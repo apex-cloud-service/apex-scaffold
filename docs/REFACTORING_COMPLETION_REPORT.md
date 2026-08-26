@@ -12,7 +12,7 @@
 
 | 验收门禁 | 状态 |
 |---|---|
-| 全库 grep `bias`/`Bias`/`BIAS` 零命中（排除 .git） | ✅ 339 文件 → 0 |
+| 全库原项目名残留扫描零命中（排除 .git） | ✅ 339 文件 → 0 |
 | `mvn test-compile` 全模块编译通过 | ✅ |
 | 单元测试全绿 | ✅ 1,786 个测试（5 模块） |
 | 数据库迁移为干净基线 | ✅ 87 个旧脚本 → V1（27 张通用表） |
@@ -38,12 +38,12 @@
 ### A3. JsonUtil 反序列化缺陷
 - ✅ 早前已修复（移除全局 default typing）
 
-### A4-A5. 通用代码与配置 bias 消除
-- ✅ `CacheConstants` 前缀 `bias:` → `apex:`
-- ✅ `ApiCallLogService` 指标 `bias.api.call` → `apex.api.call`
-- ✅ 删除 `BiasAlgorithmProperties`、`EyesightProperties` 业务配置类
-- ✅ 5 个配置文件 `com.bias` → `com.apex.scaffold`
-- ✅ 配置前缀统一：`bias.security/sentinel/scheduling/blocking-io/degrade` → `apex.*`
+### A4-A5. 通用代码与配置品牌统一
+- ✅ `CacheConstants` 缓存前缀统一为 `apex:`
+- ✅ `ApiCallLogService` 指标统一为 `apex.api.call`
+- ✅ 删除原业务算法/视力配置类
+- ✅ 5 个配置文件日志包名统一为 `com.apex.scaffold`
+- ✅ 配置前缀统一为 `apex.*` 命名空间
 - ✅ i18n、admin 静态资源、pom.xml、bootstrap.yml、spy.properties 全部清理
 
 ---
@@ -53,11 +53,11 @@
 ### B1. apex-domain 业务剥离（408 → 96 个文件）
 - ✅ 删除 `interest/` 全目录（100+ 文件，含 governance/channel/session/reveal/connection/universe/antiabuse）
 - ✅ 删除 battle/elo/vote/photo 域、face 分析域、resonance/radar/chat 域
-- ✅ 删除 eyesight/future-partner/personal-bias/aesthetic/recommendation 域
+- ✅ 删除 eyesight/future-partner/偏好模型/aesthetic/recommendation 域
 - ✅ 删除业务 enums/events/exceptions/gateways/services/repositories/entities/valueobjects
 
 ### B2. apex-application 业务剥离（398 → 77 个文件）
-- ✅ 删除约 200 个业务 DTO（interest/frequency、Battle/Chat/Resonance/PersonalBias 等）
+- ✅ 删除约 200 个业务 DTO（interest/frequency、Battle/Chat/Resonance/偏好模型等）
 - ✅ 删除业务 service/listener/config（PhotoBatch、SingleRecommendation、Interest 等）
 - ✅ 重写 `AdminUserManagementService`（去除高风险用户处置/偏好模型导出等业务方法）
 - ✅ 重写 `ProfileService`（去除 interest 图谱集成，保留通用资料管理）
@@ -68,22 +68,22 @@
 - ✅ 重写 `ApiRouter`（仅注册 auth/user/file/health/RBAC/admin 路由）
 - ✅ 重写 `OpenApiDocumentationCustomizer`、`RouterOpenApiConfig`
 - ✅ 重写 `FileHandler`（保留通用上传下载，去除照片业务端点）
-- ✅ admin 后台品牌改造（BIAS → Apex Scaffold，`bias.admin.*` → `apex.admin.*`）
+- ✅ admin 后台品牌改造（原品牌 → Apex Scaffold，存储 key 统一为 `apex.admin.*`）
 - ✅ 删除 `db/interest/` 种子数据、`interfaces/tool/` 业务工具
 
 ### B4. apex-infrastructure 业务剥离
-- ✅ 删除 `FaceAnalysisClient`、PersonalBias/Photo/Vote/Interest 等 PO/Mapper/Repository
+- ✅ 删除 `FaceAnalysisClient`、偏好模型/Photo/Vote/Interest 等 PO/Mapper/Repository
 - ✅ 重写 `AccountDeletionCleanupMapper`（仅保留 11 个通用表清理方法）
 - ✅ 重建 `BusinessMetricsService`（通用 Micrometer 实现，仅 recordCreditChange）
 
 ### B5. 数据库迁移重建
-- ✅ 删除全部 87 个旧迁移脚本（含 `bias_data` 库名、`@bias_*` 变量、personal_bias 表）
+- ✅ 删除全部 87 个旧迁移脚本（含原库名、`@apex_*` 重命名变量、偏好模型表）
 - ✅ 新建 `V1__init_schema.sql`：27 张通用表（RBAC 六件套 + 用户/文件/审计/订阅/信用/举报/黑名单等）
 - ✅ 数据库名统一为 `apex_data`，迁移脚本不包含 CREATE DATABASE/USE（由 JDBC URL 提供）
 - ✅ `schema-it.sql` 重建为 27 张通用表（H2 兼容），`data-it.sql` 保留通用种子数据
 - ✅ `application-prod.yml` 去除业务配置节（vote-photo/recommendation/algorithm），通用配置并入 `apex:` 节
 
-### B6. 文档 bias 清理
+### B6. 文档品牌清理
 - ✅ 删除内部分析文档 `COMMERCIAL_INCREMENTAL_ANALYSIS.md`
 - ✅ 重写 `apex-domain/README.md`、`apex-infrastructure/README.md`（零业务残留）
 - ✅ 清理重构方案文档中的原项目引用
