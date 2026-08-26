@@ -79,3 +79,4 @@ license.lic
 .env.*
 !.env.example
 
+.workbuddy/
