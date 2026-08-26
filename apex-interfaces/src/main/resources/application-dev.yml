@@ -1,0 +1,63 @@
+# Dev环境配置 - 使用嵌入式服务简化开发
+spring:
+  # Redis - dev环境禁用Redisson自动配置
+  autoconfigure:
+    exclude:
+      - org.redisson.spring.starter.RedissonAutoConfigurationV2
+  
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: 
+      timeout: 3000ms
+  
+  # MySQL - 使用H2内存数据库替代
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:apex_dev;DB_CLOSE_DELAY=-1;MODE=MySQL
+    username: sa
+    password: 
+  
+  # 禁用Nacos
+  cloud:
+    nacos:
+      discovery:
+        enabled: false
+      config:
+        enabled: false
+
+# Redisson配置 - 使用单机模式
+redisson:
+  single-server-config:
+    address: "redis://localhost:6379"
+    connection-pool-size: 10
+    connection-minimum-idle-size: 5
+
+# RocketMQ - dev环境禁用
+rocketmq:
+  name-server: localhost:9876
+  producer:
+    group: apex-dev-producer
+
+# MinIO配置
+storage:
+  type: local
+  local:
+    base-path: /tmp/apex-uploads
+
+# 日志级别调整
+logging:
+  level:
+    root: INFO
+    com.apex.scaffold: DEBUG
+    org.redisson: WARN
+
+# 禁用某些中间件检查
+apex:
+  redis:
+    cleanup-on-startup: false
+
+# H2控制台(可选)
+spring.h2.console.enabled: true
+spring.h2.console.path: /h2-console

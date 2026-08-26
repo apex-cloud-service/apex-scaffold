@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  - Apex.Mar - 领域层 POM 配置文件
+  - @author Apex Team
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <groupId>com.apex.scaffold</groupId>
+        <artifactId>apex-scaffold</artifactId>
+        <version>1.0.0</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>apex-domain</artifactId>
+    <packaging>jar</packaging>
+    <name>apex-domain</name>
+    <description>Apex Scaffold - Domain Module</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.apex.scaffold</groupId>
+            <artifactId>apex-common</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-tx</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-tracing-bridge-brave</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.zipkin.zipkin2</groupId>
+            <artifactId>zipkin</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.zipkin.reporter2</groupId>
+            <artifactId>zipkin-reporter-brave</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.zipkin.reporter2</groupId>
+            <artifactId>zipkin-sender-okhttp3</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-params</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.projectreactor</groupId>
+            <artifactId>reactor-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <!-- 纯领域 Port/Gateway 接口：无实现逻辑，排除 -->
+                        <exclude>com/apex/scaffold/domain/gateway/**/*</exclude>
+                        <exclude>com/apex/scaffold/domain/interest/connection/**/*</exclude>
+                        <!-- 纯领域事件 DTO：仅携带数据，无业务决策分支 -->
+                        <exclude>com/apex/scaffold/domain/event/**/*</exclude>
+                    </excludes>
+                    <rules>
+                        <rule>
+                            <element>BUNDLE</element>
+                            <includes>
+                                <!-- 高覆盖核心算法与工具包：已达高覆盖基线 -->
+                                <include>com.apex.scaffold.domain.service.recommendation.utility.*</include>
+                                <include>com.apex.scaffold.domain.service.goldeneye.*</include>
+                                <include>com.apex.scaffold.domain.interest.antiabuse.*</include>
+                                <include>com.apex.scaffold.domain.enums.*</include>
+                                <include>com.apex.scaffold.domain.service.distribution.*</include>
+                                <include>com.apex.scaffold.domain.interest.recompute.*</include>
+                                <include>com.apex.scaffold.domain.interest.universe.*</include>
+                                <include>com.apex.scaffold.domain.model.valueobject.*</include>
+                                <include>com.apex.scaffold.domain.model.moderation.*</include>
+                                <include>com.apex.scaffold.domain.model.eyesight.*</include>
+                            </includes>
+                            <limits>
+                                <limit>
+                                    <counter>LINE</counter>
+                                    <value>COVEREDRATIO</value>
+                                    <minimum>0.90</minimum>
+                                </limit>
+                                <limit>
+                                    <counter>BRANCH</counter>
+                                    <value>COVEREDRATIO</value>
+                                    <minimum>0.75</minimum>
+                                </limit>
+                            </limits>
+                        </rule>
+                        <rule>
+                            <element>BUNDLE</element>
+                            <includes>
+                                <!-- 实体与领域服务核心：批量提升至 88/70 -->
+                                <include>com.apex.scaffold.domain.model.entity.*</include>
+                                <include>com.apex.scaffold.domain.service.*</include>
+                                <include>com.apex.scaffold.domain.interest.*</include>
+                                <include>com.apex.scaffold.domain.interest.governance.*</include>
+                                <include>com.apex.scaffold.domain.interest.session.*</include>
+                                <include>com.apex.scaffold.domain.interest.channel.*</include>
+                                <include>com.apex.scaffold.domain.interest.reveal.*</include>
+                            </includes>
+                            <limits>
+                                <limit>
+                                    <counter>LINE</counter>
+                                    <value>COVEREDRATIO</value>
+                                    <minimum>0.85</minimum>
+                                </limit>
+                                <limit>
+                                    <counter>BRANCH</counter>
+                                    <value>COVEREDRATIO</value>
+                                    <minimum>0.65</minimum>
+                                </limit>
+                            </limits>
+                        </rule>
+                        <rule>
+                            <element>CLASS</element>
+                            <includes>
+                                <include>com.apex.scaffold.domain.service.EyesightScoreCalculator</include>
+                            </includes>
+                            <limits>
+                                <limit>
+                                    <counter>LINE</counter>
+                                    <value>COVEREDRATIO</value>
+                                    <minimum>0.90</minimum>
+                                </limit>
+                            </limits>
+                        </rule>
+                    </rules>
+                </configuration>
+                <executions>
+                    <execution><goals><goal>prepare-agent</goal></goals></execution>
+                    <execution><id>domain-report</id><phase>test</phase><goals><goal>report</goal></goals></execution>
+                    <execution><id>domain-coverage-check</id><phase>test</phase><goals><goal>check</goal></goals></execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

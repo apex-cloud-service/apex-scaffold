@@ -1,0 +1,81 @@
+# ===== 构建产物 =====
+target/
+build/
+out/
+dist/
+*.class
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.tar.bz2
+
+# ===== IDE 与编辑器 =====
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.project
+.classpath
+.settings/
+.factorypath
+.spring-boot-devtools.properties
+
+# ===== OS 生成文件 =====
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*.swo
+*~
+
+# ===== 日志与运行时 =====
+logs/
+*.log
+hs_err_pid*.log
+
+# ===== 本地配置与密钥 =====
+local.properties
+application-local.yml
+application-local.yaml
+application-local.properties
+.env
+.env.*
+*.pem
+*.key
+*.keystore
+*.truststore
+*.lic
+*.license
+
+# ===== 压力测试与报告 =====
+stress-test-reports/
+coverage-report/
+*.exec
+
+# ===== Node / 前端 =====
+node_modules/
+npm-debug.log*
+yarn-error.log*
+
+# ===== 临时文件 =====
+tmp/
+temp/
+*.tmp
+*.bak
+
+# ===== JRebel / 个人配置 =====
+rebel.xml
+rebel-remote.xml
+
+# ===== License 文件（不入库） =====
+*.lic
+license.lic
+
+# ===== 环境变量 =====
+.env
+.env.*
+!.env.example
+

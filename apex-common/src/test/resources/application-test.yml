@@ -1,0 +1,15 @@
+# 测试环境配置
+spring:
+  main:
+    allow-bean-definition-overriding: true
+
+# JWT测试配置
+jwt:
+  secret: test-secret-key-for-unit-testing-only-min-32-characters
+  expiration: 7200000
+
+# 日志级别
+logging:
+  level:
+    root: WARN
+    com.apex: DEBUG

@@ -1,0 +1,860 @@
+# ============================================================
+# Apex.Mar — 生产环境配置文件
+# @author Apex Team
+# ============================================================
+# 本文件仅放置生产环境特有的差异项，并覆盖 application.yml 中的同名配置。
+# 配置优先级遵循 Spring Boot 规则：
+#   命令行参数 > 环境变量 > application-{profile}.yml > application.yml
+# 部署凭据（密钥、Token、数据库密码等）应通过环境变量或外部配置中心注入，
+# 不得将明文写入本文件并提交到版本控制。
+#
+# 阅读提示：
+#   - ${ENV_NAME:default} 表示优先读取环境变量，未设置时使用默认值
+#   - 带单位的数值须保持原单位，不得随意修改
+#   - "（差异）" 标记表示该项与 application.yml 中的值不同
+# ============================================================
+
+# ============================================================
+#  1. SPRING 核心配置
+# ============================================================
+spring:
+
+  # ----------------------------------------------------------
+  #  1.1 ANSI 彩色日志输出
+  # ----------------------------------------------------------
+  output:
+    ansi:
+      # 始终启用 ANSI 彩色日志输出，便于在生产终端中快速区分日志级别。
+      # 不支持 ANSI 的日志采集端（如部分 ELK/filebeat）可忽略颜色转义码，
+      # 或通过外部配置覆盖为 DETECT/NEVER。
+      # （差异）application.yml 未显式设置，依赖系统自动检测；生产强制 always。
+      enabled: always
+
+  # ----------------------------------------------------------
+  #  1.2 Nacos 配置中心与服务发现
+  # ----------------------------------------------------------
+  cloud:
+    nacos:
+      # ===== 配置中心 =====
+      config:
+        # Nacos 服务端地址，格式 host:port。
+        # 生产环境可通过 NACOS_SERVER_ADDR 环境变量覆盖。
+        server-addr: ${NACOS_SERVER_ADDR:124.174.25.161:8848}
+        # 命名空间：生产使用独立命名空间，实现配置隔离，防止误操作影响线上。
+        # 须与 Nacos 控制台创建的命名空间 ID 一致。
+        namespace: ${NACOS_NAMESPACE:prod}
+        # 配置分组：与 Nacos 控制台中的 Group 保持一致。
+        group: DEFAULT_GROUP
+        # 配置文件后缀：yml 格式。
+        file-extension: yml
+        # 关闭 import-check，避免启动检查耗时。
+        import-check:
+          enabled: false
+        # 启用 Nacos 配置中心。
+        enabled: true
+        # 允许运行时接收 Nacos 推送的配置变更（热更新）。
+        # 仅对标注 @RefreshScope 的 Bean 或 @Value 注入的属性生效。
+        refresh-enabled: true
+
+      # ===== 服务注册与发现 =====
+      discovery:
+        # 注册中心地址，与配置中心复用同一 Nacos 集群。
+        server-addr: ${NACOS_SERVER_ADDR:124.174.25.161:8848}
+        # 服务发现命名空间：与配置中心保持独立的生产命名空间。
+        namespace: ${NACOS_NAMESPACE:prod}
+        # 服务发现分组。
+        group: DEFAULT_GROUP
+        # 启用服务发现。
+        enabled: true
+        # 是否将本实例注册到 Nacos。
+        register-enabled: true
+        # 注册的服务名，须与 spring.application.name 一致。
+        service: ${spring.application.name}
+        # 实例权重：值越大，被客户端选中的概率越高（0~1 或整数）。
+        # 设置为 1 表示所有实例等权重。
+        weight: 1
+
+    # ----------------------------------------------------------
+    #  1.3 Sentinel 限流熔断（控制台通信）
+    # ----------------------------------------------------------
+    sentinel:
+      transport:
+        # Sentinel 控制台地址，用于实时查看流量、限流和熔断状态。
+        dashboard: ${SENTINEL_DASHBOARD_URL:http://124.174.25.161:8859}
+        # Sentinel 客户端与 Dashboard 通信的端口，每实例须唯一。
+        # 同一宿主机多实例部署时应通过环境变量分配不同端口。
+        port: ${SENTINEL_TRANSPORT_PORT:8719}
+        # 客户端上报至 Dashboard 时使用的 IP，留空则自动探测。
+        # 多网卡环境建议显式指定内网 IP。
+        client-ip: ${SENTINEL_CLIENT_IP:}
+      # 启动时立即初始化 Sentinel 客户端，避免首次请求因懒加载造成延迟。
+      # （差异）application.yml 未设置 eager，生产显式开启以消除冷启动延迟。
+      eager: true
+
+  # ----------------------------------------------------------
+  #  1.4 数据源配置（多数据源 + Druid 连接池）
+  # ----------------------------------------------------------
+  datasource:
+    dynamic:
+      # 默认数据源名称，未通过 @DS 指定时使用。
+      primary: master
+      # strict=false：未找到指定数据源时回退到 primary，不抛异常。
+      # （差异）application.yml 未使用 dynamic-datasource，仅 dev 使用 P6Spy；
+      #         生产启用 P6Spy 便于上线初期定位慢 SQL，后续需切换为纯 Druid 监控。
+      strict: false
+      # 优化说明（Netty/线程池/IO 性能优化方案 P3）：
+      #   关闭 P6Spy SQL 日志代理层。原值为 true（上线过渡期 SQL 观测），
+      #   P6Spy 代理层会拦截所有 SQL 并格式化输出，CPU 开销约 1-3%。
+      #   关闭后 SQL 监控由 Druid stat 过滤器接管，避免重复日志和代理层性能损耗。
+      #   如需临时开启排查 SQL 问题，通过环境变量或 Nacos 动态调整。
+      p6spy: false
+      datasource:
+        master:
+          # 主库 JDBC URL；生产部署必须通过 DB_MASTER_URL 环境变量注入真实地址。
+          # 默认空字符串会在启动时触发参数校验而失败，防止误连。
+          url: ${DB_MASTER_URL:}
+          # 数据库凭据由部署环境注入；默认空值为安全兜底，启动时校验不通过即失败。
+          username: ${DB_MASTER_USERNAME:}
+          password: ${DB_MASTER_PASSWORD:}
+          # 连接池实现：Alibaba Druid。
+          type: com.alibaba.druid.pool.DruidDataSource
+          druid:
+            # 数据库类型标识。
+            db-type: mysql
+            # ---------- 连接池容量 ----------
+            # 初始连接数：启动时立即创建，避免冷启动期间投票/预取链路连接等待。
+            # P3 高并发优化：从 5 提升至 15。
+            initial-size: 15
+            # 最小空闲连接数：保持池中有足够的空闲连接应对突发流量。
+            # P3 优化：从 5 提升至 15，减少突增流量下的建连开销。
+            min-idle: 15
+            # 最大活跃连接数：所有业务线程同时可持有的连接上限。
+            # 当前模型：40 个连接中 32 个供 JDBC Scheduler 工作，余量留给事务调度和后台任务。
+            # 调低可能导致连接不足而请求排队，调高会增加 MySQL 连接压力。
+            max-active: ${DB_MAX_ACTIVE:40}
+            # 连接池饱和时的最大等待时间（毫秒）：所有连接都在使用时，新请求最多等待多久。
+            # 3 秒快速失败，避免 60 秒等待将瞬时过载放大为全站请求堆积。
+            max-wait: ${DB_MAX_WAIT_MILLIS:3000}
+            # ---------- 连接检测与回收 ----------
+            # 空闲连接检测间隔（毫秒）：60 秒扫描一次超时空闲连接。
+            time-between-eviction-runs-millis: 60000
+            # 连接最小空闲时间（毫秒）：空闲超过 5 分钟才回收。
+            min-evictable-idle-time-millis: 300000
+            # 优化说明（Netty/线程池/IO 性能优化方案 P3）：
+            #   启用连接保活机制，防止 MySQL wait_timeout（默认 8 小时）断开空闲连接。
+            #   keep-alive=true 触发 Druid 在 min-idle 连接不足时主动发起 validationQuery，
+            #   keep-alive-between-time-millis=60000 每 60 秒检测一次。
+            #   连接保活间隔（毫秒）：60 秒一次检测。
+            keep-alive: true
+            keep-alive-between-time-millis: 60000
+            # MySQL 连接有效性检查语句，轻量级。
+            validation-query: SELECT 1 FROM DUAL
+            # 空闲时检测连接有效性。
+            test-while-idle: true
+            # 借出时不检测（避免每次借出的额外开销）。
+            test-on-borrow: false
+            # 归还时不检测（避免每次归还的额外开销）。
+            test-on-return: false
+            # ---------- PreparedStatement 缓存 ----------
+            # 启用 PSCache，对相同 SQL 的重复执行有性能提升。
+            pool-prepared-statements: true
+            # 每个连接最大缓存的 PreparedStatement 数量。
+            max-pool-prepared-statement-per-connection-size: 20
+            # ---------- 监控过滤器 ----------
+            # 仅启用 stat（统计）过滤器；SQL 日志由 P6Spy 负责，避免重复。
+            filters: stat
+            # 连接属性：关闭 SQL 合并（P6Spy 已处理），慢 SQL 阈值 5 秒。
+            connection-properties: druid.stat.mergeSql=false;druid.stat.slowSqlMillis=5000
+            # 关闭全局数据源统计，仅保留单数据源级别的统计。
+            use-global-data-source-stat: false
+
+  # ----------------------------------------------------------
+  #  1.5 Redis 缓存连接（Spring Data Redis + Lettuce）
+  # ----------------------------------------------------------
+  data:
+    redis:
+      # Redis 实例地址。
+      host: ${REDIS_HOST:115.191.17.107}
+      # Redis 端口，默认 6379。
+      port: ${REDIS_PORT:6379}
+      # 逻辑数据库编号：生产使用 8 号库，与开发环境隔离。
+      # （差异）application.yml 未指定 Redis 连接，由 Nacos 或默认 localhost 提供；
+      #         生产显式指定生产 Redis 实例。
+      database: ${REDIS_DATABASE:8}
+      # 生产 Redis 必须设置密码，空值启动时校验不通过。
+      # 该密码同时被 Redisson Starter 和 Spring Data Redis 共用。
+      password: ${REDIS_PASSWORD}
+      lettuce:
+        pool:
+          # Redis 同时承载限流计数器、Token 存储和业务缓存，使用有界连接池避免故障扩散。
+          # 最大活跃连接数：建议不低于 16，高并发场景可上调至 64。
+          max-active: ${REDIS_POOL_MAX_ACTIVE:32}
+          # 最大空闲连接数：维持一定空闲连接以响应突发流量。
+          max-idle: ${REDIS_POOL_MAX_IDLE:16}
+          # 最小空闲连接数：低于此值时 Lettuce 自动补充。
+          min-idle: ${REDIS_POOL_MIN_IDLE:4}
+          # 连接池耗尽时的最大等待时间（Duration 格式）。
+          max-wait: ${REDIS_POOL_MAX_WAIT:2s}
+
+  # ----------------------------------------------------------
+  #  1.6 Flyway 数据库迁移
+  # ----------------------------------------------------------
+  flyway:
+    # 生产环境启动时自动执行数据库迁移。
+    # （差异）application.yml 未显式关闭，由各 profile 决定；生产显式开启。
+    enabled: true
+    # 迁移脚本存放路径，classpath 下相对目录。
+    locations: classpath:db/migration
+    # 严格校验已执行迁移脚本的 checksum，防止被篡改。
+    # 若发现差异将阻止应用启动，需人工介入修复。
+    validate-on-migrate: true
+    # 禁止自动创建基线版本（baseline），防止在新数据库中跳过迁移。
+    baseline-on-migrate: false
+    # 禁止自动修复 Flyway 元数据表（repair），仅在 DBA 确认后手动执行。
+    repair: false
+
+  # ----------------------------------------------------------
+  #  1.7 自动配置排除
+  # ----------------------------------------------------------
+  autoconfigure:
+    exclude:
+      # 排除 Zipkin 自动配置，使用自定义 trace.zipkin-url 上报。
+      # 与 dev 环境保持一致。
+      - org.springframework.boot.actuate.autoconfigure.tracing.zipkin.ZipkinAutoConfiguration
+
+  # ----------------------------------------------------------
+  #  1.8 Profile 分组声明
+  # ----------------------------------------------------------
+  profiles:
+    group:
+      # 保留现有 profile 分组声明，避免改变启动参数解析行为。
+      prod: prod
+
+# ============================================================
+#  2. 链路追踪配置
+# ============================================================
+trace:
+  # 自定义追踪数据上报地址（Zipkin API v2 Spans 端点）。
+  # （差异）application.yml 通过 management.zipkin.tracing.endpoint 配置；
+  #         生产使用自定义 trace 前缀，底层仍对接同一 Zipkin 实例。
+  zipkin-url: ${ZIPKIN_BASE_URL:http://124.174.25.161:9411}/api/v2/spans
+  # 采样率（0.0 ~ 1.0）：1.0 = 全量采样。
+  # 优化说明（Netty/线程池/IO 性能优化方案 P3）：
+  #   全量采样会产生较大网络和存储开销（每请求至少上报 1 个 span），
+  #   高 QPS 场景下 Zipkin 网络流量和存储压力显著。
+  #   从 1.0（100%）降至 0.1（10%），节约约 90% 的 span 流量，
+  #   仍保留足够采样用于故障排查和延迟分布统计。
+  #   如需临时提高采样率排查特定问题，通过环境变量 TRACE_SAMPLING_RATE 动态调整。
+  sampling-rate: ${TRACE_SAMPLING_RATE:0.1}
+  # 慢请求阈值（毫秒），超过该值的 Span 在日志中以 WARN 级别记录详情。
+  slow-threshold-ms: ${TRACE_SLOW_THRESHOLD_MS:3000}
+
+# ============================================================
+#  3. RocketMQ 消息队列配置
+# ============================================================
+rocketmq:
+  # Name Server 地址：兼容 dev/prod 两套环境变量名。
+  # 优先级：ROCKETMQ_NAMESERVER > ROCKETMQ_NAMESRV_ADDR > 默认值。
+  name-server: ${ROCKETMQ_NAMESERVER:${ROCKETMQ_NAMESRV_ADDR:124.174.25.161:9876}}
+
+  # ===== 生产者 =====
+  producer:
+    # 生产者组名，同组多实例负载均衡发送。
+    group: ${ROCKETMQ_PRODUCER_GROUP:apex-producer-group}
+    # ACL 访问凭据（AccessKey/SecretKey）。
+    # 为空表示 Broker 未启用 ACL 认证；启用 ACL 时必须由环境变量注入。
+    access-key: ${ROCKETMQ_ACCESS_KEY:}
+    secret-key: ${ROCKETMQ_SECRET_KEY:}
+    # 同步发送消息超时（毫秒）：超过此时间未收到 Broker 确认则视为失败。
+    # （差异）application.yml 未配置 RocketMQ，使用 Starter 默认 3000ms；
+    #         生产设置 30 秒以容忍网络抖动和 Broker 短暂过载。
+    send-message-timeout: 30000
+    # 消息体超过此字节数时自动压缩（默认 4KB）。
+    compress-message-body-threshold: 1024
+    # 同步发送失败重试次数（不包含首次调用）：共发 3 次。
+    retry-times-when-send-failed: 2
+    # 异步发送失败重试次数：共发 3 次。
+    retry-times-when-send-async-failed: 2
+    # 单条消息最大字节数（默认 4MB）。
+    max-message-size: 4194304
+
+  # ===== 消费者 =====
+  consumer:
+    # 消费端 ACL 凭据，与生产端共用同一环境变量。
+    access-key: ${ROCKETMQ_ACCESS_KEY:}
+    secret-key: ${ROCKETMQ_SECRET_KEY:}
+
+# ============================================================
+#  4. MyBatis 持久化配置
+# ============================================================
+mybatis:
+  # Mapper XML 文件扫描路径：所有模块 classpath 下的 mapper/**/*.xml。
+  # （差异）application.yml 未配置此项，使用 MyBatis 默认行为；
+  #         生产显式指定以确保多模块 JAR 中的 XML 全部加载。
+  mapper-locations: classpath*:mapper/**/*.xml
+
+# ============================================================
+#  5. 日志配置
+# ============================================================
+logging:
+  level:
+    # 生产环境暂时使用 DEBUG 级别，便于上线初期快速定位问题。
+    # 后续在日志观测体系和告警链路完善后，应逐步将大部分组件降级为 INFO。
+    # （差异）application.yml 默认 INFO；生产统一 DEBUG。
+    root: DEBUG
+    # 业务模块：按层次细分日志级别。
+    com.apex: DEBUG
+    com.apex.application: DEBUG
+    com.apex.domain: DEBUG
+    com.apex.infrastructure: DEBUG
+    com.apex.interfaces: DEBUG
+    # Mapper SQL 仅记录 WARN 以上，避免 DEBUG 级别的参数/结果集日志洪水。
+    # MyBatis 的 SQL 日志由 P6Spy 在更上层统一处理。
+    com.apex.infrastructure.persistence.mapper: WARN
+
+    # Spring WebFlux 框架层：DEBUG 级别追踪请求/响应流转。
+    org.springframework.web: DEBUG
+    org.springframework.web.reactive: DEBUG
+    org.springframework.http.codec: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.security.web: DEBUG
+
+    # Netty 网络层：生产环境使用 WARN 级别，仅记录异常事件。
+    # 优化说明：原 DEBUG 级别每请求产生 50-200 条 DEBUG 日志（ByteBuf 分配/释放、
+    # 管道事件、SSL 握手细节），日志量约 50000-200000 条/秒，磁盘 I/O 约 5-20 MB/s，
+    # CPU 开销约 5-15%。改为 WARN 后仅输出错误和告警，与 application-performance.yml 对齐。
+    # 如需临时排查 Netty 连接问题，可通过环境变量或 Nacos 动态调整。
+    reactor.netty: WARN
+    reactor.netty.http.server: WARN
+    reactor.netty.http.client: WARN
+
+    # Druid SQL 日志：WARN 级别仅输出异常，详细 SQL 由 P6Spy 单行输出。
+    druid.sql.Statement: WARN
+    druid.sql.PreparedStatement: WARN
+    druid.sql.ResultSet: WARN
+    druid.sql.Connection: WARN
+
+    # Redisson（Redis 客户端）：DEBUG 级别追踪连接池和命令执行。
+    org.redisson: DEBUG
+    org.redisson.client: DEBUG
+
+    # Nacos 客户端：DEBUG 级别追踪配置拉取和服务发现心跳。
+    com.alibaba.nacos: DEBUG
+    com.alibaba.cloud.nacos: DEBUG
+
+    # Sentinel 内部日志。
+    sentinelRecordLogger: DEBUG
+    sentinelCommandCenterLogger: DEBUG
+
+    # RocketMQ 客户端。
+    org.apache.rocketmq: DEBUG
+    org.apache.rocketmq.spring: DEBUG
+
+    # MyBatis-Plus 和动态数据源。
+    com.baomidou.mybatisplus: DEBUG
+    com.baomidou.dynamic.datasource: DEBUG
+
+    # Lombok 注解处理器。
+    lombok: DEBUG
+
+  pattern:
+    # 控制台日志格式（带 ANSI 颜色）：
+    #   时间 | 级别 | 线程 | TraceId | RequestId | UserId | Logger | 源文件:行号 | 消息
+    # %clr() 仅在有 ANSI 支持的终端生效；日志文件输出时会忽略颜色字符。
+    console: "%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(%-5level) %clr([%thread]){cyan} %clr([%X{traceId:-N/A}]){magenta} %clr([%X{requestId:-N/A}]){blue} %clr([%X{userId:-N/A}]){green} %clr(%logger{60}){white} %clr([%file:%line]){faint} - %msg%n%wEx"
+    # 文件日志格式（无颜色，包含更多上下文信息）：
+    #   时间 | 线程 | TraceId | RequestId | UserId | 级别 | Logger | 源文件:行号 | 消息
+    # （差异）application.yml 的 file 格式不含 userId/requestId 及源文件行号；
+    #         生产增加这些字段用于审计和问题追溯。
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [%X{traceId:-N/A}] [%X{requestId:-N/A}] [%X{userId:-N/A}] %-5level %logger{100} [%file:%line] - %msg%n"
+
+# ============================================================
+#  6. SpringDoc OpenAPI / Knife4j 接口文档
+# ============================================================
+springdoc:
+  swagger-ui:
+    # 生产环境关闭 Swagger UI，避免暴露交互式接口入口。
+    # 这是安全合规要求：不允许在生产环境通过浏览器直接浏览和调用 API。
+    # （差异）application.yml 开启 Swagger UI；生产强制关闭。
+    enabled: false
+  api-docs:
+    # 同时关闭 OpenAPI JSON 端点（/v3/api-docs），防止接口元数据外泄。
+    # （差异）application.yml 开启 API 文档；生产强制关闭。
+    enabled: false
+
+# Knife4j 增强文档：生产环境同样关闭。
+knife4j:
+  enable: false
+  # production=true 表示当前为生产环境模式，Knife4j 会拦截所有文档请求。
+  # （差异）application.yml 设置 production=false（开发模式）。
+  production: true
+
+# ============================================================
+#  7. Actuator 监控端点
+# ============================================================
+management:
+  server:
+    # 管理端口与业务端口（8080）物理隔离，防止将监控信息暴露在业务流量中。
+    # 默认 8081，可通过 MANAGEMENT_SERVER_PORT 调整。
+    port: ${MANAGEMENT_SERVER_PORT:8081}
+    # 管理端仅监听回环地址（127.0.0.1），外部不可达。
+    # 容器/K8s 环境可通过 MANAGEMENT_SERVER_ADDRESS 调整为 Pod IP 或 0.0.0.0。
+    address: ${MANAGEMENT_SERVER_ADDRESS:127.0.0.1}
+
+  endpoints:
+    web:
+      exposure:
+        # 仅暴露运维必需的端点：
+        #   health    — 健康检查（存活/就绪探针）
+        #   info      — 应用信息
+        #   metrics   — 指标数据（Prometheus 拉取）
+        #   prometheus — Prometheus 专用指标端点
+        #   circuitbreakers — 熔断器状态
+        # 禁止暴露 env、configprops、mappings 等可能泄露敏感信息的端点。
+        include: health,info,metrics,prometheus,circuitbreakers
+
+  endpoint:
+    health:
+      # 健康详情仅向已认证的请求展示（when-authorized），匿名请求只返回 UP/DOWN。
+      show-details: when-authorized
+      probes:
+        # 启用 K8s 风格的存活/就绪探针。
+        enabled: true
+      group:
+        liveness:
+          # 存活探针：仅检查进程是否存活，不连带外部依赖。
+          # 探针失败 → K8s 重启 Pod。
+          include: livenessState
+        readiness:
+          # 就绪探针：检查应用是否可以接流量（DB + Redis 均可用）。
+          # 探针失败 → K8s 摘除 Pod，停止分发流量。
+          include: readinessState,db,redis
+
+    circuitbreakers:
+      # 启用熔断器状态端点，供监控系统采集。
+      enabled: true
+
+  metrics:
+    tags:
+      # 为所有指标附加 application 标签，便于 Prometheus 按应用聚合。
+      application: ${spring.application.name}
+    distribution:
+      percentiles-histogram:
+        http:
+          server:
+            # 开启 HTTP 请求延迟直方图，用于 Prometheus Histogram 分位数计算。
+            requests: true
+      percentiles:
+        http:
+          server:
+            # 请求延迟百分位：P50、P90、P95、P99。
+            requests: 0.5, 0.9, 0.95, 0.99
+
+# ============================================================
+#  8. Resilience4j 熔断器配置
+# ============================================================
+# 注意：生产环境对关键外部服务使用更严格的熔断阈值，
+# 以便更快检测故障并触发降级，避免级联雪崩。
+resilience4j:
+  circuitbreaker:
+    configs:
+      # ===== 默认熔断配置 =====
+      default:
+        # 失败率阈值（百分比）：50% 请求失败 → 触发熔断。
+        failure-rate-threshold: 50
+        # 慢调用率阈值（百分比）：50% 请求超时 → 触发熔断。
+        slow-call-rate-threshold: 50
+        # 慢调用判定阈值（毫秒）：响应时间超过 3000ms 计为慢调用。
+        slow-call-duration-threshold: 3000
+        # 滑动窗口大小：统计最近 100 次调用的状态。
+        sliding-window-size: 100
+        # 最小调用次数：窗口内调用不足 10 次时不触发熔断，防止小样本误判。
+        minimum-number-of-calls: 10
+        # 熔断打开后等待时间（毫秒）：60 秒后自动进入半开状态探测恢复。
+        wait-duration-in-open-state: 60000
+        # 半开状态允许的试探调用次数：5 次试探全部成功 → 关闭熔断。
+        permitted-number-of-calls-in-half-open-state: 5
+        # 自动从 Open 过渡到 Half-Open，无需人工干预。
+        automatic-transition-from-open-to-half-open-enabled: true
+        # 记录为失败的异常类型：IO 异常、超时、WebClient 5xx 响应、远程 API 异常。
+        record-exceptions:
+          - java.io.IOException
+          - java.util.concurrent.TimeoutException
+          - org.springframework.web.reactive.function.client.WebClientResponseException
+          - com.apex.infrastructure.remote.exception.RemoteApiException
+        # 忽略的异常类型：客户端输入错误（4xx）不触发熔断，应由调用方自行修正。
+        ignore-exceptions:
+          - com.apex.infrastructure.remote.exception.RemoteClientInputException
+
+      # ===== 严格熔断配置（关键服务专用） =====
+      # 适用于支付、短信、微信等不可降级的核心外部服务。
+      # （差异）application.yml 中 chuanglan-api 和 wechat-api 使用 default 配置；
+      #         生产升级为 strict 配置，降低故障容忍度。
+      strict:
+        # 失败率阈值降至 30%，更快触发熔断。
+        failure-rate-threshold: 30
+        # 慢调用阈值同步降至 30%。
+        slow-call-rate-threshold: 30
+        # 滑动窗口缩小至 50 次，对故障更敏感。
+        sliding-window-size: 50
+        # 最小调用次数降至 5 次，减少冷启动期间的无效重试。
+        minimum-number-of-calls: 5
+        # 熔断打开后 30 秒即进入半开，比 default 快一倍。
+        wait-duration-in-open-state: 30000
+
+    instances:
+      # 创蓝短信 API：使用严格熔断，避免短信发送失败堆积。
+      chuanglan-api:
+        base-config: strict
+      # 微信 API：使用严格熔断，避免微信接口不可用时无限重试。
+      wechat-api:
+        base-config: strict
+
+  timelimiter:
+    configs:
+      default:
+        # 默认异步调用超时时间（毫秒）：10 秒。
+        timeout-duration: 10000
+        # 超时后取消正在运行的 Future，释放线程资源。
+        cancel-running-future: true
+
+    instances:
+      # Python 人脸分析服务独立超时配置。
+      # （差异）application.yml 默认 10 秒超时；人脸分析需要 300 秒（5 分钟），
+      #         与 remote.api.services.face-analysis.read-timeout (300s) 对齐。
+      #         注意：此超时须 >= read-timeout，否则可能导致异步调用提前取消。
+      face-analysis:
+        timeout-duration: 300000
+        cancel-running-future: true
+
+# ============================================================
+#  9. 告警配置
+# ============================================================
+alert:
+  exception:
+    # 异常告警阈值：在统计窗口内达到此异常次数时触发告警。
+    # （差异）application.yml 无此配置；生产特有。
+    threshold: 10
+    # 异常统计窗口：单位由告警实现约定为分钟（5 分钟）。
+    # 窗口内异常 >= 10 次 → 触发钉钉通知。
+    window: 5
+
+  dingding:
+    # 钉钉群机器人 Webhook URL，由环境变量注入。
+    # 格式：https://oapi.dingtalk.com/robot/send?access_token=xxx
+    # 空值表示未配置通知通道，告警静默。
+    webhook: ${DINGDING_WEBHOOK:}
+    # 钉钉机器人签名密钥（加签模式），用于 HMAC-SHA256 签名验证。
+    # 空值时降级为无签名模式（不推荐，存在安全风险）。
+    secret: ${DINGDING_SECRET:}
+
+# ============================================================
+# 10. CORS 跨域配置
+# ============================================================
+cors:
+  # 是否允许所有来源的跨域请求。
+  # （差异）application.yml 未配置此项；生产设置为 true 以兼容既有客户端。
+  # ⚠️ 安全提示：allow-all-origins=true 意味着任何域都可以访问接口。
+  # 收紧前需完成所有客户端来源盘点，并改为白名单模式。
+  allow-all-origins: true
+
+# ============================================================
+# 11. JWT 认证令牌配置
+# ============================================================
+jwt:
+  # JWT 签名密钥：HS256 算法的对称密钥。
+  # （差异）application.yml 默认值为空，由安全校验器在启动时检查密钥强度；
+  #         生产必须通过 JWT_SECRET 环境变量注入至少 32 字节的随机密钥。
+  # ⚠️ 安全要求：密钥不得使用硬编码默认值或弱密码。
+  secret: ${JWT_SECRET:}
+
+  # Access Token 有效期，单位毫秒。
+  # （差异）application.yml 默认 7200000（2 小时），生产保持一致。
+  # 2 小时平衡安全性和用户体验：过期需重新登录，但不会频繁打断用户。
+  access-token-expire: ${JWT_ACCESS_EXPIRE:7200000}
+
+  # Refresh Token 有效期，单位毫秒。
+  # （差异）application.yml 默认 604800000（7 天），生产保持一致。
+  # 7 天允许用户在一周内无感续期，超过后需重新登录。
+  refresh-token-expire: ${JWT_REFRESH_EXPIRE:604800000}
+
+# ============================================================
+# 12. 微信开放平台配置
+# ============================================================
+wechat:
+  app:
+    # 微信开放平台应用 AppID 和 AppSecret。
+    # （差异）application.yml 仅配置了默认值，生产由环境变量注入真实凭据。
+    # ⚠️ 安全要求：Secret 严禁写入代码仓库，必须通过环境变量或密钥管理服务注入。
+    app-id: ${WECHAT_APP_ID:}
+    app-secret: ${WECHAT_APP_SECRET:}
+
+  # 微信开放平台移动应用 OAuth2 登录接口。
+  # 注意：此接口用于移动应用 OAuth2 授权码换取 access_token，
+  # 非小程序 jscode2session 接口。
+  login-url: ${WECHAT_LOGIN_URL:https://api.weixin.qq.com/sns/oauth2/access_token}
+
+  # 微信开放平台用户信息接口（获取昵称、头像等）。
+  user-info-url: ${WECHAT_USER_INFO_URL:https://api.weixin.qq.com/sns/userinfo}
+
+  pay:
+    # 微信支付 AppID：默认回退到微信应用 AppID（多数情况下两者相同）。
+    app-id: ${WECHAT_PAY_APP_ID:${WECHAT_APP_ID:}}
+    # 微信支付商户号。
+    mch-id: ${WECHAT_PAY_MCH_ID:}
+    # API v3 密钥：32 字节的对称加密密钥，用于回调通知验证和敏感信息加密。
+    # ⚠️ 安全要求：必须通过环境变量注入，不得硬编码。
+    api-v3-key: ${WECHAT_PAY_API_V3_KEY:}
+    # 商户 API 证书私钥文件路径（PEM 格式）。
+    # 通常部署时挂载到 /etc/secrets/ 或类似安全目录。
+    private-key-path: ${WECHAT_PAY_PRIVATE_KEY_PATH:}
+    # 商户 API 证书序列号：用于微信支付平台验证商户身份。
+    merchant-serial-number: ${WECHAT_PAY_MERCHANT_SERIAL_NO:}
+    # 支付结果通知 URL：微信支付成功后回调通知的完整地址。
+    # 须为公网可达的 HTTPS 地址。
+    notify-url: ${WECHAT_PAY_NOTIFY_URL:}
+
+# ============================================================
+# 13. 企业微信配置
+# ============================================================
+wework:
+  # 企业微信 CorpID：企业唯一标识。
+  corp-id: ${WEWORK_CORP_ID:}
+  # 企业微信应用 AgentID。
+  agent-id: ${WEWORK_AGENT_ID:}
+  # 企业微信应用 Secret。
+  # ⚠️ 安全要求：必须通过环境变量注入。
+  secret: ${WEWORK_SECRET:}
+  # 回调 URL 验证 Token：企业微信后台配置的 Token。
+  token: ${WEWORK_TOKEN:}
+  # 消息加解密密钥（Base64 编码的 AES 密钥）。
+  # ⚠️ 安全要求：必须通过环境变量注入。
+  encoding-aes-key: ${WEWORK_ENCODING_AES_KEY:}
+
+# ============================================================
+# 14. 创蓝云平台配置（短信 + 闪验一键登录）
+# ============================================================
+chuanglan:
+  # ===== 短信服务（v2 模板 API） =====
+  sms:
+    # API 主机地址。
+    host: ${CL_SMS_HOST:smssh.253.com}
+    # API 端口：443 = HTTPS。
+    port: ${CL_SMS_PORT:443}
+    # 短信平台账号。
+    account: ${CL_SMS_ACCOUNT:}
+    # 短信平台密码。
+    # ⚠️ 安全要求：生产环境通过 CL_SMS_PASSWORD 环境变量注入。
+    password: ${CL_SMS_PASSWORD:}
+    # 短信签名：【】内的内容为签名，须与创蓝控制台备案一致。
+    # （差异）application.yml 默认使用公司全称签名，生产使用产品品牌名。
+    signature: ${CL_SMS_SIGNATURE:【Apex】}
+    # 短信模板 ID：从创蓝控制台获取，不同业务使用不同模板。
+    template-id: ${CL_SMS_TEMPLATE_ID:}
+    # 短信发送接口路径：v2 模板 API。
+    send-uri: /msg/sms/v2/tpl/send
+    # 余额查询接口路径。
+    balance-uri: /msg/balance/json
+    # 是否启用 HTTPS：生产必须启用。
+    ssl-enabled: ${CL_SMS_SSL:true}
+
+  # ===== 闪验一键登录（P0-CL-9：多平台独立凭证） =====
+  flash:
+    # API 主机地址。
+    host: ${CL_FLASH_HOST:wsflash.253.com}
+    # API 端口：443 = HTTPS。
+    port: ${CL_FLASH_PORT:443}
+    # Token 换号接口：用闪验 Token 换取手机号。
+    token-validate-uri: /open/flashsdk/mobile-query
+    # 手机号校验接口：验证手机号是否为本机号码。
+    mobile-validate-uri: /open/flashsdk/mobile-validate
+    # 是否启用 HTTPS。
+    ssl-enabled: ${CL_FLASH_SSL:true}
+    # 手机号加密方式：0 = AES，1 = RSA。
+    # 须与创蓝控制台配置一致。
+    encrypt-type: ${CL_FLASH_ENCRYPT_TYPE:0}
+
+    # ---------- 各平台独立闪验凭据 ----------
+    # 根据创蓝文档，一个应用对应一个 AppID。
+    # Android / iOS / H5 / HarmonyOS / 微信小程序 须独立配置。
+    android:
+      app-id: ${CL_FLASH_ANDROID_APP_ID:6fyCOWoc}
+      app-key: ${CL_FLASH_ANDROID_APP_KEY:jNC1RXIv}
+    ios:
+      app-id: ${CL_FLASH_IOS_APP_ID:}
+      app-key: ${CL_FLASH_IOS_APP_KEY:}
+    h5:
+      app-id: ${CL_FLASH_H5_APP_ID:}
+      app-key: ${CL_FLASH_H5_APP_KEY:}
+    harmony:
+      app-id: ${CL_FLASH_HARMONY_APP_ID:}
+      app-key: ${CL_FLASH_HARMONY_APP_KEY:}
+    wechat:
+      app-id: ${CL_FLASH_WECHAT_APP_ID:}
+      app-key: ${CL_FLASH_WECHAT_APP_KEY:}
+
+    # ---------- 兼容旧版客户端（已废弃） ----------
+    # 完成旧版客户端迁移前不可删除此配置，否则老版本 App 无法使用一键登录。
+    app-id: ${CL_FLASH_APP_ID:6fyCOWoc}
+    app-key: ${CL_FLASH_APP_KEY:jNC1RXIv}
+
+# ============================================================
+# 15. MinIO 对象存储（备用方案）
+# ============================================================
+# （差异）application.yml 未配置 MinIO；生产配置作为火山云 TOS 的备用方案。
+# 当前主流存储方案为 volcengine（TOS），MinIO 仅在降级或迁移场景使用。
+minio:
+  # MinIO 服务端点，格式 http(s)://host:port。
+  endpoint: ${MINIO_ENDPOINT:}
+  # 访问密钥。
+  access-key: ${MINIO_ACCESS_KEY:}
+  # 秘密密钥。
+  # ⚠️ 安全要求：必须通过环境变量注入。
+  secret-key: ${MINIO_SECRET_KEY:}
+  # 是否使用 HTTPS 连接 MinIO。
+  secure: ${MINIO_SECURE:false}
+
+# ============================================================
+# 16. 自定义配置（通用 + 业务）
+# ============================================================
+
+# ----------------------------------------------------------
+# 16.1 通用 Redis 启动清理
+# ----------------------------------------------------------
+
+apex:
+  redis:
+    # 生产环境默认关闭启动时 Redis 自动清理，避免误清除用户 Token 和业务缓存。
+    # （差异）application.yml 未配置此开关；生产显式关闭。
+    # 仅在确认需要清理旧格式数据时，通过环境变量临时开启：
+    #   APEX_REDIS_CLEANUP_ON_STARTUP=true
+    cleanup-on-startup: ${APEX_REDIS_CLEANUP_ON_STARTUP:false}
+
+# ----------------------------------------------------------
+# 16.2 业务自定义配置
+# ----------------------------------------------------------
+
+  gateway:
+    # 网关全局过滤器总开关。关闭后仅保留 Spring Security 核心过滤器链。
+    enabled: true
+    # 请求唯一标识使用的 HTTP 头名称。
+    # 前端 / 反向代理 / API 网关应在此头中注入唯一的请求 ID，
+    # 用于全链路日志关联和故障排查。
+    request-id-header: X-Request-Id
+    # 慢请求判定阈值（毫秒）：超过此值的请求将记录 WARN 日志并增加慢请求计数器。
+    # 3 秒为经验值，覆盖正常请求 + 2 次数据库查询 + 1 次 Redis 往返。
+    slow-request-threshold: 3000
+    metrics:
+      # 网关指标采集总开关。
+      enabled: true
+      # 请求计数：按 method + path 统计请求总量（MeterRegistry counter）。
+      request-counter-enabled: true
+      # 响应计时：按 method + path 记录请求延迟分布（Timer）。
+      response-timer-enabled: true
+      # 错误计数：按 method + path + statusCode 统计异常响应（counter）。
+      error-counter-enabled: true
+
+  # ----------------------------------------------------------
+  # 16.4 安全配置
+  # ----------------------------------------------------------
+
+  security:
+    guard:
+      # User-Agent 检查开关。
+      # （差异）application.yml 默认开启 UA 检查；
+      #         生产关闭，因为部分合法客户端（如小程序 WebView）可能不发送 User-Agent 头。
+      # ⚠️ 关闭 UA 检查会降低对基础爬虫的防御能力，但可避免误拦正常用户。
+      ua-check-enabled: false
+
+    # ===== IP 限流配置 =====
+    ip-rate-limit:
+      # IP 限流总开关：生产环境必须开启，防止单 IP 恶意请求。
+      enabled: true
+      # 默认滑动窗口内最大请求数。
+      # （差异）application.yml 默认 120 次/60 秒；
+      #         生产降至 200 次/窗口（窗口大小继承 application.yml 的 60 秒），
+      #         实际放宽了限制以支持高活跃度用户。
+      default-limit: 200
+
+    # ===== 登录保护 =====
+    login-protection:
+      # 登录保护开关。
+      # （差异）application.yml 默认开启；生产暂时关闭。
+      # ⚠️ 重新启用前需完成以下验证：
+      #   1. 锁定/解锁流程在 Redis 跨实例一致性；
+      #   2. 短信验证码与登录保护的配合逻辑；
+      #   3. 被锁用户的解锁通知和客服处理流程。
+      enabled: false
+      # 单 IP 最大登录尝试次数（统计窗口内）。
+      ip-max-attempts: 20
+      # 单用户名最大登录尝试次数（统计窗口内）：5 次即锁定。
+      # 低于 IP 级别，更严格：针对暴力破解特定账号。
+      username-max-attempts: 5
+      # 锁定持续时间（秒）：5 分钟内禁止登录。
+      lock-duration: 300
+      # 统计窗口大小（秒）：10 分钟内的尝试累计。
+      window-size: 600
+
+    # ===== 输入校验 =====
+    input-validation:
+      # 输入校验总开关：生产必须开启。
+      enabled: true
+
+    # ===== 安全响应头 =====
+    security-headers:
+      # 安全响应头总开关：生产必须开启，为所有 HTTP 响应附加安全头。
+      enabled: true
+
+  # ----------------------------------------------------------
+  # 16.4 新旧推荐算法双轨（生产默认保持旧算法）
+  # ----------------------------------------------------------
+
+  cache:
+    # 一级本地缓存（Caffeine）：进程内、低延迟、无网络开销。
+    local:
+      # 最大缓存条目数：超出后按 LRU 策略驱逐。
+      max-size: 10000
+      # 写入后过期时间（秒）：写入后 5 分钟未更新即过期。
+      # 平衡数据新鲜度和缓存命中率。
+      expire-after-write: 300
+      # 内部哈希表初始容量：预分配 500 个桶，减少扩容停顿。
+      initial-capacity: 500
+
+    # 二级远程缓存（Redis）：跨实例共享、持久化、故障恢复。
+    remote:
+      # 默认 TTL（秒）：每条 Redis 缓存的兜底过期时间。
+      # 1 小时防止僵尸数据长期占用内存。
+      default-ttl: 3600
+      # 批量操作最大条目数：mget/mset/Pipeline 每批 100 条。
+      # 超过后分批次执行，控制 Redis 单次命令延迟在可接受范围。
+      batch-size: 100
+
+# ============================================================
+# 17. Sentinel 旧版/自定义配置
+# ============================================================
+# 注意：此 sentinel.* 为旧版自定义命名空间，供代码中手动读取 Sentinel 地址。
+# 与 spring.cloud.sentinel.* 框架配置并存，两者指向同一 Dashboard 实例。
+sentinel:
+  # Sentinel 控制台主机。
+  host: ${SENTINEL_HOST:124.174.25.161}
+  # Sentinel 控制台端口。
+  port: ${SENTINEL_PORT:8859}
+
+# ============================================================
+# 18. P6Spy SQL 日志代理配置
+# ============================================================
+p6spy:
+  # 日志输出器：使用 SLF4J，与项目日志框架统一。
+  # （差异）application.yml 未配置 P6Spy；生产开启用于 SQL 诊断。
+  appender: com.p6spy.engine.spy.appender.Slf4JLogger
+  # 日志格式：SingleLineFormat 单行输出完整 SQL（含参数替换后的实际值）。
+  # 避免与 Druid SQL 日志重复记录。
+  log-message-format: com.p6spy.engine.spy.appender.SingleLineFormat
+
+# ============================================================
+# 19. 远程 API 调用配置
+# ============================================================
+remote:
+  api:
+    # ---------- 默认超时与重试 ----------
+    # 未为具体服务配置时使用的连接超时（毫秒）。

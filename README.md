@@ -1,0 +1,254 @@
+# Apex Scaffold - 企业级后端开发脚手架
+
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Java](https://img.shields.io/badge/java-17+-orange.svg)](https://www.oracle.com/java/)
+[![Spring Boot](https://img.shields.io/badge/spring--boot-3.5-brightgreen.svg)](https://spring.io/projects/spring-boot)
+
+## 📖 简介
+
+Apex Scaffold 是一个面向中小型企业的**轻量级企业级后端脚手架**,基于 Spring Boot 3 + WebFlux 响应式架构,提供开箱即用的基础设施组件,帮助团队快速启动新项目,减少重复开发成本。
+
+### ✨ 核心特性
+
+- 🏗️ **DDD分层架构** - 清晰的五层架构设计,符合企业级开发规范
+- 🔐 **安全认证** - JWT + Spring Security + RBAC权限控制
+- 💾 **多级缓存** - Redisson + Caffeine 二级缓存策略
+- ⚡ **高可用保障** - Sentinel限流熔断 + Resilience4j容错
+- 📨 **消息队列** - RocketMQ封装,支持异步解耦
+- 📊 **监控告警** - Prometheus + Grafana + Zipkin链路追踪
+- 📝 **API文档** - SpringDoc OpenAPI + Knife4j可视化文档
+- 🐳 **容器化部署** - Docker Compose一键启动完整环境
+- 🌍 **国际化支持** - 内置i18n框架,支持多语言切换
+
+### 🎯 适用场景
+
+- ✅ 企业内部管理系统(CRM/ERP/OA等)
+- ✅ SaaS平台后端服务
+- ✅ 微服务架构中的独立服务
+- ✅ 需要快速验证的MVP项目
+- ❌ 不适合:超大型分布式系统、实时交易系统、IoT设备接入
+
+## 🚀 快速开始
+
+### 前置要求
+
+- JDK 17+
+- Maven 3.8+
+- Docker & Docker Compose (可选,用于容器化部署)
+
+### 方式一:本地开发
+
+```bash
+# 1. 克隆项目
+git clone https://github.com/your-org/apex-scaffold.git
+cd apex-scaffold
+
+# 2. 编译项目
+mvn clean package -DskipTests
+
+# 3. 启动应用
+mvn spring-boot:run -pl apex-interfaces
+
+# 4. 访问 API 文档
+# Swagger UI: http://localhost:8080/swagger-ui.html
+# Knife4j: http://localhost:8080/doc.html
+```
+
+### 方式二:Docker一键部署
+
+```bash
+# 启动所有服务(应用 + MySQL + Redis)
+docker-compose up -d
+
+# 查看日志
+docker-compose logs -f apex-scaffold
+
+# 停止服务
+docker-compose down
+```
+
+### 方式三:使用示例模块(⭐推荐)
+
+我们提供了完整的示例模块(`apex-example`),展示如何使用脚手架的核心功能。**这是新用户学习的最佳起点:**
+
+```bash
+# 查看示例代码
+cd apex-example/src/main/java/com/apex/example
+
+# 运行示例
+mvn spring-boot:run -pl apex-example
+
+# 访问API文档
+open http://localhost:8080/doc.html
+```
+
+**重要提示**: 
+- ✅ **推荐使用**: `apex-example` 模块是纯净的示例,展示了从零开始使用脚手架的标准方式
+- ⚠️ **谨慎参考**: `apex-domain` 和 `apex-infrastructure` 中包含大量特定业务实现(ELO评分、兴趣图谱等),仅供展示DDD架构完整性,**不应在您的项目中直接使用**
+- 📖 详细说明请查看: [apex-domain说明](apex-domain/README.md) | [apex-infrastructure说明](apex-infrastructure/README.md)
+
+## 📦 项目结构
+
+```
+apex-scaffold/
+├── apex-common/              # 公共模块(工具类、异常、统一响应)
+├── apex-Domain/              # 领域层(聚合根、仓储接口、领域服务)
+├── apex-Application/         # 应用层(用例编排、DTO转换)
+├── apex-Infrastructure/      # 基础设施层(技术实现、第三方集成)
+├── apex-Interfaces/          # 接口层(HTTP端点、安全配置)
+├── apex-Example/             # 示例模块(展示如何使用脚手架)
+├── docs/                     # 文档目录
+│   ├── QUICK_START.md        # 快速开始指南
+│   ├── ARCHITECTURE.md       # 架构设计说明
+│   ├── CONFIGURATION.md      # 配置项详解
+│   └── BEST_PRACTICES.md     # 最佳实践
+├── scripts/                  # 脚本工具
+├── config/                   # 配置文件模板
+├── docker-compose.yml        # Docker编排文件
+├── Dockerfile                # Docker镜像构建文件
+├── pom.xml                   # Maven父POM
+├── LICENSE                   # MIT许可证
+└── README.md                 # 项目说明文档
+```
+
+## 🛠️ 核心功能清单
+
+| 功能模块 | 说明 | 可配置开关 |
+|---------|------|-----------|
+| JWT认证 | 基于Token的身份验证 | ✅ |
+| RBAC权限 | 角色-based访问控制 | ✅ |
+| 多级缓存 | Redis + Caffeine二级缓存 | ✅ |
+| 限流熔断 | Sentinel + Resilience4j | ✅ |
+| 消息队列 | RocketMQ生产者/消费者封装 | ✅ |
+| 文件存储 | Local/MinIO/S3抽象 | ✅ |
+| 链路追踪 | Micrometer + Zipkin | ✅ |
+| 操作日志 | AOP切面记录用户操作 | ✅ |
+| 监控告警 | Prometheus指标暴露 | ✅ |
+| API文档 | OpenAPI 3.0自动生成 | ✅ |
+| 国际化 | MessageSource多语言支持 | ✅ |
+| 全局异常 | 统一异常处理与响应格式 | ✅ |
+
+## 📚 文档
+
+- [快速开始指南](docs/QUICK_START.md) - 5分钟上手教程
+- [架构设计说明](docs/ARCHITECTURE.md) - DDD分层架构详解
+- [配置项详解](docs/CONFIGURATION.md) - 所有配置项说明
+- [最佳实践](docs/BEST_PRACTICES.md) - 常见问题与解决方案
+- [API参考](http://localhost:8080/doc.html) - 在线API文档(Knife4j)
+
+## 🔧 配置说明
+
+主要配置文件位于 `apex-interfaces/src/main/resources/application.yml`:
+
+```yaml
+# JWT配置
+jwt:
+  secret: ${JWT_SECRET:your-secret-key-change-in-production}
+  expiration: 7200000  # 2小时(毫秒)
+
+# 数据库配置
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/apex_db?useSSL=false&serverTimezone=Asia/Shanghai
+    username: root
+    password: ${DB_PASSWORD:root123}
+
+# Redis配置
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+# 缓存配置
+cache:
+  caffeine:
+    max-size: 1000
+    expire-after-write: 300s  # 5分钟
+```
+
+更多配置项请参考 [配置项详解](docs/CONFIGURATION.md)。
+
+## 🧪 测试
+
+```bash
+# 运行单元测试
+mvn test
+
+# 生成覆盖率报告
+mvn jacoco:report
+
+# 查看报告
+open target/site/jacoco/index.html
+```
+
+## 🤝 贡献
+
+欢迎提交 Issue 和 Pull Request!
+
+1. Fork 本仓库
+2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 开启 Pull Request
+
+## 💰 商业版本
+
+Apex Scaffold 提供三个版本,满足不同规模企业的需求:
+
+| 版本 | 价格 | 适用场景 | 技术支持 |
+|------|------|---------|---------|
+| **基础版** | 免费开源 | 个人项目、小型应用 | 社区支持 |
+| **标准版** | ¥9,999/年 | 中型企业、创业公司 | 邮件支持 (5工作日响应) |
+| **企业版** | ¥49,999/年 | 大型企业、高并发系统 | 专属客服 (2小时响应) |
+
+### 版本对比
+
+详细功能对比请查看 [商业版本说明](docs/COMMERCIAL_VERSIONS.md)
+
+#### 基础版 (Basic)
+- ✅ MIT License 完全开源
+- ✅ JWT认证、统一响应、参数校验
+- ✅ WebFlux函数式编程、MyBatis-Plus
+- ❌ RBAC权限、缓存、消息队列、监控
+
+#### 标准版 (Standard)
+- ✅ 包含基础版全部功能
+- ✅ RBAC权限管理、Redis缓存
+- ✅ Prometheus监控、微信SDK集成
+- ✅ 对象存储、邮件短信服务
+- ✅ Excel导入导出
+
+#### 企业版 (Enterprise)
+- ✅ 包含标准版全部功能
+- ✅ RocketMQ消息队列、Zipkin链路追踪
+- ✅ Sentinel限流熔断、Resilience4j容错
+- ✅ 分布式锁、多数据源、读写分离
+- ✅ Flyway数据库迁移、K8s部署脚本
+- ✅ 专属技术顾问、源码级调试支持
+
+### 购买方式
+
+- 🌐 官网: https://apex-scaffold.example.com/pricing
+- 📧 邮箱: sales@apex-scaffold.example.com
+- 📞 电话: 400-XXX-XXXX
+- 🎁 试用: 标准版30天免费试用,企业版14天POC验证
+
+## 📄 许可证
+
+本项目基础版基于 [MIT License](LICENSE) 开源。标准版和企业版为商业授权,禁止二次分发。
+
+详细条款请查看 [LICENSE](LICENSE) 文件。
+
+## 🙏 致谢
+
+感谢以下开源项目的支持:
+
+- [Spring Boot](https://spring.io/projects/spring-boot)
+- [MyBatis-Plus](https://baomidou.com/)
+- [Redisson](https://redisson.org/)
+- [RocketMQ](https://rocketmq.apache.org/)
+- [Sentinel](https://sentinelguard.io/)
+
+---
+
+**Made with ❤️ by Apex Team**

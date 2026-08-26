@@ -1,0 +1,57 @@
+# ============================================================
+# 开发性能基准覆盖配置
+#
+# 使用方式：
+#   --spring.profiles.active=dev,performance
+#
+# performance 必须位于 dev 之后，使本文件只覆盖诊断开销相关配置，
+# 其余数据库、Redis、Nacos、RocketMQ 与对象存储连接仍继承 dev。
+# 环境变量和 Nacos 的更高优先级配置仍可能覆盖本文件，压测报告需记录有效值。
+# 维护作者：Apex Team
+# ============================================================
+
+spring:
+  datasource:
+    dynamic:
+      # 性能基准关闭 SQL 代理，避免 SQL 字符串格式化和日志 I/O 污染结果。
+      p6spy: false
+
+trace:
+  # 基准模式默认不采样；需要观测少量 Trace 时通过环境变量显式设置固定比例。
+  sampling-rate: ${TRACE_SAMPLING_RATE:0.0}
+  # 慢请求阈值（毫秒），超过该值的 Span 在日志中以 WARN 级别记录详情。
+  slow-threshold-ms: ${TRACE_SLOW_THRESHOLD_MS:3000}
+
+apex:
+  vote-candidate-index:
+    # 基准模式保持分桶刷新后自动构建候选世代，与默认行为一致。
+    candidate-build-enabled: ${APEX_VOTE_CANDIDATE_BUILD_ENABLED:true}
+    # 正式候选读开关；压测聚焦 Redis 派生索引链路时保持开启。
+    candidate-read-enabled: ${APEX_VOTE_CANDIDATE_READ_ENABLED:true}
+    # Shadow 仅记录差异、不改写 MySQL 正式结果，压测期间保持开启以观测一致性。
+    candidate-shadow-enabled: ${APEX_VOTE_CANDIDATE_SHADOW_ENABLED:true}
+    # 性能 profile 可显式比较 DB 基线与 Redis 派生索引路径。
+    recent-exposure-enabled: ${APEX_VOTE_CANDIDATE_RECENT_EXPOSURE_ENABLED:false}
+
+logging:
+  level:
+    # 基准模式保留业务 INFO，关闭高频框架 DEBUG。
+    root: INFO
+    com.apex: INFO
+    com.apex.application: INFO
+    com.apex.domain: INFO
+    com.apex.infrastructure: INFO
+    com.apex.interfaces: INFO
+    org.springframework.web: WARN
+    org.springframework.web.reactive: WARN
+    org.springframework.http.codec: WARN
+    org.springframework.security: WARN
+    org.springframework.security.web: WARN
+    reactor.netty: WARN
+    reactor.netty.http.server: WARN
+    reactor.netty.http.client: WARN
+    com.baomidou.mybatisplus: WARN
+    com.baomidou.dynamic.datasource: INFO
+    org.redisson: WARN
+    org.redisson.client: WARN
+    com.alibaba.nacos: INFO

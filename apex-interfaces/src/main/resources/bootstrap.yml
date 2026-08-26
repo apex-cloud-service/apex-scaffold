@@ -1,0 +1,59 @@
+# ============================================================
+# Apex.Mar - Bootstrap 配置文件
+#
+# 【作用】
+#   本文件在 Spring Boot 启动早期（环境准备阶段）加载，
+#   用于配置外部配置中心 Nacos 的访问信息（地址、命名空间、分组等）。
+#   Nacos 配置中心必须在 application.yml 装配之前建立连接，
+#   才能把远端托管的配置（如 apex-service-{profile}.yml）拉取合并。
+#
+# 【加载顺序】
+#   bootstrap.yml -> Nacos 远端配置 -> application.yml -> application-{profile}.yml
+#
+# 【优先级说明】
+#   环境变量 > Nacos 远端配置 > 本文件默认值；
+#   所有 server-addr / namespace 均支持环境变量覆盖。
+#
+# 【安全提示】
+#   生产环境应使用内网 Nacos 地址并经 NACOS_SERVER_ADDR 注入，
+#   避免在仓库配置中固化公网地址。
+#
+# @author Apex Team
+# ============================================================
+
+spring:
+  application:
+    # 应用名称，作为配置中心的配置标识和服务发现的服务名
+    name: apex-service
+  profiles:
+    # 默认激活的配置文件（dev/test/prod）
+    active: dev
+  cloud:
+    nacos:
+      # ==================== Nacos 配置中心 ====================
+      config:
+        # Nacos 服务器地址（支持环境变量覆盖）
+        server-addr: ${NACOS_SERVER_ADDR:124.174.25.161:8848}
+        # Nacos 命名空间（用于环境隔离）
+        namespace: ${NACOS_NAMESPACE:dev}
+        # 配置分组
+        group: DEFAULT_GROUP
+        # 配置文件扩展名
+        file-extension: yml
+        # 是否启用配置自动刷新
+        refresh-enabled: true
+        # 是否启用配置中心
+        enabled: true
+
+      # ==================== Nacos 服务发现 ====================
+      discovery:
+        # Nacos 服务器地址（与配置中心一致）
+        server-addr: ${NACOS_SERVER_ADDR:124.174.25.161:8848}
+        # Nacos 命名空间（与配置中心一致）
+        namespace: ${NACOS_NAMESPACE:dev}
+        # 服务分组
+        group: DEFAULT_GROUP
+        # 是否启用服务发现
+        enabled: true
+        # 是否注册到服务发现
+        register-enabled: true

@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <title>Apex Scaffold 管理控制台</title>
+  <link rel="stylesheet" href="/admin/styles.css">
+  <script type="module" src="/admin/app.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">跳到主要内容</a>
+
+  <section id="login-view" class="login-view" aria-labelledby="login-title">
+    <div class="login-brand" aria-hidden="true">
+      <span class="brand-mark">B</span>
+      <span>APEX ADMIN</span>
+    </div>
+    <div class="login-grid">
+      <div class="login-intro">
+        <p class="eyebrow">INTERNAL</p>
+        <h1 id="login-title">后台工作台</h1>
+        <p class="intro-copy">审核、用户与权限管理。</p>
+      </div>
+
+      <form id="login-form" class="login-card" novalidate>
+        <div>
+          <p class="step-label">身份验证</p>
+          <h2>审核人员登录</h2>
+        </div>
+        <label class="field">
+          <span>手机号码</span>
+          <input id="login-phone" name="phone" type="tel" inputmode="numeric" autocomplete="tel"
+                 maxlength="11" placeholder="请输入 11 位手机号" required>
+        </label>
+        <label class="field">
+          <span>短信验证码</span>
+          <span class="code-field">
+            <input id="login-code" name="code" type="text" inputmode="numeric" autocomplete="one-time-code"
+                   maxlength="6" placeholder="6 位验证码" required>
+            <button id="send-code" class="text-button" type="button">获取验证码</button>
+          </span>
+        </label>
+        <p id="login-error" class="form-error" role="alert" hidden></p>
+        <button id="login-submit" class="primary-button full" type="submit">
+          <span>进入控制台</span><span aria-hidden="true">→</span>
+        </button>
+        <p class="login-footnote">内部系统 · 操作留痕</p>
+      </form>
+    </div>
+  </section>
+
+  <div id="app-shell" class="app-shell" hidden>
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <span class="brand-mark compact">B</span>
+        <div><strong>APEX</strong><small>ADMIN CONTROL</small></div>
+      </div>
+      <nav class="main-nav" aria-label="后台导航">
+        <button class="nav-item active" data-view="dashboard" type="button">
+          <span class="nav-index">01</span><span>总览</span>
+        </button>
+        <button class="nav-item" data-view="photos" data-capability="photo" type="button">
+          <span class="nav-index">02</span><span>照片审核</span><span id="photo-nav-count" class="nav-count">—</span>
+        </button>
+        <button class="nav-item" data-view="interests" data-capability="interest" type="button">
+          <span class="nav-index">03</span><span>标签审核</span><span id="interest-nav-count" class="nav-count">—</span>
+        </button>
+        <button class="nav-item" data-view="users" data-capability="users" type="button" hidden>
+          <span class="nav-index">04</span><span>用户管理</span>
+        </button>
+        <button class="nav-item" data-view="risks" data-capability="risks" type="button" hidden>
+          <span class="nav-index">05</span><span>高风险用户</span>
+        </button>
+        <button class="nav-item" data-view="policies" data-capability="policies" type="button" hidden>
+          <span class="nav-index">05</span><span>审核配置</span>
+        </button>
+        <button class="nav-item" data-view="catalog" data-capability="catalog" type="button" hidden>
+          <span class="nav-index">06</span><span>图谱治理</span>
+        </button>
+        <button class="nav-item" data-view="appeals" data-capability="appeals" type="button" hidden>
+          <span class="nav-index">07</span><span>复核申诉</span>
+        </button>
+        <button class="nav-item" data-view="security" type="button">
+          <span class="nav-index">08</span><span>我的权限</span>
+        </button>
+      </nav>
+      <div class="sidebar-footer">
+        <span class="status-indicator"></span>
+        <div><strong>安全连接</strong><small id="session-label">会话已验证</small></div>
+      </div>
+    </aside>
+
+    <div class="workspace">
+      <header class="topbar">
+        <button id="mobile-menu" class="icon-button mobile-only" type="button" aria-label="打开导航">☰</button>
+        <div>
+          <p id="view-kicker" class="eyebrow">OPERATIONS OVERVIEW</p>
+          <h1 id="view-title">审核工作台</h1>
+        </div>
+        <div class="operator-block">
+          <div class="operator-copy"><strong id="operator-name">审核人员</strong><small id="operator-role">已验证</small></div>
+          <span id="operator-avatar" class="avatar" aria-hidden="true">审</span>
+          <button id="logout-button" class="icon-button" type="button" title="退出登录" aria-label="退出登录">↗</button>
+        </div>
+      </header>
+
+      <main id="main-content" tabindex="-1">
+        <section id="view-dashboard" class="view-panel active" aria-labelledby="dashboard-heading">
+          <div class="hero-band">
+            <div>
+              <p class="eyebrow light">TODAY</p>
+              <h2 id="dashboard-heading">待办</h2>
+            </div>
+            <div class="hero-time"><span id="current-date">—</span><strong id="current-time">—</strong></div>
+          </div>
+          <div class="metric-grid">
+            <article class="metric-card accent-photo">
+              <div class="metric-head"><span>待审照片</span><span class="metric-symbol">P</span></div>
+              <strong id="metric-photo-pending">—</strong>
+              <button class="link-button" data-go="photos" type="button">进入照片队列 →</button>
+            </article>
+            <article class="metric-card accent-interest">
+              <div class="metric-head"><span>待审标签</span><span class="metric-symbol">T</span></div>
+              <strong id="metric-interest-pending">—</strong>
+              <button class="link-button" data-go="interests" type="button">进入标签队列 →</button>
+            </article>
+            <article class="metric-card">
+              <div class="metric-head"><span>我的进行中</span><span class="metric-symbol">M</span></div>
+              <strong id="metric-mine">—</strong>
+              <button class="link-button" data-action="refresh-dashboard" type="button">刷新数据 ↻</button>
+            </article>
+          </div>
+          <div class="dashboard-lower">
+            <article class="identity-card">
+              <h3>我的权限</h3>
+              <div id="dashboard-roles" class="chip-list"></div>
+              <p id="access-summary" class="muted">正在校验权限…</p>
+            </article>
+          </div>
+        </section>
+
+        <section id="view-photos" class="view-panel" aria-labelledby="photos-heading">
+          <div class="section-heading">
+            <div><p class="eyebrow">PHOTO MODERATION</p><h2 id="photos-heading">照片审核队列</h2></div>
+            <button class="secondary-button" data-refresh="photos" type="button">刷新队列</button>
+          </div>
+          <div class="filter-bar">
+            <label><span>任务状态</span><select id="photo-status">
+              <option value="WAITING_REVIEW">等待审核</option><option value="IN_REVIEW">审核中</option>
+              <option value="APPROVED">已通过</option><option value="REJECTED">已拒绝</option><option value="">全部</option>
+            </select></label>
+            <label class="toggle-label"><input id="photo-mine" type="checkbox"><span>只看我的任务</span></label>
+            <span id="photo-total" class="result-total">—</span>
+          </div>
+          <div class="review-layout">
+            <div id="photo-list" class="task-list" aria-live="polite"></div>
+            <aside id="photo-detail" class="detail-panel" aria-label="照片审核详情">
+              <div class="empty-detail"><span>02 / PHOTO</span><p>从左侧选择一项任务查看安全预览与机器审核信息。</p></div>
+            </aside>
+          </div>
+        </section>
+
+        <section id="view-interests" class="view-panel" aria-labelledby="interests-heading">
+          <div class="section-heading">
+            <div><p class="eyebrow">INTEREST GOVERNANCE</p><h2 id="interests-heading">新增标签审核</h2></div>
+            <button class="secondary-button" data-refresh="interests" type="button">刷新队列</button>
+          </div>
+          <div class="filter-bar">
+            <label><span>任务状态</span><select id="interest-status">
+              <option value="">全部状态</option><option value="OPEN">待进入审核</option>
+              <option value="PENDING_REVIEW">等待审核</option><option value="REVIEWING">审核中</option>
+              <option value="APPROVED">已通过</option><option value="REJECTED">已拒绝</option>
+            </select></label>
+            <label class="toggle-label"><input id="interest-mine" type="checkbox"><span>只看我的任务</span></label>
+            <span id="interest-total" class="result-total">—</span>
+          </div>
+          <div class="review-layout">
+            <div id="interest-list" class="task-list" aria-live="polite"></div>
+            <aside id="interest-detail" class="detail-panel" aria-label="兴趣标签审核详情">
+              <div class="empty-detail"><span>03 / TAG</span><p>从左侧选择一项申请查看证据、信号与建议标签。</p></div>
+            </aside>
+          </div>
+        </section>
+
+        <section id="view-users" class="view-panel" aria-labelledby="users-heading">
+          <div class="section-heading">
+            <div><p class="eyebrow">SUPER ADMIN</p><h2 id="users-heading">用户管理</h2></div>
+            <div class="detail-actions"><button id="user-create" class="primary-button" type="button">加入用户</button>
+              <button class="secondary-button" data-refresh="users" type="button">刷新</button></div>
+          </div>
+          <div class="filter-bar user-filters">
+            <label class="search-field"><span>搜索</span><input id="user-keyword" type="search" maxlength="80" placeholder="手机号、昵称、用户 ID 或照片 ID"></label>
+            <label><span>状态</span><select id="user-status"><option value="">全部</option><option value="1">正常</option><option value="0">禁用</option></select></label>
+            <button id="user-search" class="primary-button" type="button">查询</button>
+            <span id="user-total" class="result-total">—</span>
+          </div>
+          <div class="review-layout user-layout">
+            <div id="user-list" class="task-list user-list" aria-live="polite"></div>
+            <aside id="user-detail" class="detail-panel" aria-label="用户详情">
+              <div class="empty-detail"><span>USER</span><p>选择用户查看资料与生活照。</p></div>
+            </aside>
+          </div>
+        </section>
+
+        <section id="view-risks" class="view-panel" aria-labelledby="risks-heading">
+          <div class="section-heading">
+            <div><p class="eyebrow">PHOTO RISK</p><h2 id="risks-heading">高风险用户管理</h2></div>
+            <button class="secondary-button" data-refresh="risks" type="button">刷新</button>
+          </div>
+          <div class="filter-bar user-filters">
+            <label class="search-field"><span>搜索</span><input id="risk-keyword" type="search" maxlength="80" placeholder="手机号、昵称或用户 ID"></label>
+            <label><span>状态</span><select id="risk-status"><option value="">全部</option><option value="1">正常</option><option value="0">已封禁</option></select></label>
+            <button id="risk-search" class="primary-button" type="button">查询</button>
+            <span id="risk-total" class="result-total">—</span>
+          </div>
+          <div id="risk-list" class="policy-list" aria-live="polite"></div>
+        </section>
+
+        <section id="view-policies" class="view-panel" aria-labelledby="policies-heading">
+          <div class="section-heading">
+            <div><p class="eyebrow">REVIEW POLICY</p><h2 id="policies-heading">审核配置</h2></div>
+            <button class="secondary-button" data-refresh="policies" type="button">刷新</button>
+          </div>
+          <div class="filter-bar">
+            <label><span>审核类型</span><select id="policy-type"><option value="PHOTO">照片</option><option value="INTEREST">兴趣标签</option></select></label>
+            <span class="result-total">配置修改立即用于新裁决</span>
+          </div>
+          <div id="policy-list" class="policy-list" aria-live="polite"></div>
+        </section>
+
+        <section id="view-catalog" class="view-panel" aria-labelledby="catalog-heading">
+          <div class="section-heading"><div><p class="eyebrow">INTEREST CATALOG</p><h2 id="catalog-heading">图谱治理</h2></div></div>
+          <div class="catalog-actions">
+            <article class="security-card"><h3>准备目录草稿</h3>
+              <label class="field"><span>运行 ID</span><input id="catalog-run-id" inputmode="numeric" placeholder="正整数"></label>
+              <button id="catalog-prepare" class="primary-button" type="button">准备草稿</button>
+            </article>
+            <article class="security-card"><h3>就绪检查</h3>
+              <label class="field"><span>图谱版本</span><input id="catalog-version" inputmode="numeric" placeholder="正整数"></label>
+              <button id="catalog-readiness" class="secondary-button" type="button">检查</button>
+            </article>
+          </div>
+          <pre id="catalog-result" class="catalog-result" aria-live="polite">等待操作</pre>
+        </section>
+
+        <section id="view-appeals" class="view-panel" aria-labelledby="appeals-heading">
+          <div class="section-heading"><div><p class="eyebrow">SECOND REVIEW</p><h2 id="appeals-heading">复核申诉</h2></div>
+            <button class="secondary-button" data-refresh="appeals" type="button">刷新</button></div>
+          <div class="filter-bar"><label><span>状态</span><select id="appeal-status"><option value="OPEN">待处理</option><option value="RESOLVED">已接受</option><option value="REJECTED">已驳回</option></select></label></div>
+          <div id="appeal-list" class="policy-list" aria-live="polite"></div>
+        </section>
+
+        <section id="view-security" class="view-panel" aria-labelledby="security-heading">
+          <div class="section-heading">
+            <div><p class="eyebrow">ACCESS CONTROL</p><h2 id="security-heading">权限与安全</h2></div>
+          </div>
+          <div class="security-grid">
+            <article class="security-card"><span class="security-number">01</span><h3>当前角色</h3><div id="security-roles" class="chip-list"></div></article>
+            <article class="security-card"><span class="security-number">02</span><h3>已授予权限</h3><div id="security-permissions" class="permission-list"></div></article>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <dialog id="decision-dialog" class="decision-dialog">
+    <form id="decision-form" method="dialog">
+      <div class="dialog-head"><div><p class="eyebrow">CONFIRM DECISION</p><h2 id="decision-title">提交审核结论</h2></div>
+        <button class="icon-button" value="cancel" aria-label="关闭">×</button></div>
+      <p id="decision-context" class="dialog-context"></p>
+      <fieldset class="decision-options">
+        <legend>审核结论</legend>
+        <label><input type="radio" name="decision" value="APPROVE" checked><span><strong>通过</strong><small>确认内容符合规则</small></span></label>
+        <label><input type="radio" name="decision" value="REJECT"><span><strong>拒绝</strong><small>退回并记录原因</small></span></label>
+      </fieldset>
+      <label id="reason-field" class="field" hidden><span>拒绝原因</span><select id="decision-reason"></select></label>
+      <label class="field"><span id="comment-label">审核备注（可选）</span><textarea id="decision-comment" rows="4" maxlength="500" placeholder="记录判断依据，便于后续审计与复核"></textarea></label>
+      <p id="decision-error" class="form-error" role="alert" hidden></p>
+      <div class="dialog-actions"><button class="secondary-button" value="cancel">取消</button><button id="confirm-decision" class="primary-button" value="default">确认提交</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="user-form-dialog" class="decision-dialog user-form-dialog">
+    <form id="user-form">
+      <div class="dialog-head"><div><p class="eyebrow">USER PROFILE</p><h2 id="user-form-title">加入用户</h2></div>
+        <button class="icon-button" id="user-form-close" type="button" aria-label="关闭">×</button></div>
+      <div class="user-form-grid">
+        <label class="field"><span>手机号 *</span><input name="phone" inputmode="numeric" maxlength="11" required></label>
+        <label class="field"><span>昵称 *</span><input name="nickname" maxlength="50" required></label>
+        <label class="field"><span>性别 *</span><select name="gender" required><option value="1">男</option><option value="2">女</option></select></label>
+        <label class="field"><span>生日 *</span><input name="birthday" type="date" required></label>
+        <label class="field"><span>国家/地区</span><input name="country" maxlength="100"></label>
+        <label class="field"><span>省份</span><input name="province" maxlength="100"></label>
+        <label class="field"><span>城市</span><input name="city" maxlength="100"></label>
+        <label class="field"><span>交友目的</span><input name="datingGoal" maxlength="64"></label>
+        <label class="field"><span>MBTI</span><input name="mbti" maxlength="4" placeholder="例如 INTJ"></label>
+        <label class="field"><span>身高(cm)</span><input name="heightCm" type="number" min="100" max="250"></label>
+        <label class="field"><span>学校</span><input name="school" maxlength="100"></label>
+        <label class="field"><span>学历</span><select name="educationLevel"><option value="">未填写</option><option value="HIGH_SCHOOL">高中及以下</option><option value="ASSOCIATE">大专</option><option value="BACHELOR">本科</option><option value="MASTER">硕士</option><option value="DOCTOR">博士</option><option value="OTHER">其他</option></select></label>
+        <label class="field"><span>职业</span><input name="job" maxlength="100"></label>
+        <label class="field user-form-wide"><span>个人简介</span><textarea name="bio" rows="3" maxlength="500"></textarea></label>
+      </div>
+      <p id="user-form-error" class="form-error" role="alert" hidden></p>
+      <div class="dialog-actions"><button id="user-form-cancel" class="secondary-button" type="button">取消</button><button id="user-form-submit" class="primary-button" type="submit">保存</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="risk-action-dialog" class="decision-dialog">
+    <form id="risk-action-form">
+      <div class="dialog-head"><div><p class="eyebrow">SECURITY ACTION</p><h2 id="risk-action-title">处置高风险用户</h2></div>
+        <button id="risk-action-close" class="icon-button" type="button" aria-label="关闭">×</button></div>
+      <p id="risk-action-context" class="dialog-context"></p>
+      <label class="field"><span>处置原因</span><textarea id="risk-action-reason" maxlength="500" rows="4" required placeholder="请填写可审计的具体原因"></textarea></label>
+      <label class="toggle-label"><input id="risk-phone-allowed" type="checkbox" checked><span>允许该手机号再次注册</span></label>
+      <label class="toggle-label"><input id="risk-wechat-allowed" type="checkbox" checked><span>允许该微信号再次注册</span></label>
+      <p class="muted">取消勾选后，仅保存带服务端密钥的身份摘要，不复制手机号或微信号明文。</p>
+      <p id="risk-action-error" class="form-error" role="alert" hidden></p>
+      <div class="dialog-actions"><button id="risk-action-cancel" class="secondary-button" type="button">取消</button>
+        <button id="risk-action-submit" class="reject-button" type="submit">确认处置</button></div>
+    </form>
+  </dialog>
+
+  <div id="toast-region" class="toast-region" aria-live="polite" aria-atomic="true"></div>
+</body>
+</html>

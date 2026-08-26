@@ -1,0 +1,18 @@
+package com.apex.scaffold.infrastructure.persistence.mapper;
+
+import com.apex.scaffold.infrastructure.persistence.po.CreditTxPO;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Mapper;
+
+/**
+ * 积分交易记录 MyBatis Mapper 接口。
+ *
+ * <p>负责 {@code biz_credit_tx} 表的持久化操作，记录用户算力积分的出入账流水。
+ * 继承 MyBatis-Plus {@link BaseMapper} 获得通用单表 CRUD 操作。</p>
+ *
+ * @author Apex Team
+ * @version 1.0.0
+ * @since 1.0.0
+ */
+@Mapper
+public interface CreditTxMapper extends BaseMapper<CreditTxPO> {}

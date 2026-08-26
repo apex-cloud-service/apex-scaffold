@@ -1,0 +1,44 @@
+server:
+  port: 0  # 使用随机端口
+
+spring:
+  application:
+    name: apex-example-test
+  
+  # H2内存数据库(用于测试)
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=MySQL
+    username: sa
+    password: 
+    driver-class-name: org.h2.Driver
+    
+  # JPA配置
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+
+# MyBatis-Plus配置
+mybatis-plus:
+  mapper-locations: classpath*:mapper/**/*.xml
+  type-aliases-package: com.apex.example.model
+  global-config:
+    db-config:
+      id-type: ASSIGN_ID
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+  configuration:
+    map-underscore-to-camel-case: true
+
+# JWT配置(测试用弱密钥)
+jwt:
+  secret: test-secret-key-for-integration-testing-only-min-32-chars!!!
+  expiration: 7200000
+
+# 日志配置
+logging:
+  level:
+    root: WARN
+    com.apex: DEBUG
+    org.springframework.test: INFO

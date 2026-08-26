@@ -1,0 +1,77 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: apex-example
+  
+  # 数据源配置
+  datasource:
+    url: jdbc:mysql://localhost:3306/apex_example?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root
+    password: ${DB_PASSWORD:root123}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    
+    # Druid连接池
+    druid:
+      initial-size: 5
+      min-idle: 5
+      max-active: 20
+  
+  # Redis配置
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      database: 1
+  
+  # Flyway数据库迁移配置
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    validate-on-migrate: true
+    clean-disabled: true
+    out-of-order: false
+
+# MyBatis-Plus配置
+mybatis-plus:
+  mapper-locations: classpath*:mapper/**/*.xml
+  type-aliases-package: com.apex.example.model
+  global-config:
+    db-config:
+      id-type: ASSIGN_ID
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+
+# 商业License验证(默认关闭)
+# ------------------------------------------------------------------
+# 开启后,标注了 @FeatureGate 的接口将按License授权校验(如 /api/example/reports/premium)。
+# 启用步骤:
+#   1. 使用 com.apex.scaffold.common.license.LicenseGenerator 生成密钥对与 license.json
+#      (将 enabledFeatures 配置为 ["premium_report"],private.key 必须保密,不可提交到仓库)
+#   2. 将 license.json 放入 classpath 根目录(src/main/resources/)
+#   3. 将公钥保存到服务器路径,配置 public-key-file
+#   4. 设置 enabled: true 并重启应用
+apex:
+  license:
+    enabled: false
+    file-path: classpath:license.json
+    public-key-file: /etc/apex/public.key
+
+# JWT配置
+jwt:
+  secret: ${JWT_SECRET:example-secret-key-for-testing-only-min-32-chars}
+  expiration: 7200000
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.apex: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"

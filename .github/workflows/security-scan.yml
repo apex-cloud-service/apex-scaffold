@@ -1,0 +1,99 @@
+name: Security Scan
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # 每周日凌晨2点执行定期扫描
+    - cron: '0 2 * * 0'
+
+env:
+  JAVA_VERSION: '17'
+
+jobs:
+  owasp-dependency-check:
+    name: OWASP Dependency Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: maven
+      
+      - name: Cache Maven packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+      
+      - name: Run OWASP Dependency Check
+        uses: dependency-check/Dependency-Check_Action@main
+        id: dependency-check
+        with:
+          project: 'apex-scaffold'
+          path: '.'
+          format: 'HTML'
+          args: >
+            --failOnCVSS 7
+            --enableRetired
+      
+      - name: Upload HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: owasp-dependency-report
+          path: reports/dependency-check-report.html
+      
+      - name: Upload JSON report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: owasp-dependency-json
+          path: reports/dependency-check-report.json
+      
+      - name: Comment PR with results
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const reportPath = 'reports/dependency-check-report.json';
+            
+            if (fs.existsSync(reportPath)) {
+              const report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
+              const vulnerabilities = report.dependencies?.flatMap(d => d.vulnerabilities || []) || [];
+              
+              const criticalCount = vulnerabilities.filter(v => v.cvssV3?.baseScore >= 9.0).length;
+              const highCount = vulnerabilities.filter(v => v.cvssV3?.baseScore >= 7.0 && v.cvssV3?.baseScore < 9.0).length;
+              const mediumCount = vulnerabilities.filter(v => v.cvssV3?.baseScore >= 4.0 && v.cvssV3?.baseScore < 7.0).length;
+              
+              let comment = '## 🔒 OWASP Dependency Check Results\n\n';
+              comment += `| Severity | Count |\n|----------|-------|\n`;
+              comment += `| 🔴 Critical (≥9.0) | ${criticalCount} |\n`;
+              comment += `| 🟠 High (7.0-8.9) | ${highCount} |\n`;
+              comment += `| 🟡 Medium (4.0-6.9) | ${mediumCount} |\n\n`;
+              
+              if (criticalCount > 0 || highCount > 0) {
+                comment += '⚠️ **发现高危漏洞,请审查详细报告!**\n\n';
+                comment += '下载完整报告: [HTML](artifact://owasp-dependency-report) | [JSON](artifact://owasp-dependency-json)';
+              } else {
+                comment += '✅ **未发现高危漏洞**';
+              }
+              
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: comment
+              });
+            }

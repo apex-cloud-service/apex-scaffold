@@ -1,0 +1,229 @@
+package com.apex.scaffold.interfaces.handler;
+
+import com.apex.scaffold.application.dto.admin.AdminUserCreateRequest;
+import com.apex.scaffold.application.dto.admin.AdminUserRolesRequest;
+import com.apex.scaffold.application.dto.admin.AdminUserStatusRequest;
+import com.apex.scaffold.application.dto.admin.AdminUserUpdateRequest;
+import com.apex.scaffold.application.service.AdminUserManagementService;
+import com.apex.scaffold.common.annotation.OperationLog;
+import com.apex.scaffold.common.annotation.RequirePermission;
+import com.apex.scaffold.common.exception.BusinessException;
+import com.apex.scaffold.common.result.Result;
+import com.apex.scaffold.common.result.ResultCode;
+import com.apex.scaffold.common.util.TraceIdUtil;
+import com.apex.scaffold.interfaces.util.MessageUtils;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Validator;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.server.ServerRequest;
+import org.springframework.web.reactive.function.server.ServerResponse;
+import reactor.core.publisher.Mono;
+
+/**
+ * 超级管理员专用的用户查询及后台角色配置端点。
+ *
+ * <p>覆盖用户创建、检索、详情、资料编辑、会话撤销、状态启停与后台角色配置；
+ * 除会话撤销外均要求 {@code staff:manage} 权限。</p>
+ *
+ * @author Apex Team
+ * @version 1.0.0
+ * @since 1.0.0
+ */
+@Component
+@Tag(name = "后台-用户管理", description = "超级管理员用户查询和后台角色配置")
+public class AdminUserManagementHandler extends BaseHandler {
+
+    private final AdminUserManagementService service;
+
+    /**
+     * 创建后台用户管理处理器。
+     *
+     * @param service 后台用户管理应用服务
+     * @param messageUtils 国际化消息工具
+     * @param validator Jakarta Bean Validation 校验器
+     */
+    public AdminUserManagementHandler(
+            AdminUserManagementService service, MessageUtils messageUtils, Validator validator) {
+        super(messageUtils, validator);
+        this.service = service;
+    }
+
+    /**
+     * 后台创建用户。
+     *
+     * <p>请求体必填并经 Jakarta Bean Validation 校验；创建操作人身份取自当前登录上下文。</p>
+     *
+     * @param request HTTP 请求
+     * @return 带 traceId 的统一成功响应，data 为创建结果
+     * @throws BusinessException 当请求体为空时，错误码为 {@code PARAM_ERROR}
+     */
+    @RequirePermission("staff:manage")
+    @Operation(operationId = "adminCreateUser", summary = "后台创建用户")
+    @OperationLog(module = "用户管理", type = OperationLog.OperationType.INSERT, description = "后台创建用户")
+    public Mono<ServerResponse> create(ServerRequest request) {
+        return request.bodyToMono(AdminUserCreateRequest.class)
+                .switchIfEmpty(Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "请求体不能为空")))
+                .flatMap(this::validateAndThrow)
+                .flatMap(body -> currentOpenId(request).flatMap(openId -> service.create(openId, body)))
+                .flatMap(this::ok);
+    }
+
+    /**
+     * 分页检索用户。
+     *
+     * @param request HTTP 请求；{@code page} 缺省 1，{@code size} 缺省 30，
+     *                {@code keyword} 与 {@code status} 可缺省
+     * @return 带 traceId 的统一成功响应，data 为用户分页结果
+     */
+    @RequirePermission("staff:manage")
+    @Operation(operationId = "adminListUsers", summary = "分页检索用户")
+    public Mono<ServerResponse> list(ServerRequest request) {
+        int page = safeParseInt(request.queryParam("page").orElse(null), 1);
+        int size = safeParseInt(request.queryParam("size").orElse(null), 30);
+        Integer status = request.queryParam("status")
+                .filter(value -> !value.isBlank())
+                .map(value -> safeParseInt(value, -1))
+                .orElse(null);
+        return currentOpenId(request)
+                .flatMap(openId ->
+                        service.search(openId, request.queryParam("keyword").orElse(null), status, page, size))
+                .flatMap(this::ok);
+    }
+
+    /**
+     * 查看用户资料。
+     *
+     * @param request HTTP 请求，路径参数 {@code userId} 必须为正整数
+     * @return 带 traceId 的统一成功响应，data 为用户资料详情
+     * @throws BusinessException 当 {@code userId} 非法时，错误码为 {@code PARAM_ERROR}
+     */
+    @RequirePermission("staff:manage")
+    @Operation(operationId = "adminGetUser", summary = "查看用户资料")
+    @OperationLog(module = "用户管理", type = OperationLog.OperationType.SELECT, description = "查看用户详情")
+    public Mono<ServerResponse> detail(ServerRequest request) {
+        return currentOpenId(request)
+                .flatMap(openId -> service.detail(openId, userId(request)))
+                .flatMap(this::ok);
+    }
+
+    /**
+     * 编辑用户资料。
+     *
+     * <p>请求体必填并经 Jakarta Bean Validation 校验后透传给应用服务。</p>
+     *
+     * @param request HTTP 请求，路径参数 {@code userId} 必须为正整数
+     * @return 带 traceId 的统一成功响应，data 为更新结果
+     * @throws BusinessException 当 {@code userId} 非法或请求体为空时，错误码为 {@code PARAM_ERROR}
+     */
+    @RequirePermission("staff:manage")
+    @Operation(operationId = "adminUpdateUser", summary = "编辑用户资料")
+    @OperationLog(module = "用户管理", type = OperationLog.OperationType.UPDATE, description = "编辑用户资料")
+    public Mono<ServerResponse> update(ServerRequest request) {
+        Long targetId = userId(request);
+        return request.bodyToMono(AdminUserUpdateRequest.class)
+                .switchIfEmpty(Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "请求体不能为空")))
+                .flatMap(this::validateAndThrow)
+                .flatMap(body -> currentOpenId(request).flatMap(openId -> service.update(openId, targetId, body)))
+                .flatMap(this::ok);
+    }
+
+    /**
+     * 查询当前操作人可配置的后台角色。
+     *
+     * @param request HTTP 请求
+     * @return 带 traceId 的统一成功响应，data 为可配置角色列表
+     */
+    @RequirePermission("staff:manage")
+    @Operation(operationId = "adminListStaffRoles", summary = "查询可配置的后台角色")
+    public Mono<ServerResponse> roles(ServerRequest request) {
+        return currentOpenId(request).flatMap(service::manageableRoles).flatMap(this::ok);
+    }
+
+    /**
+     * 替换用户的全部后台角色。
+     *
+     * <p>请求体必填并携带角色 ID 列表，经校验后整体替换（而非增量追加），
+     * 目标用户 ID 取自路径参数。</p>
+     *
+     * @param request HTTP 请求，路径参数 {@code userId} 必须为正整数
+     * @return 带 traceId 的统一成功响应，data 为替换结果
+     * @throws BusinessException 当 {@code userId} 非法或请求体为空时，错误码为 {@code PARAM_ERROR}
+     */
+    @RequirePermission("staff:manage")
+    @Operation(operationId = "adminReplaceUserRoles", summary = "替换用户后台角色")
+    @OperationLog(module = "用户管理", type = OperationLog.OperationType.UPDATE, description = "配置用户后台角色")
+    public Mono<ServerResponse> replaceRoles(ServerRequest request) {
+        Long userId = userId(request);
+        return request.bodyToMono(AdminUserRolesRequest.class)
+                .switchIfEmpty(Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "请求体不能为空")))
+                .flatMap(this::validateAndThrow)
+                .flatMap(body ->
+                        currentOpenId(request).flatMap(openId -> service.replaceRoles(openId, userId, body.roleIds())))
+                .flatMap(this::ok);
+    }
+
+    /**
+     * 强制撤销目标用户的全部会话。
+     *
+     * @param request HTTP 请求，路径参数 {@code userId} 必须为正整数
+     * @return 带 traceId 的统一成功响应，data 为 {@code {"revokedTokens": 撤销数}}
+     * @throws BusinessException 当 {@code userId} 非法时，错误码为 {@code PARAM_ERROR}
+     */
+    @RequirePermission("staff:session:revoke")
+    @Operation(operationId = "adminRevokeUserSessions", summary = "强制撤销用户全部会话")
+    @OperationLog(module = "用户管理", type = OperationLog.OperationType.UPDATE, description = "强制用户下线")
+    public Mono<ServerResponse> revokeSessions(ServerRequest request) {
+        return currentOpenId(request)
+                .flatMap(openId -> service.revokeSessions(openId, userId(request)))
+                .flatMap(deleted -> ok(java.util.Map.of("revokedTokens", deleted)));
+    }
+
+    /**
+     * 启用或停用目标用户。
+     *
+     * <p>请求体必填并经校验；目标用户 ID 取自路径参数。</p>
+     *
+     * @param request HTTP 请求，路径参数 {@code userId} 必须为正整数
+     * @return 带 traceId 的统一成功响应，data 为状态更新结果
+     * @throws BusinessException 当 {@code userId} 非法或请求体为空时，错误码为 {@code PARAM_ERROR}
+     */
+    @RequirePermission("staff:manage")
+    @Operation(operationId = "adminUpdateUserStatus", summary = "启用或停用用户")
+    @OperationLog(module = "用户管理", type = OperationLog.OperationType.UPDATE, description = "更新用户状态")
+    public Mono<ServerResponse> updateStatus(ServerRequest request) {
+        Long targetId = userId(request);
+        return request.bodyToMono(AdminUserStatusRequest.class)
+                .switchIfEmpty(Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "请求体不能为空")))
+                .flatMap(this::validateAndThrow)
+                .flatMap(body -> currentOpenId(request)
+                        .flatMap(openId -> service.updateStatus(openId, targetId, body.enabled())))
+                .flatMap(this::ok);
+    }
+
+    /**
+     * 解析并校验路径参数 {@code userId}。
+     *
+     * @param request HTTP 请求
+     * @return 大于 0 的用户 ID
+     * @throws BusinessException 当参数缺失、非数字或不大于 0 时，错误码为 {@code PARAM_ERROR}
+     */
+    private Long userId(ServerRequest request) {
+        Long userId = safeParseLong(request.pathVariable("userId"));
+        if (userId == null || userId <= 0) throw new BusinessException(ResultCode.PARAM_ERROR, "userId格式错误");
+        return userId;
+    }
+
+    /**
+     * 构造统一 JSON 成功响应。
+     *
+     * @param data 业务数据，可为 {@code null}
+     * @return 携带当前 traceId 的 200 JSON 响应
+     */
+    private <T> Mono<ServerResponse> ok(T data) {
+        return ServerResponse.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(Result.success(data, TraceIdUtil.getTraceId()));
+    }
+}

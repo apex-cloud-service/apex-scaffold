@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ =============================================================================
+  ~ Apex.Mar - 测试环境 Logback 日志配置文件
+  ~ =============================================================================
+  ~
+  ~ 适用场景：单元测试（maven-surefire-plugin）、集成测试（maven-failsafe-plugin）、
+  ~          压力测试（-P stress-tests）、以及 IDE 中直接运行的测试用例。
+  ~
+  ~ 与 logback-spring.xml 的关键区别：
+  ~   1. 不依赖 Spring Profile — 测试环境使用独立的 logback-test.xml
+  ~   2. 日志输出到 ${apex.log.dir}/test/apex-test.log（默认 logs/test/）
+  ~   3. 控制台格式精简 — 仅保留 traceId MDC 上下文，跳过 requestId/userId
+  ~   4. 默认只输出 INFO 级别，避免 Spring Boot 启动日志淹没测试结果
+  ~   5. 每次测试覆盖上一次的日志文件（append=false），防止无限膨胀
+  ~
+  ~ 日志级别控制（通过 Maven -D 参数或 IDE VM Options）：
+  ~   -Dtest.log.level=DEBUG    根日志级别（默认 INFO）
+  ~   -Dtest.log.apex=DEBUG     业务代码 com.apex 包日志级别（默认 INFO）
+  ~   -Dtest.log.sql=DEBUG      SQL 日志级别（默认 OFF，设为 DEBUG 启用）
+  ~   -Dtest.log.spring=DEBUG   Spring 测试框架日志级别（默认 INFO）
+  ~
+  ~ 日志目录控制：
+  ~   -Dapex.log.dir=/path/to/logs  日志根目录（默认 ${user.dir}/logs，即项目根目录）
+  ~
+  ~ 日志文件位置：
+  ~   ${apex.log.dir}/test/apex-test.log  — 全量测试日志（每次覆盖）
+  ~
+  ~ @author Apex Team
+  ~ @since 1.0.0
+  ~ =============================================================================
+-->
+<configuration>
+
+  <!--
+    =================================================================
+    日志目录属性
+    =================================================================
+    - apex.log.dir: 可通过系统属性覆盖，默认 ${user.dir}/logs
+    - 测试日志写入 logs/test/ 子目录，与应用日志（logs/）分离
+  -->
+  <property name="TEST_LOG_HOME" value="${apex.log.dir:-${user.dir}/logs}/test"/>
+
+  <!--
+    =================================================================
+    控制台 Appender — 测试执行时的实时输出
+    =================================================================
+
+    格式说明：
+      %d{HH:mm:ss.SSS}  — 时间（只显示时分秒毫秒，不显示日期）
+      [%thread]         — 线程名（main / ForkJoinPool / reactor-http 等）
+      [%X{traceId}]     — 链路追踪 TraceId（N/A 表示非追踪上下文）
+      %-5level          — 日志级别（左对齐 5 字符宽度）
+      %logger{36}       — Logger 名称（最多 36 字符，从右截断）
+      %msg%n            — 日志消息 + 换行
+
+    说明：测试日志不含日期前缀，因为 surefire 报告已按时间戳组织；
+         不含 requestId / userId，因为单元测试通常不经过完整过滤器链。
+  -->
+  <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <charset>UTF-8</charset>
+      <pattern>%d{HH:mm:ss.SSS} [%thread] [%X{traceId:-N/A}] %-5level %logger{36} - %msg%n</pattern>
+    </encoder>
+  </appender>
+
+  <!--
+    =================================================================
+    文件 Appender — 持久化测试日志，便于 CI 归档和失败用例排查
+    =================================================================
+
+    特性：
+      - 每次测试运行覆盖上一次的文件（append=false），避免日志无限增长
+      - 完整时间戳格式（含日期）便于 CI 按时间检索
+      - 包含 requestId 占位符，集成测试时 Trace 上下文会填充实际值
+      - 不含异常堆栈符号（%wEx 需额外依赖，测试环境略过）
+
+    输出文件：${apex.log.dir}/test/apex-test.log（默认 logs/test/apex-test.log）
+  -->
+  <appender name="TEST_FILE" class="ch.qos.logback.core.FileAppender">
+    <file>${TEST_LOG_HOME}/apex-test.log</file>
+    <append>false</append>
+    <encoder>
+      <charset>UTF-8</charset>
+      <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [%X{traceId:-N/A}] [%X{requestId:-N/A}] %-5level %logger{80} - %msg%n</pattern>
+    </encoder>
+  </appender>
+
+  <!--
+    =================================================================
+    根 Logger
+    =================================================================
+
+    level: 通过 -Dtest.log.level=DEBUG 可提升根级别查看框架内部日志
+           默认 INFO，抑制 Spring/MyBatis/Netty 等框架的启动日志噪音
+
+    输出目标：
+      - CONSOLE: 实时查看测试执行进度
+      - TEST_FILE: 持久化到文件（CI 归档、失败用例排查）
+  -->
+  <root level="${test.log.level:-INFO}">
+    <appender-ref ref="CONSOLE"/>
+    <appender-ref ref="TEST_FILE"/>
+  </root>
+
+  <!--
+    =================================================================
+    业务代码 — com.apex 及其子包
+    =================================================================
+
+    说明：这是开发人员最关心的日志范围。
+    - 默认 INFO：查看关键业务流程（Service/Controller/Repository 等）
+    - DEBUG 模式：-Dtest.log.apex=DEBUG 查看详细调用链和参数值
+  -->
+  <logger name="com.apex" level="${test.log.apex:-INFO}"/>
+
+  <!--
+    =================================================================
+    Spring 测试框架日志
+    =================================================================
+
+    说明：Spring TestContext 框架的日志（ApplicationContext 加载、
+    Bean 注入、Mock 配置等）。默认 INFO，需要诊断测试框架问题时设为 DEBUG。
+  -->
+  <logger name="org.springframework.test" level="${test.log.spring:-INFO}"/>
+  <logger name="org.springframework.boot.test" level="${test.log.spring:-INFO}"/>
+  <logger name="org.junit" level="INFO"/>
+  <logger name="org.testcontainers" level="INFO"/>
+
+  <!--
+    =================================================================
+    框架噪音抑制
+    =================================================================
+
+    说明：以下 Logger 在默认模式下设为 WARN，避免 Spring/MyBatis/HikariCP/
+    Netty 等框架的启动/关闭日志淹没测试结果。仅在调试框架自身问题时临时提升。
+  -->
+  <logger name="org.springframework.context.support" level="WARN"/>
+  <logger name="org.springframework.beans" level="WARN"/>
+  <logger name="org.springframework.core.env" level="WARN"/>
+  <logger name="org.springframework.boot.context" level="WARN"/>
+  <logger name="com.baomidou.mybatisplus" level="WARN"/>
+  <logger name="com.zaxxer.hikari" level="WARN"/>
+  <logger name="io.netty" level="WARN"/>
+
+  <!--
+    =================================================================
+    SQL 日志（可选开启）
+    =================================================================
+
+    说明：默认 OFF，不输出 SQL。需要排查数据问题时通过 -Dtest.log.sql=DEBUG 开启。
+    - com.apex.infrastructure.persistence: 应用层持久化日志（Repository/Impl）
+    - org.mybatis: MyBatis SQL 执行日志（含参数绑定和结果映射）
+
+    警告：SQL 日志量大，仅排障时临时开启，勿在 CI 常驻。
+  -->
+  <logger name="com.apex.infrastructure.persistence" level="${test.log.sql:-OFF}"/>
+  <logger name="org.mybatis" level="${test.log.sql:-OFF}"/>
+
+</configuration>

@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ========================================================================================================================
+  RocketMQ Client 日志配置（rmq.logback.xml）
+  ========================================================================================================================
+
+  【用途】
+    RocketMQ 客户端（rocketmq-client 5.x，含 remoting/acl）使用自带的 shaded logback
+    （org.apache.rocketmq.logging.*，来自 io.github.aliyunmq:rocketmq-logback-classic）输出日志，
+    不经过应用的 SLF4J/Logback 链路。客户端默认加载 jar 内 rmq.client.logback.xml，
+    将日志写入 ${user.home}/logs/rocketmqlogs/rocketmq_client.log，与应用日志目录割裂。
+
+    本文件置于应用 classpath 后，客户端的 DefaultJoranConfiguratorExt 会优先加载本文件
+    （其搜索顺序为 rmq.logback-test.xml → rmq.logback.xml → ... → rmq.client.logback.xml），
+    将客户端内部日志（连接、路由、发送、消费、偏移量、心跳、重平衡等）统一收敛到
+    ${apex.log.dir:-${user.dir}/logs}/rocketmq/rocketmq.log。
+
+  【与 logback-spring.xml 的分工】
+    - logs/rocketmq/rocketmq.log        RocketMQ 客户端内部日志（本文件控制）
+    - logs/rocketmq/rocketmq-spring.log org.apache.rocketmq.spring 启动器日志
+                                        （logback-spring.xml 的 ROCKETMQ_FILE appender）
+    两者由不同的日志框架写入不同文件，避免同一文件被两套滚动策略同时轮转造成竞争。
+
+  【可调项】（JVM 系统属性，优先级高于默认值）
+    -Drocketmq.log.root=/path/to/rocketmq   日志目录，默认 ${apex.log.dir:-${user.dir}/logs}/rocketmq
+    -Drocketmq.log.level=debug              日志级别，默认 info；排障时可调为 debug 观察发送/消费明细
+
+  @author Apex Team
+  ========================================================================================================================
+-->
+<configuration>
+  <!-- pid 转换器：在日志中输出进程 ID，便于多进程场景区分日志来源 -->
+  <conversionRule conversionWord="pid" converterClass="io.github.aliyunmq.logback.extensions.ProcessIdConverter"/>
+  <!-- RocketMQ 客户端日志根目录：优先 JVM 属性 -Drocketmq.log.root，其次 apex.log.dir，兜底 ${user.dir}/logs/rocketmq -->
+  <property name="ROCKETMQ_LOG_ROOT" value="${rocketmq.log.root:-${apex.log.dir:-${user.dir}/logs}/rocketmq}"/>
+  <!-- 客户端日志级别：默认 info，排障时可经 -Drocketmq.log.level=debug 观察发送/消费明细 -->
+  <property name="ROCKETMQ_LOG_LEVEL" value="${rocketmq.log.level:-info}"/>
+  <!-- 单个日志文件最大大小，超过后触发滚动切分 -->
+  <property name="MAX_FILE_SIZE" value="100MB"/>
+  <!-- 历史日志文件保留天数，超过后自动删除 -->
+  <property name="MAX_HISTORY" value="30"/>
+  <!-- 日志总大小上限，防止磁盘写满 -->
+  <property name="TOTAL_SIZE_CAP" value="1GB"/>
+
+  <!-- 客户端日志文件 Appender：按日期 + 大小双维度滚动，自动 gzip 压缩归档 -->
+  <appender name="ROCKETMQ_CLIENT_FILE" class="org.apache.rocketmq.logging.ch.qos.logback.core.rolling.RollingFileAppender">
+    <!-- 当前日志文件 -->
+    <file>${ROCKETMQ_LOG_ROOT}/rocketmq.log</file>
+    <!-- 追加写入，不覆盖历史内容 -->
+    <append>true</append>
+    <!-- 滚动策略：按日期分目录并限制单文件大小 -->
+    <rollingPolicy class="org.apache.rocketmq.logging.ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+      <!-- 归档文件命名：日期 + 序号 + gzip 压缩 -->
+      <fileNamePattern>${ROCKETMQ_LOG_ROOT}/rocketmq.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+      <maxFileSize>${MAX_FILE_SIZE}</maxFileSize>
+      <maxHistory>${MAX_HISTORY}</maxHistory>
+      <totalSizeCap>${TOTAL_SIZE_CAP}</totalSizeCap>
+    </rollingPolicy>
+    <!-- 日志编码器：UTF-8，含时间、级别、进程ID、线程、Logger 与代码位置 -->
+    <encoder class="org.apache.rocketmq.logging.ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+      <charset>UTF-8</charset>
+      <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%pid] [%thread] [%logger{40}#%M:%L] - %msg%n</pattern>
+    </encoder>
+  </appender>
+
+  <!-- Root Logger：所有未单独配置的 RocketMQ 客户端日志统一写入上述文件 -->
+  <root level="${ROCKETMQ_LOG_LEVEL}">
+    <appender-ref ref="ROCKETMQ_CLIENT_FILE"/>
+  </root>
+</configuration>

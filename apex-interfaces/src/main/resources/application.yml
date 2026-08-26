@@ -1,0 +1,83 @@
+server:
+  port: 8080
+  shutdown: graceful
+  http2:
+    enabled: true
+
+spring:
+  application:
+    name: apex-scaffold
+  profiles:
+    active: dev
+  main:
+    web-application-type: reactive
+  messages:
+    basename: i18n/messages
+  cache:
+    type: caffeine
+
+jwt:
+  secret: ${JWT_SECRET:change-me-in-production}
+  access-token-expire: 7200000
+  refresh-token-expire: 604800000
+
+logging:
+  level:
+    root: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+management:
+  server:
+    port: 8081
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10000
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+
+cors:
+  allow-all-origins: false
+  allowed-origins:
+    - http://localhost:3000
+
+apex:
+  blocking-io:
+    jdbc:
+      threads: 32
+    cache:
+      threads: 4
+    storage:
+      threads: 8
+  gateway:
+    enabled: true
+    request-id-header: X-Request-Id
+    slow-request-threshold: 3000
+  security:
+    guard:
+      enabled: true
+    ip-rate-limit:
+      enabled: true
+    input-validation:
+      enabled: true
+    security-headers:
+      enabled: true
+    anti-replay:
+      enabled: true

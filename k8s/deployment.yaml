@@ -1,0 +1,199 @@
+# Apex Scaffold Kubernetes 部署配置
+# 
+# 使用方法:
+# kubectl apply -f k8s/
+
+---
+# Namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: apex-scaffold
+  labels:
+    app: apex-scaffold
+
+---
+# ConfigMap - 应用配置
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: apex-config
+  namespace: apex-scaffold
+data:
+  application.yml: |
+    server:
+      port: 8080
+    
+    spring:
+      application:
+        name: apex-scaffold
+      
+      datasource:
+        url: jdbc:mysql://mysql-service:3306/apex_db?useSSL=false&serverTimezone=Asia/Shanghai
+        username: ${DB_USERNAME}
+        password: ${DB_PASSWORD}
+      
+      data:
+        redis:
+          host: redis-service
+          port: 6379
+    
+    jwt:
+      secret: ${JWT_SECRET}
+      expiration: 7200000
+
+---
+# Secret - 敏感信息
+apiVersion: v1
+kind: Secret
+metadata:
+  name: apex-secrets
+  namespace: apex-scaffold
+type: Opaque
+stringData:
+  DB_USERNAME: root
+  DB_PASSWORD: changeme123
+  JWT_SECRET: change-this-to-a-secure-random-string-min-32-chars!!!
+
+---
+# Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: apex-scaffold
+  namespace: apex-scaffold
+  labels:
+    app: apex-scaffold
+    version: v1.0.0
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: apex-scaffold
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: apex-scaffold
+        version: v1.0.0
+    spec:
+      containers:
+        - name: apex-scaffold
+          image: apexscaffold/apex-scaffold:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+              name: http
+              protocol: TCP
+          envFrom:
+            - secretRef:
+                name: apex-secrets
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "500m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 8080
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 3
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          volumeMounts:
+            - name: config-volume
+              mountPath: /app/config
+      volumes:
+        - name: config-volume
+          configMap:
+            name: apex-config
+      restartPolicy: Always
+
+---
+# Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: apex-scaffold-service
+  namespace: apex-scaffold
+  labels:
+    app: apex-scaffold
+spec:
+  type: ClusterIP
+  selector:
+    app: apex-scaffold
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
+      protocol: TCP
+
+---
+# Ingress (可选,需要安装Ingress Controller)
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: apex-scaffold-ingress
+  namespace: apex-scaffold
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  rules:
+    - host: apex-scaffold.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: apex-scaffold-service
+                port:
+                  number: 80
+  tls:
+    - hosts:
+        - apex-scaffold.example.com
+      secretName: apex-tls-secret
+
+---
+# Horizontal Pod Autoscaler
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: apex-scaffold-hpa
+  namespace: apex-scaffold
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: apex-scaffold
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80

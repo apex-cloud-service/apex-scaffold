@@ -1,0 +1,128 @@
+# 功能开关配置示例
+# 
+# 本文件展示了如何通过 YAML 配置灵活启用/禁用不同功能模块
+# 适用于不同商业化版本的功能差异化
+
+# ============================================
+# 基础功能（所有版本都启用）
+# ============================================
+features:
+  # JWT 认证
+  jwt-auth: true
+  
+  # 统一响应格式
+  unified-response: true
+  
+  # 参数校验
+  validation: true
+  
+  # API 文档（Swagger）
+  api-docs: true
+
+# ============================================
+# 标准版功能
+# ============================================
+standard-features:
+  # RBAC 权限管理
+  rbac: true
+  
+  # Redis 缓存
+  cache: true
+  
+  # 监控指标（Prometheus）
+  monitoring: true
+  
+  # 健康检查
+  health-check: true
+
+# ============================================
+# 企业版功能
+# ============================================
+enterprise-features:
+  # 消息队列（RocketMQ）
+  message-queue: true
+  
+  # 链路追踪（Zipkin）
+  tracing: true
+  
+  # 限流熔断（Sentinel + Resilience4j）
+  rate-limiting: true
+  
+  # 分布式锁（Redisson）
+  distributed-lock: true
+  
+  # 多数据源支持
+  multi-datasource: true
+  
+  # 数据库迁移工具（Flyway）
+  db-migration: true
+
+# ============================================
+# 可选功能（按需启用）
+# ============================================
+optional-features:
+  # 微信集成
+  wechat: false
+  
+  # 对象存储（MinIO / 火山云TOS）
+  object-storage: false
+  
+  # 邮件发送
+  email: false
+  
+  # 短信服务
+  sms: false
+  
+  # Excel 导入导出
+  excel: false
+  
+  # PDF 生成
+  pdf: false
+
+# ============================================
+# 性能优化配置
+# ============================================
+performance:
+  # 连接池大小
+  connection-pool-size: 20
+  
+  # 缓存过期时间（秒）
+  cache-ttl: 3600
+  
+  # 最大线程数
+  max-threads: 200
+  
+  # 请求超时时间（毫秒）
+  request-timeout: 5000
+
+# ============================================
+# 安全配置
+# ============================================
+security:
+  # CORS 跨域允许
+  cors-enabled: true
+  
+  # CSRF 防护
+  csrf-enabled: false
+  
+  # XSS 过滤
+  xss-filter: true
+  
+  # SQL 注入防护
+  sql-injection-protection: true
+
+# ============================================
+# 日志配置
+# ============================================
+logging:
+  # 日志级别
+  level: INFO
+  
+  # 是否输出到文件
+  file-enabled: true
+  
+  # 是否输出 JSON 格式（便于 ELK 收集）
+  json-format: false
+  
+  # 日志保留天数
+  retention-days: 30

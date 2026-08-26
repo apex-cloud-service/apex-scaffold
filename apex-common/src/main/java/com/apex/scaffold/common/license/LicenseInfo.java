@@ -1,0 +1,102 @@
+package com.apex.scaffold.common.license;
+
+import java.io.Serializable;
+import java.time.LocalDateTime;
+import lombok.Data;
+
+/**
+ * License授权信息
+ *
+ * <p>包含商业版本的授权详情,用于验证和限制功能使用。
+ *
+ * @author Apex Team
+ * @version 1.0.0
+ */
+@Data
+public class LicenseInfo implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
+    /**
+     * License ID(唯一标识)
+     */
+    private String licenseId;
+
+    /**
+     * 客户名称
+     */
+    private String customerName;
+
+    /**
+     * 客户邮箱
+     */
+    private String customerEmail;
+
+    /**
+     * 授权版本(BASIC/STANDARD/ENTERPRISE)
+     */
+    private LicenseVersion version;
+
+    /**
+     * 授权开始时间
+     */
+    private LocalDateTime validFrom;
+
+    /**
+     * 授权过期时间
+     */
+    private LocalDateTime validTo;
+
+    /**
+     * 最大用户数(-1表示无限制)
+     */
+    private Integer maxUsers;
+
+    /**
+     * 最大并发数(-1表示无限制)
+     */
+    private Integer maxConcurrent;
+
+    /**
+     * 启用的功能模块(JSON数组)
+     * <p>例如: ["audit_log", "api_version", "monitoring"]
+     */
+    private String enabledFeatures;
+
+    /**
+     * 签名(RSA-SHA256)
+     */
+    private String signature;
+
+    /**
+     * 公钥指纹(用于快速验证公钥匹配)
+     */
+    private String publicKeyFingerprint;
+
+    /**
+     * 是否永久有效
+     */
+    public boolean isPermanent() {
+        return validTo == null || validTo.isAfter(LocalDateTime.now().plusYears(100));
+    }
+
+    /**
+     * 是否已过期
+     */
+    public boolean isExpired() {
+        return validTo != null && LocalDateTime.now().isAfter(validTo);
+    }
+
+    /**
+     * 剩余天数
+     */
+    public long getRemainingDays() {
+        if (isPermanent()) {
+            return Long.MAX_VALUE;
+        }
+        if (isExpired()) {
+            return 0;
+        }
+        return java.time.Duration.between(LocalDateTime.now(), validTo).toDays();
+    }
+}

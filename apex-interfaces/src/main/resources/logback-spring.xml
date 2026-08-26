@@ -1,0 +1,947 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ========================================================================================================================
+  Apex.Service — Logback Spring Boot 日志配置
+  ========================================================================================================================
+
+  【文档说明】
+    本配置文件是 Apex.Service 微服务的核心日志配置，遵循 Spring Boot + Logback 的最佳实践。
+    配置文件支持按 Spring Profile 动态切换日志策略，确保开发、测试、生产环境的差异化需求。
+
+  【核心特性】
+    1. 日志级别外部化：所有关键日志级别通过环境变量/配置中心注入，避免硬编码
+    2. 多 Appender 分离：控制台、主日志、错误日志、请求日志、SQL日志、组件日志分文件存储
+    3. 组件日志隔离：Nacos、RocketMQ、Zipkin、Sentinel 等中间件日志独立存储
+    4. 集中式日志聚合：生产环境通过 Logstash TCP 输出到 ELK/OpenSearch
+    5. 链路追踪集成：全链路 traceId/requestId/userId 通过 MDC 贯穿所有日志
+    6. 滚动策略：基于时间 + 大小的双重滚动，自动压缩归档
+
+  【日志变量体系】
+    - traceId      链路追踪ID，由 Spring Cloud Sleuth/Micrometer Tracing 注入
+    - requestId    请求ID，由自定义过滤器生成，标识单个HTTP请求
+    - userId       用户ID，从认证上下文获取
+    - sqlType      SQL操作类型（SELECT/INSERT/UPDATE/DELETE），P6Spy 注入
+    - sqlDuration  SQL执行耗时（毫秒），P6Spy 注入
+
+  【Profile 策略说明】
+    - dev  开发环境：DEBUG级别，全量日志输出，SQL日志启用，彩色控制台
+    - test 测试环境：DEBUG级别，业务代码日志详细记录
+    - prod 生产环境：INFO/WARN级别，Logstash聚合，组件日志降级
+
+  【修改指南】
+    - 新增 Appender：在 <configuration> 顶层添加，然后在对应 <springProfile> 的 <logger> 中引用
+    - 调整日志级别：通过启动参数 -DLOG_LEVEL_XXX=DEBUG 或配置中心热更新
+    - 添加新组件日志：创建专用 File Appender + Logger，使用 additivity="false" 避免日志混入主日志
+
+  @author Apex Team
+  @version 2.0.0
+  @since 1.0.0
+  ========================================================================================================================
+-->
+
+<!--
+  【配置扫描】
+    scan="true"    启用配置文件热加载，修改 XML 后无需重启即可生效
+    scanPeriod     扫描间隔，默认60秒，此处设为30秒以加快响应
+    注意：频繁扫描会增加 CPU 开销，生产环境可适当调大
+-->
+<configuration scan="true" scanPeriod="30 seconds">
+
+  <!--
+    ================================================================================================================
+    第一部分：全局属性定义
+    ================================================================================================================
+
+    【最佳实践】
+      所有可配置参数集中在文件顶部定义，便于统一修改和外部化。
+      建议将这些属性迁移到 <springProperty> 或 application.yml，通过配置中心动态管理。
+  -->
+
+  <!-- 日志字符编码：统一 UTF-8，避免中文乱码 -->
+  <property name="ENCODING" value="UTF-8"/>
+
+    <!-- ===== 日志目录根路径 =======================================================
+         读取顺序:
+         1. apex.log.dir JVM 系统属性        (–Dapex.log.dir=...)
+         2. APEX_LOG_DIR 环境变量             (容器/systemd 部署时注入)
+         3. apex.log.dir Spring 配置属性     (application.yml / Nacos 配置中心)
+         4. 兜底: ${user.dir}/logs            (进程工作目录/logs)
+         ========================================================================= -->
+    <property name="DEFAULT_LOG_HOME" value="${apex.log.dir:-${APEX_LOG_DIR:-${user.dir}/logs}}"/>
+
+    <!-- Spring 属性: 优先从 application.yml / Nacos 读取 apex.log.dir，
+         未配置时回退到 DEFAULT_LOG_HOME -->
+    <springProperty scope="context" name="LOG_HOME" source="apex.log.dir" defaultValue="${DEFAULT_LOG_HOME:-${user.dir}/logs}"/>
+
+  <!-- 应用标识：用于日志文件名前缀，便于快速定位 -->
+  <property name="LOG_NAME" value="apex-service"/>
+
+  <!-- 单文件最大大小：超过后自动滚动切分 -->
+  <property name="MAX_FILE_SIZE" value="100MB"/>
+
+  <!-- 历史文件保留天数：超过后自动删除 -->
+  <property name="MAX_HISTORY" value="30"/>
+
+  <!-- 所有日志文件总大小上限：防止磁盘写满 -->
+  <property name="TOTAL_SIZE_CAP" value="1GB"/>
+
+  <!--
+    Logstash 目标地址（仅 prod 环境使用）
+    通过 Spring 配置注入，支持配置中心热更新
+    默认值：localhost:5044（开发环境占位，实际部署时覆盖）
+  -->
+  <springProperty scope="context" name="LOGSTASH_DESTINATION" source="logstash.destination" defaultValue="localhost:5044"/>
+
+  <!--
+    ================================================================================================================
+    第二部分：自定义 Conversion Rule（日志格式组件）
+    ================================================================================================================
+
+    Spring Boot 提供的日志格式增强组件，用于实现彩色输出和异常美化。
+    这些组件是 Spring Boot 的标准扩展，无需额外依赖。
+  -->
+
+  <!-- 颜色转换器：支持 %clr() 和 %highlight() 在控制台输出彩色日志 -->
+  <conversionRule conversionWord="clr" class="org.springframework.boot.logging.logback.ColorConverter"/>
+
+  <!-- 普通异常堆栈格式化：将异常信息追加到日志消息末尾 -->
+  <conversionRule conversionWord="wex" class="org.springframework.boot.logging.logback.WhitespaceThrowableProxyConverter"/>
+
+  <!-- 扩展异常堆栈格式化：包含更多上下文信息（Cause、Suppressed 等） -->
+  <conversionRule conversionWord="wEx" class="org.springframework.boot.logging.logback.ExtendedWhitespaceThrowableProxyConverter"/>
+
+  <!--
+    ================================================================================================================
+    第三部分：Appender 定义
+    ================================================================================================================
+
+    Appender 负责日志的实际输出目的地。本项目定义了以下类型的 Appender：
+
+    【控制台类】
+      - CONSOLE        主控制台输出（dev 带彩色，prod 无彩色）
+      - SQL_CONSOLE    SQL 专用控制台输出（仅 dev 环境）
+
+    【文件类 - 应用日志】
+      - FILE           全量日志文件（INFO 及以上）
+      - ERROR_FILE     错误日志专用文件（ERROR 及以上）
+      - REQUEST_FILE   HTTP 请求日志专用文件
+
+    【文件类 - 组件日志】
+      - NACOS_FILE     Nacos 客户端日志
+      - ROCKETMQ_FILE  RocketMQ Spring 启动器日志（客户端内部日志由 rmq.logback.xml 输出）
+      - ZIPKIN_FILE    Zipkin/Brave 链路追踪日志
+      - SENTINEL_FILE  Sentinel 熔断限流日志
+      - SQL_FILE       SQL 查询日志（仅 dev 环境）
+
+    【网络类】
+      - LOGSTASH       Logstash TCP 输出（仅 prod 环境）
+  -->
+
+  <!--
+    ================================================================================================================
+    3.1 控制台 Appender
+    ================================================================================================================
+  -->
+
+  <!--
+    CONSOLE (dev 环境)
+    开发环境专用：彩色输出，便于调试
+    包含完整上下文信息：时间、级别、线程、traceId、requestId、userId、Logger、文件位置
+  -->
+  <springProfile name="dev">
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+      <!-- 输出到标准输出，便于 Docker/K8s 收集 -->
+      <target>System.out</target>
+      <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+        <charset>${ENCODING}</charset>
+        <pattern>
+          %clr(%d{HH:mm:ss.SSS}){faint}
+          [%clr(%-5level)]
+          %clr([%thread]){cyan}
+          %clr([%X{traceId:-N/A}]){magenta}
+          %clr([%X{requestId:-N/A}]){blue}
+          %clr([%X{userId:-N/A}]){green}
+          %clr(%logger{45}){white}
+          %clr([%file:%line]){faint}
+          - %msg%n%wEx
+        </pattern>
+      </encoder>
+    </appender>
+
+    <!--
+      SQL_CONSOLE (dev 环境)
+      SQL 日志专用控制台输出
+      只输出时间、SQL类型、线程、traceId和消息内容，格式更简洁
+    -->
+    <appender name="SQL_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+      <target>System.out</target>
+      <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+        <charset>${ENCODING}</charset>
+        <pattern>%clr(%d{HH:mm:ss.SSS}){faint} [%clr(SQL){yellow}] %clr([%thread]){cyan} %clr([%X{traceId:-N/A}]){magenta} %clr(%msg){green}%n</pattern>
+      </encoder>
+    </appender>
+  </springProfile>
+
+  <!--
+    ================================================================================================================
+    4.2.1 集成测试 (it) Logger 配置
+    ================================================================================================================
+
+    适用 Profile：spring.profiles.active=it（maven-failsafe-plugin 自动激活）
+
+    设计目标：在集成测试中尽可能暴露问题，但不产生生产级日志量。
+
+    各 Logger 详解：
+    ┌─────────────────────┬──────────┬───────────────────────────────────────────────────┐
+    │ Logger              │ Level    │ 说明                                              │
+    ├─────────────────────┼──────────┼───────────────────────────────────────────────────┤
+    │ com.apex            │ DEBUG    │ 业务全量 DEBUG：用例执行路径、参数、返回值完整记录 │
+    │ org.springframework │ INFO     │ Spring 框架启动/关闭摘要，不含 Bean 扫描噪音       │
+    │ *.persistence       │ DEBUG    │ 应用层持久化操作日志（Repository/Impl）            │
+    │ org.mybatis         │ DEBUG    │ MyBatis SQL 日志：含参数绑定 INSERT/UPDATE/SELECT  │
+    │ com.baomidou.mybatis│ DEBUG    │ MyBatis-Plus 增强 SQL：分页、Lambda 条件构造      │
+    │ LoggingFilter       │ INFO     │ HTTP 请求摘要 → REQUEST_FILE + FILE，便于定位异常  │
+    │ zipkin2             │ DEBUG    │ Zipkin 上报层日志：Span 序列化、HTTP 发送、错误重试│
+    │ brave               │ DEBUG    │ Brave 框架日志：Span 创建/传播/采样决策/完成/清理  │
+    │ TraceLoggingSpan... │ INFO     │ 自定义 Span 摘要 → ZIPKIN_FILE（路径/耗时/状态）   │
+    │ nacos/rocketmq      │ WARN     │ 中间件客户端日志：仅记录连接异常和配置错误          │
+    └─────────────────────┴──────────┴───────────────────────────────────────────────────┘
+
+    文件输出路由：
+    - apex-service.log:          com.apex + Spring + SQL + 组件
+    - apex-service-error.log:    所有 ERROR 级别
+    - apex-service-request.log:  LoggingFilter 请求摘要
+    - zipkin/zipkin.log:         Brave/Zipkin 链路追踪
+    - nacos/nacos.log:           Nacos 客户端日志
+    - rocketmq/rocketmq*.log:    RocketMQ 客户端日志
+
+  -->
+  <springProfile name="it">
+    <!-- 业务代码：DEBUG 级别完整调用链 -->
+    <logger name="com.apex" level="${LOG_LEVEL_COM_APEX:-DEBUG}" additivity="false">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="FILE"/>
+      <appender-ref ref="ERROR_FILE"/>
+    </logger>
+
+    <!-- Spring Framework：INFO 级别 -->
+    <logger name="org.springframework" level="INFO" additivity="false">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="FILE"/>
+    </logger>
+
+    <!-- SQL 日志：集成测试默认开启 -->
+    <logger name="com.apex.infrastructure.persistence" level="DEBUG" additivity="false">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="FILE"/>
+    </logger>
+    <logger name="org.mybatis" level="DEBUG" additivity="false">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="FILE"/>
+    </logger>
+    <logger name="com.baomidou.mybatisplus" level="DEBUG" additivity="false">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="FILE"/>
+    </logger>
+
+    <!-- 请求日志：INFO 级别写入 REQUEST_FILE -->
+    <logger name="com.apex.interfaces.filter.LoggingFilter" level="INFO" additivity="false">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="REQUEST_FILE"/>
+      <appender-ref ref="FILE"/>
+    </logger>
+
+    <!-- 链路追踪：DEBUG 级别记录 span 创建/传播/上报全过程 -->
+    <logger name="zipkin2" level="DEBUG" additivity="false">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="ZIPKIN_FILE"/>
+    </logger>
+    <logger name="brave" level="DEBUG" additivity="false">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="ZIPKIN_FILE"/>
+    </logger>
+    <logger name="com.apex.interfaces.config.TraceLoggingSpanHandler" level="INFO" additivity="false">
+      <appender-ref ref="ZIPKIN_FILE"/>
+    </logger>
+
+    <!-- 组件日志：WARN 级别抑制噪音 -->
+    <logger name="com.alibaba.nacos" level="WARN" additivity="false">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="NACOS_FILE"/>
+    </logger>
+    <logger name="org.apache.rocketmq" level="WARN" additivity="false">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="ROCKETMQ_FILE"/>
+    </logger>
+    <logger name="org.redisson" level="WARN" additivity="false">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="FILE"/>
+    </logger>
+  </springProfile>
+
+  <!--
+    ================================================================================================================
+    4.2.2 压力测试 (performance) Logger 配置
+    ================================================================================================================
+
+    适用 Profile：spring.profiles.active=performance（-P stress-tests 自动激活）
+
+    核心原则：日志 I/O 是压测的主要干扰源之一，必须最小化。
+
+    各 Logger 详解：
+    ┌──────────────────────┬────────┬────────────────────────────────────────────────────┐
+    │ Logger               │ Level  │ 说明                                               │
+    ├──────────────────────┼────────┼────────────────────────────────────────────────────┤
+    │ com.apex             │ ERROR  │ 仅记录业务异常（NPE、SQL 错误、外部调用失败等）     │
+    │ org.springframework  │ ERROR  │ 仅记录致命错误（Context 加载失败等）                 │
+    │ LoggingFilter        │ OFF    │ 关闭请求日志：高频请求日志会拖累 TPS 30%-50%         │
+    │ zipkin2              │ OFF    │ 关闭 Zipkin 上报层日志                              │
+    │ brave                │ OFF    │ 关闭 Brave 框架日志                                 │
+    │ TraceLoggingSpan...  │ OFF    │ 关闭 Span 摘要日志                                  │
+    │ *.persistence        │ OFF    │ 关闭 SQL 日志：DB 查询数量巨大，日志可翻倍 I/O        │
+    │ org.mybatis          │ OFF    │ 关闭 MyBatis 框架日志                               │
+    │ com.baomidou.mybatis │ OFF    │ 关闭 MyBatis-Plus 框架日志                          │
+    │ nacos/rocketmq/redis │ OFF    │ 关闭中间件日志                                      │
+    │ reactor.netty        │ OFF    │ 关闭 Netty 事件循环日志（压测时线程极多）            │
+    └──────────────────────┴────────┴────────────────────────────────────────────────────┘
+
+    补充说明：
+    - application-performance.yml 中 trace.sampling-rate=0.0 已关闭 Span 采样，
+      此处进一步关闭日志输出，双保险。
+    - 所有 Logger 均设置 additivity="false"，防止日志向 Root Logger 重复输出。
+    - 压测失败时建议先看 apex-service-error.log，逐级提升需要的 Logger 级别复现。
+
+  -->
+  <springProfile name="performance">
+    <!-- 业务代码：仅 ERROR -->
+    <logger name="com.apex" level="ERROR" additivity="false">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="ERROR_FILE"/>
+    </logger>
+
+    <!-- Spring Framework：ERROR 级别 -->
+    <logger name="org.springframework" level="ERROR" additivity="false">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="ERROR_FILE"/>
+    </logger>
+
+    <!-- 请求日志：关闭（高频请求日志会严重拖累压测 TPS） -->
+    <logger name="com.apex.interfaces.filter.LoggingFilter" level="OFF" additivity="false"/>
+
+    <!-- 链路追踪：关闭（压测时 <trace.sampling-rate>0.0</trace.sampling-rate> 已关闭采样） -->
+    <logger name="zipkin2" level="OFF" additivity="false"/>
+    <logger name="brave" level="OFF" additivity="false"/>
+    <logger name="com.apex.interfaces.config.TraceLoggingSpanHandler" level="OFF" additivity="false"/>
+
+    <!-- SQL 日志：关闭 -->
+    <logger name="com.apex.infrastructure.persistence" level="OFF" additivity="false"/>
+    <logger name="org.mybatis" level="OFF" additivity="false"/>
+    <logger name="com.baomidou.mybatisplus" level="OFF" additivity="false"/>
+
+    <!-- 组件日志：关闭 -->
+    <logger name="com.alibaba.nacos" level="OFF" additivity="false"/>
+    <logger name="org.apache.rocketmq" level="OFF" additivity="false"/>
+    <logger name="org.redisson" level="OFF" additivity="false"/>
+    <logger name="reactor.netty" level="OFF" additivity="false"/>
+  </springProfile>
+
+  <!--
+    CONSOLE (test/prod 环境)
+    非开发环境：无彩色输出，统一格式
+    生产环境建议日志输出到 stdout/stderr，由容器运行时收集
+  -->
+  <springProfile name="!dev">
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+      <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+        <charset>${ENCODING}</charset>
+        <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] [%X{traceId:-N/A}] [%X{requestId:-N/A}] [%X{userId:-N/A}] %logger{60} [%file:%line] - %msg%n</pattern>
+      </encoder>
+    </appender>
+  </springProfile>
+
+  <!--
+    ================================================================================================================
+    3.2 应用日志文件 Appender
+    ================================================================================================================
+  -->
+
+  <!--
+    FILE - 全量应用日志
+    记录所有 INFO 及以上级别的日志
+    使用 SizeAndTimeBasedRollingPolicy：按日期+大小双维度滚动
+    文件命名：apex-service.2025-01-01.0.log.gz
+  -->
+  <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>${LOG_HOME}/${LOG_NAME}.log</file>
+    <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+      <fileNamePattern>${LOG_HOME}/${LOG_NAME}.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+      <maxFileSize>${MAX_FILE_SIZE}</maxFileSize>
+      <maxHistory>${MAX_HISTORY}</maxHistory>
+      <totalSizeCap>${TOTAL_SIZE_CAP}</totalSizeCap>
+    </rollingPolicy>
+    <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+      <charset>${ENCODING}</charset>
+      <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [%X{traceId:-N/A}] [%X{requestId:-N/A}] [%X{userId:-N/A}] %-5level %logger{100} [%file:%line] - %msg%n</pattern>
+    </encoder>
+  </appender>
+
+  <!--
+    ERROR_FILE - 错误日志专用
+    只记录 ERROR 及以上级别（ERROR、FATAL）
+    使用 ThresholdFilter 过滤，确保只有严重错误才写入
+    包含完整异常堆栈（%wEx）
+  -->
+  <appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>${LOG_HOME}/${LOG_NAME}-error.log</file>
+    <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+      <level>ERROR</level>
+    </filter>
+    <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+      <fileNamePattern>${LOG_HOME}/${LOG_NAME}-error.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+      <maxFileSize>${MAX_FILE_SIZE}</maxFileSize>
+      <maxHistory>${MAX_HISTORY}</maxHistory>
+      <totalSizeCap>${TOTAL_SIZE_CAP}</totalSizeCap>
+    </rollingPolicy>
+    <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+      <charset>${ENCODING}</charset>
+      <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [%X{traceId:-N/A}] [%X{requestId:-N/A}] [%X{userId:-N/A}] %-5level %logger{100} [%file:%line] - %msg%n%wEx</pattern>
+    </encoder>
+  </appender>
+
+  <!--
+    REQUEST_FILE - HTTP 请求日志
+    记录所有 HTTP 请求的关键指标：
+    - traceId、requestId、userId：链路关联
+    - method、uri、status、duration：请求元数据
+    - clientIp：客户端IP
+    注意：此 Appender 只负责输出原始日志，业务过滤由 Logger 控制
+  -->
+  <appender name="REQUEST_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>${LOG_HOME}/${LOG_NAME}-request.log</file>
+    <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+      <fileNamePattern>${LOG_HOME}/${LOG_NAME}-request.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+      <maxFileSize>${MAX_FILE_SIZE}</maxFileSize>
+      <maxHistory>${MAX_HISTORY}</maxHistory>
+      <totalSizeCap>${TOTAL_SIZE_CAP}</totalSizeCap>
+    </rollingPolicy>
+    <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+      <charset>${ENCODING}</charset>
+      <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%X{traceId:-N/A}] [%X{requestId:-N/A}] [%X{userId:-N/A}] [%X{method:-N/A}] [%X{uri:-N/A}] [%X{status:-N/A}] [%X{duration:-N/A}ms] [%X{clientIp:-N/A}] - %msg%n</pattern>
+    </encoder>
+  </appender>
+
+  <!--
+    SQL_FILE - SQL 查询日志（仅 dev 环境）
+    记录 P6Spy 输出的完整 SQL（参数已替换到语句中）
+    生产环境不启用，避免日志量过大和敏感信息泄露
+  -->
+  <springProfile name="dev">
+    <appender name="SQL_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+      <file>${LOG_HOME}/${LOG_NAME}-sql.log</file>
+      <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+        <fileNamePattern>${LOG_HOME}/${LOG_NAME}-sql.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+        <maxFileSize>${MAX_FILE_SIZE}</maxFileSize>
+        <maxHistory>${MAX_HISTORY}</maxHistory>
+        <totalSizeCap>${TOTAL_SIZE_CAP}</totalSizeCap>
+      </rollingPolicy>
+      <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+        <charset>${ENCODING}</charset>
+        <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [%X{traceId:-N/A}] [%X{sqlType:-N/A}] [%X{sqlDuration:-N/A}ms] - %msg%n</pattern>
+      </encoder>
+    </appender>
+  </springProfile>
+
+  <!--
+    ================================================================================================================
+    3.3 中间件组件日志 Appender
+    ================================================================================================================
+
+    【设计说明】
+      中间件组件日志独立存放，避免与应用日志混杂。每个组件使用独立子目录：
+      - logs/nacos/      Nacos 服务发现与配置
+      - logs/rocketmq/   RocketMQ 消息队列
+      - logs/zipkin/     Zipkin/Brave 链路追踪
+      - logs/sentinel/   Sentinel 熔断限流
+
+    【日志来源说明】
+      - Nacos          com.alibaba.nacos 包
+      - RocketMQ       org.apache.rocketmq.spring 包（RocketMQ Spring Starter，走 SLF4J）
+      - Zipkin/Brave   zipkin2、brave 包
+      - Sentinel       sentinelRecordLogger、sentinelCommandCenterLogger（桥接自 sentinel-logging-slf4j）
+
+    【注意】
+      - RocketMQ 客户端内部日志（连接、发送、消费、偏移量等）由客户端自带的 shaded logback
+        输出，不经过 SLF4J，因此不受本文件控制；其配置位于 resources/rmq.logback.xml，
+        输出到 logs/rocketmq/rocketmq.log。本文件仅处理 org.apache.rocketmq.spring 启动器日志，
+        输出到 logs/rocketmq/rocketmq-spring.log，避免两套框架写同一文件导致轮转竞争。
+      - Sentinel 的 BlockLog 和指标日志仍由 Sentinel 原生框架直接写入（目录由 csp.sentinel.log.dir 指定），
+        不受此配置控制。
+  -->
+
+  <!-- Nacos 客户端日志 -->
+  <appender name="NACOS_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>${LOG_HOME}/nacos/nacos.log</file>
+    <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+      <fileNamePattern>${LOG_HOME}/nacos/nacos.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+      <maxFileSize>${MAX_FILE_SIZE}</maxFileSize>
+      <maxHistory>${MAX_HISTORY}</maxHistory>
+      <totalSizeCap>${TOTAL_SIZE_CAP}</totalSizeCap>
+    </rollingPolicy>
+    <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+      <charset>${ENCODING}</charset>
+      <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [%X{traceId:-N/A}] %-5level %logger{80} - %msg%n%wEx</pattern>
+    </encoder>
+  </appender>
+
+  <!-- RocketMQ Spring 启动器日志（客户端内部日志由 rmq.logback.xml 输出到 rocketmq.log） -->
+  <appender name="ROCKETMQ_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>${LOG_HOME}/rocketmq/rocketmq-spring.log</file>
+    <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+      <fileNamePattern>${LOG_HOME}/rocketmq/rocketmq-spring.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+      <maxFileSize>${MAX_FILE_SIZE}</maxFileSize>
+      <maxHistory>${MAX_HISTORY}</maxHistory>
+      <totalSizeCap>${TOTAL_SIZE_CAP}</totalSizeCap>
+    </rollingPolicy>
+    <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+      <charset>${ENCODING}</charset>
+      <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [%X{traceId:-N/A}] %-5level %logger{80} - %msg%n%wEx</pattern>
+    </encoder>
+  </appender>
+
+  <!-- Zipkin/Brave 链路追踪日志 -->
+  <appender name="ZIPKIN_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>${LOG_HOME}/zipkin/zipkin.log</file>
+    <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+      <fileNamePattern>${LOG_HOME}/zipkin/zipkin.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+      <maxFileSize>${MAX_FILE_SIZE}</maxFileSize>
+      <maxHistory>${MAX_HISTORY}</maxHistory>
+      <totalSizeCap>${TOTAL_SIZE_CAP}</totalSizeCap>
+    </rollingPolicy>
+    <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+      <charset>${ENCODING}</charset>
+      <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [%X{traceId:-N/A}] [%X{requestId:-N/A}] [%X{userId:-N/A}] %-5level %logger{80} - %msg%n%wEx</pattern>
+    </encoder>
+  </appender>
+
+  <!-- Sentinel 熔断限流日志 -->
+  <appender name="SENTINEL_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>${LOG_HOME}/sentinel/sentinel.log</file>
+    <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+      <fileNamePattern>${LOG_HOME}/sentinel/sentinel.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+      <maxFileSize>${MAX_FILE_SIZE}</maxFileSize>
+      <maxHistory>${MAX_HISTORY}</maxHistory>
+      <totalSizeCap>${TOTAL_SIZE_CAP}</totalSizeCap>
+    </rollingPolicy>
+    <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+      <charset>${ENCODING}</charset>
+      <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [%X{traceId:-N/A}] %-5level %logger{80} - %msg%n%wEx</pattern>
+    </encoder>
+  </appender>
+
+  <!--
+    ================================================================================================================
+    3.4 Logstash 集中日志输出 Appender（仅 prod 环境）
+    ================================================================================================================
+
+    使用 LogstashTcpSocketAppender 通过 TCP 协议将日志推送到 Logstash
+    支持自动重连、异步写入、MDC上下文传递
+
+    配置说明：
+      - destination       Logstash 地址，格式 host:port
+      - connectionTimeout 连接超时 5秒
+      - reconnectionDelay 重连延迟 10秒
+      - ringBufferSize    环形缓冲区大小，防止阻塞业务线程
+      - includeMdc        包含 MDC 上下文（traceId 等）
+      - timeZone          时区设置为 Asia/Shanghai
+  -->
+  <springProfile name="prod">
+    <appender name="LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
+      <destination>${LOGSTASH_DESTINATION}</destination>
+      <connectionTimeout>5000</connectionTimeout>
+      <reconnectionDelay>10000</reconnectionDelay>
+      <ringBufferSize>8192</ringBufferSize>
+      <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+        <!-- 自定义字段：标识服务名称和环境，便于 Logstash 过滤和聚合 -->
+        <customFields>{
+          "service": "apex-service",
+          "environment": "prod"
+          }
+        </customFields>
+        <includeMdc>true</includeMdc>
+        <timeZone>Asia/Shanghai</timeZone>
+      </encoder>
+    </appender>
+  </springProfile>
+
+  <!--
+    ================================================================================================================
+    第四部分：Logger 配置
+    ================================================================================================================
+
+    Logger 定义日志的路由规则：哪个包的日志 → 输出到哪些 Appender → 使用什么级别
+
+    【关键属性说明】
+      - name        Logger 对应的包名或类名
+      - level       日志级别：TRACE < DEBUG < INFO < WARN < ERROR
+      - additivity  是否向上传播日志事件（true=同时发送到父Logger/Root）
+                    设为 false 可避免日志重复输出
+
+    【Profile 策略】
+      - dev  环境：各组件单独配置，开发调试最灵活
+      - test 环境：简化配置，聚焦业务代码
+      - prod 环境：精简配置，确保稳定性
+  -->
+
+  <!--
+    ================================================================================================================
+    4.1 开发环境 (dev) Logger 配置
+    ================================================================================================================
+
+    开发环境需要最详细的日志信息，便于问题定位：
+    - WebFlux 请求/响应：DEBUG
+    - Spring Security：DEBUG
+    - MyBatis SQL：关闭（由 P6Spy 接管）
+    - P6Spy SQL：DEBUG（含完整参数）
+  -->
+  <springProfile name="dev">
+
+    <!-- Spring WebFlux 请求日志：记录所有 HTTP 请求细节 -->
+    <logger name="org.springframework.web" level="${LOG_LEVEL_SPRING_WEB:-DEBUG}" additivity="false">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="FILE"/>
+    </logger>
+
+    <!-- Spring Security 日志：认证/授权过程 -->
+    <logger name="org.springframework.security" level="${LOG_LEVEL_SPRING_SECURITY:-DEBUG}" additivity="false">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="FILE"/>
+    </logger>
+
+    <!-- Reactor Netty 网络日志：HTTP 客户端/服务端通信 -->
+    <logger name="reactor.netty" level="INFO" additivity="false">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="FILE"/>
+    </logger>
+
+    <!-- MyBatis Mapper 日志：设为 WARN，详细 SQL 由 P6Spy 输出 -->
+    <logger name="com.apex.infrastructure.persistence.mapper" level="WARN" additivity="false">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="FILE"/>
+    </logger>
+
+    <!-- Druid SQL 日志：设为 WARN，避免与 P6Spy 重复 -->
+    <logger name="druid.sql.Statement" level="WARN" additivity="false">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="FILE"/>
+    </logger>
+
+    <!-- Redisson 客户端日志：Redis 操作日志 -->
+    <logger name="org.redisson" level="INFO" additivity="false">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="FILE"/>
+    </logger>
+
+    <!-- Nacos 日志：路由到专用子目录 -->
+    <logger name="com.alibaba.nacos" level="INFO" additivity="false">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="NACOS_FILE"/>
+    </logger>
+    <!-- Nacos NotifyCenter shutdown InterruptedException 降级，避免 kill 时产生 ERROR -->
+    <logger name="com.alibaba.nacos.common.notify.NotifyCenter" level="WARN" additivity="false">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="NACOS_FILE"/>
+    </logger>
+
+    <!-- RocketMQ Spring 启动器日志：路由到专用子目录（客户端内部日志见 rmq.logback.xml） -->
+    <logger name="org.apache.rocketmq" level="INFO" additivity="false">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="ROCKETMQ_FILE"/>
+    </logger>
+
+    <!-- Zipkin/Brave 链路追踪日志：dev 使用 DEBUG 记录各层详情 -->
+    <logger name="zipkin2" level="DEBUG" additivity="false">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="ZIPKIN_FILE"/>
+    </logger>
+    <logger name="brave" level="DEBUG" additivity="false">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="ZIPKIN_FILE"/>
+    </logger>
+    <!-- Brave Span 处理器日志（TraceLoggingSpanHandler 输出完整 Span 数据；ERROR 级同时进入 error.log） -->
+    <logger name="com.apex.interfaces.config.TraceLoggingSpanHandler" level="INFO" additivity="false">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="ZIPKIN_FILE"/>
+      <appender-ref ref="ERROR_FILE"/>
+    </logger>
+    <!-- Brave Handler 层：Span 序列化与上报内部流程 -->
+    <logger name="brave.handler" level="DEBUG" additivity="false">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="ZIPKIN_FILE"/>
+    </logger>
+    <!-- Brave Tracer 层：Span 创建、采样决策 -->
+    <logger name="brave.Tracer" level="DEBUG" additivity="false">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="ZIPKIN_FILE"/>
+    </logger>
+    <!-- Brave Propagation 层：Trace 上下文传播 -->
+    <logger name="brave.propagation" level="DEBUG" additivity="false">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="ZIPKIN_FILE"/>
+    </logger>
+
+    <!-- Sentinel 熔断限流日志 -->
+    <logger name="sentinelRecordLogger" level="INFO" additivity="false">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="SENTINEL_FILE"/>
+    </logger>
+    <logger name="sentinelCommandCenterLogger" level="INFO" additivity="false">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="SENTINEL_FILE"/>
+    </logger>
+
+    <!--
+      P6Spy SQL 日志
+      输出到两个地方：
+      1. SQL_CONSOLE：彩色控制台输出，便于实时查看
+      2. SQL_FILE：文件持久化，便于回溯分析
+      注意：此日志包含完整 SQL（含参数），可能含有敏感数据
+    -->
+    <logger name="p6spy" level="DEBUG" additivity="false">
+      <appender-ref ref="SQL_CONSOLE"/>
+      <appender-ref ref="SQL_FILE"/>
+    </logger>
+  </springProfile>
+
+  <!--
+    ================================================================================================================
+    4.2 测试环境 (test) Logger 配置
+    ================================================================================================================
+
+    测试环境：
+    - 业务代码 DEBUG 级别
+    - 框架日志 INFO 级别
+    - 简化组件日志配置
+  -->
+  <springProfile name="test">
+    <!-- 业务代码日志：DEBUG 级别便于调试，但需注意敏感信息 -->
+    <logger name="com.apex" level="${LOG_LEVEL_COM_APEX:-DEBUG}" additivity="false">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="FILE"/>
+      <appender-ref ref="ERROR_FILE"/>
+    </logger>
+
+    <!-- Spring Framework 日志：INFO 级别，避免过于嘈杂 -->
+    <logger name="org.springframework" level="INFO" additivity="false">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="FILE"/>
+    </logger>
+  </springProfile>
+
+  <!--
+    ================================================================================================================
+    4.3 生产环境 (prod) Logger 配置
+    ================================================================================================================
+
+    生产环境：
+    - 业务代码 INFO 级别（可通过 LOG_LEVEL_COM_APEX 环境变量调整）
+    - 框架日志 WARN 级别
+    - 日志同时输出到文件和 Logstash
+    - 组件日志降级或关闭
+  -->
+  <springProfile name="prod">
+    <!-- 业务代码日志：INFO 级别，避免敏感信息泄露 -->
+    <logger name="com.apex" level="${LOG_LEVEL_COM_APEX:-INFO}" additivity="false">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="FILE"/>
+      <appender-ref ref="ERROR_FILE"/>
+      <appender-ref ref="LOGSTASH"/>
+    </logger>
+
+    <!-- Spring Framework 日志：WARN 级别，只关注异常 -->
+    <logger name="org.springframework" level="WARN" additivity="false">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="FILE"/>
+      <appender-ref ref="LOGSTASH"/>
+    </logger>
+
+    <!-- Reactor Netty：WARN 级别 -->
+    <logger name="reactor.netty" level="WARN" additivity="false">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="FILE"/>
+      <appender-ref ref="LOGSTASH"/>
+    </logger>
+  </springProfile>
+
+  <!--
+    ================================================================================================================
+    4.4 Root Logger 配置
+    ================================================================================================================
+
+    Root Logger 是所有 Logger 的父节点，未被显式配置的日志都会路由到 Root。
+    配置原则：
+    - 非生产环境：INFO 级别，全量输出
+    - 生产环境：INFO 级别，同时输出到 Logstash
+    - 组件日志单独配置，不经过 Root
+  -->
+
+  <!-- Root Logger (dev/test 环境) -->
+  <springProfile name="!prod">
+    <root level="info">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="FILE"/>
+      <appender-ref ref="ERROR_FILE"/>
+    </root>
+
+    <!-- Spring Security：INFO 级别 -->
+    <logger name="org.springframework.security" level="${LOG_LEVEL_SPRING_SECURITY:-INFO}" additivity="false">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="FILE"/>
+    </logger>
+
+    <!-- Spring Web：INFO 级别 -->
+    <logger name="org.springframework.web" level="${LOG_LEVEL_SPRING_WEB:-INFO}" additivity="false">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="FILE"/>
+    </logger>
+
+    <!-- Reactor Netty：INFO 级别 -->
+    <logger name="reactor.netty" level="info" additivity="false">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="FILE"/>
+    </logger>
+
+    <!-- 组件日志：非 prod 环境仍输出到控制台和专用文件 -->
+    <logger name="com.alibaba.nacos" level="INFO" additivity="false">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="NACOS_FILE"/>
+    </logger>
+    <logger name="com.alibaba.nacos.common.notify.NotifyCenter" level="WARN" additivity="false">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="NACOS_FILE"/>
+    </logger>
+    <!-- RocketMQ Spring 启动器日志：路由到专用子目录（客户端内部日志见 rmq.logback.xml） -->
+    <logger name="org.apache.rocketmq" level="INFO" additivity="false">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="ROCKETMQ_FILE"/>
+    </logger>
+    <logger name="zipkin2" level="INFO" additivity="false">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="ZIPKIN_FILE"/>
+    </logger>
+    <logger name="brave" level="INFO" additivity="false">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="ZIPKIN_FILE"/>
+    </logger>
+    <!-- Brave Span 处理器日志（TraceLoggingSpanHandler 输出完整 Span 数据；ERROR 级同时进入 error.log） -->
+    <logger name="com.apex.interfaces.config.TraceLoggingSpanHandler" level="INFO" additivity="false">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="ZIPKIN_FILE"/>
+      <appender-ref ref="ERROR_FILE"/>
+    </logger>
+    <logger name="sentinelRecordLogger" level="INFO" additivity="false">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="SENTINEL_FILE"/>
+    </logger>
+    <logger name="sentinelCommandCenterLogger" level="INFO" additivity="false">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="SENTINEL_FILE"/>
+    </logger>
+  </springProfile>
+
+  <!-- Root Logger (prod 环境) -->
+  <springProfile name="prod">
+    <root level="info">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="FILE"/>
+      <appender-ref ref="ERROR_FILE"/>
+      <appender-ref ref="LOGSTASH"/>
+    </root>
+
+    <!-- Spring Security：INFO 级别，输出到 Logstash -->
+    <logger name="org.springframework.security" level="${LOG_LEVEL_SPRING_SECURITY:-INFO}" additivity="false">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="FILE"/>
+      <appender-ref ref="LOGSTASH"/>
+    </logger>
+
+    <!-- Spring Web：INFO 级别 -->
+    <logger name="org.springframework.web" level="${LOG_LEVEL_SPRING_WEB:-INFO}" additivity="false">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="FILE"/>
+      <appender-ref ref="LOGSTASH"/>
+    </logger>
+
+    <!-- Reactor Netty：INFO 级别 -->
+    <logger name="reactor.netty" level="info" additivity="false">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="FILE"/>
+      <appender-ref ref="LOGSTASH"/>
+    </logger>
+
+    <!--
+      生产环境组件日志策略：
+      - Nacos、RocketMQ：仅写文件，不走 Console 和 Logstash（避免日志量过大）
+      - Sentinel：仅写文件
+      - Zipkin/Brave：降级到 WARN，仅写文件
+    -->
+    <logger name="com.alibaba.nacos" level="INFO" additivity="false">
+      <appender-ref ref="NACOS_FILE"/>
+    </logger>
+    <logger name="com.alibaba.nacos.common.notify.NotifyCenter" level="WARN" additivity="false">
+      <appender-ref ref="NACOS_FILE"/>
+    </logger>
+    <!-- RocketMQ Spring 启动器日志：仅写文件（客户端内部日志见 rmq.logback.xml） -->
+    <logger name="org.apache.rocketmq" level="INFO" additivity="false">
+      <appender-ref ref="ROCKETMQ_FILE"/>
+    </logger>
+    <logger name="sentinelRecordLogger" level="INFO" additivity="false">
+      <appender-ref ref="SENTINEL_FILE"/>
+    </logger>
+    <logger name="sentinelCommandCenterLogger" level="INFO" additivity="false">
+      <appender-ref ref="SENTINEL_FILE"/>
+    </logger>
+    <logger name="zipkin2" level="WARN" additivity="false">
+      <appender-ref ref="ZIPKIN_FILE"/>
+    </logger>
+    <logger name="brave" level="WARN" additivity="false">
+      <appender-ref ref="ZIPKIN_FILE"/>
+    </logger>
+    <!-- Brave Span 处理器日志（TraceLoggingSpanHandler 输出完整 Span 数据；ERROR 级同时进入 error.log） -->
+    <logger name="com.apex.interfaces.config.TraceLoggingSpanHandler" level="INFO" additivity="false">
+      <appender-ref ref="ZIPKIN_FILE"/>
+      <appender-ref ref="ERROR_FILE"/>
+    </logger>
+  </springProfile>
+
+  <!--
+    ================================================================================================================
+    4.5 请求日志 Logger（LoggingFilter）
+    ================================================================================================================
+
+    LoggingFilter 负责记录 HTTP 请求摘要日志，策略如下：
+    - dev/test：DEBUG 级别，记录完整请求入参/出参
+    - prod：INFO 级别，仅记录慢请求(>3s)和错误响应(>=400)
+
+    日志输出：
+    - REQUEST_FILE：专用请求日志文件
+    - FILE：同时写入主日志（dev/test 环境）
+  -->
+
+  <!-- dev/test 环境：DEBUG 级别，完整请求日志 -->
+  <springProfile name="dev,test">
+    <logger name="com.apex.interfaces.filter.LoggingFilter" level="DEBUG" additivity="false">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="REQUEST_FILE"/>
+      <appender-ref ref="FILE"/>
+    </logger>
+  </springProfile>
+
+  <!-- prod 环境：INFO 级别，仅记录关键事件 -->
+  <springProfile name="!dev,!test">
+    <logger name="com.apex.interfaces.filter.LoggingFilter" level="INFO" additivity="false">
+      <appender-ref ref="REQUEST_FILE"/>
+      <appender-ref ref="FILE"/>
+    </logger>
+  </springProfile>
+
+</configuration>
