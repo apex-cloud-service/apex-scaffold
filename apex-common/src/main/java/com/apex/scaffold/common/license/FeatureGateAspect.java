@@ -34,7 +34,7 @@ import reactor.core.publisher.Mono;
 @Aspect
 @Component
 @RequiredArgsConstructor
-@ConditionalOnProperty(name = "apex.license.enabled", havingValue = "true")
+@ConditionalOnProperty(name = "apex.license.enabled", havingValue = "true", matchIfMissing = true)
 public class FeatureGateAspect {
 
     private final LicenseValidator licenseValidator;

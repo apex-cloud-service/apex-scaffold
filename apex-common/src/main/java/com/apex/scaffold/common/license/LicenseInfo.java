@@ -1,5 +1,6 @@
 package com.apex.scaffold.common.license;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import lombok.Data;
@@ -74,22 +75,25 @@ public class LicenseInfo implements Serializable {
     private String publicKeyFingerprint;
 
     /**
-     * 是否永久有效
+     * 是否永久有效（计算属性，不参与序列化）
      */
+    @JsonIgnore
     public boolean isPermanent() {
         return validTo == null || validTo.isAfter(LocalDateTime.now().plusYears(100));
     }
 
     /**
-     * 是否已过期
+     * 是否已过期（计算属性，不参与序列化）
      */
+    @JsonIgnore
     public boolean isExpired() {
         return validTo != null && LocalDateTime.now().isAfter(validTo);
     }
 
     /**
-     * 剩余天数
+     * 剩余天数（计算属性，不参与序列化）
      */
+    @JsonIgnore
     public long getRemainingDays() {
         if (isPermanent()) {
             return Long.MAX_VALUE;

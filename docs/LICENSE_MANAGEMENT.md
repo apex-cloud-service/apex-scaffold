@@ -1,14 +1,19 @@
-# 商业License验证机制使用指南
+# 商业 License 验证机制使用指南
 
 ## 功能说明
 
-商业License验证机制用于控制不同版本的功能访问权限,支持基础版/标准版/企业版的差异化授权。通过RSA签名确保License文件不可篡改。
+商业 License 验证机制用于控制不同版本的功能访问权限，支持基础版/标准版/企业版的差异化授权。通过 RSA 签名确保 License 文件不可篡改。
+
+**v2.0 机制要点**：
+- **默认启用**：`apex.license.enabled` 缺省为 `true`，License 校验不可被跳过（显式关闭将导致商业功能无法被授权）。
+- **开箱即用**：随包内置基础版 License 模板与官方公钥，下载后基础功能立即可用。
+- **容错降级**：未配置 License / License 无效 / 已过期时，应用**正常启动**，基础功能放行，商业功能（`@FeatureGate` 标注）拒绝，并输出明确的 WARN 日志 —— fork 用户无法绕过商业功能授权。
 
 ## 架构设计
 
 ```
 ┌─────────────────┐
-│ LicenseGenerator │ ← 生成License(仅服务商使用)
+│ LicenseGenerator │ ← 生成License(仅服务商使用, 持有私钥)
 └────────┬────────┘
          │ 生成 .json + RSA签名
          ↓
@@ -23,98 +28,89 @@
          │ 检查结果
          ↓
 ┌─────────────────┐
-│ @FeatureGate     │ ← AOP自动拦截未授权功能
+│ @FeatureGate     │ ← AOP自动拦截未授权功能(降级模式同样生效)
 └─────────────────┘
 ```
 
 ## 快速开始
 
-### 1. 生成密钥对(仅服务商)
+### 1. 服务商：生成密钥对（仅一次）
 
 ```bash
-# 方式一: 使用LicenseGenerator命令行工具
-java -cp apex-common.jar com.apex.scaffold.common.license.LicenseGenerator \
-  gen-keys private.key public.key
-
-# 方式二: 代码生成
-KeyPair keyPair = RsaUtil.generateKeyPair();
-String privateKeyBase64 = RsaUtil.privateKeyToBase64(keyPair.getPrivate());
-String publicKeyBase64 = RsaUtil.publicKeyToBase64(keyPair.getPublic());
+# 使用 LicenseGenerator 命令行工具
+java -cp "<apex-common.jar>:<依赖>" com.apex.scaffold.common.license.LicenseGenerator \
+  gen-keys config/license/private.key config/license/public.key
 ```
 
-**重要**: 私钥必须严格保密,仅保存在服务端!
+**重要**：私钥必须严格保密，仅保存在服务端，**禁止提交到代码仓库**（已加入 .gitignore）。
 
-### 2. 生成License(仅服务商)
+### 2. 服务商：发放 License（每次购买）
 
-```java
-LicenseGenerator generator = LicenseGenerator.loadKeys("private.key", "public.key");
+推荐使用官方发放脚本：
 
-LicenseInfo license = generator.generateLicense(
-    "示例客户",                    // 客户名称
-    "customer@example.com",        // 客户邮箱
-    LicenseVersion.ENTERPRISE,     // 授权版本
-    LocalDateTime.now(),           // 生效时间
-    LocalDateTime.now().plusYears(1), // 过期时间
-    100,                           // 最大用户数
-    50,                            // 最大并发数
-    new String[]{                  // 启用的功能
-        "audit_log", 
-        "api_version", 
-        "monitoring"
-    }
-);
+```bash
+# 发放标准版一年授权
+./scripts/license/generate-license.sh STANDARD "示例公司" 365
 
-generator.saveToFile(license, "customer-license.json");
+# 发放企业版一年授权
+./scripts/license/generate-license.sh ENTERPRISE "示例公司" 365
+
+# 发放自定义功能集
+./scripts/license/generate-license.sh STANDARD "示例公司" 365 jwt_auth,rbac,redis_cache
 ```
 
-生成的JSON示例:
-```json
-{
-  "licenseId": "LIC-20260825130000-a1b2",
-  "customerName": "示例客户",
-  "customerEmail": "customer@example.com",
-  "version": "ENTERPRISE",
-  "validFrom": "2026-08-25T13:00:00",
-  "validTo": "2027-08-25T13:00:00",
-  "maxUsers": 100,
-  "maxConcurrent": 50,
-  "enabledFeatures": "[\"audit_log\",\"api_version\",\"monitoring\"]",
-  "signature": "Base64编码的RSA签名...",
-  "publicKeyFingerprint": "abc123def456..."
-}
+脚本会自动使用各版本默认功能集（与 [LICENSE-COMMERCIAL.md](../LICENSE-COMMERCIAL.md) 版本对照一致），产物输出到 `dist/license/`。
+
+也可以使用 CLI 手动生成：
+
+```bash
+java -cp "<apex-common.jar>:<依赖>" com.apex.scaffold.common.license.LicenseGenerator \
+  gen-license config/license/private.key config/license/public.key customer-license.json \
+  STANDARD "示例公司" 365
 ```
 
-### 3. 客户端配置
+生成的功能清单（默认）：
 
-在`application.yml`中配置:
+| 版本 | 默认功能集 |
+|------|-----------|
+| BASIC | jwt_auth, unified_response, parameter_validation, webflux, mybatis_plus |
+| STANDARD | 基础版 + rbac, redis_cache, monitoring, wechat_sdk, object_storage, email_sms, excel_io |
+| ENTERPRISE | 标准版 + rocketmq, tracing, sentinel, resilience4j, distributed_lock, multi_datasource, flyway, k8s |
+
+### 3. 客户端：配置并激活
+
+随包默认配置已开箱可用（基础版）：
 
 ```yaml
 apex:
   license:
-    enabled: true                          # 启用License验证
-    file-path: classpath:license.json      # License文件路径
-    public-key-file: /etc/apex/public.key  # 公钥文件路径
+    enabled: ${APEX_LICENSE_ENABLED:true}       # 默认开启
+    file-path: ${APEX_LICENSE_FILE:classpath:license/license-basic.json}
+    public-key-file: ${APEX_LICENSE_PUBLIC_KEY_FILE:classpath:license/public.key}
 ```
 
-将`license.json`和`public.key`放到对应位置。
+**激活商业版**：将服务商发放的 License 文件放置到应用可访问路径，通过环境变量覆盖：
 
-### 4. 使用@FeatureGate注解
+```bash
+export APEX_LICENSE_FILE=/opt/apex/customer-license.json
+java -jar apex-interfaces.jar
+```
+
+重启后日志输出 `License 验证通过: 客户=xxx, 版本=STANDARD` 即激活成功。
+
+### 4. 使用 @FeatureGate 注解标记商业功能
 
 ```java
-@RestController
-@RequestMapping("/audit")
-public class AuditLogController {
-
-    @GetMapping("/logs")
-    @FeatureGate(value = "audit_log", message = "审计日志功能需要标准版或企业版License")
-    public Result<List<AuditLogVO>> listLogs() {
-        // 只有授权客户才能访问此接口
-        return Result.success(auditLogService.list());
-    }
+@GetMapping("/logs")
+@FeatureGate(value = "audit_log", message = "审计日志功能需要标准版或企业版License")
+public Result<List<AuditLogVO>> listLogs() {
+    // 只有授权客户才能访问此接口
+    return Result.success(auditLogService.list());
 }
 ```
 
-未授权访问时返回:
+未授权访问时返回：
+
 ```json
 {
   "code": 1007,
@@ -126,20 +122,20 @@ public class AuditLogController {
 ## 授权版本对比
 
 | 功能 | 基础版 | 标准版 | 企业版 |
-|------|--------|--------|--------|
-| 核心CRUD | ✅ | ✅ | ✅ |
-| 数据脱敏 | ✅ | ✅ | ✅ |
-| 错误码体系 | ✅ | ✅ | ✅ |
-| Flyway迁移 | ✅ | ✅ | ✅ |
-| OWASP扫描 | ✅ | ✅ | ✅ |
-| **操作审计日志** | ❌ | ✅ | ✅ |
-| **API版本管理** | ❌ | ✅ | ✅ |
-| **Grafana监控** | ❌ | ✅ | ✅ |
-| **License验证** | ❌ | ✅ | ✅ |
-| SPI插件扩展 | ❌ | ❌ | ✅ |
-| 定制化开发 | ❌ | ❌ | ✅ |
-| 技术支持 | 社区 | 邮件 | 专属顾问 |
-| 价格 | 免费 | ¥9,800/年 | ¥29,800/年 |
+|------|:---:|:---:|:---:|
+| JWT 认证 / 统一响应 / 参数校验 | ✅ | ✅ | ✅ |
+| WebFlux / MyBatis-Plus | ✅ | ✅ | ✅ |
+| RBAC 权限管理 | - | ✅ | ✅ |
+| Redis 多级缓存 | - | ✅ | ✅ |
+| Prometheus 监控 | - | ✅ | ✅ |
+| 对象存储 / 短信邮件 | - | ✅ | ✅ |
+| RocketMQ 消息队列 | - | - | ✅ |
+| 链路追踪（Zipkin） | - | - | ✅ |
+| Sentinel / Resilience4j | - | - | ✅ |
+| 分布式锁 / 多数据源 | - | - | ✅ |
+| K8s 部署脚本 | - | - | ✅ |
+| 技术支持 | 社区 | 邮件 5 工作日 | 专属客服 2 小时 |
+| 价格 | 免费 | ¥9,999/年 | ¥49,999/年 |
 
 ## 高级用法
 
@@ -149,17 +145,15 @@ public class AuditLogController {
 @Service
 @RequiredArgsConstructor
 public class UserService {
-    
+
     private final LicenseValidator licenseValidator;
-    
+
     public Result<Void> createUser(UserDTO user) {
         int currentCount = userMapper.selectCount(null);
-        
         if (!licenseValidator.checkUserLimit(currentCount + 1)) {
-            return Result.error(ErrorCode.BUSINESS_RULE_VIOLATION, 
+            return Result.error(ErrorCode.BUSINESS_RULE_VIOLATION,
                 "已达到最大用户数限制: " + licenseValidator.getLicenseInfo().getMaxUsers());
         }
-        
         userMapper.insert(user);
         return Result.success();
     }
@@ -169,151 +163,68 @@ public class UserService {
 ### 自定义功能列表
 
 ```java
-// 生成License时指定自定义功能
-String[] features = new String[]{
-    "custom_report",      // 自定义报表
-    "advanced_search",    // 高级搜索
-    "batch_import"        // 批量导入
-};
-
+String[] features = new String[]{"custom_report", "advanced_search", "batch_import"};
 LicenseInfo license = generator.generateLicense(
-    "客户A", "a@example.com", 
+    "客户A", "a@example.com",
     LicenseVersion.STANDARD,
-    LocalDateTime.now(), 
+    LocalDateTime.now(),
     LocalDateTime.now().plusYears(1),
     50, 20, features
 );
 ```
 
-### License续期
+### License 续期
 
 ```java
-// 重新生成License,延长有效期
 LicenseInfo renewedLicense = generator.generateLicense(
     license.getCustomerName(),
     license.getCustomerEmail(),
     license.getVersion(),
     license.getValidFrom(),
-    LocalDateTime.now().plusYears(1), // 新过期时间
+    LocalDateTime.now().plusYears(1),
     license.getMaxUsers(),
     license.getMaxConcurrent(),
     license.getEnabledFeatures().split(",")
 );
-
 generator.saveToFile(renewedLicense, "renewed-license.json");
 ```
 
 ## 安全建议
 
-### 1. 私钥保护
-
-- **绝不**将私钥交给客户
-- 使用HSM(硬件安全模块)存储私钥
-- 定期轮换密钥对(每年一次)
-- 私钥文件权限设置为`600`(仅所有者可读写)
-
-### 2. License文件保护
-
-- 使用HTTPS分发License文件
-- License文件包含客户标识,防止共享
-- 定期检查License是否被篡改
-
-### 3. 公钥分发
-
-- 公钥可以公开,但应通过可信渠道分发
-- 使用公钥指纹验证公钥完整性
-- 避免中间人攻击
-
-### 4. 运行时保护
-
-- License验证失败时应立即终止应用
-- 记录所有License相关操作到审计日志
-- 实现心跳机制,定期向授权服务器报告
+1. **私钥保护**：绝不将私钥交给客户；使用 HSM 存储；定期轮换密钥对（每年一次）；私钥文件权限设为 `600`。
+2. **License 文件保护**：使用 HTTPS 分发；License 包含客户标识防止共享；定期检查是否被篡改。
+3. **公钥分发**：公钥可公开，但应通过可信渠道分发；使用公钥指纹验证完整性。
+4. **运行时保护**：开启审计日志记录 License 相关操作；商业功能一律通过 `@FeatureGate` 标注，保证降级模式下同样受控。
 
 ## 故障排查
 
-### 问题1: License验证失败
-
-**现象**: 启动时报错"License签名验证失败"
-
-**原因**:
-- License文件被篡改
-- 公钥不匹配
-- JSON格式错误
-
-**解决**:
-1. 检查License文件完整性(MD5校验)
-2. 确认公钥与生成License时使用的密钥对匹配
-3. 重新生成License
-
-### 问题2: 功能未授权
-
-**现象**: 访问接口返回"当前License未授权此功能"
-
-**原因**:
-- License中未包含该功能标识
-- 功能标识拼写错误
-
-**解决**:
-1. 检查License JSON中的`enabledFeatures`字段
-2. 确认`@FeatureGate`注解的value与功能列表一致
-3. 联系服务商升级License
-
-### 问题3: License已过期
-
-**现象**: 启动时报错"License已过期"
-
-**解决**:
-1. 联系服务商续期
-2. 临时方案: 修改系统时间(不推荐)
-3. 升级到新版本获取新License
-
-## API参考
-
-### LicenseValidator
-
-```java
-// 加载License
-validator.loadFromFile("license.json");
-validator.loadFromJson(jsonString);
-
-// 检查功能
-boolean enabled = validator.isFeatureEnabled("audit_log");
-
-// 检查限制
-boolean allowed = validator.checkUserLimit(100);
-boolean allowed = validator.checkConcurrentLimit(50);
-
-// 获取信息
-LicenseInfo info = validator.getLicenseInfo();
-long remainingDays = info.getRemainingDays();
-```
-
-### LicenseGenerator
-
-```java
-// 生成密钥对
-LicenseGenerator gen = LicenseGenerator.generateNewKeys("private.key", "public.key");
-
-// 生成License
-LicenseInfo license = gen.generateLicense(...);
-
-// 保存文件
-gen.saveToFile(license, "output.json");
-```
+| 现象 | 原因 | 解决 |
+|------|------|------|
+| 启动日志 WARN "License 加载或验证失败...进入降级模式" | 未配置 License 或 License 无效 | 基础功能不受影响；如需商业功能，联系服务商获取正确 License |
+| 访问商业接口返回"当前License未授权此功能" | License 功能集不含该标识，或未激活商业 License | 检查 `enabledFeatures`，确认 `@FeatureGate` value 一致，或升级 License |
+| 启动日志 "License已过期" | License 超过有效期 | 联系服务商续期 |
+| 篡改 License 后访问商业功能被拒 | 签名验证失败 | 重新从服务商获取 License |
 
 ## 注意事项
 
-1. **性能影响**: License验证在启动时执行,运行时仅内存检查,无性能影响
-2. **离线使用**: License文件一旦生成即可离线使用,无需联网验证
-3. **多实例部署**: 每个实例都需要独立的License文件或共享同一文件
-4. **测试环境**: 测试时可设置`apex.license.enabled=false`跳过验证
-5. **法律合规**: License协议应符合当地法律法规,建议咨询法律专家
+1. **性能**：License 验证在启动时执行，运行时仅内存检查，无性能影响。
+2. **离线**：License 文件生成后即可离线使用，无需联网。
+3. **多实例**：每个实例可共享同一 License 文件。
+4. **测试环境**：测试时可将 `apex.license.enabled` 设为 `false` 跳过验证（商业功能将不可用）。
+5. **降级 ≠ 绕过**：即使关闭 License 校验或移除 License 文件，`@FeatureGate` 标注的商业功能仍会拒绝访问。
+
+## 工具链
+
+| 工具 | 用途 | 持有方 |
+|------|------|--------|
+| `LicenseGenerator`（CLI） | 生成密钥对 / 发放 License | 服务商 |
+| `scripts/license/generate-license.sh` | 一键发放 License | 服务商 |
+| `LicenseValidator` | 应用内验证（随包自动装配） | 客户 |
+| `@FeatureGate` + Aspect | 商业功能门禁 | 开发者 |
 
 ## TODO
 
-- [ ] 实现在线激活机制(需联网)
-- [ ] 支持License撤销列表(CRL)
-- [ ] 添加License使用统计上报
-- [ ] 实现灰度发布支持(部分功能试用)
-- [ ] 集成区块链存证(防抵赖)
+- [ ] 实现在线激活机制（需联网）
+- [ ] 支持 License 撤销列表（CRL）
+- [ ] 添加 License 使用统计上报
+- [ ] 实现灰度试用支持（部分功能限时试用）

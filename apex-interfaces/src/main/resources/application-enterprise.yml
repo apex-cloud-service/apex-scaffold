@@ -1,0 +1,38 @@
+# ============================================================
+# Apex Scaffold 企业版 (Enterprise) 配置模板
+# ============================================================
+# 适用: 大型企业 / 高并发系统（商业授权）
+# 启用: java -jar apex-interfaces.jar --spring.profiles.active=enterprise
+# 功能: 标准版全部 + RocketMQ / 链路追踪 / Sentinel / 分布式锁 / 多数据源
+# ============================================================
+
+apex:
+  features:
+    jwt-auth: true
+    rbac: true
+    cache: true
+    message-queue: true
+    monitoring: true
+    tracing: true
+
+# 消息队列（RocketMQ）
+rocketmq:
+  producer:
+    enabled: true
+  consumer:
+    enabled: true
+
+# 链路追踪（Micrometer + Zipkin）
+management:
+  tracing:
+    enabled: true
+
+# 多数据源（dynamic-datasource）
+spring:
+  datasource:
+    dynamic:
+      strict: false
+
+# Sentinel 限流熔断
+apex-sentinel:
+  enabled: true

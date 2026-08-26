@@ -80,3 +80,7 @@ license.lic
 !.env.example
 
 .workbuddy/
+
+# ===== 发布产物与卖方私钥 =====
+dist/
+config/license/private.key

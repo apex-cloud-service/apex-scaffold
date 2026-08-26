@@ -1,0 +1,39 @@
+# ============================================================
+# Apex Scaffold 基础版 (Basic) 配置模板
+# ============================================================
+# 适用: 个人项目 / 小型应用（MIT 开源）
+# 启用: java -jar apex-interfaces.jar --spring.profiles.active=basic
+# 功能: JWT 认证 / 统一响应 / 参数校验 / WebFlux / MyBatis-Plus
+# ============================================================
+
+apex:
+  features:
+    jwt-auth: true
+    rbac: false
+    cache: false
+    message-queue: false
+    monitoring: false
+    tracing: false
+
+spring:
+  # 基础版不使用 Redis 缓存（Caffeine 单机缓存可用）
+  data:
+    redis:
+      enabled: false
+  autoconfigure:
+    exclude:
+      - org.redisson.spring.starter.RedissonAutoConfigurationV2
+
+# 消息队列（基础版禁用）
+rocketmq:
+  producer:
+    enabled: false
+  consumer:
+    enabled: false
+
+# 监控（基础版仅保留基础 actuator）
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

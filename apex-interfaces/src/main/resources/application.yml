@@ -59,6 +59,15 @@ cors:
     - http://localhost:3000
 
 apex:
+  license:
+    # License 校验总开关（默认开启）。
+    # 开启后：随包内置基础版 License，商业功能（@FeatureGate 标注）需授权版本才能使用；
+    # 未检测到有效 License 时进入降级模式：基础功能放行，商业功能拒绝并输出 WARN 日志。
+    enabled: ${APEX_LICENSE_ENABLED:true}
+    # License 文件路径：支持 classpath: 前缀与文件系统路径（生产可通过环境变量指向授权文件）
+    file-path: ${APEX_LICENSE_FILE:classpath:license/license-basic.json}
+    # 公钥（Base64）：生产可覆盖为官方发布公钥；缺省使用随包默认公钥
+    public-key-file: ${APEX_LICENSE_PUBLIC_KEY_FILE:classpath:license/public.key}
   blocking-io:
     jdbc:
       threads: 32

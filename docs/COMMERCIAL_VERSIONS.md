@@ -165,11 +165,12 @@ A:
 A: 企业版客户可享受 2 天的现场技术培训(差旅另计)。标准版提供在线视频教程和文档。
 
 ### Q: 开源协议是什么?
-A: 基础版采用 MIT License,可自由商用。标准版和企业版为商业授权,禁止二次分发。
+A: Apex Scaffold 采用双轨许可证。基础版采用 [MIT License](../LICENSE)，可自由商用。标准版和企业版为商业授权（[LICENSE-COMMERCIAL.md](../LICENSE-COMMERCIAL.md)），禁止二次分发，需购买 License 授权文件激活。
 
 ## 📝 许可证说明
 
-- **基础版**: MIT License - 允许商业使用、修改、分发
-- **标准版/企业版**: 商业授权 - 仅限购买方内部使用,禁止转售或开源
+- **基础版**: [MIT License](../LICENSE) - 允许商业使用、修改、分发
+- **标准版/企业版**: [商业授权](../LICENSE-COMMERCIAL.md) - 仅限购买方内部使用,禁止转售或开源
+- **授权机制**: 商业版内置 License 验证，未配置有效授权时商业功能自动降级关闭（基础功能不受影响），详见 [LICENSE_MANAGEMENT.md](LICENSE_MANAGEMENT.md)
 
-详细条款请查看 [LICENSE](../LICENSE) 文件。
+详细条款请查看 [LICENSE](../LICENSE) 与 [LICENSE-COMMERCIAL.md](../LICENSE-COMMERCIAL.md)。

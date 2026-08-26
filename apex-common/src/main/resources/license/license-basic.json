@@ -1,0 +1,13 @@
+{
+  "licenseId" : "LIC-20260826200647-19d5",
+  "customerName" : "Apex Scaffold 基础版",
+  "customerEmail" : "customer@example.com",
+  "version" : "BASIC",
+  "validFrom" : "2026-08-26T20:06:47.784061",
+  "validTo" : "2027-08-26T20:06:47.784112",
+  "maxUsers" : -1,
+  "maxConcurrent" : -1,
+  "enabledFeatures" : "[\"jwt_auth\",\"unified_response\",\"parameter_validation\",\"webflux\",\"mybatis_plus\"]",
+  "signature" : "lY6nSwCAm34g0YHtuzwae3VWvgpMIE2chN6DWuV4bdeZuin5kM8OvFZB0Kt0Tlnv3KnaHxaDDTNRUpnsYycDOcw3zCOy8h8FidjxxB2YaanTiXqS6hUXbOW6j4EfJiWNPQiSkrhuDC0SgX/BrSAe30I3vG76gKhFMyT4FhAbqWOSSAld/vDwAyJOFBg2DfYYhltEk9TMY1VAi2EARZRnX+daBOYF03BXDlAgbHUakrrmMegq8+8/0/wa+kSK5x++kVW+oE0h4pThQkkll5ICSSf+aKvph5Iw442YHChNQn/C1oq58JXMAv1GX4yO+Jcy7W8OZR0UQKnKE0Fdfj08ew==",
+  "publicKeyFingerprint" : "u/E2CR+cb0JHCmvF"
+}

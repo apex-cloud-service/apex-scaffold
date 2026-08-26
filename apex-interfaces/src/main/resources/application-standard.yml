@@ -1,0 +1,36 @@
+# ============================================================
+# Apex Scaffold 标准版 (Standard) 配置模板
+# ============================================================
+# 适用: 中型企业 / 创业公司（商业授权）
+# 启用: java -jar apex-interfaces.jar --spring.profiles.active=standard
+# 功能: 基础版全部 + RBAC / 多级缓存 / 监控告警 / 对象存储 / 短信邮件
+# ============================================================
+
+apex:
+  features:
+    jwt-auth: true
+    rbac: true
+    cache: true
+    message-queue: false
+    monitoring: true
+    tracing: false
+
+# 多级缓存（Caffeine + Redis）
+spring:
+  data:
+    redis:
+      enabled: true
+
+# 监控告警（Prometheus 指标 + Grafana）
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+
+# 消息队列（标准版禁用）
+rocketmq:
+  producer:
+    enabled: false
+  consumer:
+    enabled: false

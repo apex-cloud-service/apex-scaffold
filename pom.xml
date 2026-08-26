@@ -581,11 +581,16 @@
     <profile>
       <id>basic</id>
       <properties>
+        <!-- 构建产物标识: 写入 apex-build.properties，区分三档构建 -->
+        <build.profile.id>basic</build.profile.id>
+        <!-- 绑定 Spring Profile: 运行时激活 application-basic.yml -->
+        <spring.profiles.active>basic</spring.profiles.active>
         <features.jwt-auth>true</features.jwt-auth>
         <features.rbac>false</features.rbac>
         <features.cache>false</features.cache>
         <features.message-queue>false</features.message-queue>
         <features.monitoring>false</features.monitoring>
+        <features.tracing>false</features.tracing>
       </properties>
     </profile>
     
@@ -596,11 +601,14 @@
         <activeByDefault>true</activeByDefault>
       </activation>
       <properties>
+        <build.profile.id>standard</build.profile.id>
+        <spring.profiles.active>standard</spring.profiles.active>
         <features.jwt-auth>true</features.jwt-auth>
         <features.rbac>true</features.rbac>
         <features.cache>true</features.cache>
         <features.message-queue>false</features.message-queue>
         <features.monitoring>true</features.monitoring>
+        <features.tracing>false</features.tracing>
       </properties>
     </profile>
     
@@ -608,6 +616,8 @@
     <profile>
       <id>enterprise</id>
       <properties>
+        <build.profile.id>enterprise</build.profile.id>
+        <spring.profiles.active>enterprise</spring.profiles.active>
         <features.jwt-auth>true</features.jwt-auth>
         <features.rbac>true</features.rbac>
         <features.cache>true</features.cache>

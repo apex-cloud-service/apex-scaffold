@@ -1,6 +1,7 @@
 package com.apex.scaffold.common.license;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -13,14 +14,18 @@ import lombok.extern.slf4j.Slf4j;
  * <p>负责加载、解析和验证License文件。
  * 支持RSA签名验证、过期检查、功能权限控制。
  *
+ * <p>当 License 缺失/无效时，可通过 {@link #degraded()} 创建降级验证器：
+ * 基础功能放行，所有商业功能（@FeatureGate 标注）拒绝，并在日志中明确提示。</p>
+ *
  * @author Apex Team
  * @version 1.0.0
  */
 @Slf4j
 public class LicenseValidator {
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
     private final PublicKey publicKey;
+    private final boolean degraded;
     private LicenseInfo licenseInfo;
     private boolean validated = false;
 
@@ -31,7 +36,30 @@ public class LicenseValidator {
      * @throws Exception 公钥加载失败
      */
     public LicenseValidator(String base64PublicKey) throws Exception {
+        this.objectMapper = new ObjectMapper();
+        this.objectMapper.registerModule(new JavaTimeModule());
         this.publicKey = RsaUtil.loadPublicKey(base64PublicKey);
+        this.degraded = false;
+    }
+
+    /**
+     * 创建降级验证器（无有效 License 时使用）。
+     *
+     * <p>降级模式下：基础功能可用，所有商业功能拒绝。</p>
+     *
+     * @return 降级验证器
+     */
+    public static LicenseValidator degraded() {
+        LicenseValidator validator = new LicenseValidator();
+        log.warn("License 验证器进入降级模式：未检测到有效 License，商业功能不可用");
+        return validator;
+    }
+
+    private LicenseValidator() {
+        this.objectMapper = new ObjectMapper();
+        this.objectMapper.registerModule(new JavaTimeModule());
+        this.publicKey = null;
+        this.degraded = true;
     }
 
     /**
@@ -83,16 +111,19 @@ public class LicenseValidator {
 
     /**
      * 验证签名
+     *
+     * <p>签名数据为"剔除 signature 字段后的规范化 JSON"，与
+     * {@link LicenseGenerator#generateLicense} 生成时的待签数据保持一致。</p>
      */
     private void validateSignature(String json) throws Exception {
-        // 提取签名字段前的JSON内容
-        int signatureIndex = json.lastIndexOf("\"signature\"");
-        if (signatureIndex == -1) {
+        var node = objectMapper.readTree(json);
+        if (!node.has("signature") || node.get("signature").isNull()) {
             throw new LicenseException("License缺少签名字段");
         }
 
-        // 简单策略: 使用整个JSON作为待验证数据(生产环境应使用规范化的JSON)
-        byte[] data = json.getBytes(StandardCharsets.UTF_8);
+        // 移除 signature 字段后作为待验数据
+        ((com.fasterxml.jackson.databind.node.ObjectNode) node).remove("signature");
+        byte[] data = objectMapper.writeValueAsBytes(node);
         boolean valid = RsaUtil.verify(data, licenseInfo.getSignature(), publicKey);
 
         if (!valid) {
@@ -141,7 +172,7 @@ public class LicenseValidator {
      */
     public LicenseInfo getLicenseInfo() {
         if (!validated) {
-            throw new IllegalStateException("License尚未验证");
+            throw new IllegalStateException("License尚未验证或已降级");
         }
         return licenseInfo;
     }
@@ -153,7 +184,7 @@ public class LicenseValidator {
      * @return 是否启用
      */
     public boolean isFeatureEnabled(String feature) {
-        if (!validated) {
+        if (!validated || degraded) {
             return false;
         }
 
@@ -180,7 +211,7 @@ public class LicenseValidator {
      * @return 是否允许
      */
     public boolean checkUserLimit(int currentUserCount) {
-        if (!validated) {
+        if (!validated || degraded) {
             return false;
         }
 
@@ -198,7 +229,7 @@ public class LicenseValidator {
      * @return 是否允许
      */
     public boolean checkConcurrentLimit(int currentConcurrent) {
-        if (!validated) {
+        if (!validated || degraded) {
             return false;
         }
 

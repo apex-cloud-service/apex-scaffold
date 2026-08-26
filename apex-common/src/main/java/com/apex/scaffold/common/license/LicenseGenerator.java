@@ -1,6 +1,8 @@
 package com.apex.scaffold.common.license;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -22,8 +24,16 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class LicenseGenerator {
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = createObjectMapper();
     private final KeyPair keyPair;
+
+    /** 创建支持 Java 8 时间类型的 ObjectMapper。 */
+    private static ObjectMapper createObjectMapper() {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        return mapper;
+    }
 
     /**
      * 构造函数(使用已有密钥对)
@@ -117,9 +127,12 @@ public class LicenseGenerator {
         // 计算公钥指纹
         license.setPublicKeyFingerprint(RsaUtil.calculateFingerprint(keyPair.getPublic()));
 
-        // 生成签名
+        // 生成签名：签名数据为"剔除 signature 字段后的规范化 JSON"，
+        // 与 LicenseValidator 验证时的待验数据保持一致。
         String jsonContent = objectMapper.writeValueAsString(license);
-        byte[] data = jsonContent.getBytes(StandardCharsets.UTF_8);
+        var node = objectMapper.readTree(jsonContent);
+        ((com.fasterxml.jackson.databind.node.ObjectNode) node).remove("signature");
+        byte[] data = objectMapper.writeValueAsBytes(node);
         String signature = RsaUtil.sign(data, keyPair.getPrivate());
         license.setSignature(signature);
 
@@ -150,14 +163,21 @@ public class LicenseGenerator {
 
     /**
      * 命令行入口
+     *
+     * <p>用法:</p>
+     * <pre>
+     *   # 生成密钥对
+     *   java LicenseGenerator gen-keys &lt;private.key&gt; &lt;public.key&gt;
+     *
+     *   # 生成 License（完整参数）
+     *   java LicenseGenerator gen-license &lt;private.key&gt; &lt;public.key&gt; &lt;output.json&gt; \
+     *        &lt;version:BASIC|STANDARD|ENTERPRISE&gt; &lt;customer&gt; &lt;valid-days&gt; [feature1,feature2,...]
+     * </pre>
      */
     public static void main(String[] args) {
         try {
             if (args.length < 2) {
-                System.out.println("用法:");
-                System.out.println("  生成密钥对: java LicenseGenerator gen-keys <private.key> <public.key>");
-                System.out.println(
-                        "  生成License: java LicenseGenerator gen-license <private.key> <public.key> <output.json>");
+                printUsage();
                 return;
             }
 
@@ -168,34 +188,44 @@ public class LicenseGenerator {
                 String privateKeyFile = args[1];
                 String publicKeyFile = args[2];
                 generateNewKeys(privateKeyFile, publicKeyFile);
-                System.out.println("密钥对已生成");
+                System.out.println("密钥对已生成: " + privateKeyFile + " / " + publicKeyFile);
 
             } else if ("gen-license".equals(command)) {
-                // 生成License
                 String privateKeyFile = args[1];
                 String publicKeyFile = args[2];
                 String outputFile = args[3];
+                LicenseVersion version = args.length > 4 ? LicenseVersion.valueOf(args[4].toUpperCase()) : LicenseVersion.ENTERPRISE;
+                String customerName = args.length > 5 ? args[5] : "示例客户";
+                int validDays = args.length > 6 ? Integer.parseInt(args[6]) : 365;
+                String[] features = args.length > 7 ? args[7].split(",") : null;
 
                 LicenseGenerator generator = loadKeys(privateKeyFile, publicKeyFile);
-
-                // 示例License
                 LicenseInfo license = generator.generateLicense(
-                        "示例客户",
+                        customerName,
                         "customer@example.com",
-                        LicenseVersion.ENTERPRISE,
+                        version,
                         LocalDateTime.now(),
-                        LocalDateTime.now().plusYears(1),
-                        100,
-                        50,
-                        new String[] {"audit_log", "api_version", "monitoring"});
+                        LocalDateTime.now().plusDays(validDays),
+                        -1,
+                        -1,
+                        features);
 
                 generator.saveToFile(license, outputFile);
-                System.out.println("License已生成: " + outputFile);
+                System.out.println("License已生成: " + outputFile + " (版本: " + version + ", 客户: " + customerName + ")");
+            } else {
+                printUsage();
             }
 
         } catch (Exception e) {
             log.error("执行失败", e);
             System.err.println("错误: " + e.getMessage());
         }
+    }
+
+    private static void printUsage() {
+        System.out.println("用法:");
+        System.out.println("  生成密钥对: java LicenseGenerator gen-keys <private.key> <public.key>");
+        System.out.println(
+                "  生成License: java LicenseGenerator gen-license <private.key> <public.key> <output.json> <version> <customer> <days> [feature1,feature2,...]");
     }
 }

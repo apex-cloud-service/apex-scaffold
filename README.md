@@ -235,9 +235,14 @@ Apex Scaffold 提供三个版本,满足不同规模企业的需求:
 
 ## 📄 许可证
 
-本项目基础版基于 [MIT License](LICENSE) 开源。标准版和企业版为商业授权,禁止二次分发。
+Apex Scaffold 采用**双轨许可证**模式：
 
-详细条款请查看 [LICENSE](LICENSE) 文件。
+- **基础版（Basic）**：基于 [MIT License](LICENSE) 完全开源，可自由使用、修改与再分发。
+- **标准版（Standard）/ 企业版（Enterprise）**：商业授权，受 [LICENSE-COMMERCIAL.md](LICENSE-COMMERCIAL.md) 约束，需购买 License 授权文件后方可使用，**禁止二次分发**。
+
+> ⚠️ 商业版内置 License 验证机制：未配置有效授权时，商业功能（如消息队列、链路追踪等）自动降级关闭，基础功能不受影响。
+
+详细条款请查看 [LICENSE](LICENSE) 与 [LICENSE-COMMERCIAL.md](LICENSE-COMMERCIAL.md)，授权管理指南见 [docs/LICENSE_MANAGEMENT.md](docs/LICENSE_MANAGEMENT.md)。
 
 ## 🙏 致谢
 

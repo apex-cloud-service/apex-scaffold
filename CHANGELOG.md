@@ -2,26 +2,30 @@
 
 本项目遵循 [语义化版本规范](https://semver.org/lang/zh-CN/)。
 
-## [Unreleased]
+## [1.1.0] - 2026-08-26
 
 ### Added
-- 初始商业化版本发布
-- MIT开源许可证
-- 完整的文档体系(快速开始、配置详解、架构说明、最佳实践)
-- 贡献指南和行为准则
-- 单元测试框架(JUnit 5 + Mockito + AssertJ)
-
-### Changed
 - v2.0 通用化重构：完成业务代码剥离，脚手架仅保留通用能力
 - 数据库迁移重建：87 个业务迁移脚本替换为干净的通用基线（V1 27 张通用表）
 - 全库品牌统一：配置前缀/指标名/缓存前缀统一为 `apex.*` 命名空间
 - 管理后台品牌改造：控制台更名为 Apex Scaffold，移除业务审核视图
 - 文档体系重构：模块 README 重写，移除内部工作文档
-
-### Removed
 - 移除全部业务耦合代码（兴趣图谱/照片对战/人脸分析/共鸣/雷达等约 500+ 文件）
 - 移除业务迁移脚本、业务种子数据与内部拷贝脚本
 - 移除原项目名称残留（全库零命中验证）
+- 商业化机制落地（阶段 D）：
+  - **License 强制启用**：默认开启校验，随包内置基础版 License 模板与官方公钥；容错降级策略（无有效 License 时基础功能放行、商业功能拒绝），fork 无法绕过
+  - **License 签名缺陷修复**：签名数据统一为剔除 signature 字段的规范化 JSON，生成/验证一致
+  - **Maven Profile 实质化**：basic/standard/enterprise 三档与 Spring Profile 联动，构建标识（apex-build.properties）区分产物，三档功能矩阵启动日志
+  - **三档配置模板**：application-basic.yml / application-standard.yml / application-enterprise.yml
+  - **双轨许可证**：LICENSE 限定基础版 MIT + LICENSE-COMMERCIAL.md 商业授权模板
+  - **License 发放工具**：scripts/license/generate-license.sh（一键发放），发布脚本 scripts/release/release.sh
+  - **License 管理手册**：docs/LICENSE_MANAGEMENT.md 重写（购买→发 License→激活全流程）
+
+### Fixed
+- License 签名验证数据不一致缺陷（原实现必然验签失败）
+- LocalDateTime 序列化缺少 JavaTimeModule 支持
+- LicenseInfo 派生 getter 被 Jackson 序列化导致反序列化失败
 
 ## [1.0.0] - 2026-08-25
 
