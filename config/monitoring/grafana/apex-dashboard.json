@@ -429,7 +429,7 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "sum(hikaricp_connections_active) / sum(hikaricp_connections_max) * 100",
+          "expr": "(sum(hikaricp_connections_active) or sum(druid_connections_active)) / (sum(hikaricp_connections_max) or sum(druid_connections_max)) * 100",
           "legendFormat": "连接池水位",
           "refId": "A"
         }
@@ -863,7 +863,7 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "sum(hikaricp_connections_active)",
+          "expr": "sum(hikaricp_connections_active) or sum(druid_connections_active)",
           "legendFormat": "活跃连接",
           "refId": "A"
         },
@@ -872,7 +872,7 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "sum(hikaricp_connections_idle)",
+          "expr": "sum(hikaricp_connections_idle) or sum(druid_connections_pooling)",
           "legendFormat": "空闲连接",
           "refId": "B"
         },
@@ -881,7 +881,7 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "sum(hikaricp_connections_max)",
+          "expr": "sum(hikaricp_connections_max) or sum(druid_connections_max)",
           "legendFormat": "最大连接",
           "refId": "C"
         }

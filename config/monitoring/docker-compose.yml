@@ -56,6 +56,20 @@ services:
     networks:
       - apex-observability
 
+  # ---- Blackbox Exporter：健康探针（探测应用 /actuator/health） ----
+  # 供 ApexHealthCheckDown 告警使用；经 host.docker.internal 访问宿主机应用
+  # （Linux 需 Docker 20.10+ 支持 host-gateway）。
+  blackbox-exporter:
+    image: prom/blackbox-exporter:v0.25.0
+    container_name: apex-blackbox-exporter
+    restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "9115:9115"
+    networks:
+      - apex-observability
+
   # ---- Zipkin：链路追踪后端 ----
   zipkin:
     image: openzipkin/zipkin:3.4

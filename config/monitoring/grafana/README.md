@@ -30,6 +30,7 @@ docker compose up -d
 | Grafana | http://localhost:3000 | admin / admin（首次登录提示修改） |
 | Prometheus | http://localhost:9090 | - |
 | Zipkin | http://localhost:9411 | - |
+| Blackbox Exporter | http://localhost:9115 | - |
 
 ### 方式二：手动导入大盘
 
@@ -49,7 +50,7 @@ docker compose up -d
 | P95 响应时间 | `histogram_quantile(0.95, sum(rate(apex_api_response_time_seconds_bucket[5m])) by (le))` | >2s 红色 |
 | 5xx 错误率 | 5xx 计数 / 总计数 | >5% 黄色，>10% 红色 |
 | JVM 堆使用率 | `jvm_memory_used_bytes{area="heap"}` / max | >85% 红色 |
-| DB 连接池水位 | `hikaricp_connections_active` / max | >80% 红色 |
+| DB 连接池水位 | `(sum(hikaricp_connections_active) or sum(druid_connections_active)) / (sum(hikaricp_connections_max) or sum(druid_connections_max)) * 100` | >80% 红色 |
 
 ### 图表行（Timeseries）
 
@@ -58,26 +59,36 @@ docker compose up -d
 | 请求量（按状态码） | `sum by (status) (rate(apex_api_request_count_total[5m]))` |
 | 响应时间分位数 | P50 / P95 / P99 三线对比 |
 | JVM 堆内存 | 按内存池（id）拆分，定位泄漏来源 |
-| 数据库连接池 | 活跃 / 空闲 / 最大连接三线 |
+| 数据库连接池 | 活跃 / 空闲 / 最大连接三线（`hikaricp_*` 与 `druid_*` 双口径，任一环境生效） |
 | JVM GC 频率 | `rate(jvm_gc_pause_seconds_count[5m])` |
 | Sentinel 治理 | 拦截 QPS / 放行 QPS 对比，评估限流熔断效果 |
 
 ## 告警规则
 
-告警规则已随包提供：`config/monitoring/prometheus/alert-rules.yml`，覆盖：
+告警规则已随包提供：`config/monitoring/prometheus/alert-rules.yml`，共 **12 条**，覆盖：
 
 | 告警 | 阈值 | 级别 |
 |------|------|------|
 | ApexServiceDown | 抓取失败 1 分钟 | critical |
+| ApexHealthCheckDown | `/actuator/health` 非 UP 2 分钟（Blackbox 探测） | critical |
 | ApexHighErrorRate | 5xx 错误率 > 5%（5 分钟） | warning |
 | ApexHighLatency | P95 > 2s（5 分钟） | warning |
 | ApexTrafficDrop | 流量 < 日均 20%（10 分钟） | warning |
 | ApexJvmHeapHigh | 堆使用率 > 85%（10 分钟） | warning |
 | ApexFullGcFrequent | Full GC > 5 次/分钟（5 分钟） | warning |
-| ApexDbConnectionPoolHigh | 连接池水位 > 80%（5 分钟） | warning |
-| ApexDbConnectionTimeout | 10 分钟连接超时 > 5 次 | critical |
-| ApexRedisDown | 5 分钟 Redis 连接失败 > 0 | critical |
+| ApexThreadCountHigh | 存活线程 > 2000（10 分钟） | warning |
+| ApexDbConnectionPoolHigh | 连接池水位 > 80%（5 分钟，Hikari/Druid 双口径） | warning |
+| ApexDbConnectionTimeout | 10 分钟连接超时 > 5 次（Hikari/Druid 双口径） | critical |
+| ApexRedisDown | `redisson_healthy == 0`（2 分钟） | critical |
 | ApexSentinelBlockHigh | 10 分钟拦截 > 100 次 | warning |
+
+> **指标口径说明**：
+> - 数据库连接池：dev/本地用 HikariCP（`hikaricp_*`），prod 用 Druid（`druid_*`，由
+>   `DruidDataSourceMetricsBinder` 上报）。大盘与告警均以 `or` 合并，任一环境生效。
+> - Redis：`redisson_healthy`（1 = 全部节点 PING 通，0 = 不可达）由应用侧
+>   `RedissonMetricsBinder` 上报（带 500ms 超时探针）。
+> - 健康探针：`probe_success` 由 Blackbox Exporter 探测 `/actuator/health` 提供，
+>   docker-compose 栈已内置（`blackbox-exporter` 服务）。
 
 启用告警的两种方式：
 
@@ -102,6 +113,8 @@ docker compose up -d
   - P99 响应时间：`histogram_quantile(0.99, sum(rate(apex_api_response_time_seconds_bucket[5m])) by (le))`
   - Top 10 慢接口：`topk(10, apex_api_response_time_seconds_sum / apex_api_response_time_seconds_count)`
   - 活跃线程数：`jvm_threads_live_threads`
+  - Redis 节点健康：`redisson_healthy`（0 = 节点不可达）
+  - Druid 连接池水位：`sum(druid_connections_active) / sum(druid_connections_max) * 100`
 
 ## 注意事项
 

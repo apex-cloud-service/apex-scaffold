@@ -42,6 +42,29 @@ scrape_configs:
           application: apex-scaffold
           component: sentinel
 
+  # ---- 健康探针（Blackbox Exporter 探测 /actuator/health） ----
+  # 供 alert-rules.yml 的 ApexHealthCheckDown（probe_success）使用。
+  # 本地 docker-compose 栈：blackbox 容器经 host.docker.internal 访问宿主机上的应用；
+  # K8s/生产：targets 改为 <service>:8081，并将 relabel 的 __address__ 改为实际
+  # blackbox-exporter 地址（集群内通常为 <blackbox-service>:9115）。
+  - job_name: apex-scaffold-health
+    metrics_path: /probe
+    params:
+      module: [http_2xx]
+    scrape_interval: 15s
+    static_configs:
+      - targets:
+          - "http://host.docker.internal:8081/actuator/health"
+        labels:
+          application: apex-scaffold
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+
   # ---- Grafana 自身指标（可选，用于监控监控本身） ----
   - job_name: grafana
     metrics_path: /metrics
