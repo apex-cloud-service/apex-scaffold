@@ -46,8 +46,8 @@ public class TraceConfig {
      */
     public TraceConfig() {}
 
-    /** 服务名称，用于链路追踪标识 */
-    @Value("${spring.application.name:apex-service}")
+    /** 服务名称，用于链路追踪标识（兜底默认值与应用名 apex-scaffold 保持一致） */
+    @Value("${spring.application.name:apex-scaffold}")
     private String serviceName;
 
     /** 采样率，范围 0.0-1.0，表示采样的比例 */

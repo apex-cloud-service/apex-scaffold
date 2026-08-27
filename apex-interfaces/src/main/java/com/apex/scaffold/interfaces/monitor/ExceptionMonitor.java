@@ -65,6 +65,10 @@ public class ExceptionMonitor {
     @Value("${alert.exception.max-types:100}")
     private int maxExceptionTypes;
 
+    /** 告警服务名（读配置，兜底默认值与应用名 apex-scaffold 保持一致） */
+    @Value("${spring.application.name:apex-scaffold}")
+    private String serviceName;
+
     /**
      * 构造函数
      *
@@ -105,7 +109,7 @@ public class ExceptionMonitor {
                     .message(ex.getMessage())
                     .traceId(traceId)
                     .count(currentCount)
-                    .serviceName("apex-service")
+                    .serviceName(serviceName)
                     .level(determineAlertLevel(ex))
                     .build();
 

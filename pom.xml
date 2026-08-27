@@ -949,7 +949,7 @@
           <version>${maven-surefire-plugin.version}</version>
           <configuration>
             <!-- apex.log.dir: 将集成测试日志统一输出到项目根目录 logs/ 下。
-                 集成测试使用 logback-spring.xml（it profile），写入 logs/apex-service.log 等。 -->
+                 集成测试使用 logback-spring.xml（it profile），写入 logs/apex-scaffold.log 等。 -->
             <argLine>@{argLine} -javaagent:${settings.localRepository}/net/bytebuddy/byte-buddy-agent/${byte-buddy.version}/byte-buddy-agent-${byte-buddy.version}.jar -Dcsp.sentinel.log.dir=${project.build.directory}/sentinel-logs -Dapex.log.dir=${project.basedir}/../logs</argLine>
             <includes>
               <include>**/*IntegrationTest.java</include>

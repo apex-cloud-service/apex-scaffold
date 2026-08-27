@@ -63,11 +63,11 @@ class RemoteRequestTest {
      *
      */
     @Test
-    @DisplayName("计费图片请求可关闭请求体日志")
+    @DisplayName("大体积请求体可关闭请求体日志")
     void shouldAllowSuppressingRequestBodyLogging() {
         RemoteRequest<String> request = RemoteRequest.builder(String.class)
-                .service("volc-ai-beauty")
-                .path("/openapi/ai_effect/submit")
+                .service("image-processor")
+                .path("/openapi/image/submit")
                 .method(HttpMethod.POST)
                 .jsonBody(Map.of("resource", "data:image/jpeg;base64,AAAA"))
                 .logRequestBody(false)

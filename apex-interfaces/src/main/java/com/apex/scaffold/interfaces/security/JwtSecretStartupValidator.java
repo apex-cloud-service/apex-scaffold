@@ -35,7 +35,7 @@ public class JwtSecretStartupValidator {
     private static final String DEFAULT_SECRET_MARKER = "MUST-CHANGE-IN-PROD";
 
     /** 默认密钥完整值 */
-    private static final String DEFAULT_SECRET = "apex-service-default-secret-key-" + DEFAULT_SECRET_MARKER;
+    private static final String DEFAULT_SECRET = "apex-scaffold-default-secret-key-" + DEFAULT_SECRET_MARKER;
 
     /** 最小密钥长度的默认值（与 application.yml 中 jwt.min-secret-length 默认值一致） */
     private static final int DEFAULT_MIN_SECRET_LENGTH = 32;

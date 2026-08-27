@@ -14,7 +14,7 @@
 
 groups:
   # ---------- 服务可用性 ----------
-  - name: apex-service-availability
+  - name: apex-scaffold-availability
     rules:
       # 应用进程不可达（管理端口探活失败 1 分钟）
       - alert: ApexServiceDown

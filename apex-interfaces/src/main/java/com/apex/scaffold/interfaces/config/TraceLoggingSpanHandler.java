@@ -274,7 +274,7 @@ public class TraceLoggingSpanHandler extends SpanHandler {
          * @param serviceName 服务名（可能为空）
          * @param ip          服务 IP（可能为空）
          * @param port        服务端口（0 表示未知）
-         * @return 如 "apex-service (127.0.0.1:8080)" 或 "N/A"
+         * @return 如 "apex-scaffold (127.0.0.1:8080)" 或 "N/A"
          */
         private static String formatEndpoint(String serviceName, String ip, int port) {
             String address = Optional.ofNullable(ip)

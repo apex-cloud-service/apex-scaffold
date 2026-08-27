@@ -74,7 +74,7 @@
     <springProperty scope="context" name="LOG_HOME" source="apex.log.dir" defaultValue="${DEFAULT_LOG_HOME:-${user.dir}/logs}"/>
 
   <!-- 应用标识：用于日志文件名前缀，便于快速定位 -->
-  <property name="LOG_NAME" value="apex-service"/>
+  <property name="LOG_NAME" value="apex-scaffold"/>
 
   <!-- 单文件最大大小：超过后自动滚动切分 -->
   <property name="MAX_FILE_SIZE" value="100MB"/>
@@ -208,9 +208,9 @@
     └─────────────────────┴──────────┴───────────────────────────────────────────────────┘
 
     文件输出路由：
-    - apex-service.log:          com.apex + Spring + SQL + 组件
-    - apex-service-error.log:    所有 ERROR 级别
-    - apex-service-request.log:  LoggingFilter 请求摘要
+    - apex-scaffold.log:          com.apex + Spring + SQL + 组件
+    - apex-scaffold-error.log:    所有 ERROR 级别
+    - apex-scaffold-request.log:  LoggingFilter 请求摘要
     - zipkin/zipkin.log:         Brave/Zipkin 链路追踪
     - nacos/nacos.log:           Nacos 客户端日志
     - rocketmq/rocketmq*.log:    RocketMQ 客户端日志
@@ -309,7 +309,7 @@
     - application-performance.yml 中 trace.sampling-rate=0.0 已关闭 Span 采样，
       此处进一步关闭日志输出，双保险。
     - 所有 Logger 均设置 additivity="false"，防止日志向 Root Logger 重复输出。
-    - 压测失败时建议先看 apex-service-error.log，逐级提升需要的 Logger 级别复现。
+    - 压测失败时建议先看 apex-scaffold-error.log，逐级提升需要的 Logger 级别复现。
 
   -->
   <springProfile name="performance">
@@ -369,7 +369,7 @@
     FILE - 全量应用日志
     记录所有 INFO 及以上级别的日志
     使用 SizeAndTimeBasedRollingPolicy：按日期+大小双维度滚动
-    文件命名：apex-service.2025-01-01.0.log.gz
+    文件命名：apex-scaffold.2025-01-01.0.log.gz
   -->
   <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
     <file>${LOG_HOME}/${LOG_NAME}.log</file>
@@ -563,7 +563,7 @@
       <encoder class="net.logstash.logback.encoder.LogstashEncoder">
         <!-- 自定义字段：标识服务名称和环境，便于 Logstash 过滤和聚合 -->
         <customFields>{
-          "service": "apex-service",
+          "service": "apex-scaffold",
           "environment": "prod"
           }
         </customFields>

@@ -106,8 +106,8 @@ curl http://localhost:8080/api/health
   "data": {
     "status": "UP",
     "timestamp": "2026-08-25T12:00:00",
-    "application": "apex-service",
-    "version": "1.0.0"
+    "application": "apex-scaffold",
+    "version": "1.1.3"
   },
   "traceId": null
 }

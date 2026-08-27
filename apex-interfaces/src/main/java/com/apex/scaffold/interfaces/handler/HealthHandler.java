@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
@@ -50,6 +51,14 @@ public class HealthHandler extends BaseHandler {
         super(messageUtils);
     }
 
+    /** 应用名称（读配置，兜底默认值与应用名 apex-scaffold 保持一致） */
+    @Value("${spring.application.name:apex-scaffold}")
+    private String applicationName;
+
+    /** 应用版本（读配置，三档构建时由 apex-build.properties 注入） */
+    @Value("${apex.version:1.1.3}")
+    private String applicationVersion;
+
     /**
      * 健康检查接口
      *
@@ -82,8 +91,8 @@ public class HealthHandler extends BaseHandler {
         Map<String, Object> healthInfo = new HashMap<>(4);
         healthInfo.put("status", "UP");
         healthInfo.put("timestamp", LocalDateTime.now());
-        healthInfo.put("application", "apex-service");
-        healthInfo.put("version", "1.0.0");
+        healthInfo.put("application", applicationName);
+        healthInfo.put("version", applicationVersion);
         return buildOk(Result.success(healthInfo));
     }
 
@@ -106,7 +115,7 @@ public class HealthHandler extends BaseHandler {
     public Mono<ServerResponse> root(ServerRequest request) {
         Map<String, Object> probeInfo = new HashMap<>(3);
         probeInfo.put("status", "UP");
-        probeInfo.put("application", "apex-service");
+        probeInfo.put("application", applicationName);
         probeInfo.put("timestamp", LocalDateTime.now());
         return buildOk(Result.success(probeInfo));
     }

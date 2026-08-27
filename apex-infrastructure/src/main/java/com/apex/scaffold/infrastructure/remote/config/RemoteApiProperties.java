@@ -34,7 +34,7 @@ import org.springframework.context.annotation.Configuration;
  *         connect-timeout: 3000
  *         read-timeout: 8000
  *         default-headers:
- *           X-Request-Source: apex-service
+ *           X-Request-Source: apex-scaffold
  *       order-service:
  *         base-url: http://localhost:8082
  *         connect-timeout: 5000

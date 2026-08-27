@@ -34,10 +34,12 @@ import org.springframework.util.AntPathMatcher;
 @Configuration
 public class SpringDocConfig {
 
-    @Value("${spring.application.name:apex-service}")
+    /** 应用名称（兜底默认值与应用名 apex-scaffold 保持一致） */
+    @Value("${spring.application.name:apex-scaffold}")
     private String applicationName;
 
-    @Value("${apex.version:1.1.2}")
+    /** 应用版本（三档构建时由 apex-build.properties 注入；兜底默认值随发布版本同步） */
+    @Value("${apex.version:1.1.3}")
     private String applicationVersion;
 
     private static final String LOCAL_SERVER_URL = "http://localhost:8080";

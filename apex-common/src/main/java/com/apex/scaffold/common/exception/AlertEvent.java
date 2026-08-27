@@ -73,7 +73,8 @@ public class AlertEvent {
         this.exceptionType = ex.getClass().getSimpleName();
         this.message = ex.getMessage();
         this.traceId = TraceIdUtil.getTraceId();
-        this.serviceName = System.getProperty("spring.application.name", "apex-service");
+        // 兜底默认值与应用名 apex-scaffold 保持一致（Spring 环境下通常由调用方显式注入真实服务名）
+        this.serviceName = System.getProperty("spring.application.name", "apex-scaffold");
         this.count = 1;
         this.level = ex instanceof BusinessException ? AlertLevel.WARNING : AlertLevel.ERROR;
     }

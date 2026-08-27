@@ -43,7 +43,7 @@ class HealthRemoteIT extends BaseLocalIntegrationTest {
                 .jsonPath("$.data.status")
                 .isEqualTo("UP")
                 .jsonPath("$.data.application")
-                .isEqualTo("apex-service");
+                .isEqualTo("apex-scaffold");
     }
 
     /**
