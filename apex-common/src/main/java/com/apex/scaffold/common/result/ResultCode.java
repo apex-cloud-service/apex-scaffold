@@ -394,31 +394,4 @@ public enum ResultCode {
                 .findFirst()
                 .orElse(ERROR);
     }
-
-    /**
-     * 获取状态码
-     *
-     * @return 状态码
-     */
-    public Integer getCode() {
-        return code;
-    }
-
-    /**
-     * 获取状态消息
-     *
-     * @return 状态消息
-     */
-    public String getMsg() {
-        return msg;
-    }
-
-    /**
-     * 获取国际化消息键
-     *
-     * @return 消息键
-     */
-    public String getMessageKey() {
-        return messageKey;
-    }
 }
