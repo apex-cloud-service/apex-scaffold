@@ -24,7 +24,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.bind.support.WebExchangeBindException;
@@ -46,7 +45,7 @@ import reactor.core.publisher.Mono;
  *   <li><b>业务异常</b>：{@link BusinessException}，根据错误码映射 HTTP 状态码，
  *       使用 {@link BusinessException#getMessageKey()} 获取关联的消息键</li>
  *   <li><b>微信 API 异常</b>：{@code WeChatApiException}</li>
- *   <li><b>参数校验异常</b>：{@link ConstraintViolationException}、{@link MethodArgumentNotValidException}</li>
+ *   <li><b>参数校验异常</b>：{@link ConstraintViolationException}、{@link WebExchangeBindException}</li>
  *   <li><b>参数异常</b>：{@link IllegalArgumentException}、{@link IllegalStateException}</li>
  *   <li><b>系统异常</b>：{@link NullPointerException} 及其他未捕获异常</li>
  * </ul>
@@ -215,33 +214,6 @@ public class GlobalExceptionHandler {
                 .collect(Collectors.joining(", "));
 
         log.warn("参数校验失败: {}, traceId: {}", message, traceId);
-
-        Result<Void> result = Result.error(ResultCode.PARAM_ERROR.getCode(), message, traceId);
-        return Mono.just(ResponseEntity.badRequest().body(result));
-    }
-
-    /**
-     * 处理参数绑定异常
-     *
-     * <p>
-     * 处理 {@code @RequestBody} 注解参数绑定时的 JSR 校验异常。
-     *
-     * @param ex       {@link MethodArgumentNotValidException} 参数绑定异常
-     * @param exchange {@link ServerWebExchange} 交换对象
-     * @return 错误响应（400 Bad Request），包含字段校验失败信息
-     */
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public Mono<ResponseEntity<Result<Void>>> handleMethodArgumentNotValidException(
-            MethodArgumentNotValidException ex, ServerWebExchange exchange) {
-        exceptionMonitor.monitorException(ex);
-
-        String traceId = resolveTraceId(exchange);
-
-        String message = ex.getBindingResult().getFieldErrors().stream()
-                .map(FieldError::getDefaultMessage)
-                .collect(Collectors.joining(", "));
-
-        log.warn("参数绑定失败: {}, traceId: {}", message, traceId);
 
         Result<Void> result = Result.error(ResultCode.PARAM_ERROR.getCode(), message, traceId);
         return Mono.just(ResponseEntity.badRequest().body(result));
@@ -419,7 +391,7 @@ public class GlobalExceptionHandler {
      * <p>
      * 在 WebFlux 响应式环境中，当 {@code @RequestBody} 注解的参数绑定失败
      * 或请求体反序列化失败时，Spring 会抛出 {@link WebExchangeBindException}，
-     * 而非传统的 {@link MethodArgumentNotValidException}。
+     * 而非 Spring MVC 的 {@code MethodArgumentNotValidException}（WebFlux 下不会抛出）。
      * 本方法收集所有字段级别的校验错误信息，提取 {@link FieldError} 的默认消息并拼接，
      * 返回 400 Bad Request 状态码及国际化的错误提示。
      *

@@ -3,6 +3,7 @@ package com.apex.scaffold.application.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -12,6 +13,7 @@ import com.apex.scaffold.application.dto.LoginRequest;
 import com.apex.scaffold.application.dto.LoginResponse;
 import com.apex.scaffold.application.dto.SendSmsRequest;
 import com.apex.scaffold.application.dto.WxPhoneRequest;
+import com.apex.scaffold.application.security.CaptchaService;
 import com.apex.scaffold.application.service.login.LoginStrategy;
 import com.apex.scaffold.application.service.login.LoginStrategyProvider;
 import com.apex.scaffold.common.exception.BusinessException;
@@ -80,6 +82,12 @@ class AuthServiceTest {
     @Mock
     private LoginProtectionProperties loginProtectionProperties;
 
+    @Mock
+    private CaptchaService captchaService;
+
+    @Mock
+    private LoginLogService loginLogService;
+
     private UserEntity user;
     private LoginResponse loginResponse;
     private LoginRequest loginRequest;
@@ -104,8 +112,13 @@ class AuthServiceTest {
                 smsVerificationCoordinator,
                 ioTaskExecutor,
                 redisTemplate,
-                loginProtectionProperties);
+                loginProtectionProperties,
+                captchaService,
+                loginLogService);
         ReflectionTestUtils.setField(authService, "accessTokenExpireMs", 7200000L);
+        lenient()
+                .when(loginLogService.record(any(com.apex.scaffold.domain.model.entity.LoginLogEntity.class)))
+                .thenReturn(Mono.empty());
 
         user = new UserEntity();
         user.setId(1L);

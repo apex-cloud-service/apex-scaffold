@@ -398,3 +398,81 @@ main { padding: 28px 30px; }
   .policy-list { grid-template-columns: 1fr; }
   .catalog-actions { grid-template-columns: 1fr; }
 }
+
+/* ============================================================
+ * 系统管理控制台（追加样式）
+ * ============================================================ */
+
+/* 主区域 */
+.main-content { margin-left: 242px; padding: 32px clamp(20px, 4vw, 48px) 60px; }
+.view-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 24px; }
+.view-header h1 { margin: 0; font-family: Georgia, "Songti SC", serif; font-size: 34px; font-weight: 500; }
+.view-subtitle { margin: 6px 0 0; color: var(--muted); font-size: 13px; }
+
+/* 工具栏 */
+.toolbar { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
+.input { min-height: 40px; padding: 0 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); font-size: 13px; }
+.input:focus { outline: 2px solid rgba(23,32,29,.18); }
+select.input { min-width: 140px; }
+textarea.input { padding: 10px 12px; min-height: 84px; resize: vertical; }
+
+/* 表格 */
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 14px; background: var(--paper); }
+.table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.table th, .table td { padding: 12px 14px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: middle; }
+.table th { background: var(--surface); font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.table tr:last-child td { border-bottom: 0; }
+.table .actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.table code { padding: 2px 6px; border-radius: 6px; background: var(--surface); font-size: 12px; }
+.table .empty { padding: 36px; color: var(--muted); text-align: center; }
+
+/* 徽标 */
+.badge { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 750; }
+.badge-success { background: rgba(60,160,90,.14); color: #2e7d46; }
+.badge-danger { background: rgba(210,90,80,.14); color: #b23a2e; }
+
+/* 分页 */
+.pagination { display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin-top: 14px; }
+.page-button { min-height: 34px; padding: 0 14px; border: 1px solid var(--line); border-radius: 9px; background: var(--paper); font-size: 12px; }
+.page-button:disabled { opacity: .45; cursor: not-allowed; }
+.page-info { color: var(--muted); font-size: 12px; }
+
+/* 卡片 */
+.card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+.card { padding: 22px; border: 1px solid var(--line); border-radius: 16px; background: var(--paper); }
+.card h3 { margin: 0 0 10px; font-size: 12px; font-weight: 800; letter-spacing: .08em; color: var(--muted); }
+.card-value { margin: 0; font-family: Georgia, "Songti SC", serif; font-size: 30px; }
+.card-hint { margin: 8px 0 0; color: var(--muted); font-size: 12px; line-height: 1.6; }
+
+/* 左右分栏 */
+.split-layout { display: grid; grid-template-columns: 320px 1fr; gap: 18px; align-items: start; }
+.split-pane { min-width: 0; }
+.pane-title { margin: 0 0 12px; font-size: 14px; font-weight: 800; }
+.list-pane { display: grid; gap: 8px; max-height: 640px; overflow-y: auto; }
+.list-item { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); cursor: pointer; }
+.list-item.active { border-color: var(--ink); background: var(--surface); }
+.list-item-main { display: grid; gap: 4px; min-width: 0; }
+.list-item-sub { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 12px; }
+.list-item-actions { display: flex; gap: 4px; flex-shrink: 0; }
+
+/* 弹窗 */
+.modal-backdrop { position: fixed; z-index: 200; inset: 0; display: grid; place-items: center; padding: 24px; background: rgba(15,20,18,.45); }
+.modal { width: min(560px, 100%); max-height: 84vh; display: flex; flex-direction: column; border-radius: 18px; background: var(--paper); box-shadow: var(--shadow); }
+.modal-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 22px; border-bottom: 1px solid var(--line); }
+.modal-header h2 { margin: 0; font-size: 17px; }
+.modal-body { padding: 20px 22px; overflow-y: auto; }
+.modal-footer { display: flex; justify-content: flex-end; gap: 10px; padding: 14px 22px; border-top: 1px solid var(--line); }
+
+/* 表单 */
+.form-grid { display: grid; gap: 14px; }
+.form-grid label { display: grid; gap: 6px; font-size: 12px; font-weight: 750; }
+.check-row { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border: 1px solid var(--line); border-radius: 10px; font-size: 13px; font-weight: 500; }
+.detail-list { display: grid; grid-template-columns: 96px 1fr; gap: 10px 14px; font-size: 13px; }
+.detail-list dt { color: var(--muted); }
+.detail-list dd { margin: 0; }
+
+/* 验证码图片 */
+.captcha-image { height: 40px; border: 1px solid var(--line); border-radius: 10px; cursor: pointer; }
+
+/* 提示（错误态） */
+.toast-error { background: var(--danger); }

@@ -29,10 +29,11 @@ import org.springframework.validation.beanvalidation.MethodValidationPostProcess
  *     private String phone;
  * }
  *
- * // 在Controller上启用校验
- * @PostMapping("/login")
- * public Mono<Result<LoginResponse>> login(@Valid @RequestBody LoginRequest request) {
- *     // ...
+ * // 在 WebFlux 函数式端点的 Handler 中启用校验（继承 BaseHandler 注入 Validator）
+ * public Mono<ServerResponse> login(ServerRequest request) {
+ *     return request.bodyToMono(LoginRequest.class)
+ *             .flatMap(this::validateAndThrow)
+ *             .flatMap(body -> authService.login(body, ...));
  * }
  * }</pre>
  *

@@ -40,6 +40,20 @@ public class ApexLambdaQueryWrapper<T> extends LambdaQueryWrapper<T> {
     }
 
     /**
+     * 如果值不为 null，则执行不等于查询。
+     *
+     * <p>用于"排除自身"的唯一性校验场景，例如更新时校验编码唯一性
+     * 需排除当前记录自身。</p>
+     *
+     * @param column 数据库列（SFunction 形式）
+     * @param val    查询值；为 null 时不追加条件
+     * @return 当前 wrapper 实例，便于链式调用
+     */
+    public ApexLambdaQueryWrapper<T> neIfPresent(SFunction<T, ?> column, Object val) {
+        return (ApexLambdaQueryWrapper<T>) super.ne(val != null, column, val);
+    }
+
+    /**
      * 如果字符串不为空（非 null 且长度大于 0），则执行等于查询。
      *
      * @param column 数据库列

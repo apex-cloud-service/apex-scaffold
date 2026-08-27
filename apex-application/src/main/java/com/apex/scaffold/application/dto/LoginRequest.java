@@ -136,4 +136,29 @@ public class LoginRequest {
     @Schema(description = "客户端平台标识（android/ios/h5/harmony/wechat）")
     @Size(max = 20, message = "{param.size_invalid}")
     private String platform;
+
+    /**
+     * 图形验证码 ID（可选）。
+     *
+     * <p>启用图形验证码后，登录前需先获取验证码并回传该 ID，
+     * 与 {@link #captchaCode} 共同参与服务端校验。APP 客户端
+     * 未开启验证码时可不传。</p>
+     *
+     * @since 3.2.0
+     */
+    @Schema(description = "图形验证码ID（可选，启用验证码时必填）")
+    @Size(max = 64, message = "{param.size_invalid}")
+    private String captchaId;
+
+    /**
+     * 图形验证码内容（可选）。
+     *
+     * <p>用户输入并提交的验证码字符，与 {@link #captchaId} 配对使用，
+     * 服务端一次性校验，忽略大小写。</p>
+     *
+     * @since 3.2.0
+     */
+    @Schema(description = "图形验证码（可选，启用验证码时必填）")
+    @Size(min = 4, max = 6, message = "{param.size_invalid}")
+    private String captchaCode;
 }

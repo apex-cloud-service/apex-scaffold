@@ -194,7 +194,8 @@ public class LicenseGenerator {
                 String privateKeyFile = args[1];
                 String publicKeyFile = args[2];
                 String outputFile = args[3];
-                LicenseVersion version = args.length > 4 ? LicenseVersion.valueOf(args[4].toUpperCase()) : LicenseVersion.ENTERPRISE;
+                LicenseVersion version =
+                        args.length > 4 ? LicenseVersion.valueOf(args[4].toUpperCase()) : LicenseVersion.ENTERPRISE;
                 String customerName = args.length > 5 ? args[5] : "示例客户";
                 int validDays = args.length > 6 ? Integer.parseInt(args[6]) : 365;
                 String[] features = args.length > 7 ? args[7].split(",") : null;

@@ -8,6 +8,7 @@ import com.apex.scaffold.application.dto.LoginResponse;
 import com.apex.scaffold.application.dto.MobileValidateResponse;
 import com.apex.scaffold.application.dto.SendSmsRequest;
 import com.apex.scaffold.application.dto.WxPhoneRequest;
+import com.apex.scaffold.application.security.CaptchaService;
 import com.apex.scaffold.application.service.login.LoginStrategyProvider;
 import com.apex.scaffold.common.dto.TokenStoreEntry;
 import com.apex.scaffold.common.exception.BusinessException;
@@ -119,8 +120,14 @@ public class AuthService {
      */
     private final ReactiveStringRedisTemplate redisTemplate;
 
-    /** 登录保护配置 */
+    /** 登录保护配置属性，包含失败次数阈值与时间窗口。 */
     private final LoginProtectionProperties loginProtectionProperties;
+
+    /** 图形验证码服务，用于登录防自动化爆破校验。 */
+    private final CaptchaService captchaService;
+
+    /** 登录日志服务，用于记录每次登录尝试（成功/失败）。 */
+    private final LoginLogService loginLogService;
 
     /**
      * 构造方法注入依赖
@@ -135,6 +142,8 @@ public class AuthService {
      * @param ioTaskExecutor IO 密集型任务线程池
      * @param redisTemplate Redis 响应式字符串模板
      * @param loginProtectionProperties 登录保护配置
+     * @param captchaService 图形验证码服务
+     * @param loginLogService 登录日志服务
      */
     public AuthService(
             TokenService tokenService,
@@ -146,7 +155,9 @@ public class AuthService {
             SmsVerificationCoordinator smsVerificationCoordinator,
             ExecutorService ioTaskExecutor,
             ReactiveStringRedisTemplate redisTemplate,
-            LoginProtectionProperties loginProtectionProperties) {
+            LoginProtectionProperties loginProtectionProperties,
+            CaptchaService captchaService,
+            LoginLogService loginLogService) {
         this.tokenService = tokenService;
         this.tokenBlacklistService = tokenBlacklistService;
         this.userService = userService;
@@ -157,6 +168,8 @@ public class AuthService {
         this.ioTaskExecutor = ioTaskExecutor;
         this.redisTemplate = redisTemplate;
         this.loginProtectionProperties = loginProtectionProperties;
+        this.captchaService = captchaService;
+        this.loginLogService = loginLogService;
     }
 
     /**
@@ -178,11 +191,35 @@ public class AuthService {
      */
     @SentinelResource(value = "authLogin", blockHandler = "handleLoginBlock", fallback = "loginFallback")
     public Mono<LoginResponse> login(LoginRequest request, String clientIp) {
-        return checkBruteForce(request, clientIp).then(Mono.defer(() -> loginStrategyProvider
-                .getStrategy(request.getLoginType())
-                .login(request)
-                .flatMap(response -> recordLoginSuccess(request, clientIp).thenReturn(response))
-                .onErrorResume(e -> recordLoginFailure(request, clientIp).then(Mono.error(e)))));
+        return verifyCaptchaIfPresent(request)
+                .then(checkBruteForce(request, clientIp))
+                .then(Mono.defer(() -> loginStrategyProvider
+                        .getStrategy(request.getLoginType())
+                        .login(request)
+                        .flatMap(response ->
+                                recordLoginSuccess(request, clientIp).thenReturn(response))
+                        .onErrorResume(
+                                e -> recordLoginFailure(request, clientIp).then(Mono.error(e)))));
+    }
+
+    /**
+     * 登录前校验图形验证码（可选）。
+     *
+     * <p>仅当请求携带 {@code captchaId} 时触发校验；校验失败抛出
+     * {@code CAPTCHA_INVALID} 错误。APP 客户端未开启验证码时不传
+     * 该字段，直接放行。</p>
+     *
+     * @param request 登录请求
+     * @return 校验通过的信号
+     * @throws BusinessException 当验证码校验失败时抛出
+     */
+    private Mono<Void> verifyCaptchaIfPresent(LoginRequest request) {
+        if (request.getCaptchaId() == null || request.getCaptchaId().isBlank()) {
+            return Mono.empty();
+        }
+        return captchaService
+                .verify(request.getCaptchaId(), request.getCaptchaCode())
+                .flatMap(valid -> valid ? Mono.empty() : Mono.error(new BusinessException(ResultCode.CAPTCHA_INVALID)));
     }
 
     /**
@@ -273,11 +310,13 @@ public class AuthService {
         String ipKey = LOGIN_FAIL_IP_PREFIX + clientIp;
         Mono<Void> deleteIp = redisTemplate.opsForValue().delete(ipKey).then();
         String username = resolveUsername(request);
-        if (username == null || username.isBlank()) {
-            return deleteIp;
-        }
-        String usernameKey = LOGIN_FAIL_USERNAME_PREFIX + username;
-        return deleteIp.then(redisTemplate.opsForValue().delete(usernameKey).then());
+        Mono<Void> cleanup = username == null || username.isBlank()
+                ? deleteIp
+                : deleteIp.then(redisTemplate
+                        .opsForValue()
+                        .delete(LOGIN_FAIL_USERNAME_PREFIX + username)
+                        .then());
+        return cleanup.then(safeRecordLoginLog(username, clientIp, true, "登录成功"));
     }
 
     /**
@@ -304,23 +343,74 @@ public class AuthService {
                 .then();
 
         String username = resolveUsername(request);
-        if (username == null || username.isBlank()) {
-            return incrementIp;
-        }
+        Mono<Void> counters = username == null || username.isBlank()
+                ? incrementIp
+                : incrementIp.then(incrementLoginFailCount(LOGIN_FAIL_USERNAME_PREFIX + username, windowSize));
 
-        String usernameKey = LOGIN_FAIL_USERNAME_PREFIX + username;
-        Mono<Void> incrementUsername = redisTemplate
+        return counters.then(safeRecordLoginLog(username, clientIp, false, "登录失败"));
+    }
+
+    /**
+     * 递增登录失败计数并设置过期时间。
+     *
+     * @param key 计数器 Redis 键
+     * @param windowSize 计数窗口
+     * @return 空 Mono
+     */
+    private Mono<Void> incrementLoginFailCount(String key, Duration windowSize) {
+        return redisTemplate
                 .opsForValue()
-                .increment(usernameKey)
+                .increment(key)
                 .flatMap(count -> {
                     if (count == 1) {
-                        return redisTemplate.expire(usernameKey, windowSize).then();
+                        return redisTemplate.expire(key, windowSize).then();
                     }
                     return Mono.empty();
                 })
                 .then();
+    }
 
-        return incrementIp.then(incrementUsername);
+    /**
+     * 记录登录日志（失败不阻塞主流程）。
+     *
+     * <p>登录日志写入失败仅记录 WARN 日志，不向登录流程传播异常，
+     * 保证审计能力不影响登录可用性。</p>
+     *
+     * @param username 登录账号
+     * @param clientIp 客户端 IP
+     * @param success 是否成功
+     * @param message 登录消息
+     * @return 空 Mono
+     */
+    private Mono<Void> safeRecordLoginLog(String username, String clientIp, boolean success, String message) {
+        if (loginLogService == null) {
+            return Mono.empty();
+        }
+        com.apex.scaffold.domain.model.entity.LoginLogEntity entity =
+                com.apex.scaffold.domain.model.entity.LoginLogEntity.create(
+                        username, clientIp, resolveBrowser(), resolveOs(), success, message);
+        return loginLogService.record(entity).onErrorResume(error -> {
+            log.warn("登录日志记录失败，username: {}, error: {}", username, error.getMessage());
+            return Mono.empty();
+        });
+    }
+
+    /**
+     * 解析浏览器信息（占位实现，可接入 UA 解析库）。
+     *
+     * @return 浏览器标识，当前返回固定值
+     */
+    private String resolveBrowser() {
+        return "unknown";
+    }
+
+    /**
+     * 解析操作系统信息（占位实现，可接入 UA 解析库）。
+     *
+     * @return 操作系统标识，当前返回固定值
+     */
+    private String resolveOs() {
+        return "unknown";
     }
 
     /**

@@ -303,6 +303,37 @@ public enum ResultCode {
     /** 上传照片不是正脸 */
     PHOTO_NOT_FRONTAL(4603, "请上传清晰的正脸照片后重试", "param.photo_not_frontal"),
 
+    // ========== 系统管理错误 ==========
+
+    /** 菜单不存在 */
+    MENU_NOT_FOUND(4701, "菜单不存在", "biz.menu.not_found"),
+    /** 父菜单不存在 */
+    MENU_PARENT_NOT_FOUND(4702, "父菜单不存在", "biz.menu.parent_not_found"),
+    /** 存在子菜单，无法删除 */
+    MENU_HAS_CHILDREN(4703, "存在子菜单，无法删除", "biz.menu.has_children"),
+    /** 按钮类型菜单必须配置权限标识 */
+    MENU_PERMS_REQUIRED(4704, "按钮类型菜单必须配置权限标识", "biz.menu.perms_required"),
+
+    /** 字典类型不存在 */
+    DICT_TYPE_NOT_FOUND(4711, "字典类型不存在", "biz.dict.type_not_found"),
+    /** 字典类型编码已存在 */
+    DICT_TYPE_EXISTS(4712, "字典类型编码已存在", "biz.dict.type_exists"),
+    /** 字典数据不存在 */
+    DICT_DATA_NOT_FOUND(4713, "字典数据不存在", "biz.dict.data_not_found"),
+
+    /** 参数配置不存在 */
+    CONFIG_NOT_FOUND(4721, "参数配置不存在", "biz.config.not_found"),
+    /** 参数键名已存在 */
+    CONFIG_KEY_EXISTS(4722, "参数键名已存在", "biz.config.key_exists"),
+
+    /** 定时任务不存在 */
+    JOB_NOT_FOUND(4731, "定时任务不存在", "biz.job.not_found"),
+    /** 定时任务执行失败 */
+    JOB_INVOKE_FAILED(4732, "定时任务执行失败", "biz.job.invoke_failed"),
+
+    /** 验证码错误或已过期 */
+    CAPTCHA_INVALID(4741, "验证码错误或已过期", "biz.captcha.invalid"),
+
     // ========== 安全防护错误 ==========
 
     /** 防重放校验失败 */

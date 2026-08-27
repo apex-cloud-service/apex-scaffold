@@ -46,7 +46,8 @@ public class LicenseAutoConfiguration {
             }
             loadLicense(validator, licensePath);
 
-            log.info("License 验证通过: 客户={}, 版本={}",
+            log.info(
+                    "License 验证通过: 客户={}, 版本={}",
                     validator.getLicenseInfo().getCustomerName(),
                     validator.getLicenseInfo().getVersion());
             return validator;
@@ -78,8 +79,7 @@ public class LicenseAutoConfiguration {
             if (resource == null) {
                 throw new IllegalStateException("License文件不存在: " + licensePath);
             }
-            String content = new String(
-                    resource.openStream().readAllBytes(), StandardCharsets.UTF_8);
+            String content = new String(resource.openStream().readAllBytes(), StandardCharsets.UTF_8);
             validator.loadFromJson(content);
         } else {
             validator.loadFromFile(licensePath);

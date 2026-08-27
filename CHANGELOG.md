@@ -2,6 +2,23 @@
 
 本项目遵循 [语义化版本规范](https://semver.org/lang/zh-CN/)。
 
+## [1.1.1] - 2026-08-27
+
+### Added
+- 系统管理三件套（P0-1）：菜单管理（sys_menu 树 + 按钮权限）、字典管理（sys_dict_type/sys_dict_data）、参数配置（sys_config）
+- 定时任务管理（P0-2）：sys_job/sys_job_log，自研 Cron 解析器 + Reactor 动态调度，支持动态注册/启停/手动触发/执行日志
+- 管理后台升级（P0-3）：静态审核控制台重写为系统管理控制台（用户/菜单/字典/参数/任务/登录日志，含图形验证码登录）
+- 登录安全（P0-4）：图形验证码（Redis 一次性校验，防重放）+ 登录日志（sys_login_log，审计回溯）
+
+### Changed
+- 数据库迁移（Flyway）：V1__init_schema.sql 基线由 27 张扩展至 34 张通用表，同步 schema-it.sql
+- 登录接口新增可选 captchaId/captchaCode 字段，携带时强制校验图形验证码
+- WebFlux 化：删除遗留 MVC 注解式死代码（UserControllerV1/V2），管理后台短入口改为函数式重定向路由，
+  GlobalExceptionHandler 移除 Spring MVC 专用异常处理器（统一由 WebExceptionHandler 兜底函数式端点）
+
+### Removed
+- 移除业务迁移契约测试残留（InterestCatalog/PhotoReport MigrationContractTest）
+
 ## [1.1.0] - 2026-08-26
 
 ### Added

@@ -1,0 +1,62 @@
+package com.apex.scaffold.infrastructure.persistence.po;
+
+import com.baomidou.mybatisplus.annotation.TableName;
+import java.time.LocalDateTime;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+/**
+ * 登录日志持久化对象。
+ *
+ * <p>对应数据库中的 {@code sys_login_log} 表，存储登录尝试记录。
+ * 每次登录（无论成败）写入一条日志，供安全审计与异常排查。</p>
+ *
+ * @author Apex Team
+ * @version 1.0.0
+ * @since 1.0.0
+ */
+@Data
+@EqualsAndHashCode(callSuper = true)
+@TableName("sys_login_log")
+public class LoginLogPO extends BasePO {
+
+    /**
+     * 构造登录日志持久化对象。
+     */
+    public LoginLogPO() {}
+
+    /**
+     * 登录账号。
+     */
+    private String username;
+
+    /**
+     * 客户端 IP 地址。
+     */
+    private String ip;
+
+    /**
+     * 浏览器信息。
+     */
+    private String browser;
+
+    /**
+     * 操作系统信息。
+     */
+    private String os;
+
+    /**
+     * 登录状态（0-成功，1-失败）。
+     */
+    private Integer status;
+
+    /**
+     * 登录消息。
+     */
+    private String message;
+
+    /**
+     * 登录时间。
+     */
+    private LocalDateTime loginTime;
+}

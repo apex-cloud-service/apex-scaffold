@@ -44,15 +44,16 @@ class LicenseValidatorTest {
     }
 
     private LicenseInfo basicLicense() throws Exception {
-        return generator().generateLicense(
-                "测试客户",
-                "test@example.com",
-                LicenseVersion.BASIC,
-                LocalDateTime.now().minusDays(1),
-                LocalDateTime.now().plusDays(365),
-                -1,
-                -1,
-                new String[] {"jwt_auth", "webflux"});
+        return generator()
+                .generateLicense(
+                        "测试客户",
+                        "test@example.com",
+                        LicenseVersion.BASIC,
+                        LocalDateTime.now().minusDays(1),
+                        LocalDateTime.now().plusDays(365),
+                        -1,
+                        -1,
+                        new String[] {"jwt_auth", "webflux"});
     }
 
     @Test
@@ -93,15 +94,16 @@ class LicenseValidatorTest {
     @Test
     @DisplayName("过期 License 被拒绝")
     void expiredLicenseRejected() throws Exception {
-        LicenseInfo license = generator().generateLicense(
-                "测试客户",
-                "test@example.com",
-                LicenseVersion.BASIC,
-                LocalDateTime.now().minusDays(30),
-                LocalDateTime.now().minusDays(1),
-                -1,
-                -1,
-                null);
+        LicenseInfo license = generator()
+                .generateLicense(
+                        "测试客户",
+                        "test@example.com",
+                        LicenseVersion.BASIC,
+                        LocalDateTime.now().minusDays(30),
+                        LocalDateTime.now().minusDays(1),
+                        -1,
+                        -1,
+                        null);
         String json = toJson(license);
 
         LicenseValidator validator = new LicenseValidator(publicKeyBase64);
@@ -120,8 +122,7 @@ class LicenseValidatorTest {
         KeyPair otherKeyPair = RsaUtil.generateKeyPair();
         String otherPublicKey = RsaUtil.publicKeyToBase64(otherKeyPair.getPublic());
         LicenseValidator validator = new LicenseValidator(otherPublicKey);
-        assertThatThrownBy(() -> validator.loadFromJson(json))
-                .isInstanceOf(LicenseException.class);
+        assertThatThrownBy(() -> validator.loadFromJson(json)).isInstanceOf(LicenseException.class);
     }
 
     @Test
@@ -132,7 +133,6 @@ class LicenseValidatorTest {
         assertThat(degraded.isFeatureEnabled("jwt_auth")).isFalse();
         assertThat(degraded.isFeatureEnabled("any")).isFalse();
         assertThat(degraded.checkUserLimit(1)).isFalse();
-        assertThatThrownBy(degraded::getLicenseInfo)
-                .isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(degraded::getLicenseInfo).isInstanceOf(IllegalStateException.class);
     }
 }

@@ -6,9 +6,16 @@ import static org.springframework.web.reactive.function.server.RequestPredicates
 import com.apex.scaffold.interfaces.handler.AdminUserManagementHandler;
 import com.apex.scaffold.interfaces.handler.AuthHandler;
 import com.apex.scaffold.interfaces.handler.AuthorizationHandler;
+import com.apex.scaffold.interfaces.handler.CaptchaHandler;
+import com.apex.scaffold.interfaces.handler.ConfigHandler;
+import com.apex.scaffold.interfaces.handler.DictHandler;
 import com.apex.scaffold.interfaces.handler.FileHandler;
 import com.apex.scaffold.interfaces.handler.HealthHandler;
+import com.apex.scaffold.interfaces.handler.JobHandler;
+import com.apex.scaffold.interfaces.handler.LoginLogHandler;
+import com.apex.scaffold.interfaces.handler.MenuHandler;
 import com.apex.scaffold.interfaces.handler.UserHandler;
+import java.net.URI;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
@@ -50,6 +57,150 @@ public class ApiRouter {
                         .POST("/{userId}/sessions/revoke", handler::revokeSessions)
                         .PUT("/{userId}/status", contentType(MediaType.APPLICATION_JSON), handler::updateStatus)
                         .PUT("/{userId}/roles", contentType(MediaType.APPLICATION_JSON), handler::replaceRoles))
+                .build();
+    }
+
+    /**
+     * 管理后台短入口重定向路由。
+     *
+     * <p>将短管理地址（{@code /admin}、{@code /admin/}）以 302 重定向到
+     * 不可变静态入口文档，使浏览器地址栏保持规范形式。以函数式端点
+     * 实现，替代历史遗留的注解式 {@code @Controller}。</p>
+     *
+     * @return 短入口重定向路由函数
+     */
+    @Bean
+    public RouterFunction<ServerResponse> adminFrontendRedirectRoutes() {
+        return RouterFunctions.route()
+                .GET("/admin", request -> ServerResponse.temporaryRedirect(URI.create("/admin/index.html"))
+                        .build())
+                .GET("/admin/", request -> ServerResponse.temporaryRedirect(URI.create("/admin/index.html"))
+                        .build())
+                .build();
+    }
+
+    /**
+     * 系统管理-菜单路由（/admin-api/v1/menus）。
+     *
+     * <p>提供菜单树的查询、详情、创建、更新、删除与启停管理端点，
+     * 所有端点经 {@code RequirePermissionAspect} 校验 {@code system:menu:*} 权限。</p>
+     *
+     * @param handler 系统菜单处理器
+     * @return 菜单管理路由函数
+     */
+    @Bean
+    public RouterFunction<ServerResponse> adminMenuRoutes(MenuHandler handler) {
+        return RouterFunctions.route()
+                .path("/admin-api/v1/menus", routes -> routes.GET("", handler::tree)
+                        .GET("/{menuId}", handler::detail)
+                        .POST("", contentType(MediaType.APPLICATION_JSON), handler::create)
+                        .PUT("/{menuId}", contentType(MediaType.APPLICATION_JSON), handler::update)
+                        .DELETE("/{menuId}", handler::delete)
+                        .PUT("/{menuId}/status", contentType(MediaType.APPLICATION_JSON), handler::updateStatus))
+                .build();
+    }
+
+    /**
+     * 系统管理-字典路由（/admin-api/v1/dict）。
+     *
+     * <p>提供字典类型与字典数据的查询、创建、更新、删除与启停管理端点，
+     * 所有端点经 {@code RequirePermissionAspect} 校验 {@code system:dict:*} 权限。</p>
+     *
+     * @param handler 系统字典处理器
+     * @return 字典管理路由函数
+     */
+    @Bean
+    public RouterFunction<ServerResponse> adminDictRoutes(DictHandler handler) {
+        return RouterFunctions.route()
+                .path("/admin-api/v1/dict/types", types -> types.GET("", handler::listTypes)
+                        .GET("/{id}", handler::getType)
+                        .POST("", contentType(MediaType.APPLICATION_JSON), handler::createType)
+                        .PUT("/{id}", contentType(MediaType.APPLICATION_JSON), handler::updateType)
+                        .DELETE("/{id}", handler::deleteType)
+                        .PUT("/{id}/status", contentType(MediaType.APPLICATION_JSON), handler::updateTypeStatus))
+                .path("/admin-api/v1/dict/data", data -> data.GET("", handler::listData)
+                        .GET("/{id}", handler::getData)
+                        .POST("", contentType(MediaType.APPLICATION_JSON), handler::createData)
+                        .PUT("/{id}", contentType(MediaType.APPLICATION_JSON), handler::updateData)
+                        .DELETE("/{id}", handler::deleteData)
+                        .PUT("/{id}/status", contentType(MediaType.APPLICATION_JSON), handler::updateDataStatus))
+                .build();
+    }
+
+    /**
+     * 系统管理-登录日志路由（/admin-api/v1/login-logs）。
+     *
+     * <p>提供登录日志的分页回溯查询端点，经 {@code RequirePermissionAspect}
+     * 校验 {@code system:login-log:list} 权限。</p>
+     *
+     * @param handler 登录日志处理器
+     * @return 登录日志管理路由函数
+     */
+    @Bean
+    public RouterFunction<ServerResponse> adminLoginLogRoutes(LoginLogHandler handler) {
+        return RouterFunctions.route()
+                .GET("/admin-api/v1/login-logs", handler::list)
+                .build();
+    }
+
+    /**
+     * 图形验证码路由（/api/v1/auth/captcha）。
+     *
+     * <p>提供验证码获取与一次性校验端点，供登录场景防自动化爆破使用。</p>
+     *
+     * @param handler 图形验证码处理器
+     * @return 验证码路由函数
+     */
+    @Bean
+    public RouterFunction<ServerResponse> captchaRoutes(CaptchaHandler handler) {
+        return RouterFunctions.route()
+                .GET("/api/v1/auth/captcha", handler::generate)
+                .POST("/api/v1/auth/captcha/verify", contentType(MediaType.APPLICATION_JSON), handler::verify)
+                .build();
+    }
+
+    /**
+     * 系统管理-定时任务路由（/admin-api/v1/jobs）。
+     *
+     * <p>提供定时任务的查询、创建、更新、删除、启停、手动触发与
+     * 执行日志端点，所有端点经 {@code RequirePermissionAspect} 校验
+     * {@code system:job:*} 权限。</p>
+     *
+     * @param handler 定时任务处理器
+     * @return 定时任务管理路由函数
+     */
+    @Bean
+    public RouterFunction<ServerResponse> adminJobRoutes(JobHandler handler) {
+        return RouterFunctions.route()
+                .path("/admin-api/v1/jobs", routes -> routes.GET("", handler::list)
+                        .GET("/{id}", handler::detail)
+                        .POST("", contentType(MediaType.APPLICATION_JSON), handler::create)
+                        .PUT("/{id}", contentType(MediaType.APPLICATION_JSON), handler::update)
+                        .DELETE("/{id}", handler::delete)
+                        .PUT("/{id}/status", contentType(MediaType.APPLICATION_JSON), handler::updateStatus)
+                        .POST("/{id}/run", handler::runOnce)
+                        .GET("/{id}/logs", handler::logs))
+                .build();
+    }
+
+    /**
+     * 系统管理-参数配置路由（/admin-api/v1/configs）。
+     *
+     * <p>提供参数配置的查询、详情、创建、更新、删除与启停管理端点，
+     * 所有端点经 {@code RequirePermissionAspect} 校验 {@code system:config:*} 权限。</p>
+     *
+     * @param handler 系统参数配置处理器
+     * @return 参数配置管理路由函数
+     */
+    @Bean
+    public RouterFunction<ServerResponse> adminConfigRoutes(ConfigHandler handler) {
+        return RouterFunctions.route()
+                .path("/admin-api/v1/configs", routes -> routes.GET("", handler::list)
+                        .GET("/{id}", handler::detail)
+                        .POST("", contentType(MediaType.APPLICATION_JSON), handler::create)
+                        .PUT("/{id}", contentType(MediaType.APPLICATION_JSON), handler::update)
+                        .DELETE("/{id}", handler::delete)
+                        .PUT("/{id}/status", contentType(MediaType.APPLICATION_JSON), handler::updateStatus))
                 .build();
     }
 

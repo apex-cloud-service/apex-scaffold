@@ -646,4 +646,149 @@ CREATE TABLE IF NOT EXISTS biz_admin_review_audit (
   PRIMARY KEY (id),
   KEY idx_admin_review_audit_aggregate (aggregate_type, aggregate_id, created_at),
   KEY idx_admin_review_audit_actor (actor_id, created_at)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='后台审核不可变业务审计';;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='后台审核不可变业务审计';
+
+-- ------------------------------------------------------------------
+-- sys_menu
+-- ------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sys_menu` (
+  `id`          BIGINT       NOT NULL COMMENT '主键ID(雪花算法)',
+  `parent_id`   BIGINT       NOT NULL DEFAULT 0 COMMENT '父菜单ID，0表示顶级菜单',
+  `menu_name`   VARCHAR(50)  NOT NULL DEFAULT '' COMMENT '菜单名称',
+  `menu_type`   INT(1)       NOT NULL DEFAULT 1 COMMENT '菜单类型(0-目录,1-菜单,2-按钮)',
+  `path`        VARCHAR(200) DEFAULT NULL COMMENT '路由地址',
+  `component`   VARCHAR(255) DEFAULT NULL COMMENT '组件路径',
+  `perms`       VARCHAR(100) DEFAULT NULL COMMENT '权限标识',
+  `icon`        VARCHAR(100) DEFAULT NULL COMMENT '菜单图标',
+  `sort`        INT(4)       NOT NULL DEFAULT 0 COMMENT '显示顺序',
+  `visible`     INT(1)       NOT NULL DEFAULT 1 COMMENT '是否显示(0-隐藏,1-显示)',
+  `status`      INT(1)       NOT NULL DEFAULT 1 COMMENT '状态(0-停用,1-正常)',
+  `create_time` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `version`     INT(10)      NOT NULL DEFAULT 0 COMMENT '版本号（乐观锁）',
+  `deleted`     INT(1)       NOT NULL DEFAULT '0' COMMENT '逻辑删除(0-未删,1-已删)',
+  PRIMARY KEY (`id`),
+  KEY `idx_menu_parent_id` (`parent_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='系统菜单表';
+
+-- ------------------------------------------------------------------
+-- sys_dict_type
+-- ------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sys_dict_type` (
+  `id`          BIGINT       NOT NULL COMMENT '主键ID(雪花算法)',
+  `dict_name`   VARCHAR(100) NOT NULL DEFAULT '' COMMENT '字典名称',
+  `dict_type`   VARCHAR(100) NOT NULL DEFAULT '' COMMENT '字典类型编码',
+  `status`      INT(1)       NOT NULL DEFAULT 1 COMMENT '状态(0-停用,1-正常)',
+  `remark`      VARCHAR(500) DEFAULT NULL COMMENT '备注',
+  `create_time` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `version`     INT(10)      NOT NULL DEFAULT 0 COMMENT '版本号（乐观锁）',
+  `deleted`     INT(1)       NOT NULL DEFAULT '0' COMMENT '逻辑删除(0-未删,1-已删)',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_dict_type_code` (`dict_type`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='系统字典类型表';
+
+-- ------------------------------------------------------------------
+-- sys_dict_data
+-- ------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sys_dict_data` (
+  `id`          BIGINT       NOT NULL COMMENT '主键ID(雪花算法)',
+  `dict_sort`   INT(4)       NOT NULL DEFAULT 0 COMMENT '字典排序',
+  `dict_label`  VARCHAR(100) NOT NULL DEFAULT '' COMMENT '字典标签',
+  `dict_value`  VARCHAR(100) NOT NULL DEFAULT '' COMMENT '字典键值',
+  `dict_type`   VARCHAR(100) NOT NULL DEFAULT '' COMMENT '所属字典类型编码',
+  `is_default`  INT(1)       NOT NULL DEFAULT 0 COMMENT '是否默认(0-否,1-是)',
+  `status`      INT(1)       NOT NULL DEFAULT 1 COMMENT '状态(0-停用,1-正常)',
+  `remark`      VARCHAR(500) DEFAULT NULL COMMENT '备注',
+  `create_time` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `version`     INT(10)      NOT NULL DEFAULT 0 COMMENT '版本号（乐观锁）',
+  `deleted`     INT(1)       NOT NULL DEFAULT '0' COMMENT '逻辑删除(0-未删,1-已删)',
+  PRIMARY KEY (`id`),
+  KEY `idx_dict_data_type` (`dict_type`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='系统字典数据表';
+
+-- ------------------------------------------------------------------
+-- sys_config
+-- ------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sys_config` (
+  `id`           BIGINT       NOT NULL COMMENT '主键ID(雪花算法)',
+  `config_name`  VARCHAR(100) NOT NULL DEFAULT '' COMMENT '参数名称',
+  `config_key`   VARCHAR(100) NOT NULL DEFAULT '' COMMENT '参数键名',
+  `config_value` VARCHAR(500) DEFAULT NULL COMMENT '参数键值',
+  `config_type`  INT(1)       NOT NULL DEFAULT 1 COMMENT '参数类型(0-内置,1-用户)',
+  `status`       INT(1)       NOT NULL DEFAULT 1 COMMENT '状态(0-停用,1-正常)',
+  `remark`       VARCHAR(500) DEFAULT NULL COMMENT '备注',
+  `create_time`  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time`  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `version`      INT(10)      NOT NULL DEFAULT 0 COMMENT '版本号（乐观锁）',
+  `deleted`      INT(1)       NOT NULL DEFAULT '0' COMMENT '逻辑删除(0-未删,1-已删)',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_config_key` (`config_key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='系统参数配置表';
+
+-- ------------------------------------------------------------------
+-- sys_job
+-- ------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sys_job` (
+  `id`              BIGINT       NOT NULL COMMENT '主键ID(雪花算法)',
+  `job_name`        VARCHAR(64)  NOT NULL DEFAULT '' COMMENT '任务名称',
+  `job_group`       VARCHAR(64)  NOT NULL DEFAULT 'DEFAULT' COMMENT '任务分组',
+  `invoke_target`   VARCHAR(500) NOT NULL DEFAULT '' COMMENT '调用目标(beanName.methodName或带参数)',
+  `cron_expression` VARCHAR(255) NOT NULL DEFAULT '' COMMENT 'Cron表达式',
+  `misfire_policy`  INT(1)       NOT NULL DEFAULT 0 COMMENT '错失执行策略(0-默认,1-立即补执行,2-放弃)',
+  `concurrent`      INT(1)       NOT NULL DEFAULT 1 COMMENT '是否允许并发(0-禁止,1-允许)',
+  `status`          INT(1)       NOT NULL DEFAULT 1 COMMENT '状态(0-停用,1-正常)',
+  `remark`          VARCHAR(500) DEFAULT NULL COMMENT '备注',
+  `create_time`     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time`     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `version`         INT(10)      NOT NULL DEFAULT 0 COMMENT '版本号（乐观锁）',
+  `deleted`         INT(1)       NOT NULL DEFAULT '0' COMMENT '逻辑删除(0-未删,1-已删)',
+  PRIMARY KEY (`id`),
+  KEY `idx_job_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='定时任务表';
+
+-- ------------------------------------------------------------------
+-- sys_job_log
+-- ------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sys_job_log` (
+  `id`             BIGINT       NOT NULL COMMENT '主键ID(雪花算法)',
+  `job_id`         BIGINT       NOT NULL COMMENT '任务ID',
+  `job_name`       VARCHAR(64)  NOT NULL DEFAULT '' COMMENT '任务名称(执行快照)',
+  `job_group`      VARCHAR(64)  NOT NULL DEFAULT 'DEFAULT' COMMENT '任务分组(执行快照)',
+  `invoke_target`  VARCHAR(500) NOT NULL DEFAULT '' COMMENT '调用目标(执行快照)',
+  `job_message`    VARCHAR(500) DEFAULT NULL COMMENT '执行消息',
+  `status`         INT(1)       NOT NULL DEFAULT 0 COMMENT '执行状态(0-成功,1-失败,2-执行中)',
+  `exception_info` TEXT         DEFAULT NULL COMMENT '异常信息',
+  `start_time`     DATETIME     DEFAULT NULL COMMENT '开始时间',
+  `end_time`       DATETIME     DEFAULT NULL COMMENT '结束时间',
+  `duration`       BIGINT       DEFAULT NULL COMMENT '执行耗时(毫秒)',
+  `create_time`    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time`    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `version`        INT(10)      NOT NULL DEFAULT 0 COMMENT '版本号（乐观锁）',
+  `deleted`        INT(1)       NOT NULL DEFAULT '0' COMMENT '逻辑删除(0-未删,1-已删)',
+  PRIMARY KEY (`id`),
+  KEY `idx_job_log_job_id` (`job_id`),
+  KEY `idx_job_log_start_time` (`start_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='定时任务执行日志表';
+
+-- ------------------------------------------------------------------
+-- sys_login_log
+-- ------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sys_login_log` (
+  `id`          BIGINT       NOT NULL COMMENT '主键ID(雪花算法)',
+  `username`    VARCHAR(64)  NOT NULL DEFAULT '' COMMENT '登录账号',
+  `ip`          VARCHAR(64)  DEFAULT NULL COMMENT '客户端IP',
+  `browser`     VARCHAR(100) DEFAULT NULL COMMENT '浏览器信息',
+  `os`          VARCHAR(100) DEFAULT NULL COMMENT '操作系统信息',
+  `status`      INT(1)       NOT NULL DEFAULT 1 COMMENT '登录状态(0-成功,1-失败)',
+  `message`     VARCHAR(255) DEFAULT NULL COMMENT '登录消息',
+  `login_time`  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '登录时间',
+  `create_time` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `version`     INT(10)      NOT NULL DEFAULT 0 COMMENT '版本号（乐观锁）',
+  `deleted`     INT(1)       NOT NULL DEFAULT '0' COMMENT '逻辑删除(0-未删,1-已删)',
+  PRIMARY KEY (`id`),
+  KEY `idx_login_log_username` (`username`),
+  KEY `idx_login_log_login_time` (`login_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='登录日志表';

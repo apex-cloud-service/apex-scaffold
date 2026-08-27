@@ -1,111 +1,118 @@
-const SESSION_TOKEN_KEY = "apex.admin.access-token";
-const SESSION_DEVICE_KEY = "apex.admin.device-id";
-const PAGE_SIZE = 30;
+/*
+ * Apex Scaffold 管理控制台（系统管理版）
+ *
+ * 原生 ES Module 实现的轻量管理后台，覆盖：用户、菜单、字典、参数、
+ * 定时任务与登录日志的系统管理闭环。所有请求经统一 api() 封装，
+ * 携带 Bearer Token，自动处理 401 会话失效与 Token 续期。
+ */
 
+// ==================== 常量与状态 ====================
+
+/** 会话 Token 的 sessionStorage 键 */
+const SESSION_TOKEN_KEY = "apex.admin.token";
+/** 会话角色缓存键 */
+const SESSION_ROLES_KEY = "apex.admin.roles";
+/** 会话权限缓存键 */
+const SESSION_PERMS_KEY = "apex.admin.permissions";
+
+/** 全局状态 */
 const state = {
   token: sessionStorage.getItem(SESSION_TOKEN_KEY) || "",
-  deviceId: sessionStorage.getItem(SESSION_DEVICE_KEY) || crypto.randomUUID(),
-  roles: [],
-  permissions: [],
   identity: null,
-  view: "dashboard",
-  photoItems: [],
-  photoTotal: 0,
-  photoOffset: 0,
-  selectedPhoto: null,
-  interestItems: [],
-  interestTotal: 0,
-  interestOffset: 0,
-  selectedInterest: null,
-  userItems: [],
-  userPage: 1,
-  userTotal: 0,
-  selectedUser: null,
-  riskItems: [],
-  riskTotal: 0,
-  riskTarget: null,
-  riskAction: null,
-  manageableRoles: [],
-  reviewReasons: { photo: [], interest: [] },
-  policyItems: [],
-  appealItems: [],
-  decisionTarget: null,
-  dashboardLoading: false,
-  editingUserId: null,
+  roles: JSON.parse(sessionStorage.getItem(SESSION_ROLES_KEY) || "[]"),
+  permissions: JSON.parse(sessionStorage.getItem(SESSION_PERMS_KEY) || "[]"),
+  captchaId: "",
+  deviceId: "admin-h5",
+  // 各视图内部状态
+  users: { page: 1, size: 20, total: 0 },
+  logs: { page: 1, size: 20, total: 0 },
+  selectedDictType: null,
+  selectedMenu: null,
+  selectedJob: null,
+  selectedConfig: null,
 };
-sessionStorage.setItem(SESSION_DEVICE_KEY, state.deviceId);
 
-const $ = (selector, root = document) => root.querySelector(selector);
-const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
-
+/** 业务异常类型 */
 class ApiError extends Error {
   constructor(message, status, traceId) {
     super(message);
+    this.name = "ApiError";
     this.status = status;
     this.traceId = traceId;
   }
 }
 
-function node(tag, options = {}, children = []) {
-  const element = document.createElement(tag);
-  if (options.className) element.className = options.className;
-  if (options.text !== undefined) element.textContent = String(options.text);
-  if (options.type) element.type = options.type;
-  if (options.title) element.title = options.title;
-  for (const [name, value] of Object.entries(options.dataset || {})) element.dataset[name] = value;
-  for (const [name, value] of Object.entries(options.attributes || {})) element.setAttribute(name, value);
-  for (const child of children.flat()) {
-    if (child !== null && child !== undefined) element.append(child);
+// ==================== 工具函数 ====================
+
+/** 按选择器取元素 */
+function $(selector) {
+  return document.querySelector(selector);
+}
+
+/** HTML 转义，防 XSS */
+function esc(value) {
+  if (value === null || value === undefined) return "";
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+/** 格式化时间 */
+function fmtTime(value) {
+  if (!value) return "-";
+  return String(value).replace("T", " ").slice(0, 19);
+}
+
+/** 状态徽标 HTML */
+function badge(status, successText, failText) {
+  const ok = status === 1 || status === 0 && successText === "正常";
+  if (status === 0) return `<span class="badge badge-success">${esc(successText)}</span>`;
+  if (status === 1) return `<span class="badge badge-danger">${esc(failText)}</span>`;
+  return `<span class="badge">${esc(ok ? successText : failText)}</span>`;
+}
+
+/** 简单确认 */
+function confirmAction(message) {
+  return window.confirm(message);
+}
+
+// ==================== 会话与权限 ====================
+
+function setSessionToken(token) {
+  state.token = token || "";
+  if (state.token) sessionStorage.setItem(SESSION_TOKEN_KEY, state.token);
+  else sessionStorage.removeItem(SESSION_TOKEN_KEY);
+}
+
+function setIdentity(identity) {
+  state.identity = identity;
+  if (identity?.roles) {
+    state.roles = identity.roles;
+    sessionStorage.setItem(SESSION_ROLES_KEY, JSON.stringify(state.roles));
   }
-  return element;
+  if (identity?.permissions) {
+    state.permissions = identity.permissions;
+    sessionStorage.setItem(SESSION_PERMS_KEY, JSON.stringify(state.permissions));
+  }
 }
 
-function normalizeRole(code) {
-  return String(code || "").replace(/^ROLE_/, "");
-}
-
-function roleCodes() {
-  return state.roles.map((role) => normalizeRole(role.code));
-}
-
-function permissionCodes() {
-  return state.permissions.map((permission) => permission.code).filter(Boolean);
+function clearSession() {
+  setSessionToken("");
+  state.identity = null;
+  state.roles = [];
+  state.permissions = [];
+  sessionStorage.removeItem(SESSION_ROLES_KEY);
+  sessionStorage.removeItem(SESSION_PERMS_KEY);
 }
 
 function hasRole(...codes) {
-  const current = new Set(roleCodes());
-  return codes.some((code) => current.has(code));
+  return state.roles.some((role) => codes.includes(role));
 }
 
-function hasPermission(code) {
-  return permissionCodes().includes(code) || hasRole("ADMIN", "SUPER_ADMIN");
-}
-
-function canReviewPhotos() {
-  return hasPermission("photo:review:read") || hasRole("REVIEW_MANAGER", "PHOTO_REVIEWER");
-}
-
-function canReviewInterests() {
-  return hasPermission("interest:review:read") || hasRole("REVIEW_MANAGER", "INTEREST_REVIEWER");
-}
-
-function canManageUsers() {
-  return hasRole("SUPER_ADMIN") && permissionCodes().includes("staff:manage");
-}
-
-function canManageHighRiskUsers() {
-  return hasPermission("photo:review:decide") || hasRole("REVIEW_MANAGER", "PHOTO_REVIEWER", "SUPER_ADMIN");
-}
-
-function canManagePolicies() {
-  return hasRole("SUPER_ADMIN") && permissionCodes().includes("review:policy:manage");
-}
-
-function canGovernCatalog() {
-  return permissionCodes().includes("interest:graph:publish");
-}
-
-function canReviewAppeals() { return permissionCodes().includes("review:appeal:read"); }
+// ==================== API 封装 ====================
 
 async function api(path, options = {}) {
   const headers = new Headers(options.headers || {});
@@ -144,158 +151,72 @@ async function api(path, options = {}) {
   return payload?.data;
 }
 
-function setSessionToken(token) {
-  state.token = token || "";
-  if (state.token) sessionStorage.setItem(SESSION_TOKEN_KEY, state.token);
-  else sessionStorage.removeItem(SESSION_TOKEN_KEY);
-}
+// ==================== 通用弹窗 ====================
 
-function clearSession() {
-  setSessionToken("");
-  state.identity = null;
-  state.roles = [];
-  state.permissions = [];
-  state.photoItems = [];
-  state.interestItems = [];
-  state.userItems = [];
-  state.selectedUser = null;
-}
+/**
+ * 打开模态弹窗。
+ *
+ * @param {string} title 弹窗标题
+ * @param {string} bodyHtml 表单 HTML
+ * @param {(form: HTMLFormElement) => Promise<void>} onSubmit 提交回调
+ */
+function openModal(title, bodyHtml, onSubmit) {
+  $("#modal-title").textContent = title;
+  $("#modal-body").innerHTML = bodyHtml;
+  $("#modal-backdrop").hidden = false;
+  const form = $("#modal-body").querySelector("form");
+  const confirmButton = $("#modal-confirm");
 
-function showLogin(message = "") {
-  $("#app-shell").hidden = true;
-  $("#login-view").hidden = false;
-  const error = $("#login-error");
-  error.textContent = message;
-  error.hidden = !message;
-  $("#login-phone").focus();
-}
-
-function showApp() {
-  $("#login-view").hidden = true;
-  $("#app-shell").hidden = false;
-  applyCapabilities();
-  renderIdentity();
-  navigate("dashboard");
-}
-
-function showToast(message, type = "success") {
-  const toast = node("div", { className: `toast ${type === "error" ? "error" : ""}`, text: message });
-  $("#toast-region").append(toast);
-  window.setTimeout(() => toast.remove(), 4200);
-}
-
-async function bootstrap() {
-  updateClock();
-  window.setInterval(updateClock, 30_000);
-  bindEvents();
-  if (!state.token) {
-    showLogin();
-    return;
-  }
-  try {
-    await loadIdentity();
-    showApp();
-  } catch (error) {
-    if (error.status !== 401) {
-      clearSession();
-      showLogin("无法验证后台访问权限，请重新登录。");
+  confirmButton.onclick = async () => {
+    if (form && !form.reportValidity()) return;
+    confirmButton.disabled = true;
+    try {
+      await onSubmit(form);
+      closeModal();
+      showToast("操作成功");
+    } catch (error) {
+      showToast(error.message || "操作失败", true);
+    } finally {
+      confirmButton.disabled = false;
     }
-  }
-}
-
-async function loadIdentity(loginData = null) {
-  const [roles, permissions] = await Promise.all([
-    api("/api/v1/auth/roles/my"),
-    api("/api/v1/auth/permissions/my"),
-  ]);
-  state.roles = Array.isArray(roles) ? roles : [];
-  state.permissions = Array.isArray(permissions) ? permissions : [];
-  state.identity = loginData || state.identity || {};
-
-  const allowedRoles = new Set([
-    "ADMIN", "SUPER_ADMIN", "REVIEW_MANAGER", "PHOTO_REVIEWER", "INTEREST_REVIEWER", "INTEREST_PUBLISHER", "AUDITOR",
-  ]);
-  if (!roleCodes().some((role) => allowedRoles.has(role))) {
-    throw new ApiError("当前账号未分配后台角色", 403, null);
-  }
-}
-
-function bindEvents() {
-  $("#login-form").addEventListener("submit", handleLogin);
-  $("#send-code").addEventListener("click", sendSmsCode);
-  $("#logout-button").addEventListener("click", logout);
-  $("#mobile-menu").addEventListener("click", () => $(".sidebar").classList.toggle("open"));
-
-  $$(".nav-item").forEach((button) => button.addEventListener("click", () => navigate(button.dataset.view)));
-  $$('[data-go]').forEach((button) => button.addEventListener("click", () => navigate(button.dataset.go)));
-  $('[data-action="refresh-dashboard"]').addEventListener("click", loadDashboard);
-  $('[data-refresh="photos"]').addEventListener("click", () => loadPhotos(true));
-  $('[data-refresh="interests"]').addEventListener("click", () => loadInterests(true));
-  $("#photo-status").addEventListener("change", () => loadPhotos(true));
-  $("#photo-mine").addEventListener("change", () => loadPhotos(true));
-  $("#interest-status").addEventListener("change", () => loadInterests(true));
-  $("#interest-mine").addEventListener("change", () => loadInterests(true));
-  $('[data-refresh="users"]').addEventListener("click", () => loadUsers(true));
-  $('[data-refresh="risks"]').addEventListener("click", () => loadHighRiskUsers());
-  $("#risk-search").addEventListener("click", loadHighRiskUsers);
-  $("#risk-status").addEventListener("change", loadHighRiskUsers);
-  $("#risk-keyword").addEventListener("keydown", (event) => { if (event.key === "Enter") loadHighRiskUsers(); });
-  $("#risk-action-form").addEventListener("submit", submitRiskAction);
-  $("#risk-action-close").addEventListener("click", closeRiskAction);
-  $("#risk-action-cancel").addEventListener("click", closeRiskAction);
-  $("#user-create").addEventListener("click", () => openUserForm());
-  $("#user-form").addEventListener("submit", submitUserForm);
-  $("#user-form-close").addEventListener("click", closeUserForm);
-  $("#user-form-cancel").addEventListener("click", closeUserForm);
-  $('[data-refresh="policies"]').addEventListener("click", loadPolicies);
-  $("#policy-type").addEventListener("change", loadPolicies);
-  $("#catalog-prepare").addEventListener("click", prepareCatalog);
-  $("#catalog-readiness").addEventListener("click", checkCatalogReadiness);
-  $('[data-refresh="appeals"]').addEventListener("click", loadAppeals);
-  $("#appeal-status").addEventListener("change", loadAppeals);
-  $("#user-search").addEventListener("click", () => loadUsers(true));
-  $("#user-status").addEventListener("change", () => loadUsers(true));
-  $("#user-keyword").addEventListener("keydown", (event) => {
-    if (event.key === "Enter") loadUsers(true);
+  };
+  if (form) form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    confirmButton.click();
   });
-
-  $$('input[name="decision"]').forEach((radio) => radio.addEventListener("change", syncDecisionFields));
-  $("#decision-reason").addEventListener("change", syncDecisionFields);
-  $("#decision-form").addEventListener("submit", submitDecision);
+  $("#modal-close").onclick = closeModal;
+  $("#modal-cancel").onclick = closeModal;
 }
 
-async function handleLogin(event) {
-  event.preventDefault();
-  const phone = $("#login-phone").value.trim();
-  const smsCode = $("#login-code").value.trim();
-  const errorBox = $("#login-error");
-  if (!/^1[3-9]\d{9}$/.test(phone) || !/^\d{6}$/.test(smsCode)) {
-    errorBox.textContent = "请输入有效的手机号和 6 位短信验证码。";
-    errorBox.hidden = false;
-    return;
-  }
-  const submit = $("#login-submit");
-  submit.disabled = true;
-  errorBox.hidden = true;
+function closeModal() {
+  $("#modal-backdrop").hidden = true;
+  $("#modal-body").innerHTML = "";
+}
+
+// ==================== 提示 ====================
+
+let toastTimer = null;
+
+function showToast(message, isError = false) {
+  const toast = $("#toast");
+  toast.textContent = message;
+  toast.hidden = false;
+  toast.classList.toggle("toast-error", isError);
+  window.clearTimeout(toastTimer);
+  toastTimer = window.setTimeout(() => {
+    toast.hidden = true;
+  }, 3000);
+}
+
+// ==================== 登录 ====================
+
+async function loadCaptcha() {
   try {
-    const loginData = await api("/api/v1/auth/login", {
-      method: "POST",
-      auth: false,
-      body: { loginType: "CL_SMS", phone, smsCode, deviceId: state.deviceId, platform: "h5" },
-    });
-    if (!loginData?.accessToken || loginData.nextAction !== "AUTHENTICATED") {
-      throw new ApiError("该账号尚未完成注册或后台身份验证。", 403, null);
-    }
-    setSessionToken(loginData.accessToken);
-    await loadIdentity(loginData);
-    showApp();
-    showToast("身份验证成功，欢迎进入审核控制台。");
-  } catch (error) {
-    clearSession();
-    errorBox.textContent = error.message || "登录失败，请稍后重试。";
-    errorBox.hidden = false;
-  } finally {
-    submit.disabled = false;
+    const data = await api("/api/v1/auth/captcha", { auth: false });
+    state.captchaId = data.captchaId;
+    $("#captcha-image").src = `data:image/png;base64,${data.image}`;
+  } catch {
+    $("#captcha-image").removeAttribute("src");
   }
 }
 
@@ -330,1248 +251,830 @@ async function sendSmsCode() {
   }
 }
 
+async function login() {
+  const phone = $("#login-phone").value.trim();
+  const smsCode = $("#login-code").value.trim();
+  const captchaCode = $("#login-captcha").value.trim();
+  const errorBox = $("#login-error");
+  if (!/^1[3-9]\d{9}$/.test(phone) || !/^\d{6}$/.test(smsCode)) {
+    errorBox.textContent = "请输入有效的手机号和 6 位短信验证码。";
+    errorBox.hidden = false;
+    return;
+  }
+  const submit = $("#login-submit");
+  submit.disabled = true;
+  errorBox.hidden = true;
+  try {
+    const loginData = await api("/api/v1/auth/login", {
+      method: "POST",
+      auth: false,
+      body: {
+        loginType: "CL_SMS",
+        phone,
+        smsCode,
+        captchaId: state.captchaId,
+        captchaCode,
+        deviceId: state.deviceId,
+        platform: "h5",
+      },
+    });
+    if (!loginData?.accessToken) {
+      throw new ApiError("该账号尚未完成注册或后台身份验证。", 403, null);
+    }
+    setSessionToken(loginData.accessToken);
+    await loadIdentity();
+    showApp();
+    showToast("身份验证成功，欢迎进入系统管理工作台。");
+  } catch (error) {
+    clearSession();
+    errorBox.textContent = error.message || "登录失败，请稍后重试。";
+    errorBox.hidden = false;
+    loadCaptcha();
+  } finally {
+    submit.disabled = false;
+  }
+}
+
+async function loadIdentity() {
+  const [roles, permissions] = await Promise.all([
+    api("/api/v1/auth/roles/my").catch(() => []),
+    api("/api/v1/auth/permissions/my").catch(() => []),
+  ]);
+  setIdentity({ roles, permissions });
+}
+
 async function logout() {
   try {
     if (state.token) await api("/api/v1/auth/logout", { method: "POST" });
   } catch {
-    // Local session cleanup must still happen if the server is unavailable.
+    // 服务不可用时仍清理本地会话
   } finally {
     clearSession();
     showLogin();
   }
 }
 
-function applyCapabilities() {
-  $('[data-capability="photo"]').disabled = !canReviewPhotos();
-  $('[data-capability="interest"]').disabled = !canReviewInterests();
-  $('[data-go="photos"]').disabled = !canReviewPhotos();
-  $('[data-go="interests"]').disabled = !canReviewInterests();
-  $('[data-capability="users"]').hidden = !canManageUsers();
-  $('[data-capability="risks"]').hidden = !canManageHighRiskUsers();
-  $('[data-capability="policies"]').hidden = !canManagePolicies();
-  $('[data-capability="catalog"]').hidden = !canGovernCatalog();
-  $('[data-capability="appeals"]').hidden = !canReviewAppeals();
+// ==================== 视图切换 ====================
+
+function showLogin(message = "") {
+  $("#app-shell").hidden = true;
+  $("#login-view").hidden = false;
+  const error = $("#login-error");
+  error.textContent = message;
+  error.hidden = !message;
+  $("#login-phone").focus();
+  loadCaptcha();
 }
 
-function renderIdentity() {
-  const displayName = state.identity?.userInfo?.nickName || maskPhone($("#login-phone").value) || "审核人员";
-  const primaryRole = state.roles[0]?.name || roleCodes()[0] || "后台人员";
-  $("#operator-name").textContent = displayName;
-  $("#operator-role").textContent = primaryRole;
-  $("#operator-avatar").textContent = displayName.slice(0, 1);
-  $("#session-label").textContent = "当前标签页有效";
-  renderChips($("#dashboard-roles"), state.roles.map((role) => role.name || normalizeRole(role.code)));
-  renderChips($("#security-roles"), state.roles.map((role) => role.name || normalizeRole(role.code)));
-
-  const capabilities = [];
-  if (canReviewPhotos()) capabilities.push("照片审核");
-  if (canReviewInterests()) capabilities.push("标签审核");
-  if (hasRole("INTEREST_PUBLISHER")) capabilities.push("图谱发布");
-  if (hasPermission("audit:read")) capabilities.push("审计读取");
-  if (canManageUsers()) capabilities.push("用户管理");
-  if (canManageHighRiskUsers()) capabilities.push("高风险用户处置");
-  $("#access-summary").textContent = capabilities.length
-    ? `可访问：${capabilities.join("、")}。最终授权始终由服务端判定。`
-    : "当前角色没有审核队列权限，可查看本页的会话与授权信息。";
-
-  const permissionList = $("#security-permissions");
-  const items = state.permissions.map((permission) => node("div", { className: "permission-item" }, [
-    node("strong", { text: permission.name || "未命名权限" }),
-    node("span", { text: permission.code || "—" }),
-  ]));
-  permissionList.replaceChildren(...(items.length ? items : [node("p", { className: "muted", text: "当前角色没有显式权限记录。" })]));
+function showApp() {
+  $("#login-view").hidden = true;
+  $("#app-shell").hidden = false;
+  switchView("dashboard");
 }
 
-function renderChips(container, values) {
-  const unique = [...new Set(values.filter(Boolean))];
-  container.replaceChildren(...unique.map((value) => node("span", { className: "chip", text: value })));
-}
-
-function maskPhone(value) {
-  return /^\d{11}$/.test(value || "") ? `${value.slice(0, 3)}****${value.slice(-4)}` : "";
-}
-
-function navigate(view) {
-  if (view === "photos" && !canReviewPhotos()) return;
-  if (view === "interests" && !canReviewInterests()) return;
-  if (view === "users" && !canManageUsers()) return;
-  if (view === "risks" && !canManageHighRiskUsers()) return;
-  if (view === "policies" && !canManagePolicies()) return;
-  if (view === "catalog" && !canGovernCatalog()) return;
-  if (view === "appeals" && !canReviewAppeals()) return;
-  state.view = view;
-  const titles = {
-    dashboard: ["OPERATIONS OVERVIEW", "审核工作台"],
-    photos: ["PHOTO MODERATION", "照片审核"],
-    interests: ["INTEREST GOVERNANCE", "标签审核"],
-    users: ["USER MANAGEMENT", "用户管理"],
-    risks: ["PHOTO RISK", "高风险用户管理"],
-    policies: ["REVIEW POLICY", "审核配置"],
-    catalog: ["INTEREST CATALOG", "图谱治理"],
-    appeals: ["SECOND REVIEW", "复核申诉"],
-    security: ["ACCESS CONTROL", "权限与安全"],
+function switchView(name) {
+  document.querySelectorAll(".view").forEach((section) => {
+    section.hidden = section.id !== `view-${name}`;
+  });
+  document.querySelectorAll(".nav-item").forEach((button) => {
+    button.classList.toggle("active", button.dataset.view === name);
+  });
+  const renderers = {
+    dashboard: renderDashboard,
+    users: renderUsers,
+    menus: renderMenus,
+    dicts: renderDicts,
+    configs: renderConfigs,
+    jobs: renderJobs,
+    "login-logs": renderLoginLogs,
   };
-  $$(".view-panel").forEach((panel) => panel.classList.toggle("active", panel.id === `view-${view}`));
-  $$(".nav-item").forEach((button) => button.classList.toggle("active", button.dataset.view === view));
-  $("#view-kicker").textContent = titles[view][0];
-  $("#view-title").textContent = titles[view][1];
-  $(".sidebar").classList.remove("open");
-  $("#main-content").focus({ preventScroll: true });
-  if (view === "dashboard") loadDashboard();
-  if (view === "photos" && state.photoItems.length === 0) loadPhotos(true);
-  if (view === "interests" && state.interestItems.length === 0) loadInterests(true);
-  if (view === "users" && state.userItems.length === 0) loadUsers(true);
-  if (view === "risks" && state.riskItems.length === 0) loadHighRiskUsers();
-  if (view === "policies") loadPolicies();
-  if (view === "appeals") loadAppeals();
+  const render = renderers[name];
+  if (render) render().catch((error) => showToast(error.message || "加载失败", true));
 }
 
-async function loadDashboard() {
-  if (state.dashboardLoading) return;
-  state.dashboardLoading = true;
-  const queries = [];
-  if (canReviewPhotos()) {
-    queries.push(api("/admin-api/v1/photo-reviews?status=WAITING_REVIEW&offset=0&limit=1"));
-    queries.push(api("/admin-api/v1/photo-reviews?status=IN_REVIEW&mine=true&offset=0&limit=1"));
-  } else queries.push(Promise.resolve({ total: 0 }), Promise.resolve({ total: 0 }));
-  if (canReviewInterests()) {
-    queries.push(api("/admin-api/v1/interest-reviews?status=OPEN&offset=0&limit=1"));
-    queries.push(api("/admin-api/v1/interest-reviews?status=PENDING_REVIEW&offset=0&limit=1"));
-    queries.push(api("/admin-api/v1/interest-reviews?status=REVIEWING&mine=true&offset=0&limit=1"));
-  } else queries.push(Promise.resolve({ total: 0 }), Promise.resolve({ total: 0 }), Promise.resolve({ total: 0 }));
-  try {
-    const [photoPending, photoMine, interestOpen, interestPending, interestMine] = await Promise.all(queries);
-    const interestWaiting = Number(interestOpen.total || 0) + Number(interestPending.total || 0);
-    setMetric("#metric-photo-pending", photoPending.total);
-    setMetric("#metric-interest-pending", interestWaiting);
-    setMetric("#metric-mine", Number(photoMine.total || 0) + Number(interestMine.total || 0));
-    $("#photo-nav-count").textContent = compactNumber(photoPending.total);
-    $("#interest-nav-count").textContent = compactNumber(interestWaiting);
-  } catch (error) {
-    showToast(error.message || "总览数据加载失败。", "error");
-  } finally {
-    state.dashboardLoading = false;
-  }
+// ==================== 仪表盘 ====================
+
+async function renderDashboard() {
+  const rolesText = state.roles.length ? state.roles.join("、") : "未分配后台角色";
+  const permissionsCount = state.permissions.length;
+  $("#dashboard-cards").innerHTML = `
+    <div class="card">
+      <h3>登录身份</h3>
+      <p class="card-value">${esc(rolesText)}</p>
+      <p class="card-hint">当前会话已通过短信验证码 + 图形验证码双重校验</p>
+    </div>
+    <div class="card">
+      <h3>权限点</h3>
+      <p class="card-value">${permissionsCount}</p>
+      <p class="card-hint">已授予 ${permissionsCount} 个接口级权限标识</p>
+    </div>
+    <div class="card">
+      <h3>系统管理能力</h3>
+      <p class="card-value">7 类</p>
+      <p class="card-hint">用户 / 菜单 / 字典 / 参数 / 定时任务 / 登录日志</p>
+    </div>
+  `;
 }
 
-function setMetric(selector, value) {
-  $(selector).textContent = compactNumber(value);
-}
+// ==================== 用户管理 ====================
 
-function compactNumber(value) {
-  const number = Number(value || 0);
-  return number > 999 ? `${(number / 1000).toFixed(1)}k` : String(number);
-}
-
-async function loadPhotos(reset) {
-  if (reset) {
-    state.photoOffset = 0;
-    state.photoItems = [];
-    state.selectedPhoto = null;
-    renderEmptyDetail("photo");
-  }
-  renderListLoading("photo", reset ? "正在读取照片审核队列…" : "正在加载更多任务…");
-  const status = $("#photo-status").value;
-  const mine = $("#photo-mine").checked;
-  const query = new URLSearchParams({ offset: String(state.photoOffset), limit: String(PAGE_SIZE), mine: String(mine) });
-  if (status) query.set("status", status);
-  try {
-    const page = await api(`/admin-api/v1/photo-reviews?${query}`);
-    state.photoItems = reset ? page.items : [...state.photoItems, ...page.items];
-    state.photoTotal = page.total;
-    state.photoOffset = state.photoItems.length;
-    renderPhotoList();
-  } catch (error) {
-    renderListError("photo", error.message);
-  }
-}
-
-function renderPhotoList() {
-  const container = $("#photo-list");
-  $("#photo-total").textContent = `共 ${state.photoTotal} 项 · 已加载 ${state.photoItems.length} 项`;
-  if (!state.photoItems.length) {
-    container.replaceChildren(node("div", { className: "loading-state", text: "当前筛选条件下没有照片审核任务。" }));
-    return;
-  }
-  const rows = state.photoItems.map((item) => {
-    const button = node("button", { className: `task-row ${state.selectedPhoto?.taskId === item.taskId ? "selected" : ""}`, type: "button" }, [
-      node("div", { className: "task-top" }, [
-        node("strong", { text: `照片 #${item.photoId}` }),
-        statusBadge(item.status),
-      ]),
-      node("span", { className: "task-id", text: `TASK ${item.taskId} · V${item.version}` }),
-      node("div", { className: "task-meta" }, [
-        node("span", { text: item.provider || "未知审核源" }),
-        node("span", { text: formatTime(item.submittedAt) }),
-      ]),
-      node("span", { className: "task-id", text: `命中原因：${primaryModerationReason(item.findingsJson)}` }),
-    ]);
-    button.addEventListener("click", () => selectPhoto(item.taskId));
-    return button;
-  });
-  if (state.photoItems.length < state.photoTotal) rows.push(loadMoreButton("photo"));
-  container.replaceChildren(...rows);
-}
-
-async function selectPhoto(taskId) {
-  renderDetailLoading("photo");
-  try {
-    state.selectedPhoto = await api(`/admin-api/v1/photo-reviews/${encodeURIComponent(taskId)}`);
-    renderPhotoList();
-    renderPhotoDetail();
-  } catch (error) {
-    renderDetailError("photo", error.message);
-  }
-}
-
-function renderPhotoDetail() {
-  const item = state.selectedPhoto;
-  if (!item) return renderEmptyDetail("photo");
-  const header = detailHeader(`照片 #${item.photoId}`, `TASK ${item.taskId}`, item.status);
-  const preview = node("div", { className: "preview-frame" });
-  if (item.previewUrl) {
-    const image = node("img", { attributes: { src: item.previewUrl, alt: `待审核照片 ${item.photoId}`, referrerpolicy: "no-referrer" } });
-    image.addEventListener("error", () => preview.replaceChildren(node("span", { className: "preview-placeholder", text: "安全预览已过期，请重新选择任务。" })));
-    preview.append(image, node("span", { className: "preview-expiry", text: `${item.previewExpiresInSeconds || 60}s 临时预览` }));
-  } else preview.append(node("span", { className: "preview-placeholder", text: "该任务暂无可用安全预览" }));
-
-  const content = node("div", { className: "detail-content" }, [
-    header,
-    preview,
-    facts([
-      ["机器结论", item.machineDecision || "—"], ["审核提供方", item.provider || "—"],
-      ["提交时间", formatTime(item.submittedAt)], ["租约截止", formatTime(item.leaseExpiresAt)],
-      ["审核人 ID", item.reviewerId || "未领取"], ["当前版本", item.version],
-    ]),
-    evidenceSection("场景识别", parseEvidence(item.scenesJson)),
-    moderationReasonsSection(item.findingsJson),
-    photoActions(item),
-  ]);
-  $("#photo-detail").replaceChildren(content);
-}
-
-function photoActions(item) {
-  const actions = node("div", { className: "detail-actions" });
-  if (item.status === "WAITING_REVIEW") {
-    const claim = node("button", { className: "claim-button", type: "button", text: "领取任务" });
-    claim.addEventListener("click", () => claimPhoto(item));
-    actions.append(claim);
-  } else if (item.status === "IN_REVIEW") {
-    const approve = node("button", { className: "approve-button", type: "button", text: "通过照片" });
-    const reject = node("button", { className: "reject-button", type: "button", text: "拒绝照片" });
-    approve.addEventListener("click", () => openDecision("photo", item, "APPROVE"));
-    reject.addEventListener("click", () => openDecision("photo", item, "REJECT"));
-    actions.append(approve, reject);
-  } else actions.append(node("span", { className: "muted", text: "该任务已完成裁决，仅供查看。" }));
-  return actions;
-}
-
-async function claimPhoto(item) {
-  try {
-    const claimed = await api(`/admin-api/v1/photo-reviews/${item.taskId}/claim`, {
-      method: "POST", body: { expectedVersion: item.version },
-    });
-    state.selectedPhoto = claimed;
-    showToast("照片任务已领取，租约有效期为 15 分钟。");
-    await loadPhotos(true);
-    await selectPhoto(item.taskId);
-    loadDashboard();
-  } catch (error) {
-    showToast(error.message || "领取失败，请刷新任务。", "error");
-  }
-}
-
-async function loadInterests(reset) {
-  if (reset) {
-    state.interestOffset = 0;
-    state.interestItems = [];
-    state.selectedInterest = null;
-    renderEmptyDetail("interest");
-  }
-  renderListLoading("interest", reset ? "正在读取新增标签审核队列…" : "正在加载更多申请…");
-  const status = $("#interest-status").value;
-  const mine = $("#interest-mine").checked;
-  const query = new URLSearchParams({ offset: String(state.interestOffset), limit: String(PAGE_SIZE), mine: String(mine) });
-  if (status) query.set("status", status);
-  try {
-    const page = await api(`/admin-api/v1/interest-reviews?${query}`);
-    state.interestItems = reset ? page.items : [...state.interestItems, ...page.items];
-    state.interestTotal = page.total;
-    state.interestOffset = state.interestItems.length;
-    renderInterestList();
-  } catch (error) {
-    renderListError("interest", error.message);
-  }
-}
-
-function renderInterestList() {
-  const container = $("#interest-list");
-  $("#interest-total").textContent = `共 ${state.interestTotal} 项 · 已加载 ${state.interestItems.length} 项`;
-  if (!state.interestItems.length) {
-    container.replaceChildren(node("div", { className: "loading-state", text: "当前筛选条件下没有新增标签申请。" }));
-    return;
-  }
-  const rows = state.interestItems.map((item) => {
-    const button = node("button", { className: `task-row ${state.selectedInterest?.candidateId === item.candidateId ? "selected" : ""}`, type: "button" }, [
-      node("div", { className: "task-top" }, [node("strong", { text: item.normalizedText || "未命名标签" }), statusBadge(item.status)]),
-      node("span", { className: "task-id", text: `${shortId(item.candidateId)} · V${item.version}` }),
-      node("div", { className: "task-meta" }, [
-        node("span", { text: `证据分 ${formatScore(item.evidenceScore)}` }),
-        node("span", { text: formatTime(item.createdAt) }),
-      ]),
-    ]);
-    button.addEventListener("click", () => selectInterest(item.candidateId));
-    return button;
-  });
-  if (state.interestItems.length < state.interestTotal) rows.push(loadMoreButton("interest"));
-  container.replaceChildren(...rows);
-}
-
-async function selectInterest(candidateId) {
-  renderDetailLoading("interest");
-  try {
-    state.selectedInterest = await api(`/admin-api/v1/interest-reviews/${encodeURIComponent(candidateId)}`);
-    renderInterestList();
-    renderInterestDetail();
-  } catch (error) {
-    renderDetailError("interest", error.message);
-  }
-}
-
-function renderInterestDetail() {
-  const item = state.selectedInterest;
-  if (!item) return renderEmptyDetail("interest");
-  const signalChips = node("div", { className: "chip-list" }, (item.evidenceSignals || []).map((signal) => node("span", { className: "chip", text: signal })));
-  const content = node("div", { className: "detail-content" }, [
-    detailHeader(item.normalizedText || "未命名标签", shortId(item.candidateId), item.status),
-    facts([
-      ["候选类型", item.type], ["证据得分", formatScore(item.evidenceScore)],
-      ["基础图版本", item.baseGraphVersion], ["当前版本", item.version],
-      ["审核人员", item.reviewerId || "未领取"], ["候选过期", formatTime(item.expiresAt)],
-    ]),
-    node("div", { className: "evidence-block" }, [node("h4", { text: "证据信号" }), signalChips]),
-    evidenceSection("证据属性", Object.entries(item.evidenceAttributes || {})),
-    evidenceSection("关联节点", (item.nodeIds || []).map((value, index) => [`节点 ${index + 1}`, value])),
-    interestActions(item),
-  ]);
-  $("#interest-detail").replaceChildren(content);
-}
-
-function interestActions(item) {
-  const actions = node("div", { className: "detail-actions" });
-  if (["OPEN", "PENDING_REVIEW"].includes(item.status)) {
-    const claim = node("button", { className: "claim-button", type: "button", text: "领取申请" });
-    claim.addEventListener("click", () => claimInterest(item));
-    actions.append(claim);
-  } else if (item.status === "REVIEWING") {
-    const approve = node("button", { className: "approve-button", type: "button", text: "通过标签" });
-    const reject = node("button", { className: "reject-button", type: "button", text: "拒绝标签" });
-    approve.addEventListener("click", () => openDecision("interest", item, "APPROVE"));
-    reject.addEventListener("click", () => openDecision("interest", item, "REJECT"));
-    actions.append(approve, reject);
-  } else actions.append(node("span", { className: "muted", text: "该申请已完成审核，仅供查看。" }));
-  return actions;
-}
-
-async function claimInterest(item) {
-  try {
-    const claimed = await api(`/admin-api/v1/interest-reviews/${encodeURIComponent(item.candidateId)}/claim`, {
-      method: "POST", body: { expectedVersion: item.version },
-    });
-    state.selectedInterest = claimed;
-    showToast("新增标签申请已领取，租约有效期为 15 分钟。");
-    await loadInterests(true);
-    await selectInterest(item.candidateId);
-    loadDashboard();
-  } catch (error) {
-    showToast(error.message || "领取失败，请刷新申请。", "error");
-  }
-}
-
-function detailHeader(title, id, status) {
-  return node("div", { className: "detail-title" }, [
-    node("div", {}, [node("span", { className: "task-id", text: id }), node("h3", { text: title })]),
-    statusBadge(status),
-  ]);
-}
-
-function statusBadge(status) {
-  const labels = {
-    WAITING_REVIEW: "等待审核", IN_REVIEW: "审核中", OPEN: "等待审核", PENDING_REVIEW: "等待审核",
-    REVIEWING: "审核中", APPROVED: "已通过", REJECTED: "已拒绝", EXPIRED: "已过期",
-  };
-  const style = ["WAITING_REVIEW", "OPEN", "PENDING_REVIEW"].includes(status)
-    ? "waiting" : status === "IN_REVIEW" || status === "REVIEWING" ? "reviewing" : String(status || "").toLowerCase();
-  return node("span", { className: `status-badge ${style}`, text: labels[status] || status || "未知" });
-}
-
-function facts(entries) {
-  return node("div", { className: "detail-facts" }, entries.map(([label, value]) => node("div", { className: "fact" }, [
-    node("span", { text: label }), node("strong", { text: value ?? "—" }),
-  ])));
-}
-
-function evidenceSection(title, entries) {
-  const normalized = Array.isArray(entries) ? entries : [];
-  const list = normalized.length
-    ? normalized.slice(0, 24).map(([key, value]) => node("li", {}, [node("span", { text: key }), node("strong", { text: displayValue(value) })]))
-    : [node("li", {}, [node("span", { text: "暂无数据" })])];
-  return node("div", { className: "evidence-block" }, [node("h4", { text: title }), node("ul", { className: "evidence-list" }, list)]);
-}
-
-function moderationReasonsSection(raw) {
-  const findings = parseJsonArray(raw);
-  if (!findings.length) return evidenceSection("百度审核原因", []);
-  const cards = findings.slice(0, 24).map((finding, index) => {
-    if (!finding || typeof finding !== "object") {
-      return node("article", { className: "moderation-reason-card" }, [
-        node("strong", { text: `审核发现 ${index + 1}` }), node("p", { text: displayValue(finding) }),
-      ]);
-    }
-    const details = finding.details && typeof finding.details === "object" ? finding.details : {};
-    const rate = finding.rate === null || finding.rate === undefined ? Number.NaN : Number(finding.rate);
-    const confidence = Number.isFinite(rate) ? `${rate.toFixed(1)}%` : "—";
-    const rows = [
-      ["审核结论", moderationSuggestionLabel(finding.suggestion)],
-      ["命中原因", finding.label || details.msg || details.conclusion || "—"],
-      ["风险场景", moderationSceneLabel(finding.scene)],
-      ["置信度", confidence],
-      ["百度类型", details.type ?? "—"],
-      ["百度子类型", details.subType ?? "—"],
-    ];
-    return node("article", { className: "moderation-reason-card" }, [
-      node("div", { className: "moderation-reason-head" }, [
-        node("strong", { text: finding.label || details.msg || `审核发现 ${index + 1}` }),
-        moderationSuggestionBadge(finding.suggestion),
-      ]),
-      facts(rows),
-    ]);
-  });
-  return node("section", { className: "evidence-block" }, [
-    node("h4", { text: "百度审核原因" }),
-    node("div", { className: "moderation-reason-list" }, cards),
-  ]);
-}
-
-function parseJsonArray(raw) {
-  if (!raw) return [];
-  try {
-    const value = typeof raw === "string" ? JSON.parse(raw) : raw;
-    return Array.isArray(value) ? value : value ? [value] : [];
-  } catch {
-    return [];
-  }
-}
-
-function primaryModerationReason(raw) {
-  const findings = parseJsonArray(raw).filter((item) => item && typeof item === "object");
-  const finding = findings.find((item) => ["block", "review"].includes(String(item.suggestion || "").toLowerCase()))
-    || findings[0];
-  return finding?.label || finding?.details?.msg || finding?.details?.conclusion || "待查看详情";
-}
-
-function moderationSuggestionLabel(value) {
-  return { pass: "通过", review: "需要人工确认", block: "违规" }[String(value || "").toLowerCase()] || value || "—";
-}
-
-function moderationSuggestionBadge(value) {
-  const suggestion = String(value || "review").toLowerCase();
-  const style = suggestion === "pass" ? "approved" : suggestion === "block" ? "rejected" : "waiting";
-  return node("span", { className: `status-badge ${style}`, text: moderationSuggestionLabel(suggestion) });
-}
-
-function moderationSceneLabel(value) {
-  const labels = {
-    forbidden_image: "违禁图像", porn: "色情内容", terrorism: "暴恐内容", disgusting: "恶心内容",
-    ad: "广告内容", political: "政治敏感", quality: "图像质量", custom_blacklist: "自定义黑名单",
-    custom_whitelist: "自定义白名单", avatar: "头像风险", text: "文字风险", custom_model: "自定义模型",
-    prohibited: "违禁内容", live: "直播风险", public_figure: "公众人物", official_scene: "官方场景",
-    custom_scene: "自定义场景", overall: "百度综合结论",
-    python_fgclip_violation: "Python FGCLIP 违规检测",
-  };
-  return labels[value] || value || "—";
-}
-
-function parseEvidence(raw) {
-  if (!raw) return [];
-  try {
-    const value = JSON.parse(raw);
-    if (Array.isArray(value)) return value.map((entry, index) => [`项目 ${index + 1}`, displayValue(entry)]);
-    if (value && typeof value === "object") return Object.entries(value);
-    return [["结果", value]];
-  } catch {
-    return [["原始结果", raw]];
-  }
-}
-
-function displayValue(value) {
-  if (value === null || value === undefined || value === "") return "—";
-  if (typeof value === "object") return JSON.stringify(value);
-  return String(value);
-}
-
-function formatTime(value) {
-  if (!value) return "—";
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? String(value) : new Intl.DateTimeFormat("zh-CN", {
-    month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false,
-  }).format(date);
-}
-
-function formatScore(value) {
-  const number = Number(value);
-  return Number.isFinite(number) ? number.toFixed(3) : "—";
-}
-
-function shortId(value) {
-  const text = String(value || "—");
-  return text.length > 24 ? `${text.slice(0, 12)}…${text.slice(-8)}` : text;
-}
-
-function loadMoreButton(kind) {
-  const button = node("button", { className: "task-row", type: "button", text: "加载更多任务 ↓" });
-  button.addEventListener("click", () => kind === "photo" ? loadPhotos(false) : loadInterests(false));
-  return button;
-}
-
-function renderListLoading(kind, message) {
-  const container = kind === "photo" ? $("#photo-list") : $("#interest-list");
-  if ((kind === "photo" ? state.photoItems : state.interestItems).length === 0) {
-    container.replaceChildren(node("div", { className: "loading-state", text: message }));
-  }
-}
-
-function renderListError(kind, message) {
-  const container = kind === "photo" ? $("#photo-list") : $("#interest-list");
-  container.replaceChildren(node("div", { className: "error-state", text: message || "队列读取失败" }));
-}
-
-function renderDetailLoading(kind) {
-  const container = kind === "photo" ? $("#photo-detail") : $("#interest-detail");
-  container.replaceChildren(node("div", { className: "loading-state", text: "正在安全读取任务详情…" }));
-}
-
-function renderDetailError(kind, message) {
-  const container = kind === "photo" ? $("#photo-detail") : $("#interest-detail");
-  container.replaceChildren(node("div", { className: "error-state", text: message || "详情读取失败" }));
-}
-
-function renderEmptyDetail(kind) {
-  const isPhoto = kind === "photo";
-  const container = isPhoto ? $("#photo-detail") : $("#interest-detail");
-  container.replaceChildren(node("div", { className: "empty-detail" }, [
-    node("span", { text: isPhoto ? "02 / PHOTO" : "03 / TAG" }),
-    node("p", { text: isPhoto ? "从左侧选择一项任务查看安全预览与机器审核信息。" : "从左侧选择一项申请查看证据、信号与建议标签。" }),
-  ]));
-}
-
-async function openDecision(kind, item, decision) {
-  state.decisionTarget = { kind, item };
-  const title = kind === "photo" ? `照片 #${item.photoId}` : item.normalizedText;
-  $("#decision-title").textContent = kind === "photo" ? "提交照片审核结论" : "提交标签审核结论";
-  $("#decision-context").textContent = `${title} · 当前版本 V${item.version}。提交后结论将写入业务审计。`;
-  $(`input[name="decision"][value="${decision}"]`).checked = true;
-  $("#decision-comment").value = "";
-  if (decision === "REJECT") {
-    try {
-      const reasons = await loadDecisionReasons(kind);
-      $("#decision-reason").replaceChildren(...reasons.map((reason) =>
-        node("option", { text: reason.label, attributes: { value: reason.code } })));
-    } catch (error) {
-      showToast(error.message || "审核原因加载失败", "error");
-      return;
-    }
-  }
-  $("#decision-error").hidden = true;
-  syncDecisionFields();
-  $("#decision-dialog").showModal();
-}
-
-function syncDecisionFields() {
-  const decision = $('input[name="decision"]:checked').value;
-  const isPhoto = state.decisionTarget?.kind === "photo";
-  $("#reason-field").hidden = decision !== "REJECT";
-  const reasons = state.reviewReasons[state.decisionTarget?.kind] || [];
-  const selected = reasons.find((reason) => reason.code === $("#decision-reason").value);
-  $("#comment-label").textContent = selected?.requireComment ? "审核备注（必填）" : "审核备注（可选）";
-  $("#decision-comment").maxLength = isPhoto ? 500 : 2048;
-}
-
-async function submitDecision(event) {
-  event.preventDefault();
-  if (event.submitter?.value === "cancel") {
-    $("#decision-dialog").close();
-    return;
-  }
-  const target = state.decisionTarget;
-  if (!target) return;
-  const decision = $('input[name="decision"]:checked').value;
-  const comment = $("#decision-comment").value.trim();
-  const errorBox = $("#decision-error");
-  const selectedReason = state.reviewReasons[target.kind]?.find((reason) => reason.code === $("#decision-reason").value);
-  if (decision === "REJECT" && selectedReason?.requireComment && !comment) {
-    errorBox.textContent = "该拒绝原因必须填写审核备注。";
-    errorBox.hidden = false;
-    return;
-  }
-  const confirm = $("#confirm-decision");
-  confirm.disabled = true;
-  errorBox.hidden = true;
-  try {
-    if (target.kind === "photo") {
-      await api(`/admin-api/v1/photo-reviews/${target.item.taskId}/decision`, {
-        method: "POST",
-        body: {
-          decisionId: crypto.randomUUID(), decision,
-          reasonCode: decision === "REJECT" ? $("#decision-reason").value : null,
-          comment: comment || null, expectedVersion: target.item.version,
-        },
-      });
-      $("#decision-dialog").close();
-      showToast(`照片已${decision === "APPROVE" ? "通过" : "拒绝"}。`);
-      await loadPhotos(true);
-    } else {
-      await api(`/admin-api/v1/interest-reviews/${encodeURIComponent(target.item.candidateId)}/decision`, {
-        method: "POST", body: { decision, reasonCode: decision === "REJECT" ? $("#decision-reason").value : null,
-          comment: comment || null, expectedVersion: target.item.version },
-      });
-      $("#decision-dialog").close();
-      showToast(`新增标签已${decision === "APPROVE" ? "通过" : "拒绝"}。`);
-      await loadInterests(true);
-    }
-    loadDashboard();
-  } catch (error) {
-    errorBox.textContent = error.message || "裁决提交失败，请刷新后重试。";
-    errorBox.hidden = false;
-  } finally {
-    confirm.disabled = false;
-  }
-}
-
-async function loadDecisionReasons(kind) {
-  if (!state.reviewReasons[kind]?.length) {
-    state.reviewReasons[kind] = await api(`/admin-api/v1/review-reasons/${kind}`);
-  }
-  return state.reviewReasons[kind];
-}
-
-async function loadHighRiskUsers() {
-  if (!canManageHighRiskUsers()) return;
-  $("#risk-list").replaceChildren(node("div", { className: "loading-state", text: "加载中…" }));
-  const query = new URLSearchParams({ page: "1", size: String(PAGE_SIZE) });
-  const keyword = $("#risk-keyword").value.trim();
-  const status = $("#risk-status").value;
-  if (keyword) query.set("keyword", keyword);
-  if (status) query.set("status", status);
-  try {
-    const page = await api(`/admin-api/v1/high-risk-users?${query}`);
-    state.riskItems = Array.isArray(page.list) ? page.list : [];
-    state.riskTotal = Number(page.total || 0);
-    renderHighRiskUsers();
-  } catch (error) {
-    $("#risk-list").replaceChildren(node("div", { className: "loading-state error-text", text: error.message }));
-  }
-}
-
-function renderHighRiskUsers() {
-  $("#risk-total").textContent = `${state.riskTotal} 位高风险用户`;
-  if (!state.riskItems.length) {
-    $("#risk-list").replaceChildren(node("div", { className: "loading-state", text: "当前没有风险合计大于 5 的用户" }));
-    return;
-  }
-  const cards = state.riskItems.map((user) => {
-    const review = Number(user.photoReviewCount || 0);
-    const blocked = Number(user.photoBlockedCount || 0);
-    const ban = node("button", { className: "secondary-button", type: "button", text: "封禁" });
-    const remove = node("button", { className: "reject-button", type: "button", text: "注销" });
-    ban.disabled = user.status !== 1;
-    ban.addEventListener("click", () => openRiskAction(user, "ban"));
-    remove.addEventListener("click", () => openRiskAction(user, "delete"));
-    return node("article", { className: "security-card" }, [
-      node("div", { className: "section-inline-title" }, [
-        node("div", {}, [node("h3", { text: user.nickname || "未设置昵称" }),
-          node("p", { className: "muted", text: `${user.phone || "无手机号"} · #${user.id}` })]),
-        statusBadge(user.status === 1 ? "正常" : "已封禁"),
-      ]),
-      facts([["人工审核", review], ["已拦截", blocked], ["风险合计", review + blocked],
-        ["最近风险", formatTime(user.photoRiskUpdatedAt)]]),
-      node("div", { className: "detail-actions" }, [ban, remove]),
-    ]);
-  });
-  $("#risk-list").replaceChildren(...cards);
-}
-
-function openRiskAction(user, action) {
-  state.riskTarget = user;
-  state.riskAction = action;
-  const deleting = action === "delete";
-  $("#risk-action-title").textContent = deleting ? "注销高风险用户" : "封禁高风险用户";
-  $("#risk-action-context").textContent = `${user.nickname || "未设置昵称"} · #${user.id} · 风险合计 ${Number(user.photoReviewCount || 0) + Number(user.photoBlockedCount || 0)}`;
-  $("#risk-action-reason").value = "";
-  $("#risk-phone-allowed").checked = true;
-  $("#risk-wechat-allowed").checked = true;
-  $("#risk-action-error").hidden = true;
-  $("#risk-action-submit").textContent = deleting ? "确认注销" : "确认封禁";
-  $("#risk-action-dialog").showModal();
-}
-
-function closeRiskAction() {
-  $("#risk-action-dialog").close();
-  state.riskTarget = null;
-  state.riskAction = null;
-}
-
-async function submitRiskAction(event) {
-  event.preventDefault();
-  if (!state.riskTarget || !state.riskAction) return;
-  const reason = $("#risk-action-reason").value.trim();
-  const errorBox = $("#risk-action-error");
-  if (!reason) {
-    errorBox.textContent = "必须填写处置原因。";
-    errorBox.hidden = false;
-    return;
-  }
-  const submit = $("#risk-action-submit");
-  submit.disabled = true;
-  try {
-    await api(`/admin-api/v1/high-risk-users/${encodeURIComponent(state.riskTarget.id)}/${state.riskAction}`, {
-      method: "POST",
-      body: {
-        reason,
-        phoneRegistrationAllowed: $("#risk-phone-allowed").checked,
-        wechatRegistrationAllowed: $("#risk-wechat-allowed").checked,
-      },
-    });
-    showToast(state.riskAction === "delete" ? "注销任务已受理" : "用户已封禁并撤销会话");
-    closeRiskAction();
-    await loadHighRiskUsers();
-  } catch (error) {
-    errorBox.textContent = error.message || "处置失败";
-    errorBox.hidden = false;
-  } finally {
-    submit.disabled = false;
-  }
-}
-
-async function loadUsers(reset) {
-  if (!canManageUsers()) return;
-  if (reset) {
-    state.userPage = 1;
-    state.userItems = [];
-    state.selectedUser = null;
-    $("#user-detail").replaceChildren(node("div", { className: "empty-detail" }, [
-      node("span", { text: "USER" }), node("p", { text: "选择用户查看资料与生活照。" }),
-    ]));
-  }
-  $("#user-list").replaceChildren(node("div", { className: "loading-state", text: "加载中…" }));
-  const query = new URLSearchParams({ page: String(state.userPage), size: String(PAGE_SIZE) });
+async function renderUsers() {
   const keyword = $("#user-keyword").value.trim();
   const status = $("#user-status").value;
-  if (keyword) query.set("keyword", keyword);
-  if (status) query.set("status", status);
-  try {
-    const page = await api(`/admin-api/v1/users?${query}`);
-    state.userItems = Array.isArray(page.list) ? page.list : [];
-    state.userTotal = Number(page.total || 0);
-    renderUserList();
-  } catch (error) {
-    $("#user-list").replaceChildren(node("div", { className: "loading-state error-text", text: error.message }));
-  }
-}
+  const page = state.users.page;
+  const size = state.users.size;
+  const data = await api(`/admin-api/v1/users?page=${page}&size=${size}`
+      + `&keyword=${encodeURIComponent(keyword)}`
+      + (status ? `&status=${status}` : ""));
+  state.users.total = data.total || 0;
 
-function renderUserList() {
-  $("#user-total").textContent = `${state.userTotal} 位用户`;
-  if (!state.userItems.length) {
-    $("#user-list").replaceChildren(node("div", { className: "loading-state", text: "没有匹配用户" }));
-    return;
-  }
-  const rows = state.userItems.map((user) => {
-    const name = user.nickname || "未设置昵称";
-    const button = node("button", {
-      className: `task-row user-row ${String(state.selectedUser?.id || "") === String(user.id) ? "selected" : ""}`, type: "button",
-    }, [
-      node("span", { className: "user-list-avatar", text: name.slice(0, 1) }),
-      node("div", { className: "user-list-main" }, [
-        node("strong", { text: name }),
-        node("span", { text: `${user.phone || "无手机号"} · #${user.id}` }),
-        node("span", { text: `曝光状态 ${activityStatusLabel(user.activityStatus)}` }),
-        node("span", { text: `人工审核 ${user.photoReviewCount || 0} · 拦截 ${user.photoBlockedCount || 0}` }),
-        node("div", { className: "chip-list compact-chips" }, (user.roles || []).map((role) =>
-          node("span", { className: "chip", text: role.name || normalizeRole(role.code) }))),
-      ]),
-      statusBadge(user.status === 1 ? "正常" : "禁用"),
-    ]);
-    button.addEventListener("click", () => selectUser(user.id));
-    return button;
+  const rows = (data.list || []).map((user) => `
+    <tr>
+      <td>${esc(user.id)}</td>
+      <td>${esc(user.nickName ?? user.nickname ?? "-")}</td>
+      <td>${esc(user.phone ?? "-")}</td>
+      <td>${badge(user.status === undefined ? 1 : user.status, "正常", "禁用")}</td>
+      <td class="actions">
+        <button class="text-button" data-action="detail" data-id="${user.id}">详情</button>
+        <button class="text-button" data-action="roles" data-id="${user.id}">角色</button>
+        <button class="text-button" data-action="toggle" data-id="${user.id}" data-enabled="${user.status === 1 ? "false" : "true"}">
+          ${user.status === 1 ? "禁用" : "启用"}
+        </button>
+      </td>
+    </tr>`).join("");
+
+  $("#user-table").innerHTML = `
+    <table class="table">
+      <thead><tr><th>ID</th><th>昵称</th><th>手机号</th><th>状态</th><th>操作</th></tr></thead>
+      <tbody>${rows || '<tr><td colspan="5" class="empty">暂无数据</td></tr>'}</tbody>
+    </table>`;
+
+  renderPagination($("#user-pagination"), state.users, () => {
+    renderUsers();
   });
-  $("#user-list").replaceChildren(...rows);
-}
 
-async function selectUser(userId) {
-  $("#user-detail").replaceChildren(node("div", { className: "loading-state", text: "加载资料…" }));
-  try {
-    if (!state.manageableRoles.length) state.manageableRoles = await api("/admin-api/v1/staff-roles");
-    state.selectedUser = await api(`/admin-api/v1/users/${encodeURIComponent(userId)}`);
-    renderUserList();
-    renderUserDetail();
-  } catch (error) {
-    $("#user-detail").replaceChildren(node("div", { className: "loading-state error-text", text: error.message }));
-  }
-}
-
-function renderUserDetail() {
-  const user = state.selectedUser;
-  if (!user) return;
-  const name = user.nickname || "未设置昵称";
-  const header = node("div", { className: "user-profile-head" }, [
-    user.avatarUrl
-      ? node("img", { className: "profile-avatar", attributes: { src: user.avatarUrl, alt: "用户头像", referrerpolicy: "no-referrer" } })
-      : node("span", { className: "profile-avatar fallback", text: name.slice(0, 1) }),
-    node("div", {}, [node("h3", { text: name }), node("p", { text: `#${user.id} · ${user.status === 1 ? "正常" : "禁用"}` })]),
-  ]);
-  const profile = user.profile || {};
-  const detail = user.profileDetails || {};
-  const info = facts([
-    ["手机号", user.phone || "—"], ["性别", genderLabel(user.gender)],
-    ["生日", user.birthday || "—"], ["地区", [user.country, user.province, user.city].filter(Boolean).join(" ") || "—"],
-    ["注册状态", user.onboardingStatus || "—"], ["注册时间", formatTime(user.createdAt)],
-    ["曝光活跃状态", activityStatusLabel(user.activityStatus)],
-    ["最后登录", formatTime(user.lastLoginTime)], ["最后活跃", formatTime(user.lastHeartbeatTime)],
-    ["交友目的", detail.datingGoal || "—"], ["MBTI", detail.mbti || "—"],
-    ["身高", detail.heightCm ? `${detail.heightCm} cm` : "—"], ["学历", educationLabel(detail.educationLevel)],
-    ["学校", detail.school || "—"], ["职业", detail.job || "—"],
-    ["简介", detail.bio || "—"], ["兴趣标签", formatInterests(detail.interests)],
-    ["会员等级", profile.vipLevel || "NONE"], ["认证状态", profile.verificationStatus || "—"],
-    ["获赞", profile.receivedLikeCount ?? 0], ["算力余额", profile.creditBalance ?? 0],
-    ["审美共鸣", profile.aestheticResonanceCount ?? 0], ["曝光算力", profile.exposureCreditBalance ?? 0],
-    ["进入人工审核", user.photoReviewCount ?? 0], ["照片被拦截", user.photoBlockedCount ?? 0],
-    ["照片风险合计", Number(user.photoReviewCount || 0) + Number(user.photoBlockedCount || 0)],
-    ["最近风险时间", formatTime(user.photoRiskUpdatedAt)],
-  ]);
-  const active = new Set((user.roles || []).map((role) => String(role.id)));
-  const roleOptions = node("div", { className: "role-options" }, state.manageableRoles.map((role) => {
-    const input = node("input", { type: "checkbox", attributes: { value: String(role.id) } });
-    input.checked = active.has(String(role.id));
-    return node("label", {}, [input, node("span", { text: role.name })]);
-  }));
-  const save = node("button", { className: "primary-button", type: "button", text: "保存角色" });
-  const revoke = node("button", { className: "reject-button", type: "button", text: "强制下线" });
-  const statusButton = node("button", { className: "secondary-button", type: "button",
-    text: user.status === 1 ? "停用账号" : "恢复账号" });
-  const activateButton = node("button", { className: "secondary-button", type: "button",
-    text: user.activityStatus === "INACTIVE" ? "激活曝光" : "刷新曝光活跃" });
-  const edit = node("button", { className: "secondary-button", type: "button", text: "编辑资料" });
-  const upload = node("button", { className: "secondary-button", type: "button", text: "添加生活照" });
-  const exportWeights = node("button", { className: "secondary-button", type: "button", text: "导出偏爱权重" });
-  const fileInput = node("input", { className: "upload-photo-input", type: "file",
-    attributes: { accept: "image/jpeg,image/png,image/webp,image/heic,image/heif", multiple: "multiple" } });
-  const uploadProgress = node("div", { className: "upload-progress", attributes: { hidden: "hidden" } }, [
-    node("div", { className: "upload-progress-track" }, [node("span", { className: "upload-progress-fill" })]),
-    node("p", { text: "等待上传" }),
-  ]);
-  const ownId = state.identity?.userInfo?.id;
-  if (String(ownId || "") === String(user.id)) {
-    save.disabled = true;
-    save.title = "不能修改自己的角色";
-    revoke.disabled = true;
-    statusButton.disabled = true;
-  }
-  save.addEventListener("click", () => saveUserRoles(user.id, roleOptions, save));
-  revoke.addEventListener("click", () => revokeUserSessions(user.id, revoke));
-  statusButton.addEventListener("click", () => updateUserStatus(user.id, user.status !== 1, statusButton));
-  activateButton.addEventListener("click", () => activateUserDistribution(user.id, activateButton));
-  edit.addEventListener("click", () => openUserForm(user));
-  upload.addEventListener("click", () => fileInput.click());
-  exportWeights.addEventListener("click", () => downloadPreferenceWeights(user.id, exportWeights));
-  fileInput.addEventListener("change", () => prepareUserPhotos(user.id, fileInput, upload, uploadProgress));
-  const roleSection = node("section", { className: "detail-section" }, [
-    node("div", { className: "section-inline-title" }, [node("h4", { text: "后台角色与账号状态" }), node("div", { className: "detail-actions" }, [activateButton, statusButton, revoke, save])]), roleOptions,
-  ]);
-  const photos = node("section", { className: "detail-section" }, [
-    node("div", { className: "section-inline-title" }, [node("h4", { text: `生活照 ${(user.lifestylePhotos || []).length}` }),
-      node("div", { className: "detail-actions" }, [exportWeights, edit, upload, fileInput])]), uploadProgress,
-    renderUserPhotoSearch(user.lifestylePhotos || []),
-  ]);
-  $("#user-detail").replaceChildren(node("div", { className: "detail-content user-detail-content" }, [header, info, roleSection, photos]));
-}
-
-function openUserForm(user = null) {
-  state.editingUserId = user?.id || null;
-  const form = $("#user-form");
-  form.reset();
-  $("#user-form-title").textContent = user ? "编辑用户" : "加入用户";
-  $("#user-form-error").hidden = true;
-  const detail = user?.profileDetails || {};
-  const values = user ? {
-    phone: user.phone, nickname: user.nickname, gender: user.gender, birthday: user.birthday,
-    country: user.country, province: user.province, city: user.city,
-    datingGoal: detail.datingGoal, mbti: detail.mbti, heightCm: detail.heightCm,
-    school: detail.school, educationLevel: detail.educationLevel, job: detail.job, bio: detail.bio,
-  } : {};
-  for (const [name, value] of Object.entries(values)) {
-    const input = form.elements.namedItem(name);
-    if (input) input.value = value ?? "";
-  }
-  $("#user-form-dialog").showModal();
-}
-
-function closeUserForm() { $("#user-form-dialog").close(); }
-
-async function submitUserForm(event) {
-  event.preventDefault();
-  const form = event.currentTarget;
-  const button = $("#user-form-submit");
-  const error = $("#user-form-error");
-  const data = Object.fromEntries(new FormData(form));
-  data.gender = Number(data.gender);
-  data.heightCm = data.heightCm ? Number(data.heightCm) : null;
-  data.mbti = String(data.mbti || "").toUpperCase();
-  for (const key of ["country", "province", "city", "datingGoal", "mbti", "school", "educationLevel", "job", "bio"])
-    data[key] = data[key] || null;
-  button.disabled = true;
-  error.hidden = true;
-  try {
-    const editingId = state.editingUserId;
-    const saved = await api(editingId ? `/admin-api/v1/users/${encodeURIComponent(editingId)}` : "/admin-api/v1/users", {
-      method: editingId ? "PUT" : "POST", body: data,
-    });
-    closeUserForm();
-    showToast(editingId ? "用户资料已更新" : "用户已加入");
-    await loadUsers(true);
-    await selectUser(saved.id);
-  } catch (caught) {
-    error.textContent = caught.message || "保存失败";
-    error.hidden = false;
-  } finally { button.disabled = false; }
-}
-
-function prepareUserPhotos(userId, input, button, progress) {
-  const files = Array.from(input.files || []);
-  if (!files.length) return;
-  progress.hidden = false;
-  const sex = node("select", {}, [node("option", { text: "男", attributes: { value: "1" } }),
-    node("option", { text: "女", attributes: { value: "2" } })]);
-  const start = node("button", { className: "primary-button", type: "button", text: `开始上传 ${files.length} 张` });
-  start.addEventListener("click", () => uploadUserPhotos(userId, input, button, progress, files, sex.value, start));
-  progress.replaceChildren(
-    node("label", { className: "batch-sex-field" }, [node("span", { text: "整批照片性别" }), sex]),
-    node("p", { text: `${files.length} 张：${files.map((file) => file.name).join("、")}` }), start);
-}
-
-async function uploadUserPhotos(userId, input, button, progress, files, sex, start) {
-  button.disabled = true;
-  start.disabled = true;
-  progress.replaceChildren(
-    node("div", { className: "upload-progress-track" }, [node("span", { className: "upload-progress-fill" })]),
-    node("p", { text: "准备上传" }));
-  const fill = $(".upload-progress-fill", progress);
-  const label = $("p", progress);
-  let completed = 0;
-  const failures = [];
-  const queue = files.slice();
-  const worker = async () => {
-    while (queue.length) {
-      const file = queue.shift();
-      label.textContent = `正在分析 ${file.name} · ${completed}/${files.length}`;
-      const body = new FormData();
-      body.append("file", file, file.name);
-      body.append("sex", sex);
-      body.append("clientRequestId", `admin-${crypto.randomUUID()}`);
-      try {
-        const result = await api(`/admin-api/v1/users/${encodeURIComponent(userId)}/lifestyle-photos`, { method: "POST", body });
-        if (result?.clipAesthetic?.analysisStatus !== "DONE" || !result?.clipAesthetic?.aesthetic)
-          throw new Error("分析结果不完整");
-      } catch (error) { failures.push(`${file.name}：${error.message || "失败"}`); }
-      completed += 1;
-      fill.style.width = `${Math.round(completed * 100 / files.length)}%`;
-      label.textContent = `已完成 ${completed}/${files.length}${failures.length ? ` · 失败 ${failures.length}` : ""}`;
-    }
-  };
-  try {
-    await Promise.all(Array.from({ length: Math.min(2, files.length) }, worker));
-    if (failures.length) showToast(`批量上传未全部完成：${failures.join("；")}`, "error");
-    else showToast(`${files.length} 张生活照均已完成上传与分析`);
-    await selectUser(userId);
-  } finally { input.value = ""; button.disabled = false; }
-}
-
-async function deleteUserPhoto(userId, photoId, button) {
-  if (!window.confirm("确认删除这张生活照？照片会立即停止分发，原图按现有延迟删除策略清理。")) return;
-  button.disabled = true;
-  try {
-    await api(`/admin-api/v1/users/${encodeURIComponent(userId)}/lifestyle-photos/${encodeURIComponent(photoId)}`, {
-      method: "DELETE",
-    });
-    showToast("生活照删除已受理");
-    await selectUser(userId);
-  } catch (error) {
-    showToast(error.message || "删除失败", "error");
-    button.disabled = false;
-  }
-}
-
-function educationLabel(value) {
-  return ({ HIGH_SCHOOL: "高中及以下", ASSOCIATE: "大专", BACHELOR: "本科", MASTER: "硕士", DOCTOR: "博士", OTHER: "其他" })[value] || "—";
-}
-
-function formatInterests(value) {
-  if (!value) return "—";
-  try { const items = JSON.parse(value); return Array.isArray(items) && items.length ? items.join("、") : "—"; }
-  catch { return String(value); }
-}
-
-function renderUserPhotos(photos) {
-  if (!photos.length) return node("p", { className: "muted", text: "暂无生活照" });
-  return node("div", { className: "user-photo-grid" }, photos.map((photo) => {
-    const frame = node("div", { className: "user-photo" });
-    if (photo.url) frame.append(node("img", {
-      attributes: { src: photo.url, alt: `生活照 ${photo.photoId}`, loading: "lazy", referrerpolicy: "no-referrer" },
-    }));
-    else frame.append(node("span", { text: photo.status || "不可预览" }));
-    frame.append(node("span", { className: "user-photo-id", text: `#${photo.photoId}` }));
-    const remove = node("button", { className: "user-photo-delete", type: "button", text: "删除",
-      attributes: { "aria-label": `删除生活照 ${photo.photoId}` } });
-    remove.addEventListener("click", () => deleteUserPhoto(state.selectedUser.id, photo.photoId, remove));
-    frame.append(remove);
-    return frame;
-  }));
-}
-
-function renderUserPhotoSearch(photos) {
-  const results = node("div");
-  const input = node("input", { type: "search", attributes: {
-    placeholder: "输入照片 ID 搜索", "aria-label": "按照片 ID 搜索生活照", inputmode: "numeric",
-  } });
-  const count = node("span", { className: "result-total", text: `${photos.length} 张` });
-  const render = () => {
-    const keyword = input.value.trim();
-    const filtered = keyword ? photos.filter((photo) => String(photo.photoId).includes(keyword)) : photos;
-    count.textContent = `${filtered.length} 张`;
-    results.replaceChildren(renderUserPhotos(filtered));
-  };
-  input.addEventListener("input", render);
-  render();
-  return node("div", { className: "user-photo-search" }, [
-    node("div", { className: "photo-search-bar" }, [input, count]), results,
-  ]);
-}
-
-async function downloadPreferenceWeights(userId, button) {
-  button.disabled = true;
-  try {
-    const response = await fetch(`/admin-api/v1/users/${encodeURIComponent(userId)}/preference-weights/export`, {
-      headers: { Accept: "application/json", Authorization: `Bearer ${state.token}` },
-      credentials: "omit", cache: "no-store",
-    });
-    const renewedToken = response.headers.get("X-New-Access-Token");
-    if (renewedToken) setSessionToken(renewedToken);
-    if (!response.ok) {
-      const payload = await response.json().catch(() => null);
-      if (response.status === 401) { clearSession(); showLogin("登录状态已失效，请重新验证身份。"); }
-      throw new ApiError(payload?.msg || `下载失败（HTTP ${response.status}）`, response.status, payload?.traceId);
-    }
-    const url = URL.createObjectURL(await response.blob());
-    const link = node("a", { attributes: { href: url, download: `preference-weights-${userId}.json` } });
-    document.body.append(link);
-    link.click();
-    link.remove();
-    URL.revokeObjectURL(url);
-    showToast("偏爱权重已下载");
-  } catch (error) {
-    showToast(error.message || "偏爱权重下载失败", "error");
-  } finally { button.disabled = false; }
-}
-
-async function saveUserRoles(userId, container, button) {
-  const roleIds = $$('input[type="checkbox"]:checked', container).map((input) => input.value);
-  button.disabled = true;
-  try {
-    state.selectedUser = await api(`/admin-api/v1/users/${encodeURIComponent(userId)}/roles`, {
-      method: "PUT", body: { roleIds },
-    });
-    showToast("角色已更新");
-    await loadUsers(true);
-    await selectUser(userId);
-  } catch (error) {
-    showToast(error.message || "角色更新失败", "error");
-  } finally {
-    button.disabled = false;
-  }
-}
-
-async function revokeUserSessions(userId, button) {
-  if (!window.confirm("确认强制该用户退出所有已登录设备？")) return;
-  button.disabled = true;
-  try {
-    await api(`/admin-api/v1/users/${encodeURIComponent(userId)}/sessions/revoke`, { method: "POST" });
-    showToast("用户会话已撤销");
-  } catch (error) {
-    showToast(error.message || "强制下线失败", "error");
-  } finally { button.disabled = false; }
-}
-
-async function updateUserStatus(userId, enabled, button) {
-  const action = enabled ? "恢复" : "停用";
-  if (!window.confirm(`确认${action}该用户？${enabled ? "" : "停用后将同时撤销全部会话。"}`)) return;
-  button.disabled = true;
-  try {
-    state.selectedUser = await api(`/admin-api/v1/users/${encodeURIComponent(userId)}/status`, {
-      method: "PUT", body: { enabled },
-    });
-    showToast(`用户已${action}`);
-    renderUserDetail();
-    await loadUsers(true);
-    await selectUser(userId);
-  } catch (error) {
-    showToast(error.message || `${action}失败`, "error");
-  } finally { button.disabled = false; }
-}
-
-async function activateUserDistribution(userId, button) {
-  if (!window.confirm("确认刷新该账号的曝光活跃状态？激活后其合格照片可重新进入投票分发。")) return;
-  button.disabled = true;
-  try {
-    state.selectedUser = await api(`/admin-api/v1/users/${encodeURIComponent(userId)}/activity/activate`, {
-      method: "POST",
-    });
-    showToast("照片曝光已激活");
-    renderUserDetail();
-    await loadUsers(true);
-    await selectUser(userId);
-  } catch (error) {
-    showToast(error.message || "激活曝光失败", "error");
-  } finally { button.disabled = false; }
-}
-
-function activityStatusLabel(status) {
-  return status === "ONLINE" ? "在线" : status === "ACTIVE" ? "活跃" : "沉睡";
-}
-
-function genderLabel(gender) {
-  return gender === 1 ? "男" : gender === 2 ? "女" : "未设置";
-}
-
-async function loadPolicies() {
-  if (!canManagePolicies()) return;
-  $("#policy-list").replaceChildren(node("div", { className: "loading-state", text: "加载中…" }));
-  try {
-    const type = $("#policy-type").value;
-    state.policyItems = await api(`/admin-api/v1/review-policies/reasons?type=${encodeURIComponent(type)}`);
-    renderPolicies();
-  } catch (error) {
-    $("#policy-list").replaceChildren(node("div", { className: "loading-state error-text", text: error.message }));
-  }
-}
-
-function renderPolicies() {
-  const cards = state.policyItems.map((item) => {
-    const label = node("input", { attributes: { value: item.label, maxlength: "128", "aria-label": "显示名称" } });
-    const description = node("input", { attributes: { value: item.description || "", maxlength: "512", "aria-label": "说明" } });
-    const enabled = node("input", { type: "checkbox" });
-    enabled.checked = item.enabled;
-    const requireComment = node("input", { type: "checkbox" });
-    requireComment.checked = item.requireComment;
-    const save = node("button", { className: "secondary-button", type: "button", text: "保存" });
-    save.addEventListener("click", async () => {
-      save.disabled = true;
-      try {
-        await api(`/admin-api/v1/review-policies/reasons/${encodeURIComponent(item.id)}`, {
-          method: "PUT", body: { label: label.value.trim(), description: description.value.trim() || null,
-            enabled: enabled.checked, requireComment: requireComment.checked,
-            sortOrder: item.sortOrder, expectedVersion: item.version },
-        });
-        state.reviewReasons = { photo: [], interest: [] };
-        showToast("配置已保存");
-        await loadPolicies();
-      } catch (error) {
-        showToast(error.message || "保存失败", "error");
-      } finally { save.disabled = false; }
-    });
-    return node("article", { className: "policy-card" }, [
-      node("div", { className: "policy-code" }, [node("strong", { text: item.code }), save]),
-      node("label", {}, [node("span", { text: "名称" }), label]),
-      node("label", {}, [node("span", { text: "说明" }), description]),
-      node("div", { className: "policy-switches" }, [
-        node("label", {}, [enabled, node("span", { text: "启用" })]),
-        node("label", {}, [requireComment, node("span", { text: "强制备注" })]),
-      ]),
-    ]);
+  $("#user-table").querySelectorAll("[data-action]").forEach((button) => {
+    button.onclick = () => handleUserAction(button.dataset.action, button.dataset.id, button.dataset.enabled);
   });
-  $("#policy-list").replaceChildren(...cards);
 }
 
-async function prepareCatalog() {
-  const runId = $("#catalog-run-id").value.trim();
-  if (!/^\d+$/.test(runId) || runId === "0") return showToast("请输入有效运行 ID", "error");
-  await runCatalogAction(`/admin-api/v1/interest-catalog/runs/${encodeURIComponent(runId)}/prepare`, "POST");
-}
-
-async function checkCatalogReadiness() {
-  const version = $("#catalog-version").value.trim();
-  if (!/^\d+$/.test(version) || version === "0") return showToast("请输入有效图谱版本", "error");
-  await runCatalogAction(`/admin-api/v1/interest-catalog/graphs/${encodeURIComponent(version)}/readiness`, "GET");
-}
-
-async function runCatalogAction(path, method) {
-  $("#catalog-result").textContent = "执行中…";
+async function handleUserAction(action, id, enabled) {
   try {
-    const result = await api(path, { method });
-    $("#catalog-result").textContent = JSON.stringify(result, null, 2);
-  } catch (error) {
-    $("#catalog-result").textContent = error.message || "操作失败";
-  }
-}
-
-async function loadAppeals() {
-  if (!canReviewAppeals()) return;
-  $("#appeal-list").replaceChildren(node("div", { className: "loading-state", text: "加载中…" }));
-  try {
-    state.appealItems = await api(`/admin-api/v1/interest-appeals?status=${encodeURIComponent($("#appeal-status").value)}&offset=0&limit=100`);
-    renderAppeals();
-  } catch (error) {
-    $("#appeal-list").replaceChildren(node("div", { className: "loading-state error-text", text: error.message }));
-  }
-}
-
-function renderAppeals() {
-  if (!state.appealItems.length) {
-    $("#appeal-list").replaceChildren(node("div", { className: "loading-state", text: "当前没有申诉" }));
-    return;
-  }
-  $("#appeal-list").replaceChildren(...state.appealItems.map((item) => {
-    const children = [
-      node("div", { className: "policy-code" }, [node("strong", { text: item.candidateId }), statusBadge(item.appealStatus)]),
-      node("h3", { text: item.normalizedText || "未命名标签" }),
-      node("p", { className: "muted", text: item.appealComment || "未填写申诉说明" }),
-      facts([["原审核意见", item.originalReviewComment || "—"], ["更新时间", formatTime(item.updatedAt)]])
-    ];
-    if (item.appealStatus === "OPEN" && hasPermission("review:appeal:resolve")) {
-      const accept = node("button", { className: "approve-button", type: "button", text: "接受申诉" });
-      const reject = node("button", { className: "reject-button", type: "button", text: "驳回申诉" });
-      accept.addEventListener("click", () => resolveAppeal(item, "ACCEPT"));
-      reject.addEventListener("click", () => resolveAppeal(item, "REJECT"));
-      children.push(node("div", { className: "detail-actions" }, [accept, reject]));
+    if (action === "detail") {
+      const user = await api(`/admin-api/v1/users/${id}`);
+      openModal("用户详情", `
+        <dl class="detail-list">
+          <dt>用户 ID</dt><dd>${esc(user.id)}</dd>
+          <dt>昵称</dt><dd>${esc(user.nickName ?? user.nickname ?? "-")}</dd>
+          <dt>手机号</dt><dd>${esc(user.phone ?? "-")}</dd>
+          <dt>状态</dt><dd>${user.status === 1 ? "正常" : "禁用"}</dd>
+        </dl>` , () => Promise.resolve());
+      $("#modal-confirm").hidden = true;
+      $("#modal-cancel").textContent = "关闭";
+    } else if (action === "roles") {
+      const [user, roles] = await Promise.all([
+        api(`/admin-api/v1/users/${id}`),
+        api("/admin-api/v1/staff-roles"),
+      ]);
+      const current = user.roleIds || user.roles || [];
+      openModal(`配置角色 · 用户 ${user.id}`, `
+        <form>
+          ${(roles || []).map((role) => `
+            <label class="check-row">
+              <input type="checkbox" name="roleIds" value="${role.id}" ${current.includes(role.id) ? "checked" : ""}>
+              ${esc(role.name)}（${esc(role.code)}）
+            </label>`).join("") || '<p class="empty">无可用后台角色</p>'}
+        </form>`, async (form) => {
+        const roleIds = Array.from(form.querySelectorAll('input[name="roleIds"]:checked')).map((input) => Number(input.value));
+        await api(`/admin-api/v1/users/${id}/roles`, { method: "PUT", body: { roleIds } });
+        renderUsers();
+      });
+    } else if (action === "toggle") {
+      const enabled = enabled === "true";
+      if (!confirmAction(enabled ? "确认启用该用户？" : "确认禁用该用户？")) return;
+      await api(`/admin-api/v1/users/${id}/status`, { method: "PUT", body: { enabled } });
+      showToast("状态已更新");
+      renderUsers();
     }
-    return node("article", { className: "policy-card" }, children);
-  }));
+  } catch (error) {
+    showToast(error.message || "操作失败", true);
+  }
 }
 
-async function resolveAppeal(item, decision) {
-  const comment = window.prompt(decision === "ACCEPT" ? "填写接受申诉的复核意见" : "填写驳回申诉的复核意见");
-  if (!comment?.trim()) return;
-  try {
-    await api(`/admin-api/v1/interest-appeals/${encodeURIComponent(item.candidateId)}/resolve`, {
-      method: "POST", body: { decision, comment: comment.trim(), expectedVersion: item.version },
+// ==================== 菜单管理 ====================
+
+const MENU_TYPE_LABELS = { 0: "目录", 1: "菜单", 2: "按钮" };
+
+async function renderMenus() {
+  const menus = await api("/admin-api/v1/menus");
+  const rows = [];
+  const walk = (nodes, depth) => {
+    nodes.forEach((menu) => {
+      rows.push(`
+        <tr>
+          <td style="padding-left:${depth * 24 + 8}px">${depth > 0 ? "└ " : ""}${esc(menu.menuName)}</td>
+          <td>${MENU_TYPE_LABELS[menu.menuType] ?? menu.menuType}</td>
+          <td>${esc(menu.path ?? "-")}</td>
+          <td>${esc(menu.perms ?? "-")}</td>
+          <td>${badge(menu.status ?? 1, "正常", "停用")}</td>
+          <td class="actions">
+            <button class="text-button" data-action="create-child" data-id="${menu.id}">新增子项</button>
+            <button class="text-button" data-action="edit" data-id="${menu.id}">编辑</button>
+            <button class="text-button" data-action="toggle" data-id="${menu.id}" data-enabled="${menu.status === 1 ? "false" : "true"}">${menu.status === 1 ? "停用" : "启用"}</button>
+            <button class="text-button" data-action="delete" data-id="${menu.id}">删除</button>
+          </td>
+        </tr>`);
+      if (menu.children?.length) walk(menu.children, depth + 1);
     });
-    showToast("申诉已处理");
-    await loadAppeals();
-  } catch (error) { showToast(error.message || "申诉处理失败", "error"); }
+  };
+  walk(menus || [], 0);
+
+  $("#menu-table").innerHTML = `
+    <table class="table">
+      <thead><tr><th>菜单名称</th><th>类型</th><th>路由</th><th>权限标识</th><th>状态</th><th>操作</th></tr></thead>
+      <tbody>${rows.join("") || '<tr><td colspan="6" class="empty">暂无菜单，点击右上角"新增菜单"创建</td></tr>'}</tbody>
+    </table>`;
+
+  $("#menu-table").querySelectorAll("[data-action]").forEach((button) => {
+    button.onclick = () => handleMenuAction(button.dataset.action, button.dataset.id, button.dataset.enabled);
+  });
+  $("#menu-create").onclick = () => openMenuForm(null);
 }
 
-function updateClock() {
-  const now = new Date();
-  $("#current-date").textContent = new Intl.DateTimeFormat("zh-CN", { year: "numeric", month: "long", day: "numeric", weekday: "short" }).format(now);
-  $("#current-time").textContent = new Intl.DateTimeFormat("zh-CN", { hour: "2-digit", minute: "2-digit", hour12: false }).format(now);
+async function handleMenuAction(action, id, enabled) {
+  try {
+    if (action === "edit") {
+      const menu = await findMenu(id);
+      openMenuForm(menu);
+    } else if (action === "create-child") {
+      const menu = await findMenu(id);
+      openMenuForm({ parentId: menu.id });
+    } else if (action === "toggle") {
+      const targetEnabled = enabled === "true";
+      await api(`/admin-api/v1/menus/${id}/status`, { method: "PUT", body: { enabled: targetEnabled } });
+      showToast("状态已更新");
+      renderMenus();
+    } else if (action === "delete") {
+      if (!confirmAction("确认删除该菜单？含子菜单的节点将被拒绝。")) return;
+      await api(`/admin-api/v1/menus/${id}`, { method: "DELETE" });
+      showToast("菜单已删除");
+      renderMenus();
+    }
+  } catch (error) {
+    showToast(error.message || "操作失败", true);
+  }
 }
 
-bootstrap();
+async function findMenu(id) {
+  const menus = await api("/admin-api/v1/menus");
+  let found = null;
+  const walk = (nodes) => {
+    nodes.forEach((menu) => {
+      if (String(menu.id) === String(id)) found = menu;
+      if (menu.children?.length) walk(menu.children);
+    });
+  };
+  walk(menus || []);
+  return found;
+}
+
+function openMenuForm(menu) {
+  const isEdit = Boolean(menu?.id);
+  openModal(isEdit ? "编辑菜单" : "新增菜单", `
+    <form class="form-grid">
+      <input type="hidden" name="id" value="${menu?.id ?? ""}">
+      <label>父菜单 ID
+        <input class="input" name="parentId" type="number" min="0" value="${menu?.parentId ?? 0}" required>
+      </label>
+      <label>菜单名称
+        <input class="input" name="menuName" value="${esc(menu?.menuName ?? "")}" maxlength="50" required>
+      </label>
+      <label>菜单类型
+        <select class="input" name="menuType" required>
+          <option value="0" ${menu?.menuType === 0 ? "selected" : ""}>目录</option>
+          <option value="1" ${menu?.menuType === 1 || !menu ? "selected" : ""}>菜单</option>
+          <option value="2" ${menu?.menuType === 2 ? "selected" : ""}>按钮</option>
+        </select>
+      </label>
+      <label>路由地址
+        <input class="input" name="path" value="${esc(menu?.path ?? "")}" maxlength="200">
+      </label>
+      <label>组件路径
+        <input class="input" name="component" value="${esc(menu?.component ?? "")}" maxlength="255">
+      </label>
+      <label>权限标识
+        <input class="input" name="perms" value="${esc(menu?.perms ?? "")}" maxlength="100" placeholder="如 system:user:add">
+      </label>
+      <label>图标
+        <input class="input" name="icon" value="${esc(menu?.icon ?? "")}" maxlength="100">
+      </label>
+      <label>排序
+        <input class="input" name="sort" type="number" min="0" value="${menu?.sort ?? 0}">
+      </label>
+      <label>状态
+        <select class="input" name="status">
+          <option value="1" ${menu?.status !== 0 ? "selected" : ""}>正常</option>
+          <option value="0" ${menu?.status === 0 ? "selected" : ""}>停用</option>
+        </select>
+      </label>
+    </form>`, async (form) => {
+    const body = Object.fromEntries(new FormData(form).entries());
+    body.parentId = Number(body.parentId || 0);
+    body.menuType = Number(body.menuType);
+    body.sort = Number(body.sort || 0);
+    body.status = Number(body.status);
+    if (isEdit) {
+      await api(`/admin-api/v1/menus/${menu.id}`, { method: "PUT", body });
+    } else {
+      await api("/admin-api/v1/menus", { method: "POST", body });
+    }
+    renderMenus();
+  });
+}
+
+// ==================== 字典管理 ====================
+
+async function renderDicts() {
+  const types = await api("/admin-api/v1/dict/types");
+  $("#dict-type-list").innerHTML = (types || []).map((type) => `
+    <div class="list-item ${state.selectedDictType === type.dictType ? "active" : ""}" data-type="${esc(type.dictType)}">
+      <div class="list-item-main">
+        <strong>${esc(type.dictName)}</strong>
+        <span class="list-item-sub">${esc(type.dictType)} · ${badge(type.status ?? 1, "正常", "停用")}</span>
+      </div>
+      <div class="list-item-actions">
+        <button class="text-button" data-action="type-edit" data-id="${type.id}">编辑</button>
+        <button class="text-button" data-action="type-toggle" data-id="${type.id}" data-enabled="${type.status === 1 ? "false" : "true"}">${type.status === 1 ? "停用" : "启用"}</button>
+        <button class="text-button" data-action="type-delete" data-id="${type.id}">删除</button>
+      </div>
+    </div>`).join("") || '<p class="empty">暂无字典类型</p>';
+
+  $("#dict-type-list").querySelectorAll(".list-item").forEach((item) => {
+    item.onclick = () => {
+      state.selectedDictType = item.dataset.type;
+      renderDicts();
+    };
+  });
+  $("#dict-type-list").querySelectorAll("[data-action]").forEach((button) => {
+    button.onclick = (event) => {
+      event.stopPropagation();
+      handleDictTypeAction(button.dataset.action, button.dataset.id, button.dataset.enabled);
+    };
+  });
+
+  if (state.selectedDictType) {
+    $("#dict-data-title").textContent = `字典数据 · ${state.selectedDictType}`;
+    $("#dict-data-create").disabled = false;
+    const data = await api(`/admin-api/v1/dict/data?dictType=${encodeURIComponent(state.selectedDictType)}`);
+    $("#dict-data-list").innerHTML = `
+      <table class="table">
+        <thead><tr><th>排序</th><th>标签</th><th>键值</th><th>默认</th><th>状态</th><th>操作</th></tr></thead>
+        <tbody>${(data || []).map((item) => `
+          <tr>
+            <td>${item.dictSort}</td>
+            <td>${esc(item.dictLabel)}</td>
+            <td>${esc(item.dictValue)}</td>
+            <td>${item.isDefault === 1 ? "✔" : "-"}</td>
+            <td>${badge(item.status ?? 1, "正常", "停用")}</td>
+            <td class="actions">
+              <button class="text-button" data-action="data-edit" data-id="${item.id}">编辑</button>
+              <button class="text-button" data-action="data-default" data-id="${item.id}">设默认</button>
+              <button class="text-button" data-action="data-delete" data-id="${item.id}">删除</button>
+            </td>
+          </tr>`).join("") || '<tr><td colspan="6" class="empty">暂无数据项</td></tr>'}
+        </tbody>
+      </table>`;
+    $("#dict-data-list").querySelectorAll("[data-action]").forEach((button) => {
+      button.onclick = () => handleDictDataAction(button.dataset.action, button.dataset.id);
+    });
+  } else {
+    $("#dict-data-title").textContent = "字典数据（请选择类型）";
+    $("#dict-data-create").disabled = true;
+    $("#dict-data-list").innerHTML = '<p class="empty">从左侧选择字典类型查看数据项</p>';
+  }
+}
+
+async function handleDictTypeAction(action, id, enabled) {
+  try {
+    if (action === "type-edit") {
+      const types = await api("/admin-api/v1/dict/types");
+      const type = types.find((item) => String(item.id) === String(id));
+      if (!type) return;
+      openModal("编辑字典类型", `
+        <form class="form-grid">
+          <label>字典名称
+            <input class="input" name="dictName" value="${esc(type.dictName)}" maxlength="100" required>
+          </label>
+          <label>字典类型编码
+            <input class="input" name="dictType" value="${esc(type.dictType)}" maxlength="100" required>
+          </label>
+          <label>备注
+            <input class="input" name="remark" value="${esc(type.remark ?? "")}" maxlength="500">
+          </label>
+        </form>`, async (form) => {
+        const body = Object.fromEntries(new FormData(form).entries());
+        await api(`/admin-api/v1/dict/types/${id}`, { method: "PUT", body });
+        renderDicts();
+      });
+    } else if (action === "type-toggle") {
+      await api(`/admin-api/v1/dict/types/${id}/status`, { method: "PUT", body: { enabled: enabled === "true" } });
+      showToast("状态已更新");
+      renderDicts();
+    } else if (action === "type-delete") {
+      if (!confirmAction("确认删除该字典类型？含数据项的类型将被拒绝。")) return;
+      await api(`/admin-api/v1/dict/types/${id}`, { method: "DELETE" });
+      if (state.selectedDictType) state.selectedDictType = null;
+      showToast("字典类型已删除");
+      renderDicts();
+    }
+  } catch (error) {
+    showToast(error.message || "操作失败", true);
+  }
+}
+
+async function handleDictDataAction(action, id) {
+  try {
+    const dictType = state.selectedDictType;
+    if (!dictType) return;
+    if (action === "data-edit") {
+      const items = await api(`/admin-api/v1/dict/data?dictType=${encodeURIComponent(dictType)}`);
+      const item = items.find((entry) => String(entry.id) === String(id));
+      if (!item) return;
+      openModal("编辑字典数据", `
+        <form class="form-grid">
+          <label>字典标签
+            <input class="input" name="dictLabel" value="${esc(item.dictLabel)}" maxlength="100" required>
+          </label>
+          <label>字典键值
+            <input class="input" name="dictValue" value="${esc(item.dictValue)}" maxlength="100" required>
+          </label>
+          <label>排序
+            <input class="input" name="dictSort" type="number" min="0" value="${item.dictSort ?? 0}">
+          </label>
+          <label>设为默认
+            <select class="input" name="isDefault">
+              <option value="0" ${item.isDefault !== 1 ? "selected" : ""}>否</option>
+              <option value="1" ${item.isDefault === 1 ? "selected" : ""}>是</option>
+            </select>
+          </label>
+        </form>`, async (form) => {
+        const body = Object.fromEntries(new FormData(form).entries());
+        body.dictSort = Number(body.dictSort || 0);
+        body.isDefault = Number(body.isDefault);
+        body.dictType = dictType;
+        await api(`/admin-api/v1/dict/data/${id}`, { method: "PUT", body });
+        renderDicts();
+      });
+    } else if (action === "data-default") {
+      const items = await api(`/admin-api/v1/dict/data?dictType=${encodeURIComponent(dictType)}`);
+      const item = items.find((entry) => String(entry.id) === String(id));
+      if (!item) return;
+      const body = {
+        dictLabel: item.dictLabel,
+        dictValue: item.dictValue,
+        dictSort: item.dictSort,
+        dictType,
+        isDefault: 1,
+      };
+      await api(`/admin-api/v1/dict/data/${id}`, { method: "PUT", body });
+      showToast("已设为默认项");
+      renderDicts();
+    } else if (action === "data-delete") {
+      if (!confirmAction("确认删除该字典数据？")) return;
+      await api(`/admin-api/v1/dict/data/${id}`, { method: "DELETE" });
+      showToast("字典数据已删除");
+      renderDicts();
+    }
+  } catch (error) {
+    showToast(error.message || "操作失败", true);
+  }
+}
+
+function initDictCreators() {
+  $("#dict-type-create").onclick = () => {
+    openModal("新增字典类型", `
+      <form class="form-grid">
+        <label>字典名称
+          <input class="input" name="dictName" maxlength="100" required>
+        </label>
+        <label>字典类型编码
+          <input class="input" name="dictType" maxlength="100" placeholder="如 sys_user_sex" required>
+        </label>
+        <label>备注
+          <input class="input" name="remark" maxlength="500">
+        </label>
+      </form>`, async (form) => {
+      const body = Object.fromEntries(new FormData(form).entries());
+      await api("/admin-api/v1/dict/types", { method: "POST", body });
+      renderDicts();
+    });
+  };
+  $("#dict-data-create").onclick = () => {
+    const dictType = state.selectedDictType;
+    if (!dictType) return;
+    openModal("新增字典数据", `
+      <form class="form-grid">
+        <label>字典标签
+          <input class="input" name="dictLabel" maxlength="100" required>
+        </label>
+        <label>字典键值
+          <input class="input" name="dictValue" maxlength="100" required>
+        </label>
+        <label>排序
+          <input class="input" name="dictSort" type="number" min="0" value="0">
+        </label>
+        <label>设为默认
+          <select class="input" name="isDefault">
+            <option value="0">否</option>
+            <option value="1">是</option>
+          </select>
+        </label>
+      </form>`, async (form) => {
+      const body = Object.fromEntries(new FormData(form).entries());
+      body.dictSort = Number(body.dictSort || 0);
+      body.isDefault = Number(body.isDefault);
+      body.dictType = dictType;
+      await api("/admin-api/v1/dict/data", { method: "POST", body });
+      renderDicts();
+    });
+  };
+}
+
+// ==================== 参数配置 ====================
+
+async function renderConfigs() {
+  const configs = await api("/admin-api/v1/configs");
+  $("#config-table").innerHTML = `
+    <table class="table">
+      <thead><tr><th>ID</th><th>参数名称</th><th>参数键名</th><th>参数值</th><th>类型</th><th>状态</th><th>操作</th></tr></thead>
+      <tbody>${(configs || []).map((config) => `
+        <tr>
+          <td>${config.id}</td>
+          <td>${esc(config.configName)}</td>
+          <td><code>${esc(config.configKey)}</code></td>
+          <td>${esc(config.configValue)}</td>
+          <td>${config.configType === 0 ? "内置" : "用户"}</td>
+          <td>${badge(config.status ?? 1, "正常", "停用")}</td>
+          <td class="actions">
+            <button class="text-button" data-action="config-edit" data-id="${config.id}">编辑</button>
+            <button class="text-button" data-action="config-toggle" data-id="${config.id}" data-enabled="${config.status === 1 ? "false" : "true"}">${config.status === 1 ? "停用" : "启用"}</button>
+            <button class="text-button" data-action="config-delete" data-id="${config.id}" ${config.configType === 0 ? "disabled" : ""}>删除</button>
+          </td>
+        </tr>`).join("") || '<tr><td colspan="7" class="empty">暂无参数配置</td></tr>'}
+      </tbody>
+    </table>`;
+  $("#config-table").querySelectorAll("[data-action]").forEach((button) => {
+    button.onclick = () => handleConfigAction(button.dataset.action, button.dataset.id, button.dataset.enabled);
+  });
+  $("#config-create").onclick = () => openConfigForm(null);
+}
+
+async function handleConfigAction(action, id, enabled) {
+  try {
+    const configs = await api("/admin-api/v1/configs");
+    const config = configs.find((item) => String(item.id) === String(id));
+    if (!config) return;
+    if (action === "config-edit") {
+      openConfigForm(config);
+    } else if (action === "config-toggle") {
+      await api(`/admin-api/v1/configs/${id}/status`, { method: "PUT", body: { enabled: enabled === "true" } });
+      showToast("状态已更新");
+      renderConfigs();
+    } else if (action === "config-delete") {
+      if (!confirmAction("确认删除该参数？内置参数禁止删除。")) return;
+      await api(`/admin-api/v1/configs/${id}`, { method: "DELETE" });
+      showToast("参数已删除");
+      renderConfigs();
+    }
+  } catch (error) {
+    showToast(error.message || "操作失败", true);
+  }
+}
+
+function openConfigForm(config) {
+  const isEdit = Boolean(config?.id);
+  openModal(isEdit ? "编辑参数" : "新增参数", `
+    <form class="form-grid">
+      <label>参数名称
+        <input class="input" name="configName" value="${esc(config?.configName ?? "")}" maxlength="100" required>
+      </label>
+      <label>参数键名
+        <input class="input" name="configKey" value="${esc(config?.configKey ?? "")}" maxlength="100" placeholder="如 sys.site.name" ${isEdit ? "readonly" : "required"}>
+      </label>
+      <label>参数值
+        <textarea class="input" name="configValue" maxlength="500" required>${esc(config?.configValue ?? "")}</textarea>
+      </label>
+      <label>备注
+        <input class="input" name="remark" value="${esc(config?.remark ?? "")}" maxlength="500">
+      </label>
+    </form>`, async (form) => {
+    const body = Object.fromEntries(new FormData(form).entries());
+    if (isEdit) {
+      await api(`/admin-api/v1/configs/${config.id}`, { method: "PUT", body });
+    } else {
+      await api("/admin-api/v1/configs", { method: "POST", body });
+    }
+    renderConfigs();
+  });
+}
+
+// ==================== 定时任务 ====================
+
+async function renderJobs() {
+  const jobs = await api("/admin-api/v1/jobs");
+  $("#job-table").innerHTML = `
+    <table class="table">
+      <thead><tr><th>ID</th><th>任务名称</th><th>分组</th><th>调用目标</th><th>Cron</th><th>状态</th><th>操作</th></tr></thead>
+      <tbody>${(jobs || []).map((job) => `
+        <tr>
+          <td>${job.id}</td>
+          <td>${esc(job.jobName)}</td>
+          <td>${esc(job.jobGroup)}</td>
+          <td><code>${esc(job.invokeTarget)}</code></td>
+          <td><code>${esc(job.cronExpression)}</code></td>
+          <td>${badge(job.status ?? 1, "正常", "停用")}</td>
+          <td class="actions">
+            <button class="text-button" data-action="job-edit" data-id="${job.id}">编辑</button>
+            <button class="text-button" data-action="job-run" data-id="${job.id}">立即执行</button>
+            <button class="text-button" data-action="job-logs" data-id="${job.id}">日志</button>
+            <button class="text-button" data-action="job-toggle" data-id="${job.id}" data-enabled="${job.status === 1 ? "false" : "true"}">${job.status === 1 ? "停用" : "启用"}</button>
+            <button class="text-button" data-action="job-delete" data-id="${job.id}">删除</button>
+          </td>
+        </tr>`).join("") || '<tr><td colspan="7" class="empty">暂无定时任务</td></tr>'}
+      </tbody>
+    </table>`;
+  $("#job-table").querySelectorAll("[data-action]").forEach((button) => {
+    button.onclick = () => handleJobAction(button.dataset.action, button.dataset.id, button.dataset.enabled);
+  });
+  $("#job-create").onclick = () => openJobForm(null);
+}
+
+async function handleJobAction(action, id, enabled) {
+  try {
+    const jobs = await api("/admin-api/v1/jobs");
+    const job = jobs.find((item) => String(item.id) === String(id));
+    if (!job) return;
+    if (action === "job-edit") {
+      openJobForm(job);
+    } else if (action === "job-run") {
+      if (!confirmAction(`确认立即执行任务「${job.jobName}」？`)) return;
+      await api(`/admin-api/v1/jobs/${id}/run`, { method: "POST" });
+      showToast("任务已触发，执行结果见日志");
+    } else if (action === "job-logs") {
+      const logs = await api(`/admin-api/v1/jobs/${id}/logs?limit=20`);
+      openModal(`执行日志 · ${job.jobName}`, `
+        <table class="table">
+          <thead><tr><th>状态</th><th>消息</th><th>耗时(ms)</th><th>开始时间</th></tr></thead>
+          <tbody>${(logs || []).map((log) => `
+            <tr>
+              <td>${log.status === 0 ? "✔ 成功" : log.status === 1 ? "✘ 失败" : "运行中"}</td>
+              <td>${esc(log.jobMessage ?? "-")}</td>
+              <td>${log.duration ?? "-"}</td>
+              <td>${fmtTime(log.startTime)}</td>
+            </tr>`).join("") || '<tr><td colspan="4" class="empty">暂无执行日志</td></tr>'}
+          </tbody>
+        </table>`, () => Promise.resolve());
+      $("#modal-confirm").hidden = true;
+      $("#modal-cancel").textContent = "关闭";
+    } else if (action === "job-toggle") {
+      await api(`/admin-api/v1/jobs/${id}/status`, { method: "PUT", body: { enabled: enabled === "true" } });
+      showToast("状态已更新");
+      renderJobs();
+    } else if (action === "job-delete") {
+      if (!confirmAction("确认删除该定时任务？")) return;
+      await api(`/admin-api/v1/jobs/${id}`, { method: "DELETE" });
+      showToast("任务已删除");
+      renderJobs();
+    }
+  } catch (error) {
+    showToast(error.message || "操作失败", true);
+  }
+}
+
+function openJobForm(job) {
+  const isEdit = Boolean(job?.id);
+  openModal(isEdit ? "编辑定时任务" : "新增定时任务", `
+    <form class="form-grid">
+      <label>任务名称
+        <input class="input" name="jobName" value="${esc(job?.jobName ?? "")}" maxlength="64" required>
+      </label>
+      <label>任务分组
+        <input class="input" name="jobGroup" value="${esc(job?.jobGroup ?? "DEFAULT")}" maxlength="64">
+      </label>
+      <label>调用目标
+        <input class="input" name="invokeTarget" value="${esc(job?.invokeTarget ?? "")}" maxlength="500"
+               placeholder="beanName.methodName() 或 beanName.methodName(&quot;arg&quot;, 1)" required>
+      </label>
+      <label>Cron 表达式
+        <input class="input" name="cronExpression" value="${esc(job?.cronExpression ?? "")}" maxlength="255"
+               placeholder="如 0 0 2 * * ?" required>
+      </label>
+      <label>允许并发
+        <select class="input" name="concurrent">
+          <option value="1" ${job?.concurrent !== 0 ? "selected" : ""}>允许</option>
+          <option value="0" ${job?.concurrent === 0 ? "selected" : ""}>禁止</option>
+        </select>
+      </label>
+      <label>备注
+        <input class="input" name="remark" value="${esc(job?.remark ?? "")}" maxlength="500">
+      </label>
+    </form>`, async (form) => {
+    const body = Object.fromEntries(new FormData(form).entries());
+    body.concurrent = Number(body.concurrent);
+    if (isEdit) {
+      await api(`/admin-api/v1/jobs/${job.id}`, { method: "PUT", body });
+    } else {
+      await api("/admin-api/v1/jobs", { method: "POST", body });
+    }
+    renderJobs();
+  });
+}
+
+// ==================== 登录日志 ====================
+
+async function renderLoginLogs() {
+  const keyword = $("#log-keyword").value.trim();
+  const status = $("#log-status").value;
+  const page = state.logs.page;
+  const size = state.logs.size;
+  const data = await api(`/admin-api/v1/login-logs?page=${page}&size=${size}`
+      + `&username=${encodeURIComponent(keyword)}`
+      + (status ? `&status=${status}` : ""));
+  state.logs.total = data.total || 0;
+
+  $("#log-table").innerHTML = `
+    <table class="table">
+      <thead><tr><th>ID</th><th>账号</th><th>IP</th><th>状态</th><th>消息</th><th>登录时间</th></tr></thead>
+      <tbody>${(data.list || []).map((log) => `
+        <tr>
+          <td>${log.id}</td>
+          <td>${esc(log.username ?? "-")}</td>
+          <td>${esc(log.ip ?? "-")}</td>
+          <td>${log.status === 0 ? "✔ 成功" : "✘ 失败"}</td>
+          <td>${esc(log.message ?? "-")}</td>
+          <td>${fmtTime(log.loginTime)}</td>
+        </tr>`).join("") || '<tr><td colspan="6" class="empty">暂无登录日志</td></tr>'}
+      </tbody>
+    </table>`;
+
+  renderPagination($("#log-pagination"), state.logs, () => {
+    renderLoginLogs();
+  });
+}
+
+// ==================== 分页 ====================
+
+function renderPagination(container, pager, onPageChange) {
+  const pages = Math.max(Math.ceil((pager.total || 0) / pager.size), 1);
+  const current = Math.min(pager.page, pages);
+  let html = `<button class="page-button" data-page="${current - 1}" ${current <= 1 ? "disabled" : ""}>上一页</button>`;
+  html += `<span class="page-info">第 ${current} / ${pages} 页 · 共 ${pager.total} 条</span>`;
+  html += `<button class="page-button" data-page="${current + 1}" ${current >= pages ? "disabled" : ""}>下一页</button>`;
+  container.innerHTML = html;
+  container.querySelectorAll("[data-page]").forEach((button) => {
+    button.onclick = () => {
+      const target = Number(button.dataset.page);
+      if (target < 1 || target > pages) return;
+      pager.page = target;
+      onPageChange();
+    };
+  });
+}
+
+// ==================== 初始化 ====================
+
+function init() {
+  // 登录表单
+  $("#login-form").addEventListener("submit", (event) => {
+    event.preventDefault();
+    login();
+  });
+  $("#send-code").addEventListener("click", sendSmsCode);
+  $("#captcha-image").addEventListener("click", loadCaptcha);
+  $("#logout-button").addEventListener("click", logout);
+
+  // 导航
+  document.querySelectorAll(".nav-item").forEach((button) => {
+    button.addEventListener("click", () => switchView(button.dataset.view));
+  });
+
+  // 查询按钮
+  $("#user-search").addEventListener("click", () => {
+    state.users.page = 1;
+    renderUsers();
+  });
+  $("#log-search").addEventListener("click", () => {
+    state.logs.page = 1;
+    renderLoginLogs();
+  });
+
+  initDictCreators();
+
+  if (state.token) {
+    showApp();
+  } else {
+    showLogin();
+  }
+}
+
+init();

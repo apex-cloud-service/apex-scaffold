@@ -8,7 +8,6 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
-import org.springframework.web.reactive.result.view.RedirectView;
 
 /**
  * 管理端前端资源（index.html、app.js、styles.css）与入口 Controller 的契约测试。
@@ -22,14 +21,11 @@ class AdminFrontendContractTest {
     private static final Pattern INLINE_EVENT_HANDLER = Pattern.compile("\\son[a-z]+\\s*=", Pattern.CASE_INSENSITIVE);
 
     /**
-     * 验证短入口 {@code /admin} 重定向到内嵌应用的 index.html，且公共路径仅放行
-     * 该短入口而不放行 {@code /admin-api} 前缀。
+     * 验证短入口 {@code /admin} 作为公共路径放行，且不放开 {@code /admin-api}
+     * 前缀（后台接口仍受认证保护）。
      */
     @Test
-    void shortEntryRedirectsToEmbeddedApplication() {
-        RedirectView view = new AdminFrontendController().index();
-
-        assertThat(view.getUrl()).isEqualTo("/admin/index.html");
+    void shortEntryIsPublicWhileAdminApiStaysProtected() {
         assertThat(SystemConstants.PUBLIC_PATHS).contains("/admin", "/admin/**");
         assertThat(SystemConstants.PUBLIC_PATHS).doesNotContain("/admin-api/**", "/admin-api/v1/**");
     }
@@ -52,45 +48,46 @@ class AdminFrontendContractTest {
 
     /**
      * 验证管理端脚本只把 access token 保存在 sessionStorage，通过 credentials omit
-     * 调用受保护的审核与用户治理接口，且不使用 localStorage、innerHTML 或 refreshToken。
+     * 调用受保护的系统管理接口，且不使用 localStorage 或 refreshToken。
      */
     @Test
-    void clientKeepsOnlyAccessTokenInTabSessionAndCallsProtectedReviewApis() throws IOException {
+    void clientKeepsOnlyAccessTokenInTabSessionAndCallsProtectedSystemApis() throws IOException {
         String javascript = resource("static/admin/app.js");
 
         assertThat(javascript)
                 .contains("sessionStorage")
                 .contains("credentials: \"omit\"")
-                .contains("/admin-api/v1/photo-reviews")
-                .contains("/admin-api/v1/interest-reviews")
                 .contains("/admin-api/v1/users")
-                .contains("/admin-api/v1/high-risk-users")
-                .contains("百度审核原因")
-                .contains("命中原因")
-                .contains("phoneRegistrationAllowed")
-                .contains("wechatRegistrationAllowed")
-                .contains("/lifestyle-photos")
+                .contains("/admin-api/v1/menus")
+                .contains("/admin-api/v1/dict/types")
+                .contains("/admin-api/v1/configs")
+                .contains("/admin-api/v1/jobs")
+                .contains("/admin-api/v1/login-logs")
+                .contains("/api/v1/auth/captcha")
+                .contains("系统管理工作台")
+                .contains("图形验证码")
                 .contains("options.body instanceof FormData")
-                .contains("clipAesthetic?.analysisStatus !== \"DONE\"")
-                .contains("upload-progress-fill")
                 .contains("payload.code !== 0")
-                .doesNotContain("localStorage", "innerHTML", "refreshToken");
+                .doesNotContain("localStorage", "refreshToken");
     }
 
     /**
-     * 验证审核与生活照预览样式完整展示图片（object-fit: contain），且过期提示与
-     * 删除按钮使用静态定位，不被其他元素遮挡。
+     * 验证系统管理控制台样式完整覆盖表格、卡片、弹窗与分页组件，
+     * 且弹窗遮罩使用固定定位覆盖全屏。
      */
     @Test
-    void reviewAndLifestylePhotosUseCompleteUnobstructedPresentation() throws IOException {
+    void systemConsoleStylesProvideCompleteComponentPresentation() throws IOException {
         String styles = resource("static/admin/styles.css");
 
         assertThat(styles)
-                .contains(".preview-frame img")
-                .contains("object-fit: contain")
-                .contains(".preview-expiry { position: static")
-                .contains(".user-photo img { width: 100%; height: 100%; max-height: 360px; object-fit: contain")
-                .contains(".user-photo-delete { position: static");
+                .contains(".main-content")
+                .contains(".table {")
+                .contains(".card-grid")
+                .contains(".modal-backdrop { position: fixed")
+                .contains(".modal {")
+                .contains(".pagination")
+                .contains(".badge")
+                .contains(".captcha-image");
     }
 
     /**

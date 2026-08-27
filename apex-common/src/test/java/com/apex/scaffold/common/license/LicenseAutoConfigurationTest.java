@@ -19,8 +19,7 @@ import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 class LicenseAutoConfigurationTest {
 
     private final ApplicationContextRunner contextRunner =
-            new ApplicationContextRunner()
-                    .withConfiguration(AutoConfigurations.of(LicenseAutoConfiguration.class));
+            new ApplicationContextRunner().withConfiguration(AutoConfigurations.of(LicenseAutoConfiguration.class));
 
     @Test
     @DisplayName("默认启用并加载随包基础版 License")
@@ -39,9 +38,8 @@ class LicenseAutoConfigurationTest {
     @Test
     @DisplayName("显式关闭 License 校验时验证器不注册")
     void disabledWhenPropertyFalse() {
-        contextRunner
-                .withPropertyValues("apex.license.enabled=false")
-                .run(context -> assertThat(context).doesNotHaveBean(LicenseValidator.class));
+        contextRunner.withPropertyValues("apex.license.enabled=false").run(context -> assertThat(context)
+                .doesNotHaveBean(LicenseValidator.class));
     }
 
     @Test
@@ -65,7 +63,8 @@ class LicenseAutoConfigurationTest {
                 .withPropertyValues("apex.license.public-key-file=classpath:license/not-exist.key")
                 .run(context -> {
                     assertThat(context).hasSingleBean(LicenseValidator.class);
-                    assertThat(context.getBean(LicenseValidator.class).isValidated()).isFalse();
+                    assertThat(context.getBean(LicenseValidator.class).isValidated())
+                            .isFalse();
                 });
     }
 }
