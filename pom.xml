@@ -38,7 +38,7 @@
   </parent>
   <groupId>com.apex.scaffold</groupId>
   <artifactId>apex-scaffold</artifactId>
-  <version>1.1.2</version>
+  <version>1.1.3</version>
   <packaging>pom</packaging>
   <name>Apex Scaffold</name>
   <description>企业级开发脚手架 - 微信APP版 (WebFlux响应式)</description>

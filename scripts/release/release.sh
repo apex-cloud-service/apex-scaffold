@@ -6,7 +6,7 @@
 #   ./scripts/release/release.sh [basic|standard|enterprise] [版本号]
 #
 # 示例:
-#   ./scripts/release/release.sh standard 1.1.0
+#   ./scripts/release/release.sh standard 1.1.3
 #
 # 产出:
 #   dist/apex-scaffold-<version>-<profile>.zip
@@ -25,7 +25,7 @@ ROOT_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 cd "${ROOT_DIR}"
 
 PROFILE="${1:-standard}"
-VERSION="${2:-1.1.0}"
+VERSION="${2:-1.1.3}"
 DIST_DIR="dist/apex-scaffold-${VERSION}-${PROFILE}"
 
 # 统一构建环境：sdkman 默认 JDK（17.0.12-oracle）+ mvnd 2.0.0-rc-3

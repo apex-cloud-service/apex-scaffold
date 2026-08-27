@@ -2,7 +2,7 @@
 
 本项目遵循 [语义化版本规范](https://semver.org/lang/zh-CN/)。
 
-## [Unreleased]
+## [1.1.3] - 2026-08-27
 
 ### Added
 - **P6Spy SQL 日志（dev 专用）**：新增 spy.properties（Slf4JLogger 输出、H2/MySQL 双驱动），dev 数据源切换为 `jdbc:p6spy:h2:...`，控制台/日志文件输出带参数值的格式化 SQL（含耗时/连接号）；生产保持纯 Druid stat 监控（p6spy: false），测试环境用 logging.level 控制，`P6SpyIntegrationContractTest` 契约测试防止配置回归
@@ -11,8 +11,10 @@
 - **统一构建环境**：新增 `.sdkmanrc` 固定 JDK 17.0.12-oracle；build/release/codegen/license 脚本统一 sdkman + mvnd（Maven Daemon），文档命令同步替换
 
 ### Changed
+- 版本号统一升至 1.1.3：父 POM 与全部子模块（common/domain/infrastructure/application/interfaces/generator/example）同步
 - 三档配置（basic/standard/enterprise）修正无效键：`spring.data.redis.enabled` → autoconfigure.exclude、`rocketmq.producer.enabled` → `apex.mq.consumer.enabled`、`apex-sentinel.enabled` → `apex.sentinel.*`
 - 全部配置文件引入统一符号注释规范（✅ 已启用 / ❌ 已禁用 / ⚠️ 安全提示 / 💡 设计说明 / 🔒 敏感配置 / （差异）公共层差异）
+- 面向用户文档构建命令统一 `mvn` → `mvnd`（Dockerfile 内 Maven 镜像命令保留）
 
 ### Fixed
 - **prod `remote.api` 配置截断**：文件末尾 `remote:` 后无实际配置（此前一直未生效），已补全默认超时/重试/连接池
