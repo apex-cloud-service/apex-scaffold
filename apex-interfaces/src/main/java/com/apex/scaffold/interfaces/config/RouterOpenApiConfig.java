@@ -28,8 +28,14 @@ import com.apex.scaffold.interfaces.dto.GenericFileUploadRequestDoc;
 import com.apex.scaffold.interfaces.handler.AdminUserManagementHandler;
 import com.apex.scaffold.interfaces.handler.AuthHandler;
 import com.apex.scaffold.interfaces.handler.AuthorizationHandler;
+import com.apex.scaffold.interfaces.handler.CaptchaHandler;
+import com.apex.scaffold.interfaces.handler.ConfigHandler;
+import com.apex.scaffold.interfaces.handler.DictHandler;
 import com.apex.scaffold.interfaces.handler.FileHandler;
 import com.apex.scaffold.interfaces.handler.HealthHandler;
+import com.apex.scaffold.interfaces.handler.JobHandler;
+import com.apex.scaffold.interfaces.handler.LoginLogHandler;
+import com.apex.scaffold.interfaces.handler.MenuHandler;
 import com.apex.scaffold.interfaces.handler.UserHandler;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -869,6 +875,396 @@ public class RouterOpenApiConfig {
     })
     public RouterFunction<ServerResponse> adminUserManagementRoutesDocs() {
         return placeholderRoute("/__openapi_admin_user_placeholder");
+    }
+
+    /** 系统管理-菜单模块在线接口文档。 */
+    @Bean
+    @RouterOperations({
+        @RouterOperation(
+                path = "/admin-api/v1/menus",
+                method = RequestMethod.GET,
+                beanClass = MenuHandler.class,
+                beanMethod = "tree",
+                operation =
+                        @Operation(
+                                operationId = "adminListMenus",
+                                summary = "查询菜单树",
+                                security = @SecurityRequirement(name = "BearerAuth"))),
+        @RouterOperation(
+                path = "/admin-api/v1/menus/{menuId}",
+                method = RequestMethod.GET,
+                beanClass = MenuHandler.class,
+                beanMethod = "detail",
+                operation =
+                        @Operation(
+                                operationId = "adminGetMenu",
+                                summary = "查询菜单详情",
+                                security = @SecurityRequirement(name = "BearerAuth"))),
+        @RouterOperation(
+                path = "/admin-api/v1/menus",
+                method = RequestMethod.POST,
+                beanClass = MenuHandler.class,
+                beanMethod = "create",
+                operation =
+                        @Operation(
+                                operationId = "adminCreateMenu",
+                                summary = "创建菜单",
+                                security = @SecurityRequirement(name = "BearerAuth"))),
+        @RouterOperation(
+                path = "/admin-api/v1/menus/{menuId}",
+                method = RequestMethod.PUT,
+                beanClass = MenuHandler.class,
+                beanMethod = "update",
+                operation =
+                        @Operation(
+                                operationId = "adminUpdateMenu",
+                                summary = "更新菜单",
+                                security = @SecurityRequirement(name = "BearerAuth"))),
+        @RouterOperation(
+                path = "/admin-api/v1/menus/{menuId}",
+                method = RequestMethod.DELETE,
+                beanClass = MenuHandler.class,
+                beanMethod = "delete",
+                operation =
+                        @Operation(
+                                operationId = "adminDeleteMenu",
+                                summary = "删除菜单",
+                                security = @SecurityRequirement(name = "BearerAuth"))),
+        @RouterOperation(
+                path = "/admin-api/v1/menus/{menuId}/status",
+                method = RequestMethod.PUT,
+                beanClass = MenuHandler.class,
+                beanMethod = "updateStatus",
+                operation =
+                        @Operation(
+                                operationId = "adminUpdateMenuStatus",
+                                summary = "启用或停用菜单",
+                                security = @SecurityRequirement(name = "BearerAuth")))
+    })
+    public RouterFunction<ServerResponse> adminMenuRoutesDocs() {
+        return placeholderRoute("/__openapi_admin_menu_placeholder");
+    }
+
+    /** 系统管理-字典模块在线接口文档。 */
+    @Bean
+    @RouterOperations({
+        @RouterOperation(
+                path = "/admin-api/v1/dict/types",
+                method = RequestMethod.GET,
+                beanClass = DictHandler.class,
+                beanMethod = "listTypes",
+                operation =
+                        @Operation(
+                                operationId = "adminListDictTypes",
+                                summary = "查询字典类型列表",
+                                security = @SecurityRequirement(name = "BearerAuth"))),
+        @RouterOperation(
+                path = "/admin-api/v1/dict/types/{id}",
+                method = RequestMethod.GET,
+                beanClass = DictHandler.class,
+                beanMethod = "getType",
+                operation =
+                        @Operation(
+                                operationId = "adminGetDictType",
+                                summary = "查询字典类型详情",
+                                security = @SecurityRequirement(name = "BearerAuth"))),
+        @RouterOperation(
+                path = "/admin-api/v1/dict/types",
+                method = RequestMethod.POST,
+                beanClass = DictHandler.class,
+                beanMethod = "createType",
+                operation =
+                        @Operation(
+                                operationId = "adminCreateDictType",
+                                summary = "创建字典类型",
+                                security = @SecurityRequirement(name = "BearerAuth"))),
+        @RouterOperation(
+                path = "/admin-api/v1/dict/types/{id}",
+                method = RequestMethod.PUT,
+                beanClass = DictHandler.class,
+                beanMethod = "updateType",
+                operation =
+                        @Operation(
+                                operationId = "adminUpdateDictType",
+                                summary = "更新字典类型",
+                                security = @SecurityRequirement(name = "BearerAuth"))),
+        @RouterOperation(
+                path = "/admin-api/v1/dict/types/{id}",
+                method = RequestMethod.DELETE,
+                beanClass = DictHandler.class,
+                beanMethod = "deleteType",
+                operation =
+                        @Operation(
+                                operationId = "adminDeleteDictType",
+                                summary = "删除字典类型",
+                                security = @SecurityRequirement(name = "BearerAuth"))),
+        @RouterOperation(
+                path = "/admin-api/v1/dict/types/{id}/status",
+                method = RequestMethod.PUT,
+                beanClass = DictHandler.class,
+                beanMethod = "updateTypeStatus",
+                operation =
+                        @Operation(
+                                operationId = "adminUpdateDictTypeStatus",
+                                summary = "启用或停用字典类型",
+                                security = @SecurityRequirement(name = "BearerAuth"))),
+        @RouterOperation(
+                path = "/admin-api/v1/dict/data",
+                method = RequestMethod.GET,
+                beanClass = DictHandler.class,
+                beanMethod = "listData",
+                operation =
+                        @Operation(
+                                operationId = "adminListDictData",
+                                summary = "按类型查询字典数据",
+                                security = @SecurityRequirement(name = "BearerAuth"))),
+        @RouterOperation(
+                path = "/admin-api/v1/dict/data/{id}",
+                method = RequestMethod.GET,
+                beanClass = DictHandler.class,
+                beanMethod = "getData",
+                operation =
+                        @Operation(
+                                operationId = "adminGetDictData",
+                                summary = "查询字典数据详情",
+                                security = @SecurityRequirement(name = "BearerAuth"))),
+        @RouterOperation(
+                path = "/admin-api/v1/dict/data",
+                method = RequestMethod.POST,
+                beanClass = DictHandler.class,
+                beanMethod = "createData",
+                operation =
+                        @Operation(
+                                operationId = "adminCreateDictData",
+                                summary = "创建字典数据",
+                                security = @SecurityRequirement(name = "BearerAuth"))),
+        @RouterOperation(
+                path = "/admin-api/v1/dict/data/{id}",
+                method = RequestMethod.PUT,
+                beanClass = DictHandler.class,
+                beanMethod = "updateData",
+                operation =
+                        @Operation(
+                                operationId = "adminUpdateDictData",
+                                summary = "更新字典数据",
+                                security = @SecurityRequirement(name = "BearerAuth"))),
+        @RouterOperation(
+                path = "/admin-api/v1/dict/data/{id}",
+                method = RequestMethod.DELETE,
+                beanClass = DictHandler.class,
+                beanMethod = "deleteData",
+                operation =
+                        @Operation(
+                                operationId = "adminDeleteDictData",
+                                summary = "删除字典数据",
+                                security = @SecurityRequirement(name = "BearerAuth"))),
+        @RouterOperation(
+                path = "/admin-api/v1/dict/data/{id}/status",
+                method = RequestMethod.PUT,
+                beanClass = DictHandler.class,
+                beanMethod = "updateDataStatus",
+                operation =
+                        @Operation(
+                                operationId = "adminUpdateDictDataStatus",
+                                summary = "启用或停用字典数据",
+                                security = @SecurityRequirement(name = "BearerAuth")))
+    })
+    public RouterFunction<ServerResponse> adminDictRoutesDocs() {
+        return placeholderRoute("/__openapi_admin_dict_placeholder");
+    }
+
+    /** 系统管理-参数配置模块在线接口文档。 */
+    @Bean
+    @RouterOperations({
+        @RouterOperation(
+                path = "/admin-api/v1/configs",
+                method = RequestMethod.GET,
+                beanClass = ConfigHandler.class,
+                beanMethod = "list",
+                operation =
+                        @Operation(
+                                operationId = "adminListConfigs",
+                                summary = "查询参数配置列表",
+                                security = @SecurityRequirement(name = "BearerAuth"))),
+        @RouterOperation(
+                path = "/admin-api/v1/configs/{id}",
+                method = RequestMethod.GET,
+                beanClass = ConfigHandler.class,
+                beanMethod = "detail",
+                operation =
+                        @Operation(
+                                operationId = "adminGetConfig",
+                                summary = "查询参数配置详情",
+                                security = @SecurityRequirement(name = "BearerAuth"))),
+        @RouterOperation(
+                path = "/admin-api/v1/configs",
+                method = RequestMethod.POST,
+                beanClass = ConfigHandler.class,
+                beanMethod = "create",
+                operation =
+                        @Operation(
+                                operationId = "adminCreateConfig",
+                                summary = "创建参数配置",
+                                security = @SecurityRequirement(name = "BearerAuth"))),
+        @RouterOperation(
+                path = "/admin-api/v1/configs/{id}",
+                method = RequestMethod.PUT,
+                beanClass = ConfigHandler.class,
+                beanMethod = "update",
+                operation =
+                        @Operation(
+                                operationId = "adminUpdateConfig",
+                                summary = "更新参数配置",
+                                security = @SecurityRequirement(name = "BearerAuth"))),
+        @RouterOperation(
+                path = "/admin-api/v1/configs/{id}",
+                method = RequestMethod.DELETE,
+                beanClass = ConfigHandler.class,
+                beanMethod = "delete",
+                operation =
+                        @Operation(
+                                operationId = "adminDeleteConfig",
+                                summary = "删除参数配置",
+                                security = @SecurityRequirement(name = "BearerAuth"))),
+        @RouterOperation(
+                path = "/admin-api/v1/configs/{id}/status",
+                method = RequestMethod.PUT,
+                beanClass = ConfigHandler.class,
+                beanMethod = "updateStatus",
+                operation =
+                        @Operation(
+                                operationId = "adminUpdateConfigStatus",
+                                summary = "启用或停用参数配置",
+                                security = @SecurityRequirement(name = "BearerAuth")))
+    })
+    public RouterFunction<ServerResponse> adminConfigRoutesDocs() {
+        return placeholderRoute("/__openapi_admin_config_placeholder");
+    }
+
+    /** 系统管理-定时任务模块在线接口文档。 */
+    @Bean
+    @RouterOperations({
+        @RouterOperation(
+                path = "/admin-api/v1/jobs",
+                method = RequestMethod.GET,
+                beanClass = JobHandler.class,
+                beanMethod = "list",
+                operation =
+                        @Operation(
+                                operationId = "adminListJobs",
+                                summary = "查询定时任务列表",
+                                security = @SecurityRequirement(name = "BearerAuth"))),
+        @RouterOperation(
+                path = "/admin-api/v1/jobs/{id}",
+                method = RequestMethod.GET,
+                beanClass = JobHandler.class,
+                beanMethod = "detail",
+                operation =
+                        @Operation(
+                                operationId = "adminGetJob",
+                                summary = "查询任务详情",
+                                security = @SecurityRequirement(name = "BearerAuth"))),
+        @RouterOperation(
+                path = "/admin-api/v1/jobs",
+                method = RequestMethod.POST,
+                beanClass = JobHandler.class,
+                beanMethod = "create",
+                operation =
+                        @Operation(
+                                operationId = "adminCreateJob",
+                                summary = "创建定时任务",
+                                security = @SecurityRequirement(name = "BearerAuth"))),
+        @RouterOperation(
+                path = "/admin-api/v1/jobs/{id}",
+                method = RequestMethod.PUT,
+                beanClass = JobHandler.class,
+                beanMethod = "update",
+                operation =
+                        @Operation(
+                                operationId = "adminUpdateJob",
+                                summary = "更新定时任务",
+                                security = @SecurityRequirement(name = "BearerAuth"))),
+        @RouterOperation(
+                path = "/admin-api/v1/jobs/{id}",
+                method = RequestMethod.DELETE,
+                beanClass = JobHandler.class,
+                beanMethod = "delete",
+                operation =
+                        @Operation(
+                                operationId = "adminDeleteJob",
+                                summary = "删除定时任务",
+                                security = @SecurityRequirement(name = "BearerAuth"))),
+        @RouterOperation(
+                path = "/admin-api/v1/jobs/{id}/status",
+                method = RequestMethod.PUT,
+                beanClass = JobHandler.class,
+                beanMethod = "updateStatus",
+                operation =
+                        @Operation(
+                                operationId = "adminUpdateJobStatus",
+                                summary = "启用或停用定时任务",
+                                security = @SecurityRequirement(name = "BearerAuth"))),
+        @RouterOperation(
+                path = "/admin-api/v1/jobs/{id}/run",
+                method = RequestMethod.POST,
+                beanClass = JobHandler.class,
+                beanMethod = "runOnce",
+                operation =
+                        @Operation(
+                                operationId = "adminRunJob",
+                                summary = "立即执行一次任务",
+                                security = @SecurityRequirement(name = "BearerAuth"))),
+        @RouterOperation(
+                path = "/admin-api/v1/jobs/{id}/logs",
+                method = RequestMethod.GET,
+                beanClass = JobHandler.class,
+                beanMethod = "logs",
+                operation =
+                        @Operation(
+                                operationId = "adminListJobLogs",
+                                summary = "查询任务执行日志",
+                                security = @SecurityRequirement(name = "BearerAuth")))
+    })
+    public RouterFunction<ServerResponse> adminJobRoutesDocs() {
+        return placeholderRoute("/__openapi_admin_job_placeholder");
+    }
+
+    /** 系统管理-登录日志模块在线接口文档。 */
+    @Bean
+    @RouterOperations({
+        @RouterOperation(
+                path = "/admin-api/v1/login-logs",
+                method = RequestMethod.GET,
+                beanClass = LoginLogHandler.class,
+                beanMethod = "list",
+                operation =
+                        @Operation(
+                                operationId = "adminListLoginLogs",
+                                summary = "分页查询登录日志",
+                                security = @SecurityRequirement(name = "BearerAuth")))
+    })
+    public RouterFunction<ServerResponse> adminLoginLogRoutesDocs() {
+        return placeholderRoute("/__openapi_admin_login_log_placeholder");
+    }
+
+    /** 图形验证码模块在线接口文档。 */
+    @Bean
+    @RouterOperations({
+        @RouterOperation(
+                path = "/api/v1/auth/captcha",
+                method = RequestMethod.GET,
+                beanClass = CaptchaHandler.class,
+                beanMethod = "generate",
+                operation = @Operation(operationId = "getCaptcha", summary = "获取图形验证码", security = {})),
+        @RouterOperation(
+                path = "/api/v1/auth/captcha/verify",
+                method = RequestMethod.POST,
+                beanClass = CaptchaHandler.class,
+                beanMethod = "verify",
+                operation = @Operation(operationId = "verifyCaptcha", summary = "校验图形验证码", security = {}))
+    })
+    public RouterFunction<ServerResponse> captchaRoutesDocs() {
+        return placeholderRoute("/__openapi_captcha_placeholder");
     }
 
     /**

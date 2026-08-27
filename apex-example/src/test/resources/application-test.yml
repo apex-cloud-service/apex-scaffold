@@ -4,19 +4,47 @@ server:
 spring:
   application:
     name: apex-example-test
-  
-  # H2内存数据库(用于测试)
+
+  # 测试环境不依赖本地 Redis：关闭 Spring Data Redis 自动配置，
+  # RedissonClient 由 ExampleTestMockConfiguration 的 @Primary 替身覆盖
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisReactiveAutoConfiguration
+
+  # 数据源（dynamic-datasource 配置，与主应用保持一致）
   datasource:
-    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=MySQL
-    username: sa
-    password: 
-    driver-class-name: org.h2.Driver
-    
-  # JPA配置
-  jpa:
-    hibernate:
-      ddl-auto: create-drop
-    show-sql: true
+    dynamic:
+      primary: master
+      strict: false
+      datasource:
+        master:
+          # H2 内存数据库（MODE=MySQL 兼容 MySQL 语法）
+          url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=MySQL
+          username: sa
+          password:
+          driver-class-name: org.h2.Driver
+
+  # Flyway：加载 H2 兼容建表脚本（src/test/resources/db/migration）
+  flyway:
+    enabled: true
+    locations: classpath:db/example-migration
+    baseline-on-migrate: true
+    clean-disabled: true
+
+# 定时任务：测试环境禁用所有 @Scheduled 任务（outbox/账号注销等），
+# 避免依赖主应用业务表（SYS_DOMAIN_EVENT_OUTBOX 等）产生日志噪音
+apex:
+  scheduling:
+    enabled: false
+  # Sentinel 系统保护规则：测试环境关闭（避免慢启动/低流量误触发全局降级 503）
+  sentinel:
+    system-rules:
+      enabled: false
+
+# 跨域配置（测试环境放开所有来源，与主应用 application-it.yml 一致）
+cors:
+  allow-all-origins: true
 
 # MyBatis-Plus配置
 mybatis-plus:

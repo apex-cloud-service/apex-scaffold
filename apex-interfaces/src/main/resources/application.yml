@@ -53,6 +53,13 @@ springdoc:
   api-docs:
     path: /v3/api-docs
 
+# Knife4j 增强接口文档（doc.html）。
+# 纯前端 webjar（knife4j-openapi3-ui），不引入 MVC 依赖，与 WebFlux 函数式端点兼容。
+# production=true 时 Knife4j 会拦截文档请求并提示"文档维护中"；开发环境保持 false。
+knife4j:
+  enable: true
+  production: false
+
 cors:
   allow-all-origins: false
   allowed-origins:

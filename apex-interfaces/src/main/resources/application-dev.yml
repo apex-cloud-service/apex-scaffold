@@ -13,9 +13,12 @@ spring:
       timeout: 3000ms
   
   # MySQL - 使用H2内存数据库替代
+  # 数据源经 P6Spy 代理（spy.properties 位于 apex-infrastructure/src/main/resources/），
+  # 输出带参数值的格式化 SQL 日志（logback-spring.xml dev 段 p6spy logger → SQL_CONSOLE/SQL_FILE）。
+  # 生产/测试环境不启用：prod 用纯 Druid stat 监控，it 测试用 logging.level 控制，避免代理层开销。
   datasource:
-    driver-class-name: org.h2.Driver
-    url: jdbc:h2:mem:apex_dev;DB_CLOSE_DELAY=-1;MODE=MySQL
+    driver-class-name: com.p6spy.engine.spy.P6SpyDriver
+    url: jdbc:p6spy:h2:mem:apex_dev;DB_CLOSE_DELAY=-1;MODE=MySQL
     username: sa
     password: 
   

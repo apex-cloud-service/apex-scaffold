@@ -172,5 +172,8 @@ public final class SystemConstants {
             "/admin/**",
             "/uploads/apex/**",
             "/tos/**",
-            "/minio/**");
+            "/minio/**",
+            // 示例模块（apex-example）教学路由：主应用不注册该前缀，放行不构成安全风险；
+            // 独立运行 apex-example 时用于演示无认证的 DDD 五层 CRUD 链路。
+            "/api/example/**");
 }

@@ -51,7 +51,7 @@ class RouterOpenApiCoverageTest {
     private static final Pattern PATH_PATTERN = Pattern.compile("&& (/[^)]+)\\)");
 
     /** 采用 202 表示异步任务已受理的操作。 */
-    private static final Set<String> ASYNC_ACCEPTED_OPERATION_IDS = Set.of("deleteLifestylePhoto", "deleteCurrentUser");
+    private static final Set<String> ASYNC_ACCEPTED_OPERATION_IDS = Set.of("deleteCurrentUser");
 
     /**
      * 验证所有真实业务路由均有且只有一个 OpenAPI 声明。
@@ -127,27 +127,26 @@ class RouterOpenApiCoverageTest {
                 .containsKeys("401", "403");
     }
 
-    /** 验证兴趣用户文档组与后台治理文档组分别覆盖正确的 URL 前缀。 */
+    /** 验证系统管理文档组与后台用户管理文档组分别覆盖正确的 URL 前缀。 */
     @Test
-    void shouldExposeDedicatedInterestOpenApiGroups() {
+    void shouldExposeDedicatedAdminOpenApiGroups() {
         SpringDocConfig config = new SpringDocConfig();
         var customizer = config.openApiCustomizer();
 
-        var userGroup = config.interestApi(customizer);
-        assertThat(userGroup.getGroup()).isEqualTo("interest");
-        assertThat(userGroup.getPathsToMatch())
+        var systemGroup = config.adminSystemApi(customizer);
+        assertThat(systemGroup.getGroup()).isEqualTo("admin-system");
+        assertThat(systemGroup.getPathsToMatch())
                 .contains(
-                        "/api/v1/interests/**",
-                        "/api/v1/interest-universe/**",
-                        "/api/v1/interest-channels/**",
-                        "/api/v1/interest-topics/**",
-                        "/api/v1/interest-connections/**",
-                        "/api/v1/anonymous-interest-sessions/**",
-                        "/api/v1/reveal-requests/**");
+                        "/admin-api/v1/menus/**",
+                        "/admin-api/v1/dict/**",
+                        "/admin-api/v1/configs/**",
+                        "/admin-api/v1/jobs/**",
+                        "/admin-api/v1/login-logs/**",
+                        "/api/v1/auth/captcha/**");
 
-        var governanceGroup = config.interestGovernanceApi(customizer);
-        assertThat(governanceGroup.getGroup()).isEqualTo("interest-governance");
-        assertThat(governanceGroup.getPathsToMatch()).containsExactly("/internal/v1/interests/**");
+        var userGroup = config.adminUserApi(customizer);
+        assertThat(userGroup.getGroup()).isEqualTo("admin-user");
+        assertThat(userGroup.getPathsToMatch()).containsExactly("/admin-api/v1/users/**", "/admin-api/v1/staff-roles/**");
     }
 
     /**
@@ -198,8 +197,9 @@ class RouterOpenApiCoverageTest {
     /**
      * 构建真实函数式路由并提取端点集合。
      *
-     * <p>v2.0 通用化重构后仅保留 {@code apiRoutes}（/api/v1 通用模块）与
-     * {@code adminUserManagementRoutes}（后台用户管理）两个路由工厂。</p>
+     * <p>覆盖全部业务路由工厂：通用 /api/v1 模块（apiRoutes）、后台用户管理
+     * （adminUserManagementRoutes）以及 P0 系统管理模块（菜单/字典/参数/定时任务/登录日志/验证码）。
+     * 前端重定向路由（adminFrontendRedirectRoutes）不承载业务 API，不纳入覆盖范围。</p>
      *
      * @return 已注册的 HTTP 方法和绝对路径集合
      * @throws Exception 当路由 Bean 反射调用失败时
@@ -207,7 +207,16 @@ class RouterOpenApiCoverageTest {
     private Set<Endpoint> actualRoutes() throws Exception {
         ApiRouter router = new ApiRouter();
         Set<Endpoint> endpoints = new LinkedHashSet<>();
-        for (String factoryName : List.of("apiRoutes", "adminUserManagementRoutes")) {
+        for (String factoryName :
+                List.of(
+                        "apiRoutes",
+                        "adminUserManagementRoutes",
+                        "adminMenuRoutes",
+                        "adminDictRoutes",
+                        "adminJobRoutes",
+                        "adminConfigRoutes",
+                        "adminLoginLogRoutes",
+                        "captchaRoutes")) {
             Method factory = Arrays.stream(ApiRouter.class.getMethods())
                     .filter(method -> method.getName().equals(factoryName))
                     .findFirst()

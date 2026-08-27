@@ -10,16 +10,21 @@ import org.springframework.context.annotation.Configuration;
 /**
  * MyBatis-Plus 配置类
  *
- * <p>配置 MyBatis-Plus 扩展插件，包括：
+ * <p>配置 MyBatis-Plus 扩展插件：
  * <ul>
  *   <li><strong>乐观锁插件</strong>：{@link OptimisticLockerInnerInterceptor}，
  *       自动为标注了 {@code @Version} 注解的字段生成乐观锁 SQL</li>
  * </ul>
  *
- * <p>分页插件由 MyBatis-Plus Starter 自动配置，无需手动添加。
+ * <p><b>分页插件说明</b>：MyBatis-Plus 3.5.9 起分页插件 {@code PaginationInnerInterceptor}
+ * 从 {@code mybatis-plus-extension} 拆分为独立模块 {@code mybatis-plus-jsqlparser}
+ * （依赖 JSQLParser），Starter 不再自动注册。本脚手架的分页统一走
+ * {@link com.apex.scaffold.infrastructure.persistence.repository.BaseRepositoryImpl} 的
+ * PageHelper 分页（见 {@code findPage}）；如需在业务 Mapper 上直接使用
+ * {@code selectPage}，请引入 {@code mybatis-plus-jsqlparser} 并在此显式注册分页插件。
  *
  * @author Apex Team
- * @version 2.0.0
+ * @version 2.1.0
  * @since 1.0.0
  */
 @Configuration
@@ -30,7 +35,7 @@ public class MybatisPlusConfig {
     public MybatisPlusConfig() {}
 
     /**
-     * 注册 MyBatis-Plus 拦截器链（含乐观锁插件）
+     * 注册 MyBatis-Plus 拦截器链（乐观锁）
      *
      * <p>在 MyBatis-Plus 3.5.x 中，所有内部拦截器需通过 {@link MybatisPlusInterceptor}
      * 统一注册。乐观锁插件自动为 {@code UPDATE} 语句追加 {@code WHERE version = oldVersion}

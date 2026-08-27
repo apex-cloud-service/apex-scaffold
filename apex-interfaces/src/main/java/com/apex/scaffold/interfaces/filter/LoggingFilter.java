@@ -44,7 +44,7 @@ import reactor.core.publisher.Mono;
 public class LoggingFilter implements WebFilter {
 
     private static final String[] EXCLUDED_PREFIXES = {
-        "/actuator", "/health", "/favicon.ico", "/swagger-ui", "/v3/api-docs", "/webjars"
+        "/actuator", "/health", "/favicon.ico", "/swagger-ui", "/v3/api-docs", "/webjars", "/doc.html"
     };
 
     private static final long SLOW_REQUEST_THRESHOLD_MS = 3000L;

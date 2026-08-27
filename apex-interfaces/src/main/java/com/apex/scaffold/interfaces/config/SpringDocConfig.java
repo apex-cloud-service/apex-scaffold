@@ -37,6 +37,9 @@ public class SpringDocConfig {
     @Value("${spring.application.name:apex-service}")
     private String applicationName;
 
+    @Value("${apex.version:1.1.2}")
+    private String applicationVersion;
+
     private static final String LOCAL_SERVER_URL = "http://localhost:8080";
     private static final String PROD_SERVER_URL = "https://api.apex-scaffold.com";
     private static final String BEARER_AUTH = "BearerAuth";
@@ -55,7 +58,7 @@ public class SpringDocConfig {
                 .info(new Info()
                         .title("Apex.Mar API 文档")
                         .description("Apex.Mar 后端服务 API 在线文档")
-                        .version("1.0.0")
+                        .version(applicationVersion)
                         .contact(new Contact().name("Apex Team").email("team@apex-scaffold.com"))
                         .license(new License().name("Apache 2.0").url("https://www.apache.org/licenses/LICENSE-2.0")))
                 .externalDocs(new ExternalDocumentation()
@@ -179,39 +182,28 @@ public class SpringDocConfig {
                 .build();
     }
 
-    /** API 分组 - Python 人脸分析 Java API。 */
+    /** API 分组 - 系统管理（菜单/字典/参数/定时任务/登录日志，P0 阶段）。 */
     @Bean
-    public GroupedOpenApi faceAnalysisApi(OpenApiCustomizer openApiCustomizer) {
+    public GroupedOpenApi adminSystemApi(OpenApiCustomizer openApiCustomizer) {
         return GroupedOpenApi.builder()
-                .group("face-analysis")
-                .pathsToMatch("/api/v1/face-analysis/**")
-                .addOpenApiCustomizer(openApiCustomizer)
-                .build();
-    }
-
-    /** API 分组 - 兴趣目录、用户声明和推荐。 */
-    @Bean
-    public GroupedOpenApi interestApi(OpenApiCustomizer openApiCustomizer) {
-        return GroupedOpenApi.builder()
-                .group("interest")
+                .group("admin-system")
                 .pathsToMatch(
-                        "/api/v1/interests/**",
-                        "/api/v1/interest-universe/**",
-                        "/api/v1/interest-channels/**",
-                        "/api/v1/interest-topics/**",
-                        "/api/v1/interest-connections/**",
-                        "/api/v1/anonymous-interest-sessions/**",
-                        "/api/v1/reveal-requests/**")
+                        "/admin-api/v1/menus/**",
+                        "/admin-api/v1/dict/**",
+                        "/admin-api/v1/configs/**",
+                        "/admin-api/v1/jobs/**",
+                        "/admin-api/v1/login-logs/**",
+                        "/api/v1/auth/captcha/**")
                 .addOpenApiCustomizer(openApiCustomizer)
                 .build();
     }
 
-    /** API 分组 - 兴趣图谱后台治理与发布。 */
+    /** API 分组 - 后台用户管理。 */
     @Bean
-    public GroupedOpenApi interestGovernanceApi(OpenApiCustomizer openApiCustomizer) {
+    public GroupedOpenApi adminUserApi(OpenApiCustomizer openApiCustomizer) {
         return GroupedOpenApi.builder()
-                .group("interest-governance")
-                .pathsToMatch("/internal/v1/interests/**")
+                .group("admin-user")
+                .pathsToMatch("/admin-api/v1/users/**", "/admin-api/v1/staff-roles/**")
                 .addOpenApiCustomizer(openApiCustomizer)
                 .build();
     }

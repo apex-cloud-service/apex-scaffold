@@ -233,6 +233,10 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
                     <mainClass>com.apex.scaffold.Application</mainClass>
+                    <!-- 可执行包使用 classifier，避免覆盖普通 jar：
+                         下游模块（如 apex-example）依赖的是未 repackage 的普通 jar，
+                         若被 BOOT-INF fat jar 替换将导致类加载失败。 -->
+                    <classifier>executable</classifier>
                 </configuration>
             </plugin>
             <plugin>

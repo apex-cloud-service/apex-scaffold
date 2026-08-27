@@ -5,14 +5,19 @@ spring:
   application:
     name: apex-example
   
-  # 数据源配置
+  # 数据源配置（dynamic-datasource，与主应用 apex-interfaces 配置范式一致）
   datasource:
-    url: jdbc:mysql://localhost:3306/apex_example?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
-    username: root
-    password: ${DB_PASSWORD:root123}
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    
-    # Druid连接池
+    dynamic:
+      primary: master
+      strict: false
+      datasource:
+        master:
+          url: jdbc:mysql://localhost:3306/apex_example?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+          username: root
+          password: ${DB_PASSWORD:root123}
+          driver-class-name: com.mysql.cj.jdbc.Driver
+
+    # Druid连接池（全局配置，对 dynamic 下所有数据源生效）
     druid:
       initial-size: 5
       min-idle: 5
@@ -33,6 +38,15 @@ spring:
     validate-on-migrate: true
     clean-disabled: true
     out-of-order: false
+
+# 跨域配置（与主应用 apex-interfaces 保持一致）
+cors:
+  # 是否允许所有来源（生产建议 false 并配置白名单）
+  allow-all-origins: false
+  # 明确允许的来源域名（逗号分隔或列表）
+  allowed-origins:
+    - http://localhost:3000
+    - http://localhost:8080
 
 # MyBatis-Plus配置
 mybatis-plus:

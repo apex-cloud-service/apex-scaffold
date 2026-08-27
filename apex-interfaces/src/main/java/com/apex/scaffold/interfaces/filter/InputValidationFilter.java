@@ -105,9 +105,14 @@ public class InputValidationFilter implements WebFilter {
 
     /** SQL 注入攻击特征正则表达式模式列表 */
     private static final Pattern[] SQL_INJECTION_PATTERNS = {
-        // 检测 SELECT/INSERT/UPDATE/DELETE/DROP/UNION 等 SQL 关键字
+        // 检测 SELECT/INSERT/UPDATE/DELETE/DROP/UNION 等 SQL 关键字。
+        // 要求关键字处于 SQL 语法位置（前为空白/引号/括号/逗号/分号/开头，
+        // 后为空白/引号/括号/逗号/分号/结尾），避免对英文单词误报——
+        // 例如 \bDELETE\b 会误判 "delete@example.com"（@ 构成单词边界）。
         Pattern.compile(
-                "\\b(SELECT|INSERT|UPDATE|DELETE|DROP|UNION|ALTER|CREATE|TRUNCATE)\\b", Pattern.CASE_INSENSITIVE),
+                "(?:^|[\\s\"'\\(,;])(SELECT|INSERT|UPDATE|DELETE|DROP|UNION|ALTER|CREATE|TRUNCATE)"
+                        + "(?:\\s|$|[\\s\"'\\);,])",
+                Pattern.CASE_INSENSITIVE),
         // 检测 SQL 注释符（--、#、/* */）
         Pattern.compile("(--|#|/\\*|\\*/)", Pattern.CASE_INSENSITIVE),
         // 检测 SQL 特殊字符组合（单引号+分号、分号后跟危险关键字）

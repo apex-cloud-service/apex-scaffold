@@ -5,13 +5,17 @@ import static org.springframework.web.reactive.function.server.ServerResponse.ok
 import com.apex.example.dto.CreateUserRequest;
 import com.apex.example.service.ExampleUserService;
 import com.apex.scaffold.common.annotation.FeatureGate;
+import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.result.Result;
+import com.apex.scaffold.common.result.ResultCode;
+import com.apex.scaffold.interfaces.util.MessageUtils;
+import com.apex.scaffold.interfaces.handler.BaseHandler;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Validator;
 import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
@@ -21,12 +25,14 @@ import reactor.core.publisher.Mono;
 /**
  * 示例用户处理器
  *
- * <p>展示如何编写WebFlux函数式端点:
+ * <p>展示如何编写 WebFlux 函数式端点:
  * <ul>
- *   <li>使用ServerRequest/ServerResponse</li>
- *   <li>集成Swagger文档注解</li>
- *   <li>统一响应格式封装</li>
- *   <li>商业版功能授权(@FeatureGate)</li>
+ *   <li>使用 {@link ServerRequest}/{@link ServerResponse}</li>
+ *   <li>集成 Swagger 文档注解</li>
+ *   <li>统一响应格式封装（{@link Result}）</li>
+ *   <li>继承 {@link BaseHandler} 获得请求体校验（{@link #validateAndThrow}）</li>
+ *   <li>分页查询参数解析（query 参数 pageNum/pageSize）</li>
+ *   <li>商业版功能授权（{@link FeatureGate}）</li>
  * </ul>
  *
  * <p>异常处理约定: 处理器内不捕获异常,统一由
@@ -38,11 +44,31 @@ import reactor.core.publisher.Mono;
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
 @Tag(name = "示例模块-用户管理", description = "展示脚手架的使用方法")
-public class ExampleUserHandler {
+public class ExampleUserHandler extends BaseHandler {
+
+    /** 分页参数默认值：页码。 */
+    private static final int DEFAULT_PAGE_NUM = 1;
+
+    /** 分页参数默认值：每页大小。 */
+    private static final int DEFAULT_PAGE_SIZE = 10;
+
+    /** 分页参数每页大小上限。 */
+    private static final int MAX_PAGE_SIZE = 100;
 
     private final ExampleUserService userService;
+
+    /**
+     * 构造方法，注入消息工具、校验器与用户服务。
+     *
+     * @param messageUtils 国际化消息工具
+     * @param validator    Jakarta Bean Validation 校验器
+     * @param userService  示例用户服务
+     */
+    public ExampleUserHandler(MessageUtils messageUtils, Validator validator, ExampleUserService userService) {
+        super(messageUtils, validator);
+        this.userService = userService;
+    }
 
     /**
      * 创建用户
@@ -53,6 +79,8 @@ public class ExampleUserHandler {
     @Operation(summary = "创建用户", description = "创建一个新用户")
     public Mono<ServerResponse> createUser(ServerRequest request) {
         return request.bodyToMono(CreateUserRequest.class)
+                .switchIfEmpty(Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "请求体不能为空")))
+                .flatMap(this::validateAndThrow)
                 .flatMap(userService::createUser)
                 .flatMap(response -> ok().bodyValue(Result.success(response)));
     }
@@ -71,14 +99,26 @@ public class ExampleUserHandler {
     }
 
     /**
-     * 查询用户列表
+     * 分页查询用户列表
+     *
+     * <p>从 query 参数读取 {@code pageNum}（默认 1）与 {@code pageSize}（默认 10，上限 100），
+     * 返回脚手架统一分页模型 {@code PageResponse}。</p>
      *
      * @param request HTTP请求
-     * @return 响应结果
+     * @return 分页响应结果
      */
-    @Operation(summary = "查询用户列表", description = "查询所有用户")
+    @Operation(summary = "分页查询用户列表", description = "支持 pageNum/pageSize 分页参数")
     public Mono<ServerResponse> listUsers(ServerRequest request) {
-        return userService.listUsers().flatMap(responses -> ok().bodyValue(Result.success(responses)));
+        long pageNum = request.queryParam("pageNum").map(Long::parseLong).orElse((long) DEFAULT_PAGE_NUM);
+        long pageSize = request.queryParam("pageSize").map(Long::parseLong).orElse((long) DEFAULT_PAGE_SIZE);
+
+        // 参数兜底：非法分页参数直接拒绝（避免负数/超大分页）
+        if (pageNum < 1 || pageSize < 1 || pageSize > MAX_PAGE_SIZE) {
+            return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "分页参数非法"));
+        }
+
+        return userService.listUsers(pageNum, pageSize)
+                .flatMap(response -> ok().bodyValue(Result.success(response)));
     }
 
     /**
@@ -92,6 +132,8 @@ public class ExampleUserHandler {
         Long id = Long.parseLong(request.pathVariable("id"));
 
         return request.bodyToMono(CreateUserRequest.class)
+                .switchIfEmpty(Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "请求体不能为空")))
+                .flatMap(this::validateAndThrow)
                 .flatMap(dto -> userService.updateUser(id, dto))
                 .flatMap(response -> ok().bodyValue(Result.success(response)));
     }
