@@ -67,7 +67,8 @@ public final class GeneratorCli {
 
         try {
             ObjectMapper mapper = new ObjectMapper();
-            TableDefinition definition = mapper.readValue(Files.readAllBytes(Paths.get(inputFile)), TableDefinition.class);
+            TableDefinition definition =
+                    mapper.readValue(Files.readAllBytes(Paths.get(inputFile)), TableDefinition.class);
             if (definition.getEntityName() == null || definition.getEntityName().isBlank()) {
                 throw new IllegalArgumentException("entityName 不能为空");
             }

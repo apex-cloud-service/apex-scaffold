@@ -1255,13 +1255,21 @@ public class RouterOpenApiConfig {
                 method = RequestMethod.GET,
                 beanClass = CaptchaHandler.class,
                 beanMethod = "generate",
-                operation = @Operation(operationId = "getCaptcha", summary = "获取图形验证码", security = {})),
+                operation =
+                        @Operation(
+                                operationId = "getCaptcha",
+                                summary = "获取图形验证码",
+                                security = {})),
         @RouterOperation(
                 path = "/api/v1/auth/captcha/verify",
                 method = RequestMethod.POST,
                 beanClass = CaptchaHandler.class,
                 beanMethod = "verify",
-                operation = @Operation(operationId = "verifyCaptcha", summary = "校验图形验证码", security = {}))
+                operation =
+                        @Operation(
+                                operationId = "verifyCaptcha",
+                                summary = "校验图形验证码",
+                                security = {}))
     })
     public RouterFunction<ServerResponse> captchaRoutesDocs() {
         return placeholderRoute("/__openapi_captcha_placeholder");

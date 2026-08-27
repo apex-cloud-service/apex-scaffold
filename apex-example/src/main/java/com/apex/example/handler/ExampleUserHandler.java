@@ -8,8 +8,8 @@ import com.apex.scaffold.common.annotation.FeatureGate;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.common.result.ResultCode;
-import com.apex.scaffold.interfaces.util.MessageUtils;
 import com.apex.scaffold.interfaces.handler.BaseHandler;
+import com.apex.scaffold.interfaces.util.MessageUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Validator;
@@ -117,8 +117,7 @@ public class ExampleUserHandler extends BaseHandler {
             return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "分页参数非法"));
         }
 
-        return userService.listUsers(pageNum, pageSize)
-                .flatMap(response -> ok().bodyValue(Result.success(response)));
+        return userService.listUsers(pageNum, pageSize).flatMap(response -> ok().bodyValue(Result.success(response)));
     }
 
     /**

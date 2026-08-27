@@ -42,8 +42,7 @@ class OpenApiEndpointsIntegrationTest {
 
     @Test
     void knife4jDocHtmlIsServed() {
-        client()
-                .get()
+        client().get()
                 .uri("/doc.html")
                 .exchange()
                 .expectStatus()
@@ -56,8 +55,7 @@ class OpenApiEndpointsIntegrationTest {
 
     @Test
     void openApiJsonEndpointIsServedWithAdminSystemPaths() {
-        client()
-                .get()
+        client().get()
                 .uri("/v3/api-docs")
                 .exchange()
                 .expectStatus()
@@ -75,11 +73,7 @@ class OpenApiEndpointsIntegrationTest {
     @Test
     void swaggerUiIsServed() {
         // springdoc 默认将 /swagger-ui.html 重定向到 /swagger-ui/index.html（WebFlux 下为 302）
-        client()
-                .get()
-                .uri("/swagger-ui.html")
-                .exchange()
-                .expectStatus()
-                .value(status -> assertThat(status).isIn(302, 200));
+        client().get().uri("/swagger-ui.html").exchange().expectStatus().value(status -> assertThat(status)
+                .isIn(302, 200));
     }
 }

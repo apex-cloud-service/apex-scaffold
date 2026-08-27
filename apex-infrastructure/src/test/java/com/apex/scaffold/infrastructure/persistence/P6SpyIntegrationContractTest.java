@@ -24,8 +24,7 @@ import org.junit.jupiter.api.Test;
 class P6SpyIntegrationContractTest {
 
     /** dev 数据源 URL（与 application-dev.yml 保持一致）。 */
-    private static final String DEV_URL =
-            "jdbc:p6spy:h2:mem:apex_dev;DB_CLOSE_DELAY=-1;MODE=MySQL";
+    private static final String DEV_URL = "jdbc:p6spy:h2:mem:apex_dev;DB_CLOSE_DELAY=-1;MODE=MySQL";
 
     @Test
     void spyPropertiesIsPresentOnClasspath() {

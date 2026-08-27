@@ -72,22 +72,34 @@ docker-compose down
 
 ### 方式三:使用示例模块(⭐推荐)
 
-我们提供了完整的示例模块(`apex-example`),展示如何使用脚手架的核心功能。**这是新用户学习的最佳起点:**
+我们提供了完整的示例模块(`apex-example`),以"用户管理"为业务载体,演示脚手架核心能力的标准用法。**这是新用户学习的最佳起点:**
 
 ```bash
 # 查看示例代码
 cd apex-example/src/main/java/com/apex/example
 
-# 运行示例
+# 运行示例（使用 sdkman 环境：source ~/.sdkman/bin/sdkman-init.sh）
 mvn spring-boot:run -pl apex-example
 
 # 访问API文档
 open http://localhost:8080/doc.html
 ```
 
-**重要提示**: 
-- ✅ **推荐使用**: `apex-example` 模块是纯净的示例,展示了从零开始使用脚手架的标准方式
-- ⚠️ **谨慎参考**: `apex-domain` 和 `apex-infrastructure` 中包含大量特定业务实现(ELO评分、兴趣图谱等),仅供展示DDD架构完整性,**不应在您的项目中直接使用**
+**示例模块演示的能力**（均有集成测试覆盖）:
+
+| 能力 | 示例位置 | 说明 |
+|------|----------|------|
+| WebFlux 函数式路由 | `config/ExampleRouterConfig` | RouterFunction 端点注册 |
+| 参数校验 | `dto/CreateUserRequest` | Jakarta Validation 注解 + Handler `validateAndThrow` |
+| 统一响应/错误码 | `service/ExampleUserService` | `Result` + `BusinessException` + `ResultCode`（4001/4002） |
+| 分页查询 | `service/ExampleUserService#listUsers` | 统一 `PageResponse` 模型 + 手写 COUNT/LIMIT 分页 |
+| 数据脱敏 | `service/ExampleUserService#maskPhone` | 手机号 `138****8000` 展示 |
+| 逻辑删除 | `service/ExampleUserService#deleteUser` | MyBatis-Plus `deleteById`（deleted=1） |
+| 商业功能授权 | `handler/ExampleUserHandler#premiumReport` | `@FeatureGate` + License 授权控制 |
+| 独立应用配置 | `resources/application.yml` | dynamic-datasource / Flyway / Redis / CORS |
+
+**重要提示**:
+- ✅ **推荐使用**: `apex-example` 模块是纯净的教学示例,展示了从零开始使用脚手架的标准方式,可直接作为您业务的起步模板
 - 📖 详细说明请查看: [apex-domain说明](apex-domain/README.md) | [apex-infrastructure说明](apex-infrastructure/README.md)
 
 ## 📦 项目结构

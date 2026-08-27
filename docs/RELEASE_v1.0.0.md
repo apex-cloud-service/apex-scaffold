@@ -77,16 +77,16 @@ mvn spring-boot:run -pl apex-interfaces
 open http://localhost:8080/doc.html
 ```
 
-详细教程请查看 [快速开始指南](docs/QUICK_START.md)
+详细教程请查看 [快速开始指南](QUICK_START.md)
 
 ## 📖 文档
 
-- [快速开始](docs/QUICK_START.md) - 5分钟上手教程
-- [架构设计](docs/ARCHITECTURE.md) - DDD架构详解
-- [配置说明](docs/CONFIGURATION.md) - 120+配置项说明
-- [最佳实践](docs/BEST_PRACTICES.md) - 编码规范与安全实践
-- [问题排查](docs/TROUBLESHOOTING.md) - 常见问题解决方案
-- [商业版本](docs/COMMERCIAL_VERSIONS.md) - 版本对比与定价
+- [快速开始](QUICK_START.md) - 5分钟上手教程
+- [架构设计](architecture.md) - DDD架构详解
+- [配置说明](CONFIGURATION.md) - 120+配置项说明
+- [最佳实践](BEST_PRACTICES.md) - 编码规范与安全实践
+- [问题排查](TROUBLESHOOTING.md) - 常见问题解决方案
+- [商业版本](COMMERCIAL_VERSIONS.md) - 版本对比与定价
 
 ## 🆕 示例模块
 
@@ -125,7 +125,7 @@ mvn spring-boot:run
 
 ## 📝 变更日志
 
-完整变更历史请查看 [CHANGELOG.md](CHANGELOG.md)
+完整变更历史请查看 [CHANGELOG.md](../CHANGELOG.md)
 
 ## 🙏 致谢
 
@@ -142,7 +142,7 @@ mvn spring-boot:run
 
 本项目基础版基于 MIT License 开源。标准版和企业版为商业授权。
 
-详细条款请查看 [LICENSE](LICENSE) 文件。
+详细条款请查看 [LICENSE](../LICENSE) 文件。
 
 ## 📞 联系方式
 

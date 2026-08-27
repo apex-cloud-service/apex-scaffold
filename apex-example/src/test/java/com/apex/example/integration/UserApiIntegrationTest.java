@@ -3,7 +3,6 @@ package com.apex.example.integration;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.apex.example.dto.CreateUserRequest;
-import com.apex.example.dto.UserResponse;
 import com.apex.scaffold.common.result.Result;
 import java.util.Map;
 import org.junit.jupiter.api.DisplayName;

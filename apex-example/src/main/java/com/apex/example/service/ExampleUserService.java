@@ -173,7 +173,12 @@ public class ExampleUserService {
     }
 
     /**
-     * 删除用户
+     * 删除用户（MyBatis-Plus 逻辑删除）
+     *
+     * <p>使用 {@code deleteById} 触发逻辑删除（配置了 {@code logic-delete-field: deleted}，
+     * 生成 {@code UPDATE ... SET deleted=1 WHERE id=? AND deleted=0}）。
+     * <b>注意</b>：不能通过 {@code setDeleted(1) + updateById} 实现——MyBatis-Plus
+     * 会从 UPDATE 的 SET 子句中排除逻辑删除字段，导致删除不生效。</p>
      *
      * @param id 用户ID
      * @return 空 Mono（完成后响应）
@@ -186,10 +191,8 @@ public class ExampleUserService {
             return Mono.error(new BusinessException(ResultCode.USER_NOT_FOUND));
         }
 
-        // 逻辑删除：设置 deleted=1（MyBatis-Plus 逻辑删除配置见 application.yml）
-        user.setDeleted(1);
-        user.setUpdateTime(LocalDateTime.now());
-        int rows = userMapper.updateById(user);
+        // 逻辑删除：MyBatis-Plus deleteById 自动置 deleted=1
+        int rows = userMapper.deleteById(id);
         if (rows == 0) {
             return Mono.error(new BusinessException(ResultCode.ERROR, "删除用户失败"));
         }

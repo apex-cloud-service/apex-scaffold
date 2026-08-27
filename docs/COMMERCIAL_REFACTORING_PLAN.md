@@ -12,7 +12,7 @@
 >
 > **核心约束（v2.0 新增）**: **彻底消除一切 业务痕迹**——交付物中不得出现任何 `业务`/`业务`/`业务` 字样（含类名、变量名、字符串、注释、配置键、指标名、SQL 变量、文档内容、脚本内容）。最终验收门禁为全库 grep 零命中。
 >
-> **关联文档**: [商业化差距分析](COMMERCIAL_GAP_ANALYSIS.md) · [商业化改进任务清单](COMMERCIAL_IMPROVEMENT_TASKS.md) · [商业化改造增量分析](COMMERCIAL_INCREMENTAL_ANALYSIS.md) · [商业版本说明](COMMERCIAL_VERSIONS.md)
+> **关联文档**: [商业化差距分析](COMMERCIAL_GAP_ANALYSIS.md) · [商业化改进任务清单](COMMERCIAL_IMPROVEMENT_TASKS.md) · 商业化改造增量分析（已归档删除） · [商业版本说明](COMMERCIAL_VERSIONS.md)
 > **执行前提**: 本方案经确认后方可实施；本文档只描述"怎么做"，不包含具体代码级实施步骤（实施前将按阶段产出细化任务清单）
 
 ---

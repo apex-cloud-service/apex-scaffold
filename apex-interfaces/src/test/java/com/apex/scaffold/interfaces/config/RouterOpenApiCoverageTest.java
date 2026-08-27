@@ -146,7 +146,8 @@ class RouterOpenApiCoverageTest {
 
         var userGroup = config.adminUserApi(customizer);
         assertThat(userGroup.getGroup()).isEqualTo("admin-user");
-        assertThat(userGroup.getPathsToMatch()).containsExactly("/admin-api/v1/users/**", "/admin-api/v1/staff-roles/**");
+        assertThat(userGroup.getPathsToMatch())
+                .containsExactly("/admin-api/v1/users/**", "/admin-api/v1/staff-roles/**");
     }
 
     /**
@@ -207,16 +208,15 @@ class RouterOpenApiCoverageTest {
     private Set<Endpoint> actualRoutes() throws Exception {
         ApiRouter router = new ApiRouter();
         Set<Endpoint> endpoints = new LinkedHashSet<>();
-        for (String factoryName :
-                List.of(
-                        "apiRoutes",
-                        "adminUserManagementRoutes",
-                        "adminMenuRoutes",
-                        "adminDictRoutes",
-                        "adminJobRoutes",
-                        "adminConfigRoutes",
-                        "adminLoginLogRoutes",
-                        "captchaRoutes")) {
+        for (String factoryName : List.of(
+                "apiRoutes",
+                "adminUserManagementRoutes",
+                "adminMenuRoutes",
+                "adminDictRoutes",
+                "adminJobRoutes",
+                "adminConfigRoutes",
+                "adminLoginLogRoutes",
+                "captchaRoutes")) {
             Method factory = Arrays.stream(ApiRouter.class.getMethods())
                     .filter(method -> method.getName().equals(factoryName))
                     .findFirst()

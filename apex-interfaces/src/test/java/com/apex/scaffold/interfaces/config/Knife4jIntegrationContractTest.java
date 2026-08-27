@@ -36,17 +36,14 @@ class Knife4jIntegrationContractTest {
     void knife4jWebjarAssetsAreResolvable() throws Exception {
         // doc.html 相对路径引用 webjars/... → 实际请求 /webjars/**，由 Spring Boot 静态资源映射提供
         var appJs = new ClassPathResource("META-INF/resources/webjars/js/app.b0c0d7df.js");
-        assertThat(appJs.exists())
-                .as("knife4j 前端 JS 资源必须可通过 /webjars/** 解析")
-                .isTrue();
+        assertThat(appJs.exists()).as("knife4j 前端 JS 资源必须可通过 /webjars/** 解析").isTrue();
     }
 
     @Test
     void springdocEndpointsAreConfiguredInDefaultProfile() throws Exception {
         // application.yml 中 springdoc.swagger-ui.path 与 api-docs.path 为默认配置
         org.yaml.snakeyaml.Yaml yaml = new org.yaml.snakeyaml.Yaml();
-        var props = yaml.<java.util.Map<String, Object>>load(
-                new ClassPathResource("application.yml").getInputStream());
+        var props = yaml.<java.util.Map<String, Object>>load(new ClassPathResource("application.yml").getInputStream());
         @SuppressWarnings("unchecked")
         var springdoc = (java.util.Map<String, Object>) props.get("springdoc");
         assertThat(springdoc).as("application.yml 必须配置 springdoc 段").isNotNull();
@@ -62,8 +59,7 @@ class Knife4jIntegrationContractTest {
     void knife4jIsEnabledInDevelopmentProfile() throws Exception {
         // application.yml 中 knife4j.enable=true / production=false（开发可用；prod 强制关闭）
         org.yaml.snakeyaml.Yaml yaml = new org.yaml.snakeyaml.Yaml();
-        var props = yaml.<java.util.Map<String, Object>>load(
-                new ClassPathResource("application.yml").getInputStream());
+        var props = yaml.<java.util.Map<String, Object>>load(new ClassPathResource("application.yml").getInputStream());
         @SuppressWarnings("unchecked")
         var knife4j = (java.util.Map<String, Object>) props.get("knife4j");
         assertThat(knife4j).as("application.yml 必须配置 knife4j 段").isNotNull();

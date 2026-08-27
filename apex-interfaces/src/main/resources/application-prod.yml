@@ -519,13 +519,11 @@ resilience4j:
         cancel-running-future: true
 
     instances:
-      # Python 人脸分析服务独立超时配置。
-      # （差异）application.yml 默认 10 秒超时；人脸分析需要 300 秒（5 分钟），
-      #         与 remote.api.services.face-analysis.read-timeout (300s) 对齐。
-      #         注意：此超时须 >= read-timeout，否则可能导致异步调用提前取消。
-      face-analysis:
-        timeout-duration: 300000
-        cancel-running-future: true
+      # 按需为特定远程服务配置独立超时（resilience4j 仅加载实际引用的实例）。
+      # 示例：长耗时 AI 服务需 300s 超时，且须 >= remote.api.services.<name>.read-timeout。
+      # long-running-ai:
+      #   timeout-duration: 300000
+      #   cancel-running-future: true
 
 # ============================================================
 #  9. 告警配置
@@ -854,7 +852,39 @@ p6spy:
 # ============================================================
 # 19. 远程 API 调用配置
 # ============================================================
+# （差异）公共默认值位于 application.yml；生产按需覆盖超时/重试/连接池。
 remote:
   api:
     # ---------- 默认超时与重试 ----------
     # 未为具体服务配置时使用的连接超时（毫秒）。
+    default-connect-timeout: ${REMOTE_API_CONNECT_TIMEOUT:5000}
+    # 默认读取超时（毫秒）。
+    default-read-timeout: ${REMOTE_API_READ_TIMEOUT:10000}
+    # 默认重试次数（不包含首次调用）。
+    default-retry-count: ${REMOTE_API_RETRY_COUNT:2}
+    # 默认重试间隔（毫秒）。
+    default-retry-delay: ${REMOTE_API_RETRY_DELAY:1000}
+    # 远程响应聚合缓冲上限（字节），默认 10MB。
+    max-in-memory-size: 10485760
+
+    # ---------- 外部 HTTP 客户端连接池 ----------
+    # 生产高并发场景适度放大连接池，避免外部调用排队。
+    pool-max-connections: ${REMOTE_API_POOL_MAX_CONNECTIONS:200}
+    # 等待获取连接的最大排队数。
+    pool-pending-acquire-max-count: 1000
+    # 连接最大空闲时间（秒）。
+    pool-max-idle-time-seconds: 60
+    # 连接最大生命周期（分钟）。
+    pool-max-life-time-minutes: 10
+    # IO 读写超时（秒）。
+    io-timeout-seconds: 15
+    # 连接建立超时（毫秒）。
+    connect-timeout-millis: 5000
+
+    # ---------- 多目标服务配置（按需扩展） ----------
+    # 示例：
+    # services:
+    #   face-analysis:
+    #     base-url: http://127.0.0.1:9000
+    #     read-timeout: 300000   # 与 timelimiter face-analysis 300s 对齐
+    services: {}

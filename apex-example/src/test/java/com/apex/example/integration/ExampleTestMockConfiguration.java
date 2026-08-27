@@ -61,7 +61,6 @@ public class ExampleTestMockConfiguration {
         return Mockito.mock(ReactiveRedisTemplate.class, Answers.RETURNS_DEEP_STUBS);
     }
 
-
     /**
      * 创建定时任务仓储替身。
      *

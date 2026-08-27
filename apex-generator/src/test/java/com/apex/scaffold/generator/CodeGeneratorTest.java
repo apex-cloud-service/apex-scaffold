@@ -63,17 +63,18 @@ class CodeGeneratorTest {
         List<String> files = generator.generate(definition, tempDir, 3);
 
         assertThat(files).hasSize(13);
-        assertThat(files).contains(
-                "com/apex/scaffold/domain/model/entity/ProductEntity.java",
-                "com/apex/scaffold/domain/repository/ProductRepository.java",
-                "com/apex/scaffold/infrastructure/persistence/po/ProductPO.java",
-                "com/apex/scaffold/infrastructure/persistence/mapper/ProductMapper.java",
-                "com/apex/scaffold/infrastructure/persistence/converter/ProductPoConverter.java",
-                "com/apex/scaffold/infrastructure/persistence/repository/ProductRepositoryImpl.java",
-                "com/apex/scaffold/application/dto/demo/ProductRequest.java",
-                "com/apex/scaffold/application/dto/demo/ProductDTO.java",
-                "com/apex/scaffold/application/service/ProductService.java",
-                "com/apex/scaffold/interfaces/handler/demo/ProductHandler.java");
+        assertThat(files)
+                .contains(
+                        "com/apex/scaffold/domain/model/entity/ProductEntity.java",
+                        "com/apex/scaffold/domain/repository/ProductRepository.java",
+                        "com/apex/scaffold/infrastructure/persistence/po/ProductPO.java",
+                        "com/apex/scaffold/infrastructure/persistence/mapper/ProductMapper.java",
+                        "com/apex/scaffold/infrastructure/persistence/converter/ProductPoConverter.java",
+                        "com/apex/scaffold/infrastructure/persistence/repository/ProductRepositoryImpl.java",
+                        "com/apex/scaffold/application/dto/demo/ProductRequest.java",
+                        "com/apex/scaffold/application/dto/demo/ProductDTO.java",
+                        "com/apex/scaffold/application/service/ProductService.java",
+                        "com/apex/scaffold/interfaces/handler/demo/ProductHandler.java");
     }
 
     /**
@@ -106,9 +107,7 @@ class CodeGeneratorTest {
         generator.generate(definition, tempDir, 3);
 
         String po = Files.readString(tempDir.resolve("com/apex/scaffold/infrastructure/persistence/po/ProductPO.java"));
-        assertThat(po)
-                .contains("@TableName(\"biz_product\")")
-                .contains("private BigDecimal price;");
+        assertThat(po).contains("@TableName(\"biz_product\")").contains("private BigDecimal price;");
     }
 
     /**

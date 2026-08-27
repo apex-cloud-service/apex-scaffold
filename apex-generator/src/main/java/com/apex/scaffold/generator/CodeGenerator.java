@@ -152,17 +152,24 @@ public class CodeGenerator {
         files.add(new GeneratedFile("entity.ftl", pkgPath + "/domain/model/entity/" + entity + "Entity.java"));
         files.add(new GeneratedFile("repository.ftl", pkgPath + "/domain/repository/" + entity + "Repository.java"));
         files.add(new GeneratedFile("po.ftl", pkgPath + "/infrastructure/persistence/po/" + entity + "PO.java"));
-        files.add(new GeneratedFile("mapper.ftl", pkgPath + "/infrastructure/persistence/mapper/" + entity + "Mapper.java"));
-        files.add(new GeneratedFile("converter.ftl", pkgPath + "/infrastructure/persistence/converter/" + entity + "PoConverter.java"));
         files.add(new GeneratedFile(
-                "repositoryImpl.ftl", pkgPath + "/infrastructure/persistence/repository/" + entity + "RepositoryImpl.java"));
-        files.add(new GeneratedFile("dtoRequest.ftl", pkgPath + "/application/dto/" + module + "/" + entity + "Request.java"));
-        files.add(new GeneratedFile("dtoResponse.ftl", pkgPath + "/application/dto/" + module + "/" + entity + "DTO.java"));
+                "mapper.ftl", pkgPath + "/infrastructure/persistence/mapper/" + entity + "Mapper.java"));
+        files.add(new GeneratedFile(
+                "converter.ftl", pkgPath + "/infrastructure/persistence/converter/" + entity + "PoConverter.java"));
+        files.add(new GeneratedFile(
+                "repositoryImpl.ftl",
+                pkgPath + "/infrastructure/persistence/repository/" + entity + "RepositoryImpl.java"));
+        files.add(new GeneratedFile(
+                "dtoRequest.ftl", pkgPath + "/application/dto/" + module + "/" + entity + "Request.java"));
+        files.add(new GeneratedFile(
+                "dtoResponse.ftl", pkgPath + "/application/dto/" + module + "/" + entity + "DTO.java"));
         files.add(new GeneratedFile("service.ftl", pkgPath + "/application/service/" + entity + "Service.java"));
-        files.add(new GeneratedFile("handler.ftl", pkgPath + "/interfaces/handler/" + module + "/" + entity + "Handler.java"));
+        files.add(new GeneratedFile(
+                "handler.ftl", pkgPath + "/interfaces/handler/" + module + "/" + entity + "Handler.java"));
         files.add(new GeneratedFile("routerFragment.ftl", "generated/" + entity + "RouterFragment.txt"));
         files.add(new GeneratedFile(
-                "migrationFragment.ftl", "generated/V" + model.get("migrationVersion") + "__create_" + definition.getTableName() + ".sql"));
+                "migrationFragment.ftl",
+                "generated/V" + model.get("migrationVersion") + "__create_" + definition.getTableName() + ".sql"));
         files.add(new GeneratedFile("serviceTest.ftl", "generated/" + entity + "ServiceTest.java"));
         return files;
     }
