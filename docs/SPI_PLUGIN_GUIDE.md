@@ -129,7 +129,7 @@ com.example.storage.S3StorageProvider
 将实现类和 SPI 注册文件打包为独立的 JAR 文件:
 
 ```bash
-mvn package
+mvnd package
 ```
 
 ### 步骤 4: 添加到项目依赖

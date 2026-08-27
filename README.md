@@ -18,7 +18,8 @@ Apex Scaffold 是一个面向中小型企业的**轻量级企业级后端脚手�
 - ⚡ **高可用保障** - Sentinel限流熔断 + Resilience4j容错
 - 📨 **消息队列** - RocketMQ封装,支持异步解耦
 - 📊 **可观测性** - Micrometer + Prometheus 指标,Zipkin(Brave)链路追踪,TraceId 贯穿日志
-- 📝 **API文档** - SpringDoc OpenAPI + Knife4j可视化文档
+- 📝 **API文档** - SpringDoc OpenAPI + Knife4j可视化文档（/doc.html）
+- 🔍 **SQL 日志** - dev 环境 P6Spy 格式化 SQL 日志（含参数值）；prod 用 Druid stat 监控
 - 💼 **商业保护** - 三档版本(基础/标准/企业)构建 + License 授权校验 + 双轨许可证
 - 🐳 **容器化部署** - Docker Compose一键启动完整环境
 - 🌍 **国际化支持** - 内置i18n框架,支持多语言切换
@@ -35,8 +36,8 @@ Apex Scaffold 是一个面向中小型企业的**轻量级企业级后端脚手�
 
 ### 前置要求
 
-- JDK 17+
-- Maven 3.8+
+- JDK 17+（推荐 sdkman 管理：`sdk install java 17.0.12-oracle`）
+- mvnd 3.9+（Maven Daemon，构建加速；`sdk install mvnd`。传统 `mvn` 亦可，命令等价）
 - Docker & Docker Compose (可选,用于容器化部署)
 
 ### 方式一:本地开发
@@ -46,11 +47,12 @@ Apex Scaffold 是一个面向中小型企业的**轻量级企业级后端脚手�
 git clone https://github.com/your-org/apex-scaffold.git
 cd apex-scaffold
 
-# 2. 编译项目
-mvn clean package -DskipTests
+# 2. 编译项目（统一构建环境：sdkman JDK + mvnd；可用 ./scripts/build/build.sh）
+source ~/.sdkman/bin/sdkman-init.sh   # 加载 sdkman（JDK + mvnd）
+mvnd clean package -DskipTests
 
 # 3. 启动应用
-mvn spring-boot:run -pl apex-interfaces
+mvnd spring-boot:run -pl apex-interfaces
 
 # 4. 访问 API 文档
 # Swagger UI: http://localhost:8080/swagger-ui.html
@@ -78,8 +80,8 @@ docker-compose down
 # 查看示例代码
 cd apex-example/src/main/java/com/apex/example
 
-# 运行示例（使用 sdkman 环境：source ~/.sdkman/bin/sdkman-init.sh）
-mvn spring-boot:run -pl apex-example
+# 运行示例（统一构建环境：source ~/.sdkman/bin/sdkman-init.sh）
+mvnd spring-boot:run -pl apex-example
 
 # 访问API文档
 open http://localhost:8080/doc.html
@@ -186,11 +188,11 @@ cache:
 ## 🧪 测试
 
 ```bash
-# 运行单元测试
-mvn test
+# 运行单元测试（全量验证建议用 mvn：mvnd 并行偶发类加载问题，见 .workbuddy/memory）
+mvnd test
 
 # 生成覆盖率报告
-mvn jacoco:report
+mvnd jacoco:report
 
 # 查看报告
 open target/site/jacoco/index.html

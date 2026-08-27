@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env zsh
 # ============================================================
 # Apex Scaffold 发布产物打包脚本
 # ============================================================
@@ -16,10 +16,11 @@
 #     ├── config/           (配置模板 + 公钥)
 #     ├── docker-compose.yml / Dockerfile / k8s/
 #     └── scripts/
+# 💡 shebang 用 zsh：macOS 自带 bash 3.2 不支持 sdkman 的 ${var^^} 语法，zsh 正常。
 # ============================================================
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 cd "${ROOT_DIR}"
 
@@ -27,11 +28,20 @@ PROFILE="${1:-standard}"
 VERSION="${2:-1.1.0}"
 DIST_DIR="dist/apex-scaffold-${VERSION}-${PROFILE}"
 
-export JAVA_HOME="${JAVA_HOME:-/Library/Java/JavaVirtualMachines/jdk-17.jdk/Contents/Home}"
-export PATH="${JAVA_HOME}/bin:${PATH}"
+# 统一构建环境：sdkman 默认 JDK（17.0.12-oracle）+ mvnd 2.0.0-rc-3
+# （差异）项目统一使用 mvnd 而非 mvn；JDK 由 sdkman 管理，不硬编码 JAVA_HOME。
+if [[ -f "$HOME/.sdkman/bin/sdkman-init.sh" ]]; then
+  # shellcheck disable=SC1091
+  source "$HOME/.sdkman/bin/sdkman-init.sh"
+fi
+if ! command -v mvnd &> /dev/null; then
+  echo "❌ 未找到 mvnd，请先安装: sdk install mvnd"
+  exit 1
+fi
 
 echo "==> [1/3] 构建 ${PROFILE} 版本 (v${VERSION})"
-mvn -o -q clean package -P"${PROFILE}" -DskipTests || mvn -q clean package -P"${PROFILE}" -DskipTests
+MAVEN_OPTS="-Xmx1024m" mvnd -o -q clean package -P"${PROFILE}" -DskipTests \
+  || MAVEN_OPTS="-Xmx1024m" mvnd -q clean package -P"${PROFILE}" -DskipTests
 
 echo "==> [2/3] 组装发布目录 ${DIST_DIR}"
 rm -rf "${DIST_DIR}"

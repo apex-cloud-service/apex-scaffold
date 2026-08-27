@@ -181,7 +181,7 @@ com.apex.scaffold.infrastructure.repository
 
 ```bash
 cd apex-example
-mvn spring-boot:run
+mvnd spring-boot:run
 ```
 
 访问 http://localhost:8080/doc.html 查看API文档

@@ -2,6 +2,24 @@
 
 本项目遵循 [语义化版本规范](https://semver.org/lang/zh-CN/)。
 
+## [Unreleased]
+
+### Added
+- **P6Spy SQL 日志（dev 专用）**：新增 spy.properties（Slf4JLogger 输出、H2/MySQL 双驱动），dev 数据源切换为 `jdbc:p6spy:h2:...`，控制台/日志文件输出带参数值的格式化 SQL（含耗时/连接号）；生产保持纯 Druid stat 监控（p6spy: false），测试环境用 logging.level 控制，`P6SpyIntegrationContractTest` 契约测试防止配置回归
+- **接口文档增强**：补齐 P0 系统管理模块（菜单/字典/参数/定时任务/登录日志/验证码）约 28 个操作的 @RouterOperation 声明；SpringDoc 分组重构（移除已下线 face-analysis/interest 死分组，新增 admin-system/admin-user）；Knife4j 增强 UI 在开发环境启用（`/doc.html`）；`Knife4jIntegrationContractTest` + `OpenApiEndpointsIntegrationTest` 端到端保证不回归
+- **配置全面补充（公共默认，全部环境变量可覆盖）**：Resilience4j 四件套（熔断 default/strict + 限流 + 重试 + 超时）、Sentinel 控制台通信、Micrometer 链路追踪（采样率 0.1 + Zipkin）、Nacos 注册/配置中心、RocketMQ 生产消费参数、Actuator 监控端点与健康分组、Hikari 连接池、异常钉钉告警、远程调用（remote.api 超时/重试/连接池）、文件上传限制、性能（Netty 超时 + 阻塞 IO 线程池）
+- **统一构建环境**：新增 `.sdkmanrc` 固定 JDK 17.0.12-oracle；build/release/codegen/license 脚本统一 sdkman + mvnd（Maven Daemon），文档命令同步替换
+
+### Changed
+- 三档配置（basic/standard/enterprise）修正无效键：`spring.data.redis.enabled` → autoconfigure.exclude、`rocketmq.producer.enabled` → `apex.mq.consumer.enabled`、`apex-sentinel.enabled` → `apex.sentinel.*`
+- 全部配置文件引入统一符号注释规范（✅ 已启用 / ❌ 已禁用 / ⚠️ 安全提示 / 💡 设计说明 / 🔒 敏感配置 / （差异）公共层差异）
+
+### Fixed
+- **prod `remote.api` 配置截断**：文件末尾 `remote:` 后无实际配置（此前一直未生效），已补全默认超时/重试/连接池
+- **熔断异常类名错误**：`com.apex.infrastructure.remote.exception.*` → `com.apex.scaffold.infrastructure.remote.exception.*`（公共层新增配置后暴露的潜在启动 bug）
+- **bootstrap 应用名不一致**：`apex-service` → `apex-scaffold`（与 application.yml 对齐，否则 Nacos 配置拉取/服务注册错乱）
+- **配置重复顶层键**：basic 档 `apex:` 块重复导致 features 被覆盖丢失，已合并
+
 ## [1.1.2] - 2026-08-27
 
 ### Added

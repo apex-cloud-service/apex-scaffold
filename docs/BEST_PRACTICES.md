@@ -201,7 +201,7 @@ jwt:
 
 ```bash
 export JWT_SECRET=$(openssl rand -base64 48)
-mvn spring-boot:run
+mvnd spring-boot:run
 ```
 
 **❌ 错误做法**:

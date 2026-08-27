@@ -1,0 +1,7 @@
+# ============================================================
+# sdkman 项目级 JDK 固定
+# ============================================================
+# 进入项目目录时 sdkman 自动切换到此版本（需 sdkman auto_env=true）。
+# ⚠️ 与 scripts/*.sh 的构建环境保持一致：全库统一 17.0.12-oracle。
+# 切换版本命令: sdk java install <version> && echo <version> > .sdkmanrc
+java=17.0.12-oracle

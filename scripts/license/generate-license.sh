@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env zsh
 # ============================================================
 # Apex Scaffold License 发放工具（卖方使用）
 # ============================================================
@@ -22,7 +22,7 @@
 # ============================================================
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 cd "${ROOT_DIR}"
 
@@ -57,15 +57,22 @@ if [[ ! -f "${PRIVATE_KEY}" || ! -f "${PUBLIC_KEY}" ]]; then
   exit 1
 fi
 
-# 构建 classpath（优先使用已安装的依赖；找不到 mvn 时回退到已知 classpath）
+# 构建 classpath（统一使用 mvnd + sdkman JDK；无 sdkman 时回退系统 mvn）
+# 先确保 apex-common 已构建（离线优先，失败回退在线）
+if [[ -f "$HOME/.sdkman/bin/sdkman-init.sh" ]]; then
+  # shellcheck disable=SC1091
+  source "$HOME/.sdkman/bin/sdkman-init.sh"
+fi
 CP_FILE="$(mktemp)"
-if command -v mvn >/dev/null 2>&1; then
+if command -v mvnd >/dev/null 2>&1; then
+  MAVEN_OPTS="-Xmx512m" mvnd -o -q dependency:build-classpath -pl apex-common -Dmdep.outputFile="${CP_FILE}" 2>/dev/null \
+    || MAVEN_OPTS="-Xmx512m" mvnd -q dependency:build-classpath -pl apex-common -Dmdep.outputFile="${CP_FILE}"
+elif command -v mvn >/dev/null 2>&1; then
   mvn -q -o dependency:build-classpath -pl apex-common -Dmdep.outputFile="${CP_FILE}" 2>/dev/null \
     || mvn -q dependency:build-classpath -pl apex-common -Dmdep.outputFile="${CP_FILE}"
 else
-  MVN_HOME="${MVN_HOME:-$HOME/.sdkman/candidates/maven/current}"
-  "${MVN_HOME}/bin/mvn" -q -o dependency:build-classpath -pl apex-common -Dmdep.outputFile="${CP_FILE}" 2>/dev/null \
-    || "${MVN_HOME}/bin/mvn" -q dependency:build-classpath -pl apex-common -Dmdep.outputFile="${CP_FILE}"
+  echo "❌ 未找到 mvnd/mvn，请先安装: sdk install mvnd"
+  exit 1
 fi
 CP="apex-common/target/classes:$(cat "${CP_FILE}")"
 rm -f "${CP_FILE}"

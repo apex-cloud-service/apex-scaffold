@@ -7,11 +7,14 @@
 确保你的环境满足以下要求:
 
 ```bash
+# 加载 sdkman（JDK + mvnd，推荐）
+source ~/.sdkman/bin/sdkman-init.sh
+
 # 检查Java版本(需要17+)
 java -version
 
-# 检查Maven版本(需要3.8+)
-mvn -version
+# 检查构建工具版本（推荐 mvnd，Maven Daemon；mvn 亦可）
+mvnd --version
 
 # 检查Docker(可选)
 docker --version
@@ -19,8 +22,8 @@ docker-compose --version
 ```
 
 如果未安装,请参考:
-- [JDK 17下载](https://www.oracle.com/java/technologies/downloads/#java17)
-- [Maven安装指南](https://maven.apache.org/install.html)
+- [JDK 17下载](https://www.oracle.com/java/technologies/downloads/#java17)（推荐 sdkman：`sdk install java 17.0.12-oracle`）
+- [mvnd安装指南](https://github.com/apache/maven-mvnd)（推荐 sdkman：`sdk install mvnd`；传统 Maven 亦可）
 - [Docker安装指南](https://docs.docker.com/get-docker/)
 
 ## 🎯 第一步:获取代码
@@ -71,7 +74,7 @@ docker-compose up -d mysql redis
 #### 2.2 编译项目
 
 ```bash
-mvn clean package -DskipTests
+mvnd clean package -DskipTests
 ```
 
 首次编译可能需要3-5分钟(下载依赖)。
@@ -79,7 +82,7 @@ mvn clean package -DskipTests
 #### 2.3 启动应用
 
 ```bash
-mvn spring-boot:run -pl apex-interfaces
+mvnd spring-boot:run -pl apex-interfaces
 ```
 
 看到以下日志表示启动成功:

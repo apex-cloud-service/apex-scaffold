@@ -73,10 +73,10 @@ docker exec -it apex-redis redis-cli ping
 
 ```bash
 # 清理本地缓存
-mvn dependency:purge-local-repository
+mvnd dependency:purge-local-repository
 
 # 重新下载依赖
-mvn clean install -U
+mvnd clean install -U
 
 # 如果使用国内网络,配置阿里云镜像
 # ~/.m2/settings.xml
@@ -453,7 +453,7 @@ logging:
 
 ```bash
 # 启动时添加JVM参数
-mvn spring-boot:run -Dspring-boot.run.jvmArguments="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005"
+mvnd spring-boot:run -Dspring-boot.run.jvmArguments="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005"
 
 # IDEA中配置Remote JVM Debug
 # Host: localhost

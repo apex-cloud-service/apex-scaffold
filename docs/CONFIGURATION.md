@@ -13,7 +13,7 @@
 
 通过 `spring.profiles.active` 激活对应环境:
 ```bash
-mvn spring-boot:run -Dspring-boot.run.profiles=prod
+mvnd spring-boot:run -Dspring-boot.run.profiles=prod
 ```
 
 ## 🔐 安全认证配置
