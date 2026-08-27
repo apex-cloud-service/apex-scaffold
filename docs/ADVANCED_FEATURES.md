@@ -110,6 +110,46 @@ public Mono<List<OrderDTO>> listReport() {
 
 ---
 
+
+---
+
+## 6. 分布式 ID 生成器（C11）
+
+### 能力
+- `SnowflakeIdGenerator`（apex-common/util/id）：标准雪花算法（41 位毫秒时间戳 + 5 位数据中心 + 5 位机器 + 12 位序列），单机每毫秒 4096 个，跨实例全局唯一。
+- 特性：线程安全（synchronized）、毫秒内序列自旋、时钟回拨超 5ms 抛异常防重复。
+- 用法：`new SnowflakeIdGenerator(datacenterId, workerId).nextId()`。
+- 说明：项目数据表主键注释约定「雪花算法」，可与 MyBatis-Plus `IdType.INPUT` 配合作为主键分配器。
+
+---
+
+## 7. 多租户支持（C10）
+
+### 能力
+- `TenantContext`（ThreadLocal 租户上下文）+ `@TenantAware` 注解 + `TenantAspect` 切面。
+- 机制：`@TenantAware` 方法从请求头 `X-Tenant-Id` 装配租户 ID 到上下文，业务查询按租户隔离；请求结束自动释放（防线程复用泄漏）。
+
+### 使用示例
+```java
+@TenantAware
+public Mono<PageResponse<OrderDTO>> listOrders(ServerRequest request) {
+    String tenantId = TenantContext.currentTenantId().orElseThrow(() -> new BusinessException(ResultCode.PARAM_ERROR, "缺少租户标识"));
+    return orderRepository.findByTenant(tenantId, pageNum, pageSize);
+}
+```
+
+### 隔离策略
+- 表级隔离：业务表加 `tenant_id` 列，查询自动过滤（可扩展 MyBatis-Plus `TenantLineInnerInterceptor` 消费 `TenantContext`）。
+- 分库隔离：按租户路由数据源（扩展 dynamic-datasource）。
+
+---
+
+## 8. 发布流水线（C13）
+
+- 新增 `.github/workflows/release.yml`：推送 `v*` 标签时自动三档构建（basic/standard/enterprise）并上传 GitHub Release 产物。
+- 与既有 `ci-cd.yml`（质量检查）分工：CI 管合并前验证，CD 管打标后发布。
+- 发布流程：`git tag -a v1.x.x -m "..." && git push origin v1.x.x`。
+
 ## 关联文档
 - 架构分层与端口规范：[ARCHITECTURE_USAGE_GUIDE.md](ARCHITECTURE_USAGE_GUIDE.md)
 - 配置符号规范与键说明：[CONFIGURATION.md](CONFIGURATION.md)
