@@ -1,28 +1,51 @@
-# Dev环境配置 - 使用嵌入式服务简化开发
+# ============================================================
+# Apex Scaffold 开发环境（Dev）配置
+# ============================================================
+# 适用场景 : 本地开发 / 联调调试
+# 启用方式 : 默认 profile（spring.profiles.active=dev，见 application.yml）
+# 核心特性 : H2 内存库 + P6Spy SQL 日志 / 本地 Redis / 禁用 Nacos / 本地文件存储
+#
+# ┌───────────────────────────────────────────────────────────┐
+# │ 注释符号规范（全仓配置文件统一约定）                         │
+# ├───────────────────────────────────────────────────────────┤
+# │ ✅ 已启用能力          ❌ 已禁用能力                       │
+# │ ⚠️ 安全提示/注意点     💡 设计说明/优化理由                │
+# │ 🔒 敏感配置（环境变量注入，禁止硬编码）                     │
+# │ （差异）标注与公共 application.yml 的差异及理由              │
+# └───────────────────────────────────────────────────────────┘
+# ============================================================
+
 spring:
-  # Redis - dev环境禁用Redisson自动配置
+  # ---------- 自动配置排除 ----------
+  # ❌ Redisson：dev 环境不启用 Redisson 分布式锁/缓存客户端。
+  # 💡 仅排除 Redisson；Spring Data Redis（Lettuce）保留用于缓存/验证码。
   autoconfigure:
     exclude:
       - org.redisson.spring.starter.RedissonAutoConfigurationV2
-  
+
+  # ---------- Redis（本地） ----------
   data:
     redis:
+      # ✅ 本地 Redis：默认 localhost:6379
       host: localhost
       port: 6379
-      password: 
+      # 连接超时（毫秒）
       timeout: 3000ms
-  
-  # MySQL - 使用H2内存数据库替代
-  # 数据源经 P6Spy 代理（spy.properties 位于 apex-infrastructure/src/main/resources/），
-  # 输出带参数值的格式化 SQL 日志（logback-spring.xml dev 段 p6spy logger → SQL_CONSOLE/SQL_FILE）。
-  # 生产/测试环境不启用：prod 用纯 Druid stat 监控，it 测试用 logging.level 控制，避免代理层开销。
+
+  # ---------- 数据源（H2 内存库，替代 MySQL） ----------
+  # 💡 dev 使用 H2 内存库（MODE=MySQL 兼容 MySQL 语法），无需安装数据库。
+  # ✅ 数据源经 P6Spy 代理（spy.properties 位于 apex-infrastructure/src/main/resources/），
+  #    输出带参数值的格式化 SQL 日志（logback-spring.xml dev 段 p6spy logger → SQL_CONSOLE/SQL_FILE）。
+  # ⚠️ 生产/测试环境不启用 P6Spy：prod 用纯 Druid stat 监控，it 测试用 logging.level 控制，避免代理层开销。
   datasource:
     driver-class-name: com.p6spy.engine.spy.P6SpyDriver
     url: jdbc:p6spy:h2:mem:apex_dev;DB_CLOSE_DELAY=-1;MODE=MySQL
     username: sa
-    password: 
-  
-  # 禁用Nacos
+    password:
+
+  # ---------- 注册中心与配置中心 ----------
+  # ❌ Nacos：dev 环境禁用配置中心与服务发现，避免依赖外部 Nacos 实例。
+  # （差异）公共层 spring.cloud.nacos 默认 enabled；dev 显式关闭。
   cloud:
     nacos:
       discovery:
@@ -30,37 +53,55 @@ spring:
       config:
         enabled: false
 
-# Redisson配置 - 使用单机模式
-redisson:
-  single-server-config:
-    address: "redis://localhost:6379"
-    connection-pool-size: 10
-    connection-minimum-idle-size: 5
-
-# RocketMQ - dev环境禁用
+# ============================================================
+# 消息中间件（RocketMQ）
+# ============================================================
+# ⚠️ dev 环境不启动本地 RocketMQ Broker；仅配置连接信息供调试。
 rocketmq:
+  # Name Server 地址：本地 Broker 未启动时生产者发送会失败，属预期行为。
   name-server: localhost:9876
   producer:
     group: apex-dev-producer
 
-# MinIO配置
+# ============================================================
+# 对象存储（本地文件模式）
+# ============================================================
+# ✅ dev 使用本地文件系统模拟对象存储，无需 MinIO/TOS。
 storage:
   type: local
   local:
+    # 本地存储根目录
     base-path: /tmp/apex-uploads
 
-# 日志级别调整
+# ============================================================
+# 日志级别
+# ============================================================
 logging:
   level:
     root: INFO
+    # ✅ 业务代码 DEBUG：本地开发查看详细日志
     com.apex.scaffold: DEBUG
     org.redisson: WARN
 
-# 禁用某些中间件检查
+# ============================================================
+# 业务自定义配置
+# ============================================================
 apex:
   redis:
+    # ❌ 关闭启动时 Redis 清理（开发环境保留本地缓存数据）
     cleanup-on-startup: false
+  # ---------- 消息消费者开关 ----------
+  # ❌ 关闭消息消费者：本地无 RocketMQ Broker，避免监听器启动报错。
+  mq:
+    consumer:
+      enabled: false
+    dlq:
+      enabled: false
 
-# H2控制台(可选)
+# ============================================================
+# H2 控制台（可选调试工具）
+# ============================================================
+# ✅ 浏览器访问 http://localhost:8080/h2-console 可查看内存库数据
+#    JDBC URL 填写: jdbc:h2:mem:apex_dev
 spring.h2.console.enabled: true
 spring.h2.console.path: /h2-console

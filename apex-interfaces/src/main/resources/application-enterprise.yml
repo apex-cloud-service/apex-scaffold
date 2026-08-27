@@ -1,38 +1,103 @@
 # ============================================================
 # Apex Scaffold 企业版 (Enterprise) 配置模板
 # ============================================================
-# 适用: 大型企业 / 高并发系统（商业授权）
-# 启用: java -jar apex-interfaces.jar --spring.profiles.active=enterprise
-# 功能: 标准版全部 + RocketMQ / 链路追踪 / Sentinel / 分布式锁 / 多数据源
+# 适用场景 : 大型企业 / 高并发系统（商业授权）
+# 启用方式 : java -jar apex-interfaces.jar --spring.profiles.active=enterprise
+# 功能范围 : 标准版全部 + RocketMQ / 链路追踪 / Sentinel / 分布式锁 / 多数据源
+#
+# ┌───────────────────────────────────────────────────────────┐
+# │ 注释符号规范（全仓配置文件统一约定）                         │
+# ├───────────────────────────────────────────────────────────┤
+# │ ✅ 已启用能力          ❌ 已禁用能力                       │
+# │ ⚠️ 安全提示/注意点     💡 设计说明/优化理由                │
+# │ 🔒 敏感配置（环境变量注入，禁止硬编码）                     │
+# │ （差异）标注与公共 application.yml 的差异及理由              │
+# └───────────────────────────────────────────────────────────┘
+# 说明: 本文件只覆盖 enterprise 档差异项，公共默认值见 application.yml。
 # ============================================================
 
+# ============================================================
+# 1. 档位功能矩阵（features.*）
+# ============================================================
+# 企业版 = 全部能力：认证/RBAC/缓存/消息/监控/追踪。
 apex:
   features:
+    # ✅ JWT 认证
     jwt-auth: true
+    # ✅ RBAC 权限
     rbac: true
+    # ✅ 多级缓存
     cache: true
+    # ✅ 消息队列（RocketMQ）
     message-queue: true
+    # ✅ 监控告警
     monitoring: true
+    # ✅ 链路追踪
     tracing: true
 
-# 消息队列（RocketMQ）
+  # ---------- 消息消费者开关 ----------
+  # ✅ 企业版启用消息消费者（与 features.message-queue=true 一致）。
+  # 💡 监听器通过 @ConditionalOnProperty(name="apex.mq.consumer.enabled") 装配，
+  #    关闭时可避免无 Broker 环境下监听器启动失败。
+  mq:
+    consumer:
+      enabled: true
+    dlq:
+      enabled: true
+
+  # ---------- Sentinel 系统规则（企业版可选调优） ----------
+  # 💡 Sentinel 框架连接（dashboard/transport）在公共层 spring.cloud.sentinel 配置；
+  #    此处为代码自定义的规则参数（SentinelConfig 读取）。
+  sentinel:
+    system-rules:
+      # ✅ 启用系统自适应保护规则
+      enabled: true
+      # 系统负载保护：CPU 使用率阈值（0.0~1.0）
+      cpu-usage-threshold: 0.8
+      # 系统入口总 QPS 阈值
+      entry-qps-threshold: 2000
+    degrade:
+      slow-call:
+        # AI 分析类接口慢调用阈值（毫秒）
+        ai-analysis-threshold-ms: 30000
+        # 探索类接口慢调用阈值（毫秒）
+        explore-threshold-ms: 3000
+
+# ============================================================
+# 2. 消息中间件（RocketMQ）
+# ============================================================
+# ✅ RocketMQ：企业版启用。
+# 🔒 Name Server 地址与 ACL 凭据必须由环境变量注入：
+#    ROCKETMQ_NAMESERVER / ROCKETMQ_ACCESS_KEY / ROCKETMQ_SECRET_KEY。
+# 💡 连接参数（超时/重试/压缩）继承公共层 rocketmq 配置。
 rocketmq:
   producer:
+    # ✅ 生产者启用（与 features.message-queue=true 一致）
     enabled: true
   consumer:
     enabled: true
 
-# 链路追踪（Micrometer + Zipkin）
+# ============================================================
+# 3. 链路追踪（Micrometer Tracing + Zipkin）
+# ============================================================
+# ✅ 链路追踪：企业版启用。
+# 💡 采样率/上报地址在公共层 management.tracing / management.zipkin 配置，
+#    生产通过 TRACE_SAMPLING_RATE / ZIPKIN_BASE_URL 环境变量调优。
 management:
   tracing:
+    # ✅ 显式启用（公共层默认已启用，此处档位语义明确）
     enabled: true
 
-# 多数据源（dynamic-datasource）
+# ============================================================
+# 4. 多数据源（dynamic-datasource）
+# ============================================================
+# ✅ 多数据源：企业版支持。
+# 💡 数据源实例（master/slave 等）与连接池参数在生产 application-prod.yml
+#    或 Nacos 远端配置中声明；此处仅声明使用 dynamic-datasource 框架。
 spring:
   datasource:
     dynamic:
+      # 默认数据源：未通过 @DS 指定时使用 master
+      primary: master
+      # strict=false：未找到指定数据源时回退 primary，不抛异常
       strict: false
-
-# Sentinel 限流熔断
-apex-sentinel:
-  enabled: true

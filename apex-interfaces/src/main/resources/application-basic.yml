@@ -1,39 +1,74 @@
 # ============================================================
 # Apex Scaffold 基础版 (Basic) 配置模板
 # ============================================================
-# 适用: 个人项目 / 小型应用（MIT 开源）
-# 启用: java -jar apex-interfaces.jar --spring.profiles.active=basic
-# 功能: JWT 认证 / 统一响应 / 参数校验 / WebFlux / MyBatis-Plus
+# 适用场景 : 个人项目 / 小型应用（MIT 开源）
+# 启用方式 : java -jar apex-interfaces.jar --spring.profiles.active=basic
+# 功能范围 : JWT 认证 / 统一响应 / 参数校验 / WebFlux / MyBatis-Plus
+#
+# ┌───────────────────────────────────────────────────────────┐
+# │ 注释符号规范（全仓配置文件统一约定）                         │
+# ├───────────────────────────────────────────────────────────┤
+# │ ✅ 已启用能力          ❌ 已禁用能力                       │
+# │ ⚠️ 安全提示/注意点     💡 设计说明/优化理由                │
+# │ 🔒 敏感配置（环境变量注入，禁止硬编码）                     │
+# │ （差异）标注与公共 application.yml 的差异及理由              │
+# └───────────────────────────────────────────────────────────┘
+# 说明: 本文件只覆盖 basic 档差异项，公共默认值见 application.yml。
 # ============================================================
 
+# ============================================================
+# 1. 档位功能矩阵（features.*）
+# ============================================================
+# 基础版仅含核心能力，商业版差异详见 standard/enterprise。
 apex:
   features:
+    # ✅ JWT 认证：所有档位必备
     jwt-auth: true
+    # ❌ RBAC 权限：基础版不提供
     rbac: false
+    # ❌ 多级缓存：基础版仅 Caffeine 单机缓存（见公共层 apex.cache.local）
     cache: false
+    # ❌ 消息队列：基础版不引入 RocketMQ
     message-queue: false
+    # ❌ 监控告警：基础版仅保留 Actuator 基础端点（见下方 management）
     monitoring: false
+    # ❌ 链路追踪：基础版不启用
     tracing: false
 
-spring:
-  # 基础版不使用 Redis 缓存（Caffeine 单机缓存可用）
-  data:
-    redis:
+  # ---------- 消息消费者开关 ----------
+  # ❌ RocketMQ：基础版不启用消息队列。
+  # ⚠️ rocketmq.producer.enabled 不是有效开关；业务消费者由
+  #    apex.mq.consumer.enabled 控制，RocketMQ Starter 在基础版通过
+  #    不配置 name-server 保持惰性，不建立连接。
+  mq:
+    consumer:
+      # ❌ 关闭消息消费者（防止无 Broker 环境下监听器启动报错）
       enabled: false
+    dlq:
+      # ❌ 关闭死信队列处理
+      enabled: false
+
+# ============================================================
+# 2. 数据访问
+# ============================================================
+spring:
+  # ❌ Redis 缓存：基础版不引入 Redis。
+  # 禁用方式：通过 autoconfigure.exclude 排除 Redis/Redisson 自动配置
+  # （⚠️ 注意：spring.data.redis.enabled 不是有效属性，必须用下方方式禁用）。
   autoconfigure:
     exclude:
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisReactiveAutoConfiguration
       - org.redisson.spring.starter.RedissonAutoConfigurationV2
 
-# 消息队列（基础版禁用）
-rocketmq:
-  producer:
-    enabled: false
-  consumer:
-    enabled: false
-
-# 监控（基础版仅保留基础 actuator）
+# ============================================================
+# 3. 系统监控
+# ============================================================
+# ✅ Actuator 基础端点：基础版仅暴露健康检查与应用信息。
 management:
   endpoints:
     web:
       exposure:
+        # （差异）公共层默认 health,info,metrics,prometheus,circuitbreakers；
+        #          基础版收紧为 health,info，不暴露指标端点。
         include: health,info

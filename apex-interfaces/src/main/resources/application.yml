@@ -4,81 +4,131 @@
 # 本文件为所有环境（dev/basic/standard/enterprise/prod）的公共默认配置，
 # 各环境通过 application-{profile}.yml 覆盖差异项；所有敏感/环境相关值
 # 均以环境变量 ${VAR:default} 形式提供，生产必须注入真实值。
+#
+# ┌───────────────────────────────────────────────────────────┐
+# │ 注释符号规范（全仓配置文件统一约定）                         │
+# ├───────────────────────────────────────────────────────────┤
+# │ ✅ 已启用能力          ❌ 已禁用能力                       │
+# │ ⚠️ 安全提示/注意点     💡 设计说明/优化理由                │
+# │ 🔒 敏感配置（环境变量注入，禁止硬编码）                     │
+# │ （差异）标注与公共 application.yml 的差异及理由              │
+# │ 区块分隔: # ==== 一级区块 ====  # ---- 二级小节 ----         │
+# └───────────────────────────────────────────────────────────┘
+# ============================================================
 
 server:
+  # HTTP 服务端口
   port: 8080
+  # ✅ 优雅停机：收到停机信号后停止接收新请求，等待在途请求完成
   shutdown: graceful
+  # ✅ HTTP/2 支持（Netty 原生支持，需 TLS 或 h2c）
   http2:
     enabled: true
   # ---------- Netty 服务器性能参数 ----------
   netty:
+    # 连接建立超时（毫秒）
     connection-timeout: 5000
-    # 事件循环线程数：默认 = CPU 核数 * 2；高并发可显式覆盖（NETTY_EVENT_LOOP_THREADS）
+    # 💡 事件循环线程数：默认 = CPU 核数 * 2；高并发可显式覆盖（NETTY_EVENT_LOOP_THREADS）
     # WebFlux 下通过系统属性 reactor.netty.ioWorkerCount 控制（见性能优化说明）
   # ---------- 默认 WebClient 超时（毫秒） ----------
   webclient:
+    # 连接建立超时
     connect-timeout-millis: ${WEBCLIENT_CONNECT_TIMEOUT:5000}
+    # 读取响应超时
     read-timeout-millis: ${WEBCLIENT_READ_TIMEOUT:10000}
+    # 写入请求超时
     write-timeout-millis: ${WEBCLIENT_WRITE_TIMEOUT:10000}
 
 spring:
   application:
+    # 应用名称：服务注册名 + 配置中心配置标识（⚠️ 须与 bootstrap.yml 一致）
     name: apex-scaffold
   profiles:
+    # 默认激活环境（dev/basic/standard/enterprise/prod）
     active: dev
   main:
+    # ✅ 响应式应用（WebFlux）：禁用 Servlet 容器
     web-application-type: reactive
   messages:
+    # 国际化消息源
     basename: i18n/messages
   cache:
+    # ✅ 本地缓存：Caffeine（进程内缓存）
     type: caffeine
   # ---------- 文件上传 / 请求体大小 ----------
   codec:
+    # 请求体/响应体内存缓冲上限（WebFlux 编解码器）
     max-in-memory-size: ${MAX_IN_MEMORY_SIZE:10MB}
   # ---------- 数据库连接池（HikariCP 默认；prod 使用 Druid dynamic-datasource 覆盖） ----------
   datasource:
     hikari:
-      # 连接池大小：响应式应用 JDBC 阻塞操作经 boundedElastic 调度，按需调整
+      # 连接池最大连接数：响应式应用 JDBC 阻塞操作经 boundedElastic 调度，按需调整
       maximum-pool-size: ${DB_MAX_POOL_SIZE:20}
+      # 最小空闲连接数
       minimum-idle: ${DB_MIN_IDLE:5}
+      # 获取连接超时（毫秒）
       connection-timeout: 30000
+      # 空闲连接回收时间（毫秒）
       idle-timeout: 600000
+      # 连接最大存活时间（毫秒），应小于数据库 wait_timeout
       max-lifetime: 1800000
       pool-name: ApexHikariPool
   # ---------- 注册中心与配置中心（Nacos） ----------
-  # dev 环境在 application-dev.yml 中关闭；生产使用独立命名空间。
+  # ⚠️ dev 环境在 application-dev.yml 中关闭；生产使用独立命名空间（NACOS_NAMESPACE）。
+  # 💡 启动早期加载由 bootstrap.yml 负责，此处为应用装配期配置。
   cloud:
     nacos:
+      # ===== 配置中心 =====
       config:
+        # 🔒 Nacos 地址（生产通过 NACOS_SERVER_ADDR 注入）
         server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+        # 命名空间（环境隔离）
         namespace: ${NACOS_NAMESPACE:public}
+        # 配置分组
         group: DEFAULT_GROUP
+        # 配置文件后缀
         file-extension: yml
+        # ✅ 配置自动刷新（@RefreshScope / @Value 生效）
         refresh-enabled: true
+        # ✅ 启用配置中心
         enabled: ${NACOS_CONFIG_ENABLED:true}
+      # ===== 服务注册与发现 =====
       discovery:
+        # 🔒 Nacos 地址（与配置中心一致）
         server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
         namespace: ${NACOS_NAMESPACE:public}
         group: DEFAULT_GROUP
+        # ✅ 启用服务发现
         enabled: ${NACOS_DISCOVERY_ENABLED:true}
+        # ✅ 注册本实例到 Nacos
         register-enabled: ${NACOS_REGISTER_ENABLED:true}
+        # 注册服务名（默认取应用名）
         service: ${spring.application.name}
+        # 实例权重（越大被选中概率越高）
         weight: 1
     # ---------- Sentinel 限流熔断（控制台通信） ----------
     sentinel:
       transport:
+        # 🔒 Sentinel Dashboard 地址（空值 = 不连接控制台，仅本地规则生效）
         dashboard: ${SENTINEL_DASHBOARD_URL:}
+        # 客户端与 Dashboard 通信端口（同宿主机多实例须唯一）
         port: ${SENTINEL_TRANSPORT_PORT:8719}
+        # 客户端上报 IP（多网卡环境建议显式指定）
         client-ip: ${SENTINEL_CLIENT_IP:}
+      # 💡 启动即初始化 Sentinel 客户端，避免首请求懒加载延迟
       eager: ${SENTINEL_EAGER:true}
 
 jwt:
+  # 🔒 JWT 签名密钥：生产必须通过 JWT_SECRET 注入 ≥32 字节随机密钥
   secret: ${JWT_SECRET:change-me-in-production}
+  # Access Token 有效期（毫秒）：2 小时
   access-token-expire: 7200000
+  # Refresh Token 有效期（毫秒）：7 天
   refresh-token-expire: 604800000
 
 logging:
   level:
+    # 💡 日志级别分层：业务层 INFO，框架层 WARN；dev 在 logback-spring.xml 覆盖为 DEBUG
     root: INFO
     com.apex: INFO
     com.apex.application: INFO
@@ -92,7 +142,7 @@ logging:
     org.springframework.web.reactive: WARN
     org.springframework.security: WARN
     org.springframework.http.codec: WARN
-    # Netty 网络层：默认 WARN，仅记录异常（性能优化，避免每请求 50-200 条 DEBUG）
+    # Netty 网络层：默认 WARN，仅记录异常（💡 性能优化，避免每请求 50-200 条 DEBUG）
     reactor.netty: WARN
     reactor.netty.http.server: WARN
     reactor.netty.http.client: WARN
@@ -105,78 +155,106 @@ logging:
 # ============================================================
 # 系统监控（Actuator + Micrometer + Prometheus）
 # ============================================================
+# ✅ 统一监控体系：Actuator 端点 + Micrometer 指标 + Prometheus 拉取
 management:
   server:
-    # 管理端口与业务端口物理隔离；默认仅监听回环地址
+    # 管理端口与业务端口物理隔离（默认 8081）
+    # ⚠️ 仅监听回环地址，外部不可达；容器/K8s 通过 MANAGEMENT_SERVER_ADDRESS 调整
     port: 8081
     address: ${MANAGEMENT_SERVER_ADDRESS:127.0.0.1}
   endpoints:
     web:
       exposure:
-        # 仅暴露运维必需端点，禁止 env/configprops/mappings 等敏感端点
+        # ⚠️ 仅暴露运维必需端点，禁止 env/configprops/mappings 等敏感端点
         include: health,info,metrics,prometheus,circuitbreakers
   endpoint:
     health:
+      # 健康详情仅向已认证请求展示，匿名请求只返回 UP/DOWN
       show-details: when-authorized
+      # ✅ K8s 风格存活/就绪探针
       probes:
         enabled: true
       group:
+        # 存活探针：仅检查进程存活（失败 → K8s 重启 Pod）
         liveness:
           include: livenessState
+        # 就绪探针：检查 DB + Redis 可用（失败 → K8s 摘除流量）
         readiness:
           include: readinessState,db,redis
     circuitbreakers:
+      # ✅ 熔断器状态端点（供监控采集）
       enabled: true
   metrics:
     tags:
+      # 所有指标附加 application 标签，便于 Prometheus 按应用聚合
       application: ${spring.application.name}
     distribution:
       percentiles-histogram:
         http:
           server:
+            # ✅ HTTP 请求延迟直方图（Prometheus Histogram 分位数计算）
             requests: true
       percentiles:
         http:
           server:
+            # 请求延迟百分位：P50/P90/P95/P99
             requests: 0.5, 0.9, 0.95, 0.99
   # ---------- 链路追踪（Micrometer Tracing + Zipkin） ----------
   tracing:
+    # ✅ 启用链路追踪（企业版档位语义明确；basic/standard 可在档位配置关闭）
     enabled: ${TRACING_ENABLED:true}
     sampling:
+      # 采样率：默认 10%（💡 高 QPS 下全量采样会造成 Zipkin 网络/存储压力）
       probability: ${TRACE_SAMPLING_RATE:0.1}
   zipkin:
     tracing:
+      # 🔒 Zipkin 上报端点（生产通过 ZIPKIN_BASE_URL 注入）
       endpoint: ${ZIPKIN_BASE_URL:http://localhost:9411}/api/v2/spans
 
 # ============================================================
 # 熔断 / 限流 / 重试 / 超时（Resilience4j）
 # ============================================================
+# ✅ 弹性能力四件套：熔断（circuitbreaker）+ 限流（ratelimiter）
+#   + 重试（retry）+ 超时（timelimiter），保护外部调用不拖垮本服务
 resilience4j:
   circuitbreaker:
     configs:
       # 默认熔断配置：适用一般外部服务
       default:
+        # 失败率阈值（%）：50% 请求失败 → 熔断
         failure-rate-threshold: 50
+        # 慢调用率阈值（%）
         slow-call-rate-threshold: 50
+        # 慢调用判定阈值（毫秒）：>3s 计为慢调用
         slow-call-duration-threshold: 3000
+        # 滑动窗口大小：统计最近 100 次调用
         sliding-window-size: 100
+        # 最小调用次数：不足 10 次不触发（防小样本误判）
         minimum-number-of-calls: 10
+        # 熔断打开后等待（毫秒）：60s 后进入半开探测
         wait-duration-in-open-state: 60000
+        # 半开状态试探调用数：5 次全成功 → 关闭熔断
         permitted-number-of-calls-in-half-open-state: 5
+        # 自动 Open → Half-Open 过渡
         automatic-transition-from-open-to-half-open-enabled: true
+        # 视为失败的异常（IO/超时/5xx/远程 API）
         record-exceptions:
           - java.io.IOException
           - java.util.concurrent.TimeoutException
           - org.springframework.web.reactive.function.client.WebClientResponseException
-          - com.apex.infrastructure.remote.exception.RemoteApiException
+          - com.apex.scaffold.infrastructure.remote.exception.RemoteApiException
+        # 忽略的异常（客户端输入错误 4xx 不触发熔断）
         ignore-exceptions:
-          - com.apex.infrastructure.remote.exception.RemoteClientInputException
+          - com.apex.scaffold.infrastructure.remote.exception.RemoteClientInputException
       # 严格熔断配置：支付/短信/微信等关键服务专用（prod 覆盖到实例）
       strict:
+        # 更快熔断：失败率降至 30%
         failure-rate-threshold: 30
         slow-call-rate-threshold: 30
+        # 更敏感：窗口缩小至 50 次
         sliding-window-size: 50
         minimum-number-of-calls: 5
+        # 更快恢复：30s 即半开
         wait-duration-in-open-state: 30000
     instances:
       # 默认实例继承 default；prod 可覆盖为 strict
@@ -185,7 +263,9 @@ resilience4j:
   timelimiter:
     configs:
       default:
+        # 异步调用超时（毫秒）：10s 未完成则取消
         timeout-duration: 10000
+        # 超时后取消运行中的 Future，释放线程
         cancel-running-future: true
     instances:
       default:
@@ -196,6 +276,7 @@ resilience4j:
         # 默认限流：每 10 秒允许 50 次调用（突发容忍 10）
         limit-for-period: 50
         limit-refresh-period: 10s
+        # 等待令牌超时：5s 内未获得令牌则拒绝
         timeout-duration: 5s
     instances:
       default:
@@ -203,8 +284,11 @@ resilience4j:
   retry:
     configs:
       default:
+        # 重试次数：共执行 3 次（1 次 + 2 次重试）
         max-attempts: 3
+        # 重试间隔
         wait-duration: 500ms
+        # 仅对可重试异常重试（IO/超时/5xx）
         retry-exceptions:
           - java.io.IOException
           - java.util.concurrent.TimeoutException
@@ -216,37 +300,51 @@ resilience4j:
 # ============================================================
 # 消息中间件（RocketMQ）
 # ============================================================
+# ✅ 生产者/消费者连接参数；business 消费者开关由 apex.mq.consumer.enabled 控制
+#   （basic/standard 档位关闭，enterprise/prod 开启）
 rocketmq:
+  # 🔒 Name Server 地址（生产通过 ROCKETMQ_NAMESERVER / ROCKETMQ_NAMESRV_ADDR 注入）
   name-server: ${ROCKETMQ_NAMESERVER:${ROCKETMQ_NAMESRV_ADDR:127.0.0.1:9876}}
   producer:
+    # 生产者组名
     group: ${ROCKETMQ_PRODUCER_GROUP:apex-producer-group}
+    # 同步发送超时（毫秒）
     send-message-timeout: 30000
+    # 消息压缩阈值（字节）：超过 1KB 压缩
     compress-message-body-threshold: 1024
+    # 同步发送失败重试次数（不含首次）
     retry-times-when-send-failed: 2
+    # 异步发送失败重试次数
     retry-times-when-send-async-failed: 2
+    # 单条消息最大字节数（默认 4MB）
     max-message-size: 4194304
   consumer:
+    # ⚠️ rocketmq.consumer.enabled 仅控制 RocketMQ Starter 消费者装配；
+    #    业务监听器由 apex.mq.consumer.enabled 控制（见 apex.mq 段）
     enabled: ${ROCKETMQ_CONSUMER_ENABLED:true}
 
 # ============================================================
 # MyBatis 持久化
 # ============================================================
 mybatis:
-  # Mapper XML 扫描路径：覆盖多模块 classpath
+  # Mapper XML 扫描路径：覆盖多模块 classpath（** 匹配跨目录）
   mapper-locations: classpath*:mapper/**/*.xml
 
 # ============================================================
 # 接口文档（SpringDoc OpenAPI + Knife4j）
 # ============================================================
+# ✅ 在线接口文档：Swagger UI + Knife4j 增强 UI（prod 关闭，见 application-prod.yml）
 springdoc:
   swagger-ui:
+    # Swagger UI 入口
     path: /swagger-ui.html
   api-docs:
+    # OpenAPI JSON 端点
     path: /v3/api-docs
 
 # Knife4j 增强接口文档（doc.html）。
-# 纯前端 webjar（knife4j-openapi3-ui），不引入 MVC 依赖，与 WebFlux 函数式端点兼容。
-# production=true 时 Knife4j 会拦截文档请求并提示"文档维护中"；开发环境保持 false。
+# ✅ 纯前端 webjar（knife4j-openapi3-ui），不引入 MVC 依赖，与 WebFlux 函数式端点兼容。
+# ⚠️ production=true 时 Knife4j 会拦截文档请求并提示"文档维护中"；开发环境保持 false。
 knife4j:
   enable: true
   production: false
@@ -255,30 +353,49 @@ knife4j:
 # CORS 跨域
 # ============================================================
 cors:
+  # ⚠️ 安全：默认禁止所有来源；生产收紧前须完成客户端来源盘点
   allow-all-origins: false
+  # 允许的来源白名单
   allowed-origins:
     - http://localhost:3000
 
 # ============================================================
 # 远程调用（WebClient + 外部 API）
 # ============================================================
+# ✅ 统一外部 HTTP 调用：默认超时/重试 + 连接池 + 多服务配置
 remote:
   api:
     # ---------- 默认超时与重试 ----------
+    # 连接超时（毫秒）
     default-connect-timeout: ${REMOTE_API_CONNECT_TIMEOUT:5000}
+    # 读取超时（毫秒）
     default-read-timeout: ${REMOTE_API_READ_TIMEOUT:10000}
+    # 默认重试次数（不含首次）
     default-retry-count: ${REMOTE_API_RETRY_COUNT:2}
+    # 重试间隔（毫秒）
     default-retry-delay: ${REMOTE_API_RETRY_DELAY:1000}
     # 远程响应聚合缓冲上限（字节），默认 10MB
     max-in-memory-size: 10485760
     # ---------- 外部 HTTP 连接池 ----------
+    # 连接池最大连接数
     pool-max-connections: ${REMOTE_API_POOL_MAX_CONNECTIONS:100}
+    # 等待获取连接的最大排队数
     pool-pending-acquire-max-count: 500
+    # 连接最大空闲时间（秒）
     pool-max-idle-time-seconds: 30
+    # 连接最大生命周期（分钟）
     pool-max-life-time-minutes: 5
+    # IO 读写超时（秒）
     io-timeout-seconds: 10
+    # 连接建立超时（毫秒）
     connect-timeout-millis: 5000
     # ---------- 多目标服务配置（按需扩展） ----------
+    # 示例:
+    # services:
+    #   user-service:
+    #     base-url: http://localhost:8081
+    #     connect-timeout: 3000
+    #     read-timeout: 8000
     services: {}
 
 # ============================================================
@@ -286,22 +403,27 @@ remote:
 # ============================================================
 file:
   upload:
+    # ✅ 文件上传总开关
     enabled: ${FILE_UPLOAD_ENABLED:true}
-    # 单文件最大字节数：默认 10MB
+    # 单文件最大字节数：默认 10MB（⚠️ 与 spring.codec.max-in-memory-size 联动）
     max-size-bytes: ${FILE_UPLOAD_MAX_SIZE:10485760}
 
 # ============================================================
 # 异常告警
 # ============================================================
+# ✅ 异常聚合告警：统计窗口内达到阈值触发通知（钉钉）
 alert:
   exception:
-    # 统计窗口内异常次数达到阈值时触发告警
+    # 触发阈值：窗口内异常次数
     threshold: 10
+    # 统计窗口（分钟）
     window: 5
+    # 去重类型上限
     max-types: 100
   dingding:
-    # 钉钉机器人 Webhook（环境变量注入；空值表示告警静默）
+    # 🔒 钉钉机器人 Webhook（环境变量注入；空值 = 告警静默）
     webhook: ${DINGDING_WEBHOOK:}
+    # 🔒 钉钉加签密钥（HMAC-SHA256；空值降级为无签名模式）
     secret: ${DINGDING_SECRET:}
 
 # ============================================================
@@ -309,16 +431,16 @@ alert:
 # ============================================================
 apex:
   license:
-    # License 校验总开关（默认开启）。
+    # ✅ License 校验总开关（默认开启）。
     # 开启后：随包内置基础版 License，商业功能（@FeatureGate 标注）需授权版本才能使用；
     # 未检测到有效 License 时进入降级模式：基础功能放行，商业功能拒绝并输出 WARN 日志。
     enabled: ${APEX_LICENSE_ENABLED:true}
-    # License 文件路径：支持 classpath: 前缀与文件系统路径（生产可通过环境变量指向授权文件）
+    # 🔒 License 文件路径：支持 classpath: 前缀与文件系统路径（生产可通过环境变量指向授权文件）
     file-path: ${APEX_LICENSE_FILE:classpath:license/license-basic.json}
-    # 公钥（Base64）：生产可覆盖为官方发布公钥；缺省使用随包默认公钥
+    # 🔒 公钥（Base64）：生产可覆盖为官方发布公钥；缺省使用随包默认公钥
     public-key-file: ${APEX_LICENSE_PUBLIC_KEY_FILE:classpath:license/public.key}
   captcha:
-    # 图形验证码总开关（默认开启）。
+    # ✅ 图形验证码总开关（默认开启）。
     # 开启后提供 GET /api/v1/auth/captcha 获取验证码；登录请求携带 captchaId 时强制校验。
     enabled: ${APEX_CAPTCHA_ENABLED:true}
     # 验证码字符长度（4-6）
@@ -326,50 +448,96 @@ apex:
     # 验证码有效期（秒）
     ttl: ${APEX_CAPTCHA_TTL_SECONDS:120s}
   # ---------- 阻塞 IO 线程池（响应式应用内 JDBC/缓存/存储阻塞操作） ----------
+  # 💡 WebFlux 主线程不阻塞；JDBC/缓存/存储阻塞操作调度到独立 boundedElastic 线程池
   blocking-io:
     jdbc:
+      # JDBC 阻塞操作线程数
       threads: 32
     cache:
+      # 缓存阻塞操作线程数
       threads: 4
     storage:
+      # 存储阻塞操作线程数
       threads: 8
   # ---------- API 网关过滤器 ----------
   gateway:
+    # ✅ 网关全局过滤器总开关（关闭后仅保留 Spring Security 核心过滤器链）
     enabled: true
+    # 请求唯一标识 HTTP 头（前端/网关注入，用于全链路日志关联）
     request-id-header: X-Request-Id
+    # 慢请求判定阈值（毫秒）：超过则记录 WARN 并增加慢请求计数
     slow-request-threshold: 3000
     metrics:
+      # ✅ 网关指标采集总开关
       enabled: true
+      # 请求计数（按 method+path）
       request-counter-enabled: true
+      # 响应计时（Timer）
       response-timer-enabled: true
+      # 错误计数（按 method+path+statusCode）
       error-counter-enabled: true
   # ---------- 缓存（Caffeine 本地 + Redis 远程） ----------
   cache:
     local:
+      # 一级本地缓存（Caffeine）：进程内低延迟
       max-size: 10000
+      # 写入后过期（秒）：5 分钟
       expire-after-write: 300
+      # 哈希表初始容量（减少扩容停顿）
       initial-capacity: 500
     remote:
+      # 二级远程缓存（Redis）：跨实例共享
       default-ttl: 3600
+      # 批量操作每批条目数（mget/mset/Pipeline）
       batch-size: 100
   # ---------- 安全配置 ----------
   security:
     guard:
+      # ✅ 安全守卫总开关（UA 检查等基础防护）
       enabled: true
+      # ✅ User-Agent 检查（💡 部分合法客户端可能不发 UA，prod 可关闭）
       ua-check-enabled: true
     ip-rate-limit:
+      # ✅ IP 限流总开关（防单 IP 恶意请求）
       enabled: true
+      # 默认窗口内最大请求数
       default-limit: 120
-      window-seconds: 60
+      # 默认滑动窗口（秒）
+      default-window: 60
+      # 违规统计窗口（秒）
+      violation-window: 60
+      # 封禁阈值：窗口内违规次数达到则封禁
+      block-threshold: 30
+      # 封禁时长（秒）
+      block-duration: 300
     login-protection:
+      # ✅ 登录保护（防暴力破解；⚠️ prod 暂关闭，启用前需验证 Redis 跨实例一致性）
       enabled: true
+      # 单 IP 最大登录尝试次数（窗口内）
       ip-max-attempts: 20
+      # 单用户名最大尝试次数（更严格）
       username-max-attempts: 5
+      # 锁定时长（秒）
       lock-duration: 300
+      # 统计窗口（秒）
       window-size: 600
     input-validation:
+      # ✅ 输入校验过滤器（SQL 注入/XSS 等攻击特征检测）
       enabled: true
     security-headers:
+      # ✅ 安全响应头（CSP/X-Content-Type-Options 等）
       enabled: true
     anti-replay:
+      # ✅ 防重放攻击（时间戳 + 随机数校验）
       enabled: true
+  # ---------- 消息消费者开关（业务监听器装配） ----------
+  # ⚠️ 与 rocketmq.consumer.enabled 区分：此键控制业务监听器
+  #    （UserMessageListener / DeadLetterQueueProcessor）的 @ConditionalOnProperty 装配
+  mq:
+    consumer:
+      # ✅ 启用消息消费者（basic/standard 档位关闭）
+      enabled: ${APEX_MQ_CONSUMER_ENABLED:true}
+    dlq:
+      # ✅ 启用死信队列处理
+      enabled: ${APEX_MQ_DLQ_ENABLED:true}
+
