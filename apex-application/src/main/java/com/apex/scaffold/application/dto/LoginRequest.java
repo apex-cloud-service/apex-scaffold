@@ -32,6 +32,30 @@ public class LoginRequest {
     private String loginType = "WX_CODE";
 
     /**
+     * 登录账号（账号密码登录）。
+     *
+     * <p>登录类型为 {@code PASSWORD} 时必填，对应 {@code sys_user.username}。
+     * 微信/手机号登录场景可为空。</p>
+     *
+     * @since 2.2.0
+     */
+    @Schema(description = "登录账号（账号密码登录时使用，PASSWORD 类型必填）")
+    @Size(min = 1, max = 50, message = "{param.size_invalid}")
+    private String username;
+
+    /**
+     * 登录密码（账号密码登录）。
+     *
+     * <p>登录类型为 {@code PASSWORD} 时必填，明文传输，服务端以
+     * BCrypt 哈希比对（{@code sys_user.password}）。</p>
+     *
+     * @since 2.2.0
+     */
+    @Schema(description = "登录密码（账号密码登录时使用，PASSWORD 类型必填）")
+    @Size(min = 6, max = 64, message = "{param.size_invalid}")
+    private String password;
+
+    /**
      * 微信授权码（code）
      *
      * <p>用户同意授权后，微信返回的授权码，有效期5分钟

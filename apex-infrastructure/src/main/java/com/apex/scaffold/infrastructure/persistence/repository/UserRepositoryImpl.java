@@ -152,6 +152,24 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     /**
+     * 根据登录账号查询用户（账号密码登录）。
+     *
+     * <p>按 {@code username} 精确匹配（{@code uk_username} 唯一索引），
+     * 查询结果含 BCrypt 密码哈希字段，供密码认证策略校验。</p>
+     *
+     * @param username 登录账号
+     * @return 用户实体（含密码哈希），不存在时返回 {@link Mono#empty()}
+     * @since 2.2.0
+     */
+    @Override
+    public Mono<UserEntity> findByUsername(String username) {
+        return Mono.fromCallable(() -> userMapper.selectOne(
+                        ConditionUtil.lambda(UserPO.class).eqIfPresent(UserPO::getUsername, username)))
+                .subscribeOn(BlockingIoSchedulers.jdbc())
+                .flatMap(this::convertToEntity);
+    }
+
+    /**
      * 保存：创建或更新用户
      *
      * <p>
@@ -190,6 +208,64 @@ public class UserRepositoryImpl implements UserRepository {
                 })
                 .subscribeOn(BlockingIoSchedulers.jdbc())
                 .flatMap(this::convertToEntity);
+    }
+
+    /**
+     * 更新用户最后心跳时间（在线判定）。
+     *
+     * <p>将 {@code last_heartbeat_time} 刷新为当前时间，供在线用户列表
+     * （最近 5 分钟有心跳视为在线）判定使用。</p>
+     *
+     * @param userId 用户 ID
+     * @return 更新完成信号
+     * @since 2.2.0
+     */
+    @Override
+    public Mono<Void> updateLastHeartbeat(Long userId) {
+        return Mono.fromCallable(() -> {
+                    UserPO update = new UserPO();
+                    update.setLastHeartbeatTime(java.time.LocalDateTime.now());
+                    userMapper.update(
+                            update,
+                            ConditionUtil.lambda(UserPO.class).eq(UserPO::getId, userId));
+                    return true;
+                })
+                .subscribeOn(BlockingIoSchedulers.jdbc())
+                .then();
+    }
+
+    /**
+     * 分页查询在线用户。
+     *
+     * <p>在线判定：最近 {@link UserRepository#ONLINE_WINDOW_MINUTES} 分钟内有心跳
+     * （{@code last_heartbeat_time} ≥ 当前时间 - 窗口）的用户，按心跳时间倒序。</p>
+     *
+     * @param pageNum  页码，从 1 开始
+     * @param pageSize 每页大小
+     * @return 在线用户分页结果
+     * @since 2.2.0
+     */
+    @Override
+    public Mono<com.apex.scaffold.common.dto.PageResponse<UserEntity>> findOnlineUsers(int pageNum, int pageSize) {
+        return Mono.fromCallable(() -> {
+                    com.baomidou.mybatisplus.extension.plugins.pagination.Page<UserPO> page =
+                            new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(pageNum, pageSize);
+                    userMapper.selectPage(
+                            page,
+                            ConditionUtil.lambda(UserPO.class)
+                                    .ge(
+                                            UserPO::getLastHeartbeatTime,
+                                            java.time.LocalDateTime.now().minusMinutes(UserRepository.ONLINE_WINDOW_MINUTES))
+                                    .orderByDesc(UserPO::getLastHeartbeatTime));
+                    return com.apex.scaffold.common.dto.PageResponse.of(
+                            page.getRecords().stream()
+                                    .map(userPoConverter::toEntity)
+                                    .collect(java.util.stream.Collectors.toList()),
+                            page.getTotal(),
+                            pageNum,
+                            pageSize);
+                })
+                .subscribeOn(BlockingIoSchedulers.jdbc());
     }
 
     /**

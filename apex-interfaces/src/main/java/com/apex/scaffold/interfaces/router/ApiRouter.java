@@ -12,6 +12,9 @@ import com.apex.scaffold.interfaces.handler.DictHandler;
 import com.apex.scaffold.interfaces.handler.FileHandler;
 import com.apex.scaffold.interfaces.handler.HealthHandler;
 import com.apex.scaffold.interfaces.handler.JobHandler;
+import com.apex.scaffold.interfaces.handler.AuditLogHandler;
+import com.apex.scaffold.interfaces.handler.DeptHandler;
+import com.apex.scaffold.interfaces.handler.OnlineUserHandler;
 import com.apex.scaffold.interfaces.handler.LoginLogHandler;
 import com.apex.scaffold.interfaces.handler.MenuHandler;
 import com.apex.scaffold.interfaces.handler.UserHandler;
@@ -140,6 +143,59 @@ public class ApiRouter {
     public RouterFunction<ServerResponse> adminLoginLogRoutes(LoginLogHandler handler) {
         return RouterFunctions.route()
                 .GET("/admin-api/v1/login-logs", handler::list)
+                .build();
+    }
+
+    /**
+     * 系统管理-审计日志路由（/admin-api/v1/audit-logs）。
+     *
+     * <p>提供操作审计日志的分页查询端点，经 {@code RequirePermissionAspect}
+     * 校验 {@code system:audit-log:list} 权限（V4 迁移预置）。</p>
+     *
+     * @param handler 审计日志处理器
+     * @return 审计日志管理路由函数
+     * @since 2.2.0
+     */
+    @Bean
+    public RouterFunction<ServerResponse> adminAuditLogRoutes(AuditLogHandler handler) {
+        return RouterFunctions.route()
+                .GET("/admin-api/v1/audit-logs", handler::list)
+                .build();
+    }
+    /**
+     * 系统管理-部门管理路由（/admin-api/v1/depts）。
+     *
+     * <p>提供部门树与 CRUD 端点（C3 数据权限基础），经
+     * {@code RequirePermissionAspect} 校验 {@code system:dept:*} 权限（V6 迁移预置）。</p>
+     *
+     * @param handler 部门管理处理器
+     * @return 部门管理路由函数
+     * @since 2.2.0
+     */
+    @Bean
+    public RouterFunction<ServerResponse> adminDeptRoutes(DeptHandler handler) {
+        return RouterFunctions.route()
+                .GET("/admin-api/v1/depts", handler::listTree)
+                .GET("/admin-api/v1/depts/{id}", handler::detail)
+                .POST("/admin-api/v1/depts", handler::create)
+                .PUT("/admin-api/v1/depts/{id}", handler::update)
+                .DELETE("/admin-api/v1/depts/{id}", handler::delete)
+                .build();
+    }
+    /**
+     * 系统管理-在线用户路由（/admin-api/v1/online-users）。
+     *
+     * <p>提供在线用户列表查询端点（C4），经 {@code RequirePermissionAspect}
+     * 校验 {@code system:online-user:list} 权限（V5 迁移预置）。</p>
+     *
+     * @param handler 在线用户处理器
+     * @return 在线用户管理路由函数
+     * @since 2.2.0
+     */
+    @Bean
+    public RouterFunction<ServerResponse> adminOnlineUserRoutes(OnlineUserHandler handler) {
+        return RouterFunctions.route()
+                .GET("/admin-api/v1/online-users", handler::list)
                 .build();
     }
 

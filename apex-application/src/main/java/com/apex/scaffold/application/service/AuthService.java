@@ -197,9 +197,38 @@ public class AuthService {
                         .getStrategy(request.getLoginType())
                         .login(request)
                         .flatMap(response ->
-                                recordLoginSuccess(request, clientIp).thenReturn(response))
+                                recordLoginSuccess(request, clientIp)
+                                        .then(Mono.defer(() -> refreshHeartbeat(response)))
+                                        .thenReturn(response))
                         .onErrorResume(
                                 e -> recordLoginFailure(request, clientIp).then(Mono.error(e)))));
+    }
+
+    /**
+     * 登录成功后刷新用户最后心跳时间（在线判定）。
+     *
+     * <p>基于登录响应中的 {@code openId} 查询用户并更新
+     * {@code last_heartbeat_time}，支撑「在线用户列表」按最近
+     * 5 分钟窗口判定在线状态。新用户（openId 为空）跳过。</p>
+     *
+     * @param response 登录响应
+     * @return 心跳更新完成信号
+     * @since 2.2.0
+     */
+    private Mono<Void> refreshHeartbeat(LoginResponse response) {
+        if (response == null || response.getOpenId() == null || response.getOpenId().isBlank()) {
+            return Mono.empty();
+        }
+        Mono<com.apex.scaffold.domain.model.entity.UserEntity> userMono =
+                userService.getByOpenId(response.getOpenId());
+        if (userMono == null) {
+            return Mono.empty();
+        }
+        // 心跳刷新为旁路逻辑：任何异常（含 mock/降级场景）都不应影响登录成功
+        return userMono
+                .flatMap(user -> userService.updateLastHeartbeat(user.getId()))
+                .onErrorResume(e -> Mono.empty())
+                .switchIfEmpty(Mono.empty());
     }
 
     /**

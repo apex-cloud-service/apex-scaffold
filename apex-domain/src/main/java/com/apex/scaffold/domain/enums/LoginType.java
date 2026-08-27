@@ -12,6 +12,7 @@ package com.apex.scaffold.domain.enums;
  *   <li>{@link #WX_SMS} - 微信短信验证码登录：通过短信验证码进行登录</li>
  *   <li>{@link #CL_PHONE} - 创蓝一键登录：通过创蓝闪验SDK token置换手机号进行登录（默认）</li>
  *   <li>{@link #CL_SMS} - 创蓝短信验证码登录：通过创蓝253短信平台发送验证码进行登录</li>
+ *   <li>{@link #PASSWORD} - 账号密码登录：传统用户名+密码（BCrypt），面向管理后台场景</li>
  * </ul>
  *
  * @author Apex Team
@@ -69,5 +70,17 @@ public enum LoginType {
      *
      * @see com.apex.scaffold.domain.service.SmsCodeService
      */
-    CL_SMS
+    CL_SMS,
+
+    /**
+     * 账号密码登录
+     *
+     * <p>传统用户名+密码登录（BCrypt 密码校验），面向管理后台与
+     * 需要账号体系的 B 端场景。由 {@code PasswordLoginStrategy}
+     * 实现，依赖 {@code sys_user.username / password} 字段
+     * （V3 迁移引入）。
+     *
+     * @since 2.2.0
+     */
+    PASSWORD
 }

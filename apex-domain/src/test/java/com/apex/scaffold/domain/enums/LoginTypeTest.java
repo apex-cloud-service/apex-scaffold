@@ -22,12 +22,15 @@ class LoginTypeTest {
     class EnumConstantsTest {
 
         /**
-         * 执行 {@code shouldHaveFiveConstants} 操作。
+         * 执行 {@code shouldHaveSixConstants} 操作。
+         *
+         * <p>v2.2.0 起新增 {@link LoginType#PASSWORD}（账号密码登录）。</p>
          */
         @Test
-        @DisplayName("应包含 5 个枚举常量")
-        void shouldHaveFiveConstants() {
-            assertThat(LoginType.values()).hasSize(5);
+        @DisplayName("应包含 6 个枚举常量（含 PASSWORD）")
+        void shouldHaveSixConstants() {
+            assertThat(LoginType.values()).hasSize(6);
+            assertThat(LoginType.valueOf("PASSWORD")).isEqualTo(LoginType.PASSWORD);
         }
 
         /**

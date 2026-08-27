@@ -34,6 +34,9 @@ import com.apex.scaffold.interfaces.handler.DictHandler;
 import com.apex.scaffold.interfaces.handler.FileHandler;
 import com.apex.scaffold.interfaces.handler.HealthHandler;
 import com.apex.scaffold.interfaces.handler.JobHandler;
+import com.apex.scaffold.interfaces.handler.AuditLogHandler;
+import com.apex.scaffold.interfaces.handler.DeptHandler;
+import com.apex.scaffold.interfaces.handler.OnlineUserHandler;
 import com.apex.scaffold.interfaces.handler.LoginLogHandler;
 import com.apex.scaffold.interfaces.handler.MenuHandler;
 import com.apex.scaffold.interfaces.handler.UserHandler;
@@ -1245,6 +1248,98 @@ public class RouterOpenApiConfig {
     })
     public RouterFunction<ServerResponse> adminLoginLogRoutesDocs() {
         return placeholderRoute("/__openapi_admin_login_log_placeholder");
+    }
+
+    /** 系统管理-审计日志模块在线接口文档。 */
+    @Bean
+    @RouterOperations({
+        @RouterOperation(
+                path = "/admin-api/v1/audit-logs",
+                method = RequestMethod.GET,
+                beanClass = AuditLogHandler.class,
+                beanMethod = "list",
+                operation =
+                        @Operation(
+                                operationId = "adminListAuditLogs",
+                                summary = "分页查询审计日志",
+                                security = @SecurityRequirement(name = "BearerAuth")))
+    })
+    public RouterFunction<ServerResponse> adminAuditLogRoutesDocs() {
+        return placeholderRoute("/__openapi_admin_audit_log_placeholder");
+    }
+    /** 系统管理-部门管理模块在线接口文档。 */
+    @Bean
+    @RouterOperations({
+        @RouterOperation(
+                path = "/admin-api/v1/depts",
+                method = RequestMethod.GET,
+                beanClass = DeptHandler.class,
+                beanMethod = "listTree",
+                operation =
+                        @Operation(
+                                operationId = "adminListDepts",
+                                summary = "查询部门树",
+                                security = @SecurityRequirement(name = "BearerAuth"))),
+        @RouterOperation(
+                path = "/admin-api/v1/depts/{id}",
+                method = RequestMethod.GET,
+                beanClass = DeptHandler.class,
+                beanMethod = "detail",
+                operation =
+                        @Operation(
+                                operationId = "adminGetDept",
+                                summary = "查询部门详情",
+                                security = @SecurityRequirement(name = "BearerAuth"))),
+        @RouterOperation(
+                path = "/admin-api/v1/depts",
+                method = RequestMethod.POST,
+                beanClass = DeptHandler.class,
+                beanMethod = "create",
+                operation =
+                        @Operation(
+                                operationId = "adminCreateDept",
+                                summary = "新增部门",
+                                security = @SecurityRequirement(name = "BearerAuth"))),
+        @RouterOperation(
+                path = "/admin-api/v1/depts/{id}",
+                method = RequestMethod.PUT,
+                beanClass = DeptHandler.class,
+                beanMethod = "update",
+                operation =
+                        @Operation(
+                                operationId = "adminUpdateDept",
+                                summary = "更新部门",
+                                security = @SecurityRequirement(name = "BearerAuth"))),
+        @RouterOperation(
+                path = "/admin-api/v1/depts/{id}",
+                method = RequestMethod.DELETE,
+                beanClass = DeptHandler.class,
+                beanMethod = "delete",
+                operation =
+                        @Operation(
+                                operationId = "adminDeleteDept",
+                                summary = "删除部门",
+                                security = @SecurityRequirement(name = "BearerAuth")))
+    })
+    public RouterFunction<ServerResponse> adminDeptRoutesDocs() {
+        return placeholderRoute("/__openapi_admin_dept_placeholder");
+    }
+    /** 系统管理-在线用户模块在线接口文档。 */
+    @Bean
+    @RouterOperations({
+        @RouterOperation(
+                path = "/admin-api/v1/online-users",
+                method = RequestMethod.GET,
+                beanClass = OnlineUserHandler.class,
+                beanMethod = "list",
+                operation =
+                        @Operation(
+                                operationId = "adminListOnlineUsers",
+                                summary = "分页查询在线用户",
+                                security = @SecurityRequirement(name = "BearerAuth")))
+    })
+    public RouterFunction<ServerResponse> adminOnlineUserRoutesDocs() {
+        return placeholderRoute("/__openapi_admin_online_user_placeholder");
     }
 
     /** 图形验证码模块在线接口文档。 */

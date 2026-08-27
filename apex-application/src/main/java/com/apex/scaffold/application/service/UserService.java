@@ -143,6 +143,22 @@ public class UserService {
     }
 
     /**
+     * 查询：根据登录账号获取用户（账号密码登录）。
+     *
+     * <p>通过 {@code username} 查询用户实体（含 BCrypt 密码哈希），
+     * 供 {@code PasswordLoginStrategy} 认证使用。账号不存在时返回
+     * 空 {@link Mono}，由认证策略统一转换为登录失败错误。</p>
+     *
+     * @param username 登录账号
+     * @return 用户实体（含密码哈希），不存在时返回空 {@code Mono}
+     * @since 2.2.0
+     */
+    public Mono<UserEntity> getByUsername(String username) {
+        log.debug("根据登录账号查询用户，username: {}", username);
+        return userRepository.findByUsername(username);
+    }
+
+    /**
      * 查询：根据ID获取用户
      *
      * <p>
@@ -376,5 +392,35 @@ public class UserService {
     public Mono<PageResponse<UserEntity>> findPage(Integer pageNum, Integer pageSize) {
         log.debug("分页查询用户列表，pageNum: {}, pageSize: {}", pageNum, pageSize);
         return userRepository.findPage(pageNum, pageSize);
+    }
+
+    /**
+     * 更新用户最后心跳时间（在线判定）。
+     *
+     * <p>登录成功与活跃请求时调用，刷新 {@code last_heartbeat_time}；
+     * 供「在线用户列表」按最近 5 分钟窗口判定在线状态。</p>
+     *
+     * @param userId 用户 ID
+     * @return 更新完成信号
+     * @since 2.2.0
+     */
+    public Mono<Void> updateLastHeartbeat(Long userId) {
+        return userRepository.updateLastHeartbeat(userId);
+    }
+
+    /**
+     * 分页查询在线用户。
+     *
+     * <p>在线判定基于 {@code last_heartbeat_time}（最近
+     * {@link com.apex.scaffold.domain.repository.UserRepository#ONLINE_WINDOW_MINUTES}
+     * 分钟内有心跳），按心跳时间倒序返回。</p>
+     *
+     * @param pageNum  页码，从 1 开始
+     * @param pageSize 每页大小
+     * @return 在线用户分页结果
+     * @since 2.2.0
+     */
+    public Mono<PageResponse<UserEntity>> findOnlineUsers(int pageNum, int pageSize) {
+        return userRepository.findOnlineUsers(pageNum, pageSize);
     }
 }

@@ -23,6 +23,9 @@
 CREATE TABLE IF NOT EXISTS sys_user (
   id                    BIGINT NOT NULL COMMENT '主键ID（雪花算法）',
   open_id               VARCHAR(100) COMMENT '微信OpenID（手机号注册用户可为NULL）',
+  username              VARCHAR(50) COMMENT '登录账号（账号密码登录）',
+  dept_id               BIGINT COMMENT '所属部门ID（数据权限）',
+  password              VARCHAR(100) COMMENT '登录密码（BCrypt哈希）',
   union_id              VARCHAR(100) COMMENT '微信UnionID',
   access_token          VARCHAR(512) COMMENT '微信AccessToken',
   refresh_token         VARCHAR(512) COMMENT '微信RefreshToken',
@@ -46,7 +49,8 @@ CREATE TABLE IF NOT EXISTS sys_user (
   version               INT DEFAULT 0 COMMENT '版本号（乐观锁）',
   deleted               INT DEFAULT 0 COMMENT '逻辑删除（0-未删，1-已删）',
   PRIMARY KEY (id),
-  UNIQUE KEY uk_phone (phone)
+  UNIQUE KEY uk_phone (phone),
+  UNIQUE KEY uk_username (username)
 );
 
 -- 1.2 系统角色表 (sys_role) → RolePO
@@ -681,4 +685,24 @@ CREATE TABLE IF NOT EXISTS sys_login_log (
   version     INT DEFAULT 0 COMMENT '版本号（乐观锁）',
   deleted     INT DEFAULT 0 COMMENT '逻辑删除（0-未删，1-已删）',
   PRIMARY KEY (id)
+);
+
+-- 1.x 部门表 (sys_dept) → DeptPO
+CREATE TABLE IF NOT EXISTS sys_dept (
+  id          BIGINT NOT NULL COMMENT '主键ID（雪花算法）',
+  parent_id   BIGINT DEFAULT 0 COMMENT '父部门ID（0为根部门）',
+  ancestors   VARCHAR(255) DEFAULT '' COMMENT '祖级列表（逗号分隔）',
+  name        VARCHAR(50) NOT NULL COMMENT '部门名称',
+  order_num   INT DEFAULT 0 COMMENT '显示顺序',
+  leader      VARCHAR(50) COMMENT '负责人',
+  phone       VARCHAR(20) COMMENT '联系电话',
+  email       VARCHAR(50) COMMENT '邮箱',
+  status      INT DEFAULT 1 COMMENT '状态（0-停用，1-正常）',
+  create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
+  version     INT DEFAULT 0 COMMENT '版本号（乐观锁）',
+  deleted     INT DEFAULT 0 COMMENT '逻辑删除（0-未删，1-已删）',
+  PRIMARY KEY (id),
+  KEY idx_parent_id (parent_id),
+  KEY idx_status (status)
 );

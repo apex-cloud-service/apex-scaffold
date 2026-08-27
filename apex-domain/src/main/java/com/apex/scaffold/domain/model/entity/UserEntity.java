@@ -53,6 +53,27 @@ public class UserEntity extends BaseEntity {
     private String openId;
 
     /**
+     * 登录账号（账号密码登录）。
+     *
+     * <p>传统账号密码登录场景下使用，微信/手机号注册用户可为 {@code null}。
+     * 全局唯一（{@code uk_username} 唯一索引约束），由
+     * {@code PasswordAuthenticationStrategy} 认证时查询。</p>
+     *
+     * @since 2.2.0
+     */
+    private String username;
+
+    /**
+     * 登录密码（BCrypt 哈希）。
+     *
+     * <p>仅账号密码登录使用，存储 {@code BCryptPasswordEncoder} 生成的哈希值，
+     * 禁止存储明文。校验由 {@code PasswordAuthenticationStrategy} 完成。</p>
+     *
+     * @since 2.2.0
+     */
+    private String password;
+
+    /**
      * 微信UnionID
      *
      * <p>用户在微信开放平台的全局唯一标识。

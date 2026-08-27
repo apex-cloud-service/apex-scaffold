@@ -216,6 +216,9 @@ class RouterOpenApiCoverageTest {
                 "adminJobRoutes",
                 "adminConfigRoutes",
                 "adminLoginLogRoutes",
+                "adminAuditLogRoutes",
+                "adminOnlineUserRoutes",
+                "adminDeptRoutes",
                 "captchaRoutes")) {
             Method factory = Arrays.stream(ApiRouter.class.getMethods())
                     .filter(method -> method.getName().equals(factoryName))

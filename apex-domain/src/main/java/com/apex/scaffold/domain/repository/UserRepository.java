@@ -48,6 +48,19 @@ public interface UserRepository {
     Mono<UserEntity> findByPhone(String phone);
 
     /**
+     * 根据登录账号查询用户。
+     *
+     * <p>账号密码登录场景使用：按 {@code username}（{@code uk_username} 唯一索引）
+     * 精确查询，返回用户实体（含 BCrypt 密码哈希）。用户不存在时返回
+     * {@link Mono#empty()}，由认证策略统一转换为登录失败错误。</p>
+     *
+     * @param username 登录账号
+     * @return 用户信息，若不存在则返回 {@code Mono.empty()}
+     * @since 2.2.0
+     */
+    Mono<UserEntity> findByUsername(String username);
+
+    /**
      * 保存用户信息
      *
      * <p>如果用户ID为空，则执行创建操作；否则执行更新操作
@@ -56,6 +69,40 @@ public interface UserRepository {
      * @return 保存后的用户信息
      */
     Mono<UserEntity> save(UserEntity user);
+
+    /**
+     * 更新用户最后心跳时间（在线判定）。
+     *
+     * <p>登录成功与活跃请求时调用，将 {@code last_heartbeat_time} 刷新为当前时间；
+     * 超过 {@link #ONLINE_WINDOW_MINUTES} 分钟未更新的用户视为离线。</p>
+     *
+     * @param userId 用户 ID
+     * @return 更新完成信号
+     * @since 2.2.0
+     */
+    Mono<Void> updateLastHeartbeat(Long userId);
+
+    /**
+     * 分页查询在线用户。
+     *
+     * <p>在线判定：最近 {@link #ONLINE_WINDOW_MINUTES} 分钟内有心跳更新
+     * （{@code last_heartbeat_time} 在窗口内）的用户，按心跳时间倒序返回。</p>
+     *
+     * @param pageNum  页码，从 1 开始
+     * @param pageSize 每页大小
+     * @return 在线用户分页结果
+     * @since 2.2.0
+     */
+    Mono<com.apex.scaffold.common.dto.PageResponse<UserEntity>> findOnlineUsers(int pageNum, int pageSize);
+
+    /**
+     * 在线判定窗口（分钟）。
+     *
+     * <p>最近 {@code ONLINE_WINDOW_MINUTES} 分钟内有心跳的用户视为在线。</p>
+     *
+     * @since 2.2.0
+     */
+    int ONLINE_WINDOW_MINUTES = 5;
 
     /**
      * 根据ID删除用户
