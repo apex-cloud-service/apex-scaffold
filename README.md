@@ -10,13 +10,16 @@ Apex Scaffold 是一个面向中小型企业的**轻量级企业级后端脚手�
 
 ### ✨ 核心特性
 
-- 🏗️ **DDD分层架构** - 清晰的五层架构设计,符合企业级开发规范
-- 🔐 **安全认证** - JWT + Spring Security + RBAC权限控制
+- 🏗️ **DDD分层架构** - 五层架构 + 纯 WebFlux 函数式端点（无 servlet 依赖）
+- 🖥️ **开箱即用的系统管理** - 菜单/字典/参数/定时任务/登录日志管理 + 管理后台控制台
+- ⚙️ **代码生成器** - 按表结构一键生成 DDD 五层代码（entity→Handler 全链路 + 迁移 + 测试）
+- 🔐 **安全认证** - JWT + Spring Security + RBAC + 图形验证码 + 登录审计（等保友好）
 - 💾 **多级缓存** - Redisson + Caffeine 二级缓存策略
 - ⚡ **高可用保障** - Sentinel限流熔断 + Resilience4j容错
 - 📨 **消息队列** - RocketMQ封装,支持异步解耦
-- 📊 **监控告警** - Prometheus + Grafana + Zipkin链路追踪
+- 📊 **可观测性** - Micrometer + Prometheus 指标,Zipkin(Brave)链路追踪,TraceId 贯穿日志
 - 📝 **API文档** - SpringDoc OpenAPI + Knife4j可视化文档
+- 💼 **商业保护** - 三档版本(基础/标准/企业)构建 + License 授权校验 + 双轨许可证
 - 🐳 **容器化部署** - Docker Compose一键启动完整环境
 - 🌍 **国际化支持** - 内置i18n框架,支持多语言切换
 
