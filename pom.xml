@@ -132,6 +132,7 @@
     <module>apex-application</module>
     <module>apex-interfaces</module>
     <module>apex-example</module>
+    <module>apex-generator</module>
   </modules>
   <dependencyManagement>
     <dependencies>

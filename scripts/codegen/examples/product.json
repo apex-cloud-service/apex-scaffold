@@ -1,0 +1,13 @@
+{
+  "module": "demo",
+  "entityName": "Product",
+  "tableName": "biz_product",
+  "tableComment": "商品",
+  "fields": [
+    { "name": "productName", "type": "String", "comment": "商品名称", "required": true },
+    { "name": "price", "type": "BigDecimal", "comment": "销售价格" },
+    { "name": "stock", "type": "Integer", "comment": "库存数量" },
+    { "name": "onSale", "type": "Boolean", "comment": "是否上架" },
+    { "name": "launchAt", "type": "LocalDateTime", "comment": "上架时间" }
+  ]
+}

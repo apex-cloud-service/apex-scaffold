@@ -2,6 +2,12 @@
 
 本项目遵循 [语义化版本规范](https://semver.org/lang/zh-CN/)。
 
+## [1.1.2] - 2026-08-27
+
+### Added
+- 代码生成器（模板开发功能）：新增 apex-generator 独立模块，FreeMarker 模板引擎按表结构一键生成 DDD 五层代码（entity/repository/PO/Mapper/Converter/RepositoryImpl/Service/DTO/Handler + 路由片段 + 迁移片段 + 测试骨架），CLI 入口 scripts/codegen/generate.sh
+- 系统管理种子数据：V2 迁移预置 24 个 system:* 权限码与系统管理菜单树（Flyway 管理）
+
 ## [1.1.1] - 2026-08-27
 
 ### Added

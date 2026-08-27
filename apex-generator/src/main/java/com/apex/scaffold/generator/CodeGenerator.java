@@ -1,0 +1,209 @@
+package com.apex.scaffold.generator;
+
+import freemarker.template.Configuration;
+import freemarker.template.Template;
+import freemarker.template.TemplateExceptionHandler;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
+
+/**
+ * DDD 五层代码生成器引擎。
+ *
+ * <p>基于 FreeMarker 模板，按 {@link TableDefinition} 生成一套完整的
+ * 通用 CRUD 代码：领域实体与仓储、持久化对象与 Mapper/转换器/仓储实现、
+ * 应用服务与 DTO、接口层函数式 Handler，以及路由注册片段、数据库迁移
+ * 片段与单元测试骨架。生成的代码遵循项目既有 Javadoc / Lombok / DDD 规范。</p>
+ *
+ * <h2>输出文件</h2>
+ * <ul>
+ *   <li>{@code domain/model/entity/{Entity}Entity.java}</li>
+ *   <li>{@code domain/repository/{Entity}Repository.java}</li>
+ *   <li>{@code infrastructure/persistence/po/{Entity}PO.java}</li>
+ *   <li>{@code infrastructure/persistence/mapper/{Entity}Mapper.java}</li>
+ *   <li>{@code infrastructure/persistence/converter/{Entity}PoConverter.java}</li>
+ *   <li>{@code infrastructure/persistence/repository/{Entity}RepositoryImpl.java}</li>
+ *   <li>{@code application/dto/{module}/{Entity}Request.java} / {@code {Entity}DTO.java}</li>
+ *   <li>{@code application/service/{Entity}Service.java}</li>
+ *   <li>{@code interfaces/handler/{module}/{Entity}Handler.java}</li>
+ *   <li>路由注册片段、迁移 SQL 片段、Service 单元测试骨架</li>
+ * </ul>
+ *
+ * @author Apex Team
+ * @version 1.0.0
+ * @since 1.0.0
+ */
+@Slf4j
+public class CodeGenerator {
+
+    /**
+     * 生成代码的基础包名。
+     */
+    public static final String BASE_PACKAGE = "com.apex.scaffold";
+
+    /**
+     * 生成代码的作者标识。
+     */
+    public static final String AUTHOR = "Apex Team";
+
+    /**
+     * FreeMarker 配置（类路径模板目录）。
+     */
+    private final Configuration freemarker;
+
+    /**
+     * 构造代码生成器。
+     *
+     * @throws IOException 当模板目录加载失败时抛出
+     */
+    public CodeGenerator() throws IOException {
+        this.freemarker = new Configuration(Configuration.VERSION_2_3_33);
+        this.freemarker.setClassLoaderForTemplateLoading(getClass().getClassLoader(), "templates");
+        this.freemarker.setDefaultEncoding(StandardCharsets.UTF_8.name());
+        this.freemarker.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
+        this.freemarker.setLogTemplateExceptions(false);
+    }
+
+    /**
+     * 依据表定义生成全套代码。
+     *
+     * @param definition 表结构定义
+     * @param outputRoot 输出根目录（包结构在此目录下创建）
+     * @param migrationVersion 迁移脚本版本号（如 3）
+     * @return 生成的文件相对路径列表
+     * @throws IOException 当模板渲染或文件写入失败时抛出
+     */
+    public List<String> generate(TableDefinition definition, Path outputRoot, int migrationVersion) throws IOException {
+        Map<String, Object> model = buildModel(definition, migrationVersion);
+        List<GeneratedFile> files = collectFiles(definition, model);
+
+        for (GeneratedFile file : files) {
+            Path target = outputRoot.resolve(file.path()).normalize();
+            Files.createDirectories(target.getParent());
+            Files.writeString(target, render(file.template(), model), StandardCharsets.UTF_8);
+            log.info("生成: {}", file.path());
+        }
+        return files.stream().map(GeneratedFile::path).toList();
+    }
+
+    /**
+     * 构造 FreeMarker 数据模型。
+     *
+     * @param definition 表结构定义
+     * @param migrationVersion 迁移版本号
+     * @return 数据模型
+     */
+    private Map<String, Object> buildModel(TableDefinition definition, int migrationVersion) {
+        Map<String, Object> model = new HashMap<>();
+        model.put("module", definition.getModule());
+        model.put("entityName", definition.getEntityName());
+        model.put("entityVar", lowerFirst(definition.getEntityName()));
+        model.put("tableName", definition.getTableName());
+        model.put("tableComment", definition.getTableComment());
+        model.put("basePackage", BASE_PACKAGE);
+        model.put("domainPackage", BASE_PACKAGE + ".domain");
+        model.put("infraPackage", BASE_PACKAGE + ".infrastructure");
+        model.put("appPackage", BASE_PACKAGE + ".application");
+        model.put("ifacePackage", BASE_PACKAGE + ".interfaces");
+        model.put("author", AUTHOR);
+        model.put("migrationVersion", migrationVersion);
+
+        List<Map<String, Object>> fields = new ArrayList<>();
+        boolean hasBigDecimal = false;
+        boolean hasLocalDateTime = false;
+        for (FieldDefinition field : definition.getFields()) {
+            Map<String, Object> item = new HashMap<>();
+            item.put("name", field.getName());
+            item.put("type", field.simpleType());
+            item.put("comment", field.getComment());
+            item.put("required", field.isRequired());
+            item.put("columnName", field.columnName());
+            item.put("sqlType", field.sqlType());
+            fields.add(item);
+            hasBigDecimal |= "BigDecimal".equals(field.simpleType());
+            hasLocalDateTime |= "LocalDateTime".equals(field.simpleType());
+        }
+        model.put("fields", fields);
+        model.put("hasBigDecimal", hasBigDecimal);
+        model.put("hasLocalDateTime", hasLocalDateTime);
+        return model;
+    }
+
+    /**
+     * 收集全部待生成文件（模板名 → 输出路径）。
+     *
+     * @param definition 表结构定义
+     * @param model 数据模型
+     * @return 待生成文件列表
+     */
+    private List<GeneratedFile> collectFiles(TableDefinition definition, Map<String, Object> model) {
+        String entity = definition.getEntityName();
+        String module = definition.getModule();
+        String pkgPath = BASE_PACKAGE.replace('.', '/');
+
+        List<GeneratedFile> files = new ArrayList<>();
+        files.add(new GeneratedFile("entity.ftl", pkgPath + "/domain/model/entity/" + entity + "Entity.java"));
+        files.add(new GeneratedFile("repository.ftl", pkgPath + "/domain/repository/" + entity + "Repository.java"));
+        files.add(new GeneratedFile("po.ftl", pkgPath + "/infrastructure/persistence/po/" + entity + "PO.java"));
+        files.add(new GeneratedFile("mapper.ftl", pkgPath + "/infrastructure/persistence/mapper/" + entity + "Mapper.java"));
+        files.add(new GeneratedFile("converter.ftl", pkgPath + "/infrastructure/persistence/converter/" + entity + "PoConverter.java"));
+        files.add(new GeneratedFile(
+                "repositoryImpl.ftl", pkgPath + "/infrastructure/persistence/repository/" + entity + "RepositoryImpl.java"));
+        files.add(new GeneratedFile("dtoRequest.ftl", pkgPath + "/application/dto/" + module + "/" + entity + "Request.java"));
+        files.add(new GeneratedFile("dtoResponse.ftl", pkgPath + "/application/dto/" + module + "/" + entity + "DTO.java"));
+        files.add(new GeneratedFile("service.ftl", pkgPath + "/application/service/" + entity + "Service.java"));
+        files.add(new GeneratedFile("handler.ftl", pkgPath + "/interfaces/handler/" + module + "/" + entity + "Handler.java"));
+        files.add(new GeneratedFile("routerFragment.ftl", "generated/" + entity + "RouterFragment.txt"));
+        files.add(new GeneratedFile(
+                "migrationFragment.ftl", "generated/V" + model.get("migrationVersion") + "__create_" + definition.getTableName() + ".sql"));
+        files.add(new GeneratedFile("serviceTest.ftl", "generated/" + entity + "ServiceTest.java"));
+        return files;
+    }
+
+    /**
+     * 渲染指定模板。
+     *
+     * @param templateName 模板文件名（classpath:templates 下）
+     * @param model 数据模型
+     * @return 渲染后的文本
+     * @throws IOException 当模板加载或渲染失败时抛出
+     */
+    private String render(String templateName, Map<String, Object> model) throws IOException {
+        try {
+            Template template = freemarker.getTemplate(templateName);
+            StringWriter writer = new StringWriter();
+            template.process(model, writer);
+            return writer.toString();
+        } catch (freemarker.template.TemplateException e) {
+            throw new IOException("模板渲染失败: " + templateName, e);
+        }
+    }
+
+    /**
+     * 首字母小写。
+     *
+     * @param value 输入字符串
+     * @return 首字母小写后的字符串
+     */
+    private String lowerFirst(String value) {
+        if (value == null || value.isEmpty()) {
+            return value;
+        }
+        return Character.toLowerCase(value.charAt(0)) + value.substring(1);
+    }
+
+    /**
+     * 待生成文件记录。
+     *
+     * @param template 模板文件名
+     * @param path 输出相对路径
+     */
+    private record GeneratedFile(String template, String path) {}
+}
