@@ -10,6 +10,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.caffeine.CaffeineCacheManager;
 import org.springframework.context.annotation.Bean;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.context.annotation.Configuration;
 
 /**
@@ -47,7 +48,7 @@ import org.springframework.context.annotation.Configuration;
  * @version 1.0.0
  * @since 1.0.0
  */
-@Configuration
+@AutoConfiguration
 @EnableCaching
 public class MultiLevelCacheConfig {
     private static final Logger log = LoggerFactory.getLogger(MultiLevelCacheConfig.class);

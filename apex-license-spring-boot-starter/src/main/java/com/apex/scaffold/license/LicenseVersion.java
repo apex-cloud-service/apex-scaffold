@@ -1,4 +1,4 @@
-package com.apex.scaffold.common.license;
+package com.apex.scaffold.license;
 
 /**
  * License授权版本枚举

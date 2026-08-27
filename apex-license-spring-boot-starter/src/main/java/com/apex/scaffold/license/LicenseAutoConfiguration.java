@@ -1,4 +1,4 @@
-package com.apex.scaffold.common.license;
+package com.apex.scaffold.license;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -8,7 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
 
 /**
  * License自动配置
@@ -24,7 +24,7 @@ import org.springframework.context.annotation.Configuration;
  * @version 2.0.0
  */
 @Slf4j
-@Configuration
+@AutoConfiguration
 @RequiredArgsConstructor
 @EnableConfigurationProperties(LicenseProperties.class)
 @ConditionalOnProperty(name = "apex.license.enabled", havingValue = "true", matchIfMissing = true)

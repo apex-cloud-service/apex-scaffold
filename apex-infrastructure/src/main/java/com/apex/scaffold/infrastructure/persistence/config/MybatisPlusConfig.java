@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.inner.OptimisticLockerInnerInt
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
 
 /**
  * MyBatis-Plus 配置类
@@ -27,7 +27,7 @@ import org.springframework.context.annotation.Configuration;
  * @version 2.1.0
  * @since 1.0.0
  */
-@Configuration
+@AutoConfiguration
 public class MybatisPlusConfig {
     private static final Logger log = LoggerFactory.getLogger(MybatisPlusConfig.class);
 

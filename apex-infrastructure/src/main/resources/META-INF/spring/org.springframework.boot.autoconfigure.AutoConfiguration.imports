@@ -1,0 +1,6 @@
+com.apex.scaffold.infrastructure.persistence.config.MybatisPlusConfig
+com.apex.scaffold.infrastructure.cache.config.MultiLevelCacheConfig
+com.apex.scaffold.infrastructure.storage.config.MinioConfig
+com.apex.scaffold.infrastructure.storage.config.VolcEngineConfig
+com.apex.scaffold.infrastructure.storage.config.DefaultStorageConfiguration
+com.apex.scaffold.infrastructure.remote.config.RemoteApiClientConfig

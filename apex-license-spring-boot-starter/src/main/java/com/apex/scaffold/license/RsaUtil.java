@@ -1,4 +1,4 @@
-package com.apex.scaffold.common.license;
+package com.apex.scaffold.license;
 
 import java.security.*;
 import java.security.spec.PKCS8EncodedKeySpec;

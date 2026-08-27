@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.netty.resources.ConnectionProvider;
 
@@ -32,7 +32,7 @@ import reactor.netty.resources.ConnectionProvider;
  * @version 1.0.0
  * @since 2.1.0
  */
-@Configuration
+@AutoConfiguration
 public class RemoteApiClientConfig {
     private static final Logger log = LoggerFactory.getLogger(RemoteApiClientConfig.class);
 

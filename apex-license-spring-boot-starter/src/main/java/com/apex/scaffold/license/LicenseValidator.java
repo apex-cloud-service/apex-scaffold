@@ -1,4 +1,4 @@
-package com.apex.scaffold.common.license;
+package com.apex.scaffold.license;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;

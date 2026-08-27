@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.apex.scaffold</groupId>
+        <artifactId>apex-scaffold</artifactId>
+        <version>1.1.3</version>
+    </parent>
+
+    <artifactId>apex-license-spring-boot-starter</artifactId>
+    <name>Apex License Spring Boot Starter</name>
+    <description>
+        Apex Scaffold License 授权校验 Spring Boot Starter。
+
+        提供 License 校验、FeatureGate 功能门控切面与发放工具，支持随包分发与独立裁剪：
+        - apex.license.enabled=false 可整体关闭（spring.autoconfigure.exclude 亦可排除）
+        - 无有效 License 时容错降级：基础功能放行、商业功能拒绝
+    </description>
+
+    <dependencies>
+        <!-- Apex 公共模块：依赖其 error/exception/result 与 annotation.FeatureGate -->
+        <dependency>
+            <groupId>com.apex.scaffold</groupId>
+            <artifactId>apex-common</artifactId>
+        </dependency>
+
+        <!-- AOP 切面支持（FeatureGateAspect） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-aop</artifactId>
+        </dependency>
+
+        <!-- Jackson：License JSON 序列化/反序列化 -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- ===== 测试依赖 ===== -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>

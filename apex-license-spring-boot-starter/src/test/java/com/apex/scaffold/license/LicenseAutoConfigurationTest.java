@@ -1,4 +1,4 @@
-package com.apex.scaffold.common.license;
+package com.apex.scaffold.license;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

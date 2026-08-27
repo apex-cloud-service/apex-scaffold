@@ -53,7 +53,7 @@ PUBLIC_KEY="${PUBLIC_KEY:-config/license/public.key}"
 
 if [[ ! -f "${PRIVATE_KEY}" || ! -f "${PUBLIC_KEY}" ]]; then
   echo "错误: 未找到密钥对 ${PRIVATE_KEY} / ${PUBLIC_KEY}"
-  echo "请先运行: java -cp ... com.apex.scaffold.common.license.LicenseGenerator gen-keys <private.key> <public.key>"
+  echo "请先运行: java -cp ... com.apex.scaffold.license.LicenseGenerator gen-keys <private.key> <public.key>"
   exit 1
 fi
 
@@ -65,16 +65,16 @@ if [[ -f "$HOME/.sdkman/bin/sdkman-init.sh" ]]; then
 fi
 CP_FILE="$(mktemp)"
 if command -v mvnd >/dev/null 2>&1; then
-  MAVEN_OPTS="-Xmx512m" mvnd -o -q dependency:build-classpath -pl apex-common -Dmdep.outputFile="${CP_FILE}" 2>/dev/null \
-    || MAVEN_OPTS="-Xmx512m" mvnd -q dependency:build-classpath -pl apex-common -Dmdep.outputFile="${CP_FILE}"
+  MAVEN_OPTS="-Xmx512m" mvnd -o -q dependency:build-classpath -pl apex-license-spring-boot-starter -Dmdep.outputFile="${CP_FILE}" 2>/dev/null \
+    || MAVEN_OPTS="-Xmx512m" mvnd -q dependency:build-classpath -pl apex-license-spring-boot-starter -Dmdep.outputFile="${CP_FILE}"
 elif command -v mvn >/dev/null 2>&1; then
-  mvn -q -o dependency:build-classpath -pl apex-common -Dmdep.outputFile="${CP_FILE}" 2>/dev/null \
-    || mvn -q dependency:build-classpath -pl apex-common -Dmdep.outputFile="${CP_FILE}"
+  mvn -q -o dependency:build-classpath -pl apex-license-spring-boot-starter -Dmdep.outputFile="${CP_FILE}" 2>/dev/null \
+    || mvn -q dependency:build-classpath -pl apex-license-spring-boot-starter -Dmdep.outputFile="${CP_FILE}"
 else
   echo "❌ 未找到 mvnd/mvn，请先安装: sdk install mvnd"
   exit 1
 fi
-CP="apex-common/target/classes:$(cat "${CP_FILE}")"
+CP="apex-license-spring-boot-starter/target/classes:$(cat "${CP_FILE}")"
 rm -f "${CP_FILE}"
 
 OUTPUT_DIR_DEFAULT="dist/license"
@@ -82,7 +82,7 @@ VERSION_LOWER="$(printf '%s' "${VERSION}" | tr '[:upper:]' '[:lower:]')"
 OUTPUT="${OUTPUT_DIR:-${OUTPUT_DIR_DEFAULT}}/${VERSION_LOWER}-${DAYS}d-$(date +%Y%m%d).json"
 mkdir -p "$(dirname "${OUTPUT}")"
 
-java -cp "${CP}" com.apex.scaffold.common.license.LicenseGenerator \
+java -cp "${CP}" com.apex.scaffold.license.LicenseGenerator \
   gen-license "${PRIVATE_KEY}" "${PUBLIC_KEY}" "${OUTPUT}" "${VERSION}" "${CUSTOMER}" "${DAYS}" "${FEATURES}"
 
 echo ""

@@ -4,7 +4,7 @@ import com.apex.scaffold.domain.service.StorageService;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.context.annotation.Primary;
 
 /**
@@ -18,7 +18,7 @@ import org.springframework.context.annotation.Primary;
  * @version 1.0.0
  * @since 1.0.0
  */
-@Configuration
+@AutoConfiguration
 public class DefaultStorageConfiguration {
 
     /**

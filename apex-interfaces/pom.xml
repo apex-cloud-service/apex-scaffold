@@ -31,6 +31,11 @@
             <groupId>com.apex.scaffold</groupId>
             <artifactId>apex-domain</artifactId>
         </dependency>
+        <!-- License 授权校验 Starter：License 校验 + FeatureGate 功能门控切面 -->
+        <dependency>
+            <groupId>com.apex.scaffold</groupId>
+            <artifactId>apex-license-spring-boot-starter</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>org.projectlombok</groupId>

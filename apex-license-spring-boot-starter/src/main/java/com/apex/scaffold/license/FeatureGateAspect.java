@@ -1,4 +1,4 @@
-package com.apex.scaffold.common.license;
+package com.apex.scaffold.license;
 
 import com.apex.scaffold.common.annotation.FeatureGate;
 import com.apex.scaffold.common.error.ErrorCode;
