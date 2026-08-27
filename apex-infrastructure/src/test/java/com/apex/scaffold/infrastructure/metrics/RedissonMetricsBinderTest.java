@@ -112,7 +112,7 @@ class RedissonMetricsBinderTest {
         assertEquals(0.0, registry.get("redisson.healthy").gauge().value());
 
         // 探测抛异常
-        registry.getMeters().clear();
+        MeterRegistry boomRegistry = new SimpleMeterRegistry();
         RedissonClient boomClient = mock(RedissonClient.class);
         NodesGroup<Node> boomGroup = mock(NodesGroup.class);
         Node boomNode = mock(Node.class);
@@ -121,8 +121,8 @@ class RedissonMetricsBinderTest {
         when(boomNode.ping(anyLong(), eq(TimeUnit.MILLISECONDS))).thenThrow(new RuntimeException("conn refused"));
         ObjectProvider<RedissonClient> boomProvider = mock(ObjectProvider.class);
         when(boomProvider.getIfAvailable()).thenReturn(boomClient);
-        RedissonMetricsBinder binder2 = new RedissonMetricsBinder(registry, boomProvider);
+        RedissonMetricsBinder binder2 = new RedissonMetricsBinder(boomRegistry, boomProvider);
         binder2.bindOnReady();
-        assertEquals(0.0, registry.get("redisson.healthy").gauge().value());
+        assertEquals(0.0, boomRegistry.get("redisson.healthy").gauge().value());
     }
 }
