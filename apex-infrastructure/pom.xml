@@ -28,6 +28,16 @@
             <artifactId>apex-common</artifactId>
         </dependency>
 
+        <!-- EasyExcel：Excel 导入导出（C5） -->
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>easyexcel</artifactId>
+        </dependency>
+        <!-- JavaMail：邮件发送（C7） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>

@@ -43,6 +43,17 @@ spring:
   application:
     # 应用名称：服务注册名 + 配置中心配置标识（⚠️ 须与 bootstrap.yml 一致）
     name: apex-scaffold
+  # ---------- 邮件发送（C7） ----------
+  mail:
+    # SMTP 服务器（环境变量注入；空配置时发送会报错，业务方可捕获降级）
+    host: ${MAIL_HOST:}
+    port: ${MAIL_PORT:465}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    default-encoding: UTF-8
+    # 465(SSL) 或 587(STARTTLS)
+    properties:
+      mail.smtp.ssl.enable: true
   profiles:
     # 默认激活环境（dev/basic/standard/enterprise/prod）
     active: dev

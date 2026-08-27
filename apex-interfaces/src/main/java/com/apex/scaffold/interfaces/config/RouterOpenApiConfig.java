@@ -36,6 +36,8 @@ import com.apex.scaffold.interfaces.handler.HealthHandler;
 import com.apex.scaffold.interfaces.handler.JobHandler;
 import com.apex.scaffold.interfaces.handler.AuditLogHandler;
 import com.apex.scaffold.interfaces.handler.DeptHandler;
+import com.apex.scaffold.interfaces.handler.ExcelExportHandler;
+import com.apex.scaffold.interfaces.handler.NotificationSseHandler;
 import com.apex.scaffold.interfaces.handler.OnlineUserHandler;
 import com.apex.scaffold.interfaces.handler.LoginLogHandler;
 import com.apex.scaffold.interfaces.handler.MenuHandler;
@@ -1323,6 +1325,41 @@ public class RouterOpenApiConfig {
     })
     public RouterFunction<ServerResponse> adminDeptRoutesDocs() {
         return placeholderRoute("/__openapi_admin_dept_placeholder");
+    }
+    /** 数据导出-Excel 在线接口文档。 */
+    @Bean
+    @RouterOperations({
+        @RouterOperation(
+                path = "/admin-api/v1/export/users",
+                method = RequestMethod.GET,
+                beanClass = ExcelExportHandler.class,
+                beanMethod = "exportUsers",
+                operation =
+                        @Operation(
+                                operationId = "adminExportUsers",
+                                summary = "导出用户列表（xlsx）",
+                                security = @SecurityRequirement(name = "BearerAuth")))
+    })
+    public RouterFunction<ServerResponse> adminExportRoutesDocs() {
+        return placeholderRoute("/__openapi_admin_export_placeholder");
+    }
+
+    /** 站内通知 SSE 在线接口文档。 */
+    @Bean
+    @RouterOperations({
+        @RouterOperation(
+                path = "/api/v1/notifications/stream",
+                method = RequestMethod.GET,
+                beanClass = NotificationSseHandler.class,
+                beanMethod = "stream",
+                operation =
+                        @Operation(
+                                operationId = "streamNotifications",
+                                summary = "订阅当前用户通知流（SSE）",
+                                security = @SecurityRequirement(name = "BearerAuth")))
+    })
+    public RouterFunction<ServerResponse> notificationSseRoutesDocs() {
+        return placeholderRoute("/__openapi_notification_sse_placeholder");
     }
     /** 系统管理-在线用户模块在线接口文档。 */
     @Bean

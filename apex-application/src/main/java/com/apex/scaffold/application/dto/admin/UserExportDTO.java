@@ -1,0 +1,82 @@
+package com.apex.scaffold.application.dto.admin;
+
+import com.alibaba.excel.annotation.ExcelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
+import java.time.LocalDateTime;
+
+/**
+ * 用户导出 DTO（Excel 表头定义）。
+ *
+ * <p>供 {@code ExcelExportService} 导出用户列表使用，{@code @ExcelProperty}
+ * 标注列名与顺序（C5 Excel 导入导出示例）。</p>
+ *
+ * @author Apex Team
+ * @version 1.0.0
+ * @since 2.2.0
+ */
+@Schema(description = "用户导出模型")
+public class UserExportDTO {
+
+    /** 用户 ID */
+    @ExcelProperty("用户ID")
+    private Long id;
+
+    /** 登录账号 */
+    @ExcelProperty("登录账号")
+    private String username;
+
+    /** 昵称 */
+    @ExcelProperty("昵称")
+    private String nickName;
+
+    /** 手机号 */
+    @ExcelProperty("手机号")
+    private String phone;
+
+    /** 状态 */
+    @ExcelProperty("状态")
+    private Integer status;
+
+    /** 最后登录时间 */
+    @ExcelProperty("最后登录时间")
+    private LocalDateTime lastLoginTime;
+
+    /** 无参构造 */
+    public UserExportDTO() {}
+
+    /** @return 用户 ID */
+    public Long getId() { return id; }
+
+    /** @param id 用户 ID */
+    public void setId(Long id) { this.id = id; }
+
+    /** @return 登录账号 */
+    public String getUsername() { return username; }
+
+    /** @param username 登录账号 */
+    public void setUsername(String username) { this.username = username; }
+
+    /** @return 昵称 */
+    public String getNickName() { return nickName; }
+
+    /** @param nickName 昵称 */
+    public void setNickName(String nickName) { this.nickName = nickName; }
+
+    /** @return 手机号 */
+    public String getPhone() { return phone; }
+
+    /** @param phone 手机号 */
+    public void setPhone(String phone) { this.phone = phone; }
+
+    /** @return 状态 */
+    public Integer getStatus() { return status; }
+
+    /** @param status 状态 */
+    public void setStatus(Integer status) { this.status = status; }
+
+    /** @return 最后登录时间 */
+    public LocalDateTime getLastLoginTime() { return lastLoginTime; }
+
+    /** @param lastLoginTime 最后登录时间 */
+    public void setLastLoginTime(LocalDateTime lastLoginTime) { this.lastLoginTime = lastLoginTime; }
+}

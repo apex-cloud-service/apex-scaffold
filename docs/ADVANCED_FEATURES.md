@@ -1,0 +1,116 @@
+# 高级功能使用指南（C5-C9）
+
+> 版本：v2.2.0（2026-08-27）
+> 覆盖：Excel 导入导出 / SSE 通知推送 / 邮件发送 / 国际化补全 / 读写分离示例
+
+---
+
+## 1. Excel 导入导出（C5）
+
+### 能力
+- `ExcelExportService`（apex-infrastructure/excel）：基于 EasyExcel 将任意 DTO 列表导出为 xlsx 字节流。
+- 示例端点：`GET /admin-api/v1/export/users`（导出用户列表，需 `system:user:list` 权限）。
+
+### 用法
+```java
+// 1. 定义表头 DTO（@ExcelProperty 标注列名与顺序）
+@ExcelProperty("用户名") private String username;
+
+// 2. 调用导出服务
+byte[] bytes = excelExportService.export("用户列表", UserExportDTO.class, rows);
+```
+
+### 扩展
+- 新增导出：参照 `ExcelExportHandler.exportUsers`，在 `ApiRouter` 注册新路由并同步 `RouterOpenApiConfig` 文档声明（覆盖测试强制）。
+- 导入：EasyExcel 的 `read()` 监听器模式接入即可，脚手架未内置导入端点（按业务需要扩展）。
+
+---
+
+## 2. SSE 站内通知推送（C6）
+
+### 能力
+- `NotificationService`（apex-infrastructure/notification）：基于 Reactor `Sinks` 的进程内发布-订阅。
+- 端点：`GET /api/v1/notifications/stream`（SSE，按认证 Principal 定向推送，30s 心跳保活）。
+
+### 用法
+```java
+// 业务方发布通知（如订单状态变更、审核结果）
+notificationService.publish(userOpenId, "您的订单已发货");
+
+// 客户端订阅（EventSource）
+const es = new EventSource('/api/v1/notifications/stream');
+es.addEventListener('notification', e => console.log(e.data));
+```
+
+### 设计说明
+- 单实例进程内广播；多实例横向扩展需将 `NotificationService.publish` 桥接到 RocketMQ 广播（`biz_system_message` 表已预留）。
+- 未认证请求返回 401。
+
+---
+
+## 3. 邮件发送（C7）
+
+### 能力
+- `MailService`（apex-infrastructure/mail）：`sendSimple`（文本）/ `sendHtml`（富文本）。
+- 配置：`application.yml` → `spring.mail.*`（host/port/username/password 环境变量注入）。
+
+### 用法
+```java
+mailService.sendSimple("user@example.com", "欢迎注册", "您的账号已创建");
+mailService.sendHtml("user@example.com", "重置密码", "<h1>点击链接重置密码</h1>");
+```
+
+### 配置（application.yml）
+```yaml
+spring:
+  mail:
+    host: ${MAIL_HOST:}
+    port: ${MAIL_PORT:465}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail.smtp.ssl.enable: true
+```
+
+### 说明
+- SMTP 未配置时发送调用抛异常，业务方按需捕获降级（如告警邮件失败仅记日志）。
+- 465 用 SSL、587 用 STARTTLS（`mail.smtp.ssl.enable` 相应调整）。
+
+---
+
+## 4. 国际化全量覆盖（C8）
+
+- ResultCode 全部消息键（102 个）已覆盖 **4 语言**（zh_CN / zh_TW / en_US / th_TH），零缺失。
+- 新增错误码必须同步 4 语言文件（`i18n/messages_*.properties`），否则 `MessageUtils` 回退默认文案。
+- 本次清理：删除已移除业务域死枚举 `GOLDEN_EYE_TRIGGERED(4203)`（无引用）。
+
+---
+
+## 5. 多数据源读写分离示例（C9）
+
+### 现状
+- `dynamic-datasource` 已集成，`application-prod.yml` 主库（master，Druid）配置完整。
+- 从库（slave）配置以注释形式提供（`DB_SLAVE_URL/USERNAME/PASSWORD` 环境变量）。
+
+### 启用步骤
+1. 取消 `application-prod.yml` 中 `slave` 数据源块注释，注入真实从库地址。
+2. 在只读方法上标注 `@DS("slave")`（如报表查询）：
+```java
+@DS("slave")
+public Mono<List<OrderDTO>> listReport() {
+    return orderRepository.findReport();
+}
+```
+3. 未配置 slave 时 `strict=false` 自动回退 primary（安全兜底）。
+
+### 注意事项
+- **主从延迟**：读多写少、对一致性不敏感的场景（报表/列表）才建议使用。
+- 写操作禁止走 slave；事务方法内 @DS 以方法级为准。
+- 本地/测试环境无 slave，示例默认关闭。
+
+---
+
+## 关联文档
+- 架构分层与端口规范：[ARCHITECTURE_USAGE_GUIDE.md](ARCHITECTURE_USAGE_GUIDE.md)
+- 配置符号规范与键说明：[CONFIGURATION.md](CONFIGURATION.md)
+- 接口文档：启动后访问 `/doc.html`（Knife4j）

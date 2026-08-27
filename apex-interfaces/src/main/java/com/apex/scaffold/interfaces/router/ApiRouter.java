@@ -14,6 +14,8 @@ import com.apex.scaffold.interfaces.handler.HealthHandler;
 import com.apex.scaffold.interfaces.handler.JobHandler;
 import com.apex.scaffold.interfaces.handler.AuditLogHandler;
 import com.apex.scaffold.interfaces.handler.DeptHandler;
+import com.apex.scaffold.interfaces.handler.ExcelExportHandler;
+import com.apex.scaffold.interfaces.handler.NotificationSseHandler;
 import com.apex.scaffold.interfaces.handler.OnlineUserHandler;
 import com.apex.scaffold.interfaces.handler.LoginLogHandler;
 import com.apex.scaffold.interfaces.handler.MenuHandler;
@@ -180,6 +182,38 @@ public class ApiRouter {
                 .POST("/admin-api/v1/depts", handler::create)
                 .PUT("/admin-api/v1/depts/{id}", handler::update)
                 .DELETE("/admin-api/v1/depts/{id}", handler::delete)
+                .build();
+    }
+    /**
+     * 数据导出路由（/admin-api/v1/export/users）。
+     *
+     * <p>提供 Excel 导出端点（C5），经 {@code RequirePermissionAspect}
+     * 校验 {@code system:user:list} 权限。</p>
+     *
+     * @param handler Excel 导出处理器
+     * @return 导出路由函数
+     * @since 2.2.0
+     */
+    @Bean
+    public RouterFunction<ServerResponse> adminExportRoutes(ExcelExportHandler handler) {
+        return RouterFunctions.route()
+                .GET("/admin-api/v1/export/users", handler::exportUsers)
+                .build();
+    }
+
+    /**
+     * 站内通知 SSE 路由（/api/v1/notifications/stream）。
+     *
+     * <p>提供实时通知推送端点（C6），基于认证 Principal 定向推送。</p>
+     *
+     * @param handler SSE 通知处理器
+     * @return SSE 推送路由函数
+     * @since 2.2.0
+     */
+    @Bean
+    public RouterFunction<ServerResponse> notificationSseRoutes(NotificationSseHandler handler) {
+        return RouterFunctions.route()
+                .GET("/api/v1/notifications/stream", handler::stream)
                 .build();
     }
     /**

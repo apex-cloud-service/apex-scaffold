@@ -167,6 +167,21 @@ spring:
             connection-properties: druid.stat.mergeSql=false;druid.stat.slowSqlMillis=5000
             # 关闭全局数据源统计，仅保留单数据源级别的统计。
             use-global-data-source-stat: false
+        # （C9 读写分离示例）从库（只读）。按需启用：取消注释并在服务方法上标注
+        #   @DS("slave") 即可路由到从库；未配置时 strict=false 自动回退 primary。
+        # ⚠️ 主从延迟：读多写少且对一致性不敏感的场景（如报表/列表）才使用。
+        # slave:
+        #   url: ${DB_SLAVE_URL:}
+        #   username: ${DB_SLAVE_USERNAME:}
+        #   password: ${DB_SLAVE_PASSWORD:}
+        #   type: com.alibaba.druid.pool.DruidDataSource
+        #   druid:
+        #     db-type: mysql
+        #     initial-size: 5
+        #     min-idle: 5
+        #     max-active: 20
+        #     filters: stat
+        #     use-global-data-source-stat: false
 
   # ----------------------------------------------------------
   #  1.5 Redis 缓存连接（Spring Data Redis + Lettuce）
