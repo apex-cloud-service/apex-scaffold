@@ -4,7 +4,7 @@ import static com.apex.scaffold.common.scheduler.BlockingIoSchedulers.cache;
 
 import com.apex.scaffold.common.annotation.UserRateLimit;
 import com.apex.scaffold.common.exception.BusinessException;
-import com.apex.scaffold.infrastructure.ratelimit.local.LocalRateLimiter;
+import com.apex.scaffold.common.util.ratelimit.LocalRateLimiter;
 import java.lang.reflect.Method;
 import java.util.UUID;
 import java.util.stream.IntStream;

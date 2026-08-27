@@ -1,6 +1,7 @@
 package com.apex.scaffold.interfaces.handler;
 
 import com.apex.scaffold.application.dto.admin.ConfigRequest;
+import com.apex.scaffold.application.dto.admin.StatusRequest;
 import com.apex.scaffold.application.service.ConfigService;
 import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.annotation.RequirePermission;
@@ -70,7 +71,7 @@ public class ConfigHandler extends BaseHandler {
     @RequirePermission("system:config:list")
     @Operation(operationId = "adminListConfigs", summary = "查询参数配置列表")
     public Mono<ServerResponse> list(ServerRequest request) {
-        return configService.listConfigs().flatMap(this::ok);
+        return configService.listConfigs().flatMap(this::buildSuccess);
     }
 
     /**
@@ -83,7 +84,7 @@ public class ConfigHandler extends BaseHandler {
     @RequirePermission("system:config:query")
     @Operation(operationId = "adminGetConfig", summary = "查询参数配置详情")
     public Mono<ServerResponse> detail(ServerRequest request) {
-        return configService.getConfig(configId(request)).flatMap(this::ok);
+        return configService.getConfig(requirePositiveId(request)).flatMap(this::buildSuccess);
     }
 
     /**
@@ -97,11 +98,9 @@ public class ConfigHandler extends BaseHandler {
     @Operation(operationId = "adminCreateConfig", summary = "创建参数配置")
     @OperationLog(module = "参数配置", type = OperationLog.OperationType.INSERT, description = "创建参数配置")
     public Mono<ServerResponse> create(ServerRequest request) {
-        return request.bodyToMono(ConfigRequest.class)
-                .switchIfEmpty(Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "请求体不能为空")))
-                .flatMap(this::validateAndThrow)
+        return parseBody(request, ConfigRequest.class)
                 .flatMap(configService::createConfig)
-                .flatMap(this::ok);
+                .flatMap(this::buildSuccess);
     }
 
     /**
@@ -115,12 +114,10 @@ public class ConfigHandler extends BaseHandler {
     @Operation(operationId = "adminUpdateConfig", summary = "更新参数配置")
     @OperationLog(module = "参数配置", type = OperationLog.OperationType.UPDATE, description = "更新参数配置")
     public Mono<ServerResponse> update(ServerRequest request) {
-        Long id = configId(request);
-        return request.bodyToMono(ConfigRequest.class)
-                .switchIfEmpty(Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "请求体不能为空")))
-                .flatMap(this::validateAndThrow)
+        Long id = requirePositiveId(request);
+        return parseBody(request, ConfigRequest.class)
                 .flatMap(body -> configService.updateConfig(id, body))
-                .flatMap(this::ok);
+                .flatMap(this::buildSuccess);
     }
 
     /**
@@ -137,8 +134,8 @@ public class ConfigHandler extends BaseHandler {
     @OperationLog(module = "参数配置", type = OperationLog.OperationType.DELETE, description = "删除参数配置")
     public Mono<ServerResponse> delete(ServerRequest request) {
         return configService
-                .deleteConfig(configId(request))
-                .flatMap(deleted -> ok(java.util.Map.of("deleted", deleted)));
+                .deleteConfig(requirePositiveId(request))
+                .flatMap(deleted -> buildSuccess(java.util.Map.of("deleted", deleted)));
     }
 
     /**
@@ -152,70 +149,9 @@ public class ConfigHandler extends BaseHandler {
     @Operation(operationId = "adminUpdateConfigStatus", summary = "启用或停用参数配置")
     @OperationLog(module = "参数配置", type = OperationLog.OperationType.UPDATE, description = "更新参数配置状态")
     public Mono<ServerResponse> updateStatus(ServerRequest request) {
-        Long id = configId(request);
-        return request.bodyToMono(StatusRequest.class)
-                .switchIfEmpty(Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "请求体不能为空")))
-                .flatMap(this::validateAndThrow)
+        Long id = requirePositiveId(request);
+        return parseBody(request, StatusRequest.class)
                 .flatMap(body -> configService.updateConfigStatus(id, body.isEnabled()))
-                .flatMap(this::ok);
-    }
-
-    /**
-     * 解析并校验路径参数 {@code id}。
-     *
-     * @param request HTTP 请求
-     * @return 大于 0 的参数配置 ID
-     * @throws BusinessException 当参数缺失、非数字或不大于 0 时抛出
-     */
-    private Long configId(ServerRequest request) {
-        Long id = safeParseLong(request.pathVariable("id"));
-        if (id == null || id <= 0) throw new BusinessException(ResultCode.PARAM_ERROR, "id格式错误");
-        return id;
-    }
-
-    /**
-     * 构造统一 JSON 成功响应。
-     *
-     * @param data 业务数据，可为 {@code null}
-     * @return 携带当前 traceId 的 200 JSON 响应
-     */
-    private <T> Mono<ServerResponse> ok(T data) {
-        return ServerResponse.ok()
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(Result.success(data, TraceIdUtil.getTraceId()));
-    }
-
-    /**
-     * 状态更新请求体。
-     *
-     * <p>仅承载 {@code enabled} 布尔值，表示启用或停用目标对象。</p>
-     */
-    public static class StatusRequest {
-
-        /** 是否启用：true-启用，false-停用 */
-        private boolean enabled;
-
-        /**
-         * 构造状态更新请求体。
-         */
-        public StatusRequest() {}
-
-        /**
-         * 获取是否启用。
-         *
-         * @return true-启用，false-停用
-         */
-        public boolean isEnabled() {
-            return enabled;
-        }
-
-        /**
-         * 设置是否启用。
-         *
-         * @param enabled true-启用，false-停用
-         */
-        public void setEnabled(boolean enabled) {
-            this.enabled = enabled;
-        }
+                .flatMap(this::buildSuccess);
     }
 }

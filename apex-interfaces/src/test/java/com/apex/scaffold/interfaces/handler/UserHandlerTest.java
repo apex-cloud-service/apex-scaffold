@@ -3,6 +3,7 @@ package com.apex.scaffold.interfaces.handler;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -69,6 +70,9 @@ class UserHandlerTest {
      */
     @BeforeEach
     void setUp() {
+        // 统一为 buildError 的国际化解析提供默认消息（重构后错误响应走 MessageUtils）
+        when(messageUtils.get(anyString())).thenReturn(Mono.just("错误消息"));
+        when(messageUtils.get(anyString(), any())).thenReturn(Mono.just("错误消息"));
         handler = new UserHandler(userService, userAssembler, requestHandlerUtil, messageUtils);
     }
 

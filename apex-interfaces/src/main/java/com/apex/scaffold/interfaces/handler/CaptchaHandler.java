@@ -64,7 +64,7 @@ public class CaptchaHandler extends BaseHandler {
      */
     @Operation(operationId = "getCaptcha", summary = "获取图形验证码")
     public Mono<ServerResponse> generate(ServerRequest request) {
-        return captchaService.generate().flatMap(this::ok);
+        return captchaService.generate().flatMap(this::buildSuccess);
     }
 
     /**
@@ -81,19 +81,7 @@ public class CaptchaHandler extends BaseHandler {
         return request.bodyToMono(CaptchaVerifyRequest.class)
                 .defaultIfEmpty(new CaptchaVerifyRequest())
                 .flatMap(body -> captchaService.verify(body.getCaptchaId(), body.getCode()))
-                .flatMap(valid -> ok(java.util.Map.of("valid", valid)));
-    }
-
-    /**
-     * 构造统一 JSON 成功响应。
-     *
-     * @param data 业务数据，可为 {@code null}
-     * @return 携带当前 traceId 的 200 JSON 响应
-     */
-    private <T> Mono<ServerResponse> ok(T data) {
-        return ServerResponse.ok()
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(Result.success(data, TraceIdUtil.getTraceId()));
+                .flatMap(valid -> buildSuccess(java.util.Map.of("valid", valid)));
     }
 
     /**

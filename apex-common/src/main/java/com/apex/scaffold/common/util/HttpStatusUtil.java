@@ -23,6 +23,7 @@ import org.springframework.http.HttpStatus;
  *       <td>范围匹配：资源不存在的细分错误码</td></tr>
  *   <tr><td>4202</td><td>409 Conflict</td><td>对局已结算，不允许重复提交</td></tr>
  *   <tr><td>4204</td><td>404 Not Found</td><td>暂无目标性别照片（候选池枯竭）</td></tr>
+ *   <tr><td>4001</td><td>404 Not Found</td><td>用户不存在（资源不存在语义）</td></tr>
  *   <tr><td>其他 400~499</td><td>400 Bad Request</td><td>通用客户端错误</td></tr>
  *   <tr><td>4600~4699</td><td>400 Bad Request</td><td>文件校验错误</td></tr>
  *   <tr><td>null 或 ≥500</td><td>500 Internal Server Error</td><td>服务器错误</td></tr>
@@ -113,6 +114,13 @@ public class HttpStatusUtil {
         }
         if (ResultCode.NO_TARGET_GENDER_PHOTO.getCode().equals(code)
                 || ResultCode.NO_SINGLE_RECOMMENDATION.getCode().equals(code)) {
+            return HttpStatus.NOT_FOUND;
+        }
+        // USER_NOT_FOUND(4001)：资源不存在语义，映射 404 Not Found
+        // （v2.2.0 起：UserHandler 错误响应收敛至 BaseHandler.buildError 后，
+        //  原内联 404 行为由本映射统一承接，AccountDeletion/Profile 等
+        //  业务异常亦随之从 500 修正为 404）
+        if (ResultCode.USER_NOT_FOUND.getCode().equals(code)) {
             return HttpStatus.NOT_FOUND;
         }
         if (ResultCode.PIN_DAILY_LIMIT_REACHED.getCode().equals(code)) {

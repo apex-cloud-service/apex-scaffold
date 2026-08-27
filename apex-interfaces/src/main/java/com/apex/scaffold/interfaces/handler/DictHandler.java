@@ -2,6 +2,7 @@ package com.apex.scaffold.interfaces.handler;
 
 import com.apex.scaffold.application.dto.admin.DictDataRequest;
 import com.apex.scaffold.application.dto.admin.DictTypeRequest;
+import com.apex.scaffold.application.dto.admin.StatusRequest;
 import com.apex.scaffold.application.service.DictService;
 import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.annotation.RequirePermission;
@@ -79,7 +80,7 @@ public class DictHandler extends BaseHandler {
     @RequirePermission("system:dict:list")
     @Operation(operationId = "adminListDictTypes", summary = "查询字典类型列表")
     public Mono<ServerResponse> listTypes(ServerRequest request) {
-        return dictService.listTypes().flatMap(this::ok);
+        return dictService.listTypes().flatMap(this::buildSuccess);
     }
 
     /**
@@ -92,7 +93,7 @@ public class DictHandler extends BaseHandler {
     @RequirePermission("system:dict:query")
     @Operation(operationId = "adminGetDictType", summary = "查询字典类型详情")
     public Mono<ServerResponse> getType(ServerRequest request) {
-        return dictService.getType(typeId(request)).flatMap(this::ok);
+        return dictService.getType(requirePositiveId(request)).flatMap(this::buildSuccess);
     }
 
     /**
@@ -106,11 +107,9 @@ public class DictHandler extends BaseHandler {
     @Operation(operationId = "adminCreateDictType", summary = "创建字典类型")
     @OperationLog(module = "字典管理", type = OperationLog.OperationType.INSERT, description = "创建字典类型")
     public Mono<ServerResponse> createType(ServerRequest request) {
-        return request.bodyToMono(DictTypeRequest.class)
-                .switchIfEmpty(Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "请求体不能为空")))
-                .flatMap(this::validateAndThrow)
+        return parseBody(request, DictTypeRequest.class)
                 .flatMap(dictService::createType)
-                .flatMap(this::ok);
+                .flatMap(this::buildSuccess);
     }
 
     /**
@@ -124,12 +123,10 @@ public class DictHandler extends BaseHandler {
     @Operation(operationId = "adminUpdateDictType", summary = "更新字典类型")
     @OperationLog(module = "字典管理", type = OperationLog.OperationType.UPDATE, description = "更新字典类型")
     public Mono<ServerResponse> updateType(ServerRequest request) {
-        Long id = typeId(request);
-        return request.bodyToMono(DictTypeRequest.class)
-                .switchIfEmpty(Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "请求体不能为空")))
-                .flatMap(this::validateAndThrow)
+        Long id = requirePositiveId(request);
+        return parseBody(request, DictTypeRequest.class)
                 .flatMap(body -> dictService.updateType(id, body))
-                .flatMap(this::ok);
+                .flatMap(this::buildSuccess);
     }
 
     /**
@@ -143,7 +140,7 @@ public class DictHandler extends BaseHandler {
     @Operation(operationId = "adminDeleteDictType", summary = "删除字典类型")
     @OperationLog(module = "字典管理", type = OperationLog.OperationType.DELETE, description = "删除字典类型")
     public Mono<ServerResponse> deleteType(ServerRequest request) {
-        return dictService.deleteType(typeId(request)).flatMap(deleted -> ok(java.util.Map.of("deleted", deleted)));
+        return dictService.deleteType(requirePositiveId(request)).flatMap(deleted -> buildSuccess(java.util.Map.of("deleted", deleted)));
     }
 
     /**
@@ -157,12 +154,10 @@ public class DictHandler extends BaseHandler {
     @Operation(operationId = "adminUpdateDictTypeStatus", summary = "启用或停用字典类型")
     @OperationLog(module = "字典管理", type = OperationLog.OperationType.UPDATE, description = "更新字典类型状态")
     public Mono<ServerResponse> updateTypeStatus(ServerRequest request) {
-        Long id = typeId(request);
-        return request.bodyToMono(StatusRequest.class)
-                .switchIfEmpty(Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "请求体不能为空")))
-                .flatMap(this::validateAndThrow)
+        Long id = requirePositiveId(request);
+        return parseBody(request, StatusRequest.class)
                 .flatMap(body -> dictService.updateTypeStatus(id, body.isEnabled()))
-                .flatMap(this::ok);
+                .flatMap(this::buildSuccess);
     }
 
     // ==================== 字典数据 ====================
@@ -181,7 +176,7 @@ public class DictHandler extends BaseHandler {
         if (dictType == null || dictType.isBlank()) {
             return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "dictType不能为空"));
         }
-        return dictService.listDataByType(dictType).flatMap(this::ok);
+        return dictService.listDataByType(dictType).flatMap(this::buildSuccess);
     }
 
     /**
@@ -194,7 +189,7 @@ public class DictHandler extends BaseHandler {
     @RequirePermission("system:dict:query")
     @Operation(operationId = "adminGetDictData", summary = "查询字典数据详情")
     public Mono<ServerResponse> getData(ServerRequest request) {
-        return dictService.getData(dataId(request)).flatMap(this::ok);
+        return dictService.getData(requirePositiveId(request)).flatMap(this::buildSuccess);
     }
 
     /**
@@ -208,11 +203,9 @@ public class DictHandler extends BaseHandler {
     @Operation(operationId = "adminCreateDictData", summary = "创建字典数据")
     @OperationLog(module = "字典管理", type = OperationLog.OperationType.INSERT, description = "创建字典数据")
     public Mono<ServerResponse> createData(ServerRequest request) {
-        return request.bodyToMono(DictDataRequest.class)
-                .switchIfEmpty(Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "请求体不能为空")))
-                .flatMap(this::validateAndThrow)
+        return parseBody(request, DictDataRequest.class)
                 .flatMap(dictService::createData)
-                .flatMap(this::ok);
+                .flatMap(this::buildSuccess);
     }
 
     /**
@@ -226,12 +219,10 @@ public class DictHandler extends BaseHandler {
     @Operation(operationId = "adminUpdateDictData", summary = "更新字典数据")
     @OperationLog(module = "字典管理", type = OperationLog.OperationType.UPDATE, description = "更新字典数据")
     public Mono<ServerResponse> updateData(ServerRequest request) {
-        Long id = dataId(request);
-        return request.bodyToMono(DictDataRequest.class)
-                .switchIfEmpty(Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "请求体不能为空")))
-                .flatMap(this::validateAndThrow)
+        Long id = requirePositiveId(request);
+        return parseBody(request, DictDataRequest.class)
                 .flatMap(body -> dictService.updateData(id, body))
-                .flatMap(this::ok);
+                .flatMap(this::buildSuccess);
     }
 
     /**
@@ -245,7 +236,7 @@ public class DictHandler extends BaseHandler {
     @Operation(operationId = "adminDeleteDictData", summary = "删除字典数据")
     @OperationLog(module = "字典管理", type = OperationLog.OperationType.DELETE, description = "删除字典数据")
     public Mono<ServerResponse> deleteData(ServerRequest request) {
-        return dictService.deleteData(dataId(request)).flatMap(deleted -> ok(java.util.Map.of("deleted", deleted)));
+        return dictService.deleteData(requirePositiveId(request)).flatMap(deleted -> buildSuccess(java.util.Map.of("deleted", deleted)));
     }
 
     /**
@@ -259,83 +250,9 @@ public class DictHandler extends BaseHandler {
     @Operation(operationId = "adminUpdateDictDataStatus", summary = "启用或停用字典数据")
     @OperationLog(module = "字典管理", type = OperationLog.OperationType.UPDATE, description = "更新字典数据状态")
     public Mono<ServerResponse> updateDataStatus(ServerRequest request) {
-        Long id = dataId(request);
-        return request.bodyToMono(StatusRequest.class)
-                .switchIfEmpty(Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "请求体不能为空")))
-                .flatMap(this::validateAndThrow)
+        Long id = requirePositiveId(request);
+        return parseBody(request, StatusRequest.class)
                 .flatMap(body -> dictService.updateDataStatus(id, body.isEnabled()))
-                .flatMap(this::ok);
-    }
-
-    /**
-     * 解析并校验路径参数 {@code id}（字典类型）。
-     *
-     * @param request HTTP 请求
-     * @return 大于 0 的字典类型 ID
-     * @throws BusinessException 当参数缺失、非数字或不大于 0 时抛出
-     */
-    private Long typeId(ServerRequest request) {
-        Long id = safeParseLong(request.pathVariable("id"));
-        if (id == null || id <= 0) throw new BusinessException(ResultCode.PARAM_ERROR, "id格式错误");
-        return id;
-    }
-
-    /**
-     * 解析并校验路径参数 {@code id}（字典数据）。
-     *
-     * @param request HTTP 请求
-     * @return 大于 0 的字典数据 ID
-     * @throws BusinessException 当参数缺失、非数字或不大于 0 时抛出
-     */
-    private Long dataId(ServerRequest request) {
-        Long id = safeParseLong(request.pathVariable("id"));
-        if (id == null || id <= 0) throw new BusinessException(ResultCode.PARAM_ERROR, "id格式错误");
-        return id;
-    }
-
-    /**
-     * 构造统一 JSON 成功响应。
-     *
-     * @param data 业务数据，可为 {@code null}
-     * @return 携带当前 traceId 的 200 JSON 响应
-     */
-    private <T> Mono<ServerResponse> ok(T data) {
-        return ServerResponse.ok()
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(Result.success(data, TraceIdUtil.getTraceId()));
-    }
-
-    /**
-     * 状态更新请求体。
-     *
-     * <p>仅承载 {@code enabled} 布尔值，表示启用或停用目标对象。</p>
-     */
-    public static class StatusRequest {
-
-        /** 是否启用：true-启用，false-停用 */
-        private boolean enabled;
-
-        /**
-         * 构造状态更新请求体。
-         */
-        public StatusRequest() {}
-
-        /**
-         * 获取是否启用。
-         *
-         * @return true-启用，false-停用
-         */
-        public boolean isEnabled() {
-            return enabled;
-        }
-
-        /**
-         * 设置是否启用。
-         *
-         * @param enabled true-启用，false-停用
-         */
-        public void setEnabled(boolean enabled) {
-            this.enabled = enabled;
-        }
+                .flatMap(this::buildSuccess);
     }
 }

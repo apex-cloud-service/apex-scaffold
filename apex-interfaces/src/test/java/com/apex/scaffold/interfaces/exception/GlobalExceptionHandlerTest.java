@@ -16,7 +16,7 @@ import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.common.util.TraceIdUtil;
-import com.apex.scaffold.infrastructure.remote.exception.RemoteApiException;
+import com.apex.scaffold.domain.gateway.RemoteApiException;
 import com.apex.scaffold.infrastructure.wechat.exception.WeChatApiException;
 import com.apex.scaffold.interfaces.monitor.ExceptionMonitor;
 import com.apex.scaffold.interfaces.util.MessageUtils;

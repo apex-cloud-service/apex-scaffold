@@ -6,7 +6,7 @@ import static org.mockito.Mockito.*;
 
 import com.apex.scaffold.infrastructure.remote.config.RemoteApiProperties;
 import com.apex.scaffold.infrastructure.remote.config.RemoteApiProperties.ServiceConfig;
-import com.apex.scaffold.infrastructure.remote.exception.RemoteApiException;
+import com.apex.scaffold.domain.gateway.RemoteApiException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

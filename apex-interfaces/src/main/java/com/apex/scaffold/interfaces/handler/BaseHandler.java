@@ -202,6 +202,86 @@ public abstract class BaseHandler {
     }
 
     /**
+     * 构建携带当前 traceId 的统一成功响应（模板方法）。
+     *
+     * <p>业务数据 → {@code Result.success(data, traceId)} → HTTP 200 JSON 响应 的
+     * 完整包装链。这是所有 Handler 成功出口的<b>唯一标准入口</b>，用于消除各
+     * Handler 中重复的私有 {@code ok(T)} 方法（历史版本中 CaptchaHandler、
+     * DictHandler、ConfigHandler、JobHandler、MenuHandler、LoginLogHandler、
+     * AdminUserManagementHandler 各维护一份平行实现，均已收敛至本方法）。</p>
+     *
+     * <p>区别于 {@link #buildOk(Result)}：本方法自动从 {@link TraceIdUtil} 获取
+     * traceId 并完成 {@link Result#success(Object, String)} 包装，调用方无需手动
+     * 组装 {@link Result}。</p>
+     *
+     * <h3>使用示例</h3>
+     * <pre>{@code * public Mono<ServerResponse> list(ServerRequest request) {
+     *     return someService.list().flatMap(this::buildSuccess);
+     * }
+     * }</pre>
+     *
+     * @param <T>  业务数据类型，将被包装到 {@link Result#data}
+     * @param data 业务数据，可为 {@code null}
+     * @return 携带当前 traceId 的 HTTP 200 JSON 响应
+     * @since 2.2.0
+     */
+    protected <T> Mono<ServerResponse> buildSuccess(T data) {
+        return buildOk(Result.success(data, TraceIdUtil.getTraceId()));
+    }
+
+    /**
+     * 解析请求体并执行 Jakarta Bean Validation 校验（模板方法）。
+     *
+     * <p>封装了 POST/PUT/PATCH 类 Handler 中最重复的请求体处理链：
+     * {@code bodyToMono → switchIfEmpty(请求体不能为空) → validateAndThrow}。
+     * 用于消除各 Handler 中逐字重复的 6+ 处
+     * {@code request.bodyToMono(X).switchIfEmpty(...).flatMap(this::validateAndThrow)}
+     * 样板代码。</p>
+     *
+     * <h3>使用示例</h3>
+     * <pre>{@code * public Mono<ServerResponse> create(ServerRequest request) {
+     *     return parseBody(request, DictTypeRequest.class)
+     *         .flatMap(dictService::createType)
+     *         .flatMap(this::buildSuccess);
+     * }
+     * }</pre>
+     *
+     * @param <T>       请求体类型，携带 Jakarta Bean Validation 约束注解
+     * @param request   HTTP 请求对象
+     * @param bodyClass 请求体的 Java 类型，用于 {@link ServerRequest#bodyToMono(Class)} 反序列化
+     * @return 校验通过时返回含请求体的 Mono；请求体为空或校验失败时返回 error Mono
+     * @throws IllegalStateException 如果 {@link Validator} 未注入（使用无 Validator 的构造方法初始化时）
+     * @since 2.2.0
+     */
+    protected <T> Mono<T> parseBody(ServerRequest request, Class<T> bodyClass) {
+        return request.bodyToMono(bodyClass)
+                .switchIfEmpty(Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "请求体不能为空")))
+                .flatMap(this::validateAndThrow);
+    }
+
+    /**
+     * 解析并校验路径参数 {@code id}（模板方法）。
+     *
+     * <p>封装了各 Handler 中重复的 {@code safeParseLong(pathVariable("id")) + 正数校验}
+     * 模式：路径参数 {@code id} 必须为大于 0 的整数，否则抛出
+     * {@link BusinessException}（错误码 {@link ResultCode#PARAM_ERROR}）。
+     * 用于消除 DictHandler/ConfigHandler/JobHandler 中逐字重复的
+     * {@code typeId()/configId()/jobId()} 私有辅助方法。</p>
+     *
+     * @param request HTTP 请求，路径参数 {@code id} 必须为正整数
+     * @return 大于 0 的资源 ID
+     * @throws BusinessException 当参数缺失、非数字或不大于 0 时抛出
+     * @since 2.2.0
+     */
+    protected long requirePositiveId(ServerRequest request) {
+        Long id = safeParseLong(request.pathVariable("id"));
+        if (id == null || id <= 0) {
+            throw new BusinessException(ResultCode.PARAM_ERROR, "id格式错误");
+        }
+        return id;
+    }
+
+    /**
      * 根据错误码构建国际化错误响应
      *
      * <p>通过 {@link ResultCode#getMessageKey()} 获取消息键，

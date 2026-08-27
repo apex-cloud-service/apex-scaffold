@@ -135,12 +135,8 @@ public class UserHandler extends BaseHandler {
         return currentOpenId(request)
                 .flatMap(userService::getByOpenId)
                 .map(userAssembler::toDTO)
-                .flatMap(data -> ServerResponse.ok()
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .bodyValue(Result.success(data, traceId)))
-                .switchIfEmpty(ServerResponse.status(HttpStatus.NOT_FOUND)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .bodyValue(Result.error(ResultCode.USER_NOT_FOUND.getCode(), "用户不存在", traceId)));
+                .flatMap(this::buildSuccess)
+                .switchIfEmpty(buildError(ResultCode.USER_NOT_FOUND, traceId));
     }
 
     /**
@@ -171,19 +167,13 @@ public class UserHandler extends BaseHandler {
         String traceId = TraceIdUtil.getTraceId();
         Long userId = safeParseLong(request.pathVariable("userId"));
         if (userId == null) {
-            return ServerResponse.badRequest()
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .bodyValue(Result.error(ResultCode.PARAM_ERROR.getCode(), "无效的用户ID", traceId));
+            return buildError(ResultCode.PARAM_ERROR, traceId);
         }
         return userService
                 .getById(userId)
                 .map(userAssembler::toDTO)
-                .flatMap(data -> ServerResponse.ok()
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .bodyValue(Result.success(data, traceId)))
-                .switchIfEmpty(ServerResponse.status(HttpStatus.NOT_FOUND)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .bodyValue(Result.error(ResultCode.USER_NOT_FOUND.getCode(), "用户不存在", traceId)));
+                .flatMap(this::buildSuccess)
+                .switchIfEmpty(buildError(ResultCode.USER_NOT_FOUND, traceId));
     }
 
     /**
@@ -223,9 +213,7 @@ public class UserHandler extends BaseHandler {
         return requestHandlerUtil.handleRequestBody(request, PageRequest.class).flatMap(body -> userService
                 .findPage(body.getPageNum(), body.getPageSize())
                 .map(data -> Result.success(data, traceId))
-                .flatMap(result -> ServerResponse.ok()
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .bodyValue(result)));
+                .flatMap(this::buildOk));
     }
 
     /**
@@ -251,9 +239,7 @@ public class UserHandler extends BaseHandler {
         String traceId = TraceIdUtil.getTraceId();
         return currentOpenId(request)
                 .flatMap(accountDeletionService::sendDeletionCode)
-                .then(ServerResponse.ok()
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .bodyValue(Result.success(null, traceId)));
+                .then(buildSuccess(null));
     }
 
     /**

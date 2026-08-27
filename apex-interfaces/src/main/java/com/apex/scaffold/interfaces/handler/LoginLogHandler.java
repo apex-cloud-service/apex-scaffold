@@ -70,18 +70,6 @@ public class LoginLogHandler extends BaseHandler {
                 .orElse(null);
         return loginLogService
                 .search(request.queryParam("username").orElse(null), status, page, size)
-                .flatMap(this::ok);
-    }
-
-    /**
-     * 构造统一 JSON 成功响应。
-     *
-     * @param data 业务数据，可为 {@code null}
-     * @return 携带当前 traceId 的 200 JSON 响应
-     */
-    private <T> Mono<ServerResponse> ok(T data) {
-        return ServerResponse.ok()
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(Result.success(data, TraceIdUtil.getTraceId()));
+                .flatMap(this::buildSuccess);
     }
 }

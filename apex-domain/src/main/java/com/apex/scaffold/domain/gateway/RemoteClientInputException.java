@@ -1,4 +1,4 @@
-package com.apex.scaffold.infrastructure.remote.exception;
+package com.apex.scaffold.domain.gateway;
 
 /**
  * 远程服务返回的 4xx 请求/业务输入错误。

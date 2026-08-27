@@ -1,5 +1,6 @@
 package com.apex.scaffold.infrastructure.remote.exception;
 
+import com.apex.scaffold.domain.gateway.RemoteApiException;
 import static org.assertj.core.api.Assertions.*;
 
 import org.junit.jupiter.api.DisplayName;

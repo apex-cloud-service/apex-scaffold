@@ -1,6 +1,7 @@
 package com.apex.scaffold.interfaces.handler;
 
 import com.apex.scaffold.application.dto.admin.JobRequest;
+import com.apex.scaffold.application.dto.admin.StatusRequest;
 import com.apex.scaffold.application.service.JobService;
 import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.annotation.RequirePermission;
@@ -72,7 +73,7 @@ public class JobHandler extends BaseHandler {
     @RequirePermission("system:job:list")
     @Operation(operationId = "adminListJobs", summary = "查询定时任务列表")
     public Mono<ServerResponse> list(ServerRequest request) {
-        return jobService.listJobs().flatMap(this::ok);
+        return jobService.listJobs().flatMap(this::buildSuccess);
     }
 
     /**
@@ -85,7 +86,7 @@ public class JobHandler extends BaseHandler {
     @RequirePermission("system:job:query")
     @Operation(operationId = "adminGetJob", summary = "查询任务详情")
     public Mono<ServerResponse> detail(ServerRequest request) {
-        return jobService.getJob(jobId(request)).flatMap(this::ok);
+        return jobService.getJob(requirePositiveId(request)).flatMap(this::buildSuccess);
     }
 
     /**
@@ -102,11 +103,9 @@ public class JobHandler extends BaseHandler {
     @Operation(operationId = "adminCreateJob", summary = "创建定时任务")
     @OperationLog(module = "定时任务", type = OperationLog.OperationType.INSERT, description = "创建定时任务")
     public Mono<ServerResponse> create(ServerRequest request) {
-        return request.bodyToMono(JobRequest.class)
-                .switchIfEmpty(Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "请求体不能为空")))
-                .flatMap(this::validateAndThrow)
+        return parseBody(request, JobRequest.class)
                 .flatMap(jobService::createJob)
-                .flatMap(this::ok);
+                .flatMap(this::buildSuccess);
     }
 
     /**
@@ -120,12 +119,10 @@ public class JobHandler extends BaseHandler {
     @Operation(operationId = "adminUpdateJob", summary = "更新定时任务")
     @OperationLog(module = "定时任务", type = OperationLog.OperationType.UPDATE, description = "更新定时任务")
     public Mono<ServerResponse> update(ServerRequest request) {
-        Long id = jobId(request);
-        return request.bodyToMono(JobRequest.class)
-                .switchIfEmpty(Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "请求体不能为空")))
-                .flatMap(this::validateAndThrow)
+        Long id = requirePositiveId(request);
+        return parseBody(request, JobRequest.class)
                 .flatMap(body -> jobService.updateJob(id, body))
-                .flatMap(this::ok);
+                .flatMap(this::buildSuccess);
     }
 
     /**
@@ -141,7 +138,7 @@ public class JobHandler extends BaseHandler {
     @Operation(operationId = "adminDeleteJob", summary = "删除定时任务")
     @OperationLog(module = "定时任务", type = OperationLog.OperationType.DELETE, description = "删除定时任务")
     public Mono<ServerResponse> delete(ServerRequest request) {
-        return jobService.deleteJob(jobId(request)).flatMap(deleted -> ok(java.util.Map.of("deleted", deleted)));
+        return jobService.deleteJob(requirePositiveId(request)).flatMap(deleted -> buildSuccess(java.util.Map.of("deleted", deleted)));
     }
 
     /**
@@ -157,12 +154,10 @@ public class JobHandler extends BaseHandler {
     @Operation(operationId = "adminUpdateJobStatus", summary = "启用或停用定时任务")
     @OperationLog(module = "定时任务", type = OperationLog.OperationType.UPDATE, description = "更新任务状态")
     public Mono<ServerResponse> updateStatus(ServerRequest request) {
-        Long id = jobId(request);
-        return request.bodyToMono(StatusRequest.class)
-                .switchIfEmpty(Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "请求体不能为空")))
-                .flatMap(this::validateAndThrow)
+        Long id = requirePositiveId(request);
+        return parseBody(request, StatusRequest.class)
                 .flatMap(body -> jobService.updateStatus(id, body.isEnabled()))
-                .flatMap(this::ok);
+                .flatMap(this::buildSuccess);
     }
 
     /**
@@ -178,7 +173,7 @@ public class JobHandler extends BaseHandler {
     @Operation(operationId = "adminRunJob", summary = "立即执行一次任务")
     @OperationLog(module = "定时任务", type = OperationLog.OperationType.UPDATE, description = "手动触发任务")
     public Mono<ServerResponse> runOnce(ServerRequest request) {
-        return jobService.runOnce(jobId(request)).then(ok(java.util.Map.of("triggered", true)));
+        return jobService.runOnce(requirePositiveId(request)).then(buildSuccess(java.util.Map.of("triggered", true)));
     }
 
     /**
@@ -193,65 +188,6 @@ public class JobHandler extends BaseHandler {
     @Operation(operationId = "adminListJobLogs", summary = "查询任务执行日志")
     public Mono<ServerResponse> logs(ServerRequest request) {
         int limit = safeParseInt(request.queryParam("limit").orElse(null), 20);
-        return jobService.listLogs(jobId(request), limit).flatMap(this::ok);
-    }
-
-    /**
-     * 解析并校验路径参数 {@code id}。
-     *
-     * @param request HTTP 请求
-     * @return 大于 0 的任务 ID
-     * @throws BusinessException 当参数缺失、非数字或不大于 0 时抛出
-     */
-    private Long jobId(ServerRequest request) {
-        Long id = safeParseLong(request.pathVariable("id"));
-        if (id == null || id <= 0) throw new BusinessException(ResultCode.PARAM_ERROR, "id格式错误");
-        return id;
-    }
-
-    /**
-     * 构造统一 JSON 成功响应。
-     *
-     * @param data 业务数据，可为 {@code null}
-     * @return 携带当前 traceId 的 200 JSON 响应
-     */
-    private <T> Mono<ServerResponse> ok(T data) {
-        return ServerResponse.ok()
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(Result.success(data, TraceIdUtil.getTraceId()));
-    }
-
-    /**
-     * 状态更新请求体。
-     *
-     * <p>仅承载 {@code enabled} 布尔值，表示启用或停用目标对象。</p>
-     */
-    public static class StatusRequest {
-
-        /** 是否启用：true-启用，false-停用 */
-        private boolean enabled;
-
-        /**
-         * 构造状态更新请求体。
-         */
-        public StatusRequest() {}
-
-        /**
-         * 获取是否启用。
-         *
-         * @return true-启用，false-停用
-         */
-        public boolean isEnabled() {
-            return enabled;
-        }
-
-        /**
-         * 设置是否启用。
-         *
-         * @param enabled true-启用，false-停用
-         */
-        public void setEnabled(boolean enabled) {
-            this.enabled = enabled;
-        }
+        return jobService.listLogs(requirePositiveId(request), limit).flatMap(this::buildSuccess);
     }
 }

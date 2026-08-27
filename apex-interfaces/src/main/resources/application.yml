@@ -242,10 +242,10 @@ resilience4j:
           - java.io.IOException
           - java.util.concurrent.TimeoutException
           - org.springframework.web.reactive.function.client.WebClientResponseException
-          - com.apex.scaffold.infrastructure.remote.exception.RemoteApiException
+          - com.apex.scaffold.domain.gateway.RemoteApiException
         # 忽略的异常（客户端输入错误 4xx 不触发熔断）
         ignore-exceptions:
-          - com.apex.scaffold.infrastructure.remote.exception.RemoteClientInputException
+          - com.apex.scaffold.domain.gateway.RemoteClientInputException
       # 严格熔断配置：支付/短信/微信等关键服务专用（prod 覆盖到实例）
       strict:
         # 更快熔断：失败率降至 30%

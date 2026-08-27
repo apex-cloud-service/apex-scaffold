@@ -3,7 +3,7 @@ package com.apex.scaffold.infrastructure.remote.service;
 import com.apex.scaffold.infrastructure.chaos.ChaosInjectionService;
 import com.apex.scaffold.infrastructure.remote.config.RemoteApiProperties;
 import com.apex.scaffold.infrastructure.remote.config.RemoteApiProperties.ServiceConfig;
-import com.apex.scaffold.infrastructure.remote.exception.RemoteApiException;
+import com.apex.scaffold.domain.gateway.RemoteApiException;
 import com.apex.scaffold.infrastructure.remote.filter.ApiCallLogFilter;
 import com.apex.scaffold.infrastructure.remote.logging.ApiCallLogService;
 import com.fasterxml.jackson.core.JsonProcessingException;

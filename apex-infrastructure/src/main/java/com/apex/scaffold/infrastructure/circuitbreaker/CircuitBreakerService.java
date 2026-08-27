@@ -2,6 +2,7 @@ package com.apex.scaffold.infrastructure.circuitbreaker;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import com.apex.scaffold.domain.gateway.CircuitBreakerPort;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator;
 import org.slf4j.Logger;
@@ -51,7 +52,7 @@ import reactor.core.publisher.Mono;
  * @see CircuitBreakerConfig
  */
 @Service
-public class CircuitBreakerService {
+public class CircuitBreakerService implements CircuitBreakerPort {
     private static final Logger log = LoggerFactory.getLogger(CircuitBreakerService.class);
 
     /** 断路器注册表 */

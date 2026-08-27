@@ -6,7 +6,7 @@ import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.common.util.HttpStatusUtil;
 import com.apex.scaffold.common.util.JsonUtil;
 import com.apex.scaffold.common.util.TraceIdUtil;
-import com.apex.scaffold.infrastructure.remote.exception.RemoteApiException;
+import com.apex.scaffold.domain.gateway.RemoteApiException;
 import com.apex.scaffold.interfaces.monitor.ExceptionMonitor;
 import com.apex.scaffold.interfaces.util.MessageUtils;
 import jakarta.validation.ConstraintViolation;

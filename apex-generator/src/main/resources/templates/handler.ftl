@@ -5,15 +5,11 @@ import ${appPackage}.service.${entityName}Service;
 import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.annotation.RequirePermission;
 import com.apex.scaffold.common.exception.BusinessException;
-import com.apex.scaffold.common.result.Result;
-import com.apex.scaffold.common.result.ResultCode;
-import com.apex.scaffold.common.util.TraceIdUtil;
 import com.apex.scaffold.interfaces.handler.BaseHandler;
 import com.apex.scaffold.interfaces.util.MessageUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Validator;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
@@ -24,6 +20,12 @@ import reactor.core.publisher.Mono;
  *
  * <p>提供${tableComment}的查询、创建、更新与删除 API，所有端点要求
  * {@code ${module}:${entityVar}:*} 权限。</p>
+ *
+ * <p>遵循 Handler 统一规范（v2.2.0 起）：
+ * 成功出口统一使用 {@link BaseHandler#buildSuccess(Object)}，
+ * 请求体解析与校验统一使用 {@link BaseHandler#parseBody(ServerRequest, Class)}，
+ * 路径参数校验统一使用 {@link BaseHandler#requirePositiveId(ServerRequest)}。
+ * 生成产物不再包含私有 {@code ok()} / {@code id()} 样板方法。</p>
  *
  * <h2>接口清单</h2>
  * <ul>
@@ -38,6 +40,7 @@ import reactor.core.publisher.Mono;
  * @version 1.0.0
  * @since 1.0.0
  * @see ${entityName}Service
+ * @see BaseHandler
  */
 @Component
 @Tag(name = "后台-${tableComment}", description = "${tableComment}管理")
@@ -69,7 +72,7 @@ public class ${entityName}Handler extends BaseHandler {
     @RequirePermission("${module}:${entityVar}:list")
     @Operation(operationId = "adminList${entityName}s", summary = "查询${tableComment}列表")
     public Mono<ServerResponse> list(ServerRequest request) {
-        return ${entityVar}Service.list().flatMap(this::ok);
+        return ${entityVar}Service.list().flatMap(this::buildSuccess);
     }
 
     /**
@@ -82,7 +85,7 @@ public class ${entityName}Handler extends BaseHandler {
     @RequirePermission("${module}:${entityVar}:query")
     @Operation(operationId = "adminGet${entityName}", summary = "查询${tableComment}详情")
     public Mono<ServerResponse> detail(ServerRequest request) {
-        return ${entityVar}Service.get(id(request)).flatMap(this::ok);
+        return ${entityVar}Service.get(requirePositiveId(request)).flatMap(this::buildSuccess);
     }
 
     /**
@@ -96,11 +99,9 @@ public class ${entityName}Handler extends BaseHandler {
     @Operation(operationId = "adminCreate${entityName}", summary = "创建${tableComment}")
     @OperationLog(module = "${tableComment}", type = OperationLog.OperationType.INSERT, description = "创建${tableComment}")
     public Mono<ServerResponse> create(ServerRequest request) {
-        return request.bodyToMono(${entityName}Request.class)
-                .switchIfEmpty(Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "请求体不能为空")))
-                .flatMap(this::validateAndThrow)
+        return parseBody(request, ${entityName}Request.class)
                 .flatMap(${entityVar}Service::create)
-                .flatMap(this::ok);
+                .flatMap(this::buildSuccess);
     }
 
     /**
@@ -114,12 +115,10 @@ public class ${entityName}Handler extends BaseHandler {
     @Operation(operationId = "adminUpdate${entityName}", summary = "更新${tableComment}")
     @OperationLog(module = "${tableComment}", type = OperationLog.OperationType.UPDATE, description = "更新${tableComment}")
     public Mono<ServerResponse> update(ServerRequest request) {
-        Long id = id(request);
-        return request.bodyToMono(${entityName}Request.class)
-                .switchIfEmpty(Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "请求体不能为空")))
-                .flatMap(this::validateAndThrow)
+        long id = requirePositiveId(request);
+        return parseBody(request, ${entityName}Request.class)
                 .flatMap(body -> ${entityVar}Service.update(id, body))
-                .flatMap(this::ok);
+                .flatMap(this::buildSuccess);
     }
 
     /**
@@ -134,32 +133,7 @@ public class ${entityName}Handler extends BaseHandler {
     @OperationLog(module = "${tableComment}", type = OperationLog.OperationType.DELETE, description = "删除${tableComment}")
     public Mono<ServerResponse> delete(ServerRequest request) {
         return ${entityVar}Service
-                .delete(id(request))
-                .flatMap(deleted -> ok(java.util.Map.of("deleted", deleted)));
-    }
-
-    /**
-     * 解析并校验路径参数 {@code id}。
-     *
-     * @param request HTTP 请求
-     * @return 大于 0 的${tableComment} ID
-     * @throws BusinessException 当参数缺失、非数字或不大于 0 时抛出
-     */
-    private Long id(ServerRequest request) {
-        Long id = safeParseLong(request.pathVariable("id"));
-        if (id == null || id <= 0) throw new BusinessException(ResultCode.PARAM_ERROR, "id格式错误");
-        return id;
-    }
-
-    /**
-     * 构造统一 JSON 成功响应。
-     *
-     * @param data 业务数据，可为 {@code null}
-     * @return 携带当前 traceId 的 200 JSON 响应
-     */
-    private <T> Mono<ServerResponse> ok(T data) {
-        return ServerResponse.ok()
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(Result.success(data, TraceIdUtil.getTraceId()));
+                .delete(requirePositiveId(request))
+                .flatMap(deleted -> buildSuccess(java.util.Map.of("deleted", deleted)));
     }
 }

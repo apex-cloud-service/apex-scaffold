@@ -3,7 +3,7 @@ package com.apex.scaffold.interfaces.filter;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
-import com.apex.scaffold.infrastructure.circuitbreaker.CircuitBreakerService;
+import com.apex.scaffold.domain.gateway.CircuitBreakerPort;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Timer;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
@@ -44,7 +44,7 @@ class ApiGatewayFilterTest {
     @BeforeEach
     void setUp() {
         meterRegistry = new SimpleMeterRegistry();
-        filter = new ApiGatewayFilter(meterRegistry, mock(CircuitBreakerService.class));
+        filter = new ApiGatewayFilter(meterRegistry, mock(CircuitBreakerPort.class));
     }
 
     /**

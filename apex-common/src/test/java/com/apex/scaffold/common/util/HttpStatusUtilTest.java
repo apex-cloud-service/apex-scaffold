@@ -117,6 +117,19 @@ class HttpStatusUtilTest {
         }
 
         /**
+         * 执行 {@code shouldReturnNotFoundWhenUserNotFound} 操作。
+         *
+         * <p>USER_NOT_FOUND(4001) 属"资源不存在"语义，v2.2.0 起统一映射 404
+         * （UserHandler 错误响应收敛至 BaseHandler.buildError 后的行为承接）。</p>
+         */
+        @Test
+        @DisplayName("USER_NOT_FOUND(4001) 应返回 404（资源不存在）")
+        void shouldReturnNotFoundWhenUserNotFound() {
+            assertThat(HttpStatusUtil.fromBusinessCode(ResultCode.USER_NOT_FOUND.getCode()))
+                    .isEqualTo(HttpStatus.NOT_FOUND);
+        }
+
+        /**
          * 执行 {@code shouldReturnBadRequestWhenCodeIs499} 操作。
          */
         @Test

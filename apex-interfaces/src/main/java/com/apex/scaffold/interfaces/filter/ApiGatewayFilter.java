@@ -1,6 +1,6 @@
 package com.apex.scaffold.interfaces.filter;
 
-import com.apex.scaffold.infrastructure.circuitbreaker.CircuitBreakerService;
+import com.apex.scaffold.domain.gateway.CircuitBreakerPort;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.Timer;
@@ -99,7 +99,7 @@ public class ApiGatewayFilter implements WebFilter {
     private final MeterRegistry meterRegistry;
 
     /** 断路器服务（预留，用于故障隔离扩展） */
-    private final CircuitBreakerService circuitBreakerService;
+    private final CircuitBreakerPort circuitBreakerService;
 
     /**
      * 构造 API 网关过滤器。
@@ -107,7 +107,7 @@ public class ApiGatewayFilter implements WebFilter {
      * @param meterRegistry         Micrometer 指标注册表
      * @param circuitBreakerService 断路器服务
      */
-    public ApiGatewayFilter(MeterRegistry meterRegistry, CircuitBreakerService circuitBreakerService) {
+    public ApiGatewayFilter(MeterRegistry meterRegistry, CircuitBreakerPort circuitBreakerService) {
         this.meterRegistry = meterRegistry;
         this.circuitBreakerService = circuitBreakerService;
     }

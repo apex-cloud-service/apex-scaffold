@@ -1,6 +1,5 @@
-package com.apex.scaffold.infrastructure.remote.exception;
+package com.apex.scaffold.domain.gateway;
 
-import com.apex.scaffold.domain.gateway.RemoteClientFailure;
 import lombok.Getter;
 
 /**

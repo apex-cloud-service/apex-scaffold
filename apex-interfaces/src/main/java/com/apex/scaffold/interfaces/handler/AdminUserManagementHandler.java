@@ -63,11 +63,9 @@ public class AdminUserManagementHandler extends BaseHandler {
     @Operation(operationId = "adminCreateUser", summary = "后台创建用户")
     @OperationLog(module = "用户管理", type = OperationLog.OperationType.INSERT, description = "后台创建用户")
     public Mono<ServerResponse> create(ServerRequest request) {
-        return request.bodyToMono(AdminUserCreateRequest.class)
-                .switchIfEmpty(Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "请求体不能为空")))
-                .flatMap(this::validateAndThrow)
+        return parseBody(request, AdminUserCreateRequest.class)
                 .flatMap(body -> currentOpenId(request).flatMap(openId -> service.create(openId, body)))
-                .flatMap(this::ok);
+                .flatMap(this::buildSuccess);
     }
 
     /**
@@ -89,7 +87,7 @@ public class AdminUserManagementHandler extends BaseHandler {
         return currentOpenId(request)
                 .flatMap(openId ->
                         service.search(openId, request.queryParam("keyword").orElse(null), status, page, size))
-                .flatMap(this::ok);
+                .flatMap(this::buildSuccess);
     }
 
     /**
@@ -105,7 +103,7 @@ public class AdminUserManagementHandler extends BaseHandler {
     public Mono<ServerResponse> detail(ServerRequest request) {
         return currentOpenId(request)
                 .flatMap(openId -> service.detail(openId, userId(request)))
-                .flatMap(this::ok);
+                .flatMap(this::buildSuccess);
     }
 
     /**
@@ -122,11 +120,9 @@ public class AdminUserManagementHandler extends BaseHandler {
     @OperationLog(module = "用户管理", type = OperationLog.OperationType.UPDATE, description = "编辑用户资料")
     public Mono<ServerResponse> update(ServerRequest request) {
         Long targetId = userId(request);
-        return request.bodyToMono(AdminUserUpdateRequest.class)
-                .switchIfEmpty(Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "请求体不能为空")))
-                .flatMap(this::validateAndThrow)
+        return parseBody(request, AdminUserUpdateRequest.class)
                 .flatMap(body -> currentOpenId(request).flatMap(openId -> service.update(openId, targetId, body)))
-                .flatMap(this::ok);
+                .flatMap(this::buildSuccess);
     }
 
     /**
@@ -138,7 +134,7 @@ public class AdminUserManagementHandler extends BaseHandler {
     @RequirePermission("staff:manage")
     @Operation(operationId = "adminListStaffRoles", summary = "查询可配置的后台角色")
     public Mono<ServerResponse> roles(ServerRequest request) {
-        return currentOpenId(request).flatMap(service::manageableRoles).flatMap(this::ok);
+        return currentOpenId(request).flatMap(service::manageableRoles).flatMap(this::buildSuccess);
     }
 
     /**
@@ -156,12 +152,10 @@ public class AdminUserManagementHandler extends BaseHandler {
     @OperationLog(module = "用户管理", type = OperationLog.OperationType.UPDATE, description = "配置用户后台角色")
     public Mono<ServerResponse> replaceRoles(ServerRequest request) {
         Long userId = userId(request);
-        return request.bodyToMono(AdminUserRolesRequest.class)
-                .switchIfEmpty(Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "请求体不能为空")))
-                .flatMap(this::validateAndThrow)
+        return parseBody(request, AdminUserRolesRequest.class)
                 .flatMap(body ->
                         currentOpenId(request).flatMap(openId -> service.replaceRoles(openId, userId, body.roleIds())))
-                .flatMap(this::ok);
+                .flatMap(this::buildSuccess);
     }
 
     /**
@@ -177,7 +171,7 @@ public class AdminUserManagementHandler extends BaseHandler {
     public Mono<ServerResponse> revokeSessions(ServerRequest request) {
         return currentOpenId(request)
                 .flatMap(openId -> service.revokeSessions(openId, userId(request)))
-                .flatMap(deleted -> ok(java.util.Map.of("revokedTokens", deleted)));
+                .flatMap(deleted -> buildSuccess(java.util.Map.of("revokedTokens", deleted)));
     }
 
     /**
@@ -194,12 +188,10 @@ public class AdminUserManagementHandler extends BaseHandler {
     @OperationLog(module = "用户管理", type = OperationLog.OperationType.UPDATE, description = "更新用户状态")
     public Mono<ServerResponse> updateStatus(ServerRequest request) {
         Long targetId = userId(request);
-        return request.bodyToMono(AdminUserStatusRequest.class)
-                .switchIfEmpty(Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "请求体不能为空")))
-                .flatMap(this::validateAndThrow)
+        return parseBody(request, AdminUserStatusRequest.class)
                 .flatMap(body -> currentOpenId(request)
                         .flatMap(openId -> service.updateStatus(openId, targetId, body.enabled())))
-                .flatMap(this::ok);
+                .flatMap(this::buildSuccess);
     }
 
     /**
@@ -213,17 +205,5 @@ public class AdminUserManagementHandler extends BaseHandler {
         Long userId = safeParseLong(request.pathVariable("userId"));
         if (userId == null || userId <= 0) throw new BusinessException(ResultCode.PARAM_ERROR, "userId格式错误");
         return userId;
-    }
-
-    /**
-     * 构造统一 JSON 成功响应。
-     *
-     * @param data 业务数据，可为 {@code null}
-     * @return 携带当前 traceId 的 200 JSON 响应
-     */
-    private <T> Mono<ServerResponse> ok(T data) {
-        return ServerResponse.ok()
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(Result.success(data, TraceIdUtil.getTraceId()));
     }
 }

@@ -1,4 +1,4 @@
-package com.apex.scaffold.infrastructure.ratelimit.local;
+package com.apex.scaffold.common.util.ratelimit;
 
 import static org.assertj.core.api.Assertions.*;
 
