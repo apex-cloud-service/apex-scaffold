@@ -8,10 +8,18 @@
 - 代码生成器（模板开发功能）：新增 apex-generator 独立模块，FreeMarker 模板引擎按表结构一键生成 DDD 五层代码（entity/repository/PO/Mapper/Converter/RepositoryImpl/Service/DTO/Handler + 路由片段 + 迁移片段 + 测试骨架），CLI 入口 scripts/codegen/generate.sh
 - 系统管理种子数据：V2 迁移预置 24 个 system:* 权限码与系统管理菜单树（Flyway 管理）
 - 可观测性配套整合：监控资产统一收敛至 `config/monitoring/` —— Prometheus 抓取配置（应用 8081 + Sentinel 8720）、10 条告警规则（服务宕机/5xx 率/P95 延迟/JVM 堆/连接池/Redis/Sentinel）、Grafana 大盘（`apex_api_*` 指标口径，14 面板自动置备）、一键 docker-compose 栈（Prometheus + Grafana + Zipkin，数据源与大盘免手工导入）
+- 示例模块（apex-example）增强：分页查询（手写 COUNT/LIMIT，统一 PageResponse）、参数校验、标准错误码（4001/4002）、手机号脱敏、逻辑删除（deleteById）、集成测试 10 例全绿（覆盖分页/校验/错误码/脱敏/删除链路）
 
 ### Changed
 - 版本号统一升至 1.1.2：父 POM 与全部子模块（含新增 apex-generator）同步
 - 旧 MVC 指标口径大盘（`http_server_requests_*`）由 `apex-dashboard.json` 替代，README/架构文档/快速开始引用路径同步更新
+- README 示例模块章节重写：新增能力演示对照表，移除过时的 ELO/兴趣图谱提示（业务代码已下线）
+
+### Fixed
+- **InputValidationFilter SQL 注入误报**：`\bDELETE\b` 等关键字正则对 "delete@example.com" 之类英文单词误判为注入，改为要求关键字处于 SQL 语法位置（前后为空白/引号/括号/逗号/分号）
+- **示例模块集成测试链路**：dynamic-datasource 配置、Flyway 独立迁移目录、Redis Mock、CORS 配置、JWT 公开路径、`@Transactional` 响应式陷阱（惰性 Mono 下事务提前提交致数据不落库）、MyBatis-Plus 3.5.9+ 分页插件拆分（改手写分页）、逻辑删除 API 用法
+- **spring-boot repackage classifier**：apex-interfaces 可执行包加 `executable` classifier，避免 BOOT-INF fat jar 覆盖普通 jar 导致下游模块（apex-example）类加载失败
+- **文档断链**：RELEASE_v1.0.0.md 链接路径修正（docs/X.md → X.md）、内部分析文档对已删除文档的引用清理（45 个内部链接全部有效）
 
 ## [1.1.1] - 2026-08-27
 
