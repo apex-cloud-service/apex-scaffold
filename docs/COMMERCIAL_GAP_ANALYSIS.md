@@ -273,9 +273,11 @@ public Mono<ServerResponse> getUsersV2(ServerRequest request) { }
 
 ---
 
-### 7. Grafana Dashboard模板 ⚠️
+### 7. Grafana Dashboard模板 ✅
 
-**现状**: config/monitoring/grafana目录存在但为空
+**现状**: 已随包落地（`config/monitoring/`）——Prometheus 抓取配置 + 告警规则 +
+Grafana 大盘（`apex-dashboard.json`）+ 一键 docker-compose 栈（Prometheus/Grafana/Zipkin），
+指标口径为 WebFlux 自定义 `apex_api_*`，详见 `config/monitoring/README.md`。
 
 **需求**:
 - 提供开箱即用的监控面板

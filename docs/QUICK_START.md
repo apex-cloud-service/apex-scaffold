@@ -179,6 +179,14 @@ spring:
 - ⚙️ [配置项详解](CONFIGURATION.md) - 查看所有可配置项
 - 💡 [最佳实践](BEST_PRACTICES.md) - 学习常见问题解决方案
 - 🐛 [问题排查](TROUBLESHOOTING.md) - 常见错误与解决方法
+- 📊 [监控大盘](https://localhost:3000) - 可观测性栈（Prometheus + Grafana + Zipkin）一键启动：
+
+  ```bash
+  docker compose -f config/monitoring/docker-compose.yml up -d
+  # Grafana http://localhost:3000（admin/admin）  Prometheus http://localhost:9090  Zipkin http://localhost:9411
+  ```
+
+  大盘、告警规则与使用说明详见 [`config/monitoring/README.md`](../config/monitoring/README.md)。
 
 ## ❓ 常见问题
 

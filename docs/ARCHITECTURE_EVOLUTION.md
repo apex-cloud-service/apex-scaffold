@@ -67,16 +67,21 @@ Apex Scaffold 当前为**模块化单体**（Modular Monolith）：
 
 ## 三、可观测性增强建议（部署侧配套，非代码缺口）
 
-代码侧已完备，以下为**运维/部署配套**建议（写入部署文档即可）：
+代码侧已完备，以下为**运维/部署配套**建议（已随包落地于 `config/monitoring/`）：
 
-1. **监控大盘**：为 Prometheus + Grafana 提供官方仪表盘 JSON（覆盖 JVM/HTTP/线程池/Sentinel 指标），随发布包附送；
-2. **告警规则**：预置 Prometheus 告警规则（接口 5xx 率、P95 延迟、线程池积压、Sentinel 熔断触发）；
+1. **监控大盘**：`config/monitoring/grafana/apex-dashboard.json` —— Grafana 官方仪表盘
+   （覆盖 JVM/HTTP/连接池/Sentinel 指标，指标口径 `apex_api_*`），docker-compose 一键导入；
+2. **告警规则**：`config/monitoring/prometheus/alert-rules.yml` —— 10 条预置规则
+   （服务宕机、接口 5xx 率、P95 延迟、JVM 堆、连接池水位、Redis/Sentinel）；
 3. **日志采集**：对接 ELK / Loki（结构化日志 + TraceId 字段即可关联查询）；
 4. **采样率调优**：默认 0.1（10%），高 QPS 可再下调，低流量可上调至 1.0；
 5. **管理端口安全**：`management.server.port=8081` 独立端口，建议仅内网/服务网格暴露，生产关闭 prometheus 之外的多余端点。
+
+> 一键拉起监控栈：`docker compose -f config/monitoring/docker-compose.yml up -d`
+> （Prometheus + Grafana + Zipkin，自动置备数据源与大盘，详见 `config/monitoring/README.md`）
 
 ## 四、结论
 
 - **微服务**：现阶段保持模块化单体（边界已就绪、演进路径清晰），不建议拆分；按第二节触发信号按需演进。
 - **监控与链路追踪**：已具备（Micrometer + Prometheus + Zipkin/Brave + TraceId + Sentinel/Resilience4j），
-  缺的是部署侧配套（大盘/告警/日志采集），作为阶段 E 文档与发布物料补齐。
+  部署侧配套（大盘/告警）已随包落地于 `config/monitoring/`，仅剩日志采集（ELK/Loki）按需对接。

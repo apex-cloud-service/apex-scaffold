@@ -1,0 +1,75 @@
+# ================================================================
+# Apex Scaffold - 可观测性一键部署栈（Prometheus + Grafana + Zipkin）
+# ================================================================
+# 用途: 本地/测试环境一键拉起监控与链路追踪全套组件。
+# 用法: docker compose -f config/monitoring/docker-compose.yml up -d
+# 访问:
+#   Grafana    http://localhost:3000   (admin / admin，首次登录提示修改)
+#   Prometheus http://localhost:9090
+#   Zipkin     http://localhost:9411
+# 说明: Apex 应用自身通过 docker-compose.yml 或独立方式启动，
+#       管理端口 8081 暴露 /actuator/prometheus 供 Prometheus 抓取；
+#       链路采样数据由应用主动上报 trace.zipkin-url（默认 http://localhost:9411）。
+# ================================================================
+
+services:
+  # ---- Prometheus：指标抓取与告警 ----
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    container_name: apex-prometheus
+    restart: unless-stopped
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus/alert-rules.yml:/etc/prometheus/alert-rules.yml:ro
+      - apex-prometheus-data:/prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=15d
+    ports:
+      - "9090:9090"
+    networks:
+      - apex-observability
+
+  # ---- Grafana：可视化大盘 ----
+  grafana:
+    image: grafana/grafana:11.1.0
+    container_name: apex-grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      # 预置 Prometheus 数据源（指向 docker-compose 网络内的 prometheus 服务）
+      GF_DATASOURCES_PROMETHEUS_NAME: Prometheus
+      GF_DATASOURCES_PROMETHEUS_TYPE: prometheus
+      GF_DATASOURCES_PROMETHEUS_URL: http://prometheus:9090
+      GF_DATASOURCES_PROMETHEUS_ACCESS: server
+      GF_DATASOURCES_PROMETHEUS_IS_DEFAULT: "true"
+    volumes:
+      - ./grafana/apex-dashboard.json:/var/lib/grafana/dashboards/apex-dashboard.json:ro
+      # 自动置备数据源与大盘（容器启动时执行）
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - apex-grafana-data:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    networks:
+      - apex-observability
+
+  # ---- Zipkin：链路追踪后端 ----
+  zipkin:
+    image: openzipkin/zipkin:3.4
+    container_name: apex-zipkin
+    restart: unless-stopped
+    ports:
+      - "9411:9411"
+    networks:
+      - apex-observability
+
+volumes:
+  apex-prometheus-data:
+  apex-grafana-data:
+
+networks:
+  apex-observability:
+    driver: bridge

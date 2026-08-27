@@ -1,0 +1,19 @@
+# ================================================================
+# Apex Scaffold - Grafana 数据源自动置备
+# ================================================================
+# 用途: 容器启动时自动创建 Prometheus 数据源，免去手工配置。
+# 背景: 应用通过独立管理端口 8081 暴露 /actuator/prometheus，
+#       Prometheus 抓取后此处作为 Grafana 查询数据源。
+# 影响: 修改 URL 可切换数据源指向（如生产环境独立 Prometheus 地址）。
+# ================================================================
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: true
+    jsonData:
+      timeInterval: 15s

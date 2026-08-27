@@ -133,9 +133,13 @@
 - [x] 错误率面板
 - [x] JVM内存/CPU面板
 - [x] 导入说明文档
+- [x] 告警规则 + 一键部署栈（Prometheus/Grafana/Zipkin）
 
 **相关文件**:
-- `config/monitoring/grafana/dashboard.json`
+- `config/monitoring/grafana/apex-dashboard.json`
+- `config/monitoring/prometheus/prometheus.yml`
+- `config/monitoring/prometheus/alert-rules.yml`
+- `config/monitoring/docker-compose.yml`
 
 ---
 

@@ -1,0 +1,17 @@
+# Grafana 自动置备（Auto-Provisioning）配置
+# 用途: 容器启动时自动注册 Prometheus 数据源并导入 Apex Scaffold 监控大盘。
+# 背景: 与 docker-compose.yml 配合，容器启动即完成数据源 + 大盘的免手工配置。
+# 影响: 如需修改大盘 JSON，直接编辑 ../grafana/apex-dashboard.json 后重启容器。
+apiVersion: 1
+
+providers:
+  - name: "Apex Scaffold Dashboards"
+    orgId: 1
+    folder: "Apex Scaffold"
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards
+      foldersFromFilesStructure: false
