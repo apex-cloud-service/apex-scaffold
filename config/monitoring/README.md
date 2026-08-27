@@ -8,6 +8,8 @@ Apex Scaffold 的监控配套统一存放在本目录，与应用代码解耦，
 config/monitoring/
 ├── README.md                    # 本文件：监控配套总览
 ├── docker-compose.yml           # 一键部署 Prometheus + Grafana + Zipkin
+├── alertmanager/                # 告警通知渠道配置（钉钉/企业微信/邮件等）
+│   └── README.md                # Alertmanager 接入说明与配置示例
 ├── prometheus/
 │   ├── prometheus.yml           # 抓取配置（应用 8081 + Sentinel 8720）
 │   └── alert-rules.yml          # 告警规则（服务/接口/JVM/DB/Redis/Sentinel）
