@@ -7,6 +7,11 @@
 ### Added
 - 代码生成器（模板开发功能）：新增 apex-generator 独立模块，FreeMarker 模板引擎按表结构一键生成 DDD 五层代码（entity/repository/PO/Mapper/Converter/RepositoryImpl/Service/DTO/Handler + 路由片段 + 迁移片段 + 测试骨架），CLI 入口 scripts/codegen/generate.sh
 - 系统管理种子数据：V2 迁移预置 24 个 system:* 权限码与系统管理菜单树（Flyway 管理）
+- 可观测性配套整合：监控资产统一收敛至 `config/monitoring/` —— Prometheus 抓取配置（应用 8081 + Sentinel 8720）、10 条告警规则（服务宕机/5xx 率/P95 延迟/JVM 堆/连接池/Redis/Sentinel）、Grafana 大盘（`apex_api_*` 指标口径，14 面板自动置备）、一键 docker-compose 栈（Prometheus + Grafana + Zipkin，数据源与大盘免手工导入）
+
+### Changed
+- 版本号统一升至 1.1.2：父 POM 与全部子模块（含新增 apex-generator）同步
+- 旧 MVC 指标口径大盘（`http_server_requests_*`）由 `apex-dashboard.json` 替代，README/架构文档/快速开始引用路径同步更新
 
 ## [1.1.1] - 2026-08-27
 
