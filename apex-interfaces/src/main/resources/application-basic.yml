@@ -47,6 +47,9 @@ apex:
     dlq:
       # ❌ 关闭死信队列处理
       enabled: false
+    # ❌ 关闭领域事件 MQ 广播（基础版无 RocketMQ，事件仅本地分发）
+    domain-event-enabled: false
+    domain-event-topic: apex-domain-event
 
 # ============================================================
 # 2. 数据访问

@@ -44,6 +44,10 @@ apex:
       enabled: true
     dlq:
       enabled: true
+    # ✅ 启用领域事件 MQ 广播（企业版 RocketMQ 全链路）
+    domain-event-enabled: true
+    # 领域事件 Topic（生产可通过 APEX_MQ_DOMAIN_EVENT_TOPIC 覆盖）
+    domain-event-topic: apex-domain-event
 
   # ---------- Sentinel 系统规则（企业版可选调优） ----------
   # 💡 Sentinel 框架连接（dashboard/transport）在公共层 spring.cloud.sentinel 配置；

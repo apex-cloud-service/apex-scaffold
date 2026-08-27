@@ -24,12 +24,29 @@ server:
   # ✅ HTTP/2 支持（Netty 原生支持，需 TLS 或 h2c）
   http2:
     enabled: true
-  # ---------- Netty 服务器性能参数 ----------
+  # ---------- Netty 服务器性能参数（NettyConfig 读取） ----------
   netty:
-    # 连接建立超时（毫秒）
+    # Spring Boot 原生连接建立超时（毫秒）（ServerProperties.Netty）
     connection-timeout: 5000
+    # 自定义 NettyConfig 读取的连接建立超时（毫秒）（与原生键保持一致）
+    connect-timeout-millis: 5000
     # 💡 事件循环线程数：默认 = CPU 核数 * 2；高并发可显式覆盖（NETTY_EVENT_LOOP_THREADS）
     # WebFlux 下通过系统属性 reactor.netty.ioWorkerCount 控制（见性能优化说明）
+    # ---------- HTTP 响应压缩（GZip） ----------
+    compression:
+      # ✅ 启用响应压缩：显著降低 JSON 响应体积（WebFlux 静态资源默认压缩）
+      enabled: true
+      # 压缩级别（0-9）：6 为 CPU/体积均衡点（NettyConfig 默认值）
+      level: 6
+      # 最小压缩响应体（字节）：低于此值不压缩，避免小响应压缩开销大于收益
+      min-response-size: 1024
+    # ---------- 连接超时控制 ----------
+    # 读取超时（秒）：超过 30s 无数据读取则关闭连接（防慢客户端占用连接）
+    read-timeout-seconds: 30
+    # 写入超时（秒）：超过 60s 未写完则关闭连接
+    write-timeout-seconds: 60
+    # 空闲超时（秒）：连接空闲 20s 无任何读写则关闭（keep-alive 连接回收）
+    idle-timeout-seconds: 20
   # ---------- 默认 WebClient 超时（毫秒） ----------
   webclient:
     # 连接建立超时
@@ -136,6 +153,9 @@ jwt:
   access-token-expire: 7200000
   # Refresh Token 有效期（毫秒）：7 天
   refresh-token-expire: 604800000
+  # Access Token 自动续期阈值（毫秒）：剩余有效期低于该值且携带有效 Refresh Token 时
+  # 自动签发新 Token（JwtAuthenticationFilter 读取，实现无感续期，默认 30 分钟）
+  access-token-renew-threshold: ${JWT_ACCESS_RENEW_THRESHOLD:1800000}
 
 logging:
   level:
@@ -335,6 +355,16 @@ rocketmq:
     enabled: ${ROCKETMQ_CONSUMER_ENABLED:true}
 
 # ============================================================
+# 消息消费幂等（MqConsumerService 读取）
+# ============================================================
+# ✅ 消费端幂等控制：已处理消息 ID 在 Redis 中保留该时长（分钟），
+#    重复投递（At-least-once 语义）在窗口内直接跳过，防止业务重复执行
+mq:
+  consumer:
+    # 幂等记录 TTL（分钟）：默认 30 分钟；须大于业务最长处理链路时长
+    idempotent-ttl-minutes: ${MQ_IDEMPOTENT_TTL_MINUTES:30}
+
+# ============================================================
 # MyBatis 持久化
 # ============================================================
 mybatis:
@@ -387,6 +417,9 @@ remote:
     default-retry-delay: ${REMOTE_API_RETRY_DELAY:1000}
     # 远程响应聚合缓冲上限（字节），默认 10MB
     max-in-memory-size: 10485760
+    # ✅ 远程响应 GZip 解压（WebClient 自动协商 Accept-Encoding）
+    # 💡 外部服务返回 gzip 响应时自动解压，节省带宽；服务端不压缩时无副作用
+    compress-response: true
     # ---------- 外部 HTTP 连接池 ----------
     # 连接池最大连接数
     pool-max-connections: ${REMOTE_API_POOL_MAX_CONNECTIONS:100}
@@ -410,6 +443,64 @@ remote:
     services: {}
 
 # ============================================================
+# 内容安全审核（百度 AI 内容审核，企业版能力）
+# ============================================================
+# ⚠️ 文本/图片审核适配器读取以下凭据；未配置时审核通道自动禁用（放行直传）
+# 🔒 所有密钥均通过环境变量注入，禁止硬编码；启用后需在 prod 校验器完成参数校验
+text:
+  moderation:
+    baidu:
+      # 🔒 百度 AI 内容审核 API Key（空值 = 不启用文本审核）
+      api-key: ${BAIDU_TEXT_MODERATION_API_KEY:}
+      # 🔒 Secret Key（空值 = 不启用文本审核）
+      secret-key: ${BAIDU_TEXT_MODERATION_SECRET_KEY:}
+      # Token 获取端点（OAuth 2.0）
+      token-endpoint: https://aip.baidubce.com/oauth/2.0/token
+      # 文本审核接口地址
+      endpoint: https://aip.baidubce.com/rest/2.0/solution/v1/text_censor/v2/user_defined
+      # 审核接口调用超时（秒）
+      timeout-seconds: 10
+      # 失败重试次数（不含首次）
+      retry-max-attempts: 3
+      # 重试基础间隔（毫秒，指数退避）
+      retry-base-delay-ms: 250
+image:
+  moderation:
+    baidu:
+      # 🔒 百度 AI 图片审核 API Key（空值 = 不启用图片审核）
+      api-key: ${BAIDU_IMAGE_MODERATION_API_KEY:}
+      # 🔒 Secret Key（空值 = 不启用图片审核）
+      secret-key: ${BAIDU_IMAGE_MODERATION_SECRET_KEY:}
+      # Token 获取端点（OAuth 2.0）
+      token-endpoint: https://aip.baidubce.com/oauth/2.0/token
+      # 图片审核接口地址
+      endpoint: https://aip.baidubce.com/rest/2.0/solution/v1/img_censor/v2/user_defined
+      # 审核策略 ID（百度控制台配置；0 = 默认策略）
+      strategy-id: 1
+      # 审核接口调用超时（秒）
+      timeout-seconds: 10
+      # 图片 Base64 编码后最大字节数（默认 9.5MB，超出拒绝审核）
+      max-base64-bytes: 9500000
+      # 图片最大边长（像素）：超过按比例缩放后再审核
+      max-dimension: 4096
+      # 图片压缩质量（0.0-1.0）：降低审核传输体积
+      jpeg-quality: 0.88
+
+# ============================================================
+# API 调用日志（外部 HTTP 调用采集，ApiCallLogProperties 读取）
+# ============================================================
+# ✅ 记录对外部服务调用的请求/响应摘要（含耗时与状态码），便于联调与审计
+api-call-log:
+  # ✅ 调用日志采集总开关
+  enabled: true
+  # 请求/响应体最大记录长度（字符）：超出截断，防止大报文撑爆日志
+  max-body-length: 4096
+  # ✅ 记录请求体（⚠️ 含敏感字段的调用建议关闭）
+  log-request-body: true
+  # ✅ 记录响应体（⚠️ 含敏感字段的调用建议关闭）
+  log-response-body: true
+
+# ============================================================
 # 文件上传
 # ============================================================
 file:
@@ -418,6 +509,39 @@ file:
     enabled: ${FILE_UPLOAD_ENABLED:true}
     # 单文件最大字节数：默认 10MB（⚠️ 与 spring.codec.max-in-memory-size 联动）
     max-size-bytes: ${FILE_UPLOAD_MAX_SIZE:10485760}
+
+# ============================================================
+# 对象存储（多实现门面：local / minio / volcengine）
+# ============================================================
+# ✅ 默认存储实现由 storage.default-type 选择（DefaultStorageConfiguration 读取）：
+#   local（默认，本地磁盘）/ minio（MinIO）/ volcengine（火山引擎 TOS）
+# 💡 dev 环境在 application-dev.yml 覆盖为本地目录；生产须通过环境变量注入远端凭据
+storage:
+  # 默认存储实现：local（未配置时兜底本地，保证文件上传不依赖外部服务）
+  default-type: ${STORAGE_DEFAULT_TYPE:local}
+  # 默认 Bucket 名称（对象存储实现使用）
+  bucket-name: ${STORAGE_BUCKET_NAME:apex}
+  # 预签名 URL 有效期（秒）：文件直传/直读链接过期时间
+  presigned-url-expire-seconds: ${STORAGE_PRESIGNED_EXPIRE:300}
+  # ---------- 本地存储实现 ----------
+  local:
+    # ✅ 本地存储开关（default-type=local 时生效）
+    enabled: true
+    # 本地存储根目录（相对项目根；生产可用绝对路径）
+    base-path: ${STORAGE_LOCAL_BASE_PATH:./data/storage}
+    # 文件对外访问基础 URL（反向代理映射本地目录时配置；空 = 不提供公网直链）
+    public-base-url: ${STORAGE_LOCAL_PUBLIC_BASE_URL:}
+  # ---------- 火山引擎 TOS（对象存储） ----------
+  # ❌ 默认关闭：启用需设置 storage.default-type=volcengine 并注入以下凭据
+  volcengine:
+    enabled: ${VOLC_ENGINE_ENABLED:false}
+    # 🔒 TOS Endpoint（环境变量注入）
+    endpoint: ${VOLC_ENGINE_ENDPOINT:}
+    # 🔒 区域（如 cn-beijing）
+    region: ${VOLC_ENGINE_REGION:}
+    # 🔒 Access Key / Secret Key（禁止硬编码，生产必须注入）
+    access-key: ${VOLC_ENGINE_ACCESS_KEY:}
+    secret-key: ${VOLC_ENGINE_SECRET_KEY:}
 
 # ============================================================
 # 异常告警
@@ -438,6 +562,23 @@ alert:
     secret: ${DINGDING_SECRET:}
 
 # ============================================================
+# 操作日志 / 审计（@OperationLog 注解切面）
+# ============================================================
+# ✅ 操作审计：拦截标注 @OperationLog 的方法，异步批量落库（OperationLogAspect 读取）
+# 💡 支持生产-消费批量写入（阻塞队列合并），降低高频操作场景的 DB 写入压力
+operation-log:
+  # ✅ 操作日志总开关（关闭后切面直接放行，不记录任何操作）
+  enabled: ${OPERATION_LOG_ENABLED:true}
+  # ✅ 记录请求参数（JSON 序列化后入库）
+  log-params: true
+  # ✅ 记录响应结果（供审计追踪返回内容；⚠️ 含敏感字段的响应建议关闭或脱敏）
+  log-result: true
+  # 请求参数最大截断长度（字符）：防止大报文撑爆日志表
+  max-param-length: 2000
+  # 响应结果最大截断长度（字符）
+  max-result-length: 2000
+
+# ============================================================
 # 业务自定义配置（apex.*）
 # ============================================================
 apex:
@@ -450,6 +591,43 @@ apex:
     file-path: ${APEX_LICENSE_FILE:classpath:license/license-basic.json}
     # 🔒 公钥（Base64）：生产可覆盖为官方发布公钥；缺省使用随包默认公钥
     public-key-file: ${APEX_LICENSE_PUBLIC_KEY_FILE:classpath:license/public.key}
+  # ---------- 熔断器（CircuitBreakerPort 编程式熔断） ----------
+  # ✅ CircuitBreakerService 按模式读取以下参数创建 Resilience4j CircuitBreaker，
+  #    业务代码通过 domain 端口 CircuitBreakerPort.withCircuitBreaker(name, mono) 接入；
+  #    （差异）此处为编程式熔断参数，与 resilience4j.* 声明式配置互补
+  circuit-breaker:
+    # 默认模式：均衡保护，适用一般外部服务
+    default:
+      # 失败率阈值（%）：50% 请求失败 → 熔断
+      failure-rate-threshold: 50
+      # 熔断打开后等待时长（Duration）：60s 后进入半开探测
+      wait-duration-in-open-state: 60s
+      # 滑动窗口大小：统计最近 100 次调用
+      sliding-window-size: 100
+      # 最小调用次数：不足 10 次不触发（防小样本误判）
+      minimum-number-of-calls: 10
+      # 半开状态允许通过的最大调用次数
+      permitted-calls-in-half-open: 5
+    # 严格模式：低阈值快熔断，适用支付/短信等不可降级关键服务
+    strict:
+      failure-rate-threshold: 30
+      wait-duration-in-open-state: 30s
+      sliding-window-size: 50
+      minimum-number-of-calls: 5
+      permitted-calls-in-half-open: 5
+    # 宽松模式：高阈值长等待，适用非关键/可容忍延迟服务
+    lenient:
+      failure-rate-threshold: 80
+      wait-duration-in-open-state: 120s
+      sliding-window-size: 200
+      minimum-number-of-calls: 20
+      permitted-calls-in-half-open: 15
+  # ---------- 本地限流降级（LocalRateLimiter） ----------
+  ratelimit:
+    local-fallback:
+      # ✅ Redis 不可用时自动降级为进程内本地限流（UserRateLimitAspect 读取）。
+      # 💡 保证 Redis 故障期间 @UserRateLimit 仍生效（单实例语义），恢复后自动切回 Redis
+      enabled: true
   captcha:
     # ✅ 图形验证码总开关（默认开启）。
     # 开启后提供 GET /api/v1/auth/captcha 获取验证码；登录请求携带 captchaId 时强制校验。
@@ -501,6 +679,44 @@ apex:
       default-ttl: 3600
       # 批量操作每批条目数（mget/mset/Pipeline）
       batch-size: 100
+  # ---------- Redis 键前缀（RedisKeyPrefix 读取） ----------
+  redis:
+    # Redis 键统一前缀：多应用共用同一 Redis 实例时用前缀隔离（如 apex-prod:）
+    # 空值 = 无前缀（默认）；配置后所有业务键（限流/验证码/缓存）自动追加
+    key-prefix: ${APEX_REDIS_KEY_PREFIX:}
+  # ---------- 领域事件 Outbox（DomainEventOutboxDispatcher 读取） ----------
+  # ✅ 发件箱模式：领域事件先落库（outbox 表）再可靠投递，保证事件不丢失
+  #    （进程崩溃后由定时 Dispatcher 补偿重发，投递成功后清理）
+  events:
+    outbox:
+      # 每次轮询批量取出的事件数
+      batch-size: 50
+      # 单事件最大投递尝试次数：超过后标记死信（留待人工处理）
+      max-attempts: 8
+      # 分布式锁持有时长（秒）：防多实例并发轮询同一批事件
+      lock-timeout-seconds: 120
+      # 并行投递线程数
+      parallelism: 4
+      # ✅ 保留策略总开关：定期清理已投递/死信事件，防止表无限膨胀
+      retention-enabled: true
+      # 已投递事件保留时长（小时）：默认 7 天
+      retention-delivered-hours: 168
+      # 死信事件保留时长（天）：默认 30 天
+      retention-dead-days: 30
+      # 每次清理批次大小（条）
+      retention-batch-size: 5000
+  # ---------- 降级快照（DegradeSnapshotProperties 读取） ----------
+  degrade:
+    snapshot:
+      # ✅ 降级快照总开关：接口降级时将最近一次成功响应快照存入本地/Redis，
+      #    降级期间优先返回快照（提升可用性）。默认白名单为空 = 不接入任何接口
+      enabled: true
+      # Redis 写入节流窗口（秒）：同一资源在此窗口内最多写一次 Redis（写放大控制）
+      redis-throttle-seconds: 5
+      # 本地缓存最大条目数（超出按最旧淘汰）
+      local-max-entries: 256
+      # 快照资源白名单：显式声明才接入（如 /api/v1/users/me）；须经评审避免跨用户错配
+      resources: []
   # ---------- 安全配置 ----------
   security:
     guard:
@@ -508,6 +724,41 @@ apex:
       enabled: true
       # ✅ User-Agent 检查（💡 部分合法客户端可能不发 UA，prod 可关闭）
       ua-check-enabled: true
+    scan-guard:
+      # ✅ 扫描流量拦截：识别公网扫描器高频探测路径（/.git、/phpmyadmin、/actuator/env 等）
+      #    并直接阻断，降低信息泄露与被攻击面（ScanTrafficGuardProperties 读取）
+      enabled: true
+      # 拦截响应状态码：403 明确拒绝（默认）；可改 404 让扫描器误判路径不存在
+      block-status: 403
+      # ✅ 拦截 CONNECT 隧道探测（防代理隧道滥用）
+      block-connect-method: true
+      # 探测路径模式列表（默认覆盖公网扫描器高频路径，均与业务 /api /actuator 无交集）
+      path-patterns:
+        - /HNAP1
+        - /CFIDE
+        - /.git
+        - /.env
+        - /dana-cached
+        - /success.txt
+        - /confluence
+        - /devicedesc.xml
+        - /SDK
+        - /cgi-bin
+        - /boaform
+        - /GponForm
+        - /autodiscover
+        - /remote
+        - /owa
+        - /ecp
+        - /phpmyadmin
+        - /_ignition
+        - /WEB-INF
+        - /server-status
+        - /server-info
+        - /.aws
+        - /actuator/env
+        - /manager
+        - /host-manager
     ip-rate-limit:
       # ✅ IP 限流总开关（防单 IP 恶意请求）
       enabled: true
@@ -532,6 +783,12 @@ apex:
       lock-duration: 300
       # 统计窗口（秒）
       window-size: 600
+    # ---------- 短信发送限流（防短信轰炸） ----------
+    sms-send-limit:
+      # 单手机号窗口内最大发送次数（SmsSendLimitProperties 读取）
+      max-attempts: 3
+      # 限流窗口（秒）：5 分钟内最多 3 条
+      window-seconds: 300
     input-validation:
       # ✅ 输入校验过滤器（SQL 注入/XSS 等攻击特征检测）
       enabled: true
@@ -541,6 +798,9 @@ apex:
     anti-replay:
       # ✅ 防重放攻击（时间戳 + 随机数校验）
       enabled: true
+      # 随机数（nonce）有效期（秒）：同一 nonce 在有效期内只允许使用一次
+      # （AntiReplayAspect 读取，默认 360s = 6 分钟，须大于客户端时钟偏差容忍度）
+      nonce-ttl-seconds: ${APEX_ANTI_REPLAY_NONCE_TTL:360}
   # ---------- 消息消费者开关（业务监听器装配） ----------
   # ⚠️ 与 rocketmq.consumer.enabled 区分：此键控制业务监听器
   #    （UserMessageListener / DeadLetterQueueProcessor）的 @ConditionalOnProperty 装配
@@ -551,4 +811,9 @@ apex:
     dlq:
       # ✅ 启用死信队列处理
       enabled: ${APEX_MQ_DLQ_ENABLED:true}
+    # ---------- 领域事件 MQ 投递（EnhancedDomainEventPublisherImpl 读取） ----------
+    # ✅ 领域事件经 RocketMQ 广播（配合 Outbox 实现可靠投递）；关闭后仅本地发布
+    domain-event-enabled: ${APEX_MQ_DOMAIN_EVENT_ENABLED:true}
+    # 领域事件 Topic 名称
+    domain-event-topic: ${APEX_MQ_DOMAIN_EVENT_TOPIC:apex-domain-event}
 

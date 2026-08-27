@@ -22,16 +22,9 @@ trace:
   # 慢请求阈值（毫秒），超过该值的 Span 在日志中以 WARN 级别记录详情。
   slow-threshold-ms: ${TRACE_SLOW_THRESHOLD_MS:3000}
 
-apex:
-  vote-candidate-index:
-    # 基准模式保持分桶刷新后自动构建候选世代，与默认行为一致。
-    candidate-build-enabled: ${APEX_VOTE_CANDIDATE_BUILD_ENABLED:true}
-    # 正式候选读开关；压测聚焦 Redis 派生索引链路时保持开启。
-    candidate-read-enabled: ${APEX_VOTE_CANDIDATE_READ_ENABLED:true}
-    # Shadow 仅记录差异、不改写 MySQL 正式结果，压测期间保持开启以观测一致性。
-    candidate-shadow-enabled: ${APEX_VOTE_CANDIDATE_SHADOW_ENABLED:true}
-    # 性能 profile 可显式比较 DB 基线与 Redis 派生索引路径。
-    recent-exposure-enabled: ${APEX_VOTE_CANDIDATE_RECENT_EXPOSURE_ENABLED:false}
+# （说明）历史遗留 apex.vote-candidate-index 段已移除：对应配置类
+#   VoteCandidateIndexProperties 无任何业务消费方（去业务化后残留死代码），
+#   保留无效配置只会误导运维；如需恢复候选索引基准，先恢复消费方再补回配置。
 
 logging:
   level:

@@ -42,6 +42,9 @@ apex:
       enabled: false
     dlq:
       enabled: false
+    # ❌ 关闭领域事件 MQ 广播（标准版无 RocketMQ，事件仅本地分发）
+    domain-event-enabled: false
+    domain-event-topic: apex-domain-event
 
 # ============================================================
 # 2. 缓存（Caffeine + Redis 多级缓存）

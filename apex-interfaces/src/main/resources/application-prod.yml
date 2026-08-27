@@ -899,7 +899,7 @@ remote:
     # ---------- 多目标服务配置（按需扩展） ----------
     # 示例：
     # services:
-    #   face-analysis:
+    #   payment-service:
     #     base-url: http://127.0.0.1:9000
-    #     read-timeout: 300000   # 与 timelimiter face-analysis 300s 对齐
+    #     read-timeout: 300000   # 与 timelimiter payment-service 300s 对齐
     services: {}

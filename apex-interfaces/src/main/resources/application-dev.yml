@@ -97,6 +97,11 @@ apex:
       enabled: false
     dlq:
       enabled: false
+    # ❌ 关闭领域事件 MQ 广播：无 Broker 时跳过分布式发布，仅保留本地事件（进程内）
+    # 💡 EnhancedDomainEventPublisherImpl 读取，关闭后发布走 Spring 事件本地分发
+    domain-event-enabled: false
+    # 领域事件 Topic（保留默认值；开启广播时生效）
+    domain-event-topic: apex-domain-event
 
 # ============================================================
 # H2 控制台（可选调试工具）
