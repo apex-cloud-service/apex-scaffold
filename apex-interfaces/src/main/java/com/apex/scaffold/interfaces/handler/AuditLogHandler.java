@@ -16,10 +16,10 @@ import reactor.core.publisher.Mono;
 /**
  * 操作审计日志处理器（函数式端点）。
  *
- * <p>提供操作审计日志（{@code audit_log} 表）的分页查询 API，
+ * <p>提供操作审计日志（{@code sys_operation_log} 表）的分页查询 API，
  * 支撑管理后台「系统监控-审计日志」页面（C2 审计落库闭环）。
- * 审计写入由 {@code OperationLogAspect} 切面在业务方法执行后自动完成，
- * 本 Handler 仅负责查询展示。</p>
+ * 审计写入由 {@code OperationLogAspect} 切面 + {@code OperationLogService}
+ * 在业务方法执行后自动完成（写读同源），本 Handler 仅负责查询展示。</p>
  *
  * <h2>接口清单</h2>
  * <ul>

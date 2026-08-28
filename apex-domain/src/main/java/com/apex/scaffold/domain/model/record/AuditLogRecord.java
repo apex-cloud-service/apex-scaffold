@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 /**
  * 审计日志记录（领域层查询模型）。
  *
- * <p>操作审计日志（{@code audit_log} 表）的领域查询载体，由基础设施层
+ * <p>操作审计日志（{@code sys_operation_log} 表）的领域查询载体，由基础设施层
  * 从 PO 转换而来，供应用层查询服务转换为展示 DTO，避免 PO 跨层暴露。</p>
  *
  * @author Apex Team

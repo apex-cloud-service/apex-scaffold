@@ -2,6 +2,27 @@
 
 本项目遵循 [语义化版本规范](https://semver.org/lang/zh-CN/)。
 
+## [1.1.4] - 2026-08-28
+
+### Added
+- **备份/恢复脚本**：`scripts/backup/db-backup.sh`（mysqldump 一致性快照 + gzip + 轮转保留 N 份 + 可选 MinIO/S3 上传；支持宿主机直连与 Docker 容器两种场景）、`db-restore.sh`（交互选择/指定文件恢复，恢复前自动备份当前库）、`README.md`；本机实测备份→恢复全链路通过
+- **配套前端工程（独立仓库 apex-admin-web）**：Vue3 + Vite + TS + Pinia + Element Plus 管理后台，前后端分离对接（登录/验证码、用户/角色/菜单/部门/字典/参数/任务、登录/审计日志、在线用户、个人中心、动态路由 + 按钮权限）
+- **三种部署方式统一**：`java -jar`（守护脚本 `scripts/deploy/app.sh` + systemd 模板）、Docker 单容器（Dockerfile 多阶段 + `ARG BUILD_PROFILE`）、Docker Compose（`docker-compose.yml` 应用栈）；完整部署文档 `docs/DEPLOYMENT.md`（16 章，含环境变量全表、systemd、多实例、升级回滚、备份、安全清单、FAQ）
+- **本地基础设施一键编排**：`docker-compose.infra.yml` 一键部署 MySQL/Redis/Nacos/RocketMQ/Sentinel/Zipkin/Prometheus/Grafana/Blackbox 全部 9 组件；镜像拉取脚本 `scripts/deploy/pull-infra-images.sh`（带重试，容错镜像加速器故障）；`.env.example` / `.dockerignore`
+- **配置增强**：Nacos 开关全部环境变量化（`NACOS_CONFIG_ENABLED` 等，无 Nacos 可完全关闭）；远程 IP 统一为 `127.0.0.1` 默认值（Nacos/Sentinel/RocketMQ/Zipkin/Redis）；Prometheus 抓取改 `host.docker.internal:8081`
+
+### Changed
+- 对齐审计：文档/脚本/配置端口、端点（`/api/v1/health`、`/actuator/health/readiness`）、环境变量、账号全量统一；k8s 编排重构为环境变量注入 + readiness/liveness 探针；TROUBLESHOOTING/CONFIGURATION/QUICK_START/README 同步
+
+### Fixed
+- **basic 档启动失败**：基础版排除 Redis 自动配置导致防重放/限流组件缺 `ReactiveStringRedisTemplate`，移除排除（基础版仍依赖 Redis 基础设施）
+- **dev 档启动失败**：排除 Redisson 导致 `HotSpotRateLimitAspect` 缺 `RedissonClient`，移除排除
+- **prod Druid 启动失败**：`keep-alive-between-time-millis` 与 `time-between-eviction-runs-millis` 相等（Druid 校验必崩），扫描间隔调为 30s
+- **RocketMQ broker 启动即崩**：store 卷挂载点归 root 导致非 root 无写权限，去掉卷挂载 + 调小 HEAP_OPTS
+- **spy.properties 残留 H2 driver**（运行时无该依赖，P6Spy 初始化崩溃），清理
+- **compose 默认栈 Redis 密码联动**（prod 强制 `REDIS_PASSWORD`）、JWT ≥32 字节校验、文件上传与百度云审核联动校验
+- **IdempotentApiAspect 日志 NPE**：方法参数无请求对象时 `getSignature()` 可能为 null 导致日志崩溃，新增 `signatureText` 防御性取值（回归测试覆盖）
+
 ## [1.1.3] - 2026-08-27
 
 ### Added

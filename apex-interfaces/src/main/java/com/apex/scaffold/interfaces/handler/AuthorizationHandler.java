@@ -7,6 +7,7 @@ import com.apex.scaffold.application.dto.RoleRequest;
 import com.apex.scaffold.application.service.PermissionService;
 import com.apex.scaffold.application.service.RoleService;
 import com.apex.scaffold.application.service.UserService;
+import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.common.util.TraceIdUtil;
@@ -268,6 +269,7 @@ public class AuthorizationHandler extends BaseHandler {
                 description = "服务器内部错误",
                 content = @Content(schema = @Schema(implementation = Result.class)))
     })
+    @OperationLog(module = "权限管理", type = OperationLog.OperationType.INSERT, description = "创建角色")
     public Mono<ServerResponse> createRole(ServerRequest request) {
         String traceId = TraceIdUtil.getTraceId();
         return request.bodyToMono(RoleRequest.class)
@@ -308,6 +310,7 @@ public class AuthorizationHandler extends BaseHandler {
                 description = "服务器内部错误",
                 content = @Content(schema = @Schema(implementation = Result.class)))
     })
+    @OperationLog(module = "权限管理", type = OperationLog.OperationType.UPDATE, description = "更新角色")
     public Mono<ServerResponse> updateRole(ServerRequest request) {
         String traceId = TraceIdUtil.getTraceId();
         return request.bodyToMono(RoleRequest.class)
@@ -348,6 +351,7 @@ public class AuthorizationHandler extends BaseHandler {
                 description = "服务器内部错误",
                 content = @Content(schema = @Schema(implementation = Result.class)))
     })
+    @OperationLog(module = "权限管理", type = OperationLog.OperationType.DELETE, description = "删除角色")
     public Mono<ServerResponse> deleteRole(ServerRequest request) {
         String traceId = TraceIdUtil.getTraceId();
         Long id = safeParseLong(request.pathVariable("id"));
@@ -396,6 +400,7 @@ public class AuthorizationHandler extends BaseHandler {
                 description = "服务器内部错误",
                 content = @Content(schema = @Schema(implementation = Result.class)))
     })
+    @OperationLog(module = "权限管理", type = OperationLog.OperationType.INSERT, description = "创建权限")
     public Mono<ServerResponse> createPermission(ServerRequest request) {
         String traceId = TraceIdUtil.getTraceId();
         return request.bodyToMono(PermissionRequest.class)
@@ -436,6 +441,7 @@ public class AuthorizationHandler extends BaseHandler {
                 description = "服务器内部错误",
                 content = @Content(schema = @Schema(implementation = Result.class)))
     })
+    @OperationLog(module = "权限管理", type = OperationLog.OperationType.UPDATE, description = "更新权限")
     public Mono<ServerResponse> updatePermission(ServerRequest request) {
         String traceId = TraceIdUtil.getTraceId();
         return request.bodyToMono(PermissionRequest.class)
@@ -476,6 +482,7 @@ public class AuthorizationHandler extends BaseHandler {
                 description = "服务器内部错误",
                 content = @Content(schema = @Schema(implementation = Result.class)))
     })
+    @OperationLog(module = "权限管理", type = OperationLog.OperationType.DELETE, description = "删除权限")
     public Mono<ServerResponse> deletePermission(ServerRequest request) {
         String traceId = TraceIdUtil.getTraceId();
         Long id = safeParseLong(request.pathVariable("id"));
@@ -529,6 +536,7 @@ public class AuthorizationHandler extends BaseHandler {
                 description = "服务器内部错误",
                 content = @Content(schema = @Schema(implementation = Result.class)))
     })
+    @OperationLog(module = "权限管理", type = OperationLog.OperationType.UPDATE, description = "为用户分配角色")
     public Mono<ServerResponse> assignRoleToUser(ServerRequest request) {
         String traceId = TraceIdUtil.getTraceId();
         Long userId = safeParseLong(request.pathVariable("userId"));
@@ -587,6 +595,7 @@ public class AuthorizationHandler extends BaseHandler {
                 description = "服务器内部错误",
                 content = @Content(schema = @Schema(implementation = Result.class)))
     })
+    @OperationLog(module = "权限管理", type = OperationLog.OperationType.UPDATE, description = "移除用户角色")
     public Mono<ServerResponse> removeRoleFromUser(ServerRequest request) {
         String traceId = TraceIdUtil.getTraceId();
         Long userId = safeParseLong(request.pathVariable("userId"));

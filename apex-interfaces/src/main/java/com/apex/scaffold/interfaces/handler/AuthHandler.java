@@ -12,6 +12,7 @@ import com.apex.scaffold.application.dto.WechatBindPhoneRequest;
 import com.apex.scaffold.application.dto.WxPhoneRequest;
 import com.apex.scaffold.application.service.AuthRegistrationService;
 import com.apex.scaffold.application.service.AuthService;
+import com.apex.scaffold.common.annotation.IdempotentApi;
 import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.common.result.ResultCode;
@@ -303,6 +304,7 @@ public class AuthHandler extends BaseHandler {
     /** 完成手机号或微信注册，并在成功后返回登录令牌。 */
     @Operation(summary = "用户注册", description = "使用登录或微信绑定流程签发的一次性票据完成注册")
     @OperationLog(module = "认证管理", type = OperationLog.OperationType.INSERT, description = "用户注册")
+    @IdempotentApi(required = false, header = "Idempotency-Key")
     public Mono<ServerResponse> register(ServerRequest request) {
         return requestHandlerUtil
                 .handleRequestBody(request, RegisterRequest.class)

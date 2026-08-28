@@ -217,7 +217,7 @@ private String phone;
 **建议方案**:
 ```java
 // 注解方式
-@AuditLog(module = "用户管理", action = "创建用户", description = "创建新用户{username}")
+@OperationLog(module = "用户管理", type = OperationLog.OperationType.INSERT, description = "创建用户")
 public Mono<UserResponse> createUser(CreateUserRequest request) {
     // ...
 }
@@ -492,7 +492,7 @@ src/main/resources/i18n/
 ```bash
 #!/bin/bash
 # scripts/backup/db-backup.sh
-mysqldump -u root -p apex_db > backup_$(date +%Y%m%d_%H%M%S).sql
+mysqldump -u root -p apex_data > backup_$(date +%Y%m%d_%H%M%S).sql
 ```
 
 **工作量**: 1天

@@ -34,8 +34,13 @@ docker compose -f config/monitoring/docker-compose.yml up -d
 #   Blackbox   http://localhost:9115
 ```
 
+> 💡 监控组件（Prometheus/Grafana/Zipkin/Blackbox）已同时整合进根目录
+> `docker-compose.infra.yml`（与 MySQL/Redis/Nacos/RocketMQ/Sentinel 一起一键部署），
+> 本独立编排供「仅需监控栈」的场景使用，两者端口与配置完全一致。
+
 应用侧无需额外配置：`spring-boot-starter-actuator` 已在独立管理端口 **8081**
-暴露 `/actuator/prometheus`，Prometheus 启动即开始抓取；链路采样数据由应用按
+暴露 `/actuator/prometheus`，Prometheus 启动即开始抓取（本地应用经
+`host.docker.internal:8081` 访问）；链路采样数据由应用按
 `trace.zipkin-url`（默认 `http://localhost:9411`）上报 Zipkin；Redis 健康探针
 （`redisson_healthy`）由应用侧 `RedissonMetricsBinder` 自动上报。
 

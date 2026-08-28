@@ -89,6 +89,10 @@ public class AuthService {
      */
     private static final String LOGIN_FAIL_USERNAME_PREFIX = "login:fail:username:";
 
+    /** 登录保护被关闭时的告警只输出一次，避免刷屏（配置诚实性）。 */
+    private final java.util.concurrent.atomic.AtomicBoolean loginProtectionDisabledLogged =
+            new java.util.concurrent.atomic.AtomicBoolean();
+
     /** Token 服务，处理 Token 生成、验证和管理 */
     private final TokenService tokenService;
 
@@ -191,17 +195,27 @@ public class AuthService {
      */
     @SentinelResource(value = "authLogin", blockHandler = "handleLoginBlock", fallback = "loginFallback")
     public Mono<LoginResponse> login(LoginRequest request, String clientIp) {
-        return verifyCaptchaIfPresent(request)
-                .then(checkBruteForce(request, clientIp))
-                .then(Mono.defer(() -> loginStrategyProvider
-                        .getStrategy(request.getLoginType())
-                        .login(request)
-                        .flatMap(response ->
-                                recordLoginSuccess(request, clientIp)
-                                        .then(Mono.defer(() -> refreshHeartbeat(response)))
-                                        .thenReturn(response))
-                        .onErrorResume(
-                                e -> recordLoginFailure(request, clientIp).then(Mono.error(e)))));
+        Mono<Void> preChecks;
+        if (Boolean.FALSE.equals(loginProtectionProperties.getEnabled())) {
+            // 配置诚实性：enabled=false 时真实跳过防护并告警一次，避免「配置写了但没生效」
+            if (loginProtectionDisabledLogged.compareAndSet(false, true)) {
+                log.warn(
+                        "登录保护已关闭（apex.security.login-protection.enabled=false），"
+                                + "跳过暴力破解检查与验证码升级，生产环境存在撞库/爆破风险");
+            }
+            preChecks = Mono.empty();
+        } else {
+            preChecks = verifyCaptchaIfPresent(request, clientIp).then(checkBruteForce(request, clientIp));
+        }
+        return preChecks.then(Mono.defer(() -> loginStrategyProvider
+                .getStrategy(request.getLoginType())
+                .login(request)
+                .flatMap(response ->
+                        recordLoginSuccess(request, clientIp)
+                                .then(Mono.defer(() -> refreshHeartbeat(response)))
+                                .thenReturn(response))
+                .onErrorResume(
+                        e -> recordLoginFailure(request, clientIp).then(Mono.error(e)))));
     }
 
     /**
@@ -232,23 +246,90 @@ public class AuthService {
     }
 
     /**
-     * 登录前校验图形验证码（可选）。
+     * 登录前校验图形验证码（可选 + 失败升级强制）。
      *
-     * <p>仅当请求携带 {@code captchaId} 时触发校验；校验失败抛出
-     * {@code CAPTCHA_INVALID} 错误。APP 客户端未开启验证码时不传
-     * 该字段，直接放行。</p>
+     * <p>两种触发路径：</p>
+     * <ul>
+     *   <li><b>客户端主动携带</b>：请求带 {@code captchaId} 时校验，失败抛
+     *       {@code CAPTCHA_INVALID}</li>
+     *   <li><b>升级强制</b>：客户端 IP 在窗口内的失败次数达到
+     *       {@code apex.security.login-protection.captcha-after-failures}（默认 3 次）后，
+     *       登录必须携带验证码，否则抛 {@code CAPTCHA_REQUIRED}——在 IP 锁定（默认 20 次）
+     *       之前引入人机校验拦截层，缓解同 IP 撞库</li>
+     * </ul>
+     *
+     * <p>升级阈值未配置（{@code null}）或非正数时退化为「仅客户端主动携带时校验」。</p>
+     *
+     * @param request 登录请求
+     * @param clientIp 客户端 IP，用于查询失败计数
+     * @return 校验通过的信号
+     * @throws BusinessException 当验证码校验失败或升级强制未携带验证码时抛出
+     */
+    private Mono<Void> verifyCaptchaIfPresent(LoginRequest request, String clientIp) {
+        Integer captchaAfterFailures = loginProtectionProperties.getCaptchaAfterFailures();
+        if (captchaAfterFailures == null || captchaAfterFailures <= 0) {
+            return verifyIfPresent(request);
+        }
+        String ipKey = LOGIN_FAIL_IP_PREFIX + clientIp;
+        return redisTemplate
+                .opsForValue()
+                .get(ipKey)
+                .defaultIfEmpty("0")
+                .flatMap(count -> {
+                    int failCount = parseFailCount(count);
+                    if (failCount >= captchaAfterFailures) {
+                        if (request.getCaptchaId() == null || request.getCaptchaId().isBlank()) {
+                            log.warn("登录验证码升级强制，IP: {}, failCount: {}, 缺少验证码", clientIp, failCount);
+                            return Mono.error(new BusinessException(ResultCode.CAPTCHA_REQUIRED));
+                        }
+                        return verifyCaptcha(request);
+                    }
+                    return verifyIfPresent(request);
+                });
+    }
+
+    /**
+     * 校验请求携带的图形验证码。
+     *
+     * @param request 登录请求
+     * @return 校验通过的信号
+     * @throws BusinessException 验证码无效时抛出 {@code CAPTCHA_INVALID}
+     */
+    private Mono<Void> verifyCaptcha(LoginRequest request) {
+        return captchaService
+                .verify(request.getCaptchaId(), request.getCaptchaCode())
+                .flatMap(valid -> valid ? Mono.empty() : Mono.error(new BusinessException(ResultCode.CAPTCHA_INVALID)));
+    }
+
+    /**
+     * 仅当请求携带 {@code captchaId} 时校验图形验证码。
+     *
+     * <p>APP 客户端未开启验证码时不传该字段，直接放行。</p>
      *
      * @param request 登录请求
      * @return 校验通过的信号
      * @throws BusinessException 当验证码校验失败时抛出
      */
-    private Mono<Void> verifyCaptchaIfPresent(LoginRequest request) {
+    private Mono<Void> verifyIfPresent(LoginRequest request) {
         if (request.getCaptchaId() == null || request.getCaptchaId().isBlank()) {
             return Mono.empty();
         }
-        return captchaService
-                .verify(request.getCaptchaId(), request.getCaptchaCode())
-                .flatMap(valid -> valid ? Mono.empty() : Mono.error(new BusinessException(ResultCode.CAPTCHA_INVALID)));
+        return verifyCaptcha(request);
+    }
+
+    /**
+     * 将 Redis 中的失败计数字符串解析为整数，格式异常时视为 0。
+     *
+     * @param count 计数字符串
+     * @return 解析后的失败次数
+     */
+    private int parseFailCount(String count) {
+        try {
+            return Integer.parseInt(count);
+        } catch (NumberFormatException e) {
+            log.warn("登录失败计数格式异常: {}", count);
+            return 0;
+        }
     }
 
     /**
@@ -336,15 +417,21 @@ public class AuthService {
      * @return 空 Mono
      */
     private Mono<Void> recordLoginSuccess(LoginRequest request, String clientIp) {
-        String ipKey = LOGIN_FAIL_IP_PREFIX + clientIp;
-        Mono<Void> deleteIp = redisTemplate.opsForValue().delete(ipKey).then();
         String username = resolveUsername(request);
-        Mono<Void> cleanup = username == null || username.isBlank()
-                ? deleteIp
-                : deleteIp.then(redisTemplate
-                        .opsForValue()
-                        .delete(LOGIN_FAIL_USERNAME_PREFIX + username)
-                        .then());
+        Mono<Void> cleanup;
+        if (Boolean.FALSE.equals(loginProtectionProperties.getEnabled())) {
+            // 配置诚实性：登录保护关闭时失败计数从未写入，跳过 Redis 清理，仅记录登录日志。
+            cleanup = Mono.empty();
+        } else {
+            String ipKey = LOGIN_FAIL_IP_PREFIX + clientIp;
+            Mono<Void> deleteIp = redisTemplate.opsForValue().delete(ipKey).then();
+            cleanup = username == null || username.isBlank()
+                    ? deleteIp
+                    : deleteIp.then(redisTemplate
+                            .opsForValue()
+                            .delete(LOGIN_FAIL_USERNAME_PREFIX + username)
+                            .then());
+        }
         return cleanup.then(safeRecordLoginLog(username, clientIp, true, "登录成功"));
     }
 
@@ -358,24 +445,28 @@ public class AuthService {
      * @return 空 Mono
      */
     private Mono<Void> recordLoginFailure(LoginRequest request, String clientIp) {
-        String ipKey = LOGIN_FAIL_IP_PREFIX + clientIp;
-        Duration windowSize = Duration.ofSeconds(loginProtectionProperties.getWindowSize());
-        Mono<Void> incrementIp = redisTemplate
-                .opsForValue()
-                .increment(ipKey)
-                .flatMap(count -> {
-                    if (count == 1) {
-                        return redisTemplate.expire(ipKey, windowSize).then();
-                    }
-                    return Mono.empty();
-                })
-                .then();
-
         String username = resolveUsername(request);
-        Mono<Void> counters = username == null || username.isBlank()
-                ? incrementIp
-                : incrementIp.then(incrementLoginFailCount(LOGIN_FAIL_USERNAME_PREFIX + username, windowSize));
-
+        Mono<Void> counters;
+        if (Boolean.FALSE.equals(loginProtectionProperties.getEnabled())) {
+            // 配置诚实性：登录保护关闭时失败计数无实际用途，跳过递增，仅记录登录日志。
+            counters = Mono.empty();
+        } else {
+            String ipKey = LOGIN_FAIL_IP_PREFIX + clientIp;
+            Duration windowSize = Duration.ofSeconds(loginProtectionProperties.getWindowSize());
+            Mono<Void> incrementIp = redisTemplate
+                    .opsForValue()
+                    .increment(ipKey)
+                    .flatMap(count -> {
+                        if (count == 1) {
+                            return redisTemplate.expire(ipKey, windowSize).then();
+                        }
+                        return Mono.empty();
+                    })
+                    .then();
+            counters = username == null || username.isBlank()
+                    ? incrementIp
+                    : incrementIp.then(incrementLoginFailCount(LOGIN_FAIL_USERNAME_PREFIX + username, windowSize));
+        }
         return counters.then(safeRecordLoginLog(username, clientIp, false, "登录失败"));
     }
 

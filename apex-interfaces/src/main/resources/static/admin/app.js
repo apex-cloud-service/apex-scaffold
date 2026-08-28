@@ -26,6 +26,7 @@ const state = {
   // 各视图内部状态
   users: { page: 1, size: 20, total: 0 },
   logs: { page: 1, size: 20, total: 0 },
+  auditLogs: { page: 1, size: 20, total: 0 },
   selectedDictType: null,
   selectedMenu: null,
   selectedJob: null,
@@ -347,6 +348,7 @@ function switchView(name) {
     configs: renderConfigs,
     jobs: renderJobs,
     "login-logs": renderLoginLogs,
+    "audit-logs": renderAuditLogs,
   };
   const render = renderers[name];
   if (render) render().catch((error) => showToast(error.message || "加载失败", true));
@@ -1022,6 +1024,57 @@ async function renderLoginLogs() {
   });
 }
 
+// ==================== 审计日志 ====================
+
+/** 操作类型中文名映射 */
+const AUDIT_TYPE_NAMES = {
+  INSERT: "新增",
+  UPDATE: "修改",
+  DELETE: "删除",
+  SELECT: "查询",
+  LOGIN: "登录",
+  LOGOUT: "登出",
+  UPLOAD: "上传",
+  DOWNLOAD: "下载",
+  EXPORT: "导出",
+  IMPORT: "导入",
+  OTHER: "其他",
+};
+
+async function renderAuditLogs() {
+  const module = $("#audit-keyword").value.trim();
+  const operatorName = $("#audit-operator").value.trim();
+  const page = state.auditLogs.page;
+  const size = state.auditLogs.size;
+  const data = await api(`/admin-api/v1/audit-logs?page=${page}&size=${size}`
+      + (module ? `&module=${encodeURIComponent(module)}` : "")
+      + (operatorName ? `&operatorName=${encodeURIComponent(operatorName)}` : ""));
+  state.auditLogs.total = data.total || 0;
+
+  $("#audit-table").innerHTML = `
+    <table class="table">
+      <thead><tr><th>ID</th><th>操作人</th><th>模块</th><th>类型</th><th>描述</th><th>方法</th><th>URL</th><th>状态</th><th>耗时</th><th>时间</th></tr></thead>
+      <tbody>${(data.list || []).map((log) => `
+        <tr>
+          <td>${log.id}</td>
+          <td>${esc(log.operatorName ?? log.operatorId ?? "-")}</td>
+          <td>${esc(log.module ?? "-")}</td>
+          <td>${esc(AUDIT_TYPE_NAMES[log.operationType] ?? log.operationType ?? "-")}</td>
+          <td>${esc(log.description ?? "-")}</td>
+          <td>${esc(log.method ?? "-")}</td>
+          <td title="${esc(log.requestUrl ?? "")}">${esc(log.requestUrl ?? "-")}</td>
+          <td>${log.status === "SUCCESS" ? "✔ 成功" : log.status === "FAILED" ? "✘ 失败" : "-"}</td>
+          <td>${log.duration != null ? `${log.duration}ms` : "-"}</td>
+          <td>${fmtTime(log.createTime)}</td>
+        </tr>`).join("") || '<tr><td colspan="10" class="empty">暂无审计日志</td></tr>'}
+      </tbody>
+    </table>`;
+
+  renderPagination($("#audit-pagination"), state.auditLogs, () => {
+    renderAuditLogs();
+  });
+}
+
 // ==================== 分页 ====================
 
 function renderPagination(container, pager, onPageChange) {
@@ -1066,6 +1119,10 @@ function init() {
   $("#log-search").addEventListener("click", () => {
     state.logs.page = 1;
     renderLoginLogs();
+  });
+  $("#audit-search").addEventListener("click", () => {
+    state.auditLogs.page = 1;
+    renderAuditLogs();
   });
 
   initDictCreators();

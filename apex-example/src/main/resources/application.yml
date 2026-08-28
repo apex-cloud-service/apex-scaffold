@@ -14,7 +14,8 @@ spring:
         master:
           url: jdbc:mysql://localhost:3306/apex_example?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
           username: root
-          password: ${DB_PASSWORD:root123}
+          # 与本地基础设施（docker-compose.infra.yml）默认一致；可用 DB_PASSWORD 覆盖
+          password: ${DB_PASSWORD:apex-root}
           driver-class-name: com.mysql.cj.jdbc.Driver
 
     # Druid连接池（全局配置，对 dynamic 下所有数据源生效）

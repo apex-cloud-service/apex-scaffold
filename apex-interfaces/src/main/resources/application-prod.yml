@@ -39,7 +39,7 @@ spring:
       config:
         # Nacos 服务端地址，格式 host:port。
         # 生产环境可通过 NACOS_SERVER_ADDR 环境变量覆盖。
-        server-addr: ${NACOS_SERVER_ADDR:124.174.25.161:8848}
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
         # 命名空间：生产使用独立命名空间，实现配置隔离，防止误操作影响线上。
         # 须与 Nacos 控制台创建的命名空间 ID 一致。
         namespace: ${NACOS_NAMESPACE:prod}
@@ -50,8 +50,8 @@ spring:
         # 关闭 import-check，避免启动检查耗时。
         import-check:
           enabled: false
-        # 启用 Nacos 配置中心。
-        enabled: true
+        # 启用 Nacos 配置中心（默认开启；无 Nacos 部署时通过 NACOS_CONFIG_ENABLED=false 关闭）。
+        enabled: ${NACOS_CONFIG_ENABLED:true}
         # 允许运行时接收 Nacos 推送的配置变更（热更新）。
         # 仅对标注 @RefreshScope 的 Bean 或 @Value 注入的属性生效。
         refresh-enabled: true
@@ -59,15 +59,15 @@ spring:
       # ===== 服务注册与发现 =====
       discovery:
         # 注册中心地址，与配置中心复用同一 Nacos 集群。
-        server-addr: ${NACOS_SERVER_ADDR:124.174.25.161:8848}
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
         # 服务发现命名空间：与配置中心保持独立的生产命名空间。
         namespace: ${NACOS_NAMESPACE:prod}
         # 服务发现分组。
         group: DEFAULT_GROUP
-        # 启用服务发现。
-        enabled: true
-        # 是否将本实例注册到 Nacos。
-        register-enabled: true
+        # 启用服务发现（默认开启；无 Nacos 部署时通过 NACOS_DISCOVERY_ENABLED=false 关闭）。
+        enabled: ${NACOS_DISCOVERY_ENABLED:true}
+        # 是否将本实例注册到 Nacos（无 Nacos 部署时通过 NACOS_REGISTER_ENABLED=false 关闭）。
+        register-enabled: ${NACOS_REGISTER_ENABLED:true}
         # 注册的服务名，须与 spring.application.name 一致。
         service: ${spring.application.name}
         # 实例权重：值越大，被客户端选中的概率越高（0~1 或整数）。
@@ -80,7 +80,7 @@ spring:
     sentinel:
       transport:
         # Sentinel 控制台地址，用于实时查看流量、限流和熔断状态。
-        dashboard: ${SENTINEL_DASHBOARD_URL:http://124.174.25.161:8859}
+        dashboard: ${SENTINEL_DASHBOARD_URL:http://127.0.0.1:8858}
         # Sentinel 客户端与 Dashboard 通信的端口，每实例须唯一。
         # 同一宿主机多实例部署时应通过环境变量分配不同端口。
         port: ${SENTINEL_TRANSPORT_PORT:8719}
@@ -136,8 +136,10 @@ spring:
             # 3 秒快速失败，避免 60 秒等待将瞬时过载放大为全站请求堆积。
             max-wait: ${DB_MAX_WAIT_MILLIS:3000}
             # ---------- 连接检测与回收 ----------
-            # 空闲连接检测间隔（毫秒）：60 秒扫描一次超时空闲连接。
-            time-between-eviction-runs-millis: 60000
+            # 空闲连接检测间隔（毫秒）：30 秒扫描一次超时空闲连接。
+            # ⚠️ 必须小于 keep-alive-between-time-millis（60s），否则 Druid 启动校验失败
+            #    （keepAliveBetweenTimeMillis must be greater than timeBetweenEvictionRunsMillis）。
+            time-between-eviction-runs-millis: 30000
             # 连接最小空闲时间（毫秒）：空闲超过 5 分钟才回收。
             min-evictable-idle-time-millis: 300000
             # 优化说明（Netty/线程池/IO 性能优化方案 P3）：
@@ -189,7 +191,7 @@ spring:
   data:
     redis:
       # Redis 实例地址。
-      host: ${REDIS_HOST:115.191.17.107}
+      host: ${REDIS_HOST:127.0.0.1}
       # Redis 端口，默认 6379。
       port: ${REDIS_PORT:6379}
       # 逻辑数据库编号：生产使用 8 号库，与开发环境隔离。
@@ -252,7 +254,7 @@ trace:
   # 自定义追踪数据上报地址（Zipkin API v2 Spans 端点）。
   # （差异）application.yml 通过 management.zipkin.tracing.endpoint 配置；
   #         生产使用自定义 trace 前缀，底层仍对接同一 Zipkin 实例。
-  zipkin-url: ${ZIPKIN_BASE_URL:http://124.174.25.161:9411}/api/v2/spans
+  zipkin-url: ${ZIPKIN_BASE_URL:http://127.0.0.1:9411}/api/v2/spans
   # 采样率（0.0 ~ 1.0）：1.0 = 全量采样。
   # 优化说明（Netty/线程池/IO 性能优化方案 P3）：
   #   全量采样会产生较大网络和存储开销（每请求至少上报 1 个 span），
@@ -268,9 +270,13 @@ trace:
 #  3. RocketMQ 消息队列配置
 # ============================================================
 rocketmq:
-  # Name Server 地址：兼容 dev/prod 两套环境变量名。
-  # 优先级：ROCKETMQ_NAMESERVER > ROCKETMQ_NAMESRV_ADDR > 默认值。
-  name-server: ${ROCKETMQ_NAMESERVER:${ROCKETMQ_NAMESRV_ADDR:124.174.25.161:9876}}
+  # ⚠️ Name Server 地址【不在此处写默认值】：
+  #   rocketmq-spring-boot 2.3.3 依据 rocketmq.name-server 属性【是否存在】装配生产者，
+  #   （@ConditionalOnProperty，无 producer.enabled 开关）。
+  #   - 不部署 RocketMQ：不注入任何变量 → 属性不存在 → 生产者/消费者/领域事件组件全部跳过，
+  #     应用可无 MQ 干净启动（与 basic/standard 行为一致）。
+  #   - 部署 RocketMQ：注入 ROCKETMQ_NAMESERVER（或 ROCKETMQ_NAMESRV_ADDR）→ 自动装配启用。
+  # 优先级：ROCKETMQ_NAMESERVER > ROCKETMQ_NAMESRV_ADDR。
 
   # ===== 生产者 =====
   producer:
@@ -793,7 +799,8 @@ apex:
     login-protection:
       # 登录保护开关。
       # （差异）application.yml 默认开启；生产暂时关闭。
-      # ⚠️ 重新启用前需完成以下验证：
+      # ⚠️ 该开关已真实生效（enabled=false 时跳过暴力破解检查与验证码升级，
+      #    并在首次登录时输出 WARN 告警）。重新启用前需完成以下验证：
       #   1. 锁定/解锁流程在 Redis 跨实例一致性；
       #   2. 短信验证码与登录保护的配合逻辑；
       #   3. 被锁用户的解锁通知和客服处理流程。
@@ -803,6 +810,8 @@ apex:
       # 单用户名最大登录尝试次数（统计窗口内）：5 次即锁定。
       # 低于 IP 级别，更严格：针对暴力破解特定账号。
       username-max-attempts: 5
+      # 连续失败多少次后强制要求图形验证码（验证码升级阈值，0 表示不启用）。
+      captcha-after-failures: 3
       # 锁定持续时间（秒）：5 分钟内禁止登录。
       lock-duration: 300
       # 统计窗口大小（秒）：10 分钟内的尝试累计。
@@ -849,20 +858,21 @@ apex:
 # 与 spring.cloud.sentinel.* 框架配置并存，两者指向同一 Dashboard 实例。
 sentinel:
   # Sentinel 控制台主机。
-  host: ${SENTINEL_HOST:124.174.25.161}
+  host: ${SENTINEL_HOST:127.0.0.1}
   # Sentinel 控制台端口。
-  port: ${SENTINEL_PORT:8859}
+  port: ${SENTINEL_PORT:8858}
 
 # ============================================================
 # 18. P6Spy SQL 日志代理配置
 # ============================================================
-p6spy:
-  # 日志输出器：使用 SLF4J，与项目日志框架统一。
-  # （差异）application.yml 未配置 P6Spy；生产开启用于 SQL 诊断。
-  appender: com.p6spy.engine.spy.appender.Slf4JLogger
-  # 日志格式：SingleLineFormat 单行输出完整 SQL（含参数替换后的实际值）。
-  # 避免与 Druid SQL 日志重复记录。
-  log-message-format: com.p6spy.engine.spy.appender.SingleLineFormat
+# 💡 P6Spy 为 dev 环境专用（spring.datasource.dynamic.p6spy=true），
+#    配置位于 apex-infrastructure/src/main/resources/spy.properties
+#    （logMessageFormat 用 CustomLineFormat + Slf4JLogger，logback 路由到 p6spy logger）。
+# ✅ 生产不启用 P6Spy：datasource.dynamic.p6spy=false，SQL 监控由 Druid stat
+#    过滤器接管（filters: stat），避免代理层 CPU 开销与重复日志。
+# ❌ 历史遗留：此前存在 p6spy.appender / p6spy.log-message-format 顶层属性段，
+#    项目未引入 p6spy-spring-boot-starter（p6spy core 不读取 p6spy.* 属性前缀），
+#    该段为死配置且与 p6spy: false 矛盾，已于 2026-08-27 清理。
 
 # ============================================================
 # 19. 远程 API 调用配置

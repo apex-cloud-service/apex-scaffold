@@ -9,7 +9,7 @@
 #   1. 零外部依赖 — 使用 H2 内嵌数据库、嵌入式 Redis、禁用服务发现/消息队列，确保 CI 可复现。
 #   2. 快速启动 — 排除不必要的自动配置，缩短测试上下文加载时间。
 #   3. 安全隔离 — 禁用所有安全防护，避免测试请求被拦截或限流。
-#   4. 数据可控 — 通过 schema-it.sql / data-it.sql 提供稳定的测试数据集。
+#   4. 数据可控 — Flyway 迁移（db/migration）建表 + data-it.sql 提供稳定的测试数据集。
 # ============================================================================
 
 # ============================================================================
@@ -25,47 +25,44 @@ spring:
       enabled: always
 
   # ==========================================================================
-  # 数据源配置 — H2 内嵌数据库（替代 MySQL）
+  # 数据源配置 — MySQL（与 prod 同构：dynamic-datasource + Druid）
   # ==========================================================================
-  # 集成测试不依赖真实 MySQL 实例，而是使用 H2 内存数据库，原因：
-  #   1. CI 环境无需预装 MySQL 服务，降低环境复杂度
-  #   2. 每次测试启动即创建、结束即销毁，天然保证测试隔离性
-  #   3. 启动速度远快于真实数据库，显著缩短测试总耗时
+  # 集成测试使用真实 MySQL（默认 127.0.0.1:3306/apex_test，与 prod 结构一致），
+  # 理由：
+  #   1. Flyway 迁移脚本（db/migration，MySQL 版 V1-V6）在测试环境真实执行，
+  #      保证「各环境 Flyway 均可用」且 schema 与生产完全一致
+  #   2. 表结构与生产零差异，规避 H2 兼容性造成的假阳性/漏检
+  #   3. 每次启动经 Flyway migrate + data-it.sql 幂等重置，保证测试确定性
+  # 前提：本地 MySQL 可达（如 docker run -p 3306:3306 -e MYSQL_ROOT_PASSWORD=apex-root
+  #       -e MYSQL_DATABASE=apex_test mysql:8.0），连接信息可经环境变量覆盖。
   # --------------------------------------------------------------------------
   datasource:
     dynamic:
       # 主数据源名称，与生产配置保持一致
       primary: master
-      # 关闭严格模式：允许未显式声明的数据源，适配测试中简化的数据源配置
+      # 关闭严格模式：允许未显式声明的数据源
       strict: false
-      # 关闭 P6Spy SQL 日志代理 — 集成测试通过 logging.level 控制 SQL 日志，
-      # 无需额外代理层，避免干扰断言和性能开销
+      # 关闭 P6Spy SQL 日志代理 — 集成测试通过 logging.level 控制 SQL 日志
       p6spy: false
       datasource:
         master:
-          # H2 内存数据库连接 URL，各参数含义：
-          #   mem:apex_db           — 使用内存模式，数据库名 apex_db
-          #   MODE=MySQL            — 兼容 MySQL 语法模式，迁移脚本中 MySQL 特有
-          #                           DDL（如 ENGINE=InnoDB、AUTO_INCREMENT 等）
-          #                           可在 H2 中正常解析
-          #   DB_CLOSE_DELAY=-1     — JVM 生命周期内不关闭数据库，即使所有连接
-          #                           断开也不销毁，避免多测试类之间数据库被意外回收
-          #   DATABASE_TO_UPPER=false — 保留原始大小写，不强制将表名/列名转为大写，
-          #                           与 MySQL 行为一致
-          url: jdbc:h2:mem:apex_db;MODE=MySQL;DB_CLOSE_DELAY=-1;DATABASE_TO_UPPER=false
-          # H2 默认用户名
-          username: sa
-          # H2 默认无密码
-          password:
-          # H2 驱动类名
-          driver-class-name: org.h2.Driver
-          # 连接池类型（与生产一致，使用 HikariCP）
-          type: com.zaxxer.hikari.HikariDataSource
-          hikari:
-            # 连接池最大连接数设为 5 — 集成测试并发量低，较小的池避免资源浪费
-            maximum-pool-size: 5
-            # 最少空闲连接数设为 1 — 保持至少一个连接预热，避免首请求冷启动延迟
-            minimum-idle: 1
+          # 测试库 JDBC URL；默认本机 MySQL（apex_test 库）
+          url: ${DB_MASTER_URL:jdbc:mysql://127.0.0.1:3306/apex_test?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false}
+          # 数据库凭据；默认本机 root/apex-root，可经环境变量覆盖
+          username: ${DB_MASTER_USERNAME:root}
+          password: ${DB_MASTER_PASSWORD:apex-root}
+          # MySQL 驱动与连接池（与 prod 一致：Alibaba Druid）
+          driver-class-name: com.mysql.cj.jdbc.Driver
+          type: com.alibaba.druid.pool.DruidDataSource
+          druid:
+            db-type: mysql
+            # 集成测试并发量低，连接池适当缩小
+            initial-size: 2
+            min-idle: 1
+            max-active: ${DB_MAX_ACTIVE:10}
+            max-wait: 3000
+            validation-query: SELECT 1 FROM DUAL
+            test-while-idle: true
 
   # ==========================================================================
   # Redis 配置 — 嵌入式 Redis（替代外部 Redis 服务）
@@ -116,7 +113,7 @@ spring:
       enabled: false
       transport:
         # Dashboard 地址（保留默认值，但已禁用不会实际连接）
-        dashboard: ${SENTINEL_DASHBOARD_URL:http://124.174.25.161:8859}
+        dashboard: ${SENTINEL_DASHBOARD_URL:http://127.0.0.1:8858}
         # 客户端上报端口
         port: ${SENTINEL_TRANSPORT_PORT:8719}
         # 客户端 IP（留空自动探测）
@@ -154,27 +151,29 @@ spring:
       - org.springframework.boot.actuate.autoconfigure.tracing.zipkin.ZipkinAutoConfiguration
 
   # ==========================================================================
-  # 数据库迁移 — 禁用 Flyway，使用 SQL 初始化脚本
+  # 数据库迁移 — Flyway（与 prod 一致，MySQL 版 db/migration）
   # ==========================================================================
-  # 集成测试不通过 Flyway 执行版本化迁移，原因：
-  #   1. Flyway 迁移脚本针对 MySQL 编写，H2 无法完全兼容所有 DDL
-  #   2. schema-it.sql 是专门为 H2 适配的精简 DDL，直接涵盖测试所需的所有表
-  #   3. data-it.sql 预置测试数据集，保证测试用例有确定性的数据基线
+  # 集成测试通过 Flyway 真实执行 MySQL 版版本化迁移（db/migration V1-V6），
+  # 保证「各环境 Flyway 均可用」且测试库 schema 与生产完全一致；
+  # 表结构由 Flyway 建立，data-it.sql 仅负责灌入测试种子数据（幂等重置）。
   # --------------------------------------------------------------------------
   flyway:
-    # 禁用 Flyway 自动迁移
-    enabled: false
+    enabled: true
+    locations: classpath:db/migration
+    # 严格校验已执行迁移的 checksum，防止脚本被篡改
+    validate-on-migrate: true
+    # 禁止自动创建基线版本
+    baseline-on-migrate: false
+    # 禁止自动修复元数据表
+    repair: false
 
   sql:
     init:
-      # mode: always — 每次启动 Spring 容器都执行初始化脚本，
-      # 确保每个测试类获得干净的数据库状态
+      # mode: always — 每次启动 Spring 容器都执行数据初始化脚本，
+      # 确保每个测试类获得确定性的数据基线（表结构由 Flyway 负责）
       mode: always
-      # schema-it.sql：专为 H2 适配的精简 DDL，包含集成测试所需的所有表结构。
-      # 与 Flyway 迁移脚本不同，此文件省略了 H2 不支持的 MySQL 特有语法。
-      schema-locations: classpath:schema-it.sql
       # data-it.sql：集成测试的预置数据集，包含测试用例运行所需的基础记录
-      # （如系统配置、示例用户、投票基准数据等），保证测试可重复性。
+      # （如系统配置、示例用户等），通过 DELETE + INSERT 幂等重置
       data-locations: classpath:data-it.sql
 
   # ==========================================================================
@@ -199,7 +198,7 @@ mybatis:
 # ============================================================================
 trace:
   # Zipkin 服务地址（保留默认值，但已排除 ZipkinAutoConfiguration 不会实际使用）
-  zipkin-url: ${ZIPKIN_BASE_URL:http://124.174.25.161:9411}/api/v2/spans
+  zipkin-url: ${ZIPKIN_BASE_URL:http://127.0.0.1:9411}/api/v2/spans
   # 采样率 1.0（100%）— 已排除 Zipkin，此配置仅用于满足属性注入占位符
   sampling-rate: ${TRACE_SAMPLING_RATE:1.0}
 
@@ -212,7 +211,7 @@ trace:
 # --------------------------------------------------------------------------
 rocketmq:
   # Name Server 地址
-  name-server: ${ROCKETMQ_NAMESRV_ADDR:124.174.25.161:9876}
+  name-server: ${ROCKETMQ_NAMESRV_ADDR:127.0.0.1:9876}
   producer:
     # 生产者组名
     group: ${ROCKETMQ_PRODUCER_GROUP:apex-producer-group}
@@ -258,8 +257,8 @@ apex:
   # --------------------------------------------------------------------------
   events:
     outbox:
-      # 集成测试使用裁剪后的 H2 schema（schema-it.sql），Outbox 相关表可能不存在
-      # 或结构与生产不一致。Outbox 的可靠性由独立的存储/调度单元测试验证，
+      # 集成测试由 Flyway 执行 MySQL 版迁移（V1 即含 sys_domain_event_outbox 表），
+      # 与生产结构一致。Outbox 的可靠性由独立的存储/调度单元测试验证，
       # 无需在 API 集成测试中重复覆盖。
       enabled: false
 

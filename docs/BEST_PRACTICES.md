@@ -402,12 +402,13 @@ ENTRYPOINT ["java", "-jar", "app.jar"]
 ### 2. 健康检查
 
 ```yaml
+# 与项目 Dockerfile 一致：探测管理端口 8081 的就绪探针（含 DB + Redis）
 healthcheck:
-  test: ["CMD", "curl", "-f", "http://localhost:8080/api/health"]
+  test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8081/actuator/health/readiness", "|", "grep", "-q", "UP"]
   interval: 30s
-  timeout: 10s
+  timeout: 5s
   retries: 3
-  start_period: 40s
+  start_period: 90s
 ```
 
 ### 3. 资源限制

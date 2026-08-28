@@ -146,6 +146,9 @@ public enum ResultCode {
     /** 降级写接口返回排队中状态 */
     DEGRADE_QUEUED(2005, "系统繁忙，请求已排队", "flow.degrade_queued"),
 
+    /** 请求处理超时（全局响应超时熔断） */
+    REQUEST_TIMEOUT(2006, "请求超时，请稍后重试", "flow.network_timeout"),
+
     // ========== 基础设施错误 ==========
 
     /** 缓存错误 */
@@ -332,11 +335,17 @@ public enum ResultCode {
 
     /** 验证码错误或已过期 */
     CAPTCHA_INVALID(4741, "验证码错误或已过期", "biz.captcha.invalid"),
+    /** 需要输入图形验证码（登录失败次数达到阈值后的升级校验） */
+    CAPTCHA_REQUIRED(4742, "请输入图形验证码后重试", "auth.captcha_required"),
 
     // ========== 安全防护错误 ==========
 
     /** 防重放校验失败 */
     ANTI_REPLAY_FAILED(5001, "请求已过期或重复提交", "web.anti_replay_failed"),
+    /** 重复提交（HTTP 写接口幂等拦截） */
+    REPEAT_SUBMIT(5002, "重复提交，请勿重复操作", "web.repeat_submit"),
+    /** 缺少幂等键请求头 */
+    IDEMPOTENCY_KEY_MISSING(5003, "缺少幂等键请求头", "web.idempotency_key_missing"),
 
     /** 暂无符合目标性别的新照片（候选池枯竭或重建失败） */
     NO_TARGET_GENDER_PHOTO(4204, "当前暂无新的目标性别照片，请稍后再试", "biz.no_target_gender_photo"),

@@ -30,38 +30,41 @@ server:
 **解决方案**:
 
 ```bash
-# 检查MySQL是否运行
-docker-compose ps mysql
+# 检查MySQL是否运行（本地基础设施由 docker-compose.infra.yml 管理）
+docker compose -f docker-compose.infra.yml ps mysql
 
 # 如果未运行,启动MySQL
-docker-compose up -d mysql
+docker compose -f docker-compose.infra.yml up -d mysql
 
 # 等待MySQL完全启动(约30秒)
 sleep 30
 
-# 测试连接
-mysql -h localhost -P 3306 -u root -proot123
+# 测试连接（默认 root / apex-root）
+mysql -h localhost -P 3306 -u root -papex-root
 ```
 
-检查配置文件:
+检查配置文件（应用实际为 dynamic-datasource 结构，见 application-dev.yml）:
 ```yaml
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/apex_db?useSSL=false&serverTimezone=Asia/Shanghai
-    username: root
-    password: root123  # 确保与docker-compose.yml一致
+    dynamic:
+      datasource:
+        master:
+          url: jdbc:mysql://127.0.0.1:3306/apex_data?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
+          username: root
+          password: apex-root  # 与 docker-compose.infra.yml 的 MYSQL_ROOT_PASSWORD 一致
 ```
 
-### Q3: Redis连接失败 "Cannot get Jedis connection"
+### Q3: Redis连接失败（Lettuce/Redisson 无法建立连接）
 
 **解决方案**:
 
 ```bash
-# 检查Redis状态
-docker-compose ps redis
+# 检查Redis状态（本地基础设施由 docker-compose.infra.yml 管理）
+docker compose -f docker-compose.infra.yml ps redis
 
-# 测试Redis连接
-docker exec -it apex-redis redis-cli ping
+# 测试Redis连接（infra 栈容器名为 apex-infra-redis）
+docker exec -it apex-infra-redis redis-cli ping
 # 应返回: PONG
 ```
 
@@ -248,10 +251,10 @@ public Mono<UserEntity> findById(Long id) {
 3. 清除缓存测试:
 ```bash
 # Redis中查看缓存Key
-docker exec -it apex-redis redis-cli keys "user:*"
+docker exec -it apex-infra-redis redis-cli keys "user:*"
 
 # 删除特定缓存
-docker exec -it apex-redis redis-cli del "user::1"
+docker exec -it apex-infra-redis redis-cli del "user::1"
 ```
 
 ### Q11: 缓存穿透导致数据库压力大
@@ -297,8 +300,8 @@ public Mono<UserEntity> findById(Long id) {
 **解决方案**:
 
 ```bash
-# 检查NameServer是否运行
-docker-compose ps
+# 检查NameServer是否运行（本地基础设施由 docker-compose.infra.yml 管理）
+docker compose -f docker-compose.infra.yml ps rocketmq-namesrv
 
 # 创建Topic
 docker exec -it <rocketmq-broker-container> sh
@@ -390,7 +393,7 @@ curl http://localhost:9090/api/v1/targets | jq '.data.activeTargets[] | select(.
 
 3. 重启Grafana:
 ```bash
-docker-compose restart grafana
+docker compose -f docker-compose.infra.yml restart grafana
 ```
 
 ## 🐳 Docker问题
@@ -401,10 +404,10 @@ docker-compose restart grafana
 
 ```bash
 # 查看容器日志
-docker-compose logs apex-scaffold
+docker compose -f docker-compose.infra.yml logs apex-scaffold
 
 # 常见原因:
-# 1. 端口冲突: 修改docker-compose.yml中的ports映射
+# 1. 端口冲突: 修改 docker-compose.yml / docker-compose.infra.yml 中的 ports 映射
 # 2. 内存不足: 增加Docker资源限制
 # 3. 配置文件错误: 检查application.yml
 ```

@@ -39,8 +39,8 @@ INSERT INTO `sys_permission` (`id`, `name`, `code`, `description`, `type`, `stat
 (2031, '部门编辑', 'system:dept:edit', '编辑部门', 1, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0, 0),
 (2032, '部门删除', 'system:dept:remove', '删除部门', 1, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0, 0);
 
-INSERT INTO `sys_menu` (`id`, `parent_id`, `name`, `sort`, `path`, `component`, `permission`, `icon`, `menu_type`, `status`, `visible`, `create_time`, `update_time`, `version`, `deleted`) VALUES
-(1008, 1000, '部门管理', 1, 'system/dept', 'system/dept/index', 'system:dept:list', 'Cluster', 2, 1, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0, 0);
+INSERT INTO `sys_menu` (`id`, `parent_id`, `menu_name`, `menu_type`, `path`, `component`, `perms`, `icon`, `sort`, `visible`, `status`, `create_time`, `update_time`, `version`, `deleted`) VALUES
+(1008, 1000, '部门管理', 1, 'system/dept', 'system/dept/index', 'system:dept:list', 'Cluster', 8, 1, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0, 0);
 
 -- 根部门示例（可选，生产按需调整）
 INSERT INTO `sys_dept` (`id`, `parent_id`, `ancestors`, `name`, `order_num`, `status`, `create_time`, `update_time`, `version`, `deleted`) VALUES

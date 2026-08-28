@@ -1,0 +1,77 @@
+# ============================================================
+# Apex Scaffold - systemd 服务单元模板（java -jar 部署）
+# ============================================================
+# 部署位置: /etc/systemd/system/apex-scaffold.service
+# 配套环境变量文件: /etc/apex-scaffold/apex.env（每行 KEY=VALUE）
+#
+# 使用步骤:
+#   1. 构建并拷贝可执行 jar:
+#        ./scripts/build/build.sh -Penterprise
+#        mkdir -p /opt/apex-scaffold
+#        cp apex-interfaces/target/apex-interfaces-*-executable.jar /opt/apex-scaffold/app.jar
+#   2. 创建环境变量文件（见 docs/DEPLOYMENT.md 环境变量参考表）:
+#        sudo mkdir -p /etc/apex-scaffold
+#        sudo tee /etc/apex-scaffold/apex.env > /dev/null <<'EOF'
+#        SPRING_PROFILES_ACTIVE=prod,enterprise
+#        DB_MASTER_URL=jdbc:mysql://127.0.0.1:3306/apex_data?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
+#        DB_MASTER_USERNAME=apex
+#        DB_MASTER_PASSWORD=********
+#        REDIS_HOST=127.0.0.1
+#        REDIS_PORT=6379
+#        REDIS_PASSWORD=********   # prod 强制要求（spring.data.redis.password）
+#        JWT_SECRET=please-generate-a-32-byte-random-secret
+#        NACOS_CONFIG_ENABLED=false
+#        NACOS_DISCOVERY_ENABLED=false
+#        NACOS_REGISTER_ENABLED=false
+#        APEX_LOG_DIR=/var/log/apex-scaffold
+#        EOF
+#   3. 安装并启用:
+#        sudo cp scripts/deploy/apex-scaffold.service /etc/systemd/system/
+#        sudo chown -R apex:apex /opt/apex-scaffold /var/log/apex-scaffold
+#        sudo systemctl daemon-reload
+#        sudo systemctl enable --now apex-scaffold
+#   4. 常用操作:
+#        systemctl status apex-scaffold
+#        journalctl -u apex-scaffold -f
+#        sudo systemctl restart apex-scaffold
+# ============================================================
+
+[Unit]
+Description=Apex Scaffold Application
+Documentation=https://github.com/your-org/apex-scaffold
+After=network-online.target mysqld.service redis.service docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+# 建议创建专用系统用户: useradd -r -s /usr/sbin/nologin apex
+User=apex
+Group=apex
+WorkingDirectory=/opt/apex-scaffold
+
+# 环境变量文件（数据库 / Redis / JWT / License / 开关等，见上方说明）
+EnvironmentFile=/etc/apex-scaffold/apex.env
+
+# JVM 参数
+Environment=JAVA_OPTS=-Xms512m -Xmx1024m -XX:+UseG1GC -Dfile.encoding=UTF-8 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/opt/apex-scaffold/logs
+
+# 启动命令（bash -c 用于展开 $JAVA_OPTS）
+ExecStart=/usr/bin/env bash -c 'exec java $JAVA_OPTS -jar /opt/apex-scaffold/app.jar'
+
+# 优雅停机：发送 SIGTERM，Spring Boot 完成在途请求后退出（server.shutdown=graceful）
+ExecStop=/bin/kill -s TERM $MAINPID
+TimeoutStopSec=90
+KillMode=control-group
+
+# 崩溃自动重启
+Restart=on-failure
+RestartSec=10
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+# 日志统一走 journald（应用自身亦输出 logs/ 目录文件，APEX_LOG_DIR 控制）
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

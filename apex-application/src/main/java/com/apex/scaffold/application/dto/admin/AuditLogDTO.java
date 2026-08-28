@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 /**
  * 操作审计日志 DTO。
  *
- * <p>管理后台审计日志查询的展示模型，字段与 {@code audit_log} 表对齐
+ * <p>管理后台审计日志查询的展示模型，字段与 {@code sys_operation_log} 表对齐
  * （由基础设施层 PO 转换而来，避免 PO 跨层暴露）。</p>
  *
  * @author Apex Team

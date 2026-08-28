@@ -12,6 +12,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -94,6 +95,19 @@ class ApiCallLogIntegrationTest {
         this.apiCallLogRepository = apiCallLogRepository;
         this.apiCallLogService = apiCallLogService;
         this.apiCallLogProperties = apiCallLogProperties;
+    }
+
+    /**
+     * 每个测试前清空 API 调用日志表。
+     *
+     * <p>it 环境使用真实 MySQL（持久库，非 H2 内存库），多次运行/多个嵌套测试
+     * 之间 sys_api_call_log 会残留数据，导致固定 ID 插入冲突（DuplicateKey）与
+     * 固定条件查询返回多条（expected 1 actual N）。该表为测试专用写入表，
+     * 清空不影响种子数据。</p>
+     */
+    @BeforeEach
+    void cleanApiCallLogTable() {
+        jdbcTemplate.update("DELETE FROM sys_api_call_log");
     }
 
     // ==================== 基础设施验证 ====================

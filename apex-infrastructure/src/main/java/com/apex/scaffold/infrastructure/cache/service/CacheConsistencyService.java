@@ -2,6 +2,7 @@ package com.apex.scaffold.infrastructure.cache.service;
 
 import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
 import com.apex.scaffold.domain.service.CacheConsistencyPort;
+import com.apex.scaffold.infrastructure.cache.support.InFlightRequestMerge;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Duration;
 import java.util.List;
@@ -69,6 +70,9 @@ public class CacheConsistencyService implements CacheConsistencyPort {
 
     /** TTL jitter 因子：±10% */
     private static final double JITTER_FACTOR = 0.1;
+
+    /** 回源请求合并器：缓存击穿防护（Single-Flight），同 key 并发回源只执行一次 */
+    private final InFlightRequestMerge inFlight = new InFlightRequestMerge();
 
     private final CacheManager cacheManager;
 
@@ -338,6 +342,9 @@ public class CacheConsistencyService implements CacheConsistencyPort {
      * <p>三级读取路径：L1 → L2 → DB（loader回调）。
      * 如果缓存未命中，执行loader从数据库加载数据，并自动回填到两级缓存。
      *
+     * <p><b>缓存击穿防护（Single-Flight）</b>：对同一 cacheName+key 的并发回源请求
+     * 做进程内合并，热点 key 过期瞬间只有一个请求真正访问数据库。</p>
+     *
      * @param <T>       返回值类型
      * @param cacheName 缓存名称/前缀
      * @param key       缓存键
@@ -347,14 +354,15 @@ public class CacheConsistencyService implements CacheConsistencyPort {
      */
     public <T> Mono<T> getWithLoader(String cacheName, String key, Class<T> clazz, Mono<T> loader) {
         return get(cacheName, key, clazz)
-                .switchIfEmpty(Mono.defer(() -> loader.flatMap(dbValue -> {
-                    if (dbValue == null) {
-                        // 写入空值标记防止缓存穿透
-                        return setEmptyMarker(cacheName, key).then(Mono.empty());
-                    }
-                    // 写入两级缓存
-                    return put(cacheName, key, dbValue).thenReturn(dbValue);
-                })));
+                .switchIfEmpty(Mono.defer(() -> inFlight
+                        .join(cacheName + ":" + key, () -> loader.flatMap(dbValue -> {
+                            if (dbValue == null) {
+                                // 写入空值标记防止缓存穿透
+                                return setEmptyMarker(cacheName, key).then(Mono.empty());
+                            }
+                            // 写入两级缓存
+                            return put(cacheName, key, dbValue).thenReturn(dbValue);
+                        }))));
     }
 
     /**

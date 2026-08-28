@@ -10,8 +10,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -20,21 +18,20 @@ import reactor.core.publisher.Mono;
  *
  * <p>拦截标注了@FeatureGate注解的方法,自动检查License授权。
  * <ul>
- *   <li>仅当 {@code apex.license.enabled=true} 时激活,与{@link LicenseAutoConfiguration}
- *       保持一致,避免未启用License时因缺少LicenseValidator Bean导致应用启动失败。</li>
+ *   <li>由{@link LicenseAutoConfiguration} 以 {@code @Bean} 方式注册,
+ *       不依赖宿主应用的组件扫描路径 —— 宿主应用主类无论位于什么包名下,
+ *       只要引入本模块且未关闭 {@code apex.license.enabled},切面即生效。</li>
  *   <li>兼容WebFlux响应式方法: 拦截方法返回{@link Mono}/{@link Flux}时,
  *       以{@code Mono.error}/{@code Flux.error}抛出{@link BusinessException},
  *       由全局异常处理器转换为统一响应格式。</li>
  * </ul>
  *
  * @author Apex Team
- * @version 2.0.0
+ * @version 2.1.0
  */
 @Slf4j
 @Aspect
-@Component
 @RequiredArgsConstructor
-@ConditionalOnProperty(name = "apex.license.enabled", havingValue = "true", matchIfMissing = true)
 public class FeatureGateAspect {
 
     private final LicenseValidator licenseValidator;

@@ -6,7 +6,6 @@ import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.interfaces.monitor.SecurityMetricsRecorder;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Arrays;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -15,8 +14,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.annotation.Order;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
-import org.springframework.http.server.reactive.ServerHttpRequest;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
@@ -28,11 +28,17 @@ import reactor.core.publisher.Mono;
  *
  * <h2>工作原理</h2>
  * <ol>
- *   <li>从目标方法参数中提取 {@link ServerWebExchange}，获取请求头</li>
+ *   <li>从目标方法参数中提取请求上下文（函数式 {@link ServerRequest} 或注解式 {@link ServerWebExchange}），
+ *       获取请求头</li>
  *   <li>校验 {@code X-Timestamp} 与服务器当前时间的偏差是否在允许范围内</li>
  *   <li>校验 {@code X-Nonce} 是否已存在于 Redis（SET NX EX 原子操作）</li>
  *   <li>任一校验失败则抛出 {@link BusinessException}，拒绝请求执行</li>
  * </ol>
+ *
+ * <h2>函数式端点适配</h2>
+ * <p>项目 WebFlux 纯函数式端点（RouterFunction）的 Handler 方法参数形态为 {@link ServerRequest}，
+ * 而非 {@link ServerWebExchange}。本切面通过 {@link #resolveHeaders(Object[])} 兼容两种形态，
+ * 避免函数式端点上标注 {@code @AntiReplay} 被静默跳过。</p>
  *
  * <h2>防重放键命名规范</h2>
  * <pre>
@@ -120,14 +126,13 @@ public class AntiReplayAspect {
      */
     @Around("@annotation(antiReplay)")
     public Object around(ProceedingJoinPoint joinPoint, AntiReplay antiReplay) throws Throwable {
-        ServerWebExchange exchange = findExchange(joinPoint.getArgs());
-        if (exchange == null) {
-            log.warn("未找到 ServerWebExchange 参数，跳过防重放校验");
+        HttpHeaders headers = resolveHeaders(joinPoint.getArgs());
+        if (headers == null) {
+            log.warn("未找到 ServerWebExchange/ServerRequest 参数，跳过防重放校验");
             return joinPoint.proceed();
         }
 
-        ServerHttpRequest request = exchange.getRequest();
-        String timestampStr = request.getHeaders().getFirst(HEADER_TIMESTAMP);
+        String timestampStr = headers.getFirst(HEADER_TIMESTAMP);
 
         if (timestampStr == null) {
             log.warn("防重放校验失败，缺少 X-Timestamp 请求头");
@@ -149,7 +154,7 @@ public class AntiReplayAspect {
         }
 
         if (antiReplay.requireNonce()) {
-            String nonce = request.getHeaders().getFirst(HEADER_NONCE);
+            String nonce = headers.getFirst(HEADER_NONCE);
             if (nonce == null || nonce.isBlank()) {
                 log.warn("防重放校验失败，缺少 X-Nonce 请求头");
                 securityMetricsRecorder.recordAntiReplayRejected();
@@ -181,21 +186,29 @@ public class AntiReplayAspect {
     }
 
     /**
-     * 从方法参数列表中查找 {@link ServerWebExchange} 实例
+     * 从方法参数列表中解析请求头，兼容函数式端点与注解式端点。
      *
-     * <p>遍历目标方法的所有参数，返回第一个类型为 {@link ServerWebExchange} 的参数。
-     * 若未找到则返回 {@code null}，此时切面将跳过防重放校验。
+     * <p>遍历目标方法的所有参数：优先返回 {@link ServerWebExchange} 的请求头；
+     * 其次返回函数式 {@link ServerRequest} 的请求头（{@code asHttpHeaders()} 转换）。
+     * 若均未找到则返回 {@code null}，此时切面将跳过防重放校验。</p>
      *
      * @param args 目标方法的参数数组
-     * @return {@link ServerWebExchange} 实例，未找到时返回 {@code null}
+     * @return 请求头，未找到请求对象时返回 {@code null}
      */
-    private ServerWebExchange findExchange(Object[] args) {
+    private HttpHeaders resolveHeaders(Object[] args) {
         if (args == null) {
             return null;
         }
-        return (ServerWebExchange) Arrays.stream(args)
-                .filter(arg -> arg instanceof ServerWebExchange)
-                .findFirst()
-                .orElse(null);
+        for (Object arg : args) {
+            if (arg instanceof ServerWebExchange exchange) {
+                return exchange.getRequest().getHeaders();
+            }
+        }
+        for (Object arg : args) {
+            if (arg instanceof ServerRequest request) {
+                return request.headers().asHttpHeaders();
+            }
+        }
+        return null;
     }
 }

@@ -55,8 +55,8 @@ security:
   
   # 公开路径(无需认证即可访问)
   public-paths:
-    - /api/health
-    - /api/info
+    - /api/v1/health
+    - /api/v1/info
     - /swagger-ui.html
     - /doc.html
     - /v3/api-docs/**
@@ -69,49 +69,45 @@ security:
 ```yaml
 spring:
   datasource:
-    # 数据库URL
-    url: jdbc:mysql://localhost:3306/apex_db?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
-    
-    # 用户名
-    username: root
-    
-    # 密码(生产环境建议使用环境变量)
-    password: ${DB_PASSWORD:root123}
-    
-    # 驱动类名
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    
-    # Druid连接池配置
-    druid:
-      # 初始连接数
-      initial-size: 5
-      
-      # 最小空闲连接数
-      min-idle: 5
-      
-      # 最大活跃连接数
-      max-active: 20
-      
-      # 获取连接超时时间(毫秒)
-      max-wait: 60000
-      
-      # 连接保活间隔(毫秒)
-      time-between-eviction-runs-millis: 60000
-      
-      # 连接最小生存时间(毫秒)
-      min-evictable-idle-time-millis: 300000
-      
-      # 是否开启PSCache
-      pool-prepared-statements: true
-      
-      # PSCache大小
-      max-pool-prepared-statement-per-connection-size: 20
-      
-      # 监控统计拦截的filters
-      filters: stat,wall,slf4j
-      
-      # 合并多个DruidDataSource的监控数据
-      use-global-data-source-stat: true
+    dynamic:
+      # 默认数据源（dynamic-datasource，应用实际结构见 application-dev.yml / application-prod.yml）
+      primary: master
+      datasource:
+        master:
+          # 数据库URL（默认库 apex_data；dev 默认 root/apex-root，prod 必须环境变量注入）
+          url: jdbc:mysql://127.0.0.1:3306/apex_data?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
+          # 用户名
+          username: root
+          # 密码(生产环境建议使用环境变量 DB_MASTER_PASSWORD)
+          password: ${DB_MASTER_PASSWORD:apex-root}
+          # 驱动类名
+          driver-class-name: com.mysql.cj.jdbc.Driver
+          # Druid连接池配置
+          druid:
+            # 初始连接数
+            druid:
+              # 初始连接数
+              initial-size: 5
+              # 最小空闲连接数
+              min-idle: 5
+              # 最大活跃连接数
+              max-active: 20
+              # 获取连接超时时间(毫秒)
+              max-wait: 60000
+              # 空闲连接检测间隔(毫秒)（须小于 keep-alive-between-time-millis）
+              time-between-eviction-runs-millis: 30000
+              # 连接保活间隔(毫秒)
+              keep-alive-between-time-millis: 60000
+              # 连接最小生存时间(毫秒)
+              min-evictable-idle-time-millis: 300000
+              # 是否开启PSCache
+              pool-prepared-statements: true
+              # PSCache大小
+              max-pool-prepared-statement-per-connection-size: 20
+              # 监控统计拦截的filters
+              filters: stat,wall,slf4j
+              # 合并多个DruidDataSource的监控数据
+              use-global-data-source-stat: true
 ```
 
 ### MyBatis-Plus配置
@@ -228,6 +224,17 @@ cache:
 
 ## ⚡ 限流熔断配置
 
+### 全局响应超时
+
+```yaml
+apex:
+  api:
+    # 单个请求（含过滤器链与业务处理）的最大处理时长
+    # 超时返回 504 + REQUEST_TIMEOUT(2006) 统一错误响应，防止慢请求占用连接引发雪崩
+    # SSE 长连接（Accept: text/event-stream）自动豁免；设为 0s 关闭
+    response-timeout: ${APEX_RESPONSE_TIMEOUT:30s}
+```
+
 ### Sentinel配置
 
 ```yaml
@@ -333,10 +340,13 @@ rate-limit:
 
 ### RocketMQ配置
 
+> ⚠️ rocketmq-spring-boot 2.3.3 依据 `rocketmq.name-server` 属性**是否存在**装配生产者组件：
+> 不注入 `ROCKETMQ_NAMESERVER` 时全部跳过（应用可无 MQ 启动），启用时注入即可。
+
 ```yaml
 rocketmq:
-  # NameServer地址
-  name-server: localhost:9876
+  # NameServer地址（启用消息能力时注入；本地 infra 栈为 127.0.0.1:9876）
+  name-server: 127.0.0.1:9876
   
   # 生产者配置
   producer:

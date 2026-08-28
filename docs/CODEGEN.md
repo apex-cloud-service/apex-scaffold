@@ -66,7 +66,7 @@
    在 `ApiRouter.java` 注册路由；
 3. 将 `V{n}__create_*.sql` 合并入 `apex-interfaces/src/main/resources/db/migration`；
 4. 将 `ProductServiceTest.java` 移入测试目录，并把表定义对应的建表语句追加到
-   `schema-it.sql`（H2 测试基线）。
+   Flyway 迁移 `db/migration`（MySQL 版 V1-V6，各环境共用）。
 
 ## 五、扩展模板
 

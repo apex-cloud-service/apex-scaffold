@@ -20,6 +20,9 @@ import org.springframework.boot.autoconfigure.AutoConfiguration;
  * 所有商业功能（{@code @FeatureGate} 标注）拒绝，并输出明确的 WARN 日志。
  * 该策略保证 fork 用户无法绕过商业功能授权，同时不影响基础版正常使用。</p>
  *
+ * <p><b>装配说明</b>：本配置同时注册 {@link FeatureGateAspect}（功能门控切面），
+ * 全部 Bean 均通过自动配置注册，不依赖宿主应用的组件扫描路径。</p>
+ *
  * @author Apex Team
  * @version 2.0.0
  */
@@ -55,6 +58,21 @@ public class LicenseAutoConfiguration {
             log.warn("License 加载或验证失败（{}），进入降级模式：商业功能不可用，基础功能不受影响", e.getMessage());
             return LicenseValidator.degraded();
         }
+    }
+
+    /**
+     * 注册功能门控切面
+     *
+     * <p>由自动配置统一注册（而非依赖宿主应用的 {@code @ComponentScan} 路径），
+     * 保证任意包名结构的宿主应用引入本模块后 {@code @FeatureGate} 均能生效。
+     * 整个配置类受 {@code apex.license.enabled} 条件控制，切面随验证器同生同灭。</p>
+     *
+     * @param licenseValidator License 验证器
+     * @return 功能门控切面
+     */
+    @Bean
+    public FeatureGateAspect featureGateAspect(LicenseValidator licenseValidator) {
+        return new FeatureGateAspect(licenseValidator);
     }
 
     /** 加载公钥：优先外部文件，其次配置内嵌，最后随包默认公钥。 */

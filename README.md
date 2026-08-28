@@ -63,20 +63,40 @@ mvnd spring-boot:run -pl apex-interfaces
 
 ```bash
 # 启动所有服务(应用 + MySQL + Redis)
-docker-compose up -d
+docker compose up -d --build
 
 # 查看日志
-docker-compose logs -f apex-scaffold
+docker compose logs -f apex-scaffold
 
 # 停止服务
-docker-compose down
+docker compose down
 ```
 
-### 方式三:使用示例模块(⭐推荐)
+> 💡 **本地全部中间件一键部署**（MySQL/Redis/Nacos/RocketMQ/Sentinel/Zipkin/Prometheus/Grafana）：
+> `docker compose -f docker-compose.infra.yml up -d`
+
+### 方式三:java -jar 直接部署
+
+```bash
+# 1. 构建（-Pbasic / -Pstandard / -Penterprise）
+./scripts/build/build.sh -Penterprise
+
+# 2. 注入环境变量并启动（dev 环境示例；详见 docs/DEPLOYMENT.md）
+export SPRING_PROFILES_ACTIVE=dev,enterprise
+export NACOS_CONFIG_ENABLED=false NACOS_DISCOVERY_ENABLED=false NACOS_REGISTER_ENABLED=false
+java -jar apex-interfaces/target/apex-interfaces-*-executable.jar
+```
+
+> 📖 **完整部署指南（三种方式 × dev/it/prod 全环境、环境变量、systemd、监控、升级回滚）请阅读 [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)**
+
+### 方式四:使用示例模块(⭐推荐)
 
 我们提供了完整的示例模块(`apex-example`),以"用户管理"为业务载体,演示脚手架核心能力的标准用法。**这是新用户学习的最佳起点:**
 
 ```bash
+# 0. 准备独立库（example 使用 apex_example 库，与主应用隔离）
+mysql -h 127.0.0.1 -u root -papex-root -e "CREATE DATABASE IF NOT EXISTS apex_example DEFAULT CHARACTER SET utf8mb4;"
+
 # 查看示例代码
 cd apex-example/src/main/java/com/apex/example
 
@@ -163,12 +183,15 @@ jwt:
   secret: ${JWT_SECRET:your-secret-key-change-in-production}
   expiration: 7200000  # 2小时(毫秒)
 
-# 数据库配置
+# 数据库配置（dynamic-datasource，example 使用独立库 apex_example，需先 CREATE DATABASE apex_example）
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/apex_db?useSSL=false&serverTimezone=Asia/Shanghai
-    username: root
-    password: ${DB_PASSWORD:root123}
+    dynamic:
+      datasource:
+        master:
+          url: jdbc:mysql://localhost:3306/apex_example?useSSL=false&serverTimezone=Asia/Shanghai
+          username: root
+          password: ${DB_PASSWORD:apex-root}
 
 # Redis配置
   data:

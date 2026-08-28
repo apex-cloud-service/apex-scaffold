@@ -13,11 +13,15 @@
     <artifactId>apex-license-spring-boot-starter</artifactId>
     <name>Apex License Spring Boot Starter</name>
     <description>
-        Apex Scaffold License 授权校验 Spring Boot Starter。
+        Apex Scaffold 内置 License 授权校验组件（产品整体交付，随源码一同出售）。
 
-        提供 License 校验、FeatureGate 功能门控切面与发放工具，支持随包分发与独立裁剪：
+        提供 License 校验、FeatureGate 功能门控切面与发放工具：
+        - 定位为本脚手架的内置授权模块，与 apex-common 共同编译交付，不可脱离本工程独立分发
+        - 全部 Bean 由 AutoConfiguration 注册，不依赖宿主应用的组件扫描路径
         - apex.license.enabled=false 可整体关闭（spring.autoconfigure.exclude 亦可排除）
         - 无有效 License 时容错降级：基础功能放行、商业功能拒绝
+        - 商业防护依赖合同约束与私钥保密（卖方保留 config/license/private.key，不随源码交付）；
+          对持有完整源码的买家，本组件为最佳努力的授权基线而非绝对技术屏障
     </description>
 
     <dependencies>

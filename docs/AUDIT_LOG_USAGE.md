@@ -2,52 +2,49 @@
 
 ## 功能说明
 
-操作审计日志用于记录用户的关键操作,满足安全合规要求。通过`@AuditLog`注解标记需要审计的方法,AOP切面会自动记录操作信息到数据库。
+操作审计日志用于记录用户的关键操作（登录、增删改、权限变更、文件操作等），满足安全合规要求。
+通过 `@OperationLog` 注解标记需要审计的方法，`OperationLogAspect` 切面会自动记录操作信息，
+异步落库到 `sys_operation_log` 表；管理后台通过 `GET /admin-api/v1/audit-logs` 查询展示。
+
+> 说明：本项目为 WebFlux 纯函数式端点架构（无 @RestController），审计写入由
+> `OperationLogAspect`（响应式适配：支持 Mono 返回值、ReactiveSecurityContextHolder 取操作人、
+> 异步批量入队）完成，查询链路与之**写读同源**，保证审计页面可查到实际操作记录。
 
 ## 快速开始
 
-### 1. 在Controller或Service方法上添加注解
+### 1. 在 Handler 方法上添加注解（函数式端点）
 
 ```java
-import com.apex.scaffold.common.annotation.AuditLog;
-import com.apex.scaffold.common.annotation.OperationType;
+import com.apex.scaffold.common.annotation.OperationLog;
 
-@RestController
-@RequestMapping("/users")
-public class UserController {
+@Component
+public class UserHandler extends BaseHandler {
 
-    @PostMapping
-    @AuditLog(
+    @OperationLog(
         module = "用户管理",
-        type = OperationType.CREATE,
-        description = "创建用户: #{#user.username}",
-        ignoreParams = {"password"}  // 忽略密码字段
+        type = OperationLog.OperationType.INSERT,
+        description = "创建用户: #{#request}"
     )
-    public Result<UserVO> createUser(@RequestBody UserDTO user) {
+    public Mono<ServerResponse> create(ServerRequest request) {
         // 业务逻辑
-        return Result.success(userService.create(user));
     }
-    
-    @PutMapping("/{id}")
-    @AuditLog(
+
+    @OperationLog(
         module = "用户管理",
-        type = OperationType.UPDATE,
+        type = OperationLog.OperationType.UPDATE,
         description = "修改用户信息"
     )
-    public Result<Void> updateUser(@PathVariable Long id, @RequestBody UserDTO user) {
-        userService.update(id, user);
-        return Result.success();
+    public Mono<ServerResponse> update(ServerRequest request) {
+        // 业务逻辑
     }
-    
-    @DeleteMapping("/{id}")
-    @AuditLog(
+
+    @OperationLog(
         module = "用户管理",
-        type = OperationType.DELETE,
-        description = "删除用户ID: #{#id}"
+        type = OperationLog.OperationType.DELETE,
+        description = "删除用户"
     )
-    public Result<Void> deleteUser(@PathVariable Long id) {
-        userService.delete(id);
-        return Result.success();
+    public Mono<ServerResponse> delete(ServerRequest request) {
+        // 业务逻辑
     }
 }
 ```
@@ -57,105 +54,80 @@ public class UserController {
 | 参数 | 类型 | 必填 | 说明 | 示例 |
 |------|------|------|------|------|
 | module | String | 否 | 操作模块 | "用户管理" |
-| type | OperationType | 否 | 操作类型 | CREATE/UPDATE/DELETE/QUERY |
-| description | String | 否 | 操作描述(支持SpEL) | "创建用户: #{#user.username}" |
-| recordParams | boolean | 否 | 是否记录请求参数(默认true) | true |
-| recordResult | boolean | 否 | 是否记录响应结果(默认false) | false |
-| ignoreParams | String[] | 否 | 忽略的参数名 | {"password", "token"} |
+| type | OperationType | 否 | 操作类型 | INSERT/UPDATE/DELETE/SELECT |
+| description | String | 否 | 操作描述 | "创建用户" |
+| saveRequest | boolean | 否 | 是否保存请求参数(默认true) | true |
+| saveResponse | boolean | 否 | 是否保存响应结果(默认true) | false |
+| excludeRequestFields | String[] | 否 | 排除的请求参数字段(默认排除密码/token) | {"password", "token"} |
+| excludeResponseFields | String[] | 否 | 排除的响应字段 | {} |
 
-### 3. 操作类型枚举
+### 3. 操作类型枚举（OperationLog.OperationType）
 
-- `CREATE` - 新增
+- `INSERT` - 新增
 - `UPDATE` - 修改
 - `DELETE` - 删除
-- `QUERY` - 查询
-- `EXPORT` - 导出
-- `IMPORT` - 导入
+- `SELECT` - 查询
 - `LOGIN` - 登录
 - `LOGOUT` - 登出
-- `AUTHORIZE` - 授权
+- `UPLOAD` - 上传
+- `DOWNLOAD` - 下载
+- `EXPORT` - 导出
+- `IMPORT` - 导入
 - `OTHER` - 其他
 
-## 高级用法
+### 4. 全局开关（application.yml）
 
-### SpEL表达式支持
-
-在description中可以使用SpEL表达式引用方法参数:
-
-```java
-@AuditLog(
-    module = "订单管理",
-    type = OperationType.CREATE,
-    description = "创建订单: 商品ID=#{#order.productId}, 数量=#{#order.quantity}"
-)
-public Result<OrderVO> createOrder(@RequestBody OrderDTO order) {
-    // ...
-}
+```yaml
+operation-log:
+  enabled: true          # 总开关，false 时切面直接放行不记录
+  log-params: true       # 是否记录请求参数内容
+  log-result: true       # 是否记录响应结果内容
+  max-param-length: 2000 # 请求参数最大截断长度
+  max-result-length: 2000 # 响应结果最大截断长度
 ```
 
-### 敏感参数过滤
+## 查询 API
 
-对于密码、token等敏感信息,使用ignoreParams排除:
+- `GET /admin-api/v1/audit-logs` - 分页查询审计日志（需要权限 `system:audit-log:list`）
+  - 查询参数：`page`（页码，默认 1）、`size`（每页大小，默认 20，上限 100）、
+    `module`（操作模块，模糊）、`operatorName`（操作人姓名，模糊）
+  - 结果按主键倒序（最新优先）
 
-```java
-@AuditLog(
-    module = "用户管理",
-    type = OperationType.CREATE,
-    ignoreParams = {"password", "confirmPassword", "token"}
-)
-public Result<Void> register(@RequestBody RegisterDTO dto) {
-    // ...
-}
-```
-
-### 大数据量接口优化
-
-对于返回大量数据的接口,关闭响应结果记录:
-
-```java
-@AuditLog(
-    module = "报表管理",
-    type = OperationType.EXPORT,
-    recordResult = false  // 不记录响应结果,避免存储过大
-)
-public Result<List<DataVO>> exportData(@RequestBody QueryDTO query) {
-    // ...
-}
-```
-
-## 数据库表结构
-
-审计日志存储在`audit_log`表中,主要字段:
+## 数据库表结构（sys_operation_log）
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
-| id | BIGINT | 主键ID |
-| operator_id | VARCHAR(64) | 操作人ID |
-| operator_name | VARCHAR(100) | 操作人姓名 |
-| operator_ip | VARCHAR(50) | 操作人IP |
+| id | BIGINT | 主键ID(雪花算法) |
 | module | VARCHAR(100) | 操作模块 |
-| operation_type | VARCHAR(20) | 操作类型 |
-| description | VARCHAR(500) | 操作描述 |
-| request_url | VARCHAR(500) | 请求URL |
+| operation_type | VARCHAR(50) | 操作类型 |
+| description | VARCHAR(255) | 操作描述 |
+| request_method | VARCHAR(10) | 请求方法 |
+| request_uri | VARCHAR(500) | 请求URI |
 | request_params | TEXT | 请求参数(JSON) |
 | response_result | TEXT | 响应结果(JSON) |
-| duration | BIGINT | 执行时长(ms) |
-| status | VARCHAR(20) | 状态(SUCCESS/FAIL) |
-| error_msg | VARCHAR(1000) | 错误信息 |
-| create_time | DATETIME | 创建时间 |
+| status | INT(1) | 操作状态(0-成功,1-失败) |
+| error_msg | TEXT | 错误信息 |
+| execution_time | BIGINT | 执行时间(毫秒) |
+| ip | VARCHAR(50) | 操作IP |
+| location | VARCHAR(100) | 操作地点 |
+| user_id | BIGINT | 操作用户ID |
+| user_name | VARCHAR(50) | 操作用户名 |
+| operation_time | DATETIME | 操作时间 |
+| device_type / browser / os | VARCHAR | 设备/浏览器/系统 |
+| trace_id | VARCHAR(100) | 追踪ID |
+| create_time / update_time | DATETIME | 创建/更新时间 |
 
 ## 注意事项
 
-1. **性能影响**: 审计日志采用异步保存,对主业务流程影响极小
-2. **存储空间**: 建议定期归档或删除历史数据(如保留90天)
-3. **敏感信息**: 务必使用ignoreParams过滤密码、token等敏感字段
-4. **异常处理**: 审计日志保存失败不会影响主业务流程,仅记录错误日志
-5. **操作人获取**: 当前版本使用默认值,生产环境需从SecurityContext或Token中获取真实操作人
+1. **性能影响**：日志通过阻塞队列异步批量写入（生产者-消费者模式），不阻塞主业务流程
+2. **存储空间**：建议定期归档或删除历史数据（如保留 90 天），可配合定时任务清理
+3. **敏感信息**：`excludeRequestFields` 默认排除 password/oldPassword/newPassword/token，
+   业务侧对自定义敏感字段需显式声明
+4. **异常处理**：日志保存失败仅记录错误日志，不影响主业务流程
+5. **操作人获取**：响应式路径通过 `ReactiveSecurityContextHolder` 解析 JWT 中的 openId，
+   再查询用户表补全 userId/昵称；未登录请求记为匿名
 
-## TODO
+## 审计注解覆盖约定
 
-- [ ] 集成Spring Security获取真实操作人信息
-- [ ] 实现真正的异步保存(@Async或消息队列)
-- [ ] 添加审计日志查询API
-- [ ] 支持数据脱敏(手机号、身份证等)
-- [ ] 定期归档策略
+写操作（INSERT/UPDATE/DELETE/UPLOAD/IMPORT/授权变更等）与关键查询（登录/登出/导出）必须标注
+`@OperationLog`；纯读接口（列表/详情查询）可按需标注，健康检查等系统探针接口不标注。

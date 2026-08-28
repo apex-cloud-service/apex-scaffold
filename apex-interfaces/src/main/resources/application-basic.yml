@@ -54,15 +54,11 @@ apex:
 # ============================================================
 # 2. 数据访问
 # ============================================================
+# 💡 Redis 基础设施：基础版仍依赖 Redis（JWT 黑名单 / 图形验证码 / 防重放 nonce /
+#    登录保护等通用能力均存储于 Redis），故**不排除** Redis/Redisson 自动配置；
+#    features.cache=false 仅表示不提供「多级业务缓存」能力（Caffeine 单机），
+#    与 Redis 基础设施无关。部署时需提供 Redis（如 docker-compose.infra.yml）。
 spring:
-  # ❌ Redis 缓存：基础版不引入 Redis。
-  # 禁用方式：通过 autoconfigure.exclude 排除 Redis/Redisson 自动配置
-  # （⚠️ 注意：spring.data.redis.enabled 不是有效属性，必须用下方方式禁用）。
-  autoconfigure:
-    exclude:
-      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
-      - org.springframework.boot.autoconfigure.data.redis.RedisReactiveAutoConfiguration
-      - org.redisson.spring.starter.RedissonAutoConfigurationV2
 
 # ============================================================
 # 3. 系统监控

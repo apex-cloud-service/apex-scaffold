@@ -75,6 +75,7 @@
         <button class="nav-item" data-view="configs">参数配置</button>
         <button class="nav-item" data-view="jobs">定时任务</button>
         <button class="nav-item" data-view="login-logs">登录日志</button>
+        <button class="nav-item" data-view="audit-logs">审计日志</button>
       </nav>
       <div class="sidebar-footer">
         <button id="logout-button" class="text-button" type="button">退出登录</button>
@@ -177,6 +178,21 @@
         </div>
         <div id="log-table" class="table-wrap"></div>
         <div id="log-pagination" class="pagination"></div>
+      </section>
+
+      <!-- 审计日志 -->
+      <section id="view-audit-logs" class="view" hidden>
+        <header class="view-header">
+          <h1>审计日志</h1>
+          <p class="view-subtitle">回溯管理操作留痕（增删改、授权、文件、登录等），满足安全合规审计。</p>
+        </header>
+        <div class="toolbar">
+          <input id="audit-keyword" class="input" type="search" placeholder="搜索操作模块">
+          <input id="audit-operator" class="input" type="search" placeholder="搜索操作人">
+          <button id="audit-search" class="secondary-button" type="button">查询</button>
+        </div>
+        <div id="audit-table" class="table-wrap"></div>
+        <div id="audit-pagination" class="pagination"></div>
       </section>
     </main>
   </div>

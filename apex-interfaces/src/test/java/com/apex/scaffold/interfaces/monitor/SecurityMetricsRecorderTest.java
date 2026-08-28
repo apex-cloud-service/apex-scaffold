@@ -22,15 +22,17 @@ class SecurityMetricsRecorderTest {
         Counter loginFailed = org.mockito.Mockito.mock(Counter.class);
         Counter xss = org.mockito.Mockito.mock(Counter.class);
         Counter antiReplay = org.mockito.Mockito.mock(Counter.class);
+        Counter repeatSubmit = org.mockito.Mockito.mock(Counter.class);
         Counter circuitBreaker = org.mockito.Mockito.mock(Counter.class);
         SecurityMetricsRecorder recorder =
-                new SecurityMetricsRecorder(rateLimit, ipBlocked, loginFailed, xss, antiReplay, circuitBreaker);
+                new SecurityMetricsRecorder(rateLimit, ipBlocked, loginFailed, xss, antiReplay, repeatSubmit, circuitBreaker);
 
         recorder.recordRateLimitRejected();
         recorder.recordIpBlocked();
         recorder.recordLoginFailed();
         recorder.recordXssIntercepted();
         recorder.recordAntiReplayRejected();
+        recorder.recordRepeatSubmitRejected();
         recorder.recordCircuitBreakerOpened();
 
         verify(rateLimit).increment();
@@ -38,6 +40,7 @@ class SecurityMetricsRecorderTest {
         verify(loginFailed).increment();
         verify(xss).increment();
         verify(antiReplay).increment();
+        verify(repeatSubmit).increment();
         verify(circuitBreaker).increment();
     }
 }

@@ -57,7 +57,7 @@
 
 ### 2.2 通用组件（apex-common）— 已有能力
 
-**安全注解**：`@RequireRole`、`@RequirePermission`、`@RateLimiter`、`@UserRateLimit`、`@HotSpotRateLimit`、`@AntiReplay`、`@DataMask`、`@AuditLog`、`@OperationLog`、`@ApiVersion`、`@FeatureGate`、`@ConcurrencyControl`、`@OptimisticLockRetry`、`@Logical`、`@AggregateRoot`
+**安全注解**：`@RequireRole`、`@RequirePermission`、`@RateLimiter`、`@UserRateLimit`、`@HotSpotRateLimit`、`@AntiReplay`、`@DataMask`、`@OperationLog`、`@ApiVersion`、`@FeatureGate`、`@ConcurrencyControl`、`@OptimisticLockRetry`、`@Logical`、`@AggregateRoot`
 
 **工具/基础**：`JsonUtil`、`DateUtil`、`JwtUtil`、`PasswordUtil`、`TraceIdUtil`、`DataMaskUtil`、`SensitiveDataUtil`、`RequestUtil`、`HttpStatusUtil`、`FileUrlUtil`、`ExpiringLocalCache`、统一响应 `Result`、错误码 `ErrorCode`/`ResultCode`、全局异常、领域事件基类、License 套件、SPI 存储接口、阻塞 IO 调度器
 
@@ -303,7 +303,7 @@ RBAC 六件套（sys_user/role/permission/user_role/role_permission）、sys_ope
 3. 文件上传/下载示例（Local/MinIO 切换）
 4. RocketMQ 生产/消费示例（含死信）
 5. i18n 示例（中英文切换）
-6. 注解示例集：`@AuditLog`/`@DataMask`/`@RateLimiter`/`@AntiReplay`/`@ApiVersion`/`@FeatureGate`
+6. 注解示例集：`@OperationLog`/`@DataMask`/`@RateLimiter`/`@AntiReplay`/`@ApiVersion`/`@FeatureGate`
 7. 多数据源示例（主库/从库 `@DS`）
 8. 每个示例配 README + 测试
 

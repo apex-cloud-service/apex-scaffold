@@ -18,7 +18,7 @@ mvnd --version
 
 # 检查Docker(可选)
 docker --version
-docker-compose --version
+docker compose --version
 ```
 
 如果未安装,请参考:
@@ -45,30 +45,34 @@ cd apex-scaffold
 
 ```bash
 # 一键启动所有依赖(MySQL + Redis + 应用)
-docker-compose up -d
+docker compose up -d --build
 
 # 等待30秒让服务完全启动
 sleep 30
 
 # 验证服务状态
-docker-compose ps
+docker compose ps
 ```
 
-预期输出:
+预期输出（容器名由 compose 自动生成，形如 apex-scaffold-mysql-1）:
 ```
-NAME                STATUS              PORTS
-apex-mysql          Up (healthy)        0.0.0.0:3306->3306/tcp
-apex-redis          Up (healthy)        0.0.0.0:6379->6379/tcp
-apex-scaffold       Up                  0.0.0.0:8080->8080/tcp
+NAME                     STATUS              PORTS
+apex-scaffold-apex...-1  Up                  0.0.0.0:8080->8080/tcp
+apex-scaffold-mysql-1    Up (healthy)        0.0.0.0:3306->3306/tcp
+apex-scaffold-redis-1    Up (healthy)        0.0.0.0:6379->6379/tcp
 ```
+
+> 💡 如需同时部署项目用到的**全部中间件**（Nacos / RocketMQ / Sentinel /
+> Zipkin / Prometheus / Grafana 等），一条命令：
+> `docker compose -f docker-compose.infra.yml up -d`（详见 [docs/DEPLOYMENT.md](DEPLOYMENT.md) §6.5）
 
 ### 选项2:本地手动启动
 
 #### 2.1 启动MySQL和Redis
 
 ```bash
-# 仅启动基础设施
-docker-compose up -d mysql redis
+# 本地开发使用基础设施栈（Redis 无密码，与 dev 配置一致）
+docker compose -f docker-compose.infra.yml up -d mysql redis
 ```
 
 #### 2.2 编译项目
@@ -95,7 +99,7 @@ Started ApexApplication in X.XXX seconds
 ### 3.1 健康检查
 
 ```bash
-curl http://localhost:8080/api/health
+curl http://localhost:8080/api/v1/health
 ```
 
 预期响应:
@@ -205,7 +209,7 @@ ports:
 
 ```bash
 # Docker方式
-docker-compose logs -f apex-scaffold
+docker compose logs -f apex-scaffold
 
 # 本地方式
 tail -f logs/application.log
@@ -215,22 +219,22 @@ tail -f logs/application.log
 
 检查MySQL是否启动:
 ```bash
-docker-compose ps mysql
+docker compose ps mysql
 ```
 
 如果未启动,执行:
 ```bash
-docker-compose up -d mysql
+docker compose up -d mysql
 ```
 
 ### Q4: 如何重置数据库?
 
 ```bash
 # 删除数据卷(⚠️ 会丢失所有数据!)
-docker-compose down -v
+docker compose down -v
 
 # 重新启动
-docker-compose up -d
+docker compose up -d
 ```
 
 ## 🆘 获取帮助

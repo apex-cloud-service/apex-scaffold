@@ -3,7 +3,7 @@
 # ============================================================
 # 适用场景 : 本地开发 / 联调调试
 # 启用方式 : 默认 profile（spring.profiles.active=dev，见 application.yml）
-# 核心特性 : H2 内存库 + P6Spy SQL 日志 / 本地 Redis / 禁用 Nacos / 本地文件存储
+# 核心特性 : MySQL + P6Spy SQL 日志 / 本地 Redis / 禁用 Nacos / 本地文件存储
 #
 # ┌───────────────────────────────────────────────────────────┐
 # │ 注释符号规范（全仓配置文件统一约定）                         │
@@ -16,32 +16,72 @@
 # ============================================================
 
 spring:
-  # ---------- 自动配置排除 ----------
-  # ❌ Redisson：dev 环境不启用 Redisson 分布式锁/缓存客户端。
-  # 💡 仅排除 Redisson；Spring Data Redis（Lettuce）保留用于缓存/验证码。
-  autoconfigure:
-    exclude:
-      - org.redisson.spring.starter.RedissonAutoConfigurationV2
+  # ---------- 自动配置 ----------
+  # 💡 不排除 RedissonAutoConfigurationV2：HotSpotRateLimitAspect（IP 热点限流）直接依赖
+  #    RedissonClient，AntiReplayAspect / MetricsConfig / IpRateLimitWebFilter 依赖其
+  #    ReactiveRedisConnectionFactory（ReactiveStringRedisTemplate）。
+  #    RedissonAutoConfigurationV2 按 spring.data.redis.* 构建（localhost:6379 无密码），
+  #    若排除 Redisson，dev 完整启动将因缺少 RedissonClient / ReactiveStringRedisTemplate 失败。
 
   # ---------- Redis（本地） ----------
   data:
     redis:
-      # ✅ 本地 Redis：默认 localhost:6379
+      # ✅ 本地 Redis：默认 localhost:6379（可由 docker-compose.infra.yml 一键部署）
       host: localhost
       port: 6379
       # 连接超时（毫秒）
       timeout: 3000ms
 
-  # ---------- 数据源（H2 内存库，替代 MySQL） ----------
-  # 💡 dev 使用 H2 内存库（MODE=MySQL 兼容 MySQL 语法），无需安装数据库。
-  # ✅ 数据源经 P6Spy 代理（spy.properties 位于 apex-infrastructure/src/main/resources/），
-  #    输出带参数值的格式化 SQL 日志（logback-spring.xml dev 段 p6spy logger → SQL_CONSOLE/SQL_FILE）。
-  # ⚠️ 生产/测试环境不启用 P6Spy：prod 用纯 Druid stat 监控，it 测试用 logging.level 控制，避免代理层开销。
+  # ---------- 数据源（MySQL，与 prod 同构：dynamic-datasource + Druid） ----------
+  # ✅ dev 使用本机/容器 MySQL（默认 127.0.0.1:3306/apex_data），与 prod 结构一致，
+  #    可通过 DB_MASTER_URL / DB_MASTER_USERNAME / DB_MASTER_PASSWORD 环境变量覆盖。
+  # ✅ dev 保留 P6Spy SQL 日志代理（p6spy: true；spy.properties 位于
+  #    apex-infrastructure/src/main/resources/），输出带参数值的格式化 SQL 日志
+  #    （logback-spring.xml dev 段 p6spy logger → SQL_CONSOLE/SQL_FILE）。
+  # ⚠️ prod / it 关闭 P6Spy（p6spy: false），避免代理层开销。
+  # ⚠️ 启动前提：本地 MySQL 可达（docker compose -f docker-compose.infra.yml up -d 一键部署，
+  #    root/apex-root、库 apex_data），且 Flyway 迁移可执行（见下方 flyway 段）。
   datasource:
-    driver-class-name: com.p6spy.engine.spy.P6SpyDriver
-    url: jdbc:p6spy:h2:mem:apex_dev;DB_CLOSE_DELAY=-1;MODE=MySQL
-    username: sa
-    password:
+    dynamic:
+      # 主数据源名称，与生产配置保持一致
+      primary: master
+      # 关闭严格模式：允许未显式声明的数据源
+      strict: false
+      # 启用 P6Spy SQL 日志代理（仅 dev）
+      p6spy: true
+      datasource:
+        master:
+          # 主库 JDBC URL；默认指向本机 MySQL（apex_data 库）
+          url: ${DB_MASTER_URL:jdbc:mysql://127.0.0.1:3306/apex_data?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false}
+          # 数据库凭据；默认本机 root/apex-root，可经环境变量覆盖
+          username: ${DB_MASTER_USERNAME:root}
+          password: ${DB_MASTER_PASSWORD:apex-root}
+          # MySQL 驱动与连接池（与 prod 一致：Alibaba Druid）
+          driver-class-name: com.mysql.cj.jdbc.Driver
+          type: com.alibaba.druid.pool.DruidDataSource
+          druid:
+            db-type: mysql
+            initial-size: 5
+            min-idle: 5
+            max-active: ${DB_MAX_ACTIVE:20}
+            max-wait: 3000
+            validation-query: SELECT 1 FROM DUAL
+            test-while-idle: true
+            pool-prepared-statements: true
+            max-pool-prepared-statement-per-connection-size: 20
+            filters: stat
+
+  # ---------- Flyway 数据库迁移（与 prod 一致） ----------
+  flyway:
+    # dev 启动时自动执行 classpath:db/migration（MySQL 版 V1-V6）迁移
+    enabled: true
+    locations: classpath:db/migration
+    # 严格校验已执行迁移的 checksum，防止脚本被篡改
+    validate-on-migrate: true
+    # 禁止自动创建基线版本
+    baseline-on-migrate: false
+    # 禁止自动修复元数据表
+    repair: false
 
   # ---------- 注册中心与配置中心 ----------
   # ❌ Nacos：dev 环境禁用配置中心与服务发现，避免依赖外部 Nacos 实例。
@@ -104,9 +144,8 @@ apex:
     domain-event-topic: apex-domain-event
 
 # ============================================================
-# H2 控制台（可选调试工具）
+# 数据可视化（可选调试工具）
 # ============================================================
-# ✅ 浏览器访问 http://localhost:8080/h2-console 可查看内存库数据
-#    JDBC URL 填写: jdbc:h2:mem:apex_dev
-spring.h2.console.enabled: true
-spring.h2.console.path: /h2-console
+# ✅ dev 已切换 MySQL，不再有 H2 内存库，故不再启用 H2 控制台。
+#    如需查看数据，可使用 Navicat / mysql 客户端直连
+#    jdbc:mysql://127.0.0.1:3306/apex_data（root/apex-root，可环境变量覆盖）。

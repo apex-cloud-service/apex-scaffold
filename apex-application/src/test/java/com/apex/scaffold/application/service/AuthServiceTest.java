@@ -2,9 +2,11 @@ package com.apex.scaffold.application.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -185,6 +187,9 @@ class AuthServiceTest {
 
         loginRequest.setLoginType("CL_SMS");
         loginRequest.setPhone(phone);
+        // Mockito 对未打桩的 Boolean 方法默认返回 FALSE，此处必须显式开启登录保护，
+        // 否则新逻辑会走 enabled=false 跳过防护的路径，checkBruteForce 不会执行。
+        when(loginProtectionProperties.getEnabled()).thenReturn(true);
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
         when(valueOperations.get(ipKey)).thenReturn(Mono.empty());
         when(valueOperations.get(usernameKey)).thenReturn(Mono.empty());
@@ -200,6 +205,127 @@ class AuthServiceTest {
                 .verifyComplete();
 
         verify(strategy).login(loginRequest);
+    }
+
+    /**
+     * 执行 {@code login_ProtectionDisabledSkipsChecks} 操作。
+     */
+    @Test
+    @DisplayName("login - enabled=false 时应跳过暴力破解检查与验证码校验直接登录")
+    void login_ProtectionDisabledSkipsChecks() {
+        String clientIp = "127.0.0.1";
+        LoginStrategy strategy = mock(LoginStrategy.class);
+        when(loginProtectionProperties.getEnabled()).thenReturn(false);
+        when(loginStrategyProvider.getStrategy("WX_CODE")).thenReturn(strategy);
+        when(strategy.login(loginRequest)).thenReturn(Mono.just(loginResponse));
+
+        authService
+                .login(loginRequest, clientIp)
+                .as(StepVerifier::create)
+                .expectNext(loginResponse)
+                .verifyComplete();
+
+        verify(strategy).login(loginRequest);
+        verify(redisTemplate, never()).opsForValue();
+    }
+
+    /**
+     * 执行 {@code login_CaptchaEscalationRequiresCaptcha} 操作。
+     */
+    @Test
+    @DisplayName("login - IP失败次数达到阈值且未携带验证码时应返回CAPTCHA_REQUIRED")
+    void login_CaptchaEscalationRequiresCaptcha() {
+        String clientIp = "127.0.0.1";
+        String ipKey = "login:fail:ip:" + clientIp;
+        @SuppressWarnings("unchecked")
+        ReactiveValueOperations<String, String> valueOperations = mock(ReactiveValueOperations.class);
+        // Mockito 未打桩的 Boolean 默认返回 FALSE，须显式开启登录保护，否则跳过验证码升级逻辑。
+        when(loginProtectionProperties.getEnabled()).thenReturn(true);
+        when(loginProtectionProperties.getCaptchaAfterFailures()).thenReturn(3);
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.get(ipKey)).thenReturn(Mono.just("3"));
+
+        authService
+                .login(loginRequest, clientIp)
+                .as(StepVerifier::create)
+                .verifyErrorSatisfies(error -> {
+                    assertThat(error).isInstanceOf(BusinessException.class);
+                    assertThat(((BusinessException) error).getCode())
+                            .isEqualTo(ResultCode.CAPTCHA_REQUIRED.getCode());
+                });
+        verify(loginStrategyProvider, never()).getStrategy(anyString());
+    }
+
+    /**
+     * 执行 {@code login_CaptchaEscalationInvalidCaptcha} 操作。
+     */
+    @Test
+    @DisplayName("login - IP失败次数达到阈值且验证码错误时应返回CAPTCHA_INVALID")
+    void login_CaptchaEscalationInvalidCaptcha() {
+        String clientIp = "127.0.0.1";
+        String ipKey = "login:fail:ip:" + clientIp;
+        @SuppressWarnings("unchecked")
+        ReactiveValueOperations<String, String> valueOperations = mock(ReactiveValueOperations.class);
+        loginRequest.setCaptchaId("captcha-1");
+        loginRequest.setCaptchaCode("wrong");
+        // Mockito 未打桩的 Boolean 默认返回 FALSE，须显式开启登录保护，否则跳过验证码升级逻辑。
+        when(loginProtectionProperties.getEnabled()).thenReturn(true);
+        when(loginProtectionProperties.getCaptchaAfterFailures()).thenReturn(3);
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.get(ipKey)).thenReturn(Mono.just("5"));
+        when(captchaService.verify("captcha-1", "wrong")).thenReturn(Mono.just(false));
+
+        authService
+                .login(loginRequest, clientIp)
+                .as(StepVerifier::create)
+                .verifyErrorSatisfies(error -> {
+                    assertThat(error).isInstanceOf(BusinessException.class);
+                    assertThat(((BusinessException) error).getCode())
+                            .isEqualTo(ResultCode.CAPTCHA_INVALID.getCode());
+                });
+        verify(loginStrategyProvider, never()).getStrategy(anyString());
+    }
+
+    /**
+     * 执行 {@code login_CaptchaEscalationPassesWithValidCaptcha} 操作。
+     */
+    @Test
+    @DisplayName("login - IP失败次数达到阈值但验证码正确时应继续登录")
+    void login_CaptchaEscalationPassesWithValidCaptcha() {
+        String clientIp = "127.0.0.1";
+        String ipKey = "login:fail:ip:" + clientIp;
+        String phone = "13800138000";
+        String usernameKey = "login:fail:username:" + phone;
+        @SuppressWarnings("unchecked")
+        ReactiveValueOperations<String, String> valueOperations = mock(ReactiveValueOperations.class);
+        LoginStrategy strategy = mock(LoginStrategy.class);
+        loginRequest.setLoginType("CL_SMS");
+        loginRequest.setPhone(phone);
+        loginRequest.setCaptchaId("captcha-1");
+        loginRequest.setCaptchaCode("correct");
+        // Mockito 未打桩的 Boolean 默认返回 FALSE，须显式开启登录保护，否则跳过验证码升级逻辑。
+        when(loginProtectionProperties.getEnabled()).thenReturn(true);
+        when(loginProtectionProperties.getCaptchaAfterFailures()).thenReturn(3);
+        // 验证码通过后仍会执行 checkBruteForce（IP 维度 failCount=3），
+        // 未打桩的 Integer 默认返回 0 会误触发 LOGIN_LOCKED，须显式给出 IP 最大失败阈值。
+        when(loginProtectionProperties.getIpMaxAttempts()).thenReturn(20);
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.get(ipKey)).thenReturn(Mono.just("3"));
+        when(valueOperations.get(usernameKey)).thenReturn(Mono.empty());
+        when(valueOperations.delete(ipKey)).thenReturn(Mono.just(true));
+        when(valueOperations.delete(usernameKey)).thenReturn(Mono.just(true));
+        when(captchaService.verify("captcha-1", "correct")).thenReturn(Mono.just(true));
+        when(loginStrategyProvider.getStrategy("CL_SMS")).thenReturn(strategy);
+        when(strategy.login(loginRequest)).thenReturn(Mono.just(loginResponse));
+
+        authService
+                .login(loginRequest, clientIp)
+                .as(StepVerifier::create)
+                .expectNext(loginResponse)
+                .verifyComplete();
+
+        verify(strategy).login(loginRequest);
+        verify(captchaService).verify("captcha-1", "correct");
     }
 
     /**

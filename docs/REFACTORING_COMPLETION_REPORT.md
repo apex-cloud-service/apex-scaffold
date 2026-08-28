@@ -80,7 +80,7 @@
 - ✅ 删除全部 87 个旧迁移脚本（含原库名、`@apex_*` 重命名变量、偏好模型表）
 - ✅ 新建 `V1__init_schema.sql`：27 张通用表（RBAC 六件套 + 用户/文件/审计/订阅/信用/举报/黑名单等）
 - ✅ 数据库名统一为 `apex_data`，迁移脚本不包含 CREATE DATABASE/USE（由 JDBC URL 提供）
-- ✅ `schema-it.sql` 重建为 27 张通用表（H2 兼容），`data-it.sql` 保留通用种子数据
+- ✅ 测试基线改为 Flyway 迁移 `db/migration`（MySQL 版），`data-it.sql` 保留通用种子数据
 - ✅ `application-prod.yml` 去除业务配置节（vote-photo/recommendation/algorithm），通用配置并入 `apex:` 节
 
 ### B6. 文档品牌清理

@@ -2,6 +2,7 @@ package com.apex.scaffold.interfaces.handler;
 
 import com.apex.scaffold.application.dto.FileUploadResult;
 import com.apex.scaffold.application.service.FileService;
+import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.common.util.TraceIdUtil;
@@ -168,6 +169,7 @@ public class FileHandler extends BaseHandler {
                 content = @Content(schema = @Schema(implementation = Result.class)))
     })
     @Deprecated(since = "2.2.0", forRemoval = true)
+    @OperationLog(module = "文件管理", type = OperationLog.OperationType.UPLOAD, description = "上传图片（兼容入口）")
     public Mono<ServerResponse> upload(ServerRequest request) {
         String traceId = TraceIdUtil.getTraceId();
         if (!uploadEnabled) {
@@ -232,6 +234,7 @@ public class FileHandler extends BaseHandler {
         @ApiResponse(responseCode = "401", description = "未登录"),
         @ApiResponse(responseCode = "503", description = "百度或 Python 审核服务不可用")
     })
+    @OperationLog(module = "文件管理", type = OperationLog.OperationType.UPLOAD, description = "上传普通图片")
     public Mono<ServerResponse> uploadGenericFile(ServerRequest request) {
         String traceId = TraceIdUtil.getTraceId();
         if (!uploadEnabled) {
@@ -495,6 +498,7 @@ public class FileHandler extends BaseHandler {
                 description = "服务器内部错误",
                 content = @Content(schema = @Schema(implementation = Result.class)))
     })
+    @OperationLog(module = "文件管理", type = OperationLog.OperationType.DELETE, description = "删除文件")
     public Mono<ServerResponse> delete(ServerRequest request) {
         String traceId = TraceIdUtil.getTraceId();
         String bucketName = request.queryParam("bucketName").orElse(null);

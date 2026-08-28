@@ -76,7 +76,7 @@ Apex Scaffold 的技术底座显著强于主流商用脚手架（RuoYi / pig / J
 **配套**：新增/强化 **ArchUnit 分层规则**（`LayerArchTest` 扩展：interfaces → application → domain 单向，infrastructure 实现 domain 接口），把违规变成 CI 门禁。
 
 ### A3. 一致性治理（中优先）
-- 响应出口、错误信息 i18n、日志格式统一（见 A1）；新增 `@AuditLog` 落库补全（见 C2）。
+- 响应出口、错误信息 i18n、日志格式统一（见 A1）；新增 `@OperationLog` 落库补全（见 C2）。
 
 ### A4. 其他可评估的重构点（建议，不阻塞）
 | 点 | 模式 | 说明 |
@@ -124,7 +124,7 @@ Apex Scaffold 的技术底座显著强于主流商用脚手架（RuoYi / pig / J
 | # | 功能 | 说明 | 落点 |
 |---|------|------|------|
 | C1 | **账号密码登录** | 补齐传统账密认证，与微信/短信统一为 `AuthenticationStrategy`（配合 A4 策略重构）；含密码加密（BCrypt 已有 util）、登录保护（已有 LoginProtectionProperties 直接复用） | AuthHandler + TokenServiceImpl |
-| C2 | **操作审计日志落地** | `@AuditLog` 注解 + `OperationLogAspect` 已有，补齐 `sys_operation_log` 落库 + 查询 API + 管理后台页面 | infrastructure + interfaces |
+| C2 | **操作审计日志落地** | `@OperationLog` 注解 + `OperationLogAspect` 已有（原方案所述 `@AuditLog` 落地方案最终统一采用 `@OperationLog` 体系），补齐 `sys_operation_log` 落库 + 查询 API + 管理后台页面 | infrastructure + interfaces |
 | C3 | **数据权限与部门** | `sys_dept` 表 + `@DataScope` 注解 + 切面注入部门过滤（参考 RuoYi 的 DataScope 语义）；配合 `sys_user.dept_id` | infrastructure + common 注解 |
 | C4 | **在线用户与会话管理** | 在线用户列表（Redis 会话索引）+ 强制下线（清除 token）+ 踢人接口 | infrastructure + interfaces |
 

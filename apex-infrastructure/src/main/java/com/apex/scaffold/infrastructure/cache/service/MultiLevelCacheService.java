@@ -2,6 +2,7 @@ package com.apex.scaffold.infrastructure.cache.service;
 
 import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
 import com.apex.scaffold.domain.service.CacheService;
+import com.apex.scaffold.infrastructure.cache.support.InFlightRequestMerge;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Duration;
 import java.util.Collections;
@@ -68,6 +69,9 @@ public class MultiLevelCacheService {
 
     /** 空值标记 TTL：5 分钟 */
     private static final Duration EMPTY_TTL = Duration.ofMinutes(5);
+
+    /** 回源请求合并器：缓存击穿防护（Single-Flight），同一 key 并发回源只执行一次 */
+    private final InFlightRequestMerge inFlight = new InFlightRequestMerge();
 
     private final LocalCacheService localCacheService;
 
@@ -224,6 +228,9 @@ public class MultiLevelCacheService {
      * 如果所有缓存层均未命中，则执行 {@code loader} 回调从数据库加载数据，
      * 并将结果自动回填到 L2 和 L1。
      *
+     * <p><b>缓存击穿防护（Single-Flight）</b>：对同一 key 的并发回源请求做进程内合并，
+     * 热点 key 过期瞬间只有一个请求真正访问数据库，其余并发请求共享同一次回源结果。</p>
+     *
      * @param <T>   返回值类型
      * @param key   缓存键
      * @param clazz 目标类型 Class 对象
@@ -235,18 +242,18 @@ public class MultiLevelCacheService {
         if (key == null) {
             return Mono.empty();
         }
-        // 三级读取：L1 → L2 → DB(loader)
+        // 三级读取：L1 → L2 → DB(loader)，回源段做 Single-Flight 合并防击穿
         return get(key, clazz)
                 .switchIfEmpty(Mono.defer(() ->
-                        // 缓存未命中，从 DB 回源
-                        loader.get().flatMap(dbValue -> {
+                        // 缓存未命中，从 DB 回源（同 key 并发请求合并为一次）
+                        inFlight.join(key, () -> loader.get().flatMap(dbValue -> {
                             if (dbValue == null) {
                                 // 写入空值标记防止缓存穿透
                                 return setEmptyMarker(key).then(Mono.empty());
                             }
                             // 写入 L2（Redis）和 L1（Caffeine）
                             return set(key, dbValue, ttl).thenReturn(dbValue);
-                        })));
+                        }))));
     }
 
     /**

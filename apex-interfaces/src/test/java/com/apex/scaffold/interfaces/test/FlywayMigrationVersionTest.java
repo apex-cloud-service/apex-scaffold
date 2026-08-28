@@ -43,7 +43,7 @@ class FlywayMigrationVersionTest {
                     .toList();
         }
 
-        // V1 基线 34 表 + V2 权限种子 + V3 账号密码 + V4 审计权限 + V5 在线用户 + V6 部门
+        // V1 基线 34 表 + V2 权限种子 + V3 账号密码 + V4 审计权限 + V5 在线用户 + V6 部门 + V7 api_call_log 补列
         assertThat(versions)
                 .containsExactlyElementsOf(
                         List.of(
@@ -52,7 +52,8 @@ class FlywayMigrationVersionTest {
                                 versionNumber("3"),
                                 versionNumber("4"),
                                 versionNumber("5"),
-                                versionNumber("6")));
+                                versionNumber("6"),
+                                versionNumber("7")));
     }
 
     /**

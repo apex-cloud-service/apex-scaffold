@@ -32,14 +32,17 @@ class LicenseAutoConfigurationTest {
             assertThat(validator.isFeatureEnabled("jwt_auth")).isTrue();
             // 商业功能拒绝
             assertThat(validator.isFeatureEnabled("rocketmq")).isFalse();
+            // 门控切面由自动配置注册，不依赖宿主组件扫描
+            assertThat(context).hasSingleBean(FeatureGateAspect.class);
         });
     }
 
     @Test
-    @DisplayName("显式关闭 License 校验时验证器不注册")
+    @DisplayName("显式关闭 License 校验时验证器与门控切面均不注册")
     void disabledWhenPropertyFalse() {
         contextRunner.withPropertyValues("apex.license.enabled=false").run(context -> assertThat(context)
-                .doesNotHaveBean(LicenseValidator.class));
+                .doesNotHaveBean(LicenseValidator.class)
+                .doesNotHaveBean(FeatureGateAspect.class));
     }
 
     @Test

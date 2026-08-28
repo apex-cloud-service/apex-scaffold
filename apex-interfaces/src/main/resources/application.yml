@@ -396,9 +396,9 @@ knife4j:
 cors:
   # ⚠️ 安全：默认禁止所有来源；生产收紧前须完成客户端来源盘点
   allow-all-origins: false
-  # 允许的来源白名单
-  allowed-origins:
-    - http://localhost:3000
+  # 允许的来源白名单（⚠️ 必须用逗号分隔字符串：CorsConfig 以 @Value("${cors.allowed-origins}") 注入 List，
+  #   YAML List（- item）形式无法被占位符解析，会导致 dev（allow-all-origins=false）启动校验失败）
+  allowed-origins: http://localhost:3000
 
 # ============================================================
 # 远程调用（WebClient + 外部 API）
@@ -591,6 +591,12 @@ apex:
     file-path: ${APEX_LICENSE_FILE:classpath:license/license-basic.json}
     # 🔒 公钥（Base64）：生产可覆盖为官方发布公钥；缺省使用随包默认公钥
     public-key-file: ${APEX_LICENSE_PUBLIC_KEY_FILE:classpath:license/public.key}
+  # ---------- 全局响应超时（三高-高可用兜底） ----------
+  api:
+    # ✅ 单个请求（含过滤器链与业务处理）的最大处理时长（GlobalResponseTimeoutWebFilter）。
+    # 超时请求返回 504 + REQUEST_TIMEOUT(2006) 统一错误响应，防止慢请求长期占用连接引发雪崩；
+    # 💡 SSE 长连接（Accept: text/event-stream）自动豁免；设为 0s 可关闭
+    response-timeout: ${APEX_RESPONSE_TIMEOUT:30s}
   # ---------- 熔断器（CircuitBreakerPort 编程式熔断） ----------
   # ✅ CircuitBreakerService 按模式读取以下参数创建 Resilience4j CircuitBreaker，
   #    业务代码通过 domain 端口 CircuitBreakerPort.withCircuitBreaker(name, mono) 接入；
@@ -779,6 +785,8 @@ apex:
       ip-max-attempts: 20
       # 单用户名最大尝试次数（更严格）
       username-max-attempts: 5
+      # 连续失败多少次后强制要求图形验证码（验证码升级阈值，0 表示不启用）
+      captcha-after-failures: 3
       # 锁定时长（秒）
       lock-duration: 300
       # 统计窗口（秒）

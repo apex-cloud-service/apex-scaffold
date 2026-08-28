@@ -26,6 +26,7 @@ import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.data.redis.core.ReactiveValueOperations;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.server.reactive.ServerHttpRequest;
+import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
@@ -140,6 +141,69 @@ class AntiReplayAspectTest {
         Object result = aspect.around(joinPoint, annotation);
 
         assertThat(result).isEqualTo(TEST_RESULT);
+    }
+
+    /**
+     * 执行 {@code shouldAllowFreshFunctionalRequest} 操作。
+     * @throws Throwable 当操作无法完成时
+     */
+    @Test
+    @DisplayName("函数式端点 ServerRequest 参数（新鲜时间戳 + 新 Nonce）时应正常执行方法")
+    void shouldAllowFreshFunctionalRequest() throws Throwable {
+        long now = Instant.now().getEpochSecond();
+        ServerRequest request = createMockServerRequest(String.valueOf(now), TEST_NONCE);
+        when(joinPoint.getArgs()).thenReturn(new Object[] {request});
+        when(annotation.maxTimeDiff()).thenReturn(300L);
+        when(annotation.requireNonce()).thenReturn(true);
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.setIfAbsent(anyString(), anyString(), any(Duration.class)))
+                .thenReturn(Mono.just(true));
+        when(joinPoint.proceed()).thenReturn(TEST_RESULT);
+
+        Mono<?> result = (Mono<?>) aspect.around(joinPoint, annotation);
+
+        assertThat(result.block()).isEqualTo(TEST_RESULT);
+    }
+
+    /**
+     * 执行 {@code shouldRejectReplayOnFunctionalRequest} 操作。
+     * @throws Throwable 当操作无法完成时
+     */
+    @Test
+    @DisplayName("函数式端点 ServerRequest 参数（Nonce 已存在）时应抛出 BusinessException")
+    void shouldRejectReplayOnFunctionalRequest() throws Throwable {
+        long now = Instant.now().getEpochSecond();
+        ServerRequest request = createMockServerRequest(String.valueOf(now), TEST_NONCE);
+        when(joinPoint.getArgs()).thenReturn(new Object[] {request});
+        when(annotation.maxTimeDiff()).thenReturn(300L);
+        when(annotation.requireNonce()).thenReturn(true);
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.setIfAbsent(anyString(), anyString(), any(Duration.class)))
+                .thenReturn(Mono.just(false));
+
+        Mono<?> result = (Mono<?>) aspect.around(joinPoint, annotation);
+        assertThatThrownBy(() -> result.block())
+                .isInstanceOf(BusinessException.class)
+                .hasMessage("请求已过期或重复提交");
+        verify(securityMetricsRecorder).recordAntiReplayRejected();
+    }
+
+    /**
+     * 创建包含指定时间戳和 Nonce 请求头的模拟函数式 ServerRequest
+     *
+     * @param timestamp 时间戳
+     * @param nonce     随机数
+     * @return 模拟的 ServerRequest
+     */
+    private ServerRequest createMockServerRequest(String timestamp, String nonce) {
+        ServerRequest request = mock(ServerRequest.class);
+        ServerRequest.Headers serverHeaders = mock(ServerRequest.Headers.class);
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("X-Timestamp", timestamp);
+        headers.set("X-Nonce", nonce);
+        when(serverHeaders.asHttpHeaders()).thenReturn(headers);
+        when(request.headers()).thenReturn(serverHeaders);
+        return request;
     }
 
     /**

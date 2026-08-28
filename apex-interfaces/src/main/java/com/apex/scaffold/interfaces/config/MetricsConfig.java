@@ -40,6 +40,7 @@ import reactor.core.publisher.Mono;
  *   <li>loginFailed - 登录失败计数</li>
  *   <li>xssIntercepted - XSS攻击拦截计数</li>
  *   <li>antiReplayRejected - 防重放拒绝计数</li>
+ *   <li>repeatSubmitRejected - HTTP幂等重复提交拒绝计数</li>
  *   <li>IP黑名单大小 - 通过 Redis SCAN blacklist:ip:* 统计</li>
  *   <li>Token黑名单大小 - 通过 Redis SCAN token:blacklist:* 统计</li>
  *   <li>活跃会话数 - 通过 Redis SCAN token:access:* 统计</li>
@@ -254,6 +255,22 @@ public class MetricsConfig {
         return Counter.builder("apex.security.anti.replay.rejected")
                 .description("防重放拒绝次数")
                 .tags(Tags.of("type", "anti_replay"))
+                .register(registry);
+    }
+
+    /**
+     * 注册幂等重复提交拒绝计数器
+     *
+     * <p>统计被 {@code @IdempotentApi} 幂等去重机制拒绝的重复写请求数量。
+     *
+     * @param registry Micrometer 指标注册器
+     * @return 幂等重复提交拒绝计数器
+     */
+    @Bean
+    public Counter repeatSubmitRejectedCounter(MeterRegistry registry) {
+        return Counter.builder("apex.security.repeat.submit.rejected")
+                .description("HTTP幂等重复提交拒绝次数")
+                .tags(Tags.of("type", "repeat_submit"))
                 .register(registry);
     }
 

@@ -90,7 +90,7 @@ Apex Scaffold 是当前仓库中的多模块 Java 后端脚手架（Spring Boot 
 - **消息**：RocketMQ 封装、领域事件总线 + outbox 表
 - **存储抽象**：`StorageProvider` SPI、Local/MinIO/TOS Provider
 - **短信验证码**：`SmsCodeService` + 创蓝 Gateway（可插拔）
-- **合规与安全**：`@AuditLog`、`@DataMask`、`@RateLimiter`、`@AntiReplay`、`@ApiVersion`、`@FeatureGate`、操作日志/API 调用日志表、脱敏工具
+- **合规与安全**：`@OperationLog`、`@DataMask`、`@RateLimiter`、`@AntiReplay`、`@ApiVersion`、`@FeatureGate`、操作日志/API 调用日志表、脱敏工具
 - **商业机制**：License 套件、`@FeatureGate`、basic/standard/enterprise 三个 Profile
 - **可观测性**：Micrometer + Prometheus + Zipkin、Sentinel、Resilience4j、Grafana dashboard
 - **工程化**：Spotless、PMD(P3C)、JaCoCo、ArchUnit 分层测试、OWASP security-scan workflow、Flyway
@@ -317,7 +317,7 @@ apex-interfaces/src/main/resources/db/migration/
 
 - **复杂度**: M　**优先级**: P0
 - **动作**:
-  1. 确认 `application-it.yml` / `schema-it.sql` / `data-it.sql` 与当前通用 schema 一致且零业务残留；
+  1. 确认 `application-it.yml` / `data-it.sql` 与 Flyway 迁移（db/migration）schema 一致且零业务残留；
   2. 执行 `mvn verify`（failsafe 集成测试）；
   3. 对与业务强耦合的 IT 测试做删除或改造为通用场景。
 - **验收**: `mvn verify` 全绿（含 JaCoCo 覆盖率报告生成）。
@@ -477,7 +477,7 @@ apex-interfaces/src/main/resources/db/migration/
 - **复杂度**: M　**优先级**: P1
 - **动作**:
   1. 现有用户 CRUD 保留；
-  2. 增加：JWT 登录完整示例、Redis 缓存示例、文件上传（Local/MinIO）示例、RocketMQ 生产/消费示例、多数据源示例（可选）、i18n 示例、`@AuditLog`/`@DataMask`/`@RateLimiter` 注解示例；
+  2. 增加：JWT 登录完整示例、Redis 缓存示例、文件上传（Local/MinIO）示例、RocketMQ 生产/消费示例、多数据源示例（可选）、i18n 示例、`@OperationLog`/`@DataMask`/`@RateLimiter` 注解示例；
   3. 每个示例配套 README 说明与测试。
 - **验收**: 按 README 操作可跑通全部示例；示例模块独立可启动。
 

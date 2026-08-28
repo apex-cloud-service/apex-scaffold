@@ -90,7 +90,7 @@
 **状态**: ✅ 已完成
 
 **验收标准**:
-- [x] @AuditLog注解
+- [x] @OperationLog注解
 - [x] AuditLogEntity实体
 - [x] AOP切面记录操作
 - [x] 查询审计日志API
@@ -189,7 +189,7 @@
 **相关文件**:
 - `apex-common/src/test/java/com/apex/scaffold/common/util/JsonUtilTest.java`
 - 各模块 `src/test/java`（共 593 个测试文件）
-- `apex-interfaces/src/test/resources/`（application-it.yml / schema-it.sql / data-it.sql 等）
+- `apex-interfaces/src/test/resources/`（application-it.yml / data-it.sql 等；测试表结构由 Flyway db/migration 提供）
 
 ---
 
