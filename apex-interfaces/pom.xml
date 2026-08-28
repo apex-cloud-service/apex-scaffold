@@ -110,6 +110,11 @@
             <groupId>com.alibaba.csp</groupId>
             <artifactId>sentinel-logging-slf4j</artifactId>
         </dependency>
+        <!-- Sentinel Nacos 规则数据源：支持限流/熔断规则动态下发（apex.sentinel.nacos.enabled=true 时生效） -->
+        <dependency>
+            <groupId>com.alibaba.csp</groupId>
+            <artifactId>sentinel-datasource-nacos</artifactId>
+        </dependency>
         <!-- Sentinel 指标导出到 Prometheus：通过 SPI 自动注册 Prometheus HTTPServer
              （默认端口 csp.sentinel.prometheus.fetch.port=9092），供 Prometheus 独立抓取。 -->
         <dependency>

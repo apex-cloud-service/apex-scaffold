@@ -1,0 +1,133 @@
+# ============================================================
+# Apex Scaffold Kubernetes 金丝雀（灰度）发布配置
+# ============================================================
+# 目标: 将新版本（v-next）以小流量（10%）灰度上线，验证无异常后
+#       全量切换，失败可即时回滚。
+#
+# 方式一（推荐，本文件）: Nginx Ingress 金丝雀注解
+#   - 稳定版 Service（apex-scaffold-service，指向主 Deployment）
+#   - 金丝雀 Service（apex-scaffold-canary-service，指向金丝雀 Deployment）
+#   - Ingress 通过 canary-by-weight=10 将 10% 流量导入金丝雀
+#   - 验证通过: 调整 weight=100 全量 → 更新主 Deployment 后删除金丝雀
+#   - 验证失败: 删除金丝雀 Ingress 注解即可回滚（流量 100% 回稳定版）
+#
+# 方式二: Argo Rollouts（渐进式交付，需安装 argo-rollouts）
+#   使用 Rollout 对象 + analysis 自动化灰度，见 docs/DEPLOYMENT.md §14。
+#
+# 前提:
+#   - Nginx Ingress Controller ≥ v0.22（支持 canary 注解）
+#   - 主 Deployment/Service 已部署（k8s/deployment.yaml）
+# ============================================================
+
+---
+# 金丝雀 Deployment（新版本，先部署但仅接收灰度流量）
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: apex-scaffold-canary
+  namespace: apex-scaffold
+  labels:
+    app: apex-scaffold
+    track: canary
+    version: v-next
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: apex-scaffold
+      track: canary
+  template:
+    metadata:
+      labels:
+        app: apex-scaffold
+        track: canary
+        version: v-next
+    spec:
+      containers:
+        - name: apex-scaffold
+          # 替换为新版本镜像（灰度验证对象）
+          image: apex-scaffold:v-next
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+              name: http
+              protocol: TCP
+            - containerPort: 8081
+              name: management
+              protocol: TCP
+          envFrom:
+            - secretRef:
+                name: apex-secrets
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "500m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8081
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 3
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8081
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+      restartPolicy: Always
+
+---
+# 金丝雀 Service（供 Ingress 按权重导入流量）
+apiVersion: v1
+kind: Service
+metadata:
+  name: apex-scaffold-canary-service
+  namespace: apex-scaffold
+  labels:
+    app: apex-scaffold
+    track: canary
+spec:
+  type: ClusterIP
+  selector:
+    app: apex-scaffold
+    track: canary
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
+      protocol: TCP
+
+---
+# 金丝雀 Ingress（Nginx canary 注解：10% 流量进入金丝雀）
+# ⚠️ 启用前请确认主 Ingress（apex-scaffold-ingress）已存在，且 host 一致。
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: apex-scaffold-canary-ingress
+  namespace: apex-scaffold
+  annotations:
+    nginx.ingress.kubernetes.io/canary: "true"
+    # 灰度权重: 10 表示 10% 流量进入金丝雀（0~100）
+    nginx.ingress.kubernetes.io/canary-by-weight: "10"
+    # 备选策略: 按请求头路由（如 canary: always），与权重二选一或叠加
+    # nginx.ingress.kubernetes.io/canary-by-header: "X-Canary"
+    # nginx.ingress.kubernetes.io/canary-by-header-value: "always"
+spec:
+  rules:
+    - host: apex-scaffold.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: apex-scaffold-canary-service
+                port:
+                  number: 80

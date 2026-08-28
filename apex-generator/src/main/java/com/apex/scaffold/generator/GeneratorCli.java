@@ -15,16 +15,18 @@ import lombok.extern.slf4j.Slf4j;
  * <h2>用法</h2>
  * <pre>{@code
  * java com.apex.scaffold.generator.GeneratorCli -i definition.json -o ./generated -v 3
+ * java com.apex.scaffold.generator.GeneratorCli -i definition.json -o ./generated -f /path/to/apex-admin-web
  * }</pre>
  *
  * <ul>
  *   <li>{@code -i} 表结构定义 JSON 文件路径（必填）</li>
- *   <li>{@code -o} 输出根目录（缺省 {@code ./generated}）</li>
+ *   <li>{@code -o} 后端输出根目录（缺省 {@code ./generated}）</li>
  *   <li>{@code -v} 迁移脚本版本号（缺省 2）</li>
+ *   <li>{@code -f} 前端工程根目录（指定后同时生成 Vue3 管理页面，缺省不生成）</li>
  * </ul>
  *
  * @author Apex Team
- * @version 1.0.0
+ * @version 1.1.4
  * @since 1.0.0
  * @see CodeGenerator
  * @see TableDefinition
@@ -40,11 +42,12 @@ public final class GeneratorCli {
     /**
      * 命令行入口。
      *
-     * @param args 命令行参数（{@code -i} / {@code -o} / {@code -v}）
+     * @param args 命令行参数（{@code -i} / {@code -o} / {@code -v} / {@code -f}）
      */
     public static void main(String[] args) {
         String inputFile = null;
         String outputDir = "./generated";
+        String frontendDir = null;
         int migrationVersion = 2;
 
         for (int i = 0; i < args.length; i++) {
@@ -52,6 +55,7 @@ public final class GeneratorCli {
                 case "-i" -> inputFile = args[++i];
                 case "-o" -> outputDir = args[++i];
                 case "-v" -> migrationVersion = Integer.parseInt(args[++i]);
+                case "-f" -> frontendDir = args[++i];
                 default -> {
                     System.err.println("未知参数: " + args[i]);
                     printUsage();
@@ -78,9 +82,18 @@ public final class GeneratorCli {
             Path outputRoot = Paths.get(outputDir).toAbsolutePath().normalize();
             var files = generator.generate(definition, outputRoot, migrationVersion);
 
-            System.out.println("=== 代码生成完成，共 " + files.size() + " 个文件 ===");
+            System.out.println("=== 后端代码生成完成，共 " + files.size() + " 个文件 ===");
             files.forEach(file -> System.out.println("  " + file));
             System.out.println("输出目录: " + outputRoot);
+
+            // 可选：同时生成 Vue3 管理前端页面
+            if (frontendDir != null && !frontendDir.isBlank()) {
+                Path frontendRoot = Paths.get(frontendDir).toAbsolutePath().normalize();
+                var frontendFiles = generator.generateFrontend(definition, frontendRoot);
+                System.out.println("=== 前端代码生成完成，共 " + frontendFiles.size() + " 个文件 ===");
+                frontendFiles.forEach(file -> System.out.println("  " + file));
+                System.out.println("前端输出目录: " + frontendRoot);
+            }
         } catch (Exception e) {
             System.err.println("代码生成失败: " + e.getMessage());
             System.exit(1);
@@ -111,6 +124,7 @@ public final class GeneratorCli {
      * 打印用法说明。
      */
     private static void printUsage() {
-        System.out.println("用法: GeneratorCli -i <definition.json> [-o <outputDir>] [-v <migrationVersion>]");
+        System.out.println(
+                "用法: GeneratorCli -i <definition.json> [-o <outputDir>] [-v <migrationVersion>] [-f <frontendDir>]");
     }
 }

@@ -1,0 +1,29 @@
+[
+  {
+    "resource": "/api/v1/auth/login",
+    "grade": 0,
+    "count": 0.5,
+    "timeWindow": 10,
+    "minRequestAmount": 5,
+    "statIntervalMs": 10000,
+    "slowRatioThreshold": 1.0
+  },
+  {
+    "resource": "/api/v1/auth/refresh",
+    "grade": 0,
+    "count": 0.3,
+    "timeWindow": 10,
+    "minRequestAmount": 5,
+    "statIntervalMs": 10000,
+    "slowRatioThreshold": 1.0
+  },
+  {
+    "resource": "/api/v1/file/upload",
+    "grade": 0,
+    "count": 0.5,
+    "timeWindow": 15,
+    "minRequestAmount": 5,
+    "statIntervalMs": 10000,
+    "slowRatioThreshold": 1.0
+  }
+]

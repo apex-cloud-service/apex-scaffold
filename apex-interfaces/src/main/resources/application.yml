@@ -597,6 +597,24 @@ apex:
     # 超时请求返回 504 + REQUEST_TIMEOUT(2006) 统一错误响应，防止慢请求长期占用连接引发雪崩；
     # 💡 SSE 长连接（Accept: text/event-stream）自动豁免；设为 0s 可关闭
     response-timeout: ${APEX_RESPONSE_TIMEOUT:30s}
+  # ---------- Sentinel 规则 Nacos 动态下发（生产热更新） ----------
+  # ✅ 启用后限流/熔断规则改为从 Nacos 拉取（约 30s 热生效），静态规则作为启动兜底；
+  # ⚠️ 启用时 Nacos 的 DataId 需维护完整规则集（JSON 模板见 config/sentinel/ 与 docs/CONFIGURATION.md）；
+  #    Nacos 不可用不影响启动（仅记录 WARN，静态规则继续生效）
+  sentinel:
+    nacos:
+      # ✅ 是否启用 Nacos 动态规则下发（生产接入 Nacos 后置 true）
+      enabled: ${SENTINEL_NACOS_ENABLED:false}
+      # 🔒 Nacos 服务地址（默认取 NACOS_SERVER_ADDR，本地 infra 栈为 127.0.0.1:18848）
+      server-addr: ${apex.sentinel.nacos.server-addr:${NACOS_SERVER_ADDR:127.0.0.1:18848}}
+      # Nacos 命名空间 ID（默认公共空间）
+      namespace: ${NACOS_NAMESPACE:}
+      # 配置分组
+      group-id: ${SENTINEL_NACOS_GROUP:SENTINEL_GROUP}
+      # 限流规则 DataId
+      flow-data-id: ${SENTINEL_NACOS_FLOW_DATA_ID:apex-sentinel-flow-rules}
+      # 熔断规则 DataId
+      degrade-data-id: ${SENTINEL_NACOS_DEGRADE_DATA_ID:apex-sentinel-degrade-rules}
   # ---------- 熔断器（CircuitBreakerPort 编程式熔断） ----------
   # ✅ CircuitBreakerService 按模式读取以下参数创建 Resilience4j CircuitBreaker，
   #    业务代码通过 domain 端口 CircuitBreakerPort.withCircuitBreaker(name, mono) 接入；

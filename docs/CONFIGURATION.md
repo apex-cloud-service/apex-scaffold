@@ -237,27 +237,41 @@ apex:
 
 ### Sentinel配置
 
+**控制台通信（spring.cloud.sentinel）**：
+
 ```yaml
 spring:
   cloud:
     sentinel:
-      # 是否启用Sentinel
+      # 是否启用 Sentinel 客户端
       enabled: true
-      
-      # 控制台地址
+      # 控制台地址（空 = 不连接控制台，仅本地规则生效）
       transport:
-        dashboard: localhost:8080
+        dashboard: localhost:8858
         port: 8719
-      
-      # 规则持久化
-      datasource:
-        flow:
-          nacos:
-            server-addr: localhost:8848
-            data-id: ${spring.application.name}-flow-rules
-            group-id: DEFAULT_GROUP
-            rule-type: flow
+      # 启动即初始化客户端，避免首请求懒加载延迟
+      eager: true
 ```
+
+**规则 Nacos 动态下发（apex.sentinel.nacos，生产热更新）**：
+
+```yaml
+apex:
+  sentinel:
+    nacos:
+      # 启用后限流/熔断规则从 Nacos 拉取（约 30s 热生效），静态规则作为启动兜底；
+      # 默认关闭（无 Nacos 零影响）；生产接入 Nacos 后置 true
+      enabled: ${SENTINEL_NACOS_ENABLED:false}
+      server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:18848}
+      namespace: ${NACOS_NAMESPACE:}
+      group-id: ${SENTINEL_NACOS_GROUP:SENTINEL_GROUP}
+      flow-data-id: ${SENTINEL_NACOS_FLOW_DATA_ID:apex-sentinel-flow-rules}
+      degrade-data-id: ${SENTINEL_NACOS_DEGRADE_DATA_ID:apex-sentinel-degrade-rules}
+```
+
+> ⚠️ 启用动态下发时，Nacos 的 DataId 需维护**完整规则集**（推送为整体替换语义）。
+> JSON 模板与字段说明见 `config/sentinel/README.md`；内置静态规则（39 条限流 + 熔断）
+> 定义于 `SentinelConfig`，可作为模板导出基线。
 
 ### Resilience4j配置
 

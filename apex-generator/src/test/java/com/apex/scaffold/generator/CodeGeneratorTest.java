@@ -158,4 +158,58 @@ class CodeGeneratorTest {
                 .contains("@ExtendWith(MockitoExtension.class)")
                 .contains("private ProductService productService;");
     }
+
+    /**
+     * 测试前端代码生成（Vue3 页面 + API + 路由说明）。
+     */
+    @Test
+    @DisplayName("generateFrontend - 生成 4 个前端文件且类型/路由正确")
+    void generateFrontend_ProducesVue3Files() throws Exception {
+        CodeGenerator generator = new CodeGenerator();
+        List<String> files = generator.generateFrontend(definition, tempDir);
+
+        assertThat(files).hasSize(4);
+        assertThat(files)
+                .contains(
+                        "src/api/demo/product.ts",
+                        "src/views/demo/product/index.vue",
+                        "src/views/demo/product/form.vue",
+                        "generated/ProductRouteFragment.txt");
+
+        // API 模块：类型化接口 + 后端路径
+        String api = Files.readString(tempDir.resolve("src/api/demo/product.ts"));
+        assertThat(api)
+                .contains("export interface ProductItem")
+                .contains("productName?: string")
+                .contains("price?: number")
+                .contains("'/admin-api/v1/demo/products'");
+
+        // 列表页：表格列 + 分页组件引用
+        String listPage = Files.readString(tempDir.resolve("src/views/demo/product/index.vue"));
+        assertThat(listPage)
+                .contains("el-table")
+                .contains("productName")
+                .contains("Pagination")
+                .contains("import " + lowerFirst("product") + "Form from './form.vue'");
+
+        // 路由说明：注册表 + 权限码
+        String route = Files.readString(tempDir.resolve("generated/ProductRouteFragment.txt"));
+        assertThat(route)
+                .contains("VIEW_REGISTRY")
+                .contains("demo:product:list")
+                .contains("'demo/product/index'");
+    }
+
+    /**
+     * 首字母小写（与 CodeGenerator 语义一致，供本测试断言复用）。
+     *
+     * @param value 输入字符串
+     * @return 首字母小写后的字符串
+     */
+    private static String lowerFirst(String value) {
+        if (value == null || value.isEmpty()) {
+            return value;
+        }
+        return Character.toLowerCase(value.charAt(0)) + value.substring(1);
+    }
 }

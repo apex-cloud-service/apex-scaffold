@@ -94,6 +94,44 @@ public class CodeGenerator {
     }
 
     /**
+     * 依据表定义生成配套 Vue3 管理前端代码（前后端分离工程 apex-admin-web）。
+     *
+     * <p>输出与 {@code apex-admin-web} 工程目录结构一致的页面，可直接消费：
+     * <ul>
+     *   <li>{@code src/api/{module}/{entityVar}.ts} - 类型化 API 封装（Result 解包）</li>
+     *   <li>{@code src/views/{module}/{entityVar}/index.vue} - 列表页（搜索 + 表格 + 分页）</li>
+     *   <li>{@code src/views/{module}/{entityVar}/form.vue} - 新增/编辑表单</li>
+     *   <li>{@code generated/{entityName}RouteFragment.txt} - 动态路由注册说明（VIEW_REGISTRY + 菜单）</li>
+     * </ul>
+     * 代码风格与 apex-admin-web 的现有页面（如 system/user）保持一致。</p>
+     *
+     * @param definition 表结构定义
+     * @param outputRoot 前端工程根目录（含 src/）
+     * @return 生成的文件相对路径列表
+     * @throws IOException 当模板渲染或文件写入失败时抛出
+     */
+    public List<String> generateFrontend(TableDefinition definition, Path outputRoot) throws IOException {
+        Map<String, Object> model = buildModel(definition, 0);
+        String entity = definition.getEntityName();
+        String module = definition.getModule();
+        String var = lowerFirst(entity);
+
+        List<GeneratedFile> files = new ArrayList<>();
+        files.add(new GeneratedFile("frontendApi.ftl", "src/api/" + module + "/" + var + ".ts"));
+        files.add(new GeneratedFile("frontendList.ftl", "src/views/" + module + "/" + var + "/index.vue"));
+        files.add(new GeneratedFile("frontendForm.ftl", "src/views/" + module + "/" + var + "/form.vue"));
+        files.add(new GeneratedFile("frontendRouteFragment.ftl", "generated/" + entity + "RouteFragment.txt"));
+
+        for (GeneratedFile file : files) {
+            Path target = outputRoot.resolve(file.path()).normalize();
+            Files.createDirectories(target.getParent());
+            Files.writeString(target, render(file.template(), model), StandardCharsets.UTF_8);
+            log.info("生成前端: {}", file.path());
+        }
+        return files.stream().map(GeneratedFile::path).toList();
+    }
+
+    /**
      * 构造 FreeMarker 数据模型。
      *
      * @param definition 表结构定义
@@ -116,6 +154,7 @@ public class CodeGenerator {
         model.put("migrationVersion", migrationVersion);
 
         List<Map<String, Object>> fields = new ArrayList<>();
+        List<Map<String, Object>> formFields = new ArrayList<>();
         boolean hasBigDecimal = false;
         boolean hasLocalDateTime = false;
         for (FieldDefinition field : definition.getFields()) {
@@ -126,14 +165,39 @@ public class CodeGenerator {
             item.put("required", field.isRequired());
             item.put("columnName", field.columnName());
             item.put("sqlType", field.sqlType());
+            // 前端 TypeScript 类型映射（供 Vue3 页面模板消费）
+            item.put("tsType", toTsType(field.simpleType()));
             fields.add(item);
+            // 表单字段排除主键 id（主键由后端生成/列表行携带）
+            if (!"id".equals(field.getName())) {
+                formFields.add(item);
+            }
             hasBigDecimal |= "BigDecimal".equals(field.simpleType());
             hasLocalDateTime |= "LocalDateTime".equals(field.simpleType());
         }
         model.put("fields", fields);
+        model.put("formFields", formFields);
         model.put("hasBigDecimal", hasBigDecimal);
         model.put("hasLocalDateTime", hasLocalDateTime);
         return model;
+    }
+
+    /**
+     * Java 字段类型 → TypeScript 类型映射。
+     *
+     * <p>数值型映射为 {@code number}，布尔映射为 {@code boolean}，
+     * 其余（字符串/时间/日期）统一映射为 {@code string}。</p>
+     *
+     * @param javaType Java 类型全名
+     * @return TypeScript 类型
+     */
+    private static String toTsType(String javaType) {
+        return switch (javaType) {
+            case "Long", "Integer", "int", "long", "short", "Short", "Double", "double", "Float", "float",
+                    "BigDecimal" -> "number";
+            case "Boolean", "boolean" -> "boolean";
+            default -> "string";
+        };
     }
 
     /**

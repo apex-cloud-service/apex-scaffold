@@ -58,6 +58,9 @@
 
 # 仅生成到指定目录（迁移版本号可选，缺省 2）
 ./scripts/codegen/generate.sh -i my-table.json -o ./my-module -v 3
+
+# 同时生成 Vue3 管理前端页面（-f 指定 apex-admin-web 工程根目录）
+./scripts/codegen/generate.sh -i my-table.json -f /path/to/apex-admin-web
 ```
 
 生成后：
@@ -68,11 +71,28 @@
 4. 将 `ProductServiceTest.java` 移入测试目录，并把表定义对应的建表语句追加到
    Flyway 迁移 `db/migration`（MySQL 版 V1-V6，各环境共用）。
 
+## 四·五、前端代码生成（Vue3 页面）
+
+指定 `-f <frontendDir>` 后，除后端代码外还会在 `apex-admin-web` 工程下生成：
+
+| 文件 | 说明 |
+|------|------|
+| `src/api/{module}/{entityVar}.ts` | 类型化 API 封装（Result 解包、JSDoc 注释） |
+| `src/views/{module}/{entityVar}/index.vue` | 列表页（关键字搜索 + 表格 + 分页 + 新增/编辑/删除） |
+| `src/views/{module}/{entityVar}/form.vue` | 新增/编辑共用表单（v-model + validate 暴露） |
+| `generated/{entityName}RouteFragment.txt` | 动态路由注册说明（VIEW_REGISTRY + sys_menu + 权限码） |
+
+接入步骤（详见生成的路由说明文件）：
+1. 在 `src/router/dynamic.ts` 的 `VIEW_REGISTRY` 注册组件；
+2. 在后端 `sys_menu` 表新增目录/菜单/按钮三条记录；
+3. 后端 Handler 需已按 `@RequirePermission("${module}:${entityVar}:list")` 等权限点标注。
+
 ## 五、扩展模板
 
 模板位于 `apex-generator/src/main/resources/templates/`（FreeMarker 2.3.33）：
 `entity/repository/po/mapper/converter/repositoryImpl/dtoRequest/dtoResponse/service/handler/
-routerFragment/migrationFragment/serviceTest.ftl`。
+routerFragment/migrationFragment/serviceTest.ftl`，以及前端模板
+`frontendApi/frontendList/frontendForm/frontendRouteFragment.ftl`。
 
 自定义字段类型、校验规则、权限点或生成风格时，直接修改对应 `.ftl` 即可。
 

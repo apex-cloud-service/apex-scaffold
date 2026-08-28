@@ -723,6 +723,19 @@ docker run -d --name apex-scaffold ... apex-scaffold:1.1.3
 > Flyway 仅校验 schema 兼容性；新增迁移如已执行，旧版本可能因 checksum/缺列校验失败。
 > 升级前务必 dump 数据库，回滚时按需还原数据。
 
+### 12.4 灰度发布（K8s 金丝雀）
+
+K8s 场景支持按权重/请求头灰度：稳定版与金丝雀版并存，Nginx Ingress 将
+10% 流量导入新版本，验证通过后逐步放量至全量切换，失败即时回滚。
+
+```bash
+kubectl apply -f k8s/canary-deployment.yaml   # 金丝雀（默认 10% 流量）
+# 验证 → 调整权重（canary-by-weight: 50/100）→ 全量切换 → 删除金丝雀
+# 失败 → 删除金丝雀 Ingress 即回滚（流量 100% 回稳定版）
+```
+
+> 完整演练步骤、按请求头路由与 Argo Rollouts 进阶方案见 [k8s/README.md](../k8s/README.md)。
+
 ---
 
 ## 13. 备份与恢复

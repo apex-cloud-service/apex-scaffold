@@ -2,6 +2,21 @@
 
 本项目遵循 [语义化版本规范](https://semver.org/lang/zh-CN/)。
 
+## [1.2.0-alpha] - 2026-08-28（商业化 P1 能力补齐）
+
+### Added
+- **G05 一键初始化脚本**：`scripts/init/new-project.sh` —— 复制脚手架 → 全局替换项目名/包名/端口/库名 → 包路径迁移 → 旧标识零残留校验 → 启动指引；实测新项目零残留
+- **G06 Sentinel 规则 Nacos 动态下发**：新增 `SentinelNacosDataSourceConfig`（`apex.sentinel.nacos.enabled=true` 时启用），限流/熔断规则从 Nacos 热更新（约 30s 生效），静态规则兜底；`config/sentinel/` 规则 JSON 模板 + 发布说明；`SentinelNacosDataSourceConfigTest` 门禁测试（默认关闭零影响）
+- **G07 前端代码生成**：generator 新增 4 个 Vue3 模板（frontendApi/frontendList/frontendForm/frontendRouteFragment），CLI/脚本支持 `-f <frontendDir>` 同时生成管理页面（TS 类型映射、列表/表单/路由注册说明）；`CodeGeneratorTest` 前端用例
+- **G08 采购材料包**：`docs/sales/` —— 安全白皮书 / API 规范 / 性能测试报告（含 2026-08-28 本机沙箱实测基线：健康检查 c100=292 req/s 零错误，并实证 IP 限流 429 与 Sentinel 系统保护 503 行为）/ 交付清单；`scripts/bench/bench.sh` wrk 压测脚本
+- **G09 灰度发布资产**：`k8s/canary-deployment.yaml`（金丝雀 Deployment + Service + Nginx Ingress 按权重/请求头导流）+ `k8s/README.md` 演练步骤；DEPLOYMENT.md §12.4；deployment.yaml 版本标签 v1.1.4
+
+### Changed
+- 父 POM dependencyManagement 新增 `sentinel-datasource-nacos`（1.8.9）；apex-interfaces 引入
+- `application.yml` 新增 `apex.sentinel.nacos.*` 配置块（默认关闭）
+- CONFIGURATION.md Sentinel 章节更新为实际实现的动态规则配置
+- docs/CODEGEN.md 新增前端生成章节
+
 ## [1.1.4] - 2026-08-28
 
 ### Added
