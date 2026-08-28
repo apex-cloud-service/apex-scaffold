@@ -5,6 +5,8 @@
 ## [1.1.4] - 2026-08-28
 
 ### Added
+- **示例模块能力地图（G02）**：新增 `ExampleCapabilityHandler`/`ExampleCapabilityService`，演示多级缓存读穿（含击穿合并）、写接口幂等（`@IdempotentApi`）、操作审计（`@OperationLog`）、SSE 推送、数据脱敏、Excel 导出（`ExcelExportService`）7 个核心能力端点 + 7 例集成测试；`docs/EXAMPLE_GUIDE.md` 逐步跑通指南；README 新增"方式五：配套前端"入口
+- **版本号统一升级 1.1.3 → 1.1.4**：父 POM 与 8 个子模块 + 运行版本号（HealthHandler/SpringDocConfig 默认值）
 - **备份/恢复脚本**：`scripts/backup/db-backup.sh`（mysqldump 一致性快照 + gzip + 轮转保留 N 份 + 可选 MinIO/S3 上传；支持宿主机直连与 Docker 容器两种场景）、`db-restore.sh`（交互选择/指定文件恢复，恢复前自动备份当前库）、`README.md`；本机实测备份→恢复全链路通过
 - **配套前端工程（独立仓库 apex-admin-web）**：Vue3 + Vite + TS + Pinia + Element Plus 管理后台，前后端分离对接（登录/验证码、用户/角色/菜单/部门/字典/参数/任务、登录/审计日志、在线用户、个人中心、动态路由 + 按钮权限）
 - **三种部署方式统一**：`java -jar`（守护脚本 `scripts/deploy/app.sh` + systemd 模板）、Docker 单容器（Dockerfile 多阶段 + `ARG BUILD_PROFILE`）、Docker Compose（`docker-compose.yml` 应用栈）；完整部署文档 `docs/DEPLOYMENT.md`（16 章，含环境变量全表、systemd、多实例、升级回滚、备份、安全清单、FAQ）
@@ -22,6 +24,9 @@
 - **spy.properties 残留 H2 driver**（运行时无该依赖，P6Spy 初始化崩溃），清理
 - **compose 默认栈 Redis 密码联动**（prod 强制 `REDIS_PASSWORD`）、JWT ≥32 字节校验、文件上传与百度云审核联动校验
 - **IdempotentApiAspect 日志 NPE**：方法参数无请求对象时 `getSignature()` 可能为 null 导致日志崩溃，新增 `signatureText` 防御性取值（回归测试覆盖）
+- **Excel 导出 NoClassDefFoundError**：POI 4.1.2 运行时要求 commons-io ≥2.13，被旧版本（2.11.0）覆盖导致 EasyExcel 抛 `Can not close IO.`——父 POM dependencyManagement 固定 commons-io 2.16.1（主应用 /admin-api/v1/export/users 与 example 导出均受影响，实测修复）
+- **example 测试上下文修复**：MailService 依赖 `JavaMailSender` 需 `spring.mail.host` 装配（补占位配置）；测试环境关闭 Nacos 服务发现；SSE 测试改首事件消费（避免等待完整流超时）
+- **example 测试断言修正**：USER_NOT_FOUND 已按 REST 语义映射为 HTTP 404（原断言 5xx 过期），`shouldFailWhenUserNotFound`/`shouldDeleteUserSuccessfully` 更新为 404 + 4001 校验
 
 ## [1.1.3] - 2026-08-27
 

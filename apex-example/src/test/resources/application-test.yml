@@ -5,6 +5,17 @@ spring:
   application:
     name: apex-example-test
 
+  # 邮件（演示占位）：满足 MailService 对 JavaMailSender 的装配依赖
+  mail:
+    host: smtp.example.com
+    port: 25
+
+  # 测试环境不接入 Nacos 注册中心（避免启动时尝试注册服务）
+  cloud:
+    nacos:
+      discovery:
+        enabled: false
+
   # 测试环境不依赖本地 Redis：关闭 Spring Data Redis 自动配置，
   # RedissonClient 由 ExampleTestMockConfiguration 的 @Primary 替身覆盖
   autoconfigure:

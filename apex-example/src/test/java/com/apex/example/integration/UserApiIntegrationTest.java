@@ -233,13 +233,13 @@ class UserApiIntegrationTest extends BaseIntegrationTest {
     @Test
     @DisplayName("查询不存在的用户应该失败")
     void shouldFailWhenUserNotFound() {
-        // USER_NOT_FOUND=4001 → HTTP 500
+        // USER_NOT_FOUND=4001 → HTTP 404（全局异常处理器按 REST 语义映射未找到资源）
         webTestClient
                 .get()
                 .uri(BASE_URL + "/999999")
                 .exchange()
                 .expectStatus()
-                .is5xxServerError()
+                .isNotFound()
                 .expectBody(Result.class)
                 .value(result -> {
                     assertThat(result).isNotNull();
@@ -342,13 +342,13 @@ class UserApiIntegrationTest extends BaseIntegrationTest {
                     assertThat(result.getData()).isEqualTo("删除成功");
                 });
 
-        // 验证用户已被逻辑删除（查询返回 USER_NOT_FOUND=4001 → HTTP 500）
+        // 验证用户已被逻辑删除（查询返回 USER_NOT_FOUND=4001 → HTTP 404）
         webTestClient
                 .get()
                 .uri(BASE_URL + "/" + userId)
                 .exchange()
                 .expectStatus()
-                .is5xxServerError()
+                .isNotFound()
                 .expectBody(Result.class)
                 .value(result -> {
                     assertThat(result.getCode()).isEqualTo(4001);

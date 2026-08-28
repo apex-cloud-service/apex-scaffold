@@ -38,7 +38,7 @@
   </parent>
   <groupId>com.apex.scaffold</groupId>
   <artifactId>apex-scaffold</artifactId>
-  <version>1.1.3</version>
+  <version>1.1.4</version>
   <packaging>pom</packaging>
   <name>Apex Scaffold</name>
   <description>企业级开发脚手架 - 微信APP版 (WebFlux响应式)</description>
@@ -535,6 +535,13 @@
         <groupId>com.alibaba</groupId>
         <artifactId>easyexcel</artifactId>
         <version>3.3.4</version>
+      </dependency>
+      <!-- POI 4.1.2 运行时要求 commons-io >= 2.13（org.apache.commons.io.build.*）；
+           旧版本被其他依赖带入会触发 EasyExcel "Can not close IO."（NoClassDefFoundError） -->
+      <dependency>
+        <groupId>commons-io</groupId>
+        <artifactId>commons-io</artifactId>
+        <version>2.16.1</version>
       </dependency>
       <dependency>
         <groupId>com.apex.scaffold</groupId>

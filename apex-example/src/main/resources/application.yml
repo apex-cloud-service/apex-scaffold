@@ -4,7 +4,13 @@ server:
 spring:
   application:
     name: apex-example
-  
+
+  # 邮件（演示占位）：MailService 依赖 JavaMailSender 自动装配
+  # ⚠️ 仅用于满足 Bean 装配；实际发信需替换为真实 SMTP 配置
+  mail:
+    host: smtp.example.com
+    port: 25
+
   # 数据源配置（dynamic-datasource，与主应用 apex-interfaces 配置范式一致）
   datasource:
     dynamic:

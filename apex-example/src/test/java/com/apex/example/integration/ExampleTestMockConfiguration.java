@@ -8,6 +8,7 @@ import com.apex.scaffold.domain.service.StorageService;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import org.mockito.Answers;
 import org.mockito.Mockito;
 import org.redisson.api.RedissonClient;
@@ -17,6 +18,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
+import org.springframework.data.redis.core.ReactiveValueOperations;
 import org.springframework.data.redis.core.ScanOptions;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -44,6 +46,11 @@ public class ExampleTestMockConfiguration {
 
     /**
      * 执行 {@code reactiveStringRedisTemplate} 操作。
+     *
+     * <p>除 scan 外，为幂等切面（{@code IdempotentApiAspect}）与多级缓存
+     * 打桩 value 操作：SETNX 成功、删除成功，保证写接口幂等示例
+     * 在 Mock Redis 下返回 200。</p>
+     *
      * @return 操作结果
      */
     @Bean
@@ -51,6 +58,14 @@ public class ExampleTestMockConfiguration {
     ReactiveStringRedisTemplate reactiveStringRedisTemplate() {
         ReactiveStringRedisTemplate template = Mockito.mock(ReactiveStringRedisTemplate.class);
         Mockito.when(template.scan(Mockito.any(ScanOptions.class))).thenReturn(Flux.empty());
+
+        // 打桩 value 操作：SETNX 幂等键成功、删除成功
+        ReactiveValueOperations<String, String> valueOps = Mockito.mock(ReactiveValueOperations.class);
+        Mockito.when(valueOps.setIfAbsent(Mockito.anyString(), Mockito.anyString(), Mockito.any(Duration.class)))
+                .thenReturn(Mono.just(true));
+        Mockito.when(valueOps.delete(Mockito.any()))
+                .thenReturn(Mono.just(true));
+        Mockito.when(template.opsForValue()).thenReturn(valueOps);
         return template;
     }
 

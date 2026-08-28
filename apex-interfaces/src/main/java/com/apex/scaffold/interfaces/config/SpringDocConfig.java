@@ -39,7 +39,7 @@ public class SpringDocConfig {
     private String applicationName;
 
     /** 应用版本（三档构建时由 apex-build.properties 注入；兜底默认值随发布版本同步） */
-    @Value("${apex.version:1.1.3}")
+    @Value("${apex.version:1.1.4}")
     private String applicationVersion;
 
     private static final String LOCAL_SERVER_URL = "http://localhost:8080";

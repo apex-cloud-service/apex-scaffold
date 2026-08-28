@@ -107,6 +107,22 @@ mvnd spring-boot:run -pl apex-example
 open http://localhost:8080/doc.html
 ```
 
+> 📖 **示例能力地图**：缓存读穿/写接口幂等/操作审计/SSE推送/数据脱敏/Excel导出等
+> 核心能力的最小示例与逐步跑通指南，见 [docs/EXAMPLE_GUIDE.md](docs/EXAMPLE_GUIDE.md)
+
+### 方式五:配套管理后台前端(⭐前后端分离)
+
+提供独立的 Vue3 管理后台前端工程 **apex-admin-web**（登录/验证码、用户/角色/菜单/部门/字典/参数/任务、登录/审计日志、在线用户、个人中心；菜单驱动动态路由 + 按钮权限指令）：
+
+```bash
+git clone <apex-admin-web 仓库地址>
+cd apex-admin-web
+npm install
+npm run dev   # http://localhost:5173（开发代理 /api、/admin-api 到后端 8080）
+```
+
+> 完整对接说明见 apex-admin-web 工程内 README。
+
 **示例模块演示的能力**（均有集成测试覆盖）:
 
 | 能力 | 示例位置 | 说明 |

@@ -56,7 +56,7 @@ public class HealthHandler extends BaseHandler {
     private String applicationName;
 
     /** 应用版本（读配置，三档构建时由 apex-build.properties 注入） */
-    @Value("${apex.version:1.1.3}")
+    @Value("${apex.version:1.1.4}")
     private String applicationVersion;
 
     /**
