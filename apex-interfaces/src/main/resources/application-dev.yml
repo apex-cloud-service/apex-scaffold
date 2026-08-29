@@ -15,6 +15,15 @@
 # └───────────────────────────────────────────────────────────┘
 # ============================================================
 
+# ============================================================
+# CORS 跨域（开发环境）
+# ============================================================
+# （差异）公共层仅放行 http://localhost:3000；开发联调时前端 Vite
+#   运行在 5173，经代理转发请求仍携带 Origin: http://localhost:5173，
+#   需显式加入白名单，否则浏览器端所有接口请求被 CORS 过滤器拦截返回 403。
+cors:
+  allowed-origins: http://localhost:3000,http://localhost:5173
+
 spring:
   # ---------- 自动配置 ----------
   # 💡 不排除 RedissonAutoConfigurationV2：HotSpotRateLimitAspect（IP 热点限流）直接依赖
@@ -70,6 +79,31 @@ spring:
             pool-prepared-statements: true
             max-pool-prepared-statement-per-connection-size: 20
             filters: stat
+        # 从库（数据源动态切换：@DataSource("slave") 切到本数据源）
+        # ✅ 配置与 master 完全一致（仅环境变量前缀 DB_SLAVE_*），本地演示默认指向同一
+        #    MySQL 实例（apex_data 库），无需额外部署；真实只读从库通过
+        #    DB_SLAVE_URL / DB_SLAVE_USERNAME / DB_SLAVE_PASSWORD 注入；
+        #    初始化脚本见 scripts/datasource/init-slave.sql。
+        slave:
+          # 从库 JDBC URL；默认指向本机 MySQL（apex_data 库），可经 DB_SLAVE_URL 覆盖
+          url: ${DB_SLAVE_URL:jdbc:mysql://127.0.0.1:3306/apex_data?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false}
+          # 数据库凭据；默认本机 root/apex-root，可经环境变量覆盖
+          username: ${DB_SLAVE_USERNAME:root}
+          password: ${DB_SLAVE_PASSWORD:apex-root}
+          # MySQL 驱动与连接池（与 master 一致：Alibaba Druid）
+          driver-class-name: com.mysql.cj.jdbc.Driver
+          type: com.alibaba.druid.pool.DruidDataSource
+          druid:
+            db-type: mysql
+            initial-size: 5
+            min-idle: 5
+            max-active: ${DB_MAX_ACTIVE:20}
+            max-wait: 3000
+            validation-query: SELECT 1 FROM DUAL
+            test-while-idle: true
+            pool-prepared-statements: true
+            max-pool-prepared-statement-per-connection-size: 20
+            filters: stat
 
   # ---------- Flyway 数据库迁移（与 prod 一致） ----------
   flyway:
@@ -92,6 +126,14 @@ spring:
         enabled: false
       config:
         enabled: false
+
+# ============================================================
+# JWT 签名密钥（开发环境）
+# ============================================================
+# 🔒 生产必须通过 JWT_SECRET 注入 ≥32 字节（256 bits）随机密钥；
+#    dev 默认值长度满足 JJWT 0.12+ 的 HMAC-SHA256 密钥强度要求（≥256 bits）。
+jwt:
+  secret: ${JWT_SECRET:apex-dev-jwt-secret-key-change-me-0123456789}
 
 # ============================================================
 # 消息中间件（RocketMQ）
@@ -130,6 +172,13 @@ apex:
   redis:
     # ❌ 关闭启动时 Redis 清理（开发环境保留本地缓存数据）
     cleanup-on-startup: false
+  # ---------- Sentinel 系统保护 ----------
+  # ❌ 开发环境关闭系统保护规则（CPU/QPS 过载拦截）：
+  #   本地机器负载波动（容器/其他进程占用 CPU）会触发 SystemBlockException(503)，
+  #   误伤正常接口调试；生产环境保持默认开启（application.yml 默认 enabled=true）。
+  sentinel:
+    system-rules:
+      enabled: false
   # ---------- 消息消费者开关 ----------
   # ❌ 关闭消息消费者：本地无 RocketMQ Broker，避免监听器启动报错。
   mq:

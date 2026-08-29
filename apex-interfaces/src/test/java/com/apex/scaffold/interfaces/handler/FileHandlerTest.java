@@ -8,6 +8,7 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.apex.scaffold.interfaces.monitor.BusinessMetricsRecorder;
 import com.apex.scaffold.application.dto.FileUploadResult;
 import com.apex.scaffold.application.service.FileService;
 import com.apex.scaffold.common.result.ResultCode;
@@ -58,6 +59,9 @@ class FileHandlerTest {
     @Mock
     private MessageUtils messageUtils;
 
+    @Mock
+    private BusinessMetricsRecorder businessMetricsRecorder;
+
     private FileHandler handler;
 
     /**
@@ -65,7 +69,7 @@ class FileHandlerTest {
      */
     @BeforeEach
     void setUp() {
-        handler = new FileHandler(fileService, messageUtils);
+        handler = new FileHandler(fileService, messageUtils, businessMetricsRecorder);
         ReflectionTestUtils.setField(handler, "maxFileSize", 1024L);
         ReflectionTestUtils.setField(handler, "uploadEnabled", true);
         ReflectionTestUtils.setField(handler, "defaultBucketName", "apex");

@@ -3,7 +3,7 @@
 # Apex Scaffold License 发放工具（卖方使用）
 # ============================================================
 # 用法:
-#   ./scripts/license/generate-license.sh <version> <customer> <days> [feature1,feature2,...]
+#   ./scripts/license/generate-license.sh <version> <customer> <days> [features] [--fingerprint <hash>]
 #
 # 示例:
 #   # 发放标准版一年授权（默认标准版功能集）
@@ -14,6 +14,9 @@
 #
 #   # 发放自定义功能集
 #   ./scripts/license/generate-license.sh STANDARD "示例公司" 365 jwt_auth,rbac,redis_cache
+#
+#   # 绑定机器指纹签发（客户先运行 gen-fingerprint 采集后发给卖方）
+#   ./scripts/license/generate-license.sh ENTERPRISE "示例公司" 365 --fingerprint a1b2c3...
 #
 # 前置要求:
 #   - JDK 17 已安装（JAVA_HOME 已设置）
@@ -34,7 +37,25 @@ fi
 VERSION="$(printf '%s' "${1}" | tr '[:lower:]' '[:upper:]')"
 CUSTOMER="$2"
 DAYS="$3"
-FEATURES="${4:-}"
+
+# 第 4 个参数如果是 --fingerprint 则不作为 features 解析
+FEATURES=""
+FINGERPRINT=""
+FP_NEXT=0
+for arg in "${@:4}"; do
+  if [[ "${FP_NEXT}" == "1" ]]; then
+    FINGERPRINT="${arg}"
+    FP_NEXT=0
+    continue
+  fi
+  if [[ "${arg}" == "--fingerprint" ]]; then
+    FP_NEXT=1
+    continue
+  fi
+  if [[ -z "${FEATURES}" ]]; then
+    FEATURES="${arg}"
+  fi
+done
 
 # 默认功能集（与 LICENSE-COMMERCIAL.md 版本对照表一致）
 BASIC_FEATURES="jwt_auth,unified_response,parameter_validation,webflux,mybatis_plus"
@@ -53,7 +74,7 @@ PUBLIC_KEY="${PUBLIC_KEY:-config/license/public.key}"
 
 if [[ ! -f "${PRIVATE_KEY}" || ! -f "${PUBLIC_KEY}" ]]; then
   echo "错误: 未找到密钥对 ${PRIVATE_KEY} / ${PUBLIC_KEY}"
-  echo "请先运行: java -cp ... com.apex.scaffold.license.LicenseGenerator gen-keys <private.key> <public.key>"
+  echo "请先运行: java -cp <apex-license-tools 类路径> com.apex.scaffold.license.tools.LicenseGenerator gen-keys <private.key> <public.key>"
   exit 1
 fi
 
@@ -63,18 +84,19 @@ if [[ -f "$HOME/.sdkman/bin/sdkman-init.sh" ]]; then
   # shellcheck disable=SC1091
   source "$HOME/.sdkman/bin/sdkman-init.sh"
 fi
+# LicenseGenerator 位于卖方内部模块 apex-license-tools（发行源码已剥离）
 CP_FILE="$(mktemp)"
 if command -v mvnd >/dev/null 2>&1; then
-  MAVEN_OPTS="-Xmx512m" mvnd -o -q dependency:build-classpath -pl apex-license-spring-boot-starter -Dmdep.outputFile="${CP_FILE}" 2>/dev/null \
-    || MAVEN_OPTS="-Xmx512m" mvnd -q dependency:build-classpath -pl apex-license-spring-boot-starter -Dmdep.outputFile="${CP_FILE}"
+  MAVEN_OPTS="-Xmx512m" mvnd -o -q dependency:build-classpath -pl apex-license-tools -Dmdep.outputFile="${CP_FILE}" 2>/dev/null \
+    || MAVEN_OPTS="-Xmx512m" mvnd -q dependency:build-classpath -pl apex-license-tools -Dmdep.outputFile="${CP_FILE}"
 elif command -v mvn >/dev/null 2>&1; then
-  mvn -q -o dependency:build-classpath -pl apex-license-spring-boot-starter -Dmdep.outputFile="${CP_FILE}" 2>/dev/null \
-    || mvn -q dependency:build-classpath -pl apex-license-spring-boot-starter -Dmdep.outputFile="${CP_FILE}"
+  mvn -q -o dependency:build-classpath -pl apex-license-tools -Dmdep.outputFile="${CP_FILE}" 2>/dev/null \
+    || mvn -q dependency:build-classpath -pl apex-license-tools -Dmdep.outputFile="${CP_FILE}"
 else
   echo "❌ 未找到 mvnd/mvn，请先安装: sdk install mvnd"
   exit 1
 fi
-CP="apex-license-spring-boot-starter/target/classes:$(cat "${CP_FILE}")"
+CP="apex-license-tools/target/classes:apex-license-spring-boot-starter/target/classes:apex-common/target/classes:$(cat "${CP_FILE}")"
 rm -f "${CP_FILE}"
 
 OUTPUT_DIR_DEFAULT="dist/license"
@@ -82,10 +104,23 @@ VERSION_LOWER="$(printf '%s' "${VERSION}" | tr '[:upper:]' '[:lower:]')"
 OUTPUT="${OUTPUT_DIR:-${OUTPUT_DIR_DEFAULT}}/${VERSION_LOWER}-${DAYS}d-$(date +%Y%m%d).json"
 mkdir -p "$(dirname "${OUTPUT}")"
 
-java -cp "${CP}" com.apex.scaffold.license.LicenseGenerator \
-  gen-license "${PRIVATE_KEY}" "${PUBLIC_KEY}" "${OUTPUT}" "${VERSION}" "${CUSTOMER}" "${DAYS}" "${FEATURES}"
+# 构建 java 调用参数（FEATURES 非空时追加，FINGERPRINT 非空时追加 --fingerprint）
+JAVA_ARGS=("gen-license" "${PRIVATE_KEY}" "${PUBLIC_KEY}" "${OUTPUT}" "${VERSION}" "${CUSTOMER}" "${DAYS}")
+if [[ -n "${FEATURES}" ]]; then
+  JAVA_ARGS+=("${FEATURES}")
+fi
+if [[ -n "${FINGERPRINT}" ]]; then
+  JAVA_ARGS+=("--fingerprint" "${FINGERPRINT}")
+fi
+
+java -cp "${CP}" com.apex.scaffold.license.tools.LicenseGenerator "${JAVA_ARGS[@]}"
 
 echo ""
 echo "✅ License 已生成: ${OUTPUT}"
 echo "   版本: ${VERSION} | 客户: ${CUSTOMER} | 有效期: ${DAYS} 天"
+if [[ -n "${FINGERPRINT}" ]]; then
+  echo "   机器指纹: 已绑定 (${FINGERPRINT:0:12}...)"
+else
+  echo "   机器指纹: 未绑定（如需绑定请在参数中追加 --fingerprint <hash>）"
+fi
 echo "   将文件发送给客户，并指导其放置到应用可访问路径后重启应用。"

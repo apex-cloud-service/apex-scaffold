@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  - Apex.Mar - 领域层 POM 配置文件
+  - Apex Scaffold - 领域层 POM 配置文件
   - @author Apex Team
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
@@ -9,7 +9,7 @@
     <parent>
         <groupId>com.apex.scaffold</groupId>
         <artifactId>apex-scaffold</artifactId>
-        <version>1.1.4</version>
+        <version>1.2.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 

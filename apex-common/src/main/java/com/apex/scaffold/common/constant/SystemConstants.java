@@ -148,6 +148,9 @@ public final class SystemConstants {
             "/api/v1/auth/sms/code",
             "/api/v1/auth/cl/sms/code",
             "/api/v1/auth/cl/validate-mobile",
+            // 图形验证码：登录前必须先获取验证码（含一次性校验接口），必须匿名放行。
+            "/api/v1/auth/captcha",
+            "/api/v1/auth/captcha/**",
             "/api/v1/onboarding/policies",
             "/api/v1/health",
             "/health",

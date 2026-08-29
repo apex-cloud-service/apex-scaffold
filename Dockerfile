@@ -77,7 +77,15 @@ RUN mkdir -p /app/logs /app/data/storage \
     && chown -R appuser:appgroup /app/logs /app/data/storage
 
 # 运行环境变量（均可被 docker run -e / compose environment 覆盖）
-ENV JAVA_OPTS="-Xms512m -Xmx1024m -XX:+UseG1GC -Dfile.encoding=UTF-8"
+# JVM 生产级调优默认（与 compose 默认值保持一致，改这里需同步 docker-compose.yml）：
+#   -Xms/-Xmx            堆内存 初始(最小)512m / 最大 1024m
+#   -XX:+UseG1GC          G1 垃圾回收器；-XX:MaxGCPauseMillis=200 目标最大停顿
+#   -XX:MetaspaceSize/-XX:MaxMetaspaceSize  元空间初始 256m / 上限 512m
+#   -XX:+HeapDumpOnOutOfMemoryError          OOM 自动堆转储到 /app/logs
+#   -XX:+ExitOnOutOfMemoryError              OOM 后退出进程，便于容器/编排自动重启
+#   -Xlog:gc*:file=...                       滚动 GC 日志（5 份 × 20m，/app/logs 已预创建）
+#   -Dfile.encoding=UTF-8 -Djava.security.egd=file:/dev/./urandom
+ENV JAVA_OPTS="-Xms512m -Xmx1024m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:MetaspaceSize=256m -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/app/logs/heapdump.hprof -XX:+ExitOnOutOfMemoryError -Xlog:gc*:file=/app/logs/gc.log:time,uptime,level,tags:filecount=5,filesize=20m -Dfile.encoding=UTF-8 -Djava.security.egd=file:/dev/./urandom"
 ENV SPRING_PROFILES_ACTIVE="prod,${BUILD_PROFILE}"
 ENV TZ="Asia/Shanghai"
 # 管理端口监听 0.0.0.0，供 Prometheus / 探针访问（默认回环地址）

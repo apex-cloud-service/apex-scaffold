@@ -63,6 +63,27 @@ spring:
             max-wait: 3000
             validation-query: SELECT 1 FROM DUAL
             test-while-idle: true
+        # 从库（配置与 master 完全一致，仅环境变量前缀 DB_SLAVE_*）
+        # ✅ 集成测试默认指向同一 MySQL 实例（apex_test 库），无需额外部署；
+        #    用于验证 @DataSource("slave") 动态切换链路（Druid 池参数与 master 一致）。
+        slave:
+          # 测试从库 JDBC URL；默认本机 MySQL（apex_test 库），可经 DB_SLAVE_URL 覆盖
+          url: ${DB_SLAVE_URL:jdbc:mysql://127.0.0.1:3306/apex_test?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false}
+          # 数据库凭据；默认本机 root/apex-root，可经环境变量覆盖
+          username: ${DB_SLAVE_USERNAME:root}
+          password: ${DB_SLAVE_PASSWORD:apex-root}
+          # MySQL 驱动与连接池（与 master 一致：Alibaba Druid）
+          driver-class-name: com.mysql.cj.jdbc.Driver
+          type: com.alibaba.druid.pool.DruidDataSource
+          druid:
+            db-type: mysql
+            # 与 master 一致：集成测试并发量低，连接池适当缩小
+            initial-size: 2
+            min-idle: 1
+            max-active: ${DB_MAX_ACTIVE:10}
+            max-wait: 3000
+            validation-query: SELECT 1 FROM DUAL
+            test-while-idle: true
 
   # ==========================================================================
   # Redis 配置 — 嵌入式 Redis（替代外部 Redis 服务）

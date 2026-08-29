@@ -84,7 +84,9 @@ docker compose down
 # 2. 注入环境变量并启动（dev 环境示例；详见 docs/DEPLOYMENT.md）
 export SPRING_PROFILES_ACTIVE=dev,enterprise
 export NACOS_CONFIG_ENABLED=false NACOS_DISCOVERY_ENABLED=false NACOS_REGISTER_ENABLED=false
-java -jar apex-interfaces/target/apex-interfaces-*-executable.jar
+# JVM 生产级调优参数（堆内存/G1 回收器/OOM 堆转储/滚动 GC 日志，可用 JAVA_OPTS 覆盖，详见 docs/DEPLOYMENT.md §4.5）
+export JAVA_OPTS='-Xms512m -Xmx1024m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=logs/heapdump.hprof -XX:+ExitOnOutOfMemoryError -Xlog:gc*:file=logs/gc.log:time,uptime,level,tags:filecount=5,filesize=20m -Dfile.encoding=UTF-8'
+java ${JAVA_OPTS} -jar apex-interfaces/target/apex-interfaces-*-executable.jar
 ```
 
 > 📖 **完整部署指南（三种方式 × dev/it/prod 全环境、环境变量、systemd、监控、升级回滚）请阅读 [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)**
@@ -170,6 +172,8 @@ apex-scaffold/
 |---------|------|-----------|
 | JWT认证 | 基于Token的身份验证 | ✅ |
 | RBAC权限 | 角色-based访问控制 | ✅ |
+| 自定义数据权限 | MyBatis-Plus 拦截器自动注入部门/用户过滤（全部/本部门/本部门及以下/仅本人/自定义） | ✅ |
+| 多数据源动态切换 | 自定义 @DataSource 注解读写分离/多库路由（响应式适配 + 切换埋点） | ✅ |
 | 多级缓存 | Redis + Caffeine二级缓存 | ✅ |
 | 限流熔断 | Sentinel + Resilience4j | ✅ |
 | 消息队列 | RocketMQ生产者/消费者封装 | ✅ |
@@ -184,6 +188,8 @@ apex-scaffold/
 ## 📚 文档
 
 - [快速开始指南](docs/QUICK_START.md) - 5分钟上手教程
+- [自定义数据权限使用指南](docs/DATA_SCOPE_USAGE.md) - MyBatis-Plus 拦截器数据权限使用手册（设计见 [DATA_SCOPE.md](docs/DATA_SCOPE.md)）
+- [多数据源动态切换使用指南](docs/DATA_SOURCE_SWITCH_USAGE.md) - 自定义 @DataSource 注解读写分离/多库路由
 - [架构设计说明](docs/ARCHITECTURE.md) - DDD分层架构详解
 - [配置项详解](docs/CONFIGURATION.md) - 所有配置项说明
 - [最佳实践](docs/BEST_PRACTICES.md) - 常见问题与解决方案

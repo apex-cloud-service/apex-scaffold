@@ -24,6 +24,9 @@
 # 说明:
 #   - 应用本地开发（java -jar）直接使用上述地址，dev 配置默认值即匹配（127.0.0.1）。
 #   - 监控组件配置来自 config/monitoring/（prometheus.yml / grafana / alert-rules.yml）。
+#   - JVM 调优：Nacos/RocketMQ/Sentinel/Zipkin 均已内置生产级 JVM 参数
+#     （G1 回收器/GC 停顿目标/元空间/OOM 堆转储+退出/滚动 GC 日志），与 Apex 应用同思路，
+#     详见各服务注释与 docs/DEPLOYMENT.md §4.5；注意组件镜像多为 JDK8，GC 日志用 -Xloggc 语法。
 #   - 详细说明见 docs/DEPLOYMENT.md 第 6.5 节「本地基础设施一键部署」。
 # ============================================================
 
@@ -83,9 +86,16 @@ services:
       NACOS_AUTH_TOKEN: ${NACOS_AUTH_TOKEN:-ApexScaffoldLocalSecretKey01234567890123456789}
       NACOS_AUTH_IDENTITY_KEY: apex-scaffold-serverIdentity
       NACOS_AUTH_IDENTITY_VALUE: apex-scaffold-serverIdentity
+      # 堆内存（standalone 模式经 JVM_X* 注入，-Xms/-Xmx/-Xmn）
       JVM_XMS: 256m
       JVM_XMX: 512m
       JVM_XMN: 128m
+      # JVM 调优（JDK8 语法；docker-startup.sh 将 JAVA_OPT 置于 CMS 之前，故不传 G1，
+      # 镜像脚本 standalone 分支强制 CMS 回收器）：
+      #   -XX:MetaspaceSize/-XX:MaxMetaspaceSize  元空间 256m/512m
+      #   -XX:+HeapDumpOnOutOfMemoryError + ExitOnOutOfMemoryError  OOM 转储 + 退出自愈
+      #   -Xloggc + PrintGCDetails + UseGCLogFileRotation  滚动 GC 日志 5×20m（/home/nacos/logs 已挂卷持久化）
+      JAVA_OPT: "-XX:MetaspaceSize=256m -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/home/nacos/logs/java_heapdump.hprof -XX:+ExitOnOutOfMemoryError -Xloggc:/home/nacos/logs/nacos_gc.log -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=5 -XX:GCLogFileSize=20m -Dfile.encoding=UTF-8"
       TZ: Asia/Shanghai
     ports:
       - "${NACOS_PORT:-18848}:8848"
@@ -110,9 +120,18 @@ services:
   rocketmq-namesrv:
     image: apache/rocketmq:5.3.1
     container_name: apex-infra-rocketmq-namesrv
-    command: sh mqnamesrv
+    # mkdir 确保 GC 日志目录存在（镜像默认无 /home/rocketmq/logs，JVM 打开日志文件不自动建父目录）
+    command:
+      - /bin/sh
+      - -c
+      - mkdir -p /home/rocketmq/logs && exec sh mqnamesrv
     environment:
+      # 堆内存（镜像 JDK8，runserver.sh 经 HEAP_OPTS 注入）
       HEAP_OPTS: "-Xms256m -Xmx512m -Xmn128m"
+      # JVM 调优（JDK8 语法；runserver.sh 将 JAVA_OPT_EXT 追加在末尾，覆盖默认 /dev/shm GC 日志）：
+      #   ⚠️ runserver.sh 强制 CMS 回收器（JDK8），故不传 G1（G1+CMS 共存会启动崩溃）；
+      #   元空间 256m/512m；OOM 堆转储 + 退出自愈；滚动 GC 日志 5×20m（/home/rocketmq/logs）
+      JAVA_OPT_EXT: "-XX:MetaspaceSize=256m -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/home/rocketmq/logs/rmq_namesrv_heapdump.hprof -XX:+ExitOnOutOfMemoryError -Xloggc:/home/rocketmq/logs/rmq_namesrv_gc.log -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=5 -XX:GCLogFileSize=20m -Dfile.encoding=UTF-8"
     ports:
       - "9876:9876"
     restart: unless-stopped
@@ -122,10 +141,17 @@ services:
   rocketmq-broker:
     image: apache/rocketmq:5.3.1
     container_name: apex-infra-rocketmq-broker
-    command: sh mqbroker -n rocketmq-namesrv:9876
+    command:
+      - /bin/sh
+      - -c
+      - mkdir -p /home/rocketmq/logs && exec sh mqbroker -n rocketmq-namesrv:9876
     environment:
       NAMESRV_ADDR: rocketmq-namesrv:9876
+      # 堆内存（镜像 JDK8，runbroker.sh 经 HEAP_OPTS 注入）
       HEAP_OPTS: "-Xms512m -Xmx1g -Xmn256m"
+      # JVM 调优（JDK8 语法；runbroker.sh 已含 G1，JAVA_OPT_EXT 追加在末尾）：
+      #   200ms 停顿目标；元空间 256m/512m；OOM 堆转储 + 退出自愈；滚动 GC 日志 5×20m
+      JAVA_OPT_EXT: "-XX:MaxGCPauseMillis=200 -XX:MetaspaceSize=256m -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/home/rocketmq/logs/rmq_broker_heapdump.hprof -XX:+ExitOnOutOfMemoryError -Xloggc:/home/rocketmq/logs/rmq_broker_gc.log -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=5 -XX:GCLogFileSize=20m -Dfile.encoding=UTF-8"
     depends_on:
       - rocketmq-namesrv
     ports:
@@ -142,6 +168,22 @@ services:
     container_name: apex-infra-sentinel
     environment:
       TZ: Asia/Shanghai
+    # 镜像 Cmd 为固定 java -jar 命令（不展开 JAVA_OPTS），故整体覆盖 command 注入 JVM 调优参数（JDK8 语法）：
+    #   堆 256m/512m；G1 + 200ms 停顿；元空间 256m/512m；OOM 堆转储 + 退出自愈；滚动 GC 日志 5×20m（/tmp）
+    command:
+      - /bin/sh
+      - -c
+      - >
+        exec java -Xms256m -Xmx512m -XX:+UseG1GC -XX:MaxGCPauseMillis=200
+        -XX:MetaspaceSize=256m -XX:MaxMetaspaceSize=512m
+        -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/sentinel_heapdump.hprof
+        -XX:+ExitOnOutOfMemoryError
+        -Xloggc:/tmp/sentinel_gc.log -XX:+PrintGCDetails -XX:+PrintGCDateStamps
+        -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=5 -XX:GCLogFileSize=20m
+        -Dfile.encoding=UTF-8 -Djava.security.egd=file:/dev/./urandom
+        -Dserver.port=8858 -Dcsp.sentinel.api.port=8719
+        -Dcsp.sentinel.dashboard.server=localhost:8858 -Dproject.name=sentinel-dashboard
+        -jar /app.jar
     ports:
       - "${SENTINEL_PORT:-8858}:8858"
       - "8719:8719"
@@ -154,6 +196,9 @@ services:
     image: openzipkin/zipkin:3.4
     container_name: apex-infra-zipkin
     environment:
+      # JVM 调优（镜像 JDK21，统一日志 -Xlog 语法；JAVA_OPTS 整体覆盖镜像默认 -Xms160m -Xmx160m）：
+      #   G1 + 200ms 停顿；元空间 256m/512m；OOM 堆转储 + 退出自愈；滚动 GC 日志 5×20m（/tmp）
+      JAVA_OPTS: "-Xms160m -Xmx160m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:MetaspaceSize=256m -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/zipkin_heapdump.hprof -XX:+ExitOnOutOfMemoryError -Xlog:gc*:file=/tmp/zipkin_gc.log:time,uptime,level,tags:filecount=5,filesize=20m -Dfile.encoding=UTF-8"
       TZ: Asia/Shanghai
     ports:
       - "9411:9411"
@@ -200,11 +245,6 @@ services:
       GF_SECURITY_ADMIN_USER: admin
       GF_SECURITY_ADMIN_PASSWORD: admin
       GF_USERS_ALLOW_SIGN_UP: "false"
-      GF_DATASOURCES_PROMETHEUS_NAME: Prometheus
-      GF_DATASOURCES_PROMETHEUS_TYPE: prometheus
-      GF_DATASOURCES_PROMETHEUS_URL: http://prometheus:9090
-      GF_DATASOURCES_PROMETHEUS_ACCESS: server
-      GF_DATASOURCES_PROMETHEUS_IS_DEFAULT: "true"
       TZ: Asia/Shanghai
     volumes:
       - ./config/monitoring/grafana/apex-dashboard.json:/var/lib/grafana/dashboards/apex-dashboard.json:ro

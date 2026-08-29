@@ -73,3 +73,15 @@ scrape_configs:
     static_configs:
       - targets:
           - "grafana:3000"
+
+  # ---- Zipkin 自指标（span/message 收集与丢弃计数，支撑大盘「Zipkin 链路追踪」分组） ----
+  # 经 zipkin:9411/prometheus 暴露 Prometheus 格式自指标（zipkin_collector_* 等）。
+  - job_name: zipkin
+    metrics_path: /prometheus
+    scrape_interval: 15s
+    static_configs:
+      - targets:
+          - "zipkin:9411"
+        labels:
+          application: apex-scaffold
+          component: zipkin

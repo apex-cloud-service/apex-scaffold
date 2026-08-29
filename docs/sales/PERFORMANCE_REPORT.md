@@ -2,7 +2,7 @@
 
 **版本**: v1.1（含本机沙箱基线实测）  
 **状态**: ✅ 含 2026-08-28 实测基线（沙箱环境）；正式交付建议按 §5 在目标环境复核  
-**适用版本**: Apex Scaffold v1.1.4（Java 17 / Spring Boot 3.5 / WebFlux / Netty）
+**适用版本**: Apex Scaffold v1.2.0（Java 17 / Spring Boot 3.5 / WebFlux / Netty）
 
 ---
 
@@ -26,7 +26,7 @@
 
 | 项 | 值 |
 |----|----|
-| 应用 | Apex Scaffold v1.1.4（enterprise 档，dev profile） |
+| 应用 | Apex Scaffold v1.2.0（enterprise 档，dev profile） |
 | 硬件 | macOS 12 核 / 32G（共享机器） |
 | 并发占用 | **同机运行 9 个中间件容器**（MySQL/Redis/Nacos/RocketMQ/Sentinel/Zipkin/Prometheus/Grafana/Blackbox）+ 开发档 P6Spy SQL 日志 |
 | JDK | 17.0.12（Oracle） |

@@ -5,6 +5,7 @@ import com.apex.example.dto.UserResponse;
 import com.apex.example.model.ExampleUser;
 import com.apex.example.repository.ExampleUserMapper;
 import com.apex.scaffold.application.dto.PageResponse;
+import com.apex.scaffold.common.annotation.DataSource;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.result.ResultCode;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -103,6 +104,33 @@ public class ExampleUserService {
         }
 
         return Mono.just(convertToResponse(user));
+    }
+
+    /**
+     * 数据源动态切换演示：从从库（slave）读取用户。
+     *
+     * <p>标注 {@link DataSource @DataSource("slave")} 后，由
+     * {@code DataSourceSwitchAspect} 切面在方法执行期间切换到 {@code slave} 数据源
+     * （对应 {@code spring.datasource.dynamic.datasource.slave} 配置），
+     * 方法结束自动切回。本地演示默认指向同一 MySQL 实例，通过
+     * {@code DB_SLAVE_URL} 环境变量可指向真实只读从库。</p>
+     *
+     * <p><b>响应式说明</b>：切换在<em>订阅时</em>生效（切面 {@code doFirst}），
+     * 因此查询必须延迟到订阅期执行——使用 {@link Mono#fromCallable} 包裹 Mapper 调用
+     * 而非在方法体直接调用（后者在装配期执行，早于切换）。示例模块未切换调度线程，
+     * 订阅与切换同线程，切换对查询可见；主应用经 {@code BlockingIoSchedulers.jdbc()}
+     * 切换线程的阻塞查询需显式装配或线程上下文透明传播（详见
+     * {@code docs/DATA_SOURCE_SWITCH_USAGE.md}）。</p>
+     *
+     * @param id 用户ID
+     * @return 用户响应（从从库读取）
+     */
+    @DataSource("slave")
+    public Mono<UserResponse> getUserFromSlave(Long id) {
+        log.debug("从从库(slave)查询用户, id={}", id);
+
+        return Mono.fromCallable(() -> userMapper.selectById(id))
+                .map(this::convertToResponse);
     }
 
     /**

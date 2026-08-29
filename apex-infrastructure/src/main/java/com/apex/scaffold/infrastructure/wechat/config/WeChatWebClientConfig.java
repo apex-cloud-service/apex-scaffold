@@ -22,20 +22,22 @@ import reactor.util.retry.Retry;
  * 微信生态 WebClient 配置。
  *
  * <p>为微信API调用提供统一的、连接池化的 WebClient Bean。
- * 包括微信公众号API、微信支付API和企业微信API三个独立的 WebClient 实例，
+ * 包括微信公众号API和企业微信API两个独立的 WebClient 实例，
  * 共享同一个底层连接池，避免每次调用都创建新的连接实例，提升连接复用率和性能。
+ *
+ * <p><b>注</b>：微信支付模块已于 1.2.0 整体移除（回调验签未完成不满足交付标准），
+ * 后续将作为增值模块回归。</p>
  *
  * <h2>优化说明（Netty/线程池/IO 性能优化方案 P2-1）</h2>
  * <p>原有微信服务存在两种客户端路径混用：
  * <ul>
- *   <li>本配置类的 3 个独立 Bean（wechat-api-pool / wechat-pay-pool / wework-pool）</li>
+ *   <li>本配置类的 2 个独立 Bean（wechat-api-pool / wework-pool）</li>
  *   <li>微信服务中通过 {@code ManagedWebClientFactory.create()} 创建的客户端（共用 external-http 池）</li>
  * </ul>
  * 混用导致 external-http 池额外承担约 100 个微信连接，且 wechat-api-pool 大量空闲。
  * 优化后将所有微信服务统一使用本配置类的 {@code @Qualifier} Bean：
  * <ul>
  *   <li>weChatApiWebClient — 微信公众号/小程序 API，baseUrl {@code https://api.weixin.qq.com}</li>
- *   <li>weChatPayWebClient — 微信支付 API，baseUrl {@code https://api.mch.weixin.qq.com}</li>
  *   <li>weWorkWebClient — 企业微信 API，baseUrl {@code https://qyapi.weixin.qq.com}</li>
  * </ul>
  * 新增 {@link ApiCallLogFilter} 使统一后的 WebClient 具备 API 调用日志能力，
@@ -117,19 +119,6 @@ public class WeChatWebClientConfig {
     @Bean("weChatApiWebClient")
     public WebClient weChatApiWebClient(ObjectProvider<ApiCallLogService> logServiceProvider) {
         return buildWebClient("https://api.weixin.qq.com", "wechat-api-pool", logServiceProvider);
-    }
-
-    /**
-     * 微信支付 API WebClient。
-     *
-     * <p>用于调用微信支付相关的API接口。
-     *
-     * @param logServiceProvider API 调用日志服务的延迟提供者
-     * @return 配置好的 WebClient 实例，baseUrl 为 https://api.mch.weixin.qq.com
-     */
-    @Bean("weChatPayWebClient")
-    public WebClient weChatPayWebClient(ObjectProvider<ApiCallLogService> logServiceProvider) {
-        return buildWebClient("https://api.mch.weixin.qq.com", "wechat-pay-pool", logServiceProvider);
     }
 
     /**

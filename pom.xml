@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  - Apex.Mar - Maven 父 POM 配置文件
+  - Apex Scaffold - Maven 父 POM 配置文件
   - @author Apex Team
 -->
 <project
@@ -38,7 +38,7 @@
   </parent>
   <groupId>com.apex.scaffold</groupId>
   <artifactId>apex-scaffold</artifactId>
-  <version>1.1.4</version>
+  <version>1.2.0</version>
   <packaging>pom</packaging>
   <name>Apex Scaffold</name>
   <description>企业级开发脚手架 - 微信APP版 (WebFlux响应式)</description>
@@ -60,6 +60,7 @@
     <mysql-connector.version>8.4.0</mysql-connector.version>
     <redisson.version>3.36.0</redisson.version>
     <rocketmq-spring.version>2.3.3</rocketmq-spring.version>
+    <!-- 注：微信支付 SDK（weixin-java-pay）已于 1.2.0 移除；后续作为增值模块按需引入。 -->
     <weixin-java.version>4.8.0</weixin-java.version>
     <minio.version>8.6.0</minio.version>
     <volcengine.tos.version>2.6.1</volcengine.tos.version>
@@ -128,6 +129,8 @@
   <modules>
     <module>apex-common</module>
     <module>apex-license-spring-boot-starter</module>
+    <!-- 卖方内部工具模块：发行源码/发布包必须剥离（详见模块 pom 说明） -->
+    <module>apex-license-tools</module>
     <module>apex-domain</module>
     <module>apex-infrastructure</module>
     <module>apex-application</module>
@@ -224,6 +227,11 @@
       </dependency>
       <dependency>
         <groupId>com.baomidou</groupId>
+        <artifactId>mybatis-plus-jsqlparser</artifactId>
+        <version>${mybatis-plus.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.baomidou</groupId>
         <artifactId>dynamic-datasource-spring-boot3-starter</artifactId>
         <version>${dynamic-datasource.version}</version>
       </dependency>
@@ -262,11 +270,7 @@
         <artifactId>weixin-java-miniapp</artifactId>
         <version>${weixin-java.version}</version>
       </dependency>
-      <dependency>
-        <groupId>com.github.binarywang</groupId>
-        <artifactId>weixin-java-pay</artifactId>
-        <version>${weixin-java.version}</version>
-      </dependency>
+      <!-- 注：weixin-java-pay（微信支付 SDK）已于 1.2.0 从依赖管理与各模块中移除；后续作为增值模块按需引入。 -->
       <dependency>
         <groupId>com.github.binarywang</groupId>
         <artifactId>weixin-java-mp</artifactId>
@@ -616,6 +620,94 @@
         <features.monitoring>false</features.monitoring>
         <features.tracing>false</features.tracing>
       </properties>
+      <!--
+        P0-3a 依赖真裁剪：
+        1) 高级依赖（RocketMQ / Sentinel / Zipkin tracing / resilience4j-circuitbreaker / sentinel-datasource-nacos /
+           sentinel-prometheus-metric-exporter / simpleclient_httpserver / sentinel-logging-slf4j）
+           在 basic profile 中以 <optional>true</optional> 重新声明，使它们不被传递到下游；
+        2) 同时各子模块 basic profile 对上游依赖添加 exclusions，确保 spring-boot-maven-plugin
+           打包时这些 jar 不进入 BOOT-INF/lib，运行期类不存在则 @ConditionalOnClass 自动跳过装配。
+      -->
+      <dependencyManagement>
+        <dependencies>
+          <!-- ===== apex-infrastructure 侧高级依赖（basic 不打包） ===== -->
+          <dependency>
+            <groupId>org.apache.rocketmq</groupId>
+            <artifactId>rocketmq-spring-boot-starter</artifactId>
+            <version>${rocketmq-spring.version}</version>
+            <optional>true</optional>
+          </dependency>
+          <dependency>
+            <groupId>io.github.resilience4j</groupId>
+            <artifactId>resilience4j-circuitbreaker</artifactId>
+            <version>${resilience4j.version}</version>
+            <optional>true</optional>
+          </dependency>
+          <dependency>
+            <groupId>io.github.resilience4j</groupId>
+            <artifactId>resilience4j-spring-boot3</artifactId>
+            <version>${resilience4j.version}</version>
+            <optional>true</optional>
+          </dependency>
+          <dependency>
+            <groupId>io.github.resilience4j</groupId>
+            <artifactId>resilience4j-reactor</artifactId>
+            <version>${resilience4j.version}</version>
+            <optional>true</optional>
+          </dependency>
+          <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-tracing-bridge-brave</artifactId>
+            <version>${micrometer-tracing.version}</version>
+            <optional>true</optional>
+          </dependency>
+          <dependency>
+            <groupId>io.zipkin.zipkin2</groupId>
+            <artifactId>zipkin</artifactId>
+            <version>${zipkin.version}</version>
+            <optional>true</optional>
+          </dependency>
+          <dependency>
+            <groupId>io.zipkin.reporter2</groupId>
+            <artifactId>zipkin-reporter-brave</artifactId>
+            <version>${zipkin-reporter.version}</version>
+            <optional>true</optional>
+          </dependency>
+          <dependency>
+            <groupId>io.zipkin.reporter2</groupId>
+            <artifactId>zipkin-sender-okhttp3</artifactId>
+            <version>${zipkin-reporter.version}</version>
+            <optional>true</optional>
+          </dependency>
+
+          <!-- ===== apex-interfaces 侧高级依赖（basic 不打包） ===== -->
+          <dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-sentinel</artifactId>
+            <optional>true</optional>
+          </dependency>
+          <dependency>
+            <groupId>com.alibaba.csp</groupId>
+            <artifactId>sentinel-logging-slf4j</artifactId>
+            <optional>true</optional>
+          </dependency>
+          <dependency>
+            <groupId>com.alibaba.csp</groupId>
+            <artifactId>sentinel-datasource-nacos</artifactId>
+            <optional>true</optional>
+          </dependency>
+          <dependency>
+            <groupId>com.alibaba.csp</groupId>
+            <artifactId>sentinel-prometheus-metric-exporter</artifactId>
+            <optional>true</optional>
+          </dependency>
+          <dependency>
+            <groupId>io.prometheus</groupId>
+            <artifactId>simpleclient_httpserver</artifactId>
+            <optional>true</optional>
+          </dependency>
+        </dependencies>
+      </dependencyManagement>
     </profile>
     
     <!-- 标准版: 包含常用功能,适合中型企业 (默认) -->

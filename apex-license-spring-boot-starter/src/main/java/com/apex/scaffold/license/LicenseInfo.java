@@ -75,6 +75,20 @@ public class LicenseInfo implements Serializable {
     private String publicKeyFingerprint;
 
     /**
+     * 机器指纹（SHA-256 哈希）。
+     *
+     * <p>签发时由卖方写入客户机器的指纹哈希；运行时 LicenseValidator
+     * 采集本机指纹并比对，不匹配则进入降级模式（基础功能放行、
+     * 商业功能拒绝）。该字段参与 RSA 签名（在 signature 生成前写入），
+     * 防止篡改。</p>
+     *
+     * <p>为 null 时跳过机器指纹验证，兼容旧版无指纹 License。</p>
+     *
+     * @since 1.2.1
+     */
+    private String machineFingerprint;
+
+    /**
      * 是否永久有效（计算属性，不参与序列化）
      */
     @JsonIgnore

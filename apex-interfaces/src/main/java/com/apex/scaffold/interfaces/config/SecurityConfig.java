@@ -6,6 +6,7 @@ import com.apex.scaffold.interfaces.util.MessageUtils;
 import com.apex.scaffold.interfaces.util.ResponseUtil;
 import java.util.Locale;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -73,9 +74,12 @@ import reactor.core.publisher.Mono;
 @Configuration
 @Profile("!it")
 @EnableWebFluxSecurity
-@EnableReactiveMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
+
+    /** 是否启用 RBAC 细粒度角色授权（basic 版本关闭，仅保留 JWT 认证）。 */
+    @Value("${apex.features.rbac:true}")
+    private boolean rbacEnabled;
 
     /** JWT 认证过滤器，用于验证请求中的 JWT Token */
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -108,20 +112,34 @@ public class SecurityConfig {
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
         return http.csrf(csrf -> csrf.disable())
-                .authorizeExchange(exchanges -> exchanges
-                        .pathMatchers(SystemConstants.PUBLIC_PATHS.toArray(new String[0]))
-                        .permitAll()
-                        // 本人角色/权限查询会命中后续管理通配规则，需优先按普通登录用户授权。
-                        .pathMatchers(SystemConstants.AUTHENTICATED_USER_PATHS.toArray(new String[0]))
-                        .authenticated()
-                        .pathMatchers("/internal/v1/interests/**")
-                        .hasAnyRole("ADMIN", "INTEREST_GRAPH_EDITOR", "INTEREST_PUBLISHER")
-                        .pathMatchers("/admin-api/v1/**")
-                        .hasAnyRole(securityProperties.getAdminRoles().toArray(new String[0]))
-                        .pathMatchers(securityProperties.getAdminPaths().toArray(new String[0]))
-                        .hasAnyRole(securityProperties.getAdminRole(), "SUPER_ADMIN")
-                        .anyExchange()
-                        .authenticated())
+                .authorizeExchange(exchanges -> {
+                    exchanges
+                            .pathMatchers(SystemConstants.PUBLIC_PATHS.toArray(new String[0]))
+                            .permitAll()
+                            // 本人角色/权限查询会命中后续管理通配规则，需优先按普通登录用户授权。
+                            .pathMatchers(SystemConstants.AUTHENTICATED_USER_PATHS.toArray(new String[0]))
+                            .authenticated();
+                    if (rbacEnabled) {
+                        // standard / enterprise：启用 RBAC，管理端路径要求特定角色
+                        exchanges
+                                .pathMatchers("/internal/v1/interests/**")
+                                .hasAnyRole("ADMIN", "INTEREST_GRAPH_EDITOR", "INTEREST_PUBLISHER")
+                                .pathMatchers("/admin-api/v1/**")
+                                .hasAnyRole(securityProperties.getAdminRoles().toArray(new String[0]))
+                                .pathMatchers(securityProperties.getAdminPaths().toArray(new String[0]))
+                                .hasAnyRole(securityProperties.getAdminRole(), "SUPER_ADMIN");
+                    } else {
+                        // basic：关闭 RBAC，管理端路径仅要求已认证（不做角色拦截）
+                        exchanges
+                                .pathMatchers("/internal/v1/interests/**")
+                                .authenticated()
+                                .pathMatchers("/admin-api/v1/**")
+                                .authenticated()
+                                .pathMatchers(securityProperties.getAdminPaths().toArray(new String[0]))
+                                .authenticated();
+                    }
+                    exchanges.anyExchange().authenticated();
+                })
                 .addFilterAt(jwtAuthenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION)
                 .exceptionHandling(exceptionHandling -> exceptionHandling
                         .authenticationEntryPoint((exchange, ex) -> Mono.deferContextual(ctx -> {

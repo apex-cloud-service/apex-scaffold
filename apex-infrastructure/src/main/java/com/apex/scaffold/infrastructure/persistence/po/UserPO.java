@@ -47,6 +47,17 @@ public class UserPO extends BasePO {
     private String username;
 
     /**
+     * 所属部门 ID（数据权限）。
+     *
+     * <p>对应 {@code sys_user.dept_id} 列（V6 迁移新增），关联 {@code sys_dept.id}，
+     * 配合数据权限拦截器实现部门级数据隔离。</p>
+     *
+     * @since 2.3.0
+     */
+    @TableField("dept_id")
+    private Long deptId;
+
+    /**
      * 登录密码（BCrypt 哈希）。
      *
      * <p>仅账号密码登录使用，禁止存储明文。</p>

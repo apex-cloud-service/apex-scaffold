@@ -8,6 +8,7 @@ import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.common.util.TraceIdUtil;
 import com.apex.scaffold.interfaces.dto.FileUploadRequestDoc;
 import com.apex.scaffold.interfaces.dto.GenericFileUploadRequestDoc;
+import com.apex.scaffold.interfaces.monitor.BusinessMetricsRecorder;
 import com.apex.scaffold.interfaces.util.MessageUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -69,6 +70,9 @@ public class FileHandler extends BaseHandler {
 
     private final FileService fileService;
 
+    /** 核心业务指标记录器。 */
+    private final BusinessMetricsRecorder businessMetricsRecorder;
+
     @Value("${file.upload.max-size-bytes:10485760}")
     private long maxFileSize;
 
@@ -93,9 +97,11 @@ public class FileHandler extends BaseHandler {
      * @param fileService 文件服务
      * @param messageUtils 国际化消息工具
      */
-    public FileHandler(FileService fileService, MessageUtils messageUtils) {
+    public FileHandler(
+            FileService fileService, MessageUtils messageUtils, BusinessMetricsRecorder businessMetricsRecorder) {
         super(messageUtils);
         this.fileService = fileService;
+        this.businessMetricsRecorder = businessMetricsRecorder;
     }
 
     /**
@@ -365,6 +371,7 @@ public class FileHandler extends BaseHandler {
                     return fileService.upload(filename, bytes, contentType, sex, openId);
                 }))
                 .flatMap(uploadResult -> buildOk(Result.success(uploadResult, traceId)))
+                .doOnSuccess(response -> businessMetricsRecorder.recordUpload())
                 .doOnError(e -> log.error("文件上传失败, filename: {}, error: {}", filename, e.getMessage(), e));
     }
 

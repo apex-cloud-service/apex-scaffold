@@ -18,7 +18,29 @@ import com.apex.scaffold.application.dto.UserDTO;
 import com.apex.scaffold.application.dto.WechatBindPhoneRequest;
 import com.apex.scaffold.application.dto.WxPhoneRequest;
 import com.apex.scaffold.application.dto.admin.AdminRoleResponse;
+import com.apex.scaffold.application.dto.admin.ApiCallLogDTO;
+import com.apex.scaffold.application.dto.admin.AuditLogDTO;
+import com.apex.scaffold.application.dto.admin.ConfigDTO;
+import com.apex.scaffold.application.dto.admin.ConfigRequest;
+import com.apex.scaffold.application.dto.admin.DeptDTO;
+import com.apex.scaffold.application.dto.admin.DictDataDTO;
+import com.apex.scaffold.application.dto.admin.DictDataRequest;
+import com.apex.scaffold.application.dto.admin.DictTypeDTO;
+import com.apex.scaffold.application.dto.admin.DictTypeRequest;
+import com.apex.scaffold.application.dto.admin.JobDTO;
+import com.apex.scaffold.application.dto.admin.JobLogDTO;
+import com.apex.scaffold.application.dto.admin.JobRequest;
+import com.apex.scaffold.application.dto.admin.LoginLogDTO;
+import com.apex.scaffold.application.dto.admin.MenuDTO;
+import com.apex.scaffold.application.dto.admin.MenuRequest;
+import com.apex.scaffold.application.dto.admin.OnlineUserDTO;
+import com.apex.scaffold.application.dto.admin.StatusRequest;
 import com.apex.scaffold.application.dto.admin.AdminUserCreateRequest;
+import com.apex.scaffold.interfaces.dto.monitor.MonitorBusinessResponse;
+import com.apex.scaffold.interfaces.dto.monitor.MonitorGovernanceResponse;
+import com.apex.scaffold.interfaces.dto.monitor.MonitorMiddlewareResponse;
+import com.apex.scaffold.interfaces.dto.monitor.MonitorOverviewResponse;
+import com.apex.scaffold.interfaces.dto.monitor.MonitorSystemResponse;
 import com.apex.scaffold.application.dto.admin.AdminUserDetailResponse;
 import com.apex.scaffold.application.dto.admin.AdminUserRolesRequest;
 import com.apex.scaffold.application.dto.admin.AdminUserStatusRequest;
@@ -94,7 +116,24 @@ final class OpenApiDocumentationCustomizer {
             Map.entry("adminCreateUser", AdminUserCreateRequest.class),
             Map.entry("adminUpdateUser", AdminUserUpdateRequest.class),
             Map.entry("adminReplaceUserRoles", AdminUserRolesRequest.class),
-            Map.entry("adminUpdateUserStatus", AdminUserStatusRequest.class));
+            Map.entry("adminUpdateUserStatus", AdminUserStatusRequest.class),
+            Map.entry("adminCreateMenu", MenuRequest.class),
+            Map.entry("adminUpdateMenu", MenuRequest.class),
+            Map.entry("adminUpdateMenuStatus", StatusRequest.class),
+            Map.entry("adminCreateDictType", DictTypeRequest.class),
+            Map.entry("adminUpdateDictType", DictTypeRequest.class),
+            Map.entry("adminUpdateDictTypeStatus", StatusRequest.class),
+            Map.entry("adminCreateDictData", DictDataRequest.class),
+            Map.entry("adminUpdateDictData", DictDataRequest.class),
+            Map.entry("adminUpdateDictDataStatus", StatusRequest.class),
+            Map.entry("adminCreateConfig", ConfigRequest.class),
+            Map.entry("adminUpdateConfig", ConfigRequest.class),
+            Map.entry("adminUpdateConfigStatus", StatusRequest.class),
+            Map.entry("adminCreateJob", JobRequest.class),
+            Map.entry("adminUpdateJob", JobRequest.class),
+            Map.entry("adminUpdateJobStatus", StatusRequest.class),
+            Map.entry("adminCreateDept", com.apex.scaffold.domain.model.entity.DeptEntity.class),
+            Map.entry("adminUpdateDept", com.apex.scaffold.domain.model.entity.DeptEntity.class));
 
     /** 操作对应的查询参数定义，key 为 operationId，value 为该操作支持的查询参数列表。 */
     private static final Map<String, List<QueryParameter>> QUERY_PARAMETERS = queryParameters();
@@ -136,11 +175,61 @@ final class OpenApiDocumentationCustomizer {
             Map.entry("adminUpdateUser", AdminUserDetailResponse.class),
             Map.entry("adminReplaceUserRoles", AdminUserDetailResponse.class),
             Map.entry("adminUpdateUserStatus", AdminUserDetailResponse.class),
-            Map.entry("adminListStaffRoles", AdminRoleResponse.class));
+            Map.entry("adminListStaffRoles", AdminRoleResponse.class),
+            Map.entry("adminListMenus", MenuDTO.class),
+            Map.entry("adminGetMenu", MenuDTO.class),
+            Map.entry("adminCreateMenu", MenuDTO.class),
+            Map.entry("adminUpdateMenu", MenuDTO.class),
+            Map.entry("adminUpdateMenuStatus", MenuDTO.class),
+            Map.entry("adminListDictTypes", DictTypeDTO.class),
+            Map.entry("adminGetDictType", DictTypeDTO.class),
+            Map.entry("adminCreateDictType", DictTypeDTO.class),
+            Map.entry("adminUpdateDictType", DictTypeDTO.class),
+            Map.entry("adminListDictData", DictDataDTO.class),
+            Map.entry("adminGetDictData", DictDataDTO.class),
+            Map.entry("adminCreateDictData", DictDataDTO.class),
+            Map.entry("adminUpdateDictData", DictDataDTO.class),
+            Map.entry("adminListConfigs", ConfigDTO.class),
+            Map.entry("adminGetConfig", ConfigDTO.class),
+            Map.entry("adminCreateConfig", ConfigDTO.class),
+            Map.entry("adminUpdateConfig", ConfigDTO.class),
+            Map.entry("adminListJobs", JobDTO.class),
+            Map.entry("adminGetJob", JobDTO.class),
+            Map.entry("adminCreateJob", JobDTO.class),
+            Map.entry("adminUpdateJob", JobDTO.class),
+            Map.entry("adminListJobLogs", JobLogDTO.class),
+            Map.entry("adminListLoginLogs", LoginLogDTO.class),
+            Map.entry("adminListAuditLogs", AuditLogDTO.class),
+            Map.entry("adminListApiCallLogs", ApiCallLogDTO.class),
+            Map.entry("adminListOnlineUsers", OnlineUserDTO.class),
+            Map.entry("adminDeptTree", DeptDTO.class),
+            Map.entry("adminDeptDetail", DeptDTO.class),
+            Map.entry("adminCreateDept", DeptDTO.class),
+            Map.entry("adminUpdateDept", DeptDTO.class),
+            Map.entry("monitorOverview", MonitorOverviewResponse.class),
+            Map.entry("monitorSystem", MonitorSystemResponse.class),
+            Map.entry("monitorMiddleware", MonitorMiddlewareResponse.class),
+            Map.entry("monitorGovernance", MonitorGovernanceResponse.class),
+            Map.entry("monitorBusiness", MonitorBusinessResponse.class));
 
     /** 响应 data 为列表类型的操作。 */
-    private static final Set<String> LIST_RESPONSE_TYPES =
-            Set.of("getMyRoles", "getAllRoles", "getMyPermissions", "getAllPermissions", "listUsers");
+    private static final Set<String> LIST_RESPONSE_TYPES = Set.of(
+            "getMyRoles",
+            "getAllRoles",
+            "getMyPermissions",
+            "getAllPermissions",
+            "listUsers",
+            "adminListMenus",
+            "adminListDictTypes",
+            "adminListDictData",
+            "adminListConfigs",
+            "adminListJobs",
+            "adminListJobLogs",
+            "adminListLoginLogs",
+            "adminListAuditLogs",
+            "adminListApiCallLogs",
+            "adminListOnlineUsers",
+            "adminDeptTree");
 
     /** 匿名访问路径判断器，用于确定哪些接口无需 Bearer Token 鉴权。 */
     private final Predicate<String> publicPath;

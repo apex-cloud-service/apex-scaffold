@@ -6,12 +6,13 @@ import java.util.concurrent.TimeUnit;
 import lombok.Data;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.caffeine.CaffeineCacheManager;
 import org.springframework.context.annotation.Bean;
-import org.springframework.boot.autoconfigure.AutoConfiguration;
-import org.springframework.context.annotation.Configuration;
 
 /**
  * 多级缓存配置类
@@ -50,6 +51,8 @@ import org.springframework.context.annotation.Configuration;
  */
 @AutoConfiguration
 @EnableCaching
+@ConditionalOnProperty(prefix = "apex.features", name = "cache", havingValue = "true", matchIfMissing = true)
+@ConditionalOnClass(CaffeineCacheManager.class)
 public class MultiLevelCacheConfig {
     private static final Logger log = LoggerFactory.getLogger(MultiLevelCacheConfig.class);
 

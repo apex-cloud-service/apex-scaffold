@@ -1,7 +1,7 @@
 # Apex Scaffold API 规范
 
 **版本**: v1.0  
-**适用版本**: Apex Scaffold v1.1.4  
+**适用版本**: Apex Scaffold v1.2.0  
 **定位**: 对接方开发规范；所有约定均已在代码中实现并有契约测试保障（RouterOpenApiCoverageTest 等）。
 
 ---

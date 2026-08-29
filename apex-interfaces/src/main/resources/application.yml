@@ -597,6 +597,16 @@ apex:
     # 超时请求返回 504 + REQUEST_TIMEOUT(2006) 统一错误响应，防止慢请求长期占用连接引发雪崩；
     # 💡 SSE 长连接（Accept: text/event-stream）自动豁免；设为 0s 可关闭
     response-timeout: ${APEX_RESPONSE_TIMEOUT:30s}
+  # ---------- 慢 SQL 指标（Grafana「数据库（慢SQL）」分组） ----------
+  # ✅ SlowSqlMetricsInterceptor（MyBatis 插件）统计 SQL 执行耗时，上报
+  #    apex.sql.execution / apex.sql.slow.count / apex.sql.slow.max.ms 指标；
+  #    超阈值时输出 WARN 慢 SQL 日志（含 SQL 文本与耗时）
+  sql:
+    slow:
+      # ✅ 是否启用慢 SQL 指标采集（默认开启）
+      enabled: ${APEX_SQL_SLOW_ENABLED:true}
+      # 慢 SQL 判定阈值（毫秒），超过即计入慢 SQL 计数并告警日志
+      threshold-ms: ${APEX_SQL_SLOW_THRESHOLD_MS:1000}
   # ---------- Sentinel 规则 Nacos 动态下发（生产热更新） ----------
   # ✅ 启用后限流/熔断规则改为从 Nacos 拉取（约 30s 热生效），静态规则作为启动兜底；
   # ⚠️ 启用时 Nacos 的 DataId 需维护完整规则集（JSON 模板见 config/sentinel/ 与 docs/CONFIGURATION.md）；

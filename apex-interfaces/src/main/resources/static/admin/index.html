@@ -76,6 +76,7 @@
         <button class="nav-item" data-view="jobs">定时任务</button>
         <button class="nav-item" data-view="login-logs">登录日志</button>
         <button class="nav-item" data-view="audit-logs">审计日志</button>
+        <button class="nav-item" data-view="api-call-logs">API调用日志</button>
       </nav>
       <div class="sidebar-footer">
         <button id="logout-button" class="text-button" type="button">退出登录</button>
@@ -193,6 +194,21 @@
         </div>
         <div id="audit-table" class="table-wrap"></div>
         <div id="audit-pagination" class="pagination"></div>
+      </section>
+      <section id="view-api-call-logs" class="view" hidden>
+        <header class="view-header">
+          <h1>API调用日志</h1>
+          <p class="view-subtitle">回溯对外部 HTTP 服务调用详情（敏感字段已脱敏），支撑第三方接口联调与排障。</p>
+        </header>
+        <div class="toolbar">
+          <input id="apicall-service" class="input" type="search" placeholder="目标服务，如 wechat">
+          <input id="apicall-status" class="input" type="search" placeholder="状态 0/1/2/3">
+          <input id="apicall-traceid" class="input" type="search" placeholder="TraceId">
+          <input id="apicall-path" class="input" type="search" placeholder="请求路径">
+          <button id="apicall-search" class="secondary-button" type="button">查询</button>
+        </div>
+        <div id="apicall-table" class="table-wrap"></div>
+        <div id="apicall-pagination" class="pagination"></div>
       </section>
     </main>
   </div>

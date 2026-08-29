@@ -26,6 +26,13 @@ data
 .env.*
 !.env.example
 
+# 卖方签发私钥、License 文件与本地数据（严禁进入任何构建上下文/交付物）
+config/license/private.key
+config/license/*.lic
+backups
+lr
+.workbuddy
+
 # 其他
 node_modules
 k8s

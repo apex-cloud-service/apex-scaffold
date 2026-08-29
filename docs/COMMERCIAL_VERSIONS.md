@@ -31,8 +31,10 @@ Apex Scaffold 提供三个商业化版本,满足不同规模企业的需求。
 | 数据权限控制 | ❌ | ✅ | ✅ |
 | XSS 防护 | ✅ | ✅ | ✅ |
 | SQL 注入防护 | ✅ | ✅ | ✅ |
-| CSRF 防护 | ❌ | ✅ | ✅ |
-| 审计日志 | ❌ | ❌ | ✅ |
+| CSRF 防护\* | ❌ | ❌ | ❌ |
+| 操作审计日志（安全合规） | ❌ | ❌ | ✅ |
+
+\* 微信小程序场景下 Spring Security 全局关闭 CSRF，三档行为一致；若后续接入 H5 Web 端可按需按版本开启。
 
 ### ⚡ 性能与扩展
 
@@ -87,9 +89,11 @@ Apex Scaffold 提供三个商业化版本,满足不同规模企业的需求。
 | Grafana 仪表盘 | ❌ | ✅ | ✅ |
 | 告警规则（钉钉通知） | ❌ | ✅ | ✅ |
 | Zipkin 链路追踪 | ❌ | ❌ | ✅ |
-| Sentinel 限流熔断 | ❌ | ❌ | ✅ |
-| Resilience4j 容错 | ❌ | ❌ | ✅ |
+| Sentinel 限流熔断\*\* | ❌ | ✅ | ✅ |
+| Resilience4j 容错 | ❌ | ✅ | ✅ |
 | 健康检查 | ✅ | ✅ | ✅ |
+
+\*\* Sentinel 依赖 `apex.features.monitoring` 属性开关，standard/enterprise 均为 true，basic 为 false；与 Prometheus 共用同一条 Maven Profile 控制。
 
 ### 🗄️ 数据库
 
@@ -109,6 +113,40 @@ Apex Scaffold 提供三个商业化版本,满足不同规模企业的需求。
 | CORS 跨域 | ✅ | ✅ | ✅ |
 | Docker 支持 | ✅ | ✅ | ✅ |
 | Kubernetes 部署脚本 | ❌ | ❌ | ✅ |
+
+## 🔧 三档差异实现机制（v1.2.0）
+
+三档版本通过**编译期 Maven Profile + 运行期 Spring 条件门控**双层控制实现功能差异，保证：
+- **basic 构建产物不包含高级依赖 jar**（真裁剪，BOOT-INF/lib 中不会出现 RocketMQ / Sentinel / Zipkin）
+- **运行期属性开关与 Spring Bean 装配对齐**（`apex.features.*` 为 false 时 Bean 不注册）
+
+### 属性矩阵（Maven Profile → 运行期 `apex.features.*`）
+
+| 属性 | Basic | Standard | Enterprise | 说明 |
+|------|-------|----------|------------|------|
+| `apex.features.jwt-auth` | true | true | true | JWT 认证（三档均启用） |
+| `apex.features.rbac` | **false** | true | true | RBAC 权限管理 + `@PreAuthorize` 方法级安全 |
+| `apex.features.cache` | **false** | true | true | Caffeine L1 + Redis L2 多级缓存（含 Redisson 分布式锁） |
+| `apex.features.message-queue` | false | **false** | true | RocketMQ 集成（生产者/消费者/死信队列处理/幂等切面） |
+| `apex.features.monitoring` | **false** | true | true | Sentinel 限流熔断 + Prometheus + Grafana + 钉钉告警 |
+| `apex.features.tracing` | false | **false** | true | Zipkin Brave 全链路追踪上报 |
+
+### 条件门控生效原理
+
+1. **Maven Profile 编译裁剪**：
+   - `basic` profile 在顶层 `dependencyManagement` 中把高级依赖声明为 `<optional>true</optional>`；
+   - 子模块（如 `apex-interfaces`）的 `basic` profile 对上游依赖添加 `<exclusions>`；
+   - `spring-boot-maven-plugin` 打包时可选依赖 / 被排除依赖不进入 `BOOT-INF/lib`。
+
+2. **Spring 条件装配（双条件门控）**：
+   - `@ConditionalOnProperty(prefix = "apex.features", name = "xxx", havingValue = "true", matchIfMissing = true)` 控制属性开关；
+   - `@ConditionalOnClass(SomeAdvancedClass.class)` 兜底：当 basic 构建缺少类时即使属性被强制设为 true 也不会装配，避免 NoClassDefFoundError。
+   - 关键配置类：`RbacMethodSecurityConfig`、`MultiLevelCacheConfig`、`SentinelConfig`、`TraceConfig`、`MqProducerService`/`UserMessageListener` 等均按此模式配置。
+
+3. **RBAC 特殊处理**：
+   - JWT 认证链（SecurityConfig）三档始终激活；
+   - `@EnableReactiveMethodSecurity` 独立封装为 `RbacMethodSecurityConfig`，只有 `rbac=true` 时激活；
+   - `rbac=false`（basic）时管理端路径降级为「仅需认证」，不做 ADMIN/SUPER_ADMIN 角色校验。
 
 ## 💰 定价策略
 

@@ -41,10 +41,18 @@ services:
     environment:
       # 激活 profile：<环境>,<档位>，例如 prod,enterprise / dev,standard
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod,enterprise}
-      # ---------- 数据源（dynamic-datasource，应用读取 DB_MASTER_*） ----------
+      # ---------- JVM 调优参数（默认与 Dockerfile ENV JAVA_OPTS 一致；.env 设置 JAVA_OPTS 可整体覆盖） ----------
+      # 堆内存 -Xms512m/-Xmx1024m、G1 回收器、GC 停顿目标、元空间上下限、OOM 堆转储+退出、滚动 GC 日志
+      # （GC 日志/堆转储写入容器 /app/logs，需持久化时挂载 volume 或经 logstash/sidecar 采集）
+      JAVA_OPTS: ${JAVA_OPTS:--Xms512m -Xmx1024m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:MetaspaceSize=256m -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/app/logs/heapdump.hprof -XX:+ExitOnOutOfMemoryError -Xlog:gc*:file=/app/logs/gc.log:time,uptime,level,tags:filecount=5,filesize=20m -Dfile.encoding=UTF-8 -Djava.security.egd=file:/dev/./urandom}
+      # ---------- 数据源（dynamic-datasource，应用读取 DB_MASTER_* / DB_SLAVE_*） ----------
       DB_MASTER_URL: ${DB_MASTER_URL:-jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-apex_data}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false}
       DB_MASTER_USERNAME: ${DB_MASTER_USERNAME:-root}
       DB_MASTER_PASSWORD: ${DB_MASTER_PASSWORD:-apex-root}
+      # 从库：prod 配置已启用 slave 数据源，必须注入 DB_SLAVE_*（默认与主库同库，可经 .env 指向真实只读副本）
+      DB_SLAVE_URL: ${DB_SLAVE_URL:-jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-apex_data}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false}
+      DB_SLAVE_USERNAME: ${DB_SLAVE_USERNAME:-root}
+      DB_SLAVE_PASSWORD: ${DB_SLAVE_PASSWORD:-apex-root}
       # ---------- Redis ----------
       REDIS_HOST: redis
       REDIS_PORT: "6379"
@@ -130,9 +138,17 @@ services:
   rocketmq-namesrv:
     image: apache/rocketmq:5.3.1
     profiles: ["rocketmq"]
-    command: sh mqnamesrv
+    # mkdir 确保 GC 日志目录存在（镜像默认无 /home/rocketmq/logs）
+    command:
+      - /bin/sh
+      - -c
+      - mkdir -p /home/rocketmq/logs && exec sh mqnamesrv
     environment:
-      JAVA_OPT_EXT: "-Xms256m -Xmx512m -Xmn128m"
+      HEAP_OPTS: "-Xms256m -Xmx512m -Xmn128m"
+      # JVM 调优（JDK8 语法；JAVA_OPT_EXT 追加在末尾，覆盖默认 /dev/shm GC 日志）：
+      #   ⚠️ runserver.sh 强制 CMS 回收器（JDK8），故不传 G1（G1+CMS 共存会启动崩溃）；
+      #   元空间 256m/512m；OOM 堆转储 + 退出自愈；滚动 GC 日志 5×20m
+      JAVA_OPT_EXT: "-XX:MetaspaceSize=256m -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/home/rocketmq/logs/rmq_namesrv_heapdump.hprof -XX:+ExitOnOutOfMemoryError -Xloggc:/home/rocketmq/logs/rmq_namesrv_gc.log -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=5 -XX:GCLogFileSize=20m -Dfile.encoding=UTF-8"
     ports:
       - "9876:9876"
     restart: unless-stopped
@@ -142,10 +158,16 @@ services:
   rocketmq-broker:
     image: apache/rocketmq:5.3.1
     profiles: ["rocketmq"]
-    command: sh mqbroker -n rocketmq-namesrv:9876
+    command:
+      - /bin/sh
+      - -c
+      - mkdir -p /home/rocketmq/logs && exec sh mqbroker -n rocketmq-namesrv:9876
     environment:
       NAMESRV_ADDR: rocketmq-namesrv:9876
-      JAVA_OPT_EXT: "-Xms512m -Xmx1g -Xmn256m"
+      HEAP_OPTS: "-Xms512m -Xmx1g -Xmn256m"
+      # JVM 调优（JDK8 语法；runbroker.sh 已含 G1）：
+      #   200ms 停顿；元空间 256m/512m；OOM 堆转储 + 退出自愈；滚动 GC 日志 5×20m
+      JAVA_OPT_EXT: "-XX:MaxGCPauseMillis=200 -XX:MetaspaceSize=256m -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/home/rocketmq/logs/rmq_broker_heapdump.hprof -XX:+ExitOnOutOfMemoryError -Xloggc:/home/rocketmq/logs/rmq_broker_gc.log -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=5 -XX:GCLogFileSize=20m -Dfile.encoding=UTF-8"
     depends_on:
       - rocketmq-namesrv
     ports:

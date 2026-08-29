@@ -20,8 +20,18 @@ docker compose up -d
 
 容器启动时通过 [auto-provisioning](./provisioning/) 自动完成：
 
-1. 注册 **Prometheus** 数据源（`http://prometheus:9090`）
+1. 注册 **Prometheus** 数据源（`http://prometheus:9090`，**uid 固定为 `prometheus`**）
 2. 导入 **Apex Scaffold 监控大盘**（`apex-dashboard.json`）
+
+> **自动置备目录结构（勿改）**：Grafana 11 要求置备 YAML 按组件子目录存放，
+> 即 `provisioning/dashboards/dashboards.yml` 与 `provisioning/datasources/datasources.yml`。
+> 若直接放在 `provisioning/` 根目录，Grafana 会静默忽略（日志报
+> `can't read dashboard provisioning files from directory ... no such file or directory`），
+> 表现为访问 3000 端口没有任何面板。
+>
+> **数据源 uid 约定**：`datasources.yml` 将 Prometheus 的 uid 固定为 `prometheus`，
+> 大盘 JSON 中全部面板以 `"uid": "prometheus"` 直引（文件置备不会解析
+> `__inputs` 模板变量，因此大盘 JSON 中不再使用 `${DS_PROMETHEUS}`）。
 
 启动后访问：
 
@@ -40,6 +50,27 @@ docker compose up -d
 4. 点击 **Import**
 
 ## 大盘面板说明
+
+大盘共 **11 个分组 91 个面板**（3 行既有 + 8 行增强分组）：
+
+| 分组 | 面板 | 指标来源 |
+|------|------|----------|
+| 顶部状态行 | 服务状态 / 请求吞吐 / P95 / 5xx 错误率 / JVM 堆 / DB 池水位 | `up`、`apex_api_*`、`jvm_*`、`hikaricp_*`/`druid_*` |
+| HTTP 接口指标 | 请求量按状态码 / 响应时间分位数 | `apex_api_request_count_total`、`apex_api_response_time_seconds_bucket` |
+| JVM / 数据库 / 治理 | JVM 堆内存 / 连接池 / GC 频率 / 连接池等待超时 / Sentinel | `jvm_*`、`hikaricp_*`、`druid_*`、`sentinel_*` |
+| 系统资源（磁盘/网络） | 磁盘使用率 / 网卡启用数 / 磁盘使用率按挂载点 / 网卡状态 | `apex_disk_*`、`apex_network_*` |
+| 中间件（Redis/缓存） | Redis 健康 / 节点数 / 缓存命中率 / 命中未命中 / Redis 可用性 | `redisson_healthy`、`redisson_nodes_total`、`apex_cache_gets_total`、`apex_security_redis_metrics_up` |
+| 治理与安全 | 限流拒绝 / 熔断触发 / 活跃会话 / 安全拦截 / 限流·熔断 1h 累计 / 趋势 / 防护明细 | `apex_security_rate_limit_rejected_total`、`apex_security_circuit_breaker_opened_total`、`apex_security_active_sessions`、`apex_security_*` 拦截类 |
+| 核心业务 | 登录成功 / 注册 / 上传 / 信用变更 / 外部API QPS / 外部API成功率 / 业务量趋势 / 调用结果 / 按服务QPS / 耗时 | `apex_business_*_total`、`apex_api_call_result_total`、`apex_api_call_seconds_*` |
+| Zipkin 链路追踪 | Zipkin 在线 / Span 接收 / Span 丢弃 / 收集器负载 | `zipkin_collector_*`（Prometheus 已新增 `zipkin` 抓取任务，`zipkin:9411/prometheus`） |
+| JVM 详细（CPU/线程/类加载） | 进程/系统CPU / 存活·守护线程 / 已加载类 / 运行时长 / CPU趋势 / 线程数趋势 / 线程状态分布 / 非堆内存 / 类加载卸载 / 内存缓冲区 | `process_cpu_usage`、`system_cpu_usage`、`jvm_threads_*`、`jvm_classes_*`、`jvm_memory_used_bytes{area="nonheap"}`、`jvm_buffer_memory_used_bytes`、`process_uptime_seconds` |
+| 数据库（慢SQL） | 慢SQL次数 / 慢SQL最长耗时 / SQL执行耗时均值 / 慢SQL按类型 | `apex.sql.slow.count_total`、`apex.sql.slow.max.ms`、`apex.sql.execution_seconds_*`（由 `SlowSqlMetricsInterceptor` MyBatis 插件上报，`apex.sql.slow.threshold-ms` 默认 1000ms） |
+| 消息中间件（RocketMQ/Outbox） | MQ发送QPS / 发送失败率 / 发送耗时 / Outbox待处理·死信·统计可用 / QPS按模式 / 成功失败 / Outbox各状态 / 耗时按模式 | `apex_mq_publish_count_total{mode,result}`、`apex_mq_publish_latency_seconds_*`（`MqPublishMetricsAspect` 上报）、`apex_outbox_records{status}`、`apex_outbox_metrics_up` |
+| 异步响应 / 幂等重试 | 响应超时次数 / SSE连接数 / SSE推送事件 / 幂等通过·拒绝 / 乐观锁重试 / 各自趋势 | `apex_response_timeout_count_total`（超时过滤器）、`apex_sse_connections`、`apex_sse_events_count_total`、`apex_idempotent_count_total{result}`、`apex_retry_optimistic_count_total{result}` |
+
+> **外部指标依赖**：应用侧指标（`apex_*`/`redisson_*`/`apex.sql.*` 等）均由应用自身
+> （8081 `/actuator/prometheus`）上报，应用未启动时对应面板显示 No data，启动后自动填充；
+> `zipkin_collector_*` 为 Zipkin 自指标，链路数据上报后 rate 即出值。
 
 ### 顶部状态行（Stat）
 
@@ -120,7 +151,7 @@ docker compose up -d
 
 1. **数据保留**：docker-compose 预设 Prometheus 保留 15 天，按需调整
    `--storage.tsdb.retention.time`
-2. **性能影响**：面板控制在 20 个以内，避免拖慢 Grafana
+2. **面板规模**：大盘 46 面板按 7 个分组折叠展示，性能开销可控；如需精简可折叠分组行
 3. **权限管理**：生产环境务必修改 Grafana 默认口令并配置 SSO / 权限
 4. **管理端口安全**：应用监控端点位于独立端口 8081，生产建议仅内网暴露
 5. **告警通道**：alert-rules.yml 仅定义规则，通知渠道需配置 Alertmanager

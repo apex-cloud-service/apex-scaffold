@@ -5,9 +5,9 @@
 # 配套环境变量文件: /etc/apex-scaffold/apex.env（每行 KEY=VALUE）
 #
 # 使用步骤:
-#   1. 构建并拷贝可执行 jar:
+#   1. 构建并拷贝可执行 jar（logs 目录存放 GC 日志 gc.log 与 OOM 堆转储 heapdump.hprof）:
 #        ./scripts/build/build.sh -Penterprise
-#        mkdir -p /opt/apex-scaffold
+#        mkdir -p /opt/apex-scaffold/logs
 #        cp apex-interfaces/target/apex-interfaces-*-executable.jar /opt/apex-scaffold/app.jar
 #   2. 创建环境变量文件（见 docs/DEPLOYMENT.md 环境变量参考表）:
 #        sudo mkdir -p /etc/apex-scaffold
@@ -16,6 +16,9 @@
 #        DB_MASTER_URL=jdbc:mysql://127.0.0.1:3306/apex_data?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
 #        DB_MASTER_USERNAME=apex
 #        DB_MASTER_PASSWORD=********
+#        DB_SLAVE_URL=jdbc:mysql://127.0.0.1:3306/apex_data?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
+#        DB_SLAVE_USERNAME=apex
+#        DB_SLAVE_PASSWORD=********   # 从库凭据（prod 已启用 slave，必须注入）
 #        REDIS_HOST=127.0.0.1
 #        REDIS_PORT=6379
 #        REDIS_PASSWORD=********   # prod 强制要求（spring.data.redis.password）
@@ -52,8 +55,16 @@ WorkingDirectory=/opt/apex-scaffold
 # 环境变量文件（数据库 / Redis / JWT / License / 开关等，见上方说明）
 EnvironmentFile=/etc/apex-scaffold/apex.env
 
-# JVM 参数
-Environment=JAVA_OPTS=-Xms512m -Xmx1024m -XX:+UseG1GC -Dfile.encoding=UTF-8 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/opt/apex-scaffold/logs
+# JVM 参数（生产级调优默认。注意 Environment= 优先于 EnvironmentFile=：
+# 如需覆盖请直接修改本行，或注释本行后在 apex.env 中设置 JAVA_OPTS）:
+#   -Xms/-Xmx            堆内存 初始(最小)512m / 最大 1024m
+#   -XX:+UseG1GC          G1 垃圾回收器；-XX:MaxGCPauseMillis=200 目标最大停顿
+#   -XX:MetaspaceSize/-XX:MaxMetaspaceSize  元空间初始 256m / 上限 512m
+#   -XX:+HeapDumpOnOutOfMemoryError          OOM 自动堆转储到 /opt/apex-scaffold/logs
+#   -XX:+ExitOnOutOfMemoryError              OOM 后退出进程，systemd Restart=on-failure 自动拉起
+#   -Xlog:gc*:file=...                       滚动 GC 日志（5 份 × 20m）
+#   -Dfile.encoding=UTF-8 -Djava.security.egd=file:/dev/./urandom
+Environment=JAVA_OPTS=-Xms512m -Xmx1024m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:MetaspaceSize=256m -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/opt/apex-scaffold/logs/heapdump.hprof -XX:+ExitOnOutOfMemoryError -Xlog:gc*:file=/opt/apex-scaffold/logs/gc.log:time,uptime,level,tags:filecount=5,filesize=20m -Dfile.encoding=UTF-8 -Djava.security.egd=file:/dev/./urandom
 
 # 启动命令（bash -c 用于展开 $JAVA_OPTS）
 ExecStart=/usr/bin/env bash -c 'exec java $JAVA_OPTS -jar /opt/apex-scaffold/app.jar'

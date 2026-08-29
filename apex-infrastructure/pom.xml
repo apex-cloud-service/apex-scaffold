@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  - Apex.Mar - 基础设施层 POM 配置文件
+  - Apex Scaffold - 基础设施层 POM 配置文件
   - @author Apex Team
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
@@ -9,7 +9,7 @@
     <parent>
         <groupId>com.apex.scaffold</groupId>
         <artifactId>apex-scaffold</artifactId>
-        <version>1.1.4</version>
+        <version>1.2.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -66,6 +66,11 @@
         <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-extension</artifactId>
+        </dependency>
+        <!-- MyBatis-Plus 3.5.9+ 将多租户/分页/动态表名等基于 JSQLParser 的插件迁移到 mybatis-plus-jsqlparser -->
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-jsqlparser</artifactId>
         </dependency>
         <dependency>
             <groupId>com.baomidou</groupId>
@@ -163,10 +168,7 @@
             <groupId>com.github.binarywang</groupId>
             <artifactId>weixin-java-mp</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.github.binarywang</groupId>
-            <artifactId>weixin-java-pay</artifactId>
-        </dependency>
+        <!-- 注：weixin-java-pay（微信支付 SDK）已于 1.2.0 移除；后续作为增值模块按需引入。 -->
 
         <dependency>
             <groupId>io.micrometer</groupId>

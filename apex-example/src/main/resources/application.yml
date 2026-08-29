@@ -18,10 +18,20 @@ spring:
       strict: false
       datasource:
         master:
-          url: jdbc:mysql://localhost:3306/apex_example?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
-          username: root
-          # 与本地基础设施（docker-compose.infra.yml）默认一致；可用 DB_PASSWORD 覆盖
-          password: ${DB_PASSWORD:apex-root}
+          url: ${DB_MASTER_URL:jdbc:mysql://localhost:3306/apex_example?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true}
+          username: ${DB_MASTER_USERNAME:root}
+          # 与本地基础设施（docker-compose.infra.yml）默认一致；可用 DB_MASTER_PASSWORD 覆盖
+          password: ${DB_MASTER_PASSWORD:apex-root}
+          driver-class-name: com.mysql.cj.jdbc.Driver
+        # 从库（数据源动态切换演示：@DataSource("slave") 切到本数据源）
+        # ✅ 配置与 master 完全一致（仅环境变量前缀 DB_SLAVE_*），连接池参数由下方
+        #    Druid 全局配置统一生效；本地演示默认指向同一 MySQL 实例（apex_example 库），
+        #    真实从库通过 DB_SLAVE_URL / DB_SLAVE_USERNAME / DB_SLAVE_PASSWORD 注入。
+        slave:
+          url: ${DB_SLAVE_URL:jdbc:mysql://localhost:3306/apex_example?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true}
+          username: ${DB_SLAVE_USERNAME:root}
+          # 默认值与 master 一致（apex-root，与本地基础设施 docker-compose.infra.yml 默认一致）
+          password: ${DB_SLAVE_PASSWORD:apex-root}
           driver-class-name: com.mysql.cj.jdbc.Driver
 
     # Druid连接池（全局配置，对 dynamic 下所有数据源生效）

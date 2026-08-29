@@ -17,6 +17,7 @@ import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.common.util.TraceIdUtil;
+import com.apex.scaffold.interfaces.monitor.BusinessMetricsRecorder;
 import com.apex.scaffold.interfaces.monitor.SecurityMetricsRecorder;
 import com.apex.scaffold.interfaces.util.MessageUtils;
 import com.apex.scaffold.interfaces.util.RequestHandlerUtil;
@@ -82,6 +83,9 @@ public class AuthHandler extends BaseHandler {
     /** 安全指标记录器 */
     private final SecurityMetricsRecorder securityMetricsRecorder;
 
+    /** 核心业务指标记录器。 */
+    private final BusinessMetricsRecorder businessMetricsRecorder;
+
     /**
      * 构造方法，通过 super(messageUtils) 传递 MessageUtils 给 BaseHandler
      *
@@ -94,12 +98,14 @@ public class AuthHandler extends BaseHandler {
             AuthRegistrationService authRegistrationService,
             RequestHandlerUtil requestHandlerUtil,
             MessageUtils messageUtils,
-            SecurityMetricsRecorder securityMetricsRecorder) {
+            SecurityMetricsRecorder securityMetricsRecorder,
+            BusinessMetricsRecorder businessMetricsRecorder) {
         super(messageUtils);
         this.authService = authService;
         this.authRegistrationService = authRegistrationService;
         this.requestHandlerUtil = requestHandlerUtil;
         this.securityMetricsRecorder = securityMetricsRecorder;
+        this.businessMetricsRecorder = businessMetricsRecorder;
     }
 
     /**
@@ -152,6 +158,7 @@ public class AuthHandler extends BaseHandler {
                     return authService.login(loginRequest, clientIp);
                 })
                 .flatMap(requestHandlerUtil::buildSuccessResponse)
+                .doOnSuccess(response -> businessMetricsRecorder.recordLoginSuccess())
                 .doOnError(error -> securityMetricsRecorder.recordLoginFailed());
     }
 
@@ -312,7 +319,8 @@ public class AuthHandler extends BaseHandler {
                     registerRequest.setClientIp(requestHandlerUtil.extractClientIp(request));
                     return authRegistrationService.register(registerRequest);
                 })
-                .flatMap(requestHandlerUtil::buildSuccessResponse);
+                .flatMap(requestHandlerUtil::buildSuccessResponse)
+                .doOnSuccess(response -> businessMetricsRecorder.recordRegister());
     }
 
     /** 在注册前验证微信票据和手机号；已注册手机号直接绑定并登录。 */

@@ -2,6 +2,7 @@ package com.apex.scaffold.interfaces.aspect;
 
 import com.apex.scaffold.common.annotation.OptimisticLockRetry;
 import com.apex.scaffold.common.exception.BusinessException;
+import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -43,10 +44,20 @@ public class OptimisticLockRetryAspect {
     /** 最大退避倍数，指数退避算法的上限，防止重试间隔增长到不合理的级别。 */
     private static final long MAX_BACKOFF_MULTIPLIER = 3L;
 
+    /** 乐观锁重试指标名（Grafana「异步响应 / 幂等重试」分组）。 */
+    static final String METRIC_RETRY = "apex.retry.optimistic.count";
+
+    /** 指标注册表。 */
+    private final MeterRegistry meterRegistry;
+
     /**
      * 构造乐观锁重试切面
+     *
+     * @param meterRegistry Micrometer 指标注册表
      */
-    public OptimisticLockRetryAspect() {}
+    public OptimisticLockRetryAspect(MeterRegistry meterRegistry) {
+        this.meterRegistry = meterRegistry;
+    }
 
     /**
      * 乐观锁重试环绕通知
@@ -91,6 +102,7 @@ public class OptimisticLockRetryAspect {
             } catch (OptimisticLockingFailureException e) {
                 attempt++;
                 if (attempt > maxRetries) {
+                    meterRegistry.counter(METRIC_RETRY, "result", "exhausted").increment();
                     log.warn(
                             "乐观锁重试耗尽, 方法: {}.{}, attempts: {}",
                             joinPoint.getSignature().getDeclaringType().getSimpleName(),
@@ -98,6 +110,7 @@ public class OptimisticLockRetryAspect {
                             attempt - 1);
                     throw new BusinessException(annotation.message());
                 }
+                meterRegistry.counter(METRIC_RETRY, "result", "retried").increment();
                 log.debug(
                         "乐观锁冲突, 准备重试, 方法: {}.{}. attempt: {}/{}",
                         joinPoint.getSignature().getDeclaringType().getSimpleName(),

@@ -179,6 +179,20 @@ public class MetricsConfig {
     }
 
     /**
+     * 注册磁盘与网络指标。
+     *
+     * <p>补齐磁盘容量/使用率与网卡状态指标（{@code apex.disk.*}、{@code apex.network.*}），
+     * 供 Grafana 大盘与监控聚合接口使用。</p>
+     *
+     * @param registry Micrometer 指标注册器
+     * @return 磁盘/网络指标绑定器
+     */
+    @Bean
+    public MeterBinder systemResourceMetrics(MeterRegistry registry) {
+        return new SystemResourceMetrics();
+    }
+
+    /**
      * 注册限流拒绝请求计数器
      *
      * <p>统计被 Sentinel 限流规则拒绝的请求数量。

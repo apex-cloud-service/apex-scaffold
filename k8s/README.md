@@ -15,7 +15,7 @@
 kubectl apply -f k8s/deployment.yaml
 ```
 
-> 使用前按环境修改 Secret（`DB_MASTER_PASSWORD` / `REDIS_PASSWORD` / `JWT_SECRET` 必改）与 Ingress 域名。
+> 使用前按环境修改 Secret（`DB_MASTER_PASSWORD` / `DB_SLAVE_PASSWORD` / `REDIS_PASSWORD` / `JWT_SECRET` 必改）与 Ingress 域名。
 
 ## 灰度发布演练（10% 流量 → 全量）
 
@@ -62,5 +62,5 @@ kubectl apply -n argo-rollouts -f https://github.com/argoproj/argo-rollouts/rele
 
 ## 版本标签约定
 
-- Deployment labels `version` 与镜像 tag 保持一致（当前 v1.1.4）
+- Deployment labels `version` 与镜像 tag 保持一致（当前 v1.2.0）
 - 灰度期间金丝雀使用 `track: canary` 标签，与稳定版按 `track` 维度隔离，便于日志/指标对比

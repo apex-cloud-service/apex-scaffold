@@ -1,7 +1,11 @@
 # ============================================================
-# sdkman 项目级 JDK 固定
+# SDKMAN 项目级配置（sdk env 自动激活）
 # ============================================================
-# 进入项目目录时 sdkman 自动切换到此版本（需 sdkman auto_env=true）。
-# ⚠️ 与 scripts/*.sh 的构建环境保持一致：全库统一 17.0.12-oracle。
-# 切换版本命令: sdk java install <version> && echo <version> > .sdkmanrc
+# 由 sdkman 安装的默认版本（current 指向）：
+#   java: 17.0.12-oracle（项目 pom 要求 Java 17）
+#   mvnd: 2.0.0-rc-3（Maven Daemon，构建替代 mvn，速度更快）
+# 用法：cd apex-scaffold && sdk env
+# 构建：mvnd -DskipTests package
+# ============================================================
 java=17.0.12-oracle
+mvnd=2.0.0-rc-3

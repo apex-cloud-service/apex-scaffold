@@ -29,7 +29,6 @@ import reactor.util.retry.Retry;
  * <h2>测试覆盖范围</h2>
  * <ul>
  *   <li>weChatApiWebClient Bean 创建和 baseUrl 配置</li>
- *   <li>weChatPayWebClient Bean 创建和 baseUrl 配置</li>
  *   <li>weWorkWebClient Bean 创建和 baseUrl 配置</li>
  *   <li>createRetry 重试策略配置验证</li>
  * </ul>
@@ -119,16 +118,6 @@ class WeChatWebClientConfigTest {
         }
 
         /**
-         * 测试 weChatPayWebClient Bean 创建成功，baseUrl 正确。
-         */
-        @Test
-        @DisplayName("weChatPayWebClient Bean 创建成功且 baseUrl 正确")
-        void weChatPayWebClient_CreatedWithCorrectBaseUrl() {
-            WebClient client = config.weChatPayWebClient(logServiceProvider);
-            assertThat(client).isNotNull();
-        }
-
-        /**
          * 测试 weWorkWebClient Bean 创建成功，baseUrl 正确。
          */
         @Test
@@ -139,22 +128,18 @@ class WeChatWebClientConfigTest {
         }
 
         /**
-         * 测试三个 Bean 都是不同的实例。
+         * 测试两个 Bean 都是不同的实例。
          */
         @Test
-        @DisplayName("三个WebClient是不同的实例")
-        void threeWebClientsAreDifferentInstances() {
+        @DisplayName("两个WebClient是不同的实例")
+        void twoWebClientsAreDifferentInstances() {
             WebClient apiClient = config.weChatApiWebClient(logServiceProvider);
-            WebClient payClient = config.weChatPayWebClient(logServiceProvider);
             WebClient workClient = config.weWorkWebClient(logServiceProvider);
 
             assertThat(apiClient).isNotNull();
-            assertThat(payClient).isNotNull();
             assertThat(workClient).isNotNull();
 
-            assertThat(apiClient).isNotSameAs(payClient);
             assertThat(apiClient).isNotSameAs(workClient);
-            assertThat(payClient).isNotSameAs(workClient);
         }
     }
 

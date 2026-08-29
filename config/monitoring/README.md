@@ -16,8 +16,10 @@ config/monitoring/
 └── grafana/
     ├── apex-dashboard.json      # 监控大盘（apex_api_* 指标口径）
     ├── provisioning/            # Grafana 自动置备（数据源 + 大盘）
-    │   ├── datasources.yml
-    │   └── dashboards.yml
+    │   ├── dashboards/          # ⚠️ Grafana 11 要求按组件子目录存放
+    │   │   └── dashboards.yml
+    │   └── datasources/         #    （放根目录会导致置备静默失败）
+    │       └── datasources.yml
     └── README.md                # 大盘使用与自定义指南
 ```
 

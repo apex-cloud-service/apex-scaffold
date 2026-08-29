@@ -7,6 +7,8 @@ import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
@@ -47,6 +49,8 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @RequiredArgsConstructor
+@ConditionalOnProperty(prefix = "apex.features", name = "message-queue", havingValue = "true", matchIfMissing = true)
+@ConditionalOnClass(RocketMQTemplate.class)
 @ConditionalOnBean(RocketMQTemplate.class)
 public class MqProducerService {
     private static final Logger log = LoggerFactory.getLogger(MqProducerService.class);

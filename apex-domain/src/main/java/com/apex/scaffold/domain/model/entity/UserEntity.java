@@ -64,6 +64,32 @@ public class UserEntity extends BaseEntity {
     private String username;
 
     /**
+     * 所属部门 ID（数据权限）。
+     *
+     * <p>关联 {@code sys_dept.id}，配合 {@code @DataScope} 注解与数据权限拦截器
+     * （{@code DataScopeInnerInterceptor}）实现部门级数据隔离；未分配部门时可为
+     * {@code null}（此时默认不做数据权限过滤，生产环境应保证关键用户均归属部门）。</p>
+     *
+     * @since 2.3.0
+     */
+    private Long deptId;
+
+    /**
+     * 租户 ID（多租户隔离）。
+     *
+     * <p>SaaS 多租户场景下用于标识用户所属租户；由 MyBatis-Plus
+     * {@code TenantLineInnerInterceptor} 自动为 SELECT/INSERT/UPDATE/DELETE 语句
+     * 注入 {@code tenant_id} 过滤条件，实现行级租户数据隔离。未启用多租户
+     * （{@code apex.tenant.enabled=false}）时该字段为空，不参与 SQL 改写。</p>
+     *
+     * <p>值来源：请求头 {@code X-Tenant-Id}（{@link com.apex.scaffold.interfaces.aspect.TenantAspect}
+     * 装配到 {@link com.apex.scaffold.common.context.TenantContext}）或创建用户时显式写入。
+     *
+     * @since 1.2.0
+     */
+    private String tenantId;
+
+    /**
      * 登录密码（BCrypt 哈希）。
      *
      * <p>仅账号密码登录使用，存储 {@code BCryptPasswordEncoder} 生成的哈希值，
@@ -243,6 +269,16 @@ public class UserEntity extends BaseEntity {
         this.openId = value;
     }
 
+    /** Sets username. For persistence/construction use only. */
+    public void setUsername(String value) {
+        this.username = value;
+    }
+
+    /** Sets password. For persistence/construction use only. */
+    public void setPassword(String value) {
+        this.password = value;
+    }
+
     /** Sets unionId. For persistence/construction use only. */
     public void setUnionId(String value) {
         this.unionId = value;
@@ -331,6 +367,16 @@ public class UserEntity extends BaseEntity {
     /** Sets lastHeartbeatTime. For persistence/construction use only. */
     public void setLastHeartbeatTime(LocalDateTime value) {
         this.lastHeartbeatTime = value;
+    }
+
+    /** Sets deptId. For persistence/construction use only. */
+    public void setDeptId(Long value) {
+        this.deptId = value;
+    }
+
+    /** Sets tenantId. For persistence/construction use only. */
+    public void setTenantId(String value) {
+        this.tenantId = value;
     }
 
     /**

@@ -1,6 +1,8 @@
 package com.apex.scaffold.infrastructure.notification;
 
-import java.time.Duration;
+import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.MeterRegistry;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -32,6 +34,24 @@ public class NotificationService {
     private final Sinks.Many<NotificationMessage> sink =
             Sinks.many().multicast().onBackpressureBuffer(100);
 
+    /** 指标注册表。 */
+    private final MeterRegistry meterRegistry;
+
+    /** 活动 SSE 连接数（Grafana「异步响应 / 幂等重试」分组）。 */
+    private final AtomicInteger activeConnections = new AtomicInteger();
+
+    /**
+     * 构造通知推送服务并注册 SSE 连接数指标。
+     *
+     * @param meterRegistry Micrometer 指标注册表
+     */
+    public NotificationService(MeterRegistry meterRegistry) {
+        this.meterRegistry = meterRegistry;
+        Gauge.builder("apex.sse.connections", activeConnections, AtomicInteger::get)
+                .description("SSE 实时通知活动连接数")
+                .register(meterRegistry);
+    }
+
     /**
      * 发布站内通知消息。
      *
@@ -48,6 +68,7 @@ public class NotificationService {
      * @param message 消息体（含接收人）
      */
     public void publish(NotificationMessage message) {
+        meterRegistry.counter("apex.sse.events.count").increment();
         Sinks.EmitResult result = sink.tryEmitNext(message);
         if (result.isFailure()) {
             log.warn("通知消息发布失败: result={}, content={}", result, message.content());
@@ -57,12 +78,17 @@ public class NotificationService {
     /**
      * 订阅指定接收人的实时通知流（SSE 数据源）。
      *
+     * <p>连接建立时递增活动连接数，取消/完成/异常时递减，供
+     * {@code apex.sse.connections} 指标反映当前长连接规模。</p>
+     *
      * @param recipient 接收人标识
      * @return 通知消息流（接收人不匹配的消息自动过滤）
      */
     public Flux<NotificationMessage> stream(String recipient) {
         return sink.asFlux()
                 .filter(msg -> msg.recipient() == null || msg.recipient().equals(recipient))
+                .doOnSubscribe(subscription -> activeConnections.incrementAndGet())
+                .doFinally(signal -> activeConnections.decrementAndGet())
                 .doOnError(e -> log.warn("通知流异常: {}", e.getMessage()));
     }
 

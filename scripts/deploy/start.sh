@@ -8,6 +8,9 @@
 # 说明:
 #   - 首次构建镜像需要联网拉取 Maven 依赖（Dockerfile 内已配置阿里云镜像加速）
 #   - 环境变量通过根目录 .env 配置（可 cp .env.example .env 后修改）
+#   - JVM 参数: 默认使用镜像内置生产级调优参数（堆内存 -Xms512m/-Xmx1024m、G1 回收器、
+#     GC 停顿目标、元空间上下限、OOM 堆转储+退出、滚动 GC 日志），可通过 .env 设置
+#     JAVA_OPTS 整体覆盖（详见 docs/DEPLOYMENT.md §4.5）
 #   - 监控栈（Prometheus/Grafana/Zipkin）另行启动:
 #       docker compose -f config/monitoring/docker-compose.yml up -d
 # ============================================================

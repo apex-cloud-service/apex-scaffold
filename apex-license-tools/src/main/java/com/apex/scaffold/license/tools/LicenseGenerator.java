@@ -1,4 +1,9 @@
-package com.apex.scaffold.license;
+package com.apex.scaffold.license.tools;
+
+import com.apex.scaffold.license.LicenseInfo;
+import com.apex.scaffold.license.LicenseVersion;
+import com.apex.scaffold.license.MachineFingerprintCollector;
+import com.apex.scaffold.license.RsaUtil;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -95,8 +100,10 @@ public class LicenseGenerator {
      * @param maxUsers 最大用户数(-1表示无限制)
      * @param maxConcurrent 最大并发数(-1表示无限制)
      * @param enabledFeatures 启用的功能列表
+     * @param machineFingerprint 机器指纹哈希（SHA-256），null 表示不绑定机器
      * @return LicenseInfo对象
      * @throws Exception 生成失败
+     * @since 1.2.1 新增 machineFingerprint 参数
      */
     public LicenseInfo generateLicense(
             String customerName,
@@ -106,7 +113,8 @@ public class LicenseGenerator {
             LocalDateTime validTo,
             Integer maxUsers,
             Integer maxConcurrent,
-            String[] enabledFeatures)
+            String[] enabledFeatures,
+            String machineFingerprint)
             throws Exception {
 
         LicenseInfo license = new LicenseInfo();
@@ -124,6 +132,9 @@ public class LicenseGenerator {
             license.setEnabledFeatures(objectMapper.writeValueAsString(Arrays.asList(enabledFeatures)));
         }
 
+        // 写入机器指纹（在签名前写入，使该字段参与 RSA 签名覆盖）
+        license.setMachineFingerprint(machineFingerprint);
+
         // 计算公钥指纹
         license.setPublicKeyFingerprint(RsaUtil.calculateFingerprint(keyPair.getPublic()));
 
@@ -136,7 +147,9 @@ public class LicenseGenerator {
         String signature = RsaUtil.sign(data, keyPair.getPrivate());
         license.setSignature(signature);
 
-        log.info("License生成成功: {} ({})", customerName, version);
+        log.info("License生成成功: {} ({}), 机器指纹: {}",
+                customerName, version,
+                machineFingerprint != null ? "已绑定" : "未绑定");
         return license;
     }
 
@@ -169,14 +182,17 @@ public class LicenseGenerator {
      *   # 生成密钥对
      *   java LicenseGenerator gen-keys &lt;private.key&gt; &lt;public.key&gt;
      *
+     *   # 采集当前机器指纹（客户运行后发给卖方）
+     *   java LicenseGenerator gen-fingerprint
+     *
      *   # 生成 License（完整参数）
      *   java LicenseGenerator gen-license &lt;private.key&gt; &lt;public.key&gt; &lt;output.json&gt; \
-     *        &lt;version:BASIC|STANDARD|ENTERPRISE&gt; &lt;customer&gt; &lt;valid-days&gt; [feature1,feature2,...]
+     *        &lt;version:BASIC|STANDARD|ENTERPRISE&gt; &lt;customer&gt; &lt;valid-days&gt; [feature1,feature2,...] [--fingerprint &lt;hash&gt;]
      * </pre>
      */
     public static void main(String[] args) {
         try {
-            if (args.length < 2) {
+            if (args.length < 1) {
                 printUsage();
                 return;
             }
@@ -190,6 +206,18 @@ public class LicenseGenerator {
                 generateNewKeys(privateKeyFile, publicKeyFile);
                 System.out.println("密钥对已生成: " + privateKeyFile + " / " + publicKeyFile);
 
+            } else if ("gen-fingerprint".equals(command)) {
+                // 采集当前机器指纹
+                String fingerprint = MachineFingerprintCollector.collect();
+                if (fingerprint == null || fingerprint.isBlank()) {
+                    System.err.println("错误: 机器指纹采集失败，请检查系统权限");
+                    System.exit(1);
+                }
+                System.out.println("机器指纹（SHA-256）:");
+                System.out.println(fingerprint);
+                System.out.println("");
+                System.out.println("请将此指纹发给卖方用于 License 签发。");
+
             } else if ("gen-license".equals(command)) {
                 String privateKeyFile = args[1];
                 String publicKeyFile = args[2];
@@ -198,7 +226,16 @@ public class LicenseGenerator {
                         args.length > 4 ? LicenseVersion.valueOf(args[4].toUpperCase()) : LicenseVersion.ENTERPRISE;
                 String customerName = args.length > 5 ? args[5] : "示例客户";
                 int validDays = args.length > 6 ? Integer.parseInt(args[6]) : 365;
-                String[] features = args.length > 7 ? args[7].split(",") : null;
+                String[] features = args.length > 7 && !args[7].startsWith("--") ? args[7].split(",") : null;
+
+                // 解析 --fingerprint 可选参数
+                String machineFingerprint = null;
+                for (int i = (features != null ? 8 : 7); i < args.length; i++) {
+                    if ("--fingerprint".equals(args[i]) && i + 1 < args.length) {
+                        machineFingerprint = args[i + 1];
+                        break;
+                    }
+                }
 
                 LicenseGenerator generator = loadKeys(privateKeyFile, publicKeyFile);
                 LicenseInfo license = generator.generateLicense(
@@ -209,10 +246,13 @@ public class LicenseGenerator {
                         LocalDateTime.now().plusDays(validDays),
                         -1,
                         -1,
-                        features);
+                        features,
+                        machineFingerprint);
 
                 generator.saveToFile(license, outputFile);
-                System.out.println("License已生成: " + outputFile + " (版本: " + version + ", 客户: " + customerName + ")");
+                System.out.println("License已生成: " + outputFile
+                        + " (版本: " + version + ", 客户: " + customerName
+                        + (machineFingerprint != null ? ", 机器指纹: 已绑定" : ", 机器指纹: 未绑定") + ")");
             } else {
                 printUsage();
             }
@@ -226,7 +266,7 @@ public class LicenseGenerator {
     private static void printUsage() {
         System.out.println("用法:");
         System.out.println("  生成密钥对: java LicenseGenerator gen-keys <private.key> <public.key>");
-        System.out.println(
-                "  生成License: java LicenseGenerator gen-license <private.key> <public.key> <output.json> <version> <customer> <days> [feature1,feature2,...]");
+        System.out.println("  采集机器指纹: java LicenseGenerator gen-fingerprint");
+        System.out.println("  生成License: java LicenseGenerator gen-license <private.key> <public.key> <output.json> <version> <customer> <days> [feature1,feature2,...] [--fingerprint <hash>]");
     }
 }

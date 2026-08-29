@@ -27,6 +27,7 @@ const state = {
   users: { page: 1, size: 20, total: 0 },
   logs: { page: 1, size: 20, total: 0 },
   auditLogs: { page: 1, size: 20, total: 0 },
+  apiCallLogs: { page: 1, size: 20, total: 0 },
   selectedDictType: null,
   selectedMenu: null,
   selectedJob: null,
@@ -349,6 +350,7 @@ function switchView(name) {
     jobs: renderJobs,
     "login-logs": renderLoginLogs,
     "audit-logs": renderAuditLogs,
+    "api-call-logs": renderApiCallLogs,
   };
   const render = renderers[name];
   if (render) render().catch((error) => showToast(error.message || "加载失败", true));
@@ -1075,6 +1077,55 @@ async function renderAuditLogs() {
   });
 }
 
+// ==================== API调用日志 ====================
+
+/** 调用状态中文名映射（0-成功 1-客户端错误 2-服务端错误 3-网络异常） */
+const API_CALL_STATUS_NAMES = {
+  0: "成功",
+  1: "客户端错误",
+  2: "服务端错误",
+  3: "网络异常",
+};
+
+async function renderApiCallLogs() {
+  const serviceName = $("#apicall-service").value.trim();
+  const status = $("#apicall-status").value.trim();
+  const traceId = $("#apicall-traceid").value.trim();
+  const path = $("#apicall-path").value.trim();
+  const page = state.apiCallLogs.page;
+  const size = state.apiCallLogs.size;
+  const params = new URLSearchParams({ page, size });
+  if (serviceName) params.set("serviceName", serviceName);
+  if (status) params.set("status", status);
+  if (traceId) params.set("traceId", traceId);
+  if (path) params.set("path", path);
+  const data = await api(`/admin-api/v1/api-call-logs?${params.toString()}`);
+  state.apiCallLogs.total = data.total || 0;
+
+  $("#apicall-table").innerHTML = `
+    <table class="table">
+      <thead><tr><th>ID</th><th>服务</th><th>方法</th><th>路径</th><th>响应码</th><th>状态</th><th>耗时</th><th>错误</th><th>TraceId</th><th>调用时间</th></tr></thead>
+      <tbody>${(data.list || []).map((log) => `
+        <tr>
+          <td>${log.id}</td>
+          <td>${esc(log.serviceName ?? "-")}</td>
+          <td>${esc(log.method ?? "-")}</td>
+          <td title="${esc(log.url ?? "")}">${esc(log.path ?? "-")}</td>
+          <td>${esc(log.responseStatus ?? "-")}</td>
+          <td>${esc(API_CALL_STATUS_NAMES[log.status] ?? "-")}</td>
+          <td>${log.executionTime != null ? `${log.executionTime}ms` : "-"}</td>
+          <td title="${esc(log.errorMsg ?? "")}">${esc((log.errorMsg ?? "-").slice(0, 40))}</td>
+          <td>${esc(log.traceId ?? "-")}</td>
+          <td>${fmtTime(log.callTime ?? log.createTime)}</td>
+        </tr>`).join("") || '<tr><td colspan="10" class="empty">暂无API调用日志</td></tr>'}
+      </tbody>
+    </table>`;
+
+  renderPagination($("#apicall-pagination"), state.apiCallLogs, () => {
+    renderApiCallLogs();
+  });
+}
+
 // ==================== 分页 ====================
 
 function renderPagination(container, pager, onPageChange) {
@@ -1123,6 +1174,10 @@ function init() {
   $("#audit-search").addEventListener("click", () => {
     state.auditLogs.page = 1;
     renderAuditLogs();
+  });
+  $("#apicall-search").addEventListener("click", () => {
+    state.apiCallLogs.page = 1;
+    renderApiCallLogs();
   });
 
   initDictCreators();

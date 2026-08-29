@@ -2,6 +2,7 @@ package com.apex.scaffold.interfaces.filter;
 
 import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.interfaces.util.ResponseUtil;
+import io.micrometer.core.instrument.MeterRegistry;
 import java.util.concurrent.TimeoutException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -55,7 +56,12 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class GlobalResponseTimeoutWebFilter implements WebFilter {
 
+    /** 响应超时次数指标名（Grafana「异步响应 / 幂等重试」分组）。 */
+    static final String METRIC_RESPONSE_TIMEOUT = "apex.response.timeout.count";
+
     private final ApiTimeoutProperties properties;
+
+    private final MeterRegistry meterRegistry;
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
@@ -90,6 +96,7 @@ public class GlobalResponseTimeoutWebFilter implements WebFilter {
      * @return 错误响应写出 Mono
      */
     private Mono<Void> handleTimeout(ServerWebExchange exchange, String path, TimeoutException ex) {
+        meterRegistry.counter(METRIC_RESPONSE_TIMEOUT).increment();
         log.warn("全局响应超时, path: {}, timeout: {}ms", path, properties.getResponseTimeout().toMillis(), ex);
         // 响应已提交（如流式写出中途超时）时无法回写 JSON，仅记录告警
         if (exchange.getResponse().isCommitted()) {

@@ -2,6 +2,25 @@
 
 本项目遵循 [语义化版本规范](https://semver.org/lang/zh-CN/)。
 
+## [Unreleased]
+
+## [1.2.0] - 2026-08-29（商业化售卖就绪 P0/P1 修复）
+
+### Fixed
+- **P0-2 商业功能 FeatureGate 门控**：业务模块（RBAC/缓存/MQ/tracing/Sentinel）的关键 Bean 与切面增加 `@ConditionalOnProperty(apex.features.*)` / `@ConditionalOnLicenseFeature` 条件装配，三档版本运行期真实差异化；fork 仅修改 yml 开关不再能静默启用商业组件
+- **P0-3 三档版本实质化**：① Maven Profile `basic` 真实裁剪 RocketMQ/Zipkin/Sentinel 高级依赖（三档 jar 体积与依赖图差异显著）；② `SecurityConfig` 按 `apex.features.rbac` 条件装配 RBAC 路由规则；③ `COMMERCIAL_VERSIONS.md` 矩阵逐项对齐实现（Flyway 全档提供、CSRF 全档禁用、Excel=Standard+、Sentinel=Enterprise、K8s=Enterprise、分布式锁=Enterprise 等）
+- **P0-4 仓库卫生**：`backups/apex-mysql-full-20260828.sql`、`lr`（mvnd 构建日志）从工作树删除；`.gitignore` 已含 `backups/`、`lr`、`config/license/private.key`；`scripts/release/release.sh` 在交付物打包前主动清除 `private.key`，杜绝卖方私钥随交付物外泄
+- **P0-5 微信支付残留清除**：删除 `application-prod.yml` 中"微信支付模块已于 1.2.0 移除"的注释占位行；微信支付相关源码、配置、测试此前已整体移除（`WeChatPayService`/`WeChatPayProperties`/`WeChatPayPayloadCodec`），工作树无残留
+- **P0-6 版本收口**：父 POM 与 9 个子模块 `1.1.4 → 1.2.0`；`HealthHandler`/`MonitorMetricsCollector`/`SpringDocConfig` 兜底版本号同步；`k8s/deployment.yaml` + `k8s/README.md` + `docs/DEPLOYMENT.md` + `docs/sales/{API_SPECIFICATION,SECURITY_WHITEPAPER,PERFORMANCE_REPORT,DELIVERY_CHECKLIST}.md` 版本字符串同步；`COMMERCIAL_IMPROVEMENT_TASKS.md` 状态校准（灰度/备份脚本由"待开始"修正为"已完成"等）
+- **P1-3 多租户补齐**：新增 `TenantLineInnerInterceptor` + `tenant_id` 字段注入 + `apex.tenant.enabled` 启用开关，README 的"SaaS 平台"场景宣传名副其实
+- **P1-6 i18n 补齐与品牌清理**：`zh_TW`/`th_TH` 补齐与 `zh_CN` 一致的全部键；清理 i18n 文件头及 POM 注释中残留的 `Apex.Mar` 旧品牌字样，统一为 `Apex Scaffold`
+- **P1-9 文档收敛**：`COMMERCIAL_IMPROVEMENT_TASKS`/`COMMERCIAL_VERSIONS`/`COMMERCIAL_GAP_ANALYSIS` 三份状态统一校准为当前代码事实；过期评审文档归档
+- **P1-10 坏注释清理**：清理 `MqConsumerService`/`AbstractStorageService` 的生成式坏注释（`/** destroy */`、`加载ad` 等）
+
+### Changed
+- **JVM 启动参数统一生产级调优**：全部启动载体内置同一套 JVM 参数（可用 `JAVA_OPTS` 整体覆盖）—— 堆内存 `-Xms512m/-Xmx1024m`、G1 垃圾回收器 + `-XX:MaxGCPauseMillis=200`、元空间 `256m/512m`、OOM 自动堆转储 + `-XX:+ExitOnOutOfMemoryError` 退出自愈、滚动 GC 日志（`-Xlog:gc*` 5 份 × 20m）、`-Dfile.encoding=UTF-8`、非阻塞熵源；覆盖 `scripts/deploy/app.sh`、systemd 模板（`apex-scaffold.service`）、Dockerfile/Compose、k8s deployment/canary；新增 `docs/DEPLOYMENT.md §4.5 JVM 参数调优` 说明与各载体日志落盘对照表
+- **依赖组件 JVM 调优**：`docker-compose.infra.yml` 的 Nacos（`JAVA_OPT`，JDK8 语法，镜像强制 CMS 不传 G1）、RocketMQ Namesrv/Broker（`HEAP_OPTS` + `JAVA_OPT_EXT`，`command` 预建 GC 日志目录）、Sentinel Dashboard（覆盖 `command` 注入）、Zipkin（`JAVA_OPTS`，JDK21 `-Xlog`）均加同一套优化参数；`docker-compose.yml` rocketmq profile 与应用栈监控 `config/monitoring/docker-compose.yml` 的 Zipkin 同步；DEPLOYMENT.md §6.5 补充说明
+
 ## [1.2.0-alpha] - 2026-08-28（商业化 P1 能力补齐）
 
 ### Added

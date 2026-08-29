@@ -54,21 +54,23 @@ cp apex-interfaces/target/apex-interfaces-*.jar "${DIST_DIR}/" 2>/dev/null || \
 # 许可证
 cp LICENSE LICENSE-COMMERCIAL.md "${DIST_DIR}/"
 
-# 文档（排除内部工作文档）
+# 文档（排除内部工作文档：评审/任务清单/商业化内参一律不进入发行包）
 for doc in README.md CHANGELOG.md CODE_OF_CONDUCT.md CONTRIBUTING.md; do
   [[ -f "${doc}" ]] && cp "${doc}" "${DIST_DIR}/"
 done
 cp docs/*.md "${DIST_DIR}/docs/" 2>/dev/null || true
-rm -f "${DIST_DIR}/docs/COMMERCIAL_REFACTORING_PLAN.md" "${DIST_DIR}/docs/REFACTORING_COMPLETION_REPORT.md" 2>/dev/null || true
+rm -f "${DIST_DIR}/docs/"COMMERCIAL_*.md "${DIST_DIR}/docs/"REFACTORING_*.md "${DIST_DIR}/docs/"*GAP_ANALYSIS*.md 2>/dev/null || true
 
 # 配置与公钥（私钥绝不打包）
 cp -r config/* "${DIST_DIR}/config/" 2>/dev/null || true
 rm -f "${DIST_DIR}/config/license/private.key" 2>/dev/null || true
 
 # 部署文件
+# 注意：scripts/license（发放工具）与 apex-license-tools 模块不进入发行包 ——
+# License 发放能力为卖方专属，随包交付会令买家可自签 License。
 cp docker-compose.yml Dockerfile "${DIST_DIR}/" 2>/dev/null || true
 cp -r k8s "${DIST_DIR}/" 2>/dev/null || true
-cp -r scripts/build scripts/deploy scripts/license "${DIST_DIR}/scripts/" 2>/dev/null || true
+cp -r scripts/build scripts/deploy "${DIST_DIR}/scripts/" 2>/dev/null || true
 chmod +x "${DIST_DIR}"/scripts/*/*.sh 2>/dev/null || true
 
 echo "==> [3/3] 打包压缩"

@@ -39,7 +39,7 @@ public class SpringDocConfig {
     private String applicationName;
 
     /** 应用版本（三档构建时由 apex-build.properties 注入；兜底默认值随发布版本同步） */
-    @Value("${apex.version:1.1.4}")
+    @Value("${apex.version:1.2.0}")
     private String applicationVersion;
 
     private static final String LOCAL_SERVER_URL = "http://localhost:8080";
@@ -58,13 +58,13 @@ public class SpringDocConfig {
     public OpenAPI apexOpenApi() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("Apex.Mar API 文档")
-                        .description("Apex.Mar 后端服务 API 在线文档")
+                        .title("Apex Scaffold API 文档")
+                        .description("Apex Scaffold 后端服务 API 在线文档")
                         .version(applicationVersion)
                         .contact(new Contact().name("Apex Team").email("team@apex-scaffold.com"))
                         .license(new License().name("Apache 2.0").url("https://www.apache.org/licenses/LICENSE-2.0")))
                 .externalDocs(new ExternalDocumentation()
-                        .description("Apex.Mar 项目仓库")
+                        .description("Apex Scaffold 项目仓库")
                         .url("https://github.com/apex-scaffold/apex-scaffold"))
                 .servers(List.of(
                         new Server().url(LOCAL_SERVER_URL).description("本地开发环境"),
@@ -184,7 +184,7 @@ public class SpringDocConfig {
                 .build();
     }
 
-    /** API 分组 - 系统管理（菜单/字典/参数/定时任务/登录日志，P0 阶段）。 */
+    /** API 分组 - 系统管理（菜单/字典/参数/定时任务/日志/部门/导出/在线用户/监控大盘）。 */
     @Bean
     public GroupedOpenApi adminSystemApi(OpenApiCustomizer openApiCustomizer) {
         return GroupedOpenApi.builder()
@@ -195,6 +195,12 @@ public class SpringDocConfig {
                         "/admin-api/v1/configs/**",
                         "/admin-api/v1/jobs/**",
                         "/admin-api/v1/login-logs/**",
+                        "/admin-api/v1/audit-logs/**",
+                        "/admin-api/v1/api-call-logs/**",
+                        "/admin-api/v1/depts/**",
+                        "/admin-api/v1/export/**",
+                        "/admin-api/v1/online-users/**",
+                        "/admin-api/v1/monitor/**",
                         "/api/v1/auth/captcha/**")
                 .addOpenApiCustomizer(openApiCustomizer)
                 .build();

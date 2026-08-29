@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.Locale;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -88,6 +90,8 @@ import org.springframework.web.server.ServerWebExchange;
  */
 @Slf4j
 @Configuration
+@ConditionalOnProperty(prefix = "apex.features", name = "monitoring", havingValue = "true", matchIfMissing = true)
+@ConditionalOnClass(FlowRuleManager.class)
 public class SentinelConfig {
 
     /** 支持的语言列表，与 {@code LocaleWebFilter} 保持一致，用于限流/熔断响应的国际化。 */

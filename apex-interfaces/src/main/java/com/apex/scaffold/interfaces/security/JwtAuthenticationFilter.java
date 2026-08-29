@@ -251,7 +251,7 @@ public class JwtAuthenticationFilter implements WebFilter {
 
                 boolean forceFreshRoles =
                         exchange.getRequest().getPath().value().startsWith("/internal/v1/interests/");
-                return getUserAuthorities(openId, forceFreshRoles)
+                return getUserAuthorities(exchange, openId, forceFreshRoles)
                         .map(Optional::of)
                         .defaultIfEmpty(Optional.empty())
                         // 认证成功后，将 userId（即 openId）写入 exchange attributes，
@@ -348,7 +348,8 @@ public class JwtAuthenticationFilter implements WebFilter {
      * @param openId 微信 OpenID
      * @return 用户权限列表的 Mono 包装
      */
-    private Mono<List<SimpleGrantedAuthority>> getUserAuthorities(String openId, boolean forceFreshRoles) {
+    private Mono<List<SimpleGrantedAuthority>> getUserAuthorities(
+            ServerWebExchange exchange, String openId, boolean forceFreshRoles) {
         return userRepository
                 .findByOpenId(openId)
                 .filter(user -> {
@@ -359,6 +360,13 @@ public class JwtAuthenticationFilter implements WebFilter {
                     return true;
                 })
                 .flatMap(user -> {
+                    // 将用户身份与部门写入 exchange attributes，供数据权限装配端使用
+                    // （DataScopeAspect / 自定义 DataScopeProvider），键名与 MdcDataScopeProvider 对齐。
+                    // 注意 attributes 为 ConcurrentHashMap（禁止 null 值），deptId 为空时跳过。
+                    exchange.getAttributes().put("apex.userId", user.getId());
+                    if (user.getDeptId() != null) {
+                        exchange.getAttributes().put("apex.deptId", user.getDeptId());
+                    }
                     List<SimpleGrantedAuthority> cached =
                             forceFreshRoles ? null : userRolesCache.getIfPresent(user.getId());
                     if (cached != null) {

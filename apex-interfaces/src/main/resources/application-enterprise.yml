@@ -67,6 +67,14 @@ apex:
         # 探索类接口慢调用阈值（毫秒）
         explore-threshold-ms: 3000
 
+  # ---------- 多租户（SaaS 行级隔离，仅 Enterprise 默认开启） ----------
+  # 💡 开启后：MybatisPlusConfig 注册 TenantLineInnerInterceptor，通过
+  #    DefaultTenantLineHandler 自动为业务表注入 tenant_id 过滤条件，
+  #    配合 @TenantAware / TenantAspect / TenantContext 形成完整 SaaS 隔离链。
+  #    basic/standard 默认关闭（apex.tenant.enabled=false）。
+  tenant:
+    enabled: true
+
 # ============================================================
 # 2. 消息中间件（RocketMQ）
 # ============================================================

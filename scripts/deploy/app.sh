@@ -19,14 +19,18 @@
 #
 # 可覆盖变量（export 或 .env 文件注入）:
 #   APEX_JAR       可执行 jar 路径（默认自动查找 apex-interfaces/target/*-executable.jar）
-#   JAVA_OPTS      JVM 参数（默认 -Xms512m -Xmx1024m -XX:+UseG1GC -Dfile.encoding=UTF-8）
+#   JAVA_OPTS      JVM 参数。默认已含完整调优集：堆内存(-Xms512m/-Xmx1024m)、G1 回收器、
+#                  GC 停顿目标、元空间上下限、OOM 堆转储+退出、滚动 GC 日志(-Xlog:gc*)等；
+#                  详见 docs/DEPLOYMENT.md §4.5；GC 日志与堆转储落盘 ${LOG_DIR}
+#   APEX_LOG_DIR   日志根目录（默认 <项目根>/logs；logback 业务日志 + GC 日志 + 堆转储共用）
 #   APP_PID_FILE   PID 文件（默认 <项目根>/logs/app.pid）
 #   APP_OUT_LOG    标准输出日志（默认 <项目根>/logs/app.out.log）
 #   SERVER_PORT    业务端口（仅用于健康检查，默认 8080）
 #   APEX_ENV_FILE  环境变量文件（可选，每行 KEY=VALUE，启动前 source）
 #
 # 业务环境变量（必须注入）:
-#   DB_MASTER_URL / DB_MASTER_USERNAME / DB_MASTER_PASSWORD  数据库
+#   DB_MASTER_URL / DB_MASTER_USERNAME / DB_MASTER_PASSWORD  主库（写）
+#   DB_SLAVE_URL / DB_SLAVE_USERNAME / DB_SLAVE_PASSWORD     从库（读，prod 已启用，必须注入，可指向只读副本）
 #   REDIS_HOST / REDIS_PORT / REDIS_PASSWORD                 Redis（prod 强制 REDIS_PASSWORD 非空）
 #   JWT_SECRET                                              JWT 密钥（>=32 字节随机值）
 #   无 Nacos 部署: NACOS_CONFIG_ENABLED=false NACOS_DISCOVERY_ENABLED=false \
@@ -56,7 +60,17 @@ esac
 SPRING_PROFILES_ACTIVE="${ENV_PROFILE},${TIER}"
 
 # ---------- 可覆盖变量默认值 ----------
-JAVA_OPTS="${JAVA_OPTS:--Xms512m -Xmx1024m -XX:+UseG1GC -Dfile.encoding=UTF-8}"
+# 日志根目录：logback 业务日志（APEX_LOG_DIR）+ GC 日志 + OOM 堆转储 共用同一目录
+LOG_DIR="${APEX_LOG_DIR:-${PROJECT_ROOT}/logs}"
+# 生产级 JVM 调优默认值（可用 JAVA_OPTS 整体覆盖，详见 docs/DEPLOYMENT.md §4.5）：
+#   -Xms/-Xmx            堆内存 初始(最小)512m / 最大 1024m
+#   -XX:+UseG1GC          G1 垃圾回收器；-XX:MaxGCPauseMillis=200 目标最大停顿
+#   -XX:MetaspaceSize/-XX:MaxMetaspaceSize  元空间初始 256m / 上限 512m
+#   -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=...  OOM 自动堆转储
+#   -XX:+ExitOnOutOfMemoryError    OOM 后退出进程，便于守护脚本/编排自动拉起
+#   -Xlog:gc*:file=...    滚动 GC 日志（5 份 × 20m）
+#   -Dfile.encoding=UTF-8 -Djava.security.egd=file:/dev/./urandom
+JAVA_OPTS="${JAVA_OPTS:--Xms512m -Xmx1024m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:MetaspaceSize=256m -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=${LOG_DIR}/heapdump.hprof -XX:+ExitOnOutOfMemoryError -Xlog:gc*:file=${LOG_DIR}/gc.log:time,uptime,level,tags:filecount=5,filesize=20m -Dfile.encoding=UTF-8 -Djava.security.egd=file:/dev/./urandom}"
 APP_PID_FILE="${APP_PID_FILE:-${PROJECT_ROOT}/logs/app.pid}"
 APP_OUT_LOG="${APP_OUT_LOG:-${PROJECT_ROOT}/logs/app.out.log}"
 SERVER_PORT="${SERVER_PORT:-8080}"
@@ -112,13 +126,14 @@ cmd_start() {
     echo "ℹ️  服务已在运行 (PID $(get_pid))，如需重启请执行: $0 restart ${ENV_PROFILE} ${TIER}"
     return 0
   fi
-  mkdir -p "${PROJECT_ROOT}/logs"
+  mkdir -p "${LOG_DIR}"
 
   echo "🚀 启动 Apex Scaffold"
   echo "   JAR        : ${JAR}"
   echo "   Profiles   : ${SPRING_PROFILES_ACTIVE}"
   echo "   PID 文件   : ${APP_PID_FILE}"
   echo "   输出日志   : ${APP_OUT_LOG}"
+  echo "   GC 日志    : ${LOG_DIR}/gc.log（滚动 5×20m）"
 
   # 后台运行；SPRING_PROFILES_ACTIVE 显式传给子进程
   # ⚠️ 显式绑定 SERVER_PORT：防止外部环境（如 SERVER__PORT=0）注入导致随机端口，
@@ -198,14 +213,16 @@ cmd_logs() {
     fi
     return 0
   fi
-  echo "📄 业务日志目录: ${PROJECT_ROOT}/logs/（APEX_LOG_DIR 可覆盖）"
+  echo "📄 业务日志目录: ${LOG_DIR}/（GC 日志 gc.log、OOM 堆转储 heapdump.hprof 同目录）"
   echo "📄 跟随输出日志: ${APP_OUT_LOG}（Ctrl+C 退出）"
   tail -f "${APP_OUT_LOG}"
 }
 
 cmd_console() {
+  mkdir -p "${LOG_DIR}"
   echo "🚀 前台运行 (Profiles: ${SPRING_PROFILES_ACTIVE})，Ctrl+C 停止"
   echo "   JAR: ${JAR}"
+  echo "   GC 日志: ${LOG_DIR}/gc.log"
   SPRING_PROFILES_ACTIVE="${SPRING_PROFILES_ACTIVE}" exec java ${JAVA_OPTS} -jar "${JAR}" --server.port="${SERVER_PORT}"
 }
 

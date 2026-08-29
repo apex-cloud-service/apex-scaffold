@@ -40,12 +40,6 @@ services:
       GF_SECURITY_ADMIN_USER: admin
       GF_SECURITY_ADMIN_PASSWORD: admin
       GF_USERS_ALLOW_SIGN_UP: "false"
-      # 预置 Prometheus 数据源（指向 docker-compose 网络内的 prometheus 服务）
-      GF_DATASOURCES_PROMETHEUS_NAME: Prometheus
-      GF_DATASOURCES_PROMETHEUS_TYPE: prometheus
-      GF_DATASOURCES_PROMETHEUS_URL: http://prometheus:9090
-      GF_DATASOURCES_PROMETHEUS_ACCESS: server
-      GF_DATASOURCES_PROMETHEUS_IS_DEFAULT: "true"
     volumes:
       - ./grafana/apex-dashboard.json:/var/lib/grafana/dashboards/apex-dashboard.json:ro
       # 自动置备数据源与大盘（容器启动时执行）
@@ -75,6 +69,10 @@ services:
     image: openzipkin/zipkin:3.4
     container_name: apex-zipkin
     restart: unless-stopped
+    environment:
+      # JVM 调优（镜像 JDK21，统一日志 -Xlog 语法；JAVA_OPTS 整体覆盖镜像默认 -Xms160m -Xmx160m）：
+      #   G1 + 200ms 停顿；元空间 256m/512m；OOM 堆转储 + 退出自愈；滚动 GC 日志 5×20m（/tmp）
+      JAVA_OPTS: "-Xms160m -Xmx160m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:MetaspaceSize=256m -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/zipkin_heapdump.hprof -XX:+ExitOnOutOfMemoryError -Xlog:gc*:file=/tmp/zipkin_gc.log:time,uptime,level,tags:filecount=5,filesize=20m -Dfile.encoding=UTF-8"
     ports:
       - "9411:9411"
     networks:

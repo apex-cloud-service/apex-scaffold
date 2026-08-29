@@ -58,6 +58,10 @@ spec:
           envFrom:
             - secretRef:
                 name: apex-secrets
+          env:
+            # JVM 生产级调优参数（与 Dockerfile 默认一致；GC 日志/堆转储写入容器 /app/logs）
+            - name: JAVA_OPTS
+              value: "-Xms512m -Xmx1024m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:MetaspaceSize=256m -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/app/logs/heapdump.hprof -XX:+ExitOnOutOfMemoryError -Xlog:gc*:file=/app/logs/gc.log:time,uptime,level,tags:filecount=5,filesize=20m -Dfile.encoding=UTF-8 -Djava.security.egd=file:/dev/./urandom"
           resources:
             requests:
               memory: "512Mi"

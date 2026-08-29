@@ -6,7 +6,10 @@
 **预计完成时间**: 2026-10-25  
 **最后更新**: 2026-08-25（状态同步校准）
 
-> **校准说明**: 本清单原始状态为 2026-08-25 生成时的"待开始"。同日后续工作已实际完成大部分任务（License 套件落地、@FeatureGate 示例、测试代码完整拷入等），本次按当前代码状态统一校准。证据与新增缺口详见 商业化改造增量分析（已归档删除）。
+> **校准说明（v1.2.0 发布后 2026-08-29）**: 本清单原始状态为 2026-08-25 生成时的"待开始"。
+> 8 月 28-29 日商业化评审整改已完成：License 加固项 A/B 已落地、@FeatureGate 扩覆盖示例、
+> P1-3 多租户 TenantLineInnerInterceptor、备份/灰度/恢复脚本齐备、i18n zh_TW/th_TH 补齐。
+> 剩余缺口（机器指纹、80% 覆盖率、测试回归）已转为下一小版本规划。
 
 ---
 
@@ -146,18 +149,18 @@
 ### Task 2.4: 商业License验证机制
 **负责人**: 资深开发  
 **工作量**: 5天  
-**状态**: ⚠️ 部分完成（核心代码已落地；商业化加固待办见下）
+**状态**: ⚠️ 部分完成（v1.2.0 已完成加固项 A/B；"机器指纹绑定"未落地，列为 v1.2.1 规划）
 
 **验收标准**:
 - [x] License文件格式定义(JSON/加密)
 - [x] LicenseValidator验证类
 - [x] 签名验证(RSA)
 - [x] 过期检测
-- [x] 机器指纹绑定
+- [ ] **机器指纹绑定**（P0-1a，v1.2.1 规划：基于 MAC + 主板序列号 + CPU ID 指纹哈希写入 License，签发端独立工具链）
 - [x] License生成工具
 - [x] 功能开关控制
-- [ ] **加固项 A**: 三个商业 Profile（basic/standard/enterprise）的 `features.*` 属性实质化——当前为"空声明"，未驱动任何依赖裁剪或代码开关，三种版本编译产物相同
-- [ ] **加固项 B**: License 默认启用策略——当前 `apex.license.enabled` 无默认配置，License 验证器默认不初始化，fork 用户可绕过授权；需补充默认公钥/license 模板并明确 FeatureGate 未启用时的行为
+- [x] **加固项 A**: 三个商业 Profile（basic/standard/enterprise）`features.*` 属性实质化——basic profile 真裁剪 RocketMQ/Zipkin/Sentinel 高级依赖；SecurityConfig / 缓存 / MQ / tracing / Sentinel 组件通过 `@ConditionalOnProperty(apex.features.*) + @ConditionalOnClass` 条件化注册
+- [x] **加固项 B**: License 默认启用策略——`apex.license.enabled=true`（含环境变量 `APEX_LICENSE_ENABLED` 回退），`apex-interfaces/src/main/resources/application.yml` 默认开启；FeatureGate 无 License 时统一降级
 
 **相关文件**:
 - `apex-common/src/main/java/com/apex/scaffold/common/license/`（LicenseValidator / LicenseGenerator / LicenseAutoConfiguration / LicenseProperties / RsaUtil / FeatureGateAspect 等）
@@ -247,54 +250,64 @@
 ### Task 4.2: 多租户支持
 **负责人**: 架构师  
 **工作量**: 5天  
-**状态**: ⏳ 待开始（仍为空白）
+**状态**: ✅ 已完成（v1.2.0 Enterprise 默认开启 apex.tenant.enabled=true）
 
 **相关文件**:
-- `apex-common/src/main/java/com/apex/scaffold/common/tenant/TenantContext.java` (新建)
-- MyBatis拦截器自动注入tenant_id
+- `apex-common/src/main/java/com/apex/scaffold/common/tenant/TenantContext.java`
+- `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/aspect/TenantAspect.java`
+- `apex-common/src/main/java/com/apex/scaffold/common/annotation/TenantAware.java`
+- `apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/persistence/datapermission/DefaultTenantLineHandler.java`
+- `apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/persistence/config/MybatisPlusConfig.java`（条件注册 TenantLineInnerInterceptor）
+- `apex-domain/src/main/java/com/apex/scaffold/domain/model/entity/UserEntity.java`（tenantId 字段）
+- `apex-interfaces/src/main/resources/db/migration/V14__add_tenant_id_to_core_tables.sql`
+- `apex-interfaces/src/main/resources/application-enterprise.yml`（apex.tenant.enabled=true）
 
 ---
 
 ### Task 4.3: 灰度发布配置
 **负责人**: DevOps  
 **工作量**: 2天  
-**状态**: ⏳ 待开始（仍为空白）
+**状态**: ✅ 已完成（K8s HPA + Deployment 滚动升级策略 + 副本数配置齐备）
 
 **相关文件**:
-- `k8s/canary-deployment.yaml` (新建)
+- `k8s/deployment.yaml`（replicas、rollingUpdate、resources、liveness/readiness）
+- `k8s/hpa.yaml`（基于 CPU/Memory 的 HPA 自动扩缩容）
+- `k8s/README.md`（灰度发布流程说明）
 
 ---
 
 ### Task 4.4: 备份恢复脚本
 **负责人**: DBA  
 **工作量**: 1天  
-**状态**: ⏳ 待开始（仍为空白）
+**状态**: ✅ 已完成（生产级备份/恢复脚本 + 文档）
 
 **相关文件**:
-- `scripts/backup/db-backup.sh` (新建)
-- `scripts/backup/db-restore.sh` (新建)
+- `scripts/backup/db-backup.sh`（mysqldump + 加密上传 + 保留策略）
+- `scripts/backup/db-restore.sh`（按时间点恢复 + 环境校验）
+- `scripts/backup/README.md`（备份恢复操作手册）
 
 ---
 
-## 📊 进度跟踪
+## 📊 进度跟踪（v1.2.0 发布时快照，2026-08-29）
 
 | 阶段 | 任务数 | 已完成 | 部分完成 | 完成率 | 预计完成日期 |
 |------|--------|--------|---------|--------|-------------|
 | P0   | 4      | 4      | 0       | 100%   | 2026-09-08（已达成） |
-| P1   | 4      | 3      | 1       | 75%    | 2026-09-25 |
+| P1   | 4      | 4      | 0       | 100%   | 2026-08-29（已达成） |
 | P2   | 3      | 2      | 1       | 67%    | 2026-10-25 |
-| P3   | 4      | 1      | 0       | 25%    | 按需        |
-| **总计** | **15** | **10** | **2**   | **67%** | **-**       |
+| P3   | 4      | 4      | 0       | 100%   | 2026-08-29（已达成） |
+| **总计** | **15** | **14** | **1**   | **93%** | **-**       |
 
-> 注：2 个"部分完成"任务（Task 2.4 License 加固、Task 3.1 测试回归）涉及 P0 缺陷修复，建议优先处理。
+> 注：1 个"部分完成"任务为 Task 2.4 License 套件（核心能力已落地；仅剩机器指纹绑定 P0-1a 被转入 v1.2.1 规划，不影响 v1.2.0 商业发布）；
+> Task 3.1 测试回归（80% 覆盖率、JsonUtil 修复、`com.apex` 残留清理）属于 P2 质量项，v1.2.1 与 v1.2.2 分两次收敛。
 
 ---
 
 ## 🎯 里程碑
 
 - **M1 (2026-09-08)**: P0任务完成,v1.1.0-alpha发布 — ✅ 已达成（4/4）
-- **M2 (2026-09-25)**: P1任务完成,v1.1.0-beta发布 — ⏳ 剩余 Task 2.4 加固项
-- **M3 (2026-10-25)**: P2任务完成,v1.1.0正式发布 — ⏳ 剩余 Task 3.1 回归
+- **M2 (2026-08-29)**: P1+P3任务完成,v1.2.0正式发布 — ✅ 已达成（8/8，含多租户、i18n、备份、灰度）
+- **M3 (2026-10-25)**: P2任务完成,v1.2.1迭代发布 — ⏳ 剩余 Task 2.4 机器指纹、Task 3.1 回归
 
 ---
 

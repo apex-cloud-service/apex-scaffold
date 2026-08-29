@@ -35,12 +35,14 @@ import com.apex.scaffold.interfaces.handler.FileHandler;
 import com.apex.scaffold.interfaces.handler.HealthHandler;
 import com.apex.scaffold.interfaces.handler.JobHandler;
 import com.apex.scaffold.interfaces.handler.AuditLogHandler;
+import com.apex.scaffold.interfaces.handler.ApiCallLogHandler;
 import com.apex.scaffold.interfaces.handler.DeptHandler;
 import com.apex.scaffold.interfaces.handler.ExcelExportHandler;
 import com.apex.scaffold.interfaces.handler.NotificationSseHandler;
 import com.apex.scaffold.interfaces.handler.OnlineUserHandler;
 import com.apex.scaffold.interfaces.handler.LoginLogHandler;
 import com.apex.scaffold.interfaces.handler.MenuHandler;
+import com.apex.scaffold.interfaces.handler.MonitorDashboardHandler;
 import com.apex.scaffold.interfaces.handler.UserHandler;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -1269,6 +1271,24 @@ public class RouterOpenApiConfig {
     public RouterFunction<ServerResponse> adminAuditLogRoutesDocs() {
         return placeholderRoute("/__openapi_admin_audit_log_placeholder");
     }
+
+    /** 系统管理-API调用日志模块在线接口文档。 */
+    @Bean
+    @RouterOperations({
+        @RouterOperation(
+                path = "/admin-api/v1/api-call-logs",
+                method = RequestMethod.GET,
+                beanClass = ApiCallLogHandler.class,
+                beanMethod = "list",
+                operation =
+                        @Operation(
+                                operationId = "adminListApiCallLogs",
+                                summary = "分页查询API调用日志",
+                                security = @SecurityRequirement(name = "BearerAuth")))
+    })
+    public RouterFunction<ServerResponse> adminApiCallLogRoutesDocs() {
+        return placeholderRoute("/__openapi_admin_api_call_log_placeholder");
+    }
     /** 系统管理-部门管理模块在线接口文档。 */
     @Bean
     @RouterOperations({
@@ -1377,6 +1397,69 @@ public class RouterOpenApiConfig {
     })
     public RouterFunction<ServerResponse> adminOnlineUserRoutesDocs() {
         return placeholderRoute("/__openapi_admin_online_user_placeholder");
+    }
+
+    /** 监控大盘模块在线接口文档。 */
+    @Bean
+    @RouterOperations({
+        @RouterOperation(
+                path = "/admin-api/v1/monitor/overview",
+                method = RequestMethod.GET,
+                beanClass = MonitorDashboardHandler.class,
+                beanMethod = "overview",
+                operation =
+                        @Operation(
+                                operationId = "monitorOverview",
+                                summary = "监控概览",
+                                description = "应用状态、运行时长、堆内存、CPU、线程、会话与请求/治理/业务计数",
+                                security = @SecurityRequirement(name = "BearerAuth"))),
+        @RouterOperation(
+                path = "/admin-api/v1/monitor/system",
+                method = RequestMethod.GET,
+                beanClass = MonitorDashboardHandler.class,
+                beanMethod = "system",
+                operation =
+                        @Operation(
+                                operationId = "monitorSystem",
+                                summary = "系统资源监控",
+                                description = "JVM 内存/GC、CPU、进程、线程、磁盘、网络、阻塞 IO 线程池",
+                                security = @SecurityRequirement(name = "BearerAuth"))),
+        @RouterOperation(
+                path = "/admin-api/v1/monitor/middleware",
+                method = RequestMethod.GET,
+                beanClass = MonitorDashboardHandler.class,
+                beanMethod = "middleware",
+                operation =
+                        @Operation(
+                                operationId = "monitorMiddleware",
+                                summary = "中间件监控",
+                                description = "MySQL 连接池、Redis 健康与派生指标、消息中间件、链路追踪状态",
+                                security = @SecurityRequirement(name = "BearerAuth"))),
+        @RouterOperation(
+                path = "/admin-api/v1/monitor/governance",
+                method = RequestMethod.GET,
+                beanClass = MonitorDashboardHandler.class,
+                beanMethod = "governance",
+                operation =
+                        @Operation(
+                                operationId = "monitorGovernance",
+                                summary = "治理监控",
+                                description = "Sentinel 规则、安全计数、Resilience4j 熔断器状态、网关/API 流量",
+                                security = @SecurityRequirement(name = "BearerAuth"))),
+        @RouterOperation(
+                path = "/admin-api/v1/monitor/business",
+                method = RequestMethod.GET,
+                beanClass = MonitorDashboardHandler.class,
+                beanMethod = "business",
+                operation =
+                        @Operation(
+                                operationId = "monitorBusiness",
+                                summary = "核心业务监控",
+                                description = "登录/注册/上传/信用变动等核心业务指标与近 10 分钟趋势",
+                                security = @SecurityRequirement(name = "BearerAuth")))
+    })
+    public RouterFunction<ServerResponse> adminMonitorRoutesDocs() {
+        return placeholderRoute("/__openapi_admin_monitor_placeholder");
     }
 
     /** 图形验证码模块在线接口文档。 */

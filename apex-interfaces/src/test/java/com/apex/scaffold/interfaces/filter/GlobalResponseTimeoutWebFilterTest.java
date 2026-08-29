@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import java.time.Duration;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -38,11 +39,14 @@ class GlobalResponseTimeoutWebFilterTest {
 
     private GlobalResponseTimeoutWebFilter filter;
 
+    private SimpleMeterRegistry meterRegistry;
+
     @BeforeEach
     void setUp() {
         properties = new ApiTimeoutProperties();
         properties.setResponseTimeout(Duration.ofMillis(100));
-        filter = new GlobalResponseTimeoutWebFilter(properties);
+        meterRegistry = new SimpleMeterRegistry();
+        filter = new GlobalResponseTimeoutWebFilter(properties, meterRegistry);
     }
 
     @Test
@@ -56,6 +60,7 @@ class GlobalResponseTimeoutWebFilterTest {
 
         assertThat(exchange.getResponse().getStatusCode()).isEqualTo(HttpStatus.GATEWAY_TIMEOUT);
         assertThat(exchange.getResponse().getHeaders().getContentType()).isNotNull();
+        assertThat(meterRegistry.get("apex.response.timeout.count").counter().count()).isEqualTo(1);
     }
 
     @Test

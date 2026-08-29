@@ -16,6 +16,7 @@ import com.apex.scaffold.application.dto.WechatBindPhoneRequest;
 import com.apex.scaffold.application.dto.WxPhoneRequest;
 import com.apex.scaffold.application.service.AuthRegistrationService;
 import com.apex.scaffold.application.service.AuthService;
+import com.apex.scaffold.interfaces.monitor.BusinessMetricsRecorder;
 import com.apex.scaffold.interfaces.monitor.SecurityMetricsRecorder;
 import com.apex.scaffold.interfaces.util.MessageUtils;
 import com.apex.scaffold.interfaces.util.RequestHandlerUtil;
@@ -63,6 +64,9 @@ class AuthHandlerTest {
     @Mock
     private SecurityMetricsRecorder securityMetricsRecorder;
 
+    @Mock
+    private BusinessMetricsRecorder businessMetricsRecorder;
+
     private static final String TEST_OPEN_ID = "test-open-id-123";
 
     private AuthHandler handler;
@@ -73,7 +77,7 @@ class AuthHandlerTest {
     @BeforeEach
     void setUp() {
         handler = new AuthHandler(
-                authService, authRegistrationService, requestHandlerUtil, messageUtils, securityMetricsRecorder);
+                authService, authRegistrationService, requestHandlerUtil, messageUtils, securityMetricsRecorder, businessMetricsRecorder);
     }
 
     @Nested

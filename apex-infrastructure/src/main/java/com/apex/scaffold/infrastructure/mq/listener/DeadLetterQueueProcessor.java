@@ -46,6 +46,7 @@ import org.springframework.stereotype.Component;
  */
 @Slf4j
 @Component
+@ConditionalOnProperty(prefix = "apex.features", name = "message-queue", havingValue = "true", matchIfMissing = true)
 @ConditionalOnClass(RocketMQAutoConfiguration.class)
 @ConditionalOnProperty(name = "apex.mq.consumer.enabled", havingValue = "true", matchIfMissing = true)
 @ConditionalOnProperty(name = "apex.mq.dlq.enabled", havingValue = "true", matchIfMissing = true)

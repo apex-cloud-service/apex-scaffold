@@ -7,6 +7,7 @@ import com.apex.scaffold.application.dto.admin.AdminUserProfileResponse;
 import com.apex.scaffold.application.dto.admin.AdminUserSummaryResponse;
 import com.apex.scaffold.application.dto.admin.AdminUserUpdateRequest;
 import com.apex.scaffold.application.factory.UserDefaultsFactory;
+import com.apex.scaffold.common.annotation.DataScope;
 import com.apex.scaffold.common.dto.PageResponse;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.result.ResultCode;
@@ -98,6 +99,11 @@ public class AdminUserManagementService {
     /**
      * 超级管理员分页搜索用户并附带角色摘要。
      *
+     * <p><b>数据权限</b>：标注 {@link DataScope} 后，由数据权限拦截器在
+     * {@code sys_user} 查询上自动注入当前操作者的部门过滤条件
+     * （{@code dept_id = 当前用户所属部门}），超级管理员/未分配部门用户
+     * 未装配数据权限范围时放行全量查询。</p>
+     *
      * @param operatorOpenId 操作管理员 openId，需超级管理员权限
      * @param keyword 搜索关键字，可为空
      * @param status 状态过滤，可为空
@@ -105,6 +111,7 @@ public class AdminUserManagementService {
      * @param pageSize 每页条数，限制在 1 到 100
      * @return 用户摘要分页结果
      */
+    @DataScope
     public Mono<PageResponse<AdminUserSummaryResponse>> search(
             String operatorOpenId, String keyword, Integer status, int pageNum, int pageSize) {
         if (pageNum < 1 || pageSize < 1 || pageSize > 100) {

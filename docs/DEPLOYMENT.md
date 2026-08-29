@@ -150,6 +150,9 @@ export SPRING_PROFILES_ACTIVE=prod,enterprise
 export DB_MASTER_URL='jdbc:mysql://127.0.0.1:3306/apex_data?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false'
 export DB_MASTER_USERNAME=apex
 export DB_MASTER_PASSWORD='********'
+export DB_SLAVE_URL='jdbc:mysql://127.0.0.1:3306/apex_data?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false'   # 从库（prod 已启用 slave，必须注入；可指向真实只读副本）
+export DB_SLAVE_USERNAME=apex
+export DB_SLAVE_PASSWORD='********'
 export REDIS_HOST=127.0.0.1
 export REDIS_PORT=6379
 export REDIS_PASSWORD='********'   # prod 配置强制要求（spring.data.redis.password=${REDIS_PASSWORD}）
@@ -158,7 +161,10 @@ export NACOS_CONFIG_ENABLED=false
 export NACOS_DISCOVERY_ENABLED=false
 export NACOS_REGISTER_ENABLED=false
 
-java -Xms512m -Xmx1024m -XX:+UseG1GC \
+# 生产级 JVM 调优参数（堆内存/G1 回收器/GC 停顿/元空间/OOM 堆转储/滚动 GC 日志，见 §4.5）
+export JAVA_OPTS='-Xms512m -Xmx1024m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:MetaspaceSize=256m -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/opt/apex-scaffold/logs/heapdump.hprof -XX:+ExitOnOutOfMemoryError -Xlog:gc*:file=/opt/apex-scaffold/logs/gc.log:time,uptime,level,tags:filecount=5,filesize=20m -Dfile.encoding=UTF-8 -Djava.security.egd=file:/dev/./urandom'
+mkdir -p /opt/apex-scaffold/logs
+java ${JAVA_OPTS} \
      -jar /opt/apex-scaffold/app.jar
 ```
 
@@ -189,7 +195,8 @@ Management port 8081
 
 | 项 | 默认值 | 覆盖方式 |
 |----|--------|---------|
-| JVM 参数 | `-Xms512m -Xmx1024m -XX:+UseG1GC -Dfile.encoding=UTF-8` | `JAVA_OPTS` |
+| JVM 参数 | `-Xms512m -Xmx1024m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:MetaspaceSize=256m -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=<logs>/heapdump.hprof -XX:+ExitOnOutOfMemoryError -Xlog:gc*:file=<logs>/gc.log:...（滚动 5×20m） -Dfile.encoding=UTF-8`（见 §4.5） | `JAVA_OPTS` |
+| GC 日志 / 堆转储 | `<日志根>/gc.log`、`<日志根>/heapdump.hprof`（与 logback 业务日志同目录，`APEX_LOG_DIR` 可整体迁移） | `APEX_LOG_DIR` |
 | PID 文件 | `<项目根>/logs/app.pid` | `APP_PID_FILE` |
 | 标准输出日志 | `<项目根>/logs/app.out.log` | `APP_OUT_LOG` |
 | 环境变量文件 | 无 | `APEX_ENV_FILE=/etc/apex-scaffold/apex.env`（每行 `KEY=VALUE`） |
@@ -213,6 +220,9 @@ SPRING_PROFILES_ACTIVE=prod,enterprise
 DB_MASTER_URL=jdbc:mysql://127.0.0.1:3306/apex_data?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
 DB_MASTER_USERNAME=apex
 DB_MASTER_PASSWORD=********
+DB_SLAVE_URL=jdbc:mysql://127.0.0.1:3306/apex_data?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
+DB_SLAVE_USERNAME=apex
+DB_SLAVE_PASSWORD=********
 REDIS_HOST=127.0.0.1
 REDIS_PORT=6379
 JWT_SECRET=********
@@ -242,13 +252,15 @@ sudo systemctl restart apex-scaffold  # 重启（优雅停机，等待在途请�
 同一台机器跑多实例时，通过端口与内存隔离：
 
 ```bash
-# 实例 A
+# 实例 A（JVM 参数见 §4.5；多实例必须用各自独立的 GC 日志路径）
+export JAVA_OPTS='-Xms512m -Xmx1024m -XX:+UseG1GC -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/opt/apex-scaffold/logs/heapdump-a.hprof -Xlog:gc*:file=/opt/apex-scaffold/logs/gc-a.log:time,uptime,level,tags:filecount=5,filesize=20m -Dfile.encoding=UTF-8'
 SERVER_PORT=8080 MANAGEMENT_SERVER_ADDRESS=0.0.0.0 MANAGEMENT_SERVER_PORT=8081 \
-  java -Xms512m -Xmx1024m -jar app.jar --spring.profiles.active=prod,enterprise
+  java ${JAVA_OPTS} -jar app.jar --spring.profiles.active=prod,enterprise
 
 # 实例 B
+export JAVA_OPTS='-Xms512m -Xmx1024m -XX:+UseG1GC -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/opt/apex-scaffold/logs/heapdump-b.hprof -Xlog:gc*:file=/opt/apex-scaffold/logs/gc-b.log:time,uptime,level,tags:filecount=5,filesize=20m -Dfile.encoding=UTF-8'
 SERVER_PORT=8082 MANAGEMENT_SERVER_PORT=8083 \
-  java -Xms512m -Xmx1024m -jar app.jar --spring.profiles.active=prod,enterprise \
+  java ${JAVA_OPTS} -jar app.jar --spring.profiles.active=prod,enterprise \
   --spring.application.name=apex-scaffold-2
 ```
 
@@ -256,7 +268,43 @@ SERVER_PORT=8082 MANAGEMENT_SERVER_PORT=8083 \
 
 - 业务端口：`SERVER_PORT`；管理端口：`MANAGEMENT_SERVER_PORT`
 - 多实例共用 MySQL/Redis 时业务数据天然一致；Redis 键带应用名前缀，互不干扰
+- 多实例须通过 `JAVA_OPTS` 指定各自独立的 GC 日志 / 堆转储路径（否则写同一 `gc.log` 互相覆盖）
 - 如需对外负载均衡，前端加 Nginx / SLB，健康检查指向 `GET /api/v1/health`
+
+### 4.5 JVM 参数调优（全部部署方式通用）
+
+三种部署方式（java -jar / Docker / Compose / k8s）内置同一套生产级 JVM 调优参数，
+默认值如下，均可通过环境变量 `JAVA_OPTS` 整体覆盖：
+
+| 参数 | 作用 | 默认值 |
+|------|------|--------|
+| `-Xms512m` | 堆内存初始值（最小堆） | 512m |
+| `-Xmx1024m` | 堆内存最大值（最大堆） | 1024m |
+| `-XX:+UseG1GC` | G1 垃圾回收器（JDK17 默认，显式声明） | 开启 |
+| `-XX:MaxGCPauseMillis=200` | G1 目标最大 GC 停顿时间 | 200ms |
+| `-XX:MetaspaceSize=256m` | 元空间初始阈值（避免频繁扩容触发 Full GC） | 256m |
+| `-XX:MaxMetaspaceSize=512m` | 元空间上限 | 512m |
+| `-XX:+HeapDumpOnOutOfMemoryError` | OOM 时自动堆转储（定位内存泄漏必备） | 开启 |
+| `-XX:HeapDumpPath=<logs>/heapdump.hprof` | 堆转储文件路径 | 日志根目录 |
+| `-XX:+ExitOnOutOfMemoryError` | OOM 后立即退出进程，便于 systemd/容器/k8s 自动重启自愈 | 开启 |
+| `-Xlog:gc*:file=<logs>/gc.log:time,uptime,level,tags:filecount=5,filesize=20m` | 滚动 GC 日志（5 份 × 20m，JDK9+ 统一日志） | 开启 |
+| `-Dfile.encoding=UTF-8` | 字符编码 | UTF-8 |
+| `-Djava.security.egd=file:/dev/./urandom` | 非阻塞熵源，加速启动（Linux） | 开启 |
+
+各载体的日志落盘位置：
+
+| 部署方式 | GC 日志 / 堆转储位置 |
+|----------|----------------------|
+| `scripts/deploy/app.sh` | `<项目根>/logs/gc.log`、`heapdump.hprof`（`APEX_LOG_DIR` 可迁移） |
+| systemd（`apex-scaffold.service`） | `/opt/apex-scaffold/logs/gc.log`、`heapdump.hprof` |
+| Docker / Compose | `/app/logs/gc.log`、`heapdump.hprof`（镜像内已预创建；生产可挂 volume 持久化） |
+| k8s | 容器内 `/app/logs/`（建议配置 emptyDir/挂载采集，或由日志代理收集 stdout） |
+
+> 调整建议：内存充足（≥4G）的机器可将 `-Xms/-Xmx` 调至 2g~4g（两值相等可避免堆扩容抖动）；
+> 需要时可用 `-XX:+PrintSafepointStatistics` 等扩展诊断，默认参数已是"开箱即用"的稳妥基线。
+>
+> 依赖组件（Nacos/RocketMQ/Sentinel/Zipkin）的 JVM 调优见 [§6.5](#65-本地基础设施一键部署全部中间件)，
+> 参数思路一致，但组件镜像多为 JDK8（GC 日志用 `-Xloggc` 语法）。
 
 ---
 
@@ -273,7 +321,8 @@ docker build --build-arg BUILD_PROFILE=enterprise -t apex-scaffold:1.1.3 .
 
 - 多阶段构建：builder 阶段预下载依赖（阿里云 Maven 镜像加速），runtime 仅含 JRE + 可执行 jar
 - 非 root 用户 `appuser` 运行；时区默认 `Asia/Shanghai`（含 tzdata）
-- 默认 JVM：`-Xms512m -Xmx1024m -XX:+UseG1GC`，可用 `JAVA_OPTS` 覆盖
+- 默认 JVM：生产级调优集（`-Xms512m -Xmx1024m -XX:+UseG1GC -XX:MaxGCPauseMillis=200` + OOM 堆转储/退出 + 滚动 GC 日志，详见 §4.5），可用 `JAVA_OPTS` 覆盖
+- GC 日志与堆转储写入容器 `/app/logs/`（`gc.log` / `heapdump.hprof`，镜像已预创建）；生产建议挂 volume 持久化或由日志代理采集
 - 暴露 `8080`（业务）、`8081`（管理/Actuator/Prometheus）
 
 ### 5.2 运行容器
@@ -285,6 +334,9 @@ docker run -d --name apex-scaffold \
   -e DB_MASTER_URL='jdbc:mysql://<mysql-host>:3306/apex_data?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false' \
   -e DB_MASTER_USERNAME=apex \
   -e DB_MASTER_PASSWORD='********' \
+  -e DB_SLAVE_URL='jdbc:mysql://<mysql-host>:3306/apex_data?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false' \
+  -e DB_SLAVE_USERNAME=apex \
+  -e DB_SLAVE_PASSWORD='********' \
   -e REDIS_HOST=<redis-host> \
   -e REDIS_PORT=6379 \
   -e REDIS_PASSWORD='********' \
@@ -310,9 +362,9 @@ curl http://localhost:8081/actuator/health
 docker stop apex-scaffold && docker rm apex-scaffold
 
 # 升级：构建新镜像 → 重建容器
-docker build -t apex-scaffold:1.1.4 .
+docker build -t apex-scaffold:1.2.0 .
 docker stop apex-scaffold && docker rm apex-scaffold
-docker run -d --name apex-scaffold ...（同上参数，镜像换 1.1.4）
+docker run -d --name apex-scaffold ...（同上参数，镜像换 1.2.0）
 ```
 
 > 容器内管理端口默认监听 `0.0.0.0`（镜像已设 `MANAGEMENT_SERVER_ADDRESS=0.0.0.0`），
@@ -361,7 +413,7 @@ curl http://localhost:8080/api/v1/health
 ```bash
 # 1. 生成生产环境变量文件并逐项修改（密码 / 密钥 / 地址）
 cp .env.example .env.prod
-vim .env.prod     # 至少修改: MYSQL_ROOT_PASSWORD / DB_MASTER_PASSWORD / JWT_SECRET
+vim .env.prod     # 至少修改: MYSQL_ROOT_PASSWORD / DB_MASTER_PASSWORD / DB_SLAVE_PASSWORD / JWT_SECRET
                   # 建议: APP_PORT / MANAGEMENT_PORT / MYSQL_PORT 按实际调整
 
 # 2. 使用生产环境文件启动
@@ -450,6 +502,18 @@ docker compose -f docker-compose.infra.yml down -v       # ⚠️ 连同数据�
 | Grafana | grafana/grafana:11.1.0 | 3000 | admin / admin | 可视化大盘 |
 | Blackbox Exporter | prom/blackbox-exporter:v0.25.0 | 9115 | — | 健康探针 |
 
+> **依赖组件的 JVM 调优**：Nacos / RocketMQ（Namesrv+Broker）/ Sentinel Dashboard / Zipkin 已在
+> `docker-compose.infra.yml` 内置与 Apex 应用同思路的生产级 JVM 参数（G1 回收器 / GC 停顿目标 /
+> 元空间 256m/512m / OOM 堆转储 + 退出自愈 / 滚动 GC 日志），详见文件内各服务注释。
+> 注意：这些组件镜像大多基于 **JDK8**（Nacos / RocketMQ / Sentinel），GC 日志使用 `-Xloggc` +
+> `PrintGCDetails` 语法（`-Xlog` 仅 JDK9+ 可用，Zipkin 镜像为 JDK21 使用 `-Xlog`）；
+> Nacos 与 RocketMQ Namesrv 的启动脚本强制 CMS 回收器（再传 G1 会导致 JVM 启动崩溃
+> "Conflicting collector combinations"），故不传 G1/停顿目标，仅加元空间/OOM/GC 日志。
+> 日志落盘位置：Nacos → `/home/nacos/logs`（已挂卷持久化）、
+> RocketMQ → `/home/rocketmq/logs`（`command` 已预建目录）、Sentinel/Zipkin → `/tmp`（本地开发用）。
+> 调整方式：直接改 `docker-compose.infra.yml` 中对应服务的 `JAVA_OPT`/`JAVA_OPT_EXT`/`JAVA_OPTS`。
+> 监控栈 `config/monitoring/docker-compose.yml` 中的 Zipkin 同样已配置。
+
 与本地开发应用的连接约定（**dev 配置默认值即匹配，无需改任何配置**）：
 
 - 本地 `java -jar`（dev 档）默认连 `127.0.0.1:3306/apex_data`、`127.0.0.1:6379` → 直接可用
@@ -495,6 +559,9 @@ docker compose -f docker-compose.infra.yml down -v       # ⚠️ 连同数据�
 | `DB_MASTER_URL` | dev: `jdbc:mysql://127.0.0.1:3306/apex_data...`；prod: **空（必填）** | 主库 JDBC URL；生产为空时启动校验直接失败，防止误连 |
 | `DB_MASTER_USERNAME` | dev: `root`；prod: **空（必填）** | 数据库账号 |
 | `DB_MASTER_PASSWORD` | dev: `apex-root`；prod: **空（必填）** | 数据库密码 |
+| `DB_SLAVE_URL` | dev: `jdbc:mysql://127.0.0.1:3306/apex_data...`；prod: **空（必填）** | 从库 JDBC URL（prod 已启用 slave 数据源，必须注入；可指向只读副本）；生产为空时启动校验直接失败，防止误连 |
+| `DB_SLAVE_USERNAME` | dev: `root`；prod: **空（必填）** | 从库数据库账号 |
+| `DB_SLAVE_PASSWORD` | dev: `apex-root`；prod: **空（必填）** | 从库数据库密码 |
 | `REDIS_HOST` | dev: `127.0.0.1`；prod: `127.0.0.1`（**必改**为真实地址） | Redis 地址 |
 | `REDIS_PORT` | 6379 | Redis 端口 |
 | `REDIS_PASSWORD` | dev: 无；prod: **空（必填）** | Redis 密码；**prod 配置强制非空**，需与 Redis 服务 `--requirepass` 一致 |
@@ -532,7 +599,7 @@ docker compose -f docker-compose.infra.yml down -v       # ⚠️ 连同数据�
 
 | 变量 | 默认 | 说明 |
 |------|------|------|
-| `JAVA_OPTS` | `-Xms512m -Xmx1024m -XX:+UseG1GC` | JVM 参数（Docker/systemd 场景） |
+| `JAVA_OPTS` | `-Xms512m -Xmx1024m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:MetaspaceSize=256m -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError -XX:+ExitOnOutOfMemoryError -Xlog:gc*:file=<logs>/gc.log:...`（完整见 §4.5） | JVM 调优参数（Docker/systemd/java -jar 场景，`JAVA_OPTS` 覆盖） |
 | `SERVER_PORT` | 8080 | 业务端口 |
 | `MANAGEMENT_SERVER_PORT` | 8081 | 管理端口（Actuator） |
 | `MANAGEMENT_SERVER_ADDRESS` | 127.0.0.1 | 管理端口监听地址；容器/远程采集设 `0.0.0.0` |
@@ -691,13 +758,13 @@ export SENTINEL_TRANSPORT_PORT=8719   # 同机多实例须唯一
 
 ```bash
 # java -jar（systemd）
-sudo cp apex-interfaces-1.1.4-executable.jar /opt/apex-scaffold/app.jar
+sudo cp apex-interfaces-1.2.0-executable.jar /opt/apex-scaffold/app.jar
 sudo systemctl restart apex-scaffold
 
 # Docker 单容器
-docker build -t apex-scaffold:1.1.4 .
+docker build -t apex-scaffold:1.2.0 .
 docker stop apex-scaffold && docker rm apex-scaffold
-docker run -d --name apex-scaffold ...（同 §5.2 参数，镜像 1.1.4）
+docker run -d --name apex-scaffold ...（同 §5.2 参数，镜像 1.2.0）
 
 # Docker Compose
 docker compose build                                  # 用新代码重建
@@ -770,7 +837,7 @@ docker run --rm -v apex-scaffold_redis-data:/data -v $(pwd):/backup \
 ## 14. 生产安全部署清单
 
 - [ ] `JWT_SECRET` 使用 `openssl rand -base64 48` 生成，长度 ≥32 字节
-- [ ] `DB_MASTER_PASSWORD` / `MYSQL_ROOT_PASSWORD` 强密码，与默认值不同
+- [ ] `DB_MASTER_PASSWORD` / `DB_SLAVE_PASSWORD` / `MYSQL_ROOT_PASSWORD` 强密码，与默认值不同
 - [ ] 无 Nacos 时显式设置 `NACOS_CONFIG_ENABLED=false` 等三个开关
 - [ ] `MANAGEMENT_SERVER_ADDRESS`：公网裸跑建议保持 `127.0.0.1` 或经防火墙仅放行监控网段；容器/内网采集再设 `0.0.0.0`
 - [ ] 管理端点仅暴露 `health,info,metrics,prometheus,circuitbreakers`（已内置，勿开启 `env/configprops`）
@@ -786,7 +853,7 @@ docker run --rm -v apex-scaffold_redis-data:/data -v $(pwd):/backup \
 ## 15. 常见问题 FAQ
 
 **Q1 启动报错：`Failed to configure a DataSource` / 连接超时？**
-检查 `DB_MASTER_URL/USERNAME/PASSWORD` 是否正确注入、MySQL 是否可达、库是否已创建
+检查 `DB_MASTER_URL/USERNAME/PASSWORD`（以及从库 `DB_SLAVE_URL/USERNAME/PASSWORD`）是否正确注入、MySQL 是否可达、库是否已创建
 （`CREATE DATABASE apex_data DEFAULT CHARACTER SET utf8mb4;`）。生产环境三项均为必填，空值会触发启动校验失败（安全兜底）。
 
 **Q2 启动时大量 Nacos 连接日志/卡顿？**

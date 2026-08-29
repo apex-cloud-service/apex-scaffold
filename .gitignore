@@ -84,3 +84,7 @@ license.lic
 # ===== 发布产物与卖方私钥 =====
 dist/
 config/license/private.key
+
+# ===== 本地数据与构建日志（不入库） =====
+backups/
+lr

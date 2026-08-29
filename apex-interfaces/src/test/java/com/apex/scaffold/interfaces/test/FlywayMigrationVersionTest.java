@@ -43,7 +43,10 @@ class FlywayMigrationVersionTest {
                     .toList();
         }
 
-        // V1 基线 34 表 + V2 权限种子 + V3 账号密码 + V4 审计权限 + V5 在线用户 + V6 部门 + V7 api_call_log 补列
+        // V1 基线 34 表 + V2 权限种子 + V3 账号密码 + V4 审计权限 + V5 在线用户 +
+        // V6 部门 + V7 api_call_log 补列 + V8 管理员/菜单修复 + V9 生日引导 + V10 超管角色 +
+        // V11 菜单状态语义修复与监控中心种子 + V12 废弃 audit_log 空表删除 +
+        // V13 API调用日志权限与菜单种子
         assertThat(versions)
                 .containsExactlyElementsOf(
                         List.of(
@@ -53,7 +56,13 @@ class FlywayMigrationVersionTest {
                                 versionNumber("4"),
                                 versionNumber("5"),
                                 versionNumber("6"),
-                                versionNumber("7")));
+                                versionNumber("7"),
+                                versionNumber("8"),
+                                versionNumber("9"),
+                                versionNumber("10"),
+                                versionNumber("11"),
+                                versionNumber("12"),
+                                versionNumber("13")));
     }
 
     /**

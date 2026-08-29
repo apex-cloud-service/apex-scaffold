@@ -1,5 +1,5 @@
 # ============================================================
-# Apex.Mar — 生产环境配置文件
+# Apex Scaffold — 生产环境配置文件
 # @author Apex Team
 # ============================================================
 # 本文件仅放置生产环境特有的差异项，并覆盖 application.yml 中的同名配置。
@@ -169,21 +169,47 @@ spring:
             connection-properties: druid.stat.mergeSql=false;druid.stat.slowSqlMillis=5000
             # 关闭全局数据源统计，仅保留单数据源级别的统计。
             use-global-data-source-stat: false
-        # （C9 读写分离示例）从库（只读）。按需启用：取消注释并在服务方法上标注
-        #   @DS("slave") 即可路由到从库；未配置时 strict=false 自动回退 primary。
-        # ⚠️ 主从延迟：读多写少且对一致性不敏感的场景（如报表/列表）才使用。
-        # slave:
-        #   url: ${DB_SLAVE_URL:}
-        #   username: ${DB_SLAVE_USERNAME:}
-        #   password: ${DB_SLAVE_PASSWORD:}
-        #   type: com.alibaba.druid.pool.DruidDataSource
-        #   druid:
-        #     db-type: mysql
-        #     initial-size: 5
-        #     min-idle: 5
-        #     max-active: 20
-        #     filters: stat
-        #     use-global-data-source-stat: false
+        # （C9 读写分离示例）从库（只读）。配置与 master 完全一致（仅环境变量前缀
+        #   DB_SLAVE_*），在服务方法上标注 @DataSource("slave")（或 @DS("slave")）
+        #   即可路由到从库。
+        # ⚠️ 主从延迟：读多写少且对一致性不敏感的场景（如报表/列表）才使用；
+        #    需要强一致的读请显式走 master。
+        # ⚠️ 生产必须通过 DB_SLAVE_URL 等环境变量注入真实只读副本地址；默认空字符串
+        #    会在启动时触发参数校验而失败，防止误连。
+        slave:
+          # 从库 JDBC URL；生产部署必须通过 DB_SLAVE_URL 环境变量注入真实地址。
+          # 默认空字符串会在启动时触发参数校验而失败，防止误连。
+          url: ${DB_SLAVE_URL:}
+          # 数据库凭据由部署环境注入；默认空值为安全兜底，启动时校验不通过即失败。
+          username: ${DB_SLAVE_USERNAME:}
+          password: ${DB_SLAVE_PASSWORD:}
+          # 连接池实现：Alibaba Druid（与 master 一致）。
+          type: com.alibaba.druid.pool.DruidDataSource
+          druid:
+            # 数据库类型标识。
+            db-type: mysql
+            # ---------- 连接池容量（与 master 一致） ----------
+            initial-size: 15
+            min-idle: 15
+            max-active: ${DB_MAX_ACTIVE:40}
+            max-wait: ${DB_MAX_WAIT_MILLIS:3000}
+            # ---------- 连接检测与回收（与 master 一致） ----------
+            # ⚠️ 必须小于 keep-alive-between-time-millis（60s），否则 Druid 启动校验失败。
+            time-between-eviction-runs-millis: 30000
+            min-evictable-idle-time-millis: 300000
+            keep-alive: true
+            keep-alive-between-time-millis: 60000
+            validation-query: SELECT 1 FROM DUAL
+            test-while-idle: true
+            test-on-borrow: false
+            test-on-return: false
+            # ---------- PreparedStatement 缓存（与 master 一致） ----------
+            pool-prepared-statements: true
+            max-pool-prepared-statement-per-connection-size: 20
+            # ---------- 监控过滤器（与 master 一致） ----------
+            filters: stat
+            connection-properties: druid.stat.mergeSql=false;druid.stat.slowSqlMillis=5000
+            use-global-data-source-stat: false
 
   # ----------------------------------------------------------
   #  1.5 Redis 缓存连接（Spring Data Redis + Lettuce）
@@ -615,23 +641,6 @@ wechat:
 
   # 微信开放平台用户信息接口（获取昵称、头像等）。
   user-info-url: ${WECHAT_USER_INFO_URL:https://api.weixin.qq.com/sns/userinfo}
-
-  pay:
-    # 微信支付 AppID：默认回退到微信应用 AppID（多数情况下两者相同）。
-    app-id: ${WECHAT_PAY_APP_ID:${WECHAT_APP_ID:}}
-    # 微信支付商户号。
-    mch-id: ${WECHAT_PAY_MCH_ID:}
-    # API v3 密钥：32 字节的对称加密密钥，用于回调通知验证和敏感信息加密。
-    # ⚠️ 安全要求：必须通过环境变量注入，不得硬编码。
-    api-v3-key: ${WECHAT_PAY_API_V3_KEY:}
-    # 商户 API 证书私钥文件路径（PEM 格式）。
-    # 通常部署时挂载到 /etc/secrets/ 或类似安全目录。
-    private-key-path: ${WECHAT_PAY_PRIVATE_KEY_PATH:}
-    # 商户 API 证书序列号：用于微信支付平台验证商户身份。
-    merchant-serial-number: ${WECHAT_PAY_MERCHANT_SERIAL_NO:}
-    # 支付结果通知 URL：微信支付成功后回调通知的完整地址。
-    # 须为公网可达的 HTTPS 地址。
-    notify-url: ${WECHAT_PAY_NOTIFY_URL:}
 
 # ============================================================
 # 13. 企业微信配置

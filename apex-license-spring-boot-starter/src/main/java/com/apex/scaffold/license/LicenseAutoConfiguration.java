@@ -1,71 +1,71 @@
 package com.apex.scaffold.license;
 
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
-import org.springframework.boot.autoconfigure.AutoConfiguration;
 
 /**
  * License自动配置
  *
- * <p>默认启用 License 校验（{@code apex.license.enabled} 缺省为 true）。
+ * <p><b>不可整体关闭</b>：本配置类无条件装配（v2.2 起）。
+ * 验证器、门控切面与运行期重检调度器始终注册：
+ * <ul>
+ *   <li>{@code apex.license.enabled} 缺省为 {@code true}；显式设为 {@code false}
+ *       仅意味着"更严格"——强制进入降级模式（全部商业功能拒绝），
+ *       <b>不能</b>用于绕过 {@code @FeatureGate} 商业功能校验</li>
+ *   <li>商业组件同时受 {@code @ConditionalOnLicenseFeature} 门控：即使宿主
+ *       通过移除依赖等手段绕过本模块，商业基础设施（RBAC/缓存/MQ/追踪等）
+ *       的装配条件同样不满足，无法静默开启</li>
+ * </ul>
  *
  * <p><b>容错降级策略</b>：License 文件缺失、签名无效或已过期时，
  * 不阻塞应用启动，而是注册一个降级验证器 —— 基础功能放行，
- * 所有商业功能（{@code @FeatureGate} 标注）拒绝，并输出明确的 WARN 日志。
- * 该策略保证 fork 用户无法绕过商业功能授权，同时不影响基础版正常使用。</p>
+ * 所有商业功能（{@code @FeatureGate} 标注 / {@code @ConditionalOnLicenseFeature}
+ * 装配的商业组件）拒绝，并输出明确的 WARN 日志。</p>
  *
- * <p><b>装配说明</b>：本配置同时注册 {@link FeatureGateAspect}（功能门控切面），
- * 全部 Bean 均通过自动配置注册，不依赖宿主应用的组件扫描路径。</p>
+ * <p><b>装配说明</b>：本配置同时注册 {@link FeatureGateAspect}（功能门控切面）与
+ * {@link LicenseRevalidationScheduler}（运行期重检），全部 Bean 均通过自动配置注册，
+ * 不依赖宿主应用的组件扫描路径。</p>
  *
  * @author Apex Team
- * @version 2.0.0
+ * @version 2.2.0
  */
 @Slf4j
 @AutoConfiguration
 @RequiredArgsConstructor
 @EnableConfigurationProperties(LicenseProperties.class)
-@ConditionalOnProperty(name = "apex.license.enabled", havingValue = "true", matchIfMissing = true)
 public class LicenseAutoConfiguration {
 
     private final LicenseProperties properties;
 
+    /**
+     * License 验证器。
+     *
+     * <p>验证逻辑经 {@link LicenseFeatureGate} 静态缓存 —— 条件装配期
+     * （{@code @ConditionalOnLicenseFeature}）与运行期切面共享同一验证器实例，
+     * 保证两条路径的授权判断一致。</p>
+     *
+     * @return 验证器（加载失败时为降级验证器）
+     */
     @Bean
     public LicenseValidator licenseValidator() {
-        try {
-            // 1. 加载公钥（优先外部文件，其次配置内嵌，最后随包默认公钥）
-            String publicKeyBase64 = loadPublicKey();
-            LicenseValidator validator = new LicenseValidator(publicKeyBase64);
-
-            // 2. 加载并验证 License 文件
-            String licensePath = properties.getFilePath();
-            if (licensePath == null || licensePath.isBlank()) {
-                throw new IllegalStateException("未配置 apex.license.file-path");
-            }
-            loadLicense(validator, licensePath);
-
+        LicenseValidator validator = LicenseFeatureGate.getOrCreate(properties);
+        if (validator.isValidated()) {
             log.info(
                     "License 验证通过: 客户={}, 版本={}",
                     validator.getLicenseInfo().getCustomerName(),
                     validator.getLicenseInfo().getVersion());
-            return validator;
-        } catch (Exception e) {
-            log.warn("License 加载或验证失败（{}），进入降级模式：商业功能不可用，基础功能不受影响", e.getMessage());
-            return LicenseValidator.degraded();
         }
+        return validator;
     }
 
     /**
      * 注册功能门控切面
      *
      * <p>由自动配置统一注册（而非依赖宿主应用的 {@code @ComponentScan} 路径），
-     * 保证任意包名结构的宿主应用引入本模块后 {@code @FeatureGate} 均能生效。
-     * 整个配置类受 {@code apex.license.enabled} 条件控制，切面随验证器同生同灭。</p>
+     * 保证任意包名结构的宿主应用引入本模块后 {@code @FeatureGate} 均能生效。</p>
      *
      * @param licenseValidator License 验证器
      * @return 功能门控切面
@@ -75,45 +75,16 @@ public class LicenseAutoConfiguration {
         return new FeatureGateAspect(licenseValidator);
     }
 
-    /** 加载公钥：优先外部文件，其次配置内嵌，最后随包默认公钥。 */
-    private String loadPublicKey() throws Exception {
-        String file = properties.getPublicKeyFile();
-        if (file != null && !file.isBlank()) {
-            return readResourceOrFile(file);
-        }
-        String inline = properties.getPublicKey();
-        if (inline != null && !inline.isBlank()) {
-            return inline.trim();
-        }
-        // 随包默认公钥
-        return readResourceOrFile("classpath:license/public.key");
-    }
-
-    /** 加载 License 文件（支持 classpath: 与文件系统路径）。 */
-    private void loadLicense(LicenseValidator validator, String licensePath) throws Exception {
-        if (licensePath.startsWith("classpath:")) {
-            String resourceName = licensePath.substring("classpath:".length());
-            var resource = getClass().getClassLoader().getResource(resourceName);
-            if (resource == null) {
-                throw new IllegalStateException("License文件不存在: " + licensePath);
-            }
-            String content = new String(resource.openStream().readAllBytes(), StandardCharsets.UTF_8);
-            validator.loadFromJson(content);
-        } else {
-            validator.loadFromFile(licensePath);
-        }
-    }
-
-    /** 读取 classpath 资源或文件系统文件内容。 */
-    private String readResourceOrFile(String path) throws Exception {
-        if (path.startsWith("classpath:")) {
-            String resourceName = path.substring("classpath:".length());
-            var resource = getClass().getClassLoader().getResource(resourceName);
-            if (resource == null) {
-                throw new IllegalStateException("资源不存在: " + path);
-            }
-            return new String(resource.openStream().readAllBytes(), StandardCharsets.UTF_8).trim();
-        }
-        return new String(Files.readAllBytes(Paths.get(path)), StandardCharsets.UTF_8).trim();
+    /**
+     * License 运行期重检调度器（守护线程，随应用关闭终止）。
+     *
+     * <p>{@code apex.license.recheck-interval<=0} 时为空操作。</p>
+     *
+     * @param licenseValidator 共享验证器
+     * @return 调度器
+     */
+    @Bean(destroyMethod = "close")
+    public LicenseRevalidationScheduler licenseRevalidationScheduler(LicenseValidator licenseValidator) {
+        return new LicenseRevalidationScheduler(licenseValidator, properties);
     }
 }

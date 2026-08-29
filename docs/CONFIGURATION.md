@@ -108,6 +108,36 @@ spring:
               filters: stat,wall,slf4j
               # 合并多个DruidDataSource的监控数据
               use-global-data-source-stat: true
+        # 从库（与 master 参数完全一致，仅环境变量前缀 DB_SLAVE_*；prod 必须注入真实只读副本地址）
+        slave:
+          url: jdbc:mysql://127.0.0.1:3306/apex_data?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
+          username: root
+          # 密码(生产环境建议使用环境变量 DB_SLAVE_PASSWORD)
+          password: ${DB_SLAVE_PASSWORD:apex-root}
+          driver-class-name: com.mysql.cj.jdbc.Driver
+          druid:
+            # 初始连接数
+            initial-size: 5
+            # 最小空闲连接数
+            min-idle: 5
+            # 最大活跃连接数
+            max-active: 20
+            # 获取连接超时时间(毫秒)
+            max-wait: 60000
+            # 空闲连接检测间隔(毫秒)（须小于 keep-alive-between-time-millis）
+            time-between-eviction-runs-millis: 30000
+            # 连接保活间隔(毫秒)
+            keep-alive-between-time-millis: 60000
+            # 连接最小生存时间(毫秒)
+            min-evictable-idle-time-millis: 300000
+            # 是否开启PSCache
+            pool-prepared-statements: true
+            # PSCache大小
+            max-pool-prepared-statement-per-connection-size: 20
+            # 监控统计拦截的filters
+            filters: stat,wall,slf4j
+            # 合并多个DruidDataSource的监控数据
+            use-global-data-source-stat: true
 ```
 
 ### MyBatis-Plus配置

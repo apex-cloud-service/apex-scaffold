@@ -13,12 +13,14 @@ import com.apex.scaffold.interfaces.handler.FileHandler;
 import com.apex.scaffold.interfaces.handler.HealthHandler;
 import com.apex.scaffold.interfaces.handler.JobHandler;
 import com.apex.scaffold.interfaces.handler.AuditLogHandler;
+import com.apex.scaffold.interfaces.handler.ApiCallLogHandler;
 import com.apex.scaffold.interfaces.handler.DeptHandler;
 import com.apex.scaffold.interfaces.handler.ExcelExportHandler;
 import com.apex.scaffold.interfaces.handler.NotificationSseHandler;
 import com.apex.scaffold.interfaces.handler.OnlineUserHandler;
 import com.apex.scaffold.interfaces.handler.LoginLogHandler;
 import com.apex.scaffold.interfaces.handler.MenuHandler;
+import com.apex.scaffold.interfaces.handler.MonitorDashboardHandler;
 import com.apex.scaffold.interfaces.handler.UserHandler;
 import java.net.URI;
 import org.springframework.context.annotation.Bean;
@@ -164,6 +166,24 @@ public class ApiRouter {
                 .GET("/admin-api/v1/audit-logs", handler::list)
                 .build();
     }
+
+    /**
+     * 系统管理-API调用日志路由（/admin-api/v1/api-call-logs）。
+     *
+     * <p>提供对外部 HTTP 服务调用日志（{@code sys_api_call_log} 表）的分页查询端点，
+     * 经 {@code RequirePermissionAspect} 校验 {@code system:api-call-log:list} 权限
+     * （V13 迁移预置）。</p>
+     *
+     * @param handler API 调用日志处理器
+     * @return API 调用日志管理路由函数
+     * @since 2.3.0
+     */
+    @Bean
+    public RouterFunction<ServerResponse> adminApiCallLogRoutes(ApiCallLogHandler handler) {
+        return RouterFunctions.route()
+                .GET("/admin-api/v1/api-call-logs", handler::list)
+                .build();
+    }
     /**
      * 系统管理-部门管理路由（/admin-api/v1/depts）。
      *
@@ -230,6 +250,29 @@ public class ApiRouter {
     public RouterFunction<ServerResponse> adminOnlineUserRoutes(OnlineUserHandler handler) {
         return RouterFunctions.route()
                 .GET("/admin-api/v1/online-users", handler::list)
+                .build();
+    }
+
+    /**
+     * 监控大盘路由（/admin-api/v1/monitor）。
+     *
+     * <p>提供监控概览、系统资源、中间件、治理与核心业务五类监控聚合数据，
+     * 经 {@code RequirePermissionAspect} 校验 {@code system:monitor:view} 权限。</p>
+     *
+     * @param handler 监控大盘处理器
+     * @return 监控路由函数
+     * @since 2.3.0
+     */
+    @Bean
+    public RouterFunction<ServerResponse> adminMonitorRoutes(MonitorDashboardHandler handler) {
+        return RouterFunctions.route()
+                .path(
+                        "/admin-api/v1/monitor",
+                        routes -> routes.GET("/overview", handler::overview)
+                                .GET("/system", handler::system)
+                                .GET("/middleware", handler::middleware)
+                                .GET("/governance", handler::governance)
+                                .GET("/business", handler::business))
                 .build();
     }
 

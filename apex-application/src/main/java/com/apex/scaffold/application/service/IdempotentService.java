@@ -1,5 +1,6 @@
 package com.apex.scaffold.application.service;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import java.time.Duration;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
@@ -48,13 +49,18 @@ public class IdempotentService {
     /** Redis 响应式字符串模板 */
     private final ReactiveStringRedisTemplate redisTemplate;
 
+    /** 指标注册表（幂等命中/拒绝计数）。 */
+    private final MeterRegistry meterRegistry;
+
     /**
      * 构造幂等性服务
      *
      * @param redisTemplate Redis 响应式字符串模板，由 Spring 自动注入
+     * @param meterRegistry Micrometer 指标注册表
      */
-    public IdempotentService(ReactiveStringRedisTemplate redisTemplate) {
+    public IdempotentService(ReactiveStringRedisTemplate redisTemplate, MeterRegistry meterRegistry) {
         this.redisTemplate = redisTemplate;
+        this.meterRegistry = meterRegistry;
     }
 
     /**
@@ -85,8 +91,10 @@ public class IdempotentService {
                 .setIfAbsent(cacheKey, PLACEHOLDER_VALUE, DEFAULT_EXPIRE_TIME)
                 .doOnNext(success -> {
                     if (Boolean.TRUE.equals(success)) {
+                        meterRegistry.counter("apex.idempotent.count", "result", "allowed").increment();
                         log.info("幂等性检查通过，key: {}", key);
                     } else {
+                        meterRegistry.counter("apex.idempotent.count", "result", "duplicate").increment();
                         log.warn("检测到重复请求，key: {}", key);
                     }
                 });
