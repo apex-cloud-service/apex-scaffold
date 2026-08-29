@@ -13,8 +13,9 @@ import reactor.core.publisher.Mono;
 /**
  * 断路器服务
  *
- * <p>基于 Resilience4j 实现的断路器服务，用于保护外部API调用，防止级联故障。
- * 支持多种断路器配置策略，可根据业务需求灵活调整。
+ * <p>基于 Resilience4j 实现的编程式断路器服务，用于由业务显式调用的保护链路。
+ * 该服务使用 {@link CircuitBreakerProperties} 创建或获取断路器，不是
+ * {@code RemoteApiClient} 的远程调用策略入口。
  *
  * <h2>断路器状态</h2>
  * <ul>
@@ -218,8 +219,8 @@ public class CircuitBreakerService implements CircuitBreakerPort {
      * 未显式配置时回退到代码中的合理默认值。
      *
      * <ul>
-     *   <li><b>异常过滤</b>：仅记录 IOException、TimeoutException 和 5xx HTTP 错误，
-     *       排除业务异常（BusinessException），避免业务错误不必要地触发熔断</li>
+     *   <li><b>异常过滤</b>：记录除 {@code BusinessException} 外的所有异常，
+     *       避免业务异常参与失败率统计</li>
      * </ul>
      *
      * @return 默认配置

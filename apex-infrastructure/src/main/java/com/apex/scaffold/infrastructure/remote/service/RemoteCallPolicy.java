@@ -18,21 +18,21 @@ import reactor.util.retry.RetryBackoffSpec;
  * 远程调用超时、重试与异常映射统一策略。
  *
  * <p>对 {@link com.apex.scaffold.infrastructure.remote.service.RemoteApiClient} 的每次远程 HTTP 调用
- * 提供统一的超时解析、重试判断和异常包装逻辑，避免上层业务代码重复处理底层网络语义。
+ * 提供统一的超时解析、Reactor Retry 重试判断和异常包装逻辑，避免上层业务代码重复处理底层网络语义。
  *
  * <h2>职责</h2>
  * <ul>
- *   <li><b>超时解析</b>：从 {@code RemoteApiProperties.getServiceConfigs()} 读取按服务级别的
- *       connect / read 超时，未配置时回退到全局默认值</li>
- *   <li><b>重试策略</b>：仅对 5xx 服务端错误和网络异常（IOException 等）执行 Reactor
+ *   <li><b>超时解析</b>：从 {@link ServiceConfig} 读取按服务级别的 connect / read 超时，
+ *       未配置时回退到 {@link RemoteApiProperties} 的全局默认值</li>
+ *   <li><b>重试策略</b>：对 5xx 服务端错误和未分类调用异常执行 Reactor
  *       {@link Retry#backoff} 退避重试，4xx 客户端错误不重试（语义安全）</li>
  *   <li><b>异常映射</b>：将 {@link WebClientResponseException} 和 Reactor 重试耗尽异常
  *       统一包装为 {@link RemoteApiException}，保留 HTTP 状态码和响应体</li>
  * </ul>
  *
  * <h2>重试参数来源</h2>
- * <p>重试次数和间隔由 {@link ServiceConfig#retryCount} / {@link ServiceConfig#retryDelay}
- * 控制，最大退避固定为 10s，避免长时间占用连接。</p>
+ * <p>重试次数和间隔优先取服务级 {@link ServiceConfig}，未配置时回退到
+ * {@link RemoteApiProperties} 的全局默认值；最大退避固定为 10s。</p>
  *
  * @author Apex Team
  * @version 1.0.0
@@ -51,9 +51,9 @@ public final class RemoteCallPolicy {
     private final RemoteApiProperties properties;
 
     /**
-     * 构建仅重试网络异常与服务端错误（5xx）的指数退避策略。
+     * 构建重试服务端错误（5xx）与未分类调用异常的指数退避策略。
      *
-     * <p>重试次数和退避间隔从 {@link ServiceConfig} 读取，
+     * <p>重试次数和退避间隔优先从 {@link ServiceConfig} 读取，未配置时回退到全局默认值；
      * 最大退避固定 10s，重试前输出 INFO 级别日志。
      *
      * @param config      对应服务的配置

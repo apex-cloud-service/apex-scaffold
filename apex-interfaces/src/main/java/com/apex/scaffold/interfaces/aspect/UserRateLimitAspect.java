@@ -65,7 +65,7 @@ import reactor.core.publisher.Mono;
 @Component
 @Order(1)
 @ConditionalOnProperty(
-        prefix = "apex.security.ip-rate-limit",
+        prefix = "apex.security.user-rate-limit",
         name = "enabled",
         havingValue = "true",
         matchIfMissing = true)
@@ -93,7 +93,7 @@ public class UserRateLimitAspect {
      * 默认开启。当 Redis 不可用时，自动降级到本地限流。
      */
     @Value("${apex.ratelimit.local-fallback.enabled:true}")
-    private boolean localFallbackEnabled;
+    private boolean localFallbackEnabled = true;
 
     /**
      * 构造用户级别限流切面
@@ -142,7 +142,7 @@ public class UserRateLimitAspect {
                 .subscribeOn(cache())
                 .onErrorResume(throwable -> {
                     // Step 2: Redis 异常，降级到本地限流
-                    if (localFallbackEnabled && isRedisException(throwable)) {
+                    if (localFallbackEnabled && (redissonClient == null || isRedisException(throwable))) {
                         log.warn("Redis 不可用，降级到本地限流, key: {}", rateKey, throwable);
                         return Mono.fromCallable(() -> {
                                     LocalRateLimiter localLimiter =
@@ -187,7 +187,7 @@ public class UserRateLimitAspect {
      */
     private boolean tryAcquireDistributed(String rateKey, long rate, long rateInterval) {
         if (redissonClient == null) {
-            return false;
+            throw new RedisException("Redisson client is unavailable");
         }
         RRateLimiter rateLimiter = redissonClient.getRateLimiter(rateKey);
         rateLimiter.trySetRate(RateType.OVERALL, rate, rateInterval, RateIntervalUnit.SECONDS);

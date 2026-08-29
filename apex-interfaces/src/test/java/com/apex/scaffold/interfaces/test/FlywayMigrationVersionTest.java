@@ -58,7 +58,30 @@ class FlywayMigrationVersionTest {
                                 versionNumber("11"),
                                 versionNumber("12"),
                                 versionNumber("13"),
-                                versionNumber("14")));
+                                versionNumber("14"),
+                                versionNumber("15")));
+    }
+
+    @Test
+    void shouldCompleteTenantTableCoverage() throws Exception {
+        Path projectRoot = Path.of(System.getProperty("user.dir"));
+        Path migration = projectRoot.resolve(
+                "apex-interfaces/src/main/resources/db/migration/V15__complete_tenant_isolation_schema.sql");
+        if (!Files.exists(migration)) {
+            migration = projectRoot.resolve("src/main/resources/db/migration/V15__complete_tenant_isolation_schema.sql");
+        }
+
+        String sql = Files.readString(migration);
+        assertThat(sql).contains(
+                "sys_operation_log",
+                "biz_system_message",
+                "biz_credit_tx",
+                "sys_file",
+                "sys_login_log",
+                "biz_admin_review_audit");
+        assertThat(sql).doesNotContain(
+                "CALL add_tenant_id_if_not_exists('operation_log'",
+                "CALL add_tenant_id_if_not_exists('system_message'");
     }
 
     /**

@@ -1,3 +1,13 @@
+-- 脚本用途：初始化本地动态数据源演示库，并在主从库创建可识别的路由探针。
+-- 业务背景：通过 MASTER/SLAVE 固定标记验证 @DataSource("slave") 的实际连接路由结果。
+-- 前置依赖：MySQL 服务及 apex_data 主库已存在，执行账号具备建库、切库、建表和写数据权限。
+-- 影响范围：创建 apex_data_slave，并在 apex_data_slave、apex_data 中创建或更新 routing_probe。
+-- 幂等性：建库建表使用 IF NOT EXISTS，探针使用 ON DUPLICATE KEY UPDATE，可重复执行。
+-- MySQL/Flyway 兼容性：面向 MySQL 8.x 客户端脚本；含 CREATE DATABASE/USE，不属于 Flyway 迁移。
+-- 数据风险：会把两库中 routing_probe 主键 1 的 source 强制改为固定标记，且不配置真实复制关系。
+-- 运维注意：仅用于本地路由验证；生产只读副本禁止运行，执行前确认主从库名称和连接实例。
+-- 版本与阶段：无 Flyway 版本；执行阶段为动态数据源本地联调环境准备。
+-- Checksum 提示：不受 Flyway checksum 管理，不得作为生产主从复制或正式库变更脚本使用。
 -- ================================================================
 -- Apex Scaffold 数据源动态切换 - 从库初始化脚本
 -- ================================================================
@@ -15,6 +25,7 @@
 -- ================================================================
 
 -- 1) 创建从库（演示用；生产环境指向真实只读副本）
+-- 仅创建演示库对象，不负责配置复制拓扑、账号权限或只读策略。
 CREATE DATABASE IF NOT EXISTS `apex_data_slave`
     DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 

@@ -31,7 +31,7 @@
 | `sys_job_log` | 定时任务执行日志（状态/异常/耗时快照） | JobLogEntity / JobLogPO |
 | `sys_login_log` | 登录尝试日志（账号/IP/结果/时间，审计用） | LoginLogEntity / LoginLogPO |
 
-同步维护 Flyway 迁移 `db/migration`（MySQL 版 V1-V6，各环境共用），保持表结构与生产一致。
+同步维护 Flyway 迁移 `db/migration`（MySQL 版当前 V1-V15，各环境共用），保持表结构与生产一致。
 
 ## 三、API 清单
 

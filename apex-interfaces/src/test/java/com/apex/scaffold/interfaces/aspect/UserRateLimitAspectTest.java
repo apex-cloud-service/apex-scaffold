@@ -136,6 +136,22 @@ class UserRateLimitAspectTest {
      * @throws Throwable 当操作无法完成时
      */
     @Test
+    @DisplayName("Redisson 缺失时应降级到本地限流")
+    void shouldFallbackToLocalRateLimitWhenRedissonIsMissing() throws Throwable {
+        UserRateLimitAspect localAspect = new UserRateLimitAspect(null);
+        when(annotation.prefix()).thenReturn("sms");
+        when(annotation.key()).thenReturn("test");
+        when(annotation.rate()).thenReturn(1.0);
+        when(annotation.rateInterval()).thenReturn(60L);
+        when(annotation.message()).thenReturn("操作过于频繁，请稍后再试");
+        when(joinPoint.proceed()).thenReturn(TEST_RESULT);
+
+        Mono<?> result = (Mono<?>) localAspect.around(joinPoint, annotation);
+
+        assertThat(result.block()).isEqualTo(TEST_RESULT);
+    }
+
+    @Test
     @DisplayName("未指定限流参数时应使用默认值")
     void shouldUseDefaultRateLimit() throws Throwable {
         when(redissonClient.getRateLimiter(anyString())).thenReturn(rateLimiter);

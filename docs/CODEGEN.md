@@ -69,7 +69,7 @@
    在 `ApiRouter.java` 注册路由；
 3. 将 `V{n}__create_*.sql` 合并入 `apex-interfaces/src/main/resources/db/migration`；
 4. 将 `ProductServiceTest.java` 移入测试目录，并把表定义对应的建表语句追加到
-   Flyway 迁移 `db/migration`（MySQL 版 V1-V6，各环境共用）。
+   Flyway 迁移 `db/migration`（MySQL 版当前 V1-V15，各环境共用）。
 
 ## 四·五、前端代码生成（Vue3 页面）
 

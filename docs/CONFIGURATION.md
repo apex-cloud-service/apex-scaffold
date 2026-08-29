@@ -300,55 +300,54 @@ apex:
 ```
 
 > ⚠️ 启用动态下发时，Nacos 的 DataId 需维护**完整规则集**（推送为整体替换语义）。
-> JSON 模板与字段说明见 `config/sentinel/README.md`；内置静态规则（39 条限流 + 熔断）
-> 定义于 `SentinelConfig`，可作为模板导出基线。
+> JSON 模板与字段说明见 `config/sentinel/README.md`；当前内置静态基线为 43 条限流规则和 30 条降级规则，定义于 `SentinelConfig`，两个 Nacos DataId 必须分别发布完整集合。动态规则推送采用整体替换语义，不会与静态规则自动合并。
 
-### Resilience4j配置
+### Resilience4j 与远程调用配置
+
+当前存在两条独立的断路器链路：
+
+- `apex.circuit-breaker` 由 `CircuitBreakerService` 读取，供业务通过 `CircuitBreakerPort.withCircuitBreaker(name, mono)` 显式接入编程式断路器。
+- `resilience4j.circuitbreaker.instances` 由 `RemoteApiClient` 使用的 `CircuitBreakerRegistry` 管理。实例名必须与 `remote.api.services` 的服务名一致，远程调用才会绑定对应断路器。
+
+`RemoteApiClient` 的连接超时、读取超时和重试参数实际来自 `RemoteApiProperties`，即 `remote.api` 配置。重试由 Reactor Retry 执行：4xx 不重试，5xx 和未分类调用异常按配置进行退避重试。
 
 ```yaml
+remote:
+  api:
+    default-connect-timeout: 5000
+    default-read-timeout: 10000
+    default-retry-count: 2
+    default-retry-delay: 1000
+    services:
+      example-service:
+        base-url: https://api.example.com
+        connect-timeout: 3000
+        read-timeout: 8000
+        retry-count: 2
+        retry-delay: 1000
+
 resilience4j:
   circuitbreaker:
     instances:
-      default:
-        # 滑动窗口大小
+      example-service:
         sliding-window-size: 10
-        
-        # 失败率阈值(百分比)
         failure-rate-threshold: 50
-        
-        # 慢调用率阈值(百分比)
         slow-call-rate-threshold: 50
-        
-        # 慢调用时间阈值(毫秒)
-        slow-call-duration-threshold: 3000
-        
-        # 熔断器打开后等待时间(秒)
-        wait-duration-in-open-state: 60
-        
-        # 半开状态允许的调用次数
+        slow-call-duration-threshold: 3s
+        wait-duration-in-open-state: 60s
         permitted-number-of-calls-in-half-open-state: 10
-  
-  timelimiter:
-    instances:
-      default:
-        # 超时时间(秒)
-        timeout-duration: 5
-        
-        # 取消运行中的任务
-        cancel-running-future: true
-  
-  retry:
-    instances:
-      default:
-        # 最大重试次数
-        max-attempts: 3
-        
-        # 重试间隔(毫秒)
-        wait-duration: 1000
-        
-        # 指数退避乘数
-        multiplier: 2
+
+apex:
+  circuit-breaker:
+    default:
+      failure-rate-threshold: 50
+      wait-duration-in-open-state: 60s
+      sliding-window-size: 100
+      minimum-number-of-calls: 10
+      permitted-calls-in-half-open: 5
 ```
+
+`resilience4j.retry`、`resilience4j.timelimiter` 和 `resilience4j.ratelimiter` 即使存在于配置中，也不会自动作用于当前 `RemoteApiClient` 调用链；当前远程重试和超时分别由 Reactor Retry 与 `remote.api` 参数控制。
 
 ### 接口级限流
 

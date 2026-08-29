@@ -27,8 +27,8 @@ import org.slf4j.LoggerFactory;
  * <h2>忽略的系统表</h2>
  * <p>以下系统配置级表不参与租户隔离：
  * {@code sys_menu / sys_permission / sys_role / sys_role_permission / sys_dept /
- * sys_dict / sys_dict_item / sys_tenant / flyway_schema_history / scheduler_job /
- * scheduler_job_log}。这些表要么是平台级元数据，要么由超级管理员统一维护。
+ * sys_dict_type / sys_dict_data / sys_tenant / sys_config / sys_job /
+ * sys_job_log / sys_domain_event_outbox / flyway_schema_history}。这些表要么是平台级元数据，要么由超级管理员统一维护。
  * 若未来新增系统字典类表，应在此补充。</p>
  *
  * <h2>启用开关</h2>
@@ -57,12 +57,17 @@ public class DefaultTenantLineHandler implements TenantLineHandler {
             "sys_dept",
             "sys_dict",
             "sys_dict_item",
+            "sys_dict_type",
+            "sys_dict_data",
             "sys_tenant",
             "sys_config",
             "sys_oss",
             "flyway_schema_history",
             "scheduler_job",
-            "scheduler_job_log"
+            "scheduler_job_log",
+            "sys_job",
+            "sys_job_log",
+            "sys_domain_event_outbox"
     );
 
     @Override

@@ -7,6 +7,7 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 
 import com.alibaba.csp.sentinel.adapter.spring.webflux.callback.BlockRequestHandler;
+import com.alibaba.csp.sentinel.slots.block.RuleConstant;
 import com.alibaba.csp.sentinel.slots.block.degrade.DegradeException;
 import com.alibaba.csp.sentinel.slots.block.degrade.DegradeRule;
 import com.alibaba.csp.sentinel.slots.block.degrade.DegradeRuleManager;
@@ -18,10 +19,13 @@ import com.alibaba.csp.sentinel.transport.endpoint.Protocol;
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.common.util.JsonUtil;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.apex.scaffold.interfaces.util.MessageUtils;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -330,6 +334,55 @@ class SentinelConfigTest {
         String body = exchange.getResponse().getBodyAsString().block();
         assertThat(body).isNotBlank();
         return JsonUtil.fromJson(body, Result.class);
+    }
+
+    @Test
+    @DisplayName("Nacos限流模板应覆盖全部静态限流规则")
+    void shouldKeepFlowTemplateConsistentWithStaticRules() throws Exception {
+        sentinelConfig.initFlowRules();
+        List<Map<String, Object>> template = readRuleTemplate("/sentinel/apex-sentinel-flow-rules.json");
+
+        assertThat(template).hasSize(43);
+        assertThat(template).extracting(rule -> rule.get("resource"))
+                .containsExactlyInAnyOrderElementsOf(
+                        FlowRuleManager.getRules().stream().map(rule -> rule.getResource()).toList());
+        assertThat(template).allSatisfy(rule -> {
+            assertThat(rule.get("grade")).isEqualTo(1);
+            assertThat(rule.get("limitApp")).isEqualTo("default");
+        });
+    }
+
+    @Test
+    @DisplayName("Nacos降级模板应覆盖全部静态降级规则")
+    void shouldKeepDegradeTemplateConsistentWithStaticRules() throws Exception {
+        sentinelConfig.initDegradeRules();
+        List<Map<String, Object>> template = readRuleTemplate("/sentinel/apex-sentinel-degrade-rules.json");
+
+        assertThat(template).hasSize(30);
+        assertThat(template).extracting(rule -> rule.get("resource"))
+                .containsExactlyInAnyOrderElementsOf(
+                        DegradeRuleManager.getRules().stream().map(rule -> rule.getResource()).toList());
+        assertThat(template).allSatisfy(rule -> {
+            assertThat(rule.get("grade")).isIn(
+                    RuleConstant.DEGRADE_GRADE_EXCEPTION_RATIO,
+                    RuleConstant.DEGRADE_GRADE_RT);
+            assertThat(rule.get("minRequestAmount")).isEqualTo(5);
+            if (Integer.valueOf(RuleConstant.DEGRADE_GRADE_EXCEPTION_RATIO).equals(rule.get("grade"))) {
+                assertThat(rule).doesNotContainKey("statIntervalMs");
+            } else {
+                assertThat(rule.get("statIntervalMs")).isEqualTo(30000);
+            }
+        });
+    }
+
+    private List<Map<String, Object>> readRuleTemplate(String resource) throws Exception {
+        Path templatePath = Path.of(System.getProperty("user.dir"), "..", "config", "sentinel", resource.substring(resource.lastIndexOf('/') + 1))
+                .toAbsolutePath()
+                .normalize();
+        assertThat(Files.exists(templatePath)).isTrue();
+        return JsonUtil.fromJson(
+                Files.readString(templatePath),
+                new TypeReference<>() {});
     }
 
     /**

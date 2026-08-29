@@ -45,7 +45,7 @@
 - DDD 五层（common/domain/infrastructure/application/interfaces）+ 纯 WebFlux 函数式端点（无 servlet）
 - Java 17 + Spring Boot 3.5 + MyBatis-Plus + MySQL/Redis/RocketMQ
 - 代码生成器 apex-generator（13 个 FTL 模板：entity/po/mapper/repository/Impl/converter/service/handler/dto×2/路由片段/迁移片段/测试骨架）
-- Flyway 唯一迁移集（V1~V7，apex-interfaces）；CORS/多数据源/主从示例/Snowflake
+- Flyway 唯一迁移集（当前 V1~V15，apex-interfaces）；CORS/多数据源/主从示例/Snowflake
 
 ### 2.2 系统管理（P0 全集）
 - 菜单树+按钮权限、字典、参数配置、定时任务（自研 Cron + Reactor 动态调度）、登录日志、图形验证码（防重放）、在线用户、部门数据权限、操作审计（@OperationLog + OperationLogAspect）
@@ -230,7 +230,7 @@
 
 ### 5.2 G06 Sentinel 规则 Nacos 动态下发（3~5 人日）
 
-**现状**：Sentinel 规则静态编码（39 条 FlowRule 等），改规则需发版重启。
+**现状**：Sentinel 规则静态编码（43 条 FlowRule、30 条 DegradeRule 等），改规则需发版重启。
 
 **方案**：
 - 引入 `sentinel-datasource-nacos`，FlowRule/DegradeRule/ParamFlowRule 数据源接入 Nacos

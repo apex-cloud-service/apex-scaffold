@@ -55,7 +55,7 @@ Apex Scaffold 采用**纵深防御**策略构建安全体系，覆盖认证、�
 
 ## 7. 限流与抗滥用
 
-- Sentinel 四维限流：接口（39 条 QPS 规则）、IP（ZSet + Lua 滑窗 + 封禁升级）、用户、热点参数
+- Sentinel 四维限流：接口（43 条限流规则）、IP（ZSet + Lua 滑窗 + 封禁升级）、用户、热点参数
 - 登录/短信等敏感接口专属低阈值（20 QPS 防刷）
 - 系统保护：CPU 使用率 + 入口 QPS 兜底
 - 规则支持 Nacos 动态下发（生产热更新，见 `apex.sentinel.nacos`）

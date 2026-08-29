@@ -107,7 +107,7 @@ spring:
 
   # ---------- Flyway 数据库迁移（与 prod 一致） ----------
   flyway:
-    # dev 启动时自动执行 classpath:db/migration（MySQL 版 V1-V6）迁移
+    # dev 启动时自动执行 classpath:db/migration（MySQL 版当前 V1-V15）迁移
     enabled: true
     locations: classpath:db/migration
     # 严格校验已执行迁移的 checksum，防止脚本被篡改

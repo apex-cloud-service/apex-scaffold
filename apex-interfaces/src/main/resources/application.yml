@@ -793,6 +793,8 @@ apex:
         - /actuator/env
         - /manager
         - /host-manager
+    user-rate-limit:
+      enabled: ${APEX_USER_RATE_LIMIT_ENABLED:true}
     ip-rate-limit:
       # ✅ IP 限流总开关（防单 IP 恶意请求）
       enabled: true

@@ -11,23 +11,17 @@ import org.springframework.stereotype.Component;
 /**
  * 优雅关闭管理器。
  *
- * <p>统一管理应用关闭时各组件的停止顺序，确保：
+ * <p>参与应用关闭生命周期，执行 RocketMQ 消费者的固定等待并记录异步线程池状态：
  * <ol>
- *   <li>先从注册中心摘除流量（Nacos deregister）</li>
- *   <li>停止接收新的 HTTP 请求（Spring graceful shutdown）</li>
+ *   <li>HTTP 停止接收新请求由 Spring Boot {@code server.shutdown=graceful} 处理</li>
+ *   <li>Nacos 实例摘除由服务发现组件的生命周期处理，本类不直接调用 deregister</li>
  *   <li>等待 RocketMQ 消费者处理完已拉取的消息</li>
- *   <li>等待 @Async 线程池排空队列中的任务</li>
- *   <li>关闭数据库连接池和 Redis 连接</li>
+ *   <li>@Async 线程池排空和连接池关闭由各自 Bean 生命周期处理</li>
  * </ol>
  *
- * <h2>关闭顺序设计</h2>
- * <p>Spring 的 {@code @PreDestroy} 和 {@code SmartLifecycle} 回调默认无严格顺序。
- * 本类通过 {@link SmartLifecycle} 的 {@code getPhase()} 控制关闭阶段：
- * <ul>
- *   <li>Phase = {@link Integer#MIN_VALUE}：最先执行，在所有业务 Bean 销毁前</li>
- *   <li>各线程池的 {@code @PreDestroy} 在中间阶段执行</li>
- *   <li>连接池的关闭在最后阶段由 Spring 自动处理</li>
- * </ul>
+ * <h2>生命周期阶段</h2>
+ * <p>本类返回 {@link Integer#MIN_VALUE} 作为 {@link SmartLifecycle} phase，
+ * 用于参与生命周期组件的停止排序；该 phase 不定义 {@code @PreDestroy} 回调之间的严格顺序。
  *
  * @author Apex Team
  * @version 1.0.0
@@ -69,12 +63,9 @@ public class GracefulShutdownManager implements SmartLifecycle {
     }
 
     /**
-     * 停止生命周期组件，执行有序关闭。
+     * 停止生命周期组件，固定等待 RocketMQ 消费者并记录 {@code @Async} 线程池状态。
      *
-     * <p>关闭顺序：
-     * 1. 等待 RocketMQ 消费者处理完已拉取消息
-     * 2. 记录 @Async 线程池状态（排空由 Spring Bean 生命周期处理）
-     * 3. ThreadPoolConfig 的 @PreDestroy 会在此后自动执行
+     * <p>线程池和连接池的实际关闭由各自 Bean 生命周期负责。
      */
     @Override
     public void stop() {
@@ -91,8 +82,8 @@ public class GracefulShutdownManager implements SmartLifecycle {
         logger.info("[Shutdown-2] 检查 @Async 线程池状态");
         logAsyncExecutorStatus();
 
-        // 阶段 3：ThreadPoolConfig 的 @PreDestroy 会在此后自动执行
-        logger.info("[Shutdown-3] 等待 ThreadPoolConfig 线程池关闭（由 @PreDestroy 处理）");
+        // ThreadPoolConfig 线程池由其 Bean 生命周期关闭
+        logger.info("[Shutdown-3] ThreadPoolConfig 线程池由其 Bean 生命周期处理");
 
         logger.info("===== 优雅关闭流程完成 =====");
     }
@@ -108,10 +99,10 @@ public class GracefulShutdownManager implements SmartLifecycle {
     }
 
     /**
-     * 返回关闭阶段。
+     * 返回生命周期停止阶段。
      *
-     * <p>使用 {@link Integer#MIN_VALUE} 确保本组件在所有其他 Bean 之前执行关闭逻辑，
-     * 以便在连接池和线程池销毁前给消费者和异步任务留出排空时间。
+     * <p>使用 {@link Integer#MIN_VALUE} 参与 {@link SmartLifecycle} 组件的停止排序，
+     * 不用于约束普通 Bean 的销毁回调顺序。
      *
      * @return 最小整数值
      */

@@ -44,7 +44,7 @@ import org.springframework.web.server.ServerWebExchange;
  *   <caption>Sentinel 规则类型与用途</caption>
  *   <tr><th>规则类型</th><th>Sentinel 管理器</th><th>触发场景</th><th>触发后行为</th></tr>
  *   <tr><td>流控规则</td><td>{@link FlowRuleManager}</td><td>QPS 超过阈值</td><td>返回 429 Too Many Requests</td></tr>
- *   <tr><td>熔断降级规则</td><td>{@link DegradeRuleManager}</td><td>异常比例超过阈值</td><td>返回 503 Service Unavailable</td></tr>
+ *   <tr><td>熔断降级规则</td><td>{@link DegradeRuleManager}</td><td>异常比例或慢调用比例超过阈值</td><td>返回 503 Service Unavailable</td></tr>
  *   <tr><td>系统保护规则</td><td>{@link SystemRuleManager}</td><td>CPU/线程/QPS 过载</td><td>返回 503 Service Unavailable</td></tr>
  * </table>
  *
@@ -57,14 +57,15 @@ import org.springframework.web.server.ServerWebExchange;
  *   <tr><td>用户（user）</td><td>3</td><td>50~300</td><td>信息/列表</td></tr>
  *   <tr><td>媒体（media）</td><td>6</td><td>30~60</td><td>样本/收藏/共鸣/对战/投票</td></tr>
  *   <tr><td>排名（ranking）</td><td>3</td><td>100</td><td>排行榜</td></tr>
- *   <tr><td>同频（same-frequency）</td><td>3</td><td>100</td><td>状态/外观/兴趣</td></tr>
+ *   <tr><td>同频（same-frequency）</td><td>7</td><td>30~100</td><td>状态/外观/兴趣/匿名会话</td></tr>
  *   <tr><td>其他（other）</td><td>5</td><td>20~100</td><td>伴侣/黑名单/举报/资料</td></tr>
  *   <tr><td>V1 探索投票（explore-v1）</td><td>6</td><td>40~100</td><td>获取对局/提交/跳过/共鸣/金睛火眼</td></tr>
  * </table>
  *
  * <h2>熔断参数说明</h2>
  * <ul>
- *   <li>异常比例阈值（count）：窗口内异常数占比超过此值触发熔断</li>
+ *   <li>异常比例阈值（count）：窗口内异常数占比超过此值触发熔断，统计窗口使用 Sentinel 默认值</li>
+ *   <li>慢调用规则显式使用 30 秒统计窗口，{@code count} 表示 RT 阈值，{@code slowRatioThreshold} 表示慢调用比例</li>
  *   <li>熔断时长（timeWindow）：熔断打开后持续多少秒再进入半开探测</li>
  *   <li>认证接口（login/refresh）为 10s，文件/媒体/外部为 15~30s</li>
  * </ul>
@@ -270,13 +271,13 @@ public class SentinelConfig {
     /**
      * 初始化全局限流规则。
      *
-     * <p>在应用启动时注册 39 条流控规则到 {@link FlowRuleManager}。
+     * <p>在应用启动时注册 43 条流控规则到 {@link FlowRuleManager}。
      * 覆盖认证、文件、用户、媒体、排名、同频、通用、V1 探索投票和 V2 投票探索共 9 个业务模块。
      * 规则基于 QPS 维度，对所有调用来源生效（{@code limitApp=default}）。</p>
      */
     @PostConstruct
     public void initFlowRules() {
-        List<FlowRule> rules = new ArrayList<>(39);
+        List<FlowRule> rules = new ArrayList<>(43);
 
         addAuthRules(rules);
         addFileRules(rules);

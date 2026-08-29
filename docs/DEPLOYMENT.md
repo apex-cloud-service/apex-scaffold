@@ -106,8 +106,8 @@ docker compose version
 source ~/.sdkman/bin/sdkman-init.sh
 ./scripts/build/build.sh -Penterprise        # 或 -Pbasic / -Pstandard
 
-# 或使用传统 Maven（CI / Docker）
-mvn clean package -DskipTests -Penterprise
+# 或直接使用 Maven Daemon（CI / Docker）
+mvnd clean package -DskipTests -Penterprise
 ```
 
 ### 3.3 构建产物
@@ -202,7 +202,9 @@ Management port 8081
 | 环境变量文件 | 无 | `APEX_ENV_FILE=/etc/apex-scaffold/apex.env`（每行 `KEY=VALUE`） |
 | 健康检查端口 | 8080 | `SERVER_PORT` |
 
-启动时脚本会轮询 `GET /api/v1/health` 最长 90 秒，就绪后返回成功；若超时请查看 `logs/app.out.log`。
+启动时脚本会轮询业务端点 `GET /api/v1/health` 最长 90 秒，用于确认应用 HTTP 服务已启动；该端点不等同于包含 DB、Redis 状态的 Actuator readiness。若超时请查看 `logs/app.out.log`。
+
+停止时脚本发送 SIGTERM 并最多等待 60 秒，超时后执行强制终止。Spring Boot 的 `server.shutdown=graceful` 负责停止接收新请求并等待在途 HTTP 请求；`GracefulShutdownManager` 仅固定等待 15 秒，为 RocketMQ 已拉取消息的处理提供宽限期，不检测或确认消息已排空，并记录 `@Async` 线程池状态。线程池和连接池由各自 Bean 生命周期关闭。
 
 ### 4.3 systemd 服务化（推荐生产）
 
@@ -621,10 +623,10 @@ docker compose -f docker-compose.infra.yml down -v       # ⚠️ 连同数据�
 
 | 端点 | 端口 | 说明 |
 |------|------|------|
-| `GET /api/v1/health` | 8080 | 业务健康检查，返回 `code=200, data.status=UP`；Docker HEALTHCHECK / 负载均衡 / 探针均推荐此端点 |
-| `GET /actuator/health` | 8081 | Spring Boot Actuator 聚合健康（含 db / redis 组件），`show-details: when-authorized` |
-| `GET /actuator/health/liveness` | 8081 | 存活探针（进程级），K8s 风格 |
-| `GET /actuator/health/readiness` | 8081 | 就绪探针（DB + Redis），Docker HEALTHCHECK 使用此端点 |
+| `GET /api/v1/health` | 8080 | 业务健康端点，返回 `code=0, data.status=UP`；`app.sh` 启动检查和外部负载均衡可使用 |
+| `GET /actuator/health` | 8081 | Spring Boot Actuator 聚合健康，`show-details: when-authorized` |
+| `GET /actuator/health/liveness` | 8081 | 存活探针，仅包含 `livenessState` |
+| `GET /actuator/health/readiness` | 8081 | 就绪探针，包含 `readinessState`、DB 和 Redis；Docker HEALTHCHECK 使用此端点 |
 | `GET /actuator/prometheus` | 8081 | Prometheus 指标抓取端点 |
 
 验证：
@@ -637,10 +639,10 @@ curl -s http://localhost:8081/actuator/health/readiness
 # {"status":"UP","components":{"db":{"status":"UP"},...}}
 ```
 
-> ⚠️ **聚合健康 vs 就绪探针**：`/actuator/health`（聚合）包含全部外部组件
-> （DB/Redis/Sentinel Dashboard/邮件 SMTP/Zipkin 等），未部署的可选组件会使其返回 `DOWN`，
-> 属**正常信号**，不代表应用故障；容器健康检查与负载均衡应使用 `/api/v1/health` 或
-> `/actuator/health/readiness`（仅含核心 DB + Redis）。
+> **端点用途**：`/api/v1/health` 是不包含依赖状态的业务存活响应，当前 `app.sh` 用它确认 HTTP 服务启动；
+> `/actuator/health/liveness` 用于进程存活判断；`/actuator/health/readiness` 包含就绪状态、DB 和 Redis，
+> 供 Docker 或编排平台判断是否接收流量。Nacos 注册与摘除由服务发现组件生命周期处理，
+> `GracefulShutdownManager` 不主动调用 deregister。
 
 ---
 
@@ -881,7 +883,7 @@ prod 配置强制 `REDIS_PASSWORD` 非空。请确认：① 已注入 `REDIS_PAS
 java -jar 改 `SERVER_PORT`；compose 改 `.env` 的 `APP_PORT/MANAGEMENT_PORT/MYSQL_PORT/REDIS_PORT`。
 
 **Q10 数据库表没有自动创建？**
-Flyway 会在应用启动时执行 `classpath:db/migration`（V1~V7）。若日志出现 Flyway 报错，检查账号建表权限；`flyway.clean-disabled=true` 防误删。
+Flyway 会在应用启动时执行 `classpath:db/migration`（当前 V1~V15）。若日志出现 Flyway 报错，检查账号建表权限和已执行迁移 checksum；`flyway.clean-disabled=true` 防误删。
 
 **Q11 中文字符乱码？**
 MySQL 已强制 utf8mb4（compose 内置）；独立部署请确认库表字符集 `utf8mb4`，并在 JDBC URL 带 `characterEncoding=utf8`。
