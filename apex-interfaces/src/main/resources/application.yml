@@ -161,13 +161,13 @@ logging:
   level:
     # 💡 日志级别分层：业务层 INFO，框架层 WARN；dev 在 logback-spring.xml 覆盖为 DEBUG
     root: INFO
-    com.apex: INFO
-    com.apex.application: INFO
-    com.apex.domain: INFO
-    com.apex.infrastructure: INFO
-    com.apex.interfaces: INFO
+    com.apex.scaffold: INFO
+    com.apex.scaffold.application: INFO
+    com.apex.scaffold.domain: INFO
+    com.apex.scaffold.infrastructure: INFO
+    com.apex.scaffold.interfaces: INFO
     # MyBatis Mapper SQL：由 P6Spy（dev）或 Druid stat（prod）统一输出，避免重复
-    com.apex.infrastructure.persistence.mapper: WARN
+    com.apex.scaffold.infrastructure.persistence.mapper: WARN
     # 框架层默认 WARN，避免调试日志洪水；dev profile 在 logback-spring.xml 覆盖为 DEBUG
     org.springframework.web: WARN
     org.springframework.web.reactive: WARN

@@ -149,12 +149,12 @@
     =================================================================
 
     说明：默认 OFF，不输出 SQL。需要排查数据问题时通过 -Dtest.log.sql=DEBUG 开启。
-    - com.apex.infrastructure.persistence: 应用层持久化日志（Repository/Impl）
+    - com.apex.scaffold.infrastructure.persistence: 应用层持久化日志（Repository/Impl）
     - org.mybatis: MyBatis SQL 执行日志（含参数绑定和结果映射）
 
     警告：SQL 日志量大，仅排障时临时开启，勿在 CI 常驻。
   -->
-  <logger name="com.apex.infrastructure.persistence" level="${test.log.sql:-OFF}"/>
+  <logger name="com.apex.scaffold.infrastructure.persistence" level="${test.log.sql:-OFF}"/>
   <logger name="org.mybatis" level="${test.log.sql:-OFF}"/>
 
 </configuration>

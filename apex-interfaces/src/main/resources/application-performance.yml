@@ -30,11 +30,11 @@ logging:
   level:
     # 基准模式保留业务 INFO，关闭高频框架 DEBUG。
     root: INFO
-    com.apex: INFO
-    com.apex.application: INFO
-    com.apex.domain: INFO
-    com.apex.infrastructure: INFO
-    com.apex.interfaces: INFO
+    com.apex.scaffold: INFO
+    com.apex.scaffold.application: INFO
+    com.apex.scaffold.domain: INFO
+    com.apex.scaffold.infrastructure: INFO
+    com.apex.scaffold.interfaces: INFO
     org.springframework.web: WARN
     org.springframework.web.reactive: WARN
     org.springframework.http.codec: WARN

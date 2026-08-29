@@ -350,14 +350,14 @@ logging:
     # （差异）application.yml 默认 INFO；生产统一 DEBUG。
     root: DEBUG
     # 业务模块：按层次细分日志级别。
-    com.apex: DEBUG
-    com.apex.application: DEBUG
-    com.apex.domain: DEBUG
-    com.apex.infrastructure: DEBUG
-    com.apex.interfaces: DEBUG
+    com.apex.scaffold: DEBUG
+    com.apex.scaffold.application: DEBUG
+    com.apex.scaffold.domain: DEBUG
+    com.apex.scaffold.infrastructure: DEBUG
+    com.apex.scaffold.interfaces: DEBUG
     # Mapper SQL 仅记录 WARN 以上，避免 DEBUG 级别的参数/结果集日志洪水。
     # MyBatis 的 SQL 日志由 P6Spy 在更上层统一处理。
-    com.apex.infrastructure.persistence.mapper: WARN
+    com.apex.scaffold.infrastructure.persistence.mapper: WARN
 
     # Spring WebFlux 框架层：DEBUG 级别追踪请求/响应流转。
     org.springframework.web: DEBUG

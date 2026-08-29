@@ -13,8 +13,7 @@ import org.junit.jupiter.api.Test;
 /**
  * 无需 Docker 的 Flyway 版本链静态检查。
  *
- * <p>通用化重构后迁移目录仅保留干净基线 V1__init_schema.sql 与
- * V2__seed_system_permissions.sql（P0 阶段新增的权限码/菜单种子）。</p>
+ * <p>迁移版本必须从 V1 连续递增，当前基线包含租户字段迁移。</p>
  *
  * @author Apex Team
  */
@@ -43,10 +42,6 @@ class FlywayMigrationVersionTest {
                     .toList();
         }
 
-        // V1 基线 34 表 + V2 权限种子 + V3 账号密码 + V4 审计权限 + V5 在线用户 +
-        // V6 部门 + V7 api_call_log 补列 + V8 管理员/菜单修复 + V9 生日引导 + V10 超管角色 +
-        // V11 菜单状态语义修复与监控中心种子 + V12 废弃 audit_log 空表删除 +
-        // V13 API调用日志权限与菜单种子
         assertThat(versions)
                 .containsExactlyElementsOf(
                         List.of(
@@ -62,7 +57,8 @@ class FlywayMigrationVersionTest {
                                 versionNumber("10"),
                                 versionNumber("11"),
                                 versionNumber("12"),
-                                versionNumber("13")));
+                                versionNumber("13"),
+                                versionNumber("14")));
     }
 
     /**

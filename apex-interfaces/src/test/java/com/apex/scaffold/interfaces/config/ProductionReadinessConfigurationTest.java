@@ -65,7 +65,7 @@ class ProductionReadinessConfigurationTest {
         assertThat(yaml)
                 .contains(
                         "root: DEBUG",
-                        "com.apex: DEBUG",
+                        "com.apex.scaffold: DEBUG",
                         "org.springframework.web: DEBUG",
                         "org.springframework.security: DEBUG",
                         "com.baomidou.mybatisplus: DEBUG");

@@ -368,14 +368,14 @@ logging:
     # 根日志级别 INFO — 不过多输出框架内部日志
     root: INFO
     # Apex 全模块 DEBUG 级别 — 集成测试需要详细的业务日志用于故障排查
-    com.apex: DEBUG
-    com.apex.application: DEBUG
-    com.apex.domain: DEBUG
-    com.apex.infrastructure: DEBUG
-    com.apex.interfaces: DEBUG
+    com.apex.scaffold: DEBUG
+    com.apex.scaffold.application: DEBUG
+    com.apex.scaffold.domain: DEBUG
+    com.apex.scaffold.infrastructure: DEBUG
+    com.apex.scaffold.interfaces: DEBUG
     # MyBatis Mapper 日志设为 WARN — 减少 SQL 参数/结果集日志噪音，
     # 如需排查 SQL 问题可临时改为 DEBUG
-    com.apex.infrastructure.persistence.mapper: WARN
+    com.apex.scaffold.infrastructure.persistence.mapper: WARN
     # Spring Security 日志 INFO — 不过多输出认证/授权细节
     org.springframework.security: INFO
     # Redisson 日志 INFO — 测试不依赖 Redisson，降低噪音

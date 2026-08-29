@@ -231,7 +231,7 @@
     </logger>
 
     <!-- SQL 日志：集成测试默认开启 -->
-    <logger name="com.apex.infrastructure.persistence" level="DEBUG" additivity="false">
+    <logger name="com.apex.scaffold.infrastructure.persistence" level="DEBUG" additivity="false">
       <appender-ref ref="CONSOLE"/>
       <appender-ref ref="FILE"/>
     </logger>
@@ -245,7 +245,7 @@
     </logger>
 
     <!-- 请求日志：INFO 级别写入 REQUEST_FILE -->
-    <logger name="com.apex.interfaces.filter.LoggingFilter" level="INFO" additivity="false">
+    <logger name="com.apex.scaffold.interfaces.filter.LoggingFilter" level="INFO" additivity="false">
       <appender-ref ref="CONSOLE"/>
       <appender-ref ref="REQUEST_FILE"/>
       <appender-ref ref="FILE"/>
@@ -260,7 +260,7 @@
       <appender-ref ref="CONSOLE"/>
       <appender-ref ref="ZIPKIN_FILE"/>
     </logger>
-    <logger name="com.apex.interfaces.config.TraceLoggingSpanHandler" level="INFO" additivity="false">
+    <logger name="com.apex.scaffold.interfaces.config.TraceLoggingSpanHandler" level="INFO" additivity="false">
       <appender-ref ref="ZIPKIN_FILE"/>
     </logger>
 
@@ -326,15 +326,15 @@
     </logger>
 
     <!-- 请求日志：关闭（高频请求日志会严重拖累压测 TPS） -->
-    <logger name="com.apex.interfaces.filter.LoggingFilter" level="OFF" additivity="false"/>
+    <logger name="com.apex.scaffold.interfaces.filter.LoggingFilter" level="OFF" additivity="false"/>
 
     <!-- 链路追踪：关闭（压测时 <trace.sampling-rate>0.0</trace.sampling-rate> 已关闭采样） -->
     <logger name="zipkin2" level="OFF" additivity="false"/>
     <logger name="brave" level="OFF" additivity="false"/>
-    <logger name="com.apex.interfaces.config.TraceLoggingSpanHandler" level="OFF" additivity="false"/>
+    <logger name="com.apex.scaffold.interfaces.config.TraceLoggingSpanHandler" level="OFF" additivity="false"/>
 
     <!-- SQL 日志：关闭 -->
-    <logger name="com.apex.infrastructure.persistence" level="OFF" additivity="false"/>
+    <logger name="com.apex.scaffold.infrastructure.persistence" level="OFF" additivity="false"/>
     <logger name="org.mybatis" level="OFF" additivity="false"/>
     <logger name="com.baomidou.mybatisplus" level="OFF" additivity="false"/>
 
@@ -624,7 +624,7 @@
     </logger>
 
     <!-- MyBatis Mapper 日志：设为 WARN，详细 SQL 由 P6Spy 输出 -->
-    <logger name="com.apex.infrastructure.persistence.mapper" level="WARN" additivity="false">
+    <logger name="com.apex.scaffold.infrastructure.persistence.mapper" level="WARN" additivity="false">
       <appender-ref ref="CONSOLE"/>
       <appender-ref ref="FILE"/>
     </logger>
@@ -668,7 +668,7 @@
       <appender-ref ref="ZIPKIN_FILE"/>
     </logger>
     <!-- Brave Span 处理器日志（TraceLoggingSpanHandler 输出完整 Span 数据；ERROR 级同时进入 error.log） -->
-    <logger name="com.apex.interfaces.config.TraceLoggingSpanHandler" level="INFO" additivity="false">
+    <logger name="com.apex.scaffold.interfaces.config.TraceLoggingSpanHandler" level="INFO" additivity="false">
       <appender-ref ref="CONSOLE"/>
       <appender-ref ref="ZIPKIN_FILE"/>
       <appender-ref ref="ERROR_FILE"/>
@@ -833,7 +833,7 @@
       <appender-ref ref="ZIPKIN_FILE"/>
     </logger>
     <!-- Brave Span 处理器日志（TraceLoggingSpanHandler 输出完整 Span 数据；ERROR 级同时进入 error.log） -->
-    <logger name="com.apex.interfaces.config.TraceLoggingSpanHandler" level="INFO" additivity="false">
+    <logger name="com.apex.scaffold.interfaces.config.TraceLoggingSpanHandler" level="INFO" additivity="false">
       <appender-ref ref="CONSOLE"/>
       <appender-ref ref="ZIPKIN_FILE"/>
       <appender-ref ref="ERROR_FILE"/>
@@ -907,7 +907,7 @@
       <appender-ref ref="ZIPKIN_FILE"/>
     </logger>
     <!-- Brave Span 处理器日志（TraceLoggingSpanHandler 输出完整 Span 数据；ERROR 级同时进入 error.log） -->
-    <logger name="com.apex.interfaces.config.TraceLoggingSpanHandler" level="INFO" additivity="false">
+    <logger name="com.apex.scaffold.interfaces.config.TraceLoggingSpanHandler" level="INFO" additivity="false">
       <appender-ref ref="ZIPKIN_FILE"/>
       <appender-ref ref="ERROR_FILE"/>
     </logger>
@@ -929,7 +929,7 @@
 
   <!-- dev/test 环境：DEBUG 级别，完整请求日志 -->
   <springProfile name="dev,test">
-    <logger name="com.apex.interfaces.filter.LoggingFilter" level="DEBUG" additivity="false">
+    <logger name="com.apex.scaffold.interfaces.filter.LoggingFilter" level="DEBUG" additivity="false">
       <appender-ref ref="CONSOLE"/>
       <appender-ref ref="REQUEST_FILE"/>
       <appender-ref ref="FILE"/>
@@ -938,7 +938,7 @@
 
   <!-- prod 环境：INFO 级别，仅记录关键事件 -->
   <springProfile name="!dev,!test">
-    <logger name="com.apex.interfaces.filter.LoggingFilter" level="INFO" additivity="false">
+    <logger name="com.apex.scaffold.interfaces.filter.LoggingFilter" level="INFO" additivity="false">
       <appender-ref ref="REQUEST_FILE"/>
       <appender-ref ref="FILE"/>
     </logger>
