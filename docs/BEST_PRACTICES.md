@@ -380,6 +380,24 @@ class UserControllerIntegrationTest {
 }
 ```
 
+## 📨 重试与消息可靠性
+
+### 1. 自动重试边界
+
+`@AutoRetry` 只应标注幂等或具备幂等保护的操作，例如缓存刷新、可重复查询和临时性基础设施调用。写入数据库、发送外部请求等操作必须先确认重复执行不会产生重复副作用。
+
+通过 `retryOn` 限定可重试异常；外部 HTTP 4xx、参数校验失败和业务规则异常通常不应重试。响应式方法应返回 `Mono` 或 `Flux`，由调用链订阅触发重试，不要在业务代码中 fire-and-forget `subscribe()`。
+
+### 2. RocketMQ 消费确认
+
+listener 只有在业务副作用完成后才能返回成功。处理失败应抛出异常，让 RocketMQ 按消费策略重试；不能先返回成功再异步执行数据库或缓存操作。
+
+生产消息应复用或生成稳定 message ID，并同时写入消息 header 和 RocketMQ `KEYS`。消费者使用 Redis token 状态机：实例先以 `PROCESSING:<token>` 竞争处理权，业务完成且确认仍由当前实例持有时才转为 `SUCCESS`。其他实例持有不同 token 时应返回失败，避免并发重复处理。
+
+### 3. Outbox 投递
+
+事务内先保存领域事件和 Outbox 记录，worker 通过 claim token 获取所有权后投递。状态按 `PENDING -> PROCESSING -> DELIVERED` 流转，超时处理中的记录可回收，连续失败达到上限后进入 `DEAD`。RocketMQ callback 成功前禁止标记 `DELIVERED`，否则会丢失消息。
+
 ## 📦 部署最佳实践
 
 ### 1. Docker镜像优化

@@ -13,8 +13,8 @@
 #   docker compose --env-file .env.prod up -d --build
 #
 #   # 3) 需要 RocketMQ（企业版消息能力）
-#   docker compose --profile rocketmq up -d --build \
-#     -e ROCKETMQ_NAMESERVER=rocketmq-namesrv:9876 -e APEX_MQ_CONSUMER_ENABLED=true
+#   ROCKETMQ_NAMESERVER=rocketmq-namesrv:9876 APEX_MQ_CONSUMER_ENABLED=true \
+#   docker compose --profile rocketmq up -d --build
 #
 #   # 4) 监控栈（Prometheus + Grafana + Zipkin）另行启动
 #   docker compose -f config/monitoring/docker-compose.yml up -d
@@ -67,12 +67,26 @@ services:
       NACOS_REGISTER_ENABLED: ${NACOS_REGISTER_ENABLED:-false}
       NACOS_SERVER_ADDR: ${NACOS_SERVER_ADDR:-}
       NACOS_NAMESPACE: ${NACOS_NAMESPACE:-}
-      # ---------- RocketMQ（默认不注入 ROCKETMQ_NAMESERVER → 生产者组件不装配，应用无 MQ 启动） ----------
-      # 启用消息能力：.env 设置 ROCKETMQ_NAMESERVER=rocketmq-namesrv:9876 并搭配 --profile rocketmq 启动
-      # ROCKETMQ_NAMESERVER: ${ROCKETMQ_NAMESERVER:-}
+      # ---------- RocketMQ（公共配置提供本地默认地址；业务能力默认关闭） ----------
+      # 启用消息能力：设置 ROCKETMQ_NAMESERVER=rocketmq-namesrv:9876、APEX_MQ_CONSUMER_ENABLED=true，并搭配 --profile rocketmq 启动
+      ROCKETMQ_NAMESERVER: ${ROCKETMQ_NAMESERVER:-}
+      ROCKETMQ_NAMESRV_ADDR: ${ROCKETMQ_NAMESRV_ADDR:-}
+      ROCKETMQ_PRODUCER_GROUP: ${ROCKETMQ_PRODUCER_GROUP:-apex-producer-group}
+      ROCKETMQ_ACCESS_KEY: ${ROCKETMQ_ACCESS_KEY:-}
+      ROCKETMQ_SECRET_KEY: ${ROCKETMQ_SECRET_KEY:-}
       APEX_MQ_CONSUMER_ENABLED: ${APEX_MQ_CONSUMER_ENABLED:-false}
       APEX_MQ_DLQ_ENABLED: ${APEX_MQ_DLQ_ENABLED:-false}
       APEX_MQ_DOMAIN_EVENT_ENABLED: ${APEX_MQ_DOMAIN_EVENT_ENABLED:-false}
+      APEX_MQ_DOMAIN_EVENT_TOPIC: ${APEX_MQ_DOMAIN_EVENT_TOPIC:-apex-domain-event}
+      MQ_IDEMPOTENT_TTL_MINUTES: ${MQ_IDEMPOTENT_TTL_MINUTES:-30}
+      OUTBOX_BATCH_SIZE: ${OUTBOX_BATCH_SIZE:-50}
+      OUTBOX_MAX_ATTEMPTS: ${OUTBOX_MAX_ATTEMPTS:-8}
+      OUTBOX_LOCK_TIMEOUT_SECONDS: ${OUTBOX_LOCK_TIMEOUT_SECONDS:-120}
+      OUTBOX_PARALLELISM: ${OUTBOX_PARALLELISM:-4}
+      OUTBOX_RETENTION_ENABLED: ${OUTBOX_RETENTION_ENABLED:-true}
+      OUTBOX_RETENTION_DELIVERED_HOURS: ${OUTBOX_RETENTION_DELIVERED_HOURS:-168}
+      OUTBOX_RETENTION_DEAD_DAYS: ${OUTBOX_RETENTION_DEAD_DAYS:-30}
+      OUTBOX_RETENTION_BATCH_SIZE: ${OUTBOX_RETENTION_BATCH_SIZE:-5000}
       # ---------- License（商业授权，可选；留空使用随包基础版） ----------
       APEX_LICENSE_FILE: ${APEX_LICENSE_FILE:-}
       # ---------- 文件上传（prod 强制校验：开启上传必须同时开启百度云图片审核） ----------

@@ -7,11 +7,14 @@ import com.apex.scaffold.domain.event.DomainEventBus;
 import com.apex.scaffold.domain.service.DomainEventPublisher;
 import lombok.RequiredArgsConstructor;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
+import org.apache.rocketmq.spring.support.RocketMQHeaders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
@@ -132,24 +135,17 @@ public class EnhancedDomainEventPublisherImpl implements DomainEventPublisher {
         log.debug("异步发布领域事件: {}, ID: {}", event.getClass().getSimpleName(), event.getEventId());
 
         // 通过线程池异步执行
-        return Mono.fromRunnable(() -> {
-                    // 通过 Spring ApplicationEventPublisher 发布
-                    applicationEventPublisher.publishEvent(event);
-                    // 通过领域事件总线发布
-                    domainEventBus
-                            .publish(event)
-                            .subscribe(
-                                    v -> log.debug(
-                                            "异步事件处理完成: {} (eventId={})", event.getEventName(), event.getEventId()),
-                                    e -> log.error(
-                                            "异步事件处理失败: {} (eventId={}), error: {}",
-                                            event.getEventName(),
-                                            event.getEventId(),
-                                            e.getMessage(),
-                                            e));
-                })
+        return Mono.fromRunnable(() -> applicationEventPublisher.publishEvent(event))
+                .then(domainEventBus.publish(event))
                 .subscribeOn(BlockingIoSchedulers.event())
-                .then()
+                .doOnSuccess(v -> log.debug(
+                        "异步事件处理完成: {} (eventId={})", event.getEventName(), event.getEventId()))
+                .doOnError(e -> log.error(
+                        "异步事件处理失败: {} (eventId={}), error: {}",
+                        event.getEventName(),
+                        event.getEventId(),
+                        e.getMessage(),
+                        e))
                 .doOnSuccess(v -> log.info("异步事件发布完成: {} (eventId={})", event.getEventName(), event.getEventId()))
                 .doOnError(e -> log.error(
                         "异步事件发布失败: {} (eventId={}), error: {}",
@@ -178,35 +174,45 @@ public class EnhancedDomainEventPublisherImpl implements DomainEventPublisher {
 
         String eventJson = JsonUtil.toJson(event);
 
-        return Mono.fromRunnable(() -> {
-                    // 使用 RocketMQ 异步发送消息
-                    rocketMQTemplate.asyncSend(
-                            domainEventTopic, eventJson, new org.apache.rocketmq.client.producer.SendCallback() {
-                                /** {@inheritDoc} */
-                                @Override
-                                public void onSuccess(org.apache.rocketmq.client.producer.SendResult sendResult) {
-                                    log.info(
-                                            "分布式事件发送成功: {} (eventId={}, msgId={})",
-                                            event.getEventName(),
-                                            event.getEventId(),
-                                            sendResult.getMsgId());
-                                }
+        Message<String> message = MessageBuilder.withPayload(eventJson)
+                .setHeader(RocketMQHeaders.KEYS, event.getEventId())
+                .build();
 
-                                /** {@inheritDoc} */
-                                @Override
-                                public void onException(Throwable e) {
-                                    log.error(
-                                            "分布式事件发送失败: {} (eventId={}), error: {}",
-                                            event.getEventName(),
-                                            event.getEventId(),
-                                            e.getMessage(),
-                                            e);
-                                }
-                            });
+        return Mono.<Void>create(sink -> {
+                    try {
+                        rocketMQTemplate.asyncSend(
+                                domainEventTopic,
+                                message,
+                                new org.apache.rocketmq.client.producer.SendCallback() {
+                                    /** {@inheritDoc} */
+                                    @Override
+                                    public void onSuccess(org.apache.rocketmq.client.producer.SendResult sendResult) {
+                                        log.info(
+                                                "分布式事件发送成功: {} (eventId={}, msgId={})",
+                                                event.getEventName(),
+                                                event.getEventId(),
+                                                sendResult.getMsgId());
+                                        sink.success();
+                                    }
+
+                                    /** {@inheritDoc} */
+                                    @Override
+                                    public void onException(Throwable e) {
+                                        log.error(
+                                                "分布式事件发送失败: {} (eventId={}), error: {}",
+                                                event.getEventName(),
+                                                event.getEventId(),
+                                                e.getMessage(),
+                                                e);
+                                        sink.error(e);
+                                    }
+                                });
+                    } catch (Throwable e) {
+                        sink.error(e);
+                    }
                 })
                 .subscribeOn(BlockingIoSchedulers.event())
-                .then()
-                .doOnSuccess(v -> log.info("分布式事件发布请求已提交: {} (eventId={})", event.getEventName(), event.getEventId()))
+                .doOnSuccess(v -> log.info("分布式事件发布完成: {} (eventId={})", event.getEventName(), event.getEventId()))
                 .doOnError(e -> log.error(
                         "分布式事件发布失败: {} (eventId={}), error: {}",
                         event.getEventName(),

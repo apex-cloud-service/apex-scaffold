@@ -2,6 +2,7 @@ package com.apex.scaffold.infrastructure.mq.service;
 
 import jakarta.annotation.PreDestroy;
 import java.time.Duration;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -39,12 +40,13 @@ import org.springframework.stereotype.Service;
  * </ul>
  *
  * <h2>幂等性说明</h2>
- * <p>使用 Redis TTL 自动过期机制实现分布式幂等性：
+ * <p>使用 Redis TTL 和带所有权令牌的两阶段状态实现分布式幂等性：
  * <ol>
- *   <li>消息首次到达时，通过 {@code setIfAbsent} 原子操作尝试写入 Redis key</li>
- *   <li>写入成功表示首次处理，正常执行业务逻辑</li>
- *   <li>写入失败表示消息已被处理，直接返回重复结果</li>
- *   <li>Redis 在 TTL 到期后自动删除 key，防止内存无限增长</li>
+ *   <li>消息首次到达时，通过 {@code setIfAbsent} 原子操作竞争处理令牌</li>
+ *   <li>获得令牌后写入 {@code PROCESSING:&lt;token&gt;}，防止其他实例并发处理</li>
+ *   <li>业务成功后仅由令牌持有者确认 {@code SUCCESS}</li>
+ *   <li>业务失败或确认失败时释放当前令牌，让 RocketMQ 后续重试</li>
+ *   <li>Redis 在 TTL 到期后自动删除状态，防止处理实例异常导致永久占用</li>
  * </ol>
  *
  * <h2>Key 格式</h2>
@@ -66,6 +68,8 @@ public class MqConsumerService {
 
     /** 消息幂等性缓存键前缀 */
     private static final String IDEMPOTENT_KEY_PREFIX = "mq:idempotent:";
+    private static final String PROCESSING_PREFIX = "PROCESSING:";
+    private static final String SUCCESS = "SUCCESS";
 
     /** 默认幂等性记录 TTL（分钟） */
     private static final long DEFAULT_IDEMPOTENT_TTL_MINUTES = 30;
@@ -110,42 +114,8 @@ public class MqConsumerService {
      * @return true-处理成功或业务已处理，false-处理失败
      */
     public <T> boolean processMessage(String messageId, T message, MessageHandler<T> handler) {
-        if (shuttingDown.get()) {
-            log.warn("服务正在关闭，拒绝处理消息, messageId: {}", messageId);
-            return false;
-        }
-
-        String key = IDEMPOTENT_KEY_PREFIX + messageId;
-        log.debug("开始幂等性检查, messageId: {}", messageId);
-
-        RBucket<String> bucket = redissonClient.getBucket(key, StringCodec.INSTANCE);
-        Duration ttl = getTtl();
-
-        // 原子性尝试标记消息为已处理
-        boolean firstTime = bucket.setIfAbsent("1", ttl);
-        if (!firstTime) {
-            log.warn("消息已处理, 跳过重复处理, messageId: {}", messageId);
-            return true;
-        }
-
-        try {
-            log.info("开始处理消息, messageId: {}", messageId);
-            boolean result = handler.handle(message);
-
-            if (result) {
-                log.info("消息处理成功, messageId: {}", messageId);
-            } else {
-                // 处理失败时删除幂等标记，允许重试
-                bucket.delete();
-                log.warn("消息处理失败, 删除幂等标记允许重试, messageId: {}", messageId);
-            }
-            return result;
-        } catch (Exception e) {
-            // 异常时删除幂等标记，允许重试
-            bucket.delete();
-            log.error("消息处理异常, messageId: {}", messageId, e);
-            return false;
-        }
+        ProcessingResult<T> result = processMessageWithResult(messageId, message, handler);
+        return result.isSuccess();
     }
 
     /**
@@ -160,40 +130,43 @@ public class MqConsumerService {
      * @return ProcessingResult 包含处理状态和数据的详细结果
      */
     public <T> ProcessingResult<T> processMessageWithResult(String messageId, T message, MessageHandler<T> handler) {
+        if (messageId == null || messageId.isBlank()) {
+            return ProcessingResult.error(messageId, "消息缺少稳定的messageId");
+        }
         if (shuttingDown.get()) {
             log.warn("服务正在关闭，拒绝处理消息, messageId: {}", messageId);
             return ProcessingResult.error(messageId, "服务正在关闭");
         }
 
         String key = IDEMPOTENT_KEY_PREFIX + messageId;
-        log.debug("开始幂等性检查, messageId: {}", messageId);
-
         RBucket<String> bucket = redissonClient.getBucket(key, StringCodec.INSTANCE);
-        Duration ttl = getTtl();
-
-        // 原子性尝试标记消息为已处理
-        boolean firstTime = bucket.setIfAbsent("1", ttl);
-        if (!firstTime) {
-            log.warn("消息已处理, 跳过重复处理, messageId: {}", messageId);
-            return ProcessingResult.duplicate(messageId);
+        String token = PROCESSING_PREFIX + UUID.randomUUID();
+        if (!bucket.setIfAbsent(token, getTtl())) {
+            String state = bucket.get();
+            if (SUCCESS.equals(state)) {
+                log.info("消息已成功处理, 跳过重复处理, messageId: {}", messageId);
+                return ProcessingResult.duplicate(messageId);
+            }
+            log.warn("消息正在其他实例处理中, messageId: {}", messageId);
+            return ProcessingResult.failed(messageId, "消息正在处理中");
         }
 
         try {
-            log.info("开始处理消息, messageId: {}", messageId);
             boolean success = handler.handle(message);
-
-            if (success) {
-                log.info("消息处理成功, messageId: {}", messageId);
-                return ProcessingResult.success(messageId, message);
-            } else {
-                // 处理失败时删除幂等标记，允许重试
-                bucket.delete();
-                log.warn("消息处理失败, 删除幂等标记允许重试, messageId: {}", messageId);
+            if (!success) {
+                bucket.compareAndSet(token, null);
+                log.warn("消息处理失败, messageId: {}", messageId);
                 return ProcessingResult.failed(messageId, "处理返回false");
             }
+            if (!bucket.compareAndSet(token, SUCCESS)) {
+                log.warn("消息确认失败, 当前实例不再持有处理令牌, messageId: {}", messageId);
+                return ProcessingResult.error(messageId, "消息确认失败");
+            }
+            bucket.expire(getTtl());
+            log.info("消息处理成功, messageId: {}", messageId);
+            return ProcessingResult.success(messageId, message);
         } catch (Exception e) {
-            // 异常时删除幂等标记，允许重试
-            bucket.delete();
+            bucket.compareAndSet(token, null);
             log.error("消息处理异常, messageId: {}", messageId, e);
             return ProcessingResult.error(messageId, e.getMessage());
         }

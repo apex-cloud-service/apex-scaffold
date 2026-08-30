@@ -24,7 +24,7 @@ import org.springframework.context.annotation.Profile;
  * <pre>{@code * # application-prod.yml
  * jwt:
  *   secret: your-secret-key-here
- *   min-key-length: 32
+ *   min-secret-length: 32
  * }</pre>
  *
  * @author Apex Team
@@ -152,7 +152,7 @@ public class SecurityConfigValidator {
     /**
      * 校验 JWT 密钥配置
      *
-     * <p>检查 JWT 密钥是否为空或长度不足。若密钥长度小于配置的 {@code minKeyLength}，
+     * <p>检查 JWT 密钥是否为空或长度不足。若密钥长度小于配置的 {@code minSecretLength}，
      * 将抛出异常阻止应用启动。
      *
      * @throws IllegalStateException JWT 密钥为空或长度不足时抛出

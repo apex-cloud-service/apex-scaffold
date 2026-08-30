@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Consumer;
+import org.apache.rocketmq.spring.annotation.ConsumeMode;
 import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.apache.rocketmq.spring.core.RocketMQListener;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
@@ -44,10 +45,10 @@ import org.springframework.stereotype.Component;
  *   <li><b>用户后置处理</b>：注册欢迎消息、登录奖励、缓存清理等</li>
  * </ul>
  *
- * <h2>Fire-and-Forget 模式说明</h2>
- * <p>非关键异步操作（如写操作日志、发欢迎消息）使用 {@code .subscribe(null, errorCallback)}
- * fire-and-forget 模式。这些操作的失败不应阻塞主消息处理流程，仅记录错误日志用于事后排查。
- * 对于关键操作（如积分发放），失败会记录日志并有对应的补偿机制。</p>
+ * <h2>消费确认说明</h2>
+ * <p>消息处理涉及的持久化和缓存操作在监听器返回前完成。监听器采用顺序消费模式，
+ * 同一消息队列内按 RocketMQ 投递顺序处理；处理异常会向 RocketMQ 抛出并触发重消费，
+ * 只有完整处理成功后才确认消息。</p>
  *
  * @author Apex Team
  * @version 2.1.0
@@ -70,6 +71,7 @@ import org.springframework.stereotype.Component;
                 + MqConstant.TAG_USER_LOGOUT
                 + " || "
                 + MqConstant.TAG_USER_UPDATE,
+        consumeMode = ConsumeMode.ORDERLY,
         maxReconsumeTimes = MqConstant.MAX_RECONSUME_TIMES)
 public class UserMessageListener implements RocketMQListener<Map<String, Object>> {
     private static final Logger log = LoggerFactory.getLogger(UserMessageListener.class);
@@ -157,27 +159,23 @@ public class UserMessageListener implements RocketMQListener<Map<String, Object>
         String messageId = payload.messageId();
         String tag = payload.tag();
 
-        log.info("接收到用户消息, messageId: {}, tag: {}, message: {}", messageId, tag, message);
+        log.info("接收到用户消息, messageId: {}, tag: {}", messageId, tag);
 
         // 使用消费者服务处理消息，确保幂等性
-        mqConsumerService.processMessage(messageId, message, ignored -> {
-            try {
-                if (tag == null) {
-                    log.warn("消息缺少tag字段, messageId: {}", messageId);
-                    return false;
-                }
-                Consumer<UserMessagePayload> handler = handlers.get(tag);
-                if (handler == null) {
-                    log.warn("未知的用户消息标签: {}, 返回false以触发重试", tag);
-                    return false;
-                }
-                handler.accept(payload);
-                return true;
-            } catch (Exception error) {
-                log.error("处理用户消息异常, messageId: {}", messageId, error);
-                return false;
+        boolean processed = mqConsumerService.processMessage(messageId, message, ignored -> {
+            if (tag == null) {
+                throw new IllegalArgumentException("消息缺少tag字段");
             }
+            Consumer<UserMessagePayload> handler = handlers.get(tag);
+            if (handler == null) {
+                throw new IllegalArgumentException("未知的用户消息标签: " + tag);
+            }
+            handler.accept(payload);
+            return true;
         });
+        if (!processed) {
+            throw new IllegalStateException("用户消息消费失败, messageId: " + messageId);
+        }
     }
 
     /**
@@ -200,9 +198,7 @@ public class UserMessageListener implements RocketMQListener<Map<String, Object>
             welcomeMsg.setContent("欢迎加入 Apex！您的账号已注册成功，开始探索你的审美偏好之旅吧。");
             welcomeMsg.setCreateTime(LocalDateTime.now());
             welcomeMsg.setUpdateTime(LocalDateTime.now());
-            systemMessageRepository
-                    .save(welcomeMsg)
-                    .subscribe(null, e -> log.error("发送注册欢迎消息失败, userId: {}", userId, e));
+            systemMessageRepository.save(welcomeMsg).block();
 
             // 2. 记录注册操作日志
             OperationLogEntity logEntity = new OperationLogEntity();
@@ -212,7 +208,7 @@ public class UserMessageListener implements RocketMQListener<Map<String, Object>
             logEntity.setDescription("用户注册: " + nickName);
             logEntity.setIp(payload.clientIp());
             logEntity.setOperationTime(LocalDateTime.now());
-            operationLogRepository.insert(logEntity).subscribe(null, e -> log.error("记录注册日志失败, userId: {}", userId, e));
+            operationLogRepository.insert(logEntity).block();
         }
 
         log.info("用户注册后置处理完成, userId: {}, nickName: {}", userId, nickName);
@@ -241,7 +237,7 @@ public class UserMessageListener implements RocketMQListener<Map<String, Object>
                     user.setLastLoginTime(LocalDateTime.now());
                     return userRepository.save(user);
                 })
-                .subscribe(null, e -> log.error("更新用户登录时间失败, userId: {}", userId, e));
+                .block();
 
         // 2. 每日登录奖励由首次有效投票触发（§8「每日登录并完成投票行为+3」），
         //    不再在登录时自动发放，避免登录即领取而不需投票。
@@ -257,7 +253,7 @@ public class UserMessageListener implements RocketMQListener<Map<String, Object>
         logEntity.setIp(clientIp);
         logEntity.setDeviceType(deviceId);
         logEntity.setOperationTime(LocalDateTime.now());
-        operationLogRepository.insert(logEntity).subscribe(null, e -> log.error("记录登录日志失败, userId: {}", userId, e));
+        operationLogRepository.insert(logEntity).block();
 
         log.info("用户登录后置处理完成, userId: {}, ip: {}, deviceId: {}", userId, clientIp, deviceId);
     }
@@ -279,9 +275,7 @@ public class UserMessageListener implements RocketMQListener<Map<String, Object>
         }
 
         // 1. 清理用户临时缓存
-        cacheService
-                .delete("user:session:" + userId, "user:token:" + userId)
-                .subscribe(null, e -> log.error("清理用户缓存失败, userId: {}", userId, e));
+        cacheService.delete("user:session:" + userId, "user:token:" + userId).block();
 
         // 2. 记录退出日志便于安全审计
         OperationLogEntity logEntity = new OperationLogEntity();
@@ -291,7 +285,7 @@ public class UserMessageListener implements RocketMQListener<Map<String, Object>
         logEntity.setDescription("用户退出登录");
         logEntity.setIp(payload.clientIp());
         logEntity.setOperationTime(LocalDateTime.now());
-        operationLogRepository.insert(logEntity).subscribe(null, e -> log.error("记录退出日志失败, userId: {}", userId, e));
+        operationLogRepository.insert(logEntity).block();
 
         log.info("用户退出后置处理完成, userId: {}", userId);
     }
@@ -315,7 +309,7 @@ public class UserMessageListener implements RocketMQListener<Map<String, Object>
         // 1. 清理用户相关缓存
         cacheService
                 .delete("user:id:" + userId, "user:openId:*")
-                .subscribe(null, e -> log.error("清理用户缓存失败, userId: {}", userId, e));
+                .block();
 
         // 2. 记录更新操作日志
         String updatedFields = payload.updatedFields();
@@ -326,7 +320,7 @@ public class UserMessageListener implements RocketMQListener<Map<String, Object>
         logEntity.setDescription("用户信息更新: " + updatedFields);
         logEntity.setIp(payload.clientIp());
         logEntity.setOperationTime(LocalDateTime.now());
-        operationLogRepository.insert(logEntity).subscribe(null, e -> log.error("记录更新日志失败, userId: {}", userId, e));
+        operationLogRepository.insert(logEntity).block();
 
         log.info("用户信息更新后置处理完成, userId: {}, updatedFields: {}", userId, updatedFields);
     }

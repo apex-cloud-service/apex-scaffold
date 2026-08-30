@@ -15,7 +15,7 @@ import org.springframework.validation.annotation.Validated;
  * <h2>使用示例</h2>
  * <pre>{@code * apex:
  *   circuit-breaker:
- *     default:
+ *     default-config:
  *       failure-rate-threshold: 50
  *       wait-duration-in-open-state: 60s
  *       sliding-window-size: 100

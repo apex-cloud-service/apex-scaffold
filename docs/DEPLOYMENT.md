@@ -431,11 +431,10 @@ curl http://localhost:8081/actuator/health
 
 ### 6.3 启用 RocketMQ（可选）
 
-企业版需要消息能力时，携带 profile 启动 RocketMQ（Namesrv + Broker）并注入 name-server：
+企业版需要消息能力时，携带 profile 启动 RocketMQ（Namesrv + Broker），并在 `.env` 或命令行环境中注入 NameServer 与业务开关：
 
 ```bash
-# 1) 取消 docker-compose.yml 中 ROCKETMQ_NAMESERVER 环境变量映射的注释
-# 2) .env 设置 name-server 与消费者开关
+# .env 设置 name-server 与消费者开关
 #   ROCKETMQ_NAMESERVER=rocketmq-namesrv:9876
 #   APEX_MQ_CONSUMER_ENABLED=true
 #   APEX_MQ_DLQ_ENABLED=true
@@ -444,8 +443,8 @@ curl http://localhost:8081/actuator/health
 docker compose --profile rocketmq --env-file .env up -d --build
 ```
 
-> 无 RocketMQ 时**无需任何配置**：生产者/消费者/领域事件组件依据 `rocketmq.name-server`
-> 属性是否存在而装配（rocketmq-spring-boot 2.3.3 行为），默认不注入即全部跳过、干净启动。
+> 公共配置始终提供 `rocketmq.name-server` 默认值。未部署 RocketMQ 时请保持
+> `APEX_MQ_CONSUMER_ENABLED=false` 和 `APEX_MQ_DOMAIN_EVENT_ENABLED=false`；生产环境启用消息能力时，必须显式注入可达的 `ROCKETMQ_NAMESERVER` 或 `ROCKETMQ_NAMESRV_ADDR`。
 
 RocketMQ 控制台访问（可选）：
 
@@ -583,11 +582,23 @@ docker compose -f docker-compose.infra.yml down -v       # ⚠️ 连同数据�
 
 | 变量 | 默认 | 说明 |
 |------|------|------|
-| `ROCKETMQ_NAMESERVER` / `ROCKETMQ_NAMESRV_ADDR` | 不注入 | NameServer 地址 `host:port`；**不注入则 RocketMQ 组件整体不装配**（2.3.3 按属性存在性装配），应用无 MQ 启动；注入即启用生产者 |
+| `ROCKETMQ_NAMESERVER` / `ROCKETMQ_NAMESRV_ADDR` | 本地默认 `127.0.0.1:9876` | NameServer 地址 `host:port`；生产启用消息能力时必须注入可达地址 |
+| `ROCKETMQ_PRODUCER_GROUP` | `apex-producer-group` | 生产者组 |
+| `ROCKETMQ_SEND_TIMEOUT` | `30000` | 消息发送超时时间，单位为毫秒 |
 | `APEX_MQ_CONSUMER_ENABLED` | false | 消费者总开关（`apex.mq.consumer.enabled`） |
 | `APEX_MQ_DLQ_ENABLED` | false | 死信队列开关 |
 | `APEX_MQ_DOMAIN_EVENT_ENABLED` | false | 领域事件 MQ 广播开关（关闭时走进程内事件） |
+| `APEX_MQ_DOMAIN_EVENT_TOPIC` | `apex-domain-event` | 领域事件广播主题 |
+| `MQ_IDEMPOTENT_TTL_MINUTES` | 30 | 消费幂等记录 TTL；必须为正数 |
 | `ROCKETMQ_ACCESS_KEY` / `ROCKETMQ_SECRET_KEY` | 空 | 阿里云 RocketMQ 5.x 鉴权（可选） |
+| `OUTBOX_BATCH_SIZE` | 50 | Outbox 每轮领取数量 |
+| `OUTBOX_MAX_ATTEMPTS` | 8 | 单条 Outbox 最大投递次数 |
+| `OUTBOX_LOCK_TIMEOUT_SECONDS` | 120 | Outbox worker 所有权超时 |
+| `OUTBOX_PARALLELISM` | 4 | Outbox 并行投递数 |
+| `OUTBOX_RETENTION_ENABLED` | true | 是否清理历史 Outbox |
+| `OUTBOX_RETENTION_DELIVERED_HOURS` | 168 | DELIVERED 记录保留小时数 |
+| `OUTBOX_RETENTION_DEAD_DAYS` | 30 | DEAD 记录保留天数 |
+| `OUTBOX_RETENTION_BATCH_SIZE` | 5000 | 单轮清理数量 |
 
 ### 7.4 License（商业授权）
 

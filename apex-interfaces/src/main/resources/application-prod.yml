@@ -296,12 +296,10 @@ trace:
 #  3. RocketMQ 消息队列配置
 # ============================================================
 rocketmq:
-  # ⚠️ Name Server 地址【不在此处写默认值】：
-  #   rocketmq-spring-boot 2.3.3 依据 rocketmq.name-server 属性【是否存在】装配生产者，
-  #   （@ConditionalOnProperty，无 producer.enabled 开关）。
-  #   - 不部署 RocketMQ：不注入任何变量 → 属性不存在 → 生产者/消费者/领域事件组件全部跳过，
-  #     应用可无 MQ 干净启动（与 basic/standard 行为一致）。
-  #   - 部署 RocketMQ：注入 ROCKETMQ_NAMESERVER（或 ROCKETMQ_NAMESRV_ADDR）→ 自动装配启用。
+  # ⚠️ Name Server 地址由环境变量注入，生产部署应显式配置。
+  # RocketMQ Starter 按 rocketmq.name-server 装配客户端，无独立 producer.enabled 开关。
+  # 通过 APEX_MQ_CONSUMER_ENABLED 和 APEX_MQ_DOMAIN_EVENT_ENABLED 控制业务能力。
+  # 未部署 RocketMQ 时应关闭上述业务开关，避免应用连接本地默认地址。
   # 优先级：ROCKETMQ_NAMESERVER > ROCKETMQ_NAMESRV_ADDR。
 
   # ===== 生产者 =====
@@ -313,9 +311,8 @@ rocketmq:
     access-key: ${ROCKETMQ_ACCESS_KEY:}
     secret-key: ${ROCKETMQ_SECRET_KEY:}
     # 同步发送消息超时（毫秒）：超过此时间未收到 Broker 确认则视为失败。
-    # （差异）application.yml 未配置 RocketMQ，使用 Starter 默认 3000ms；
-    #         生产设置 30 秒以容忍网络抖动和 Broker 短暂过载。
-    send-message-timeout: 30000
+    # 默认 30 秒，可通过环境变量按部署环境调整。
+    send-message-timeout: ${ROCKETMQ_SEND_TIMEOUT:30000}
     # 消息体超过此字节数时自动压缩（默认 4KB）。
     compress-message-body-threshold: 1024
     # 同步发送失败重试次数（不包含首次调用）：共发 3 次。
@@ -821,8 +818,6 @@ apex:
       username-max-attempts: 5
       # 连续失败多少次后强制要求图形验证码（验证码升级阈值，0 表示不启用）。
       captcha-after-failures: 3
-      # 锁定持续时间（秒）：5 分钟内禁止登录。
-      lock-duration: 300
       # 统计窗口大小（秒）：10 分钟内的尝试累计。
       window-size: 600
 

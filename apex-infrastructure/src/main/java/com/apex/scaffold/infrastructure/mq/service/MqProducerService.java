@@ -1,9 +1,13 @@
 package com.apex.scaffold.infrastructure.mq.service;
 
+import java.util.Map;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.apache.rocketmq.client.producer.SendCallback;
 import org.apache.rocketmq.client.producer.SendResult;
+import org.apache.rocketmq.client.producer.TransactionSendResult;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
+import org.apache.rocketmq.spring.core.RocketMQLocalTransactionState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -57,6 +61,8 @@ public class MqProducerService {
 
     /** 同步发送超时时间（毫秒） */
     private static final long SYNC_SEND_TIMEOUT_MS = 30000L;
+    private static final String MESSAGE_ID_HEADER = "apex-message-id";
+    private static final String ROCKETMQ_KEYS_HEADER = "KEYS";
 
     /**
      * RocketMQ 模板
@@ -79,8 +85,8 @@ public class MqProducerService {
      * @throws RuntimeException 当RocketMQ客户端抛出异常时
      */
     public <T> SendResult sendSync(String topic, String tag, T message) {
-        String destination = topic + ":" + tag;
-        Message<T> springMessage = MessageBuilder.withPayload(message).build();
+        String destination = destination(topic, tag);
+        Message<T> springMessage = buildMessage(message, null);
 
         long startTime = System.currentTimeMillis();
         try {
@@ -108,8 +114,8 @@ public class MqProducerService {
      * @param callback 异步发送结果回调，onSuccess接收SendResult，onException接收Throwable
      */
     public <T> void sendAsync(String topic, String tag, T message, SendCallback callback) {
-        String destination = topic + ":" + tag;
-        Message<T> springMessage = MessageBuilder.withPayload(message).build();
+        String destination = destination(topic, tag);
+        Message<T> springMessage = buildMessage(message, null);
 
         rocketMQTemplate.asyncSend(destination, springMessage, callback);
         log.info("异步发送消息, topic: {}, tag: {}", topic, tag);
@@ -127,8 +133,8 @@ public class MqProducerService {
      * @param message 消息体对象
      */
     public <T> void sendOneWay(String topic, String tag, T message) {
-        String destination = topic + ":" + tag;
-        Message<T> springMessage = MessageBuilder.withPayload(message).build();
+        String destination = destination(topic, tag);
+        Message<T> springMessage = buildMessage(message, null);
 
         rocketMQTemplate.sendOneWay(destination, springMessage);
         log.info("单向发送消息, topic: {}, tag: {}", topic, tag);
@@ -152,8 +158,8 @@ public class MqProducerService {
      * @throws RuntimeException 当RocketMQ客户端抛出异常时
      */
     public <T> SendResult sendDelay(String topic, String tag, T message, int delayLevel) {
-        String destination = topic + ":" + tag;
-        Message<T> springMessage = MessageBuilder.withPayload(message).build();
+        String destination = destination(topic, tag);
+        Message<T> springMessage = buildMessage(message, null);
 
         long startTime = System.currentTimeMillis();
         try {
@@ -184,14 +190,8 @@ public class MqProducerService {
      * @throws RuntimeException 当RocketMQ客户端抛出异常时
      */
     public <T> SendResult sendWithHeaders(String topic, String tag, T message, java.util.Map<String, Object> headers) {
-        String destination = topic + ":" + tag;
-        MessageBuilder<T> builder = MessageBuilder.withPayload(message);
-
-        if (headers != null && !headers.isEmpty()) {
-            headers.forEach(builder::setHeader);
-        }
-
-        Message<T> springMessage = builder.build();
+        String destination = destination(topic, tag);
+        Message<T> springMessage = buildMessage(message, headers);
 
         long startTime = System.currentTimeMillis();
         try {
@@ -204,5 +204,71 @@ public class MqProducerService {
             log.error("发送带头部的消息失败, topic: {}, tag: {}, cost: {}ms", topic, tag, cost, e);
             throw e;
         }
+    }
+
+    /**
+     * 发送同业务键的顺序消息。
+     *
+     * @param <T> 消息体类型
+     * @param topic 消息主题
+     * @param tag 消息标签
+     * @param message 消息体
+     * @param hashKey 顺序键，同一键路由到同一消息队列
+     * @return 发送结果
+     */
+    public <T> SendResult sendOrderly(String topic, String tag, T message, String hashKey) {
+        if (hashKey == null || hashKey.isBlank()) {
+            throw new IllegalArgumentException("顺序消息hashKey不能为空");
+        }
+        return rocketMQTemplate.syncSendOrderly(destination(topic, tag), buildMessage(message, null), hashKey,
+                SYNC_SEND_TIMEOUT_MS);
+    }
+
+    /**
+     * 发送事务消息。
+     *
+     * @param <T> 消息体类型
+     * @param topic 消息主题
+     * @param tag 消息标签
+     * @param message 消息体
+     * @param argument 本地事务参数
+     * @return 事务发送结果
+     */
+    public <T> TransactionSendResult sendTransaction(String topic, String tag, T message, Object argument) {
+        Message<T> springMessage = buildMessage(message, null);
+        return rocketMQTemplate.sendMessageInTransaction(destination(topic, tag), springMessage, argument);
+    }
+
+    /**
+     * 创建事务提交状态。
+     *
+     * @return 提交状态
+     */
+    public RocketMQLocalTransactionState commitTransaction() {
+        return RocketMQLocalTransactionState.COMMIT;
+    }
+
+    private String destination(String topic, String tag) {
+        if (topic == null || topic.isBlank()) {
+            throw new IllegalArgumentException("消息topic不能为空");
+        }
+        if (tag == null || tag.isBlank()) {
+            throw new IllegalArgumentException("消息tag不能为空");
+        }
+        return topic + ":" + tag;
+    }
+
+    private <T> Message<T> buildMessage(T message, Map<String, Object> headers) {
+        MessageBuilder<T> builder = MessageBuilder.withPayload(message);
+        if (headers != null) {
+            headers.forEach(builder::setHeader);
+        }
+        String messageId = headers == null ? null : String.valueOf(headers.get(MESSAGE_ID_HEADER));
+        if (messageId == null || "null".equals(messageId) || messageId.isBlank()) {
+            messageId = UUID.randomUUID().toString();
+        }
+        builder.setHeader(MESSAGE_ID_HEADER, messageId);
+        builder.setHeader(ROCKETMQ_KEYS_HEADER, messageId);
+        return builder.build();
     }
 }

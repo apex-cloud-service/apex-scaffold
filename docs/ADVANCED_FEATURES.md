@@ -113,7 +113,35 @@ public Mono<List<OrderDTO>> listReport() {
 
 ---
 
-## 6. 分布式 ID 生成器（C11）
+## 6. 自动重试与可靠消息
+
+### 自动重试
+
+使用 `@AutoRetry` 为适合重复执行的同步方法、`Mono` 或 `Flux` 增加统一重试策略：
+
+```java
+@AutoRetry(maxAttempts = 3, retryDelayMs = 200, maxDelayMs = 5000,
+        backoffMultiplier = 2.0, retryOn = {TransientDataAccessException.class})
+public Mono<Result> refreshCache(String key) {
+    return cacheClient.refresh(key);
+}
+```
+
+注解参数包括最大尝试次数、初始和最大延迟、指数退避倍率以及可重试异常白名单。只对幂等操作使用，HTTP 4xx 和业务校验异常不应加入白名单。
+
+### RocketMQ 幂等和确认
+
+生产者为消息复用或生成稳定 message ID，并写入 header 与 RocketMQ `KEYS`。消费者使用 Redis token 竞争处理权，只有业务副作用完成并由当前 token 确认成功后才返回消费成功；失败抛异常以触发 RocketMQ 重消费，重复成功消息不会再次执行 handler。
+
+### Domain Event Outbox
+
+领域事件通过 Outbox 保证业务提交与消息投递解耦。worker 领取 `PENDING` 记录后进入 `PROCESSING`，RocketMQ callback 成功后进入 `DELIVERED`；失败按退避策略重试，超过 `OUTBOX_MAX_ATTEMPTS` 进入 `DEAD`，并按保留配置清理历史记录。
+
+关键配置通过环境变量注入：`MQ_IDEMPOTENT_TTL_MINUTES`、`OUTBOX_BATCH_SIZE`、`OUTBOX_MAX_ATTEMPTS`、`OUTBOX_LOCK_TIMEOUT_SECONDS`、`OUTBOX_PARALLELISM` 及 `OUTBOX_RETENTION_*`。
+
+---
+
+## 7. 分布式 ID 生成器（C11）
 
 ### 能力
 - `SnowflakeIdGenerator`（apex-common/util/id）：标准雪花算法（41 位毫秒时间戳 + 5 位数据中心 + 5 位机器 + 12 位序列），单机每毫秒 4096 个，跨实例全局唯一。

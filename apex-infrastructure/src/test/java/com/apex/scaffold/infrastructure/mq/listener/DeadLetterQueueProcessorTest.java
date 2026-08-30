@@ -2,13 +2,17 @@ package com.apex.scaffold.infrastructure.mq.listener;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockConstruction;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
 import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
 import org.apache.rocketmq.common.message.MessageExt;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedConstruction;
 import org.springframework.test.util.ReflectionTestUtils;
 
 /**
@@ -109,6 +113,59 @@ class DeadLetterQueueProcessorTest {
         noNameServerProcessor.start();
         // 不应抛出异常
         assertThat(true).isTrue();
+    }
+
+    @Test
+    @DisplayName("空注册时启动后首次注册应启动消费者并订阅DLQ Topic")
+    void shouldStartWhenHandlerRegisteredAfterStart() throws Exception {
+        try (MockedConstruction<DefaultMQPushConsumer> construction = mockConstruction(DefaultMQPushConsumer.class)) {
+            processor.start();
+            processor.registerHandler("apex-photo-moderation", "photo-consumer-group", msg -> true);
+
+            DefaultMQPushConsumer consumer = construction.constructed().get(0);
+            verify(consumer).subscribe("%DLQ%photo-consumer-group", "*");
+            verify(consumer).start();
+        }
+    }
+
+    @Test
+    @DisplayName("启动后新增处理器只订阅新增DLQ Topic")
+    void shouldSubscribeNewTopicWhenHandlerRegisteredAfterStart() throws Exception {
+        processor.registerHandler("apex-photo-moderation", "photo-consumer-group", msg -> true);
+
+        try (MockedConstruction<DefaultMQPushConsumer> construction = mockConstruction(DefaultMQPushConsumer.class)) {
+            processor.start();
+            processor.registerHandler("apex-video-moderation", "video-consumer-group", msg -> true);
+            processor.registerHandler("apex-video-moderation", "video-consumer-group", msg -> true);
+
+            DefaultMQPushConsumer consumer = construction.constructed().get(0);
+            verify(consumer).subscribe("%DLQ%photo-consumer-group", "*");
+            verify(consumer).subscribe("%DLQ%video-consumer-group", "*");
+            verify(consumer).start();
+        }
+    }
+
+    @Test
+    @DisplayName("NameServer未配置时注册处理器不启动消费者")
+    void shouldNotStartWhenHandlerRegisteredWithNameServerBlank() {
+        DeadLetterQueueProcessor noNameServerProcessor = new DeadLetterQueueProcessor();
+        ReflectionTestUtils.setField(noNameServerProcessor, "nameServer", "");
+
+        noNameServerProcessor.start();
+        noNameServerProcessor.registerHandler("apex-photo-moderation", msg -> true);
+
+        assertThat(ReflectionTestUtils.getField(noNameServerProcessor, "started")).isEqualTo(false);
+    }
+
+    @Test
+    @DisplayName("显式消费者组应生成对应的DLQ Topic")
+    void shouldBuildDlqTopicFromExplicitConsumerGroup() {
+        String topic = "apex-photo-moderation";
+        processor.registerHandler(topic, "photo-consumer-group", msg -> true);
+
+        String dlqTopic = ReflectionTestUtils.invokeMethod(processor, "buildDlqTopic", topic);
+
+        assertThat(dlqTopic).isEqualTo("%DLQ%photo-consumer-group");
     }
 
     /**

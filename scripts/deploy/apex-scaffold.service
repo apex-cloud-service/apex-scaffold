@@ -26,6 +26,25 @@
 #        NACOS_CONFIG_ENABLED=false
 #        NACOS_DISCOVERY_ENABLED=false
 #        NACOS_REGISTER_ENABLED=false
+#        NACOS_NAMESPACE=public
+#        ROCKETMQ_NAMESERVER=
+#        ROCKETMQ_NAMESRV_ADDR=
+#        ROCKETMQ_PRODUCER_GROUP=apex-producer-group
+#        ROCKETMQ_ACCESS_KEY=
+#        ROCKETMQ_SECRET_KEY=
+#        APEX_MQ_CONSUMER_ENABLED=false
+#        APEX_MQ_DLQ_ENABLED=false
+#        APEX_MQ_DOMAIN_EVENT_ENABLED=false
+#        APEX_MQ_DOMAIN_EVENT_TOPIC=apex-domain-event
+#        MQ_IDEMPOTENT_TTL_MINUTES=30
+#        OUTBOX_BATCH_SIZE=50
+#        OUTBOX_MAX_ATTEMPTS=8
+#        OUTBOX_LOCK_TIMEOUT_SECONDS=120
+#        OUTBOX_PARALLELISM=4
+#        OUTBOX_RETENTION_ENABLED=true
+#        OUTBOX_RETENTION_DELIVERED_HOURS=168
+#        OUTBOX_RETENTION_DEAD_DAYS=30
+#        OUTBOX_RETENTION_BATCH_SIZE=5000
 #        APEX_LOG_DIR=/var/log/apex-scaffold
 #        EOF
 #   3. 安装并启用:
@@ -52,7 +71,7 @@ User=apex
 Group=apex
 WorkingDirectory=/opt/apex-scaffold
 
-# 环境变量文件（数据库 / Redis / JWT / License / 开关等，见上方说明）
+# 环境变量文件（数据库 / Redis / JWT / Nacos / RocketMQ / Outbox / 开关等，见上方说明）
 EnvironmentFile=/etc/apex-scaffold/apex.env
 
 # JVM 参数（生产级调优默认。注意 Environment= 优先于 EnvironmentFile=：

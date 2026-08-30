@@ -73,7 +73,9 @@ mybatis-plus:
 # JWT配置(测试用弱密钥)
 jwt:
   secret: test-secret-key-for-integration-testing-only-min-32-chars!!!
-  expiration: 7200000
+  access-token-expire: 7200000
+  refresh-token-expire: 604800000
+  min-secret-length: 32
 
 # 日志配置
 logging:

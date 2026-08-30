@@ -83,9 +83,6 @@ apex:
 #    ROCKETMQ_NAMESERVER / ROCKETMQ_ACCESS_KEY / ROCKETMQ_SECRET_KEY。
 # 💡 连接参数（超时/重试/压缩）继承公共层 rocketmq 配置。
 rocketmq:
-  producer:
-    # ✅ 生产者启用（与 features.message-queue=true 一致）
-    enabled: true
   consumer:
     enabled: true
 

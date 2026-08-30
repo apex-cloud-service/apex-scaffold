@@ -16,7 +16,7 @@ Apex Scaffold 是一个面向中小型企业的**轻量级企业级后端脚手�
 - 🔐 **安全认证** - JWT + Spring Security + RBAC + 图形验证码 + 登录审计（等保友好）
 - 💾 **多级缓存** - Redisson + Caffeine 二级缓存策略
 - ⚡ **高可用保障** - Sentinel限流熔断 + Resilience4j容错
-- 📨 **消息队列** - RocketMQ封装,支持异步解耦
+- 📨 **消息队列** - RocketMQ二次封装,支持事务消息、顺序消息、顺序消费和 Redis 分布式幂等
 - 📊 **可观测性** - Micrometer + Prometheus 指标,Zipkin(Brave)链路追踪,TraceId 贯穿日志
 - 📝 **API文档** - SpringDoc OpenAPI + Knife4j可视化文档（/doc.html）
 - 🔍 **SQL 日志** - dev 环境 P6Spy 格式化 SQL 日志（含参数值）；prod 用 Druid stat 监控
@@ -176,7 +176,9 @@ apex-scaffold/
 | 多数据源动态切换 | 自定义 @DataSource 注解读写分离/多库路由（响应式适配 + 切换埋点） | ✅ |
 | 多级缓存 | Redis + Caffeine二级缓存 | ✅ |
 | 限流熔断 | Sentinel + Resilience4j | ✅ |
-| 消息队列 | RocketMQ生产者/消费者封装 | ✅ |
+| 自动重试 | `@AutoRetry` 支持同步方法、Mono、Flux 和指数退避 | ✅ |
+| 消息队列 | RocketMQ生产消费、稳定消息 ID、KEYS 和 Redis 分布式幂等确认 | ✅ |
+| Outbox | 领域事件可靠投递、失败重试、死信和保留清理 | ✅ |
 | 文件存储 | Local/MinIO/S3抽象 | ✅ |
 | 链路追踪 | Micrometer + Zipkin | ✅ |
 | 操作日志 | AOP切面记录用户操作 | ✅ |
@@ -193,6 +195,8 @@ apex-scaffold/
 - [架构设计说明](docs/ARCHITECTURE.md) - DDD分层架构详解
 - [配置项详解](docs/CONFIGURATION.md) - 所有配置项说明
 - [最佳实践](docs/BEST_PRACTICES.md) - 常见问题与解决方案
+- [高级功能](docs/ADVANCED_FEATURES.md) - 自动重试、可靠消息和其他扩展能力
+- [部署使用指南](docs/DEPLOYMENT.md) - java -jar、Docker、Compose 和 Kubernetes 部署
 - [API参考](http://localhost:8080/doc.html) - 在线API文档(Knife4j)
 
 ## 🔧 配置说明
@@ -203,7 +207,9 @@ apex-scaffold/
 # JWT配置
 jwt:
   secret: ${JWT_SECRET:your-secret-key-change-in-production}
-  expiration: 7200000  # 2小时(毫秒)
+  access-token-expire: 7200000  # 2小时(毫秒)
+  refresh-token-expire: 604800000  # 7天(毫秒)
+  min-secret-length: 32
 
 # 数据库配置（dynamic-datasource，example 使用独立库 apex_example，需先 CREATE DATABASE apex_example）
 spring:

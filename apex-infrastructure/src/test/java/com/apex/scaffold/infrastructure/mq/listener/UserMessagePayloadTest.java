@@ -37,4 +37,19 @@ class UserMessagePayloadTest {
         assertThat(payload.raw()).containsEntry("userId", 42);
         assertThatThrownBy(() -> payload.raw().put("extra", true)).isInstanceOf(UnsupportedOperationException.class);
     }
+
+    @Test
+    @DisplayName("数字字符串用户ID应转换为Long")
+    void shouldNormalizeNumericStringUserId() {
+        UserMessagePayload payload = UserMessagePayload.from(Map.of("userId", "42"));
+
+        assertThat(payload.userId()).isEqualTo(42L);
+    }
+
+    @Test
+    @DisplayName("非法或空白用户ID应转换为空")
+    void shouldRejectInvalidStringUserId() {
+        assertThat(UserMessagePayload.from(Map.of("userId", "invalid")).userId()).isNull();
+        assertThat(UserMessagePayload.from(Map.of("userId", " ")).userId()).isNull();
+    }
 }

@@ -143,14 +143,15 @@ rocketmq:
   # Name Server 地址：本地 Broker 未启动时生产者发送会失败，属预期行为。
   name-server: localhost:9876
   producer:
-    group: apex-dev-producer
+    group: ${ROCKETMQ_PRODUCER_GROUP:apex-dev-producer}
+    send-message-timeout: ${ROCKETMQ_SEND_TIMEOUT:30000}
 
 # ============================================================
 # 对象存储（本地文件模式）
 # ============================================================
 # ✅ dev 使用本地文件系统模拟对象存储，无需 MinIO/TOS。
 storage:
-  type: local
+  default-type: local
   local:
     # 本地存储根目录
     base-path: /tmp/apex-uploads

@@ -11,6 +11,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Map;
+import org.apache.rocketmq.client.producer.TransactionSendResult;
+import org.mockito.ArgumentCaptor;
 import org.apache.rocketmq.client.producer.SendCallback;
 import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
@@ -123,7 +125,12 @@ class MqProducerServiceTest {
         void shouldCallSendOneWay() {
             service.sendOneWay("topic", "tag", "msg");
 
-            verify(rocketMQTemplate).sendOneWay(eq("topic:tag"), any(Message.class));
+            ArgumentCaptor<Message<String>> captor = ArgumentCaptor.forClass(Message.class);
+            verify(rocketMQTemplate).sendOneWay(eq("topic:tag"), captor.capture());
+            assertThat(captor.getValue().getHeaders().get("apex-message-id"))
+                    .isNotNull();
+            assertThat(captor.getValue().getHeaders().get("KEYS"))
+                    .isEqualTo(captor.getValue().getHeaders().get("apex-message-id"));
         }
     }
 
@@ -148,6 +155,48 @@ class MqProducerServiceTest {
     }
 
     @Nested
+    @DisplayName("事务和顺序消息")
+    class AdvancedSendTests {
+
+        /**
+         * 验证顺序键被传递给 RocketMQ。
+         */
+        @Test
+        @DisplayName("应按 hashKey 发送顺序消息")
+        void shouldSendOrderlyMessage() {
+            when(rocketMQTemplate.syncSendOrderly(anyString(), any(Message.class), anyString(), anyLong()))
+                    .thenReturn(sendResult);
+
+            assertThat(service.sendOrderly("topic", "tag", "msg", "order-1")).isSameAs(sendResult);
+            verify(rocketMQTemplate).syncSendOrderly(eq("topic:tag"), any(Message.class), eq("order-1"), eq(30000L));
+        }
+
+        /**
+         * 验证事务参数和消息被传递给 RocketMQ。
+         */
+        @Test
+        @DisplayName("应发送事务消息")
+        void shouldSendTransactionMessage() {
+            TransactionSendResult transactionResult = new TransactionSendResult();
+            when(rocketMQTemplate.sendMessageInTransaction(anyString(), any(Message.class), any()))
+                    .thenReturn(transactionResult);
+
+            assertThat(service.sendTransaction("topic", "tag", "msg", "tx-1")).isSameAs(transactionResult);
+            verify(rocketMQTemplate).sendMessageInTransaction(eq("topic:tag"), any(Message.class), eq("tx-1"));
+        }
+
+        /**
+         * 验证顺序键不能为空。
+         */
+        @Test
+        @DisplayName("顺序键为空时应拒绝发送")
+        void shouldRejectBlankHashKey() {
+            assertThatThrownBy(() -> service.sendOrderly("topic", "tag", "msg", " "))
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
+    }
+
+    @Nested
     @DisplayName("sendWithHeaders 带Header发送")
     class SendWithHeadersTests {
 
@@ -163,7 +212,12 @@ class MqProducerServiceTest {
             SendResult result = service.sendWithHeaders("topic", "tag", "msg", headers);
 
             assertThat(result).isSameAs(sendResult);
-            verify(rocketMQTemplate).syncSend(eq("topic:tag"), any(Message.class));
+            ArgumentCaptor<Message<String>> captor = ArgumentCaptor.forClass(Message.class);
+            verify(rocketMQTemplate).syncSend(eq("topic:tag"), captor.capture());
+            assertThat(captor.getValue().getHeaders().get("apex-message-id"))
+                    .isNotNull();
+            assertThat(captor.getValue().getHeaders().get("KEYS"))
+                    .isEqualTo(captor.getValue().getHeaders().get("apex-message-id"));
         }
 
         /**
@@ -177,6 +231,10 @@ class MqProducerServiceTest {
             SendResult result = service.sendWithHeaders("topic", "tag", "msg", null);
 
             assertThat(result).isSameAs(sendResult);
+            ArgumentCaptor<Message<String>> captor = ArgumentCaptor.forClass(Message.class);
+            verify(rocketMQTemplate).syncSend(eq("topic:tag"), captor.capture());
+            assertThat(captor.getValue().getHeaders().get("apex-message-id"))
+                    .isNotNull();
         }
     }
 }

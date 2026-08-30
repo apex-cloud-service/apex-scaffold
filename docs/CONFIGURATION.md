@@ -24,12 +24,15 @@ mvnd spring-boot:run -Dspring-boot.run.profiles=prod
 jwt:
   # JWT签名密钥(生产环境必须修改为强随机字符串,至少32字符)
   secret: ${JWT_SECRET:change-this-in-production-min-32-chars}
-  
-  # Token过期时间(毫秒),默认2小时
-  expiration: 7200000
-  
+
+  # Access Token过期时间(毫秒),默认2小时
+  access-token-expire: 7200000
+
   # Refresh Token过期时间(毫秒),默认7天
-  refresh-expiration: 604800000
+  refresh-token-expire: 604800000
+
+  # JWT密钥最小长度
+  min-secret-length: 32
   
   # Token请求头名称
   header: Authorization
@@ -397,7 +400,7 @@ rocketmq:
     group: apex-producer-group
     
     # 发送消息超时时间(毫秒)
-    send-message-timeout: 3000
+    send-message-timeout: ${ROCKETMQ_SEND_TIMEOUT:30000}
     
     # 消息最大长度(字节)
     max-message-size: 4194304
@@ -419,7 +422,48 @@ rocketmq:
     # 消费线程数
     consume-thread-min: 10
     consume-thread-max: 20
+
+mq:
+  consumer:
+    # 消费幂等记录保留时间（分钟）
+    idempotent-ttl-minutes: ${MQ_IDEMPOTENT_TTL_MINUTES:30}
+
+apex:
+  mq:
+    # 是否通过 RocketMQ 广播领域事件
+    domain-event-enabled: ${APEX_MQ_DOMAIN_EVENT_ENABLED:false}
+    domain-event-topic: ${APEX_MQ_DOMAIN_EVENT_TOPIC:apex-domain-event}
+  events:
+    outbox:
+      batch-size: ${OUTBOX_BATCH_SIZE:50}
+      max-attempts: ${OUTBOX_MAX_ATTEMPTS:8}
+      lock-timeout-seconds: ${OUTBOX_LOCK_TIMEOUT_SECONDS:120}
+      parallelism: ${OUTBOX_PARALLELISM:4}
+      retention-enabled: ${OUTBOX_RETENTION_ENABLED:true}
+      retention-delivered-hours: ${OUTBOX_RETENTION_DELIVERED_HOURS:168}
+      retention-dead-days: ${OUTBOX_RETENTION_DEAD_DAYS:30}
+      retention-batch-size: ${OUTBOX_RETENTION_BATCH_SIZE:5000}
 ```
+
+生产消息使用稳定的业务 message ID，同时写入消息 header 和 RocketMQ `KEYS`。消费者以 Redis token 竞争处理权，状态从 `PROCESSING:<token>` 变为 `SUCCESS`；业务处理或最终确认失败时释放当前 token 并抛出异常，使 RocketMQ 触发重消费。
+
+### 自动重试配置
+
+`@AutoRetry` 适用于幂等或可安全重复执行的业务方法，支持同步返回值、`Mono` 和 `Flux`：
+
+```java
+@AutoRetry(maxAttempts = 3, retryDelayMs = 200, maxDelayMs = 5000,
+        backoffMultiplier = 2.0, retryOn = {TransientDataAccessException.class})
+public Mono<Result> refreshCache(String key) {
+    return cacheClient.refresh(key);
+}
+```
+
+`maxAttempts` 包含首次调用；仅 `retryOn` 指定的异常会重试，其他异常立即传播。响应式方法在订阅时执行退避，不应在注解方法内部自行 `subscribe()`。
+
+### Outbox 配置与生命周期
+
+领域事件先写入 Outbox，再由 worker 领取并投递。记录按 `PENDING -> PROCESSING -> DELIVERED` 流转；超时的 `PROCESSING` 会被回收，失败达到 `max-attempts` 后进入 `DEAD`。只有 RocketMQ callback 成功后才标记 `DELIVERED`。
 
 ## 📁 文件存储配置
 
@@ -428,7 +472,7 @@ rocketmq:
 ```yaml
 storage:
   # 当前使用的存储类型(LOCAL/MINIO/S3/VOLCENGINE_TOS)
-  type: LOCAL
+  default-type: LOCAL
   
   # 本地存储配置
   local:

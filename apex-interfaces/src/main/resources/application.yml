@@ -340,7 +340,7 @@ rocketmq:
     # 生产者组名
     group: ${ROCKETMQ_PRODUCER_GROUP:apex-producer-group}
     # 同步发送超时（毫秒）
-    send-message-timeout: 30000
+    send-message-timeout: ${ROCKETMQ_SEND_TIMEOUT:30000}
     # 消息压缩阈值（字节）：超过 1KB 压缩
     compress-message-body-threshold: 1024
     # 同步发送失败重试次数（不含首次）
@@ -631,7 +631,7 @@ apex:
   #    （差异）此处为编程式熔断参数，与 resilience4j.* 声明式配置互补
   circuit-breaker:
     # 默认模式：均衡保护，适用一般外部服务
-    default:
+    default-config:
       # 失败率阈值（%）：50% 请求失败 → 熔断
       failure-rate-threshold: 50
       # 熔断打开后等待时长（Duration）：60s 后进入半开探测
@@ -724,21 +724,21 @@ apex:
   events:
     outbox:
       # 每次轮询批量取出的事件数
-      batch-size: 50
+      batch-size: ${OUTBOX_BATCH_SIZE:50}
       # 单事件最大投递尝试次数：超过后标记死信（留待人工处理）
-      max-attempts: 8
+      max-attempts: ${OUTBOX_MAX_ATTEMPTS:8}
       # 分布式锁持有时长（秒）：防多实例并发轮询同一批事件
-      lock-timeout-seconds: 120
+      lock-timeout-seconds: ${OUTBOX_LOCK_TIMEOUT_SECONDS:120}
       # 并行投递线程数
-      parallelism: 4
+      parallelism: ${OUTBOX_PARALLELISM:4}
       # ✅ 保留策略总开关：定期清理已投递/死信事件，防止表无限膨胀
-      retention-enabled: true
+      retention-enabled: ${OUTBOX_RETENTION_ENABLED:true}
       # 已投递事件保留时长（小时）：默认 7 天
-      retention-delivered-hours: 168
+      retention-delivered-hours: ${OUTBOX_RETENTION_DELIVERED_HOURS:168}
       # 死信事件保留时长（天）：默认 30 天
-      retention-dead-days: 30
+      retention-dead-days: ${OUTBOX_RETENTION_DEAD_DAYS:30}
       # 每次清理批次大小（条）
-      retention-batch-size: 5000
+      retention-batch-size: ${OUTBOX_RETENTION_BATCH_SIZE:5000}
   # ---------- 降级快照（DegradeSnapshotProperties 读取） ----------
   degrade:
     snapshot:
@@ -817,8 +817,6 @@ apex:
       username-max-attempts: 5
       # 连续失败多少次后强制要求图形验证码（验证码升级阈值，0 表示不启用）
       captcha-after-failures: 3
-      # 锁定时长（秒）
-      lock-duration: 300
       # 统计窗口（秒）
       window-size: 600
     # ---------- 短信发送限流（防短信轰炸） ----------

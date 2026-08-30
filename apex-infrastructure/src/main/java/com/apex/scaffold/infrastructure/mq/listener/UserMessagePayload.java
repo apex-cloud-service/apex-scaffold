@@ -75,6 +75,16 @@ public record UserMessagePayload(
      * @return Long 值；类型不匹配时为空
      */
     private static Long number(Object value) {
-        return value instanceof Number number ? number.longValue() : null;
+        if (value instanceof Number number) {
+            return number.longValue();
+        }
+        if (value instanceof String text && !text.isBlank()) {
+            try {
+                return Long.valueOf(text);
+            } catch (NumberFormatException ignored) {
+                return null;
+            }
+        }
+        return null;
     }
 }

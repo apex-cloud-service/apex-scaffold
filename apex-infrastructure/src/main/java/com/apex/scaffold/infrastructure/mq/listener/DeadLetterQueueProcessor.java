@@ -4,6 +4,7 @@ import com.apex.scaffold.infrastructure.mq.constant.MqConstant;
 import jakarta.annotation.PostConstruct;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
@@ -65,8 +66,16 @@ public class DeadLetterQueueProcessor {
     /** DLQ 处理器是否已启动 */
     private volatile boolean started = false;
 
+    private boolean lifecycleInitialized = false;
+
     /** 原始 Topic 到死信处理器的路由表 */
     private final Map<String, DlqHandler> handlerRegistry = new ConcurrentHashMap<>();
+
+    private final Map<String, String> consumerGroupRegistry = new ConcurrentHashMap<>();
+
+    private final Set<String> subscribedDlqTopics = ConcurrentHashMap.newKeySet();
+
+    private final Object lifecycleMonitor = new Object();
 
     /** RocketMQ 死信消费者实例 */
     private DefaultMQPushConsumer dlqConsumer;
@@ -81,11 +90,24 @@ public class DeadLetterQueueProcessor {
      * @param handler       死信处理器
      */
     public void registerHandler(String originalTopic, DlqHandler handler) {
-        handlerRegistry.put(originalTopic, handler);
-        log.info(
-                "注册 DLQ 处理器, topic: {}, handler: {}",
-                originalTopic,
-                handler.getClass().getSimpleName());
+        registerHandler(originalTopic, originalTopic.replace("-topic", "-consumer-group"), handler);
+    }
+
+    public void registerHandler(String originalTopic, String consumerGroup, DlqHandler handler) {
+        synchronized (lifecycleMonitor) {
+            handlerRegistry.put(originalTopic, handler);
+            consumerGroupRegistry.put(originalTopic, consumerGroup);
+            log.info(
+                    "注册 DLQ 处理器, topic: {}, consumerGroup: {}, handler: {}",
+                    originalTopic,
+                    consumerGroup,
+                    handler.getClass().getSimpleName());
+            if (started) {
+                subscribe(originalTopic);
+            } else if (lifecycleInitialized) {
+                startIfReady();
+            }
+        }
     }
 
     /**
@@ -98,8 +120,17 @@ public class DeadLetterQueueProcessor {
      */
     @PostConstruct
     public void start() {
-        if (nameServer == null || nameServer.isBlank()) {
-            log.info("RocketMQ NameServer 未配置, DLQ 处理器不启动");
+        synchronized (lifecycleMonitor) {
+            lifecycleInitialized = true;
+            startIfReady();
+        }
+    }
+
+    private void startIfReady() {
+        if (started || nameServer == null || nameServer.isBlank()) {
+            if (nameServer == null || nameServer.isBlank()) {
+                log.info("RocketMQ NameServer 未配置, DLQ 处理器不启动");
+            }
             return;
         }
         if (handlerRegistry.isEmpty()) {
@@ -109,6 +140,8 @@ public class DeadLetterQueueProcessor {
         try {
             initAndStartConsumer();
         } catch (MQClientException e) {
+            subscribedDlqTopics.clear();
+            dlqConsumer = null;
             log.error("DLQ 消费者启动失败, 死信消息将无法自动处理", e);
         }
     }
@@ -123,34 +156,41 @@ public class DeadLetterQueueProcessor {
         dlqConsumer = new DefaultMQPushConsumer(consumerGroup);
         dlqConsumer.setNamesrvAddr(nameServer);
 
-        // 订阅所有已注册消费组的死信 Topic
         for (String topic : handlerRegistry.keySet()) {
-            String dlqTopic = buildDlqTopic(topic);
-            try {
-                dlqConsumer.subscribe(dlqTopic, "*");
-                log.info("订阅死信 Topic: {}", dlqTopic);
-            } catch (MQClientException e) {
-                log.error("订阅死信 Topic 失败: {}", dlqTopic, e);
-            }
+            subscribe(topic);
         }
 
         dlqConsumer.registerMessageListener(new DlqMessageListener());
         dlqConsumer.start();
         started = true;
-        log.info("DLQ 死信队列处理器已启动, 监听 {} 个 Topic", handlerRegistry.size());
+        log.info("DLQ 死信队列处理器已启动, 监听 {} 个 Topic", subscribedDlqTopics.size());
+    }
+
+    private void subscribe(String originalTopic) {
+        String dlqTopic = buildDlqTopic(originalTopic);
+        if (!subscribedDlqTopics.add(dlqTopic)) {
+            return;
+        }
+        try {
+            dlqConsumer.subscribe(dlqTopic, "*");
+            log.info("订阅死信 Topic: {}", dlqTopic);
+        } catch (MQClientException e) {
+            subscribedDlqTopics.remove(dlqTopic);
+            log.error("订阅死信 Topic 失败: {}", dlqTopic, e);
+        }
     }
 
     /**
      * 构建死信 Topic 名称。
      *
      * <p>RocketMQ 死信 Topic 格式为 {@code %DLQ% + 消费组名}。
-     * 本方法根据原始 Topic 推导对应的消费组死信 Topic。
+     * 本方法根据原始 Topic 查找对应的消费组死信 Topic。
      *
      * @param originalTopic 原始业务 Topic
      * @return 死信 Topic 名称
      */
     private String buildDlqTopic(String originalTopic) {
-        return DLQ_TOPIC_PREFIX + originalTopic.replace("-topic", "-consumer-group");
+        return DLQ_TOPIC_PREFIX + consumerGroupRegistry.get(originalTopic);
     }
 
     /**
@@ -197,9 +237,13 @@ public class DeadLetterQueueProcessor {
      */
     @jakarta.annotation.PreDestroy
     public void shutdown() {
-        if (dlqConsumer != null && started) {
-            dlqConsumer.shutdown();
-            log.info("DLQ 死信队列处理器已关闭");
+        synchronized (lifecycleMonitor) {
+            if (dlqConsumer != null && started) {
+                dlqConsumer.shutdown();
+                started = false;
+                subscribedDlqTopics.clear();
+                log.info("DLQ 死信队列处理器已关闭");
+            }
         }
     }
 

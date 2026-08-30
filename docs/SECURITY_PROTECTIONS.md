@@ -11,7 +11,7 @@
 
 | 维度 | 现状 | 结论 |
 | --- | --- | --- |
-| 消息消费幂等 | 已实现（Redisson SETNX + 业务处理 ID） | ✅ 到位 |
+| 消息消费幂等 | 已实现（Redisson 带 token 所有权的 Redis `SETNX`/`compareAndSet` 状态机 + 业务处理 ID） | ✅ 到位 |
 | 账号注销幂等 | 已实现（Idempotency-Key + DB 唯一索引 + 原子 UPDATE） | ✅ 到位 |
 | HTTP 写接口幂等 | **本轮新增** `@IdempotentApi` + 响应式切面（Redis SETNX） | 🆕 补齐 |
 | 防重放（Anti-Replay） | 切面已存在但**此前从未命中函数式端点**；**本轮修复** | 🆕 补齐 |

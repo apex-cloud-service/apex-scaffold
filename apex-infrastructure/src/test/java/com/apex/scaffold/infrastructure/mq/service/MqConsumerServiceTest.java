@@ -1,10 +1,29 @@
 package com.apex.scaffold.infrastructure.mq.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
+import java.time.Duration;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.redisson.api.RBucket;
+import org.redisson.api.RedissonClient;
+import org.redisson.client.codec.StringCodec;
+import org.springframework.test.util.ReflectionTestUtils;
 
 /**
  * {@link MqConsumerService.ProcessingResult} 的单元测试类
@@ -15,8 +34,132 @@ import org.junit.jupiter.api.Test;
  * @version 1.0.0
  * @since 1.0.0
  */
-@DisplayName("MqConsumerService.ProcessingResult 单元测试")
+@DisplayName("MqConsumerService 单元测试")
+@ExtendWith(MockitoExtension.class)
 class MqConsumerServiceTest {
+
+    @Mock
+    private RedissonClient redissonClient;
+
+    @Mock
+    private RBucket<String> bucket;
+
+    private MqConsumerService service;
+
+    @BeforeEach
+    void setUp() {
+        service = new MqConsumerService(redissonClient);
+        ReflectionTestUtils.setField(service, "idempotentTtlMinutes", 30L);
+        lenient().doReturn(bucket).when(redissonClient).getBucket(
+                anyString(), eq(StringCodec.INSTANCE));
+    }
+
+    @Test
+    @DisplayName("首次处理应获得令牌并确认成功")
+    void shouldClaimAndConfirmMessage() {
+        when(bucket.setIfAbsent(anyString(), any(Duration.class))).thenReturn(true);
+        when(bucket.compareAndSet(anyString(), eq("SUCCESS"))).thenReturn(true);
+
+        MqConsumerService.ProcessingResult<String> result =
+                service.processMessageWithResult("msg-1", "payload", message -> true);
+
+        assertThat(result.isSuccess()).isTrue();
+        verify(bucket).setIfAbsent(anyString(), eq(Duration.ofMinutes(30)));
+        verify(bucket).compareAndSet(anyString(), eq("SUCCESS"));
+        verify(bucket).expire(Duration.ofMinutes(30));
+    }
+
+    @Test
+    @DisplayName("处理返回false应释放当前实例令牌")
+    void shouldReleaseOwnTokenWhenHandlerFails() {
+        when(bucket.setIfAbsent(anyString(), any(Duration.class))).thenReturn(true);
+
+        MqConsumerService.ProcessingResult<String> result =
+                service.processMessageWithResult("msg-1", "payload", message -> false);
+
+        assertThat(result.isSuccess()).isFalse();
+        verify(bucket).compareAndSet(anyString(), isNull());
+    }
+
+    @Test
+    @DisplayName("处理异常应释放当前实例令牌")
+    void shouldReleaseOwnTokenWhenHandlerThrows() {
+        when(bucket.setIfAbsent(anyString(), any(Duration.class))).thenReturn(true);
+
+        MqConsumerService.ProcessingResult<String> result =
+                service.processMessageWithResult("msg-1", "payload", message -> {
+                    throw new IllegalStateException("temporary failure");
+                });
+
+        assertThat(result.isSuccess()).isFalse();
+        assertThat(result.getErrorMessage()).isEqualTo("temporary failure");
+        verify(bucket).compareAndSet(anyString(), isNull());
+    }
+
+    @Test
+    @DisplayName("已成功消息应跳过处理器")
+    void shouldSkipSuccessfulDuplicate() {
+        when(bucket.setIfAbsent(anyString(), any(Duration.class))).thenReturn(false);
+        when(bucket.get()).thenReturn("SUCCESS");
+
+        MqConsumerService.ProcessingResult<String> result =
+                service.processMessageWithResult("msg-1", "payload", message -> {
+                    throw new AssertionError("duplicate handler must not run");
+                });
+
+        assertThat(result.isDuplicate()).isTrue();
+        verify(bucket, never()).compareAndSet(anyString(), anyString());
+    }
+
+    @Test
+    @DisplayName("其他实例处理中应返回失败")
+    void shouldRejectConcurrentProcessing() {
+        when(bucket.setIfAbsent(anyString(), any(Duration.class))).thenReturn(false);
+        when(bucket.get()).thenReturn("PROCESSING:other");
+
+        MqConsumerService.ProcessingResult<String> result =
+                service.processMessageWithResult("msg-1", "payload", message -> true);
+
+        assertThat(result.isSuccess()).isFalse();
+        assertThat(result.getErrorMessage()).isEqualTo("消息正在处理中");
+    }
+
+    @Test
+    @DisplayName("成功处理但令牌确认失败应返回错误")
+    void shouldFailWhenOwnershipConfirmationFails() {
+        when(bucket.setIfAbsent(anyString(), any(Duration.class))).thenReturn(true);
+        when(bucket.compareAndSet(anyString(), eq("SUCCESS"))).thenReturn(false);
+
+        MqConsumerService.ProcessingResult<String> result =
+                service.processMessageWithResult("msg-1", "payload", message -> true);
+
+        assertThat(result.isSuccess()).isFalse();
+        assertThat(result.getErrorMessage()).isEqualTo("消息确认失败");
+        verify(bucket, never()).expire(any(Duration.class));
+    }
+
+    @Test
+    @DisplayName("非法TTL应使用默认值")
+    void shouldUseDefaultTtlWhenConfiguredTtlIsInvalid() {
+        ReflectionTestUtils.setField(service, "idempotentTtlMinutes", 0L);
+        when(bucket.setIfAbsent(anyString(), any(Duration.class))).thenReturn(true);
+        when(bucket.compareAndSet(anyString(), eq("SUCCESS"))).thenReturn(true);
+
+        service.processMessageWithResult("msg-1", "payload", message -> true);
+
+        verify(bucket).setIfAbsent(anyString(), eq(Duration.ofMinutes(30)));
+        verify(bucket).expire(Duration.ofMinutes(30));
+    }
+
+    @Test
+    @DisplayName("缺少消息ID应拒绝处理")
+    void shouldRejectMissingMessageId() {
+        MqConsumerService.ProcessingResult<String> result =
+                service.processMessageWithResult(" ", "payload", message -> true);
+
+        assertThat(result.isSuccess()).isFalse();
+        verifyNoInteractions(redissonClient);
+    }
 
     @Nested
     @DisplayName("ProcessingResult.success 方法")

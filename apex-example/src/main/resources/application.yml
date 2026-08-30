@@ -97,7 +97,9 @@ apex:
 # JWT配置
 jwt:
   secret: ${JWT_SECRET:example-secret-key-for-testing-only-min-32-chars}
-  expiration: 7200000
+  access-token-expire: 7200000
+  refresh-token-expire: 604800000
+  min-secret-length: 32
 
 # 日志配置
 logging:
