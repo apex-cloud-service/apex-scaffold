@@ -117,13 +117,6 @@ public class CacheServiceImpl implements CacheService {
      * @return 成功删除的键数量，键为空时返回0
      */
     @Override
-    /**
-     * 删除
-     *
-     * @param keys 参数
-     *
-     * @return 结果
-     */
     public Mono<Long> delete(String... keys) {
         return Mono.fromCallable(() -> {
                     if (keys == null || keys.length == 0) {
@@ -181,7 +174,7 @@ public class CacheServiceImpl implements CacheService {
      * @param <T>          缓存值的类型
      * @param keyValueMap  键值对映射
      * @param ttl          过期时间
-     * @return 操作完成返回true，键值对映射为空时返回false
+     * @return 所有键值对均设置成功返回true，任一操作失败或键值对映射为空时返回false
      */
     @Override
     public <T> Mono<Boolean> setBatch(Map<String, T> keyValueMap, Duration ttl) {
@@ -189,14 +182,15 @@ public class CacheServiceImpl implements CacheService {
             return Mono.just(false);
         }
         return Mono.fromCallable(() -> {
-                    keyValueMap.forEach((key, value) -> {
+                    for (Map.Entry<String, T> entry : keyValueMap.entrySet()) {
                         try {
-                            RBucket<String> bucket = redissonClient.getBucket(key, StringCodec.INSTANCE);
-                            bucket.set(toStoreValue(value), ttl);
+                            RBucket<String> bucket = redissonClient.getBucket(entry.getKey(), StringCodec.INSTANCE);
+                            bucket.set(toStoreValue(entry.getValue()), ttl);
                         } catch (Exception e) {
-                            log.warn("Failed to set cache for key: {}", key, e);
+                            log.warn("Failed to set cache for key: {}", entry.getKey(), e);
+                            return false;
                         }
-                    });
+                    }
                     return true;
                 })
                 .subscribeOn(BlockingIoSchedulers.cache());

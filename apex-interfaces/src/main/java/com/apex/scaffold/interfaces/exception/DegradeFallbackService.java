@@ -226,21 +226,36 @@ public class DegradeFallbackService {
         }
         long throttleMillis = properties.getRedisThrottleSeconds() * 1000L;
         long now = System.currentTimeMillis();
-        boolean withinWindow = Optional.ofNullable(lastRedisWriteAt.get(resource))
-                .map(lastWrite -> now - lastWrite < throttleMillis)
-                .orElse(false);
-        if (withinWindow) {
+        boolean[] shouldWrite = {false};
+        Long writeAt = lastRedisWriteAt.compute(resource, (ignored, lastWrite) -> {
+            if (lastWrite == null || now - lastWrite >= throttleMillis) {
+                shouldWrite[0] = true;
+                return now;
+            }
+            return lastWrite;
+        });
+        if (!shouldWrite[0]) {
             return;
         }
-        lastRedisWriteAt.put(resource, now);
         try {
             Mono<Boolean> setMono = redisTemplate.opsForValue().set(key, data, SNAPSHOT_TTL);
             if (setMono != null) {
-                setMono.doOnError(e -> log.warn("保存降级快照到 Redis 失败, resource: {}", resource, e))
+                setMono.doOnSuccess(success -> {
+                            if (!Boolean.TRUE.equals(success)) {
+                                lastRedisWriteAt.remove(resource, writeAt);
+                            }
+                        })
+                        .doOnError(e -> {
+                            lastRedisWriteAt.remove(resource, writeAt);
+                            log.warn("保存降级快照到 Redis 失败, resource: {}", resource, e);
+                        })
                         .onErrorResume(e -> Mono.empty())
                         .subscribe();
+            } else {
+                lastRedisWriteAt.remove(resource, writeAt);
             }
         } catch (Exception e) {
+            lastRedisWriteAt.remove(resource, writeAt);
             log.warn("保存降级快照到 Redis 异常, resource: {}", resource, e);
         }
     }

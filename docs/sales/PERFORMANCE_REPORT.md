@@ -16,9 +16,13 @@
 - 工具: [wrk](https://github.com/wg/wrk) 4.2（HTTP 基准工具），脚本 `scripts/bench/bench.sh`
 - 场景: 固定并发梯度（100/300/500），时长 20s，统计 Requests/sec、延迟分布（Avg/P50/P99）、错误率
 - 指标采集: 服务端 Prometheus `apex_api_*`（QPS/P95/错误率）+ Grafana 大盘
-- 复现: `./scripts/bench/bench.sh <base_url> <duration> <threads> <connections>`
+- 复现健康检查: `BENCH_SCENARIO=health ./scripts/bench/bench.sh <base_url> <duration> <threads> <connections>`
+- 复现登录场景: `BENCH_SCENARIO=login BENCH_LOGIN_ENABLED=true BENCH_USERNAME=<real_user> BENCH_PASSWORD='<real_password>' ./scripts/bench/bench.sh <base_url> <duration> <threads> <connections>`
+- 复现全部场景: `BENCH_SCENARIO=all BENCH_LOGIN_ENABLED=true BENCH_USERNAME=<real_user> BENCH_PASSWORD='<real_password>' ./scripts/bench/bench.sh <base_url> <duration> <threads> <connections>`
+- `BENCH_SCENARIO` 默认为 `health`，可选 `health`、`login`、`all`；`BENCH_LOGIN_ENABLED` 默认为 `false`
 - ⚠️ 默认配置下的压测会**先触发安全防护**（见 §4.4），属预期行为；测框架极限需
   `APEX_SECURITY_IP_RATE_LIMIT_DEFAULT_LIMIT` 提限 + `APEX_SENTINEL_SYSTEM_RULES_ENABLED=false`
+- 安全要求：登录场景必须显式启用 `BENCH_LOGIN_ENABLED=true`，并提供真实的 `BENCH_USERNAME` 与 `BENCH_PASSWORD`。脚本不会使用占位密码，也不会将密码打印到输出；密码不要写入脚本、文档、命令历史或版本库。
 
 ## 3. 测试环境
 

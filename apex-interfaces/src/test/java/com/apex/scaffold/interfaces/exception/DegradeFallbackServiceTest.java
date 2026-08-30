@@ -11,6 +11,10 @@ import static org.mockito.Mockito.when;
 import com.apex.scaffold.interfaces.config.DegradeSnapshotProperties;
 import java.util.Collections;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -242,6 +246,51 @@ class DegradeFallbackServiceTest {
 
         // 窗口内三次保存，Redis 只应写入一次
         verify(valueOperations, times(1)).set(anyString(), any(), any());
+    }
+
+    @Test
+    @DisplayName("并发保存同一资源只发起一次Redis写入")
+    @SuppressWarnings("unchecked")
+    void shouldOnlyWriteRedisOnceWhenSnapshotsAreSavedConcurrently() throws Exception {
+        when(valueOperations.set(anyString(), any(), any())).thenReturn(Mono.just(true));
+        DegradeSnapshotProperties props = new DegradeSnapshotProperties();
+        props.setRedisThrottleSeconds(60);
+        DegradeFallbackService throttled = new DegradeFallbackService(fixedProvider(redisTemplate), props);
+        ExecutorService executor = Executors.newFixedThreadPool(8);
+        CountDownLatch ready = new CountDownLatch(8);
+        CountDownLatch start = new CountDownLatch(1);
+
+        for (int i = 0; i < 8; i++) {
+            executor.submit(() -> {
+                ready.countDown();
+                start.await();
+                throttled.saveSnapshot(TEST_RESOURCE, Map.of("k", "v"));
+                return null;
+            });
+        }
+
+        assertThat(ready.await(5, TimeUnit.SECONDS)).isTrue();
+        start.countDown();
+        executor.shutdown();
+        assertThat(executor.awaitTermination(5, TimeUnit.SECONDS)).isTrue();
+        verify(valueOperations, times(1)).set(anyString(), any(), any());
+    }
+
+    @Test
+    @DisplayName("Redis写入失败后下一次保存可以重试")
+    @SuppressWarnings("unchecked")
+    void shouldRetryRedisWriteAfterPreviousWriteFails() {
+        when(valueOperations.set(anyString(), any(), any()))
+                .thenReturn(Mono.error(new IllegalStateException("redis unavailable")))
+                .thenReturn(Mono.just(true));
+        DegradeSnapshotProperties props = new DegradeSnapshotProperties();
+        props.setRedisThrottleSeconds(60);
+        DegradeFallbackService throttled = new DegradeFallbackService(fixedProvider(redisTemplate), props);
+
+        throttled.saveSnapshot(TEST_RESOURCE, Map.of("k", "v"));
+        throttled.saveSnapshot(TEST_RESOURCE, Map.of("k", "v2"));
+
+        verify(valueOperations, times(2)).set(anyString(), any(), any());
     }
 
     /**

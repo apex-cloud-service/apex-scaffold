@@ -7,6 +7,7 @@ import static org.mockito.Mockito.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
@@ -388,6 +389,28 @@ class CacheServiceImplTest {
 
         verify(bucket1).set("v1", Duration.ofMinutes(1));
         verify(bucket2).set("v2", Duration.ofMinutes(1));
+    }
+
+    @Test
+    @DisplayName("setBatch - 单项写入异常应返回false")
+    void setBatch_WhenOneWriteFails_ReturnsFalse() {
+        RBucket<Object> bucket1 = mock(RBucket.class);
+        RBucket<Object> bucket2 = mock(RBucket.class);
+        when(redissonClient.getBucket(eq("k1"), any())).thenReturn(bucket1);
+        when(redissonClient.getBucket(eq("k2"), any())).thenReturn(bucket2);
+        doNothing().when(bucket1).set("v1", Duration.ofMinutes(1));
+        doThrow(new IllegalStateException("write failed"))
+                .when(bucket2)
+                .set("v2", Duration.ofMinutes(1));
+        Map<String, String> entries = new LinkedHashMap<>();
+        entries.put("k1", "v1");
+        entries.put("k2", "v2");
+
+        cacheService
+                .setBatch(entries, Duration.ofMinutes(1))
+                .as(StepVerifier::create)
+                .expectNext(false)
+                .verifyComplete();
     }
 
     /**

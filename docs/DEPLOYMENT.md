@@ -161,8 +161,8 @@ export NACOS_CONFIG_ENABLED=false
 export NACOS_DISCOVERY_ENABLED=false
 export NACOS_REGISTER_ENABLED=false
 
-# 生产级 JVM 调优参数（堆内存/G1 回收器/GC 停顿/元空间/OOM 堆转储/滚动 GC 日志，见 §4.5）
-export JAVA_OPTS='-Xms512m -Xmx1024m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:MetaspaceSize=256m -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/opt/apex-scaffold/logs/heapdump.hprof -XX:+ExitOnOutOfMemoryError -Xlog:gc*:file=/opt/apex-scaffold/logs/gc.log:time,uptime,level,tags:filecount=5,filesize=20m -Dfile.encoding=UTF-8 -Djava.security.egd=file:/dev/./urandom'
+# JVM 参数应按部署环境的内存上限调整；Kubernetes 1Gi limit 使用 768Mi heap，并预留堆外内存
+export JAVA_OPTS='-Xms512m -Xmx768m -Xss512k -XX:MaxDirectMemorySize=128m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:MetaspaceSize=256m -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/opt/apex-scaffold/logs/heapdump.hprof -XX:+ExitOnOutOfMemoryError -Xlog:gc*:file=/opt/apex-scaffold/logs/gc.log:time,uptime,level,tags:filecount=5,filesize=20m -Dfile.encoding=UTF-8 -Djava.security.egd=file:/dev/./urandom'
 mkdir -p /opt/apex-scaffold/logs
 java ${JAVA_OPTS} \
      -jar /opt/apex-scaffold/app.jar

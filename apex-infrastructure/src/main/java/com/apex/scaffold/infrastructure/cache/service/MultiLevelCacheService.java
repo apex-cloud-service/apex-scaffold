@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import org.redisson.api.RBucket;
 import org.redisson.api.RKeys;
 import org.redisson.api.RedissonClient;
@@ -290,37 +289,8 @@ public class MultiLevelCacheService {
         if (keys == null || keys.isEmpty()) {
             return Mono.just(Collections.emptyList());
         }
-        // 批量从 L2 查询（L1 中已存在的直接在 get 中处理）
-        return Mono.fromCallable(() -> {
-                    return keys.stream()
-                            .filter(Objects::nonNull)
-                            .map(key -> {
-                                try {
-                                    RBucket<String> bucket = redissonClient.getBucket(key, StringCodec.INSTANCE);
-                                    String value = bucket.get();
-                                    if (value == null || EMPTY_VALUE.equals(value)) {
-                                        return null;
-                                    }
-                                    T result;
-                                    if (clazz == String.class) {
-                                        result = clazz.cast(value);
-                                    } else {
-                                        result = objectMapper.readValue(value, clazz);
-                                    }
-                                    // 异步回填 L1
-                                    localCacheService
-                                            .set(key, result, Duration.ofMinutes(5))
-                                            .subscribe(null, e -> log.error("L1缓存回填失败: {}", e.getMessage(), e));
-                                    return result;
-                                } catch (Exception e) {
-                                    log.warn("批量查询 L2 缓存失败, key: {}", key, e);
-                                    return null;
-                                }
-                            })
-                            .filter(Objects::nonNull)
-                            .collect(Collectors.toList());
-                })
-                .subscribeOn(BlockingIoSchedulers.cache());
+        List<String> validKeys = keys.stream().filter(Objects::nonNull).toList();
+        return Flux.fromIterable(validKeys).concatMap(key -> get(key, clazz)).collectList();
     }
 
     /**

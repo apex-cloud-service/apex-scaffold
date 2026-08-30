@@ -728,6 +728,33 @@ spring:
     password: ${DB_PASSWORD}  # 必须从环境变量读取
 ```
 
+## 📈 性能压测脚本
+
+脚本位置为 `scripts/bench/bench.sh`，依赖 `wrk`。基础用法如下：
+
+```bash
+./scripts/bench/bench.sh [base_url] [duration] [threads] [connections]
+```
+
+脚本支持以下环境变量：
+
+| 变量 | 默认值 | 说明 |
+|------|--------|------|
+| `BENCH_SCENARIO` | `health` | 执行场景：`health`、`login` 或 `all` |
+| `BENCH_LOGIN_ENABLED` | `false` | 是否允许执行登录场景，支持 `true`/`false`、`1`/`0`、`yes`/`no` |
+| `BENCH_USERNAME` | 空 | 登录场景使用的真实用户名 |
+| `BENCH_PASSWORD` | 空 | 登录场景使用的真实密码 |
+
+示例：
+
+```bash
+BENCH_SCENARIO=health ./scripts/bench/bench.sh http://127.0.0.1:8080 30s 4 200
+BENCH_SCENARIO=login BENCH_LOGIN_ENABLED=true BENCH_USERNAME=real-user BENCH_PASSWORD='real-password' ./scripts/bench/bench.sh
+BENCH_SCENARIO=all BENCH_LOGIN_ENABLED=true BENCH_USERNAME=real-user BENCH_PASSWORD='real-password' ./scripts/bench/bench.sh
+```
+
+安全要求：默认只执行健康检查，不会使用占位密码执行登录压测。登录场景必须显式设置 `BENCH_LOGIN_ENABLED=true`，并通过环境变量提供真实账号和密码；不要把密码写入脚本、文档、命令历史或提交到版本库。完整脚本说明和失败排查见 `docs/sales/PERFORMANCE_REPORT.md`。
+
 ## ❓ 常见问题
 
 ### Q1: 如何覆盖默认配置?

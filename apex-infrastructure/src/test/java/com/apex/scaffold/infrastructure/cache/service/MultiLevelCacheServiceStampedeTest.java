@@ -6,6 +6,8 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -82,6 +84,43 @@ class MultiLevelCacheServiceStampedeTest {
                     assertThat(loaderCount.get()).isEqualTo(1);
                 })
                 .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("批量读取时 L1 命中不访问 Redis")
+    void shouldNotAccessRedisForL1Hits() {
+        when(localCacheService.get("user:1", String.class)).thenReturn(Mono.just("l1-value"));
+
+        StepVerifier.create(cacheService.getBatch(java.util.List.of("user:1"), String.class))
+                .assertNext(result -> assertThat(result).containsExactly("l1-value"))
+                .verifyComplete();
+
+        verify(redissonClient, never()).getBucket(anyString(), any());
+    }
+
+    @Test
+    @DisplayName("批量读取时 L1 未命中查询 L2 并按输入顺序回填 L1")
+    void shouldQueryL2ForL1MissesAndBackfillInInputOrder() {
+        when(localCacheService.get("user:1", String.class)).thenReturn(Mono.just("l1-value"));
+        when(localCacheService.get("user:2", String.class)).thenReturn(Mono.empty());
+        when(localCacheService.get("user:3", String.class)).thenReturn(Mono.empty());
+        @SuppressWarnings("unchecked")
+        RBucket<Object> user2Bucket = mock(RBucket.class);
+        @SuppressWarnings("unchecked")
+        RBucket<Object> user3Bucket = mock(RBucket.class);
+        when(redissonClient.getBucket(eq("user:2"), any())).thenReturn(user2Bucket);
+        when(redissonClient.getBucket(eq("user:3"), any())).thenReturn(user3Bucket);
+        when(user2Bucket.get()).thenReturn("l2-value");
+        when(user3Bucket.get()).thenReturn("__EMPTY__");
+
+        StepVerifier.create(cacheService.getBatch(java.util.Arrays.asList("user:3", null, "user:1", "user:2"), String.class))
+                .assertNext(result -> assertThat(result).containsExactly("l1-value", "l2-value"))
+                .verifyComplete();
+
+        verify(redissonClient, never()).getBucket(eq("user:1"), any());
+        verify(redissonClient).getBucket(eq("user:2"), any());
+        verify(redissonClient).getBucket(eq("user:3"), any());
+        verify(localCacheService).set(eq("user:2"), eq("l2-value"), eq(Duration.ofMinutes(5)));
     }
 
     @Test
