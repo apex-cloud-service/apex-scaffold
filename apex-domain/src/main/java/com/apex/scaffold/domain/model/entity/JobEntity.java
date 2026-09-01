@@ -98,6 +98,7 @@ public class JobEntity extends BaseEntity {
      */
     private String remark;
 
+    /** Sets tenantId. For persistence/construction use only. */
     public void setTenantId(String value) {
         this.tenantId = value;
     }
@@ -162,6 +163,19 @@ public class JobEntity extends BaseEntity {
         return create(jobName, jobGroup, invokeTarget, cronExpression, null);
     }
 
+    /**
+     * 静态工厂方法：创建定时任务（指定租户）。
+     *
+     * <p>在 {@link #create(String, String, String, String)} 的基础上额外指定租户归属，
+     * 便于多租户场景下按租户隔离任务调度。</p>
+     *
+     * @param jobName 任务名称
+     * @param jobGroup 任务分组
+     * @param invokeTarget 调用目标
+     * @param cronExpression Cron 表达式
+     * @param tenantId 租户 ID，可为 null 表示不归属具体租户
+     * @return 新创建的定时任务实体，默认允许并发且启用
+     */
     public static JobEntity create(
             String jobName, String jobGroup, String invokeTarget, String cronExpression, String tenantId) {
         JobEntity entity = new JobEntity();

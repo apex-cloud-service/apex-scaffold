@@ -203,7 +203,7 @@ public class WeChatTagService {
      * @param accessToken 微信全局AccessToken
      * @param tagId 标签ID
      * @param openIdList 要打标签的用户OpenID列表，单次最多50个
-     * @return 操作结果Map
+     * @return 微信API返回的标签操作响应（Map形式）
      */
     public Mono<Map<String, Object>> batchTagging(String accessToken, Integer tagId, List<String> openIdList) {
         log.info("批量为用户打标签, tagId: {}, count: {}", tagId, openIdList.size());
@@ -235,7 +235,7 @@ public class WeChatTagService {
      * @param accessToken 微信全局AccessToken
      * @param tagId 标签ID
      * @param openIdList 要取消标签的用户OpenID列表，单次最多50个
-     * @return 操作结果Map
+     * @return 微信API返回的标签操作响应（Map形式）
      */
     public Mono<Map<String, Object>> batchUntagging(String accessToken, Integer tagId, List<String> openIdList) {
         log.info("批量为用户取消标签, tagId: {}, count: {}", tagId, openIdList.size());

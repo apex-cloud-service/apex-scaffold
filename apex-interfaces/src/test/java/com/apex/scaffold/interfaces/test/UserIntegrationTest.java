@@ -17,18 +17,10 @@ import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 @DisplayName("用户API集成测试")
 @EnabledIfSystemProperty(named = "apex.remote-it.enabled", matches = "true")
 class UserRemoteIT extends BaseLocalIntegrationTest {
-
-    /**
-     * 创建 {@code UserRemoteIT} 实例。
-     * @param dataSource 参数 {@code dataSource}
-     */
     public UserRemoteIT(DataSource dataSource) {
         super(dataSource);
     }
 
-    /**
-     * 获取{@code currentUserInfo_withValidToken_shouldReturnUserInfo}。
-     */
     @Test
     @DisplayName("GET /api/v1/user/info - 携带有效Token应返回用户信息")
     void getCurrentUserInfo_withValidToken_shouldReturnUserInfo() {
@@ -45,18 +37,12 @@ class UserRemoteIT extends BaseLocalIntegrationTest {
                 .isEqualTo(0);
     }
 
-    /**
-     * 获取{@code currentUserInfo_withoutToken_shouldReturn401}。
-     */
     @Test
     @DisplayName("GET /api/v1/user/info - 未携带Token应返回401")
     void getCurrentUserInfo_withoutToken_shouldReturn401() {
         webTestClient.get().uri("/api/v1/user/info").exchange().expectStatus().isUnauthorized();
     }
 
-    /**
-     * 获取{@code currentUserInfo_withExpiredToken_shouldReturn401}。
-     */
     @Test
     @DisplayName("GET /api/v1/user/info - 携带过期Token应返回401")
     void getCurrentUserInfo_withExpiredToken_shouldReturn401() {
@@ -70,18 +56,12 @@ class UserRemoteIT extends BaseLocalIntegrationTest {
                 .isUnauthorized();
     }
 
-    /**
-     * 获取{@code userById_withoutToken_shouldReturn401}。
-     */
     @Test
     @DisplayName("GET /api/v1/user/{userId} - 未携带Token应返回401")
     void getUserById_withoutToken_shouldReturn401() {
         webTestClient.get().uri("/api/v1/user/1").exchange().expectStatus().isUnauthorized();
     }
 
-    /**
-     * 获取{@code userById_withValidToken_shouldReturn200}。
-     */
     @Test
     @DisplayName("GET /api/v1/user/{userId} - 携带有效Token应返回200")
     void getUserById_withValidToken_shouldReturn200() {

@@ -65,9 +65,6 @@ class LoginStrategyProviderTest {
         loginStrategyProvider.init();
     }
 
-    /**
-     * 执行 {@code init_AllStrategiesRegistered} 操作。
-     */
     @Test
     @DisplayName("init - 自注册后所有策略都已注册")
     void init_AllStrategiesRegistered() {
@@ -78,9 +75,6 @@ class LoginStrategyProviderTest {
         assertThat(loginStrategyProvider.getStrategy("CL_SMS")).isEqualTo(chuanglanSmsLoginStrategy);
     }
 
-    /**
-     * 获取{@code strategy_LowerCase_ReturnsCorrectStrategy}。
-     */
     @Test
     @DisplayName("getStrategy - 小写类型名正确匹配")
     void getStrategy_LowerCase_ReturnsCorrectStrategy() {
@@ -91,9 +85,6 @@ class LoginStrategyProviderTest {
         assertThat(loginStrategyProvider.getStrategy("cl_sms")).isEqualTo(chuanglanSmsLoginStrategy);
     }
 
-    /**
-     * 获取{@code strategy_MixedCase_ReturnsCorrectStrategy}。
-     */
     @Test
     @DisplayName("getStrategy - 混合大小写类型名正确匹配")
     void getStrategy_MixedCase_ReturnsCorrectStrategy() {
@@ -101,18 +92,12 @@ class LoginStrategyProviderTest {
         assertThat(loginStrategyProvider.getStrategy("Wx_Phone")).isEqualTo(weChatPhoneLoginStrategy);
     }
 
-    /**
-     * 获取{@code strategy_NullType_ReturnsFirstStrategy}。
-     */
     @Test
     @DisplayName("getStrategy - null类型名返回列表中第一个策略")
     void getStrategy_NullType_ReturnsFirstStrategy() {
         assertThat(loginStrategyProvider.getStrategy(null)).isEqualTo(weChatCodeLoginStrategy);
     }
 
-    /**
-     * 获取{@code strategy_BlankType_ReturnsFirstStrategy}。
-     */
     @Test
     @DisplayName("getStrategy - 空字符串类型名返回列表中第一个策略")
     void getStrategy_BlankType_ReturnsFirstStrategy() {
@@ -120,9 +105,6 @@ class LoginStrategyProviderTest {
         assertThat(loginStrategyProvider.getStrategy("   ")).isEqualTo(weChatCodeLoginStrategy);
     }
 
-    /**
-     * 获取{@code strategy_InvalidType_ThrowsBusinessException}。
-     */
     @Test
     @DisplayName("getStrategy - 无效类型名抛出不支持登录类型异常")
     void getStrategy_InvalidType_ThrowsBusinessException() {
@@ -134,9 +116,6 @@ class LoginStrategyProviderTest {
                 });
     }
 
-    /**
-     * 获取{@code strategy_UnregisteredType_ThrowsBusinessException}。
-     */
     @Test
     @DisplayName("getStrategy - 未注册类型名抛出不支持登录类型异常")
     void getStrategy_UnregisteredType_ThrowsBusinessException() {
@@ -148,9 +127,6 @@ class LoginStrategyProviderTest {
                 });
     }
 
-    /**
-     * 获取{@code strategy_EmptyStrategies_NullType_ThrowsBusinessException}。
-     */
     @Test
     @DisplayName("getStrategy - 空策略列表时 null 类型名抛出异常")
     void getStrategy_EmptyStrategies_NullType_ThrowsBusinessException() {

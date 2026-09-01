@@ -157,9 +157,9 @@ public class MultipartRequestParser {
                 if (bytes.length == 0) return parameterError("文件不能为空: " + filePart.filename());
                 return Mono.just(new ByteArrayResource(bytes) {
                     /**
-                     * 执行 {@code getFilename} 逻辑。
+                     * 返回原始的 multipart 文件名。
                      *
-                     * @return 执行结果
+                     * @return 原始文件名
                      */
                     @Override
                     public String getFilename() {
@@ -173,11 +173,11 @@ public class MultipartRequestParser {
     }
 
     /**
-     * 执行 {@code parameterError} 逻辑。
+     * 构造参数错误信号。
      *
-     * @param message message 参数
-     *
-     * @return 执行结果
+     * @param message 错误提示信息
+     * @param <T>     泛型类型
+     * @return 携带参数错误的 Mono 信号
      */
     private static <T> Mono<T> parameterError(String message) {
         return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, message));

@@ -13,10 +13,6 @@ import org.junit.jupiter.api.Test;
  * @author Apex Team
  */
 class ChuanglanPropertiesTest {
-
-    /**
-     * 执行 {@code explicitPlatformMustHaveItsOwnCredentials} 操作。
-     */
     @Test
     void explicitPlatformMustHaveItsOwnCredentials() {
         ChuanglanProperties.Flash flash = new ChuanglanProperties.Flash();
@@ -25,18 +21,12 @@ class ChuanglanPropertiesTest {
                 .hasMessageContaining("ios");
     }
 
-    /**
-     * 执行 {@code unknownPlatformIsRejected} 操作。
-     */
     @Test
     void unknownPlatformIsRejected() {
         ChuanglanProperties.Flash flash = new ChuanglanProperties.Flash();
         assertThatThrownBy(() -> flash.getPlatformConfig("unknown")).isInstanceOf(IllegalArgumentException.class);
     }
 
-    /**
-     * 执行 {@code legacyCredentialsRemainAvailableOnlyForDefaultPlatform} 操作。
-     */
     @Test
     @SuppressWarnings("deprecation")
     void legacyCredentialsRemainAvailableOnlyForDefaultPlatform() {

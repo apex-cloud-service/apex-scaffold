@@ -62,11 +62,6 @@ class WeChatPhoneLoginStrategyTest {
     private UserEntity existingUser;
     private UserEntity newUser;
 
-    /**
-     * 创建{@code phoneResult}。
-     * @param phoneNumber 参数 {@code phoneNumber}
-     * @return 操作结果
-     */
     private WeChatGateway.WeChatPhoneResult createPhoneResult(String phoneNumber) {
         WeChatGateway.WeChatPhoneResult result = new WeChatGateway.WeChatPhoneResult();
         result.setPhoneNumber(phoneNumber);
@@ -99,9 +94,6 @@ class WeChatPhoneLoginStrategyTest {
         newUser.setPhone("13900139000");
     }
 
-    /**
-     * 执行 {@code login_PhoneCodeIsNull_ThrowsError} 操作。
-     */
     @Test
     @DisplayName("login - phoneCode为空时抛出参数异常")
     void login_PhoneCodeIsNull_ThrowsError() {
@@ -114,9 +106,6 @@ class WeChatPhoneLoginStrategyTest {
         });
     }
 
-    /**
-     * 执行 {@code login_PhoneCodeIsBlank_ThrowsError} 操作。
-     */
     @Test
     @DisplayName("login - phoneCode为空白时抛出参数异常")
     void login_PhoneCodeIsBlank_ThrowsError() {
@@ -129,9 +118,6 @@ class WeChatPhoneLoginStrategyTest {
         });
     }
 
-    /**
-     * 执行 {@code login_GetPhoneFailed_ThrowsError} 操作。
-     */
     @Test
     @DisplayName("login - 获取手机号失败时抛出异常")
     void login_GetPhoneFailed_ThrowsError() {
@@ -146,9 +132,6 @@ class WeChatPhoneLoginStrategyTest {
         });
     }
 
-    /**
-     * 执行 {@code login_ExistingUser_Success} 操作。
-     */
     @Test
     @DisplayName("login - 已有用户登录成功")
     void login_ExistingUser_Success() {
@@ -175,9 +158,6 @@ class WeChatPhoneLoginStrategyTest {
         verify(tokenService).storeToken(eq("test_openid"), eq("access_token"), eq("refresh_token"), any(), any());
     }
 
-    /**
-     * 执行 {@code login_NewUser_Success} 操作。
-     */
     @Test
     @DisplayName("login - 未注册手机号返回注册票据")
     void login_NewUser_Success() {

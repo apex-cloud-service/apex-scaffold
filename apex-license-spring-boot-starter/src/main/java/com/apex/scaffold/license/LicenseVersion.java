@@ -33,10 +33,20 @@ public enum LicenseVersion {
         this.annualPrice = annualPrice;
     }
 
+    /**
+     * 获取授权版本展示名称
+     *
+     * @return 版本展示名称,如"基础版"
+     */
     public String getDisplayName() {
         return displayName;
     }
 
+    /**
+     * 获取授权版本年度价格
+     *
+     * @return 年度价格(单位: 分)
+     */
     public int getAnnualPrice() {
         return annualPrice;
     }

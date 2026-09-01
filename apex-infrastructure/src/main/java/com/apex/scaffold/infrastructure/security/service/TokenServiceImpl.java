@@ -145,15 +145,6 @@ public class TokenServiceImpl implements TokenService {
      * @return JWT AccessToken 字符串
      */
     @Override
-    /**
-     * 生成AccessToken
-     *
-     * @param subject 参数
-     *
-     * @param deviceId 参数
-     *
-     * @return 结果
-     */
     public String generateAccessToken(String subject, String deviceId) {
         Map<String, Object> claims = new HashMap<>(8);
         claims.put("type", TOKEN_TYPE_ACCESS);
@@ -175,15 +166,6 @@ public class TokenServiceImpl implements TokenService {
      * @return JWT RefreshToken 字符串
      */
     @Override
-    /**
-     * 刷新eRefreshToken
-     *
-     * @param subject 参数
-     *
-     * @param deviceId 参数
-     *
-     * @return 结果
-     */
     public String generateRefreshToken(String subject, String deviceId) {
         Map<String, Object> claims = new HashMap<>(8);
         claims.put("type", TOKEN_TYPE_REFRESH);
@@ -218,13 +200,6 @@ public class TokenServiceImpl implements TokenService {
      * @return 响应式校验结果：true-有效且不在黑名单中，false-无效或已在黑名单中
      */
     @Override
-    /**
-     * 验证Token
-     *
-     * @param token 参数
-     *
-     * @return 结果
-     */
     public Mono<Boolean> validateToken(String token) {
         try {
             JwtUtil.parseToken(token);
@@ -246,17 +221,6 @@ public class TokenServiceImpl implements TokenService {
      * @return 空的 Mono，表示存储完成
      */
     @Override
-    /**
-     * 存储Token
-     *
-     * @param subject 参数
-     *
-     * @param accessToken 参数
-     *
-     * @param refreshToken 参数
-     *
-     * @return 结果
-     */
     public Mono<Void> storeToken(String subject, String accessToken, String refreshToken) {
         return storeToken(subject, accessToken, refreshToken, null, null);
     }
@@ -320,17 +284,6 @@ public class TokenServiceImpl implements TokenService {
      * @return 空的 Mono，表示存储完成
      */
     @Override
-    /**
-     * 存储AccessToken
-     *
-     * @param subject 参数
-     *
-     * @param accessToken 参数
-     *
-     * @param ttlSeconds 参数
-     *
-     * @return 结果
-     */
     public Mono<Void> storeAccessToken(String subject, String accessToken, int ttlSeconds) {
         RBucket<String> accessBucket = redissonClient.getBucket(accessKey(subject), StringCodec.INSTANCE);
         return Mono.fromCompletionStage(accessBucket.setAsync(accessToken, Duration.ofSeconds(ttlSeconds)));
@@ -357,15 +310,6 @@ public class TokenServiceImpl implements TokenService {
      * @return {@code Mono.just(true)}-校验通过，{@code Mono.just(false)}-校验失败
      */
     @Override
-    /**
-     * 验证RefreshToken
-     *
-     * @param subject 参数
-     *
-     * @param refreshToken 参数
-     *
-     * @return 结果
-     */
     public Mono<Boolean> validateRefreshToken(String subject, String refreshToken) {
         if (refreshToken == null || refreshToken.isBlank()) {
             return Mono.just(false);
@@ -578,13 +522,6 @@ public class TokenServiceImpl implements TokenService {
      * @return {@code Mono.just(2L)} 固定返回 2，表示删除了 access 和 refresh 两条记录
      */
     @Override
-    /**
-     * 删除Token
-     *
-     * @param subject 参数
-     *
-     * @return 结果
-     */
     public Mono<Long> deleteToken(String subject) {
         Mono<Boolean> accessDeleted = Mono.fromCompletionStage(redissonClient
                 .getBucket(accessKey(subject), StringCodec.INSTANCE)

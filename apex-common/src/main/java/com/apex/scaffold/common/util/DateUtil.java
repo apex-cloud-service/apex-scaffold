@@ -12,6 +12,7 @@ import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
 import java.util.Date;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -619,28 +620,28 @@ public class DateUtil {
     // ==================== 内部工具方法 ====================
 
     /**
+     * 预编译格式化器注册表：pattern → 线程安全的静态 {@link DateTimeFormatter}。
+     *
+     * <p>仅在首次访问时惰性初始化；未注册的 pattern 由
+     * {@link #getPrecompiledFormatter(String)} 动态创建。</p>
+     */
+    private static final Map<String, DateTimeFormatter> PRECOMPILED_FORMATTERS = Map.of(
+            DATE_PATTERN, DATE_FORMATTER,
+            TIME_PATTERN, TIME_FORMATTER,
+            DATETIME_PATTERN, DATETIME_FORMATTER,
+            DATETIME_MS_PATTERN, DATETIME_MS_FORMATTER,
+            DATETIME_ZONE_PATTERN, DATETIME_ZONE_FORMATTER);
+
+    /**
      * 根据pattern获取预编译的DateTimeFormatter。
      *
-     * <p>如果pattern匹配预定义的常量,返回对应的静态formatter;
-     * 否则创建新的formatter(非线程安全场景应谨慎使用)。
+     * <p>优先从 {@link #PRECOMPILED_FORMATTERS} 注册表返回静态 formatter；
+     * 未注册的 pattern 动态创建（每次创建开销较小，调用方应避免高频动态 pattern）。</p>
      *
      * @param pattern 日期格式模式
      * @return DateTimeFormatter实例
      */
     private static DateTimeFormatter getPrecompiledFormatter(String pattern) {
-        if (pattern.equals(DATE_PATTERN)) {
-            return DATE_FORMATTER;
-        } else if (pattern.equals(TIME_PATTERN)) {
-            return TIME_FORMATTER;
-        } else if (pattern.equals(DATETIME_PATTERN)) {
-            return DATETIME_FORMATTER;
-        } else if (pattern.equals(DATETIME_MS_PATTERN)) {
-            return DATETIME_MS_FORMATTER;
-        } else if (pattern.equals(DATETIME_ZONE_PATTERN)) {
-            return DATETIME_ZONE_FORMATTER;
-        } else {
-            // 未匹配的pattern,动态创建(注意:此方式非线程安全)
-            return DateTimeFormatter.ofPattern(pattern);
-        }
+        return PRECOMPILED_FORMATTERS.getOrDefault(pattern, DateTimeFormatter.ofPattern(pattern));
     }
 }

@@ -57,9 +57,6 @@ class FileEntityTest extends BaseEntityTest<FileEntity> {
             assertThat(file.getUserId()).isEqualTo(100L);
         }
 
-        /**
-         * 执行 {@code newEntityShouldHaveNullFields} 操作。
-         */
         @Test
         @DisplayName("新创建的实体字段应为 null")
         void newEntityShouldHaveNullFields() {
@@ -80,10 +77,6 @@ class FileEntityTest extends BaseEntityTest<FileEntity> {
     @Nested
     @DisplayName("业务场景")
     class BusinessScenarioTest {
-
-        /**
-         * 执行 {@code shouldRecordImageFileUpload} 操作。
-         */
         @Test
         @DisplayName("上传图片文件记录")
         void shouldRecordImageFileUpload() {
@@ -99,9 +92,6 @@ class FileEntityTest extends BaseEntityTest<FileEntity> {
             assertThat(file.getUserId()).isEqualTo(1L);
         }
 
-        /**
-         * 执行 {@code shouldRecordVideoFileUpload} 操作。
-         */
         @Test
         @DisplayName("上传视频文件记录")
         void shouldRecordVideoFileUpload() {
@@ -115,9 +105,6 @@ class FileEntityTest extends BaseEntityTest<FileEntity> {
             assertThat(file.getContentType()).isEqualTo("video/mp4");
         }
 
-        /**
-         * 执行 {@code shouldSupportMd5Value} 操作。
-         */
         @Test
         @DisplayName("支持 MD5 校验值")
         void shouldSupportMd5Value() {

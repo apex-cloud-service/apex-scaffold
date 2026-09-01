@@ -73,11 +73,6 @@ public class MinioServiceImpl extends AbstractStorageService {
      * @return 存储类型字符串 "MINIO"
      */
     @Override
-    /**
-     * 获取StorageType
-     *
-     * @return 结果
-     */
     protected String getStorageType() {
         return "MINIO";
     }
@@ -91,13 +86,6 @@ public class MinioServiceImpl extends AbstractStorageService {
      * @return 空Mono，表示操作完成
      */
     @Override
-    /**
-     * 是否存在BucketExistsInternal
-     *
-     * @param bucketName 参数
-     *
-     * @return 结果
-     */
     protected Mono<Void> ensureBucketExistsInternal(String bucketName) {
         return Mono.fromRunnable(() -> {
                     try {
@@ -125,13 +113,6 @@ public class MinioServiceImpl extends AbstractStorageService {
      * @return 异步操作结果
      */
     @Override
-    /**
-     * 创建BucketInternal
-     *
-     * @param bucketName 参数
-     *
-     * @return 结果
-     */
     protected Mono<Void> createBucketInternal(String bucketName) {
         return Mono.fromRunnable(() -> {
                     try {
@@ -178,15 +159,6 @@ public class MinioServiceImpl extends AbstractStorageService {
      * @return 包含文件内容的原始输入流，调用方负责关闭
      */
     @Override
-    /**
-     * 加载load
-     *
-     * @param bucketName 参数
-     *
-     * @param objectName 参数
-     *
-     * @return 结果
-     */
     public Mono<InputStream> download(String bucketName, String objectName) {
         return Mono.fromCallable(() -> (InputStream) minioClient.getObject(GetObjectArgs.builder()
                         .bucket(bucketName)
@@ -206,17 +178,6 @@ public class MinioServiceImpl extends AbstractStorageService {
      * @return 预签名URL
      */
     @Override
-    /**
-     * 获取PresignedUrl
-     *
-     * @param bucketName 参数
-     *
-     * @param objectName 参数
-     *
-     * @param expiry 参数
-     *
-     * @return 结果
-     */
     public Mono<String> getPresignedUrl(String bucketName, String objectName, Integer expiry) {
         int effectiveExpiry = expiry == null ? 300 : expiry;
         return Mono.fromCallable(() -> minioClient.getPresignedObjectUrl(GetPresignedObjectUrlArgs.builder()
@@ -241,19 +202,6 @@ public class MinioServiceImpl extends AbstractStorageService {
      * @return 上传后的唯一文件名
      */
     @Override
-    /**
-     * 加载load
-     *
-     * @param bucketName 参数
-     *
-     * @param fileName 参数
-     *
-     * @param inputStream 参数
-     *
-     * @param contentType 参数
-     *
-     * @return 结果
-     */
     protected String doUpload(String bucketName, String fileName, InputStream inputStream, String contentType) {
         String uniqueFileName = generateUniqueFileName(fileName);
         try {
@@ -279,15 +227,6 @@ public class MinioServiceImpl extends AbstractStorageService {
      * @return 删除成功返回 true，失败返回 false
      */
     @Override
-    /**
-     * 删除te
-     *
-     * @param bucketName 参数
-     *
-     * @param fileName 参数
-     *
-     * @return 结果
-     */
     protected boolean doDelete(String bucketName, String fileName) {
         try {
             minioClient.removeObject(RemoveObjectArgs.builder()
@@ -312,15 +251,6 @@ public class MinioServiceImpl extends AbstractStorageService {
      * @return 文件存在返回 true，否则返回 false
      */
     @Override
-    /**
-     * 是否存在ts
-     *
-     * @param bucketName 参数
-     *
-     * @param fileName 参数
-     *
-     * @return 结果
-     */
     protected boolean doExists(String bucketName, String fileName) {
         try {
             minioClient.statObject(
@@ -342,17 +272,6 @@ public class MinioServiceImpl extends AbstractStorageService {
      * @return 文件访问路径
      */
     @Override
-    /**
-     * 构建PresignedUrl
-     *
-     * @param bucketName 参数
-     *
-     * @param fileName 参数
-     *
-     * @param expiry 参数
-     *
-     * @return 结果
-     */
     protected String buildPresignedUrl(String bucketName, String fileName, int expiry) {
         return "/minio/" + bucketName + "/" + fileName;
     }
@@ -365,11 +284,6 @@ public class MinioServiceImpl extends AbstractStorageService {
      * @return 照片访问 URL 前缀，如 {@code /minio/apex}
      */
     @Override
-    /**
-     * 获取PhotoUrlPrefix
-     *
-     * @return 结果
-     */
     public String getPhotoUrlPrefix() {
         return "/minio/" + getBucketName();
     }
@@ -380,11 +294,6 @@ public class MinioServiceImpl extends AbstractStorageService {
      * @return 存储桶名称
      */
     @Override
-    /**
-     * 获取BucketName
-     *
-     * @return 结果
-     */
     protected String getBucketName() {
         return MINIO_BUCKET;
     }

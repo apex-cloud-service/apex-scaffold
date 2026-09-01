@@ -23,10 +23,6 @@ class AlertEventTest {
     @Nested
     @DisplayName("无参构造函数测试")
     class NoArgsConstructorTest {
-
-        /**
-         * 执行 {@code shouldCreateObjectWithDefaultValues} 操作。
-         */
         @Test
         @DisplayName("无参构造应创建对象且所有字段为 null 或默认值")
         void shouldCreateObjectWithDefaultValues() {
@@ -44,10 +40,6 @@ class AlertEventTest {
     @Nested
     @DisplayName("全参构造函数测试")
     class AllArgsConstructorTest {
-
-        /**
-         * 执行 {@code shouldSetAllFieldsViaConstructor} 操作。
-         */
         @Test
         @DisplayName("所有字段应通过构造函数正确设置")
         void shouldSetAllFieldsViaConstructor() {
@@ -66,10 +58,6 @@ class AlertEventTest {
     @Nested
     @DisplayName("Exception 构造函数测试")
     class ExceptionConstructorTest {
-
-        /**
-         * 执行 {@code runtimeExceptionShouldSetExceptionTypeToClassName} 操作。
-         */
         @Test
         @DisplayName("传入 RuntimeException 应设置 exceptionType 为类名")
         void runtimeExceptionShouldSetExceptionTypeToClassName() {
@@ -79,9 +67,6 @@ class AlertEventTest {
             assertEquals("RuntimeException", event.getExceptionType());
         }
 
-        /**
-         * 执行 {@code shouldSetMessageFromException} 操作。
-         */
         @Test
         @DisplayName("应设置 message 为异常的 getMessage()")
         void shouldSetMessageFromException() {
@@ -91,9 +76,6 @@ class AlertEventTest {
             assertEquals("测试异常消息", event.getMessage());
         }
 
-        /**
-         * 执行 {@code countShouldBeOne} 操作。
-         */
         @Test
         @DisplayName("count 应设置为 1")
         void countShouldBeOne() {
@@ -102,9 +84,6 @@ class AlertEventTest {
             assertEquals(1, event.getCount());
         }
 
-        /**
-         * 执行 {@code nonBusinessExceptionShouldHaveErrorLevel} 操作。
-         */
         @Test
         @DisplayName("非 BusinessException 的 level 应为 AlertLevel.ERROR")
         void nonBusinessExceptionShouldHaveErrorLevel() {
@@ -113,9 +92,6 @@ class AlertEventTest {
             assertEquals(AlertLevel.ERROR, event.getLevel());
         }
 
-        /**
-         * 执行 {@code businessExceptionShouldHaveWarningLevel} 操作。
-         */
         @Test
         @DisplayName("BusinessException 的 level 应为 AlertLevel.WARNING")
         void businessExceptionShouldHaveWarningLevel() {
@@ -125,9 +101,6 @@ class AlertEventTest {
             assertEquals(AlertLevel.WARNING, event.getLevel());
         }
 
-        /**
-         * 执行 {@code nullPointerExceptionShouldBeHandled} 操作。
-         */
         @Test
         @DisplayName("传入 NullPointerException 应正确处理")
         void nullPointerExceptionShouldBeHandled() {
@@ -140,9 +113,6 @@ class AlertEventTest {
             assertEquals(AlertLevel.ERROR, event.getLevel());
         }
 
-        /**
-         * 执行 {@code illegalArgumentExceptionShouldBeHandled} 操作。
-         */
         @Test
         @DisplayName("传入 IllegalArgumentException 应正确处理")
         void illegalArgumentExceptionShouldBeHandled() {
@@ -217,10 +187,6 @@ class AlertEventTest {
     @Nested
     @DisplayName("Setter/Getter 测试")
     class SetterGetterTest {
-
-        /**
-         * 执行 {@code allPropertiesShouldBeSetAndGet} 操作。
-         */
         @Test
         @DisplayName("所有属性应可通过 setter/getter 操作")
         void allPropertiesShouldBeSetAndGet() {
@@ -244,10 +210,6 @@ class AlertEventTest {
     @Nested
     @DisplayName("Lombok equals/hashCode 测试")
     class EqualsHashCodeTest {
-
-        /**
-         * 执行 {@code equalObjectsShouldBeEqual} 操作。
-         */
         @Test
         @DisplayName("属性相同的两个对象应相等")
         void equalObjectsShouldBeEqual() {
@@ -272,9 +234,6 @@ class AlertEventTest {
             assertEquals(e1.hashCode(), e2.hashCode());
         }
 
-        /**
-         * 执行 {@code differentCountShouldNotBeEqual} 操作。
-         */
         @Test
         @DisplayName("count 不同的两个对象应不相等")
         void differentCountShouldNotBeEqual() {
@@ -284,9 +243,6 @@ class AlertEventTest {
             assertNotEquals(e1, e2);
         }
 
-        /**
-         * 执行 {@code differentLevelShouldNotBeEqual} 操作。
-         */
         @Test
         @DisplayName("level 不同的两个对象应不相等")
         void differentLevelShouldNotBeEqual() {
@@ -296,9 +252,6 @@ class AlertEventTest {
             assertNotEquals(e1, e2);
         }
 
-        /**
-         * 执行 {@code nullComparisonShouldReturnFalse} 操作。
-         */
         @Test
         @DisplayName("与 null 比较应返回 false")
         void nullComparisonShouldReturnFalse() {

@@ -73,9 +73,6 @@ class TokenBlacklistServiceImplTest {
         lenient().when(redisTemplate.opsForValue()).thenReturn(valueOps);
     }
 
-    /**
-     * 执行 {@code shouldAddTokenToBlacklist} 操作。
-     */
     @Test
     @DisplayName("应该将Token加入黑名单并设置正确的键前缀和TTL")
     void shouldAddTokenToBlacklist() {
@@ -100,9 +97,6 @@ class TokenBlacklistServiceImplTest {
         }
     }
 
-    /**
-     * 执行 {@code shouldCheckTokenInBlacklist} 操作。
-     */
     @Test
     @DisplayName("应该正确识别在黑名单中的Token")
     void shouldCheckTokenInBlacklist() {
@@ -122,9 +116,6 @@ class TokenBlacklistServiceImplTest {
         }
     }
 
-    /**
-     * 执行 {@code shouldCheckTokenNotInBlacklist} 操作。
-     */
     @Test
     @DisplayName("应该正确识别不在黑名单中的Token")
     void shouldCheckTokenNotInBlacklist() {
@@ -142,9 +133,6 @@ class TokenBlacklistServiceImplTest {
         }
     }
 
-    /**
-     * 执行 {@code shouldHandleRedisError} 操作。
-     */
     @Test
     @DisplayName("Token解析异常时应优雅降级")
     void shouldHandleRedisError() {
@@ -164,9 +152,6 @@ class TokenBlacklistServiceImplTest {
         }
     }
 
-    /**
-     * 执行 {@code shouldCheckBlacklistForJwtToken} 操作。
-     */
     @Test
     @DisplayName("应该使用JWT的jti作为Redis黑名单键")
     void shouldCheckBlacklistForJwtToken() {
@@ -187,9 +172,6 @@ class TokenBlacklistServiceImplTest {
         }
     }
 
-    /**
-     * 执行 {@code shouldTreatExpiredTokenAsNotBlacklisted} 操作。
-     */
     @Test
     @DisplayName("过期Token应视为不在黑名单且不抛异常")
     void shouldTreatExpiredTokenAsNotBlacklisted() {
@@ -205,9 +187,6 @@ class TokenBlacklistServiceImplTest {
         }
     }
 
-    /**
-     * 执行 {@code shouldHandleExpiredTokenWhenAdding} 操作。
-     */
     @Test
     @DisplayName("过期Token加入黑名单时应静默完成")
     void shouldHandleExpiredTokenWhenAdding() {

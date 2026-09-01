@@ -40,12 +40,10 @@ class JsonUtilTest {
         private int age;
 
         /**
-         * 创建 {@code TestUser} 实例。
          */
         public TestUser() {}
 
         /**
-         * 创建 {@code TestUser} 实例。
          *
          * @param name 用户名
          * @param age  年龄
@@ -98,7 +96,6 @@ class JsonUtilTest {
         private String name;
 
         /**
-         * 创建 {@code ExtraFieldsBean} 实例。
          */
         public ExtraFieldsBean() {}
 
@@ -151,12 +148,10 @@ class JsonUtilTest {
         private String breed;
 
         /**
-         * 创建 {@code Dog} 实例。
          */
         public Dog() {}
 
         /**
-         * 创建 {@code Dog} 实例。
          *
          * @param name  名称
          * @param breed 品种
@@ -191,12 +186,10 @@ class JsonUtilTest {
         private boolean indoor;
 
         /**
-         * 创建 {@code Cat} 实例。
          */
         public Cat() {}
 
         /**
-         * 创建 {@code Cat} 实例。
          *
          * @param name   名称
          * @param indoor 是否室内饲养

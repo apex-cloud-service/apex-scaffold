@@ -20,10 +20,6 @@ class PermissionEntityTest {
     @Nested
     @DisplayName("静态工厂方法 create()")
     class CreateTest {
-
-        /**
-         * 执行 {@code withValidParamsShouldCreateEnabledPermission} 操作。
-         */
         @Test
         @DisplayName("使用有效参数应创建启用权限并设置正确初始状态")
         void withValidParamsShouldCreateEnabledPermission() {
@@ -45,9 +41,6 @@ class PermissionEntityTest {
             assertThat(permission.isDeleted()).isFalse();
         }
 
-        /**
-         * 创建{@code timeShouldEqualUpdateTime}。
-         */
         @Test
         @DisplayName("创建时间应与更新时间一致")
         void createTimeShouldEqualUpdateTime() {
@@ -60,10 +53,6 @@ class PermissionEntityTest {
     @Nested
     @DisplayName("有效性判断 isEnabled()")
     class IsEnabledTest {
-
-        /**
-         * 执行 {@code newlyCreatedPermissionShouldBeEnabled} 操作。
-         */
         @Test
         @DisplayName("新创建的权限应处于启用状态")
         void newlyCreatedPermissionShouldBeEnabled() {
@@ -72,9 +61,6 @@ class PermissionEntityTest {
             assertThat(permission.isEnabled()).isTrue();
         }
 
-        /**
-         * 执行 {@code afterDisableShouldBeDisabled} 操作。
-         */
         @Test
         @DisplayName("禁用后应返回 false")
         void afterDisableShouldBeDisabled() {
@@ -83,9 +69,6 @@ class PermissionEntityTest {
             assertThat(permission.isEnabled()).isFalse();
         }
 
-        /**
-         * 执行 {@code afterEnableShouldBeEnabled} 操作。
-         */
         @Test
         @DisplayName("启用后应返回 true")
         void afterEnableShouldBeEnabled() {
@@ -95,9 +78,6 @@ class PermissionEntityTest {
             assertThat(permission.isEnabled()).isTrue();
         }
 
-        /**
-         * 执行 {@code nullStatusShouldReturnFalse} 操作。
-         */
         @Test
         @DisplayName("status 为 null 时应返回 false")
         void nullStatusShouldReturnFalse() {
@@ -109,10 +89,6 @@ class PermissionEntityTest {
     @Nested
     @DisplayName("信息更新 updateInfo()")
     class UpdateInfoTest {
-
-        /**
-         * 执行 {@code shouldUpdateNameDescriptionAndStatus} 操作。
-         */
         @Test
         @DisplayName("应正确更新名称、描述和状态")
         void shouldUpdateNameDescriptionAndStatus() {
@@ -125,9 +101,6 @@ class PermissionEntityTest {
             assertThat(permission.getCode()).isEqualTo("old:perm");
         }
 
-        /**
-         * 执行 {@code shouldTouchUpdateTime} 操作。
-         */
         @Test
         @DisplayName("应刷新更新时间")
         void shouldTouchUpdateTime() {
@@ -141,10 +114,6 @@ class PermissionEntityTest {
     @Nested
     @DisplayName("启用/禁用 enable() / disable()")
     class EnableDisableTest {
-
-        /**
-         * 执行 {@code disableShouldSetStatusToZero} 操作。
-         */
         @Test
         @DisplayName("disable() 应将状态设为 0")
         void disableShouldSetStatusToZero() {
@@ -154,9 +123,6 @@ class PermissionEntityTest {
             assertThat(permission.isEnabled()).isFalse();
         }
 
-        /**
-         * 执行 {@code enableShouldSetStatusToOne} 操作。
-         */
         @Test
         @DisplayName("enable() 应将状态设为 1")
         void enableShouldSetStatusToOne() {
@@ -167,9 +133,6 @@ class PermissionEntityTest {
             assertThat(permission.isEnabled()).isTrue();
         }
 
-        /**
-         * 执行 {@code disableShouldTouchUpdateTime} 操作。
-         */
         @Test
         @DisplayName("disable() 应刷新更新时间")
         void disableShouldTouchUpdateTime() {
@@ -179,9 +142,6 @@ class PermissionEntityTest {
             assertThat(permission.getUpdateTime()).isAfterOrEqualTo(originalUpdateTime);
         }
 
-        /**
-         * 执行 {@code enableShouldTouchUpdateTime} 操作。
-         */
         @Test
         @DisplayName("enable() 应刷新更新时间")
         void enableShouldTouchUpdateTime() {
@@ -192,9 +152,6 @@ class PermissionEntityTest {
             assertThat(permission.getUpdateTime()).isAfterOrEqualTo(originalUpdateTime);
         }
 
-        /**
-         * 执行 {@code repeatedDisableShouldStayDisabled} 操作。
-         */
         @Test
         @DisplayName("重复禁用应保持禁用状态")
         void repeatedDisableShouldStayDisabled() {
@@ -204,9 +161,6 @@ class PermissionEntityTest {
             assertThat(permission.isEnabled()).isFalse();
         }
 
-        /**
-         * 执行 {@code repeatedEnableShouldStayEnabled} 操作。
-         */
         @Test
         @DisplayName("重复启用应保持启用状态")
         void repeatedEnableShouldStayEnabled() {
@@ -245,28 +199,18 @@ class PermissionEntityTest {
     @Nested
     @DisplayName("PermissionType 枚举")
     class PermissionTypeEnumTest {
-
-        /**
-         * 执行 {@code menuCodeShouldBeOne} 操作。
-         */
         @Test
         @DisplayName("MENU 的 code 应为 1")
         void menuCodeShouldBeOne() {
             assertThat(PermissionEntity.PermissionType.MENU.getCode()).isEqualTo(1);
         }
 
-        /**
-         * 执行 {@code buttonCodeShouldBeTwo} 操作。
-         */
         @Test
         @DisplayName("BUTTON 的 code 应为 2")
         void buttonCodeShouldBeTwo() {
             assertThat(PermissionEntity.PermissionType.BUTTON.getCode()).isEqualTo(2);
         }
 
-        /**
-         * 执行 {@code apiCodeShouldBeThree} 操作。
-         */
         @Test
         @DisplayName("API 的 code 应为 3")
         void apiCodeShouldBeThree() {

@@ -58,10 +58,25 @@ public final class DataScopeContext {
         return currentScope().map(Scope::info);
     }
 
+    /**
+     * 获取当前请求的数据权限条目（信息 + 注入配置）。
+     *
+     * @return 数据权限条目（未装配时为 {@link Optional#empty()}
+     */
     public static Optional<Scope> currentScope() {
         return Optional.ofNullable(SCOPE.get());
     }
 
+    /**
+     * 安装数据权限条目到当前线程并返回清理句柄。
+     *
+     * <p>用于需要临时覆盖 {@link #setDataScope(DataScopeInfo)} 装配结果的场景
+     * （如 {@code DataScopeAspect} 的 doFirst/doFinally 配对）。返回值必须通过
+     * try-with-resources 或 finally 释放，否则线程复用将导致数据越权泄漏。</p>
+     *
+     * @param scope 数据权限条目，不允许为 {@code null}
+     * @return 释放句柄，调用 {@link AutoCloseable#close()} 恢复之前的值
+     */
     public static AutoCloseable install(Scope scope) {
         Scope previous = SCOPE.get();
         SCOPE.set(Objects.requireNonNull(scope, "scope must not be null"));
@@ -122,7 +137,23 @@ public final class DataScopeContext {
         SCOPE.remove();
     }
 
+    /**
+     * 数据权限条目：权限信息与其注入配置的组合。
+     *
+     * <p>紧凑构造器对 {@code info} 做防御性复制，避免外部篡改 {@link DataScopeInfo}
+     * 内部可变集合导致上下文状态不一致。</p>
+     *
+     * @param info   数据权限信息（不允许为 {@code null}）
+     * @param config 注入配置（不允许为 {@code null}）
+     */
     public record Scope(DataScopeInfo info, DataScopeConfig config) {
+        /**
+         * 紧凑构造器：对 {@code info} 防御性复制并校验非空。
+         *
+         * @param info   数据权限信息
+         * @param config 注入配置
+         * @throws NullPointerException 当任一参数为 {@code null} 时抛出
+         */
         public Scope {
             info = new DataScopeInfo(
                     Objects.requireNonNull(info, "info must not be null").type(),

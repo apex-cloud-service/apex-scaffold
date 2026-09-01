@@ -90,6 +90,17 @@ public final class PageUtil {
         return new PageInfo<>(list);
     }
 
+    /**
+     * 规范化排序字段。
+     *
+     * <p>仅接受单个列名（可选 ASC/DESC 方向）的排序表达式，防止 SQL 注入。
+     * 排序字段必须是字母、数字、下划线组成的合法列名，方向不区分大小写，
+     * 输出统一为 {@code column ASC} / {@code column DESC} 格式。</p>
+     *
+     * @param orderBy 原始排序表达式，可为 null 或空白
+     * @return 规范化后的排序表达式；输入为 null/空白时返回 null
+     * @throws IllegalArgumentException 当排序表达式格式不合法时抛出
+     */
     public static String normalizeOrderBy(String orderBy) {
         if (orderBy == null || orderBy.isBlank()) {
             return null;

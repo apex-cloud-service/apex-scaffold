@@ -105,24 +105,17 @@ public class BaiduImageModerationAdapter implements ImageModerationPort {
     }
 
     /**
-     * 执行 {@code moderate} 逻辑。
+     * 审核图片内容。
      *
-     * @param image image 参数
+     * <p>对指定图片按给定场景列表执行百度云内容审核，在远程弹性调度器上执行，
+     * 并设置整体超时时间（接口超时的两倍加两秒）。</p>
      *
-     * @param scenes scenes 参数
-     *
-     * @return 执行结果
+     * @param image  待审核的图片资源
+     * @param scenes 审核场景列表，不能为空
+     * @return 审核结果，包含总体结论与逐项发现
+     * @throws IllegalArgumentException 图片为空或审核场景为空时抛出
      */
     @Override
-    /**
-     * moderate
-     *
-     * @param image 参数
-     *
-     * @param scenes 参数
-     *
-     * @return 结果
-     */
     public Mono<ImageModerationResult> moderate(Resource image, List<ModerationScene> scenes) {
         if (image == null || scenes == null || scenes.isEmpty()) {
             return Mono.error(new IllegalArgumentException("图片与审核场景不能为空"));
@@ -133,13 +126,14 @@ public class BaiduImageModerationAdapter implements ImageModerationPort {
     }
 
     /**
-     * 执行 {@code callBaidu} 逻辑。
+     * 调用百度云图片审核 API。
      *
-     * @param image image 参数
+     * <p>先将图片交给 {@link BaiduImagePreprocessor} 预处理，再携带有效 Access Token
+     * 发起审核请求；若首次请求因 Token 失效失败，则作废缓存 Token 并重试一次。</p>
      *
-     * @return 执行结果
-     *
-     * @throws Exception 执行失败时
+     * @param image 待审核的图片资源
+     * @return 审核结果
+     * @throws Exception 预处理或调用审核 API 失败时抛出
      */
     private ImageModerationResult callBaidu(Resource image) throws Exception {
         byte[] preparedImage = imagePreprocessor.prepare(image);
@@ -152,15 +146,15 @@ public class BaiduImageModerationAdapter implements ImageModerationPort {
     }
 
     /**
-     * 执行 {@code requestModeration} 逻辑。
+     * 向百度云发起图片审核 HTTP 请求。
      *
-     * @param image image 参数
+     * <p>将图片 Base64 编码后与策略 ID 组成表单请求体，携带 Access Token 调用审核端点；
+     * 解析响应并判断返回的错误码，Token 失效或过期时抛出 {@link BaiduTokenException}。</p>
      *
-     * @param accessToken accessToken 参数
-     *
-     * @return 执行结果
-     *
-     * @throws Exception 执行失败时
+     * @param image       已预处理的图片字节数组
+     * @param accessToken 百度云 Access Token
+     * @return 审核结果
+     * @throws Exception HTTP 调用失败、审核失败或返回 Token 失效时抛出
      */
     private ImageModerationResult requestModeration(byte[] image, String accessToken) throws Exception {
         String formBody = "image="
@@ -190,11 +184,13 @@ public class BaiduImageModerationAdapter implements ImageModerationPort {
     }
 
     /**
-     * 执行 {@code mapResponse} 逻辑。
+     * 将百度云审核响应解析为领域审核结果。
      *
-     * @param root root 参数
+     * <p>根据响应中的 {@code conclusionType} 计算总体决策，遍历 {@code data} 数组
+     * 生成逐项发现；无明细时以总体结论兜底构造单条发现，并提取 {@code log_id} 作为请求 ID。</p>
      *
-     * @return 执行结果
+     * @param root 百度云审核响应 JSON 根节点
+     * @return 审核结果
      */
     ImageModerationResult mapResponse(JsonNode root) {
         int conclusionType = root.path("conclusionType").asInt(0);
@@ -224,13 +220,14 @@ public class BaiduImageModerationAdapter implements ImageModerationPort {
     }
 
     /**
-     * 执行 {@code mapFinding} 逻辑。
+     * 将单条审核明细映射为发现项。
      *
-     * @param item item 参数
+     * <p>解析明细中的类型、子类型与结论类型；结论类型缺失时沿用总体决策兜底，
+     * 计算命中概率并附带完整明细数据。</p>
      *
-     * @param fallbackDecision fallbackDecision 参数
-     *
-     * @return 执行结果
+     * @param item             百度云审核明细 JSON 节点
+     * @param fallbackDecision 明细未给出结论类型时的兜底决策
+     * @return 单条审核发现
      */
     private ModerationFinding mapFinding(JsonNode item, ModerationDecision fallbackDecision) {
         int type = item.path("type").asInt(-1);
@@ -244,11 +241,13 @@ public class BaiduImageModerationAdapter implements ImageModerationPort {
     }
 
     /**
-     * 执行 {@code probability} 逻辑。
+     * 计算审核明细的命中概率。
      *
-     * @param item item 参数
+     * <p>优先取明细自身的 {@code probability}；否则遍历 {@code stars} 数组中的
+     * 概率值并返回最大值。</p>
      *
-     * @return 执行结果
+     * @param item 百度云审核明细 JSON 节点
+     * @return 命中概率（百分比），无法计算时返回 {@code null}
      */
     private BigDecimal probability(JsonNode item) {
         if (item.has("probability") && item.path("probability").isNumber()) {
@@ -270,22 +269,22 @@ public class BaiduImageModerationAdapter implements ImageModerationPort {
     }
 
     /**
-     * 执行 {@code percentage} 逻辑。
+     * 将 0~1 区间的概率换算为百分比并保留四位小数。
      *
-     * @param probability probability 参数
-     *
-     * @return 执行结果
+     * @param probability 原始概率（0~1）
+     * @return 百分比数值（0~100，四位小数）
      */
     private BigDecimal percentage(BigDecimal probability) {
         return probability.multiply(BigDecimal.valueOf(100)).setScale(4, RoundingMode.HALF_UP);
     }
 
     /**
-     * 执行 {@code accessToken} 逻辑。
+     * 获取有效的百度云 Access Token。
      *
-     * @return 执行结果
+     * <p>优先返回缓存中未过期的 Token；否则在锁内再次校验后重新获取，避免并发重复请求。</p>
      *
-     * @throws Exception 执行失败时
+     * @return 有效的 Access Token
+     * @throws Exception 获取 Token 失败时抛出
      */
     private String accessToken() throws Exception {
         CachedToken current = cachedToken;
@@ -303,11 +302,13 @@ public class BaiduImageModerationAdapter implements ImageModerationPort {
     }
 
     /**
-     * 执行 {@code requestAccessToken} 逻辑。
+     * 向百度云 OAuth 端点请求新的 Access Token。
      *
-     * @return 执行结果
+     * <p>使用 API Key 与 Secret Key 按客户端凭证模式获取 Token，按过期时间提前
+     * 留出安全余量计算可用截止时间。</p>
      *
-     * @throws Exception 执行失败时
+     * @return 带过期时间的缓存 Token
+     * @throws Exception HTTP 调用失败或响应中缺少有效 Token 时抛出
      */
     private CachedToken requestAccessToken() throws Exception {
         String query = "grant_type=client_credentials&client_id="
@@ -333,7 +334,9 @@ public class BaiduImageModerationAdapter implements ImageModerationPort {
     }
 
     /**
-     * 执行 {@code invalidateToken} 逻辑。
+     * 作废缓存的 Access Token。
+     *
+     * <p>在锁内将缓存 Token 置空，触发下次请求时重新获取。</p>
      */
     private void invalidateToken() {
         synchronized (tokenLock) {
@@ -342,11 +345,13 @@ public class BaiduImageModerationAdapter implements ImageModerationPort {
     }
 
     /**
-     * 执行 {@code mapDecision} 逻辑。
+     * 将百度云审核结论类型映射为领域决策。
      *
-     * @param conclusionType conclusionType 参数
+     * <p>1 对应通过、2 对应拦截、3 对应人工审核，其余类型视为未知并抛异常。</p>
      *
-     * @return 执行结果
+     * @param conclusionType 百度云审核结论类型
+     * @return 对应的领域审核决策
+     * @throws IllegalStateException 结论类型未知时抛出
      */
     private ModerationDecision mapDecision(int conclusionType) {
         return switch (conclusionType) {
@@ -358,11 +363,10 @@ public class BaiduImageModerationAdapter implements ImageModerationPort {
     }
 
     /**
-     * 执行 {@code suggestion} 逻辑。
+     * 生成决策对应的建议动作标识。
      *
-     * @param decision decision 参数
-     *
-     * @return 执行结果
+     * @param decision 领域审核决策
+     * @return 决策名的小写形式（如 {@code pass}、{@code block}）
      */
     private String suggestion(ModerationDecision decision) {
         return decision.name().toLowerCase(java.util.Locale.ROOT);
@@ -412,22 +416,20 @@ public class BaiduImageModerationAdapter implements ImageModerationPort {
             Map.entry(41, "custom_scene"));
 
     /**
-     * 执行 {@code scene} 逻辑。
+     * 将审核场景类型映射为百度云场景编号。
      *
-     * @param type type 参数
-     *
-     * @return 执行结果
+     * @param type 审核场景类型编号
+     * @return 对应的百度云场景编号，未知类型时返回 {@code type_<编号>}
      */
     private String scene(int type) {
         return SCENE_MAP.getOrDefault(type, "type_" + type);
     }
 
     /**
-     * 执行 {@code isBlank} 逻辑。
+     * 判断给定文本是否为空或仅含空白字符。
      *
-     * @param value value 参数
-     *
-     * @return 执行结果
+     * @param value 待判断的文本
+     * @return 文本为 {@code null} 或空白时返回 {@code true}
      */
     private boolean isBlank(String value) {
         return value == null || value.isBlank();
@@ -435,9 +437,9 @@ public class BaiduImageModerationAdapter implements ImageModerationPort {
 
     private record CachedToken(String value, Instant expiresAt) {
         /**
-         * 执行 {@code usable} 逻辑。
+         * 判断缓存的 Token 是否仍可用。
          *
-         * @return 执行结果
+         * @return 未过有效期时返回 {@code true}
          */
         boolean usable() {
             return Instant.now().isBefore(expiresAt);

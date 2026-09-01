@@ -39,9 +39,7 @@ class FlywayMigrationStartupTest {
     }
 
     /**
-     * 执行 {@code shouldStartWithEmbeddedDependencies} 操作。
      *
-     * @throws SQLException 当操作无法完成时
      */
     @Test
     void shouldStartWithEmbeddedDependencies() throws SQLException {
@@ -52,12 +50,10 @@ class FlywayMigrationStartupTest {
     }
 
     /**
-     * 执行 {@code shouldApplyAllSixMigrations} 操作。
      *
      * <p>Flyway 迁移链 V1-V15 必须全部应用成功（MySQL 版，各环境共用同一套迁移）。
      * 新增迁移脚本时同步更新本断言数量。</p>
      *
-     * @throws SQLException 当操作无法完成时
      */
     @Test
     void shouldApplyAllMigrationsThroughV19() throws SQLException {
@@ -112,11 +108,9 @@ class FlywayMigrationStartupTest {
     }
 
     /**
-     * 执行 {@code shouldHaveAuditAndDeptSeeds} 操作。
      *
      * <p>校验 V4（审计日志菜单）与 V6（部门管理菜单）修复后的种子数据可正常写入。</p>
      *
-     * @throws SQLException 当操作无法完成时
      */
     @Test
     void shouldHaveAuditAndDeptSeeds() throws SQLException {
@@ -141,9 +135,7 @@ class FlywayMigrationStartupTest {
     }
 
     /**
-     * 执行 {@code shouldHaveV3AndV6UserColumns} 操作。
      *
-     * @throws SQLException 当操作无法完成时
      */
     @Test
     void shouldHaveV3AndV6UserColumns() throws SQLException {

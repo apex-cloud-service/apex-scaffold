@@ -41,9 +41,6 @@ class UserRoleEntityTest extends BaseEntityTest<UserRoleEntity> {
             assertThat(entity.getRoleId()).isEqualTo(200L);
         }
 
-        /**
-         * 执行 {@code newEntityShouldHaveNullFields} 操作。
-         */
         @Test
         @DisplayName("新创建的实体字段应为 null")
         void newEntityShouldHaveNullFields() {
@@ -56,10 +53,6 @@ class UserRoleEntityTest extends BaseEntityTest<UserRoleEntity> {
     @Nested
     @DisplayName("业务场景")
     class BusinessScenarioTest {
-
-        /**
-         * 执行 {@code shouldSupportUserWithMultipleRoles} 操作。
-         */
         @Test
         @DisplayName("用户关联多个角色")
         void shouldSupportUserWithMultipleRoles() {
@@ -75,9 +68,6 @@ class UserRoleEntityTest extends BaseEntityTest<UserRoleEntity> {
             assertThat(entity1.getRoleId()).isNotEqualTo(entity2.getRoleId());
         }
 
-        /**
-         * 执行 {@code shouldSupportDifferentUsersWithSameRole} 操作。
-         */
         @Test
         @DisplayName("不同用户关联同一角色")
         void shouldSupportDifferentUsersWithSameRole() {

@@ -21,10 +21,6 @@ class UserStatusTest {
     @Nested
     @DisplayName("枚举值测试")
     class EnumValuesTest {
-
-        /**
-         * 执行 {@code shouldHaveTwoValues} 操作。
-         */
         @Test
         @DisplayName("应包含两个枚举值：NORMAL、DISABLED")
         void shouldHaveTwoValues() {
@@ -32,9 +28,6 @@ class UserStatusTest {
             assertEquals(2, values.length);
         }
 
-        /**
-         * 执行 {@code normalShouldHaveCorrectCodeAndDesc} 操作。
-         */
         @Test
         @DisplayName("NORMAL 的 code 应为 1，desc 应为 '正常'")
         void normalShouldHaveCorrectCodeAndDesc() {
@@ -42,9 +35,6 @@ class UserStatusTest {
             assertEquals("正常", UserStatus.NORMAL.getDesc());
         }
 
-        /**
-         * 执行 {@code disabledShouldHaveCorrectCodeAndDesc} 操作。
-         */
         @Test
         @DisplayName("DISABLED 的 code 应为 0，desc 应为 '禁用'")
         void disabledShouldHaveCorrectCodeAndDesc() {
@@ -52,9 +42,6 @@ class UserStatusTest {
             assertEquals("禁用", UserStatus.DISABLED.getDesc());
         }
 
-        /**
-         * 执行 {@code ordinalsShouldBeCorrect} 操作。
-         */
         @Test
         @DisplayName("ordinal 值应正确排列")
         void ordinalsShouldBeCorrect() {
@@ -62,9 +49,6 @@ class UserStatusTest {
             assertEquals(1, UserStatus.DISABLED.ordinal());
         }
 
-        /**
-         * 执行 {@code nameShouldReturnEnumConstantName} 操作。
-         */
         @Test
         @DisplayName("name 方法应返回枚举常量名称")
         void nameShouldReturnEnumConstantName() {
@@ -76,10 +60,6 @@ class UserStatusTest {
     @Nested
     @DisplayName("枚举属性测试")
     class EnumPropertiesTest {
-
-        /**
-         * 获取{@code codeShouldReturnInteger}。
-         */
         @Test
         @DisplayName("getCode 应返回 Integer 类型")
         void getCodeShouldReturnInteger() {
@@ -87,9 +67,6 @@ class UserStatusTest {
             assertInstanceOf(Integer.class, UserStatus.DISABLED.getCode());
         }
 
-        /**
-         * 获取{@code descShouldReturnString}。
-         */
         @Test
         @DisplayName("getDesc 应返回 String 类型")
         void getDescShouldReturnString() {
@@ -101,28 +78,18 @@ class UserStatusTest {
     @Nested
     @DisplayName("枚举使用场景测试")
     class UsageScenarioTest {
-
-        /**
-         * 执行 {@code normalAndDisabledCodeShouldBeDifferent} 操作。
-         */
         @Test
         @DisplayName("NORMAL 和 DISABLED 的 code 应互不相同")
         void normalAndDisabledCodeShouldBeDifferent() {
             assertNotEquals(UserStatus.NORMAL.getCode(), UserStatus.DISABLED.getCode());
         }
 
-        /**
-         * 执行 {@code normalAndDisabledDescShouldBeDifferent} 操作。
-         */
         @Test
         @DisplayName("NORMAL 和 DISABLED 的 desc 应互不相同")
         void normalAndDisabledDescShouldBeDifferent() {
             assertNotEquals(UserStatus.NORMAL.getDesc(), UserStatus.DISABLED.getDesc());
         }
 
-        /**
-         * 执行 {@code valueOfShouldParseCorrectly} 操作。
-         */
         @Test
         @DisplayName("valueOf 应正确解析枚举名称")
         void valueOfShouldParseCorrectly() {
@@ -130,9 +97,6 @@ class UserStatusTest {
             assertEquals(UserStatus.DISABLED, UserStatus.valueOf("DISABLED"));
         }
 
-        /**
-         * 执行 {@code invalidNameShouldThrowException} 操作。
-         */
         @Test
         @DisplayName("非法 name 应抛出 IllegalArgumentException")
         void invalidNameShouldThrowException() {

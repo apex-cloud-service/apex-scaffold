@@ -270,11 +270,10 @@ public class FileHandler extends BaseHandler {
     }
 
     /**
-     * 执行 {@code contentType} 逻辑。
+     * 解析文件部分的 Content-Type。
      *
-     * @param filePart filePart 参数
-     *
-     * @return 执行结果
+     * @param filePart multipart 中的文件部分
+     * @return 内容类型字符串，未声明时返回 {@code application/octet-stream}
      */
     private String contentType(FilePart filePart) {
         return filePart.headers().getContentType() != null

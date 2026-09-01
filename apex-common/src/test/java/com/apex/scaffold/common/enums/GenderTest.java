@@ -46,10 +46,6 @@ class GenderTest {
     @Nested
     @DisplayName("人脸分析编码映射")
     class AnalysisCodeTest {
-
-        /**
-         * 执行 {@code shouldMapAnalysisCodes} 操作。
-         */
         @Test
         void shouldMapAnalysisCodes() {
             assertThat(Gender.MALE.getAnalysisCode()).isEqualTo("male");
@@ -111,9 +107,6 @@ class GenderTest {
     @Nested
     @DisplayName("枚举属性")
     class EnumPropertiesTest {
-        /**
-         * 执行 {@code shouldHaveNonNullDeclaringClass} 操作。
-         */
         @Test
         void shouldHaveNonNullDeclaringClass() {
             for (Gender gender : Gender.values()) {

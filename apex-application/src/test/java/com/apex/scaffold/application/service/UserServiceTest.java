@@ -62,9 +62,6 @@ class UserServiceTest {
         lenient().when(cacheConsistencyService.evict(anyString(), anyString())).thenReturn(Mono.just(true));
     }
 
-    /**
-     * 获取{@code byOpenId_Success}。
-     */
     @Test
     @DisplayName("getByOpenId - 成功场景")
     void getByOpenId_Success() {
@@ -77,9 +74,6 @@ class UserServiceTest {
                 .verifyComplete();
     }
 
-    /**
-     * 获取{@code byOpenId_NotFound}。
-     */
     @Test
     @DisplayName("getByOpenId - 用户不存在")
     void getByOpenId_NotFound() {
@@ -88,9 +82,6 @@ class UserServiceTest {
         userService.getByOpenId("unknown").as(StepVerifier::create).verifyComplete();
     }
 
-    /**
-     * 获取{@code byPhone_Success}。
-     */
     @Test
     @DisplayName("getByPhone - 成功场景")
     void getByPhone_Success() {
@@ -103,9 +94,6 @@ class UserServiceTest {
                 .verifyComplete();
     }
 
-    /**
-     * 获取{@code byPhone_NotFound}。
-     */
     @Test
     @DisplayName("getByPhone - 用户不存在")
     void getByPhone_NotFound() {
@@ -114,9 +102,6 @@ class UserServiceTest {
         userService.getByPhone("13900000000").as(StepVerifier::create).verifyComplete();
     }
 
-    /**
-     * 获取{@code byId_Success}。
-     */
     @Test
     @DisplayName("getById - 成功场景")
     void getById_Success() {
@@ -129,9 +114,6 @@ class UserServiceTest {
                 .verifyComplete();
     }
 
-    /**
-     * 获取{@code byId_NotFound}。
-     */
     @Test
     @DisplayName("getById - 用户不存在")
     void getById_NotFound() {
@@ -140,9 +122,6 @@ class UserServiceTest {
         userService.getById(999L).as(StepVerifier::create).verifyComplete();
     }
 
-    /**
-     * 创建{@code _Success}。
-     */
     @Test
     @DisplayName("create - 成功场景")
     void create_Success() {

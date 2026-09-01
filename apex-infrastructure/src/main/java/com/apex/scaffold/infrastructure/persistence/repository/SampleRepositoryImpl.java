@@ -37,13 +37,6 @@ public class SampleRepositoryImpl implements SampleRepository {
      * @return 样本实体；若不存在则返回空 Mono
      */
     @Override
-    /**
-     * 查找ById
-     *
-     * @param id 参数
-     *
-     * @return 结果
-     */
     public Mono<SampleEntity> findById(Long id) {
         return Mono.fromCallable(() -> mapper.selectById(id))
                 .subscribeOn(BlockingIoSchedulers.jdbc())
@@ -59,13 +52,6 @@ public class SampleRepositoryImpl implements SampleRepository {
      * @return 保存后的样本实体
      */
     @Override
-    /**
-     * 保存
-     *
-     * @param entity 参数
-     *
-     * @return 结果
-     */
     public Mono<SampleEntity> save(SampleEntity entity) {
         return Mono.fromCallable(() -> {
                     SamplePO po = samplePoConverter.toPo(entity);

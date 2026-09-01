@@ -22,10 +22,6 @@ class PhoneNumberTest {
     @Nested
     @DisplayName("of 工厂方法")
     class OfTests {
-
-        /**
-         * 执行 {@code shouldCreateWithValidPhoneNumber} 操作。
-         */
         @Test
         @DisplayName("有效的11位手机号应创建成功")
         void shouldCreateWithValidPhoneNumber() {
@@ -34,9 +30,6 @@ class PhoneNumberTest {
             assertThat(phone.getNormalized()).isEqualTo("13812345678");
         }
 
-        /**
-         * 执行 {@code shouldCreateWithCountryCodePrefix} 操作。
-         */
         @Test
         @DisplayName("带+86前缀的手机号应创建成功")
         void shouldCreateWithCountryCodePrefix() {
@@ -44,9 +37,6 @@ class PhoneNumberTest {
             assertThat(phone.getNormalized()).isEqualTo("13812345678");
         }
 
-        /**
-         * 执行 {@code shouldCreateWith86Prefix} 操作。
-         */
         @Test
         @DisplayName("带86前缀的手机号应创建成功")
         void shouldCreateWith86Prefix() {
@@ -54,9 +44,6 @@ class PhoneNumberTest {
             assertThat(phone.getNormalized()).isEqualTo("13812345678");
         }
 
-        /**
-         * 执行 {@code shouldCreateWithFormattingCharacters} 操作。
-         */
         @Test
         @DisplayName("带空格或短横线的手机号应创建成功")
         void shouldCreateWithFormattingCharacters() {
@@ -64,9 +51,6 @@ class PhoneNumberTest {
             assertThat(phone.getNormalized()).isEqualTo("13812345678");
         }
 
-        /**
-         * 执行 {@code shouldThrowExceptionWhenNull} 操作。
-         */
         @Test
         @DisplayName("null 手机号应抛出异常")
         void shouldThrowExceptionWhenNull() {
@@ -75,9 +59,6 @@ class PhoneNumberTest {
                     .hasMessageContaining("手机号不能为空");
         }
 
-        /**
-         * 执行 {@code shouldThrowExceptionWhenBlank} 操作。
-         */
         @Test
         @DisplayName("空字符串手机号应抛出异常")
         void shouldThrowExceptionWhenBlank() {
@@ -86,9 +67,6 @@ class PhoneNumberTest {
                     .hasMessageContaining("手机号不能为空");
         }
 
-        /**
-         * 执行 {@code shouldThrowExceptionWhenInvalidLength} 操作。
-         */
         @Test
         @DisplayName("非11位数字应抛出异常")
         void shouldThrowExceptionWhenInvalidLength() {
@@ -97,9 +75,6 @@ class PhoneNumberTest {
                     .hasMessageContaining("无效的手机号格式");
         }
 
-        /**
-         * 执行 {@code shouldThrowExceptionWhenNotStartingWithOne} 操作。
-         */
         @Test
         @DisplayName("非1开头的手机号应抛出异常")
         void shouldThrowExceptionWhenNotStartingWithOne() {
@@ -112,28 +87,18 @@ class PhoneNumberTest {
     @Nested
     @DisplayName("ofNullable 工厂方法")
     class OfNullableTests {
-
-        /**
-         * 执行 {@code shouldReturnPhoneWhenValid} 操作。
-         */
         @Test
         @DisplayName("有效手机号应返回对象")
         void shouldReturnPhoneWhenValid() {
             assertThat(PhoneNumber.ofNullable("13812345678")).isNotNull();
         }
 
-        /**
-         * 执行 {@code shouldReturnNullWhenInvalid} 操作。
-         */
         @Test
         @DisplayName("无效手机号应返回 null")
         void shouldReturnNullWhenInvalid() {
             assertThat(PhoneNumber.ofNullable("12345")).isNull();
         }
 
-        /**
-         * 执行 {@code shouldReturnNullWhenNullInput} 操作。
-         */
         @Test
         @DisplayName("null 输入应返回 null")
         void shouldReturnNullWhenNullInput() {
@@ -144,37 +109,24 @@ class PhoneNumberTest {
     @Nested
     @DisplayName("isValid 静态方法")
     class IsValidTests {
-
-        /**
-         * 执行 {@code shouldReturnTrueForValidPhone} 操作。
-         */
         @Test
         @DisplayName("有效手机号应返回 true")
         void shouldReturnTrueForValidPhone() {
             assertThat(PhoneNumber.isValid("13812345678")).isTrue();
         }
 
-        /**
-         * 执行 {@code shouldReturnFalseForNull} 操作。
-         */
         @Test
         @DisplayName("null 应返回 false")
         void shouldReturnFalseForNull() {
             assertThat(PhoneNumber.isValid(null)).isFalse();
         }
 
-        /**
-         * 执行 {@code shouldReturnFalseForBlank} 操作。
-         */
         @Test
         @DisplayName("空字符串应返回 false")
         void shouldReturnFalseForBlank() {
             assertThat(PhoneNumber.isValid("")).isFalse();
         }
 
-        /**
-         * 执行 {@code shouldReturnFalseForInvalidFormat} 操作。
-         */
         @Test
         @DisplayName("格式不正确的手机号应返回 false")
         void shouldReturnFalseForInvalidFormat() {
@@ -185,10 +137,6 @@ class PhoneNumberTest {
     @Nested
     @DisplayName("getMasked 方法")
     class GetMaskedTests {
-
-        /**
-         * 执行 {@code shouldMaskPhoneNumber} 操作。
-         */
         @Test
         @DisplayName("11位手机号应脱敏为 138****5678 格式")
         void shouldMaskPhoneNumber() {
@@ -200,10 +148,6 @@ class PhoneNumberTest {
     @Nested
     @DisplayName("getFormatted 方法")
     class GetFormattedTests {
-
-        /**
-         * 执行 {@code shouldFormatPhoneNumber} 操作。
-         */
         @Test
         @DisplayName("11位手机号应格式化为 138-1234-5678")
         void shouldFormatPhoneNumber() {
@@ -215,10 +159,6 @@ class PhoneNumberTest {
     @Nested
     @DisplayName("getWithCountryCode 方法")
     class GetWithCountryCodeTests {
-
-        /**
-         * 执行 {@code shouldReturnWithCountryCode} 操作。
-         */
         @Test
         @DisplayName("应返回带+86国家码的手机号")
         void shouldReturnWithCountryCode() {
@@ -230,10 +170,6 @@ class PhoneNumberTest {
     @Nested
     @DisplayName("equalsPhone 方法")
     class EqualsPhoneTests {
-
-        /**
-         * 执行 {@code shouldBeEqualWithSameNormalized} 操作。
-         */
         @Test
         @DisplayName("相同归一化手机号应判断为相等")
         void shouldBeEqualWithSameNormalized() {
@@ -242,9 +178,6 @@ class PhoneNumberTest {
             assertThat(phone1.equalsPhone(phone2)).isTrue();
         }
 
-        /**
-         * 执行 {@code shouldNotBeEqualWithDifferentNumber} 操作。
-         */
         @Test
         @DisplayName("不同手机号应判断为不相等")
         void shouldNotBeEqualWithDifferentNumber() {
@@ -253,9 +186,6 @@ class PhoneNumberTest {
             assertThat(phone1.equalsPhone(phone2)).isFalse();
         }
 
-        /**
-         * 执行 {@code shouldReturnFalseWhenCompareWithNull} 操作。
-         */
         @Test
         @DisplayName("与 null 比较应返回 false")
         void shouldReturnFalseWhenCompareWithNull() {
@@ -267,10 +197,6 @@ class PhoneNumberTest {
     @Nested
     @DisplayName("toString 方法")
     class ToStringTests {
-
-        /**
-         * 执行 {@code shouldReturnMaskedPhone} 操作。
-         */
         @Test
         @DisplayName("toString 应返回脱敏后的手机号")
         void shouldReturnMaskedPhone() {

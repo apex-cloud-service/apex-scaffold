@@ -20,9 +20,10 @@ import org.apache.ibatis.annotations.Update;
 public interface ContentModerationReviewMapper extends BaseMapper<ContentModerationReviewPO> {
 
     /**
-     * 查询 active。
+     * 查询未被删除的复核任务。
+     *
      * @param id 主键 ID
-     * @return 返回 ContentModerationReviewPO 类型结果
+     * @return 复核任务持久化对象；不存在时返回 null
      */
     @Select("SELECT * FROM biz_content_moderation_review WHERE id=#{id} AND deleted=0")
     ContentModerationReviewPO selectActive(@Param("id") Long id);
@@ -41,13 +42,14 @@ public interface ContentModerationReviewMapper extends BaseMapper<ContentModerat
     int insertIgnore(ContentModerationReviewPO row);
 
     /**
-     * 查询 分页。
-     * @param status 状态过滤
-     * @param mine 是否仅查本人
+     * 分页查询复核任务，PENDING 优先排序。
+     *
+     * @param status         状态过滤，为空表示不过滤
+     * @param mine           是否仅查本人（审核员视角）
      * @param reviewerOpenId 审核员 OpenId
-     * @param offset 分页偏移量
-     * @param limit 每页条数
-     * @return 返回 List&lt;ContentModerationReviewPO&gt; 类型结果
+     * @param offset         分页偏移量
+     * @param limit          每页条数
+     * @return 复核任务持久化对象列表
      */
     @Select({
         "<script>",
@@ -66,11 +68,12 @@ public interface ContentModerationReviewMapper extends BaseMapper<ContentModerat
             @Param("limit") int limit);
 
     /**
-     * 执行 count 相关逻辑。
-     * @param status 状态过滤
-     * @param mine 是否仅查本人
+     * 按状态 / 是否本人统计复核任务数量。
+     *
+     * @param status         状态过滤，为空表示不过滤
+     * @param mine           是否仅查本人（审核员视角）
      * @param reviewerOpenId 审核员 OpenId
-     * @return 计算结果
+     * @return 符合条件的记录数量
      */
     @Select({
         "<script>",
@@ -85,12 +88,13 @@ public interface ContentModerationReviewMapper extends BaseMapper<ContentModerat
             @Param("reviewerOpenId") String reviewerOpenId);
 
     /**
-     * 执行 casClaim 相关逻辑。
-     * @param id 主键 ID
-     * @param reviewerOpenId 审核员 OpenId
-     * @param expectedVersion 参数 expectedVersion（类型 long）
-     * @param claimedAt 参数 claimedAt（类型 LocalDateTime）
-     * @return 计算结果
+     * 乐观锁认领任务：仅当状态为 PENDING 且版本匹配时更新为 REVIEWING。
+     *
+     * @param id              主键 ID
+     * @param reviewerOpenId  审核员 OpenId
+     * @param expectedVersion 期望的版本号（乐观锁）
+     * @param claimedAt       认领时间
+     * @return 影响行数，1 表示认领成功，0 表示并发冲突
      */
     @Update("UPDATE biz_content_moderation_review SET status='REVIEWING',reviewer_open_id=#{reviewerOpenId},"
             + "claimed_at=#{claimedAt},version=version+1,update_time=NOW() WHERE id=#{id} AND status='PENDING' "
@@ -102,13 +106,14 @@ public interface ContentModerationReviewMapper extends BaseMapper<ContentModerat
             @Param("claimedAt") LocalDateTime claimedAt);
 
     /**
-     * 执行 casDecide 相关逻辑。
-     * @param id 主键 ID
-     * @param reviewerOpenId 审核员 OpenId
-     * @param toStatus 参数 toStatus（类型 String）
-     * @param comment 参数 comment（类型 String）
-     * @param expectedVersion 参数 expectedVersion（类型 long）
-     * @return 计算结果
+     * 乐观锁裁决任务：仅当状态为 REVIEWING 且认领人与版本匹配时更新为目标状态。
+     *
+     * @param id              主键 ID
+     * @param reviewerOpenId  审核员 OpenId（须与认领人一致）
+     * @param toStatus        目标状态
+     * @param comment         裁决意见
+     * @param expectedVersion 期望的版本号（乐观锁）
+     * @return 影响行数，1 表示裁决成功，0 表示并发冲突
      */
     @Update("UPDATE biz_content_moderation_review SET status=#{toStatus},review_comment=#{comment},"
             + "decided_at=NOW(),version=version+1,update_time=NOW() WHERE id=#{id} AND status='REVIEWING' "
@@ -121,9 +126,10 @@ public interface ContentModerationReviewMapper extends BaseMapper<ContentModerat
             @Param("expectedVersion") long expectedVersion);
 
     /**
-     * 执行 reopenStaleClaims 相关逻辑。
-     * @param claimedBefore 参数 claimedBefore（类型 LocalDateTime）
-     * @return 计算结果
+     * 重新开放认领超时的任务：REVIEWING → PENDING 并清除认领信息。
+     *
+     * @param claimedBefore 认领时间早于该时间点的任务将被重新开放
+     * @return 影响行数，即被重新开放的任务数量
      */
     @Update("UPDATE biz_content_moderation_review SET status='PENDING',reviewer_open_id=NULL,claimed_at=NULL,"
             + "version=version+1,update_time=NOW() WHERE status='REVIEWING' AND claimed_at IS NOT NULL "

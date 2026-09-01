@@ -16,12 +16,29 @@ import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
+/**
+ * 从当前安全上下文解析用户数据权限的数据权限提供者。
+ *
+ * <p>从 {@link ReactiveSecurityContextHolder} 中取出已认证的 {@link AuthenticatedUser}，结合其角色
+ * 的数据权限类型（全部/本人/本部门/本部门及子部门/自定义）解析出 {@link DataScopeInfo}，供数据层
+ * 自动追加数据范围过滤条件。</p>
+ *
+ * @author Apex Team
+ * @version 1.0
+ * @since 1.0
+ */
 @Component
 public class SecurityContextDataScopeProvider implements ReactiveDataScopeProvider {
 
     private final RoleRepository roleRepository;
     private final DeptRepository deptRepository;
 
+    /**
+     * 构建数据权限提供者。
+     *
+     * @param roleRepository 角色仓储，用于查询用户角色及其数据权限
+     * @param deptRepository 部门仓储，用于校验部门状态与解析部门及其子部门
+     */
     public SecurityContextDataScopeProvider(RoleRepository roleRepository, DeptRepository deptRepository) {
         this.roleRepository = roleRepository;
         this.deptRepository = deptRepository;

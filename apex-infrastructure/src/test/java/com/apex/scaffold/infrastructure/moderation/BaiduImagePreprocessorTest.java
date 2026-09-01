@@ -66,17 +66,13 @@ class BaiduImagePreprocessorTest {
     }
 
     /**
-     * 执行 {@code png} 逻辑。
+     * 生成指定尺寸的 PNG 图片字节数组。
      *
-     * @param width width 参数
-     *
-     * @param height height 参数
-     *
-     * @param noise noise 参数
-     *
-     * @return 执行结果
-     *
-     * @throws Exception 执行失败时
+     * @param width  图片宽度
+     * @param height 图片高度
+     * @param noise  是否填充随机噪点像素
+     * @return PNG 图片字节数组
+     * @throws Exception 图片编码失败时抛出
      */
     private byte[] png(int width, int height, boolean noise) throws Exception {
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);

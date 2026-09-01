@@ -23,7 +23,14 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class AuthTicketService {
 
+    /**
+     * 票据有效期（秒）。
+     *
+     * <p>认证票据签发后在此时间内有效，超过后自动过期失效。
+     * 默认 300 秒（5 分钟），与 {@link #issue(AuthTicketPayload)} 中的过期时间设置保持一致。</p>
+     */
     public static final long EXPIRES_IN_SECONDS = 300L;
+
     private static final String KEY_PREFIX = "apex:auth:ticket:";
     private static final String REVOKED_PHONE_PREFIX = KEY_PREFIX + "revoked:phone:";
     private static final String REVOKED_OPEN_ID_PREFIX = KEY_PREFIX + "revoked:open-id:";

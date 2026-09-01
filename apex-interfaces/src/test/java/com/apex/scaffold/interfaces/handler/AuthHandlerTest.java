@@ -147,23 +147,12 @@ class AuthHandlerTest {
         }
     }
 
-    /**
-     * 创建{@code postRequestWithBody}。
-     * @param path 参数 {@code path}
-     * @param body 参数 {@code body}
-     * @return 操作结果
-     */
     private ServerRequest createPostRequestWithBody(String path, String body) {
         MockServerHttpRequest httpRequest = MockServerHttpRequest.post(path).body(body);
         MockServerWebExchange exchange = MockServerWebExchange.from(httpRequest);
         return ServerRequest.create(exchange, HandlerStrategies.withDefaults().messageReaders());
     }
 
-    /**
-     * 创建{@code requestWithOpenId}。
-     * @param path 参数 {@code path}
-     * @return 操作结果
-     */
     private ServerRequest createRequestWithOpenId(String path) {
         MockServerHttpRequest httpRequest = MockServerHttpRequest.get(path).build();
         MockServerWebExchange exchange = MockServerWebExchange.from(httpRequest);
@@ -174,12 +163,6 @@ class AuthHandlerTest {
                 exchangeWithPrincipal, HandlerStrategies.withDefaults().messageReaders());
     }
 
-    /**
-     * 创建{@code postRequestWithOpenId}。
-     * @param path 参数 {@code path}
-     * @param body 参数 {@code body}
-     * @return 操作结果
-     */
     private ServerRequest createPostRequestWithOpenId(String path, String body) {
         MockServerHttpRequest httpRequest = MockServerHttpRequest.post(path).body(body);
         MockServerWebExchange exchange = MockServerWebExchange.from(httpRequest);
@@ -193,10 +176,6 @@ class AuthHandlerTest {
     @Nested
     @DisplayName("login 方法")
     class LoginTests {
-
-        /**
-         * 执行 {@code shouldLoginSuccessfully} 操作。
-         */
         @Test
         @DisplayName("应成功登录并返回200且包含Token信息")
         void shouldLoginSuccessfully() {
@@ -250,10 +229,6 @@ class AuthHandlerTest {
     @Nested
     @DisplayName("refresh 方法")
     class RefreshTests {
-
-        /**
-         * 执行 {@code shouldRefreshTokenSuccessfully} 操作。
-         */
         @Test
         @DisplayName("应成功刷新Token并返回200")
         void shouldRefreshTokenSuccessfully() {
@@ -295,10 +270,6 @@ class AuthHandlerTest {
     @Nested
     @DisplayName("logout 方法")
     class LogoutTests {
-
-        /**
-         * 执行 {@code shouldLogoutSuccessfully} 操作。
-         */
         @Test
         @DisplayName("应成功退出登录并返回200")
         void shouldLogoutSuccessfully() {
@@ -324,10 +295,6 @@ class AuthHandlerTest {
     @Nested
     @DisplayName("bindPhone 方法")
     class BindPhoneTests {
-
-        /**
-         * 执行 {@code shouldBindPhoneSuccessfully} 操作。
-         */
         @Test
         @DisplayName("应成功绑定手机号并返回200")
         void shouldBindPhoneSuccessfully() {
@@ -359,10 +326,6 @@ class AuthHandlerTest {
     @Nested
     @DisplayName("sendSmsCode 方法")
     class SendSmsCodeTests {
-
-        /**
-         * 执行 {@code shouldSendSmsCodeSuccessfully} 操作。
-         */
         @Test
         @DisplayName("应成功发送短信验证码并返回200")
         void shouldSendSmsCodeSuccessfully() {

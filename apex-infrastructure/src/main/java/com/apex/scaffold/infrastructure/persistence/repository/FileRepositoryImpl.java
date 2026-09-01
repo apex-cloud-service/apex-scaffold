@@ -39,13 +39,6 @@ public class FileRepositoryImpl implements FileRepository {
      * @return 保存后的文件信息
      */
     @Override
-    /**
-     * 保存
-     *
-     * @param file 参数
-     *
-     * @return 结果
-     */
     public Mono<FileEntity> save(FileEntity file) {
         return Mono.fromCallable(() -> {
                     FilePO po = filePoConverter.toPo(file);
@@ -66,13 +59,6 @@ public class FileRepositoryImpl implements FileRepository {
      * @return 文件信息，未找到时返回 Mono.empty()
      */
     @Override
-    /**
-     * 查找ById
-     *
-     * @param id 参数
-     *
-     * @return 结果
-     */
     public Mono<FileEntity> findById(Long id) {
         return Mono.fromCallable(() -> fileMapper.selectById(id))
                 .subscribeOn(BlockingIoSchedulers.jdbc())
@@ -91,13 +77,6 @@ public class FileRepositoryImpl implements FileRepository {
      * @return 文件信息，未找到时返回 Mono.empty()
      */
     @Override
-    /**
-     * 查找ByMd5
-     *
-     * @param md5 参数
-     *
-     * @return 结果
-     */
     public Mono<FileEntity> findByMd5(String md5) {
         return Mono.fromCallable(() -> {
                     return fileMapper.selectOne(
@@ -114,15 +93,6 @@ public class FileRepositoryImpl implements FileRepository {
 
     /** {@inheritDoc} */
     @Override
-    /**
-     * 查找ByStorageLocation
-     *
-     * @param bucketName 参数
-     *
-     * @param fileName 参数
-     *
-     * @return 结果
-     */
     public Mono<FileEntity> findByStorageLocation(String bucketName, String fileName) {
         return Mono.fromCallable(() -> fileMapper.selectOne(ConditionUtil.lambda(FilePO.class)
                         .eq(FilePO::getBucketName, bucketName)
@@ -139,13 +109,6 @@ public class FileRepositoryImpl implements FileRepository {
      * @return 成功返回 Mono.empty()
      */
     @Override
-    /**
-     * 删除ById
-     *
-     * @param id 参数
-     *
-     * @return 结果
-     */
     public Mono<Void> deleteById(Long id) {
         return Mono.fromRunnable(() -> fileMapper.deleteById(id))
                 .subscribeOn(BlockingIoSchedulers.jdbc())
@@ -159,13 +122,6 @@ public class FileRepositoryImpl implements FileRepository {
      * @return 文件信息流
      */
     @Override
-    /**
-     * 查找ByUserId
-     *
-     * @param userId 参数
-     *
-     * @return 结果
-     */
     public Flux<FileEntity> findByUserId(Long userId) {
         return Mono.fromCallable(() -> fileMapper.selectList(
                         ConditionUtil.lambda(FilePO.class).eqIfPresent(FilePO::getUserId, userId)))

@@ -44,9 +44,6 @@ class InputValidationFilterTest {
     @Mock
     private WebFilterChain chain;
 
-    /**
-     * 执行 {@code shouldBlockPathTraversal} 操作。
-     */
     @Test
     @DisplayName("路径遍历攻击应该被拦截")
     void shouldBlockPathTraversal() {
@@ -68,9 +65,6 @@ class InputValidationFilterTest {
         assertThat(exchange.getResponse().getStatusCode().value()).isEqualTo(400);
     }
 
-    /**
-     * 执行 {@code shouldBlockXssAttack} 操作。
-     */
     @Test
     @DisplayName("XSS攻击应该被拦截")
     void shouldBlockXssAttack() {
@@ -93,9 +87,6 @@ class InputValidationFilterTest {
         verify(securityMetricsRecorder).recordXssIntercepted();
     }
 
-    /**
-     * 执行 {@code shouldBlockSqlInjection} 操作。
-     */
     @Test
     @DisplayName("SQL注入攻击应该被拦截")
     void shouldBlockSqlInjection() {
@@ -117,9 +108,6 @@ class InputValidationFilterTest {
         assertThat(exchange.getResponse().getStatusCode().value()).isEqualTo(400);
     }
 
-    /**
-     * 执行 {@code shouldAllowNormalRequest} 操作。
-     */
     @Test
     @DisplayName("正常请求应该通过")
     void shouldAllowNormalRequest() {
@@ -143,9 +131,6 @@ class InputValidationFilterTest {
         assertThat(exchange.getResponse().getStatusCode()).isNull();
     }
 
-    /**
-     * 执行 {@code shouldAllowAllRequestsWhenDisabled} 操作。
-     */
     @Test
     @DisplayName("禁用验证时应该允许所有请求")
     void shouldAllowAllRequestsWhenDisabled() {

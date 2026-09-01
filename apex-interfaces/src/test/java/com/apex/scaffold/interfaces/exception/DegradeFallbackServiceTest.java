@@ -83,7 +83,7 @@ class DegradeFallbackServiceTest {
             /**
              * {@inheritDoc}
              *
-             * @return 操作结果，类型为 {@code ReactiveRedisTemplate<String, Object>}
+             * @return ReactiveRedisTemplate<String, Object> 类型的实例
              */
             @Override
             public ReactiveRedisTemplate<String, Object> getObject() {
@@ -94,7 +94,7 @@ class DegradeFallbackServiceTest {
              * {@inheritDoc}
              *
              * @param args 方法输入 {@code args}，类型为 {@code Object[]}
-             * @return 操作结果，类型为 {@code ReactiveRedisTemplate<String, Object>}
+             * @return ReactiveRedisTemplate<String, Object> 类型的实例
              */
             @Override
             public ReactiveRedisTemplate<String, Object> getObject(Object... args) {
@@ -104,7 +104,7 @@ class DegradeFallbackServiceTest {
             /**
              * {@inheritDoc}
              *
-             * @return 操作结果，类型为 {@code ReactiveRedisTemplate<String, Object>}
+             * @return ReactiveRedisTemplate<String, Object> 类型的实例
              */
             @Override
             public ReactiveRedisTemplate<String, Object> getIfAvailable() {
@@ -114,7 +114,7 @@ class DegradeFallbackServiceTest {
             /**
              * {@inheritDoc}
              *
-             * @return 操作结果，类型为 {@code ReactiveRedisTemplate<String, Object>}
+             * @return ReactiveRedisTemplate<String, Object> 类型的实例
              */
             @Override
             public ReactiveRedisTemplate<String, Object> getIfUnique() {

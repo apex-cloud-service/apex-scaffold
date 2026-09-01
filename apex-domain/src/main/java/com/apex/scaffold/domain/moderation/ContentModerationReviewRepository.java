@@ -14,37 +14,41 @@ import reactor.core.publisher.Mono;
 public interface ContentModerationReviewRepository {
 
     /**
-     * 保存。
+     * 保存复核记录。
+     *
      * @param review 复核记录
-     * @return 包含 ContentModerationReview 的响应式结果
+     * @return 已保存的复核记录
      */
     Mono<ContentModerationReview> save(ContentModerationReview review);
 
     /**
-     * 查询 by ID。
+     * 根据主键 ID 查询复核记录。
+     *
      * @param id 主键 ID
-     * @return 包含 ContentModerationReview 的响应式结果
+     * @return 匹配的复核记录；不存在时返回空
      */
     Mono<ContentModerationReview> findById(Long id);
 
     /**
-     * 查询 分页。
-     * @param status 状态过滤
-     * @param mine 是否仅查本人
+     * 分页查询复核记录。
+     *
+     * @param status         状态过滤，为空表示不过滤
+     * @param mine           是否仅查本人（审核员视角）
      * @param reviewerOpenId 审核员 OpenId
-     * @param offset 分页偏移量
-     * @param limit 每页条数
-     * @return 包含 List&lt;ContentModerationReview&gt; 的响应式结果
+     * @param offset         分页偏移量
+     * @param limit          每页条数
+     * @return 分页后的复核记录列表
      */
     Mono<List<ContentModerationReview>> findPage(
             ContentModerationReviewStatus status, boolean mine, String reviewerOpenId, int offset, int limit);
 
     /**
-     * 执行 count 相关逻辑。
-     * @param status 状态过滤
-     * @param mine 是否仅查本人
+     * 统计复核记录数量。
+     *
+     * @param status         状态过滤，为空表示不过滤
+     * @param mine           是否仅查本人（审核员视角）
      * @param reviewerOpenId 审核员 OpenId
-     * @return 包含 Long 的响应式结果
+     * @return 符合条件的记录数量
      */
     Mono<Long> count(ContentModerationReviewStatus status, boolean mine, String reviewerOpenId);
 

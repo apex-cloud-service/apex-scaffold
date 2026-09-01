@@ -138,17 +138,11 @@ class AuthServiceTest {
         loginRequest.setLoginType("WX_CODE");
     }
 
-    /**
-     * 执行 {@code tearDown} 操作。
-     */
     @AfterEach
     void tearDown() {
         ioTaskExecutor.shutdownNow();
     }
 
-    /**
-     * 执行 {@code login_Success} 操作。
-     */
     @Test
     @DisplayName("login - 成功登录")
     void login_Success() {
@@ -171,9 +165,6 @@ class AuthServiceTest {
         verify(loginStrategyProvider).getStrategy("WX_CODE");
     }
 
-    /**
-     * 执行 {@code login_WithClientIpContinuesAfterBruteForceCheck} 操作。
-     */
     @Test
     @DisplayName("login - 暴力破解检查完成后应继续执行登录策略")
     void login_WithClientIpContinuesAfterBruteForceCheck() {
@@ -207,9 +198,6 @@ class AuthServiceTest {
         verify(strategy).login(loginRequest);
     }
 
-    /**
-     * 执行 {@code login_ProtectionDisabledSkipsChecks} 操作。
-     */
     @Test
     @DisplayName("login - enabled=false 时应跳过暴力破解检查与验证码校验直接登录")
     void login_ProtectionDisabledSkipsChecks() {
@@ -229,9 +217,6 @@ class AuthServiceTest {
         verify(redisTemplate, never()).opsForValue();
     }
 
-    /**
-     * 执行 {@code login_CaptchaEscalationRequiresCaptcha} 操作。
-     */
     @Test
     @DisplayName("login - IP失败次数达到阈值且未携带验证码时应返回CAPTCHA_REQUIRED")
     void login_CaptchaEscalationRequiresCaptcha() {
@@ -252,9 +237,6 @@ class AuthServiceTest {
         verify(loginStrategyProvider, never()).getStrategy(anyString());
     }
 
-    /**
-     * 执行 {@code login_CaptchaEscalationInvalidCaptcha} 操作。
-     */
     @Test
     @DisplayName("login - IP失败次数达到阈值且验证码错误时应返回CAPTCHA_INVALID")
     void login_CaptchaEscalationInvalidCaptcha() {
@@ -278,9 +260,6 @@ class AuthServiceTest {
         verify(loginStrategyProvider, never()).getStrategy(anyString());
     }
 
-    /**
-     * 执行 {@code login_CaptchaEscalationPassesWithValidCaptcha} 操作。
-     */
     @Test
     @DisplayName("login - IP失败次数达到阈值但验证码正确时应继续登录")
     void login_CaptchaEscalationPassesWithValidCaptcha() {
@@ -453,9 +432,6 @@ class AuthServiceTest {
                 });
     }
 
-    /**
-     * 执行 {@code logout_Success} 操作。
-     */
     @Test
     @DisplayName("logout - 成功退出登录")
     void logout_Success() {
@@ -480,9 +456,6 @@ class AuthServiceTest {
         verify(tokenService).deleteToken("test_openid");
     }
 
-    /**
-     * 执行 {@code logout_TokenMismatch} 操作。
-     */
     @Test
     @DisplayName("logout - Token与用户不匹配")
     void logout_TokenMismatch() {
@@ -498,9 +471,6 @@ class AuthServiceTest {
                 });
     }
 
-    /**
-     * 执行 {@code bindPhone_Success} 操作。
-     */
     @Test
     @DisplayName("bindPhone - 成功绑定手机号")
     void bindPhone_Success() {
@@ -523,9 +493,6 @@ class AuthServiceTest {
                 .verifyComplete();
     }
 
-    /**
-     * 执行 {@code bindPhone_PhoneNull} 操作。
-     */
     @Test
     @DisplayName("bindPhone - 获取手机号失败")
     void bindPhone_PhoneNull() {

@@ -284,17 +284,18 @@ public class ReportEntity extends BaseEntity {
         }
 
         /**
-         * 获取{@code code}。
-         * @return 字符串结果
+         * 获取枚举编码。
+         * @return 枚举编码
          */
         public String getCode() {
             return code;
         }
 
         /**
-         * 执行 {@code fromCode} 操作。
-         * @param code 参数 {@code code}
-         * @return 操作结果
+         * 根据枚举编码解析举报类型。
+         *
+         * @param code 举报类型编码
+         * @return 匹配的举报类型；编码为空或未匹配时返回 {@code null}
          */
         public static ReportType fromCode(String code) {
             if (code == null) {
@@ -334,17 +335,18 @@ public class ReportEntity extends BaseEntity {
         }
 
         /**
-         * 获取{@code code}。
-         * @return 字符串结果
+         * 获取枚举编码。
+         * @return 枚举编码
          */
         public String getCode() {
             return code;
         }
 
         /**
-         * 执行 {@code fromCode} 操作。
-         * @param code 参数 {@code code}
-         * @return 操作结果
+         * 根据枚举编码解析举报处理状态。
+         *
+         * @param code 举报处理状态编码
+         * @return 匹配的举报处理状态；编码为空或未匹配时返回 {@code null}
          */
         public static ReportStatus fromCode(String code) {
             if (code == null) {

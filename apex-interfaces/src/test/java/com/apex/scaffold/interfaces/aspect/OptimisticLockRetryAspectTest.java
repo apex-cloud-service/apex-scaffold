@@ -64,11 +64,6 @@ class OptimisticLockRetryAspectTest {
     @Nested
     @DisplayName("around 方法")
     class AroundTests {
-
-        /**
-         * 执行 {@code shouldReturnOnFirstSuccess} 操作。
-         * @throws Throwable 当操作无法完成时
-         */
         @Test
         @DisplayName("首次执行成功应返回结果")
         void shouldReturnOnFirstSuccess() throws Throwable {
@@ -83,10 +78,6 @@ class OptimisticLockRetryAspectTest {
             verify(joinPoint, times(1)).proceed();
         }
 
-        /**
-         * 执行 {@code shouldRetryAndSucceed} 操作。
-         * @throws Throwable 当操作无法完成时
-         */
         @Test
         @DisplayName("乐观锁冲突后应重试并成功")
         void shouldRetryAndSucceed() throws Throwable {
@@ -114,10 +105,6 @@ class OptimisticLockRetryAspectTest {
                     .isEmpty();
         }
 
-        /**
-         * 执行 {@code shouldThrowWhenRetriesExhausted} 操作。
-         * @throws Throwable 当操作无法完成时
-         */
         @Test
         @DisplayName("重试耗尽后应抛出 BusinessException")
         void shouldThrowWhenRetriesExhausted() throws Throwable {
@@ -142,10 +129,6 @@ class OptimisticLockRetryAspectTest {
                     .isEqualTo(1);
         }
 
-        /**
-         * 执行 {@code shouldNotRetryForNonOptimisticLockException} 操作。
-         * @throws Throwable 当操作无法完成时
-         */
         @Test
         @DisplayName("非乐观锁 RuntimeException 应直接抛出不重试")
         void shouldNotRetryForNonOptimisticLockException() throws Throwable {

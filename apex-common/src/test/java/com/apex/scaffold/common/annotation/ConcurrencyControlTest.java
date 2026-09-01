@@ -17,22 +17,14 @@ import org.junit.jupiter.api.Test;
  */
 @DisplayName("ConcurrencyControl 注解测试")
 class ConcurrencyControlTest {
-
-    /**
-     * 执行 {@code defaultMethod} 操作。
-     */
     @ConcurrencyControl
     public void defaultMethod() {}
 
-    /**
-     * 执行 {@code customMethod} 操作。
-     */
     @ConcurrencyControl(maxConcurrent = 5, timeout = 3000, message = "自定义消息")
     public void customMethod() {}
 
     /**
      * 验证 {@code testDefaultAttributes} 场景。
-     * @throws Exception 当操作无法完成时
      */
     @Test
     @DisplayName("测试默认属性值")
@@ -48,7 +40,6 @@ class ConcurrencyControlTest {
 
     /**
      * 验证 {@code testCustomAttributes} 场景。
-     * @throws Exception 当操作无法完成时
      */
     @Test
     @DisplayName("测试自定义属性值")

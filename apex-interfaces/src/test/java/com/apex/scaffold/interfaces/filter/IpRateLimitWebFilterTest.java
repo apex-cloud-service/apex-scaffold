@@ -83,17 +83,11 @@ class IpRateLimitWebFilterTest {
         traceIdUtilMockedStatic = mockStatic(TraceIdUtil.class);
     }
 
-    /**
-     * 执行 {@code tearDown} 操作。
-     */
     @AfterEach
     void tearDown() {
         traceIdUtilMockedStatic.close();
     }
 
-    /**
-     * 执行 {@code shouldAllowWithinLimit} 操作。
-     */
     @Test
     @DisplayName("正常请求在限制内应该放行")
     void shouldAllowWithinLimit() {
@@ -159,9 +153,6 @@ class IpRateLimitWebFilterTest {
         verify(hashOps, never()).increment(anyString(), any(), anyLong());
     }
 
-    /**
-     * 执行 {@code shouldBlockExceedingLimit} 操作。
-     */
     @Test
     @DisplayName("超出速率限制应该返回 429 错误响应")
     void shouldBlockExceedingLimit() {
@@ -350,9 +341,6 @@ class IpRateLimitWebFilterTest {
         verify(redisTemplate, never()).execute(any(), anyList(), anyString(), anyString(), anyString(), anyString());
     }
 
-    /**
-     * 执行 {@code shouldWhitelistIp} 操作。
-     */
     @Test
     @DisplayName("白名单 IP 应该绕过速率限制")
     void shouldWhitelistIp() {

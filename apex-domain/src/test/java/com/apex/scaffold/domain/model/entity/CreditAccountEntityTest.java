@@ -41,9 +41,6 @@ class CreditAccountEntityTest extends BaseEntityTest<CreditAccountEntity> {
             assertThat(entity.getBalance()).isEqualTo(500L);
         }
 
-        /**
-         * 执行 {@code newEntityShouldHaveNullFields} 操作。
-         */
         @Test
         @DisplayName("新创建的实体字段应为 null")
         void newEntityShouldHaveNullFields() {
@@ -56,10 +53,6 @@ class CreditAccountEntityTest extends BaseEntityTest<CreditAccountEntity> {
     @Nested
     @DisplayName("业务场景")
     class BusinessScenarioTest {
-
-        /**
-         * 执行 {@code newUserAccountShouldHaveZeroBalance} 操作。
-         */
         @Test
         @DisplayName("新用户积分账户余额为 0")
         void newUserAccountShouldHaveZeroBalance() {
@@ -71,9 +64,6 @@ class CreditAccountEntityTest extends BaseEntityTest<CreditAccountEntity> {
             assertThat(entity.getBalance()).isEqualTo(0L);
         }
 
-        /**
-         * 执行 {@code balanceShouldIncreaseAfterRecharge} 操作。
-         */
         @Test
         @DisplayName("积分充值后余额增加")
         void balanceShouldIncreaseAfterRecharge() {
@@ -85,9 +75,6 @@ class CreditAccountEntityTest extends BaseEntityTest<CreditAccountEntity> {
             assertThat(entity.getBalance()).isEqualTo(150L);
         }
 
-        /**
-         * 执行 {@code balanceShouldDecreaseAfterSpending} 操作。
-         */
         @Test
         @DisplayName("积分消费后余额减少")
         void balanceShouldDecreaseAfterSpending() {

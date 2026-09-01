@@ -37,13 +37,6 @@ public class RolePermissionRepositoryImpl implements RolePermissionRepository {
      * @return 角色权限关联列表
      */
     @Override
-    /**
-     * 查找ByRoleId
-     *
-     * @param roleId 参数
-     *
-     * @return 结果
-     */
     public Mono<List<RolePermissionEntity>> findByRoleId(Long roleId) {
         return Mono.fromCallable(() -> rolePermissionMapper.selectList(
                         ConditionUtil.lambda(RolePermissionPO.class).eqIfPresent(RolePermissionPO::getRoleId, roleId)))
@@ -58,13 +51,6 @@ public class RolePermissionRepositoryImpl implements RolePermissionRepository {
      * @return 影响行数
      */
     @Override
-    /**
-     * 删除ByRoleId
-     *
-     * @param roleId 参数
-     *
-     * @return 结果
-     */
     public Mono<Integer> deleteByRoleId(Long roleId) {
         return Mono.fromCallable(() -> {
                     return rolePermissionMapper.delete(ConditionUtil.lambda(RolePermissionPO.class)

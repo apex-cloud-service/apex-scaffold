@@ -49,9 +49,6 @@ class CreditTxEntityTest extends BaseEntityTest<CreditTxEntity> {
             assertThat(entity.getRefId()).isEqualTo(200L);
         }
 
-        /**
-         * 执行 {@code newEntityShouldHaveNullFields} 操作。
-         */
         @Test
         @DisplayName("新创建的实体字段应为 null")
         void newEntityShouldHaveNullFields() {
@@ -68,10 +65,6 @@ class CreditTxEntityTest extends BaseEntityTest<CreditTxEntity> {
     @Nested
     @DisplayName("业务场景")
     class BusinessScenarioTest {
-
-        /**
-         * 执行 {@code shouldSupportIncomeTransaction} 操作。
-         */
         @Test
         @DisplayName("积分收入流水")
         void shouldSupportIncomeTransaction() {
@@ -85,9 +78,6 @@ class CreditTxEntityTest extends BaseEntityTest<CreditTxEntity> {
             assertThat(entity.getAmount()).isEqualTo(100L);
         }
 
-        /**
-         * 执行 {@code shouldSupportOutcomeTransaction} 操作。
-         */
         @Test
         @DisplayName("积分支出流水")
         void shouldSupportOutcomeTransaction() {
@@ -101,9 +91,6 @@ class CreditTxEntityTest extends BaseEntityTest<CreditTxEntity> {
             assertThat(entity.getAmount()).isEqualTo(30L);
         }
 
-        /**
-         * 执行 {@code shouldSupportReferenceType} 操作。
-         */
         @Test
         @DisplayName("关联业务类型")
         void shouldSupportReferenceType() {

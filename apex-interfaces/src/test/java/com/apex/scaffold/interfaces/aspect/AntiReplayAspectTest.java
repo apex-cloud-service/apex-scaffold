@@ -66,10 +66,6 @@ class AntiReplayAspectTest {
     private static final String TEST_RESULT = "success";
     private static final String TEST_NONCE = "550e8400-e29b-41d4-a716-446655440000";
 
-    /**
-     * 执行 {@code shouldAllowFreshRequest} 操作。
-     * @throws Throwable 当操作无法完成时
-     */
     @Test
     @DisplayName("新鲜请求（有效时间戳 + 新 Nonce）时应正常执行方法")
     void shouldAllowFreshRequest() throws Throwable {
@@ -88,10 +84,6 @@ class AntiReplayAspectTest {
         assertThat(result.block()).isEqualTo(TEST_RESULT);
     }
 
-    /**
-     * 执行 {@code shouldReplayRequest} 操作。
-     * @throws Throwable 当操作无法完成时
-     */
     @Test
     @DisplayName("Nonce 已存在于 Redis 时应抛出 BusinessException")
     void shouldReplayRequest() throws Throwable {
@@ -111,10 +103,6 @@ class AntiReplayAspectTest {
         verify(securityMetricsRecorder).recordAntiReplayRejected();
     }
 
-    /**
-     * 执行 {@code shouldRejectExpiredTimestamp} 操作。
-     * @throws Throwable 当操作无法完成时
-     */
     @Test
     @DisplayName("时间戳偏差超过 maxTimeDiff 时应抛出 BusinessException")
     void shouldRejectExpiredTimestamp() throws Throwable {
@@ -128,10 +116,6 @@ class AntiReplayAspectTest {
                 .hasMessage("请求已过期或重复提交");
     }
 
-    /**
-     * 执行 {@code shouldSkipCheckWhenNoExchange} 操作。
-     * @throws Throwable 当操作无法完成时
-     */
     @Test
     @DisplayName("参数中无 ServerWebExchange 时应跳过校验并正常执行方法")
     void shouldSkipCheckWhenNoExchange() throws Throwable {
@@ -143,10 +127,6 @@ class AntiReplayAspectTest {
         assertThat(result).isEqualTo(TEST_RESULT);
     }
 
-    /**
-     * 执行 {@code shouldAllowFreshFunctionalRequest} 操作。
-     * @throws Throwable 当操作无法完成时
-     */
     @Test
     @DisplayName("函数式端点 ServerRequest 参数（新鲜时间戳 + 新 Nonce）时应正常执行方法")
     void shouldAllowFreshFunctionalRequest() throws Throwable {
@@ -165,10 +145,6 @@ class AntiReplayAspectTest {
         assertThat(result.block()).isEqualTo(TEST_RESULT);
     }
 
-    /**
-     * 执行 {@code shouldRejectReplayOnFunctionalRequest} 操作。
-     * @throws Throwable 当操作无法完成时
-     */
     @Test
     @DisplayName("函数式端点 ServerRequest 参数（Nonce 已存在）时应抛出 BusinessException")
     void shouldRejectReplayOnFunctionalRequest() throws Throwable {

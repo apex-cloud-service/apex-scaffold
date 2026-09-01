@@ -22,10 +22,6 @@ class BusinessExceptionTest {
     @Nested
     @DisplayName("构造函数测试：仅 message")
     class ConstructorWithMessageOnlyTest {
-
-        /**
-         * 执行 {@code shouldSetMessageAndDefaultErrorCode} 操作。
-         */
         @Test
         @DisplayName("应设置 message 并自动使用 ERROR 错误码")
         void shouldSetMessageAndDefaultErrorCode() {
@@ -40,10 +36,6 @@ class BusinessExceptionTest {
     @Nested
     @DisplayName("构造函数测试：自定义 code + message")
     class ConstructorWithCodeAndMessageTest {
-
-        /**
-         * 执行 {@code shouldSetCustomCodeAndMessage} 操作。
-         */
         @Test
         @DisplayName("应正确设置自定义 code 和 message")
         void shouldSetCustomCodeAndMessage() {
@@ -58,10 +50,6 @@ class BusinessExceptionTest {
     @Nested
     @DisplayName("构造函数测试：使用 ResultCode 枚举")
     class ConstructorWithResultCodeTest {
-
-        /**
-         * 执行 {@code shouldUseResultCode} 操作。
-         */
         @Test
         @DisplayName("使用预定义错误码时应设置对应 code 和 msg")
         void shouldUseResultCode() {
@@ -71,9 +59,6 @@ class BusinessExceptionTest {
             assertEquals(ResultCode.USER_ALREADY_EXISTS.getMsg(), ex.getMsg());
         }
 
-        /**
-         * 执行 {@code shouldUseRateLimitResultCode} 操作。
-         */
         @Test
         @DisplayName("使用 RATE_LIMIT 错误码时应正确设置")
         void shouldUseRateLimitResultCode() {
@@ -83,9 +68,6 @@ class BusinessExceptionTest {
             assertEquals("请求过于频繁", ex.getMsg());
         }
 
-        /**
-         * 执行 {@code shouldUseSkipLimitReachedResultCode} 操作。
-         */
         @Test
         @DisplayName("使用 SKIP_LIMIT_REACHED 错误码时应正确设置")
         void shouldUseSkipLimitReachedResultCode() {
@@ -99,10 +81,6 @@ class BusinessExceptionTest {
     @Nested
     @DisplayName("构造函数测试：ResultCode + 自定义 message")
     class ConstructorWithResultCodeAndMessageTest {
-
-        /**
-         * 执行 {@code shouldUseCustomMessageWithResultCode} 操作。
-         */
         @Test
         @DisplayName("msg 使用自定义 message，code 使用 ResultCode")
         void shouldUseCustomMessageWithResultCode() {
@@ -112,9 +90,6 @@ class BusinessExceptionTest {
             assertEquals("订单不存在", ex.getMsg());
         }
 
-        /**
-         * 执行 {@code customMessageShouldOverrideResultCodeMsg} 操作。
-         */
         @Test
         @DisplayName("自定义 message 应覆盖 ResultCode 的默认 msg")
         void customMessageShouldOverrideResultCodeMsg() {
@@ -129,10 +104,6 @@ class BusinessExceptionTest {
     @Nested
     @DisplayName("继承关系测试")
     class InheritanceTest {
-
-        /**
-         * 执行 {@code shouldExtendBaseException} 操作。
-         */
         @Test
         @DisplayName("BusinessException 应继承自 BaseException")
         void shouldExtendBaseException() {
@@ -140,9 +111,6 @@ class BusinessExceptionTest {
             assertInstanceOf(BaseException.class, ex);
         }
 
-        /**
-         * 执行 {@code shouldExtendRuntimeException} 操作。
-         */
         @Test
         @DisplayName("BusinessException 应继承自 RuntimeException")
         void shouldExtendRuntimeException() {
@@ -150,9 +118,6 @@ class BusinessExceptionTest {
             assertInstanceOf(RuntimeException.class, ex);
         }
 
-        /**
-         * 执行 {@code shouldExtendException} 操作。
-         */
         @Test
         @DisplayName("BusinessException 应继承自 Exception")
         void shouldExtendException() {
@@ -160,9 +125,6 @@ class BusinessExceptionTest {
             assertInstanceOf(Exception.class, ex);
         }
 
-        /**
-         * 执行 {@code shouldNotBeSameClassAsBaseException} 操作。
-         */
         @Test
         @DisplayName("BusinessException 实例不应是 BaseException 的相同类")
         void shouldNotBeSameClassAsBaseException() {
@@ -176,10 +138,6 @@ class BusinessExceptionTest {
     @Nested
     @DisplayName("所有构造函数一致性测试")
     class AllConstructorsConsistencyTest {
-
-        /**
-         * 执行 {@code codeShouldNeverBeNull} 操作。
-         */
         @Test
         @DisplayName("任何构造方式都不应导致 code 为 null")
         void codeShouldNeverBeNull() {
@@ -189,9 +147,6 @@ class BusinessExceptionTest {
             assertNotNull(new BusinessException(ResultCode.ERROR, "msg").getCode());
         }
 
-        /**
-         * 执行 {@code msgShouldNeverBeNull} 操作。
-         */
         @Test
         @DisplayName("任何构造方式都不应导致 msg 为 null")
         void msgShouldNeverBeNull() {

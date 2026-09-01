@@ -388,21 +388,19 @@ public class ApiGatewayFilter implements WebFilter {
     /**
      * 获取状态码分类（纯函数）。
      *
+     * <p>按状态码百位数分桶：1xx/2xx/3xx/4xx/5xx，其他值归入 5xx 兜底。</p>
+     *
      * @param statusCode HTTP 状态码
      * @return 状态码分类（1xx/2xx/3xx/4xx/5xx）
      */
     private static String getStatusClass(int statusCode) {
-        if (statusCode >= HTTP_STATUS_INFORMATIONAL_START && statusCode < HTTP_STATUS_SUCCESS_START) {
-            return "1xx";
-        } else if (statusCode >= HTTP_STATUS_SUCCESS_START && statusCode < HTTP_STATUS_REDIRECT_START) {
-            return "2xx";
-        } else if (statusCode >= HTTP_STATUS_REDIRECT_START && statusCode < HTTP_STATUS_CLIENT_ERROR_START) {
-            return "3xx";
-        } else if (statusCode >= HTTP_STATUS_CLIENT_ERROR_START && statusCode < HTTP_STATUS_SERVER_ERROR_START) {
-            return "4xx";
-        } else {
-            return "5xx";
-        }
+        return switch (statusCode / HTTP_STATUS_INFORMATIONAL_START) {
+            case 1 -> "1xx";
+            case 2 -> "2xx";
+            case 3 -> "3xx";
+            case 4 -> "4xx";
+            default -> "5xx";
+        };
     }
 
     /**

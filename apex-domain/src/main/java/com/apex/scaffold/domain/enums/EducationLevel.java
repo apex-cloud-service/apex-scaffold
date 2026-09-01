@@ -34,9 +34,9 @@ public enum EducationLevel {
     private final String description;
 
     /**
-     * 使用给定依赖和配置创建EducationLevel实例。
+     * 以中文展示描述构造教育程度枚举。
      *
-     * @param description 方法输入 {@code description}，类型为 {@code String}
+     * @param description 中文展示描述
      */
     EducationLevel(String description) {
         this.description = description;

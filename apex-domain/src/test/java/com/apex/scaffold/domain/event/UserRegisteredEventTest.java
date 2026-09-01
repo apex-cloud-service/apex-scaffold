@@ -20,10 +20,6 @@ class UserRegisteredEventTest {
     @Nested
     @DisplayName("构造函数")
     class ConstructorTest {
-
-        /**
-         * 执行 {@code withValidParamsShouldSetAllFields} 操作。
-         */
         @Test
         @DisplayName("使用有效参数应正确设置所有字段")
         void withValidParamsShouldSetAllFields() {
@@ -38,9 +34,6 @@ class UserRegisteredEventTest {
             assertThat(event.getPhone()).isEqualTo(phone);
         }
 
-        /**
-         * 执行 {@code nullUserIdShouldBeAllowed} 操作。
-         */
         @Test
         @DisplayName("userId 为 null 时应允许创建")
         void nullUserIdShouldBeAllowed() {
@@ -48,9 +41,6 @@ class UserRegisteredEventTest {
             assertThat(event.getUserId()).isNull();
         }
 
-        /**
-         * 执行 {@code nullNickNameShouldBeAllowed} 操作。
-         */
         @Test
         @DisplayName("nickName 为 null 时应允许创建")
         void nullNickNameShouldBeAllowed() {
@@ -58,9 +48,6 @@ class UserRegisteredEventTest {
             assertThat(event.getNickName()).isNull();
         }
 
-        /**
-         * 执行 {@code nullPhoneShouldBeAllowed} 操作。
-         */
         @Test
         @DisplayName("phone 为 null 时应允许创建")
         void nullPhoneShouldBeAllowed() {
@@ -72,10 +59,6 @@ class UserRegisteredEventTest {
     @Nested
     @DisplayName("继承自 AbstractDomainEvent 的行为")
     class AbstractDomainEventInheritanceTest {
-
-        /**
-         * 执行 {@code shouldAutoGenerateEventId} 操作。
-         */
         @Test
         @DisplayName("创建事件时应自动生成 eventId")
         void shouldAutoGenerateEventId() {
@@ -83,9 +66,6 @@ class UserRegisteredEventTest {
             assertThat(event.getEventId()).isNotNull();
         }
 
-        /**
-         * 执行 {@code eachEventShouldHaveUniqueEventId} 操作。
-         */
         @Test
         @DisplayName("每次创建事件应生成不同的 eventId")
         void eachEventShouldHaveUniqueEventId() {
@@ -94,9 +74,6 @@ class UserRegisteredEventTest {
             assertThat(event1.getEventId()).isNotEqualTo(event2.getEventId());
         }
 
-        /**
-         * 执行 {@code shouldAutoSetCreatedAt} 操作。
-         */
         @Test
         @DisplayName("创建事件时应自动设置 createdAt")
         void shouldAutoSetCreatedAt() {
@@ -108,10 +85,6 @@ class UserRegisteredEventTest {
     @Nested
     @DisplayName("不可变性")
     class ImmutabilityTest {
-
-        /**
-         * 执行 {@code userIdShouldBeFinal} 操作。
-         */
         @Test
         @DisplayName("userId 字段应为 final")
         void userIdShouldBeFinal() {
@@ -120,9 +93,6 @@ class UserRegisteredEventTest {
                     .isTrue();
         }
 
-        /**
-         * 执行 {@code fieldsShouldBeSetViaConstructor} 操作。
-         */
         @Test
         @DisplayName("所有字段应通过构造函数设置后不可修改")
         void fieldsShouldBeSetViaConstructor() {

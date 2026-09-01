@@ -36,6 +36,21 @@ public class FeatureGateAspect {
 
     private final LicenseValidator licenseValidator;
 
+    /**
+     * 环绕通知: 校验@FeatureGate标注方法对应的功能是否已授权
+     *
+     * <p>功能已授权时直接放行; 未授权时根据方法返回类型分别处理:
+     * <ul>
+     *   <li>返回{@link Mono}/{@link Flux}的响应式方法, 通过{@code Mono.error}/{@code Flux.error}
+     *       传递{@link BusinessException}, 交由全局异常处理器转换为统一响应格式;</li>
+     *   <li>同步方法直接返回统一错误结果。</li>
+     * </ul>
+     *
+     * @param joinPoint   被拦截方法的连接点, 可用于获取签名并继续执行
+     * @param featureGate 方法上标注的{@link FeatureGate}注解, 包含功能名与未授权提示消息
+     * @return 原方法返回值, 或未授权时对应的错误结果(响应式错误流/统一错误结果)
+     * @throws Throwable 原方法执行过程中抛出的异常, 或连接点获取/执行失败时的异常
+     */
     @Around("@annotation(featureGate)")
     public Object around(ProceedingJoinPoint joinPoint, FeatureGate featureGate) throws Throwable {
         // 功能已授权,继续执行

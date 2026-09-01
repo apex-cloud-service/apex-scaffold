@@ -362,7 +362,9 @@ class AuthRegistrationServiceTest {
     }
 
     /**
-     * 执行 {@code prepareValidWechatBinding} 逻辑。
+     * 预置短信校验通过的有效微信绑定场景。
+     *
+     * <p>先让短信校验返回成功，再预置微信绑定票据的执行行为。</p>
      */
     private void prepareValidWechatBinding() {
         when(smsCodeService.validate(PHONE, "123456")).thenReturn(Mono.just(true));
@@ -370,13 +372,11 @@ class AuthRegistrationServiceTest {
     }
 
     /**
-     * 执行 {@code prepareTicketExecution} 逻辑。
+     * 预置票据执行行为，使票据回调实际执行给定动作。
      *
-     * @param ticket ticket 参数
-     *
-     * @param type type 参数
-     *
-     * @param payload payload 参数
+     * @param ticket  票据标识
+     * @param type    票据类型
+     * @param payload 票据关联的载荷
      */
     @SuppressWarnings("unchecked")
     private void prepareTicketExecution(String ticket, AuthTicketType type, AuthTicketPayload payload) {
@@ -388,13 +388,11 @@ class AuthRegistrationServiceTest {
     }
 
     /**
-     * 执行 {@code prepareLogin} 逻辑。
+     * 预置普通登录的依赖行为并返回预期登录结果。
      *
-     * @param user user 参数
-     *
-     * @param newUser newUser 参数
-     *
-     * @return 执行结果
+     * @param user    登录用户
+     * @param newUser 是否为注册新用户
+     * @return 预期的登录结果
      */
     private LoginResponse prepareLogin(UserEntity user, boolean newUser) {
         when(userService.updateLoginInfo(eq(user.getId()), anyString())).thenReturn(Mono.just(true));
@@ -410,7 +408,7 @@ class AuthRegistrationServiceTest {
     }
 
     /**
-     * 执行 {@code prepareGeneratedTokenLogin} 逻辑。
+     * 预置由系统生成 Token 的注册登录行为。
      */
     private void prepareGeneratedTokenLogin() {
         when(userService.updateLoginInfo(any(), anyString())).thenReturn(Mono.just(true));
@@ -427,9 +425,9 @@ class AuthRegistrationServiceTest {
     }
 
     /**
-     * 执行 {@code bindRequest} 逻辑。
+     * 构造微信绑定手机号请求。
      *
-     * @return 执行结果
+     * @return 微信绑定请求
      */
     private WechatBindPhoneRequest bindRequest() {
         WechatBindPhoneRequest request = new WechatBindPhoneRequest();
@@ -442,11 +440,10 @@ class AuthRegistrationServiceTest {
     }
 
     /**
-     * 执行 {@code registerRequest} 逻辑。
+     * 构造注册请求。
      *
-     * @param nickname nickname 参数
-     *
-     * @return 执行结果
+     * @param nickname 昵称
+     * @return 注册请求
      */
     private RegisterRequest registerRequest(String nickname) {
         RegisterRequest request = new RegisterRequest();
@@ -460,9 +457,9 @@ class AuthRegistrationServiceTest {
     }
 
     /**
-     * 执行 {@code wechatPayload} 逻辑。
+     * 构造微信绑定场景的票据载荷。
      *
-     * @return 执行结果
+     * @return 微信绑定票据载荷
      */
     private AuthTicketPayload wechatPayload() {
         AuthTicketPayload payload = new AuthTicketPayload();
@@ -477,11 +474,10 @@ class AuthRegistrationServiceTest {
     }
 
     /**
-     * 执行 {@code registrationPayload} 逻辑。
+     * 构造注册场景的票据载荷。
      *
-     * @param openId openId 参数
-     *
-     * @return 执行结果
+     * @param openId 微信 OpenId
+     * @return 注册票据载荷
      */
     private AuthTicketPayload registrationPayload(String openId) {
         AuthTicketPayload payload = wechatPayload();
@@ -492,15 +488,12 @@ class AuthRegistrationServiceTest {
     }
 
     /**
-     * 执行 {@code user} 逻辑。
+     * 构造指定属性的用户实体。
      *
-     * @param id id 参数
-     *
-     * @param openId openId 参数
-     *
-     * @param phone phone 参数
-     *
-     * @return 执行结果
+     * @param id     用户 ID
+     * @param openId 微信 OpenId
+     * @param phone  手机号
+     * @return 用户实体
      */
     private UserEntity user(Long id, String openId, String phone) {
         UserEntity user = new UserEntity();
@@ -511,11 +504,10 @@ class AuthRegistrationServiceTest {
     }
 
     /**
-     * 执行 {@code assertCode} 逻辑。
+     * 断言异常为业务异常且错误码与预期一致。
      *
-     * @param error error 参数
-     *
-     * @param expected expected 参数
+     * @param error    捕获的异常
+     * @param expected 期望的错误码
      */
     private void assertCode(Throwable error, ResultCode expected) {
         assertThat(error).isInstanceOf(BusinessException.class);

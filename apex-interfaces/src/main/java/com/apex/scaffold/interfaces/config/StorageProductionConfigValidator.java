@@ -122,9 +122,9 @@ public class StorageProductionConfigValidator extends AbstractProductionConfigVa
     }
 
     /**
-     * 执行 {@code prefix} 逻辑。
+     * 返回校验错误信息的前缀。
      *
-     * @return 执行结果
+     * @return 错误信息前缀
      */
     @Override
     protected String prefix() {

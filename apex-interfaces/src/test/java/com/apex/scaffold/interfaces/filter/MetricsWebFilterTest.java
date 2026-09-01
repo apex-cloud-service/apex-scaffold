@@ -40,9 +40,6 @@ class MetricsWebFilterTest {
         filter = new MetricsWebFilter(meterRegistry);
     }
 
-    /**
-     * 执行 {@code filter_shouldRecordMetricsForNormalizedApiPath} 操作。
-     */
     @Test
     @DisplayName("filter 应记录归一化后的 API 指标")
     void filter_shouldRecordMetricsForNormalizedApiPath() {
@@ -70,9 +67,6 @@ class MetricsWebFilterTest {
         assertThat(counter.count()).isEqualTo(1.0d);
     }
 
-    /**
-     * 执行 {@code filter_shouldSkipExcludedPath} 操作。
-     */
     @Test
     @DisplayName("filter 对排除路径不应记录指标")
     void filter_shouldSkipExcludedPath() {

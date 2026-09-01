@@ -149,9 +149,6 @@ class IdempotentServiceTest {
                 .verifyComplete();
     }
 
-    /**
-     * 校验{@code token_ExistingToken_ReturnsTrue}。
-     */
     @Test
     @DisplayName("validateToken - 已存在的token返回true")
     void validateToken_ExistingToken_ReturnsTrue() {
@@ -162,9 +159,6 @@ class IdempotentServiceTest {
                 .verifyComplete();
     }
 
-    /**
-     * 校验{@code token_NonExistingToken_ReturnsFalse}。
-     */
     @Test
     @DisplayName("validateToken - 不存在的token返回false")
     void validateToken_NonExistingToken_ReturnsFalse() {
@@ -175,9 +169,6 @@ class IdempotentServiceTest {
                 .verifyComplete();
     }
 
-    /**
-     * 校验{@code token_DoesNotModifyCache}。
-     */
     @Test
     @DisplayName("validateToken - 验证不修改缓存状态（hasKey为只读操作）")
     void validateToken_DoesNotModifyCache() {
@@ -203,9 +194,6 @@ class IdempotentServiceTest {
                 .verifyComplete();
     }
 
-    /**
-     * 执行 {@code stubValueOperations} 操作。
-     */
     private void stubValueOperations() {
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
     }

@@ -52,17 +52,11 @@ class TraceFilterTest {
         traceIdUtilMockedStatic = mockStatic(TraceIdUtil.class);
     }
 
-    /**
-     * 执行 {@code tearDown} 操作。
-     */
     @AfterEach
     void tearDown() {
         traceIdUtilMockedStatic.close();
     }
 
-    /**
-     * 执行 {@code filter_withoutTraceIdInHeader_shouldGenerateNewTraceId} 操作。
-     */
     @Test
     @DisplayName("请求头中无TraceId时应该生成新的TraceId")
     void filter_withoutTraceIdInHeader_shouldGenerateNewTraceId() {
@@ -79,9 +73,6 @@ class TraceFilterTest {
         assertThat(exchange.getResponse().getHeaders().getFirst("X-Trace-Id")).isNotNull();
     }
 
-    /**
-     * 执行 {@code filter_withTraceIdInHeader_shouldUseExistingTraceId} 操作。
-     */
     @Test
     @DisplayName("请求头中有TraceId时应使用已有的TraceId")
     void filter_withTraceIdInHeader_shouldUseExistingTraceId() {
@@ -101,9 +92,6 @@ class TraceFilterTest {
         assertThat(exchange.getResponse().getHeaders().getFirst("X-Trace-Id")).isEqualTo(existingTraceId);
     }
 
-    /**
-     * 执行 {@code filter_afterCompletion_shouldClearTraceId} 操作。
-     */
     @Test
     @DisplayName("过滤器执行后应清除TraceId")
     void filter_afterCompletion_shouldClearTraceId() {
@@ -117,9 +105,6 @@ class TraceFilterTest {
         StepVerifier.create(result).verifyComplete();
     }
 
-    /**
-     * 执行 {@code filter_shouldAddTraceIdToResponseHeader} 操作。
-     */
     @Test
     @DisplayName("响应头中应包含TraceId")
     void filter_shouldAddTraceIdToResponseHeader() {

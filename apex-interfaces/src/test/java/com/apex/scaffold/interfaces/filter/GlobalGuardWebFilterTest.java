@@ -78,17 +78,11 @@ class GlobalGuardWebFilterTest {
         when(bucket.get()).thenReturn(null);
     }
 
-    /**
-     * 执行 {@code tearDown} 操作。
-     */
     @AfterEach
     void tearDown() {
         traceIdUtilMockedStatic.close();
     }
 
-    /**
-     * 执行 {@code shouldInjectSecurityHeaders} 操作。
-     */
     @Test
     @DisplayName("正常请求应该放行")
     void shouldInjectSecurityHeaders() {
@@ -104,9 +98,6 @@ class GlobalGuardWebFilterTest {
         assertThat(exchange.getResponse().getStatusCode()).isNull();
     }
 
-    /**
-     * 执行 {@code shouldCheckIpBlacklist} 操作。
-     */
     @Test
     @DisplayName("应该执行 IP 黑名单检查并放行正常 IP")
     void shouldCheckIpBlacklist() {
@@ -146,9 +137,6 @@ class GlobalGuardWebFilterTest {
         verify(bucket, times(1)).get();
     }
 
-    /**
-     * 执行 {@code shouldAllowEmptyUaForPublicPaths} 操作。
-     */
     @Test
     @DisplayName("公共路径的空 User-Agent 应该放行")
     void shouldAllowEmptyUaForPublicPaths() {
@@ -164,9 +152,6 @@ class GlobalGuardWebFilterTest {
         verify(chain).filter(exchange);
     }
 
-    /**
-     * 执行 {@code shouldBlockBlacklistedIp} 操作。
-     */
     @Test
     @DisplayName("黑名单 IP 应该返回 403 禁止访问")
     void shouldBlockBlacklistedIp() {

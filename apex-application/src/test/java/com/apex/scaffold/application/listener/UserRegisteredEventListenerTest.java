@@ -26,9 +26,6 @@ class UserRegisteredEventListenerTest {
         return new UserRegisteredEventListener(java.util.Optional.empty(), java.util.Optional.empty());
     }
 
-    /**
-     * 执行 {@code shouldHandleEventWithoutException} 操作。
-     */
     @Test
     @DisplayName("处理事件不应抛出异常")
     void shouldHandleEventWithoutException() {
@@ -38,9 +35,6 @@ class UserRegisteredEventListenerTest {
         assertThatCode(() -> listener.handleUserRegisteredEvent(event)).doesNotThrowAnyException();
     }
 
-    /**
-     * 执行 {@code eventShouldContainCorrectUserInfo} 操作。
-     */
     @Test
     @DisplayName("事件应正确包含用户注册信息")
     void eventShouldContainCorrectUserInfo() {
@@ -51,9 +45,6 @@ class UserRegisteredEventListenerTest {
         assertThat(event.getPhone()).isEqualTo("13900139000");
     }
 
-    /**
-     * 执行 {@code shouldHandleNullEvent} 操作。
-     */
     @Test
     @DisplayName("处理null事件应安全忽略")
     void shouldHandleNullEvent() {

@@ -30,21 +30,12 @@ import reactor.core.publisher.Mono;
 @Configuration
 @Profile("it")
 class ItProfileMockRedisConfiguration {
-
-    /**
-     * 执行 {@code redissonClient} 操作。
-     * @return 操作结果
-     */
     @Bean
     @Primary
     RedissonClient redissonClient() {
         return Mockito.mock(RedissonClient.class, Answers.RETURNS_DEEP_STUBS);
     }
 
-    /**
-     * 执行 {@code reactiveStringRedisTemplate} 操作。
-     * @return 操作结果
-     */
     @Bean
     @Primary
     ReactiveStringRedisTemplate reactiveStringRedisTemplate() {
@@ -61,7 +52,6 @@ class ItProfileMockRedisConfiguration {
     }
 
     /**
-     * 执行 {@code accountDeletionPort} 操作。
      *
      * <p>账号注销持久化端口的实现随 v2.0 业务下线被移除，集成测试通过
      * 测试桩满足 Spring 依赖注入，不触发真实注销流程。</p>
@@ -79,7 +69,6 @@ class ItProfileMockRedisConfiguration {
     }
 
     /**
-     * 执行 {@code businessMetricsPort} 操作。
      *
      * <p>业务指标端点的 Micrometer 实现随 v2.0 业务下线被移除，集成测试通过
      * 空桩满足 Spring 依赖注入。</p>
@@ -92,10 +81,6 @@ class ItProfileMockRedisConfiguration {
         return Mockito.mock(BusinessMetricsPort.class);
     }
 
-    /**
-     * 执行 {@code fileService} 操作。
-     * @return 操作结果
-     */
     @Bean
     @Primary
     FileService fileService() {
@@ -107,10 +92,6 @@ class ItProfileMockRedisConfiguration {
         return service;
     }
 
-    /**
-     * 执行 {@code storageService} 操作。
-     * @return 操作结果
-     */
     @Bean
     @Primary
     StorageService storageService() {

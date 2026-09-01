@@ -19,27 +19,16 @@ import org.springframework.http.MediaType;
 @DisplayName("认证流程集成测试")
 @EnabledIfSystemProperty(named = "apex.remote-it.enabled", matches = "true")
 class AuthRemoteIT extends BaseLocalIntegrationTest {
-
-    /**
-     * 创建 {@code AuthRemoteIT} 实例。
-     * @param dataSource 参数 {@code dataSource}
-     */
     public AuthRemoteIT(DataSource dataSource) {
         super(dataSource);
     }
 
-    /**
-     * 执行 {@code authenticatedEndpoint_withoutToken_shouldReturn401} 操作。
-     */
     @Test
     @DisplayName("访问需认证接口 - 未携带Token应返回401")
     void authenticatedEndpoint_withoutToken_shouldReturn401() {
         webTestClient.get().uri("/api/v1/user/info").exchange().expectStatus().isUnauthorized();
     }
 
-    /**
-     * 执行 {@code authenticatedEndpoint_withInvalidToken_shouldReturn401} 操作。
-     */
     @Test
     @DisplayName("访问需认证接口 - 携带无效Token应返回401")
     void authenticatedEndpoint_withInvalidToken_shouldReturn401() {
@@ -52,9 +41,6 @@ class AuthRemoteIT extends BaseLocalIntegrationTest {
                 .isUnauthorized();
     }
 
-    /**
-     * 执行 {@code authenticatedEndpoint_withExpiredToken_shouldReturn401} 操作。
-     */
     @Test
     @DisplayName("访问需认证接口 - 携带过期Token应返回401")
     void authenticatedEndpoint_withExpiredToken_shouldReturn401() {
@@ -140,9 +126,6 @@ class AuthRemoteIT extends BaseLocalIntegrationTest {
                 .isEqualTo(400);
     }
 
-    /**
-     * 执行 {@code logout_withoutToken_shouldReturn401} 操作。
-     */
     @Test
     @DisplayName("POST /api/v1/auth/logout - 未携带Token应返回401")
     void logout_withoutToken_shouldReturn401() {
@@ -154,9 +137,6 @@ class AuthRemoteIT extends BaseLocalIntegrationTest {
                 .isUnauthorized();
     }
 
-    /**
-     * 执行 {@code logout_withValidToken_shouldReturn200} 操作。
-     */
     @Test
     @DisplayName("POST /api/v1/auth/logout - 携带有效Token应返回200")
     void logout_withValidToken_shouldReturn200() {
@@ -173,9 +153,6 @@ class AuthRemoteIT extends BaseLocalIntegrationTest {
                 .isEqualTo(0);
     }
 
-    /**
-     * 获取{@code myRoles_withoutToken_shouldReturn401}。
-     */
     @Test
     @DisplayName("GET /api/v1/auth/roles/my - 未携带Token应返回401")
     void getMyRoles_withoutToken_shouldReturn401() {

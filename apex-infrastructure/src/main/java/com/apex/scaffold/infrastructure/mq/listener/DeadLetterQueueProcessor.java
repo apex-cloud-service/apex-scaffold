@@ -93,6 +93,17 @@ public class DeadLetterQueueProcessor {
         registerHandler(originalTopic, originalTopic.replace("-topic", "-consumer-group"), handler);
     }
 
+    /**
+     * 注册死信处理器（指定消费组）。
+     *
+     * <p>显式指定原始 Topic 对应的消费组，用于处理 RocketMQ 重试耗尽后投递到
+     * {@code %DLQ% + 消费组名} 死信 Topic 的消息。注册发生在启动前的，启动时自动订阅；
+     * 注册发生在启动后的，立即补订阅该 Topic。</p>
+     *
+     * @param originalTopic 原始业务 Topic
+     * @param consumerGroup 原始消费组名（用于推导死信 Topic）
+     * @param handler       死信处理器
+     */
     public void registerHandler(String originalTopic, String consumerGroup, DlqHandler handler) {
         synchronized (lifecycleMonitor) {
             handlerRegistry.put(originalTopic, handler);

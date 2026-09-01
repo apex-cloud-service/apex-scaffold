@@ -49,10 +49,6 @@ class CreditServiceTest {
     }
 
     // ==================== addCredit ====================
-
-    /**
-     * 执行 {@code addCredit_Normal} 操作。
-     */
     @Test
     @DisplayName("addCredit - 余额 500 增加 100 后余额为 600")
     void addCredit_Normal() {
@@ -76,9 +72,6 @@ class CreditServiceTest {
                 .verifyComplete();
     }
 
-    /**
-     * 执行 {@code addCredit_CappedAtMax} 操作。
-     */
     @Test
     @DisplayName("addCredit - 余额 1950 增加 100 后封顶 2000")
     void addCredit_CappedAtMax() {
@@ -102,9 +95,6 @@ class CreditServiceTest {
                 .verifyComplete();
     }
 
-    /**
-     * 执行 {@code addCredit_SaveFails} 操作。
-     */
     @Test
     @DisplayName("addCredit - 保存失败时返回 false")
     void addCredit_SaveFails() {
@@ -120,10 +110,6 @@ class CreditServiceTest {
     }
 
     // ==================== consumeCredit ====================
-
-    /**
-     * 执行 {@code consumeCredit_SufficientBalance} 操作。
-     */
     @Test
     @DisplayName("consumeCredit - 余额 500 消费 100 后余额为 400")
     void consumeCredit_SufficientBalance() {
@@ -146,9 +132,6 @@ class CreditServiceTest {
                 .verifyComplete();
     }
 
-    /**
-     * 执行 {@code consumeCredit_InsufficientBalance} 操作。
-     */
     @Test
     @DisplayName("consumeCredit - 余额不足时返回 false")
     void consumeCredit_InsufficientBalance() {
@@ -162,9 +145,6 @@ class CreditServiceTest {
                 .verifyComplete();
     }
 
-    /**
-     * 执行 {@code consumeCredit_AccountNotFound} 操作。
-     */
     @Test
     @DisplayName("consumeCredit - 账户不存在时返回 false")
     void consumeCredit_AccountNotFound() {
@@ -178,10 +158,6 @@ class CreditServiceTest {
     }
 
     // ==================== grantDailyLoginBonus ====================
-
-    /**
-     * 执行 {@code grantDailyLoginBonus_AlreadyClaimed} 操作。
-     */
     @Test
     @DisplayName("grantDailyLoginBonus - 今日已领取返回 false")
     void grantDailyLoginBonus_AlreadyClaimed() {
@@ -195,9 +171,6 @@ class CreditServiceTest {
                 .verifyComplete();
     }
 
-    /**
-     * 执行 {@code grantDailyLoginBonus_Success} 操作。
-     */
     @Test
     @DisplayName("grantDailyLoginBonus - 首次领取成功（+3）")
     void grantDailyLoginBonus_Success() {
@@ -222,10 +195,6 @@ class CreditServiceTest {
     }
 
     // ==================== grantVoteReward ====================
-
-    /**
-     * 执行 {@code grantVoteReward_ChoiceTwo} 操作。
-     */
     @Test
     @DisplayName("grantVoteReward - CHOICE_2 奖励 1 分")
     void grantVoteReward_ChoiceTwo() {
@@ -248,9 +217,6 @@ class CreditServiceTest {
                 .verifyComplete();
     }
 
-    /**
-     * 执行 {@code grantVoteReward_FourPickTwoWithFrontal} 操作。
-     */
     @Test
     @DisplayName("grantVoteReward - FOUR_PICK_TWO 有正面照奖励 3 分")
     void grantVoteReward_FourPickTwoWithFrontal() {
@@ -273,9 +239,6 @@ class CreditServiceTest {
                 .verifyComplete();
     }
 
-    /**
-     * 执行 {@code grantVoteReward_FourPickTwoWithoutFrontal} 操作。
-     */
     @Test
     @DisplayName("grantVoteReward - FOUR_PICK_TWO 无正面照奖励 2 分")
     void grantVoteReward_FourPickTwoWithoutFrontal() {
@@ -298,9 +261,6 @@ class CreditServiceTest {
                 .verifyComplete();
     }
 
-    /**
-     * 执行 {@code grantVoteReward_ChoiceTwoSelfAnchor} 操作。
-     */
     @Test
     @DisplayName("grantVoteReward - CHOICE_2_SELF_ANCHOR 奖励 1 分")
     void grantVoteReward_ChoiceTwoSelfAnchor() {
@@ -324,10 +284,6 @@ class CreditServiceTest {
     }
 
     // ==================== grantFavoriteReward ====================
-
-    /**
-     * 执行 {@code grantFavoriteReward_NormalAdd5} 操作。
-     */
     @Test
     @DisplayName("grantFavoriteReward - 正常增加 5 分")
     void grantFavoriteReward_NormalAdd5() {
@@ -357,9 +313,6 @@ class CreditServiceTest {
                 .verifyComplete();
     }
 
-    /**
-     * 执行 {@code grantFavoriteReward_DailyLimitReached} 操作。
-     */
     @Test
     @DisplayName("grantFavoriteReward - 当日收藏已达上限（200）返回 false")
     void grantFavoriteReward_DailyLimitReached() {
@@ -374,9 +327,6 @@ class CreditServiceTest {
                 .verifyComplete();
     }
 
-    /**
-     * 执行 {@code grantFavoriteReward_DateReset} 操作。
-     */
     @Test
     @DisplayName("grantFavoriteReward - 跨天后收藏计数重置")
     void grantFavoriteReward_DateReset() {
@@ -407,10 +357,6 @@ class CreditServiceTest {
     }
 
     // ==================== grantInviteReward ====================
-
-    /**
-     * 执行 {@code grantInviteReward_Success} 操作。
-     */
     @Test
     @DisplayName("grantInviteReward - 邀请奖励 100 分")
     void grantInviteReward_Success() {

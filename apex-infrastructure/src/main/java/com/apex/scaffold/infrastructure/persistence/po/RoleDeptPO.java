@@ -4,14 +4,28 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+/**
+ * 角色-部门关联持久化对象。
+ *
+ * <p>映射数据表 {@code sys_role_dept}，记录角色与部门之间的数据权限归属关系，
+ * 用于实现按部门维度的数据范围控制。</p>
+ *
+ * @author Apex Team
+ * @version 1.0.0
+ * @since 1.0.0
+ * @see com.apex.scaffold.infrastructure.persistence.mapper.RoleDeptMapper
+ */
 @Data
 @EqualsAndHashCode(callSuper = true)
 @TableName("sys_role_dept")
 public class RoleDeptPO extends BasePO {
 
+    /** 租户 ID */
     private String tenantId;
 
+    /** 角色 ID */
     private Long roleId;
 
+    /** 部门 ID */
     private Long deptId;
 }

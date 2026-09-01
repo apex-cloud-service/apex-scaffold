@@ -49,9 +49,6 @@ class WeChatGatewayImplTest {
                 .thenAnswer(invocation -> invocation.getArgument(1));
     }
 
-    /**
-     * 执行 {@code login_Success_ReturnsLoginResult} 操作。
-     */
     @Test
     @DisplayName("login - 成功委派并返回登录结果")
     void login_Success_ReturnsLoginResult() {
@@ -81,9 +78,6 @@ class WeChatGatewayImplTest {
                 .verifyComplete();
     }
 
-    /**
-     * 执行 {@code login_ServiceError_ReturnsFallback} 操作。
-     */
     @Test
     @DisplayName("login - 服务异常应返回降级结果")
     void login_ServiceError_ReturnsFallback() {
@@ -100,9 +94,6 @@ class WeChatGatewayImplTest {
                 .verifyComplete();
     }
 
-    /**
-     * 获取{@code userInfo_Success_ReturnsUserInfo}。
-     */
     @Test
     @DisplayName("getUserInfo - 成功委派并返回用户信息")
     void getUserInfo_Success_ReturnsUserInfo() {
@@ -138,9 +129,6 @@ class WeChatGatewayImplTest {
                 .verifyComplete();
     }
 
-    /**
-     * 获取{@code userInfo_EmptyResult_ReturnsEmptyDto}。
-     */
     @Test
     @DisplayName("getUserInfo - 返回空Map应返回空字段DTO")
     void getUserInfo_EmptyResult_ReturnsEmptyDto() {
@@ -156,9 +144,6 @@ class WeChatGatewayImplTest {
                 .verifyComplete();
     }
 
-    /**
-     * 获取{@code phoneNumber_Success_ReturnsPhoneResult}。
-     */
     @Test
     @DisplayName("getPhoneNumber - 成功委派并返回手机号结果")
     void getPhoneNumber_Success_ReturnsPhoneResult() {
@@ -180,9 +165,6 @@ class WeChatGatewayImplTest {
                 .verifyComplete();
     }
 
-    /**
-     * 获取{@code phoneNumber_EmptyResult_ReturnsEmptyDto}。
-     */
     @Test
     @DisplayName("getPhoneNumber - 返回空Map应返回空字段DTO")
     void getPhoneNumber_EmptyResult_ReturnsEmptyDto() {

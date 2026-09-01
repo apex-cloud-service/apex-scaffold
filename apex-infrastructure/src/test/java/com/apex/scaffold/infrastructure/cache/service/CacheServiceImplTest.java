@@ -50,18 +50,12 @@ class CacheServiceImplTest {
         cacheService = new CacheServiceImpl(redissonClient, objectMapper);
     }
 
-    /**
-     * 获取{@code _NullKey_ReturnsEmpty}。
-     */
     @Test
     @DisplayName("get - key为null应返回Mono.empty")
     void get_NullKey_ReturnsEmpty() {
         cacheService.get(null, String.class).as(StepVerifier::create).verifyComplete();
     }
 
-    /**
-     * 获取{@code _StringValueExists_ReturnsValue}。
-     */
     @Test
     @DisplayName("get - 缓存中存在String值应返回该值")
     void get_StringValueExists_ReturnsValue() {
@@ -76,9 +70,6 @@ class CacheServiceImplTest {
                 .verifyComplete();
     }
 
-    /**
-     * 获取{@code _NullValue_ReturnsEmpty}。
-     */
     @Test
     @DisplayName("get - 缓存中值为null应返回Mono.empty")
     void get_NullValue_ReturnsEmpty() {
@@ -89,9 +80,6 @@ class CacheServiceImplTest {
         cacheService.get("test-key", String.class).as(StepVerifier::create).verifyComplete();
     }
 
-    /**
-     * 获取{@code _TypeMismatchAndNotString_ReturnsEmpty}。
-     */
     @Test
     @DisplayName("get - JSON反序列化失败应返回Mono.error")
     void get_TypeMismatchAndNotString_ReturnsEmpty() {
@@ -102,10 +90,6 @@ class CacheServiceImplTest {
         cacheService.get("test-key", Integer.class).as(StepVerifier::create).verifyError();
     }
 
-    /**
-     * 获取{@code _JsonString_DeserializesToTargetType}。
-     * @throws Exception 当操作无法完成时
-     */
     @Test
     @DisplayName("get - 缓存值为JSON字符串应反序列化为目标类型")
     void get_JsonString_DeserializesToTargetType() throws Exception {
@@ -192,7 +176,6 @@ class CacheServiceImplTest {
 
     /**
      * 设置{@code _ComplexObject_SerializesToJson}。
-     * @throws Exception 当操作无法完成时
      */
     @Test
     @DisplayName("set - 存储复杂对象应序列化为JSON再存入Redis")
@@ -250,9 +233,6 @@ class CacheServiceImplTest {
                 .verifyComplete();
     }
 
-    /**
-     * 获取{@code batch_NullKeys_ReturnsEmptyList}。
-     */
     @Test
     @DisplayName("getBatch - 传入null应返回空列表")
     void getBatch_NullKeys_ReturnsEmptyList() {
@@ -263,9 +243,6 @@ class CacheServiceImplTest {
                 .verifyComplete();
     }
 
-    /**
-     * 获取{@code batch_EmptyKeys_ReturnsEmptyList}。
-     */
     @Test
     @DisplayName("getBatch - 传入空列表应返回空列表")
     void getBatch_EmptyKeys_ReturnsEmptyList() {
@@ -276,9 +253,6 @@ class CacheServiceImplTest {
                 .verifyComplete();
     }
 
-    /**
-     * 获取{@code batch_MultipleKeys_ReturnsValues}。
-     */
     @Test
     @DisplayName("getBatch - 批量获取缓存值")
     void getBatch_MultipleKeys_ReturnsValues() {
@@ -299,9 +273,6 @@ class CacheServiceImplTest {
                 .verifyComplete();
     }
 
-    /**
-     * 获取{@code batch_WithNullKey_FiltersOutNull}。
-     */
     @Test
     @DisplayName("getBatch - 包含null key应被过滤")
     void getBatch_WithNullKey_FiltersOutNull() {
@@ -319,9 +290,6 @@ class CacheServiceImplTest {
                 .verifyComplete();
     }
 
-    /**
-     * 获取{@code batch_WithNullValue_FiltersOutNull}。
-     */
     @Test
     @DisplayName("getBatch - 缓存中null值应被过滤")
     void getBatch_WithNullValue_FiltersOutNull() {
@@ -413,7 +381,6 @@ class CacheServiceImplTest {
 
     /**
      * 设置{@code batch_ComplexObject_SerializesToJson}。
-     * @throws Exception 当操作无法完成时
      */
     @Test
     @DisplayName("setBatch - 批量设置复杂对象应序列化为JSON")
@@ -435,30 +402,18 @@ class CacheServiceImplTest {
     static class UserInfo {
         private String name;
 
-        /**
-         * 创建 {@code UserInfo} 实例。
-         */
         public UserInfo() {}
 
-        /**
-         * 创建 {@code UserInfo} 实例。
-         * @param name 参数 {@code name}
-         */
         public UserInfo(String name) {
             this.name = name;
         }
 
-        /**
-         * 获取{@code name}。
-         * @return 字符串结果
-         */
         public String getName() {
             return name;
         }
 
         /**
          * 设置{@code name}。
-         * @param name 参数 {@code name}
          */
         public void setName(String name) {
             this.name = name;

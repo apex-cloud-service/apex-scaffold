@@ -75,18 +75,11 @@ class OperationLogAspectTest {
         traceIdUtilMockedStatic.when(TraceIdUtil::getTraceId).thenReturn(TEST_TRACE_ID);
     }
 
-    /**
-     * 执行 {@code tearDown} 操作。
-     */
     @AfterEach
     void tearDown() {
         traceIdUtilMockedStatic.close();
     }
 
-    /**
-     * 执行 {@code around_whenMethodSucceeds_shouldLogSuccess} 操作。
-     * @throws Throwable 当操作无法完成时
-     */
     @Test
     @DisplayName("方法正常执行时应记录成功日志")
     void around_whenMethodSucceeds_shouldLogSuccess() throws Throwable {
@@ -111,10 +104,6 @@ class OperationLogAspectTest {
         assertThat(result).isEqualTo("success");
     }
 
-    /**
-     * 执行 {@code around_whenMethodThrowsException_shouldLogFailureAndRethrow} 操作。
-     * @throws Throwable 当操作无法完成时
-     */
     @Test
     @DisplayName("方法抛出异常时应记录失败日志并重新抛出异常")
     void around_whenMethodThrowsException_shouldLogFailureAndRethrow() throws Throwable {
@@ -139,10 +128,6 @@ class OperationLogAspectTest {
                 .hasMessage("业务异常");
     }
 
-    /**
-     * 执行 {@code around_withServerWebExchange_shouldSetRequestInfo} 操作。
-     * @throws Throwable 当操作无法完成时
-     */
     @Test
     @DisplayName("请求中包含ServerWebExchange时应记录请求信息")
     void around_withServerWebExchange_shouldSetRequestInfo() throws Throwable {
@@ -174,10 +159,6 @@ class OperationLogAspectTest {
         assertThat(result).isEqualTo("success");
     }
 
-    /**
-     * 执行 {@code around_whenSaveLogFails_shouldNotAffectMainFlow} 操作。
-     * @throws Throwable 当操作无法完成时
-     */
     @Test
     @DisplayName("保存操作日志失败时不应影响主流程")
     void around_whenSaveLogFails_shouldNotAffectMainFlow() throws Throwable {

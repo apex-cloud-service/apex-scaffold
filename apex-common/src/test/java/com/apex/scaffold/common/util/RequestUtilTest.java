@@ -22,10 +22,6 @@ class RequestUtilTest {
     @Nested
     @DisplayName("getClientIp 方法")
     class GetClientIpTests {
-
-        /**
-         * 执行 {@code shouldReturnFirstForwardedIpWhenHeaderExists} 操作。
-         */
         @Test
         @DisplayName("X-Forwarded-For 存在时优先返回第一个IP")
         void shouldReturnFirstForwardedIpWhenHeaderExists() {
@@ -36,9 +32,6 @@ class RequestUtilTest {
             assertThat(RequestUtil.getClientIp(request)).isEqualTo("192.168.1.100");
         }
 
-        /**
-         * 执行 {@code shouldReturnSingleForwardedIp} 操作。
-         */
         @Test
         @DisplayName("X-Forwarded-For 为单个IP时直接返回")
         void shouldReturnSingleForwardedIp() {
@@ -49,9 +42,6 @@ class RequestUtilTest {
             assertThat(RequestUtil.getClientIp(request)).isEqualTo("8.8.8.8");
         }
 
-        /**
-         * 执行 {@code shouldFallbackToXRealIpWhenForwardedForIsEmpty} 操作。
-         */
         @Test
         @DisplayName("X-Forwarded-For 为空时回退到 X-Real-IP")
         void shouldFallbackToXRealIpWhenForwardedForIsEmpty() {
@@ -63,9 +53,6 @@ class RequestUtilTest {
             assertThat(RequestUtil.getClientIp(request)).isEqualTo("10.10.10.10");
         }
 
-        /**
-         * 执行 {@code shouldFallbackToRemoteAddressWhenNoProxyHeaders} 操作。
-         */
         @Test
         @DisplayName("代理头均不存在时回退到 remoteAddress")
         void shouldFallbackToRemoteAddressWhenNoProxyHeaders() {
@@ -76,9 +63,6 @@ class RequestUtilTest {
             assertThat(RequestUtil.getClientIp(request)).isEqualTo("127.0.0.1");
         }
 
-        /**
-         * 执行 {@code shouldReturnUnknownWhenAllSourcesUnavailable} 操作。
-         */
         @Test
         @DisplayName("所有来源均不可用时返回 unknown")
         void shouldReturnUnknownWhenAllSourcesUnavailable() {
@@ -87,9 +71,6 @@ class RequestUtilTest {
             assertThat(RequestUtil.getClientIp(request)).isEqualTo("unknown");
         }
 
-        /**
-         * 执行 {@code shouldReturnXRealIpWhenOnlyPresent} 操作。
-         */
         @Test
         @DisplayName("仅 X-Real-IP 存在时直接返回")
         void shouldReturnXRealIpWhenOnlyPresent() {

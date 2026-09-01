@@ -27,10 +27,6 @@ class UserDefaultsFactoryTest {
     @Nested
     @DisplayName("createDefaultCompliance 方法")
     class CreateDefaultComplianceTests {
-
-        /**
-         * 执行 {@code shouldCreateDefaultComplianceWithCorrectUserId} 操作。
-         */
         @Test
         @DisplayName("应创建包含正确用户ID的默认合规配置")
         void shouldCreateDefaultComplianceWithCorrectUserId() {
@@ -40,9 +36,6 @@ class UserDefaultsFactoryTest {
             assertThat(result.getUserId()).isEqualTo(100L);
         }
 
-        /**
-         * 执行 {@code shouldCreateDefaultComplianceWithTeenModeDisabled} 操作。
-         */
         @Test
         @DisplayName("应创建青少年模式关闭的默认合规配置")
         void shouldCreateDefaultComplianceWithTeenModeDisabled() {
@@ -52,9 +45,6 @@ class UserDefaultsFactoryTest {
             assertThat(result.getTeenMode()).isEqualTo(UserComplianceEntity.TeenModeStatus.DISABLED.getCode());
         }
 
-        /**
-         * 执行 {@code shouldCreateDefaultComplianceWithNotDeletedStatus} 操作。
-         */
         @Test
         @DisplayName("应设置为非删除状态")
         void shouldCreateDefaultComplianceWithNotDeletedStatus() {
@@ -63,9 +53,6 @@ class UserDefaultsFactoryTest {
             assertThat(result.isDeleted()).isFalse();
         }
 
-        /**
-         * 执行 {@code shouldAutoSetTimestamps} 操作。
-         */
         @Test
         @DisplayName("应自动设置创建时间和更新时间")
         void shouldAutoSetTimestamps() {
@@ -80,10 +67,6 @@ class UserDefaultsFactoryTest {
     @Nested
     @DisplayName("createDefaultProfile 方法")
     class CreateDefaultProfileTests {
-
-        /**
-         * 执行 {@code shouldCreateDefaultProfileWithCorrectUserId} 操作。
-         */
         @Test
         @DisplayName("应创建包含正确用户ID的默认画像")
         void shouldCreateDefaultProfileWithCorrectUserId() {
@@ -93,9 +76,6 @@ class UserDefaultsFactoryTest {
             assertThat(result.getUserId()).isEqualTo(100L);
         }
 
-        /**
-         * 执行 {@code shouldCreateDefaultProfileAsNormalUser} 操作。
-         */
         @Test
         @DisplayName("应创建普通用户类型的默认画像")
         void shouldCreateDefaultProfileAsNormalUser() {
@@ -105,9 +85,6 @@ class UserDefaultsFactoryTest {
             assertThat(result.isSocialUser()).isFalse();
         }
 
-        /**
-         * 执行 {@code shouldCreateDefaultProfileWithNotDeletedStatus} 操作。
-         */
         @Test
         @DisplayName("应设置为非删除状态")
         void shouldCreateDefaultProfileWithNotDeletedStatus() {
@@ -116,9 +93,6 @@ class UserDefaultsFactoryTest {
             assertThat(result.isDeleted()).isFalse();
         }
 
-        /**
-         * 执行 {@code shouldAutoSetTimestamps} 操作。
-         */
         @Test
         @DisplayName("应自动设置创建时间和更新时间")
         void shouldAutoSetTimestamps() {
@@ -129,9 +103,6 @@ class UserDefaultsFactoryTest {
             assertThat(result.getCreateTime()).isEqualTo(result.getUpdateTime());
         }
 
-        /**
-         * 执行 {@code shouldThrowExceptionWhenUserIdIsNull} 操作。
-         */
         @Test
         @DisplayName("传入null用户ID时应抛出异常")
         void shouldThrowExceptionWhenUserIdIsNull() {

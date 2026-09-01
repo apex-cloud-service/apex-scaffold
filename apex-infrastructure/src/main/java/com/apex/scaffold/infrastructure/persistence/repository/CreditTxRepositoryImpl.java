@@ -39,17 +39,6 @@ public class CreditTxRepositoryImpl implements CreditTxRepository {
      * @return 积分交易记录列表
      */
     @Override
-    /**
-     * 列表ByUserId
-     *
-     * @param userId 参数
-     *
-     * @param offset 参数
-     *
-     * @param limit 参数
-     *
-     * @return 结果
-     */
     public Mono<List<CreditTxEntity>> listByUserId(Long userId, int offset, int limit) {
         return Mono.fromCallable(() -> mapper.selectList(new LambdaQueryWrapper<CreditTxPO>()
                         .eq(CreditTxPO::getUserId, userId)
@@ -68,13 +57,6 @@ public class CreditTxRepositoryImpl implements CreditTxRepository {
      * @return 交易记录总数
      */
     @Override
-    /**
-     * 计数ByUserId
-     *
-     * @param userId 参数
-     *
-     * @return 结果
-     */
     public Mono<Long> countByUserId(Long userId) {
         return Mono.fromCallable(() ->
                         mapper.selectCount(new LambdaQueryWrapper<CreditTxPO>().eq(CreditTxPO::getUserId, userId)))

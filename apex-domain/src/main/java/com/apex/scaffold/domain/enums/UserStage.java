@@ -32,6 +32,11 @@ public enum UserStage {
      */
     MATURE;
 
+    /**
+     * 新人阶段判定阈值（投票次数）。
+     *
+     * <p>累计投票次数 ≤ 该值判定为 {@link #NEWBIE}，否则判定为 {@link #MATURE}。</p>
+     */
     public static final int NEWBIE_THRESHOLD_COUNT = 30;
 
     /**

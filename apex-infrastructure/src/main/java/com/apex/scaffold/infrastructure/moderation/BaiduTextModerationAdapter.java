@@ -106,11 +106,14 @@ public class BaiduTextModerationAdapter implements TextModerationPort {
     }
 
     /**
-     * 执行 {@code moderate} 逻辑。
+     * 审核文本内容。
      *
-     * @param text text 参数
+     * <p>校验文本非空且不超过 20000 字节上限后，在远程弹性调度器上调用百度云文本审核，
+     * 并设置整体超时时间（接口超时的两倍加两秒）。</p>
      *
-     * @return 执行结果
+     * @param text 待审核的文本
+     * @return 审核结果，包含总体结论与逐项发现
+     * @throws IllegalArgumentException 文本为空或超过字节上限时抛出
      */
     @Override
     public Mono<TextModerationResult> moderate(String text) {
@@ -126,13 +129,14 @@ public class BaiduTextModerationAdapter implements TextModerationPort {
     }
 
     /**
-     * 执行 {@code callBaidu} 逻辑。
+     * 调用百度云文本审核接口。
      *
-     * @param text text 参数
+     * <p>携带 Access Token 发起审核，若首次因 Token 失效/过期失败，则使缓存 Token
+     * 失效并重试一次。</p>
      *
-     * @return 执行结果
-     *
-     * @throws Exception 执行失败时
+     * @param text 待审核的文本
+     * @return 审核结果
+     * @throws Exception 网络调用失败、审核失败或重试后仍 Token 无效时抛出
      */
     private TextModerationResult callBaidu(String text) throws Exception {
         try {
@@ -144,15 +148,15 @@ public class BaiduTextModerationAdapter implements TextModerationPort {
     }
 
     /**
-     * 执行 {@code requestWithRetry} 逻辑：对 QPS 限流与可重试 HTTP 状态做线性退避重试。
+     * 携带 Access Token 发送审核请求，并对限流与瞬时故障做线性退避重试。
      *
-     * @param text text 参数
+     * <p>对 HTTP 429/503 与 QPS 限流错误码（{@link #isRateLimitedErrorCode}）采用
+     * 线性退避重试；Token 失效或过期时抛出 {@link BaiduTokenException}。</p>
      *
-     * @param accessToken accessToken 参数
-     *
-     * @return 执行结果
-     *
-     * @throws Exception 执行失败时
+     * @param text        待审核的文本
+     * @param accessToken 百度云 Access Token
+     * @return 审核结果
+     * @throws Exception 重试耗尽、HTTP 调用失败、审核失败或返回 Token 失效时抛出
      */
     private TextModerationResult requestWithRetry(String text, String accessToken) throws Exception {
         int totalAttempts = 1 + maxRetryAttempts;
@@ -190,15 +194,14 @@ public class BaiduTextModerationAdapter implements TextModerationPort {
     }
 
     /**
-     * 执行 {@code sendRequest} 逻辑。
+     * 向百度云发起文本审核 HTTP 请求。
      *
-     * @param text text 参数
+     * <p>将文本 URL 编码后作为表单请求体，携带 Access Token 调用审核端点。</p>
      *
-     * @param accessToken accessToken 参数
-     *
-     * @return 执行结果
-     *
-     * @throws Exception 执行失败时
+     * @param text        待审核的文本
+     * @param accessToken 百度云 Access Token
+     * @return 百度云 HTTP 响应
+     * @throws Exception HTTP 调用失败时抛出
      */
     private HttpResponse<String> sendRequest(String text, String accessToken) throws Exception {
         String formBody = "text=" + URLEncoder.encode(text, StandardCharsets.UTF_8);
@@ -213,11 +216,10 @@ public class BaiduTextModerationAdapter implements TextModerationPort {
     }
 
     /**
-     * 执行 {@code sleepRetry} 逻辑。
+     * 按线性退避策略休眠等待后重试。
      *
-     * @param attempt attempt 参数
-     *
-     * @throws InterruptedException 执行失败时
+     * @param attempt 当前调用次数（从 1 开始）
+     * @throws InterruptedException 线程休眠被中断时抛出
      */
     private void sleepRetry(int attempt) throws InterruptedException {
         Thread.sleep(retryDelayMillis(attempt, retryBaseDelayMillis));
@@ -259,11 +261,13 @@ public class BaiduTextModerationAdapter implements TextModerationPort {
     }
 
     /**
-     * 执行 {@code mapResponse} 逻辑。
+     * 将百度云审核响应解析为领域审核结果。
      *
-     * @param root root 参数
+     * <p>根据 {@code conclusionType} 计算总体决策，遍历 {@code data} 数组生成逐项
+     * 发现；无明细时以总体结论兜底构造单条发现，并提取 {@code log_id} 作为请求 ID。</p>
      *
-     * @return 执行结果
+     * @param root 百度云审核响应 JSON 根节点
+     * @return 审核结果
      */
     TextModerationResult mapResponse(JsonNode root) {
         int conclusionType = root.path("conclusionType").asInt(0);
@@ -292,13 +296,14 @@ public class BaiduTextModerationAdapter implements TextModerationPort {
     }
 
     /**
-     * 执行 {@code mapFinding} 逻辑。
+     * 将单条审核明细映射为发现项。
      *
-     * @param item item 参数
+     * <p>解析明细中的类型、子类型与结论类型；结论类型缺失时沿用总体决策兜底，
+     * 计算命中概率并附带完整明细数据。</p>
      *
-     * @param fallbackDecision fallbackDecision 参数
-     *
-     * @return 执行结果
+     * @param item             百度云审核明细 JSON 节点
+     * @param fallbackDecision 明细未给出结论类型时的兜底决策
+     * @return 单条审核发现
      */
     private ModerationFinding mapFinding(JsonNode item, ModerationDecision fallbackDecision) {
         int type = item.path("type").asInt(-1);
@@ -312,11 +317,13 @@ public class BaiduTextModerationAdapter implements TextModerationPort {
     }
 
     /**
-     * 执行 {@code probability} 逻辑。
+     * 计算审核明细的命中概率。
      *
-     * @param item item 参数
+     * <p>遍历 {@code hits} 数组中的概率值取最大值；无明细概率时回退到明细自身的
+     * {@code probability}。</p>
      *
-     * @return 执行结果
+     * @param item 百度云审核明细 JSON 节点
+     * @return 命中概率（百分比），无法计算时返回 {@code null}
      */
     private BigDecimal probability(JsonNode item) {
         BigDecimal highest = null;
@@ -344,11 +351,12 @@ public class BaiduTextModerationAdapter implements TextModerationPort {
     }
 
     /**
-     * 执行 {@code accessToken} 逻辑。
+     * 获取有效的百度云 Access Token。
      *
-     * @return 执行结果
+     * <p>优先返回缓存中未过期的 Token；否则在锁内再次校验后重新获取，避免并发重复请求。</p>
      *
-     * @throws Exception 执行失败时
+     * @return 有效的 Access Token
+     * @throws Exception 获取 Token 失败时抛出
      */
     private String accessToken() throws Exception {
         CachedToken current = cachedToken;
@@ -366,11 +374,13 @@ public class BaiduTextModerationAdapter implements TextModerationPort {
     }
 
     /**
-     * 执行 {@code requestAccessToken} 逻辑。
+     * 使用客户端凭证向百度云换取 Access Token。
      *
-     * @return 执行结果
+     * <p>以 apiKey/secretKey 构造 client_credentials 请求，从响应中解析 Token 与
+     * 有效期，并预留部分安全余量作为实际可用时长。</p>
      *
-     * @throws Exception 执行失败时
+     * @return 带可用时长的缓存 Token
+     * @throws Exception HTTP 调用失败、返回 Token 为空或有效期非法时抛出
      */
     private CachedToken requestAccessToken() throws Exception {
         String query = "grant_type=client_credentials&client_id="
@@ -396,7 +406,9 @@ public class BaiduTextModerationAdapter implements TextModerationPort {
     }
 
     /**
-     * 执行 {@code invalidateToken} 逻辑。
+     * 使缓存的 Access Token 失效。
+     *
+     * <p>置空缓存的 Token，促使下一次审核重新获取。</p>
      */
     private void invalidateToken() {
         synchronized (tokenLock) {
@@ -405,11 +417,11 @@ public class BaiduTextModerationAdapter implements TextModerationPort {
     }
 
     /**
-     * 执行 {@code mapDecision} 逻辑。
+     * 将百度云审核结论类型映射为审核决策。
      *
-     * @param conclusionType conclusionType 参数
-     *
-     * @return 执行结果
+     * @param conclusionType 百度云结论类型（1 通过、2 拒绝、3 需人工复审）
+     * @return 对应的审核决策
+     * @throws IllegalStateException 遇到未知结论类型时抛出
      */
     private ModerationDecision mapDecision(int conclusionType) {
         return switch (conclusionType) {
@@ -421,27 +433,24 @@ public class BaiduTextModerationAdapter implements TextModerationPort {
     }
 
     /**
-     * 执行 {@code suggestion} 逻辑。
+     * 生成决策对应的建议动作标识。
      *
-     * @param decision decision 参数
-     *
-     * @return 执行结果
+     * @param decision 领域审核决策
+     * @return 决策名的小写形式（如 {@code pass}、{@code block}）
      */
     private String suggestion(ModerationDecision decision) {
         return decision.name().toLowerCase(java.util.Locale.ROOT);
     }
 
     /**
-     * 百度云文本审核主类型/子类型到场景编码的映射。
+     * 将百度云文本审核主类型/子类型映射为场景编码。
      *
      * <p>type=11 官方违禁词库；type=12 文本反作弊（subType：0 低质灌水、1 违禁违规、
      * 2 文本色情、3 敏感信息、4 恶意推广、5 低俗辱骂、6 恶意推广-联系方式、
      * 7 恶意推广-软文推广）；type=13 自定义文本黑名单；type=14 自定义文本白名单。</p>
      *
-     * @param type type 参数
-     *
-     * @param subType subType 参数
-     *
+     * @param type    百度云审核主类型号
+     * @param subType 百度云审核子类型号
      * @return 场景编码
      */
     private String scene(int type, int subType) {
@@ -469,11 +478,10 @@ public class BaiduTextModerationAdapter implements TextModerationPort {
     }
 
     /**
-     * 执行 {@code isBlank} 逻辑。
+     * 判断给定文本是否为空或仅含空白字符。
      *
-     * @param value value 参数
-     *
-     * @return 执行结果
+     * @param value 待判断的文本
+     * @return 文本为 {@code null} 或空白时返回 {@code true}
      */
     private boolean isBlank(String value) {
         return value == null || value.isBlank();
@@ -481,9 +489,9 @@ public class BaiduTextModerationAdapter implements TextModerationPort {
 
     private record CachedToken(String value, Instant expiresAt) {
         /**
-         * 执行 {@code usable} 逻辑。
+         * 判断缓存的 Token 是否仍可用。
          *
-         * @return 执行结果
+         * @return 未过有效期时返回 {@code true}
          */
         boolean usable() {
             return Instant.now().isBefore(expiresAt);

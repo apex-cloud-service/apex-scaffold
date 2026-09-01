@@ -76,9 +76,6 @@ class SentinelExceptionHandlerTest {
         lenient().when(messageUtils.get(any(Locale.class), any())).thenReturn("");
     }
 
-    /**
-     * 执行 {@code tearDown} 操作。
-     */
     @AfterEach
     void tearDown() {
         traceIdUtilMockedStatic.close();
@@ -86,8 +83,6 @@ class SentinelExceptionHandlerTest {
 
     /**
      * 设置{@code ruleOnException}。
-     * @param ex 参数 {@code ex}
-     * @param rule 参数 {@code rule}
      */
     private static void setRuleOnException(BlockException ex, com.alibaba.csp.sentinel.slots.block.Rule rule) {
         try {

@@ -41,11 +41,9 @@ final class BaiduImagePreprocessor {
     /**
      * 创建 {@link BaiduImagePreprocessor} 实例。
      *
-     * @param maxBase64Bytes maxBase64Bytes 参数
-     *
-     * @param maxDimension maxDimension 参数
-     *
-     * @param initialJpegQuality initialJpegQuality 参数
+     * @param maxBase64Bytes      Base64 编码最大字节数
+     * @param maxDimension        图片最大边长（像素）
+     * @param initialJpegQuality  JPEG 初始压缩质量（0~1）
      */
     BaiduImagePreprocessor(int maxBase64Bytes, int maxDimension, float initialJpegQuality) {
         if (maxBase64Bytes <= 0
@@ -60,13 +58,14 @@ final class BaiduImagePreprocessor {
     }
 
     /**
-     * 执行 {@code prepare} 逻辑。
+     * 预处理图片以符合百度云审核要求。
      *
-     * @param resource resource 参数
+     * <p>读取图片字节后识别其格式；若尺寸或 Base64 大小不超过限制则原样返回，
+     * 否则解码后压缩为 JPEG。</p>
      *
-     * @return 执行结果
-     *
-     * @throws Exception 执行失败时
+     * @param resource 待审核的图片资源
+     * @return 符合百度云大小与尺寸限制的图片字节
+     * @throws Exception 图片读取、解码或压缩失败时抛出
      */
     byte[] prepare(Resource resource) throws Exception {
         byte[] original;
@@ -111,13 +110,14 @@ final class BaiduImagePreprocessor {
     }
 
     /**
-     * 执行 {@code compress} 逻辑。
+     * 压缩图片至满足百度云大小限制。
      *
-     * @param source source 参数
+     * <p>先按最长边等比缩放，再以递减的 JPEG 质量尝试编码；若仍未达标，则继续
+     * 缩小尺寸后重试，直至命中大小限制或达到下限。</p>
      *
-     * @return 执行结果
-     *
-     * @throws Exception 执行失败时
+     * @param source 原始解码后的图片
+     * @return 压缩后的 JPEG 字节数组
+     * @throws Exception 图片宽高比例异常或压缩后仍超出限制时抛出
      */
     private byte[] compress(BufferedImage source) throws Exception {
         double dimensionScale = Math.min(
@@ -148,15 +148,12 @@ final class BaiduImagePreprocessor {
     }
 
     /**
-     * 执行 {@code resizeToRgb} 逻辑。
+     * 将图片缩放至目标尺寸并转换为 RGB 色彩空间。
      *
-     * @param source source 参数
-     *
-     * @param width width 参数
-     *
-     * @param height height 参数
-     *
-     * @return 执行结果
+     * @param source 源图片
+     * @param width  目标宽度
+     * @param height 目标高度
+     * @return 缩放并转换后的图片
      */
     private BufferedImage resizeToRgb(BufferedImage source, int width, int height) {
         BufferedImage target = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
@@ -174,15 +171,12 @@ final class BaiduImagePreprocessor {
     }
 
     /**
-     * 执行 {@code encodeJpeg} 逻辑。
+     * 将图片按指定质量编码为 JPEG 字节。
      *
-     * @param image image 参数
-     *
-     * @param quality quality 参数
-     *
-     * @return 执行结果
-     *
-     * @throws Exception 执行失败时
+     * @param image   待编码的图片
+     * @param quality JPEG 压缩质量（0~1）
+     * @return JPEG 编码结果
+     * @throws Exception 当前 JVM 不支持 JPEG 编码或编码失败时抛出
      */
     private byte[] encodeJpeg(BufferedImage image, float quality) throws Exception {
         Iterator<ImageWriter> writers = ImageIO.getImageWritersByFormatName("jpeg");
@@ -205,11 +199,11 @@ final class BaiduImagePreprocessor {
     }
 
     /**
-     * 执行 {@code validateDimensions} 逻辑。
+     * 校验图片尺寸符合百度云审核要求。
      *
-     * @param width width 参数
-     *
-     * @param height height 参数
+     * @param width  图片宽度
+     * @param height 图片高度
+     * @throws IllegalArgumentException 最短边过小或像素总量超出上限时抛出
      */
     private void validateDimensions(int width, int height) {
         if (width < MIN_DIMENSION || height < MIN_DIMENSION) {
@@ -221,11 +215,10 @@ final class BaiduImagePreprocessor {
     }
 
     /**
-     * 执行 {@code base64Length} 逻辑。
+     * 按字节长度估算 Base64 编码后的字符长度。
      *
-     * @param byteLength byteLength 参数
-     *
-     * @return 执行结果
+     * @param byteLength 原始字节长度
+     * @return Base64 编码后的长度
      */
     private long base64Length(long byteLength) {
         return ((byteLength + 2L) / 3L) * 4L;

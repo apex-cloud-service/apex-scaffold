@@ -169,13 +169,13 @@ public class GlobalGuardWebFilter implements WebFilter {
     }
 
     /**
-     * 执行 {@code cacheBlacklistResult} 逻辑。
+     * 缓存 IP 黑名单判断结果。
      *
-     * @param clientIp clientIp 参数
+     * <p>按上限淘汰最旧条目，根据命中与否分别采用正向与反向缓存的 TTL。</p>
      *
-     * @param blacklisted blacklisted 参数
-     *
-     * @param now now 参数
+     * @param clientIp    客户端 IP 地址
+     * @param blacklisted 是否命中黑名单
+     * @param now         当前时间戳（毫秒）
      */
     private void cacheBlacklistResult(String clientIp, boolean blacklisted, long now) {
         int maxSize = Math.max(1, guardProperties.getIpBlacklistCacheSize());

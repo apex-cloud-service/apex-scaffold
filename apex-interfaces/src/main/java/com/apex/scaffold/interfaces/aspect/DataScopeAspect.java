@@ -60,10 +60,28 @@ public class DataScopeAspect {
         this(dataScopeProvider, () -> Mono.justOrEmpty(dataScopeProvider.resolve()));
     }
 
+    /**
+     * 构造数据权限切面（仅响应式数据权限装配器）。
+     *
+     * <p>兼容仅配置响应式数据权限解析的场景：以返回 {@link Optional#empty()} 的同步装配器
+     * 作为占位，实际数据权限解析全部经由 {@link ReactiveDataScopeProvider} 完成。</p>
+     *
+     * @param reactiveDataScopeProvider 响应式数据权限装配器
+     */
     public DataScopeAspect(ReactiveDataScopeProvider reactiveDataScopeProvider) {
         this(() -> Optional.empty(), reactiveDataScopeProvider);
     }
 
+    /**
+     * 构造数据权限切面（同步 + 响应式数据权限装配器）。
+     *
+     * <p>同时注入两类装配器：同步方法经 {@link DataScopeProvider} 解析，
+     * 响应式方法（{@code Mono}/{@code Flux}）经 {@link ReactiveDataScopeProvider} 解析。
+     * 由 Spring 依赖注入调用（{@link Autowired}）。</p>
+     *
+     * @param dataScopeProvider            同步数据权限装配器
+     * @param reactiveDataScopeProvider    响应式数据权限装配器
+     */
     @Autowired
     public DataScopeAspect(DataScopeProvider dataScopeProvider, ReactiveDataScopeProvider reactiveDataScopeProvider) {
         this.dataScopeProvider = dataScopeProvider;

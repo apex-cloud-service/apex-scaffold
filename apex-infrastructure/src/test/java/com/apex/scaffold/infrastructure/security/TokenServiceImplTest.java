@@ -71,9 +71,6 @@ class TokenServiceImplTest {
         lenient().when(redisKeyPrefix.wrap(anyString())).thenAnswer(invocation -> invocation.getArgument(0));
     }
 
-    /**
-     * 执行 {@code generateAccessToken_Success} 操作。
-     */
     @Test
     @DisplayName("生成AccessToken - 成功场景")
     void generateAccessToken_Success() {
@@ -88,9 +85,6 @@ class TokenServiceImplTest {
         }
     }
 
-    /**
-     * 执行 {@code generateRefreshToken_Success} 操作。
-     */
     @Test
     @DisplayName("生成RefreshToken - 成功场景")
     void generateRefreshToken_Success() {
@@ -205,9 +199,6 @@ class TokenServiceImplTest {
         }
     }
 
-    /**
-     * 执行 {@code storeToken_Success} 操作。
-     */
     @Test
     @DisplayName("存储Token - 成功场景")
     void storeToken_Success() {
@@ -219,9 +210,6 @@ class TokenServiceImplTest {
                 .verifyComplete();
     }
 
-    /**
-     * 校验{@code refreshToken_Success}。
-     */
     @Test
     @DisplayName("验证RefreshToken - 成功场景")
     void validateRefreshToken_Success() {
@@ -248,9 +236,6 @@ class TokenServiceImplTest {
         }
     }
 
-    /**
-     * 校验{@code refreshToken_NullToken_ReturnsFalse}。
-     */
     @Test
     @DisplayName("验证RefreshToken - Token为空")
     void validateRefreshToken_NullToken_ReturnsFalse() {
@@ -273,9 +258,6 @@ class TokenServiceImplTest {
                 .verifyComplete();
     }
 
-    /**
-     * 校验{@code refreshToken_Blacklisted_ReturnsFalse}。
-     */
     @Test
     @DisplayName("验证RefreshToken - Token在黑名单中")
     void validateRefreshToken_Blacklisted_ReturnsFalse() {
@@ -290,9 +272,6 @@ class TokenServiceImplTest {
         }
     }
 
-    /**
-     * 校验{@code refreshToken_WrongType_ReturnsFalse}。
-     */
     @Test
     @DisplayName("验证RefreshToken - Token类型不匹配")
     void validateRefreshToken_WrongType_ReturnsFalse() {
@@ -309,9 +288,6 @@ class TokenServiceImplTest {
         }
     }
 
-    /**
-     * 校验{@code refreshToken_SubjectMismatch_ReturnsFalse}。
-     */
     @Test
     @DisplayName("验证RefreshToken - Subject不匹配")
     void validateRefreshToken_SubjectMismatch_ReturnsFalse() {
@@ -329,9 +305,6 @@ class TokenServiceImplTest {
         }
     }
 
-    /**
-     * 校验{@code refreshToken_NotStored_ReturnsFalse}。
-     */
     @Test
     @DisplayName("验证RefreshToken - 未存储该Token")
     void validateRefreshToken_NotStored_ReturnsFalse() {
@@ -350,9 +323,6 @@ class TokenServiceImplTest {
         }
     }
 
-    /**
-     * 校验{@code refreshToken_Expired_ReturnsFalse}。
-     */
     @Test
     @DisplayName("验证RefreshToken - Token已过期")
     void validateRefreshToken_Expired_ReturnsFalse() {
@@ -371,9 +341,6 @@ class TokenServiceImplTest {
         }
     }
 
-    /**
-     * 校验{@code refreshToken_ParseError_ReturnsFalse}。
-     */
     @Test
     @DisplayName("验证RefreshToken - 解析失败")
     void validateRefreshToken_ParseError_ReturnsFalse() {

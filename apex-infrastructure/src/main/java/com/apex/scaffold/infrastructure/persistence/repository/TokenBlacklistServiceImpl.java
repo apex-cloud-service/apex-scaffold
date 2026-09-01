@@ -63,18 +63,9 @@ public class TokenBlacklistServiceImpl implements TokenBlacklistService {
      *
      * @param token Token 字符串
      * @param expireTime 过期时间（毫秒），此参数保留用于接口兼容，实际以 Token 自身过期时间为准
-     * @return 操作结果
+     * @return 完成信号
      */
     @Override
-    /**
-     * 添加
-     *
-     * @param token 参数
-     *
-     * @param expireTime 参数
-     *
-     * @return 结果
-     */
     public Mono<Void> add(String token, long expireTime) {
         try {
             Claims claims = JwtUtil.parseToken(token);
@@ -117,13 +108,6 @@ public class TokenBlacklistServiceImpl implements TokenBlacklistService {
      * @return true-在黑名单中，false-不在黑名单中
      */
     @Override
-    /**
-     * 列表acklisted
-     *
-     * @param token 参数
-     *
-     * @return 结果
-     */
     public Mono<Boolean> isBlacklisted(String token) {
         try {
             Claims claims = JwtUtil.parseToken(token);

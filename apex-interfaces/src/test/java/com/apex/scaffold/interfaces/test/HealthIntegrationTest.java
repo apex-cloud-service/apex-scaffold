@@ -16,18 +16,10 @@ import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 @DisplayName("健康检查接口集成测试")
 @EnabledIfSystemProperty(named = "apex.remote-it.enabled", matches = "true")
 class HealthRemoteIT extends BaseLocalIntegrationTest {
-
-    /**
-     * 创建 {@code HealthRemoteIT} 实例。
-     * @param dataSource 参数 {@code dataSource}
-     */
     public HealthRemoteIT(DataSource dataSource) {
         super(dataSource);
     }
 
-    /**
-     * 执行 {@code health_shouldReturnUpStatus} 操作。
-     */
     @Test
     @DisplayName("GET /api/v1/health - 应返回200及UP状态")
     void health_shouldReturnUpStatus() {
@@ -46,9 +38,6 @@ class HealthRemoteIT extends BaseLocalIntegrationTest {
                 .isEqualTo("apex-scaffold");
     }
 
-    /**
-     * 执行 {@code info_shouldReturnSystemInfo} 操作。
-     */
     @Test
     @DisplayName("GET /api/v1/info - 应返回200及系统信息")
     void info_shouldReturnSystemInfo() {
@@ -69,9 +58,6 @@ class HealthRemoteIT extends BaseLocalIntegrationTest {
                 .isEqualTo("1.0.0");
     }
 
-    /**
-     * 执行 {@code health_shouldContainTimestamp} 操作。
-     */
     @Test
     @DisplayName("GET /api/v1/health - 响应中包含时间戳")
     void health_shouldContainTimestamp() {
@@ -86,9 +72,6 @@ class HealthRemoteIT extends BaseLocalIntegrationTest {
                 .isNotEmpty();
     }
 
-    /**
-     * 执行 {@code info_shouldContainEnvironmentInfo} 操作。
-     */
     @Test
     @DisplayName("GET /api/v1/info - 响应中包含Java版本和操作系统信息")
     void info_shouldContainEnvironmentInfo() {

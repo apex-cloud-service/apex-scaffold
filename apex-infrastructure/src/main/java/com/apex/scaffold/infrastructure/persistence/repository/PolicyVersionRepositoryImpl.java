@@ -40,13 +40,6 @@ public class PolicyVersionRepositoryImpl implements PolicyVersionRepository {
      * @return 最新政策版本实体；若不存在则返回空 Mono
      */
     @Override
-    /**
-     * 查找LatestByType
-     *
-     * @param policyType 参数
-     *
-     * @return 结果
-     */
     public Mono<PolicyVersionEntity> findLatestByType(String policyType) {
         return Mono.fromCallable(() -> mapper.selectOne(new LambdaQueryWrapper<PolicyVersionPO>()
                         .eq(PolicyVersionPO::getPolicyType, policyType)

@@ -213,23 +213,19 @@ public class WeChatCodeLoginStrategy implements LoginStrategy {
     }
 
     /**
-     * 执行 {@code issueWechatBindTicket} 逻辑。
+     * 签发微信手机号绑定票据并返回待绑定登录响应。
      *
-     * @param openId openId 参数
+     * <p>将微信身份与用户资料写入注册票据，返回 {@link AuthNextAction#PHONE_BIND_REQUIRED}
+     * 登录响应以引导用户完成手机号绑定。</p>
      *
-     * @param unionId unionId 参数
-     *
-     * @param accessToken accessToken 参数
-     *
-     * @param refreshToken refreshToken 参数
-     *
-     * @param tokenExpireTime tokenExpireTime 参数
-     *
-     * @param deviceId deviceId 参数
-     *
-     * @param wxUserInfo wxUserInfo 参数
-     *
-     * @return 执行结果
+     * @param openId          微信 openId
+     * @param unionId         微信 unionId
+     * @param accessToken     微信 Access Token
+     * @param refreshToken    微信 Refresh Token
+     * @param tokenExpireTime 微信 Token 过期时间
+     * @param deviceId        设备 ID
+     * @param wxUserInfo      微信用户资料
+     * @return 待绑定登录响应（含注册票据）
      */
     private Mono<LoginResponse> issueWechatBindTicket(
             String openId,
@@ -269,13 +265,13 @@ public class WeChatCodeLoginStrategy implements LoginStrategy {
     }
 
     /**
-     * 执行 {@code buildLoginResponse} 逻辑。
+     * 为已登录用户生成并存储 Token，构建完整登录响应。
      *
-     * @param user user 参数
+     * <p>生成访问令牌与刷新令牌并写入 Token 存储，再组装登录响应。</p>
      *
-     * @param request request 参数
-     *
-     * @return 执行结果
+     * @param user    已登录的用户实体
+     * @param request 微信验证码登录请求
+     * @return 登录响应（含 Token）
      */
     private Mono<LoginResponse> buildLoginResponse(UserEntity user, LoginRequest request) {
         String deviceId = request.getDeviceId();

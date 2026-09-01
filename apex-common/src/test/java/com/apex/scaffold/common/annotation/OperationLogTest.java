@@ -17,16 +17,9 @@ import org.junit.jupiter.api.Test;
  */
 @DisplayName("OperationLog 注解测试")
 class OperationLogTest {
-
-    /**
-     * 执行 {@code defaultMethod} 操作。
-     */
     @OperationLog
     public void defaultMethod() {}
 
-    /**
-     * 执行 {@code customMethod} 操作。
-     */
     @OperationLog(
             module = "用户管理",
             type = OperationLog.OperationType.INSERT,
@@ -39,7 +32,6 @@ class OperationLogTest {
 
     /**
      * 验证 {@code testDefaultAttributes} 场景。
-     * @throws Exception 当操作无法完成时
      */
     @Test
     @DisplayName("测试默认属性值")
@@ -60,7 +52,6 @@ class OperationLogTest {
 
     /**
      * 验证 {@code testCustomAttributes} 场景。
-     * @throws Exception 当操作无法完成时
      */
     @Test
     @DisplayName("测试自定义属性值")

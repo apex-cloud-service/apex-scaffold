@@ -112,19 +112,6 @@ public abstract class AbstractStorageService implements StorageService {
      * @return 上传成功返回唯一文件名
      */
     @Override
-    /**
-     * 加载ad
-     *
-     * @param bucketName 参数
-     *
-     * @param objectName 参数
-     *
-     * @param inputStream 参数
-     *
-     * @param contentType 参数
-     *
-     * @return 结果
-     */
     public Mono<String> upload(String bucketName, String objectName, InputStream inputStream, String contentType) {
         return uploadFile(bucketName, objectName, inputStream, contentType);
     }
@@ -176,15 +163,6 @@ public abstract class AbstractStorageService implements StorageService {
      * @return 删除成功返回 true，失败返回 false
      */
     @Override
-    /**
-     * 删除
-     *
-     * @param bucketName 参数
-     *
-     * @param objectName 参数
-     *
-     * @return 结果
-     */
     public Mono<Boolean> delete(String bucketName, String objectName) {
         return deleteFile(bucketName, objectName);
     }
@@ -213,15 +191,6 @@ public abstract class AbstractStorageService implements StorageService {
      * @return 文件存在返回 true，否则返回 false
      */
     @Override
-    /**
-     * 是否存在
-     *
-     * @param bucketName 参数
-     *
-     * @param objectName 参数
-     *
-     * @return 结果
-     */
     public Mono<Boolean> exists(String bucketName, String objectName) {
         return checkFileExists(bucketName, objectName);
     }
@@ -239,13 +208,14 @@ public abstract class AbstractStorageService implements StorageService {
     }
 
     /**
-     * 下载FileAsBytes
+     * 从存储中下载文件并以字节数组返回。
      *
-     * <p>详细说明</p>
+     * <p>调用子类的 {@link #download(String, String)} 获取文件输入流，在弹性调度器上读取全部字节，
+     * 读取完成后关闭输入流；关闭异常仅记录日志，不影响调用结果。</p>
      *
-     * @param bucketName 参数说明
-     * @param fileName 参数说明
-     * @return 返回值说明
+     * @param bucketName 存储桶名称
+     * @param fileName   文件名
+     * @return 文件内容的字节数组
      */
     protected Mono<byte[]> downloadFileAsBytes(String bucketName, String fileName) {
         return download(bucketName, fileName).flatMap(stream -> Mono.fromCallable(() -> stream.readAllBytes())
@@ -356,11 +326,6 @@ public abstract class AbstractStorageService implements StorageService {
      * @return 照片访问 URL 前缀
      */
     @Override
-    /**
-     * 获取PhotoUrlPrefix
-     *
-     * @return 结果
-     */
     public String getPhotoUrlPrefix() {
         return "/storage/" + getBucketName();
     }

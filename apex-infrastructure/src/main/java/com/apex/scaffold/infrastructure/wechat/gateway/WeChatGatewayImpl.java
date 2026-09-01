@@ -62,13 +62,6 @@ public class WeChatGatewayImpl implements WeChatGateway {
      * @see CircuitBreakerService
      */
     @Override
-    /**
-     * login
-     *
-     * @param code 参数
-     *
-     * @return 结果
-     */
     public Mono<WeChatLoginResult> login(String code) {
         Mono<WeChatLoginResult> apiCall = weChatAppService
                 .login(code)
@@ -93,15 +86,6 @@ public class WeChatGatewayImpl implements WeChatGateway {
      * @return 微信用户信息，断路器打开时返回降级结果
      */
     @Override
-    /**
-     * 获取UserInfo
-     *
-     * @param accessToken 参数
-     *
-     * @param openId 参数
-     *
-     * @return 结果
-     */
     public Mono<WeChatUserInfo> getUserInfo(String accessToken, String openId) {
         Mono<WeChatUserInfo> apiCall = weChatAppService
                 .getUserInfo(accessToken, openId)
@@ -126,13 +110,6 @@ public class WeChatGatewayImpl implements WeChatGateway {
      * @return 微信手机号结果，断路器打开时返回降级结果
      */
     @Override
-    /**
-     * 获取PhoneNumber
-     *
-     * @param phoneCode 参数
-     *
-     * @return 结果
-     */
     public Mono<WeChatPhoneResult> getPhoneNumber(String phoneCode) {
         Mono<WeChatPhoneResult> apiCall = weChatAppService
                 .getPhoneNumber(phoneCode)

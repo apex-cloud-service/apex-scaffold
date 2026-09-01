@@ -41,9 +41,6 @@ class RolePermissionEntityTest extends BaseEntityTest<RolePermissionEntity> {
             assertThat(entity.getPermissionId()).isEqualTo(200L);
         }
 
-        /**
-         * 执行 {@code newEntityShouldHaveNullFields} 操作。
-         */
         @Test
         @DisplayName("新创建的实体字段应为 null")
         void newEntityShouldHaveNullFields() {
@@ -56,10 +53,6 @@ class RolePermissionEntityTest extends BaseEntityTest<RolePermissionEntity> {
     @Nested
     @DisplayName("业务场景")
     class BusinessScenarioTest {
-
-        /**
-         * 执行 {@code shouldSupportRoleWithMultiplePermissions} 操作。
-         */
         @Test
         @DisplayName("角色关联多个权限")
         void shouldSupportRoleWithMultiplePermissions() {

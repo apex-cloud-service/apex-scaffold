@@ -245,10 +245,20 @@ public enum ErrorCode {
         this.message = message;
     }
 
+    /**
+     * 获取错误码数值。
+     *
+     * @return 错误码数值
+     */
     public int getCode() {
         return code;
     }
 
+    /**
+     * 获取错误描述消息。
+     *
+     * @return 错误描述消息
+     */
     public String getMessage() {
         return message;
     }

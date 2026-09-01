@@ -41,7 +41,6 @@ class ConcurrencyControlAspectTest {
 
     /**
      * 设置{@code up}。
-     * @throws Throwable 当操作无法完成时
      */
     @BeforeEach
     void setUp() throws Throwable {
@@ -50,10 +49,6 @@ class ConcurrencyControlAspectTest {
         when(annotation.message()).thenReturn("系统繁忙，请稍后再试");
     }
 
-    /**
-     * 执行 {@code around_whenPermitAcquired_shouldProceed} 操作。
-     * @throws Throwable 当操作无法完成时
-     */
     @Test
     @DisplayName("并发控制通过时应正常执行方法")
     void around_whenPermitAcquired_shouldProceed() throws Throwable {

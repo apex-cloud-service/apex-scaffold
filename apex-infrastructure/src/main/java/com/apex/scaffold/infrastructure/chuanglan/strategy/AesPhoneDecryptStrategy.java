@@ -64,15 +64,6 @@ public class AesPhoneDecryptStrategy implements PhoneDecryptStrategy {
      * <p>使用 AES/CBC/PKCS5Padding 解密，密钥由 md5(appKey) 派生。</p>
      */
     @Override
-    /**
-     * 解密
-     *
-     * @param encryptedPhone 参数
-     *
-     * @param appKey 参数
-     *
-     * @return 结果
-     */
     public String decrypt(String encryptedPhone, String appKey) {
         try {
             // MD5(appKey) -> 32位十六进制字符串
@@ -103,11 +94,6 @@ public class AesPhoneDecryptStrategy implements PhoneDecryptStrategy {
      * {@inheritDoc}
      */
     @Override
-    /**
-     * 获取EncryptType
-     *
-     * @return 结果
-     */
     public String getEncryptType() {
         return ENCRYPT_TYPE;
     }

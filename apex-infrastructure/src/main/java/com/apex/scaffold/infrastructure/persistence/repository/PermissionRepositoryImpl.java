@@ -51,13 +51,6 @@ public class PermissionRepositoryImpl implements PermissionRepository {
      * @return 权限列表
      */
     @Override
-    /**
-     * 查找ByUserId
-     *
-     * @param userId 参数
-     *
-     * @return 结果
-     */
     public Mono<List<PermissionEntity>> findByUserId(Long userId) {
         return Mono.fromCallable(() -> {
                     List<Long> roleIds = userRoleMapper
@@ -98,11 +91,6 @@ public class PermissionRepositoryImpl implements PermissionRepository {
      * @return 权限列表
      */
     @Override
-    /**
-     * 查找All
-     *
-     * @return 结果
-     */
     public Mono<List<PermissionEntity>> findAll() {
         return Mono.fromCallable(() -> permissionMapper.selectList(null))
                 .subscribeOn(BlockingIoSchedulers.jdbc())
@@ -116,13 +104,6 @@ public class PermissionRepositoryImpl implements PermissionRepository {
      * @return 权限信息，未找到时返回 Mono.empty()
      */
     @Override
-    /**
-     * 查找ById
-     *
-     * @param id 参数
-     *
-     * @return 结果
-     */
     public Mono<PermissionEntity> findById(Long id) {
         return Mono.fromCallable(() -> permissionMapper.selectById(id))
                 .subscribeOn(BlockingIoSchedulers.jdbc())
@@ -144,15 +125,6 @@ public class PermissionRepositoryImpl implements PermissionRepository {
      * @return 权限信息，未找到时返回 Mono.empty()
      */
     @Override
-    /**
-     * 查找One
-     *
-     * @param field 参数
-     *
-     * @param value 参数
-     *
-     * @return 结果
-     */
     public Mono<PermissionEntity> findOne(String field, Object value) {
         return Mono.fromCallable(() -> {
                     PermissionPO po = permissionMapper.selectOne(ConditionUtil.lambda(PermissionPO.class)
@@ -170,13 +142,6 @@ public class PermissionRepositoryImpl implements PermissionRepository {
      * @return 影响行数
      */
     @Override
-    /**
-     * 插入
-     *
-     * @param entity 参数
-     *
-     * @return 结果
-     */
     public Mono<Integer> insert(PermissionEntity entity) {
         return Mono.fromCallable(() -> {
                     int rows = permissionMapper.insert(permissionPoConverter.toPo(entity));
@@ -192,13 +157,6 @@ public class PermissionRepositoryImpl implements PermissionRepository {
      * @return 影响行数
      */
     @Override
-    /**
-     * 更新ById
-     *
-     * @param entity 参数
-     *
-     * @return 结果
-     */
     public Mono<Integer> updateById(PermissionEntity entity) {
         return Mono.fromCallable(() -> permissionMapper.updateById(permissionPoConverter.toPo(entity)))
                 .subscribeOn(BlockingIoSchedulers.jdbc());
@@ -211,13 +169,6 @@ public class PermissionRepositoryImpl implements PermissionRepository {
      * @return 影响行数
      */
     @Override
-    /**
-     * 删除ById
-     *
-     * @param id 参数
-     *
-     * @return 结果
-     */
     public Mono<Integer> deleteById(Long id) {
         return Mono.fromCallable(() -> permissionMapper.deleteById(id)).subscribeOn(BlockingIoSchedulers.jdbc());
     }

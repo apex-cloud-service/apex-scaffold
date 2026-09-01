@@ -17,10 +17,6 @@ import org.junit.jupiter.api.Test;
  * @since 1.0.0
  */
 class RemoteApiExceptionTest {
-
-    /**
-     * 执行 {@code constructor_HttpStatusCode_SetsAllFields} 操作。
-     */
     @Test
     @DisplayName("构造HTTP状态码异常 - 应正确设置所有字段")
     void constructor_HttpStatusCode_SetsAllFields() {
@@ -35,9 +31,6 @@ class RemoteApiExceptionTest {
         assertThat(ex.getCause()).isNull();
     }
 
-    /**
-     * 执行 {@code constructor_Http500StatusCode_SetsFields} 操作。
-     */
     @Test
     @DisplayName("构造HTTP状态码异常 - 5xx状态码")
     void constructor_Http500StatusCode_SetsFields() {
@@ -50,9 +43,6 @@ class RemoteApiExceptionTest {
         assertThat(ex.getErrorBody()).isEqualTo("Service Unavailable");
     }
 
-    /**
-     * 执行 {@code constructor_NetworkError_SetsHttpStatusMinusOneAndCause} 操作。
-     */
     @Test
     @DisplayName("构造网络层异常 - 应设置httpStatus为-1并包含cause")
     void constructor_NetworkError_SetsHttpStatusMinusOneAndCause() {
@@ -67,9 +57,6 @@ class RemoteApiExceptionTest {
         assertThat(ex.getCause()).isSameAs(cause);
     }
 
-    /**
-     * 执行 {@code constructor_ShortMessage_SetsMinusOneAndNullFields} 操作。
-     */
     @Test
     @DisplayName("构造简短消息异常 - 应设置httpStatus为-1且serviceName和requestPath为null")
     void constructor_ShortMessage_SetsMinusOneAndNullFields() {
@@ -158,9 +145,6 @@ class RemoteApiExceptionTest {
         assertThat(ex.isServerError()).isFalse();
     }
 
-    /**
-     * 执行 {@code exception_IsRuntimeException} 操作。
-     */
     @Test
     @DisplayName("RemoteApiException 是 RuntimeException 的子类")
     void exception_IsRuntimeException() {

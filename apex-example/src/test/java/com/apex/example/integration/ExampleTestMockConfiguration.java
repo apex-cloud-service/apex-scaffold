@@ -33,11 +33,6 @@ import reactor.core.publisher.Mono;
 @Configuration
 @Profile("test")
 public class ExampleTestMockConfiguration {
-
-    /**
-     * 执行 {@code redissonClient} 操作。
-     * @return 操作结果
-     */
     @Bean
     @Primary
     RedissonClient redissonClient() {
@@ -45,13 +40,11 @@ public class ExampleTestMockConfiguration {
     }
 
     /**
-     * 执行 {@code reactiveStringRedisTemplate} 操作。
      *
      * <p>除 scan 外，为幂等切面（{@code IdempotentApiAspect}）与多级缓存
      * 打桩 value 操作：SETNX 成功、删除成功，保证写接口幂等示例
      * 在 Mock Redis 下返回 200。</p>
      *
-     * @return 操作结果
      */
     @Bean
     @Primary
@@ -92,7 +85,6 @@ public class ExampleTestMockConfiguration {
     }
 
     /**
-     * 执行 {@code accountDeletionPort} 操作。
      *
      * <p>账号注销持久化端口的实现随 v2.0 业务下线被移除，集成测试通过
      * 测试桩满足 Spring 依赖注入，不触发真实注销流程。</p>
@@ -110,7 +102,6 @@ public class ExampleTestMockConfiguration {
     }
 
     /**
-     * 执行 {@code businessMetricsPort} 操作。
      *
      * <p>业务指标端点的 Micrometer 实现随 v2.0 业务下线被移除，集成测试通过
      * 空桩满足 Spring 依赖注入。</p>
@@ -123,10 +114,6 @@ public class ExampleTestMockConfiguration {
         return Mockito.mock(BusinessMetricsPort.class);
     }
 
-    /**
-     * 执行 {@code fileService} 操作。
-     * @return 操作结果
-     */
     @Bean
     @Primary
     FileService fileService() {
@@ -138,10 +125,6 @@ public class ExampleTestMockConfiguration {
         return service;
     }
 
-    /**
-     * 执行 {@code storageService} 操作。
-     * @return 操作结果
-     */
     @Bean
     @Primary
     StorageService storageService() {

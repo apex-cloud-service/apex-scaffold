@@ -65,10 +65,6 @@ class UserRateLimitAspectTest {
         when(joinPoint.getSignature()).thenReturn(signature);
     }
 
-    /**
-     * 执行 {@code shouldAllowRequestWhenUnderLimit} 操作。
-     * @throws Throwable 当操作无法完成时
-     */
     @Test
     @DisplayName("限流通过时应正常执行方法")
     void shouldAllowRequestWhenUnderLimit() throws Throwable {
@@ -86,10 +82,6 @@ class UserRateLimitAspectTest {
         assertThat(result.block()).isEqualTo(TEST_RESULT);
     }
 
-    /**
-     * 执行 {@code shouldBlockRequestWhenOverLimit} 操作。
-     * @throws Throwable 当操作无法完成时
-     */
     @Test
     @DisplayName("限流未通过时应抛出 BusinessException")
     void shouldBlockRequestWhenOverLimit() throws Throwable {
@@ -107,10 +99,6 @@ class UserRateLimitAspectTest {
                 .hasMessage("操作过于频繁，请稍后再试");
     }
 
-    /**
-     * 执行 {@code shouldResolveSpelKey} 操作。
-     * @throws Throwable 当操作无法完成时
-     */
     @Test
     @DisplayName("应正确解析 SpEL 表达式中的参数值")
     void shouldResolveSpelKey() throws Throwable {
@@ -131,10 +119,6 @@ class UserRateLimitAspectTest {
         assertThat(result.block()).isEqualTo(TEST_RESULT);
     }
 
-    /**
-     * 执行 {@code shouldUseDefaultRateLimit} 操作。
-     * @throws Throwable 当操作无法完成时
-     */
     @Test
     @DisplayName("Redisson 缺失时应降级到本地限流")
     void shouldFallbackToLocalRateLimitWhenRedissonIsMissing() throws Throwable {

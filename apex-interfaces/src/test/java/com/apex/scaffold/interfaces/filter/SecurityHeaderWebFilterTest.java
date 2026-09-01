@@ -38,9 +38,6 @@ class SecurityHeaderWebFilterTest {
     @InjectMocks
     private SecurityHeaderWebFilter filter;
 
-    /**
-     * 执行 {@code shouldInjectAllSecurityHeaders} 操作。
-     */
     @Test
     @DisplayName("应该注入全部安全响应头")
     void shouldInjectAllSecurityHeaders() {
@@ -65,9 +62,6 @@ class SecurityHeaderWebFilterTest {
         assertThat(headers.getFirst("Permissions-Policy")).isEqualTo("geolocation=(), camera=(), microphone=()");
     }
 
-    /**
-     * 执行 {@code shouldNotInjectHeadersWhenDisabled} 操作。
-     */
     @Test
     @DisplayName("禁用时不应该注入任何安全头")
     void shouldNotInjectHeadersWhenDisabled() {
@@ -85,9 +79,6 @@ class SecurityHeaderWebFilterTest {
         assertThat(headers.getFirst("Cache-Control")).isNull();
     }
 
-    /**
-     * 执行 {@code shouldInjectHstsWithSubdomains} 操作。
-     */
     @Test
     @DisplayName("应该注入带子域名的 HSTS 头")
     void shouldInjectHstsWithSubdomains() {

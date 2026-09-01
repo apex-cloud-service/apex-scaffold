@@ -49,13 +49,6 @@ public class SystemMessageRepositoryImpl implements SystemMessageRepository {
      * @return 保存后的系统消息实体
      */
     @Override
-    /**
-     * 保存
-     *
-     * @param entity 参数
-     *
-     * @return 结果
-     */
     public Mono<SystemMessageEntity> save(SystemMessageEntity entity) {
         return Mono.fromCallable(() -> {
                     SystemMessagePO po = converter.toPo(entity);
@@ -87,17 +80,6 @@ public class SystemMessageRepositoryImpl implements SystemMessageRepository {
      * @return 系统消息实体列表
      */
     @Override
-    /**
-     * 列表ByUserId
-     *
-     * @param userId 参数
-     *
-     * @param offset 参数
-     *
-     * @param limit 参数
-     *
-     * @return 结果
-     */
     public Mono<List<SystemMessageEntity>> listByUserId(Long userId, int offset, int limit) {
         return Mono.fromCallable(() -> mapper.selectList(new LambdaQueryWrapper<SystemMessagePO>()
                         .eq(SystemMessagePO::getUserId, userId)
@@ -108,21 +90,14 @@ public class SystemMessageRepositoryImpl implements SystemMessageRepository {
     }
 
     /**
-     * 执行countByUserId操作
+     * 统计指定用户的系统消息数量。
      *
-     * <p>详细说明</p>
+     * <p>按用户 ID 精确匹配，在 JDBC 弹性调度器上执行 COUNT 查询。</p>
      *
-     * @param userId 参数说明
-     * @return 返回值说明
+     * @param userId 用户 ID
+     * @return 系统消息数量
      */
     @Override
-    /**
-     * 计数ByUserId
-     *
-     * @param userId 参数
-     *
-     * @return 结果
-     */
     public Mono<Long> countByUserId(Long userId) {
         return Mono.fromCallable(() -> mapper.selectCount(
                         new LambdaQueryWrapper<SystemMessagePO>().eq(SystemMessagePO::getUserId, userId)))

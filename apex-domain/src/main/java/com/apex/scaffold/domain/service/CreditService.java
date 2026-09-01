@@ -5,6 +5,7 @@ import com.apex.scaffold.domain.repository.CreditAccountRepository;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.OptimisticLockingFailureException;
@@ -87,6 +88,10 @@ public class CreditService {
 
     /** 二选一全局校准对局类型 */
     private static final String BATTLE_TYPE_CHOICE_2_GLOBAL_CALIBRATION = "CHOICE_2_GLOBAL_CALIBRATION";
+
+    /** 按固定奖励计分的二选一对局类型集合（CHOICE_2 及其变体）。 */
+    private static final Set<String> BATTLE_TYPE_CHOICE_2_REWARD_TYPES =
+            Set.of(BATTLE_TYPE_CHOICE_2, BATTLE_TYPE_CHOICE_2_SELF_ANCHOR, BATTLE_TYPE_CHOICE_2_GLOBAL_CALIBRATION);
 
     /**
      * 收藏奖励积分
@@ -341,9 +346,7 @@ public class CreditService {
      * @return 奖励积分
      */
     private long calculateVoteReward(String battleType, Boolean hasFrontalPhoto) {
-        if (BATTLE_TYPE_CHOICE_2.equals(battleType)
-                || BATTLE_TYPE_CHOICE_2_SELF_ANCHOR.equals(battleType)
-                || BATTLE_TYPE_CHOICE_2_GLOBAL_CALIBRATION.equals(battleType)) {
+        if (BATTLE_TYPE_CHOICE_2_REWARD_TYPES.contains(battleType)) {
             return VOTE_REWARD_CHOICE2;
         }
         return Boolean.TRUE.equals(hasFrontalPhoto) ? VOTE_REWARD_CHOICE4_FRONTAL : VOTE_REWARD_CHOICE4_NO_FRONTAL;

@@ -24,10 +24,6 @@ class PageResponseTest {
     @Nested
     @DisplayName("of() 工厂方法测试")
     class OfFactoryMethodTest {
-
-        /**
-         * 执行 {@code shouldReturnCorrectBasicFields} 操作。
-         */
         @Test
         @DisplayName("有数据时应返回正确的 pageNum/pageSize/list/total")
         void shouldReturnCorrectBasicFields() {
@@ -40,9 +36,6 @@ class PageResponseTest {
             assertEquals(list, response.getList());
         }
 
-        /**
-         * 执行 {@code shouldCalculatePagesCorrectly} 操作。
-         */
         @Test
         @DisplayName("总记录数 30，每页 10 条时，总页数应为 3")
         void shouldCalculatePagesCorrectly() {
@@ -51,9 +44,6 @@ class PageResponseTest {
             assertEquals(3, response.getPages());
         }
 
-        /**
-         * 执行 {@code shouldRoundUpPagesCorrectly} 操作。
-         */
         @Test
         @DisplayName("总记录数 25，每页 10 条时，总页数应为 3（向上取整）")
         void shouldRoundUpPagesCorrectly() {
@@ -62,9 +52,6 @@ class PageResponseTest {
             assertEquals(3, response.getPages());
         }
 
-        /**
-         * 执行 {@code zeroTotalShouldHaveZeroPages} 操作。
-         */
         @Test
         @DisplayName("总记录数为 0 时，总页数应为 0")
         void zeroTotalShouldHaveZeroPages() {
@@ -88,10 +75,6 @@ class PageResponseTest {
     @Nested
     @DisplayName("hasNext 计算测试")
     class HasNextCalculationTest {
-
-        /**
-         * 执行 {@code shouldHaveNextWhenPageNumLessThanPages} 操作。
-         */
         @Test
         @DisplayName("当前页码小于总页数时，hasNext 应为 true")
         void shouldHaveNextWhenPageNumLessThanPages() {
@@ -100,9 +83,6 @@ class PageResponseTest {
             assertTrue(response.getHasNext());
         }
 
-        /**
-         * 执行 {@code shouldNotHaveNextWhenPageNumEqualsPages} 操作。
-         */
         @Test
         @DisplayName("当前页码等于总页数时，hasNext 应为 false")
         void shouldNotHaveNextWhenPageNumEqualsPages() {
@@ -111,9 +91,6 @@ class PageResponseTest {
             assertFalse(response.getHasNext());
         }
 
-        /**
-         * 执行 {@code shouldNotHaveNextWhenPageNumGreaterThanPages} 操作。
-         */
         @Test
         @DisplayName("当前页码大于总页数时，hasNext 应为 false")
         void shouldNotHaveNextWhenPageNumGreaterThanPages() {
@@ -122,9 +99,6 @@ class PageResponseTest {
             assertFalse(response.getHasNext());
         }
 
-        /**
-         * 执行 {@code zeroTotalShouldNotHaveNext} 操作。
-         */
         @Test
         @DisplayName("总记录数为 0 时，hasNext 应为 false")
         void zeroTotalShouldNotHaveNext() {
@@ -137,10 +111,6 @@ class PageResponseTest {
     @Nested
     @DisplayName("空数据场景测试")
     class EmptyDataTest {
-
-        /**
-         * 执行 {@code emptyListAndZeroTotalShouldWork} 操作。
-         */
         @Test
         @DisplayName("空列表和 0 总记录数时应正常工作")
         void emptyListAndZeroTotalShouldWork() {
@@ -152,9 +122,6 @@ class PageResponseTest {
             assertFalse(response.getHasNext());
         }
 
-        /**
-         * 执行 {@code emptyListWithNonZeroTotalShouldWork} 操作。
-         */
         @Test
         @DisplayName("空列表但总记录数不为 0 时应正常计算")
         void emptyListWithNonZeroTotalShouldWork() {
@@ -169,10 +136,6 @@ class PageResponseTest {
     @Nested
     @DisplayName("Setter/Getter 测试")
     class SetterGetterTest {
-
-        /**
-         * 执行 {@code allPropertiesShouldBeSetAndGet} 操作。
-         */
         @Test
         @DisplayName("所有属性应可通过 setter 设置，getter 获取")
         void allPropertiesShouldBeSetAndGet() {
@@ -198,10 +161,6 @@ class PageResponseTest {
     @Nested
     @DisplayName("Lombok equals/hashCode 测试")
     class EqualsHashCodeTest {
-
-        /**
-         * 执行 {@code equalObjectsShouldBeEqual} 操作。
-         */
         @Test
         @DisplayName("属性相同的两个对象应相等")
         void equalObjectsShouldBeEqual() {
@@ -213,9 +172,6 @@ class PageResponseTest {
             assertEquals(r1.hashCode(), r2.hashCode());
         }
 
-        /**
-         * 执行 {@code differentTotalShouldNotBeEqual} 操作。
-         */
         @Test
         @DisplayName("total 不同的两个对象应不相等")
         void differentTotalShouldNotBeEqual() {
@@ -251,10 +207,6 @@ class PageResponseTest {
     @Nested
     @DisplayName("泛型测试")
     class GenericsTest {
-
-        /**
-         * 执行 {@code shouldSupportStringType} 操作。
-         */
         @Test
         @DisplayName("应支持 String 类型的数据")
         void shouldSupportStringType() {
@@ -265,9 +217,6 @@ class PageResponseTest {
             assertEquals("hello", response.getList().get(0));
         }
 
-        /**
-         * 执行 {@code shouldSupportIntegerType} 操作。
-         */
         @Test
         @DisplayName("应支持 Integer 类型的数据")
         void shouldSupportIntegerType() {

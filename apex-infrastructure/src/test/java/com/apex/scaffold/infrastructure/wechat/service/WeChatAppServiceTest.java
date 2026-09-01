@@ -67,9 +67,6 @@ class WeChatAppServiceTest {
         ReflectionTestUtils.setField(weChatAppService, "webClient", webClient);
     }
 
-    /**
-     * 执行 {@code login_Success_ReturnsLoginResult} 操作。
-     */
     @Test
     @DisplayName("login - 成功返回登录结果")
     void login_Success_ReturnsLoginResult() {
@@ -86,9 +83,6 @@ class WeChatAppServiceTest {
                 .verifyComplete();
     }
 
-    /**
-     * 执行 {@code login_ErrorCode_ThrowsWeChatApiException} 操作。
-     */
     @Test
     @DisplayName("login - 微信返回错误码应抛出WeChatApiException")
     void login_ErrorCode_ThrowsWeChatApiException() {
@@ -144,9 +138,6 @@ class WeChatAppServiceTest {
                 .verify();
     }
 
-    /**
-     * 获取{@code userInfo_Success_ReturnsUserInfo}。
-     */
     @Test
     @DisplayName("getUserInfo - 成功返回用户信息")
     void getUserInfo_Success_ReturnsUserInfo() {
@@ -162,9 +153,6 @@ class WeChatAppServiceTest {
                 .verifyComplete();
     }
 
-    /**
-     * 获取{@code userInfo_ErrorCode_ThrowsWeChatApiException}。
-     */
     @Test
     @DisplayName("getUserInfo - 微信返回错误码应抛出WeChatApiException")
     void getUserInfo_ErrorCode_ThrowsWeChatApiException() {
@@ -228,9 +216,6 @@ class WeChatAppServiceTest {
                 .verifyComplete();
     }
 
-    /**
-     * 获取{@code globalAccessToken_Success_ReturnsToken}。
-     */
     @Test
     @DisplayName("getGlobalAccessToken - 成功返回access_token")
     void getGlobalAccessToken_Success_ReturnsToken() {
@@ -244,9 +229,6 @@ class WeChatAppServiceTest {
                 .verifyComplete();
     }
 
-    /**
-     * 获取{@code globalAccessToken_ErrorCode_ThrowsWeChatApiException}。
-     */
     @Test
     @DisplayName("getGlobalAccessToken - 微信返回错误码应抛出WeChatApiException")
     void getGlobalAccessToken_ErrorCode_ThrowsWeChatApiException() {
@@ -356,9 +338,6 @@ class WeChatAppServiceTest {
                 .verify();
     }
 
-    /**
-     * 获取{@code phoneNumber_ReturnsMockPhone}。
-     */
     @Test
     @DisplayName("getPhoneNumber - 应直接返回模拟手机号")
     void getPhoneNumber_ReturnsMockPhone() {
@@ -390,7 +369,6 @@ class WeChatAppServiceTest {
     }
 
     /**
-     * 执行 {@code mockWebClientGet} 操作。
      * @param response 响应参数
      */
     @SuppressWarnings("unchecked")
@@ -403,10 +381,6 @@ class WeChatAppServiceTest {
                 .thenReturn(Mono.just(response));
     }
 
-    /**
-     * 执行 {@code mockWebClientGetError} 操作。
-     * @param error 参数 {@code error}
-     */
     private void mockWebClientGetError(Throwable error) {
         when(webClient.get()).thenReturn(requestHeadersUriSpec);
         when(requestHeadersUriSpec.uri(any(Function.class))).thenReturn(requestHeadersSpec);
@@ -417,7 +391,6 @@ class WeChatAppServiceTest {
     }
 
     /**
-     * 执行 {@code mockWebClientPost} 操作。
      * @param response 响应参数
      */
     @SuppressWarnings("unchecked")

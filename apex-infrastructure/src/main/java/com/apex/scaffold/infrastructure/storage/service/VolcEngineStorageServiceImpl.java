@@ -64,11 +64,6 @@ public class VolcEngineStorageServiceImpl extends AbstractStorageService {
      * @return 存储类型 "VOLCENGINE"
      */
     @Override
-    /**
-     * 获取StorageType
-     *
-     * @return 结果
-     */
     protected String getStorageType() {
         return "VOLCENGINE";
     }
@@ -83,13 +78,6 @@ public class VolcEngineStorageServiceImpl extends AbstractStorageService {
      * @return 完成信号
      */
     @Override
-    /**
-     * 是否存在BucketExistsInternal
-     *
-     * @param bucketName 参数
-     *
-     * @return 结果
-     */
     protected Mono<Void> ensureBucketExistsInternal(String bucketName) {
         return Mono.fromRunnable(() -> {
                     try {
@@ -113,13 +101,6 @@ public class VolcEngineStorageServiceImpl extends AbstractStorageService {
      * @return 完成信号
      */
     @Override
-    /**
-     * 创建BucketInternal
-     *
-     * @param bucketName 参数
-     *
-     * @return 结果
-     */
     protected Mono<Void> createBucketInternal(String bucketName) {
         return Mono.fromRunnable(() -> {
                     try {
@@ -145,15 +126,6 @@ public class VolcEngineStorageServiceImpl extends AbstractStorageService {
      * @return 包含文件内容的输入流
      */
     @Override
-    /**
-     * 加载load
-     *
-     * @param bucketName 参数
-     *
-     * @param objectName 参数
-     *
-     * @return 结果
-     */
     public Mono<InputStream> download(String bucketName, String objectName) {
         return Mono.fromCallable(() -> {
                     GetObjectV2Input input =
@@ -177,17 +149,6 @@ public class VolcEngineStorageServiceImpl extends AbstractStorageService {
      * @return 预签名 URL
      */
     @Override
-    /**
-     * 获取PresignedUrl
-     *
-     * @param bucketName 参数
-     *
-     * @param objectName 参数
-     *
-     * @param expiry 参数
-     *
-     * @return 结果
-     */
     public Mono<String> getPresignedUrl(String bucketName, String objectName, Integer expiry) {
         int effectiveExpiry = expiry == null ? 300 : expiry;
         return Mono.fromCallable(() -> {
@@ -216,19 +177,6 @@ public class VolcEngineStorageServiceImpl extends AbstractStorageService {
      * @throws BusinessException 上传失败时抛出
      */
     @Override
-    /**
-     * 加载load
-     *
-     * @param bucketName 参数
-     *
-     * @param fileName 参数
-     *
-     * @param inputStream 参数
-     *
-     * @param contentType 参数
-     *
-     * @return 结果
-     */
     protected String doUpload(String bucketName, String fileName, InputStream inputStream, String contentType) {
         try {
             PutObjectInput input =
@@ -252,15 +200,6 @@ public class VolcEngineStorageServiceImpl extends AbstractStorageService {
      * @return 删除成功返回 true，失败返回 false
      */
     @Override
-    /**
-     * 删除te
-     *
-     * @param bucketName 参数
-     *
-     * @param fileName 参数
-     *
-     * @return 结果
-     */
     protected boolean doDelete(String bucketName, String fileName) {
         try {
             DeleteObjectInput input =
@@ -284,15 +223,6 @@ public class VolcEngineStorageServiceImpl extends AbstractStorageService {
      * @return 文件存在返回 true，否则返回 false
      */
     @Override
-    /**
-     * 是否存在ts
-     *
-     * @param bucketName 参数
-     *
-     * @param fileName 参数
-     *
-     * @return 结果
-     */
     protected boolean doExists(String bucketName, String fileName) {
         try {
             HeadObjectV2Input input =
@@ -315,17 +245,6 @@ public class VolcEngineStorageServiceImpl extends AbstractStorageService {
      * @return 文件访问路径
      */
     @Override
-    /**
-     * 构建PresignedUrl
-     *
-     * @param bucketName 参数
-     *
-     * @param fileName 参数
-     *
-     * @param expiry 参数
-     *
-     * @return 结果
-     */
     protected String buildPresignedUrl(String bucketName, String fileName, int expiry) {
         return "/tos/" + bucketName + "/" + fileName;
     }
@@ -339,11 +258,6 @@ public class VolcEngineStorageServiceImpl extends AbstractStorageService {
      * @return 照片访问 URL 前缀，如 {@code /tos/apex-photo}
      */
     @Override
-    /**
-     * 获取PhotoUrlPrefix
-     *
-     * @return 结果
-     */
     public String getPhotoUrlPrefix() {
         return "/tos/" + getBucketName();
     }
@@ -354,11 +268,6 @@ public class VolcEngineStorageServiceImpl extends AbstractStorageService {
      * @return 存储桶名称
      */
     @Override
-    /**
-     * 获取BucketName
-     *
-     * @return 结果
-     */
     protected String getBucketName() {
         return TOS_PHOTO_BUCKET;
     }

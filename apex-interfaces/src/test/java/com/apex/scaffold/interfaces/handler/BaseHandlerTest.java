@@ -23,7 +23,6 @@ class BaseHandlerTest {
     static class TestHandler extends BaseHandler {
 
         /**
-         * 创建 {@code TestHandler} 实例。
          */
         TestHandler() {
             super(null);
@@ -43,10 +42,6 @@ class BaseHandlerTest {
     @Nested
     @DisplayName("safeParseLong 方法")
     class SafeParseLongTests {
-
-        /**
-         * 执行 {@code shouldParseValidLong} 操作。
-         */
         @Test
         @DisplayName("有效数字应返回对应 Long 值")
         void shouldParseValidLong() {
@@ -55,18 +50,12 @@ class BaseHandlerTest {
             assertThat(handler.safeParseLong("-1")).isEqualTo(-1L);
         }
 
-        /**
-         * 执行 {@code shouldReturnNullForNull} 操作。
-         */
         @Test
         @DisplayName("null 应返回 null")
         void shouldReturnNullForNull() {
             assertThat(handler.safeParseLong(null)).isNull();
         }
 
-        /**
-         * 执行 {@code shouldReturnNullForBlank} 操作。
-         */
         @Test
         @DisplayName("空字符串应返回 null")
         void shouldReturnNullForBlank() {
@@ -74,9 +63,6 @@ class BaseHandlerTest {
             assertThat(handler.safeParseLong("   ")).isNull();
         }
 
-        /**
-         * 执行 {@code shouldReturnNullForNonNumeric} 操作。
-         */
         @Test
         @DisplayName("非数字应返回 null")
         void shouldReturnNullForNonNumeric() {
@@ -85,9 +71,6 @@ class BaseHandlerTest {
             assertThat(handler.safeParseLong("12L")).isNull();
         }
 
-        /**
-         * 执行 {@code shouldTrimAndParse} 操作。
-         */
         @Test
         @DisplayName("前后带空格的数字应正确解析")
         void shouldTrimAndParse() {
@@ -98,10 +81,6 @@ class BaseHandlerTest {
     @Nested
     @DisplayName("safeParseInt 方法")
     class SafeParseIntTests {
-
-        /**
-         * 执行 {@code shouldParseValidInt} 操作。
-         */
         @Test
         @DisplayName("有效数字应返回对应值")
         void shouldParseValidInt() {
@@ -109,36 +88,24 @@ class BaseHandlerTest {
             assertThat(handler.safeParseInt("100", 1)).isEqualTo(100);
         }
 
-        /**
-         * 执行 {@code shouldReturnDefaultForNull} 操作。
-         */
         @Test
         @DisplayName("null 应返回默认值")
         void shouldReturnDefaultForNull() {
             assertThat(handler.safeParseInt(null, 10)).isEqualTo(10);
         }
 
-        /**
-         * 执行 {@code shouldReturnDefaultForBlank} 操作。
-         */
         @Test
         @DisplayName("空字符串应返回默认值")
         void shouldReturnDefaultForBlank() {
             assertThat(handler.safeParseInt("", 5)).isEqualTo(5);
         }
 
-        /**
-         * 执行 {@code shouldReturnDefaultForNonNumeric} 操作。
-         */
         @Test
         @DisplayName("非数字应返回默认值")
         void shouldReturnDefaultForNonNumeric() {
             assertThat(handler.safeParseInt("abc", 20)).isEqualTo(20);
         }
 
-        /**
-         * 执行 {@code shouldReturnZeroForZeroDefaultForNegative} 操作。
-         */
         @Test
         @DisplayName("0 应返回 0，负数应返回默认值")
         void shouldReturnZeroForZeroDefaultForNegative() {

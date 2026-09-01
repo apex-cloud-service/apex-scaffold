@@ -62,9 +62,6 @@ class RoleServiceTest {
         role.setDescription("系统管理员");
     }
 
-    /**
-     * 获取{@code rolesByUserId_Success}。
-     */
     @Test
     @DisplayName("getRolesByUserId - 成功获取用户角色列表")
     void getRolesByUserId_Success() {
@@ -77,9 +74,6 @@ class RoleServiceTest {
                 .verifyComplete();
     }
 
-    /**
-     * 获取{@code rolesByUserId_EmptyList}。
-     */
     @Test
     @DisplayName("getRolesByUserId - 用户无角色时返回空列表")
     void getRolesByUserId_EmptyList() {
@@ -137,9 +131,6 @@ class RoleServiceTest {
                 .verifyComplete();
     }
 
-    /**
-     * 获取{@code allRoles_Success}。
-     */
     @Test
     @DisplayName("getAllRoles - 成功获取所有角色")
     void getAllRoles_Success() {
@@ -152,9 +143,6 @@ class RoleServiceTest {
                 .verifyComplete();
     }
 
-    /**
-     * 获取{@code allRoles_Empty}。
-     */
     @Test
     @DisplayName("getAllRoles - 无角色时返回空列表")
     void getAllRoles_Empty() {
@@ -167,9 +155,6 @@ class RoleServiceTest {
                 .verifyComplete();
     }
 
-    /**
-     * 获取{@code roleByCode_Success}。
-     */
     @Test
     @DisplayName("getRoleByCode - 成功按编码获取角色")
     void getRoleByCode_Success() {
@@ -182,9 +167,6 @@ class RoleServiceTest {
                 .verifyComplete();
     }
 
-    /**
-     * 获取{@code roleByCode_NotFound}。
-     */
     @Test
     @DisplayName("getRoleByCode - 角色不存在时返回空")
     void getRoleByCode_NotFound() {
@@ -193,9 +175,6 @@ class RoleServiceTest {
         roleService.getRoleByCode("UNKNOWN").as(StepVerifier::create).verifyComplete();
     }
 
-    /**
-     * 创建{@code role_Success}。
-     */
     @Test
     @DisplayName("createRole - 成功创建角色")
     void createRole_Success() {
@@ -276,9 +255,6 @@ class RoleServiceTest {
         roleService.deleteRole(999L).as(StepVerifier::create).expectNext(false).verifyComplete();
     }
 
-    /**
-     * 执行 {@code assignRoleToUser_Success} 操作。
-     */
     @Test
     @DisplayName("assignRoleToUser - 成功为用户分配角色")
     void assignRoleToUser_Success() {
@@ -293,9 +269,6 @@ class RoleServiceTest {
         verify(userRoleRepository).insert(any(UserRoleEntity.class));
     }
 
-    /**
-     * 执行 {@code assignRoleToUser_NoRowsInserted} 操作。
-     */
     @Test
     @DisplayName("assignRoleToUser - 未插入记录返回false")
     void assignRoleToUser_NoRowsInserted() {

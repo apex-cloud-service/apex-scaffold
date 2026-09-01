@@ -294,17 +294,18 @@ public class SampleEntity extends BaseEntity {
         }
 
         /**
-         * 获取{@code code}。
-         * @return 字符串结果
+         * 获取枚举编码。
+         * @return 枚举编码
          */
         public String getCode() {
             return code;
         }
 
         /**
-         * 执行 {@code fromCode} 操作。
-         * @param code 参数 {@code code}
-         * @return 操作结果
+         * 根据枚举编码解析样本模式。
+         *
+         * @param code 样本模式编码
+         * @return 匹配的样本模式；编码为空或未匹配时返回 {@code null}
          */
         public static SampleMode fromCode(String code) {
             if (code == null) {
@@ -340,17 +341,18 @@ public class SampleEntity extends BaseEntity {
         }
 
         /**
-         * 获取{@code code}。
-         * @return 字符串结果
+         * 获取枚举编码。
+         * @return 枚举编码
          */
         public String getCode() {
             return code;
         }
 
         /**
-         * 执行 {@code fromCode} 操作。
-         * @param code 参数 {@code code}
-         * @return 操作结果
+         * 根据枚举编码解析人脸类型。
+         *
+         * @param code 人脸类型编码
+         * @return 匹配的人脸类型；编码为空或未匹配时返回 {@code null}
          */
         public static FaceType fromCode(String code) {
             if (code == null) {

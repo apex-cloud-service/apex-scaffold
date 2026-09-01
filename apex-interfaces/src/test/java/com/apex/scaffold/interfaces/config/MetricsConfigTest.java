@@ -45,9 +45,6 @@ class MetricsConfigTest {
 
     private final MetricsConfig metricsConfig = new MetricsConfig(redisTemplate);
 
-    /**
-     * 执行 {@code shouldCreateJvmMemoryMetrics} 操作。
-     */
     @Test
     @DisplayName("应该创建JVM内存指标")
     void shouldCreateJvmMemoryMetrics() {
@@ -56,9 +53,6 @@ class MetricsConfigTest {
         assertThat(metrics).isNotNull();
     }
 
-    /**
-     * 执行 {@code shouldCreateJvmThreadMetrics} 操作。
-     */
     @Test
     @DisplayName("应该创建JVM线程指标")
     void shouldCreateJvmThreadMetrics() {
@@ -67,9 +61,6 @@ class MetricsConfigTest {
         assertThat(metrics).isNotNull();
     }
 
-    /**
-     * 执行 {@code shouldCreateProcessorMetrics} 操作。
-     */
     @Test
     @DisplayName("应该创建处理器指标")
     void shouldCreateProcessorMetrics() {
@@ -78,9 +69,6 @@ class MetricsConfigTest {
         assertThat(metrics).isNotNull();
     }
 
-    /**
-     * 执行 {@code shouldCreateSecurityCounters} 操作。
-     */
     @Test
     @DisplayName("应该创建安全计数器并包含正确名称")
     void shouldCreateSecurityCounters() {
@@ -103,9 +91,6 @@ class MetricsConfigTest {
         assertThat(counter5.getId().getName()).isEqualTo("apex.security.anti.replay.rejected");
     }
 
-    /**
-     * 执行 {@code shouldCreateSecurityMeterBinder} 操作。
-     */
     @Test
     @DisplayName("安全指标MeterBinder应绑定gauge指标")
     void shouldCreateSecurityMeterBinder() {

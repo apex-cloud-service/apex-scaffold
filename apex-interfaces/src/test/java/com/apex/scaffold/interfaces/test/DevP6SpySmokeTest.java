@@ -56,9 +56,6 @@ class DevP6SpySmokeTest {
         this.dataSource = dataSource;
     }
 
-    /**
-     * 执行 {@code shouldUseDynamicRoutingDataSource} 操作。
-     */
     @Test
     void shouldUseDynamicRoutingDataSource() {
         assertThat(dataSource)
@@ -67,9 +64,7 @@ class DevP6SpySmokeTest {
     }
 
     /**
-     * 执行 {@code shouldExecuteSqlThroughP6SpyProxy} 操作。
      *
-     * @throws Exception 当操作无法完成时
      */
     @Test
     void shouldExecuteSqlThroughP6SpyProxy() throws Exception {
@@ -82,12 +77,10 @@ class DevP6SpySmokeTest {
     }
 
     /**
-     * 执行 {@code shouldLogSqlViaP6SpyLogger} 操作。
      *
      * <p>在 p6spy logger 上挂 {@link ListAppender}，执行 SQL 后断言捕获到代理日志，
      * 证明 dev 的 p6spy 配置（spy.properties + dynamic p6spy=true）真实生效。</p>
      *
-     * @throws Exception 当操作无法完成时
      */
     @Test
     void shouldLogSqlViaP6SpyLogger() throws Exception {

@@ -20,10 +20,6 @@ class ReportEntityTest {
     @Nested
     @DisplayName("静态工厂方法 createPhotoRiskReport()")
     class CreatePhotoRiskReportTest {
-
-        /**
-         * 执行 {@code withValidParamsShouldCreatePendingReport} 操作。
-         */
         @Test
         @DisplayName("使用有效参数应创建待处理报告并设置正确初始状态")
         void withValidParamsShouldCreatePendingReport() {
@@ -46,9 +42,6 @@ class ReportEntityTest {
             assertThat(report.isDeleted()).isFalse();
         }
 
-        /**
-         * 创建{@code timeShouldEqualUpdateTime}。
-         */
         @Test
         @DisplayName("创建时间应与更新时间一致")
         void createTimeShouldEqualUpdateTime() {
@@ -60,10 +53,6 @@ class ReportEntityTest {
     @Nested
     @DisplayName("开始处理 startProcessing()")
     class StartProcessingTest {
-
-        /**
-         * 执行 {@code shouldSetStatusToRunningAndResetProgress} 操作。
-         */
         @Test
         @DisplayName("应将状态设为 RUNNING 并重置进度为 0")
         void shouldSetStatusToRunningAndResetProgress() {
@@ -74,9 +63,6 @@ class ReportEntityTest {
             assertThat(report.getProgress()).isEqualTo(0);
         }
 
-        /**
-         * 执行 {@code shouldTouchUpdateTime} 操作。
-         */
         @Test
         @DisplayName("应刷新更新时间")
         void shouldTouchUpdateTime() {
@@ -90,10 +76,6 @@ class ReportEntityTest {
     @Nested
     @DisplayName("更新进度 updateProgress()")
     class UpdateProgressTest {
-
-        /**
-         * 执行 {@code shouldSetProgressValue} 操作。
-         */
         @Test
         @DisplayName("应正确设置进度值")
         void shouldSetProgressValue() {
@@ -103,9 +85,6 @@ class ReportEntityTest {
             assertThat(report.getProgress()).isEqualTo(50);
         }
 
-        /**
-         * 执行 {@code progressShouldNotBeLessThanZero} 操作。
-         */
         @Test
         @DisplayName("进度值不应小于 0")
         void progressShouldNotBeLessThanZero() {
@@ -115,9 +94,6 @@ class ReportEntityTest {
             assertThat(report.getProgress()).isEqualTo(0);
         }
 
-        /**
-         * 执行 {@code progressShouldNotExceedOneHundred} 操作。
-         */
         @Test
         @DisplayName("进度值不应大于 100")
         void progressShouldNotExceedOneHundred() {
@@ -127,9 +103,6 @@ class ReportEntityTest {
             assertThat(report.getProgress()).isEqualTo(100);
         }
 
-        /**
-         * 执行 {@code shouldTouchUpdateTime} 操作。
-         */
         @Test
         @DisplayName("应刷新更新时间")
         void shouldTouchUpdateTime() {
@@ -143,10 +116,6 @@ class ReportEntityTest {
     @Nested
     @DisplayName("完成处理 complete()")
     class CompleteTest {
-
-        /**
-         * 执行 {@code shouldSetStatusToDoneAndRecordData} 操作。
-         */
         @Test
         @DisplayName("应将状态设为 DONE、进度设为 100 并设置数据和完成时间")
         void shouldSetStatusToDoneAndRecordData() {
@@ -162,9 +131,6 @@ class ReportEntityTest {
             assertThat(report.isFailed()).isFalse();
         }
 
-        /**
-         * 执行 {@code shouldTouchUpdateTime} 操作。
-         */
         @Test
         @DisplayName("应刷新更新时间")
         void shouldTouchUpdateTime() {
@@ -178,10 +144,6 @@ class ReportEntityTest {
     @Nested
     @DisplayName("标记失败 markAsFailed()")
     class MarkAsFailedTest {
-
-        /**
-         * 执行 {@code shouldSetStatusToFailed} 操作。
-         */
         @Test
         @DisplayName("应将状态设为 FAILED")
         void shouldSetStatusToFailed() {
@@ -193,9 +155,6 @@ class ReportEntityTest {
             assertThat(report.isFailed()).isTrue();
         }
 
-        /**
-         * 执行 {@code shouldTouchUpdateTime} 操作。
-         */
         @Test
         @DisplayName("应刷新更新时间")
         void shouldTouchUpdateTime() {
@@ -209,10 +168,6 @@ class ReportEntityTest {
     @Nested
     @DisplayName("状态判断 isCompleted() / isFailed()")
     class StatusCheckTest {
-
-        /**
-         * 执行 {@code pendingReportShouldReturnFalseForIsCompleted} 操作。
-         */
         @Test
         @DisplayName("待处理报告 isCompleted() 应返回 false")
         void pendingReportShouldReturnFalseForIsCompleted() {
@@ -221,9 +176,6 @@ class ReportEntityTest {
             assertThat(report.isFailed()).isFalse();
         }
 
-        /**
-         * 执行 {@code completedReportShouldReturnTrueForIsCompleted} 操作。
-         */
         @Test
         @DisplayName("完成后 isCompleted() 应返回 true")
         void completedReportShouldReturnTrueForIsCompleted() {
@@ -233,9 +185,6 @@ class ReportEntityTest {
             assertThat(report.isFailed()).isFalse();
         }
 
-        /**
-         * 执行 {@code failedReportShouldReturnTrueForIsFailed} 操作。
-         */
         @Test
         @DisplayName("失败后 isFailed() 应返回 true")
         void failedReportShouldReturnTrueForIsFailed() {
@@ -245,9 +194,6 @@ class ReportEntityTest {
             assertThat(report.isFailed()).isTrue();
         }
 
-        /**
-         * 执行 {@code runningReportShouldReturnFalseForIsCompleted} 操作。
-         */
         @Test
         @DisplayName("处理中状态 isCompleted() 应返回 false")
         void runningReportShouldReturnFalseForIsCompleted() {
@@ -291,10 +237,6 @@ class ReportEntityTest {
     @Nested
     @DisplayName("ReportType 枚举")
     class ReportTypeEnumTest {
-
-        /**
-         * 执行 {@code photoRiskCodeShouldBePhotoRisk} 操作。
-         */
         @Test
         @DisplayName("PHOTO_RISK 的 code 应为 PHOTO_RISK")
         void photoRiskCodeShouldBePhotoRisk() {
@@ -305,37 +247,24 @@ class ReportEntityTest {
     @Nested
     @DisplayName("ReportStatus 枚举")
     class ReportStatusEnumTest {
-
-        /**
-         * 执行 {@code pendingCodeShouldBePending} 操作。
-         */
         @Test
         @DisplayName("PENDING 的 code 应为 PENDING")
         void pendingCodeShouldBePending() {
             assertThat(ReportEntity.ReportStatus.PENDING.getCode()).isEqualTo("PENDING");
         }
 
-        /**
-         * 执行 {@code runningCodeShouldBeRunning} 操作。
-         */
         @Test
         @DisplayName("RUNNING 的 code 应为 RUNNING")
         void runningCodeShouldBeRunning() {
             assertThat(ReportEntity.ReportStatus.RUNNING.getCode()).isEqualTo("RUNNING");
         }
 
-        /**
-         * 执行 {@code doneCodeShouldBeDone} 操作。
-         */
         @Test
         @DisplayName("DONE 的 code 应为 DONE")
         void doneCodeShouldBeDone() {
             assertThat(ReportEntity.ReportStatus.DONE.getCode()).isEqualTo("DONE");
         }
 
-        /**
-         * 执行 {@code failedCodeShouldBeFailed} 操作。
-         */
         @Test
         @DisplayName("FAILED 的 code 应为 FAILED")
         void failedCodeShouldBeFailed() {

@@ -38,13 +38,6 @@ public class UserProfileRepositoryImpl implements UserProfileRepository {
      * @return 用户资料实体；若不存在则返回空 Mono
      */
     @Override
-    /**
-     * 查找ByUserId
-     *
-     * @param userId 参数
-     *
-     * @return 结果
-     */
     public Mono<UserProfileEntity> findByUserId(Long userId) {
         return Mono.fromCallable(() -> mapper.selectOne(new LambdaQueryWrapper<UserProfilePO>()
                         .eq(UserProfilePO::getUserId, userId)
@@ -62,13 +55,6 @@ public class UserProfileRepositoryImpl implements UserProfileRepository {
      * @return 保存后的用户资料实体
      */
     @Override
-    /**
-     * 保存
-     *
-     * @param entity 参数
-     *
-     * @return 结果
-     */
     public Mono<UserProfileEntity> save(UserProfileEntity entity) {
         return Mono.fromCallable(() -> {
                     UserProfilePO po = userProfilePoConverter.toPo(entity);

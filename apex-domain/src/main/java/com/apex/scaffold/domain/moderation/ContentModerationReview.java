@@ -28,22 +28,23 @@ public record ContentModerationReview(
         long version) {
 
     /**
-     * 构造实例并初始化字段。
-     * @param id 主键 ID
-     * @param sourceType 参数 sourceType（类型 String）
-     * @param userId 用户 ID
-     * @param contentText 参数 contentText（类型 String）
-     * @param mediaJson 参数 mediaJson（类型 String）
-     * @param provider 参数 provider（类型 String）
-     * @param providerRequestId 参数 providerRequestId（类型 String）
-     * @param findingsJson 参数 findingsJson（类型 String）
-     * @param contentHash 参数 contentHash（类型 String）
-     * @param status 状态过滤
-     * @param reviewerOpenId 审核员 OpenId
-     * @param reviewComment 参数 reviewComment（类型 String）
-     * @param claimedAt 参数 claimedAt（类型 Instant）
-     * @param decidedAt 参数 decidedAt（类型 Instant）
-     * @param version 参数 version（类型 long）
+     * 构造复核任务记录。
+     *
+     * @param id                主键 ID
+     * @param sourceType        内容来源类型（如 POST 等）
+     * @param userId            内容所属用户 ID
+     * @param contentText       内容文本快照，可为空串
+     * @param mediaJson         内容媒体信息 JSON 快照
+     * @param provider          审核供应商标识
+     * @param providerRequestId 审核供应商请求 ID
+     * @param findingsJson      供应商命中详情 JSON
+     * @param contentHash       内容哈希，用于去重
+     * @param status            复核状态，为空时默认 PENDING
+     * @param reviewerOpenId    审核员 OpenId
+     * @param reviewComment     审核员裁决意见
+     * @param claimedAt         认领时间
+     * @param decidedAt         裁决时间
+     * @param version           乐观锁版本号
      */
     public ContentModerationReview {
         sourceType = Objects.requireNonNull(sourceType, "sourceType");
@@ -55,7 +56,8 @@ public record ContentModerationReview(
 
     /**
      * 判断是否处于待处理状态。
-     * @return 判断结果
+     *
+     * @return true 表示状态为 PENDING
      */
     public boolean pending() {
         return status == ContentModerationReviewStatus.PENDING;
@@ -63,15 +65,17 @@ public record ContentModerationReview(
 
     /**
      * 判断是否处于复核中。
-     * @return 判断结果
+     *
+     * @return true 表示状态为 REVIEWING
      */
     public boolean reviewing() {
         return status == ContentModerationReviewStatus.REVIEWING;
     }
 
     /**
-     * 判断是否已关闭。
-     * @return 判断结果
+     * 判断是否已关闭（已裁决）。
+     *
+     * @return true 表示状态为 APPROVED 或 REJECTED
      */
     public boolean closed() {
         return status == ContentModerationReviewStatus.APPROVED || status == ContentModerationReviewStatus.REJECTED;

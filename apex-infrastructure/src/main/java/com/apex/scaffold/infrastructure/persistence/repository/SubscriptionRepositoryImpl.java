@@ -41,13 +41,6 @@ public class SubscriptionRepositoryImpl implements SubscriptionRepository {
      * @return 当前有效订阅；若不存在则返回空 Mono
      */
     @Override
-    /**
-     * 查找ActiveByUserId
-     *
-     * @param userId 参数
-     *
-     * @return 结果
-     */
     public Mono<SubscriptionEntity> findActiveByUserId(Long userId) {
         return Mono.fromCallable(() -> mapper.selectOne(new LambdaQueryWrapper<SubscriptionPO>()
                         .eq(SubscriptionPO::getUserId, userId)
@@ -81,13 +74,6 @@ public class SubscriptionRepositoryImpl implements SubscriptionRepository {
      * @return 保存后的订阅实体
      */
     @Override
-    /**
-     * 保存
-     *
-     * @param entity 参数
-     *
-     * @return 结果
-     */
     public Mono<SubscriptionEntity> save(SubscriptionEntity entity) {
         return Mono.fromCallable(() -> {
                     SubscriptionPO po = subscriptionPoConverter.toPo(entity);

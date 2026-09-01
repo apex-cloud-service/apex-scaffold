@@ -126,11 +126,6 @@ public class WeChatMaterialService {
                             "media", new org.springframework.core.io.ByteArrayResource(fileBytes) {
                                 /** {@inheritDoc} */
                                 @Override
-                                /**
-                                 * 获取Filename
-                                 *
-                                 * @return 结果
-                                 */
                                 public String getFilename() {
                                     return safeFileName;
                                 }
@@ -231,11 +226,6 @@ public class WeChatMaterialService {
                             "media", new org.springframework.core.io.ByteArrayResource(fileBytes) {
                                 /** {@inheritDoc} */
                                 @Override
-                                /**
-                                 * 获取Filename
-                                 *
-                                 * @return 结果
-                                 */
                                 public String getFilename() {
                                     return safeFileName;
                                 }

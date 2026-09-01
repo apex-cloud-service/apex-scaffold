@@ -107,6 +107,12 @@ public class TenantEntity extends BaseEntity {
         this.remark = value;
     }
 
+    /**
+     * 默认构造函数。
+     *
+     * <p>仅供持久层框架或静态工厂 {@link #create(String, String, String, TenantQuota)} 使用，
+     * 业务代码应优先使用静态工厂方法创建租户。</p>
+     */
     public TenantEntity() {
         super();
     }

@@ -38,9 +38,6 @@ class SecurityConfigValidatorTest {
         properties = new SecurityProperties();
     }
 
-    /**
-     * 执行 {@code shouldRejectEmptyJwtSecret} 操作。
-     */
     @Test
     @DisplayName("JWT 密码为空时应抛出 IllegalStateException")
     void shouldRejectEmptyJwtSecret() {
@@ -55,9 +52,6 @@ class SecurityConfigValidatorTest {
                 .hasMessageContaining("JWT_SECRET 未设置");
     }
 
-    /**
-     * 执行 {@code shouldRejectShortJwtSecret} 操作。
-     */
     @Test
     @DisplayName("JWT 密码长度不足时应抛出 IllegalStateException")
     void shouldRejectShortJwtSecret() {
@@ -72,9 +66,6 @@ class SecurityConfigValidatorTest {
                 .hasMessageContaining("JWT_SECRET 长度不足");
     }
 
-    /**
-     * 执行 {@code shouldRejectEmptyRedisPassword} 操作。
-     */
     @Test
     @DisplayName("Redis 密码为空时应抛出 IllegalStateException")
     void shouldRejectEmptyRedisPassword() {
@@ -89,9 +80,6 @@ class SecurityConfigValidatorTest {
                 .hasMessageContaining("REDIS_PASSWORD 未设置");
     }
 
-    /**
-     * 执行 {@code shouldPassWithValidConfiguration} 操作。
-     */
     @Test
     @DisplayName("所有配置正确时应通过验证")
     void shouldPassWithValidConfiguration() {
@@ -105,9 +93,6 @@ class SecurityConfigValidatorTest {
         // 无异常抛出即为通过
     }
 
-    /**
-     * 执行 {@code shouldLogWarningWhenWechatSecretMissing} 操作。
-     */
     @Test
     @DisplayName("配置了微信 AppID 但未设置 AppSecret 时应抛出 IllegalStateException")
     void shouldLogWarningWhenWechatSecretMissing() {
@@ -130,9 +115,6 @@ class SecurityConfigValidatorTest {
                 .hasMessageContaining("AppSecret");
     }
 
-    /**
-     * 执行 {@code shouldSkipWechatValidationWhenNoAppId} 操作。
-     */
     @Test
     @DisplayName("未配置微信 AppId 时应跳过微信校验")
     void shouldSkipWechatValidationWhenNoAppId() {
@@ -153,11 +135,6 @@ class SecurityConfigValidatorTest {
         // 无异常抛出即为通过
     }
 
-    /**
-     * 创建{@code redisConfigWithPassword}。
-     * @param password 参数 {@code password}
-     * @return 操作结果
-     */
     private RedisConfig createRedisConfigWithPassword(String password) {
         RedisConfig redisConfig = new RedisConfig();
         redisConfig.setPassword(password);

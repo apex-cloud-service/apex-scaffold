@@ -162,15 +162,6 @@ public class CacheConsistencyService implements CacheConsistencyPort {
      * @return 删除成功返回true
      */
     @Override
-    /**
-     * evict
-     *
-     * @param cacheName 参数
-     *
-     * @param key 参数
-     *
-     * @return 结果
-     */
     public Mono<Boolean> evict(String cacheName, String key) {
         if (key == null || cacheName == null) {
             log.warn("缓存键或缓存名称为空，跳过删除");

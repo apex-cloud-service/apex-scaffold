@@ -62,9 +62,6 @@ class RequestHandlerUtilTest {
         traceIdUtilMockedStatic.when(TraceIdUtil::getTraceId).thenReturn(TEST_TRACE_ID);
     }
 
-    /**
-     * 执行 {@code tearDown} 操作。
-     */
     @AfterEach
     void tearDown() {
         traceIdUtilMockedStatic.close();
@@ -74,33 +71,23 @@ class RequestHandlerUtilTest {
         private String name;
         private Integer age;
 
-        /**
-         * 获取{@code name}。
-         * @return 字符串结果
-         */
         public String getName() {
             return name;
         }
 
         /**
          * 设置{@code name}。
-         * @param name 参数 {@code name}
          */
         public void setName(String name) {
             this.name = name;
         }
 
-        /**
-         * 获取{@code age}。
-         * @return 操作结果
-         */
         public Integer getAge() {
             return age;
         }
 
         /**
          * 设置{@code age}。
-         * @param age 参数 {@code age}
          */
         public void setAge(Integer age) {
             this.age = age;
@@ -211,9 +198,6 @@ class RequestHandlerUtilTest {
                 .verifyComplete();
     }
 
-    /**
-     * 执行 {@code extractToken_withAuthorizationHeader_shouldReturnToken} 操作。
-     */
     @Test
     @DisplayName("提取请求头中的Token应返回正确的Token值")
     void extractToken_withAuthorizationHeader_shouldReturnToken() {
@@ -227,9 +211,6 @@ class RequestHandlerUtilTest {
         assertThat(token.get()).isEqualTo("test-token-value");
     }
 
-    /**
-     * 执行 {@code extractToken_withoutAuthorizationHeader_shouldReturnEmpty} 操作。
-     */
     @Test
     @DisplayName("请求头中无Token时应返回空Optional")
     void extractToken_withoutAuthorizationHeader_shouldReturnEmpty() {
@@ -242,9 +223,6 @@ class RequestHandlerUtilTest {
         assertThat(token).isEmpty();
     }
 
-    /**
-     * 执行 {@code extractQueryParam_shouldReturnParamValue} 操作。
-     */
     @Test
     @DisplayName("提取查询参数应返回正确的参数值")
     void extractQueryParam_shouldReturnParamValue() {
@@ -256,9 +234,6 @@ class RequestHandlerUtilTest {
         assertThat(param.get()).isEqualTo("test-value");
     }
 
-    /**
-     * 执行 {@code extractPathParam_shouldReturnParamValue} 操作。
-     */
     @Test
     @DisplayName("提取路径参数应返回正确的参数值")
     void extractPathParam_shouldReturnParamValue() {

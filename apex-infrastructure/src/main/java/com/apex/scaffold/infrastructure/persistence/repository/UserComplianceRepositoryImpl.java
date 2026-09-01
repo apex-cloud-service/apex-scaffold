@@ -38,13 +38,6 @@ public class UserComplianceRepositoryImpl implements UserComplianceRepository {
      * @return 用户合规实体；若不存在则返回空 Mono
      */
     @Override
-    /**
-     * 查找ByUserId
-     *
-     * @param userId 参数
-     *
-     * @return 结果
-     */
     public Mono<UserComplianceEntity> findByUserId(Long userId) {
         return Mono.fromCallable(() -> mapper.selectOne(new LambdaQueryWrapper<UserCompliancePO>()
                         .eq(UserCompliancePO::getUserId, userId)
@@ -62,13 +55,6 @@ public class UserComplianceRepositoryImpl implements UserComplianceRepository {
      * @return 保存后的用户合规实体
      */
     @Override
-    /**
-     * 保存
-     *
-     * @param entity 参数
-     *
-     * @return 结果
-     */
     public Mono<UserComplianceEntity> save(UserComplianceEntity entity) {
         return Mono.fromCallable(() -> {
                     UserCompliancePO po = userCompliancePoConverter.toPo(entity);

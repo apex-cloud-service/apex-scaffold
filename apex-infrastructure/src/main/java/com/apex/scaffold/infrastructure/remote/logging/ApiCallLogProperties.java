@@ -41,27 +41,27 @@ public class ApiCallLogProperties {
 
     // 手动 getter（Lombok @Data 在某些场景不生成方法）
     /**
-     * isEnabled
+     * 是否启用 API 调用日志采集。
      *
-     * @return 结果
+     * @return true 表示启用日志采集
      */
     public boolean isEnabled() {
         return enabled;
     }
 
     /**
-     * 获取MaxBodyLength
+     * 获取请求体 / 响应体的最大记录长度。
      *
-     * @return 结果
+     * @return 最大记录长度（字符数），超出部分截断
      */
     public int getMaxBodyLength() {
         return maxBodyLength;
     }
 
     /**
-     * 响应ponseBody
+     * 是否记录响应体。
      *
-     * @return 结果
+     * @return true 表示记录响应体
      */
     public boolean isLogResponseBody() {
         return logResponseBody;

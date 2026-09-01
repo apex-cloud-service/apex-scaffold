@@ -184,11 +184,10 @@ class WeChatCodeLoginStrategyTest {
     }
 
     /**
-     * 执行 {@code loginResult} 逻辑。
+     * 构造微信登录结果对象。
      *
-     * @param expiresIn expiresIn 参数
-     *
-     * @return 执行结果
+     * @param expiresIn 令牌有效期秒数
+     * @return 微信登录结果
      */
     private WeChatGateway.WeChatLoginResult loginResult(Long expiresIn) {
         WeChatGateway.WeChatLoginResult result = new WeChatGateway.WeChatLoginResult();
@@ -201,13 +200,11 @@ class WeChatCodeLoginStrategyTest {
     }
 
     /**
-     * 执行 {@code user} 逻辑。
+     * 构造指定属性的用户实体。
      *
-     * @param openId openId 参数
-     *
-     * @param phone phone 参数
-     *
-     * @return 执行结果
+     * @param openId 微信 OpenId
+     * @param phone  手机号
+     * @return 用户实体
      */
     private UserEntity user(String openId, String phone) {
         UserEntity user = new UserEntity();

@@ -28,10 +28,6 @@ import reactor.core.publisher.Mono;
  * @see ChuanglanSmsLoginStrategy
  */
 class LoginStrategyTest {
-
-    /**
-     * 执行 {@code allImplementations_ImplementLoginStrategy} 操作。
-     */
     @Test
     @DisplayName("所有实现类应实现LoginStrategy接口 - 验证接口契约")
     void allImplementations_ImplementLoginStrategy() {
@@ -42,10 +38,6 @@ class LoginStrategyTest {
         assertThat(ChuanglanSmsLoginStrategy.class).isAssignableTo(LoginStrategy.class);
     }
 
-    /**
-     * 执行 {@code loginMethod_ReturnsMonoLoginResponse} 操作。
-     * @throws NoSuchMethodException 当操作无法完成时
-     */
     @Test
     @DisplayName("login方法签名 - 返回Mono<LoginResponse>")
     void loginMethod_ReturnsMonoLoginResponse() throws NoSuchMethodException {
@@ -53,10 +45,6 @@ class LoginStrategyTest {
         assertThat(method.getReturnType()).isEqualTo(Mono.class);
     }
 
-    /**
-     * 执行 {@code loginMethod_AcceptsLoginRequest} 操作。
-     * @throws NoSuchMethodException 当操作无法完成时
-     */
     @Test
     @DisplayName("login方法签名 - 接收LoginRequest参数")
     void loginMethod_AcceptsLoginRequest() throws NoSuchMethodException {

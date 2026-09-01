@@ -21,10 +21,6 @@ class FlywayMigrationVersionTest {
 
     private static final Pattern VERSION_PATTERN = Pattern.compile("V([0-9_]+)__.+\\.sql");
 
-    /**
-     * 执行 {@code shouldHaveUniqueContiguousVersions} 操作。
-     * @throws Exception 当操作无法完成时
-     */
     @Test
     void shouldHaveUniqueContiguousVersions() throws Exception {
         Path projectRoot = Path.of(System.getProperty("user.dir"));

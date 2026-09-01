@@ -61,7 +61,6 @@ class IdempotentAspectTest {
 
     /**
      * 设置{@code up}。
-     * @throws Exception 当操作无法完成时
      */
     @BeforeEach
     void setUp() throws Exception {
@@ -77,7 +76,6 @@ class IdempotentAspectTest {
 
         /**
          * 设置{@code upMethod}。
-         * @throws Exception 当操作无法完成时
          */
         @BeforeEach
         void setupMethod() throws Exception {
@@ -85,10 +83,6 @@ class IdempotentAspectTest {
             when(signature.getMethod()).thenReturn(method);
         }
 
-        /**
-         * 执行 {@code shouldProceedOnFirstAttempt} 操作。
-         * @throws Throwable 当操作无法完成时
-         */
         @Test
         @DisplayName("首次处理：setIfAbsent成功则应执行目标方法")
         void shouldProceedOnFirstAttempt() throws Throwable {
@@ -103,10 +97,6 @@ class IdempotentAspectTest {
             verify(joinPoint).proceed();
         }
 
-        /**
-         * 执行 {@code shouldReturnNullOnDuplicate} 操作。
-         * @throws Throwable 当操作无法完成时
-         */
         @Test
         @DisplayName("重复消息：setIfAbsent失败应返回null")
         void shouldReturnNullOnDuplicate() throws Throwable {
@@ -120,10 +110,6 @@ class IdempotentAspectTest {
             verify(joinPoint, never()).proceed();
         }
 
-        /**
-         * 执行 {@code shouldDeleteBucketAndRethrowOnException} 操作。
-         * @throws Throwable 当操作无法完成时
-         */
         @Test
         @DisplayName("处理异常时应删除幂等标记并重新抛出")
         void shouldDeleteBucketAndRethrowOnException() throws Throwable {
@@ -140,10 +126,6 @@ class IdempotentAspectTest {
             verify(bucket).delete();
         }
 
-        /**
-         * 执行 {@code shouldSkipIdempotencyWhenKeyEmpty} 操作。
-         * @throws Throwable 当操作无法完成时
-         */
         @Test
         @DisplayName("key为空时自动生成默认key并执行幂等检查")
         void shouldSkipIdempotencyWhenKeyEmpty() throws Throwable {
@@ -169,8 +151,6 @@ class IdempotentAspectTest {
 
     static class EmptyKeyTestClass {
         /**
-         * 执行 {@code emptyKeyMethod} 操作。
-         * @param param 参数 {@code param}
          */
         @Idempotent(key = "")
         void emptyKeyMethod(@SuppressWarnings("unused") String param) {}

@@ -21,9 +21,6 @@ import org.junit.jupiter.api.Test;
 class AbstractDomainEventTest {
 
     private static class TestDomainEvent extends AbstractDomainEvent {
-        /**
-         * 创建 {@code TestDomainEvent} 实例。
-         */
         TestDomainEvent() {
             super("TEST_EVENT", null);
         }
@@ -40,7 +37,6 @@ class AbstractDomainEventTest {
     class EventIdTest {
 
         /**
-         * 执行 {@code eventIdShouldNotBeNull} 操作。
          */
         @Test
         @DisplayName("eventId 不应为 null")
@@ -49,9 +45,6 @@ class AbstractDomainEventTest {
             assertNotNull(event.getEventId());
         }
 
-        /**
-         * 执行 {@code eventIdShouldNotBeEmpty} 操作。
-         */
         @Test
         @DisplayName("eventId 不应为空字符串")
         void eventIdShouldNotBeEmpty() {
@@ -59,9 +52,6 @@ class AbstractDomainEventTest {
             assertFalse(event.getEventId().isEmpty());
         }
 
-        /**
-         * 执行 {@code eventIdShouldBeValidUuidFormat} 操作。
-         */
         @Test
         @DisplayName("eventId 应为有效的 UUID 格式")
         void eventIdShouldBeValidUuidFormat() {
@@ -69,9 +59,6 @@ class AbstractDomainEventTest {
             assertDoesNotThrow(() -> UUID.fromString(event.getEventId()));
         }
 
-        /**
-         * 执行 {@code differentEventsShouldHaveDifferentEventIds} 操作。
-         */
         @Test
         @DisplayName("不同事件实例的 eventId 应各不相同")
         void differentEventsShouldHaveDifferentEventIds() {
@@ -81,9 +68,6 @@ class AbstractDomainEventTest {
             assertNotEquals(event1.getEventId(), event2.getEventId());
         }
 
-        /**
-         * 执行 {@code eventIdShouldHave36Characters} 操作。
-         */
         @Test
         @DisplayName("eventId 长度应为 36 个字符（标准 UUID 字符串长度）")
         void eventIdShouldHave36Characters() {
@@ -95,10 +79,6 @@ class AbstractDomainEventTest {
     @Nested
     @DisplayName("createdAt 时间戳测试")
     class CreatedAtTest {
-
-        /**
-         * 创建{@code dAtShouldNotBeNull}。
-         */
         @Test
         @DisplayName("createdAt 不应为 null")
         void createdAtShouldNotBeNull() {
@@ -106,9 +86,6 @@ class AbstractDomainEventTest {
             assertNotNull(event.getCreatedAt());
         }
 
-        /**
-         * 创建{@code dAtShouldBeCloseToCurrentTime}。
-         */
         @Test
         @DisplayName("createdAt 应接近当前时间（误差在 2 秒内）")
         void createdAtShouldBeCloseToCurrentTime() {
@@ -120,10 +97,6 @@ class AbstractDomainEventTest {
             assertFalse(event.getCreatedAt().isAfter(after.plusSeconds(2)));
         }
 
-        /**
-         * 执行 {@code eventsCreatedWithDelayShouldHaveDifferentCreatedAt} 操作。
-         * @throws Exception 当操作无法完成时
-         */
         @Test
         @DisplayName("相隔一段时间创建的事件，createdAt 应不同")
         void eventsCreatedWithDelayShouldHaveDifferentCreatedAt() throws Exception {
@@ -138,10 +111,6 @@ class AbstractDomainEventTest {
     @Nested
     @DisplayName("不可变性测试")
     class ImmutabilityTest {
-
-        /**
-         * 执行 {@code eventIdShouldBeImmutable} 操作。
-         */
         @Test
         @DisplayName("eventId 每次调用 getter 应返回相同的值")
         void eventIdShouldBeImmutable() {
@@ -152,9 +121,6 @@ class AbstractDomainEventTest {
             assertEquals(id1, id2);
         }
 
-        /**
-         * 创建{@code dAtShouldBeImmutable}。
-         */
         @Test
         @DisplayName("createdAt 每次调用 getter 应返回相同的值")
         void createdAtShouldBeImmutable() {

@@ -487,9 +487,6 @@ class GlobalExceptionHandlerTest {
         verify(exceptionMonitor).monitorException(ex);
     }
 
-    /**
-     * 执行 {@code webExceptionHandler_shouldTreatDecodingExceptionAsBadRequest} 操作。
-     */
     @Test
     @DisplayName("WebFlux 兜底处理器应将解码异常映射为400")
     void webExceptionHandler_shouldTreatDecodingExceptionAsBadRequest() {

@@ -16,9 +16,6 @@ final class EmbeddedItSupport {
     private static RedisServer redisServer;
     private static Integer redisPort;
 
-    /**
-     * 创建 {@code EmbeddedItSupport} 实例。
-     */
     private EmbeddedItSupport() {}
 
     /**

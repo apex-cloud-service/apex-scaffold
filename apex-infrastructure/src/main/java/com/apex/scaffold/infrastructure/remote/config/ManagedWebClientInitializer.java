@@ -29,13 +29,6 @@ public class ManagedWebClientInitializer {
      * @return ApplicationRunner 实例
      */
     @Bean
-    /**
-     * 运行agedWebClientPoolRunner
-     *
-     * @param properties 参数
-     *
-     * @return 结果
-     */
     public ApplicationRunner managedWebClientPoolRunner(ExternalHttpClientPoolProperties properties) {
         return args -> ManagedWebClientFactory.initialize(properties);
     }

@@ -921,7 +921,7 @@ final class OpenApiDocumentationCustomizer {
      * 将常见参数名转换为中文说明。
      *
      * @param name 参数名
-     * @return 参数说明
+     * @return 参数名对应的中文说明；未收录的参数名原样返回
      */
     private String humanizeParameter(String name) {
         return switch (name) {

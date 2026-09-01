@@ -226,17 +226,18 @@ public class SubscriptionEntity extends BaseEntity {
         }
 
         /**
-         * 获取{@code code}。
-         * @return 字符串结果
+         * 获取枚举编码。
+         * @return 枚举编码
          */
         public String getCode() {
             return code;
         }
 
         /**
-         * 执行 {@code fromCode} 操作。
-         * @param code 参数 {@code code}
-         * @return 操作结果
+         * 根据枚举编码解析订阅等级。
+         *
+         * @param code 订阅等级编码
+         * @return 匹配的订阅等级；编码为空或未匹配时返回 {@code null}
          */
         public static SubscriptionLevel fromCode(String code) {
             if (code == null) {
@@ -274,17 +275,18 @@ public class SubscriptionEntity extends BaseEntity {
         }
 
         /**
-         * 获取{@code code}。
-         * @return 字符串结果
+         * 获取枚举编码。
+         * @return 枚举编码
          */
         public String getCode() {
             return code;
         }
 
         /**
-         * 执行 {@code fromCode} 操作。
-         * @param code 参数 {@code code}
-         * @return 操作结果
+         * 根据枚举编码解析订阅状态。
+         *
+         * @param code 订阅状态编码
+         * @return 匹配的订阅状态；编码为空或未匹配时返回 {@code null}
          */
         public static SubscriptionStatus fromCode(String code) {
             if (code == null) {

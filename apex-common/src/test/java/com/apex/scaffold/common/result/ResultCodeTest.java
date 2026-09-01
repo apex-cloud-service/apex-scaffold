@@ -21,10 +21,6 @@ class ResultCodeTest {
     @Nested
     @DisplayName("基础状态码测试")
     class BasicCodesTest {
-
-        /**
-         * 执行 {@code successShouldBeCorrect} 操作。
-         */
         @Test
         @DisplayName("SUCCESS 的 code=0, msg='成功'")
         void successShouldBeCorrect() {
@@ -32,9 +28,6 @@ class ResultCodeTest {
             assertEquals("成功", ResultCode.SUCCESS.getMsg());
         }
 
-        /**
-         * 执行 {@code errorShouldBeCorrect} 操作。
-         */
         @Test
         @DisplayName("ERROR 的 code=-1, msg='系统错误'")
         void errorShouldBeCorrect() {
@@ -46,10 +39,6 @@ class ResultCodeTest {
     @Nested
     @DisplayName("客户端错误码测试")
     class ClientErrorCodesTest {
-
-        /**
-         * 执行 {@code paramErrorShouldBeCorrect} 操作。
-         */
         @Test
         @DisplayName("PARAM_ERROR 的 code=400, msg='参数错误'")
         void paramErrorShouldBeCorrect() {
@@ -57,9 +46,6 @@ class ResultCodeTest {
             assertEquals("参数错误", ResultCode.PARAM_ERROR.getMsg());
         }
 
-        /**
-         * 执行 {@code unauthorizedShouldBeCorrect} 操作。
-         */
         @Test
         @DisplayName("UNAUTHORIZED 的 code=401, msg='未授权'")
         void unauthorizedShouldBeCorrect() {
@@ -67,9 +53,6 @@ class ResultCodeTest {
             assertEquals("未授权", ResultCode.UNAUTHORIZED.getMsg());
         }
 
-        /**
-         * 执行 {@code forbiddenShouldBeCorrect} 操作。
-         */
         @Test
         @DisplayName("FORBIDDEN 的 code=403, msg='禁止访问'")
         void forbiddenShouldBeCorrect() {
@@ -77,9 +60,6 @@ class ResultCodeTest {
             assertEquals("禁止访问", ResultCode.FORBIDDEN.getMsg());
         }
 
-        /**
-         * 执行 {@code notFoundShouldBeCorrect} 操作。
-         */
         @Test
         @DisplayName("NOT_FOUND 的 code=404, msg='资源不存在'")
         void notFoundShouldBeCorrect() {
@@ -91,10 +71,6 @@ class ResultCodeTest {
     @Nested
     @DisplayName("微信相关错误码测试")
     class WechatErrorCodesTest {
-
-        /**
-         * 执行 {@code wxLoginFailedShouldBeCorrect} 操作。
-         */
         @Test
         @DisplayName("WX_LOGIN_FAILED 的 code=1001, msg='微信登录失败'")
         void wxLoginFailedShouldBeCorrect() {
@@ -102,9 +78,6 @@ class ResultCodeTest {
             assertEquals("微信登录失败", ResultCode.WX_LOGIN_FAILED.getMsg());
         }
 
-        /**
-         * 执行 {@code wxApiErrorShouldBeCorrect} 操作。
-         */
         @Test
         @DisplayName("WX_API_ERROR 的 code=1003, msg='微信接口调用失败'")
         void wxApiErrorShouldBeCorrect() {
@@ -112,9 +85,6 @@ class ResultCodeTest {
             assertEquals("微信接口调用失败", ResultCode.WX_API_ERROR.getMsg());
         }
 
-        /**
-         * 执行 {@code wxAuthFailedShouldBeCorrect} 操作。
-         */
         @Test
         @DisplayName("WX_AUTH_FAILED 的 code=1004, msg='微信授权失败'")
         void wxAuthFailedShouldBeCorrect() {
@@ -122,9 +92,6 @@ class ResultCodeTest {
             assertEquals("微信授权失败", ResultCode.WX_AUTH_FAILED.getMsg());
         }
 
-        /**
-         * 执行 {@code wxUserInfoErrorShouldBeCorrect} 操作。
-         */
         @Test
         @DisplayName("WX_USER_INFO_ERROR 的 code=1005, msg='微信用户信息获取失败'")
         void wxUserInfoErrorShouldBeCorrect() {
@@ -132,9 +99,6 @@ class ResultCodeTest {
             assertEquals("微信用户信息获取失败", ResultCode.WX_USER_INFO_ERROR.getMsg());
         }
 
-        /**
-         * 执行 {@code unsupportedLoginTypeShouldBeCorrect} 操作。
-         */
         @Test
         @DisplayName("UNSUPPORTED_LOGIN_TYPE 的 code=1006, msg='不支持的登录类型'")
         void unsupportedLoginTypeShouldBeCorrect() {
@@ -142,9 +106,6 @@ class ResultCodeTest {
             assertEquals("不支持的登录类型", ResultCode.UNSUPPORTED_LOGIN_TYPE.getMsg());
         }
 
-        /**
-         * 执行 {@code loginFailedShouldBeCorrect} 操作。
-         */
         @Test
         @DisplayName("LOGIN_FAILED 的 code=1007, msg='登录失败'")
         void loginFailedShouldBeCorrect() {
@@ -156,10 +117,6 @@ class ResultCodeTest {
     @Nested
     @DisplayName("流量治理错误码测试")
     class GovernanceErrorCodesTest {
-
-        /**
-         * 执行 {@code rateLimitShouldBeCorrect} 操作。
-         */
         @Test
         @DisplayName("RATE_LIMIT 的 code=2001, msg='请求过于频繁'")
         void rateLimitShouldBeCorrect() {
@@ -167,9 +124,6 @@ class ResultCodeTest {
             assertEquals("请求过于频繁", ResultCode.RATE_LIMIT.getMsg());
         }
 
-        /**
-         * 执行 {@code circuitBreakerShouldBeCorrect} 操作。
-         */
         @Test
         @DisplayName("CIRCUIT_BREAKER 的 code=2002, msg='服务熔断'")
         void circuitBreakerShouldBeCorrect() {
@@ -177,9 +131,6 @@ class ResultCodeTest {
             assertEquals("服务熔断", ResultCode.CIRCUIT_BREAKER.getMsg());
         }
 
-        /**
-         * 执行 {@code degradeShouldBeCorrect} 操作。
-         */
         @Test
         @DisplayName("DEGRADE 的 code=2003, msg='服务降级'")
         void degradeShouldBeCorrect() {
@@ -191,10 +142,6 @@ class ResultCodeTest {
     @Nested
     @DisplayName("基础设施错误码测试")
     class InfrastructureErrorCodesTest {
-
-        /**
-         * 执行 {@code cacheErrorShouldBeCorrect} 操作。
-         */
         @Test
         @DisplayName("CACHE_ERROR 的 code=3001, msg='缓存错误'")
         void cacheErrorShouldBeCorrect() {
@@ -202,9 +149,6 @@ class ResultCodeTest {
             assertEquals("缓存错误", ResultCode.CACHE_ERROR.getMsg());
         }
 
-        /**
-         * 执行 {@code dbErrorShouldBeCorrect} 操作。
-         */
         @Test
         @DisplayName("DB_ERROR 的 code=3002, msg='数据库错误'")
         void dbErrorShouldBeCorrect() {
@@ -212,9 +156,6 @@ class ResultCodeTest {
             assertEquals("数据库错误", ResultCode.DB_ERROR.getMsg());
         }
 
-        /**
-         * 执行 {@code mqErrorShouldBeCorrect} 操作。
-         */
         @Test
         @DisplayName("MQ_ERROR 的 code=3003, msg='消息队列错误'")
         void mqErrorShouldBeCorrect() {
@@ -226,10 +167,6 @@ class ResultCodeTest {
     @Nested
     @DisplayName("业务错误码测试")
     class BusinessErrorCodesTest {
-
-        /**
-         * 执行 {@code userNotFoundShouldBeCorrect} 操作。
-         */
         @Test
         @DisplayName("USER_NOT_FOUND 的 code=4001, msg='用户不存在'")
         void userNotFoundShouldBeCorrect() {
@@ -237,9 +174,6 @@ class ResultCodeTest {
             assertEquals("用户不存在", ResultCode.USER_NOT_FOUND.getMsg());
         }
 
-        /**
-         * 执行 {@code userAlreadyExistsShouldBeCorrect} 操作。
-         */
         @Test
         @DisplayName("USER_ALREADY_EXISTS 的 code=4002, msg='用户已存在'")
         void userAlreadyExistsShouldBeCorrect() {
@@ -247,9 +181,6 @@ class ResultCodeTest {
             assertEquals("用户已存在", ResultCode.USER_ALREADY_EXISTS.getMsg());
         }
 
-        /**
-         * 执行 {@code sameFrequencyLockedShouldBeCorrect} 操作。
-         */
         @Test
         @DisplayName("SAME_FREQUENCY_LOCKED 的 code=4101, msg='同频未解锁'")
         void sameFrequencyLockedShouldBeCorrect() {
@@ -257,9 +188,6 @@ class ResultCodeTest {
             assertEquals("同频未解锁", ResultCode.SAME_FREQUENCY_LOCKED.getMsg());
         }
 
-        /**
-         * 执行 {@code profileIncompleteShouldBeCorrect} 操作。
-         */
         @Test
         @DisplayName("PROFILE_INCOMPLETE 的 code=4102, msg='资料未补完'")
         void profileIncompleteShouldBeCorrect() {
@@ -267,9 +195,6 @@ class ResultCodeTest {
             assertEquals("资料未补完", ResultCode.PROFILE_INCOMPLETE.getMsg());
         }
 
-        /**
-         * 执行 {@code teenModeRestrictedShouldBeCorrect} 操作。
-         */
         @Test
         @DisplayName("TEEN_MODE_RESTRICTED 的 code=4103, msg='青少年模式限制'")
         void teenModeRestrictedShouldBeCorrect() {
@@ -277,9 +202,6 @@ class ResultCodeTest {
             assertEquals("青少年模式限制", ResultCode.TEEN_MODE_RESTRICTED.getMsg());
         }
 
-        /**
-         * 执行 {@code skipLimitReachedShouldBeCorrect} 操作。
-         */
         @Test
         @DisplayName("SKIP_LIMIT_REACHED 的 code=4201, msg='跳过次数已达上限'")
         void skipLimitReachedShouldBeCorrect() {
@@ -287,9 +209,6 @@ class ResultCodeTest {
             assertEquals("跳过次数已达上限", ResultCode.SKIP_LIMIT_REACHED.getMsg());
         }
 
-        /**
-         * 执行 {@code battleAlreadySubmittedShouldBeCorrect} 操作。
-         */
         @Test
         @DisplayName("BATTLE_ALREADY_SUBMITTED 的 code=4202, msg='对局已结算/不可重复提交'")
         void battleAlreadySubmittedShouldBeCorrect() {
@@ -306,7 +225,6 @@ class ResultCodeTest {
         }
 
         /**
-         * 执行 {@code contentNotVisibleShouldBeCorrect} 操作。
          */
         @Test
         @DisplayName("CONTENT_NOT_VISIBLE 的 code=4301, msg='内容不可见'")
@@ -315,9 +233,6 @@ class ResultCodeTest {
             assertEquals("内容不可见", ResultCode.CONTENT_NOT_VISIBLE.getMsg());
         }
 
-        /**
-         * 执行 {@code tagAuditRequiredShouldBeCorrect} 操作。
-         */
         @Test
         @DisplayName("TAG_AUDIT_REQUIRED 的 code=4401, msg='标签审核中/未通过'")
         void tagAuditRequiredShouldBeCorrect() {
@@ -325,9 +240,6 @@ class ResultCodeTest {
             assertEquals("标签审核中/未通过", ResultCode.TAG_AUDIT_REQUIRED.getMsg());
         }
 
-        /**
-         * 执行 {@code membershipRequiredShouldBeCorrect} 操作。
-         */
         @Test
         @DisplayName("MEMBERSHIP_REQUIRED 的 code=4501, msg='会员权益不足'")
         void membershipRequiredShouldBeCorrect() {
@@ -339,10 +251,6 @@ class ResultCodeTest {
     @Nested
     @DisplayName("枚举整体性测试")
     class EnumIntegrityTest {
-
-        /**
-         * 执行 {@code allCodesShouldNotBeNull} 操作。
-         */
         @Test
         @DisplayName("所有枚举值的 code 均不应为 null")
         void allCodesShouldNotBeNull() {
@@ -351,9 +259,6 @@ class ResultCodeTest {
             }
         }
 
-        /**
-         * 执行 {@code allMsgsShouldNotBeNullOrEmpty} 操作。
-         */
         @Test
         @DisplayName("所有枚举值的 msg 均不应为 null 或空")
         void allMsgsShouldNotBeNullOrEmpty() {
@@ -363,9 +268,6 @@ class ResultCodeTest {
             }
         }
 
-        /**
-         * 执行 {@code allCodesShouldBeUnique} 操作。
-         */
         @Test
         @DisplayName("所有枚举值的 code 应各不重复")
         void allCodesShouldBeUnique() {
@@ -376,9 +278,6 @@ class ResultCodeTest {
             assertEquals(ResultCode.values().length, distinctCount, "所有 code 应各不重复");
         }
 
-        /**
-         * 执行 {@code valueOfShouldWorkForAllValues} 操作。
-         */
         @Test
         @DisplayName("valueOf 应能通过 name 获取所有枚举值")
         void valueOfShouldWorkForAllValues() {
@@ -387,9 +286,6 @@ class ResultCodeTest {
             }
         }
 
-        /**
-         * 执行 {@code ordinalsShouldBeSequentialFromZero} 操作。
-         */
         @Test
         @DisplayName("ordinal 值应从 0 开始有序排列")
         void ordinalsShouldBeSequentialFromZero() {
@@ -399,9 +295,6 @@ class ResultCodeTest {
             }
         }
 
-        /**
-         * 执行 {@code successShouldBeFirst} 操作。
-         */
         @Test
         @DisplayName("SUCCESS 的 ordinal 应为 0")
         void successShouldBeFirst() {

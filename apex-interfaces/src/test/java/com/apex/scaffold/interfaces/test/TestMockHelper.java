@@ -15,10 +15,6 @@ public final class TestMockHelper {
 
     private final WebTestClient webTestClient;
 
-    /**
-     * 创建 {@code TestMockHelper} 实例。
-     * @param webTestClient 参数 {@code webTestClient}
-     */
     public TestMockHelper(WebTestClient webTestClient) {
         this.webTestClient = webTestClient;
     }

@@ -21,10 +21,6 @@ class UserEntityTest {
     @Nested
     @DisplayName("静态工厂方法 create()")
     class CreateTest {
-
-        /**
-         * 执行 {@code withValidParamsShouldCreateEnabledUser} 操作。
-         */
         @Test
         @DisplayName("使用有效参数应创建启用且未删除的用户")
         void withValidParamsShouldCreateEnabledUser() {
@@ -42,9 +38,6 @@ class UserEntityTest {
             assertNotNull(user.getUpdateTime());
         }
 
-        /**
-         * 执行 {@code shouldAcceptNullUnionId} 操作。
-         */
         @Test
         @DisplayName("unionId 可为 null")
         void shouldAcceptNullUnionId() {
@@ -52,9 +45,6 @@ class UserEntityTest {
             assertNull(user.getUnionId());
         }
 
-        /**
-         * 执行 {@code blankOpenIdShouldThrowException} 操作。
-         */
         @Test
         @DisplayName("openId 为空时应抛出异常")
         void blankOpenIdShouldThrowException() {
@@ -62,18 +52,12 @@ class UserEntityTest {
             assertThrows(IllegalArgumentException.class, () -> UserEntity.create("  ", "unionId"));
         }
 
-        /**
-         * 执行 {@code nullOpenIdShouldThrowException} 操作。
-         */
         @Test
         @DisplayName("openId 为 null 时应抛出异常")
         void nullOpenIdShouldThrowException() {
             assertThrows(IllegalArgumentException.class, () -> UserEntity.create(null, "unionId"));
         }
 
-        /**
-         * 创建{@code timeShouldEqualUpdateTime}。
-         */
         @Test
         @DisplayName("创建时间应与更新时间一致")
         void createTimeShouldEqualUpdateTime() {
@@ -85,10 +69,6 @@ class UserEntityTest {
     @Nested
     @DisplayName("updateToken()")
     class UpdateTokenTest {
-
-        /**
-         * 执行 {@code shouldUpdateTokenAndRefreshUpdateTime} 操作。
-         */
         @Test
         @DisplayName("应正确更新 Token 并刷新更新时间")
         void shouldUpdateTokenAndRefreshUpdateTime() {
@@ -107,9 +87,6 @@ class UserEntityTest {
                     || user.getUpdateTime().isEqual(originalUpdateTime));
         }
 
-        /**
-         * 执行 {@code shouldSupportNullAccessToken} 操作。
-         */
         @Test
         @DisplayName("支持 accessToken 为 null")
         void shouldSupportNullAccessToken() {
@@ -122,10 +99,6 @@ class UserEntityTest {
     @Nested
     @DisplayName("recordLogin()")
     class RecordLoginTest {
-
-        /**
-         * 执行 {@code shouldRecordLoginIpAndTime} 操作。
-         */
         @Test
         @DisplayName("应正确记录登录 IP 和时间")
         void shouldRecordLoginIpAndTime() {
@@ -139,9 +112,6 @@ class UserEntityTest {
             assertNotNull(user.getUpdateTime());
         }
 
-        /**
-         * 执行 {@code subsequentLoginShouldOverwritePrevious} 操作。
-         */
         @Test
         @DisplayName("后续登录应覆盖上次记录")
         void subsequentLoginShouldOverwritePrevious() {
@@ -160,10 +130,6 @@ class UserEntityTest {
     @Nested
     @DisplayName("isEnabled() / disable() / enable()")
     class EnableDisableTest {
-
-        /**
-         * 执行 {@code newlyCreatedUserShouldBeEnabled} 操作。
-         */
         @Test
         @DisplayName("新创建的用户应处于启用状态")
         void newlyCreatedUserShouldBeEnabled() {
@@ -171,9 +137,6 @@ class UserEntityTest {
             assertTrue(user.isEnabled());
         }
 
-        /**
-         * 执行 {@code afterDisableUserShouldBeDisabled} 操作。
-         */
         @Test
         @DisplayName("disable() 后用户应处于禁用状态")
         void afterDisableUserShouldBeDisabled() {
@@ -182,9 +145,6 @@ class UserEntityTest {
             assertFalse(user.isEnabled());
         }
 
-        /**
-         * 执行 {@code afterEnableUserShouldBeEnabled} 操作。
-         */
         @Test
         @DisplayName("enable() 后用户应重新启用")
         void afterEnableUserShouldBeEnabled() {
@@ -194,9 +154,6 @@ class UserEntityTest {
             assertTrue(user.isEnabled());
         }
 
-        /**
-         * 执行 {@code disableShouldRefreshUpdateTime} 操作。
-         */
         @Test
         @DisplayName("disable() 应刷新更新时间")
         void disableShouldRefreshUpdateTime() {
@@ -207,9 +164,6 @@ class UserEntityTest {
                     || user.getUpdateTime().isEqual(originalUpdateTime));
         }
 
-        /**
-         * 执行 {@code repeatedDisableShouldStayDisabled} 操作。
-         */
         @Test
         @DisplayName("重复禁用应保持禁用状态")
         void repeatedDisableShouldStayDisabled() {

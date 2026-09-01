@@ -20,10 +20,6 @@ class BlacklistEntityTest {
     @Nested
     @DisplayName("静态工厂方法 create()")
     class CreateTest {
-
-        /**
-         * 执行 {@code withValidParamsShouldCreateBlacklist} 操作。
-         */
         @Test
         @DisplayName("使用有效参数应创建有效拉黑记录并设置正确初始状态")
         void withValidParamsShouldCreateBlacklist() {
@@ -41,9 +37,6 @@ class BlacklistEntityTest {
             assertThat(blacklist.isDeleted()).isFalse();
         }
 
-        /**
-         * 创建{@code timeShouldEqualUpdateTime}。
-         */
         @Test
         @DisplayName("创建时间应与更新时间一致")
         void createTimeShouldEqualUpdateTime() {
@@ -55,10 +48,6 @@ class BlacklistEntityTest {
     @Nested
     @DisplayName("有效性判断 isEnabled()")
     class IsEnabledTest {
-
-        /**
-         * 执行 {@code newlyCreatedBlacklistShouldBeEnabled} 操作。
-         */
         @Test
         @DisplayName("新创建的拉黑记录应处于有效状态")
         void newlyCreatedBlacklistShouldBeEnabled() {
@@ -66,9 +55,6 @@ class BlacklistEntityTest {
             assertThat(blacklist.isEnabled()).isTrue();
         }
 
-        /**
-         * 执行 {@code afterUnblockShouldBeDisabled} 操作。
-         */
         @Test
         @DisplayName("解除后应返回 false")
         void afterUnblockShouldBeDisabled() {
@@ -77,9 +63,6 @@ class BlacklistEntityTest {
             assertThat(blacklist.isEnabled()).isFalse();
         }
 
-        /**
-         * 执行 {@code afterReblockShouldBeEnabled} 操作。
-         */
         @Test
         @DisplayName("重新拉黑后应返回 true")
         void afterReblockShouldBeEnabled() {
@@ -89,9 +72,6 @@ class BlacklistEntityTest {
             assertThat(blacklist.isEnabled()).isTrue();
         }
 
-        /**
-         * 执行 {@code nullEnabledShouldReturnFalse} 操作。
-         */
         @Test
         @DisplayName("enabled 为 null 时应返回 false")
         void nullEnabledShouldReturnFalse() {
@@ -103,10 +83,6 @@ class BlacklistEntityTest {
     @Nested
     @DisplayName("解除拉黑 unblock()")
     class UnblockTest {
-
-        /**
-         * 执行 {@code shouldSetEnabledToZero} 操作。
-         */
         @Test
         @DisplayName("应将 enabled 设为 0")
         void shouldSetEnabledToZero() {
@@ -116,9 +92,6 @@ class BlacklistEntityTest {
             assertThat(blacklist.isEnabled()).isFalse();
         }
 
-        /**
-         * 执行 {@code unblockShouldTouchUpdateTime} 操作。
-         */
         @Test
         @DisplayName("取消拉黑应刷新更新时间")
         void unblockShouldTouchUpdateTime() {
@@ -132,10 +105,6 @@ class BlacklistEntityTest {
     @Nested
     @DisplayName("重新拉黑 reblock()")
     class ReblockTest {
-
-        /**
-         * 执行 {@code shouldRestoreEnabledToOne} 操作。
-         */
         @Test
         @DisplayName("应将 enabled 恢复为 1")
         void shouldRestoreEnabledToOne() {
@@ -146,9 +115,6 @@ class BlacklistEntityTest {
             assertThat(blacklist.isEnabled()).isTrue();
         }
 
-        /**
-         * 执行 {@code shouldTouchUpdateTime} 操作。
-         */
         @Test
         @DisplayName("应刷新更新时间")
         void shouldTouchUpdateTime() {

@@ -21,20 +21,11 @@ import org.junit.jupiter.api.Test;
 @Slf4j
 @DisplayName("BaseEntity 行为测试")
 public abstract class BaseEntityTest<T extends BaseEntity> {
-
-    /**
-     * 创建{@code entity}。
-     * @return 操作结果
-     */
     protected abstract T createEntity();
 
     @Nested
     @DisplayName("isNew 方法")
     class IsNewTests {
-
-        /**
-         * 执行 {@code shouldReturnTrueWhenIdIsNull} 操作。
-         */
         @Test
         @DisplayName("新建实体（id为null）应返回true")
         void shouldReturnTrueWhenIdIsNull() {
@@ -42,9 +33,6 @@ public abstract class BaseEntityTest<T extends BaseEntity> {
             assertThat(entity.isNew()).isTrue();
         }
 
-        /**
-         * 执行 {@code shouldReturnFalseWhenIdIsSet} 操作。
-         */
         @Test
         @DisplayName("已持久化实体（id不为null）应返回false")
         void shouldReturnFalseWhenIdIsSet() {
@@ -57,10 +45,6 @@ public abstract class BaseEntityTest<T extends BaseEntity> {
     @Nested
     @DisplayName("markAsDeleted 方法")
     class MarkAsDeletedTests {
-
-        /**
-         * 执行 {@code shouldReturnTrueAfterMarkAsDeleted} 操作。
-         */
         @Test
         @DisplayName("标记删除后 isDeleted 应返回true")
         void shouldReturnTrueAfterMarkAsDeleted() {
@@ -69,9 +53,6 @@ public abstract class BaseEntityTest<T extends BaseEntity> {
             assertThat(entity.isDeleted()).isTrue();
         }
 
-        /**
-         * 执行 {@code shouldTouchUpdateTimeAfterMarkAsDeleted} 操作。
-         */
         @Test
         @DisplayName("标记删除后应更新 updateTime")
         void shouldTouchUpdateTimeAfterMarkAsDeleted() {
@@ -86,10 +67,6 @@ public abstract class BaseEntityTest<T extends BaseEntity> {
     @Nested
     @DisplayName("restore 方法")
     class RestoreTests {
-
-        /**
-         * 执行 {@code shouldReturnFalseAfterRestore} 操作。
-         */
         @Test
         @DisplayName("恢复后 isDeleted 应返回false")
         void shouldReturnFalseAfterRestore() {
@@ -99,9 +76,6 @@ public abstract class BaseEntityTest<T extends BaseEntity> {
             assertThat(entity.isDeleted()).isFalse();
         }
 
-        /**
-         * 执行 {@code shouldTouchUpdateTimeAfterRestore} 操作。
-         */
         @Test
         @DisplayName("恢复后应更新 updateTime")
         void shouldTouchUpdateTimeAfterRestore() {
@@ -117,10 +91,6 @@ public abstract class BaseEntityTest<T extends BaseEntity> {
     @Nested
     @DisplayName("initTimestamps 方法")
     class InitTimestampsTests {
-
-        /**
-         * 执行 {@code shouldInitializeTimestamps} 操作。
-         */
         @Test
         @DisplayName("初始化后 createTime 和 updateTime 应不为 null")
         void shouldInitializeTimestamps() {
@@ -130,9 +100,6 @@ public abstract class BaseEntityTest<T extends BaseEntity> {
             assertThat(entity.getUpdateTime()).isNotNull();
         }
 
-        /**
-         * 执行 {@code shouldSetEqualTimestampsOnInit} 操作。
-         */
         @Test
         @DisplayName("初始化后 createTime 和 updateTime 应相等")
         void shouldSetEqualTimestampsOnInit() {

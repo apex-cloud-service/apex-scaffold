@@ -22,7 +22,6 @@ class LoginTypeTest {
     class EnumConstantsTest {
 
         /**
-         * 执行 {@code shouldHaveSixConstants} 操作。
          *
          * <p>v2.2.0 起新增 {@link LoginType#PASSWORD}（账号密码登录）。</p>
          */
@@ -33,45 +32,30 @@ class LoginTypeTest {
             assertThat(LoginType.valueOf("PASSWORD")).isEqualTo(LoginType.PASSWORD);
         }
 
-        /**
-         * 执行 {@code shouldContainWxCode} 操作。
-         */
         @Test
         @DisplayName("应包含 WX_CODE 常量")
         void shouldContainWxCode() {
             assertThat(LoginType.valueOf("WX_CODE")).isEqualTo(LoginType.WX_CODE);
         }
 
-        /**
-         * 执行 {@code shouldContainWxPhone} 操作。
-         */
         @Test
         @DisplayName("应包含 WX_PHONE 常量")
         void shouldContainWxPhone() {
             assertThat(LoginType.valueOf("WX_PHONE")).isEqualTo(LoginType.WX_PHONE);
         }
 
-        /**
-         * 执行 {@code shouldContainWxSms} 操作。
-         */
         @Test
         @DisplayName("应包含 WX_SMS 常量")
         void shouldContainWxSms() {
             assertThat(LoginType.valueOf("WX_SMS")).isEqualTo(LoginType.WX_SMS);
         }
 
-        /**
-         * 执行 {@code shouldContainClPhone} 操作。
-         */
         @Test
         @DisplayName("应包含 CL_PHONE 常量")
         void shouldContainClPhone() {
             assertThat(LoginType.valueOf("CL_PHONE")).isEqualTo(LoginType.CL_PHONE);
         }
 
-        /**
-         * 执行 {@code shouldContainClSms} 操作。
-         */
         @Test
         @DisplayName("应包含 CL_SMS 常量")
         void shouldContainClSms() {
@@ -82,46 +66,30 @@ class LoginTypeTest {
     @Nested
     @DisplayName("name() 方法")
     class NameMethodTest {
-
-        /**
-         * 执行 {@code wxCodeNameShouldBeWX_CODE} 操作。
-         */
         @Test
         @DisplayName("WX_CODE 的 name() 应返回 WX_CODE")
         void wxCodeNameShouldBeWX_CODE() {
             assertThat(LoginType.WX_CODE.name()).isEqualTo("WX_CODE");
         }
 
-        /**
-         * 执行 {@code wxPhoneNameShouldBeWX_PHONE} 操作。
-         */
         @Test
         @DisplayName("WX_PHONE 的 name() 应返回 WX_PHONE")
         void wxPhoneNameShouldBeWX_PHONE() {
             assertThat(LoginType.WX_PHONE.name()).isEqualTo("WX_PHONE");
         }
 
-        /**
-         * 执行 {@code wxSmsNameShouldBeWX_SMS} 操作。
-         */
         @Test
         @DisplayName("WX_SMS 的 name() 应返回 WX_SMS")
         void wxSmsNameShouldBeWX_SMS() {
             assertThat(LoginType.WX_SMS.name()).isEqualTo("WX_SMS");
         }
 
-        /**
-         * 执行 {@code clPhoneNameShouldBeCL_PHONE} 操作。
-         */
         @Test
         @DisplayName("CL_PHONE 的 name() 应返回 CL_PHONE")
         void clPhoneNameShouldBeCL_PHONE() {
             assertThat(LoginType.CL_PHONE.name()).isEqualTo("CL_PHONE");
         }
 
-        /**
-         * 执行 {@code clSmsNameShouldBeCL_SMS} 操作。
-         */
         @Test
         @DisplayName("CL_SMS 的 name() 应返回 CL_SMS")
         void clSmsNameShouldBeCL_SMS() {
@@ -132,46 +100,30 @@ class LoginTypeTest {
     @Nested
     @DisplayName("ordinal() 方法")
     class OrdinalMethodTest {
-
-        /**
-         * 执行 {@code wxCodeOrdinalShouldBeZero} 操作。
-         */
         @Test
         @DisplayName("WX_CODE 的 ordinal 应为 0")
         void wxCodeOrdinalShouldBeZero() {
             assertThat(LoginType.WX_CODE.ordinal()).isZero();
         }
 
-        /**
-         * 执行 {@code wxPhoneOrdinalShouldBeOne} 操作。
-         */
         @Test
         @DisplayName("WX_PHONE 的 ordinal 应为 1")
         void wxPhoneOrdinalShouldBeOne() {
             assertThat(LoginType.WX_PHONE.ordinal()).isEqualTo(1);
         }
 
-        /**
-         * 执行 {@code wxSmsOrdinalShouldBeTwo} 操作。
-         */
         @Test
         @DisplayName("WX_SMS 的 ordinal 应为 2")
         void wxSmsOrdinalShouldBeTwo() {
             assertThat(LoginType.WX_SMS.ordinal()).isEqualTo(2);
         }
 
-        /**
-         * 执行 {@code clPhoneOrdinalShouldBeThree} 操作。
-         */
         @Test
         @DisplayName("CL_PHONE 的 ordinal 应为 3")
         void clPhoneOrdinalShouldBeThree() {
             assertThat(LoginType.CL_PHONE.ordinal()).isEqualTo(3);
         }
 
-        /**
-         * 执行 {@code clSmsOrdinalShouldBeFour} 操作。
-         */
         @Test
         @DisplayName("CL_SMS 的 ordinal 应为 4")
         void clSmsOrdinalShouldBeFour() {
@@ -182,10 +134,6 @@ class LoginTypeTest {
     @Nested
     @DisplayName("values() 方法")
     class ValuesMethodTest {
-
-        /**
-         * 执行 {@code valuesShouldReturnConstantsInDeclarationOrder} 操作。
-         */
         @Test
         @DisplayName("values() 应返回按声明顺序排列的常量")
         void valuesShouldReturnConstantsInDeclarationOrder() {

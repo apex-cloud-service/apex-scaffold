@@ -854,11 +854,12 @@ public class RemoteApiClient {
     }
 
     /**
-     * 执行业务操作；该操作由 {@code execute} 定义。
+     * 按服务配置执行 HTTP 请求并返回反序列化结果。
      *
-     * @param request 方法输入 {@code request}，类型为 {@code RemoteRequest<T>}
-     * @param retryEnabled 方法输入 {@code retryEnabled}，类型为 {@code boolean}
-     * @return 操作结果，类型为 {@code Mono<T>}
+     * @param request      已声明的不可变远程请求
+     * @param retryEnabled true 表示按服务配置应用统一重试策略
+     * @param <T>          响应体类型
+     * @return 远程响应的异步结果
      */
     private <T> Mono<T> execute(RemoteRequest<T> request, boolean retryEnabled) {
         java.util.Objects.requireNonNull(request, "request不能为空");

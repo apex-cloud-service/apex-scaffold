@@ -111,7 +111,6 @@ class FileHandlerTest {
     class UploadTests {
 
         /**
-         * 执行 {@code shouldUploadMultipartImageAndReturnUrl} 操作。
          */
         @Test
         @DisplayName("应上传multipart图片并返回临时访问URL")
@@ -175,7 +174,6 @@ class FileHandlerTest {
         }
 
         /**
-         * 执行 {@code shouldRejectMultipartWithoutBoundary} 操作。
          */
         @Test
         @DisplayName("缺少boundary时应返回400")
@@ -197,9 +195,6 @@ class FileHandlerTest {
                     .isEqualTo("param.multipart_boundary_missing");
         }
 
-        /**
-         * 执行 {@code shouldAcceptUploadWithoutSex} 操作。
-         */
         @Test
         @DisplayName("缺少sex时应由后端自动检测并上传成功")
         void shouldAcceptUploadWithoutSex() {
@@ -240,7 +235,6 @@ class FileHandlerTest {
         }
 
         /**
-         * 执行 {@code shouldRejectNonMultipartRequest} 操作。
          */
         @Test
         @DisplayName("非multipart请求应返回400")
@@ -266,10 +260,6 @@ class FileHandlerTest {
     @Nested
     @DisplayName("getUrl 方法")
     class GetUrlTests {
-
-        /**
-         * 执行 {@code shouldGetUrlSuccessfully} 操作。
-         */
         @Test
         @DisplayName("应成功获取文件URL并返回200")
         void shouldGetUrlSuccessfully() {
@@ -294,10 +284,6 @@ class FileHandlerTest {
     @Nested
     @DisplayName("delete 方法")
     class DeleteTests {
-
-        /**
-         * 执行 {@code shouldDeleteSuccessfully} 操作。
-         */
         @Test
         @DisplayName("应成功删除文件并返回200")
         void shouldDeleteSuccessfully() {
@@ -321,10 +307,6 @@ class FileHandlerTest {
     @Nested
     @DisplayName("exists 方法")
     class ExistsTests {
-
-        /**
-         * 执行 {@code shouldCheckExistsSuccessfully} 操作。
-         */
         @Test
         @DisplayName("应成功检查文件是否存在并返回200")
         void shouldCheckExistsSuccessfully() {

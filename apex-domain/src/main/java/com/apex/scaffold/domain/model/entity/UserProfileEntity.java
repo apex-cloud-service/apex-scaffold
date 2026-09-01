@@ -363,17 +363,19 @@ public class UserProfileEntity extends BaseEntity {
         }
 
         /**
-         * 获取{@code code}。
-         * @return 操作结果
+         * 获取枚举编码。
+         *
+         * @return 枚举编码
          */
         public Integer getCode() {
             return code;
         }
 
         /**
-         * 执行 {@code fromCode} 操作。
-         * @param code 参数 {@code code}
-         * @return 操作结果
+         * 根据枚举编码解析社交用户类型。
+         *
+         * @param code 社交用户类型编码
+         * @return 匹配的社交用户类型；编码为空或未匹配时返回 {@code null}
          */
         public static SocialUserType fromCode(Integer code) {
             if (code == null) {

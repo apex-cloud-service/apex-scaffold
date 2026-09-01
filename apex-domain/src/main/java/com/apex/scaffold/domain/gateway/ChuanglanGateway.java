@@ -213,8 +213,8 @@ public interface ChuanglanGateway {
 
         /**
          * 创建 {@code PhoneNumberResult} 实例。
-         * @param phone 参数 {@code phone}
-         * @param success 参数 {@code success}
+         * @param phone   手机号，中国大陆11位数字格式
+         * @param success 是否成功获取手机号
          */
         public PhoneNumberResult(String phone, boolean success) {
             this.phone = phone;
@@ -252,8 +252,8 @@ public interface ChuanglanGateway {
 
         /**
          * 创建 {@code SmsSendResult} 实例。
-         * @param msgId 参数 {@code msgId}
-         * @param success 参数 {@code success}
+         * @param msgId   创蓝平台返回的消息标识
+         * @param success 是否发送成功
          */
         public SmsSendResult(String msgId, boolean success) {
             this.msgId = msgId;
@@ -331,8 +331,8 @@ public interface ChuanglanGateway {
 
         /**
          * 创建 {@code BalanceResult} 实例。
-         * @param balance 参数 {@code balance}
-         * @param success 参数 {@code success}
+         * @param balance 账号余额
+         * @param success 是否查询成功
          */
         public BalanceResult(String balance, boolean success) {
             this.balance = balance;

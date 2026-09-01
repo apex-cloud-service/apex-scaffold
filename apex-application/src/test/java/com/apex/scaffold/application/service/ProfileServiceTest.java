@@ -119,9 +119,6 @@ class ProfileServiceTest {
         lenient().when(cacheConsistencyService.evict(anyString(), anyString())).thenReturn(Mono.just(true));
     }
 
-    /**
-     * 获取{@code me_Success}。
-     */
     @Test
     @DisplayName("getMe - 成功获取用户资料")
     void getMe_Success() {
@@ -164,9 +161,6 @@ class ProfileServiceTest {
                         any(Map.class));
     }
 
-    /**
-     * 获取{@code me_WithSubscriptionAndCredit_Success}。
-     */
     @Test
     @DisplayName("getMe - 展示会员与算力余额")
     void getMe_WithSubscriptionAndCredit_Success() {
@@ -198,9 +192,6 @@ class ProfileServiceTest {
                 .verifyComplete();
     }
 
-    /**
-     * 获取{@code me_WithoutProfileAndCompliance_Success}。
-     */
     @Test
     @DisplayName("getMe - 无画像和合规记录时使用默认值")
     void getMe_WithoutProfileAndCompliance_Success() {
@@ -230,9 +221,6 @@ class ProfileServiceTest {
                         any(Map.class));
     }
 
-    /**
-     * 获取{@code me_UserNotFound}。
-     */
     @Test
     @DisplayName("getMe - 用户不存在时抛出异常")
     void getMe_UserNotFound() {
@@ -431,9 +419,6 @@ class ProfileServiceTest {
         });
     }
 
-    /**
-     * 执行 {@code submitCustomInterestTag_Success} 操作。
-     */
     @Test
     @DisplayName("submitCustomInterestTag - 成功提交自定义标签")
     void submitCustomInterestTag_Success() {
@@ -454,9 +439,6 @@ class ProfileServiceTest {
         verify(userProfileRepository).save(profile);
     }
 
-    /**
-     * 执行 {@code submitCustomInterestTag_NullTag_ThrowsError} 操作。
-     */
     @Test
     @DisplayName("submitCustomInterestTag - 标签为空时抛出参数异常")
     void submitCustomInterestTag_NullTag_ThrowsError() {
@@ -470,9 +452,6 @@ class ProfileServiceTest {
                 });
     }
 
-    /**
-     * 执行 {@code submitCustomInterestTag_BlankTag_ThrowsError} 操作。
-     */
     @Test
     @DisplayName("submitCustomInterestTag - 标签为空白时抛出参数异常")
     void submitCustomInterestTag_BlankTag_ThrowsError() {
@@ -486,9 +465,6 @@ class ProfileServiceTest {
                 });
     }
 
-    /**
-     * 执行 {@code submitCustomInterestTag_UserNotFound} 操作。
-     */
     @Test
     @DisplayName("submitCustomInterestTag - 用户不存在时抛出异常")
     void submitCustomInterestTag_UserNotFound() {

@@ -542,8 +542,8 @@ public class UserEntity extends BaseEntity {
         }
 
         /**
-         * 获取{@code code}。
-         * @return 操作结果
+         * 获取枚举编码。
+         * @return 枚举编码
          */
         public Integer getCode() {
             return code;

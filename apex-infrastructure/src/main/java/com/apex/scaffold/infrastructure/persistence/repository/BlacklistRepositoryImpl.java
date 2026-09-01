@@ -56,13 +56,6 @@ public class BlacklistRepositoryImpl implements BlacklistRepository {
      * @return 保存后的黑名单实体
      */
     @Override
-    /**
-     * upsert
-     *
-     * @param entity 参数
-     *
-     * @return 结果
-     */
     public Mono<BlacklistEntity> upsert(BlacklistEntity entity) {
         return Mono.fromCallable(() -> {
                     BlacklistPO existing = mapper.selectOne(new LambdaQueryWrapper<BlacklistPO>()
@@ -100,13 +93,6 @@ public class BlacklistRepositoryImpl implements BlacklistRepository {
      * @return 被该用户拉黑的目标用户ID列表
      */
     @Override
-    /**
-     * 列表EnabledTargetUserIds
-     *
-     * @param userId 参数
-     *
-     * @return 结果
-     */
     public Mono<List<Long>> listEnabledTargetUserIds(Long userId) {
         return Mono.fromCallable(() -> mapper.selectList(new LambdaQueryWrapper<BlacklistPO>()
                         .eq(BlacklistPO::getUserId, userId)
@@ -127,15 +113,6 @@ public class BlacklistRepositoryImpl implements BlacklistRepository {
      * @return 如果用户B拉黑了用户A则返回true，否则返回false
      */
     @Override
-    /**
-     * isBlocked
-     *
-     * @param userId 参数
-     *
-     * @param targetUserId 参数
-     *
-     * @return 结果
-     */
     public Mono<Boolean> isBlocked(Long userId, Long targetUserId) {
         return Mono.fromCallable(() -> mapper.selectCount(new LambdaQueryWrapper<BlacklistPO>()
                                 .eq(BlacklistPO::getUserId, userId)

@@ -88,9 +88,6 @@ class ChuanglanPhoneLoginStrategyTest {
         newUser.setPhone("13900139000");
     }
 
-    /**
-     * 执行 {@code login_ClTokenIsNull_ThrowsError} 操作。
-     */
     @Test
     @DisplayName("login - clToken为空时抛出参数异常")
     void login_ClTokenIsNull_ThrowsError() {
@@ -103,9 +100,6 @@ class ChuanglanPhoneLoginStrategyTest {
         });
     }
 
-    /**
-     * 执行 {@code login_ClTokenIsBlank_ThrowsError} 操作。
-     */
     @Test
     @DisplayName("login - clToken为空白时抛出参数异常")
     void login_ClTokenIsBlank_ThrowsError() {
@@ -118,9 +112,6 @@ class ChuanglanPhoneLoginStrategyTest {
         });
     }
 
-    /**
-     * 执行 {@code login_GetPhoneFailed_ThrowsError} 操作。
-     */
     @Test
     @DisplayName("login - 获取手机号失败时抛出异常")
     void login_GetPhoneFailed_ThrowsError() {
@@ -138,9 +129,6 @@ class ChuanglanPhoneLoginStrategyTest {
         });
     }
 
-    /**
-     * 执行 {@code login_PhoneIsNull_ThrowsError} 操作。
-     */
     @Test
     @DisplayName("login - 获取到的手机号为空时抛出异常")
     void login_PhoneIsNull_ThrowsError() {
@@ -156,9 +144,6 @@ class ChuanglanPhoneLoginStrategyTest {
         });
     }
 
-    /**
-     * 执行 {@code login_ExistingUser_Success} 操作。
-     */
     @Test
     @DisplayName("login - 已有用户登录成功")
     void login_ExistingUser_Success() {
@@ -186,9 +171,6 @@ class ChuanglanPhoneLoginStrategyTest {
         verify(tokenService).storeToken(eq("test_openid"), eq("access_token"), eq("refresh_token"), any(), any());
     }
 
-    /**
-     * 执行 {@code login_NewUser_Success} 操作。
-     */
     @Test
     @DisplayName("login - 未注册手机号返回注册票据")
     void login_NewUser_Success() {
@@ -208,9 +190,6 @@ class ChuanglanPhoneLoginStrategyTest {
         verify(userService, never()).create(any(UserEntity.class));
     }
 
-    /**
-     * 获取{@code loginType_ShouldReturnClPhone}。
-     */
     @Test
     @DisplayName("getLoginType - 应返回CL_PHONE")
     void getLoginType_ShouldReturnClPhone() {

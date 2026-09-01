@@ -51,9 +51,6 @@ class HealthHandlerTest {
         when(messageUtils.get(any(Locale.class), any())).thenReturn("");
     }
 
-    /**
-     * 执行 {@code health_shouldReturnUpStatus} 操作。
-     */
     @Test
     @DisplayName("健康检查接口应返回200和UP状态")
     void health_shouldReturnUpStatus() {
@@ -69,9 +66,6 @@ class HealthHandlerTest {
                 .verifyComplete();
     }
 
-    /**
-     * 执行 {@code info_shouldReturnSystemInfo} 操作。
-     */
     @Test
     @DisplayName("获取系统信息接口应返回200")
     void info_shouldReturnSystemInfo() {
@@ -87,10 +81,6 @@ class HealthHandlerTest {
                 .verifyComplete();
     }
 
-    /**
-     * 创建{@code mockServerRequest}。
-     * @return 操作结果
-     */
     private ServerRequest createMockServerRequest() {
         return mock(ServerRequest.class);
     }

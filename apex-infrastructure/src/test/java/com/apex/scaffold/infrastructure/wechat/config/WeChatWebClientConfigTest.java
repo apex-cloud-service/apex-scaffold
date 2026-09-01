@@ -59,7 +59,7 @@ class WeChatWebClientConfigTest {
             /**
              * {@inheritDoc}
              *
-             * @return 操作结果，类型为 {@code ApiCallLogService}
+             * @return ApiCallLogService 类型的实例
              */
             @Override
             public ApiCallLogService getObject() {
@@ -70,7 +70,7 @@ class WeChatWebClientConfigTest {
              * {@inheritDoc}
              *
              * @param args 方法输入 {@code args}，类型为 {@code Object[]}
-             * @return 操作结果，类型为 {@code ApiCallLogService}
+             * @return ApiCallLogService 类型的实例
              */
             @Override
             public ApiCallLogService getObject(Object... args) {
@@ -80,7 +80,7 @@ class WeChatWebClientConfigTest {
             /**
              * {@inheritDoc}
              *
-             * @return 操作结果，类型为 {@code ApiCallLogService}
+             * @return ApiCallLogService 类型的实例
              */
             @Override
             public ApiCallLogService getIfAvailable() {
@@ -90,7 +90,7 @@ class WeChatWebClientConfigTest {
             /**
              * {@inheritDoc}
              *
-             * @return 操作结果，类型为 {@code ApiCallLogService}
+             * @return ApiCallLogService 类型的实例
              */
             @Override
             public ApiCallLogService getIfUnique() {

@@ -19,9 +19,6 @@ class ClientIpResolverTest {
     private final IpRateLimitProperties properties = new IpRateLimitProperties();
     private final ClientIpResolver resolver = new ClientIpResolver(properties);
 
-    /**
-     * 执行 {@code untrustedPeerCannotSpoofForwardedHeaders} 操作。
-     */
     @Test
     void untrustedPeerCannotSpoofForwardedHeaders() {
         String result =
@@ -30,9 +27,6 @@ class ClientIpResolverTest {
         assertThat(result).isEqualTo("203.0.113.9");
     }
 
-    /**
-     * 执行 {@code trustedProxyUsesFirstUntrustedHopFromRight} 操作。
-     */
     @Test
     void trustedProxyUsesFirstUntrustedHopFromRight() {
         properties.setTrustedProxyCidrs(List.of("10.0.0.0/8"));

@@ -87,6 +87,7 @@ public class RoleEntity extends BaseEntity {
 
     private DataScopeType dataScope;
 
+    /** Sets dataScope. For persistence/construction use only. */
     public void setDataScope(DataScopeType value) {
         this.dataScope = value;
     }
@@ -217,8 +218,9 @@ public class RoleEntity extends BaseEntity {
         }
 
         /**
-         * 获取{@code code}。
-         * @return 操作结果
+         * 获取枚举编码。
+         *
+         * @return 枚举编码
          */
         public Integer getCode() {
             return code;

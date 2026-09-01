@@ -19,9 +19,6 @@ public final class TestTokenHelper {
 
     public static final String TEST_JWT_SECRET = "KdT3xL9mN8pQ2rV5wY7zA1cE4gH6jK0sM2nP4rT6vW8xZ0bD3fG5hJ7kL9mN1q";
 
-    /**
-     * 创建 {@code TestTokenHelper} 实例。
-     */
     private TestTokenHelper() {
         // 工具类，禁止实例化
     }
@@ -87,7 +84,6 @@ public final class TestTokenHelper {
 
     /**
      * 解析并获取{@code jwtSecret}。
-     * @return 字符串结果
      */
     private static String resolveJwtSecret() {
         String envSecret = System.getenv("JWT_SECRET");

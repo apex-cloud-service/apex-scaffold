@@ -51,7 +51,6 @@ class CacheLockAspectTest {
 
     /**
      * 设置{@code up}。
-     * @throws Exception 当操作无法完成时
      */
     @BeforeEach
     void setUp() throws Exception {
@@ -61,10 +60,6 @@ class CacheLockAspectTest {
         when(joinPoint.getArgs()).thenReturn(new Object[] {"user-123"});
     }
 
-    /**
-     * 执行 {@code around_LockAcquired_ProceedsAndReturnsResult} 操作。
-     * @throws Throwable 当操作无法完成时
-     */
     @Test
     @DisplayName("around - 成功获取锁并执行目标方法")
     void around_LockAcquired_ProceedsAndReturnsResult() throws Throwable {
@@ -82,10 +77,6 @@ class CacheLockAspectTest {
         verify(joinPoint).proceed();
     }
 
-    /**
-     * 执行 {@code around_LockTimeout_ThrowsRuntimeException} 操作。
-     * @throws Throwable 当操作无法完成时
-     */
     @Test
     @DisplayName("around - 获取锁超时应抛出RuntimeException")
     void around_LockTimeout_ThrowsRuntimeException() throws Throwable {
@@ -103,10 +94,6 @@ class CacheLockAspectTest {
         verify(joinPoint, never()).proceed();
     }
 
-    /**
-     * 执行 {@code around_NonSpelKey_UsesOriginalKey} 操作。
-     * @throws Throwable 当操作无法完成时
-     */
     @Test
     @DisplayName("around - 非SpEL key应直接使用原始字符串")
     void around_NonSpelKey_UsesOriginalKey() throws Throwable {
@@ -123,10 +110,6 @@ class CacheLockAspectTest {
         verify(redissonClient).getLock("cache:lock:user:fixed-key");
     }
 
-    /**
-     * 执行 {@code around_EmptyPrefix_UsesDefaultPrefix} 操作。
-     * @throws Throwable 当操作无法完成时
-     */
     @Test
     @DisplayName("around - 空前缀应使用cache:lock:前缀+key")
     void around_EmptyPrefix_UsesDefaultPrefix() throws Throwable {
@@ -143,10 +126,6 @@ class CacheLockAspectTest {
         verify(redissonClient).getLock("cache:lock::my-key");
     }
 
-    /**
-     * 执行 {@code around_LockAcquiredButMethodThrows_ReleasesLock} 操作。
-     * @throws Throwable 当操作无法完成时
-     */
     @Test
     @DisplayName("around - 获取锁成功但方法执行抛出异常应释放锁")
     void around_LockAcquiredButMethodThrows_ReleasesLock() throws Throwable {
@@ -163,10 +142,6 @@ class CacheLockAspectTest {
         verify(lock).unlock();
     }
 
-    /**
-     * 执行 {@code around_LockAcquiredButNotHeld_DoesNotUnlock} 操作。
-     * @throws Throwable 当操作无法完成时
-     */
     @Test
     @DisplayName("around - 获取锁后isHeldByCurrentThread返回false不应释放锁")
     void around_LockAcquiredButNotHeld_DoesNotUnlock() throws Throwable {
@@ -182,14 +157,6 @@ class CacheLockAspectTest {
         verify(lock, never()).unlock();
     }
 
-    /**
-     * 创建{@code cacheLock}。
-     * @param prefix 参数 {@code prefix}
-     * @param key 参数 {@code key}
-     * @param waitTime 参数 {@code waitTime}
-     * @param timeUnit 参数 {@code timeUnit}
-     * @return 操作结果
-     */
     private CacheLock createCacheLock(String prefix, String key, long waitTime, TimeUnit timeUnit) {
         CacheLock cacheLock = mock(CacheLock.class);
         when(cacheLock.prefix()).thenReturn(prefix);
@@ -203,8 +170,6 @@ class CacheLockAspectTest {
     static class TestService {
         /**
          * 验证 {@code testMethod} 场景。
-         * @param arg0 参数 {@code arg0}
-         * @return 字符串结果
          */
         @CacheLock(prefix = "test", key = "#arg0")
         public String testMethod(String arg0) {

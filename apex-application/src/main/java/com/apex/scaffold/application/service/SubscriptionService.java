@@ -218,8 +218,10 @@ public class SubscriptionService {
     }
 
     /**
-     * 执行 {@code publishSubscriptionExpiredEvent} 操作。
-     * @param sub 参数 {@code sub}
+     * 发布订阅过期领域事件，通知下游服务会员等级变更。
+     *
+     * @param sub 已过期的订阅实体
+     * @throws IllegalStateException 当领域事件持久化失败时
      */
     private void publishSubscriptionExpiredEvent(SubscriptionEntity sub) {
         try {

@@ -22,10 +22,6 @@ class FileUrlUtilTest {
     @Nested
     @DisplayName("parseBucketAndObject 解析URL测试")
     class ParseBucketAndObjectTests {
-
-        /**
-         * 执行 {@code shouldParseStandardHttpsUrl} 操作。
-         */
         @Test
         @DisplayName("解析标准HTTPS URL应返回正确的bucket和object")
         void shouldParseStandardHttpsUrl() {
@@ -38,9 +34,6 @@ class FileUrlUtilTest {
             assertThat(result.objectName()).isEqualTo("my-file.jpg");
         }
 
-        /**
-         * 执行 {@code shouldParseHttpUrl} 操作。
-         */
         @Test
         @DisplayName("解析HTTP URL应返回正确的bucket和object")
         void shouldParseHttpUrl() {
@@ -53,9 +46,6 @@ class FileUrlUtilTest {
             assertThat(result.objectName()).isEqualTo("path/to/file.png");
         }
 
-        /**
-         * 执行 {@code shouldParseRelativePath} 操作。
-         */
         @Test
         @DisplayName("解析相对路径（以/开头）应返回正确结果")
         void shouldParseRelativePath() {
@@ -68,9 +58,6 @@ class FileUrlUtilTest {
             assertThat(result.objectName()).isEqualTo("some-file.txt");
         }
 
-        /**
-         * 执行 {@code shouldParseUrlWithMultiLevelPath} 操作。
-         */
         @Test
         @DisplayName("解析带多级路径的URL：取第一部分为bucket，剩余部分拼接为object")
         void shouldParseUrlWithMultiLevelPath() {
@@ -83,9 +70,6 @@ class FileUrlUtilTest {
             assertThat(result.objectName()).isEqualTo("a/b/c/document.pdf");
         }
 
-        /**
-         * 执行 {@code shouldParseLocalStorageUploadUrl} 操作。
-         */
         @Test
         @DisplayName("解析本地存储上传返回路径时应跳过local-storage代理前缀")
         void shouldParseLocalStorageUploadUrl() {
@@ -98,9 +82,6 @@ class FileUrlUtilTest {
             assertThat(result.objectName()).isEqualTo("2026/07/photo.jpg");
         }
 
-        /**
-         * 执行 {@code shouldParseMinioProxyUrl} 操作。
-         */
         @Test
         @DisplayName("解析MinIO代理路径时应跳过minio前缀")
         void shouldParseMinioProxyUrl() {
@@ -113,9 +94,6 @@ class FileUrlUtilTest {
             assertThat(result.objectName()).isEqualTo("uuid-photo.jpg");
         }
 
-        /**
-         * 执行 {@code shouldParseTosVirtualHostUrl} 操作。
-         */
         @Test
         @DisplayName("解析火山TOS虚拟主机预签名URL应从域名提取bucket")
         void shouldParseTosVirtualHostUrl() {
@@ -128,9 +106,6 @@ class FileUrlUtilTest {
             assertThat(result.objectName()).isEqualTo("2026/07/uuid-photo.jpg");
         }
 
-        /**
-         * 执行 {@code shouldReturnNullForNullUrl} 操作。
-         */
         @Test
         @DisplayName("解析null URL应返回null")
         void shouldReturnNullForNullUrl() {
@@ -139,9 +114,6 @@ class FileUrlUtilTest {
             assertThat(result).isNull();
         }
 
-        /**
-         * 执行 {@code shouldReturnNullForEmptyUrl} 操作。
-         */
         @Test
         @DisplayName("解析空字符串URL应返回null")
         void shouldReturnNullForEmptyUrl() {
@@ -150,9 +122,6 @@ class FileUrlUtilTest {
             assertThat(result).isNull();
         }
 
-        /**
-         * 执行 {@code shouldReturnNullForBlankUrl} 操作。
-         */
         @Test
         @DisplayName("解析空白字符串URL应返回null")
         void shouldReturnNullForBlankUrl() {
@@ -161,9 +130,6 @@ class FileUrlUtilTest {
             assertThat(result).isNull();
         }
 
-        /**
-         * 执行 {@code shouldReturnNullForUrlWithoutPath} 操作。
-         */
         @Test
         @DisplayName("解析无路径的URL（如纯域名）应返回null")
         void shouldReturnNullForUrlWithoutPath() {
@@ -174,9 +140,6 @@ class FileUrlUtilTest {
             assertThat(result).isNull();
         }
 
-        /**
-         * 执行 {@code shouldReturnNullForUrlWithInsufficientPathParts} 操作。
-         */
         @Test
         @DisplayName("解析路径部分不足2段的URL应返回null")
         void shouldReturnNullForUrlWithInsufficientPathParts() {
@@ -187,9 +150,6 @@ class FileUrlUtilTest {
             assertThat(result).isNull();
         }
 
-        /**
-         * 执行 {@code shouldReturnNullForMalformedUrl} 操作。
-         */
         @Test
         @DisplayName("解析格式严重错误的URL应返回null（不抛出异常）")
         void shouldReturnNullForMalformedUrl() {
@@ -200,9 +160,6 @@ class FileUrlUtilTest {
             assertThat(result).isNull();
         }
 
-        /**
-         * 执行 {@code shouldFilterBlankPathSegments} 操作。
-         */
         @Test
         @DisplayName("解析包含空路径段的URL应正确过滤空白段")
         void shouldFilterBlankPathSegments() {
@@ -219,10 +176,6 @@ class FileUrlUtilTest {
     @Nested
     @DisplayName("BucketAndObject 记录类测试")
     class BucketAndObjectTests {
-
-        /**
-         * 执行 {@code shouldCreateBucketAndObjectWithValidParams} 操作。
-         */
         @Test
         @DisplayName("正常构造BucketAndObject应正确设置属性")
         void shouldCreateBucketAndObjectWithValidParams() {
@@ -232,9 +185,6 @@ class FileUrlUtilTest {
             assertThat(bo.objectName()).isEqualTo("path/to/file.txt");
         }
 
-        /**
-         * 执行 {@code shouldThrowExceptionForNullBucketName} 操作。
-         */
         @Test
         @DisplayName("null bucketName应抛出IllegalArgumentException")
         void shouldThrowExceptionForNullBucketName() {
@@ -243,9 +193,6 @@ class FileUrlUtilTest {
                     .withMessage("bucketName 不能为空");
         }
 
-        /**
-         * 执行 {@code shouldThrowExceptionForEmptyBucketName} 操作。
-         */
         @Test
         @DisplayName("空字符串bucketName应抛出IllegalArgumentException")
         void shouldThrowExceptionForEmptyBucketName() {
@@ -254,9 +201,6 @@ class FileUrlUtilTest {
                     .withMessage("bucketName 不能为空");
         }
 
-        /**
-         * 执行 {@code shouldThrowExceptionForBlankBucketName} 操作。
-         */
         @Test
         @DisplayName("空白字符串bucketName应抛出IllegalArgumentException")
         void shouldThrowExceptionForBlankBucketName() {
@@ -265,9 +209,6 @@ class FileUrlUtilTest {
                     .withMessage("bucketName 不能为空");
         }
 
-        /**
-         * 执行 {@code shouldThrowExceptionForNullObjectName} 操作。
-         */
         @Test
         @DisplayName("null objectName应抛出IllegalArgumentException")
         void shouldThrowExceptionForNullObjectName() {
@@ -276,9 +217,6 @@ class FileUrlUtilTest {
                     .withMessage("objectName 不能为空");
         }
 
-        /**
-         * 执行 {@code shouldThrowExceptionForEmptyObjectName} 操作。
-         */
         @Test
         @DisplayName("空字符串objectName应抛出IllegalArgumentException")
         void shouldThrowExceptionForEmptyObjectName() {
@@ -287,9 +225,6 @@ class FileUrlUtilTest {
                     .withMessage("objectName 不能为空");
         }
 
-        /**
-         * 执行 {@code shouldReturnFormattedToString} 操作。
-         */
         @Test
         @DisplayName("toString应返回格式化的字符串")
         void shouldReturnFormattedToString() {
@@ -301,9 +236,6 @@ class FileUrlUtilTest {
             assertThat(str).contains("objectName=test-object.txt");
         }
 
-        /**
-         * 执行 {@code shouldHaveConsistentBucketNameAccessor} 操作。
-         */
         @Test
         @DisplayName("bucketName访问器和构造函数参数应一致")
         void shouldHaveConsistentBucketNameAccessor() {
@@ -313,9 +245,6 @@ class FileUrlUtilTest {
             assertThat(bo.bucketName()).isSameAs(bucketName);
         }
 
-        /**
-         * 执行 {@code shouldHaveConsistentObjectNameAccessor} 操作。
-         */
         @Test
         @DisplayName("objectName访问器和构造函数参数应一致")
         void shouldHaveConsistentObjectNameAccessor() {

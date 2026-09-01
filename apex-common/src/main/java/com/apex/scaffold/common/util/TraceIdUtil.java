@@ -29,6 +29,12 @@ public class TraceIdUtil {
         throw new UnsupportedOperationException("Tool class should not be instantiated");
     }
 
+    /**
+     * 追踪 ID 在 MDC 与 Reactor Context 中使用的键名。
+     *
+     * <p>统一为 {@code "traceId"}，保证日志框架（MDC）与响应式上下文
+     * 使用同一键进行读写。</p>
+     */
     public static final String TRACE_ID_KEY = "traceId";
 
     /**

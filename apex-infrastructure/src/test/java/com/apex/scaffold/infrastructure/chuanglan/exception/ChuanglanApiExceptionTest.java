@@ -16,10 +16,6 @@ import org.junit.jupiter.api.Test;
  * @since 1.0.0
  */
 class ChuanglanApiExceptionTest {
-
-    /**
-     * 执行 {@code constructor_ErrorCodeAndMessage_SetsFields} 操作。
-     */
     @Test
     @DisplayName("构造异常 - 带错误码和消息")
     void constructor_ErrorCodeAndMessage_SetsFields() {
@@ -30,9 +26,6 @@ class ChuanglanApiExceptionTest {
         assertThat(ex.getCause()).isNull();
     }
 
-    /**
-     * 执行 {@code constructor_EmptyErrorCode_SetsFields} 操作。
-     */
     @Test
     @DisplayName("构造异常 - 空错误码")
     void constructor_EmptyErrorCode_SetsFields() {
@@ -42,9 +35,6 @@ class ChuanglanApiExceptionTest {
         assertThat(ex.getMessage()).isEqualTo("余额不足");
     }
 
-    /**
-     * 执行 {@code constructor_NullErrorCode_SetsFields} 操作。
-     */
     @Test
     @DisplayName("构造异常 - null错误码")
     void constructor_NullErrorCode_SetsFields() {
@@ -54,9 +44,6 @@ class ChuanglanApiExceptionTest {
         assertThat(ex.getMessage()).isEqualTo("未知错误");
     }
 
-    /**
-     * 执行 {@code constructor_MessageAndCause_SetsErrorCodeToUnknown} 操作。
-     */
     @Test
     @DisplayName("构造异常 - 带消息和cause，错误码应为UNKNOWN")
     void constructor_MessageAndCause_SetsErrorCodeToUnknown() {
@@ -68,9 +55,6 @@ class ChuanglanApiExceptionTest {
         assertThat(ex.getCause()).isSameAs(cause);
     }
 
-    /**
-     * 执行 {@code constructor_MessageAndNullCause_SetsErrorCodeToUnknown} 操作。
-     */
     @Test
     @DisplayName("构造异常 - 带消息和cause，cause为null")
     void constructor_MessageAndNullCause_SetsErrorCodeToUnknown() {
@@ -81,9 +65,6 @@ class ChuanglanApiExceptionTest {
         assertThat(ex.getCause()).isNull();
     }
 
-    /**
-     * 执行 {@code exception_IsRuntimeException} 操作。
-     */
     @Test
     @DisplayName("ChuanglanApiException 是 RuntimeException 的子类")
     void exception_IsRuntimeException() {

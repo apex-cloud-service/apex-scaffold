@@ -20,10 +20,6 @@ class UserComplianceEntityTest {
     @Nested
     @DisplayName("静态工厂方法 create()")
     class CreateTest {
-
-        /**
-         * 执行 {@code shouldSetUserIdAndDefaultTeenModeDisabled} 操作。
-         */
         @Test
         @DisplayName("创建时应正确设置 userId 且青少年模式默认关闭")
         void shouldSetUserIdAndDefaultTeenModeDisabled() {
@@ -42,10 +38,6 @@ class UserComplianceEntityTest {
     @Nested
     @DisplayName("青少年模式")
     class TeenModeTest {
-
-        /**
-         * 执行 {@code defaultShouldNotBeTeenMode} 操作。
-         */
         @Test
         @DisplayName("默认不应开启青少年模式")
         void defaultShouldNotBeTeenMode() {
@@ -53,9 +45,6 @@ class UserComplianceEntityTest {
             assertFalse(compliance.isTeenModeEnabled());
         }
 
-        /**
-         * 执行 {@code enableTeenModeShouldEnableAndRecordTime} 操作。
-         */
         @Test
         @DisplayName("enableTeenMode() 应开启青少年模式并记录时间")
         void enableTeenModeShouldEnableAndRecordTime() {
@@ -65,9 +54,6 @@ class UserComplianceEntityTest {
             assertNotNull(compliance.getTeenModeSetAt());
         }
 
-        /**
-         * 执行 {@code disableTeenModeShouldDisableAndRecordTime} 操作。
-         */
         @Test
         @DisplayName("disableTeenMode() 应关闭青少年模式并记录时间")
         void disableTeenModeShouldDisableAndRecordTime() {
@@ -80,9 +66,6 @@ class UserComplianceEntityTest {
             assertNotNull(compliance.getTeenModeSetAt());
         }
 
-        /**
-         * 执行 {@code repeatedEnableShouldStayEnabled} 操作。
-         */
         @Test
         @DisplayName("重复开启应保持开启状态")
         void repeatedEnableShouldStayEnabled() {
@@ -92,9 +75,6 @@ class UserComplianceEntityTest {
             assertTrue(compliance.isTeenModeEnabled());
         }
 
-        /**
-         * 执行 {@code nullTeenModeShouldReturnFalse} 操作。
-         */
         @Test
         @DisplayName("teenMode 为 null 时 isTeenModeEnabled 应返回 false")
         void nullTeenModeShouldReturnFalse() {
@@ -107,19 +87,12 @@ class UserComplianceEntityTest {
     @Nested
     @DisplayName("TeenModeStatus 枚举")
     class TeenModeStatusTest {
-
-        /**
-         * 执行 {@code disabledCodeShouldBeZero} 操作。
-         */
         @Test
         @DisplayName("DISABLED 的 code 应为 0")
         void disabledCodeShouldBeZero() {
             assertEquals(0, UserComplianceEntity.TeenModeStatus.DISABLED.getCode());
         }
 
-        /**
-         * 执行 {@code enabledCodeShouldBeOne} 操作。
-         */
         @Test
         @DisplayName("ENABLED 的 code 应为 1")
         void enabledCodeShouldBeOne() {
@@ -130,10 +103,6 @@ class UserComplianceEntityTest {
     @Nested
     @DisplayName("影子封禁 ShadowBan")
     class ShadowBanTest {
-
-        /**
-         * 创建{@code shouldSetShadowBanStageToNone}。
-         */
         @Test
         @DisplayName("创建时影子封禁阶段应为 NONE")
         void createShouldSetShadowBanStageToNone() {
@@ -165,9 +134,6 @@ class UserComplianceEntityTest {
             assertFalse(compliance.isShadowBanned());
         }
 
-        /**
-         * 执行 {@code escalateShadowBanShouldUpgradeStage} 操作。
-         */
         @Test
         @DisplayName("escalateShadowBan() 应逐级升级封禁阶段")
         void escalateShadowBanShouldUpgradeStage() {
@@ -187,9 +153,6 @@ class UserComplianceEntityTest {
             assertEquals("STAGE_3", compliance.getShadowBanStage());
         }
 
-        /**
-         * 执行 {@code liftShadowBanShouldResetStage} 操作。
-         */
         @Test
         @DisplayName("liftShadowBan() 应解除封禁并清空封禁时间")
         void liftShadowBanShouldResetStage() {
@@ -209,10 +172,6 @@ class UserComplianceEntityTest {
     @Nested
     @DisplayName("ShadowBanStage 枚举")
     class ShadowBanStageTest {
-
-        /**
-         * 执行 {@code stageCodesShouldBeCorrect} 操作。
-         */
         @Test
         @DisplayName("各阶段的 code 应正确")
         void stageCodesShouldBeCorrect() {
@@ -222,9 +181,6 @@ class UserComplianceEntityTest {
             assertEquals("STAGE_3", UserComplianceEntity.ShadowBanStage.STAGE_3.getCode());
         }
 
-        /**
-         * 执行 {@code fromCodeShouldParseCorrectly} 操作。
-         */
         @Test
         @DisplayName("fromCode() 应正确解析阶段编码")
         void fromCodeShouldParseCorrectly() {
@@ -241,18 +197,12 @@ class UserComplianceEntityTest {
                     UserComplianceEntity.ShadowBanStage.fromCode("STAGE_3"));
         }
 
-        /**
-         * 执行 {@code fromCodeWithNullShouldReturnNone} 操作。
-         */
         @Test
         @DisplayName("fromCode() 传入 null 应返回 NONE")
         void fromCodeWithNullShouldReturnNone() {
             assertEquals(UserComplianceEntity.ShadowBanStage.NONE, UserComplianceEntity.ShadowBanStage.fromCode(null));
         }
 
-        /**
-         * 执行 {@code fromCodeWithInvalidCodeShouldReturnNone} 操作。
-         */
         @Test
         @DisplayName("fromCode() 传入无效编码应返回 NONE")
         void fromCodeWithInvalidCodeShouldReturnNone() {
@@ -260,9 +210,6 @@ class UserComplianceEntityTest {
                     UserComplianceEntity.ShadowBanStage.NONE, UserComplianceEntity.ShadowBanStage.fromCode("INVALID"));
         }
 
-        /**
-         * 执行 {@code nextShouldReturnNextStage} 操作。
-         */
         @Test
         @DisplayName("next() 应返回下一阶段")
         void nextShouldReturnNextStage() {

@@ -20,10 +20,6 @@ class RoleEntityTest {
     @Nested
     @DisplayName("静态工厂方法 create()")
     class CreateTest {
-
-        /**
-         * 执行 {@code withValidParamsShouldCreateEnabledRole} 操作。
-         */
         @Test
         @DisplayName("使用有效参数应创建启用角色并设置正确初始状态")
         void withValidParamsShouldCreateEnabledRole() {
@@ -43,9 +39,6 @@ class RoleEntityTest {
             assertThat(role.isDeleted()).isFalse();
         }
 
-        /**
-         * 创建{@code timeShouldEqualUpdateTime}。
-         */
         @Test
         @DisplayName("创建时间应与更新时间一致")
         void createTimeShouldEqualUpdateTime() {
@@ -57,10 +50,6 @@ class RoleEntityTest {
     @Nested
     @DisplayName("有效性判断 isEnabled()")
     class IsEnabledTest {
-
-        /**
-         * 执行 {@code newlyCreatedRoleShouldBeEnabled} 操作。
-         */
         @Test
         @DisplayName("新创建的角色应处于启用状态")
         void newlyCreatedRoleShouldBeEnabled() {
@@ -68,9 +57,6 @@ class RoleEntityTest {
             assertThat(role.isEnabled()).isTrue();
         }
 
-        /**
-         * 执行 {@code afterDisableShouldBeDisabled} 操作。
-         */
         @Test
         @DisplayName("禁用后应返回 false")
         void afterDisableShouldBeDisabled() {
@@ -79,9 +65,6 @@ class RoleEntityTest {
             assertThat(role.isEnabled()).isFalse();
         }
 
-        /**
-         * 执行 {@code afterEnableShouldBeEnabled} 操作。
-         */
         @Test
         @DisplayName("启用后应返回 true")
         void afterEnableShouldBeEnabled() {
@@ -91,9 +74,6 @@ class RoleEntityTest {
             assertThat(role.isEnabled()).isTrue();
         }
 
-        /**
-         * 执行 {@code nullStatusShouldReturnFalse} 操作。
-         */
         @Test
         @DisplayName("status 为 null 时应返回 false")
         void nullStatusShouldReturnFalse() {
@@ -105,10 +85,6 @@ class RoleEntityTest {
     @Nested
     @DisplayName("信息更新 updateInfo()")
     class UpdateInfoTest {
-
-        /**
-         * 执行 {@code shouldUpdateNameAndDescription} 操作。
-         */
         @Test
         @DisplayName("应正确更新名称和描述")
         void shouldUpdateNameAndDescription() {
@@ -120,9 +96,6 @@ class RoleEntityTest {
             assertThat(role.getCode()).isEqualTo("ROLE");
         }
 
-        /**
-         * 执行 {@code shouldTouchUpdateTime} 操作。
-         */
         @Test
         @DisplayName("应刷新更新时间")
         void shouldTouchUpdateTime() {
@@ -132,9 +105,6 @@ class RoleEntityTest {
             assertThat(role.getUpdateTime()).isAfterOrEqualTo(originalUpdateTime);
         }
 
-        /**
-         * 执行 {@code shouldNotAffectStatus} 操作。
-         */
         @Test
         @DisplayName("不应影响角色状态")
         void shouldNotAffectStatus() {
@@ -147,10 +117,6 @@ class RoleEntityTest {
     @Nested
     @DisplayName("启用/禁用 enable() / disable()")
     class EnableDisableTest {
-
-        /**
-         * 执行 {@code disableShouldSetStatusToZero} 操作。
-         */
         @Test
         @DisplayName("disable() 应将状态设为 0")
         void disableShouldSetStatusToZero() {
@@ -160,9 +126,6 @@ class RoleEntityTest {
             assertThat(role.isEnabled()).isFalse();
         }
 
-        /**
-         * 执行 {@code enableShouldSetStatusToOne} 操作。
-         */
         @Test
         @DisplayName("enable() 应将状态设为 1")
         void enableShouldSetStatusToOne() {
@@ -173,9 +136,6 @@ class RoleEntityTest {
             assertThat(role.isEnabled()).isTrue();
         }
 
-        /**
-         * 执行 {@code disableShouldTouchUpdateTime} 操作。
-         */
         @Test
         @DisplayName("disable() 应刷新更新时间")
         void disableShouldTouchUpdateTime() {
@@ -185,9 +145,6 @@ class RoleEntityTest {
             assertThat(role.getUpdateTime()).isAfterOrEqualTo(originalUpdateTime);
         }
 
-        /**
-         * 执行 {@code enableShouldTouchUpdateTime} 操作。
-         */
         @Test
         @DisplayName("enable() 应刷新更新时间")
         void enableShouldTouchUpdateTime() {
@@ -198,9 +155,6 @@ class RoleEntityTest {
             assertThat(role.getUpdateTime()).isAfterOrEqualTo(originalUpdateTime);
         }
 
-        /**
-         * 执行 {@code repeatedDisableShouldStayDisabled} 操作。
-         */
         @Test
         @DisplayName("重复禁用应保持禁用状态")
         void repeatedDisableShouldStayDisabled() {
@@ -210,9 +164,6 @@ class RoleEntityTest {
             assertThat(role.isEnabled()).isFalse();
         }
 
-        /**
-         * 执行 {@code repeatedEnableShouldStayEnabled} 操作。
-         */
         @Test
         @DisplayName("重复启用应保持启用状态")
         void repeatedEnableShouldStayEnabled() {

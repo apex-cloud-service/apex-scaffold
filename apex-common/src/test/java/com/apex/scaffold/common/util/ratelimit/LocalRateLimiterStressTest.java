@@ -31,18 +31,11 @@ class LocalRateLimiterStressTest {
         LocalRateLimiter.clearIdleInstances();
     }
 
-    /**
-     * 执行 {@code tearDown} 操作。
-     */
     @AfterEach
     void tearDown() {
         LocalRateLimiter.clearIdleInstances();
     }
 
-    /**
-     * 执行 {@code slidingWindowAccuracy} 操作。
-     * @throws InterruptedException 当操作无法完成时
-     */
     @Test
     @DisplayName("滑动窗口精度 - 10 permits/s 下每秒发送11个请求持续5秒，接受量 ≈ 50（±10%）")
     void slidingWindowAccuracy() throws InterruptedException {
@@ -77,9 +70,6 @@ class LocalRateLimiterStressTest {
         assertThat(rejected.get()).isPositive();
     }
 
-    /**
-     * 执行 {@code burstHandling} 操作。
-     */
     @Test
     @DisplayName("突发流量处理 - 100 permits/s 窗口，150个请求在100ms内突发达成，约100接受50拒绝")
     void burstHandling() {
@@ -110,10 +100,6 @@ class LocalRateLimiterStressTest {
         assertThat(rejected.get()).isEqualTo(burstSize - permits);
     }
 
-    /**
-     * 执行 {@code clearIdleRecovery} 操作。
-     * @throws InterruptedException 当操作无法完成时
-     */
     @Test
     @DisplayName("清理空闲实例并恢复 - 使用后 clearIdle(0) 移除，重建后正常工作")
     void clearIdleRecovery() throws InterruptedException {
@@ -136,9 +122,6 @@ class LocalRateLimiterStressTest {
         assertThat(newLimiter.tryAcquire()).isTrue();
     }
 
-    /**
-     * 执行 {@code memoryStability} 操作。
-     */
     @Test
     @DisplayName("内存稳定性 - 创建1000个不同 key 的限流器，使用后清理，验证内存可回收")
     void memoryStability() {
@@ -170,10 +153,6 @@ class LocalRateLimiterStressTest {
         assertThat(recreated.tryAcquire()).isTrue();
     }
 
-    /**
-     * 执行 {@code concurrentTryAcquire} 操作。
-     * @throws InterruptedException 当操作无法完成时
-     */
     @Test
     @DisplayName("多线程并发 tryAcquire - 10线程×50次请求共500次，2000 permits下全部接受，验证线程安全")
     void concurrentTryAcquire() throws InterruptedException {
@@ -215,9 +194,6 @@ class LocalRateLimiterStressTest {
         assertThat(rejected.get()).isZero();
     }
 
-    /**
-     * 执行 {@code currentCountAccuracy} 操作。
-     */
     @Test
     @DisplayName("getCurrentCount - 窗口内计数准确反映实际请求数")
     void currentCountAccuracy() {
@@ -233,9 +209,6 @@ class LocalRateLimiterStressTest {
         assertThat(limiter.getCurrentCount()).isEqualTo(5);
     }
 
-    /**
-     * 执行 {@code permitsAndWindowMsReturnedCorrectly} 操作。
-     */
     @Test
     @DisplayName("getPermits 和 getWindowMs - 返回构造时传入的值")
     void permitsAndWindowMsReturnedCorrectly() {

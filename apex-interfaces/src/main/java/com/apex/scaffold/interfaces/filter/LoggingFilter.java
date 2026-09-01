@@ -53,9 +53,9 @@ public class LoggingFilter implements WebFilter {
     /**
      * {@inheritDoc}
      *
-     * @param exchange 方法输入 {@code exchange}，类型为 {@code ServerWebExchange}
-     * @param chain 方法输入 {@code chain}，类型为 {@code WebFilterChain}
-     * @return 操作结果，类型为 {@code Mono<Void>}
+     * @param exchange 当前请求-响应交换对象
+     * @param chain    过滤器链
+     * @return 过滤链执行结果
      */
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {

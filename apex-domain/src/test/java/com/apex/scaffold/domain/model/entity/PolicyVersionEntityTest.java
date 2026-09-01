@@ -46,9 +46,6 @@ class PolicyVersionEntityTest extends BaseEntityTest<PolicyVersionEntity> {
             assertThat(entity.getContentUrl()).isEqualTo("https://example.com/privacy/v2.html");
         }
 
-        /**
-         * 执行 {@code newEntityShouldHaveNullFields} 操作。
-         */
         @Test
         @DisplayName("新创建的实体字段应为 null")
         void newEntityShouldHaveNullFields() {
@@ -63,10 +60,6 @@ class PolicyVersionEntityTest extends BaseEntityTest<PolicyVersionEntity> {
     @Nested
     @DisplayName("业务场景")
     class BusinessScenarioTest {
-
-        /**
-         * 执行 {@code shouldSupportUserAgreementPolicy} 操作。
-         */
         @Test
         @DisplayName("用户协议版本")
         void shouldSupportUserAgreementPolicy() {
@@ -79,9 +72,6 @@ class PolicyVersionEntityTest extends BaseEntityTest<PolicyVersionEntity> {
             assertThat(entity.getVersion()).isEqualTo("v3.0");
         }
 
-        /**
-         * 执行 {@code shouldSupportPrivacyPolicyType} 操作。
-         */
         @Test
         @DisplayName("隐私政策版本")
         void shouldSupportPrivacyPolicyType() {

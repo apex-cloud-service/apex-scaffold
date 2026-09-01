@@ -313,6 +313,12 @@ public class CircuitBreakerService implements CircuitBreakerPort {
             return new CircuitBreakerStateBuilder();
         }
 
+        /**
+         * 熔断器状态快照构建器。
+         *
+         * <p>以流式方式装配 {@link CircuitBreakerState} 的各个字段，
+         * 所有字段均可选，最终通过 {@link #build()} 生成不可变快照。</p>
+         */
         public static class CircuitBreakerStateBuilder {
             private String name;
             private String state;
@@ -323,11 +329,10 @@ public class CircuitBreakerService implements CircuitBreakerPort {
             private long slowCalls;
 
             /**
-             * name
+             * 设置断路器名称。
              *
-             * @param name 参数
-             *
-             * @return 结果
+             * @param name 断路器名称
+             * @return 当前构建器实例（支持链式调用）
              */
             public CircuitBreakerStateBuilder name(String name) {
                 this.name = name;
@@ -335,11 +340,10 @@ public class CircuitBreakerService implements CircuitBreakerPort {
             }
 
             /**
-             * state
+             * 设置断路器当前状态。
              *
-             * @param state 参数
-             *
-             * @return 结果
+             * @param state 状态（CLOSED/OPEN/HALF_OPEN）
+             * @return 当前构建器实例（支持链式调用）
              */
             public CircuitBreakerStateBuilder state(String state) {
                 this.state = state;
@@ -347,11 +351,10 @@ public class CircuitBreakerService implements CircuitBreakerPort {
             }
 
             /**
-             * 失败ureRate
+             * 设置失败率（百分比）。
              *
-             * @param failureRate 参数
-             *
-             * @return 结果
+             * @param failureRate 失败率（0-100）
+             * @return 当前构建器实例（支持链式调用）
              */
             public CircuitBreakerStateBuilder failureRate(double failureRate) {
                 this.failureRate = failureRate;
@@ -359,11 +362,10 @@ public class CircuitBreakerService implements CircuitBreakerPort {
             }
 
             /**
-             * 成功Rate
+             * 设置成功率（百分比）。
              *
-             * @param successRate 参数
-             *
-             * @return 结果
+             * @param successRate 成功率（0-100）
+             * @return 当前构建器实例（支持链式调用）
              */
             public CircuitBreakerStateBuilder successRate(double successRate) {
                 this.successRate = successRate;
@@ -371,11 +373,10 @@ public class CircuitBreakerService implements CircuitBreakerPort {
             }
 
             /**
-             * totalCalls
+             * 设置总调用次数。
              *
-             * @param totalCalls 参数
-             *
-             * @return 结果
+             * @param totalCalls 总调用次数
+             * @return 当前构建器实例（支持链式调用）
              */
             public CircuitBreakerStateBuilder totalCalls(long totalCalls) {
                 this.totalCalls = totalCalls;
@@ -383,11 +384,10 @@ public class CircuitBreakerService implements CircuitBreakerPort {
             }
 
             /**
-             * 失败edCalls
+             * 设置失败调用次数。
              *
-             * @param failedCalls 参数
-             *
-             * @return 结果
+             * @param failedCalls 失败调用次数
+             * @return 当前构建器实例（支持链式调用）
              */
             public CircuitBreakerStateBuilder failedCalls(long failedCalls) {
                 this.failedCalls = failedCalls;
@@ -395,11 +395,10 @@ public class CircuitBreakerService implements CircuitBreakerPort {
             }
 
             /**
-             * slowCalls
+             * 设置慢调用次数。
              *
-             * @param slowCalls 参数
-             *
-             * @return 结果
+             * @param slowCalls 慢调用次数
+             * @return 当前构建器实例（支持链式调用）
              */
             public CircuitBreakerStateBuilder slowCalls(long slowCalls) {
                 this.slowCalls = slowCalls;
@@ -407,9 +406,12 @@ public class CircuitBreakerService implements CircuitBreakerPort {
             }
 
             /**
-             * 构建
+             * 构建熔断器状态快照。
              *
-             * @return 结果
+             * <p>将当前构建器已装配的字段复制到新的 {@link CircuitBreakerState} 实例，
+             * 返回后继续修改构建器不影响已生成的结果。</p>
+             *
+             * @return 装配完成的状态快照
              */
             public CircuitBreakerState build() {
                 CircuitBreakerState s = new CircuitBreakerState();

@@ -133,13 +133,11 @@ class BaiduTextModerationRetryTest {
     }
 
     /**
-     * 执行 {@code adapterWithRetry} 逻辑。
+     * 构造带重试参数的文本审核适配器。
      *
-     * @param maxRetryAttempts maxRetryAttempts 参数
-     *
-     * @param retryBaseDelayMillis retryBaseDelayMillis 参数
-     *
-     * @return 执行结果
+     * @param maxRetryAttempts      最大重试次数
+     * @param retryBaseDelayMillis  重试基础延迟毫秒数
+     * @return 文本审核适配器
      */
     private BaiduTextModerationAdapter adapterWithRetry(int maxRetryAttempts, int retryBaseDelayMillis) {
         return new BaiduTextModerationAdapter(

@@ -17,16 +17,9 @@ import org.junit.jupiter.api.Test;
  */
 @DisplayName("RequireRole 注解测试")
 class RequireRoleTest {
-
-    /**
-     * 执行 {@code defaultMethod} 操作。
-     */
     @RequireRole("ADMIN")
     public void defaultMethod() {}
 
-    /**
-     * 执行 {@code customMethod} 操作。
-     */
     @RequireRole(
             value = {"ADMIN", "USER"},
             requireAll = true)
@@ -34,7 +27,6 @@ class RequireRoleTest {
 
     /**
      * 验证 {@code testDefaultAttributes} 场景。
-     * @throws Exception 当操作无法完成时
      */
     @Test
     @DisplayName("测试单个角色的默认值")
@@ -49,7 +41,6 @@ class RequireRoleTest {
 
     /**
      * 验证 {@code testCustomAttributes} 场景。
-     * @throws Exception 当操作无法完成时
      */
     @Test
     @DisplayName("测试多角色和 requireAll 为 true")

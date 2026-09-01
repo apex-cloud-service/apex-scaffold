@@ -47,13 +47,6 @@ public class SmsCodeServiceImpl implements SmsCodeService, SmsCodePurposeService
      * @return 发送完成信号
      */
     @Override
-    /**
-     * 发送AndStore
-     *
-     * @param phone 参数
-     *
-     * @return 结果
-     */
     public Mono<Void> sendAndStore(String phone) {
         log.debug("默认短信入口委托到生产短信供应商");
         return delegate.sendAndStore(phone);
@@ -76,15 +69,6 @@ public class SmsCodeServiceImpl implements SmsCodeService, SmsCodePurposeService
      * @return 验证结果
      */
     @Override
-    /**
-     * 验证
-     *
-     * @param phone 参数
-     *
-     * @param code 参数
-     *
-     * @return 结果
-     */
     public Mono<Boolean> validate(String phone, String code) {
         return delegate.validate(phone, code);
     }

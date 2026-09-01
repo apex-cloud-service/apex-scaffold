@@ -75,29 +75,29 @@ public class CircuitBreakerProperties {
         lenient.setPermittedCallsInHalfOpen(15);
     }
 
-    // 手动 getter（Lombok @Data 在某些场景不生成方法）
+    // 手动 getter：配置绑定优先使用显式声明的方法
     /**
-     * 获取DefaultConfig
+     * 获取默认模式的熔断器配置。
      *
-     * @return 结果
+     * @return 默认模式配置
      */
     public ModeConfig getDefaultConfig() {
         return defaultConfig;
     }
 
     /**
-     * 获取Strict
+     * 获取严格模式的熔断器配置。
      *
-     * @return 结果
+     * @return 严格模式配置
      */
     public ModeConfig getStrict() {
         return strict;
     }
 
     /**
-     * 获取Lenient
+     * 获取宽松模式的熔断器配置。
      *
-     * @return 结果
+     * @return 宽松模式配置
      */
     public ModeConfig getLenient() {
         return lenient;
@@ -122,92 +122,91 @@ public class CircuitBreakerProperties {
         /** 半开状态允许通过的最大调用次数 */
         private int permittedCallsInHalfOpen;
 
-        // 手动 getter/setter（Lombok @Data 在某些场景不生成静态内部类方法）
         /**
-         * 获取FailureRateThreshold
+         * 获取失败率阈值（百分比），超过此值触发熔断。
          *
-         * @return 结果
+         * @return 失败率阈值（百分比）
          */
         public float getFailureRateThreshold() {
             return failureRateThreshold;
         }
 
         /**
-         * 设置FailureRateThreshold
+         * 设置失败率阈值（百分比），超过此值触发熔断。
          *
-         * @param failureRateThreshold 参数
+         * @param failureRateThreshold 失败率阈值（百分比）
          */
         public void setFailureRateThreshold(float failureRateThreshold) {
             this.failureRateThreshold = failureRateThreshold;
         }
 
         /**
-         * 获取WaitDurationInOpenState
+         * 获取熔断打开后进入半开状态的等待时长。
          *
-         * @return 结果
+         * @return 等待时长
          */
         public Duration getWaitDurationInOpenState() {
             return waitDurationInOpenState;
         }
 
         /**
-         * 设置WaitDurationInOpenState
+         * 设置熔断打开后进入半开状态的等待时长。
          *
-         * @param waitDurationInOpenState 参数
+         * @param waitDurationInOpenState 等待时长
          */
         public void setWaitDurationInOpenState(Duration waitDurationInOpenState) {
             this.waitDurationInOpenState = waitDurationInOpenState;
         }
 
         /**
-         * 获取SlidingWindowSize
+         * 获取滑动窗口大小。
          *
-         * @return 结果
+         * @return 滑动窗口大小
          */
         public int getSlidingWindowSize() {
             return slidingWindowSize;
         }
 
         /**
-         * 设置SlidingWindowSize
+         * 设置滑动窗口大小。
          *
-         * @param slidingWindowSize 参数
+         * @param slidingWindowSize 滑动窗口大小
          */
         public void setSlidingWindowSize(int slidingWindowSize) {
             this.slidingWindowSize = slidingWindowSize;
         }
 
         /**
-         * 获取MinimumNumberOfCalls
+         * 获取最小调用次数，低于此值不触发熔断。
          *
-         * @return 结果
+         * @return 最小调用次数
          */
         public int getMinimumNumberOfCalls() {
             return minimumNumberOfCalls;
         }
 
         /**
-         * 设置MinimumNumberOfCalls
+         * 设置最小调用次数，低于此值不触发熔断。
          *
-         * @param minimumNumberOfCalls 参数
+         * @param minimumNumberOfCalls 最小调用次数
          */
         public void setMinimumNumberOfCalls(int minimumNumberOfCalls) {
             this.minimumNumberOfCalls = minimumNumberOfCalls;
         }
 
         /**
-         * 获取PermittedCallsInHalfOpen
+         * 获取半开状态允许通过的最大调用次数。
          *
-         * @return 结果
+         * @return 半开状态允许通过的最大调用次数
          */
         public int getPermittedCallsInHalfOpen() {
             return permittedCallsInHalfOpen;
         }
 
         /**
-         * 设置PermittedCallsInHalfOpen
+         * 设置半开状态允许通过的最大调用次数。
          *
-         * @param permittedCallsInHalfOpen 参数
+         * @param permittedCallsInHalfOpen 半开状态允许通过的最大调用次数
          */
         public void setPermittedCallsInHalfOpen(int permittedCallsInHalfOpen) {
             this.permittedCallsInHalfOpen = permittedCallsInHalfOpen;

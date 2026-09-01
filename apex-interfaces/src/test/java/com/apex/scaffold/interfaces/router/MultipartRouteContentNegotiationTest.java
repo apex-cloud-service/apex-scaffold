@@ -58,11 +58,10 @@ class MultipartRouteContentNegotiationTest {
     }
 
     /**
-     * 执行 {@code routes} 逻辑。
+     * 构造包含文件处理器的 API 路由。
      *
-     * @param fileHandler fileHandler 参数
-     *
-     * @return 执行结果
+     * @param fileHandler 文件处理器
+     * @return 路由函数
      */
     private RouterFunction<ServerResponse> routes(FileHandler fileHandler) {
         return new ApiRouter()

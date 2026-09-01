@@ -18,28 +18,18 @@ class UserStageTest {
     @Nested
     @DisplayName("枚举常量定义")
     class EnumConstantsTest {
-
-        /**
-         * 执行 {@code shouldHaveTwoConstants} 操作。
-         */
         @Test
         @DisplayName("应包含 2 个枚举常量")
         void shouldHaveTwoConstants() {
             assertThat(UserStage.values()).hasSize(2);
         }
 
-        /**
-         * 执行 {@code shouldContainNewbie} 操作。
-         */
         @Test
         @DisplayName("应包含 NEWBIE 常量")
         void shouldContainNewbie() {
             assertThat(UserStage.valueOf("NEWBIE")).isEqualTo(UserStage.NEWBIE);
         }
 
-        /**
-         * 执行 {@code shouldContainMature} 操作。
-         */
         @Test
         @DisplayName("应包含 MATURE 常量")
         void shouldContainMature() {
@@ -50,19 +40,12 @@ class UserStageTest {
     @Nested
     @DisplayName("name() 方法")
     class NameMethodTest {
-
-        /**
-         * 执行 {@code newbieNameShouldBeNEWBIE} 操作。
-         */
         @Test
         @DisplayName("NEWBIE 的 name() 应返回 NEWBIE")
         void newbieNameShouldBeNEWBIE() {
             assertThat(UserStage.NEWBIE.name()).isEqualTo("NEWBIE");
         }
 
-        /**
-         * 执行 {@code matureNameShouldBeMATURE} 操作。
-         */
         @Test
         @DisplayName("MATURE 的 name() 应返回 MATURE")
         void matureNameShouldBeMATURE() {
@@ -73,19 +56,12 @@ class UserStageTest {
     @Nested
     @DisplayName("ordinal() 方法")
     class OrdinalMethodTest {
-
-        /**
-         * 执行 {@code newbieOrdinalShouldBeZero} 操作。
-         */
         @Test
         @DisplayName("NEWBIE 的 ordinal 应为 0")
         void newbieOrdinalShouldBeZero() {
             assertThat(UserStage.NEWBIE.ordinal()).isZero();
         }
 
-        /**
-         * 执行 {@code matureOrdinalShouldBeOne} 操作。
-         */
         @Test
         @DisplayName("MATURE 的 ordinal 应为 1")
         void matureOrdinalShouldBeOne() {
@@ -96,10 +72,6 @@ class UserStageTest {
     @Nested
     @DisplayName("values() 方法")
     class ValuesMethodTest {
-
-        /**
-         * 执行 {@code valuesShouldReturnConstantsInDeclarationOrder} 操作。
-         */
         @Test
         @DisplayName("values() 应返回按声明顺序排列的常量")
         void valuesShouldReturnConstantsInDeclarationOrder() {
@@ -112,10 +84,6 @@ class UserStageTest {
     @Nested
     @DisplayName("fromVoteCount(int) 静态工厂方法")
     class FromVoteCountMethodTest {
-
-        /**
-         * 执行 {@code countLessOrEqualThirtyShouldReturnNewbie} 操作。
-         */
         @Test
         @DisplayName("voteCount <= 30 应返回 NEWBIE")
         void countLessOrEqualThirtyShouldReturnNewbie() {
@@ -123,9 +91,6 @@ class UserStageTest {
             assertThat(UserStage.fromVoteCount(30)).isEqualTo(UserStage.NEWBIE);
         }
 
-        /**
-         * 执行 {@code countGreaterThanThirtyShouldReturnMature} 操作。
-         */
         @Test
         @DisplayName("voteCount > 30 应返回 MATURE")
         void countGreaterThanThirtyShouldReturnMature() {

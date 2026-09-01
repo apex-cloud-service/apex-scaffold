@@ -17,7 +17,8 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>采集三个维度的硬件标识并拼接后做 SHA-256 哈希，生成 64 字符十六进制指纹串，
  * 用于 License 机器绑定验证。指纹采集过程容错降级：任一维度采集失败时
- * 该维度回退为空字符串，不影响其他维度的采集和最终哈希生成。</p>
+ * 该维度回退为空字符串，不影响其他维度的采集和最终哈希生成。
+ * CPU 与主板维度均通过 {@link OsFamily#detect()} 识别操作系统后按策略分派采集。</p>
  *
  * <h2>采集维度</h2>
  * <ul>
@@ -116,15 +117,13 @@ public final class MachineFingerprintCollector {
      * @return CPU 标识字符串；采集失败时返回空字符串
      */
     private static String collectCpuId() {
-        String osName = System.getProperty("os.name", "").toLowerCase();
         try {
-            if (osName.contains("linux")) {
-                return collectCpuIdLinux();
-            } else if (osName.contains("mac") || osName.contains("darwin")) {
-                return collectCpuIdMac();
-            } else if (osName.contains("windows")) {
-                return System.getenv("PROCESSOR_IDENTIFIER");
-            }
+            return switch (OsFamily.detect()) {
+                case LINUX -> collectCpuIdLinux();
+                case MAC -> collectCpuIdMac();
+                case WINDOWS -> System.getenv("PROCESSOR_IDENTIFIER");
+                case UNKNOWN -> "";
+            };
         } catch (Exception e) {
             log.debug("CPU 标识采集失败: {}", e.getMessage());
         }
@@ -174,34 +173,55 @@ public final class MachineFingerprintCollector {
      * @return 主板序列号；采集失败时返回空字符串
      */
     private static String collectBoardSerial() {
-        String osName = System.getProperty("os.name", "").toLowerCase();
         try {
-            if (osName.contains("linux")) {
-                String result = execCommand("dmidecode", "-s", "baseboard-serial-number");
-                return result == null ? "" : result.trim();
-            } else if (osName.contains("mac") || osName.contains("darwin")) {
-                String output = execCommand("system_profiler", "SPHardwareDataType");
-                if (output != null) {
-                    for (String line : output.split("\n")) {
-                        if (line.contains("Serial Number")) {
-                            String value = line.substring(line.indexOf(':') + 1).trim();
-                            return value.isEmpty() ? "" : value;
-                        }
-                    }
-                }
-            } else if (osName.contains("windows")) {
-                String output = execCommand("wmic", "baseboard", "get", "serialnumber");
-                if (output != null) {
-                    for (String line : output.split("\n")) {
-                        String trimmed = line.trim();
-                        if (!trimmed.isEmpty() && !trimmed.equalsIgnoreCase("SerialNumber")) {
-                            return trimmed;
-                        }
-                    }
-                }
-            }
+            return switch (OsFamily.detect()) {
+                case LINUX -> collectBoardSerialLinux();
+                case MAC -> collectBoardSerialMac();
+                case WINDOWS -> collectBoardSerialWindows();
+                case UNKNOWN -> "";
+            };
         } catch (Exception e) {
             log.debug("主板序列号采集失败（容器内通常不可用）: {}", e.getMessage());
+        }
+        return "";
+    }
+
+    /**
+     * Linux 下通过 dmidecode 采集主板序列号。
+     */
+    private static String collectBoardSerialLinux() throws IOException, InterruptedException {
+        String result = execCommand("dmidecode", "-s", "baseboard-serial-number");
+        return result == null ? "" : result.trim();
+    }
+
+    /**
+     * macOS 下通过 system_profiler 提取主板序列号。
+     */
+    private static String collectBoardSerialMac() throws IOException, InterruptedException {
+        String output = execCommand("system_profiler", "SPHardwareDataType");
+        if (output != null) {
+            for (String line : output.split("\n")) {
+                if (line.contains("Serial Number")) {
+                    String value = line.substring(line.indexOf(':') + 1).trim();
+                    return value.isEmpty() ? "" : value;
+                }
+            }
+        }
+        return "";
+    }
+
+    /**
+     * Windows 下通过 wmic 提取主板序列号。
+     */
+    private static String collectBoardSerialWindows() throws IOException, InterruptedException {
+        String output = execCommand("wmic", "baseboard", "get", "serialnumber");
+        if (output != null) {
+            for (String line : output.split("\n")) {
+                String trimmed = line.trim();
+                if (!trimmed.isEmpty() && !trimmed.equalsIgnoreCase("SerialNumber")) {
+                    return trimmed;
+                }
+            }
         }
         return "";
     }

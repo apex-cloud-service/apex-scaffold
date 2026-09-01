@@ -65,16 +65,14 @@ public class RedisDataCleanupRunner implements ApplicationRunner {
     }
 
     /**
-     * 执行 {@code run} 逻辑。
+     * 应用启动后执行 Redis 旧格式数据清理。
      *
-     * @param args args 参数
+     * <p>受 {@code apex.redis.cleanup-on-startup} 开关控制，并通过标记 Key 保证
+     * 每次启动仅执行一次。</p>
+     *
+     * @param args 应用启动参数
      */
     @Override
-    /**
-     * 运行
-     *
-     * @param args 参数
-     */
     public void run(ApplicationArguments args) {
         if (!cleanupOnStartup) {
             log.info("Redis 数据清理已禁用 (apex.redis.cleanup-on-startup=false)，跳过清理");

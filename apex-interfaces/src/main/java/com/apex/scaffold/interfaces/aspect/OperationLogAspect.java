@@ -10,7 +10,9 @@ import com.apex.scaffold.domain.model.entity.OperationLogEntity;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
+import java.util.function.Predicate;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -293,43 +295,20 @@ public class OperationLogAspect {
                 return;
             }
 
-            String userAgent = null;
-            for (Object arg : args) {
-                if (arg instanceof ServerWebExchange exchange) {
-                    ServerHttpRequest request = exchange.getRequest();
-                    logEntity.setRequestUri(truncateString(String.valueOf(request.getURI()), 500));
-                    logEntity.setRequestMethod(
-                            truncateString(request.getMethod().name(), 10));
-                    logEntity.setIp(RequestUtil.getClientIp(request));
-                    userAgent = request.getHeaders().getFirst("User-Agent");
-                    break;
-                } else if (arg instanceof ServerHttpRequest request) {
-                    logEntity.setRequestUri(truncateString(String.valueOf(request.getURI()), 500));
-                    logEntity.setRequestMethod(
-                            truncateString(request.getMethod().name(), 10));
-                    logEntity.setIp(RequestUtil.getClientIp(request));
-                    userAgent = request.getHeaders().getFirst("User-Agent");
-                    break;
-                } else if (arg instanceof ServerRequest serverRequest) {
-                    ServerWebExchange exchange = serverRequest.exchange();
-                    ServerHttpRequest request = exchange.getRequest();
-                    logEntity.setRequestUri(truncateString(String.valueOf(request.getURI()), 500));
-                    logEntity.setRequestMethod(
-                            truncateString(request.getMethod().name(), 10));
-                    logEntity.setIp(RequestUtil.getClientIp(request));
-                    userAgent = request.getHeaders().getFirst("User-Agent");
-                    break;
+            ServerHttpRequest request = AspectRequestUtil.resolveServerHttpRequest(args);
+            if (request != null) {
+                logEntity.setRequestUri(truncateString(String.valueOf(request.getURI()), 500));
+                logEntity.setRequestMethod(truncateString(request.getMethod().name(), 10));
+                logEntity.setIp(RequestUtil.getClientIp(request));
+                String userAgent = request.getHeaders().getFirst("User-Agent");
+                // 基于 IP 设置操作地点
+                if (logEntity.getIp() != null && !logEntity.getIp().isBlank()) {
+                    logEntity.setLocation(resolveLocation(logEntity.getIp()));
                 }
-            }
-
-            // 基于 IP 设置操作地点
-            if (logEntity.getIp() != null && !logEntity.getIp().isBlank()) {
-                logEntity.setLocation(resolveLocation(logEntity.getIp()));
-            }
-
-            // 解析 User-Agent 获取设备类型、浏览器和操作系统
-            if (userAgent != null && !userAgent.isBlank()) {
-                parseUserAgent(logEntity, userAgent);
+                // 解析 User-Agent 获取设备类型、浏览器和操作系统
+                if (userAgent != null && !userAgent.isBlank()) {
+                    parseUserAgent(logEntity, userAgent);
+                }
             }
 
             if (logParams && args.length > 0) {
@@ -392,7 +371,9 @@ public class OperationLogAspect {
     /**
      * 解析 User-Agent 字符串，提取设备类型、浏览器和操作系统信息并设置到日志实体。
      *
-     * <p>采用简单规则匹配方式识别主流浏览器和操作系统，无需引入第三方 UA 解析库。
+     * <p>采用声明式规则表（{@link UaRule}）+ {@link Predicate} 按序匹配识别主流浏览器、
+     * 操作系统与设备类型，无需引入第三方 UA 解析库。规则表在类加载时构建，
+     * 每条规则表达「命中即返回」的匹配语义，消除手写 if-else 链的维护成本。</p>
      *
      * @param logEntity 日志实体
      * @param userAgent User-Agent 字符串
@@ -401,49 +382,91 @@ public class OperationLogAspect {
         if (userAgent == null || userAgent.isBlank()) {
             return;
         }
+        logEntity.setDeviceType(matchDeviceType(userAgent));
+        logEntity.setBrowser(matchBrowser(userAgent));
+        logEntity.setOs(matchOs(userAgent));
+    }
 
-        // 识别设备类型
-        if (userAgent.contains("Mobile") || userAgent.contains("Android") && !userAgent.contains("Tablet")) {
-            logEntity.setDeviceType("Mobile");
-        } else if (userAgent.contains("iPad") || userAgent.contains("Tablet")) {
-            logEntity.setDeviceType("Tablet");
-        } else {
-            logEntity.setDeviceType("Desktop");
-        }
+    /**
+     * UA 识别规则：由命中断言与目标取值构成的有序规则项。
+     *
+     * @param matcher 命中断言（接收 User-Agent 原文）
+     * @param value   命中时输出的目标值
+     */
+    private record UaRule(Predicate<String> matcher, String value) {
 
-        // 识别浏览器
-        if (userAgent.contains("Edg/")) {
-            logEntity.setBrowser("Edge");
-        } else if (userAgent.contains("Chrome/") && !userAgent.contains("Edg/")) {
-            logEntity.setBrowser("Chrome");
-        } else if (userAgent.contains("Safari/") && !userAgent.contains("Chrome/")) {
-            logEntity.setBrowser("Safari");
-        } else if (userAgent.contains("Firefox/")) {
-            logEntity.setBrowser("Firefox");
-        } else if (userAgent.contains("OPR/") || userAgent.contains("Opera/")) {
-            logEntity.setBrowser("Opera");
-        } else if (userAgent.contains("MicroMessenger/")) {
-            logEntity.setBrowser("WeChat");
-        } else if (userAgent.contains("QQ/")) {
-            logEntity.setBrowser("QQ");
-        } else {
-            logEntity.setBrowser("Unknown");
+        /** 判断给定 User-Agent 是否命中本规则。 */
+        boolean matches(String userAgent) {
+            return matcher.test(userAgent);
         }
+    }
 
-        // 识别操作系统
-        if (userAgent.contains("Windows NT")) {
-            logEntity.setOs("Windows");
-        } else if (userAgent.contains("Mac OS X") || userAgent.contains("macOS")) {
-            logEntity.setOs("macOS");
-        } else if (userAgent.contains("Android")) {
-            logEntity.setOs("Android");
-        } else if (userAgent.contains("iPhone") || userAgent.contains("iPad") || userAgent.contains("iOS")) {
-            logEntity.setOs("iOS");
-        } else if (userAgent.contains("Linux") && !userAgent.contains("Android")) {
-            logEntity.setOs("Linux");
-        } else {
-            logEntity.setOs("Unknown");
-        }
+    /** 设备类型规则表：按序首匹配，Mobile 优先于 Tablet/Desktop。 */
+    private static final List<UaRule> DEVICE_TYPE_RULES = List.of(
+            new UaRule(ua -> ua.contains("Mobile") || ua.contains("Android") && !ua.contains("Tablet"), "Mobile"),
+            new UaRule(ua -> ua.contains("iPad") || ua.contains("Tablet"), "Tablet"),
+            new UaRule(ua -> true, "Desktop"));
+
+    /** 浏览器规则表：按序首匹配，Edge 需在 Chrome 前（Edge UA 同时含 Chrome 标记）。 */
+    private static final List<UaRule> BROWSER_RULES = List.of(
+            new UaRule(ua -> ua.contains("Edg/"), "Edge"),
+            new UaRule(ua -> ua.contains("Chrome/") && !ua.contains("Edg/"), "Chrome"),
+            new UaRule(ua -> ua.contains("Safari/") && !ua.contains("Chrome/"), "Safari"),
+            new UaRule(ua -> ua.contains("Firefox/"), "Firefox"),
+            new UaRule(ua -> ua.contains("OPR/") || ua.contains("Opera/"), "Opera"),
+            new UaRule(ua -> ua.contains("MicroMessenger/"), "WeChat"),
+            new UaRule(ua -> ua.contains("QQ/"), "QQ"),
+            new UaRule(ua -> true, "Unknown"));
+
+    /** 操作系统规则表：按序首匹配，Android 需在 Linux 前（Android 基于 Linux）。 */
+    private static final List<UaRule> OS_RULES = List.of(
+            new UaRule(ua -> ua.contains("Windows NT"), "Windows"),
+            new UaRule(ua -> ua.contains("Mac OS X") || ua.contains("macOS"), "macOS"),
+            new UaRule(ua -> ua.contains("Android"), "Android"),
+            new UaRule(ua -> ua.contains("iPhone") || ua.contains("iPad") || ua.contains("iOS"), "iOS"),
+            new UaRule(ua -> ua.contains("Linux") && !ua.contains("Android"), "Linux"),
+            new UaRule(ua -> true, "Unknown"));
+
+    /**
+     * 按规则表首匹配输出设备类型。
+     *
+     * @param userAgent User-Agent 原文（已校验非空）
+     * @return 设备类型，规则表兜底返回 Desktop
+     */
+    private static String matchDeviceType(String userAgent) {
+        return DEVICE_TYPE_RULES.stream()
+                .filter(rule -> rule.matches(userAgent))
+                .findFirst()
+                .map(UaRule::value)
+                .orElse("Desktop");
+    }
+
+    /**
+     * 按规则表首匹配输出浏览器名称。
+     *
+     * @param userAgent User-Agent 原文（已校验非空）
+     * @return 浏览器名称，规则表兜底返回 Unknown
+     */
+    private static String matchBrowser(String userAgent) {
+        return BROWSER_RULES.stream()
+                .filter(rule -> rule.matches(userAgent))
+                .findFirst()
+                .map(UaRule::value)
+                .orElse("Unknown");
+    }
+
+    /**
+     * 按规则表首匹配输出操作系统名称。
+     *
+     * @param userAgent User-Agent 原文（已校验非空）
+     * @return 操作系统名称，规则表兜底返回 Unknown
+     */
+    private static String matchOs(String userAgent) {
+        return OS_RULES.stream()
+                .filter(rule -> rule.matches(userAgent))
+                .findFirst()
+                .map(UaRule::value)
+                .orElse("Unknown");
     }
 
     /**

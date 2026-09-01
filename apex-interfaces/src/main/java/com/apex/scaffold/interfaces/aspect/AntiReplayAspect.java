@@ -37,8 +37,8 @@ import reactor.core.publisher.Mono;
  *
  * <h2>函数式端点适配</h2>
  * <p>项目 WebFlux 纯函数式端点（RouterFunction）的 Handler 方法参数形态为 {@link ServerRequest}，
- * 而非 {@link ServerWebExchange}。本切面通过 {@link #resolveHeaders(Object[])} 兼容两种形态，
- * 避免函数式端点上标注 {@code @AntiReplay} 被静默跳过。</p>
+ * 而非 {@link ServerWebExchange}。本切面通过 {@link AspectRequestUtil#resolveHttpHeaders(Object[])}
+ * 兼容两种形态，避免函数式端点上标注 {@code @AntiReplay} 被静默跳过。</p>
  *
  * <h2>防重放键命名规范</h2>
  * <pre>
@@ -126,7 +126,7 @@ public class AntiReplayAspect {
      */
     @Around("@annotation(antiReplay)")
     public Object around(ProceedingJoinPoint joinPoint, AntiReplay antiReplay) throws Throwable {
-        HttpHeaders headers = resolveHeaders(joinPoint.getArgs());
+        HttpHeaders headers = AspectRequestUtil.resolveHttpHeaders(joinPoint.getArgs());
         if (headers == null) {
             log.warn("未找到 ServerWebExchange/ServerRequest 参数，跳过防重放校验");
             return joinPoint.proceed();
@@ -183,32 +183,5 @@ public class AntiReplayAspect {
         }
 
         return joinPoint.proceed();
-    }
-
-    /**
-     * 从方法参数列表中解析请求头，兼容函数式端点与注解式端点。
-     *
-     * <p>遍历目标方法的所有参数：优先返回 {@link ServerWebExchange} 的请求头；
-     * 其次返回函数式 {@link ServerRequest} 的请求头（{@code asHttpHeaders()} 转换）。
-     * 若均未找到则返回 {@code null}，此时切面将跳过防重放校验。</p>
-     *
-     * @param args 目标方法的参数数组
-     * @return 请求头，未找到请求对象时返回 {@code null}
-     */
-    private HttpHeaders resolveHeaders(Object[] args) {
-        if (args == null) {
-            return null;
-        }
-        for (Object arg : args) {
-            if (arg instanceof ServerWebExchange exchange) {
-                return exchange.getRequest().getHeaders();
-            }
-        }
-        for (Object arg : args) {
-            if (arg instanceof ServerRequest request) {
-                return request.headers().asHttpHeaders();
-            }
-        }
-        return null;
     }
 }

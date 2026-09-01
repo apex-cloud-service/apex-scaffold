@@ -39,13 +39,6 @@ public class ReportRepositoryImpl implements ReportRepository {
      * @return 报告实体；若不存在则返回空 Mono
      */
     @Override
-    /**
-     * 查找ById
-     *
-     * @param id 参数
-     *
-     * @return 结果
-     */
     public Mono<ReportEntity> findById(Long id) {
         return Mono.fromCallable(() -> mapper.selectById(id))
                 .subscribeOn(BlockingIoSchedulers.jdbc())
@@ -62,15 +55,6 @@ public class ReportRepositoryImpl implements ReportRepository {
      * @return 最新报告实体；若不存在则返回空 Mono
      */
     @Override
-    /**
-     * 查找LatestByUserAndType
-     *
-     * @param userId 参数
-     *
-     * @param reportType 参数
-     *
-     * @return 结果
-     */
     public Mono<ReportEntity> findLatestByUserAndType(Long userId, String reportType) {
         return Mono.fromCallable(() -> mapper.selectOne(new LambdaQueryWrapper<ReportPO>()
                         .eq(ReportPO::getOwnerUserId, userId)
@@ -91,13 +75,6 @@ public class ReportRepositoryImpl implements ReportRepository {
      * @return 保存后的报告实体
      */
     @Override
-    /**
-     * 保存
-     *
-     * @param entity 参数
-     *
-     * @return 结果
-     */
     public Mono<ReportEntity> save(ReportEntity entity) {
         return Mono.fromCallable(() -> {
                     ReportPO po = reportPoConverter.toPo(entity);

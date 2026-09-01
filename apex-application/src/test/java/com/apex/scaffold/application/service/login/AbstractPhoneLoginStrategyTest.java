@@ -58,11 +58,6 @@ class AbstractPhoneLoginStrategyTest {
         private volatile String generatedDeviceId;
 
         /**
-         * 创建 {@code TestPhoneLoginStrategy} 实例。
-         * @param userService 参数 {@code userService}
-         * @param tokenService 参数 {@code tokenService}
-         * @param loginResponseHelper 参数 {@code loginResponseHelper}
-         * @param authenticatedPhone 参数 {@code authenticatedPhone}
          */
         TestPhoneLoginStrategy(
                 UserService userService,
@@ -121,10 +116,6 @@ class AbstractPhoneLoginStrategyTest {
     @Nested
     @DisplayName("login 模板方法")
     class LoginTemplateTests {
-
-        /**
-         * 执行 {@code existingUserShouldNotBeNewUser} 操作。
-         */
         @Test
         @DisplayName("已存在用户登录：不应创建新用户")
         void existingUserShouldNotBeNewUser() {
@@ -146,9 +137,6 @@ class AbstractPhoneLoginStrategyTest {
             verify(userService, never()).create(any());
         }
 
-        /**
-         * 执行 {@code newUserShouldBeCreated} 操作。
-         */
         @Test
         @DisplayName("未注册手机号登录：不创建用户并返回注册票据")
         void unregisteredPhoneShouldReturnRegistrationTicket() {
@@ -175,9 +163,6 @@ class AbstractPhoneLoginStrategyTest {
             verify(userService, never()).create(any(UserEntity.class));
         }
 
-        /**
-         * 执行 {@code subjectShouldUseOpenIdWhenAvailable} 操作。
-         */
         @Test
         @DisplayName("subject选择：有openId时使用openId生成Token")
         void subjectShouldUseOpenIdWhenAvailable() {
@@ -200,9 +185,6 @@ class AbstractPhoneLoginStrategyTest {
             verify(tokenService).generateRefreshToken("openid-subject-test", "device-1");
         }
 
-        /**
-         * 执行 {@code subjectShouldUsePhoneWhenNoOpenId} 操作。
-         */
         @Test
         @DisplayName("subject选择：无openId时使用phone生成Token")
         void subjectShouldUsePhoneWhenNoOpenId() {

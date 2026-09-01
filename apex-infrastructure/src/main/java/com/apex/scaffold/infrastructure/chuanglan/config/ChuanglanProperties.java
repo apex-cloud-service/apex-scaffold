@@ -470,10 +470,12 @@ public class ChuanglanProperties {
         }
 
         /**
-         * 执行 {@code requireConfigured} 操作。
-         * @param config 参数 {@code config}
-         * @param platform 参数 {@code platform}
-         * @return 操作结果
+         * 校验闪验平台配置是否完整，未配置时抛出异常。
+         *
+         * @param config   待校验的闪验平台配置
+         * @param platform 平台名称（用于异常信息提示）
+         * @return 校验通过的闪验平台配置
+         * @throws IllegalStateException 配置为空或未配置时抛出
          */
         private FlashPlatform requireConfigured(FlashPlatform config, String platform) {
             if (config == null || !config.isConfigured()) {

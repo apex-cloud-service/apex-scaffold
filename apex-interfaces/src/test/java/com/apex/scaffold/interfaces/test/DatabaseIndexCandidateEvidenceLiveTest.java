@@ -99,9 +99,9 @@ class DatabaseIndexCandidateEvidenceLiveTest {
     }
 
     /**
-     * 执行 {@code groupMaxQueries} 逻辑。
+     * 构造各业务表分组统计最大行数的 SQL 映射。
      *
-     * @return 执行结果
+     * @return 表名到分组最大值查询 SQL 的有序映射
      */
     private static Map<String, String> groupMaxQueries() {
         Map<String, String> queries = new LinkedHashMap<>();
@@ -154,13 +154,12 @@ class DatabaseIndexCandidateEvidenceLiveTest {
     }
 
     /**
-     * 执行 {@code property} 逻辑。
+     * 解析配置值：优先取环境变量，否则从 YAML 占位符中提取默认值。
      *
-     * @param yaml yaml 参数
-     *
-     * @param name name 参数
-     *
-     * @return 执行结果
+     * @param yaml 数据库配置 YAML 内容
+     * @param name 配置项名称
+     * @return 解析后的配置值
+     * @throws IllegalStateException 环境变量与 YAML 中均未配置时抛出
      */
     private String property(String yaml, String name) {
         String environmentValue = System.getenv(name);
@@ -175,15 +174,12 @@ class DatabaseIndexCandidateEvidenceLiveTest {
     }
 
     /**
-     * 执行 {@code number} 逻辑。
+     * 执行单值查询 SQL 并返回首行首列数值。
      *
-     * @param connection connection 参数
-     *
-     * @param sql sql 参数
-     *
-     * @return 执行结果
-     *
-     * @throws Exception 执行失败时
+     * @param connection 数据库连接
+     * @param sql        单值查询 SQL
+     * @return 查询结果数值
+     * @throws Exception 查询或断言失败时抛出
      */
     private long number(Connection connection, String sql) throws Exception {
         try (Statement statement = connection.createStatement();
@@ -194,15 +190,12 @@ class DatabaseIndexCandidateEvidenceLiveTest {
     }
 
     /**
-     * 执行 {@code row} 逻辑。
+     * 执行查询 SQL 并将首行各列以竖线拼接返回。
      *
-     * @param connection connection 参数
-     *
-     * @param sql sql 参数
-     *
-     * @return 执行结果
-     *
-     * @throws Exception 执行失败时
+     * @param connection 数据库连接
+     * @param sql        查询 SQL
+     * @return 首行各列拼接后的字符串
+     * @throws Exception 查询或断言失败时抛出
      */
     private String row(Connection connection, String sql) throws Exception {
         try (Statement statement = connection.createStatement();
@@ -220,9 +213,9 @@ class DatabaseIndexCandidateEvidenceLiveTest {
     }
 
     /**
-     * 执行 {@code projectRoot} 逻辑。
+     * 定位多模块工程根目录。
      *
-     * @return 执行结果
+     * @return 包含 apex-interfaces 模块的工程根目录
      */
     private Path projectRoot() {
         Path current = Path.of(System.getProperty("user.dir"));

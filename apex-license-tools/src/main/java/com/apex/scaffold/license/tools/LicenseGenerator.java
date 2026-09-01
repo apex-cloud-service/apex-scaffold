@@ -14,6 +14,7 @@ import java.security.KeyPair;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -172,9 +173,9 @@ public class LicenseGenerator {
     }
 
     /**
-     * 命令行入口
+     * 命令行入口。
      *
-     * <p>用法:</p>
+     * <p>支持以下子命令：</p>
      * <pre>
      *   # 生成密钥对
      *   java LicenseGenerator gen-keys &lt;private.key&gt; &lt;public.key&gt;
@@ -186,78 +187,123 @@ public class LicenseGenerator {
      *   java LicenseGenerator gen-license &lt;private.key&gt; &lt;public.key&gt; &lt;output.json&gt; \
      *        &lt;version:BASIC|STANDARD|ENTERPRISE&gt; &lt;customer&gt; &lt;valid-days&gt; [feature1,feature2,...] [--fingerprint &lt;hash&gt;]
      * </pre>
+     *
+     * <p>子命令通过 {@link Map} 分发表按首个参数定位，注册式扩展可读性与维护性更高。</p>
+     *
+     * @param args 命令行参数
      */
     public static void main(String[] args) {
+        Map<String, CommandHandler> dispatcher = buildDispatcher();
+        if (args.length < 1) {
+            printUsage();
+            return;
+        }
+        CommandHandler handler = dispatcher.get(args[0]);
+        if (handler == null) {
+            System.err.println("未知命令: " + args[0]);
+            printUsage();
+            return;
+        }
         try {
-            if (args.length < 1) {
-                printUsage();
-                return;
-            }
-
-            String command = args[0];
-
-            if ("gen-keys".equals(command)) {
-                // 生成密钥对
-                String privateKeyFile = args[1];
-                String publicKeyFile = args[2];
-                generateNewKeys(privateKeyFile, publicKeyFile);
-                System.out.println("密钥对已生成: " + privateKeyFile + " / " + publicKeyFile);
-
-            } else if ("gen-fingerprint".equals(command)) {
-                // 采集当前机器指纹
-                String fingerprint = MachineFingerprintCollector.collect();
-                if (fingerprint == null || fingerprint.isBlank()) {
-                    System.err.println("错误: 机器指纹采集失败，请检查系统权限");
-                    System.exit(1);
-                }
-                System.out.println("机器指纹（SHA-256）:");
-                System.out.println(fingerprint);
-                System.out.println("");
-                System.out.println("请将此指纹发给卖方用于 License 签发。");
-
-            } else if ("gen-license".equals(command)) {
-                String privateKeyFile = args[1];
-                String publicKeyFile = args[2];
-                String outputFile = args[3];
-                LicenseVersion version =
-                        args.length > 4 ? LicenseVersion.valueOf(args[4].toUpperCase()) : LicenseVersion.ENTERPRISE;
-                String customerName = args.length > 5 ? args[5] : "示例客户";
-                int validDays = args.length > 6 ? Integer.parseInt(args[6]) : 365;
-                String[] features = args.length > 7 && !args[7].startsWith("--") ? args[7].split(",") : null;
-
-                // 解析 --fingerprint 可选参数
-                String machineFingerprint = null;
-                for (int i = (features != null ? 8 : 7); i < args.length; i++) {
-                    if ("--fingerprint".equals(args[i]) && i + 1 < args.length) {
-                        machineFingerprint = args[i + 1];
-                        break;
-                    }
-                }
-
-                LicenseGenerator generator = loadKeys(privateKeyFile, publicKeyFile);
-                LicenseInfo license = generator.generateLicense(
-                        customerName,
-                        "customer@example.com",
-                        version,
-                        LocalDateTime.now(),
-                        LocalDateTime.now().plusDays(validDays),
-                        -1,
-                        -1,
-                        features,
-                        machineFingerprint);
-
-                generator.saveToFile(license, outputFile);
-                System.out.println("License已生成: " + outputFile
-                        + " (版本: " + version + ", 客户: " + customerName
-                        + (machineFingerprint != null ? ", 机器指纹: 已绑定" : ", 机器指纹: 未绑定") + ")");
-            } else {
-                printUsage();
-            }
-
+            handler.execute(args);
         } catch (Exception e) {
             log.error("执行失败", e);
             System.err.println("错误: " + e.getMessage());
         }
+    }
+
+    /**
+     * 构建子命令分发表。
+     *
+     * @return 命令名到处理函数的映射
+     */
+    private static Map<String, CommandHandler> buildDispatcher() {
+        return Map.of(
+                "gen-keys", LicenseGenerator::handleGenKeys,
+                "gen-fingerprint", LicenseGenerator::handleGenFingerprint,
+                "gen-license", LicenseGenerator::handleGenLicense);
+    }
+
+    /**
+     * 处理 gen-keys 子命令：生成并保存密钥对。
+     *
+     * @param args 命令行参数，args[1]/args[2] 为私钥/公钥文件路径
+     * @throws Exception 生成或保存失败
+     */
+    private static void handleGenKeys(String[] args) throws Exception {
+        if (args.length < 3) {
+            throw new IllegalArgumentException("gen-keys 需要 <private.key> <public.key> 两个参数");
+        }
+        String privateKeyFile = args[1];
+        String publicKeyFile = args[2];
+        generateNewKeys(privateKeyFile, publicKeyFile);
+        System.out.println("密钥对已生成: " + privateKeyFile + " / " + publicKeyFile);
+    }
+
+    /**
+     * 处理 gen-fingerprint 子命令：采集并打印当前机器指纹。
+     *
+     * @param args 命令行参数（无额外参数）
+     */
+    private static void handleGenFingerprint(String[] args) {
+        String fingerprint = MachineFingerprintCollector.collect();
+        if (fingerprint == null || fingerprint.isBlank()) {
+            System.err.println("错误: 机器指纹采集失败，请检查系统权限");
+            System.exit(1);
+        }
+        System.out.println("机器指纹（SHA-256）:");
+        System.out.println(fingerprint);
+        System.out.println("");
+        System.out.println("请将此指纹发给卖方用于 License 签发。");
+    }
+
+    /**
+     * 处理 gen-license 子命令：生成并保存 License 文件。
+     *
+     * <p>参数顺序：&lt;private.key&gt; &lt;public.key&gt; &lt;output.json&gt; &lt;version&gt;
+     * &lt;customer&gt; &lt;valid-days&gt; [feature1,...] [--fingerprint &lt;hash&gt;]。</p>
+     *
+     * @param args 命令行参数
+     * @throws Exception 加载密钥、生成或保存 License 失败
+     */
+    private static void handleGenLicense(String[] args) throws Exception {
+        if (args.length < 4) {
+            throw new IllegalArgumentException("gen-license 至少需要 <private.key> <public.key> <output.json> 三个参数");
+        }
+        String privateKeyFile = args[1];
+        String publicKeyFile = args[2];
+        String outputFile = args[3];
+        LicenseVersion version =
+                args.length > 4 ? LicenseVersion.valueOf(args[4].toUpperCase()) : LicenseVersion.ENTERPRISE;
+        String customerName = args.length > 5 ? args[5] : "示例客户";
+        int validDays = args.length > 6 ? Integer.parseInt(args[6]) : 365;
+        String[] features = args.length > 7 && !args[7].startsWith("--") ? args[7].split(",") : null;
+
+        // 解析 --fingerprint 可选参数
+        String machineFingerprint = null;
+        for (int i = (features != null ? 8 : 7); i < args.length; i++) {
+            if ("--fingerprint".equals(args[i]) && i + 1 < args.length) {
+                machineFingerprint = args[i + 1];
+                break;
+            }
+        }
+
+        LicenseGenerator generator = loadKeys(privateKeyFile, publicKeyFile);
+        LicenseInfo license = generator.generateLicense(
+                customerName,
+                "customer@example.com",
+                version,
+                LocalDateTime.now(),
+                LocalDateTime.now().plusDays(validDays),
+                -1,
+                -1,
+                features,
+                machineFingerprint);
+
+        generator.saveToFile(license, outputFile);
+        System.out.println("License已生成: " + outputFile
+                + " (版本: " + version + ", 客户: " + customerName
+                + (machineFingerprint != null ? ", 机器指纹: 已绑定" : ", 机器指纹: 未绑定") + ")");
     }
 
     private static void printUsage() {
@@ -266,5 +312,22 @@ public class LicenseGenerator {
         System.out.println("  采集机器指纹: java LicenseGenerator gen-fingerprint");
         System.out.println(
                 "  生成License: java LicenseGenerator gen-license <private.key> <public.key> <output.json> <version> <customer> <days> [feature1,feature2,...] [--fingerprint <hash>]");
+    }
+
+    /**
+     * 支持受检异常的命令处理函数式接口。
+     *
+     * <p>标准 {@link java.util.function.Consumer} 不允许抛出受检异常，而各子命令处理逻辑
+     * 需抛出 {@link Exception}，故定义本接口并在 {@link #main} 中统一捕获。</p>
+     */
+    @FunctionalInterface
+    private interface CommandHandler {
+        /**
+         * 执行命令处理逻辑。
+         *
+         * @param args 命令行参数
+         * @throws Exception 命令执行失败
+         */
+        void execute(String[] args) throws Exception;
     }
 }

@@ -53,9 +53,6 @@ class UserConsentEntityTest extends BaseEntityTest<UserConsentEntity> {
             assertThat(consent.getDeviceId()).isEqualTo("device-123");
         }
 
-        /**
-         * 执行 {@code newEntityShouldHaveNullFields} 操作。
-         */
         @Test
         @DisplayName("新创建的实体字段应为 null")
         void newEntityShouldHaveNullFields() {
@@ -73,10 +70,6 @@ class UserConsentEntityTest extends BaseEntityTest<UserConsentEntity> {
     @Nested
     @DisplayName("业务场景")
     class BusinessScenarioTest {
-
-        /**
-         * 执行 {@code shouldRecordPrivacyConsent} 操作。
-         */
         @Test
         @DisplayName("用户同意隐私协议记录")
         void shouldRecordPrivacyConsent() {
@@ -94,9 +87,6 @@ class UserConsentEntityTest extends BaseEntityTest<UserConsentEntity> {
             assertThat(consent.getVersion()).isEqualTo("2.0");
         }
 
-        /**
-         * 执行 {@code shouldRecordConsentDenial} 操作。
-         */
         @Test
         @DisplayName("用户拒绝协议记录")
         void shouldRecordConsentDenial() {
@@ -109,9 +99,6 @@ class UserConsentEntityTest extends BaseEntityTest<UserConsentEntity> {
             assertThat(consent.getAgreed()).isEqualTo(0);
         }
 
-        /**
-         * 执行 {@code shouldSupportTermsPolicyType} 操作。
-         */
         @Test
         @DisplayName("支持服务协议类型")
         void shouldSupportTermsPolicyType() {
@@ -120,9 +107,6 @@ class UserConsentEntityTest extends BaseEntityTest<UserConsentEntity> {
             assertThat(consent.getPolicyType()).isEqualTo("TERMS");
         }
 
-        /**
-         * 执行 {@code shouldSupportMultipleChannels} 操作。
-         */
         @Test
         @DisplayName("支持多渠道记录")
         void shouldSupportMultipleChannels() {

@@ -44,10 +44,6 @@ class LoggingFilterTest {
     }
 
     // ==================== filter_NormalRequest ====================
-
-    /**
-     * 执行 {@code filter_NormalRequest} 操作。
-     */
     @Test
     @DisplayName("filter_NormalRequest: verify chain.filter called for normal request")
     void filter_NormalRequest() {
@@ -63,10 +59,6 @@ class LoggingFilterTest {
     }
 
     // ==================== filter_ShouldSkipHealthCheck ====================
-
-    /**
-     * 执行 {@code filter_ShouldSkipHealthCheck} 操作。
-     */
     @Test
     @DisplayName("filter_ShouldSkipHealthCheck: verify health check paths skipped")
     void filter_ShouldSkipHealthCheck() {
@@ -81,10 +73,6 @@ class LoggingFilterTest {
     }
 
     // ==================== filter_ShouldSkipActuator ====================
-
-    /**
-     * 执行 {@code filter_ShouldSkipActuator} 操作。
-     */
     @Test
     @DisplayName("filter_ShouldSkipActuator: verify actuator paths skipped")
     void filter_ShouldSkipActuator() {
@@ -100,10 +88,6 @@ class LoggingFilterTest {
     }
 
     // ==================== filter_ShouldSkipSwagger ====================
-
-    /**
-     * 执行 {@code filter_ShouldSkipSwagger} 操作。
-     */
     @Test
     @DisplayName("filter_ShouldSkipSwagger: verify swagger paths skipped")
     void filter_ShouldSkipSwagger() {

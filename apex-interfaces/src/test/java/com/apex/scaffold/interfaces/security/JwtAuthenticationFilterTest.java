@@ -86,17 +86,11 @@ class JwtAuthenticationFilterTest {
         when(messageUtils.get(any(Locale.class), any())).thenReturn("");
     }
 
-    /**
-     * 执行 {@code tearDown} 操作。
-     */
     @AfterEach
     void tearDown() {
         jwtUtilMockedStatic.close();
     }
 
-    /**
-     * 执行 {@code filter_withProjectV1ApiWithoutToken_shouldReturnUnauthorized} 操作。
-     */
     @Test
     @DisplayName("普通业务接口未提供Token应返回401")
     void filter_withProjectV1ApiWithoutToken_shouldReturnUnauthorized() {
@@ -180,9 +174,6 @@ class JwtAuthenticationFilterTest {
         verifyNoInteractions(tokenBlacklistService, chain);
     }
 
-    /**
-     * 执行 {@code filter_withoutToken_shouldReturnUnauthorized} 操作。
-     */
     @Test
     @DisplayName("未提供Token应返回401错误")
     void filter_withoutToken_shouldReturnUnauthorized() {
@@ -197,9 +188,6 @@ class JwtAuthenticationFilterTest {
         assertThat(exchange.getResponse().getStatusCode()).isEqualTo(HttpStatusCode.valueOf(401));
     }
 
-    /**
-     * 执行 {@code filter_withBlacklistedToken_shouldReturnUnauthorized} 操作。
-     */
     @Test
     @DisplayName("Token在黑名单中应返回401错误")
     void filter_withBlacklistedToken_shouldReturnUnauthorized() {
@@ -217,9 +205,6 @@ class JwtAuthenticationFilterTest {
         assertThat(exchange.getResponse().getStatusCode()).isEqualTo(HttpStatusCode.valueOf(401));
     }
 
-    /**
-     * 执行 {@code filter_withValidToken_shouldAuthenticate} 操作。
-     */
     @Test
     @DisplayName("有效Token应通过认证并设置SecurityContext")
     void filter_withValidToken_shouldAuthenticate() {
@@ -382,9 +367,6 @@ class JwtAuthenticationFilterTest {
         verify(roleRepository, org.mockito.Mockito.times(2)).findByUserId(10L);
     }
 
-    /**
-     * 执行 {@code filter_withRefreshToken_shouldReturnUnauthorized} 操作。
-     */
     @Test
     @DisplayName("RefreshToken不得访问业务接口")
     void filter_withRefreshToken_shouldReturnUnauthorized() {
@@ -403,9 +385,6 @@ class JwtAuthenticationFilterTest {
         verifyNoInteractions(userRepository, chain);
     }
 
-    /**
-     * 执行 {@code filter_withMissingUser_shouldReturnUnauthorized} 操作。
-     */
     @Test
     @DisplayName("Token对应用户不存在时应拒绝认证")
     void filter_withMissingUser_shouldReturnUnauthorized() {
@@ -483,9 +462,6 @@ class JwtAuthenticationFilterTest {
         verifyNoInteractions(chain);
     }
 
-    /**
-     * 执行 {@code filter_withExpiredToken_shouldReturnUnauthorized} 操作。
-     */
     @Test
     @DisplayName("过期Token应返回401错误")
     void filter_withExpiredToken_shouldReturnUnauthorized() {
@@ -506,9 +482,6 @@ class JwtAuthenticationFilterTest {
         assertThat(exchange.getResponse().getStatusCode()).isEqualTo(HttpStatusCode.valueOf(401));
     }
 
-    /**
-     * 执行 {@code filter_withInvalidToken_shouldReturnUnauthorized} 操作。
-     */
     @Test
     @DisplayName("无效Token应返回401错误")
     void filter_withInvalidToken_shouldReturnUnauthorized() {
@@ -527,9 +500,6 @@ class JwtAuthenticationFilterTest {
         assertThat(exchange.getResponse().getStatusCode()).isEqualTo(HttpStatusCode.valueOf(401));
     }
 
-    /**
-     * 执行 {@code addTokenToBlacklist_shouldDelegate} 操作。
-     */
     @Test
     @DisplayName("添加Token到黑名单应委托给TokenBlacklistService")
     void addTokenToBlacklist_shouldDelegate() {
@@ -542,10 +512,6 @@ class JwtAuthenticationFilterTest {
         verify(tokenBlacklistService).add(VALID_TOKEN, expireTime);
     }
 
-    /**
-     * 执行 {@code mockClaims} 操作。
-     * @return 操作结果
-     */
     private Claims mockClaims() {
         Claims claims = org.mockito.Mockito.mock(Claims.class);
         when(claims.getSubject()).thenReturn(TEST_OPEN_ID);

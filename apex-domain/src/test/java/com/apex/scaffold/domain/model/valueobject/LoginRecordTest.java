@@ -23,10 +23,6 @@ class LoginRecordTest {
     @Nested
     @DisplayName("of 工厂方法")
     class OfTests {
-
-        /**
-         * 执行 {@code shouldCreateWithValidParams} 操作。
-         */
         @Test
         @DisplayName("有效参数应创建成功")
         void shouldCreateWithValidParams() {
@@ -36,9 +32,6 @@ class LoginRecordTest {
             assertThat(record.getLoginIp()).isEqualTo("192.168.1.1");
         }
 
-        /**
-         * 执行 {@code shouldCreateWithNullIp} 操作。
-         */
         @Test
         @DisplayName("IP为null时应创建成功")
         void shouldCreateWithNullIp() {
@@ -47,9 +40,6 @@ class LoginRecordTest {
             assertThat(record.getLoginIp()).isNull();
         }
 
-        /**
-         * 执行 {@code shouldCreateWithBlankIp} 操作。
-         */
         @Test
         @DisplayName("空白IP应规范化为null")
         void shouldCreateWithBlankIp() {
@@ -57,9 +47,6 @@ class LoginRecordTest {
             assertThat(record.getLoginIp()).isNull();
         }
 
-        /**
-         * 执行 {@code shouldThrowExceptionWhenTimeIsNull} 操作。
-         */
         @Test
         @DisplayName("登录时间为null时应抛出异常")
         void shouldThrowExceptionWhenTimeIsNull() {
@@ -68,9 +55,6 @@ class LoginRecordTest {
                     .hasMessageContaining("登录时间不能为空");
         }
 
-        /**
-         * 执行 {@code shouldThrowExceptionWhenInvalidIp} 操作。
-         */
         @Test
         @DisplayName("无效IP格式应抛出异常")
         void shouldThrowExceptionWhenInvalidIp() {
@@ -83,10 +67,6 @@ class LoginRecordTest {
     @Nested
     @DisplayName("now 工厂方法")
     class NowTests {
-
-        /**
-         * 执行 {@code shouldCreateRecordWithCurrentTime} 操作。
-         */
         @Test
         @DisplayName("应创建当前时间的登录记录")
         void shouldCreateRecordWithCurrentTime() {
@@ -100,10 +80,6 @@ class LoginRecordTest {
     @Nested
     @DisplayName("isInternalIp 方法")
     class IsInternalIpTests {
-
-        /**
-         * 执行 {@code shouldDetectClassAInternalIp} 操作。
-         */
         @Test
         @DisplayName("10.x.x.x 应判断为内网IP")
         void shouldDetectClassAInternalIp() {
@@ -111,9 +87,6 @@ class LoginRecordTest {
             assertThat(record.isInternalIp()).isTrue();
         }
 
-        /**
-         * 执行 {@code shouldDetectClassBInternalIpLow} 操作。
-         */
         @Test
         @DisplayName("172.16.x.x 应判断为内网IP")
         void shouldDetectClassBInternalIpLow() {
@@ -121,9 +94,6 @@ class LoginRecordTest {
             assertThat(record.isInternalIp()).isTrue();
         }
 
-        /**
-         * 执行 {@code shouldDetectClassBInternalIpHigh} 操作。
-         */
         @Test
         @DisplayName("172.31.x.x 应判断为内网IP")
         void shouldDetectClassBInternalIpHigh() {
@@ -131,9 +101,6 @@ class LoginRecordTest {
             assertThat(record.isInternalIp()).isTrue();
         }
 
-        /**
-         * 执行 {@code shouldDetectClassCInternalIp} 操作。
-         */
         @Test
         @DisplayName("192.168.x.x 应判断为内网IP")
         void shouldDetectClassCInternalIp() {
@@ -141,9 +108,6 @@ class LoginRecordTest {
             assertThat(record.isInternalIp()).isTrue();
         }
 
-        /**
-         * 执行 {@code shouldDetectLoopbackAsInternal} 操作。
-         */
         @Test
         @DisplayName("127.0.0.1 应判断为内网IP")
         void shouldDetectLoopbackAsInternal() {
@@ -151,9 +115,6 @@ class LoginRecordTest {
             assertThat(record.isInternalIp()).isTrue();
         }
 
-        /**
-         * 执行 {@code shouldDetectPublicIp} 操作。
-         */
         @Test
         @DisplayName("公网IP应判断为非内网IP")
         void shouldDetectPublicIp() {
@@ -161,9 +122,6 @@ class LoginRecordTest {
             assertThat(record.isInternalIp()).isFalse();
         }
 
-        /**
-         * 执行 {@code shouldReturnFalseForNullIp} 操作。
-         */
         @Test
         @DisplayName("IP为null时应返回false")
         void shouldReturnFalseForNullIp() {
@@ -175,10 +133,6 @@ class LoginRecordTest {
     @Nested
     @DisplayName("isSameDay 方法")
     class IsSameDayTests {
-
-        /**
-         * 执行 {@code shouldReturnTrueForSameDay} 操作。
-         */
         @Test
         @DisplayName("同一天的记录应返回 true")
         void shouldReturnTrueForSameDay() {
@@ -188,9 +142,6 @@ class LoginRecordTest {
             assertThat(record1.isSameDay(record2)).isTrue();
         }
 
-        /**
-         * 执行 {@code shouldReturnFalseForDifferentDay} 操作。
-         */
         @Test
         @DisplayName("不同天的记录应返回 false")
         void shouldReturnFalseForDifferentDay() {
@@ -199,9 +150,6 @@ class LoginRecordTest {
             assertThat(record1.isSameDay(record2)).isFalse();
         }
 
-        /**
-         * 执行 {@code shouldReturnFalseForNull} 操作。
-         */
         @Test
         @DisplayName("比较null时应返回 false")
         void shouldReturnFalseForNull() {
@@ -213,10 +161,6 @@ class LoginRecordTest {
     @Nested
     @DisplayName("isSameIp 方法")
     class IsSameIpTests {
-
-        /**
-         * 执行 {@code shouldReturnTrueForSameIp} 操作。
-         */
         @Test
         @DisplayName("相同IP应返回 true")
         void shouldReturnTrueForSameIp() {
@@ -225,9 +169,6 @@ class LoginRecordTest {
             assertThat(record1.isSameIp(record2)).isTrue();
         }
 
-        /**
-         * 执行 {@code shouldReturnFalseForDifferentIp} 操作。
-         */
         @Test
         @DisplayName("不同IP应返回 false")
         void shouldReturnFalseForDifferentIp() {
@@ -236,9 +177,6 @@ class LoginRecordTest {
             assertThat(record1.isSameIp(record2)).isFalse();
         }
 
-        /**
-         * 执行 {@code shouldReturnTrueWhenBothNull} 操作。
-         */
         @Test
         @DisplayName("双方IP均为null应返回 true")
         void shouldReturnTrueWhenBothNull() {
@@ -251,10 +189,6 @@ class LoginRecordTest {
     @Nested
     @DisplayName("isRecent 方法")
     class IsRecentTests {
-
-        /**
-         * 执行 {@code shouldBeRecentJustCreated} 操作。
-         */
         @Test
         @DisplayName("刚创建的记录应在近期内")
         void shouldBeRecentJustCreated() {
@@ -266,10 +200,6 @@ class LoginRecordTest {
     @Nested
     @DisplayName("getFormattedTime 方法")
     class GetFormattedTimeTests {
-
-        /**
-         * 执行 {@code shouldReturnFormattedTime} 操作。
-         */
         @Test
         @DisplayName("应返回 yyyy-MM-dd HH:mm:ss 格式")
         void shouldReturnFormattedTime() {

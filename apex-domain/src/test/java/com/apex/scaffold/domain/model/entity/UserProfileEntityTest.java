@@ -20,10 +20,6 @@ class UserProfileEntityTest {
     @Nested
     @DisplayName("静态工厂方法 create()")
     class CreateTest {
-
-        /**
-         * 执行 {@code shouldSetUserIdAndDefaultNormal} 操作。
-         */
         @Test
         @DisplayName("创建时应正确设置 userId 并默认非社交用户")
         void shouldSetUserIdAndDefaultNormal() {
@@ -38,18 +34,12 @@ class UserProfileEntityTest {
             assertNotNull(profile.getUpdateTime());
         }
 
-        /**
-         * 执行 {@code nullUserIdShouldThrowException} 操作。
-         */
         @Test
         @DisplayName("userId 为 null 时应抛出异常")
         void nullUserIdShouldThrowException() {
             assertThrows(IllegalArgumentException.class, () -> UserProfileEntity.create(null));
         }
 
-        /**
-         * 创建{@code timeShouldEqualUpdateTime}。
-         */
         @Test
         @DisplayName("创建时间应与更新时间一致")
         void createTimeShouldEqualUpdateTime() {
@@ -61,10 +51,6 @@ class UserProfileEntityTest {
     @Nested
     @DisplayName("updateBio()")
     class UpdateBioTest {
-
-        /**
-         * 执行 {@code shouldUpdateBioAndTouch} 操作。
-         */
         @Test
         @DisplayName("应更新个人简介并刷新更新时间")
         void shouldUpdateBioAndTouch() {
@@ -74,9 +60,6 @@ class UserProfileEntityTest {
             assertNotNull(profile.getUpdateTime());
         }
 
-        /**
-         * 执行 {@code shouldSupportNullBio} 操作。
-         */
         @Test
         @DisplayName("支持更新为 null")
         void shouldSupportNullBio() {
@@ -86,9 +69,6 @@ class UserProfileEntityTest {
             assertNull(profile.getBio());
         }
 
-        /**
-         * 执行 {@code shouldSupportEmptyBio} 操作。
-         */
         @Test
         @DisplayName("支持更新为空字符串")
         void shouldSupportEmptyBio() {
@@ -101,10 +81,6 @@ class UserProfileEntityTest {
     @Nested
     @DisplayName("updateDatingGoal()")
     class UpdateDatingGoalTest {
-
-        /**
-         * 执行 {@code shouldUpdateDatingGoalAndTouch} 操作。
-         */
         @Test
         @DisplayName("应更新交友目的并刷新更新时间")
         void shouldUpdateDatingGoalAndTouch() {
@@ -117,10 +93,6 @@ class UserProfileEntityTest {
     @Nested
     @DisplayName("updateMbti()")
     class UpdateMbtiTest {
-
-        /**
-         * 执行 {@code shouldUpdateMbtiAndTouch} 操作。
-         */
         @Test
         @DisplayName("应更新 MBTI 并刷新更新时间")
         void shouldUpdateMbtiAndTouch() {
@@ -133,10 +105,6 @@ class UserProfileEntityTest {
     @Nested
     @DisplayName("社交用户状态")
     class SocialUserTest {
-
-        /**
-         * 执行 {@code defaultUserShouldNotBeSocial} 操作。
-         */
         @Test
         @DisplayName("默认用户不应是社交用户")
         void defaultUserShouldNotBeSocial() {
@@ -144,9 +112,6 @@ class UserProfileEntityTest {
             assertFalse(profile.isSocialUser());
         }
 
-        /**
-         * 执行 {@code upgradeToSocialUserShouldUpgradeAndRecordTime} 操作。
-         */
         @Test
         @DisplayName("upgradeToSocialUser() 应升级为社交用户并记录时间")
         void upgradeToSocialUserShouldUpgradeAndRecordTime() {
@@ -156,9 +121,6 @@ class UserProfileEntityTest {
             assertNotNull(profile.getSocialUserAt());
         }
 
-        /**
-         * 执行 {@code downgradeToNormalUserShouldDowngrade} 操作。
-         */
         @Test
         @DisplayName("downgradeToNormalUser() 应降级为普通用户")
         void downgradeToNormalUserShouldDowngrade() {
@@ -170,9 +132,6 @@ class UserProfileEntityTest {
             assertFalse(profile.isSocialUser());
         }
 
-        /**
-         * 执行 {@code repeatedDowngradeShouldStayNormal} 操作。
-         */
         @Test
         @DisplayName("重复降级应保持非社交用户")
         void repeatedDowngradeShouldStayNormal() {
@@ -181,9 +140,6 @@ class UserProfileEntityTest {
             assertFalse(profile.isSocialUser());
         }
 
-        /**
-         * 执行 {@code nullSocialUserShouldReturnFalse} 操作。
-         */
         @Test
         @DisplayName("socialUser 为 null 时 isSocialUser 应返回 false")
         void nullSocialUserShouldReturnFalse() {

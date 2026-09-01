@@ -61,9 +61,6 @@ class ModerationServiceTest {
         user.setNickName("TestUser");
     }
 
-    /**
-     * 执行 {@code blacklist_Enable_Success} 操作。
-     */
     @Test
     @DisplayName("blacklist - 成功拉黑目标用户")
     void blacklist_Enable_Success() {
@@ -85,9 +82,6 @@ class ModerationServiceTest {
         verify(blacklistRepository).upsert(any(BlacklistEntity.class));
     }
 
-    /**
-     * 执行 {@code blacklist_Disable_Success} 操作。
-     */
     @Test
     @DisplayName("blacklist - 成功取消拉黑目标用户")
     void blacklist_Disable_Success() {
@@ -109,9 +103,6 @@ class ModerationServiceTest {
         verify(blacklistRepository).upsert(any(BlacklistEntity.class));
     }
 
-    /**
-     * 执行 {@code blacklist_UserNotFound} 操作。
-     */
     @Test
     @DisplayName("blacklist - 用户不存在时抛出异常")
     void blacklist_UserNotFound() {
@@ -129,9 +120,6 @@ class ModerationServiceTest {
         verify(blacklistRepository, never()).upsert(any());
     }
 
-    /**
-     * 执行 {@code report_Success} 操作。
-     */
     @Test
     @DisplayName("report - 成功提交举报工单")
     void report_Success() {
@@ -160,9 +148,6 @@ class ModerationServiceTest {
         verify(reportTicketRepository).save(any(ReportTicketEntity.class));
     }
 
-    /**
-     * 执行 {@code report_PhotoTargetType_Success} 操作。
-     */
     @Test
     @DisplayName("report - 举报照片类型成功")
     void report_PhotoTargetType_Success() {
@@ -188,9 +173,6 @@ class ModerationServiceTest {
                 .verifyComplete();
     }
 
-    /**
-     * 执行 {@code report_MessageTargetType_Success} 操作。
-     */
     @Test
     @DisplayName("report - 举报消息类型成功")
     void report_MessageTargetType_Success() {
@@ -216,9 +198,6 @@ class ModerationServiceTest {
                 .verifyComplete();
     }
 
-    /**
-     * 执行 {@code report_WithEvidenceFileUrls_Success} 操作。
-     */
     @Test
     @DisplayName("report - 举报时附带证据截图")
     void report_WithEvidenceFileUrls_Success() {
@@ -247,9 +226,6 @@ class ModerationServiceTest {
         verify(reportTicketRepository).save(any(ReportTicketEntity.class));
     }
 
-    /**
-     * 执行 {@code report_UserNotFound} 操作。
-     */
     @Test
     @DisplayName("report - 用户不存在时抛出异常")
     void report_UserNotFound() {
@@ -266,9 +242,6 @@ class ModerationServiceTest {
         verify(reportTicketRepository, never()).save(any());
     }
 
-    /**
-     * 执行 {@code report_WithoutReason_Success} 操作。
-     */
     @Test
     @DisplayName("report - 无reason时使用空字符串")
     void report_WithoutReason_Success() {

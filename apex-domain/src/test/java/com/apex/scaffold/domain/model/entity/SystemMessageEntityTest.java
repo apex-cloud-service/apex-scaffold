@@ -51,9 +51,6 @@ class SystemMessageEntityTest extends BaseEntityTest<SystemMessageEntity> {
             assertThat(entity.getReadAt()).isEqualTo(readAt);
         }
 
-        /**
-         * 执行 {@code newEntityShouldHaveNullFields} 操作。
-         */
         @Test
         @DisplayName("新创建的实体字段应为 null")
         void newEntityShouldHaveNullFields() {
@@ -70,10 +67,6 @@ class SystemMessageEntityTest extends BaseEntityTest<SystemMessageEntity> {
     @Nested
     @DisplayName("业务场景")
     class BusinessScenarioTest {
-
-        /**
-         * 执行 {@code unreadMessageShouldHaveNullReadAt} 操作。
-         */
         @Test
         @DisplayName("未读系统消息应有 null 的 readAt")
         void unreadMessageShouldHaveNullReadAt() {
@@ -85,9 +78,6 @@ class SystemMessageEntityTest extends BaseEntityTest<SystemMessageEntity> {
             assertThat(entity.getReadAt()).isNull();
         }
 
-        /**
-         * 执行 {@code readMessageShouldHaveReadAt} 操作。
-         */
         @Test
         @DisplayName("已读系统消息应记录 readAt")
         void readMessageShouldHaveReadAt() {

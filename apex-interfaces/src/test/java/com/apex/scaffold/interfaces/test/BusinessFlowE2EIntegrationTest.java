@@ -58,11 +58,6 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 @DisplayName("关键业务流程 E2E 集成测试")
 @EnabledIfSystemProperty(named = "apex.remote-it.enabled", matches = "true")
 class BusinessFlowE2ERemoteIT extends BaseLocalIntegrationTest {
-
-    /**
-     * 创建 {@code BusinessFlowE2ERemoteIT} 实例。
-     * @param dataSource 参数 {@code dataSource}
-     */
     public BusinessFlowE2ERemoteIT(javax.sql.DataSource dataSource) {
         super(dataSource);
         this.dataSource = dataSource;

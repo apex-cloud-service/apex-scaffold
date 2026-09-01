@@ -13,9 +13,6 @@ public final class TestDataFactory {
     public static final String TEST_NICK_NAME = "测试用户";
     public static final String TEST_AVATAR_URL = "https://example.com/avatar.png";
 
-    /**
-     * 创建 {@code TestDataFactory} 实例。
-     */
     private TestDataFactory() {
         // 工具类，禁止实例化
     }

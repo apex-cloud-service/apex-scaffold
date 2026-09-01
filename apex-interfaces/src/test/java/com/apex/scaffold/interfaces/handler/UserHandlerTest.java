@@ -75,11 +75,6 @@ class UserHandlerTest {
         handler = new UserHandler(userService, userAssembler, requestHandlerUtil, messageUtils);
     }
 
-    /**
-     * 创建{@code requestWithOpenId}。
-     * @param path 参数 {@code path}
-     * @return 操作结果
-     */
     private ServerRequest createRequestWithOpenId(String path) {
         MockServerHttpRequest httpRequest = MockServerHttpRequest.get(path).build();
         MockServerWebExchange exchange = MockServerWebExchange.from(httpRequest);
@@ -90,12 +85,6 @@ class UserHandlerTest {
                 exchangeWithPrincipal, HandlerStrategies.withDefaults().messageReaders());
     }
 
-    /**
-     * 创建{@code postRequestWithOpenId}。
-     * @param path 参数 {@code path}
-     * @param body 参数 {@code body}
-     * @return 操作结果
-     */
     private ServerRequest createPostRequestWithOpenId(String path, String body) {
         MockServerHttpRequest httpRequest = MockServerHttpRequest.post(path).body(body);
         MockServerWebExchange exchange = MockServerWebExchange.from(httpRequest);
@@ -109,10 +98,6 @@ class UserHandlerTest {
     @Nested
     @DisplayName("getCurrentUserInfo 方法")
     class GetCurrentUserInfoTests {
-
-        /**
-         * 执行 {@code shouldReturnUserInfoWhenFound} 操作。
-         */
         @Test
         @DisplayName("用户存在时应返回200和UserDTO")
         void shouldReturnUserInfoWhenFound() {
@@ -141,9 +126,6 @@ class UserHandlerTest {
             verify(userAssembler).toDTO(entity);
         }
 
-        /**
-         * 执行 {@code shouldReturnNotFoundWhenUserNotFound} 操作。
-         */
         @Test
         @DisplayName("用户不存在时应返回404错误")
         void shouldReturnNotFoundWhenUserNotFound() {
@@ -162,10 +144,6 @@ class UserHandlerTest {
     @Nested
     @DisplayName("getUserById 方法")
     class GetUserByIdTests {
-
-        /**
-         * 执行 {@code shouldReturnUserWhenValidId} 操作。
-         */
         @Test
         @DisplayName("有效ID且用户存在时应返回200和UserDTO")
         void shouldReturnUserWhenValidId() {
@@ -192,9 +170,6 @@ class UserHandlerTest {
                     .verifyComplete();
         }
 
-        /**
-         * 执行 {@code shouldReturnBadRequestWhenInvalidId} 操作。
-         */
         @Test
         @DisplayName("无效的userId应返回400错误")
         void shouldReturnBadRequestWhenInvalidId() {
@@ -210,9 +185,6 @@ class UserHandlerTest {
                     .verifyComplete();
         }
 
-        /**
-         * 执行 {@code shouldReturnNotFoundWhenUserNotFound} 操作。
-         */
         @Test
         @DisplayName("用户不存在时应返回404错误")
         void shouldReturnNotFoundWhenUserNotFound() {
@@ -234,10 +206,6 @@ class UserHandlerTest {
     @Nested
     @DisplayName("listUsers 方法")
     class ListUsersTests {
-
-        /**
-         * 执行 {@code shouldListUsersSuccessfully} 操作。
-         */
         @Test
         @DisplayName("有效分页请求时应返回200和分页数据")
         void shouldListUsersSuccessfully() {

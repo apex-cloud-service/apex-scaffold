@@ -30,6 +30,11 @@ import reactor.util.context.Context;
  */
 public final class TenantContext {
 
+    /**
+     * Reactor Context 中租户 ID 的键。
+     *
+     * <p>以 {@link TenantContext} 类名作为键，避免字符串魔法值与跨类碰撞。</p>
+     */
     public static final String REACTOR_CONTEXT_KEY = TenantContext.class.getName();
 
     /** ThreadLocal 租户 ID */
@@ -285,6 +290,16 @@ public final class TenantContext {
         TENANT_ID.remove();
     }
 
+    /**
+     * 创建携带租户 ID 的 Reactor {@link Context}。
+     *
+     * <p>配合 {@code .contextWrite()} 在响应式操作符链中传播租户身份，
+     * 下游通过 {@link #withTenant(Mono)} / {@link #withTenant(Flux)} 读取。</p>
+     *
+     * @param tenantId 租户 ID，不允许为空
+     * @return 包含租户 ID 的 Reactor Context
+     * @throws IllegalArgumentException 当租户 ID 为 {@code null} 或空白时抛出
+     */
     public static Context withTenant(String tenantId) {
         if (tenantId == null || tenantId.isBlank()) {
             throw new IllegalArgumentException("租户 ID 不能为空");
@@ -292,6 +307,17 @@ public final class TenantContext {
         return Context.of(REACTOR_CONTEXT_KEY, tenantId);
     }
 
+    /**
+     * 在订阅 {@link Mono} 时从 Reactor Context 读取租户 ID 并安装到当前线程。
+     *
+     * <p>响应式链中阻塞式租户访问（如 MyBatis 查询）切换到其他线程执行时，
+     * 通过本方法在订阅阶段捕获 {@link ThreadLocal} 租户上下文，执行完毕后自动恢复，
+     * 防止跨线程租户泄漏。未装配租户 ID 时直接透传原始发布者。</p>
+     *
+     * @param publisher 原始 {@link Mono} 发布者
+     * @param <T>       数据流元素类型
+     * @return 包装后的 {@link Mono}
+     */
     public static <T> Mono<T> withTenant(Mono<T> publisher) {
         return Mono.deferContextual(context -> {
             String tenantId = context.getOrDefault(REACTOR_CONTEXT_KEY, null);
@@ -309,6 +335,16 @@ public final class TenantContext {
         });
     }
 
+    /**
+     * 在订阅 {@link Flux} 时从 Reactor Context 读取租户 ID 并安装到当前线程。
+     *
+     * <p>语义与 {@link #withTenant(Mono)} 一致，适用于多元素数据流；未装配租户 ID 时
+     * 直接透传原始发布者。</p>
+     *
+     * @param publisher 原始 {@link Flux} 发布者
+     * @param <T>       数据流元素类型
+     * @return 包装后的 {@link Flux}
+     */
     public static <T> Flux<T> withTenant(Flux<T> publisher) {
         return Flux.deferContextual(context -> {
             String tenantId = context.getOrDefault(REACTOR_CONTEXT_KEY, null);

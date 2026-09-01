@@ -157,9 +157,6 @@ class RemoteApiClientTest {
         when(responseSpec.bodyToMono(eq(String.class))).thenReturn(Mono.just(TEST_RESPONSE));
     }
 
-    /**
-     * 获取{@code _Success}。
-     */
     @Test
     @DisplayName("GET请求 - 成功返回响应数据")
     void get_Success() {
@@ -194,9 +191,6 @@ class RemoteApiClientTest {
         verify(defaultCodecs).maxInMemorySize(10 * 1024 * 1024);
     }
 
-    /**
-     * 获取{@code _WithQueryParams_Success}。
-     */
     @Test
     @DisplayName("GET请求 - 带查询参数成功返回")
     void get_WithQueryParams_Success() {
@@ -211,9 +205,6 @@ class RemoteApiClientTest {
                 .verifyComplete();
     }
 
-    /**
-     * 获取{@code _WithHeaders_Success}。
-     */
     @Test
     @DisplayName("GET请求 - 带自定义请求头成功返回")
     void get_WithHeaders_Success() {
@@ -228,9 +219,6 @@ class RemoteApiClientTest {
                 .verifyComplete();
     }
 
-    /**
-     * 获取{@code _WithTypeReference_Success}。
-     */
     @Test
     @DisplayName("GET请求 - 使用泛型类型引用成功返回")
     void get_WithTypeReference_Success() {
@@ -251,9 +239,6 @@ class RemoteApiClientTest {
                 .verifyComplete();
     }
 
-    /**
-     * 获取{@code _ServiceNotConfigured_ThrowsException}。
-     */
     @Test
     @DisplayName("GET请求 - 服务未配置时抛出异常")
     void get_ServiceNotConfigured_ThrowsException() {
@@ -263,9 +248,6 @@ class RemoteApiClientTest {
                 .hasMessageContaining("unknown-service");
     }
 
-    /**
-     * 获取{@code _BaseUrlBlank_ThrowsException}。
-     */
     @Test
     @DisplayName("GET请求 - baseUrl为空时抛出异常")
     void get_BaseUrlBlank_ThrowsException() {
@@ -276,9 +258,6 @@ class RemoteApiClientTest {
                 .hasMessageContaining("未配置baseUrl");
     }
 
-    /**
-     * 执行 {@code postJson_Success} 操作。
-     */
     @Test
     @DisplayName("POST JSON请求 - 成功返回响应数据")
     void postJson_Success() {
@@ -293,9 +272,6 @@ class RemoteApiClientTest {
                 .verifyComplete();
     }
 
-    /**
-     * 执行 {@code postJson_NullBody_Success} 操作。
-     */
     @Test
     @DisplayName("POST JSON请求 - 空请求体成功返回")
     void postJson_NullBody_Success() {
@@ -313,9 +289,6 @@ class RemoteApiClientTest {
                 .verifyComplete();
     }
 
-    /**
-     * 执行 {@code postJson_WithHeaders_Success} 操作。
-     */
     @Test
     @DisplayName("POST JSON请求 - 带自定义请求头成功返回")
     void postJson_WithHeaders_Success() {
@@ -331,9 +304,6 @@ class RemoteApiClientTest {
                 .verifyComplete();
     }
 
-    /**
-     * 执行 {@code postJson_WithTypeReference_Success} 操作。
-     */
     @Test
     @DisplayName("POST JSON请求 - 使用泛型类型引用")
     void postJson_WithTypeReference_Success() {
@@ -359,9 +329,6 @@ class RemoteApiClientTest {
                 .verifyComplete();
     }
 
-    /**
-     * 执行 {@code postForm_Success} 操作。
-     */
     @Test
     @DisplayName("POST表单请求 - 成功返回响应数据")
     void postForm_Success() {
@@ -383,9 +350,6 @@ class RemoteApiClientTest {
                 .verifyComplete();
     }
 
-    /**
-     * 执行 {@code postForm_NullFormData_Success} 操作。
-     */
     @Test
     @DisplayName("POST表单请求 - 空表单数据成功返回")
     void postForm_NullFormData_Success() {
@@ -405,9 +369,6 @@ class RemoteApiClientTest {
                 .verifyComplete();
     }
 
-    /**
-     * 执行 {@code postForm_WithHeaders_Success} 操作。
-     */
     @Test
     @DisplayName("POST表单请求 - 带自定义请求头成功返回")
     void postForm_WithHeaders_Success() {
@@ -430,10 +391,6 @@ class RemoteApiClientTest {
                 .verifyComplete();
     }
 
-    /**
-     * 执行 {@code postMultipart_SupportedFileFields_Success} 操作。
-     * @param fileFieldName 参数 {@code fileFieldName}
-     */
     @ParameterizedTest
     @ValueSource(strings = {"image", "file", "photo", "photos", "match_record", "feature_table", "model_json"})
     @DisplayName("POST Multipart请求 - 支持约定的 Python 文件字段")
@@ -468,7 +425,6 @@ class RemoteApiClientTest {
     }
 
     /**
-     * 执行 {@code postMultipart_MultipleFileParts_Success} 操作。
      */
     @Test
     @DisplayName("POST Multipart请求 - image_a/image_b 多文件字段成功返回")
@@ -500,9 +456,6 @@ class RemoteApiClientTest {
                 .verifyComplete();
     }
 
-    /**
-     * 执行 {@code postMultipart_UnsupportedFileField_ThrowsException} 操作。
-     */
     @Test
     @DisplayName("POST Multipart请求 - 不支持的文件字段名抛出异常")
     void postMultipart_UnsupportedFileField_ThrowsException() {
@@ -525,7 +478,6 @@ class RemoteApiClientTest {
     }
 
     /**
-     * 执行 {@code put_Success} 操作。
      */
     @Test
     @DisplayName("PUT请求 - 成功返回响应数据")
@@ -546,9 +498,6 @@ class RemoteApiClientTest {
                 .verifyComplete();
     }
 
-    /**
-     * 执行 {@code put_WithHeaders_Success} 操作。
-     */
     @Test
     @DisplayName("PUT请求 - 带自定义请求头成功返回")
     void put_WithHeaders_Success() {
@@ -628,9 +577,6 @@ class RemoteApiClientTest {
                 .verifyComplete();
     }
 
-    /**
-     * 执行 {@code remoteApiException_IsClientError} 操作。
-     */
     @Test
     @DisplayName("RemoteApiException - isClientError返回true（4xx状态码）")
     void remoteApiException_IsClientError() {
@@ -645,9 +591,6 @@ class RemoteApiClientTest {
         assertThat(ex.getErrorBody()).isEqualTo("{\"error\":\"not found\"}");
     }
 
-    /**
-     * 执行 {@code remoteApiException_IsServerError} 操作。
-     */
     @Test
     @DisplayName("RemoteApiException - isServerError返回true（5xx状态码）")
     void remoteApiException_IsServerError() {
@@ -661,9 +604,6 @@ class RemoteApiClientTest {
         assertThat(ex.getRequestPath()).isEqualTo(TEST_PATH);
     }
 
-    /**
-     * 执行 {@code remoteApiException_NetworkError} 操作。
-     */
     @Test
     @DisplayName("RemoteApiException - 网络异常构造（httpStatus=-1）")
     void remoteApiException_NetworkError() {
@@ -679,9 +619,6 @@ class RemoteApiClientTest {
         assertThat(ex.isServerError()).isFalse();
     }
 
-    /**
-     * 执行 {@code retryFilter_ClientError_NotRetried} 操作。
-     */
     @Test
     @DisplayName("重试判断 - 4xx响应不重试")
     void retryFilter_ClientError_NotRetried() {
@@ -710,9 +647,6 @@ class RemoteApiClientTest {
         assertThat(attempts).hasValue(1);
     }
 
-    /**
-     * 执行 {@code retryFilter_ServerError_RetriedByConfiguredCount} 操作。
-     */
     @Test
     @DisplayName("重试判断 - 5xx响应按retry-count重试")
     void retryFilter_ServerError_RetriedByConfiguredCount() {
@@ -741,9 +675,6 @@ class RemoteApiClientTest {
         assertThat(attempts).hasValue(3);
     }
 
-    /**
-     * 执行 {@code remoteApiException_ShortConstructor} 操作。
-     */
     @Test
     @DisplayName("RemoteApiException - 简短构造（message + cause）")
     void remoteApiException_ShortConstructor() {
@@ -795,9 +726,6 @@ class RemoteApiClientTest {
         verify(webClientBuilder).clientConnector(any());
     }
 
-    /**
-     * 执行 {@code defaultHeaders_AppliedToRequest} 操作。
-     */
     @Test
     @DisplayName("默认请求头 - 配置的默认请求头自动附加到请求")
     void defaultHeaders_AppliedToRequest() {
@@ -819,9 +747,6 @@ class RemoteApiClientTest {
         assertThat(appliedHeaders.getFirst("X-Client-Version")).isEqualTo("1.0.0");
     }
 
-    /**
-     * 执行 {@code customHeaders_OverrideDefault} 操作。
-     */
     @Test
     @DisplayName("自定义请求头 - 覆盖默认请求头中的同名键")
     void customHeaders_OverrideDefault() {
@@ -844,9 +769,6 @@ class RemoteApiClientTest {
         assertThat(appliedHeaders.get("X-Request-Source")).containsExactly("apex-service-test");
     }
 
-    /**
-     * 执行 {@code customRequest_Success} 操作。
-     */
     @Test
     @DisplayName("customRequest - 灵活自定义请求")
     void customRequest_Success() {
@@ -862,9 +784,6 @@ class RemoteApiClientTest {
                 .verifyComplete();
     }
 
-    /**
-     * 执行 {@code remoteApiProperties_DefaultValues} 操作。
-     */
     @Test
     @DisplayName("RemoteApiProperties - 默认值校验")
     void remoteApiProperties_DefaultValues() {
@@ -877,9 +796,6 @@ class RemoteApiClientTest {
         assertThat(props.getServices()).isEmpty();
     }
 
-    /**
-     * 执行 {@code serviceConfig_DefaultValues} 操作。
-     */
     @Test
     @DisplayName("ServiceConfig - 默认值校验")
     void serviceConfig_DefaultValues() {
@@ -893,9 +809,6 @@ class RemoteApiClientTest {
         assertThat(config.getDefaultHeaders()).isEmpty();
     }
 
-    /**
-     * 执行 {@code serviceConfig_FullConfiguration} 操作。
-     */
     @Test
     @DisplayName("ServiceConfig - 完整配置赋值校验")
     void serviceConfig_FullConfiguration() {
@@ -915,10 +828,6 @@ class RemoteApiClientTest {
         assertThat(config.getDefaultHeaders()).containsEntry("X-App", "test");
     }
 
-    /**
-     * 执行 {@code captureAppliedHeaders} 操作。
-     * @return 操作结果
-     */
     @SuppressWarnings({"unchecked", "rawtypes"})
     private HttpHeaders captureAppliedHeaders() {
         ArgumentCaptor<Consumer<HttpHeaders>> captor = ArgumentCaptor.forClass((Class) Consumer.class);
@@ -928,12 +837,6 @@ class RemoteApiClientTest {
         return headers;
     }
 
-    /**
-     * 执行 {@code namedResource} 操作。
-     * @param filename 参数 {@code filename}
-     * @param content 参数 {@code content}
-     * @return 操作结果
-     */
     private ByteArrayResource namedResource(String filename, String content) {
         return new ByteArrayResource(content.getBytes()) {
             /** {@inheritDoc} */

@@ -20,11 +20,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("RateLimiter 接口限流注解测试")
 class RateLimiterTest {
-
-    /**
-     * 执行 {@code shouldHaveDefaultValues} 操作。
-     * @throws Exception 当操作无法完成时
-     */
     @Test
     @DisplayName("各属性应具有正确的默认值")
     void shouldHaveDefaultValues() throws Exception {

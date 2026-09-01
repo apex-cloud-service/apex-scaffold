@@ -35,13 +35,6 @@ import reactor.core.publisher.Mono;
 @EnableWebFluxSecurity
 @EnableReactiveMethodSecurity
 class ItProfileSecurityConfiguration {
-
-    /**
-     * 执行 {@code securityWebFilterChain} 操作。
-     * @param http 参数 {@code http}
-     * @param itJwtBypassFilter 参数 {@code itJwtBypassFilter}
-     * @return 操作结果
-     */
     @Bean
     SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http, WebFilter itJwtBypassFilter) {
         return http.csrf(csrf -> csrf.disable())
@@ -54,10 +47,6 @@ class ItProfileSecurityConfiguration {
                 .build();
     }
 
-    /**
-     * 执行 {@code itJwtBypassFilter} 操作。
-     * @return 操作结果
-     */
     @Bean
     WebFilter itJwtBypassFilter() {
         return (exchange, chain) -> {
@@ -77,11 +66,6 @@ class ItProfileSecurityConfiguration {
         };
     }
 
-    /**
-     * 执行 {@code extractBearerToken} 操作。
-     * @param exchange 参数 {@code exchange}
-     * @return 字符串结果
-     */
     private static String extractBearerToken(ServerWebExchange exchange) {
         String header = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
         if (header == null || !header.startsWith("Bearer ")) {
@@ -90,11 +74,6 @@ class ItProfileSecurityConfiguration {
         return header.substring("Bearer ".length()).trim();
     }
 
-    /**
-     * 执行 {@code extractSubject} 操作。
-     * @param token 参数 {@code token}
-     * @return 字符串结果
-     */
     private static String extractSubject(String token) {
         String[] parts = token.split("\\.");
         if (parts.length < 2) {

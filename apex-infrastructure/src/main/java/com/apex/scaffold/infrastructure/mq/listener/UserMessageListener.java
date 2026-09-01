@@ -147,14 +147,12 @@ public class UserMessageListener implements RocketMQListener<Map<String, Object>
     /**
      * 接收并处理用户相关的 MQ 消息。
      *
+     * <p>先反序列化为类型化载荷，再在租户上下文内幂等消费：消费失败或未找到
+     * 对应 Handler 时抛出异常触发 RocketMQ 重消费。处理完成后恢复调用前的租户上下文。</p>
+     *
      * @param message 消息体
      */
     @Override
-    /**
-     * 消费消息
-     *
-     * @param message 参数
-     */
     public void onMessage(Map<String, Object> message) {
         UserMessagePayload payload = UserMessagePayload.from(message);
         String messageId = payload.messageId();

@@ -21,10 +21,6 @@ class PasswordUtilTest {
     @Nested
     @DisplayName("encryptPassword 加密密码测试")
     class EncryptPasswordTests {
-
-        /**
-         * 执行 {@code shouldEncryptNormalPassword} 操作。
-         */
         @Test
         @DisplayName("正常密码加密后应返回非空且与原密码不同的BCrypt密文")
         void shouldEncryptNormalPassword() {
@@ -37,9 +33,6 @@ class PasswordUtilTest {
             assertThat(encrypted).startsWith("$2a$");
         }
 
-        /**
-         * 执行 {@code shouldProduceDifferentHashesForSamePassword} 操作。
-         */
         @Test
         @DisplayName("相同密码两次加密结果应不同（BCrypt盐值随机）")
         void shouldProduceDifferentHashesForSamePassword() {
@@ -51,9 +44,6 @@ class PasswordUtilTest {
             assertThat(encrypted1).isNotEqualTo(encrypted2);
         }
 
-        /**
-         * 执行 {@code shouldEncryptEmptyPassword} 操作。
-         */
         @Test
         @DisplayName("空字符串密码加密后应为非空BCrypt密文")
         void shouldEncryptEmptyPassword() {
@@ -63,9 +53,6 @@ class PasswordUtilTest {
             assertThat(encrypted).startsWith("$2a$");
         }
 
-        /**
-         * 执行 {@code shouldThrowExceptionForNullPassword} 操作。
-         */
         @Test
         @DisplayName("null密码加密应抛出IllegalArgumentException")
         void shouldThrowExceptionForNullPassword() {
@@ -76,10 +63,6 @@ class PasswordUtilTest {
     @Nested
     @DisplayName("verifyPassword 验证密码测试")
     class VerifyPasswordTests {
-
-        /**
-         * 执行 {@code shouldVerifyCorrectPassword} 操作。
-         */
         @Test
         @DisplayName("正确密码验证应返回true")
         void shouldVerifyCorrectPassword() {
@@ -91,9 +74,6 @@ class PasswordUtilTest {
             assertThat(result).isTrue();
         }
 
-        /**
-         * 执行 {@code shouldRejectWrongPassword} 操作。
-         */
         @Test
         @DisplayName("错误密码验证应返回false")
         void shouldRejectWrongPassword() {
@@ -105,9 +85,6 @@ class PasswordUtilTest {
             assertThat(result).isFalse();
         }
 
-        /**
-         * 执行 {@code shouldThrowExceptionForNullRawPassword} 操作。
-         */
         @Test
         @DisplayName("null原始密码验证应抛出IllegalArgumentException")
         void shouldThrowExceptionForNullRawPassword() {
@@ -116,18 +93,12 @@ class PasswordUtilTest {
             assertThatIllegalArgumentException().isThrownBy(() -> PasswordUtil.verifyPassword(null, encrypted));
         }
 
-        /**
-         * 执行 {@code shouldReturnFalseForNullEncodedPassword} 操作。
-         */
         @Test
         @DisplayName("null加密密码验证应抛出IllegalArgumentException")
         void shouldReturnFalseForNullEncodedPassword() {
             assertThatIllegalArgumentException().isThrownBy(() -> PasswordUtil.verifyPassword("test", null));
         }
 
-        /**
-         * 执行 {@code shouldVerifyEmptyPasswordAgainstEmptyEncoded} 操作。
-         */
         @Test
         @DisplayName("空字符串原始密码验证空字符串加密结果应返回true")
         void shouldVerifyEmptyPasswordAgainstEmptyEncoded() {
@@ -142,10 +113,6 @@ class PasswordUtilTest {
     @Nested
     @DisplayName("generateRandomPassword 生成随机密码测试")
     class GenerateRandomPasswordTests {
-
-        /**
-         * 执行 {@code shouldGeneratePasswordWithSpecifiedLength} 操作。
-         */
         @Test
         @DisplayName("生成长度为16的随机密码应包含大写、小写、数字和特殊字符")
         void shouldGeneratePasswordWithSpecifiedLength() {
@@ -158,9 +125,6 @@ class PasswordUtilTest {
             assertThat(password).containsPattern("[0-9]");
         }
 
-        /**
-         * 执行 {@code shouldGenerateDifferentPasswordsEachTime} 操作。
-         */
         @Test
         @DisplayName("两次生成的随机密码应不相同")
         void shouldGenerateDifferentPasswordsEachTime() {
@@ -170,9 +134,6 @@ class PasswordUtilTest {
             assertThat(password1).isNotEqualTo(password2);
         }
 
-        /**
-         * 执行 {@code shouldGenerateSingleCharacterPassword} 操作。
-         */
         @Test
         @DisplayName("生成长度为1的随机密码应返回单字符")
         void shouldGenerateSingleCharacterPassword() {
@@ -182,9 +143,6 @@ class PasswordUtilTest {
             assertThat(password).hasSize(1);
         }
 
-        /**
-         * 执行 {@code shouldReturnEmptyStringForZeroLength} 操作。
-         */
         @Test
         @DisplayName("生成长度为0的随机密码应返回空字符串")
         void shouldReturnEmptyStringForZeroLength() {
@@ -194,9 +152,6 @@ class PasswordUtilTest {
             assertThat(password).isEmpty();
         }
 
-        /**
-         * 执行 {@code shouldGenerateLongPassword} 操作。
-         */
         @Test
         @DisplayName("生成长度为64的长随机密码应正常返回")
         void shouldGenerateLongPassword() {
@@ -206,9 +161,6 @@ class PasswordUtilTest {
             assertThat(password).hasSize(64);
         }
 
-        /**
-         * 执行 {@code shouldReturnEmptyStringForNegativeLength} 操作。
-         */
         @Test
         @DisplayName("负数长度应返回空字符串")
         void shouldReturnEmptyStringForNegativeLength() {

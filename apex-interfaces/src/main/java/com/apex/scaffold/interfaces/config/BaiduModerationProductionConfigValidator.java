@@ -55,7 +55,10 @@ public class BaiduModerationProductionConfigValidator extends AbstractProduction
     }
 
     /**
-     * 执行 {@code doValidate} 逻辑。
+     * 校验生产环境百度云图片审核配置。
+     *
+     * <p>仅当图片上传开启时校验；依次确认审核功能开启、API Key/Secret Key 已配置、
+     * 审核策略 ID 合法，以及生活照上传场景下隔离桶已配置。</p>
      */
     @Override
     protected void doValidate() {
@@ -77,9 +80,9 @@ public class BaiduModerationProductionConfigValidator extends AbstractProduction
     }
 
     /**
-     * 执行 {@code prefix} 逻辑。
+     * 返回校验错误信息的前缀。
      *
-     * @return 执行结果
+     * @return 错误信息前缀
      */
     @Override
     protected String prefix() {

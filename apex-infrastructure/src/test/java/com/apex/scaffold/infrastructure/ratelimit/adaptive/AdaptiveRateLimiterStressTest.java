@@ -38,10 +38,6 @@ class AdaptiveRateLimiterStressTest {
         limiter.reset();
     }
 
-    /**
-     * 执行 {@code highThroughputConcurrentAccess} 操作。
-     * @throws InterruptedException 当操作无法完成时
-     */
     @Test
     @DisplayName("高吞吐量并发调用 - 20线程×5000次 getAllowedQps，验证线程安全和响应有效性")
     void highThroughputConcurrentAccess() throws InterruptedException {
@@ -85,10 +81,6 @@ class AdaptiveRateLimiterStressTest {
         assertThat(successRate).isGreaterThan(0.95);
     }
 
-    /**
-     * 执行 {@code samplingIntervalCache} 操作。
-     * @throws InterruptedException 当操作无法完成时
-     */
     @Test
     @DisplayName("采样间隔缓存 - 2秒内重复调用返回缓存值，超时后重新计算")
     void samplingIntervalCache() throws InterruptedException {
@@ -110,9 +102,6 @@ class AdaptiveRateLimiterStressTest {
         assertThat(afterSleepResult).isBetween(10, baseQps);
     }
 
-    /**
-     * 执行 {@code adaptiveAdjustmentWithLowCpuThreshold} 操作。
-     */
     @Test
     @DisplayName("自适应调整 - 降低 CPU 阈值模拟高负载，验证 allowedQps 下降")
     void adaptiveAdjustmentWithLowCpuThreshold() {
@@ -133,9 +122,6 @@ class AdaptiveRateLimiterStressTest {
         assertThat(degradedQps).isLessThanOrEqualTo(baseQps);
     }
 
-    /**
-     * 执行 {@code resetClearsCacheAndRecalculates} 操作。
-     */
     @Test
     @DisplayName("重置后恢复正常 - reset() 清除缓存，下次调用重新采样")
     void resetClearsCacheAndRecalculates() {
@@ -150,9 +136,6 @@ class AdaptiveRateLimiterStressTest {
         assertThat(afterReset).isBetween(10, baseQps);
     }
 
-    /**
-     * 执行 {@code multipleInstancesIsolation} 操作。
-     */
     @Test
     @DisplayName("多实例隔离 - 3 个独立 AdaptiveRateLimiter 互不干扰")
     void multipleInstancesIsolation() {
@@ -181,9 +164,6 @@ class AdaptiveRateLimiterStressTest {
         assertThat(qpsA).isNotEqualTo(qpsC);
     }
 
-    /**
-     * 执行 {@code availableProcessorsIsPositive} 操作。
-     */
     @Test
     @DisplayName("getAvailableProcessors - 返回正数")
     void availableProcessorsIsPositive() {

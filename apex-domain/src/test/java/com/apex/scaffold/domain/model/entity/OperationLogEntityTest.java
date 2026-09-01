@@ -77,9 +77,6 @@ class OperationLogEntityTest extends BaseEntityTest<OperationLogEntity> {
             assertThat(entity.getTraceId()).isEqualTo("trace-001");
         }
 
-        /**
-         * 执行 {@code newEntityShouldHaveNullFields} 操作。
-         */
         @Test
         @DisplayName("新创建的实体字段应为 null")
         void newEntityShouldHaveNullFields() {
@@ -109,10 +106,6 @@ class OperationLogEntityTest extends BaseEntityTest<OperationLogEntity> {
     @Nested
     @DisplayName("业务场景")
     class BusinessScenarioTest {
-
-        /**
-         * 执行 {@code shouldSupportSuccessOperation} 操作。
-         */
         @Test
         @DisplayName("成功操作日志")
         void shouldSupportSuccessOperation() {
@@ -127,9 +120,6 @@ class OperationLogEntityTest extends BaseEntityTest<OperationLogEntity> {
             assertThat(entity.getExecutionTime()).isEqualTo(50L);
         }
 
-        /**
-         * 执行 {@code shouldSupportFailedOperationWithError} 操作。
-         */
         @Test
         @DisplayName("失败操作日志含错误信息")
         void shouldSupportFailedOperationWithError() {
@@ -143,9 +133,6 @@ class OperationLogEntityTest extends BaseEntityTest<OperationLogEntity> {
             assertThat(entity.getErrorMsg()).isEqualTo("密码错误");
         }
 
-        /**
-         * 执行 {@code shouldSupportTraceId} 操作。
-         */
         @Test
         @DisplayName("操作日志包含追踪 ID")
         void shouldSupportTraceId() {

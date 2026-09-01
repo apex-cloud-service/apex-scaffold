@@ -77,10 +77,6 @@ class MqProducerServiceTest {
     @Nested
     @DisplayName("sendSync 同步发送")
     class SendSyncTests {
-
-        /**
-         * 执行 {@code shouldSyncSendWithDestination} 操作。
-         */
         @Test
         @DisplayName("应使用 topic:tag 作为destination同步发送")
         void shouldSyncSendWithDestination() {
@@ -92,9 +88,6 @@ class MqProducerServiceTest {
             verify(rocketMQTemplate).syncSend(eq("test-topic:test-tag"), any(Message.class));
         }
 
-        /**
-         * 执行 {@code shouldThrowOnFailure} 操作。
-         */
         @Test
         @DisplayName("发送失败时应抛出异常")
         void shouldThrowOnFailure() {
@@ -110,10 +103,6 @@ class MqProducerServiceTest {
     @Nested
     @DisplayName("sendAsync 异步发送")
     class SendAsyncTests {
-
-        /**
-         * 执行 {@code shouldCallAsyncSend} 操作。
-         */
         @Test
         @DisplayName("应调用 asyncSend 异步发送")
         void shouldCallAsyncSend() {
@@ -138,7 +127,6 @@ class MqProducerServiceTest {
     class SendOneWayTests {
 
         /**
-         * 执行 {@code shouldCallSendOneWay} 操作。
          */
         @Test
         @DisplayName("应调用 sendOneWay 单向发送")
@@ -156,10 +144,6 @@ class MqProducerServiceTest {
     @Nested
     @DisplayName("sendDelay 延迟发送")
     class SendDelayTests {
-
-        /**
-         * 执行 {@code shouldSendWithDelayLevel} 操作。
-         */
         @Test
         @DisplayName("应使用指定延迟等级同步发送")
         void shouldSendWithDelayLevel() {
@@ -218,10 +202,6 @@ class MqProducerServiceTest {
     @Nested
     @DisplayName("sendWithHeaders 带Header发送")
     class SendWithHeadersTests {
-
-        /**
-         * 执行 {@code shouldSendWithHeaders} 操作。
-         */
         @Test
         @DisplayName("应附带Header键值对同步发送")
         void shouldSendWithHeaders() {
@@ -238,9 +218,6 @@ class MqProducerServiceTest {
                     .isEqualTo(captor.getValue().getHeaders().get("apex-message-id"));
         }
 
-        /**
-         * 执行 {@code shouldSendWithNullHeaders} 操作。
-         */
         @Test
         @DisplayName("headers为null时应正常发送")
         void shouldSendWithNullHeaders() {

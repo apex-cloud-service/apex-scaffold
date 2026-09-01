@@ -53,33 +53,31 @@ public class TenantAspect {
     public Object applyTenant(ProceedingJoinPoint joinPoint) throws Throwable {
         String authenticatedTenant = null;
         try {
-            for (Object arg : joinPoint.getArgs()) {
-                if (arg instanceof ServerRequest request) {
-                    Object authenticatedUserAttribute =
-                            request.exchange().getAttributes().get("apex.authenticatedUser");
-                    AuthenticatedUser authenticatedUser =
-                            authenticatedUserAttribute instanceof AuthenticatedUser user ? user : null;
-                    authenticatedTenant = authenticatedUser == null ? null : authenticatedUser.tenantId();
-                    String requestedTenant = request.headers().firstHeader(TENANT_HEADER);
-                    if (authenticatedTenant == null || authenticatedTenant.isBlank()) {
-                        throw new BusinessException(ResultCode.FORBIDDEN, "缺少可信租户身份");
-                    }
-                    if (requestedTenant != null
-                            && !requestedTenant.isBlank()
-                            && !TENANT_ID_PATTERN.matcher(requestedTenant).matches()) {
-                        throw new BusinessException(ResultCode.FORBIDDEN, "请求头租户 ID 仅允许 1-64 位字母、数字、点、下划线或短横线");
-                    }
-                    if (!TENANT_ID_PATTERN.matcher(authenticatedTenant).matches()) {
-                        throw new BusinessException(ResultCode.FORBIDDEN, "认证用户租户 ID 非法");
-                    }
-                    if (requestedTenant != null
-                            && !requestedTenant.isBlank()
-                            && !authenticatedTenant.equals(requestedTenant)) {
-                        throw new BusinessException(ResultCode.FORBIDDEN, "无权访问指定租户");
-                    }
-                    TenantContext.setTenantId(authenticatedTenant);
-                    break;
+            ServerRequest request = AspectRequestUtil.firstArgOfType(joinPoint.getArgs(), ServerRequest.class);
+            if (request != null) {
+                Object authenticatedUserAttribute =
+                        request.exchange().getAttributes().get("apex.authenticatedUser");
+                AuthenticatedUser authenticatedUser =
+                        authenticatedUserAttribute instanceof AuthenticatedUser user ? user : null;
+                authenticatedTenant = authenticatedUser == null ? null : authenticatedUser.tenantId();
+                String requestedTenant = request.headers().firstHeader(TENANT_HEADER);
+                if (authenticatedTenant == null || authenticatedTenant.isBlank()) {
+                    throw new BusinessException(ResultCode.FORBIDDEN, "缺少可信租户身份");
                 }
+                if (requestedTenant != null
+                        && !requestedTenant.isBlank()
+                        && !TENANT_ID_PATTERN.matcher(requestedTenant).matches()) {
+                    throw new BusinessException(ResultCode.FORBIDDEN, "请求头租户 ID 仅允许 1-64 位字母、数字、点、下划线或短横线");
+                }
+                if (!TENANT_ID_PATTERN.matcher(authenticatedTenant).matches()) {
+                    throw new BusinessException(ResultCode.FORBIDDEN, "认证用户租户 ID 非法");
+                }
+                if (requestedTenant != null
+                        && !requestedTenant.isBlank()
+                        && !authenticatedTenant.equals(requestedTenant)) {
+                    throw new BusinessException(ResultCode.FORBIDDEN, "无权访问指定租户");
+                }
+                TenantContext.setTenantId(authenticatedTenant);
             }
             if (authenticatedTenant == null) {
                 throw new BusinessException(ResultCode.FORBIDDEN, "缺少可信租户请求");

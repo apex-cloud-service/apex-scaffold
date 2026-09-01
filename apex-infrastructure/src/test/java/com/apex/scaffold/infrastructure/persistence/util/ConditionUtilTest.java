@@ -14,10 +14,6 @@ import org.junit.jupiter.api.Test;
  */
 @DisplayName("ConditionUtil 单元测试")
 class ConditionUtilTest {
-
-    /**
-     * 执行 {@code ifPresent_shouldRunConsumerOnlyWhenValuePresent} 操作。
-     */
     @Test
     @DisplayName("ifPresent - 值存在时执行 consumer，值为空时跳过")
     void ifPresent_shouldRunConsumerOnlyWhenValuePresent() {
@@ -29,9 +25,6 @@ class ConditionUtilTest {
         assertThat(count.get()).isEqualTo(1);
     }
 
-    /**
-     * 执行 {@code ifPresentStr_shouldSkipBlankAndRunWhenHasText} 操作。
-     */
     @Test
     @DisplayName("ifPresentStr - 空白字符串跳过，非空字符串执行 consumer")
     void ifPresentStr_shouldSkipBlankAndRunWhenHasText() {
@@ -43,9 +36,6 @@ class ConditionUtilTest {
         assertThat(count.get()).isEqualTo(1);
     }
 
-    /**
-     * 执行 {@code ifTrue_shouldRunWhenConditionTrue} 操作。
-     */
     @Test
     @DisplayName("ifTrue - 条件为 true 执行 consumer")
     void ifTrue_shouldRunWhenConditionTrue() {

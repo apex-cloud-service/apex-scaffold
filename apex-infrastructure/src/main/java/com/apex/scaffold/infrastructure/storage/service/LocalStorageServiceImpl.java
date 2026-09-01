@@ -97,11 +97,6 @@ public class LocalStorageServiceImpl extends AbstractStorageService {
      * @return 存储类型 "LOCAL"
      */
     @Override
-    /**
-     * 获取StorageType
-     *
-     * @return 结果
-     */
     protected String getStorageType() {
         return "LOCAL";
     }
@@ -116,13 +111,6 @@ public class LocalStorageServiceImpl extends AbstractStorageService {
      * @return 完成信号
      */
     @Override
-    /**
-     * 是否存在BucketExistsInternal
-     *
-     * @param bucketName 参数
-     *
-     * @return 结果
-     */
     protected Mono<Void> ensureBucketExistsInternal(String bucketName) {
         return Mono.fromRunnable(() -> {
                     try {
@@ -148,13 +136,6 @@ public class LocalStorageServiceImpl extends AbstractStorageService {
      * @return 完成信号
      */
     @Override
-    /**
-     * 创建BucketInternal
-     *
-     * @param bucketName 参数
-     *
-     * @return 结果
-     */
     protected Mono<Void> createBucketInternal(String bucketName) {
         return Mono.fromRunnable(() -> {
                     try {
@@ -182,15 +163,6 @@ public class LocalStorageServiceImpl extends AbstractStorageService {
      * @return 文件输入流
      */
     @Override
-    /**
-     * 加载load
-     *
-     * @param bucketName 参数
-     *
-     * @param objectName 参数
-     *
-     * @return 结果
-     */
     public Mono<InputStream> download(String bucketName, String objectName) {
         return Mono.fromCallable(() -> {
                     Path filePath = getFilePath(bucketName, objectName);
@@ -213,17 +185,6 @@ public class LocalStorageServiceImpl extends AbstractStorageService {
      * @return 文件访问 URL
      */
     @Override
-    /**
-     * 获取PresignedUrl
-     *
-     * @param bucketName 参数
-     *
-     * @param objectName 参数
-     *
-     * @param expiry 参数
-     *
-     * @return 结果
-     */
     public Mono<String> getPresignedUrl(String bucketName, String objectName, Integer expiry) {
         String path = "/api/v1/file/content?fileName=" + UriUtils.encodeQueryParam(objectName, StandardCharsets.UTF_8);
         return Mono.just(publicBaseUrl.isEmpty() ? path : publicBaseUrl + path);
@@ -242,19 +203,6 @@ public class LocalStorageServiceImpl extends AbstractStorageService {
      * @return 保存后的唯一文件名
      */
     @Override
-    /**
-     * 加载load
-     *
-     * @param bucketName 参数
-     *
-     * @param fileName 参数
-     *
-     * @param inputStream 参数
-     *
-     * @param contentType 参数
-     *
-     * @return 结果
-     */
     protected String doUpload(String bucketName, String fileName, InputStream inputStream, String contentType) {
         String uniqueFileName = generateUniqueFileName(fileName);
         try {
@@ -281,15 +229,6 @@ public class LocalStorageServiceImpl extends AbstractStorageService {
      * @return 删除成功返回 true，文件不存在或删除失败返回 false
      */
     @Override
-    /**
-     * 删除te
-     *
-     * @param bucketName 参数
-     *
-     * @param fileName 参数
-     *
-     * @return 结果
-     */
     protected boolean doDelete(String bucketName, String fileName) {
         try {
             Path filePath = getFilePath(bucketName, fileName);
@@ -314,15 +253,6 @@ public class LocalStorageServiceImpl extends AbstractStorageService {
      * @return 文件存在返回 true，否则返回 false
      */
     @Override
-    /**
-     * 是否存在ts
-     *
-     * @param bucketName 参数
-     *
-     * @param fileName 参数
-     *
-     * @return 结果
-     */
     protected boolean doExists(String bucketName, String fileName) {
         Path filePath = getFilePath(bucketName, fileName);
         return Files.exists(filePath);
@@ -339,17 +269,6 @@ public class LocalStorageServiceImpl extends AbstractStorageService {
      * @return 文件访问路径
      */
     @Override
-    /**
-     * 构建PresignedUrl
-     *
-     * @param bucketName 参数
-     *
-     * @param fileName 参数
-     *
-     * @param expiry 参数
-     *
-     * @return 结果
-     */
     protected String buildPresignedUrl(String bucketName, String fileName, int expiry) {
         return "/api/v1/file/content?fileName=" + UriUtils.encodeQueryParam(fileName, StandardCharsets.UTF_8);
     }
@@ -402,11 +321,6 @@ public class LocalStorageServiceImpl extends AbstractStorageService {
      * @return 照片访问 URL 前缀，如 {@code /uploads/apex}
      */
     @Override
-    /**
-     * 获取PhotoUrlPrefix
-     *
-     * @return 结果
-     */
     public String getPhotoUrlPrefix() {
         return "/uploads/" + getBucketName();
     }
@@ -417,11 +331,6 @@ public class LocalStorageServiceImpl extends AbstractStorageService {
      * @return 存储桶名称
      */
     @Override
-    /**
-     * 获取BucketName
-     *
-     * @return 结果
-     */
     protected String getBucketName() {
         return LOCAL_BUCKET;
     }

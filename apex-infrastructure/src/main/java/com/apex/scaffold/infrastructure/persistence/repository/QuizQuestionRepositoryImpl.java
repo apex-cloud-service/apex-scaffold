@@ -34,13 +34,6 @@ public class QuizQuestionRepositoryImpl implements QuizQuestionRepository {
      * {@inheritDoc}
      */
     @Override
-    /**
-     * 查找RandomQuestions
-     *
-     * @param limit 参数
-     *
-     * @return 结果
-     */
     public Mono<List<QuizQuestionEntity>> findRandomQuestions(int limit) {
         return Mono.fromCallable(() -> mapper.selectList(new LambdaQueryWrapper<QuizQuestionPO>()
                         .eq(QuizQuestionPO::getEnabled, 1)
@@ -53,13 +46,6 @@ public class QuizQuestionRepositoryImpl implements QuizQuestionRepository {
      * {@inheritDoc}
      */
     @Override
-    /**
-     * 查找ByQuestionId
-     *
-     * @param questionId 参数
-     *
-     * @return 结果
-     */
     public Mono<QuizQuestionEntity> findByQuestionId(String questionId) {
         return Mono.fromCallable(() -> mapper.selectOne(new LambdaQueryWrapper<QuizQuestionPO>()
                         .eq(QuizQuestionPO::getQuestionId, questionId)
@@ -72,13 +58,6 @@ public class QuizQuestionRepositoryImpl implements QuizQuestionRepository {
      * {@inheritDoc}
      */
     @Override
-    /**
-     * 保存
-     *
-     * @param entity 参数
-     *
-     * @return 结果
-     */
     public Mono<QuizQuestionEntity> save(QuizQuestionEntity entity) {
         return Mono.fromCallable(() -> {
                     QuizQuestionPO po = quizQuestionPoConverter.toPo(entity);

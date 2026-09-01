@@ -159,13 +159,11 @@ class AuthTicketServiceTest {
     }
 
     /**
-     * 执行 {@code payload} 逻辑。
+     * 构造指定类型与设备 ID 的票据载荷。
      *
-     * @param type type 参数
-     *
-     * @param deviceId deviceId 参数
-     *
-     * @return 执行结果
+     * @param type     票据类型
+     * @param deviceId 设备 ID
+     * @return 票据载荷
      */
     private AuthTicketPayload payload(AuthTicketType type, String deviceId) {
         AuthTicketPayload payload = new AuthTicketPayload();
@@ -176,11 +174,10 @@ class AuthTicketServiceTest {
     }
 
     /**
-     * 执行 {@code assertCode} 逻辑。
+     * 断言异常为业务异常且错误码与预期一致。
      *
-     * @param error error 参数
-     *
-     * @param expected expected 参数
+     * @param error    捕获的异常
+     * @param expected 期望的错误码
      */
     private void assertCode(Throwable error, ResultCode expected) {
         assertThat(error).isInstanceOf(BusinessException.class);

@@ -51,19 +51,12 @@ class MinioServiceImplTest {
         minioService = new MinioServiceImpl(minioClient);
     }
 
-    /**
-     * 获取{@code storageType_ReturnsMinio}。
-     */
     @Test
     @DisplayName("getStorageType - 应返回MINIO")
     void getStorageType_ReturnsMinio() {
         assertThat(minioService.getStorageType()).isEqualTo("MINIO");
     }
 
-    /**
-     * 执行 {@code ensureBucketExistsInternal_BucketExists_Completes} 操作。
-     * @throws Exception 当操作无法完成时
-     */
     @Test
     @DisplayName("ensureBucketExistsInternal - 存储桶已存在应直接完成")
     void ensureBucketExistsInternal_BucketExists_Completes() throws Exception {
@@ -78,10 +71,6 @@ class MinioServiceImplTest {
         verify(minioClient, never()).makeBucket(any(MakeBucketArgs.class));
     }
 
-    /**
-     * 执行 {@code ensureBucketExistsInternal_BucketNotExists_ReturnsError} 操作。
-     * @throws Exception 当操作无法完成时
-     */
     @Test
     @DisplayName("ensureBucketExistsInternal - 存储桶不存在应拒绝上传")
     void ensureBucketExistsInternal_BucketNotExists_ReturnsError() throws Exception {
@@ -97,10 +86,6 @@ class MinioServiceImplTest {
         verify(minioClient, never()).makeBucket(any(MakeBucketArgs.class));
     }
 
-    /**
-     * 执行 {@code ensureBucketExistsInternal_CheckException_ReturnsError} 操作。
-     * @throws Exception 当操作无法完成时
-     */
     @Test
     @DisplayName("ensureBucketExistsInternal - 检查时抛出异常应返回错误")
     void ensureBucketExistsInternal_CheckException_ReturnsError() throws Exception {
@@ -116,10 +101,6 @@ class MinioServiceImplTest {
                 .verify();
     }
 
-    /**
-     * 创建{@code bucketInternal_BucketNotExists_CreatesBucket}。
-     * @throws Exception 当操作无法完成时
-     */
     @Test
     @DisplayName("createBucketInternal - 存储桶不存在应创建")
     void createBucketInternal_BucketNotExists_CreatesBucket() throws Exception {
@@ -130,10 +111,6 @@ class MinioServiceImplTest {
         verify(minioClient).makeBucket(any(MakeBucketArgs.class));
     }
 
-    /**
-     * 创建{@code bucketInternal_BucketExists_Completes}。
-     * @throws Exception 当操作无法完成时
-     */
     @Test
     @DisplayName("createBucketInternal - 存储桶已存在应直接完成")
     void createBucketInternal_BucketExists_Completes() throws Exception {
@@ -147,10 +124,6 @@ class MinioServiceImplTest {
         verify(minioClient, never()).makeBucket(any(MakeBucketArgs.class));
     }
 
-    /**
-     * 创建{@code bucketInternal_CreateException_ReturnsError}。
-     * @throws Exception 当操作无法完成时
-     */
     @Test
     @DisplayName("createBucketInternal - 创建存储桶时抛出异常应返回错误")
     void createBucketInternal_CreateException_ReturnsError() throws Exception {
@@ -166,10 +139,6 @@ class MinioServiceImplTest {
                 .verify();
     }
 
-    /**
-     * 执行 {@code download_Success_ReturnsInputStream} 操作。
-     * @throws Exception 当操作无法完成时
-     */
     @Test
     @DisplayName("download - 成功下载文件")
     void download_Success_ReturnsInputStream() throws Exception {
@@ -191,10 +160,6 @@ class MinioServiceImplTest {
                 .verifyComplete();
     }
 
-    /**
-     * 执行 {@code download_Exception_PropagatesError} 操作。
-     * @throws Exception 当操作无法完成时
-     */
     @Test
     @DisplayName("download - 下载时抛出异常应传递错误")
     void download_Exception_PropagatesError() throws Exception {
@@ -207,10 +172,6 @@ class MinioServiceImplTest {
                 .verify();
     }
 
-    /**
-     * 获取{@code presignedUrl_CustomExpiry_ReturnsUrl}。
-     * @throws Exception 当操作无法完成时
-     */
     @Test
     @DisplayName("getPresignedUrl - 使用自定义有效期")
     void getPresignedUrl_CustomExpiry_ReturnsUrl() throws Exception {
@@ -228,10 +189,6 @@ class MinioServiceImplTest {
         assertThat(captor.getValue().expiry()).isEqualTo(30);
     }
 
-    /**
-     * 获取{@code presignedUrl_NullExpiry_ReturnsUrl}。
-     * @throws Exception 当操作无法完成时
-     */
     @Test
     @DisplayName("getPresignedUrl - expiry为null应使用默认值300秒")
     void getPresignedUrl_NullExpiry_ReturnsUrl() throws Exception {
@@ -249,10 +206,6 @@ class MinioServiceImplTest {
         assertThat(captor.getValue().expiry()).isEqualTo(300);
     }
 
-    /**
-     * 获取{@code presignedUrl_Exception_PropagatesError}。
-     * @throws Exception 当操作无法完成时
-     */
     @Test
     @DisplayName("getPresignedUrl - 生成时抛出异常应传递错误")
     void getPresignedUrl_Exception_PropagatesError() throws Exception {
@@ -266,10 +219,6 @@ class MinioServiceImplTest {
                 .verify();
     }
 
-    /**
-     * 执行 {@code doUpload_Success_ReturnsFileName} 操作。
-     * @throws Exception 当操作无法完成时
-     */
     @Test
     @DisplayName("doUpload - 成功上传文件")
     void doUpload_Success_ReturnsFileName() throws Exception {
@@ -282,10 +231,6 @@ class MinioServiceImplTest {
         verify(minioClient).putObject(any(PutObjectArgs.class));
     }
 
-    /**
-     * 执行 {@code doUpload_Exception_ThrowsRuntimeException} 操作。
-     * @throws Exception 当操作无法完成时
-     */
     @Test
     @DisplayName("doUpload - 上传时抛出异常应抛出RuntimeException")
     void doUpload_Exception_ThrowsRuntimeException() throws Exception {
@@ -297,10 +242,6 @@ class MinioServiceImplTest {
                 .hasMessage("文件上传失败");
     }
 
-    /**
-     * 执行 {@code doDelete_Success_ReturnsTrue} 操作。
-     * @throws Exception 当操作无法完成时
-     */
     @Test
     @DisplayName("doDelete - 成功删除文件")
     void doDelete_Success_ReturnsTrue() throws Exception {
@@ -309,10 +250,6 @@ class MinioServiceImplTest {
         verify(minioClient).removeObject(any(RemoveObjectArgs.class));
     }
 
-    /**
-     * 执行 {@code doDelete_Exception_ReturnsFalse} 操作。
-     * @throws Exception 当操作无法完成时
-     */
     @Test
     @DisplayName("doDelete - 删除时抛出异常应返回false")
     void doDelete_Exception_ReturnsFalse() throws Exception {
@@ -323,10 +260,6 @@ class MinioServiceImplTest {
         assertThat(result).isFalse();
     }
 
-    /**
-     * 执行 {@code doExists_FileExists_ReturnsTrue} 操作。
-     * @throws Exception 当操作无法完成时
-     */
     @Test
     @DisplayName("doExists - 文件存在应返回true")
     void doExists_FileExists_ReturnsTrue() throws Exception {
@@ -336,10 +269,6 @@ class MinioServiceImplTest {
         verify(minioClient).statObject(any(StatObjectArgs.class));
     }
 
-    /**
-     * 执行 {@code doExists_Exception_ReturnsFalse} 操作。
-     * @throws Exception 当操作无法完成时
-     */
     @Test
     @DisplayName("doExists - statObject抛出异常应返回false")
     void doExists_Exception_ReturnsFalse() throws Exception {

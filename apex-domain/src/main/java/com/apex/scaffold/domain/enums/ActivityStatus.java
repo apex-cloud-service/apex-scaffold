@@ -29,11 +29,16 @@ public enum ActivityStatus {
 
     private final double coefficient;
 
+    /**
+     * 活跃判定阈值（天）。
+     *
+     * <p>距最近一次登录 ≤ 该值判定为 {@link #ACTIVE}，否则判定为 {@link #INACTIVE}。</p>
+     */
     public static final int ACTIVE_THRESHOLD_DAYS = 3;
 
     /**
      * 创建 {@code ActivityStatus} 实例。
-     * @param coefficient 参数 {@code coefficient}
+     * @param coefficient 该活跃状态对应的曝光系数
      */
     ActivityStatus(double coefficient) {
         this.coefficient = coefficient;

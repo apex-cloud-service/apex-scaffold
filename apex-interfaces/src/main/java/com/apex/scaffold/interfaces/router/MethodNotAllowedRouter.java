@@ -43,9 +43,9 @@ public class MethodNotAllowedRouter implements RouterFunction<ServerResponse>, O
     private final List<RouterFunction<ServerResponse>> delegates;
 
     /**
-     * 使用给定依赖和配置创建MethodNotAllowedRouter实例。
+     * 用已注册的路由委托列表构造 405 兜底路由器。
      *
-     * @param delegates 方法输入 {@code delegates}，类型为 {@code List<RouterFunction<ServerResponse>>}
+     * @param delegates 已注册的路由函数委托列表
      */
     public MethodNotAllowedRouter(List<RouterFunction<ServerResponse>> delegates) {
         this.delegates = delegates;
@@ -54,8 +54,8 @@ public class MethodNotAllowedRouter implements RouterFunction<ServerResponse>, O
     /**
      * {@inheritDoc}
      *
-     * @param request 方法输入 {@code request}，类型为 {@code ServerRequest}
-     * @return 操作结果，类型为 {@code Mono<HandlerFunction<ServerResponse>>}
+     * @param request 待匹配的请求
+     * @return 探测到可处理该请求的处理器；无匹配时为空
      */
     @Override
     @NonNull
@@ -187,7 +187,7 @@ public class MethodNotAllowedRouter implements RouterFunction<ServerResponse>, O
     /**
      * {@inheritDoc}
      *
-     * @return 操作结果，类型为 {@code int}
+     * @return 路由器的排序优先级（最低）
      */
     @Override
     public int getOrder() {

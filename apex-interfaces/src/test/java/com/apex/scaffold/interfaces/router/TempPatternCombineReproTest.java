@@ -17,10 +17,6 @@ import org.springframework.web.reactive.function.server.ServerResponse;
  */
 @DisplayName("临时复现 PatternParseException")
 class TempPatternCombineReproTest {
-
-    /**
-     * 执行 {@code reproduce} 操作。
-     */
     @Test
     @DisplayName("组合 apiRoutes+exploreRoutes 后 GET reports/impression/me 不应 400")
     void reproduce() {
@@ -54,9 +50,6 @@ class TempPatternCombineReproTest {
                 .isOk();
     }
 
-    /**
-     * 执行 {@code reproduceSubmit} 操作。
-     */
     @Test
     @DisplayName("组合后 POST submit 不应 400")
     void reproduceSubmit() {
@@ -86,9 +79,6 @@ class TempPatternCombineReproTest {
                 .isOk();
     }
 
-    /**
-     * 执行 {@code reproduceWithMethodNotAllowed} 操作。
-     */
     @Test
     @DisplayName("组合 MethodNotAllowedRouter 后 GET reports/impression/me 不应 400")
     void reproduceWithMethodNotAllowed() {

@@ -29,9 +29,6 @@ class TraceIdUtilTest {
         MDC.clear();
     }
 
-    /**
-     * 执行 {@code tearDown} 操作。
-     */
     @AfterEach
     void tearDown() {
         MDC.clear();
@@ -40,10 +37,6 @@ class TraceIdUtilTest {
     @Nested
     @DisplayName("generateTraceId 生成追踪ID测试")
     class GenerateTraceIdTests {
-
-        /**
-         * 执行 {@code shouldGenerateTraceIdWithoutHyphens} 操作。
-         */
         @Test
         @DisplayName("generateTraceId应生成不含横线的32位十六进制字符串")
         void shouldGenerateTraceIdWithoutHyphens() {
@@ -56,9 +49,6 @@ class TraceIdUtilTest {
             assertThat(traceId).matches("^[0-9a-f]{32}$");
         }
 
-        /**
-         * 执行 {@code shouldGenerateDifferentTraceIds} 操作。
-         */
         @Test
         @DisplayName("两次调用generateTraceId应生成不同的ID")
         void shouldGenerateDifferentTraceIds() {
@@ -72,10 +62,6 @@ class TraceIdUtilTest {
     @Nested
     @DisplayName("setTraceId / getTraceId 设置和获取追踪ID测试")
     class SetAndGetTraceIdTests {
-
-        /**
-         * 执行 {@code shouldReturnSetTraceId} 操作。
-         */
         @Test
         @DisplayName("setTraceId设置后getTraceId应返回相同值")
         void shouldReturnSetTraceId() {
@@ -87,9 +73,6 @@ class TraceIdUtilTest {
             assertThat(actual).isEqualTo(expected);
         }
 
-        /**
-         * 执行 {@code shouldAutoGenerateTraceIdWhenNotSet} 操作。
-         */
         @Test
         @DisplayName("getTraceId在未设置时应自动生成新ID")
         void shouldAutoGenerateTraceIdWhenNotSet() {
@@ -101,9 +84,6 @@ class TraceIdUtilTest {
             assertThat(traceId).doesNotContain("-");
         }
 
-        /**
-         * 执行 {@code shouldReturnSameTraceIdOnMultipleCalls} 操作。
-         */
         @Test
         @DisplayName("getTraceId连续调用应返回同一ID")
         void shouldReturnSameTraceIdOnMultipleCalls() {
@@ -113,9 +93,6 @@ class TraceIdUtilTest {
             assertThat(traceId1).isEqualTo(traceId2);
         }
 
-        /**
-         * 执行 {@code shouldOverwriteTraceId} 操作。
-         */
         @Test
         @DisplayName("setTraceId覆盖后getTraceId应返回最新值")
         void shouldOverwriteTraceId() {
@@ -131,10 +108,6 @@ class TraceIdUtilTest {
     @Nested
     @DisplayName("clear 清除追踪ID测试")
     class ClearTraceIdTests {
-
-        /**
-         * 执行 {@code shouldGenerateNewTraceIdAfterClear} 操作。
-         */
         @Test
         @DisplayName("clear后getTraceId应自动生成新ID")
         void shouldGenerateNewTraceIdAfterClear() {
@@ -149,9 +122,6 @@ class TraceIdUtilTest {
             assertThat(traceId).isNotEqualTo("existing-id");
         }
 
-        /**
-         * 执行 {@code shouldNotThrowExceptionWhenClearingUnsetKey} 操作。
-         */
         @Test
         @DisplayName("clear未设置的MDC不应抛异常")
         void shouldNotThrowExceptionWhenClearingUnsetKey() {
@@ -162,10 +132,6 @@ class TraceIdUtilTest {
     @Nested
     @DisplayName("init 初始化追踪ID测试")
     class InitTraceIdTests {
-
-        /**
-         * 执行 {@code shouldInitTraceIdWhenNotSet} 操作。
-         */
         @Test
         @DisplayName("init在未设置时应自动生成追踪ID")
         void shouldInitTraceIdWhenNotSet() {
@@ -179,9 +145,6 @@ class TraceIdUtilTest {
             assertThat(traceId).doesNotContain("-");
         }
 
-        /**
-         * 执行 {@code shouldNotOverwriteExistingTraceIdOnInit} 操作。
-         */
         @Test
         @DisplayName("init在已设置时应保留已有ID不覆盖")
         void shouldNotOverwriteExistingTraceIdOnInit() {
@@ -198,10 +161,6 @@ class TraceIdUtilTest {
     @Nested
     @DisplayName("TRACE_ID_KEY 常量测试")
     class ConstantTests {
-
-        /**
-         * 执行 {@code shouldHaveCorrectTraceIdKeyConstant} 操作。
-         */
         @Test
         @DisplayName("TRACE_ID_KEY应为\"traceId\"")
         void shouldHaveCorrectTraceIdKeyConstant() {

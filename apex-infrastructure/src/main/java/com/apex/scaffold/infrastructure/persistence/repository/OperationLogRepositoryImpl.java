@@ -37,13 +37,6 @@ public class OperationLogRepositoryImpl implements OperationLogRepository {
      * @return 影响行数
      */
     @Override
-    /**
-     * 插入
-     *
-     * @param log 参数
-     *
-     * @return 结果
-     */
     public Mono<Integer> insert(OperationLogEntity log) {
         return Mono.fromCallable(() -> {
                     OperationLogPO po = operationLogPoConverter.toPo(log);

@@ -133,13 +133,6 @@ public class ChuanglanSmsCodeServiceImpl implements SmsCodeService, SmsCodePurpo
      * @return 发送完成的空Mono，冷却期内返回Mono.error
      */
     @Override
-    /**
-     * 发送AndStore
-     *
-     * @param phone 参数
-     *
-     * @return 结果
-     */
     public Mono<Void> sendAndStore(String phone) {
         return sendAndStore(phone, SmsCodePurpose.LOGIN);
     }
@@ -236,15 +229,6 @@ public class ChuanglanSmsCodeServiceImpl implements SmsCodeService, SmsCodePurpo
      * @return 验证通过返回true，验证失败返回false
      */
     @Override
-    /**
-     * 验证
-     *
-     * @param phone 参数
-     *
-     * @param code 参数
-     *
-     * @return 结果
-     */
     public Mono<Boolean> validate(String phone, String code) {
         return validate(phone, code, SmsCodePurpose.LOGIN);
     }

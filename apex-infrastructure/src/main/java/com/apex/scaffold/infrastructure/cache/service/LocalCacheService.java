@@ -74,6 +74,29 @@ public class LocalCacheService {
     }
 
     /**
+     * 转换缓存原始值为目标类型：优先类型安全的强制转换，回退到 JSON 反序列化。
+     *
+     * @param value 缓存的原始值
+     * @param clazz 目标类型 Class 对象
+     * @param <T>   目标类型泛型
+     * @return 转换后的值，转换失败返回 {@code null}
+     */
+    @SuppressWarnings("unchecked")
+    private <T> T deserializeValue(Object value, Class<T> clazz) {
+        if (clazz.isInstance(value)) {
+            return clazz.cast(value);
+        }
+        if (value instanceof String str) {
+            try {
+                return objectMapper.readValue(str, clazz);
+            } catch (Exception e) {
+                log.warn("JSON 反序列化缓存值失败, type: {}", clazz.getName(), e);
+            }
+        }
+        return null;
+    }
+
+    /**
      * 从本地缓存中获取单个值
      *
      * <p>优先尝试直接类型转换，失败时使用 JSON 反序列化。
@@ -84,7 +107,6 @@ public class LocalCacheService {
      * @param clazz 目标类型 Class 对象
      * @return 缓存值，不存在时返回空 Mono
      */
-    @SuppressWarnings("unchecked")
     public <T> Mono<T> get(String key, Class<T> clazz) {
         if (key == null) {
             return Mono.empty();
@@ -113,13 +135,7 @@ public class LocalCacheService {
             if (value == null) {
                 return Mono.empty();
             }
-            if (clazz.isInstance(value)) {
-                return Mono.just(clazz.cast(value));
-            } else if (value instanceof String) {
-                T result = objectMapper.readValue((String) value, clazz);
-                return Mono.justOrEmpty(result);
-            }
-            return Mono.empty();
+            return Mono.justOrEmpty(deserializeValue(value, clazz));
         } catch (Exception e) {
             log.warn("获取本地缓存失败, key: {}", key, e);
             return Mono.empty();
@@ -210,7 +226,6 @@ public class LocalCacheService {
      * @param clazz 目标类型 Class 对象
      * @return 非空的缓存值列表
      */
-    @SuppressWarnings("unchecked")
     public <T> Mono<List<T>> getBatch(List<String> keys, Class<T> clazz) {
         if (keys == null || keys.isEmpty()) {
             return Mono.just(Collections.emptyList());
@@ -238,12 +253,7 @@ public class LocalCacheService {
                             if (value == null) {
                                 return null;
                             }
-                            if (clazz.isInstance(value)) {
-                                return clazz.cast(value);
-                            } else if (value instanceof String) {
-                                return objectMapper.readValue((String) value, clazz);
-                            }
-                            return null;
+                            return deserializeValue(value, clazz);
                         } catch (Exception e) {
                             log.warn("批量获取本地缓存失败, key: {}", key, e);
                             return null;

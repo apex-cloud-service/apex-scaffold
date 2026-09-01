@@ -16,10 +16,6 @@ import org.springframework.stereotype.Service;
  */
 @DisplayName("SmsCodeService 基础设施实现契约测试")
 class SmsCodeServiceImplementationsContractTest {
-
-    /**
-     * 执行 {@code bothImplementationsShouldImplementSmsCodeService} 操作。
-     */
     @Test
     @DisplayName("两个实现类都应实现 SmsCodeService 接口")
     void bothImplementationsShouldImplementSmsCodeService() {
@@ -27,9 +23,6 @@ class SmsCodeServiceImplementationsContractTest {
         assertThat(SmsCodeService.class).isAssignableFrom(ChuanglanSmsCodeServiceImpl.class);
     }
 
-    /**
-     * 执行 {@code implementationsShouldHaveDifferentServiceNames} 操作。
-     */
     @Test
     @DisplayName("两个实现类应使用不同且非空的 Spring Bean 名称")
     void implementationsShouldHaveDifferentServiceNames() {

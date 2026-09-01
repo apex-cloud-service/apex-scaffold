@@ -87,9 +87,6 @@ class SmsLoginStrategyTest {
         newUser.setPhone("13800138000");
     }
 
-    /**
-     * 执行 {@code login_PhoneIsNull_ThrowsError} 操作。
-     */
     @Test
     @DisplayName("login - 手机号为空时抛出参数异常")
     void login_PhoneIsNull_ThrowsError() {
@@ -102,9 +99,6 @@ class SmsLoginStrategyTest {
         });
     }
 
-    /**
-     * 执行 {@code login_PhoneIsBlank_ThrowsError} 操作。
-     */
     @Test
     @DisplayName("login - 手机号为空白时抛出参数异常")
     void login_PhoneIsBlank_ThrowsError() {
@@ -117,9 +111,6 @@ class SmsLoginStrategyTest {
         });
     }
 
-    /**
-     * 执行 {@code login_SmsCodeIsNull_ThrowsError} 操作。
-     */
     @Test
     @DisplayName("login - 验证码为空时抛出参数异常")
     void login_SmsCodeIsNull_ThrowsError() {
@@ -132,9 +123,6 @@ class SmsLoginStrategyTest {
         });
     }
 
-    /**
-     * 执行 {@code login_SmsCodeIsBlank_ThrowsError} 操作。
-     */
     @Test
     @DisplayName("login - 验证码为空白时抛出参数异常")
     void login_SmsCodeIsBlank_ThrowsError() {
@@ -147,9 +135,6 @@ class SmsLoginStrategyTest {
         });
     }
 
-    /**
-     * 执行 {@code login_InvalidSmsCode_ThrowsError} 操作。
-     */
     @Test
     @DisplayName("login - 验证码错误时抛出异常")
     void login_InvalidSmsCode_ThrowsError() {
@@ -162,9 +147,6 @@ class SmsLoginStrategyTest {
         });
     }
 
-    /**
-     * 执行 {@code login_ExistingUser_Success} 操作。
-     */
     @Test
     @DisplayName("login - 已有用户登录成功")
     void login_ExistingUser_Success() {
@@ -189,9 +171,6 @@ class SmsLoginStrategyTest {
         verify(tokenService).storeToken(eq("test_openid"), eq("access_token"), eq("refresh_token"), any(), any());
     }
 
-    /**
-     * 执行 {@code login_NewUser_Success} 操作。
-     */
     @Test
     @DisplayName("login - 未注册手机号返回注册票据且不创建用户")
     void login_NewUser_Success() {

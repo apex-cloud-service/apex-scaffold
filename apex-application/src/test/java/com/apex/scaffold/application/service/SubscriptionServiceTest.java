@@ -64,9 +64,6 @@ class SubscriptionServiceTest {
         user.setNickName("TestUser");
     }
 
-    /**
-     * 获取{@code me_Success}。
-     */
     @Test
     @DisplayName("getMe - 成功获取会员状态和算力余额")
     void getMe_Success() {
@@ -93,9 +90,6 @@ class SubscriptionServiceTest {
                 .verifyComplete();
     }
 
-    /**
-     * 获取{@code me_DefaultValues_Success}。
-     */
     @Test
     @DisplayName("getMe - 无订阅和账户时返回默认值")
     void getMe_DefaultValues_Success() {
@@ -114,9 +108,6 @@ class SubscriptionServiceTest {
                 .verifyComplete();
     }
 
-    /**
-     * 获取{@code me_UserNotFound}。
-     */
     @Test
     @DisplayName("getMe - 用户不存在时抛出异常")
     void getMe_UserNotFound() {

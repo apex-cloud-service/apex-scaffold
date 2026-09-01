@@ -41,13 +41,6 @@ public class ReportTicketRepositoryImpl implements ReportTicketRepository {
      * @return 保存后的报告票据实体
      */
     @Override
-    /**
-     * 保存
-     *
-     * @param entity 参数
-     *
-     * @return 结果
-     */
     public Mono<ReportTicketEntity> save(ReportTicketEntity entity) {
         return Mono.fromCallable(() -> {
                     ReportTicketPO po = reportTicketPoConverter.toPo(entity);

@@ -186,13 +186,14 @@ public class AuthRegistrationService {
     }
 
     /**
-     * 执行 {@code registerWithPayload} 逻辑。
+     * 使用注册票据载荷完成注册或登录。
      *
-     * @param payload payload 参数
+     * <p>按票据中的手机号查找已有用户：已存在且身份一致则直接登录，
+     * 身份不一致则报手机号已注册错误；不存在则创建新用户并登录。</p>
      *
-     * @param request request 参数
-     *
-     * @return 执行结果
+     * @param payload 注册票据载荷（含手机号与 openId）
+     * @param request 注册请求
+     * @return 注册或登录响应
      */
     private Mono<LoginResponse> registerWithPayload(AuthTicketPayload payload, RegisterRequest request) {
         return userService
@@ -606,13 +607,13 @@ public class AuthRegistrationService {
     }
 
     /**
-     * 执行 {@code isSameRegistrationIdentity} 逻辑。
+     * 判断票据中的 openId 与已有用户是否属于同一注册身份。
      *
-     * @param existing existing 参数
+     * <p>票据未携带 openId（如纯手机号注册）时视为同一身份。</p>
      *
-     * @param payload payload 参数
-     *
-     * @return 执行结果
+     * @param existing 已存在的用户
+     * @param payload  注册票据载荷
+     * @return 身份一致时返回 {@code true}
      */
     private boolean isSameRegistrationIdentity(UserEntity existing, AuthTicketPayload payload) {
         if (payload.getOpenId() == null || payload.getOpenId().isBlank()) {

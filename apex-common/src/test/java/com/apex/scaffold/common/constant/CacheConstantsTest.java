@@ -19,11 +19,6 @@ import org.junit.jupiter.api.Test;
  */
 @DisplayName("CacheConstants 缓存常量测试")
 class CacheConstantsTest {
-
-    /**
-     * 执行 {@code shouldBeFinalClassWithPrivateConstructor} 操作。
-     * @throws Exception 当操作无法完成时
-     */
     @Test
     @DisplayName("验证 CacheConstants 是 final 类且构造函数为私有")
     void shouldBeFinalClassWithPrivateConstructor() throws Exception {
@@ -37,73 +32,48 @@ class CacheConstantsTest {
     @Nested
     @DisplayName("缓存 Key 前缀测试")
     class CacheKeyPrefixTest {
-
-        /**
-         * 执行 {@code shouldHaveCorrectCachePrefix} 操作。
-         */
         @Test
         @DisplayName("CACHE_PREFIX 应为 'apex:'")
         void shouldHaveCorrectCachePrefix() {
             assertEquals("apex:", CacheConstants.CACHE_PREFIX);
         }
 
-        /**
-         * 执行 {@code shouldHaveCorrectUserTokenKey} 操作。
-         */
         @Test
         @DisplayName("USER_TOKEN_KEY 应为 'apex:user:token:'")
         void shouldHaveCorrectUserTokenKey() {
             assertEquals("apex:user:token:", CacheConstants.USER_TOKEN_KEY);
         }
 
-        /**
-         * 执行 {@code shouldHaveCorrectUserInfoKey} 操作。
-         */
         @Test
         @DisplayName("USER_INFO_KEY 应为 'apex:user:info:'")
         void shouldHaveCorrectUserInfoKey() {
             assertEquals("apex:user:info:", CacheConstants.USER_INFO_KEY);
         }
 
-        /**
-         * 执行 {@code shouldHaveCorrectCaptchaKey} 操作。
-         */
         @Test
         @DisplayName("CAPTCHA_KEY 应为 'apex:captcha:'")
         void shouldHaveCorrectCaptchaKey() {
             assertEquals("apex:captcha:", CacheConstants.CAPTCHA_KEY);
         }
 
-        /**
-         * 执行 {@code shouldHaveCorrectWechatAccessTokenKey} 操作。
-         */
         @Test
         @DisplayName("WECHAT_ACCESS_TOKEN_KEY 应为 'apex:wechat:access_token'")
         void shouldHaveCorrectWechatAccessTokenKey() {
             assertEquals("apex:wechat:access_token", CacheConstants.WECHAT_ACCESS_TOKEN_KEY);
         }
 
-        /**
-         * 执行 {@code shouldHaveCorrectWechatJsapiTicketKey} 操作。
-         */
         @Test
         @DisplayName("WECHAT_JSAPI_TICKET_KEY 应为 'apex:wechat:jsapi_ticket'")
         void shouldHaveCorrectWechatJsapiTicketKey() {
             assertEquals("apex:wechat:jsapi_ticket", CacheConstants.WECHAT_JSAPI_TICKET_KEY);
         }
 
-        /**
-         * 执行 {@code shouldHaveCorrectLockPrefix} 操作。
-         */
         @Test
         @DisplayName("LOCK_PREFIX 应为 'apex:lock:'")
         void shouldHaveCorrectLockPrefix() {
             assertEquals("apex:lock:", CacheConstants.LOCK_PREFIX);
         }
 
-        /**
-         * 执行 {@code shouldHaveCorrectLoginLockKey} 操作。
-         */
         @Test
         @DisplayName("LOGIN_LOCK_KEY 应为 'apex:lock:login:'")
         void shouldHaveCorrectLoginLockKey() {
@@ -114,37 +84,24 @@ class CacheConstantsTest {
     @Nested
     @DisplayName("缓存过期时间（TTL）测试")
     class CacheTtlTest {
-
-        /**
-         * 执行 {@code shouldHaveCorrectDefaultExpireTime} 操作。
-         */
         @Test
         @DisplayName("DEFAULT_EXPIRE_TIME 应为 3600 秒（1 小时）")
         void shouldHaveCorrectDefaultExpireTime() {
             assertEquals(3600L, CacheConstants.DEFAULT_EXPIRE_TIME);
         }
 
-        /**
-         * 执行 {@code shouldHaveCorrectTokenExpireTime} 操作。
-         */
         @Test
         @DisplayName("TOKEN_EXPIRE_TIME 应为 7200 秒（2 小时）")
         void shouldHaveCorrectTokenExpireTime() {
             assertEquals(7200L, CacheConstants.TOKEN_EXPIRE_TIME);
         }
 
-        /**
-         * 执行 {@code shouldHaveCorrectCaptchaExpireTime} 操作。
-         */
         @Test
         @DisplayName("CAPTCHA_EXPIRE_TIME 应为 300 秒（5 分钟）")
         void shouldHaveCorrectCaptchaExpireTime() {
             assertEquals(300L, CacheConstants.CAPTCHA_EXPIRE_TIME);
         }
 
-        /**
-         * 执行 {@code shouldHaveCorrectWechatTokenExpireTime} 操作。
-         */
         @Test
         @DisplayName("WECHAT_TOKEN_EXPIRE_TIME 应为 6600 秒（110 分钟）")
         void shouldHaveCorrectWechatTokenExpireTime() {
@@ -155,10 +112,6 @@ class CacheConstantsTest {
     @Nested
     @DisplayName("Key 格式一致性测试")
     class KeyConsistencyTest {
-
-        /**
-         * 执行 {@code allCacheKeysShouldStartWithCachePrefix} 操作。
-         */
         @Test
         @DisplayName("所有缓存 Key 均应以 CACHE_PREFIX 开头")
         void allCacheKeysShouldStartWithCachePrefix() {
@@ -171,9 +124,6 @@ class CacheConstantsTest {
             assertTrue(CacheConstants.LOGIN_LOCK_KEY.startsWith(CacheConstants.CACHE_PREFIX));
         }
 
-        /**
-         * 执行 {@code loginLockKeyShouldStartWithLockPrefix} 操作。
-         */
         @Test
         @DisplayName("LOGIN_LOCK_KEY 应以 LOCK_PREFIX 开头")
         void loginLockKeyShouldStartWithLockPrefix() {
@@ -184,10 +134,6 @@ class CacheConstantsTest {
     @Nested
     @DisplayName("过期时间合理性测试")
     class TtlReasonablenessTest {
-
-        /**
-         * 执行 {@code captchaExpireTimeShouldBeShortest} 操作。
-         */
         @Test
         @DisplayName("验证码过期时间应最短")
         void captchaExpireTimeShouldBeShortest() {
@@ -204,9 +150,6 @@ class CacheConstantsTest {
             assertTrue(CacheConstants.TOKEN_EXPIRE_TIME > CacheConstants.DEFAULT_EXPIRE_TIME);
         }
 
-        /**
-         * 执行 {@code wechatTokenExpireTimeShouldBeLessThanTokenExpireTime} 操作。
-         */
         @Test
         @DisplayName("微信 Token 过期时间应小于 Token 过期时间（提前过期）")
         void wechatTokenExpireTimeShouldBeLessThanTokenExpireTime() {

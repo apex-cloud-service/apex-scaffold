@@ -4,13 +4,11 @@ import com.apex.scaffold.common.annotation.IdempotentApi;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.interfaces.monitor.SecurityMetricsRecorder;
-import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.util.HexFormat;
-import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -19,7 +17,6 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.server.ServerWebExchange;
@@ -74,9 +71,6 @@ public class IdempotentApiAspect {
 
     /** 占位值：键存在即表示处理中或已完成。 */
     private static final String PLACEHOLDER_VALUE = "1";
-
-    /** 未知 IP 标识，与 {@code RequestUtil.UNKNOWN_IP} 语义一致。 */
-    private static final String UNKNOWN_IP = "unknown";
 
     /** 响应式 Redis 模板，用于幂等键的原子写入与释放。 */
     private final ReactiveStringRedisTemplate redisTemplate;
@@ -253,52 +247,20 @@ public class IdempotentApiAspect {
     /**
      * 从方法参数中解析请求上下文，兼容函数式端点与注解式端点。
      *
+     * <p>基于 {@link AspectRequestUtil#resolveRequestMeta(Object[])} 将任意请求形态
+     * 归一化为 {@link AspectRequestUtil.RequestMeta}，统一提取路径、请求头与客户端 IP；
+     * 函数式端点直接消费 {@link ServerRequest} 自身的请求信息，不依赖
+     * {@code exchange()} 转换。</p>
+     *
      * @param args 方法参数数组
      * @return 请求上下文，未找到请求对象时返回 {@code null}
      */
     private static RequestContext resolveRequestContext(Object[] args) {
-        if (args == null) {
+        AspectRequestUtil.RequestMeta meta = AspectRequestUtil.resolveRequestMeta(args);
+        if (meta == null) {
             return null;
         }
-        for (Object arg : args) {
-            if (arg instanceof ServerWebExchange exchange) {
-                ServerHttpRequest request = exchange.getRequest();
-                return new RequestContext(
-                        request.getURI().getPath(),
-                        request.getHeaders(),
-                        com.apex.scaffold.common.util.RequestUtil.getClientIp(request));
-            }
-        }
-        for (Object arg : args) {
-            if (arg instanceof ServerRequest request) {
-                return new RequestContext(
-                        request.path(), request.headers().asHttpHeaders(), clientIpFromServerRequest(request));
-            }
-        }
-        return null;
-    }
-
-    /**
-     * 从函数式 {@link ServerRequest} 提取客户端 IP（与 {@code RequestUtil} 语义一致）。
-     *
-     * @param request 函数式请求
-     * @return 客户端 IP，无法获取时返回 {@code unknown}
-     */
-    private static String clientIpFromServerRequest(ServerRequest request) {
-        HttpHeaders headers = request.headers().asHttpHeaders();
-        String forwardedFor = headers.getFirst("X-Forwarded-For");
-        if (forwardedFor != null && !forwardedFor.isBlank()) {
-            return forwardedFor.split(",")[0].trim();
-        }
-        String realIp = headers.getFirst("X-Real-IP");
-        if (realIp != null && !realIp.isBlank()) {
-            return realIp.trim();
-        }
-        Optional<InetSocketAddress> remoteAddress = request.remoteAddress();
-        if (remoteAddress.isPresent() && remoteAddress.get().getAddress() != null) {
-            return remoteAddress.get().getAddress().getHostAddress();
-        }
-        return UNKNOWN_IP;
+        return new RequestContext(meta.path(), meta.headers(), AspectRequestUtil.resolveClientIp(meta));
     }
 
     /** 请求上下文：路径、请求头、客户端 IP 的轻量快照。 */

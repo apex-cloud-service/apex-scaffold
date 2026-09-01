@@ -214,17 +214,19 @@ public class PermissionEntity extends BaseEntity {
         }
 
         /**
-         * 获取{@code code}。
-         * @return 操作结果
+         * 获取枚举编码。
+         *
+         * @return 枚举编码
          */
         public Integer getCode() {
             return code;
         }
 
         /**
-         * 执行 {@code fromCode} 操作。
-         * @param code 参数 {@code code}
-         * @return 操作结果
+         * 根据枚举编码解析权限类型。
+         *
+         * @param code 权限类型编码
+         * @return 匹配的权限类型；编码为空或未匹配时返回 {@code null}
          */
         public static PermissionType fromCode(Integer code) {
             if (code == null) {
@@ -260,8 +262,9 @@ public class PermissionEntity extends BaseEntity {
         }
 
         /**
-         * 获取{@code code}。
-         * @return 操作结果
+         * 获取枚举编码。
+         *
+         * @return 枚举编码
          */
         public Integer getCode() {
             return code;

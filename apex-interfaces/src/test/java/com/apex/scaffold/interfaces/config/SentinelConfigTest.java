@@ -81,9 +81,6 @@ class SentinelConfigTest {
         sentinelConfig = new SentinelConfig(true, 0.8, 2000, 30000, 3000, messageUtils);
     }
 
-    /**
-     * 执行 {@code shouldInitializeFlowRules} 操作。
-     */
     @Test
     @DisplayName("初始化限流规则后规则列表不应为空")
     void shouldInitializeFlowRules() {
@@ -92,9 +89,6 @@ class SentinelConfigTest {
         assertThat(FlowRuleManager.getRules()).isNotEmpty();
     }
 
-    /**
-     * 执行 {@code shouldInitializeDegradeRules} 操作。
-     */
     @Test
     @DisplayName("初始化熔断降级规则后规则列表不应为空")
     void shouldInitializeDegradeRules() {
@@ -103,9 +97,6 @@ class SentinelConfigTest {
         assertThat(DegradeRuleManager.getRules()).isNotEmpty();
     }
 
-    /**
-     * 执行 {@code shouldInitializeSystemRules} 操作。
-     */
     @Test
     @DisplayName("初始化系统保护规则后规则列表不应为空")
     void shouldInitializeSystemRules() {
@@ -114,9 +105,6 @@ class SentinelConfigTest {
         assertThat(SystemRuleManager.getRules()).isNotEmpty();
     }
 
-    /**
-     * 执行 {@code shouldContainLoginRule} 操作。
-     */
     @Test
     @DisplayName("限流规则中应包含登录接口的规则")
     void shouldContainLoginRule() {
@@ -128,9 +116,6 @@ class SentinelConfigTest {
         assertThat(hasLoginRule).isTrue();
     }
 
-    /**
-     * 执行 {@code shouldContainFileUploadDegradeRule} 操作。
-     */
     @Test
     @DisplayName("熔断降级规则中应包含文件上传接口的规则")
     void shouldContainFileUploadDegradeRule() {
@@ -142,9 +127,6 @@ class SentinelConfigTest {
         assertThat(hasFileUploadRule).isTrue();
     }
 
-    /**
-     * 执行 {@code shouldContainCpuRule} 操作。
-     */
     @Test
     @DisplayName("系统保护规则应包含 CPU 使用率规则")
     void shouldContainCpuRule() {
@@ -313,7 +295,7 @@ class SentinelConfigTest {
             /**
              * {@inheritDoc}
              *
-             * @return 操作结果，类型为 {@code List<org.springframework.http.codec.HttpMessageWriter<?>>}
+             * @return List<org.springframework.http.codec.HttpMessageWriter<?>> 类型的实例
              */
             @Override
             public List<org.springframework.http.codec.HttpMessageWriter<?>> messageWriters() {
@@ -323,7 +305,7 @@ class SentinelConfigTest {
             /**
              * {@inheritDoc}
              *
-             * @return 操作结果，类型为 {@code List<org.springframework.web.reactive.result.view.ViewResolver>}
+             * @return List<org.springframework.web.reactive.result.view.ViewResolver> 类型的实例
              */
             @Override
             public List<org.springframework.web.reactive.result.view.ViewResolver> viewResolvers() {

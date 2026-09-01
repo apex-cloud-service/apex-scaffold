@@ -119,13 +119,6 @@ public class ChuanglanGatewayImpl implements ChuanglanGateway {
      * @see CircuitBreakerService
      */
     @Override
-    /**
-     * 获取PhoneNumberByToken
-     *
-     * @param token 参数
-     *
-     * @return 结果
-     */
     public Mono<PhoneNumberResult> getPhoneNumberByToken(String token) {
         // 参数校验
         if (token == null || token.isBlank()) {
@@ -285,17 +278,6 @@ public class ChuanglanGatewayImpl implements ChuanglanGateway {
      * @see <a href="https://doc.chuanglan.com/document/SY88R0I8TCUPR1M3">创蓝闪验SDK服务端接口文档</a>
      */
     @Override
-    /**
-     * 验证Mobile
-     *
-     * @param token 参数
-     *
-     * @param mobile 参数
-     *
-     * @param outId 参数
-     *
-     * @return 结果
-     */
     public Mono<MobileValidateResult> validateMobile(String token, String mobile, String outId) {
         // 参数校验
         if (token == null || token.isBlank()) {
@@ -351,15 +333,6 @@ public class ChuanglanGatewayImpl implements ChuanglanGateway {
      * @see #validateMobile(String, String, String)
      */
     @Override
-    /**
-     * 验证Mobile
-     *
-     * @param token 参数
-     *
-     * @param mobile 参数
-     *
-     * @return 结果
-     */
     public Mono<MobileValidateResult> validateMobile(String token, String mobile) {
         return validateMobile(token, mobile, null);
     }
@@ -396,15 +369,6 @@ public class ChuanglanGatewayImpl implements ChuanglanGateway {
      * @see ChuanglanApiService#sendSms(String, String)
      */
     @Override
-    /**
-     * 发送Sms
-     *
-     * @param phone 参数
-     *
-     * @param code 参数
-     *
-     * @return 结果
-     */
     public Mono<SmsSendResult> sendSms(String phone, String code) {
         // 参数校验
         if (phone == null || phone.isBlank() || code == null || code.isBlank()) {
@@ -475,11 +439,6 @@ public class ChuanglanGatewayImpl implements ChuanglanGateway {
      * @see ChuanglanApiService#queryBalance()
      */
     @Override
-    /**
-     * 查询余额
-     *
-     * @return 结果
-     */
     public Mono<BalanceResult> queryBalance() {
         Mono<BalanceResult> apiCall = chuanglanApiService
                 .queryBalance()

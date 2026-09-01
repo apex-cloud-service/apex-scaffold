@@ -22,10 +22,6 @@ class BaseExceptionTest {
     @Nested
     @DisplayName("构造函数测试：仅消息")
     class ConstructorWithMessageOnlyTest {
-
-        /**
-         * 执行 {@code shouldSetMessageAndDefaultErrorCode} 操作。
-         */
         @Test
         @DisplayName("应设置 message 并自动使用 ERROR 错误码")
         void shouldSetMessageAndDefaultErrorCode() {
@@ -40,10 +36,6 @@ class BaseExceptionTest {
     @Nested
     @DisplayName("构造函数测试：自定义 code 和 message")
     class ConstructorWithCodeAndMessageTest {
-
-        /**
-         * 执行 {@code shouldSetCustomCodeAndMessage} 操作。
-         */
         @Test
         @DisplayName("应正确设置自定义 code 和 message")
         void shouldSetCustomCodeAndMessage() {
@@ -58,10 +50,6 @@ class BaseExceptionTest {
     @Nested
     @DisplayName("构造函数测试：使用 ResultCode 枚举")
     class ConstructorWithResultCodeTest {
-
-        /**
-         * 执行 {@code shouldUseSuccessResultCode} 操作。
-         */
         @Test
         @DisplayName("使用 SUCCESS 枚举时应设置对应 code 和 msg")
         void shouldUseSuccessResultCode() {
@@ -72,9 +60,6 @@ class BaseExceptionTest {
             assertEquals(ResultCode.SUCCESS.getMsg(), ex.getMessage());
         }
 
-        /**
-         * 执行 {@code shouldUseNotFoundResultCode} 操作。
-         */
         @Test
         @DisplayName("使用 NOT_FOUND 枚举时应设置对应 code 和 msg")
         void shouldUseNotFoundResultCode() {
@@ -84,9 +69,6 @@ class BaseExceptionTest {
             assertEquals("资源不存在", ex.getMsg());
         }
 
-        /**
-         * 执行 {@code shouldUseRateLimitResultCode} 操作。
-         */
         @Test
         @DisplayName("使用 RATE_LIMIT 枚举时应设置对应 code 和 msg")
         void shouldUseRateLimitResultCode() {
@@ -100,10 +82,6 @@ class BaseExceptionTest {
     @Nested
     @DisplayName("构造函数测试：ResultCode + 自定义 message")
     class ConstructorWithResultCodeAndMessageTest {
-
-        /**
-         * 执行 {@code shouldUseCustomMessageWithResultCode} 操作。
-         */
         @Test
         @DisplayName("msg 应使用自定义 message，code 应使用 ResultCode 的 code")
         void shouldUseCustomMessageWithResultCode() {
@@ -114,9 +92,6 @@ class BaseExceptionTest {
             assertEquals("用户未找到", ex.getMessage());
         }
 
-        /**
-         * 执行 {@code customMessageShouldBeIndependentOfResultCodeMsg} 操作。
-         */
         @Test
         @DisplayName("自定义 message 应与 ResultCode.msg 独立")
         void customMessageShouldBeIndependentOfResultCodeMsg() {
@@ -131,10 +106,6 @@ class BaseExceptionTest {
     @Nested
     @DisplayName("构造函数测试：message + Throwable cause")
     class ConstructorWithMessageAndCauseTest {
-
-        /**
-         * 执行 {@code shouldSetMessageCauseAndDefaultErrorCode} 操作。
-         */
         @Test
         @DisplayName("应设置 message、cause 和默认 ERROR 错误码")
         void shouldSetMessageCauseAndDefaultErrorCode() {
@@ -151,10 +122,6 @@ class BaseExceptionTest {
     @Nested
     @DisplayName("继承关系测试")
     class InheritanceTest {
-
-        /**
-         * 执行 {@code shouldExtendRuntimeException} 操作。
-         */
         @Test
         @DisplayName("BaseException 应继承自 RuntimeException")
         void shouldExtendRuntimeException() {
@@ -162,9 +129,6 @@ class BaseExceptionTest {
             assertInstanceOf(RuntimeException.class, ex);
         }
 
-        /**
-         * 执行 {@code shouldExtendException} 操作。
-         */
         @Test
         @DisplayName("BaseException 应继承自 Exception")
         void shouldExtendException() {
@@ -176,10 +140,6 @@ class BaseExceptionTest {
     @Nested
     @DisplayName("getter 方法测试")
     class GetterTest {
-
-        /**
-         * 获取{@code msgAndGetMessageShouldReturnSame}。
-         */
         @Test
         @DisplayName("getMsg 和 getMessage 应返回相同值（构造时一致）")
         void getMsgAndGetMessageShouldReturnSame() {
@@ -188,9 +148,6 @@ class BaseExceptionTest {
             assertEquals(ex.getMessage(), ex.getMsg());
         }
 
-        /**
-         * 获取{@code codeShouldNotBeNull}。
-         */
         @Test
         @DisplayName("getCode 不应为 null")
         void getCodeShouldNotBeNull() {

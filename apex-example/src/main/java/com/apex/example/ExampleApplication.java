@@ -14,6 +14,11 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication(scanBasePackages = {"com.apex.example", "com.apex.scaffold"})
 public class ExampleApplication {
 
+    /**
+     * 应用启动入口
+     *
+     * @param args 命令行启动参数
+     */
     public static void main(String[] args) {
         SpringApplication.run(ExampleApplication.class, args);
         System.out.println("\n========================================");

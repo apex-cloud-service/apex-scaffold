@@ -88,13 +88,6 @@ public class UserRepositoryImpl implements UserRepository {
      * @return 用户实体Mono，不存在时返回empty Mono
      */
     @Override
-    /**
-     * 查找ById
-     *
-     * @param id 参数
-     *
-     * @return 结果
-     */
     public Mono<UserEntity> findById(Long id) {
         return Mono.fromCallable(() -> userMapper.selectById(id))
                 .subscribeOn(BlockingIoSchedulers.jdbc())
@@ -113,13 +106,6 @@ public class UserRepositoryImpl implements UserRepository {
      * @return 用户实体Mono，不存在时返回empty Mono
      */
     @Override
-    /**
-     * 查找ByOpenId
-     *
-     * @param openId 参数
-     *
-     * @return 结果
-     */
     public Mono<UserEntity> findByOpenId(String openId) {
         return Mono.fromCallable(() ->
                         userMapper.selectOne(ConditionUtil.lambda(UserPO.class).eqIfPresent(UserPO::getOpenId, openId)))
@@ -139,13 +125,6 @@ public class UserRepositoryImpl implements UserRepository {
      * @return 用户实体Mono，不存在时返回empty Mono
      */
     @Override
-    /**
-     * 查找ByPhone
-     *
-     * @param phone 参数
-     *
-     * @return 结果
-     */
     public Mono<UserEntity> findByPhone(String phone) {
         return Mono.fromCallable(() ->
                         userMapper.selectOne(ConditionUtil.lambda(UserPO.class).eqIfPresent(UserPO::getPhone, phone)))
@@ -191,13 +170,6 @@ public class UserRepositoryImpl implements UserRepository {
      * @return 保存后的用户实体Mono
      */
     @Override
-    /**
-     * 保存
-     *
-     * @param user 参数
-     *
-     * @return 结果
-     */
     public Mono<UserEntity> save(UserEntity user) {
         return Mono.fromCallable(() -> {
                     UserPO po = userPoConverter.toPo(user);
@@ -281,13 +253,6 @@ public class UserRepositoryImpl implements UserRepository {
      * @return 完成信号Mono
      */
     @Override
-    /**
-     * 删除ById
-     *
-     * @param id 参数
-     *
-     * @return 结果
-     */
     public Mono<Void> deleteById(Long id) {
         return Mono.fromRunnable(() -> userMapper.deleteById(id))
                 .subscribeOn(BlockingIoSchedulers.jdbc())
@@ -351,11 +316,6 @@ public class UserRepositoryImpl implements UserRepository {
      * @since 1.0.0
      */
     @Override
-    /**
-     * 查找All
-     *
-     * @return 结果
-     */
     public Flux<UserEntity> findAll() {
         return Mono.fromCallable(() -> {
                     LambdaQueryWrapper<UserPO> wrapper = new LambdaQueryWrapper<UserPO>()
@@ -387,15 +347,6 @@ public class UserRepositoryImpl implements UserRepository {
      * @return 分页响应结果，包含用户实体列表和分页信息
      */
     @Override
-    /**
-     * 查找Page
-     *
-     * @param pageNum 参数
-     *
-     * @param pageSize 参数
-     *
-     * @return 结果
-     */
     public Mono<PageResponse<UserEntity>> findPage(Integer pageNum, Integer pageSize, String orderBy, Boolean isAsc) {
         return Mono.fromCallable(() -> {
                     Page<UserPO> page = new Page<>(pageNum, pageSize);

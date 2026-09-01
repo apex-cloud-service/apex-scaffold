@@ -338,13 +338,14 @@ public class IpRateLimitWebFilter implements WebFilter {
     }
 
     /**
-     * 执行 {@code isPathPatternMatch} 逻辑。
+     * 判断配置路径模式是否匹配请求路径。
      *
-     * @param configuredPath configuredPath 参数
+     * <p>仅对包含 {@code {}} 或 {@code *} 的路径模式进行解析匹配，
+     * 非法模式将被忽略并返回 {@code false}。</p>
      *
-     * @param requestPath requestPath 参数
-     *
-     * @return 执行结果
+     * @param configuredPath 配置的路径模式
+     * @param requestPath    请求路径
+     * @return 匹配时返回 {@code true}
      */
     private boolean isPathPatternMatch(String configuredPath, PathContainer requestPath) {
         if (!configuredPath.contains("{") && !configuredPath.contains("*")) {

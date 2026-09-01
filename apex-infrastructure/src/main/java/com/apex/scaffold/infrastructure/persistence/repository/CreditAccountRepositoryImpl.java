@@ -49,13 +49,6 @@ public class CreditAccountRepositoryImpl implements CreditAccountRepository {
      * @return 信用账户实体；若不存在则返回空 Mono
      */
     @Override
-    /**
-     * 查找ByUserId
-     *
-     * @param userId 参数
-     *
-     * @return 结果
-     */
     public Mono<CreditAccountEntity> findByUserId(Long userId) {
         return Mono.fromCallable(() -> mapper.selectOne(new LambdaQueryWrapper<CreditAccountPO>()
                         .eq(CreditAccountPO::getUserId, userId)
@@ -74,13 +67,6 @@ public class CreditAccountRepositoryImpl implements CreditAccountRepository {
      * @return 保存后的信用账户实体
      */
     @Override
-    /**
-     * 保存
-     *
-     * @param entity 参数
-     *
-     * @return 结果
-     */
     public Mono<CreditAccountEntity> save(CreditAccountEntity entity) {
         return Mono.fromCallable(() -> {
                     CreditAccountPO po = creditAccountPoConverter.toPo(entity);
@@ -115,13 +101,6 @@ public class CreditAccountRepositoryImpl implements CreditAccountRepository {
      * @return 信用账户实体
      */
     @Override
-    /**
-     * 创建IfNotExists
-     *
-     * @param userId 参数
-     *
-     * @return 结果
-     */
     public Mono<CreditAccountEntity> createIfNotExists(Long userId) {
         return Mono.fromCallable(() -> {
                     CreditAccountPO existing = mapper.selectOne(new LambdaQueryWrapper<CreditAccountPO>()
@@ -158,17 +137,6 @@ public class CreditAccountRepositoryImpl implements CreditAccountRepository {
      * @since 2.1.0
      */
     @Override
-    /**
-     * 递增Balance
-     *
-     * @param userId 参数
-     *
-     * @param amount 参数
-     *
-     * @param version 参数
-     *
-     * @return 结果
-     */
     public Mono<Boolean> incrementBalance(Long userId, Long amount, Long version) {
         return Mono.fromCallable(() -> {
                     Integer ver = version != null ? version.intValue() : 0;
@@ -198,17 +166,6 @@ public class CreditAccountRepositoryImpl implements CreditAccountRepository {
      * @since 2.1.0
      */
     @Override
-    /**
-     * 递减Balance
-     *
-     * @param userId 参数
-     *
-     * @param amount 参数
-     *
-     * @param version 参数
-     *
-     * @return 结果
-     */
     public Mono<Boolean> decrementBalance(Long userId, Long amount, Long version) {
         return Mono.fromCallable(() -> {
                     Integer ver = version != null ? version.intValue() : 0;
@@ -238,17 +195,6 @@ public class CreditAccountRepositoryImpl implements CreditAccountRepository {
      * @return 更新成功返回 true，版本冲突返回 false
      */
     @Override
-    /**
-     * 更新LoginBonusWithVersion
-     *
-     * @param userId 参数
-     *
-     * @param currentVersion 参数
-     *
-     * @param newBalance 参数
-     *
-     * @return 结果
-     */
     public Mono<Boolean> updateLoginBonusWithVersion(Long userId, Long currentVersion, Long newBalance) {
         return Mono.fromCallable(() -> {
                     Integer version = currentVersion != null ? currentVersion.intValue() : 0;

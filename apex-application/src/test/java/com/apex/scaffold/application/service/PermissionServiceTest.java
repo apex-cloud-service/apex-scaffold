@@ -50,9 +50,6 @@ class PermissionServiceTest {
         permission.setType(1);
     }
 
-    /**
-     * 获取{@code permissionsByUserId_Success}。
-     */
     @Test
     @DisplayName("getPermissionsByUserId - 成功获取用户权限列表")
     void getPermissionsByUserId_Success() {
@@ -65,9 +62,6 @@ class PermissionServiceTest {
                 .verifyComplete();
     }
 
-    /**
-     * 获取{@code permissionsByUserId_EmptyList}。
-     */
     @Test
     @DisplayName("getPermissionsByUserId - 用户无权限时返回空列表")
     void getPermissionsByUserId_EmptyList() {
@@ -189,9 +183,6 @@ class PermissionServiceTest {
                 .verifyComplete();
     }
 
-    /**
-     * 获取{@code allPermissions_Success}。
-     */
     @Test
     @DisplayName("getAllPermissions - 成功获取所有权限")
     void getAllPermissions_Success() {
@@ -204,9 +195,6 @@ class PermissionServiceTest {
                 .verifyComplete();
     }
 
-    /**
-     * 获取{@code allPermissions_Empty}。
-     */
     @Test
     @DisplayName("getAllPermissions - 无权限时返回空列表")
     void getAllPermissions_Empty() {
@@ -219,9 +207,6 @@ class PermissionServiceTest {
                 .verifyComplete();
     }
 
-    /**
-     * 获取{@code permissionByCode_Success}。
-     */
     @Test
     @DisplayName("getPermissionByCode - 成功按编码获取权限")
     void getPermissionByCode_Success() {
@@ -234,9 +219,6 @@ class PermissionServiceTest {
                 .verifyComplete();
     }
 
-    /**
-     * 获取{@code permissionByCode_NotFound}。
-     */
     @Test
     @DisplayName("getPermissionByCode - 权限不存在时返回空")
     void getPermissionByCode_NotFound() {
@@ -248,9 +230,6 @@ class PermissionServiceTest {
                 .verifyComplete();
     }
 
-    /**
-     * 创建{@code permission_Success}。
-     */
     @Test
     @DisplayName("createPermission - 成功创建权限")
     void createPermission_Success() {

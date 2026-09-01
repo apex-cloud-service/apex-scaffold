@@ -41,13 +41,6 @@ public class UserRoleRepositoryImpl implements UserRoleRepository {
      * @return 用户角色关联列表
      */
     @Override
-    /**
-     * 查找ByUserId
-     *
-     * @param userId 参数
-     *
-     * @return 结果
-     */
     public Mono<List<UserRoleEntity>> findByUserId(Long userId) {
         Callable<List<UserRoleEntity>> callable = () -> {
             List<UserRolePO> poList = userRoleMapper.selectList(
@@ -67,19 +60,6 @@ public class UserRoleRepositoryImpl implements UserRoleRepository {
      * @return 影响行数
      */
     @Override
-    /**
-     * 删除
-     *
-     * @param field1 参数
-     *
-     * @param val1 参数
-     *
-     * @param field2 参数
-     *
-     * @param val2 参数
-     *
-     * @return 结果
-     */
     public Mono<Integer> delete(String field1, Object val1, String field2, Object val2) {
         Callable<Integer> callable = () -> {
             return userRoleMapper.delete(ConditionUtil.lambda(UserRolePO.class)
@@ -98,13 +78,6 @@ public class UserRoleRepositoryImpl implements UserRoleRepository {
      * @return 影响行数
      */
     @Override
-    /**
-     * 删除ByRoleId
-     *
-     * @param roleId 参数
-     *
-     * @return 结果
-     */
     public Mono<Integer> deleteByRoleId(Long roleId) {
         Callable<Integer> callable = () -> {
             return userRoleMapper.delete(
@@ -120,13 +93,6 @@ public class UserRoleRepositoryImpl implements UserRoleRepository {
      * @return 影响行数
      */
     @Override
-    /**
-     * 插入
-     *
-     * @param userRole 参数
-     *
-     * @return 结果
-     */
     public Mono<Integer> insert(UserRoleEntity userRole) {
         Callable<Integer> callable = () -> {
             UserRolePO po = userRolePoConverter.toPo(userRole);

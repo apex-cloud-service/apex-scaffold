@@ -47,18 +47,11 @@ class ResponseUtilTest {
         traceIdUtilMockedStatic.when(TraceIdUtil::getTraceId).thenReturn(TEST_TRACE_ID);
     }
 
-    /**
-     * 执行 {@code tearDown} 操作。
-     */
     @AfterEach
     void tearDown() {
         traceIdUtilMockedStatic.close();
     }
 
-    /**
-     * 执行 {@code constructor_shouldBePrivate} 操作。
-     * @throws Exception 当操作无法完成时
-     */
     @Test
     @DisplayName("工具类构造函数应为私有")
     void constructor_shouldBePrivate() throws Exception {
@@ -72,9 +65,6 @@ class ResponseUtilTest {
                 .hasMessage("工具类不能实例化");
     }
 
-    /**
-     * 执行 {@code writeJson_shouldWriteJsonResponse} 操作。
-     */
     @Test
     @DisplayName("writeJson 应正确写入JSON响应")
     void writeJson_shouldWriteJsonResponse() {
@@ -90,9 +80,6 @@ class ResponseUtilTest {
         assertThat(exchange.getResponse().getHeaders().getContentType()).hasToString("application/json");
     }
 
-    /**
-     * 执行 {@code unauthorized_shouldReturn401Response} 操作。
-     */
     @Test
     @DisplayName("unauthorized 应返回401未授权响应")
     void unauthorized_shouldReturn401Response() {
@@ -105,9 +92,6 @@ class ResponseUtilTest {
         assertThat(exchange.getResponse().getHeaders().getContentType()).hasToString("application/json");
     }
 
-    /**
-     * 执行 {@code forbidden_shouldReturn403Response} 操作。
-     */
     @Test
     @DisplayName("forbidden 应返回403禁止访问响应")
     void forbidden_shouldReturn403Response() {
@@ -120,9 +104,6 @@ class ResponseUtilTest {
         assertThat(exchange.getResponse().getHeaders().getContentType()).hasToString("application/json");
     }
 
-    /**
-     * 执行 {@code error_shouldReturnCustomErrorResponse} 操作。
-     */
     @Test
     @DisplayName("error 应返回自定义错误响应")
     void error_shouldReturnCustomErrorResponse() {

@@ -44,10 +44,6 @@ class CreditServiceConcurrencyTest {
     private CreditService creditService;
 
     // ==================== 场景1：乐观锁重试 ====================
-
-    /**
-     * 执行 {@code optimisticLockRetry} 操作。
-     */
     @Test
     @DisplayName("乐观锁重试：incrementBalance 第一次抛出 OptimisticLockingFailureException，第二次成功")
     void optimisticLockRetry() {
@@ -80,11 +76,6 @@ class CreditServiceConcurrencyTest {
     }
 
     // ==================== 场景2：并发 addCredit ====================
-
-    /**
-     * 执行 {@code concurrentAddCredit} 操作。
-     * @throws Exception 当操作无法完成时
-     */
     @Test
     @DisplayName("并发 addCredit：5 个线程各加 10，初始余额 0，最终余额应为 50")
     void concurrentAddCredit() throws Exception {
@@ -140,11 +131,6 @@ class CreditServiceConcurrencyTest {
     }
 
     // ==================== 场景3：并发 consumeCredit ====================
-
-    /**
-     * 执行 {@code concurrentConsumeCredit} 操作。
-     * @throws Exception 当操作无法完成时
-     */
     @Test
     @DisplayName("并发 consumeCredit：5 个线程各消费 5，初始余额 100，最终余额应为 75")
     void concurrentConsumeCredit() throws Exception {
@@ -200,11 +186,6 @@ class CreditServiceConcurrencyTest {
     }
 
     // ==================== 场景4：混合操作 ====================
-
-    /**
-     * 执行 {@code mixedOperations} 操作。
-     * @throws Exception 当操作无法完成时
-     */
     @Test
     @DisplayName("混合操作：3 个线程各加 10 + 3 个线程各消费 5，初始 50，最终应为 65")
     void mixedOperations() throws Exception {
@@ -294,10 +275,6 @@ class CreditServiceConcurrencyTest {
     }
 
     // ==================== 场景5：重试耗尽 ====================
-
-    /**
-     * 执行 {@code retryExhaustion} 操作。
-     */
     @Test
     @DisplayName("重试耗尽：save 始终抛出 OptimisticLockingFailureException，重试耗尽后返回 false")
     void retryExhaustion() {

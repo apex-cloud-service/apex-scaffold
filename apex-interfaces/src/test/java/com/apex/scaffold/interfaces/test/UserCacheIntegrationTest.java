@@ -26,18 +26,10 @@ import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 @DisplayName("用户缓存注解集成测试")
 @EnabledIfSystemProperty(named = "apex.remote-it.enabled", matches = "true")
 class UserCacheRemoteIT extends BaseLocalIntegrationTest {
-
-    /**
-     * 创建 {@code UserCacheRemoteIT} 实例。
-     * @param dataSource 参数 {@code dataSource}
-     */
     public UserCacheRemoteIT(DataSource dataSource) {
         super(dataSource);
     }
 
-    /**
-     * 执行 {@code shouldCacheUserByOpenId} 操作。
-     */
     @Test
     @DisplayName("GET /api/v1/user/info - 首次请求应返回用户信息（缓存未命中）")
     void shouldCacheUserByOpenId() {
@@ -68,9 +60,6 @@ class UserCacheRemoteIT extends BaseLocalIntegrationTest {
                 .isEqualTo(0);
     }
 
-    /**
-     * 执行 {@code shouldCacheUserById} 操作。
-     */
     @Test
     @DisplayName("GET /api/v1/user/{userId} - 首次请求应返回用户信息（缓存未命中）")
     void shouldCacheUserById() {
@@ -101,9 +90,6 @@ class UserCacheRemoteIT extends BaseLocalIntegrationTest {
                 .isEqualTo(0);
     }
 
-    /**
-     * 执行 {@code nonExistentUserToken_shouldReturn401} 操作。
-     */
     @Test
     @DisplayName("GET /api/v1/user/info - 不存在的用户应被安全层拒绝(401)")
     void nonExistentUserToken_shouldReturn401() {

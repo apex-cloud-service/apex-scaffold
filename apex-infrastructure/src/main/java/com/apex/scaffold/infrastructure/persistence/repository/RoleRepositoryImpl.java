@@ -45,13 +45,6 @@ public class RoleRepositoryImpl implements RoleRepository {
      * @return 角色列表
      */
     @Override
-    /**
-     * 查找ByUserId
-     *
-     * @param userId 参数
-     *
-     * @return 结果
-     */
     public Mono<List<RoleEntity>> findByUserId(Long userId) {
         return Mono.fromCallable(() -> {
                     List<Long> roleIds = userRoleMapper
@@ -82,13 +75,6 @@ public class RoleRepositoryImpl implements RoleRepository {
      * @return 角色信息，未找到时返回 Mono.empty()
      */
     @Override
-    /**
-     * 查找ById
-     *
-     * @param id 参数
-     *
-     * @return 结果
-     */
     public Mono<RoleEntity> findById(Long id) {
         return Mono.fromCallable(() -> roleMapper.selectById(id))
                 .subscribeOn(BlockingIoSchedulers.jdbc())
@@ -106,11 +92,6 @@ public class RoleRepositoryImpl implements RoleRepository {
      * @return 角色列表
      */
     @Override
-    /**
-     * 查找All
-     *
-     * @return 结果
-     */
     public Mono<List<RoleEntity>> findAll() {
         return Mono.fromCallable(() -> roleMapper.selectList(null))
                 .subscribeOn(BlockingIoSchedulers.jdbc())
@@ -127,15 +108,6 @@ public class RoleRepositoryImpl implements RoleRepository {
      * @return 角色信息，未找到时返回 Mono.empty()
      */
     @Override
-    /**
-     * 查找One
-     *
-     * @param field 参数
-     *
-     * @param value 参数
-     *
-     * @return 结果
-     */
     public Mono<RoleEntity> findOne(String field, Object value) {
         return Mono.fromCallable(() -> {
                     RolePO po = roleMapper.selectOne(
@@ -153,13 +125,6 @@ public class RoleRepositoryImpl implements RoleRepository {
      * @return 影响行数
      */
     @Override
-    /**
-     * 插入
-     *
-     * @param entity 参数
-     *
-     * @return 结果
-     */
     public Mono<Integer> insert(RoleEntity entity) {
         return Mono.fromCallable(() -> {
                     int rows = roleMapper.insert(rolePoConverter.toPo(entity));
@@ -175,13 +140,6 @@ public class RoleRepositoryImpl implements RoleRepository {
      * @return 影响行数
      */
     @Override
-    /**
-     * 更新ById
-     *
-     * @param entity 参数
-     *
-     * @return 结果
-     */
     public Mono<Integer> updateById(RoleEntity entity) {
         return Mono.fromCallable(() -> roleMapper.updateById(rolePoConverter.toPo(entity)))
                 .subscribeOn(BlockingIoSchedulers.jdbc());
@@ -194,13 +152,6 @@ public class RoleRepositoryImpl implements RoleRepository {
      * @return 影响行数
      */
     @Override
-    /**
-     * 删除ById
-     *
-     * @param id 参数
-     *
-     * @return 结果
-     */
     public Mono<Integer> deleteById(Long id) {
         return Mono.fromCallable(() -> roleMapper.deleteById(id)).subscribeOn(BlockingIoSchedulers.jdbc());
     }

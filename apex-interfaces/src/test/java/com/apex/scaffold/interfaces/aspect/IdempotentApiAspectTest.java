@@ -69,10 +69,6 @@ class IdempotentApiAspectTest {
     private static final String IDEMPOTENCY_KEY = "550e8400-e29b-41d4-a716-446655440000";
     private static final String PATH = "/api/v1/auth/register";
 
-    /**
-     * 执行 {@code shouldAllowFirstRequest} 操作。
-     * @throws Throwable 当操作无法完成时
-     */
     @Test
     @DisplayName("函数式端点首次请求（携带幂等键头 + SETNX 成功）时应正常执行方法")
     void shouldAllowFirstRequest() throws Throwable {
@@ -91,10 +87,6 @@ class IdempotentApiAspectTest {
         assertThat(result.block()).isEqualTo(TEST_RESULT);
     }
 
-    /**
-     * 执行 {@code shouldRejectDuplicateSubmission} 操作。
-     * @throws Throwable 当操作无法完成时
-     */
     @Test
     @DisplayName("相同幂等键重复提交（SETNX 返回 false）时应抛出重复提交异常并记录指标")
     void shouldRejectDuplicateSubmission() throws Throwable {
@@ -117,10 +109,6 @@ class IdempotentApiAspectTest {
         verify(joinPoint, never()).proceed();
     }
 
-    /**
-     * 执行 {@code shouldRejectWhenHeaderMissingAndRequired} 操作。
-     * @throws Throwable 当操作无法完成时
-     */
     @Test
     @DisplayName("严格模式下缺少幂等键头时应抛出缺键异常")
     void shouldRejectWhenHeaderMissingAndRequired() throws Throwable {
@@ -137,10 +125,6 @@ class IdempotentApiAspectTest {
         verify(joinPoint, never()).proceed();
     }
 
-    /**
-     * 执行 {@code shouldProceedWhenHeaderMissingAndNotRequired} 操作。
-     * @throws Throwable 当操作无法完成时
-     */
     @Test
     @DisplayName("渐进模式（required=false）缺幂等键头时应放行执行方法")
     void shouldProceedWhenHeaderMissingAndNotRequired() throws Throwable {
@@ -156,10 +140,6 @@ class IdempotentApiAspectTest {
         verify(redisTemplate, never()).opsForValue();
     }
 
-    /**
-     * 执行 {@code shouldReleaseKeyOnBusinessError} 操作。
-     * @throws Throwable 当操作无法完成时
-     */
     @Test
     @DisplayName("业务方法抛异常时应删除幂等键并传播异常")
     void shouldReleaseKeyOnBusinessError() throws Throwable {
@@ -180,10 +160,6 @@ class IdempotentApiAspectTest {
         verify(valueOperations).delete(anyString());
     }
 
-    /**
-     * 执行 {@code shouldFailOpenOnRedisUnavailable} 操作。
-     * @throws Throwable 当操作无法完成时
-     */
     @Test
     @DisplayName("Redis 不可用时应降级放行（fail-open）执行方法")
     void shouldFailOpenOnRedisUnavailable() throws Throwable {
@@ -201,10 +177,6 @@ class IdempotentApiAspectTest {
         assertThat(result.block()).isEqualTo(TEST_RESULT);
     }
 
-    /**
-     * 执行 {@code shouldSkipCheckWhenNoRequestContext} 操作。
-     * @throws Throwable 当操作无法完成时
-     */
     @Test
     @DisplayName("方法参数中无请求对象时应跳过幂等校验并执行方法")
     void shouldSkipCheckWhenNoRequestContext() throws Throwable {

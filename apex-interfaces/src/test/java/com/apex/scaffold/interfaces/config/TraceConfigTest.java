@@ -88,7 +88,7 @@ class TraceConfigTest {
             /**
              * {@inheritDoc}
              *
-             * @return 操作结果，类型为 {@code SpanHandler}
+             * @return SpanHandler 类型的实例
              */
             @Override
             public SpanHandler getObject() {
@@ -99,7 +99,7 @@ class TraceConfigTest {
              * {@inheritDoc}
              *
              * @param args 方法输入 {@code args}，类型为 {@code Object[]}
-             * @return 操作结果，类型为 {@code SpanHandler}
+             * @return SpanHandler 类型的实例
              */
             @Override
             public SpanHandler getObject(Object... args) {
@@ -109,7 +109,7 @@ class TraceConfigTest {
             /**
              * {@inheritDoc}
              *
-             * @return 操作结果，类型为 {@code SpanHandler}
+             * @return SpanHandler 类型的实例
              */
             @Override
             public SpanHandler getIfAvailable() {
@@ -119,7 +119,7 @@ class TraceConfigTest {
             /**
              * {@inheritDoc}
              *
-             * @return 操作结果，类型为 {@code SpanHandler}
+             * @return SpanHandler 类型的实例
              */
             @Override
             public SpanHandler getIfUnique() {
@@ -143,7 +143,7 @@ class TraceConfigTest {
             /**
              * {@inheritDoc}
              *
-             * @return 操作结果，类型为 {@code SpanHandler}
+             * @return SpanHandler 类型的实例
              */
             @Override
             public SpanHandler getObject() {
@@ -154,7 +154,7 @@ class TraceConfigTest {
              * {@inheritDoc}
              *
              * @param args 方法输入 {@code args}，类型为 {@code Object[]}
-             * @return 操作结果，类型为 {@code SpanHandler}
+             * @return SpanHandler 类型的实例
              */
             @Override
             public SpanHandler getObject(Object... args) {
@@ -164,7 +164,7 @@ class TraceConfigTest {
             /**
              * {@inheritDoc}
              *
-             * @return 操作结果，类型为 {@code SpanHandler}
+             * @return SpanHandler 类型的实例
              */
             @Override
             public SpanHandler getIfAvailable() {
@@ -174,7 +174,7 @@ class TraceConfigTest {
             /**
              * {@inheritDoc}
              *
-             * @return 操作结果，类型为 {@code SpanHandler}
+             * @return SpanHandler 类型的实例
              */
             @Override
             public SpanHandler getIfUnique() {

@@ -39,13 +39,6 @@ public class UserConsentRepositoryImpl implements UserConsentRepository {
      * @return 保存后的用户同意记录实体
      */
     @Override
-    /**
-     * 保存
-     *
-     * @param entity 参数
-     *
-     * @return 结果
-     */
     public Mono<UserConsentEntity> save(UserConsentEntity entity) {
         return Mono.fromCallable(() -> {
                     UserConsentPO po = userConsentPoConverter.toPo(entity);
