@@ -4,7 +4,6 @@ import com.apex.scaffold.license.LicenseInfo;
 import com.apex.scaffold.license.LicenseVersion;
 import com.apex.scaffold.license.MachineFingerprintCollector;
 import com.apex.scaffold.license.RsaUtil;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -147,9 +146,7 @@ public class LicenseGenerator {
         String signature = RsaUtil.sign(data, keyPair.getPrivate());
         license.setSignature(signature);
 
-        log.info("License生成成功: {} ({}), 机器指纹: {}",
-                customerName, version,
-                machineFingerprint != null ? "已绑定" : "未绑定");
+        log.info("License生成成功: {} ({}), 机器指纹: {}", customerName, version, machineFingerprint != null ? "已绑定" : "未绑定");
         return license;
     }
 
@@ -267,6 +264,7 @@ public class LicenseGenerator {
         System.out.println("用法:");
         System.out.println("  生成密钥对: java LicenseGenerator gen-keys <private.key> <public.key>");
         System.out.println("  采集机器指纹: java LicenseGenerator gen-fingerprint");
-        System.out.println("  生成License: java LicenseGenerator gen-license <private.key> <public.key> <output.json> <version> <customer> <days> [feature1,feature2,...] [--fingerprint <hash>]");
+        System.out.println(
+                "  生成License: java LicenseGenerator gen-license <private.key> <public.key> <output.json> <version> <customer> <days> [feature1,feature2,...] [--fingerprint <hash>]");
     }
 }

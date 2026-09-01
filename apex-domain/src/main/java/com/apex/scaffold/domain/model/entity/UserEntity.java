@@ -82,8 +82,8 @@ public class UserEntity extends BaseEntity {
      * 注入 {@code tenant_id} 过滤条件，实现行级租户数据隔离。未启用多租户
      * （{@code apex.tenant.enabled=false}）时该字段为空，不参与 SQL 改写。</p>
      *
-     * <p>值来源：请求头 {@code X-Tenant-Id}（{@link com.apex.scaffold.interfaces.aspect.TenantAspect}
-     * 装配到 {@link com.apex.scaffold.common.context.TenantContext}）或创建用户时显式写入。
+     * <p>值来源：认证用户的持久化租户归属；请求头 {@code X-Tenant-Id} 仅可选择并校验
+     * 已认证租户，不能覆盖认证身份，或创建用户时显式写入。
      *
      * @since 1.2.0
      */

@@ -43,23 +43,74 @@ class FlywayMigrationVersionTest {
         }
 
         assertThat(versions)
-                .containsExactlyElementsOf(
-                        List.of(
-                                versionNumber("1"),
-                                versionNumber("2"),
-                                versionNumber("3"),
-                                versionNumber("4"),
-                                versionNumber("5"),
-                                versionNumber("6"),
-                                versionNumber("7"),
-                                versionNumber("8"),
-                                versionNumber("9"),
-                                versionNumber("10"),
-                                versionNumber("11"),
-                                versionNumber("12"),
-                                versionNumber("13"),
-                                versionNumber("14"),
-                                versionNumber("15")));
+                .containsExactlyElementsOf(List.of(
+                        versionNumber("1"),
+                        versionNumber("2"),
+                        versionNumber("3"),
+                        versionNumber("4"),
+                        versionNumber("5"),
+                        versionNumber("6"),
+                        versionNumber("7"),
+                        versionNumber("8"),
+                        versionNumber("9"),
+                        versionNumber("10"),
+                        versionNumber("11"),
+                        versionNumber("12"),
+                        versionNumber("13"),
+                        versionNumber("14"),
+                        versionNumber("15"),
+                        versionNumber("16"),
+                        versionNumber("17"),
+                        versionNumber("18"),
+                        versionNumber("19")));
+    }
+
+    @Test
+    void shouldDefineExplicitRoleDataScopeTables() throws Exception {
+        Path projectRoot = Path.of(System.getProperty("user.dir"));
+        Path migration =
+                projectRoot.resolve("apex-interfaces/src/main/resources/db/migration/V18__add_role_data_scope.sql");
+        if (!Files.exists(migration)) {
+            migration = projectRoot.resolve("src/main/resources/db/migration/V18__add_role_data_scope.sql");
+        }
+
+        String sql = Files.readString(migration);
+        assertThat(sql)
+                .contains(
+                        "ALTER TABLE `sys_role`",
+                        "`data_scope`",
+                        "CREATE TABLE IF NOT EXISTS `sys_role_dept`",
+                        "`tenant_id`",
+                        "`role_id`",
+                        "`dept_id`",
+                        "`deleted`",
+                        "`version`");
+        assertThat(sql)
+                .contains("idx_sys_role_dept_tenant_id", "idx_sys_role_dept_role_id", "idx_sys_role_dept_dept_id");
+    }
+
+    @Test
+    void shouldEnforceDepartmentTenantIntegrity() throws Exception {
+        Path projectRoot = Path.of(System.getProperty("user.dir"));
+        Path migration = projectRoot.resolve(
+                "apex-interfaces/src/main/resources/db/migration/V19__enforce_department_tenant_integrity.sql");
+        if (!Files.exists(migration)) {
+            migration =
+                    projectRoot.resolve("src/main/resources/db/migration/V19__enforce_department_tenant_integrity.sql");
+        }
+
+        String sql = Files.readString(migration);
+        assertThat(sql)
+                .contains(
+                        "SIGNAL SQLSTATE '45000'",
+                        "`open_id` = 'admin-openid'",
+                        "`username` = 'admin'",
+                        "`name` = 'Apex 科技'",
+                        "`dept_id` = 1",
+                        "MODIFY COLUMN `tenant_id` VARCHAR(64) NOT NULL",
+                        "UNIQUE KEY `uk_sys_dept_tenant_id_id` (`tenant_id`, `id`)",
+                        "FOREIGN KEY (`tenant_id`, `dept_id`)",
+                        "REFERENCES `sys_dept` (`tenant_id`, `id`)");
     }
 
     @Test
@@ -68,20 +119,23 @@ class FlywayMigrationVersionTest {
         Path migration = projectRoot.resolve(
                 "apex-interfaces/src/main/resources/db/migration/V15__complete_tenant_isolation_schema.sql");
         if (!Files.exists(migration)) {
-            migration = projectRoot.resolve("src/main/resources/db/migration/V15__complete_tenant_isolation_schema.sql");
+            migration =
+                    projectRoot.resolve("src/main/resources/db/migration/V15__complete_tenant_isolation_schema.sql");
         }
 
         String sql = Files.readString(migration);
-        assertThat(sql).contains(
-                "sys_operation_log",
-                "biz_system_message",
-                "biz_credit_tx",
-                "sys_file",
-                "sys_login_log",
-                "biz_admin_review_audit");
-        assertThat(sql).doesNotContain(
-                "CALL add_tenant_id_if_not_exists('operation_log'",
-                "CALL add_tenant_id_if_not_exists('system_message'");
+        assertThat(sql)
+                .contains(
+                        "sys_operation_log",
+                        "biz_system_message",
+                        "biz_credit_tx",
+                        "sys_file",
+                        "sys_login_log",
+                        "biz_admin_review_audit");
+        assertThat(sql)
+                .doesNotContain(
+                        "CALL add_tenant_id_if_not_exists('operation_log'",
+                        "CALL add_tenant_id_if_not_exists('system_message'");
     }
 
     /**

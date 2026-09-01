@@ -331,8 +331,7 @@ public class LicenseValidator {
         }
 
         try {
-            java.util.List<String> features =
-                    objectMapper.readValue(info.getEnabledFeatures(), java.util.List.class);
+            java.util.List<String> features = objectMapper.readValue(info.getEnabledFeatures(), java.util.List.class);
             return features.contains(feature);
         } catch (Exception e) {
             log.error("解析功能列表失败", e);

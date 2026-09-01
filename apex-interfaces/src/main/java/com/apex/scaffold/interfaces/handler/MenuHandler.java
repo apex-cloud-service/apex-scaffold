@@ -6,14 +6,10 @@ import com.apex.scaffold.application.service.MenuService;
 import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.annotation.RequirePermission;
 import com.apex.scaffold.common.exception.BusinessException;
-import com.apex.scaffold.common.result.Result;
-import com.apex.scaffold.common.result.ResultCode;
-import com.apex.scaffold.common.util.TraceIdUtil;
 import com.apex.scaffold.interfaces.util.MessageUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Validator;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
@@ -135,7 +131,9 @@ public class MenuHandler extends BaseHandler {
     @Operation(operationId = "adminDeleteMenu", summary = "删除菜单")
     @OperationLog(module = "菜单管理", type = OperationLog.OperationType.DELETE, description = "删除菜单")
     public Mono<ServerResponse> delete(ServerRequest request) {
-        return menuService.deleteMenu(requirePositiveId(request)).flatMap(deleted -> buildSuccess(java.util.Map.of("deleted", deleted)));
+        return menuService
+                .deleteMenu(requirePositiveId(request))
+                .flatMap(deleted -> buildSuccess(java.util.Map.of("deleted", deleted)));
     }
 
     /**

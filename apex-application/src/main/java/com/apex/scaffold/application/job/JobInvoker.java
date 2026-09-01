@@ -1,5 +1,6 @@
 package com.apex.scaffold.application.job;
 
+import com.apex.scaffold.common.context.TenantContext;
 import com.apex.scaffold.domain.model.entity.JobEntity;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -51,10 +52,23 @@ public class JobInvoker {
         if (job == null || !StringUtils.hasText(job.getInvokeTarget())) {
             throw new IllegalStateException("任务调用目标不能为空");
         }
-        Invocation invocation = parse(job.getInvokeTarget());
-        Object bean = resolveBean(invocation.beanName());
-        Object result = invokeMethod(bean, invocation);
-        awaitIfPublisher(result);
+        if (!StringUtils.hasText(job.getTenantId())) {
+            throw new IllegalStateException("租户任务缺少租户ID");
+        }
+        String previousTenant = TenantContext.currentTenantId().orElse(null);
+        TenantContext.setTenantId(job.getTenantId());
+        try {
+            Invocation invocation = parse(job.getInvokeTarget());
+            Object bean = resolveBean(invocation.beanName());
+            Object result = invokeMethod(bean, invocation);
+            awaitIfPublisher(result, job.getTenantId());
+        } finally {
+            if (previousTenant == null) {
+                TenantContext.clear();
+            } else {
+                TenantContext.setTenantId(previousTenant);
+            }
+        }
     }
 
     /**
@@ -209,9 +223,11 @@ public class JobInvoker {
      *
      * @param result 方法返回值
      */
-    private void awaitIfPublisher(Object result) {
+    private void awaitIfPublisher(Object result, String tenantId) {
         if (result instanceof org.reactivestreams.Publisher<?> publisher) {
-            reactor.core.publisher.Mono.from(publisher).block(java.time.Duration.ofMinutes(5));
+            TenantContext.withTenant(reactor.core.publisher.Mono.from(publisher)
+                            .contextWrite(TenantContext.withTenant(tenantId)))
+                    .block(java.time.Duration.ofMinutes(5));
         }
     }
 

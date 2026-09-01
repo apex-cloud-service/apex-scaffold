@@ -2,9 +2,9 @@ package com.apex.scaffold.infrastructure.storage.config;
 
 import com.apex.scaffold.domain.service.StorageService;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
-import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.context.annotation.Primary;
 
 /**

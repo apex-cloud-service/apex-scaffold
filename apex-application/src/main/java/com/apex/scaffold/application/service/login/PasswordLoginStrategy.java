@@ -96,7 +96,8 @@ public class PasswordLoginStrategy implements LoginStrategy {
             return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "用户名和密码不能为空"));
         }
         String deviceId = request.getDeviceId();
-        return userService.getByUsername(username.trim())
+        return userService
+                .getByUsername(username.trim())
                 .switchIfEmpty(Mono.error(new BusinessException(ResultCode.USER_NOT_FOUND)))
                 .flatMap(user -> authenticatePassword(user, password))
                 .flatMap(user -> issueTokens(user, deviceId));

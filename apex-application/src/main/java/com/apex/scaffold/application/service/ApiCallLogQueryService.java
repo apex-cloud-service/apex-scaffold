@@ -53,10 +53,7 @@ public class ApiCallLogQueryService {
         return apiCallLogQueryRepository
                 .search(serviceName, status, traceId, path, pageNum, boundedSize)
                 .map(page -> PageResponse.of(
-                        page.getList().stream().map(this::toDto).toList(),
-                        page.getTotal(),
-                        pageNum,
-                        boundedSize));
+                        page.getList().stream().map(this::toDto).toList(), page.getTotal(), pageNum, boundedSize));
     }
 
     /**

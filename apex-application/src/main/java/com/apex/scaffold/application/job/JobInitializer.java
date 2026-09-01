@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 
@@ -20,6 +21,7 @@ import reactor.core.publisher.Flux;
  */
 @Slf4j
 @Component
+@ConditionalOnProperty(prefix = "apex.scheduling", name = "enabled", havingValue = "true", matchIfMissing = true)
 @RequiredArgsConstructor
 public class JobInitializer implements ApplicationRunner {
 
@@ -43,6 +45,7 @@ public class JobInitializer implements ApplicationRunner {
         jobRepository
                 .findEnabled()
                 .flatMapMany(Flux::fromIterable)
+                .filter(job -> job.getTenantId() != null && !job.getTenantId().isBlank())
                 .concatMap(jobScheduler::register)
                 .then()
                 .subscribe(ignored -> log.info("定时任务调度恢复完成"), error -> log.error("定时任务调度恢复失败", error));

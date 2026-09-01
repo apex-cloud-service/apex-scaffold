@@ -2,7 +2,6 @@ package com.apex.scaffold.interfaces.handler;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -245,6 +244,8 @@ class UserHandlerTest {
             PageRequest pageRequest = new PageRequest();
             pageRequest.setPageNum(1);
             pageRequest.setPageSize(10);
+            pageRequest.setOrderBy("create_time");
+            pageRequest.setIsAsc(false);
 
             UserEntity entity1 = new UserEntity();
             entity1.setId(1L);
@@ -262,7 +263,13 @@ class UserHandlerTest {
 
             when(requestHandlerUtil.handleRequestBody(any(ServerRequest.class), any()))
                     .thenReturn(Mono.just(pageRequest));
-            when(userService.findPage(anyInt(), anyInt())).thenReturn(Mono.just(pageResponse));
+            UserDTO dto1 = new UserDTO();
+            dto1.setId(1L);
+            UserDTO dto2 = new UserDTO();
+            dto2.setId(2L);
+
+            when(userService.findPage(1, 10, "create_time", false)).thenReturn(Mono.just(pageResponse));
+            when(userAssembler.toDTOList(List.of(entity1, entity2))).thenReturn(List.of(dto1, dto2));
 
             StepVerifier.create(handler.listUsers(request))
                     .assertNext(response -> {
@@ -270,7 +277,8 @@ class UserHandlerTest {
                     })
                     .verifyComplete();
 
-            verify(userService).findPage(1, 10);
+            verify(userService).findPage(1, 10, "create_time", false);
+            verify(userAssembler).toDTOList(List.of(entity1, entity2));
         }
     }
 }

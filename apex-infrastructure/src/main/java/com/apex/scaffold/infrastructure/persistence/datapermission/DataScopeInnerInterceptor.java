@@ -63,7 +63,12 @@ public class DataScopeInnerInterceptor implements InnerInterceptor {
      */
     @Override
     public boolean willDoQuery(
-            Executor executor, MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) {
+            Executor executor,
+            MappedStatement ms,
+            Object parameter,
+            RowBounds rowBounds,
+            ResultHandler resultHandler,
+            BoundSql boundSql) {
         return true;
     }
 
@@ -72,7 +77,12 @@ public class DataScopeInnerInterceptor implements InnerInterceptor {
      */
     @Override
     public void beforeQuery(
-            Executor executor, MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) {
+            Executor executor,
+            MappedStatement ms,
+            Object parameter,
+            RowBounds rowBounds,
+            ResultHandler resultHandler,
+            BoundSql boundSql) {
         DataScopeInfo scope = dataScopeProvider.resolve().orElse(null);
         if (scope == null || scope.isAll()) {
             return;

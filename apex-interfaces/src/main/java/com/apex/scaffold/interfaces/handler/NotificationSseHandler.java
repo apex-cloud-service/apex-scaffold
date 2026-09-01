@@ -64,18 +64,15 @@ public class NotificationSseHandler extends BaseHandler {
         return request.principal()
                 .flatMap(principal -> {
                     String recipient = principal.getName();
-                    Flux<org.springframework.http.codec.ServerSentEvent<String>> events =
-                            notificationService
-                                    .stream(recipient)
-                                    .map(msg -> org.springframework.http.codec.ServerSentEvent
-                                            .builder(msg.content())
-                                            .event("notification")
-                                            .build())
-                                    .mergeWith(Flux.interval(Duration.ofSeconds(30))
-                                            .map(i -> org.springframework.http.codec.ServerSentEvent
-                                                    .<String>builder()
-                                                    .comment("heartbeat")
-                                                    .build()));
+                    Flux<org.springframework.http.codec.ServerSentEvent<String>> events = notificationService.stream(
+                                    recipient)
+                            .map(msg -> org.springframework.http.codec.ServerSentEvent.builder(msg.content())
+                                    .event("notification")
+                                    .build())
+                            .mergeWith(Flux.interval(Duration.ofSeconds(30))
+                                    .map(i -> org.springframework.http.codec.ServerSentEvent.<String>builder()
+                                            .comment("heartbeat")
+                                            .build()));
                     return ServerResponse.ok()
                             .contentType(MediaType.TEXT_EVENT_STREAM)
                             .body(events, org.springframework.http.codec.ServerSentEvent.class);

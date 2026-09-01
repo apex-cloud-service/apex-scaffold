@@ -44,6 +44,11 @@ public class RolePO extends BasePO {
     private Integer status;
 
     /**
+     * 数据权限类型编码。
+     */
+    private Integer dataScope;
+
+    /**
      * 更新角色的核心信息。
      *
      * @param name        角色名称

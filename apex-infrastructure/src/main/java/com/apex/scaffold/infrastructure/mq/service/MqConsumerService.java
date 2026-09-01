@@ -1,5 +1,6 @@
 package com.apex.scaffold.infrastructure.mq.service;
 
+import com.apex.scaffold.common.context.TenantContext;
 import jakarta.annotation.PreDestroy;
 import java.time.Duration;
 import java.util.UUID;
@@ -68,6 +69,7 @@ public class MqConsumerService {
 
     /** 消息幂等性缓存键前缀 */
     private static final String IDEMPOTENT_KEY_PREFIX = "mq:idempotent:";
+
     private static final String PROCESSING_PREFIX = "PROCESSING:";
     private static final String SUCCESS = "SUCCESS";
 
@@ -138,7 +140,8 @@ public class MqConsumerService {
             return ProcessingResult.error(messageId, "服务正在关闭");
         }
 
-        String key = IDEMPOTENT_KEY_PREFIX + messageId;
+        String tenantId = TenantContext.currentTenantId().orElseThrow(() -> new IllegalStateException("租户上下文不存在"));
+        String key = IDEMPOTENT_KEY_PREFIX + tenantId + ":" + messageId;
         RBucket<String> bucket = redissonClient.getBucket(key, StringCodec.INSTANCE);
         String token = PROCESSING_PREFIX + UUID.randomUUID();
         if (!bucket.setIfAbsent(token, getTtl())) {

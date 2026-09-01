@@ -31,9 +31,7 @@ public final class LicenseLoader {
         // 1. 加载公钥（优先外部文件，其次配置内嵌，最后随包默认公钥）
         String publicKeyBase64 = loadPublicKey(properties);
         LicenseValidator validator = new LicenseValidator(
-                publicKeyBase64,
-                properties.isMachineFingerprintSkip(),
-                properties.getMachineFingerprintOverride());
+                publicKeyBase64, properties.isMachineFingerprintSkip(), properties.getMachineFingerprintOverride());
 
         // 2. 加载并验证 License 文件
         String licensePath = properties.getFilePath();
@@ -62,9 +60,7 @@ public final class LicenseLoader {
     private static void loadLicense(LicenseValidator validator, String licensePath) throws Exception {
         if (licensePath.startsWith("classpath:")) {
             String resourceName = licensePath.substring("classpath:".length());
-            var resource = LicenseLoader.class
-                    .getClassLoader()
-                    .getResource(resourceName);
+            var resource = LicenseLoader.class.getClassLoader().getResource(resourceName);
             if (resource == null) {
                 throw new IllegalStateException("License文件不存在: " + licensePath);
             }
@@ -79,9 +75,7 @@ public final class LicenseLoader {
     private static String readResourceOrFile(String path) throws Exception {
         if (path.startsWith("classpath:")) {
             String resourceName = path.substring("classpath:".length());
-            var resource = LicenseLoader.class
-                    .getClassLoader()
-                    .getResource(resourceName);
+            var resource = LicenseLoader.class.getClassLoader().getResource(resourceName);
             if (resource == null) {
                 throw new IllegalStateException("资源不存在: " + path);
             }

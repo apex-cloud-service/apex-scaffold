@@ -1,6 +1,7 @@
 package com.apex.scaffold.application.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -38,5 +39,10 @@ public class PageRequest {
     @Schema(description = "每页数量")
     @NotNull(message = "{param.not_null}")
     @Min(value = 1, message = "每页大小必须大于等于1")
+    @Max(value = 100, message = "每页大小必须小于等于100")
     private Integer pageSize;
+
+    private String orderBy;
+
+    private Boolean isAsc = false;
 }

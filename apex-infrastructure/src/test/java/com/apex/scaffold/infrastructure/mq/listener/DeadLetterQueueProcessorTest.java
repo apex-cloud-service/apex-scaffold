@@ -154,7 +154,8 @@ class DeadLetterQueueProcessorTest {
         noNameServerProcessor.start();
         noNameServerProcessor.registerHandler("apex-photo-moderation", msg -> true);
 
-        assertThat(ReflectionTestUtils.getField(noNameServerProcessor, "started")).isEqualTo(false);
+        assertThat(ReflectionTestUtils.getField(noNameServerProcessor, "started"))
+                .isEqualTo(false);
     }
 
     @Test

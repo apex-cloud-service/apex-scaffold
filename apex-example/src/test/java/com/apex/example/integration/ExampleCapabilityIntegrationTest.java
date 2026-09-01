@@ -167,8 +167,7 @@ class ExampleCapabilityIntegrationTest extends BaseIntegrationTest {
                 .expectStatus()
                 .isOk()
                 .expectHeader()
-                .contentTypeCompatibleWith(
-                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                .contentTypeCompatibleWith("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
                 .expectHeader()
                 .value("Content-Disposition", value -> assertThat(value).contains("attachment"))
                 .expectBody()

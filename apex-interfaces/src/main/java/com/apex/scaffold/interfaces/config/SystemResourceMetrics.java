@@ -85,7 +85,9 @@ public class SystemResourceMetrics implements MeterBinder {
                 Gauge.builder(METRIC_DISK_USED_PERCENT, store, s -> {
                             long total = safeLong(store::getTotalSpace);
                             long usable = safeLong(store::getUsableSpace);
-                            return total <= 0 ? Double.NaN : Math.min(1.0, Math.max(0.0, (double) (total - usable) / total));
+                            return total <= 0
+                                    ? Double.NaN
+                                    : Math.min(1.0, Math.max(0.0, (double) (total - usable) / total));
                         })
                         .description("磁盘使用率 0~1")
                         .tags(tags)

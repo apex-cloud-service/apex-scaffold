@@ -1,5 +1,7 @@
 package com.apex.scaffold.infrastructure.persistence.datasource;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.apex.scaffold.common.context.DataSourceContext;
 import com.baomidou.dynamic.datasource.DynamicRoutingDataSource;
 import com.baomidou.dynamic.datasource.provider.DynamicDataSourceProvider;
@@ -16,8 +18,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * 数据源动态切换端到端测试（双 H2 内存库 + Baomidou DynamicRoutingDataSource）。
@@ -132,7 +132,8 @@ class DataSourceSwitchE2eH2Test {
         ds.setUsername("sa");
         ds.setPassword("");
         ds.setDriverClassName("org.h2.Driver");
-        try (Connection connection = ds.getConnection(); Statement statement = connection.createStatement()) {
+        try (Connection connection = ds.getConnection();
+                Statement statement = connection.createStatement()) {
             statement.execute("CREATE TABLE routing_probe (id INT PRIMARY KEY, source VARCHAR(20))");
             statement.execute("INSERT INTO routing_probe (id, source) VALUES (1, '" + marker + "')");
         }

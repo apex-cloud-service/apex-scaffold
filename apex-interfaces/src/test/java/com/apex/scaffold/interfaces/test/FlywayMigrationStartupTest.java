@@ -1,8 +1,8 @@
 package com.apex.scaffold.interfaces.test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.Test;
@@ -60,13 +60,54 @@ class FlywayMigrationStartupTest {
      * @throws SQLException 当操作无法完成时
      */
     @Test
-    void shouldApplyAllSixMigrations() throws SQLException {
+    void shouldApplyAllMigrationsThroughV19() throws SQLException {
         try (var connection = dataSource.getConnection();
                 var st = connection.createStatement();
-                var rs = st.executeQuery(
-                        "SELECT COUNT(*) FROM flyway_schema_history WHERE success = 1")) {
+                var rs = st.executeQuery("SELECT COUNT(*) FROM flyway_schema_history WHERE success = 1")) {
             assertThat(rs.next()).isTrue();
-            assertThat(rs.getInt(1)).as("V1-V15 十五个迁移应全部应用成功").isEqualTo(15);
+            assertThat(rs.getInt(1)).as("V1-V19 十九个迁移应全部应用成功").isEqualTo(19);
+        }
+    }
+
+    @Test
+    void shouldHaveRoleDataScopeSchema() throws SQLException {
+        try (var connection = dataSource.getConnection();
+                var st = connection.createStatement();
+                var rs = st.executeQuery("SELECT COUNT(*) FROM information_schema.columns "
+                        + "WHERE table_schema = DATABASE() AND "
+                        + "((table_name = 'sys_role' AND column_name = 'data_scope') "
+                        + "OR (table_name = 'sys_dept' AND column_name = 'tenant_id' "
+                        + "AND is_nullable = 'NO'))")) {
+            assertThat(rs.next()).isTrue();
+            assertThat(rs.getInt(1)).isEqualTo(2);
+        }
+        try (var connection = dataSource.getConnection();
+                var st = connection.createStatement();
+                var rs = st.executeQuery("SELECT COUNT(*) FROM information_schema.referential_constraints "
+                        + "WHERE constraint_schema = DATABASE() "
+                        + "AND constraint_name = 'fk_sys_role_dept_tenant_dept'")) {
+            assertThat(rs.next()).isTrue();
+            assertThat(rs.getInt(1)).isEqualTo(1);
+        }
+    }
+
+    @Test
+    void shouldRejectCrossTenantRoleDepartmentRelation() throws SQLException {
+        try (var connection = dataSource.getConnection();
+                var st = connection.createStatement()) {
+            st.executeUpdate("INSERT INTO sys_dept "
+                    + "(id, parent_id, ancestors, name, tenant_id) "
+                    + "VALUES (91001, 0, '0', 'tenant-a-dept', 'tenant-a')");
+            try {
+                st.executeUpdate("INSERT INTO sys_role_dept (id, role_id, dept_id, tenant_id) "
+                        + "VALUES (91001, 1, 91001, 'tenant-a')");
+                assertThatThrownBy(() -> st.executeUpdate("INSERT INTO sys_role_dept (id, role_id, dept_id, tenant_id) "
+                                + "VALUES (91002, 1, 91001, 'tenant-b')"))
+                        .isInstanceOf(SQLException.class);
+            } finally {
+                st.executeUpdate("DELETE FROM sys_role_dept WHERE id IN (91001, 91002)");
+                st.executeUpdate("DELETE FROM sys_dept WHERE id = 91001");
+            }
         }
     }
 
@@ -81,16 +122,21 @@ class FlywayMigrationStartupTest {
     void shouldHaveAuditAndDeptSeeds() throws SQLException {
         try (var connection = dataSource.getConnection();
                 var st = connection.createStatement();
-                var rs = st.executeQuery(
-                        "SELECT COUNT(*) FROM sys_menu WHERE menu_name IN ('审计日志','部门管理')")) {
+                var rs = st.executeQuery("SELECT COUNT(*) FROM sys_menu WHERE menu_name IN ('审计日志','部门管理')")) {
             assertThat(rs.next()).isTrue();
             assertThat(rs.getInt(1)).as("V4/V6 菜单种子").isEqualTo(2);
         }
         try (var connection = dataSource.getConnection();
                 var st = connection.createStatement();
-                var rs = st.executeQuery("SELECT COUNT(*) FROM sys_dept")) {
+                var rs = st.executeQuery("SELECT COUNT(*) FROM sys_dept WHERE id = 1 AND name = 'Apex 科技'")) {
             assertThat(rs.next()).isTrue();
-            assertThat(rs.getInt(1)).as("V6 根部门种子").isGreaterThanOrEqualTo(1);
+            assertThat(rs.getInt(1)).as("V19 应移除未归属租户的 V6 演示部门").isZero();
+        }
+        try (var connection = dataSource.getConnection();
+                var st = connection.createStatement();
+                var rs = st.executeQuery("SELECT COUNT(*) FROM sys_user WHERE dept_id = 1")) {
+            assertThat(rs.next()).isTrue();
+            assertThat(rs.getInt(1)).as("V19 不应留下对已删除演示部门的用户引用").isZero();
         }
     }
 
@@ -103,10 +149,9 @@ class FlywayMigrationStartupTest {
     void shouldHaveV3AndV6UserColumns() throws SQLException {
         try (var connection = dataSource.getConnection();
                 var st = connection.createStatement();
-                var rs = st.executeQuery(
-                        "SELECT COUNT(*) FROM information_schema.columns "
-                                + "WHERE table_schema = DATABASE() AND table_name = 'sys_user' "
-                                + "AND column_name IN ('username','password','dept_id')")) {
+                var rs = st.executeQuery("SELECT COUNT(*) FROM information_schema.columns "
+                        + "WHERE table_schema = DATABASE() AND table_name = 'sys_user' "
+                        + "AND column_name IN ('username','password','dept_id')")) {
             assertThat(rs.next()).isTrue();
             assertThat(rs.getInt(1)).as("V3 username/password + V6 dept_id 应就位").isEqualTo(3);
         }

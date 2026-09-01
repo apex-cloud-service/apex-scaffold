@@ -10,17 +10,19 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.apex.scaffold.common.context.TenantContext;
 import java.util.Map;
-import org.apache.rocketmq.client.producer.TransactionSendResult;
-import org.mockito.ArgumentCaptor;
 import org.apache.rocketmq.client.producer.SendCallback;
 import org.apache.rocketmq.client.producer.SendResult;
+import org.apache.rocketmq.client.producer.TransactionSendResult;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.messaging.Message;
@@ -52,6 +54,24 @@ class MqProducerServiceTest {
     @BeforeEach
     void setUp() {
         service = new MqProducerService(rocketMQTemplate);
+    }
+
+    @AfterEach
+    void clearTenant() {
+        TenantContext.clear();
+    }
+
+    @Test
+    @DisplayName("发送消息应携带当前租户且覆盖外部租户Header")
+    void shouldPropagateTrustedTenantHeader() {
+        TenantContext.setTenantId("tenant-a");
+        when(rocketMQTemplate.syncSend(anyString(), any(Message.class))).thenReturn(sendResult);
+
+        service.sendWithHeaders("topic", "tag", "msg", Map.of("tenantId", "tenant-b"));
+
+        ArgumentCaptor<Message<String>> captor = ArgumentCaptor.forClass(Message.class);
+        verify(rocketMQTemplate).syncSend(eq("topic:tag"), captor.capture());
+        assertThat(captor.getValue().getHeaders().get("tenantId")).isEqualTo("tenant-a");
     }
 
     @Nested
@@ -127,8 +147,7 @@ class MqProducerServiceTest {
 
             ArgumentCaptor<Message<String>> captor = ArgumentCaptor.forClass(Message.class);
             verify(rocketMQTemplate).sendOneWay(eq("topic:tag"), captor.capture());
-            assertThat(captor.getValue().getHeaders().get("apex-message-id"))
-                    .isNotNull();
+            assertThat(captor.getValue().getHeaders().get("apex-message-id")).isNotNull();
             assertThat(captor.getValue().getHeaders().get("KEYS"))
                     .isEqualTo(captor.getValue().getHeaders().get("apex-message-id"));
         }
@@ -214,8 +233,7 @@ class MqProducerServiceTest {
             assertThat(result).isSameAs(sendResult);
             ArgumentCaptor<Message<String>> captor = ArgumentCaptor.forClass(Message.class);
             verify(rocketMQTemplate).syncSend(eq("topic:tag"), captor.capture());
-            assertThat(captor.getValue().getHeaders().get("apex-message-id"))
-                    .isNotNull();
+            assertThat(captor.getValue().getHeaders().get("apex-message-id")).isNotNull();
             assertThat(captor.getValue().getHeaders().get("KEYS"))
                     .isEqualTo(captor.getValue().getHeaders().get("apex-message-id"));
         }
@@ -233,8 +251,7 @@ class MqProducerServiceTest {
             assertThat(result).isSameAs(sendResult);
             ArgumentCaptor<Message<String>> captor = ArgumentCaptor.forClass(Message.class);
             verify(rocketMQTemplate).syncSend(eq("topic:tag"), captor.capture());
-            assertThat(captor.getValue().getHeaders().get("apex-message-id"))
-                    .isNotNull();
+            assertThat(captor.getValue().getHeaders().get("apex-message-id")).isNotNull();
         }
     }
 }

@@ -71,7 +71,8 @@ public class ApiCallLogHandler extends BaseHandler {
                 .filter(v -> !v.isBlank())
                 .map(v -> safeParseInt(v, -1))
                 .orElse(null);
-        String serviceName = request.queryParam("serviceName").filter(v -> !v.isBlank()).orElse(null);
+        String serviceName =
+                request.queryParam("serviceName").filter(v -> !v.isBlank()).orElse(null);
         String traceId = request.queryParam("traceId").filter(v -> !v.isBlank()).orElse(null);
         String path = request.queryParam("path").filter(v -> !v.isBlank()).orElse(null);
         return apiCallLogQueryService

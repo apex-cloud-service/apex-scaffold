@@ -24,12 +24,12 @@ import org.junit.jupiter.api.Test;
 class P6SpyIntegrationContractTest {
 
     /** dev 数据源 URL（与 application-dev.yml 保持一致，经 P6Spy 代理 MySQL）。 */
-    private static final String DEV_URL =
-            "jdbc:p6spy:mysql://127.0.0.1:3306/apex_data"
-                    + "?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai"
-                    + "&allowPublicKeyRetrieval=true&useSSL=false";
+    private static final String DEV_URL = "jdbc:p6spy:mysql://127.0.0.1:3306/apex_data"
+            + "?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai"
+            + "&allowPublicKeyRetrieval=true&useSSL=false";
     /** dev 数据库凭据（与 application-dev.yml 默认值一致，可经环境变量覆盖）。 */
     private static final String DEV_USER = System.getenv().getOrDefault("DB_MASTER_USERNAME", "root");
+
     private static final String DEV_PASSWORD = System.getenv().getOrDefault("DB_MASTER_PASSWORD", "apex-root");
 
     @Test

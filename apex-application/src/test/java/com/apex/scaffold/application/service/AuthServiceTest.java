@@ -245,14 +245,10 @@ class AuthServiceTest {
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
         when(valueOperations.get(ipKey)).thenReturn(Mono.just("3"));
 
-        authService
-                .login(loginRequest, clientIp)
-                .as(StepVerifier::create)
-                .verifyErrorSatisfies(error -> {
-                    assertThat(error).isInstanceOf(BusinessException.class);
-                    assertThat(((BusinessException) error).getCode())
-                            .isEqualTo(ResultCode.CAPTCHA_REQUIRED.getCode());
-                });
+        authService.login(loginRequest, clientIp).as(StepVerifier::create).verifyErrorSatisfies(error -> {
+            assertThat(error).isInstanceOf(BusinessException.class);
+            assertThat(((BusinessException) error).getCode()).isEqualTo(ResultCode.CAPTCHA_REQUIRED.getCode());
+        });
         verify(loginStrategyProvider, never()).getStrategy(anyString());
     }
 
@@ -275,14 +271,10 @@ class AuthServiceTest {
         when(valueOperations.get(ipKey)).thenReturn(Mono.just("5"));
         when(captchaService.verify("captcha-1", "wrong")).thenReturn(Mono.just(false));
 
-        authService
-                .login(loginRequest, clientIp)
-                .as(StepVerifier::create)
-                .verifyErrorSatisfies(error -> {
-                    assertThat(error).isInstanceOf(BusinessException.class);
-                    assertThat(((BusinessException) error).getCode())
-                            .isEqualTo(ResultCode.CAPTCHA_INVALID.getCode());
-                });
+        authService.login(loginRequest, clientIp).as(StepVerifier::create).verifyErrorSatisfies(error -> {
+            assertThat(error).isInstanceOf(BusinessException.class);
+            assertThat(((BusinessException) error).getCode()).isEqualTo(ResultCode.CAPTCHA_INVALID.getCode());
+        });
         verify(loginStrategyProvider, never()).getStrategy(anyString());
     }
 

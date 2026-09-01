@@ -885,18 +885,18 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
           <excludes>
-            <exclude>**/*StressTest.java</exclude>
-            <exclude>**/*StressTest.class</exclude>
-            <exclude>**/*E2ETest.java</exclude>
-            <exclude>**/*E2ETest.class</exclude>
-            <exclude>**/FlywayMigrationStartupTest.java</exclude>
-            <exclude>**/FlywayMigrationStartupTest.class</exclude>
-            <exclude>**/test/Test*.java</exclude>
-            <exclude>**/test/Test*.class</exclude>
-            <exclude>**/*IntegrationTest.java</exclude>
-            <exclude>**/*IntegrationTest.class</exclude>
-            <exclude>**/*LiveTest.java</exclude>
-            <exclude>**/*LiveTest.class</exclude>
+            <!-- Stress / E2E / Live / Integration / Smoke 测试需外部依赖或长线资源，
+                 从 surefire 单元测试阶段移除，由 failsafe / 特定 Profile 接管。
+                 末尾通配符 * 兼容 JUnit 5 @Nested 内部类（如 XxxIntegrationTest$NestedTests）以及
+                 Knife4jIntegrationContractTest 这类"ContractTest+Integration"混合后缀类。 -->
+            <exclude>**/*StressTest*</exclude>
+            <exclude>**/*E2ETest*</exclude>
+            <exclude>**/FlywayMigrationStartupTest*</exclude>
+            <exclude>**/test/Test*</exclude>
+            <exclude>**/*IntegrationTest*</exclude>
+            <exclude>**/*LiveTest*</exclude>
+            <exclude>**/*SmokeTest*</exclude>
+            <exclude>**/*RemoteIT</exclude>
           </excludes>
         </configuration>
       </plugin>
@@ -1032,18 +1032,14 @@
             <skipTests>${skip.unit.tests}</skipTests>
             <testFailureIgnore>false</testFailureIgnore>
             <excludes>
-              <exclude>**/*StressTest.java</exclude>
-              <exclude>**/*StressTest.class</exclude>
-              <exclude>**/*E2ETest.java</exclude>
-              <exclude>**/*E2ETest.class</exclude>
-              <exclude>**/FlywayMigrationStartupTest.java</exclude>
-              <exclude>**/FlywayMigrationStartupTest.class</exclude>
-              <exclude>**/test/Test*.java</exclude>
-              <exclude>**/test/Test*.class</exclude>
-              <exclude>**/*IntegrationTest.java</exclude>
-              <exclude>**/*IntegrationTest.class</exclude>
-              <exclude>**/*LiveTest.java</exclude>
-              <exclude>**/*LiveTest.class</exclude>
+              <exclude>**/*StressTest*</exclude>
+              <exclude>**/*E2ETest*</exclude>
+              <exclude>**/FlywayMigrationStartupTest*</exclude>
+              <exclude>**/test/Test*</exclude>
+              <exclude>**/*IntegrationTest*</exclude>
+              <exclude>**/*LiveTest*</exclude>
+              <exclude>**/*SmokeTest*</exclude>
+              <exclude>**/*RemoteIT</exclude>
             </excludes>
           </configuration>
         </plugin>

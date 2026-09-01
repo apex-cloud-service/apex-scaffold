@@ -78,21 +78,18 @@ public class ExcelExportHandler extends BaseHandler {
     @Operation(operationId = "adminExportUsers", summary = "导出用户列表（xlsx）")
     @OperationLog(module = "数据导出", type = OperationLog.OperationType.SELECT, description = "导出用户列表")
     public Mono<ServerResponse> exportUsers(ServerRequest request) {
-        return userService.findPage(1, 1000)
-                .flatMap(page -> {
-                    List<UserExportDTO> rows = page.getList().stream()
-                            .map(this::toExportDto)
-                            .collect(Collectors.toList());
-                    byte[] bytes = excelExportService.export("用户列表", UserExportDTO.class, rows);
-                    String filename =
-                            URLEncoder.encode("用户列表", StandardCharsets.UTF_8) + "-" + System.currentTimeMillis()
-                                    + ".xlsx";
-                    return ServerResponse.ok()
-                            .contentType(MediaType.parseMediaType(
-                                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
-                            .header("Content-Disposition", "attachment; filename=\"" + filename + "\"")
-                            .bodyValue(bytes);
-                });
+        return userService.findPage(1, 100, "create_time", false).flatMap(page -> {
+            List<UserExportDTO> rows =
+                    page.getList().stream().map(this::toExportDto).collect(Collectors.toList());
+            byte[] bytes = excelExportService.export("用户列表", UserExportDTO.class, rows);
+            String filename =
+                    URLEncoder.encode("用户列表", StandardCharsets.UTF_8) + "-" + System.currentTimeMillis() + ".xlsx";
+            return ServerResponse.ok()
+                    .contentType(MediaType.parseMediaType(
+                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                    .header("Content-Disposition", "attachment; filename=\"" + filename + "\"")
+                    .bodyValue(bytes);
+        });
     }
 
     /** 用户实体 → 导出 DTO 转换。 */

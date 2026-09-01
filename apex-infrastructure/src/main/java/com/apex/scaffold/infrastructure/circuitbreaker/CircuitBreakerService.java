@@ -1,8 +1,8 @@
 package com.apex.scaffold.infrastructure.circuitbreaker;
 
+import com.apex.scaffold.domain.gateway.CircuitBreakerPort;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
-import com.apex.scaffold.domain.gateway.CircuitBreakerPort;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator;
 import org.slf4j.Logger;

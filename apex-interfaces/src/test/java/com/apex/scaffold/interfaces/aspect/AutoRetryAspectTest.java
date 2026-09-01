@@ -60,12 +60,13 @@ class AutoRetryAspectTest {
         when(annotation.maxAttempts()).thenReturn(3);
         when(annotation.retryDelayMs()).thenReturn(0L);
         when(annotation.retryOn()).thenReturn(new Class[] {IllegalStateException.class});
-        when(joinPoint.proceed()).thenAnswer(invocation -> Mono.defer(() -> {
-            if (attempts.incrementAndGet() < 3) {
-                return Mono.error(new IllegalStateException("transient"));
-            }
-            return Mono.just("ok");
-        }));
+        when(joinPoint.proceed())
+                .thenAnswer(invocation -> Mono.defer(() -> {
+                    if (attempts.incrementAndGet() < 3) {
+                        return Mono.error(new IllegalStateException("transient"));
+                    }
+                    return Mono.just("ok");
+                }));
 
         Object result = new AutoRetryAspect(null).around(joinPoint, annotation);
 
@@ -79,12 +80,13 @@ class AutoRetryAspectTest {
         when(annotation.maxAttempts()).thenReturn(2);
         when(annotation.retryDelayMs()).thenReturn(0L);
         when(annotation.retryOn()).thenReturn(new Class[] {IllegalStateException.class});
-        when(joinPoint.proceed()).thenAnswer(invocation -> Flux.defer(() -> {
-            if (attempts.incrementAndGet() == 1) {
-                return Flux.error(new IllegalStateException("transient"));
-            }
-            return Flux.just("ok");
-        }));
+        when(joinPoint.proceed())
+                .thenAnswer(invocation -> Flux.defer(() -> {
+                    if (attempts.incrementAndGet() == 1) {
+                        return Flux.error(new IllegalStateException("transient"));
+                    }
+                    return Flux.just("ok");
+                }));
 
         Object result = new AutoRetryAspect(null).around(joinPoint, annotation);
 

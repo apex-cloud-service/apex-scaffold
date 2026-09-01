@@ -4,12 +4,15 @@ import com.apex.scaffold.common.annotation.DataScope;
 import com.apex.scaffold.common.context.DataScopeConfig;
 import com.apex.scaffold.common.context.DataScopeContext;
 import com.apex.scaffold.common.context.DataScopeInfo;
+import com.apex.scaffold.common.context.DataScopeJdbcBridge;
 import com.apex.scaffold.common.context.DataScopeProvider;
-import lombok.extern.slf4j.Slf4j;
+import com.apex.scaffold.common.context.ReactiveDataScopeProvider;
+import java.util.Optional;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -39,7 +42,6 @@ import reactor.core.publisher.Mono;
  * @see DataScopeContext
  * @see DataScopeProvider
  */
-@Slf4j
 @Aspect
 @Component
 public class DataScopeAspect {
@@ -47,13 +49,25 @@ public class DataScopeAspect {
     /** 数据权限装配器（解析当前用户的数据可见范围） */
     private final DataScopeProvider dataScopeProvider;
 
+    private final ReactiveDataScopeProvider reactiveDataScopeProvider;
+
     /**
      * 构造数据权限切面。
      *
      * @param dataScopeProvider 数据权限装配器
      */
     public DataScopeAspect(DataScopeProvider dataScopeProvider) {
+        this(dataScopeProvider, () -> Mono.justOrEmpty(dataScopeProvider.resolve()));
+    }
+
+    public DataScopeAspect(ReactiveDataScopeProvider reactiveDataScopeProvider) {
+        this(() -> Optional.empty(), reactiveDataScopeProvider);
+    }
+
+    @Autowired
+    public DataScopeAspect(DataScopeProvider dataScopeProvider, ReactiveDataScopeProvider reactiveDataScopeProvider) {
         this.dataScopeProvider = dataScopeProvider;
+        this.reactiveDataScopeProvider = reactiveDataScopeProvider;
     }
 
     /**
@@ -79,48 +93,41 @@ public class DataScopeAspect {
     /**
      * 响应式方法：订阅时装配、终止时释放。
      */
-    private Object proceedReactive(ProceedingJoinPoint joinPoint, DataScope dataScope, boolean isMono) throws Throwable {
+    private Object proceedReactive(ProceedingJoinPoint joinPoint, DataScope dataScope, boolean isMono)
+            throws Throwable {
         Object result = joinPoint.proceed();
         if (isMono) {
-            return ((Mono<?>) result)
-                    .doFirst(() -> assemble(dataScope, joinPoint))
-                    .doFinally(signalType -> DataScopeContext.clear());
+            return Mono.defer(() -> reactiveDataScopeProvider
+                            .resolve()
+                            .map(info -> new DataScopeContext.Scope(info, DataScopeConfig.from(dataScope)))
+                            .switchIfEmpty(
+                                    Mono.error(new IllegalStateException("Required data scope could not be resolved"))))
+                    .flatMap(scope -> ((Mono<?>) result)
+                            .contextWrite(context -> context.put(DataScopeJdbcBridge.CONTEXT_KEY, scope)));
         }
-        return ((Flux<?>) result)
-                .doFirst(() -> assemble(dataScope, joinPoint))
-                .doFinally(signalType -> DataScopeContext.clear());
+        return Mono.defer(() -> reactiveDataScopeProvider
+                        .resolve()
+                        .map(info -> new DataScopeContext.Scope(info, DataScopeConfig.from(dataScope)))
+                        .switchIfEmpty(
+                                Mono.error(new IllegalStateException("Required data scope could not be resolved"))))
+                .flatMapMany(scope -> ((Flux<?>) result)
+                        .contextWrite(context -> context.put(DataScopeJdbcBridge.CONTEXT_KEY, scope)));
     }
 
     /**
      * 同步方法：执行前装配、finally 释放。
      */
     private Object proceedSynchronous(ProceedingJoinPoint joinPoint, DataScope dataScope) throws Throwable {
-        assemble(dataScope, joinPoint);
-        try {
+        DataScopeContext.Scope scope = resolveScope(dataScope);
+        try (AutoCloseable ignored = DataScopeContext.install(scope)) {
             return joinPoint.proceed();
-        } finally {
-            DataScopeContext.clear();
         }
     }
 
-    /**
-     * 装配数据权限上下文。
-     *
-     * @param dataScope 注解实例（用于转换注入配置）
-     * @param joinPoint 连接点（仅用于日志）
-     */
-    private void assemble(DataScope dataScope, ProceedingJoinPoint joinPoint) {
-        dataScopeProvider.resolve().ifPresentOrElse(
-                info -> {
-                    DataScopeContext.setDataScope(info, DataScopeConfig.from(dataScope));
-                    log.debug("数据权限装配: method={}, type={}, deptId={}, userId={}, deptIds={}",
-                            joinPoint.getSignature().getName(),
-                            info.type(),
-                            info.deptId(),
-                            info.userId(),
-                            info.deptIds());
-                },
-                () -> log.warn("数据权限未装配（无法解析当前用户数据权限）: method={}，将不做数据过滤",
-                        joinPoint.getSignature().getName()));
+    private DataScopeContext.Scope resolveScope(DataScope dataScope) {
+        DataScopeInfo info = dataScopeProvider
+                .resolve()
+                .orElseThrow(() -> new IllegalStateException("Required data scope could not be resolved"));
+        return new DataScopeContext.Scope(info, DataScopeConfig.from(dataScope));
     }
 }

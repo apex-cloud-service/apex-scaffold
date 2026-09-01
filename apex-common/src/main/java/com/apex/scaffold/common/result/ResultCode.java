@@ -338,6 +338,15 @@ public enum ResultCode {
     /** 需要输入图形验证码（登录失败次数达到阈值后的升级校验） */
     CAPTCHA_REQUIRED(4742, "请输入图形验证码后重试", "auth.captcha_required"),
 
+    /** 租户不存在 */
+    TENANT_NOT_FOUND(4751, "租户不存在", "biz.tenant.not_found"),
+    /** 租户编码已存在 */
+    TENANT_CODE_EXISTS(4752, "租户编码已存在", "biz.tenant.code_exists"),
+    /** 租户状态迁移非法（当前状态不允许执行该操作） */
+    TENANT_ILLEGAL_TRANSITION(4753, "租户当前状态不允许该操作", "biz.tenant.illegal_transition"),
+    /** 租户配额超限 */
+    TENANT_QUOTA_EXCEEDED(4754, "租户配额已超限", "biz.tenant.quota_exceeded"),
+
     // ========== 安全防护错误 ==========
 
     /** 防重放校验失败 */

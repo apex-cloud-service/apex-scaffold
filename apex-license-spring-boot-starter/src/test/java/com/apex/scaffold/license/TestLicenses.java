@@ -38,11 +38,7 @@ final class TestLicenses {
      * @return 已填充签名的 LicenseInfo
      */
     static LicenseInfo signed(
-            KeyPair keyPair,
-            LicenseVersion version,
-            LocalDateTime validFrom,
-            LocalDateTime validTo,
-            String... features)
+            KeyPair keyPair, LicenseVersion version, LocalDateTime validFrom, LocalDateTime validTo, String... features)
             throws Exception {
         LicenseInfo license = new LicenseInfo();
         license.setLicenseId("LIC-TEST");

@@ -1,5 +1,6 @@
 package com.apex.scaffold.infrastructure.mq.listener;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -7,6 +8,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.apex.scaffold.common.context.TenantContext;
 import com.apex.scaffold.domain.model.entity.OperationLogEntity;
 import com.apex.scaffold.domain.model.entity.SystemMessageEntity;
 import com.apex.scaffold.domain.repository.OperationLogRepository;
@@ -17,11 +19,11 @@ import com.apex.scaffold.infrastructure.mq.constant.MqConstant;
 import com.apex.scaffold.infrastructure.mq.service.MqConsumerService;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import org.apache.rocketmq.spring.annotation.ConsumeMode;
+import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.apache.rocketmq.spring.annotation.ConsumeMode;
-import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -51,22 +53,16 @@ class UserMessageListenerTest {
     @BeforeEach
     void setUp() {
         listener = new UserMessageListener(
-                mqConsumerService,
-                userRepository,
-                systemMessageRepository,
-                operationLogRepository,
-                cacheService);
+                mqConsumerService, userRepository, systemMessageRepository, operationLogRepository, cacheService);
     }
 
     @Test
     @DisplayName("应声明顺序消费模式")
     void shouldDeclareOrderlyConsumption() {
-        RocketMQMessageListener annotation = UserMessageListener.class
-                .getAnnotation(RocketMQMessageListener.class);
+        RocketMQMessageListener annotation = UserMessageListener.class.getAnnotation(RocketMQMessageListener.class);
 
         org.assertj.core.api.Assertions.assertThat(annotation).isNotNull();
-        org.assertj.core.api.Assertions.assertThat(annotation.consumeMode())
-                .isEqualTo(ConsumeMode.ORDERLY);
+        org.assertj.core.api.Assertions.assertThat(annotation.consumeMode()).isEqualTo(ConsumeMode.ORDERLY);
     }
 
     @Test
@@ -76,11 +72,10 @@ class UserMessageListenerTest {
         when(systemMessageRepository.save(any(SystemMessageEntity.class)))
                 .thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
         when(operationLogRepository.insert(any(OperationLogEntity.class))).thenReturn(Mono.just(1));
-        when(mqConsumerService.processMessage(eq("msg-1"), eq(message), any()))
-                .thenAnswer(invocation -> {
-                    MqConsumerService.MessageHandler<Map<String, Object>> handler = invocation.getArgument(2);
-                    return handler.handle(message);
-                });
+        when(mqConsumerService.processMessage(eq("msg-1"), eq(message), any())).thenAnswer(invocation -> {
+            MqConsumerService.MessageHandler<Map<String, Object>> handler = invocation.getArgument(2);
+            return handler.handle(message);
+        });
 
         listener.onMessage(message);
 
@@ -102,14 +97,43 @@ class UserMessageListenerTest {
     }
 
     @Test
+    @DisplayName("消费处理期间应装载消息租户并在完成后清理")
+    void shouldPropagateAndClearTenantContext() throws Exception {
+        Map<String, Object> message = message(MqConstant.TAG_USER_LOGIN);
+        when(mqConsumerService.processMessage(eq("msg-1"), eq(message), any())).thenAnswer(invocation -> {
+            assertThat(TenantContext.currentTenantId()).contains("tenant-a");
+            return true;
+        });
+
+        listener.onMessage(message);
+
+        assertThat(TenantContext.currentTenantId()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("消费结束应恢复调用前的租户上下文")
+    void shouldRestorePreviousTenantContext() throws Exception {
+        TenantContext.setTenantId("outer-tenant");
+        Map<String, Object> message = message(MqConstant.TAG_USER_LOGIN);
+        when(mqConsumerService.processMessage(eq("msg-1"), eq(message), any())).thenAnswer(invocation -> {
+            assertThat(TenantContext.currentTenantId()).contains("tenant-a");
+            return true;
+        });
+
+        listener.onMessage(message);
+
+        assertThat(TenantContext.currentTenantId()).contains("outer-tenant");
+        TenantContext.clear();
+    }
+
+    @Test
     @DisplayName("未知标签应作为消费失败处理")
     void shouldRejectUnknownTag() throws Exception {
         Map<String, Object> message = message("UNKNOWN");
-        when(mqConsumerService.processMessage(eq("msg-1"), eq(message), any()))
-                .thenAnswer(invocation -> {
-                    MqConsumerService.MessageHandler<Map<String, Object>> handler = invocation.getArgument(2);
-                    return handler.handle(message);
-                });
+        when(mqConsumerService.processMessage(eq("msg-1"), eq(message), any())).thenAnswer(invocation -> {
+            MqConsumerService.MessageHandler<Map<String, Object>> handler = invocation.getArgument(2);
+            return handler.handle(message);
+        });
 
         assertThatThrownBy(() -> listener.onMessage(message))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -120,6 +144,7 @@ class UserMessageListenerTest {
         Map<String, Object> message = new LinkedHashMap<>();
         message.put("messageId", "msg-1");
         message.put("tag", tag);
+        message.put("tenantId", "tenant-a");
         message.put("userId", 42L);
         message.put("nickName", "Apex");
         return message;

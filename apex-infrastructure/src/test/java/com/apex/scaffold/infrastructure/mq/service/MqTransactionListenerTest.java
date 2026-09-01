@@ -35,25 +35,21 @@ class MqTransactionListenerTest {
 
         assertThat(listener.executeLocalTransaction(message, "argument"))
                 .isEqualTo(RocketMQLocalTransactionState.UNKNOWN);
-        assertThat(listener.checkLocalTransaction(message))
-                .isEqualTo(RocketMQLocalTransactionState.UNKNOWN);
+        assertThat(listener.checkLocalTransaction(message)).isEqualTo(RocketMQLocalTransactionState.UNKNOWN);
     }
 
     @Test
     @DisplayName("应委托本地事务处理器并透传事务状态")
     void shouldDelegateToHandler() {
         when(handlerProvider.getIfAvailable()).thenReturn(handler);
-        when(handler.execute(any(Message.class), any()))
-                .thenReturn(RocketMQLocalTransactionState.COMMIT);
-        when(handler.check(any(Message.class)))
-                .thenReturn(RocketMQLocalTransactionState.ROLLBACK);
+        when(handler.execute(any(Message.class), any())).thenReturn(RocketMQLocalTransactionState.COMMIT);
+        when(handler.check(any(Message.class))).thenReturn(RocketMQLocalTransactionState.ROLLBACK);
         MqTransactionListener listener = new MqTransactionListener(handlerProvider);
         Message<String> message = MessageBuilder.withPayload("message").build();
 
         assertThat(listener.executeLocalTransaction(message, "argument"))
                 .isEqualTo(RocketMQLocalTransactionState.COMMIT);
-        assertThat(listener.checkLocalTransaction(message))
-                .isEqualTo(RocketMQLocalTransactionState.ROLLBACK);
+        assertThat(listener.checkLocalTransaction(message)).isEqualTo(RocketMQLocalTransactionState.ROLLBACK);
 
         verify(handler).execute(message, "argument");
         verify(handler).check(message);
@@ -62,7 +58,6 @@ class MqTransactionListenerTest {
     @Test
     @DisplayName("应声明RocketMQ事务监听器")
     void shouldDeclareRocketMqTransactionListener() {
-        assertThat(MqTransactionListener.class)
-                .hasAnnotation(RocketMQTransactionListener.class);
+        assertThat(MqTransactionListener.class).hasAnnotation(RocketMQTransactionListener.class);
     }
 }

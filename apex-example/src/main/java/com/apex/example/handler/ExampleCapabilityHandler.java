@@ -102,7 +102,8 @@ public class ExampleCapabilityHandler extends BaseHandler {
     @Operation(summary = "缓存失效演示", description = "主动删除指定缓存键")
     public Mono<ServerResponse> evictCache(ServerRequest request) {
         String key = request.pathVariable("key");
-        return capabilityService.evictCache(key).flatMap(count -> ok().bodyValue(Result.success(Map.of("deleted", count))));
+        return capabilityService.evictCache(key).flatMap(count -> ok().bodyValue(
+                        Result.success(Map.of("deleted", count))));
     }
 
     /**
@@ -120,9 +121,12 @@ public class ExampleCapabilityHandler extends BaseHandler {
     public Mono<ServerResponse> idempotentDemo(ServerRequest request) {
         String idempotencyKey = request.headers().firstHeader("Idempotency-Key");
         Map<String, Object> result = Map.of(
-                "idempotencyKey", idempotencyKey == null ? "" : idempotencyKey,
-                "processedAt", LocalDateTime.now().toString(),
-                "message", "请求已处理（首次）");
+                "idempotencyKey",
+                idempotencyKey == null ? "" : idempotencyKey,
+                "processedAt",
+                LocalDateTime.now().toString(),
+                "message",
+                "请求已处理（首次）");
         return ok().bodyValue(Result.success(result));
     }
 
@@ -155,10 +159,9 @@ public class ExampleCapabilityHandler extends BaseHandler {
     public Mono<ServerResponse> streamDemo(ServerRequest request) {
         Flux<ServerSentEvent<String>> events = capabilityService
                 .streamHeartbeat()
-                .map(message -> ServerSentEvent.builder(message).event("heartbeat").build());
-        return ok()
-                .contentType(MediaType.TEXT_EVENT_STREAM)
-                .body(events, ServerSentEvent.class);
+                .map(message ->
+                        ServerSentEvent.builder(message).event("heartbeat").build());
+        return ok().contentType(MediaType.TEXT_EVENT_STREAM).body(events, ServerSentEvent.class);
     }
 
     /**

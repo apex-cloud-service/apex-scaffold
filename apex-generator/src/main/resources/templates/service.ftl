@@ -69,7 +69,7 @@ public class ${entityName}Service {
     public Mono<${entityName}Entity> create(${entityName}Request request) {
         return Mono.defer(() -> {
                     ${entityName}Entity entity = ${entityName}Entity.create(
-<#list fields as field>
+<#list createFields as field>
                             request.get${field.name?cap_first}()<#if field?has_next>,</#if>
 </#list>);
                     return ${entityVar}Repository.insert(entity).map(rows -> entity);
@@ -89,7 +89,7 @@ public class ${entityName}Service {
         return get(id)
                 .flatMap(existing -> {
                     existing.updateInfo(
-<#list fields as field>
+<#list updateFields as field>
                             request.get${field.name?cap_first}()<#if field?has_next>,</#if>
 </#list>);
                     return ${entityVar}Repository.updateById(existing).map(rows -> existing);
@@ -109,6 +109,25 @@ public class ${entityName}Service {
                 .flatMap(entity -> ${entityVar}Repository.deleteById(id).map(rows -> rows > 0))
                 .doOnSuccess(deleted -> log.info("删除${tableComment}完成，id: {}, deleted: {}", id, deleted));
     }
+<#if stateMachineEnabled>
+
+    /**
+     * 流转${tableComment}状态。
+     *
+     * @param id ${tableComment} ID
+     * @param targetState 目标状态
+     * @return 已流转状态的${tableComment}实体
+     * @throws BusinessException 当${tableComment}不存在或状态迁移非法时抛出
+     */
+    public Mono<${entityName}Entity> transition(Long id, String targetState) {
+        return get(id)
+                .flatMap(existing -> {
+                    existing.transitionTo(targetState);
+                    return ${entityVar}Repository.updateById(existing).map(rows -> existing);
+                })
+                .doOnSuccess(entity -> log.info("流转${tableComment}状态成功，id: {}, targetState: {}", id, targetState));
+    }
+</#if>
 
     /**
      * 将${tableComment}实体转换为 DTO。

@@ -1,5 +1,6 @@
 package com.apex.scaffold.infrastructure.mq.listener;
 
+import com.apex.scaffold.common.context.TenantContext;
 import com.apex.scaffold.domain.model.entity.OperationLogEntity;
 import com.apex.scaffold.domain.model.entity.SystemMessageEntity;
 import com.apex.scaffold.domain.repository.OperationLogRepository;
@@ -161,20 +162,29 @@ public class UserMessageListener implements RocketMQListener<Map<String, Object>
 
         log.info("接收到用户消息, messageId: {}, tag: {}", messageId, tag);
 
-        // 使用消费者服务处理消息，确保幂等性
-        boolean processed = mqConsumerService.processMessage(messageId, message, ignored -> {
-            if (tag == null) {
-                throw new IllegalArgumentException("消息缺少tag字段");
+        String previousTenantId = TenantContext.currentTenantId().orElse(null);
+        TenantContext.setTenantId(payload.tenantId());
+        try {
+            boolean processed = mqConsumerService.processMessage(messageId, message, ignored -> {
+                if (tag == null) {
+                    throw new IllegalArgumentException("消息缺少tag字段");
+                }
+                Consumer<UserMessagePayload> handler = handlers.get(tag);
+                if (handler == null) {
+                    throw new IllegalArgumentException("未知的用户消息标签: " + tag);
+                }
+                handler.accept(payload);
+                return true;
+            });
+            if (!processed) {
+                throw new IllegalStateException("用户消息消费失败, messageId: " + messageId);
             }
-            Consumer<UserMessagePayload> handler = handlers.get(tag);
-            if (handler == null) {
-                throw new IllegalArgumentException("未知的用户消息标签: " + tag);
+        } finally {
+            if (previousTenantId == null) {
+                TenantContext.clear();
+            } else {
+                TenantContext.setTenantId(previousTenantId);
             }
-            handler.accept(payload);
-            return true;
-        });
-        if (!processed) {
-            throw new IllegalStateException("用户消息消费失败, messageId: " + messageId);
         }
     }
 
@@ -307,9 +317,7 @@ public class UserMessageListener implements RocketMQListener<Map<String, Object>
         }
 
         // 1. 清理用户相关缓存
-        cacheService
-                .delete("user:id:" + userId, "user:openId:*")
-                .block();
+        cacheService.delete("user:id:" + userId, "user:openId:*").block();
 
         // 2. 记录更新操作日志
         String updatedFields = payload.updatedFields();

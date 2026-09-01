@@ -253,19 +253,21 @@
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <configuration>
+                    <!-- JSQLParser 由 JavaCC 生成，CONSTANT 池含 JaCoCo 0.8.12 无法识别的
+                         block type 68；必须从 agent（instrumentation）和 report 两端同时排除，
+                         否则 prepare-agent 仍会写入 jsqlparser 探针，report 阶段 Analyzer
+                         回读 class 字节码时报 Unknown block type 68。 -->
                     <excludes>
-                        <!-- 低覆盖运维工具包：仅用于本地 CLI/后台工具 -->
                         <exclude>com/apex/scaffold/interfaces/tool/**/*</exclude>
-                        <!-- 薄内部服务适配：仅依赖注入转发 -->
                         <exclude>com/apex/scaffold/interfaces/service/**/*</exclude>
-                        <!-- 纯 DTO：请求响应值对象 -->
                         <exclude>com/apex/scaffold/interfaces/dto/**/*</exclude>
+                        <exclude>net/sf/jsqlparser/**/*</exclude>
+                        <exclude>com/github/jsqlparser/**/*</exclude>
                     </excludes>
                     <rules>
                         <rule>
                             <element>BUNDLE</element>
                             <includes>
-                                <!-- 高覆盖路由配置/安全/工具/管理/异常 -->
                                 <include>com.apex.scaffold.interfaces.config.*</include>
                                 <include>com.apex.scaffold.interfaces.interest.catalog.*</include>
                                 <include>com.apex.scaffold.interfaces.router.*</include>
@@ -290,7 +292,6 @@
                         <rule>
                             <element>BUNDLE</element>
                             <includes>
-                                <!-- Handler/Filter/Aspect/Monitor：协议适配与切面薄封装 -->
                                 <include>com.apex.scaffold.interfaces.handler.*</include>
                                 <include>com.apex.scaffold.interfaces.filter.*</include>
                                 <include>com.apex.scaffold.interfaces.aspect.*</include>
@@ -312,7 +313,15 @@
                     </rules>
                 </configuration>
                 <executions>
-                    <execution><goals><goal>prepare-agent</goal></goals></execution>
+                    <execution>
+                        <goals><goal>prepare-agent</goal></goals>
+                        <configuration>
+                            <excludes>
+                                <exclude>net.sf.jsqlparser.*</exclude>
+                                <exclude>com.github.jsqlparser.*</exclude>
+                            </excludes>
+                        </configuration>
+                    </execution>
                     <execution><id>interfaces-report</id><phase>test</phase><goals><goal>report</goal></goals></execution>
                     <execution><id>interfaces-coverage-check</id><phase>test</phase><goals><goal>check</goal></goals></execution>
                 </executions>

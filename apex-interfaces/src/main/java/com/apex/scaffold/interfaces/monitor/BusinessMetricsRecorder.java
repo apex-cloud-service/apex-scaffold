@@ -60,8 +60,6 @@ public class BusinessMetricsRecorder {
      * @return 计数器
      */
     private Counter counter(String name) {
-        return Counter.builder(name)
-                .description("核心业务成功次数")
-                .register(meterRegistry);
+        return Counter.builder(name).description("核心业务成功次数").register(meterRegistry);
     }
 }

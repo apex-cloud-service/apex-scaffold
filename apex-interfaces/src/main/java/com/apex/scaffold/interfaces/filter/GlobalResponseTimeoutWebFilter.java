@@ -70,8 +70,7 @@ public class GlobalResponseTimeoutWebFilter implements WebFilter {
         }
 
         String path = exchange.getRequest().getURI().getPath();
-        return chain
-                .filter(exchange)
+        return chain.filter(exchange)
                 .timeout(properties.getResponseTimeout())
                 .onErrorResume(TimeoutException.class, ex -> handleTimeout(exchange, path, ex));
     }
@@ -97,7 +96,11 @@ public class GlobalResponseTimeoutWebFilter implements WebFilter {
      */
     private Mono<Void> handleTimeout(ServerWebExchange exchange, String path, TimeoutException ex) {
         meterRegistry.counter(METRIC_RESPONSE_TIMEOUT).increment();
-        log.warn("全局响应超时, path: {}, timeout: {}ms", path, properties.getResponseTimeout().toMillis(), ex);
+        log.warn(
+                "全局响应超时, path: {}, timeout: {}ms",
+                path,
+                properties.getResponseTimeout().toMillis(),
+                ex);
         // 响应已提交（如流式写出中途超时）时无法回写 JSON，仅记录告警
         if (exchange.getResponse().isCommitted()) {
             return Mono.error(ex);

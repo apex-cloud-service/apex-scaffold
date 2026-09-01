@@ -3,6 +3,7 @@ package com.apex.scaffold.interfaces.config;
 import com.apex.scaffold.common.util.TraceIdUtil;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
+import org.reactivestreams.Subscription;
 import org.slf4j.MDC;
 import org.springframework.context.annotation.Configuration;
 import reactor.core.CoreSubscriber;
@@ -63,11 +64,25 @@ public class ReactorMdcConfig {
         /**
          * 订阅事件回调。
          *
+         * <p>包装原始 {@link Subscription}，使请求信号执行时同样从 Reactor {@link Context} 同步
+         * MDC，避免 {@code Mono.fromCallable(...).subscribeOn(...)} 在调度线程直接触发任务时丢失 traceId，
+         * 并防止线程复用造成的上下文串扰。
+         *
          * @param s Subscription
          */
         @Override
-        public void onSubscribe(org.reactivestreams.Subscription s) {
-            actual.onSubscribe(s);
+        public void onSubscribe(Subscription s) {
+            actual.onSubscribe(new Subscription() {
+                @Override
+                public void request(long n) {
+                    withMdc(currentContext(), () -> s.request(n));
+                }
+
+                @Override
+                public void cancel() {
+                    withMdc(currentContext(), s::cancel);
+                }
+            });
         }
 
         /**

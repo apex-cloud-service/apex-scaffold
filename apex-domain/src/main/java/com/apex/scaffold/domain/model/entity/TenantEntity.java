@@ -1,0 +1,278 @@
+package com.apex.scaffold.domain.model.entity;
+
+import com.apex.scaffold.domain.model.exception.TenantLifecycleException;
+import com.apex.scaffold.domain.model.exception.TenantQuotaExceededException;
+import com.apex.scaffold.domain.model.valueobject.TenantQuota;
+import java.time.LocalDateTime;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
+
+/**
+ * 租户聚合根实体。
+ *
+ * <p>表示 SaaS 或私有化多组织场景下的租户基础模型，承载租户基础信息、
+ * 状态生命周期与配额约束。租户是数据隔离的顶层边界，所有业务数据均归属租户。</p>
+ *
+ * <h2>状态生命周期</h2>
+ * <ul>
+ *   <li>{@link TenantStatus#ACTIVE} - 正常，可创建业务数据</li>
+ *   <li>{@link TenantStatus#DISABLED} - 停用，运营手动暂停，可重新启用</li>
+ *   <li>{@link TenantStatus#FROZEN} - 冻结，平台强制暂停（如欠费），可解冻</li>
+ *   <li>{@link TenantStatus#DEACTIVATED} - 注销，已申请退出，可归档</li>
+ *   <li>{@link TenantStatus#ARCHIVED} - 归档（终态），数据保留但任何迁移被拒绝</li>
+ * </ul>
+ *
+ * <h2>核心业务规则</h2>
+ * <ul>
+ *   <li>停用、冻结、注销、归档状态的租户不得创建新业务数据</li>
+ *   <li>非正常状态的租户不允许任何配额增长</li>
+ *   <li>归档为终态，任何状态迁移均被拒绝</li>
+ *   <li>租户编码全局唯一，由仓储层校验</li>
+ * </ul>
+ *
+ * @author Apex Team
+ * @version 1.0.0
+ * @since 1.3.0
+ * @see TenantQuota
+ */
+@Getter
+@ToString(callSuper = true)
+@EqualsAndHashCode(callSuper = true)
+public class TenantEntity extends BaseEntity {
+
+    private static final long serialVersionUID = 1L;
+
+    /** 租户编码（全局唯一，作为 TenantContext 的租户 ID） */
+    private String tenantCode;
+
+    /** 租户名称 */
+    private String tenantName;
+
+    /** 租户管理员用户 ID */
+    private String adminUserId;
+
+    /** 套餐标识 */
+    private String packageCode;
+
+    /** 有效期至（null 表示长期有效） */
+    private LocalDateTime expireTime;
+
+    /** 租户状态 */
+    private TenantStatus status;
+
+    /** 租户配额 */
+    private TenantQuota quota;
+
+    /** 备注 */
+    private String remark;
+
+    /** 仅供持久层/构造使用 */
+    public void setTenantCode(String value) {
+        this.tenantCode = value;
+    }
+
+    /** 仅供持久层/构造使用 */
+    public void setTenantName(String value) {
+        this.tenantName = value;
+    }
+
+    /** 仅供持久层/构造使用 */
+    public void setAdminUserId(String value) {
+        this.adminUserId = value;
+    }
+
+    /** 仅供持久层/构造使用 */
+    public void setPackageCode(String value) {
+        this.packageCode = value;
+    }
+
+    /** 仅供持久层/构造使用 */
+    public void setExpireTime(LocalDateTime value) {
+        this.expireTime = value;
+    }
+
+    /** 仅供持久层/构造使用 */
+    public void setStatus(TenantStatus value) {
+        this.status = value;
+    }
+
+    /** 仅供持久层/构造使用 */
+    public void setQuota(TenantQuota value) {
+        this.quota = value;
+    }
+
+    /** 仅供持久层/构造使用 */
+    public void setRemark(String value) {
+        this.remark = value;
+    }
+
+    public TenantEntity() {
+        super();
+    }
+
+    /**
+     * 静态工厂方法：创建租户。
+     *
+     * <p>新建租户默认为 {@link TenantStatus#ACTIVE}，可立即创建业务数据。</p>
+     *
+     * @param tenantCode 租户编码（非空，全局唯一）
+     * @param tenantName 租户名称
+     * @param adminUserId 租户管理员用户 ID
+     * @param quota 租户配额
+     * @return 新创建的租户实体
+     * @throws IllegalArgumentException 当租户编码为空时抛出
+     */
+    public static TenantEntity create(String tenantCode, String tenantName, String adminUserId, TenantQuota quota) {
+        if (tenantCode == null || tenantCode.isBlank()) {
+            throw new IllegalArgumentException("租户编码不能为空");
+        }
+        TenantEntity entity = new TenantEntity();
+        entity.tenantCode = tenantCode;
+        entity.tenantName = tenantName;
+        entity.adminUserId = adminUserId;
+        entity.quota = quota == null ? TenantQuota.unlimited() : quota;
+        entity.status = TenantStatus.ACTIVE;
+        entity.initTimestamps();
+        return entity;
+    }
+
+    /**
+     * 领域行为：判断当前租户是否可创建业务数据。
+     *
+     * <p>仅 {@link TenantStatus#ACTIVE} 状态允许创建新业务数据，
+     * 停用、冻结、注销和归档状态均拒绝。</p>
+     *
+     * @return true-可创建业务数据，false-不可创建
+     */
+    public boolean canCreateBusinessData() {
+        return status == TenantStatus.ACTIVE;
+    }
+
+    /**
+     * 领域行为：停用租户。
+     *
+     * <p>仅 {@link TenantStatus#ACTIVE} 可停用。</p>
+     *
+     * @throws TenantLifecycleException 当当前状态不允许停用时抛出
+     */
+    public void disable() {
+        requireStatus(TenantStatus.ACTIVE, "disable");
+        this.status = TenantStatus.DISABLED;
+        touch();
+    }
+
+    /**
+     * 领域行为：启用租户。
+     *
+     * <p>仅 {@link TenantStatus#DISABLED} 可重新启用。</p>
+     *
+     * @throws TenantLifecycleException 当当前状态不允许启用时抛出
+     */
+    public void enable() {
+        requireStatus(TenantStatus.DISABLED, "enable");
+        this.status = TenantStatus.ACTIVE;
+        touch();
+    }
+
+    /**
+     * 领域行为：冻结租户。
+     *
+     * <p>仅 {@link TenantStatus#ACTIVE} 可冻结。</p>
+     *
+     * @throws TenantLifecycleException 当当前状态不允许冻结时抛出
+     */
+    public void freeze() {
+        requireStatus(TenantStatus.ACTIVE, "freeze");
+        this.status = TenantStatus.FROZEN;
+        touch();
+    }
+
+    /**
+     * 领域行为：解冻租户。
+     *
+     * <p>仅 {@link TenantStatus#FROZEN} 可解冻恢复为正常。</p>
+     *
+     * @throws TenantLifecycleException 当当前状态不允许解冻时抛出
+     */
+    public void unfreeze() {
+        requireStatus(TenantStatus.FROZEN, "unfreeze");
+        this.status = TenantStatus.ACTIVE;
+        touch();
+    }
+
+    /**
+     * 领域行为：注销租户。
+     *
+     * <p>{@link TenantStatus#ACTIVE}、{@link TenantStatus#DISABLED}、
+     * {@link TenantStatus#FROZEN} 均可注销。</p>
+     *
+     * @throws TenantLifecycleException 当当前状态不允许注销时抛出
+     */
+    public void deactivate() {
+        if (status != TenantStatus.ACTIVE && status != TenantStatus.DISABLED && status != TenantStatus.FROZEN) {
+            throw new TenantLifecycleException(status, "deactivate");
+        }
+        this.status = TenantStatus.DEACTIVATED;
+        touch();
+    }
+
+    /**
+     * 领域行为：归档租户（终态）。
+     *
+     * <p>仅 {@link TenantStatus#DEACTIVATED} 可归档，归档后任何迁移被拒绝。</p>
+     *
+     * @throws TenantLifecycleException 当当前状态不允许归档时抛出
+     */
+    public void archive() {
+        requireStatus(TenantStatus.DEACTIVATED, "archive");
+        this.status = TenantStatus.ARCHIVED;
+        touch();
+    }
+
+    /**
+     * 领域行为：校验用户数配额增长。
+     *
+     * <p>非正常状态租户不允许任何配额增长，正常状态租户受配额上限约束。</p>
+     *
+     * @param current 当前用户数
+     * @param increment 申请增量
+     * @throws TenantLifecycleException 当租户非正常状态时抛出
+     * @throws TenantQuotaExceededException 当超出配额上限时抛出
+     */
+    public void assertUserQuota(long current, long increment) {
+        if (!canCreateBusinessData()) {
+            throw new TenantLifecycleException(status, "assertUserQuota");
+        }
+        quota.assertUsers(current, increment);
+    }
+
+    /**
+     * 校验当前状态与期望状态一致，否则抛出生命周期异常。
+     *
+     * @param expected 期望状态
+     * @param operation 操作名称
+     * @throws TenantLifecycleException 当状态不匹配时抛出
+     */
+    private void requireStatus(TenantStatus expected, String operation) {
+        if (this.status != expected) {
+            throw new TenantLifecycleException(this.status, operation);
+        }
+    }
+
+    /**
+     * 租户状态枚举。
+     */
+    public enum TenantStatus {
+        /** 正常 */
+        ACTIVE,
+        /** 停用 */
+        DISABLED,
+        /** 冻结 */
+        FROZEN,
+        /** 注销 */
+        DEACTIVATED,
+        /** 归档（终态） */
+        ARCHIVED
+    }
+}

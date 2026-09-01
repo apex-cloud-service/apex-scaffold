@@ -42,11 +42,10 @@ class MdcDataScopeProviderTest {
             DataScopeContext.setDataScope(DataScopeInfo.ofDept(100L));
             MDC.put(MdcDataScopeProvider.MDC_DEPT_ID, "999");
 
-            assertThat(provider.resolve())
-                    .hasValueSatisfying(info -> {
-                        assertThat(info.type()).isEqualTo(DataScopeType.DEPT);
-                        assertThat(info.deptId()).isEqualTo(100L);
-                    });
+            assertThat(provider.resolve()).hasValueSatisfying(info -> {
+                assertThat(info.type()).isEqualTo(DataScopeType.DEPT);
+                assertThat(info.deptId()).isEqualTo(100L);
+            });
         }
     }
 
@@ -59,12 +58,11 @@ class MdcDataScopeProviderTest {
             MDC.put(MdcDataScopeProvider.MDC_USER_ID, "42");
             MDC.put(MdcDataScopeProvider.MDC_DEPT_ID, "100");
 
-            assertThat(provider.resolve())
-                    .hasValueSatisfying(info -> {
-                        // 未显式声明类型 → 回退为"本部门数据权限"（DEPT 范围不使用 userId）
-                        assertThat(info.type()).isEqualTo(DataScopeType.DEPT);
-                        assertThat(info.deptId()).isEqualTo(100L);
-                    });
+            assertThat(provider.resolve()).hasValueSatisfying(info -> {
+                // 未显式声明类型 → 回退为"本部门数据权限"（DEPT 范围不使用 userId）
+                assertThat(info.type()).isEqualTo(DataScopeType.DEPT);
+                assertThat(info.deptId()).isEqualTo(100L);
+            });
         }
 
         @Test
@@ -73,12 +71,11 @@ class MdcDataScopeProviderTest {
             MDC.put(MdcDataScopeProvider.MDC_DEPT_ID, "100");
             MDC.put(MdcDataScopeProvider.MDC_DATA_SCOPE, "2");
 
-            assertThat(provider.resolve())
-                    .hasValueSatisfying(info -> {
-                        assertThat(info.type()).isEqualTo(DataScopeType.DEPT);
-                        assertThat(info.userId()).isEqualTo(42L);
-                        assertThat(info.deptId()).isEqualTo(100L);
-                    });
+            assertThat(provider.resolve()).hasValueSatisfying(info -> {
+                assertThat(info.type()).isEqualTo(DataScopeType.DEPT);
+                assertThat(info.userId()).isEqualTo(42L);
+                assertThat(info.deptId()).isEqualTo(100L);
+            });
         }
 
         @Test
@@ -87,11 +84,10 @@ class MdcDataScopeProviderTest {
             MDC.put(MdcDataScopeProvider.MDC_DEPT_ID, "100");
             MDC.put(MdcDataScopeProvider.MDC_DATA_SCOPE_DEPT_IDS, "100, 101, 102");
 
-            assertThat(provider.resolve())
-                    .hasValueSatisfying(info -> {
-                        assertThat(info.type()).isEqualTo(DataScopeType.DEPT_AND_CHILD);
-                        assertThat(info.deptIds()).containsExactly(100L, 101L, 102L);
-                    });
+            assertThat(provider.resolve()).hasValueSatisfying(info -> {
+                assertThat(info.type()).isEqualTo(DataScopeType.DEPT_AND_CHILD);
+                assertThat(info.deptIds()).containsExactly(100L, 101L, 102L);
+            });
         }
 
         @Test
@@ -99,11 +95,10 @@ class MdcDataScopeProviderTest {
             MDC.put(MdcDataScopeProvider.MDC_DATA_SCOPE, "5");
             MDC.put(MdcDataScopeProvider.MDC_DATA_SCOPE_DEPT_IDS, "1,2,3");
 
-            assertThat(provider.resolve())
-                    .hasValueSatisfying(info -> {
-                        assertThat(info.type()).isEqualTo(DataScopeType.CUSTOM);
-                        assertThat(info.deptIds()).containsExactly(1L, 2L, 3L);
-                    });
+            assertThat(provider.resolve()).hasValueSatisfying(info -> {
+                assertThat(info.type()).isEqualTo(DataScopeType.CUSTOM);
+                assertThat(info.deptIds()).containsExactly(1L, 2L, 3L);
+            });
         }
 
         @Test

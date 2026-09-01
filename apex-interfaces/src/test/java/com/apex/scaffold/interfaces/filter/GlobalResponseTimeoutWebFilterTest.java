@@ -4,8 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-import java.time.Duration;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import java.time.Duration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -52,21 +52,25 @@ class GlobalResponseTimeoutWebFilterTest {
     @Test
     @DisplayName("慢请求超时应返回 504 与 REQUEST_TIMEOUT 错误码")
     void shouldReturn504WhenChainExceedsTimeout() {
-        MockServerHttpRequest request = MockServerHttpRequest.get("/api/v1/slow").build();
+        MockServerHttpRequest request =
+                MockServerHttpRequest.get("/api/v1/slow").build();
         MockServerWebExchange exchange = MockServerWebExchange.from(request);
-        when(chain.filter(any(ServerWebExchange.class))).thenReturn(Mono.delay(Duration.ofSeconds(2)).then());
+        when(chain.filter(any(ServerWebExchange.class)))
+                .thenReturn(Mono.delay(Duration.ofSeconds(2)).then());
 
         StepVerifier.create(filter.filter(exchange, chain)).verifyComplete();
 
         assertThat(exchange.getResponse().getStatusCode()).isEqualTo(HttpStatus.GATEWAY_TIMEOUT);
         assertThat(exchange.getResponse().getHeaders().getContentType()).isNotNull();
-        assertThat(meterRegistry.get("apex.response.timeout.count").counter().count()).isEqualTo(1);
+        assertThat(meterRegistry.get("apex.response.timeout.count").counter().count())
+                .isEqualTo(1);
     }
 
     @Test
     @DisplayName("正常请求按时完成应透传过滤器链")
     void shouldPassThroughWhenFastEnough() {
-        MockServerHttpRequest request = MockServerHttpRequest.get("/api/v1/health").build();
+        MockServerHttpRequest request =
+                MockServerHttpRequest.get("/api/v1/health").build();
         MockServerWebExchange exchange = MockServerWebExchange.from(request);
         when(chain.filter(any(ServerWebExchange.class))).thenReturn(Mono.empty());
 
@@ -97,7 +101,8 @@ class GlobalResponseTimeoutWebFilterTest {
         properties.setResponseTimeout(Duration.ZERO);
         assertThat(properties.isTimeoutEnabled()).isFalse();
 
-        MockServerHttpRequest request = MockServerHttpRequest.get("/api/v1/slow").build();
+        MockServerHttpRequest request =
+                MockServerHttpRequest.get("/api/v1/slow").build();
         MockServerWebExchange exchange = MockServerWebExchange.from(request);
         when(chain.filter(any(ServerWebExchange.class)))
                 .thenReturn(Mono.delay(Duration.ofMillis(50)).then());

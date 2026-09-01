@@ -3,9 +3,12 @@ package com.apex.scaffold.application.service;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.apex.scaffold.common.dto.PageResponse;
+import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.domain.model.entity.UserEntity;
 import com.apex.scaffold.domain.repository.UserRepository;
 import com.apex.scaffold.domain.service.CacheConsistencyPort;
@@ -239,12 +242,76 @@ class UserServiceTest {
     @DisplayName("findPage - 成功场景")
     void findPage_Success() {
         PageResponse<UserEntity> pageResp = PageResponse.of(java.util.List.of(testUser), 1L, 1, 10);
-        when(userRepository.findPage(1, 10)).thenReturn(Mono.just(pageResp));
+        when(userRepository.findPage(1, 10, "create_time", false)).thenReturn(Mono.just(pageResp));
 
         userService
-                .findPage(1, 10)
+                .findPage(1, 10, "create_time", false)
                 .as(StepVerifier::create)
                 .expectNextMatches(r -> r.getTotal() == 1L && r.getPageNum() == 1)
                 .verifyComplete();
+
+        verify(userRepository).findPage(1, 10, "create_time", false);
+    }
+
+    @Test
+    @DisplayName("findPage - 页码或页大小非法时应返回参数错误")
+    void findPage_InvalidPaginationBounds() {
+        userService
+                .findPage(0, 10, "id", true)
+                .as(StepVerifier::create)
+                .expectErrorSatisfies(error -> {
+                    org.assertj.core.api.Assertions.assertThat(error).isInstanceOf(BusinessException.class);
+                    org.assertj.core.api.Assertions.assertThat(((BusinessException) error).getCode())
+                            .isEqualTo(400);
+                })
+                .verify();
+
+        userService
+                .findPage(1, 101, "id", true)
+                .as(StepVerifier::create)
+                .expectError(BusinessException.class)
+                .verify();
+    }
+
+    @Test
+    @DisplayName("findPage - 非法排序字段应返回参数错误且不访问仓储")
+    void findPage_InvalidOrderField() {
+        userService
+                .findPage(1, 10, "password", true)
+                .as(StepVerifier::create)
+                .expectError(BusinessException.class)
+                .verify();
+
+        verifyNoInteractions(userRepository);
+    }
+
+    @Test
+    @DisplayName("findPage - 未指定排序时使用默认排序")
+    void findPage_DefaultOrder() {
+        PageResponse<UserEntity> pageResp = PageResponse.of(java.util.List.of(testUser), 1L, 1, 10);
+        when(userRepository.findPage(1, 10, "create_time", false)).thenReturn(Mono.just(pageResp));
+
+        userService
+                .findPage(1, 10, null, true)
+                .as(StepVerifier::create)
+                .expectNext(pageResp)
+                .verifyComplete();
+
+        verify(userRepository).findPage(1, 10, "create_time", false);
+    }
+
+    @Test
+    @DisplayName("findPage - 排序字段应去除空白并归一化")
+    void findPage_NormalizesOrderField() {
+        PageResponse<UserEntity> pageResp = PageResponse.of(java.util.List.of(testUser), 1L, 1, 10);
+        when(userRepository.findPage(1, 10, "nick_name", true)).thenReturn(Mono.just(pageResp));
+
+        userService
+                .findPage(1, 10, "  NICK_NAME  ", true)
+                .as(StepVerifier::create)
+                .expectNext(pageResp)
+                .verifyComplete();
+
+        verify(userRepository).findPage(1, 10, "nick_name", true);
     }
 }

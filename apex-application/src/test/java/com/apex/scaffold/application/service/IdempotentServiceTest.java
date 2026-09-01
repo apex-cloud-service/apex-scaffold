@@ -5,8 +5,8 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
-import java.time.Duration;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import java.time.Duration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -67,11 +67,16 @@ class IdempotentServiceTest {
                 .expectNext(true)
                 .verifyComplete();
 
-        org.assertj.core.api.Assertions.assertThat(
-                        meterRegistry.get("apex.idempotent.count").tag("result", "allowed").counter().count())
+        org.assertj.core.api.Assertions.assertThat(meterRegistry
+                        .get("apex.idempotent.count")
+                        .tag("result", "allowed")
+                        .counter()
+                        .count())
                 .isEqualTo(1);
-        org.assertj.core.api.Assertions.assertThat(
-                        meterRegistry.find("apex.idempotent.count").tag("result", "duplicate").counters())
+        org.assertj.core.api.Assertions.assertThat(meterRegistry
+                        .find("apex.idempotent.count")
+                        .tag("result", "duplicate")
+                        .counters())
                 .isEmpty();
     }
 
@@ -89,8 +94,11 @@ class IdempotentServiceTest {
                 .expectNext(false)
                 .verifyComplete();
 
-        org.assertj.core.api.Assertions.assertThat(
-                        meterRegistry.get("apex.idempotent.count").tag("result", "duplicate").counter().count())
+        org.assertj.core.api.Assertions.assertThat(meterRegistry
+                        .get("apex.idempotent.count")
+                        .tag("result", "duplicate")
+                        .counter()
+                        .count())
                 .isEqualTo(1);
     }
 

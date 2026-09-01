@@ -115,12 +115,10 @@ public class MqPublishMetricsAspect {
      * @return Counter 实例
      */
     private Counter countCounter(String mode, String result) {
-        return countCounters.computeIfAbsent(
-                mode + ":" + result,
-                key -> Counter.builder(METRIC_COUNT)
-                        .tag("mode", mode)
-                        .tag("result", result)
-                        .register(meterRegistry));
+        return countCounters.computeIfAbsent(mode + ":" + result, key -> Counter.builder(METRIC_COUNT)
+                .tag("mode", mode)
+                .tag("result", result)
+                .register(meterRegistry));
     }
 
     /**

@@ -4,23 +4,23 @@ import static org.springframework.web.reactive.function.server.RequestPredicates
 import static org.springframework.web.reactive.function.server.RequestPredicates.contentType;
 
 import com.apex.scaffold.interfaces.handler.AdminUserManagementHandler;
+import com.apex.scaffold.interfaces.handler.ApiCallLogHandler;
+import com.apex.scaffold.interfaces.handler.AuditLogHandler;
 import com.apex.scaffold.interfaces.handler.AuthHandler;
 import com.apex.scaffold.interfaces.handler.AuthorizationHandler;
 import com.apex.scaffold.interfaces.handler.CaptchaHandler;
 import com.apex.scaffold.interfaces.handler.ConfigHandler;
+import com.apex.scaffold.interfaces.handler.DeptHandler;
 import com.apex.scaffold.interfaces.handler.DictHandler;
+import com.apex.scaffold.interfaces.handler.ExcelExportHandler;
 import com.apex.scaffold.interfaces.handler.FileHandler;
 import com.apex.scaffold.interfaces.handler.HealthHandler;
 import com.apex.scaffold.interfaces.handler.JobHandler;
-import com.apex.scaffold.interfaces.handler.AuditLogHandler;
-import com.apex.scaffold.interfaces.handler.ApiCallLogHandler;
-import com.apex.scaffold.interfaces.handler.DeptHandler;
-import com.apex.scaffold.interfaces.handler.ExcelExportHandler;
-import com.apex.scaffold.interfaces.handler.NotificationSseHandler;
-import com.apex.scaffold.interfaces.handler.OnlineUserHandler;
 import com.apex.scaffold.interfaces.handler.LoginLogHandler;
 import com.apex.scaffold.interfaces.handler.MenuHandler;
 import com.apex.scaffold.interfaces.handler.MonitorDashboardHandler;
+import com.apex.scaffold.interfaces.handler.NotificationSseHandler;
+import com.apex.scaffold.interfaces.handler.OnlineUserHandler;
 import com.apex.scaffold.interfaces.handler.UserHandler;
 import java.net.URI;
 import org.springframework.context.annotation.Bean;
@@ -266,13 +266,11 @@ public class ApiRouter {
     @Bean
     public RouterFunction<ServerResponse> adminMonitorRoutes(MonitorDashboardHandler handler) {
         return RouterFunctions.route()
-                .path(
-                        "/admin-api/v1/monitor",
-                        routes -> routes.GET("/overview", handler::overview)
-                                .GET("/system", handler::system)
-                                .GET("/middleware", handler::middleware)
-                                .GET("/governance", handler::governance)
-                                .GET("/business", handler::business))
+                .path("/admin-api/v1/monitor", routes -> routes.GET("/overview", handler::overview)
+                        .GET("/system", handler::system)
+                        .GET("/middleware", handler::middleware)
+                        .GET("/governance", handler::governance)
+                        .GET("/business", handler::business))
                 .build();
     }
 

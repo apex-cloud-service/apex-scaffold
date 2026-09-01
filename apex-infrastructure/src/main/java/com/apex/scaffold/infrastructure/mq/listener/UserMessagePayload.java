@@ -13,6 +13,7 @@ import java.util.Map;
  *
  * @param messageId 消息幂等标识
  * @param tag 消息路由标签
+ * @param tenantId 租户 ID
  * @param userId 用户 ID；缺失或无法转换时为空
  * @param nickName 用户昵称
  * @param clientIp 客户端 IP
@@ -20,12 +21,13 @@ import java.util.Map;
  * @param updatedFields 用户更新字段描述
  * @param raw 原始不可变消息快照
  * @author Apex Team
- * @version 1.0.0
+ * @version 1.1.0
  * @since 3.3.0
  */
 public record UserMessagePayload(
         String messageId,
         String tag,
+        String tenantId,
         Long userId,
         String nickName,
         String clientIp,
@@ -44,9 +46,14 @@ public record UserMessagePayload(
             throw new IllegalArgumentException("用户MQ消息不能为空");
         }
         Map<String, Object> snapshot = Collections.unmodifiableMap(new LinkedHashMap<>(message));
+        String tenantId = text(snapshot, "tenantId", null);
+        if (tenantId == null || !tenantId.matches("[A-Za-z0-9._-]{1,64}")) {
+            throw new IllegalArgumentException("用户MQ消息缺少合法租户ID");
+        }
         return new UserMessagePayload(
                 text(snapshot, "messageId", null),
                 text(snapshot, "tag", null),
+                tenantId,
                 number(snapshot.get("userId")),
                 text(snapshot, "nickName", "用户"),
                 text(snapshot, "clientIp", null),
@@ -55,25 +62,11 @@ public record UserMessagePayload(
                 snapshot);
     }
 
-    /**
-     * 读取可选文本字段。
-     *
-     * @param source 消息字段
-     * @param key 字段名
-     * @param defaultValue 缺失时默认值
-     * @return 字符串字段或默认值
-     */
     private static String text(Map<String, Object> source, String key, String defaultValue) {
         Object value = source.get(key);
         return value == null ? defaultValue : String.valueOf(value);
     }
 
-    /**
-     * 将任意 Number 规范化为 Long。
-     *
-     * @param value 原始数字值
-     * @return Long 值；类型不匹配时为空
-     */
     private static Long number(Object value) {
         if (value instanceof Number number) {
             return number.longValue();

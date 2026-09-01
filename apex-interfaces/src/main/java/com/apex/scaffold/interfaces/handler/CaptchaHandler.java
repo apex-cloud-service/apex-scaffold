@@ -2,13 +2,10 @@ package com.apex.scaffold.interfaces.handler;
 
 import com.apex.scaffold.application.security.CaptchaService;
 import com.apex.scaffold.application.security.CaptchaVO;
-import com.apex.scaffold.common.result.Result;
-import com.apex.scaffold.common.util.TraceIdUtil;
 import com.apex.scaffold.interfaces.util.MessageUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Validator;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;

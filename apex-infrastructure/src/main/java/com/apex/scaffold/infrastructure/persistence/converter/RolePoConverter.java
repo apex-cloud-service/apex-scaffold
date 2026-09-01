@@ -1,5 +1,6 @@
 package com.apex.scaffold.infrastructure.persistence.converter;
 
+import com.apex.scaffold.common.enums.DataScopeType;
 import com.apex.scaffold.domain.model.entity.RoleEntity;
 import com.apex.scaffold.infrastructure.persistence.po.RolePO;
 import java.util.List;
@@ -25,7 +26,23 @@ public interface RolePoConverter {
      * @param entity 角色实体
      * @return 角色PO
      */
+    @org.mapstruct.Mapping(target = "dataScope", source = "dataScope")
     RolePO toPo(RoleEntity entity);
+
+    default Integer map(DataScopeType type) {
+        return type == null ? null : type.getCode();
+    }
+
+    default DataScopeType map(Integer code) {
+        if (code == null) {
+            return null;
+        }
+        DataScopeType type = DataScopeType.fromCode(code);
+        if (type == null) {
+            throw new IllegalArgumentException("Unsupported data scope code: " + code);
+        }
+        return type;
+    }
 
     /**
      * 将角色PO转换为实体

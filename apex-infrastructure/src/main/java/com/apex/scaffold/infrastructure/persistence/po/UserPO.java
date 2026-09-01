@@ -57,6 +57,9 @@ public class UserPO extends BasePO {
     @TableField("dept_id")
     private Long deptId;
 
+    @TableField("tenant_id")
+    private String tenantId;
+
     /**
      * 登录密码（BCrypt 哈希）。
      *

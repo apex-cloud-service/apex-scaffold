@@ -91,10 +91,14 @@ public class IdempotentService {
                 .setIfAbsent(cacheKey, PLACEHOLDER_VALUE, DEFAULT_EXPIRE_TIME)
                 .doOnNext(success -> {
                     if (Boolean.TRUE.equals(success)) {
-                        meterRegistry.counter("apex.idempotent.count", "result", "allowed").increment();
+                        meterRegistry
+                                .counter("apex.idempotent.count", "result", "allowed")
+                                .increment();
                         log.info("幂等性检查通过，key: {}", key);
                     } else {
-                        meterRegistry.counter("apex.idempotent.count", "result", "duplicate").increment();
+                        meterRegistry
+                                .counter("apex.idempotent.count", "result", "duplicate")
+                                .increment();
                         log.warn("检测到重复请求，key: {}", key);
                     }
                 });

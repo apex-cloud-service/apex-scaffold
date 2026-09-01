@@ -1,5 +1,6 @@
 package com.apex.scaffold.infrastructure.persistence.repository;
 
+import com.apex.scaffold.common.context.TenantContext;
 import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
 import com.apex.scaffold.domain.model.entity.DeptEntity;
 import com.apex.scaffold.domain.repository.DeptRepository;
@@ -8,6 +9,7 @@ import com.apex.scaffold.infrastructure.persistence.po.DeptPO;
 import com.apex.scaffold.infrastructure.persistence.util.ConditionUtil;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
 
@@ -39,11 +41,12 @@ public class DeptRepositoryImpl implements DeptRepository {
     /** 查询全部未删除部门（按显示顺序升序）。 */
     @Override
     public Mono<List<DeptEntity>> findAll() {
-        return Mono.fromCallable(() -> deptMapper
-                        .selectList(ConditionUtil.lambda(DeptPO.class).orderByAsc(DeptPO::getOrderNum))
-                        .stream()
-                        .map(this::toEntity)
-                        .collect(Collectors.toList()))
+        return Mono.fromCallable(() ->
+                        deptMapper
+                                .selectList(ConditionUtil.lambda(DeptPO.class).orderByAsc(DeptPO::getOrderNum))
+                                .stream()
+                                .map(this::toEntity)
+                                .collect(Collectors.toList()))
                 .subscribeOn(BlockingIoSchedulers.jdbc());
     }
 
@@ -60,10 +63,13 @@ public class DeptRepositoryImpl implements DeptRepository {
     public Mono<DeptEntity> save(DeptEntity dept) {
         return Mono.fromCallable(() -> {
                     DeptPO po = toPo(dept);
+                    TenantContext.currentTenantId().ifPresent(po::setTenantId);
                     if (po.getId() == null) {
-                        deptMapper.insert(po);
-                    } else {
-                        deptMapper.updateById(po);
+                        if (deptMapper.insert(po) != 1) {
+                            throw new IllegalStateException("创建部门失败");
+                        }
+                    } else if (deptMapper.updateById(po) != 1) {
+                        throw new OptimisticLockingFailureException("部门并发更新冲突, deptId=" + po.getId());
                     }
                     return po;
                 })
@@ -74,8 +80,7 @@ public class DeptRepositoryImpl implements DeptRepository {
     /** 逻辑删除部门。 */
     @Override
     public Mono<Boolean> deleteById(Long id) {
-        return Mono.fromCallable(() -> deptMapper.deleteById(id) > 0)
-                .subscribeOn(BlockingIoSchedulers.jdbc());
+        return Mono.fromCallable(() -> deptMapper.deleteById(id) > 0).subscribeOn(BlockingIoSchedulers.jdbc());
     }
 
     /** PO → 实体转换。 */
@@ -85,6 +90,7 @@ public class DeptRepositoryImpl implements DeptRepository {
         }
         DeptEntity e = new DeptEntity();
         e.setId(po.getId());
+        e.setTenantId(po.getTenantId());
         e.setParentId(po.getParentId());
         e.setAncestors(po.getAncestors());
         e.setName(po.getName());
@@ -94,6 +100,9 @@ public class DeptRepositoryImpl implements DeptRepository {
         e.setEmail(po.getEmail());
         e.setStatus(po.getStatus());
         e.setCreateTime(po.getCreateTime());
+        e.setUpdateTime(po.getUpdateTime());
+        e.setLockVersion(po.getVersion());
+        e.setDeleted(po.getDeleted());
         return e;
     }
 
@@ -101,6 +110,7 @@ public class DeptRepositoryImpl implements DeptRepository {
     private DeptPO toPo(DeptEntity e) {
         DeptPO po = new DeptPO();
         po.setId(e.getId());
+        po.setTenantId(e.getTenantId());
         po.setParentId(e.getParentId());
         po.setAncestors(e.getAncestors());
         po.setName(e.getName());
@@ -110,6 +120,9 @@ public class DeptRepositoryImpl implements DeptRepository {
         po.setEmail(e.getEmail());
         po.setStatus(e.getStatus());
         po.setCreateTime(e.getCreateTime());
+        po.setUpdateTime(e.getUpdateTime());
+        po.setVersion(e.getLockVersion());
+        po.setDeleted(e.getDeleted());
         return po;
     }
 }

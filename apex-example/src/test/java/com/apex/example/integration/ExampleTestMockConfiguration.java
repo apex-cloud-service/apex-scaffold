@@ -63,8 +63,7 @@ public class ExampleTestMockConfiguration {
         ReactiveValueOperations<String, String> valueOps = Mockito.mock(ReactiveValueOperations.class);
         Mockito.when(valueOps.setIfAbsent(Mockito.anyString(), Mockito.anyString(), Mockito.any(Duration.class)))
                 .thenReturn(Mono.just(true));
-        Mockito.when(valueOps.delete(Mockito.any()))
-                .thenReturn(Mono.just(true));
+        Mockito.when(valueOps.delete(Mockito.any())).thenReturn(Mono.just(true));
         Mockito.when(template.opsForValue()).thenReturn(valueOps);
         return template;
     }

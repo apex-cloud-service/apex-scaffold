@@ -244,6 +244,52 @@ class JwtAuthenticationFilterTest {
         StepVerifier.create(result).verifyComplete();
     }
 
+    @Test
+    @DisplayName("有效Token认证后SecurityContext应提供可信租户")
+    void filter_withTenantUser_shouldExposeTrustedTenantInSecurityContext() {
+        MockServerHttpRequest request = MockServerHttpRequest.get("/internal/user/profile")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + VALID_TOKEN)
+                .build();
+        ServerWebExchange exchange = MockServerWebExchange.from(request);
+        Claims claims = mockClaims();
+        UserEntity user = UserEntity.create(TEST_OPEN_ID, "租户用户");
+        user.setId(2L);
+        user.setTenantId("tenant-a");
+        user.setDeptId(20L);
+
+        when(tokenBlacklistService.isBlacklisted(VALID_TOKEN)).thenReturn(Mono.just(false));
+        when(userRepository.findByOpenId(TEST_OPEN_ID)).thenReturn(Mono.just(user));
+        when(roleRepository.findByUserId(user.getId())).thenReturn(Mono.just(java.util.List.of()));
+        when(chain.filter(any(ServerWebExchange.class)))
+                .thenAnswer(invocation ->
+                        org.springframework.security.core.context.ReactiveSecurityContextHolder.getContext()
+                                .switchIfEmpty(Mono.error(new AssertionError("SecurityContext missing")))
+                                .doOnNext(securityContext -> {
+                                    Object principal =
+                                            securityContext.getAuthentication().getPrincipal();
+                                    assertThat(principal).isInstanceOf(AuthenticatedUser.class);
+                                    AuthenticatedUser authenticatedUser = (AuthenticatedUser) principal;
+                                    assertThat(authenticatedUser.tenantId()).isEqualTo("tenant-a");
+                                    assertThat(authenticatedUser.deptId()).isEqualTo(20L);
+                                    assertThat(authenticatedUser.openId()).isEqualTo(TEST_OPEN_ID);
+                                    Object exchangeAuthenticatedUser = exchange.getAttribute("apex.authenticatedUser");
+                                    assertThat(exchangeAuthenticatedUser).isEqualTo(authenticatedUser);
+                                    Object exchangeDeptId = exchange.getAttribute("apex.deptId");
+                                    assertThat(exchangeDeptId).isEqualTo(20L);
+                                    assertThat(securityContext
+                                                    .getAuthentication()
+                                                    .getName())
+                                            .isEqualTo(TEST_OPEN_ID);
+                                    assertThat(principal)
+                                            .hasToString(
+                                                    "AuthenticatedUser[userId=2, openId=test-open-id, tenantId=tenant-a]");
+                                })
+                                .then());
+        jwtUtilMockedStatic.when(() -> JwtUtil.parseToken(VALID_TOKEN)).thenReturn(claims);
+
+        StepVerifier.create(filter.filter(exchange, chain)).verifyComplete();
+    }
+
     /**
      * 验证数据库角色已带 ROLE_ 前缀时不再叠加前缀，SecurityContext 中的权限
      * 只出现一次且保持原始值。
@@ -272,6 +318,36 @@ class JwtAuthenticationFilterTest {
                                                 .getAuthorities())
                                         .extracting(org.springframework.security.core.GrantedAuthority::getAuthority)
                                         .containsExactly("ROLE_PHOTO_REVIEWER"))
+                                .then());
+        jwtUtilMockedStatic.when(() -> JwtUtil.parseToken(VALID_TOKEN)).thenReturn(claims);
+
+        StepVerifier.create(filter.filter(exchange, chain)).verifyComplete();
+    }
+
+    @Test
+    @DisplayName("角色显示名称包含admin时不得授予管理员权限")
+    void filter_withAdminOnlyInRoleName_shouldNotGrantAdminAuthority() {
+        MockServerHttpRequest request = MockServerHttpRequest.get("/admin-api/v1/photo-reviews")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + VALID_TOKEN)
+                .build();
+        ServerWebExchange exchange = MockServerWebExchange.from(request);
+        Claims claims = mockClaims();
+        UserEntity user = UserEntity.create(TEST_OPEN_ID, "审计员");
+        user.setId(11L);
+        RoleEntity role = RoleEntity.create("admin assistant", "AUDITOR", "test");
+
+        when(tokenBlacklistService.isBlacklisted(VALID_TOKEN)).thenReturn(Mono.just(false));
+        when(userRepository.findByOpenId(TEST_OPEN_ID)).thenReturn(Mono.just(user));
+        when(roleRepository.findByUserId(11L)).thenReturn(Mono.just(java.util.List.of(role)));
+        when(chain.filter(any(ServerWebExchange.class)))
+                .thenAnswer(invocation ->
+                        org.springframework.security.core.context.ReactiveSecurityContextHolder.getContext()
+                                .switchIfEmpty(Mono.error(new AssertionError("SecurityContext missing")))
+                                .doOnNext(securityContext -> assertThat(securityContext
+                                                .getAuthentication()
+                                                .getAuthorities())
+                                        .extracting(org.springframework.security.core.GrantedAuthority::getAuthority)
+                                        .containsExactly("ROLE_AUDITOR"))
                                 .then());
         jwtUtilMockedStatic.when(() -> JwtUtil.parseToken(VALID_TOKEN)).thenReturn(claims);
 

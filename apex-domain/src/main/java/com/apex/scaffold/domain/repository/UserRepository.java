@@ -118,7 +118,7 @@ public interface UserRepository {
      * 查询所有用户。
      *
      * <p>返回所有未删除的用户实体流（Flux），适用于统计分析等需要全量数据的场景。
-     * 对于分页展示场景，应使用 {@link #findPage(Integer, Integer)}。
+     * 对于分页展示场景，应使用分页查询方法。
      *
      * @return 所有用户实体的 Flux 流
      * @since 1.0.0
@@ -130,9 +130,11 @@ public interface UserRepository {
      *
      * @param pageNum 页码
      * @param pageSize 每页数量
+     * @param orderBy 排序字段
+     * @param isAsc 是否升序
      * @return 分页结果
      */
-    Mono<PageResponse<UserEntity>> findPage(Integer pageNum, Integer pageSize);
+    Mono<PageResponse<UserEntity>> findPage(Integer pageNum, Integer pageSize, String orderBy, Boolean isAsc);
 
     /** 后台按用户 ID、手机号或昵称分页检索用户。 */
     Mono<PageResponse<UserEntity>> searchForAdministration(

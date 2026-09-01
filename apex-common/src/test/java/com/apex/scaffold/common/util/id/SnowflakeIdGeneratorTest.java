@@ -51,12 +51,9 @@ class SnowflakeIdGeneratorTest {
         @Test
         @DisplayName("非法数据中心/机器 ID 应抛异常")
         void shouldRejectInvalidIds() {
-            assertThatThrownBy(() -> new SnowflakeIdGenerator(32, 1))
-                    .isInstanceOf(IllegalArgumentException.class);
-            assertThatThrownBy(() -> new SnowflakeIdGenerator(1, 32))
-                    .isInstanceOf(IllegalArgumentException.class);
-            assertThatThrownBy(() -> new SnowflakeIdGenerator(-1, 1))
-                    .isInstanceOf(IllegalArgumentException.class);
+            assertThatThrownBy(() -> new SnowflakeIdGenerator(32, 1)).isInstanceOf(IllegalArgumentException.class);
+            assertThatThrownBy(() -> new SnowflakeIdGenerator(1, 32)).isInstanceOf(IllegalArgumentException.class);
+            assertThatThrownBy(() -> new SnowflakeIdGenerator(-1, 1)).isInstanceOf(IllegalArgumentException.class);
         }
     }
 

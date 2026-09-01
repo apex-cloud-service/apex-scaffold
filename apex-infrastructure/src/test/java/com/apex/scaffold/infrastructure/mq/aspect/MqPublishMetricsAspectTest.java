@@ -46,12 +46,21 @@ class MqPublishMetricsAspectTest {
         Object result = aspect.around(joinPoint);
 
         assertThat(result).isEqualTo("ok");
-        assertThat(registry.get("apex.mq.publish.count").tag("mode", "sync").tag("result", "success")
+        assertThat(registry.get("apex.mq.publish.count")
+                        .tag("mode", "sync")
+                        .tag("result", "success")
                         .counter()
                         .count())
                 .isEqualTo(1);
-        assertThat(registry.get("apex.mq.publish.latency").tag("mode", "sync").timer().count()).isEqualTo(1);
-        assertThat(registry.find("apex.mq.publish.count").tag("result", "failed").counters()).isEmpty();
+        assertThat(registry.get("apex.mq.publish.latency")
+                        .tag("mode", "sync")
+                        .timer()
+                        .count())
+                .isEqualTo(1);
+        assertThat(registry.find("apex.mq.publish.count")
+                        .tag("result", "failed")
+                        .counters())
+                .isEmpty();
     }
 
     @Test
@@ -63,11 +72,17 @@ class MqPublishMetricsAspectTest {
                 .isInstanceOf(RuntimeException.class)
                 .hasMessage("broker down");
 
-        assertThat(registry.get("apex.mq.publish.count").tag("mode", "async").tag("result", "failed")
+        assertThat(registry.get("apex.mq.publish.count")
+                        .tag("mode", "async")
+                        .tag("result", "failed")
                         .counter()
                         .count())
                 .isEqualTo(1);
-        assertThat(registry.get("apex.mq.publish.latency").tag("mode", "async").timer().count()).isEqualTo(1);
+        assertThat(registry.get("apex.mq.publish.latency")
+                        .tag("mode", "async")
+                        .timer()
+                        .count())
+                .isEqualTo(1);
     }
 
     @Test
@@ -77,7 +92,9 @@ class MqPublishMetricsAspectTest {
         for (int i = 0; i < methods.length; i++) {
             ProceedingJoinPoint joinPoint = joinPoint(methods[i], null);
             aspect.around(joinPoint);
-            assertThat(registry.get("apex.mq.publish.count").tag("mode", modes[i]).tag("result", "success")
+            assertThat(registry.get("apex.mq.publish.count")
+                            .tag("mode", modes[i])
+                            .tag("result", "success")
                             .counter()
                             .count())
                     .as(methods[i])

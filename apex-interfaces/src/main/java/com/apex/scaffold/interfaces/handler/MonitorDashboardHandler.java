@@ -79,7 +79,10 @@ public class MonitorDashboardHandler extends BaseHandler {
      * @return 统一成功响应，data 为中间件数据
      */
     @RequirePermission("system:monitor:view")
-    @Operation(operationId = "monitorMiddleware", summary = "中间件监控", description = "MySQL 连接池、Redis 健康与派生指标、消息中间件、链路追踪状态")
+    @Operation(
+            operationId = "monitorMiddleware",
+            summary = "中间件监控",
+            description = "MySQL 连接池、Redis 健康与派生指标、消息中间件、链路追踪状态")
     public Mono<ServerResponse> middleware(ServerRequest request) {
         return Mono.fromSupplier(collector::middleware).flatMap(this::buildSuccess);
     }
@@ -91,7 +94,10 @@ public class MonitorDashboardHandler extends BaseHandler {
      * @return 统一成功响应，data 为治理数据
      */
     @RequirePermission("system:monitor:view")
-    @Operation(operationId = "monitorGovernance", summary = "治理监控", description = "Sentinel 规则、安全计数、Resilience4j 熔断器状态、网关/API 流量")
+    @Operation(
+            operationId = "monitorGovernance",
+            summary = "治理监控",
+            description = "Sentinel 规则、安全计数、Resilience4j 熔断器状态、网关/API 流量")
     public Mono<ServerResponse> governance(ServerRequest request) {
         return Mono.fromSupplier(collector::governance).flatMap(this::buildSuccess);
     }

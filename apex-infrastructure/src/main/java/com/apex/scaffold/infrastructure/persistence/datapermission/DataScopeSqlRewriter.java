@@ -14,8 +14,6 @@ import net.sf.jsqlparser.statement.select.ParenthesedSelect;
 import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.Select;
 import net.sf.jsqlparser.statement.select.SetOperationList;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * 数据权限 SQL 改写器（基于 JSQLParser 4.7，随 PageHelper 传递依赖提供，无新增依赖）。
@@ -39,8 +37,6 @@ import org.slf4j.LoggerFactory;
  */
 final class DataScopeSqlRewriter {
 
-    private static final Logger log = LoggerFactory.getLogger(DataScopeSqlRewriter.class);
-
     /** 私有构造，禁止实例化 */
     private DataScopeSqlRewriter() {
         throw new UnsupportedOperationException("工具类不能实例化");
@@ -59,58 +55,59 @@ final class DataScopeSqlRewriter {
         if (condition == null || condition.isBlank()) {
             return sql;
         }
+        Statement statement;
         try {
-            Statement statement = CCJSqlParserUtil.parse(sql);
-            if (!(statement instanceof Select select)) {
-                return sql;
-            }
-            PlainSelect plain = mainPlainSelect(select);
-            if (plain == null) {
-                return sql;
-            }
-            Table target = findTargetTable(plain, config.deptAlias());
-            if (target == null) {
-                log.debug("数据权限: 未找到目标表(alias={}), 跳过注入: {}", config.deptAlias(), sql);
-                return sql;
-            }
-            Expression conditionExpr = CCJSqlParserUtil.parseExpression(condition);
-            if (plain.getWhere() == null) {
-                plain.setWhere(conditionExpr);
-            } else {
-                plain.setWhere(new AndExpression(plain.getWhere(), conditionExpr));
-            }
-            return select.toString();
+            statement = CCJSqlParserUtil.parse(sql);
         } catch (Exception e) {
-            log.warn("数据权限: SQL 解析/改写失败, 跳过注入: {}", e.getMessage());
-            return sql;
+            throw new IllegalStateException("SQL 解析失败", e);
         }
+        if (!(statement instanceof Select select)) {
+            throw new IllegalStateException("数据权限仅支持 SELECT 结构");
+        }
+        Expression conditionExpr;
+        try {
+            conditionExpr = CCJSqlParserUtil.parseExpression(condition);
+        } catch (Exception e) {
+            throw new IllegalStateException("数据权限条件解析失败", e);
+        }
+        rewriteSelect(select, config, scope, conditionExpr, false);
+        return select.toString();
     }
 
-    /**
-     * 提取主查询 {@link PlainSelect}。
-     *
-     * <p>JSQLParser 4.7 中 {@code PlainSelect}/{@code SetOperationList}/{@code ParenthesedSelect}
-     * 均继承自 {@link Select}，{@code getSelectBody()} 返回的是子类型实例。
-     * 支持普通 SELECT、UNION 集合操作（取第一个子查询）、括号包裹的子查询；
-     * 其余结构返回 {@code null} 保守跳过。</p>
-     */
-    private static PlainSelect mainPlainSelect(Select select) {
+    private static void rewriteSelect(
+            Select select, DataScopeConfig config, DataScopeInfo scope, Expression condition, boolean unionBranch) {
         Select body = select.getSelectBody();
         if (body instanceof PlainSelect plain) {
-            return plain;
+            String alias = scope.type() == com.apex.scaffold.common.enums.DataScopeType.SELF
+                    ? config.userAlias()
+                    : config.deptAlias();
+            findTargetTable(plain, alias, unionBranch);
+            if (plain.getWhere() == null) {
+                plain.setWhere(condition);
+            } else {
+                plain.setWhere(new AndExpression(plain.getWhere(), condition));
+            }
+            return;
         }
         if (body instanceof SetOperationList setOperationList) {
             List<Select> selects = setOperationList.getSelects();
             if (selects == null || selects.isEmpty()) {
-                return null;
+                throw new IllegalStateException("UNION 缺少 SELECT 分支");
             }
-            Select first = selects.get(0);
-            return first instanceof PlainSelect plain ? plain : mainPlainSelect(first);
+            for (Select branch : selects) {
+                try {
+                    rewriteSelect(branch, config, scope, condition, true);
+                } catch (IllegalStateException e) {
+                    throw new IllegalStateException("UNION 分支改写失败: " + e.getMessage(), e);
+                }
+            }
+            return;
         }
         if (body instanceof ParenthesedSelect parenthesed) {
-            return mainPlainSelect(parenthesed.getSelect());
+            rewriteSelect(parenthesed.getSelect(), config, scope, condition, unionBranch);
+            return;
         }
-        return null;
+        throw new IllegalStateException("不支持的 SELECT 结构");
     }
 
     /**
@@ -120,7 +117,7 @@ final class DataScopeSqlRewriter {
      * @param alias 配置的部门表别名（可为空）
      * @return 目标表；未找到时返回 {@code null}
      */
-    private static Table findTargetTable(PlainSelect plain, String alias) {
+    private static Table findTargetTable(PlainSelect plain, String alias, boolean unionBranch) {
         if (alias != null && !alias.isBlank()) {
             Table matched = findTableByAlias(firstTable(plain.getFromItem()), alias);
             if (matched != null) {
@@ -134,10 +131,13 @@ final class DataScopeSqlRewriter {
                     }
                 }
             }
-            return null;
+            throw new IllegalStateException((unionBranch ? "UNION 分支" : "SELECT") + "未找到匹配别名: " + alias);
         }
-        // 未指定别名 → 主查询第一张表
-        return firstTable(plain.getFromItem());
+        Table table = firstTable(plain.getFromItem());
+        if (table == null) {
+            throw new IllegalStateException("FROM 包含不支持的子查询");
+        }
+        return table;
     }
 
     /**

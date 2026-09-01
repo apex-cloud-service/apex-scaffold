@@ -1,12 +1,14 @@
 package com.apex.scaffold.infrastructure.persistence.config;
 
-import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
-import com.baomidou.mybatisplus.extension.plugins.inner.OptimisticLockerInnerInterceptor;
-import com.baomidou.mybatisplus.extension.plugins.inner.TenantLineInnerInterceptor;
 import com.apex.scaffold.common.context.DataScopeProvider;
 import com.apex.scaffold.infrastructure.persistence.datapermission.DataScopeInnerInterceptor;
 import com.apex.scaffold.infrastructure.persistence.datapermission.DefaultTenantLineHandler;
 import com.apex.scaffold.infrastructure.persistence.datapermission.MdcDataScopeProvider;
+import com.baomidou.mybatisplus.annotation.DbType;
+import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
+import com.baomidou.mybatisplus.extension.plugins.inner.OptimisticLockerInnerInterceptor;
+import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
+import com.baomidou.mybatisplus.extension.plugins.inner.TenantLineInnerInterceptor;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -94,6 +96,7 @@ public class MybatisPlusConfig {
         }
         interceptor.addInnerInterceptor(new DataScopeInnerInterceptor(dataScopeProvider));
         interceptor.addInnerInterceptor(new OptimisticLockerInnerInterceptor());
+        interceptor.addInnerInterceptor(new PaginationInnerInterceptor(DbType.MYSQL));
         log.info("MyBatis-Plus 数据权限/乐观锁插件已注册");
         return interceptor;
     }
@@ -130,7 +133,8 @@ public class MybatisPlusConfig {
     @Bean
     @ConditionalOnProperty(prefix = "apex.sql.slow", name = "enabled", havingValue = "true", matchIfMissing = true)
     @ConditionalOnMissingBean(SlowSqlMetricsInterceptor.class)
-    public SlowSqlMetricsInterceptor slowSqlMetricsInterceptor(SlowSqlProperties properties, MeterRegistry meterRegistry) {
+    public SlowSqlMetricsInterceptor slowSqlMetricsInterceptor(
+            SlowSqlProperties properties, MeterRegistry meterRegistry) {
         log.info("慢SQL指标拦截器已注册, thresholdMs={}", properties.getThresholdMs());
         return new SlowSqlMetricsInterceptor(properties, meterRegistry);
     }

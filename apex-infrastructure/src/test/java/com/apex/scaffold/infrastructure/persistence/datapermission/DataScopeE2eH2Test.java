@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.apex.scaffold.common.context.DataScopeContext;
 import com.apex.scaffold.common.context.DataScopeInfo;
-import com.apex.scaffold.common.enums.DataScopeType;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -16,7 +15,6 @@ import com.zaxxer.hikari.HikariDataSource;
 import java.sql.Connection;
 import java.sql.Statement;
 import java.util.List;
-import javax.sql.DataSource;
 import lombok.Data;
 import org.apache.ibatis.mapping.Environment;
 import org.apache.ibatis.session.SqlSession;
@@ -54,7 +52,8 @@ class DataScopeE2eH2Test {
         dataSource.setPassword("");
         dataSource.setDriverClassName("org.h2.Driver");
 
-        try (Connection conn = dataSource.getConnection(); Statement st = conn.createStatement()) {
+        try (Connection conn = dataSource.getConnection();
+                Statement st = conn.createStatement()) {
             st.execute("CREATE TABLE sys_user ("
                     + "id BIGINT AUTO_INCREMENT PRIMARY KEY, "
                     + "username VARCHAR(64), "

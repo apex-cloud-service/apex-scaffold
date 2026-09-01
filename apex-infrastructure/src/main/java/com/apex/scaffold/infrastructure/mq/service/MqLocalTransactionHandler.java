@@ -18,8 +18,7 @@ public interface MqLocalTransactionHandler {
      * @param argument 事务参数
      * @return 事务状态
      */
-    org.apache.rocketmq.spring.core.RocketMQLocalTransactionState execute(
-            Message<?> message, Object argument);
+    org.apache.rocketmq.spring.core.RocketMQLocalTransactionState execute(Message<?> message, Object argument);
 
     /**
      * 检查本地事务状态。

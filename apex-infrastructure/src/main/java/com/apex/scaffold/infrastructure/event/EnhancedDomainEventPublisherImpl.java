@@ -138,8 +138,7 @@ public class EnhancedDomainEventPublisherImpl implements DomainEventPublisher {
         return Mono.fromRunnable(() -> applicationEventPublisher.publishEvent(event))
                 .then(domainEventBus.publish(event))
                 .subscribeOn(BlockingIoSchedulers.event())
-                .doOnSuccess(v -> log.debug(
-                        "异步事件处理完成: {} (eventId={})", event.getEventName(), event.getEventId()))
+                .doOnSuccess(v -> log.debug("异步事件处理完成: {} (eventId={})", event.getEventName(), event.getEventId()))
                 .doOnError(e -> log.error(
                         "异步事件处理失败: {} (eventId={}), error: {}",
                         event.getEventName(),
@@ -181,9 +180,7 @@ public class EnhancedDomainEventPublisherImpl implements DomainEventPublisher {
         return Mono.<Void>create(sink -> {
                     try {
                         rocketMQTemplate.asyncSend(
-                                domainEventTopic,
-                                message,
-                                new org.apache.rocketmq.client.producer.SendCallback() {
+                                domainEventTopic, message, new org.apache.rocketmq.client.producer.SendCallback() {
                                     /** {@inheritDoc} */
                                     @Override
                                     public void onSuccess(org.apache.rocketmq.client.producer.SendResult sendResult) {

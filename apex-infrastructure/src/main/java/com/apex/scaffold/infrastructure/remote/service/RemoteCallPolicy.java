@@ -1,9 +1,9 @@
 package com.apex.scaffold.infrastructure.remote.service;
 
-import com.apex.scaffold.infrastructure.remote.config.RemoteApiProperties;
-import com.apex.scaffold.infrastructure.remote.config.RemoteApiProperties.ServiceConfig;
 import com.apex.scaffold.domain.gateway.RemoteApiException;
 import com.apex.scaffold.domain.gateway.RemoteClientInputException;
+import com.apex.scaffold.infrastructure.remote.config.RemoteApiProperties;
+import com.apex.scaffold.infrastructure.remote.config.RemoteApiProperties.ServiceConfig;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import java.time.Duration;
 import lombok.RequiredArgsConstructor;

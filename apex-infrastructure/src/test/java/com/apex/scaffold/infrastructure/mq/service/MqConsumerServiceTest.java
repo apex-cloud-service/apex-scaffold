@@ -5,14 +5,15 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import com.apex.scaffold.common.context.TenantContext;
 import java.time.Duration;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -48,10 +49,40 @@ class MqConsumerServiceTest {
 
     @BeforeEach
     void setUp() {
+        TenantContext.setTenantId("tenant-a");
         service = new MqConsumerService(redissonClient);
         ReflectionTestUtils.setField(service, "idempotentTtlMinutes", 30L);
-        lenient().doReturn(bucket).when(redissonClient).getBucket(
-                anyString(), eq(StringCodec.INSTANCE));
+        lenient().doReturn(bucket).when(redissonClient).getBucket(anyString(), eq(StringCodec.INSTANCE));
+    }
+
+    @AfterEach
+    void clearTenant() {
+        TenantContext.clear();
+    }
+
+    @Test
+    @DisplayName("幂等键应包含当前租户以隔离相同消息ID")
+    void shouldScopeIdempotentKeyByTenant() {
+        TenantContext.setTenantId("tenant-a");
+        when(bucket.setIfAbsent(anyString(), any(Duration.class))).thenReturn(true);
+        when(bucket.compareAndSet(anyString(), eq("SUCCESS"))).thenReturn(true);
+
+        service.processMessageWithResult("msg-1", "payload", message -> true);
+
+        verify(redissonClient).getBucket(eq("mq:idempotent:tenant-a:msg-1"), eq(StringCodec.INSTANCE));
+    }
+
+    @Test
+    @DisplayName("缺少租户上下文应拒绝访问幂等存储")
+    void shouldRejectProcessingWithoutTenantContext() {
+        TenantContext.clear();
+
+        org.assertj.core.api.Assertions.assertThatThrownBy(
+                        () -> service.processMessageWithResult("msg-1", "payload", message -> true))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("租户上下文不存在");
+
+        verifyNoInteractions(redissonClient);
     }
 
     @Test

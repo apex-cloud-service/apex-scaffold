@@ -49,6 +49,9 @@ public class DeptDTO {
     @Schema(description = "状态（0-停用，1-正常）")
     private Integer status;
 
+    @Schema(description = "乐观锁版本")
+    private Integer lockVersion;
+
     /** 子部门列表 */
     @Schema(description = "子部门列表")
     private List<DeptDTO> children = new ArrayList<>();
@@ -57,56 +60,100 @@ public class DeptDTO {
     public DeptDTO() {}
 
     /** @return 部门 ID */
-    public Long getId() { return id; }
+    public Long getId() {
+        return id;
+    }
 
     /** @param id 部门 ID */
-    public void setId(Long id) { this.id = id; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
     /** @return 父部门 ID */
-    public Long getParentId() { return parentId; }
+    public Long getParentId() {
+        return parentId;
+    }
 
     /** @param parentId 父部门 ID */
-    public void setParentId(Long parentId) { this.parentId = parentId; }
+    public void setParentId(Long parentId) {
+        this.parentId = parentId;
+    }
 
     /** @return 部门名称 */
-    public String getName() { return name; }
+    public String getName() {
+        return name;
+    }
 
     /** @param name 部门名称 */
-    public void setName(String name) { this.name = name; }
+    public void setName(String name) {
+        this.name = name;
+    }
 
     /** @return 显示顺序 */
-    public Integer getOrderNum() { return orderNum; }
+    public Integer getOrderNum() {
+        return orderNum;
+    }
 
     /** @param orderNum 显示顺序 */
-    public void setOrderNum(Integer orderNum) { this.orderNum = orderNum; }
+    public void setOrderNum(Integer orderNum) {
+        this.orderNum = orderNum;
+    }
 
     /** @return 负责人 */
-    public String getLeader() { return leader; }
+    public String getLeader() {
+        return leader;
+    }
 
     /** @param leader 负责人 */
-    public void setLeader(String leader) { this.leader = leader; }
+    public void setLeader(String leader) {
+        this.leader = leader;
+    }
 
     /** @return 联系电话 */
-    public String getPhone() { return phone; }
+    public String getPhone() {
+        return phone;
+    }
 
     /** @param phone 联系电话 */
-    public void setPhone(String phone) { this.phone = phone; }
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
 
     /** @return 邮箱 */
-    public String getEmail() { return email; }
+    public String getEmail() {
+        return email;
+    }
 
     /** @param email 邮箱 */
-    public void setEmail(String email) { this.email = email; }
+    public void setEmail(String email) {
+        this.email = email;
+    }
 
     /** @return 状态 */
-    public Integer getStatus() { return status; }
+    public Integer getStatus() {
+        return status;
+    }
 
     /** @param status 状态 */
-    public void setStatus(Integer status) { this.status = status; }
+    public void setStatus(Integer status) {
+        this.status = status;
+    }
+
+    public Integer getLockVersion() {
+        return lockVersion;
+    }
+
+    public void setLockVersion(Integer lockVersion) {
+        this.lockVersion = lockVersion;
+    }
 
     /** @return 子部门列表 */
-    public List<DeptDTO> getChildren() { return children; }
+    public List<DeptDTO> getChildren() {
+        return children;
+    }
 
     /** @param children 子部门列表 */
-    public void setChildren(List<DeptDTO> children) { this.children = children; }
+    public void setChildren(List<DeptDTO> children) {
+        this.children = children;
+    }
 }

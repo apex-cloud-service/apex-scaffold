@@ -26,10 +26,8 @@ import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 class SentinelNacosDataSourceConfigTest {
 
     /** 上下文运行器：仅加载目标配置类，隔离其他 Bean。 */
-    private final ApplicationContextRunner contextRunner =
-            new ApplicationContextRunner()
-                    .withConfiguration(
-                            AutoConfigurations.of(SentinelNacosDataSourceConfig.class));
+    private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
+            .withConfiguration(AutoConfigurations.of(SentinelNacosDataSourceConfig.class));
 
     /**
      * 默认配置下不应装配 Nacos 数据源（避免无 Nacos 环境启动失败）。
@@ -48,9 +46,8 @@ class SentinelNacosDataSourceConfigTest {
     @Test
     @DisplayName("enabled=false 时不装配 Nacos 数据源")
     void shouldNotRegisterWhenExplicitlyDisabled() {
-        contextRunner
-                .withPropertyValues("apex.sentinel.nacos.enabled=false")
-                .run(context -> assertThat(context).doesNotHaveBean(SentinelNacosDataSourceConfig.class));
+        contextRunner.withPropertyValues("apex.sentinel.nacos.enabled=false").run(context -> assertThat(context)
+                .doesNotHaveBean(SentinelNacosDataSourceConfig.class));
     }
 
     /**
@@ -62,14 +59,11 @@ class SentinelNacosDataSourceConfigTest {
     @Test
     @DisplayName("enabled=true 时装配 Nacos 数据源")
     void shouldRegisterWhenEnabled() {
-        contextRunner
-                .withPropertyValues("apex.sentinel.nacos.enabled=true")
-                .run(context -> {
-                    assertThat(context).hasSingleBean(SentinelNacosDataSourceConfig.class);
-                    // 默认地址注入（本地 infra 栈端口）
-                    SentinelNacosDataSourceConfig bean =
-                            context.getBean(SentinelNacosDataSourceConfig.class);
-                    assertThat(bean).isNotNull();
-                });
+        contextRunner.withPropertyValues("apex.sentinel.nacos.enabled=true").run(context -> {
+            assertThat(context).hasSingleBean(SentinelNacosDataSourceConfig.class);
+            // 默认地址注入（本地 infra 栈端口）
+            SentinelNacosDataSourceConfig bean = context.getBean(SentinelNacosDataSourceConfig.class);
+            assertThat(bean).isNotNull();
+        });
     }
 }

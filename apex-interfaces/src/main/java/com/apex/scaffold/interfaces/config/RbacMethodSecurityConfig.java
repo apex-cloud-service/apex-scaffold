@@ -27,5 +27,4 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 @Configuration
 @ConditionalOnProperty(prefix = "apex.features", name = "rbac", havingValue = "true", matchIfMissing = true)
 @EnableReactiveMethodSecurity
-public class RbacMethodSecurityConfig {
-}
+public class RbacMethodSecurityConfig {}

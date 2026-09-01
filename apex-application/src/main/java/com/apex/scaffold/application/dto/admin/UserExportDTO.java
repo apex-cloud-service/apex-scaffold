@@ -45,38 +45,62 @@ public class UserExportDTO {
     public UserExportDTO() {}
 
     /** @return 用户 ID */
-    public Long getId() { return id; }
+    public Long getId() {
+        return id;
+    }
 
     /** @param id 用户 ID */
-    public void setId(Long id) { this.id = id; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
     /** @return 登录账号 */
-    public String getUsername() { return username; }
+    public String getUsername() {
+        return username;
+    }
 
     /** @param username 登录账号 */
-    public void setUsername(String username) { this.username = username; }
+    public void setUsername(String username) {
+        this.username = username;
+    }
 
     /** @return 昵称 */
-    public String getNickName() { return nickName; }
+    public String getNickName() {
+        return nickName;
+    }
 
     /** @param nickName 昵称 */
-    public void setNickName(String nickName) { this.nickName = nickName; }
+    public void setNickName(String nickName) {
+        this.nickName = nickName;
+    }
 
     /** @return 手机号 */
-    public String getPhone() { return phone; }
+    public String getPhone() {
+        return phone;
+    }
 
     /** @param phone 手机号 */
-    public void setPhone(String phone) { this.phone = phone; }
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
 
     /** @return 状态 */
-    public Integer getStatus() { return status; }
+    public Integer getStatus() {
+        return status;
+    }
 
     /** @param status 状态 */
-    public void setStatus(Integer status) { this.status = status; }
+    public void setStatus(Integer status) {
+        this.status = status;
+    }
 
     /** @return 最后登录时间 */
-    public LocalDateTime getLastLoginTime() { return lastLoginTime; }
+    public LocalDateTime getLastLoginTime() {
+        return lastLoginTime;
+    }
 
     /** @param lastLoginTime 最后登录时间 */
-    public void setLastLoginTime(LocalDateTime lastLoginTime) { this.lastLoginTime = lastLoginTime; }
+    public void setLastLoginTime(LocalDateTime lastLoginTime) {
+        this.lastLoginTime = lastLoginTime;
+    }
 }

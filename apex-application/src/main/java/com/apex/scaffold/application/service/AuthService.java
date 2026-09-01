@@ -199,9 +199,7 @@ public class AuthService {
         if (Boolean.FALSE.equals(loginProtectionProperties.getEnabled())) {
             // 配置诚实性：enabled=false 时真实跳过防护并告警一次，避免「配置写了但没生效」
             if (loginProtectionDisabledLogged.compareAndSet(false, true)) {
-                log.warn(
-                        "登录保护已关闭（apex.security.login-protection.enabled=false），"
-                                + "跳过暴力破解检查与验证码升级，生产环境存在撞库/爆破风险");
+                log.warn("登录保护已关闭（apex.security.login-protection.enabled=false），" + "跳过暴力破解检查与验证码升级，生产环境存在撞库/爆破风险");
             }
             preChecks = Mono.empty();
         } else {
@@ -210,12 +208,10 @@ public class AuthService {
         return preChecks.then(Mono.defer(() -> loginStrategyProvider
                 .getStrategy(request.getLoginType())
                 .login(request)
-                .flatMap(response ->
-                        recordLoginSuccess(request, clientIp)
-                                .then(Mono.defer(() -> refreshHeartbeat(response)))
-                                .thenReturn(response))
-                .onErrorResume(
-                        e -> recordLoginFailure(request, clientIp).then(Mono.error(e)))));
+                .flatMap(response -> recordLoginSuccess(request, clientIp)
+                        .then(Mono.defer(() -> refreshHeartbeat(response)))
+                        .thenReturn(response))
+                .onErrorResume(e -> recordLoginFailure(request, clientIp).then(Mono.error(e)))));
     }
 
     /**
@@ -230,17 +226,17 @@ public class AuthService {
      * @since 2.2.0
      */
     private Mono<Void> refreshHeartbeat(LoginResponse response) {
-        if (response == null || response.getOpenId() == null || response.getOpenId().isBlank()) {
+        if (response == null
+                || response.getOpenId() == null
+                || response.getOpenId().isBlank()) {
             return Mono.empty();
         }
-        Mono<com.apex.scaffold.domain.model.entity.UserEntity> userMono =
-                userService.getByOpenId(response.getOpenId());
+        Mono<com.apex.scaffold.domain.model.entity.UserEntity> userMono = userService.getByOpenId(response.getOpenId());
         if (userMono == null) {
             return Mono.empty();
         }
         // 心跳刷新为旁路逻辑：任何异常（含 mock/降级场景）都不应影响登录成功
-        return userMono
-                .flatMap(user -> userService.updateLastHeartbeat(user.getId()))
+        return userMono.flatMap(user -> userService.updateLastHeartbeat(user.getId()))
                 .onErrorResume(e -> Mono.empty())
                 .switchIfEmpty(Mono.empty());
     }
@@ -271,21 +267,17 @@ public class AuthService {
             return verifyIfPresent(request);
         }
         String ipKey = LOGIN_FAIL_IP_PREFIX + clientIp;
-        return redisTemplate
-                .opsForValue()
-                .get(ipKey)
-                .defaultIfEmpty("0")
-                .flatMap(count -> {
-                    int failCount = parseFailCount(count);
-                    if (failCount >= captchaAfterFailures) {
-                        if (request.getCaptchaId() == null || request.getCaptchaId().isBlank()) {
-                            log.warn("登录验证码升级强制，IP: {}, failCount: {}, 缺少验证码", clientIp, failCount);
-                            return Mono.error(new BusinessException(ResultCode.CAPTCHA_REQUIRED));
-                        }
-                        return verifyCaptcha(request);
-                    }
-                    return verifyIfPresent(request);
-                });
+        return redisTemplate.opsForValue().get(ipKey).defaultIfEmpty("0").flatMap(count -> {
+            int failCount = parseFailCount(count);
+            if (failCount >= captchaAfterFailures) {
+                if (request.getCaptchaId() == null || request.getCaptchaId().isBlank()) {
+                    log.warn("登录验证码升级强制，IP: {}, failCount: {}, 缺少验证码", clientIp, failCount);
+                    return Mono.error(new BusinessException(ResultCode.CAPTCHA_REQUIRED));
+                }
+                return verifyCaptcha(request);
+            }
+            return verifyIfPresent(request);
+        });
     }
 
     /**

@@ -1,6 +1,7 @@
 package com.apex.scaffold.infrastructure.persistence.datapermission;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.apex.scaffold.common.context.DataScopeConfig;
 import com.apex.scaffold.common.context.DataScopeInfo;
@@ -32,10 +33,7 @@ class DataScopeSqlRewriterTest {
             String sql = "SELECT id, username, dept_id FROM sys_user WHERE deleted = 0";
             String rewritten = DataScopeSqlRewriter.rewrite(sql, DEFAULT_CONFIG, DataScopeInfo.ofDept(100L));
 
-            assertThat(rewritten)
-                    .isNotEqualTo(sql)
-                    .contains("dept_id = 100")
-                    .contains("deleted = 0");
+            assertThat(rewritten).isNotEqualTo(sql).contains("dept_id = 100").contains("deleted = 0");
             assertThat(rewritten).matches("(?s).*deleted = 0 AND dept_id = 100.*");
         }
 
@@ -44,9 +42,7 @@ class DataScopeSqlRewriterTest {
             String sql = "SELECT id, username, dept_id FROM sys_user";
             String rewritten = DataScopeSqlRewriter.rewrite(sql, DEFAULT_CONFIG, DataScopeInfo.ofDept(100L));
 
-            assertThat(rewritten)
-                    .isNotEqualTo(sql)
-                    .contains("WHERE dept_id = 100");
+            assertThat(rewritten).isNotEqualTo(sql).contains("WHERE dept_id = 100");
         }
 
         @Test
@@ -65,9 +61,7 @@ class DataScopeSqlRewriterTest {
             String sql = "SELECT dept_id, COUNT(*) FROM sys_user WHERE status = 1 GROUP BY dept_id";
             String rewritten = DataScopeSqlRewriter.rewrite(sql, DEFAULT_CONFIG, DataScopeInfo.ofDept(100L));
 
-            assertThat(rewritten)
-                    .contains("GROUP BY dept_id")
-                    .contains("status = 1 AND dept_id = 100");
+            assertThat(rewritten).contains("GROUP BY dept_id").contains("status = 1 AND dept_id = 100");
         }
     }
 
@@ -93,10 +87,7 @@ class DataScopeSqlRewriterTest {
             DataScopeConfig config = new DataScopeConfig("u", "u", "dept_id", "user_id");
             String rewritten = DataScopeSqlRewriter.rewrite(sql, config, DataScopeInfo.ofDept(100L));
 
-            // 大小写不敏感匹配 U 表别名，条件列按配置别名渲染（SQL 列引用大小写不敏感）
-            assertThat(rewritten)
-                    .isNotEqualTo(sql)
-                    .contains("dept_id = 100");
+            assertThat(rewritten).isNotEqualTo(sql).contains("dept_id = 100");
         }
 
         @Test
@@ -109,12 +100,14 @@ class DataScopeSqlRewriterTest {
         }
 
         @Test
-        void shouldLeaveSqlUntouchedWhenAliasNotFound() {
+        void shouldRejectWhenAliasNotFound() {
             String sql = "SELECT u.* FROM sys_user u LEFT JOIN sys_dept d ON u.dept_id = d.id";
             DataScopeConfig config = new DataScopeConfig("x", "x", "dept_id", "user_id");
-            String rewritten = DataScopeSqlRewriter.rewrite(sql, config, DataScopeInfo.ofDept(100L));
 
-            assertThat(rewritten).isEqualTo(sql);
+            assertThatThrownBy(() -> DataScopeSqlRewriter.rewrite(sql, config, DataScopeInfo.ofDept(100L)))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining("别名")
+                    .hasMessageContaining("x");
         }
     }
 
@@ -142,7 +135,8 @@ class DataScopeSqlRewriterTest {
         @Test
         void shouldInjectCustomInClause() {
             String sql = "SELECT * FROM sys_user";
-            String rewritten = DataScopeSqlRewriter.rewrite(sql, DEFAULT_CONFIG, DataScopeInfo.ofCustom(List.of(1L, 2L)));
+            String rewritten =
+                    DataScopeSqlRewriter.rewrite(sql, DEFAULT_CONFIG, DataScopeInfo.ofCustom(List.of(1L, 2L)));
 
             assertThat(rewritten).contains("dept_id IN (1, 2)");
         }
@@ -150,7 +144,8 @@ class DataScopeSqlRewriterTest {
         @Test
         void shouldLeaveSqlUntouchedForAllScope() {
             String sql = "SELECT * FROM sys_user WHERE status = 1";
-            assertThat(DataScopeSqlRewriter.rewrite(sql, DEFAULT_CONFIG, DataScopeInfo.all())).isEqualTo(sql);
+            assertThat(DataScopeSqlRewriter.rewrite(sql, DEFAULT_CONFIG, DataScopeInfo.all()))
+                    .isEqualTo(sql);
         }
     }
 
@@ -160,32 +155,51 @@ class DataScopeSqlRewriterTest {
 
         @Test
         void shouldInjectIntoFirstSelectOfUnion() {
-            String sql = "SELECT id, dept_id FROM sys_user WHERE deleted = 0 UNION SELECT id, dept_id FROM sys_user_archive";
+            String sql =
+                    "SELECT id, dept_id FROM sys_user WHERE deleted = 0 UNION SELECT id, dept_id FROM sys_user_archive";
             String rewritten = DataScopeSqlRewriter.rewrite(sql, DEFAULT_CONFIG, DataScopeInfo.ofDept(100L));
 
-            assertThat(rewritten).isNotEqualTo(sql).contains("dept_id = 100");
+            assertThat(rewritten).isNotEqualTo(sql);
+            assertThat(rewritten.split("dept_id = 100", -1)).hasSize(3);
         }
 
         @Test
-        void shouldLeaveSubqueryFromUntouched() {
+        void shouldRejectSubqueryFrom() {
             String sql = "SELECT * FROM (SELECT id, dept_id FROM sys_user) t WHERE t.id > 1";
-            String rewritten = DataScopeSqlRewriter.rewrite(sql, DEFAULT_CONFIG, DataScopeInfo.ofDept(100L));
 
-            assertThat(rewritten).isEqualTo(sql);
+            assertThatThrownBy(() -> DataScopeSqlRewriter.rewrite(sql, DEFAULT_CONFIG, DataScopeInfo.ofDept(100L)))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining("FROM")
+                    .hasMessageContaining("子查询");
         }
 
         @Test
-        void shouldLeaveNonSelectUntouched() {
+        void shouldRejectNonSelect() {
             String sql = "UPDATE sys_user SET status = 1 WHERE id = 1";
-            assertThat(DataScopeSqlRewriter.rewrite(sql, DEFAULT_CONFIG, DataScopeInfo.ofDept(100L)))
-                    .isEqualTo(sql);
+
+            assertThatThrownBy(() -> DataScopeSqlRewriter.rewrite(sql, DEFAULT_CONFIG, DataScopeInfo.ofDept(100L)))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining("SELECT");
         }
 
         @Test
-        void shouldLeaveUnparseableSqlUntouched() {
-            String sql = "SELEC * FRM sys_user WHERE";  // 非法 SQL
-            assertThat(DataScopeSqlRewriter.rewrite(sql, DEFAULT_CONFIG, DataScopeInfo.ofDept(100L)))
-                    .isEqualTo(sql);
+        void shouldRejectUnparseableSql() {
+            String sql = "SELEC * FRM sys_user WHERE";
+
+            assertThatThrownBy(() -> DataScopeSqlRewriter.rewrite(sql, DEFAULT_CONFIG, DataScopeInfo.ofDept(100L)))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining("SQL")
+                    .hasMessageContaining("解析");
+        }
+
+        @Test
+        void shouldRejectUnsupportedSelectStructure() {
+            String sql = "VALUES (1)";
+
+            assertThatThrownBy(() -> DataScopeSqlRewriter.rewrite(sql, DEFAULT_CONFIG, DataScopeInfo.ofDept(100L)))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining("SELECT")
+                    .hasMessageContaining("结构");
         }
 
         @Test

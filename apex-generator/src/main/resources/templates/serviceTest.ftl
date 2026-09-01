@@ -2,11 +2,17 @@ package ${appPackage}.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+<#if stateMachineEnabled>
+import static org.mockito.Mockito.never;
+</#if>
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import ${appPackage}.dto.${module}.${entityName}DTO;
 import ${appPackage}.dto.${module}.${entityName}Request;
+<#if stateMachineEnabled>
+import com.apex.scaffold.common.exception.BusinessException;
+</#if>
 import ${domainPackage}.model.entity.${entityName}Entity;
 import ${domainPackage}.repository.${entityName}Repository;
 import java.util.List;
@@ -46,11 +52,11 @@ class ${entityName}ServiceTest {
      */
     @BeforeEach
     void setUp() {
-<#list fields as field>
+<#list createFields as field>
         ${field.type} ${field.name} = null;
 </#list>
         entity = ${entityName}Entity.create(
-<#list fields as field>
+<#list createFields as field>
                 ${field.name}<#if field?has_next>,</#if>
 </#list>);
         entity.setId(1L);
@@ -108,4 +114,40 @@ class ${entityName}ServiceTest {
                 .expectNext(true)
                 .verifyComplete();
     }
+<#if stateMachineEnabled>
+
+    /**
+     * 测试${tableComment}状态流转成功。
+     */
+    @Test
+    @DisplayName("transition - 成功流转${tableComment}状态")
+    void transition_Success() {
+        when(${entityVar}Repository.findById(1L)).thenReturn(Mono.just(entity));
+        when(${entityVar}Repository.updateById(entity)).thenReturn(Mono.just(1));
+
+        ${entityVar}Service.transition(1L, "${stateTransitions[0].to}")
+                .as(StepVerifier::create)
+                .assertNext(transitioned -> assertThat(transitioned.get${stateField?cap_first}())
+                        .isEqualTo("${stateTransitions[0].to}"))
+                .verifyComplete();
+
+        verify(${entityVar}Repository).updateById(entity);
+    }
+
+    /**
+     * 测试拒绝非法的${tableComment}目标状态。
+     */
+    @Test
+    @DisplayName("transition - 拒绝非法目标状态")
+    void transition_RejectsInvalidTargetState() {
+        when(${entityVar}Repository.findById(1L)).thenReturn(Mono.just(entity));
+
+        ${entityVar}Service.transition(1L, "${invalidState}")
+                .as(StepVerifier::create)
+                .expectError(BusinessException.class)
+                .verify();
+
+        verify(${entityVar}Repository, never()).updateById(any(${entityName}Entity.class));
+    }
+</#if>
 }

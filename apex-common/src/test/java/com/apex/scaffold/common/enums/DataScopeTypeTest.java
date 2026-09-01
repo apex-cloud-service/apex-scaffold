@@ -80,7 +80,8 @@ class DataScopeTypeTest {
 
         @Test
         void shouldFallbackToDefaultForInvalidCode() {
-            assertThat(DataScopeType.fromCodeOrDefault(null, DataScopeType.DEPT)).isEqualTo(DataScopeType.DEPT);
+            assertThat(DataScopeType.fromCodeOrDefault(null, DataScopeType.DEPT))
+                    .isEqualTo(DataScopeType.DEPT);
             assertThat(DataScopeType.fromCodeOrDefault(99, DataScopeType.DEPT)).isEqualTo(DataScopeType.DEPT);
             assertThat(DataScopeType.fromCodeOrDefault(3, DataScopeType.DEPT)).isEqualTo(DataScopeType.DEPT_AND_CHILD);
         }

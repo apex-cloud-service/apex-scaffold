@@ -4,8 +4,10 @@ import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
 import com.apex.scaffold.domain.model.entity.RoleEntity;
 import com.apex.scaffold.domain.repository.RoleRepository;
 import com.apex.scaffold.infrastructure.persistence.converter.RolePoConverter;
+import com.apex.scaffold.infrastructure.persistence.mapper.RoleDeptMapper;
 import com.apex.scaffold.infrastructure.persistence.mapper.RoleMapper;
 import com.apex.scaffold.infrastructure.persistence.mapper.UserRoleMapper;
+import com.apex.scaffold.infrastructure.persistence.po.RoleDeptPO;
 import com.apex.scaffold.infrastructure.persistence.po.RolePO;
 import com.apex.scaffold.infrastructure.persistence.po.UserRolePO;
 import com.apex.scaffold.infrastructure.persistence.util.ConditionUtil;
@@ -31,6 +33,7 @@ public class RoleRepositoryImpl implements RoleRepository {
 
     private final RoleMapper roleMapper;
     private final UserRoleMapper userRoleMapper;
+    private final RoleDeptMapper roleDeptMapper;
     private final RolePoConverter rolePoConverter;
 
     /**
@@ -62,9 +65,12 @@ public class RoleRepositoryImpl implements RoleRepository {
                         return List.<RoleEntity>of();
                     }
 
-                    List<RolePO> pos = roleMapper.selectList(
-                            ConditionUtil.lambda(RolePO.class).inIfPresent(RolePO::getId, roleIds));
-                    return rolePoConverter.toEntityList(pos);
+                    List<RolePO> pos = roleMapper.selectList(ConditionUtil.lambda(RolePO.class)
+                            .inIfPresent(RolePO::getId, roleIds)
+                            .eq(RolePO::getStatus, 1));
+                    return rolePoConverter.toEntityList(pos).stream()
+                            .filter(RoleEntity::isEnabled)
+                            .toList();
                 })
                 .subscribeOn(BlockingIoSchedulers.jdbc());
     }
@@ -197,5 +203,22 @@ public class RoleRepositoryImpl implements RoleRepository {
      */
     public Mono<Integer> deleteById(Long id) {
         return Mono.fromCallable(() -> roleMapper.deleteById(id)).subscribeOn(BlockingIoSchedulers.jdbc());
+    }
+
+    @Override
+    public Mono<List<Long>> findDataScopeDeptIds(List<Long> roleIds) {
+        if (roleIds == null || roleIds.isEmpty()) {
+            return Mono.just(List.of());
+        }
+        return Mono.fromCallable(
+                        () -> roleDeptMapper
+                                .selectList(ConditionUtil.lambda(RoleDeptPO.class)
+                                        .inIfPresent(RoleDeptPO::getRoleId, roleIds))
+                                .stream()
+                                .map(RoleDeptPO::getDeptId)
+                                .filter(java.util.Objects::nonNull)
+                                .distinct()
+                                .toList())
+                .subscribeOn(BlockingIoSchedulers.jdbc());
     }
 }

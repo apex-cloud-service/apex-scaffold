@@ -1,7 +1,9 @@
 package com.apex.scaffold.generator;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -127,6 +129,186 @@ class CodeGeneratorTest {
                 .contains("V3: 创建 商品表");
     }
 
+    @Test
+    @DisplayName("tenantAware - 开启后实体、PO 与迁移统一生成租户字段")
+    void tenantAware_RendersTenantIsolationContract() throws Exception {
+        TableDefinition tenantDefinition = new ObjectMapper()
+                .readValue(
+                        """
+                {
+                  "module": "order",
+                  "entityName": "Order",
+                  "tableName": "biz_order",
+                  "tableComment": "订单",
+                  "tenantAware": true,
+                  "fields": [
+                    {"name": "orderName", "type": "String", "comment": "订单名称", "required": true}
+                  ]
+                }
+                """,
+                        TableDefinition.class);
+
+        new CodeGenerator().generate(tenantDefinition, tempDir, 8);
+
+        String entity = Files.readString(tempDir.resolve("com/apex/scaffold/domain/model/entity/OrderEntity.java"));
+        String po = Files.readString(tempDir.resolve("com/apex/scaffold/infrastructure/persistence/po/OrderPO.java"));
+        String migration = Files.readString(tempDir.resolve("generated/V8__create_biz_order.sql"));
+
+        assertThat(entity).contains("private String tenantId;").contains("public void setTenantId(String tenantId)");
+        assertThat(po).contains("@TableField(\"tenant_id\")").contains("private String tenantId;");
+        assertThat(migration)
+                .containsPattern("`tenant_id`\\s+VARCHAR\\(64\\)\\s+NOT NULL COMMENT '租户ID'")
+                .contains("KEY `idx_biz_order_tenant_id` (`tenant_id`)");
+    }
+
+    @Test
+    @DisplayName("stateMachine - 开启后生成实体流转、应用服务与测试骨架")
+    void stateMachine_RendersEntityServiceAndTestContract() throws Exception {
+        TableDefinition statefulDefinition = new ObjectMapper()
+                .readValue(
+                        """
+                {
+                  "module": "order",
+                  "entityName": "Order",
+                  "tableName": "biz_order",
+                  "tableComment": "订单",
+                  "stateMachine": {
+                    "field": "status",
+                    "initialState": "PENDING",
+                    "transitions": [
+                      {"from": "PENDING", "to": "PROCESSING"},
+                      {"from": "PROCESSING", "to": "DONE"}
+                    ]
+                  },
+                  "fields": [
+                    {"name": "orderName", "type": "String", "comment": "订单名称", "required": true},
+                    {"name": "status", "type": "String", "comment": "订单状态", "required": true}
+                  ]
+                }
+                """,
+                        TableDefinition.class);
+
+        List<String> files = new CodeGenerator().generate(statefulDefinition, tempDir, 9);
+
+        String entity = Files.readString(tempDir.resolve("com/apex/scaffold/domain/model/entity/OrderEntity.java"));
+        String service = Files.readString(tempDir.resolve("com/apex/scaffold/application/service/OrderService.java"));
+        String test = Files.readString(tempDir.resolve("generated/OrderServiceTest.java"));
+
+        assertThat(files).hasSize(13);
+        assertThat(entity)
+                .contains("StateTransitionMachine<String>")
+                .contains(".allow(\"PENDING\", \"PROCESSING\")")
+                .contains(".allow(\"PROCESSING\", \"DONE\")")
+                .contains("entity.status = \"PENDING\";")
+                .contains("public void transitionTo(String targetState)")
+                .contains("this.status = STATE_MACHINE.transition(this.status, targetState);")
+                .doesNotContain("String orderName,\n            String status")
+                .doesNotContain("this.status = status;");
+        assertThat(service)
+                .contains("OrderEntity.create(\n                            request.getOrderName()")
+                .contains("existing.updateInfo(\n                            request.getOrderName()")
+                .doesNotContain("request.getStatus()")
+                .contains("public Mono<OrderEntity> transition(Long id, String targetState)")
+                .contains("return get(id)")
+                .contains("existing.transitionTo(targetState);")
+                .contains("orderRepository.updateById(existing).map(rows -> existing)")
+                .contains("流转订单状态成功");
+        assertThat(test)
+                .contains("OrderEntity.create(\n                orderName")
+                .doesNotContain("String status = null", "orderName,\n                status")
+                .contains("void transition_Success()")
+                .contains("void transition_RejectsInvalidTargetState()")
+                .contains("orderService.transition(1L, \"PROCESSING\")")
+                .contains("assertThat(transitioned.getStatus())")
+                .contains(".isEqualTo(\"PROCESSING\")")
+                .contains("orderService.transition(1L, \"__INVALID_STATE__\")")
+                .contains("expectError(BusinessException.class)")
+                .contains("verify(orderRepository, never()).updateById(any(OrderEntity.class))");
+    }
+
+    @Test
+    @DisplayName("stateMachine - 空迁移列表时抛出参数异常")
+    void stateMachine_RejectsEmptyTransitions() throws Exception {
+        TableDefinition statefulDefinition = statefulDefinition();
+        statefulDefinition.getStateMachine().getTransitions().clear();
+
+        assertThatThrownBy(() -> new CodeGenerator().generate(statefulDefinition, tempDir, 9))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("状态迁移列表不能为空");
+    }
+
+    @Test
+    @DisplayName("stateMachine - 初始状态不在迁移图中时抛出参数异常")
+    void stateMachine_RejectsInitialStateOutsideTransitionGraph() throws Exception {
+        TableDefinition statefulDefinition = statefulDefinition();
+        statefulDefinition.getStateMachine().setInitialState("UNKNOWN");
+
+        assertThatThrownBy(() -> new CodeGenerator().generate(statefulDefinition, tempDir, 9))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("状态机初始状态必须存在于迁移图中: UNKNOWN");
+    }
+
+    @Test
+    @DisplayName("stateMachine - fields 为 null 时抛出参数异常")
+    void stateMachine_RejectsNullFields() throws Exception {
+        TableDefinition statefulDefinition = statefulDefinition();
+        statefulDefinition.setFields(null);
+
+        assertThatThrownBy(() -> new CodeGenerator().generate(statefulDefinition, tempDir, 9))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("状态机字段列表不能为空");
+    }
+
+    @Test
+    @DisplayName("stateMachine - transitions 为 null 时抛出参数异常")
+    void stateMachine_RejectsNullTransitions() throws Exception {
+        TableDefinition statefulDefinition = statefulDefinition();
+        statefulDefinition.getStateMachine().setTransitions(null);
+
+        assertThatThrownBy(() -> new CodeGenerator().generate(statefulDefinition, tempDir, 9))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("状态迁移列表不能为空");
+    }
+
+    @Test
+    @DisplayName("stateMachine - transition 为 null 时抛出参数异常")
+    void stateMachine_RejectsNullTransition() throws Exception {
+        TableDefinition statefulDefinition = statefulDefinition();
+        statefulDefinition.getStateMachine().getTransitions().add(null);
+
+        assertThatThrownBy(() -> new CodeGenerator().generate(statefulDefinition, tempDir, 9))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("状态迁移不能为空");
+    }
+
+    @Test
+    @DisplayName("stateMachine - 未配置时保持原有实体与服务输出")
+    void stateMachine_DefaultsToDisabled() throws Exception {
+        new CodeGenerator().generate(definition, tempDir, 3);
+
+        String entity = Files.readString(tempDir.resolve("com/apex/scaffold/domain/model/entity/ProductEntity.java"));
+        String service = Files.readString(tempDir.resolve("com/apex/scaffold/application/service/ProductService.java"));
+        String test = Files.readString(tempDir.resolve("generated/ProductServiceTest.java"));
+
+        assertThat(entity).doesNotContain("StateTransitionMachine", "transitionTo");
+        assertThat(service).doesNotContain("transition(Long id, String targetState)");
+        assertThat(test).doesNotContain("transition_Success", "transition_RejectsInvalidTargetState");
+    }
+
+    @Test
+    @DisplayName("tenantAware - 未开启时保持原有非租户输出")
+    void tenantAware_DefaultsToDisabled() throws Exception {
+        new CodeGenerator().generate(definition, tempDir, 3);
+
+        String entity = Files.readString(tempDir.resolve("com/apex/scaffold/domain/model/entity/ProductEntity.java"));
+        String po = Files.readString(tempDir.resolve("com/apex/scaffold/infrastructure/persistence/po/ProductPO.java"));
+        String migration = Files.readString(tempDir.resolve("generated/V3__create_biz_product.sql"));
+
+        assertThat(entity).doesNotContain("tenantId");
+        assertThat(po).doesNotContain("tenantId", "tenant_id");
+        assertThat(migration).doesNotContain("tenant_id");
+    }
+
     /**
      * 测试路由片段渲染正确性。
      */
@@ -198,6 +380,31 @@ class CodeGeneratorTest {
                 .contains("VIEW_REGISTRY")
                 .contains("demo:product:list")
                 .contains("'demo/product/index'");
+    }
+
+    private static TableDefinition statefulDefinition() throws Exception {
+        return new ObjectMapper()
+                .readValue(
+                        """
+                {
+                  "module": "order",
+                  "entityName": "Order",
+                  "tableName": "biz_order",
+                  "tableComment": "订单",
+                  "stateMachine": {
+                    "field": "status",
+                    "initialState": "PENDING",
+                    "transitions": [
+                      {"from": "PENDING", "to": "PROCESSING"}
+                    ]
+                  },
+                  "fields": [
+                    {"name": "orderName", "type": "String", "comment": "订单名称", "required": true},
+                    {"name": "status", "type": "String", "comment": "订单状态", "required": true}
+                  ]
+                }
+                """,
+                        TableDefinition.class);
     }
 
     /**

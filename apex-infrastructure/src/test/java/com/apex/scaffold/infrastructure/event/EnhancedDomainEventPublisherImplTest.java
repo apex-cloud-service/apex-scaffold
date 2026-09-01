@@ -38,8 +38,7 @@ class EnhancedDomainEventPublisherImplTest {
         AtomicBoolean completed = new AtomicBoolean();
         when(domainEventBus.publish(event)).thenReturn(Mono.fromRunnable(() -> completed.set(true)));
 
-        StepVerifier.create(publisher.publishAsync(event))
-                .verifyComplete();
+        StepVerifier.create(publisher.publishAsync(event)).verifyComplete();
 
         assertThat(completed).isTrue();
         verify(applicationEventPublisher).publishEvent(event);

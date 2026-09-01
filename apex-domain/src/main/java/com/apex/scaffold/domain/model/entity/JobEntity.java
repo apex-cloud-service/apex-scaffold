@@ -41,6 +41,8 @@ public class JobEntity extends BaseEntity {
      */
     public static final String DEFAULT_GROUP = "DEFAULT";
 
+    private String tenantId;
+
     /**
      * 任务名称。
      *
@@ -95,6 +97,10 @@ public class JobEntity extends BaseEntity {
      * 备注。
      */
     private String remark;
+
+    public void setTenantId(String value) {
+        this.tenantId = value;
+    }
 
     /** Sets jobName. For persistence/construction use only. */
     public void setJobName(String value) {
@@ -153,7 +159,13 @@ public class JobEntity extends BaseEntity {
      * @return 新创建的定时任务实体，默认允许并发且启用
      */
     public static JobEntity create(String jobName, String jobGroup, String invokeTarget, String cronExpression) {
+        return create(jobName, jobGroup, invokeTarget, cronExpression, null);
+    }
+
+    public static JobEntity create(
+            String jobName, String jobGroup, String invokeTarget, String cronExpression, String tenantId) {
         JobEntity entity = new JobEntity();
+        entity.tenantId = tenantId;
         entity.jobName = jobName;
         entity.jobGroup = jobGroup == null || jobGroup.isBlank() ? DEFAULT_GROUP : jobGroup;
         entity.invokeTarget = invokeTarget;

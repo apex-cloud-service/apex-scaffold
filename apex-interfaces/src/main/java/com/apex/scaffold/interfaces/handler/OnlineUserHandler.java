@@ -1,6 +1,5 @@
 package com.apex.scaffold.interfaces.handler;
 
-import com.apex.scaffold.application.dto.admin.OnlineUserDTO;
 import com.apex.scaffold.application.service.OnlineUserQueryService;
 import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.annotation.RequirePermission;

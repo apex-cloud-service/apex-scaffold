@@ -113,8 +113,7 @@ public class IdempotentApiAspect {
         RequestContext context = resolveRequestContext(joinPoint.getArgs());
         if (context == null) {
             // 防御性日志：AOP 代理下签名恒非空，但单元测试 mock 场景可能为空
-            log.warn("未找到 ServerWebExchange/ServerRequest 参数，跳过 HTTP 幂等校验: {}",
-                    signatureText(joinPoint));
+            log.warn("未找到 ServerWebExchange/ServerRequest 参数，跳过 HTTP 幂等校验: {}", signatureText(joinPoint));
             return joinPoint.proceed();
         }
 
@@ -144,8 +143,7 @@ public class IdempotentApiAspect {
                     try {
                         Object result = joinPoint.proceed();
                         if (result instanceof Mono<?> mono) {
-                            return mono
-                                    .cast(Object.class)
+                            return mono.cast(Object.class)
                                     .onErrorResume(error -> release(cacheKey).then(Mono.error(error)));
                         }
                         // 同步返回：无异常即视为成功，保留幂等键至 TTL 过期
@@ -154,7 +152,8 @@ public class IdempotentApiAspect {
                         return release(cacheKey).then(Mono.error(unwrap(error)));
                     }
                 })
-                .onErrorResume(error -> isRedisUnavailable(error) ? fallbackToProceed(joinPoint, error) : Mono.error(error));
+                .onErrorResume(
+                        error -> isRedisUnavailable(error) ? fallbackToProceed(joinPoint, error) : Mono.error(error));
     }
 
     /**
@@ -190,7 +189,8 @@ public class IdempotentApiAspect {
         Throwable cause = error;
         while (cause != null) {
             String name = cause.getClass().getName();
-            if (name.contains("Redis") || name.contains("RedisConnection")
+            if (name.contains("Redis")
+                    || name.contains("RedisConnection")
                     || cause instanceof org.springframework.data.redis.RedisConnectionFailureException) {
                 return true;
             }
@@ -216,8 +216,7 @@ public class IdempotentApiAspect {
      * @return 原始异常
      */
     private Throwable unwrap(Throwable error) {
-        return error instanceof RuntimeException runtimeException
-                && runtimeException.getCause() != null
+        return error instanceof RuntimeException runtimeException && runtimeException.getCause() != null
                 ? runtimeException.getCause()
                 : error;
     }
@@ -273,9 +272,7 @@ public class IdempotentApiAspect {
         for (Object arg : args) {
             if (arg instanceof ServerRequest request) {
                 return new RequestContext(
-                        request.path(),
-                        request.headers().asHttpHeaders(),
-                        clientIpFromServerRequest(request));
+                        request.path(), request.headers().asHttpHeaders(), clientIpFromServerRequest(request));
             }
         }
         return null;

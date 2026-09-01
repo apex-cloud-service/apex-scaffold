@@ -60,8 +60,10 @@ public class AccountDeletionPortAdapter implements AccountDeletionPort {
                     // 1. 账号立即失效（status 1 → 0），失败说明已禁用或不存在
                     int disabled = userMapper.deactivateForAccountDeletion(command.userId());
                     if (disabled == 0) {
-                        log.info("账号注销：用户已处于禁用状态或不存在，视为已完成，userId={}, requestId={}",
-                                command.userId(), command.requestId());
+                        log.info(
+                                "账号注销：用户已处于禁用状态或不存在，视为已完成，userId={}, requestId={}",
+                                command.userId(),
+                                command.requestId());
                         return null;
                     }
                     // 2. 写入异步清理任务
@@ -71,8 +73,11 @@ public class AccountDeletionPortAdapter implements AccountDeletionPort {
                     po.setStatus(STATUS_PENDING);
                     po.setAttempts(0);
                     taskMapper.insert(po);
-                    log.info("账号注销：任务已入队，jobId={}, userId={}, requestId={}",
-                            po.getId(), command.userId(), command.requestId());
+                    log.info(
+                            "账号注销：任务已入队，jobId={}, userId={}, requestId={}",
+                            po.getId(),
+                            command.userId(),
+                            command.requestId());
                     return new AcceptedDeletion(po.getId(), command.requestId(), STATUS_PENDING);
                 })
                 .subscribeOn(BlockingIoSchedulers.jdbc());

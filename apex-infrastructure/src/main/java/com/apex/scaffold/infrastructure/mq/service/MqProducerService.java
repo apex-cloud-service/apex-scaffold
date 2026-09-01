@@ -1,13 +1,14 @@
 package com.apex.scaffold.infrastructure.mq.service;
 
+import com.apex.scaffold.common.context.TenantContext;
 import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.apache.rocketmq.client.producer.SendCallback;
 import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.client.producer.TransactionSendResult;
-import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.apache.rocketmq.spring.core.RocketMQLocalTransactionState;
+import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -61,7 +62,9 @@ public class MqProducerService {
 
     /** 同步发送超时时间（毫秒） */
     private static final long SYNC_SEND_TIMEOUT_MS = 30000L;
+
     private static final String MESSAGE_ID_HEADER = "apex-message-id";
+    private static final String TENANT_ID_HEADER = "tenantId";
     private static final String ROCKETMQ_KEYS_HEADER = "KEYS";
 
     /**
@@ -220,8 +223,8 @@ public class MqProducerService {
         if (hashKey == null || hashKey.isBlank()) {
             throw new IllegalArgumentException("顺序消息hashKey不能为空");
         }
-        return rocketMQTemplate.syncSendOrderly(destination(topic, tag), buildMessage(message, null), hashKey,
-                SYNC_SEND_TIMEOUT_MS);
+        return rocketMQTemplate.syncSendOrderly(
+                destination(topic, tag), buildMessage(message, null), hashKey, SYNC_SEND_TIMEOUT_MS);
     }
 
     /**
@@ -269,6 +272,7 @@ public class MqProducerService {
         }
         builder.setHeader(MESSAGE_ID_HEADER, messageId);
         builder.setHeader(ROCKETMQ_KEYS_HEADER, messageId);
+        TenantContext.currentTenantId().ifPresent(tenantId -> builder.setHeader(TENANT_ID_HEADER, tenantId));
         return builder.build();
     }
 }

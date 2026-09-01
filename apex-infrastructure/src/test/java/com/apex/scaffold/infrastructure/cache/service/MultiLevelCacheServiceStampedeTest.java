@@ -50,7 +50,8 @@ class MultiLevelCacheServiceStampedeTest {
 
         // L1 恒未命中
         lenient().when(localCacheService.get(anyString(), eq(String.class))).thenReturn(Mono.empty());
-        lenient().when(localCacheService.set(anyString(), any(), any(Duration.class)))
+        lenient()
+                .when(localCacheService.set(anyString(), any(), any(Duration.class)))
                 .thenReturn(Mono.just(true));
         lenient().when(localCacheService.delete(any(String[].class))).thenReturn(Mono.just(1L));
 
@@ -72,10 +73,8 @@ class MultiLevelCacheServiceStampedeTest {
                 })
                 .delayElement(Duration.ofMillis(50));
 
-        Mono<String> first =
-                cacheService.getWithLoader("user:1", String.class, () -> load, Duration.ofMinutes(10));
-        Mono<String> second =
-                cacheService.getWithLoader("user:1", String.class, () -> load, Duration.ofMinutes(10));
+        Mono<String> first = cacheService.getWithLoader("user:1", String.class, () -> load, Duration.ofMinutes(10));
+        Mono<String> second = cacheService.getWithLoader("user:1", String.class, () -> load, Duration.ofMinutes(10));
 
         StepVerifier.create(Mono.zip(first, second, (a, b) -> a + "|" + b))
                 .assertNext(result -> {
@@ -113,7 +112,8 @@ class MultiLevelCacheServiceStampedeTest {
         when(user2Bucket.get()).thenReturn("l2-value");
         when(user3Bucket.get()).thenReturn("__EMPTY__");
 
-        StepVerifier.create(cacheService.getBatch(java.util.Arrays.asList("user:3", null, "user:1", "user:2"), String.class))
+        StepVerifier.create(cacheService.getBatch(
+                        java.util.Arrays.asList("user:3", null, "user:1", "user:2"), String.class))
                 .assertNext(result -> assertThat(result).containsExactly("l1-value", "l2-value"))
                 .verifyComplete();
 

@@ -4,6 +4,7 @@ import com.apex.scaffold.common.constant.SystemConstants;
 import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.common.util.JwtUtil;
 import com.apex.scaffold.domain.model.entity.RoleEntity;
+import com.apex.scaffold.domain.model.entity.UserEntity;
 import com.apex.scaffold.domain.repository.RoleRepository;
 import com.apex.scaffold.domain.repository.UserRepository;
 import com.apex.scaffold.domain.service.TokenBlacklistService;
@@ -40,6 +41,8 @@ import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple2;
+import reactor.util.function.Tuples;
 
 /**
  * JWT认证过滤器
@@ -59,10 +62,10 @@ import reactor.core.publisher.Mono;
  * <ol>
  *   <li>{@link #filter(ServerWebExchange, WebFilterChain)}：入口方法，判断公开路径、提取Token、检查黑名单</li>
  *   <li>{@link #authenticateToken(ServerWebExchange, WebFilterChain, String)}：解析Token，处理异常</li>
- *   <li>{@link #getUserAuthorities(String, boolean)}：根据OpenID获取用户权限（含敏感路径强制刷新）</li>
+ *   <li>{@link #getUserAuthorities(ServerWebExchange, String, boolean)}：根据OpenID获取用户和权限（含敏感路径强制刷新）</li>
  *   <li>{@link #fetchAndCacheUserRoles(Long)}：缓存未命中时，从数据库查询角色并缓存</li>
  *   <li>{@link #buildAuthoritiesFromRoles(List)}：将角色列表转换为Spring Security权限对象</li>
- *   <li>{@link #setAuthenticationContext(ServerWebExchange, WebFilterChain, String, List)}：创建认证信息并存入SecurityContext</li>
+ *   <li>{@link #setAuthenticationContext(ServerWebExchange, WebFilterChain, UserEntity, List)}：创建认证信息并存入SecurityContext</li>
  * </ol>
  *
  * <h2>国际化支持</h2>
@@ -262,8 +265,9 @@ public class JwtAuthenticationFilter implements WebFilter {
                             log.warn("加载用户认证信息失败, openId: {}, error: {}", openId, e.getMessage());
                             return Mono.error(new AuthenticationInfrastructureException(e));
                         })
-                        .flatMap(authorities -> authorities
-                                .map(value -> renewal.then(setAuthenticationContext(exchange, chain, openId, value)))
+                        .flatMap(userAndAuthorities -> userAndAuthorities
+                                .map(value -> renewal.then(
+                                        setAuthenticationContext(exchange, chain, value.getT1(), value.getT2())))
                                 .orElseGet(() -> handleError(exchange, ResultCode.UNAUTHORIZED)))
                         .onErrorResume(
                                 AuthenticationInfrastructureException.class,
@@ -346,10 +350,10 @@ public class JwtAuthenticationFilter implements WebFilter {
      * 用户不存在或已禁用时返回空 Publisher，由认证流程拒绝访问。
      *
      * @param openId 微信 OpenID
-     * @return 用户权限列表的 Mono 包装
+     * @return 用户与权限列表的 Mono 包装
      */
-    private Mono<List<SimpleGrantedAuthority>> getUserAuthorities(
-            ServerWebExchange exchange, String openId, boolean forceFreshRoles) {
+    private Mono<Tuple2<com.apex.scaffold.domain.model.entity.UserEntity, List<SimpleGrantedAuthority>>>
+            getUserAuthorities(ServerWebExchange exchange, String openId, boolean forceFreshRoles) {
         return userRepository
                 .findByOpenId(openId)
                 .filter(user -> {
@@ -364,15 +368,20 @@ public class JwtAuthenticationFilter implements WebFilter {
                     // （DataScopeAspect / 自定义 DataScopeProvider），键名与 MdcDataScopeProvider 对齐。
                     // 注意 attributes 为 ConcurrentHashMap（禁止 null 值），deptId 为空时跳过。
                     exchange.getAttributes().put("apex.userId", user.getId());
+                    exchange.getAttributes()
+                            .put(
+                                    "apex.authenticatedUser",
+                                    new AuthenticatedUser(
+                                            user.getId(), user.getOpenId(), user.getTenantId(), user.getDeptId()));
                     if (user.getDeptId() != null) {
                         exchange.getAttributes().put("apex.deptId", user.getDeptId());
                     }
                     List<SimpleGrantedAuthority> cached =
                             forceFreshRoles ? null : userRolesCache.getIfPresent(user.getId());
                     if (cached != null) {
-                        return Mono.just(cached);
+                        return Mono.just(Tuples.of(user, cached));
                     }
-                    return fetchAndCacheUserRoles(user.getId());
+                    return fetchAndCacheUserRoles(user.getId()).map(authorities -> Tuples.of(user, authorities));
                 });
     }
 
@@ -417,13 +426,6 @@ public class JwtAuthenticationFilter implements WebFilter {
                 .map(role -> new SimpleGrantedAuthority(normalizeRoleAuthority(role.getCode())))
                 .collect(Collectors.toList()));
 
-        boolean isAdmin = roles.stream()
-                .anyMatch(role -> "ADMIN".equalsIgnoreCase(stripRolePrefix(role.getCode()))
-                        || (role.getName() != null
-                                && role.getName().toLowerCase().contains("admin")));
-        if (isAdmin && authorities.stream().noneMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()))) {
-            authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
-        }
         return authorities;
     }
 
@@ -431,23 +433,6 @@ public class JwtAuthenticationFilter implements WebFilter {
     private static String normalizeRoleAuthority(String roleCode) {
         String normalized = roleCode.trim().toUpperCase(java.util.Locale.ROOT);
         return normalized.startsWith("ROLE_") ? normalized : "ROLE_" + normalized;
-    }
-
-    /**
-     * 去除角色编码的 {@code ROLE_} 前缀并统一为大写。
-     *
-     * <p>仅用于 {@code ADMIN} 等特殊角色的比较判断；{@code null} 输入返回空字符串，
-     * 保证比较逻辑不会因空值抛出异常。</p>
-     *
-     * @param roleCode 持久化的角色编码，可为 {@code null}
-     * @return 大写且去除 {@code ROLE_} 前缀后的角色编码；输入为 {@code null} 时返回空字符串
-     */
-    private static String stripRolePrefix(String roleCode) {
-        if (roleCode == null) {
-            return "";
-        }
-        String normalized = roleCode.trim().toUpperCase(java.util.Locale.ROOT);
-        return normalized.startsWith("ROLE_") ? normalized.substring("ROLE_".length()) : normalized;
     }
 
     /**
@@ -459,13 +444,19 @@ public class JwtAuthenticationFilter implements WebFilter {
      *
      * @param exchange    ServerWebExchange 交换对象
      * @param chain       WebFilterChain 过滤器链
-     * @param openId      微信 OpenID（作为认证主体）
+     * @param user        数据库查询到的用户实体
      * @param authorities 用户权限列表
      * @return 携带安全上下文的过滤链处理结果
      */
     private Mono<Void> setAuthenticationContext(
-            ServerWebExchange exchange, WebFilterChain chain, String openId, List<SimpleGrantedAuthority> authorities) {
-        Authentication authentication = new UsernamePasswordAuthenticationToken(openId, null, authorities);
+            ServerWebExchange exchange,
+            WebFilterChain chain,
+            com.apex.scaffold.domain.model.entity.UserEntity user,
+            List<SimpleGrantedAuthority> authorities) {
+        Authentication authentication = new UsernamePasswordAuthenticationToken(
+                new AuthenticatedUser(user.getId(), user.getOpenId(), user.getTenantId(), user.getDeptId()),
+                null,
+                authorities);
         SecurityContext securityContext = new SecurityContextImpl(authentication);
         return chain.filter(exchange)
                 .contextWrite(ReactiveSecurityContextHolder.withSecurityContext(Mono.just(securityContext)));

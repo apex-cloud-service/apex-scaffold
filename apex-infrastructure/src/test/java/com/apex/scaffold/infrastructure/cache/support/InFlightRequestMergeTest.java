@@ -33,11 +33,13 @@ class InFlightRequestMergeTest {
         // 两个订阅几乎同时发起，但只有首个注册的 source 真正执行
         Mono<String> combined = Mono.zip(first, second, (a, b) -> a + "|" + b);
 
-        StepVerifier.create(combined).assertNext(result -> {
-            // 两个订阅者共享同一次加载结果（同为 v1 或同为 v2）
-            assertThat(result).matches("v1\\|v1|v2\\|v2");
-            assertThat(loadCount.get()).isEqualTo(1);
-        }).verifyComplete();
+        StepVerifier.create(combined)
+                .assertNext(result -> {
+                    // 两个订阅者共享同一次加载结果（同为 v1 或同为 v2）
+                    assertThat(result).matches("v1\\|v1|v2\\|v2");
+                    assertThat(loadCount.get()).isEqualTo(1);
+                })
+                .verifyComplete();
     }
 
     @Test
@@ -61,22 +63,28 @@ class InFlightRequestMergeTest {
     void shouldRemoveEntryOnErrorAndAllowRetry() {
         AtomicInteger attempts = new AtomicInteger();
 
-        Mono<String> failed = merge.join("key", () -> Mono.defer(() -> {
-            attempts.incrementAndGet();
-            return Mono.error(new IllegalStateException("db down"));
-        }));
+        Mono<String> failed = merge.join(
+                "key",
+                () -> Mono.defer(() -> {
+                    attempts.incrementAndGet();
+                    return Mono.error(new IllegalStateException("db down"));
+                }));
         StepVerifier.create(failed).expectError(IllegalStateException.class).verify();
 
         assertThat(merge.inflightCount()).isZero();
 
-        Mono<String> retried = merge.join("key", () -> Mono.fromSupplier(() -> {
-            attempts.incrementAndGet();
-            return "recovered";
-        }));
-        StepVerifier.create(retried).assertNext(v -> {
-            assertThat(v).isEqualTo("recovered");
-            assertThat(attempts.get()).isEqualTo(2);
-        }).verifyComplete();
+        Mono<String> retried = merge.join(
+                "key",
+                () -> Mono.fromSupplier(() -> {
+                    attempts.incrementAndGet();
+                    return "recovered";
+                }));
+        StepVerifier.create(retried)
+                .assertNext(v -> {
+                    assertThat(v).isEqualTo("recovered");
+                    assertThat(attempts.get()).isEqualTo(2);
+                })
+                .verifyComplete();
     }
 
     @Test
@@ -87,18 +95,25 @@ class InFlightRequestMergeTest {
         Mono<String> inFlightMono = merge.join("user:1", () -> Mono.fromSupplier(() -> {
                     loadCount.incrementAndGet();
                     return "value";
-                }).delayElement(Duration.ofMillis(10)));
+                })
+                .delayElement(Duration.ofMillis(10)));
 
         // 完成后条目应被移除
-        StepVerifier.create(inFlightMono).assertNext(v -> assertThat(v).isEqualTo("value")).verifyComplete();
+        StepVerifier.create(inFlightMono)
+                .assertNext(v -> assertThat(v).isEqualTo("value"))
+                .verifyComplete();
         assertThat(merge.inflightCount()).isZero();
 
         // 第二次 join 是全新加载（缓存层应命中，不会到这里；此处验证合并器语义）
-        Mono<String> second = merge.join("user:1", () -> Mono.fromSupplier(() -> {
-            loadCount.incrementAndGet();
-            return "value2";
-        }));
-        StepVerifier.create(second).assertNext(v -> assertThat(v).isEqualTo("value2")).verifyComplete();
+        Mono<String> second = merge.join(
+                "user:1",
+                () -> Mono.fromSupplier(() -> {
+                    loadCount.incrementAndGet();
+                    return "value2";
+                }));
+        StepVerifier.create(second)
+                .assertNext(v -> assertThat(v).isEqualTo("value2"))
+                .verifyComplete();
         assertThat(loadCount.get()).isEqualTo(2);
     }
 

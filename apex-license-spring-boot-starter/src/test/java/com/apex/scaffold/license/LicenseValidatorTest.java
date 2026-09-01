@@ -87,8 +87,7 @@ class LicenseValidatorTest {
     @DisplayName("错误公钥（其他系统）验证失败")
     void wrongPublicKeyRejected() throws Exception {
         KeyPair otherKeyPair = RsaUtil.generateKeyPair();
-        LicenseValidator validator =
-                new LicenseValidator(RsaUtil.publicKeyToBase64(otherKeyPair.getPublic()));
+        LicenseValidator validator = new LicenseValidator(RsaUtil.publicKeyToBase64(otherKeyPair.getPublic()));
         assertThatThrownBy(() -> validator.loadFromJson(TestLicenses.toJson(basicLicense())))
                 .isInstanceOf(LicenseException.class);
     }

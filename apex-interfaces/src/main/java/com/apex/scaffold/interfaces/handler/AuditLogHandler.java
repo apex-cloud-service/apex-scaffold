@@ -1,9 +1,8 @@
 package com.apex.scaffold.interfaces.handler;
 
+import com.apex.scaffold.application.service.AuditLogQueryService;
 import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.annotation.RequirePermission;
-
-import com.apex.scaffold.application.service.AuditLogQueryService;
 import com.apex.scaffold.interfaces.util.MessageUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -66,7 +65,8 @@ public class AuditLogHandler extends BaseHandler {
         int page = safeParseInt(request.queryParam("page").orElse(null), 1);
         int size = safeParseInt(request.queryParam("size").orElse(null), 20);
         String module = request.queryParam("module").filter(v -> !v.isBlank()).orElse(null);
-        String operatorName = request.queryParam("operatorName").filter(v -> !v.isBlank()).orElse(null);
+        String operatorName =
+                request.queryParam("operatorName").filter(v -> !v.isBlank()).orElse(null);
         return auditLogQueryService.search(module, operatorName, page, size).flatMap(this::buildSuccess);
     }
 }

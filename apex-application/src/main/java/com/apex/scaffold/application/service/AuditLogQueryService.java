@@ -49,10 +49,12 @@ public class AuditLogQueryService {
      * @return 审计日志 DTO 分页结果
      */
     public Mono<PageResponse<AuditLogDTO>> search(String module, String operatorName, int pageNum, int pageSize) {
-        return auditLogQueryRepository.search(module, operatorName, pageNum, pageSize).map(page -> {
-            var dtos = page.getList().stream().map(this::toDto).collect(Collectors.toList());
-            return PageResponse.of(dtos, page.getTotal(), page.getPageNum(), page.getPageSize());
-        });
+        return auditLogQueryRepository
+                .search(module, operatorName, pageNum, pageSize)
+                .map(page -> {
+                    var dtos = page.getList().stream().map(this::toDto).collect(Collectors.toList());
+                    return PageResponse.of(dtos, page.getTotal(), page.getPageNum(), page.getPageSize());
+                });
     }
 
     /**

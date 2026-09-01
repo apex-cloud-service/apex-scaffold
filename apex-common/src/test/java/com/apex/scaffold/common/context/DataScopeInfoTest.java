@@ -85,8 +85,7 @@ class DataScopeInfoTest {
             DataScopeInfo info = new DataScopeInfo(DataScopeType.CUSTOM, null, null, mutable);
             mutable.add(3L);
             assertThat(info.deptIds()).containsExactly(1L, 2L);
-            assertThatThrownBy(() -> info.deptIds().add(9L))
-                    .isInstanceOf(UnsupportedOperationException.class);
+            assertThatThrownBy(() -> info.deptIds().add(9L)).isInstanceOf(UnsupportedOperationException.class);
         }
     }
 

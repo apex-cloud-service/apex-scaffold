@@ -55,7 +55,8 @@ public class DeptService {
      * @throws BusinessException 部门不存在时抛出
      */
     public Mono<DeptDTO> get(Long id) {
-        return deptRepository.findById(id)
+        return deptRepository
+                .findById(id)
                 .map(this::toDto)
                 .switchIfEmpty(Mono.error(new BusinessException(ResultCode.NOT_FOUND)));
     }
@@ -81,8 +82,16 @@ public class DeptService {
      * @return 更新后的部门 DTO
      */
     public Mono<DeptDTO> update(Long id, DeptEntity dept) {
+        if (dept.getLockVersion() == null) {
+            return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "部门版本不能为空"));
+        }
         dept.setId(id);
-        return resolveAncestors(dept).flatMap(d -> deptRepository.save(d)).map(this::toDto);
+        return deptRepository
+                .findById(id)
+                .switchIfEmpty(Mono.error(new BusinessException(ResultCode.NOT_FOUND)))
+                .then(resolveAncestors(dept))
+                .flatMap(d -> deptRepository.save(d))
+                .map(this::toDto);
     }
 
     /**
@@ -110,7 +119,8 @@ public class DeptService {
             dept.setAncestors("0");
             return Mono.just(dept);
         }
-        return deptRepository.findById(parentId)
+        return deptRepository
+                .findById(parentId)
                 .map(parent -> {
                     dept.setAncestors(parent.getAncestors() + "," + parentId);
                     return dept;
@@ -151,6 +161,7 @@ public class DeptService {
         dto.setPhone(e.getPhone());
         dto.setEmail(e.getEmail());
         dto.setStatus(e.getStatus());
+        dto.setLockVersion(e.getLockVersion());
         return dto;
     }
 }

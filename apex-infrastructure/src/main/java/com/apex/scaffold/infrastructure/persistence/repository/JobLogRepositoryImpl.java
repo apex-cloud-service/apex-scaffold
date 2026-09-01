@@ -59,6 +59,9 @@ public class JobLogRepositoryImpl implements JobLogRepository {
      */
     @Override
     public Mono<List<JobLogEntity>> findLatestByJobId(Long jobId, int limit) {
+        if (limit <= 0) {
+            throw new IllegalArgumentException("日志条数必须大于0");
+        }
         return Mono.fromCallable(() -> jobLogMapper.selectList(ConditionUtil.lambda(JobLogPO.class)
                         .eq(JobLogPO::getJobId, jobId)
                         .orderByDesc(JobLogPO::getStartTime)

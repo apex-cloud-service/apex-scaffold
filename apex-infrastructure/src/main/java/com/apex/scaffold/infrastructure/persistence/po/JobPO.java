@@ -24,6 +24,8 @@ public class JobPO extends BasePO {
      */
     public JobPO() {}
 
+    private String tenantId;
+
     /**
      * 任务名称。
      */

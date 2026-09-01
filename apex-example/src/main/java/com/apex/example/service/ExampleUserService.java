@@ -129,8 +129,7 @@ public class ExampleUserService {
     public Mono<UserResponse> getUserFromSlave(Long id) {
         log.debug("从从库(slave)查询用户, id={}", id);
 
-        return Mono.fromCallable(() -> userMapper.selectById(id))
-                .map(this::convertToResponse);
+        return Mono.fromCallable(() -> userMapper.selectById(id)).map(this::convertToResponse);
     }
 
     /**

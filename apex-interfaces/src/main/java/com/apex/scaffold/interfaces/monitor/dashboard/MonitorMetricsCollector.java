@@ -1,18 +1,16 @@
 package com.apex.scaffold.interfaces.monitor.dashboard;
 
-import com.apex.scaffold.interfaces.dto.monitor.MonitorBusinessResponse;
-import com.apex.scaffold.interfaces.dto.monitor.MonitorGovernanceResponse;
-import com.apex.scaffold.interfaces.dto.monitor.MonitorMiddlewareResponse;
-import com.apex.scaffold.interfaces.dto.monitor.MonitorOverviewResponse;
-import com.apex.scaffold.interfaces.dto.monitor.MonitorSystemResponse;
-import com.alibaba.csp.sentinel.slots.block.authority.AuthorityRule;
 import com.alibaba.csp.sentinel.slots.block.authority.AuthorityRuleManager;
 import com.alibaba.csp.sentinel.slots.block.degrade.DegradeRule;
 import com.alibaba.csp.sentinel.slots.block.degrade.DegradeRuleManager;
 import com.alibaba.csp.sentinel.slots.block.flow.FlowRule;
 import com.alibaba.csp.sentinel.slots.block.flow.FlowRuleManager;
-import com.alibaba.csp.sentinel.slots.block.flow.param.ParamFlowRule;
 import com.alibaba.csp.sentinel.slots.block.flow.param.ParamFlowRuleManager;
+import com.apex.scaffold.interfaces.dto.monitor.MonitorBusinessResponse;
+import com.apex.scaffold.interfaces.dto.monitor.MonitorGovernanceResponse;
+import com.apex.scaffold.interfaces.dto.monitor.MonitorMiddlewareResponse;
+import com.apex.scaffold.interfaces.dto.monitor.MonitorOverviewResponse;
+import com.apex.scaffold.interfaces.dto.monitor.MonitorSystemResponse;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.micrometer.core.instrument.Gauge;
@@ -39,7 +37,6 @@ import java.util.Enumeration;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -273,9 +270,7 @@ public class MonitorMetricsCollector {
                 gauge(M_PROCESS_FILES_MAX));
 
         MonitorSystemResponse.ThreadStats threadStats = new MonitorSystemResponse.ThreadStats(
-                gauge(M_JVM_THREADS_LIVE),
-                gauge(M_JVM_THREADS_PEAK),
-                gauge(M_JVM_THREADS_DAEMON));
+                gauge(M_JVM_THREADS_LIVE), gauge(M_JVM_THREADS_PEAK), gauge(M_JVM_THREADS_DAEMON));
 
         return new MonitorSystemResponse(
                 System.currentTimeMillis(),
@@ -297,11 +292,7 @@ public class MonitorMetricsCollector {
      */
     public MonitorMiddlewareResponse middleware() {
         return new MonitorMiddlewareResponse(
-                System.currentTimeMillis(),
-                mysqlStats(),
-                redisStats(),
-                mqStats(),
-                tracingStats());
+                System.currentTimeMillis(), mysqlStats(), redisStats(), mqStats(), tracingStats());
     }
 
     /* ==================== 治理 ==================== */
@@ -315,11 +306,7 @@ public class MonitorMetricsCollector {
         return new MonitorGovernanceResponse(
                 System.currentTimeMillis(),
                 new MonitorGovernanceResponse.SentinelStats(
-                        sentinelEnabled(),
-                        flowRules(),
-                        degradeRules(),
-                        authorityRules(),
-                        paramFlowRules()),
+                        sentinelEnabled(), flowRules(), degradeRules(), authorityRules(), paramFlowRules()),
                 new MonitorGovernanceResponse.SecurityCounters(
                         counter(M_RATE_LIMIT_REJECTED),
                         counter(M_CIRCUIT_OPENED),
@@ -351,15 +338,16 @@ public class MonitorMetricsCollector {
         // 更新趋势聚合
         metrics.forEach(m -> recordTrend(m.key(), m.name(), m.unit(), m.value()));
 
-        List<MonitorBusinessResponse.BusinessTrend> trends =
-                businessTrends.entrySet().stream()
-                        .map(entry -> new MonitorBusinessResponse.BusinessTrend(
-                                entry.getValue().peekLast() == null ? entry.getKey() : entry.getValue().peekLast().name(),
-                                entry.getKey(),
-                                entry.getValue().stream()
-                                        .map(b -> new MonitorBusinessResponse.TrendPoint(b.time(), b.value()))
-                                        .toList()))
-                        .toList();
+        List<MonitorBusinessResponse.BusinessTrend> trends = businessTrends.entrySet().stream()
+                .map(entry -> new MonitorBusinessResponse.BusinessTrend(
+                        entry.getValue().peekLast() == null
+                                ? entry.getKey()
+                                : entry.getValue().peekLast().name(),
+                        entry.getKey(),
+                        entry.getValue().stream()
+                                .map(b -> new MonitorBusinessResponse.TrendPoint(b.time(), b.value()))
+                                .toList()))
+                .toList();
 
         return new MonitorBusinessResponse(System.currentTimeMillis(), metrics, trends);
     }
@@ -379,12 +367,7 @@ public class MonitorMetricsCollector {
                 long usable = store.getUsableSpace();
                 long free = store.getUnallocatedSpace();
                 list.add(new MonitorSystemResponse.DiskUsage(
-                        store.name(),
-                        store.type(),
-                        total,
-                        free,
-                        usable,
-                        safeRatio(total - usable, total)));
+                        store.name(), store.type(), total, free, usable, safeRatio(total - usable, total)));
             }
         } catch (Exception e) {
             log.debug("采集磁盘指标失败: {}", e.getMessage());
@@ -417,15 +400,7 @@ public class MonitorMetricsCollector {
                     }
                 }
                 long speed = -1; // 链路速率 Java 无法直接获取
-                list.add(new MonitorSystemResponse.NetworkUsage(
-                        net.getName(),
-                        net.isUp(),
-                        speed,
-                        rx,
-                        tx,
-                        0,
-                        0,
-                        false));
+                list.add(new MonitorSystemResponse.NetworkUsage(net.getName(), net.isUp(), speed, rx, tx, 0, 0, false));
             }
             if (linux && !list.isEmpty()) {
                 fillNetRates(list);
@@ -586,16 +561,10 @@ public class MonitorMetricsCollector {
     private MonitorMiddlewareResponse.MqStats mqStats() {
         RocketMQTemplate template = rocketMQTemplateProvider.getIfAvailable();
         if (template == null || template.getProducer() == null) {
-            return new MonitorMiddlewareResponse.MqStats(
-                    false, "RocketMQ", rocketMqNameServer, null, "未接入", 0);
+            return new MonitorMiddlewareResponse.MqStats(false, "RocketMQ", rocketMqNameServer, null, "未接入", 0);
         }
         return new MonitorMiddlewareResponse.MqStats(
-                true,
-                "RocketMQ",
-                rocketMqNameServer,
-                template.getProducer().getProducerGroup(),
-                "RUNNING",
-                0);
+                true, "RocketMQ", rocketMqNameServer, template.getProducer().getProducerGroup(), "RUNNING", 0);
     }
 
     /**
@@ -609,12 +578,7 @@ public class MonitorMetricsCollector {
     private MonitorMiddlewareResponse.TracingStats tracingStats() {
         boolean available = zipkinUrl != null && !zipkinUrl.isBlank();
         return new MonitorMiddlewareResponse.TracingStats(
-                available,
-                "Brave/Zipkin",
-                available ? zipkinUrl : null,
-                samplingRate,
-                0,
-                0);
+                available, "Brave/Zipkin", available ? zipkinUrl : null, samplingRate, 0, 0);
     }
 
     /* ==================== 治理实现 ==================== */
@@ -688,13 +652,7 @@ public class MonitorMetricsCollector {
         try {
             return AuthorityRuleManager.getRules().stream()
                     .map(rule -> new MonitorGovernanceResponse.SentinelRule(
-                            rule.getResource(),
-                            "授权",
-                            rule.getStrategy(),
-                            rule.getLimitApp(),
-                            null,
-                            null,
-                            true))
+                            rule.getResource(), "授权", rule.getStrategy(), rule.getLimitApp(), null, null, true))
                     .toList();
         } catch (Exception e) {
             return Collections.emptyList();
@@ -784,7 +742,8 @@ public class MonitorMetricsCollector {
         }
 
         List<MonitorGovernanceResponse.PathTraffic> topPaths = byPath.values().stream()
-                .sorted(Comparator.comparingDouble((PathAggregate agg) -> agg.count).reversed())
+                .sorted(Comparator.comparingDouble((PathAggregate agg) -> agg.count)
+                        .reversed())
                 .limit(10)
                 .map(agg -> new MonitorGovernanceResponse.PathTraffic(
                         agg.path,
@@ -907,10 +866,7 @@ public class MonitorMetricsCollector {
      * @return 计数值
      */
     private double counter(String name) {
-        return meterRegistry
-                .find(name)
-                .counters()
-                .stream()
+        return meterRegistry.find(name).counters().stream()
                 .mapToDouble(io.micrometer.core.instrument.Counter::count)
                 .sum();
     }
@@ -923,9 +879,7 @@ public class MonitorMetricsCollector {
      */
     private double apiErrorCount(int statusClass) {
         return meterRegistry.find(M_API_REQUEST_COUNT).meters().stream()
-                .filter(meter -> meterTags(meter)
-                        .getOrDefault("status", "")
-                        .startsWith(String.valueOf(statusClass)))
+                .filter(meter -> meterTags(meter).getOrDefault("status", "").startsWith(String.valueOf(statusClass)))
                 .filter(meter -> meter instanceof io.micrometer.core.instrument.Counter)
                 .mapToDouble(meter -> ((io.micrometer.core.instrument.Counter) meter).count())
                 .sum();
@@ -939,9 +893,8 @@ public class MonitorMetricsCollector {
      */
     private double gatewayErrorCount(int statusClass) {
         return meterRegistry.find(M_GATEWAY_REQUEST_COUNT).meters().stream()
-                .filter(meter -> meterTags(meter)
-                        .getOrDefault("statusClass", "")
-                        .startsWith(String.valueOf(statusClass)))
+                .filter(meter ->
+                        meterTags(meter).getOrDefault("statusClass", "").startsWith(String.valueOf(statusClass)))
                 .filter(meter -> meter instanceof io.micrometer.core.instrument.Counter)
                 .mapToDouble(meter -> ((io.micrometer.core.instrument.Counter) meter).count())
                 .sum();
@@ -1011,7 +964,10 @@ public class MonitorMetricsCollector {
      */
     private static Map<String, String> meterTags(Meter meter) {
         return meter.getId().getTags().stream()
-                .collect(Collectors.toMap(io.micrometer.core.instrument.Tag::getKey, io.micrometer.core.instrument.Tag::getValue, (a, b) -> a));
+                .collect(Collectors.toMap(
+                        io.micrometer.core.instrument.Tag::getKey,
+                        io.micrometer.core.instrument.Tag::getValue,
+                        (a, b) -> a));
     }
 
     /**
@@ -1022,7 +978,10 @@ public class MonitorMetricsCollector {
      */
     private static Map<String, String> timerTags(Timer timer) {
         return timer.getId().getTags().stream()
-                .collect(Collectors.toMap(io.micrometer.core.instrument.Tag::getKey, io.micrometer.core.instrument.Tag::getValue, (a, b) -> a));
+                .collect(Collectors.toMap(
+                        io.micrometer.core.instrument.Tag::getKey,
+                        io.micrometer.core.instrument.Tag::getValue,
+                        (a, b) -> a));
     }
 
     /* ==================== 辅助工具 ==================== */

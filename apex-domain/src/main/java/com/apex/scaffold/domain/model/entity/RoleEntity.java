@@ -1,5 +1,6 @@
 package com.apex.scaffold.domain.model.entity;
 
+import com.apex.scaffold.common.enums.DataScopeType;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -83,6 +84,12 @@ public class RoleEntity extends BaseEntity {
      * @see #isEnabled()
      */
     private Integer status;
+
+    private DataScopeType dataScope;
+
+    public void setDataScope(DataScopeType value) {
+        this.dataScope = value;
+    }
 
     /** Sets name. For persistence/construction use only. */
     public void setName(String value) {

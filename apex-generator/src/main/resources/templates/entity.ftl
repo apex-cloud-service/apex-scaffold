@@ -1,5 +1,6 @@
 package ${domainPackage}.model.entity;
 
+<#if stateMachineEnabled>import com.apex.scaffold.common.state.StateTransitionMachine;</#if>
 import java.time.LocalDateTime;
 import java.math.BigDecimal;
 import lombok.EqualsAndHashCode;
@@ -32,6 +33,23 @@ public class ${entityName}Entity extends BaseEntity {
      */
     private static final long serialVersionUID = 1L;
 
+<#if stateMachineEnabled>
+    private static final StateTransitionMachine<String> STATE_MACHINE =
+            StateTransitionMachine.<String>builder()
+<#list stateTransitions as transition>
+                    .allow("${transition.from}", "${transition.to}")
+</#list>
+                    .build();
+
+</#if>
+<#if tenantAware>
+    private String tenantId;
+
+    public void setTenantId(String tenantId) {
+        this.tenantId = tenantId;
+    }
+
+</#if>
 <#list fields as field>
     /**
      * ${field.comment}。
@@ -54,19 +72,22 @@ public class ${entityName}Entity extends BaseEntity {
     /**
      * 静态工厂方法：创建${tableComment}。
      *
-<#list fields as field>
+<#list createFields as field>
      * @param ${field.name} ${field.comment}
 </#list>
      * @return 新创建的${tableComment}实体
      */
     public static ${entityName}Entity create(
-<#list fields as field>
+<#list createFields as field>
             ${field.type} ${field.name}<#if field?has_next>,</#if>
 </#list>) {
         ${entityName}Entity entity = new ${entityName}Entity();
-<#list fields as field>
+<#list createFields as field>
         entity.${field.name} = ${field.name};
 </#list>
+<#if stateMachineEnabled>
+        entity.${stateField} = "${initialState}";
+</#if>
         entity.initTimestamps();
         return entity;
     }
@@ -74,17 +95,24 @@ public class ${entityName}Entity extends BaseEntity {
     /**
      * 领域行为：更新${tableComment}核心信息。
      *
-<#list fields as field>
+<#list updateFields as field>
      * @param ${field.name} ${field.comment}
 </#list>
      */
     public void updateInfo(
-<#list fields as field>
+<#list updateFields as field>
             ${field.type} ${field.name}<#if field?has_next>,</#if>
 </#list>) {
-<#list fields as field>
+<#list updateFields as field>
         this.${field.name} = ${field.name};
 </#list>
         touch();
     }
+<#if stateMachineEnabled>
+
+    public void transitionTo(String targetState) {
+        this.${stateField} = STATE_MACHINE.transition(this.${stateField}, targetState);
+        touch();
+    }
+</#if>
 }

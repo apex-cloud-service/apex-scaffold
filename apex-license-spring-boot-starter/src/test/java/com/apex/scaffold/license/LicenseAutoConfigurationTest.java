@@ -2,10 +2,6 @@ package com.apex.scaffold.license;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
 import java.security.KeyPair;
 import java.time.LocalDateTime;
 import org.junit.jupiter.api.DisplayName;
@@ -91,9 +87,8 @@ class LicenseAutoConfigurationTest {
     @Test
     @DisplayName("recheck-interval=0 时调度器为空操作（Bean 仍注册）")
     void schedulerIsNoOpWhenRecheckDisabled() {
-        contextRunner
-                .withPropertyValues("apex.license.recheck-interval=0")
-                .run(context -> assertThat(context).hasSingleBean(LicenseRevalidationScheduler.class));
+        contextRunner.withPropertyValues("apex.license.recheck-interval=0").run(context -> assertThat(context)
+                .hasSingleBean(LicenseRevalidationScheduler.class));
     }
 
     // ==================== @ConditionalOnLicenseFeature 条件装配 ====================
@@ -134,8 +129,7 @@ class LicenseAutoConfigurationTest {
                 "rbac");
 
         // 将已签名 License 写入临时文件（含 rbac 授权）
-        java.nio.file.Path licenseFile =
-                java.nio.file.Files.createTempFile("apex-license-test", ".json");
+        java.nio.file.Path licenseFile = java.nio.file.Files.createTempFile("apex-license-test", ".json");
         java.nio.file.Files.write(
                 licenseFile, TestLicenses.toJson(license).getBytes(java.nio.charset.StandardCharsets.UTF_8));
 
@@ -150,7 +144,8 @@ class LicenseAutoConfigurationTest {
                     .withUserConfiguration(RbacGatedConfig.class)
                     .run(context -> {
                         assertThat(context).hasSingleBean(LicenseValidator.class);
-                        assertThat(context.getBean(LicenseValidator.class).isValidated()).isTrue();
+                        assertThat(context.getBean(LicenseValidator.class).isValidated())
+                                .isTrue();
                         // 授权 License 在场：rbac 商业组件装配
                         assertThat(context).hasBean("rbacMarker");
                     });

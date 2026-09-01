@@ -121,7 +121,10 @@ class DataSourceSwitchAspectTest {
 
             proxy.probeSync();
 
-            assertThat(registry.get("apex.datasource.switch.count").tag("target", "slave").counter().count())
+            assertThat(registry.get("apex.datasource.switch.count")
+                            .tag("target", "slave")
+                            .counter()
+                            .count())
                     .isEqualTo(1);
         }
 

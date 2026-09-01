@@ -67,9 +67,7 @@ public class AutoRetryAspect {
                 return Mono.error(failure);
             }
             recordRetry();
-            long retryDelay = Math.min(
-                    maxDelay,
-                    (long) (delay * Math.pow(multiplier, signal.totalRetries())));
+            long retryDelay = Math.min(maxDelay, (long) (delay * Math.pow(multiplier, signal.totalRetries())));
             return Mono.delay(java.time.Duration.ofMillis(Math.max(0, retryDelay)))
                     .thenReturn(signal);
         }));
@@ -86,7 +84,8 @@ public class AutoRetryAspect {
 
     private long delay(AutoRetry annotation, int attempt) {
         double multiplier = Math.max(1.0, annotation.backoffMultiplier());
-        return Math.min(annotation.maxDelayMs(), (long) (annotation.retryDelayMs() * Math.pow(multiplier, attempt - 1)));
+        return Math.min(
+                annotation.maxDelayMs(), (long) (annotation.retryDelayMs() * Math.pow(multiplier, attempt - 1)));
     }
 
     private void sleep(long delay) throws InterruptedException {

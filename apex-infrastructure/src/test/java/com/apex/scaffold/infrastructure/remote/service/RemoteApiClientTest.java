@@ -4,9 +4,9 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+import com.apex.scaffold.domain.gateway.RemoteApiException;
 import com.apex.scaffold.infrastructure.remote.config.RemoteApiProperties;
 import com.apex.scaffold.infrastructure.remote.config.RemoteApiProperties.ServiceConfig;
-import com.apex.scaffold.domain.gateway.RemoteApiException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

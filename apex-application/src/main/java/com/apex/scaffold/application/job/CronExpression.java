@@ -22,7 +22,7 @@ import java.util.TreeSet;
  * <h2>字段语法</h2>
  * <ul>
  *   <li>{@code *} — 任意值</li>
- *   <li>{@code ?} — 不指定（日与周字段互斥使用，语义同 {@code *}）</li>
+ *   <li>{@code ?} — 不指定，仅允许单独用于日字段或周字段</li>
  *   <li>{@code 1,5,10} — 列表</li>
  *   <li>{@code 1-5} — 范围</li>
  *   <li>{@code &#42;/5} — 步长</li>
@@ -31,7 +31,7 @@ import java.util.TreeSet;
  *
  * <h2>周字段说明</h2>
  * <p>周字段取值 1-7，其中 1 表示周日（与 Quartz 一致），2-7 表示周一至周六。
- * 当日与周字段均指定具体值时按"或"语义匹配（与 Quartz 一致）。</p>
+ * 日字段与周字段必须且只能有一个使用 {@code ?}。</p>
  *
  * <h2>线程安全</h2>
  * <p>实例解析完成后不可变，可安全并发复用。</p>
@@ -91,10 +91,10 @@ public final class CronExpression {
     /** 周字段取值集合（1-7，index=day-1）。 */
     private final BitSet daysOfWeek = new BitSet(7);
 
-    /** 是否显式指定了日字段（区分 {@code *} 与具体值，用于日/周 OR 语义）。 */
+    /** 是否显式指定了日字段。 */
     private final boolean dayFieldSpecified;
 
-    /** 是否显式指定了周字段（区分 {@code *} 与具体值，用于日/周 OR 语义）。 */
+    /** 是否显式指定了周字段。 */
     private final boolean weekFieldSpecified;
 
     /** 年字段取值集合（1970-2099，index=year-1970），为空表示不限制年份。 */
@@ -117,6 +117,8 @@ public final class CronExpression {
             throw new IllegalArgumentException("Cron表达式必须包含6段（秒-周）或7段（秒-年），当前为 " + fields.length + " 段");
         }
 
+        validateQuestionMarks(fields);
+
         parseField(fields[0], 0, 59, null, seconds);
         parseField(fields[1], 0, 59, null, minutes);
         parseField(fields[2], 0, 23, null, hours);
@@ -133,6 +135,23 @@ public final class CronExpression {
 
         if (fields.length == 7) {
             parseField(fields[6], 1970, 2099, null, years);
+        }
+    }
+
+    private void validateQuestionMarks(String[] fields) {
+        for (int index = 0; index < fields.length; index++) {
+            if (index != 3 && index != 5 && fields[index].contains("?")) {
+                throw new IllegalArgumentException("问号只能用于日字段或周字段");
+            }
+        }
+
+        String dayField = fields[3];
+        String weekField = fields[5];
+        if ((dayField.contains("?") && !"?".equals(dayField)) || (weekField.contains("?") && !"?".equals(weekField))) {
+            throw new IllegalArgumentException("问号必须单独用于日字段或周字段");
+        }
+        if ("?".equals(dayField) == "?".equals(weekField)) {
+            throw new IllegalArgumentException("日字段和周字段必须且只能有一个使用问号");
         }
     }
 
@@ -183,7 +202,7 @@ public final class CronExpression {
                 }
             } else {
                 rangeStart = resolveValue(rangeStr, names, min, max);
-                rangeEnd = rangeStart;
+                rangeEnd = stepStr == null ? rangeStart : max;
             }
 
             for (int v = rangeStart; v <= rangeEnd; v += step) {
@@ -272,19 +291,13 @@ public final class CronExpression {
     /**
      * 判断日期是否满足日/周字段约束。
      *
-     * <p>日与周字段采用"或"语义：任一匹配即通过（与 Quartz 一致）。
-     * 当两个字段都未显式指定（均为 {@code *}）时恒为真。</p>
-     *
      * @param t 候选时间
      * @return true-日期匹配
      */
     private boolean dayMatches(LocalDateTime t) {
-        boolean dayOk = !dayFieldSpecified || daysOfMonth.get(t.getDayOfMonth() - 1);
-        boolean weekOk = !weekFieldSpecified || daysOfWeek.get(toCronDayOfWeek(t) - 1);
-        if (dayFieldSpecified && weekFieldSpecified) {
-            return dayOk || weekOk;
-        }
-        return dayFieldSpecified ? dayOk : weekOk;
+        return dayFieldSpecified
+                ? daysOfMonth.get(t.getDayOfMonth() - 1)
+                : !weekFieldSpecified || daysOfWeek.get(toCronDayOfWeek(t) - 1);
     }
 
     /**

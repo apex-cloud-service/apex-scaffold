@@ -1,6 +1,7 @@
 package com.apex.scaffold.application.job;
 
 import com.apex.scaffold.application.service.JobLogService;
+import com.apex.scaffold.common.context.TenantContext;
 import com.apex.scaffold.domain.model.entity.JobEntity;
 import com.apex.scaffold.domain.model.entity.JobLogEntity;
 import jakarta.annotation.PreDestroy;
@@ -10,7 +11,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -93,7 +93,7 @@ public class JobScheduler {
      */
     public Mono<Void> register(JobEntity job) {
         return Mono.fromRunnable(() -> {
-            unregister(job.getId());
+            cancelSchedule(job.getId());
             if (job.isEnabled()) {
                 schedules.put(job.getId(), scheduleLoop(job));
                 log.info("定时任务已注册调度，name: {}, cron: {}", job.getJobName(), job.getCronExpression());
@@ -109,13 +109,17 @@ public class JobScheduler {
      */
     public Mono<Void> unregister(Long jobId) {
         return Mono.fromRunnable(() -> {
-            Disposable disposable = schedules.remove(jobId);
-            if (disposable != null && !disposable.isDisposed()) {
-                disposable.dispose();
-                log.info("定时任务调度已取消，jobId: {}", jobId);
-            }
+            cancelSchedule(jobId);
             running.remove(jobId);
         });
+    }
+
+    private void cancelSchedule(Long jobId) {
+        Disposable disposable = schedules.remove(jobId);
+        if (disposable != null && !disposable.isDisposed()) {
+            disposable.dispose();
+            log.info("定时任务调度已取消，jobId: {}", jobId);
+        }
     }
 
     /**
@@ -155,10 +159,7 @@ public class JobScheduler {
      * @return 调度链的可取消句柄
      */
     private Disposable scheduleLoop(JobEntity job) {
-        AtomicReference<Disposable> self = new AtomicReference<>();
-        Disposable disposable = loop(job, self).subscribe();
-        self.set(disposable);
-        return disposable;
+        return loop(job).subscribe();
     }
 
     /**
@@ -172,11 +173,8 @@ public class JobScheduler {
      * @param self 当前调度链句柄引用
      * @return 单轮调度链
      */
-    private Mono<Void> loop(JobEntity job, AtomicReference<Disposable> self) {
+    private Mono<Void> loop(JobEntity job) {
         return Mono.defer(() -> {
-            if (self.get() == null || self.get().isDisposed()) {
-                return Mono.empty();
-            }
             long delayMs = nextDelayMillis(job);
             if (delayMs < 0) {
                 log.warn("任务无未来触发时间，调度终止，name: {}, cron: {}", job.getJobName(), job.getCronExpression());
@@ -188,7 +186,7 @@ public class JobScheduler {
                         log.error("任务执行异常，name: {}", job.getJobName(), error);
                         return Mono.empty();
                     })
-                    .then(Mono.defer(() -> loop(job, self)));
+                    .then(Mono.defer(() -> loop(job)));
         });
     }
 
@@ -226,19 +224,48 @@ public class JobScheduler {
             log.warn("任务禁止并发执行且上一轮未完成，跳过本轮，name: {}", job.getJobName());
             return Mono.empty();
         }
-        return Mono.fromCallable(() -> {
-                    JobLogEntity logEntity = JobLogEntity.start(job);
-                    try {
-                        jobInvoker.invoke(job);
-                        logEntity.complete("任务执行成功", true, null);
-                    } catch (Exception e) {
-                        log.error("任务执行失败，name: {}", job.getJobName(), e);
-                        logEntity.complete("任务执行失败: " + e.getMessage(), false, truncate(e));
+        return Mono.defer(() -> {
+                    if (job.getTenantId() == null || job.getTenantId().isBlank()) {
+                        return Mono.error(new IllegalStateException("租户任务缺少租户ID"));
                     }
-                    return logEntity;
+                    return Mono.fromCallable(() -> {
+                                String previousTenant =
+                                        TenantContext.currentTenantId().orElse(null);
+                                TenantContext.setTenantId(job.getTenantId());
+                                try {
+                                    JobLogEntity logEntity = JobLogEntity.start(job);
+                                    try {
+                                        jobInvoker.invoke(job);
+                                        logEntity.complete("任务执行成功", true, null);
+                                    } catch (Exception e) {
+                                        log.error("任务执行失败，name: {}", job.getJobName(), e);
+                                        logEntity.complete("任务执行失败: " + e.getMessage(), false, truncate(e));
+                                    }
+                                    return logEntity;
+                                } finally {
+                                    if (previousTenant == null) {
+                                        TenantContext.clear();
+                                    } else {
+                                        TenantContext.setTenantId(previousTenant);
+                                    }
+                                }
+                            })
+                            .subscribeOn(scheduler)
+                            .flatMap(logEntity -> {
+                                String previousTenant =
+                                        TenantContext.currentTenantId().orElse(null);
+                                TenantContext.setTenantId(job.getTenantId());
+                                try {
+                                    return jobLogService.record(logEntity);
+                                } finally {
+                                    if (previousTenant == null) {
+                                        TenantContext.clear();
+                                    } else {
+                                        TenantContext.setTenantId(previousTenant);
+                                    }
+                                }
+                            });
                 })
-                .subscribeOn(scheduler)
-                .flatMap(jobLogService::record)
                 .doFinally(signal -> flag.set(false));
     }
 

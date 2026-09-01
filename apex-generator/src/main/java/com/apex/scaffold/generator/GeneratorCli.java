@@ -51,16 +51,19 @@ public final class GeneratorCli {
         int migrationVersion = 2;
 
         for (int i = 0; i < args.length; i++) {
-            switch (args[i]) {
-                case "-i" -> inputFile = args[++i];
-                case "-o" -> outputDir = args[++i];
-                case "-v" -> migrationVersion = Integer.parseInt(args[++i]);
-                case "-f" -> frontendDir = args[++i];
-                default -> {
-                    System.err.println("未知参数: " + args[i]);
-                    printUsage();
-                    System.exit(2);
-                }
+            String argument = args[i];
+            if ("-i".equals(argument)) {
+                inputFile = args[++i];
+            } else if ("-o".equals(argument)) {
+                outputDir = args[++i];
+            } else if ("-v".equals(argument)) {
+                migrationVersion = Integer.parseInt(args[++i]);
+            } else if ("-f".equals(argument)) {
+                frontendDir = args[++i];
+            } else {
+                System.err.println("未知参数: " + argument);
+                printUsage();
+                System.exit(2);
             }
         }
 

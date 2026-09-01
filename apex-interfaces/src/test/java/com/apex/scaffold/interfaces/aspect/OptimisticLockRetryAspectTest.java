@@ -103,9 +103,14 @@ class OptimisticLockRetryAspectTest {
 
             assertThat(result).isEqualTo("retry-success");
             verify(joinPoint, times(2)).proceed();
-            assertThat(registry.get("apex.retry.optimistic.count").tag("result", "retried").counter().count())
+            assertThat(registry.get("apex.retry.optimistic.count")
+                            .tag("result", "retried")
+                            .counter()
+                            .count())
                     .isEqualTo(1);
-            assertThat(registry.find("apex.retry.optimistic.count").tag("result", "exhausted").counters())
+            assertThat(registry.find("apex.retry.optimistic.count")
+                            .tag("result", "exhausted")
+                            .counters())
                     .isEmpty();
         }
 
@@ -125,9 +130,15 @@ class OptimisticLockRetryAspectTest {
             assertThatThrownBy(() -> aspect.around(joinPoint, annotation)).isInstanceOf(BusinessException.class);
 
             verify(joinPoint, times(3)).proceed(); // 首次 + 2次重试
-            assertThat(registry.get("apex.retry.optimistic.count").tag("result", "retried").counter().count())
+            assertThat(registry.get("apex.retry.optimistic.count")
+                            .tag("result", "retried")
+                            .counter()
+                            .count())
                     .isEqualTo(2);
-            assertThat(registry.get("apex.retry.optimistic.count").tag("result", "exhausted").counter().count())
+            assertThat(registry.get("apex.retry.optimistic.count")
+                            .tag("result", "exhausted")
+                            .counter()
+                            .count())
                     .isEqualTo(1);
         }
 

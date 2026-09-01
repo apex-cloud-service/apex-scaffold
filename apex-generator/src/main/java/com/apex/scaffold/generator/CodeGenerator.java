@@ -12,6 +12,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -52,6 +54,8 @@ public class CodeGenerator {
      * 生成代码的作者标识。
      */
     public static final String AUTHOR = "Apex Team";
+
+    private static final String JAVA_STRING_TYPE = "String";
 
     /**
      * FreeMarker 配置（类路径模板目录）。
@@ -139,12 +143,13 @@ public class CodeGenerator {
      * @return 数据模型
      */
     private Map<String, Object> buildModel(TableDefinition definition, int migrationVersion) {
-        Map<String, Object> model = new HashMap<>();
+        Map<String, Object> model = new HashMap<>(16);
         model.put("module", definition.getModule());
         model.put("entityName", definition.getEntityName());
         model.put("entityVar", lowerFirst(definition.getEntityName()));
         model.put("tableName", definition.getTableName());
         model.put("tableComment", definition.getTableComment());
+        model.put("tenantAware", definition.isTenantAware());
         model.put("basePackage", BASE_PACKAGE);
         model.put("domainPackage", BASE_PACKAGE + ".domain");
         model.put("infraPackage", BASE_PACKAGE + ".infrastructure");
@@ -153,12 +158,19 @@ public class CodeGenerator {
         model.put("author", AUTHOR);
         model.put("migrationVersion", migrationVersion);
 
+        StateMachineDefinition stateMachine = definition.getStateMachine();
+        validateStateMachine(definition, stateMachine);
+        boolean stateMachineEnabled = stateMachine != null;
+        String stateField = stateMachineEnabled ? stateMachine.getField() : null;
+
         List<Map<String, Object>> fields = new ArrayList<>();
+        List<Map<String, Object>> createFields = new ArrayList<>();
+        List<Map<String, Object>> updateFields = new ArrayList<>();
         List<Map<String, Object>> formFields = new ArrayList<>();
         boolean hasBigDecimal = false;
         boolean hasLocalDateTime = false;
         for (FieldDefinition field : definition.getFields()) {
-            Map<String, Object> item = new HashMap<>();
+            Map<String, Object> item = new HashMap<>(16);
             item.put("name", field.getName());
             item.put("type", field.simpleType());
             item.put("comment", field.getComment());
@@ -168,18 +180,88 @@ public class CodeGenerator {
             // 前端 TypeScript 类型映射（供 Vue3 页面模板消费）
             item.put("tsType", toTsType(field.simpleType()));
             fields.add(item);
+            boolean managedStateField = stateMachineEnabled && stateField.equals(field.getName());
+            if (!managedStateField) {
+                createFields.add(item);
+                updateFields.add(item);
+            }
             // 表单字段排除主键 id（主键由后端生成/列表行携带）
-            if (!"id".equals(field.getName())) {
+            if (!"id".equals(field.getName()) && !managedStateField) {
                 formFields.add(item);
             }
             hasBigDecimal |= "BigDecimal".equals(field.simpleType());
             hasLocalDateTime |= "LocalDateTime".equals(field.simpleType());
         }
         model.put("fields", fields);
+        model.put("createFields", createFields);
+        model.put("updateFields", updateFields);
         model.put("formFields", formFields);
+        model.put("stateMachineEnabled", stateMachineEnabled);
+        model.put("stateField", stateField);
+        model.put("initialState", stateMachineEnabled ? stateMachine.getInitialState() : null);
+        model.put("stateTransitions", stateMachineEnabled ? stateMachine.getTransitions() : List.of());
+        model.put("invalidState", stateMachineEnabled ? invalidState(stateMachine) : null);
         model.put("hasBigDecimal", hasBigDecimal);
         model.put("hasLocalDateTime", hasLocalDateTime);
         return model;
+    }
+
+    private static void validateStateMachine(TableDefinition definition, StateMachineDefinition stateMachine) {
+        if (stateMachine == null) {
+            return;
+        }
+        if (stateMachine.getField() == null || stateMachine.getField().isBlank()) {
+            throw new IllegalArgumentException("状态机字段不能为空");
+        }
+        if (definition.getFields() == null) {
+            throw new IllegalArgumentException("状态机字段列表不能为空");
+        }
+        FieldDefinition stateField = definition.getFields().stream()
+                .filter(field -> stateMachine.getField().equals(field.getName()))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("状态机字段不存在: " + stateMachine.getField()));
+        if (!JAVA_STRING_TYPE.equals(stateField.simpleType())) {
+            throw new IllegalArgumentException("状态机字段必须为 String 类型");
+        }
+        if (stateMachine.getInitialState() == null
+                || stateMachine.getInitialState().isBlank()) {
+            throw new IllegalArgumentException("状态机初始状态不能为空");
+        }
+        if (stateMachine.getTransitions() == null
+                || stateMachine.getTransitions().isEmpty()) {
+            throw new IllegalArgumentException("状态迁移列表不能为空");
+        }
+        for (StateTransitionDefinition transition : stateMachine.getTransitions()) {
+            if (transition == null) {
+                throw new IllegalArgumentException("状态迁移不能为空");
+            }
+            if (transition.getFrom() == null
+                    || transition.getFrom().isBlank()
+                    || transition.getTo() == null
+                    || transition.getTo().isBlank()) {
+                throw new IllegalArgumentException("状态迁移端点不能为空");
+            }
+            if (transition.getFrom().equals(transition.getTo())) {
+                throw new IllegalArgumentException("状态迁移不允许自循环");
+            }
+        }
+        boolean initialStateInGraph = stateMachine.getTransitions().stream()
+                .anyMatch(transition -> stateMachine.getInitialState().equals(transition.getFrom())
+                        || stateMachine.getInitialState().equals(transition.getTo()));
+        if (!initialStateInGraph) {
+            throw new IllegalArgumentException("状态机初始状态必须存在于迁移图中: " + stateMachine.getInitialState());
+        }
+    }
+
+    private static String invalidState(StateMachineDefinition stateMachine) {
+        Set<String> states = stateMachine.getTransitions().stream()
+                .flatMap(transition -> List.of(transition.getFrom(), transition.getTo()).stream())
+                .collect(Collectors.toSet());
+        String invalidState = "__INVALID_STATE__";
+        while (states.contains(invalidState)) {
+            invalidState = "_" + invalidState;
+        }
+        return invalidState;
     }
 
     /**
@@ -193,7 +275,16 @@ public class CodeGenerator {
      */
     private static String toTsType(String javaType) {
         return switch (javaType) {
-            case "Long", "Integer", "int", "long", "short", "Short", "Double", "double", "Float", "float",
+            case "Long",
+                    "Integer",
+                    "int",
+                    "long",
+                    "short",
+                    "Short",
+                    "Double",
+                    "double",
+                    "Float",
+                    "float",
                     "BigDecimal" -> "number";
             case "Boolean", "boolean" -> "boolean";
             default -> "string";

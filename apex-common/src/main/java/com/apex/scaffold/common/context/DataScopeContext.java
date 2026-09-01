@@ -1,5 +1,6 @@
 package com.apex.scaffold.common.context;
 
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -22,7 +23,7 @@ import java.util.Optional;
 public final class DataScopeContext {
 
     /** ThreadLocal 数据权限条目（信息 + 注入配置） */
-    private static final ThreadLocal<Entry> SCOPE = new ThreadLocal<>();
+    private static final ThreadLocal<Scope> SCOPE = new ThreadLocal<>();
 
     /** 私有构造，禁止实例化 */
     private DataScopeContext() {
@@ -35,7 +36,7 @@ public final class DataScopeContext {
      * @param info 数据权限信息
      */
     public static void setDataScope(DataScopeInfo info) {
-        SCOPE.set(new Entry(info, DataScopeConfig.defaults()));
+        SCOPE.set(new Scope(info, DataScopeConfig.defaults()));
     }
 
     /**
@@ -45,7 +46,7 @@ public final class DataScopeContext {
      * @param config 注入配置（{@code @DataScope} 注解转换而来；为 {@code null} 时使用默认配置）
      */
     public static void setDataScope(DataScopeInfo info, DataScopeConfig config) {
-        SCOPE.set(new Entry(info, config == null ? DataScopeConfig.defaults() : config));
+        SCOPE.set(new Scope(info, config == null ? DataScopeConfig.defaults() : config));
     }
 
     /**
@@ -54,8 +55,23 @@ public final class DataScopeContext {
      * @return 数据权限信息（未装配时为 {@link Optional#empty()}
      */
     public static Optional<DataScopeInfo> currentDataScope() {
-        Entry entry = SCOPE.get();
-        return entry == null ? Optional.empty() : Optional.of(entry.info());
+        return currentScope().map(Scope::info);
+    }
+
+    public static Optional<Scope> currentScope() {
+        return Optional.ofNullable(SCOPE.get());
+    }
+
+    public static AutoCloseable install(Scope scope) {
+        Scope previous = SCOPE.get();
+        SCOPE.set(Objects.requireNonNull(scope, "scope must not be null"));
+        return () -> {
+            if (previous == null) {
+                SCOPE.remove();
+            } else {
+                SCOPE.set(previous);
+            }
+        };
     }
 
     /**
@@ -64,8 +80,7 @@ public final class DataScopeContext {
      * @return 注入配置（未装配时为 {@link Optional#empty()}
      */
     public static Optional<DataScopeConfig> currentConfig() {
-        Entry entry = SCOPE.get();
-        return entry == null ? Optional.empty() : Optional.of(entry.config());
+        return currentScope().map(Scope::config);
     }
 
     /**
@@ -76,8 +91,8 @@ public final class DataScopeContext {
      * @return {@code true} 表示需要过滤
      */
     public static boolean isActive() {
-        Entry entry = SCOPE.get();
-        return entry != null && !entry.info().isAll();
+        Scope scope = SCOPE.get();
+        return scope != null && !scope.info().isAll();
     }
 
     /**
@@ -86,7 +101,7 @@ public final class DataScopeContext {
      * @param deptId 部门 ID
      */
     public static void setDeptId(Long deptId) {
-        SCOPE.set(new Entry(DataScopeInfo.ofDept(deptId), DataScopeConfig.defaults()));
+        SCOPE.set(new Scope(DataScopeInfo.ofDept(deptId), DataScopeConfig.defaults()));
     }
 
     /**
@@ -107,6 +122,14 @@ public final class DataScopeContext {
         SCOPE.remove();
     }
 
-    /** 上下文条目：数据权限信息 + 注入配置 */
-    private record Entry(DataScopeInfo info, DataScopeConfig config) {}
+    public record Scope(DataScopeInfo info, DataScopeConfig config) {
+        public Scope {
+            info = new DataScopeInfo(
+                    Objects.requireNonNull(info, "info must not be null").type(),
+                    info.userId(),
+                    info.deptId(),
+                    info.deptIds());
+            config = Objects.requireNonNull(config, "config must not be null");
+        }
+    }
 }

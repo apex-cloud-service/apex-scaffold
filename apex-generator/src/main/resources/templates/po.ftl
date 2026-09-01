@@ -1,5 +1,6 @@
 package ${infraPackage}.persistence.po;
 
+<#if tenantAware>import com.baomidou.mybatisplus.annotation.TableField;</#if>
 import com.baomidou.mybatisplus.annotation.TableName;
 <#if hasBigDecimal>import java.math.BigDecimal;</#if>
 <#if hasLocalDateTime>import java.time.LocalDateTime;</#if>
@@ -25,6 +26,11 @@ public class ${entityName}PO extends BasePO {
      */
     public ${entityName}PO() {}
 
+<#if tenantAware>
+    @TableField("tenant_id")
+    private String tenantId;
+
+</#if>
 <#list fields as field>
     /**
      * ${field.comment}。

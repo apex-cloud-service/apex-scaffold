@@ -5,6 +5,7 @@ import com.apex.scaffold.application.dto.admin.JobLogDTO;
 import com.apex.scaffold.application.dto.admin.JobRequest;
 import com.apex.scaffold.application.job.CronExpression;
 import com.apex.scaffold.application.job.JobScheduler;
+import com.apex.scaffold.common.context.TenantContext;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.domain.model.entity.JobEntity;
@@ -87,11 +88,14 @@ public class JobService {
     public Mono<JobEntity> createJob(JobRequest request) {
         return Mono.defer(() -> {
                     validateCron(request.getCronExpression());
+                    String tenantId =
+                            TenantContext.currentTenantId().orElseThrow(() -> new IllegalStateException("租户上下文不存在"));
                     JobEntity entity = JobEntity.create(
                             request.getJobName(),
                             request.getJobGroup(),
                             request.getInvokeTarget(),
-                            request.getCronExpression());
+                            request.getCronExpression(),
+                            tenantId);
                     entity.setRemark(request.getRemark());
                     if (request.getConcurrent() != null) {
                         entity.setConcurrent(request.getConcurrent());

@@ -8,6 +8,8 @@ import com.apex.scaffold.domain.model.entity.UserEntity;
 import com.apex.scaffold.domain.repository.UserRepository;
 import com.apex.scaffold.domain.service.CacheConsistencyPort;
 import java.time.LocalDateTime;
+import java.util.Locale;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
@@ -72,6 +74,8 @@ public class UserService {
      * </p>
      */
     private final CacheConsistencyPort cacheConsistencyService;
+
+    private static final Set<String> ALLOWED_ORDER_FIELDS = Set.of("create_time", "nick_name", "status", "id");
 
     /**
      * 校验手机号允许注册。
@@ -389,9 +393,17 @@ public class UserService {
      * @param pageSize 每页数量
      * @return 分页响应结果，包含用户列表和分页信息
      */
-    public Mono<PageResponse<UserEntity>> findPage(Integer pageNum, Integer pageSize) {
-        log.debug("分页查询用户列表，pageNum: {}, pageSize: {}", pageNum, pageSize);
-        return userRepository.findPage(pageNum, pageSize);
+    public Mono<PageResponse<UserEntity>> findPage(Integer pageNum, Integer pageSize, String orderBy, Boolean isAsc) {
+        if (pageNum == null || pageNum < 1 || pageSize == null || pageSize < 1 || pageSize > 100) {
+            return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "分页参数非法"));
+        }
+        boolean defaultOrder = orderBy == null || orderBy.isBlank();
+        String normalizedOrderBy = defaultOrder ? "create_time" : orderBy.trim().toLowerCase(Locale.ROOT);
+        if (!ALLOWED_ORDER_FIELDS.contains(normalizedOrderBy)) {
+            return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "排序字段非法"));
+        }
+        return userRepository.findPage(
+                pageNum, pageSize, normalizedOrderBy, !defaultOrder && Boolean.TRUE.equals(isAsc));
     }
 
     /**

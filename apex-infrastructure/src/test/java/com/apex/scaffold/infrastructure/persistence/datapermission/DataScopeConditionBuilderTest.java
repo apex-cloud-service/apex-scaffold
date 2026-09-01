@@ -1,6 +1,7 @@
 package com.apex.scaffold.infrastructure.persistence.datapermission;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.apex.scaffold.common.context.DataScopeConfig;
 import com.apex.scaffold.common.context.DataScopeInfo;
@@ -47,10 +48,14 @@ class DataScopeConditionBuilderTest {
         }
 
         @Test
-        void shouldReturnNullWhenDeptIdMissing() {
-            DataScopeInfo scope = new DataScopeInfo(
-                    com.apex.scaffold.common.enums.DataScopeType.DEPT, null, null, List.of());
-            assertThat(DataScopeConditionBuilder.build(DEFAULT_CONFIG, scope)).isNull();
+        void shouldRejectWhenDeptIdMissing() {
+            DataScopeInfo scope =
+                    new DataScopeInfo(com.apex.scaffold.common.enums.DataScopeType.DEPT, null, null, List.of());
+
+            assertThatThrownBy(() -> DataScopeConditionBuilder.build(DEFAULT_CONFIG, scope))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining("DEPT")
+                    .hasMessageContaining("deptId");
         }
     }
 
@@ -61,21 +66,25 @@ class DataScopeConditionBuilderTest {
         @Test
         void shouldBuildInClauseWithDeptIds() {
             DataScopeInfo scope = DataScopeInfo.ofDeptAndChild(100L, List.of(100L, 101L, 102L));
-            assertThat(DataScopeConditionBuilder.build(DEFAULT_CONFIG, scope))
-                    .isEqualTo("dept_id IN (100, 101, 102)");
+            assertThat(DataScopeConditionBuilder.build(DEFAULT_CONFIG, scope)).isEqualTo("dept_id IN (100, 101, 102)");
         }
 
         @Test
-        void shouldFallbackToSingleDeptId() {
+        void shouldRejectWhenDeptIdsAreEmpty() {
             DataScopeInfo scope = DataScopeInfo.ofDeptAndChild(100L, List.of());
-            assertThat(DataScopeConditionBuilder.build(DEFAULT_CONFIG, scope))
-                    .isEqualTo("dept_id IN (100)");
+            assertThatThrownBy(() -> DataScopeConditionBuilder.build(DEFAULT_CONFIG, scope))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining("DEPT_AND_CHILD")
+                    .hasMessageContaining("deptIds");
         }
 
         @Test
-        void shouldReturnNullWhenNoDeptInfo() {
+        void shouldRejectWhenNoDeptInfo() {
             DataScopeInfo scope = DataScopeInfo.ofDeptAndChild(null, List.of());
-            assertThat(DataScopeConditionBuilder.build(DEFAULT_CONFIG, scope)).isNull();
+            assertThatThrownBy(() -> DataScopeConditionBuilder.build(DEFAULT_CONFIG, scope))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining("DEPT_AND_CHILD")
+                    .hasMessageContaining("deptIds");
         }
     }
 
@@ -97,10 +106,13 @@ class DataScopeConditionBuilderTest {
         }
 
         @Test
-        void shouldReturnNullWhenUserIdMissing() {
-            DataScopeInfo scope = new DataScopeInfo(
-                    com.apex.scaffold.common.enums.DataScopeType.SELF, null, null, List.of());
-            assertThat(DataScopeConditionBuilder.build(DEFAULT_CONFIG, scope)).isNull();
+        void shouldRejectWhenUserIdMissing() {
+            DataScopeInfo scope =
+                    new DataScopeInfo(com.apex.scaffold.common.enums.DataScopeType.SELF, null, null, List.of());
+            assertThatThrownBy(() -> DataScopeConditionBuilder.build(DEFAULT_CONFIG, scope))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining("SELF")
+                    .hasMessageContaining("userId");
         }
     }
 
@@ -111,8 +123,15 @@ class DataScopeConditionBuilderTest {
         @Test
         void shouldBuildInClauseWithCustomDeptIds() {
             DataScopeInfo scope = DataScopeInfo.ofCustom(List.of(1L, 2L, 3L));
-            assertThat(DataScopeConditionBuilder.build(DEFAULT_CONFIG, scope))
-                    .isEqualTo("dept_id IN (1, 2, 3)");
+            assertThat(DataScopeConditionBuilder.build(DEFAULT_CONFIG, scope)).isEqualTo("dept_id IN (1, 2, 3)");
+        }
+
+        @Test
+        void shouldRejectWhenCustomDeptIdsAreEmpty() {
+            assertThatThrownBy(() -> DataScopeConditionBuilder.build(DEFAULT_CONFIG, DataScopeInfo.ofCustom(List.of())))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining("CUSTOM")
+                    .hasMessageContaining("deptIds");
         }
     }
 
@@ -122,12 +141,14 @@ class DataScopeConditionBuilderTest {
 
         @Test
         void shouldReturnNullForAllScope() {
-            assertThat(DataScopeConditionBuilder.build(DEFAULT_CONFIG, DataScopeInfo.all())).isNull();
+            assertThat(DataScopeConditionBuilder.build(DEFAULT_CONFIG, DataScopeInfo.all()))
+                    .isNull();
         }
 
         @Test
         void shouldReturnNullForNullScopeOrConfig() {
-            assertThat(DataScopeConditionBuilder.build(null, DataScopeInfo.ofDept(100L))).isNull();
+            assertThat(DataScopeConditionBuilder.build(null, DataScopeInfo.ofDept(100L)))
+                    .isNull();
             assertThat(DataScopeConditionBuilder.build(DEFAULT_CONFIG, null)).isNull();
         }
     }

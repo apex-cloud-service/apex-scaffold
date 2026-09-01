@@ -399,9 +399,7 @@ class CacheServiceImplTest {
         when(redissonClient.getBucket(eq("k1"), any())).thenReturn(bucket1);
         when(redissonClient.getBucket(eq("k2"), any())).thenReturn(bucket2);
         doNothing().when(bucket1).set("v1", Duration.ofMinutes(1));
-        doThrow(new IllegalStateException("write failed"))
-                .when(bucket2)
-                .set("v2", Duration.ofMinutes(1));
+        doThrow(new IllegalStateException("write failed")).when(bucket2).set("v2", Duration.ofMinutes(1));
         Map<String, String> entries = new LinkedHashMap<>();
         entries.put("k1", "v1");
         entries.put("k2", "v2");

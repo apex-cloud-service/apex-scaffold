@@ -47,9 +47,9 @@ final class DataScopeConditionBuilder {
         }
         return switch (scope.type()) {
             case DEPT -> buildDeptCondition(config, scope);
-            case DEPT_AND_CHILD -> buildDeptInCondition(config, scope.effectiveDeptIds());
+            case DEPT_AND_CHILD -> buildDeptInCondition(config, scope.deptIds(), DataScopeType.DEPT_AND_CHILD);
             case SELF -> buildSelfCondition(config, scope);
-            case CUSTOM -> buildDeptInCondition(config, scope.effectiveDeptIds());
+            case CUSTOM -> buildDeptInCondition(config, scope.deptIds(), DataScopeType.CUSTOM);
             default -> null;
         };
     }
@@ -60,7 +60,7 @@ final class DataScopeConditionBuilder {
     private static String buildDeptCondition(DataScopeConfig config, DataScopeInfo scope) {
         Long deptId = scope.deptId();
         if (deptId == null) {
-            return null;
+            throw new IllegalStateException("DEPT 缺少 deptId");
         }
         return column(config.deptAlias(), config.deptField()) + " = " + deptId;
     }
@@ -68,16 +68,16 @@ final class DataScopeConditionBuilder {
     /**
      * 本部门及以下 / 自定义数据权限：{@code [alias.]dept_id IN (id1, id2, ...)}。
      */
-    private static String buildDeptInCondition(DataScopeConfig config, List<Long> deptIds) {
+    private static String buildDeptInCondition(DataScopeConfig config, List<Long> deptIds, DataScopeType scopeType) {
         if (deptIds == null || deptIds.isEmpty()) {
-            return null;
+            throw new IllegalStateException(scopeType + " 缺少有效 deptIds");
         }
         String ids = deptIds.stream()
                 .filter(java.util.Objects::nonNull)
                 .map(String::valueOf)
                 .collect(Collectors.joining(", "));
         if (ids.isEmpty()) {
-            return null;
+            throw new IllegalStateException(scopeType + " 缺少有效 deptIds");
         }
         return column(config.deptAlias(), config.deptField()) + " IN (" + ids + ")";
     }
@@ -88,7 +88,7 @@ final class DataScopeConditionBuilder {
     private static String buildSelfCondition(DataScopeConfig config, DataScopeInfo scope) {
         Long userId = scope.userId();
         if (userId == null) {
-            return null;
+            throw new IllegalStateException("SELF 缺少 userId");
         }
         return column(config.userAlias(), config.userField()) + " = " + userId;
     }

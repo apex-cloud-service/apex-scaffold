@@ -77,7 +77,12 @@ class AuthHandlerTest {
     @BeforeEach
     void setUp() {
         handler = new AuthHandler(
-                authService, authRegistrationService, requestHandlerUtil, messageUtils, securityMetricsRecorder, businessMetricsRecorder);
+                authService,
+                authRegistrationService,
+                requestHandlerUtil,
+                messageUtils,
+                securityMetricsRecorder,
+                businessMetricsRecorder);
     }
 
     @Nested

@@ -66,8 +66,7 @@ public class RedissonMetricsBinder {
      * @param meterRegistry Micrometer 指标注册表
      * @param redissonClientProvider Redisson 客户端提供者（dev 无 RedissonClient 时 getIfAvailable 返回 null）
      */
-    public RedissonMetricsBinder(
-            MeterRegistry meterRegistry, ObjectProvider<RedissonClient> redissonClientProvider) {
+    public RedissonMetricsBinder(MeterRegistry meterRegistry, ObjectProvider<RedissonClient> redissonClientProvider) {
         this.meterRegistry = meterRegistry;
         this.redissonClientProvider = redissonClientProvider;
     }
@@ -83,10 +82,8 @@ public class RedissonMetricsBinder {
             return;
         }
         NodesGroup<Node> nodesGroup = client.getNodesGroup();
-        Gauge.builder(NODES_TOTAL, nodesGroup, group -> group.getNodes().size())
-                .register(meterRegistry);
-        Gauge.builder(HEALTHY, nodesGroup, this::healthy)
-                .register(meterRegistry);
+        Gauge.builder(NODES_TOTAL, nodesGroup, group -> group.getNodes().size()).register(meterRegistry);
+        Gauge.builder(HEALTHY, nodesGroup, this::healthy).register(meterRegistry);
         log.info("Redisson 节点指标绑定完成（{} 个节点）", nodesGroup.getNodes().size());
     }
 

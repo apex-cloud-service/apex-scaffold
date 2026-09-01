@@ -99,8 +99,6 @@ class P6SpyEnabledSmokeTest {
             p6spyLogger.detachAppender(appender);
         }
 
-        assertThat(appender.list)
-                .as("p6spy logger 应捕获 SQL 代理日志（证明 P6Spy 真实生效）")
-                .isNotEmpty();
+        assertThat(appender.list).as("p6spy logger 应捕获 SQL 代理日志（证明 P6Spy 真实生效）").isNotEmpty();
     }
 }

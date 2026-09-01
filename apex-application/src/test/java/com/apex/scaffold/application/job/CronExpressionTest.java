@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
  * Cron 表达式解析器单元测试。
  *
  * <p>覆盖 6/7 段表达式的解析与下次触发时间计算，验证列表、范围、
- * 步长、名称简写与日/周"或"语义等核心能力。</p>
+ * 步长、名称简写与日/周字段互斥语义等核心能力。</p>
  *
  * @author Apex Team
  * @version 1.0.0
@@ -143,21 +143,20 @@ class CronExpressionTest {
         assertThat(next.get()).isEqualTo(LocalDateTime.of(2026, 8, 31, 9, 0, 0));
     }
 
-    /**
-     * 测试日与周的"或"语义。
-     */
     @Test
-    @DisplayName("日与周或语义 - 每月15日或周一执行")
-    void dayOrWeek() {
-        // 2026-08-27 是周四，本月15日已过；2026-08-31 是周一，即下一个匹配
-        LocalDateTime base = LocalDateTime.of(2026, 8, 27, 0, 0, 0);
-        CronExpression cron = new CronExpression("0 0 0 15 * MON");
+    @DisplayName("日与周字段 - 同时指定具体值时抛出异常")
+    void dayAndWeekCannotBothBeSpecified() {
+        assertThatThrownBy(() -> new CronExpression("0 0 0 15 * MON"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("日字段和周字段");
+    }
 
-        Optional<LocalDateTime> next = cron.next(base);
-
-        // 日与周为"或"语义：8-31（周一）已匹配，无需等到 9-15
-        assertThat(next).isPresent();
-        assertThat(next.get()).isEqualTo(LocalDateTime.of(2026, 8, 31, 0, 0, 0));
+    @Test
+    @DisplayName("日与周字段 - 同时使用问号时抛出异常")
+    void dayAndWeekCannotBothUseQuestionMark() {
+        assertThatThrownBy(() -> new CronExpression("0 0 0 ? * ?"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("日字段和周字段");
     }
 
     /**
@@ -209,6 +208,18 @@ class CronExpressionTest {
         assertThatThrownBy(() -> new CronExpression("60 * * * * ?"))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("范围");
+    }
+
+    @Test
+    @DisplayName("非法表达式 - 问号只能用于日或周字段")
+    void questionMarkOnlyAllowedInDayOrWeek() {
+        String[] expressions = {"? * * * * ?", "0 ? * * * ?", "0 0 ? * * ?", "0 0 0 * ? ?", "0 0 0 * * ? ?"};
+
+        for (String expression : expressions) {
+            assertThatThrownBy(() -> new CronExpression(expression))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("问号");
+        }
     }
 
     /**

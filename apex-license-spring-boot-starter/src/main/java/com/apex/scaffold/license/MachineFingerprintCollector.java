@@ -136,9 +136,9 @@ public final class MachineFingerprintCollector {
      */
     private static String collectCpuIdLinux() throws IOException {
         StringBuilder sb = new StringBuilder();
-        try (BufferedReader reader = new BufferedReader(
-                new InputStreamReader(java.nio.file.Files.newInputStream(java.nio.file.Paths.get("/proc/cpuinfo")),
-                        StandardCharsets.UTF_8))) {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(
+                java.nio.file.Files.newInputStream(java.nio.file.Paths.get("/proc/cpuinfo")),
+                StandardCharsets.UTF_8))) {
             String line;
             boolean modelNameFound = false;
             boolean physicalIdFound = false;
@@ -217,8 +217,8 @@ public final class MachineFingerprintCollector {
         pb.redirectErrorStream(true);
         Process process = pb.start();
         StringBuilder output = new StringBuilder();
-        try (BufferedReader reader = new BufferedReader(
-                new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
+        try (BufferedReader reader =
+                new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 output.append(line).append("\n");

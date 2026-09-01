@@ -36,6 +36,5 @@ public record MonitorBusinessResponse(
     /** 趋势点。 */
     @Schema(description = "趋势点")
     public record TrendPoint(
-            @Schema(description = "时间（HH:mm:ss）") String time,
-            @Schema(description = "指标值") double value) {}
+            @Schema(description = "时间（HH:mm:ss）") String time, @Schema(description = "指标值") double value) {}
 }

@@ -1,5 +1,6 @@
 package com.apex.scaffold.infrastructure.persistence.repository;
 
+import com.apex.scaffold.common.context.DataScopeJdbcBridge;
 import com.apex.scaffold.common.dto.PageResponse;
 import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
 import com.apex.scaffold.domain.model.entity.UserEntity;
@@ -9,6 +10,7 @@ import com.apex.scaffold.infrastructure.persistence.mapper.UserMapper;
 import com.apex.scaffold.infrastructure.persistence.po.UserPO;
 import com.apex.scaffold.infrastructure.persistence.util.ConditionUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -225,9 +227,7 @@ public class UserRepositoryImpl implements UserRepository {
         return Mono.fromCallable(() -> {
                     UserPO update = new UserPO();
                     update.setLastHeartbeatTime(java.time.LocalDateTime.now());
-                    userMapper.update(
-                            update,
-                            ConditionUtil.lambda(UserPO.class).eq(UserPO::getId, userId));
+                    userMapper.update(update, ConditionUtil.lambda(UserPO.class).eq(UserPO::getId, userId));
                     return true;
                 })
                 .subscribeOn(BlockingIoSchedulers.jdbc())
@@ -255,7 +255,8 @@ public class UserRepositoryImpl implements UserRepository {
                             ConditionUtil.lambda(UserPO.class)
                                     .ge(
                                             UserPO::getLastHeartbeatTime,
-                                            java.time.LocalDateTime.now().minusMinutes(UserRepository.ONLINE_WINDOW_MINUTES))
+                                            java.time.LocalDateTime.now()
+                                                    .minusMinutes(UserRepository.ONLINE_WINDOW_MINUTES))
                                     .orderByDesc(UserPO::getLastHeartbeatTime));
                     return com.apex.scaffold.common.dto.PageResponse.of(
                             page.getRecords().stream()
@@ -395,12 +396,30 @@ public class UserRepositoryImpl implements UserRepository {
      *
      * @return 结果
      */
-    public Mono<PageResponse<UserEntity>> findPage(Integer pageNum, Integer pageSize) {
+    public Mono<PageResponse<UserEntity>> findPage(Integer pageNum, Integer pageSize, String orderBy, Boolean isAsc) {
         return Mono.fromCallable(() -> {
                     Page<UserPO> page = new Page<>(pageNum, pageSize);
-                    LambdaQueryWrapper<UserPO> wrapper = new LambdaQueryWrapper<UserPO>()
-                            .eq(UserPO::getDeleted, 0)
-                            .orderByDesc(UserPO::getCreateTime);
+                    LambdaQueryWrapper<UserPO> wrapper = new LambdaQueryWrapper<UserPO>().eq(UserPO::getDeleted, 0);
+                    boolean defaultOrder = orderBy == null || orderBy.isBlank();
+                    SFunction<UserPO, ?> orderColumn = defaultOrder
+                            ? UserPO::getCreateTime
+                            : switch (orderBy) {
+                                case "nick_name" -> UserPO::getNickName;
+                                case "status" -> UserPO::getStatus;
+                                case "id" -> UserPO::getId;
+                                default -> UserPO::getCreateTime;
+                            };
+                    if (!defaultOrder && Boolean.TRUE.equals(isAsc)) {
+                        wrapper.orderByAsc(orderColumn);
+                        if (!"id".equals(orderBy)) {
+                            wrapper.orderByAsc(UserPO::getId);
+                        }
+                    } else {
+                        wrapper.orderByDesc(orderColumn);
+                        if (!"id".equals(orderBy)) {
+                            wrapper.orderByDesc(UserPO::getId);
+                        }
+                    }
                     Page<UserPO> result = userMapper.selectPage(page, wrapper);
                     List<UserEntity> entities = userPoConverter.toEntityList(result.getRecords());
                     return PageResponse.of(entities, result.getTotal(), pageNum, pageSize);
@@ -423,7 +442,7 @@ public class UserRepositoryImpl implements UserRepository {
     @Override
     public Mono<PageResponse<UserEntity>> searchForAdministration(
             String keyword, Integer status, Integer pageNum, Integer pageSize) {
-        return Mono.fromCallable(() -> {
+        return Mono.deferContextual(contextView -> Mono.fromCallable(DataScopeJdbcBridge.required(contextView, () -> {
                     Page<UserPO> page = new Page<>(pageNum, pageSize);
                     LambdaQueryWrapper<UserPO> wrapper = new LambdaQueryWrapper<UserPO>().eq(UserPO::getDeleted, 0);
                     if (status != null) {
@@ -435,7 +454,6 @@ public class UserRepositoryImpl implements UserRepository {
                         try {
                             userId = Long.valueOf(query);
                         } catch (NumberFormatException ignored) {
-                            // Non-numeric keywords only match nickname and phone.
                         }
                         Long exactId = userId;
                         wrapper.and(nested -> {
@@ -456,7 +474,7 @@ public class UserRepositoryImpl implements UserRepository {
                     Page<UserPO> result = userMapper.selectPage(page, wrapper);
                     return PageResponse.of(
                             userPoConverter.toEntityList(result.getRecords()), result.getTotal(), pageNum, pageSize);
-                })
+                })))
                 .subscribeOn(BlockingIoSchedulers.jdbc());
     }
 

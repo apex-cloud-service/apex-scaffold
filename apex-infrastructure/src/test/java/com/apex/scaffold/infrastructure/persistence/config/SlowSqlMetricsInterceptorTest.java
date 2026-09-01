@@ -67,8 +67,16 @@ class SlowSqlMetricsInterceptorTest {
         interceptor.intercept(invocation);
 
         verify(invocation).proceed();
-        assertThat(registry.get("apex.sql.slow.count").tag("type", "SELECT").counter().count()).isEqualTo(1);
-        assertThat(registry.get("apex.sql.execution").tag("type", "SELECT").timer().count()).isEqualTo(1);
+        assertThat(registry.get("apex.sql.slow.count")
+                        .tag("type", "SELECT")
+                        .counter()
+                        .count())
+                .isEqualTo(1);
+        assertThat(registry.get("apex.sql.execution")
+                        .tag("type", "SELECT")
+                        .timer()
+                        .count())
+                .isEqualTo(1);
         assertThat(registry.get("apex.sql.slow.max.ms").gauge().value()).isGreaterThanOrEqualTo(30);
     }
 
@@ -81,7 +89,11 @@ class SlowSqlMetricsInterceptorTest {
         interceptor.intercept(invocation);
 
         assertThat(registry.find("apex.sql.slow.count").counters()).isEmpty();
-        assertThat(registry.get("apex.sql.execution").tag("type", "SELECT").timer().count()).isEqualTo(1);
+        assertThat(registry.get("apex.sql.execution")
+                        .tag("type", "SELECT")
+                        .timer()
+                        .count())
+                .isEqualTo(1);
         assertThat(registry.get("apex.sql.slow.max.ms").gauge().value()).isZero();
     }
 
@@ -102,8 +114,16 @@ class SlowSqlMetricsInterceptorTest {
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessage("db down");
 
-        assertThat(registry.get("apex.sql.slow.count").tag("type", "UPDATE").counter().count()).isEqualTo(1);
-        assertThat(registry.get("apex.sql.execution").tag("type", "UPDATE").timer().count()).isEqualTo(1);
+        assertThat(registry.get("apex.sql.slow.count")
+                        .tag("type", "UPDATE")
+                        .counter()
+                        .count())
+                .isEqualTo(1);
+        assertThat(registry.get("apex.sql.execution")
+                        .tag("type", "UPDATE")
+                        .timer()
+                        .count())
+                .isEqualTo(1);
     }
 
     @Test

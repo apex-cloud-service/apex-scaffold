@@ -118,19 +118,13 @@ public class SentinelNacosDataSourceConfig {
         }
 
         // 限流规则数据源：JSON 数组 → List<FlowRule>
-        NacosDataSource<List<FlowRule>> flowDataSource = new NacosDataSource<>(
-                nacosProps,
-                groupId,
-                flowDataId,
-                jsonToFlowRules());
+        NacosDataSource<List<FlowRule>> flowDataSource =
+                new NacosDataSource<>(nacosProps, groupId, flowDataId, jsonToFlowRules());
         FlowRuleManager.register2Property(flowDataSource.getProperty());
 
         // 熔断规则数据源：JSON 数组 → List<DegradeRule>
-        NacosDataSource<List<DegradeRule>> degradeDataSource = new NacosDataSource<>(
-                nacosProps,
-                groupId,
-                degradeDataId,
-                jsonToDegradeRules());
+        NacosDataSource<List<DegradeRule>> degradeDataSource =
+                new NacosDataSource<>(nacosProps, groupId, degradeDataId, jsonToDegradeRules());
         DegradeRuleManager.register2Property(degradeDataSource.getProperty());
 
         log.info(

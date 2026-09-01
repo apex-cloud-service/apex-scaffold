@@ -3,11 +3,14 @@ package com.apex.scaffold.application.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.apex.scaffold.application.dto.admin.JobRequest;
 import com.apex.scaffold.application.job.JobScheduler;
+import com.apex.scaffold.common.context.TenantContext;
 import com.apex.scaffold.common.exception.BusinessException;
+import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.domain.model.entity.JobEntity;
 import com.apex.scaffold.domain.repository.JobRepository;
 import java.util.List;
@@ -70,6 +73,7 @@ class JobServiceTest {
         request.setInvokeTarget("tokenCleanupTask.cleanup()");
         request.setCronExpression("0 0 2 * * ?");
 
+        TenantContext.setTenantId("tenant-a");
         when(jobRepository.insert(any(JobEntity.class))).thenReturn(Mono.just(1));
         when(jobScheduler.register(any(JobEntity.class))).thenReturn(Mono.empty());
 
@@ -85,22 +89,47 @@ class JobServiceTest {
         verify(jobScheduler).register(any(JobEntity.class));
     }
 
-    /**
-     * 测试非法 Cron 表达式被拒绝。
-     */
     @Test
-    @DisplayName("createJob - 非法Cron表达式抛出异常")
-    void createJob_InvalidCronFails() {
+    @DisplayName("createJob - 缺少可信租户上下文时拒绝")
+    void createJob_WithoutTenantFails() {
+        TenantContext.clear();
         JobRequest request = new JobRequest();
-        request.setJobName("非法任务");
+        request.setJobName("无租户任务");
         request.setInvokeTarget("tokenCleanupTask.cleanup()");
-        request.setCronExpression("0 0");
+        request.setCronExpression("0 0 2 * * ?");
 
         jobService
                 .createJob(request)
                 .as(StepVerifier::create)
-                .expectError(BusinessException.class)
+                .expectErrorSatisfies(error -> assertThat(error)
+                        .isInstanceOf(IllegalStateException.class)
+                        .hasMessage("租户上下文不存在"))
                 .verify();
+    }
+
+    /**
+     * 测试非法 Cron 表达式被拒绝。
+     */
+    @Test
+    @DisplayName("createJob - 日字段和周字段同时使用问号时返回参数错误")
+    void createJob_InvalidQuestionMarkCronFailsWithParamError() {
+        JobRequest request = new JobRequest();
+        request.setJobName("非法任务");
+        request.setInvokeTarget("tokenCleanupTask.cleanup()");
+        request.setCronExpression("0 0 0 ? * ?");
+
+        jobService
+                .createJob(request)
+                .as(StepVerifier::create)
+                .expectErrorSatisfies(error -> {
+                    assertThat(error).isInstanceOf(BusinessException.class);
+                    BusinessException exception = (BusinessException) error;
+                    assertThat(exception.getCode()).isEqualTo(ResultCode.PARAM_ERROR.getCode());
+                    assertThat(exception.getMessage()).contains("Cron表达式非法").contains("日字段和周字段");
+                })
+                .verify();
+
+        verifyNoInteractions(jobRepository, jobScheduler);
     }
 
     /**

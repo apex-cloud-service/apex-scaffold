@@ -7,14 +7,11 @@ import com.apex.scaffold.application.service.DictService;
 import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.annotation.RequirePermission;
 import com.apex.scaffold.common.exception.BusinessException;
-import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.common.result.ResultCode;
-import com.apex.scaffold.common.util.TraceIdUtil;
 import com.apex.scaffold.interfaces.util.MessageUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Validator;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
@@ -140,7 +137,9 @@ public class DictHandler extends BaseHandler {
     @Operation(operationId = "adminDeleteDictType", summary = "删除字典类型")
     @OperationLog(module = "字典管理", type = OperationLog.OperationType.DELETE, description = "删除字典类型")
     public Mono<ServerResponse> deleteType(ServerRequest request) {
-        return dictService.deleteType(requirePositiveId(request)).flatMap(deleted -> buildSuccess(java.util.Map.of("deleted", deleted)));
+        return dictService
+                .deleteType(requirePositiveId(request))
+                .flatMap(deleted -> buildSuccess(java.util.Map.of("deleted", deleted)));
     }
 
     /**
@@ -236,7 +235,9 @@ public class DictHandler extends BaseHandler {
     @Operation(operationId = "adminDeleteDictData", summary = "删除字典数据")
     @OperationLog(module = "字典管理", type = OperationLog.OperationType.DELETE, description = "删除字典数据")
     public Mono<ServerResponse> deleteData(ServerRequest request) {
-        return dictService.deleteData(requirePositiveId(request)).flatMap(deleted -> buildSuccess(java.util.Map.of("deleted", deleted)));
+        return dictService
+                .deleteData(requirePositiveId(request))
+                .flatMap(deleted -> buildSuccess(java.util.Map.of("deleted", deleted)));
     }
 
     /**

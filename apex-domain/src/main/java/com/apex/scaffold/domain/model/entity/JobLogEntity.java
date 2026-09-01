@@ -41,6 +41,8 @@ public class JobLogEntity extends BaseEntity {
      */
     private Long jobId;
 
+    private String tenantId;
+
     /**
      * 任务名称（执行时快照）。
      */
@@ -161,6 +163,7 @@ public class JobLogEntity extends BaseEntity {
     public static JobLogEntity start(JobEntity job) {
         JobLogEntity entity = new JobLogEntity();
         entity.jobId = job.getId();
+        entity.tenantId = job.getTenantId();
         entity.jobName = job.getJobName();
         entity.jobGroup = job.getJobGroup();
         entity.invokeTarget = job.getInvokeTarget();

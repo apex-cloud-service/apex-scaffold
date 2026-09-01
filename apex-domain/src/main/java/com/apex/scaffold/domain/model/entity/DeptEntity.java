@@ -1,7 +1,5 @@
 package com.apex.scaffold.domain.model.entity;
 
-import java.time.LocalDateTime;
-
 /**
  * 部门实体（领域层）。
  *
@@ -12,10 +10,9 @@ import java.time.LocalDateTime;
  * @version 1.0.0
  * @since 2.2.0
  */
-public class DeptEntity {
+public class DeptEntity extends BaseEntity {
 
-    /** 主键 ID */
-    private Long id;
+    private String tenantId;
 
     /** 父部门 ID（0 为根部门） */
     private Long parentId;
@@ -41,66 +38,91 @@ public class DeptEntity {
     /** 状态（0-停用，1-正常） */
     private Integer status;
 
-    /** 创建时间 */
-    private LocalDateTime createTime;
+    public String getTenantId() {
+        return tenantId;
+    }
 
-    /** @return 主键 ID */
-    public Long getId() { return id; }
-
-    /** @param id 主键 ID */
-    public void setId(Long id) { this.id = id; }
+    public void setTenantId(String tenantId) {
+        this.tenantId = tenantId;
+    }
 
     /** @return 父部门 ID */
-    public Long getParentId() { return parentId; }
+    public Long getParentId() {
+        return parentId;
+    }
 
     /** @param parentId 父部门 ID */
-    public void setParentId(Long parentId) { this.parentId = parentId; }
+    public void setParentId(Long parentId) {
+        this.parentId = parentId;
+    }
 
     /** @return 祖级列表 */
-    public String getAncestors() { return ancestors; }
+    public String getAncestors() {
+        return ancestors;
+    }
 
     /** @param ancestors 祖级列表 */
-    public void setAncestors(String ancestors) { this.ancestors = ancestors; }
+    public void setAncestors(String ancestors) {
+        this.ancestors = ancestors;
+    }
 
     /** @return 部门名称 */
-    public String getName() { return name; }
+    public String getName() {
+        return name;
+    }
 
     /** @param name 部门名称 */
-    public void setName(String name) { this.name = name; }
+    public void setName(String name) {
+        this.name = name;
+    }
 
     /** @return 显示顺序 */
-    public Integer getOrderNum() { return orderNum; }
+    public Integer getOrderNum() {
+        return orderNum;
+    }
 
     /** @param orderNum 显示顺序 */
-    public void setOrderNum(Integer orderNum) { this.orderNum = orderNum; }
+    public void setOrderNum(Integer orderNum) {
+        this.orderNum = orderNum;
+    }
 
     /** @return 负责人 */
-    public String getLeader() { return leader; }
+    public String getLeader() {
+        return leader;
+    }
 
     /** @param leader 负责人 */
-    public void setLeader(String leader) { this.leader = leader; }
+    public void setLeader(String leader) {
+        this.leader = leader;
+    }
 
     /** @return 联系电话 */
-    public String getPhone() { return phone; }
+    public String getPhone() {
+        return phone;
+    }
 
     /** @param phone 联系电话 */
-    public void setPhone(String phone) { this.phone = phone; }
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
 
     /** @return 邮箱 */
-    public String getEmail() { return email; }
+    public String getEmail() {
+        return email;
+    }
 
     /** @param email 邮箱 */
-    public void setEmail(String email) { this.email = email; }
+    public void setEmail(String email) {
+        this.email = email;
+    }
 
     /** @return 状态 */
-    public Integer getStatus() { return status; }
+    public Integer getStatus() {
+        return status;
+    }
 
     /** @param status 状态 */
-    public void setStatus(Integer status) { this.status = status; }
-
-    /** @return 创建时间 */
-    public LocalDateTime getCreateTime() { return createTime; }
-
-    /** @param createTime 创建时间 */
-    public void setCreateTime(LocalDateTime createTime) { this.createTime = createTime; }
+    public void setStatus(Integer status) {
+        this.status = status;
+    }
 }

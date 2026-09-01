@@ -66,6 +66,10 @@ public class TableDefinition {
      */
     private String tableComment = "";
 
+    private boolean tenantAware;
+
+    private StateMachineDefinition stateMachine;
+
     /**
      * 字段定义列表。
      */

@@ -354,8 +354,9 @@ public class CacheConsistencyService implements CacheConsistencyPort {
      */
     public <T> Mono<T> getWithLoader(String cacheName, String key, Class<T> clazz, Mono<T> loader) {
         return get(cacheName, key, clazz)
-                .switchIfEmpty(Mono.defer(() -> inFlight
-                        .join(cacheName + ":" + key, () -> loader.flatMap(dbValue -> {
+                .switchIfEmpty(Mono.defer(() -> inFlight.join(
+                        cacheName + ":" + key,
+                        () -> loader.flatMap(dbValue -> {
                             if (dbValue == null) {
                                 // 写入空值标记防止缓存穿透
                                 return setEmptyMarker(cacheName, key).then(Mono.empty());

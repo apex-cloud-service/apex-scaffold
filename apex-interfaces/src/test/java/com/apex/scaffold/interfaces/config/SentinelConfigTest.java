@@ -19,13 +19,13 @@ import com.alibaba.csp.sentinel.transport.endpoint.Protocol;
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.common.util.JsonUtil;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.apex.scaffold.interfaces.util.MessageUtils;
+import com.fasterxml.jackson.core.type.TypeReference;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -343,9 +343,11 @@ class SentinelConfigTest {
         List<Map<String, Object>> template = readRuleTemplate("/sentinel/apex-sentinel-flow-rules.json");
 
         assertThat(template).hasSize(43);
-        assertThat(template).extracting(rule -> rule.get("resource"))
-                .containsExactlyInAnyOrderElementsOf(
-                        FlowRuleManager.getRules().stream().map(rule -> rule.getResource()).toList());
+        assertThat(template)
+                .extracting(rule -> rule.get("resource"))
+                .containsExactlyInAnyOrderElementsOf(FlowRuleManager.getRules().stream()
+                        .map(rule -> rule.getResource())
+                        .toList());
         assertThat(template).allSatisfy(rule -> {
             assertThat(rule.get("grade")).isEqualTo(1);
             assertThat(rule.get("limitApp")).isEqualTo("default");
@@ -359,13 +361,14 @@ class SentinelConfigTest {
         List<Map<String, Object>> template = readRuleTemplate("/sentinel/apex-sentinel-degrade-rules.json");
 
         assertThat(template).hasSize(30);
-        assertThat(template).extracting(rule -> rule.get("resource"))
-                .containsExactlyInAnyOrderElementsOf(
-                        DegradeRuleManager.getRules().stream().map(rule -> rule.getResource()).toList());
+        assertThat(template)
+                .extracting(rule -> rule.get("resource"))
+                .containsExactlyInAnyOrderElementsOf(DegradeRuleManager.getRules().stream()
+                        .map(rule -> rule.getResource())
+                        .toList());
         assertThat(template).allSatisfy(rule -> {
-            assertThat(rule.get("grade")).isIn(
-                    RuleConstant.DEGRADE_GRADE_EXCEPTION_RATIO,
-                    RuleConstant.DEGRADE_GRADE_RT);
+            assertThat(rule.get("grade"))
+                    .isIn(RuleConstant.DEGRADE_GRADE_EXCEPTION_RATIO, RuleConstant.DEGRADE_GRADE_RT);
             assertThat(rule.get("minRequestAmount")).isEqualTo(5);
             if (Integer.valueOf(RuleConstant.DEGRADE_GRADE_EXCEPTION_RATIO).equals(rule.get("grade"))) {
                 assertThat(rule).doesNotContainKey("statIntervalMs");
@@ -376,13 +379,16 @@ class SentinelConfigTest {
     }
 
     private List<Map<String, Object>> readRuleTemplate(String resource) throws Exception {
-        Path templatePath = Path.of(System.getProperty("user.dir"), "..", "config", "sentinel", resource.substring(resource.lastIndexOf('/') + 1))
+        Path templatePath = Path.of(
+                        System.getProperty("user.dir"),
+                        "..",
+                        "config",
+                        "sentinel",
+                        resource.substring(resource.lastIndexOf('/') + 1))
                 .toAbsolutePath()
                 .normalize();
         assertThat(Files.exists(templatePath)).isTrue();
-        return JsonUtil.fromJson(
-                Files.readString(templatePath),
-                new TypeReference<>() {});
+        return JsonUtil.fromJson(Files.readString(templatePath), new TypeReference<>() {});
     }
 
     /**

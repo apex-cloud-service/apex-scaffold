@@ -4,7 +4,9 @@ import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import java.util.List;
+import java.util.Locale;
 import java.util.function.Supplier;
+import java.util.regex.Pattern;
 
 /**
  * 分页工具类
@@ -16,6 +18,9 @@ import java.util.function.Supplier;
  * @since 1.0.0
  */
 public final class PageUtil {
+
+    private static final Pattern ORDER_BY_PATTERN =
+            Pattern.compile("^([A-Za-z_][A-Za-z0-9_]*)(?:\\s+(ASC|DESC))?$", Pattern.CASE_INSENSITIVE);
 
     /** 私有构造方法，防止实例化 */
     private PageUtil() {}
@@ -42,7 +47,11 @@ public final class PageUtil {
      * @return Page对象
      */
     public static <E> Page<E> startPage(int pageNum, int pageSize, String orderBy) {
-        return PageHelper.startPage(pageNum, pageSize, orderBy);
+        String normalizedOrderBy = normalizeOrderBy(orderBy);
+        if (normalizedOrderBy == null) {
+            return PageHelper.startPage(pageNum, pageSize);
+        }
+        return PageHelper.startPage(pageNum, pageSize, normalizedOrderBy);
     }
 
     /**
@@ -71,9 +80,28 @@ public final class PageUtil {
      * @return 分页结果
      */
     public static <E> PageInfo<E> doPage(int pageNum, int pageSize, String orderBy, Supplier<List<E>> listQuery) {
-        PageHelper.startPage(pageNum, pageSize, orderBy);
+        String normalizedOrderBy = normalizeOrderBy(orderBy);
+        if (normalizedOrderBy == null) {
+            PageHelper.startPage(pageNum, pageSize);
+        } else {
+            PageHelper.startPage(pageNum, pageSize, normalizedOrderBy);
+        }
         List<E> list = listQuery.get();
         return new PageInfo<>(list);
+    }
+
+    public static String normalizeOrderBy(String orderBy) {
+        if (orderBy == null || orderBy.isBlank()) {
+            return null;
+        }
+        String value = orderBy.trim();
+        var matcher = ORDER_BY_PATTERN.matcher(value);
+        if (!matcher.matches()) {
+            throw new IllegalArgumentException("排序字段格式不合法");
+        }
+        String column = matcher.group(1);
+        String direction = matcher.group(2);
+        return direction == null ? column : column + " " + direction.toLowerCase(Locale.ROOT);
     }
 
     /**

@@ -34,9 +34,7 @@ public class LicenseFeatureCondition implements Condition {
 
         boolean enabled = LicenseFeatureGate.isFeatureEnabled(properties, feature);
         if (!enabled) {
-            log.info(
-                    "License 未授权功能 [{}]，跳过对应商业组件装配（降级模式或功能集不含该标识）",
-                    feature);
+            log.info("License 未授权功能 [{}]，跳过对应商业组件装配（降级模式或功能集不含该标识）", feature);
         }
         return enabled;
     }

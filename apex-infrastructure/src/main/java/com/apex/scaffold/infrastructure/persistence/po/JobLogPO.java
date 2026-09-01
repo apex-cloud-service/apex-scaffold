@@ -25,6 +25,8 @@ public class JobLogPO extends BasePO {
      */
     public JobLogPO() {}
 
+    private String tenantId;
+
     /**
      * 任务 ID。
      */

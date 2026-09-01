@@ -3,11 +3,11 @@ package com.apex.scaffold.interfaces.handler;
 import com.apex.scaffold.application.assembler.UserAssembler;
 import com.apex.scaffold.application.dto.AccountDeletionRequest;
 import com.apex.scaffold.application.dto.PageRequest;
-import com.apex.scaffold.application.dto.PageResponse;
 import com.apex.scaffold.application.dto.UserDTO;
 import com.apex.scaffold.application.service.AccountDeletionService;
 import com.apex.scaffold.application.service.UserService;
 import com.apex.scaffold.common.annotation.OperationLog;
+import com.apex.scaffold.common.dto.PageResponse;
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.common.util.TraceIdUtil;
@@ -211,7 +211,17 @@ public class UserHandler extends BaseHandler {
     public Mono<ServerResponse> listUsers(ServerRequest request) {
         String traceId = TraceIdUtil.getTraceId();
         return requestHandlerUtil.handleRequestBody(request, PageRequest.class).flatMap(body -> userService
-                .findPage(body.getPageNum(), body.getPageSize())
+                .findPage(body.getPageNum(), body.getPageSize(), body.getOrderBy(), body.getIsAsc())
+                .map(data -> {
+                    PageResponse<UserDTO> response = new PageResponse<>();
+                    response.setList(userAssembler.toDTOList(data.getList()));
+                    response.setTotal(data.getTotal());
+                    response.setPageNum(data.getPageNum());
+                    response.setPageSize(data.getPageSize());
+                    response.setPages(data.getPages());
+                    response.setHasNext(data.getHasNext());
+                    return response;
+                })
                 .map(data -> Result.success(data, traceId))
                 .flatMap(this::buildOk));
     }

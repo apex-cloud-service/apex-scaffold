@@ -59,7 +59,8 @@ class PasswordLoginStrategyTest {
         org.springframework.test.util.ReflectionTestUtils.setField(user, "username", username);
         org.springframework.test.util.ReflectionTestUtils.setField(user, "openId", "open-" + id);
         org.springframework.test.util.ReflectionTestUtils.setField(user, "status", 1);
-        org.springframework.test.util.ReflectionTestUtils.setField(user, "password", PasswordUtil.encryptPassword(rawPassword));
+        org.springframework.test.util.ReflectionTestUtils.setField(
+                user, "password", PasswordUtil.encryptPassword(rawPassword));
         return user;
     }
 
@@ -88,9 +89,11 @@ class PasswordLoginStrategyTest {
             when(tokenService.storeToken(anyString(), anyString(), anyString())).thenReturn(Mono.empty());
             LoginResponse expected = new LoginResponse();
             expected.setAccessToken("access-token");
-            when(loginResponseHelper.build(user, "access-token", "refresh-token", false)).thenReturn(expected);
+            when(loginResponseHelper.build(user, "access-token", "refresh-token", false))
+                    .thenReturn(expected);
 
-            LoginResponse response = strategy.login(request("admin", "secret123")).block();
+            LoginResponse response =
+                    strategy.login(request("admin", "secret123")).block();
 
             assertThat(response).isNotNull();
             assertThat(response.getAccessToken()).isEqualTo("access-token");
@@ -107,7 +110,8 @@ class PasswordLoginStrategyTest {
         void shouldFailWhenUserNotFound() {
             when(userService.getByUsername("ghost")).thenReturn(Mono.empty());
 
-            assertThatThrownBy(() -> strategy.login(request("ghost", "secret123")).block())
+            assertThatThrownBy(
+                            () -> strategy.login(request("ghost", "secret123")).block())
                     .isInstanceOf(BusinessException.class)
                     .extracting(e -> ((BusinessException) e).getCode())
                     .isEqualTo(ResultCode.USER_NOT_FOUND.getCode());
@@ -119,7 +123,8 @@ class PasswordLoginStrategyTest {
             UserEntity user = user(1L, "admin", "correct-pass");
             when(userService.getByUsername("admin")).thenReturn(Mono.just(user));
 
-            assertThatThrownBy(() -> strategy.login(request("admin", "wrong-pass")).block())
+            assertThatThrownBy(
+                            () -> strategy.login(request("admin", "wrong-pass")).block())
                     .isInstanceOf(BusinessException.class)
                     .extracting(e -> ((BusinessException) e).getCode())
                     .isEqualTo(ResultCode.LOGIN_FAILED.getCode());
@@ -132,7 +137,8 @@ class PasswordLoginStrategyTest {
             user.setStatus(0);
             when(userService.getByUsername("admin")).thenReturn(Mono.just(user));
 
-            assertThatThrownBy(() -> strategy.login(request("admin", "secret123")).block())
+            assertThatThrownBy(
+                            () -> strategy.login(request("admin", "secret123")).block())
                     .isInstanceOf(BusinessException.class)
                     .extracting(e -> ((BusinessException) e).getCode())
                     .isEqualTo(ResultCode.LOGIN_FAILED.getCode());
