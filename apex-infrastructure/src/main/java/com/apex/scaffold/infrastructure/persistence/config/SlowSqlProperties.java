@@ -1,5 +1,6 @@
 package com.apex.scaffold.infrastructure.persistence.config;
 
+import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -17,6 +18,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @since 2.3.0
  */
 @ConfigurationProperties(prefix = "apex.sql.slow")
+@Data
 public class SlowSqlProperties {
 
     /** 是否启用慢 SQL 指标采集。 */
@@ -27,32 +29,4 @@ public class SlowSqlProperties {
 
     /** 构造配置属性。 */
     public SlowSqlProperties() {}
-
-    /**
-     * @return 是否启用
-     */
-    public boolean isEnabled() {
-        return enabled;
-    }
-
-    /**
-     * @param enabled 是否启用
-     */
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
-    }
-
-    /**
-     * @return 慢 SQL 判定阈值（毫秒）
-     */
-    public long getThresholdMs() {
-        return thresholdMs;
-    }
-
-    /**
-     * @param thresholdMs 慢 SQL 判定阈值（毫秒）
-     */
-    public void setThresholdMs(long thresholdMs) {
-        this.thresholdMs = thresholdMs;
-    }
 }

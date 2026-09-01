@@ -1,5 +1,9 @@
 package com.apex.scaffold.domain.model.entity;
 
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+
 /**
  * 部门实体（领域层）。
  *
@@ -10,6 +14,9 @@ package com.apex.scaffold.domain.model.entity;
  * @version 1.0.0
  * @since 2.2.0
  */
+@Data
+@EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
 public class DeptEntity extends BaseEntity {
 
     private String tenantId;
@@ -37,92 +44,4 @@ public class DeptEntity extends BaseEntity {
 
     /** 状态（0-停用，1-正常） */
     private Integer status;
-
-    public String getTenantId() {
-        return tenantId;
-    }
-
-    public void setTenantId(String tenantId) {
-        this.tenantId = tenantId;
-    }
-
-    /** @return 父部门 ID */
-    public Long getParentId() {
-        return parentId;
-    }
-
-    /** @param parentId 父部门 ID */
-    public void setParentId(Long parentId) {
-        this.parentId = parentId;
-    }
-
-    /** @return 祖级列表 */
-    public String getAncestors() {
-        return ancestors;
-    }
-
-    /** @param ancestors 祖级列表 */
-    public void setAncestors(String ancestors) {
-        this.ancestors = ancestors;
-    }
-
-    /** @return 部门名称 */
-    public String getName() {
-        return name;
-    }
-
-    /** @param name 部门名称 */
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    /** @return 显示顺序 */
-    public Integer getOrderNum() {
-        return orderNum;
-    }
-
-    /** @param orderNum 显示顺序 */
-    public void setOrderNum(Integer orderNum) {
-        this.orderNum = orderNum;
-    }
-
-    /** @return 负责人 */
-    public String getLeader() {
-        return leader;
-    }
-
-    /** @param leader 负责人 */
-    public void setLeader(String leader) {
-        this.leader = leader;
-    }
-
-    /** @return 联系电话 */
-    public String getPhone() {
-        return phone;
-    }
-
-    /** @param phone 联系电话 */
-    public void setPhone(String phone) {
-        this.phone = phone;
-    }
-
-    /** @return 邮箱 */
-    public String getEmail() {
-        return email;
-    }
-
-    /** @param email 邮箱 */
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    /** @return 状态 */
-    public Integer getStatus() {
-        return status;
-    }
-
-    /** @param status 状态 */
-    public void setStatus(Integer status) {
-        this.status = status;
-    }
 }

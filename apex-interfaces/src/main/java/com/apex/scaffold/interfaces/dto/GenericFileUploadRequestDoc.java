@@ -1,6 +1,7 @@
 package com.apex.scaffold.interfaces.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
 
 /**
  * 普通图片上传 multipart 文档模型。
@@ -14,6 +15,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
  * @since 1.0.0
  */
 @Schema(name = "GenericFileUploadRequest", description = "普通图片上传表单")
+@Data
 public class GenericFileUploadRequestDoc {
 
     @Schema(
@@ -29,40 +31,4 @@ public class GenericFileUploadRequestDoc {
             example = "0",
             requiredMode = Schema.RequiredMode.REQUIRED)
     private Integer sex;
-
-    /**
-     * 获取上传文件字段。
-     *
-     * @return 文件字段占位值
-     */
-    public String getFile() {
-        return file;
-    }
-
-    /**
-     * 设置上传文件字段。
-     *
-     * @param file 文件字段占位值
-     */
-    public void setFile(String file) {
-        this.file = file;
-    }
-
-    /**
-     * 获取性别路由字段。
-     *
-     * @return 性别编码（0=男，1=女）
-     */
-    public Integer getSex() {
-        return sex;
-    }
-
-    /**
-     * 设置性别路由字段。
-     *
-     * @param sex 性别编码（0=男，1=女）
-     */
-    public void setSex(Integer sex) {
-        this.sex = sex;
-    }
 }

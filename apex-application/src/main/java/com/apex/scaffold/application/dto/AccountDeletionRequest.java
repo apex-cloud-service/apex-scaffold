@@ -3,6 +3,7 @@ package com.apex.scaffold.application.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
+import lombok.Data;
 
 /**
  * 账号注销二次验证请求。
@@ -11,6 +12,7 @@ import jakarta.validation.constraints.Pattern;
  * @version 1.0.0
  * @since 1.0.0
  */
+@Data
 @Schema(name = "AccountDeletionRequest", description = "账号注销短信二次验证请求")
 public class AccountDeletionRequest {
 
@@ -23,14 +25,4 @@ public class AccountDeletionRequest {
     @Pattern(regexp = "\\d{6}", message = "注销验证码必须为6位数字")
     @Schema(description = "发送到当前账号绑定手机号的 6 位短信验证码", example = "123456", requiredMode = Schema.RequiredMode.REQUIRED)
     private String code;
-
-    /** @return 验证码 */
-    public String getCode() {
-        return code;
-    }
-
-    /** @param code 验证码 */
-    public void setCode(String code) {
-        this.code = code;
-    }
 }

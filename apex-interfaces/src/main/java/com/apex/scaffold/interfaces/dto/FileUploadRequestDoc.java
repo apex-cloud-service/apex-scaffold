@@ -1,6 +1,7 @@
 package com.apex.scaffold.interfaces.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
 
 /**
  * 文件上传 multipart 表单文档模型。
@@ -12,6 +13,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
  * @since 1.0.0
  */
 @Schema(name = "FileUploadRequest", description = "图片上传 multipart 表单")
+@Data
 public class FileUploadRequestDoc {
 
     /** multipart 中的二进制图片字段。 */
@@ -39,76 +41,4 @@ public class FileUploadRequestDoc {
     /** multipart 中的 clientRequestId 幂等键字段。 */
     @Schema(description = "客户端请求幂等键，最长 64 字符，VOTE_PHOTO 推荐必传", example = "upload-20260720-0001", maxLength = 64)
     private String clientRequestId;
-
-    /**
-     * 获取文档模型中的文件字段。
-     *
-     * @return 文件字段占位值
-     */
-    public String getFile() {
-        return file;
-    }
-
-    /**
-     * 设置文档模型中的文件字段。
-     *
-     * @param file 文件字段占位值
-     */
-    public void setFile(String file) {
-        this.file = file;
-    }
-
-    /**
-     * 获取文档模型中的 sex 字段。
-     *
-     * @return sex 占位值
-     */
-    public Integer getSex() {
-        return sex;
-    }
-
-    /**
-     * 设置文档模型中的 sex 字段。
-     *
-     * @param sex sex 占位值
-     */
-    public void setSex(Integer sex) {
-        this.sex = sex;
-    }
-
-    /**
-     * 获取文档模型中的 usage 字段。
-     *
-     * @return usage 占位值
-     */
-    public String getUsage() {
-        return usage;
-    }
-
-    /**
-     * 设置文档模型中的 usage 字段。
-     *
-     * @param usage usage 占位值
-     */
-    public void setUsage(String usage) {
-        this.usage = usage;
-    }
-
-    /**
-     * 获取文档模型中的 clientRequestId 字段。
-     *
-     * @return clientRequestId 占位值
-     */
-    public String getClientRequestId() {
-        return clientRequestId;
-    }
-
-    /**
-     * 设置文档模型中的 clientRequestId 字段。
-     *
-     * @param clientRequestId clientRequestId 占位值
-     */
-    public void setClientRequestId(String clientRequestId) {
-        this.clientRequestId = clientRequestId;
-    }
 }

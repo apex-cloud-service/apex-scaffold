@@ -1,5 +1,6 @@
 package com.apex.scaffold.infrastructure.mail;
 
+import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -13,6 +14,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @since 2.2.0
  */
 @ConfigurationProperties(prefix = "spring.mail")
+@Data
 public class MailConfigurationProperties {
 
     /** SMTP 主机 */
@@ -26,44 +28,4 @@ public class MailConfigurationProperties {
 
     /** 发件人密码（环境变量注入） */
     private String password;
-
-    /** @return SMTP 主机 */
-    public String getHost() {
-        return host;
-    }
-
-    /** @param host SMTP 主机 */
-    public void setHost(String host) {
-        this.host = host;
-    }
-
-    /** @return SMTP 端口 */
-    public Integer getPort() {
-        return port;
-    }
-
-    /** @param port SMTP 端口 */
-    public void setPort(Integer port) {
-        this.port = port;
-    }
-
-    /** @return 发件人账号 */
-    public String getUsername() {
-        return username;
-    }
-
-    /** @param username 发件人账号 */
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    /** @return 发件人密码 */
-    public String getPassword() {
-        return password;
-    }
-
-    /** @param password 发件人密码 */
-    public void setPassword(String password) {
-        this.password = password;
-    }
 }

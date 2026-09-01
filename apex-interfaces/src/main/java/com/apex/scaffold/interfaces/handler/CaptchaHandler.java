@@ -6,6 +6,7 @@ import com.apex.scaffold.interfaces.util.MessageUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Validator;
+import lombok.Data;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
@@ -87,6 +88,7 @@ public class CaptchaHandler extends BaseHandler {
      * <p>承载 {@code captchaId}（获取验证码时返回的 ID）与用户输入的
      * {@code code}（忽略大小写）。</p>
      */
+    @Data
     public static class CaptchaVerifyRequest {
 
         /** 验证码 ID */
@@ -99,41 +101,5 @@ public class CaptchaHandler extends BaseHandler {
          * 构造验证码校验请求体。
          */
         public CaptchaVerifyRequest() {}
-
-        /**
-         * 获取验证码 ID。
-         *
-         * @return 验证码 ID
-         */
-        public String getCaptchaId() {
-            return captchaId;
-        }
-
-        /**
-         * 设置验证码 ID。
-         *
-         * @param captchaId 验证码 ID
-         */
-        public void setCaptchaId(String captchaId) {
-            this.captchaId = captchaId;
-        }
-
-        /**
-         * 获取用户输入的验证码。
-         *
-         * @return 验证码
-         */
-        public String getCode() {
-            return code;
-        }
-
-        /**
-         * 设置用户输入的验证码。
-         *
-         * @param code 验证码
-         */
-        public void setCode(String code) {
-            this.code = code;
-        }
     }
 }
