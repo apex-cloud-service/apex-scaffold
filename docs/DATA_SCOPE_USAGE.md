@@ -6,15 +6,15 @@
 内部拦截器（`DataScopeInnerInterceptor`）在 SELECT 执行前**自动注入过滤条件**，
 业务代码无需手动拼接 `dept_id` / `user_id`。支持五种数据权限类型：
 
-| 类型 | 说明 | 注入条件 |
-|------|------|----------|
-| 全部数据权限 | 不限制（超级管理员） | 不注入 |
-| 本部门数据权限 | 只能看本部门数据 | `dept_id = 当前部门` |
-| 本部门及以下 | 看本部门及全部子部门 | `dept_id IN (本部门, 子部门...)` |
-| 仅本人数据权限 | 只能看自己的数据 | `user_id = 当前用户` |
-| 自定义数据权限 | 按指定部门集合可见 | `dept_id IN (指定部门)` |
+| 类型      | 说明         | 注入条件                       |
+| ------- | ---------- | -------------------------- |
+| 全部数据权限  | 不限制（超级管理员） | 不注入                        |
+| 本部门数据权限 | 只能看本部门数据   | `dept_id = 当前部门`           |
+| 本部门及以下  | 看本部门及全部子部门 | `dept_id IN (本部门, 子部门...)` |
+| 仅本人数据权限 | 只能看自己的数据   | `user_id = 当前用户`           |
+| 自定义数据权限 | 按指定部门集合可见  | `dept_id IN (指定部门)`        |
 
-> 完整架构与设计说明见 [DATA_SCOPE.md](DATA_SCOPE.md)；本文档为使用手册。
+> 完整架构与设计说明见 [DATA\_SCOPE.md](DATA_SCOPE.md)；本文档为使用手册。
 
 ## 快速开始
 
@@ -83,29 +83,31 @@ public class DataScopeConfig {
 
 ## 配置项说明（@DataScope 注解）
 
-| 参数 | 类型 | 必填 | 说明 | 示例 |
-|------|------|------|------|------|
-| deptAlias | String | 否 | 部门字段所在表的别名（多表 JOIN 必填，防列歧义；无别名单表可留空） | `"o"` |
-| userAlias | String | 否 | 用户字段所在表的别名（仅本人数据权限使用） | `"o"` |
-| deptField | String | 否 | 部门字段名（默认 `dept_id`） | `"org_id"` |
-| userField | String | 否 | 用户字段名（默认 `user_id`） | `"creator_id"` |
+| 参数        | 类型     | 必填 | 说明                                   | 示例             |
+| --------- | ------ | -- | ------------------------------------ | -------------- |
+| deptAlias | String | 否  | 部门字段所在表的别名（多表 JOIN 必填，防列歧义；无别名单表可留空） | `"o"`          |
+| userAlias | String | 否  | 用户字段所在表的别名（仅本人数据权限使用）                | `"o"`          |
+| deptField | String | 否  | 部门字段名（默认 `dept_id`）                  | `"org_id"`     |
+| userField | String | 否  | 用户字段名（默认 `user_id`）                  | `"creator_id"` |
 
 ## 数据权限类型装配示例（DataScopeInfo）
 
-| 场景 | 装配代码 |
-|------|----------|
-| 全部 | `DataScopeContext.setDataScope(DataScopeInfo.all())` |
-| 本部门 | `DataScopeContext.setDataScope(DataScopeInfo.ofDept(100L))` |
+| 场景     | 装配代码                                                                                           |
+| ------ | ---------------------------------------------------------------------------------------------- |
+| 全部     | `DataScopeContext.setDataScope(DataScopeInfo.all())`                                           |
+| 本部门    | `DataScopeContext.setDataScope(DataScopeInfo.ofDept(100L))`                                    |
 | 本部门及以下 | `DataScopeContext.setDataScope(DataScopeInfo.ofDeptAndChild(100L, List.of(100L, 101L, 102L)))` |
-| 仅本人 | `DataScopeContext.setDataScope(DataScopeInfo.ofSelf(42L))` |
-| 自定义 | `DataScopeContext.setDataScope(DataScopeInfo.ofCustom(List.of(1L, 2L)))` |
+| 仅本人    | `DataScopeContext.setDataScope(DataScopeInfo.ofSelf(42L))`                                     |
+| 自定义    | `DataScopeContext.setDataScope(DataScopeInfo.ofCustom(List.of(1L, 2L)))`                       |
 
 ## 数据模型要求
 
-- `sys_user.dept_id`：用户所属部门（V6 迁移已建列，`UserEntity` / `UserPO` 已映射）；
-- `sys_dept`：部门树（`parent_id` 自关联 + `ancestors` 祖级链，供"本部门及以下"
+* `sys_user.dept_id`：用户所属部门（V6 迁移已建列，`UserEntity` / `UserPO` 已映射）；
+
+* `sys_dept`：部门树（`parent_id` 自关联 + `ancestors` 祖级链，供"本部门及以下"
   递归解析子部门集合）；
-- 未分配部门（`dept_id = NULL`）的用户默认不做过滤（放行），**生产环境应保证
+
+* 未分配部门（`dept_id = NULL`）的用户默认不做过滤（放行），**生产环境应保证
   关键用户均归属部门**。
 
 ## 注意事项
@@ -120,7 +122,8 @@ public class DataScopeConfig {
    切换到独立 JDBC 线程执行，**请求线程装配的 ThreadLocal/MDC 不会自动到达 JDBC 线程**。
    拦截器在"装配与查询同线程"路径完整生效（H2 端到端测试验证）；响应式链路要生效，
    任选其一：
-   - 在阻塞调用内部显式装配（推荐）：
+
+   * 在阻塞调用内部显式装配（推荐）：
 
      ```java
      return Mono.fromCallable(() -> {
@@ -132,7 +135,8 @@ public class DataScopeConfig {
          }
      }).subscribeOn(BlockingIoSchedulers.jdbc());
      ```
-   - 将 JDBC 调度器替换为 ThreadLocal 透明实现（Spring Framework 6.2
+
+   * 将 JDBC 调度器替换为 ThreadLocal 透明实现（Spring Framework 6.2
      `BlockingIoSchedulers` / Reactor `Hints.THREAD_LOCAL_TRANSPARENT`），
      使请求线程 ThreadLocal 自动传播到 JDBC 线程（同时惠及 `TenantContext`、
      `DataSourceContext`）。
@@ -147,7 +151,7 @@ public class DataScopeConfig {
 **Q2：如何让管理员看全部数据？**
 装配端对管理员角色返回 `DataScopeInfo.all()`（类型 1），拦截器自动跳过注入。
 
-**Q3：自定义字段名（如 org_id）怎么配？**
+**Q3：自定义字段名（如 org\_id）怎么配？**
 `@DataScope(deptField = "org_id", userField = "creator_id")`。
 
 **Q4：会影响未标注的查询吗？**
@@ -159,12 +163,19 @@ public class DataScopeConfig {
 
 ## 相关代码位置
 
-- 注解：`apex-common/.../common/annotation/DataScope.java`
-- 上下文/装配器：`apex-common/.../common/context/`
+* 注解：`apex-common/.../common/annotation/DataScope.java`
+
+* 上下文/装配器：`apex-common/.../common/context/`
   `{DataScopeInfo, DataScopeConfig, DataScopeContext, DataScopeProvider}.java`
-- 类型枚举：`apex-common/.../common/enums/DataScopeType.java`
-- 拦截器：`apex-infrastructure/.../persistence/datapermission/`
+
+* 类型枚举：`apex-common/.../common/enums/DataScopeType.java`
+
+* 拦截器：`apex-infrastructure/.../persistence/datapermission/`
   `{DataScopeInnerInterceptor, DataScopeConditionBuilder, DataScopeSqlRewriter, MdcDataScopeProvider}.java`
-- 切面：`apex-interfaces/.../interfaces/aspect/DataScopeAspect.java`
-- 注册：`apex-infrastructure/.../persistence/config/MybatisPlusConfig.java`
-- 演示：`apex-application/.../application/service/AdminUserManagementService.java#search`
+
+* 切面：`apex-interfaces/.../interfaces/aspect/DataScopeAspect.java`
+
+* 注册：`apex-infrastructure/.../persistence/config/MybatisPlusConfig.java`
+
+* 演示：`apex-application/.../application/service/AdminUserManagementService.java#search`
+

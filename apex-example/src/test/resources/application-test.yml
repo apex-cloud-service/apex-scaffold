@@ -24,19 +24,21 @@ spring:
       - org.springframework.boot.autoconfigure.data.redis.RedisReactiveAutoConfiguration
 
   # 数据源（dynamic-datasource 配置，与主应用保持一致）
+  # MySQL 测试库（与主应用 dev/it 约定一致，env 可覆盖）；
+  # 启动前提：本地 MySQL 可达（docker compose -f docker-compose.infra.yml up -d）。
   datasource:
     dynamic:
       primary: master
       strict: false
       datasource:
         master:
-          # H2 内存数据库（MODE=MySQL 兼容 MySQL 语法）
-          url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=MySQL
-          username: sa
-          password:
-          driver-class-name: org.h2.Driver
+          # 测试库 JDBC URL；默认本机 MySQL（apex_example_test 库），可经环境变量覆盖
+          url: ${DB_MASTER_URL:jdbc:mysql://127.0.0.1:3306/apex_example_test?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false}
+          username: ${DB_MASTER_USERNAME:root}
+          password: ${DB_MASTER_PASSWORD:apex-root}
+          driver-class-name: com.mysql.cj.jdbc.Driver
 
-  # Flyway：加载 H2 兼容建表脚本（src/test/resources/db/migration）
+  # Flyway：加载 MySQL 建表脚本（src/test/resources/db/example-migration）
   flyway:
     enabled: true
     locations: classpath:db/example-migration

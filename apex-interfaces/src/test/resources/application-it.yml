@@ -6,7 +6,7 @@
 # 以测试专用配置覆盖生产/开发环境默认值。
 #
 # 核心原则：
-#   1. 零外部依赖 — 使用 H2 内嵌数据库、嵌入式 Redis、禁用服务发现/消息队列，确保 CI 可复现。
+#   1. 最小外部依赖 — 嵌入式 Redis + 本地 MySQL（apex_test 库）；MySQL 由 docker-compose.infra.yml 提供，禁用服务发现/消息队列，确保 CI 可复现。
 #   2. 快速启动 — 排除不必要的自动配置，缩短测试上下文加载时间。
 #   3. 安全隔离 — 禁用所有安全防护，避免测试请求被拦截或限流。
 #   4. 数据可控 — Flyway 迁移（db/migration）建表 + data-it.sql 提供稳定的测试数据集。
@@ -31,7 +31,7 @@ spring:
   # 理由：
   #   1. Flyway 迁移脚本（db/migration，MySQL 版当前 V1-V19）在测试环境真实执行，
   #      保证「各环境 Flyway 均可用」且 schema 与生产完全一致
-  #   2. 表结构与生产零差异，规避 H2 兼容性造成的假阳性/漏检
+  #   2. 表结构与生产零差异，规避内存数据库兼容性造成的假阳性/漏检
   #   3. 每次启动经 Flyway migrate + data-it.sql 幂等重置，保证测试确定性
   # 前提：本地 MySQL 可达（如 docker run -p 3306:3306 -e MYSQL_ROOT_PASSWORD=apex-root
   #       -e MYSQL_DATABASE=apex_test mysql:8.0），连接信息可经环境变量覆盖。

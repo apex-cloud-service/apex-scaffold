@@ -121,7 +121,7 @@ return Mono.fromCallable(() -> mapper.selectPage(...)).subscribeOn(BlockingIoSch
 ⚠️ 当前 JDBC 调度器为普通 `Schedulers.newBoundedElastic`（无 ThreadLocal 透明传播），
 **请求线程装配的 ThreadLocal / MDC 不会自动到达 JDBC 线程**。因此：
 
-1. **拦截器本身**在"装配与查询同线程"的执行路径下**完整生效**（H2 端到端测试验证）；
+1. **拦截器本身**在"装配与查询同线程"的执行路径下**完整生效**（MySQL 端到端测试验证）；
 2. **响应式链路**要让拦截器生效，任选其一：
    - 在阻塞调用内部显式装配（推荐，精确）：
 
@@ -160,7 +160,7 @@ return Mono.fromCallable(() -> mapper.selectPage(...)).subscribeOn(BlockingIoSch
 | `DataScopeConditionBuilderTest` | 五种类型条件生成、别名/字段配置、缺值降级 |
 | `DataScopeSqlRewriterTest` | 真实 JSQLParser 的 SQL 注入：WHERE/无 WHERE/JOIN 别名/UNION/子查询/分组排序分页/解析失败 |
 | `DataScopeInnerInterceptorTest` | 完整链路：装配 → 解析 → 改写 → 反射回写 `BoundSql.sql` |
-| `DataScopeE2eH2Test` | H2 + 真实 MyBatis-Plus：不同范围下查询结果正确过滤 |
+| `DataScopeE2eTest` | MySQL + 真实 MyBatis-Plus：不同范围下查询结果正确过滤 |
 
 ## 8. 相关代码位置
 

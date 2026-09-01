@@ -44,7 +44,7 @@ import reactor.test.StepVerifier;
  * </ul>
  *
  * <h2>运行方式</h2>
- * <p>使用 H2 内存数据库（profile {@code it}），默认随单元测试运行。
+ * <p>使用本地 MySQL（profile {@code it}，apex_test 库），默认随单元测试运行。
  * 不需要外部服务或特定系统属性。</p>
  *
  * @author Apex Team
@@ -100,7 +100,7 @@ class ApiCallLogIntegrationTest {
     /**
      * 每个测试前清空 API 调用日志表。
      *
-     * <p>it 环境使用真实 MySQL（持久库，非 H2 内存库），多次运行/多个嵌套测试
+     * <p>it 环境使用真实 MySQL（持久库），多次运行/多个嵌套测试
      * 之间 sys_api_call_log 会残留数据，导致固定 ID 插入冲突（DuplicateKey）与
      * 固定条件查询返回多条（expected 1 actual N）。该表为测试专用写入表，
      * 清空不影响种子数据。</p>
@@ -123,12 +123,12 @@ class ApiCallLogIntegrationTest {
          * 验证 Flyway 迁移或 SQL 初始化已创建 sys_api_call_log 表。
          *
          * <p>通过尝试写入并查询一条记录来间接验证表的存在性，
-         * 而非依赖 INFORMATION_SCHEMA（H2 模式下表名可能不匹配）。</p>
+         * 而非依赖 INFORMATION_SCHEMA 查询（不同 MySQL 版本元数据可能不一致）。</p>
          *
          */
         @Test
-        @DisplayName("sys_api_call_log 表应存在于 H2 数据库中")
-        void shouldHaveApiCallLogTableInH2() {
+        @DisplayName("sys_api_call_log 表应存在于 MySQL 测试库中")
+        void shouldHaveApiCallLogTableInMySqlTestDb() {
             // 通过写入验证表存在
             jdbcTemplate.execute(
                     "INSERT INTO sys_api_call_log (id, service_name, method, path, url, status, create_time, update_time) "

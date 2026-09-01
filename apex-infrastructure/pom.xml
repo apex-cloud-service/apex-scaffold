@@ -95,12 +95,6 @@
             <artifactId>flyway-mysql</artifactId>
         </dependency>
         
-        <!-- H2 Database for dev/test -->
-        <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
-            <scope>runtime</scope>
-        </dependency>
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>druid-spring-boot-3-starter</artifactId>

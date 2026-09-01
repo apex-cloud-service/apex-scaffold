@@ -158,7 +158,7 @@ JDBC 线程执行且未显式装配（见注意事项第 4 条）；③ slave �
 `DataSourceContext.current()`（本脚手架）或 `DynamicDataSourceContextHolder.peek()`（Baomidou）。
 
 **Q4：如何验证功能正确？**
-参考 `DataSourceSwitchE2eH2Test`（双 H2 内存库 + DynamicRoutingDataSource 端到端路由验证）
+参考 `DataSourceSwitchE2eTest`（双 MySQL schema + DynamicRoutingDataSource 端到端路由验证）
 与 `DataSourceSwitchAspectTest`（真实切面代理测试）。
 
 ## 相关代码位置
@@ -170,5 +170,5 @@ JDBC 线程执行且未显式装配（见注意事项第 4 条）；③ slave �
   `apex-example/.../resources/application.yml`
 - 演示：`apex-example/.../service/ExampleUserService.java#getUserFromSlave`
 - 脚本：`scripts/datasource/{setup-slave.sh, init-slave.sql}`
-- 测试：`DataSourceContextTest`（common）、`DataSourceSwitchE2eH2Test`（infra）、
+- 测试：`DataSourceContextTest`（common）、`DataSourceSwitchE2eTest`（infra）、
   `DataSourceSwitchAspectTest`（interfaces）

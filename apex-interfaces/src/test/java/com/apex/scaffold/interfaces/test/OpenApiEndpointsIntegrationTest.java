@@ -16,7 +16,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 /**
  * 接口文档端点端到端验证。
  *
- * <p>启动完整应用上下文（it profile，H2 + mock Redis），验证：
+ * <p>启动完整应用上下文（it profile，MySQL + mock Redis），验证：
  * <ul>
  *   <li>{@code GET /doc.html} — Knife4j 增强文档入口可访问（返回 200，静态资源由 webjar 提供）</li>
  *   <li>{@code GET /v3/api-docs} — OpenAPI JSON 端点可访问，且包含系统管理分组声明的路径</li>
