@@ -34,7 +34,7 @@ import org.mapstruct.factory.Mappers;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-class UserRepositoryH2Test {
+class UserRepositoryTest {
 
     private static HikariDataSource dataSource;
     private static SqlSessionFactory sqlSessionFactory;
@@ -43,14 +43,29 @@ class UserRepositoryH2Test {
 
     @BeforeAll
     static void setUpFactory() throws Exception {
+        String host = System.getProperty("DB_MASTER_HOST", "127.0.0.1");
+        String port = System.getProperty("DB_MASTER_PORT", "3306");
+        String user = System.getProperty("DB_MASTER_USERNAME", "root");
+        String pass = System.getProperty("DB_MASTER_PASSWORD", "apex-root");
+        String dbName = "apex_unit_userrepository";
+        String serverUrl = "jdbc:mysql://" + host + ":" + port
+                + "/?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai"
+                + "&allowPublicKeyRetrieval=true&useSSL=false";
+        try (Connection admin = java.sql.DriverManager.getConnection(serverUrl, user, pass);
+                Statement create = admin.createStatement()) {
+            create.execute("CREATE DATABASE IF NOT EXISTS `" + dbName + "`");
+        }
         dataSource = new HikariDataSource();
-        dataSource.setJdbcUrl("jdbc:h2:mem:userrepository;MODE=MySQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE");
-        dataSource.setUsername("sa");
-        dataSource.setPassword("");
-        dataSource.setDriverClassName("org.h2.Driver");
+        dataSource.setJdbcUrl("jdbc:mysql://" + host + ":" + port + "/" + dbName
+                + "?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai"
+                + "&allowPublicKeyRetrieval=true&useSSL=false");
+        dataSource.setUsername(user);
+        dataSource.setPassword(pass);
+        dataSource.setDriverClassName("com.mysql.cj.jdbc.Driver");
 
         try (Connection connection = dataSource.getConnection();
                 Statement statement = connection.createStatement()) {
+            statement.execute("DROP TABLE IF EXISTS sys_user");
             statement.execute("CREATE TABLE sys_user ("
                     + "id BIGINT NOT NULL PRIMARY KEY, "
                     + "open_id VARCHAR(64), username VARCHAR(64), dept_id BIGINT, tenant_id VARCHAR(64), "

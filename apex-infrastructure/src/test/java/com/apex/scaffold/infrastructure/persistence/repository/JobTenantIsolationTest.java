@@ -31,22 +31,38 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-@DisplayName("Job/JobLog 仓储租户行隔离端到端测试(H2)")
-class JobTenantIsolationH2Test {
+@DisplayName("Job/JobLog 仓储租户行隔离端到端测试")
+class JobTenantIsolationTest {
 
     private static SqlSessionFactory sqlSessionFactory;
     private static HikariDataSource dataSource;
 
     @BeforeAll
     static void setUpFactory() throws Exception {
+        String host = System.getProperty("DB_MASTER_HOST", "127.0.0.1");
+        String port = System.getProperty("DB_MASTER_PORT", "3306");
+        String user = System.getProperty("DB_MASTER_USERNAME", "root");
+        String pass = System.getProperty("DB_MASTER_PASSWORD", "apex-root");
+        String dbName = "apex_unit_jobtenant";
+        String serverUrl = "jdbc:mysql://" + host + ":" + port
+                + "/?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai"
+                + "&allowPublicKeyRetrieval=true&useSSL=false";
+        try (Connection admin = java.sql.DriverManager.getConnection(serverUrl, user, pass);
+                Statement create = admin.createStatement()) {
+            create.execute("CREATE DATABASE IF NOT EXISTS `" + dbName + "`");
+        }
         dataSource = new HikariDataSource();
-        dataSource.setJdbcUrl("jdbc:h2:mem:jobtenant;MODE=MySQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE");
-        dataSource.setUsername("sa");
-        dataSource.setPassword("");
-        dataSource.setDriverClassName("org.h2.Driver");
+        dataSource.setJdbcUrl("jdbc:mysql://" + host + ":" + port + "/" + dbName
+                + "?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai"
+                + "&allowPublicKeyRetrieval=true&useSSL=false");
+        dataSource.setUsername(user);
+        dataSource.setPassword(pass);
+        dataSource.setDriverClassName("com.mysql.cj.jdbc.Driver");
 
         try (Connection connection = dataSource.getConnection();
                 Statement statement = connection.createStatement()) {
+            statement.execute("DROP TABLE IF EXISTS sys_job_log");
+            statement.execute("DROP TABLE IF EXISTS sys_job");
             statement.execute("CREATE TABLE sys_job ("
                     + "id BIGINT NOT NULL PRIMARY KEY, "
                     + "tenant_id VARCHAR(64), "

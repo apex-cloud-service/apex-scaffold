@@ -7,9 +7,13 @@ import org.reactivestreams.Subscription;
 import org.slf4j.MDC;
 import org.springframework.context.annotation.Configuration;
 import reactor.core.CoreSubscriber;
+import reactor.core.Fuseable;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Operators;
 import reactor.util.context.Context;
+
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 /**
  * Reactor MDC 配置。
@@ -72,17 +76,23 @@ public class ReactorMdcConfig {
          */
         @Override
         public void onSubscribe(Subscription s) {
-            actual.onSubscribe(new Subscription() {
-                @Override
-                public void request(long n) {
-                    withMdc(currentContext(), () -> s.request(n));
-                }
+            if (s instanceof Fuseable.QueueSubscription) {
+                @SuppressWarnings("unchecked")
+                Fuseable.QueueSubscription<Object> qs = (Fuseable.QueueSubscription<Object>) s;
+                actual.onSubscribe(new MdcContextQueueSubscription<>(qs, this));
+            } else {
+                actual.onSubscribe(new Subscription() {
+                    @Override
+                    public void request(long n) {
+                        withMdc(currentContext(), () -> s.request(n));
+                    }
 
-                @Override
-                public void cancel() {
-                    withMdc(currentContext(), s::cancel);
-                }
-            });
+                    @Override
+                    public void cancel() {
+                        withMdc(currentContext(), s::cancel);
+                    }
+                });
+            }
         }
 
         /**
@@ -150,6 +160,108 @@ public class ReactorMdcConfig {
             } finally {
                 MDC.remove(TraceIdUtil.TRACE_ID_KEY);
             }
+        }
+    }
+
+    /**
+     * 针对 Reactor Fuseable 优化路径的 QueueSubscription 桥接包装。
+     *
+     * <p>当上游订阅是 {@link Fuseable.QueueSubscription} 时（常用于可融合的同步队列模式），
+     * 必须保持该接口类型，否则下游 Reactor 操作符尝试强转为 {@code QueueSubscription}
+     * 会抛出 {@link ClassCastException}。此包装类委托所有 QueueSubscription 方法，并在
+     * request/cancel 信号触发时应用 MDC 上下文同步，确保 traceId 在线程切换时不丢失。
+     *
+     * @param <T> 元素类型
+     */
+    private static final class MdcContextQueueSubscription<T> implements Fuseable.QueueSubscription<T> {
+
+        private final Fuseable.QueueSubscription<T> delegate;
+        private final MdcContextSubscriber<?> subscriber;
+
+        private MdcContextQueueSubscription(
+                Fuseable.QueueSubscription<T> delegate, MdcContextSubscriber<?> subscriber) {
+            this.delegate = delegate;
+            this.subscriber = subscriber;
+        }
+
+        @Override
+        public void request(long n) {
+            withMdcStatic(subscriber.currentContext(), () -> delegate.request(n));
+        }
+
+        @Override
+        public void cancel() {
+            withMdcStatic(subscriber.currentContext(), delegate::cancel);
+        }
+
+        @Override
+        public int requestFusion(int requestedMode) {
+            return delegate.requestFusion(requestedMode);
+        }
+
+        @Override
+        public T poll() {
+            return delegate.poll();
+        }
+
+        @Override
+        public int size() {
+            return delegate.size();
+        }
+
+        @Override
+        public boolean isEmpty() {
+            return delegate.isEmpty();
+        }
+
+        @Override
+        public void clear() {
+            delegate.clear();
+        }
+
+        @Override
+        public Iterator<T> iterator() {
+            return new Iterator<>() {
+                private final Iterator<T> delegateIterator = delegate.iterator();
+
+                @Override
+                public boolean hasNext() {
+                    return delegateIterator.hasNext();
+                }
+
+                @Override
+                public T next() {
+                    if (!hasNext()) {
+                        throw new NoSuchElementException();
+                    }
+                    return delegateIterator.next();
+                }
+
+                @Override
+                public void remove() {
+                    delegateIterator.remove();
+                }
+            };
+        }
+    }
+
+    /**
+     * {@link MdcContextSubscriber#withMdc} 方法的静态版本，供外部静态内部类调用。
+     *
+     * @param ctx      Reactor Context
+     * @param runnable 需要在带 MDC 的上下文中执行的逻辑
+     */
+    private static void withMdcStatic(Context ctx, Runnable runnable) {
+        String traceId = ctx.getOrDefault(TraceIdUtil.TRACE_ID_KEY, null);
+        if (traceId != null && !traceId.isEmpty()) {
+            MDC.put(TraceIdUtil.TRACE_ID_KEY, traceId);
+        } else {
+            MDC.remove(TraceIdUtil.TRACE_ID_KEY);
+        }
+        try {
+            runnable.run();
+        } finally {
+            MDC.remove(TraceIdUtil.TRACE_ID_KEY);
         }
     }
 }

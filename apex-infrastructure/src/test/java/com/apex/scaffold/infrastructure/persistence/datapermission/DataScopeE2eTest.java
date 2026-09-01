@@ -28,7 +28,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 /**
- * 数据权限拦截器端到端测试（H2 内存库 + 真实 MyBatis-Plus 执行）。
+ * 数据权限拦截器端到端测试（MySQL + 真实 MyBatis-Plus 执行）。
  *
  * <p>验证完整的"装配上下文 → 拦截器改写 SQL → 数据库执行"链路：
  * 不同数据权限范围下 {@code sys_user} 查询结果被正确过滤，且分页/未装配场景不受影响。</p>
@@ -38,22 +38,37 @@ import org.junit.jupiter.api.Test;
  *
  * @author Apex Team
  */
-@DisplayName("数据权限拦截器端到端测试(H2)")
-class DataScopeE2eH2Test {
+@DisplayName("数据权限拦截器端到端测试")
+class DataScopeE2eTest {
 
     private static SqlSessionFactory sqlSessionFactory;
     private static HikariDataSource dataSource;
 
     @BeforeAll
     static void setUpFactory() throws Exception {
+        String host = System.getProperty("DB_MASTER_HOST", "127.0.0.1");
+        String port = System.getProperty("DB_MASTER_PORT", "3306");
+        String user = System.getProperty("DB_MASTER_USERNAME", "root");
+        String pass = System.getProperty("DB_MASTER_PASSWORD", "apex-root");
+        String dbName = "apex_unit_datascope";
+        String serverUrl = "jdbc:mysql://" + host + ":" + port
+                + "/?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai"
+                + "&allowPublicKeyRetrieval=true&useSSL=false";
+        try (Connection admin = java.sql.DriverManager.getConnection(serverUrl, user, pass);
+                Statement create = admin.createStatement()) {
+            create.execute("CREATE DATABASE IF NOT EXISTS `" + dbName + "`");
+        }
         dataSource = new HikariDataSource();
-        dataSource.setJdbcUrl("jdbc:h2:mem:datascope;MODE=MySQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE");
-        dataSource.setUsername("sa");
-        dataSource.setPassword("");
-        dataSource.setDriverClassName("org.h2.Driver");
+        dataSource.setJdbcUrl("jdbc:mysql://" + host + ":" + port + "/" + dbName
+                + "?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai"
+                + "&allowPublicKeyRetrieval=true&useSSL=false");
+        dataSource.setUsername(user);
+        dataSource.setPassword(pass);
+        dataSource.setDriverClassName("com.mysql.cj.jdbc.Driver");
 
         try (Connection conn = dataSource.getConnection();
                 Statement st = conn.createStatement()) {
+            st.execute("DROP TABLE IF EXISTS sys_user");
             st.execute("CREATE TABLE sys_user ("
                     + "id BIGINT AUTO_INCREMENT PRIMARY KEY, "
                     + "username VARCHAR(64), "

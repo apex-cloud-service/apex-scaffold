@@ -37,22 +37,39 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-@DisplayName("租户行拦截器端到端测试(H2)")
-class TenantLineE2eH2Test {
+@DisplayName("租户行拦截器端到端测试")
+class TenantLineE2eTest {
 
     private static SqlSessionFactory sqlSessionFactory;
     private static HikariDataSource dataSource;
 
     @BeforeAll
     static void setUpFactory() throws Exception {
+        String host = System.getProperty("DB_MASTER_HOST", "127.0.0.1");
+        String port = System.getProperty("DB_MASTER_PORT", "3306");
+        String user = System.getProperty("DB_MASTER_USERNAME", "root");
+        String pass = System.getProperty("DB_MASTER_PASSWORD", "apex-root");
+        String dbName = "apex_unit_tenantline";
+        String serverUrl = "jdbc:mysql://" + host + ":" + port
+                + "/?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai"
+                + "&allowPublicKeyRetrieval=true&useSSL=false";
+        try (Connection admin = java.sql.DriverManager.getConnection(serverUrl, user, pass);
+                Statement create = admin.createStatement()) {
+            create.execute("CREATE DATABASE IF NOT EXISTS `" + dbName + "`");
+        }
         dataSource = new HikariDataSource();
-        dataSource.setJdbcUrl("jdbc:h2:mem:tenantline;MODE=MySQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE");
-        dataSource.setUsername("sa");
-        dataSource.setPassword("");
-        dataSource.setDriverClassName("org.h2.Driver");
+        dataSource.setJdbcUrl("jdbc:mysql://" + host + ":" + port + "/" + dbName
+                + "?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai"
+                + "&allowPublicKeyRetrieval=true&useSSL=false");
+        dataSource.setUsername(user);
+        dataSource.setPassword(pass);
+        dataSource.setDriverClassName("com.mysql.cj.jdbc.Driver");
 
         try (Connection connection = dataSource.getConnection();
                 Statement statement = connection.createStatement()) {
+            statement.execute("DROP TABLE IF EXISTS sys_role_dept");
+            statement.execute("DROP TABLE IF EXISTS sys_dept");
+            statement.execute("DROP TABLE IF EXISTS tenant_record");
             statement.execute("CREATE TABLE tenant_record ("
                     + "id BIGINT AUTO_INCREMENT PRIMARY KEY, "
                     + "tenant_id VARCHAR(64) NOT NULL, "
@@ -108,7 +125,7 @@ class TenantLineE2eH2Test {
         TenantContext.clear();
         try (Connection connection = dataSource.getConnection();
                 Statement statement = connection.createStatement()) {
-            statement.execute("TRUNCATE TABLE tenant_record RESTART IDENTITY");
+            statement.execute("TRUNCATE TABLE tenant_record");
             statement.execute("TRUNCATE TABLE sys_role_dept");
             statement.execute("TRUNCATE TABLE sys_dept");
             statement.execute("INSERT INTO tenant_record (tenant_id, record_name) VALUES "
