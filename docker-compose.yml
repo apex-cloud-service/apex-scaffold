@@ -19,9 +19,13 @@
 #   # 4) 监控栈（Prometheus + Grafana + Zipkin）另行启动
 #   docker compose -f config/monitoring/docker-compose.yml up -d
 #
+#   # 5) 管理后台前端（可选，需先构建镜像: cd ../apex-admin-web && docker build -t apex-admin-web:latest .）
+#   docker compose up -d apex-admin-web
+#
 # 访问:
 #   业务 API    http://localhost:8080    （API 文档 /doc.html）
 #   管理端点    http://localhost:8081/actuator/health
+#   管理后台    http://localhost          （前端容器 Nginx，反代 /api、/admin-api 到后端）
 #   详细文档:   docs/DEPLOYMENT.md
 # ============================================================
 
@@ -165,6 +169,26 @@ services:
       JAVA_OPT_EXT: "-XX:MetaspaceSize=256m -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/home/rocketmq/logs/rmq_namesrv_heapdump.hprof -XX:+ExitOnOutOfMemoryError -Xloggc:/home/rocketmq/logs/rmq_namesrv_gc.log -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=5 -XX:GCLogFileSize=20m -Dfile.encoding=UTF-8"
     ports:
       - "9876:9876"
+    restart: unless-stopped
+    networks:
+      - apex-network
+
+  # ---------------- Apex Admin Web（前端管理后台，可选） ----------------
+  apex-admin-web:
+    # 镜像需预先构建（前端为独立仓库，compose 无法引用仓库外 build context）：
+    #   cd ../apex-admin-web && docker build -t apex-admin-web:${TAG:-latest} .
+    image: apex-admin-web:${TAG:-latest}
+    container_name: apex-admin-web
+    environment:
+      # 反代后端：同 compose 网络内按服务名访问 apex-scaffold:8080
+      API_PROXY_PASS: ${API_PROXY_PASS:-http://apex-scaffold:8080}
+      TZ: ${TZ:-Asia/Shanghai}
+    ports:
+      - "${WEB_PORT:-80}:80"
+    # apex-scaffold 无 healthcheck，故用 service_started；Nginx 就绪后反代自然可用
+    depends_on:
+      apex-scaffold:
+        condition: service_started
     restart: unless-stopped
     networks:
       - apex-network

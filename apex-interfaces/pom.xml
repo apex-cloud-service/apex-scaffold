@@ -265,7 +265,6 @@
                                 <include>com.apex.scaffold.interfaces.interest.catalog.*</include>
                                 <include>com.apex.scaffold.interfaces.router.*</include>
                                 <include>com.apex.scaffold.interfaces.security.*</include>
-                                <include>com.apex.scaffold.interfaces.admin.*</include>
                                 <include>com.apex.scaffold.interfaces.util.*</include>
                                 <include>com.apex.scaffold.interfaces.exception.*</include>
                             </includes>

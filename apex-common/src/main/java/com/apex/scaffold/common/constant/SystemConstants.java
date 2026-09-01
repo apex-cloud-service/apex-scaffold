@@ -132,7 +132,6 @@ public final class SystemConstants {
      *       仅本机访问，安全风险可控。Prometheus 抓取端点必须放行以满足指标采集需求；
      *       /actuator 仅返回端点目录索引，其余未列出端点仍要求管理员角色（精确放行）</li>
      *   <li>/swagger-ui/**、/v3/api-docs/** — API 文档接口</li>
-     *   <li>/admin、/admin/** — 后台管理前端静态壳；后台业务 API 不在公开路径中</li>
      *   <li>/uploads/apex/** — 二选一和四选二使用的 AF/AM 投票照片静态资源（本地存储）</li>
      *   <li>/tos/** — 火山云 TOS 照片代理路径（通过预签名 URL 302 重定向访问）</li>
      *   <li>/minio/** — MinIO 照片代理路径（通过预签名 URL 302 重定向访问）</li>
@@ -170,9 +169,6 @@ public final class SystemConstants {
             "/v3/api-docs/**",
             "/webjars/**",
             "/doc.html",
-            // 后台前端仅包含静态壳资源；全部业务数据仍由 /admin-api/v1/** 的 JWT + RBAC 保护。
-            "/admin",
-            "/admin/**",
             "/uploads/apex/**",
             "/tos/**",
             "/minio/**",

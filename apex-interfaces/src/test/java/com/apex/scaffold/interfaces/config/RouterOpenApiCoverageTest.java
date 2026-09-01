@@ -200,7 +200,7 @@ class RouterOpenApiCoverageTest {
      *
      * <p>覆盖全部业务路由工厂：通用 /api/v1 模块（apiRoutes）、后台用户管理
      * （adminUserManagementRoutes）以及 P0 系统管理模块（菜单/字典/参数/定时任务/登录日志/验证码）。
-     * 前端重定向路由（adminFrontendRedirectRoutes）不承载业务 API，不纳入覆盖范围。</p>
+     * 前端静态壳与短入口重定向路由已随前后端分离迁移移除，不纳入覆盖范围。</p>
      *
      * @return 已注册的 HTTP 方法和绝对路径集合
      * @throws Exception 当路由 Bean 反射调用失败时

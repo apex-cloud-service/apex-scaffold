@@ -22,7 +22,6 @@ import com.apex.scaffold.interfaces.handler.MonitorDashboardHandler;
 import com.apex.scaffold.interfaces.handler.NotificationSseHandler;
 import com.apex.scaffold.interfaces.handler.OnlineUserHandler;
 import com.apex.scaffold.interfaces.handler.UserHandler;
-import java.net.URI;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
@@ -64,25 +63,6 @@ public class ApiRouter {
                         .POST("/{userId}/sessions/revoke", handler::revokeSessions)
                         .PUT("/{userId}/status", contentType(MediaType.APPLICATION_JSON), handler::updateStatus)
                         .PUT("/{userId}/roles", contentType(MediaType.APPLICATION_JSON), handler::replaceRoles))
-                .build();
-    }
-
-    /**
-     * 管理后台短入口重定向路由。
-     *
-     * <p>将短管理地址（{@code /admin}、{@code /admin/}）以 302 重定向到
-     * 不可变静态入口文档，使浏览器地址栏保持规范形式。以函数式端点
-     * 实现，替代历史遗留的注解式 {@code @Controller}。</p>
-     *
-     * @return 短入口重定向路由函数
-     */
-    @Bean
-    public RouterFunction<ServerResponse> adminFrontendRedirectRoutes() {
-        return RouterFunctions.route()
-                .GET("/admin", request -> ServerResponse.temporaryRedirect(URI.create("/admin/index.html"))
-                        .build())
-                .GET("/admin/", request -> ServerResponse.temporaryRedirect(URI.create("/admin/index.html"))
-                        .build())
                 .build();
     }
 
