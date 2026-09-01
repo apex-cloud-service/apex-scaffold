@@ -51,7 +51,11 @@
   - `header()` 默认 `Idempotency-Key`；`expireTime()` 默认 600 秒；`required()` 默认 true（严格模式）
 - 切面：`apex-interfaces/.../aspect/IdempotentApiAspect.java`
   - `@Order(HIGHEST_PRECEDENCE + 10)`，拦截 `@annotation(idempotentApi)`
-  - 兼容函数式端点（`ServerRequest`）与注解式端点（`ServerWebExchange`）两种参数形态
+  - 兼容函数式端点（`ServerRequest`）与注解式端点（`ServerWebExchange`）两种参数形态：
+    统一经 `AspectRequestUtil.resolveRequestMeta(args)` 归一化为 `RequestMeta`
+    （路径/方法/请求头/远端地址），再以 `resolveClientIp(meta)` 提取客户端 IP；
+    函数式端点直接消费 `ServerRequest` 自身的 `path()/headers()/remoteAddress()`，
+    不依赖 `ServerRequest.exchange()` 转换（该调用在部分 WebFlux 构建与测试场景返回 null）
   - 键合成：`apex:idem:{sha256Hex(路径 | 幂等键头值 | 客户端IP)}`
   - 语义：SETNX 并发只放行一个；业务异常释放键允许重试；成功保留至 TTL 过期
   - Redis 不可用：记录 ERROR 并 fail-open 放行，DB 唯一约束作最终兜底
@@ -75,8 +79,15 @@
 **缺口**：`AntiReplayAspect` 原 `findExchange` 只识别 `ServerWebExchange`；项目全库为
 WebFlux 纯函数式端点（Handler 参数是 `ServerRequest`），导致标注 `@AntiReplay` 的方法**从未被拦截**。
 
-**修复**：`resolveHeaders(Object[] args)` 依次匹配 `ServerWebExchange` → `ServerRequest`
+**修复（2026-08-28）**：`resolveHeaders(Object[] args)` 依次匹配 `ServerWebExchange` → `ServerRequest`
 （`asHttpHeaders()` 转换），函数式端点防重放校验真实生效。
+
+**统一化（2026-09-02）**：请求解析收敛至 `AspectRequestUtil` —— 新增 `RequestMeta` record
+与 `resolveRequestMeta(Object[])`（查找优先级 `ServerWebExchange` → `ServerHttpRequest` →
+`ServerRequest`），`AntiReplayAspect` 经 `AspectRequestUtil.resolveHttpHeaders(args)`
+获取请求头；函数式端点直接读取 `ServerRequest` 自身的 `path()/method()/headers()/remoteAddress()`，
+**不再调用 `ServerRequest.exchange()`**（该调用在部分 WebFlux 构建与测试场景返回 null），
+保证注解式与函数式两种端点形态在切面中行为一致。
 
 **防重放键**：`replay:{nonce}`，TTL 默认 360 秒（`apex.security.anti-replay.nonce-ttl-seconds`）。
 
@@ -143,8 +154,9 @@ Reactor `Retry` 编程式完成，参数含义与声明式配置存在差异。�
 | --- | --- |
 | `apex-common/.../annotation/IdempotentApi.java` | 新增注解 |
 | `apex-common/.../result/ResultCode.java` | 新增 4742 / 5002 / 5003 |
-| `apex-interfaces/.../aspect/IdempotentApiAspect.java` | 新增响应式幂等切面 |
-| `apex-interfaces/.../aspect/AntiReplayAspect.java` | 修复函数式端点识别 |
+| `apex-interfaces/.../aspect/IdempotentApiAspect.java` | 新增响应式幂等切面；请求上下文经 `AspectRequestUtil.RequestMeta` 统一解析 |
+| `apex-interfaces/.../aspect/AntiReplayAspect.java` | 修复函数式端点识别；请求头解析收敛至 `AspectRequestUtil.resolveHttpHeaders` |
+| `apex-interfaces/.../aspect/AspectRequestUtil.java` | 统一请求解析工具：`RequestMeta` record + `resolveRequestMeta`（函数式端点不依赖 `exchange()`） |
 | `apex-interfaces/.../monitor/SecurityMetricsRecorder.java` | 新增 `recordRepeatSubmitRejected` |
 | `apex-interfaces/.../config/MetricsConfig.java` | 新增 `apex.security.repeat.submit.rejected` 计数器 |
 | `apex-interfaces/.../handler/AuthHandler.java` | `register` 接线 `@IdempotentApi(required=false)` |
@@ -152,7 +164,7 @@ Reactor `Retry` 编程式完成，参数含义与声明式配置存在差异。�
 | `apex-application/.../service/AuthService.java` | 接线 `enabled` 开关 + 验证码升级强制 |
 | `application.yml` / `application-prod.yml` | 新增 `captcha-after-failures: 3`；更新开关注释 |
 | i18n `messages_{zh_CN,zh_TW,en_US,th_TH}.properties` | 新增 3 组文案 |
-| 测试 | `IdempotentApiAspectTest`（新增）、`AntiReplayAspectTest`（补函数式端点用例）、`SecurityMetricsRecorderTest`（补计数器）、`AuthServiceTest`（补开关/升级用例） |
+| 测试 | `IdempotentApiAspectTest`（新增）、`AntiReplayAspectTest`（补函数式端点用例）、`SecurityMetricsRecorderTest`（补计数器）、`AuthServiceTest`（补开关/升级用例）；函数式/注解式端点请求解析用例覆盖 `AspectRequestUtil` |
 
 ---
 

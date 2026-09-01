@@ -4,6 +4,14 @@
 
 ## [Unreleased]
 
+### Refactor
+- **全库 Javadoc 补全与规范化**：为无注释的公开 API 补充符合规范的中文 Javadoc（5 个主模块的方法/字段/类）；清除机器生成的占位模板（`执行 {@code X} 操作` / `参数说明` / `返回值说明` / `@return 操作结果` 等），全库移除 1100+ 测试占位块与主代码冗余注释，统一重写为语义化描述
+- **切面请求解析统一为 `AspectRequestUtil`**：新增 `RequestMeta` record 与 `resolveRequestMeta(Object[])`，将函数式端点（`ServerRequest`）与注解式端点（`ServerWebExchange`）的请求定位/归一化逻辑收敛为函数式 API；函数式端点直接消费 `ServerRequest` 自身的 `path()/method()/headers()/remoteAddress()`，不再调用 `ServerRequest.exchange()`（该调用在部分 WebFlux 构建与测试场景返回 null），修复 `AntiReplayAspect` / `IdempotentApiAspect` 在函数式端点上的请求解析回归
+- **OperationLogAspect UA 解析声明式规则表**：设备类型/浏览器/操作系统识别由手写 if-else 链重构为 `UaRule`（`Predicate` + 目标值）有序规则表，按序首匹配，消除重复判定与维护成本
+
+### Fixed
+- **切面请求解析回归**：`resolveServerHttpRequest` 对 `ServerRequest.exchange()` 返回 null 的场景优雅降级；`fromHttpRequest` 对 URI 为 null 的 mock 场景（路径取空串）优雅降级，避免请求头/IP 解析中断
+
 ## [1.2.0] - 2026-08-29（商业化售卖就绪 P0/P1 修复）
 
 ### Fixed
