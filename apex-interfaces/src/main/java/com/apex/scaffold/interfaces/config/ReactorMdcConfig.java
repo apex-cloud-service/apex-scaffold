@@ -3,6 +3,8 @@ package com.apex.scaffold.interfaces.config;
 import com.apex.scaffold.common.util.TraceIdUtil;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 import org.reactivestreams.Subscription;
 import org.slf4j.MDC;
 import org.springframework.context.annotation.Configuration;
@@ -11,9 +13,6 @@ import reactor.core.Fuseable;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Operators;
 import reactor.util.context.Context;
-
-import java.util.Iterator;
-import java.util.NoSuchElementException;
 
 /**
  * Reactor MDC 配置。

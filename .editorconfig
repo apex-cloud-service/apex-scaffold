@@ -1,0 +1,33 @@
+# EditorConfig：统一各编辑器/IDE 编码风格
+# 后端工程规范：Java 4 空格 / 缩进用空格 / LF 行尾 / UTF-8
+# 格式约束最终以 spotless(palantirJavaFormat) + p3c 为准，本文件保证编辑器层面一致
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+
+[*.java]
+indent_size = 4
+indent_style = space
+tab_width = 4
+max_line_length = 120
+
+[*.{xml,yml,yaml,json,properties,sql,sh,bat}]
+indent_size = 2
+indent_style = space
+tab_width = 2
+
+[*.{md,markdown}]
+indent_size = 4
+trim_trailing_whitespace = false
+
+[Makefile]
+indent_style = tab
+
+[*.sh]
+end_of_line = lf
