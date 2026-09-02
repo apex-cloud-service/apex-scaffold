@@ -5,14 +5,19 @@ import io.swagger.v3.oas.annotations.media.Schema;
 /**
  * 中间件监控响应（/admin-api/v1/monitor/middleware）。
  *
- * <p>聚合 MySQL 连接池、Redis 健康与派生指标、消息中间件（RocketMQ）
- * 与链路追踪（Zipkin）的状态与关键指标。</p>
  *
- * @param timestamp 采集时间戳（毫秒）
- * @param mysql MySQL 指标
- * @param redis Redis 指标
- * @param mq 消息中间件指标
- * @param tracing 链路追踪指标
+ *<p>聚合 MySQL 连接池、Redis 健康与派生指标、消息中间件（RocketMQ）
+ *与链路追踪（Zipkin）的状态与关键指标。</p>
+ *
+ *@param timestamp 采集时间戳（毫秒）
+ *@param mysql MySQL 指标
+ *@param redis Redis 指标
+ *@param mq 消息中间件指标
+ *@param tracing 链路追踪指标
+ *
+ * @author Apex Team
+ * @version 1.0.0
+ * @since 1.0.0
  */
 @Schema(description = "中间件监控（MySQL/Redis/消息中间件/Zipkin）")
 public record MonitorMiddlewareResponse(

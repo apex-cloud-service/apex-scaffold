@@ -9,6 +9,13 @@ package com.apex.scaffold.domain.model.moderation;
  * @version 1.0.0
  * @since 1.0.0
  */
+/**
+ * ModerationDecision 组件。
+ *
+ * @author Apex Team
+ * @version 1.0.0
+ * @since 1.0.0
+ */
 public enum ModerationDecision {
 
     /** 通过（严重程度0） */

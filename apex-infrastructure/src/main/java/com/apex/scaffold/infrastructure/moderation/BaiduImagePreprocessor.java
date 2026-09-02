@@ -19,7 +19,7 @@ import org.springframework.core.io.Resource;
 /**
  * 在提交百度云前约束尺寸，并将超出 Base64 限制的图片缩放压缩为 JPEG。
  *
- * @author weiqiang.ling
+ * @author Apex Team
  * @version 1.0.0
  * @since 1.0.0
  */

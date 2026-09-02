@@ -24,50 +24,52 @@ import reactor.core.publisher.Mono;
 /**
  * 用户注册及微信绑定编排服务。
  *
- * <h2>职责</h2>
- * <p>该服务负责编排以下核心业务流程：</p>
- * <ol>
- *   <li><b>注册</b> — 消耗 {@link AuthTicketType#REGISTRATION} 票据，
- *       根据性别 / 生日合法性校验创建完整用户并签发 JWT Token 自动登录</li>
- *   <li><b>微信手机号绑定</b> — 消耗 {@link AuthTicketType#WECHAT_BIND} 票据，
- *       在微信授权码登录无手机号场景下将微信 openId 与短信验证后的手机号绑定</li>
- *   <li><b>跨身份合并</b> — 当微信绑定的手机号已存在独立手机号注册用户时，
- *       将微信 openId / unionId / wechatToken 合并到已有手机号用户上，并清理旧的占位 openId</li>
- * </ol>
  *
- * <h2>调用链路</h2>
- * <pre>
- *   AuthHandler
- *     └── AuthRegistrationService
- *           ├── register()           → POST /api/v1/auth/register
- *           └── bindWechatPhone()    → POST /api/v1/auth/bind-wechat-phone
- *                 ├── AuthTicketService.consume()
- *                 ├── UserService.getByOpenId() / getByPhone()
- *                 ├── UserService.create() / update()
- *                 └── TokenService.generateAccessToken() / storeToken()
- * </pre>
+ *<h2>职责</h2>
+ *<p>该服务负责编排以下核心业务流程：</p>
+ *<ol>
+ *  <li><b>注册</b> — 消耗 {@link AuthTicketType#REGISTRATION} 票据，
+ *      根据性别 / 生日合法性校验创建完整用户并签发 JWT Token 自动登录</li>
+ *  <li><b>微信手机号绑定</b> — 消耗 {@link AuthTicketType#WECHAT_BIND} 票据，
+ *      在微信授权码登录无手机号场景下将微信 openId 与短信验证后的手机号绑定</li>
+ *  <li><b>跨身份合并</b> — 当微信绑定的手机号已存在独立手机号注册用户时，
+ *      将微信 openId / unionId / wechatToken 合并到已有手机号用户上，并清理旧的占位 openId</li>
+ *</ol>
  *
- * <h2>安全保障</h2>
- * <ul>
- *   <li>所有请求依赖一次性票据（{@link AuthTicketService}），防止重放攻击</li>
- *   <li>短信验证码通过 {@link SmsCodeService#validate(String, String)} 校验，
- *       由调用方（AuthHandler）在 {@code bindWechatPhone} 入口传入</li>
- *   <li>性别和生日在注册阶段强制执行校验（{@link #validateRegistrationProfile(RegisterRequest)}），
- *       防止非法数据进入数据库</li>
- *   <li>手机号唯一性在 {@link UserService} 层面通过数据库 UNIQUE 约束保障</li>
- *   <li>微信 openId 与手机号的绑定关系严格检查：
- *       <ul>
- *         <li>同一 openId 不允许绑定多个不同手机号</li>
- *         <li>同一手机号不允许绑定多个不同 openId</li>
- *       </ul>
- *   </li>
- * </ul>
+ *<h2>调用链路</h2>
+ *<pre>
+ *  AuthHandler
+ *    └── AuthRegistrationService
+ *          ├── register()           → POST /api/v1/auth/register
+ *          └── bindWechatPhone()    → POST /api/v1/auth/bind-wechat-phone
+ *                ├── AuthTicketService.consume()
+ *                ├── UserService.getByOpenId() / getByPhone()
+ *                ├── UserService.create() / update()
+ *                └── TokenService.generateAccessToken() / storeToken()
+ *</pre>
  *
- * @author weiqiang.ling
- * @version 1.1.0
+ *<h2>安全保障</h2>
+ *<ul>
+ *  <li>所有请求依赖一次性票据（{@link AuthTicketService}），防止重放攻击</li>
+ *  <li>短信验证码通过 {@link SmsCodeService#validate(String, String)} 校验，
+ *      由调用方（AuthHandler）在 {@code bindWechatPhone} 入口传入</li>
+ *  <li>性别和生日在注册阶段强制执行校验（{@link #validateRegistrationProfile(RegisterRequest)}），
+ *      防止非法数据进入数据库</li>
+ *  <li>手机号唯一性在 {@link UserService} 层面通过数据库 UNIQUE 约束保障</li>
+ *  <li>微信 openId 与手机号的绑定关系严格检查：
+ *      <ul>
+ *        <li>同一 openId 不允许绑定多个不同手机号</li>
+ *        <li>同一手机号不允许绑定多个不同 openId</li>
+ *      </ul>
+ *  </li>
+ *</ul>
+ *
+ *@see com.apex.scaffold.application.service.auth.AuthTicketService
+ *@see com.apex.scaffold.application.service.auth.AuthTicketType
+ *
+ * @author Apex Team
+ * @version 1.0.0
  * @since 1.0.0
- * @see com.apex.scaffold.application.service.auth.AuthTicketService
- * @see com.apex.scaffold.application.service.auth.AuthTicketType
  */
 @Service
 public class AuthRegistrationService {

@@ -7,6 +7,13 @@ package com.apex.scaffold.application.service.auth;
  * @version 1.0.0
  * @since 1.0.0
  */
+/**
+ * AuthNextAction 组件。
+ *
+ * @author Apex Team
+ * @version 1.0.0
+ * @since 1.0.0
+ */
 public enum AuthNextAction {
     /** 用户已完成认证，可直接进入应用。 */
     AUTHENTICATED,

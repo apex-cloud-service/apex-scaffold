@@ -6,14 +6,16 @@ import java.util.List;
 /**
  * 图片审核聚合结果值对象。
  *
- * <p>聚合多个审核场景的检测结果，按BLOCK > REVIEW > PASS的优先级确定最终审核决定。</p>
  *
- * @param decision 最终审核决定
- * @param provider 审核服务提供商
- * @param requestId 请求ID
- * @param taskId 任务ID
- * @param findings 各场景命中结果列表
- * @author weiqiang.ling
+ *<p>聚合多个审核场景的检测结果，按BLOCK > REVIEW > PASS的优先级确定最终审核决定。</p>
+ *
+ *@param decision 最终审核决定
+ *@param provider 审核服务提供商
+ *@param requestId 请求ID
+ *@param taskId 任务ID
+ *@param findings 各场景命中结果列表
+ *
+ * @author Apex Team
  * @version 1.0.0
  * @since 1.0.0
  */

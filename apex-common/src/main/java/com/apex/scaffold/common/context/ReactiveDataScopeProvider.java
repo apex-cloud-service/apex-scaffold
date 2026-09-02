@@ -5,11 +5,14 @@ import reactor.core.publisher.Mono;
 /**
  * 响应式数据权限解析入口。
  *
- * <p>实现方需从当前安全上下文、请求头或调用方显式参数中解析出用户可访问的
- * 数据范围（如全部、本部门、本部门及下级、本人、自定义部门集合），返回
- * {@link DataScopeInfo} 供 MyBatis 拦截器拼接 SQL。</p>
  *
- * @author apex-scaffold
+ *<p>实现方需从当前安全上下文、请求头或调用方显式参数中解析出用户可访问的
+ *数据范围（如全部、本部门、本部门及下级、本人、自定义部门集合），返回
+ *{@link DataScopeInfo} 供 MyBatis 拦截器拼接 SQL。</p>
+ *
+ * @author Apex Team
+ * @version 1.0.0
+ * @since 1.0.0
  */
 @FunctionalInterface
 public interface ReactiveDataScopeProvider {

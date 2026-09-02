@@ -9,9 +9,12 @@ import java.lang.annotation.Target;
 /**
  * 方法级自动重试注解，用于封装固定次数 + 指数退避的同步重试逻辑。
  *
- * <p>仅在业务方法本身幂等、或重试失败可由上层兜底回滚时使用。</p>
  *
- * @author apex-scaffold
+ *<p>仅在业务方法本身幂等、或重试失败可由上层兜底回滚时使用。</p>
+ *
+ * @author Apex Team
+ * @version 1.0.0
+ * @since 1.0.0
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)

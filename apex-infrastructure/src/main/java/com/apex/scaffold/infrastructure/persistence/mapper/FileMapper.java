@@ -9,16 +9,17 @@ import org.apache.ibatis.annotations.Update;
 /**
  * 文件记录 MyBatis Mapper 接口。
  *
- * <p>负责 {@code sys_file} 表的持久化操作，管理上传文件的元数据和存储状态。
- * 继承 MyBatis-Plus {@link BaseMapper} 获得通用单表 CRUD 操作，
- * 并通过自定义 SQL 支持文件存储状态的原子转换。</p>
  *
- * <h2>核心能力</h2>
- * <ul>
- *   <li>标记文件存储状态为已删除/已批准</li>
- * </ul>
+ *<p>负责 {@code sys_file} 表的持久化操作，管理上传文件的元数据和存储状态。
+ *继承 MyBatis-Plus {@link BaseMapper} 获得通用单表 CRUD 操作，
+ *并通过自定义 SQL 支持文件存储状态的原子转换。</p>
  *
- * @author weiqiang.ling
+ *<h2>核心能力</h2>
+ *<ul>
+ *  <li>标记文件存储状态为已删除/已批准</li>
+ *</ul>
+ *
+ * @author Apex Team
  * @version 1.0.0
  * @since 1.0.0
  */

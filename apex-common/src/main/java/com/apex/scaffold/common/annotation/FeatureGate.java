@@ -5,10 +5,12 @@ import java.lang.annotation.*;
 /**
  * 功能开关注解
  *
- * <p>用于标记需要License授权的功能,配合AOP切面自动检查权限。
+ *
+ *<p>用于标记需要License授权的功能,配合AOP切面自动检查权限。
  *
  * @author Apex Team
  * @version 1.0.0
+ * @since 1.0.0
  */
 @Target({ElementType.METHOD, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)

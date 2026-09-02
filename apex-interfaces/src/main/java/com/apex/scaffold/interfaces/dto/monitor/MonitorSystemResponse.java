@@ -7,16 +7,21 @@ import java.util.Map;
 /**
  * 系统资源监控响应（/admin-api/v1/monitor/system）。
  *
- * <p>聚合 JVM 内存/GC/类加载、CPU、进程、线程、磁盘、网络与阻塞 IO 线程池快照。</p>
  *
- * @param timestamp 采集时间戳（毫秒）
- * @param jvm JVM 指标
- * @param cpu CPU 指标
- * @param process 进程指标
- * @param threads 线程指标
- * @param disk 磁盘使用列表
- * @param network 网络使用列表
- * @param blockingIo 阻塞 IO 线程池快照（key=池名）
+ *<p>聚合 JVM 内存/GC/类加载、CPU、进程、线程、磁盘、网络与阻塞 IO 线程池快照。</p>
+ *
+ *@param timestamp 采集时间戳（毫秒）
+ *@param jvm JVM 指标
+ *@param cpu CPU 指标
+ *@param process 进程指标
+ *@param threads 线程指标
+ *@param disk 磁盘使用列表
+ *@param network 网络使用列表
+ *@param blockingIo 阻塞 IO 线程池快照（key=池名）
+ *
+ * @author Apex Team
+ * @version 1.0.0
+ * @since 1.0.0
  */
 @Schema(description = "系统资源监控（内存/CPU/磁盘/网络/JVM/线程/GC）")
 public record MonitorSystemResponse(

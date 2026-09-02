@@ -5,34 +5,39 @@ import io.swagger.v3.oas.annotations.media.Schema;
 /**
  * 监控概览响应（/admin-api/v1/monitor/overview）。
  *
- * <p>为监控大盘顶部指标卡提供聚合快照：应用状态、运行时长、
- * 堆内存、CPU、线程、会话以及请求/治理/核心业务计数。</p>
  *
- * @param application 应用名称
- * @param version 应用版本
- * @param status 运行状态（UP / DOWN / 降级）
- * @param uptimeSeconds 进程已运行时长（秒）
- * @param startTime 进程启动时间
- * @param timestamp 采集时间戳（毫秒）
- * @param heapUsed 堆内存已用（字节）
- * @param heapMax 堆内存最大值（字节）
- * @param heapUsedPercent 堆内存使用率（0~1，1 表示已满）
- * @param nonHeapUsed 非堆内存已用（字节）
- * @param cpuUsage 进程 CPU 使用率（0~1）
- * @param systemCpuUsage 系统 CPU 使用率（0~1）
- * @param threadCount 当前存活线程数
- * @param activeSessions 活跃会话数（NaN 表示采集不可用）
- * @param totalRequests 累计 API 请求数
- * @param error4xx 累计 4xx 错误数
- * @param error5xx 累计 5xx 错误数
- * @param avgResponseTime 平均响应时间（秒）
- * @param gatewayRequests 累计网关请求数
- * @param rateLimitRejected 限流拒绝次数
- * @param circuitBreakerOpened 熔断打开次数
- * @param loginFailed 登录失败次数
- * @param loginSuccess 登录成功次数
- * @param registerCount 注册成功次数
- * @param uploadCount 文件上传成功次数
+ *<p>为监控大盘顶部指标卡提供聚合快照：应用状态、运行时长、
+ *堆内存、CPU、线程、会话以及请求/治理/核心业务计数。</p>
+ *
+ *@param application 应用名称
+ *@param version 应用版本
+ *@param status 运行状态（UP / DOWN / 降级）
+ *@param uptimeSeconds 进程已运行时长（秒）
+ *@param startTime 进程启动时间
+ *@param timestamp 采集时间戳（毫秒）
+ *@param heapUsed 堆内存已用（字节）
+ *@param heapMax 堆内存最大值（字节）
+ *@param heapUsedPercent 堆内存使用率（0~1，1 表示已满）
+ *@param nonHeapUsed 非堆内存已用（字节）
+ *@param cpuUsage 进程 CPU 使用率（0~1）
+ *@param systemCpuUsage 系统 CPU 使用率（0~1）
+ *@param threadCount 当前存活线程数
+ *@param activeSessions 活跃会话数（NaN 表示采集不可用）
+ *@param totalRequests 累计 API 请求数
+ *@param error4xx 累计 4xx 错误数
+ *@param error5xx 累计 5xx 错误数
+ *@param avgResponseTime 平均响应时间（秒）
+ *@param gatewayRequests 累计网关请求数
+ *@param rateLimitRejected 限流拒绝次数
+ *@param circuitBreakerOpened 熔断打开次数
+ *@param loginFailed 登录失败次数
+ *@param loginSuccess 登录成功次数
+ *@param registerCount 注册成功次数
+ *@param uploadCount 文件上传成功次数
+ *
+ * @author Apex Team
+ * @version 1.0.0
+ * @since 1.0.0
  */
 @Schema(description = "监控概览（大盘指标卡）")
 public record MonitorOverviewResponse(

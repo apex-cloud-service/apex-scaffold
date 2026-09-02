@@ -6,14 +6,19 @@ import java.util.List;
 /**
  * 治理监控响应（/admin-api/v1/monitor/governance）。
  *
- * <p>聚合 Sentinel 熔断/限流/授权规则、安全计数、Resilience4j 熔断器状态
- * 与网关/API 流量统计。</p>
  *
- * @param timestamp 采集时间戳（毫秒）
- * @param sentinel Sentinel 规则与状态
- * @param security 安全治理计数
- * @param circuitBreakers 熔断器状态列表
- * @param gateway 网关流量统计
+ *<p>聚合 Sentinel 熔断/限流/授权规则、安全计数、Resilience4j 熔断器状态
+ *与网关/API 流量统计。</p>
+ *
+ *@param timestamp 采集时间戳（毫秒）
+ *@param sentinel Sentinel 规则与状态
+ *@param security 安全治理计数
+ *@param circuitBreakers 熔断器状态列表
+ *@param gateway 网关流量统计
+ *
+ * @author Apex Team
+ * @version 1.0.0
+ * @since 1.0.0
  */
 @Schema(description = "治理监控（Sentinel 熔断/限流 + 网关流量 + 熔断器）")
 public record MonitorGovernanceResponse(

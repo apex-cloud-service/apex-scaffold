@@ -9,11 +9,13 @@ import org.springframework.stereotype.Component;
 /**
  * 商业版本功能矩阵启动日志。
  *
- * <p>应用启动完成后输出当前构建版本启用的功能清单，
- * 便于售前演示与客户核验版本差异。</p>
+ *
+ *<p>应用启动完成后输出当前构建版本启用的功能清单，
+ *便于售前演示与客户核验版本差异。</p>
  *
  * @author Apex Team
  * @version 1.0.0
+ * @since 1.0.0
  */
 @Slf4j
 @Component

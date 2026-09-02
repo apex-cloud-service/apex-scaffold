@@ -9,6 +9,13 @@ package com.apex.scaffold.domain.gateway;
  * @version 1.0.0
  * @since 1.0.0
  */
+/**
+ * RemoteClientInputException 远程客户端异常/失败契约。
+ *
+ * @author Apex Team
+ * @version 1.0.0
+ * @since 1.0.0
+ */
 public class RemoteClientInputException extends RemoteApiException {
 
     /**

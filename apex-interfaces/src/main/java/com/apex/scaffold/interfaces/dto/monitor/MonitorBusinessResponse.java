@@ -6,11 +6,16 @@ import java.util.List;
 /**
  * 核心业务监控响应（/admin-api/v1/monitor/business）。
  *
- * <p>提供核心业务指标快照与近 10 分钟趋势（按 1 分钟窗口聚合）。</p>
  *
- * @param timestamp 采集时间戳（毫秒）
- * @param metrics 业务指标快照列表
- * @param trends 业务指标趋势列表
+ *<p>提供核心业务指标快照与近 10 分钟趋势（按 1 分钟窗口聚合）。</p>
+ *
+ *@param timestamp 采集时间戳（毫秒）
+ *@param metrics 业务指标快照列表
+ *@param trends 业务指标趋势列表
+ *
+ * @author Apex Team
+ * @version 1.0.0
+ * @since 1.0.0
  */
 @Schema(description = "核心业务监控")
 public record MonitorBusinessResponse(

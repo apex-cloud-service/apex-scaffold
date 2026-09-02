@@ -10,6 +10,13 @@ package com.apex.scaffold.domain.model.moderation;
  * @version 1.0.0
  * @since 1.0.0
  */
+/**
+ * ModerationStatus 组件。
+ *
+ * @author Apex Team
+ * @version 1.0.0
+ * @since 1.0.0
+ */
 public enum ModerationStatus {
 
     /** 等待机器审核 */

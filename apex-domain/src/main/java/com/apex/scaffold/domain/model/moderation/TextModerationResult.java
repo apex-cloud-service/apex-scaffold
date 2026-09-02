@@ -6,13 +6,15 @@ import java.util.List;
 /**
  * 文本审核聚合结果值对象。
  *
- * <p>聚合文本审核命中项，按 BLOCK &gt; REVIEW &gt; PASS 的优先级确定最终审核决定。</p>
  *
- * @param decision 最终审核决定
- * @param provider 审核服务提供商
- * @param requestId 供应商请求 ID（如百度 log_id）
- * @param findings 各命中项结果列表
- * @author weiqiang.ling
+ *<p>聚合文本审核命中项，按 BLOCK &gt; REVIEW &gt; PASS 的优先级确定最终审核决定。</p>
+ *
+ *@param decision 最终审核决定
+ *@param provider 审核服务提供商
+ *@param requestId 供应商请求 ID（如百度 log_id）
+ *@param findings 各命中项结果列表
+ *
+ * @author Apex Team
  * @version 1.0.0
  * @since 1.0.0
  */

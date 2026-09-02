@@ -5,10 +5,12 @@ import java.lang.annotation.*;
 /**
  * 数据脱敏注解
  *
- * <p>用于标记需要脱敏的字段,配合AOP切面自动脱敏
+ *
+ *<p>用于标记需要脱敏的字段,配合AOP切面自动脱敏
  *
  * @author Apex Team
  * @version 1.0.0
+ * @since 1.0.0
  */
 @Target({ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)

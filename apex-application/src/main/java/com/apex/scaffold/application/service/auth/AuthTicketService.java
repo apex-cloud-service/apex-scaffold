@@ -15,7 +15,7 @@ import reactor.core.publisher.Mono;
 /**
  * 签发和原子消费短期一次性认证票据。
  *
- * @author weiqiang.ling
+ * @author Apex Team
  * @version 1.0.0
  * @since 1.0.0
  */

@@ -8,14 +8,16 @@ import java.util.Map;
 /**
  * 单个检测场景的命中结果值对象。
  *
- * <p>封装审核场景的检测结果，包括场景、建议、标签、置信度和扩展详情。</p>
  *
- * @param scene 审核场景编码
- * @param suggestion 供应商建议（pass/review/block）
- * @param label 命中的标签名称
- * @param rate 命中置信度（0.0~1.0）
- * @param details 扩展详情（不可变）
- * @author weiqiang.ling
+ *<p>封装审核场景的检测结果，包括场景、建议、标签、置信度和扩展详情。</p>
+ *
+ *@param scene 审核场景编码
+ *@param suggestion 供应商建议（pass/review/block）
+ *@param label 命中的标签名称
+ *@param rate 命中置信度（0.0~1.0）
+ *@param details 扩展详情（不可变）
+ *
+ * @author Apex Team
  * @version 1.0.0
  * @since 1.0.0
  */

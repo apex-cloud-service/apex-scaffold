@@ -13,10 +13,11 @@ import lombok.Data;
 /**
  * 完成手机号或微信注册的请求。
  *
- * <p>用户登录后若为首次访问，需提交性别、生日等必填资料完成注册。
- * {@code registrationTicket} 由登录流程签发，用于绑定新注册用户与登录渠道身份。</p>
  *
- * @author weiqiang.ling
+ *<p>用户登录后若为首次访问，需提交性别、生日等必填资料完成注册。
+ *{@code registrationTicket} 由登录流程签发，用于绑定新注册用户与登录渠道身份。</p>
+ *
+ * @author Apex Team
  * @version 1.0.0
  * @since 1.0.0
  */

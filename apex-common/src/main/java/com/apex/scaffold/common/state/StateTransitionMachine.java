@@ -11,8 +11,12 @@ import java.util.Set;
 /**
  * 通用业务状态迁移器。
  *
- * @param <S> 状态类型
+ *
+ *@param <S> 状态类型
+ *
  * @author Apex Team
+ * @version 1.0.0
+ * @since 1.0.0
  */
 public final class StateTransitionMachine<S> {
 

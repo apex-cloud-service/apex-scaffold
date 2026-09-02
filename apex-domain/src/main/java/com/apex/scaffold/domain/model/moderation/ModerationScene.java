@@ -9,6 +9,13 @@ package com.apex.scaffold.domain.model.moderation;
  * @version 1.0.0
  * @since 1.0.0
  */
+/**
+ * ModerationScene 组件。
+ *
+ * @author Apex Team
+ * @version 1.0.0
+ * @since 1.0.0
+ */
 public enum ModerationScene {
 
     /** 色情内容审核 */

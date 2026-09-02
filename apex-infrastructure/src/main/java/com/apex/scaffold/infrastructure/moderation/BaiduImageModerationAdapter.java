@@ -34,10 +34,11 @@ import reactor.core.publisher.Mono;
 /**
  * 百度智能云内容审核平台图像审核适配器。
  *
- * <p>封装百度图像审核 API 的鉴权、请求构建和响应解析，
- * 实现 {@link ImageModerationPort} 对接百度内容审核服务。</p>
  *
- * @author weiqiang.ling
+ *<p>封装百度图像审核 API 的鉴权、请求构建和响应解析，
+ *实现 {@link ImageModerationPort} 对接百度内容审核服务。</p>
+ *
+ * @author Apex Team
  * @version 1.0.0
  * @since 1.0.0
  */

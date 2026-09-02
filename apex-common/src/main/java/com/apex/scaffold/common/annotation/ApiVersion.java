@@ -5,11 +5,13 @@ import java.lang.annotation.*;
 /**
  * API版本注解
  *
- * <p>用于标记API的版本号,支持多版本共存和灰度发布。
- * 配合ApiVersionConfig实现基于URL路径的版本控制。
+ *
+ *<p>用于标记API的版本号,支持多版本共存和灰度发布。
+ *配合ApiVersionConfig实现基于URL路径的版本控制。
  *
  * @author Apex Team
  * @version 1.0.0
+ * @since 1.0.0
  */
 @Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)

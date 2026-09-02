@@ -31,13 +31,14 @@ import reactor.core.publisher.Mono;
 /**
  * 百度智能云内容审核平台文本审核适配器。
  *
- * <p>封装百度文本审核 API（{@code /rest/2.0/solution/v1/text_censor/v2/user_defined}）
- * 的鉴权、请求构建和响应解析，实现 {@link TextModerationPort}。</p>
  *
- * <p>请求体仅包含 {@code text}（Content-Type 为 form-urlencoded，上限 20000 字节）；
- * 响应使用 {@code conclusionType}（1 合规 / 2 不合规 / 3 疑似 / 4 审核失败）驱动领域决定。</p>
+ *<p>封装百度文本审核 API（{@code /rest/2.0/solution/v1/text_censor/v2/user_defined}）
+ *的鉴权、请求构建和响应解析，实现 {@link TextModerationPort}。</p>
  *
- * @author weiqiang.ling
+ *<p>请求体仅包含 {@code text}（Content-Type 为 form-urlencoded，上限 20000 字节）；
+ *响应使用 {@code conclusionType}（1 合规 / 2 不合规 / 3 疑似 / 4 审核失败）驱动领域决定。</p>
+ *
+ * @author Apex Team
  * @version 1.0.0
  * @since 1.0.0
  */

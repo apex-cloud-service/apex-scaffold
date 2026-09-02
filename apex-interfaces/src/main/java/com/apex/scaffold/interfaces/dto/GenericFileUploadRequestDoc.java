@@ -6,11 +6,12 @@ import lombok.Data;
 /**
  * 普通图片上传 multipart 文档模型。
  *
- * <p>该模型只用于生成函数式路由的 OpenAPI schema。运行时由 WebFlux 读取表单：
- * {@code file} 是待上传图片，{@code sex} 仅用于选择 AM/AF 对象存储目录。
- * 接口不接受 usage 或 clientRequestId，也不会创建照片、分析任务、ELO 或分桶记录。</p>
  *
- * @author weiqiang.ling
+ *<p>该模型只用于生成函数式路由的 OpenAPI schema。运行时由 WebFlux 读取表单：
+ *{@code file} 是待上传图片，{@code sex} 仅用于选择 AM/AF 对象存储目录。
+ *接口不接受 usage 或 clientRequestId，也不会创建照片、分析任务、ELO 或分桶记录。</p>
+ *
+ * @author Apex Team
  * @version 1.0.0
  * @since 1.0.0
  */

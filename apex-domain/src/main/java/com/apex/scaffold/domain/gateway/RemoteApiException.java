@@ -5,29 +5,30 @@ import lombok.Getter;
 /**
  * 远程API调用异常
  *
- * <p>当调用外部项目的API接口时，如果发生HTTP错误（4xx/5xx状态码）、
- * 网络超时、连接异常或响应解析失败等情况，将抛出此异常。
  *
- * <h2>触发场景</h2>
- * <ul>
- *   <li>HTTP请求超时（连接超时或读取超时）</li>
- *   <li>目标服务返回4xx客户端错误状态码</li>
- *   <li>目标服务返回5xx服务端错误状态码</li>
- *   <li>网络不可达或DNS解析失败</li>
- *   <li>响应体解析失败（如反序列化异常）</li>
- *   <li>所有重试次数耗尽后仍然失败</li>
- * </ul>
+ *<p>当调用外部项目的API接口时，如果发生HTTP错误（4xx/5xx状态码）、
+ *网络超时、连接异常或响应解析失败等情况，将抛出此异常。
  *
- * <h2>使用示例</h2>
- * <pre>{@code * try {
- *     String result = remoteApiClient.get(serviceName, path, String.class).block();
- * } catch (RemoteApiException e) {
- *     log.error("远程调用失败, serviceName: {}, httpStatus: {}, errorBody: {}",
- *         e.getServiceName(), e.getHttpStatus(), e.getErrorBody());
- * }
- * }</pre>
+ *<h2>触发场景</h2>
+ *<ul>
+ *  <li>HTTP请求超时（连接超时或读取超时）</li>
+ *  <li>目标服务返回4xx客户端错误状态码</li>
+ *  <li>目标服务返回5xx服务端错误状态码</li>
+ *  <li>网络不可达或DNS解析失败</li>
+ *  <li>响应体解析失败（如反序列化异常）</li>
+ *  <li>所有重试次数耗尽后仍然失败</li>
+ *</ul>
  *
- * @author weiqiang.ling
+ *<h2>使用示例</h2>
+ *<pre>{@code * try {
+ *    String result = remoteApiClient.get(serviceName, path, String.class).block();
+ *} catch (RemoteApiException e) {
+ *    log.error("远程调用失败, serviceName: {}, httpStatus: {}, errorBody: {}",
+ *        e.getServiceName(), e.getHttpStatus(), e.getErrorBody());
+ *}
+ *}</pre>
+ *
+ * @author Apex Team
  * @version 1.0.0
  * @since 1.0.0
  */
