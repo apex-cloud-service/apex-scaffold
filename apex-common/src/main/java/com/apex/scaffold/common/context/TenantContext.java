@@ -111,6 +111,13 @@ public final class TenantContext {
 
         private void withTenant(Runnable runnable) {
             String tenantId = actual.currentContext().getOrDefault(REACTOR_CONTEXT_KEY, null);
+            // 只有当调用方显式写入了 Reactor Context 时才做"安装/恢复"；
+            // tenantId == null 时不参与线程上下文管理，避免 onComplete/doFinally
+            // 后业务代码的清理被 finally 中的 restore 覆盖。
+            if (tenantId == null) {
+                runnable.run();
+                return;
+            }
             String previous = install(tenantId);
             try {
                 runnable.run();
@@ -266,10 +273,38 @@ public final class TenantContext {
     /**
      * 装配当前请求的租户 ID。
      *
-     * @param tenantId 租户 ID（如租户编码）
+     * <p>用于显式设置租户（如响应式发布器、请求网关入口）。与
+     * {@link #restoreTenantId(String)} 配对使用，保证调用方在 finally 中能恢复
+     * 线程复用前的旧值，避免跨租户泄漏。</p>
+     *
+     * @param tenantId 租户 ID（如租户编码）；{@code null} 等价于清除
+     * @return 写入前的旧租户 ID（未装配时为 {@code null}）
      */
-    public static void setTenantId(String tenantId) {
-        TENANT_ID.set(tenantId);
+    public static String setTenantId(String tenantId) {
+        String previous = TENANT_ID.get();
+        if (tenantId == null) {
+            TENANT_ID.remove();
+        } else {
+            TENANT_ID.set(tenantId);
+        }
+        return previous;
+    }
+
+    /**
+     * 恢复装配前的租户 ID。
+     *
+     * <p>与 {@link #setTenantId(String)} 配对，在 finally 中调用：
+     * <pre>{@code String prev = TenantContext.setTenantId(id);
+     * try { ... } finally { TenantContext.restoreTenantId(prev); }}</pre>
+     *
+     * @param previous {@link #setTenantId(String)} 返回的旧租户 ID
+     */
+    public static void restoreTenantId(String previous) {
+        if (previous == null) {
+            TENANT_ID.remove();
+        } else {
+            TENANT_ID.set(previous);
+        }
     }
 
     /**

@@ -1,9 +1,11 @@
 package com.apex.scaffold.infrastructure.remote.filter;
 
+import com.apex.scaffold.common.context.TenantContext;
 import com.apex.scaffold.common.util.TraceIdUtil;
 import com.apex.scaffold.domain.model.entity.ApiCallLogEntity;
 import com.apex.scaffold.infrastructure.remote.logging.ApiCallLogService;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
@@ -17,6 +19,7 @@ import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.ExchangeFunction;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 /**
  * API 调用日志 ExchangeFilterFunction。
@@ -71,6 +74,13 @@ public final class ApiCallLogFilter {
      * <p>便捷方法：{@link #withRequestBody(String)}</p>
      */
     public static final String ATTRIBUTE_REQUEST_BODY = "api-call-log.request-body";
+
+    /**
+     * Exchange 属性键名 — 用于在 WebClient 请求中传入当前请求的租户 ID。
+     * <p>若传入，API 调用日志落库时将在阻塞写入线程内显式安装此 tenantId，避免
+     * WebClient 订阅线程与切面入口线程不同导致 TenantContext ThreadLocal 丢失。</p>
+     */
+    public static final String ATTRIBUTE_TENANT_ID = "api-call-log.tenant-id";
 
     /**
      * 返回一个 Consumer，用于将请求体文本写入日志属性。
@@ -139,6 +149,12 @@ public final class ApiCallLogFilter {
                     .map(String.class::cast)
                     .orElse(null));
             entity.setRequestId(UUID.randomUUID().toString().replace("-", ""));
+            // C3 修复：在请求入口捕获 tenantId 属性，后续 WebClient 切换到 NIO 线程后
+            // ThreadLocal 不可靠，写入线程内显式安装即可。
+            String tenantId = request.attribute(ATTRIBUTE_TENANT_ID)
+                    .filter(String.class::isInstance)
+                    .map(String.class::cast)
+                    .orElseGet(() -> TenantContext.currentTenantId().orElse(null));
             AtomicLong start = new AtomicLong(System.currentTimeMillis());
 
             return next.exchange(request)
@@ -174,9 +190,34 @@ public final class ApiCallLogFilter {
                         entity.setStatus(3);
                         entity.setErrorMsg(formatError(throwable));
                     })
-                    .doFinally(signalType ->
-                            logService.log(entity).subscribe(null, e -> log.warn("API调用日志写入失败: {}", e.getMessage())));
+                    .doFinally(signalType -> writeLog(entity, tenantId));
         };
+    }
+
+    /**
+     * C3 修复：在统一阻塞池上提交 API 调用日志写入，并在写入线程显式安装/释放
+     * 从请求属性捕获的 tenantId；避免 doFinally 内裸 subscribe() 造成调度不确定，
+     * 以及切换线程后的 ThreadLocal 丢失。
+     *
+     * @param entity   API 调用日志实体
+     * @param tenantId 入口侧捕获的租户 ID（允许为 null）
+     */
+    private void writeLog(ApiCallLogEntity entity, String tenantId) {
+        String previous = TenantContext.setTenantId(tenantId);
+        try {
+            // 注意：不使用 usingWhen 包装 install/log——因为租户 previous 可能为 null，
+            // usingWhen 会把 null 资源视为"空"直接 onComplete，跳过 resourceClosure 导致
+            // logService.log 根本不被调用（Mockito.verify 失败）。
+            logService
+                    .log(entity)
+                    .doOnError(e -> log.warn("API调用日志写入失败: {}", e.getMessage()))
+                    .onErrorResume(e -> Mono.empty())
+                    .block(Duration.ofSeconds(2));
+        } catch (Exception ex) {
+            log.warn("API调用日志写入超时或异常: {}", ex.getMessage());
+        } finally {
+            TenantContext.restoreTenantId(previous);
+        }
     }
 
     /**

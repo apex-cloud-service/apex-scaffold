@@ -172,11 +172,14 @@ public class LocalCacheService {
             } else {
                 cacheValue = objectMapper.writeValueAsString(value);
             }
-            cache.put(key, cacheValue);
-            // 记录 TTL：仅在 ttl 不为 null 时设置过期时间戳
+            // H1 修复：先写 ttlTracker 再写 cache，避免"读线程先拿到 cache 值但 ttlTracker 还没写 → 视为永不过期"的竞态；
+            // 读取侧顺序是"先读 cache → 再读 ttlTracker"，写入侧按镜像反序符合 2PL 安全。
             if (ttl != null) {
                 ttlTracker.put(key, System.currentTimeMillis() + ttl.toMillis());
+            } else {
+                ttlTracker.remove(key);
             }
+            cache.put(key, cacheValue);
             return Mono.just(true);
         } catch (Exception e) {
             log.warn("设置本地缓存失败, key: {}", key, e);
@@ -204,6 +207,8 @@ public class LocalCacheService {
             long deleted = 0;
             for (String key : keys) {
                 if (key != null) {
+                    // H1 修复：删除顺序与写入镜像——先 evict cache（读侧首步命中的字段），再删 ttlTracker；
+                    // 这样中间窗口里读线程要么拿到 cache(已不存在)，要么 cache 存在但 ttlTracker 还在，都不会读到假值。
                     cache.evictIfPresent(key);
                     ttlTracker.remove(key);
                     deleted++;

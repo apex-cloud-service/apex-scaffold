@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -109,7 +108,9 @@ class MqConsumerServiceTest {
                 service.processMessageWithResult("msg-1", "payload", message -> false);
 
         assertThat(result.isSuccess()).isFalse();
-        verify(bucket).compareAndSet(anyString(), isNull());
+        // H2 修复：业务失败同样 CAS 为 FAILED，保留幂等键到 TTL，避免瞬态失败重入。
+        verify(bucket).compareAndSet(anyString(), eq("FAILED"));
+        verify(bucket).expire(Duration.ofMinutes(30));
     }
 
     @Test
@@ -124,7 +125,10 @@ class MqConsumerServiceTest {
 
         assertThat(result.isSuccess()).isFalse();
         assertThat(result.getErrorMessage()).isEqualTo("temporary failure");
-        verify(bucket).compareAndSet(anyString(), isNull());
+        // H2 修复：异常路径不把幂等键 CAS 为 null（否则重复投递将再次执行业务），
+        // 而是 CAS 为 FAILED，直到 TTL；仅明确瞬态异常在后续可特例释放。
+        verify(bucket).compareAndSet(anyString(), eq("FAILED"));
+        verify(bucket).expire(Duration.ofMinutes(30));
     }
 
     @Test

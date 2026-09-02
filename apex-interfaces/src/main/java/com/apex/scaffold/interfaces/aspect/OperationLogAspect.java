@@ -3,6 +3,7 @@ package com.apex.scaffold.interfaces.aspect;
 import com.apex.scaffold.application.service.OperationLogService;
 import com.apex.scaffold.application.service.UserService;
 import com.apex.scaffold.common.annotation.OperationLog;
+import com.apex.scaffold.common.context.TenantContext;
 import com.apex.scaffold.common.util.JsonUtil;
 import com.apex.scaffold.common.util.RequestUtil;
 import com.apex.scaffold.common.util.TraceIdUtil;
@@ -130,6 +131,11 @@ public class OperationLogAspect {
         long startTime = System.currentTimeMillis();
         String traceId = TraceIdUtil.getTraceId();
 
+        // C3 修复：在切面入口捕获当时的 tenantId，后续 enrichUserInfo 异步切线程后
+        // ThreadLocal 会丢失；传参到 saveAsync，在 DB 写入线程显式安装/恢复，
+        // 保证 Repository 通过 TenantLineInnerInterceptor 能读到正确租户。
+        String tenantIdAtEntry = TenantContext.currentTenantId().orElse(null);
+
         OperationLogEntity logEntity = buildLogEntity(joinPoint, operationLog, traceId);
 
         try {
@@ -142,9 +148,9 @@ public class OperationLogAspect {
         boolean isMonoReturn = isMonoReturnType(joinPoint);
 
         if (isMonoReturn) {
-            return handleMonoReturn(joinPoint, logEntity, startTime, traceId);
+            return handleMonoReturn(joinPoint, logEntity, startTime, traceId, tenantIdAtEntry);
         } else {
-            return handleSyncReturn(joinPoint, logEntity, startTime, traceId);
+            return handleSyncReturn(joinPoint, logEntity, startTime, traceId, tenantIdAtEntry);
         }
     }
 
@@ -165,7 +171,11 @@ public class OperationLogAspect {
      */
     @SuppressWarnings("unchecked")
     private Object handleMonoReturn(
-            ProceedingJoinPoint joinPoint, OperationLogEntity logEntity, long startTime, String traceId)
+            ProceedingJoinPoint joinPoint,
+            OperationLogEntity logEntity,
+            long startTime,
+            String traceId,
+            String tenantIdAtEntry)
             throws Throwable {
         return ((Mono<Object>) joinPoint.proceed())
                 .flatMap(result -> {
@@ -175,7 +185,7 @@ public class OperationLogAspect {
                     }
                     completeLog(logEntity, startTime);
                     return enrichUserInfo(logEntity)
-                            .doFinally(s -> enqueueLog(logEntity))
+                            .doFinally(s -> enqueueLog(logEntity, tenantIdAtEntry))
                             .thenReturn(result);
                 })
                 .onErrorResume(error -> {
@@ -183,7 +193,7 @@ public class OperationLogAspect {
                     logEntity.setErrorMsg(truncateString(error.getMessage(), 2000));
                     completeLog(logEntity, startTime);
                     return enrichUserInfo(logEntity)
-                            .doFinally(s -> enqueueLog(logEntity))
+                            .doFinally(s -> enqueueLog(logEntity, tenantIdAtEntry))
                             .then(Mono.error(error));
                 });
     }
@@ -201,7 +211,11 @@ public class OperationLogAspect {
      * @throws Throwable 目标方法执行异常
      */
     private Object handleSyncReturn(
-            ProceedingJoinPoint joinPoint, OperationLogEntity logEntity, long startTime, String traceId)
+            ProceedingJoinPoint joinPoint,
+            OperationLogEntity logEntity,
+            long startTime,
+            String traceId,
+            String tenantIdAtEntry)
             throws Throwable {
         try {
             Object result = joinPoint.proceed();
@@ -217,7 +231,7 @@ public class OperationLogAspect {
         } finally {
             enrichUserInfoSync(logEntity);
             completeLog(logEntity, startTime);
-            enqueueLog(logEntity);
+            enqueueLog(logEntity, tenantIdAtEntry);
         }
     }
 
@@ -534,10 +548,11 @@ public class OperationLogAspect {
     /**
      * 将日志实体放入队列
      *
-     * @param logEntity 日志实体
+     * @param logEntity      日志实体
+     * @param tenantIdAtEntry 切面入口捕获的租户 ID（可能为 null）；在写入线程显式安装
      */
-    private void enqueueLog(OperationLogEntity logEntity) {
-        operationLogService.saveAsync(logEntity);
+    private void enqueueLog(OperationLogEntity logEntity, String tenantIdAtEntry) {
+        operationLogService.saveAsync(logEntity, tenantIdAtEntry);
     }
 
     /**

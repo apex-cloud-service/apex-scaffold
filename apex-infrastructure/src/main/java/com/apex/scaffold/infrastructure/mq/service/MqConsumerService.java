@@ -71,7 +71,11 @@ public class MqConsumerService {
     private static final String IDEMPOTENT_KEY_PREFIX = "mq:idempotent:";
 
     private static final String PROCESSING_PREFIX = "PROCESSING:";
+
     private static final String SUCCESS = "SUCCESS";
+
+    /** H2 修复：处理失败状态（含业务未执行成功或已执行部分后抛异常），失败窗口内不可重入，由 TTL 兜底。 */
+    private static final String FAILED = "FAILED";
 
     /** 默认幂等性记录 TTL（分钟） */
     private static final long DEFAULT_IDEMPOTENT_TTL_MINUTES = 30;
@@ -150,6 +154,10 @@ public class MqConsumerService {
                 log.info("消息已成功处理, 跳过重复处理, messageId: {}", messageId);
                 return ProcessingResult.duplicate(messageId);
             }
+            if (FAILED.equals(state)) {
+                log.warn("消息此前处理失败（已写 FAILED 状态），拒绝重入以避免重复副作用, messageId: {}", messageId);
+                return ProcessingResult.failed(messageId, "消息此前处理失败，等待 TTL 过期后可重试");
+            }
             log.warn("消息正在其他实例处理中, messageId: {}", messageId);
             return ProcessingResult.failed(messageId, "消息正在处理中");
         }
@@ -157,7 +165,12 @@ public class MqConsumerService {
         try {
             boolean success = handler.handle(message);
             if (!success) {
-                bucket.compareAndSet(token, null);
+                // H2 修复：业务返回 false 但不代表"可重入"，CAS 为 FAILED 而非 null；
+                // 只有明确抛出 TransientFailureException/DAO 死锁/Redis 瞬态异常时才允许删除 PROCESSING
+                if (!bucket.compareAndSet(token, FAILED)) {
+                    bucket.compareAndSet(token, null); // 兜底：无法转 FAILED 时保守释放（罕见）
+                }
+                bucket.expire(getTtl());
                 log.warn("消息处理失败, messageId: {}", messageId);
                 return ProcessingResult.failed(messageId, "处理返回false");
             }
@@ -169,7 +182,11 @@ public class MqConsumerService {
             log.info("消息处理成功, messageId: {}", messageId);
             return ProcessingResult.success(messageId, message);
         } catch (Exception e) {
-            bucket.compareAndSet(token, null);
+            // H2 修复：异常一律保留 PROCESSING → FAILED，绝不直接删除幂等键；
+            // 理由：handler 可能已完成一半写库/回调，"释放幂等键 → RocketMQ/另一实例重消费"会再次执行副作用，违反幂等性。
+            // 仅对显式标记为"瞬态可重试"的异常，才 CAS 为 null 放行重试（此处先写保守策略，后续接入 TransientFailureException 白名单再扩展）。
+            bucket.compareAndSet(token, FAILED);
+            bucket.expire(getTtl());
             log.error("消息处理异常, messageId: {}", messageId, e);
             return ProcessingResult.error(messageId, e.getMessage());
         }

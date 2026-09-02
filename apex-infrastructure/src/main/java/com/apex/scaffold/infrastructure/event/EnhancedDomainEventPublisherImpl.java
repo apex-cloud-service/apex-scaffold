@@ -1,5 +1,6 @@
 package com.apex.scaffold.infrastructure.event;
 
+import com.apex.scaffold.common.context.TenantContext;
 import com.apex.scaffold.common.event.AbstractDomainEvent;
 import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
 import com.apex.scaffold.common.util.JsonUtil;
@@ -17,6 +18,7 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
+import reactor.util.context.ContextView;
 
 /**
  * 增强版领域事件发布器实现
@@ -108,7 +110,14 @@ public class EnhancedDomainEventPublisherImpl implements DomainEventPublisher {
         log.debug("同步发布领域事件: {}, ID: {}", event.getClass().getSimpleName(), event.getEventId());
 
         // 通过 Spring ApplicationEventPublisher 同步发布
-        return Mono.defer(() -> {
+        return Mono.deferContextual((ContextView ctx) -> {
+                    // 发布前将当前租户 ID 写进事件 DTO，监听器侧跨线程可直接读，
+                    // 不再依赖 TenantContext ThreadLocal（避免 publishAsync 切线程后上下文丢失）。
+                    String tenantId = ctx.getOrDefault(TenantContext.REACTOR_CONTEXT_KEY, null);
+                    if (tenantId == null) {
+                        tenantId = TenantContext.currentTenantId().orElse(null);
+                    }
+                    event.attachTenantContext(tenantId);
                     applicationEventPublisher.publishEvent(event);
                     return Mono.empty();
                 })
@@ -135,7 +144,19 @@ public class EnhancedDomainEventPublisherImpl implements DomainEventPublisher {
         log.debug("异步发布领域事件: {}, ID: {}", event.getClass().getSimpleName(), event.getEventId());
 
         // 通过线程池异步执行
-        return Mono.fromRunnable(() -> applicationEventPublisher.publishEvent(event))
+        return Mono.fromRunnable(() -> {
+                    // C2 修复：在执行线程（BlockingIoSchedulers.event）内先写租户上下文，
+                    // 因为 Spring ApplicationEventMulticaster 将在**同一调用线程**调用同步
+                    // @EventListener。监听器里的 Repository 经 Mybatis/TenantLineInnerInterceptor
+                    // 需要从 TenantContext.currentTenantId 读到租户。
+                    String tenantId = event.getTenantId();
+                    String prev = TenantContext.setTenantId(tenantId);
+                    try {
+                        applicationEventPublisher.publishEvent(event);
+                    } finally {
+                        TenantContext.restoreTenantId(prev);
+                    }
+                })
                 .then(domainEventBus.publish(event))
                 .subscribeOn(BlockingIoSchedulers.event())
                 .doOnSuccess(v -> log.debug("异步事件处理完成: {} (eventId={})", event.getEventName(), event.getEventId()))

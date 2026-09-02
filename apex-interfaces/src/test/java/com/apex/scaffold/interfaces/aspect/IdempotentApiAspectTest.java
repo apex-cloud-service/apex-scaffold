@@ -141,8 +141,8 @@ class IdempotentApiAspectTest {
     }
 
     @Test
-    @DisplayName("业务方法抛异常时应删除幂等键并传播异常")
-    void shouldReleaseKeyOnBusinessError() throws Throwable {
+    @DisplayName("业务方法抛 4xx BusinessException 时应删除幂等键（客户端可换参数重试）")
+    void shouldReleaseKeyOnClientBusinessError() throws Throwable {
         ServerRequest request = createMockServerRequest(IDEMPOTENCY_KEY);
         when(joinPoint.getArgs()).thenReturn(new Object[] {request});
         when(annotation.header()).thenReturn("Idempotency-Key");
@@ -152,12 +152,53 @@ class IdempotentApiAspectTest {
         when(valueOperations.setIfAbsent(anyString(), anyString(), any(Duration.class)))
                 .thenReturn(Mono.just(true));
         when(valueOperations.delete(anyString())).thenReturn(Mono.just(true));
-        when(joinPoint.proceed()).thenReturn(Mono.error(new IllegalStateException("business boom")));
+        when(joinPoint.proceed()).thenReturn(Mono.error(new BusinessException(ResultCode.PARAM_ERROR)));
+
+        Mono<?> result = (Mono<?>) aspect.around(joinPoint, annotation);
+
+        assertThatThrownBy(() -> result.block())
+                .isInstanceOf(BusinessException.class)
+                .extracting(e -> ((BusinessException) e).getCode())
+                .isEqualTo(ResultCode.PARAM_ERROR.getCode());
+        verify(valueOperations).delete(anyString());
+    }
+
+    @Test
+    @DisplayName("业务方法抛 5xx 瞬态异常（非 BusinessException）时应保留幂等键至 TTL，禁止删除以避免重复写库")
+    void shouldNotReleaseKeyOnTransient5xxError() throws Throwable {
+        ServerRequest request = createMockServerRequest(IDEMPOTENCY_KEY);
+        when(joinPoint.getArgs()).thenReturn(new Object[] {request});
+        when(annotation.header()).thenReturn("Idempotency-Key");
+        when(annotation.expireTime()).thenReturn(600L);
+        when(annotation.required()).thenReturn(true);
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.setIfAbsent(anyString(), anyString(), any(Duration.class)))
+                .thenReturn(Mono.just(true));
+        when(joinPoint.proceed()).thenReturn(Mono.error(new IllegalStateException("db flush后NPE 或外部IO异常")));
 
         Mono<?> result = (Mono<?>) aspect.around(joinPoint, annotation);
 
         assertThatThrownBy(() -> result.block()).isInstanceOf(IllegalStateException.class);
-        verify(valueOperations).delete(anyString());
+        verify(valueOperations, never()).delete(anyString());
+    }
+
+    @Test
+    @DisplayName("同步方法抛 5xx 瞬态异常时同样不应释放幂等键")
+    void shouldNotReleaseKeyOnSyncProceedTransientError() throws Throwable {
+        ServerRequest request = createMockServerRequest(IDEMPOTENCY_KEY);
+        when(joinPoint.getArgs()).thenReturn(new Object[] {request});
+        when(annotation.header()).thenReturn("Idempotency-Key");
+        when(annotation.expireTime()).thenReturn(600L);
+        when(annotation.required()).thenReturn(true);
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.setIfAbsent(anyString(), anyString(), any(Duration.class)))
+                .thenReturn(Mono.just(true));
+        when(joinPoint.proceed()).thenThrow(new RuntimeException("dao层连接超时"));
+
+        Mono<?> result = (Mono<?>) aspect.around(joinPoint, annotation);
+
+        assertThatThrownBy(() -> result.block()).isInstanceOf(RuntimeException.class);
+        verify(valueOperations, never()).delete(anyString());
     }
 
     @Test

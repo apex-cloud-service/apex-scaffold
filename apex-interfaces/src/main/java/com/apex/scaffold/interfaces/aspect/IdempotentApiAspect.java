@@ -41,7 +41,11 @@ import reactor.core.publisher.Mono;
  * <ul>
  *   <li><b>并发保护</b>：SETNX 原子性保证同一幂等键并发到达时仅一个请求获得执行权，
  *       其余立即收到 {@code REPEAT_SUBMIT}</li>
- *   <li><b>失败释放</b>：业务方法抛出异常时删除幂等键，允许客户端换新键或窗口后重试</li>
+ *   <li><b>5xx 异常保留键</b>：业务方法抛出 {@code IllegalStateException}/DAO/IO 等瞬态异常时，
+ *       数据库写入可能已部分落盘，<b>绝不删除幂等键</b>，由 TTL 兜底保证窗口内绝对不可重入；
+ *       避免"写已落盘 → delete(key) → 下一请求穿过 setIfAbsent 再次写库"的竞态窗口</li>
+ *   <li><b>4xx 客户端异常释放键</b>：仅当方法抛 {@link BusinessException}（客户端可通过换参/换幂等键
+ *       重试的业务错误）时删除幂等键，允许下一次合法重试</li>
  *   <li><b>成功保留</b>：业务成功后幂等键保留至 TTL 过期，窗口内重复请求被拒绝
  *       （此时操作已生效，客户端应查询结果而非重放）</li>
  *   <li><b>Redis 不可用</b>：记录错误日志并放行（fail-open），避免写接口整体不可用；
@@ -138,12 +142,16 @@ public class IdempotentApiAspect {
                         Object result = joinPoint.proceed();
                         if (result instanceof Mono<?> mono) {
                             return mono.cast(Object.class)
-                                    .onErrorResume(error -> release(cacheKey).then(Mono.error(error)));
+                                    .onErrorResume(error -> isClientError(error)
+                                            ? release(cacheKey).then(Mono.error(error))
+                                            : Mono.error(error));
                         }
                         // 同步返回：无异常即视为成功，保留幂等键至 TTL 过期
                         return Mono.just(result);
                     } catch (Throwable error) {
-                        return release(cacheKey).then(Mono.error(unwrap(error)));
+                        return isClientError(error)
+                                ? release(cacheKey).then(Mono.error(unwrap(error)))
+                                : Mono.error(unwrap(error));
                     }
                 })
                 .onErrorResume(
@@ -191,6 +199,20 @@ public class IdempotentApiAspect {
             cause = cause.getCause();
         }
         return false;
+    }
+
+    /**
+     * 判断异常是否属于"客户端可换参重试"的确定性 4xx 业务错误。
+     *
+     * <p>仅 {@link BusinessException} 通过——意味着请求语义不合法（缺少参数、状态错、
+     * 权限不足等），幂等键不会掩盖数据，允许释放以便客户端使用合法参数或新键重试。
+     * 任何 IO/DB/框架级瞬态异常一律视为"可能已写库"的 5xx，保留幂等键到 TTL。</p>
+     *
+     * @param error 错误
+     * @return {@code true} 表示确定性客户端错误，可安全释放幂等键
+     */
+    private boolean isClientError(Throwable error) {
+        return unwrap(error) instanceof BusinessException;
     }
 
     /**

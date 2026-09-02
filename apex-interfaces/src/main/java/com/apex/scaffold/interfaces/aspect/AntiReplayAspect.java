@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
+import org.reactivestreams.Publisher;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.annotation.Order;
@@ -18,6 +19,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.server.ServerWebExchange;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
@@ -172,13 +174,25 @@ public class AntiReplayAspect {
                             return Mono.error(new BusinessException(ResultCode.ANTI_REPLAY_FAILED));
                         }
                         log.debug("防重放通过，nonce: {}", nonce);
-                        return Mono.fromCallable(() -> {
-                            try {
-                                return joinPoint.proceed();
-                            } catch (Throwable e) {
-                                throw new RuntimeException(e);
+                        try {
+                            Object result = joinPoint.proceed();
+                            if (result instanceof Mono<?> mono) {
+                                return mono.cast(Object.class);
                             }
-                        });
+                            if (result instanceof Flux<?> flux) {
+                                return Flux.from(flux).cast(Object.class).collectList();
+                            }
+                            if (result instanceof Publisher<?> publisher) {
+                                return Flux.from(publisher).cast(Object.class).collectList();
+                            }
+                            // 同步返回值：包装进 Mono 完成响应式链（避免在 Redis I/O 线程执行阻塞代码）
+                            return Mono.just(result);
+                        } catch (Throwable error) {
+                            return Mono.error(
+                                    error instanceof RuntimeException runtimeException
+                                            ? runtimeException
+                                            : new RuntimeException(error));
+                        }
                     });
         }
 

@@ -52,6 +52,16 @@ public abstract class BaseDomainEvent {
     private final String eventType;
 
     /**
+     * 租户 ID（发布时写入，跨线程监听器从此读取，不再依赖 TenantContext ThreadLocal）。
+     *
+     * <p>非 final 以允许发布端在构造后通过 {@link #attachTenantContext(String)} 注入；
+     * 正常业务代码不应调用 setter，只由事件发布器（如 EnhancedDomainEventPublisherImpl）
+     * 在构造事件后即刻写入一次。</p>
+     */
+    @JsonIgnore
+    private String tenantId;
+
+    /**
      * 构造函数，自动生成事件ID和时间戳。
      *
      * @param eventType 事件类型
@@ -148,6 +158,27 @@ public abstract class BaseDomainEvent {
      */
     public String getEventName() {
         return this.getClass().getSimpleName();
+    }
+
+    /**
+     * 把发布时的租户上下文注入事件对象。
+     *
+     * <p>应仅由发布器在发布前调用一次；监听器通过 {@link #getTenantId()}
+     * 读取，避免跨线程监听器访问 {@code TenantContext ThreadLocal}。</p>
+     *
+     * @param tenantId 当前发布请求的租户 ID（可 {@code null} 表示无租户）
+     */
+    public void attachTenantContext(String tenantId) {
+        this.tenantId = tenantId;
+    }
+
+    /**
+     * 获取事件携带的租户上下文。
+     *
+     * @return 发布时注入的租户 ID；未注入时返回 {@code null}
+     */
+    public String getTenantId() {
+        return tenantId;
     }
 
     /**

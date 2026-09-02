@@ -1,5 +1,7 @@
 package com.apex.scaffold.application.listener;
 
+import com.apex.scaffold.common.context.TenantContext;
+import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
 import com.apex.scaffold.domain.event.SubscriptionActivatedEvent;
 import com.apex.scaffold.domain.event.SubscriptionExpiredEvent;
 import com.apex.scaffold.domain.model.entity.SystemMessageEntity;
@@ -9,17 +11,17 @@ import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Mono;
 
 /**
  * 订阅事件监听器
  *
- * <p>处理既有订阅状态变更的通知。首版不提供付费购买、支付、退款或自动权益发放，
- * 因此监听器不会修改算力账户或高级功能权限。
- *
- * <p>P0-13修复: 从Stub实现升级为基础实现</p>
+ * <p>处理既有订阅状态变更的通知（激活/过期系统消息）。与 C2 并发修复一致：
+ * 所有 Repository 操作合并为 Mono 链，不 .block()；在阻塞池 jdbc() 上运行时显式
+ * 安装/释放事件 DTO 内携带的 tenantId（而非依赖发布线程 ThreadLocal）。</p>
  *
  * @author Apex Team
- * @version 2.0.0
+ * @version 3.0.0
  * @since 1.0.0
  */
 @Slf4j
@@ -28,122 +30,109 @@ public class SubscriptionEventListener {
 
     private final SystemMessageRepository systemMessageRepository;
 
-    /**
-     * 构造器注入依赖
-     *
-     * <p>依赖使用 {@link Optional} 接收，确保依赖未注册时服务仍可正常启动。</p>
-     *
-     * @param systemMessageRepository 系统消息仓储（可选）
-     */
     public SubscriptionEventListener(Optional<SystemMessageRepository> systemMessageRepository) {
         this.systemMessageRepository = systemMessageRepository.orElse(null);
     }
 
-    /**
-     * 处理订阅激活事件
-     *
-     * <p>当外部管理流程把订阅状态变为活跃时，仅发送状态通知。
-     *
-     * @param event 订阅激活事件
-     */
     @EventListener(SubscriptionActivatedEvent.class)
     public void handleSubscriptionActivatedEvent(SubscriptionActivatedEvent event) {
-        try {
-            log.info(
-                    "处理订阅激活事件: subscriptionId={}, userId={}, level={}, startAt={}, endAt={}",
-                    event.getSubscriptionId(),
-                    event.getUserId(),
-                    event.getLevel(),
-                    event.getStartAt(),
-                    event.getEndAt());
-
-            if (systemMessageRepository != null) {
-                SystemMessageEntity notification = new SystemMessageEntity();
-                notification.setUserId(event.getUserId());
-                notification.setMsgType("SUBSCRIPTION_ACTIVATED");
-                notification.setContent("您的 " + event.getLevel() + " 订阅状态已更新，有效期至 " + event.getEndAt() + "。");
-                notification.setRefType("SUBSCRIPTION");
-                notification.setRefId(event.getSubscriptionId());
-                notification.setCreateTime(LocalDateTime.now());
-                notification.setUpdateTime(LocalDateTime.now());
-
-                systemMessageRepository
-                        .save(notification)
-                        .doOnSuccess(v -> log.info(
-                                "订阅激活通知发送成功: subscriptionId={}, userId={}",
-                                event.getSubscriptionId(),
-                                event.getUserId()))
-                        .doOnError(e -> log.error(
-                                "订阅激活通知发送失败: subscriptionId={}, userId={}",
-                                event.getSubscriptionId(),
+        log.info(
+                "处理订阅激活事件: subscriptionId={}, userId={}, level={}",
+                event.getSubscriptionId(),
+                event.getUserId(),
+                event.getLevel());
+        runWithTenantFromEvent(
+                        event,
+                        () -> sendNotification(
+                                "SUBSCRIPTION_ACTIVATED",
                                 event.getUserId(),
-                                e))
-                        .block();
-            } else {
-                log.warn("SystemMessageRepository 未注入，跳过订阅激活通知: subscriptionId={}", event.getSubscriptionId());
-            }
-
-            log.info("订阅激活事件处理完成");
-        } catch (Exception e) {
-            log.error(
-                    "handleSubscriptionActivatedEvent 异常: subscriptionId={}, userId={}",
-                    event.getSubscriptionId(),
-                    event.getUserId(),
-                    e);
-            throw new IllegalStateException("处理订阅激活事件失败", e);
-        }
+                                "您的 " + event.getLevel() + " 订阅状态已更新，有效期至 " + event.getEndAt() + "。",
+                                "SUBSCRIPTION",
+                                event.getSubscriptionId(),
+                                "订阅激活通知发送成功: subscriptionId=" + event.getSubscriptionId(),
+                                "订阅激活通知发送失败: subscriptionId=" + event.getSubscriptionId()))
+                .doOnSuccess(v -> log.info("订阅激活事件处理完成: subscriptionId={}", event.getSubscriptionId()))
+                .doOnError(e -> log.error(
+                        "handleSubscriptionActivatedEvent 异常: subscriptionId={}", event.getSubscriptionId(), e))
+                .subscribe();
     }
 
-    /**
-     * 处理订阅过期事件
-     *
-     * <p>当既有订阅到期时，仅发送状态通知；当前版本不存在需要回收的付费权益。
-     *
-     * @param event 订阅过期事件
-     */
     @EventListener(SubscriptionExpiredEvent.class)
     public void handleSubscriptionExpiredEvent(SubscriptionExpiredEvent event) {
-        try {
-            log.info(
-                    "处理订阅过期事件: subscriptionId={}, userId={}, level={}",
-                    event.getSubscriptionId(),
-                    event.getUserId(),
-                    event.getLevel());
-
-            if (systemMessageRepository != null) {
-                SystemMessageEntity notification = new SystemMessageEntity();
-                notification.setUserId(event.getUserId());
-                notification.setMsgType("SUBSCRIPTION_EXPIRED");
-                notification.setContent("您的 " + event.getLevel() + " 订阅已到期，当前状态已恢复为普通模式。");
-                notification.setRefType("SUBSCRIPTION");
-                notification.setRefId(event.getSubscriptionId());
-                notification.setCreateTime(LocalDateTime.now());
-                notification.setUpdateTime(LocalDateTime.now());
-
-                systemMessageRepository
-                        .save(notification)
-                        .doOnSuccess(v -> log.info(
-                                "订阅过期通知发送成功: subscriptionId={}, userId={}",
-                                event.getSubscriptionId(),
-                                event.getUserId()))
-                        .doOnError(e -> log.error(
-                                "订阅过期通知发送失败: subscriptionId={}, userId={}",
-                                event.getSubscriptionId(),
+        log.info(
+                "处理订阅过期事件: subscriptionId={}, userId={}, level={}",
+                event.getSubscriptionId(),
+                event.getUserId(),
+                event.getLevel());
+        runWithTenantFromEvent(
+                        event,
+                        () -> sendNotification(
+                                "SUBSCRIPTION_EXPIRED",
                                 event.getUserId(),
-                                e))
-                        .block();
-            } else {
-                log.warn("SystemMessageRepository 未注入，跳过订阅过期通知: subscriptionId={}", event.getSubscriptionId());
-            }
+                                "您的 " + event.getLevel() + " 订阅已到期，当前状态已恢复为普通模式。",
+                                "SUBSCRIPTION",
+                                event.getSubscriptionId(),
+                                "订阅过期通知发送成功: subscriptionId=" + event.getSubscriptionId(),
+                                "订阅过期通知发送失败: subscriptionId=" + event.getSubscriptionId()))
+                .doOnSuccess(v -> log.info("订阅过期事件处理完成: subscriptionId={}", event.getSubscriptionId()))
+                .doOnError(e ->
+                        log.error("handleSubscriptionExpiredEvent 异常: subscriptionId={}", event.getSubscriptionId(), e))
+                .subscribe();
+    }
 
-            log.info("订阅过期事件处理完成");
-        } catch (Exception e) {
-            log.error(
-                    "handleSubscriptionExpiredEvent 异常: subscriptionId={}, userId={}",
-                    event.getSubscriptionId(),
-                    event.getUserId(),
-                    e);
-            throw new IllegalStateException("处理订阅过期事件失败", e);
+    private Mono<Void> runWithTenantFromEvent(Object event, java.util.function.Supplier<Mono<Void>> task) {
+        String tenantId = (event instanceof com.apex.scaffold.common.event.BaseDomainEvent baseEvent)
+                ? baseEvent.getTenantId()
+                : null;
+        // usingWhen 的 resource 不能为 null，用 String[1] 作 previous 非空 holder。
+        String[] holder = new String[1];
+        return Mono.usingWhen(
+                        Mono.fromCallable(() -> {
+                            holder[0] = TenantContext.setTenantId(tenantId);
+                            return holder;
+                        }),
+                        ignored -> task.get(),
+                        ignored -> Mono.fromRunnable(() -> TenantContext.restoreTenantId(holder[0])),
+                        (ignored, err) -> Mono.fromRunnable(() -> TenantContext.restoreTenantId(holder[0])),
+                        ignored -> Mono.fromRunnable(() -> TenantContext.restoreTenantId(holder[0])))
+                .subscribeOn(BlockingIoSchedulers.event());
+    }
+
+    private Mono<Void> sendNotification(
+            String msgType,
+            Long userId,
+            String content,
+            String refType,
+            Object refId,
+            String successLog,
+            String errorLog) {
+        if (systemMessageRepository == null) {
+            log.warn("SystemMessageRepository 未注入，跳过: {}, userId={}", msgType, userId);
+            return Mono.empty();
         }
+        SystemMessageEntity notification = new SystemMessageEntity();
+        notification.setUserId(userId);
+        notification.setMsgType(msgType);
+        notification.setContent(content);
+        notification.setRefType(refType);
+        if (refId != null) {
+            if (refId instanceof Long longRefId) {
+                notification.setRefId(longRefId);
+            } else {
+                try {
+                    notification.setRefId(Long.valueOf(refId.toString()));
+                } catch (NumberFormatException e) {
+                    log.warn("无法将 refId 转为 Long，已跳过写入: {}", refId);
+                }
+            }
+        }
+        notification.setCreateTime(LocalDateTime.now());
+        notification.setUpdateTime(LocalDateTime.now());
+        return systemMessageRepository
+                .save(notification)
+                .doOnSuccess(v -> log.info("{}", successLog))
+                .doOnError(e -> log.error("{}, userId={}", errorLog, userId, e))
+                .onErrorResume(e -> Mono.empty())
+                .then();
     }
 }

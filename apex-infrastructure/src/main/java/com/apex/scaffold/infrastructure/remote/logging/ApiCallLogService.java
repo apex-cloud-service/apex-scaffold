@@ -1,5 +1,6 @@
 package com.apex.scaffold.infrastructure.remote.logging;
 
+import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
 import com.apex.scaffold.domain.model.entity.ApiCallLogEntity;
 import com.apex.scaffold.domain.repository.ApiCallLogRepository;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -124,7 +125,9 @@ public class ApiCallLogService {
             entity.setResponseBody(truncate(entity.getResponseBody()));
         }
         recordApiCallMetrics(entity);
-        return repository.save(entity);
+        // C3 修复：将落库提交到专用阻塞池，避免在 WebClient NIO / doFinally 线程里阻塞，
+        // 同时返回的 Mono 延迟到订阅者线程执行 subscribeOn，测试侧 Mockito 可同步 verify。
+        return repository.save(entity).subscribeOn(BlockingIoSchedulers.jdbc());
     }
 
     /**
