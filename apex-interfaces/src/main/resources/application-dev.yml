@@ -192,9 +192,39 @@ apex:
     domain-event-enabled: false
     # 领域事件 Topic（保留默认值；开启广播时生效）
     domain-event-topic: apex-domain-event
+  # ---------- 登录保护开关 ----------
+  # ❌ 开发环境临时关闭登录保护：便于快速调试，避免验证码/暴力检查干扰
+  security:
+    login-protection:
+      enabled: false
 
 # ============================================================
-# 数据可视化（可选调试工具）
+# 数据可视化(可选调试工具)
 # ============================================================
-# ✅ dev 使用本地 MySQL；如需查看数据，可使用 Navicat / mysql 客户端直连
+# ✅ dev 使用本地 MySQL;如需查看数据,可使用 Navicat / mysql 客户端直连
 #    jdbc:mysql://127.0.0.1:3306/apex_data（root/apex-root，可环境变量覆盖）。
+
+# ============================================================
+# 全文搜索（Meilisearch）
+# ============================================================
+# ✅ dev 环境启用 Meilisearch，本地默认 http://localhost:7700
+meilisearch:
+  enabled: true
+  url: http://localhost:7700
+  api-key: masterKey  # 开发环境测试密钥
+
+# ============================================================
+# 运行日志查询（Grafana Loki）
+# ============================================================
+# ✅ dev 环境启用 Loki，本地默认 http://localhost:3100
+loki:
+  enabled: true
+  url: http://localhost:3100
+
+# ============================================================
+# Grafana（日志查询跳转）
+# ============================================================
+# ✅ dev 环境启用 Grafana，本地默认 http://localhost:3000
+grafana:
+  enabled: true
+  url: http://localhost:3000
