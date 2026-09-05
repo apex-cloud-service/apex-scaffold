@@ -2,7 +2,10 @@ package com.apex.scaffold.application.dto.admin;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * 租户响应 DTO。
@@ -14,12 +17,11 @@ import lombok.Data;
  * @since 1.3.0
  */
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Schema(description = "租户信息")
 public class TenantDTO {
-
-    /** 构造租户响应 DTO。 */
-    public TenantDTO() {}
-
     @Schema(description = "租户ID")
     private Long id;
 

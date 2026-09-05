@@ -2,7 +2,10 @@ package com.apex.scaffold.application.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * 操作日志 DTO
@@ -15,6 +18,9 @@ import lombok.Data;
  * @since 1.0.0
  */
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class OperationLogDTO {
     @Schema(description = "ID")
     private Long id;

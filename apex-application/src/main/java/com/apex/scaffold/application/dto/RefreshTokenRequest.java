@@ -1,7 +1,10 @@
 package com.apex.scaffold.application.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * Token 刷新请求 DTO。
@@ -13,6 +16,9 @@ import lombok.Data;
  * @since 1.0.0
  */
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class RefreshTokenRequest {
 
     /** RefreshToken 字符串（必填） */

@@ -3,24 +3,66 @@ package com.apex.scaffold.application.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
- * 登录请求DTO
+ * 登录请求 DTO
  *
- * <p>微信APP登录请求参数封装，支持多种登录方式。
- * 目前支持微信授权码登录、微信一键登录、微信短信验证码登录、
- * 以及创蓝一键登录（闪验）和创蓝短信验证码登录。
+ * <p>微信 APP 登录请求参数封装，支持多种登录方式：
+ * <ul>
+ *   <li>WX_CODE：微信授权码登录（OAuth 2.0 授权流程）</li>
+ *   <li>WX_PHONE：微信一键登录（微信手机号快捷授权）</li>
+ *   <li>WX_SMS：微信短信验证码登录（手机号 + 验证码）</li>
+ *   <li>CL_PHONE：创蓝一键登录（闪验 SDK 集成）</li>
+ *   <li>CL_SMS：创蓝短信验证码登录（手机号 + 验证码）</li>
+ *   <li>PASSWORD：账号密码登录（用户名 + 密码）</li>
+ * </ul>
+ *
+ * <h2>字段验证规则</h2>
+ * <ul>
+ *   <li>手机号：{@code ^1[3-9]\\d{9}$} 格式（中国大陆手机号）</li>
+ *   <li>验证码：6 位数字</li>
+ *   <li>用户名：1-50 字符</li>
+ *   <li>密码：6-64 字符</li>
+ * </ul>
+ *
+ * <h2>使用示例</h2>
+ * <pre>{@code
+ * // 微信授权码登录
+ * LoginRequest request = LoginRequest.builder()
+ *     .loginType("WX_CODE")
+ *     .code("wx_auth_code_123456")
+ *     .deviceId("device_uuid_123")
+ *     .build();
+ *
+ * // 短信验证码登录
+ * LoginRequest request = LoginRequest.builder()
+ *     .loginType("WX_SMS")
+ *     .phone("13800138000")
+ *     .smsCode("123456")
+ *     .build();
+ * }</pre>
+ *
+ * <h2>注意事项</h2>
+ * <ul>
+ *   <li>密码字段明文传输，服务端使用 BCrypt 比对哈希值</li>
+ *   <li>{@code clientIp} 由 Handler 自动填充，无需客户端传递</li>
+ *   <li>{@code deviceId} 用于 Token 刷新时的设备一致性校验</li>
+ *   <li>图形验证码（{@code captchaId}/{@code captchaCode}）为可选功能，按需启用</li>
+ * </ul>
  *
  * @author Apex Team
- * @version 3.0.0
+ * @version 3.2.0
  * @since 1.0.0
  */
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class LoginRequest {
-
-    /** 构造登录请求 DTO */
-    public LoginRequest() {}
 
     /**
      * 登录类型

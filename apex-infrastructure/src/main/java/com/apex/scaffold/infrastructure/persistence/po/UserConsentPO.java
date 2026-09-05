@@ -9,6 +9,7 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import lombok.Builder;
 import lombok.Data;
 
 /**
@@ -23,6 +24,7 @@ import lombok.Data;
  * @since 1.0.0
  */
 @Data
+@Builder
 @TableName("biz_user_consent")
 public class UserConsentPO implements Serializable {
 

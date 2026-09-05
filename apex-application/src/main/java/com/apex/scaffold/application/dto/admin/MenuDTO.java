@@ -4,7 +4,10 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * 菜单树节点响应 DTO。
@@ -18,13 +21,11 @@ import lombok.Data;
  * @since 1.0.0
  */
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Schema(description = "菜单树节点")
 public class MenuDTO {
-
-    /**
-     * 构造菜单树节点。
-     */
-    public MenuDTO() {}
 
     /**
      * 菜单 ID。

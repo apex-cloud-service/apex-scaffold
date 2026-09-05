@@ -1,7 +1,10 @@
 package com.apex.scaffold.application.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * 微信手机号绑定请求：使用短信验证码校验手机号后与微信授权信息绑定。
@@ -11,6 +14,9 @@ import lombok.Data;
  * @since 1.0.0
  */
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class WechatBindPhoneRequest {
 
     @Schema(description = "微信授权临时票据")

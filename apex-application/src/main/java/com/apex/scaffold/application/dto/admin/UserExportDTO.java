@@ -3,7 +3,10 @@ package com.apex.scaffold.application.dto.admin;
 import com.alibaba.excel.annotation.ExcelProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * 用户导出 DTO（Excel 表头定义）。
@@ -17,6 +20,9 @@ import lombok.Data;
  */
 @Schema(description = "用户导出模型")
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class UserExportDTO {
 
     /** 用户 ID */
@@ -42,7 +48,4 @@ public class UserExportDTO {
     /** 最后登录时间 */
     @ExcelProperty("最后登录时间")
     private LocalDateTime lastLoginTime;
-
-    /** 无参构造 */
-    public UserExportDTO() {}
 }

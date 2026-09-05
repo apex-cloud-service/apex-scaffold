@@ -3,7 +3,9 @@ package com.apex.scaffold.application.dto.admin;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * 操作审计日志 DTO。
@@ -16,6 +18,8 @@ import lombok.Data;
  * @since 2.2.0
  */
 @Data
+@Builder
+@NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "操作审计日志")
 public class AuditLogDTO {
@@ -75,7 +79,4 @@ public class AuditLogDTO {
     /** 创建时间 */
     @Schema(description = "创建时间")
     private LocalDateTime createTime;
-
-    /** 无参构造（JSON 反序列化） */
-    public AuditLogDTO() {}
 }

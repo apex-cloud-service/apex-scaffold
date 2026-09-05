@@ -6,7 +6,10 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * 菜单创建/更新请求体。
@@ -20,13 +23,11 @@ import lombok.Data;
  * @since 1.0.0
  */
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Schema(description = "菜单创建/更新请求")
 public class MenuRequest {
-
-    /**
-     * 构造菜单请求体。
-     */
-    public MenuRequest() {}
 
     /**
      * 父菜单 ID。

@@ -3,7 +3,10 @@ package com.apex.scaffold.application.dto.admin;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * 参数配置创建/更新请求体。
@@ -16,13 +19,11 @@ import lombok.Data;
  * @since 1.0.0
  */
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Schema(description = "参数配置创建/更新请求")
 public class ConfigRequest {
-
-    /**
-     * 构造参数配置请求体。
-     */
-    public ConfigRequest() {}
 
     /**
      * 参数名称。

@@ -2,7 +2,10 @@ package com.apex.scaffold.application.dto.admin;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * API 调用日志响应 DTO。
@@ -15,6 +18,9 @@ import lombok.Data;
  * @since 2.3.0
  */
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Schema(description = "API调用日志响应")
 public class ApiCallLogDTO {
 

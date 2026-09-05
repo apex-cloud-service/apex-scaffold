@@ -5,7 +5,10 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * 租户创建请求体。
@@ -18,12 +21,11 @@ import lombok.Data;
  * @since 1.3.0
  */
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Schema(description = "租户创建请求")
 public class TenantCreateRequest {
-
-    /** 构造租户创建请求体。 */
-    public TenantCreateRequest() {}
-
     @Schema(description = "租户编码（全局唯一，创建后不可变更）", example = "T001")
     @NotBlank(message = "{tenant.code_not_blank}")
     @Size(max = 64, message = "{tenant.code_too_long}")

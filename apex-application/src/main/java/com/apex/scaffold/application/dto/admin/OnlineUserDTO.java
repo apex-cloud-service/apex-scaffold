@@ -3,7 +3,9 @@ package com.apex.scaffold.application.dto.admin;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * 在线用户 DTO。
@@ -17,6 +19,8 @@ import lombok.Data;
  */
 @Schema(description = "在线用户")
 @Data
+@Builder
+@NoArgsConstructor
 @AllArgsConstructor
 public class OnlineUserDTO {
 
@@ -43,7 +47,4 @@ public class OnlineUserDTO {
     /** 最后心跳时间（在线判定依据） */
     @Schema(description = "最后心跳时间")
     private LocalDateTime lastHeartbeatTime;
-
-    /** 无参构造（JSON 反序列化） */
-    public OnlineUserDTO() {}
 }

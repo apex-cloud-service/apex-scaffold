@@ -3,7 +3,10 @@ package com.apex.scaffold.application.dto.admin;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * 部门 DTO（树形）。
@@ -17,6 +20,9 @@ import lombok.Data;
  */
 @Schema(description = "部门（树形）")
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class DeptDTO {
 
     /** 部门 ID */
@@ -57,7 +63,4 @@ public class DeptDTO {
     /** 子部门列表 */
     @Schema(description = "子部门列表")
     private List<DeptDTO> children = new ArrayList<>();
-
-    /** 无参构造 */
-    public DeptDTO() {}
 }

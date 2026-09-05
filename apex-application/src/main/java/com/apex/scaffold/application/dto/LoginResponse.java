@@ -1,7 +1,10 @@
 package com.apex.scaffold.application.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * 登录响应DTO
@@ -13,10 +16,10 @@ import lombok.Data;
  * @since 1.0.0
  */
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class LoginResponse {
-
-    /** 构造登录响应 DTO，用于反序列化。 */
-    public LoginResponse() {}
 
     /**
      * 访问令牌（Access Token）。
@@ -131,11 +134,10 @@ public class LoginResponse {
      * @since 1.0.0
      */
     @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class UserInfo {
-
-        /** 构造用户信息内部类，用于反序列化。 */
-        public UserInfo() {}
-
         /**
          * 用户昵称。
          *

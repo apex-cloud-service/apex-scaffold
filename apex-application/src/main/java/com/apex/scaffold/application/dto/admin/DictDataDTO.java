@@ -1,7 +1,10 @@
 package com.apex.scaffold.application.dto.admin;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * 字典数据响应 DTO。
@@ -14,13 +17,11 @@ import lombok.Data;
  * @since 1.0.0
  */
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Schema(description = "字典数据响应")
 public class DictDataDTO {
-
-    /**
-     * 构造字典数据响应。
-     */
-    public DictDataDTO() {}
 
     /**
      * 字典数据 ID。

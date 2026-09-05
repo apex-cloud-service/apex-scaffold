@@ -2,7 +2,10 @@ package com.apex.scaffold.application.dto.admin;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * 定时任务响应 DTO。
@@ -15,13 +18,11 @@ import lombok.Data;
  * @since 1.0.0
  */
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Schema(description = "定时任务响应")
 public class JobDTO {
-
-    /**
-     * 构造定时任务响应。
-     */
-    public JobDTO() {}
 
     /**
      * 任务 ID。

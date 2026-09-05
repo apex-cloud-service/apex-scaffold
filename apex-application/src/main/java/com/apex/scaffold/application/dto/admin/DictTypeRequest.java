@@ -4,7 +4,10 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * 字典类型创建/更新请求体。
@@ -17,13 +20,11 @@ import lombok.Data;
  * @since 1.0.0
  */
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Schema(description = "字典类型创建/更新请求")
 public class DictTypeRequest {
-
-    /**
-     * 构造字典类型请求体。
-     */
-    public DictTypeRequest() {}
 
     /**
      * 字典名称。
