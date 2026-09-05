@@ -51,7 +51,7 @@ class FlywayMigrationStartupTest {
 
     /**
      *
-     * <p>Flyway 迁移链 V1-V15 必须全部应用成功（MySQL 版，各环境共用同一套迁移）。
+     * <p>Flyway 迁移链 V1-V20 必须全部应用成功（MySQL 版，各环境共用同一套迁移）。
      * 新增迁移脚本时同步更新本断言数量。</p>
      *
      */
@@ -61,7 +61,7 @@ class FlywayMigrationStartupTest {
                 var st = connection.createStatement();
                 var rs = st.executeQuery("SELECT COUNT(*) FROM flyway_schema_history WHERE success = 1")) {
             assertThat(rs.next()).isTrue();
-            assertThat(rs.getInt(1)).as("V1-V19 十九个迁移应全部应用成功").isEqualTo(19);
+            assertThat(rs.getInt(1)).as("V1-V20 二十个迁移应全部应用成功").isEqualTo(20);
         }
     }
 

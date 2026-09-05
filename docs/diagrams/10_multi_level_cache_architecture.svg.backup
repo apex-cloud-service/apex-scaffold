@@ -1,0 +1,352 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900">
+  <defs>
+    <style>
+      :root {
+        --text: #1a1d29;
+        --text-secondary: #64748b;
+        --border: #e2e8f0;
+        --surface: #ffffff;
+        --surface-hover: #f8fafc;
+        --primary: #3b82f6;
+        --success: #10b981;
+        --warning: #f59e0b;
+        --danger: #ef4444;
+        --info: #06b6d4;
+        --shadow: rgba(0, 0, 0, 0.1);
+      }
+      
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --text: #f1f5f9;
+          --text-secondary: #94a3b8;
+          --border: #334155;
+          --surface: #1e293b;
+          --surface-hover: #334155;
+          --primary: #60a5fa;
+          --success: #34d399;
+          --warning: #fbbf24;
+          --danger: #f87171;
+          --info: #22d3ee;
+          --shadow: rgba(0, 0, 0, 0.3);
+        }
+      }
+      
+      text {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        fill: var(--text);
+      }
+      
+      .title {
+        font-size: 24px;
+        font-weight: 600;
+        fill: var(--text);
+      }
+      
+      .subtitle {
+        font-size: 14px;
+        fill: var(--text-secondary);
+      }
+      
+      .label {
+        font-size: 14px;
+        font-weight: 500;
+      }
+      
+      .label-small {
+        font-size: 12px;
+        fill: var(--text-secondary);
+      }
+      
+      .box {
+        fill: var(--surface);
+        stroke: var(--border);
+        stroke-width: 2;
+        rx: 8;
+      }
+      
+      .box-primary {
+        fill: var(--surface);
+        stroke: var(--primary);
+        stroke-width: 2;
+        rx: 8;
+      }
+      
+      .box-success {
+        fill: var(--surface);
+        stroke: var(--success);
+        stroke-width: 2.5;
+        rx: 8;
+      }
+      
+      .box-info {
+        fill: var(--surface);
+        stroke: var(--info);
+        stroke-width: 2.5;
+        rx: 8;
+      }
+      
+      .box-warning {
+        fill: var(--surface);
+        stroke: var(--warning);
+        stroke-width: 2;
+        rx: 8;
+      }
+      
+      .arrow {
+        stroke: var(--text-secondary);
+        stroke-width: 2;
+        fill: none;
+        marker-end: url(#arrowhead);
+      }
+      
+      .arrow-success {
+        stroke: var(--success);
+        stroke-width: 2.5;
+        fill: none;
+        marker-end: url(#arrowhead-success);
+      }
+      
+      .arrow-danger {
+        stroke: var(--danger);
+        stroke-width: 2;
+        fill: none;
+        marker-end: url(#arrowhead-danger);
+      }
+      
+      .arrow-dashed {
+        stroke: var(--text-secondary);
+        stroke-width: 2;
+        stroke-dasharray: 5, 5;
+        fill: none;
+        marker-end: url(#arrowhead);
+      }
+    </style>
+    
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="var(--text-secondary)" />
+    </marker>
+    
+    <marker id="arrowhead-success" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="var(--success)" />
+    </marker>
+    
+    <marker id="arrowhead-danger" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="var(--danger)" />
+    </marker>
+  </defs>
+  
+  <!-- Title -->
+  <text x="600" y="35" text-anchor="middle" class="title">多级缓存架构 (L1 Caffeine + L2 Redis)</text>
+  <text x="600" y="55" text-anchor="middle" class="subtitle">读流程 · 写流程 · 一致性保障 · 防护机制</text>
+  
+  <!-- Application Layer -->
+  <rect x="400" y="85" width="400" height="60" class="box-primary"/>
+  <text x="600" y="110" text-anchor="middle" class="label" style="font-size: 16px; font-weight: 600;">应用服务层</text>
+  <text x="600" y="130" text-anchor="middle" class="label-small">MultiLevelCacheService</text>
+  
+  <!-- Read Flow Section -->
+  <g>
+    <text x="150" y="185" class="label" style="font-size: 18px; font-weight: 600; fill: var(--success);">读取流程 (Read)</text>
+    
+    <!-- Request -->
+    <rect x="100" y="200" width="180" height="50" class="box"/>
+    <text x="190" y="220" text-anchor="middle" class="label">1. 请求读取</text>
+    <text x="190" y="238" text-anchor="middle" class="label-small">get(key)</text>
+    
+    <!-- Arrow to L1 -->
+    <path d="M 190 250 L 190 280" class="arrow"/>
+    
+    <!-- L1 Cache (Caffeine) -->
+    <rect x="100" y="280" width="180" height="80" class="box-success"/>
+    <text x="190" y="303" text-anchor="middle" class="label" style="fill: var(--success); font-size: 15px;">L1 本地缓存</text>
+    <text x="190" y="322" text-anchor="middle" class="label-small">Caffeine</text>
+    <text x="190" y="340" text-anchor="middle" class="label-small" style="font-size: 11px;">命中率 &gt; 80%</text>
+    <text x="190" y="355" text-anchor="middle" class="label-small" style="font-size: 11px;">微秒级 (0.1ms)</text>
+    
+    <!-- L1 Hit -->
+    <path d="M 100 320 L 50 320 L 50 420 L 190 420 L 190 450" class="arrow-success"/>
+    <text x="65" y="315" class="label-small" style="fill: var(--success); font-size: 11px;">✓ 命中</text>
+    
+    <!-- L1 Miss to L2 -->
+    <path d="M 280 320 L 330 320 L 330 400" class="arrow"/>
+    <text x="300" y="315" class="label-small">✗ 未命中</text>
+    
+    <!-- L2 Cache (Redis) -->
+    <rect x="250" y="400" width="180" height="80" class="box-info"/>
+    <text x="340" y="423" text-anchor="middle" class="label" style="fill: var(--info); font-size: 15px;">L2 分布式缓存</text>
+    <text x="340" y="442" text-anchor="middle" class="label-small">Redis</text>
+    <text x="340" y="460" text-anchor="middle" class="label-small" style="font-size: 11px;">命中率 &gt; 95%</text>
+    <text x="340" y="475" text-anchor="middle" class="label-small" style="font-size: 11px;">毫秒级 (2ms)</text>
+    
+    <!-- L2 Hit - backfill L1 -->
+    <path d="M 250 440 L 190 440 L 190 450" class="arrow-success"/>
+    <text x="215" y="435" class="label-small" style="fill: var(--success); font-size: 11px;">✓ 命中 → 回填L1</text>
+    
+    <!-- L2 Miss to DB -->
+    <path d="M 430 440 L 480 440 L 480 530" class="arrow"/>
+    <text x="450" y="435" class="label-small">✗ 未命中</text>
+    
+    <!-- Database -->
+    <rect x="400" y="530" width="180" height="70" class="box-warning"/>
+    <text x="490" y="553" text-anchor="middle" class="label" style="fill: var(--warning); font-size: 15px;">数据库 (DB)</text>
+    <text x="490" y="572" text-anchor="middle" class="label-small">MySQL</text>
+    <text x="490" y="590" text-anchor="middle" class="label-small" style="font-size: 11px;">慢查询 (~50ms)</text>
+    
+    <!-- DB result back -->
+    <path d="M 400 565 L 340 565 L 340 540 L 190 540 L 190 450" class="arrow-dashed"/>
+    <text x="350" y="560" class="label-small" style="font-size: 10px;">← 回源数据</text>
+    
+    <!-- Final Response -->
+    <rect x="100" y="450" width="180" height="50" class="box-primary"/>
+    <text x="190" y="470" text-anchor="middle" class="label">返回结果</text>
+    <text x="190" y="488" text-anchor="middle" class="label-small">Response Data</text>
+  </g>
+  
+  <!-- Write Flow Section -->
+  <g>
+    <text x="750" y="185" class="label" style="font-size: 18px; font-weight: 600; fill: var(--primary);">写入流程 (Write)</text>
+    
+    <!-- Write Request -->
+    <rect x="660" y="200" width="180" height="50" class="box"/>
+    <text x="750" y="220" text-anchor="middle" class="label">1. 请求写入</text>
+    <text x="750" y="238" text-anchor="middle" class="label-small">set(key, value)</text>
+    
+    <!-- Arrow to L2 -->
+    <path d="M 750 250 L 750 300" class="arrow"/>
+    
+    <!-- Write to L2 First -->
+    <rect x="660" y="300" width="180" height="70" class="box-info"/>
+    <text x="750" y="323" text-anchor="middle" class="label" style="fill: var(--info);">2. 写入L2 (Redis)</text>
+    <text x="750" y="342" text-anchor="middle" class="label-small">Write-Through</text>
+    <text x="750" y="360" text-anchor="middle" class="label-small" style="font-size: 11px;">持久化保障</text>
+    
+    <!-- Arrow to Evict L1 -->
+    <path d="M 750 370 L 750 420" class="arrow"/>
+    
+    <!-- Evict L1 -->
+    <rect x="660" y="420" width="180" height="70" class="box-success"/>
+    <text x="750" y="443" text-anchor="middle" class="label" style="fill: var(--success);">3. 失效L1 (Caffeine)</text>
+    <text x="750" y="462" text-anchor="middle" class="label-small">evict(key)</text>
+    <text x="750" y="480" text-anchor="middle" class="label-small" style="font-size: 11px;">保证一致性</text>
+    
+    <!-- Success -->
+    <path d="M 750 490 L 750 530" class="arrow"/>
+    <rect x="660" y="530" width="180" height="50" class="box-primary"/>
+    <text x="750" y="550" text-anchor="middle" class="label">写入成功</text>
+    <text x="750" y="568" text-anchor="middle" class="label-small">Success</text>
+  </g>
+  
+  <!-- Cache Protection Mechanisms -->
+  <g transform="translate(100, 640)">
+    <rect x="0" y="0" width="1000" height="220" class="box-primary"/>
+    <text x="500" y="28" text-anchor="middle" class="label" style="font-size: 17px; font-weight: 600; fill: var(--primary);">缓存防护机制</text>
+    
+    <!-- Protection 1: Penetration -->
+    <g transform="translate(20, 50)">
+      <rect x="0" y="0" width="220" height="150" class="box-success"/>
+      <text x="110" y="25" text-anchor="middle" class="label" style="fill: var(--success); font-size: 14px;">穿透防护</text>
+      <text x="110" y="45" text-anchor="middle" class="label-small">Cache Penetration</text>
+      
+      <text x="15" y="70" class="label-small" style="font-size: 11px;">• 空值标记</text>
+      <text x="15" y="88" class="label-small" style="font-size: 11px;">• NULL_VALUE缓存</text>
+      <text x="15" y="106" class="label-small" style="font-size: 11px;">• 短TTL (5分钟)</text>
+      <text x="15" y="124" class="label-small" style="font-size: 11px;">• 防止恶意查询</text>
+      <text x="15" y="142" class="label-small" style="font-size: 11px;">  打穿数据库</text>
+    </g>
+    
+    <!-- Protection 2: Breakdown -->
+    <g transform="translate(260, 50)">
+      <rect x="0" y="0" width="220" height="150" class="box-info"/>
+      <text x="110" y="25" text-anchor="middle" class="label" style="fill: var(--info); font-size: 14px;">击穿防护</text>
+      <text x="110" y="45" text-anchor="middle" class="label-small">Cache Breakdown</text>
+      
+      <text x="15" y="70" class="label-small" style="font-size: 11px;">• Single-Flight模式</text>
+      <text x="15" y="88" class="label-small" style="font-size: 11px;">• 并发请求合并</text>
+      <text x="15" y="106" class="label-small" style="font-size: 11px;">• 首个请求查DB</text>
+      <text x="15" y="124" class="label-small" style="font-size: 11px;">• 其他请求等待</text>
+      <text x="15" y="142" class="label-small" style="font-size: 11px;">  并共享结果</text>
+    </g>
+    
+    <!-- Protection 3: Avalanche -->
+    <g transform="translate(500, 50)">
+      <rect x="0" y="0" width="220" height="150" class="box-warning"/>
+      <text x="110" y="25" text-anchor="middle" class="label" style="fill: var(--warning); font-size: 14px;">雪崩防护</text>
+      <text x="110" y="45" text-anchor="middle" class="label-small">Cache Avalanche</text>
+      
+      <text x="15" y="70" class="label-small" style="font-size: 11px;">• TTL随机抖动</text>
+      <text x="15" y="88" class="label-small" style="font-size: 11px;">• ttl ± random(60s)</text>
+      <text x="15" y="106" class="label-small" style="font-size: 11px;">• 分批过期</text>
+      <text x="15" y="124" class="label-small" style="font-size: 11px;">• 避免同时失效</text>
+      <text x="15" y="142" class="label-small" style="font-size: 11px;">  造成雪崩</text>
+    </g>
+    
+    <!-- Protection 4: Consistency -->
+    <g transform="translate(740, 50)">
+      <rect x="0" y="0" width="220" height="150" class="box"/>
+      <text x="110" y="25" text-anchor="middle" class="label" style="font-size: 14px;">一致性保障</text>
+      <text x="110" y="45" text-anchor="middle" class="label-small">Consistency</text>
+      
+      <text x="15" y="70" class="label-small" style="font-size: 11px;">• 写入先写L2</text>
+      <text x="15" y="88" class="label-small" style="font-size: 11px;">• 再失效L1</text>
+      <text x="15" y="106" class="label-small" style="font-size: 11px;">• 删除同时删除</text>
+      <text x="15" y="124" class="label-small" style="font-size: 11px;">• 分层TTL管理</text>
+      <text x="15" y="142" class="label-small" style="font-size: 11px;">  L1: 5min L2: 1h</text>
+    </g>
+  </g>
+  
+  <!-- Performance Stats -->
+  <g transform="translate(950, 200)">
+    <rect x="0" y="0" width="200" height="180" class="box-primary"/>
+    <text x="100" y="25" text-anchor="middle" class="label" style="font-size: 14px; font-weight: 600;">性能提升</text>
+    
+    <text x="15" y="50" class="label-small" style="font-size: 11px;">DB查询: ~50ms</text>
+    <line x1="15" y1="55" x2="185" y2="55" stroke="var(--border)" stroke-width="1"/>
+    
+    <text x="15" y="75" class="label-small" style="font-size: 11px; fill: var(--info);">L2命中: ~2ms</text>
+    <text x="15" y="92" class="label-small" style="font-size: 10px;">性能提升 25倍 ✓</text>
+    <line x1="15" y1="97" x2="185" y2="97" stroke="var(--border)" stroke-width="1"/>
+    
+    <text x="15" y="117" class="label-small" style="font-size: 11px; fill: var(--success);">L1命中: ~0.1ms</text>
+    <text x="15" y="134" class="label-small" style="font-size: 10px;">性能提升 500倍 ✓✓</text>
+    <line x1="15" y1="139" x2="185" y2="139" stroke="var(--border)" stroke-width="1"/>
+    
+    <text x="15" y="159" class="label-small" style="font-size: 11px; font-weight: 600;">综合命中率</text>
+    <text x="15" y="176" class="label-small" style="font-size: 11px; fill: var(--success);">&gt; 95%</text>
+  </g>
+  
+  <!-- Config Stats -->
+  <g transform="translate(950, 400)">
+    <rect x="0" y="0" width="200" height="180" class="box"/>
+    <text x="100" y="25" text-anchor="middle" class="label" style="font-size: 14px; font-weight: 600;">配置参数</text>
+    
+    <text x="15" y="50" class="label-small" style="font-size: 11px; font-weight: 600;">L1 (Caffeine)</text>
+    <text x="15" y="68" class="label-small" style="font-size: 10px;">• 最大条目: 10,000</text>
+    <text x="15" y="83" class="label-small" style="font-size: 10px;">• TTL: 5分钟</text>
+    <text x="15" y="98" class="label-small" style="font-size: 10px;">• 淘汰: W-TinyLFU</text>
+    
+    <line x1="15" y1="105" x2="185" y2="105" stroke="var(--border)" stroke-width="1"/>
+    
+    <text x="15" y="125" class="label-small" style="font-size: 11px; font-weight: 600;">L2 (Redis)</text>
+    <text x="15" y="143" class="label-small" style="font-size: 10px;">• TTL: 1小时</text>
+    <text x="15" y="158" class="label-small" style="font-size: 10px;">• 连接池: 20</text>
+    <text x="15" y="173" class="label-small" style="font-size: 10px;">• 超时: 2秒</text>
+  </g>
+  
+  <!-- Legend -->
+  <g transform="translate(50, 200)">
+    <text x="0" y="0" class="label" style="font-size: 13px; font-weight: 600;">图例</text>
+    
+    <line x1="0" y1="15" x2="30" y2="15" style="stroke: var(--success); stroke-width: 2.5;"/>
+    <text x="35" y="20" class="label-small">L1 本地缓存</text>
+    
+    <line x1="0" y1="35" x2="30" y2="35" style="stroke: var(--info); stroke-width: 2.5;"/>
+    <text x="35" y="40" class="label-small">L2 分布式缓存</text>
+    
+    <line x1="0" y1="55" x2="30" y2="55" style="stroke: var(--success); stroke-width: 2.5; marker-end: url(#arrowhead-success);"/>
+    <text x="35" y="60" class="label-small">命中路径</text>
+    
+    <line x1="0" y1="75" x2="30" y2="75" style="stroke: var(--text-secondary); stroke-width: 2; stroke-dasharray: 5,5;"/>
+    <text x="35" y="80" class="label-small">回填/回源</text>
+  </g>
+</svg>

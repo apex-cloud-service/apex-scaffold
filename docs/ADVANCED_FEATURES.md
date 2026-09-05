@@ -115,6 +115,8 @@ public Mono<List<OrderDTO>> listReport() {
 
 ## 6. 自动重试与可靠消息
 
+> **配套流程图**: [自动重试策略流程](diagrams/11_auto_retry_strategy_flow.svg)
+
 ### 自动重试
 
 使用 `@AutoRetry` 为适合重复执行的同步方法、`Mono` 或 `Flux` 增加统一重试策略：

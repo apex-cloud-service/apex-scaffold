@@ -52,8 +52,26 @@
 #### 前置条件
 
 - JDK 17+
-- Maven 3.8+
+- Maven Daemon (mvnd) 2.0.0+
 - Git
+- SDKMAN (推荐)
+
+#### 环境准备
+
+项目使用 SDKMAN 管理 JDK 和构建工具：
+
+```bash
+# 1. 激活项目环境（必须）
+cd /Users/work/apex-scaffold && sdk env
+
+# 2. 验证环境
+java -version    # 应显示 17.0.12
+mvnd --version   # 应显示 2.0.0-rc-3
+
+# 3. 如环境未安装，执行：
+sdk install java 17.0.12-oracle
+sdk install mvnd 2.0.0-rc-3
+```
 
 #### 开发流程
 
@@ -72,7 +90,7 @@ git remote add upstream https://github.com/your-org/apex-scaffold.git
 git checkout -b feature/your-feature-name
 
 # 5. 开发并测试
-mvn clean test
+mvnd clean test
 
 # 6. 提交更改
 git add .
@@ -182,16 +200,16 @@ Closes #123
 
 ```bash
 # 1. 代码格式化
-mvn spotless:apply
+mvnd spotless:apply
 
 # 2. 运行测试
-mvn clean test
+mvnd clean test
 
 # 3. 检查代码质量
-mvn pmd:check
+mvnd pmd:check
 
 # 4. 生成覆盖率报告
-mvn jacoco:report
+mvnd jacoco:report
 ```
 
 ## 测试要求

@@ -22,6 +22,12 @@ import reactor.core.publisher.Mono;
  * <p>在 REQUEST_FILE appender 中输出每个业务请求的结构化详情，
  * 涵盖请求头、查询参数、响应体大小和异常堆栈，方便联调与排障。</p>
  *
+ * <h2>MDC 上下文</h2>
+ * <p>在请求处理开始时将 {@code traceId}（Micrometer Tracing 注入的链路 ID）与
+ * {@code requestId}（{@code ApiGatewayFilter} 生成的请求 ID）写入 MDC，使控制台与全部
+ * 文件 Appender 的 pattern 统一携带链路标识；响应完成后在 {@code doOnSuccess}/{@code doOnError}
+ * 中写入 method/uri/status/duration/clientIp/userId 并统一清理，避免上下文残留。</p>
+ *
  * <h2>记录内容</h2>
  * <table>
  *   <tr><th>类别</th><th>字段</th><th>示例</th></tr>
@@ -70,10 +76,15 @@ public class LoggingFilter implements WebFilter {
         long startTime = System.currentTimeMillis();
         String queryString = request.getURI().getRawQuery();
         String traceId = (String) exchange.getAttributes().getOrDefault("traceId", "-");
+        String requestId = (String) exchange.getAttributes().getOrDefault("requestId", "-");
         String userId = (String) exchange.getAttributes().getOrDefault("userId", "-");
         String clientIp = Optional.ofNullable(request.getRemoteAddress())
                 .map(InetSocketAddress::getHostString)
                 .orElse("-");
+
+        // 将链路与请求标识写入 MDC，使所有 Appender 格式统一携带 traceId/requestId
+        MDC.put("traceId", traceId);
+        MDC.put("requestId", requestId);
 
         HttpHeaders headers = request.getHeaders();
         String userAgent = toHeaderValue(headers, HttpHeaders.USER_AGENT, "-");
@@ -112,12 +123,12 @@ public class LoggingFilter implements WebFilter {
                             responseSize);
 
                     if (statusCode >= HTTP_STATUS_CLIENT_ERROR_START) {
-                        log.warn("请求完成(错误) | traceId={} | {}", traceId, detail);
+                        log.warn("请求完成(错误) | {}", detail);
                         errorLogged.set(true);
                     } else if (durationMs > SLOW_REQUEST_THRESHOLD_MS) {
-                        log.warn("请求完成(慢请求) | traceId={} | {}", traceId, detail);
+                        log.warn("请求完成(慢请求) | {}", detail);
                     } else {
-                        log.info("请求完成 | traceId={} | {}", traceId, detail);
+                        log.info("请求完成 | {}", detail);
                     }
                     clearMdc();
                 })
@@ -133,9 +144,8 @@ public class LoggingFilter implements WebFilter {
 
                     if (!errorLogged.get()) {
                         log.error(
-                                "请求异常 | traceId={} | method={} path={} duration={}ms "
+                                "请求异常 | method={} path={} duration={}ms "
                                         + "error={}: {} query={} UA={} CT={} referer={} reqSize={}B",
-                                traceId,
                                 method,
                                 path,
                                 durationMs,
@@ -214,9 +224,11 @@ public class LoggingFilter implements WebFilter {
     }
 
     /**
-     * 清除 MDC 中的请求级字段。
+     * 清除 MDC 中的请求级字段，防止上下文残留到其他请求。
      */
     private static void clearMdc() {
+        MDC.remove("traceId");
+        MDC.remove("requestId");
         MDC.remove("method");
         MDC.remove("uri");
         MDC.remove("clientIp");

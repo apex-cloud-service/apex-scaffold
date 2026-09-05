@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1800 1400" width="1800" height="1400">
+  <defs>
+    <style>
+      .title { font: bold 28px sans-serif; fill: #1a1a1a; }
+      .subtitle { font: 16px sans-serif; fill: #666; }
+      .layer-title { font: bold 18px sans-serif; fill: #fff; }
+      .component-title { font: bold 14px sans-serif; fill: #1a1a1a; }
+      .component-desc { font: 12px sans-serif; fill: #666; }
+      .port { font: 11px sans-serif; fill: #0ea5e9; }
+      .layer-bg { fill: #0f172a; }
+      .component-box { fill: #fff; stroke: #e2e8f0; stroke-width: 2; }
+      .component-box:hover { fill: #f8fafc; stroke: #38bdf8; }
+      .critical-box { fill: #fee2e2; stroke: #ef4444; stroke-width: 2; }
+      .arrow { fill: none; stroke: #94a3b8; stroke-width: 2; marker-end: url(#arrowhead); }
+      .data-flow { fill: none; stroke: #22d3ee; stroke-width: 3; stroke-dasharray: 5,5; }
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#94a3b8"/>
+    </marker>
+  </defs>
+
+  <!-- 标题 -->
+  <text x="900" y="40" text-anchor="middle" class="title">Apex Scaffold 基础设施组件架构</text>
+  <text x="900" y="65" text-anchor="middle" class="subtitle">Infrastructure Components Architecture - Production-Grade Deployment</text>
+
+  <!-- Layer 1: 应用服务层 -->
+  <rect x="50" y="100" width="1700" height="160" rx="8" class="layer-bg"/>
+  <text x="70" y="130" class="layer-title">[Layer 1] 应用服务层 Application Services</text>
+
+  <!-- Apex Scaffold Application -->
+  <rect x="70" y="145" width="380" height="100" rx="6" class="critical-box"/>
+  <text x="260" y="170" text-anchor="middle" class="component-title">Apex Scaffold Application</text>
+  <text x="260" y="188" text-anchor="middle" class="port">Spring Boot 3.5.15 / Java 17</text>
+  <text x="80" y="208" class="component-desc">• WebFlux 响应式服务 (Netty Port: 8080)</text>
+  <text x="80" y="225" class="component-desc">• Actuator 监控端点 (Port: 9090)</text>
+  <text x="80" y="242" class="component-desc">• 多实例部署 (K8s Deployment: 3 replicas)</text>
+
+  <!-- Sentinel Dashboard -->
+  <rect x="470" y="145" width="280" height="100" rx="6" class="component-box"/>
+  <text x="610" y="170" text-anchor="middle" class="component-title">Sentinel Dashboard</text>
+  <text x="610" y="188" text-anchor="middle" class="port">Port: 8858</text>
+  <text x="480" y="208" class="component-desc">• 流控规则配置</text>
+  <text x="480" y="225" class="component-desc">• 实时监控 QPS/RT</text>
+  <text x="480" y="242" class="component-desc">• 熔断降级管理</text>
+
+  <!-- Zipkin Server -->
+  <rect x="770" y="145" width="280" height="100" rx="6" class="component-box"/>
+  <text x="910" y="170" text-anchor="middle" class="component-title">Zipkin Server</text>
+  <text x="910" y="188" text-anchor="middle" class="port">Port: 9411</text>
+  <text x="780" y="208" class="component-desc">• 分布式链路追踪</text>
+  <text x="780" y="225" class="component-desc">• Span 收集 &amp; 存储</text>
+  <text x="780" y="242" class="component-desc">• UI 可视化界面</text>
+
+  <!-- Nacos Server -->
+  <rect x="1070" y="145" width="320" height="100" rx="6" class="component-box"/>
+  <text x="1230" y="170" text-anchor="middle" class="component-title">Nacos Server</text>
+  <text x="1230" y="188" text-anchor="middle" class="port">Port: 8848 (HTTP) / 9848 (gRPC)</text>
+  <text x="1080" y="208" class="component-desc">• 服务注册发现中心</text>
+  <text x="1080" y="225" class="component-desc">• 配置中心 (动态配置推送)</text>
+  <text x="1080" y="242" class="component-desc">• Sentinel 规则存储</text>
+
+  <!-- Meilisearch -->
+  <rect x="1410" y="145" width="320" height="100" rx="6" class="component-box"/>
+  <text x="1570" y="170" text-anchor="middle" class="component-title">Meilisearch</text>
+  <text x="1570" y="188" text-anchor="middle" class="port">Port: 7700 (HTTP API)</text>
+  <text x="1420" y="208" class="component-desc">• 全文搜索引擎</text>
+  <text x="1420" y="225" class="component-desc">• 中文分词索引</text>
+  <text x="1420" y="242" class="component-desc">• RESTful API</text>
+
+  <!-- Layer 2: 数据存储层 -->
+  <rect x="50" y="280" width="1700" height="160" rx="8" class="layer-bg"/>
+  <text x="70" y="310" class="layer-title">[Layer 2] 数据存储层 Data Storage</text>
+
+  <!-- MySQL Primary/Replica -->
+  <rect x="70" y="325" width="380" height="100" rx="6" class="critical-box"/>
+  <text x="260" y="350" text-anchor="middle" class="component-title">MySQL Cluster</text>
+  <text x="260" y="368" text-anchor="middle" class="port">Primary: 3306 / Replica: 3307</text>
+  <text x="80" y="388" class="component-desc">• MySQL 8.4.0 (InnoDB)</text>
+  <text x="80" y="405" class="component-desc">• 主从复制 (异步/半同步)</text>
+  <text x="80" y="422" class="component-desc">• Flyway 数据库版本管理</text>
+
+  <!-- Redis Cluster -->
+  <rect x="470" y="325" width="280" height="100" rx="6" class="critical-box"/>
+  <text x="610" y="350" text-anchor="middle" class="component-title">Redis Cluster</text>
+  <text x="610" y="368" text-anchor="middle" class="port">Port: 6379-6384 (6 nodes)</text>
+  <text x="480" y="388" class="component-desc">• Redis 7.x Cluster 模式</text>
+  <text x="480" y="405" class="component-desc">• 3 主 3 从 (哈希槽分片)</text>
+  <text x="480" y="422" class="component-desc">• 缓存 + 分布式锁</text>
+
+  <!-- MinIO Cluster -->
+  <rect x="770" y="325" width="280" height="100" rx="6" class="component-box"/>
+  <text x="910" y="350" text-anchor="middle" class="component-title">MinIO Cluster</text>
+  <text x="910" y="368" text-anchor="middle" class="port">Port: 9000 (API) / 9001 (Console)</text>
+  <text x="780" y="388" class="component-desc">• 分布式对象存储</text>
+  <text x="780" y="405" class="component-desc">• S3 兼容 API</text>
+  <text x="780" y="422" class="component-desc">• 纠删码数据保护</text>
+
+  <!-- RocketMQ Cluster -->
+  <rect x="1070" y="325" width="320" height="100" rx="6" class="component-box"/>
+  <text x="1230" y="350" text-anchor="middle" class="component-title">RocketMQ Cluster</text>
+  <text x="1230" y="368" text-anchor="middle" class="port">NameServer: 9876 / Broker: 10911</text>
+  <text x="1080" y="388" class="component-desc">• NameServer 集群 (2 节点)</text>
+  <text x="1080" y="405" class="component-desc">• Broker 主从 (同步双写)</text>
+  <text x="1080" y="422" class="component-desc">• 消息持久化 &amp; 事务消息</text>
+
+  <!-- Elasticsearch (Optional) -->
+  <rect x="1410" y="325" width="320" height="100" rx="6" class="component-box"/>
+  <text x="1570" y="350" text-anchor="middle" class="component-title">Elasticsearch</text>
+  <text x="1570" y="368" text-anchor="middle" class="port">Port: 9200 (HTTP) / 9300 (TCP)</text>
+  <text x="1420" y="388" class="component-desc">• ELK 日志存储</text>
+  <text x="1420" y="405" class="component-desc">• 日志全文检索</text>
+  <text x="1420" y="422" class="component-desc">• Logstash 日志聚合</text>
+
+  <!-- Layer 3: 监控可观测层 -->
+  <rect x="50" y="460" width="1700" height="160" rx="8" class="layer-bg"/>
+  <text x="70" y="490" class="layer-title">[Layer 3] 监控可观测层 Monitoring &amp; Observability</text>
+
+  <!-- Prometheus -->
+  <rect x="70" y="505" width="320" height="100" rx="6" class="component-box"/>
+  <text x="230" y="530" text-anchor="middle" class="component-title">Prometheus</text>
+  <text x="230" y="548" text-anchor="middle" class="port">Port: 9090</text>
+  <text x="80" y="568" class="component-desc">• 指标采集 &amp; 存储 (TSDB)</text>
+  <text x="80" y="585" class="component-desc">• 拉取 /actuator/prometheus</text>
+  <text x="80" y="602" class="component-desc">• PromQL 查询语言</text>
+
+  <!-- Grafana -->
+  <rect x="410" y="505" width="320" height="100" rx="6" class="component-box"/>
+  <text x="570" y="530" text-anchor="middle" class="component-title">Grafana</text>
+  <text x="570" y="548" text-anchor="middle" class="port">Port: 3000</text>
+  <text x="420" y="568" class="component-desc">• 可视化仪表盘 (66+ Panels)</text>
+  <text x="420" y="585" class="component-desc">• JVM / 应用 / 业务指标</text>
+  <text x="420" y="602" class="component-desc">• 告警配置 &amp; 通知</text>
+
+  <!-- AlertManager -->
+  <rect x="750" y="505" width="280" height="100" rx="6" class="component-box"/>
+  <text x="890" y="530" text-anchor="middle" class="component-title">AlertManager</text>
+  <text x="890" y="548" text-anchor="middle" class="port">Port: 9093</text>
+  <text x="760" y="568" class="component-desc">• 告警聚合 &amp; 去重</text>
+  <text x="760" y="585" class="component-desc">• 钉钉/邮件/Webhook</text>
+  <text x="760" y="602" class="component-desc">• 告警分级路由</text>
+
+  <!-- Grafana Loki -->
+  <rect x="1050" y="505" width="280" height="100" rx="6" class="component-box"/>
+  <text x="1190" y="530" text-anchor="middle" class="component-title">Grafana Loki</text>
+  <text x="1190" y="548" text-anchor="middle" class="port">Port: 3100</text>
+  <text x="1060" y="568" class="component-desc">• 日志聚合系统</text>
+  <text x="1060" y="585" class="component-desc">• LogQL 查询语言</text>
+  <text x="1060" y="602" class="component-desc">• 与 Grafana 集成</text>
+
+  <!-- Grafana Alloy -->
+  <rect x="1350" y="505" width="380" height="100" rx="6" class="component-box"/>
+  <text x="1540" y="530" text-anchor="middle" class="component-title">Grafana Alloy</text>
+  <text x="1540" y="548" text-anchor="middle" class="port">Port: 12345 (HTTP) / 4317 (OTLP)</text>
+  <text x="1360" y="568" class="component-desc">• OpenTelemetry Collector</text>
+  <text x="1360" y="585" class="component-desc">• Metrics/Logs/Traces 统一采集</text>
+  <text x="1360" y="602" class="component-desc">• 遥测数据管道</text>
+
+  <!-- Layer 4: 网关负载均衡层 -->
+  <rect x="50" y="640" width="1700" height="160" rx="8" class="layer-bg"/>
+  <text x="70" y="670" class="layer-title">[Layer 4] 网关负载均衡层 Gateway &amp; Load Balancing</text>
+
+  <!-- Nginx Ingress -->
+  <rect x="70" y="685" width="380" height="100" rx="6" class="component-box"/>
+  <text x="260" y="710" text-anchor="middle" class="component-title">Nginx Ingress Controller</text>
+  <text x="260" y="728" text-anchor="middle" class="port">Port: 80 (HTTP) / 443 (HTTPS)</text>
+  <text x="80" y="748" class="component-desc">• K8s 入口流量管理</text>
+  <text x="80" y="765" class="component-desc">• SSL/TLS 终止</text>
+  <text x="80" y="782" class="component-desc">• 路径路由 &amp; 反向代理</text>
+
+  <!-- K8s Service (ClusterIP) -->
+  <rect x="470" y="685" width="320" height="100" rx="6" class="component-box"/>
+  <text x="630" y="710" text-anchor="middle" class="component-title">Kubernetes Service</text>
+  <text x="630" y="728" text-anchor="middle" class="port">ClusterIP: 10.96.x.x:8080</text>
+  <text x="480" y="748" class="component-desc">• 服务发现 &amp; 负载均衡</text>
+  <text x="480" y="765" class="component-desc">• iptables/IPVS 转发</text>
+  <text x="480" y="782" class="component-desc">• 会话亲和性 (可选)</text>
+
+  <!-- HPA (Horizontal Pod Autoscaler) -->
+  <rect x="810" y="685" width="340" height="100" rx="6" class="component-box"/>
+  <text x="980" y="710" text-anchor="middle" class="component-title">HPA + VPA</text>
+  <text x="980" y="728" text-anchor="middle" class="port">Auto Scaling</text>
+  <text x="820" y="748" class="component-desc">• CPU &gt; 70% 触发扩容 (3-10 Pods)</text>
+  <text x="820" y="765" class="component-desc">• Memory &gt; 80% 触发扩容</text>
+  <text x="820" y="782" class="component-desc">• VPA 垂直资源调整</text>
+
+  <!-- Spring Cloud Gateway (备选) -->
+  <rect x="1170" y="685" width="280" height="100" rx="6" class="component-box"/>
+  <text x="1310" y="710" text-anchor="middle" class="component-title">API Gateway (备选)</text>
+  <text x="1310" y="728" text-anchor="middle" class="port">Port: 8081</text>
+  <text x="1180" y="748" class="component-desc">• Spring Cloud Gateway</text>
+  <text x="1180" y="765" class="component-desc">• 路由 &amp; 过滤器</text>
+  <text x="1180" y="782" class="component-desc">• 统一鉴权网关</text>
+
+  <!-- CloudFlare CDN -->
+  <rect x="1470" y="685" width="260" height="100" rx="6" class="component-box"/>
+  <text x="1600" y="710" text-anchor="middle" class="component-title">CloudFlare CDN</text>
+  <text x="1600" y="728" text-anchor="middle" class="port">Edge Network</text>
+  <text x="1480" y="748" class="component-desc">• 静态资源 CDN 加速</text>
+  <text x="1480" y="765" class="component-desc">• DDoS 防护</text>
+  <text x="1480" y="782" class="component-desc">• WAF 防火墙</text>
+
+  <!-- Layer 5: 容器编排层 -->
+  <rect x="50" y="820" width="1700" height="160" rx="8" class="layer-bg"/>
+  <text x="70" y="850" class="layer-title">[Layer 5] 容器编排层 Container Orchestration</text>
+
+  <!-- Kubernetes Cluster -->
+  <rect x="70" y="865" width="480" height="100" rx="6" class="critical-box"/>
+  <text x="310" y="890" text-anchor="middle" class="component-title">Kubernetes Cluster</text>
+  <text x="310" y="908" text-anchor="middle" class="port">API Server: 6443</text>
+  <text x="80" y="928" class="component-desc">• Master 节点 (3 HA) + Worker 节点 (3+)</text>
+  <text x="80" y="945" class="component-desc">• Deployment / StatefulSet / DaemonSet</text>
+  <text x="80" y="962" class="component-desc">• ConfigMap / Secret / PV / PVC</text>
+
+  <!-- Docker Engine -->
+  <rect x="570" y="865" width="280" height="100" rx="6" class="component-box"/>
+  <text x="710" y="890" text-anchor="middle" class="component-title">Docker Engine</text>
+  <text x="710" y="908" text-anchor="middle" class="port">Docker 24.x / containerd</text>
+  <text x="580" y="928" class="component-desc">• 容器运行时</text>
+  <text x="580" y="945" class="component-desc">• 镜像构建 &amp; 推送</text>
+  <text x="580" y="962" class="component-desc">• Harbor 私有镜像仓库</text>
+
+  <!-- Helm Charts -->
+  <rect x="870" y="865" width="280" height="100" rx="6" class="component-box"/>
+  <text x="1010" y="890" text-anchor="middle" class="component-title">Helm Charts</text>
+  <text x="1010" y="908" text-anchor="middle" class="port">v3.x</text>
+  <text x="880" y="928" class="component-desc">• K8s 包管理器</text>
+  <text x="880" y="945" class="component-desc">• 应用模板化部署</text>
+  <text x="880" y="962" class="component-desc">• 版本管理 &amp; 回滚</text>
+
+  <!-- Kustomize -->
+  <rect x="1170" y="865" width="280" height="100" rx="6" class="component-box"/>
+  <text x="1310" y="890" text-anchor="middle" class="component-title">Kustomize</text>
+  <text x="1310" y="908" text-anchor="middle" class="port">Native K8s</text>
+  <text x="1180" y="928" class="component-desc">• YAML 配置管理</text>
+  <text x="1180" y="945" class="component-desc">• 多环境配置覆盖</text>
+  <text x="1180" y="962" class="component-desc">• dev/staging/prod</text>
+
+  <!-- ArgoCD (GitOps) -->
+  <rect x="1470" y="865" width="260" height="100" rx="6" class="component-box"/>
+  <text x="1600" y="890" text-anchor="middle" class="component-title">ArgoCD</text>
+  <text x="1600" y="908" text-anchor="middle" class="port">Port: 8080</text>
+  <text x="1480" y="928" class="component-desc">• GitOps 持续部署</text>
+  <text x="1480" y="945" class="component-desc">• Git 作为单一事实源</text>
+  <text x="1480" y="962" class="component-desc">• 自动同步 &amp; 回滚</text>
+
+  <!-- Layer 6: CI/CD 流水线 -->
+  <rect x="50" y="1000" width="1700" height="160" rx="8" class="layer-bg"/>
+  <text x="70" y="1030" class="layer-title">[Layer 6] CI/CD 流水线 Continuous Integration &amp; Deployment</text>
+
+  <!-- GitHub Actions -->
+  <rect x="70" y="1045" width="380" height="100" rx="6" class="component-box"/>
+  <text x="260" y="1070" text-anchor="middle" class="component-title">GitHub Actions</text>
+  <text x="260" y="1088" text-anchor="middle" class="port">Workflow Automation</text>
+  <text x="80" y="1108" class="component-desc">• ci-cd.yml 自动化构建</text>
+  <text x="80" y="1125" class="component-desc">• Maven 测试 + JaCoCo 覆盖率</text>
+  <text x="80" y="1142" class="component-desc">• Docker 镜像构建推送</text>
+
+  <!-- SonarQube -->
+  <rect x="470" y="1045" width="280" height="100" rx="6" class="component-box"/>
+  <text x="610" y="1070" text-anchor="middle" class="component-title">SonarQube</text>
+  <text x="610" y="1088" text-anchor="middle" class="port">Port: 9000</text>
+  <text x="480" y="1108" class="component-desc">• 代码质量扫描</text>
+  <text x="480" y="1125" class="component-desc">• 安全漏洞检测</text>
+  <text x="480" y="1142" class="component-desc">• 技术债务分析</text>
+
+  <!-- Trivy Scanner -->
+  <rect x="770" y="1045" width="280" height="100" rx="6" class="component-box"/>
+  <text x="910" y="1070" text-anchor="middle" class="component-title">Trivy Scanner</text>
+  <text x="910" y="1088" text-anchor="middle" class="port">CLI Tool</text>
+  <text x="780" y="1108" class="component-desc">• 容器镜像扫描</text>
+  <text x="780" y="1125" class="component-desc">• CVE 漏洞检测</text>
+  <text x="780" y="1142" class="component-desc">• SBOM 生成</text>
+
+  <!-- Harbor Registry -->
+  <rect x="1070" y="1045" width="320" height="100" rx="6" class="component-box"/>
+  <text x="1230" y="1070" text-anchor="middle" class="component-title">Harbor Registry</text>
+  <text x="1230" y="1088" text-anchor="middle" class="port">Port: 443 (HTTPS)</text>
+  <text x="1080" y="1108" class="component-desc">• 私有 Docker Registry</text>
+  <text x="1080" y="1125" class="component-desc">• 镜像签名 &amp; 扫描</text>
+  <text x="1080" y="1142" class="component-desc">• RBAC 权限管理</text>
+
+  <!-- Nexus Repository -->
+  <rect x="1410" y="1045" width="320" height="100" rx="6" class="component-box"/>
+  <text x="1570" y="1070" text-anchor="middle" class="component-title">Nexus Repository</text>
+  <text x="1570" y="1088" text-anchor="middle" class="port">Port: 8081</text>
+  <text x="1420" y="1108" class="component-desc">• Maven 私服仓库</text>
+  <text x="1420" y="1125" class="component-desc">• 依赖代理缓存</text>
+  <text x="1420" y="1142" class="component-desc">• Snapshot &amp; Release</text>
+
+  <!-- 数据流向图例 -->
+  <rect x="50" y="1180" width="1700" height="190" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+  <text x="900" y="1210" text-anchor="middle" class="component-title">🔄 关键数据流向 Key Data Flows</text>
+  
+  <text x="80" y="1240" class="component-desc">1️⃣ 用户请求: CloudFlare CDN → Nginx Ingress → K8s Service → Apex App (3 Pods)</text>
+  <text x="80" y="1265" class="component-desc">2️⃣ 数据读写: Apex App → Druid Pool → MySQL Primary (写) / MySQL Replica (读)</text>
+  <text x="80" y="1290" class="component-desc">3️⃣ 缓存查询: Apex App → Redisson Client → Redis Cluster (6 nodes) + Caffeine L1 Cache</text>
+  <text x="80" y="1315" class="component-desc">4️⃣ 消息队列: Apex App → RocketMQ Producer → NameServer → Broker → Consumer</text>
+  <text x="80" y="1340" class="component-desc">5️⃣ 监控遥测: Apex App → Prometheus Pull (/actuator/prometheus) → Grafana Dashboard</text>
+  <text x="80" y="1365" class="component-desc">6️⃣ 链路追踪: Apex App → Zipkin Reporter (HTTP) → Zipkin Server → UI 可视化</text>

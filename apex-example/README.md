@@ -42,7 +42,7 @@ spring:
 ### 3. 启动应用
 
 ```bash
-mvn spring-boot:run
+mvnd spring-boot:run
 ```
 
 或运行主类 `com.apex.example.ExampleApplication`

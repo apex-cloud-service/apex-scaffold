@@ -58,7 +58,8 @@ class FlywayMigrationVersionTest {
                         versionNumber("16"),
                         versionNumber("17"),
                         versionNumber("18"),
-                        versionNumber("19")));
+                        versionNumber("19"),
+                        versionNumber("20")));
     }
 
     @Test

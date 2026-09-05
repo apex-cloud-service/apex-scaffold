@@ -22,6 +22,7 @@ import com.apex.scaffold.interfaces.handler.MonitorDashboardHandler;
 import com.apex.scaffold.interfaces.handler.NotificationSseHandler;
 import com.apex.scaffold.interfaces.handler.OnlineUserHandler;
 import com.apex.scaffold.interfaces.handler.UserHandler;
+import com.apex.scaffold.interfaces.handler.WorkflowHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
@@ -454,5 +455,61 @@ public class ApiRouter {
                 .GET("/url", handler::getUrl)
                 .DELETE("/delete", handler::delete)
                 .GET("/exists", handler::exists);
+    }
+
+
+
+    /**
+     * 统一搜索路由（/admin-api/v1/search）。
+     *
+     * <p>提供全文搜索和索引管理功能。</p>
+     *
+     * @param handler 统一搜索处理器
+     * @return 搜索路由函数
+     * @since 1.3.0
+     */
+    @Bean
+    public RouterFunction<ServerResponse> unifiedSearchRoutes(
+            com.apex.scaffold.interfaces.handler.UnifiedSearchHandler handler) {
+        return RouterFunctions.route()
+                .GET("/admin-api/v1/search", handler::search)
+                .POST("/admin-api/v1/search/rebuild", handler::rebuildIndex)
+                .build();
+    }
+
+    /**
+     * 运行时日志路由（/admin-api/v1/logs/runtime）。
+     *
+     * <p>提供运行时日志查询功能。</p>
+     *
+     * @param handler 运行时日志处理器
+     * @return 日志路由函数
+     * @since 1.3.0
+     */
+    @Bean
+    public RouterFunction<ServerResponse> runtimeLogRoutes(
+            com.apex.scaffold.interfaces.handler.RuntimeLogHandler handler) {
+        return RouterFunctions.route()
+                .GET("/admin-api/v1/logs/runtime", handler::queryLogs)
+                .GET("/admin-api/v1/logs/runtime/count", handler::countLogs)
+                .build();
+    }
+
+    /**
+     * 业务日志统一查询路由（/admin-api/v1/logs/business）。
+     *
+     * <p>整合登录日志、操作日志、API调用日志，提供统一查询接口。</p>
+     *
+     * @param handler 业务日志处理器
+     * @return 日志路由函数
+     * @since 1.3.0
+     */
+    @Bean
+    public RouterFunction<ServerResponse> businessLogRoutes(
+            com.apex.scaffold.interfaces.handler.UnifiedBusinessLogHandler handler) {
+        return RouterFunctions.route()
+                .GET("/admin-api/v1/logs/business", handler::queryLogs)
+                .GET("/admin-api/v1/logs/business/count", handler::countLogs)
+                .build();
     }
 }

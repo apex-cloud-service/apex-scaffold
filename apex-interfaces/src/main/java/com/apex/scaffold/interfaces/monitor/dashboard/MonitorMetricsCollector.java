@@ -199,10 +199,12 @@ public class MonitorMetricsCollector {
     public MonitorOverviewResponse overview() {
         double heapUsed = sumGauges(M_JVM_MEMORY_USED, "area", "heap");
         double heapMax = sumGauges(M_JVM_MEMORY_MAX, "area", "heap");
+        double p95 = timerPercentile(M_API_RESPONSE_TIME, 0.95);
+        double p99 = timerPercentile(M_API_RESPONSE_TIME, 0.99);
         return new MonitorOverviewResponse(
                 applicationName,
                 applicationVersion,
-                "UP",
+                healthStatus(),
                 (long) gauge(M_PROCESS_UPTIME),
                 formatTimestamp(gauge(M_PROCESS_START_TIME)),
                 System.currentTimeMillis(),
@@ -218,6 +220,8 @@ public class MonitorMetricsCollector {
                 apiErrorCount(4),
                 apiErrorCount(5),
                 timerAverage(M_API_RESPONSE_TIME),
+                p95,
+                p99,
                 counter(M_GATEWAY_REQUEST_COUNT),
                 counter(M_RATE_LIMIT_REJECTED),
                 counter(M_CIRCUIT_OPENED),
@@ -225,6 +229,42 @@ public class MonitorMetricsCollector {
                 counter(M_BUSINESS_LOGIN_SUCCESS),
                 counter(M_BUSINESS_REGISTER),
                 counter(M_BUSINESS_UPLOAD));
+    }
+
+    /**
+     * 综合健康判定。
+     *
+     * <p>依据 MySQL 连接池、Redis 健康探针与熔断器状态综合评估服务健康度：
+     * 任一关键中间件不可用或存在熔断器处于 OPEN 状态时判定为 {@code DEGRADED}，
+     * 全部正常时返回 {@code UP}。避免单一指标缺失导致误报——Gauge 为 NaN
+     * （未采集到数据）时不参与判定。</p>
+     *
+     * @return UP / DEGRADED
+     */
+    private String healthStatus() {
+        boolean mysqlOk = isAvailable(gauge(M_DRUID_ACTIVE), gauge(M_DRUID_MAX))
+                || isAvailable(gauge(M_HIKARI_ACTIVE), gauge(M_HIKARI_MAX));
+        boolean redisOk = isAvailable(gauge(M_REDISSON_NODES), gauge(M_REDISSON_HEALTHY)) || gauge(M_REDIS_UP) >= 1;
+        boolean circuitOpen = circuitBreakerStates().stream().anyMatch(state -> "OPEN".equals(state.state()));
+        if (!mysqlOk || !redisOk || circuitOpen) {
+            return "DEGRADED";
+        }
+        return "UP";
+    }
+
+    /**
+     * 判断指标是否有效（非 NaN 且为正）。
+     *
+     * @param values 指标值
+     * @return 存在有效值返回 true
+     */
+    private static boolean isAvailable(double... values) {
+        for (double v : values) {
+            if (!Double.isNaN(v) && v > 0) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /* ==================== 系统资源 ==================== */
@@ -485,8 +525,8 @@ public class MonitorMetricsCollector {
      */
     private Map<String, MonitorSystemResponse.BlockingIoPool> blockingIoPools() {
         Map<String, MonitorSystemResponse.BlockingIoPool> pools = new LinkedHashMap<>();
+        double up = gauge("apex.blocking.io.up", "type", "scheduler_query");
         for (String pool : List.of("jdbc", "cache", "storage", "event", "remote", "general")) {
-            double up = gauge("apex.blocking.io.up", "type", "scheduler_query");
             pools.put(
                     pool,
                     new MonitorSystemResponse.BlockingIoPool(
@@ -927,6 +967,24 @@ public class MonitorMetricsCollector {
     private double timerMax(String name) {
         return meterRegistry.find(name).timers().stream()
                 .mapToDouble(timer -> timer.max(TimeUnit.SECONDS))
+                .filter(Double::isFinite)
+                .max()
+                .orElse(0);
+    }
+
+    /**
+     * 读取 Timer 分位数耗时（秒）。
+     *
+     * <p>依赖 Timer 注册时启用 {@code publishPercentileHistogram()}（直方图分位数），
+     * 未启用或样本不足时返回 0。多个 Timer（不同路径标签）取最大分位值。</p>
+     *
+     * @param name 指标名
+     * @param percentile 分位数（0~1），如 0.95 / 0.99
+     * @return 分位耗时（秒），无数据时 0
+     */
+    private double timerPercentile(String name, double percentile) {
+        return meterRegistry.find(name).timers().stream()
+                .mapToDouble(timer -> timer.percentile(percentile, TimeUnit.SECONDS))
                 .filter(Double::isFinite)
                 .max()
                 .orElse(0);

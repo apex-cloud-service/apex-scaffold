@@ -1570,6 +1570,194 @@ public class RouterOpenApiConfig {
         return placeholderRoute("/__openapi_captcha_placeholder");
     }
 
+    /** 统一搜索模块在线接口文档。 */
+    @Bean
+    @RouterOperations({
+        @RouterOperation(
+                path = "/admin-api/v1/search",
+                method = RequestMethod.GET,
+                beanClass = com.apex.scaffold.interfaces.handler.UnifiedSearchHandler.class,
+                beanMethod = "search",
+                operation =
+                        @Operation(
+                                operationId = "unifiedSearch",
+                                summary = "全文搜索",
+                                description = "在系统资源中执行全文搜索，支持多类型资源搜索和分页",
+                                security = @SecurityRequirement(name = "BearerAuth"))),
+        @RouterOperation(
+                path = "/admin-api/v1/search/rebuild",
+                method = RequestMethod.POST,
+                beanClass = com.apex.scaffold.interfaces.handler.UnifiedSearchHandler.class,
+                beanMethod = "rebuildIndex",
+                operation =
+                        @Operation(
+                                operationId = "rebuildSearchIndex",
+                                summary = "重建搜索索引",
+                                description = "重建全文搜索索引，用于索引数据更新或修复",
+                                security = @SecurityRequirement(name = "BearerAuth")))
+    })
+    /**
+     * 构建统一搜索接口的 OpenAPI 占位路由，保证 OpenAPI 文档分组展示。
+     *
+     * @return 统一搜索接口的 OpenAPI 占位路由
+     */
+    public RouterFunction<ServerResponse> unifiedSearchRoutesDocs() {
+        return placeholderRoute("/__openapi_unified_search_placeholder");
+    }
+
+    /** 工作流操作模块在线接口文档。 */
+    @Bean
+    @RouterOperations({
+        @RouterOperation(
+                path = "/api/workflow/tasks/{taskId}/rollback",
+                method = RequestMethod.POST,
+                beanClass = com.apex.scaffold.interfaces.handler.WorkflowHandler.class,
+                beanMethod = "rollbackTask",
+                operation =
+                        @Operation(
+                                operationId = "rollbackTask",
+                                summary = "流程回退",
+                                description = "将当前任务回退到流程中的前置节点",
+                                security = @SecurityRequirement(name = "BearerAuth"),
+                                requestBody =
+                                        @RequestBody(
+                                                required = true,
+                                                content =
+                                                        @Content(
+                                                                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                                                schema =
+                                                                        @Schema(
+                                                                                implementation =
+                                                                                        com.apex.scaffold.interfaces.dto
+                                                                                                .workflow
+                                                                                                .RollbackTaskRequest
+                                                                                                .class))),
+                                responses =
+                                        @ApiResponse(
+                                                responseCode = "200",
+                                                content = @Content(schema = @Schema(implementation = Void.class))))),
+        @RouterOperation(
+                path = "/api/workflow/tasks/{taskId}/transfer",
+                method = RequestMethod.POST,
+                beanClass = com.apex.scaffold.interfaces.handler.WorkflowHandler.class,
+                beanMethod = "transferTask",
+                operation =
+                        @Operation(
+                                operationId = "transferTask",
+                                summary = "任务转办",
+                                description = "将当前待办任务转交给其他用户处理",
+                                security = @SecurityRequirement(name = "BearerAuth"),
+                                requestBody =
+                                        @RequestBody(
+                                                required = true,
+                                                content =
+                                                        @Content(
+                                                                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                                                schema =
+                                                                        @Schema(
+                                                                                implementation =
+                                                                                        com.apex.scaffold.interfaces.dto
+                                                                                                .workflow
+                                                                                                .TransferTaskRequest
+                                                                                                .class))),
+                                responses =
+                                        @ApiResponse(
+                                                responseCode = "200",
+                                                content = @Content(schema = @Schema(implementation = Void.class))))),
+        @RouterOperation(
+                path = "/api/workflow/tasks/{taskId}/delegate",
+                method = RequestMethod.POST,
+                beanClass = com.apex.scaffold.interfaces.handler.WorkflowHandler.class,
+                beanMethod = "delegateTask",
+                operation =
+                        @Operation(
+                                operationId = "delegateTask",
+                                summary = "任务委派",
+                                description = "将当前待办任务临时委托给其他用户处理",
+                                security = @SecurityRequirement(name = "BearerAuth"),
+                                requestBody =
+                                        @RequestBody(
+                                                required = true,
+                                                content =
+                                                        @Content(
+                                                                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                                                schema =
+                                                                        @Schema(
+                                                                                implementation =
+                                                                                        com.apex.scaffold.interfaces.dto
+                                                                                                .workflow
+                                                                                                .DelegateTaskRequest
+                                                                                                .class))),
+                                responses =
+                                        @ApiResponse(
+                                                responseCode = "200",
+                                                content = @Content(schema = @Schema(implementation = Void.class))))),
+        @RouterOperation(
+                path = "/api/workflow/instances/{instanceId}/suspend",
+                method = RequestMethod.POST,
+                beanClass = com.apex.scaffold.interfaces.handler.WorkflowHandler.class,
+                beanMethod = "suspendInstance",
+                operation =
+                        @Operation(
+                                operationId = "suspendInstance",
+                                summary = "挂起流程实例",
+                                description = "暂停流程实例的执行，所有待办任务无法审批",
+                                security = @SecurityRequirement(name = "BearerAuth"),
+                                requestBody =
+                                        @RequestBody(
+                                                required = true,
+                                                content =
+                                                        @Content(
+                                                                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                                                schema =
+                                                                        @Schema(
+                                                                                implementation =
+                                                                                        com.apex.scaffold.interfaces.dto
+                                                                                                .workflow
+                                                                                                .SuspendInstanceRequest
+                                                                                                .class))),
+                                responses =
+                                        @ApiResponse(
+                                                responseCode = "200",
+                                                content = @Content(schema = @Schema(implementation = Void.class))))),
+        @RouterOperation(
+                path = "/api/workflow/instances/{instanceId}/resume",
+                method = RequestMethod.POST,
+                beanClass = com.apex.scaffold.interfaces.handler.WorkflowHandler.class,
+                beanMethod = "resumeInstance",
+                operation =
+                        @Operation(
+                                operationId = "resumeInstance",
+                                summary = "恢复流程实例",
+                                description = "恢复挂起的流程实例，允许待办任务继续审批",
+                                security = @SecurityRequirement(name = "BearerAuth"),
+                                requestBody =
+                                        @RequestBody(
+                                                required = true,
+                                                content =
+                                                        @Content(
+                                                                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                                                schema =
+                                                                        @Schema(
+                                                                                implementation =
+                                                                                        com.apex.scaffold.interfaces.dto
+                                                                                                .workflow
+                                                                                                .ResumeInstanceRequest
+                                                                                                .class))),
+                                responses =
+                                        @ApiResponse(
+                                                responseCode = "200",
+                                                content = @Content(schema = @Schema(implementation = Void.class)))))
+    })
+    /**
+     * 构建工作流操作接口的 OpenAPI 占位路由，保证 OpenAPI 文档分组展示。
+     *
+     * @return 工作流操作接口的 OpenAPI 占位路由
+     */
+    public RouterFunction<ServerResponse> workflowOperationRoutesDocs() {
+        return placeholderRoute("/__openapi_workflow_operation_placeholder");
+    }
+
     /**
      * 构造占位 RouterFunction，仅用于承载 {@code @RouterOperations} 注解。
      *

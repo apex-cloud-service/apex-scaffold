@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 850" width="1000" height="850">
+  <defs>
+    <style>
+      .title { font: 700 20px system-ui, -apple-system, sans-serif; fill: #0f172a; text-anchor: middle; }
+      .subtitle { font: 12px system-ui, -apple-system, sans-serif; fill: #64748b; text-anchor: middle; }
+      .threat-title { font: 600 13px system-ui, -apple-system, sans-serif; fill: #0f172a; text-anchor: start; }
+      .threat { fill: #ffffff; stroke-width: 2.5; rx: 6; }
+      .threat-critical { stroke: #dc2626; }
+      .threat-high { stroke: #d97706; }
+      .threat-medium { stroke: #0891b2; }
+      .defense { fill: #059669; fill-opacity: 0.1; stroke: #059669; stroke-width: 2; rx: 6; }
+      .label { font: 500 11px system-ui, -apple-system, sans-serif; fill: #0f172a; text-anchor: start; }
+      .desc { font: 9px system-ui, -apple-system, sans-serif; fill: #64748b; text-anchor: start; }
+      .mitigation { font: 9px system-ui, -apple-system, sans-serif; fill: #059669; text-anchor: start; }
+      .layer-title { font: 600 14px system-ui, -apple-system, sans-serif; fill: #0f172a; text-anchor: middle; }
+      .layer { fill: #f8fafc; stroke: #e2e8f0; stroke-width: 1; rx: 8; }
+      .arrow { stroke: #dc2626; stroke-width: 1.5; fill: none; marker-end: url(#arr-attack); stroke-dasharray: 3 2; }
+      .shield { stroke: #059669; stroke-width: 2; fill: none; }
+    </style>
+    <marker id="arr-attack" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <polygon points="0 0, 8 4, 0 8" fill="#dc2626"/>
+    </marker>
+  </defs>
+
+  <text class="title" x="500" y="30">安全威胁模型与防护体系图</text>
+  <text class="subtitle" x="500" y="50">OWASP Top 10 · STRIDE 模型 · 纵深防御 · 主动监控 · 零信任架构</text>
+
+  <!-- Layer 1: External Threats -->
+  <rect class="layer" x="20" y="70" width="960" height="150"/>
+  <text class="layer-title" x="500" y="92">🔴 外部威胁 (External Threats)</text>
+
+  <rect class="threat threat-critical" x="40" y="105" width="180" height="105"/>
+  <text class="threat-title" x="50" y="123">1. SQL 注入攻击</text>
+  <text class="desc" x="50" y="138">威胁: 恶意 SQL 语句执行</text>
+  <text class="desc" x="50" y="151">影响: 数据泄露/篡改/删除</text>
+  <text class="desc" x="50" y="164">等级: 🔴 严重</text>
+  <text class="mitigation" x="50" y="180">✓ MyBatis 预编译</text>
+  <text class="mitigation" x="50" y="193">✓ 参数校验 (JSR380)</text>
+
+  <rect class="threat threat-critical" x="235" y="105" width="180" height="105"/>
+  <text class="threat-title" x="245" y="123">2. XSS 跨站脚本</text>
+  <text class="desc" x="245" y="138">威胁: 注入恶意 JavaScript</text>
+  <text class="desc" x="245" y="151">影响: Cookie 窃取/会话劫持</text>
+  <text class="desc" x="245" y="164">等级: 🔴 严重</text>
+  <text class="mitigation" x="245" y="180">✓ CSP 策略</text>
+  <text class="mitigation" x="245" y="193">✓ 输出转义 (HTML Entity)</text>
+
+  <rect class="threat threat-high" x="430" y="105" width="180" height="105"/>
+  <text class="threat-title" x="440" y="123">3. CSRF 攻击</text>
+  <text class="desc" x="440" y="138">威胁: 伪造用户请求</text>
+  <text class="desc" x="440" y="151">影响: 未授权操作</text>
+  <text class="desc" x="440" y="164">等级: 🟠 高</text>
+  <text class="mitigation" x="440" y="180">✓ CSRF Token</text>
+  <text class="mitigation" x="440" y="193">✓ SameSite Cookie</text>
+
+  <rect class="threat threat-high" x="625" y="105" width="180" height="105"/>
+  <text class="threat-title" x="635" y="123">4. DDoS 拒绝服务</text>
+  <text class="desc" x="635" y="138">威胁: 海量请求耗尽资源</text>
+  <text class="desc" x="635" y="151">影响: 服务不可用</text>
+  <text class="desc" x="635" y="164">等级: 🟠 高</text>
+  <text class="mitigation" x="635" y="180">✓ 云厂商 DDoS 防护</text>
+  <text class="mitigation" x="635" y="193">✓ Sentinel QPS 限流</text>
+
+  <rect class="threat threat-critical" x="820" y="105" width="150" height="105"/>
+  <text class="threat-title" x="830" y="123">5. 暴力破解</text>
+  <text class="desc" x="830" y="138">威胁: 密码穷举</text>
+  <text class="desc" x="830" y="151">影响: 账户接管</text>
+  <text class="desc" x="830" y="164">等级: 🔴 严重</text>
+  <text class="mitigation" x="830" y="180">✓ 验证码</text>
+  <text class="mitigation" x="830" y="193">✓ 账户锁定</text>
+
+  <!-- Layer 2: Application Threats -->
+  <rect class="layer" x="20" y="235" width="960" height="150"/>
+  <text class="layer-title" x="500" y="257">🟠 应用层威胁 (Application Layer)</text>
+
+  <rect class="threat threat-high" x="40" y="270" width="180" height="105"/>
+  <text class="threat-title" x="50" y="288">6. 越权访问</text>
+  <text class="desc" x="50" y="303">威胁: 水平/垂直越权</text>
+  <text class="desc" x="50" y="316">影响: 访问他人数据</text>
+  <text class="desc" x="50" y="329">等级: 🟠 高</text>
+  <text class="mitigation" x="50" y="345">✓ RBAC 权限校验</text>
+  <text class="mitigation" x="50" y="358">✓ 数据权限过滤</text>
+
+  <rect class="threat threat-critical" x="235" y="270" width="180" height="105"/>
+  <text class="threat-title" x="245" y="288">7. 敏感信息泄露</text>
+  <text class="desc" x="245" y="303">威胁: 日志/错误信息泄露</text>
+  <text class="desc" x="245" y="316">影响: 系统信息暴露</text>
+  <text class="desc" x="245" y="329">等级: 🔴 严重</text>
+  <text class="mitigation" x="245" y="345">✓ 日志脱敏</text>
+  <text class="mitigation" x="245" y="358">✓ 错误信息泛化</text>
+
+  <rect class="threat threat-medium" x="430" y="270" width="180" height="105"/>
+  <text class="threat-title" x="440" y="288">8. API 滥用</text>
+  <text class="desc" x="440" y="303">威胁: 接口被恶意调用</text>
+  <text class="desc" x="440" y="316">影响: 资源耗尽/数据爬取</text>
+  <text class="desc" x="440" y="329">等级: 🟡 中</text>
+  <text class="mitigation" x="440" y="345">✓ API 限流 (Sentinel)</text>
+  <text class="mitigation" x="440" y="358">✓ 接口签名验证</text>
+
+  <rect class="threat threat-high" x="625" y="270" width="180" height="105"/>
+  <text class="threat-title" x="635" y="288">9. 会话劫持</text>
+  <text class="desc" x="635" y="303">威胁: Token 窃取/伪造</text>
+  <text class="desc" x="635" y="316">影响: 身份冒充</text>
+  <text class="desc" x="635" y="329">等级: 🟠 高</text>
+  <text class="mitigation" x="635" y="345">✓ JWT 短过期 (15min)</text>
+  <text class="mitigation" x="635" y="358">✓ Refresh Token 轮换</text>
+
+  <rect class="threat threat-medium" x="820" y="270" width="150" height="105"/>
+  <text class="threat-title" x="830" y="288">10. 文件上传</text>
+  <text class="desc" x="830" y="303">威胁: 恶意文件</text>
+  <text class="desc" x="830" y="316">影响: 代码执行</text>
+  <text class="desc" x="830" y="329">等级: 🟡 中</text>
+  <text class="mitigation" x="830" y="345">✓ 类型白名单</text>
+  <text class="mitigation" x="830" y="358">✓ 病毒扫描</text>
+
+  <!-- Layer 3: Data Threats -->
+  <rect class="layer" x="20" y="400" width="960" height="150"/>
+  <text class="layer-title" x="500" y="422">🟡 数据层威胁 (Data Layer)</text>
+
+  <rect class="threat threat-critical" x="40" y="435" width="180" height="105"/>
+  <text class="threat-title" x="50" y="453">11. 数据泄露</text>
+  <text class="desc" x="50" y="468">威胁: 数据库备份泄露</text>
+  <text class="desc" x="50" y="481">影响: 大规模隐私泄露</text>
+  <text class="desc" x="50" y="494">等级: 🔴 严重</text>
+  <text class="mitigation" x="50" y="510">✓ 数据库加密 (AES-256)</text>
+  <text class="mitigation" x="50" y="523">✓ 备份加密存储</text>
+
+  <rect class="threat threat-high" x="235" y="435" width="180" height="105"/>
+  <text class="threat-title" x="245" y="453">12. 缓存穿透</text>
+  <text class="desc" x="245" y="468">威胁: 恶意查询不存在数据</text>
+  <text class="desc" x="245" y="481">影响: 数据库压力激增</text>
+  <text class="desc" x="245" y="494">等级: 🟠 高</text>
+  <text class="mitigation" x="245" y="510">✓ 布隆过滤器</text>
+  <text class="mitigation" x="245" y="523">✓ 空值缓存</text>
+
+  <rect class="threat threat-medium" x="430" y="435" width="180" height="105"/>
+  <text class="threat-title" x="440" y="453">13. 缓存雪崩</text>
+  <text class="desc" x="440" y="468">威胁: 缓存同时失效</text>
+  <text class="desc" x="440" y="481">影响: 数据库瞬时崩溃</text>
+  <text class="desc" x="440" y="494">等级: 🟡 中</text>
+  <text class="mitigation" x="440" y="510">✓ TTL 随机化</text>
+  <text class="mitigation" x="440" y="523">✓ 多级缓存</text>
+
+  <rect class="threat threat-high" x="625" y="435" width="180" height="105"/>
+  <text class="threat-title" x="635" y="453">14. 数据篡改</text>
+  <text class="desc" x="635" y="468">威胁: 未授权修改数据</text>
+  <text class="desc" x="635" y="481">影响: 数据完整性破坏</text>
+  <text class="desc" x="635" y="494">等级: 🟠 高</text>
+  <text class="mitigation" x="635" y="510">✓ 审计日志 (谁改了什么)</text>
+  <text class="mitigation" x="635" y="523">✓ 数据签名验证</text>
+
+  <rect class="threat threat-medium" x="820" y="435" width="150" height="105"/>
+  <text class="threat-title" x="830" y="453">15. 备份丢失</text>
+  <text class="desc" x="830" y="468">威胁: 备份损坏</text>
+  <text class="desc" x="830" y="481">影响: 无法恢复</text>
+  <text class="desc" x="830" y="494">等级: 🟡 中</text>
+  <text class="mitigation" x="830" y="510">✓ 3-2-1 策略</text>
+  <text class="mitigation" x="830" y="523">✓ 定期演练</text>
+
+  <!-- Layer 4: Infrastructure Threats -->
+  <rect class="layer" x="20" y="565" width="960" height="150"/>
+  <text class="layer-title" x="500" y="587">🔵 基础设施威胁 (Infrastructure)</text>
+
+  <rect class="threat threat-medium" x="40" y="600" width="180" height="105"/>
+  <text class="threat-title" x="50" y="618">16. 容器逃逸</text>
+  <text class="desc" x="50" y="633">威胁: 突破容器隔离</text>
+  <text class="desc" x="50" y="646">影响: 宿主机接管</text>
+  <text class="desc" x="50" y="659">等级: 🟡 中</text>
+  <text class="mitigation" x="50" y="675">✓ 最小权限运行</text>
+  <text class="mitigation" x="50" y="688">✓ Security Context</text>
+
+  <rect class="threat threat-high" x="235" y="600" width="180" height="105"/>
+  <text class="threat-title" x="245" y="618">17. 依赖漏洞</text>
+  <text class="desc" x="245" y="633">威胁: 第三方库漏洞</text>
+  <text class="desc" x="245" y="646">影响: 远程代码执行</text>
+  <text class="desc" x="245" y="659">等级: 🟠 高</text>
+  <text class="mitigation" x="245" y="675">✓ OWASP Dependency Check</text>
+  <text class="mitigation" x="245" y="688">✓ SCA 扫描 (Snyk)</text>
+
+  <rect class="threat threat-medium" x="430" y="600" width="180" height="105"/>
+  <text class="threat-title" x="440" y="618">18. 配置错误</text>
+  <text class="desc" x="440" y="633">威胁: 不安全配置</text>
+  <text class="desc" x="440" y="646">影响: 信息泄露/未授权访问</text>
+  <text class="desc" x="440" y="659">等级: 🟡 中</text>
+  <text class="mitigation" x="440" y="675">✓ 配置模板化</text>
+  <text class="mitigation" x="440" y="688">✓ 安全基线检查</text>
+
+  <rect class="threat threat-high" x="625" y="600" width="180" height="105"/>
+  <text class="threat-title" x="635" y="618">19. 供应链攻击</text>
+  <text class="desc" x="635" y="633">威胁: 恶意镜像/依赖</text>
+  <text class="desc" x="635" y="646">影响: 后门植入</text>
+  <text class="desc" x="635" y="659">等级: 🟠 高</text>
+  <text class="mitigation" x="635" y="675">✓ 镜像签名验证</text>
+  <text class="mitigation" x="635" y="688">✓ 私有镜像仓库</text>
+
+  <rect class="threat threat-medium" x="820" y="600" width="150" height="105"/>
+  <text class="threat-title" x="830" y="618">20. 内部威胁</text>
+  <text class="desc" x="830" y="633">威胁: 内部人员</text>
+  <text class="desc" x="830" y="646">影响: 数据窃取</text>
+  <text class="desc" x="830" y="659">等级: 🟡 中</text>
+  <text class="mitigation" x="830" y="675">✓ 最小权限</text>
+  <text class="mitigation" x="830" y="688">✓ 操作审计</text>
+
+  <!-- Summary -->
+  <text class="desc" x="500" y="735" text-anchor="middle" fill="#0f172a" font-weight="600">
+    🛡️ 纵深防御策略 (Defense in Depth)
+  </text>
+  <text class="desc" x="500" y="755" text-anchor="middle" fill="#64748b">
+    第1层: WAF + DDoS 防护 | 第2层: API 网关 (认证/限流/熔断) | 第3层: 应用安全 (RBAC/数据权限/参数校验)
+  </text>
+  <text class="desc" x="500" y="773" text-anchor="middle" fill="#64748b">
+    第4层: 数据安全 (加密/脱敏/审计) | 第5层: 基础设施安全 (容器隔离/镜像扫描/最小权限)
+  </text>
+  <text class="desc" x="500" y="791" text-anchor="middle" fill="#059669">
+    ✓ 主动监控: Prometheus 告警 + 异常行为检测 | ✓ 应急响应: 5min RTO 容灾切换
+  </text>
+  <text class="desc" x="500" y="809" text-anchor="middle" fill="#d97706">
+    ⚠️ 安全合规: 等保二级 | GDPR 数据保护 | PCI-DSS 支付安全 (如适用)
+  </text>
+  <text class="desc" x="500" y="827" text-anchor="middle" fill="#0891b2">
+    🔐 零信任原则: 永不信任，始终验证 · 所有请求都需认证授权 · 所有操作都有审计日志
+  </text>
+</svg>

@@ -33,6 +33,7 @@ Apex Scaffold 提供三个商业化版本,满足不同规模企业的需求。
 | SQL 注入防护 | ✅ | ✅ | ✅ |
 | CSRF 防护\* | ❌ | ❌ | ❌ |
 | 操作审计日志（安全合规） | ❌ | ❌ | ✅ |
+| 机器指纹绑定 | ❌ | ✅ | ✅ |
 
 \* 微信小程序场景下 Spring Security 全局关闭 CSRF，三档行为一致；若后续接入 H5 Web 端可按需按版本开启。
 
@@ -236,5 +237,6 @@ A: Apex Scaffold 采用双轨许可证。基础版采用 [MIT License](../LICENS
 - **基础版**: [MIT License](../LICENSE) - 允许商业使用、修改、分发
 - **标准版/企业版**: [商业授权](../LICENSE-COMMERCIAL.md) - 仅限购买方内部使用,禁止转售或开源
 - **授权机制**: 商业版内置 License 验证，未配置有效授权时商业功能自动降级关闭（基础功能不受影响），详见 [LICENSE_MANAGEMENT.md](LICENSE_MANAGEMENT.md)
+- **机器指纹绑定**（v1.2.1）: 标准版/企业版签发 License 时可绑定客户机器指纹（MAC + CPU + 主板 SHA-256），防止 License 复制到未授权机器；容器/K8s 部署支持 `apex.license.machine-fingerprint-override` 手动覆盖，详见 [LICENSE_MANAGEMENT.md](LICENSE_MANAGEMENT.md)
 
 详细条款请查看 [LICENSE](../LICENSE) 与 [LICENSE-COMMERCIAL.md](../LICENSE-COMMERCIAL.md)。

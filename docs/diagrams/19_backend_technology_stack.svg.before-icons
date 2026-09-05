@@ -1,0 +1,371 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1400" width="1600" height="1400">
+  <defs>
+    <style>
+      .title { font: bold 28px sans-serif; fill: #0f172a; }
+      .subtitle { font: 16px sans-serif; fill: #666; }
+      .layer-title { font: bold 18px sans-serif; fill: #fff; }
+      .tech-title { font: bold 14px sans-serif; fill: #0f172a; }
+      .tech-desc { font: 12px sans-serif; fill: #666; }
+      .version { font: 11px sans-serif; fill: #0ea5e9; }
+      .layer-bg { fill: #0f172a; }
+      .tech-box { fill: #fff; stroke: #e2e8f0; stroke-width: 2; }
+      .tech-box:hover { fill: #f8fafc; stroke: #38bdf8; }
+      .core-box { fill: #fef3c7; stroke: #d97706; stroke-width: 2; }
+      .arrow { fill: none; stroke: #94a3b8; stroke-width: 2; marker-end: url(#arrowhead); }
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#94a3b8"/>
+    </marker>
+  </defs>
+
+  <!-- 标题 -->
+  <text x="800" y="40" text-anchor="middle" class="title">Apex Scaffold 后端技术栈架构</text>
+  <text x="800" y="65" text-anchor="middle" class="subtitle">Backend Technology Stack Architecture - Java 17 / Spring Boot 3.5 / WebFlux Reactive</text>
+
+  <!-- Layer 1: 核心框架层 (Core Framework) -->
+  <rect x="50" y="100" width="1500" height="180" rx="8" class="layer-bg"/>
+  <text x="70" y="130" class="layer-title">[Layer 1] 核心框架层 Core Framework</text>
+
+  <!-- Spring Boot 3.5.15 -->
+  <rect x="70" y="145" width="220" height="120" rx="6" class="core-box"/>
+  <text x="180" y="170" text-anchor="middle" class="tech-title">Spring Boot</text>
+  <text x="180" y="188" text-anchor="middle" class="version">3.5.15</text>
+  <text x="80" y="208" class="tech-desc">• spring-boot-starter-webflux</text>
+  <text x="80" y="225" class="tech-desc">• spring-boot-starter-security</text>
+  <text x="80" y="242" class="tech-desc">• spring-boot-starter-actuator</text>
+  <text x="80" y="259" class="tech-desc">• spring-boot-starter-validation</text>
+
+  <!-- Spring WebFlux -->
+  <rect x="310" y="145" width="220" height="120" rx="6" class="core-box"/>
+  <text x="420" y="170" text-anchor="middle" class="tech-title">Spring WebFlux</text>
+  <text x="420" y="188" text-anchor="middle" class="version">Reactor 3.6.13</text>
+  <text x="320" y="208" class="tech-desc">• 响应式Web框架</text>
+  <text x="320" y="225" class="tech-desc">• Netty Server (NIO)</text>
+  <text x="320" y="242" class="tech-desc">• Mono/Flux 响应式流</text>
+  <text x="320" y="259" class="tech-desc">• 高并发低延迟</text>
+
+  <!-- Spring Security -->
+  <rect x="550" y="145" width="220" height="120" rx="6" class="core-box"/>
+  <text x="660" y="170" text-anchor="middle" class="tech-title">Spring Security</text>
+  <text x="660" y="188" text-anchor="middle" class="version">6.5.0</text>
+  <text x="560" y="208" class="tech-desc">• JWT 认证 (jjwt 0.12.6)</text>
+  <text x="560" y="225" class="tech-desc">• RBAC 权限控制</text>
+  <text x="560" y="242" class="tech-desc">• 数据权限过滤</text>
+  <text x="560" y="259" class="tech-desc">• SecurityFilterChain</text>
+
+  <!-- Java 17 -->
+  <rect x="790" y="145" width="200" height="120" rx="6" class="core-box"/>
+  <text x="890" y="170" text-anchor="middle" class="tech-title">Java</text>
+  <text x="890" y="188" text-anchor="middle" class="version">17 LTS</text>
+  <text x="800" y="208" class="tech-desc">• Records</text>
+  <text x="800" y="225" class="tech-desc">• Sealed Classes</text>
+  <text x="800" y="242" class="tech-desc">• Pattern Matching</text>
+  <text x="800" y="259" class="tech-desc">• Text Blocks</text>
+
+  <!-- Maven -->
+  <rect x="1010" y="145" width="200" height="120" rx="6" class="core-box"/>
+  <text x="1110" y="170" text-anchor="middle" class="tech-title">Maven</text>
+  <text x="1110" y="188" text-anchor="middle" class="version">3.9.16</text>
+  <text x="1020" y="208" class="tech-desc">• 多模块构建</text>
+  <text x="1020" y="225" class="tech-desc">• Profile 分级打包</text>
+  <text x="1020" y="242" class="tech-desc">• JaCoCo 覆盖率</text>
+  <text x="1020" y="259" class="tech-desc">• Spotless 格式化</text>
+
+  <!-- Lombok + MapStruct -->
+  <rect x="1230" y="145" width="200" height="120" rx="6" class="core-box"/>
+  <text x="1330" y="170" text-anchor="middle" class="tech-title">Code Gen</text>
+  <text x="1330" y="188" text-anchor="middle" class="version">1.18.36 / 1.5.5</text>
+  <text x="1240" y="208" class="tech-desc">• Lombok 消除样板</text>
+  <text x="1240" y="225" class="tech-desc">• MapStruct 对象转换</text>
+  <text x="1240" y="242" class="tech-desc">• 编译期生成代码</text>
+  <text x="1240" y="259" class="tech-desc">• 零运行时开销</text>
+
+  <!-- Layer 2: 数据持久化层 -->
+  <rect x="50" y="300" width="1500" height="180" rx="8" class="layer-bg"/>
+  <text x="70" y="330" class="layer-title">[Layer 2] 数据持久化层 Data Persistence</text>
+
+  <!-- MyBatis-Plus -->
+  <rect x="70" y="345" width="260" height="120" rx="6" class="tech-box"/>
+  <text x="200" y="370" text-anchor="middle" class="tech-title">MyBatis-Plus</text>
+  <text x="200" y="388" text-anchor="middle" class="version">3.5.10.1</text>
+  <text x="80" y="408" class="tech-desc">• BaseMapper CRUD</text>
+  <text x="80" y="425" class="tech-desc">• 动态多数据源 (4.3.1)</text>
+  <text x="80" y="442" class="tech-desc">• 分页插件 PageHelper (2.1.1)</text>
+  <text x="80" y="459" class="tech-desc">• 多租户 &amp; 数据权限插件</text>
+
+  <!-- MySQL + Druid -->
+  <rect x="350" y="345" width="260" height="120" rx="6" class="tech-box"/>
+  <text x="480" y="370" text-anchor="middle" class="tech-title">MySQL &amp; Druid</text>
+  <text x="480" y="388" text-anchor="middle" class="version">8.4.0 / 1.2.25</text>
+  <text x="360" y="408" class="tech-desc">• MySQL Connector/J</text>
+  <text x="360" y="425" class="tech-desc">• Druid 连接池</text>
+  <text x="360" y="442" class="tech-desc">• 主从读写分离</text>
+  <text x="360" y="459" class="tech-desc">• SQL 监控统计</text>
+
+  <!-- Flyway -->
+  <rect x="630" y="345" width="220" height="120" rx="6" class="tech-box"/>
+  <text x="740" y="370" text-anchor="middle" class="tech-title">Flyway</text>
+  <text x="740" y="388" text-anchor="middle" class="version">10.15.0</text>
+  <text x="640" y="408" class="tech-desc">• 数据库版本管理</text>
+  <text x="640" y="425" class="tech-desc">• V1__init_schema.sql</text>
+  <text x="640" y="442" class="tech-desc">• 自动迁移 &amp; 回滚</text>
+  <text x="640" y="459" class="tech-desc">• flyway-mysql 驱动</text>
+
+  <!-- P6Spy -->
+  <rect x="870" y="345" width="220" height="120" rx="6" class="tech-box"/>
+  <text x="980" y="370" text-anchor="middle" class="tech-title">P6Spy</text>
+  <text x="980" y="388" text-anchor="middle" class="version">3.9.1</text>
+  <text x="880" y="408" class="tech-desc">• SQL 拦截记录</text>
+  <text x="880" y="425" class="tech-desc">• 慢查询分析</text>
+  <text x="880" y="442" class="tech-desc">• 执行耗时统计</text>
+  <text x="880" y="459" class="tech-desc">• 开发环境诊断</text>
+
+  <!-- Redis Reactive -->
+  <rect x="1110" y="345" width="220" height="120" rx="6" class="tech-box"/>
+  <text x="1220" y="370" text-anchor="middle" class="tech-title">Redis Reactive</text>
+  <text x="1220" y="388" text-anchor="middle" class="version">Redisson 3.36.0</text>
+  <text x="1120" y="408" class="tech-desc">• 响应式 Redis 客户端</text>
+  <text x="1120" y="425" class="tech-desc">• 分布式锁</text>
+  <text x="1120" y="442" class="tech-desc">• Caffeine 一级缓存</text>
+  <text x="1120" y="459" class="tech-desc">• 二级缓存架构</text>
+
+  <!-- Meilisearch -->
+  <rect x="1350" y="345" width="180" height="120" rx="6" class="tech-box"/>
+  <text x="1440" y="370" text-anchor="middle" class="tech-title">Meilisearch</text>
+  <text x="1440" y="388" text-anchor="middle" class="version">0.17.1</text>
+  <text x="1360" y="408" class="tech-desc">• 全文搜索引擎</text>
+  <text x="1360" y="425" class="tech-desc">• 中文分词</text>
+  <text x="1360" y="442" class="tech-desc">• 毫秒级响应</text>
+  <text x="1360" y="459" class="tech-desc">• RESTful API</text>
+
+  <!-- Layer 3: 微服务治理层 -->
+  <rect x="50" y="500" width="1500" height="180" rx="8" class="layer-bg"/>
+  <text x="70" y="530" class="layer-title">[Layer 3] 微服务治理层 Microservice Governance</text>
+
+  <!-- Spring Cloud Alibaba -->
+  <rect x="70" y="545" width="280" height="120" rx="6" class="tech-box"/>
+  <text x="210" y="570" text-anchor="middle" class="tech-title">Spring Cloud Alibaba</text>
+  <text x="210" y="588" text-anchor="middle" class="version">2025.0.0.0</text>
+  <text x="80" y="608" class="tech-desc">• Nacos 服务注册发现</text>
+  <text x="80" y="625" class="tech-desc">• Nacos 配置中心</text>
+  <text x="80" y="642" class="tech-desc">• Sentinel 流控熔断</text>
+  <text x="80" y="659" class="tech-desc">• Sentinel-Nacos 动态规则</text>
+
+  <!-- Resilience4j -->
+  <rect x="370" y="545" width="240" height="120" rx="6" class="tech-box"/>
+  <text x="490" y="570" text-anchor="middle" class="tech-title">Resilience4j</text>
+  <text x="490" y="588" text-anchor="middle" class="version">2.2.0</text>
+  <text x="380" y="608" class="tech-desc">• CircuitBreaker 熔断器</text>
+  <text x="380" y="625" class="tech-desc">• RateLimiter 限流器</text>
+  <text x="380" y="642" class="tech-desc">• Retry 重试策略</text>
+  <text x="380" y="659" class="tech-desc">• Reactor 响应式集成</text>
+
+  <!-- Bucket4j -->
+  <rect x="630" y="545" width="220" height="120" rx="6" class="tech-box"/>
+  <text x="740" y="570" text-anchor="middle" class="tech-title">Bucket4j</text>
+  <text x="740" y="588" text-anchor="middle" class="version">8.7.0</text>
+  <text x="640" y="608" class="tech-desc">• 令牌桶限流</text>
+  <text x="640" y="625" class="tech-desc">• 用户维度限流</text>
+  <text x="640" y="642" class="tech-desc">• 热点防刷</text>
+  <text x="640" y="659" class="tech-desc">• 分布式限流</text>
+
+  <!-- RocketMQ -->
+  <rect x="870" y="545" width="220" height="120" rx="6" class="tech-box"/>
+  <text x="980" y="570" text-anchor="middle" class="tech-title">RocketMQ</text>
+  <text x="980" y="588" text-anchor="middle" class="version">2.3.3</text>
+  <text x="880" y="608" class="tech-desc">• 消息队列</text>
+  <text x="880" y="625" class="tech-desc">• 事务消息</text>
+  <text x="880" y="642" class="tech-desc">• 延时消息</text>
+  <text x="880" y="659" class="tech-desc">• 死信队列</text>
+
+  <!-- EasyExcel -->
+  <rect x="1110" y="545" width="200" height="120" rx="6" class="tech-box"/>
+  <text x="1210" y="570" text-anchor="middle" class="tech-title">EasyExcel</text>
+  <text x="1210" y="588" text-anchor="middle" class="version">3.3.4</text>
+  <text x="1120" y="608" class="tech-desc">• Excel 导入导出</text>
+  <text x="1120" y="625" class="tech-desc">• 百万级数据</text>
+  <text x="1120" y="642" class="tech-desc">• 低内存占用</text>
+  <text x="1120" y="659" class="tech-desc">• 模板填充</text>
+
+  <!-- JavaMail -->
+  <rect x="1330" y="545" width="200" height="120" rx="6" class="tech-box"/>
+  <text x="1430" y="570" text-anchor="middle" class="tech-title">JavaMail</text>
+  <text x="1430" y="588" text-anchor="middle" class="version">Spring Boot</text>
+  <text x="1340" y="608" class="tech-desc">• 邮件发送</text>
+  <text x="1340" y="625" class="tech-desc">• HTML 模板</text>
+  <text x="1340" y="642" class="tech-desc">• 附件支持</text>
+  <text x="1340" y="659" class="tech-desc">• 异步发送</text>
+
+  <!-- Layer 4: 可观测性层 -->
+  <rect x="50" y="700" width="1500" height="180" rx="8" class="layer-bg"/>
+  <text x="70" y="730" class="layer-title">[Layer 4] 可观测性层 Observability</text>
+
+  <!-- Micrometer + Prometheus -->
+  <rect x="70" y="745" width="280" height="120" rx="6" class="tech-box"/>
+  <text x="210" y="770" text-anchor="middle" class="tech-title">Micrometer Prometheus</text>
+  <text x="210" y="788" text-anchor="middle" class="version">1.14.1</text>
+  <text x="80" y="808" class="tech-desc">• 指标采集 (Metrics)</text>
+  <text x="80" y="825" class="tech-desc">• /actuator/prometheus 端点</text>
+  <text x="80" y="842" class="tech-desc">• JVM &amp; 应用指标</text>
+  <text x="80" y="859" class="tech-desc">• Grafana 可视化</text>
+
+  <!-- Zipkin Brave -->
+  <rect x="370" y="745" width="240" height="120" rx="6" class="tech-box"/>
+  <text x="490" y="770" text-anchor="middle" class="tech-title">Zipkin Brave</text>
+  <text x="490" y="788" text-anchor="middle" class="version">2.26.0 / 3.4.0</text>
+  <text x="380" y="808" class="tech-desc">• 分布式链路追踪</text>
+  <text x="380" y="825" class="tech-desc">• Span &amp; Trace ID</text>
+  <text x="380" y="842" class="tech-desc">• 调用链可视化</text>
+  <text x="380" y="859" class="tech-desc">• 性能瓶颈定位</text>
+
+  <!-- Logstash Encoder -->
+  <rect x="630" y="745" width="220" height="120" rx="6" class="tech-box"/>
+  <text x="740" y="770" text-anchor="middle" class="tech-title">Logstash</text>
+  <text x="740" y="788" text-anchor="middle" class="version">7.4</text>
+  <text x="640" y="808" class="tech-desc">• JSON 日志格式</text>
+  <text x="640" y="825" class="tech-desc">• ELK 日志聚合</text>
+  <text x="640" y="842" class="tech-desc">• 结构化日志</text>
+  <text x="640" y="859" class="tech-desc">• Trace ID 关联</text>
+
+  <!-- Sentinel Metrics -->
+  <rect x="870" y="745" width="220" height="120" rx="6" class="tech-box"/>
+  <text x="980" y="770" text-anchor="middle" class="tech-title">Sentinel Metrics</text>
+  <text x="980" y="788" text-anchor="middle" class="version">1.8.9</text>
+  <text x="880" y="808" class="tech-desc">• 流控指标导出</text>
+  <text x="880" y="825" class="tech-desc">• Prometheus Exporter</text>
+  <text x="880" y="842" class="tech-desc">• 独立端口 9092</text>
+  <text x="880" y="859" class="tech-desc">• QPS &amp; RT 监控</text>
+
+  <!-- SpringDoc OpenAPI -->
+  <rect x="1110" y="745" width="200" height="120" rx="6" class="tech-box"/>
+  <text x="1210" y="770" text-anchor="middle" class="tech-title">SpringDoc</text>
+  <text x="1210" y="788" text-anchor="middle" class="version">2.8.1</text>
+  <text x="1120" y="808" class="tech-desc">• OpenAPI 3.0 规范</text>
+  <text x="1120" y="825" class="tech-desc">• Swagger UI</text>
+  <text x="1120" y="842" class="tech-desc">• Knife4j 增强 UI</text>
+  <text x="1120" y="859" class="tech-desc">• 在线 API 文档</text>
+
+  <!-- Actuator -->
+  <rect x="1330" y="745" width="200" height="120" rx="6" class="tech-box"/>
+  <text x="1430" y="770" text-anchor="middle" class="tech-title">Actuator</text>
+  <text x="1430" y="788" text-anchor="middle" class="version">Spring Boot</text>
+  <text x="1340" y="808" class="tech-desc">• 健康检查 /health</text>
+  <text x="1340" y="825" class="tech-desc">• 指标端点 /metrics</text>
+  <text x="1340" y="842" class="tech-desc">• 环境信息 /env</text>
+  <text x="1340" y="859" class="tech-desc">• 应用信息 /info</text>
+
+  <!-- Layer 5: 三方集成层 -->
+  <rect x="50" y="900" width="1500" height="180" rx="8" class="layer-bg"/>
+  <text x="70" y="930" class="layer-title">[Layer 5] 三方集成层 Third-party Integration</text>
+
+  <!-- MinIO -->
+  <rect x="70" y="945" width="180" height="120" rx="6" class="tech-box"/>
+  <text x="160" y="970" text-anchor="middle" class="tech-title">MinIO</text>
+  <text x="160" y="988" text-anchor="middle" class="version">8.6.0</text>
+  <text x="80" y="1008" class="tech-desc">• 对象存储</text>
+  <text x="80" y="1025" class="tech-desc">• S3 兼容 API</text>
+  <text x="80" y="1042" class="tech-desc">• 文件上传下载</text>
+  <text x="80" y="1059" class="tech-desc">• 分片上传</text>
+
+  <!-- Volcengine TOS -->
+  <rect x="270" y="945" width="180" height="120" rx="6" class="tech-box"/>
+  <text x="360" y="970" text-anchor="middle" class="tech-title">Volcengine TOS</text>
+  <text x="360" y="988" text-anchor="middle" class="version">2.6.1</text>
+  <text x="280" y="1008" class="tech-desc">• 火山引擎存储</text>
+  <text x="280" y="1025" class="tech-desc">• 云端对象存储</text>
+  <text x="280" y="1042" class="tech-desc">• CDN 加速</text>
+  <text x="280" y="1059" class="tech-desc">• 多云存储</text>
+
+  <!-- WeChat SDK -->
+  <rect x="470" y="945" width="200" height="120" rx="6" class="tech-box"/>
+  <text x="570" y="970" text-anchor="middle" class="tech-title">WeChat SDK</text>
+  <text x="570" y="988" text-anchor="middle" class="version">4.8.0</text>
+  <text x="480" y="1008" class="tech-desc">• 小程序登录</text>
+  <text x="480" y="1025" class="tech-desc">• 公众号集成</text>
+  <text x="480" y="1042" class="tech-desc">• 微信 API 封装</text>
+  <text x="480" y="1059" class="tech-desc">• weixin-java-*</text>
+
+  <!-- Hutool -->
+  <rect x="690" y="945" width="180" height="120" rx="6" class="tech-box"/>
+  <text x="780" y="970" text-anchor="middle" class="tech-title">Hutool</text>
+  <text x="780" y="988" text-anchor="middle" class="version">5.8.36</text>
+  <text x="700" y="1008" class="tech-desc">• 工具类库</text>
+  <text x="700" y="1025" class="tech-desc">• 加密解密</text>
+  <text x="700" y="1042" class="tech-desc">• 日期处理</text>
+  <text x="700" y="1059" class="tech-desc">• HTTP 客户端</text>
+
+  <!-- JUnit 5 -->
+  <rect x="890" y="945" width="180" height="120" rx="6" class="tech-box"/>
+  <text x="980" y="970" text-anchor="middle" class="tech-title">JUnit 5</text>
+  <text x="980" y="988" text-anchor="middle" class="version">5.10.2</text>
+  <text x="900" y="1008" class="tech-desc">• 单元测试框架</text>
+  <text x="900" y="1025" class="tech-desc">• Mockito 5.11</text>
+  <text x="900" y="1042" class="tech-desc">• AssertJ 3.25</text>
+  <text x="900" y="1059" class="tech-desc">• 集成测试支持</text>
+
+  <!-- ArchUnit -->
+  <rect x="1090" y="945" width="180" height="120" rx="6" class="tech-box"/>
+  <text x="1180" y="970" text-anchor="middle" class="tech-title">ArchUnit</text>
+  <text x="1180" y="988" text-anchor="middle" class="version">1.3.0</text>
+  <text x="1100" y="1008" class="tech-desc">• 架构测试</text>
+  <text x="1100" y="1025" class="tech-desc">• 分层依赖检查</text>
+  <text x="1100" y="1042" class="tech-desc">• 命名规范校验</text>
+  <text x="1100" y="1059" class="tech-desc">• 循环依赖检测</text>
+
+  <!-- JaCoCo -->
+  <rect x="1290" y="945" width="180" height="120" rx="6" class="tech-box"/>
+  <text x="1380" y="970" text-anchor="middle" class="tech-title">JaCoCo</text>
+  <text x="1380" y="988" text-anchor="middle" class="version">0.8.12</text>
+  <text x="1300" y="1008" class="tech-desc">• 代码覆盖率</text>
+  <text x="1300" y="1025" class="tech-desc">• 行覆盖 &gt; 60%</text>
+  <text x="1300" y="1042" class="tech-desc">• 分支覆盖 &gt; 50%</text>
+  <text x="1300" y="1059" class="tech-desc">• SonarQube 集成</text>
+
+  <!-- Layer 6: DDD 架构设计 -->
+  <rect x="50" y="1100" width="1500" height="140" rx="8" class="layer-bg"/>
+  <text x="70" y="1130" class="layer-title">[Layer 6] DDD 架构设计 Domain-Driven Design</text>
+
+  <!-- Interfaces 层 -->
+  <rect x="70" y="1145" width="220" height="80" rx="6" class="tech-box"/>
+  <text x="180" y="1170" text-anchor="middle" class="tech-title">Interfaces 接口层</text>
+  <text x="80" y="1193" class="tech-desc">• WebFlux Handler</text>
+  <text x="80" y="1210" class="tech-desc">• Router 路由配置</text>
+
+  <!-- Application 层 -->
+  <rect x="310" y="1145" width="220" height="80" rx="6" class="tech-box"/>
+  <text x="420" y="1170" text-anchor="middle" class="tech-title">Application 应用层</text>
+  <text x="320" y="1193" class="tech-desc">• Service 业务编排</text>
+  <text x="320" y="1210" class="tech-desc">• DTO 数据传输对象</text>
+
+  <!-- Domain 层 -->
+  <rect x="550" y="1145" width="220" height="80" rx="6" class="tech-box"/>
+  <text x="660" y="1170" text-anchor="middle" class="tech-title">Domain 领域层</text>
+  <text x="560" y="1193" class="tech-desc">• Entity 领域实体</text>
+  <text x="560" y="1210" class="tech-desc">• Repository 接口</text>
+
+  <!-- Infrastructure 层 -->
+  <rect x="790" y="1145" width="250" height="80" rx="6" class="tech-box"/>
+  <text x="915" y="1170" text-anchor="middle" class="tech-title">Infrastructure 基础设施层</text>
+  <text x="800" y="1193" class="tech-desc">• Persistence 持久化</text>
+  <text x="800" y="1210" class="tech-desc">• Gateway 网关适配器</text>
+
+  <!-- Common 层 -->
+  <rect x="1060" y="1145" width="220" height="80" rx="6" class="tech-box"/>
+  <text x="1170" y="1170" text-anchor="middle" class="tech-title">Common 公共层</text>
+  <text x="1070" y="1193" class="tech-desc">• Util 工具类</text>
+  <text x="1070" y="1210" class="tech-desc">• Exception 异常</text>
+
+  <!-- Generator -->
+  <rect x="1300" y="1145" width="230" height="80" rx="6" class="tech-box"/>
+  <text x="1415" y="1170" text-anchor="middle" class="tech-title">Generator 代码生成</text>
+  <text x="1310" y="1193" class="tech-desc">• FreeMarker 模板</text>
+  <text x="1310" y="1210" class="tech-desc">• CRUD 代码生成</text>
+
+  <!-- 关键特性标注 -->
+  <rect x="50" y="1260" width="1500" height="120" rx="8" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+  <text x="800" y="1290" text-anchor="middle" class="tech-title">🎯 核心技术特性 Core Technical Features</text>
+  <text x="80" y="1320" class="tech-desc">✅ 响应式编程: WebFlux + Reactor 异步非阻塞 I/O，单机支撑数万并发连接</text>
+  <text x="80" y="1340" class="tech-desc">✅ DDD 四层架构: Interfaces / Application / Domain / Infrastructure 清晰分层，高内聚低耦合</text>
+  <text x="80" y="1360" class="tech-desc">✅ 多租户 SaaS: 数据隔离、动态数据源、行级数据权限过滤</text>
+</svg>

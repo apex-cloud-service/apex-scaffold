@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 780" width="780" height="780">
+  <defs>
+    <style>
+      .sub { font:12px system-ui, -apple-system, sans-serif; fill:#64748b; text-anchor:middle; }
+      .node { fill:#ffffff; stroke-width:2; rx:6; }
+      .n1 { stroke:#4f46e5; }
+      .n2 { stroke:#0891b2; }
+      .n3 { stroke:#d97706; }
+      .n4 { stroke:#ec4899; }
+      .nok { stroke:#059669; }
+      .nerr { stroke:#dc2626; }
+      .dia { fill:#ffffff; stroke:#d97706; stroke-width:2; }
+      .lbl { font:500 13px system-ui, -apple-system, sans-serif; fill:#0f172a; text-anchor:middle; }
+      .ds { font:11px system-ui, -apple-system, sans-serif; fill:#64748b; text-anchor:middle; }
+      .arr { fill:none; stroke:#64748b; stroke-width:2; }
+      .al { font:11px system-ui, -apple-system, sans-serif; fill:#64748b; text-anchor:middle; }
+      .grp { font:600 13px system-ui, -apple-system, sans-serif; fill:#0f172a; text-anchor:start; }
+      .sidebar { fill:#f8fafc; stroke:#e2e8f0; stroke-width:1; rx:6; }
+    </style>
+    <marker id="a" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M1 1 L7 4 L1 7 Z" fill="#64748b"/></marker>
+  </defs>
+
+  <text class="title" x="390" y="28">权限校验业务流程图</text>
+  <text class="sub" x="390" y="48">RBAC + 数据权限 · 三层鉴权模型 · 方法级 + 行级双重防护</text>
+
+  <!-- Swimlanes -->
+  <line x1="240" y1="60" x2="240" y2="770" stroke="#e2e8f0" stroke-dasharray="3 3"/>
+  <line x1="520" y1="60" x2="520" y2="770" stroke="#e2e8f0" stroke-dasharray="3 3"/>
+  <text class="grp" x="20" y="78">📥 HTTP请求入口</text>
+  <text class="grp" x="260" y="78">⚙️ 后端校验链路</text>
+  <text class="grp" x="540" y="78">🗃️ 数据层/放行</text>
+
+  <!-- Step 1: Request comes -->
+  <rect class="node n1" x="40" y="100" width="160" height="48"/>
+  <text class="lbl" x="120" y="120">HTTP 请求</text>
+  <text class="ds" x="120" y="136">携带 Authorization Header</text>
+
+  <rect class="node n2" x="260" y="100" width="220" height="48"/>
+  <text class="lbl" x="370" y="120">CorsWebFilter → 预检</text>
+  <text class="ds" x="370" y="136">OPTIONS放行 · Origin白名单校验</text>
+  <path class="arr" d="M200 124 L260 124" marker-end="url(#a)"/>
+
+  <!-- Step 2: JWT Filter -->
+  <path class="arr" d="M480 124 L520 124 L520 180" marker-end="url(#a)" stroke-dasharray="4 3"/>
+  <rect class="node nok" x="540" y="180" width="200" height="48"/>
+  <text class="lbl" x="640" y="200">✅ 跳过白名单</text>
+  <text class="ds" x="640" y="216">/auth/login · /doc · /actuator</text>
+
+  <path class="arr" d="M370 148 L370 180" marker-end="url(#a)"/>
+  <rect class="node n1" x="260" y="180" width="220" height="56"/>
+  <text class="lbl" x="370" y="202">JwtAuthenticationFilter</text>
+  <text class="ds" x="370" y="218">解析Bearer Token → 验签 → 取claims</text>
+  <text class="ds" x="370" y="232">sub(用户) + tid(租户) + roles</text>
+
+  <path class="dia d" d="M370 250 L440 290 L370 330 L300 290 Z" fill="#ffffff" stroke="#d97706" stroke-width="2"/>
+  <text class="lbl" x="370" y="295">Token 有效?</text>
+  <path class="arr" d="M370 236 L370 250" marker-end="url(#a)"/>
+
+  <!-- Invalid -->
+  <path class="arr" d="M300 290 L180 290" marker-end="url(#a)"/>
+  <rect class="node nerr" x="40" y="265" width="140" height="48"/>
+  <text class="lbl" x="110" y="287">❌ 401 Unauthorized</text>
+  <text class="ds" x="110" y="303">jwt expired / invalid signature</text>
+  <text class="al" x="220" y="282">否</text>
+
+  <!-- Valid: continue -->
+  <path class="arr" d="M370 330 L370 360" marker-end="url(#a)"/>
+  <text class="al" x="355" y="347">是</text>
+
+  <rect class="node n2" x="260" y="360" width="220" height="56"/>
+  <text class="lbl" x="370" y="382">租户头校验 (安全层)</text>
+  <text class="ds" x="370" y="398">X-Tenant-Id 头 vs Token.tid</text>
+  <text class="ds" x="370" y="412">不一致 → 403 · 防止租户伪造</text>
+
+  <!-- L2: Menu Permission -->
+  <path class="arr" d="M370 416 L370 448" marker-end="url(#a)"/>
+  <rect class="node n3" x="260" y="448" width="220" height="56"/>
+  <text class="lbl" x="370" y="470">L2: 菜单权限校验</text>
+  <text class="ds" x="370" y="486">路由匹配 → sys_menu.permission_code</text>
+  <text class="ds" x="370" y="500">用户角色是否拥有该权限码</text>
+
+  <path class="arr" d="M480 476 L520 476 L520 510 L540 510" marker-end="url(#a)"/>
+  <rect class="node nok" x="540" y="460" width="200" height="88"/>
+  <text class="lbl" x="640" y="482">🔍 RBAC 查询 (内存/缓存)</text>
+  <text class="ds" x="640" y="498">sys_user_role → sys_role_menu</text>
+  <text class="ds" x="640" y="514">→ sys_menu.permission_code</text>
+  <text class="ds" x="640" y="530">Redis key: apex:perm:{tid}:{uid}</text>
+
+  <!-- Decision: Menu Perm OK -->
+  <path class="dia d" d="M370 516 L440 556 L370 596 L300 556 Z" fill="#ffffff" stroke="#d97706" stroke-width="2"/>
+  <text class="lbl" x="370" y="561">菜单权限通过?</text>
+  <path class="arr" d="M370 504 L370 516" marker-end="url(#a)"/>
+
+  <path class="arr" d="M300 556 L180 556" marker-end="url(#a)"/>
+  <rect class="node nerr" x="40" y="530" width="140" height="48"/>
+  <text class="lbl" x="110" y="552">❌ 403 Forbidden</text>
+  <text class="ds" x="110" y="568">访问被拒绝 · 记录审计</text>
+  <text class="al" x="220" y="548">否</text>
+
+  <!-- L3: Method Level -->
+  <path class="arr" d="M370 596 L370 626" marker-end="url(#a)"/>
+  <text class="al" x="355" y="613">是</text>
+
+  <rect class="node n4" x="260" y="626" width="220" height="56"/>
+  <text class="lbl" x="370" y="648">L3: 方法级权限 @PreAuthorize</text>
+  <text class="ds" x="370" y="664">@PreAuthorize("hasRole('ADMIN')")</text>
+  <text class="ds" x="370" y="678">hasAuthority / hasAnyRole SpEL</text>
+
+  <!-- Decision: Method Perm OK -->
+  <path class="dia d" d="M370 696 L440 736 L370 776 L300 736 Z" fill="#ffffff" stroke="#d97706" stroke-width="2"/>
+  <text class="lbl" x="370" y="741">方法权限通过?</text>
+  <path class="arr" d="M370 682 L370 696" marker-end="url(#a)"/>
+
+  <path class="arr" d="M300 736 L180 736" marker-end="url(#a)"/>
+  <rect class="node nerr" x="40" y="710" width="140" height="48"/>
+  <text class="lbl" x="110" y="732">❌ 403 权限不足</text>
+  <text class="ds" x="110" y="748">方法级拦截</text>
+  <text class="al" x="220" y="728">否</text>
+
+  <!-- L4: Data Scope (行级) -->
+  <path class="arr" d="M440 736 L490 736 L490 580" marker-end="url(#a)"/>
+  <text class="al" x="470" y="670">是</text>
+
+  <rect class="node n3" x="540" y="580" width="200" height="88"/>
+  <text class="lbl" x="640" y="602">L4: 数据权限 (行级)</text>
+  <text class="ds" x="640" y="618">@DataScope → DataScopeAspect</text>
+  <text class="ds" x="640" y="634">注入 SQL: dept_id IN (xxx)</text>
+  <text class="ds" x="640" y="650">ALL/DEPT/DEPT_AND_CHILD/SELF</text>
+  <text class="ds" x="640" y="664">→ MyBatis-Plus 自动拼接</text>
+
+  <!-- L5: TenantLineInterceptor -->
+  <path class="arr" d="M640 668 L640 700" marker-end="url(#a)"/>
+  <rect class="node n1" x="540" y="700" width="200" height="70"/>
+  <text class="lbl" x="640" y="724">L5: 多租户行级隔离</text>
+  <text class="ds" x="640" y="740">TenantLineInnerInterceptor</text>
+  <text class="ds" x="640" y="756">SQL自动加: AND tenant_id = ?</text>
+  <text class="ds" x="640" y="770">忽略表: sys_dict 等系统级</text>
+
+  <!-- Final: Reach Service -->
+  <path class="arr" d="M290 736 L260 736 L260 630 L200 630" marker-end="url(#a)" stroke-dasharray="4 3"/>
+  <rect class="node nok" x="40" y="605" width="160" height="50"/>
+  <text class="lbl" x="120" y="627">✅ 放行到业务方法</text>
+  <text class="ds" x="120" y="643">实际Controller/Service执行</text>
+
+  <!-- Sidebar: Filter Order -->
+  <rect class="sidebar" x="10" y="330" width="220" height="180"/>
+  <text class="lbl" x="120" y="352">🧱 过滤器执行顺序</text>
+  <text class="ds" x="20" y="375">① CorsWebFilter (ORDER:-105)</text>
+  <text class="ds" x="20" y="392">② Sentinel限流过滤器</text>
+  <text class="ds" x="20" y="409">③ JwtAuthenticationFilter</text>
+  <text class="ds" x="20" y="426">④ TenantHeaderValidator</text>
+  <text class="ds" x="20" y="443">⑤ SecurityFilterChain</text>
+  <text class="ds" x="20" y="460">⑥ MenuPermissionFilter</text>
+  <text class="ds" x="20" y="477">⑦ AuditLogAspect</text>
+  <text class="ds" x="20" y="494">⑧ DataPermissionAspect</text>
+  <text class="ds" x="20" y="511">⑨ → MP拦截插件链</text>
+</svg>

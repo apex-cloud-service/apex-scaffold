@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 950">
+  <defs>
+    <style>
+      
+      
+      text {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        fill: #0f172a;
+      }
+      
+      .title {
+        font-size: 26px;
+        font-weight: 600;
+        fill: #0f172a;
+      }
+      
+      .subtitle {
+        font-size: 14px;
+        fill: #64748b;
+      }
+      
+      .label {
+        font-size: 14px;
+        font-weight: 500;
+      }
+      
+      .label-small {
+        font-size: 12px;
+        fill: #64748b;
+      }
+      
+      .box {
+        fill: #ffffff;
+        stroke: #e2e8f0;
+        stroke-width: 2;
+        rx: 8;
+      }
+      
+      .box-primary {
+        fill: #ffffff;
+        stroke: #4f46e5;
+        stroke-width: 2.5;
+        rx: 8;
+      }
+      
+      .box-danger {
+        fill: #ffffff;
+        stroke: #dc2626;
+        stroke-width: 2.5;
+        rx: 8;
+      }
+      
+      .box-warning {
+        fill: #ffffff;
+        stroke: #d97706;
+        stroke-width: 2.5;
+        rx: 8;
+      }
+      
+      .box-success {
+        fill: #ffffff;
+        stroke: #059669;
+        stroke-width: 2.5;
+        rx: 8;
+      }
+      
+      .box-info {
+        fill: #ffffff;
+        stroke: #0891b2;
+        stroke-width: 2.5;
+        rx: 8;
+      }
+      
+      .box-purple {
+        fill: #ffffff;
+        stroke: #7c3aed;
+        stroke-width: 2.5;
+        rx: 8;
+      }
+      
+      .arrow {
+        stroke: #64748b;
+        stroke-width: 2;
+        fill: none;
+        marker-end: url(#arrowhead);
+      }
+      
+      .shield-icon {
+        fill: none;
+        stroke: #059669;
+        stroke-width: 2.5;
+      }
+    </style>
+    
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#64748b" />
+    </marker>
+  </defs>
+  
+  <!-- Title -->
+  <text x="700" y="35" text-anchor="middle" class="title">安全防护体系</text>
+  <text x="700" y="58" text-anchor="middle" class="subtitle">XSS · SQL注入 · CSRF · 输入验证 · 安全响应头 · JWT认证 · 权限控制</text>
+  
+  <!-- Client Request -->
+  <rect x="550" y="90" width="300" height="60" class="box-primary"/>
+  <text x="700" y="115" text-anchor="middle" class="label" style="font-size: 16px; font-weight: 600;">客户端请求</text>
+  <text x="700" y="135" text-anchor="middle" class="label-small">HTTP/HTTPS Request</text>
+  
+  <path d="M 700 150 L 700 190" class="arrow"/>
+  
+  <!-- Security Layer -->
+  <rect x="100" y="190" width="1200" height="210" class="box-danger"/>
+  <text x="700" y="215" text-anchor="middle" class="label" style="font-size: 18px; font-weight: 600; fill: #dc2626;">安全防护层</text>
+  
+  <!-- Layer 1: Security Headers -->
+  <g transform="translate(120, 230)">
+    <rect x="0" y="0" width="270" height="150" class="box-info"/>
+    <text x="135" y="25" text-anchor="middle" class="label" style="fill: #0891b2; font-size: 15px; font-weight: 600;">安全响应头</text>
+    <text x="135" y="43" text-anchor="middle" class="label-small" style="font-size: 10px;">SecurityHeaderWebFilter</text>
+    
+    <text x="15" y="63" class="label-small" style="font-size: 10px;">• X-XSS-Protection: 0</text>
+    <text x="15" y="78" class="label-small" style="font-size: 10px;">• X-Content-Type-Options</text>
+    <text x="15" y="93" class="label-small" style="font-size: 10px;">• X-Frame-Options: DENY</text>
+    <text x="15" y="108" class="label-small" style="font-size: 10px;">• Content-Security-Policy</text>
+    <text x="15" y="123" class="label-small" style="font-size: 10px;">• HSTS (strict-transport)</text>
+    <text x="15" y="138" class="label-small" style="font-size: 10px;">• Referrer-Policy</text>
+  </g>
+  
+  <!-- Layer 2: Input Validation -->
+  <g transform="translate(410, 230)">
+    <rect x="0" y="0" width="270" height="150" class="box-warning"/>
+    <text x="135" y="25" text-anchor="middle" class="label" style="fill: #d97706; font-size: 15px; font-weight: 600;">输入验证过滤</text>
+    <text x="135" y="43" text-anchor="middle" class="label-small" style="font-size: 10px;">InputValidationFilter</text>
+    
+    <text x="15" y="63" class="label-small" style="font-size: 10px;">• XSS检测 (5种模式)</text>
+    <text x="15" y="78" class="label-small" style="font-size: 10px;">• SQL注入检测 (正则)</text>
+    <text x="15" y="93" class="label-small" style="font-size: 10px;">• 路径遍历检测 (../)</text>
+    <text x="15" y="108" class="label-small" style="font-size: 10px;">• 参数长度限制</text>
+    <text x="15" y="123" class="label-small" style="font-size: 10px;">• Content-Type白名单</text>
+    <text x="15" y="138" class="label-small" style="font-size: 10px;">• 请求体大小限制</text>
+  </g>
+  
+  <!-- Layer 3: JWT Authentication -->
+  <g transform="translate(700, 230)">
+    <rect x="0" y="0" width="270" height="150" class="box-success"/>
+    <text x="135" y="25" text-anchor="middle" class="label" style="fill: #059669; font-size: 15px; font-weight: 600;">JWT 认证</text>
+    <text x="135" y="43" text-anchor="middle" class="label-small" style="font-size: 10px;">JwtAuthenticationFilter</text>
+    
+    <text x="15" y="63" class="label-small" style="font-size: 10px;">• Token有效性校验</text>
+    <text x="15" y="78" class="label-small" style="font-size: 10px;">• 黑名单检查</text>
+    <text x="15" y="93" class="label-small" style="font-size: 10px;">• 双令牌机制</text>
+    <text x="15" y="108" class="label-small" style="font-size: 10px;">• Access: 2小时</text>
+    <text x="15" y="123" class="label-small" style="font-size: 10px;">• Refresh: 30天</text>
+    <text x="15" y="138" class="label-small" style="font-size: 10px;">• ≥32字节密钥</text>
+  </g>
+  
+  <!-- Layer 4: Rate Limiting -->
+  <g transform="translate(990, 230)">
+    <rect x="0" y="0" width="270" height="150" class="box-purple"/>
+    <text x="135" y="25" text-anchor="middle" class="label" style="fill: #7c3aed; font-size: 15px; font-weight: 600;">登录保护</text>
+    <text x="135" y="43" text-anchor="middle" class="label-small" style="font-size: 10px;">Login Protection</text>
+    
+    <text x="15" y="63" class="label-small" style="font-size: 10px;">• 单IP: 20次/窗口</text>
+    <text x="15" y="78" class="label-small" style="font-size: 10px;">• 单用户名: 5次/窗口</text>
+    <text x="15" y="93" class="label-small" style="font-size: 10px;">• 3次失败强制验证码</text>
+    <text x="15" y="108" class="label-small" style="font-size: 10px;">• 窗口: 900秒</text>
+    <text x="15" y="123" class="label-small" style="font-size: 10px;">• Redis失败计数</text>
+    <text x="15" y="138" class="label-small" style="font-size: 10px;">• 防爆破攻击</text>
+  </g>
+  
+  <path d="M 700 400 L 700 440" class="arrow"/>
+  
+  <!-- Business Layer -->
+  <rect x="500" y="440" width="400" height="70" class="box"/>
+  <text x="700" y="465" text-anchor="middle" class="label" style="font-size: 16px; font-weight: 600;">业务处理层</text>
+  <text x="700" y="485" text-anchor="middle" class="label-small">Handler → Service → Repository</text>
+  <text x="700" y="502" text-anchor="middle" class="label-small" style="font-size: 11px;">权限校验 · 数据权限 · 多租户隔离</text>
+  
+  <path d="M 700 510 L 700 550" class="arrow"/>
+  
+  <!-- Data Layer Security -->
+  <rect x="100" y="550" width="1200" height="180" class="box-primary"/>
+  <text x="700" y="575" text-anchor="middle" class="label" style="font-size: 18px; font-weight: 600; fill: #4f46e5;">数据层安全</text>
+  
+  <!-- SQL Injection Prevention -->
+  <g transform="translate(120, 590)">
+    <rect x="0" y="0" width="350" height="120" class="box-danger"/>
+    <text x="175" y="25" text-anchor="middle" class="label" style="fill: #dc2626; font-size: 15px; font-weight: 600;">SQL注入防护</text>
+    
+    <text x="15" y="48" class="label-small" style="font-size: 11px; font-weight: 600;">三层防护:</text>
+    <text x="15" y="66" class="label-small" style="font-size: 10px;">1. 输入预检 (正则检测)</text>
+    <text x="25" y="81" class="label-small" style="font-size: 9px;">· SQL关键字检测</text>
+    <text x="25" y="94" class="label-small" style="font-size: 9px;">· 特殊字符组合检测</text>
+    <text x="15" y="109" class="label-small" style="font-size: 10px;">2. MyBatis预编译 (#{} ✓)</text>
+    <text x="15" y="124" class="label-small" style="font-size: 10px;">3. Lambda安全查询</text>
+  </g>
+  
+  <!-- Password Security -->
+  <g transform="translate(490, 590)">
+    <rect x="0" y="0" width="350" height="120" class="box-warning"/>
+    <text x="175" y="25" text-anchor="middle" class="label" style="fill: #d97706; font-size: 15px; font-weight: 600;">密码安全</text>
+    
+    <text x="15" y="48" class="label-small" style="font-size: 11px;">• BCrypt加密 (salt=10)</text>
+    <text x="15" y="66" class="label-small" style="font-size: 11px;">• 防彩虹表攻击</text>
+    <text x="15" y="84" class="label-small" style="font-size: 11px;">• 密码强度要求</text>
+    <text x="15" y="102" class="label-small" style="font-size: 11px;">• 定期密码更新策略</text>
+  </g>
+  
+  <!-- Data Encryption -->
+  <g transform="translate(860, 590)">
+    <rect x="0" y="0" width="400" height="120" class="box-success"/>
+    <text x="200" y="25" text-anchor="middle" class="label" style="fill: #059669; font-size: 15px; font-weight: 600;">敏感数据处理</text>
+    
+    <text x="15" y="48" class="label-small" style="font-size: 11px;">• 数据库字段加密 (@FieldEncrypt)</text>
+    <text x="15" y="66" class="label-small" style="font-size: 11px;">• 手机号脱敏 (138****8000)</text>
+    <text x="15" y="84" class="label-small" style="font-size: 11px;">• 身份证脱敏 (显示前6后4位)</text>
+    <text x="15" y="102" class="label-small" style="font-size: 11px;">• 日志脱敏 (SensitiveDataUtil)</text>
+  </g>
+  
+  <!-- XSS Protection Detail -->
+  <g transform="translate(70, 760)">
+    <rect x="0" y="0" width="350" height="160" class="box-danger"/>
+    <text x="175" y="25" text-anchor="middle" class="label" style="fill: #dc2626; font-size: 15px; font-weight: 600;">XSS 防护详解</text>
+    
+    <text x="15" y="48" class="label-small" style="font-size: 11px; font-weight: 600;">5种检测模式:</text>
+    <text x="15" y="66" class="label-small" style="font-size: 10px;">1. &lt;script&gt; 标签检测</text>
+    <text x="15" y="82" class="label-small" style="font-size: 10px;">2. javascript: 协议检测</text>
+    <text x="15" y="98" class="label-small" style="font-size: 10px;">3. 事件处理器检测 (on*=)</text>
+    <text x="15" y="114" class="label-small" style="font-size: 10px;">4. iframe 嵌入检测</text>
+    <text x="15" y="130" class="label-small" style="font-size: 10px;">5. data:text/html 协议检测</text>
+    <text x="15" y="148" class="label-small" style="font-size: 10px; fill: #059669;">✓ 前端输出转义 (Vue 3自动)</text>
+  </g>
+  
+  <!-- Permission Control -->
+  <g transform="translate(440, 760)">
+    <rect x="0" y="0" width="300" height="160" class="box-info"/>
+    <text x="150" y="25" text-anchor="middle" class="label" style="fill: #0891b2; font-size: 15px; font-weight: 600;">权限控制</text>
+    
+    <text x="15" y="48" class="label-small" style="font-size: 11px; font-weight: 600;">接口级:</text>
+    <text x="15" y="66" class="label-small" style="font-size: 10px;">• @RequirePermission</text>
+    <text x="15" y="82" class="label-small" style="font-size: 10px;">• @RequireRole</text>
+    
+    <line x1="15" y1="90" x2="285" y2="90" stroke="#e2e8f0" stroke-width="1"/>
+    
+    <text x="15" y="108" class="label-small" style="font-size: 11px; font-weight: 600;">数据级:</text>
+    <text x="15" y="126" class="label-small" style="font-size: 10px;">• @DataScope (5层)</text>
+    <text x="15" y="142" class="label-small" style="font-size: 10px;">• 多租户隔离 (@TenantId)</text>
+  </g>
+  
+  <!-- CSRF Info -->
+  <g transform="translate(760, 760)">
+    <rect x="0" y="0" width="300" height="160" class="box-warning"/>
+    <text x="150" y="25" text-anchor="middle" class="label" style="fill: #d97706; font-size: 15px; font-weight: 600;">CSRF 策略</text>
+    
+    <text x="15" y="48" class="label-small" style="font-size: 11px; font-weight: 600;">当前状态:</text>
+    <text x="15" y="66" class="label-small" style="font-size: 10px;">✗ 禁用 (微信小程序场景)</text>
+    
+    <line x1="15" y1="74" x2="285" y2="74" stroke="#e2e8f0" stroke-width="1"/>
+    
+    <text x="15" y="92" class="label-small" style="font-size: 11px; font-weight: 600;">替代防护:</text>
+    <text x="15" y="110" class="label-small" style="font-size: 10px;">• JWT无状态认证</text>
+    <text x="15" y="126" class="label-small" style="font-size: 10px;">• Token过期机制</text>
+    <text x="15" y="142" class="label-small" style="font-size: 10px;">• 防重放 (@AntiReplay)</text>
+  </g>
+  
+  <!-- Anti-Replay -->
+  <g transform="translate(1080, 760)">
+    <rect x="0" y="0" width="260" height="160" class="box-purple"/>
+    <text x="130" y="25" text-anchor="middle" class="label" style="fill: #7c3aed; font-size: 15px; font-weight: 600;">防重放攻击</text>
+    
+    <text x="15" y="48" class="label-small" style="font-size: 10px;">@AntiReplay</text>
+    
+    <text x="15" y="66" class="label-small" style="font-size: 10px;">• 请求唯一标识</text>
+    <text x="15" y="82" class="label-small" style="font-size: 10px;">• Redis存储已处理</text>
+    <text x="15" y="98" class="label-small" style="font-size: 10px;">• TTL时间窗口</text>
+    <text x="15" y="114" class="label-small" style="font-size: 10px;">• 防止重复提交</text>
+    <text x="15" y="130" class="label-small" style="font-size: 10px;">• 配合@Idempotent</text>
+  </g>
+  
+  <!-- Legend -->
+  <g transform="translate(50, 90)">
+    <text x="0" y="0" class="label" style="font-size: 13px; font-weight: 600;">防护层级</text>
+    
+    <rect x="0" y="10" width="15" height="15" style="fill: none; stroke: #dc2626; stroke-width: 2.5;"/>
+    <text x="20" y="22" class="label-small">关键防护</text>
+    
+    <rect x="0" y="35" width="15" height="15" style="fill: none; stroke: #d97706; stroke-width: 2.5;"/>
+    <text x="20" y="47" class="label-small">输入验证</text>
+    
+    <rect x="0" y="60" width="15" height="15" style="fill: none; stroke: #059669; stroke-width: 2.5;"/>
+    <text x="20" y="72" class="label-small">认证授权</text>
+    
+    <rect x="0" y="85" width="15" height="15" style="fill: none; stroke: #0891b2; stroke-width: 2.5;"/>
+    <text x="20" y="97" class="label-small">数据安全</text>
+    
+    <rect x="0" y="110" width="15" height="15" style="fill: none; stroke: #7c3aed; stroke-width: 2.5;"/>
+    <text x="20" y="122" class="label-small">业务防护</text>
+  </g>
+</svg>

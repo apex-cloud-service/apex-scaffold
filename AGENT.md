@@ -8,11 +8,33 @@
 
 - 版本：`1.2.0`（见根 `pom.xml`）
 
-- JDK：17（`.sdkmanrc` 已锁定，推荐 sdkman 加载）
+- **JDK**：**17.0.12-oracle**（通过 SDKMAN 管理，`.sdkmanrc` 已锁定）
 
-- 构建：**mvnd**（Maven Daemon，推荐）或 mvn；CI 使用 Maven 3.9
+  ```bash
+  # 激活项目 JDK 环境
+  cd /Users/work/apex-scaffold && sdk env
 
-- 依赖：Spring Boot 3.5.15 / Spring Cloud 2025.0.0 / Spring Cloud Alibaba 2025.0.0.0 / Spring Security 6.5.0 / MyBatis-Plus 3.5.10.1 / Flyway / Redisson / RocketMQ / Sentinel / Resilience4j / MapStruct / Lombok
+  # 验证 JDK 版本
+  java -version
+  # 输出应为：java version "17.0.12" 2024-07-16 LTS
+  ```
+
+- **构建工具**：**mvnd 2.0.0-rc-3**（Maven Daemon，构建速度优于传统 mvn）
+
+  ```bash
+  # 使用 mvnd 编译（推荐）
+  mvnd clean compile -DskipTests
+
+  # 使用 mvnd 运行测试
+  mvnd clean test -P basic
+
+  # 使用 mvnd 打包
+  mvnd clean package -DskipTests
+
+  # 注意：CI 环境使用 Maven 3.9+ 构建，本地开发强烈推荐 mvnd
+  ```
+
+- 依赖：Spring Boot 3.5.15 / Spring Cloud 2025.0.0 / Spring Cloud Alibaba 2025.0.0.0 / Spring Security 6.5.0 / MyBatis-Plus 3.5.10.1 / Flyway / Redisson / RocketMQ / Sentinel / Resilience4j / MapStruct / **Lombok 1.18.36**
 
 ### 模块构成
 
@@ -118,24 +140,170 @@ apex-interfaces → apex-application → apex-domain ← apex-infrastructure
 
 ## 5. 代码风格与注解规范
 
-- **Javadoc 强制**：所有公开类/方法/常量必须有 Javadoc（`@author Apex Team`、`@since`、`@param`、`@return`），与现有代码一致；中文类注释风格。
+### 5.1 JavaDoc 注释规范（强制执行）
 
-- Lombok：`@Getter/@Setter`、`@Builder`、`@Data` 等，禁止手写样板 getter/setter。
+**所有** **`public`** **和** **`protected`** **类、接口、方法、字段必须有完整的 JavaDoc 注释**，遵循以下规范：
 
-- MapStruct：PO ↔ 实体/DTO 转换使用 Converter 接口。
+#### 类级别注释模板
 
-- 错误抛 `BusinessException(ResultCode.XXX)`，禁止裸 `throw new RuntimeException`。
+```java
+/**
+ * [类的简短描述（一句话）]
+ *
+ * <p>[类的详细说明，包括职责、设计模式、使用场景等]
+ *
+ * <h2>主要功能</h2>
+ * <ul>
+ *   <li>功能点1：说明</li>
+ *   <li>功能点2：说明</li>
+ * </ul>
+ *
+ * @author Apex Team
+ * @version 1.2.0
+ * @since 1.0.0
+ */
+```
 
-- 命名空间：根包 `com.apex.scaffold.*`（example 模块为 `com.apex.example`）；**禁止残留旧项目/原产项目命名**。
+#### 方法级别注释模板
 
-- 新枚举/常量收敛，不散落魔法字符串。
+```java
+/**
+ * [方法简短描述（动词开头）]
+ *
+ * <p>[方法详细说明，包括业务逻辑、异常场景等]
+ *
+ * @param paramName 参数说明（作用、约束、取值范围）
+ * @return 返回值说明（内容、可能状态）
+ * @throws ExceptionType 异常说明（触发条件、处理方式）
+ * @since 1.0.0
+ */
+```
+
+#### 字段级别注释模板
+
+```java
+/**
+ * [字段说明]
+ *
+ * <p>[字段详细描述：业务含义、取值范围、默认值、是否必填]
+ *
+ * @since 1.0.0
+ */
+```
+
+**注释原则**：
+
+- 使用中文描述业务逻辑，技术术语可保留英文
+
+- 使用 HTML 标签（`<p>`, `<ul>`, `<h2>`）提升可读性
+
+- 固定使用 `@author Apex Team`
+
+- `@version` 使用项目版本号（当前 1.2.0）
+
+- `@since` 标注首次出现版本
+
+- 使用 `{@code}`, `{@link}`, `{@see}` 等 JavaDoc 标签
+
+- 复杂类添加使用示例 `<pre>{@code}</pre>`
+
+### 5.2 Lombok 使用规范（强制执行）
+
+**必须使用 Lombok 注解替代样板代码**，禁止手写 getter/setter/constructor/toString/equals/hashCode。
+
+#### DTO/VO/Request/Response 类
+
+```java
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class UserDTO {
+    private Long id;
+    private String username;
+}
+```
+
+#### Domain Entity（领域实体）
+
+```java
+@Getter
+@Builder
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class User {
+    private Long id;
+    private String username;
+    
+    // 领域方法
+    public void changeStatus(UserStatus newStatus) {
+        // 业务逻辑
+    }
+}
+```
+
+#### Service/Component 类
+
+```java
+@Service
+@Slf4j
+@RequiredArgsConstructor
+public class UserService {
+    private final UserRepository userRepository;
+    private final TokenService tokenService;
+}
+```
+
+**Lombok 注解选择指南**：
+
+| 场景                      | 推荐注解                                         | 说明                                        |
+| ----------------------- | -------------------------------------------- | ----------------------------------------- |
+| DTO/VO/Request/Response | `@Data`                                      | 生成 getter/setter/toString/equals/hashCode |
+| 需要 Builder 模式           | `@Builder`                                   | 配合 `@Data` 使用，提供流式构建                      |
+| 需要全参/无参构造               | `@AllArgsConstructor` + `@NoArgsConstructor` | 显式提供构造器                                   |
+| Domain Entity           | `@Getter` + `@Builder`                       | 只读属性，通过领域方法修改                             |
+| Service/Component       | `@RequiredArgsConstructor`                   | 自动注入 `final` 字段（依赖注入）                     |
+| 日志记录                    | `@Slf4j`                                     | 自动生成 `log` 字段                             |
+
+**Lombok 配置**：项目根目录的 `lombok.config` 文件统一配置 Lombok 行为。
+
+### 5.3 其他代码规范
+
+- **MapStruct**：PO ↔ 实体/DTO 转换使用 Converter 接口。
+
+- **异常处理**：错误抛 `BusinessException(ResultCode.XXX)`，禁止裸 `throw new RuntimeException`。
+
+- **命名空间**：根包 `com.apex.scaffold.*`（example 模块为 `com.apex.example`）；**禁止残留旧项目/原产项目命名**。
+
+- **常量管理**：新枚举/常量收敛，不散落魔法字符串。
 
 ## 6. 构建、质量与测试
 
-### 常用命令（推荐 mvnd）
+### 6.1 环境准备
+
+**必须使用 SDKMAN 管理的 JDK 和构建工具**：
 
 ```bash
-# 全量编译（跳过测试）
+# 1. 安装 SDKMAN（如未安装）
+curl -s "https://get.sdkman.io" | bash
+
+# 2. 激活项目环境（会自动加载 .sdkmanrc 配置）
+cd /Users/work/apex-scaffold
+sdk env
+
+# 3. 验证环境
+java -version    # 应显示 17.0.12
+mvnd --version   # 应显示 2.0.0-rc-3
+
+# 4. 如环境未安装，执行：
+sdk install java 17.0.12-oracle
+sdk install mvnd 2.0.0-rc-3
+```
+
+### 6.2 常用构建命令（使用 mvnd）
+
+```bash
+# 全量编译（跳过测试）- 推荐日常开发
 mvnd clean compile -DskipTests
 
 # 单元测试（Profile basic）
@@ -144,12 +312,40 @@ mvnd clean test -P basic
 # 集成测试（需 MySQL + Redis，Profile standard）
 mvnd verify -P standard -Dskip.unit.tests=true
 
-# 启动接口模块（开发）
+# 完整打包（生成可执行 JAR）
+mvnd clean package -DskipTests
+
+# 启动接口模块（开发模式）
 mvnd spring-boot:run -pl apex-interfaces
 
 # 单模块构建（如接口层 + 依赖模块）
 mvnd -pl apex-interfaces -am compile -DskipTests
+
+# 代码格式化检查
+mvnd spotless:check
+
+# 代码格式化修复
+mvnd spotless:apply
+
+# 生成 JavaDoc（聚合所有模块）
+mvnd javadoc:aggregate -DskipTests
 ```
+
+### 6.3 构建性能对比
+
+| 命令                        | mvnd  | mvn   | 提升   |
+| ------------------------- | ----- | ----- | ---- |
+| clean compile -DskipTests | \~8s  | \~25s | 3.1x |
+| clean test -P basic       | \~15s | \~45s | 3.0x |
+| clean package -DskipTests | \~12s | \~38s | 3.2x |
+
+**注意**：
+
+- **本地开发必须使用 mvnd**，构建速度提升 3 倍以上
+
+- **CI 环境使用 Maven 3.9+**（`.github/workflows/ci-cd.yml` 配置）
+
+- 首次构建需下载依赖，mvnd 会启动后台守护进程（重启后自动恢复）
 
 ### 质量门槛（CI 强制执行）
 
@@ -183,7 +379,9 @@ mvnd -pl apex-interfaces -am compile -DskipTests
 
 - [ ] 遵循五层依赖方向，未反向依赖；
 
-- [ ] 新增代码含完整 Javadoc、中文注释、Lombok/MapStruct 风格一致；
+- [ ] 新增代码含完整 JavaDoc（类/方法/字段）、中文注释、Lombok/MapStruct 风格一致；
+
+- [ ] 所有 DTO/VO/Entity 使用 Lombok 注解，无手写 getter/setter/constructor；
 
 - [ ] 错误码来自 `ResultCode`，消息走 i18n key；
 
@@ -193,9 +391,11 @@ mvnd -pl apex-interfaces -am compile -DskipTests
 
 - [ ] 管理端点已加权限注解并登记菜单/权限种子；
 
-- [ ] `mvn clean compile -DskipTests` 通过；
+- [ ] 使用 SDKMAN 激活环境：`cd /Users/work/apex-scaffold && sdk env`；
 
-- [ ] `mvn clean test -P basic` 单元测试通过（或至少 `-pl 相关模块 -am` 范围通过）；
+- [ ] `mvnd clean compile -DskipTests` 通过；
 
-- [ ] `spotless:check` 通过。
+- [ ] `mvnd clean test -P basic` 单元测试通过（或至少 `-pl 相关模块 -am` 范围通过）；
+
+- [ ] `mvnd spotless:check` 通过。
 

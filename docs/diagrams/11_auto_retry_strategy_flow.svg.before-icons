@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 850">
+  <defs>
+    <style>
+      
+      
+      text {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        fill: #0f172a;
+      }
+      
+      .title {
+        font-size: 24px;
+        font-weight: 600;
+        fill: #0f172a;
+      }
+      
+      .subtitle {
+        font-size: 14px;
+        fill: #64748b;
+      }
+      
+      .label {
+        font-size: 14px;
+        font-weight: 500;
+      }
+      
+      .label-small {
+        font-size: 12px;
+        fill: #64748b;
+      }
+      
+      .box {
+        fill: #ffffff;
+        stroke: #e2e8f0;
+        stroke-width: 2;
+        rx: 8;
+      }
+      
+      .box-primary {
+        fill: #ffffff;
+        stroke: #4f46e5;
+        stroke-width: 2;
+        rx: 8;
+      }
+      
+      .box-success {
+        fill: #ffffff;
+        stroke: #059669;
+        stroke-width: 2;
+        rx: 8;
+      }
+      
+      .box-warning {
+        fill: #ffffff;
+        stroke: #d97706;
+        stroke-width: 2;
+        rx: 8;
+      }
+      
+      .box-danger {
+        fill: #ffffff;
+        stroke: #dc2626;
+        stroke-width: 2;
+        rx: 8;
+      }
+      
+      .arrow {
+        stroke: #64748b;
+        stroke-width: 2;
+        fill: none;
+        marker-end: url(#arrowhead);
+      }
+      
+      .arrow-success {
+        stroke: #059669;
+        stroke-width: 2;
+        fill: none;
+        marker-end: url(#arrowhead-success);
+      }
+      
+      .arrow-danger {
+        stroke: #dc2626;
+        stroke-width: 2;
+        fill: none;
+        marker-end: url(#arrowhead-danger);
+      }
+      
+      .decision-diamond {
+        fill: #ffffff;
+        stroke: #4f46e5;
+        stroke-width: 2;
+      }
+    </style>
+    
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#64748b" />
+    </marker>
+    
+    <marker id="arrowhead-success" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#059669" />
+    </marker>
+    
+    <marker id="arrowhead-danger" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#dc2626" />
+    </marker>
+  </defs>
+  
+  <!-- Title -->
+  <text x="600" y="35" text-anchor="middle" class="title">自动重试策略流程</text>
+  <text x="600" y="55" text-anchor="middle" class="subtitle">@AutoRetry 注解 · 指数退避 · 异常分类 · 响应式支持</text>
+  
+  <!-- Start -->
+  <ellipse cx="600" cy="105" rx="80" ry="35" class="box-primary"/>
+  <text x="600" y="110" text-anchor="middle" class="label">方法调用</text>
+  <text x="600" y="127" text-anchor="middle" class="label-small">@AutoRetry</text>
+  
+  <!-- Arrow to execution -->
+  <path d="M 600 140 L 600 180" class="arrow"/>
+  
+  <!-- Execute -->
+  <rect x="500" y="180" width="200" height="60" class="box"/>
+  <text x="600" y="205" text-anchor="middle" class="label">执行业务逻辑</text>
+  <text x="600" y="225" text-anchor="middle" class="label-small">attempt = {1, 2, 3...}</text>
+  
+  <!-- Arrow to decision -->
+  <path d="M 600 240 L 600 280" class="arrow"/>
+  
+  <!-- Decision: Success or Error -->
+  <polygon points="600,280 700,330 600,380 500,330" class="decision-diamond"/>
+  <text x="600" y="325" text-anchor="middle" class="label">执行结果</text>
+  <text x="600" y="343" text-anchor="middle" class="label-small" style="font-size: 11px;">成功/失败?</text>
+  
+  <!-- Success path -->
+  <path d="M 700 330 L 850 330 L 850 405" class="arrow-success"/>
+  <text x="760" y="325" class="label-small" style="fill: #059669;">✓ 成功</text>
+  
+  <!-- Success box -->
+  <rect x="750" y="405" width="200" height="60" class="box-success"/>
+  <text x="850" y="430" text-anchor="middle" class="label" style="fill: #059669;">返回结果</text>
+  <text x="850" y="450" text-anchor="middle" class="label-small">Success Result</text>
+  
+  <!-- Error path -->
+  <path d="M 500 330 L 350 330 L 350 405" class="arrow"/>
+  <text x="420" y="325" class="label-small">✗ 异常</text>
+  
+  <!-- Check Retryable -->
+  <polygon points="350,405 450,455 350,505 250,455" class="decision-diamond"/>
+  <text x="350" y="445" text-anchor="middle" class="label" style="font-size: 13px;">可重试?</text>
+  <text x="350" y="463" text-anchor="middle" class="label-small" style="font-size: 10px;">异常类型判断</text>
+  
+  <!-- Not Retryable -->
+  <path d="M 250 455 L 150 455 L 150 600" class="arrow-danger"/>
+  <text x="190" y="450" class="label-small" style="fill: #dc2626; font-size: 11px;">否</text>
+  
+  <!-- Not Retryable Box -->
+  <rect x="50" y="600" width="200" height="100" class="box-danger"/>
+  <text x="150" y="625" text-anchor="middle" class="label" style="fill: #dc2626;">不可重试异常</text>
+  <text x="150" y="645" text-anchor="middle" class="label-small" style="font-size: 11px;">• 参数校验失败</text>
+  <text x="150" y="663" text-anchor="middle" class="label-small" style="font-size: 11px;">• 权限不足</text>
+  <text x="150" y="681" text-anchor="middle" class="label-small" style="font-size: 11px;">• 业务逻辑异常</text>
+  <text x="150" y="695" text-anchor="middle" class="label-small" style="font-size: 11px;">→ 直接抛出异常</text>
+  
+  <!-- Retryable -->
+  <path d="M 450 455 L 550 455 L 550 530" class="arrow"/>
+  <text x="510" y="450" class="label-small" style="fill: #059669; font-size: 11px;">是</text>
+  
+  <!-- Check Max Attempts -->
+  <polygon points="550,530 650,580 550,630 450,580" class="decision-diamond"/>
+  <text x="550" y="570" text-anchor="middle" class="label" style="font-size: 13px;">达到最大</text>
+  <text x="550" y="588" text-anchor="middle" class="label" style="font-size: 13px;">重试次数?</text>
+  
+  <!-- Max Attempts Reached -->
+  <path d="M 450 580 L 350 580 L 350 720" class="arrow-danger"/>
+  <text x="390" y="575" class="label-small" style="fill: #dc2626; font-size: 11px;">是</text>
+  
+  <!-- Final Failure -->
+  <rect x="270" y="720" width="160" height="60" class="box-danger"/>
+  <text x="350" y="743" text-anchor="middle" class="label" style="fill: #dc2626;">重试耗尽</text>
+  <text x="350" y="763" text-anchor="middle" class="label-small">抛出最后异常</text>
+  
+  <!-- Not Max - Continue Retry -->
+  <path d="M 650 580 L 780 580 L 780 670" class="arrow"/>
+  <text x="710" y="575" class="label-small" style="fill: #059669; font-size: 11px;">否</text>
+  
+  <!-- Calculate Backoff Delay -->
+  <rect x="680" y="670" width="200" height="90" class="box-warning"/>
+  <text x="780" y="693" text-anchor="middle" class="label" style="fill: #d97706;">计算退避延迟</text>
+  <text x="780" y="713" text-anchor="middle" class="label-small" style="font-size: 11px;">delay = retryDelayMs</text>
+  <text x="780" y="731" text-anchor="middle" class="label-small" style="font-size: 11px;">× (backoffMult ^ attempt)</text>
+  <text x="780" y="749" text-anchor="middle" class="label-small" style="font-size: 11px;">min(maxDelayMs, delay)</text>
+  
+  <!-- Wait -->
+  <path d="M 780 760 L 780 200 L 700 200" class="arrow"/>
+  <text x="790" y="480" class="label-small" transform="rotate(-90 790 480)">等待后重试</text>
+  
+  <!-- Retryable Exception Types -->
+  <g transform="translate(300, 600)">
+    <rect x="0" y="0" width="200" height="100" class="box-success"/>
+    <text x="100" y="25" text-anchor="middle" class="label" style="fill: #059669;">可重试异常</text>
+    <text x="100" y="45" text-anchor="middle" class="label-small" style="font-size: 11px;">• 网络超时</text>
+    <text x="100" y="63" text-anchor="middle" class="label-small" style="font-size: 11px;">• 临时性故障</text>
+    <text x="100" y="81" text-anchor="middle" class="label-small" style="font-size: 11px;">• 5xx服务端错误</text>
+    <text x="100" y="95" text-anchor="middle" class="label-small" style="font-size: 11px;">→ 自动重试</text>
+  </g>
+  
+  <!-- Configuration Box -->
+  <g transform="translate(950, 180)">
+    <rect x="0" y="0" width="220" height="250" class="box-primary"/>
+    <text x="110" y="28" text-anchor="middle" class="label" style="font-size: 15px; font-weight: 600;">重试配置</text>
+    
+    <text x="15" y="55" class="label-small" style="font-size: 12px; font-weight: 600;">@AutoRetry 参数</text>
+    
+    <text x="15" y="78" class="label-small" style="font-size: 11px;">maxAttempts</text>
+    <text x="15" y="95" class="label-small" style="font-size: 10px;">最大重试次数 (含首次)</text>
+    <text x="15" y="109" class="label-small" style="font-size: 10px; fill: #059669;">默认: 3</text>
+    
+    <line x1="15" y1="115" x2="205" y2="115" stroke="#e2e8f0" stroke-width="1"/>
+    
+    <text x="15" y="133" class="label-small" style="font-size: 11px;">retryDelayMs</text>
+    <text x="15" y="150" class="label-small" style="font-size: 10px;">首次重试延迟 (毫秒)</text>
+    <text x="15" y="164" class="label-small" style="font-size: 10px; fill: #059669;">默认: 100ms</text>
+    
+    <line x1="15" y1="170" x2="205" y2="170" stroke="#e2e8f0" stroke-width="1"/>
+    
+    <text x="15" y="188" class="label-small" style="font-size: 11px;">backoffMultiplier</text>
+    <text x="15" y="205" class="label-small" style="font-size: 10px;">指数退避倍数</text>
+    <text x="15" y="219" class="label-small" style="font-size: 10px; fill: #059669;">默认: 2.0</text>
+    
+    <line x1="15" y1="225" x2="205" y2="225" stroke="#e2e8f0" stroke-width="1"/>
+    
+    <text x="15" y="243" class="label-small" style="font-size: 11px;">maxDelayMs</text>
+    <text x="15" y="260" class="label-small" style="font-size: 10px;">最大延迟上限 (毫秒)</text>
+    <text x="15" y="274" class="label-small" style="font-size: 10px; fill: #059669;">默认: 5000ms</text>
+  </g>
+  
+  <!-- Example Box -->
+  <g transform="translate(950, 450)">
+    <rect x="0" y="0" width="220" height="180" class="box-warning"/>
+    <text x="110" y="28" text-anchor="middle" class="label" style="font-size: 15px; font-weight: 600;">延迟示例</text>
+    
+    <text x="15" y="55" class="label-small" style="font-size: 11px; font-weight: 600;">指数退避序列:</text>
+    
+    <text x="15" y="78" class="label-small" style="font-size: 10px;">1次: 100ms</text>
+    <text x="15" y="95" class="label-small" style="font-size: 10px;">2次: 200ms</text>
+    <text x="15" y="112" class="label-small" style="font-size: 10px;">3次: 400ms</text>
+    <text x="15" y="129" class="label-small" style="font-size: 10px;">4次: 800ms</text>
+    <text x="15" y="146" class="label-small" style="font-size: 10px;">5次: 1600ms</text>
+    <text x="15" y="163" class="label-small" style="font-size: 10px;">6次: 3200ms</text>
+    <text x="15" y="180" class="label-small" style="font-size: 10px;">7次: 5000ms (封顶)</text>
+  </g>
+  
+  <!-- Support Types -->
+  <g transform="translate(950, 650)">
+    <rect x="0" y="0" width="220" height="120" class="box"/>
+    <text x="110" y="25" text-anchor="middle" class="label" style="font-size: 15px; font-weight: 600;">支持场景</text>
+    
+    <text x="15" y="50" class="label-small" style="font-size: 11px;">• 同步方法重试</text>
+    <text x="15" y="68" class="label-small" style="font-size: 11px;">• Mono/Flux重试</text>
+    <text x="15" y="86" class="label-small" style="font-size: 11px;">• 远程服务调用</text>
+    <text x="15" y="104" class="label-small" style="font-size: 11px;">• 乐观锁重试</text>
+  </g>
+  
+  <!-- Legend -->
+  <g transform="translate(50, 80)">
+    <text x="0" y="0" class="label" style="font-size: 13px; font-weight: 600;">图例</text>
+    
+    <polygon points="10,20 30,30 10,40 0,30" style="fill: #ffffff; stroke: #4f46e5; stroke-width: 2;"/>
+    <text x="35" y="35" class="label-small">决策点</text>
+    
+    <rect x="0" y="50" width="30" height="20" class="box"/>
+    <text x="35" y="65" class="label-small">处理步骤</text>
+    
+    <line x1="0" y1="85" x2="30" y2="85" style="stroke: #059669; stroke-width: 2; marker-end: url(#arrowhead-success);"/>
+    <text x="35" y="90" class="label-small">成功路径</text>
+    
+    <line x1="0" y1="105" x2="30" y2="105" style="stroke: #dc2626; stroke-width: 2; marker-end: url(#arrowhead-danger);"/>
+    <text x="35" y="110" class="label-small">失败路径</text>
+  </g>
+</svg>

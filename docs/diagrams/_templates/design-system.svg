@@ -1,0 +1,501 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1600 2400" width="1600" height="2400">
+  <!-- 
+    Apex Scaffold SVG Design System
+    版本: 3.0 (优化版)
+    更新时间: 2026-09-05
+    说明: 企业级视觉规范，更专业的配色和图标系统
+  -->
+  
+  <defs>
+    <!-- ========== 颜色系统 ========== -->
+    <style>
+      :root {
+        /* 核心品牌色 */
+        --brand-primary: #6366f1;      /* Indigo 500 - 主品牌色 */
+        --brand-secondary: #8b5cf6;    /* Violet 500 - 辅助品牌色 */
+        --brand-accent: #06b6d4;       /* Cyan 500 - 强调色 */
+        
+        /* 语义色 */
+        --success: #10b981;            /* Green 500 - 成功 */
+        --warning: #f59e0b;            /* Amber 500 - 警告 */
+        --error: #ef4444;              /* Red 500 - 错误 */
+        --info: #3b82f6;               /* Blue 500 - 信息 */
+        
+        /* DDD分层色 */
+        --layer-interfaces: #6366f1;   /* Indigo - 接口层 */
+        --layer-application: #22d3ee;  /* Cyan - 应用层 */
+        --layer-domain: #10b981;       /* Green - 领域层 */
+        --layer-infrastructure: #f59e0b; /* Amber - 基础设施层 */
+        
+        /* 中立色（浅色模式） */
+        --text-primary: #1a1d29;       /* Gray 900 */
+        --text-secondary: #64748b;     /* Gray 500 */
+        --text-muted: #94a3b8;         /* Gray 400 */
+        --border: #e2e8f0;             /* Gray 200 */
+        --border-strong: #cbd5e1;      /* Gray 300 */
+        --background: #ffffff;         /* White */
+        --surface: #f8fafc;            /* Gray 50 */
+        --surface-hover: #f1f5f9;      /* Gray 100 */
+      }
+      
+      /* 暗色模式 */
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --text-primary: #f1f5f9;     /* Gray 100 */
+          --text-secondary: #94a3b8;   /* Gray 400 */
+          --text-muted: #64748b;       /* Gray 500 */
+          --border: #334155;           /* Gray 700 */
+          --border-strong: #475569;    /* Gray 600 */
+          --background: #0f172a;       /* Gray 950 */
+          --surface: #1e293b;          /* Gray 900 */
+          --surface-hover: #334155;    /* Gray 700 */
+        }
+      }
+      
+      /* ========== 字体系统 ========== */
+      --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', 
+                   'Noto Sans', 'Liberation Sans', Arial, sans-serif, 
+                   'Apple Color Emoji', 'Segoe UI Emoji';
+      --font-mono: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', 
+                   'Courier New', monospace;
+      
+      /* 字体大小 */
+      --text-xs: 11px;               /* 小标注 */
+      --text-sm: 12px;               /* 说明文字 */
+      --text-base: 14px;             /* 正文 */
+      --text-lg: 16px;               /* 副标题 */
+      --text-xl: 18px;               /* 模块标题 */
+      --text-2xl: 22px;              /* 图表标题 */
+      --text-3xl: 28px;              /* 大标题 */
+      
+      /* 字重 */
+      --font-normal: 400;
+      --font-medium: 500;
+      --font-semibold: 600;
+      --font-bold: 700;
+      
+      /* ========== 间距系统 ========== */
+      --space-1: 4px;
+      --space-2: 8px;
+      --space-3: 12px;
+      --space-4: 16px;
+      --space-5: 20px;
+      --space-6: 24px;
+      --space-8: 32px;
+      --space-10: 40px;
+      --space-12: 48px;
+      --space-16: 64px;
+      
+      /* ========== 组件样式 ========== */
+      .title-main {
+        font: var(--font-bold) var(--text-3xl) var(--font-sans);
+        fill: var(--text-primary);
+        text-anchor: middle;
+      }
+      
+      .title-sub {
+        font: var(--font-medium) var(--text-lg) var(--font-sans);
+        fill: var(--text-secondary);
+        text-anchor: middle;
+      }
+      
+      .section-title {
+        font: var(--font-semibold) var(--text-2xl) var(--font-sans);
+        fill: var(--text-primary);
+      }
+      
+      .label-primary {
+        font: var(--font-medium) var(--text-base) var(--font-sans);
+        fill: var(--text-primary);
+      }
+      
+      .label-secondary {
+        font: var(--font-normal) var(--text-sm) var(--font-sans);
+        fill: var(--text-secondary);
+      }
+      
+      .label-muted {
+        font: var(--font-normal) var(--text-xs) var(--font-sans);
+        fill: var(--text-muted);
+      }
+      
+      .code {
+        font: var(--font-normal) var(--text-sm) var(--font-mono);
+        fill: var(--text-primary);
+      }
+      
+      /* 矩形组件 */
+      .rect-default {
+        fill: var(--surface);
+        stroke: var(--border);
+        stroke-width: 2;
+        rx: 8;
+        ry: 8;
+      }
+      
+      .rect-primary {
+        fill: var(--brand-primary);
+        fill-opacity: 0.1;
+        stroke: var(--brand-primary);
+        stroke-width: 3;
+        rx: 12;
+        ry: 12;
+      }
+      
+      .rect-success {
+        fill: var(--success);
+        fill-opacity: 0.1;
+        stroke: var(--success);
+        stroke-width: 2;
+        rx: 8;
+        ry: 8;
+      }
+      
+      .rect-warning {
+        fill: var(--warning);
+        fill-opacity: 0.1;
+        stroke: var(--warning);
+        stroke-width: 2;
+        rx: 8;
+        ry: 8;
+      }
+      
+      .rect-error {
+        fill: var(--error);
+        fill-opacity: 0.1;
+        stroke: var(--error);
+        stroke-width: 2;
+        rx: 8;
+        ry: 8;
+      }
+      
+      /* 连接线 */
+      .line-default {
+        stroke: var(--text-secondary);
+        stroke-width: 2;
+        fill: none;
+      }
+      
+      .line-primary {
+        stroke: var(--brand-primary);
+        stroke-width: 2;
+        fill: none;
+      }
+      
+      .line-dashed {
+        stroke: var(--text-secondary);
+        stroke-width: 2;
+        stroke-dasharray: 5,5;
+        fill: none;
+      }
+      
+      /* 悬停效果 */
+      .rect-default:hover {
+        fill: var(--surface-hover);
+        stroke: var(--brand-primary);
+      }
+    </style>
+    
+    <!-- ========== 箭头标记 ========== -->
+    <marker id="arrow-default" viewBox="0 0 10 10" refX="9" refY="5" 
+            markerWidth="10" markerHeight="10" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-secondary)"/>
+    </marker>
+    
+    <marker id="arrow-primary" viewBox="0 0 10 10" refX="9" refY="5" 
+            markerWidth="10" markerHeight="10" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--brand-primary)"/>
+    </marker>
+    
+    <marker id="arrow-success" viewBox="0 0 10 10" refX="9" refY="5" 
+            markerWidth="10" markerHeight="10" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--success)"/>
+    </marker>
+    
+    <!-- ========== 图标组件库 ========== -->
+    <!-- 服务器图标 -->
+    <g id="icon-server">
+      <rect x="0" y="0" width="24" height="24" rx="4" 
+            fill="none" stroke="currentColor" stroke-width="2"/>
+      <line x1="0" y1="8" x2="24" y2="8" stroke="currentColor" stroke-width="2"/>
+      <line x1="0" y1="16" x2="24" y2="16" stroke="currentColor" stroke-width="2"/>
+      <circle cx="6" cy="4" r="1" fill="currentColor"/>
+      <circle cx="10" cy="4" r="1" fill="currentColor"/>
+      <circle cx="6" cy="12" r="1" fill="currentColor"/>
+      <circle cx="10" cy="12" r="1" fill="currentColor"/>
+      <circle cx="6" cy="20" r="1" fill="currentColor"/>
+      <circle cx="10" cy="20" r="1" fill="currentColor"/>
+    </g>
+    
+    <!-- 数据库图标 -->
+    <g id="icon-database">
+      <ellipse cx="12" cy="5" rx="9" ry="3" 
+               fill="none" stroke="currentColor" stroke-width="2"/>
+      <path d="M 3 5 L 3 19 C 3 21 7 23 12 23 C 17 23 21 21 21 19 L 21 5" 
+            fill="none" stroke="currentColor" stroke-width="2"/>
+      <path d="M 3 12 C 3 14 7 16 12 16 C 17 16 21 14 21 12" 
+            fill="none" stroke="currentColor" stroke-width="2"/>
+    </g>
+    
+    <!-- 缓存图标 -->
+    <g id="icon-cache">
+      <rect x="2" y="6" width="20" height="16" rx="2" 
+            fill="none" stroke="currentColor" stroke-width="2"/>
+      <path d="M 6 6 L 6 2 L 18 2 L 18 6" 
+            fill="none" stroke="currentColor" stroke-width="2"/>
+      <circle cx="12" cy="14" r="2" fill="currentColor"/>
+    </g>
+    
+    <!-- 用户图标 -->
+    <g id="icon-user">
+      <circle cx="12" cy="8" r="5" 
+              fill="none" stroke="currentColor" stroke-width="2"/>
+      <path d="M 4 24 C 4 18 7 14 12 14 C 17 14 20 18 20 24" 
+            fill="none" stroke="currentColor" stroke-width="2"/>
+    </g>
+    
+    <!-- 安全图标 -->
+    <g id="icon-shield">
+      <path d="M 12 2 L 22 7 L 22 13 C 22 19 17 23 12 24 C 7 23 2 19 2 13 L 2 7 Z" 
+            fill="none" stroke="currentColor" stroke-width="2"/>
+      <path d="M 8 12 L 11 15 L 16 9" 
+            fill="none" stroke="currentColor" stroke-width="2" 
+            stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+    
+    <!-- API图标 -->
+    <g id="icon-api">
+      <circle cx="5" cy="12" r="3" 
+              fill="none" stroke="currentColor" stroke-width="2"/>
+      <circle cx="19" cy="12" r="3" 
+              fill="none" stroke="currentColor" stroke-width="2"/>
+      <line x1="8" y1="12" x2="16" y2="12" 
+            stroke="currentColor" stroke-width="2"/>
+    </g>
+    
+    <!-- 监控图标 -->
+    <g id="icon-monitor">
+      <polyline points="3,12 6,8 9,16 12,4 15,12 18,8 21,12" 
+                fill="none" stroke="currentColor" stroke-width="2" 
+                stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+    
+    <!-- 告警图标 -->
+    <g id="icon-alert">
+      <path d="M 18 8 C 18 5 15 2 12 2 C 9 2 6 5 6 8 C 6 11 5 13 3 14 L 21 14 C 19 13 18 11 18 8" 
+            fill="none" stroke="currentColor" stroke-width="2"/>
+      <path d="M 10 20 C 10 21 11 22 12 22 C 13 22 14 21 14 20" 
+            fill="none" stroke="currentColor" stroke-width="2"/>
+    </g>
+    
+    <!-- 日志图标 -->
+    <g id="icon-log">
+      <path d="M 14 2 L 6 2 C 5 2 4 3 4 4 L 4 20 C 4 21 5 22 6 22 L 18 22 C 19 22 20 21 20 20 L 20 8 Z" 
+            fill="none" stroke="currentColor" stroke-width="2"/>
+      <polyline points="14,2 14,8 20,8" 
+                fill="none" stroke="currentColor" stroke-width="2"/>
+      <line x1="8" y1="13" x2="16" y2="13" stroke="currentColor" stroke-width="2"/>
+      <line x1="8" y1="17" x2="16" y2="17" stroke="currentColor" stroke-width="2"/>
+    </g>
+    
+    <!-- 消息队列图标 -->
+    <g id="icon-queue">
+      <rect x="2" y="7" width="20" height="10" rx="2" 
+            fill="none" stroke="currentColor" stroke-width="2"/>
+      <line x1="8" y1="7" x2="8" y2="17" stroke="currentColor" stroke-width="2"/>
+      <line x1="14" y1="7" x2="14" y2="17" stroke="currentColor" stroke-width="2"/>
+    </g>
+  </defs>
+  
+  <!-- ========== 设计系统展示 ========== -->
+  <!-- 标题 -->
+  <text x="800" y="60" class="title-main">Apex Scaffold SVG Design System</text>
+  <text x="800" y="90" class="title-sub">统一视觉规范 v2.0 · 2026-09-04</text>
+  
+  <!-- 颜色系统展示 -->
+  <text x="50" y="150" class="section-title">1. 颜色系统 Color System</text>
+  
+  <!-- 核心品牌色 -->
+  <text x="70" y="190" class="label-primary">核心品牌色 Brand Colors</text>
+  <rect x="70" y="200" width="120" height="80" rx="8" fill="#6366f1"/>
+  <text x="130" y="250" class="label-secondary" fill="#ffffff">Primary</text>
+  <text x="130" y="268" class="label-muted" fill="#ffffff">#6366f1</text>
+  
+  <rect x="210" y="200" width="120" height="80" rx="8" fill="#8b5cf6"/>
+  <text x="270" y="250" class="label-secondary" fill="#ffffff">Secondary</text>
+  <text x="270" y="268" class="label-muted" fill="#ffffff">#8b5cf6</text>
+  
+  <rect x="350" y="200" width="120" height="80" rx="8" fill="#06b6d4"/>
+  <text x="410" y="250" class="label-secondary" fill="#ffffff">Accent</text>
+  <text x="410" y="268" class="label-muted" fill="#ffffff">#06b6d4</text>
+  
+  <!-- 语义色 -->
+  <text x="70" y="330" class="label-primary">语义色 Semantic Colors</text>
+  <rect x="70" y="340" width="100" height="60" rx="8" fill="#10b981"/>
+  <text x="120" y="375" class="label-secondary" fill="#ffffff">Success</text>
+  
+  <rect x="190" y="340" width="100" height="60" rx="8" fill="#f59e0b"/>
+  <text x="240" y="375" class="label-secondary" fill="#ffffff">Warning</text>
+  
+  <rect x="310" y="340" width="100" height="60" rx="8" fill="#ef4444"/>
+  <text x="360" y="375" class="label-secondary" fill="#ffffff">Error</text>
+  
+  <rect x="430" y="340" width="100" height="60" rx="8" fill="#3b82f6"/>
+  <text x="480" y="375" class="label-secondary" fill="#ffffff">Info</text>
+  
+  <!-- DDD分层色 -->
+  <text x="70" y="450" class="label-primary">DDD分层色 Layer Colors</text>
+  <rect x="70" y="460" width="140" height="60" rx="8" fill="#6366f1" fill-opacity="0.2" stroke="#6366f1" stroke-width="2"/>
+  <text x="140" y="495" class="label-secondary" fill="#6366f1">Interfaces</text>
+  
+  <rect x="230" y="460" width="140" height="60" rx="8" fill="#22d3ee" fill-opacity="0.2" stroke="#22d3ee" stroke-width="2"/>
+  <text x="300" y="495" class="label-secondary" fill="#22d3ee">Application</text>
+  
+  <rect x="390" y="460" width="140" height="60" rx="8" fill="#10b981" fill-opacity="0.2" stroke="#10b981" stroke-width="2"/>
+  <text x="460" y="495" class="label-secondary" fill="#10b981">Domain</text>
+  
+  <rect x="550" y="460" width="160" height="60" rx="8" fill="#f59e0b" fill-opacity="0.2" stroke="#f59e0b" stroke-width="2"/>
+  <text x="630" y="495" class="label-secondary" fill="#f59e0b">Infrastructure</text>
+  
+  <!-- 字体系统 -->
+  <text x="50" y="600" class="section-title">2. 字体系统 Typography System</text>
+  
+  <text x="70" y="640" style="font: 700 28px var(--font-sans); fill: var(--text-primary);">Title Main (28px/Bold)</text>
+  <text x="70" y="680" style="font: 600 22px var(--font-sans); fill: var(--text-primary);">Title Section (22px/SemiBold)</text>
+  <text x="70" y="715" style="font: 500 18px var(--font-sans); fill: var(--text-primary);">Title Module (18px/Medium)</text>
+  <text x="70" y="745" style="font: 500 16px var(--font-sans); fill: var(--text-primary);">Label Sub (16px/Medium)</text>
+  <text x="70" y="772" style="font: 500 14px var(--font-sans); fill: var(--text-primary);">Label Primary (14px/Medium)</text>
+  <text x="70" y="797" style="font: 400 12px var(--font-sans); fill: var(--text-secondary);">Label Secondary (12px/Normal)</text>
+  <text x="70" y="820" style="font: 400 11px var(--font-sans); fill: var(--text-muted);">Label Muted (11px/Normal)</text>
+  <text x="70" y="845" style="font: 400 12px var(--font-mono); fill: var(--text-primary);">Code/Mono (12px/Monaco)</text>
+  
+  <!-- 组件样式 -->
+  <text x="50" y="920" class="section-title">3. 组件样式 Component Styles</text>
+  
+  <!-- 矩形组件示例 -->
+  <text x="70" y="960" class="label-primary">矩形组件 Rectangle Components</text>
+  
+  <rect x="70" y="980" width="180" height="80" class="rect-default"/>
+  <text x="160" y="1020" class="label-secondary">Default</text>
+  <text x="160" y="1038" class="label-muted">正常矩形</text>
+  
+  <rect x="270" y="980" width="180" height="80" class="rect-primary"/>
+  <text x="360" y="1020" class="label-secondary" fill="#6366f1">Primary</text>
+  <text x="360" y="1038" class="label-muted" fill="#6366f1">强调矩形</text>
+  
+  <rect x="470" y="980" width="180" height="80" class="rect-success"/>
+  <text x="560" y="1020" class="label-secondary" fill="#10b981">Success</text>
+  <text x="560" y="1038" class="label-muted" fill="#10b981">成功状态</text>
+  
+  <rect x="670" y="980" width="180" height="80" class="rect-warning"/>
+  <text x="760" y="1020" class="label-secondary" fill="#f59e0b">Warning</text>
+  <text x="760" y="1038" class="label-muted" fill="#f59e0b">警告状态</text>
+  
+  <rect x="870" y="980" width="180" height="80" class="rect-error"/>
+  <text x="960" y="1020" class="label-secondary" fill="#ef4444">Error</text>
+  <text x="960" y="1038" class="label-muted" fill="#ef4444">错误状态</text>
+  
+  <!-- 连接线示例 -->
+  <text x="70" y="1130" class="label-primary">连接线 Connection Lines</text>
+  
+  <line x1="70" y1="1160" x2="250" y2="1160" class="line-default" marker-end="url(#arrow-default)"/>
+  <text x="160" y="1180" class="label-muted" text-anchor="middle">实线箭头</text>
+  
+  <line x1="300" y1="1160" x2="480" y2="1160" class="line-primary" marker-end="url(#arrow-primary)"/>
+  <text x="390" y="1180" class="label-muted" text-anchor="middle" fill="#6366f1">强调箭头</text>
+  
+  <line x1="530" y1="1160" x2="710" y2="1160" class="line-dashed" marker-end="url(#arrow-default)"/>
+  <text x="620" y="1180" class="label-muted" text-anchor="middle">虚线箭头</text>
+  
+  <!-- 图标库 -->
+  <text x="50" y="1270" class="section-title">4. 图标库 Icon Library</text>
+  
+  <text x="70" y="1310" class="label-primary">常用图标 Common Icons (24px)</text>
+  
+  <use href="#icon-server" x="70" y="1330" color="#6366f1"/>
+  <text x="70" y="1375" class="label-muted" text-anchor="start">Server</text>
+  
+  <use href="#icon-database" x="150" y="1330" color="#6366f1"/>
+  <text x="150" y="1375" class="label-muted" text-anchor="start">Database</text>
+  
+  <use href="#icon-cache" x="230" y="1330" color="#6366f1"/>
+  <text x="230" y="1375" class="label-muted" text-anchor="start">Cache</text>
+  
+  <use href="#icon-user" x="310" y="1330" color="#6366f1"/>
+  <text x="310" y="1375" class="label-muted" text-anchor="start">User</text>
+  
+  <use href="#icon-shield" x="390" y="1330" color="#6366f1"/>
+  <text x="390" y="1375" class="label-muted" text-anchor="start">Security</text>
+  
+  <use href="#icon-api" x="470" y="1330" color="#6366f1"/>
+  <text x="470" y="1375" class="label-muted" text-anchor="start">API</text>
+  
+  <use href="#icon-monitor" x="550" y="1330" color="#6366f1"/>
+  <text x="550" y="1375" class="label-muted" text-anchor="start">Monitor</text>
+  
+  <use href="#icon-alert" x="630" y="1330" color="#6366f1"/>
+  <text x="630" y="1375" class="label-muted" text-anchor="start">Alert</text>
+  
+  <use href="#icon-log" x="710" y="1330" color="#6366f1"/>
+  <text x="710" y="1375" class="label-muted" text-anchor="start">Log</text>
+  
+  <use href="#icon-queue" x="790" y="1330" color="#6366f1"/>
+  <text x="790" y="1375" class="label-muted" text-anchor="start">Queue</text>
+  
+  <!-- 间距系统 -->
+  <text x="50" y="1460" class="section-title">5. 间距系统 Spacing System</text>
+  
+  <text x="70" y="1500" class="label-primary">标准间距 Standard Spacing</text>
+  
+  <line x1="70" y1="1525" x2="74" y2="1525" stroke="#6366f1" stroke-width="2"/>
+  <text x="80" y="1530" class="label-muted">4px (space-1)</text>
+  
+  <line x1="70" y1="1555" x2="78" y2="1555" stroke="#6366f1" stroke-width="2"/>
+  <text x="85" y="1560" class="label-muted">8px (space-2)</text>
+  
+  <line x1="70" y1="1585" x2="82" y2="1585" stroke="#6366f1" stroke-width="2"/>
+  <text x="90" y="1590" class="label-muted">12px (space-3)</text>
+  
+  <line x1="70" y1="1615" x2="86" y2="1615" stroke="#6366f1" stroke-width="2"/>
+  <text x="95" y="1620" class="label-muted">16px (space-4)</text>
+  
+  <line x1="70" y1="1645" x2="94" y2="1645" stroke="#6366f1" stroke-width="2"/>
+  <text x="103" y="1650" class="label-muted">24px (space-6)</text>
+  
+  <line x1="70" y1="1675" x2="102" y2="1675" stroke="#6366f1" stroke-width="2"/>
+  <text x="111" y="1680" class="label-muted">32px (space-8)</text>
+  
+  <line x1="70" y1="1705" x2="118" y2="1705" stroke="#6366f1" stroke-width="2"/>
+  <text x="127" y="1710" class="label-muted">48px (space-12)</text>
+  
+  <line x1="70" y1="1735" x2="134" y2="1735" stroke="#6366f1" stroke-width="2"/>
+  <text x="143" y="1740" class="label-muted">64px (space-16)</text>
+  
+  <!-- 布局规范 -->
+  <text x="50" y="1830" class="section-title">6. 布局规范 Layout Guidelines</text>
+  
+  <text x="70" y="1870" class="label-primary">标准尺寸 Standard Sizes</text>
+  <text x="70" y="1895" class="label-secondary">• 横向图表: 1600 × 1200 px</text>
+  <text x="70" y="1920" class="label-secondary">• 纵向图表: 1200 × 1600 px</text>
+  <text x="70" y="1945" class="label-secondary">• 方形图表: 1600 × 1600 px</text>
+  <text x="70" y="1970" class="label-secondary">• 安全边距: 50px (上下左右)</text>
+  <text x="70" y="1995" class="label-secondary">• 标题区高度: 120px</text>
+  <text x="70" y="2020" class="label-secondary">• 图例区尺寸: 200 × 300px (右下角)</text>
+  <text x="70" y="2045" class="label-secondary">• 页脚区高度: 60px</text>
+  
+  <!-- 使用说明 -->
+  <text x="50" y="2140" class="section-title">7. 使用说明 Usage Notes</text>
+  
+  <text x="70" y="2180" class="label-primary">如何使用此设计系统:</text>
+  <text x="70" y="2205" class="label-secondary">1. 复制 &lt;defs&gt; 标签中的所有定义到您的SVG文件</text>
+  <text x="70" y="2230" class="label-secondary">2. 使用 CSS 类名应用样式，如 class="rect-default"</text>
+  <text x="70" y="2255" class="label-secondary">3. 使用 &lt;use&gt; 标签引用图标，如 &lt;use href="#icon-server"/&gt;</text>
+  <text x="70" y="2280" class="label-secondary">4. 所有颜色支持浅色/暗色模式自动切换</text>
+  <text x="70" y="2305" class="label-secondary">5. 保持统一的间距和字体大小</text>
+  
+  <!-- 页脚 -->
+  <rect x="0" y="2340" width="1600" height="60" fill="var(--surface)"/>
+  <text x="50" y="2375" class="label-muted">© 2026 Apex Scaffold · Design System v2.0 · Apache 2.0 License</text>
+  <text x="1550" y="2375" class="label-muted" text-anchor="end">Created: 2026-09-04</text>
+</svg>

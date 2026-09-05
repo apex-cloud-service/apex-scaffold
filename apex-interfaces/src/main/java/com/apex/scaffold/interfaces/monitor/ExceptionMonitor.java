@@ -4,6 +4,10 @@ import com.apex.scaffold.common.exception.AlertEvent;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.util.TraceIdUtil;
 import com.apex.scaffold.interfaces.service.AlertService;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tag;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -47,11 +51,20 @@ public class ExceptionMonitor {
     /** 告警服务 */
     private final AlertService alertService;
 
+    /** Micrometer 指标注册表 */
+    private final MeterRegistry meterRegistry;
+
     /** 异常计数器，按异常类型统计 */
     private final ConcurrentHashMap<String, AtomicInteger> exceptionCounter = new ConcurrentHashMap<>();
 
     /** 异常时间戳，记录每种异常的最近发生时间 */
     private final ConcurrentHashMap<String, AtomicLong> exceptionTimestamp = new ConcurrentHashMap<>();
+
+    /** 异常总数（供 Prometheus Gauge 原子读取） */
+    private final AtomicLong totalExceptionCount = new AtomicLong();
+
+    /** 告警次数（供 Prometheus Gauge 原子读取） */
+    private final AtomicLong totalAlertCount = new AtomicLong();
 
     /** 异常告警阈值，超过该次数触发告警 */
     @Value("${alert.exception.threshold:10}")
@@ -73,9 +86,24 @@ public class ExceptionMonitor {
      * 构造函数
      *
      * @param alertService 告警服务
+     * @param meterRegistry Micrometer 指标注册表
      */
-    public ExceptionMonitor(AlertService alertService) {
+    public ExceptionMonitor(AlertService alertService, MeterRegistry meterRegistry) {
         this.alertService = alertService;
+        this.meterRegistry = meterRegistry;
+        registerMetrics();
+    }
+
+    /**
+     * 注册异常监控指标。
+     *
+     * <p>注册 {@code apex.exception.count} 计数器（按异常类型打标签）与
+     * {@code apex.exception.total}、{@code apex.exception.alert.count} 两个 Gauge，
+     * 供 Prometheus/Grafana 查询异常趋势与告警次数。</p>
+     */
+    private void registerMetrics() {
+        meterRegistry.gauge("apex.exception.total", totalExceptionCount, AtomicLong::get);
+        meterRegistry.gauge("apex.exception.alert.count", totalAlertCount, AtomicLong::get);
     }
 
     /**
@@ -98,12 +126,23 @@ public class ExceptionMonitor {
 
         AtomicInteger count = exceptionCounter.computeIfAbsent(exceptionType, k -> new AtomicInteger(0));
         int currentCount = count.incrementAndGet();
+        totalExceptionCount.incrementAndGet();
 
         exceptionTimestamp
                 .computeIfAbsent(exceptionType, k -> new AtomicLong(0))
                 .set(System.currentTimeMillis());
 
+        // 记录异常计数器（Prometheus 标签为异常类型与告警级别，供 Grafana 趋势查询）
+        Counter.builder("apex.exception.count")
+                .description("按类型统计的异常发生次数")
+                .tags(List.of(
+                        Tag.of("exception", simpleExceptionName(exceptionType)),
+                        Tag.of("level", determineAlertLevel(ex).name())))
+                .register(meterRegistry)
+                .increment();
+
         if (shouldAlert(currentCount, exceptionType)) {
+            totalAlertCount.incrementAndGet();
             AlertEvent alertEvent = AlertEvent.builder()
                     .exceptionType(exceptionType)
                     .message(ex.getMessage())
@@ -188,6 +227,18 @@ public class ExceptionMonitor {
     public void resetExceptionStats() {
         exceptionCounter.clear();
         exceptionTimestamp.clear();
+        totalExceptionCount.set(0);
+    }
+
+    /**
+     * 提取异常类型的简单类名，用于指标标签。
+     *
+     * @param exceptionType 全限定异常类型
+     * @return 简单类名
+     */
+    private static String simpleExceptionName(String exceptionType) {
+        int idx = exceptionType.lastIndexOf('.');
+        return idx >= 0 ? exceptionType.substring(idx + 1) : exceptionType;
     }
 
     /**

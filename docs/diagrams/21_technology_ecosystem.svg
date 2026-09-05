@@ -1,0 +1,504 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2000 1600" width="2000" height="1600">
+  <defs>
+    <style>
+      .title { font: bold 32px sans-serif; fill: #0f172a; }
+      .subtitle { font: 18px sans-serif; fill: #666; }
+      .zone-title { font: bold 20px sans-serif; fill: #fff; }
+      .category-title { font: bold 16px sans-serif; fill: #0f172a; }
+      .tech-item { font: 13px sans-serif; fill: #334155; }
+      .tech-version { font: 11px sans-serif; fill: #0ea5e9; }
+      .zone-bg { fill: #0f172a; }
+      .category-box { fill: #fff; stroke: #cbd5e1; stroke-width: 2; }
+      .category-box:hover { fill: #f1f5f9; stroke: #38bdf8; }
+      .highlight-box { fill: #fef3c7; stroke: #d97706; stroke-width: 3; }
+      .connector { fill: none; stroke: #94a3b8; stroke-width: 2; stroke-dasharray: 5,5; }
+    </style>
+  
+    <!-- 云原生专业图标库 - 自动添加 -->
+    <g id="icon-kubernetes">
+      <path d="M10,2 L14,4 L18,2 L18,10 L14,12 L10,10 Z" fill="#326CE5" stroke="#1A4D8F" stroke-width="0.5"/>
+      <circle cx="14" cy="7" r="1.5" fill="white"/>
+      <line x1="14" y1="4" x2="14" y2="7" stroke="white" stroke-width="0.8"/>
+      <line x1="11" y1="5.5" x2="14" y2="7" stroke="white" stroke-width="0.8"/>
+      <line x1="17" y1="5.5" x2="14" y2="7" stroke="white" stroke-width="0.8"/>
+    </g>
+    <g id="icon-pod">
+      <rect x="4" y="4" width="12" height="12" rx="2" fill="#326CE5" stroke="#1A4D8F" stroke-width="1"/>
+      <rect x="6" y="6" width="3" height="3" rx="0.5" fill="white" opacity="0.9"/>
+      <rect x="10.5" y="6" width="3" height="3" rx="0.5" fill="white" opacity="0.9"/>
+      <rect x="6" y="10.5" width="3" height="3" rx="0.5" fill="white" opacity="0.9"/>
+      <rect x="10.5" y="10.5" width="3" height="3" rx="0.5" fill="white" opacity="0.9"/>
+    </g>
+    <g id="icon-deployment">
+      <rect x="3" y="5" width="10" height="10" rx="1.5" fill="#326CE5" stroke="#1A4D8F" stroke-width="1" opacity="0.3"/>
+      <rect x="5" y="3" width="10" height="10" rx="1.5" fill="#326CE5" stroke="#1A4D8F" stroke-width="1" opacity="0.6"/>
+      <rect x="7" y="1" width="10" height="10" rx="1.5" fill="#326CE5" stroke="#1A4D8F" stroke-width="1"/>
+      <path d="M10,4 L10,8 M8,6 L12,6" stroke="white" stroke-width="1.2" stroke-linecap="round"/>
+    </g>
+    <g id="icon-service">
+      <circle cx="10" cy="10" r="7" fill="none" stroke="#326CE5" stroke-width="1.5"/>
+      <circle cx="10" cy="10" r="2" fill="#326CE5"/>
+      <circle cx="10" cy="3" r="1.5" fill="#326CE5"/>
+      <circle cx="17" cy="10" r="1.5" fill="#326CE5"/>
+      <circle cx="10" cy="17" r="1.5" fill="#326CE5"/>
+      <circle cx="3" cy="10" r="1.5" fill="#326CE5"/>
+    </g>
+    <g id="icon-ingress">
+      <path d="M2,10 L10,2 L18,10" fill="none" stroke="#326CE5" stroke-width="1.5" stroke-linejoin="round"/>
+      <rect x="6" y="10" width="8" height="8" fill="#326CE5" stroke="#1A4D8F" stroke-width="1"/>
+      <path d="M8,13 L12,13 M10,11 L10,16" stroke="white" stroke-width="1" stroke-linecap="round"/>
+    </g>
+    <g id="icon-configmap">
+      <rect x="3" y="3" width="14" height="14" rx="2" fill="none" stroke="#326CE5" stroke-width="1.5"/>
+      <line x1="6" y1="7" x2="14" y2="7" stroke="#326CE5" stroke-width="1"/>
+      <line x1="6" y1="10" x2="14" y2="10" stroke="#326CE5" stroke-width="1"/>
+      <line x1="6" y1="13" x2="11" y2="13" stroke="#326CE5" stroke-width="1"/>
+    </g>
+    <g id="icon-secret">
+      <rect x="5" y="8" width="10" height="9" rx="1" fill="#326CE5" stroke="#1A4D8F" stroke-width="1"/>
+      <path d="M7,8 L7,6 C7,4.3 8.3,3 10,3 C11.7,3 13,4.3 13,6 L13,8" fill="none" stroke="#326CE5" stroke-width="1.5"/>
+      <circle cx="10" cy="12" r="1.2" fill="white"/>
+    </g>
+    <g id="icon-namespace">
+      <rect x="2" y="2" width="7" height="7" rx="1" fill="none" stroke="#326CE5" stroke-width="1.2"/>
+      <rect x="11" y="2" width="7" height="7" rx="1" fill="none" stroke="#326CE5" stroke-width="1.2"/>
+      <rect x="2" y="11" width="7" height="7" rx="1" fill="none" stroke="#326CE5" stroke-width="1.2"/>
+      <rect x="11" y="11" width="7" height="7" rx="1" fill="none" stroke="#326CE5" stroke-width="1.2"/>
+    </g>
+    <g id="icon-docker">
+      <rect x="6" y="8" width="2.5" height="2.5" fill="#2496ED"/>
+      <rect x="9" y="8" width="2.5" height="2.5" fill="#2496ED"/>
+      <rect x="12" y="8" width="2.5" height="2.5" fill="#2496ED"/>
+      <rect x="6" y="5" width="2.5" height="2.5" fill="#2496ED"/>
+      <rect x="9" y="5" width="2.5" height="2.5" fill="#2496ED"/>
+      <path d="M3,11 Q3,9 5,9 L15,9 Q17,9 17,11 Q19,11 19,13 Q19,15 17,15 L5,15 Q3,15 3,13 Q3,11 3,11 Z" 
+            fill="none" stroke="#2496ED" stroke-width="1.2"/>
+    </g>
+    <g id="icon-container">
+      <rect x="4" y="5" width="12" height="10" rx="1.5" fill="none" stroke="#2496ED" stroke-width="1.5"/>
+      <line x1="4" y1="8" x2="16" y2="8" stroke="#2496ED" stroke-width="1"/>
+      <line x1="4" y1="11.5" x2="16" y2="11.5" stroke="#2496ED" stroke-width="1"/>
+      <circle cx="6.5" cy="6.5" r="0.8" fill="#2496ED"/>
+      <circle cx="9" cy="6.5" r="0.8" fill="#2496ED"/>
+    </g>
+    <g id="icon-cloud-pro">
+      <path d="M6,12 C4,12 2.5,10.5 2.5,8.5 C2.5,7 3.5,5.7 5,5.3 C5,3.5 6.5,2 8.5,2 C9.8,2 11,2.7 11.6,3.8 
+               C12,3.6 12.5,3.5 13,3.5 C14.7,3.5 16,4.8 16,6.5 C17.2,6.8 18,7.9 18,9.2 C18,10.8 16.8,12 15.2,12 Z" 
+            fill="#4285F4" stroke="#2563EB" stroke-width="0.8" opacity="0.9"/>
+      <path d="M6,12 C4,12 2.5,10.5 2.5,8.5 C2.5,7 3.5,5.7 5,5.3" 
+            fill="none" stroke="white" stroke-width="0.5" opacity="0.5"/>
+    </g>
+    <g id="icon-aws">
+      <path d="M3,10 L6,8 L9,10 L6,12 Z" fill="#FF9900"/>
+      <path d="M9,10 L12,8 L15,10 L12,12 Z" fill="#FF9900"/>
+      <path d="M3,14 L17,14" stroke="#FF9900" stroke-width="1.5" stroke-linecap="round"/>
+      <path d="M15,14 L17,15" stroke="#FF9900" stroke-width="1.5" stroke-linecap="round"/>
+    </g>
+    <g id="icon-mysql">
+      <ellipse cx="10" cy="6" rx="6" ry="2.5" fill="#4479A1" stroke="#2F5F7F" stroke-width="0.8"/>
+      <path d="M4,6 L4,14 Q4,16.5 10,16.5 Q16,16.5 16,14 L16,6" 
+            fill="#4479A1" stroke="#2F5F7F" stroke-width="0.8"/>
+      <ellipse cx="10" cy="14" rx="6" ry="2.5" fill="#5D87A1" stroke="#2F5F7F" stroke-width="0.8"/>
+      <line x1="4" y1="10" x2="4" y2="11" stroke="white" stroke-width="0.5" opacity="0.5"/>
+    </g>
+    <g id="icon-redis">
+      <ellipse cx="10" cy="8" rx="7" ry="3" fill="#DC382D"/>
+      <ellipse cx="10" cy="12" rx="7" ry="3" fill="#C6302B"/>
+      <path d="M3,8 L3,12" stroke="#A41E11" stroke-width="0.8"/>
+      <path d="M17,8 L17,12" stroke="#A41E11" stroke-width="0.8"/>
+      <path d="M6,7 L8,8 L10,7 L12,8 L14,7" stroke="white" stroke-width="1" fill="none"/>
+    </g>
+    <g id="icon-mongodb">
+      <path d="M10,2 L12,8 L10,18 L8,8 Z" fill="#47A248" stroke="#3F8C40" stroke-width="0.8"/>
+      <ellipse cx="10" cy="8" rx="2" ry="6" fill="#47A248" opacity="0.7"/>
+    </g>
+    <g id="icon-postgresql">
+      <ellipse cx="10" cy="10" rx="6" ry="7" fill="#336791" stroke="#2A5373" stroke-width="1"/>
+      <path d="M7,7 Q10,5 13,7" fill="none" stroke="white" stroke-width="1" stroke-linecap="round"/>
+      <circle cx="8" cy="9" r="0.8" fill="white"/>
+      <circle cx="12" cy="9" r="0.8" fill="white"/>
+      <path d="M10,13 Q10,14 11,14" fill="none" stroke="white" stroke-width="0.8"/>
+    </g>
+    <g id="icon-kafka">
+      <circle cx="10" cy="10" r="7" fill="black"/>
+      <circle cx="10" cy="10" r="5.5" fill="white"/>
+      <path d="M7,10 L10,7 L13,10 L10,13 Z" fill="black"/>
+    </g>
+    <g id="icon-rabbitmq">
+      <circle cx="7" cy="8" r="2.5" fill="#FF6600"/>
+      <circle cx="13" cy="8" r="2.5" fill="#FF6600"/>
+      <path d="M5,10 L7,14 L10,12 L13,14 L15,10 Q15,16 10,16 Q5,16 5,10 Z" fill="#FF6600"/>
+      <circle cx="7" cy="7.5" r="0.8" fill="white"/>
+      <circle cx="13" cy="7.5" r="0.8" fill="white"/>
+    </g>
+    <g id="icon-rocketmq">
+      <path d="M10,3 L13,10 L10,17 L7,10 Z" fill="#D77310" stroke="#B85F0A" stroke-width="1"/>
+      <circle cx="10" cy="10" r="2" fill="#FFA500"/>
+      <path d="M8,17 L10,18 L12,17" stroke="#D77310" stroke-width="1.5" stroke-linecap="round"/>
+    </g>
+    <g id="icon-nginx">
+      <rect x="4" y="6" width="12" height="8" rx="1" fill="#009639" stroke="#007A2D" stroke-width="1"/>
+      <path d="M7,9 L10,13 L10,9 L13,13 L13,9" stroke="white" stroke-width="1.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+    <g id="icon-load-balancer-pro">
+      <rect x="6" y="2" width="8" height="3" rx="0.5" fill="#0891b2" stroke="#0e7490" stroke-width="0.8"/>
+      <line x1="10" y1="5" x2="10" y2="8" stroke="#64748b" stroke-width="1.5"/>
+      <circle cx="10" cy="9.5" r="1.5" fill="#0891b2"/>
+      <line x1="10" y1="11" x2="6" y2="14" stroke="#64748b" stroke-width="1"/>
+      <line x1="10" y1="11" x2="10" y2="14" stroke="#64748b" stroke-width="1"/>
+      <line x1="10" y1="11" x2="14" y2="14" stroke="#64748b" stroke-width="1"/>
+      <rect x="4" y="14" width="3" height="2.5" rx="0.5" fill="#059669"/>
+      <rect x="8.5" y="14" width="3" height="2.5" rx="0.5" fill="#059669"/>
+      <rect x="13" y="14" width="3" height="2.5" rx="0.5" fill="#059669"/>
+    </g>
+    <g id="icon-cdn-pro">
+      <circle cx="10" cy="5" r="2" fill="#10b981" stroke="#059669" stroke-width="0.8"/>
+      <circle cx="4" cy="12" r="2" fill="#10b981" stroke="#059669" stroke-width="0.8"/>
+      <circle cx="16" cy="12" r="2" fill="#10b981" stroke="#059669" stroke-width="0.8"/>
+      <circle cx="10" cy="15" r="2" fill="#10b981" stroke="#059669" stroke-width="0.8"/>
+      <line x1="10" y1="7" x2="5" y2="11" stroke="#64748b" stroke-width="1"/>
+      <line x1="10" y1="7" x2="15" y2="11" stroke="#64748b" stroke-width="1"/>
+      <line x1="5.5" y1="13" x2="9" y2="14" stroke="#64748b" stroke-width="1"/>
+      <line x1="14.5" y1="13" x2="11" y2="14" stroke="#64748b" stroke-width="1"/>
+    </g>
+    <g id="icon-prometheus">
+      <circle cx="10" cy="10" r="7" fill="#E6522C" stroke="#C14522" stroke-width="1"/>
+      <path d="M10,5 L10,10 L14,10" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+      <circle cx="10" cy="10" r="1.5" fill="white"/>
+    </g>
+    <g id="icon-grafana">
+      <circle cx="10" cy="10" r="7" fill="#F46800"/>
+      <path d="M6,10 Q10,6 14,10 Q14,14 10,14 Q6,14 6,10" fill="#FFA500" opacity="0.7"/>
+      <path d="M10,7 L10,13 M7,10 L13,10" stroke="white" stroke-width="1.2"/>
+    </g>
+    <g id="icon-springboot">
+      <circle cx="10" cy="10" r="7" fill="#6DB33F"/>
+      <path d="M12,6 Q14,8 12,10 Q14,12 12,14" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+      <path d="M8,6 Q6,8 8,10 Q6,12 8,14" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+    </g>
+    <g id="icon-java">
+      <path d="M8,14 Q6,12 8,10 Q10,12 8,14" fill="#F89820"/>
+      <path d="M12,14 Q10,12 12,10 Q14,12 12,14" fill="#F89820"/>
+      <ellipse cx="10" cy="7" rx="4" ry="2" fill="#5382A1"/>
+    </g>
+    <g id="icon-react">
+      <ellipse cx="10" cy="10" rx="7" ry="3" fill="none" stroke="#61DAFB" stroke-width="1"/>
+      <ellipse cx="10" cy="10" rx="7" ry="3" fill="none" stroke="#61DAFB" stroke-width="1" transform="rotate(60 10 10)"/>
+      <ellipse cx="10" cy="10" rx="7" ry="3" fill="none" stroke="#61DAFB" stroke-width="1" transform="rotate(120 10 10)"/>
+      <circle cx="10" cy="10" r="1.5" fill="#61DAFB"/>
+    </g>
+    <g id="icon-vue">
+      <path d="M10,4 L6,12 L10,12 L14,12 Z" fill="#42B883"/>
+      <path d="M10,4 L8,8 L10,12 L12,8 Z" fill="#35495E"/>
+    </g>
+    <g id="icon-git">
+      <rect x="3" y="3" width="14" height="14" rx="2" fill="#F05032"/>
+      <path d="M12,8 L10,10 L8,8 L10,6 Z" fill="white"/>
+      <circle cx="7" cy="13" r="1.2" fill="white"/>
+      <circle cx="13" cy="13" r="1.2" fill="white"/>
+      <line x1="10" y1="10" x2="10" y2="13" stroke="white" stroke-width="1"/>
+    </g>
+    <g id="icon-elasticsearch">
+      <circle cx="10" cy="10" r="7" fill="#FEC514"/>
+      <path d="M6,10 L14,10 M6,8 L12,8 M6,12 L12,12" stroke="#343741" stroke-width="1.2" stroke-linecap="round"/>
+    </g>
+    <g id="icon-minio">
+      <rect x="4" y="6" width="12" height="8" rx="1" fill="#C72C48"/>
+      <rect x="6" y="8" width="3" height="4" fill="white" opacity="0.9"/>
+      <rect x="11" y="8" width="3" height="4" fill="white" opacity="0.9"/>
+    </g>
+  </defs>
+
+  <!-- 标题 -->
+  <text x="1000" y="50" text-anchor="middle" class="title">Apex Scaffold 技术生态全景图</text>
+  <text x="1000" y="85" text-anchor="middle" class="subtitle">Technology Ecosystem Overview - Full Stack Architecture &amp; Infrastructure</text>
+
+  <!-- Zone 1: 核心技术栈 -->
+  <rect x="50" y="120" width="1900" height="280" rx="10" class="zone-bg"/>
+  <text x="80" y="155" class="zone-title">[Zone 1] 核心技术栈 Core Technology Stack</text>
+
+  <!-- 编程语言与运行时 -->
+  <rect x="80" y="175" width="260" height="210" rx="6" class="category-box"/>
+  <text x="210" y="200" text-anchor="middle" class="category-title">编程语言 &amp; 运行时</text>
+  <text x="95" y="225" class="tech-item">• Java 17 LTS</text>
+  <text x="95" y="245" class="tech-item">• JVM (HotSpot VM)</text>
+  <text x="95" y="265" class="tech-item">• GraalVM (Native Image)</text>
+  <text x="95" y="285" class="tech-item">• Maven 3.9.16</text>
+  <text x="95" y="305" class="tech-item">• Gradle (备选)</text>
+  <text x="95" y="325" class="tech-item">• Lombok 1.18.36</text>
+  <text x="95" y="345" class="tech-item">• MapStruct 1.5.5</text>
+  <text x="95" y="365" class="tech-item">• Hutool 5.8.36</text>
+
+  <!-- Spring 生态 -->
+  <rect x="360" y="175" width="300" height="210" rx="6" class="highlight-box"/>
+  <text x="510" y="200" text-anchor="middle" class="category-title">Spring 生态系统</text>
+  <text x="375" y="225" class="tech-item">• Spring Boot 3.5.15</text>
+  <text x="375" y="245" class="tech-item">• Spring WebFlux (Reactor)</text>
+  <text x="375" y="265" class="tech-item">• Spring Security 6.5.0</text>
+  <text x="375" y="285" class="tech-item">• Spring Data Redis</text>
+  <text x="375" y="305" class="tech-item">• Spring Cloud 2025.0.0</text>
+  <text x="375" y="325" class="tech-item">• Spring Cloud Alibaba</text>
+  <text x="375" y="345" class="tech-item">• Spring AOP</text>
+  <text x="375" y="365" class="tech-item">• Spring Validation</text>
+
+  <!-- 数据持久化 -->
+  <rect x="680" y="175" width="280" height="210" rx="6" class="category-box"/>
+  <text x="820" y="200" text-anchor="middle" class="category-title">数据持久化层</text>
+  <text x="695" y="225" class="tech-item">• MyBatis-Plus 3.5.10</text>
+  <text x="695" y="245" class="tech-item">• Dynamic DataSource</text>
+  <text x="695" y="265" class="tech-item">• PageHelper 2.1.1</text>
+  <text x="695" y="285" class="tech-item">• Druid 1.2.25</text>
+  <text x="695" y="305" class="tech-item">• Flyway 10.15.0</text>
+  <text x="695" y="325" class="tech-item">• P6Spy 3.9.1</text>
+  <text x="695" y="345" class="tech-item">• MySQL Connector 8.4</text>
+  <text x="695" y="365" class="tech-item">• HikariCP</text>
+
+  <!-- 响应式编程 -->
+  <rect x="980" y="175" width="280" height="210" rx="6" class="highlight-box"/>
+  <text x="1120" y="200" text-anchor="middle" class="category-title">响应式编程</text>
+  <text x="995" y="225" class="tech-item">• Project Reactor 3.6.13</text>
+  <text x="995" y="245" class="tech-item">• Netty 4.x (NIO)</text>
+  <text x="995" y="265" class="tech-item">• Mono / Flux</text>
+  <text x="995" y="285" class="tech-item">• Reactive Streams</text>
+  <text x="995" y="305" class="tech-item">• Spring Data R2DBC</text>
+  <text x="995" y="325" class="tech-item">• Redisson Reactive</text>
+  <text x="995" y="345" class="tech-item">• WebClient</text>
+  <text x="995" y="365" class="tech-item">• 背压 (Backpressure)</text>
+
+  <!-- API 文档 -->
+  <rect x="1280" y="175" width="280" height="210" rx="6" class="category-box"/>
+  <text x="1420" y="200" text-anchor="middle" class="category-title">API 文档 &amp; 规范</text>
+  <text x="1295" y="225" class="tech-item">• SpringDoc 2.8.1</text>
+  <text x="1295" y="245" class="tech-item">• OpenAPI 3.0 规范</text>
+  <text x="1295" y="265" class="tech-item">• Swagger UI</text>
+  <text x="1295" y="285" class="tech-item">• Knife4j 4.4.0</text>
+  <text x="1295" y="305" class="tech-item">• API 版本管理</text>
+  <text x="1295" y="325" class="tech-item">• JSR 303 验证</text>
+  <text x="1295" y="345" class="tech-item">• JSON Schema</text>
+  <text x="1295" y="365" class="tech-item">• Javadoc</text>
+
+  <!-- 安全认证 -->
+  <rect x="1580" y="175" width="340" height="210" rx="6" class="category-box"/>
+  <text x="1750" y="200" text-anchor="middle" class="category-title">安全 &amp; 认证授权</text>
+  <text x="1595" y="225" class="tech-item">• JWT (JJWT 0.12.6)</text>
+  <text x="1595" y="245" class="tech-item">• BCrypt 密码加密</text>
+  <text x="1595" y="265" class="tech-item">• RBAC 权限模型</text>
+  <text x="1595" y="285" class="tech-item">• 数据权限过滤</text>
+  <text x="1595" y="305" class="tech-item">• 多租户隔离</text>
+  <text x="1595" y="325" class="tech-item">• XSS/CSRF 防护</text>
+  <text x="1595" y="345" class="tech-item">• 防重放攻击</text>
+  <text x="1595" y="365" class="tech-item">• 敏感数据脱敏</text>
+
+  <!-- Zone 2: 数据存储与缓存 -->
+  <rect x="50" y="420" width="1900" height="240" rx="10" class="zone-bg"/>
+  <text x="80" y="455" class="zone-title">[Zone 2] 数据存储 &amp; 缓存层 Data Storage &amp; Caching</text>
+
+  <!-- 关系型数据库 -->
+  <rect x="80" y="475" width="340" height="170" rx="6" class="highlight-box"/>
+  <text x="250" y="500" text-anchor="middle" class="category-title">关系型数据库</text>
+  <text x="95" y="525" class="tech-item">• MySQL 8.4 InnoDB</text>
+  <text x="95" y="545" class="tech-item">• 主从复制 (异步/半同步)</text>
+  <text x="95" y="565" class="tech-item">• 读写分离</text>
+  <text x="95" y="585" class="tech-item">• 动态多数据源</text>
+  <text x="95" y="605" class="tech-item">• 分库分表 (ShardingSphere)</text>
+  <text x="95" y="625" class="tech-item">• 数据库版本管理 (Flyway)</text>
+
+  <!-- 缓存系统 -->
+  <rect x="440" y="475" width="340" height="170" rx="6" class="highlight-box"/>
+  <text x="610" y="500" text-anchor="middle" class="category-title">分布式缓存</text>
+  <text x="455" y="525" class="tech-item">• Redis 7.x Cluster (6 nodes)</text>
+  <text x="455" y="545" class="tech-item">• Redisson 3.36.0 客户端</text>
+  <text x="455" y="565" class="tech-item">• Caffeine 本地缓存 (L1)</text>
+  <text x="455" y="585" class="tech-item">• 二级缓存架构</text>
+  <text x="455" y="605" class="tech-item">• 分布式锁</text>
+  <text x="455" y="625" class="tech-item">• 缓存穿透/击穿/雪崩防护</text>
+
+  <!-- 对象存储 -->
+  <rect x="800" y="475" width="320" height="170" rx="6" class="category-box"/>
+  <text x="960" y="500" text-anchor="middle" class="category-title">对象存储</text>
+  <text x="815" y="525" class="tech-item">• MinIO 8.6.0 (S3 兼容)</text>
+  <text x="815" y="545" class="tech-item">• Volcengine TOS 2.6.1</text>
+  <text x="815" y="565" class="tech-item">• 分片上传/断点续传</text>
+  <text x="815" y="585" class="tech-item">• 秒传 (Hash 去重)</text>
+  <text x="815" y="605" class="tech-item">• CDN 加速</text>
+  <text x="815" y="625" class="tech-item">• 纠删码存储</text>
+
+  <!-- 搜索引擎 -->
+  <rect x="1140" y="475" width="320" height="170" rx="6" class="category-box"/>
+  <text x="1300" y="500" text-anchor="middle" class="category-title">全文搜索</text>
+  <text x="1155" y="525" class="tech-item">• Meilisearch 0.17.1</text>
+  <text x="1155" y="545" class="tech-item">• Elasticsearch 8.x (备选)</text>
+  <text x="1155" y="565" class="tech-item">• 中文分词 (IK Analyzer)</text>
+  <text x="1155" y="585" class="tech-item">• 毫秒级搜索响应</text>
+  <text x="1155" y="605" class="tech-item">• 模糊匹配/同义词</text>
+  <text x="1155" y="625" class="tech-item">• RESTful API</text>
+
+  <!-- 消息队列 -->
+  <rect x="1480" y="475" width="440" height="170" rx="6" class="category-box"/>
+  <text x="1700" y="500" text-anchor="middle" class="category-title">消息队列 &amp; 事件流</text>
+  <text x="1495" y="525" class="tech-item">• RocketMQ 2.3.3 (NameServer + Broker)</text>
+  <text x="1495" y="545" class="tech-item">• 事务消息 / 延时消息 / 顺序消息</text>
+  <text x="1495" y="565" class="tech-item">• 死信队列 &amp; 消息重试</text>
+  <text x="1495" y="585" class="tech-item">• Kafka (备选) / Pulsar (备选)</text>
+  <text x="1495" y="605" class="tech-item">• Spring Cloud Stream</text>
+  <text x="1495" y="625" class="tech-item">• 领域事件发布订阅</text>
+
+  <!-- Zone 3: 微服务治理 -->
+  <rect x="50" y="680" width="1900" height="240" rx="10" class="zone-bg"/>
+  <text x="80" y="715" class="zone-title">[Zone 3] 微服务治理 &amp; 弹性工程 Microservice Governance &amp; Resilience</text>
+
+  <!-- 服务注册发现 -->
+  <rect x="80" y="735" width="340" height="170" rx="6" class="highlight-box"/>
+  <text x="250" y="760" text-anchor="middle" class="category-title">服务注册 &amp; 配置中心</text>
+  <text x="95" y="785" class="tech-item">• Nacos 2.x (Server Cluster)</text>
+  <text x="95" y="805" class="tech-item">• 服务注册发现</text>
+  <text x="95" y="825" class="tech-item">• 动态配置推送</text>
+  <text x="95" y="845" class="tech-item">• 配置版本管理</text>
+  <text x="95" y="865" class="tech-item">• 配置灰度发布</text>
+  <text x="95" y="885" class="tech-item">• 健康检查</text>
+
+  <!-- 流控熔断 -->
+  <rect x="440" y="735" width="340" height="170" rx="6" class="highlight-box"/>
+  <text x="610" y="760" text-anchor="middle" class="category-title">流控 &amp; 熔断降级</text>
+  <text x="455" y="785" class="tech-item">• Sentinel 1.8.9 (Dashboard)</text>
+  <text x="455" y="805" class="tech-item">• QPS 限流 / 热点参数限流</text>
+  <text x="455" y="825" class="tech-item">• 熔断降级 (慢调用/异常比例)</text>
+  <text x="455" y="845" class="tech-item">• Resilience4j 2.2.0 (备选)</text>
+  <text x="455" y="865" class="tech-item">• Bucket4j 令牌桶限流</text>
+  <text x="455" y="885" class="tech-item">• Sentinel-Nacos 动态规则</text>
+
+  <!-- 负载均衡 -->
+  <rect x="800" y="735" width="320" height="170" rx="6" class="category-box"/>
+  <text x="960" y="760" text-anchor="middle" class="category-title">负载均衡 &amp; 路由</text>
+  <text x="815" y="785" class="tech-item">• Spring Cloud LoadBalancer</text>
+  <text x="815" y="805" class="tech-item">• Nginx Ingress Controller</text>
+  <text x="815" y="825" class="tech-item">• K8s Service (iptables/IPVS)</text>
+  <text x="815" y="845" class="tech-item">• 轮询/随机/加权/一致性Hash</text>
+  <text x="815" y="865" class="tech-item">• 会话亲和性</text>
+  <text x="815" y="885" class="tech-item">• 健康检查</text>
+
+  <!-- 重试补偿 -->
+  <rect x="1140" y="735" width="320" height="170" rx="6" class="category-box"/>
+  <text x="1300" y="760" text-anchor="middle" class="category-title">重试 &amp; 补偿</text>
+  <text x="1155" y="785" class="tech-item">• Resilience4j Retry</text>
+  <text x="1155" y="805" class="tech-item">• 指数退避重试</text>
+  <text x="1155" y="825" class="tech-item">• 幂等性保障</text>
+  <text x="1155" y="845" class="tech-item">• 分布式事务 (Seata 备选)</text>
+  <text x="1155" y="865" class="tech-item">• SAGA 补偿模式</text>
+  <text x="1155" y="885" class="tech-item">• 乐观锁重试</text>
+
+  <!-- API 网关 -->
+  <rect x="1480" y="735" width="440" height="170" rx="6" class="category-box"/>
+  <text x="1700" y="760" text-anchor="middle" class="category-title">API 网关 &amp; 安全网关</text>
+  <text x="1495" y="785" class="tech-item">• Spring Cloud Gateway (备选)</text>
+  <text x="1495" y="805" class="tech-item">• Nginx + Lua (OpenResty)</text>
+  <text x="1495" y="825" class="tech-item">• 路由/过滤器/断言</text>
+  <text x="1495" y="845" class="tech-item">• 统一鉴权/限流/日志</text>
+  <text x="1495" y="865" class="tech-item">• CloudFlare WAF</text>
+  <text x="1495" y="885" class="tech-item">• DDoS 防护</text>
+
+  <!-- Zone 4: 可观测性 -->
+  <rect x="50" y="940" width="1900" height="240" rx="10" class="zone-bg"/>
+  <text x="80" y="975" class="zone-title">[Zone 4] 可观测性三支柱 Observability (Metrics / Logs / Traces)</text>
+
+  <!-- 指标监控 -->
+  <rect x="80" y="995" width="420" height="170" rx="6" class="highlight-box"/>
+  <text x="290" y="1020" text-anchor="middle" class="category-title">指标监控 Metrics</text>
+  <text x="95" y="1045" class="tech-item">• Prometheus 2.x (TSDB + PromQL)</text>
+  <text x="95" y="1065" class="tech-item">• Micrometer 1.14.1 (Metrics Facade)</text>
+  <text x="95" y="1085" class="tech-item">• Grafana 10.x (66+ 仪表盘)</text>
+  <text x="95" y="1105" class="tech-item">• Actuator /actuator/prometheus</text>
+  <text x="95" y="1125" class="tech-item">• Sentinel Prometheus Exporter</text>
+  <text x="95" y="1145" class="tech-item">• JVM / 应用 / 业务指标</text>
+
+  <!-- 日志聚合 -->
+  <rect x="520" y="995" width="420" height="170" rx="6" class="highlight-box"/>
+  <text x="730" y="1020" text-anchor="middle" class="category-title">日志聚合 Logs</text>
+  <text x="535" y="1045" class="tech-item">• Grafana Loki 2.x (LogQL)</text>
+  <text x="535" y="1065" class="tech-item">• Elasticsearch + Logstash + Kibana (ELK)</text>
+  <text x="535" y="1085" class="tech-item">• Logstash Logback Encoder 7.4</text>
+  <text x="535" y="1105" class="tech-item">• Grafana Alloy (OTLP Collector)</text>
+  <text x="535" y="1125" class="tech-item">• 结构化 JSON 日志</text>
+  <text x="535" y="1145" class="tech-item">• Trace ID 关联</text>
+
+  <!-- 链路追踪 -->
+  <rect x="960" y="995" width="420" height="170" rx="6" class="highlight-box"/>
+  <text x="1170" y="1020" text-anchor="middle" class="category-title">链路追踪 Traces</text>
+  <text x="975" y="1045" class="tech-item">• Zipkin 2.26.0 (Server + UI)</text>
+  <text x="975" y="1065" class="tech-item">• Micrometer Tracing Bridge Brave</text>
+  <text x="975" y="1085" class="tech-item">• OpenTelemetry (备选)</text>
+  <text x="975" y="1105" class="tech-item">• Span / Trace ID 传播</text>
+  <text x="975" y="1125" class="tech-item">• 调用链可视化</text>
+  <text x="975" y="1145" class="tech-item">• 性能瓶颈定位</text>
+
+  <!-- 告警系统 -->
+  <rect x="1400" y="995" width="520" height="170" rx="6" class="category-box"/>
+  <text x="1660" y="1020" text-anchor="middle" class="category-title">告警 &amp; 通知</text>
+  <text x="1415" y="1045" class="tech-item">• Prometheus AlertManager 0.27</text>
+  <text x="1415" y="1065" class="tech-item">• Grafana Alerting</text>
+  <text x="1415" y="1085" class="tech-item">• 告警分级 (P0/P1/P2/P3)</text>
+  <text x="1415" y="1105" class="tech-item">• 告警聚合 &amp; 去重</text>
+  <text x="1415" y="1125" class="tech-item">• 钉钉/邮件/Webhook/PagerDuty</text>
+  <text x="1415" y="1145" class="tech-item">• 告警抑制 &amp; 静默</text>
+
+  <!-- Zone 5: DevOps 工具链 -->
+  <rect x="50" y="1200" width="1900" height="240" rx="10" class="zone-bg"/>
+  <text x="80" y="1235" class="zone-title">[Zone 5] DevOps 工具链 &amp; 容器编排 DevOps Toolchain &amp; Container Orchestration</text>
+
+  <!-- CI/CD -->
+  <rect x="80" y="1255" width="340" height="170" rx="6" class="category-box"/>
+  <text x="250" y="1280" text-anchor="middle" class="category-title">CI/CD 流水线</text>
+  <text x="95" y="1305" class="tech-item">• GitHub Actions (CI)</text>
+  <text x="95" y="1325" class="tech-item">• ArgoCD / FluxCD (CD)</text>
+  <text x="95" y="1345" class="tech-item">• Jenkins (备选)</text>
+  <text x="95" y="1365" class="tech-item">• GitLab CI/CD (备选)</text>
+  <text x="95" y="1385" class="tech-item">• Tekton Pipelines (备选)</text>
+  <text x="95" y="1405" class="tech-item">• Maven / Gradle 构建</text>
+
+  <!-- 容器编排 -->
+  <rect x="440" y="1255" width="340" height="170" rx="6" class="highlight-box"/>
+  <text x="610" y="1280" text-anchor="middle" class="category-title">容器编排</text>
+  <text x="455" y="1305" class="tech-item">• Kubernetes 1.28+ (K8s)</text>
+  <text x="455" y="1325" class="tech-item">• Docker 24.x / containerd</text>
+  <text x="455" y="1345" class="tech-item">• Helm 3.x (包管理)</text>
+  <text x="455" y="1365" class="tech-item">• Kustomize (配置管理)</text>
+  <text x="455" y="1385" class="tech-item">• HPA / VPA 自动扩缩容</text>
+  <text x="455" y="1405" class="tech-item">• Ingress / Service / ConfigMap</text>
+
+  <!-- 质量保障 -->
+  <rect x="800" y="1255" width="320" height="170" rx="6" class="category-box"/>
+  <text x="960" y="1280" text-anchor="middle" class="category-title">质量保障</text>
+  <text x="815" y="1305" class="tech-item">• JUnit 5 + Mockito 5</text>
+  <text x="815" y="1325" class="tech-item">• ArchUnit 架构测试</text>
+  <text x="815" y="1345" class="tech-item">• JaCoCo 覆盖率 (60%+)</text>
+  <text x="815" y="1365" class="tech-item">• SonarQube 代码扫描</text>
+  <text x="815" y="1385" class="tech-item">• Spotless 代码格式化</text>
+  <text x="815" y="1405" class="tech-item">• PMD + Alibaba P3C</text>
+
+  <!-- 安全扫描 -->
+  <rect x="1140" y="1255" width="320" height="170" rx="6" class="category-box"/>
+  <text x="1300" y="1280" text-anchor="middle" class="category-title">安全扫描</text>
+  <text x="1155" y="1305" class="tech-item">• Trivy (镜像扫描)</text>
+  <text x="1155" y="1325" class="tech-item">• Snyk (依赖扫描)</text>
+  <text x="1155" y="1345" class="tech-item">• OWASP Dependency Check</text>
+  <text x="1155" y="1365" class="tech-item">• Clair (容器漏洞扫描)</text>
+  <text x="1155" y="1385" class="tech-item">• GitHub Security Advisory</text>
+  <text x="1155" y="1405" class="tech-item">• SBOM 生成</text>
+
+  <!-- 镜像仓库 -->
+  <rect x="1480" y="1255" width="440" height="170" rx="6" class="category-box"/>
+  <text x="1700" y="1280" text-anchor="middle" class="category-title">镜像 &amp; 制品仓库</text>
+  <text x="1495" y="1305" class="tech-item">• Harbor 2.x (私有 Docker Registry)</text>
+  <text x="1495" y="1325" class="tech-item">• Nexus Repository (Maven 私服)</text>
+  <text x="1495" y="1345" class="tech-item">• Docker Hub (公共镜像)</text>
+  <text x="1495" y="1365" class="tech-item">• 镜像签名 &amp; 验证 (Notary)</text>
+  <text x="1495" y="1385" class="tech-item">• 镜像扫描集成</text>
+  <text x="1495" y="1405" class="tech-item">• RBAC 权限管理</text>
+
+  <!-- 底部统计 -->
+  <rect x="50" y="1460" width="1900" height="110" rx="8" fill="#fef3c7" stroke="#d97706" stroke-width="3"/>
+  <text x="1000" y="1495" text-anchor="middle" class="category-title">🎯 技术栈统计 Technology Stack Statistics</text>
+  <text x="100" y="1525" class="tech-item">📦 核心框架: 15+   💾 数据存储: 8+   🛡️ 微服务治理: 12+   📊 可观测性: 10+   🚀 DevOps: 15+</text>
+  <text x="100" y="1550" class="tech-item">✅ 总计 60+ 技术组件   ⚡ 响应式编程   🌐 云原生架构   🔒 企业级安全   📈 生产级监控   🔄 GitOps 部署</text>
+</svg>

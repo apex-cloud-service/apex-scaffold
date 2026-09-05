@@ -265,6 +265,7 @@ public class ApiGatewayFilter implements WebFilter {
         Timer.builder(METRIC_RESPONSE_TIME)
                 .description("API网关响应时间")
                 .publishPercentileHistogram()
+                .publishPercentiles(0.95, 0.99)
                 .tags(tags)
                 .register(meterRegistry)
                 .record(stats.durationNs(), TimeUnit.NANOSECONDS);

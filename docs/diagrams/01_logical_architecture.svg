@@ -1,0 +1,670 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1600 1200" width="1600" height="1200">
+  <!-- 
+    Apex Scaffold DDD 四层逻辑架构图
+    版本: 2.0
+    创建时间: 2026-09-04
+    说明: DDD领域驱动设计，展示接口层、应用层、领域层、基础设施层的职责划分
+  -->
+  
+  <metadata>
+    <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+             xmlns:dc="http://purl.org/dc/elements/1.1/"
+             xmlns:cc="http://creativecommons.org/ns#">
+      <cc:Work>
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type>Architecture Diagram</dc:type>
+        <dc:title>Apex Scaffold DDD 四层逻辑架构图</dc:title>
+        <dc:creator>Apex Team</dc:creator>
+        <dc:date>2026-09-04</dc:date>
+        <dc:version>2.0</dc:version>
+        <dc:description>展示DDD领域驱动设计的四层架构：接口层、应用层、领域层、基础设施层</dc:description>
+        <dc:rights>Apache 2.0 License</dc:rights>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  
+  <defs>
+    <style>
+      .title-main {
+        font: 700 32px system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        fill: #0f172a;
+        text-anchor: middle;
+      }
+      .title-sub {
+        font: 500 18px system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        fill: #64748b;
+        text-anchor: middle;
+      }
+      .layer-title {
+        font: 600 24px system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        fill: #0f172a;
+      }
+      .layer-subtitle {
+        font: 500 14px system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        fill: #64748b;
+      }
+      .module-name {
+        font: 600 16px system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        fill: #0f172a;
+        text-anchor: middle;
+      }
+      .module-desc {
+        font: 400 13px system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        fill: #64748b;
+        text-anchor: middle;
+      }
+      .module-tech {
+        font: 400 12px 'SF Mono', Monaco, 'Cascadia Code', monospace;
+        fill: #94a3b8;
+        text-anchor: middle;
+      }
+      .label-primary {
+        font: 500 14px system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        fill: #0f172a;
+      }
+      .label-secondary {
+        font: 400 13px system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        fill: #64748b;
+      }
+      .label-muted {
+        font: 400 12px system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        fill: #94a3b8;
+      }
+      .layer-bg {
+        fill: #f8fafc;
+        stroke: #e2e8f0;
+        stroke-width: 2;
+        rx: 12;
+        ry: 12;
+      }
+      .module-box {
+        fill: #ffffff;
+        stroke-width: 2.5;
+        rx: 10;
+        ry: 10;
+      }
+      .interfaces-stroke { stroke: #4f46e5; }
+      .application-stroke { stroke: #0891b2; }
+      .domain-stroke { stroke: #059669; }
+      .infrastructure-stroke { stroke: #d97706; }
+      .arrow-line {
+        fill: none;
+        stroke: #64748b;
+        stroke-width: 2.5;
+      }
+      .arrow-line-dashed {
+        fill: none;
+        stroke: #64748b;
+        stroke-width: 2.5;
+        stroke-dasharray: 8 4;
+      }
+      .highlight-badge-bg {
+        fill: #4f46e5;
+        rx: 6;
+        ry: 6;
+      }
+      .highlight-badge-text {
+        font: 600 13px system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        fill: #ffffff;
+        text-anchor: middle;
+      }
+    </style>
+    
+    <!-- 箭头标记 -->
+    <marker id="arrow-default" viewBox="0 0 10 10" refX="9" refY="5" 
+            markerWidth="10" markerHeight="10" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/>
+    </marker>
+    
+    <marker id="arrow-interfaces" viewBox="0 0 10 10" refX="9" refY="5" 
+            markerWidth="10" markerHeight="10" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#4f46e5"/>
+    </marker>
+    
+    <marker id="arrow-application" viewBox="0 0 10 10" refX="9" refY="5" 
+            markerWidth="10" markerHeight="10" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#0891b2"/>
+    </marker>
+    
+    <marker id="arrow-domain" viewBox="0 0 10 10" refX="9" refY="5" 
+            markerWidth="10" markerHeight="10" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#059669"/>
+    </marker>
+    
+    <marker id="arrow-infrastructure" viewBox="0 0 10 10" refX="9" refY="5" 
+            markerWidth="10" markerHeight="10" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#d97706"/>
+    </marker>
+  
+    <!-- 云原生专业图标库 - 自动添加 -->
+    <g id="icon-kubernetes">
+      <path d="M10,2 L14,4 L18,2 L18,10 L14,12 L10,10 Z" fill="#326CE5" stroke="#1A4D8F" stroke-width="0.5"/>
+      <circle cx="14" cy="7" r="1.5" fill="white"/>
+      <line x1="14" y1="4" x2="14" y2="7" stroke="white" stroke-width="0.8"/>
+      <line x1="11" y1="5.5" x2="14" y2="7" stroke="white" stroke-width="0.8"/>
+      <line x1="17" y1="5.5" x2="14" y2="7" stroke="white" stroke-width="0.8"/>
+    </g>
+    <g id="icon-pod">
+      <rect x="4" y="4" width="12" height="12" rx="2" fill="#326CE5" stroke="#1A4D8F" stroke-width="1"/>
+      <rect x="6" y="6" width="3" height="3" rx="0.5" fill="white" opacity="0.9"/>
+      <rect x="10.5" y="6" width="3" height="3" rx="0.5" fill="white" opacity="0.9"/>
+      <rect x="6" y="10.5" width="3" height="3" rx="0.5" fill="white" opacity="0.9"/>
+      <rect x="10.5" y="10.5" width="3" height="3" rx="0.5" fill="white" opacity="0.9"/>
+    </g>
+    <g id="icon-deployment">
+      <rect x="3" y="5" width="10" height="10" rx="1.5" fill="#326CE5" stroke="#1A4D8F" stroke-width="1" opacity="0.3"/>
+      <rect x="5" y="3" width="10" height="10" rx="1.5" fill="#326CE5" stroke="#1A4D8F" stroke-width="1" opacity="0.6"/>
+      <rect x="7" y="1" width="10" height="10" rx="1.5" fill="#326CE5" stroke="#1A4D8F" stroke-width="1"/>
+      <path d="M10,4 L10,8 M8,6 L12,6" stroke="white" stroke-width="1.2" stroke-linecap="round"/>
+    </g>
+    <g id="icon-service">
+      <circle cx="10" cy="10" r="7" fill="none" stroke="#326CE5" stroke-width="1.5"/>
+      <circle cx="10" cy="10" r="2" fill="#326CE5"/>
+      <circle cx="10" cy="3" r="1.5" fill="#326CE5"/>
+      <circle cx="17" cy="10" r="1.5" fill="#326CE5"/>
+      <circle cx="10" cy="17" r="1.5" fill="#326CE5"/>
+      <circle cx="3" cy="10" r="1.5" fill="#326CE5"/>
+    </g>
+    <g id="icon-ingress">
+      <path d="M2,10 L10,2 L18,10" fill="none" stroke="#326CE5" stroke-width="1.5" stroke-linejoin="round"/>
+      <rect x="6" y="10" width="8" height="8" fill="#326CE5" stroke="#1A4D8F" stroke-width="1"/>
+      <path d="M8,13 L12,13 M10,11 L10,16" stroke="white" stroke-width="1" stroke-linecap="round"/>
+    </g>
+    <g id="icon-configmap">
+      <rect x="3" y="3" width="14" height="14" rx="2" fill="none" stroke="#326CE5" stroke-width="1.5"/>
+      <line x1="6" y1="7" x2="14" y2="7" stroke="#326CE5" stroke-width="1"/>
+      <line x1="6" y1="10" x2="14" y2="10" stroke="#326CE5" stroke-width="1"/>
+      <line x1="6" y1="13" x2="11" y2="13" stroke="#326CE5" stroke-width="1"/>
+    </g>
+    <g id="icon-secret">
+      <rect x="5" y="8" width="10" height="9" rx="1" fill="#326CE5" stroke="#1A4D8F" stroke-width="1"/>
+      <path d="M7,8 L7,6 C7,4.3 8.3,3 10,3 C11.7,3 13,4.3 13,6 L13,8" fill="none" stroke="#326CE5" stroke-width="1.5"/>
+      <circle cx="10" cy="12" r="1.2" fill="white"/>
+    </g>
+    <g id="icon-namespace">
+      <rect x="2" y="2" width="7" height="7" rx="1" fill="none" stroke="#326CE5" stroke-width="1.2"/>
+      <rect x="11" y="2" width="7" height="7" rx="1" fill="none" stroke="#326CE5" stroke-width="1.2"/>
+      <rect x="2" y="11" width="7" height="7" rx="1" fill="none" stroke="#326CE5" stroke-width="1.2"/>
+      <rect x="11" y="11" width="7" height="7" rx="1" fill="none" stroke="#326CE5" stroke-width="1.2"/>
+    </g>
+    <g id="icon-docker">
+      <rect x="6" y="8" width="2.5" height="2.5" fill="#2496ED"/>
+      <rect x="9" y="8" width="2.5" height="2.5" fill="#2496ED"/>
+      <rect x="12" y="8" width="2.5" height="2.5" fill="#2496ED"/>
+      <rect x="6" y="5" width="2.5" height="2.5" fill="#2496ED"/>
+      <rect x="9" y="5" width="2.5" height="2.5" fill="#2496ED"/>
+      <path d="M3,11 Q3,9 5,9 L15,9 Q17,9 17,11 Q19,11 19,13 Q19,15 17,15 L5,15 Q3,15 3,13 Q3,11 3,11 Z" 
+            fill="none" stroke="#2496ED" stroke-width="1.2"/>
+    </g>
+    <g id="icon-container">
+      <rect x="4" y="5" width="12" height="10" rx="1.5" fill="none" stroke="#2496ED" stroke-width="1.5"/>
+      <line x1="4" y1="8" x2="16" y2="8" stroke="#2496ED" stroke-width="1"/>
+      <line x1="4" y1="11.5" x2="16" y2="11.5" stroke="#2496ED" stroke-width="1"/>
+      <circle cx="6.5" cy="6.5" r="0.8" fill="#2496ED"/>
+      <circle cx="9" cy="6.5" r="0.8" fill="#2496ED"/>
+    </g>
+    <g id="icon-cloud-pro">
+      <path d="M6,12 C4,12 2.5,10.5 2.5,8.5 C2.5,7 3.5,5.7 5,5.3 C5,3.5 6.5,2 8.5,2 C9.8,2 11,2.7 11.6,3.8 
+               C12,3.6 12.5,3.5 13,3.5 C14.7,3.5 16,4.8 16,6.5 C17.2,6.8 18,7.9 18,9.2 C18,10.8 16.8,12 15.2,12 Z" 
+            fill="#4285F4" stroke="#2563EB" stroke-width="0.8" opacity="0.9"/>
+      <path d="M6,12 C4,12 2.5,10.5 2.5,8.5 C2.5,7 3.5,5.7 5,5.3" 
+            fill="none" stroke="white" stroke-width="0.5" opacity="0.5"/>
+    </g>
+    <g id="icon-aws">
+      <path d="M3,10 L6,8 L9,10 L6,12 Z" fill="#FF9900"/>
+      <path d="M9,10 L12,8 L15,10 L12,12 Z" fill="#FF9900"/>
+      <path d="M3,14 L17,14" stroke="#FF9900" stroke-width="1.5" stroke-linecap="round"/>
+      <path d="M15,14 L17,15" stroke="#FF9900" stroke-width="1.5" stroke-linecap="round"/>
+    </g>
+    <g id="icon-mysql">
+      <ellipse cx="10" cy="6" rx="6" ry="2.5" fill="#4479A1" stroke="#2F5F7F" stroke-width="0.8"/>
+      <path d="M4,6 L4,14 Q4,16.5 10,16.5 Q16,16.5 16,14 L16,6" 
+            fill="#4479A1" stroke="#2F5F7F" stroke-width="0.8"/>
+      <ellipse cx="10" cy="14" rx="6" ry="2.5" fill="#5D87A1" stroke="#2F5F7F" stroke-width="0.8"/>
+      <line x1="4" y1="10" x2="4" y2="11" stroke="white" stroke-width="0.5" opacity="0.5"/>
+    </g>
+    <g id="icon-redis">
+      <ellipse cx="10" cy="8" rx="7" ry="3" fill="#DC382D"/>
+      <ellipse cx="10" cy="12" rx="7" ry="3" fill="#C6302B"/>
+      <path d="M3,8 L3,12" stroke="#A41E11" stroke-width="0.8"/>
+      <path d="M17,8 L17,12" stroke="#A41E11" stroke-width="0.8"/>
+      <path d="M6,7 L8,8 L10,7 L12,8 L14,7" stroke="white" stroke-width="1" fill="none"/>
+    </g>
+    <g id="icon-mongodb">
+      <path d="M10,2 L12,8 L10,18 L8,8 Z" fill="#47A248" stroke="#3F8C40" stroke-width="0.8"/>
+      <ellipse cx="10" cy="8" rx="2" ry="6" fill="#47A248" opacity="0.7"/>
+    </g>
+    <g id="icon-postgresql">
+      <ellipse cx="10" cy="10" rx="6" ry="7" fill="#336791" stroke="#2A5373" stroke-width="1"/>
+      <path d="M7,7 Q10,5 13,7" fill="none" stroke="white" stroke-width="1" stroke-linecap="round"/>
+      <circle cx="8" cy="9" r="0.8" fill="white"/>
+      <circle cx="12" cy="9" r="0.8" fill="white"/>
+      <path d="M10,13 Q10,14 11,14" fill="none" stroke="white" stroke-width="0.8"/>
+    </g>
+    <g id="icon-kafka">
+      <circle cx="10" cy="10" r="7" fill="black"/>
+      <circle cx="10" cy="10" r="5.5" fill="white"/>
+      <path d="M7,10 L10,7 L13,10 L10,13 Z" fill="black"/>
+    </g>
+    <g id="icon-rabbitmq">
+      <circle cx="7" cy="8" r="2.5" fill="#FF6600"/>
+      <circle cx="13" cy="8" r="2.5" fill="#FF6600"/>
+      <path d="M5,10 L7,14 L10,12 L13,14 L15,10 Q15,16 10,16 Q5,16 5,10 Z" fill="#FF6600"/>
+      <circle cx="7" cy="7.5" r="0.8" fill="white"/>
+      <circle cx="13" cy="7.5" r="0.8" fill="white"/>
+    </g>
+    <g id="icon-rocketmq">
+      <path d="M10,3 L13,10 L10,17 L7,10 Z" fill="#D77310" stroke="#B85F0A" stroke-width="1"/>
+      <circle cx="10" cy="10" r="2" fill="#FFA500"/>
+      <path d="M8,17 L10,18 L12,17" stroke="#D77310" stroke-width="1.5" stroke-linecap="round"/>
+    </g>
+    <g id="icon-nginx">
+      <rect x="4" y="6" width="12" height="8" rx="1" fill="#009639" stroke="#007A2D" stroke-width="1"/>
+      <path d="M7,9 L10,13 L10,9 L13,13 L13,9" stroke="white" stroke-width="1.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+    <g id="icon-load-balancer-pro">
+      <rect x="6" y="2" width="8" height="3" rx="0.5" fill="#0891b2" stroke="#0e7490" stroke-width="0.8"/>
+      <line x1="10" y1="5" x2="10" y2="8" stroke="#64748b" stroke-width="1.5"/>
+      <circle cx="10" cy="9.5" r="1.5" fill="#0891b2"/>
+      <line x1="10" y1="11" x2="6" y2="14" stroke="#64748b" stroke-width="1"/>
+      <line x1="10" y1="11" x2="10" y2="14" stroke="#64748b" stroke-width="1"/>
+      <line x1="10" y1="11" x2="14" y2="14" stroke="#64748b" stroke-width="1"/>
+      <rect x="4" y="14" width="3" height="2.5" rx="0.5" fill="#059669"/>
+      <rect x="8.5" y="14" width="3" height="2.5" rx="0.5" fill="#059669"/>
+      <rect x="13" y="14" width="3" height="2.5" rx="0.5" fill="#059669"/>
+    </g>
+    <g id="icon-cdn-pro">
+      <circle cx="10" cy="5" r="2" fill="#10b981" stroke="#059669" stroke-width="0.8"/>
+      <circle cx="4" cy="12" r="2" fill="#10b981" stroke="#059669" stroke-width="0.8"/>
+      <circle cx="16" cy="12" r="2" fill="#10b981" stroke="#059669" stroke-width="0.8"/>
+      <circle cx="10" cy="15" r="2" fill="#10b981" stroke="#059669" stroke-width="0.8"/>
+      <line x1="10" y1="7" x2="5" y2="11" stroke="#64748b" stroke-width="1"/>
+      <line x1="10" y1="7" x2="15" y2="11" stroke="#64748b" stroke-width="1"/>
+      <line x1="5.5" y1="13" x2="9" y2="14" stroke="#64748b" stroke-width="1"/>
+      <line x1="14.5" y1="13" x2="11" y2="14" stroke="#64748b" stroke-width="1"/>
+    </g>
+    <g id="icon-prometheus">
+      <circle cx="10" cy="10" r="7" fill="#E6522C" stroke="#C14522" stroke-width="1"/>
+      <path d="M10,5 L10,10 L14,10" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+      <circle cx="10" cy="10" r="1.5" fill="white"/>
+    </g>
+    <g id="icon-grafana">
+      <circle cx="10" cy="10" r="7" fill="#F46800"/>
+      <path d="M6,10 Q10,6 14,10 Q14,14 10,14 Q6,14 6,10" fill="#FFA500" opacity="0.7"/>
+      <path d="M10,7 L10,13 M7,10 L13,10" stroke="white" stroke-width="1.2"/>
+    </g>
+    <g id="icon-springboot">
+      <circle cx="10" cy="10" r="7" fill="#6DB33F"/>
+      <path d="M12,6 Q14,8 12,10 Q14,12 12,14" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+      <path d="M8,6 Q6,8 8,10 Q6,12 8,14" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+    </g>
+    <g id="icon-java">
+      <path d="M8,14 Q6,12 8,10 Q10,12 8,14" fill="#F89820"/>
+      <path d="M12,14 Q10,12 12,10 Q14,12 12,14" fill="#F89820"/>
+      <ellipse cx="10" cy="7" rx="4" ry="2" fill="#5382A1"/>
+    </g>
+    <g id="icon-react">
+      <ellipse cx="10" cy="10" rx="7" ry="3" fill="none" stroke="#61DAFB" stroke-width="1"/>
+      <ellipse cx="10" cy="10" rx="7" ry="3" fill="none" stroke="#61DAFB" stroke-width="1" transform="rotate(60 10 10)"/>
+      <ellipse cx="10" cy="10" rx="7" ry="3" fill="none" stroke="#61DAFB" stroke-width="1" transform="rotate(120 10 10)"/>
+      <circle cx="10" cy="10" r="1.5" fill="#61DAFB"/>
+    </g>
+    <g id="icon-vue">
+      <path d="M10,4 L6,12 L10,12 L14,12 Z" fill="#42B883"/>
+      <path d="M10,4 L8,8 L10,12 L12,8 Z" fill="#35495E"/>
+    </g>
+    <g id="icon-git">
+      <rect x="3" y="3" width="14" height="14" rx="2" fill="#F05032"/>
+      <path d="M12,8 L10,10 L8,8 L10,6 Z" fill="white"/>
+      <circle cx="7" cy="13" r="1.2" fill="white"/>
+      <circle cx="13" cy="13" r="1.2" fill="white"/>
+      <line x1="10" y1="10" x2="10" y2="13" stroke="white" stroke-width="1"/>
+    </g>
+    <g id="icon-elasticsearch">
+      <circle cx="10" cy="10" r="7" fill="#FEC514"/>
+      <path d="M6,10 L14,10 M6,8 L12,8 M6,12 L12,12" stroke="#343741" stroke-width="1.2" stroke-linecap="round"/>
+    </g>
+    <g id="icon-minio">
+      <rect x="4" y="6" width="12" height="8" rx="1" fill="#C72C48"/>
+      <rect x="6" y="8" width="3" height="4" fill="white" opacity="0.9"/>
+      <rect x="11" y="8" width="3" height="4" fill="white" opacity="0.9"/>
+    </g>
+  </defs>
+  
+  <!-- 背景 -->
+  <rect width="1600" height="1200" fill="#ffffff"/>
+  
+  <!-- 标题区 -->
+  <g id="title-section">
+    <text x="800" y="70" class="title-main">Apex Scaffold DDD 四层逻辑架构图</text>
+    <text x="800" y="105" class="title-sub">领域驱动设计 · 依赖倒置原则 · 清晰职责划分 · v2.0</text>
+    <line x1="50" y1="130" x2="1550" y2="130" stroke="#e2e8f0" stroke-width="1"/>
+  </g>
+  
+  <!-- Layer 4: 接口层 (Interfaces Layer) -->
+  <g id="layer-interfaces">
+    <rect class="layer-bg" x="60" y="160" width="1480" height="200"/>
+    
+    <!-- 层标题 -->
+    <text x="80" y="195" class="layer-title">第4层：接口层 (Interfaces Layer)</text>
+    <text x="80" y="218" class="layer-subtitle">对外暴露API、处理协议适配、请求路由、参数验证</text>
+    
+    <!-- 高亮标注 -->
+    <g>
+      <rect class="highlight-badge-bg" x="470" y="175" width="90" height="26"/>
+      <text x="515" y="194" class="highlight-badge-text">用户入口</text>
+    </g>
+    
+    <!-- 模块组件 -->
+    <rect class="module-box interfaces-stroke" x="100" y="240" width="180" height="95"/>
+    <text x="190" y="270" class="module-name">REST API</text>
+    <text x="190" y="292" class="module-desc">RESTful 接口</text>
+    <text x="190" y="310" class="module-tech">RouterFunction</text>
+    <text x="190" y="325" class="label-muted">响应式函数端点</text>
+    
+    <rect class="module-box interfaces-stroke" x="310" y="240" width="180" height="95"/>
+    <text x="400" y="270" class="module-name">WebSocket (扩展)</text>
+    <text x="400" y="292" class="module-desc">实时双向通信方向</text>
+    <text x="400" y="310" class="module-tech">WebFlux 扩展点</text>
+    <text x="400" y="325" class="label-muted">以运行配置为准</text>
+    
+    <rect class="module-box interfaces-stroke" x="520" y="240" width="180" height="95"/>
+    <text x="610" y="270" class="module-name">OpenAPI Docs</text>
+    <text x="610" y="292" class="module-desc">API 文档自动生成</text>
+    <text x="610" y="310" class="module-tech">SpringDoc 2.8.1</text>
+    <text x="610" y="325" class="label-muted">Router OpenAPI</text>
+    
+    <rect class="module-box interfaces-stroke" x="730" y="240" width="180" height="95"/>
+    <text x="820" y="270" class="module-name">消息消费者</text>
+    <text x="820" y="292" class="module-desc">异步事件监听</text>
+    <text x="820" y="310" class="module-tech">RocketMQ Listener</text>
+    <text x="820" y="325" class="label-muted">企业版可选启用</text>
+    
+    <rect class="module-box interfaces-stroke" x="930" y="240" width="120" height="95"/>
+    <text x="990" y="270" class="module-name" style="font-size:14px">定时任务</text>
+    <text x="990" y="292" class="module-desc">调度执行器</text>
+    <text x="990" y="310" class="module-tech">@Scheduled</text>
+    <text x="990" y="325" class="label-muted">Cron 表达式</text>
+    
+    <rect class="module-box interfaces-stroke" x="1065" y="240" width="120" height="95"/>
+    <text x="1125" y="270" class="module-name" style="font-size:13px">GraphQL (扩展)</text>
+    <text x="1125" y="292" class="module-desc">灵活查询接口</text>
+    <text x="1125" y="310" class="module-tech" style="font-size:10px">Spring GraphQL</text>
+    <text x="1125" y="325" class="label-muted">按需加载字段</text>
+    
+    <rect class="module-box interfaces-stroke" x="1200" y="240" width="120" height="95"/>
+    <text x="1260" y="270" class="module-name" style="font-size:13px">gRPC (扩展)</text>
+    <text x="1260" y="292" class="module-desc">高性能RPC</text>
+    <text x="1260" y="310" class="module-tech">Protobuf</text>
+    <text x="1260" y="325" class="label-muted">微服务间调用</text>
+  </g>
+  
+  <!-- 依赖箭头: 接口层 -> 应用层 -->
+  <path class="arrow-line" d="M190 360 L190 405" marker-end="url(#arrow-default)"/>
+  <path class="arrow-line" d="M400 360 L400 405" marker-end="url(#arrow-default)"/>
+  <path class="arrow-line" d="M610 360 L610 405" marker-end="url(#arrow-default)"/>
+  <path class="arrow-line" d="M820 360 L820 405" marker-end="url(#arrow-default)"/>
+  <text x="800" y="388" class="label-secondary" text-anchor="middle">调用应用服务 (Application Services)</text>
+  
+  <!-- Layer 3: 应用层 (Application Layer) -->
+  <g id="layer-application">
+    <rect class="layer-bg" x="60" y="415" width="1480" height="210"/>
+    
+    <!-- 层标题 -->
+    <text x="80" y="450" class="layer-title">第3层：应用层 (Application Layer)</text>
+    <text x="80" y="473" class="layer-subtitle">业务流程编排、事务管理、DTO转换、应用级缓存</text>
+    
+    <!-- 高亮标注 -->
+    <g>
+      <rect class="highlight-badge-bg" x="520" y="430" width="110" height="26"/>
+      <text x="575" y="449" class="highlight-badge-text">业务编排层</text>
+    </g>
+    
+    <!-- 模块组件 -->
+    <rect class="module-box application-stroke" x="100" y="495" width="160" height="105"/>
+    <text x="180" y="525" class="module-name">UserService</text>
+    <text x="180" y="545" class="module-desc">用户管理</text>
+    <text x="180" y="562" class="module-tech">用户CRUD</text>
+    <text x="180" y="577" class="module-tech">角色分配</text>
+    <text x="180" y="592" class="label-muted">@Transactional</text>
+    
+    <rect class="module-box application-stroke" x="280" y="495" width="160" height="105"/>
+    <text x="360" y="525" class="module-name">AuthService</text>
+    <text x="360" y="545" class="module-desc">认证授权</text>
+    <text x="360" y="562" class="module-tech">登录/登出</text>
+    <text x="360" y="577" class="module-tech">JWT生成</text>
+    <text x="360" y="592" class="label-muted">Token管理</text>
+    
+    <rect class="module-box application-stroke" x="460" y="495" width="160" height="105"/>
+    <text x="540" y="525" class="module-name">DeptService</text>
+    <text x="540" y="545" class="module-desc">组织管理</text>
+    <text x="540" y="562" class="module-tech">部门树形结构</text>
+    <text x="540" y="577" class="module-tech">岗位管理</text>
+    <text x="540" y="592" class="label-muted">树形数据</text>
+    
+    <rect class="module-box application-stroke" x="640" y="495" width="160" height="105"/>
+    <text x="720" y="525" class="module-name">WorkflowService</text>
+    <text x="720" y="545" class="module-desc">工作流引擎</text>
+    <text x="720" y="562" class="module-tech">流程定义</text>
+    <text x="720" y="577" class="module-tech">实例管理</text>
+    <text x="720" y="592" class="label-muted">BPMN 2.0</text>
+    
+    <rect class="module-box application-stroke" x="820" y="495" width="160" height="105"/>
+    <text x="900" y="525" class="module-name">StorageService</text>
+    <text x="900" y="545" class="module-desc">文件存储</text>
+    <text x="900" y="562" class="module-tech">上传/下载</text>
+    <text x="900" y="577" class="module-tech">多策略适配</text>
+    <text x="900" y="592" class="label-muted">MinIO/TOS</text>
+    
+    <rect class="module-box application-stroke" x="1000" y="495" width="160" height="105"/>
+    <text x="1080" y="525" class="module-name">NotificationService</text>
+    <text x="1080" y="545" class="module-desc">通知服务</text>
+    <text x="1080" y="562" class="module-tech">站内信</text>
+    <text x="1080" y="577" class="module-tech">短信/邮件</text>
+    <text x="1080" y="592" class="label-muted">模板渲染</text>
+    
+    <rect class="module-box application-stroke" x="1180" y="495" width="160" height="105"/>
+    <text x="1260" y="525" class="module-name">DTO Assembler</text>
+    <text x="1260" y="545" class="module-desc">对象转换</text>
+    <text x="1260" y="562" class="module-tech">Domain → DTO</text>
+    <text x="1260" y="577" class="module-tech">DTO → Domain</text>
+    <text x="1260" y="592" class="label-muted">MapStruct</text>
+    
+    <rect class="module-box application-stroke" x="1360" y="495" width="160" height="105"/>
+    <text x="1440" y="525" class="module-name">CacheService</text>
+    <text x="1440" y="545" class="module-desc">应用级缓存</text>
+    <text x="1440" y="562" class="module-tech">热点数据</text>
+    <text x="1440" y="577" class="module-tech">缓存预热</text>
+    <text x="1440" y="592" class="label-muted">@Cacheable</text>
+  </g>
+  
+  <!-- 依赖箭头: 应用层 -> 领域层 -->
+  <path class="arrow-line" d="M180 625 L180 685" marker-end="url(#arrow-default)"/>
+  <path class="arrow-line" d="M360 625 L360 685" marker-end="url(#arrow-default)"/>
+  <path class="arrow-line" d="M540 625 L540 685" marker-end="url(#arrow-default)"/>
+  <path class="arrow-line" d="M720 625 L720 685" marker-end="url(#arrow-default)"/>
+  <text x="800" y="660" class="label-secondary" text-anchor="middle">依赖领域模型 + 调用仓储接口 (Repository Interface)</text>
+  
+  <!-- Layer 2: 领域层 (Domain Layer) -->
+  <g id="layer-domain">
+    <rect class="layer-bg" x="60" y="695" width="1480" height="220"/>
+    
+    <!-- 层标题 -->
+    <text x="80" y="730" class="layer-title">第2层：领域层 (Domain Layer) — 核心业务逻辑</text>
+    <text x="80" y="753" class="layer-subtitle">聚合根、实体、值对象、领域服务、仓储接口定义</text>
+    
+    <!-- 高亮标注 -->
+    <g>
+      <rect class="highlight-badge-bg" x="685" y="710" width="130" height="26"/>
+      <text x="750" y="729" class="highlight-badge-text">系统核心</text>
+    </g>
+    
+    <!-- 聚合根 -->
+    <rect class="module-box domain-stroke" x="100" y="775" width="180" height="115"/>
+    <text x="190" y="805" class="module-name">User 聚合根</text>
+    <text x="190" y="827" class="module-desc">用户聚合</text>
+    <text x="190" y="844" class="module-tech">User 实体</text>
+    <text x="190" y="859" class="module-tech">Email 值对象</text>
+    <text x="190" y="874" class="module-tech">changePassword()</text>
+    
+    <rect class="module-box domain-stroke" x="300" y="775" width="180" height="115"/>
+    <text x="390" y="805" class="module-name">Role 聚合根</text>
+    <text x="390" y="827" class="module-desc">角色聚合</text>
+    <text x="390" y="844" class="module-tech">Role 实体</text>
+    <text x="390" y="859" class="module-tech">Permission 集合</text>
+    <text x="390" y="874" class="module-tech">grantPermission()</text>
+    
+    <rect class="module-box domain-stroke" x="500" y="775" width="180" height="115"/>
+    <text x="590" y="805" class="module-name">Department 聚合</text>
+    <text x="590" y="827" class="module-desc">部门聚合</text>
+    <text x="590" y="844" class="module-tech">Dept 实体</text>
+    <text x="590" y="859" class="module-tech">树形结构</text>
+    <text x="590" y="874" class="module-tech">addChild()</text>
+    
+    <rect class="module-box domain-stroke" x="700" y="775" width="180" height="115"/>
+    <text x="790" y="805" class="module-name">WorkflowInstance</text>
+    <text x="790" y="827" class="module-desc">流程实例</text>
+    <text x="790" y="844" class="module-tech">状态机</text>
+    <text x="790" y="859" class="module-tech">节点流转</text>
+    <text x="790" y="874" class="module-tech">approve()</text>
+    
+    <!-- 领域服务 -->
+    <rect class="module-box domain-stroke" x="900" y="775" width="180" height="115"/>
+    <text x="990" y="805" class="module-name">领域服务</text>
+    <text x="990" y="827" class="module-desc">DomainService</text>
+    <text x="990" y="844" class="module-tech">跨聚合协作</text>
+    <text x="990" y="859" class="module-tech">复杂业务规则</text>
+    <text x="990" y="874" class="module-tech">PolicyChecker</text>
+    
+    <!-- 仓储接口 -->
+    <rect class="module-box domain-stroke" x="1100" y="775" width="200" height="115"/>
+    <text x="1200" y="805" class="module-name">仓储接口定义</text>
+    <text x="1200" y="827" class="module-desc">Repository Interface</text>
+    <text x="1200" y="844" class="module-tech">IUserRepository</text>
+    <text x="1200" y="859" class="module-tech">IRoleRepository</text>
+    <text x="1200" y="874" class="module-tech">IDeptRepository</text>
+    
+    <!-- 工厂 -->
+    <rect class="module-box domain-stroke" x="1320" y="775" width="200" height="115"/>
+    <text x="1420" y="805" class="module-name">领域工厂</text>
+    <text x="1420" y="827" class="module-desc">Domain Factory</text>
+    <text x="1420" y="844" class="module-tech">UserFactory</text>
+    <text x="1420" y="859" class="module-tech">createUser()</text>
+    <text x="1420" y="874" class="module-tech">复杂对象创建</text>
+  </g>
+  
+  <!-- Layer 1: 基础设施层 (Infrastructure Layer) -->
+  <g id="layer-infrastructure">
+    <rect class="layer-bg" x="60" y="935" width="1480" height="190"/>
+    
+    <!-- 层标题 -->
+    <text x="80" y="970" class="layer-title">第1层：基础设施层 (Infrastructure Layer)</text>
+    <text x="80" y="993" class="layer-subtitle">技术实现细节、第三方集成、基础组件、仓储实现</text>
+    
+    <!-- 高亮标注 -->
+    <g>
+      <rect class="highlight-badge-bg" x="645" y="950" width="110" height="26"/>
+      <text x="700" y="969" class="highlight-badge-text">技术支撑</text>
+    </g>
+    
+    <!-- 模块组件 -->
+    <rect class="module-box infrastructure-stroke" x="80" y="1015" width="150" height="90"/>
+    <text x="155" y="1042" class="module-name">仓储实现</text>
+    <text x="155" y="1062" class="module-desc">MyBatis-Plus</text>
+    <text x="155" y="1077" class="module-tech">UserRepoImpl</text>
+    <text x="155" y="1092" class="label-muted">CRUD + 复杂查询</text>
+    
+    <rect class="module-box infrastructure-stroke" x="250" y="1015" width="150" height="90"/>
+    <text x="325" y="1042" class="module-name">缓存适配器</text>
+    <text x="325" y="1062" class="module-desc">Redis / Caffeine</text>
+    <text x="325" y="1077" class="module-tech">L1/L2 缓存</text>
+    <text x="325" y="1092" class="label-muted">缓存穿透保护</text>
+    
+    <rect class="module-box infrastructure-stroke" x="420" y="1015" width="150" height="90"/>
+    <text x="495" y="1042" class="module-name">消息发布器</text>
+    <text x="495" y="1062" class="module-desc">RocketMQ</text>
+    <text x="495" y="1077" class="module-tech">EventPublisher</text>
+    <text x="495" y="1092" class="label-muted">事务消息</text>
+    
+    <rect class="module-box infrastructure-stroke" x="590" y="1015" width="150" height="90"/>
+    <text x="665" y="1042" class="module-name">存储适配器</text>
+    <text x="665" y="1062" class="module-desc">MinIO / TOS</text>
+    <text x="665" y="1077" class="module-tech">本地/对象存储</text>
+    <text x="665" y="1092" class="label-muted">策略模式</text>
+    
+    <rect class="module-box infrastructure-stroke" x="760" y="1015" width="150" height="90"/>
+    <text x="835" y="1042" class="module-name">外部接口</text>
+    <text x="835" y="1062" class="module-desc">HTTP Client</text>
+    <text x="835" y="1077" class="module-tech">SMS / 邮件</text>
+    <text x="835" y="1092" class="label-muted">WebClient</text>
+    
+    <rect class="module-box infrastructure-stroke" x="930" y="1015" width="150" height="90"/>
+    <text x="1005" y="1042" class="module-name">搜索引擎</text>
+    <text x="1005" y="1062" class="module-desc">Elasticsearch</text>
+    <text x="1005" y="1077" class="module-tech">全文检索</text>
+    <text x="1005" y="1092" class="label-muted">分词/高亮</text>
+    
+    <rect class="module-box infrastructure-stroke" x="1100" y="1015" width="150" height="90"/>
+    <text x="1175" y="1042" class="module-name">定时调度</text>
+    <text x="1175" y="1062" class="module-desc">Quartz / XXL-Job</text>
+    <text x="1175" y="1077" class="module-tech">分布式调度</text>
+    <text x="1175" y="1092" class="label-muted">任务编排</text>
+    
+    <rect class="module-box infrastructure-stroke" x="1270" y="1015" width="120" height="90"/>
+    <text x="1330" y="1042" class="module-name">通用组件</text>
+    <text x="1330" y="1062" class="module-desc">Common</text>
+    <text x="1330" y="1077" class="module-tech">多租户</text>
+    <text x="1330" y="1092" class="label-muted">IdGenerator</text>
+    
+    <rect class="module-box infrastructure-stroke" x="1410" y="1015" width="110" height="90"/>
+    <text x="1465" y="1042" class="module-name">监控</text>
+    <text x="1465" y="1062" class="module-desc">Metrics</text>
+    <text x="1465" y="1077" class="module-tech">Prometheus</text>
+    <text x="1465" y="1092" class="label-muted">链路追踪</text>
+  </g>
+  
+  <!-- 依赖倒置箭头: 基础设施层 -> 领域层仓储接口 -->
+  <path class="arrow-line-dashed" d="M1200 1015 L1200 980 L1200 890" marker-end="url(#arrow-infrastructure)" stroke="#d97706"/>
+  <text x="1210" y="950" class="label-secondary">实现仓储接口</text>
+  <text x="1210" y="968" class="label-muted">(依赖倒置 DIP)</text>
+  
+  <!-- 图例区 -->
+  <g id="legend-section">
+    <rect x="1350" y="160" width="190" height="260" fill="#f8fafc" stroke="#e2e8f0" stroke-width="2" rx="8"/>
+    
+    <text x="1370" y="188" class="label-primary">图例 Legend</text>
+    <line x1="1370" y1="195" x2="1520" y2="195" stroke="#e2e8f0" stroke-width="1"/>
+    
+    <!-- 图例项 -->
+    <rect x="1370" y="210" width="30" height="20" fill="none" stroke="#4f46e5" stroke-width="2.5" rx="4"/>
+    <text x="1410" y="224" class="label-secondary">接口层</text>
+    
+    <rect x="1370" y="240" width="30" height="20" fill="none" stroke="#0891b2" stroke-width="2.5" rx="4"/>
+    <text x="1410" y="254" class="label-secondary">应用层</text>
+    
+    <rect x="1370" y="270" width="30" height="20" fill="none" stroke="#059669" stroke-width="2.5" rx="4"/>
+    <text x="1410" y="284" class="label-secondary">领域层 (核心)</text>
+    
+    <rect x="1370" y="300" width="30" height="20" fill="none" stroke="#d97706" stroke-width="2.5" rx="4"/>
+    <text x="1410" y="314" class="label-secondary">基础设施层</text>
+    
+    <line x1="1370" y1="335" x2="1400" y2="335" stroke="#64748b" stroke-width="2.5" marker-end="url(#arrow-default)"/>
+    <text x="1410" y="340" class="label-secondary">依赖方向</text>
+    
+    <line x1="1370" y1="360" x2="1400" y2="360" stroke="#d97706" stroke-width="2.5" stroke-dasharray="8 4" marker-end="url(#arrow-infrastructure)"/>
+    <text x="1410" y="365" class="label-secondary">接口实现</text>
+    
+    <text x="1370" y="390" class="label-primary">核心原则</text>
+    <line x1="1370" y1="395" x2="1520" y2="395" stroke="#e2e8f0" stroke-width="1"/>
+    <text x="1370" y="410" class="label-muted">✓ 依赖倒置 DIP</text>
+  </g>
+  
+  <!-- 页脚 -->
+  <g id="footer-section">
+    <rect x="0" y="1140" width="1600" height="60" fill="#f8fafc"/>
+    <text x="50" y="1175" class="label-muted">© 2026 Apex Scaffold · Apache 2.0 License</text>
+    <text x="800" y="1175" class="label-muted" text-anchor="middle">文档: docs/architecture/01-logical-architecture-detail.md</text>
+    <text x="1550" y="1175" class="label-muted" text-anchor="end">版本 v2.0 · 更新于 2026-09-04</text>
+  </g>
+</svg>

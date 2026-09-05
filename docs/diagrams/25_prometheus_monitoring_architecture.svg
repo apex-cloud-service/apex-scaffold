@@ -1,0 +1,599 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1800 2000">
+  <defs>
+    <style>
+      .title { font: bold 28px sans-serif; fill: #F8FAFC; }
+      .subtitle { font: 16px sans-serif; fill: #94A3B8; }
+      .section-title { font: bold 20px sans-serif; fill: #38BDF8; }
+      .layer-title { font: bold 16px sans-serif; fill: #F8FAFC; }
+      .group-title { font: bold 14px sans-serif; fill: #F8FAFC; }
+      .panel-desc { font: 12px sans-serif; fill: #CBD5E1; }
+      .metric-name { font: 11px monospace; fill: #4FD1C5; }
+      .config-key { font: 11px monospace; fill: #F59E0B; }
+      .port { font: 11px monospace; fill: #38BDF8; }
+      .count { font: bold 16px sans-serif; fill: #F97316; }
+      
+      .prometheus-bg { fill: #1E293B; stroke: #E85D35; stroke-width: 3; }
+      .target-bg { fill: #0F172A; stroke: #10B981; stroke-width: 2; }
+      .storage-bg { fill: #0F172A; stroke: #38BDF8; stroke-width: 2; }
+      .alert-bg { fill: #0F172A; stroke: #EF4444; stroke-width: 2; }
+      .query-bg { fill: #0F172A; stroke: #F59E0B; stroke-width: 2; }
+      .exporter-box { fill: #1E293B; stroke: #4FD1C5; stroke-width: 1.5; }
+      
+      .scrape-flow { stroke: #10B981; stroke-width: 2.5; fill: none; marker-end: url(#scrapehead); }
+      .query-flow { stroke: #F59E0B; stroke-width: 2; fill: none; stroke-dasharray: 5,5; marker-end: url(#queryhead); }
+      .alert-flow { stroke: #EF4444; stroke-width: 2.5; fill: none; marker-end: url(#alerthead); }
+    </style>
+    <marker id="scrapehead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#10B981" />
+    </marker>
+    <marker id="queryhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#F59E0B" />
+    </marker>
+    <marker id="alerthead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#EF4444" />
+    </marker>
+  
+    <!-- 云原生专业图标库 - 自动添加 -->
+    <g id="icon-kubernetes">
+      <path d="M10,2 L14,4 L18,2 L18,10 L14,12 L10,10 Z" fill="#326CE5" stroke="#1A4D8F" stroke-width="0.5"/>
+      <circle cx="14" cy="7" r="1.5" fill="white"/>
+      <line x1="14" y1="4" x2="14" y2="7" stroke="white" stroke-width="0.8"/>
+      <line x1="11" y1="5.5" x2="14" y2="7" stroke="white" stroke-width="0.8"/>
+      <line x1="17" y1="5.5" x2="14" y2="7" stroke="white" stroke-width="0.8"/>
+    </g>
+    <g id="icon-pod">
+      <rect x="4" y="4" width="12" height="12" rx="2" fill="#326CE5" stroke="#1A4D8F" stroke-width="1"/>
+      <rect x="6" y="6" width="3" height="3" rx="0.5" fill="white" opacity="0.9"/>
+      <rect x="10.5" y="6" width="3" height="3" rx="0.5" fill="white" opacity="0.9"/>
+      <rect x="6" y="10.5" width="3" height="3" rx="0.5" fill="white" opacity="0.9"/>
+      <rect x="10.5" y="10.5" width="3" height="3" rx="0.5" fill="white" opacity="0.9"/>
+    </g>
+    <g id="icon-deployment">
+      <rect x="3" y="5" width="10" height="10" rx="1.5" fill="#326CE5" stroke="#1A4D8F" stroke-width="1" opacity="0.3"/>
+      <rect x="5" y="3" width="10" height="10" rx="1.5" fill="#326CE5" stroke="#1A4D8F" stroke-width="1" opacity="0.6"/>
+      <rect x="7" y="1" width="10" height="10" rx="1.5" fill="#326CE5" stroke="#1A4D8F" stroke-width="1"/>
+      <path d="M10,4 L10,8 M8,6 L12,6" stroke="white" stroke-width="1.2" stroke-linecap="round"/>
+    </g>
+    <g id="icon-service">
+      <circle cx="10" cy="10" r="7" fill="none" stroke="#326CE5" stroke-width="1.5"/>
+      <circle cx="10" cy="10" r="2" fill="#326CE5"/>
+      <circle cx="10" cy="3" r="1.5" fill="#326CE5"/>
+      <circle cx="17" cy="10" r="1.5" fill="#326CE5"/>
+      <circle cx="10" cy="17" r="1.5" fill="#326CE5"/>
+      <circle cx="3" cy="10" r="1.5" fill="#326CE5"/>
+    </g>
+    <g id="icon-ingress">
+      <path d="M2,10 L10,2 L18,10" fill="none" stroke="#326CE5" stroke-width="1.5" stroke-linejoin="round"/>
+      <rect x="6" y="10" width="8" height="8" fill="#326CE5" stroke="#1A4D8F" stroke-width="1"/>
+      <path d="M8,13 L12,13 M10,11 L10,16" stroke="white" stroke-width="1" stroke-linecap="round"/>
+    </g>
+    <g id="icon-configmap">
+      <rect x="3" y="3" width="14" height="14" rx="2" fill="none" stroke="#326CE5" stroke-width="1.5"/>
+      <line x1="6" y1="7" x2="14" y2="7" stroke="#326CE5" stroke-width="1"/>
+      <line x1="6" y1="10" x2="14" y2="10" stroke="#326CE5" stroke-width="1"/>
+      <line x1="6" y1="13" x2="11" y2="13" stroke="#326CE5" stroke-width="1"/>
+    </g>
+    <g id="icon-secret">
+      <rect x="5" y="8" width="10" height="9" rx="1" fill="#326CE5" stroke="#1A4D8F" stroke-width="1"/>
+      <path d="M7,8 L7,6 C7,4.3 8.3,3 10,3 C11.7,3 13,4.3 13,6 L13,8" fill="none" stroke="#326CE5" stroke-width="1.5"/>
+      <circle cx="10" cy="12" r="1.2" fill="white"/>
+    </g>
+    <g id="icon-namespace">
+      <rect x="2" y="2" width="7" height="7" rx="1" fill="none" stroke="#326CE5" stroke-width="1.2"/>
+      <rect x="11" y="2" width="7" height="7" rx="1" fill="none" stroke="#326CE5" stroke-width="1.2"/>
+      <rect x="2" y="11" width="7" height="7" rx="1" fill="none" stroke="#326CE5" stroke-width="1.2"/>
+      <rect x="11" y="11" width="7" height="7" rx="1" fill="none" stroke="#326CE5" stroke-width="1.2"/>
+    </g>
+    <g id="icon-docker">
+      <rect x="6" y="8" width="2.5" height="2.5" fill="#2496ED"/>
+      <rect x="9" y="8" width="2.5" height="2.5" fill="#2496ED"/>
+      <rect x="12" y="8" width="2.5" height="2.5" fill="#2496ED"/>
+      <rect x="6" y="5" width="2.5" height="2.5" fill="#2496ED"/>
+      <rect x="9" y="5" width="2.5" height="2.5" fill="#2496ED"/>
+      <path d="M3,11 Q3,9 5,9 L15,9 Q17,9 17,11 Q19,11 19,13 Q19,15 17,15 L5,15 Q3,15 3,13 Q3,11 3,11 Z" 
+            fill="none" stroke="#2496ED" stroke-width="1.2"/>
+    </g>
+    <g id="icon-container">
+      <rect x="4" y="5" width="12" height="10" rx="1.5" fill="none" stroke="#2496ED" stroke-width="1.5"/>
+      <line x1="4" y1="8" x2="16" y2="8" stroke="#2496ED" stroke-width="1"/>
+      <line x1="4" y1="11.5" x2="16" y2="11.5" stroke="#2496ED" stroke-width="1"/>
+      <circle cx="6.5" cy="6.5" r="0.8" fill="#2496ED"/>
+      <circle cx="9" cy="6.5" r="0.8" fill="#2496ED"/>
+    </g>
+    <g id="icon-cloud-pro">
+      <path d="M6,12 C4,12 2.5,10.5 2.5,8.5 C2.5,7 3.5,5.7 5,5.3 C5,3.5 6.5,2 8.5,2 C9.8,2 11,2.7 11.6,3.8 
+               C12,3.6 12.5,3.5 13,3.5 C14.7,3.5 16,4.8 16,6.5 C17.2,6.8 18,7.9 18,9.2 C18,10.8 16.8,12 15.2,12 Z" 
+            fill="#4285F4" stroke="#2563EB" stroke-width="0.8" opacity="0.9"/>
+      <path d="M6,12 C4,12 2.5,10.5 2.5,8.5 C2.5,7 3.5,5.7 5,5.3" 
+            fill="none" stroke="white" stroke-width="0.5" opacity="0.5"/>
+    </g>
+    <g id="icon-aws">
+      <path d="M3,10 L6,8 L9,10 L6,12 Z" fill="#FF9900"/>
+      <path d="M9,10 L12,8 L15,10 L12,12 Z" fill="#FF9900"/>
+      <path d="M3,14 L17,14" stroke="#FF9900" stroke-width="1.5" stroke-linecap="round"/>
+      <path d="M15,14 L17,15" stroke="#FF9900" stroke-width="1.5" stroke-linecap="round"/>
+    </g>
+    <g id="icon-mysql">
+      <ellipse cx="10" cy="6" rx="6" ry="2.5" fill="#4479A1" stroke="#2F5F7F" stroke-width="0.8"/>
+      <path d="M4,6 L4,14 Q4,16.5 10,16.5 Q16,16.5 16,14 L16,6" 
+            fill="#4479A1" stroke="#2F5F7F" stroke-width="0.8"/>
+      <ellipse cx="10" cy="14" rx="6" ry="2.5" fill="#5D87A1" stroke="#2F5F7F" stroke-width="0.8"/>
+      <line x1="4" y1="10" x2="4" y2="11" stroke="white" stroke-width="0.5" opacity="0.5"/>
+    </g>
+    <g id="icon-redis">
+      <ellipse cx="10" cy="8" rx="7" ry="3" fill="#DC382D"/>
+      <ellipse cx="10" cy="12" rx="7" ry="3" fill="#C6302B"/>
+      <path d="M3,8 L3,12" stroke="#A41E11" stroke-width="0.8"/>
+      <path d="M17,8 L17,12" stroke="#A41E11" stroke-width="0.8"/>
+      <path d="M6,7 L8,8 L10,7 L12,8 L14,7" stroke="white" stroke-width="1" fill="none"/>
+    </g>
+    <g id="icon-mongodb">
+      <path d="M10,2 L12,8 L10,18 L8,8 Z" fill="#47A248" stroke="#3F8C40" stroke-width="0.8"/>
+      <ellipse cx="10" cy="8" rx="2" ry="6" fill="#47A248" opacity="0.7"/>
+    </g>
+    <g id="icon-postgresql">
+      <ellipse cx="10" cy="10" rx="6" ry="7" fill="#336791" stroke="#2A5373" stroke-width="1"/>
+      <path d="M7,7 Q10,5 13,7" fill="none" stroke="white" stroke-width="1" stroke-linecap="round"/>
+      <circle cx="8" cy="9" r="0.8" fill="white"/>
+      <circle cx="12" cy="9" r="0.8" fill="white"/>
+      <path d="M10,13 Q10,14 11,14" fill="none" stroke="white" stroke-width="0.8"/>
+    </g>
+    <g id="icon-kafka">
+      <circle cx="10" cy="10" r="7" fill="black"/>
+      <circle cx="10" cy="10" r="5.5" fill="white"/>
+      <path d="M7,10 L10,7 L13,10 L10,13 Z" fill="black"/>
+    </g>
+    <g id="icon-rabbitmq">
+      <circle cx="7" cy="8" r="2.5" fill="#FF6600"/>
+      <circle cx="13" cy="8" r="2.5" fill="#FF6600"/>
+      <path d="M5,10 L7,14 L10,12 L13,14 L15,10 Q15,16 10,16 Q5,16 5,10 Z" fill="#FF6600"/>
+      <circle cx="7" cy="7.5" r="0.8" fill="white"/>
+      <circle cx="13" cy="7.5" r="0.8" fill="white"/>
+    </g>
+    <g id="icon-rocketmq">
+      <path d="M10,3 L13,10 L10,17 L7,10 Z" fill="#D77310" stroke="#B85F0A" stroke-width="1"/>
+      <circle cx="10" cy="10" r="2" fill="#FFA500"/>
+      <path d="M8,17 L10,18 L12,17" stroke="#D77310" stroke-width="1.5" stroke-linecap="round"/>
+    </g>
+    <g id="icon-nginx">
+      <rect x="4" y="6" width="12" height="8" rx="1" fill="#009639" stroke="#007A2D" stroke-width="1"/>
+      <path d="M7,9 L10,13 L10,9 L13,13 L13,9" stroke="white" stroke-width="1.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+    <g id="icon-load-balancer-pro">
+      <rect x="6" y="2" width="8" height="3" rx="0.5" fill="#0891b2" stroke="#0e7490" stroke-width="0.8"/>
+      <line x1="10" y1="5" x2="10" y2="8" stroke="#64748b" stroke-width="1.5"/>
+      <circle cx="10" cy="9.5" r="1.5" fill="#0891b2"/>
+      <line x1="10" y1="11" x2="6" y2="14" stroke="#64748b" stroke-width="1"/>
+      <line x1="10" y1="11" x2="10" y2="14" stroke="#64748b" stroke-width="1"/>
+      <line x1="10" y1="11" x2="14" y2="14" stroke="#64748b" stroke-width="1"/>
+      <rect x="4" y="14" width="3" height="2.5" rx="0.5" fill="#059669"/>
+      <rect x="8.5" y="14" width="3" height="2.5" rx="0.5" fill="#059669"/>
+      <rect x="13" y="14" width="3" height="2.5" rx="0.5" fill="#059669"/>
+    </g>
+    <g id="icon-cdn-pro">
+      <circle cx="10" cy="5" r="2" fill="#10b981" stroke="#059669" stroke-width="0.8"/>
+      <circle cx="4" cy="12" r="2" fill="#10b981" stroke="#059669" stroke-width="0.8"/>
+      <circle cx="16" cy="12" r="2" fill="#10b981" stroke="#059669" stroke-width="0.8"/>
+      <circle cx="10" cy="15" r="2" fill="#10b981" stroke="#059669" stroke-width="0.8"/>
+      <line x1="10" y1="7" x2="5" y2="11" stroke="#64748b" stroke-width="1"/>
+      <line x1="10" y1="7" x2="15" y2="11" stroke="#64748b" stroke-width="1"/>
+      <line x1="5.5" y1="13" x2="9" y2="14" stroke="#64748b" stroke-width="1"/>
+      <line x1="14.5" y1="13" x2="11" y2="14" stroke="#64748b" stroke-width="1"/>
+    </g>
+    <g id="icon-prometheus">
+      <circle cx="10" cy="10" r="7" fill="#E6522C" stroke="#C14522" stroke-width="1"/>
+      <path d="M10,5 L10,10 L14,10" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+      <circle cx="10" cy="10" r="1.5" fill="white"/>
+    </g>
+    <g id="icon-grafana">
+      <circle cx="10" cy="10" r="7" fill="#F46800"/>
+      <path d="M6,10 Q10,6 14,10 Q14,14 10,14 Q6,14 6,10" fill="#FFA500" opacity="0.7"/>
+      <path d="M10,7 L10,13 M7,10 L13,10" stroke="white" stroke-width="1.2"/>
+    </g>
+    <g id="icon-springboot">
+      <circle cx="10" cy="10" r="7" fill="#6DB33F"/>
+      <path d="M12,6 Q14,8 12,10 Q14,12 12,14" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+      <path d="M8,6 Q6,8 8,10 Q6,12 8,14" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+    </g>
+    <g id="icon-java">
+      <path d="M8,14 Q6,12 8,10 Q10,12 8,14" fill="#F89820"/>
+      <path d="M12,14 Q10,12 12,10 Q14,12 12,14" fill="#F89820"/>
+      <ellipse cx="10" cy="7" rx="4" ry="2" fill="#5382A1"/>
+    </g>
+    <g id="icon-react">
+      <ellipse cx="10" cy="10" rx="7" ry="3" fill="none" stroke="#61DAFB" stroke-width="1"/>
+      <ellipse cx="10" cy="10" rx="7" ry="3" fill="none" stroke="#61DAFB" stroke-width="1" transform="rotate(60 10 10)"/>
+      <ellipse cx="10" cy="10" rx="7" ry="3" fill="none" stroke="#61DAFB" stroke-width="1" transform="rotate(120 10 10)"/>
+      <circle cx="10" cy="10" r="1.5" fill="#61DAFB"/>
+    </g>
+    <g id="icon-vue">
+      <path d="M10,4 L6,12 L10,12 L14,12 Z" fill="#42B883"/>
+      <path d="M10,4 L8,8 L10,12 L12,8 Z" fill="#35495E"/>
+    </g>
+    <g id="icon-git">
+      <rect x="3" y="3" width="14" height="14" rx="2" fill="#F05032"/>
+      <path d="M12,8 L10,10 L8,8 L10,6 Z" fill="white"/>
+      <circle cx="7" cy="13" r="1.2" fill="white"/>
+      <circle cx="13" cy="13" r="1.2" fill="white"/>
+      <line x1="10" y1="10" x2="10" y2="13" stroke="white" stroke-width="1"/>
+    </g>
+    <g id="icon-elasticsearch">
+      <circle cx="10" cy="10" r="7" fill="#FEC514"/>
+      <path d="M6,10 L14,10 M6,8 L12,8 M6,12 L12,12" stroke="#343741" stroke-width="1.2" stroke-linecap="round"/>
+    </g>
+    <g id="icon-minio">
+      <rect x="4" y="6" width="12" height="8" rx="1" fill="#C72C48"/>
+      <rect x="6" y="8" width="3" height="4" fill="white" opacity="0.9"/>
+      <rect x="11" y="8" width="3" height="4" fill="white" opacity="0.9"/>
+    </g>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1800" height="2000" fill="#0B0E14"/>
+
+  <!-- Title -->
+  <text x="900" y="40" text-anchor="middle" class="title">Apex Scaffold Prometheus 监控体系架构</text>
+  <text x="900" y="65" text-anchor="middle" class="subtitle">6个抓取目标 · 100+指标类型 · 15天数据保留 · 10组告警规则</text>
+
+  <!-- Center: Prometheus Core -->
+  <rect x="650" y="120" width="500" height="320" rx="8" class="prometheus-bg"/>
+  <text x="900" y="160" text-anchor="middle" class="section-title">Prometheus Server</text>
+  <text x="900" y="185" text-anchor="middle" class="port">http://prometheus:9090</text>
+
+  <!-- Core Components -->
+  <rect x="670" y="200" width="220" height="220" rx="6" class="storage-bg"/>
+  <text x="780" y="230" text-anchor="middle" class="layer-title">时间序列数据库 TSDB</text>
+  <text x="685" y="255" class="panel-desc">存储引擎: LevelDB</text>
+  <text x="685" y="275" class="panel-desc">数据保留: 15 days</text>
+  <text x="685" y="295" class="panel-desc">压缩率: ~10:1</text>
+  <text x="685" y="315" class="panel-desc">WAL预写日志</text>
+  <text x="685" y="335" class="panel-desc">样本/秒: ~10k</text>
+  <text x="685" y="355" class="config-key">--storage.tsdb.retention.time=15d</text>
+  <text x="685" y="375" class="config-key">--storage.tsdb.path=/data</text>
+  <text x="685" y="395" class="metric-name">prometheus_tsdb_head_samples</text>
+
+  <rect x="910" y="200" width="220" height="220" rx="6" class="query-bg"/>
+  <text x="1020" y="230" text-anchor="middle" class="layer-title">PromQL 查询引擎</text>
+  <text x="925" y="255" class="panel-desc">即时查询 Instant</text>
+  <text x="925" y="275" class="panel-desc">范围查询 Range</text>
+  <text x="925" y="295" class="panel-desc">聚合函数 Aggregation</text>
+  <text x="925" y="315" class="panel-desc">数学运算 Math</text>
+  <text x="925" y="335" class="panel-desc">Top K / Bottom K</text>
+  <text x="925" y="355" class="metric-name">rate() / irate()</text>
+  <text x="925" y="375" class="metric-name">histogram_quantile()</text>
+  <text x="925" y="395" class="metric-name">increase() / sum()</text>
+
+  <!-- Left: Scrape Targets -->
+  <rect x="50" y="120" width="550" height="1800" rx="8" class="target-bg"/>
+  <text x="325" y="160" text-anchor="middle" class="section-title">抓取目标 Scrape Targets</text>
+  <text x="325" y="185" text-anchor="middle" class="subtitle">6个服务端点 · 15秒抓取周期</text>
+
+  <!-- Target 1: Apex Scaffold -->
+  <rect x="70" y="210" width="510" height="260" rx="6" class="exporter-box"/>
+  <text x="325" y="240" text-anchor="middle" class="group-title">① Apex Scaffold 应用 (主要)</text>
+  <text x="325" y="260" text-anchor="middle" class="port">http://apex-scaffold:8081/actuator/prometheus</text>
+  <text x="325" y="280" text-anchor="middle" class="config-key">scrape_interval: 15s | scrape_timeout: 10s</text>
+  
+  <text x="85" y="305" class="layer-title">核心业务指标 (20+)</text>
+  <text x="95" y="325" class="metric-name">apex_api_request_count_total</text>
+  <text x="95" y="345" class="metric-name">apex_api_response_time_seconds</text>
+  <text x="95" y="365" class="metric-name">apex_exception_total</text>
+  <text x="95" y="385" class="metric-name">apex_business_login_total</text>
+  <text x="95" y="405" class="metric-name">apex_business_upload_total</text>
+  
+  <text x="340" y="305" class="layer-title">JVM运行时 (30+)</text>
+  <text x="350" y="325" class="metric-name">jvm_memory_used_bytes</text>
+  <text x="350" y="345" class="metric-name">jvm_gc_pause_seconds_count</text>
+  <text x="350" y="365" class="metric-name">jvm_threads_live_threads</text>
+  <text x="350" y="385" class="metric-name">hikaricp_connections_active</text>
+  <text x="350" y="405" class="metric-name">druid_connections_max</text>
+  
+  <text x="85" y="435" class="layer-title">安全防护 (10+)</text>
+  <text x="95" y="455" class="metric-name">apex_security_ip_blocked_total</text>
+  
+  <text x="340" y="435" class="layer-title">阻塞IO (5+)</text>
+  <text x="350" y="455" class="metric-name">apex_blocking_io_queued_tasks</text>
+
+  <!-- Target 2: Sentinel -->
+  <rect x="70" y="490" width="510" height="140" rx="6" class="exporter-box"/>
+  <text x="325" y="520" text-anchor="middle" class="group-title">② Sentinel 治理平台</text>
+  <text x="325" y="540" text-anchor="middle" class="port">http://sentinel:8720/metrics</text>
+  <text x="325" y="560" text-anchor="middle" class="config-key">scrape_interval: 15s</text>
+  <text x="85" y="585" class="metric-name">sentinel_block_qps_total (限流拦截)</text>
+  <text x="85" y="605" class="metric-name">sentinel_pass_qps (通过请求)</text>
+  <text x="350" y="585" class="metric-name">resilience4j_circuitbreaker_state</text>
+  <text x="350" y="605" class="metric-name">resilience4j_retry_calls_total</text>
+
+  <!-- Target 3: Blackbox Exporter -->
+  <rect x="70" y="650" width="510" height="140" rx="6" class="exporter-box"/>
+  <text x="325" y="680" text-anchor="middle" class="group-title">③ Blackbox Exporter 健康探针</text>
+  <text x="325" y="700" text-anchor="middle" class="port">http://blackbox-exporter:9115/probe</text>
+  <text x="325" y="720" text-anchor="middle" class="config-key">scrape_interval: 30s | module: http_2xx</text>
+  <text x="85" y="745" class="metric-name">probe_success{} (探测成功 0/1)</text>
+  <text x="85" y="765" class="metric-name">probe_http_status_code (HTTP状态码)</text>
+  <text x="350" y="745" class="metric-name">probe_duration_seconds (探测耗时)</text>
+  <text x="350" y="765" class="metric-name">probe_http_ssl_expiry_seconds (SSL过期)</text>
+
+  <!-- Target 4: Grafana -->
+  <rect x="70" y="810" width="510" height="120" rx="6" class="exporter-box"/>
+  <text x="325" y="840" text-anchor="middle" class="group-title">④ Grafana 自监控</text>
+  <text x="325" y="860" text-anchor="middle" class="port">http://grafana:3000/metrics</text>
+  <text x="325" y="880" text-anchor="middle" class="config-key">scrape_interval: 30s</text>
+  <text x="85" y="905" class="metric-name">grafana_api_dashboard_get_total</text>
+  <text x="350" y="905" class="metric-name">grafana_database_query_duration_seconds</text>
+
+  <!-- Target 5: Zipkin -->
+  <rect x="70" y="950" width="510" height="120" rx="6" class="exporter-box"/>
+  <text x="325" y="980" text-anchor="middle" class="group-title">⑤ Zipkin 链路追踪</text>
+  <text x="325" y="1000" text-anchor="middle" class="port">http://zipkin:9411/prometheus</text>
+  <text x="325" y="1020" text-anchor="middle" class="config-key">scrape_interval: 15s</text>
+  <text x="85" y="1045" class="metric-name">zipkin_collector_spans_total</text>
+  <text x="350" y="1045" class="metric-name">zipkin_collector_messages_dropped_total</text>
+
+  <!-- Target 6: Node Exporter (Optional) -->
+  <rect x="70" y="1090" width="510" height="180" rx="6" class="exporter-box"/>
+  <text x="325" y="1120" text-anchor="middle" class="group-title">⑥ Node Exporter 主机监控 (可选)</text>
+  <text x="325" y="1140" text-anchor="middle" class="port">http://node-exporter:9100/metrics</text>
+  <text x="325" y="1160" text-anchor="middle" class="config-key">scrape_interval: 30s</text>
+  <text x="85" y="1185" class="metric-name">node_cpu_seconds_total (CPU)</text>
+  <text x="85" y="1205" class="metric-name">node_memory_MemAvailable_bytes</text>
+  <text x="85" y="1225" class="metric-name">node_disk_io_time_seconds_total</text>
+  <text x="85" y="1245" class="metric-name">node_network_receive_bytes_total</text>
+  <text x="350" y="1185" class="metric-name">node_filesystem_avail_bytes</text>
+  <text x="350" y="1205" class="metric-name">node_load1 / node_load5</text>
+  <text x="350" y="1225" class="metric-name">node_netstat_Tcp_CurrEstab</text>
+  <text x="350" y="1245" class="metric-name">node_time_seconds (时间同步)</text>
+
+  <!-- Scrape Config -->
+  <rect x="70" y="1290" width="510" height="610" rx="6" style="fill:#0B0E14;stroke:#F59E0B;stroke-width:2;"/>
+  <text x="325" y="1320" text-anchor="middle" class="layer-title">prometheus.yml 抓取配置</text>
+  
+  <text x="85" y="1350" class="config-key">global:</text>
+  <text x="95" y="1370" class="panel-desc">scrape_interval: 15s</text>
+  <text x="95" y="1390" class="panel-desc">scrape_timeout: 10s</text>
+  <text x="95" y="1410" class="panel-desc">evaluation_interval: 15s</text>
+  <text x="95" y="1430" class="panel-desc">external_labels:</text>
+  <text x="105" y="1450" class="panel-desc">cluster: 'apex-prod'</text>
+  
+  <text x="85" y="1480" class="config-key">scrape_configs:</text>
+  <text x="95" y="1500" class="panel-desc">- job_name: 'apex-scaffold'</text>
+  <text x="105" y="1520" class="panel-desc">static_configs:</text>
+  <text x="115" y="1540" class="panel-desc">- targets: ['apex:8081']</text>
+  <text x="105" y="1560" class="panel-desc">metrics_path: '/actuator/prometheus'</text>
+  
+  <text x="95" y="1590" class="panel-desc">- job_name: 'sentinel'</text>
+  <text x="105" y="1610" class="panel-desc">static_configs:</text>
+  <text x="115" y="1630" class="panel-desc">- targets: ['sentinel:8720']</text>
+  
+  <text x="95" y="1660" class="panel-desc">- job_name: 'blackbox'</text>
+  <text x="105" y="1680" class="panel-desc">metrics_path: '/probe'</text>
+  <text x="105" y="1700" class="panel-desc">params:</text>
+  <text x="115" y="1720" class="panel-desc">module: [http_2xx]</text>
+  <text x="105" y="1740" class="panel-desc">static_configs:</text>
+  <text x="115" y="1760" class="panel-desc">- targets:</text>
+  <text x="125" y="1780" class="panel-desc">- http://apex:8081/actuator/health</text>
+  <text x="105" y="1800" class="panel-desc">relabel_configs:</text>
+  <text x="115" y="1820" class="panel-desc">- source_labels: [__address__]</text>
+  <text x="115" y="1840" class="panel-desc">target_label: __param_target</text>
+  
+  <text x="95" y="1870" class="panel-desc">- job_name: 'grafana'</text>
+  <text x="95" y="1890" class="panel-desc">- job_name: 'zipkin'</text>
+
+  <!-- Right Top: Alertmanager -->
+  <rect x="1200" y="120" width="550" height="600" rx="8" class="alert-bg"/>
+  <text x="1475" y="160" text-anchor="middle" class="section-title">Alertmanager 告警管理</text>
+  <text x="1475" y="185" text-anchor="middle" class="port">http://alertmanager:9093</text>
+
+  <!-- Alert Rules -->
+  <rect x="1220" y="200" width="510" height="500" rx="6" style="fill:#0B0E14;stroke:#EF4444;stroke-width:2;"/>
+  <text x="1475" y="230" text-anchor="middle" class="layer-title">10组告警规则 (rules/)</text>
+  
+  <text x="1235" y="260" class="group-title">🚨 服务可用性告警 (2条)</text>
+  <text x="1245" y="280" class="panel-desc">• ApexServiceDown</text>
+  <text x="1250" y="300" class="metric-name">expr: up{job="apex-scaffold"} == 0</text>
+  <text x="1250" y="320" class="metric-name">for: 1m | severity: critical</text>
+  <text x="1245" y="340" class="panel-desc">• ApexHealthCheckFailed</text>
+  <text x="1250" y="360" class="metric-name">expr: probe_success{} == 0</text>
+  
+  <text x="1235" y="390" class="group-title">⚠️ 接口质量告警 (5条)</text>
+  <text x="1245" y="410" class="panel-desc">• High5xxErrorRate</text>
+  <text x="1250" y="430" class="metric-name">rate(apex_api_*{status="5xx"}[5m]) &gt; 0.05</text>
+  <text x="1245" y="450" class="panel-desc">• HighP95Latency</text>
+  <text x="1250" y="470" class="metric-name">histogram_quantile(0.95, ...) &gt; 2</text>
+  <text x="1245" y="490" class="panel-desc">• TrafficDrop (流量骤降)</text>
+  <text x="1245" y="510" class="panel-desc">• ExceptionSpike (异常突增)</text>
+  <text x="1245" y="530" class="panel-desc">• AlertStorm (告警风暴)</text>
+  
+  <text x="1235" y="560" class="group-title">☕ JVM健康告警 (4条)</text>
+  <text x="1245" y="580" class="panel-desc">• HighHeapUsage (&gt; 85%)</text>
+  <text x="1245" y="600" class="panel-desc">• FrequentFullGC (&gt; 5/min)</text>
+  <text x="1245" y="620" class="panel-desc">• LongGCPause (&gt; 1s)</text>
+  <text x="1245" y="640" class="panel-desc">• HighThreadCount (&gt; 2000)</text>
+  
+  <text x="1235" y="670" class="group-title">💾 数据库与中间件 (3条)</text>
+  <text x="1245" y="690" class="panel-desc">• ConnectionPoolHigh (&gt; 80%)</text>
+
+  <!-- Right Bottom: Query Clients -->
+  <rect x="1200" y="740" width="550" height="480" rx="8" class="query-bg"/>
+  <text x="1475" y="780" text-anchor="middle" class="section-title">查询客户端 Query Clients</text>
+  
+  <!-- Grafana Query -->
+  <rect x="1220" y="800" width="510" height="120" rx="6" style="fill:#0B0E14;stroke:#F59E0B;stroke-width:2;"/>
+  <text x="1475" y="830" text-anchor="middle" class="layer-title">Grafana 数据可视化</text>
+  <text x="1235" y="855" class="panel-desc">66个监控面板实时查询</text>
+  <text x="1235" y="875" class="panel-desc">PromQL查询语句</text>
+  <text x="1235" y="895" class="metric-name">rate(apex_api_request_count_total[5m])</text>
+  <text x="1235" y="915" class="metric-name">histogram_quantile(0.95, ...)</text>
+
+  <!-- API Query -->
+  <rect x="1220" y="940" width="510" height="100" rx="6" style="fill:#0B0E14;stroke:#F59E0B;stroke-width:2;"/>
+  <text x="1475" y="970" text-anchor="middle" class="layer-title">HTTP API 直接查询</text>
+  <text x="1235" y="995" class="panel-desc">GET /api/v1/query (即时查询)</text>
+  <text x="1235" y="1015" class="panel-desc">GET /api/v1/query_range (范围查询)</text>
+  <text x="1235" y="1035" class="panel-desc">GET /api/v1/series (序列查询)</text>
+
+  <!-- Recording Rules -->
+  <rect x="1220" y="1060" width="510" height="140" rx="6" style="fill:#0B0E14;stroke:#10B981;stroke-width:2;"/>
+  <text x="1475" y="1090" text-anchor="middle" class="layer-title">Recording Rules 预聚合</text>
+  <text x="1235" y="1115" class="panel-desc">定时计算复杂查询结果</text>
+  <text x="1235" y="1135" class="metric-name">job:apex_api_qps:rate5m</text>
+  <text x="1250" y="1155" class="panel-desc">= rate(apex_api_request_count_total[5m])</text>
+  <text x="1235" y="1175" class="metric-name">job:apex_api_p95:histogram_quantile</text>
+  <text x="1250" y="1195" class="panel-desc">= histogram_quantile(0.95, ...)</text>
+
+  <!-- Right Bottom: Alert Notification -->
+  <rect x="1200" y="1240" width="550" height="660" rx="8" style="fill:#1E293B;stroke:#F59E0B;stroke-width:2;"/>
+  <text x="1475" y="1280" text-anchor="middle" class="section-title">告警通知配置</text>
+
+  <!-- Notification Channels -->
+  <rect x="1220" y="1300" width="510" height="180" rx="6" style="fill:#0B0E14;stroke:#EF4444;stroke-width:2;"/>
+  <text x="1475" y="1330" text-anchor="middle" class="layer-title">通知渠道 (alertmanager.yml)</text>
+  <text x="1235" y="1355" class="config-key">receivers:</text>
+  <text x="1245" y="1375" class="panel-desc">- name: 'email-team'</text>
+  <text x="1255" y="1395" class="panel-desc">email_configs:</text>
+  <text x="1265" y="1415" class="panel-desc">to: 'ops@example.com'</text>
+  <text x="1245" y="1435" class="panel-desc">- name: 'dingtalk-webhook'</text>
+  <text x="1255" y="1455" class="panel-desc">webhook_configs:</text>
+  <text x="1265" y="1475" class="panel-desc">url: 'https://oapi.dingtalk.com/...'</text>
+
+  <!-- Alert Routing -->
+  <rect x="1220" y="1500" width="510" height="180" rx="6" style="fill:#0B0E14;stroke:#F59E0B;stroke-width:2;"/>
+  <text x="1475" y="1530" text-anchor="middle" class="layer-title">路由规则 (route)</text>
+  <text x="1235" y="1555" class="config-key">route:</text>
+  <text x="1245" y="1575" class="panel-desc">group_by: ['alertname', 'severity']</text>
+  <text x="1245" y="1595" class="panel-desc">group_wait: 30s</text>
+  <text x="1245" y="1615" class="panel-desc">group_interval: 5m</text>
+  <text x="1245" y="1635" class="panel-desc">repeat_interval: 4h</text>
+  <text x="1245" y="1655" class="panel-desc">receiver: 'email-team'</text>
+  <text x="1245" y="1675" class="panel-desc">routes: (按severity分发)</text>
+
+  <!-- Inhibition Rules -->
+  <rect x="1220" y="1700" width="510" height="180" rx="6" style="fill:#0B0E14;stroke:#10B981;stroke-width:2;"/>
+  <text x="1475" y="1730" text-anchor="middle" class="layer-title">抑制规则 (inhibit_rules)</text>
+  <text x="1235" y="1755" class="panel-desc">场景: 服务Down时抑制其他告警</text>
+  <text x="1235" y="1775" class="config-key">- source_match:</text>
+  <text x="1245" y="1795" class="panel-desc">severity: 'critical'</text>
+  <text x="1245" y="1815" class="panel-desc">alertname: 'ApexServiceDown'</text>
+  <text x="1235" y="1835" class="config-key">target_match:</text>
+  <text x="1245" y="1855" class="panel-desc">severity: 'warning'</text>
+  <text x="1235" y="1875" class="panel-desc">抑制低级别相关告警</text>
+
+  <!-- Bottom: Data Flow -->
+  <rect x="50" y="1940" width="1700" height="40" rx="6" style="fill:#1E293B;stroke:#4FD1C5;stroke-width:2;"/>
+  <text x="900" y="1970" text-anchor="middle" class="panel-desc">
+    🟢 15秒抓取周期 · 💾 15天数据保留 · 📊 PromQL查询 · 🚨 实时告警 · 📧 多渠道通知 · 🔄 自动发现服务
+  </text>
+
+  <!-- Data Flow Arrows -->
+  <!-- Targets -> Prometheus -->
+  <path d="M 600 400 L 650 400" class="scrape-flow"/>
+  <text x="605" y="390" class="panel-desc" style="fill:#10B981;">抓取指标</text>
+
+  <!-- Prometheus -> Alertmanager -->
+  <path d="M 1150 280 L 1200 280" class="alert-flow"/>
+  <text x="1155" y="270" class="panel-desc" style="fill:#EF4444;">触发告警</text>
+
+  <!-- Prometheus -> Grafana -->
+  <path d="M 1150 360 L 1200 860" class="query-flow"/>
+  <text x="1155" y="600" class="panel-desc" style="fill:#F59E0B;">PromQL查询</text>
+
+  <!-- Legend -->
+  <g transform="translate(650, 460)">
+    <text x="0" y="0" class="layer-title">配置文件位置:</text>
+    <text x="0" y="20" class="config-key">/etc/prometheus/prometheus.yml</text>
+    <text x="0" y="40" class="config-key">/etc/prometheus/rules/*.yml</text>
+    <text x="0" y="60" class="config-key">/etc/alertmanager/alertmanager.yml</text>
+  </g>
+
+  <g transform="translate(650, 550)">
+    <text x="0" y="0" class="layer-title">数据目录:</text>
+    <text x="0" y="20" class="config-key">/data/prometheus/ (TSDB数据)</text>
+    <text x="0" y="40" class="config-key">/data/alertmanager/ (告警状态)</text>
+  </g>
+
+  <g transform="translate(650, 630)">
+    <text x="0" y="0" class="layer-title">端口映射:</text>
+    <text x="0" y="20" class="port">9090 - Prometheus Web UI</text>
+    <text x="0" y="40" class="port">9093 - Alertmanager UI</text>
+    <text x="0" y="60" class="port">9115 - Blackbox Exporter</text>
+    <text x="0" y="80" class="port">9100 - Node Exporter</text>
+  </g>
+
+  <g transform="translate(650, 750)">
+    <text x="0" y="0" class="layer-title">运维命令:</text>
+    <text x="0" y="20" class="config-key">promtool check config prometheus.yml</text>
+    <text x="0" y="40" class="config-key">promtool check rules rules/*.yml</text>
+    <text x="0" y="60" class="config-key">curl http://prometheus:9090/-/reload</text>
+    <text x="0" y="80" class="config-key">amtool alert query</text>
+  </g>
+
+  <g transform="translate(650, 870)">
+    <text x="0" y="0" class="layer-title">高可用方案 (可选):</text>
+    <text x="0" y="20" class="panel-desc">• Prometheus联邦 (Federation)</text>
+    <text x="0" y="40" class="panel-desc">• Thanos长期存储</text>
+    <text x="0" y="60" class="panel-desc">• Cortex多租户</text>
+    <text x="0" y="80" class="panel-desc">• VictoriaMetrics替代</text>
+  </g>
+
+  <g transform="translate(650, 990)">
+    <text x="0" y="0" class="layer-title">性能优化:</text>
+    <text x="0" y="20" class="panel-desc">• 调整scrape_interval降低负载</text>
+    <text x="0" y="40" class="panel-desc">• 使用Recording Rules预聚合</text>
+    <text x="0" y="60" class="panel-desc">• 设置metric_relabel_configs过滤</text>
+    <text x="0" y="80" class="panel-desc">• 启用远程存储Remote Write</text>
+  </g>
+
+  <g transform="translate(650, 1110)">
+    <text x="0" y="0" class="section-title">指标命名规范:</text>
+    <text x="0" y="25" class="metric-name">apex_&lt;subsystem&gt;_&lt;name&gt;_&lt;unit&gt;</text>
+    <text x="0" y="45" class="panel-desc">示例: apex_api_request_count_total</text>
+    <text x="0" y="65" class="panel-desc">类型: Counter / Gauge / Histogram / Summary</text>
+  </g>
+
+  <g transform="translate(650, 1210)">
+    <text x="0" y="0" class="section-title">PromQL查询示例:</text>
+    <text x="0" y="25" class="metric-name">rate(apex_api_request_count_total[5m])</text>
+    <text x="10" y="45" class="panel-desc">5分钟平均QPS</text>
+    <text x="0" y="70" class="metric-name">histogram_quantile(0.95, rate(apex_api_response_time_seconds_bucket[5m]))</text>
+    <text x="10" y="90" class="panel-desc">P95响应时间</text>
+    <text x="0" y="115" class="metric-name">sum(rate(apex_exception_total[5m])) by (exception_type)</text>
+    <text x="10" y="135" class="panel-desc">按异常类型分组统计</text>
+    <text x="0" y="160" class="metric-name">topk(10, rate(apex_api_request_count_total[5m]))</text>
+    <text x="10" y="180" class="panel-desc">QPS Top 10 接口</text>
+  </g>
+
+  <g transform="translate(650, 1430)">
+    <text x="0" y="0" class="section-title">告警最佳实践:</text>
+    <text x="0" y="25" class="panel-desc">✅ 设置合理的for时长避免抖动</text>
+    <text x="0" y="45" class="panel-desc">✅ 使用severity分级(critical/warning/info)</text>
+    <text x="0" y="65" class="panel-desc">✅ 告警消息包含明确的修复建议</text>
+    <text x="0" y="85" class="panel-desc">✅ 配置告警抑制规则避免风暴</text>
+    <text x="0" y="105" class="panel-desc">✅ 定期review和优化告警规则</text>
+  </g>
+
+  <g transform="translate(650, 1570)">
+    <text x="0" y="0" class="section-title">监控黄金指标 (Google SRE):</text>
+    <text x="0" y="25" class="panel-desc">1. Latency (延迟) - P50/P90/P95/P99响应时间</text>
+    <text x="0" y="45" class="panel-desc">2. Traffic (流量) - QPS / RPS请求速率</text>
+    <text x="0" y="65" class="panel-desc">3. Errors (错误) - 错误率 / 5xx比例</text>
+    <text x="0" y="85" class="panel-desc">4. Saturation (饱和度) - CPU/内存/连接池水位</text>
+  </g>
+
+  <g transform="translate(650, 1690)">
+    <text x="0" y="0" class="section-title">容量规划参考:</text>
+    <text x="0" y="25" class="panel-desc">• 每个时间序列: ~1-2 bytes/sample</text>
+    <text x="0" y="45" class="panel-desc">• 10k指标 × 15s间隔 = 667样本/秒</text>
+    <text x="0" y="65" class="panel-desc">• 15天数据: ~86M样本 (~172MB未压缩)</text>
+    <text x="0" y="85" class="panel-desc">• 实际压缩后: ~17MB (10:1压缩比)</text>
+    <text x="0" y="105" class="panel-desc">• 内存需求: 样本数 × 2 bytes + 索引开销</text>
+  </g>
+
+  <g transform="translate(650, 1830)">
+    <text x="0" y="0" class="section-title">故障排查:</text>
+    <text x="0" y="25" class="panel-desc">🔍 检查Targets页面抓取状态</text>
+    <text x="0" y="45" class="panel-desc">🔍 查看Graph页面测试PromQL</text>
+    <text x="0" y="65" class="panel-desc">🔍 检查Alerts页面告警状态</text>
+    <text x="0" y="85" class="panel-desc">🔍 查看日志: docker logs prometheus</text>
+  </g>
+</svg>

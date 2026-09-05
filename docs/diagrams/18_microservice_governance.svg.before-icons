@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1200">
+  <defs>
+    <style>
+      .title { font: bold 28px sans-serif; fill: #0f172a; }
+      .subtitle { font: 16px sans-serif; fill: #666; }
+      .section-title { font: bold 20px sans-serif; fill: #1e293b; }
+      .component-title { font: bold 14px sans-serif; fill: #334155; }
+      .component-text { font: 12px sans-serif; fill: #555; }
+      .label-text { font: 11px sans-serif; fill: #666; }
+      .detail-text { font: 10px sans-serif; fill: #444; }
+      
+      .service-box { fill: #e8f5e9; stroke: #4caf50; stroke-width: 2; }
+      .config-box { fill: #e1f5fe; stroke: #03a9f4; stroke-width: 2; }
+      .gateway-box { fill: #fff3e0; stroke: #ff9800; stroke-width: 2; }
+      .circuit-box { fill: #ffebee; stroke: #f44336; stroke-width: 2; }
+      .trace-box { fill: #f3e5f5; stroke: #9c27b0; stroke-width: 2; }
+      .lb-box { fill: #fce4ec; stroke: #e91e63; stroke-width: 2; }
+      
+      .reg-arrow { fill: none; stroke: #03a9f4; stroke-width: 2.5; marker-end: url(#reg-arrow); stroke-dasharray: 4,2; }
+      .call-arrow { fill: none; stroke: #4caf50; stroke-width: 2.5; marker-end: url(#call-arrow); }
+      .config-arrow { fill: none; stroke: #ff9800; stroke-width: 2; marker-end: url(#config-arrow); stroke-dasharray: 6,3; }
+    </style>
+    
+    <marker id="reg-arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#03a9f4" />
+    </marker>
+    <marker id="call-arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#4caf50" />
+    </marker>
+    <marker id="config-arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#ff9800" />
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="800" y="40" text-anchor="middle" class="title">Apex Scaffold 微服务治理架构</text>
+  <text x="800" y="65" text-anchor="middle" class="subtitle">Microservice Governance (Nacos + Sentinel + Spring Cloud Alibaba)</text>
+
+  <!-- ==================== Service Registry & Discovery ==================== -->
+  <rect x="50" y="100" width="700" height="300" rx="10" fill="#f8f9fa" stroke="#dee2e6" stroke-width="2"/>
+  <text x="70" y="130" class="section-title">[Compass] 服务注册与发现 (Nacos)</text>
+  
+  <!-- Nacos Cluster -->
+  <g id="nacos-cluster">
+    <rect x="100" y="160" width="600" height="220" rx="8" fill="#fff" stroke="#03a9f4" stroke-width="2" stroke-dasharray="6,3"/>
+    <text x="120" y="185" class="component-text" font-weight="bold">Nacos 集群 (CP模式 / AP模式)</text>
+    
+    <!-- Nacos Node 1 -->
+    <rect x="120" y="200" width="160" height="160" rx="8" class="config-box"/>
+    <text x="200" y="225" text-anchor="middle" class="component-title">Nacos-1</text>
+    <text x="200" y="245" text-anchor="middle" class="label-text">:8848</text>
+    
+    <rect x="140" y="260" width="120" height="40" rx="6" fill="#fff" stroke="#03a9f4" stroke-width="1.5"/>
+    <text x="200" y="278" text-anchor="middle" class="component-text">服务注册表</text>
+    <text x="200" y="293" text-anchor="middle" class="detail-text">Service → Instance</text>
+    
+    <rect x="140" y="310" width="120" height="40" rx="6" fill="#fff" stroke="#ff9800" stroke-width="1.5"/>
+    <text x="200" y="328" text-anchor="middle" class="component-text">配置管理</text>
+    <text x="200" y="343" text-anchor="middle" class="detail-text">Namespace/Group</text>
+    
+    <!-- Nacos Node 2 -->
+    <rect x="320" y="200" width="160" height="160" rx="8" class="config-box"/>
+    <text x="400" y="225" text-anchor="middle" class="component-title">Nacos-2</text>
+    <text x="400" y="245" text-anchor="middle" class="label-text">:8848</text>
+    
+    <rect x="340" y="260" width="120" height="40" rx="6" fill="#fff" stroke="#03a9f4" stroke-width="1.5"/>
+    <text x="400" y="278" text-anchor="middle" class="component-text">服务注册表</text>
+    <text x="400" y="293" text-anchor="middle" class="detail-text">Health Check</text>
+    
+    <rect x="340" y="310" width="120" height="40" rx="6" fill="#fff" stroke="#ff9800" stroke-width="1.5"/>
+    <text x="400" y="328" text-anchor="middle" class="component-text">配置管理</text>
+    <text x="400" y="343" text-anchor="middle" class="detail-text">版本管理</text>
+    
+    <!-- Nacos Node 3 -->
+    <rect x="520" y="200" width="160" height="160" rx="8" class="config-box"/>
+    <text x="600" y="225" text-anchor="middle" class="component-title">Nacos-3</text>
+    <text x="600" y="245" text-anchor="middle" class="label-text">:8848</text>
+    
+    <rect x="540" y="260" width="120" height="40" rx="6" fill="#fff" stroke="#03a9f4" stroke-width="1.5"/>
+    <text x="600" y="278" text-anchor="middle" class="component-text">服务注册表</text>
+    <text x="600" y="293" text-anchor="middle" class="detail-text">路由推送</text>
+    
+    <rect x="540" y="310" width="120" height="40" rx="6" fill="#fff" stroke="#ff9800" stroke-width="1.5"/>
+    <text x="600" y="328" text-anchor="middle" class="component-text">配置管理</text>
+    <text x="600" y="343" text-anchor="middle" class="detail-text">动态刷新</text>
+    
+    <!-- Raft Replication -->
+    <path d="M 280 280 L 320 280" stroke="#03a9f4" stroke-width="2" fill="none"/>
+    <path d="M 480 280 L 520 280" stroke="#03a9f4" stroke-width="2" fill="none"/>
+    <text x="290" y="275" class="detail-text" fill="#03a9f4">Raft同步</text>
+  </g>
+
+  <!-- ==================== Service Mesh ==================== -->
+  <rect x="800" y="100" width="750" height="300" rx="10" fill="#f8f9fa" stroke="#dee2e6" stroke-width="2"/>
+  <text x="820" y="130" class="section-title">[Web] 服务网格 (可选)</text>
+  
+  <!-- Service Instances -->
+  <g id="service-instances">
+    <rect x="850" y="160" width="280" height="220" rx="8" fill="#fff" stroke="#4caf50" stroke-width="2" stroke-dasharray="6,3"/>
+    <text x="870" y="185" class="component-text" font-weight="bold">Apex 服务实例</text>
+    
+    <rect x="870" y="200" width="120" height="70" rx="6" class="service-box"/>
+    <text x="930" y="225" text-anchor="middle" class="component-text">Service-1</text>
+    <text x="930" y="245" text-anchor="middle" class="detail-text">apex-app-1</text>
+    <text x="930" y="260" text-anchor="middle" class="detail-text">:8080</text>
+    
+    <rect x="1010" y="200" width="100" height="70" rx="6" class="service-box"/>
+    <text x="1060" y="225" text-anchor="middle" class="component-text">Service-2</text>
+    <text x="1060" y="245" text-anchor="middle" class="detail-text">apex-app-2</text>
+    <text x="1060" y="260" text-anchor="middle" class="detail-text">:8080</text>
+    
+    <rect x="870" y="290" width="120" height="70" rx="6" class="service-box"/>
+    <text x="930" y="315" text-anchor="middle" class="component-text">Service-3</text>
+    <text x="930" y="335" text-anchor="middle" class="detail-text">apex-app-3</text>
+    <text x="930" y="350" text-anchor="middle" class="detail-text">:8080</text>
+    
+    <rect x="1010" y="290" width="100" height="70" rx="6" class="service-box"/>
+    <text x="1060" y="315" text-anchor="middle" class="component-text">Service-N</text>
+    <text x="1060" y="335" text-anchor="middle" class="detail-text">apex-app-n</text>
+    <text x="1060" y="350" text-anchor="middle" class="detail-text">:8080</text>
+  </g>
+  
+  <!-- Load Balancer -->
+  <rect x="1180" y="160" width="330" height="220" rx="8" class="lb-box"/>
+  <text x="1345" y="185" text-anchor="middle" class="component-title">负载均衡策略</text>
+  
+  <rect x="1200" y="210" width="290" height="40" rx="6" fill="#fff" stroke="#e91e63" stroke-width="1.5"/>
+  <text x="1220" y="230" class="component-text">RoundRobin (轮询)</text>
+  <text x="1220" y="243" class="detail-text">默认策略，均匀分配</text>
+  
+  <rect x="1200" y="260" width="290" height="40" rx="6" fill="#fff" stroke="#e91e63" stroke-width="1.5"/>
+  <text x="1220" y="280" class="component-text">Random (随机)</text>
+  <text x="1220" y="293" class="detail-text">随机选择实例</text>
+  
+  <rect x="1200" y="310" width="290" height="40" rx="6" fill="#fff" stroke="#e91e63" stroke-width="1.5"/>
+  <text x="1220" y="330" class="component-text">WeightedRandom (权重)</text>
+  <text x="1220" y="343" class="detail-text">根据权重分配流量</text>
+
+  <!-- Arrows -->
+  <path d="M 930 270 L 930 420 L 200 420 L 200 360" class="reg-arrow"/>
+  <path d="M 1060 270 L 1060 440 L 400 440 L 400 360" class="reg-arrow"/>
+  <text x="935" y="390" class="label-text" fill="#03a9f4">心跳注册</text>
+  
+  <path d="M 200 200 L 200 80 L 930 80 L 930 200" class="config-arrow"/>
+  <path d="M 400 200 L 400 60 L 1060 60 L 1060 200" class="config-arrow"/>
+  <text x="550" y="75" class="label-text" fill="#ff9800">配置下发</text>
+  
+  <path d="M 1130 240 L 1180 240" class="call-arrow"/>
+  <path d="M 1130 325 L 1180 325" class="call-arrow"/>
+
+  <!-- ==================== Circuit Breaker & Rate Limiting ==================== -->
+  <rect x="50" y="430" width="1500" height="270" rx="10" fill="#f8f9fa" stroke="#dee2e6" stroke-width="2"/>
+  <text x="70" y="460" class="section-title">熔断降级与限流 (Sentinel + Resilience4j)</text>
+  
+  <!-- Sentinel Dashboard -->
+  <rect x="100" y="490" width="300" height="190" rx="8" class="circuit-box"/>
+  <text x="250" y="515" text-anchor="middle" class="component-title">Sentinel Dashboard</text>
+  <text x="250" y="535" text-anchor="middle" class="label-text">:8858</text>
+  
+  <rect x="120" y="555" width="260" height="50" rx="6" fill="#fff" stroke="#f44336" stroke-width="1.5"/>
+  <text x="140" y="575" class="component-text">流控规则</text>
+  <text x="140" y="595" class="detail-text">QPS/并发线程数/关联流控/链路流控</text>
+  
+  <rect x="120" y="615" width="260" height="50" rx="6" fill="#fff" stroke="#f44336" stroke-width="1.5"/>
+  <text x="140" y="635" class="component-text">熔断规则</text>
+  <text x="140" y="655" class="detail-text">慢调用比例/异常比例/异常数</text>
+  
+  <!-- Resilience4j -->
+  <rect x="450" y="490" width="300" height="190" rx="8" class="circuit-box"/>
+  <text x="600" y="515" text-anchor="middle" class="component-title">[Flash] Resilience4j</text>
+  <text x="600" y="535" text-anchor="middle" class="label-text">代码级熔断器</text>
+  
+  <rect x="470" y="555" width="260" height="35" rx="6" fill="#fff" stroke="#f44336" stroke-width="1.5"/>
+  <text x="490" y="578" class="component-text">CircuitBreaker (熔断器)</text>
+  
+  <rect x="470" y="600" width="260" height="35" rx="6" fill="#fff" stroke="#f44336" stroke-width="1.5"/>
+  <text x="490" y="623" class="component-text">RateLimiter (限流器)</text>
+  
+  <rect x="470" y="645" width="260" height="25" rx="6" fill="#fff" stroke="#f44336" stroke-width="1.5"/>
+  <text x="490" y="663" class="component-text">Retry (重试)</text>
+  
+  <!-- Flow Control Patterns -->
+  <rect x="800" y="490" width="710" height="190" rx="8" fill="#fff3e0" stroke="#ff9800" stroke-width="2" stroke-dasharray="4,4"/>
+  <text x="820" y="515" class="component-text" font-weight="bold">[Target] 流控模式与效果</text>
+  
+  <rect x="820" y="535" width="330" height="130" rx="6" fill="#fff" stroke="#ff9800" stroke-width="1.5"/>
+  <text x="840" y="555" class="component-text">流控模式</text>
+  <text x="840" y="575" class="detail-text">• 直接模式: 针对当前资源限流</text>
+  <text x="840" y="593" class="detail-text">• 关联模式: 关联资源达到阈值时限流</text>
+  <text x="840" y="611" class="detail-text">• 链路模式: 从指定入口进入的流量限流</text>
+  <text x="840" y="629" class="detail-text">• 集群模式: 集群总体QPS限流</text>
+  <text x="840" y="647" class="detail-text">阈值类型: QPS / 并发线程数</text>
+  
+  <rect x="1180" y="535" width="310" height="130" rx="6" fill="#fff" stroke="#f44336" stroke-width="1.5"/>
+  <text x="1200" y="555" class="component-text">熔断降级策略</text>
+  <text x="1200" y="575" class="detail-text">• 慢调用比例: RT>阈值的比例>设定</text>
+  <text x="1200" y="593" class="detail-text">• 异常比例: 异常比例>设定阈值</text>
+  <text x="1200" y="611" class="detail-text">• 异常数: 异常数>设定阈值</text>
+  <text x="1200" y="629" class="detail-text">熔断时长: 5s~300s</text>
+  <text x="1200" y="647" class="detail-text">半开状态: 探测恢复</text>
+
+  <!-- ==================== Distributed Tracing ==================== -->
+  <rect x="50" y="730" width="750" height="210" rx="10" fill="#f8f9fa" stroke="#dee2e6" stroke-width="2"/>
+  <text x="70" y="760" class="section-title">[Link] 分布式链路追踪 (Spring Cloud Sleuth + Zipkin)</text>
+  
+  <!-- Sleuth -->
+  <rect x="100" y="790" width="250" height="120" rx="8" class="trace-box"/>
+  <text x="225" y="815" text-anchor="middle" class="component-title">[Tag] Spring Cloud Sleuth</text>
+  <text x="225" y="835" text-anchor="middle" class="label-text">自动埋点</text>
+  
+  <rect x="120" y="855" width="210" height="40" rx="6" fill="#fff" stroke="#9c27b0" stroke-width="1.5"/>
+  <text x="140" y="873" class="component-text">TraceID / SpanID</text>
+  <text x="140" y="888" class="detail-text">全链路唯一标识，父子Span关系</text>
+  
+  <!-- Zipkin -->
+  <rect x="400" y="790" width="350" height="120" rx="8" class="trace-box"/>
+  <text x="575" y="815" text-anchor="middle" class="component-title">Zipkin Server</text>
+  <text x="575" y="835" text-anchor="middle" class="label-text">:9411</text>
+  
+  <rect x="420" y="855" width="310" height="40" rx="6" fill="#fff" stroke="#9c27b0" stroke-width="1.5"/>
+  <text x="440" y="873" class="component-text">Span收集 → 存储 → 查询</text>
+  <text x="440" y="888" class="detail-text">支持MySQL/ES作为存储后端，保留7天</text>
+
+  <!-- ==================== Configuration Management ==================== -->
+  <rect x="850" y="730" width="700" height="210" rx="10" fill="#f8f9fa" stroke="#dee2e6" stroke-width="2"/>
+  <text x="870" y="760" class="section-title">[Gear] 配置管理 (Nacos Config)</text>
+  
+  <!-- Config Features -->
+  <rect x="900" y="790" width="280" height="120" rx="8" class="config-box"/>
+  <text x="1040" y="815" text-anchor="middle" class="component-title">[Clipboard] 配置特性</text>
+  
+  <rect x="920" y="835" width="240" height="60" rx="6" fill="#fff" stroke="#03a9f4" stroke-width="1.5"/>
+  <text x="940" y="855" class="component-text">• 命名空间隔离</text>
+  <text x="940" y="873" class="component-text">• 配置分组管理</text>
+  <text x="940" y="888" class="component-text">• 灰度发布</text>
+  
+  <!-- Config Refresh -->
+  <rect x="1220" y="790" width="300" height="120" rx="8" fill="#fff3e0" stroke="#ff9800" stroke-width="2"/>
+  <text x="1370" y="815" text-anchor="middle" class="component-title">[Refresh] 动态刷新</text>
+  
+  <rect x="1240" y="835" width="260" height="60" rx="6" fill="#fff" stroke="#ff9800" stroke-width="1.5"/>
+  <text x="1260" y="855" class="component-text">@RefreshScope注解</text>
+  <text x="1260" y="873" class="detail-text">配置变更自动推送到客户端</text>
+  <text x="1260" y="888" class="detail-text">无需重启应用，秒级生效</text>
+
+  <!-- ==================== Best Practices ==================== -->
+  <rect x="50" y="970" width="1500" height="210" rx="10" fill="#f8f9fa" stroke="#dee2e6" stroke-width="2"/>
+  <text x="70" y="1000" class="section-title">[Idea] 治理最佳实践</text>
+  
+  <!-- Service Governance -->
+  <rect x="100" y="1020" width="420" height="140" rx="8" fill="#e8f5e9" stroke="#4caf50" stroke-width="2"/>
+  <text x="120" y="1045" class="component-text" font-weight="bold">[Building] 服务治理</text>
+  <text x="120" y="1065" class="detail-text">• 服务拆分: 按业务域拆分，单一职责</text>
+  <text x="120" y="1083" class="detail-text">• 服务命名: apex-{domain}-service</text>
+  <text x="120" y="1101" class="detail-text">• 版本管理: v1/v2并行，灰度升级</text>
+  <text x="120" y="1119" class="detail-text">• 健康检查: /actuator/health，15s心跳</text>
+  <text x="120" y="1137" class="detail-text">• 优雅下线: PreStop Hook，30s延迟</text>
+  
+  <!-- Flow Control -->
+  <rect x="560" y="1020" width="420" height="140" rx="8" fill="#ffebee" stroke="#f44336" stroke-width="2"/>
+  <text x="580" y="1045" class="component-text" font-weight="bold">[Flash] 流控熔断</text>
+  <text x="580" y="1065" class="detail-text">• 限流阈值: QPS 5000/实例 (压测得出)</text>
+  <text x="580" y="1083" class="detail-text">• 熔断条件: 错误率>50% 持续10s</text>
+  <text x="580" y="1101" class="detail-text">• 降级策略: 返回兜底数据/缓存</text>
+  <text x="580" y="1119" class="detail-text">• 超时设置: HTTP 5s / MQ消费 15min</text>
+  <text x="580" y="1137" class="detail-text">• 重试策略: 幂等接口3次，指数退避</text>
+  
+  <!-- Configuration -->
+  <rect x="1020" y="1020" width="500" height="140" rx="8" fill="#e1f5fe" stroke="#03a9f4" stroke-width="2"/>
+  <text x="1040" y="1045" class="component-text" font-weight="bold">[Gear] 配置管理</text>
+  <text x="1040" y="1065" class="detail-text">• 环境隔离: dev / test / pre / prod命名空间</text>
+  <text x="1040" y="1083" class="detail-text">• 敏感配置: 数据库密码/密钥加密存储</text>
+  <text x="1040" y="1101" class="detail-text">• 配置版本: Git方式管理，可回滚</text>
+  <text x="1040" y="1119" class="detail-text">• 灰度发布: 金丝雀发布，先部署1个实例验证</text>
+  <text x="1040" y="1137" class="detail-text">• 监控告警: 配置变更审计日志，钉钉通知</text>
+</svg>

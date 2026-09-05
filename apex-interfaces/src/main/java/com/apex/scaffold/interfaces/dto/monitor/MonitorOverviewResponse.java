@@ -27,6 +27,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
  *@param error4xx 累计 4xx 错误数
  *@param error5xx 累计 5xx 错误数
  *@param avgResponseTime 平均响应时间（秒）
+ *@param p95ResponseTime 响应时间 P95 分位（秒）
+ *@param p99ResponseTime 响应时间 P99 分位（秒）
  *@param gatewayRequests 累计网关请求数
  *@param rateLimitRejected 限流拒绝次数
  *@param circuitBreakerOpened 熔断打开次数
@@ -59,6 +61,8 @@ public record MonitorOverviewResponse(
         @Schema(description = "累计 4xx 错误数") double error4xx,
         @Schema(description = "累计 5xx 错误数") double error5xx,
         @Schema(description = "平均响应时间（秒）") double avgResponseTime,
+        @Schema(description = "响应时间 P95 分位（秒）") double p95ResponseTime,
+        @Schema(description = "响应时间 P99 分位（秒）") double p99ResponseTime,
         @Schema(description = "累计网关请求数") double gatewayRequests,
         @Schema(description = "限流拒绝次数") double rateLimitRejected,
         @Schema(description = "熔断打开次数") double circuitBreakerOpened,
