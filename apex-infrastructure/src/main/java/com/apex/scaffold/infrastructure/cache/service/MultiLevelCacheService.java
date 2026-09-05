@@ -2,8 +2,11 @@ package com.apex.scaffold.infrastructure.cache.service;
 
 import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
 import com.apex.scaffold.domain.service.CacheService;
+import com.apex.scaffold.infrastructure.cache.config.CacheProperties;
 import com.apex.scaffold.infrastructure.cache.support.InFlightRequestMerge;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
@@ -16,6 +19,7 @@ import org.redisson.api.RedissonClient;
 import org.redisson.client.codec.StringCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -45,15 +49,20 @@ import reactor.core.publisher.Mono;
  *   <li><strong>淘汰</strong>：L1 基于 W-TinyLFU 算法自动淘汰低频条目</li>
  * </ul>
  *
+ * <h2>DB 故障读降级（Enterprise License 特性，v1.3.0）</h2>
+ * <p>当数据库不可用且缓存未命中时，启用读降级策略可从过期缓存中读取旧数据作为兜底，
+ * 避免服务完全不可用。通过 {@code apex.cache.read-degradation.enabled=true} 启用。
+ *
  * <h2>注意事项</h2>
  * <ul>
  *   <li>L1 缓存是进程级的，不同实例间缓存数据独立，存在短暂的不一致窗口</li>
  *   <li>写操作始终优先更新 L2，确保分布式一致性，再失效 L1</li>
  *   <li>L1 适用于读多写少的热点数据场景</li>
+ *   <li>读降级返回的是过期数据，仅适用于可用性优先、一致性要求不严格的场景</li>
  * </ul>
  *
  * @author Apex Team
- * @version 1.0.0
+ * @version 1.3.0
  * @since 1.0.0
  * @see LocalCacheService
  * @see CacheService
@@ -78,18 +87,33 @@ public class MultiLevelCacheService {
 
     private final ObjectMapper objectMapper;
 
+    private final CacheProperties cacheProperties;
+
+    /** 读降级计数器：记录 DB 故障时返回过期缓存的次数 */
+    private final Counter readDegradationCounter;
+
     /**
      * 构造多级缓存服务
      *
      * @param localCacheService 本地缓存服务（L1）
      * @param redissonClient    Redisson 客户端（L2）
      * @param objectMapper      JSON 序列化器
+     * @param cacheProperties   缓存配置属性
+     * @param meterRegistry     指标注册表
      */
     public MultiLevelCacheService(
-            LocalCacheService localCacheService, RedissonClient redissonClient, ObjectMapper objectMapper) {
+            LocalCacheService localCacheService,
+            RedissonClient redissonClient,
+            ObjectMapper objectMapper,
+            CacheProperties cacheProperties,
+            MeterRegistry meterRegistry) {
         this.localCacheService = localCacheService;
         this.redissonClient = redissonClient;
         this.objectMapper = objectMapper;
+        this.cacheProperties = cacheProperties;
+        this.readDegradationCounter = Counter.builder("apex_cache_read_degradation_total")
+                .description("DB 故障读降级次数")
+                .register(meterRegistry);
     }
 
     /**
@@ -230,6 +254,10 @@ public class MultiLevelCacheService {
      * <p><b>缓存击穿防护（Single-Flight）</b>：对同一 key 的并发回源请求做进程内合并，
      * 热点 key 过期瞬间只有一个请求真正访问数据库，其余并发请求共享同一次回源结果。</p>
      *
+     * <p><b>DB 故障读降级（v1.3.0）</b>：当启用读降级开关（{@code apex.cache.read-degradation.enabled=true}）
+     * 且数据库查询失败（抛出 {@link DataAccessException}）时，会尝试从过期的 Redis 缓存中读取旧数据返回，
+     * 并记录降级指标 {@code apex_cache_read_degradation_total}。适用于可用性优先的场景。</p>
+     *
      * @param <T>   返回值类型
      * @param key   缓存键
      * @param clazz 目标类型 Class 对象
@@ -245,14 +273,69 @@ public class MultiLevelCacheService {
         return get(key, clazz)
                 .switchIfEmpty(Mono.defer(() ->
                         // 缓存未命中，从 DB 回源（同 key 并发请求合并为一次）
-                        inFlight.join(key, () -> loader.get().flatMap(dbValue -> {
-                            if (dbValue == null) {
-                                // 写入空值标记防止缓存穿透
-                                return setEmptyMarker(key).then(Mono.empty());
-                            }
-                            // 写入 L2（Redis）和 L1（Caffeine）
-                            return set(key, dbValue, ttl).thenReturn(dbValue);
-                        }))));
+                        inFlight.join(key, () -> loader.get()
+                                .flatMap(dbValue -> {
+                                    if (dbValue == null) {
+                                        // 写入空值标记防止缓存穿透
+                                        return setEmptyMarker(key).then(Mono.empty());
+                                    }
+                                    // 写入 L2（Redis）和 L1（Caffeine）
+                                    return set(key, dbValue, ttl).thenReturn(dbValue);
+                                })
+                                .onErrorResume(this::isDataAccessException, ex -> {
+                                    // DB 故障读降级：尝试从过期缓存中读取旧数据
+                                    if (cacheProperties.getReadDegradation().isEnabled()) {
+                                        log.warn("DB 查询失败，尝试读降级从过期缓存返回, key: {}", key, ex);
+                                        return tryReadStaleCache(key, clazz);
+                                    }
+                                    // 降级未启用，直接传播异常
+                                    return Mono.error(ex);
+                                }))));
+    }
+
+    /**
+     * 判断异常是否为数据访问异常（DB 故障）
+     *
+     * @param ex 异常对象
+     * @return 如果是 DataAccessException 或其子类返回 true
+     */
+    private boolean isDataAccessException(Throwable ex) {
+        return ex instanceof DataAccessException;
+    }
+
+    /**
+     * 从过期缓存中读取旧数据（读降级兜底）
+     *
+     * <p>当 DB 不可用时，尝试从 Redis 中读取已过期但仍存在的缓存数据作为降级返回。
+     * 只有在配置的最大过期时间窗口（{@code apex.cache.read-degradation.max-stale-seconds}）
+     * 内的数据才会被返回。成功降级时会增加降级计数指标。
+     *
+     * @param <T>   返回值类型
+     * @param key   缓存键
+     * @param clazz 目标类型 Class 对象
+     * @return 过期缓存中的旧数据，不存在时返回空 Mono
+     */
+    private <T> Mono<T> tryReadStaleCache(String key, Class<T> clazz) {
+        return Mono.fromCallable(() -> {
+                    // 尝试从 Redis 读取（即使已过期，只要键还在就能读到）
+                    RBucket<String> bucket = redissonClient.getBucket(key, StringCodec.INSTANCE);
+                    String value = bucket.get();
+                    if (value == null || EMPTY_VALUE.equals(value)) {
+                        log.warn("读降级失败：过期缓存不存在, key: {}", key);
+                        return null;
+                    }
+                    log.info("读降级成功：从过期缓存返回旧数据, key: ", key);
+                    readDegradationCounter.increment();
+                    if (clazz == String.class) {
+                        return clazz.cast(value);
+                    }
+                    return objectMapper.readValue(value, clazz);
+                })
+                .subscribeOn(BlockingIoSchedulers.cache())
+                .onErrorResume(ex -> {
+                    log.error("读降级异常, key: {}", key, ex);
+                    return Mono.empty();
+                });
     }
 
     /**

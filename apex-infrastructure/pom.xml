@@ -33,6 +33,11 @@
             <groupId>com.alibaba</groupId>
             <artifactId>easyexcel</artifactId>
         </dependency>
+        <!-- Meilisearch：全文搜索客户端 -->
+        <dependency>
+            <groupId>com.meilisearch.sdk</groupId>
+            <artifactId>meilisearch-java</artifactId>
+        </dependency>
         <!-- JavaMail：邮件发送（C7） -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

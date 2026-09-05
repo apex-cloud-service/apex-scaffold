@@ -10,7 +10,10 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.apex.scaffold.infrastructure.cache.config.CacheProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,7 +49,10 @@ class MultiLevelCacheServiceStampedeTest {
     void setUp() {
         localCacheService = mock(LocalCacheService.class);
         redissonClient = mock(RedissonClient.class);
-        cacheService = new MultiLevelCacheService(localCacheService, redissonClient, new ObjectMapper());
+        CacheProperties cacheProperties = new CacheProperties();
+        MeterRegistry meterRegistry = new SimpleMeterRegistry();
+        cacheService = new MultiLevelCacheService(
+                localCacheService, redissonClient, new ObjectMapper(), cacheProperties, meterRegistry);
 
         // L1 恒未命中
         lenient().when(localCacheService.get(anyString(), eq(String.class))).thenReturn(Mono.empty());
