@@ -79,6 +79,28 @@ groups:
           summary: "接口请求量骤降"
           description: "当前请求速率不足日常均值的 20%，疑似流量异常。"
 
+      # 异常总量连续增长（5 分钟窗口突增超过 50 次/分钟）
+      - alert: ApexExceptionSpike
+        expr: |
+          rate(apex_exception_total[5m]) > 0.8333
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "异常发生速率过高"
+          description: "最近 5 分钟异常发生速率 {{ $value }} 次/秒（> 50 次/分钟），可能存在系统性故障。"
+
+      # 告警次数突增（5 分钟累计超 3 次，通常伴随告警风暴）
+      - alert: ApexAlertCountHigh
+        expr: |
+          increase(apex_exception_alert_count[5m]) > 3
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "异常告警次数突增"
+          description: "5 分钟内异常告警累计 {{ $value }} 次，可能存在告警风暴，需立即介入。"
+
   # ---------- JVM 健康 ----------
   - name: apex-jvm-health
     rules:
@@ -106,6 +128,17 @@ groups:
           summary: "Full GC 过于频繁"
           description: "Full GC 频率 {{ $value }} 次/秒（5 分钟均值 > 5 次/分钟），堆可能不足。"
 
+      # GC 单次停顿超过 1 秒（STW 过长影响接口响应）
+      - alert: ApexGcPauseLong
+        expr: |
+          max_over_time(jvm_gc_pause_seconds_max[5m]) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "GC 停顿时间过长"
+          description: "最近 5 分钟单次 GC 最大停顿 {{ $value }}s 超过 1s，建议调整 GC 参数。"
+
       # 线程数过高（> 2000，WebFlux 下多为线程池泄漏）
       - alert: ApexThreadCountHigh
         expr: jvm_threads_live_threads > 2000
@@ -115,6 +148,19 @@ groups:
         annotations:
           summary: "存活线程数过高"
           description: "当前存活线程 {{ $value }} 超过 2000，存在线程泄漏风险。"
+
+  # ---------- 主机资源 ----------
+  - name: apex-host-resources
+    rules:
+      # 磁盘使用率超过 90%（任一分区，持续 10 分钟）
+      - alert: ApexDiskUsageHigh
+        expr: apex_disk_used_percent > 90
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "磁盘使用率过高"
+          description: "挂载点 {{ $labels.mount }} 使用率 {{ $value | humanize }}% 超过 90%，建议清理或扩容。"
 
   # ---------- 数据库连接池 ----------
   - name: apex-database-health
@@ -160,6 +206,30 @@ groups:
           summary: "Sentinel 拦截请求过多"
           description: "10 分钟内 Sentinel 拦截 {{ $value }} 次，系统可能过载或资源被过度保护。"
 
+  # ---------- 阻塞 IO 线程池 ----------
+  - name: apex-blocking-io
+    rules:
+      # 任一堆积任务数超过阈值（30 分钟持续高水位，说明下游 IO 变慢）
+      - alert: ApexBlockingIoQueuedHigh
+        expr: |
+          max by (pool) (apex_blocking_io_queued_tasks) > 500
+        for: 30m
+        labels:
+          severity: warning
+        annotations:
+          summary: "阻塞 IO 队列积压过多"
+          description: "池 {{ $labels.pool }} 队列积压 {{ $value }} 个任务持续 30 分钟，下游 IO 可能变慢。"
+
+      # 阻塞 IO 快照采集失败（10 分钟，说明反射采集或调度异常）
+      - alert: ApexBlockingIoSnapshotDown
+        expr: apex_blocking_io_up{type="scheduler_query"} == 0
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "阻塞 IO 指标采集失败"
+          description: "阻塞 IO 线程池快照连续 10 分钟采集失败，监控大盘线程池面板将显示为不可用。"
+
   # ---------- 下游依赖 ----------
   - name: apex-downstream-dependencies
     rules:
@@ -173,3 +243,13 @@ groups:
         annotations:
           summary: "Redis 连接异常"
           description: "Redis 健康探针连续 2 分钟为 0，缓存/分布式锁功能不可用。"
+
+      # Redis 派生安全指标采集失败（SCAN 快照连续失败，监控大盘安全面板不可用）
+      - alert: ApexRedisMetricsScrapeDown
+        expr: apex_security_redis_metrics_up{type="redis_query"} == 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Redis 安全指标采集失败"
+          description: "Redis 黑名单/会话派生指标连续 5 分钟采集失败，安全监控面板不可用。"

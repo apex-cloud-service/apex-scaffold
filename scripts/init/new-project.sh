@@ -176,5 +176,5 @@ cat << 'EOF'
    □ http://localhost:<port>/doc.html        API 文档可访问
    □ http://localhost:<port>/api/v1/health   业务健康检查 UP
    □ 登录管理后台（默认账号见 docs/QUICK_START.md）
-   □ 全量测试: mvn -o test
+   □ 全量测试: mvnd -o test
 EOF

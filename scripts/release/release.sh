@@ -8,6 +8,16 @@
 # 示例:
 #   ./scripts/release/release.sh standard 1.1.3
 #
+# 机器指纹绑定（签发演示）:
+#   商业版建议在签发 License 时绑定客户机器指纹，防止复制到未授权机器：
+#     1) 客户在目标机器采集指纹（Client 执行）:
+#        java -cp "<apex-license-tools.jar>:<依赖>" \
+#          com.apex.scaffold.license.tools.LicenseGenerator gen-fingerprint
+#     2) 卖方用采集到的指纹签发（Seller 执行，见 scripts/license/generate-license.sh）:
+#        ./scripts/license/generate-license.sh ENTERPRISE "示例公司" 365 --fingerprint <64位SHA-256>
+#   注意: 私钥与 license 发放工具（scripts/license、apex-license-tools）不进发行包，
+#   随包交付会令买家自签 License。
+#
 # 产出:
 #   dist/apex-scaffold-<version>-<profile>.zip
 #     ├── apex-*.jar        (可执行 jar)

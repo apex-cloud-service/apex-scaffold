@@ -79,6 +79,7 @@
     <commons-pool2.version>2.12.0</commons-pool2.version>
     <javassist.version>3.30.2-GA</javassist.version>
     <logstash.version>7.4</logstash.version>
+    <meilisearch.version>0.17.1</meilisearch.version>
     <bucket4j.version>8.7.0</bucket4j.version>
     <caffeine.version>3.1.8</caffeine.version>
     <resilience4j.version>2.2.0</resilience4j.version>
@@ -552,6 +553,12 @@
         <artifactId>commons-io</artifactId>
         <version>2.16.1</version>
       </dependency>
+      <!-- Meilisearch 全文搜索客户端 -->
+      <dependency>
+        <groupId>com.meilisearch.sdk</groupId>
+        <artifactId>meilisearch-java</artifactId>
+        <version>${meilisearch.version}</version>
+      </dependency>
       <dependency>
         <groupId>com.apex.scaffold</groupId>
         <artifactId>apex-domain</artifactId>
@@ -1017,6 +1024,32 @@
               <goals>
                 <goal>report</goal>
               </goals>
+            </execution>
+            <execution>
+              <id>check</id>
+              <phase>verify</phase>
+              <goals>
+                <goal>check</goal>
+              </goals>
+              <configuration>
+                <rules>
+                  <rule>
+                    <element>BUNDLE</element>
+                    <limits>
+                      <limit>
+                        <counter>LINE</counter>
+                        <value>COVEREDRATIO</value>
+                        <minimum>0.60</minimum>
+                      </limit>
+                      <limit>
+                        <counter>BRANCH</counter>
+                        <value>COVEREDRATIO</value>
+                        <minimum>0.50</minimum>
+                      </limit>
+                    </limits>
+                  </rule>
+                </rules>
+              </configuration>
             </execution>
           </executions>
         </plugin>

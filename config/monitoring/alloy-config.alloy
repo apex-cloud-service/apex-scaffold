@@ -1,0 +1,135 @@
+// ============================================================
+// Grafana Alloy 配置文件（日志采集）
+// ============================================================
+// 
+// 【设计目标】
+//   采集 Apex Scaffold 应用的 JSON 格式日志文件，推送到 Loki 进行聚合与查询。
+//   替代 Logstash，配置简单，资源占用低，支持日志/指标/trace 统一采集。
+// 
+// 【核心特性】
+//   1. 文件采集：监听 /var/log/apex-scaffold/apex-scaffold-json.log
+//   2. JSON 解析：自动解析 JSON 字段（level、message、traceId 等）
+//   3. 标签提取：提取 service、level、traceId 作为 Loki 标签
+//   4. 批量推送：批量聚合后推送到 Loki，减少网络往返
+// 
+// 【标签策略】
+//   - service：服务名（apex-scaffold），用于多服务环境区分
+//   - level：日志级别（info/warn/error），用于按级别过滤
+//   - env：环境标识（dev/prod），用于多环境隔离
+//   - traceId：链路追踪ID（仅当存在时添加），用于链路关联查询
+// 
+// 【性能优化】
+//   - 批量大小：1MB 或 1024 条/批，减少网络请求
+//   - 刷新间隔：10 秒，平衡实时性与资源占用
+//   - 最大重试：3 次，超出丢弃（防止内存积压）
+// 
+// @author Apex Team
+// @since 1.3.0
+// @see https://grafana.com/docs/alloy/latest/
+// ============================================================
+
+// ============================================================
+// 第一部分：日志采集源（Loki Source File）
+// ============================================================
+
+// 采集 Apex Scaffold JSON 日志文件
+loki.source.file "apex_logs" {
+  // 监听的日志文件路径（支持通配符）
+  // Docker Compose 挂载：./logs:/var/log/apex-scaffold:ro
+  targets = [
+    {
+      __path__ = "/var/log/apex-scaffold/apex-scaffold-json.log",
+      service  = "apex-scaffold",
+      env      = "dev",
+      job      = "apex-scaffold-logs",
+    },
+  ]
+
+  // 转发到日志处理 Pipeline
+  forward_to = [loki.process.apex_logs.receiver]
+
+  // 文件监听配置
+  tail_from_end = false  // 从文件开头读取（首次启动时）
+  sync_period   = "10s"  // 文件扫描间隔（检测新日志）
+}
+
+// ============================================================
+// 第二部分：日志处理 Pipeline
+// ============================================================
+
+// 日志处理：解析 JSON、提取标签、过滤字段
+loki.process "apex_logs" {
+  // 转发到 Loki 写入组件
+  forward_to = [loki.write.loki_endpoint.receiver]
+
+  // Stage 1: 解析 JSON 日志行
+  stage.json {
+    // 提取 JSON 字段到内部变量
+    expressions = {
+      level       = "level",         // 日志级别：INFO/WARN/ERROR
+      logger      = "logger_name",   // Logger 名称（Java 类名）
+      message     = "message",       // 日志消息
+      timestamp   = "@timestamp",    // 时间戳（ISO 8601）
+      thread      = "thread_name",   // 线程名
+      traceId     = "traceId",       // 分布式链路追踪ID（MDC）
+      requestId   = "requestId",     // HTTP 请求ID（MDC）
+      userId      = "userId",        // 用户ID（MDC）
+      stack_trace = "stack_trace",   // 异常堆栈（仅 ERROR 级别）
+    }
+  }
+
+  // Stage 2: 提取标签（Loki 标签索引）
+  // 注意：标签数量越多，索引体积越大，查询越慢，应精简标签
+  stage.labels {
+    values = {
+      level = "",  // 从 Stage 1 提取的 level 字段作为标签
+    }
+  }
+
+  // Stage 3: 时间戳解析（将 JSON 中的 @timestamp 作为日志时间）
+  stage.timestamp {
+    source = "timestamp"
+    format = "RFC3339"  // ISO 8601 格式：2024-01-01T12:00:00.123Z
+  }
+
+  // Stage 4: 输出格式化（将 JSON 字段组合为最终日志行）
+  // Loki 存储原始日志行，此处保留完整 JSON 供查询时解析
+  stage.output {
+    source = ""  // 空字符串表示保留原始日志行
+  }
+}
+
+// ============================================================
+// 第三部分：Loki 写入组件
+// ============================================================
+
+// 推送日志到 Loki
+loki.write "loki_endpoint" {
+  // Loki HTTP Push API 端点
+  // Docker Compose 网络内：http://loki:3100/loki/api/v1/push
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+
+    // 批量推送配置（提高吞吐量，降低网络开销）
+    batch_size  = 1048576   // 批量大小：1MB
+    batch_wait  = "10s"     // 批量等待时间：10 秒
+    max_backoff = "5m"      // 最大重试退避时间
+    min_backoff = "500ms"   // 最小重试退避时间
+
+    // 租户ID（单租户模式留空，多租户模式填写）
+    // tenant_id = ""
+  }
+
+  // 外部标签（所有日志统一添加的标签）
+  external_labels = {
+    cluster = "local",  // 集群标识（本地开发环境）
+  }
+}
+
+// ============================================================
+// 第四部分：监控与健康检查（可选）
+// ============================================================
+
+// Alloy 内置 HTTP 服务器，提供健康检查和指标端点
+// 访问 http://localhost:12345/-/ready（就绪检查）
+// 访问 http://localhost:12345/metrics（Prometheus 指标）

@@ -97,6 +97,16 @@ services:
       FILE_UPLOAD_ENABLED: ${FILE_UPLOAD_ENABLED:-false}
       # ---------- 管理端口监听 0.0.0.0（供 Prometheus 抓取 /actuator/prometheus） ----------
       MANAGEMENT_SERVER_ADDRESS: "0.0.0.0"
+      # ---------- Meilisearch（全文搜索） ----------
+      MEILISEARCH_ENABLED: ${MEILISEARCH_ENABLED:-true}
+      MEILISEARCH_URL: ${MEILISEARCH_URL:-http://meilisearch:7700}
+      MEILISEARCH_API_KEY: ${MEILI_MASTER_KEY:-masterKey}
+      # ---------- Loki（运行日志查询） ----------
+      LOKI_ENABLED: ${LOKI_ENABLED:-true}
+      LOKI_URL: ${LOKI_URL:-http://loki:3100}
+      # ---------- Grafana（日志查询跳转） ----------
+      GRAFANA_ENABLED: ${GRAFANA_ENABLED:-false}
+      GRAFANA_URL: ${GRAFANA_URL:-http://localhost:3000}
       # ---------- 时区 ----------
       TZ: ${TZ:-Asia/Shanghai}
     depends_on:
@@ -148,6 +158,83 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
+    networks:
+      - apex-network
+
+  # ---------------- Meilisearch（全文搜索引擎） ----------------
+  # 轻量级搜索引擎，用于系统管理数据（用户/角色/菜单/部门/字典/配置）全文索引
+  # CJK 支持好，内存占用比 Elasticsearch 低 80%
+  meilisearch:
+    image: getmeili/meilisearch:v1.10
+    environment:
+      # Master Key：开发环境默认值，生产必须通过 MEILI_MASTER_KEY 注入随机密钥（≥16字符）
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:-masterKey}
+      # 运行环境：development（允许无 Master Key）/ production（强制 Master Key）
+      MEILI_ENV: ${MEILI_ENV:-development}
+      # 数据持久化路径
+      MEILI_DB_PATH: /meili_data
+      # 时区
+      TZ: ${TZ:-Asia/Shanghai}
+    ports:
+      - "${MEILISEARCH_PORT:-7700}:7700"
+    volumes:
+      - meilisearch-data:/meili_data
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:7700/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - apex-network
+
+  # ---------------- Loki（日志聚合与查询） ----------------
+  # Grafana Loki 轻量级日志系统，比 ELK 资源消耗降低 80%
+  # 标签索引 + 全文扫描架构，专为云原生应用设计
+  loki:
+    image: grafana/loki:3.0.0
+    command: -config.file=/etc/loki/local-config.yaml
+    environment:
+      TZ: ${TZ:-Asia/Shanghai}
+    ports:
+      - "${LOKI_PORT:-3100}:3100"
+    volumes:
+      - ./config/monitoring/loki-config.yaml:/etc/loki/local-config.yaml:ro
+      - loki-data:/loki
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3100/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    restart: unless-stopped
+    networks:
+      - apex-network
+
+  # ---------------- Alloy（日志采集器） ----------------
+  # Grafana Alloy：新一代可观测性数据采集器，统一采集日志/指标/trace
+  # 替代 Logstash，配置简单，资源占用低
+  alloy:
+    image: grafana/alloy:v1.0.0
+    command:
+      - run
+      - --server.http.listen-addr=0.0.0.0:12345
+      - --storage.path=/var/lib/alloy/data
+      - /etc/alloy/config.alloy
+    environment:
+      TZ: ${TZ:-Asia/Shanghai}
+    ports:
+      - "${ALLOY_PORT:-12345}:12345"
+    volumes:
+      - ./config/monitoring/alloy-config.alloy:/etc/alloy/config.alloy:ro
+      # 挂载应用日志目录（只读），Alloy 读取 JSON 日志文件
+      - ./logs:/var/log/apex-scaffold:ro
+      - alloy-data:/var/lib/alloy
+    depends_on:
+      loki:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - apex-network
@@ -218,6 +305,9 @@ services:
 volumes:
   mysql-data:
   redis-data:
+  meilisearch-data:
+  loki-data:
+  alloy-data:
 
 networks:
   apex-network:
