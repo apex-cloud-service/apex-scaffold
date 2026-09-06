@@ -23,6 +23,11 @@ cd "${PROJECT_ROOT}"
 
 EXTRA_ARGS=("$@")
 
+# Compose 自动识别标记与应用总关停预算，可由调用方环境变量覆盖
+export APEX_GOVERNANCE_DEPLOYMENT_MODE="${APEX_GOVERNANCE_DEPLOYMENT_MODE:-compose}"
+export APEX_GOVERNANCE_SHUTDOWN_TIMEOUT="${APEX_GOVERNANCE_SHUTDOWN_TIMEOUT:-90s}"
+export APEX_STOP_GRACE_PERIOD="${APEX_STOP_GRACE_PERIOD:-105s}"
+
 echo "🚀 启动 Apex Scaffold（Docker Compose）..."
 docker compose "${EXTRA_ARGS[@]}" up -d --build
 
@@ -33,8 +38,8 @@ echo "   查看日志: docker compose logs -f apex-scaffold"
 echo ""
 echo "📝 访问入口:"
 echo "   API 文档   http://localhost:8080/doc.html"
-echo "   健康检查   http://localhost:8080/api/v1/health"
-echo "   Actuator   http://localhost:8081/actuator/health"
+echo "   readiness  http://localhost:8081/actuator/health/readiness"
+echo "   liveness   http://localhost:8081/actuator/health/liveness"
 echo ""
 echo "📊 监控栈（可选）: docker compose -f config/monitoring/docker-compose.yml up -d"
 echo "   Grafana    http://localhost:3000"

@@ -6,8 +6,9 @@
 
 | 文件 | 说明 |
 |------|------|
-| `deployment.yaml` | 基础部署：Namespace / Secret / Deployment（滚动更新）/ Service / Ingress / HPA（CPU 70% + 内存 80% 自动伸缩 2~10 副本） |
+| `deployment.yaml` | 基础部署：Namespace / Secret / Deployment（稳定版滚动更新）/ Service / Ingress / HPA（CPU 70% + 内存 80% 自动伸缩 2~10 副本） |
 | `canary-deployment.yaml` | 金丝雀（灰度）发布：金丝雀 Deployment + Service + Nginx Ingress 按权重/请求头导流 |
+| `pod-disruption-budget.yaml` | 稳定版 PodDisruptionBudget，节点维护时至少保留一个稳定副本 |
 
 ## 基础部署
 
@@ -16,6 +17,8 @@ kubectl apply -f k8s/deployment.yaml
 ```
 
 > 使用前按环境修改 Secret（`DB_MASTER_PASSWORD` / `DB_SLAVE_PASSWORD` / `REDIS_PASSWORD` / `JWT_SECRET` 必改）与 Ingress 域名。
+>
+> `startupProbe` 应用启动阶段使用管理端口 `/actuator/health/readiness`，启动成功后才启用 liveness/readiness；`readinessProbe` 负责摘流，`livenessProbe` 负责异常重启；HPA 负责副本数，应用不直接操作 Kubernetes 控制面。稳定版使用 `track: stable`，金丝雀使用 `track: canary`，避免 Service selector 交叉选 Pod。`terminationGracePeriodSeconds` 为 120 秒，覆盖应用 90 秒总关停预算和摘流传播缓冲；请通过压测校准副本数与关停时间。
 
 ## 灰度发布演练（10% 流量 → 全量）
 

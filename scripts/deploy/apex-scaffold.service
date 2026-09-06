@@ -73,6 +73,12 @@ WorkingDirectory=/opt/apex-scaffold
 
 # 环境变量文件（数据库 / Redis / JWT / Nacos / RocketMQ / Outbox / 开关等，见上方说明）
 EnvironmentFile=/etc/apex-scaffold/apex.env
+# standalone 模式仅维护本地 readiness，不调用 systemd 或编排平台 API
+Environment=APEX_GOVERNANCE_DEPLOYMENT_MODE=standalone
+Environment=APEX_GOVERNANCE_SHUTDOWN_TIMEOUT=90s
+Environment=APEX_GOVERNANCE_READINESS_WITHDRAW_TIMEOUT=5s
+Environment=APEX_GOVERNANCE_MQ_DRAIN_TIMEOUT=30s
+Environment=APEX_GOVERNANCE_FORCE_SHUTDOWN=true
 
 # JVM 参数（生产级调优默认。注意 Environment= 优先于 EnvironmentFile=：
 # 如需覆盖请直接修改本行，或注释本行后在 apex.env 中设置 JAVA_OPTS）:
@@ -88,9 +94,9 @@ Environment=JAVA_OPTS=-Xms512m -Xmx1024m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -
 # 启动命令（bash -c 用于展开 $JAVA_OPTS）
 ExecStart=/usr/bin/env bash -c 'exec java $JAVA_OPTS -jar /opt/apex-scaffold/app.jar'
 
-# 优雅停机：发送 SIGTERM，Spring Boot 完成在途请求后退出（server.shutdown=graceful）
+# 优雅停机：发送 SIGTERM，105 秒覆盖应用 90 秒总预算并预留摘流传播缓冲
 ExecStop=/bin/kill -s TERM $MAINPID
-TimeoutStopSec=90
+TimeoutStopSec=105
 KillMode=control-group
 
 # 崩溃自动重启

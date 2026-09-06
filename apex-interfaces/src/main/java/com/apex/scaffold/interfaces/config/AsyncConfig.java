@@ -1,10 +1,14 @@
 package com.apex.scaffold.interfaces.config;
 
+import com.apex.scaffold.interfaces.governance.lifecycle.ExecutorDrainParticipant;
+import com.apex.scaffold.interfaces.governance.lifecycle.ResourceDrainRegistry;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadPoolExecutor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
@@ -41,6 +45,8 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 @Configuration
 @EnableAsync
 public class AsyncConfig {
+
+    private ThreadPoolTaskExecutor asyncExecutor;
 
     /**
      * 构造异步任务配置类。
@@ -87,6 +93,25 @@ public class AsyncConfig {
 
         log.info("@Async 线程池初始化完成（缩容后）, coreSize: {}, maxSize: {}, queueCapacity: {}", corePoolSize, maxPoolSize, 50);
 
+        asyncExecutor = executor;
         return executor;
+    }
+
+    /**
+     * 将 Spring 异步线程池注册到统一资源排空注册表。
+     *
+     * @param event 应用就绪事件
+     */
+    @EventListener
+    public void asyncExecutorDrainRegistration(ApplicationReadyEvent event) {
+        if (asyncExecutor != null) {
+            ResourceDrainRegistry registry =
+                    event.getApplicationContext().getBeansOfType(ResourceDrainRegistry.class).values().stream()
+                            .findFirst()
+                            .orElse(null);
+            if (registry != null) {
+                registry.register(new ExecutorDrainParticipant("asyncExecutor", asyncExecutor));
+            }
+        }
     }
 }

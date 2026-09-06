@@ -1,22 +1,24 @@
 package com.apex.scaffold.interfaces.config;
 
+import com.apex.scaffold.interfaces.governance.lifecycle.GracefulShutdownCoordinator;
 import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.stereotype.Component;
 
 /**
  * 优雅关闭管理器。
  *
- * <p>参与应用关闭生命周期，执行 RocketMQ 消费者的固定等待并记录异步线程池状态：
+ * <p>参与应用关闭生命周期，将关停流程委托给统一协调器并记录异步线程池状态：
  * <ol>
- *   <li>HTTP 停止接收新请求由 Spring Boot {@code server.shutdown=graceful} 处理</li>
- *   <li>Nacos 实例摘除由服务发现组件的生命周期处理，本类不直接调用 deregister</li>
- *   <li>等待 RocketMQ 消费者处理完已拉取的消息</li>
- *   <li>@Async 线程池排空和连接池关闭由各自 Bean 生命周期处理</li>
+ *   <li>协调器先切换 readiness 并停止资源接收新任务</li>
+ *   <li>MQ、线程池和其他后台资源通过排空参与者共享同一个关停截止时间</li>
+ *   <li>超时后的资源强制停止由协调器统一执行</li>
+ *   <li>Spring Boot 的 HTTP graceful shutdown 负责 Web 服务器自身的关闭</li>
  * </ol>
  *
  * <h2>生命周期阶段</h2>
@@ -31,15 +33,16 @@ import org.springframework.stereotype.Component;
  */
 @Slf4j
 @Component
+@ConditionalOnProperty(prefix = "apex.governance", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class GracefulShutdownManager implements SmartLifecycle {
 
     private static final Logger logger = LoggerFactory.getLogger(GracefulShutdownManager.class);
 
-    /** MQ 消费者排空等待时间（秒） */
-    private static final long MQ_DRAIN_WAIT_SECONDS = 15L;
-
     /** 生命周期活跃标记 */
     private final AtomicBoolean running = new AtomicBoolean(false);
+
+    /** 统一关停协调器 */
+    private final GracefulShutdownCoordinator coordinator;
 
     /** Spring asyncExecutor（ThreadPoolTaskExecutor 包装的 Executor） */
     private final java.util.concurrent.Executor asyncExecutor;
@@ -49,8 +52,11 @@ public class GracefulShutdownManager implements SmartLifecycle {
      *
      * @param asyncExecutor Spring {@code @Async} 线程池执行器
      */
-    public GracefulShutdownManager(@Qualifier("asyncExecutor") java.util.concurrent.Executor asyncExecutor) {
+    public GracefulShutdownManager(
+            @Qualifier("asyncExecutor") java.util.concurrent.Executor asyncExecutor,
+            GracefulShutdownCoordinator coordinator) {
         this.asyncExecutor = asyncExecutor;
+        this.coordinator = coordinator;
     }
 
     /**
@@ -58,8 +64,10 @@ public class GracefulShutdownManager implements SmartLifecycle {
      */
     @Override
     public void start() {
-        running.set(true);
-        logger.info("优雅关闭管理器已启动");
+        if (running.compareAndSet(false, true)) {
+            coordinator.start();
+            logger.info("优雅关闭管理器已启动");
+        }
     }
 
     /**
@@ -69,23 +77,12 @@ public class GracefulShutdownManager implements SmartLifecycle {
      */
     @Override
     public void stop() {
-        if (!running.compareAndSet(true, false)) {
-            return;
+        if (running.compareAndSet(true, false)) {
+            logger.info("===== 优雅关闭流程开始 =====");
+            coordinator.shutdown().toCompletableFuture().join();
+            logAsyncExecutorStatus();
+            logger.info("===== 优雅关闭流程完成 =====");
         }
-        logger.info("===== 优雅关闭流程开始 =====");
-
-        // 阶段 1：等待 RocketMQ 消费者处理完已拉取的消息
-        logger.info("[Shutdown-1] 等待 RocketMQ 消费者排空已拉取消息, 超时: {}s", MQ_DRAIN_WAIT_SECONDS);
-        waitForMqConsumerDrain();
-
-        // 阶段 2：记录 @Async 线程池状态
-        logger.info("[Shutdown-2] 检查 @Async 线程池状态");
-        logAsyncExecutorStatus();
-
-        // ThreadPoolConfig 线程池由其 Bean 生命周期关闭
-        logger.info("[Shutdown-3] ThreadPoolConfig 线程池由其 Bean 生命周期处理");
-
-        logger.info("===== 优雅关闭流程完成 =====");
     }
 
     /**
@@ -109,24 +106,6 @@ public class GracefulShutdownManager implements SmartLifecycle {
     @Override
     public int getPhase() {
         return Integer.MIN_VALUE;
-    }
-
-    /**
-     * 等待 RocketMQ 消费者处理完已拉取的消息。
-     *
-     * <p>RocketMQ Spring 消费者在容器关闭时会自动调用 {@code consumer.shutdown()}，
-     * 但已拉取到本地但尚未处理的消息可能被中断。本方法通过短暂等待
-     * 让消费线程有机会完成处理。
-     */
-    private void waitForMqConsumerDrain() {
-        try {
-            // 给 MQ 消费者一个宽限期处理已拉取消息
-            Thread.sleep(MQ_DRAIN_WAIT_SECONDS * 1000);
-            logger.info("[Shutdown-1] RocketMQ 消费者排空等待完成");
-        } catch (InterruptedException e) {
-            logger.warn("[Shutdown-1] RocketMQ 消费者排空等待被中断");
-            Thread.currentThread().interrupt();
-        }
     }
 
     /**

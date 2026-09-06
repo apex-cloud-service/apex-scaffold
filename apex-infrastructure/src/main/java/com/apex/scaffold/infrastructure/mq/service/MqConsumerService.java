@@ -4,7 +4,11 @@ import com.apex.scaffold.common.context.TenantContext;
 import jakarta.annotation.PreDestroy;
 import java.time.Duration;
 import java.util.UUID;
+import java.time.Instant;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
@@ -100,6 +104,50 @@ public class MqConsumerService {
      */
     private final AtomicBoolean shuttingDown = new AtomicBoolean(false);
 
+    /** 当前正在处理的消息数量。 */
+    private final AtomicInteger inFlight = new AtomicInteger();
+
+    /**
+     * 停止接收新消息。
+     */
+    public void stopAccepting() {
+        shuttingDown.set(true);
+    }
+
+    /**
+     * 返回当前正在处理的消息数量。
+     *
+     * @return 在途消息数量
+     */
+    public int inFlightCount() {
+        return inFlight.get();
+    }
+
+    /**
+     * 在截止时间前等待在途消息完成。
+     *
+     * @param deadline 统一截止时间
+     * @return 排空结果，true 表示已无在途消息
+     */
+    public CompletionStage<Boolean> drain(Instant deadline) {
+        CompletableFuture<Boolean> result = new CompletableFuture<>();
+        drainUntil(deadline, result);
+        return result;
+    }
+
+    private void drainUntil(Instant deadline, CompletableFuture<Boolean> result) {
+        if (inFlight.get() == 0) {
+            result.complete(true);
+            return;
+        }
+        if (!Instant.now().isBefore(deadline)) {
+            result.complete(false);
+            return;
+        }
+        CompletableFuture.delayedExecutor(10, java.util.concurrent.TimeUnit.MILLISECONDS)
+                .execute(() -> drainUntil(deadline, result));
+    }
+
     /**
      * 处理消息（幂等）
      *
@@ -162,6 +210,7 @@ public class MqConsumerService {
             return ProcessingResult.failed(messageId, "消息正在处理中");
         }
 
+        inFlight.incrementAndGet();
         try {
             boolean success = handler.handle(message);
             if (!success) {
@@ -189,6 +238,8 @@ public class MqConsumerService {
             bucket.expire(getTtl());
             log.error("消息处理异常, messageId: {}", messageId, e);
             return ProcessingResult.error(messageId, e.getMessage());
+        } finally {
+            inFlight.decrementAndGet();
         }
     }
 
@@ -202,6 +253,13 @@ public class MqConsumerService {
     private Duration getTtl() {
         long minutes = idempotentTtlMinutes > 0 ? idempotentTtlMinutes : DEFAULT_IDEMPOTENT_TTL_MINUTES;
         return Duration.ofMinutes(minutes);
+    }
+
+    /**
+     * 强制停止 MQ 消费资源。
+     */
+    public void forceStop() {
+        destroy();
     }
 
     /**

@@ -24,7 +24,8 @@
 #
 # 访问:
 #   业务 API    http://localhost:8080    （API 文档 /doc.html）
-#   管理端点    http://localhost:8081/actuator/health
+#   readiness    http://localhost:8081/actuator/health/readiness
+#   liveness     http://localhost:8081/actuator/health/liveness
 #   管理后台    http://localhost          （前端容器 Nginx，反代 /api、/admin-api 到后端）
 #   详细文档:   docs/DEPLOYMENT.md
 # ============================================================
@@ -107,6 +108,12 @@ services:
       # ---------- Grafana（日志查询跳转） ----------
       GRAFANA_ENABLED: ${GRAFANA_ENABLED:-false}
       GRAFANA_URL: ${GRAFANA_URL:-http://localhost:3000}
+      # ---------- 服务治理：Compose 模式与统一关停预算 ----------
+      APEX_GOVERNANCE_DEPLOYMENT_MODE: ${APEX_GOVERNANCE_DEPLOYMENT_MODE:-compose}
+      APEX_GOVERNANCE_SHUTDOWN_TIMEOUT: ${APEX_GOVERNANCE_SHUTDOWN_TIMEOUT:-90s}
+      APEX_GOVERNANCE_READINESS_WITHDRAW_TIMEOUT: ${APEX_GOVERNANCE_READINESS_WITHDRAW_TIMEOUT:-5s}
+      APEX_GOVERNANCE_MQ_DRAIN_TIMEOUT: ${APEX_GOVERNANCE_MQ_DRAIN_TIMEOUT:-30s}
+      APEX_GOVERNANCE_FORCE_SHUTDOWN: ${APEX_GOVERNANCE_FORCE_SHUTDOWN:-true}
       # ---------- 时区 ----------
       TZ: ${TZ:-Asia/Shanghai}
     depends_on:
@@ -114,6 +121,14 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    # readiness 负责摘流，停止宽限覆盖应用 90 秒总关停预算
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:8081/actuator/health/readiness"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 90s
+    stop_grace_period: ${APEX_STOP_GRACE_PERIOD:-105s}
     restart: unless-stopped
     networks:
       - apex-network
@@ -153,8 +168,9 @@ services:
       - "${REDIS_PORT:-6379}:6379"
     volumes:
       - redis-data:/data
+    # Redis 开启 requirepass 后，健康检查必须携带密码，否则应用依赖检查会长期失败
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD-SHELL", "redis-cli -a \"$${REDIS_PASSWORD}\" ping | grep -q PONG"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -272,10 +288,10 @@ services:
       TZ: ${TZ:-Asia/Shanghai}
     ports:
       - "${WEB_PORT:-80}:80"
-    # apex-scaffold 无 healthcheck，故用 service_started；Nginx 就绪后反代自然可用
+    # 等待应用 readiness 通过后再启动反向代理，避免将流量导向未就绪实例
     depends_on:
       apex-scaffold:
-        condition: service_started
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - apex-network

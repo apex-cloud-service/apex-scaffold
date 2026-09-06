@@ -5,7 +5,12 @@ import jakarta.annotation.PostConstruct;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.time.Instant;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
 import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyContext;
@@ -77,6 +82,12 @@ public class DeadLetterQueueProcessor {
 
     private final Object lifecycleMonitor = new Object();
 
+    /** 是否继续接受死信处理回调。 */
+    private final AtomicBoolean accepting = new AtomicBoolean(true);
+
+    /** 当前正在执行的死信处理数量。 */
+    private final AtomicInteger inFlight = new AtomicInteger();
+
     /** RocketMQ 死信消费者实例 */
     private DefaultMQPushConsumer dlqConsumer;
 
@@ -131,6 +142,7 @@ public class DeadLetterQueueProcessor {
      */
     @PostConstruct
     public void start() {
+        accepting.set(true);
         synchronized (lifecycleMonitor) {
             lifecycleInitialized = true;
             startIfReady();
@@ -205,6 +217,45 @@ public class DeadLetterQueueProcessor {
     }
 
     /**
+     * 停止接收新的死信处理回调。
+     */
+    public void stopAccepting() {
+        accepting.set(false);
+    }
+
+    /**
+     * 在截止时间前等待在途死信处理完成。
+     *
+     * @param deadline 统一截止时间
+     * @return true 表示已排空
+     */
+    public CompletionStage<Boolean> drain(Instant deadline) {
+        CompletableFuture<Boolean> result = new CompletableFuture<>();
+        drainUntil(deadline, result);
+        return result;
+    }
+
+    private void drainUntil(Instant deadline, CompletableFuture<Boolean> result) {
+        if (inFlight.get() == 0) {
+            result.complete(true);
+            return;
+        }
+        if (!Instant.now().isBefore(deadline)) {
+            result.complete(false);
+            return;
+        }
+        CompletableFuture.delayedExecutor(10, java.util.concurrent.TimeUnit.MILLISECONDS)
+                .execute(() -> drainUntil(deadline, result));
+    }
+
+    /**
+     * 强制停止死信消费者。
+     */
+    public void forceStop() {
+        shutdown();
+    }
+
+    /**
      * 处理单条死信消息。
      *
      * <p>根据消息的原始 Topic 路由到对应的处理器。如果未找到处理器，
@@ -214,6 +265,18 @@ public class DeadLetterQueueProcessor {
      * @return 处理结果
      */
     ConsumeConcurrentlyStatus processDeadLetter(MessageExt messageExt) {
+        if (!accepting.get()) {
+            return ConsumeConcurrentlyStatus.RECONSUME_LATER;
+        }
+        inFlight.incrementAndGet();
+        try {
+            return processDeadLetterInternal(messageExt);
+        } finally {
+            inFlight.decrementAndGet();
+        }
+    }
+
+    private ConsumeConcurrentlyStatus processDeadLetterInternal(MessageExt messageExt) {
         String originalTopic = messageExt.getUserProperty("ORIGINAL_TOPIC");
         if (originalTopic == null) {
             originalTopic = messageExt.getTopic();
@@ -248,6 +311,7 @@ public class DeadLetterQueueProcessor {
      */
     @jakarta.annotation.PreDestroy
     public void shutdown() {
+        accepting.set(false);
         synchronized (lifecycleMonitor) {
             if (dlqConsumer != null && started) {
                 dlqConsumer.shutdown();

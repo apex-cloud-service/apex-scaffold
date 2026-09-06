@@ -16,6 +16,36 @@
 # └───────────────────────────────────────────────────────────┘
 # ============================================================
 
+# ============================================================
+# 服务治理：模式只在启动期解析一次，运行期不热切换
+# ============================================================
+apex:
+  governance:
+    # 是否启用统一 readiness、资源排空和优雅关停协调
+    enabled: ${APEX_GOVERNANCE_ENABLED:true}
+    # auto 会按显式环境变量、Kubernetes 标记、Compose 标记顺序识别
+    deployment-mode: ${APEX_GOVERNANCE_DEPLOYMENT_MODE:auto}
+    auto-detection:
+      # 是否启用部署环境自动识别
+      enabled: ${APEX_GOVERNANCE_AUTO_DETECTION_ENABLED:true}
+      # 检测到多个平台证据时是否阻止启动
+      fail-on-ambiguous-environment: ${APEX_GOVERNANCE_FAIL_ON_AMBIGUOUS:true}
+    registration:
+      # 注册方式：auto、none、nacos、platform
+      provider: ${APEX_GOVERNANCE_REGISTRATION_PROVIDER:auto}
+      # 注册中心故障处理：auto、open、closed
+      fail-mode: ${APEX_GOVERNANCE_REGISTRATION_FAIL_MODE:auto}
+    mq:
+      # MQ 在途消息排空预算
+      drain-timeout: ${APEX_GOVERNANCE_MQ_DRAIN_TIMEOUT:30s}
+    shutdown:
+      # 所有资源共享的总关停预算
+      total-timeout: ${APEX_GOVERNANCE_SHUTDOWN_TIMEOUT:90s}
+      # readiness 摘流后的传播等待预算
+      readiness-withdraw-timeout: ${APEX_GOVERNANCE_READINESS_WITHDRAW_TIMEOUT:5s}
+      # 总预算耗尽后是否强制停止剩余资源
+      force-shutdown-after-timeout: ${APEX_GOVERNANCE_FORCE_SHUTDOWN:true}
+
 server:
   # HTTP 服务端口
   port: 8080

@@ -46,7 +46,7 @@
 #           OUTBOX_RETENTION_BATCH_SIZE
 # ============================================================
 
-set -u
+set -Eeuo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
@@ -83,12 +83,24 @@ JAVA_OPTS="${JAVA_OPTS:--Xms512m -Xmx1024m -XX:+UseG1GC -XX:MaxGCPauseMillis=200
 APP_PID_FILE="${APP_PID_FILE:-${PROJECT_ROOT}/logs/app.pid}"
 APP_OUT_LOG="${APP_OUT_LOG:-${PROJECT_ROOT}/logs/app.out.log}"
 SERVER_PORT="${SERVER_PORT:-8080}"
-HEALTH_URL="http://127.0.0.1:${SERVER_PORT}/api/v1/health"
+MANAGEMENT_PORT="${MANAGEMENT_PORT:-8081}"
+SHUTDOWN_TIMEOUT_SECONDS="${APEX_SHUTDOWN_TIMEOUT_SECONDS:-90}"
+APEX_GOVERNANCE_DEPLOYMENT_MODE="${APEX_GOVERNANCE_DEPLOYMENT_MODE:-standalone}"
+READINESS_URL="${APEX_READINESS_URL:-http://127.0.0.1:${MANAGEMENT_PORT}/actuator/health/readiness}"
 
 # 若提供环境变量文件则先加载（每行 KEY=VALUE）
 if [ -n "${APEX_ENV_FILE:-}" ] && [ -f "${APEX_ENV_FILE}" ]; then
   # shellcheck disable=SC1090
-  set -a; source "${APEX_ENV_FILE}"; set +a
+  set -a
+  source "${APEX_ENV_FILE}"
+  set +a
+
+  # 环境文件优先于脚本默认值，重新计算端口、治理模式和等待预算
+  SERVER_PORT="${SERVER_PORT:-8080}"
+  MANAGEMENT_PORT="${MANAGEMENT_PORT:-8081}"
+  SHUTDOWN_TIMEOUT_SECONDS="${APEX_SHUTDOWN_TIMEOUT_SECONDS:-90}"
+  APEX_GOVERNANCE_DEPLOYMENT_MODE="${APEX_GOVERNANCE_DEPLOYMENT_MODE:-standalone}"
+  READINESS_URL="${APEX_READINESS_URL:-http://127.0.0.1:${MANAGEMENT_PORT}/actuator/health/readiness}"
 fi
 
 # ---------- 定位可执行 jar ----------
@@ -144,21 +156,22 @@ cmd_start() {
   echo "   输出日志   : ${APP_OUT_LOG}"
   echo "   GC 日志    : ${LOG_DIR}/gc.log（滚动 5×20m）"
 
-  # 后台运行；SPRING_PROFILES_ACTIVE 显式传给子进程
-  # ⚠️ 显式绑定 SERVER_PORT：防止外部环境（如 SERVER__PORT=0）注入导致随机端口，
-  #    与下方健康检查 URL 失配
-  SPRING_PROFILES_ACTIVE="${SPRING_PROFILES_ACTIVE}" nohup \
-    java ${JAVA_OPTS} -jar "${JAR}" --server.port="${SERVER_PORT}" \
+  # 后台运行；显式传递治理模式、业务端口和管理端口，确保健康检查地址与进程监听一致
+  SPRING_PROFILES_ACTIVE="${SPRING_PROFILES_ACTIVE}" \
+  APEX_GOVERNANCE_DEPLOYMENT_MODE="${APEX_GOVERNANCE_DEPLOYMENT_MODE:-standalone}" nohup \
+    java ${JAVA_OPTS} -jar "${JAR}" \
+    --server.port="${SERVER_PORT}" \
+    --management.server.port="${MANAGEMENT_PORT:-8081}" \
     >> "${APP_OUT_LOG}" 2>&1 &
   echo $! > "${APP_PID_FILE}"
 
-  # 等待健康检查通过（最多 90 秒）
+  # 等待管理端口 readiness 通过，等待上限与应用关停预算保持一致
   local waited=0
   echo -n "⏳ 等待服务就绪"
-  while [ "${waited}" -lt 90 ]; do
-    if curl -sf -o /dev/null "${HEALTH_URL}" 2>/dev/null; then
+  while [ "${waited}" -lt "${SHUTDOWN_TIMEOUT_SECONDS}" ]; do
+    if curl -sf -o /dev/null "${READINESS_URL}" 2>/dev/null; then
       echo ""
-      echo "✅ 服务已就绪: ${HEALTH_URL}  (PID $(get_pid))"
+      echo "✅ 服务已就绪: ${READINESS_URL}  (PID $(get_pid))"
       return 0
     fi
     sleep 2
@@ -166,7 +179,7 @@ cmd_start() {
     echo -n "."
   done
   echo ""
-  echo "⚠️  90 秒内健康检查未通过，请查看日志: tail -f ${APP_OUT_LOG}"
+  echo "⚠️  ${SHUTDOWN_TIMEOUT_SECONDS} 秒内 readiness 未通过，请查看日志: tail -f ${APP_OUT_LOG}"
   return 1
 }
 
@@ -180,9 +193,14 @@ cmd_stop() {
   fi
   echo "🛑 停止服务 (PID ${pid})，发送 SIGTERM 优雅停机..."
   kill -TERM "${pid}" 2>/dev/null
-  wait_stopped "${pid}" 60
+  if wait_stopped "${pid}" "${SHUTDOWN_TIMEOUT_SECONDS}"; then
+    rm -f "${APP_PID_FILE}"
+    echo "✅ 服务已停止"
+    return 0
+  fi
   rm -f "${APP_PID_FILE}"
-  echo "✅ 服务已停止"
+  echo "❌ 服务在关停预算内未退出，已强制终止"
+  return 1
 }
 
 cmd_restart() {
@@ -199,10 +217,10 @@ cmd_status() {
     echo "   PID      : ${pid}"
     echo "   Profiles : ${SPRING_PROFILES_ACTIVE}"
     echo "   JAR      : ${JAR}"
-    if curl -sf -o /dev/null "${HEALTH_URL}" 2>/dev/null; then
-      echo "   健康状态 : UP (${HEALTH_URL})"
+    if curl -sf -o /dev/null "${READINESS_URL}" 2>/dev/null; then
+      echo "   readiness : UP (${READINESS_URL})"
     else
-      echo "   健康状态 : 启动中或异常（未通过 ${HEALTH_URL}）"
+      echo "   readiness : 启动中或异常（未通过 ${READINESS_URL}）"
     fi
   else
     echo "❌ 服务未运行"

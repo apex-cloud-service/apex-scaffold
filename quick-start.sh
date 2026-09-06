@@ -1,14 +1,19 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+# 基于脚本位置解析项目目录，避免依赖开发机绝对路径
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_ROOT="${SCRIPT_DIR}"
+FRONTEND_ROOT="${APEX_ADMIN_WEB_ROOT:-${PROJECT_ROOT}/../apex-admin-web}"
 
 echo "========================================="
 echo "工作流前后端联调 - 快速启动脚本"
 echo "========================================="
 echo ""
 
-# 检查后端服务是否运行
+# 检查后端 readiness，只有可接收流量时才认为服务已运行
 check_backend() {
-    echo "检查后端服务..."
-    if curl -s http://localhost:8080/actuator/health > /dev/null 2>&1; then
+    echo "检查后端服务 readiness..."
+    if curl -s "${APEX_READINESS_URL:-http://localhost:8081/actuator/health/readiness}" > /dev/null 2>&1; then
         echo "✅ 后端服务已运行"
         return 0
     else
@@ -35,8 +40,8 @@ start_backend() {
     echo "========================================="
     echo "启动后端服务"
     echo "========================================="
-    cd /Users/work/apex-scaffold
-    echo "执行命令: mvn spring-boot:run -pl apex-interfaces"
+    cd "${PROJECT_ROOT}"
+    echo "执行命令: source scripts/build/init-build-env.sh && mvnd spring-boot:run -pl apex-interfaces"
     echo "请在新终端窗口中执行上述命令"
     echo ""
 }
@@ -47,7 +52,11 @@ start_frontend() {
     echo "========================================="
     echo "启动前端服务"
     echo "========================================="
-    cd /Users/work/apex-admin-web
+    if [ ! -d "${FRONTEND_ROOT}" ]; then
+        echo "❌ 未找到前端目录: ${FRONTEND_ROOT}"
+        return 1
+    fi
+    cd "${FRONTEND_ROOT}"
     echo "执行命令: npm run dev"
     echo "前端服务已在端口 5174 启动"
     echo "访问地址: http://localhost:5174"
@@ -60,7 +69,7 @@ run_api_test() {
     echo "========================================="
     echo "运行接口测试"
     echo "========================================="
-    cd /Users/work/apex-scaffold
+    cd "${PROJECT_ROOT}"
     
     if [ ! -f "test-workflow-api.sh" ]; then
         echo "❌ 测试脚本不存在"
@@ -135,6 +144,8 @@ main_menu() {
 }
 
 # 启动脚本
+echo "后端服务状态："
+check_backend
 echo "前端服务状态："
 check_frontend
 echo ""

@@ -7,7 +7,7 @@
 #   - 配置注入方式与应用 Docker/Compose 一致：全部通过环境变量（Secret + env），
 #     不覆盖 classpath 内 application*.yml（应用本身已含完整配置）。
 #   - 镜像: 本地 docker build -t apex-scaffold:latest .（详见 docs/DEPLOYMENT.md §5）
-#   - 探针: liveness/readiness 指向管理端口 8081 的 Actuator 端点（与 Dockerfile 一致）
+#   - 探针: startup/liveness/readiness 指向管理端口 8081 的 Actuator 端点（与 Dockerfile 一致）
 #   - 数据库/Redis 为集群外服务时，将 Secret 与 env 中的地址改为实际 Service/DNS。
 # ============================================================
 
@@ -78,6 +78,7 @@ spec:
   selector:
     matchLabels:
       app: apex-scaffold
+      track: stable
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -107,6 +108,13 @@ spec:
             # JVM 生产级调优参数（与 Dockerfile 默认一致；GC 日志/堆转储写入容器 /app/logs）
             - name: JAVA_OPTS
               value: "-Xms512m -Xmx768m -Xss512k -XX:MaxDirectMemorySize=128m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:MetaspaceSize=256m -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/app/logs/heapdump.hprof -XX:+ExitOnOutOfMemoryError -Xlog:gc*:file=/app/logs/gc.log:time,uptime,level,tags:filecount=5,filesize=20m -Dfile.encoding=UTF-8 -Djava.security.egd=file:/dev/./urandom"
+          startupProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8081
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 30
           resources:
             requests:
               memory: "512Mi"
@@ -118,7 +126,6 @@ spec:
             httpGet:
               path: /actuator/health/liveness
               port: 8081
-            initialDelaySeconds: 60
             periodSeconds: 30
             timeoutSeconds: 3
             failureThreshold: 3
@@ -130,6 +137,11 @@ spec:
             periodSeconds: 10
             timeoutSeconds: 3
             failureThreshold: 3
+          lifecycle:
+            preStop:
+              # 仅留出 readiness 摘流传播时间，实际排空由应用响应 SIGTERM 完成
+              exec:
+                command: ["/bin/sh", "-c", "sleep 8"]
       restartPolicy: Always
 
 ---
@@ -145,6 +157,7 @@ spec:
   type: ClusterIP
   selector:
     app: apex-scaffold
+    track: stable
   ports:
     - name: http
       port: 80

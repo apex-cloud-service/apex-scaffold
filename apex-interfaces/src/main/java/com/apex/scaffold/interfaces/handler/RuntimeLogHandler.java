@@ -26,7 +26,7 @@ import reactor.core.publisher.Mono;
 public class RuntimeLogHandler {
 
     private final RuntimeLogService runtimeLogService;
-    
+
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     /**
@@ -45,37 +45,43 @@ public class RuntimeLogHandler {
             String logger = request.queryParam("logger").orElse(null);
             String message = request.queryParam("message").orElse(null);
             int limit = parseIntParam(request, "limit", 100);
-            
+
             if (limit > 1000) {
                 limit = 1000;
             }
-            
-            LocalDateTime startTime = startTimeStr != null 
-                ? LocalDateTime.parse(startTimeStr, FORMATTER)
-                : LocalDateTime.now().minusHours(1);
-            
-            LocalDateTime endTime = endTimeStr != null
-                ? LocalDateTime.parse(endTimeStr, FORMATTER)
-                : LocalDateTime.now();
-            
-            log.info("Query runtime logs: start={}, end={}, level={}, logger={}, message={}, limit={}",
-                    startTime, endTime, level, logger, message, limit);
-            
-            return runtimeLogService.queryLogs(startTime, endTime, level, logger, message, limit)
-                .flatMap(logs -> ServerResponse.ok()
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .bodyValue(Result.success(logs)))
-                .onErrorResume(e -> {
-                    log.error("Query runtime logs failed", e);
-                    return ServerResponse.ok()
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .bodyValue(Result.error("查询失败：" + e.getMessage()));
-                });
+
+            LocalDateTime startTime = startTimeStr != null
+                    ? LocalDateTime.parse(startTimeStr, FORMATTER)
+                    : LocalDateTime.now().minusHours(1);
+
+            LocalDateTime endTime =
+                    endTimeStr != null ? LocalDateTime.parse(endTimeStr, FORMATTER) : LocalDateTime.now();
+
+            log.info(
+                    "Query runtime logs: start={}, end={}, level={}, logger={}, message={}, limit={}",
+                    startTime,
+                    endTime,
+                    level,
+                    logger,
+                    message,
+                    limit);
+
+            return runtimeLogService
+                    .queryLogs(startTime, endTime, level, logger, message, limit)
+                    .flatMap(logs -> ServerResponse.ok()
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .bodyValue(Result.success(logs)))
+                    .onErrorResume(e -> {
+                        log.error("Query runtime logs failed", e);
+                        return ServerResponse.ok()
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .bodyValue(Result.error("查询失败：" + e.getMessage()));
+                    });
         } catch (Exception e) {
             log.error("Parse query parameters failed", e);
             return ServerResponse.ok()
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(Result.error("参数错误：" + e.getMessage()));
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .bodyValue(Result.error("参数错误：" + e.getMessage()));
         }
     }
 
@@ -91,42 +97,42 @@ public class RuntimeLogHandler {
             String startTimeStr = request.queryParam("startTime").orElse(null);
             String endTimeStr = request.queryParam("endTime").orElse(null);
             String level = request.queryParam("level").orElse(null);
-            
+
             LocalDateTime startTime = startTimeStr != null
-                ? LocalDateTime.parse(startTimeStr, FORMATTER)
-                : LocalDateTime.now().minusHours(1);
-            
-            LocalDateTime endTime = endTimeStr != null
-                ? LocalDateTime.parse(endTimeStr, FORMATTER)
-                : LocalDateTime.now();
-            
-            return runtimeLogService.countLogs(startTime, endTime, level)
-                .flatMap(count -> ServerResponse.ok()
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .bodyValue(Result.success(count)))
-                .onErrorResume(e -> {
-                    log.error("Count logs failed", e);
-                    return ServerResponse.ok()
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .bodyValue(Result.error("统计失败：" + e.getMessage()));
-                });
+                    ? LocalDateTime.parse(startTimeStr, FORMATTER)
+                    : LocalDateTime.now().minusHours(1);
+
+            LocalDateTime endTime =
+                    endTimeStr != null ? LocalDateTime.parse(endTimeStr, FORMATTER) : LocalDateTime.now();
+
+            return runtimeLogService
+                    .countLogs(startTime, endTime, level)
+                    .flatMap(count -> ServerResponse.ok()
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .bodyValue(Result.success(count)))
+                    .onErrorResume(e -> {
+                        log.error("Count logs failed", e);
+                        return ServerResponse.ok()
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .bodyValue(Result.error("统计失败：" + e.getMessage()));
+                    });
         } catch (Exception e) {
             log.error("Parse query parameters failed", e);
             return ServerResponse.ok()
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(Result.error("参数错误：" + e.getMessage()));
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .bodyValue(Result.error("参数错误：" + e.getMessage()));
         }
     }
 
     private int parseIntParam(ServerRequest request, String paramName, int defaultValue) {
         return request.queryParam(paramName)
-            .map(value -> {
-                try {
-                    return Integer.parseInt(value);
-                } catch (NumberFormatException e) {
-                    return defaultValue;
-                }
-            })
-            .orElse(defaultValue);
+                .map(value -> {
+                    try {
+                        return Integer.parseInt(value);
+                    } catch (NumberFormatException e) {
+                        return defaultValue;
+                    }
+                })
+                .orElse(defaultValue);
     }
 }

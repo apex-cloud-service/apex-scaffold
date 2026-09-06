@@ -1,14 +1,17 @@
 package com.apex.scaffold.interfaces.config;
 
-import jakarta.annotation.PreDestroy;
+import com.apex.scaffold.interfaces.governance.lifecycle.ExecutorDrainParticipant;
+import com.apex.scaffold.interfaces.governance.lifecycle.ResourceDrainRegistry;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 
 /**
@@ -66,6 +69,31 @@ public class ThreadPoolConfig {
     private ExecutorService asyncTaskExecutor;
     private ExecutorService ioTaskExecutor;
     private ExecutorService cpuTaskExecutor;
+
+    /**
+     * 注册三个业务线程池到统一关停协调器。
+     *
+     * @param event 应用就绪事件
+     */
+    @EventListener
+    public void threadPoolDrainRegistration(ApplicationReadyEvent event) {
+        ResourceDrainRegistry registry =
+                event.getApplicationContext().getBeansOfType(ResourceDrainRegistry.class).values().stream()
+                        .findFirst()
+                        .orElse(null);
+        if (registry == null) {
+            return;
+        }
+        if (asyncTaskExecutor != null) {
+            registry.register(new ExecutorDrainParticipant("asyncTaskExecutor", asyncTaskExecutor));
+        }
+        if (ioTaskExecutor != null) {
+            registry.register(new ExecutorDrainParticipant("ioTaskExecutor", ioTaskExecutor));
+        }
+        if (cpuTaskExecutor != null) {
+            registry.register(new ExecutorDrainParticipant("cpuTaskExecutor", cpuTaskExecutor));
+        }
+    }
 
     /**
      * 异步任务线程池
@@ -183,38 +211,11 @@ public class ThreadPoolConfig {
     }
 
     /**
-     * 销毁所有线程池
+     * 保留兼容关闭入口。
      *
-     * <p>在应用关闭时依次关闭异步任务、IO密集型和CPU密集型线程池，
-     * 确保所有任务执行完毕或超时后强制终止。
+     * <p>线程池由统一资源排空注册表关闭，避免多个销毁回调叠加等待时间。
      */
-    @PreDestroy
     public void shutdown() {
-        shutdownExecutor(asyncTaskExecutor, "asyncTaskExecutor");
-        shutdownExecutor(ioTaskExecutor, "ioTaskExecutor");
-        shutdownExecutor(cpuTaskExecutor, "cpuTaskExecutor");
-    }
-
-    /**
-     * 关闭指定线程池
-     *
-     * <p>先调用 shutdown() 停止接收新任务，等待30秒后仍未完成则调用 shutdownNow() 强制终止。
-     *
-     * @param executor 待关闭的线程池实例
-     * @param name 线程池名称，用于日志标识
-     */
-    private void shutdownExecutor(ExecutorService executor, String name) {
-        if (executor == null || executor.isShutdown()) {
-            return;
-        }
-        executor.shutdown();
-        try {
-            if (!executor.awaitTermination(SHUTDOWN_WAIT_SECONDS, TimeUnit.SECONDS)) {
-                executor.shutdownNow();
-            }
-        } catch (InterruptedException e) {
-            executor.shutdownNow();
-            Thread.currentThread().interrupt();
-        }
+        log.info("线程池关闭由统一治理协调器处理");
     }
 }

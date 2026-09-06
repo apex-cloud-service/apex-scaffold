@@ -43,6 +43,8 @@ spec:
         track: canary
         version: v-next
     spec:
+      # 120 秒覆盖应用 90 秒总关停预算、readiness 摘流传播与容器退出缓冲
+      terminationGracePeriodSeconds: 120
       containers:
         - name: apex-scaffold
           # 替换为新版本镜像（灰度验证对象）
@@ -62,6 +64,24 @@ spec:
             # JVM 生产级调优参数（与 Dockerfile 默认一致；GC 日志/堆转储写入容器 /app/logs）
             - name: JAVA_OPTS
               value: "-Xms512m -Xmx768m -Xss512k -XX:MaxDirectMemorySize=128m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:MetaspaceSize=256m -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/app/logs/heapdump.hprof -XX:+ExitOnOutOfMemoryError -Xlog:gc*:file=/app/logs/gc.log:time,uptime,level,tags:filecount=5,filesize=20m -Dfile.encoding=UTF-8 -Djava.security.egd=file:/dev/./urandom"
+            # 显式选择 Kubernetes 治理模式，启动后不随运行环境热切换
+            - name: APEX_GOVERNANCE_DEPLOYMENT_MODE
+              value: kubernetes
+            - name: APEX_GOVERNANCE_SHUTDOWN_TIMEOUT
+              value: 90s
+            - name: APEX_GOVERNANCE_READINESS_WITHDRAW_TIMEOUT
+              value: 5s
+            - name: APEX_GOVERNANCE_MQ_DRAIN_TIMEOUT
+              value: 30s
+            - name: APEX_GOVERNANCE_FORCE_SHUTDOWN
+              value: "true"
+          startupProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8081
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 30
           resources:
             requests:
               memory: "512Mi"
@@ -81,10 +101,14 @@ spec:
             httpGet:
               path: /actuator/health/readiness
               port: 8081
-            initialDelaySeconds: 60
-            periodSeconds: 10
+            periodSeconds: 2
             timeoutSeconds: 3
             failureThreshold: 3
+          lifecycle:
+            preStop:
+              # 仅留出 readiness 摘流传播时间，实际排空由应用响应 SIGTERM 完成
+              exec:
+                command: ["/bin/sh", "-c", "sleep 8"]
       restartPolicy: Always
 
 ---

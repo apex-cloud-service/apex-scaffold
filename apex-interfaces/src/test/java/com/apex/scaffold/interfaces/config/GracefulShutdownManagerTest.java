@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.apex.scaffold.interfaces.governance.lifecycle.GracefulShutdownCoordinator;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -31,6 +32,9 @@ class GracefulShutdownManagerTest {
     /** Mock 线程池执行器 */
     private ThreadPoolTaskExecutor asyncExecutor;
 
+    /** Mock 关停协调器 */
+    private GracefulShutdownCoordinator coordinator;
+
     /**
      * 初始化测试环境。
      */
@@ -40,7 +44,11 @@ class GracefulShutdownManagerTest {
         when(asyncExecutor.getActiveCount()).thenReturn(0);
         when(asyncExecutor.getThreadPoolExecutor())
                 .thenReturn(new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>()));
-        manager = new GracefulShutdownManager(asyncExecutor);
+        coordinator = mock(GracefulShutdownCoordinator.class);
+        when(coordinator.shutdown())
+                .thenReturn(java.util.concurrent.CompletableFuture.completedFuture(
+                        GracefulShutdownCoordinator.ShutdownResult.alreadyStopped()));
+        manager = new GracefulShutdownManager(asyncExecutor, coordinator);
     }
 
     /**

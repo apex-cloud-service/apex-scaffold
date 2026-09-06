@@ -22,7 +22,6 @@ import com.apex.scaffold.interfaces.handler.MonitorDashboardHandler;
 import com.apex.scaffold.interfaces.handler.NotificationSseHandler;
 import com.apex.scaffold.interfaces.handler.OnlineUserHandler;
 import com.apex.scaffold.interfaces.handler.UserHandler;
-import com.apex.scaffold.interfaces.handler.WorkflowHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
@@ -456,8 +455,6 @@ public class ApiRouter {
                 .DELETE("/delete", handler::delete)
                 .GET("/exists", handler::exists);
     }
-
-
 
     /**
      * 统一搜索路由（/admin-api/v1/search）。

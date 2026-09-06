@@ -69,7 +69,8 @@ public class UnifiedSearchHandler {
         log.info("Search request: keyword={}, types={}, page={}, size={}", keyword, resourceTypes, page, size);
 
         // 执行搜索
-        return searchService.search(keyword, resourceTypes, page, size)
+        return searchService
+                .search(keyword, resourceTypes, page, size)
                 .flatMap(result -> ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(Result.success(result)))
@@ -94,7 +95,8 @@ public class UnifiedSearchHandler {
 
         log.warn("Index rebuild request: type={}", resourceType);
 
-        return indexSyncService.rebuildIndex(resourceType)
+        return indexSyncService
+                .rebuildIndex(resourceType)
                 .flatMap(count -> ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(Result.success(count, "索引重建成功，共索引 " + count + " 条记录")))
