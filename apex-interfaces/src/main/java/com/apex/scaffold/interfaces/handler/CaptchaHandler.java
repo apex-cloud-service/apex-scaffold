@@ -4,6 +4,10 @@ import com.apex.scaffold.application.security.CaptchaService;
 import com.apex.scaffold.application.security.CaptchaVO;
 import com.apex.scaffold.interfaces.util.MessageUtils;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Validator;
 import lombok.Data;
@@ -60,7 +64,20 @@ public class CaptchaHandler extends BaseHandler {
      * @param request HTTP 请求
      * @return 带 traceId 的统一成功响应，data 为 {@link CaptchaVO}
      */
-    @Operation(operationId = "getCaptcha", summary = "获取图形验证码")
+    @Operation(
+            operationId = "getCaptcha",
+            summary = "获取图形验证码",
+            description = "生成图形验证码，返回验证码ID和Base64编码的PNG图片，用于登录场景的防自动化爆破")
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "获取成功",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = CaptchaVO.class))),
+        @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
     public Mono<ServerResponse> generate(ServerRequest request) {
         return captchaService.generate().flatMap(this::buildSuccess);
     }
@@ -74,7 +91,24 @@ public class CaptchaHandler extends BaseHandler {
      * @param request HTTP 请求
      * @return 带 traceId 的统一成功响应，data 为 {@code {"valid": 是否通过}}
      */
-    @Operation(operationId = "verifyCaptcha", summary = "校验图形验证码")
+    @Operation(
+            operationId = "verifyCaptcha",
+            summary = "校验图形验证码",
+            description = "校验用户输入的图形验证码是否正确，验证码一次性消费，校验后自动失效")
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            description = "验证码校验请求信息",
+            required = true,
+            content =
+                    @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = CaptchaVerifyRequest.class)))
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "校验完成，返回校验结果",
+                content = @Content(mediaType = "application/json")),
+        @ApiResponse(responseCode = "400", description = "参数错误，captchaId或code为空")
+    })
     public Mono<ServerResponse> verify(ServerRequest request) {
         return request.bodyToMono(CaptchaVerifyRequest.class)
                 .defaultIfEmpty(new CaptchaVerifyRequest())

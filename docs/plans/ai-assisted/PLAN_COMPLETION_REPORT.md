@@ -1,9 +1,9 @@
 # 全项目代码评审计划完成报告
 
 **项目**：Apex Scaffold  
-**任务**：全项目代码评审，系统性修复 Lombok 和 JavaDoc 不规范问题  
+**任务**：全项目代码评审,系统性修复 Lombok 和 JavaDoc 不规范问题  
 **完成日期**：2026-09-02  
-**执行者**：Kiro AI Assistant
+**执行者**：开发团队
 
 ---
 
@@ -367,7 +367,7 @@ bash scripts/scan-javadoc-issues.sh
 ---
 
 **报告完成日期**：2026-09-02  
-**创建者**：Kiro AI Assistant  
+**创建者**：开发团队  
 **状态**：✅ Phase 1 完成，计划已就绪  
 **下一步**：启动 Phase 2 执行
 

@@ -33,8 +33,11 @@ public class WorkflowInstanceDTO {
     /** 流程标题 */
     private String title;
 
-    /** 流程状态：DRAFT/RUNNING/APPROVED/REJECTED/CANCELLED/TERMINATED */
+    /** 流程状态：DRAFT/RUNNING/APPROVED/REJECTED/CANCELLED/TERMINATED/SUSPENDED */
     private String status;
+
+    /** 是否已挂起 */
+    private Boolean suspended;
 
     /** 发起人 ID */
     private Long initiatorId;

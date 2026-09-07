@@ -382,6 +382,67 @@ class CodeGeneratorTest {
                 .contains("'demo/product/index'");
     }
 
+    @Test
+    @DisplayName("generateDatabaseDeploymentConfig - MySQL 配置包含驱动、URL 前缀、Flyway 目录与分页方言")
+    void generateDatabaseDeploymentConfig_MysqlRendersDatasourceAndFlyway() throws Exception {
+        DatabaseDeploymentConfig config = new DatabaseDeploymentConfig();
+        config.setDbType("mysql");
+        config.setHost("127.0.0.1");
+        config.setPort(3306);
+        config.setDatabase("apex_data");
+        config.setUsername("root");
+
+        List<String> files = new CodeGenerator().generateDatabaseDeploymentConfig(config, tempDir);
+
+        assertThat(files).containsExactly("generated/database-deployment.yml");
+        String yaml = Files.readString(tempDir.resolve("generated/database-deployment.yml"));
+        assertThat(yaml)
+                .contains("driver-class-name: com.mysql.cj.jdbc.Driver")
+                .contains("jdbc:mysql://127.0.0.1:3306/apex_data")
+                .contains("db-type: mysql")
+                .contains("classpath:db/migration/mysql")
+                .contains("db-type: mysql")
+                .contains("${DB_MASTER_PASSWORD}");
+    }
+
+    @Test
+    @DisplayName("generateDatabaseDeploymentConfig - PostgreSQL 配置使用对应驱动、URL 前缀与 Flyway 目录")
+    void generateDatabaseDeploymentConfig_PostgresRendersDatasourceAndFlyway() throws Exception {
+        DatabaseDeploymentConfig config = new DatabaseDeploymentConfig();
+        config.setDbType("postgresql");
+        config.setHost("127.0.0.1");
+        config.setPort(5432);
+        config.setDatabase("apex_data");
+        config.setUsername("apex");
+        config.setSchema("public");
+
+        List<String> files = new CodeGenerator().generateDatabaseDeploymentConfig(config, tempDir);
+
+        assertThat(files).containsExactly("generated/database-deployment.yml");
+        String yaml = Files.readString(tempDir.resolve("generated/database-deployment.yml"));
+        assertThat(yaml)
+                .contains("driver-class-name: org.postgresql.Driver")
+                .contains("jdbc:postgresql://127.0.0.1:5432/apex_data")
+                .contains("db-type: postgresql")
+                .contains("classpath:db/migration/postgresql")
+                .contains("${DB_MASTER_PASSWORD}");
+    }
+
+    @Test
+    @DisplayName("generateDatabaseDeploymentConfig - 不支持的数据库类型抛出参数异常")
+    void generateDatabaseDeploymentConfig_RejectsUnsupportedDbType() throws Exception {
+        DatabaseDeploymentConfig config = new DatabaseDeploymentConfig();
+        config.setDbType("oracle");
+        config.setHost("127.0.0.1");
+        config.setPort(1521);
+        config.setDatabase("apex");
+        config.setUsername("apex");
+
+        assertThatThrownBy(() -> new CodeGenerator().generateDatabaseDeploymentConfig(config, tempDir))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("不支持的数据库类型");
+    }
+
     private static TableDefinition statefulDefinition() throws Exception {
         return new ObjectMapper()
                 .readValue(

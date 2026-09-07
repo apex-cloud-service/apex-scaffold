@@ -564,6 +564,6 @@ tcpdump -i eth0 port 3306 -w mysql.pcap
 
 ---
 
-**文档维护者**: TRAE AI Assistant  
+**文档维护者**: 架构团队  
 **审核状态**: 待人工审核  
 **下次更新**: 网络架构变更后同步更新

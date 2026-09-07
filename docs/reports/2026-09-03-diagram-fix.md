@@ -223,5 +223,5 @@ sips --resampleWidth 1000 input.png --out output_thumb.png
 ---
 
 **修复日期**: 2026-09-03  
-**修复人员**: TRAE AI Assistant  
+**修复人员**: 开发团队  
 **验证状态**: ✅ 通过

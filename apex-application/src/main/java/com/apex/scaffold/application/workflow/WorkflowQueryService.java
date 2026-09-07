@@ -4,6 +4,7 @@ import com.apex.scaffold.application.dto.WorkflowDefinitionDTO;
 import com.apex.scaffold.application.dto.WorkflowInstanceDTO;
 import com.apex.scaffold.application.dto.WorkflowInstanceDetailDTO;
 import com.apex.scaffold.application.dto.WorkflowTaskDTO;
+import com.apex.scaffold.common.dto.PageResponse;
 import com.apex.scaffold.infrastructure.persistence.mapper.ProcessInstanceMapper;
 import com.apex.scaffold.infrastructure.persistence.mapper.TaskMapper;
 import com.apex.scaffold.infrastructure.persistence.mapper.WorkflowDefinitionMapper;
@@ -54,8 +55,15 @@ public class WorkflowQueryService {
      * @param initiatorId 发起人过滤（可选）
      * @return 分页结果
      */
-    public Mono<IPage<WorkflowInstanceDTO>> listInstances(int pageNum, int pageSize, String status, Long initiatorId) {
+    public Mono<PageResponse<WorkflowInstanceDTO>> listInstances(String status, int pageNum, int pageSize) {
+        return listInstances(pageNum, pageSize, status, null);
+    }
+
+    public Mono<PageResponse<WorkflowInstanceDTO>> listInstances(int pageNum, int pageSize, String status, Long initiatorId) {
         return Mono.fromCallable(() -> {
+                    log.info("开始查询工作流实例列表: pageNum={}, pageSize={}, status={}, initiatorId={}", 
+                            pageNum, pageSize, status, initiatorId);
+                    
                     Page<ProcessInstancePO> page = new Page<>(pageNum, pageSize);
                     LambdaQueryWrapper<ProcessInstancePO> wrapper = new LambdaQueryWrapper<>();
 
@@ -68,16 +76,21 @@ public class WorkflowQueryService {
                     wrapper.orderByDesc(ProcessInstancePO::getCreateTime);
 
                     IPage<ProcessInstancePO> poPage = processInstanceMapper.selectPage(page, wrapper);
+                    log.info("查询到 {} 条记录，总数: {}", poPage.getRecords().size(), poPage.getTotal());
 
-                    // 转换为 DTO
+                    // 转换为 DTO，需要查询工作流定义获取 processCode
                     List<WorkflowInstanceDTO> dtoList = poPage.getRecords().stream()
-                            .map(this::convertToInstanceDTO)
+                            .map(po -> {
+                                WorkflowDefinitionPO definition =
+                                        workflowDefinitionMapper.selectById(po.getWorkflowDefinitionId());
+                                return convertToInstanceDTO(po, definition);
+                            })
                             .collect(Collectors.toList());
 
-                    Page<WorkflowInstanceDTO> dtoPage = new Page<>(pageNum, pageSize, poPage.getTotal());
-                    dtoPage.setRecords(dtoList);
-                    return (IPage<WorkflowInstanceDTO>) dtoPage;
+                    log.info("转换完成，返回 {} 条 DTO", dtoList.size());
+                    return PageResponse.of(dtoList, poPage.getTotal(), pageNum, pageSize);
                 })
+                .doOnError(error -> log.error("查询工作流实例列表失败", error))
                 .subscribeOn(Schedulers.boundedElastic());
     }
 
@@ -96,12 +109,13 @@ public class WorkflowQueryService {
                     if (instancePO == null) {
                         return null;
                     }
-                    detail.setInstance(convertToInstanceDTO(instancePO));
-                    detail.setCurrentNodeId(instancePO.getCurrentNodeCode());
 
                     // 查询流程定义
                     WorkflowDefinitionPO definitionPO =
                             workflowDefinitionMapper.selectById(instancePO.getWorkflowDefinitionId());
+                    detail.setInstance(convertToInstanceDTO(instancePO, definitionPO));
+                    detail.setCurrentNodeId(instancePO.getCurrentNodeCode());
+
                     if (definitionPO != null) {
                         detail.setDefinition(convertToDefinitionDTO(definitionPO));
                     }
@@ -127,7 +141,7 @@ public class WorkflowQueryService {
      * @param pageSize 每页大小
      * @return 分页结果
      */
-    public Mono<IPage<WorkflowTaskDTO>> listMyTasks(Long assigneeId, int pageNum, int pageSize) {
+    public Mono<PageResponse<WorkflowTaskDTO>> listMyTasks(Long assigneeId, int pageNum, int pageSize) {
         return Mono.fromCallable(() -> {
                     Page<TaskPO> page = new Page<>(pageNum, pageSize);
                     LambdaQueryWrapper<TaskPO> wrapper = new LambdaQueryWrapper<>();
@@ -141,9 +155,7 @@ public class WorkflowQueryService {
                             .map(this::convertToTaskDTO)
                             .collect(Collectors.toList());
 
-                    Page<WorkflowTaskDTO> dtoPage = new Page<>(pageNum, pageSize, poPage.getTotal());
-                    dtoPage.setRecords(dtoList);
-                    return (IPage<WorkflowTaskDTO>) dtoPage;
+                    return PageResponse.of(dtoList, poPage.getTotal(), pageNum, pageSize);
                 })
                 .subscribeOn(Schedulers.boundedElastic());
     }
@@ -154,6 +166,19 @@ public class WorkflowQueryService {
      * @param definitionId 流程定义 ID
      * @return 流程定义 DTO
      */
+    public Mono<WorkflowDefinitionDTO> getDefinitionDetail(String workflowCode) {
+        return Mono.fromCallable(() -> {
+                    WorkflowDefinitionPO definitionPO = workflowDefinitionMapper.selectOne(
+                            new LambdaQueryWrapper<WorkflowDefinitionPO>()
+                                    .eq(WorkflowDefinitionPO::getWorkflowCode, workflowCode));
+                    if (definitionPO == null) {
+                        return null;
+                    }
+                    return convertToDefinitionDTO(definitionPO);
+                })
+                .subscribeOn(Schedulers.boundedElastic());
+    }
+
     public Mono<WorkflowDefinitionDTO> getDefinitionDetail(Long definitionId) {
         return Mono.fromCallable(() -> {
                     WorkflowDefinitionPO definitionPO = workflowDefinitionMapper.selectById(definitionId);
@@ -165,15 +190,15 @@ public class WorkflowQueryService {
                 .subscribeOn(Schedulers.boundedElastic());
     }
 
-    // ========== 私有转换方法 ==========
-
-    private WorkflowInstanceDTO convertToInstanceDTO(ProcessInstancePO po) {
+    private WorkflowInstanceDTO convertToInstanceDTO(ProcessInstancePO po, WorkflowDefinitionPO definition) {
         WorkflowInstanceDTO dto = new WorkflowInstanceDTO();
         dto.setId(po.getId());
         dto.setDefinitionId(po.getWorkflowDefinitionId());
-        dto.setProcessCode(po.getBusinessKey()); // 简化映射
-        dto.setTitle("流程实例-" + po.getId()); // 简化映射
+        // 从工作流定义获取 processCode，而不是使用 businessKey
+        dto.setProcessCode(definition != null ? definition.getWorkflowCode() : null);
+        dto.setTitle(po.getRemark() != null ? po.getRemark() : "流程实例-" + po.getId());
         dto.setStatus(po.getStatus());
+        dto.setSuspended(Boolean.TRUE.equals(po.getSuspended()) || "SUSPENDED".equals(po.getStatus()));
         dto.setInitiatorId(po.getInitiatorId());
         dto.setInitiatorName("用户-" + po.getInitiatorId()); // 简化映射，实际应关联用户表
         dto.setBusinessKey(po.getBusinessKey());
@@ -210,28 +235,37 @@ public class WorkflowQueryService {
         dto.setVersion(po.getVersion());
         dto.setEnabled(po.getEnabled() == 1);
 
-        // 解析 DAG JSON
+        // 解析 DAG JSON，增加 null 防护
         try {
             if (po.getNodeDefinition() != null && !po.getNodeDefinition().isEmpty()) {
                 Map<String, Object> dag =
                         objectMapper.readValue(po.getNodeDefinition(), new TypeReference<Map<String, Object>>() {});
 
-                // 解析节点
-                @SuppressWarnings("unchecked")
-                List<Map<String, Object>> nodesJson = (List<Map<String, Object>>) dag.get("nodes");
-                if (nodesJson != null) {
-                    List<WorkflowDefinitionDTO.WorkflowNodeDTO> nodes =
-                            nodesJson.stream().map(this::convertToNodeDTO).collect(Collectors.toList());
-                    dto.setNodes(nodes);
-                }
+                // 解析节点，增加 null 检查
+                if (dag != null) {
+                    @SuppressWarnings("unchecked")
+                    List<Map<String, Object>> nodesJson = (List<Map<String, Object>>) dag.get("nodes");
+                    if (nodesJson != null) {
+                        List<WorkflowDefinitionDTO.WorkflowNodeDTO> nodes =
+                                nodesJson.stream().map(this::convertToNodeDTO).collect(Collectors.toList());
+                        dto.setNodes(nodes);
+                    } else {
+                        dto.setNodes(new ArrayList<>());
+                    }
 
-                // 解析连线
-                @SuppressWarnings("unchecked")
-                List<Map<String, Object>> edgesJson = (List<Map<String, Object>>) dag.get("edges");
-                if (edgesJson != null) {
-                    List<WorkflowDefinitionDTO.WorkflowEdgeDTO> edges =
-                            edgesJson.stream().map(this::convertToEdgeDTO).collect(Collectors.toList());
-                    dto.setEdges(edges);
+                    // 解析连线
+                    @SuppressWarnings("unchecked")
+                    List<Map<String, Object>> edgesJson = (List<Map<String, Object>>) dag.get("edges");
+                    if (edgesJson != null) {
+                        List<WorkflowDefinitionDTO.WorkflowEdgeDTO> edges =
+                                edgesJson.stream().map(this::convertToEdgeDTO).collect(Collectors.toList());
+                        dto.setEdges(edges);
+                    } else {
+                        dto.setEdges(new ArrayList<>());
+                    }
+                } else {
+                    dto.setNodes(new ArrayList<>());
+                    dto.setEdges(new ArrayList<>());
                 }
             } else {
                 dto.setNodes(new ArrayList<>());

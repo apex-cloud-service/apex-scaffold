@@ -4,6 +4,10 @@ import com.apex.scaffold.common.annotation.RequirePermission;
 import com.apex.scaffold.interfaces.monitor.dashboard.MonitorMetricsCollector;
 import com.apex.scaffold.interfaces.util.MessageUtils;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
@@ -55,7 +59,18 @@ public class MonitorDashboardHandler extends BaseHandler {
      * @return 统一成功响应，data 为概览数据
      */
     @RequirePermission("system:monitor:view")
-    @Operation(operationId = "monitorOverview", summary = "监控概览", description = "应用状态、运行时长、堆内存、CPU、线程、会话与请求/治理/业务计数")
+    @Operation(
+            operationId = "monitorOverview",
+            summary = "监控概览",
+            description = "应用状态、运行时长、堆内存、CPU、线程、会话与请求/治理/业务计数")
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "查询成功",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = Object.class))),
+        @ApiResponse(responseCode = "401", description = "未授权，需要登录"),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要system:monitor:view权限")
+    })
     public Mono<ServerResponse> overview(ServerRequest request) {
         return Mono.fromSupplier(collector::overview).flatMap(this::buildSuccess);
     }
@@ -67,7 +82,18 @@ public class MonitorDashboardHandler extends BaseHandler {
      * @return 统一成功响应，data 为系统资源数据
      */
     @RequirePermission("system:monitor:view")
-    @Operation(operationId = "monitorSystem", summary = "系统资源监控", description = "JVM 内存/GC、CPU、进程、线程、磁盘、网络、阻塞 IO 线程池")
+    @Operation(
+            operationId = "monitorSystem",
+            summary = "系统资源监控",
+            description = "JVM 内存/GC、CPU、进程、线程、磁盘、网络、阻塞 IO 线程池")
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "查询成功",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = Object.class))),
+        @ApiResponse(responseCode = "401", description = "未授权，需要登录"),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要system:monitor:view权限")
+    })
     public Mono<ServerResponse> system(ServerRequest request) {
         return Mono.fromSupplier(collector::system).flatMap(this::buildSuccess);
     }
@@ -83,6 +109,14 @@ public class MonitorDashboardHandler extends BaseHandler {
             operationId = "monitorMiddleware",
             summary = "中间件监控",
             description = "MySQL 连接池、Redis 健康与派生指标、消息中间件、链路追踪状态")
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "查询成功",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = Object.class))),
+        @ApiResponse(responseCode = "401", description = "未授权，需要登录"),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要system:monitor:view权限")
+    })
     public Mono<ServerResponse> middleware(ServerRequest request) {
         return Mono.fromSupplier(collector::middleware).flatMap(this::buildSuccess);
     }
@@ -98,6 +132,14 @@ public class MonitorDashboardHandler extends BaseHandler {
             operationId = "monitorGovernance",
             summary = "治理监控",
             description = "Sentinel 规则、安全计数、Resilience4j 熔断器状态、网关/API 流量")
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "查询成功",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = Object.class))),
+        @ApiResponse(responseCode = "401", description = "未授权，需要登录"),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要system:monitor:view权限")
+    })
     public Mono<ServerResponse> governance(ServerRequest request) {
         return Mono.fromSupplier(collector::governance).flatMap(this::buildSuccess);
     }
@@ -109,7 +151,18 @@ public class MonitorDashboardHandler extends BaseHandler {
      * @return 统一成功响应，data 为业务指标数据
      */
     @RequirePermission("system:monitor:view")
-    @Operation(operationId = "monitorBusiness", summary = "核心业务监控", description = "登录/注册/上传/信用变动等核心业务指标与近 10 分钟趋势")
+    @Operation(
+            operationId = "monitorBusiness",
+            summary = "核心业务监控",
+            description = "登录/注册/上传/信用变动等核心业务指标与近 10 分钟趋势")
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "查询成功",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = Object.class))),
+        @ApiResponse(responseCode = "401", description = "未授权，需要登录"),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要system:monitor:view权限")
+    })
     public Mono<ServerResponse> business(ServerRequest request) {
         return Mono.fromSupplier(collector::business).flatMap(this::buildSuccess);
     }

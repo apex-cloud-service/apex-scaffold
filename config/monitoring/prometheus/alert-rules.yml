@@ -1,255 +1,188 @@
-# ================================================================
-# Apex Scaffold - Prometheus 告警规则
-# ================================================================
-# 用途: 面向 Apex Scaffold 生产部署的核心告警规则，覆盖服务可用性、
-#      接口质量、JVM 健康、数据库连接池与下游依赖。
-# 背景: 指标来源为 Micrometer（apex_api_*）、Actuator（jvm_*/hikaricp_*）、
-#      应用侧自定义绑定（druid_*/redisson_*）与 Sentinel（sentinel_*）。
-#      数据库连接池告警兼容双连接池口径：dev/本地用 HikariCP（hikaricp_*），
-#      prod 用 Druid（druid_*），PromQL 以 or 合并，任一环境均可命中。
-#      健康探针（probe_success）由 blackbox-exporter 提供，见 prometheus.yml。
-# 影响: 与 grafana/apex-dashboard.json 大盘配套；告警收敛阈值按
-#      「基础版中小规模部署」预设，可按业务规模调整。
-# ================================================================
-
 groups:
-  # ---------- 服务可用性 ----------
-  - name: apex-scaffold-availability
+  # ============================================================
+  # JVM深度告警
+  # ============================================================
+  - name: jvm_deep_monitoring
+    interval: 30s
     rules:
-      # 应用进程不可达（管理端口探活失败 1 分钟）
-      - alert: ApexServiceDown
-        expr: up{job="apex-scaffold"} == 0
-        for: 1m
+      # Metaspace使用率告警
+      - alert: MetaspaceUsageHigh
+        expr: |
+          100 * jvm_memory_used_bytes{area="nonheap",id="Metaspace"} 
+            / jvm_memory_max_bytes{area="nonheap",id="Metaspace"} > 85
+        for: 5m
         labels:
-          severity: critical
-          component: apex-scaffold
+          severity: warning
+          component: jvm
         annotations:
-          summary: "Apex Scaffold 实例不可达"
-          description: "实例 {{ $labels.instance }} 已连续 1 分钟无法抓取指标，服务可能已宕机。"
-
-      # 健康探针返回非 UP 状态（由 blackbox-exporter 探测 /actuator/health）
-      - alert: ApexHealthCheckDown
-        expr: probe_success{job="apex-scaffold-health"} == 0
+          summary: "Metaspace使用率过高"
+          description: "实例 {{ $labels.instance }} 的Metaspace使用率为 {{ $value | humanizePercentage }},超过85%阈值"
+      
+      - alert: MetaspaceUsageCritical
+        expr: |
+          100 * jvm_memory_used_bytes{area="nonheap",id="Metaspace"} 
+            / jvm_memory_max_bytes{area="nonheap",id="Metaspace"} > 90
         for: 2m
         labels:
           severity: critical
+          component: jvm
         annotations:
-          summary: "健康检查失败"
-          description: "实例 {{ $labels.instance }} 的 /actuator/health 连续 2 分钟返回非 UP。"
-
-  # ---------- 接口质量 ----------
-  - name: apex-api-quality
-    rules:
-      # 5xx 错误率超过 5%（5 分钟窗口）
-      - alert: ApexHighErrorRate
+          summary: "Metaspace使用率严重过高"
+          description: "实例 {{ $labels.instance }} 的Metaspace使用率为 {{ $value | humanizePercentage }},超过90%,可能导致OOM"
+      
+      # CodeCache使用率告警
+      - alert: CodeCacheUsageHigh
         expr: |
-          sum(rate(apex_api_request_count_total{status=~"5.."}[5m]))
-            / sum(rate(apex_api_request_count_total[5m]))
-            * 100 > 5
-        for: 5m
-        labels:
-          severity: warning
-        annotations:
-          summary: "接口 5xx 错误率过高"
-          description: "5 分钟窗口内 5xx 错误率 {{ $value | humanize }}% 超过 5% 阈值。"
-
-      # P95 响应时间超过 2 秒（基于 histogram 分位数）
-      - alert: ApexHighLatency
-        expr: |
-          histogram_quantile(0.95,
-            sum(rate(apex_api_response_time_seconds_bucket[5m])) by (le)
-          ) > 2
-        for: 5m
-        labels:
-          severity: warning
-        annotations:
-          summary: "接口 P95 响应时间过高"
-          description: "最近 5 分钟 P95 响应时间 {{ $value }}s 超过 2s 阈值。"
-
-      # 请求量骤降（疑似流量异常/路由故障）
-      - alert: ApexTrafficDrop
-        expr: |
-          sum(rate(apex_api_request_count_total[10m]))
-            / (sum(rate(apex_api_request_count_total[1d])) / 144)
-            < 0.2
+          100 * jvm_memory_used_bytes{area="nonheap",id="CodeCache"} 
+            / jvm_memory_max_bytes{area="nonheap",id="CodeCache"} > 80
         for: 10m
         labels:
           severity: warning
+          component: jvm
         annotations:
-          summary: "接口请求量骤降"
-          description: "当前请求速率不足日常均值的 20%，疑似流量异常。"
-
-      # 异常总量连续增长（5 分钟窗口突增超过 50 次/分钟）
-      - alert: ApexExceptionSpike
+          summary: "CodeCache使用率过高"
+          description: "实例 {{ $labels.instance }} 的CodeCache使用率为 {{ $value | humanizePercentage }},可能影响JIT编译性能"
+      
+      # GC暂停时间告警
+      - alert: GCPauseTimeHigh
         expr: |
-          rate(apex_exception_total[5m]) > 0.8333
+          jvm_gc_pause_seconds{quantile="0.99"} > 0.5
         for: 5m
         labels:
           severity: warning
+          component: jvm
         annotations:
-          summary: "异常发生速率过高"
-          description: "最近 5 分钟异常发生速率 {{ $value }} 次/秒（> 50 次/分钟），可能存在系统性故障。"
-
-      # 告警次数突增（5 分钟累计超 3 次，通常伴随告警风暴）
-      - alert: ApexAlertCountHigh
+          summary: "GC P99暂停时间过长"
+          description: "实例 {{ $labels.instance }} 的GC P99暂停时间为 {{ $value }}秒,超过500ms阈值"
+      
+      - alert: GCPauseTimeCritical
         expr: |
-          increase(apex_exception_alert_count[5m]) > 3
-        for: 1m
-        labels:
-          severity: critical
-        annotations:
-          summary: "异常告警次数突增"
-          description: "5 分钟内异常告警累计 {{ $value }} 次，可能存在告警风暴，需立即介入。"
-
-  # ---------- JVM 健康 ----------
-  - name: apex-jvm-health
-    rules:
-      # 堆内存使用率超过 85%（持续 10 分钟，排除短暂 GC 波动）
-      - alert: ApexJvmHeapHigh
-        expr: |
-          jvm_memory_used_bytes{area="heap"}
-            / jvm_memory_max_bytes{area="heap"}
-            * 100 > 85
-        for: 10m
-        labels:
-          severity: warning
-        annotations:
-          summary: "JVM 堆内存使用率过高"
-          description: "堆内存使用率 {{ $value | humanize }}% 持续 10 分钟超过 85%，建议扩容或排查泄漏。"
-
-      # 老年代 GC 次数突增（Full GC 1 分钟超 5 次）
-      - alert: ApexFullGcFrequent
-        expr: |
-          rate(jvm_gc_pause_seconds_count{action="end of major GC"}[5m]) > 0.0833
-        for: 5m
-        labels:
-          severity: warning
-        annotations:
-          summary: "Full GC 过于频繁"
-          description: "Full GC 频率 {{ $value }} 次/秒（5 分钟均值 > 5 次/分钟），堆可能不足。"
-
-      # GC 单次停顿超过 1 秒（STW 过长影响接口响应）
-      - alert: ApexGcPauseLong
-        expr: |
-          max_over_time(jvm_gc_pause_seconds_max[5m]) > 1
-        for: 5m
-        labels:
-          severity: warning
-        annotations:
-          summary: "GC 停顿时间过长"
-          description: "最近 5 分钟单次 GC 最大停顿 {{ $value }}s 超过 1s，建议调整 GC 参数。"
-
-      # 线程数过高（> 2000，WebFlux 下多为线程池泄漏）
-      - alert: ApexThreadCountHigh
-        expr: jvm_threads_live_threads > 2000
-        for: 10m
-        labels:
-          severity: warning
-        annotations:
-          summary: "存活线程数过高"
-          description: "当前存活线程 {{ $value }} 超过 2000，存在线程泄漏风险。"
-
-  # ---------- 主机资源 ----------
-  - name: apex-host-resources
-    rules:
-      # 磁盘使用率超过 90%（任一分区，持续 10 分钟）
-      - alert: ApexDiskUsageHigh
-        expr: apex_disk_used_percent > 90
-        for: 10m
-        labels:
-          severity: warning
-        annotations:
-          summary: "磁盘使用率过高"
-          description: "挂载点 {{ $labels.mount }} 使用率 {{ $value | humanize }}% 超过 90%，建议清理或扩容。"
-
-  # ---------- 数据库连接池 ----------
-  - name: apex-database-health
-    rules:
-      # 活跃连接占比超过 80%（连接池耗尽风险）
-      # （差异）HikariCP（dev/本地）与 Druid（prod）双口径，or 合并任一环境生效
-      - alert: ApexDbConnectionPoolHigh
-        expr: |
-          (hikaricp_connections_active or druid_connections_active)
-            / (hikaricp_connections_max or druid_connections_max)
-            * 100 > 80
-        for: 5m
-        labels:
-          severity: warning
-        annotations:
-          summary: "数据库连接池水位过高"
-          description: "活跃连接占比 {{ $value | humanize }}% 超过 80%，可能引发获取连接超时。"
-
-      # 等待获取连接超时累计（10 分钟超 5 次）
-      # （差异）HikariCP 用 connection_timeout_total；Druid 用 wait_count（等待获取连接计数）
-      - alert: ApexDbConnectionTimeout
-        expr: |
-          increase(hikaricp_connection_timeout_total[10m]) > 5
-            or increase(druid_connections_wait_count_total[10m]) > 5
-        for: 1m
-        labels:
-          severity: critical
-        annotations:
-          summary: "数据库连接获取超时"
-          description: "10 分钟内连接获取超时 {{ $value }} 次，数据库可能不可用或连接池耗尽。"
-
-  # ---------- 治理（Sentinel） ----------
-  - name: apex-sentinel-governance
-    rules:
-      # Sentinel 限流/熔断触发次数（10 分钟超 100 次）
-      - alert: ApexSentinelBlockHigh
-        expr: |
-          increase(sentinel_block_qps_total[10m]) > 100
-        for: 1m
-        labels:
-          severity: warning
-        annotations:
-          summary: "Sentinel 拦截请求过多"
-          description: "10 分钟内 Sentinel 拦截 {{ $value }} 次，系统可能过载或资源被过度保护。"
-
-  # ---------- 阻塞 IO 线程池 ----------
-  - name: apex-blocking-io
-    rules:
-      # 任一堆积任务数超过阈值（30 分钟持续高水位，说明下游 IO 变慢）
-      - alert: ApexBlockingIoQueuedHigh
-        expr: |
-          max by (pool) (apex_blocking_io_queued_tasks) > 500
-        for: 30m
-        labels:
-          severity: warning
-        annotations:
-          summary: "阻塞 IO 队列积压过多"
-          description: "池 {{ $labels.pool }} 队列积压 {{ $value }} 个任务持续 30 分钟，下游 IO 可能变慢。"
-
-      # 阻塞 IO 快照采集失败（10 分钟，说明反射采集或调度异常）
-      - alert: ApexBlockingIoSnapshotDown
-        expr: apex_blocking_io_up{type="scheduler_query"} == 0
-        for: 10m
-        labels:
-          severity: warning
-        annotations:
-          summary: "阻塞 IO 指标采集失败"
-          description: "阻塞 IO 线程池快照连续 10 分钟采集失败，监控大盘线程池面板将显示为不可用。"
-
-  # ---------- 下游依赖 ----------
-  - name: apex-downstream-dependencies
-    rules:
-      # Redis 节点健康探针（由应用 RedissonMetricsBinder 上报 redisson_healthy）
-      # 1 = 全部节点 PING 通，0 = 任一节点不可达（含连接异常）
-      - alert: ApexRedisDown
-        expr: redisson_healthy == 0
+          jvm_gc_pause_seconds{quantile="0.99"} > 1.0
         for: 2m
         labels:
           severity: critical
+          component: jvm
         annotations:
-          summary: "Redis 连接异常"
-          description: "Redis 健康探针连续 2 分钟为 0，缓存/分布式锁功能不可用。"
+          summary: "GC P99暂停时间严重过长"
+          description: "实例 {{ $labels.instance }} 的GC P99暂停时间为 {{ $value }}秒,严重影响性能"
 
-      # Redis 派生安全指标采集失败（SCAN 快照连续失败，监控大盘安全面板不可用）
-      - alert: ApexRedisMetricsScrapeDown
-        expr: apex_security_redis_metrics_up{type="redis_query"} == 0
+  # ============================================================
+  # Sentinel治理告警
+  # ============================================================
+  - name: sentinel_governance
+    interval: 30s
+    rules:
+      # 系统保护触发告警
+      - alert: SentinelSystemProtectionTriggered
+        expr: |
+          rate(sentinel_system_protection_triggered_total[5m]) > 0.1
         for: 5m
         labels:
           severity: warning
+          component: sentinel
         annotations:
-          summary: "Redis 安全指标采集失败"
-          description: "Redis 黑名单/会话派生指标连续 5 分钟采集失败，安全监控面板不可用。"
+          summary: "Sentinel系统保护频繁触发"
+          description: "实例 {{ $labels.instance }} 的系统保护在5分钟内触发 {{ $value }} 次/秒"
+      
+      # 限流频繁告警
+      - alert: SentinelFlowControlFrequent
+        expr: |
+          rate(sentinel_blocked_qps[5m]) > 10
+        for: 5m
+        labels:
+          severity: info
+          component: sentinel
+        annotations:
+          summary: "Sentinel限流频繁"
+          description: "资源 {{ $labels.resource }} 限流QPS为 {{ $value }},请检查是否需要调整规则"
+
+  # ============================================================
+  # 网关性能告警
+  # ============================================================
+  - name: gateway_performance
+    interval: 30s
+    rules:
+      # 慢请求过多告警
+      - alert: SlowRequestsExcessive
+        expr: |
+          sum(rate(http_server_requests_seconds_bucket{le="3.0"}[5m])) > 1
+        for: 10m
+        labels:
+          severity: warning
+          component: gateway
+        annotations:
+          summary: "慢请求(>3s)数量过多"
+          description: "实例 {{ $labels.instance }} 的慢请求速率为 {{ $value }} req/s"
+      
+      # 连接池使用率告警
+      - alert: ConnectionPoolUsageHigh
+        expr: |
+          100 * reactor_netty_connection_provider_active_connections 
+            / reactor_netty_connection_provider_max_connections > 80
+        for: 5m
+        labels:
+          severity: warning
+          component: gateway
+        annotations:
+          summary: "连接池使用率过高"
+          description: "实例 {{ $labels.instance }} 的连接池使用率为 {{ $value | humanizePercentage }}"
+
+  # ============================================================
+  # 熔断器告警
+  # ============================================================
+  - name: circuit_breaker
+    interval: 30s
+    rules:
+      # 熔断器Open状态告警
+      - alert: CircuitBreakerOpen
+        expr: |
+          resilience4j_circuitbreaker_state{state="open"} == 1
+        for: 1m
+        labels:
+          severity: critical
+          component: circuit_breaker
+        annotations:
+          summary: "熔断器已开启"
+          description: "熔断器 {{ $labels.name }} 处于Open状态,请求被拒绝"
+      
+      # 失败率过高告警
+      - alert: CircuitBreakerFailureRateHigh
+        expr: |
+          resilience4j_circuitbreaker_failure_rate > 50
+        for: 5m
+        labels:
+          severity: warning
+          component: circuit_breaker
+        annotations:
+          summary: "熔断器失败率过高"
+          description: "熔断器 {{ $labels.name }} 失败率为 {{ $value }}%,可能即将触发熔断"
+
+  # ============================================================
+  # 数据库告警
+  # ============================================================
+  - name: database_monitoring
+    interval: 30s
+    rules:
+      # 数据库连接池使用率告警
+      - alert: DBConnectionPoolUsageHigh
+        expr: |
+          100 * hikaricp_connections_active / hikaricp_connections_max > 80
+        for: 5m
+        labels:
+          severity: warning
+          component: database
+        annotations:
+          summary: "数据库连接池使用率过高"
+          description: "连接池 {{ $labels.pool }} 使用率为 {{ $value | humanizePercentage }}"
+      
+      # 数据库慢查询告警
+      - alert: DBSlowQueriesExcessive
+        expr: |
+          rate(jdbc_query_duration_seconds_bucket{le="1.0"}[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          component: database
+        annotations:
+          summary: "数据库慢查询过多"
+          description: "慢查询(>1s)速率为 {{ $value }} queries/s"

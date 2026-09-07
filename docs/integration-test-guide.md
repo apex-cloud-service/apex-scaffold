@@ -14,7 +14,7 @@
 
 ```bash
 cd /Users/work/apex-scaffold
-mvn spring-boot:run -pl apex-interfaces
+mvnd spring-boot:run -pl apex-interfaces
 ```
 
 ### 1.2 启动前端服务
@@ -624,4 +624,4 @@ ab -n 100 -c 10 -T 'application/json' \
 
 **文档版本**：1.0  
 **创建时间**：2026-09-04  
-**作者**：Kiro (AI Assistant)
+**作者**：开发团队

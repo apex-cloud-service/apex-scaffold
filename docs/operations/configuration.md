@@ -421,6 +421,6 @@ export DINGDING_SECRET="<if-alert-enabled>"
 
 ---
 
-**报告生成者**: TRAE AI Assistant  
+**报告生成者**: 运维团队  
 **最后更新**: 2026-09-03  
 **下次检查**: 建议在系统上线前再次执行完整检查

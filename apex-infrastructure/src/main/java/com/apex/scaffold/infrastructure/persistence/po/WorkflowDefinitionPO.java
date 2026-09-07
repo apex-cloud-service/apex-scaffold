@@ -24,7 +24,23 @@ public class WorkflowDefinitionPO extends BasePO {
 
     private String workflowCode;
 
+    public String getCode() {
+        return workflowCode;
+    }
+
+    public void setCode(String code) {
+        this.workflowCode = code;
+    }
+
     private String workflowName;
+
+    public String getName() {
+        return workflowName;
+    }
+
+    public void setName(String name) {
+        this.workflowName = name;
+    }
 
     private String description;
 

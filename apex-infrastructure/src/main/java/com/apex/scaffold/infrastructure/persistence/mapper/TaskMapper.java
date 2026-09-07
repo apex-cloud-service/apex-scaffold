@@ -1,8 +1,11 @@
 package com.apex.scaffold.infrastructure.persistence.mapper;
 
 import com.apex.scaffold.infrastructure.persistence.po.TaskPO;
+import java.time.LocalDateTime;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 
 /**
  * Task MyBatis Mapper 接口。
@@ -14,4 +17,14 @@ import org.apache.ibatis.annotations.Mapper;
  * @since 1.0.0
  */
 @Mapper
-public interface TaskMapper extends BaseMapper<TaskPO> {}
+public interface TaskMapper extends BaseMapper<TaskPO> {
+
+    @Select("SELECT COUNT(*) FROM wf_task WHERE status = 'PENDING' AND deleted = 0")
+    Integer countPendingTasks();
+
+    @Select("SELECT COUNT(*) FROM wf_task WHERE status = 'PENDING' AND timeout_at IS NOT NULL AND timeout_at <= #{now} AND timeout_handled = 0 AND deleted = 0")
+    Integer countTimeoutTasks(@Param("now") LocalDateTime now);
+
+    @Select("SELECT COUNT(*) FROM wf_task WHERE transferred_from IS NOT NULL AND deleted = 0")
+    Integer countTransferredTasks();
+}

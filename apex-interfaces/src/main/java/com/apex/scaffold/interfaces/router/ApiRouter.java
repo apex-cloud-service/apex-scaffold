@@ -10,6 +10,7 @@ import com.apex.scaffold.interfaces.handler.AuthHandler;
 import com.apex.scaffold.interfaces.handler.AuthorizationHandler;
 import com.apex.scaffold.interfaces.handler.CaptchaHandler;
 import com.apex.scaffold.interfaces.handler.ConfigHandler;
+import com.apex.scaffold.interfaces.handler.DatabaseConfigHandler;
 import com.apex.scaffold.interfaces.handler.DeptHandler;
 import com.apex.scaffold.interfaces.handler.DictHandler;
 import com.apex.scaffold.interfaces.handler.ExcelExportHandler;
@@ -291,6 +292,25 @@ public class ApiRouter {
                         .PUT("/{id}/status", contentType(MediaType.APPLICATION_JSON), handler::updateStatus)
                         .POST("/{id}/run", handler::runOnce)
                         .GET("/{id}/logs", handler::logs))
+                .build();
+    }
+
+    /**
+     * 系统管理-数据库配置路由（/admin-api/v1/database）。
+     *
+     * <p>提供数据库连接测试、部署配置生成和当前数据库信息查询端点，
+     * 所有端点经 {@code RequirePermissionAspect} 校验 {@code system:database:*} 权限。</p>
+     *
+     * @param handler 数据库配置处理器
+     * @return 数据库配置管理路由函数
+     * @since 1.2.0
+     */
+    @Bean
+    public RouterFunction<ServerResponse> adminDatabaseConfigRoutes(DatabaseConfigHandler handler) {
+        return RouterFunctions.route()
+                .POST("/admin-api/v1/database/test", contentType(MediaType.APPLICATION_JSON), handler::testConnection)
+                .POST("/admin-api/v1/database/generate-config", contentType(MediaType.APPLICATION_JSON), handler::generateConfig)
+                .GET("/admin-api/v1/database/current", handler::getCurrentInfo)
                 .build();
     }
 

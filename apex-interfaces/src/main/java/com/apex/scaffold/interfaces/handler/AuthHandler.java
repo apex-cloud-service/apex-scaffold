@@ -308,8 +308,41 @@ public class AuthHandler extends BaseHandler {
                 .flatMap(requestHandlerUtil::buildSuccessResponse);
     }
 
-    /** 完成手机号或微信注册，并在成功后返回登录令牌。 */
-    @Operation(summary = "用户注册", description = "使用登录或微信绑定流程签发的一次性票据完成注册")
+    /**
+     * 完成手机号或微信注册，并在成功后返回登录令牌。
+     *
+     * <p>使用登录或微信绑定流程签发的一次性票据完成用户注册流程。</p>
+     *
+     * @param request 服务器请求对象，包含注册信息（JSON格式）
+     * @return 包含注册结果和登录令牌的响应对象
+     */
+    @Operation(
+            summary = "用户注册",
+            description = "使用登录或微信绑定流程签发的一次性票据完成注册，注册成功后返回登录令牌"
+    )
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            required = true,
+            description = "注册请求信息",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = RegisterRequest.class)
+            )
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "注册成功，返回登录令牌",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = LoginResponse.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "参数错误或票据无效",
+                    content = @Content(schema = @Schema(implementation = Result.class))
+            )
+    })
     @OperationLog(module = "认证管理", type = OperationLog.OperationType.INSERT, description = "用户注册")
     @IdempotentApi(required = false, header = "Idempotency-Key")
     public Mono<ServerResponse> register(ServerRequest request) {
@@ -323,8 +356,41 @@ public class AuthHandler extends BaseHandler {
                 .doOnSuccess(response -> businessMetricsRecorder.recordRegister());
     }
 
-    /** 在注册前验证微信票据和手机号；已注册手机号直接绑定并登录。 */
-    @Operation(summary = "微信绑定手机号", description = "微信未绑定账号时验证手机号，已注册则绑定登录，未注册则返回注册票据")
+    /**
+     * 在注册前验证微信票据和手机号；已注册手机号直接绑定并登录。
+     *
+     * <p>微信未绑定账号时验证手机号，已注册则绑定登录，未注册则返回注册票据。</p>
+     *
+     * @param request 服务器请求对象，包含微信绑定手机号信息（JSON格式）
+     * @return 包含绑定或注册票据的响应对象
+     */
+    @Operation(
+            summary = "微信绑定手机号",
+            description = "微信未绑定账号时验证手机号，已注册则绑定登录，未注册则返回注册票据"
+    )
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            required = true,
+            description = "微信绑定手机号请求信息",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = WechatBindPhoneRequest.class)
+            )
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "处理成功，返回绑定结果或注册票据",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = LoginResponse.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "参数错误或微信票据无效",
+                    content = @Content(schema = @Schema(implementation = Result.class))
+            )
+    })
     @OperationLog(module = "认证管理", type = OperationLog.OperationType.UPDATE, description = "注册前微信绑定手机号")
     public Mono<ServerResponse> bindWechatPhone(ServerRequest request) {
         return requestHandlerUtil

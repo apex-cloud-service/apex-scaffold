@@ -1,10 +1,18 @@
 package com.apex.scaffold.interfaces.handler;
 
 import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.apex.scaffold.application.service.WorkflowService;
 import com.apex.scaffold.interfaces.dto.workflow.*;
+import com.apex.scaffold.interfaces.router.WorkflowRouter;
+import com.apex.scaffold.interfaces.security.AuthenticatedUser;
+import java.util.List;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,12 +24,21 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
 
 @WebFluxTest
-@ContextConfiguration(classes = {WorkflowHandler.class})
+@ContextConfiguration(classes = {WorkflowHandler.class, WorkflowRouter.class})
 @DisplayName("工作流 Handler 集成测试")
 class WorkflowHandlerIntegrationTest {
 
     @Autowired
     private WebTestClient webTestClient;
+
+    @BeforeEach
+    void setUpAuthentication() {
+        Authentication authentication = new UsernamePasswordAuthenticationToken(
+                new AuthenticatedUser(900L, "user-900", "tenant-a"), null, List.of());
+        webTestClient = webTestClient.mutateWith(
+                        SecurityMockServerConfigurers.mockAuthentication(authentication))
+                .mutateWith(SecurityMockServerConfigurers.csrf());
+    }
 
     @MockBean
     private WorkflowService workflowService;
@@ -48,8 +65,31 @@ class WorkflowHandlerIntegrationTest {
                 .expectBody()
                 .jsonPath("$.code")
                 .isEqualTo(0)
-                .jsonPath("$.message")
-                .isEqualTo("操作成功");
+                .jsonPath("$.msg")
+                .isEqualTo("成功");
+    }
+
+    @Test
+    @DisplayName("流程回退接口测试 - 使用认证上下文用户")
+    void testRollbackTask_UsesAuthenticatedUser() {
+        when(workflowService.rollbackToNode(anyLong(), anyString(), anyLong(), anyString()))
+                .thenReturn(Mono.empty());
+
+        RollbackTaskRequest request = new RollbackTaskRequest();
+        request.setTargetNodeCode("manager_approval");
+        request.setReason("材料不完整");
+
+        webTestClient
+                .post()
+                .uri("/api/workflow/tasks/1000/rollback")
+                .header("X-User-Id", "999")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(request)
+                .exchange()
+                .expectStatus()
+                .isOk();
+
+        verify(workflowService).rollbackToNode(1000L, "manager_approval", 900L, "材料不完整");
     }
 
     @Test
@@ -184,7 +224,7 @@ class WorkflowHandlerIntegrationTest {
                 .expectBody()
                 .jsonPath("$.code")
                 .isEqualTo(400)
-                .jsonPath("$.message")
+                .jsonPath("$.msg")
                 .isEqualTo("目标节点不存在");
     }
 
@@ -210,7 +250,7 @@ class WorkflowHandlerIntegrationTest {
                 .expectBody()
                 .jsonPath("$.code")
                 .isEqualTo(400)
-                .jsonPath("$.message")
+                .jsonPath("$.msg")
                 .isEqualTo("只能转办待办任务");
     }
 }

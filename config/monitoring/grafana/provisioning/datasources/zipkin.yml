@@ -1,0 +1,32 @@
+apiVersion: 1
+
+datasources:
+  - name: Zipkin
+    type: zipkin
+    access: proxy
+    url: http://zipkin:9411
+    isDefault: false
+    jsonData:
+      # 链路追踪到日志关联
+      tracesToLogsV2:
+        datasourceUid: 'loki'
+        spanStartTimeShift: '-1h'
+        spanEndTimeShift: '1h'
+        tags: ['trace_id']
+      
+      # 链路追踪到指标关联
+      tracesToMetrics:
+        datasourceUid: 'prometheus'
+        spanStartTimeShift: '-1h'
+        spanEndTimeShift: '1h'
+        tags: 
+          - key: 'service.name'
+            value: 'service'
+      
+      # 节点图配置
+      nodeGraph:
+        enabled: true
+    
+    # 基本配置
+    editable: true
+    uid: zipkin

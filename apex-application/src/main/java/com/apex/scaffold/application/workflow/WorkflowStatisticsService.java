@@ -48,32 +48,39 @@ public class WorkflowStatisticsService {
                     // 今日发起流程数
                     LocalDateTime todayStart = LocalDateTime.of(LocalDate.now(), LocalTime.MIN);
                     LocalDateTime todayEnd = LocalDateTime.of(LocalDate.now(), LocalTime.MAX);
-                    long todayStarted = processInstanceMapper.selectCount(new LambdaQueryWrapper<ProcessInstancePO>()
-                            .ge(ProcessInstancePO::getCreateTime, todayStart)
-                            .le(ProcessInstancePO::getCreateTime, todayEnd));
-                    stats.setTodayStarted((int) todayStarted);
+                    Integer todayStarted = processInstanceMapper.countTodayStarted(todayStart, todayEnd);
+                    stats.setTodayStarted(todayStarted != null ? todayStarted : 0);
 
-                    // 运行中流程总数
-                    long runningTotal = processInstanceMapper.selectCount(
-                            new LambdaQueryWrapper<ProcessInstancePO>().eq(ProcessInstancePO::getStatus, "RUNNING"));
-                    stats.setRunningTotal((int) runningTotal);
+                    Integer runningTotal = processInstanceMapper.countByStatus("RUNNING");
+                    stats.setRunningTotal(runningTotal != null ? runningTotal : 0);
+                    
+                    Integer suspendedCount = processInstanceMapper.countSuspended();
+                    stats.setSuspendedCount(suspendedCount != null ? suspendedCount : 0);
 
-                    // 待办任务总数
-                    long pendingTaskTotal =
-                            taskMapper.selectCount(new LambdaQueryWrapper<TaskPO>().eq(TaskPO::getStatus, "PENDING"));
-                    stats.setPendingTaskTotal((int) pendingTaskTotal);
+                    Integer pendingTaskTotal = taskMapper.countPendingTasks();
+                    stats.setPendingTaskTotal(pendingTaskTotal != null ? pendingTaskTotal : 0);
+                    
+                    Integer timeoutCount = taskMapper.countTimeoutTasks(LocalDateTime.now());
+                    stats.setTimeoutCount(timeoutCount != null ? timeoutCount : 0);
+                    
+                    Integer transferredCount = taskMapper.countTransferredTasks();
+                    stats.setTransferredCount(transferredCount != null ? transferredCount : 0);
 
-                    // 平均完成时长（秒）
-                    // 这里简化处理，实际应通过原生 SQL 计算 AVG(TIMESTAMPDIFF(SECOND, start_time, end_time))
-                    stats.setAvgCompletionSeconds(0L);
-
-                    // 流程状态分布
-                    Map<String, Integer> statusDistribution = new HashMap<>();
-                    statusDistribution.put("RUNNING", (int) runningTotal);
-                    statusDistribution.put("APPROVED", 0);
-                    statusDistribution.put("REJECTED", 0);
-                    statusDistribution.put("CANCELLED", 0);
-                    stats.setStatusDistribution(statusDistribution);
+                    Long avgSeconds = processInstanceMapper.avgCompletionSeconds();
+                    stats.setAvgCompletionSeconds(avgSeconds != null ? avgSeconds : 0L);
+                    
+                    // 转换状态分布 List<Map> 为 Map<String, Integer>
+                    List<Map<String, Object>> statusList = processInstanceMapper.statusDistribution();
+                    Map<String, Integer> statusMap = new HashMap<>();
+                    if (statusList != null) {
+                        for (Map<String, Object> row : statusList) {
+                            String status = (String) row.get("status");
+                            Object countObj = row.get("count");
+                            Integer count = countObj instanceof Long ? ((Long) countObj).intValue() : (Integer) countObj;
+                            statusMap.put(status, count);
+                        }
+                    }
+                    stats.setStatusDistribution(statusMap);
 
                     return stats;
                 })
@@ -81,7 +88,7 @@ public class WorkflowStatisticsService {
     }
 
     /**
-     * 获取工作流趋势数据（最近7天）。
+     * 获取工作流趋势数据（最近N天）。
      *
      * @param days 天数，默认7天
      * @return 趋势 DTO
@@ -101,18 +108,17 @@ public class WorkflowStatisticsService {
                         LocalDateTime dayStart = LocalDateTime.of(date, LocalTime.MIN);
                         LocalDateTime dayEnd = LocalDateTime.of(date, LocalTime.MAX);
 
-                        // 当天发起数量
-                        long started = processInstanceMapper.selectCount(new LambdaQueryWrapper<ProcessInstancePO>()
-                                .ge(ProcessInstancePO::getCreateTime, dayStart)
-                                .le(ProcessInstancePO::getCreateTime, dayEnd));
-                        startedCounts.add((int) started);
+                        // 转换 List<Map> 为 Map<LocalDate, Integer>
+                        List<Map<String, Object>> startedList =
+                                processInstanceMapper.countStartedByDateRange(dayStart, dayEnd);
+                        List<Map<String, Object>> completedList =
+                                processInstanceMapper.countCompletedByDateRange(dayStart, dayEnd);
 
-                        // 当天完成数量
-                        long completed = processInstanceMapper.selectCount(new LambdaQueryWrapper<ProcessInstancePO>()
-                                .in(ProcessInstancePO::getStatus, Arrays.asList("APPROVED", "REJECTED"))
-                                .ge(ProcessInstancePO::getEndTime, dayStart)
-                                .le(ProcessInstancePO::getEndTime, dayEnd));
-                        completedCounts.add((int) completed);
+                        Map<LocalDate, Integer> startedByDate = convertToDateMap(startedList);
+                        Map<LocalDate, Integer> completedByDate = convertToDateMap(completedList);
+
+                        startedCounts.add(startedByDate.getOrDefault(date, 0));
+                        completedCounts.add(completedByDate.getOrDefault(date, 0));
                     }
 
                     trend.setDates(dates);
@@ -121,5 +127,33 @@ public class WorkflowStatisticsService {
                     return trend;
                 })
                 .subscribeOn(Schedulers.boundedElastic());
+    }
+
+    /**
+     * 转换 List<Map> 为 Map<LocalDate, Integer>。
+     */
+    private Map<LocalDate, Integer> convertToDateMap(List<Map<String, Object>> list) {
+        Map<LocalDate, Integer> result = new HashMap<>();
+        if (list != null) {
+            for (Map<String, Object> row : list) {
+                Object dateObj = row.get("date");
+                Object countObj = row.get("count");
+                
+                // MySQL DATE() 返回 java.sql.Date
+                LocalDate date = null;
+                if (dateObj instanceof java.sql.Date) {
+                    date = ((java.sql.Date) dateObj).toLocalDate();
+                } else if (dateObj instanceof LocalDate) {
+                    date = (LocalDate) dateObj;
+                }
+                
+                Integer count = countObj instanceof Long ? ((Long) countObj).intValue() : (Integer) countObj;
+                
+                if (date != null && count != null) {
+                    result.put(date, count);
+                }
+            }
+        }
+        return result;
     }
 }

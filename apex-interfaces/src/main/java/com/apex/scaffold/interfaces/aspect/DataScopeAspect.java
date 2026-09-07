@@ -77,12 +77,11 @@ public class DataScopeAspect {
      *
      * <p>同时注入两类装配器：同步方法经 {@link DataScopeProvider} 解析，
      * 响应式方法（{@code Mono}/{@code Flux}）经 {@link ReactiveDataScopeProvider} 解析。
-     * 由 Spring 依赖注入调用（{@link Autowired}）。</p>
+     * Spring 自动识别单构造器并完成依赖注入。</p>
      *
      * @param dataScopeProvider            同步数据权限装配器
      * @param reactiveDataScopeProvider    响应式数据权限装配器
      */
-    @Autowired
     public DataScopeAspect(DataScopeProvider dataScopeProvider, ReactiveDataScopeProvider reactiveDataScopeProvider) {
         this.dataScopeProvider = dataScopeProvider;
         this.reactiveDataScopeProvider = reactiveDataScopeProvider;

@@ -246,8 +246,8 @@ spring:
     # 生产环境启动时自动执行数据库迁移。
     # （差异）application.yml 未显式关闭，由各 profile 决定；生产显式开启。
     enabled: true
-    # 迁移脚本存放路径，classpath 下相对目录。
-    locations: classpath:db/migration
+    # 迁移脚本存放路径，按数据库类型分目录（classpath:db/migration/{apex.database.type}）。
+    locations: classpath:db/migration/${apex.database.type:mysql}
     # 严格校验已执行迁移脚本的 checksum，防止被篡改。
     # 若发现差异将阻止应用启动，需人工介入修复。
     validate-on-migrate: true

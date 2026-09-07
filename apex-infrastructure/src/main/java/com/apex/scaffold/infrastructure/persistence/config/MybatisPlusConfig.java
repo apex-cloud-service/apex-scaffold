@@ -50,7 +50,7 @@ import org.springframework.context.annotation.Bean;
  * @since 1.0.0
  */
 @AutoConfiguration
-@EnableConfigurationProperties(SlowSqlProperties.class)
+@EnableConfigurationProperties({SlowSqlProperties.class, DatabaseProperties.class})
 public class MybatisPlusConfig {
     private static final Logger log = LoggerFactory.getLogger(MybatisPlusConfig.class);
 
@@ -58,8 +58,17 @@ public class MybatisPlusConfig {
     @org.springframework.beans.factory.annotation.Value("${apex.tenant.enabled:false}")
     private boolean tenantEnabled;
 
-    /** 构造 MyBatis-Plus 配置类 */
-    public MybatisPlusConfig() {}
+    /** 数据库配置属性（驱动分页方言与迁移目录） */
+    private final DatabaseProperties databaseProperties;
+
+    /**
+     * 构造 MyBatis-Plus 配置类。
+     *
+     * @param databaseProperties 数据库配置属性
+     */
+    public MybatisPlusConfig(DatabaseProperties databaseProperties) {
+        this.databaseProperties = databaseProperties;
+    }
 
     /**
      * 注册 MyBatis-Plus 拦截器链（多租户 + 数据权限 + 乐观锁）。
@@ -96,8 +105,8 @@ public class MybatisPlusConfig {
         }
         interceptor.addInnerInterceptor(new DataScopeInnerInterceptor(dataScopeProvider));
         interceptor.addInnerInterceptor(new OptimisticLockerInnerInterceptor());
-        interceptor.addInnerInterceptor(new PaginationInnerInterceptor(DbType.MYSQL));
-        log.info("MyBatis-Plus 数据权限/乐观锁插件已注册");
+        interceptor.addInnerInterceptor(new PaginationInnerInterceptor(databaseProperties.resolveDbType()));
+        log.info("MyBatis-Plus 数据权限/乐观锁/分页插件已注册，数据库类型={}", databaseProperties.getType());
         return interceptor;
     }
 

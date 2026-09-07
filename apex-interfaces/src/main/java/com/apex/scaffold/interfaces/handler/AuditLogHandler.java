@@ -1,10 +1,18 @@
 package com.apex.scaffold.interfaces.handler;
 
+import com.apex.scaffold.application.dto.admin.AuditLogDTO;
 import com.apex.scaffold.application.service.AuditLogQueryService;
 import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.annotation.RequirePermission;
 import com.apex.scaffold.interfaces.util.MessageUtils;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Validator;
 import org.springframework.stereotype.Component;
@@ -59,7 +67,63 @@ public class AuditLogHandler extends BaseHandler {
      * @return 带 traceId 的统一成功响应，data 为 {@code PageResponse<AuditLogPO>}
      */
     @RequirePermission("system:audit-log:list")
-    @Operation(operationId = "adminListAuditLogs", summary = "分页查询审计日志")
+    @Operation(
+            operationId = "adminListAuditLogs",
+            summary = "分页查询审计日志",
+            description = "提供操作审计日志的分页查询，支持按操作模块、操作人等条件模糊匹配过滤，支撑C2审计落库闭环与安全审计"
+    )
+    @Parameters({
+            @Parameter(
+                    name = "page",
+                    description = "页码，从1开始",
+                    required = false,
+                    in = ParameterIn.QUERY,
+                    schema = @Schema(type = "integer", defaultValue = "1")
+            ),
+            @Parameter(
+                    name = "size",
+                    description = "每页大小",
+                    required = false,
+                    in = ParameterIn.QUERY,
+                    schema = @Schema(type = "integer", defaultValue = "20")
+            ),
+            @Parameter(
+                    name = "module",
+                    description = "操作模块（模糊匹配）",
+                    required = false,
+                    in = ParameterIn.QUERY,
+                    schema = @Schema(type = "string")
+            ),
+            @Parameter(
+                    name = "operatorName",
+                    description = "操作人姓名（模糊匹配）",
+                    required = false,
+                    in = ParameterIn.QUERY,
+                    schema = @Schema(type = "string")
+            )
+    })
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "查询成功",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = AuditLogDTO.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "参数错误"
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "未授权，需要登录"
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "权限不足，需要 system:audit-log:list 权限"
+            )
+    })
     @OperationLog(module = "审计日志", type = OperationLog.OperationType.SELECT, description = "分页查询审计日志")
     public Mono<ServerResponse> list(ServerRequest request) {
         int page = safeParseInt(request.queryParam("page").orElse(null), 1);

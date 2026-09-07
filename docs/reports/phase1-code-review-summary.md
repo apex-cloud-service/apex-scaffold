@@ -310,6 +310,6 @@ apex-scaffold (父POM)
 ---
 
 **报告生成时间**: 2026-09-05  
-**审查人员**: TRAE AI Assistant  
+**审查人员**: 开发团队  
 **审查范围**: pom.xml + docker-compose.yml + application.yml + Flyway脚本  
 **下一步**: Phase 2 差异分析

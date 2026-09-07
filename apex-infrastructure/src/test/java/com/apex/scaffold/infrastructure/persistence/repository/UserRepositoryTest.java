@@ -84,7 +84,8 @@ class UserRepositoryTest {
         globalConfig.setIdentifierGenerator(new DefaultIdentifierGenerator());
         GlobalConfigUtils.setGlobalConfig(configuration, globalConfig);
         configuration.setEnvironment(new Environment("test", new JdbcTransactionFactory(), dataSource));
-        configuration.addInterceptor(new MybatisPlusConfig().mybatisPlusInterceptor(new MdcDataScopeProvider()));
+        configuration.addInterceptor(new MybatisPlusConfig(new com.apex.scaffold.infrastructure.persistence.config.DatabaseProperties())
+                .mybatisPlusInterceptor(new MdcDataScopeProvider()));
         configuration.addMapper(UserMapper.class);
         sqlSessionFactory = new SqlSessionFactoryBuilder().build(configuration);
     }

@@ -29,4 +29,20 @@ public class WorkflowTrendDTO {
 
     /** 每日完成数量 */
     private List<Integer> completedCounts;
+
+    public List<Integer> getStarted() {
+        return startedCounts;
+    }
+
+    public void setStarted(List<Integer> started) {
+        this.startedCounts = started;
+    }
+
+    public List<Integer> getCompleted() {
+        return completedCounts;
+    }
+
+    public void setCompleted(List<Integer> completed) {
+        this.completedCounts = completed;
+    }
 }

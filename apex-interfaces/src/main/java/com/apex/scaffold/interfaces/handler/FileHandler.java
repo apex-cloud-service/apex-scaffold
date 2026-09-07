@@ -447,24 +447,52 @@ public class FileHandler extends BaseHandler {
      * @param request 服务器请求对象，包含 {@code bucketName} 和 {@code fileName} 查询参数
      * @return 包含文件预签名 URL 的响应对象
      */
+    @Operation(
+            operationId = "getFileUrl",
+            summary = "获取文件URL",
+            description = "根据存储桶名称和文件名获取文件的预签名访问地址，预签名 URL 具有时效性，可直接用于文件下载"
+    )
     @Parameters({
-        @Parameter(name = "bucketName", in = ParameterIn.QUERY, required = true, description = "存储桶名称"),
-        @Parameter(name = "fileName", in = ParameterIn.QUERY, required = true, description = "文件名称")
+        @Parameter(
+                name = "bucketName",
+                description = "存储桶名称",
+                required = true,
+                in = ParameterIn.QUERY,
+                schema = @Schema(type = "string")
+        ),
+        @Parameter(
+                name = "fileName",
+                description = "文件名称",
+                required = true,
+                in = ParameterIn.QUERY,
+                schema = @Schema(type = "string")
+        )
     })
-    @Operation(summary = "获取文件URL", description = "获取文件的预签名访问地址")
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",
-                description = "成功",
-                content = @Content(schema = @Schema(implementation = Result.class))),
+                description = "获取成功，返回文件预签名URL",
+                content = @Content(
+                        mediaType = "application/json",
+                        schema = @Schema(implementation = Result.class)
+                )
+        ),
         @ApiResponse(
                 responseCode = "400",
-                description = "参数错误",
-                content = @Content(schema = @Schema(implementation = Result.class))),
+                description = "参数错误，bucketName或fileName为空",
+                content = @Content(
+                        mediaType = "application/json",
+                        schema = @Schema(implementation = Result.class)
+                )
+        ),
         @ApiResponse(
                 responseCode = "500",
                 description = "服务器内部错误",
-                content = @Content(schema = @Schema(implementation = Result.class)))
+                content = @Content(
+                        mediaType = "application/json",
+                        schema = @Schema(implementation = Result.class)
+                )
+        )
     })
     public Mono<ServerResponse> getUrl(ServerRequest request) {
         String traceId = TraceIdUtil.getTraceId();
@@ -485,24 +513,60 @@ public class FileHandler extends BaseHandler {
      * @param request 服务器请求对象，包含 {@code bucketName} 和 {@code fileName} 查询参数
      * @return 包含删除操作结果的响应对象，成功时返回 {@code true}
      */
+    @Operation(
+            operationId = "deleteFile",
+            summary = "删除文件",
+            description = "从对象存储系统中删除指定的文件，删除操作不可逆，请谨慎使用"
+    )
     @Parameters({
-        @Parameter(name = "bucketName", in = ParameterIn.QUERY, required = true, description = "存储桶名称"),
-        @Parameter(name = "fileName", in = ParameterIn.QUERY, required = true, description = "文件名称")
+        @Parameter(
+                name = "bucketName",
+                description = "存储桶名称",
+                required = true,
+                in = ParameterIn.QUERY,
+                schema = @Schema(type = "string")
+        ),
+        @Parameter(
+                name = "fileName",
+                description = "文件名称",
+                required = true,
+                in = ParameterIn.QUERY,
+                schema = @Schema(type = "string")
+        )
     })
-    @Operation(summary = "删除文件", description = "从存储系统中删除指定文件")
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",
-                description = "成功",
-                content = @Content(schema = @Schema(implementation = Result.class))),
+                description = "删除成功，返回操作结果",
+                content = @Content(
+                        mediaType = "application/json",
+                        schema = @Schema(implementation = Result.class)
+                )
+        ),
         @ApiResponse(
                 responseCode = "400",
-                description = "参数错误",
-                content = @Content(schema = @Schema(implementation = Result.class))),
+                description = "参数错误，bucketName或fileName为空",
+                content = @Content(
+                        mediaType = "application/json",
+                        schema = @Schema(implementation = Result.class)
+                )
+        ),
+        @ApiResponse(
+                responseCode = "404",
+                description = "文件不存在",
+                content = @Content(
+                        mediaType = "application/json",
+                        schema = @Schema(implementation = Result.class)
+                )
+        ),
         @ApiResponse(
                 responseCode = "500",
                 description = "服务器内部错误",
-                content = @Content(schema = @Schema(implementation = Result.class)))
+                content = @Content(
+                        mediaType = "application/json",
+                        schema = @Schema(implementation = Result.class)
+                )
+        )
     })
     @OperationLog(module = "文件管理", type = OperationLog.OperationType.DELETE, description = "删除文件")
     public Mono<ServerResponse> delete(ServerRequest request) {
@@ -524,24 +588,52 @@ public class FileHandler extends BaseHandler {
      * @param request 服务器请求对象，包含 {@code bucketName} 和 {@code fileName} 查询参数
      * @return 包含文件存在状态的响应对象，成功时返回 {@code true} 或 {@code false}
      */
+    @Operation(
+            operationId = "checkFileExists",
+            summary = "检查文件是否存在",
+            description = "查询指定文件是否已存在于对象存储系统中，返回布尔值表示文件是否存在"
+    )
     @Parameters({
-        @Parameter(name = "bucketName", in = ParameterIn.QUERY, required = true, description = "存储桶名称"),
-        @Parameter(name = "fileName", in = ParameterIn.QUERY, required = true, description = "文件名称")
+        @Parameter(
+                name = "bucketName",
+                description = "存储桶名称",
+                required = true,
+                in = ParameterIn.QUERY,
+                schema = @Schema(type = "string")
+        ),
+        @Parameter(
+                name = "fileName",
+                description = "文件名称",
+                required = true,
+                in = ParameterIn.QUERY,
+                schema = @Schema(type = "string")
+        )
     })
-    @Operation(summary = "检查文件是否存在", description = "检查指定文件是否存在于存储中")
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",
-                description = "成功",
-                content = @Content(schema = @Schema(implementation = Result.class))),
+                description = "查询成功，返回文件是否存在",
+                content = @Content(
+                        mediaType = "application/json",
+                        schema = @Schema(implementation = Result.class)
+                )
+        ),
         @ApiResponse(
                 responseCode = "400",
-                description = "参数错误",
-                content = @Content(schema = @Schema(implementation = Result.class))),
+                description = "参数错误，bucketName或fileName为空",
+                content = @Content(
+                        mediaType = "application/json",
+                        schema = @Schema(implementation = Result.class)
+                )
+        ),
         @ApiResponse(
                 responseCode = "500",
                 description = "服务器内部错误",
-                content = @Content(schema = @Schema(implementation = Result.class)))
+                content = @Content(
+                        mediaType = "application/json",
+                        schema = @Schema(implementation = Result.class)
+                )
+        )
     })
     public Mono<ServerResponse> exists(ServerRequest request) {
         String traceId = TraceIdUtil.getTraceId();
@@ -562,12 +654,52 @@ public class FileHandler extends BaseHandler {
      * @param request 包含 fileName 查询参数的服务器请求
      * @return 流式文件响应
      */
-    @Parameters({@Parameter(name = "fileName", in = ParameterIn.QUERY, required = true, description = "上传后返回的对象名称")})
-    @Operation(summary = "读取本地存储文件", description = "仅用于 local 存储模式，按服务端固定桶流式读取文件")
+    @Operation(
+            operationId = "getFileContent",
+            summary = "读取本地存储文件",
+            description = "仅用于 local 存储模式，按服务端固定桶流式读取文件内容并返回，主要为本地存储提供可访问 URL"
+    )
+    @Parameters({
+        @Parameter(
+                name = "fileName",
+                description = "上传后返回的对象名称（UUID格式）",
+                required = true,
+                in = ParameterIn.QUERY,
+                schema = @Schema(type = "string")
+        )
+    })
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "文件内容"),
-        @ApiResponse(responseCode = "400", description = "fileName 缺失"),
-        @ApiResponse(responseCode = "500", description = "文件读取失败")
+        @ApiResponse(
+                responseCode = "200",
+                description = "读取成功，返回文件内容流",
+                content = @Content(
+                        mediaType = "application/octet-stream"
+                )
+        ),
+        @ApiResponse(
+                responseCode = "400",
+                description = "参数错误，fileName缺失或为空",
+                content = @Content(
+                        mediaType = "application/json",
+                        schema = @Schema(implementation = Result.class)
+                )
+        ),
+        @ApiResponse(
+                responseCode = "404",
+                description = "文件不存在",
+                content = @Content(
+                        mediaType = "application/json",
+                        schema = @Schema(implementation = Result.class)
+                )
+        ),
+        @ApiResponse(
+                responseCode = "500",
+                description = "文件读取失败",
+                content = @Content(
+                        mediaType = "application/json",
+                        schema = @Schema(implementation = Result.class)
+                )
+        )
     })
     public Mono<ServerResponse> content(ServerRequest request) {
         String traceId = TraceIdUtil.getTraceId();

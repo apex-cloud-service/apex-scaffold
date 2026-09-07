@@ -14,7 +14,7 @@ class MybatisPlusConfigTest {
 
     @Test
     void registersTenantInterceptorWhenTenantIsolationIsEnabled() throws Exception {
-        MybatisPlusConfig config = new MybatisPlusConfig();
+        MybatisPlusConfig config = new MybatisPlusConfig(new DatabaseProperties());
         setTenantEnabled(config, true);
 
         MybatisPlusInterceptor interceptor = config.mybatisPlusInterceptor(new MdcDataScopeProvider());
@@ -24,7 +24,7 @@ class MybatisPlusConfigTest {
 
     @Test
     void doesNotRegisterTenantInterceptorWhenTenantIsolationIsDisabled() throws Exception {
-        MybatisPlusConfig config = new MybatisPlusConfig();
+        MybatisPlusConfig config = new MybatisPlusConfig(new DatabaseProperties());
         setTenantEnabled(config, false);
 
         MybatisPlusInterceptor interceptor = config.mybatisPlusInterceptor(new MdcDataScopeProvider());
@@ -34,7 +34,7 @@ class MybatisPlusConfigTest {
 
     @Test
     void registersMysqlPaginationInterceptorLast() {
-        MybatisPlusConfig config = new MybatisPlusConfig();
+        MybatisPlusConfig config = new MybatisPlusConfig(new DatabaseProperties());
 
         MybatisPlusInterceptor interceptor = config.mybatisPlusInterceptor(new MdcDataScopeProvider());
 

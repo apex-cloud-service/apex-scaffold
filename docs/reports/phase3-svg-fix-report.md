@@ -324,6 +324,6 @@ $ xmllint --noout 03_technical_architecture.svg
 ---
 
 **报告生成时间**: 2026-09-05  
-**修复人员**: TRAE AI Assistant  
+**修复人员**: 开发团队  
 **修复耗时**: 约30分钟  
 **质量评级**: ⭐⭐⭐⭐⭐ 优秀

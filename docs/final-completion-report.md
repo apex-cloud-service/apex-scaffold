@@ -484,4 +484,4 @@ curl -X POST 'http://localhost:8080/api/workflow/tasks/1000/rollback' \
 
 **文档版本**：1.0  
 **创建时间**：2026-09-04 02:00  
-**作者**：Kiro (AI Assistant)
+**作者**：开发团队

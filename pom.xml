@@ -58,6 +58,7 @@
     <druid.version>1.2.25</druid.version>
     <dynamic-datasource.version>4.3.1</dynamic-datasource.version>
     <mysql-connector.version>8.4.0</mysql-connector.version>
+    <postgresql.version>42.7.4</postgresql.version>
     <redisson.version>3.36.0</redisson.version>
     <rocketmq-spring.version>2.3.3</rocketmq-spring.version>
     <!-- 注：微信支付 SDK（weixin-java-pay）已于 1.2.0 移除；后续作为增值模块按需引入。 -->
@@ -252,6 +253,11 @@
         <version>${mysql-connector.version}</version>
       </dependency>
       <dependency>
+        <groupId>org.postgresql</groupId>
+        <artifactId>postgresql</artifactId>
+        <version>${postgresql.version}</version>
+      </dependency>
+      <dependency>
         <groupId>org.redisson</groupId>
         <artifactId>redisson-spring-boot-starter</artifactId>
         <version>${redisson.version}</version>
@@ -428,6 +434,11 @@
       <dependency>
         <groupId>org.flywaydb</groupId>
         <artifactId>flyway-mysql</artifactId>
+        <version>${flyway.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.flywaydb</groupId>
+        <artifactId>flyway-database-postgresql</artifactId>
         <version>${flyway.version}</version>
       </dependency>
       <!-- JUnit 4 (仅用于控制传递依赖版本，全项目已使用 JUnit 5) -->

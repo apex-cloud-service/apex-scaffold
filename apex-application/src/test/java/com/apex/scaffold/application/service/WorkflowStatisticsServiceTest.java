@@ -59,9 +59,12 @@ class WorkflowStatisticsServiceTest {
 
         // 模拟运行中总数
         when(processInstanceMapper.countByStatus("RUNNING")).thenReturn(8);
+        when(processInstanceMapper.countSuspended()).thenReturn(2);
 
         // 模拟待办任务总数
         when(taskMapper.countPendingTasks()).thenReturn(23);
+        when(taskMapper.countTimeoutTasks(any(LocalDateTime.class))).thenReturn(4);
+        when(taskMapper.countTransferredTasks()).thenReturn(6);
 
         // 模拟平均完成时长（秒）
         when(processInstanceMapper.avgCompletionSeconds()).thenReturn(7200L);
@@ -82,6 +85,9 @@ class WorkflowStatisticsServiceTest {
                     assertThat(dto.getTodayStarted()).isEqualTo(15);
                     assertThat(dto.getRunningTotal()).isEqualTo(8);
                     assertThat(dto.getPendingTaskTotal()).isEqualTo(23);
+                    assertThat(dto.getSuspendedCount()).isEqualTo(2);
+                    assertThat(dto.getTimeoutCount()).isEqualTo(4);
+                    assertThat(dto.getTransferredCount()).isEqualTo(6);
                     assertThat(dto.getAvgCompletionSeconds()).isEqualTo(7200L);
                     assertThat(dto.getStatusDistribution()).hasSize(3);
                     assertThat(dto.getStatusDistribution().get("RUNNING")).isEqualTo(8);
@@ -98,7 +104,10 @@ class WorkflowStatisticsServiceTest {
         when(processInstanceMapper.countTodayStarted(any(LocalDateTime.class), any(LocalDateTime.class)))
                 .thenReturn(0);
         when(processInstanceMapper.countByStatus("RUNNING")).thenReturn(0);
+        when(processInstanceMapper.countSuspended()).thenReturn(0);
         when(taskMapper.countPendingTasks()).thenReturn(0);
+        when(taskMapper.countTimeoutTasks(any(LocalDateTime.class))).thenReturn(0);
+        when(taskMapper.countTransferredTasks()).thenReturn(0);
         when(processInstanceMapper.avgCompletionSeconds()).thenReturn(0L);
         when(processInstanceMapper.statusDistribution()).thenReturn(new HashMap<>());
 

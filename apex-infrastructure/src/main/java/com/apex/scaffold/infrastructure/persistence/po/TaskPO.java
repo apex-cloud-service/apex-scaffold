@@ -34,6 +34,14 @@ public class TaskPO extends BasePO {
 
     private String nodeCode;
 
+    public String getNodeId() {
+        return nodeCode;
+    }
+
+    public void setNodeId(String nodeId) {
+        this.nodeCode = nodeId;
+    }
+
     private String taskName;
 
     private Long assigneeId;

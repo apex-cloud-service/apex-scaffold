@@ -1,7 +1,7 @@
 # Apex Scaffold 项目完善任务总结报告
 
 > 报告生成时间: 2026-09-03  
-> 任务执行者: TRAE AI Assistant  
+> 任务执行者: 开发团队  
 > 项目版本: apex-scaffold v2.5.0
 
 ---
@@ -357,6 +357,6 @@ docker compose up -d
 
 ---
 
-**报告生成者**: TRAE AI Assistant  
+**报告生成者**: 开发团队  
 **联系方式**: 通过GitHub Issues反馈  
 **下次更新**: 根据实际运行情况优化

@@ -5,6 +5,14 @@ import com.apex.scaffold.application.service.SearchService;
 import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.annotation.RequirePermission;
 import com.apex.scaffold.common.result.Result;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -27,17 +35,75 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@Tag(name = "全文搜索", description = "系统资源全文搜索与索引管理接口")
 public class UnifiedSearchHandler {
 
     private final SearchService searchService;
     private final IndexSyncService indexSyncService;
 
     /**
-     * 统一搜索
+     * 统一搜索。
      *
-     * @param request HTTP请求
-     * @return 搜索结果
+     * <p>根据关键词在指定资源类型中进行全文搜索，支持分页查询。</p>
+     *
+     * @param request ServerRequest，查询参数：keyword, types, page, size
+     * @return 搜索结果分页列表
      */
+    @Operation(
+            operationId = "unifiedSearch",
+            summary = "全文搜索",
+            description = "根据关键词在指定资源类型中进行全文搜索，支持分页查询。可搜索的资源类型包括用户、角色、菜单、部门等系统资源"
+    )
+    @Parameter(
+            name = "keyword",
+            description = "搜索关键词",
+            required = true,
+            in = ParameterIn.QUERY,
+            schema = @Schema(type = "string")
+    )
+    @Parameter(
+            name = "types",
+            description = "资源类型，多个类型用逗号分隔（如：user,role,menu），不传则搜索所有类型",
+            required = false,
+            in = ParameterIn.QUERY,
+            schema = @Schema(type = "string")
+    )
+    @Parameter(
+            name = "page",
+            description = "页码，从1开始",
+            required = false,
+            in = ParameterIn.QUERY,
+            schema = @Schema(type = "integer", defaultValue = "1")
+    )
+    @Parameter(
+            name = "size",
+            description = "每页大小，最大100",
+            required = false,
+            in = ParameterIn.QUERY,
+            schema = @Schema(type = "integer", defaultValue = "20")
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "搜索成功",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = Result.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "参数错误"
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "权限不足，需要system:search:query权限"
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "搜索失败，服务器内部错误"
+            )
+    })
     @RequirePermission("system:search:query")
     @OperationLog(module = "全文搜索", type = OperationLog.OperationType.SELECT, description = "执行全文搜索")
     public Mono<ServerResponse> search(ServerRequest request) {
@@ -83,11 +149,47 @@ public class UnifiedSearchHandler {
     }
 
     /**
-     * 重建索引
+     * 重建搜索索引。
      *
-     * @param request HTTP请求
-     * @return 重建结果
+     * <p>重建指定资源类型或所有资源的全文搜索索引。此操作会清空现有索引并重新建立，适用于索引损坏或数据不一致时。</p>
+     *
+     * @param request ServerRequest，查询参数：type
+     * @return 重建结果，包含索引的记录数
      */
+    @Operation(
+            operationId = "rebuildSearchIndex",
+            summary = "重建搜索索引",
+            description = "重建指定资源类型或所有资源的全文搜索索引。此操作会清空现有索引并重新建立，适用于索引损坏或数据不一致时"
+    )
+    @Parameter(
+            name = "type",
+            description = "资源类型（如：user, role, menu），不传则重建所有资源的索引",
+            required = false,
+            in = ParameterIn.QUERY,
+            schema = @Schema(type = "string")
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "重建成功",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = Result.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "参数错误，资源类型不存在"
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "权限不足，需要system:search:rebuild权限"
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "索引重建失败，服务器内部错误"
+            )
+    })
     @RequirePermission("system:search:rebuild")
     @OperationLog(module = "全文搜索", type = OperationLog.OperationType.UPDATE, description = "重建搜索索引")
     public Mono<ServerResponse> rebuildIndex(ServerRequest request) {

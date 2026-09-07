@@ -34,6 +34,14 @@ public class PageResponse<T> implements Serializable {
      */
     private List<T> list;
 
+    public List<T> getRecords() {
+        return list;
+    }
+
+    public void setRecords(List<T> records) {
+        this.list = records;
+    }
+
     /**
      * 总记录数
      *

@@ -3,6 +3,7 @@ package com.apex.scaffold.interfaces.config;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.apex.scaffold.interfaces.router.ApiRouter;
+import com.apex.scaffold.interfaces.router.WorkflowRouter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.models.OpenAPI;
@@ -207,6 +208,7 @@ class RouterOpenApiCoverageTest {
      */
     private Set<Endpoint> actualRoutes() throws Exception {
         ApiRouter router = new ApiRouter();
+        WorkflowRouter workflowRouter = new WorkflowRouter();
         Set<Endpoint> endpoints = new LinkedHashSet<>();
         for (String factoryName : List.of(
                 "apiRoutes",
@@ -223,7 +225,8 @@ class RouterOpenApiCoverageTest {
                 "adminExportRoutes",
                 "notificationSseRoutes",
                 "adminMonitorRoutes",
-                "captchaRoutes")) {
+                "captchaRoutes",
+                "unifiedSearchRoutes")) {
             Method factory = Arrays.stream(ApiRouter.class.getMethods())
                     .filter(method -> method.getName().equals(factoryName))
                     .findFirst()
@@ -236,6 +239,11 @@ class RouterOpenApiCoverageTest {
             routes.accept(collector);
             endpoints.addAll(collector.endpoints);
         }
+        RouterFunction<?> workflowRoutes = workflowRouter.workflowRoutes(Mockito.mock(
+                com.apex.scaffold.interfaces.handler.WorkflowHandler.class));
+        RouteCollector workflowCollector = new RouteCollector();
+        workflowRoutes.accept(workflowCollector);
+        endpoints.addAll(workflowCollector.endpoints);
         return endpoints;
     }
 

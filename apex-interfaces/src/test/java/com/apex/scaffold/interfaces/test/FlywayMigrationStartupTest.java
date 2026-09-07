@@ -15,8 +15,8 @@ import org.springframework.test.context.TestConstructor;
  * 集成测试启动校验：MySQL 迁移链完整性。
  *
  * <p>it profile 使用真实 MySQL（dynamic-datasource + Druid，与 prod 同构），
- * Spring 启动时 Flyway 自动执行 {@code classpath:db/migration}（MySQL 版 V1-V15）。
- * 本测试断言：迁移全部应用（flyway_schema_history 15 条）、关键表与种子就位，
+ * Spring 启动时 Flyway 自动执行 {@code classpath:db/migration/${apex.database.type}}。
+ * 本测试断言：迁移全部应用（flyway_schema_history 22 条）、关键表与种子就位，
  * 防止「迁移 SQL 坏导致应用无法启动」回归（历史教训：V4/V6 sys_menu 列名错误）。</p>
  *
  * @author Apex Team
@@ -51,17 +51,17 @@ class FlywayMigrationStartupTest {
 
     /**
      *
-     * <p>Flyway 迁移链 V1-V20 必须全部应用成功（MySQL 版，各环境共用同一套迁移）。
+     * <p>Flyway 迁移链 V1-V22 必须全部应用成功（MySQL 版，各环境共用同一套迁移）。
      * 新增迁移脚本时同步更新本断言数量。</p>
      *
      */
     @Test
-    void shouldApplyAllMigrationsThroughV19() throws SQLException {
+    void shouldApplyAllMigrationsThroughV22() throws SQLException {
         try (var connection = dataSource.getConnection();
                 var st = connection.createStatement();
                 var rs = st.executeQuery("SELECT COUNT(*) FROM flyway_schema_history WHERE success = 1")) {
             assertThat(rs.next()).isTrue();
-            assertThat(rs.getInt(1)).as("V1-V20 二十个迁移应全部应用成功").isEqualTo(20);
+            assertThat(rs.getInt(1)).as("V1-V22 二十二个迁移应全部应用成功").isEqualTo(22);
         }
     }
 

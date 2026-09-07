@@ -107,20 +107,28 @@ public class AuthorizationHandler extends BaseHandler {
      * @param request HTTP 请求（用于解析鉴权主体 openId）
      * @return 角色列表的标准响应
      */
-    @Operation(summary = "获取当前用户角色", description = "获取当前登录用户的所有角色")
+    @Operation(
+            operationId = "getMyRoles",
+            summary = "获取当前用户角色",
+            description = "返回当前登录用户的所有角色信息，包括角色代码、角色名称等"
+    )
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",
-                description = "成功",
-                content = @Content(schema = @Schema(implementation = Result.class))),
+                description = "查询成功",
+                content = @Content(
+                        mediaType = "application/json",
+                        schema = @Schema(implementation = Result.class)
+                )
+        ),
         @ApiResponse(
                 responseCode = "401",
-                description = "未登录",
-                content = @Content(schema = @Schema(implementation = Result.class))),
+                description = "未授权，需要登录"
+        ),
         @ApiResponse(
                 responseCode = "500",
-                description = "服务器内部错误",
-                content = @Content(schema = @Schema(implementation = Result.class)))
+                description = "服务器内部错误"
+        )
     })
     public Mono<ServerResponse> getMyRoles(ServerRequest request) {
         String traceId = TraceIdUtil.getTraceId();
@@ -145,20 +153,28 @@ public class AuthorizationHandler extends BaseHandler {
      * @param request HTTP 请求（用于解析鉴权主体 openId）
      * @return 权限列表的标准响应
      */
-    @Operation(summary = "获取当前用户权限", description = "获取当前登录用户的所有权限")
+    @Operation(
+            operationId = "getMyPermissions",
+            summary = "获取当前用户权限",
+            description = "返回当前登录用户的所有权限信息，包括权限代码、权限名称、资源标识等"
+    )
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",
-                description = "成功",
-                content = @Content(schema = @Schema(implementation = Result.class))),
+                description = "查询成功",
+                content = @Content(
+                        mediaType = "application/json",
+                        schema = @Schema(implementation = Result.class)
+                )
+        ),
         @ApiResponse(
                 responseCode = "401",
-                description = "未登录",
-                content = @Content(schema = @Schema(implementation = Result.class))),
+                description = "未授权，需要登录"
+        ),
         @ApiResponse(
                 responseCode = "500",
-                description = "服务器内部错误",
-                content = @Content(schema = @Schema(implementation = Result.class)))
+                description = "服务器内部错误"
+        )
     })
     public Mono<ServerResponse> getMyPermissions(ServerRequest request) {
         String traceId = TraceIdUtil.getTraceId();
@@ -182,20 +198,32 @@ public class AuthorizationHandler extends BaseHandler {
      * @param request HTTP 请求
      * @return 角色列表的标准响应
      */
-    @Operation(summary = "获取所有角色", description = "查询系统中所有角色")
+    @Operation(
+            operationId = "getAllRoles",
+            summary = "获取所有角色",
+            description = "查询系统中所有已定义的角色列表，用于角色管理界面展示和角色分配选择"
+    )
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",
-                description = "成功",
-                content = @Content(schema = @Schema(implementation = Result.class))),
+                description = "查询成功",
+                content = @Content(
+                        mediaType = "application/json",
+                        schema = @Schema(implementation = Result.class)
+                )
+        ),
         @ApiResponse(
                 responseCode = "401",
-                description = "未登录",
-                content = @Content(schema = @Schema(implementation = Result.class))),
+                description = "未授权，需要登录"
+        ),
+        @ApiResponse(
+                responseCode = "403",
+                description = "权限不足"
+        ),
         @ApiResponse(
                 responseCode = "500",
-                description = "服务器内部错误",
-                content = @Content(schema = @Schema(implementation = Result.class)))
+                description = "服务器内部错误"
+        )
     })
     public Mono<ServerResponse> getAllRoles(ServerRequest request) {
         String traceId = TraceIdUtil.getTraceId();
@@ -216,20 +244,32 @@ public class AuthorizationHandler extends BaseHandler {
      * @param request HTTP 请求
      * @return 权限列表的标准响应
      */
-    @Operation(summary = "获取所有权限", description = "查询系统中所有权限")
+    @Operation(
+            operationId = "getAllPermissions",
+            summary = "获取所有权限",
+            description = "查询系统中所有已定义的权限列表，用于权限管理界面展示和权限配置"
+    )
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",
-                description = "成功",
-                content = @Content(schema = @Schema(implementation = Result.class))),
+                description = "查询成功",
+                content = @Content(
+                        mediaType = "application/json",
+                        schema = @Schema(implementation = Result.class)
+                )
+        ),
         @ApiResponse(
                 responseCode = "401",
-                description = "未登录",
-                content = @Content(schema = @Schema(implementation = Result.class))),
+                description = "未授权，需要登录"
+        ),
+        @ApiResponse(
+                responseCode = "403",
+                description = "权限不足"
+        ),
         @ApiResponse(
                 responseCode = "500",
-                description = "服务器内部错误",
-                content = @Content(schema = @Schema(implementation = Result.class)))
+                description = "服务器内部错误"
+        )
     })
     public Mono<ServerResponse> getAllPermissions(ServerRequest request) {
         String traceId = TraceIdUtil.getTraceId();
@@ -250,24 +290,44 @@ public class AuthorizationHandler extends BaseHandler {
      * @param request HTTP 请求（包含角色创建请求体）
      * @return 创建结果的标准响应
      */
-    @Operation(summary = "创建角色", description = "创建新的角色")
+    @Operation(
+            operationId = "createRole",
+            summary = "创建角色",
+            description = "创建一个新的角色，包括角色代码、角色名称、描述等信息"
+    )
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            description = "角色创建请求信息",
+            required = true,
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = RoleRequest.class)
+            )
+    )
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",
-                description = "操作成功",
-                content = @Content(schema = @Schema(implementation = Result.class))),
+                description = "创建成功",
+                content = @Content(
+                        mediaType = "application/json",
+                        schema = @Schema(implementation = Result.class)
+                )
+        ),
         @ApiResponse(
                 responseCode = "400",
-                description = "参数错误",
-                content = @Content(schema = @Schema(implementation = Result.class))),
+                description = "参数校验失败或角色代码已存在"
+        ),
         @ApiResponse(
                 responseCode = "401",
-                description = "未登录",
-                content = @Content(schema = @Schema(implementation = Result.class))),
+                description = "未授权，需要登录"
+        ),
+        @ApiResponse(
+                responseCode = "403",
+                description = "权限不足，需要角色管理权限"
+        ),
         @ApiResponse(
                 responseCode = "500",
-                description = "服务器内部错误",
-                content = @Content(schema = @Schema(implementation = Result.class)))
+                description = "服务器内部错误"
+        )
     })
     @OperationLog(module = "权限管理", type = OperationLog.OperationType.INSERT, description = "创建角色")
     public Mono<ServerResponse> createRole(ServerRequest request) {
@@ -291,24 +351,48 @@ public class AuthorizationHandler extends BaseHandler {
      * @param request HTTP 请求（包含角色更新请求体，必须包含 id）
      * @return 更新结果的标准响应
      */
-    @Operation(summary = "更新角色", description = "更新已有角色信息")
+    @Operation(
+            operationId = "updateRole",
+            summary = "更新角色",
+            description = "更新已有角色的信息，支持更新角色代码、名称、描述等字段"
+    )
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            description = "角色更新请求信息",
+            required = true,
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = RoleRequest.class)
+            )
+    )
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",
-                description = "操作成功",
-                content = @Content(schema = @Schema(implementation = Result.class))),
+                description = "更新成功",
+                content = @Content(
+                        mediaType = "application/json",
+                        schema = @Schema(implementation = Result.class)
+                )
+        ),
         @ApiResponse(
                 responseCode = "400",
-                description = "参数错误",
-                content = @Content(schema = @Schema(implementation = Result.class))),
+                description = "参数校验失败"
+        ),
         @ApiResponse(
                 responseCode = "401",
-                description = "未登录",
-                content = @Content(schema = @Schema(implementation = Result.class))),
+                description = "未授权，需要登录"
+        ),
+        @ApiResponse(
+                responseCode = "403",
+                description = "权限不足"
+        ),
+        @ApiResponse(
+                responseCode = "404",
+                description = "角色不存在"
+        ),
         @ApiResponse(
                 responseCode = "500",
-                description = "服务器内部错误",
-                content = @Content(schema = @Schema(implementation = Result.class)))
+                description = "服务器内部错误"
+        )
     })
     @OperationLog(module = "权限管理", type = OperationLog.OperationType.UPDATE, description = "更新角色")
     public Mono<ServerResponse> updateRole(ServerRequest request) {
@@ -331,25 +415,51 @@ public class AuthorizationHandler extends BaseHandler {
      * @param request HTTP 请求（包含 pathVariable id）
      * @return 删除结果的标准响应
      */
-    @Operation(summary = "删除角色", description = "删除指定的角色")
-    @Parameters({@Parameter(name = "id", in = ParameterIn.PATH, required = true, description = "角色ID")})
+    @Operation(
+            operationId = "deleteRole",
+            summary = "删除角色",
+            description = "删除指定的角色，同时清理该角色的所有关联关系"
+    )
+    @Parameter(
+            name = "id",
+            description = "角色ID",
+            required = true,
+            in = ParameterIn.PATH,
+            schema = @Schema(type = "integer", format = "int64")
+    )
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",
-                description = "操作成功",
-                content = @Content(schema = @Schema(implementation = Result.class))),
+                description = "删除成功",
+                content = @Content(
+                        mediaType = "application/json",
+                        schema = @Schema(implementation = Result.class)
+                )
+        ),
         @ApiResponse(
                 responseCode = "400",
-                description = "参数错误（含路径参数无效）",
-                content = @Content(schema = @Schema(implementation = Result.class))),
+                description = "参数错误或路径参数无效"
+        ),
         @ApiResponse(
                 responseCode = "401",
-                description = "未登录",
-                content = @Content(schema = @Schema(implementation = Result.class))),
+                description = "未授权，需要登录"
+        ),
+        @ApiResponse(
+                responseCode = "403",
+                description = "权限不足"
+        ),
+        @ApiResponse(
+                responseCode = "404",
+                description = "角色不存在"
+        ),
+        @ApiResponse(
+                responseCode = "409",
+                description = "角色存在关联数据，无法删除"
+        ),
         @ApiResponse(
                 responseCode = "500",
-                description = "服务器内部错误",
-                content = @Content(schema = @Schema(implementation = Result.class)))
+                description = "服务器内部错误"
+        )
     })
     @OperationLog(module = "权限管理", type = OperationLog.OperationType.DELETE, description = "删除角色")
     public Mono<ServerResponse> deleteRole(ServerRequest request) {
@@ -381,24 +491,44 @@ public class AuthorizationHandler extends BaseHandler {
      * @param request HTTP 请求（包含权限创建请求体）
      * @return 创建结果的标准响应
      */
-    @Operation(summary = "创建权限", description = "创建新的权限")
+    @Operation(
+            operationId = "createPermission",
+            summary = "创建权限",
+            description = "创建一个新的权限，包括权限代码、权限名称、资源标识等信息"
+    )
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            description = "权限创建请求信息",
+            required = true,
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = PermissionRequest.class)
+            )
+    )
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",
-                description = "操作成功",
-                content = @Content(schema = @Schema(implementation = Result.class))),
+                description = "创建成功",
+                content = @Content(
+                        mediaType = "application/json",
+                        schema = @Schema(implementation = Result.class)
+                )
+        ),
         @ApiResponse(
                 responseCode = "400",
-                description = "参数错误",
-                content = @Content(schema = @Schema(implementation = Result.class))),
+                description = "参数校验失败或权限代码已存在"
+        ),
         @ApiResponse(
                 responseCode = "401",
-                description = "未登录",
-                content = @Content(schema = @Schema(implementation = Result.class))),
+                description = "未授权，需要登录"
+        ),
+        @ApiResponse(
+                responseCode = "403",
+                description = "权限不足，需要权限管理权限"
+        ),
         @ApiResponse(
                 responseCode = "500",
-                description = "服务器内部错误",
-                content = @Content(schema = @Schema(implementation = Result.class)))
+                description = "服务器内部错误"
+        )
     })
     @OperationLog(module = "权限管理", type = OperationLog.OperationType.INSERT, description = "创建权限")
     public Mono<ServerResponse> createPermission(ServerRequest request) {
@@ -422,24 +552,48 @@ public class AuthorizationHandler extends BaseHandler {
      * @param request HTTP 请求（包含权限更新请求体，必须包含 id）
      * @return 更新结果的标准响应
      */
-    @Operation(summary = "更新权限", description = "更新已有权限信息")
+    @Operation(
+            operationId = "updatePermission",
+            summary = "更新权限",
+            description = "更新已有权限的信息，支持更新权限代码、名称、资源标识等字段"
+    )
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            description = "权限更新请求信息",
+            required = true,
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = PermissionRequest.class)
+            )
+    )
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",
-                description = "操作成功",
-                content = @Content(schema = @Schema(implementation = Result.class))),
+                description = "更新成功",
+                content = @Content(
+                        mediaType = "application/json",
+                        schema = @Schema(implementation = Result.class)
+                )
+        ),
         @ApiResponse(
                 responseCode = "400",
-                description = "参数错误",
-                content = @Content(schema = @Schema(implementation = Result.class))),
+                description = "参数校验失败"
+        ),
         @ApiResponse(
                 responseCode = "401",
-                description = "未登录",
-                content = @Content(schema = @Schema(implementation = Result.class))),
+                description = "未授权，需要登录"
+        ),
+        @ApiResponse(
+                responseCode = "403",
+                description = "权限不足"
+        ),
+        @ApiResponse(
+                responseCode = "404",
+                description = "权限不存在"
+        ),
         @ApiResponse(
                 responseCode = "500",
-                description = "服务器内部错误",
-                content = @Content(schema = @Schema(implementation = Result.class)))
+                description = "服务器内部错误"
+        )
     })
     @OperationLog(module = "权限管理", type = OperationLog.OperationType.UPDATE, description = "更新权限")
     public Mono<ServerResponse> updatePermission(ServerRequest request) {
@@ -462,25 +616,51 @@ public class AuthorizationHandler extends BaseHandler {
      * @param request HTTP 请求（包含 pathVariable id）
      * @return 删除结果的标准响应
      */
-    @Operation(summary = "删除权限", description = "删除指定的权限")
-    @Parameters({@Parameter(name = "id", in = ParameterIn.PATH, required = true, description = "权限ID")})
+    @Operation(
+            operationId = "deletePermission",
+            summary = "删除权限",
+            description = "删除指定的权限，同时清理该权限的关联关系"
+    )
+    @Parameter(
+            name = "id",
+            description = "权限ID",
+            required = true,
+            in = ParameterIn.PATH,
+            schema = @Schema(type = "integer", format = "int64")
+    )
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",
-                description = "操作成功",
-                content = @Content(schema = @Schema(implementation = Result.class))),
+                description = "删除成功",
+                content = @Content(
+                        mediaType = "application/json",
+                        schema = @Schema(implementation = Result.class)
+                )
+        ),
         @ApiResponse(
                 responseCode = "400",
-                description = "参数错误（含路径参数无效）",
-                content = @Content(schema = @Schema(implementation = Result.class))),
+                description = "参数错误或路径参数无效"
+        ),
         @ApiResponse(
                 responseCode = "401",
-                description = "未登录",
-                content = @Content(schema = @Schema(implementation = Result.class))),
+                description = "未授权，需要登录"
+        ),
+        @ApiResponse(
+                responseCode = "403",
+                description = "权限不足"
+        ),
+        @ApiResponse(
+                responseCode = "404",
+                description = "权限不存在"
+        ),
+        @ApiResponse(
+                responseCode = "409",
+                description = "权限存在关联数据，无法删除"
+        ),
         @ApiResponse(
                 responseCode = "500",
-                description = "服务器内部错误",
-                content = @Content(schema = @Schema(implementation = Result.class)))
+                description = "服务器内部错误"
+        )
     })
     @OperationLog(module = "权限管理", type = OperationLog.OperationType.DELETE, description = "删除权限")
     public Mono<ServerResponse> deletePermission(ServerRequest request) {
@@ -513,28 +693,56 @@ public class AuthorizationHandler extends BaseHandler {
      * @param request HTTP 请求（包含 pathVariable userId 和 roleId）
      * @return 分配结果的标准响应
      */
-    @Operation(summary = "分配角色", description = "为用户分配指定角色")
+    @Operation(
+            operationId = "assignRoleToUser",
+            summary = "分配角色",
+            description = "为指定用户分配角色，建立用户与角色的关联关系"
+    )
     @Parameters({
-        @Parameter(name = "userId", in = ParameterIn.PATH, required = true, description = "用户ID"),
-        @Parameter(name = "roleId", in = ParameterIn.PATH, required = true, description = "角色ID")
+        @Parameter(
+                name = "userId",
+                description = "用户ID",
+                required = true,
+                in = ParameterIn.PATH,
+                schema = @Schema(type = "integer", format = "int64")
+        ),
+        @Parameter(
+                name = "roleId",
+                description = "角色ID",
+                required = true,
+                in = ParameterIn.PATH,
+                schema = @Schema(type = "integer", format = "int64")
+        )
     })
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",
-                description = "操作成功",
-                content = @Content(schema = @Schema(implementation = Result.class))),
+                description = "分配成功",
+                content = @Content(
+                        mediaType = "application/json",
+                        schema = @Schema(implementation = Result.class)
+                )
+        ),
         @ApiResponse(
                 responseCode = "400",
-                description = "参数错误（含路径参数无效）",
-                content = @Content(schema = @Schema(implementation = Result.class))),
+                description = "参数错误或路径参数无效"
+        ),
         @ApiResponse(
                 responseCode = "401",
-                description = "未登录",
-                content = @Content(schema = @Schema(implementation = Result.class))),
+                description = "未授权，需要登录"
+        ),
+        @ApiResponse(
+                responseCode = "403",
+                description = "权限不足"
+        ),
+        @ApiResponse(
+                responseCode = "404",
+                description = "用户或角色不存在"
+        ),
         @ApiResponse(
                 responseCode = "500",
-                description = "服务器内部错误",
-                content = @Content(schema = @Schema(implementation = Result.class)))
+                description = "服务器内部错误"
+        )
     })
     @OperationLog(module = "权限管理", type = OperationLog.OperationType.UPDATE, description = "为用户分配角色")
     public Mono<ServerResponse> assignRoleToUser(ServerRequest request) {
@@ -572,28 +780,56 @@ public class AuthorizationHandler extends BaseHandler {
      * @param request HTTP 请求（包含 pathVariable userId/roleId）
      * @return 移除结果的标准响应
      */
-    @Operation(summary = "移除角色", description = "移除用户的指定角色")
+    @Operation(
+            operationId = "removeRoleFromUser",
+            summary = "移除角色",
+            description = "移除用户的指定角色，解除用户与角色的关联关系"
+    )
     @Parameters({
-        @Parameter(name = "userId", in = ParameterIn.PATH, required = true, description = "用户ID"),
-        @Parameter(name = "roleId", in = ParameterIn.PATH, required = true, description = "角色ID")
+        @Parameter(
+                name = "userId",
+                description = "用户ID",
+                required = true,
+                in = ParameterIn.PATH,
+                schema = @Schema(type = "integer", format = "int64")
+        ),
+        @Parameter(
+                name = "roleId",
+                description = "角色ID",
+                required = true,
+                in = ParameterIn.PATH,
+                schema = @Schema(type = "integer", format = "int64")
+        )
     })
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",
-                description = "操作成功",
-                content = @Content(schema = @Schema(implementation = Result.class))),
+                description = "移除成功",
+                content = @Content(
+                        mediaType = "application/json",
+                        schema = @Schema(implementation = Result.class)
+                )
+        ),
         @ApiResponse(
                 responseCode = "400",
-                description = "参数错误（含路径参数无效）",
-                content = @Content(schema = @Schema(implementation = Result.class))),
+                description = "参数错误或路径参数无效"
+        ),
         @ApiResponse(
                 responseCode = "401",
-                description = "未登录",
-                content = @Content(schema = @Schema(implementation = Result.class))),
+                description = "未授权，需要登录"
+        ),
+        @ApiResponse(
+                responseCode = "403",
+                description = "权限不足"
+        ),
+        @ApiResponse(
+                responseCode = "404",
+                description = "用户或角色不存在"
+        ),
         @ApiResponse(
                 responseCode = "500",
-                description = "服务器内部错误",
-                content = @Content(schema = @Schema(implementation = Result.class)))
+                description = "服务器内部错误"
+        )
     })
     @OperationLog(module = "权限管理", type = OperationLog.OperationType.UPDATE, description = "移除用户角色")
     public Mono<ServerResponse> removeRoleFromUser(ServerRequest request) {

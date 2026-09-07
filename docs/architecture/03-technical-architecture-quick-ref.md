@@ -90,13 +90,13 @@ npm run lint
 
 ```bash
 # 编译
-mvn clean compile
+mvnd clean compile
 
 # 运行测试
 mvn test
 
 # 打包
-mvn clean package -DskipTests
+mvnd clean package -DskipTests
 
 # 运行
 java -jar target/*.jar
@@ -459,7 +459,7 @@ mvn clean package -DskipTests
 
 ```bash
 # 使用 Testcontainers
-mvn verify -P integration-test
+mvnd verify -P integration-test
 
 # 指定测试环境
 mvn verify -Dspring.profiles.active=test

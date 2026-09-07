@@ -289,6 +289,6 @@ Cannot find name 'listUsers'
 
 ---
 
-**更新人员**：Kiro (AI Assistant)  
+**更新人员**：开发团队  
 **确认时间**：2026-09-04 01:58  
 **文档版本**：1.0

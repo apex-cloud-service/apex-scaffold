@@ -432,6 +432,6 @@ head -50 docs/architecture/monitoring-dashboard-architecture.md
 
 ---
 
-**计划制定者**: TRAE AI Assistant  
+**计划制定者**: 开发团队  
 **计划状态**: 待用户确认  
 **下一步**: 等待用户确认方案后开始执行

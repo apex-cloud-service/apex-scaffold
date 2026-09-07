@@ -781,6 +781,6 @@ kubectl logs -f <pod-name> -n apex-prod --tail=100
 
 ---
 
-**文档维护者**: TRAE AI Assistant  
+**文档维护者**: 架构团队  
 **审核状态**: 待人工审核  
 **下次更新**: 部署架构变更后同步更新

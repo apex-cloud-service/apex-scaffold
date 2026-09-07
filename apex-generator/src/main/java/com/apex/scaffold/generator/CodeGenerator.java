@@ -136,6 +136,99 @@ public class CodeGenerator {
     }
 
     /**
+     * 依据数据库部署配置生成可合并的 YAML 配置片段。
+     *
+     * <p>将前端页面采集的数据库类型、主机、端口、库名、用户名等信息渲染为
+     * dynamic-datasource 数据源、Flyway 迁移目录与 MyBatis-Plus 分页方言
+     * 配置。密码统一使用环境变量占位符 {@code ${DB_MASTER_PASSWORD}}，
+     * 不写入明文。</p>
+     *
+     * <p>首期支持 {@code mysql} 与 {@code postgresql}，其余类型抛出
+     * {@link IllegalArgumentException}，避免生成不可用配置。</p>
+     *
+     * @param config 数据库部署配置（不含密码）
+     * @param outputRoot 输出根目录
+     * @return 生成的文件相对路径列表（仅 1 个：{@code generated/database-deployment.yml}）
+     * @throws IOException 当模板渲染或文件写入失败时抛出
+     * @throws IllegalArgumentException 当数据库类型不受支持时抛出
+     */
+    public List<String> generateDatabaseDeploymentConfig(DatabaseDeploymentConfig config, Path outputRoot)
+            throws IOException {
+        String dbType = normalizeDbType(config.getDbType());
+        DatabaseProfile profile = DatabaseProfile.of(dbType);
+
+        Map<String, Object> model = new HashMap<>(16);
+        model.put("dbType", dbType);
+        model.put("driverClassName", profile.driverClassName());
+        model.put("jdbcUrl", profile.buildJdbcUrl(config));
+        model.put("username", config.getUsername());
+        model.put("validationQuery", profile.validationQuery());
+        // Spring 环境变量占位符（不通过 FreeMarker 插值，避免嵌套 ${} 解析冲突）
+        model.put("dbMasterPasswordPlaceholder", "${DB_MASTER_PASSWORD}");
+        model.put("dbMaxActivePlaceholder", "${DB_MAX_ACTIVE:20}");
+
+        String outputPath = "generated/database-deployment.yml";
+        Path target = outputRoot.resolve(outputPath).normalize();
+        Files.createDirectories(target.getParent());
+        Files.writeString(target, render("databaseDeployment.ftl", model), StandardCharsets.UTF_8);
+        log.info("生成数据库部署配置: {}", outputPath);
+        return List.of(outputPath);
+    }
+
+    private static String normalizeDbType(String dbType) {
+        if (dbType == null || dbType.isBlank()) {
+            throw new IllegalArgumentException("数据库类型不能为空");
+        }
+        return dbType.trim().toLowerCase();
+    }
+
+    /**
+     * 数据库方言概要（驱动、URL 前缀、校验查询、迁移目录）。
+     *
+     * @param dbType 规范化后的数据库类型
+     * @param driverClassName JDBC 驱动类全限定名
+     * @param urlPrefix JDBC URL 前缀（含 {@code //}）
+     * @param validationQuery 连接池校验查询
+     */
+    private record DatabaseProfile(
+            String dbType,
+            String driverClassName,
+            String urlPrefix,
+            String validationQuery) {
+
+        static DatabaseProfile of(String dbType) {
+            return switch (dbType) {
+                case "mysql" -> new DatabaseProfile(
+                        "mysql",
+                        "com.mysql.cj.jdbc.Driver",
+                        "jdbc:mysql://",
+                        "SELECT 1");
+                case "postgresql" -> new DatabaseProfile(
+                        "postgresql",
+                        "org.postgresql.Driver",
+                        "jdbc:postgresql://",
+                        "SELECT 1");
+                default -> throw new IllegalArgumentException("不支持的数据库类型: " + dbType);
+            };
+        }
+
+        String buildJdbcUrl(DatabaseDeploymentConfig config) {
+            StringBuilder url = new StringBuilder()
+                    .append(urlPrefix)
+                    .append(config.getHost())
+                    .append(':')
+                    .append(config.getPort())
+                    .append('/')
+                    .append(config.getDatabase());
+            String params = config.getConnectionParams();
+            if (params != null && !params.isBlank()) {
+                url.append('?').append(params);
+            }
+            return url.toString();
+        }
+    }
+
+    /**
      * 构造 FreeMarker 数据模型。
      *
      * @param definition 表结构定义

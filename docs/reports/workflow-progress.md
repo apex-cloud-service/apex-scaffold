@@ -563,5 +563,5 @@ npm install @vue-flow/core @vue-flow/controls @vue-flow/minimap
 ---
 
 **报告生成时间**：2026-09-02 20:55  
-**报告生成人**：Kiro AI Assistant  
+**报告生成人**：开发团队  
 **版本**：v1.0

@@ -180,7 +180,7 @@ spring:
   # --------------------------------------------------------------------------
   flyway:
     enabled: true
-    locations: classpath:db/migration
+    locations: classpath:db/migration/${apex.database.type:mysql}
     # 严格校验已执行迁移的 checksum，防止脚本被篡改
     validate-on-migrate: true
     # 禁止自动创建基线版本

@@ -6,6 +6,13 @@ import com.apex.scaffold.common.annotation.RequirePermission;
 import com.apex.scaffold.domain.model.entity.DeptEntity;
 import com.apex.scaffold.interfaces.util.MessageUtils;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Validator;
 import org.springframework.stereotype.Component;
@@ -52,31 +59,177 @@ public class DeptHandler extends BaseHandler {
         this.deptService = deptService;
     }
 
-    /** 查询部门树。 */
+    /**
+     * 查询部门树。
+     *
+     * <p>查询完整的部门树形结构，包含所有层级的部门信息。</p>
+     *
+     * @param request ServerRequest
+     * @return 部门树列表
+     */
     @RequirePermission("system:dept:list")
-    @Operation(operationId = "adminListDepts", summary = "查询部门树")
+    @Operation(
+            operationId = "adminListDepts",
+            summary = "查询部门树",
+            description = "查询完整的部门树形结构，包含所有层级的部门信息，支持C3数据权限过滤"
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "查询成功",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = java.util.List.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "权限不足，需要system:dept:list权限"
+            )
+    })
     public Mono<ServerResponse> listTree(ServerRequest request) {
         return deptService.listTree().flatMap(this::buildSuccess);
     }
 
-    /** 查询部门详情。 */
+    /**
+     * 查询部门详情。
+     *
+     * <p>根据部门ID查询部门的详细信息。</p>
+     *
+     * @param request ServerRequest，路径参数id
+     * @return 部门详细信息
+     */
     @RequirePermission("system:dept:query")
-    @Operation(operationId = "adminGetDept", summary = "查询部门详情")
+    @Operation(
+            operationId = "adminGetDept",
+            summary = "查询部门详情",
+            description = "根据部门ID查询部门的详细信息"
+    )
+    @Parameter(
+            name = "id",
+            description = "部门ID",
+            required = true,
+            in = ParameterIn.PATH,
+            schema = @Schema(type = "integer", format = "int64")
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "查询成功",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = DeptEntity.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "部门不存在"
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "权限不足，需要system:dept:query权限"
+            )
+    })
     public Mono<ServerResponse> detail(ServerRequest request) {
         return deptService.get(requirePositiveId(request)).flatMap(this::buildSuccess);
     }
 
-    /** 新增部门。 */
+    /**
+     * 新增部门。
+     *
+     * <p>创建一个新的部门，包括基本信息和层级关系。</p>
+     *
+     * @param request ServerRequest，请求体为部门创建信息
+     * @return 创建成功的部门信息
+     */
     @RequirePermission("system:dept:add")
-    @Operation(operationId = "adminCreateDept", summary = "新增部门")
+    @Operation(
+            operationId = "adminCreateDept",
+            summary = "新增部门",
+            description = "创建一个新的部门，包括基本信息和层级关系"
+    )
+    @RequestBody(
+            description = "部门创建请求信息",
+            required = true,
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = DeptEntity.class)
+            )
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "创建成功",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = DeptEntity.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "参数校验失败或部门名称已存在"
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "权限不足，需要system:dept:add权限"
+            )
+    })
     @OperationLog(module = "部门管理", type = OperationLog.OperationType.INSERT, description = "新增部门")
     public Mono<ServerResponse> create(ServerRequest request) {
         return parseBody(request, DeptEntity.class).flatMap(deptService::create).flatMap(this::buildSuccess);
     }
 
-    /** 更新部门。 */
+    /**
+     * 更新部门。
+     *
+     * <p>更新指定部门的信息，支持部分字段更新。</p>
+     *
+     * @param request ServerRequest，路径参数id，请求体为更新信息
+     * @return 更新后的部门信息
+     */
     @RequirePermission("system:dept:edit")
-    @Operation(operationId = "adminUpdateDept", summary = "更新部门")
+    @Operation(
+            operationId = "adminUpdateDept",
+            summary = "更新部门",
+            description = "更新指定部门的信息，支持部分字段更新"
+    )
+    @Parameter(
+            name = "id",
+            description = "部门ID",
+            required = true,
+            in = ParameterIn.PATH,
+            schema = @Schema(type = "integer", format = "int64")
+    )
+    @RequestBody(
+            description = "部门更新请求信息",
+            required = true,
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = DeptEntity.class)
+            )
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "更新成功",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = DeptEntity.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "参数校验失败"
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "部门不存在"
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "权限不足，需要system:dept:edit权限"
+            )
+    })
     @OperationLog(module = "部门管理", type = OperationLog.OperationType.UPDATE, description = "更新部门")
     public Mono<ServerResponse> update(ServerRequest request) {
         long id = requirePositiveId(request);
@@ -85,9 +238,45 @@ public class DeptHandler extends BaseHandler {
                 .flatMap(this::buildSuccess);
     }
 
-    /** 删除部门。 */
+    /**
+     * 删除部门。
+     *
+     * <p>逻辑删除指定的部门，部门数据不会真正删除。</p>
+     *
+     * @param request ServerRequest，路径参数id
+     * @return 删除结果
+     */
     @RequirePermission("system:dept:remove")
-    @Operation(operationId = "adminDeleteDept", summary = "删除部门")
+    @Operation(
+            operationId = "adminDeleteDept",
+            summary = "删除部门",
+            description = "逻辑删除指定的部门，部门数据不会真正删除"
+    )
+    @Parameter(
+            name = "id",
+            description = "部门ID",
+            required = true,
+            in = ParameterIn.PATH,
+            schema = @Schema(type = "integer", format = "int64")
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "删除成功"
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "部门不存在"
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "权限不足，需要system:dept:remove权限"
+            ),
+            @ApiResponse(
+                    responseCode = "409",
+                    description = "部门存在子部门或关联数据，无法删除"
+            )
+    })
     @OperationLog(module = "部门管理", type = OperationLog.OperationType.DELETE, description = "删除部门")
     public Mono<ServerResponse> delete(ServerRequest request) {
         return deptService

@@ -24,9 +24,9 @@ class FlywayMigrationVersionTest {
     @Test
     void shouldHaveUniqueContiguousVersions() throws Exception {
         Path projectRoot = Path.of(System.getProperty("user.dir"));
-        Path migrationDirectory = projectRoot.resolve("apex-interfaces/src/main/resources/db/migration");
+        Path migrationDirectory = projectRoot.resolve("apex-interfaces/src/main/resources/db/migration/mysql");
         if (!Files.isDirectory(migrationDirectory)) {
-            migrationDirectory = projectRoot.resolve("src/main/resources/db/migration");
+            migrationDirectory = projectRoot.resolve("src/main/resources/db/migration/mysql");
         }
 
         List<BigDecimal> versions;
@@ -59,16 +59,18 @@ class FlywayMigrationVersionTest {
                         versionNumber("17"),
                         versionNumber("18"),
                         versionNumber("19"),
-                        versionNumber("20")));
+                        versionNumber("20"),
+                        versionNumber("21"),
+                        versionNumber("22")));
     }
 
     @Test
     void shouldDefineExplicitRoleDataScopeTables() throws Exception {
         Path projectRoot = Path.of(System.getProperty("user.dir"));
         Path migration =
-                projectRoot.resolve("apex-interfaces/src/main/resources/db/migration/V18__add_role_data_scope.sql");
+                projectRoot.resolve("apex-interfaces/src/main/resources/db/migration/mysql/V18__add_role_data_scope.sql");
         if (!Files.exists(migration)) {
-            migration = projectRoot.resolve("src/main/resources/db/migration/V18__add_role_data_scope.sql");
+            migration = projectRoot.resolve("src/main/resources/db/migration/mysql/V18__add_role_data_scope.sql");
         }
 
         String sql = Files.readString(migration);
@@ -90,10 +92,10 @@ class FlywayMigrationVersionTest {
     void shouldEnforceDepartmentTenantIntegrity() throws Exception {
         Path projectRoot = Path.of(System.getProperty("user.dir"));
         Path migration = projectRoot.resolve(
-                "apex-interfaces/src/main/resources/db/migration/V19__enforce_department_tenant_integrity.sql");
+                "apex-interfaces/src/main/resources/db/migration/mysql/V19__enforce_department_tenant_integrity.sql");
         if (!Files.exists(migration)) {
             migration =
-                    projectRoot.resolve("src/main/resources/db/migration/V19__enforce_department_tenant_integrity.sql");
+                    projectRoot.resolve("src/main/resources/db/migration/mysql/V19__enforce_department_tenant_integrity.sql");
         }
 
         String sql = Files.readString(migration);
@@ -114,10 +116,10 @@ class FlywayMigrationVersionTest {
     void shouldCompleteTenantTableCoverage() throws Exception {
         Path projectRoot = Path.of(System.getProperty("user.dir"));
         Path migration = projectRoot.resolve(
-                "apex-interfaces/src/main/resources/db/migration/V15__complete_tenant_isolation_schema.sql");
+                "apex-interfaces/src/main/resources/db/migration/mysql/V15__complete_tenant_isolation_schema.sql");
         if (!Files.exists(migration)) {
             migration =
-                    projectRoot.resolve("src/main/resources/db/migration/V15__complete_tenant_isolation_schema.sql");
+                    projectRoot.resolve("src/main/resources/db/migration/mysql/V15__complete_tenant_isolation_schema.sql");
         }
 
         String sql = Files.readString(migration);

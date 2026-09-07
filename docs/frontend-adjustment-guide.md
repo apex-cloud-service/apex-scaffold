@@ -817,4 +817,4 @@ async function handleRollback() {
 
 **文档版本**：1.0  
 **创建时间**：2026-09-04  
-**作者**：Kiro (AI Assistant)
+**作者**：开发团队

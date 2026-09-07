@@ -1,9 +1,19 @@
 package com.apex.scaffold.interfaces.handler;
 
+import com.apex.scaffold.application.dto.log.UnifiedBusinessLogDTO;
 import com.apex.scaffold.application.service.UnifiedBusinessLogService;
 import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.annotation.RequirePermission;
+import com.apex.scaffold.common.dto.PageResponse;
 import com.apex.scaffold.common.result.Result;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +33,7 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@Tag(name = "业务日志", description = "业务日志统一查询接口")
 public class UnifiedBusinessLogHandler {
 
     private final UnifiedBusinessLogService unifiedBusinessLogService;
@@ -37,6 +48,80 @@ public class UnifiedBusinessLogHandler {
      */
     @RequirePermission("system:log:business:query")
     @OperationLog(module = "业务日志", type = OperationLog.OperationType.SELECT, description = "查询业务日志")
+    @Operation(
+            operationId = "queryUnifiedBusinessLogs",
+            summary = "统一查询业务日志",
+            description = "统一查询登录日志、操作日志和API调用日志，支持按日志类型、时间范围、用户名和模块名过滤，并提供分页功能"
+    )
+    @io.swagger.v3.oas.annotations.Parameters({
+            @Parameter(
+                    name = "logType",
+                    description = "日志类型（可选，login-登录日志/operation-操作日志/api-API调用日志，不传则查询全部）",
+                    required = false,
+                    in = ParameterIn.QUERY,
+                    schema = @Schema(type = "string")
+            ),
+            @Parameter(
+                    name = "startTime",
+                    description = "开始时间（格式：yyyy-MM-dd HH:mm:ss，默认为7天前）",
+                    required = false,
+                    in = ParameterIn.QUERY,
+                    schema = @Schema(type = "string", example = "2024-01-01 00:00:00")
+            ),
+            @Parameter(
+                    name = "endTime",
+                    description = "结束时间（格式：yyyy-MM-dd HH:mm:ss，默认为当前时间）",
+                    required = false,
+                    in = ParameterIn.QUERY,
+                    schema = @Schema(type = "string", example = "2024-01-31 23:59:59")
+            ),
+            @Parameter(
+                    name = "username",
+                    description = "用户名（可选，模糊匹配）",
+                    required = false,
+                    in = ParameterIn.QUERY,
+                    schema = @Schema(type = "string")
+            ),
+            @Parameter(
+                    name = "module",
+                    description = "模块名（可选，模糊匹配）",
+                    required = false,
+                    in = ParameterIn.QUERY,
+                    schema = @Schema(type = "string")
+            ),
+            @Parameter(
+                    name = "page",
+                    description = "页码，从1开始",
+                    required = false,
+                    in = ParameterIn.QUERY,
+                    schema = @Schema(type = "integer", defaultValue = "1")
+            ),
+            @Parameter(
+                    name = "size",
+                    description = "每页大小（最大100）",
+                    required = false,
+                    in = ParameterIn.QUERY,
+                    schema = @Schema(type = "integer", defaultValue = "20")
+            )
+    })
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "查询成功",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = PageResponse.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "参数错误，例如时间格式不正确"
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "权限不足，需要 system:log:business:query 权限"
+            )
+    })
     public Mono<ServerResponse> queryLogs(ServerRequest request) {
         try {
             String logType = request.queryParam("logType").orElse(null);
@@ -94,6 +179,52 @@ public class UnifiedBusinessLogHandler {
      * @return 日志数量
      */
     @RequirePermission("system:log:business:query")
+    @Operation(
+            operationId = "countUnifiedBusinessLogs",
+            summary = "统计业务日志数量",
+            description = "统计指定条件下的业务日志总数，支持按日志类型和时间范围过滤"
+    )
+    @io.swagger.v3.oas.annotations.Parameters({
+            @Parameter(
+                    name = "logType",
+                    description = "日志类型（可选，login-登录日志/operation-操作日志/api-API调用日志，不传则统计全部）",
+                    required = false,
+                    in = ParameterIn.QUERY,
+                    schema = @Schema(type = "string")
+            ),
+            @Parameter(
+                    name = "startTime",
+                    description = "开始时间（格式：yyyy-MM-dd HH:mm:ss，默认为7天前）",
+                    required = false,
+                    in = ParameterIn.QUERY,
+                    schema = @Schema(type = "string", example = "2024-01-01 00:00:00")
+            ),
+            @Parameter(
+                    name = "endTime",
+                    description = "结束时间（格式：yyyy-MM-dd HH:mm:ss，默认为当前时间）",
+                    required = false,
+                    in = ParameterIn.QUERY,
+                    schema = @Schema(type = "string", example = "2024-01-31 23:59:59")
+            )
+    })
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "统计成功",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = Long.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "参数错误，例如时间格式不正确"
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "权限不足，需要 system:log:business:query 权限"
+            )
+    })
     public Mono<ServerResponse> countLogs(ServerRequest request) {
         try {
             String logType = request.queryParam("logType").orElse(null);

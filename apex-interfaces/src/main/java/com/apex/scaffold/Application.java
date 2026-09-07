@@ -2,6 +2,7 @@ package com.apex.scaffold;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.r2dbc.R2dbcAutoConfiguration;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.scheduling.annotation.EnableAsync;
@@ -20,7 +21,10 @@ import org.springframework.scheduling.annotation.EnableAsync;
  * @version 1.0.0
  * @since 1.0.0
  */
-@SpringBootApplication(scanBasePackages = "com.apex.scaffold")
+@SpringBootApplication(
+        scanBasePackages = "com.apex.scaffold",
+        exclude = {R2dbcAutoConfiguration.class}
+)
 @ConfigurationPropertiesScan(basePackages = "com.apex.scaffold")
 @EnableAsync
 @EnableDiscoveryClient

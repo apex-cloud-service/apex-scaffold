@@ -1184,6 +1184,6 @@ java -Djasypt.encryptor.password=secret_key -jar app.jar
 
 ---
 
-**文档维护者**: TRAE AI Assistant  
+**文档维护者**: 运维团队  
 **审核状态**: 待人工审核  
 **下次更新**: 部署方式变更后同步更新

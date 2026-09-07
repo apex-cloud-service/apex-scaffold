@@ -3,6 +3,10 @@ package com.apex.scaffold.interfaces.handler;
 import com.apex.scaffold.infrastructure.notification.NotificationService;
 import com.apex.scaffold.interfaces.util.MessageUtils;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Validator;
 import java.time.Duration;
@@ -59,7 +63,25 @@ public class NotificationSseHandler extends BaseHandler {
      * @param request HTTP 请求（携带认证 Principal）
      * @return SSE 事件流响应
      */
-    @Operation(operationId = "streamNotifications", summary = "订阅当前用户通知流（SSE）")
+    @Operation(
+            operationId = "streamNotifications",
+            summary = "订阅当前用户通知流（SSE）",
+            description = "建立SSE长连接，实时推送站内通知给当前登录用户。事件类型为 'notification'，每30秒发送心跳以保持连接活跃。需要用户认证"
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "SSE连接建立成功，开始推送通知流",
+                    content = @Content(
+                            mediaType = "text/event-stream",
+                            schema = @Schema(implementation = String.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "未授权，用户未登录或认证信息无效"
+            )
+    })
     public Mono<ServerResponse> stream(ServerRequest request) {
         return request.principal()
                 .flatMap(principal -> {

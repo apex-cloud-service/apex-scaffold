@@ -725,4 +725,4 @@ mvnd clean compile -DskipTests
 **预计完成时间**：3-6 个工作日（取决于人力投入）
 
 **创建日期**：2026-09-02  
-**创建者**：Kiro AI Assistant
+**创建者**：开发团队

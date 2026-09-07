@@ -77,7 +77,6 @@ public class UserHandler extends BaseHandler {
      * @param requestHandlerUtil 请求处理工具类，用于统一解析请求体和校验参数
      * @param messageUtils 国际化消息工具
      */
-    @Autowired
     public UserHandler(
             UserService userService,
             UserAssembler userAssembler,

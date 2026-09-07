@@ -1,5 +1,6 @@
 package com.apex.scaffold.infrastructure.persistence.po;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.time.LocalDateTime;
 import lombok.Data;
@@ -27,14 +28,31 @@ public class ProcessInstancePO extends BasePO {
 
     public ProcessInstancePO() {}
 
-    private Long tenantId;
+    private String tenantId;
 
     private Long workflowDefinitionId;
 
     private String businessKey;
 
+    public String getProcessCode() {
+        return businessKey;
+    }
+
+    public void setProcessCode(String processCode) {
+        this.businessKey = processCode;
+    }
+
+    public String getTitle() {
+        return remark;
+    }
+
+    public void setTitle(String title) {
+        this.remark = title;
+    }
+
     private Long initiatorId;
 
+    @TableField("current_node_key")
     private String currentNodeCode;
 
     private String status;

@@ -1,0 +1,66 @@
+global:
+  resolve_timeout: 5m
+
+# 告警路由
+route:
+  group_by: ['alertname', 'cluster', 'service']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 12h
+  receiver: 'default'
+  
+  routes:
+    # P0告警-立即通知
+    - match:
+        severity: critical
+      receiver: 'critical'
+      continue: true
+    
+    # P1告警-延迟通知
+    - match:
+        severity: warning
+      receiver: 'warning'
+    
+    # P2告警-仅记录
+    - match:
+        severity: info
+      receiver: 'info'
+
+# 接收器配置
+receivers:
+  - name: 'default'
+    webhook_configs:
+      - url: 'http://localhost:8080/webhook/alert'
+  
+  # P0-关键告警(钉钉+邮件+短信)
+  - name: 'critical'
+    webhook_configs:
+      - url: 'http://localhost:8080/webhook/alert/critical'
+        send_resolved: true
+  
+  # P1-警告告警(钉钉+邮件)
+  - name: 'warning'
+    webhook_configs:
+      - url: 'http://localhost:8080/webhook/alert/warning'
+        send_resolved: true
+  
+  # P2-信息告警(仅记录)
+  - name: 'info'
+    webhook_configs:
+      - url: 'http://localhost:8080/webhook/alert/info'
+
+# 抑制规则
+inhibit_rules:
+  # 如果critical告警触发,抑制warning告警
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'instance']
+  
+  # 如果warning告警触发,抑制info告警
+  - source_match:
+      severity: 'warning'
+    target_match:
+      severity: 'info'
+    equal: ['alertname', 'instance']

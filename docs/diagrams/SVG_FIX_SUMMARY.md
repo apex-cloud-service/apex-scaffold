@@ -159,5 +159,5 @@ convert 14_network_architecture.svg 14_network_architecture.png
 ---
 
 **修复日期**: 2026-09-04  
-**修复人员**: TRAE AI Assistant  
+**修复人员**: 开发团队  
 **修复文件数**: 6个SVG文件

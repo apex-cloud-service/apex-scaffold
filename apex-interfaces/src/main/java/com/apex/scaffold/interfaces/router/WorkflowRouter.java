@@ -18,6 +18,9 @@ import org.springframework.web.reactive.function.server.ServerResponse;
  *
  * <h2>路由规则</h2>
  * <ul>
+ *   <li>GET /admin-api/v1/workflows/instances → WorkflowHandler.listInstances</li>
+ *   <li>GET /admin-api/v1/workflows/statistics → WorkflowHandler.getStatistics</li>
+ *   <li>GET /admin-api/v1/workflows/statistics/trend → WorkflowHandler.getTrend</li>
  *   <li>POST /api/workflow/tasks/{taskId}/rollback → WorkflowHandler.rollbackTask</li>
  *   <li>POST /api/workflow/tasks/{taskId}/transfer → WorkflowHandler.transferTask</li>
  *   <li>POST /api/workflow/tasks/{taskId}/delegate → WorkflowHandler.delegateTask</li>
@@ -30,7 +33,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
  *   <li><strong>函数式风格</strong>：使用 RouterFunction 替代传统的 @RequestMapping</li>
  *   <li><strong>类型安全</strong>：编译期检查路由配置</li>
  *   <li><strong>响应式</strong>：完全基于 Reactor 的非阻塞处理</li>
- *   <li><strong>统一前缀</strong>：所有工作流接口以 /api/workflow 开头</li>
+ *   <li><strong>统一前缀</strong>：查询接口以 /admin-api/v1/workflows 开头，操作接口以 /api/workflow 开头</li>
  * </ul>
  *
  * @author Apex Team
@@ -42,9 +45,27 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 public class WorkflowRouter {
 
     /**
-     * 工作流路由函数。
+     * 工作流查询路由（管理后台）。
      *
-     * <p>定义工作流相关的所有路由规则。
+     * <p>定义工作流查询相关的所有路由规则。
+     *
+     * @param handler WorkflowHandler
+     * @return RouterFunction
+     */
+    @Bean
+    public RouterFunction<ServerResponse> adminWorkflowQueryRoutes(WorkflowHandler handler) {
+        return RouterFunctions.route()
+                .path("/admin-api/v1/workflows", builder -> builder
+                        .GET("/instances", handler::listInstances)
+                        .GET("/statistics", handler::getStatistics)
+                        .GET("/statistics/trend", handler::getTrend))
+                .build();
+    }
+
+    /**
+     * 工作流操作路由（API）。
+     *
+     * <p>定义工作流操作相关的所有路由规则。
      *
      * @param handler WorkflowHandler
      * @return RouterFunction

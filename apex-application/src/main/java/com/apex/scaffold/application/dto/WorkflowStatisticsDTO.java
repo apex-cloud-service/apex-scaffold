@@ -30,6 +30,12 @@ public class WorkflowStatisticsDTO {
     /** 待办任务总数 */
     private Integer pendingTaskTotal;
 
+    private Integer suspendedCount;
+
+    private Integer timeoutCount;
+
+    private Integer transferredCount;
+
     /** 平均完成时长（秒） */
     private Long avgCompletionSeconds;
 

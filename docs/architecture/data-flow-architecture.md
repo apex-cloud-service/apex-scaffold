@@ -780,6 +780,6 @@ public class UserBinlogListener implements EntryHandler<User> {
 
 ---
 
-**文档维护者**: TRAE AI Assistant  
+**文档维护者**: 架构团队  
 **审核状态**: 待人工审核  
 **下次更新**: 数据流架构变更后同步更新

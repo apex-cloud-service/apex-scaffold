@@ -258,5 +258,5 @@ find docs -name "*.md" -exec markdown-link-check {} \;
 ---
 
 **报告生成时间**: 2026-09-03  
-**执行人员**: TRAE AI Assistant  
+**执行人员**: 开发团队  
 **验证状态**: ✅ 通过

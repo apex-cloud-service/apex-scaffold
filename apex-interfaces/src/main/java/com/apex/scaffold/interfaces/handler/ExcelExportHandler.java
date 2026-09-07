@@ -8,6 +8,9 @@ import com.apex.scaffold.domain.model.entity.UserEntity;
 import com.apex.scaffold.infrastructure.excel.ExcelExportService;
 import com.apex.scaffold.interfaces.util.MessageUtils;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Validator;
 import java.net.URLEncoder;
@@ -75,7 +78,21 @@ public class ExcelExportHandler extends BaseHandler {
      * @return xlsx 附件响应（Content-Disposition: attachment）
      */
     @RequirePermission("system:user:list")
-    @Operation(operationId = "adminExportUsers", summary = "导出用户列表（xlsx）")
+    @Operation(
+            operationId = "adminExportUsers",
+            summary = "导出用户列表（xlsx）",
+            description = "导出用户列表为Excel文件，包含用户ID、用户名、昵称、手机号、状态、最后登录时间等信息")
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "导出成功",
+                content =
+                        @Content(
+                                mediaType =
+                                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")),
+        @ApiResponse(responseCode = "401", description = "未授权，需要登录"),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要system:user:list权限")
+    })
     @OperationLog(module = "数据导出", type = OperationLog.OperationType.SELECT, description = "导出用户列表")
     public Mono<ServerResponse> exportUsers(ServerRequest request) {
         return userService.findPage(1, 100, "create_time", false).flatMap(page -> {

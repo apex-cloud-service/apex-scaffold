@@ -45,6 +45,13 @@ apex:
       readiness-withdraw-timeout: ${APEX_GOVERNANCE_READINESS_WITHDRAW_TIMEOUT:5s}
       # 总预算耗尽后是否强制停止剩余资源
       force-shutdown-after-timeout: ${APEX_GOVERNANCE_FORCE_SHUTDOWN:true}
+  blocking-io:
+    jdbc:
+      threads: 32
+    cache:
+      threads: 4
+    storage:
+      threads: 8
 
 server:
   # HTTP 服务端口
@@ -249,6 +256,10 @@ management:
     tags:
       # 所有指标附加 application 标签，便于 Prometheus 按应用聚合
       application: ${spring.application.name}
+    enable:
+      # ✅ 启用 Reactor Netty 指标（WebFlux 网关监控）
+      # 提供 EventLoop 线程、连接池、ByteBuf 内存等详细指标
+      reactor.netty: true
     distribution:
       percentiles-histogram:
         http:
@@ -611,7 +622,6 @@ operation-log:
 # ============================================================
 # 业务自定义配置（apex.*）
 # ============================================================
-apex:
   license:
     # ✅ License 校验总开关（默认开启）。
     # 开启后：随包内置基础版 License，商业功能（@FeatureGate 标注）需授权版本才能使用；
@@ -637,6 +647,13 @@ apex:
       enabled: ${APEX_SQL_SLOW_ENABLED:true}
       # 慢 SQL 判定阈值（毫秒），超过即计入慢 SQL 计数并告警日志
       threshold-ms: ${APEX_SQL_SLOW_THRESHOLD_MS:1000}
+  # ---------- 数据库类型（多数据库适配边界） ----------
+  # ✅ 通过 apex.database.type 统一驱动 MyBatis-Plus 分页方言、Flyway 迁移目录
+  #    与 Druid 连接池 db-type，首期支持 mysql / postgresql；
+  # 💡 切换数据库时只需修改此处（或环境变量 APEX_DATABASE_TYPE），无需改动多处配置；
+  # ⚠️ 切换数据库类型前需确保对应 db/migration/{type}/ 迁移脚本已就位
+  database:
+    type: ${APEX_DATABASE_TYPE:mysql}
   # ---------- Sentinel 规则 Nacos 动态下发（生产热更新） ----------
   # ✅ 启用后限流/熔断规则改为从 Nacos 拉取（约 30s 热生效），静态规则作为启动兜底；
   # ⚠️ 启用时 Nacos 的 DataId 需维护完整规则集（JSON 模板见 config/sentinel/ 与 docs/CONFIGURATION.md）；
@@ -700,18 +717,6 @@ apex:
     length: ${APEX_CAPTCHA_LENGTH:4}
     # 验证码有效期（秒）
     ttl: ${APEX_CAPTCHA_TTL_SECONDS:120s}
-  # ---------- 阻塞 IO 线程池（响应式应用内 JDBC/缓存/存储阻塞操作） ----------
-  # 💡 WebFlux 主线程不阻塞；JDBC/缓存/存储阻塞操作调度到独立 boundedElastic 线程池
-  blocking-io:
-    jdbc:
-      # JDBC 阻塞操作线程数
-      threads: 32
-    cache:
-      # 缓存阻塞操作线程数
-      threads: 4
-    storage:
-      # 存储阻塞操作线程数
-      threads: 8
   # ---------- API 网关过滤器 ----------
   gateway:
     # ✅ 网关全局过滤器总开关（关闭后仅保留 Spring Security 核心过滤器链）

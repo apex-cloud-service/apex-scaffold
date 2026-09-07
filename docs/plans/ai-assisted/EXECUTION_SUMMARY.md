@@ -424,7 +424,7 @@ bash scripts/scan-javadoc-issues.sh
 ---
 
 **报告日期**：2026-09-02  
-**创建者**：Kiro AI Assistant  
+**创建者**：开发团队  
 **状态**：✅ Phase 1 完成，等待审批启动 Phase 2
 
 **祝改造顺利！** 🎉

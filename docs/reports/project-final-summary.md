@@ -332,6 +332,6 @@ $ xmllint --noout 03_technical_architecture.svg
 ---
 
 **报告生成时间**: 2026-09-05  
-**项目执行**: TRAE AI Assistant  
+**项目执行**: 开发团队  
 **总耗时**: 约3.5小时  
 **整体评价**: ⭐⭐⭐⭐⭐ 圆满完成

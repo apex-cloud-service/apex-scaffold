@@ -247,7 +247,7 @@ services:
       GF_USERS_ALLOW_SIGN_UP: "false"
       TZ: Asia/Shanghai
     volumes:
-      - ./config/monitoring/grafana/apex-dashboard.json:/var/lib/grafana/dashboards/apex-dashboard.json:ro
+      - ./config/monitoring/grafana:/var/lib/grafana/dashboards:ro
       - ./config/monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
       - grafana-data:/var/lib/grafana
     ports:

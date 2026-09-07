@@ -94,7 +94,7 @@ class WorkflowQueryServiceTest {
         testDefinition.setName("请假审批流程");
         testDefinition.setNodeDefinition("{\"nodes\":[],\"edges\":[]}");
         testDefinition.setVersion(1);
-        testDefinition.setEnabled(true);
+        testDefinition.setEnabled(1);
     }
 
     @Test
@@ -107,6 +107,8 @@ class WorkflowQueryServiceTest {
 
         when(processInstanceMapper.selectPage(any(IPage.class), any(LambdaQueryWrapper.class)))
                 .thenReturn(page);
+        when(workflowDefinitionMapper.selectById(100L))
+                .thenReturn(testDefinition);
 
         // When: 调用查询服务
         Mono<PageResponse<WorkflowInstanceDTO>> result = queryService.listInstances(null, 1, 10);
@@ -137,6 +139,8 @@ class WorkflowQueryServiceTest {
 
         when(processInstanceMapper.selectPage(any(IPage.class), any(LambdaQueryWrapper.class)))
                 .thenReturn(page);
+        when(workflowDefinitionMapper.selectById(100L))
+                .thenReturn(testDefinition);
 
         // When: 按RUNNING状态筛选
         Mono<PageResponse<WorkflowInstanceDTO>> result = queryService.listInstances("RUNNING", 1, 10);
@@ -148,6 +152,54 @@ class WorkflowQueryServiceTest {
                     assertThat(pageResp.getRecords()).hasSize(1);
                     assertThat(pageResp.getRecords().get(0).getStatus()).isEqualTo("RUNNING");
                 })
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("listInstances - 使用持久化挂起标记")
+    void testListInstances_UsesPersistedSuspendedFlag() {
+        ProcessInstancePO suspendedInstance = new ProcessInstancePO();
+        suspendedInstance.setId(2L);
+        suspendedInstance.setWorkflowDefinitionId(100L);
+        suspendedInstance.setStatus("RUNNING");
+        suspendedInstance.setSuspended(true);
+        suspendedInstance.setInitiatorId(10L);
+
+        Page<ProcessInstancePO> page = new Page<>(1, 10);
+        page.setRecords(Arrays.asList(suspendedInstance));
+        page.setTotal(1);
+
+        when(processInstanceMapper.selectPage(any(IPage.class), any(LambdaQueryWrapper.class)))
+                .thenReturn(page);
+        when(workflowDefinitionMapper.selectById(100L)).thenReturn(testDefinition);
+
+        StepVerifier.create(queryService.listInstances(null, 1, 10))
+                .assertNext(pageResp ->
+                        assertThat(pageResp.getRecords().get(0).getSuspended()).isTrue())
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("listInstances - 兼容挂起状态历史数据")
+    void testListInstances_FallsBackToSuspendedStatus() {
+        ProcessInstancePO suspendedInstance = new ProcessInstancePO();
+        suspendedInstance.setId(3L);
+        suspendedInstance.setWorkflowDefinitionId(100L);
+        suspendedInstance.setStatus("SUSPENDED");
+        suspendedInstance.setSuspended(false);
+        suspendedInstance.setInitiatorId(10L);
+
+        Page<ProcessInstancePO> page = new Page<>(1, 10);
+        page.setRecords(Arrays.asList(suspendedInstance));
+        page.setTotal(1);
+
+        when(processInstanceMapper.selectPage(any(IPage.class), any(LambdaQueryWrapper.class)))
+                .thenReturn(page);
+        when(workflowDefinitionMapper.selectById(100L)).thenReturn(testDefinition);
+
+        StepVerifier.create(queryService.listInstances(null, 1, 10))
+                .assertNext(pageResp ->
+                        assertThat(pageResp.getRecords().get(0).getSuspended()).isTrue())
                 .verifyComplete();
     }
 
