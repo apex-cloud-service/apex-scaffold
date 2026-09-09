@@ -97,6 +97,37 @@ spring:
   application:
     # 应用名称：服务注册名 + 配置中心配置标识（⚠️ 须与 bootstrap.yml 一致）
     name: apex-scaffold
+  # ---------- Spring Security OAuth2 Client（Keycloak OIDC）----------
+  # ✅ OAuth2 Client 响应式支持：WebFlux 自动装配 ReactiveOAuth2AuthorizedClientService
+  # 💡 仅在 keycloak.enabled=true 时生效（KeycloakConfig 条件装配）
+  security:
+    oauth2:
+      client:
+        registration:
+          # Keycloak OIDC Provider（Spring Security 5+ 标准配置）
+          keycloak:
+            # OAuth2 Client ID（与 keycloak.client-id 保持一致）
+            client-id: ${KEYCLOAK_CLIENT_ID:apex-client}
+            # 🔒 OAuth2 Client Secret（Confidential Client）
+            client-secret: ${KEYCLOAK_CLIENT_SECRET:}
+            # 授权类型：authorization_code（标准 OAuth2 授权码流程）
+            authorization-grant-type: authorization_code
+            # 回调地址：Keycloak 授权后回调到本服务（Spring Security 默认 /login/oauth2/code/{registrationId}）
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            # 请求的 OAuth2 Scope（OIDC 必需 openid，profile/email 获取用户信息）
+            scope:
+              - openid
+              - profile
+              - email
+            # Client 名称（用于 UI 显示）
+            client-name: Keycloak
+        provider:
+          # Keycloak Provider 配置（OIDC Discovery）
+          keycloak:
+            # 🔒 OIDC Issuer URI：Keycloak 自动发现端点（/.well-known/openid-configuration）
+            issuer-uri: ${KEYCLOAK_SERVER_URL:http://localhost:8180}/realms/${KEYCLOAK_REALM:apex}
+            # 用户信息端点（OIDC UserInfo Endpoint）
+            user-name-attribute: preferred_username
   # ---------- 邮件发送（C7） ----------
   mail:
     # SMTP 服务器（环境变量注入；空配置时发送会报错，业务方可捕获降级）
@@ -193,6 +224,33 @@ jwt:
   # Access Token 自动续期阈值（毫秒）：剩余有效期低于该值且携带有效 Refresh Token 时
   # 自动签发新 Token（JwtAuthenticationFilter 读取，实现无感续期，默认 30 分钟）
   access-token-renew-threshold: ${JWT_ACCESS_RENEW_THRESHOLD:1800000}
+
+# ============================================================
+# Keycloak 集成（企业级 IAM）
+# ============================================================
+# ✅ Keycloak OAuth2/OIDC 认证：支持 OIDC 登录、社交登录、SAML、MFA 等高级认证方式
+# 💡 使用 @ConditionalOnProperty("keycloak.enabled") 控制集成开关，默认关闭
+keycloak:
+  # ✅ Keycloak 集成总开关：false = 仅使用现有 JWT 认证
+  enabled: ${KEYCLOAK_ENABLED:false}
+  # 🔒 Keycloak 服务器地址（生产通过 KEYCLOAK_SERVER_URL 注入）
+  server-url: ${KEYCLOAK_SERVER_URL:http://localhost:8180}
+  # Realm 名称（Keycloak 租户隔离单位）
+  realm: ${KEYCLOAK_REALM:apex}
+  # 🔒 Admin 用户名（仅服务端 Admin API 使用）
+  admin-username: ${KEYCLOAK_ADMIN_USERNAME:admin}
+  # 🔒 Admin 密码（仅服务端 Admin API 使用）
+  admin-password: ${KEYCLOAK_ADMIN_PASSWORD:admin123}
+  # Admin Client ID（服务端调用 Admin REST API 使用）
+  admin-client-id: ${KEYCLOAK_ADMIN_CLIENT_ID:admin-cli}
+  # OAuth2 Client ID（前端 OIDC 登录使用）
+  client-id: ${KEYCLOAK_CLIENT_ID:apex-client}
+  # 🔒 OAuth2 Client Secret（Confidential Client 模式，公钥模式可留空）
+  client-secret: ${KEYCLOAK_CLIENT_SECRET:}
+  # 用户同步开关：是否将 Keycloak 用户同步到本地数据库
+  user-sync-enabled: ${KEYCLOAK_USER_SYNC_ENABLED:true}
+  # OIDC 登录成功后前端回调地址（前端路由）
+  frontend-callback-url: ${KEYCLOAK_FRONTEND_CALLBACK_URL:http://localhost:3000/auth/callback}
 
 logging:
   level:
@@ -944,7 +1002,7 @@ grafana:
   # ✅ Grafana 集成开关
   enabled: ${GRAFANA_ENABLED:false}
   # 🔒 Grafana 服务地址（生产通过环境变量注入）
-  url: ${GRAFANA_URL:http://localhost:3000}
+  url: ${GRAFANA_URL:http://localhost:3200}
   # Grafana Explore 路径
   explore-path: /explore
 

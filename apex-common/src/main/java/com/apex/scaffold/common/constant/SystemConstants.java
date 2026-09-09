@@ -147,14 +147,14 @@ public final class SystemConstants {
             "/api/v1/auth/sms/code",
             "/api/v1/auth/cl/sms/code",
             "/api/v1/auth/cl/validate-mobile",
-            // 图形验证码：登录前必须先获取验证码（含一次性校验接口），必须匿名放行。
+            "/oauth2/token",
+            "/oauth2/revoke",
+            "/oauth2/introspect",
             "/api/v1/auth/captcha",
             "/api/v1/auth/captcha/**",
             "/api/v1/onboarding/policies",
             "/api/v1/health",
             "/health",
-            // Actuator 监控端点：管理端口默认绑定 127.0.0.1，仅本机访问。
-            // 仅精确放行已暴露端点与端点目录索引，其余管理端点仍要求管理员角色。
             "/actuator",
             "/actuator/health",
             "/actuator/health/liveness",
@@ -172,7 +172,10 @@ public final class SystemConstants {
             "/uploads/apex/**",
             "/tos/**",
             "/minio/**",
-            // 示例模块（apex-example）教学路由：主应用不注册该前缀，放行不构成安全风险；
-            // 独立运行 apex-example 时用于演示无认证的 DDD 五层 CRUD 链路。
-            "/api/example/**");
+            "/api/example/**",
+            "/api/v1/auth/oidc/login",
+            "/api/v1/auth/social/*/login",
+            "/api/v1/auth/oidc/callback",
+            "/oauth2/authorization/**",
+            "/login/oauth2/code/**");
 }

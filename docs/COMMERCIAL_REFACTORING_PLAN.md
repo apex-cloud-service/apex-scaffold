@@ -42,30 +42,35 @@
 
 ### 1.1 背景
 
-Apex Scaffold 是当前仓库中的多模块 Java 后端脚手架（Spring Boot 3.5 + WebFlux 响应式 + DDD 五层架构），定位为"企业级后端开发脚手架"，已在 README 中规划了 基础版/标准版/企业版 三档商业化售卖。
+Apex Scaffold 是一个基于 Spring Boot 3.5 + WebFlux 响应式 + DDD 五层架构的企业级后端开发脚手架，定位为"企业级通用后端开发脚手架"，已在 README 中规划了基础版/标准版/企业版三档商业化售卖。
 
-但当前仓库**实质上是某个社交 App（原 原社交业务项目）后端代码的机械拷贝**：通过 `scripts/copy_*.py` 批量复制 + 包名替换而来。**去业务化只停留在文档层面，代码层面绝大部分业务实现（照片对战、兴趣图谱、ELO 评分、人脸分析等约 500+ 文件）仍原样保留。** 更严重的是，**原业务痕迹遍布全库**——从类名（`原算法配置类`）、缓存前缀（`apex:`）、监控指标（`apex.api.call`）、系统属性（`apex.log.dir`）、数据库名（`apex_data`）、SQL 变量（`@apex_*`）、前端 key（`apex.admin.*`）、i18n 文案、迁移脚本注释、拷贝脚本，到文档引用——无孔不入。
+**当前状态**：项目已完成基础通用化（约90%），核心模块（用户、权限、文件、工作流、审计等）已通用化，但仍需进一步优化以达到商业化售卖标准。
+
+**主要成果**：
+- ✅ 核心业务模块已通用化（User/Role/Permission/Workflow/File等）
+- ✅ 完整的技术架构（WebFlux + DDD + 监控体系）
+- ✅ License机制和三档Profile基础
+- ⚠️ 需优化：部分实体命名、文档描述、集成模块标注
 
 ### 1.2 目标
 
-将当前仓库重构成一个**可对外售卖、可直接商用、无业务残留、零业务残留**的通用后端开发脚手架，使其具备：
+将当前仓库完善为**可对外售卖、可直接商用、完全通用**的后端开发脚手架，使其具备：
 
-1. **通用性**：不携带任何特定业务（社交、约会、照片等）代码与数据；
-2. **零痕迹**：交付物中不得出现任何 `业务`/`业务`/`业务` 字样（类名、变量、字符串、注释、配置、SQL、文档、脚本——全维度零容忍）；
-3. **可交付性**：开箱即用（docker-compose 一键启动）、文档完整、示例齐全；
-4. **可分级售卖**：基础版（开源）/ 标准版 / 企业版 三档在依赖与功能上真实差异化；
-5. **可盈利保护**：License 机制真实生效，商业版本无法被 fork 绕过；
-6. **可持续演进**：git 版本管理、CI/CD、版本规范、变更记录齐全。
+1. **通用性**：所有核心模块不携带特定业务场景
+2. **清晰性**：代码、文档、配置采用统一的通用术语
+3. **可交付性**：开箱即用（docker-compose 一键启动）、文档完整、示例齐全
+4. **可分级售卖**：基础版（开源）/ 标准版 / 企业版 三档在依赖与功能上真实差异化
+5. **可盈利保护**：License 机制真实生效，商业版本无法被 fork 绕过
+6. **可持续演进**：git 版本管理、CI/CD、版本规范、变更记录齐全
 
 ### 1.3 范围与约束
 
 | 项 | 说明 |
 |---|---|
-| 在范围内 | 全部 6 个 Maven 模块、docs/、scripts/、config/、docker/k8s 交付物、CI/CD 配置 |
+| 在范围内 | 全部 Maven 模块、docs/、scripts/、config/、docker/k8s 交付物、CI/CD 配置 |
 | 前提约束 | Java 17、Spring Boot 3.5、WebFlux 响应式、MyBatis-Plus、MySQL、Redis 为不可变技术底座 |
-| 不在范围内 | 不改动业务架构风格（DDD 五层为卖点，保留）；不新增云厂商绑定 |
+| 不在范围内 | 不改动核心架构风格（DDD 五层为卖点，保留）；不新增云厂商绑定 |
 | 法律前提 | ✅ 已确认：自有代码，可分发 |
-| **零容忍约束** | **交付物全库 grep `业务`/`业务`/`业务` 零命中（排除 .git 目录）** |
 
 ---
 
@@ -73,14 +78,16 @@ Apex Scaffold 是当前仓库中的多模块 Java 后端脚手架（Spring Boot 
 
 ### 2.1 模块构成
 
-| 模块 | 现状 | 通用程度 |
-|---|---|---|
-| `apex-common` | 工具类、注解、Result/异常、错误码、License、SPI、脱敏、缓存常量、JwtUtil 等 | ✅ 基本通用（有 业务类名残留：`原算法配置类`/`原阻塞IO配置类`/`CacheConstants` 前缀/`ResultCode`） |
-| `apex-domain` | 通用领域（用户/RBAC/事件总线/Token/缓存/存储/短信）+ **约 300+ 业务文件**（interest 图谱 100+、对战、ELO、人脸、聊天、共鸣、视力、未来伴侣等） | ⚠️ 业务为主 |
-| `apex-application` | DTO 约 240 个，其中约 200 个业务 DTO；业务 service/listener 大量（含 `原偏好模型*` 系列） | ⚠️ 业务为主 |
-| `apex-infrastructure` | 通用基础实施 + TOS/MinIO Provider + `FaceAnalysisClient`（含 `原偏好模型/*` 路径）+ ApiCallLogService（`apex.api.call` 指标） | ⚠️ 部分业务 |
-| `apex-interfaces` | 约 48 个 Handler（其中约 40 个业务）；路由注册；87 迁移中 64 个业务 SQL；业务 审核后台静态资源；interest 种子数据；i18n 4 语言文件含 业务痕迹；`spy.properties`/`bootstrap.yml` 含 业务配置 | ⚠️ 业务为主 |
-| `apex-example` | 纯净的用户 CRUD 示例（唯一真正"通用"的业务模块） | ✅ 通用 |
+| 模块 | 现状 | 通用程度 | 优化点 |
+|---|---|---|---|
+| `apex-common` | 工具类、注解、Result/异常、错误码、License、SPI、脱敏、缓存常量、JwtUtil 等 | ✅ 已通用 | 无需调整 |
+| `apex-domain` | 通用领域（用户/RBAC/事件总线/Token/缓存/存储/短信/租户/部门/工作流） | ✅ 已通用 | Sample/Report实体需补充说明 |
+| `apex-application` | 应用服务、DTO、登录策略（含微信登录） | ✅ 已通用 | 微信登录需标注为可选集成 |
+| `apex-infrastructure` | 基础设施（持久化、缓存、存储Provider、微信客户端） | ✅ 已通用 | 微信集成需标注为可选 |
+| `apex-interfaces` | Handler、Router、26个Flyway迁移脚本 | ✅ 已通用 | V9脚本注释需优化 |
+| `apex-example` | 纯净的用户 CRUD 示例 | ✅ 通用 | 可增强示例场景 |
+| `apex-generator` | 代码生成器（13个模板） | ✅ 通用 | 无需调整 |
+| `apex-license-*` | License管理模块 | ✅ 通用 | 无需调整 |
 
 ### 2.2 已具备的产品化能力（保留资产）
 
@@ -96,61 +103,27 @@ Apex Scaffold 是当前仓库中的多模块 Java 后端脚手架（Spring Boot 
 - **工程化**：Spotless、PMD(P3C)、JaCoCo、ArchUnit 分层测试、OWASP security-scan workflow、Flyway
 - **示例**：`apex-example` 用户 CRUD 完整垂直切片
 
-### 2.3 业务代码残留（去业务化目标清单）
+### 2.3 需优化部分（详细清单参见业务代码删除清单.md）
 
-**去业务化需移除约 500+ 源文件**（另含 64 个业务迁移脚本、业务 后台静态资源、interest 种子数据）：
+**优化范围**：约10%的内容需要优化
 
-| 业务域 | 涉及范围（目录/命名特征） |
-|---|---|
-| 兴趣图谱 interest graph | `domain/interest/` 全目录（100+ 文件，含 governance/channel/session/reveal/connection/universe/antiabuse 子包）；`application/dto/interest/` + `interest/frequency/`（约 50 个 DTO）；对应 handler 6 个 + 路由 3 组；迁移 V30、V58-V62、V64、V66-V68、V72、V79-V85、V87 等；`db/interest/v1_2/` 种子数据 |
-| 照片对战 / ELO / 投票 | `domain`：battle/elo/vote/photo 相关 entity/repository/service/enum/event/valueobject；`application`：BattleVO/Photo* 等 DTO；handler：ExploreHandler/PhotoRankHandler/VotePhotoHandler 等；迁移 V4-V8、V13-V15、V19-V20、V22-V24、V26-V27、V35-V39、V43-V44、V46-V48、V51、V57 |
-| 人脸 / 照片分析 | `domain`：FaceAnalysisGateway、FaceScoreCalculator、MediaPipe 相关；`application`：faceanalysis/ DTO；handler：FaceAnalysisHandler/MediapipeFeatureAnalysisHandler/OwnedPhotoFaceAnalysisHandler 等；迁移 V8、V10、V15 |
-| 审美 / 单选推荐 / 修图 / 个人偏好 | `domain/service/recommendation/utility/*`（10 个）、ProfileRetouch/ImageRetouch、Aesthetic*、**原偏好模型*** 全套（含 `原算法配置类` 引用）；handler：AestheticCalibrationHandler/SingleRecommendationHandler/原偏好模型ModelHandler 等；迁移 V9、V25、V49-V50、V53-V56、V65、V69、V74-V75、V6_1、V7_1、V12 |
-| 共鸣 / 雷达 / 聊天 | `domain`：Resonance/Radar/Chat 相关；`application`：ChatVO/MessageVO/Resonance*；handler：ChatHandler/RadarHandler 等；迁移 V73 等 |
-| 视力 / 未来伴侣 | Eyesight*、FuturePartner* 全套；迁移 V12、V17、V45 |
-| 业务 审核后台 | `interfaces/resources/static/admin/`（index.html/app.js/styles.css，标题"原审核控制台"，前端 key `apex.admin.*`） |
-| 业务管理 API | `application/dto/admin/` 中约 30 个业务审核 DTO；`Admin*Handler` 10 个 |
-
-### 2.4 业务痕迹全量清单（详见附录 10）
-
-**核心发现**：业务痕迹不限于业务代码，在**通用代码**中也广泛存在。这是"彻底消除"的最大难点。
-
-| 类别 | 影响范围 | 消除方式 |
+| 类别 | 优化项 | 优先级 |
 |---|---|---|
-| **类名/配置类** | `原算法配置类`、`原阻塞IO配置类` + 对应 Test 类 | 删除（随业务代码剥离）；如 BlockingIo 能力保留则重命名为 `ApexBlockingIoProperties` |
-| **缓存前缀** | `CacheConstants.CACHE_PREFIX = "apex:"` → 所有 Redis key 以 `apex:` 开头 | 改为 `"apex:"`；同步改 Test |
-| **监控指标名** | `ApiCallLogService`：`apex.api.call` / `apex.api.call.result` | 改为 `apex.api.call` / `apex.api.call.result`；同步改 Test |
-| **系统属性** | `pom.xml`：`-Dapex.log.dir=` | 改为 `-Dapex.log.dir=` |
-| **i18n 文案** | 4 个语言文件（en_US/zh_CN/zh_TW/th_TH）含 业务字样 | 逐条排查替换或删除业务相关条目 |
-| **迁移脚本** | V1 头部"原社交业务项目 全量建表脚本"、`CREATE DATABASE apex_data`、V23 `@apex_*` 变量、V73 `@apex_*` 变量、V6_1/V7_1/V12/V25 `原偏好模型` 表名/注释、interest manifest.json `APEX-N-*` ID | 重建迁移基线（全部删除重建，见 B5） |
-| **前端 key** | `static/admin/`：`apex.admin.access-token` / `apex.admin.device-id` | 随后台改造替换为 `apex.admin.*` |
-| **配置文件** | `spy.properties`、`bootstrap.yml`、`application-performance.yml`、`logback-spring.xml`、`logback-test.xml`、`application-it.yml` 中 `com.apex` / `业务.*` | 替换为 `com.apex.scaffold` / `apex.*` 或删除业务键 |
-| **拷贝脚本** | `scripts/copy_all_modules.py`、`copy_common.py`、`copy_common_files.py`、`fix-author.sh` | 直接删除（内部工具，不属于交付物） |
-| **文档** | `COMMERCIAL_INCREMENTAL_ANALYSIS.md`、`COMMERCIAL_IMPROVEMENT_TASKS.md`、内部修复报告 3 篇 | 删除内部报告；商业分析文档中 业务引用替换为通用描述或删除 |
-| **测试数据** | `AlertEventTest`：`原社交业务项目`/`业务-gateway`/`业务-core`；`CacheConstantsTest`：断言 `apex:`；`ApiCallLogServiceTest`：断言 `apex.api.call` | 替换为 `apex-*` / `apex:` |
-| **构建产物** | 全部 `target/` 目录（surefire 报告含 `apex.log.dir` 属性、`原算法配置类Test`/`原阻塞IO配置类Test` 报告） | 删除全部 `target/`（不入版本库） |
+| **实体说明** | Sample/Report实体需补充通用场景说明 | P1 |
+| **集成标注** | 微信集成（25个文件）需标注为"可选第三方登录集成" | P2 |
+| **文档清理** | 清理COMMERCIAL_*文档中的过时业务描述 | P1 |
+| **脚本优化** | V9迁移脚本注释优化（birthday/onboarding字段说明） | P3 |
 
 ---
 
-## 3. 问题诊断
+## 3. 优化策略
 
-### 3.1 关键问题清单
+### 3.1 核心原则
 
-| # | 问题 | 严重度 | 影响 |
-|---|---|---|---|
-| P-1 | 业务代码未剥离（500+ 文件），通用脚手架名不副实 | 🔴 致命 | 无法公开售卖；代码审查与构建成本高 |
-| P-2 | **原业务痕迹遍布全库**（类名/前缀/指标/属性/SQL/前端/文档/脚本），通用代码中也大量残留 | 🔴 致命 | 泄露代码来源；品牌污染；影响专业形象；客户审查不通过 |
-| P-3 | 未 git 初始化，无版本管理、无 .gitignore | 🔴 致命 | 无法交付、无法追溯、target/ 构建产物混入 |
-| P-4 | 三个商业 Profile 是空声明，`features.*` 未被消费，三档版本产物相同 | 🔴 高 | 无法支撑分级定价 |
-| P-5 | License 默认不启用（无默认公钥/模板），fork 可绕过 | 🔴 高 | 收入保护失效 |
-| P-6 | 测试回归未完成：JsonUtil `activateDefaultTyping(NON_FINAL)` 破坏标准 JSON（6 失败+3 错误）；5 个配置文件 `com.apex` 残留；全量回归未跑 | 🟡 中 | 质量门禁阻塞 |
-| P-7 | LICENSE 文件为 MIT，但 README 声称标准版/企业版商业授权，二者矛盾 | 🟡 中 | 法律风险 |
-| P-8 | `target/` 构建产物、测试报告混在仓库中，含 业务 路径泄露 | 🔴 高 | 泄密 |
-| P-9 | 通用产品能力缺失：无代码生成器、无通用管理后台、系统管理 API 不完整、无备份/灰度脚本 | 🟢 低 | 竞争力不足 |
-
-### 3.2 结论
-
-当前项目**尚不具备对外售卖条件**。核心阻塞是"业务代码未剥离 + 原业务痕迹遍布全库 + 工程基线缺失"三大问题。好消息是通用基础设施资产（约 40%）质量较高，可直接复用（但需先消除其中的 业务痕迹）。
+1. **最小改动原则**：项目已基本通用化，仅优化标注和说明
+2. **保持兼容性**：不破坏现有功能和测试
+3. **快速交付**：优先处理P1/P2项，1-2天完成
+4. **文档先行**：先优化文档，再调整代码注释
 
 ---
 

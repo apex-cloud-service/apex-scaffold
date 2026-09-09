@@ -2,11 +2,15 @@ package com.apex.scaffold.interfaces.config;
 
 import com.apex.scaffold.common.constant.SystemConstants;
 import com.apex.scaffold.interfaces.security.JwtAuthenticationFilter;
+import com.apex.scaffold.interfaces.security.OAuth2ResourceServerFilter;
+import com.apex.scaffold.interfaces.security.OidcAuthenticationSuccessHandler;
 import com.apex.scaffold.interfaces.util.MessageUtils;
 import com.apex.scaffold.interfaces.util.ResponseUtil;
 import java.util.Locale;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -82,12 +86,23 @@ public class SecurityConfig {
 
     /** JWT 认证过滤器，用于验证请求中的 JWT Token */
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    
+    /** OAuth2资源服务器过滤器，用于验证OAuth2 Token */
+    private final OAuth2ResourceServerFilter oauth2ResourceServerFilter;
 
     /** 国际化消息工具，用于解析多语言错误消息 */
     private final MessageUtils messageUtils;
 
     /** 安全配置属性，包含管理端路径和角色等可配置项 */
     private final SecurityProperties securityProperties;
+
+    /** Keycloak OIDC 认证成功处理器（可选，仅在 keycloak.enabled=true 时注入） */
+    @Autowired(required = false)
+    private OidcAuthenticationSuccessHandler oidcAuthenticationSuccessHandler;
+
+    /** Keycloak 启用开关 */
+    @Value("${keycloak.enabled:false}")
+    private boolean keycloakEnabled;
 
     /**
      * 配置安全过滤器链
@@ -110,16 +125,14 @@ public class SecurityConfig {
      */
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
-        return http.csrf(csrf -> csrf.disable())
+        ServerHttpSecurity httpSecurity = http.csrf(csrf -> csrf.disable())
                 .authorizeExchange(exchanges -> {
                     exchanges
                             .pathMatchers(SystemConstants.PUBLIC_PATHS.toArray(new String[0]))
                             .permitAll()
-                            // 本人角色/权限查询会命中后续管理通配规则，需优先按普通登录用户授权。
                             .pathMatchers(SystemConstants.AUTHENTICATED_USER_PATHS.toArray(new String[0]))
                             .authenticated();
                     if (rbacEnabled) {
-                        // standard / enterprise：启用 RBAC，管理端路径要求特定角色
                         exchanges
                                 .pathMatchers("/internal/v1/interests/**")
                                 .hasAnyRole("ADMIN", "INTEREST_GRAPH_EDITOR", "INTEREST_PUBLISHER")
@@ -128,7 +141,6 @@ public class SecurityConfig {
                                 .pathMatchers(securityProperties.getAdminPaths().toArray(new String[0]))
                                 .hasAnyRole(securityProperties.getAdminRole(), "SUPER_ADMIN");
                     } else {
-                        // basic：关闭 RBAC，管理端路径仅要求已认证（不做角色拦截）
                         exchanges
                                 .pathMatchers("/internal/v1/interests/**")
                                 .authenticated()
@@ -140,16 +152,10 @@ public class SecurityConfig {
                     exchanges.anyExchange().authenticated();
                 })
                 .addFilterAt(jwtAuthenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION)
+                .addFilterAfter(oauth2ResourceServerFilter, SecurityWebFiltersOrder.AUTHENTICATION)
                 .exceptionHandling(exceptionHandling -> exceptionHandling
                         .authenticationEntryPoint((exchange, ex) -> Mono.deferContextual(ctx -> {
                             Locale locale = ctx.getOrDefault(Locale.class, Locale.SIMPLIFIED_CHINESE);
-                            /*
-                             * 兜底认证入口：当请求绕过 JwtAuthenticationFilter
-                             * 或 JwtAuthenticationFilter 未设置认证信息时触发。
-                             * 返回通用 UNAUTHORIZED(401)，Token 过期的
-                             * 场景已在 JwtAuthenticationFilter 中通过
-                             * TOKEN_EXPIRED(40101) 精确处理。
-                             */
                             String msg = messageUtils.get(locale, "auth.login_required");
                             return ResponseUtil.unauthorized(exchange, msg);
                         }))
@@ -157,7 +163,13 @@ public class SecurityConfig {
                             Locale locale = ctx.getOrDefault(Locale.class, Locale.SIMPLIFIED_CHINESE);
                             String msg = messageUtils.get(locale, "auth.access_denied");
                             return ResponseUtil.forbidden(exchange, msg);
-                        })))
-                .build();
+                        })));
+
+        if (keycloakEnabled && oidcAuthenticationSuccessHandler != null) {
+            httpSecurity.oauth2Login(oauth2 -> oauth2
+                    .authenticationSuccessHandler(oidcAuthenticationSuccessHandler));
+        }
+
+        return httpSecurity.build();
     }
 }

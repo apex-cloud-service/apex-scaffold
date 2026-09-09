@@ -195,6 +195,13 @@ public class WorkflowHandler {
             summary = "获取工作流趋势数据",
             description = "查询指定时间段内工作流实例的趋势统计"
     )
+    @Parameter(
+            name = "days",
+            description = "查询天数",
+            required = false,
+            in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+            schema = @Schema(type = "integer", defaultValue = "7")
+    )
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
@@ -238,6 +245,13 @@ public class WorkflowHandler {
             operationId = "rollbackTask",
             summary = "流程回退",
             description = "将工作流任务回退到指定的前置节点"
+    )
+    @Parameter(
+            name = "taskId",
+            description = "任务ID",
+            required = true,
+            in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+            schema = @Schema(type = "integer", format = "int64")
     )
     @RequestBody(
             description = "回退请求信息",

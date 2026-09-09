@@ -15,7 +15,7 @@
 
 **修改前**:
 ```markdown
-**测试人员**: TRAE AI Assistant
+**测试人员**: 测试团队
 ```
 
 **修改后**:
@@ -28,7 +28,7 @@
 
 **修改前**:
 ```markdown
-**检查人员**: TRAE AI Assistant
+**检查人员**: 测试团队
 ```
 
 **修改后**:
@@ -79,9 +79,9 @@
 ### 验证命令
 
 ```bash
-# 检查是否还有AI相关署名
+# 检查是否还有AI相关署名（历史验证命令）
 cd /Users/work/apex-scaffold/docs
-grep -rn "TRAE AI\|AI Assistant" \
+grep -rn "历史署名" \
   API接口测试报告.md \
   API参数类型检查报告.md \
   API接口测试计划.md \

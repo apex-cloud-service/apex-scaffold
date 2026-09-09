@@ -5,17 +5,31 @@ import lombok.Getter;
 import lombok.ToString;
 
 /**
- * 采样聚合根实体
+ * 采样数据聚合根实体（多级缓存示例实体）
  *
  * <p>
- * 表示用户照片的采样数据。
- * 用于对局展示和算法分析。
+ * <strong>模块说明</strong>：本实体作为复杂缓存策略和数据采样的领域模型示例。
+ * </p>
+ *
+ * <p>
+ * <strong>适用场景</strong>：
+ * - 内容采样：对用户上传的内容（图片/视频/文档）进行采样分析
+ * - 数据裁剪：存储经过处理的数据切片（如图片裁剪、视频关键帧）
+ * - 特征提取：记录从原始数据中提取的特征信息
+ * - 推荐系统：存储用于推荐算法的采样数据
+ * </p>
+ *
+ * <p>
+ * <strong>技术特性</strong>：
+ * - 演示多级缓存（Redisson + Caffeine）使用
+ * - 演示存储抽象层（StorageProvider）集成
+ * - 演示复杂查询与索引设计
+ * - 演示DDD聚合根设计模式
  * </p>
  *
  * @author Apex Team
  * @version 2.0.0
  * @since 1.0.0
- * @see PhotoEntity
  * @see BaseEntity
  */
 @Getter

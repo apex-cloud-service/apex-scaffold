@@ -6,24 +6,38 @@ import lombok.Getter;
 import lombok.ToString;
 
 /**
- * 报告聚合根实体
+ * 报告聚合根实体（通用报告模块示例）
  *
  * <p>
- * 表示用户生成的内容分析报告，如照片风险评估报告。
- * 报告异步生成，状态包括待处理、处理中、已完成、失败。
+ * <strong>模块说明</strong>：本实体作为通用报告/分析结果的领域模型示例。
+ * </p>
+ * 
+ * <p>
+ * <strong>适用场景</strong>：
+ * - 内容审核报告（如用户上传内容的安全检测结果）
+ * - 数据分析报告（如用户行为分析、统计报告）
+ * - 任务执行结果（如批处理任务的执行报告）
+ * - 风险评估报告（如信用评估、安全评估）
+ * </p>
+ *
+ * <p>
+ * <strong>核心特性</strong>：
+ * - 异步生成：报告通常由后台任务生成，需轮询状态
+ * - 状态流转：PENDING → PROCESSING → COMPLETED/FAILED
+ * - JSON存储：报告内容以JSON格式灵活存储
+ * - 可重试：失败后支持重新生成
  * </p>
  *
  * <h2>核心业务规则</h2>
  * <ul>
  *   <li>报告生成是异步过程，需轮询状态</li>
- *   <li>报告数据以JSON格式存储</li>
+ *   <li>报告数据以JSON格式存储，支持灵活的内容结构</li>
  *   <li>处理失败可重试</li>
  * </ul>
  *
  * @author Apex Team
  * @version 2.0.0
  * @since 1.0.0
- * @see PhotoEntity
  * @see BaseEntity
  */
 @Getter

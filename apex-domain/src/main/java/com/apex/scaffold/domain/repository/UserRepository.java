@@ -61,6 +61,18 @@ public interface UserRepository {
     Mono<UserEntity> findByUsername(String username);
 
     /**
+     * 根据 Keycloak 用户唯一标识查询用户。
+     *
+     * <p>Keycloak OIDC 登录场景使用：按 {@code keycloak_sub}（{@code uk_keycloak_sub} 唯一索引）
+     * 精确查询，返回用户实体。用户不存在时返回 {@link Mono#empty()}。</p>
+     *
+     * @param keycloakSub Keycloak 用户唯一标识（sub claim）
+     * @return 用户信息，若不存在则返回 {@code Mono.empty()}
+     * @since 2.4.0
+     */
+    Mono<UserEntity> findByKeycloakSub(String keycloakSub);
+
+    /**
      * 保存用户信息
      *
      * <p>如果用户ID为空，则执行创建操作；否则执行更新操作

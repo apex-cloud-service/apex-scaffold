@@ -19,7 +19,7 @@
 #   Sentinel http://localhost:8858        (sentinel / sentinel)
 #   Zipkin   http://localhost:9411
 #   Prometheus http://localhost:9090
-#   Grafana  http://localhost:3000        (admin / admin)
+#   Grafana  http://localhost:3200        (admin / admin)
 #
 # 说明:
 #   - 应用本地开发（java -jar）直接使用上述地址，dev 配置默认值即匹配（127.0.0.1）。
@@ -251,7 +251,7 @@ services:
       - ./config/monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
       - grafana-data:/var/lib/grafana
     ports:
-      - "3000:3000"
+      - "3200:3000"
     healthcheck:
       # ⚠️ 此处 /api/health 是 Grafana 自身 API（与 Apex 应用的 /api/v1/health 无关）
       test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]

@@ -136,6 +136,25 @@ jwt:
   secret: ${JWT_SECRET:apex-dev-jwt-secret-key-change-me-0123456789}
 
 # ============================================================
+# Keycloak 集成（开发环境）
+# ============================================================
+# ✅ dev 环境默认启用 Keycloak，连接到 docker-compose.yml 中的 Keycloak 服务
+keycloak:
+  # ✅ 开发环境启用 Keycloak 集成
+  enabled: ${KEYCLOAK_ENABLED:true}
+  # Keycloak 服务器地址（默认 docker-compose 配置的端口 8180）
+  server-url: ${KEYCLOAK_SERVER_URL:http://localhost:8180}
+  realm: ${KEYCLOAK_REALM:apex}
+  admin-username: ${KEYCLOAK_ADMIN_USERNAME:admin}
+  admin-password: ${KEYCLOAK_ADMIN_PASSWORD:admin123}
+  admin-client-id: admin-cli
+  client-id: apex-client
+  # dev 环境使用 Public Client（不需要 client-secret）
+  client-secret: ${KEYCLOAK_CLIENT_SECRET:}
+  user-sync-enabled: true
+  frontend-callback-url: http://localhost:3000/auth/callback
+
+# ============================================================
 # 消息中间件（RocketMQ）
 # ============================================================
 # ⚠️ dev 环境不启动本地 RocketMQ Broker；仅配置连接信息供调试。
@@ -224,7 +243,7 @@ loki:
 # ============================================================
 # Grafana（日志查询跳转）
 # ============================================================
-# ✅ dev 环境启用 Grafana，本地默认 http://localhost:3000
+# ✅ dev 环境启用 Grafana，本地默认 http://localhost:3200
 grafana:
   enabled: true
-  url: http://localhost:3000
+  url: http://localhost:3200

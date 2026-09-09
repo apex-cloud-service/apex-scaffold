@@ -216,6 +216,27 @@ public class UserEntity extends BaseEntity {
     private String phone;
 
     /**
+     * 用户邮箱
+     *
+     * <p>用户的电子邮箱地址，用于 Keycloak OIDC 登录和邮件通知。
+     * Keycloak OIDC 登录时从 ID Token 中获取 email claim。</p>
+     *
+     * @since 2.4.0
+     */
+    private String email;
+
+    /**
+     * Keycloak 用户唯一标识（sub claim）
+     *
+     * <p>Keycloak OIDC 登录时从 ID Token 中获取的 subject claim，
+     * 用于关联 Keycloak 用户与本地用户账号。全局唯一（{@code uk_keycloak_sub} 唯一索引约束）。
+     * 仅 Keycloak SSO 登录用户有值，本地注册用户为 {@code null}。</p>
+     *
+     * @since 2.4.0
+     */
+    private String keycloakSub;
+
+    /**
      * 用户状态
      *
      * <p>标识用户的可用状态。
@@ -342,6 +363,16 @@ public class UserEntity extends BaseEntity {
     /** Sets phone. For persistence/construction use only. */
     public void setPhone(String value) {
         this.phone = value;
+    }
+
+    /** Sets email. For persistence/construction use only. */
+    public void setEmail(String value) {
+        this.email = value;
+    }
+
+    /** Sets keycloakSub. For persistence/construction use only. */
+    public void setKeycloakSub(String value) {
+        this.keycloakSub = value;
     }
 
     /** Sets status. For persistence/construction use only. */

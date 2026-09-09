@@ -151,6 +151,24 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     /**
+     * 根据 Keycloak 用户唯一标识查询用户。
+     *
+     * <p>按 {@code keycloak_sub} 精确匹配（{@code uk_keycloak_sub} 唯一索引），
+     * Keycloak OIDC 登录场景使用。</p>
+     *
+     * @param keycloakSub Keycloak 用户唯一标识（sub claim）
+     * @return 用户实体，不存在时返回 {@link Mono#empty()}
+     * @since 2.4.0
+     */
+    @Override
+    public Mono<UserEntity> findByKeycloakSub(String keycloakSub) {
+        return Mono.fromCallable(() -> userMapper.selectOne(
+                        ConditionUtil.lambda(UserPO.class).eqIfPresent(UserPO::getKeycloakSub, keycloakSub)))
+                .subscribeOn(BlockingIoSchedulers.jdbc())
+                .flatMap(this::convertToEntity);
+    }
+
+    /**
      * 保存：创建或更新用户
      *
      * <p>

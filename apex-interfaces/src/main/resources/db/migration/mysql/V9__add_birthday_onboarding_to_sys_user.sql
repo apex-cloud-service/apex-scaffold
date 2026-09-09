@@ -1,4 +1,4 @@
--- 脚本用途：为系统用户补充生日与引导流程状态字段。
+-- 脚本用途：为系统用户补充生日与新手引导状态字段（通用用户属性）。
 -- 业务背景：修复 UserMapper 查询列与数据库结构不一致引发的登录鉴权异常。
 -- 前置依赖：V1-V8 已完成，sys_user 存在且目标字段尚未创建。
 -- 影响范围：变更 sys_user 表结构；新增字段允许 NULL，不主动回填存量用户数据。
@@ -9,14 +9,18 @@
 -- 迁移元信息：版本 V9；执行阶段为用户模型与数据库结构对齐阶段。
 -- Checksum 提示：修改已执行迁移的注释也会改变 Flyway checksum；存量环境需评估后 repair，禁止盲目重跑。
 -- ============================================================
--- V9: sys_user 表补齐 UserMapper 查询所需的缺失列
+-- V9: sys_user 表补齐 UserMapper 查询所需的通用用户属性字段
 -- ============================================================
 -- 背景：UserMapper 查询列包含 birthday / onboarding_status，
 --   但 V1 建表脚本未创建这两列，导致按 username/openId 查询用户时
 --   抛出 SQLSyntaxErrorException: Unknown column 'birthday'。
 -- 本脚本补齐列定义（与 UserEntity 字段类型对齐），修复登录/鉴权链路。
+-- 
+-- 字段说明：
+--   - birthday: 用户生日，常见用户属性，可用于生日提醒、年龄验证等通用场景
+--   - onboarding_status: 新手引导状态，记录用户是否完成系统引导流程（通用功能）
 -- ============================================================
 
 ALTER TABLE sys_user
-    ADD COLUMN birthday DATE NULL COMMENT '生日' AFTER gender,
-    ADD COLUMN onboarding_status VARCHAR(50) NULL COMMENT '引导流程状态' AFTER status;
+    ADD COLUMN birthday DATE NULL COMMENT '生日（通用用户属性）' AFTER gender,
+    ADD COLUMN onboarding_status VARCHAR(50) NULL COMMENT '新手引导状态（PENDING-待引导/COMPLETED-已完成）' AFTER status;

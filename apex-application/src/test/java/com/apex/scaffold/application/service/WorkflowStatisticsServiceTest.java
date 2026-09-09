@@ -11,7 +11,9 @@ import com.apex.scaffold.infrastructure.persistence.mapper.ProcessInstanceMapper
 import com.apex.scaffold.infrastructure.persistence.mapper.TaskMapper;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -70,10 +72,22 @@ class WorkflowStatisticsServiceTest {
         when(processInstanceMapper.avgCompletionSeconds()).thenReturn(7200L);
 
         // 模拟状态分布
-        Map<String, Integer> statusDist = new HashMap<>();
-        statusDist.put("RUNNING", 8);
-        statusDist.put("APPROVED", 45);
-        statusDist.put("REJECTED", 3);
+        List<Map<String, Object>> statusDist = new ArrayList<>();
+        Map<String, Object> running = new HashMap<>();
+        running.put("status", "RUNNING");
+        running.put("count", 8);
+        statusDist.add(running);
+        
+        Map<String, Object> approved = new HashMap<>();
+        approved.put("status", "APPROVED");
+        approved.put("count", 45);
+        statusDist.add(approved);
+        
+        Map<String, Object> rejected = new HashMap<>();
+        rejected.put("status", "REJECTED");
+        rejected.put("count", 3);
+        statusDist.add(rejected);
+        
         when(processInstanceMapper.statusDistribution()).thenReturn(statusDist);
 
         // When: 调用统计服务
@@ -109,7 +123,7 @@ class WorkflowStatisticsServiceTest {
         when(taskMapper.countTimeoutTasks(any(LocalDateTime.class))).thenReturn(0);
         when(taskMapper.countTransferredTasks()).thenReturn(0);
         when(processInstanceMapper.avgCompletionSeconds()).thenReturn(0L);
-        when(processInstanceMapper.statusDistribution()).thenReturn(new HashMap<>());
+        when(processInstanceMapper.statusDistribution()).thenReturn(new ArrayList<>());
 
         // When: 调用统计服务
         Mono<WorkflowStatisticsDTO> result = statisticsService.getStatistics();
@@ -127,23 +141,31 @@ class WorkflowStatisticsServiceTest {
     }
 
     @Test
-    @DisplayName("getTrend - 成功返回7天趋势数据")
-    void testGetTrend_Success() {
-        // Given: 模拟最近7天的发起和完成数据
+    @DisplayName("getTrend - 7天趋势数据")
+    void testGetTrend_7Days() {
+        // Given: 模拟7天数据
         LocalDate today = LocalDate.now();
-        Map<LocalDate, Integer> startedMap = new HashMap<>();
-        Map<LocalDate, Integer> completedMap = new HashMap<>();
+        List<Map<String, Object>> startedList = new ArrayList<>();
+        List<Map<String, Object>> completedList = new ArrayList<>();
 
         for (int i = 6; i >= 0; i--) {
             LocalDate date = today.minusDays(i);
-            startedMap.put(date, 5 + i);
-            completedMap.put(date, 4 + i);
+            
+            Map<String, Object> startedMap = new HashMap<>();
+            startedMap.put("date", date);
+            startedMap.put("count", 5 + i);
+            startedList.add(startedMap);
+            
+            Map<String, Object> completedMap = new HashMap<>();
+            completedMap.put("date", date);
+            completedMap.put("count", 4 + i);
+            completedList.add(completedMap);
         }
 
         when(processInstanceMapper.countStartedByDateRange(any(LocalDateTime.class), any(LocalDateTime.class)))
-                .thenReturn(startedMap);
+                .thenReturn(startedList);
         when(processInstanceMapper.countCompletedByDateRange(any(LocalDateTime.class), any(LocalDateTime.class)))
-                .thenReturn(completedMap);
+                .thenReturn(completedList);
 
         // When: 调用趋势分析
         Mono<WorkflowTrendDTO> result = statisticsService.getTrend(7);
@@ -169,20 +191,28 @@ class WorkflowStatisticsServiceTest {
     @DisplayName("getTrend - 30天趋势数据")
     void testGetTrend_30Days() {
         // Given: 模拟30天数据
-        Map<LocalDate, Integer> startedMap = new HashMap<>();
-        Map<LocalDate, Integer> completedMap = new HashMap<>();
+        List<Map<String, Object>> startedList = new ArrayList<>();
+        List<Map<String, Object>> completedList = new ArrayList<>();
 
         LocalDate today = LocalDate.now();
         for (int i = 29; i >= 0; i--) {
             LocalDate date = today.minusDays(i);
-            startedMap.put(date, 10);
-            completedMap.put(date, 9);
+            
+            Map<String, Object> startedMap = new HashMap<>();
+            startedMap.put("date", date);
+            startedMap.put("count", 10);
+            startedList.add(startedMap);
+            
+            Map<String, Object> completedMap = new HashMap<>();
+            completedMap.put("date", date);
+            completedMap.put("count", 9);
+            completedList.add(completedMap);
         }
 
         when(processInstanceMapper.countStartedByDateRange(any(LocalDateTime.class), any(LocalDateTime.class)))
-                .thenReturn(startedMap);
+                .thenReturn(startedList);
         when(processInstanceMapper.countCompletedByDateRange(any(LocalDateTime.class), any(LocalDateTime.class)))
-                .thenReturn(completedMap);
+                .thenReturn(completedList);
 
         // When: 调用30天趋势
         Mono<WorkflowTrendDTO> result = statisticsService.getTrend(30);
@@ -203,23 +233,45 @@ class WorkflowStatisticsServiceTest {
     @DisplayName("getTrend - 部分日期无数据时填充0")
     void testGetTrend_PartialData() {
         // Given: 只有部分日期有数据
-        Map<LocalDate, Integer> startedMap = new HashMap<>();
-        Map<LocalDate, Integer> completedMap = new HashMap<>();
+        List<Map<String, Object>> startedList = new ArrayList<>();
+        List<Map<String, Object>> completedList = new ArrayList<>();
 
         LocalDate today = LocalDate.now();
         // 只填充第1、3、5天的数据
-        startedMap.put(today.minusDays(6), 5);
-        startedMap.put(today.minusDays(4), 8);
-        startedMap.put(today.minusDays(2), 12);
+        Map<String, Object> started1 = new HashMap<>();
+        started1.put("date", today.minusDays(6));
+        started1.put("count", 5);
+        startedList.add(started1);
+        
+        Map<String, Object> started2 = new HashMap<>();
+        started2.put("date", today.minusDays(4));
+        started2.put("count", 8);
+        startedList.add(started2);
+        
+        Map<String, Object> started3 = new HashMap<>();
+        started3.put("date", today.minusDays(2));
+        started3.put("count", 12);
+        startedList.add(started3);
 
-        completedMap.put(today.minusDays(6), 4);
-        completedMap.put(today.minusDays(4), 7);
-        completedMap.put(today.minusDays(2), 10);
+        Map<String, Object> completed1 = new HashMap<>();
+        completed1.put("date", today.minusDays(6));
+        completed1.put("count", 4);
+        completedList.add(completed1);
+        
+        Map<String, Object> completed2 = new HashMap<>();
+        completed2.put("date", today.minusDays(4));
+        completed2.put("count", 7);
+        completedList.add(completed2);
+        
+        Map<String, Object> completed3 = new HashMap<>();
+        completed3.put("date", today.minusDays(2));
+        completed3.put("count", 10);
+        completedList.add(completed3);
 
         when(processInstanceMapper.countStartedByDateRange(any(LocalDateTime.class), any(LocalDateTime.class)))
-                .thenReturn(startedMap);
+                .thenReturn(startedList);
         when(processInstanceMapper.countCompletedByDateRange(any(LocalDateTime.class), any(LocalDateTime.class)))
-                .thenReturn(completedMap);
+                .thenReturn(completedList);
 
         // When: 调用趋势分析
         Mono<WorkflowTrendDTO> result = statisticsService.getTrend(7);

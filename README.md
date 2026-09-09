@@ -505,7 +505,7 @@ spring:
 
 ### 监控大盘
 
-- **Grafana**: <http://localhost:3000> (admin/admin)
+- **Grafana**: <http://localhost:3200> (admin/admin)
 
   - 66个监控面板
 

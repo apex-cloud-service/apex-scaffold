@@ -85,6 +85,7 @@
     <caffeine.version>3.1.8</caffeine.version>
     <resilience4j.version>2.2.0</resilience4j.version>
     <embedded-redis.version>1.4.3</embedded-redis.version>
+    <keycloak.version>26.0.7</keycloak.version>
     <junit.version>5.10.2</junit.version>
     <junit-platform.version>1.10.2</junit-platform.version>
     <mockito.version>5.11.0</mockito.version>
@@ -171,6 +172,12 @@
         <groupId>org.springframework.security</groupId>
         <artifactId>spring-security-crypto</artifactId>
         <version>${spring-security.version}</version>
+      </dependency>
+      <!-- Spring Security OAuth2 Resource Server (响应式JWT验证) -->
+      <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+        <version>${spring-boot.version}</version>
       </dependency>
       <dependency>
         <groupId>org.springframework.cloud</groupId>
@@ -325,6 +332,11 @@
         <artifactId>jjwt-jackson</artifactId>
         <version>${jwt.version}</version>
         <scope>runtime</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.keycloak</groupId>
+        <artifactId>keycloak-admin-client</artifactId>
+        <version>${keycloak.version}</version>
       </dependency>
       <dependency>
         <groupId>org.projectlombok</groupId>
