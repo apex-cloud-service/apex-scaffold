@@ -1,15 +1,14 @@
 package com.apex.scaffold.application.config;
 
+import static io.r2dbc.spi.ConnectionFactoryOptions.*;
+
 import io.r2dbc.spi.ConnectionFactories;
 import io.r2dbc.spi.ConnectionFactory;
 import io.r2dbc.spi.ConnectionFactoryOptions;
 import io.r2dbc.spi.Option;
+import java.time.Duration;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
-
-import java.time.Duration;
-
-import static io.r2dbc.spi.ConnectionFactoryOptions.*;
 
 /**
  * R2DBC 连接测试配置工具。
@@ -37,12 +36,7 @@ public class R2dbcTestConfig {
      * @return R2DBC 连接工厂
      */
     public static ConnectionFactory createTestConnectionFactory(
-            String dbType,
-            String host,
-            Integer port,
-            String database,
-            String username,
-            String password) {
+            String dbType, String host, Integer port, String database, String username, String password) {
 
         ConnectionFactoryOptions.Builder optionsBuilder = ConnectionFactoryOptions.builder()
                 .option(DRIVER, getDriverName(dbType))

@@ -11,7 +11,7 @@ import lombok.ToString;
  * <p>
  * <strong>模块说明</strong>：本实体作为通用报告/分析结果的领域模型示例。
  * </p>
- * 
+ *
  * <p>
  * <strong>适用场景</strong>：
  * - 内容审核报告（如用户上传内容的安全检测结果）

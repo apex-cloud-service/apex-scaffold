@@ -21,7 +21,6 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -34,12 +33,12 @@ class DataScopeAspectTest {
     }
 
     @Test
-    void shouldSelectDualProviderConstructorForSpringInjection() {
-        Constructor<?>[] autowiredConstructors = Arrays.stream(DataScopeAspect.class.getDeclaredConstructors())
-                .filter(constructor -> constructor.isAnnotationPresent(Autowired.class))
+    void shouldHaveSinglePublicConstructorForSpringInjection() {
+        Constructor<?>[] publicConstructors = Arrays.stream(DataScopeAspect.class.getDeclaredConstructors())
+                .filter(constructor -> java.lang.reflect.Modifier.isPublic(constructor.getModifiers()))
                 .toArray(Constructor<?>[]::new);
 
-        assertThat(autowiredConstructors).singleElement().satisfies(constructor -> assertThat(
+        assertThat(publicConstructors).singleElement().satisfies(constructor -> assertThat(
                         constructor.getParameterTypes())
                 .containsExactly(DataScopeProvider.class, ReactiveDataScopeProvider.class));
     }
@@ -51,13 +50,15 @@ class DataScopeAspectTest {
             resolves.incrementAndGet();
             return Optional.of(DataScopeInfo.ofDept(10L));
         };
+        ReactiveDataScopeProvider reactiveProvider = () -> Mono.justOrEmpty(provider.resolve());
         ProceedingJoinPoint joinPoint = joinPoint(
                 Mono.class,
                 Mono.deferContextual(contextView -> Mono.just(new Observation(
                         contextView.get(DataScopeJdbcBridge.CONTEXT_KEY),
                         DataScopeContext.currentScope().isPresent()))));
 
-        Mono<Observation> result = castMono(new DataScopeAspect(provider).applyDataScope(joinPoint, annotation()));
+        Mono<Observation> result =
+                castMono(new DataScopeAspect(provider, reactiveProvider).applyDataScope(joinPoint, annotation()));
 
         assertThat(resolves).hasValue(0);
         StepVerifier.create(result.repeat(1))
@@ -76,13 +77,14 @@ class DataScopeAspectTest {
 
     @Test
     void shouldResolveReactiveProviderFromSecurityContextAtSubscription() throws Throwable {
-        ReactiveDataScopeProvider provider = () -> Mono.just(DataScopeInfo.ofSelf(7L));
+        ReactiveDataScopeProvider reactiveProvider = () -> Mono.just(DataScopeInfo.ofSelf(7L));
+        DataScopeProvider syncProvider = Optional::empty;
         ProceedingJoinPoint joinPoint = joinPoint(
                 Mono.class,
                 Mono.deferContextual(contextView -> Mono.just(contextView.get(DataScopeJdbcBridge.CONTEXT_KEY))));
 
         Mono<DataScopeContext.Scope> result =
-                castMono(new DataScopeAspect(provider).applyDataScope(joinPoint, annotation()));
+                castMono(new DataScopeAspect(syncProvider, reactiveProvider).applyDataScope(joinPoint, annotation()));
 
         StepVerifier.create(result)
                 .assertNext(scope -> assertThat(scope.info().userId()).isEqualTo(7L))
@@ -93,7 +95,9 @@ class DataScopeAspectTest {
     void shouldFailMonoSubscriptionWhenProviderIsEmpty() throws Throwable {
         ProceedingJoinPoint joinPoint = joinPoint(Mono.class, Mono.just("value"));
         DataScopeProvider provider = Optional::empty;
-        Mono<?> result = castMono(new DataScopeAspect(provider).applyDataScope(joinPoint, annotation()));
+        ReactiveDataScopeProvider reactiveProvider = () -> Mono.justOrEmpty(provider.resolve());
+        Mono<?> result =
+                castMono(new DataScopeAspect(provider, reactiveProvider).applyDataScope(joinPoint, annotation()));
 
         StepVerifier.create(result)
                 .expectErrorSatisfies(error -> assertThat(error)
@@ -109,12 +113,13 @@ class DataScopeAspectTest {
             resolves.incrementAndGet();
             return Optional.of(DataScopeInfo.all());
         };
+        ReactiveDataScopeProvider reactiveProvider = () -> Mono.justOrEmpty(provider.resolve());
         ProceedingJoinPoint joinPoint = joinPoint(
                 Flux.class,
                 Flux.deferContextual(contextView -> Flux.just(contextView.get(DataScopeJdbcBridge.CONTEXT_KEY))));
 
         Flux<DataScopeContext.Scope> result =
-                castFlux(new DataScopeAspect(provider).applyDataScope(joinPoint, annotation()));
+                castFlux(new DataScopeAspect(provider, reactiveProvider).applyDataScope(joinPoint, annotation()));
 
         assertThat(resolves).hasValue(0);
         StepVerifier.create(result)
@@ -131,8 +136,12 @@ class DataScopeAspectTest {
         when(joinPoint.proceed())
                 .thenAnswer(invocation -> DataScopeContext.currentScope().orElseThrow());
 
+        DataScopeProvider syncProvider = () -> Optional.of(inner);
+        ReactiveDataScopeProvider reactiveProvider = () -> Mono.just(inner);
+
         try (AutoCloseable ignored = DataScopeContext.install(outer)) {
-            Object observed = new DataScopeAspect(() -> Optional.of(inner)).applyDataScope(joinPoint, annotation());
+            Object observed =
+                    new DataScopeAspect(syncProvider, reactiveProvider).applyDataScope(joinPoint, annotation());
 
             assertThat(observed).isEqualTo(new DataScopeContext.Scope(inner, DataScopeConfig.defaults()));
             assertThat(DataScopeContext.currentScope()).contains(outer);

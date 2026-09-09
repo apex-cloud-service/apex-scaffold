@@ -190,24 +190,13 @@ public class CodeGenerator {
      * @param urlPrefix JDBC URL 前缀（含 {@code //}）
      * @param validationQuery 连接池校验查询
      */
-    private record DatabaseProfile(
-            String dbType,
-            String driverClassName,
-            String urlPrefix,
-            String validationQuery) {
+    private record DatabaseProfile(String dbType, String driverClassName, String urlPrefix, String validationQuery) {
 
         static DatabaseProfile of(String dbType) {
             return switch (dbType) {
-                case "mysql" -> new DatabaseProfile(
-                        "mysql",
-                        "com.mysql.cj.jdbc.Driver",
-                        "jdbc:mysql://",
-                        "SELECT 1");
+                case "mysql" -> new DatabaseProfile("mysql", "com.mysql.cj.jdbc.Driver", "jdbc:mysql://", "SELECT 1");
                 case "postgresql" -> new DatabaseProfile(
-                        "postgresql",
-                        "org.postgresql.Driver",
-                        "jdbc:postgresql://",
-                        "SELECT 1");
+                        "postgresql", "org.postgresql.Driver", "jdbc:postgresql://", "SELECT 1");
                 default -> throw new IllegalArgumentException("不支持的数据库类型: " + dbType);
             };
         }

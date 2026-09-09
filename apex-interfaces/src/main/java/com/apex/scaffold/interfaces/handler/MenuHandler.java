@@ -71,21 +71,10 @@ public class MenuHandler extends BaseHandler {
      * @return 带 traceId 的统一成功响应，data 为菜单树根节点列表
      */
     @RequirePermission("system:menu:list")
-    @Operation(
-            operationId = "adminListMenus",
-            summary = "查询菜单树",
-            description = "查询完整的系统菜单树结构，包含所有菜单和按钮权限"
-    )
+    @Operation(operationId = "adminListMenus", summary = "查询菜单树", description = "查询完整的系统菜单树结构，包含所有菜单和按钮权限")
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "查询成功",
-                    content = @Content(mediaType = "application/json")
-            ),
-            @ApiResponse(
-                    responseCode = "403",
-                    description = "权限不足，需要system:menu:list权限"
-            )
+        @ApiResponse(responseCode = "200", description = "查询成功", content = @Content(mediaType = "application/json")),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要system:menu:list权限")
     })
     public Mono<ServerResponse> tree(ServerRequest request) {
         return menuService.getMenuTree().flatMap(this::buildSuccess);
@@ -99,36 +88,18 @@ public class MenuHandler extends BaseHandler {
      * @throws BusinessException 当 {@code menuId} 非法或菜单不存在时抛出
      */
     @RequirePermission("system:menu:query")
-    @Operation(
-            operationId = "adminGetMenu",
-            summary = "查询菜单详情",
-            description = "根据菜单ID查询菜单的详细信息"
-    )
+    @Operation(operationId = "adminGetMenu", summary = "查询菜单详情", description = "根据菜单ID查询菜单的详细信息")
     @Parameter(
             name = "menuId",
             description = "菜单ID",
             required = true,
             in = ParameterIn.PATH,
-            schema = @Schema(type = "integer", format = "int64")
-    )
+            schema = @Schema(type = "integer", format = "int64"))
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "查询成功",
-                    content = @Content(mediaType = "application/json")
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "菜单ID格式错误"
-            ),
-            @ApiResponse(
-                    responseCode = "403",
-                    description = "权限不足，需要system:menu:query权限"
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "菜单不存在"
-            )
+        @ApiResponse(responseCode = "200", description = "查询成功", content = @Content(mediaType = "application/json")),
+        @ApiResponse(responseCode = "400", description = "菜单ID格式错误"),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要system:menu:query权限"),
+        @ApiResponse(responseCode = "404", description = "菜单不存在")
     })
     public Mono<ServerResponse> detail(ServerRequest request) {
         return menuService.getMenu(requirePositiveId(request)).flatMap(this::buildSuccess);
@@ -144,33 +115,15 @@ public class MenuHandler extends BaseHandler {
      * @throws BusinessException 当请求体为空时，错误码为 {@code PARAM_ERROR}
      */
     @RequirePermission("system:menu:add")
-    @Operation(
-            operationId = "adminCreateMenu",
-            summary = "创建菜单",
-            description = "创建新的系统菜单或按钮权限"
-    )
+    @Operation(operationId = "adminCreateMenu", summary = "创建菜单", description = "创建新的系统菜单或按钮权限")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
             description = "菜单创建请求信息",
             required = true,
-            content = @Content(
-                    mediaType = "application/json",
-                    schema = @Schema(implementation = MenuRequest.class)
-            )
-    )
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = MenuRequest.class)))
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "创建成功",
-                    content = @Content(mediaType = "application/json")
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "参数校验失败"
-            ),
-            @ApiResponse(
-                    responseCode = "403",
-                    description = "权限不足，需要system:menu:add权限"
-            )
+        @ApiResponse(responseCode = "200", description = "创建成功", content = @Content(mediaType = "application/json")),
+        @ApiResponse(responseCode = "400", description = "参数校验失败"),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要system:menu:add权限")
     })
     @OperationLog(module = "菜单管理", type = OperationLog.OperationType.INSERT, description = "创建菜单")
     public Mono<ServerResponse> create(ServerRequest request) {
@@ -187,44 +140,22 @@ public class MenuHandler extends BaseHandler {
      * @throws BusinessException 当 {@code menuId} 非法或请求体为空时抛出
      */
     @RequirePermission("system:menu:edit")
-    @Operation(
-            operationId = "adminUpdateMenu",
-            summary = "更新菜单",
-            description = "更新指定菜单的信息"
-    )
+    @Operation(operationId = "adminUpdateMenu", summary = "更新菜单", description = "更新指定菜单的信息")
     @Parameter(
             name = "menuId",
             description = "菜单ID",
             required = true,
             in = ParameterIn.PATH,
-            schema = @Schema(type = "integer", format = "int64")
-    )
+            schema = @Schema(type = "integer", format = "int64"))
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
             description = "菜单更新请求信息",
             required = true,
-            content = @Content(
-                    mediaType = "application/json",
-                    schema = @Schema(implementation = MenuRequest.class)
-            )
-    )
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = MenuRequest.class)))
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "更新成功",
-                    content = @Content(mediaType = "application/json")
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "参数校验失败"
-            ),
-            @ApiResponse(
-                    responseCode = "403",
-                    description = "权限不足，需要system:menu:edit权限"
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "菜单不存在"
-            )
+        @ApiResponse(responseCode = "200", description = "更新成功", content = @Content(mediaType = "application/json")),
+        @ApiResponse(responseCode = "400", description = "参数校验失败"),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要system:menu:edit权限"),
+        @ApiResponse(responseCode = "404", description = "菜单不存在")
     })
     @OperationLog(module = "菜单管理", type = OperationLog.OperationType.UPDATE, description = "更新菜单")
     public Mono<ServerResponse> update(ServerRequest request) {
@@ -244,36 +175,18 @@ public class MenuHandler extends BaseHandler {
      * @throws BusinessException 当 {@code menuId} 非法时抛出
      */
     @RequirePermission("system:menu:remove")
-    @Operation(
-            operationId = "adminDeleteMenu",
-            summary = "删除菜单",
-            description = "删除指定的菜单，含子菜单的父节点将被拒绝删除"
-    )
+    @Operation(operationId = "adminDeleteMenu", summary = "删除菜单", description = "删除指定的菜单，含子菜单的父节点将被拒绝删除")
     @Parameter(
             name = "menuId",
             description = "菜单ID",
             required = true,
             in = ParameterIn.PATH,
-            schema = @Schema(type = "integer", format = "int64")
-    )
+            schema = @Schema(type = "integer", format = "int64"))
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "删除成功",
-                    content = @Content(mediaType = "application/json")
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "菜单ID格式错误或包含子菜单无法删除"
-            ),
-            @ApiResponse(
-                    responseCode = "403",
-                    description = "权限不足，需要system:menu:remove权限"
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "菜单不存在"
-            )
+        @ApiResponse(responseCode = "200", description = "删除成功", content = @Content(mediaType = "application/json")),
+        @ApiResponse(responseCode = "400", description = "菜单ID格式错误或包含子菜单无法删除"),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要system:menu:remove权限"),
+        @ApiResponse(responseCode = "404", description = "菜单不存在")
     })
     @OperationLog(module = "菜单管理", type = OperationLog.OperationType.DELETE, description = "删除菜单")
     public Mono<ServerResponse> delete(ServerRequest request) {
@@ -292,44 +205,22 @@ public class MenuHandler extends BaseHandler {
      * @throws BusinessException 当 {@code menuId} 非法或请求体为空时抛出
      */
     @RequirePermission("system:menu:edit")
-    @Operation(
-            operationId = "adminUpdateMenuStatus",
-            summary = "启用或停用菜单",
-            description = "更新菜单的启用/停用状态"
-    )
+    @Operation(operationId = "adminUpdateMenuStatus", summary = "启用或停用菜单", description = "更新菜单的启用/停用状态")
     @Parameter(
             name = "menuId",
             description = "菜单ID",
             required = true,
             in = ParameterIn.PATH,
-            schema = @Schema(type = "integer", format = "int64")
-    )
+            schema = @Schema(type = "integer", format = "int64"))
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
             description = "状态更新请求信息",
             required = true,
-            content = @Content(
-                    mediaType = "application/json",
-                    schema = @Schema(implementation = StatusRequest.class)
-            )
-    )
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = StatusRequest.class)))
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "更新成功",
-                    content = @Content(mediaType = "application/json")
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "参数错误"
-            ),
-            @ApiResponse(
-                    responseCode = "403",
-                    description = "权限不足，需要system:menu:edit权限"
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "菜单不存在"
-            )
+        @ApiResponse(responseCode = "200", description = "更新成功", content = @Content(mediaType = "application/json")),
+        @ApiResponse(responseCode = "400", description = "参数错误"),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要system:menu:edit权限"),
+        @ApiResponse(responseCode = "404", description = "菜单不存在")
     })
     @OperationLog(module = "菜单管理", type = OperationLog.OperationType.UPDATE, description = "更新菜单状态")
     public Mono<ServerResponse> updateStatus(ServerRequest request) {

@@ -12,27 +12,27 @@ import lombok.Data;
  */
 @Data
 public class OAuth2AccessTokenEntity {
-    
+
     private String tokenValue;
-    
+
     private String tokenType = "Bearer";
-    
+
     private String clientId;
-    
+
     private String userId;
-    
+
     private String scope;
-    
+
     private Instant issuedAt;
-    
+
     private Instant expiresAt;
-    
+
     private String refreshToken;
-    
+
     public boolean isExpired() {
         return Instant.now().isAfter(expiresAt);
     }
-    
+
     public long getExpiresIn() {
         return java.time.Duration.between(Instant.now(), expiresAt).getSeconds();
     }

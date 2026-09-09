@@ -4,6 +4,8 @@ import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
 import com.apex.scaffold.domain.model.entity.UserEntity;
 import com.apex.scaffold.domain.repository.UserRepository;
 import com.apex.scaffold.interfaces.config.KeycloakConfig;
+import java.time.LocalDateTime;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.keycloak.admin.client.Keycloak;
@@ -11,9 +13,6 @@ import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
-
-import java.time.LocalDateTime;
-import java.util.List;
 
 /**
  * Keycloak 用户同步服务
@@ -68,10 +67,10 @@ public class KeycloakUserSyncService {
 
     /** Keycloak Admin Client（阻塞式 API） */
     private final Keycloak keycloakAdminClient;
-    
+
     /** Keycloak 配置 */
     private final KeycloakConfig keycloakConfig;
-    
+
     /** 用户仓储 */
     private final UserRepository userRepository;
 
@@ -138,15 +137,17 @@ public class KeycloakUserSyncService {
                     user.setCreateTime(LocalDateTime.now());
                     user.setUpdateTime(LocalDateTime.now());
 
-                    return userRepository.save(user)
+                    return userRepository
+                            .save(user)
                             .doOnSuccess(savedUser -> log.info(
                                     "User synced from Keycloak: userId={}, username={}, keycloakSub={}",
-                                    savedUser.getId(), savedUser.getUsername(), keycloakSub));
+                                    savedUser.getId(),
+                                    savedUser.getUsername(),
+                                    keycloakSub));
                 })
                 .onErrorResume(e -> {
                     log.error("Failed to sync user from Keycloak: keycloakSub={}", keycloakSub, e);
-                    return Mono.error(new RuntimeException(
-                            "Failed to sync user from Keycloak: " + e.getMessage(), e));
+                    return Mono.error(new RuntimeException("Failed to sync user from Keycloak: " + e.getMessage(), e));
                 });
     }
 
@@ -166,12 +167,10 @@ public class KeycloakUserSyncService {
                 .flatMapMany(reactor.core.publisher.Flux::fromIterable)
                 .flatMap(kcUser -> {
                     String keycloakSub = kcUser.getId();
-                    return syncUserFromKeycloak(keycloakSub)
-                            .onErrorResume(e -> {
-                                log.warn("Failed to sync user: keycloakSub={}, error={}",
-                                        keycloakSub, e.getMessage());
-                                return Mono.empty();
-                            });
+                    return syncUserFromKeycloak(keycloakSub).onErrorResume(e -> {
+                        log.warn("Failed to sync user: keycloakSub={}, error={}", keycloakSub, e.getMessage());
+                        return Mono.empty();
+                    });
                 })
                 .then()
                 .doOnSuccess(v -> log.info("Full user sync from Keycloak completed"))
@@ -195,8 +194,7 @@ public class KeycloakUserSyncService {
                             .create(kcUser);
 
                     if (response.getStatus() != 201) {
-                        throw new RuntimeException("Failed to create user in Keycloak: status="
-                                + response.getStatus());
+                        throw new RuntimeException("Failed to create user in Keycloak: status=" + response.getStatus());
                     }
 
                     String locationHeader = response.getHeaderString("Location");
@@ -216,24 +214,23 @@ public class KeycloakUserSyncService {
                                 .resetPassword(credential);
                     }
 
-                    log.info("User created in Keycloak: keycloakSub={}, username={}",
-                            keycloakSub, user.getUsername());
+                    log.info("User created in Keycloak: keycloakSub={}, username={}", keycloakSub, user.getUsername());
 
                     return keycloakSub;
                 })
                 .subscribeOn(BlockingIoSchedulers.remote())
                 .flatMap(keycloakSub -> {
                     user.setKeycloakSub(keycloakSub);
-                    return userRepository.save(user)
+                    return userRepository
+                            .save(user)
                             .doOnSuccess(savedUser -> log.info(
                                     "User saved with Keycloak reference: userId={}, keycloakSub={}",
-                                    savedUser.getId(), keycloakSub));
+                                    savedUser.getId(),
+                                    keycloakSub));
                 })
                 .onErrorResume(e -> {
-                    log.error("Failed to create user in Keycloak: username={}",
-                            user.getUsername(), e);
-                    return Mono.error(new RuntimeException(
-                            "Failed to create user in Keycloak: " + e.getMessage(), e));
+                    log.error("Failed to create user in Keycloak: username={}", user.getUsername(), e);
+                    return Mono.error(new RuntimeException("Failed to create user in Keycloak: " + e.getMessage(), e));
                 });
     }
 }

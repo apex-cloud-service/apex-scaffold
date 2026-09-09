@@ -76,18 +76,12 @@ public class HealthHandler extends BaseHandler {
      * @param request HTTP请求对象
      * @return 包含健康状态信息的响应
      */
-    @Operation(
-            operationId = "healthCheck",
-            summary = "健康检查",
-            description = "用于负载均衡和服务发现的健康检查，返回服务运行状态、时间戳、应用名称和版本信息")
+    @Operation(operationId = "healthCheck", summary = "健康检查", description = "用于负载均衡和服务发现的健康检查，返回服务运行状态、时间戳、应用名称和版本信息")
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",
                 description = "健康检查通过",
-                content =
-                        @Content(
-                                mediaType = "application/json",
-                                schema = @Schema(implementation = Result.class))),
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = Result.class))),
         @ApiResponse(
                 responseCode = "503",
                 description = "服务不可用",
@@ -111,18 +105,12 @@ public class HealthHandler extends BaseHandler {
      * @param request HTTP请求对象
      * @return 包含服务存活状态的响应
      */
-    @Operation(
-            operationId = "rootProbe",
-            summary = "根路径探活",
-            description = "服务根路径探活，返回服务运行状态，用于负载均衡器和反向代理的健康检查")
+    @Operation(operationId = "rootProbe", summary = "根路径探活", description = "服务根路径探活，返回服务运行状态，用于负载均衡器和反向代理的健康检查")
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",
                 description = "服务存活",
-                content =
-                        @Content(
-                                mediaType = "application/json",
-                                schema = @Schema(implementation = Result.class)))
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = Result.class)))
     })
     public Mono<ServerResponse> root(ServerRequest request) {
         Map<String, Object> probeInfo = new HashMap<>(3);
@@ -152,18 +140,12 @@ public class HealthHandler extends BaseHandler {
      * @param request HTTP请求对象
      * @return 包含系统信息的响应
      */
-    @Operation(
-            operationId = "getSystemInfo",
-            summary = "系统信息",
-            description = "获取系统基本信息，包括应用描述、版本、Java版本、操作系统等，支持国际化")
+    @Operation(operationId = "getSystemInfo", summary = "系统信息", description = "获取系统基本信息，包括应用描述、版本、Java版本、操作系统等，支持国际化")
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",
                 description = "获取成功",
-                content =
-                        @Content(
-                                mediaType = "application/json",
-                                schema = @Schema(implementation = Result.class)))
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = Result.class)))
     })
     public Mono<ServerResponse> info(ServerRequest request) {
         return Mono.deferContextual(ctx -> {

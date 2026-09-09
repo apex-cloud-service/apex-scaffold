@@ -107,8 +107,7 @@ class WorkflowQueryServiceTest {
 
         when(processInstanceMapper.selectPage(any(IPage.class), any(LambdaQueryWrapper.class)))
                 .thenReturn(page);
-        when(workflowDefinitionMapper.selectById(100L))
-                .thenReturn(testDefinition);
+        when(workflowDefinitionMapper.selectById(100L)).thenReturn(testDefinition);
 
         // When: 调用查询服务
         Mono<PageResponse<WorkflowInstanceDTO>> result = queryService.listInstances(null, 1, 10);
@@ -139,8 +138,7 @@ class WorkflowQueryServiceTest {
 
         when(processInstanceMapper.selectPage(any(IPage.class), any(LambdaQueryWrapper.class)))
                 .thenReturn(page);
-        when(workflowDefinitionMapper.selectById(100L))
-                .thenReturn(testDefinition);
+        when(workflowDefinitionMapper.selectById(100L)).thenReturn(testDefinition);
 
         // When: 按RUNNING状态筛选
         Mono<PageResponse<WorkflowInstanceDTO>> result = queryService.listInstances("RUNNING", 1, 10);

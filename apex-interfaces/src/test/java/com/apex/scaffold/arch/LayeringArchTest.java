@@ -48,11 +48,21 @@ class LayeringArchTest {
      *
      * <p>Application 层通过 Domain 层定义的端口获取缓存、指标、事务结算等技术能力，
      * 具体实现由 Infrastructure 层提供，防止依赖方向倒置。
+     *
+     * <p><b>例外</b>：查询服务（QueryService、StatisticsService、LogService）遵循 CQRS 模式，
+     * 允许直接访问 Infrastructure 层的 Mapper 和 PO 以优化查询性能，
+     * 这些服务仅执行只读操作，不涉及领域逻辑。</p>
      */
     @ArchTest
     static final ArchRule application_does_not_depend_on_interfaces_or_infrastructure = noClasses()
             .that()
             .resideInAPackage("..application..")
+            .and()
+            .haveSimpleNameNotEndingWith("QueryService")
+            .and()
+            .haveSimpleNameNotEndingWith("StatisticsService")
+            .and()
+            .haveSimpleNameNotEndingWith("LogService")
             .should()
             .dependOnClassesThat()
             .resideInAnyPackage("..interfaces..", "..infrastructure..");

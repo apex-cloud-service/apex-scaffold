@@ -5,6 +5,8 @@ import com.apex.scaffold.domain.model.entity.UserEntity;
 import com.apex.scaffold.domain.repository.UserRepository;
 import com.apex.scaffold.domain.service.TokenService;
 import com.apex.scaffold.interfaces.config.KeycloakConfig;
+import java.net.URI;
+import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -17,9 +19,6 @@ import org.springframework.security.web.server.authentication.ServerAuthenticati
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Mono;
-
-import java.net.URI;
-import java.time.LocalDateTime;
 
 /**
  * OIDC 认证成功处理器
@@ -78,10 +77,10 @@ public class OidcAuthenticationSuccessHandler implements ServerAuthenticationSuc
 
     /** 用户仓储 */
     private final UserRepository userRepository;
-    
+
     /** Token 服务 */
     private final TokenService tokenService;
-    
+
     /** Keycloak 配置 */
     private final KeycloakConfig keycloakConfig;
 
@@ -120,74 +119,76 @@ public class OidcAuthenticationSuccessHandler implements ServerAuthenticationSuc
      * @return {@link Mono<Void>} 异步完成信号
      */
     @Override
-    public Mono<Void> onAuthenticationSuccess(
-            WebFilterExchange webFilterExchange,
-            Authentication authentication) {
+    public Mono<Void> onAuthenticationSuccess(WebFilterExchange webFilterExchange, Authentication authentication) {
 
         if (!(authentication.getPrincipal() instanceof OidcUser oidcUser)) {
-            log.error("OIDC authentication principal is not OidcUser: {}",
+            log.error(
+                    "OIDC authentication principal is not OidcUser: {}",
                     authentication.getPrincipal().getClass());
-            return Mono.error(
-                    new IllegalStateException("Invalid OIDC authentication principal"));
+            return Mono.error(new IllegalStateException("Invalid OIDC authentication principal"));
         }
 
         String keycloakSub = oidcUser.getSubject();
         String email = oidcUser.getEmail();
         String username = oidcUser.getPreferredUsername();
 
-        log.info("OIDC authentication success: sub={}, email={}, username={}",
-                keycloakSub, email, username);
+        log.info("OIDC authentication success: sub={}, email={}, username={}", keycloakSub, email, username);
 
-        return userRepository.findByKeycloakSub(keycloakSub)
+        return userRepository
+                .findByKeycloakSub(keycloakSub)
                 .switchIfEmpty(Mono.defer(() -> {
                     if (!keycloakConfig.isUserSyncEnabled()) {
                         return Mono.error(new IllegalStateException(
                                 "User not found and user-sync is disabled: keycloakSub=" + keycloakSub));
                     }
 
-                    log.info("Creating new user from OIDC: keycloakSub={}, email={}, username={}",
-                            keycloakSub, email, username);
-                    
+                    log.info(
+                            "Creating new user from OIDC: keycloakSub={}, email={}, username={}",
+                            keycloakSub,
+                            email,
+                            username);
+
                     return Mono.fromCallable(() -> {
-                        UserEntity user = new UserEntity();
-                        user.setUsername(username != null ? username : email);
-                        user.setEmail(email);
-                        user.setKeycloakSub(keycloakSub);
-                        user.setNickName(oidcUser.getGivenName() != null
-                                ? oidcUser.getGivenName() : username);
-                        user.setPassword("");
-                        user.setStatus(1);
-                        user.setDeleted(0);
-                        user.setCreateTime(LocalDateTime.now());
-                        user.setUpdateTime(LocalDateTime.now());
-                        return user;
-                    })
-                    .subscribeOn(BlockingIoSchedulers.jdbc())
-                    .flatMap(userRepository::save);
+                                UserEntity user = new UserEntity();
+                                user.setUsername(username != null ? username : email);
+                                user.setEmail(email);
+                                user.setKeycloakSub(keycloakSub);
+                                user.setNickName(oidcUser.getGivenName() != null ? oidcUser.getGivenName() : username);
+                                user.setPassword("");
+                                user.setStatus(1);
+                                user.setDeleted(0);
+                                user.setCreateTime(LocalDateTime.now());
+                                user.setUpdateTime(LocalDateTime.now());
+                                return user;
+                            })
+                            .subscribeOn(BlockingIoSchedulers.jdbc())
+                            .flatMap(userRepository::save);
                 }))
                 .flatMap(user -> {
                     log.debug("Updating last login time for user: userId={}", user.getId());
-                    
+
                     user.setUpdateTime(LocalDateTime.now());
                     return userRepository.save(user);
                 })
                 .flatMap(user -> {
-                    String accessToken = tokenService.generateAccessToken(
-                            user.getId().toString(), "keycloak-oidc");
-                    String refreshToken = tokenService.generateRefreshToken(
-                            user.getId().toString(), "keycloak-oidc");
+                    String accessToken =
+                            tokenService.generateAccessToken(user.getId().toString(), "keycloak-oidc");
+                    String refreshToken =
+                            tokenService.generateRefreshToken(user.getId().toString(), "keycloak-oidc");
 
-                    log.info("Generated JWT tokens for OIDC user: userId={}, username={}",
-                            user.getId(), user.getUsername());
+                    log.info(
+                            "Generated JWT tokens for OIDC user: userId={}, username={}",
+                            user.getId(),
+                            user.getUsername());
 
-                    String frontendUrl = UriComponentsBuilder
-                            .fromUriString(keycloakConfig.getFrontendCallbackUrl())
+                    String frontendUrl = UriComponentsBuilder.fromUriString(keycloakConfig.getFrontendCallbackUrl())
                             .queryParam("accessToken", accessToken)
                             .queryParam("refreshToken", refreshToken)
                             .queryParam("userId", user.getId())
                             .toUriString();
 
-                    ServerHttpResponse response = webFilterExchange.getExchange().getResponse();
+                    ServerHttpResponse response =
+                            webFilterExchange.getExchange().getResponse();
                     response.setStatusCode(HttpStatus.FOUND);
                     response.getHeaders().setLocation(URI.create(frontendUrl));
 
@@ -196,7 +197,8 @@ public class OidcAuthenticationSuccessHandler implements ServerAuthenticationSuc
                 })
                 .onErrorResume(e -> {
                     log.error("OIDC authentication failed: {}", e.getMessage(), e);
-                    ServerHttpResponse response = webFilterExchange.getExchange().getResponse();
+                    ServerHttpResponse response =
+                            webFilterExchange.getExchange().getResponse();
                     response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
                     return response.setComplete();
                 });

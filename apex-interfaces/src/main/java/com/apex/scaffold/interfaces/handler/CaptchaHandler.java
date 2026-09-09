@@ -72,10 +72,7 @@ public class CaptchaHandler extends BaseHandler {
         @ApiResponse(
                 responseCode = "200",
                 description = "获取成功",
-                content =
-                        @Content(
-                                mediaType = "application/json",
-                                schema = @Schema(implementation = CaptchaVO.class))),
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = CaptchaVO.class))),
         @ApiResponse(responseCode = "500", description = "服务器内部错误")
     })
     public Mono<ServerResponse> generate(ServerRequest request) {
@@ -91,10 +88,7 @@ public class CaptchaHandler extends BaseHandler {
      * @param request HTTP 请求
      * @return 带 traceId 的统一成功响应，data 为 {@code {"valid": 是否通过}}
      */
-    @Operation(
-            operationId = "verifyCaptcha",
-            summary = "校验图形验证码",
-            description = "校验用户输入的图形验证码是否正确，验证码一次性消费，校验后自动失效")
+    @Operation(operationId = "verifyCaptcha", summary = "校验图形验证码", description = "校验用户输入的图形验证码是否正确，验证码一次性消费，校验后自动失效")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
             description = "验证码校验请求信息",
             required = true,

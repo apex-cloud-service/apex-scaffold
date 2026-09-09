@@ -55,7 +55,7 @@ import reactor.core.publisher.Mono;
 @Component
 @RequiredArgsConstructor
 public class OAuth2JwksHandler {
-    
+
     /**
      * 处理JWKS公钥端点请求
      *
@@ -74,17 +74,15 @@ public class OAuth2JwksHandler {
      */
     public Mono<ServerResponse> jwks(ServerRequest request) {
         Map<String, Object> jwksResponse = new HashMap<>();
-        
+
         Map<String, Object> key = new HashMap<>();
         key.put("kty", "oct");
         key.put("kid", "apex-oauth2-key-2026");
         key.put("alg", "HS256");
         key.put("use", "sig");
-        
+
         jwksResponse.put("keys", List.of(key));
-        
-        return ServerResponse.ok()
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(jwksResponse);
+
+        return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).bodyValue(jwksResponse);
     }
 }

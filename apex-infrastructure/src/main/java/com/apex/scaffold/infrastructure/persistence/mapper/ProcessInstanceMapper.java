@@ -1,11 +1,10 @@
 package com.apex.scaffold.infrastructure.persistence.mapper;
 
 import com.apex.scaffold.infrastructure.persistence.po.ProcessInstancePO;
-import java.time.LocalDate;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
@@ -22,7 +21,8 @@ import org.apache.ibatis.annotations.Select;
 @Mapper
 public interface ProcessInstanceMapper extends BaseMapper<ProcessInstancePO> {
 
-    @Select("SELECT COUNT(*) FROM wf_process_instance WHERE start_time >= #{start} AND start_time < #{end} AND deleted = 0")
+    @Select(
+            "SELECT COUNT(*) FROM wf_process_instance WHERE start_time >= #{start} AND start_time < #{end} AND deleted = 0")
     Integer countTodayStarted(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
     @Select("SELECT COUNT(*) FROM wf_process_instance WHERE status = #{status} AND deleted = 0")
@@ -31,15 +31,20 @@ public interface ProcessInstanceMapper extends BaseMapper<ProcessInstancePO> {
     @Select("SELECT COUNT(*) FROM wf_process_instance WHERE suspended = 1 AND deleted = 0")
     Integer countSuspended();
 
-    @Select("SELECT AVG(TIMESTAMPDIFF(SECOND, start_time, end_time)) FROM wf_process_instance WHERE end_time IS NOT NULL AND deleted = 0")
+    @Select(
+            "SELECT AVG(TIMESTAMPDIFF(SECOND, start_time, end_time)) FROM wf_process_instance WHERE end_time IS NOT NULL AND deleted = 0")
     Long avgCompletionSeconds();
 
     @Select("SELECT status, COUNT(*) as count FROM wf_process_instance WHERE deleted = 0 GROUP BY status")
     List<Map<String, Object>> statusDistribution();
 
-    @Select("SELECT DATE(start_time) as date, COUNT(*) as count FROM wf_process_instance WHERE start_time >= #{start} AND start_time < #{end} AND deleted = 0 GROUP BY DATE(start_time)")
-    List<Map<String, Object>> countStartedByDateRange(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+    @Select(
+            "SELECT DATE(start_time) as date, COUNT(*) as count FROM wf_process_instance WHERE start_time >= #{start} AND start_time < #{end} AND deleted = 0 GROUP BY DATE(start_time)")
+    List<Map<String, Object>> countStartedByDateRange(
+            @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
-    @Select("SELECT DATE(end_time) as date, COUNT(*) as count FROM wf_process_instance WHERE end_time >= #{start} AND end_time < #{end} AND deleted = 0 GROUP BY DATE(end_time)")
-    List<Map<String, Object>> countCompletedByDateRange(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+    @Select(
+            "SELECT DATE(end_time) as date, COUNT(*) as count FROM wf_process_instance WHERE end_time >= #{start} AND end_time < #{end} AND deleted = 0 GROUP BY DATE(end_time)")
+    List<Map<String, Object>> countCompletedByDateRange(
+            @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 }

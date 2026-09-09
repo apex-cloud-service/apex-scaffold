@@ -59,11 +59,16 @@ public class WorkflowQueryService {
         return listInstances(pageNum, pageSize, status, null);
     }
 
-    public Mono<PageResponse<WorkflowInstanceDTO>> listInstances(int pageNum, int pageSize, String status, Long initiatorId) {
+    public Mono<PageResponse<WorkflowInstanceDTO>> listInstances(
+            int pageNum, int pageSize, String status, Long initiatorId) {
         return Mono.fromCallable(() -> {
-                    log.info("开始查询工作流实例列表: pageNum={}, pageSize={}, status={}, initiatorId={}", 
-                            pageNum, pageSize, status, initiatorId);
-                    
+                    log.info(
+                            "开始查询工作流实例列表: pageNum={}, pageSize={}, status={}, initiatorId={}",
+                            pageNum,
+                            pageSize,
+                            status,
+                            initiatorId);
+
                     Page<ProcessInstancePO> page = new Page<>(pageNum, pageSize);
                     LambdaQueryWrapper<ProcessInstancePO> wrapper = new LambdaQueryWrapper<>();
 
@@ -168,8 +173,8 @@ public class WorkflowQueryService {
      */
     public Mono<WorkflowDefinitionDTO> getDefinitionDetail(String workflowCode) {
         return Mono.fromCallable(() -> {
-                    WorkflowDefinitionPO definitionPO = workflowDefinitionMapper.selectOne(
-                            new LambdaQueryWrapper<WorkflowDefinitionPO>()
+                    WorkflowDefinitionPO definitionPO =
+                            workflowDefinitionMapper.selectOne(new LambdaQueryWrapper<WorkflowDefinitionPO>()
                                     .eq(WorkflowDefinitionPO::getWorkflowCode, workflowCode));
                     if (definitionPO == null) {
                         return null;

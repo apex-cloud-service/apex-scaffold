@@ -68,29 +68,18 @@ public class AdminUserManagementHandler extends BaseHandler {
     @Operation(
             operationId = "adminCreateUser",
             summary = "后台创建用户",
-            description = "后台创建用户账号，请求体必填并经 Jakarta Bean Validation 校验，创建操作人身份取自当前登录上下文"
-    )
+            description = "后台创建用户账号，请求体必填并经 Jakarta Bean Validation 校验，创建操作人身份取自当前登录上下文")
     @RequestBody(
             description = "用户创建请求信息",
             required = true,
-            content = @Content(
-                    mediaType = "application/json",
-                    schema = @Schema(implementation = AdminUserCreateRequest.class)
-            )
-    )
+            content =
+                    @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = AdminUserCreateRequest.class)))
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "创建成功"
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "参数校验失败或请求体为空"
-            ),
-            @ApiResponse(
-                    responseCode = "403",
-                    description = "权限不足，需要 staff:manage 权限"
-            )
+        @ApiResponse(responseCode = "200", description = "创建成功"),
+        @ApiResponse(responseCode = "400", description = "参数校验失败或请求体为空"),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要 staff:manage 权限")
     })
     @OperationLog(module = "用户管理", type = OperationLog.OperationType.INSERT, description = "后台创建用户")
     public Mono<ServerResponse> create(ServerRequest request) {
@@ -110,51 +99,37 @@ public class AdminUserManagementHandler extends BaseHandler {
     @Operation(
             operationId = "adminListUsers",
             summary = "分页检索用户",
-            description = "支持按关键词搜索和状态过滤的用户分页查询，page 缺省 1，size 缺省 30"
-    )
+            description = "支持按关键词搜索和状态过滤的用户分页查询，page 缺省 1，size 缺省 30")
     @Parameters({
-            @Parameter(
-                    name = "page",
-                    description = "页码，从 1 开始",
-                    required = false,
-                    in = ParameterIn.QUERY,
-                    schema = @Schema(type = "integer", defaultValue = "1")
-            ),
-            @Parameter(
-                    name = "size",
-                    description = "每页大小",
-                    required = false,
-                    in = ParameterIn.QUERY,
-                    schema = @Schema(type = "integer", defaultValue = "30")
-            ),
-            @Parameter(
-                    name = "keyword",
-                    description = "搜索关键词（用户名、手机号等）",
-                    required = false,
-                    in = ParameterIn.QUERY,
-                    schema = @Schema(type = "string")
-            ),
-            @Parameter(
-                    name = "status",
-                    description = "用户状态（0-禁用，1-正常）",
-                    required = false,
-                    in = ParameterIn.QUERY,
-                    schema = @Schema(type = "integer")
-            )
+        @Parameter(
+                name = "page",
+                description = "页码，从 1 开始",
+                required = false,
+                in = ParameterIn.QUERY,
+                schema = @Schema(type = "integer", defaultValue = "1")),
+        @Parameter(
+                name = "size",
+                description = "每页大小",
+                required = false,
+                in = ParameterIn.QUERY,
+                schema = @Schema(type = "integer", defaultValue = "30")),
+        @Parameter(
+                name = "keyword",
+                description = "搜索关键词（用户名、手机号等）",
+                required = false,
+                in = ParameterIn.QUERY,
+                schema = @Schema(type = "string")),
+        @Parameter(
+                name = "status",
+                description = "用户状态（0-禁用，1-正常）",
+                required = false,
+                in = ParameterIn.QUERY,
+                schema = @Schema(type = "integer"))
     })
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "查询成功"
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "参数错误"
-            ),
-            @ApiResponse(
-                    responseCode = "403",
-                    description = "权限不足，需要 staff:manage 权限"
-            )
+        @ApiResponse(responseCode = "200", description = "查询成功"),
+        @ApiResponse(responseCode = "400", description = "参数错误"),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要 staff:manage 权限")
     })
     public Mono<ServerResponse> list(ServerRequest request) {
         int page = safeParseInt(request.queryParam("page").orElse(null), 1);
@@ -177,35 +152,18 @@ public class AdminUserManagementHandler extends BaseHandler {
      * @throws BusinessException 当 {@code userId} 非法时，错误码为 {@code PARAM_ERROR}
      */
     @RequirePermission("staff:manage")
-    @Operation(
-            operationId = "adminGetUser",
-            summary = "查看用户资料",
-            description = "根据用户ID查看用户的详细资料信息"
-    )
+    @Operation(operationId = "adminGetUser", summary = "查看用户资料", description = "根据用户ID查看用户的详细资料信息")
     @Parameter(
             name = "userId",
             description = "用户ID",
             required = true,
             in = ParameterIn.PATH,
-            schema = @Schema(type = "integer", format = "int64")
-    )
+            schema = @Schema(type = "integer", format = "int64"))
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "查询成功"
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "用户ID格式错误"
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "用户不存在"
-            ),
-            @ApiResponse(
-                    responseCode = "403",
-                    description = "权限不足，需要 staff:manage 权限"
-            )
+        @ApiResponse(responseCode = "200", description = "查询成功"),
+        @ApiResponse(responseCode = "400", description = "用户ID格式错误"),
+        @ApiResponse(responseCode = "404", description = "用户不存在"),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要 staff:manage 权限")
     })
     @OperationLog(module = "用户管理", type = OperationLog.OperationType.SELECT, description = "查看用户详情")
     public Mono<ServerResponse> detail(ServerRequest request) {
@@ -227,40 +185,25 @@ public class AdminUserManagementHandler extends BaseHandler {
     @Operation(
             operationId = "adminUpdateUser",
             summary = "编辑用户资料",
-            description = "编辑指定用户的资料信息，请求体必填并经 Jakarta Bean Validation 校验"
-    )
+            description = "编辑指定用户的资料信息，请求体必填并经 Jakarta Bean Validation 校验")
     @Parameter(
             name = "userId",
             description = "用户ID",
             required = true,
             in = ParameterIn.PATH,
-            schema = @Schema(type = "integer", format = "int64")
-    )
+            schema = @Schema(type = "integer", format = "int64"))
     @RequestBody(
             description = "用户更新请求信息",
             required = true,
-            content = @Content(
-                    mediaType = "application/json",
-                    schema = @Schema(implementation = AdminUserUpdateRequest.class)
-            )
-    )
+            content =
+                    @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = AdminUserUpdateRequest.class)))
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "更新成功"
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "参数校验失败或用户ID格式错误"
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "用户不存在"
-            ),
-            @ApiResponse(
-                    responseCode = "403",
-                    description = "权限不足，需要 staff:manage 权限"
-            )
+        @ApiResponse(responseCode = "200", description = "更新成功"),
+        @ApiResponse(responseCode = "400", description = "参数校验失败或用户ID格式错误"),
+        @ApiResponse(responseCode = "404", description = "用户不存在"),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要 staff:manage 权限")
     })
     @OperationLog(module = "用户管理", type = OperationLog.OperationType.UPDATE, description = "编辑用户资料")
     public Mono<ServerResponse> update(ServerRequest request) {
@@ -277,20 +220,10 @@ public class AdminUserManagementHandler extends BaseHandler {
      * @return 带 traceId 的统一成功响应，data 为可配置角色列表
      */
     @RequirePermission("staff:manage")
-    @Operation(
-            operationId = "adminListStaffRoles",
-            summary = "查询可配置的后台角色",
-            description = "查询当前操作人可以配置给其他用户的后台角色列表"
-    )
+    @Operation(operationId = "adminListStaffRoles", summary = "查询可配置的后台角色", description = "查询当前操作人可以配置给其他用户的后台角色列表")
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "查询成功"
-            ),
-            @ApiResponse(
-                    responseCode = "403",
-                    description = "权限不足，需要 staff:manage 权限"
-            )
+        @ApiResponse(responseCode = "200", description = "查询成功"),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要 staff:manage 权限")
     })
     public Mono<ServerResponse> roles(ServerRequest request) {
         return currentOpenId(request).flatMap(service::manageableRoles).flatMap(this::buildSuccess);
@@ -310,40 +243,25 @@ public class AdminUserManagementHandler extends BaseHandler {
     @Operation(
             operationId = "adminReplaceUserRoles",
             summary = "替换用户后台角色",
-            description = "替换用户的全部后台角色（整体替换，非增量追加），请求体必填并携带角色ID列表"
-    )
+            description = "替换用户的全部后台角色（整体替换，非增量追加），请求体必填并携带角色ID列表")
     @Parameter(
             name = "userId",
             description = "用户ID",
             required = true,
             in = ParameterIn.PATH,
-            schema = @Schema(type = "integer", format = "int64")
-    )
+            schema = @Schema(type = "integer", format = "int64"))
     @RequestBody(
             description = "角色ID列表",
             required = true,
-            content = @Content(
-                    mediaType = "application/json",
-                    schema = @Schema(implementation = AdminUserRolesRequest.class)
-            )
-    )
+            content =
+                    @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = AdminUserRolesRequest.class)))
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "替换成功"
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "参数校验失败或用户ID格式错误"
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "用户不存在"
-            ),
-            @ApiResponse(
-                    responseCode = "403",
-                    description = "权限不足，需要 staff:manage 权限"
-            )
+        @ApiResponse(responseCode = "200", description = "替换成功"),
+        @ApiResponse(responseCode = "400", description = "参数校验失败或用户ID格式错误"),
+        @ApiResponse(responseCode = "404", description = "用户不存在"),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要 staff:manage 权限")
     })
     @OperationLog(module = "用户管理", type = OperationLog.OperationType.UPDATE, description = "配置用户后台角色")
     public Mono<ServerResponse> replaceRoles(ServerRequest request) {
@@ -362,35 +280,18 @@ public class AdminUserManagementHandler extends BaseHandler {
      * @throws BusinessException 当 {@code userId} 非法时，错误码为 {@code PARAM_ERROR}
      */
     @RequirePermission("staff:session:revoke")
-    @Operation(
-            operationId = "adminRevokeUserSessions",
-            summary = "强制撤销用户全部会话",
-            description = "强制撤销目标用户的全部会话，使其需要重新登录"
-    )
+    @Operation(operationId = "adminRevokeUserSessions", summary = "强制撤销用户全部会话", description = "强制撤销目标用户的全部会话，使其需要重新登录")
     @Parameter(
             name = "userId",
             description = "用户ID",
             required = true,
             in = ParameterIn.PATH,
-            schema = @Schema(type = "integer", format = "int64")
-    )
+            schema = @Schema(type = "integer", format = "int64"))
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "撤销成功，返回撤销的会话数"
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "用户ID格式错误"
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "用户不存在"
-            ),
-            @ApiResponse(
-                    responseCode = "403",
-                    description = "权限不足，需要 staff:session:revoke 权限"
-            )
+        @ApiResponse(responseCode = "200", description = "撤销成功，返回撤销的会话数"),
+        @ApiResponse(responseCode = "400", description = "用户ID格式错误"),
+        @ApiResponse(responseCode = "404", description = "用户不存在"),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要 staff:session:revoke 权限")
     })
     @OperationLog(module = "用户管理", type = OperationLog.OperationType.UPDATE, description = "强制用户下线")
     public Mono<ServerResponse> revokeSessions(ServerRequest request) {
@@ -409,43 +310,25 @@ public class AdminUserManagementHandler extends BaseHandler {
      * @throws BusinessException 当 {@code userId} 非法或请求体为空时，错误码为 {@code PARAM_ERROR}
      */
     @RequirePermission("staff:manage")
-    @Operation(
-            operationId = "adminUpdateUserStatus",
-            summary = "启用或停用用户",
-            description = "启用或停用目标用户，请求体必填并经校验"
-    )
+    @Operation(operationId = "adminUpdateUserStatus", summary = "启用或停用用户", description = "启用或停用目标用户，请求体必填并经校验")
     @Parameter(
             name = "userId",
             description = "用户ID",
             required = true,
             in = ParameterIn.PATH,
-            schema = @Schema(type = "integer", format = "int64")
-    )
+            schema = @Schema(type = "integer", format = "int64"))
     @RequestBody(
             description = "用户状态更新请求信息",
             required = true,
-            content = @Content(
-                    mediaType = "application/json",
-                    schema = @Schema(implementation = AdminUserStatusRequest.class)
-            )
-    )
+            content =
+                    @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = AdminUserStatusRequest.class)))
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "状态更新成功"
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "参数校验失败或用户ID格式错误"
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "用户不存在"
-            ),
-            @ApiResponse(
-                    responseCode = "403",
-                    description = "权限不足，需要 staff:manage 权限"
-            )
+        @ApiResponse(responseCode = "200", description = "状态更新成功"),
+        @ApiResponse(responseCode = "400", description = "参数校验失败或用户ID格式错误"),
+        @ApiResponse(responseCode = "404", description = "用户不存在"),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要 staff:manage 权限")
     })
     @OperationLog(module = "用户管理", type = OperationLog.OperationType.UPDATE, description = "更新用户状态")
     public Mono<ServerResponse> updateStatus(ServerRequest request) {

@@ -14,7 +14,7 @@ import reactor.core.publisher.Mono;
  * @since 2.0.0
  */
 public interface OAuth2RegisteredClientRepository {
-    
+
     /**
      * 根据客户端ID查找客户端
      *
@@ -22,7 +22,7 @@ public interface OAuth2RegisteredClientRepository {
      * @return 客户端实体的Mono包装，不存在则返回empty
      */
     Mono<OAuth2RegisteredClientEntity> findByClientId(String clientId);
-    
+
     /**
      * 根据主键ID查找客户端
      *
@@ -30,7 +30,7 @@ public interface OAuth2RegisteredClientRepository {
      * @return 客户端实体的Mono包装，不存在则返回empty
      */
     Mono<OAuth2RegisteredClientEntity> findById(String id);
-    
+
     /**
      * 保存客户端(新增或更新)
      *
@@ -38,7 +38,7 @@ public interface OAuth2RegisteredClientRepository {
      * @return 保存后的客户端实体
      */
     Mono<OAuth2RegisteredClientEntity> save(OAuth2RegisteredClientEntity client);
-    
+
     /**
      * 删除客户端
      *
@@ -46,7 +46,7 @@ public interface OAuth2RegisteredClientRepository {
      * @return 空的Mono，表示删除完成
      */
     Mono<Void> deleteById(String id);
-    
+
     /**
      * 分页查询客户端列表
      *
@@ -55,14 +55,14 @@ public interface OAuth2RegisteredClientRepository {
      * @return 客户端列表的Flux
      */
     Flux<OAuth2RegisteredClientEntity> findAll(int page, int size);
-    
+
     /**
      * 统计客户端总数
      *
      * @return 客户端总数
      */
     Mono<Long> count();
-    
+
     /**
      * 根据客户端名称模糊查询
      *

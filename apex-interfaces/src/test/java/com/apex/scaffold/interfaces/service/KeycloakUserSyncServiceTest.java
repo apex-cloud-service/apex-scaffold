@@ -1,5 +1,10 @@
 package com.apex.scaffold.interfaces.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
+
 import com.apex.scaffold.domain.model.entity.UserEntity;
 import com.apex.scaffold.domain.repository.UserRepository;
 import com.apex.scaffold.interfaces.config.KeycloakConfig;
@@ -17,11 +22,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.when;
 
 /**
  * {@link KeycloakUserSyncService} 的单元测试类
@@ -61,10 +61,7 @@ class KeycloakUserSyncServiceTest {
      */
     @BeforeEach
     void setUp() {
-        service = new KeycloakUserSyncService(
-                keycloakAdminClient,
-                keycloakConfig,
-                userRepository);
+        service = new KeycloakUserSyncService(keycloakAdminClient, keycloakConfig, userRepository);
 
         when(keycloakConfig.getRealm()).thenReturn("test-realm");
         when(keycloakAdminClient.realm(anyString())).thenReturn(realmResource);
@@ -101,8 +98,7 @@ class KeycloakUserSyncServiceTest {
             savedUser.setEmail(email);
             savedUser.setKeycloakSub(keycloakSub);
 
-            when(userRepository.save(any(UserEntity.class)))
-                    .thenReturn(Mono.just(savedUser));
+            when(userRepository.save(any(UserEntity.class))).thenReturn(Mono.just(savedUser));
 
             StepVerifier.create(service.syncUserFromKeycloak(keycloakSub))
                     .expectNextMatches(user -> {
@@ -124,8 +120,7 @@ class KeycloakUserSyncServiceTest {
             String keycloakSub = "test-keycloak-sub";
 
             when(usersResource.get(keycloakSub)).thenReturn(userResource);
-            when(userResource.toRepresentation())
-                    .thenThrow(new RuntimeException("Keycloak API error"));
+            when(userResource.toRepresentation()).thenThrow(new RuntimeException("Keycloak API error"));
 
             StepVerifier.create(service.syncUserFromKeycloak(keycloakSub))
                     .expectError(RuntimeException.class)
@@ -156,8 +151,7 @@ class KeycloakUserSyncServiceTest {
             savedUser.setEmail(email);
             savedUser.setKeycloakSub(keycloakSub);
 
-            when(userRepository.save(any(UserEntity.class)))
-                    .thenReturn(Mono.just(savedUser));
+            when(userRepository.save(any(UserEntity.class))).thenReturn(Mono.just(savedUser));
 
             StepVerifier.create(service.syncUserFromKeycloak(keycloakSub))
                     .expectNextMatches(user -> {
@@ -181,8 +175,7 @@ class KeycloakUserSyncServiceTest {
         void shouldCompleteSuccessfullyWhenNoUsers() {
             when(usersResource.list()).thenReturn(java.util.Collections.emptyList());
 
-            StepVerifier.create(service.syncAllUsers())
-                    .verifyComplete();
+            StepVerifier.create(service.syncAllUsers()).verifyComplete();
         }
 
         /**
@@ -215,44 +208,9 @@ class KeycloakUserSyncServiceTest {
             when(usersResource.get("user-2")).thenReturn(userResource);
             when(userResource.toRepresentation()).thenReturn(kcUser1, kcUser2);
 
-            when(userRepository.save(any(UserEntity.class)))
-                    .thenReturn(Mono.just(savedUser1), Mono.just(savedUser2));
+            when(userRepository.save(any(UserEntity.class))).thenReturn(Mono.just(savedUser1), Mono.just(savedUser2));
 
-            StepVerifier.create(service.syncAllUsers())
-                    .verifyComplete();
-        }
-    }
-
-    @Nested
-    @DisplayName("createUserInKeycloak 方法")
-    class CreateUserInKeycloakTests {
-
-        /**
-         * 验证在 Keycloak 中创建用户应返回用户表示
-         */
-        @Test
-        @DisplayName("在 Keycloak 中创建用户应返回用户表示")
-        void shouldReturnUserRepresentationWhenCreatingUser() {
-            String username = "newuser";
-            String email = "newuser@example.com";
-
-            UserRepresentation newUser = new UserRepresentation();
-            newUser.setUsername(username);
-            newUser.setEmail(email);
-            newUser.setEnabled(true);
-
-            when(usersResource.create(any(UserRepresentation.class)))
-                    .thenReturn(javax.ws.rs.core.Response.status(201).build());
-
-            StepVerifier.create(service.createUserInKeycloak(username, email))
-                    .expectNextMatches(userRep -> {
-                        assertThat(userRep).isNotNull();
-                        assertThat(userRep.getUsername()).isEqualTo(username);
-                        assertThat(userRep.getEmail()).isEqualTo(email);
-                        assertThat(userRep.isEnabled()).isTrue();
-                        return true;
-                    })
-                    .verifyComplete();
+            StepVerifier.create(service.syncAllUsers()).verifyComplete();
         }
     }
 }

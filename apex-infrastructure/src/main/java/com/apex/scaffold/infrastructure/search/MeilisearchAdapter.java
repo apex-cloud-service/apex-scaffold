@@ -29,7 +29,7 @@ public class MeilisearchAdapter implements SearchRepository, IndexSyncPort {
     private final Client meilisearchClient;
     private final MeilisearchProperties properties;
     private final ObjectMapper objectMapper;
-    
+
     // Mappers
     private final UserMapper userMapper;
     private final RoleMapper roleMapper;
@@ -37,78 +37,76 @@ public class MeilisearchAdapter implements SearchRepository, IndexSyncPort {
     private final DeptMapper deptMapper;
     private final DictDataMapper dictMapper;
     private final ConfigMapper configMapper;
-    
+
     private static final String INDEX_NAME = "system_resources";
 
     @Override
     public Mono<PageResponse<SearchResultEntity>> search(
-            String keyword,
-            Set<String> resourceTypes,
-            Long tenantId,
-            Long userId,
-            int pageNum,
-            int pageSize) {
-        
+            String keyword, Set<String> resourceTypes, Long tenantId, Long userId, int pageNum, int pageSize) {
+
         return Mono.fromCallable(() -> {
-            Index index = meilisearchClient.index(properties.getIndexPrefix() + INDEX_NAME);
-            
-            List<String> filters = new ArrayList<>();
-            if (tenantId != null) {
-                filters.add("tenantId = '" + tenantId + "'");
-            }
-            if (resourceTypes != null && !resourceTypes.isEmpty()) {
-                String typeFilter = resourceTypes.stream()
-                    .map(type -> "resourceType = '" + type + "'")
-                    .collect(Collectors.joining(" OR "));
-                filters.add("(" + typeFilter + ")");
-            }
-            filters.add("status = 1");
-            
-            String filterStr = filters.isEmpty() ? null : String.join(" AND ", filters);
-            
-            SearchRequest request = new SearchRequest(keyword)
-                .setOffset((pageNum - 1) * pageSize)
-                .setLimit(Math.min(pageSize, 100));
-            
-            if (filterStr != null) {
-                request.setFilter(new String[]{filterStr});
-            }
-            
-            com.meilisearch.sdk.model.Searchable searchResult = index.search(request);
-            
-            List<SearchResultEntity> entities = new ArrayList<>();
-            for (Object hit : searchResult.getHits()) {
-                @SuppressWarnings("unchecked")
-                Map<String, Object> doc = (Map<String, Object>) hit;
-                entities.add(mapToEntity(doc));
-            }
-            
-            long total = searchResult.getHits() != null ? searchResult.getHits().size() : 0;
-            return PageResponse.of(entities, total, pageNum, pageSize);
-            
-        }).subscribeOn(Schedulers.boundedElastic())
-          .doOnError(e -> log.error("Search failed: keyword={}", keyword, e))
-          .onErrorReturn(PageResponse.of(Collections.emptyList(), 0L, pageNum, pageSize));
+                    Index index = meilisearchClient.index(properties.getIndexPrefix() + INDEX_NAME);
+
+                    List<String> filters = new ArrayList<>();
+                    if (tenantId != null) {
+                        filters.add("tenantId = '" + tenantId + "'");
+                    }
+                    if (resourceTypes != null && !resourceTypes.isEmpty()) {
+                        String typeFilter = resourceTypes.stream()
+                                .map(type -> "resourceType = '" + type + "'")
+                                .collect(Collectors.joining(" OR "));
+                        filters.add("(" + typeFilter + ")");
+                    }
+                    filters.add("status = 1");
+
+                    String filterStr = filters.isEmpty() ? null : String.join(" AND ", filters);
+
+                    SearchRequest request = new SearchRequest(keyword)
+                            .setOffset((pageNum - 1) * pageSize)
+                            .setLimit(Math.min(pageSize, 100));
+
+                    if (filterStr != null) {
+                        request.setFilter(new String[] {filterStr});
+                    }
+
+                    com.meilisearch.sdk.model.Searchable searchResult = index.search(request);
+
+                    List<SearchResultEntity> entities = new ArrayList<>();
+                    for (Object hit : searchResult.getHits()) {
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> doc = (Map<String, Object>) hit;
+                        entities.add(mapToEntity(doc));
+                    }
+
+                    long total = searchResult.getHits() != null
+                            ? searchResult.getHits().size()
+                            : 0;
+                    return PageResponse.of(entities, total, pageNum, pageSize);
+                })
+                .subscribeOn(Schedulers.boundedElastic())
+                .doOnError(e -> log.error("Search failed: keyword={}", keyword, e))
+                .onErrorReturn(PageResponse.of(Collections.emptyList(), 0L, pageNum, pageSize));
     }
 
     @Override
     public Mono<Boolean> indexResource(String resourceType, String resourceId) {
         return Mono.fromCallable(() -> {
-            Map<String, Object> document = fetchResourceDocument(resourceType, resourceId);
-            if (document == null) {
-                log.warn("Resource not found: type={}, id={}", resourceType, resourceId);
-                return false;
-            }
-            
-            String json = objectMapper.writeValueAsString(Collections.singletonList(document));
-            Index index = meilisearchClient.index(properties.getIndexPrefix() + INDEX_NAME);
-            index.addDocuments(json);
-            
-            log.debug("Indexed resource: type={}, id={}", resourceType, resourceId);
-            return true;
-        }).subscribeOn(Schedulers.boundedElastic())
-          .doOnError(e -> log.error("Index failed: type={}, id={}", resourceType, resourceId, e))
-          .onErrorReturn(false);
+                    Map<String, Object> document = fetchResourceDocument(resourceType, resourceId);
+                    if (document == null) {
+                        log.warn("Resource not found: type={}, id={}", resourceType, resourceId);
+                        return false;
+                    }
+
+                    String json = objectMapper.writeValueAsString(Collections.singletonList(document));
+                    Index index = meilisearchClient.index(properties.getIndexPrefix() + INDEX_NAME);
+                    index.addDocuments(json);
+
+                    log.debug("Indexed resource: type={}, id={}", resourceType, resourceId);
+                    return true;
+                })
+                .subscribeOn(Schedulers.boundedElastic())
+                .doOnError(e -> log.error("Index failed: type={}, id={}", resourceType, resourceId, e))
+                .onErrorReturn(false);
     }
 
     @Override
@@ -116,96 +114,103 @@ public class MeilisearchAdapter implements SearchRepository, IndexSyncPort {
         if (resourceIds == null || resourceIds.isEmpty()) {
             return Mono.just(0);
         }
-        
+
         return Mono.fromCallable(() -> {
-            List<Map<String, Object>> documents = resourceIds.stream()
-                .map(id -> fetchResourceDocument(resourceType, id))
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
-            
-            if (documents.isEmpty()) {
-                return 0;
-            }
-            
-            String json = objectMapper.writeValueAsString(documents);
-            Index index = meilisearchClient.index(properties.getIndexPrefix() + INDEX_NAME);
-            index.addDocuments(json);
-            
-            log.info("Batch indexed: type={}, count={}", resourceType, documents.size());
-            return documents.size();
-        }).subscribeOn(Schedulers.boundedElastic())
-          .doOnError(e -> log.error("Batch index failed: type={}", resourceType, e))
-          .onErrorReturn(0);
+                    List<Map<String, Object>> documents = resourceIds.stream()
+                            .map(id -> fetchResourceDocument(resourceType, id))
+                            .filter(Objects::nonNull)
+                            .collect(Collectors.toList());
+
+                    if (documents.isEmpty()) {
+                        return 0;
+                    }
+
+                    String json = objectMapper.writeValueAsString(documents);
+                    Index index = meilisearchClient.index(properties.getIndexPrefix() + INDEX_NAME);
+                    index.addDocuments(json);
+
+                    log.info("Batch indexed: type={}, count={}", resourceType, documents.size());
+                    return documents.size();
+                })
+                .subscribeOn(Schedulers.boundedElastic())
+                .doOnError(e -> log.error("Batch index failed: type={}", resourceType, e))
+                .onErrorReturn(0);
     }
 
     @Override
     public Mono<Boolean> removeIndex(String resourceType, String resourceId) {
         return Mono.fromCallable(() -> {
-            String documentId = resourceType + "_" + resourceId;
-            Index index = meilisearchClient.index(properties.getIndexPrefix() + INDEX_NAME);
-            index.deleteDocument(documentId);
-            
-            log.debug("Removed index: type={}, id={}", resourceType, resourceId);
-            return true;
-        }).subscribeOn(Schedulers.boundedElastic())
-          .doOnError(e -> log.error("Remove index failed: type={}, id={}", resourceType, resourceId, e))
-          .onErrorReturn(false);
+                    String documentId = resourceType + "_" + resourceId;
+                    Index index = meilisearchClient.index(properties.getIndexPrefix() + INDEX_NAME);
+                    index.deleteDocument(documentId);
+
+                    log.debug("Removed index: type={}, id={}", resourceType, resourceId);
+                    return true;
+                })
+                .subscribeOn(Schedulers.boundedElastic())
+                .doOnError(e -> log.error("Remove index failed: type={}, id={}", resourceType, resourceId, e))
+                .onErrorReturn(false);
     }
 
     @Override
     public Mono<Long> rebuildIndex(String resourceType) {
         return Mono.fromCallable(() -> {
-            log.info("Starting index rebuild: type={}", resourceType);
-            
-            List<String> types = resourceType == null
-                    ? Arrays.asList("user", "role", "menu", "dept", "dict", "config")
-                    : Collections.singletonList(resourceType);
-            
-            long totalCount = 0;
-            for (String type : types) {
-                try {
-                    List<String> ids = fetchAllResourceIds(type);
-                    log.info("Rebuilding index for type={}, total={}", type, ids.size());
-                    
-                    for (int i = 0; i < ids.size(); i += properties.getBatchSize()) {
-                        List<String> batch = ids.subList(i, Math.min(i + properties.getBatchSize(), ids.size()));
-                        Integer batchCount = indexResourceBatch(type, batch).block();
-                        totalCount += (batchCount != null ? batchCount : 0);
+                    log.info("Starting index rebuild: type={}", resourceType);
+
+                    List<String> types = resourceType == null
+                            ? Arrays.asList("user", "role", "menu", "dept", "dict", "config")
+                            : Collections.singletonList(resourceType);
+
+                    long totalCount = 0;
+                    for (String type : types) {
+                        try {
+                            List<String> ids = fetchAllResourceIds(type);
+                            log.info("Rebuilding index for type={}, total={}", type, ids.size());
+
+                            for (int i = 0; i < ids.size(); i += properties.getBatchSize()) {
+                                List<String> batch =
+                                        ids.subList(i, Math.min(i + properties.getBatchSize(), ids.size()));
+                                Integer batchCount =
+                                        indexResourceBatch(type, batch).block();
+                                totalCount += (batchCount != null ? batchCount : 0);
+                            }
+
+                            log.info("Completed index rebuild for type={}, count={}", type, totalCount);
+                        } catch (Exception e) {
+                            log.error("Failed to rebuild index for type={}", type, e);
+                        }
                     }
-                    
-                    log.info("Completed index rebuild for type={}, count={}", type, totalCount);
-                } catch (Exception e) {
-                    log.error("Failed to rebuild index for type={}", type, e);
-                }
-            }
-            
-            log.info("Index rebuild completed: type={}, total={}", resourceType, totalCount);
-            return totalCount;
-        }).subscribeOn(Schedulers.boundedElastic());
+
+                    log.info("Index rebuild completed: type={}, total={}", resourceType, totalCount);
+                    return totalCount;
+                })
+                .subscribeOn(Schedulers.boundedElastic());
     }
 
     @Override
     public Mono<Long> syncIncremental(String resourceType, Long sinceTimestamp) {
         return Mono.fromCallable(() -> {
-            log.info("Starting incremental sync: type={}, since={}", resourceType, sinceTimestamp);
-            
-            List<String> ids = fetchIncrementalResourceIds(resourceType, sinceTimestamp);
-            
-            if (ids.isEmpty()) {
-                log.info("No incremental changes: type={}", resourceType);
-                return 0L;
-            }
-            
-            long totalCount = 0;
-            for (int i = 0; i < ids.size(); i += properties.getBatchSize()) {
-                List<String> batch = ids.subList(i, Math.min(i + properties.getBatchSize(), ids.size()));
-                Integer batchCount = indexResourceBatch(resourceType, batch).block();
-                totalCount += (batchCount != null ? batchCount : 0);
-            }
-            
-            log.info("Incremental sync completed: type={}, count={}", resourceType, totalCount);
-            return totalCount;
-        }).subscribeOn(Schedulers.boundedElastic());
+                    log.info("Starting incremental sync: type={}, since={}", resourceType, sinceTimestamp);
+
+                    List<String> ids = fetchIncrementalResourceIds(resourceType, sinceTimestamp);
+
+                    if (ids.isEmpty()) {
+                        log.info("No incremental changes: type={}", resourceType);
+                        return 0L;
+                    }
+
+                    long totalCount = 0;
+                    for (int i = 0; i < ids.size(); i += properties.getBatchSize()) {
+                        List<String> batch = ids.subList(i, Math.min(i + properties.getBatchSize(), ids.size()));
+                        Integer batchCount =
+                                indexResourceBatch(resourceType, batch).block();
+                        totalCount += (batchCount != null ? batchCount : 0);
+                    }
+
+                    log.info("Incremental sync completed: type={}, count={}", resourceType, totalCount);
+                    return totalCount;
+                })
+                .subscribeOn(Schedulers.boundedElastic());
     }
 
     private Map<String, Object> fetchResourceDocument(String resourceType, String resourceId) {
@@ -223,7 +228,7 @@ public class MeilisearchAdapter implements SearchRepository, IndexSyncPort {
     private Map<String, Object> fetchUserDocument(String resourceId) {
         UserPO user = userMapper.selectById(Long.parseLong(resourceId));
         if (user == null || user.getStatus() == 0) return null;
-        
+
         Map<String, Object> doc = new HashMap<>();
         doc.put("id", "user_" + resourceId);
         doc.put("resourceType", "user");
@@ -242,7 +247,7 @@ public class MeilisearchAdapter implements SearchRepository, IndexSyncPort {
     private Map<String, Object> fetchRoleDocument(String resourceId) {
         RolePO role = roleMapper.selectById(Long.parseLong(resourceId));
         if (role == null || role.getStatus() == 0) return null;
-        
+
         Map<String, Object> doc = new HashMap<>();
         doc.put("id", "role_" + resourceId);
         doc.put("resourceType", "role");
@@ -261,7 +266,7 @@ public class MeilisearchAdapter implements SearchRepository, IndexSyncPort {
     private Map<String, Object> fetchMenuDocument(String resourceId) {
         MenuPO menu = menuMapper.selectById(Long.parseLong(resourceId));
         if (menu == null || menu.getStatus() == 0) return null;
-        
+
         Map<String, Object> doc = new HashMap<>();
         doc.put("id", "menu_" + resourceId);
         doc.put("resourceType", "menu");
@@ -284,7 +289,7 @@ public class MeilisearchAdapter implements SearchRepository, IndexSyncPort {
     private Map<String, Object> fetchDeptDocument(String resourceId) {
         DeptPO dept = deptMapper.selectById(Long.parseLong(resourceId));
         if (dept == null || dept.getStatus() == 0) return null;
-        
+
         Map<String, Object> doc = new HashMap<>();
         doc.put("id", "dept_" + resourceId);
         doc.put("resourceType", "dept");
@@ -303,7 +308,7 @@ public class MeilisearchAdapter implements SearchRepository, IndexSyncPort {
     private Map<String, Object> fetchDictDocument(String resourceId) {
         DictDataPO dict = dictMapper.selectById(Long.parseLong(resourceId));
         if (dict == null || dict.getStatus() == 0) return null;
-        
+
         Map<String, Object> doc = new HashMap<>();
         doc.put("id", "dict_" + resourceId);
         doc.put("resourceType", "dict");
@@ -322,7 +327,7 @@ public class MeilisearchAdapter implements SearchRepository, IndexSyncPort {
     private Map<String, Object> fetchConfigDocument(String resourceId) {
         ConfigPO config = configMapper.selectById(Long.parseLong(resourceId));
         if (config == null) return null;
-        
+
         Map<String, Object> doc = new HashMap<>();
         doc.put("id", "config_" + resourceId);
         doc.put("resourceType", "config");
@@ -340,77 +345,131 @@ public class MeilisearchAdapter implements SearchRepository, IndexSyncPort {
 
     private List<String> fetchAllResourceIds(String resourceType) {
         return switch (resourceType) {
-            case "user" -> userMapper.selectList(new LambdaQueryWrapper<UserPO>().select(UserPO::getId).eq(UserPO::getStatus, 1))
-                .stream().map(u -> u.getId().toString()).collect(Collectors.toList());
-            case "role" -> roleMapper.selectList(new LambdaQueryWrapper<RolePO>().select(RolePO::getId).eq(RolePO::getStatus, 1))
-                .stream().map(r -> r.getId().toString()).collect(Collectors.toList());
-            case "menu" -> menuMapper.selectList(new LambdaQueryWrapper<MenuPO>().select(MenuPO::getId).eq(MenuPO::getStatus, 1))
-                .stream().map(m -> m.getId().toString()).collect(Collectors.toList());
-            case "dept" -> deptMapper.selectList(new LambdaQueryWrapper<DeptPO>().select(DeptPO::getId).eq(DeptPO::getStatus, 1))
-                .stream().map(d -> d.getId().toString()).collect(Collectors.toList());
-            case "dict" -> dictMapper.selectList(new LambdaQueryWrapper<DictDataPO>().select(DictDataPO::getId).eq(DictDataPO::getStatus, 1))
-                .stream().map(d -> d.getId().toString()).collect(Collectors.toList());
-            case "config" -> configMapper.selectList(new LambdaQueryWrapper<ConfigPO>().select(ConfigPO::getId))
-                .stream().map(c -> c.getId().toString()).collect(Collectors.toList());
+            case "user" -> userMapper
+                    .selectList(new LambdaQueryWrapper<UserPO>()
+                            .select(UserPO::getId)
+                            .eq(UserPO::getStatus, 1))
+                    .stream()
+                    .map(u -> u.getId().toString())
+                    .collect(Collectors.toList());
+            case "role" -> roleMapper
+                    .selectList(new LambdaQueryWrapper<RolePO>()
+                            .select(RolePO::getId)
+                            .eq(RolePO::getStatus, 1))
+                    .stream()
+                    .map(r -> r.getId().toString())
+                    .collect(Collectors.toList());
+            case "menu" -> menuMapper
+                    .selectList(new LambdaQueryWrapper<MenuPO>()
+                            .select(MenuPO::getId)
+                            .eq(MenuPO::getStatus, 1))
+                    .stream()
+                    .map(m -> m.getId().toString())
+                    .collect(Collectors.toList());
+            case "dept" -> deptMapper
+                    .selectList(new LambdaQueryWrapper<DeptPO>()
+                            .select(DeptPO::getId)
+                            .eq(DeptPO::getStatus, 1))
+                    .stream()
+                    .map(d -> d.getId().toString())
+                    .collect(Collectors.toList());
+            case "dict" -> dictMapper
+                    .selectList(new LambdaQueryWrapper<DictDataPO>()
+                            .select(DictDataPO::getId)
+                            .eq(DictDataPO::getStatus, 1))
+                    .stream()
+                    .map(d -> d.getId().toString())
+                    .collect(Collectors.toList());
+            case "config" -> configMapper
+                    .selectList(new LambdaQueryWrapper<ConfigPO>().select(ConfigPO::getId))
+                    .stream()
+                    .map(c -> c.getId().toString())
+                    .collect(Collectors.toList());
             default -> Collections.emptyList();
         };
     }
 
     private List<String> fetchIncrementalResourceIds(String resourceType, Long sinceTimestamp) {
         LocalDateTime since = LocalDateTime.ofInstant(
-            java.time.Instant.ofEpochMilli(sinceTimestamp),
-            java.time.ZoneId.systemDefault()
-        );
-        
+                java.time.Instant.ofEpochMilli(sinceTimestamp), java.time.ZoneId.systemDefault());
+
         return switch (resourceType) {
-            case "user" -> userMapper.selectList(new LambdaQueryWrapper<UserPO>().select(UserPO::getId)
-                .gt(UserPO::getUpdateTime, since).eq(UserPO::getStatus, 1))
-                .stream().map(u -> u.getId().toString()).collect(Collectors.toList());
-            case "role" -> roleMapper.selectList(new LambdaQueryWrapper<RolePO>().select(RolePO::getId)
-                .gt(RolePO::getUpdateTime, since).eq(RolePO::getStatus, 1))
-                .stream().map(r -> r.getId().toString()).collect(Collectors.toList());
-            case "menu" -> menuMapper.selectList(new LambdaQueryWrapper<MenuPO>().select(MenuPO::getId)
-                .gt(MenuPO::getUpdateTime, since).eq(MenuPO::getStatus, 1))
-                .stream().map(m -> m.getId().toString()).collect(Collectors.toList());
-            case "dept" -> deptMapper.selectList(new LambdaQueryWrapper<DeptPO>().select(DeptPO::getId)
-                .gt(DeptPO::getUpdateTime, since).eq(DeptPO::getStatus, 1))
-                .stream().map(d -> d.getId().toString()).collect(Collectors.toList());
-            case "dict" -> dictMapper.selectList(new LambdaQueryWrapper<DictDataPO>().select(DictDataPO::getId)
-                .gt(DictDataPO::getUpdateTime, since).eq(DictDataPO::getStatus, 1))
-                .stream().map(d -> d.getId().toString()).collect(Collectors.toList());
-            case "config" -> configMapper.selectList(new LambdaQueryWrapper<ConfigPO>().select(ConfigPO::getId)
-                .gt(ConfigPO::getUpdateTime, since))
-                .stream().map(c -> c.getId().toString()).collect(Collectors.toList());
+            case "user" -> userMapper
+                    .selectList(new LambdaQueryWrapper<UserPO>()
+                            .select(UserPO::getId)
+                            .gt(UserPO::getUpdateTime, since)
+                            .eq(UserPO::getStatus, 1))
+                    .stream()
+                    .map(u -> u.getId().toString())
+                    .collect(Collectors.toList());
+            case "role" -> roleMapper
+                    .selectList(new LambdaQueryWrapper<RolePO>()
+                            .select(RolePO::getId)
+                            .gt(RolePO::getUpdateTime, since)
+                            .eq(RolePO::getStatus, 1))
+                    .stream()
+                    .map(r -> r.getId().toString())
+                    .collect(Collectors.toList());
+            case "menu" -> menuMapper
+                    .selectList(new LambdaQueryWrapper<MenuPO>()
+                            .select(MenuPO::getId)
+                            .gt(MenuPO::getUpdateTime, since)
+                            .eq(MenuPO::getStatus, 1))
+                    .stream()
+                    .map(m -> m.getId().toString())
+                    .collect(Collectors.toList());
+            case "dept" -> deptMapper
+                    .selectList(new LambdaQueryWrapper<DeptPO>()
+                            .select(DeptPO::getId)
+                            .gt(DeptPO::getUpdateTime, since)
+                            .eq(DeptPO::getStatus, 1))
+                    .stream()
+                    .map(d -> d.getId().toString())
+                    .collect(Collectors.toList());
+            case "dict" -> dictMapper
+                    .selectList(new LambdaQueryWrapper<DictDataPO>()
+                            .select(DictDataPO::getId)
+                            .gt(DictDataPO::getUpdateTime, since)
+                            .eq(DictDataPO::getStatus, 1))
+                    .stream()
+                    .map(d -> d.getId().toString())
+                    .collect(Collectors.toList());
+            case "config" -> configMapper
+                    .selectList(new LambdaQueryWrapper<ConfigPO>()
+                            .select(ConfigPO::getId)
+                            .gt(ConfigPO::getUpdateTime, since))
+                    .stream()
+                    .map(c -> c.getId().toString())
+                    .collect(Collectors.toList());
             default -> Collections.emptyList();
         };
     }
 
     private SearchResultEntity mapToEntity(Map<String, Object> doc) {
         return SearchResultEntity.builder()
-            .resourceType((String) doc.get("resourceType"))
-            .resourceId((String) doc.get("resourceId"))
-            .title((String) doc.get("title"))
-            .subtitle((String) doc.get("subtitle"))
-            .description((String) doc.get("description"))
-            .highlightSnippet("")
-            .score(1.0)
-            .status((Integer) doc.get("status"))
-            .createdAt(toLocalDateTime((Long) doc.get("createdAt")))
-            .updatedAt(toLocalDateTime((Long) doc.get("updatedAt")))
-            .build();
+                .resourceType((String) doc.get("resourceType"))
+                .resourceId((String) doc.get("resourceId"))
+                .title((String) doc.get("title"))
+                .subtitle((String) doc.get("subtitle"))
+                .description((String) doc.get("description"))
+                .highlightSnippet("")
+                .score(1.0)
+                .status((Integer) doc.get("status"))
+                .createdAt(toLocalDateTime((Long) doc.get("createdAt")))
+                .updatedAt(toLocalDateTime((Long) doc.get("updatedAt")))
+                .build();
     }
 
     private Long toTimestamp(LocalDateTime dateTime) {
-        return dateTime == null ? null :
-            dateTime.atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli();
+        return dateTime == null
+                ? null
+                : dateTime.atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli();
     }
 
     private LocalDateTime toLocalDateTime(Long timestamp) {
-        return timestamp == null ? null :
-            LocalDateTime.ofInstant(
-                java.time.Instant.ofEpochMilli(timestamp),
-                java.time.ZoneId.systemDefault()
-            );
+        return timestamp == null
+                ? null
+                : LocalDateTime.ofInstant(java.time.Instant.ofEpochMilli(timestamp), java.time.ZoneId.systemDefault());
     }
 
     private String maskPhone(String phone) {

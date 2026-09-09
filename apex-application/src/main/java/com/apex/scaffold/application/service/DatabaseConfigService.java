@@ -54,8 +54,12 @@ public class DatabaseConfigService {
      * @return 连接测试结果
      */
     public Mono<DatabaseTestResultDTO> testConnection(DatabaseConfigRequest request) {
-        log.info("开始R2DBC连接测试: dbType={}, host={}, port={}, database={}",
-                request.getDbType(), request.getHost(), request.getPort(), request.getDatabase());
+        log.info(
+                "开始R2DBC连接测试: dbType={}, host={}, port={}, database={}",
+                request.getDbType(),
+                request.getHost(),
+                request.getPort(),
+                request.getDatabase());
 
         return Mono.defer(() -> {
             try {
@@ -65,15 +69,17 @@ public class DatabaseConfigService {
                         request.getPort(),
                         request.getDatabase(),
                         request.getUsername(),
-                        request.getPassword()
-                );
+                        request.getPassword());
 
                 return Mono.from(connectionFactory.create())
                         .flatMap(connection -> {
                             String testQuery = getTestQuery(request.getDbType());
 
-                            return Mono.from(connection.createStatement(testQuery).execute())
-                                    .flatMap(result -> Mono.from(result.getRowsUpdated()).defaultIfEmpty(0L))
+                            return Mono.from(connection
+                                            .createStatement(testQuery)
+                                            .execute())
+                                    .flatMap(result ->
+                                            Mono.from(result.getRowsUpdated()).defaultIfEmpty(0L))
                                     .then(getConnectionMetadata(connection, request.getDbType()))
                                     .doFinally(signalType -> {
                                         Mono.from(connection.close())
@@ -193,16 +199,17 @@ public class DatabaseConfigService {
      */
     public Mono<DeploymentConfigResultDTO> generateDeploymentConfig(DatabaseConfigRequest request) {
         return Mono.fromCallable(() -> {
-            String yaml = generateYamlConfig(request);
-            String env = generateEnvConfig(request);
-            String dockerCompose = generateDockerComposeConfig(request);
+                    String yaml = generateYamlConfig(request);
+                    String env = generateEnvConfig(request);
+                    String dockerCompose = generateDockerComposeConfig(request);
 
-            return DeploymentConfigResultDTO.builder()
-                    .yaml(yaml)
-                    .env(env)
-                    .dockerCompose(dockerCompose)
-                    .build();
-        }).subscribeOn(Schedulers.boundedElastic());
+                    return DeploymentConfigResultDTO.builder()
+                            .yaml(yaml)
+                            .env(env)
+                            .dockerCompose(dockerCompose)
+                            .build();
+                })
+                .subscribeOn(Schedulers.boundedElastic());
     }
 
     /**
@@ -214,28 +221,29 @@ public class DatabaseConfigService {
      */
     public Mono<CurrentDatabaseInfoDTO> getCurrentDatabaseInfo() {
         return Mono.fromCallable(() -> {
-            try (java.sql.Connection connection = dataSource.getConnection()) {
-                DatabaseMetaData metaData = connection.getMetaData();
+                    try (java.sql.Connection connection = dataSource.getConnection()) {
+                        DatabaseMetaData metaData = connection.getMetaData();
 
-                String type = metaData.getDatabaseProductName();
-                String version = metaData.getDatabaseProductVersion();
-                String driverVersion = metaData.getDriverVersion();
+                        String type = metaData.getDatabaseProductName();
+                        String version = metaData.getDatabaseProductVersion();
+                        String driverVersion = metaData.getDriverVersion();
 
-                return CurrentDatabaseInfoDTO.builder()
-                        .type(type)
-                        .version(version)
-                        .driverVersion(driverVersion)
-                        .build();
+                        return CurrentDatabaseInfoDTO.builder()
+                                .type(type)
+                                .version(version)
+                                .driverVersion(driverVersion)
+                                .build();
 
-            } catch (SQLException e) {
-                log.error("获取当前数据库信息失败", e);
-                return CurrentDatabaseInfoDTO.builder()
-                        .type("Unknown")
-                        .version("Unknown")
-                        .driverVersion("Unknown")
-                        .build();
-            }
-        }).subscribeOn(Schedulers.boundedElastic());
+                    } catch (SQLException e) {
+                        log.error("获取当前数据库信息失败", e);
+                        return CurrentDatabaseInfoDTO.builder()
+                                .type("Unknown")
+                                .version("Unknown")
+                                .driverVersion("Unknown")
+                                .build();
+                    }
+                })
+                .subscribeOn(Schedulers.boundedElastic());
     }
 
     /**
@@ -247,16 +255,17 @@ public class DatabaseConfigService {
     private String buildJdbcUrl(DatabaseConfigRequest request) {
         String baseUrl;
         if ("mysql".equalsIgnoreCase(request.getDbType())) {
-            baseUrl = String.format("jdbc:mysql://%s:%d/%s",
-                    request.getHost(), request.getPort(), request.getDatabase());
+            baseUrl =
+                    String.format("jdbc:mysql://%s:%d/%s", request.getHost(), request.getPort(), request.getDatabase());
         } else if ("postgresql".equalsIgnoreCase(request.getDbType())) {
-            baseUrl = String.format("jdbc:postgresql://%s:%d/%s",
-                    request.getHost(), request.getPort(), request.getDatabase());
+            baseUrl = String.format(
+                    "jdbc:postgresql://%s:%d/%s", request.getHost(), request.getPort(), request.getDatabase());
         } else {
             throw new IllegalArgumentException("不支持的数据库类型: " + request.getDbType());
         }
 
-        if (request.getConnectionParams() != null && !request.getConnectionParams().isEmpty()) {
+        if (request.getConnectionParams() != null
+                && !request.getConnectionParams().isEmpty()) {
             baseUrl += "?" + request.getConnectionParams();
         }
 
@@ -270,13 +279,13 @@ public class DatabaseConfigService {
      * @return YAML 格式配置
      */
     private String generateYamlConfig(DatabaseConfigRequest request) {
-        String driver = "mysql".equalsIgnoreCase(request.getDbType())
-                ? "com.mysql.cj.jdbc.Driver"
-                : "org.postgresql.Driver";
+        String driver =
+                "mysql".equalsIgnoreCase(request.getDbType()) ? "com.mysql.cj.jdbc.Driver" : "org.postgresql.Driver";
 
         String jdbcUrl = buildJdbcUrl(request);
 
-        return String.format("""
+        return String.format(
+                """
                 spring:
                   datasource:
                     url: %s
@@ -289,7 +298,8 @@ public class DatabaseConfigService {
                       connection-timeout: 30000
                       idle-timeout: 600000
                       max-lifetime: 1800000
-                """, jdbcUrl, request.getUsername(), driver);
+                """,
+                jdbcUrl, request.getUsername(), driver);
     }
 
     /**
@@ -299,18 +309,19 @@ public class DatabaseConfigService {
      * @return 环境变量格式配置
      */
     private String generateEnvConfig(DatabaseConfigRequest request) {
-        String driver = "mysql".equalsIgnoreCase(request.getDbType())
-                ? "com.mysql.cj.jdbc.Driver"
-                : "org.postgresql.Driver";
+        String driver =
+                "mysql".equalsIgnoreCase(request.getDbType()) ? "com.mysql.cj.jdbc.Driver" : "org.postgresql.Driver";
 
         String jdbcUrl = buildJdbcUrl(request);
 
-        return String.format("""
+        return String.format(
+                """
                 DB_URL=%s
                 DB_USERNAME=%s
                 DB_PASSWORD=%s
                 DB_DRIVER=%s
-                """, jdbcUrl, request.getUsername(), request.getPassword(), driver);
+                """,
+                jdbcUrl, request.getUsername(), request.getPassword(), driver);
     }
 
     /**
@@ -320,15 +331,12 @@ public class DatabaseConfigService {
      * @return Docker Compose 格式配置
      */
     private String generateDockerComposeConfig(DatabaseConfigRequest request) {
-        String image = "mysql".equalsIgnoreCase(request.getDbType())
-                ? "mysql:8.0"
-                : "postgres:15";
+        String image = "mysql".equalsIgnoreCase(request.getDbType()) ? "mysql:8.0" : "postgres:15";
 
-        String envPrefix = "mysql".equalsIgnoreCase(request.getDbType())
-                ? "MYSQL"
-                : "POSTGRES";
+        String envPrefix = "mysql".equalsIgnoreCase(request.getDbType()) ? "MYSQL" : "POSTGRES";
 
-        return String.format("""
+        return String.format(
+                """
                 version: '3.8'
                 services:
                   database:
@@ -354,12 +362,16 @@ public class DatabaseConfigService {
                     driver: bridge
                 """,
                 image,
-                request.getPort(), request.getPort(),
-                envPrefix, request.getPassword(),
-                envPrefix, request.getDatabase(),
-                envPrefix, request.getUsername(),
-                envPrefix, request.getPassword(),
-                "mysql".equalsIgnoreCase(request.getDbType()) ? "mysql" : "postgresql"
-        );
+                request.getPort(),
+                request.getPort(),
+                envPrefix,
+                request.getPassword(),
+                envPrefix,
+                request.getDatabase(),
+                envPrefix,
+                request.getUsername(),
+                envPrefix,
+                request.getPassword(),
+                "mysql".equalsIgnoreCase(request.getDbType()) ? "mysql" : "postgresql");
     }
 }

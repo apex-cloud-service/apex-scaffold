@@ -25,5 +25,4 @@ import org.apache.ibatis.annotations.Mapper;
  * @since 2.0.0
  */
 @Mapper
-public interface OAuth2AuthorizationConsentMapper extends BaseMapper<OAuth2AuthorizationConsentPO> {
-}
+public interface OAuth2AuthorizationConsentMapper extends BaseMapper<OAuth2AuthorizationConsentPO> {}

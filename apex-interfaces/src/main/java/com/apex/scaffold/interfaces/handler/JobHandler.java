@@ -76,24 +76,16 @@ public class JobHandler extends BaseHandler {
      * @return 带 traceId 的统一成功响应，data 为任务 DTO 列表
      */
     @RequirePermission("system:job:list")
-    @Operation(
-            operationId = "adminListJobs",
-            summary = "查询定时任务列表",
-            description = "查询系统中所有定时任务的列表，包含任务名称、调度表达式、执行状态等信息"
-    )
+    @Operation(operationId = "adminListJobs", summary = "查询定时任务列表", description = "查询系统中所有定时任务的列表，包含任务名称、调度表达式、执行状态等信息")
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "查询成功",
-                    content = @Content(
-                            mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = JobDTO.class))
-                    )
-            ),
-            @ApiResponse(
-                    responseCode = "403",
-                    description = "权限不足，需要system:job:list权限"
-            )
+        @ApiResponse(
+                responseCode = "200",
+                description = "查询成功",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                array = @ArraySchema(schema = @Schema(implementation = JobDTO.class)))),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要system:job:list权限")
     })
     public Mono<ServerResponse> list(ServerRequest request) {
         return jobService.listJobs().flatMap(this::buildSuccess);
@@ -107,39 +99,21 @@ public class JobHandler extends BaseHandler {
      * @throws BusinessException 当 {@code id} 非法时抛出
      */
     @RequirePermission("system:job:query")
-    @Operation(
-            operationId = "adminGetJob",
-            summary = "查询任务详情",
-            description = "根据任务ID查询定时任务的详细信息，包含完整的调度配置和执行策略"
-    )
+    @Operation(operationId = "adminGetJob", summary = "查询任务详情", description = "根据任务ID查询定时任务的详细信息，包含完整的调度配置和执行策略")
     @Parameter(
             name = "id",
             description = "任务ID",
             required = true,
             in = ParameterIn.PATH,
-            schema = @Schema(type = "integer", format = "int64", example = "1")
-    )
+            schema = @Schema(type = "integer", format = "int64", example = "1"))
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "查询成功",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = JobDTO.class)
-                    )
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "参数错误，任务ID必须为正整数"
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "任务不存在"
-            ),
-            @ApiResponse(
-                    responseCode = "403",
-                    description = "权限不足，需要system:job:query权限"
-            )
+        @ApiResponse(
+                responseCode = "200",
+                description = "查询成功",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = JobDTO.class))),
+        @ApiResponse(responseCode = "400", description = "参数错误，任务ID必须为正整数"),
+        @ApiResponse(responseCode = "404", description = "任务不存在"),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要system:job:query权限")
     })
     public Mono<ServerResponse> detail(ServerRequest request) {
         return jobService.getJob(requirePositiveId(request)).flatMap(this::buildSuccess);
@@ -159,33 +133,18 @@ public class JobHandler extends BaseHandler {
     @Operation(
             operationId = "adminCreateJob",
             summary = "创建定时任务",
-            description = "创建一个新的定时任务，需指定任务名称、调用目标、Cron表达式等配置。Cron表达式支持6/7段标准格式"
-    )
+            description = "创建一个新的定时任务，需指定任务名称、调用目标、Cron表达式等配置。Cron表达式支持6/7段标准格式")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
             description = "任务创建请求信息",
             required = true,
-            content = @Content(
-                    mediaType = "application/json",
-                    schema = @Schema(implementation = JobRequest.class)
-            )
-    )
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = JobRequest.class)))
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "创建成功",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = JobDTO.class)
-                    )
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "参数校验失败或Cron表达式不合法"
-            ),
-            @ApiResponse(
-                    responseCode = "403",
-                    description = "权限不足，需要system:job:add权限"
-            )
+        @ApiResponse(
+                responseCode = "200",
+                description = "创建成功",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = JobDTO.class))),
+        @ApiResponse(responseCode = "400", description = "参数校验失败或Cron表达式不合法"),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要system:job:add权限")
     })
     @OperationLog(module = "定时任务", type = OperationLog.OperationType.INSERT, description = "创建定时任务")
     public Mono<ServerResponse> create(ServerRequest request) {
@@ -205,44 +164,25 @@ public class JobHandler extends BaseHandler {
     @Operation(
             operationId = "adminUpdateJob",
             summary = "更新定时任务",
-            description = "更新指定任务的配置信息，支持修改任务名称、调用目标、Cron表达式、执行策略等。若任务正在运行，会重新注册调度"
-    )
+            description = "更新指定任务的配置信息，支持修改任务名称、调用目标、Cron表达式、执行策略等。若任务正在运行，会重新注册调度")
     @Parameter(
             name = "id",
             description = "任务ID",
             required = true,
             in = ParameterIn.PATH,
-            schema = @Schema(type = "integer", format = "int64", example = "1")
-    )
+            schema = @Schema(type = "integer", format = "int64", example = "1"))
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
             description = "任务更新请求信息",
             required = true,
-            content = @Content(
-                    mediaType = "application/json",
-                    schema = @Schema(implementation = JobRequest.class)
-            )
-    )
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = JobRequest.class)))
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "更新成功",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = JobDTO.class)
-                    )
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "参数校验失败或Cron表达式不合法"
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "任务不存在"
-            ),
-            @ApiResponse(
-                    responseCode = "403",
-                    description = "权限不足，需要system:job:edit权限"
-            )
+        @ApiResponse(
+                responseCode = "200",
+                description = "更新成功",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = JobDTO.class))),
+        @ApiResponse(responseCode = "400", description = "参数校验失败或Cron表达式不合法"),
+        @ApiResponse(responseCode = "404", description = "任务不存在"),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要system:job:edit权限")
     })
     @OperationLog(module = "定时任务", type = OperationLog.OperationType.UPDATE, description = "更新定时任务")
     public Mono<ServerResponse> update(ServerRequest request) {
@@ -262,35 +202,18 @@ public class JobHandler extends BaseHandler {
      * @throws BusinessException 当 {@code id} 非法时抛出
      */
     @RequirePermission("system:job:remove")
-    @Operation(
-            operationId = "adminDeleteJob",
-            summary = "删除定时任务",
-            description = "删除指定的定时任务，删除后会自动取消该任务的调度。历史执行日志会保留"
-    )
+    @Operation(operationId = "adminDeleteJob", summary = "删除定时任务", description = "删除指定的定时任务，删除后会自动取消该任务的调度。历史执行日志会保留")
     @Parameter(
             name = "id",
             description = "任务ID",
             required = true,
             in = ParameterIn.PATH,
-            schema = @Schema(type = "integer", format = "int64", example = "1")
-    )
+            schema = @Schema(type = "integer", format = "int64", example = "1"))
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "删除成功"
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "参数错误，任务ID必须为正整数"
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "任务不存在"
-            ),
-            @ApiResponse(
-                    responseCode = "403",
-                    description = "权限不足，需要system:job:remove权限"
-            )
+        @ApiResponse(responseCode = "200", description = "删除成功"),
+        @ApiResponse(responseCode = "400", description = "参数错误，任务ID必须为正整数"),
+        @ApiResponse(responseCode = "404", description = "任务不存在"),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要system:job:remove权限")
     })
     @OperationLog(module = "定时任务", type = OperationLog.OperationType.DELETE, description = "删除定时任务")
     public Mono<ServerResponse> delete(ServerRequest request) {
@@ -312,44 +235,25 @@ public class JobHandler extends BaseHandler {
     @Operation(
             operationId = "adminUpdateJobStatus",
             summary = "启用或停用定时任务",
-            description = "更新任务的启用状态。启用后任务会根据Cron表达式自动调度执行，停用后会取消调度但不删除任务配置"
-    )
+            description = "更新任务的启用状态。启用后任务会根据Cron表达式自动调度执行，停用后会取消调度但不删除任务配置")
     @Parameter(
             name = "id",
             description = "任务ID",
             required = true,
             in = ParameterIn.PATH,
-            schema = @Schema(type = "integer", format = "int64", example = "1")
-    )
+            schema = @Schema(type = "integer", format = "int64", example = "1"))
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
             description = "状态更新请求信息",
             required = true,
-            content = @Content(
-                    mediaType = "application/json",
-                    schema = @Schema(implementation = StatusRequest.class)
-            )
-    )
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = StatusRequest.class)))
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "更新成功",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = JobDTO.class)
-                    )
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "参数错误或请求体为空"
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "任务不存在"
-            ),
-            @ApiResponse(
-                    responseCode = "403",
-                    description = "权限不足，需要system:job:edit权限"
-            )
+        @ApiResponse(
+                responseCode = "200",
+                description = "更新成功",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = JobDTO.class))),
+        @ApiResponse(responseCode = "400", description = "参数错误或请求体为空"),
+        @ApiResponse(responseCode = "404", description = "任务不存在"),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要system:job:edit权限")
     })
     @OperationLog(module = "定时任务", type = OperationLog.OperationType.UPDATE, description = "更新任务状态")
     public Mono<ServerResponse> updateStatus(ServerRequest request) {
@@ -372,32 +276,18 @@ public class JobHandler extends BaseHandler {
     @Operation(
             operationId = "adminRunJob",
             summary = "立即执行一次任务",
-            description = "手动触发任务立即执行一次，不影响任务的调度状态和计划。执行结果会记录到执行日志中"
-    )
+            description = "手动触发任务立即执行一次，不影响任务的调度状态和计划。执行结果会记录到执行日志中")
     @Parameter(
             name = "id",
             description = "任务ID",
             required = true,
             in = ParameterIn.PATH,
-            schema = @Schema(type = "integer", format = "int64", example = "1")
-    )
+            schema = @Schema(type = "integer", format = "int64", example = "1"))
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "触发成功"
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "参数错误，任务ID必须为正整数"
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "任务不存在"
-            ),
-            @ApiResponse(
-                    responseCode = "403",
-                    description = "权限不足，需要system:job:run权限"
-            )
+        @ApiResponse(responseCode = "200", description = "触发成功"),
+        @ApiResponse(responseCode = "400", description = "参数错误，任务ID必须为正整数"),
+        @ApiResponse(responseCode = "404", description = "任务不存在"),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要system:job:run权限")
     })
     @OperationLog(module = "定时任务", type = OperationLog.OperationType.UPDATE, description = "手动触发任务")
     public Mono<ServerResponse> runOnce(ServerRequest request) {
@@ -416,43 +306,30 @@ public class JobHandler extends BaseHandler {
     @Operation(
             operationId = "adminListJobLogs",
             summary = "查询任务执行日志",
-            description = "查询指定任务的最近执行日志，包含执行状态、耗时、异常信息等。日志按执行时间倒序排列"
-    )
+            description = "查询指定任务的最近执行日志，包含执行状态、耗时、异常信息等。日志按执行时间倒序排列")
     @Parameter(
             name = "id",
             description = "任务ID",
             required = true,
             in = ParameterIn.PATH,
-            schema = @Schema(type = "integer", format = "int64", example = "1")
-    )
+            schema = @Schema(type = "integer", format = "int64", example = "1"))
     @Parameter(
             name = "limit",
             description = "返回条数上限，默认20，最大100",
             required = false,
             in = ParameterIn.QUERY,
-            schema = @Schema(type = "integer", defaultValue = "20", minimum = "1", maximum = "100")
-    )
+            schema = @Schema(type = "integer", defaultValue = "20", minimum = "1", maximum = "100"))
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "查询成功",
-                    content = @Content(
-                            mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = JobLogDTO.class))
-                    )
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "参数错误，任务ID必须为正整数"
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "任务不存在"
-            ),
-            @ApiResponse(
-                    responseCode = "403",
-                    description = "权限不足，需要system:job:query权限"
-            )
+        @ApiResponse(
+                responseCode = "200",
+                description = "查询成功",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                array = @ArraySchema(schema = @Schema(implementation = JobLogDTO.class)))),
+        @ApiResponse(responseCode = "400", description = "参数错误，任务ID必须为正整数"),
+        @ApiResponse(responseCode = "404", description = "任务不存在"),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要system:job:query权限")
     })
     public Mono<ServerResponse> logs(ServerRequest request) {
         int limit = safeParseInt(request.queryParam("limit").orElse(null), 20);

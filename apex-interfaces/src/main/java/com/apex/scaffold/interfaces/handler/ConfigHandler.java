@@ -74,28 +74,14 @@ public class ConfigHandler extends BaseHandler {
      * @return 带 traceId 的统一成功响应，data 为参数配置 DTO 列表
      */
     @RequirePermission("system:config:list")
-    @Operation(
-            operationId = "adminListConfigs",
-            summary = "查询参数配置列表",
-            description = "返回所有系统参数配置的列表，包括内置参数和用户自定义参数"
-    )
+    @Operation(operationId = "adminListConfigs", summary = "查询参数配置列表", description = "返回所有系统参数配置的列表，包括内置参数和用户自定义参数")
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "查询成功",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = ConfigDTO.class)
-                    )
-            ),
-            @ApiResponse(
-                    responseCode = "401",
-                    description = "未授权，需要登录"
-            ),
-            @ApiResponse(
-                    responseCode = "403",
-                    description = "权限不足，需要 system:config:list 权限"
-            )
+        @ApiResponse(
+                responseCode = "200",
+                description = "查询成功",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = ConfigDTO.class))),
+        @ApiResponse(responseCode = "401", description = "未授权，需要登录"),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要 system:config:list 权限")
     })
     public Mono<ServerResponse> list(ServerRequest request) {
         return configService.listConfigs().flatMap(this::buildSuccess);
@@ -111,43 +97,22 @@ public class ConfigHandler extends BaseHandler {
      * @throws BusinessException 当 {@code id} 非法时抛出
      */
     @RequirePermission("system:config:query")
-    @Operation(
-            operationId = "adminGetConfig",
-            summary = "查询参数配置详情",
-            description = "根据参数配置ID查询详细信息"
-    )
+    @Operation(operationId = "adminGetConfig", summary = "查询参数配置详情", description = "根据参数配置ID查询详细信息")
     @Parameter(
             name = "id",
             description = "参数配置ID",
             required = true,
             in = ParameterIn.PATH,
-            schema = @Schema(type = "integer", format = "int64")
-    )
+            schema = @Schema(type = "integer", format = "int64"))
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "查询成功",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = ConfigDTO.class)
-                    )
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "参数错误，id 必须为正整数"
-            ),
-            @ApiResponse(
-                    responseCode = "401",
-                    description = "未授权，需要登录"
-            ),
-            @ApiResponse(
-                    responseCode = "403",
-                    description = "权限不足，需要 system:config:query 权限"
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "参数配置不存在"
-            )
+        @ApiResponse(
+                responseCode = "200",
+                description = "查询成功",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = ConfigDTO.class))),
+        @ApiResponse(responseCode = "400", description = "参数错误，id 必须为正整数"),
+        @ApiResponse(responseCode = "401", description = "未授权，需要登录"),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要 system:config:query 权限"),
+        @ApiResponse(responseCode = "404", description = "参数配置不存在")
     })
     public Mono<ServerResponse> detail(ServerRequest request) {
         return configService.getConfig(requirePositiveId(request)).flatMap(this::buildSuccess);
@@ -163,40 +128,19 @@ public class ConfigHandler extends BaseHandler {
      * @throws BusinessException 当请求体为空时抛出
      */
     @RequirePermission("system:config:add")
-    @Operation(
-            operationId = "adminCreateConfig",
-            summary = "创建参数配置",
-            description = "创建新的系统参数配置，参数键名必须全局唯一"
-    )
+    @Operation(operationId = "adminCreateConfig", summary = "创建参数配置", description = "创建新的系统参数配置，参数键名必须全局唯一")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
             description = "参数配置创建请求信息",
             required = true,
-            content = @Content(
-                    mediaType = "application/json",
-                    schema = @Schema(implementation = ConfigRequest.class)
-            )
-    )
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ConfigRequest.class)))
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "创建成功",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = ConfigDTO.class)
-                    )
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "参数校验失败或参数键名已存在"
-            ),
-            @ApiResponse(
-                    responseCode = "401",
-                    description = "未授权，需要登录"
-            ),
-            @ApiResponse(
-                    responseCode = "403",
-                    description = "权限不足，需要 system:config:add 权限"
-            )
+        @ApiResponse(
+                responseCode = "200",
+                description = "创建成功",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = ConfigDTO.class))),
+        @ApiResponse(responseCode = "400", description = "参数校验失败或参数键名已存在"),
+        @ApiResponse(responseCode = "401", description = "未授权，需要登录"),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要 system:config:add 权限")
     })
     @OperationLog(module = "参数配置", type = OperationLog.OperationType.INSERT, description = "创建参数配置")
     public Mono<ServerResponse> create(ServerRequest request) {
@@ -215,51 +159,26 @@ public class ConfigHandler extends BaseHandler {
      * @throws BusinessException 当 {@code id} 非法或请求体为空时抛出
      */
     @RequirePermission("system:config:edit")
-    @Operation(
-            operationId = "adminUpdateConfig",
-            summary = "更新参数配置",
-            description = "更新指定参数配置的信息，支持部分字段更新"
-    )
+    @Operation(operationId = "adminUpdateConfig", summary = "更新参数配置", description = "更新指定参数配置的信息，支持部分字段更新")
     @Parameter(
             name = "id",
             description = "参数配置ID",
             required = true,
             in = ParameterIn.PATH,
-            schema = @Schema(type = "integer", format = "int64")
-    )
+            schema = @Schema(type = "integer", format = "int64"))
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
             description = "参数配置更新请求信息",
             required = true,
-            content = @Content(
-                    mediaType = "application/json",
-                    schema = @Schema(implementation = ConfigRequest.class)
-            )
-    )
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ConfigRequest.class)))
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "更新成功",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = ConfigDTO.class)
-                    )
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "参数校验失败或 id 非法"
-            ),
-            @ApiResponse(
-                    responseCode = "401",
-                    description = "未授权，需要登录"
-            ),
-            @ApiResponse(
-                    responseCode = "403",
-                    description = "权限不足，需要 system:config:edit 权限"
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "参数配置不存在"
-            )
+        @ApiResponse(
+                responseCode = "200",
+                description = "更新成功",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = ConfigDTO.class))),
+        @ApiResponse(responseCode = "400", description = "参数校验失败或 id 非法"),
+        @ApiResponse(responseCode = "401", description = "未授权，需要登录"),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要 system:config:edit 权限"),
+        @ApiResponse(responseCode = "404", description = "参数配置不存在")
     })
     @OperationLog(module = "参数配置", type = OperationLog.OperationType.UPDATE, description = "更新参数配置")
     public Mono<ServerResponse> update(ServerRequest request) {
@@ -279,39 +198,19 @@ public class ConfigHandler extends BaseHandler {
      * @throws BusinessException 当 {@code id} 非法时抛出
      */
     @RequirePermission("system:config:remove")
-    @Operation(
-            operationId = "adminDeleteConfig",
-            summary = "删除参数配置",
-            description = "删除指定参数配置，内置参数将被拒绝删除"
-    )
+    @Operation(operationId = "adminDeleteConfig", summary = "删除参数配置", description = "删除指定参数配置，内置参数将被拒绝删除")
     @Parameter(
             name = "id",
             description = "参数配置ID",
             required = true,
             in = ParameterIn.PATH,
-            schema = @Schema(type = "integer", format = "int64")
-    )
+            schema = @Schema(type = "integer", format = "int64"))
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "删除成功"
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "参数错误，id 必须为正整数，或尝试删除内置参数"
-            ),
-            @ApiResponse(
-                    responseCode = "401",
-                    description = "未授权，需要登录"
-            ),
-            @ApiResponse(
-                    responseCode = "403",
-                    description = "权限不足，需要 system:config:remove 权限"
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "参数配置不存在"
-            )
+        @ApiResponse(responseCode = "200", description = "删除成功"),
+        @ApiResponse(responseCode = "400", description = "参数错误，id 必须为正整数，或尝试删除内置参数"),
+        @ApiResponse(responseCode = "401", description = "未授权，需要登录"),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要 system:config:remove 权限"),
+        @ApiResponse(responseCode = "404", description = "参数配置不存在")
     })
     @OperationLog(module = "参数配置", type = OperationLog.OperationType.DELETE, description = "删除参数配置")
     public Mono<ServerResponse> delete(ServerRequest request) {
@@ -330,51 +229,26 @@ public class ConfigHandler extends BaseHandler {
      * @throws BusinessException 当 {@code id} 非法或请求体为空时抛出
      */
     @RequirePermission("system:config:edit")
-    @Operation(
-            operationId = "adminUpdateConfigStatus",
-            summary = "启用或停用参数配置",
-            description = "切换参数配置的启用状态"
-    )
+    @Operation(operationId = "adminUpdateConfigStatus", summary = "启用或停用参数配置", description = "切换参数配置的启用状态")
     @Parameter(
             name = "id",
             description = "参数配置ID",
             required = true,
             in = ParameterIn.PATH,
-            schema = @Schema(type = "integer", format = "int64")
-    )
+            schema = @Schema(type = "integer", format = "int64"))
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
             description = "状态更新请求信息",
             required = true,
-            content = @Content(
-                    mediaType = "application/json",
-                    schema = @Schema(implementation = StatusRequest.class)
-            )
-    )
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = StatusRequest.class)))
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "更新成功",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = ConfigDTO.class)
-                    )
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "参数校验失败或 id 非法"
-            ),
-            @ApiResponse(
-                    responseCode = "401",
-                    description = "未授权，需要登录"
-            ),
-            @ApiResponse(
-                    responseCode = "403",
-                    description = "权限不足，需要 system:config:edit 权限"
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "参数配置不存在"
-            )
+        @ApiResponse(
+                responseCode = "200",
+                description = "更新成功",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = ConfigDTO.class))),
+        @ApiResponse(responseCode = "400", description = "参数校验失败或 id 非法"),
+        @ApiResponse(responseCode = "401", description = "未授权，需要登录"),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要 system:config:edit 权限"),
+        @ApiResponse(responseCode = "404", description = "参数配置不存在")
     })
     @OperationLog(module = "参数配置", type = OperationLog.OperationType.UPDATE, description = "更新参数配置状态")
     public Mono<ServerResponse> updateStatus(ServerRequest request) {

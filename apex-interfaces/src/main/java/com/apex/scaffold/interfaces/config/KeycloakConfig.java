@@ -1,6 +1,7 @@
 package com.apex.scaffold.interfaces.config;
 
 import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.keycloak.admin.client.Keycloak;
@@ -10,8 +11,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.validation.annotation.Validated;
-
-import jakarta.validation.constraints.NotBlank;
 
 /**
  * Keycloak 集成配置类
@@ -154,8 +153,11 @@ public class KeycloakConfig {
     @Bean
     @ConditionalOnProperty(name = "keycloak.enabled", havingValue = "true")
     public Keycloak keycloakAdminClient() {
-        log.info("Initializing Keycloak Admin Client: server={}, realm={}, adminClientId={}",
-                serverUrl, realm, adminClientId);
+        log.info(
+                "Initializing Keycloak Admin Client: server={}, realm={}, adminClientId={}",
+                serverUrl,
+                realm,
+                adminClientId);
 
         Keycloak keycloak = KeycloakBuilder.builder()
                 .serverUrl(serverUrl)

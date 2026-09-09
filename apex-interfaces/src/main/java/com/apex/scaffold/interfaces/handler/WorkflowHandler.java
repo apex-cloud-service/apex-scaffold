@@ -1,8 +1,5 @@
 package com.apex.scaffold.interfaces.handler;
 
-import com.apex.scaffold.application.dto.WorkflowInstanceDTO;
-import com.apex.scaffold.application.dto.WorkflowInstanceDetailDTO;
-import com.apex.scaffold.application.dto.WorkflowTaskDTO;
 import com.apex.scaffold.application.service.WorkflowService;
 import com.apex.scaffold.application.workflow.WorkflowQueryService;
 import com.apex.scaffold.application.workflow.WorkflowStatisticsService;
@@ -12,8 +9,6 @@ import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.interfaces.dto.workflow.*;
 import com.apex.scaffold.interfaces.security.AuthenticatedUser;
 import com.apex.scaffold.interfaces.util.MessageUtils;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -22,12 +17,11 @@ import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.stereotype.Component;
-import org.springframework.validation.BeanPropertyBindingResult;
-import org.springframework.validation.Validator;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
@@ -102,28 +96,17 @@ public class WorkflowHandler {
      * @return 工作流实例分页列表
      */
     @TenantAware
-    @Operation(
-            operationId = "listInstances",
-            summary = "查询工作流实例列表",
-            description = "分页查询工作流实例，支持按状态过滤"
-    )
+    @Operation(operationId = "listInstances", summary = "查询工作流实例列表", description = "分页查询工作流实例，支持按状态过滤")
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "查询成功",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = PageResponse.class)
-                    )
-            ),
-            @ApiResponse(
-                    responseCode = "401",
-                    description = "未授权"
-            ),
-            @ApiResponse(
-                    responseCode = "403",
-                    description = "权限不足"
-            )
+        @ApiResponse(
+                responseCode = "200",
+                description = "查询成功",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = PageResponse.class))),
+        @ApiResponse(responseCode = "401", description = "未授权"),
+        @ApiResponse(responseCode = "403", description = "权限不足")
     })
     public Mono<ServerResponse> listInstances(ServerRequest request) {
         int pageNum = Integer.parseInt(request.queryParam("pageNum").orElse("1"));
@@ -131,7 +114,8 @@ public class WorkflowHandler {
         String status = request.queryParam("status").orElse(null);
 
         // 直接调用，不捕获错误，方便调试
-        return workflowQueryService.listInstances(pageNum, pageSize, status, null)
+        return workflowQueryService
+                .listInstances(pageNum, pageSize, status, null)
                 .flatMap(data -> ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(Result.success(data)));
@@ -146,24 +130,14 @@ public class WorkflowHandler {
      * @return 工作流统计数据
      */
     @TenantAware
-    @Operation(
-            operationId = "getStatistics",
-            summary = "获取工作流统计数据",
-            description = "获取工作流实例和任务的统计信息"
-    )
+    @Operation(operationId = "getStatistics", summary = "获取工作流统计数据", description = "获取工作流实例和任务的统计信息")
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "查询成功",
-                    content = @Content(mediaType = "application/json")
-            ),
-            @ApiResponse(
-                    responseCode = "401",
-                    description = "未授权"
-            )
+        @ApiResponse(responseCode = "200", description = "查询成功", content = @Content(mediaType = "application/json")),
+        @ApiResponse(responseCode = "401", description = "未授权")
     })
     public Mono<ServerResponse> getStatistics(ServerRequest request) {
-        return workflowStatisticsService.getStatistics()
+        return workflowStatisticsService
+                .getStatistics()
                 .flatMap(data -> ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(Result.success(data)))
@@ -190,33 +164,22 @@ public class WorkflowHandler {
      * @return 工作流趋势数据
      */
     @TenantAware
-    @Operation(
-            operationId = "getTrend",
-            summary = "获取工作流趋势数据",
-            description = "查询指定时间段内工作流实例的趋势统计"
-    )
+    @Operation(operationId = "getTrend", summary = "获取工作流趋势数据", description = "查询指定时间段内工作流实例的趋势统计")
     @Parameter(
             name = "days",
             description = "查询天数",
             required = false,
             in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-            schema = @Schema(type = "integer", defaultValue = "7")
-    )
+            schema = @Schema(type = "integer", defaultValue = "7"))
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "查询成功",
-                    content = @Content(mediaType = "application/json")
-            ),
-            @ApiResponse(
-                    responseCode = "401",
-                    description = "未授权"
-            )
+        @ApiResponse(responseCode = "200", description = "查询成功", content = @Content(mediaType = "application/json")),
+        @ApiResponse(responseCode = "401", description = "未授权")
     })
     public Mono<ServerResponse> getTrend(ServerRequest request) {
         int days = Integer.parseInt(request.queryParam("days").orElse("7"));
-        
-        return workflowStatisticsService.getTrend(days)
+
+        return workflowStatisticsService
+                .getTrend(days)
                 .flatMap(data -> ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(Result.success(data)))
@@ -241,39 +204,24 @@ public class WorkflowHandler {
      * @param request ServerRequest，路径参数 taskId，请求体 RollbackTaskRequest
      * @return ServerResponse，包含操作结果
      */
-    @Operation(
-            operationId = "rollbackTask",
-            summary = "流程回退",
-            description = "将工作流任务回退到指定的前置节点"
-    )
+    @Operation(operationId = "rollbackTask", summary = "流程回退", description = "将工作流任务回退到指定的前置节点")
     @Parameter(
             name = "taskId",
             description = "任务ID",
             required = true,
             in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-            schema = @Schema(type = "integer", format = "int64")
-    )
+            schema = @Schema(type = "integer", format = "int64"))
     @RequestBody(
             description = "回退请求信息",
             required = true,
-            content = @Content(
-                    mediaType = "application/json",
-                    schema = @Schema(implementation = RollbackTaskRequest.class)
-            )
-    )
+            content =
+                    @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = RollbackTaskRequest.class)))
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "回退成功"
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "请求参数错误"
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "任务不存在"
-            )
+        @ApiResponse(responseCode = "200", description = "回退成功"),
+        @ApiResponse(responseCode = "400", description = "请求参数错误"),
+        @ApiResponse(responseCode = "404", description = "任务不存在")
     })
     public Mono<ServerResponse> rollbackTask(ServerRequest request) {
         Long taskId = Long.valueOf(request.pathVariable("taskId"));
@@ -293,51 +241,33 @@ public class WorkflowHandler {
      * @param request ServerRequest，路径参数 taskId，请求体 TransferTaskRequest
      * @return ServerResponse，包含操作结果
      */
-    @Operation(
-            operationId = "transferTask",
-            summary = "任务转办",
-            description = "将当前待办任务转交给其他用户处理，任务责任人变更"
-    )
+    @Operation(operationId = "transferTask", summary = "任务转办", description = "将当前待办任务转交给其他用户处理，任务责任人变更")
     @Parameter(
             name = "taskId",
             description = "任务ID",
             required = true,
             in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-            schema = @Schema(type = "integer", format = "int64")
-    )
+            schema = @Schema(type = "integer", format = "int64"))
     @RequestBody(
             description = "任务转办请求信息",
             required = true,
-            content = @Content(
-                    mediaType = "application/json",
-                    schema = @Schema(implementation = TransferTaskRequest.class)
-            )
-    )
+            content =
+                    @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = TransferTaskRequest.class)))
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "转办成功"
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "请求参数错误"
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "任务不存在"
-            ),
-            @ApiResponse(
-                    responseCode = "403",
-                    description = "权限不足，无法转办该任务"
-            )
+        @ApiResponse(responseCode = "200", description = "转办成功"),
+        @ApiResponse(responseCode = "400", description = "请求参数错误"),
+        @ApiResponse(responseCode = "404", description = "任务不存在"),
+        @ApiResponse(responseCode = "403", description = "权限不足，无法转办该任务")
     })
     public Mono<ServerResponse> transferTask(ServerRequest request) {
         Long taskId = Long.valueOf(request.pathVariable("taskId"));
 
         return request.bodyToMono(TransferTaskRequest.class)
                 .flatMap(req -> getCurrentUserId()
-                        .flatMap(userId -> workflowService.transferTask(
-                                taskId, req.getNewAssigneeId(), userId, req.getReason())))
+                        .flatMap(userId ->
+                                workflowService.transferTask(taskId, req.getNewAssigneeId(), userId, req.getReason())))
                 .then(ServerResponse.ok().bodyValue(Result.success()));
     }
 
@@ -349,51 +279,33 @@ public class WorkflowHandler {
      * @param request ServerRequest，路径参数 taskId，请求体 DelegateTaskRequest
      * @return ServerResponse，包含操作结果
      */
-    @Operation(
-            operationId = "delegateTask",
-            summary = "任务委派",
-            description = "将当前待办任务临时委托给其他用户处理，委托人完成后任务回到原责任人"
-    )
+    @Operation(operationId = "delegateTask", summary = "任务委派", description = "将当前待办任务临时委托给其他用户处理，委托人完成后任务回到原责任人")
     @Parameter(
             name = "taskId",
             description = "任务ID",
             required = true,
             in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-            schema = @Schema(type = "integer", format = "int64")
-    )
+            schema = @Schema(type = "integer", format = "int64"))
     @RequestBody(
             description = "任务委派请求信息",
             required = true,
-            content = @Content(
-                    mediaType = "application/json",
-                    schema = @Schema(implementation = DelegateTaskRequest.class)
-            )
-    )
+            content =
+                    @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = DelegateTaskRequest.class)))
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "委派成功"
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "请求参数错误"
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "任务不存在"
-            ),
-            @ApiResponse(
-                    responseCode = "403",
-                    description = "权限不足，无法委派该任务"
-            )
+        @ApiResponse(responseCode = "200", description = "委派成功"),
+        @ApiResponse(responseCode = "400", description = "请求参数错误"),
+        @ApiResponse(responseCode = "404", description = "任务不存在"),
+        @ApiResponse(responseCode = "403", description = "权限不足，无法委派该任务")
     })
     public Mono<ServerResponse> delegateTask(ServerRequest request) {
         Long taskId = Long.valueOf(request.pathVariable("taskId"));
 
         return request.bodyToMono(DelegateTaskRequest.class)
                 .flatMap(req -> getCurrentUserId()
-                        .flatMap(userId -> workflowService.delegateTask(
-                                taskId, req.getDelegateToId(), userId, req.getReason())))
+                        .flatMap(userId ->
+                                workflowService.delegateTask(taskId, req.getDelegateToId(), userId, req.getReason())))
                 .then(ServerResponse.ok().bodyValue(Result.success()));
     }
 
@@ -405,43 +317,25 @@ public class WorkflowHandler {
      * @param request ServerRequest，路径参数 instanceId，请求体 SuspendInstanceRequest
      * @return ServerResponse，包含操作结果
      */
-    @Operation(
-            operationId = "suspendInstance",
-            summary = "挂起流程实例",
-            description = "暂停流程实例的执行，所有待办任务无法审批，直到恢复流程"
-    )
+    @Operation(operationId = "suspendInstance", summary = "挂起流程实例", description = "暂停流程实例的执行，所有待办任务无法审批，直到恢复流程")
     @Parameter(
             name = "instanceId",
             description = "流程实例ID",
             required = true,
             in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-            schema = @Schema(type = "integer", format = "int64")
-    )
+            schema = @Schema(type = "integer", format = "int64"))
     @RequestBody(
             description = "挂起流程请求信息",
             required = true,
-            content = @Content(
-                    mediaType = "application/json",
-                    schema = @Schema(implementation = SuspendInstanceRequest.class)
-            )
-    )
+            content =
+                    @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = SuspendInstanceRequest.class)))
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "挂起成功"
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "请求参数错误或流程已挂起"
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "流程实例不存在"
-            ),
-            @ApiResponse(
-                    responseCode = "403",
-                    description = "权限不足，无法挂起该流程"
-            )
+        @ApiResponse(responseCode = "200", description = "挂起成功"),
+        @ApiResponse(responseCode = "400", description = "请求参数错误或流程已挂起"),
+        @ApiResponse(responseCode = "404", description = "流程实例不存在"),
+        @ApiResponse(responseCode = "403", description = "权限不足，无法挂起该流程")
     })
     public Mono<ServerResponse> suspendInstance(ServerRequest request) {
         Long instanceId = Long.valueOf(request.pathVariable("instanceId"));
@@ -460,43 +354,25 @@ public class WorkflowHandler {
      * @param request ServerRequest，路径参数 instanceId，请求体 ResumeInstanceRequest
      * @return ServerResponse，包含操作结果
      */
-    @Operation(
-            operationId = "resumeInstance",
-            summary = "恢复流程实例",
-            description = "恢复挂起的流程实例，允许待办任务继续审批和流转"
-    )
+    @Operation(operationId = "resumeInstance", summary = "恢复流程实例", description = "恢复挂起的流程实例，允许待办任务继续审批和流转")
     @Parameter(
             name = "instanceId",
             description = "流程实例ID",
             required = true,
             in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-            schema = @Schema(type = "integer", format = "int64")
-    )
+            schema = @Schema(type = "integer", format = "int64"))
     @RequestBody(
             description = "恢复流程请求信息",
             required = true,
-            content = @Content(
-                    mediaType = "application/json",
-                    schema = @Schema(implementation = ResumeInstanceRequest.class)
-            )
-    )
+            content =
+                    @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ResumeInstanceRequest.class)))
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "恢复成功"
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "请求参数错误或流程未挂起"
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "流程实例不存在"
-            ),
-            @ApiResponse(
-                    responseCode = "403",
-                    description = "权限不足，无法恢复该流程"
-            )
+        @ApiResponse(responseCode = "200", description = "恢复成功"),
+        @ApiResponse(responseCode = "400", description = "请求参数错误或流程未挂起"),
+        @ApiResponse(responseCode = "404", description = "流程实例不存在"),
+        @ApiResponse(responseCode = "403", description = "权限不足，无法恢复该流程")
     })
     public Mono<ServerResponse> resumeInstance(ServerRequest request) {
         Long instanceId = Long.valueOf(request.pathVariable("instanceId"));

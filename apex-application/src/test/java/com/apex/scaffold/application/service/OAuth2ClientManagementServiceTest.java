@@ -1,5 +1,10 @@
 package com.apex.scaffold.application.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.*;
+
 import com.apex.scaffold.application.dto.OAuth2ClientRequest;
 import com.apex.scaffold.application.dto.OAuth2ClientResponse;
 import com.apex.scaffold.common.exception.BusinessException;
@@ -18,27 +23,22 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
-
 @ExtendWith(MockitoExtension.class)
 @DisplayName("OAuth2客户端管理服务测试")
 class OAuth2ClientManagementServiceTest {
-    
+
     @Mock
     private OAuth2RegisteredClientRepository clientRepository;
-    
+
     @Mock
     private PasswordEncoder passwordEncoder;
-    
+
     @InjectMocks
     private OAuth2ClientManagementService clientManagementService;
-    
+
     private OAuth2ClientRequest testRequest;
     private OAuth2RegisteredClientEntity testClient;
-    
+
     @BeforeEach
     void setUp() {
         testRequest = createTestClientRequest();
@@ -46,223 +46,197 @@ class OAuth2ClientManagementServiceTest {
 
         lenient().when(passwordEncoder.encode(anyString())).thenReturn("$2a$10$encrypted-secret");
     }
-    
+
     @Test
     @DisplayName("创建客户端 - 成功")
     void createClient_Success() {
-        when(clientRepository.findByClientId(testRequest.getClientId()))
-                .thenReturn(Mono.empty());
-        when(clientRepository.save(any(OAuth2RegisteredClientEntity.class)))
-                .thenReturn(Mono.just(testClient));
-        
+        when(clientRepository.findByClientId(testRequest.getClientId())).thenReturn(Mono.empty());
+        when(clientRepository.save(any(OAuth2RegisteredClientEntity.class))).thenReturn(Mono.just(testClient));
+
         Mono<OAuth2ClientResponse> result = clientManagementService.createClient(testRequest);
-        
+
         StepVerifier.create(result)
                 .assertNext(response -> {
                     assertThat(response.getClientId()).isEqualTo(testRequest.getClientId());
                     assertThat(response.getClientName()).isEqualTo(testRequest.getClientName());
                 })
                 .verifyComplete();
-        
+
         verify(clientRepository).findByClientId(testRequest.getClientId());
         verify(clientRepository).save(any(OAuth2RegisteredClientEntity.class));
         verify(passwordEncoder).encode(testRequest.getClientSecret());
     }
-    
+
     @Test
     @DisplayName("创建客户端 - 客户端ID已存在")
     void createClient_ClientIdExists() {
-        when(clientRepository.findByClientId(testRequest.getClientId()))
-                .thenReturn(Mono.just(testClient));
-        
+        when(clientRepository.findByClientId(testRequest.getClientId())).thenReturn(Mono.just(testClient));
+
         Mono<OAuth2ClientResponse> result = clientManagementService.createClient(testRequest);
-        
-        StepVerifier.create(result)
-                .expectError(BusinessException.class)
-                .verify();
-        
+
+        StepVerifier.create(result).expectError(BusinessException.class).verify();
+
         verify(clientRepository).findByClientId(testRequest.getClientId());
         verify(clientRepository, never()).save(any());
     }
-    
+
     @Test
     @DisplayName("更新客户端 - 成功")
     void updateClient_Success() {
         String clientId = "test-client";
         OAuth2ClientRequest updateRequest = createTestClientRequest();
         updateRequest.setClientName("Updated Client Name");
-        
-        when(clientRepository.findByClientId(clientId))
-                .thenReturn(Mono.just(testClient));
-        when(clientRepository.save(any(OAuth2RegisteredClientEntity.class)))
-                .thenReturn(Mono.just(testClient));
-        
+
+        when(clientRepository.findByClientId(clientId)).thenReturn(Mono.just(testClient));
+        when(clientRepository.save(any(OAuth2RegisteredClientEntity.class))).thenReturn(Mono.just(testClient));
+
         Mono<OAuth2ClientResponse> result = clientManagementService.updateClient(clientId, updateRequest);
-        
+
         StepVerifier.create(result)
                 .assertNext(response -> {
                     assertThat(response.getClientId()).isEqualTo(clientId);
                 })
                 .verifyComplete();
-        
+
         verify(clientRepository).findByClientId(clientId);
         verify(clientRepository).save(any(OAuth2RegisteredClientEntity.class));
     }
-    
+
     @Test
     @DisplayName("更新客户端 - 客户端不存在")
     void updateClient_ClientNotFound() {
         String clientId = "non-existent-client";
         OAuth2ClientRequest updateRequest = createTestClientRequest();
-        
-        when(clientRepository.findByClientId(clientId))
-                .thenReturn(Mono.empty());
-        
+
+        when(clientRepository.findByClientId(clientId)).thenReturn(Mono.empty());
+
         Mono<OAuth2ClientResponse> result = clientManagementService.updateClient(clientId, updateRequest);
-        
-        StepVerifier.create(result)
-                .expectError(BusinessException.class)
-                .verify();
-        
+
+        StepVerifier.create(result).expectError(BusinessException.class).verify();
+
         verify(clientRepository).findByClientId(clientId);
         verify(clientRepository, never()).save(any());
     }
-    
+
     @Test
     @DisplayName("删除客户端 - 成功")
     void deleteClient_Success() {
         String clientId = "test-client";
-        
-        when(clientRepository.findByClientId(clientId))
-                .thenReturn(Mono.just(testClient));
-        when(clientRepository.deleteById(testClient.getId()))
-                .thenReturn(Mono.empty());
-        
+
+        when(clientRepository.findByClientId(clientId)).thenReturn(Mono.just(testClient));
+        when(clientRepository.deleteById(testClient.getId())).thenReturn(Mono.empty());
+
         Mono<Void> result = clientManagementService.deleteClient(clientId);
-        
-        StepVerifier.create(result)
-                .verifyComplete();
-        
+
+        StepVerifier.create(result).verifyComplete();
+
         verify(clientRepository).findByClientId(clientId);
         verify(clientRepository).deleteById(testClient.getId());
     }
-    
+
     @Test
     @DisplayName("删除客户端 - 客户端不存在")
     void deleteClient_ClientNotFound() {
         String clientId = "non-existent-client";
-        
-        when(clientRepository.findByClientId(clientId))
-                .thenReturn(Mono.empty());
-        
+
+        when(clientRepository.findByClientId(clientId)).thenReturn(Mono.empty());
+
         Mono<Void> result = clientManagementService.deleteClient(clientId);
-        
-        StepVerifier.create(result)
-                .expectError(BusinessException.class)
-                .verify();
-        
+
+        StepVerifier.create(result).expectError(BusinessException.class).verify();
+
         verify(clientRepository).findByClientId(clientId);
         verify(clientRepository, never()).deleteById(anyString());
     }
-    
+
     @Test
     @DisplayName("查询客户端 - 成功")
     void getClient_Success() {
         String clientId = "test-client";
-        
-        when(clientRepository.findByClientId(clientId))
-                .thenReturn(Mono.just(testClient));
-        
+
+        when(clientRepository.findByClientId(clientId)).thenReturn(Mono.just(testClient));
+
         Mono<OAuth2ClientResponse> result = clientManagementService.getClient(clientId);
-        
+
         StepVerifier.create(result)
                 .assertNext(response -> {
                     assertThat(response.getClientId()).isEqualTo(clientId);
                     assertThat(response.getClientName()).isEqualTo(testClient.getClientName());
                 })
                 .verifyComplete();
-        
+
         verify(clientRepository).findByClientId(clientId);
     }
-    
+
     @Test
     @DisplayName("查询客户端 - 客户端不存在")
     void getClient_ClientNotFound() {
         String clientId = "non-existent-client";
-        
-        when(clientRepository.findByClientId(clientId))
-                .thenReturn(Mono.empty());
-        
+
+        when(clientRepository.findByClientId(clientId)).thenReturn(Mono.empty());
+
         Mono<OAuth2ClientResponse> result = clientManagementService.getClient(clientId);
-        
-        StepVerifier.create(result)
-                .expectError(BusinessException.class)
-                .verify();
+
+        StepVerifier.create(result).expectError(BusinessException.class).verify();
     }
-    
+
     @Test
     @DisplayName("客户端列表 - 成功")
     void listClients_Success() {
         int page = 1;
         int size = 10;
-        
-        when(clientRepository.findAll(page, size))
-                .thenReturn(Flux.just(testClient));
-        
+
+        when(clientRepository.findAll(page, size)).thenReturn(Flux.just(testClient));
+
         Flux<OAuth2ClientResponse> result = clientManagementService.listClients(page, size);
-        
+
         StepVerifier.create(result)
                 .assertNext(response -> {
                     assertThat(response.getClientId()).isEqualTo(testClient.getClientId());
                     assertThat(response.getClientName()).isEqualTo(testClient.getClientName());
                 })
                 .verifyComplete();
-        
+
         verify(clientRepository).findAll(page, size);
     }
-    
+
     @Test
     @DisplayName("重置客户端密钥 - 成功")
     void resetClientSecret_Success() {
         String clientId = "test-client";
-        
-        when(clientRepository.findByClientId(clientId))
-                .thenReturn(Mono.just(testClient));
-        when(clientRepository.save(any(OAuth2RegisteredClientEntity.class)))
-                .thenReturn(Mono.just(testClient));
-        
+
+        when(clientRepository.findByClientId(clientId)).thenReturn(Mono.just(testClient));
+        when(clientRepository.save(any(OAuth2RegisteredClientEntity.class))).thenReturn(Mono.just(testClient));
+
         Mono<String> result = clientManagementService.resetClientSecret(clientId);
-        
+
         StepVerifier.create(result)
                 .assertNext(secret -> {
                     assertThat(secret).isNotNull();
                     assertThat(secret.length()).isGreaterThanOrEqualTo(32);
                 })
                 .verifyComplete();
-        
+
         verify(clientRepository).findByClientId(clientId);
         verify(clientRepository).save(any(OAuth2RegisteredClientEntity.class));
         verify(passwordEncoder).encode(anyString());
     }
-    
+
     @Test
     @DisplayName("重置客户端密钥 - 客户端不存在")
     void resetClientSecret_ClientNotFound() {
         String clientId = "non-existent-client";
-        
-        when(clientRepository.findByClientId(clientId))
-                .thenReturn(Mono.empty());
-        
+
+        when(clientRepository.findByClientId(clientId)).thenReturn(Mono.empty());
+
         Mono<String> result = clientManagementService.resetClientSecret(clientId);
-        
-        StepVerifier.create(result)
-                .expectError(BusinessException.class)
-                .verify();
-        
+
+        StepVerifier.create(result).expectError(BusinessException.class).verify();
+
         verify(clientRepository).findByClientId(clientId);
         verify(clientRepository, never()).save(any());
     }
-    
+
     private OAuth2ClientRequest createTestClientRequest() {
         OAuth2ClientRequest request = new OAuth2ClientRequest();
         request.setClientId("test-client");
@@ -278,7 +252,7 @@ class OAuth2ClientManagementServiceTest {
         request.setRefreshTokenTimeToLive(604800L);
         return request;
     }
-    
+
     private OAuth2RegisteredClientEntity createTestClientEntity() {
         OAuth2RegisteredClientEntity entity = new OAuth2RegisteredClientEntity();
         entity.setId("client-id-123");

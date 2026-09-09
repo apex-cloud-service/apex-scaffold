@@ -66,21 +66,13 @@ public class NotificationSseHandler extends BaseHandler {
     @Operation(
             operationId = "streamNotifications",
             summary = "订阅当前用户通知流（SSE）",
-            description = "建立SSE长连接，实时推送站内通知给当前登录用户。事件类型为 'notification'，每30秒发送心跳以保持连接活跃。需要用户认证"
-    )
+            description = "建立SSE长连接，实时推送站内通知给当前登录用户。事件类型为 'notification'，每30秒发送心跳以保持连接活跃。需要用户认证")
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "SSE连接建立成功，开始推送通知流",
-                    content = @Content(
-                            mediaType = "text/event-stream",
-                            schema = @Schema(implementation = String.class)
-                    )
-            ),
-            @ApiResponse(
-                    responseCode = "401",
-                    description = "未授权，用户未登录或认证信息无效"
-            )
+        @ApiResponse(
+                responseCode = "200",
+                description = "SSE连接建立成功，开始推送通知流",
+                content = @Content(mediaType = "text/event-stream", schema = @Schema(implementation = String.class))),
+        @ApiResponse(responseCode = "401", description = "未授权，用户未登录或认证信息无效")
     })
     public Mono<ServerResponse> stream(ServerRequest request) {
         return request.principal()

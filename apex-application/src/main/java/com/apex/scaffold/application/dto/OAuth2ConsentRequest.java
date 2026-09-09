@@ -32,28 +32,28 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class OAuth2ConsentRequest {
-    
+
     /**
      * OAuth2客户端ID
      *
      * <p>标识请求授权的第三方应用
      */
     private String clientId;
-    
+
     /**
      * OAuth2 state参数
      *
      * <p>用于防止CSRF攻击，需要在整个授权流程中保持一致
      */
     private String state;
-    
+
     /**
      * 请求的权限作用域列表
      *
      * <p>例如: ["read", "write", "user:profile"]
      */
     private List<String> scopes;
-    
+
     /**
      * 用户是否同意授权
      *

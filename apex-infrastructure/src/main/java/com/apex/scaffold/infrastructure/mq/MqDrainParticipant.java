@@ -25,9 +25,7 @@ public class MqDrainParticipant implements DrainParticipant {
      * @param consumerService 普通消息消费服务
      * @param deadLetterQueueProcessor 死信队列处理器
      */
-    public MqDrainParticipant(
-            MqConsumerService consumerService,
-            DeadLetterQueueProcessor deadLetterQueueProcessor) {
+    public MqDrainParticipant(MqConsumerService consumerService, DeadLetterQueueProcessor deadLetterQueueProcessor) {
         this.consumerService = consumerService;
         this.deadLetterQueueProcessor = deadLetterQueueProcessor;
     }
@@ -58,7 +56,8 @@ public class MqDrainParticipant implements DrainParticipant {
     @Override
     public CompletionStage<DrainResult> drain(Instant deadline) {
         CompletableFuture<Boolean> consumer = consumerService.drain(deadline).toCompletableFuture();
-        CompletableFuture<Boolean> deadLetter = deadLetterQueueProcessor.drain(deadline).toCompletableFuture();
+        CompletableFuture<Boolean> deadLetter =
+                deadLetterQueueProcessor.drain(deadline).toCompletableFuture();
         return CompletableFuture.allOf(consumer, deadLetter)
                 .thenApply(ignored -> consumer.join() && deadLetter.join()
                         ? DrainResult.drained(name())

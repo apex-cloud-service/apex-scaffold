@@ -73,73 +73,56 @@ public class ApiCallLogHandler extends BaseHandler {
     @Operation(
             operationId = "adminListApiCallLogs",
             summary = "分页查询API调用日志",
-            description = "提供对外部HTTP服务调用日志的分页查询，支持按服务名、状态、链路ID、路径等条件过滤，支撑第三方接口联调与排障"
-    )
+            description = "提供对外部HTTP服务调用日志的分页查询，支持按服务名、状态、链路ID、路径等条件过滤，支撑第三方接口联调与排障")
     @Parameters({
-            @Parameter(
-                    name = "page",
-                    description = "页码，从1开始",
-                    required = false,
-                    in = ParameterIn.QUERY,
-                    schema = @Schema(type = "integer", defaultValue = "1")
-            ),
-            @Parameter(
-                    name = "size",
-                    description = "每页大小",
-                    required = false,
-                    in = ParameterIn.QUERY,
-                    schema = @Schema(type = "integer", defaultValue = "20")
-            ),
-            @Parameter(
-                    name = "serviceName",
-                    description = "目标服务名称（精确匹配）",
-                    required = false,
-                    in = ParameterIn.QUERY,
-                    schema = @Schema(type = "string")
-            ),
-            @Parameter(
-                    name = "status",
-                    description = "调用状态（0-成功 1-客户端错误 2-服务端错误 3-网络异常）",
-                    required = false,
-                    in = ParameterIn.QUERY,
-                    schema = @Schema(type = "integer")
-            ),
-            @Parameter(
-                    name = "traceId",
-                    description = "链路追踪ID（模糊匹配）",
-                    required = false,
-                    in = ParameterIn.QUERY,
-                    schema = @Schema(type = "string")
-            ),
-            @Parameter(
-                    name = "path",
-                    description = "请求路径（模糊匹配）",
-                    required = false,
-                    in = ParameterIn.QUERY,
-                    schema = @Schema(type = "string")
-            )
+        @Parameter(
+                name = "page",
+                description = "页码，从1开始",
+                required = false,
+                in = ParameterIn.QUERY,
+                schema = @Schema(type = "integer", defaultValue = "1")),
+        @Parameter(
+                name = "size",
+                description = "每页大小",
+                required = false,
+                in = ParameterIn.QUERY,
+                schema = @Schema(type = "integer", defaultValue = "20")),
+        @Parameter(
+                name = "serviceName",
+                description = "目标服务名称（精确匹配）",
+                required = false,
+                in = ParameterIn.QUERY,
+                schema = @Schema(type = "string")),
+        @Parameter(
+                name = "status",
+                description = "调用状态（0-成功 1-客户端错误 2-服务端错误 3-网络异常）",
+                required = false,
+                in = ParameterIn.QUERY,
+                schema = @Schema(type = "integer")),
+        @Parameter(
+                name = "traceId",
+                description = "链路追踪ID（模糊匹配）",
+                required = false,
+                in = ParameterIn.QUERY,
+                schema = @Schema(type = "string")),
+        @Parameter(
+                name = "path",
+                description = "请求路径（模糊匹配）",
+                required = false,
+                in = ParameterIn.QUERY,
+                schema = @Schema(type = "string"))
     })
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "查询成功",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = ApiCallLogDTO.class)
-                    )
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "参数错误"
-            ),
-            @ApiResponse(
-                    responseCode = "401",
-                    description = "未授权，需要登录"
-            ),
-            @ApiResponse(
-                    responseCode = "403",
-                    description = "权限不足，需要 system:api-call-log:list 权限"
-            )
+        @ApiResponse(
+                responseCode = "200",
+                description = "查询成功",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = ApiCallLogDTO.class))),
+        @ApiResponse(responseCode = "400", description = "参数错误"),
+        @ApiResponse(responseCode = "401", description = "未授权，需要登录"),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要 system:api-call-log:list 权限")
     })
     @OperationLog(module = "API调用日志", type = OperationLog.OperationType.SELECT, description = "分页查询API调用日志")
     public Mono<ServerResponse> list(ServerRequest request) {

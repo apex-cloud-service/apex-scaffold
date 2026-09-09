@@ -309,7 +309,10 @@ public class ApiRouter {
     public RouterFunction<ServerResponse> adminDatabaseConfigRoutes(DatabaseConfigHandler handler) {
         return RouterFunctions.route()
                 .POST("/admin-api/v1/database/test", contentType(MediaType.APPLICATION_JSON), handler::testConnection)
-                .POST("/admin-api/v1/database/generate-config", contentType(MediaType.APPLICATION_JSON), handler::generateConfig)
+                .POST(
+                        "/admin-api/v1/database/generate-config",
+                        contentType(MediaType.APPLICATION_JSON),
+                        handler::generateConfig)
                 .GET("/admin-api/v1/database/current", handler::getCurrentInfo)
                 .build();
     }

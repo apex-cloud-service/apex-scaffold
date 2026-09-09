@@ -239,8 +239,8 @@ class RouterOpenApiCoverageTest {
             routes.accept(collector);
             endpoints.addAll(collector.endpoints);
         }
-        RouterFunction<?> workflowRoutes = workflowRouter.workflowRoutes(Mockito.mock(
-                com.apex.scaffold.interfaces.handler.WorkflowHandler.class));
+        RouterFunction<?> workflowRoutes =
+                workflowRouter.workflowRoutes(Mockito.mock(com.apex.scaffold.interfaces.handler.WorkflowHandler.class));
         RouteCollector workflowCollector = new RouteCollector();
         workflowRoutes.accept(workflowCollector);
         endpoints.addAll(workflowCollector.endpoints);

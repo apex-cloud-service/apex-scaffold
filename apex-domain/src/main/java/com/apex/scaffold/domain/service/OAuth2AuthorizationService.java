@@ -15,7 +15,7 @@ import reactor.core.publisher.Mono;
  * @since 2.0.0
  */
 public interface OAuth2AuthorizationService {
-    
+
     /**
      * 生成授权码
      *
@@ -35,9 +35,8 @@ public interface OAuth2AuthorizationService {
             String scope,
             String state,
             String codeChallenge,
-            String codeChallengeMethod
-    );
-    
+            String codeChallengeMethod);
+
     /**
      * 验证授权码并生成访问令牌(授权码模式)
      *
@@ -49,13 +48,8 @@ public interface OAuth2AuthorizationService {
      * @return 访问令牌实体
      */
     Mono<OAuth2AccessTokenEntity> exchangeCodeForToken(
-            String code,
-            String clientId,
-            String clientSecret,
-            String redirectUri,
-            String codeVerifier
-    );
-    
+            String code, String clientId, String clientSecret, String redirectUri, String codeVerifier);
+
     /**
      * 客户端凭证模式获取访问令牌
      *
@@ -64,12 +58,8 @@ public interface OAuth2AuthorizationService {
      * @param scope 权限作用域
      * @return 访问令牌实体
      */
-    Mono<OAuth2AccessTokenEntity> clientCredentialsGrant(
-            String clientId,
-            String clientSecret,
-            String scope
-    );
-    
+    Mono<OAuth2AccessTokenEntity> clientCredentialsGrant(String clientId, String clientSecret, String scope);
+
     /**
      * 密码模式获取访问令牌
      *
@@ -81,13 +71,8 @@ public interface OAuth2AuthorizationService {
      * @return 访问令牌实体
      */
     Mono<OAuth2AccessTokenEntity> passwordGrant(
-            String clientId,
-            String clientSecret,
-            String username,
-            String password,
-            String scope
-    );
-    
+            String clientId, String clientSecret, String username, String password, String scope);
+
     /**
      * 刷新令牌
      *
@@ -96,12 +81,8 @@ public interface OAuth2AuthorizationService {
      * @param clientSecret 客户端密钥
      * @return 新的访问令牌实体
      */
-    Mono<OAuth2AccessTokenEntity> refreshToken(
-            String refreshToken,
-            String clientId,
-            String clientSecret
-    );
-    
+    Mono<OAuth2AccessTokenEntity> refreshToken(String refreshToken, String clientId, String clientSecret);
+
     /**
      * 撤销令牌
      *
@@ -110,7 +91,7 @@ public interface OAuth2AuthorizationService {
      * @return 撤销结果
      */
     Mono<Void> revokeToken(String token, String clientId);
-    
+
     /**
      * 验证访问令牌
      *
@@ -118,7 +99,7 @@ public interface OAuth2AuthorizationService {
      * @return 令牌实体,无效则返回empty
      */
     Mono<OAuth2AccessTokenEntity> validateToken(String token);
-    
+
     /**
      * 检查用户是否已授权给客户端指定的scope
      *
@@ -128,7 +109,7 @@ public interface OAuth2AuthorizationService {
      * @return 如果用户已授权所有请求的scope则返回true
      */
     Mono<Boolean> hasUserConsented(String clientId, String userId, String requestedScopes);
-    
+
     /**
      * 保存用户授权同意
      *
@@ -138,7 +119,7 @@ public interface OAuth2AuthorizationService {
      * @return 授权同意实体
      */
     Mono<OAuth2AuthorizationConsentEntity> saveConsent(String clientId, String userId, String authorizedScopes);
-    
+
     /**
      * 撤销用户对客户端的授权同意
      *

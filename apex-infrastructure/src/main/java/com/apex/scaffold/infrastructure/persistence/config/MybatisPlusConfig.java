@@ -4,7 +4,6 @@ import com.apex.scaffold.common.context.DataScopeProvider;
 import com.apex.scaffold.infrastructure.persistence.datapermission.DataScopeInnerInterceptor;
 import com.apex.scaffold.infrastructure.persistence.datapermission.DefaultTenantLineHandler;
 import com.apex.scaffold.infrastructure.persistence.datapermission.MdcDataScopeProvider;
-import com.baomidou.mybatisplus.annotation.DbType;
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.OptimisticLockerInnerInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;

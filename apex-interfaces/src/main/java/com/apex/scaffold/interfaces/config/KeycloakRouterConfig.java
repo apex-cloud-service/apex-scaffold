@@ -11,9 +11,6 @@ import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.RouterFunctions;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
-import static org.springframework.web.reactive.function.server.RequestPredicates.GET;
-import static org.springframework.web.reactive.function.server.RequestPredicates.POST;
-
 /**
  * Keycloak 路由配置类
  *
@@ -56,7 +53,7 @@ public class KeycloakRouterConfig {
 
     /** 社交登录处理器 */
     private final SocialLoginHandler socialLoginHandler;
-    
+
     /** Keycloak 管理处理器 */
     private final KeycloakAdminHandler keycloakAdminHandler;
 
@@ -76,16 +73,12 @@ public class KeycloakRouterConfig {
         log.info("Registering Keycloak routes");
 
         return RouterFunctions.route()
-                .path("/api/v1/auth", builder -> builder
-                        .GET("/oidc/login", socialLoginHandler::initiateOidcLogin)
+                .path("/api/v1/auth", builder -> builder.GET("/oidc/login", socialLoginHandler::initiateOidcLogin)
                         .GET("/social/{provider}/login", socialLoginHandler::initiateSocialLogin)
-                        .GET("/oidc/callback", socialLoginHandler::handleOidcCallback)
-                )
-                .path("/admin-api/v1/keycloak", builder -> builder
-                        .POST("/sync/all", keycloakAdminHandler::syncAllUsers)
+                        .GET("/oidc/callback", socialLoginHandler::handleOidcCallback))
+                .path("/admin-api/v1/keycloak", builder -> builder.POST("/sync/all", keycloakAdminHandler::syncAllUsers)
                         .POST("/sync/user/{keycloakSub}", keycloakAdminHandler::syncUser)
-                        .GET("/status", keycloakAdminHandler::getKeycloakStatus)
-                )
+                        .GET("/status", keycloakAdminHandler::getKeycloakStatus))
                 .build();
     }
 }

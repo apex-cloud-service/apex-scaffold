@@ -9,9 +9,6 @@ import com.apex.scaffold.interfaces.dto.workflow.*;
 import com.apex.scaffold.interfaces.router.WorkflowRouter;
 import com.apex.scaffold.interfaces.security.AuthenticatedUser;
 import java.util.List;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -19,6 +16,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
@@ -35,8 +35,8 @@ class WorkflowHandlerIntegrationTest {
     void setUpAuthentication() {
         Authentication authentication = new UsernamePasswordAuthenticationToken(
                 new AuthenticatedUser(900L, "user-900", "tenant-a"), null, List.of());
-        webTestClient = webTestClient.mutateWith(
-                        SecurityMockServerConfigurers.mockAuthentication(authentication))
+        webTestClient = webTestClient
+                .mutateWith(SecurityMockServerConfigurers.mockAuthentication(authentication))
                 .mutateWith(SecurityMockServerConfigurers.csrf());
     }
 

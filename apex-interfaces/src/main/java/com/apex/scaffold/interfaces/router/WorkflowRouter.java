@@ -55,8 +55,7 @@ public class WorkflowRouter {
     @Bean
     public RouterFunction<ServerResponse> adminWorkflowQueryRoutes(WorkflowHandler handler) {
         return RouterFunctions.route()
-                .path("/admin-api/v1/workflows", builder -> builder
-                        .GET("/instances", handler::listInstances)
+                .path("/admin-api/v1/workflows", builder -> builder.GET("/instances", handler::listInstances)
                         .GET("/statistics", handler::getStatistics)
                         .GET("/statistics/trend", handler::getTrend))
                 .build();

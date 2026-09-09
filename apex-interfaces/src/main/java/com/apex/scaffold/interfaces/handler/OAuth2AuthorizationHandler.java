@@ -5,7 +5,6 @@ import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.domain.model.entity.OAuth2AccessTokenEntity;
-import com.apex.scaffold.domain.model.entity.OAuth2AuthorizationCodeEntity;
 import com.apex.scaffold.interfaces.security.AuthenticatedUser;
 import java.util.HashMap;
 import java.util.Map;
@@ -39,9 +38,9 @@ import reactor.core.publisher.Mono;
 @Component
 @RequiredArgsConstructor
 public class OAuth2AuthorizationHandler {
-    
+
     private final OAuth2AuthorizationServiceImpl authorizationService;
-    
+
     /**
      * 授权端点 - 授权码模式第一步
      *
@@ -69,17 +68,17 @@ public class OAuth2AuthorizationHandler {
         String state = request.queryParam("state").orElse("");
         String codeChallenge = request.queryParam("code_challenge").orElse(null);
         String codeChallengeMethod = request.queryParam("code_challenge_method").orElse("plain");
-        
+
         if (!"code".equals(responseType)) {
             return buildErrorResponse(redirectUri, "unsupported_response_type", "不支持的response_type", state);
         }
-        
+
         if (clientId.isEmpty() || redirectUri.isEmpty()) {
             return ServerResponse.badRequest()
                     .contentType(MediaType.APPLICATION_JSON)
                     .bodyValue(Result.error(ResultCode.PARAM_ERROR.getCode(), "缺少必需参数"));
         }
-        
+
         return request.principal()
                 .cast(Authentication.class)
                 .map(auth -> {
@@ -87,31 +86,37 @@ public class OAuth2AuthorizationHandler {
                     return user.openId();
                 })
                 .switchIfEmpty(Mono.error(new BusinessException(ResultCode.UNAUTHORIZED, "用户未登录")))
-                .flatMap(userId -> 
-                    authorizationService.hasUserConsented(clientId, userId, scope)
-                            .flatMap(hasConsented -> {
-                                if (hasConsented) {
-                                    return authorizationService.generateAuthorizationCode(
-                                            clientId, userId, redirectUri, scope, state, codeChallenge, codeChallengeMethod);
-                                } else {
-                                    return Mono.error(new BusinessException(ResultCode.FORBIDDEN, 
-                                            "需要用户授权同意"));
-                                }
-                            })
-                )
+                .flatMap(userId -> authorizationService
+                        .hasUserConsented(clientId, userId, scope)
+                        .flatMap(hasConsented -> {
+                            if (hasConsented) {
+                                return authorizationService.generateAuthorizationCode(
+                                        clientId,
+                                        userId,
+                                        redirectUri,
+                                        scope,
+                                        state,
+                                        codeChallenge,
+                                        codeChallengeMethod);
+                            } else {
+                                return Mono.error(new BusinessException(ResultCode.FORBIDDEN, "需要用户授权同意"));
+                            }
+                        }))
                 .flatMap(authCode -> {
                     String location = UriComponentsBuilder.fromUriString(redirectUri)
                             .queryParam("code", authCode.getCode())
                             .queryParam("state", state)
                             .build()
                             .toUriString();
-                    
-                    return ServerResponse.temporaryRedirect(java.net.URI.create(location)).build();
+
+                    return ServerResponse.temporaryRedirect(java.net.URI.create(location))
+                            .build();
                 })
-                .onErrorResume(BusinessException.class, e -> 
-                        buildErrorResponse(redirectUri, "server_error", e.getMessage(), state));
+                .onErrorResume(
+                        BusinessException.class,
+                        e -> buildErrorResponse(redirectUri, "server_error", e.getMessage(), state));
     }
-    
+
     /**
      * Token端点 - 换取访问令牌
      *
@@ -127,24 +132,23 @@ public class OAuth2AuthorizationHandler {
      * @return Token响应
      */
     public Mono<ServerResponse> token(ServerRequest request) {
-        return request.formData()
-                .flatMap(formData -> {
-                    String grantType = formData.getFirst("grant_type");
-                    
-                    if (grantType == null) {
-                        return buildTokenErrorResponse("invalid_request", "缺少grant_type参数");
-                    }
-                    
-                    return switch (grantType) {
-                        case "authorization_code" -> handleAuthorizationCodeGrant(formData);
-                        case "client_credentials" -> handleClientCredentialsGrant(formData);
-                        case "password" -> handlePasswordGrant(formData);
-                        case "refresh_token" -> handleRefreshTokenGrant(formData);
-                        default -> buildTokenErrorResponse("unsupported_grant_type", "不支持的grant_type");
-                    };
-                });
+        return request.formData().flatMap(formData -> {
+            String grantType = formData.getFirst("grant_type");
+
+            if (grantType == null) {
+                return buildTokenErrorResponse("invalid_request", "缺少grant_type参数");
+            }
+
+            return switch (grantType) {
+                case "authorization_code" -> handleAuthorizationCodeGrant(formData);
+                case "client_credentials" -> handleClientCredentialsGrant(formData);
+                case "password" -> handlePasswordGrant(formData);
+                case "refresh_token" -> handleRefreshTokenGrant(formData);
+                default -> buildTokenErrorResponse("unsupported_grant_type", "不支持的grant_type");
+            };
+        });
     }
-    
+
     /**
      * Token撤销端点
      *
@@ -152,24 +156,24 @@ public class OAuth2AuthorizationHandler {
      * @return 撤销结果
      */
     public Mono<ServerResponse> revoke(ServerRequest request) {
-        return request.formData()
-                .flatMap(formData -> {
-                    String token = formData.getFirst("token");
-                    String clientId = formData.getFirst("client_id");
-                    
-                    if (token == null || clientId == null) {
-                        return ServerResponse.badRequest()
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .bodyValue(Result.error(400, "缺少必需参数"));
-                    }
-                    
-                    return authorizationService.revokeToken(token, clientId)
-                            .then(ServerResponse.ok()
-                                    .contentType(MediaType.APPLICATION_JSON)
-                                    .bodyValue(Result.success("Token已撤销")));
-                });
+        return request.formData().flatMap(formData -> {
+            String token = formData.getFirst("token");
+            String clientId = formData.getFirst("client_id");
+
+            if (token == null || clientId == null) {
+                return ServerResponse.badRequest()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(Result.error(400, "缺少必需参数"));
+            }
+
+            return authorizationService
+                    .revokeToken(token, clientId)
+                    .then(ServerResponse.ok()
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .bodyValue(Result.success("Token已撤销")));
+        });
     }
-    
+
     /**
      * Token自省端点
      *
@@ -177,33 +181,33 @@ public class OAuth2AuthorizationHandler {
      * @return Token信息
      */
     public Mono<ServerResponse> introspect(ServerRequest request) {
-        return request.formData()
-                .flatMap(formData -> {
-                    String token = formData.getFirst("token");
-                    
-                    if (token == null) {
-                        return ServerResponse.badRequest()
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .bodyValue(Result.error(400, "缺少token参数"));
-                    }
-                    
-                    return authorizationService.validateToken(token)
-                            .map(tokenEntity -> {
-                                Map<String, Object> result = new HashMap<>();
-                                result.put("active", true);
-                                result.put("client_id", tokenEntity.getClientId());
-                                result.put("user_id", tokenEntity.getUserId());
-                                result.put("scope", tokenEntity.getScope());
-                                result.put("exp", tokenEntity.getExpiresAt().getEpochSecond());
-                                return result;
-                            })
-                            .defaultIfEmpty(Map.of("active", false))
-                            .flatMap(result -> ServerResponse.ok()
-                                    .contentType(MediaType.APPLICATION_JSON)
-                                    .bodyValue(result));
-                });
+        return request.formData().flatMap(formData -> {
+            String token = formData.getFirst("token");
+
+            if (token == null) {
+                return ServerResponse.badRequest()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(Result.error(400, "缺少token参数"));
+            }
+
+            return authorizationService
+                    .validateToken(token)
+                    .map(tokenEntity -> {
+                        Map<String, Object> result = new HashMap<>();
+                        result.put("active", true);
+                        result.put("client_id", tokenEntity.getClientId());
+                        result.put("user_id", tokenEntity.getUserId());
+                        result.put("scope", tokenEntity.getScope());
+                        result.put("exp", tokenEntity.getExpiresAt().getEpochSecond());
+                        return result;
+                    })
+                    .defaultIfEmpty(Map.of("active", false))
+                    .flatMap(result -> ServerResponse.ok()
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .bodyValue(result));
+        });
     }
-    
+
     /**
      * 授权同意端点 - 保存用户授权同意
      *
@@ -216,13 +220,13 @@ public class OAuth2AuthorizationHandler {
                     String clientId = formData.getFirst("client_id");
                     String scope = formData.getFirst("scope");
                     String approved = formData.getFirst("approved");
-                    
+
                     if (clientId == null || approved == null) {
                         return ServerResponse.badRequest()
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .bodyValue(Result.error(400, "缺少必需参数"));
                     }
-                    
+
                     return request.principal()
                             .cast(Authentication.class)
                             .map(auth -> {
@@ -232,7 +236,8 @@ public class OAuth2AuthorizationHandler {
                             .switchIfEmpty(Mono.error(new BusinessException(ResultCode.UNAUTHORIZED, "用户未登录")))
                             .flatMap(userId -> {
                                 if ("true".equals(approved)) {
-                                    return authorizationService.saveConsent(clientId, userId, scope)
+                                    return authorizationService
+                                            .saveConsent(clientId, userId, scope)
                                             .then(ServerResponse.ok()
                                                     .contentType(MediaType.APPLICATION_JSON)
                                                     .bodyValue(Result.success("授权同意已保存")));
@@ -243,12 +248,11 @@ public class OAuth2AuthorizationHandler {
                                 }
                             });
                 })
-                .onErrorResume(BusinessException.class, e -> 
-                        ServerResponse.status(e.getCode())
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .bodyValue(Result.error(e.getCode(), e.getMessage())));
+                .onErrorResume(BusinessException.class, e -> ServerResponse.status(e.getCode())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(Result.error(e.getCode(), e.getMessage())));
     }
-    
+
     /**
      * 撤销授权同意端点
      *
@@ -259,13 +263,13 @@ public class OAuth2AuthorizationHandler {
         return request.formData()
                 .flatMap(formData -> {
                     String clientId = formData.getFirst("client_id");
-                    
+
                     if (clientId == null) {
                         return ServerResponse.badRequest()
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .bodyValue(Result.error(400, "缺少client_id参数"));
                     }
-                    
+
                     return request.principal()
                             .cast(Authentication.class)
                             .map(auth -> {
@@ -273,65 +277,65 @@ public class OAuth2AuthorizationHandler {
                                 return user.openId();
                             })
                             .switchIfEmpty(Mono.error(new BusinessException(ResultCode.UNAUTHORIZED, "用户未登录")))
-                            .flatMap(userId -> authorizationService.revokeConsent(clientId, userId)
+                            .flatMap(userId -> authorizationService
+                                    .revokeConsent(clientId, userId)
                                     .then(ServerResponse.ok()
                                             .contentType(MediaType.APPLICATION_JSON)
                                             .bodyValue(Result.success("授权同意已撤销"))));
                 })
-                .onErrorResume(BusinessException.class, e -> 
-                        ServerResponse.status(e.getCode())
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .bodyValue(Result.error(e.getCode(), e.getMessage())));
+                .onErrorResume(BusinessException.class, e -> ServerResponse.status(e.getCode())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(Result.error(e.getCode(), e.getMessage())));
     }
-    
+
     private Mono<ServerResponse> handleAuthorizationCodeGrant(MultiValueMap<String, String> formData) {
         String code = formData.getFirst("code");
         String clientId = formData.getFirst("client_id");
         String clientSecret = formData.getFirst("client_secret");
         String redirectUri = formData.getFirst("redirect_uri");
         String codeVerifier = formData.getFirst("code_verifier");
-        
-        return authorizationService.exchangeCodeForToken(code, clientId, clientSecret, redirectUri, codeVerifier)
+
+        return authorizationService
+                .exchangeCodeForToken(code, clientId, clientSecret, redirectUri, codeVerifier)
                 .flatMap(this::buildTokenSuccessResponse)
-                .onErrorResume(BusinessException.class, e -> 
-                        buildTokenErrorResponse("invalid_grant", e.getMessage()));
+                .onErrorResume(BusinessException.class, e -> buildTokenErrorResponse("invalid_grant", e.getMessage()));
     }
-    
+
     private Mono<ServerResponse> handleClientCredentialsGrant(MultiValueMap<String, String> formData) {
         String clientId = formData.getFirst("client_id");
         String clientSecret = formData.getFirst("client_secret");
         String scope = formData.getFirst("scope");
-        
-        return authorizationService.clientCredentialsGrant(clientId, clientSecret, scope)
+
+        return authorizationService
+                .clientCredentialsGrant(clientId, clientSecret, scope)
                 .flatMap(this::buildTokenSuccessResponse)
-                .onErrorResume(BusinessException.class, e -> 
-                        buildTokenErrorResponse("invalid_client", e.getMessage()));
+                .onErrorResume(BusinessException.class, e -> buildTokenErrorResponse("invalid_client", e.getMessage()));
     }
-    
+
     private Mono<ServerResponse> handlePasswordGrant(MultiValueMap<String, String> formData) {
         String clientId = formData.getFirst("client_id");
         String clientSecret = formData.getFirst("client_secret");
         String username = formData.getFirst("username");
         String password = formData.getFirst("password");
         String scope = formData.getFirst("scope");
-        
-        return authorizationService.passwordGrant(clientId, clientSecret, username, password, scope)
+
+        return authorizationService
+                .passwordGrant(clientId, clientSecret, username, password, scope)
                 .flatMap(this::buildTokenSuccessResponse)
-                .onErrorResume(BusinessException.class, e -> 
-                        buildTokenErrorResponse("invalid_grant", e.getMessage()));
+                .onErrorResume(BusinessException.class, e -> buildTokenErrorResponse("invalid_grant", e.getMessage()));
     }
-    
+
     private Mono<ServerResponse> handleRefreshTokenGrant(MultiValueMap<String, String> formData) {
         String refreshToken = formData.getFirst("refresh_token");
         String clientId = formData.getFirst("client_id");
         String clientSecret = formData.getFirst("client_secret");
-        
-        return authorizationService.refreshToken(refreshToken, clientId, clientSecret)
+
+        return authorizationService
+                .refreshToken(refreshToken, clientId, clientSecret)
                 .flatMap(this::buildTokenSuccessResponse)
-                .onErrorResume(BusinessException.class, e -> 
-                        buildTokenErrorResponse("invalid_grant", e.getMessage()));
+                .onErrorResume(BusinessException.class, e -> buildTokenErrorResponse("invalid_grant", e.getMessage()));
     }
-    
+
     private Mono<ServerResponse> buildTokenSuccessResponse(OAuth2AccessTokenEntity token) {
         Map<String, Object> response = new HashMap<>();
         response.put("access_token", token.getTokenValue());
@@ -339,30 +343,29 @@ public class OAuth2AuthorizationHandler {
         response.put("expires_in", token.getExpiresIn());
         response.put("refresh_token", token.getRefreshToken());
         response.put("scope", token.getScope());
-        
-        return ServerResponse.ok()
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(response);
+
+        return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).bodyValue(response);
     }
-    
+
     private Mono<ServerResponse> buildTokenErrorResponse(String error, String errorDescription) {
         Map<String, Object> response = new HashMap<>();
         response.put("error", error);
         response.put("error_description", errorDescription);
-        
+
         return ServerResponse.badRequest()
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(response);
     }
-    
-    private Mono<ServerResponse> buildErrorResponse(String redirectUri, String error, String errorDescription, String state) {
+
+    private Mono<ServerResponse> buildErrorResponse(
+            String redirectUri, String error, String errorDescription, String state) {
         String location = UriComponentsBuilder.fromUriString(redirectUri)
                 .queryParam("error", error)
                 .queryParam("error_description", errorDescription)
                 .queryParam("state", state)
                 .build()
                 .toUriString();
-        
+
         return ServerResponse.temporaryRedirect(java.net.URI.create(location)).build();
     }
 }

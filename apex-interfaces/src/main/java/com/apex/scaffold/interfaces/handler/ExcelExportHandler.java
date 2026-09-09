@@ -86,10 +86,7 @@ public class ExcelExportHandler extends BaseHandler {
         @ApiResponse(
                 responseCode = "200",
                 description = "导出成功",
-                content =
-                        @Content(
-                                mediaType =
-                                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")),
+                content = @Content(mediaType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")),
         @ApiResponse(responseCode = "401", description = "未授权，需要登录"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要system:user:list权限")
     })

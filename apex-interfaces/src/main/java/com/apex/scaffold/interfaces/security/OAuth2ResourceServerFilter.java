@@ -54,32 +54,34 @@ import reactor.core.publisher.Mono;
 @Profile("!it")
 @RequiredArgsConstructor
 public class OAuth2ResourceServerFilter implements WebFilter {
-    
+
     private final OAuth2AuthorizationService authorizationService;
     private final MessageUtils messageUtils;
-    
+
     private static final String TOKEN_PREFIX = "Bearer ";
     private static final String OAUTH2_API_PREFIX = "/oauth2/api/";
-    
+
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
         String path = exchange.getRequest().getPath().value();
-        
+
         if (!path.startsWith(OAUTH2_API_PREFIX)) {
             return chain.filter(exchange);
         }
-        
+
         String token = extractToken(exchange);
-        
+
         if (token == null) {
             return handleError(exchange, ResultCode.UNAUTHORIZED);
         }
-        
-        return authorizationService.validateToken(token)
+
+        return authorizationService
+                .validateToken(token)
                 .flatMap(tokenEntity -> {
                     List<SimpleGrantedAuthority> authorities = new ArrayList<>();
-                    
-                    if (tokenEntity.getScope() != null && !tokenEntity.getScope().isEmpty()) {
+
+                    if (tokenEntity.getScope() != null
+                            && !tokenEntity.getScope().isEmpty()) {
                         String[] scopes = tokenEntity.getScope().split(" ");
                         Arrays.stream(scopes)
                                 .map(String::trim)
@@ -89,26 +91,26 @@ public class OAuth2ResourceServerFilter implements WebFilter {
                                     authorities.add(new SimpleGrantedAuthority("SCOPE_" + normalizedScope));
                                 });
                     }
-                    
-                    String principal = tokenEntity.getUserId() != null 
-                            ? tokenEntity.getUserId() 
-                            : tokenEntity.getClientId();
-                    
-                    Authentication authentication = new UsernamePasswordAuthenticationToken(
-                            principal, null, authorities);
+
+                    String principal =
+                            tokenEntity.getUserId() != null ? tokenEntity.getUserId() : tokenEntity.getClientId();
+
+                    Authentication authentication =
+                            new UsernamePasswordAuthenticationToken(principal, null, authorities);
                     SecurityContext securityContext = new SecurityContextImpl(authentication);
-                    
+
                     exchange.getAttributes().put("oauth2.clientId", tokenEntity.getClientId());
                     if (tokenEntity.getUserId() != null) {
                         exchange.getAttributes().put("oauth2.userId", tokenEntity.getUserId());
                     }
-                    
+
                     return chain.filter(exchange)
-                            .contextWrite(ReactiveSecurityContextHolder.withSecurityContext(Mono.just(securityContext)));
+                            .contextWrite(
+                                    ReactiveSecurityContextHolder.withSecurityContext(Mono.just(securityContext)));
                 })
                 .switchIfEmpty(handleError(exchange, ResultCode.UNAUTHORIZED));
     }
-    
+
     private String extractToken(ServerWebExchange exchange) {
         String bearerToken = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
         if (bearerToken != null && bearerToken.startsWith(TOKEN_PREFIX)) {
@@ -116,7 +118,7 @@ public class OAuth2ResourceServerFilter implements WebFilter {
         }
         return null;
     }
-    
+
     private Mono<Void> handleError(ServerWebExchange exchange, ResultCode resultCode) {
         return Mono.deferContextual(ctx -> {
             Locale locale = ctx.getOrDefault(Locale.class, Locale.SIMPLIFIED_CHINESE);

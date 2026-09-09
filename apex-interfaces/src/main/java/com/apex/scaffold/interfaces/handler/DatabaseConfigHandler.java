@@ -54,9 +54,7 @@ public class DatabaseConfigHandler extends BaseHandler {
      * @param validator Jakarta Bean Validation 校验器
      */
     public DatabaseConfigHandler(
-            DatabaseConfigService databaseConfigService,
-            MessageUtils messageUtils,
-            Validator validator) {
+            DatabaseConfigService databaseConfigService, MessageUtils messageUtils, Validator validator) {
         super(messageUtils, validator);
         this.databaseConfigService = databaseConfigService;
     }
@@ -73,41 +71,30 @@ public class DatabaseConfigHandler extends BaseHandler {
     @Operation(
             operationId = "testDatabaseConnection",
             summary = "测试数据库连接",
-            description = "测试指定的数据库配置是否可以成功连接，支持MySQL和PostgreSQL数据库"
-    )
+            description = "测试指定的数据库配置是否可以成功连接，支持MySQL和PostgreSQL数据库")
     @RequestBody(
             description = "数据库配置信息",
             required = true,
-            content = @Content(
-                    mediaType = "application/json",
-                    schema = @Schema(implementation = DatabaseConfigRequest.class)
-            )
-    )
+            content =
+                    @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = DatabaseConfigRequest.class)))
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "连接测试成功，返回测试结果",
-                    content = @Content(mediaType = "application/json")
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "请求参数校验失败"
-            ),
-            @ApiResponse(
-                    responseCode = "401",
-                    description = "未授权，需要登录"
-            ),
-            @ApiResponse(
-                    responseCode = "403",
-                    description = "权限不足，需要system:database:test权限"
-            )
+        @ApiResponse(
+                responseCode = "200",
+                description = "连接测试成功，返回测试结果",
+                content = @Content(mediaType = "application/json")),
+        @ApiResponse(responseCode = "400", description = "请求参数校验失败"),
+        @ApiResponse(responseCode = "401", description = "未授权，需要登录"),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要system:database:test权限")
     })
     public Mono<ServerResponse> testConnection(ServerRequest request) {
         log.info("收到数据库连接测试请求");
         return parseBody(request, DatabaseConfigRequest.class)
                 .doOnNext(req -> log.info("请求参数解析成功: dbType={}, host={}", req.getDbType(), req.getHost()))
                 .flatMap(databaseConfigService::testConnection)
-                .doOnNext(result -> log.info("连接测试完成: success={}, message={}", result.getSuccess(), result.getMessage()))
+                .doOnNext(
+                        result -> log.info("连接测试完成: success={}, message={}", result.getSuccess(), result.getMessage()))
                 .flatMap(this::buildSuccess)
                 .doOnError(e -> log.error("处理连接测试请求时发生错误", e));
     }
@@ -121,33 +108,18 @@ public class DatabaseConfigHandler extends BaseHandler {
      * @return 带 traceId 的统一成功响应，data 为部署配置（YAML/env/docker-compose）
      */
     @RequirePermission("system:database:generate")
-    @Operation(
-            operationId = "generateDeploymentConfig",
-            summary = "生成部署配置",
-            description = "根据数据库配置生成部署所需的配置文件"
-    )
+    @Operation(operationId = "generateDeploymentConfig", summary = "生成部署配置", description = "根据数据库配置生成部署所需的配置文件")
     @RequestBody(
             description = "数据库配置信息",
             required = true,
-            content = @Content(
-                    mediaType = "application/json",
-                    schema = @Schema(implementation = DatabaseConfigRequest.class)
-            )
-    )
+            content =
+                    @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = DatabaseConfigRequest.class)))
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "生成配置成功",
-                    content = @Content(mediaType = "application/json")
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "请求参数校验失败"
-            ),
-            @ApiResponse(
-                    responseCode = "403",
-                    description = "权限不足，需要system:database:generate权限"
-            )
+        @ApiResponse(responseCode = "200", description = "生成配置成功", content = @Content(mediaType = "application/json")),
+        @ApiResponse(responseCode = "400", description = "请求参数校验失败"),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要system:database:generate权限")
     })
     public Mono<ServerResponse> generateConfig(ServerRequest request) {
         return parseBody(request, DatabaseConfigRequest.class)
@@ -164,24 +136,12 @@ public class DatabaseConfigHandler extends BaseHandler {
      * @return 带 traceId 的统一成功响应，data 为当前数据库信息
      */
     @RequirePermission("system:database:info")
-    @Operation(
-            operationId = "getCurrentDatabaseInfo",
-            summary = "获取当前数据库信息",
-            description = "查询当前系统连接的数据库类型、版本等信息"
-    )
+    @Operation(operationId = "getCurrentDatabaseInfo", summary = "获取当前数据库信息", description = "查询当前系统连接的数据库类型、版本等信息")
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "查询成功",
-                    content = @Content(mediaType = "application/json")
-            ),
-            @ApiResponse(
-                    responseCode = "403",
-                    description = "权限不足，需要system:database:info权限"
-            )
+        @ApiResponse(responseCode = "200", description = "查询成功", content = @Content(mediaType = "application/json")),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要system:database:info权限")
     })
     public Mono<ServerResponse> getCurrentInfo(ServerRequest request) {
-        return databaseConfigService.getCurrentDatabaseInfo()
-                .flatMap(this::buildSuccess);
+        return databaseConfigService.getCurrentDatabaseInfo().flatMap(this::buildSuccess);
     }
 }

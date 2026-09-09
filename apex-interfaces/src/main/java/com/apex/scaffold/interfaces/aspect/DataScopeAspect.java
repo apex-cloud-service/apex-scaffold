@@ -12,7 +12,6 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -56,7 +55,7 @@ public class DataScopeAspect {
      *
      * @param dataScopeProvider 数据权限装配器
      */
-    public DataScopeAspect(DataScopeProvider dataScopeProvider) {
+    private DataScopeAspect(DataScopeProvider dataScopeProvider) {
         this(dataScopeProvider, () -> Mono.justOrEmpty(dataScopeProvider.resolve()));
     }
 
@@ -68,7 +67,7 @@ public class DataScopeAspect {
      *
      * @param reactiveDataScopeProvider 响应式数据权限装配器
      */
-    public DataScopeAspect(ReactiveDataScopeProvider reactiveDataScopeProvider) {
+    private DataScopeAspect(ReactiveDataScopeProvider reactiveDataScopeProvider) {
         this(() -> Optional.empty(), reactiveDataScopeProvider);
     }
 
@@ -77,7 +76,7 @@ public class DataScopeAspect {
      *
      * <p>同时注入两类装配器：同步方法经 {@link DataScopeProvider} 解析，
      * 响应式方法（{@code Mono}/{@code Flux}）经 {@link ReactiveDataScopeProvider} 解析。
-     * Spring 自动识别单构造器并完成依赖注入。</p>
+     * Spring 自动识别唯一 public 构造器并完成依赖注入。</p>
      *
      * @param dataScopeProvider            同步数据权限装配器
      * @param reactiveDataScopeProvider    响应式数据权限装配器

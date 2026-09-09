@@ -23,8 +23,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
  */
 @SpringBootApplication(
         scanBasePackages = "com.apex.scaffold",
-        exclude = {R2dbcAutoConfiguration.class}
-)
+        exclude = {R2dbcAutoConfiguration.class})
 @ConfigurationPropertiesScan(basePackages = "com.apex.scaffold")
 @EnableAsync
 @EnableDiscoveryClient

@@ -97,6 +97,7 @@ class DataScopeServiceTest {
                     + "refresh_token VARCHAR(255), token_expire_time DATETIME, nick_name VARCHAR(64), "
                     + "avatar_url VARCHAR(255), gender INT, birthday DATE, country VARCHAR(64), "
                     + "province VARCHAR(64), city VARCHAR(64), language VARCHAR(32), phone VARCHAR(32), "
+                    + "email VARCHAR(128), keycloak_sub VARCHAR(128), "
                     + "status INT, onboarding_status VARCHAR(64), last_login_time DATETIME, "
                     + "last_login_ip VARCHAR(64), last_heartbeat_time DATETIME, create_time DATETIME NOT NULL, "
                     + "update_time DATETIME NOT NULL, version INT NOT NULL DEFAULT 0, deleted INT NOT NULL DEFAULT 0)");
@@ -109,9 +110,9 @@ class DataScopeServiceTest {
         globalConfig.setIdentifierGenerator(new DefaultIdentifierGenerator());
         GlobalConfigUtils.setGlobalConfig(configuration, globalConfig);
         configuration.setEnvironment(new Environment("test", new JdbcTransactionFactory(), dataSource));
-        configuration.addInterceptor(new MybatisPlusConfig(
-                new com.apex.scaffold.infrastructure.persistence.config.DatabaseProperties())
-                .mybatisPlusInterceptor(dataScopeProvider));
+        configuration.addInterceptor(
+                new MybatisPlusConfig(new com.apex.scaffold.infrastructure.persistence.config.DatabaseProperties())
+                        .mybatisPlusInterceptor(dataScopeProvider));
         configuration.addMapper(UserMapper.class);
         sqlSessionFactory = new SqlSessionFactoryBuilder().build(configuration);
     }
@@ -154,7 +155,10 @@ class DataScopeServiceTest {
         context.registerBean(
                 ReactiveDataScopeProvider.class,
                 () -> new SecurityContextDataScopeProvider(roleRepository, deptRepository));
-        context.registerBean(DataScopeAspect.class);
+        context.registerBean(
+                DataScopeAspect.class,
+                () -> new DataScopeAspect(
+                        context.getBean(DataScopeProvider.class), context.getBean(ReactiveDataScopeProvider.class)));
         context.registerBean(
                 AdminUserManagementService.class,
                 () -> new AdminUserManagementService(

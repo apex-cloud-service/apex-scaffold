@@ -12,30 +12,30 @@ import lombok.Data;
  */
 @Data
 public class OAuth2ClientRequest {
-    
+
     private String clientId;
-    
+
     private String clientSecret;
-    
+
     private String clientName;
-    
+
     private Set<String> clientAuthenticationMethods;
-    
+
     private Set<String> authorizationGrantTypes;
-    
+
     private Set<String> redirectUris;
-    
+
     private Set<String> postLogoutRedirectUris;
-    
+
     private Set<String> scopes;
-    
+
     private Boolean requireProofKey;
-    
+
     private Boolean requireAuthorizationConsent;
-    
+
     private Long accessTokenTimeToLive;
-    
+
     private Long refreshTokenTimeToLive;
-    
+
     private Long authorizationCodeTimeToLive;
 }

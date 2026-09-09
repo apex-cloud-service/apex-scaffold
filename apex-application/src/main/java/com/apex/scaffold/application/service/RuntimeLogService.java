@@ -23,7 +23,7 @@ import reactor.core.publisher.Mono;
 public class RuntimeLogService {
 
     private final RuntimeLogRepository runtimeLogRepository;
-    
+
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
 
     /**
@@ -38,30 +38,32 @@ public class RuntimeLogService {
      * @return 日志列表
      */
     public Mono<List<RuntimeLogDTO>> queryLogs(
-            LocalDateTime startTime,
-            LocalDateTime endTime,
-            String level,
-            String logger,
-            String message,
-            int limit) {
-        
-        log.debug("Query runtime logs: start={}, end={}, level={}, logger={}, message={}, limit={}",
-                startTime, endTime, level, logger, message, limit);
-        
-        return runtimeLogRepository.queryLogs(startTime, endTime, level, logger, message, limit)
-            .map(entries -> entries.stream()
-                .map(entry -> RuntimeLogDTO.builder()
-                    .timestamp(entry.getTimestamp().format(FORMATTER))
-                    .level(entry.getLevel())
-                    .logger(entry.getLogger())
-                    .message(entry.getMessage())
-                    .thread(entry.getThread())
-                    .exception(entry.getException())
-                    .tenantId(entry.getTenantId())
-                    .userId(entry.getUserId())
-                    .traceId(entry.getTraceId())
-                    .build())
-                .collect(Collectors.toList()));
+            LocalDateTime startTime, LocalDateTime endTime, String level, String logger, String message, int limit) {
+
+        log.debug(
+                "Query runtime logs: start={}, end={}, level={}, logger={}, message={}, limit={}",
+                startTime,
+                endTime,
+                level,
+                logger,
+                message,
+                limit);
+
+        return runtimeLogRepository
+                .queryLogs(startTime, endTime, level, logger, message, limit)
+                .map(entries -> entries.stream()
+                        .map(entry -> RuntimeLogDTO.builder()
+                                .timestamp(entry.getTimestamp().format(FORMATTER))
+                                .level(entry.getLevel())
+                                .logger(entry.getLogger())
+                                .message(entry.getMessage())
+                                .thread(entry.getThread())
+                                .exception(entry.getException())
+                                .tenantId(entry.getTenantId())
+                                .userId(entry.getUserId())
+                                .traceId(entry.getTraceId())
+                                .build())
+                        .collect(Collectors.toList()));
     }
 
     /**
@@ -72,11 +74,8 @@ public class RuntimeLogService {
      * @param level     日志级别
      * @return 日志数量
      */
-    public Mono<Long> countLogs(
-            LocalDateTime startTime,
-            LocalDateTime endTime,
-            String level) {
-        
+    public Mono<Long> countLogs(LocalDateTime startTime, LocalDateTime endTime, String level) {
+
         return runtimeLogRepository.countLogs(startTime, endTime, level);
     }
 }

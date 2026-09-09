@@ -23,52 +23,41 @@ class FlywayMigrationVersionTest {
 
     @Test
     void shouldHaveUniqueContiguousVersions() throws Exception {
+        List<BigDecimal> mysqlVersions = migrationVersions("mysql");
+        List<BigDecimal> postgresqlVersions = migrationVersions("postgresql");
+
+        assertThat(mysqlVersions)
+                .as("MySQL and PostgreSQL migration versions must be identical")
+                .containsExactlyElementsOf(postgresqlVersions);
+
+        assertThat(mysqlVersions)
+                .as("Migration versions must be contiguous starting from 1")
+                .containsExactlyElementsOf(java.util.stream.IntStream.rangeClosed(1, mysqlVersions.size())
+                        .mapToObj(i -> versionNumber(String.valueOf(i)))
+                        .toList());
+    }
+
+    private List<BigDecimal> migrationVersions(String database) throws Exception {
         Path projectRoot = Path.of(System.getProperty("user.dir"));
-        Path migrationDirectory = projectRoot.resolve("apex-interfaces/src/main/resources/db/migration/mysql");
+        Path migrationDirectory = projectRoot.resolve("apex-interfaces/src/main/resources/db/migration/" + database);
         if (!Files.isDirectory(migrationDirectory)) {
-            migrationDirectory = projectRoot.resolve("src/main/resources/db/migration/mysql");
+            migrationDirectory = projectRoot.resolve("src/main/resources/db/migration/" + database);
         }
 
-        List<BigDecimal> versions;
         try (var files = Files.list(migrationDirectory)) {
-            versions = files.map(path -> path.getFileName().toString())
+            return files.map(path -> path.getFileName().toString())
                     .filter(filename -> VERSION_PATTERN.matcher(filename).matches())
                     .map(this::version)
                     .sorted()
                     .toList();
         }
-
-        assertThat(versions)
-                .containsExactlyElementsOf(List.of(
-                        versionNumber("1"),
-                        versionNumber("2"),
-                        versionNumber("3"),
-                        versionNumber("4"),
-                        versionNumber("5"),
-                        versionNumber("6"),
-                        versionNumber("7"),
-                        versionNumber("8"),
-                        versionNumber("9"),
-                        versionNumber("10"),
-                        versionNumber("11"),
-                        versionNumber("12"),
-                        versionNumber("13"),
-                        versionNumber("14"),
-                        versionNumber("15"),
-                        versionNumber("16"),
-                        versionNumber("17"),
-                        versionNumber("18"),
-                        versionNumber("19"),
-                        versionNumber("20"),
-                        versionNumber("21"),
-                        versionNumber("22")));
     }
 
     @Test
     void shouldDefineExplicitRoleDataScopeTables() throws Exception {
         Path projectRoot = Path.of(System.getProperty("user.dir"));
-        Path migration =
-                projectRoot.resolve("apex-interfaces/src/main/resources/db/migration/mysql/V18__add_role_data_scope.sql");
+        Path migration = projectRoot.resolve(
+                "apex-interfaces/src/main/resources/db/migration/mysql/V18__add_role_data_scope.sql");
         if (!Files.exists(migration)) {
             migration = projectRoot.resolve("src/main/resources/db/migration/mysql/V18__add_role_data_scope.sql");
         }
@@ -94,8 +83,8 @@ class FlywayMigrationVersionTest {
         Path migration = projectRoot.resolve(
                 "apex-interfaces/src/main/resources/db/migration/mysql/V19__enforce_department_tenant_integrity.sql");
         if (!Files.exists(migration)) {
-            migration =
-                    projectRoot.resolve("src/main/resources/db/migration/mysql/V19__enforce_department_tenant_integrity.sql");
+            migration = projectRoot.resolve(
+                    "src/main/resources/db/migration/mysql/V19__enforce_department_tenant_integrity.sql");
         }
 
         String sql = Files.readString(migration);
@@ -118,8 +107,8 @@ class FlywayMigrationVersionTest {
         Path migration = projectRoot.resolve(
                 "apex-interfaces/src/main/resources/db/migration/mysql/V15__complete_tenant_isolation_schema.sql");
         if (!Files.exists(migration)) {
-            migration =
-                    projectRoot.resolve("src/main/resources/db/migration/mysql/V15__complete_tenant_isolation_schema.sql");
+            migration = projectRoot.resolve(
+                    "src/main/resources/db/migration/mysql/V15__complete_tenant_isolation_schema.sql");
         }
 
         String sql = Files.readString(migration);

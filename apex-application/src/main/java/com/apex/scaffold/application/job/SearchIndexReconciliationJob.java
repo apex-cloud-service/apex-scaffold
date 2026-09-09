@@ -67,11 +67,12 @@ public class SearchIndexReconciliationJob {
 
         for (String resourceType : RESOURCE_TYPES) {
             try {
-                Long count = indexSyncPort.syncIncremental(resourceType, sinceTimestamp)
+                Long count = indexSyncPort
+                        .syncIncremental(resourceType, sinceTimestamp)
                         .doOnSuccess(c -> log.info("Incremental sync completed: type={}, count={}", resourceType, c))
                         .doOnError(e -> log.error("Incremental sync failed: type={}", resourceType, e))
-                        .onErrorReturn(0L)  // 单个类型失败不影响其他类型
-                        .block();  // 阻塞等待完成
+                        .onErrorReturn(0L) // 单个类型失败不影响其他类型
+                        .block(); // 阻塞等待完成
 
                 if (count != null) {
                     totalCount += count;
@@ -99,7 +100,8 @@ public class SearchIndexReconciliationJob {
 
         if (resourceType != null) {
             // 同步指定类型
-            indexSyncPort.syncIncremental(resourceType, sinceTimestamp)
+            indexSyncPort
+                    .syncIncremental(resourceType, sinceTimestamp)
                     .doOnSuccess(count -> log.info("Manual sync completed: type={}, count={}", resourceType, count))
                     .doOnError(e -> log.error("Manual sync failed: type={}", resourceType, e))
                     .subscribe();

@@ -1,6 +1,10 @@
 package com.apex.scaffold.interfaces.handler;
 
-import com.apex.scaffold.common.result.Result;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import com.apex.scaffold.domain.model.entity.UserEntity;
 import com.apex.scaffold.interfaces.service.KeycloakUserSyncService;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,10 +20,6 @@ import org.springframework.web.reactive.function.server.HandlerStrategies;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.when;
 
 /**
  * {@link KeycloakAdminHandler} 的单元测试类
@@ -57,16 +57,13 @@ class KeycloakAdminHandlerTest {
         @Test
         @DisplayName("全量同步成功应返回成功响应")
         void shouldReturnSuccessWhenSyncAll() {
-            when(keycloakUserSyncService.syncAllUsers())
-                    .thenReturn(Mono.empty());
+            when(keycloakUserSyncService.syncAllUsers()).thenReturn(Mono.empty());
 
-            MockServerHttpRequest httpRequest = MockServerHttpRequest
-                    .post("/admin-api/v1/keycloak/sync/all")
+            MockServerHttpRequest httpRequest = MockServerHttpRequest.post("/admin-api/v1/keycloak/sync/all")
                     .build();
             MockServerWebExchange exchange = MockServerWebExchange.from(httpRequest);
             ServerRequest request = ServerRequest.create(
-                    exchange,
-                    HandlerStrategies.withDefaults().messageReaders());
+                    exchange, HandlerStrategies.withDefaults().messageReaders());
 
             StepVerifier.create(handler.syncAllUsers(request))
                     .expectNextMatches(response -> {
@@ -82,16 +79,13 @@ class KeycloakAdminHandlerTest {
         @Test
         @DisplayName("同步失败应返回 500 Internal Server Error")
         void shouldReturn500WhenSyncFails() {
-            when(keycloakUserSyncService.syncAllUsers())
-                    .thenReturn(Mono.error(new RuntimeException("Sync failed")));
+            when(keycloakUserSyncService.syncAllUsers()).thenReturn(Mono.error(new RuntimeException("Sync failed")));
 
-            MockServerHttpRequest httpRequest = MockServerHttpRequest
-                    .post("/admin-api/v1/keycloak/sync/all")
+            MockServerHttpRequest httpRequest = MockServerHttpRequest.post("/admin-api/v1/keycloak/sync/all")
                     .build();
             MockServerWebExchange exchange = MockServerWebExchange.from(httpRequest);
             ServerRequest request = ServerRequest.create(
-                    exchange,
-                    HandlerStrategies.withDefaults().messageReaders());
+                    exchange, HandlerStrategies.withDefaults().messageReaders());
 
             StepVerifier.create(handler.syncAllUsers(request))
                     .expectNextMatches(response -> {
@@ -119,17 +113,10 @@ class KeycloakAdminHandlerTest {
             user.setEmail("test@example.com");
             user.setKeycloakSub(keycloakSub);
 
-            when(keycloakUserSyncService.syncUserFromKeycloak(keycloakSub))
-                    .thenReturn(Mono.just(user));
+            when(keycloakUserSyncService.syncUserFromKeycloak(keycloakSub)).thenReturn(Mono.just(user));
 
-            MockServerHttpRequest httpRequest = MockServerHttpRequest
-                    .post("/admin-api/v1/keycloak/sync/user/" + keycloakSub)
-                    .build();
-            MockServerWebExchange exchange = MockServerWebExchange.from(httpRequest);
-            
-            ServerRequest request = ServerRequest.create(
-                    exchange,
-                    HandlerStrategies.withDefaults().messageReaders());
+            ServerRequest request = mock(ServerRequest.class);
+            when(request.pathVariable("keycloakSub")).thenReturn(keycloakSub);
 
             StepVerifier.create(handler.syncUser(request))
                     .expectNextMatches(response -> {
@@ -150,13 +137,8 @@ class KeycloakAdminHandlerTest {
             when(keycloakUserSyncService.syncUserFromKeycloak(anyString()))
                     .thenReturn(Mono.error(new RuntimeException("User sync failed")));
 
-            MockServerHttpRequest httpRequest = MockServerHttpRequest
-                    .post("/admin-api/v1/keycloak/sync/user/" + keycloakSub)
-                    .build();
-            MockServerWebExchange exchange = MockServerWebExchange.from(httpRequest);
-            ServerRequest request = ServerRequest.create(
-                    exchange,
-                    HandlerStrategies.withDefaults().messageReaders());
+            ServerRequest request = mock(ServerRequest.class);
+            when(request.pathVariable("keycloakSub")).thenReturn(keycloakSub);
 
             StepVerifier.create(handler.syncUser(request))
                     .expectNextMatches(response -> {
@@ -177,13 +159,11 @@ class KeycloakAdminHandlerTest {
         @Test
         @DisplayName("状态查询应返回 enabled 和 connected 状态")
         void shouldReturnEnabledAndConnectedStatus() {
-            MockServerHttpRequest httpRequest = MockServerHttpRequest
-                    .get("/admin-api/v1/keycloak/status")
-                    .build();
+            MockServerHttpRequest httpRequest =
+                    MockServerHttpRequest.get("/admin-api/v1/keycloak/status").build();
             MockServerWebExchange exchange = MockServerWebExchange.from(httpRequest);
             ServerRequest request = ServerRequest.create(
-                    exchange,
-                    HandlerStrategies.withDefaults().messageReaders());
+                    exchange, HandlerStrategies.withDefaults().messageReaders());
 
             StepVerifier.create(handler.getKeycloakStatus(request))
                     .expectNextMatches(response -> {

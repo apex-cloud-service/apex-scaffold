@@ -190,39 +190,31 @@ public abstract class AbstractStorageProxyHandler {
      *         HTTP 500 响应（预签名 URL 生成失败）
      */
     @Operation(
-        summary = "对象存储文件代理访问",
-        description = "通过反向代理方式访问对象存储（MinIO/火山引擎TOS）中的私有文件，生成临时预签名URL并302重定向。支持中文文件名和特殊字符。",
-        operationId = "proxyStorageFile"
-    )
+            summary = "对象存储文件代理访问",
+            description = "通过反向代理方式访问对象存储（MinIO/火山引擎TOS）中的私有文件，生成临时预签名URL并302重定向。支持中文文件名和特殊字符。",
+            operationId = "proxyStorageFile")
     @Parameter(
-        name = "bucketName",
-        description = "存储桶名称",
-        required = true,
-        in = ParameterIn.PATH,
-        schema = @Schema(type = "string", example = "apex-photo")
-    )
+            name = "bucketName",
+            description = "存储桶名称",
+            required = true,
+            in = ParameterIn.PATH,
+            schema = @Schema(type = "string", example = "apex-photo"))
     @Parameter(
-        name = "objectKey",
-        description = "对象键（文件路径，含目录和文件名）",
-        required = true,
-        in = ParameterIn.PATH,
-        schema = @Schema(type = "string", example = "AF/sample.jpg")
-    )
+            name = "objectKey",
+            description = "对象键（文件路径，含目录和文件名）",
+            required = true,
+            in = ParameterIn.PATH,
+            schema = @Schema(type = "string", example = "AF/sample.jpg"))
     @ApiResponses({
+        @ApiResponse(responseCode = "302", description = "重定向到预签名URL，客户端自动跳转到对象存储临时访问地址"),
         @ApiResponse(
-            responseCode = "302",
-            description = "重定向到预签名URL，客户端自动跳转到对象存储临时访问地址"
-        ),
+                responseCode = "404",
+                description = "路径格式不匹配或参数无效",
+                content = @Content(schema = @Schema(implementation = Void.class))),
         @ApiResponse(
-            responseCode = "404",
-            description = "路径格式不匹配或参数无效",
-            content = @Content(schema = @Schema(implementation = Void.class))
-        ),
-        @ApiResponse(
-            responseCode = "500",
-            description = "预签名URL生成失败或存储服务异常",
-            content = @Content(schema = @Schema(implementation = Void.class))
-        )
+                responseCode = "500",
+                description = "预签名URL生成失败或存储服务异常",
+                content = @Content(schema = @Schema(implementation = Void.class)))
     })
     public Mono<ServerResponse> proxy(ServerRequest request) {
         String path = request.requestPath().value();

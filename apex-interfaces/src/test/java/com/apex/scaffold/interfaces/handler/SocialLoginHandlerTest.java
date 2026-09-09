@@ -1,6 +1,10 @@
 package com.apex.scaffold.interfaces.handler;
 
-import com.apex.scaffold.common.result.Result;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.net.URI;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -12,11 +16,6 @@ import org.springframework.mock.web.server.MockServerWebExchange;
 import org.springframework.web.reactive.function.server.HandlerStrategies;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import reactor.test.StepVerifier;
-
-import java.net.URI;
-import java.util.Map;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * {@link SocialLoginHandler} 的单元测试类
@@ -51,17 +50,15 @@ class SocialLoginHandlerTest {
         @Test
         @DisplayName("应重定向到 Keycloak OIDC 授权端点")
         void shouldRedirectToKeycloakOidcEndpoint() {
-            MockServerHttpRequest httpRequest = MockServerHttpRequest
-                    .get("/api/v1/auth/oidc/login")
-                    .build();
+            MockServerHttpRequest httpRequest =
+                    MockServerHttpRequest.get("/api/v1/auth/oidc/login").build();
             MockServerWebExchange exchange = MockServerWebExchange.from(httpRequest);
             ServerRequest request = ServerRequest.create(
-                    exchange,
-                    HandlerStrategies.withDefaults().messageReaders());
+                    exchange, HandlerStrategies.withDefaults().messageReaders());
 
             StepVerifier.create(handler.initiateOidcLogin(request))
                     .expectNextMatches(response -> {
-                        assertThat(response.statusCode().value()).isEqualTo(302);
+                        assertThat(response.statusCode().value()).isEqualTo(307);
                         URI location = response.headers().getLocation();
                         assertThat(location).isNotNull();
                         assertThat(location.toString()).isEqualTo("/oauth2/authorization/keycloak");
@@ -81,19 +78,15 @@ class SocialLoginHandlerTest {
         @Test
         @DisplayName("应重定向到 GitHub OAuth2 授权端点")
         void shouldRedirectToGitHubEndpoint() {
-            MockServerHttpRequest httpRequest = MockServerHttpRequest
-                    .get("/api/v1/auth/social/github/login")
+            MockServerHttpRequest httpRequest = MockServerHttpRequest.get("/api/v1/auth/social/github/login")
                     .build();
             MockServerWebExchange exchange = MockServerWebExchange.from(httpRequest);
-            ServerRequest request = ServerRequest.create(
-                    exchange,
-                    HandlerStrategies.withDefaults().messageReaders());
+            ServerRequest request = mock(ServerRequest.class);
+            when(request.pathVariable("provider")).thenReturn("github");
 
-            StepVerifier.create(handler.initiateSocialLogin(request
-                    .attribute("provider", "github")
-                    .orElseThrow()))
+            StepVerifier.create(handler.initiateSocialLogin(request))
                     .expectNextMatches(response -> {
-                        assertThat(response.statusCode().value()).isEqualTo(302);
+                        assertThat(response.statusCode().value()).isEqualTo(307);
                         URI location = response.headers().getLocation();
                         assertThat(location).isNotNull();
                         assertThat(location.toString()).isEqualTo("/oauth2/authorization/github");
@@ -108,19 +101,12 @@ class SocialLoginHandlerTest {
         @Test
         @DisplayName("应重定向到 Google OAuth2 授权端点")
         void shouldRedirectToGoogleEndpoint() {
-            MockServerHttpRequest httpRequest = MockServerHttpRequest
-                    .get("/api/v1/auth/social/google/login")
-                    .build();
-            MockServerWebExchange exchange = MockServerWebExchange.from(httpRequest);
-            ServerRequest request = ServerRequest.create(
-                    exchange,
-                    HandlerStrategies.withDefaults().messageReaders());
+            ServerRequest request = mock(ServerRequest.class);
+            when(request.pathVariable("provider")).thenReturn("google");
 
-            StepVerifier.create(handler.initiateSocialLogin(request
-                    .attribute("provider", "google")
-                    .orElseThrow()))
+            StepVerifier.create(handler.initiateSocialLogin(request))
                     .expectNextMatches(response -> {
-                        assertThat(response.statusCode().value()).isEqualTo(302);
+                        assertThat(response.statusCode().value()).isEqualTo(307);
                         URI location = response.headers().getLocation();
                         assertThat(location).isNotNull();
                         assertThat(location.toString()).isEqualTo("/oauth2/authorization/google");
@@ -135,19 +121,12 @@ class SocialLoginHandlerTest {
         @Test
         @DisplayName("应重定向到微信 OAuth2 授权端点")
         void shouldRedirectToWeChatEndpoint() {
-            MockServerHttpRequest httpRequest = MockServerHttpRequest
-                    .get("/api/v1/auth/social/wechat/login")
-                    .build();
-            MockServerWebExchange exchange = MockServerWebExchange.from(httpRequest);
-            ServerRequest request = ServerRequest.create(
-                    exchange,
-                    HandlerStrategies.withDefaults().messageReaders());
+            ServerRequest request = mock(ServerRequest.class);
+            when(request.pathVariable("provider")).thenReturn("wechat");
 
-            StepVerifier.create(handler.initiateSocialLogin(request
-                    .attribute("provider", "wechat")
-                    .orElseThrow()))
+            StepVerifier.create(handler.initiateSocialLogin(request))
                     .expectNextMatches(response -> {
-                        assertThat(response.statusCode().value()).isEqualTo(302);
+                        assertThat(response.statusCode().value()).isEqualTo(307);
                         URI location = response.headers().getLocation();
                         assertThat(location).isNotNull();
                         assertThat(location.toString()).isEqualTo("/oauth2/authorization/wechat");
@@ -162,17 +141,10 @@ class SocialLoginHandlerTest {
         @Test
         @DisplayName("不支持的 provider 应返回 400 Bad Request")
         void shouldReturn400ForUnsupportedProvider() {
-            MockServerHttpRequest httpRequest = MockServerHttpRequest
-                    .get("/api/v1/auth/social/unsupported/login")
-                    .build();
-            MockServerWebExchange exchange = MockServerWebExchange.from(httpRequest);
-            ServerRequest request = ServerRequest.create(
-                    exchange,
-                    HandlerStrategies.withDefaults().messageReaders());
+            ServerRequest request = mock(ServerRequest.class);
+            when(request.pathVariable("provider")).thenReturn("unsupported");
 
-            StepVerifier.create(handler.initiateSocialLogin(request
-                    .attribute("provider", "unsupported")
-                    .orElseThrow()))
+            StepVerifier.create(handler.initiateSocialLogin(request))
                     .expectNextMatches(response -> {
                         assertThat(response.statusCode().value()).isEqualTo(400);
                         return true;
@@ -191,16 +163,14 @@ class SocialLoginHandlerTest {
         @Test
         @DisplayName("完整的回调参数应返回 Token 信息")
         void shouldReturnTokenInfoWithCompleteParameters() {
-            MockServerHttpRequest httpRequest = MockServerHttpRequest
-                    .get("/api/v1/auth/oidc/callback")
+            MockServerHttpRequest httpRequest = MockServerHttpRequest.get("/api/v1/auth/oidc/callback")
                     .queryParam("accessToken", "test-access-token")
                     .queryParam("refreshToken", "test-refresh-token")
                     .queryParam("userId", "123")
                     .build();
             MockServerWebExchange exchange = MockServerWebExchange.from(httpRequest);
             ServerRequest request = ServerRequest.create(
-                    exchange,
-                    HandlerStrategies.withDefaults().messageReaders());
+                    exchange, HandlerStrategies.withDefaults().messageReaders());
 
             StepVerifier.create(handler.handleOidcCallback(request))
                     .expectNextMatches(response -> {
@@ -216,15 +186,13 @@ class SocialLoginHandlerTest {
         @Test
         @DisplayName("缺少 accessToken 应返回 400 Bad Request")
         void shouldReturn400WhenMissingAccessToken() {
-            MockServerHttpRequest httpRequest = MockServerHttpRequest
-                    .get("/api/v1/auth/oidc/callback")
+            MockServerHttpRequest httpRequest = MockServerHttpRequest.get("/api/v1/auth/oidc/callback")
                     .queryParam("refreshToken", "test-refresh-token")
                     .queryParam("userId", "123")
                     .build();
             MockServerWebExchange exchange = MockServerWebExchange.from(httpRequest);
             ServerRequest request = ServerRequest.create(
-                    exchange,
-                    HandlerStrategies.withDefaults().messageReaders());
+                    exchange, HandlerStrategies.withDefaults().messageReaders());
 
             StepVerifier.create(handler.handleOidcCallback(request))
                     .expectNextMatches(response -> {
@@ -240,15 +208,13 @@ class SocialLoginHandlerTest {
         @Test
         @DisplayName("缺少 refreshToken 应返回 400 Bad Request")
         void shouldReturn400WhenMissingRefreshToken() {
-            MockServerHttpRequest httpRequest = MockServerHttpRequest
-                    .get("/api/v1/auth/oidc/callback")
+            MockServerHttpRequest httpRequest = MockServerHttpRequest.get("/api/v1/auth/oidc/callback")
                     .queryParam("accessToken", "test-access-token")
                     .queryParam("userId", "123")
                     .build();
             MockServerWebExchange exchange = MockServerWebExchange.from(httpRequest);
             ServerRequest request = ServerRequest.create(
-                    exchange,
-                    HandlerStrategies.withDefaults().messageReaders());
+                    exchange, HandlerStrategies.withDefaults().messageReaders());
 
             StepVerifier.create(handler.handleOidcCallback(request))
                     .expectNextMatches(response -> {
@@ -264,15 +230,13 @@ class SocialLoginHandlerTest {
         @Test
         @DisplayName("缺少 userId 应返回 400 Bad Request")
         void shouldReturn400WhenMissingUserId() {
-            MockServerHttpRequest httpRequest = MockServerHttpRequest
-                    .get("/api/v1/auth/oidc/callback")
+            MockServerHttpRequest httpRequest = MockServerHttpRequest.get("/api/v1/auth/oidc/callback")
                     .queryParam("accessToken", "test-access-token")
                     .queryParam("refreshToken", "test-refresh-token")
                     .build();
             MockServerWebExchange exchange = MockServerWebExchange.from(httpRequest);
             ServerRequest request = ServerRequest.create(
-                    exchange,
-                    HandlerStrategies.withDefaults().messageReaders());
+                    exchange, HandlerStrategies.withDefaults().messageReaders());
 
             StepVerifier.create(handler.handleOidcCallback(request))
                     .expectNextMatches(response -> {

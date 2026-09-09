@@ -77,17 +77,17 @@ class WorkflowStatisticsServiceTest {
         running.put("status", "RUNNING");
         running.put("count", 8);
         statusDist.add(running);
-        
+
         Map<String, Object> approved = new HashMap<>();
         approved.put("status", "APPROVED");
         approved.put("count", 45);
         statusDist.add(approved);
-        
+
         Map<String, Object> rejected = new HashMap<>();
         rejected.put("status", "REJECTED");
         rejected.put("count", 3);
         statusDist.add(rejected);
-        
+
         when(processInstanceMapper.statusDistribution()).thenReturn(statusDist);
 
         // When: 调用统计服务
@@ -150,12 +150,12 @@ class WorkflowStatisticsServiceTest {
 
         for (int i = 6; i >= 0; i--) {
             LocalDate date = today.minusDays(i);
-            
+
             Map<String, Object> startedMap = new HashMap<>();
             startedMap.put("date", date);
             startedMap.put("count", 5 + i);
             startedList.add(startedMap);
-            
+
             Map<String, Object> completedMap = new HashMap<>();
             completedMap.put("date", date);
             completedMap.put("count", 4 + i);
@@ -197,12 +197,12 @@ class WorkflowStatisticsServiceTest {
         LocalDate today = LocalDate.now();
         for (int i = 29; i >= 0; i--) {
             LocalDate date = today.minusDays(i);
-            
+
             Map<String, Object> startedMap = new HashMap<>();
             startedMap.put("date", date);
             startedMap.put("count", 10);
             startedList.add(startedMap);
-            
+
             Map<String, Object> completedMap = new HashMap<>();
             completedMap.put("date", date);
             completedMap.put("count", 9);
@@ -242,12 +242,12 @@ class WorkflowStatisticsServiceTest {
         started1.put("date", today.minusDays(6));
         started1.put("count", 5);
         startedList.add(started1);
-        
+
         Map<String, Object> started2 = new HashMap<>();
         started2.put("date", today.minusDays(4));
         started2.put("count", 8);
         startedList.add(started2);
-        
+
         Map<String, Object> started3 = new HashMap<>();
         started3.put("date", today.minusDays(2));
         started3.put("count", 12);
@@ -257,12 +257,12 @@ class WorkflowStatisticsServiceTest {
         completed1.put("date", today.minusDays(6));
         completed1.put("count", 4);
         completedList.add(completed1);
-        
+
         Map<String, Object> completed2 = new HashMap<>();
         completed2.put("date", today.minusDays(4));
         completed2.put("count", 7);
         completedList.add(completed2);
-        
+
         Map<String, Object> completed3 = new HashMap<>();
         completed3.put("date", today.minusDays(2));
         completed3.put("count", 10);

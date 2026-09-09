@@ -68,59 +68,42 @@ public class LoginLogHandler extends BaseHandler {
     @Operation(
             operationId = "adminListLoginLogs",
             summary = "分页查询登录日志",
-            description = "支持按登录账号模糊匹配与登录状态筛选，按登录时间倒序返回，支撑安全审计与异常登录排查"
-    )
+            description = "支持按登录账号模糊匹配与登录状态筛选，按登录时间倒序返回，支撑安全审计与异常登录排查")
     @Parameters({
-            @Parameter(
-                    name = "page",
-                    description = "页码，从1开始",
-                    required = false,
-                    in = ParameterIn.QUERY,
-                    schema = @Schema(type = "integer", defaultValue = "1")
-            ),
-            @Parameter(
-                    name = "size",
-                    description = "每页大小",
-                    required = false,
-                    in = ParameterIn.QUERY,
-                    schema = @Schema(type = "integer", defaultValue = "20")
-            ),
-            @Parameter(
-                    name = "username",
-                    description = "登录账号（模糊匹配）",
-                    required = false,
-                    in = ParameterIn.QUERY,
-                    schema = @Schema(type = "string")
-            ),
-            @Parameter(
-                    name = "status",
-                    description = "登录状态（0-成功，1-失败）",
-                    required = false,
-                    in = ParameterIn.QUERY,
-                    schema = @Schema(type = "integer")
-            )
+        @Parameter(
+                name = "page",
+                description = "页码，从1开始",
+                required = false,
+                in = ParameterIn.QUERY,
+                schema = @Schema(type = "integer", defaultValue = "1")),
+        @Parameter(
+                name = "size",
+                description = "每页大小",
+                required = false,
+                in = ParameterIn.QUERY,
+                schema = @Schema(type = "integer", defaultValue = "20")),
+        @Parameter(
+                name = "username",
+                description = "登录账号（模糊匹配）",
+                required = false,
+                in = ParameterIn.QUERY,
+                schema = @Schema(type = "string")),
+        @Parameter(
+                name = "status",
+                description = "登录状态（0-成功，1-失败）",
+                required = false,
+                in = ParameterIn.QUERY,
+                schema = @Schema(type = "integer"))
     })
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "查询成功",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = LoginLogDTO.class)
-                    )
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "参数错误"
-            ),
-            @ApiResponse(
-                    responseCode = "401",
-                    description = "未授权，需要登录"
-            ),
-            @ApiResponse(
-                    responseCode = "403",
-                    description = "权限不足，需要 system:login-log:list 权限"
-            )
+        @ApiResponse(
+                responseCode = "200",
+                description = "查询成功",
+                content =
+                        @Content(mediaType = "application/json", schema = @Schema(implementation = LoginLogDTO.class))),
+        @ApiResponse(responseCode = "400", description = "参数错误"),
+        @ApiResponse(responseCode = "401", description = "未授权，需要登录"),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要 system:login-log:list 权限")
     })
     public Mono<ServerResponse> list(ServerRequest request) {
         int page = safeParseInt(request.queryParam("page").orElse(null), 1);

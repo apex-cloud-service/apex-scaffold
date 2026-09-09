@@ -67,7 +67,8 @@ public class KeycloakAdminHandler {
     public Mono<ServerResponse> syncAllUsers(ServerRequest request) {
         log.info("Admin triggered full user sync from Keycloak");
 
-        return keycloakUserSyncService.syncAllUsers()
+        return keycloakUserSyncService
+                .syncAllUsers()
                 .then(ServerResponse.ok().bodyValue(Result.success("User sync completed successfully")))
                 .onErrorResume(e -> {
                     log.error("User sync failed", e);
@@ -88,13 +89,13 @@ public class KeycloakAdminHandler {
         String keycloakSub = request.pathVariable("keycloakSub");
         log.info("Admin triggered user sync from Keycloak: keycloakSub={}", keycloakSub);
 
-        return keycloakUserSyncService.syncUserFromKeycloak(keycloakSub)
+        return keycloakUserSyncService
+                .syncUserFromKeycloak(keycloakSub)
                 .flatMap(user -> ServerResponse.ok()
                         .bodyValue(Result.success(java.util.Map.of(
                                 "userId", user.getId(),
                                 "username", user.getUsername(),
-                                "email", user.getEmail()
-                        ))))
+                                "email", user.getEmail()))))
                 .onErrorResume(e -> {
                     log.error("User sync failed: keycloakSub={}", keycloakSub, e);
                     return ServerResponse.status(500)
@@ -114,10 +115,6 @@ public class KeycloakAdminHandler {
     public Mono<ServerResponse> getKeycloakStatus(ServerRequest request) {
         log.info("Checking Keycloak integration status");
 
-        return ServerResponse.ok()
-                .bodyValue(Result.success(java.util.Map.of(
-                        "enabled", true,
-                        "status", "connected"
-                )));
+        return ServerResponse.ok().bodyValue(Result.success(java.util.Map.of("enabled", true, "status", "connected")));
     }
 }

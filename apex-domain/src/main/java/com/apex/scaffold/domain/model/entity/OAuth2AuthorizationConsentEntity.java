@@ -24,26 +24,26 @@ import lombok.Data;
  */
 @Data
 public class OAuth2AuthorizationConsentEntity {
-    
+
     /**
      * 唯一标识符
      */
     private String id;
-    
+
     /**
      * OAuth2客户端ID
      *
      * <p>关联到 {@code oauth2_registered_client.client_id}
      */
     private String clientId;
-    
+
     /**
      * 用户ID (OpenID)
      *
      * <p>授权的用户唯一标识
      */
     private String userId;
-    
+
     /**
      * 用户已授权的权限作用域集合
      *
@@ -51,12 +51,12 @@ public class OAuth2AuthorizationConsentEntity {
      * <p>当授权请求的scope是此集合的子集时，自动通过授权
      */
     private Set<String> authorizedScopes;
-    
+
     /**
      * 首次授权时间
      */
     private Instant grantedAt;
-    
+
     /**
      * 最后修改时间
      *

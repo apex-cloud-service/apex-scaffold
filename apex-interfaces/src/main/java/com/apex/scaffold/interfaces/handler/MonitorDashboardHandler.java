@@ -59,10 +59,7 @@ public class MonitorDashboardHandler extends BaseHandler {
      * @return 统一成功响应，data 为概览数据
      */
     @RequirePermission("system:monitor:view")
-    @Operation(
-            operationId = "monitorOverview",
-            summary = "监控概览",
-            description = "应用状态、运行时长、堆内存、CPU、线程、会话与请求/治理/业务计数")
+    @Operation(operationId = "monitorOverview", summary = "监控概览", description = "应用状态、运行时长、堆内存、CPU、线程、会话与请求/治理/业务计数")
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",
@@ -82,10 +79,7 @@ public class MonitorDashboardHandler extends BaseHandler {
      * @return 统一成功响应，data 为系统资源数据
      */
     @RequirePermission("system:monitor:view")
-    @Operation(
-            operationId = "monitorSystem",
-            summary = "系统资源监控",
-            description = "JVM 内存/GC、CPU、进程、线程、磁盘、网络、阻塞 IO 线程池")
+    @Operation(operationId = "monitorSystem", summary = "系统资源监控", description = "JVM 内存/GC、CPU、进程、线程、磁盘、网络、阻塞 IO 线程池")
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",
@@ -151,10 +145,7 @@ public class MonitorDashboardHandler extends BaseHandler {
      * @return 统一成功响应，data 为业务指标数据
      */
     @RequirePermission("system:monitor:view")
-    @Operation(
-            operationId = "monitorBusiness",
-            summary = "核心业务监控",
-            description = "登录/注册/上传/信用变动等核心业务指标与近 10 分钟趋势")
+    @Operation(operationId = "monitorBusiness", summary = "核心业务监控", description = "登录/注册/上传/信用变动等核心业务指标与近 10 分钟趋势")
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",

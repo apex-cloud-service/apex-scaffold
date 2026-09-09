@@ -24,7 +24,7 @@ import reactor.core.publisher.Mono;
  * @since 2.0.0
  */
 public interface OAuth2AuthorizationConsentRepository {
-    
+
     /**
      * 根据客户端ID和用户ID查询授权同意记录
      *
@@ -35,7 +35,7 @@ public interface OAuth2AuthorizationConsentRepository {
      * @return 授权同意实体，如果不存在则返回empty
      */
     Mono<OAuth2AuthorizationConsentEntity> findByClientIdAndUserId(String clientId, String userId);
-    
+
     /**
      * 保存或更新授权同意记录
      *
@@ -46,7 +46,7 @@ public interface OAuth2AuthorizationConsentRepository {
      * @return 保存后的授权同意实体
      */
     Mono<OAuth2AuthorizationConsentEntity> save(OAuth2AuthorizationConsentEntity consent);
-    
+
     /**
      * 删除授权同意记录
      *

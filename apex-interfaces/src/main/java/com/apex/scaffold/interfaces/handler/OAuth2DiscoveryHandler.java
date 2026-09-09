@@ -54,7 +54,7 @@ import reactor.core.publisher.Mono;
 @Component
 @RequiredArgsConstructor
 public class OAuth2DiscoveryHandler {
-    
+
     /**
      * 服务器端口配置
      *
@@ -62,7 +62,7 @@ public class OAuth2DiscoveryHandler {
      */
     @Value("${server.port:8080}")
     private int serverPort;
-    
+
     /**
      * 处理OAuth2服务发现请求
      *
@@ -93,7 +93,7 @@ public class OAuth2DiscoveryHandler {
      */
     public Mono<ServerResponse> discovery(ServerRequest request) {
         String issuer = String.format("http://localhost:%d", serverPort);
-        
+
         Map<String, Object> metadata = new HashMap<>();
         metadata.put("issuer", issuer);
         metadata.put("authorization_endpoint", issuer + "/oauth2/authorize");
@@ -101,22 +101,32 @@ public class OAuth2DiscoveryHandler {
         metadata.put("token_endpoint_auth_methods_supported", List.of("client_secret_basic", "client_secret_post"));
         metadata.put("jwks_uri", issuer + "/oauth2/jwks");
         metadata.put("response_types_supported", List.of("code"));
-        metadata.put("grant_types_supported", List.of("authorization_code", "client_credentials", "password", "refresh_token"));
+        metadata.put(
+                "grant_types_supported",
+                List.of("authorization_code", "client_credentials", "password", "refresh_token"));
         metadata.put("revocation_endpoint", issuer + "/oauth2/revoke");
-        metadata.put("revocation_endpoint_auth_methods_supported", List.of("client_secret_basic", "client_secret_post"));
+        metadata.put(
+                "revocation_endpoint_auth_methods_supported", List.of("client_secret_basic", "client_secret_post"));
         metadata.put("introspection_endpoint", issuer + "/oauth2/introspect");
-        metadata.put("introspection_endpoint_auth_methods_supported", List.of("client_secret_basic", "client_secret_post"));
+        metadata.put(
+                "introspection_endpoint_auth_methods_supported", List.of("client_secret_basic", "client_secret_post"));
         metadata.put("code_challenge_methods_supported", List.of("plain", "S256"));
-        metadata.put("scopes_supported", List.of(
-                "read", "write", 
-                "user:profile", "user:update", "user:avatar",
-                "admin:users", "admin:roles", "admin:system",
-                "api:read", "api:write",
-                "file:upload", "file:download"
-        ));
-        
-        return ServerResponse.ok()
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(metadata);
+        metadata.put(
+                "scopes_supported",
+                List.of(
+                        "read",
+                        "write",
+                        "user:profile",
+                        "user:update",
+                        "user:avatar",
+                        "admin:users",
+                        "admin:roles",
+                        "admin:system",
+                        "api:read",
+                        "api:write",
+                        "file:upload",
+                        "file:download"));
+
+        return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).bodyValue(metadata);
     }
 }

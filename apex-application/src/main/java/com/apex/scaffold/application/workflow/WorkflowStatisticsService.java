@@ -4,14 +4,10 @@ import com.apex.scaffold.application.dto.WorkflowStatisticsDTO;
 import com.apex.scaffold.application.dto.WorkflowTrendDTO;
 import com.apex.scaffold.infrastructure.persistence.mapper.ProcessInstanceMapper;
 import com.apex.scaffold.infrastructure.persistence.mapper.TaskMapper;
-import com.apex.scaffold.infrastructure.persistence.po.ProcessInstancePO;
-import com.apex.scaffold.infrastructure.persistence.po.TaskPO;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,22 +49,22 @@ public class WorkflowStatisticsService {
 
                     Integer runningTotal = processInstanceMapper.countByStatus("RUNNING");
                     stats.setRunningTotal(runningTotal != null ? runningTotal : 0);
-                    
+
                     Integer suspendedCount = processInstanceMapper.countSuspended();
                     stats.setSuspendedCount(suspendedCount != null ? suspendedCount : 0);
 
                     Integer pendingTaskTotal = taskMapper.countPendingTasks();
                     stats.setPendingTaskTotal(pendingTaskTotal != null ? pendingTaskTotal : 0);
-                    
+
                     Integer timeoutCount = taskMapper.countTimeoutTasks(LocalDateTime.now());
                     stats.setTimeoutCount(timeoutCount != null ? timeoutCount : 0);
-                    
+
                     Integer transferredCount = taskMapper.countTransferredTasks();
                     stats.setTransferredCount(transferredCount != null ? transferredCount : 0);
 
                     Long avgSeconds = processInstanceMapper.avgCompletionSeconds();
                     stats.setAvgCompletionSeconds(avgSeconds != null ? avgSeconds : 0L);
-                    
+
                     // 转换状态分布 List<Map> 为 Map<String, Integer>
                     List<Map<String, Object>> statusList = processInstanceMapper.statusDistribution();
                     Map<String, Integer> statusMap = new HashMap<>();
@@ -76,7 +72,8 @@ public class WorkflowStatisticsService {
                         for (Map<String, Object> row : statusList) {
                             String status = (String) row.get("status");
                             Object countObj = row.get("count");
-                            Integer count = countObj instanceof Long ? ((Long) countObj).intValue() : (Integer) countObj;
+                            Integer count =
+                                    countObj instanceof Long ? ((Long) countObj).intValue() : (Integer) countObj;
                             statusMap.put(status, count);
                         }
                     }
@@ -138,7 +135,7 @@ public class WorkflowStatisticsService {
             for (Map<String, Object> row : list) {
                 Object dateObj = row.get("date");
                 Object countObj = row.get("count");
-                
+
                 // MySQL DATE() 返回 java.sql.Date
                 LocalDate date = null;
                 if (dateObj instanceof java.sql.Date) {
@@ -146,9 +143,9 @@ public class WorkflowStatisticsService {
                 } else if (dateObj instanceof LocalDate) {
                     date = (LocalDate) dateObj;
                 }
-                
+
                 Integer count = countObj instanceof Long ? ((Long) countObj).intValue() : (Integer) countObj;
-                
+
                 if (date != null && count != null) {
                     result.put(date, count);
                 }

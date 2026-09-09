@@ -1,6 +1,7 @@
 package com.apex.scaffold.interfaces.handler;
 
 import com.apex.scaffold.common.result.Result;
+import java.net.URI;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -8,8 +9,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
-
-import java.net.URI;
 
 /**
  * 社交登录处理器
@@ -79,15 +78,16 @@ public class SocialLoginHandler {
         String provider = request.pathVariable("provider");
         log.info("Initiating social login: provider={}", provider);
 
-        String redirectUrl = switch (provider.toLowerCase()) {
-            case "github" -> "/oauth2/authorization/github";
-            case "google" -> "/oauth2/authorization/google";
-            case "wechat" -> "/oauth2/authorization/wechat";
-            default -> {
-                log.warn("Unsupported social login provider: {}", provider);
-                yield null;
-            }
-        };
+        String redirectUrl =
+                switch (provider.toLowerCase()) {
+                    case "github" -> "/oauth2/authorization/github";
+                    case "google" -> "/oauth2/authorization/google";
+                    case "wechat" -> "/oauth2/authorization/wechat";
+                    default -> {
+                        log.warn("Unsupported social login provider: {}", provider);
+                        yield null;
+                    }
+                };
 
         if (redirectUrl == null) {
             return ServerResponse.badRequest()
@@ -116,15 +116,13 @@ public class SocialLoginHandler {
 
         if (accessToken == null || refreshToken == null || userId == null) {
             log.error("Missing required callback parameters");
-            return ServerResponse.badRequest()
-                    .bodyValue(Result.error(400, "Missing required callback parameters"));
+            return ServerResponse.badRequest().bodyValue(Result.error(400, "Missing required callback parameters"));
         }
 
         return ServerResponse.ok()
                 .bodyValue(Result.success(java.util.Map.of(
                         "accessToken", accessToken,
                         "refreshToken", refreshToken,
-                        "userId", userId
-                )));
+                        "userId", userId)));
     }
 }

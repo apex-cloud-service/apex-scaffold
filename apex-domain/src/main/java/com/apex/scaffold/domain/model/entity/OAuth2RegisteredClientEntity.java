@@ -20,33 +20,33 @@ import lombok.Data;
  */
 @Data
 public class OAuth2RegisteredClientEntity {
-    
+
     private String id;
-    
+
     private String clientId;
-    
+
     private Instant clientIdIssuedAt;
-    
+
     private String clientSecret;
-    
+
     private Instant clientSecretExpiresAt;
-    
+
     private String clientName;
-    
+
     private Set<String> clientAuthenticationMethods;
-    
+
     private Set<String> authorizationGrantTypes;
-    
+
     private Set<String> redirectUris;
-    
+
     private Set<String> postLogoutRedirectUris;
-    
+
     private Set<String> scopes;
-    
+
     private String clientSettings;
-    
+
     private String tokenSettings;
-    
+
     /**
      * 判断是否为公共客户端(无密钥)
      *
@@ -55,7 +55,7 @@ public class OAuth2RegisteredClientEntity {
     public boolean isPublicClient() {
         return clientSecret == null || clientSecret.isEmpty();
     }
-    
+
     /**
      * 判断是否支持指定的授权类型
      *
@@ -65,7 +65,7 @@ public class OAuth2RegisteredClientEntity {
     public boolean supportsGrantType(String grantType) {
         return authorizationGrantTypes != null && authorizationGrantTypes.contains(grantType);
     }
-    
+
     /**
      * 判断是否支持指定的作用域
      *

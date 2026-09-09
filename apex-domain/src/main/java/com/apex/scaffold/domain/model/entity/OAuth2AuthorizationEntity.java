@@ -25,24 +25,24 @@ import lombok.Data;
  */
 @Data
 public class OAuth2AuthorizationEntity {
-    
+
     /**
      * 唯一标识符
      */
     private String id;
-    
+
     /**
      * 客户端注册ID
      *
      * <p>关联到 {@code oauth2_registered_client.id}
      */
     private String registeredClientId;
-    
+
     /**
      * 用户主体名称 (OpenID)
      */
     private String principalName;
-    
+
     /**
      * 授权类型
      *
@@ -55,71 +55,71 @@ public class OAuth2AuthorizationEntity {
      * </ul>
      */
     private String authorizationGrantType;
-    
+
     /**
      * 已授权的scope列表 (逗号分隔)
      */
     private String authorizedScopes;
-    
+
     /**
      * OAuth2 state参数
      *
      * <p>用于防止CSRF攻击
      */
     private String state;
-    
+
     /**
      * 授权码值
      */
     private String authorizationCodeValue;
-    
+
     /**
      * 授权码签发时间
      */
     private Instant authorizationCodeIssuedAt;
-    
+
     /**
      * 授权码过期时间
      */
     private Instant authorizationCodeExpiresAt;
-    
+
     /**
      * 访问令牌值
      */
     private String accessTokenValue;
-    
+
     /**
      * 访问令牌签发时间
      */
     private Instant accessTokenIssuedAt;
-    
+
     /**
      * 访问令牌过期时间
      */
     private Instant accessTokenExpiresAt;
-    
+
     /**
      * 访问令牌类型
      *
      * <p>通常为 "Bearer"
      */
     private String accessTokenType;
-    
+
     /**
      * 访问令牌的scope (逗号分隔)
      */
     private String accessTokenScopes;
-    
+
     /**
      * 刷新令牌值
      */
     private String refreshTokenValue;
-    
+
     /**
      * 刷新令牌签发时间
      */
     private Instant refreshTokenIssuedAt;
-    
+
     /**
      * 刷新令牌过期时间
      */

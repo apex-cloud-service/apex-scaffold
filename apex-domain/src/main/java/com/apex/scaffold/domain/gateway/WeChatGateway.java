@@ -16,7 +16,7 @@ import reactor.core.publisher.Mono;
  * - 小程序登录集成
  * - PC网站的扫码登录
  * </p>
- * 
+ *
  * <p>
  * <strong>可选性说明</strong>：
  * - 本模块为可选集成，不是核心脚手架功能

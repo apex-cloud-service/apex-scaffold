@@ -13,26 +13,26 @@ import lombok.Data;
  */
 @Data
 public class OAuth2ClientResponse {
-    
+
     private String id;
-    
+
     private String clientId;
-    
+
     private String clientName;
-    
+
     private Instant clientIdIssuedAt;
-    
+
     private Instant clientSecretExpiresAt;
-    
+
     private Set<String> clientAuthenticationMethods;
-    
+
     private Set<String> authorizationGrantTypes;
-    
+
     private Set<String> redirectUris;
-    
+
     private Set<String> postLogoutRedirectUris;
-    
+
     private Set<String> scopes;
-    
+
     private Boolean isPublicClient;
 }

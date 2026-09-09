@@ -50,69 +50,55 @@ public class RuntimeLogHandler {
     @Operation(
             operationId = "queryRuntimeLogs",
             summary = "查询运行时日志",
-            description = "查询系统运行时日志，支持按时间范围、日志级别、日志名称和消息关键词过滤，默认查询最近1小时的日志"
-    )
+            description = "查询系统运行时日志，支持按时间范围、日志级别、日志名称和消息关键词过滤，默认查询最近1小时的日志")
     @io.swagger.v3.oas.annotations.Parameters({
-            @Parameter(
-                    name = "startTime",
-                    description = "开始时间（格式：yyyy-MM-dd HH:mm:ss，默认为1小时前）",
-                    required = false,
-                    in = ParameterIn.QUERY,
-                    schema = @Schema(type = "string", example = "2024-01-01 00:00:00")
-            ),
-            @Parameter(
-                    name = "endTime",
-                    description = "结束时间（格式：yyyy-MM-dd HH:mm:ss，默认为当前时间）",
-                    required = false,
-                    in = ParameterIn.QUERY,
-                    schema = @Schema(type = "string", example = "2024-01-01 23:59:59")
-            ),
-            @Parameter(
-                    name = "level",
-                    description = "日志级别（可选，如 ERROR、WARN、INFO、DEBUG、TRACE）",
-                    required = false,
-                    in = ParameterIn.QUERY,
-                    schema = @Schema(type = "string")
-            ),
-            @Parameter(
-                    name = "logger",
-                    description = "日志名称（可选，Logger类名，支持模糊匹配）",
-                    required = false,
-                    in = ParameterIn.QUERY,
-                    schema = @Schema(type = "string")
-            ),
-            @Parameter(
-                    name = "message",
-                    description = "消息关键词（可选，支持模糊匹配）",
-                    required = false,
-                    in = ParameterIn.QUERY,
-                    schema = @Schema(type = "string")
-            ),
-            @Parameter(
-                    name = "limit",
-                    description = "返回条数（默认100，最大1000）",
-                    required = false,
-                    in = ParameterIn.QUERY,
-                    schema = @Schema(type = "integer", defaultValue = "100")
-            )
+        @Parameter(
+                name = "startTime",
+                description = "开始时间（格式：yyyy-MM-dd HH:mm:ss，默认为1小时前）",
+                required = false,
+                in = ParameterIn.QUERY,
+                schema = @Schema(type = "string", example = "2024-01-01 00:00:00")),
+        @Parameter(
+                name = "endTime",
+                description = "结束时间（格式：yyyy-MM-dd HH:mm:ss，默认为当前时间）",
+                required = false,
+                in = ParameterIn.QUERY,
+                schema = @Schema(type = "string", example = "2024-01-01 23:59:59")),
+        @Parameter(
+                name = "level",
+                description = "日志级别（可选，如 ERROR、WARN、INFO、DEBUG、TRACE）",
+                required = false,
+                in = ParameterIn.QUERY,
+                schema = @Schema(type = "string")),
+        @Parameter(
+                name = "logger",
+                description = "日志名称（可选，Logger类名，支持模糊匹配）",
+                required = false,
+                in = ParameterIn.QUERY,
+                schema = @Schema(type = "string")),
+        @Parameter(
+                name = "message",
+                description = "消息关键词（可选，支持模糊匹配）",
+                required = false,
+                in = ParameterIn.QUERY,
+                schema = @Schema(type = "string")),
+        @Parameter(
+                name = "limit",
+                description = "返回条数（默认100，最大1000）",
+                required = false,
+                in = ParameterIn.QUERY,
+                schema = @Schema(type = "integer", defaultValue = "100"))
     })
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "查询成功",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = RuntimeLogDTO.class)
-                    )
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "参数错误，例如时间格式不正确"
-            ),
-            @ApiResponse(
-                    responseCode = "403",
-                    description = "权限不足，需要 system:log:runtime:query 权限"
-            )
+        @ApiResponse(
+                responseCode = "200",
+                description = "查询成功",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = RuntimeLogDTO.class))),
+        @ApiResponse(responseCode = "400", description = "参数错误，例如时间格式不正确"),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要 system:log:runtime:query 权限")
     })
     public Mono<ServerResponse> queryLogs(ServerRequest request) {
         try {
@@ -169,51 +155,34 @@ public class RuntimeLogHandler {
      * @return 日志数量
      */
     @RequirePermission("system:log:runtime:query")
-    @Operation(
-            operationId = "countRuntimeLogs",
-            summary = "统计运行时日志数量",
-            description = "统计指定条件下的运行时日志总数，支持按时间范围和日志级别过滤"
-    )
+    @Operation(operationId = "countRuntimeLogs", summary = "统计运行时日志数量", description = "统计指定条件下的运行时日志总数，支持按时间范围和日志级别过滤")
     @io.swagger.v3.oas.annotations.Parameters({
-            @Parameter(
-                    name = "startTime",
-                    description = "开始时间（格式：yyyy-MM-dd HH:mm:ss，默认为1小时前）",
-                    required = false,
-                    in = ParameterIn.QUERY,
-                    schema = @Schema(type = "string", example = "2024-01-01 00:00:00")
-            ),
-            @Parameter(
-                    name = "endTime",
-                    description = "结束时间（格式：yyyy-MM-dd HH:mm:ss，默认为当前时间）",
-                    required = false,
-                    in = ParameterIn.QUERY,
-                    schema = @Schema(type = "string", example = "2024-01-01 23:59:59")
-            ),
-            @Parameter(
-                    name = "level",
-                    description = "日志级别（可选，如 ERROR、WARN、INFO、DEBUG、TRACE）",
-                    required = false,
-                    in = ParameterIn.QUERY,
-                    schema = @Schema(type = "string")
-            )
+        @Parameter(
+                name = "startTime",
+                description = "开始时间（格式：yyyy-MM-dd HH:mm:ss，默认为1小时前）",
+                required = false,
+                in = ParameterIn.QUERY,
+                schema = @Schema(type = "string", example = "2024-01-01 00:00:00")),
+        @Parameter(
+                name = "endTime",
+                description = "结束时间（格式：yyyy-MM-dd HH:mm:ss，默认为当前时间）",
+                required = false,
+                in = ParameterIn.QUERY,
+                schema = @Schema(type = "string", example = "2024-01-01 23:59:59")),
+        @Parameter(
+                name = "level",
+                description = "日志级别（可选，如 ERROR、WARN、INFO、DEBUG、TRACE）",
+                required = false,
+                in = ParameterIn.QUERY,
+                schema = @Schema(type = "string"))
     })
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "统计成功",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = Long.class)
-                    )
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "参数错误，例如时间格式不正确"
-            ),
-            @ApiResponse(
-                    responseCode = "403",
-                    description = "权限不足，需要 system:log:runtime:query 权限"
-            )
+        @ApiResponse(
+                responseCode = "200",
+                description = "统计成功",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = Long.class))),
+        @ApiResponse(responseCode = "400", description = "参数错误，例如时间格式不正确"),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要 system:log:runtime:query 权限")
     })
     public Mono<ServerResponse> countLogs(ServerRequest request) {
         try {

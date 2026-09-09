@@ -49,34 +49,53 @@ public class ResourceIndexEventListener {
             switch (event.getAction()) {
                 case CREATE, UPDATE -> {
                     // 创建或更新索引
-                    indexSyncPort.indexResource(event.getResourceType(), event.getResourceId())
+                    indexSyncPort
+                            .indexResource(event.getResourceType(), event.getResourceId())
                             .doOnSuccess(success -> {
                                 if (Boolean.TRUE.equals(success)) {
-                                    log.info("Indexed resource: type={}, id={}, action={}",
-                                            event.getResourceType(), event.getResourceId(), event.getAction());
+                                    log.info(
+                                            "Indexed resource: type={}, id={}, action={}",
+                                            event.getResourceType(),
+                                            event.getResourceId(),
+                                            event.getAction());
                                 } else {
-                                    log.warn("Index resource failed: type={}, id={}, action={}",
-                                            event.getResourceType(), event.getResourceId(), event.getAction());
+                                    log.warn(
+                                            "Index resource failed: type={}, id={}, action={}",
+                                            event.getResourceType(),
+                                            event.getResourceId(),
+                                            event.getAction());
                                 }
                             })
-                            .doOnError(e -> log.error("Index resource error: type={}, id={}, action={}",
-                                    event.getResourceType(), event.getResourceId(), event.getAction(), e))
+                            .doOnError(e -> log.error(
+                                    "Index resource error: type={}, id={}, action={}",
+                                    event.getResourceType(),
+                                    event.getResourceId(),
+                                    event.getAction(),
+                                    e))
                             .subscribe();
                 }
                 case DELETE -> {
                     // 删除索引
-                    indexSyncPort.removeIndex(event.getResourceType(), event.getResourceId())
+                    indexSyncPort
+                            .removeIndex(event.getResourceType(), event.getResourceId())
                             .doOnSuccess(success -> {
                                 if (Boolean.TRUE.equals(success)) {
-                                    log.info("Removed index: type={}, id={}",
-                                            event.getResourceType(), event.getResourceId());
+                                    log.info(
+                                            "Removed index: type={}, id={}",
+                                            event.getResourceType(),
+                                            event.getResourceId());
                                 } else {
-                                    log.warn("Remove index failed: type={}, id={}",
-                                            event.getResourceType(), event.getResourceId());
+                                    log.warn(
+                                            "Remove index failed: type={}, id={}",
+                                            event.getResourceType(),
+                                            event.getResourceId());
                                 }
                             })
-                            .doOnError(e -> log.error("Remove index error: type={}, id={}",
-                                    event.getResourceType(), event.getResourceId(), e))
+                            .doOnError(e -> log.error(
+                                    "Remove index error: type={}, id={}",
+                                    event.getResourceType(),
+                                    event.getResourceId(),
+                                    e))
                             .subscribe();
                 }
                 default -> log.warn("Unknown action: {}", event.getAction());

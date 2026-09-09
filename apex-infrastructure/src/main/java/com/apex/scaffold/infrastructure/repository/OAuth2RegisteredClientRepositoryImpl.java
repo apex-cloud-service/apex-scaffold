@@ -32,95 +32,99 @@ import reactor.core.publisher.Mono;
 @Repository
 @RequiredArgsConstructor
 public class OAuth2RegisteredClientRepositoryImpl implements OAuth2RegisteredClientRepository {
-    
+
     private final OAuth2RegisteredClientMapper mapper;
-    
+
     @Override
     public Mono<OAuth2RegisteredClientEntity> findByClientId(String clientId) {
         return Mono.fromCallable(() -> {
-            LambdaQueryWrapper<OAuth2RegisteredClientPO> wrapper = new LambdaQueryWrapper<>();
-            wrapper.eq(OAuth2RegisteredClientPO::getClientId, clientId);
-            OAuth2RegisteredClientPO po = mapper.selectOne(wrapper);
-            return po != null ? toEntity(po) : null;
-        }).subscribeOn(BlockingIoSchedulers.jdbc());
+                    LambdaQueryWrapper<OAuth2RegisteredClientPO> wrapper = new LambdaQueryWrapper<>();
+                    wrapper.eq(OAuth2RegisteredClientPO::getClientId, clientId);
+                    OAuth2RegisteredClientPO po = mapper.selectOne(wrapper);
+                    return po != null ? toEntity(po) : null;
+                })
+                .subscribeOn(BlockingIoSchedulers.jdbc());
     }
-    
+
     @Override
     public Mono<OAuth2RegisteredClientEntity> findById(String id) {
         return Mono.fromCallable(() -> {
-            OAuth2RegisteredClientPO po = mapper.selectById(id);
-            return po != null ? toEntity(po) : null;
-        }).subscribeOn(BlockingIoSchedulers.jdbc());
+                    OAuth2RegisteredClientPO po = mapper.selectById(id);
+                    return po != null ? toEntity(po) : null;
+                })
+                .subscribeOn(BlockingIoSchedulers.jdbc());
     }
-    
+
     @Override
     public Mono<OAuth2RegisteredClientEntity> save(OAuth2RegisteredClientEntity client) {
         return Mono.fromCallable(() -> {
-            OAuth2RegisteredClientPO po = toPO(client);
-            if (client.getId() != null && mapper.selectById(client.getId()) != null) {
-                mapper.updateById(po);
-                log.info("更新OAuth2客户端: clientId={}", client.getClientId());
-            } else {
-                mapper.insert(po);
-                log.info("创建OAuth2客户端: clientId={}", client.getClientId());
-            }
-            return client;
-        }).subscribeOn(BlockingIoSchedulers.jdbc());
+                    OAuth2RegisteredClientPO po = toPO(client);
+                    if (client.getId() != null && mapper.selectById(client.getId()) != null) {
+                        mapper.updateById(po);
+                        log.info("更新OAuth2客户端: clientId={}", client.getClientId());
+                    } else {
+                        mapper.insert(po);
+                        log.info("创建OAuth2客户端: clientId={}", client.getClientId());
+                    }
+                    return client;
+                })
+                .subscribeOn(BlockingIoSchedulers.jdbc());
     }
-    
+
     @Override
     public Mono<Void> deleteById(String id) {
         return Mono.fromRunnable(() -> {
-            mapper.deleteById(id);
-            log.info("删除OAuth2客户端: id={}", id);
-        })
+                    mapper.deleteById(id);
+                    log.info("删除OAuth2客户端: id={}", id);
+                })
                 .subscribeOn(BlockingIoSchedulers.jdbc())
                 .then();
     }
-    
+
     @Override
     public Flux<OAuth2RegisteredClientEntity> findAll(int page, int size) {
         return Mono.fromCallable(() -> {
-            Page<OAuth2RegisteredClientPO> poPage = mapper.selectPage(
-                    new Page<>(page, size), null);
-            return poPage.getRecords().stream()
-                    .map(this::toEntity)
-                    .collect(Collectors.toList());
-        }).subscribeOn(BlockingIoSchedulers.jdbc())
+                    Page<OAuth2RegisteredClientPO> poPage = mapper.selectPage(new Page<>(page, size), null);
+                    return poPage.getRecords().stream().map(this::toEntity).collect(Collectors.toList());
+                })
+                .subscribeOn(BlockingIoSchedulers.jdbc())
                 .flatMapMany(Flux::fromIterable);
     }
-    
+
     @Override
     public Mono<Long> count() {
-        return Mono.fromCallable(() -> mapper.selectCount(null))
-                .subscribeOn(BlockingIoSchedulers.jdbc());
+        return Mono.fromCallable(() -> mapper.selectCount(null)).subscribeOn(BlockingIoSchedulers.jdbc());
     }
-    
+
     @Override
     public Flux<OAuth2RegisteredClientEntity> findByClientNameLike(String clientName, int page, int size) {
         return Mono.fromCallable(() -> {
-            LambdaQueryWrapper<OAuth2RegisteredClientPO> wrapper = new LambdaQueryWrapper<>();
-            wrapper.like(OAuth2RegisteredClientPO::getClientName, clientName);
-            Page<OAuth2RegisteredClientPO> poPage = mapper.selectPage(
-                    new Page<>(page, size), wrapper);
-            return poPage.getRecords().stream()
-                    .map(this::toEntity)
-                    .collect(Collectors.toList());
-        }).subscribeOn(BlockingIoSchedulers.jdbc())
+                    LambdaQueryWrapper<OAuth2RegisteredClientPO> wrapper = new LambdaQueryWrapper<>();
+                    wrapper.like(OAuth2RegisteredClientPO::getClientName, clientName);
+                    Page<OAuth2RegisteredClientPO> poPage = mapper.selectPage(new Page<>(page, size), wrapper);
+                    return poPage.getRecords().stream().map(this::toEntity).collect(Collectors.toList());
+                })
+                .subscribeOn(BlockingIoSchedulers.jdbc())
                 .flatMapMany(Flux::fromIterable);
     }
-    
+
     private OAuth2RegisteredClientEntity toEntity(OAuth2RegisteredClientPO po) {
         OAuth2RegisteredClientEntity entity = new OAuth2RegisteredClientEntity();
         entity.setId(po.getId());
         entity.setClientId(po.getClientId());
-        entity.setClientIdIssuedAt(po.getClientIdIssuedAt() != null 
-                ? po.getClientIdIssuedAt().atZone(ZoneId.systemDefault()).toInstant() 
-                : null);
+        entity.setClientIdIssuedAt(
+                po.getClientIdIssuedAt() != null
+                        ? po.getClientIdIssuedAt()
+                                .atZone(ZoneId.systemDefault())
+                                .toInstant()
+                        : null);
         entity.setClientSecret(po.getClientSecret());
-        entity.setClientSecretExpiresAt(po.getClientSecretExpiresAt() != null 
-                ? po.getClientSecretExpiresAt().atZone(ZoneId.systemDefault()).toInstant() 
-                : null);
+        entity.setClientSecretExpiresAt(
+                po.getClientSecretExpiresAt() != null
+                        ? po.getClientSecretExpiresAt()
+                                .atZone(ZoneId.systemDefault())
+                                .toInstant()
+                        : null);
         entity.setClientName(po.getClientName());
         entity.setClientAuthenticationMethods(parseJsonArray(po.getClientAuthenticationMethods()));
         entity.setAuthorizationGrantTypes(parseJsonArray(po.getAuthorizationGrantTypes()));
@@ -131,18 +135,24 @@ public class OAuth2RegisteredClientRepositoryImpl implements OAuth2RegisteredCli
         entity.setTokenSettings(po.getTokenSettings());
         return entity;
     }
-    
+
     private OAuth2RegisteredClientPO toPO(OAuth2RegisteredClientEntity entity) {
         OAuth2RegisteredClientPO po = new OAuth2RegisteredClientPO();
         po.setId(entity.getId());
         po.setClientId(entity.getClientId());
-        po.setClientIdIssuedAt(entity.getClientIdIssuedAt() != null 
-                ? entity.getClientIdIssuedAt().atZone(ZoneId.systemDefault()).toLocalDateTime() 
-                : null);
+        po.setClientIdIssuedAt(
+                entity.getClientIdIssuedAt() != null
+                        ? entity.getClientIdIssuedAt()
+                                .atZone(ZoneId.systemDefault())
+                                .toLocalDateTime()
+                        : null);
         po.setClientSecret(entity.getClientSecret());
-        po.setClientSecretExpiresAt(entity.getClientSecretExpiresAt() != null 
-                ? entity.getClientSecretExpiresAt().atZone(ZoneId.systemDefault()).toLocalDateTime() 
-                : null);
+        po.setClientSecretExpiresAt(
+                entity.getClientSecretExpiresAt() != null
+                        ? entity.getClientSecretExpiresAt()
+                                .atZone(ZoneId.systemDefault())
+                                .toLocalDateTime()
+                        : null);
         po.setClientName(entity.getClientName());
         po.setClientAuthenticationMethods(toJsonArray(entity.getClientAuthenticationMethods()));
         po.setAuthorizationGrantTypes(toJsonArray(entity.getAuthorizationGrantTypes()));
@@ -153,7 +163,7 @@ public class OAuth2RegisteredClientRepositoryImpl implements OAuth2RegisteredCli
         po.setTokenSettings(entity.getTokenSettings());
         return po;
     }
-    
+
     /**
      * 解析JSON数组字符串为Set集合
      * <p>简单实现：移除方括号和引号后分割，适用于简单字符串数组。
@@ -172,7 +182,7 @@ public class OAuth2RegisteredClientRepositoryImpl implements OAuth2RegisteredCli
                 .filter(s -> !s.isEmpty())
                 .collect(Collectors.toSet());
     }
-    
+
     /**
      * 将Set集合序列化为JSON数组字符串
      *

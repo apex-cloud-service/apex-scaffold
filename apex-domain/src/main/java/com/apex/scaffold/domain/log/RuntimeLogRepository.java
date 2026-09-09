@@ -26,13 +26,7 @@ public interface RuntimeLogRepository {
      * @return 日志条目列表
      */
     Mono<List<RuntimeLogEntry>> queryLogs(
-            LocalDateTime startTime,
-            LocalDateTime endTime,
-            String level,
-            String logger,
-            String message,
-            int limit
-    );
+            LocalDateTime startTime, LocalDateTime endTime, String level, String logger, String message, int limit);
 
     /**
      * 统计日志数量
@@ -42,9 +36,5 @@ public interface RuntimeLogRepository {
      * @param level     日志级别（可选）
      * @return 日志数量
      */
-    Mono<Long> countLogs(
-            LocalDateTime startTime,
-            LocalDateTime endTime,
-            String level
-    );
+    Mono<Long> countLogs(LocalDateTime startTime, LocalDateTime endTime, String level);
 }

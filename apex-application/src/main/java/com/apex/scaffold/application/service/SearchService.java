@@ -41,10 +41,7 @@ public class SearchService {
      * @return 搜索结果分页
      */
     public Mono<PageResponse<SearchResultDTO>> search(
-            String keyword,
-            Set<String> resourceTypes,
-            int pageNum,
-            int pageSize) {
+            String keyword, Set<String> resourceTypes, int pageNum, int pageSize) {
 
         // 获取当前租户ID
         String tenantIdStr = TenantContext.currentTenantId().orElse(null);
@@ -63,9 +60,7 @@ public class SearchService {
                 .search(keyword, resourceTypes, tenantId, null, pageNum, pageSize)
                 .map(pageResponse -> {
                     List<SearchResultDTO> dtos =
-                            pageResponse.getList().stream()
-                                    .map(this::toDTO)
-                                    .collect(Collectors.toList());
+                            pageResponse.getList().stream().map(this::toDTO).collect(Collectors.toList());
                     return PageResponse.of(dtos, pageResponse.getTotal(), pageNum, pageSize);
                 })
                 .doOnSuccess(result -> log.debug("Search completed: total={}", result.getTotal()));

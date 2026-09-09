@@ -10,7 +10,6 @@ import java.util.Locale;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -86,7 +85,7 @@ public class SecurityConfig {
 
     /** JWT 认证过滤器，用于验证请求中的 JWT Token */
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
-    
+
     /** OAuth2资源服务器过滤器，用于验证OAuth2 Token */
     private final OAuth2ResourceServerFilter oauth2ResourceServerFilter;
 
@@ -166,8 +165,7 @@ public class SecurityConfig {
                         })));
 
         if (keycloakEnabled && oidcAuthenticationSuccessHandler != null) {
-            httpSecurity.oauth2Login(oauth2 -> oauth2
-                    .authenticationSuccessHandler(oidcAuthenticationSuccessHandler));
+            httpSecurity.oauth2Login(oauth2 -> oauth2.authenticationSuccessHandler(oidcAuthenticationSuccessHandler));
         }
 
         return httpSecurity.build();

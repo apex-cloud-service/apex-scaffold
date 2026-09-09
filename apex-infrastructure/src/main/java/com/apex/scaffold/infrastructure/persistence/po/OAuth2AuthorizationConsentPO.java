@@ -33,7 +33,7 @@ import lombok.Data;
 @Data
 @TableName("oauth2_authorization_consent")
 public class OAuth2AuthorizationConsentPO {
-    
+
     /**
      * 主键ID
      *
@@ -41,7 +41,7 @@ public class OAuth2AuthorizationConsentPO {
      */
     @TableId(type = IdType.INPUT)
     private String id;
-    
+
     /**
      * 客户端注册ID
      *
@@ -49,7 +49,7 @@ public class OAuth2AuthorizationConsentPO {
      */
     @TableField("registered_client_id")
     private String registeredClientId;
-    
+
     /**
      * 用户主体名称 (OpenID)
      *
@@ -57,7 +57,7 @@ public class OAuth2AuthorizationConsentPO {
      */
     @TableField("principal_name")
     private String principalName;
-    
+
     /**
      * 授权的权限列表
      *
@@ -65,13 +65,13 @@ public class OAuth2AuthorizationConsentPO {
      */
     @TableField("authorities")
     private String authorities;
-    
+
     /**
      * 创建时间
      */
     @TableField("created_at")
     private Instant createdAt;
-    
+
     /**
      * 更新时间
      */
