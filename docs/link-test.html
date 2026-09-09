@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文档链接测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #333;
+        }
+        .test-link {
+            display: block;
+            padding: 10px;
+            margin: 10px 0;
+            background: #f0f0f0;
+            border-radius: 5px;
+            text-decoration: none;
+            color: #0066cc;
+        }
+        .test-link:hover {
+            background: #e0e0e0;
+        }
+        .info {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>📝 文档链接测试页面</h1>
+    
+    <div class="info">
+        <strong>说明</strong>: 点击下面的链接测试文档是否能正常打开。
+        <br>如果链接无法打开,可能是浏览器不支持直接打开 Markdown 文件。
+    </div>
+
+    <h2>测试链接</h2>
+    
+    <h3>相对路径测试 (./)</h3>
+    <a href="./integration/oauth2/integration-guide.md" target="_blank" class="test-link">
+        1. OAuth2 集成指南 (./integration/oauth2/integration-guide.md)
+    </a>
+    
+    <a href="./architecture/01-logical-architecture-detail.md" target="_blank" class="test-link">
+        2. DDD 四层架构详解 (./architecture/01-logical-architecture-detail.md)
+    </a>
+    
+    <a href="./QUICK_START.md" target="_blank" class="test-link">
+        3. 快速开始 (./QUICK_START.md)
+    </a>
+
+    <h3>不带前缀测试</h3>
+    <a href="integration/oauth2/integration-guide.md" target="_blank" class="test-link">
+        4. OAuth2 集成指南 (integration/oauth2/integration-guide.md)
+    </a>
+    
+    <a href="architecture/01-logical-architecture-detail.md" target="_blank" class="test-link">
+        5. DDD 四层架构详解 (architecture/01-logical-architecture-detail.md)
+    </a>
+    
+    <a href="QUICK_START.md" target="_blank" class="test-link">
+        6. 快速开始 (QUICK_START.md)
+    </a>
+
+    <div class="info" style="margin-top: 30px;">
+        <strong>测试结果</strong>:
+        <ul>
+            <li>如果链接 1-3 能打开,说明 <code>./</code> 前缀的路径正确</li>
+            <li>如果链接 4-6 能打开,说明不带前缀的路径正确</li>
+            <li>如果都不能打开,可能是浏览器限制或需要通过 HTTP 服务器访问</li>
+        </ul>
+        
+        <strong>推荐解决方案</strong>:
+        <ol>
+            <li>通过 HTTP 服务器访问:
+                <pre style="background:#f5f5f5;padding:10px;border-radius:3px;">python3 -m http.server 8080
+# 然后访问 http://localhost:8080/docs/doc-search.html</pre>
+            </li>
+            <li>安装浏览器 Markdown 预览扩展</li>
+        </ol>
+    </div>
+
+    <script>
+        // 记录点击事件
+        document.querySelectorAll('.test-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                console.log('点击链接:', this.href);
+                console.log('目标路径:', this.getAttribute('href'));
+            });
+        });
+    </script>
+</body>
+</html>

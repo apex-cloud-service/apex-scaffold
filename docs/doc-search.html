@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apex Scaffold 文档搜索</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFontFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .search-box {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .search-input-wrapper {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 15px 50px 15px 20px;
+            font-size: 1.1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            font-size: 1.3rem;
+        }
+
+        .filters {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border: 2px solid #e2e8f0;
+            background: white;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+        }
+
+        .filter-btn:hover {
+            border-color: #667eea;
+            background: #f7fafc;
+        }
+
+        .filter-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .stats {
+            background: white;
+            border-radius: 12px;
+            padding: 15px 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stats-text {
+            color: #64748b;
+            font-size: 0.95rem;
+        }
+
+        .stats-count {
+            color: #667eea;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .results {
+            display: grid;
+            gap: 15px;
+        }
+
+        .result-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s;
+            border-left: 4px solid transparent;
+        }
+
+        .result-card:hover {
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+            transform: translateY(-2px);
+            border-left-color: #667eea;
+        }
+
+        .result-header {
+            display: flex;
+            align-items: start;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .result-icon {
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .result-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 5px;
+        }
+
+        .result-title a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .result-title a:hover {
+            color: #667eea;
+        }
+
+        .result-path {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            font-family: monospace;
+        }
+
+        .result-description {
+            color: #64748b;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .result-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .tag {
+            padding: 4px 10px;
+            background: #f1f5f9;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            color: #475569;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .no-results-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .no-results-text {
+            font-size: 1.2rem;
+            color: #64748b;
+        }
+
+        .highlight {
+            background: #fef08a;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8rem;
+            }
+
+            .search-box {
+                padding: 20px;
+            }
+
+            .stats {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📚 Apex Scaffold 文档搜索</h1>
+            <p>快速查找 80+ 个技术文档</p>
+        </div>
+
+        <div class="search-box">
+            <div class="search-input-wrapper">
+                <input 
+                    type="text" 
+                    class="search-input" 
+                    id="searchInput" 
+                    placeholder="搜索文档... (例如: OAuth2, 前端组件, 监控配置)"
+                    autocomplete="off"
+                >
+                <span class="search-icon">🔍</span>
+            </div>
+
+            <div class="filters">
+                <button class="filter-btn active" data-filter="all">全部</button>
+                <button class="filter-btn" data-filter="integration">集成</button>
+                <button class="filter-btn" data-filter="frontend">前端</button>
+                <button class="filter-btn" data-filter="backend">后端</button>
+                <button class="filter-btn" data-filter="operations">运维</button>
+                <button class="filter-btn" data-filter="architecture">架构</button>
+                <button class="filter-btn" data-filter="security">安全</button>
+                <button class="filter-btn" data-filter="testing">测试</button>
+                <button class="filter-btn" data-filter="commercial">商业化</button>
+                <button class="filter-btn" data-filter="standards">规范</button>
+                <button class="filter-btn" data-filter="reports">报告</button>
+            </div>
+        </div>
+
+        <div class="stats">
+            <span class="stats-text">找到 <span class="stats-count" id="resultCount">0</span> 个相关文档</span>
+            <span class="stats-text" id="filterInfo">显示: 全部分类</span>
+        </div>
+
+        <div class="results" id="results"></div>
+    </div>
+
+    <script>
+        // 文档数据库
+        const documents = [
+            // 集成文档
+            {
+                title: "OAuth2 集成指南",
+                path: "./integration/oauth2/integration-guide.md",
+                description: "OAuth2 集成操作指南和最佳实践,包含完整的集成流程、配置说明和常见问题解决方案",
+                category: "integration",
+                tags: ["OAuth2", "认证", "第三方集成", "SSO"],
+                icon: "🔌"
+            },
+            {
+                title: "Keycloak 集成方案",
+                path: "./integration/oauth2/keycloak-integration.md",
+                description: "Keycloak 认证方式集成方案,详细说明如何配置和集成 Keycloak 认证服务器",
+                category: "integration",
+                tags: ["Keycloak", "OAuth2", "认证", "SSO"],
+                icon: "🔐"
+            },
+            {
+                title: "SSO 实施计划",
+                path: "./integration/oauth2/sso-implementation-plan.md",
+                description: "SSO OAuth2 集成的完整实施计划,包含时间表、任务分解和验收标准",
+                category: "integration",
+                tags: ["SSO", "OAuth2", "实施计划"],
+                icon: "📋"
+            },
+            {
+                title: "OAuth2 实施报告",
+                path: "./integration/oauth2/implementation-report.md",
+                description: "OAuth2 完整实施报告和结果总结,包含已知问题和解决方案",
+                category: "integration",
+                tags: ["OAuth2", "实施报告", "问题汇总"],
+                icon: "📊"
+            },
+            {
+                title: "PKCE 验证计划",
+                path: "./integration/oauth2/pkce/verification-plan.md",
+                description: "PKCE 功能验证计划,包含验证场景、测试用例和验收标准",
+                category: "integration",
+                tags: ["PKCE", "验证", "测试"],
+                icon: "✅"
+            },
+            {
+                title: "PKCE 集成测试报告",
+                path: "./integration/oauth2/pkce/integration-test-report.md",
+                description: "PKCE 集成测试执行报告,包含测试结果、覆盖率和问题记录",
+                category: "integration",
+                tags: ["PKCE", "集成测试", "测试报告"],
+                icon: "🧪"
+            },
+            {
+                title: "PKCE 性能测试报告",
+                path: "./integration/oauth2/pkce/performance-test-report.md",
+                description: "PKCE 性能测试报告和性能指标,包含压测结果和性能优化建议",
+                category: "integration",
+                tags: ["PKCE", "性能测试", "压测"],
+                icon: "⚡"
+            },
+
+            // 前端文档
+            {
+                title: "前端组件使用指南",
+                path: "./frontend/component-guide.md",
+                description: "前端组件开发指南,包含组件规范、使用示例和最佳实践",
+                category: "frontend",
+                tags: ["前端", "组件", "Vue3"],
+                icon: "🎨"
+            },
+            {
+                title: "按钮权限控制指南",
+                path: "./frontend/button-permission-guide.md",
+                description: "前端按钮权限控制补充指南,详细说明如何实现按钮级权限控制",
+                category: "frontend",
+                tags: ["前端", "权限", "按钮"],
+                icon: "🔘"
+            },
+            {
+                title: "前端页面审计报告",
+                path: "./frontend/page-audit-report.md",
+                description: "前端页面审计结果,包含页面质量评估和改进建议",
+                category: "frontend",
+                tags: ["前端", "审计", "质量"],
+                icon: "📋"
+            },
+            {
+                title: "数据库配置适配方案",
+                path: "./frontend/database-config-adapter.md",
+                description: "前端配置数据库多适配方案,支持多种数据库配置方式",
+                category: "frontend",
+                tags: ["前端", "数据库", "配置"],
+                icon: "🗄️"
+            },
+
+            // 运维文档
+            {
+                title: "Grafana 监控配置总结",
+                path: "./operations/grafana-status-summary.md",
+                description: "Grafana 监控平台现状与配置总结,包含66个监控面板配置",
+                category: "operations",
+                tags: ["监控", "Grafana", "运维"],
+                icon: "📊"
+            },
+            {
+                title: "MySQL 启动指南",
+                path: "./operations/mysql-startup-guide.md",
+                description: "MySQL 启动与 SQL 执行指南,包含数据库初始化和常用操作",
+                category: "operations",
+                tags: ["MySQL", "数据库", "运维"],
+                icon: "🗄️"
+            },
+            {
+                title: "SQL 脚本执行指南",
+                path: "./operations/sql-execution-guide.md",
+                description: "数据库 SQL 脚本执行指南,包含 Flyway 迁移和脚本管理",
+                category: "operations",
+                tags: ["SQL", "数据库", "Flyway"],
+                icon: "📝"
+            },
+            {
+                title: "监控大盘配置",
+                path: "./operations/monitoring-dashboard-configuration.md",
+                description: "Prometheus/Grafana 监控配置详解,包含指标采集和告警配置",
+                category: "operations",
+                tags: ["监控", "Prometheus", "Grafana"],
+                icon: "📈"
+            },
+
+            // 架构文档
+            {
+                title: "服务治理实现计划",
+                path: "./architecture/service-governance-implementation.md",
+                description: "服务治理代码实现计划,包含技术方案和实施步骤",
+                category: "architecture",
+                tags: ["架构", "服务治理", "微服务"],
+                icon: "🏗️"
+            },
+            {
+                title: "服务治理落地方案",
+                path: "./architecture/service-governance-solution.md",
+                description: "服务治理能力落地方案,包含治理策略和实施路径",
+                category: "architecture",
+                tags: ["架构", "服务治理", "方案"],
+                icon: "📐"
+            },
+            {
+                title: "系统架构设计文档",
+                path: "./architecture/system-architecture.md",
+                description: "DDD分层架构、技术栈、架构决策记录(ADR)",
+                category: "architecture",
+                tags: ["架构", "DDD", "设计"],
+                icon: "🏛️"
+            },
+
+            // 商业化文档
+            {
+                title: "商业化执行计划",
+                path: "./commercial/sales-execution-plan.md",
+                description: "商业化售卖落地执行计划,包含市场策略和执行路径",
+                category: "commercial",
+                tags: ["商业化", "执行计划", "售卖"],
+                icon: "💼"
+            },
+            {
+                title: "脚手架重构方案",
+                path: "./commercial/scaffold-refactoring-plan.md",
+                description: "商业化脚手架重构方案,包含重构目标和实施计划",
+                category: "commercial",
+                tags: ["商业化", "重构", "方案"],
+                icon: "🔧"
+            },
+            {
+                title: "代码清理清单",
+                path: "./commercial/code-cleanup-checklist.md",
+                description: "业务代码删除清单,用于商业化产品准备",
+                category: "commercial",
+                tags: ["商业化", "代码清理", "清单"],
+                icon: "🗑️"
+            },
+
+            // 开发标准
+            {
+                title: "mvnd 构建标准",
+                path: "./standards/mvnd-build-standard.md",
+                description: "mvnd 构建标准文档,包含构建配置和最佳实践",
+                category: "standards",
+                tags: ["构建", "mvnd", "标准"],
+                icon: "🔨"
+            },
+            {
+                title: "后端开发规范",
+                path: "./standards/backend-development-standards.md",
+                description: "Java/Spring Boot 开发规范,包含编码规范和最佳实践",
+                category: "standards",
+                tags: ["开发规范", "后端", "Java"],
+                icon: "📖"
+            },
+            {
+                title: "前端开发规范",
+                path: "./standards/frontend-development-standards.md",
+                description: "Vue/TypeScript 开发规范,包含编码规范和最佳实践",
+                category: "standards",
+                tags: ["开发规范", "前端", "Vue"],
+                icon: "📘"
+            },
+
+            // 报告文档
+            {
+                title: "前端完成总结",
+                path: "./reports/frontend-completion-summary.md",
+                description: "前端项目任务完成总结报告",
+                category: "reports",
+                tags: ["报告", "前端", "总结"],
+                icon: "📄"
+            },
+            {
+                title: "后端完成总结",
+                path: "./reports/backend-completion-summary.md",
+                description: "后端项目任务完成总结报告",
+                category: "reports",
+                tags: ["报告", "后端", "总结"],
+                icon: "📄"
+            },
+            {
+                title: "文档整合完成报告",
+                path: "./reports/trae-documents-integration-completion-report.md",
+                description: ".trae/documents 整合到 docs 目录完成报告",
+                category: "reports",
+                tags: ["报告", "文档整合", "总结"],
+                icon: "📋"
+            },
+
+            // 索引文档
+            {
+                title: "架构文档总索引",
+                path: "./ARCHITECTURE_INDEX.md",
+                description: "29张架构图 + 11个场景化查找 + 关键词索引",
+                category: "index",
+                tags: ["索引", "架构", "导航"],
+                icon: "📚"
+            },
+            {
+                title: "集成文档索引",
+                path: "./integration/README.md",
+                description: "OAuth2/PKCE 认证集成完整指南和文档索引",
+                category: "index",
+                tags: ["索引", "集成", "导航"],
+                icon: "🔌"
+            },
+            {
+                title: "文档整合摘要",
+                path: "./INTEGRATION_SUMMARY.md",
+                description: "51个整合文档索引 + 按场景/关键词查找",
+                category: "index",
+                tags: ["索引", "摘要", "导航"],
+                icon: "📊"
+            },
+
+            // 快速开始
+            {
+                title: "快速开始",
+                path: "./QUICK_START.md",
+                description: "5分钟快速启动项目,包含环境准备和运行步骤",
+                category: "guide",
+                tags: ["快速开始", "入门", "教程"],
+                icon: "🚀"
+            },
+            {
+                title: "最佳实践",
+                path: "./BEST_PRACTICES.md",
+                description: "开发和运维最佳实践,包含常见场景和解决方案",
+                category: "guide",
+                tags: ["最佳实践", "指南", "经验"],
+                icon: "✨"
+            },
+
+            // 后端开发文档
+            {
+                title: "DDD 四层架构详解",
+                path: "./architecture/01-logical-architecture-detail.md",
+                description: "DDD 领域驱动设计四层架构详细说明,包含分层职责和依赖规则",
+                category: "backend",
+                tags: ["后端", "DDD", "架构", "分层"],
+                icon: "🏗️"
+            },
+            {
+                title: "响应式编程指南",
+                path: "./architecture/reactive-programming-guide.md",
+                description: "Spring WebFlux 响应式编程实战指南,包含 Reactor 使用和最佳实践",
+                category: "backend",
+                tags: ["后端", "响应式", "WebFlux", "Reactor"],
+                icon: "⚡"
+            },
+            {
+                title: "多租户隔离方案",
+                path: "./architecture/advanced-features/multi-tenant-isolation.md",
+                description: "多租户架构设计和数据隔离实现方案",
+                category: "backend",
+                tags: ["后端", "多租户", "数据隔离", "架构"],
+                icon: "🏢"
+            },
+            {
+                title: "分布式事务处理",
+                path: "./architecture/distributed-transaction.md",
+                description: "分布式事务处理方案,包含 Saga 模式和 TCC 模式",
+                category: "backend",
+                tags: ["后端", "分布式事务", "Saga", "微服务"],
+                icon: "🔄"
+            },
+
+            // 安全相关文档
+            {
+                title: "安全防护体系",
+                path: "./architecture/advanced-features/security-protection-system.md",
+                description: "企业级安全防护体系,包含认证授权、数据加密、防护策略",
+                category: "security",
+                tags: ["安全", "认证", "授权", "加密"],
+                icon: "🔐"
+            },
+            {
+                title: "JWT 认证实现",
+                path: "./architecture/jwt-authentication.md",
+                description: "JWT Token 认证机制实现,包含 Token 生成、验证和刷新",
+                category: "security",
+                tags: ["安全", "JWT", "认证", "Token"],
+                icon: "🎫"
+            },
+            {
+                title: "RBAC 权限模型",
+                path: "./architecture/rbac-permission-model.md",
+                description: "基于角色的访问控制(RBAC)权限模型设计和实现",
+                category: "security",
+                tags: ["安全", "RBAC", "权限", "访问控制"],
+                icon: "👥"
+            },
+            {
+                title: "数据加密方案",
+                path: "./architecture/data-encryption.md",
+                description: "敏感数据加密方案,包含传输加密和存储加密",
+                category: "security",
+                tags: ["安全", "加密", "数据保护"],
+                icon: "🔒"
+            },
+
+            // 测试相关文档
+            {
+                title: "单元测试指南",
+                path: "./technical/unit-testing-guide.md",
+                description: "JUnit5 + Mockito 单元测试最佳实践",
+                category: "testing",
+                tags: ["测试", "单元测试", "JUnit", "Mockito"],
+                icon: "🧪"
+            },
+            {
+                title: "集成测试实践",
+                path: "./technical/integration-testing.md",
+                description: "Spring Boot 集成测试实践,包含 TestContainers 使用",
+                category: "testing",
+                tags: ["测试", "集成测试", "TestContainers"],
+                icon: "🔬"
+            },
+            {
+                title: "API 测试指南",
+                path: "./technical/api-testing-guide.md",
+                description: "RESTful API 测试指南,包含 Postman 和自动化测试",
+                category: "testing",
+                tags: ["测试", "API测试", "Postman", "自动化"],
+                icon: "📡"
+            },
+            {
+                title: "性能测试方案",
+                path: "./technical/performance-testing.md",
+                description: "性能测试方案和压测实践,包含 JMeter 使用指南",
+                category: "testing",
+                tags: ["测试", "性能测试", "压测", "JMeter"],
+                icon: "📊"
+            },
+            {
+                title: "测试完整性计划",
+                path: "./technical/test-completeness-plan.md",
+                description: "测试完整性与报告计划,确保测试覆盖率和质量",
+                category: "testing",
+                tags: ["测试", "测试计划", "覆盖率"],
+                icon: "📋"
+            },
+
+            // 数据库相关文档
+            {
+                title: "数据库设计文档",
+                path: "./architecture/database-design.md",
+                description: "数据库设计规范和 E-R 关系图",
+                category: "backend",
+                tags: ["数据库", "设计", "E-R图", "后端"],
+                icon: "🗄️"
+            },
+            {
+                title: "Flyway 数据库迁移",
+                path: "./operations/flyway-migration-guide.md",
+                description: "Flyway 数据库版本管理和迁移实践",
+                category: "operations",
+                tags: ["数据库", "Flyway", "迁移", "运维"],
+                icon: "🔄"
+            },
+            {
+                title: "数据库性能优化",
+                path: "./operations/database-optimization.md",
+                description: "MySQL 性能优化实践,包含索引优化和查询优化",
+                category: "operations",
+                tags: ["数据库", "性能优化", "MySQL", "索引"],
+                icon: "⚡"
+            },
+
+            // 部署运维文档
+            {
+                title: "Docker 部署指南",
+                path: "./operations/docker-deployment.md",
+                description: "Docker 容器化部署指南,包含 Dockerfile 和 docker-compose",
+                category: "operations",
+                tags: ["运维", "Docker", "容器化", "部署"],
+                icon: "🐳"
+            },
+            {
+                title: "Kubernetes 部署",
+                path: "./operations/kubernetes-deployment.md",
+                description: "Kubernetes 集群部署方案,包含 K8s 配置和服务编排",
+                category: "operations",
+                tags: ["运维", "Kubernetes", "K8s", "微服务"],
+                icon: "☸️"
+            },
+            {
+                title: "CI/CD 流水线",
+                path: "./operations/cicd-pipeline.md",
+                description: "持续集成和持续部署流水线配置",
+                category: "operations",
+                tags: ["运维", "CI/CD", "自动化", "DevOps"],
+                icon: "🔧"
+            },
+            {
+                title: "日志管理方案",
+                path: "./operations/logging-management.md",
+                description: "ELK 日志管理方案,包含日志采集、存储和分析",
+                category: "operations",
+                tags: ["运维", "日志", "ELK", "监控"],
+                icon: "📝"
+            },
+
+            // 缓存相关文档
+            {
+                title: "Redis 缓存方案",
+                path: "./architecture/redis-caching.md",
+                description: "Redis 多级缓存架构和缓存策略",
+                category: "backend",
+                tags: ["后端", "Redis", "缓存", "性能"],
+                icon: "💾"
+            },
+            {
+                title: "分布式缓存实践",
+                path: "./architecture/distributed-cache.md",
+                description: "分布式缓存实现,包含缓存一致性和缓存穿透防护",
+                category: "backend",
+                tags: ["后端", "分布式缓存", "Redis", "一致性"],
+                icon: "🔄"
+            },
+
+            // 消息队列文档
+            {
+                title: "RocketMQ 使用指南",
+                path: "./architecture/rocketmq-guide.md",
+                description: "RocketMQ 消息队列使用指南,包含生产者和消费者配置",
+                category: "backend",
+                tags: ["后端", "消息队列", "RocketMQ", "异步"],
+                icon: "📨"
+            },
+            {
+                title: "消息可靠性方案",
+                path: "./architecture/message-reliability.md",
+                description: "消息队列可靠性保障方案,包含重试机制和死信队列",
+                category: "backend",
+                tags: ["后端", "消息队列", "可靠性", "重试"],
+                icon: "✅"
+            },
+
+            // API 文档
+            {
+                title: "API 设计规范",
+                path: "./standards/api-design-standards.md",
+                description: "RESTful API 设计规范,包含命名规范和版本管理",
+                category: "standards",
+                tags: ["规范", "API", "RESTful", "设计"],
+                icon: "📐"
+            },
+            {
+                title: "OpenAPI 文档规范",
+                path: "./api/openapi-specification.md",
+                description: "OpenAPI 3.0 文档规范和 Swagger 注解使用",
+                category: "standards",
+                tags: ["规范", "OpenAPI", "Swagger", "API"],
+                icon: "📄"
+            },
+
+            // 前端扩展文档
+            {
+                title: "Vue3 开发指南",
+                path: "./frontend/vue3-development-guide.md",
+                description: "Vue3 + TypeScript 开发指南,包含组合式 API 使用",
+                category: "frontend",
+                tags: ["前端", "Vue3", "TypeScript", "组合式API"],
+                icon: "🎨"
+            },
+            {
+                title: "状态管理方案",
+                path: "./frontend/state-management.md",
+                description: "Pinia 状态管理方案,包含状态设计和模块化",
+                category: "frontend",
+                tags: ["前端", "状态管理", "Pinia", "Vue3"],
+                icon: "📦"
+            },
+            {
+                title: "路由配置指南",
+                path: "./frontend/routing-configuration.md",
+                description: "Vue Router 路由配置和动态路由实现",
+                category: "frontend",
+                tags: ["前端", "路由", "Vue Router", "导航"],
+                icon: "🗺️"
+            },
+
+            // 监控告警扩展
+            {
+                title: "Prometheus 配置",
+                path: "./operations/prometheus-configuration.md",
+                description: "Prometheus 监控配置,包含指标采集和告警规则",
+                category: "operations",
+                tags: ["运维", "Prometheus", "监控", "告警"],
+                icon: "📊"
+            },
+            {
+                title: "告警规则配置",
+                path: "./operations/alerting-rules.md",
+                description: "监控告警规则配置,包含告警通知和升级策略",
+                category: "operations",
+                tags: ["运维", "告警", "监控", "通知"],
+                icon: "🚨"
+            },
+
+            // 工作流相关
+            {
+                title: "工作流引擎使用",
+                path: "./architecture/workflow-engine.md",
+                description: "BPMN 2.0 工作流引擎使用指南",
+                category: "backend",
+                tags: ["后端", "工作流", "BPMN", "审批"],
+                icon: "🔀"
+            },
+
+            // 文件管理
+            {
+                title: "文件上传方案",
+                path: "./architecture/file-upload.md",
+                description: "分片上传和断点续传实现方案",
+                category: "backend",
+                tags: ["后端", "文件上传", "分片上传", "MinIO"],
+                icon: "📤"
+            }
+        ];
+
+        // 搜索和过滤逻辑
+        let currentFilter = 'all';
+        let currentResults = documents;
+
+        const searchInput = document.getElementById('searchInput');
+        const resultsDiv = document.getElementById('results');
+        const resultCount = document.getElementById('resultCount');
+        const filterInfo = document.getElementById('filterInfo');
+        const filterBtns = document.querySelectorAll('.filter-btn');
+
+        // 搜索函数
+        function search(query) {
+            query = query.toLowerCase().trim();
+            
+            if (!query) {
+                return documents;
+            }
+
+            return documents.filter(doc => {
+                const titleMatch = doc.title.toLowerCase().includes(query);
+                const descMatch = doc.description.toLowerCase().includes(query);
+                const tagMatch = doc.tags.some(tag => tag.toLowerCase().includes(query));
+                const pathMatch = doc.path.toLowerCase().includes(query);
+                
+                return titleMatch || descMatch || tagMatch || pathMatch;
+            });
+        }
+
+        // 过滤函数
+        function filterByCategory(docs, category) {
+            if (category === 'all') {
+                return docs;
+            }
+            return docs.filter(doc => doc.category === category);
+        }
+
+        // 高亮关键词
+        function highlight(text, query) {
+            if (!query) return text;
+            
+            const regex = new RegExp(`(${query})`, 'gi');
+            return text.replace(regex, '<span class="highlight">$1</span>');
+        }
+
+        // 渲染结果
+        function render() {
+            const query = searchInput.value;
+            let results = search(query);
+            results = filterByCategory(results, currentFilter);
+            currentResults = results;
+
+            // 更新统计
+            resultCount.textContent = results.length;
+
+            // 渲染结果
+            if (results.length === 0) {
+                resultsDiv.innerHTML = `
+                    <div class="no-results">
+                        <div class="no-results-icon">🔍</div>
+                        <div class="no-results-text">
+                            ${query ? '未找到匹配的文档' : '请输入搜索关键词'}
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            resultsDiv.innerHTML = results.map(doc => `
+                <div class="result-card">
+                    <div class="result-header">
+                        <div class="result-icon">${doc.icon}</div>
+                        <div style="flex: 1;">
+                            <div class="result-title">
+                                <a href="${doc.path}" target="_blank">
+                                    ${highlight(doc.title, query)}
+                                </a>
+                            </div>
+                            <div class="result-path">${doc.path}</div>
+                        </div>
+                    </div>
+                    <div class="result-description">
+                        ${highlight(doc.description, query)}
+                    </div>
+                    <div class="result-tags">
+                        ${doc.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 事件监听
+        searchInput.addEventListener('input', render);
+
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                filterBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                currentFilter = btn.dataset.filter;
+                
+                const filterNames = {
+                    'all': '全部分类',
+                    'integration': '集成文档',
+                    'frontend': '前端文档',
+                    'backend': '后端文档',
+                    'operations': '运维文档',
+                    'architecture': '架构文档',
+                    'security': '安全文档',
+                    'testing': '测试文档',
+                    'commercial': '商业化文档',
+                    'standards': '规范文档',
+                    'reports': '报告文档'
+                };
+                
+                filterInfo.textContent = `显示: ${filterNames[currentFilter]}`;
+                render();
+            });
+        });
+
+        // 初始渲染
+        render();
+
+        // 快捷键支持
+        document.addEventListener('keydown', (e) => {
+            if (e.key === '/' && e.target !== searchInput) {
+                e.preventDefault();
+                searchInput.focus();
+            }
+        });
+    </script>
+</body>
+</html>
