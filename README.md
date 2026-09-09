@@ -9,7 +9,7 @@
 
 **企业级快速开发脚手架 · Spring Boot 3 + WebFlux + DDD架构**
 
-[功能特性](#功能特性) • [快速开始](#快速开始) • [技术栈](#技术栈) • [文档](#文档) • [部署](#部署指南)
+[功能特性](#功能特性) • [快速开始](#快速开始) • [技术栈](#技术栈) • [文档索引](#-文档索引快速入口) • [部署](#部署指南)
 
 </div>
 
@@ -409,6 +409,18 @@ spring:
 ## 📚 文档
 
 > 💡 **文档中心**: 查看 [📚 完整文档导航](./docs/README.md) - 70+ 篇技术文档统一入口
+
+### 📑 文档索引快速入口
+
+**🔍 [文档搜索工具](./docs/doc-search.html)** - 支持关键词搜索、分类过滤、实时预览 ([使用说明](./docs/DOC_SEARCH_GUIDE.md))
+
+| 索引类型 | 文档路径 | 说明 |
+|---------|---------|------|
+| **🏗️ 架构文档总索引** | [ARCHITECTURE_INDEX.md](./docs/ARCHITECTURE_INDEX.md) | 29张架构图 + 场景化查找 + 关键词索引 |
+| **🔌 集成文档索引** | [integration/README.md](./docs/integration/README.md) | OAuth2/PKCE 认证集成完整指南 |
+| **📊 文档整合摘要** | [INTEGRATION_SUMMARY.md](./docs/INTEGRATION_SUMMARY.md) | 51个整合文档索引 + 按场景/关键词查找 |
+| **📋 快速开始** | [QUICK_START.md](./docs/QUICK_START.md) | 5分钟快速启动项目 |
+| **🔧 最佳实践** | [BEST_PRACTICES.md](./docs/BEST_PRACTICES.md) | 开发和运维最佳实践 |
 
 ### 架构文档
 
