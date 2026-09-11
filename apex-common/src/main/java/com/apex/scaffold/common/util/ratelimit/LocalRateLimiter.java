@@ -1,5 +1,6 @@
 package com.apex.scaffold.common.util.ratelimit;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -234,7 +235,8 @@ public class LocalRateLimiter {
      *
      * <h3>使用建议</h3>
      * <p>建议通过定时任务调用，如每 10 分钟清理空闲超过 30 分钟的实例：
-     * <pre>{@code * scheduler.scheduleAtFixedRate(
+     * <pre>{@code
+     * scheduler.scheduleAtFixedRate(
      *     () -> LocalRateLimiter.clearIdle(Duration.ofMinutes(30).toMillis()),
      *     10, 10, TimeUnit.MINUTES);
      * }</pre>
@@ -245,17 +247,17 @@ public class LocalRateLimiter {
      */
     public static int clearIdle(long idleThresholdMs) {
         long now = System.currentTimeMillis();
-        int removed = 0;
-        for (Map.Entry<String, LocalRateLimiter> entry : INSTANCES.entrySet()) {
-            long lastAccess = entry.getValue().lastAccessTime.get();
-            if (now - lastAccess > idleThresholdMs) {
-                INSTANCES.remove(entry.getKey());
-                removed++;
-            }
+
+        List<String> keysToRemove = INSTANCES.entrySet().stream()
+                .filter(entry -> now - entry.getValue().lastAccessTime.get() > idleThresholdMs)
+                .map(Map.Entry::getKey)
+                .toList();
+
+        keysToRemove.forEach(INSTANCES::remove);
+
+        if (!keysToRemove.isEmpty()) {
+            log.debug("清理空闲限流器实例, 移除: {}, 剩余: {}", keysToRemove.size(), INSTANCES.size());
         }
-        if (removed > 0) {
-            log.debug("清理空闲限流器实例, 移除: {}, 剩余: {}", removed, INSTANCES.size());
-        }
-        return removed;
+        return keysToRemove.size();
     }
 }

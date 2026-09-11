@@ -56,8 +56,29 @@ public class WorkflowRouter {
     public RouterFunction<ServerResponse> adminWorkflowQueryRoutes(WorkflowHandler handler) {
         return RouterFunctions.route()
                 .path("/admin-api/v1/workflows", builder -> builder.GET("/instances", handler::listInstances)
+                        .GET("/instances/{instanceId}", handler::getInstanceDetail)
                         .GET("/statistics", handler::getStatistics)
                         .GET("/statistics/trend", handler::getTrend))
+                .build();
+    }
+
+    /**
+     * 工作流业务接口路由（API）。
+     *
+     * <p>定义工作流业务操作相关的所有路由规则。
+     *
+     * @param handler WorkflowHandler
+     * @return RouterFunction
+     */
+    @Bean
+    public RouterFunction<ServerResponse> workflowApiRoutes(WorkflowHandler handler) {
+        return RouterFunctions.route()
+                .path("/api/v1/workflows", builder -> builder.POST(
+                                "/{workflowCode}/instances",
+                                accept(MediaType.APPLICATION_JSON),
+                                handler::startProcessInstance)
+                        .GET("/tasks/pending", handler::listPendingTasks)
+                        .POST("/tasks/{taskId}/complete", accept(MediaType.APPLICATION_JSON), handler::completeTask))
                 .build();
     }
 

@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 import com.apex.scaffold.application.assembler.UserAssembler;
 import com.apex.scaffold.application.dto.PageRequest;
 import com.apex.scaffold.application.dto.UserDTO;
+import com.apex.scaffold.application.service.AccountDeletionService;
 import com.apex.scaffold.application.service.UserService;
 import com.apex.scaffold.common.dto.PageResponse;
 import com.apex.scaffold.domain.model.entity.UserEntity;
@@ -60,6 +61,9 @@ class UserHandlerTest {
     @Mock
     private MessageUtils messageUtils;
 
+    @Mock
+    private AccountDeletionService accountDeletionService;
+
     private static final String TEST_OPEN_ID = "test-open-id-123";
 
     private UserHandler handler;
@@ -69,10 +73,10 @@ class UserHandlerTest {
      */
     @BeforeEach
     void setUp() {
-        // 统一为 buildError 的国际化解析提供默认消息（重构后错误响应走 MessageUtils）
+        // 统一为 buildError 的国际化解析提供默认消息(重构后错误响应走 MessageUtils)
         when(messageUtils.get(anyString())).thenReturn(Mono.just("错误消息"));
         when(messageUtils.get(anyString(), any())).thenReturn(Mono.just("错误消息"));
-        handler = new UserHandler(userService, userAssembler, requestHandlerUtil, messageUtils);
+        handler = new UserHandler(userService, userAssembler, requestHandlerUtil, messageUtils, accountDeletionService);
     }
 
     private ServerRequest createRequestWithOpenId(String path) {

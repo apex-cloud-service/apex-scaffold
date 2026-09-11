@@ -106,19 +106,25 @@ public class IpRateLimitWebFilter implements WebFilter {
      * </pre>
      */
     private static final RedisScript<Long> RATE_LIMIT_LUA = RedisScript.of(
-            "redis.call('ZREMRANGEBYSCORE', KEYS[1], '-inf', ARGV[1]) "
-                    + "redis.call('ZADD', KEYS[1], ARGV[2], ARGV[3]) "
-                    + "redis.call('EXPIRE', KEYS[1], ARGV[4]) "
-                    + "return redis.call('ZCOUNT', KEYS[1], ARGV[1], '+inf')",
+            """
+            redis.call('ZREMRANGEBYSCORE', KEYS[1], '-inf', ARGV[1])
+            redis.call('ZADD', KEYS[1], ARGV[2], ARGV[3])
+            redis.call('EXPIRE', KEYS[1], ARGV[4])
+            return redis.call('ZCOUNT', KEYS[1], ARGV[1], '+inf')
+            """,
             Long.class);
 
     /**
      * Lua 脚本：在固定违规窗口内原子递增计数，并仅在首次写入时设置 TTL。
      */
     private static final RedisScript<Long> VIOLATION_COUNT_LUA = RedisScript.of(
-            "local count = redis.call('INCR', KEYS[1]) "
-                    + "if count == 1 then redis.call('EXPIRE', KEYS[1], ARGV[1]) end "
-                    + "return count",
+            """
+            local count = redis.call('INCR', KEYS[1])
+            if count == 1 then
+                redis.call('EXPIRE', KEYS[1], ARGV[1])
+            end
+            return count
+            """,
             Long.class);
 
     /**

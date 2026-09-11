@@ -12,6 +12,7 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -81,6 +82,7 @@ public class DataScopeAspect {
      * @param dataScopeProvider            同步数据权限装配器
      * @param reactiveDataScopeProvider    响应式数据权限装配器
      */
+    @Autowired
     public DataScopeAspect(DataScopeProvider dataScopeProvider, ReactiveDataScopeProvider reactiveDataScopeProvider) {
         this.dataScopeProvider = dataScopeProvider;
         this.reactiveDataScopeProvider = reactiveDataScopeProvider;

@@ -3,12 +3,15 @@ package com.apex.scaffold.interfaces.handler;
 import com.apex.scaffold.common.annotation.RequirePermission;
 import com.apex.scaffold.interfaces.monitor.dashboard.MonitorMetricsCollector;
 import com.apex.scaffold.interfaces.util.MessageUtils;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.apache.rocketmq.spring.core.RocketMQTemplate;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
@@ -35,6 +38,7 @@ import reactor.core.publisher.Mono;
  * @see MonitorMetricsCollector
  */
 @Component
+@ConditionalOnClass({CircuitBreakerRegistry.class, RocketMQTemplate.class})
 @Tag(name = "后台-监控大盘", description = "系统性能与治理监控聚合数据")
 public class MonitorDashboardHandler extends BaseHandler {
 

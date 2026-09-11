@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![Apex Scaffold](https://img.shields.io/badge/Apex_Scaffold-v2.5.0-blue)
+![Apex Scaffold](https://img.shields.io/badge/Apex_Scaffold-v1.2.0-blue)
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.5.15-brightgreen)
 ![Java](https://img.shields.io/badge/Java-17-orange)
 ![License](https://img.shields.io/badge/license-Apache%202.0-blue)
@@ -207,29 +207,38 @@ CREATE DATABASE apex_data CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 # Flyway会自动执行迁移脚本(src/main/resources/db/migration)
 ```
 
-### 3. 配置文件
+### 3. 配置环境变量
 
-复制配置模板并修改:
+**推荐方式**: 使用环境变量（支持 .env 文件）
 
 ```bash
-cp src/main/resources/application-dev.yml.example \
-   src/main/resources/application-dev.yml
+# 复制环境变量模板
+cp .env.example .env
+
+# 编辑 .env 文件，配置数据库和 Redis
+vim .env
 ```
 
-修改`application-dev.yml`:
-
-```yaml
-spring:
-  datasource:
-    url: jdbc:mysql://localhost:3306/apex_data
-    username: root
-    password: your_password
-  
-  data:
-    redis:
-      host: localhost
-      port: 6379
+**最小配置**（basic 档位）:
+```bash
+SPRING_PROFILES_ACTIVE=dev,basic
 ```
+
+**标准配置**（standard 档位）:
+```bash
+SPRING_PROFILES_ACTIVE=dev,standard
+DB_MASTER_URL=jdbc:mysql://localhost:3306/apex_data
+DB_MASTER_USERNAME=root
+DB_MASTER_PASSWORD=your_password
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_PASSWORD=your_redis_password
+JWT_SECRET=your-secret-key-at-least-32-bytes
+```
+
+**完整配置说明**: 查看 [环境变量管理指南](docs/operations/environment-variables.md)（172 个环境变量详细说明）
+
+---
 
 ### 4. 环境准备
 
@@ -250,16 +259,33 @@ sdk install mvnd 2.0.0-rc-3
 
 ### 5. 启动后端
 
+**方式 1: 使用 mvnd（推荐，速度快 3 倍）**
+
 ```bash
-# 方式1: mvnd启动（推荐，速度快3倍）
 mvnd spring-boot:run
+```
 
-# 方式2: IDE启动
-# 运行 ApexScaffoldApplication.java
+**方式 2: 使用 IDE 启动**
 
-# 方式3: 打包运行
+```bash
+# 直接运行 ApexScaffoldApplication.java
+```
+
+**方式 3: 打包后启动（生产环境）**
+
+```bash
 mvnd clean package -DskipTests
-java -jar target/apex-scaffold-2.5.0.jar
+java -jar apex-interfaces/target/apex-interfaces-1.2.0.jar
+```
+
+**方式 4: 使用 Docker Compose**
+
+```bash
+# 启动基础设施（MySQL + Redis + 监控栈）
+docker-compose -f docker-compose.infra.yml up -d
+
+# 启动应用
+docker-compose up -d
 ```
 
 访问: <http://localhost:8080>
@@ -597,8 +623,10 @@ java -server \
   -XX:MaxGCPauseMillis=200 \
   -XX:+HeapDumpOnOutOfMemoryError \
   -XX:HeapDumpPath=/logs/heapdump.hprof \
-  -jar apex-scaffold-2.5.0.jar
+  -jar apex-interfaces-1.2.0.jar
 ```
+
+**完整环境变量配置**: 查看 [环境变量管理指南](docs/operations/environment-variables.md) 了解所有 172 个环境变量的详细说明。
 
 ***
 

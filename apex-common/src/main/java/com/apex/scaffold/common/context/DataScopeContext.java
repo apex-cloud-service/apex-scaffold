@@ -1,8 +1,9 @@
 package com.apex.scaffold.common.context;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
-import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
 import org.reactivestreams.Subscription;
@@ -389,22 +390,7 @@ public final class DataScopeContext {
 
         @Override
         public Iterator<T> iterator() {
-            return new Iterator<>() {
-                private final Iterator<T> it = delegate.iterator();
-
-                @Override
-                public boolean hasNext() {
-                    return it.hasNext();
-                }
-
-                @Override
-                public T next() {
-                    if (!hasNext()) {
-                        throw new NoSuchElementException();
-                    }
-                    return it.next();
-                }
-            };
+            return Collections.unmodifiableList(new ArrayList<>(delegate)).iterator();
         }
 
         @Override

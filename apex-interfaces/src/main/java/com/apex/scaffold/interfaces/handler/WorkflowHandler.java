@@ -17,6 +17,7 @@ import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Validator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
@@ -69,22 +70,162 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @Component
 @Tag(name = "工作流管理", description = "工作流任务和流程实例操作接口")
-public class WorkflowHandler {
+public class WorkflowHandler extends BaseHandler {
 
     private final WorkflowService workflowService;
     private final WorkflowQueryService workflowQueryService;
     private final WorkflowStatisticsService workflowStatisticsService;
-    private final MessageUtils messageUtils;
 
     public WorkflowHandler(
             WorkflowService workflowService,
             WorkflowQueryService workflowQueryService,
             WorkflowStatisticsService workflowStatisticsService,
-            MessageUtils messageUtils) {
+            MessageUtils messageUtils,
+            Validator validator) {
+        super(messageUtils, validator);
         this.workflowService = workflowService;
         this.workflowQueryService = workflowQueryService;
         this.workflowStatisticsService = workflowStatisticsService;
-        this.messageUtils = messageUtils;
+    }
+
+    /**
+     * 发起流程实例。
+     *
+     * <p>根据流程编码创建新的流程实例。</p>
+     *
+     * @param request ServerRequest，路径参数 workflowCode，请求体 StartProcessInstanceRequest
+     * @return ServerResponse，包含流程实例
+     */
+    @Operation(operationId = "startProcessInstance", summary = "发起流程实例", description = "根据流程编码创建新的流程实例")
+    @Parameter(
+            name = "workflowCode",
+            description = "流程编码",
+            required = true,
+            in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+            schema = @Schema(type = "string"))
+    @RequestBody(
+            description = "流程实例创建请求",
+            required = true,
+            content =
+                    @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = StartProcessInstanceRequest.class)))
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "创建成功"),
+        @ApiResponse(responseCode = "400", description = "请求参数错误"),
+        @ApiResponse(responseCode = "404", description = "流程定义不存在")
+    })
+    public Mono<ServerResponse> startProcessInstance(ServerRequest request) {
+        String workflowCode = request.pathVariable("workflowCode");
+
+        return request.bodyToMono(StartProcessInstanceRequest.class)
+                .flatMap(this::validateAndThrow)
+                .flatMap(req -> getCurrentUserId()
+                        .flatMap(userId -> workflowService.startProcessInstance(
+                                workflowCode, req.getBusinessKey(), userId, req.getContextJson())))
+                .flatMap(instance -> ServerResponse.ok()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(Result.success(instance)));
+    }
+
+    /**
+     * 查询当前用户待办任务。
+     *
+     * <p>分页查询当前用户的待办任务列表。</p>
+     *
+     * @param request ServerRequest
+     * @return ServerResponse，包含待办任务分页列表
+     */
+    @Operation(operationId = "listPendingTasks", summary = "查询当前用户待办任务", description = "分页查询当前用户的待办任务列表")
+    @Parameter(
+            name = "pageNum",
+            description = "页码",
+            required = false,
+            in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+            schema = @Schema(type = "integer", defaultValue = "1"))
+    @Parameter(
+            name = "pageSize",
+            description = "每页大小",
+            required = false,
+            in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+            schema = @Schema(type = "integer", defaultValue = "10"))
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "查询成功", content = @Content(mediaType = "application/json")),
+        @ApiResponse(responseCode = "401", description = "未授权")
+    })
+    public Mono<ServerResponse> listPendingTasks(ServerRequest request) {
+        int pageNum = Integer.parseInt(request.queryParam("pageNum").orElse("1"));
+        int pageSize = Integer.parseInt(request.queryParam("pageSize").orElse("10"));
+
+        return getCurrentUserId()
+                .flatMap(userId -> workflowQueryService.listMyTasks(userId, pageNum, pageSize))
+                .flatMap(data -> ServerResponse.ok()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(Result.success(data)));
+    }
+
+    /**
+     * 完成任务。
+     *
+     * <p>审批通过任务。</p>
+     *
+     * @param request ServerRequest，路径参数 taskId，请求体 CompleteTaskRequest
+     * @return ServerResponse，包含操作结果
+     */
+    @Operation(operationId = "completeTask", summary = "完成任务", description = "审批通过任务")
+    @Parameter(
+            name = "taskId",
+            description = "任务ID",
+            required = true,
+            in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+            schema = @Schema(type = "integer", format = "int64"))
+    @RequestBody(
+            description = "完成任务请求",
+            required = true,
+            content =
+                    @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = CompleteTaskRequest.class)))
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "完成成功"),
+        @ApiResponse(responseCode = "400", description = "请求参数错误"),
+        @ApiResponse(responseCode = "404", description = "任务不存在")
+    })
+    public Mono<ServerResponse> completeTask(ServerRequest request) {
+        Long taskId = Long.valueOf(request.pathVariable("taskId"));
+
+        return request.bodyToMono(CompleteTaskRequest.class)
+                .flatMap(this::validateAndThrow)
+                .flatMap(req -> getCurrentUserId()
+                        .flatMap(userId -> workflowService.completeTask(taskId, userId, req.getComment())))
+                .then(ServerResponse.ok().bodyValue(Result.success()));
+    }
+
+    /**
+     * 查询流程实例详情。
+     *
+     * <p>查询流程实例的完整信息，包括定义、任务列表等。</p>
+     *
+     * @param request ServerRequest，路径参数 instanceId
+     * @return ServerResponse，包含流程实例详情
+     */
+    @Operation(operationId = "getInstanceDetail", summary = "查询流程实例详情", description = "查询流程实例的完整信息")
+    @Parameter(
+            name = "instanceId",
+            description = "流程实例ID",
+            required = true,
+            in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+            schema = @Schema(type = "integer", format = "int64"))
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "查询成功", content = @Content(mediaType = "application/json")),
+        @ApiResponse(responseCode = "404", description = "流程实例不存在")
+    })
+    public Mono<ServerResponse> getInstanceDetail(ServerRequest request) {
+        Long instanceId = Long.valueOf(request.pathVariable("instanceId"));
+
+        return workflowQueryService.getInstanceDetail(instanceId).flatMap(data -> ServerResponse.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(Result.success(data)));
     }
 
     /**
@@ -227,6 +368,7 @@ public class WorkflowHandler {
         Long taskId = Long.valueOf(request.pathVariable("taskId"));
 
         return request.bodyToMono(RollbackTaskRequest.class)
+                .flatMap(this::validateAndThrow)
                 .flatMap(req -> getCurrentUserId()
                         .flatMap(userId -> workflowService.rollbackToNode(
                                 taskId, req.getTargetNodeCode(), userId, req.getReason())))
@@ -265,6 +407,7 @@ public class WorkflowHandler {
         Long taskId = Long.valueOf(request.pathVariable("taskId"));
 
         return request.bodyToMono(TransferTaskRequest.class)
+                .flatMap(this::validateAndThrow)
                 .flatMap(req -> getCurrentUserId()
                         .flatMap(userId ->
                                 workflowService.transferTask(taskId, req.getNewAssigneeId(), userId, req.getReason())))
@@ -303,6 +446,7 @@ public class WorkflowHandler {
         Long taskId = Long.valueOf(request.pathVariable("taskId"));
 
         return request.bodyToMono(DelegateTaskRequest.class)
+                .flatMap(this::validateAndThrow)
                 .flatMap(req -> getCurrentUserId()
                         .flatMap(userId ->
                                 workflowService.delegateTask(taskId, req.getDelegateToId(), userId, req.getReason())))
@@ -341,6 +485,7 @@ public class WorkflowHandler {
         Long instanceId = Long.valueOf(request.pathVariable("instanceId"));
 
         return request.bodyToMono(SuspendInstanceRequest.class)
+                .flatMap(this::validateAndThrow)
                 .flatMap(req -> getCurrentUserId()
                         .flatMap(userId -> workflowService.suspendInstance(instanceId, userId, req.getReason())))
                 .then(ServerResponse.ok().bodyValue(Result.success()));
@@ -378,6 +523,7 @@ public class WorkflowHandler {
         Long instanceId = Long.valueOf(request.pathVariable("instanceId"));
 
         return request.bodyToMono(ResumeInstanceRequest.class)
+                .flatMap(this::validateAndThrow)
                 .flatMap(req -> getCurrentUserId()
                         .flatMap(userId -> workflowService.resumeInstance(instanceId, userId, req.getReason())))
                 .then(ServerResponse.ok().bodyValue(Result.success()));

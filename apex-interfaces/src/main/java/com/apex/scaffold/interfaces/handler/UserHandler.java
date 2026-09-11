@@ -90,22 +90,6 @@ public class UserHandler extends BaseHandler {
     }
 
     /**
-     * 兼容既有单元测试和外部扩展代码的构造方法。
-     *
-     * @param userService 用户服务
-     * @param userAssembler 用户装配器
-     * @param requestHandlerUtil 请求处理工具
-     * @param messageUtils 国际化消息工具
-     */
-    public UserHandler(
-            UserService userService,
-            UserAssembler userAssembler,
-            RequestHandlerUtil requestHandlerUtil,
-            MessageUtils messageUtils) {
-        this(userService, userAssembler, requestHandlerUtil, messageUtils, null);
-    }
-
-    /**
      * 获取当前用户信息
      *
      * <p>

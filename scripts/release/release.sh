@@ -35,7 +35,7 @@ ROOT_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 cd "${ROOT_DIR}"
 
 PROFILE="${1:-standard}"
-VERSION="${2:-1.1.3}"
+VERSION="${2:-1.2.0}"
 DIST_DIR="dist/apex-scaffold-${VERSION}-${PROFILE}"
 
 # 统一构建环境：sdkman 默认 JDK（17.0.12-oracle）+ mvnd 2.0.0-rc-3

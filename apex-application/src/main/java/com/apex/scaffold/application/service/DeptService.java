@@ -5,9 +5,9 @@ import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.domain.model.entity.DeptEntity;
 import com.apex.scaffold.domain.repository.DeptRepository;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -135,19 +135,22 @@ public class DeptService {
      * @return 部门树根节点列表
      */
     private List<DeptDTO> buildTree(List<DeptEntity> all) {
-        List<DeptDTO> nodes = all.stream().map(this::toDto).collect(Collectors.toList());
-        Map<Long, DeptDTO> byId = nodes.stream().collect(Collectors.toMap(DeptDTO::getId, n -> n));
-        List<DeptDTO> roots = new ArrayList<>();
-        for (DeptDTO node : nodes) {
-            Long parentId = node.getParentId() == null ? 0L : node.getParentId();
-            DeptDTO parent = byId.get(parentId);
-            if (parent == null || parentId == 0L) {
-                roots.add(node);
-            } else {
-                parent.getChildren().add(node);
-            }
-        }
-        return roots;
+        List<DeptDTO> nodes = all.stream().map(this::toDto).toList();
+        Map<Long, DeptDTO> byId = nodes.stream().collect(Collectors.toMap(DeptDTO::getId, Function.identity()));
+
+        return nodes.stream()
+                .filter(node -> {
+                    Long parentId = node.getParentId() == null ? 0L : node.getParentId();
+                    if (parentId == 0L) {
+                        return true;
+                    }
+                    DeptDTO parent = byId.get(parentId);
+                    if (parent != null) {
+                        parent.getChildren().add(node);
+                    }
+                    return parentId == 0L || parent == null;
+                })
+                .toList();
     }
 
     /** 实体 → DTO 转换。 */

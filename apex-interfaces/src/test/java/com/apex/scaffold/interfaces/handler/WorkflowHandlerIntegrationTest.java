@@ -4,10 +4,17 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.apex.scaffold.application.dto.WorkflowInstanceDetailDTO;
+import com.apex.scaffold.application.dto.WorkflowTaskDTO;
 import com.apex.scaffold.application.service.WorkflowService;
+import com.apex.scaffold.application.workflow.WorkflowQueryService;
+import com.apex.scaffold.application.workflow.WorkflowStatisticsService;
+import com.apex.scaffold.common.dto.PageResponse;
+import com.apex.scaffold.domain.model.workflow.ProcessInstance;
 import com.apex.scaffold.interfaces.dto.workflow.*;
 import com.apex.scaffold.interfaces.router.WorkflowRouter;
 import com.apex.scaffold.interfaces.security.AuthenticatedUser;
+import com.apex.scaffold.interfaces.util.MessageUtils;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -23,8 +30,17 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
 
-@WebFluxTest
-@ContextConfiguration(classes = {WorkflowHandler.class, WorkflowRouter.class})
+@WebFluxTest(
+        excludeAutoConfiguration = {
+            org.springframework.boot.autoconfigure.security.oauth2.client.reactive.ReactiveOAuth2ClientAutoConfiguration
+                    .class
+        })
+@ContextConfiguration(
+        classes = {
+            WorkflowHandler.class,
+            WorkflowRouter.class,
+            com.apex.scaffold.interfaces.exception.GlobalExceptionHandler.class
+        })
 @DisplayName("工作流 Handler 集成测试")
 class WorkflowHandlerIntegrationTest {
 
@@ -42,6 +58,107 @@ class WorkflowHandlerIntegrationTest {
 
     @MockBean
     private WorkflowService workflowService;
+
+    @MockBean
+    private WorkflowQueryService workflowQueryService;
+
+    @MockBean
+    private WorkflowStatisticsService workflowStatisticsService;
+
+    @MockBean
+    private MessageUtils messageUtils;
+
+    @MockBean
+    private com.apex.scaffold.interfaces.monitor.ExceptionMonitor exceptionMonitor;
+
+    @MockBean
+    private jakarta.validation.Validator validator;
+
+    @Test
+    @DisplayName("发起流程实例接口测试 - 成功")
+    void testStartProcessInstance_Success() {
+        ProcessInstance instance = new ProcessInstance();
+        instance.setId(100L);
+        instance.setStatus("RUNNING");
+        when(workflowService.startProcessInstance("leave_approval", "LEAVE-2026-001", 900L, "{\"days\":3}"))
+                .thenReturn(Mono.just(instance));
+
+        StartProcessInstanceRequest request = new StartProcessInstanceRequest();
+        request.setBusinessKey("LEAVE-2026-001");
+        request.setContextJson("{\"days\":3}");
+
+        webTestClient
+                .post()
+                .uri("/api/v1/workflows/leave_approval/instances")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(request)
+                .exchange()
+                .expectStatus()
+                .isOk()
+                .expectBody()
+                .jsonPath("$.code")
+                .isEqualTo(0)
+                .jsonPath("$.data.id")
+                .isEqualTo(100L);
+    }
+
+    @Test
+    @DisplayName("查询当前用户待办接口测试 - 成功")
+    void testListPendingTasks_Success() {
+        WorkflowTaskDTO task = WorkflowTaskDTO.builder()
+                .id(1000L)
+                .assigneeId(900L)
+                .status("PENDING")
+                .build();
+        when(workflowQueryService.listMyTasks(900L, 1, 10))
+                .thenReturn(Mono.just(PageResponse.of(List.of(task), 1L, 1, 10)));
+
+        webTestClient
+                .get()
+                .uri("/api/v1/workflows/tasks/pending?pageNum=1&pageSize=10")
+                .exchange()
+                .expectStatus()
+                .isOk()
+                .expectBody()
+                .jsonPath("$.data.list[0].id")
+                .isEqualTo(1000L);
+    }
+
+    @Test
+    @DisplayName("完成任务接口测试 - 使用认证上下文用户")
+    void testCompleteTask_UsesAuthenticatedUser() {
+        when(workflowService.completeTask(1000L, 900L, "同意")).thenReturn(Mono.empty());
+        CompleteTaskRequest request = new CompleteTaskRequest();
+        request.setComment("同意");
+
+        webTestClient
+                .post()
+                .uri("/api/v1/workflows/tasks/1000/complete")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(request)
+                .exchange()
+                .expectStatus()
+                .isOk();
+
+        verify(workflowService).completeTask(1000L, 900L, "同意");
+    }
+
+    @Test
+    @DisplayName("查询流程实例详情接口测试 - 成功")
+    void testGetInstanceDetail_Success() {
+        WorkflowInstanceDetailDTO detail = new WorkflowInstanceDetailDTO();
+        when(workflowQueryService.getInstanceDetail(100L)).thenReturn(Mono.just(detail));
+
+        webTestClient
+                .get()
+                .uri("/admin-api/v1/workflows/instances/100")
+                .exchange()
+                .expectStatus()
+                .isOk()
+                .expectBody()
+                .jsonPath("$.code")
+                .isEqualTo(0);
+    }
 
     @Test
     @DisplayName("流程回退接口测试 - 成功")
@@ -98,6 +215,12 @@ class WorkflowHandlerIntegrationTest {
         RollbackTaskRequest request = new RollbackTaskRequest();
         request.setTargetNodeCode("manager_approval");
         request.setReason("");
+
+        jakarta.validation.ConstraintViolation<RollbackTaskRequest> violation =
+                org.mockito.Mockito.mock(jakarta.validation.ConstraintViolation.class);
+        when(violation.getMessage()).thenReturn("回退原因不能为空");
+
+        when(validator.validate(any(RollbackTaskRequest.class))).thenReturn(java.util.Set.of(violation));
 
         webTestClient
                 .post()

@@ -236,7 +236,9 @@ public class GlobalExceptionHandler {
 
         return Mono.deferContextual(ctx -> {
             Locale locale = ctx.getOrDefault(Locale.class, Locale.SIMPLIFIED_CHINESE);
-            String msg = messageUtils.get(locale, "sys.param_error");
+            String msg = ex.getMessage() != null && !ex.getMessage().isBlank()
+                    ? ex.getMessage()
+                    : messageUtils.get(locale, "sys.param_error");
             Result<Void> result = Result.error(ResultCode.PARAM_ERROR.getCode(), msg, traceId);
             return Mono.just(ResponseEntity.badRequest().body(result));
         });
@@ -288,8 +290,14 @@ public class GlobalExceptionHandler {
         String traceId = resolveTraceId(exchange);
         log.warn("非法状态: {}, traceId: {}", ex.getMessage(), traceId);
 
-        Result<Void> result = Result.error(ResultCode.ERROR.getCode(), ex.getMessage(), traceId);
-        return Mono.just(ResponseEntity.status(HttpStatus.CONFLICT).body(result));
+        return Mono.deferContextual(ctx -> {
+            Locale locale = ctx.getOrDefault(Locale.class, Locale.SIMPLIFIED_CHINESE);
+            String msg = ex.getMessage() != null && !ex.getMessage().isBlank()
+                    ? ex.getMessage()
+                    : messageUtils.get(locale, "sys.param_error");
+            Result<Void> result = Result.error(ResultCode.PARAM_ERROR.getCode(), msg, traceId);
+            return Mono.just(ResponseEntity.badRequest().body(result));
+        });
     }
 
     /**
@@ -583,8 +591,14 @@ public class GlobalExceptionHandler {
                         msg = messageUtils.get(locale, "sys.internal_error");
                         code = ResultCode.ERROR.getCode();
                     }
-                } else if (ex instanceof IllegalArgumentException
-                        || ex instanceof org.springframework.web.server.ServerWebInputException
+                } else if (ex instanceof IllegalArgumentException || ex instanceof IllegalStateException) {
+                    status = HttpStatus.BAD_REQUEST;
+                    // 保留原始异常消息,因为业务异常通常包含有用的错误描述
+                    msg = ex.getMessage() != null && !ex.getMessage().isBlank()
+                            ? ex.getMessage()
+                            : messageUtils.get(locale, "sys.param_error");
+                    code = 400;
+                } else if (ex instanceof org.springframework.web.server.ServerWebInputException
                         || ex instanceof DecodingException) {
                     status = HttpStatus.BAD_REQUEST;
                     msg = messageUtils.get(locale, "sys.param_error");

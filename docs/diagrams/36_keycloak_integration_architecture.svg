@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 900" width="1400" height="900">
+  <defs>
+    <style>
+      .title{font:700 32px sans-serif;fill:#0f172a;text-anchor:middle}
+      .subtitle{font:500 14px sans-serif;fill:#64748b;text-anchor:middle}
+      .section-title{font:600 15px sans-serif;fill:#0f172a;text-anchor:middle}
+      .text{font:400 10px sans-serif;fill:#475569}
+      .code{font:400 9px monospace;fill:#2563eb}
+      .layer-box{fill:#eff6ff;stroke:#3b82f6;stroke-width:2;rx:8}
+      .component{fill:#ffffff;stroke:#94a3b8;stroke-width:1.5;rx:6}
+      .primary{fill:#4f46e5;stroke:#4338ca;stroke-width:2;rx:6}
+      .success{fill:#059669;stroke:#047857;stroke-width:2;rx:6}
+      .warning{fill:#d97706;stroke:#b45309;stroke-width:2;rx:6}
+      .info{fill:#0891b2;stroke:#0e7490;stroke-width:2;rx:6}
+      .arrow{fill:none;stroke:#4f46e5;stroke-width:2.5;marker-end:url(#ah)}
+      .d-arrow{fill:none;stroke:#64748b;stroke-width:1.5;stroke-dasharray:5,3;marker-end:url(#ahg)}
+    </style>
+    <marker id="ah" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><polygon points="0 0,10 3,0 6" fill="#4f46e5"/></marker>
+    <marker id="ahg" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><polygon points="0 0,10 3,0 6" fill="#64748b"/></marker>
+  </defs>
+  <text x="700" y="35" class="title">Keycloak 集成架构 (OIDC 1.0)</text>
+  <text x="700" y="58" class="subtitle">身份提供商IdP · 用户同步 · 角色映射 · 统一JWT令牌</text>
+
+  <!-- Keycloak Server -->
+  <rect x="50" y="90" width="400" height="760" class="success"/>
+  <text x="250" y="118" style="font:700 18px sans-serif;fill:#ffffff">Keycloak 服务器 (Identity Provider)</text>
+
+  <rect x="70" y="140" width="360" height="110" fill="#d1fae5" stroke="#059669" stroke-width="1.5" rx="4"/>
+  <text x="250" y="160" class="text" text-anchor="middle" font-weight="600">Realm: apex-scaffold-realm</text>
+  <text x="77" y="178" class="code">• User Federation: LDAP / Active Directory</text>
+  <text x="77" y="190" class="code">• Identity Provider: GitHub / Google</text>
+  <text x="77" y="202" class="code">• 用户目录: 统一用户池</text>
+  <text x="77" y="214" class="code">• 密码策略: 复杂度+锁定</text>
+  <text x="77" y="226" class="code">• 多因素认证: OTP / SMS</text>
+  <text x="77" y="238" class="code">• 会话管理: SSO Session</text>
+
+  <rect x="70" y="270" width="360" height="100" fill="#d1fae5" stroke="#059669" stroke-width="1.5" rx="4"/>
+  <text x="250" y="290" class="text" text-anchor="middle" font-weight="600">Client: apex-web-client</text>
+  <text x="77" y="308" class="code">Protocol: openid-connect</text>
+  <text x="77" y="320" class="code">Access Type: confidential</text>
+  <text x="77" y="332" class="code">Redirect URI: https://api.apex-scaffold.com</text>
+  <text x="77" y="344" class="code">/login/oauth2/code/keycloak</text>
+  <text x="77" y="356" class="code">Scopes: openid profile email</text>
+  <text x="77" y="368" class="code">PKCE: S256</text>
+
+  <rect x="70" y="390" width="360" height="160" fill="#d1fae5" stroke="#059669" stroke-width="1.5" rx="4"/>
+  <text x="250" y="410" class="text" text-anchor="middle" font-weight="600">OIDC 协议端点</text>
+  <text x="77" y="428" class="code">Authorization:</text>
+  <text x="82" y="440" class="code">/auth/realms/apex/protocol/openid-connect/auth</text>
+  <text x="77" y="452" class="code">Token:</text>
+  <text x="82" y="464" class="code">/auth/realms/apex/protocol/openid-connect/token</text>
+  <text x="77" y="476" class="code">UserInfo:</text>
+  <text x="82" y="488" class="code">/auth/realms/apex/protocol/openid-connect/userinfo</text>
+  <text x="77" y="500" class="code">JWKS:</text>
+  <text x="82" y="512" class="code">/auth/realms/apex/protocol/openid-connect/certs</text>
+  <text x="77" y="524" class="code">Logout: /auth/realms/apex/protocol/openid-connect/logout</text>
+  <text x="77" y="536" class="code">Discovery: /auth/realms/apex/.well-known/openid-configuration</text>
+
+  <rect x="70" y="570" width="360" height="110" fill="#d1fae5" stroke="#059669" stroke-width="1.5" rx="4"/>
+  <text x="250" y="590" class="text" text-anchor="middle" font-weight="600">Keycloak Admin API</text>
+  <text x="77" y="608" class="code">• 创建用户 / 更新用户</text>
+  <text x="77" y="620" class="code">• 角色分配 / 组管理</text>
+  <text x="77" y="632" class="code">• Client 配置管理</text>
+  <text x="77" y="644" class="code">• Session / Token 查询</text>
+  <text x="77" y="656" class="code">Base URL: http://keycloak:8080/auth/admin</text>
+  <text x="77" y="668" class="code">Auth: Bearer &lt;admin_access_token&gt;</text>
+
+  <rect x="70" y="700" width="360" height="140" fill="#d1fae5" stroke="#059669" stroke-width="1.5" rx="4"/>
+  <text x="250" y="720" class="text" text-anchor="middle" font-weight="600">角色映射策略</text>
+  <text x="77" y="738" class="code">Keycloak Realm Role  →  Apex RBAC Role</text>
+  <text x="77" y="750" class="code">────────────────────────────────</text>
+  <text x="77" y="762" class="code">admin                 →  ROLE_ADMIN</text>
+  <text x="77" y="774" class="code">user                  →  ROLE_USER</text>
+  <text x="77" y="786" class="code">editor                →  ROLE_EDITOR</text>
+  <text x="77" y="798" class="code">finance_manager       →  ROLE_FINANCE_MANAGER</text>
+  <text x="77" y="810" class="code">ops_admin             →  ROLE_OPS_ADMIN</text>
+  <text x="77" y="822" class="code">映射方式: Claim → GrantedAuthority</text>
+  <text x="77" y="834" class="code">默认角色: ROLE_USER (无映射时)</text>
+
+  <!-- Apex Scaffold Integration -->
+  <rect x="500" y="90" width="430" height="760" class="primary"/>
+  <text x="715" y="118" style="font:700 18px sans-serif;fill:#ffffff">Apex Scaffold 集成层</text>
+
+  <rect x="520" y="140" width="390" height="130" fill="#6366f1" stroke="#4f46e5" stroke-width="1.5" rx="4"/>
+  <text x="715" y="160" class="text" fill="#ffffff" text-anchor="middle" font-weight="600">OidcAuthenticationSuccessHandler</text>
+  <text x="527" y="178" class="code" fill="#e0e7ff">1. 解析 OidcUser (sub, email, username)</text>
+  <text x="527" y="190" class="code" fill="#e0e7ff">2. 根据 keycloak_sub 查询本地用户</text>
+  <text x="527" y="202" class="code" fill="#e0e7ff">3. 用户不存在 → 自动创建(需开启)</text>
+  <text x="527" y="214" class="code" fill="#e0e7ff">4. 更新最后登录时间</text>
+  <text x="527" y="226" class="code" fill="#e0e7ff">5. 生成 Apex JWT Token 对</text>
+  <text x="527" y="238" class="code" fill="#e0e7ff">6. 302 重定向前端 callback URL</text>
+  <text x="527" y="250" class="code" fill="#e0e7ff">7. 携带 accessToken + refreshToken</text>
+
+  <rect x="520" y="290" width="390" height="110" fill="#6366f1" stroke="#4f46e5" stroke-width="1.5" rx="4"/>
+  <text x="715" y="310" class="text" fill="#ffffff" text-anchor="middle" font-weight="600">KeycloakUserSyncService</text>
+  <text x="527" y="328" class="code" fill="#e0e7ff">• syncUserFromKeycloak(sub, email, name)</text>
+  <text x="527" y="340" class="code" fill="#e0e7ff">  → userRepository.findByKeycloakSub(sub)</text>
+  <text x="527" y="352" class="code" fill="#e0e7ff">  → 如果null: 创建新用户</text>
+  <text x="527" y="364" class="code" fill="#e0e7ff">  → 否则: 更新用户信息</text>
+  <text x="527" y="376" class="code" fill="#e0e7ff">• 同步频率: 每次登录时同步</text>
+  <text x="527" y="388" class="code" fill="#e0e7ff">• 数据源: Keycloak ID Token Claims</text>
+
+  <rect x="520" y="420" width="390" height="130" fill="#6366f1" stroke="#4f46e5" stroke-width="1.5" rx="4"/>
+  <text x="715" y="440" class="text" fill="#ffffff" text-anchor="middle" font-weight="600">SecurityConfig (OAuth2 Client)</text>
+  <text x="527" y="458" class="code" fill="#e0e7ff">spring.security.oauth2.client:</text>
+  <text x="532" y="470" class="code" fill="#e0e7ff">  registration.keycloak:</text>
+  <text x="537" y="482" class="code" fill="#e0e7ff">    client-id: apex-web-client</text>
+  <text x="537" y="494" class="code" fill="#e0e7ff">    client-secret: ${KC_CLIENT_SECRET}</text>
+  <text x="537" y="506" class="code" fill="#e0e7ff">    scope: openid,profile,email</text>
+  <text x="537" y="518" class="code" fill="#e0e7ff">  provider.keycloak:</text>
+  <text x="537" y="530" class="code" fill="#e0e7ff">    issuer-uri: ${KC_ISSUER_URI}</text>
+  <text x="527" y="542" class="code" fill="#e0e7ff">http.oauth2Login().successHandler(oidcHandler)</text>
+
+  <rect x="520" y="570" width="390" height="110" fill="#6366f1" stroke="#4f46e5" stroke-width="1.5" rx="4"/>
+  <text x="715" y="590" class="text" fill="#ffffff" text-anchor="middle" font-weight="600">TokenService (本地JWT生成)</text>
+  <text x="527" y="608" class="code" fill="#e0e7ff">generateTokenPair(userId):</text>
+  <text x="532" y="620" class="code" fill="#e0e7ff">  accessToken = jwtUtil.generate()</text>
+  <text x="537" y="632" class="code" fill="#e0e7ff">  有效期: 2小时 (RS256签名)</text>
+  <text x="532" y="644" class="code" fill="#e0e7ff">  refreshToken = UUID.randomUUID()</text>
+  <text x="537" y="656" class="code" fill="#e0e7ff">  有效期: 7天 (存入Redis)</text>
+  <text x="527" y="668" class="code" fill="#e0e7ff">返回: { accessToken, refreshToken }</text>
+
+  <rect x="520" y="700" width="390" height="140" fill="#6366f1" stroke="#4f46e5" stroke-width="1.5" rx="4"/>
+  <text x="715" y="720" class="text" fill="#ffffff" text-anchor="middle" font-weight="600">用户表扩展 (sys_user)</text>
+  <text x="527" y="738" class="code" fill="#e0e7ff">新增字段: keycloak_sub (VARCHAR(255))</text>
+  <text x="527" y="750" class="code" fill="#e0e7ff">索引: UNIQUE KEY uk_keycloak_sub</text>
+  <text x="527" y="762" class="code" fill="#e0e7ff">作用: Keycloak用户唯一标识映射</text>
+  <text x="527" y="774" class="code" fill="#e0e7ff">值格式: "f:realm:user-id" (OIDC sub)</text>
+  <text x="527" y="786" class="code" fill="#e0e7ff">查询: findByKeycloakSub(sub)</text>
+  <text x="527" y="798" class="code" fill="#e0e7ff">迁移: V23__add_keycloak_sub_to_user.sql</text>
+  <text x="527" y="810" class="code" fill="#e0e7ff">同步字段: username, email, nick_name</text>
+  <text x="527" y="822" class="code" fill="#e0e7ff">状态: ACTIVE (默认启用)</text>
+  <text x="527" y="834" class="code" fill="#e0e7ff">角色: 从Keycloak Realm Roles映射</text>
+
+  <!-- 前端 + 数据流向 -->
+  <rect x="970" y="90" width="380" height="360" class="warning"/>
+  <text x="1160" y="118" style="font:700 18px sans-serif;fill:#ffffff">前端集成 (Vue 3)</text>
+
+  <rect x="990" y="140" width="340" height="100" fill="#fef3c7" stroke="#d97706" stroke-width="1.5" rx="4"/>
+  <text x="1160" y="160" class="text" text-anchor="middle" font-weight="600">发起Keycloak登录</text>
+  <text x="997" y="178" class="code">window.location.href =</text>
+  <text x="997" y="190" class="code">'/oauth2/authorization/keycloak'</text>
+  <text x="997" y="202" class="code">// 跳转到Keycloak登录页</text>
+  <text x="997" y="214" class="code">// 完成后回跳 /callback</text>
+  <text x="997" y="226" class="code">// 携带 accessToken, refreshToken</text>
+
+  <rect x="990" y="255" width="340" height="100" fill="#fef3c7" stroke="#d97706" stroke-width="1.5" rx="4"/>
+  <text x="1160" y="275" class="text" text-anchor="middle" font-weight="600">回调处理</text>
+  <text x="997" y="293" class="code">const url = new URL(window.location.href)</text>
+  <text x="997" y="305" class="code">const token = url.searchParams.get('accessToken')</text>
+  <text x="997" y="317" class="code">const refresh = url.searchParams.get('refreshToken')</text>
+  <text x="997" y="329" class="code">localStorage.setItem('accessToken', token)</text>
+  <text x="997" y="341" class="code">localStorage.setItem('refreshToken', refresh)</text>
+  <text x="997" y="353" class="code">router.push('/dashboard')</text>
+
+  <rect x="990" y="370" width="340" height="70" fill="#fef3c7" stroke="#d97706" stroke-width="1.5" rx="4"/>
+  <text x="1160" y="390" class="text" text-anchor="middle" font-weight="600">API调用 (使用Apex JWT)</text>
+  <text x="997" y="408" class="code">Authorization: Bearer &lt;apex_jwt_access_token&gt;</text>
+  <text x="997" y="420" class="code">// 业务API使用本地JWT</text>
+  <text x="997" y="432" class="code">// 不使用Keycloak ID Token</text>
+
+  <!-- 配置开关 -->
+  <rect x="970" y="480" width="380" height="370" class="info"/>
+  <text x="1160" y="508" style="font:700 18px sans-serif;fill:#ffffff">配置开关 (application.yml)</text>
+
+  <rect x="990" y="530" width="340" height="150" fill="#cffafe" stroke="#0891b2" stroke-width="1.5" rx="4"/>
+  <text x="1160" y="550" class="text" text-anchor="middle" font-weight="600">Keycloak集成配置</text>
+  <text x="997" y="568" class="code">keycloak:</text>
+  <text x="1002" y="580" class="code">enabled: true              # 启用Keycloak</text>
+  <text x="1002" y="592" class="code">server-url: http://kc:8080/auth</text>
+  <text x="1002" y="604" class="code">realm: apex-scaffold-realm</text>
+  <text x="1002" y="616" class="code">client-id: apex-web-client</text>
+  <text x="1002" y="628" class="code">client-secret: ${KC_SECRET}</text>
+  <text x="1002" y="640" class="code">user-sync-enabled: true   # 自动同步用户</text>
+  <text x="1002" y="652" class="code">frontend-callback-url:</text>
+  <text x="1007" y="664" class="code">https://admin.apex-scaffold.com/callback</text>
+  <text x="997" y="678" class="code">issuer-uri: ${KC_ISSUER_URI}</text>
+
+  <rect x="990" y="695" width="340" height="145" fill="#cffafe" stroke="#0891b2" stroke-width="1.5" rx="4"/>
+  <text x="1160" y="715" class="text" text-anchor="middle" font-weight="600">同步策略说明</text>
+  <text x="997" y="733" class="code">user-sync-enabled=true:</text>
+  <text x="1002" y="745" class="code">  首次登录自动创建本地用户</text>
+  <text x="1002" y="757" class="code">  后续登录更新用户信息</text>
+  <text x="997" y="769" class="code">user-sync-enabled=false:</text>
+  <text x="1002" y="781" class="code">  用户不存在返回403</text>
+  <text x="1002" y="793" class="code">  需管理员预先创建用户</text>
+  <text x="997" y="805" class="code">  keycloak_sub需手动绑定</text>
+  <text x="997" y="817" class="code">  适合严格权限控制场景</text>
+
+  <!-- Arrows -->
+  <path d="M 450,420 L 520,420" class="arrow"/>
+  <text x="485" y="414" class="code" font-size="9">OIDC回调</text>
+  <path d="M 920,640 L 990,640" class="d-arrow"/>
+  <text x="955" y="634" class="code" font-size="9">配置驱动</text>
+  <path d="M 920,250 L 990,250" class="d-arrow"/>
+
+  <text x="700" y="885" class="code" text-anchor="middle">© 2026 Apex Team · Keycloak集成架构 v3.0</text>
+</svg>

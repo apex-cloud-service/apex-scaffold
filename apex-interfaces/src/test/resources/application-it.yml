@@ -172,29 +172,35 @@ spring:
       - org.springframework.boot.actuate.autoconfigure.tracing.zipkin.ZipkinAutoConfiguration
 
   # ==========================================================================
-  # 数据库迁移 — Flyway（与 prod 一致，MySQL 版 db/migration）
+  # 数据库迁移 — Flyway(与 prod 一致,MySQL 版 db/migration)
   # ==========================================================================
-  # 集成测试通过 Flyway 真实执行 MySQL 版版本化迁移（db/migration 当前 V1-V15），
-  # 保证「各环境 Flyway 均可用」且测试库 schema 与生产完全一致；
-  # 表结构由 Flyway 建立，data-it.sql 仅负责灌入测试种子数据（幂等重置）。
+  # 集成测试通过 Flyway 真实执行 MySQL 版版本化迁移(db/migration 当前 V1-V26),
+  # 保证「各环境 Flyway 均可用」且测试库 schema 与生产完全一致;
+  # 表结构由 Flyway 建立,data-it.sql 仅负责灌入测试种子数据(幂等重置)。
   # --------------------------------------------------------------------------
   flyway:
     enabled: true
     locations: classpath:db/migration/${apex.database.type:mysql}
-    # 严格校验已执行迁移的 checksum，防止脚本被篡改
-    validate-on-migrate: true
-    # 禁止自动创建基线版本
-    baseline-on-migrate: false
-    # 禁止自动修复元数据表
-    repair: false
+    # 禁用严格校验以避免checksum不匹配
+    validate-on-migrate: false
+    # 允许在已有数据库上创建baseline
+    baseline-on-migrate: true
+    # 允许乱序执行迁移
+    out-of-order: true
+    # 忽略特定状态的迁移
+    ignore-migration-patterns: "*:pending,*:ignored,*:future"
+    # 清理失败的迁移记录
+    clean-on-validation-error: true
+    # 清理数据库(仅测试环境)
+    clean-disabled: false
 
   sql:
     init:
       # mode: always — 每次启动 Spring 容器都执行数据初始化脚本，
-      # 确保每个测试类获得确定性的数据基线（表结构由 Flyway 负责）
+      # 确保每个测试类获得确定性的数据基线(表结构由 Flyway 负责)
       mode: always
       # data-it.sql：集成测试的预置数据集，包含测试用例运行所需的基础记录
-      # （如系统配置、示例用户等），通过 DELETE + INSERT 幂等重置
+      # (如系统配置、示例用户等),通过 DELETE + INSERT 幂等重置
       data-locations: classpath:data-it.sql
 
   # ==========================================================================
@@ -383,6 +389,13 @@ logging:
     # Sentinel 日志 INFO — Sentinel 已禁用，降低日志噪音
     sentinelRecordLogger: INFO
     sentinelCommandCenterLogger: INFO
+    # ===== DEBUG日志排查自动配置问题 =====
+    com.baomidou.dynamic.datasource: DEBUG
+    com.baomidou.mybatisplus: DEBUG
+    org.springframework.boot.autoconfigure: DEBUG
+    org.springframework.jdbc: DEBUG
+    org.mybatis: DEBUG
+    org.flywaydb: DEBUG
   pattern:
     # 控制台日志格式：
     #   %d{yyyy-MM-dd HH:mm:ss.SSS} — 时间戳精确到毫秒

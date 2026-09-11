@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 1050" width="1400" height="1050">
+  <defs>
+    <style>
+      .title{font:700 30px sans-serif;fill:#0f172a;text-anchor:middle}
+      .subtitle{font:500 13px sans-serif;fill:#64748b;text-anchor:middle}
+      .at{font:600 11px sans-serif;fill:#0f172a;text-anchor:middle}
+      .text{font:400 10px sans-serif;fill:#475569}
+      .code{font:400 8.5px monospace;fill:#2563eb}
+      .st{font:500 10px sans-serif;fill:#1e293b}
+      .ab{fill:#4f46e5;stroke:#4338ca;stroke-width:2;rx:6}
+      .kb{fill:#059669;stroke:#047857;stroke-width:2;rx:6}
+      .vb{fill:#d97706;stroke:#b45309;stroke-width:2;rx:6}
+      .db{fill:#0891b2;stroke:#0e7490;stroke-width:2;rx:6}
+      .life{fill:none;stroke:#cbd5e1;stroke-width:2;stroke-dasharray:5,5}
+      .act{fill:#e0e7ff;stroke:#6366f1;stroke-width:1.5}
+      .arr{fill:none;stroke:#4f46e5;stroke-width:2;marker-end:url(#ah)}
+      .rarr{fill:none;stroke:#059669;stroke-width:2;stroke-dasharray:4,3;marker-end:url(#arh)}
+      .nb{fill:#fef3c7;stroke:#f59e0b;stroke-width:1.5;rx:4}
+      .pb{fill:#f8fafc;stroke:#cbd5e1;stroke-width:1.5;rx:6}
+    </style>
+    <marker id="ah" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><polygon points="0 0,10 3,0 6" fill="#4f46e5"/></marker>
+    <marker id="arh" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><polygon points="0 0,10 3,0 6" fill="#059669"/></marker>
+  </defs>
+  <text x="700" y="33" class="title">Keycloak OIDC 认证流程时序图</text>
+  <text x="700" y="55" class="subtitle">Authorization Code + PKCE · ID Token → Apex JWT · 用户自动同步</text>
+
+  <rect x="70" y="80" width="110" height="45" class="ab"/>
+  <text x="125" y="98" class="at" fill="#ffffff">用户浏览器</text>
+  <text x="125" y="111" class="text" fill="#e0e7ff">Vue 3 SPA</text>
+
+  <rect x="215" y="80" width="110" height="45" class="vb"/>
+  <text x="270" y="98" class="at" fill="#ffffff">Apex 后端</text>
+  <text x="270" y="111" class="text" fill="#fef3c7">Spring Boot</text>
+
+  <rect x="360" y="80" width="110" height="45" class="kb"/>
+  <text x="415" y="98" class="at" fill="#ffffff">Keycloak</text>
+  <text x="415" y="111" class="text" fill="#d1fae5">IdP Server</text>
+
+  <rect x="505" y="80" width="120" height="45" class="db"/>
+  <text x="565" y="98" class="at" fill="#ffffff">UserInfo端点</text>
+  <text x="565" y="111" class="text" fill="#cffafe">/userinfo</text>
+
+  <rect x="655" y="80" width="120" height="45" class="ab"/>
+  <text x="715" y="98" class="at" fill="#ffffff">TokenService</text>
+  <text x="715" y="111" class="text" fill="#e0e7ff">本地JWT生成</text>
+
+  <rect x="805" y="80" width="120" height="45" class="vb"/>
+  <text x="865" y="98" class="at" fill="#ffffff">UserRepository</text>
+  <text x="865" y="111" class="text" fill="#fef3c7">MySQL</text>
+
+  <rect x="955" y="80" width="120" height="45" class="kb"/>
+  <text x="1015" y="98" class="at" fill="#ffffff">前端回调</text>
+  <text x="1015" y="111" class="text" fill="#d1fae5">/callback</text>
+
+  <rect x="1105" y="80" width="120" height="45" class="db"/>
+  <text x="1165" y="98" class="at" fill="#ffffff">LocalStorage</text>
+  <text x="1165" y="111" class="text" fill="#cffafe">Token存储</text>
+
+  <path d="M 125,125 L 125,1000" class="life"/>
+  <path d="M 270,125 L 270,1000" class="life"/>
+  <path d="M 415,125 L 415,1000" class="life"/>
+  <path d="M 565,125 L 565,1000" class="life"/>
+  <path d="M 715,125 L 715,1000" class="life"/>
+  <path d="M 865,125 L 865,1000" class="life"/>
+  <path d="M 1015,125 L 1015,1000" class="life"/>
+  <path d="M 1165,125 L 1165,1000" class="life"/>
+
+  <rect x="30" y="145" width="1335" height="35" class="pb"/>
+  <text x="700" y="168" class="st" text-anchor="middle">阶段1: 发起OIDC认证</text>
+
+  <path d="M 125,195 L 270,195" class="arr"/>
+  <text x="197" y="183" class="st">点击"使用Keycloak登录"</text>
+  <path d="M 270,215 L 415,215" class="arr"/>
+  <text x="342" y="203" class="st">302重定向到Keycloak授权页</text>
+  <rect x="320" y="220" width="180" height="38" class="nb"/>
+  <text x="327" y="231" class="code">response_type=code</text>
+  <text x="327" y="241" class="code">scope=openid profile email</text>
+  <text x="327" y="251" class="code">code_challenge=S256</text>
+
+  <rect x="30" y="275" width="1335" height="35" class="pb"/>
+  <text x="700" y="298" class="st" text-anchor="middle">阶段2: Keycloak认证并颁发授权码</text>
+
+  <rect x="390" y="320" width="50" height="55" class="act"/>
+  <path d="M 125,335 L 415,335" class="arr"/>
+  <text x="270" y="323" class="st">用户在Keycloak登录</text>
+  <path d="M 415,360 L 270,360" class="rarr"/>
+  <rect x="280" y="365" width="160" height="40" class="nb"/>
+  <text x="287" y="376" class="code">302 redirect: /login/oauth2</text>
+  <text x="287" y="386" class="code">/code/keycloak?code=AUTH_CODE</text>
+  <text x="287" y="396" class="code">&amp;state=xyz</text>
+
+  <rect x="30" y="420" width="1335" height="35" class="pb"/>
+  <text x="700" y="443" class="st" text-anchor="middle">阶段3: 用授权码换取ID Token和Access Token</text>
+
+  <rect x="245" y="465" width="50" height="130" class="act"/>
+  <path d="M 270,480 L 415,480" class="arr"/>
+  <text x="342" y="468" class="st">POST /openid-connect/token</text>
+  <rect x="290" y="485" width="220" height="60" class="nb"/>
+  <text x="297" y="496" class="code">grant_type=authorization_code</text>
+  <text x="297" y="506" class="code">code=AUTH_CODE</text>
+  <text x="297" y="516" class="code">client_id + client_secret</text>
+  <text x="297" y="526" class="code">redirect_uri + code_verifier</text>
+
+  <rect x="390" y="480" width="50" height="55" class="act"/>
+  <path d="M 415,510 L 270,510" class="rarr"/>
+  <rect x="280" y="515" width="200" height="85" class="nb"/>
+  <text x="287" y="526" class="code">{</text>
+  <text x="292" y="536" class="code">"access_token":"eyJ...",</text>
+  <text x="292" y="546" class="code">"id_token":"eyJ...",</text>
+  <text x="292" y="556" class="code">"refresh_token":"eyJ...",</text>
+  <text x="292" y="566" class="code">"expires_in":300</text>
+  <text x="287" y="576" class="code">}</text>
+
+  <rect x="30" y="615" width="1335" height="35" class="pb"/>
+  <text x="700" y="638" class="st" text-anchor="middle">阶段4: 解析ID Token &amp; 调用UserInfo获取用户信息</text>
+
+  <path d="M 270,660 L 565,660" class="arr"/>
+  <text x="417" y="648" class="st">GET /userinfo (Bearer access_token)</text>
+  <rect x="540" y="660" width="50" height="50" class="act"/>
+  <path d="M 565,690 L 270,690" class="rarr"/>
+  <rect x="280" y="695" width="200" height="60" class="nb"/>
+  <text x="287" y="706" class="code">{</text>
+  <text x="292" y="716" class="code">"sub":"f:realm:u123",</text>
+  <text x="292" y="726" class="code">"email":"zs@x.com",</text>
+  <text x="292" y="736" class="code">"name":"张三"</text>
+  <text x="287" y="746" class="code">}</text>
+
+  <rect x="30" y="775" width="1335" height="35" class="pb"/>
+  <text x="700" y="798" class="st" text-anchor="middle">阶段5: 用户同步 + 生成Apex JWT</text>
+
+  <path d="M 270,820 L 865,820" class="arr"/>
+  <text x="567" y="808" class="st">findByKeycloakSub(sub)</text>
+  <rect x="840" y="820" width="50" height="35" class="act"/>
+  <path d="M 865,845 L 270,845" class="rarr"/>
+  <text x="567" y="833" class="code">返回用户 或 null(新用户)</text>
+
+  <rect x="245" y="860" width="50" height="70" class="act"/>
+  <rect x="125" y="865" width="140" height="60" class="nb"/>
+  <text x="132" y="876" class="code">if null &amp; sync enabled:</text>
+  <text x="132" y="886" class="code">  UserEntity.builder()</text>
+  <text x="132" y="896" class="code">    .keycloakSub(sub)</text>
+  <text x="132" y="906" class="code">    .username(name).email(email)</text>
+  <text x="132" y="916" class="code">  userRepository.save(user)</text>
+
+  <path d="M 270,940 L 715,940" class="arr"/>
+  <text x="492" y="928" class="st">generateTokenPair(userId)</text>
+  <rect x="690" y="940" width="50" height="40" class="act"/>
+  <path d="M 715,970 L 270,970" class="rarr"/>
+  <rect x="280" y="975" width="180" height="45" class="nb"/>
+  <text x="287" y="986" class="code">accessToken (JWT, 2h)</text>
+  <text x="287" y="996" class="code">refreshToken (UUID, 7d)</text>
+
+  <rect x="30" y="1000" width="1335" height="35" class="pb"/>
+  <text x="700" y="1023" class="st" text-anchor="middle">阶段6: 重定向前端回调,完成登录</text>
+
+  <path d="M 270,1050 L 1015,1050" class="arr"/>
+  <text x="642" y="1038" class="st">302 redirect: frontend-callback-url</text>
+  <rect x="740" y="1055" width="220" height="35" class="nb"/>
+  <text x="747" y="1066" class="code">?accessToken=APEX_JWT</text>
+  <text x="747" y="1076" class="code">&amp;refreshToken=APEX_REFRESH</text>
+
+  <path d="M 1015,1090 L 1165,1090" class="arr"/>
+  <text x="1090" y="1078" class="st">存储Token</text>
+  <rect x="1140" y="1090" width="50" height="30" class="act"/>
+  <path d="M 1165,1110 L 125,1110" class="rarr"/>
+  <text x="645" y="1098" class="st">登录成功,跳转到首页 ✅</text>
+
+  <text x="700" y="1040" class="code" text-anchor="middle">© 2026 Apex Team · Keycloak OIDC认证流程时序图 v3.0</text>
+</svg>
