@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 950" width="1400" height="950">
+  <defs>
+    <style>
+      .title{font:700 32px sans-serif;fill:#0f172a;text-anchor:middle}
+      .subtitle{font:500 14px sans-serif;fill:#64748b;text-anchor:middle}
+      .flow-title{font:600 14px sans-serif;fill:#0f172a;text-anchor:middle}
+      .text{font:400 10px sans-serif;fill:#475569}
+      .code{font:400 9px monospace;fill:#2563eb}
+      .step-box{fill:#ffffff;stroke:#94a3b8;stroke-width:1.5;rx:6}
+      .client-box{fill:#eff6ff;stroke:#3b82f6;stroke-width:2;rx:6}
+      .server-box{fill:#ecfdf5;stroke:#10b981;stroke-width:2;rx:6}
+      .user-box{fill:#fef3c7;stroke:#f59e0b;stroke-width:2;rx:6}
+      .token-box{fill:#f3e8ff;stroke:#a855f7;stroke-width:2;rx:6}
+      .arrow{fill:none;stroke:#4f46e5;stroke-width:2;marker-end:url(#arrowhead)}
+      .step-num{font:700 11px sans-serif;fill:#ffffff;text-anchor:middle}
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#4f46e5"/>
+    </marker>
+  </defs>
+
+  <text x="700" y="35" class="title">OAuth 2.0 四种授权模式详解</text>
+  <text x="700" y="58" class="subtitle">Authorization Code · Implicit · Password · Client Credentials · 完整流程对比</text>
+
+  <!-- Flow 1: Authorization Code + PKCE -->
+  <rect x="30" y="80" width="320" height="400" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2" rx="8"/>
+  <text x="190" y="105" class="flow-title">授权码模式 + PKCE</text>
+  <text x="190" y="120" class="code" text-anchor="middle">Authorization Code + PKCE (推荐)</text>
+
+  <rect x="50" y="135" width="120" height="45" class="user-box"/>
+  <text x="110" y="150" class="text" text-anchor="middle" font-weight="600">用户浏览器</text>
+  <text x="110" y="165" class="text" text-anchor="middle">Resource Owner</text>
+
+  <rect x="190" y="135" width="140" height="45" class="client-box"/>
+  <text x="260" y="150" class="text" text-anchor="middle" font-weight="600">客户端应用</text>
+  <text x="260" y="165" class="text" text-anchor="middle">SPA / Mobile App</text>
+
+  <circle cx="60" cy="210" r="12" fill="#4f46e5"/>
+  <text x="60" y="214" class="step-num">1</text>
+  <path d="M 110,185 L 110,220 L 180,220" class="arrow"/>
+  <text x="120" y="208" class="code">生成code_verifier</text>
+  <text x="120" y="218" class="code">计算code_challenge</text>
+
+  <circle cx="60" cy="250" r="12" fill="#4f46e5"/>
+  <text x="60" y="254" class="step-num">2</text>
+  <path d="M 190,220 L 190,250 L 320,250" class="arrow"/>
+  <rect x="180" y="235" width="140" height="30" class="step-box"/>
+  <text x="250" y="246" class="code" text-anchor="middle">/oauth2/authorize?</text>
+  <text x="187" y="258" class="code">response_type=code</text>
+
+  <circle cx="60" cy="290" r="12" fill="#4f46e5"/>
+  <text x="60" y="294" class="step-num">3</text>
+  <text x="80" y="288" class="code">用户登录授权</text>
+  <rect x="50" y="300" width="120" height="35" class="server-box"/>
+  <text x="110" y="315" class="text" text-anchor="middle" font-weight="600">授权页面</text>
+  <text x="110" y="328" class="code" text-anchor="middle">同意授权Scope</text>
+
+  <circle cx="60" cy="355" r="12" fill="#4f46e5"/>
+  <text x="60" y="359" class="step-num">4</text>
+  <path d="M 170,317 L 240,317" class="arrow"/>
+  <text x="180" y="313" class="code">返回 authorization_code</text>
+
+  <circle cx="60" cy="390" r="12" fill="#4f46e5"/>
+  <text x="60" y="394" class="step-num">5</text>
+  <rect x="190" y="375" width="140" height="30" class="step-box"/>
+  <text x="197" y="386" class="code">/oauth2/token</text>
+  <text x="197" y="397" class="code">code + code_verifier</text>
+
+  <circle cx="60" cy="430" r="12" fill="#4f46e5"/>
+  <text x="60" y="434" class="step-num">6</text>
+  <rect x="50" y="450" width="280" height="40" class="token-box"/>
+  <text x="190" y="465" class="code" text-anchor="middle">返回 access_token + refresh_token</text>
+  <text x="190" y="477" class="code" text-anchor="middle" font-size="8">有效期: 2小时 | 刷新令牌: 7天</text>
+
+  <text x="50" y="505" class="text" font-weight="600">✅ 优点:</text>
+  <text x="50" y="518" class="text">• 最安全,支持PKCE防止授权码劫持</text>
+  <text x="50" y="530" class="text">• Token不经过浏览器前端</text>
+  <text x="50" y="542" class="text">• 支持Refresh Token长期有效</text>
+  <text x="50" y="554" class="text" font-weight="600">⚠️ 适用场景:</text>
+  <text x="50" y="566" class="text">• Web单页应用(SPA)</text>
+  <text x="50" y="578" class="text">• 移动应用(iOS/Android)</text>
+
+  <!-- Flow 2: Implicit (Deprecated) -->
+  <rect x="370" y="80" width="280" height="400" fill="#fef2f2" stroke="#ef4444" stroke-width="2" rx="8"/>
+  <text x="510" y="105" class="flow-title">隐式模式 (已弃用)</text>
+  <text x="510" y="120" class="code" text-anchor="middle">Implicit Flow (Deprecated)</text>
+
+  <rect x="390" y="135" width="120" height="45" class="user-box"/>
+  <text x="450" y="150" class="text" text-anchor="middle" font-weight="600">用户浏览器</text>
+
+  <rect x="390" y="195" width="240" height="30" class="step-box"/>
+  <text x="397" y="206" class="code">/oauth2/authorize?</text>
+  <text x="397" y="217" class="code">response_type=token</text>
+
+  <text x="510" y="240" class="text" text-anchor="middle">用户登录授权</text>
+
+  <rect x="390" y="255" width="240" height="40" class="token-box"/>
+  <text x="510" y="270" class="code" text-anchor="middle">直接返回 access_token</text>
+  <text x="510" y="282" class="code" text-anchor="middle" font-size="8">在URL Fragment中返回</text>
+
+  <rect x="390" y="310" width="240" height="60" fill="#fee2e2" stroke="#dc2626" stroke-width="2" rx="6"/>
+  <text x="510" y="328" class="text" text-anchor="middle" font-weight="600">❌ 安全风险</text>
+  <text x="397" y="343" class="text">• Token暴露在浏览器URL中</text>
+  <text x="397" y="355" class="text">• 容易被XSS攻击窃取</text>
+  <text x="397" y="367" class="text">• 无Refresh Token,无法续期</text>
+
+  <text x="390" y="390" class="text" font-weight="600">⚠️ 状态: OAuth 2.1已移除</text>
+  <text x="390" y="405" class="text">• 不再推荐使用</text>
+  <text x="390" y="420" class="text">• 应迁移到Authorization Code + PKCE</text>
+  <text x="390" y="435" class="text">• 浏览器环境统一使用授权码模式</text>
+
+  <!-- Flow 3: Password (Legacy) -->
+  <rect x="670" y="80" width="320" height="400" fill="#fff7ed" stroke="#f97316" stroke-width="2" rx="8"/>
+  <text x="830" y="105" class="flow-title">密码模式 (遗留模式)</text>
+  <text x="830" y="120" class="code" text-anchor="middle">Resource Owner Password Credentials</text>
+
+  <rect x="690" y="135" width="130" height="45" class="user-box"/>
+  <text x="755" y="150" class="text" text-anchor="middle" font-weight="600">用户</text>
+  <text x="755" y="165" class="text" text-anchor="middle">提供用户名密码</text>
+
+  <circle cx="700" cy="210" r="12" fill="#f97316"/>
+  <text x="700" y="214" class="step-num">1</text>
+  <path d="M 755,180 L 755,220 L 845,220" class="arrow"/>
+  <rect x="835" y="135" width="140" height="45" class="client-box"/>
+  <text x="905" y="150" class="text" text-anchor="middle" font-weight="600">高度信任的客户端</text>
+  <text x="905" y="165" class="text" text-anchor="middle">如官方App</text>
+
+  <circle cx="700" cy="260" r="12" fill="#f97316"/>
+  <text x="700" y="264" class="step-num">2</text>
+  <rect x="690" y="245" width="290" height="40" class="step-box"/>
+  <text x="697" y="256" class="code">/oauth2/token</text>
+  <text x="697" y="267" class="code">grant_type=password</text>
+  <text x="697" y="278" class="code">username=xxx&amp;password=xxx</text>
+
+  <circle cx="700" cy="305" r="12" fill="#f97316"/>
+  <text x="700" y="309" class="step-num">3</text>
+  <rect x="690" y="325" width="290" height="35" class="token-box"/>
+  <text x="835" y="340" class="code" text-anchor="middle">返回 access_token</text>
+  <text x="835" y="352" class="code" text-anchor="middle" font-size="8">+ refresh_token (可选)</text>
+
+  <text x="690" y="380" class="text" font-weight="600">⚠️ 安全问题:</text>
+  <text x="690" y="393" class="text">• 客户端直接处理用户密码</text>
+  <text x="690" y="405" class="text">• 违反OAuth2的代理授权原则</text>
+  <text x="690" y="417" class="text">• 无法实现单点登录(SSO)</text>
+
+  <text x="690" y="440" class="text" font-weight="600">✅ 仅适用于:</text>
+  <text x="690" y="453" class="text">• 高度信任的第一方应用</text>
+  <text x="690" y="465" class="text">• 遗留系统迁移到OAuth2</text>
+
+  <!-- Flow 4: Client Credentials -->
+  <rect x="1010" y="80" width="340" height="400" fill="#ecfdf5" stroke="#10b981" stroke-width="2" rx="8"/>
+  <text x="1180" y="105" class="flow-title">客户端凭证模式</text>
+  <text x="1180" y="120" class="code" text-anchor="middle">Client Credentials (Machine-to-Machine)</text>
+
+  <rect x="1030" y="135" width="140" height="45" class="client-box"/>
+  <text x="1100" y="150" class="text" text-anchor="middle" font-weight="600">服务端应用</text>
+  <text x="1100" y="165" class="text" text-anchor="middle">后台服务/定时任务</text>
+
+  <rect x="1190" y="135" width="140" height="45" class="server-box"/>
+  <text x="1260" y="150" class="text" text-anchor="middle" font-weight="600">授权服务器</text>
+
+  <circle cx="1040" cy="210" r="12" fill="#10b981"/>
+  <text x="1040" y="214" class="step-num">1</text>
+  <rect x="1030" y="225" width="300" height="50" class="step-box"/>
+  <text x="1037" y="238" class="code">/oauth2/token</text>
+  <text x="1037" y="249" class="code">grant_type=client_credentials</text>
+  <text x="1037" y="260" class="code">client_id=xxx</text>
+  <text x="1037" y="271" class="code">client_secret=xxx (或 client_assertion JWT)</text>
+
+  <circle cx="1040" cy="295" r="12" fill="#10b981"/>
+  <text x="1040" y="299" class="step-num">2</text>
+  <rect x="1030" y="315" width="300" height="40" class="token-box"/>
+  <text x="1180" y="330" class="code" text-anchor="middle">返回 access_token</text>
+  <text x="1180" y="342" class="code" text-anchor="middle" font-size="8">仅包含client_id,无user信息</text>
+
+  <text x="1030" y="375" class="text" font-weight="600">✅ 优点:</text>
+  <text x="1030" y="388" class="text">• 最简单,无需用户参与</text>
+  <text x="1030" y="400" class="text">• 适合服务间通信</text>
+  <text x="1030" y="412" class="text">• 支持JWT断言(RFC 7523)</text>
+
+  <text x="1030" y="435" class="text" font-weight="600">⚠️ 适用场景:</text>
+  <text x="1030" y="448" class="text">• 微服务间API调用</text>
+  <text x="1030" y="460" class="text">• 定时任务访问资源</text>
+  <text x="1030" y="472" class="text">• CLI工具/脚本自动化</text>
+
+  <!-- Comparison Table -->
+  <rect x="30" y="510" width="1320" height="390" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2" rx="8"/>
+  <text x="690" y="535" class="flow-title">OAuth 2.0 授权模式对比表</text>
+
+  <rect x="50" y="555" width="200" height="30" fill="#4f46e5"/>
+  <text x="150" y="575" style="font:600 11px sans-serif;fill:#ffffff" text-anchor="middle">授权模式</text>
+
+  <rect x="250" y="555" width="200" height="30" fill="#4f46e5"/>
+  <text x="350" y="575" style="font:600 11px sans-serif;fill:#ffffff" text-anchor="middle">适用场景</text>
+
+  <rect x="450" y="555" width="200" height="30" fill="#4f46e5"/>
+  <text x="550" y="575" style="font:600 11px sans-serif;fill:#ffffff" text-anchor="middle">Token获取方式</text>
+
+  <rect x="650" y="555" width="200" height="30" fill="#4f46e5"/>
+  <text x="750" y="575" style="font:600 11px sans-serif;fill:#ffffff" text-anchor="middle">安全性</text>
+
+  <rect x="850" y="555" width="200" height="30" fill="#4f46e5"/>
+  <text x="950" y="575" style="font:600 11px sans-serif;fill:#ffffff" text-anchor="middle">Refresh Token</text>
+
+  <rect x="1050" y="555" width="280" height="30" fill="#4f46e5"/>
+  <text x="1190" y="575" style="font:600 11px sans-serif;fill:#ffffff" text-anchor="middle">推荐度</text>
+
+  <!-- Row 1 -->
+  <rect x="50" y="585" width="200" height="70" fill="#eff6ff" stroke="#cbd5e1"/>
+  <text x="150" y="605" class="text" text-anchor="middle" font-weight="600">授权码 + PKCE</text>
+  <text x="57" y="620" class="code">Authorization Code</text>
+  <text x="57" y="632" class="code">+ PKCE</text>
+
+  <rect x="250" y="585" width="200" height="70" fill="#ffffff" stroke="#cbd5e1"/>
+  <text x="257" y="605" class="text">• Web单页应用(SPA)</text>
+  <text x="257" y="618" class="text">• 移动应用</text>
+  <text x="257" y="631" class="text">• 需要用户授权</text>
+  <text x="257" y="644" class="text">• 公共客户端</text>
+
+  <rect x="450" y="585" width="200" height="70" fill="#ffffff" stroke="#cbd5e1"/>
+  <text x="457" y="605" class="text">1. 用户授权</text>
+  <text x="457" y="618" class="text">2. 获取code</text>
+  <text x="457" y="631" class="text">3. code换token</text>
+  <text x="457" y="644" class="text">4. PKCE验证</text>
+
+  <rect x="650" y="585" width="200" height="70" fill="#d1fae5" stroke="#cbd5e1"/>
+  <text x="750" y="615" style="font:700 16px sans-serif;fill:#059669" text-anchor="middle">⭐⭐⭐⭐⭐</text>
+  <text x="750" y="635" class="text" text-anchor="middle">最高安全性</text>
+
+  <rect x="850" y="585" width="200" height="70" fill="#d1fae5" stroke="#cbd5e1"/>
+  <text x="950" y="620" style="font:700 14px sans-serif;fill:#059669" text-anchor="middle">✅ 支持</text>
+
+  <rect x="1050" y="585" width="280" height="70" fill="#d1fae5" stroke="#059669" stroke-width="2"/>
+  <text x="1190" y="615" style="font:700 16px sans-serif;fill:#059669" text-anchor="middle">⭐⭐⭐⭐⭐ 强烈推荐</text>
+  <text x="1190" y="635" class="text" text-anchor="middle">OAuth 2.1标准推荐</text>
+
+  <!-- Row 2 -->
+  <rect x="50" y="655" width="200" height="60" fill="#fee2e2" stroke="#cbd5e1"/>
+  <text x="150" y="675" class="text" text-anchor="middle" font-weight="600">隐式模式</text>
+  <text x="57" y="690" class="code">Implicit</text>
+
+  <rect x="250" y="655" width="200" height="60" fill="#ffffff" stroke="#cbd5e1"/>
+  <text x="257" y="675" class="text">已弃用</text>
+  <text x="257" y="688" class="text">不应再使用</text>
+
+  <rect x="450" y="655" width="200" height="60" fill="#ffffff" stroke="#cbd5e1"/>
+  <text x="457" y="675" class="text">直接返回token</text>
+  <text x="457" y="688" class="text">在URL fragment</text>
+
+  <rect x="650" y="655" width="200" height="60" fill="#fee2e2" stroke="#cbd5e1"/>
+  <text x="750" y="685" style="font:700 14px sans-serif;fill:#dc2626" text-anchor="middle">⚠️ 不安全</text>
+
+  <rect x="850" y="655" width="200" height="60" fill="#fee2e2" stroke="#cbd5e1"/>
+  <text x="950" y="685" style="font:700 14px sans-serif;fill:#dc2626" text-anchor="middle">❌ 不支持</text>
+
+  <rect x="1050" y="655" width="280" height="60" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+  <text x="1190" y="685" style="font:700 14px sans-serif;fill:#dc2626" text-anchor="middle">❌ 已移除 (OAuth 2.1)</text>
+
+  <!-- Row 3 -->
+  <rect x="50" y="715" width="200" height="60" fill="#fff7ed" stroke="#cbd5e1"/>
+  <text x="150" y="735" class="text" text-anchor="middle" font-weight="600">密码模式</text>
+  <text x="57" y="750" class="code">Password</text>
+
+  <rect x="250" y="715" width="200" height="60" fill="#ffffff" stroke="#cbd5e1"/>
+  <text x="257" y="735" class="text">• 高度信任应用</text>
+  <text x="257" y="748" class="text">• 遗留系统迁移</text>
+
+  <rect x="450" y="715" width="200" height="60" fill="#ffffff" stroke="#cbd5e1"/>
+  <text x="457" y="735" class="text">用户名+密码</text>
+  <text x="457" y="748" class="text">直接换token</text>
+
+  <rect x="650" y="715" width="200" height="60" fill="#fef3c7" stroke="#cbd5e1"/>
+  <text x="750" y="745" style="font:700 14px sans-serif;fill:#d97706" text-anchor="middle">⚠️ 中等</text>
+
+  <rect x="850" y="715" width="200" height="60" fill="#d1fae5" stroke="#cbd5e1"/>
+  <text x="950" y="745" style="font:700 14px sans-serif;fill:#059669" text-anchor="middle">✅ 支持</text>
+
+  <rect x="1050" y="715" width="280" height="60" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+  <text x="1190" y="745" style="font:700 14px sans-serif;fill:#d97706" text-anchor="middle">⚠️ 不推荐 (遗留模式)</text>
+
+  <!-- Row 4 -->
+  <rect x="50" y="775" width="200" height="60" fill="#ecfdf5" stroke="#cbd5e1"/>
+  <text x="150" y="795" class="text" text-anchor="middle" font-weight="600">客户端凭证</text>
+  <text x="57" y="810" class="code">Client Credentials</text>
+
+  <rect x="250" y="775" width="200" height="60" fill="#ffffff" stroke="#cbd5e1"/>
+  <text x="257" y="795" class="text">• 服务间调用</text>
+  <text x="257" y="808" class="text">• 无用户上下文</text>
+
+  <rect x="450" y="775" width="200" height="60" fill="#ffffff" stroke="#cbd5e1"/>
+  <text x="457" y="795" class="text">client_id +</text>
+  <text x="457" y="808" class="text">client_secret</text>
+
+  <rect x="650" y="775" width="200" height="60" fill="#d1fae5" stroke="#cbd5e1"/>
+  <text x="750" y="805" style="font:700 14px sans-serif;fill:#059669" text-anchor="middle">⭐⭐⭐⭐</text>
+
+  <rect x="850" y="775" width="200" height="60" fill="#fee2e2" stroke="#cbd5e1"/>
+  <text x="950" y="805" style="font:700 14px sans-serif;fill:#dc2626" text-anchor="middle">❌ 不支持</text>
+
+  <rect x="1050" y="775" width="280" height="60" fill="#d1fae5" stroke="#10b981" stroke-width="2"/>
+  <text x="1190" y="805" style="font:700 14px sans-serif;fill:#059669" text-anchor="middle">✅ 推荐 (M2M场景)</text>
+
+  <!-- Best Practices -->
+  <rect x="50" y="850" width="1280" height="40" fill="#eff6ff" stroke="#3b82f6" stroke-width="2" rx="6"/>
+  <text x="690" y="870" class="text" text-anchor="middle" font-weight="600">🔐 最佳实践建议:</text>
+  <text x="60" y="883" class="text">✅ 浏览器/移动端: 使用授权码+PKCE | ✅ 后端服务: 使用客户端凭证 | ⚠️ 避免使用密码模式 | ❌ 禁用隐式模式</text>
+
+  <text x="700" y="935" class="code" text-anchor="middle">© 2026 Apex Team · OAuth 2.0 四种授权模式详解 v3.0</text>
+</svg>

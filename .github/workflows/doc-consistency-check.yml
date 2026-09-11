@@ -1,0 +1,33 @@
+name: 文档一致性检查
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  check-consistency:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+      
+      - name: 运行文档一致性检查
+        run: |
+          chmod +x scripts/ci/check-doc-consistency.sh
+          ./scripts/ci/check-doc-consistency.sh
+      
+      - name: 上传检查报告
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: doc-consistency-report
+          path: |
+            scripts/ci/check-doc-consistency.sh
+          retention-days: 7

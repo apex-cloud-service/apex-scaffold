@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 650" width="1400" height="650">
+  <defs><style>.title{font:700 32px sans-serif;fill:#0f172a;text-anchor:middle}.subtitle{font:500 14px sans-serif;fill:#64748b;text-anchor:middle}.box-title{font:600 14px sans-serif;fill:#0f172a}.text{font:400 11px sans-serif;fill:#475569}.code{font:400 10px monospace;fill:#2563eb}</style></defs>
+  <rect width="1400" height="650" fill="#fff"/>
+  <text x="700" y="40" class="title">28. 全文搜索 Meilisearch</text>
+  <text x="700" y="65" class="subtitle">毫秒级搜索 · CJK分词 · 拼音搜索 · 相关性排序 v3.0</text>
+  <rect x="50" y="90" width="650" height="250" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="2"/>
+  <text x="70" y="120" class="box-title">索引配置</text>
+  <text x="70" y="150" class="code">POST /indexes/users/settings</text>
+  <text x="70" y="170" class="code">{</text>
+  <text x="80" y="188" class="code">searchableAttributes: ["username","email","phone"],</text>
+  <text x="80" y="206" class="code">filterableAttributes: ["status","dept_id","tenant_id"],</text>
+  <text x="80" y="224" class="code">sortableAttributes: ["created_at"],</text>
+  <text x="80" y="242" class="code">displayedAttributes: ["id","username","avatar"],</text>
+  <text x="80" y="260" class="code">typoTolerance: { enabled: true, minWordSizeForTypos: 3 }</text>
+  <text x="70" y="278" class="code">}</text>
+  <text x="70" y="308" class="text">✅ 容错搜索: "用戸" → "用户" 自动纠正</text>
+  <rect x="720" y="90" width="630" height="250" rx="8" fill="#f0fdf4" stroke="#059669" stroke-width="2"/>
+  <text x="740" y="120" class="box-title">搜索查询</text>
+  <text x="740" y="150" class="code">GET /indexes/users/search?q=张三</text>
+  <text x="740" y="170" class="code">&amp;filter=status='active' AND dept_id=1</text>
+  <text x="740" y="188" class="code">&amp;sort=created_at:desc&amp;limit=20</text>
+  <text x="740" y="216" class="text">响应示例:</text>
+  <text x="740" y="236" class="code">{ "hits": [{ "id": 1, "username": "张三" }],</text>
+  <text x="750" y="254" class="code">"processingTimeMs": 3, // 3毫秒</text>
+  <text x="750" y="272" class="code">"estimatedTotalHits": 125 }</text>
+  <text x="740" y="302" class="text">拼音搜索 (CJK插件):</text>
+  <text x="740" y="322" class="code">"zhangsan" → "张三" 匹配成功</text>
+  <rect x="50" y="370" width="1300" height="230" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+  <text x="70" y="400" class="box-title">数据同步与使用场景</text>
+  <text x="70" y="430" class="code">增量同步: Canal监听MySQL binlog → Meilisearch批量更新 (最多1秒延迟)</text>
+  <text x="70" y="460" class="code">全量同步: 定时任务每晚3点全量重建索引,清理脏数据</text>
+  <text x="70" y="500" class="text">典型场景:</text>
+  <text x="70" y="520" class="code">• 用户搜索: 模糊匹配用户名/手机号,支持通配符和拼音</text>
+  <text x="70" y="540" class="code">• 日志搜索: 全文检索操作日志,快速定位异常记录</text>
+  <text x="70" y="560" class="code">• 文档搜索: 标题+正文全文索引,相关性排序</text>
+  <text x="70" y="590" class="text">✅ 相比ElasticSearch: 部署简单、内存占用低、开箱即用CJK分词</text>
+  <text x="700" y="635" class="code" text-anchor="middle">© 2026 Apex Team · Meilisearch全文搜索 v3.0</text>
+</svg>

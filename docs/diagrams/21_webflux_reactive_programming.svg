@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 600" width="1400" height="600">
+  <defs><style>.title{font:700 32px sans-serif;fill:#0f172a;text-anchor:middle}.subtitle{font:500 14px sans-serif;fill:#64748b;text-anchor:middle}.box-title{font:600 14px sans-serif;fill:#0f172a}.text{font:400 11px sans-serif;fill:#475569}.code{font:400 10px monospace;fill:#2563eb}</style></defs>
+  <rect width="1400" height="600" fill="#fff"/>
+  <text x="700" y="40" class="title">21-22. 响应式编程 WebFlux + 线程模型</text>
+  <text x="700" y="65" class="subtitle">Reactor 3 · Mono/Flux · 非阻塞IO · 线程池隔离 v3.0</text>
+  <rect x="50" y="90" width="660" height="230" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="2"/>
+  <text x="70" y="120" class="box-title">Reactor响应式流</text>
+  <text x="70" y="145" class="code">Mono&lt;User&gt; findById(Long id) // 0或1个元素</text>
+  <text x="70" y="163" class="code">Flux&lt;User&gt; findAll() // 0到N个元素</text>
+  <text x="70" y="193" class="text">操作符链式调用:</text>
+  <text x="70" y="213" class="code">userRepo.findById(1L)</text>
+  <text x="80" y="231" class="code">.filter(u -> u.getStatus() == 1)</text>
+  <text x="80" y="249" class="code">.map(u -> userMapper.toDTO(u))</text>
+  <text x="80" y="267" class="code">.switchIfEmpty(Mono.error(NotFoundException))</text>
+  <text x="80" y="285" class="code">.subscribeOn(Schedulers.boundedElastic())</text>
+  <text x="70" y="310" class="text">✅ 背压控制、惰性求值、可组合</text>
+  <rect x="730" y="90" width="620" height="230" rx="8" fill="#f0fdf4" stroke="#059669" stroke-width="2"/>
+  <text x="750" y="120" class="box-title">线程池隔离策略 (BlockingIoSchedulers)</text>
+  <text x="750" y="145" class="code">Schedulers.boundedElastic() // JDBC/Redis阻塞IO</text>
+  <text x="760" y="163" class="text">核心:4线程, 最大:512线程, 队列:100k</text>
+  <text x="750" y="193" class="code">Schedulers.parallel() // CPU密集计算</text>
+  <text x="760" y="211" class="text">线程数=CPU核心数</text>
+  <text x="750" y="241" class="code">customScheduler("cache") // 缓存专用</text>
+  <text x="760" y="259" class="text">4核心线程, 512最大</text>
+  <text x="750" y="289" class="text">✅ 隔离故障域,防止线程池耗尽</text>
+  <rect x="50" y="350" width="1300" height="200" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+  <text x="70" y="380" class="box-title">响应式最佳实践</text>
+  <text x="70" y="405" class="code">1. 避免阻塞操作: JDBC必须使用.subscribeOn(Schedulers.boundedElastic())隔离</text>
+  <text x="70" y="425" class="code">2. 错误处理: onErrorResume/onErrorReturn 避免流中断</text>
+  <text x="70" y="445" class="code">3. 超时控制: .timeout(Duration.ofSeconds(10)) 防止慢调用</text>
+  <text x="70" y="465" class="code">4. 背压策略: .onBackpressureBuffer(1000) 缓冲区溢出丢弃</text>
+  <text x="70" y="485" class="code">5. 调试技巧: Hooks.onOperatorDebug() 开启调试模式(仅开发环境)</text>
+  <text x="70" y="505" class="code">6. 测试: StepVerifier.create(mono).expectNext(expected).verifyComplete()</text>
+  <text x="700" y="585" class="code" text-anchor="middle">© 2026 Apex Team · WebFlux响应式编程 v3.0</text>
+</svg>

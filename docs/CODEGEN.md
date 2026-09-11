@@ -1,6 +1,6 @@
 # 代码生成器（模板开发功能）使用说明
 
-> 版本：v1.1.1（2026-08-27）
+> 版本：v1.2.0（2026-08-27）
 > 模块：`apex-generator`（独立模块，仅依赖 FreeMarker 2.3.33 + Jackson，offline 可构建）
 
 ## 一、是什么
@@ -102,3 +102,4 @@ routerFragment/migrationFragment/serviceTest.ftl`，以及前端模板
 - offline 构建说明：FreeMarker 锁定 2.3.33（本地仓库已有，BOM 默认 2.3.34 未下载，
   已显式指定版本并在本地移除 `_remote.repositories` 元数据以保证 offline 可解析）。
 - 生成代码遵循项目全库规范（原项目名零残留、apex.* 命名空间、Javadoc 完整注释）。
+> 配套图表：[52 DDD 代码生成流水线](diagrams/52_codegen_pipeline.svg)

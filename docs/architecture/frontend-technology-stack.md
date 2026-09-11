@@ -1,13 +1,13 @@
 # Apex Admin Web 前端技术栈详细文档
 
-> 文档版本: v1.0  
-> 创建时间: 2026-09-04  
-> 适用版本: apex-admin-web v1.0+  
+> 文档版本: v1.0
+> 创建时间: 2026-09-04
+> 适用版本: apex-admin-web v1.0+
 > 前端工程路径: `/Users/work/apex-admin-web`
 
-> **配套架构图**:  
-> - [前端技术栈架构图](../diagrams/22_frontend_technology_stack.svg) ⭐  
-> - [前后端交互架构图](../diagrams/23_frontend_backend_interaction.svg) ⭐  
+> **配套架构图**:
+> - [前端技术栈架构图](../diagrams/29_technology_stack_overview.svg) ⭐
+> - [前后端交互架构图](../diagrams/58_api_error_response_flow.svg) ⭐
 > - [全栈技术选型全景图](../diagrams/03_technical_architecture.svg)
 
 ---
@@ -308,7 +308,7 @@ module.exports = {
         </template>
       </el-table-column>
     </el-table>
-    
+
     <el-pagination
       v-model:current-page="pageNum"
       v-model:page-size="pageSize"
@@ -437,10 +437,10 @@ const whiteList = ['/login', '/404']
 
 router.beforeEach(async (to, from, next) => {
   NProgress.start()
-  
+
   const authStore = useAuthStore()
   const hasToken = authStore.token
-  
+
   if (hasToken) {
     if (to.path === '/login') {
       next({ path: '/' })
@@ -641,7 +641,7 @@ const canEdit = authStore.hasPermission('system:user:edit')
     <el-form-item label="用户名" prop="username">
       <el-input v-model="formData.username" placeholder="请输入用户名" clearable />
     </el-form-item>
-    
+
     <el-form-item label="密码" prop="password">
       <el-input
         v-model="formData.password"
@@ -650,7 +650,7 @@ const canEdit = authStore.hasPermission('system:user:edit')
         show-password
       />
     </el-form-item>
-    
+
     <el-form-item label="角色" prop="roleIds">
       <el-select v-model="formData.roleIds" multiple placeholder="请选择角色">
         <el-option
@@ -661,14 +661,14 @@ const canEdit = authStore.hasPermission('system:user:edit')
         />
       </el-select>
     </el-form-item>
-    
+
     <el-form-item label="状态" prop="status">
       <el-radio-group v-model="formData.status">
         <el-radio :label="1">启用</el-radio>
         <el-radio :label="0">禁用</el-radio>
       </el-radio-group>
     </el-form-item>
-    
+
     <el-form-item>
       <el-button type="primary" @click="handleSubmit">提交</el-button>
       <el-button @click="handleReset">重置</el-button>
@@ -787,7 +787,7 @@ body,
 ::-webkit-scrollbar-thumb {
   background-color: rgba(0, 0, 0, 0.2);
   border-radius: 4px;
-  
+
   &:hover {
     background-color: rgba(0, 0, 0, 0.3);
   }
@@ -826,9 +826,9 @@ let chartInstance: echarts.ECharts | null = null
 
 const initChart = () => {
   if (!chartRef.value) return
-  
+
   chartInstance = echarts.init(chartRef.value)
-  
+
   const option: EChartsOption = {
     title: {
       text: '用户增长趋势',
@@ -861,9 +861,9 @@ const initChart = () => {
       },
     ],
   }
-  
+
   chartInstance.setOption(option)
-  
+
   // 响应式
   window.addEventListener('resize', handleResize)
 }
@@ -934,26 +934,26 @@ service.interceptors.request.use(
 service.interceptors.response.use(
   (response: AxiosResponse) => {
     const res = response.data
-    
+
     // code不为0表示业务错误
     if (res.code !== 0) {
       ElMessage.error(res.message || '请求失败')
-      
+
       // 401: Token过期
       if (res.code === 401) {
         const authStore = useAuthStore()
         authStore.doLogout()
         window.location.href = '/login'
       }
-      
+
       return Promise.reject(new Error(res.message || '请求失败'))
     }
-    
+
     return res
   },
   (error) => {
     console.error('Response error:', error)
-    
+
     let message = '请求失败'
     if (error.response) {
       switch (error.response.status) {
@@ -981,7 +981,7 @@ service.interceptors.response.use(
     } else if (error.request) {
       message = '网络连接失败'
     }
-    
+
     ElMessage.error(message)
     return Promise.reject(error)
   }
@@ -1315,7 +1315,7 @@ export const permission: Directive = {
   mounted(el, binding) {
     const { value } = binding
     const authStore = useAuthStore()
-    
+
     if (value && !authStore.hasPermission(value)) {
       el.parentNode?.removeChild(el)
     }
@@ -1414,5 +1414,5 @@ apex-admin-web/
 
 ---
 
-**文档维护**: 架构团队  
+**文档维护**: 架构团队
 **最后更新**: 2026-09-04

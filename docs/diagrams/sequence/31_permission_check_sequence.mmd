@@ -1,0 +1,106 @@
+sequenceDiagram
+    participant Client as 客户端
+    participant Handler as WebFlux Handler
+    participant Aspect as RequirePermissionAspect
+    participant SecurityContext as ReactiveSecurityContextHolder
+    participant UserService as UserService
+    participant PermissionService as PermissionService
+    participant DataScopeAspect as DataScopeAspect
+    participant DataScopeProvider as ReactiveDataScopeProvider
+    participant DB as MySQL (阻塞池)
+
+    Note over Client,DB: 权限校验与数据权限流程(基于AOP切面)
+    
+    %% 业务请求
+    Client->>+Handler: GET /admin-api/v1/users/list
+    Note right of Client: Authorization: Bearer {token}
+    
+    Handler->>+Aspect: @RequirePermission("system:user:query")
+    Note right of Handler: AOP切点拦截
+    
+    %% 权限校验
+    Aspect->>+SecurityContext: getContext()
+    SecurityContext-->>-Aspect: SecurityContext
+    
+    Aspect->>Aspect: context.getAuthentication()
+    Note right of Aspect: 获取认证信息
+    
+    alt 未认证
+        Aspect-->>Client: 401 UNAUTHORIZED
+    end
+    
+    Aspect->>Aspect: authentication.getName() -> openId
+    Aspect->>+UserService: getByOpenId(openId)
+    UserService->>DB: SELECT * FROM sys_user WHERE open_id=?
+    DB-->>UserService: User实体
+    UserService-->>-Aspect: User
+    
+    alt 用户不存在
+        Aspect-->>Client: 401 UNAUTHORIZED
+    end
+    
+    %% 检查ROLE_ADMIN
+    Aspect->>Aspect: authentication.getAuthorities()
+    Aspect->>Aspect: authorities.contains("ROLE_ADMIN")
+    
+    opt 是管理员
+        Aspect->>Handler: 直接放行
+        Note right of Aspect: 管理员跳过权限检查
+    end
+    
+    %% 普通用户权限查询
+    Aspect->>+PermissionService: getPermissionsByUserId(userId)
+    PermissionService->>DB: 查询用户角色和权限
+    Note right of DB: SELECT p.code FROM sys_permission p<br/>JOIN sys_role_permission rp ON p.id = rp.permission_id<br/>JOIN sys_user_role ur ON rp.role_id = ur.role_id<br/>WHERE ur.user_id = ?
+    DB-->>PermissionService: 权限列表
+    PermissionService-->>-Aspect: Set<String> permissions
+    
+    %% 权限匹配
+    Aspect->>Aspect: checkPermission(permissions, required, logical)
+    Note right of Aspect: Logical.AND: 全部满足<br/>Logical.OR: 任一满足
+    
+    alt 权限不足
+        Aspect-->>Client: 403 FORBIDDEN
+    end
+    
+    Aspect->>Handler: 权限校验通过
+    Note right of Aspect: 继续执行业务方法
+    
+    %% 数据权限(可选)
+    opt 方法标注@DataScope
+        Handler->>+DataScopeAspect: @DataScope(type=DEPT)
+        DataScopeAspect->>+DataScopeProvider: resolve()
+        DataScopeProvider->>SecurityContext: 获取当前用户
+        DataScopeProvider->>DB: 查询用户数据权限
+        Note right of DB: 根据角色查询<br/>data_scope配置
+        DB-->>DataScopeProvider: DataScopeInfo
+        DataScopeProvider-->>-DataScopeAspect: DataScopeInfo
+        
+        alt 无法解析数据权限
+            DataScopeAspect-->>Client: 500 IllegalStateException
+            Note right of DataScopeAspect: 数据权限解析失败抛异常
+        end
+        
+        DataScopeAspect->>DataScopeAspect: 构建DataScopeContext.Scope
+        DataScopeAspect->>Handler: contextWrite(Reactor Context)
+        Note right of DataScopeAspect: 通过Reactor Context<br/>传递数据权限上下文
+    end
+    
+    %% 执行业务查询
+    Handler->>DB: 执行查询
+    Note right of DB: MyBatis-Plus拦截器注入WHERE条件<br/>FROM DataScopeContext
+    
+    alt type=ALL
+        Note right of DB: 无过滤
+    else type=DEPT
+        Note right of DB: AND dept_id = {userDeptId}
+    else type=DEPT_AND_CHILD
+        Note right of DB: AND dept_id IN (userDeptId及子部门)
+    else type=CUSTOM
+        Note right of DB: AND {customSql}
+    end
+    
+    DB-->>Handler: 过滤后的数据
+    Handler-->>-Client: 200 OK {filteredData}
+    
+    Note over Client,DB: 权限拒绝时不返回数据,解析失败时抛出异常

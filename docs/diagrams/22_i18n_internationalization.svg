@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 600" width="1400" height="600">
+  <defs><style>.title{font:700 32px sans-serif;fill:#0f172a;text-anchor:middle}.subtitle{font:500 14px sans-serif;fill:#64748b;text-anchor:middle}.box-title{font:600 14px sans-serif;fill:#0f172a}.text{font:400 11px sans-serif;fill:#475569}.code{font:400 10px monospace;fill:#2563eb}</style></defs>
+  <rect width="1400" height="600" fill="#fff"/>
+  <text x="700" y="40" class="title">22. 国际化 i18n 多语言支持</text>
+  <text x="700" y="65" class="subtitle">Spring MessageSource · Vue-i18n · 错误码国际化 v3.0</text>
+  <rect x="50" y="90" width="650" height="450" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="2"/>
+  <text x="70" y="120" class="box-title">后端i18n (Spring MessageSource)</text>
+  <text x="70" y="150" class="code">messages_zh_CN.properties:</text>
+  <text x="80" y="170" class="code">user.not.exist=用户不存在</text>
+  <text x="80" y="188" class="code">password.error=密码错误</text>
+  <text x="70" y="216" class="code">messages_en_US.properties:</text>
+  <text x="80" y="236" class="code">user.not.exist=User does not exist</text>
+  <text x="80" y="254" class="code">password.error=Incorrect password</text>
+  <text x="70" y="284" class="text">ResultCode枚举关联messageKey:</text>
+  <text x="70" y="304" class="code">USER_NOT_EXIST(1010, "user.not.exist")</text>
+  <text x="70" y="332" class="text">语言检测:</text>
+  <text x="70" y="352" class="code">Accept-Language: zh-CN,en-US;q=0.9</text>
+  <text x="70" y="370" class="code">LocaleContextResolver自动解析</text>
+  <text x="70" y="398" class="text">使用方式:</text>
+  <text x="70" y="418" class="code">messageSource.getMessage(</text>
+  <text x="80" y="436" class="code">code.getMessageKey(), null, locale)</text>
+  <text x="70" y="466" class="text">✅ 错误响应自动匹配请求语言</text>
+  <text x="70" y="486" class="text">支持语言: zh-CN(默认), en-US</text>
+  <rect x="720" y="90" width="630" height="450" rx="8" fill="#f0fdf4" stroke="#059669" stroke-width="2"/>
+  <text x="740" y="120" class="box-title">前端i18n (Vue I18n)</text>
+  <text x="740" y="150" class="code">locales/zh-CN.json:</text>
+  <text x="750" y="170" class="code">{ "menu.user": "用户管理",</text>
+  <text x="760" y="188" class="code">"button.submit": "提交" }</text>
+  <text x="740" y="216" class="code">locales/en-US.json:</text>
+  <text x="750" y="236" class="code">{ "menu.user": "User Management",</text>
+  <text x="760" y="254" class="code">"button.submit": "Submit" }</text>
+  <text x="740" y="284" class="text">组件中使用:</text>
+  <text x="740" y="304" class="code">const { t } = useI18n()</text>
+  <text x="740" y="322" class="code">&lt;el-button&gt;{{ t('button.submit') }}&lt;/el-button&gt;</text>
+  <text x="740" y="352" class="text">语言切换:</text>
+  <text x="740" y="372" class="code">locale.value = 'en-US'</text>
+  <text x="740" y="390" class="code">localStorage.setItem('lang', 'en-US')</text>
+  <text x="740" y="418" class="text">Element Plus国际化:</text>
+  <text x="740" y="438" class="code">ElConfigProvider :locale="elLocale"</text>
+  <text x="740" y="456" class="text">日期选择器/分页器等组件自动切换</text>
+  <text x="740" y="486" class="text">✅ 前后端语言联动 (统一切换)</text>
+  <text x="700" y="585" class="code" text-anchor="middle">© 2026 Apex Team · 国际化i18n v3.0</text>
+</svg>

@@ -31,7 +31,7 @@
 3. **技术架构全景** - 使用 `03_technical_architecture.svg`
 4. **DDD 四层架构** - 使用 `01_logical_architecture.svg`
 5. **部署架构** - 使用 `02_physical_architecture.svg`
-6. **核心特性 1** - 多级缓存架构（`10_multi_level_cache_architecture.svg`）
+6. **核心特性 1** - 多级缓存架构（`09_multi_level_cache_architecture.svg`）
 7. **核心特性 2** - 安全防护体系（`29_security_threat_model.svg`）
 8. **核心特性 3** - 容灾与高可用（`26_disaster_recovery_flow.svg`）
 9. **商业价值 1** - 开发效率提升（来自 `01-logical-architecture-business-value.md`）
@@ -126,7 +126,7 @@ rsvg-convert -w 1920 docs/diagrams/01_logical_architecture.svg > output.png
 
 **嵌入 Markdown / 文档**：
 ```markdown
-![DDD 四层逻辑架构](../diagrams/01_logical_architecture.svg)
+![DDD 四层逻辑架构](diagrams/01_logical_architecture.svg)
 ```
 
 **Web 页面使用**：
@@ -198,22 +198,22 @@ rsvg-convert -w 1920 docs/diagrams/01_logical_architecture.svg > output.png
 - `03_technical_architecture.svg` - 技术架构全景图 ⭐
 
 ### 高级特性图（推荐）
-- `10_multi_level_cache_architecture.svg` - 多级缓存架构 ⭐
+- `09_multi_level_cache_architecture.svg` - 多级缓存架构 ⭐
 - `26_disaster_recovery_flow.svg` - 容灾切换流程 ⭐
 - `27_cicd_pipeline_detail.svg` - CI/CD 流水线 ⭐
 - `28_api_gateway_detail.svg` - API 网关架构 ⭐
 - `29_security_threat_model.svg` - 安全威胁模型 ⭐
 
 ### 业务流程图（按需）
-- `04_login_auth_flow.svg` - JWT 登录认证
+- `04_login_authentication_flow.svg` - JWT 登录认证
 - `05_permission_check_flow.svg` - RBAC 权限校验
 - `06_workflow_approval_flow.svg` - 三级审批工作流
 - `07_file_upload_flow.svg` - 文件分片上传
 
 ### 基础设施图（按需）
 - `08_database_er_diagram.svg` - 数据库 ER 图
-- `09_sentinel_rate_limit_circuit_breaker.svg` - Sentinel 流控熔断
-- `11_auto_retry_strategy_flow.svg` - 自动重试策略
+- `10_rate_limit_circuit_breaker.svg` - Sentinel 流控熔断
+- `11_data_permission_filter.svg` - 自动重试策略
 - `12_security_protection_system.svg` - 安全防护体系
 
 ### 部署运维图（按需）

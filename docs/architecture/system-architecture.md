@@ -2,10 +2,12 @@
 
 > 文档版本: v1.0\
 > 创建时间: 2026-09-03\
-> 适用版本: apex-scaffold v2.5.0+\
+> 适用版本: apex-scaffold v1.2.0+\
 > 架构模式: DDD (领域驱动设计)
 
 > **配套架构图**:
+>
+> - [i18n 消息处理链路](../diagrams/69_i18n_message_flow.svg)
 >
 > - [DDD 四层逻辑架构图](../diagrams/01_logical_architecture.svg)
 >
@@ -13,31 +15,31 @@
 >
 > - [全栈技术选型全景图](../diagrams/03_technical_architecture.svg)
 >
-> - [部署架构拓扑图](../diagrams/13_deployment_architecture.svg)
+> - [部署架构拓扑图](../diagrams/45_deployment_flow.svg)
 >
-> - [网络架构图](../diagrams/14_network_architecture.svg)
+> - [网络架构图](../diagrams/02_physical_architecture.svg)
 >
-> - [数据流转架构图](../diagrams/15_data_flow_architecture.svg)
+> - [数据流转架构图](../diagrams/62_data_flow_consistency.svg)
 >
-> - [RocketMQ消息队列架构图](../diagrams/16_mq_architecture.svg)
+> - [RocketMQ消息队列架构图](../diagrams/61_message_queue_reliability.svg)
 >
-> - [监控体系架构图](../diagrams/17_monitoring_architecture.svg)
+> - [监控体系架构图](../diagrams/48_monitoring_configuration.svg)
 >
-> - [微服务治理架构图](../diagrams/18_microservice_governance.svg)
+> - [微服务治理架构图](../diagrams/43_spi_plugin_architecture.svg)
 >
-> - [后端技术栈架构图](../diagrams/19_backend_technology_stack.svg)
+> - [后端技术栈架构图](../diagrams/29_technology_stack_overview.svg)
 >
-> - [基础设施组件架构图](../diagrams/20_infrastructure_components.svg)
+> - [基础设施组件架构图](../diagrams/46_configuration_hierarchy.svg)
 >
-> - [技术生态全景图](../diagrams/21_technology_ecosystem.svg)
+> - [技术生态全景图](../diagrams/29_technology_stack_overview.svg)
 >
-> - [前端技术栈架构图](../diagrams/22_frontend_technology_stack.svg)
+> - [前端技术栈架构图](../diagrams/29_technology_stack_overview.svg)
 >
-> - [前后端交互架构图](../diagrams/23_frontend_backend_interaction.svg)
+> - [前后端交互架构图](../diagrams/58_api_error_response_flow.svg)
 >
-> - **[Grafana监控面板架构图](../diagrams/24_grafana_dashboard_architecture.svg)** ⭐ NEW
+> - **[Grafana监控面板架构图](../diagrams/48_monitoring_configuration.svg)** ⭐ NEW
 >
-> - **[Prometheus监控体系架构图](../diagrams/25_prometheus_monitoring_architecture.svg)** ⭐ NEW
+> - **[Prometheus监控体系架构图](../diagrams/24_prometheus_grafana_monitoring.svg)** ⭐ NEW
 
 ***
 

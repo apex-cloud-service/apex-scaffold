@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 800" width="1400" height="800">
+  <defs><style>.title{font:700 32px sans-serif;fill:#0f172a;text-anchor:middle}.subtitle{font:500 14px sans-serif;fill:#64748b;text-anchor:middle}.box-title{font:600 14px sans-serif;fill:#0f172a}.text{font:400 11px sans-serif;fill:#475569}.code{font:400 10px monospace;fill:#2563eb}</style></defs>
+  <rect width="1400" height="800" fill="#fff"/>
+  <text x="700" y="40" class="title">19. 前端Vue3组件架构</text>
+  <text x="700" y="65" class="subtitle">Composition API · Pinia状态管理 · Element Plus · TypeScript v3.0</text>
+
+  <rect x="50" y="90" width="650" height="320" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="2"/>
+  <text x="70" y="120" class="box-title">目录结构 (apex-admin-web)</text>
+  <text x="70" y="150" class="code">src/</text>
+  <text x="80" y="168" class="code">├── views/ (页面组件)</text>
+  <text x="90" y="186" class="text">system/user, system/role, monitor/*</text>
+  <text x="80" y="204" class="code">├── components/ (通用组件)</text>
+  <text x="90" y="222" class="text">Table, Form, Dialog, Upload</text>
+  <text x="80" y="240" class="code">├── stores/ (Pinia状态)</text>
+  <text x="90" y="258" class="text">user.ts, permission.ts, app.ts</text>
+  <text x="80" y="276" class="code">├── api/ (接口封装)</text>
+  <text x="90" y="294" class="text">user.ts, role.ts, workflow.ts</text>
+  <text x="80" y="312" class="code">├── router/ (路由配置)</text>
+  <text x="90" y="330" class="text">动态路由加载 + 权限守卫</text>
+  <text x="80" y="348" class="code">└── utils/ (工具函数)</text>
+  <text x="90" y="366" class="text">request.ts (Axios封装), auth.ts</text>
+
+  <rect x="720" y="90" width="630" height="320" rx="8" fill="#f0fdf4" stroke="#059669" stroke-width="2"/>
+  <text x="740" y="120" class="box-title">Pinia状态管理示例</text>
+  <text x="740" y="150" class="code">// stores/user.ts</text>
+  <text x="740" y="170" class="code">export const useUserStore = defineStore('user', {</text>
+  <text x="750" y="188" class="code">state: () => ({</text>
+  <text x="760" y="206" class="code">token: '', userInfo: null,</text>
+  <text x="760" y="224" class="code">permissions: []</text>
+  <text x="750" y="242" class="code">}),</text>
+  <text x="750" y="260" class="code">actions: {</text>
+  <text x="760" y="278" class="code">async login(data) {...}</text>
+  <text x="760" y="296" class="code">async getUserInfo() {...}</text>
+  <text x="750" y="314" class="code">},</text>
+  <text x="750" y="332" class="code">persist: true // 持久化插件</text>
+  <text x="740" y="350" class="code">})</text>
+  <text x="740" y="370" class="text">✅ 组合式API + TypeScript类型推导</text>
+
+  <rect x="50" y="440" width="1300" height="310" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+  <text x="70" y="470" class="box-title">核心特性与最佳实践</text>
+  <text x="70" y="500" class="text">动态路由 + 权限控制:</text>
+  <text x="80" y="520" class="code">router.beforeEach((to, from, next) => { 检查token → 检查permission → next() })</text>
+  <text x="80" y="540" class="code">前端菜单与后端sys_menu.component字段一一对应,动态注册路由</text>
+  <text x="70" y="570" class="text">组件通信:</text>
+  <text x="80" y="590" class="code">defineProps/defineEmits (父子组件) · provide/inject (跨层级) · Pinia (全局状态)</text>
+  <text x="70" y="620" class="text">性能优化:</text>
+  <text x="80" y="640" class="code">路由懒加载 () => import('./views/xxx.vue') · v-memo缓存渲染 · 虚拟滚动(大列表)</text>
+  <text x="70" y="670" class="text">Element Plus暗黑模式:</text>
+  <text x="80" y="690" class="code">useDark() composable + CSS变量切换,支持系统跟随/手动切换</text>
+  <text x="70" y="720" class="text">Vite构建优化: 依赖预构建 + 按需引入(unplugin-auto-import) + 生产环境Tree Shaking</text>
+
+  <text x="700" y="785" class="code" text-anchor="middle">© 2026 Apex Team · 前端Vue3组件架构 v3.0</text>
+</svg>

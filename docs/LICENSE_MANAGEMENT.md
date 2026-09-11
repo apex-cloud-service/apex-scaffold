@@ -12,6 +12,8 @@
 
 ## 架构设计
 
+> **配套架构图**: [License 验证流程](diagrams/65_license_validation_flow.svg)
+
 ```
 ┌─────────────────────┐
 │   LicenseGenerator    │ ← 生成License(仅服务商使用, 持有私钥)

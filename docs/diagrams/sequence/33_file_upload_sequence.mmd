@@ -1,0 +1,131 @@
+sequenceDiagram
+    participant Client as 客户端
+    participant Handler as FileHandler
+    participant FileService as FileService
+    participant StorageService as StorageService
+    participant BaiduAudit as 百度云内容审核
+    participant FGCLIPAudit as Python FGCLIP审核
+    participant Storage as 对象存储(Local/MinIO/TOS)
+    participant DB as MySQL (阻塞池)
+
+    Note over Client,DB: 文件上传与内容审核流程（实际路径与实现）
+    
+    %% 文件上传请求(推荐路径)
+    Client->>+Handler: POST /api/v1/files/generic
+    Note right of Client: multipart/form-data<br/>{file, sex (1|2)}
+    
+    Handler->>Handler: 校验Content-Type: multipart/form-data
+    Handler->>Handler: 校验multipart boundary
+    
+    alt sex参数缺失或不是1/2
+        Handler-->>Client: 400 PARAM_ERROR "sex must be 1 or 2"
+    end
+    
+    Handler->>Handler: 读取multipart中的file字段
+    
+    alt file字段不存在
+        Handler-->>Client: 400 PARAM_ERROR "file part not found"
+    end
+    
+    Handler->>Handler: extractClientIp(request)
+    Handler->>Handler: currentOpenId(request) -> openId
+    Note right of Handler: 从ReactiveSecurityContextHolder<br/>获取当前认证用户openId
+    
+    Handler->>+Handler: readFileBytes(filePart, filename, traceId)
+    Note right of Handler: 读取文件内容并限制大小
+    
+    alt 文件大小超过10 MiB
+        Handler->>Handler: 释放DataBuffer
+        Handler-->>Client: 400 FILE_SIZE_EXCEEDED
+    end
+    
+    Handler-->>-Handler: byte[] fileBytes
+    
+    Handler->>+FileService: upload(filename, bytes, contentType, sex, openId)
+    
+    %% 文件类型校验(三重校验)
+    FileService->>FileService: validateFileType(filename, contentType)
+    Note right of FileService: 1. 扩展名白名单校验<br/>(jpg/png/gif/bmp/webp/heic/heif)
+    
+    alt 扩展名不在白名单
+        FileService-->>Client: 400 "不支持的文件类型"
+    end
+    
+    FileService->>FileService: 校验Content-Type白名单
+    Note right of FileService: image/jpeg, image/png, image/gif<br/>image/bmp, image/webp, image/heic, image/heif
+    
+    alt Content-Type不匹配
+        FileService-->>Client: 400 "不支持的内容类型"
+    end
+    
+    FileService->>FileService: FileTypeValidator.validateImage(bytes, filename)
+    Note right of FileService: 2. 魔数校验<br/>读取文件头字节验证真实类型
+    
+    alt 魔数校验失败
+        FileService-->>Client: 400 "文件魔数校验失败"
+    end
+    
+    alt 文件大小>配置的maxFileSize
+        FileService-->>Client: 400 "文件大小超过限制"
+    end
+    
+    %% 内容审核(百度云图片审核)
+    FileService->>+BaiduAudit: 图片内容审核
+    BaiduAudit->>BaiduAudit: 色情/暴恐/政治敏感检测
+    BaiduAudit-->>-FileService: 审核结果
+    
+    alt 百度审核不通过
+        FileService-->>Client: 400 "内容审核未通过"
+    end
+    
+    %% Python FGCLIP违规检测
+    FileService->>+FGCLIPAudit: FGCLIP违规检测
+    Note right of FGCLIPAudit: Python服务进行<br/>深度学习模型检测
+    FGCLIPAudit-->>-FileService: 检测结果
+    
+    alt FGCLIP检测不通过
+        FileService-->>Client: 400 "内容违规"
+    end
+    
+    opt 审核服务不可用
+        FileService-->>Client: 503 "审核服务暂时不可用"
+    end
+    
+    %% 上传到对象存储
+    FileService->>FileService: sanitizeClientFileName(filename)
+    Note right of FileService: 清洗文件名<br/>只保留basename,防止路径注入
+    
+    FileService->>+StorageService: upload(bucket, objectName, bytes, contentType)
+    Note right of StorageService: bucket由服务端配置决定<br/>客户端不能覆盖
+    
+    StorageService->>StorageService: 根据storage.default-type选择Provider
+    Note right of StorageService: Local / MinIO / TOS<br/>策略模式动态选择
+    
+    StorageService->>+Storage: 写入对象存储
+    Storage-->>-StorageService: 存储成功 objectName
+    StorageService-->>-FileService: 存储路径
+    
+    %% 生成预签名URL
+    FileService->>+StorageService: getPresignedUrl(bucket, objectName, 300s)
+    StorageService->>+Storage: 生成预签名URL
+    Storage-->>-StorageService: 预签名URL
+    StorageService-->>-FileService: url
+    
+    FileService->>FileService: 构建FileUploadResult
+    Note right of FileService: {bucket, objectName, url, <br/>expiresIn: 300, auditResult}
+    
+    FileService-->>-Handler: FileUploadResult
+    
+    %% 返回响应
+    Handler->>Handler: buildOk(Result.success(uploadResult))
+    Handler->>Handler: 记录上传指标
+    Handler-->>-Client: 200 OK
+    Note right of Client: {bucket, objectName, url, expiresIn}
+    
+    Client->>Client: 使用预签名URL访问文件
+    Note right of Client: URL有效期300秒<br/>过期后需重新获取
+    
+    %% 旧兼容路径说明
+    Note over Client,DB: 旧路径 POST /api/v1/file/upload<br/>已标记@Deprecated,推荐使用/api/v1/files/generic
+    
+    Note over Client,DB: 注:不存在/api/storage/upload路径<br/>不存在download/presigned-url公开端点<br/>不存在FileUploadedEvent事件<br/>不存在file_info/file_download_log表<br/>不存在缩略图异步生成流程

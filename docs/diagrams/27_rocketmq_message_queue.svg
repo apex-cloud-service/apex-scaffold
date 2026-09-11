@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 650" width="1400" height="650">
+  <defs><style>.title{font:700 32px sans-serif;fill:#0f172a;text-anchor:middle}.subtitle{font:500 14px sans-serif;fill:#64748b;text-anchor:middle}.box-title{font:600 14px sans-serif;fill:#0f172a}.text{font:400 11px sans-serif;fill:#475569}.code{font:400 10px monospace;fill:#2563eb}</style></defs>
+  <rect width="1400" height="650" fill="#fff"/>
+  <text x="700" y="40" class="title">27. 消息队列 RocketMQ</text>
+  <text x="700" y="65" class="subtitle">异步解耦 · 削峰填谷 · 事务消息 · 顺序消息 v3.0</text>
+  <rect x="50" y="90" width="430" height="250" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="2"/>
+  <text x="70" y="120" class="box-title">生产者配置</text>
+  <text x="70" y="150" class="code">rocketmq.producer:</text>
+  <text x="80" y="168" class="code">group: apex-producer-group</text>
+  <text x="80" y="186" class="code">send-msg-timeout: 3000ms</text>
+  <text x="80" y="204" class="code">retry-times: 2 (失败重试)</text>
+  <text x="80" y="222" class="code">max-message-size: 4MB</text>
+  <text x="70" y="250" class="text">发送方式:</text>
+  <text x="70" y="270" class="code">同步发送: send() (重要消息)</text>
+  <text x="70" y="288" class="code">异步发送: sendAsync() (高吞吐)</text>
+  <text x="70" y="306" class="code">单向发送: sendOneway() (日志)</text>
+  <text x="70" y="324" class="text">✅ 发送失败自动切换Broker</text>
+  <rect x="500" y="90" width="430" height="250" rx="8" fill="#f0fdf4" stroke="#059669" stroke-width="2"/>
+  <text x="520" y="120" class="box-title">消费者配置</text>
+  <text x="520" y="150" class="code">rocketmq.consumer:</text>
+  <text x="530" y="168" class="code">group: apex-consumer-group</text>
+  <text x="530" y="186" class="code">message-model: CLUSTERING (集群)</text>
+  <text x="540" y="204" class="text">同组消费者负载均衡消费</text>
+  <text x="530" y="232" class="code">consume-thread-max: 20</text>
+  <text x="530" y="250" class="code">consume-timeout: 15min</text>
+  <text x="520" y="278" class="text">消费模式:</text>
+  <text x="520" y="298" class="code">@RocketMQMessageListener(</text>
+  <text x="530" y="316" class="code">topic="user-register",</text>
+  <text x="530" y="334" class="code">consumeMode=CONCURRENTLY)</text>
+  <rect x="950" y="90" width="400" height="250" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+  <text x="970" y="120" class="box-title">消息类型</text>
+  <text x="970" y="150" class="code">普通消息: 异步通知(邮件/短信)</text>
+  <text x="970" y="178" class="code">顺序消息: 订单状态变更</text>
+  <text x="980" y="196" class="text">创建→支付→发货 严格顺序</text>
+  <text x="970" y="224" class="code">延迟消息: 订单超时取消</text>
+  <text x="980" y="242" class="text">18级延迟 (1s到2h)</text>
+  <text x="970" y="270" class="code">事务消息: 本地事务+MQ一致性</text>
+  <text x="980" y="288" class="text">Half消息→本地事务→Commit</text>
+  <text x="970" y="316" class="text">消息回查: 事务状态不明时反查</text>
+  <rect x="50" y="370" width="1300" height="230" rx="8" fill="#faf5ff" stroke="#a855f7" stroke-width="2"/>
+  <text x="70" y="400" class="box-title">最佳实践与监控</text>
+  <text x="70" y="430" class="code">幂等消费: 业务去重表 (message_id唯一索引),重复消息自动忽略</text>
+  <text x="70" y="460" class="code">消息重试: 最多16次,超过进入死信队列(%DLQ%),人工介入处理</text>
+  <text x="70" y="490" class="code">消费限流: consumeMessageBatchMaxSize=10 (批量拉取10条),防止OOM</text>
+  <text x="70" y="520" class="code">消息积压监控: 消费延迟&gt;1小时告警 → 扩容消费者 → 临时提高消费并发度</text>
+  <text x="70" y="550" class="code">RocketMQ Console: :8080/rocketmq-dashboard 查看Topic/消费组/消息轨迹</text>
+  <text x="70" y="580" class="text">✅ 与Spring事务集成: @Transactional + sendMessageInTransaction() 保证一致性</text>
+  <text x="700" y="635" class="code" text-anchor="middle">© 2026 Apex Team · RocketMQ消息队列 v3.0</text>
+</svg>

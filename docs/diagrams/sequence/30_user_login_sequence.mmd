@@ -1,0 +1,112 @@
+sequenceDiagram
+    participant Client as 客户端
+    participant AuthHandler as AuthHandler
+    participant AuthService as AuthService
+    participant LoginStrategy as LoginStrategyProvider
+    participant UserService as UserService
+    participant TokenService as TokenService
+    participant DB as MySQL (阻塞池)
+    participant Cache as Redis
+
+    Note over Client,Cache: 统一认证入口：支持多种登录方式(WX_CODE/WX_PHONE/WX_SMS/CL_PHONE/CL_SMS/PASSWORD)
+    
+    %% 登录请求
+    Client->>+AuthHandler: POST /api/v1/auth/login
+    Note right of Client: LoginRequest {<br/>loginType, code, phone, <br/>smsCode, username, password, <br/>captchaId, captchaCode, deviceId}
+    
+    AuthHandler->>AuthHandler: extractClientIp(request)
+    AuthHandler->>AuthHandler: request.setClientIp(clientIp)
+    AuthHandler->>+AuthService: login(request, clientIp)
+    
+    %% 可选图形验证码校验
+    opt 启用登录保护 && (客户端携带验证码 || IP失败次数>=阈值)
+        AuthService->>Cache: verifyCaptcha(captchaId, captchaCode)
+        Cache-->>AuthService: 验证通过/失败
+        alt 验证码失败
+            AuthService-->>Client: 400 CAPTCHA_INVALID
+        end
+    end
+    
+    %% 暴力破解防护检查
+    opt 启用登录保护
+        AuthService->>Cache: GET login:fail:ip:{clientIp}
+        AuthService->>Cache: GET login:fail:username:{username}
+        Cache-->>AuthService: 失败次数
+        alt IP或用户名超过阈值
+            AuthService-->>Client: 403 LOGIN_LOCKED
+        end
+    end
+    
+    %% 策略模式分发登录
+    AuthService->>+LoginStrategy: getStrategy(loginType)
+    LoginStrategy-->>-AuthService: 具体策略实例
+    
+    AuthService->>+LoginStrategy: login(request)
+    
+    alt loginType = WX_CODE
+        LoginStrategy->>外部: 调用微信API获取openId
+        LoginStrategy->>+UserService: getByOpenId(openId)
+    else loginType = WX_PHONE
+        LoginStrategy->>外部: 获取phoneCode并换取手机号
+        LoginStrategy->>+UserService: getByPhone(phone)
+    else loginType = WX_SMS/CL_SMS
+        LoginStrategy->>Cache: 校验短信验证码
+        LoginStrategy->>+UserService: getByPhone(phone)
+    else loginType = PASSWORD
+        LoginStrategy->>+UserService: getByUsername(username)
+        UserService->>DB: SELECT * FROM sys_user WHERE username=?
+        DB-->>UserService: User实体
+        UserService-->>-LoginStrategy: User
+        LoginStrategy->>LoginStrategy: BCrypt.matches(password, user.password)
+        alt 密码错误
+            LoginStrategy-->>AuthService: 抛出 INVALID_CREDENTIALS
+        end
+    end
+    
+    UserService->>DB: 查询用户
+    DB-->>UserService: User实体 / null
+    UserService-->>-LoginStrategy: User / empty
+    
+    alt 用户不存在且支持自动注册
+        LoginStrategy->>+UserService: create(openId/phone)
+        UserService->>DB: INSERT INTO sys_user
+        DB-->>UserService: 新用户ID
+        UserService-->>-LoginStrategy: 新用户实体
+    end
+    
+    %% 生成Token对
+    LoginStrategy->>+TokenService: generateAccessToken(openId, deviceId)
+    TokenService-->>-LoginStrategy: accessToken
+    
+    LoginStrategy->>+TokenService: generateRefreshToken(openId, deviceId)
+    TokenService-->>-LoginStrategy: refreshToken
+    
+    %% 存储Token到Redis(含用户信息)
+    LoginStrategy->>Cache: SETEX token:access:{openId} 7200 {user, token}
+    LoginStrategy->>Cache: SETEX token:refresh:{openId} 604800 {user, token}
+    
+    LoginStrategy-->>-AuthService: LoginResponse
+    
+    %% 清理失败计数
+    opt 登录成功
+        AuthService->>Cache: DEL login:fail:ip:{clientIp}
+        AuthService->>Cache: DEL login:fail:username:{username}
+    end
+    
+    %% 记录登录日志
+    AuthService->>DB: INSERT INTO sys_login_log(username, ip, success)
+    
+    %% 更新用户心跳
+    AuthService->>+UserService: updateLastHeartbeat(userId)
+    UserService->>DB: UPDATE sys_user SET last_heartbeat_time=NOW()
+    UserService-->>-AuthService: 完成
+    
+    AuthService-->>-AuthHandler: LoginResponse
+    AuthHandler-->>-Client: 200 OK
+    Note right of Client: {accessToken, refreshToken, <br/>tokenType: "Bearer", <br/>expiresIn: 7200, <br/>openId, unionId, <br/>userInfo, isNewUser}
+    
+    %% 客户端存储Token
+    Client->>Client: 本地存储accessToken
+    Client->>Client: 本地存储refreshToken
+    
+    Note over Client,Cache: 后续请求携带Authorization: Bearer {accessToken}

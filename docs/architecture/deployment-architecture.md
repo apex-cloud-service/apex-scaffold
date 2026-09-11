@@ -1,13 +1,13 @@
 # Apex Scaffold 部署架构文档
 
-> 文档版本: v1.0  
-> 创建时间: 2026-09-04  
-> 适用版本: apex-scaffold v2.5.0+  
+> 文档版本: v1.0
+> 创建时间: 2026-09-04
+> 适用版本: apex-scaffold v2.5.0+
 > 部署方式: Kubernetes / Docker / Docker Compose
 
-> **配套架构图**:  
-> - [部署架构拓扑图](../diagrams/13_deployment_architecture.svg)  
-> - [网络架构图](../diagrams/14_network_architecture.svg)
+> **配套架构图**:
+> - [部署架构拓扑图](../diagrams/45_deployment_flow.svg)
+> - [网络架构图](../diagrams/02_physical_architecture.svg)
 
 ---
 
@@ -781,6 +781,6 @@ kubectl logs -f <pod-name> -n apex-prod --tail=100
 
 ---
 
-**文档维护者**: 架构团队  
-**审核状态**: 待人工审核  
+**文档维护者**: 架构团队
+**审核状态**: 待人工审核
 **下次更新**: 部署架构变更后同步更新

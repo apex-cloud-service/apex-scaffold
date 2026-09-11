@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1600 1200" width="1600" height="1200">
-  <!-- 
+  <!--
     Apex Scaffold SVG 图表模板
     版本: 2.0
     创建时间: 2026-09-04
     说明: 标准化的图表模板，包含标题区、内容区、图例区、页脚区
-    
+
     使用方法:
     1. 复制此模板文件
     2. 修改元数据（标题、版本、日期、描述）
     3. 在内容区添加您的图表内容
     4. 更新图例和页脚信息
   -->
-  
+
   <!-- 元数据 -->
   <metadata>
     <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
@@ -30,7 +30,7 @@
       </cc:Work>
     </rdf:RDF>
   </metadata>
-  
+
   <defs>
     <!-- ========== 导入设计系统 ========== -->
     <style>
@@ -39,19 +39,19 @@
         --brand-primary: #6366f1;
         --brand-secondary: #8b5cf6;
         --brand-accent: #06b6d4;
-        
+
         /* 语义色 */
         --success: #10b981;
         --warning: #f59e0b;
         --error: #ef4444;
         --info: #3b82f6;
-        
+
         /* DDD分层色 */
         --layer-interfaces: #6366f1;
         --layer-application: #22d3ee;
         --layer-domain: #10b981;
         --layer-infrastructure: #f59e0b;
-        
+
         /* 中立色（浅色模式） */
         --text-primary: #1a1d29;
         --text-secondary: #64748b;
@@ -62,7 +62,7 @@
         --surface: #f8fafc;
         --surface-hover: #f1f5f9;
       }
-      
+
       /* 暗色模式 */
       @media (prefers-color-scheme: dark) {
         :root {
@@ -76,49 +76,49 @@
           --surface-hover: #334155;
         }
       }
-      
+
       /* 字体 */
       --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
       --font-mono: 'SF Mono', Monaco, 'Cascadia Code', 'Courier New', monospace;
-      
+
       /* 样式类 */
       .title-main {
         font: 700 28px var(--font-sans);
         fill: var(--text-primary);
         text-anchor: middle;
       }
-      
+
       .title-sub {
         font: 500 16px var(--font-sans);
         fill: var(--text-secondary);
         text-anchor: middle;
       }
-      
+
       .section-title {
         font: 600 22px var(--font-sans);
         fill: var(--text-primary);
       }
-      
+
       .label-primary {
         font: 500 14px var(--font-sans);
         fill: var(--text-primary);
       }
-      
+
       .label-secondary {
         font: 400 12px var(--font-sans);
         fill: var(--text-secondary);
       }
-      
+
       .label-muted {
         font: 400 11px var(--font-sans);
         fill: var(--text-muted);
       }
-      
+
       .code {
         font: 400 12px var(--font-mono);
         fill: var(--text-primary);
       }
-      
+
       .rect-default {
         fill: var(--surface);
         stroke: var(--border);
@@ -126,7 +126,7 @@
         rx: 8;
         ry: 8;
       }
-      
+
       .rect-primary {
         fill: var(--brand-primary);
         fill-opacity: 0.1;
@@ -135,7 +135,7 @@
         rx: 12;
         ry: 12;
       }
-      
+
       .rect-success {
         fill: var(--success);
         fill-opacity: 0.1;
@@ -144,7 +144,7 @@
         rx: 8;
         ry: 8;
       }
-      
+
       .rect-warning {
         fill: var(--warning);
         fill-opacity: 0.1;
@@ -153,117 +153,117 @@
         rx: 8;
         ry: 8;
       }
-      
+
       .line-default {
         stroke: var(--text-secondary);
         stroke-width: 2;
         fill: none;
       }
-      
+
       .line-primary {
         stroke: var(--brand-primary);
         stroke-width: 2;
         fill: none;
       }
-      
+
       .line-dashed {
         stroke: var(--text-secondary);
         stroke-width: 2;
         stroke-dasharray: 5,5;
         fill: none;
       }
-      
+
       /* 悬停效果 */
       .interactive:hover {
         fill: var(--surface-hover);
         stroke: var(--brand-primary);
         cursor: pointer;
       }
-      
+
       /* 高亮标注 */
       .highlight-badge {
         fill: var(--brand-primary);
         font: 600 11px var(--font-sans);
         fill: #ffffff;
       }
-      
+
       .highlight-badge-bg {
         fill: var(--brand-primary);
         rx: 4;
         ry: 4;
       }
     </style>
-    
+
     <!-- 箭头标记 -->
-    <marker id="arrow-default" viewBox="0 0 10 10" refX="9" refY="5" 
+    <marker id="arrow-default" viewBox="0 0 10 10" refX="9" refY="5"
             markerWidth="10" markerHeight="10" orient="auto">
       <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-secondary)"/>
     </marker>
-    
-    <marker id="arrow-primary" viewBox="0 0 10 10" refX="9" refY="5" 
+
+    <marker id="arrow-primary" viewBox="0 0 10 10" refX="9" refY="5"
             markerWidth="10" markerHeight="10" orient="auto">
       <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--brand-primary)"/>
     </marker>
-    
+
     <!-- 图标定义 -->
     <g id="icon-server">
-      <rect x="0" y="0" width="24" height="24" rx="4" 
+      <rect x="0" y="0" width="24" height="24" rx="4"
             fill="none" stroke="currentColor" stroke-width="2"/>
       <line x1="0" y1="8" x2="24" y2="8" stroke="currentColor" stroke-width="2"/>
       <line x1="0" y1="16" x2="24" y2="16" stroke="currentColor" stroke-width="2"/>
       <circle cx="6" cy="4" r="1" fill="currentColor"/>
       <circle cx="10" cy="4" r="1" fill="currentColor"/>
     </g>
-    
+
     <g id="icon-database">
-      <ellipse cx="12" cy="5" rx="9" ry="3" 
+      <ellipse cx="12" cy="5" rx="9" ry="3"
                fill="none" stroke="currentColor" stroke-width="2"/>
-      <path d="M 3 5 L 3 19 C 3 21 7 23 12 23 C 17 23 21 21 21 19 L 21 5" 
+      <path d="M 3 5 L 3 19 C 3 21 7 23 12 23 C 17 23 21 21 21 19 L 21 5"
             fill="none" stroke="currentColor" stroke-width="2"/>
-      <path d="M 3 12 C 3 14 7 16 12 16 C 17 16 21 14 21 12" 
+      <path d="M 3 12 C 3 14 7 16 12 16 C 17 16 21 14 21 12"
             fill="none" stroke="currentColor" stroke-width="2"/>
     </g>
-    
+
     <g id="icon-shield">
-      <path d="M 12 2 L 22 7 L 22 13 C 22 19 17 23 12 24 C 7 23 2 19 2 13 L 2 7 Z" 
+      <path d="M 12 2 L 22 7 L 22 13 C 22 19 17 23 12 24 C 7 23 2 19 2 13 L 2 7 Z"
             fill="none" stroke="currentColor" stroke-width="2"/>
-      <path d="M 8 12 L 11 15 L 16 9" 
-            fill="none" stroke="currentColor" stroke-width="2" 
+      <path d="M 8 12 L 11 15 L 16 9"
+            fill="none" stroke="currentColor" stroke-width="2"
             stroke-linecap="round" stroke-linejoin="round"/>
     </g>
   </defs>
-  
+
   <!-- ========== 背景 ========== -->
   <rect width="1600" height="1200" fill="var(--background)"/>
-  
+
   <!-- ========== 标题区 (50px, 50px, 1500px, 120px) ========== -->
   <g id="title-section">
     <!-- 主标题 -->
     <text x="800" y="95" class="title-main">图表标题（请修改）</text>
-    
+
     <!-- 副标题 -->
     <text x="800" y="125" class="title-sub">图表副标题 · 版本 v2.0 · 2026-09-04</text>
-    
+
     <!-- 分隔线 -->
     <line x1="50" y1="150" x2="1550" y2="150" stroke="var(--border)" stroke-width="1"/>
   </g>
-  
+
   <!-- ========== 内容区 (50px, 170px, 1300px, 950px) ========== -->
   <g id="content-section">
-    <!-- 
+    <!--
       在此添加您的图表内容
       可用区域: x: 50-1350, y: 170-1120
-      
+
       示例组件:
     -->
-    
+
     <!-- 示例: 矩形组件 -->
     <rect x="100" y="220" width="300" height="150" class="rect-primary interactive">
       <title>示例组件 - 点击查看详情</title>
     </rect>
     <text x="250" y="290" class="label-primary" text-anchor="middle">示例组件 1</text>
     <text x="250" y="310" class="label-secondary" text-anchor="middle">这是一个示例组件</text>
-    
+
     <!-- 示例: 带图标的组件 -->
     <g>
       <rect x="500" y="220" width="300" height="150" class="rect-success interactive"/>
@@ -271,62 +271,62 @@
       <text x="650" y="320" class="label-primary" text-anchor="middle">示例组件 2</text>
       <text x="650" y="340" class="label-secondary" text-anchor="middle">带图标的组件</text>
     </g>
-    
+
     <!-- 示例: 连接线 -->
     <line x1="400" y1="295" x2="500" y2="295" class="line-primary" marker-end="url(#arrow-primary)"/>
     <text x="450" y="285" class="label-muted" text-anchor="middle">数据流</text>
-    
+
     <!-- 示例: 高亮标注 -->
     <g>
       <rect class="highlight-badge-bg" x="420" y="200" width="80" height="22"/>
       <text x="460" y="214" class="highlight-badge" text-anchor="middle">NEW</text>
     </g>
-    
+
     <!-- 提示文本 -->
     <text x="250" y="500" class="label-secondary">请删除示例内容，添加您的实际图表组件</text>
   </g>
-  
+
   <!-- ========== 图例区 (右下角: 1350px, 820px, 200px, 300px) ========== -->
   <g id="legend-section">
     <rect x="1350" y="820" width="200" height="300" class="rect-default"/>
-    
+
     <text x="1370" y="850" class="label-primary">图例 Legend</text>
     <line x1="1370" y1="860" x2="1530" y2="860" stroke="var(--border)" stroke-width="1"/>
-    
+
     <!-- 图例项示例 -->
     <rect x="1370" y="880" width="30" height="20" fill="#6366f1" fill-opacity="0.2" stroke="#6366f1" stroke-width="2" rx="4"/>
     <text x="1410" y="894" class="label-secondary">组件类型 A</text>
-    
+
     <rect x="1370" y="910" width="30" height="20" fill="#10b981" fill-opacity="0.2" stroke="#10b981" stroke-width="2" rx="4"/>
     <text x="1410" y="924" class="label-secondary">组件类型 B</text>
-    
+
     <line x1="1370" y1="945" x2="1400" y2="945" stroke="#6366f1" stroke-width="2" marker-end="url(#arrow-primary)"/>
     <text x="1410" y="950" class="label-secondary">主要数据流</text>
-    
+
     <line x1="1370" y1="975" x2="1400" y2="975" stroke="#64748b" stroke-width="2" stroke-dasharray="4,4"/>
     <text x="1410" y="980" class="label-secondary">异步调用</text>
-    
+
     <!-- 性能指标示例 -->
     <text x="1370" y="1020" class="label-primary">关键指标</text>
     <line x1="1370" y1="1030" x2="1530" y2="1030" stroke="var(--border)" stroke-width="1"/>
-    
+
     <text x="1370" y="1050" class="label-muted">QPS: 10,000+</text>
     <text x="1370" y="1070" class="label-muted">延迟 P95: &lt; 100ms</text>
     <text x="1370" y="1090" class="label-muted">可用性: 99.99%</text>
   </g>
-  
+
   <!-- ========== 页脚区 (0px, 1140px, 1600px, 60px) ========== -->
   <g id="footer-section">
     <rect x="0" y="1140" width="1600" height="60" fill="var(--surface)"/>
-    
+
     <!-- 版权信息 -->
     <text x="50" y="1175" class="label-muted">© 2026 Apex Scaffold · Apache 2.0 License</text>
-    
+
     <!-- 文档链接 -->
     <text x="800" y="1175" class="label-muted" text-anchor="middle">
       文档: docs/architecture/xxx.md · 源码: github.com/apex-scaffold
     </text>
-    
+
     <!-- 更新信息 -->
     <text x="1550" y="1175" class="label-muted" text-anchor="end">版本 v2.0 · 更新于 2026-09-04</text>
   </g>

@@ -1,5 +1,7 @@
 # API版本管理使用指南
 
+> 配套图表：[56 API 版本演进图](diagrams/56_api_version_evolution.svg)
+
 ## 功能说明
 
 API版本管理支持多版本共存,便于向后兼容和灰度发布。通过URL路径区分不同版本:

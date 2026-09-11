@@ -14,7 +14,7 @@
 | ----------------------------------------------- | --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [系统架构设计](./architecture/system-architecture.md) | DDD 四层架构、微服务拆分、技术选型全景       | [逻辑架构](diagrams/01_logical_architecture.svg) · [物理架构](diagrams/02_physical_architecture.svg) · [技术架构](diagrams/03_technical_architecture.svg)                                      |
 | [数据库设计](./architecture/database-design.md)      | 43 张表完整设计、E-R 图、Flyway 迁移管理 | [E-R 关系图](diagrams/08_database_er_diagram.svg)                                                                                                                                     |
-| [业务流程](./architecture/business-flows.md)        | 登录认证、权限校验、工作流、文件上传流程        | [登录流程](diagrams/04_login_auth_flow.svg) · [权限流程](diagrams/05_permission_check_flow.svg) · [工作流](diagrams/06_workflow_approval_flow.svg) · [文件上传](diagrams/07_file_upload_flow.svg) |
+| [业务流程](./architecture/business-flows.md)        | 登录认证、权限校验、工作流、文件上传流程        | [登录流程](diagrams/04_login_authentication_flow.svg) · [权限流程](diagrams/05_permission_check_flow.svg) · [工作流](diagrams/06_workflow_approval_flow.svg) · [文件上传](diagrams/07_file_upload_flow.svg) |
 
 ### 扩展阅读
 
@@ -184,32 +184,32 @@ Vue 3 前端项目的开发指南、路由配置和迁移说明。
 
 |                                              图表预览                                              | 图表名称与说明                                |                                              下载链接                                             |
 | :--------------------------------------------------------------------------------------------: | -------------------------------------- | :-------------------------------------------------------------------------------------------: |
-|   [![DDD四层逻辑架构图](diagrams/01_logical_architecture.svg)](diagrams/01_logical_architecture.svg)  | **DDD 四层逻辑架构图**接口层 / 应用层 / 领域层 / 基础设施层 |   [SVG](diagrams/01_logical_architecture.svg) · [PNG](diagrams/01_logical_architecture.svg)   |
-|  [![网络物理部署架构图](diagrams/02_physical_architecture.svg)](diagrams/02_physical_architecture.svg)  | **网络物理部署架构图**负载均衡 / 服务集群 / 数据库 / 缓存    |  [SVG](diagrams/02_physical_architecture.svg) · [PNG](diagrams/02_physical_architecture.svg)  |
-| [![全栈技术选型全景图](diagrams/03_technical_architecture.svg)](diagrams/03_technical_architecture.svg) | **全栈技术选型全景图**前后端技术栈 / 中间件 / 监控 / 部署    | [SVG](diagrams/03_technical_architecture.svg) · [PNG](diagrams/03_technical_architecture.svg) |
+|   [![DDD四层逻辑架构图](diagrams/01_logical_architecture.svg)](diagrams/01_logical_architecture.svg)  | **DDD 四层逻辑架构图**接口层 / 应用层 / 领域层 / 基础设施层 |   [SVG](diagrams/01_logical_architecture.svg) · [SVG](diagrams/01_logical_architecture.svg)   |
+|  [![网络物理部署架构图](diagrams/02_physical_architecture.svg)](diagrams/02_physical_architecture.svg)  | **网络物理部署架构图**负载均衡 / 服务集群 / 数据库 / 缓存    |  [SVG](diagrams/02_physical_architecture.svg) · [SVG](diagrams/02_physical_architecture.svg)  |
+| [![全栈技术选型全景图](diagrams/03_technical_architecture.svg)](diagrams/03_technical_architecture.svg) | **全栈技术选型全景图**前后端技术栈 / 中间件 / 监控 / 部署    | [SVG](diagrams/03_technical_architecture.svg) · [SVG](diagrams/03_technical_architecture.svg) |
 
 ### 业务流程图（4 张）
 
 |                                              图表预览                                              | 图表名称与说明                               |                                              下载链接                                             |
 | :--------------------------------------------------------------------------------------------: | ------------------------------------- | :-------------------------------------------------------------------------------------------: |
-|        [![JWT登录认证流程图](diagrams/04_login_auth_flow.svg)](diagrams/04_login_auth_flow.svg)       | **JWT 登录认证流程图**双令牌机制 / 刷新令牌 / 单点登录    |        [SVG](diagrams/04_login_auth_flow.svg) · [PNG](diagrams/04_login_auth_flow.svg)        |
-| [![RBAC权限校验流程图](diagrams/05_permission_check_flow.svg)](diagrams/05_permission_check_flow.svg) | **RBAC 权限校验流程图**5 层数据权限 / 角色继承 / 权限缓存 |  [SVG](diagrams/05_permission_check_flow.svg) · [PNG](diagrams/05_permission_check_flow.svg)  |
-|  [![三级审批工作流图](diagrams/06_workflow_approval_flow.svg)](diagrams/06_workflow_approval_flow.svg) | **三级审批工作流图**BPMN 引擎 / 条件分支 / 并行审批     | [SVG](diagrams/06_workflow_approval_flow.svg) · [PNG](diagrams/06_workflow_approval_flow.svg) |
-|       [![文件分片上传流程图](diagrams/07_file_upload_flow.svg)](diagrams/07_file_upload_flow.svg)       | **文件分片上传流程图**秒传 / 断点续传 / MinIO 存储     |       [SVG](diagrams/07_file_upload_flow.svg) · [PNG](diagrams/07_file_upload_flow.svg)       |
+|        [![JWT登录认证流程图](diagrams/04_login_authentication_flow.svg)](diagrams/04_login_authentication_flow.svg)       | **JWT 登录认证流程图**双令牌机制 / 刷新令牌 / 单点登录    |        [SVG](diagrams/04_login_authentication_flow.svg) · [SVG](diagrams/04_login_authentication_flow.svg)        |
+| [![RBAC权限校验流程图](diagrams/05_permission_check_flow.svg)](diagrams/05_permission_check_flow.svg) | **RBAC 权限校验流程图**5 层数据权限 / 角色继承 / 权限缓存 |  [SVG](diagrams/05_permission_check_flow.svg) · [SVG](diagrams/05_permission_check_flow.svg)  |
+|  [![三级审批工作流图](diagrams/06_workflow_approval_flow.svg)](diagrams/06_workflow_approval_flow.svg) | **三级审批工作流图**BPMN 引擎 / 条件分支 / 并行审批     | [SVG](diagrams/06_workflow_approval_flow.svg) · [SVG](diagrams/06_workflow_approval_flow.svg) |
+|       [![文件分片上传流程图](diagrams/07_file_upload_flow.svg)](diagrams/07_file_upload_flow.svg)       | **文件分片上传流程图**秒传 / 断点续传 / MinIO 存储     |       [SVG](diagrams/07_file_upload_flow.svg) · [SVG](diagrams/07_file_upload_flow.svg)       |
 
 ### 数据模型（1 张）
 
 |                                           图表预览                                           | 图表名称与说明                           |                                           下载链接                                          |
 | :--------------------------------------------------------------------------------------: | --------------------------------- | :-------------------------------------------------------------------------------------: |
-| [![核心表数据库关系图](diagrams/08_database_er_diagram.svg)](diagrams/08_database_er_diagram.svg) | **核心表数据库关系图**24 张核心表 crow-foot 关系 | [SVG](diagrams/08_database_er_diagram.svg) · [PNG](diagrams/08_database_er_diagram.svg) |
+| [![核心表数据库关系图](diagrams/08_database_er_diagram.svg)](diagrams/08_database_er_diagram.svg) | **核心表数据库关系图**24 张核心表 crow-foot 关系 | [SVG](diagrams/08_database_er_diagram.svg) · [SVG](diagrams/08_database_er_diagram.svg) |
 
 ### 高级主题图（4 张）
 
 |                                                             图表预览                                                            | 图表名称与说明                                         | 配套文档                                                                            |                             下载                             |
 | :-------------------------------------------------------------------------------------------------------------------------: | ----------------------------------------------- | ------------------------------------------------------------------------------- | :--------------------------------------------------------: |
-| [![Sentinel限流熔断](diagrams/09_sentinel_rate_limit_circuit_breaker.svg)](diagrams/09_sentinel_rate_limit_circuit_breaker.svg) | **Sentinel 限流熔断降级架构**43条限流规则 + 30条熔断规则 + 系统保护   | [架构文档](./architecture/advanced-features/sentinel-rate-limit-circuit-breaker.md) | [SVG](diagrams/09_sentinel_rate_limit_circuit_breaker.svg) |
-|          [![多级缓存](diagrams/10_multi_level_cache_architecture.svg)](diagrams/10_multi_level_cache_architecture.svg)          | **多级缓存架构**L1 Caffeine + L2 Redis / 读写流程 / 一致性保障 | [架构文档](./architecture/advanced-features/multi-level-cache-architecture.md)      |    [SVG](diagrams/10_multi_level_cache_architecture.svg)   |
-|                [![自动重试](diagrams/11_auto_retry_strategy_flow.svg)](diagrams/11_auto_retry_strategy_flow.svg)                | **自动重试策略流程**@AutoRetry 注解 / 指数退避 / 响应式支持        | [架构文档](./architecture/advanced-features/auto-retry-strategy.md)                 |       [SVG](diagrams/11_auto_retry_strategy_flow.svg)      |
+|          [![多级缓存](diagrams/09_multi_level_cache_architecture.svg)](diagrams/09_multi_level_cache_architecture.svg)          | **多级缓存架构**L1 Caffeine + L2 Redis / 读写流程 / 一致性保障 | [架构文档](./architecture/advanced-features/multi-level-cache-architecture.md)      |    [SVG](diagrams/09_multi_level_cache_architecture.svg)   |
+| [![Sentinel限流熔断](diagrams/10_rate_limit_circuit_breaker.svg)](diagrams/10_rate_limit_circuit_breaker.svg) | **Sentinel 限流熔断降级架构**43条限流规则 + 30条熔断规则 + 系统保护   | [架构文档](./architecture/advanced-features/sentinel-rate-limit-circuit-breaker.md) | [SVG](diagrams/10_rate_limit_circuit_breaker.svg) |
+|                [![数据权限过滤](diagrams/11_data_permission_filter.svg)](diagrams/11_data_permission_filter.svg)                | **数据权限过滤**@DataScope 注解 / 5层数据权限 / 部门角色过滤        | [架构文档](./architecture/advanced-features/data-permission-filter.md)                 |       [SVG](diagrams/11_data_permission_filter.svg)      |
 |              [![安全防护](diagrams/12_security_protection_system.svg)](diagrams/12_security_protection_system.svg)              | **安全防护体系**7层防护 / 幂等防重放 / XSS·SQLi·CSRF 拦截       | [架构文档](./architecture/advanced-features/security-protection-system.md)          |      [SVG](diagrams/12_security_protection_system.svg)     |
 
 > **💡 使用提示**：

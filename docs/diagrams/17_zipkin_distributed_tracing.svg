@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 800" width="1400" height="800">
+  <defs><style>.title{font:700 32px sans-serif;fill:#0f172a;text-anchor:middle}.subtitle{font:500 14px sans-serif;fill:#64748b;text-anchor:middle}.box-title{font:600 14px sans-serif;fill:#0f172a}.text{font:400 11px sans-serif;fill:#475569}.code{font:400 10px monospace;fill:#2563eb}</style></defs>
+  <rect width="1400" height="800" fill="#fff"/>
+  <text x="700" y="40" class="title">17. 链路追踪 Zipkin</text>
+  <text x="700" y="65" class="subtitle">Micrometer Tracing · Brave · 10%采样率 · 分布式追踪 v3.0</text>
+
+  <rect x="50" y="90" width="650" height="650" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="2"/>
+  <text x="70" y="120" class="box-title">链路追踪配置</text>
+  <text x="70" y="150" class="code">management.tracing:</text>
+  <text x="80" y="168" class="code">sampling.probability: 0.1 (10%采样)</text>
+  <text x="80" y="186" class="code">baggage.remote-fields: userId,tenantId</text>
+  <text x="70" y="214" class="code">management.zipkin.tracing:</text>
+  <text x="80" y="232" class="code">endpoint: http://zipkin:9411/api/v2/spans</text>
+  <text x="70" y="270" class="text">Trace结构:</text>
+  <text x="70" y="290" class="code">TraceId: 全局唯一追踪ID (128bit)</text>
+  <text x="80" y="308" class="text">示例: d3a4e5f6g7h8i9j0</text>
+  <text x="70" y="336" class="code">SpanId: 当前操作ID (64bit)</text>
+  <text x="80" y="354" class="text">示例: a1b2c3d4</text>
+  <text x="70" y="382" class="code">ParentSpanId: 父操作ID</text>
+  <text x="80" y="400" class="text">构建调用树</text>
+  <text x="70" y="438" class="text">Span类型:</text>
+  <text x="70" y="458" class="code">• SERVER: 服务端接收请求</text>
+  <text x="70" y="476" class="code">• CLIENT: 客户端发起请求</text>
+  <text x="70" y="494" class="code">• PRODUCER: 消息生产者</text>
+  <text x="70" y="512" class="code">• CONSUMER: 消息消费者</text>
+  <text x="70" y="550" class="text">自动埋点范围:</text>
+  <text x="70" y="570" class="code">✓ RestTemplate/WebClient HTTP调用</text>
+  <text x="70" y="588" class="code">✓ Spring MVC/WebFlux Controller</text>
+  <text x="70" y="606" class="code">✓ RabbitMQ/Kafka消息中间件</text>
+  <text x="70" y="624" class="code">✓ MyBatis-Plus数据库操作</text>
+  <text x="70" y="642" class="code">✓ Redis缓存操作</text>
+  <text x="70" y="660" class="code">✓ RocketMQ消息队列</text>
+  <text x="70" y="698" class="text">手动埋点:</text>
+  <text x="70" y="718" class="code">@NewSpan("custom-operation")</text>
+
+  <rect x="720" y="90" width="630" height="650" rx="8" fill="#f0fdf4" stroke="#059669" stroke-width="2"/>
+  <text x="740" y="120" class="box-title">典型调用链路示例</text>
+  <text x="740" y="150" class="text">用户登录请求追踪:</text>
+  <text x="740" y="180" class="code">1. Nginx接入 (ingress-span)</text>
+  <text x="750" y="198" class="text">duration: 2ms</text>
+  <text x="740" y="226" class="code">2. AuthHandler.login (server-span)</text>
+  <text x="750" y="244" class="text">duration: 156ms, tags: http.method=POST</text>
+  <text x="740" y="272" class="code">3. AuthService.authenticate (local-span)</text>
+  <text x="750" y="290" class="text">duration: 120ms</text>
+  <text x="760" y="318" class="code">3.1 Redis查询缓存 (redis-span)</text>
+  <text x="770" y="336" class="text">duration: 2ms, CACHE_MISS</text>
+  <text x="760" y="364" class="code">3.2 MySQL查询用户 (mysql-span)</text>
+  <text x="770" y="382" class="text">duration: 45ms</text>
+  <text x="770" y="400" class="text">SELECT * FROM sys_user WHERE...</text>
+  <text x="760" y="428" class="code">3.3 BCrypt密码校验 (cpu-span)</text>
+  <text x="770" y="446" class="text">duration: 60ms</text>
+  <text x="760" y="474" class="code">3.4 Redis写入Token (redis-span)</text>
+  <text x="770" y="492" class="text">duration: 3ms</text>
+  <text x="740" y="530" class="code">4. 返回响应 200 OK</text>
+  <text x="740" y="568" class="text">总耗时: 156ms</text>
+  <text x="740" y="586" class="text">慢查询检测: &gt;500ms告警</text>
+  <text x="740" y="624" class="text">Zipkin UI查询:</text>
+  <text x="740" y="644" class="code">• serviceName=apex-scaffold</text>
+  <text x="740" y="662" class="code">• minDuration=100ms</text>
+  <text x="740" y="680" class="code">• tags: error=true (错误追踪)</text>
+  <text x="740" y="698" class="code">• lookback=1h (最近1小时)</text>
+  <text x="740" y="726" class="text">Grafana集成: Tempo数据源</text>
+
+  <text x="700" y="785" class="code" text-anchor="middle">© 2026 Apex Team · Zipkin链路追踪 v3.0</text>
+</svg>

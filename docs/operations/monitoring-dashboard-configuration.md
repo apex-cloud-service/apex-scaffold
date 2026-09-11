@@ -1,5 +1,7 @@
 # Apex Scaffold 监控大盘配置指南
 
+[查看监控配置链路图](../diagrams/48_monitoring_configuration.svg)
+
 > 本文档详细说明 Prometheus + Grafana 监控体系的配置、使用和维护
 
 ## 📋 目录
@@ -28,9 +30,9 @@
 
 参考架构图：
 
-- [24\_grafana\_dashboard\_architecture.svg](../diagrams/24_grafana_dashboard_architecture.svg) - Grafana 监控面板分组架构
+- [24\_grafana\_dashboard\_architecture.svg](../diagrams/48_monitoring_configuration.svg) - Grafana 监控面板分组架构
 
-- [25\_prometheus\_monitoring\_architecture.svg](../diagrams/25_prometheus_monitoring_architecture.svg) - Prometheus 监控体系架构
+- [25\_prometheus\_monitoring\_architecture.svg](../diagrams/24_prometheus_grafana_monitoring.svg) - Prometheus 监控体系架构
 
 ### 1.2 组件清单
 
@@ -1072,7 +1074,7 @@ Mention: @channel (严重告警时)
 
 ### 3.5 监控面板分组
 
-参考: [24\_grafana\_dashboard\_architecture.svg](../diagrams/24_grafana_dashboard_architecture.svg)
+参考: [24\_grafana\_dashboard\_architecture.svg](../diagrams/48_monitoring_configuration.svg)
 
 **11 个分组，66 个面板**:
 

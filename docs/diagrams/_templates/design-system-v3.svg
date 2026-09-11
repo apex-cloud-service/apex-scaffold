@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900">
+  <!--
+    Apex Scaffold SVG 设计系统 v3.0
+    深色企业级配色方案
+    更新时间: 2026-09-10
+  -->
+
+  <defs>
+    <style>
+      /* ========== 深色企业级配色系统 ========== */
+      /* 核心品牌色 - 深沉专业 */
+      .color-brand-primary { fill: #4f46e5; }      /* 深靛蓝 - 主品牌色 */
+      .color-brand-secondary { fill: #7c3aed; }    /* 深紫 - 辅助品牌色 */
+      .color-brand-accent { fill: #0891b2; }       /* 专业青 - 强调色 */
+
+      /* DDD分层色 - 专业深色系 */
+      .color-layer-interface { fill: #4f46e5; }    /* 深靛蓝 - 接口层 */
+      .color-layer-application { fill: #0891b2; }  /* 专业青 - 应用层 */
+      .color-layer-domain { fill: #059669; }       /* 深绿 - 领域层 */
+      .color-layer-infrastructure { fill: #d97706; } /* 琥珀 - 基础设施层 */
+
+      /* 语义色 */
+      .color-success { fill: #059669; }            /* 深绿 - 成功 */
+      .color-warning { fill: #d97706; }            /* 琥珀 - 警告 */
+      .color-error { fill: #dc2626; }              /* 深红 - 错误 */
+      .color-info { fill: #2563eb; }               /* 蓝 - 信息 */
+
+      /* 中立色 */
+      .color-text-primary { fill: #0f172a; }       /* 深沉文字 */
+      .color-text-secondary { fill: #475569; }     /* 次要文字 */
+      .color-text-muted { fill: #94a3b8; }         /* 弱化文字 */
+      .color-border { fill: none; stroke: #cbd5e1; } /* 边框 */
+      .color-background { fill: #ffffff; }         /* 背景 */
+      .color-surface { fill: #f8fafc; }            /* 表面 */
+
+      /* ========== 字体系统 ========== */
+      .font-title-main {
+        font: 700 32px system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        fill: #0f172a;
+        text-anchor: middle;
+      }
+      .font-title-section {
+        font: 600 24px system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        fill: #0f172a;
+      }
+      .font-title-module {
+        font: 600 18px system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        fill: #0f172a;
+      }
+      .font-label-primary {
+        font: 500 16px system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        fill: #0f172a;
+      }
+      .font-label-secondary {
+        font: 400 14px system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        fill: #475569;
+      }
+      .font-label-muted {
+        font: 400 12px system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        fill: #94a3b8;
+      }
+      .font-code {
+        font: 400 13px 'SF Mono', Monaco, 'Cascadia Code', monospace;
+        fill: #0f172a;
+      }
+
+      /* ========== 矩形组件样式 ========== */
+      .rect-default {
+        fill: #f8fafc;
+        stroke: #cbd5e1;
+        stroke-width: 2;
+        rx: 8;
+      }
+      .rect-primary {
+        fill: #4f46e5;
+        fill-opacity: 0.1;
+        stroke: #4f46e5;
+        stroke-width: 3;
+        rx: 12;
+      }
+      .rect-success {
+        fill: #059669;
+        fill-opacity: 0.1;
+        stroke: #059669;
+        stroke-width: 2;
+        rx: 8;
+      }
+      .rect-warning {
+        fill: #d97706;
+        fill-opacity: 0.1;
+        stroke: #d97706;
+        stroke-width: 2;
+        rx: 8;
+      }
+
+      /* ========== 连接线样式 ========== */
+      .line-default {
+        stroke: #475569;
+        stroke-width: 2;
+        fill: none;
+      }
+      .line-primary {
+        stroke: #4f46e5;
+        stroke-width: 2;
+        fill: none;
+      }
+      .line-dashed {
+        stroke: #475569;
+        stroke-width: 2;
+        stroke-dasharray: 6,4;
+        fill: none;
+      }
+    </style>
+
+    <!-- ========== 箭头标记 ========== -->
+    <marker id="arrow-default" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#475569"/>
+    </marker>
+
+    <marker id="arrow-primary" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#4f46e5"/>
+    </marker>
+
+    <marker id="arrow-success" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#059669"/>
+    </marker>
+  </defs>
+
+  <!-- 设计系统展示内容 -->
+  <text x="800" y="50" class="font-title-main">Apex Scaffold SVG 设计系统 v3.0</text>
+  <text x="800" y="80" class="font-label-secondary" text-anchor="middle">深色企业级配色 · 2026-09-10</text>
+
+  <!-- 配色展示 -->
+  <text x="50" y="140" class="font-title-section">核心配色</text>
+  <rect x="50" y="160" width="120" height="80" fill="#4f46e5" rx="8"/>
+  <text x="110" y="210" class="font-label-secondary" fill="white" text-anchor="middle">深靛蓝</text>
+
+  <rect x="190" y="160" width="120" height="80" fill="#0891b2" rx="8"/>
+  <text x="250" y="210" class="font-label-secondary" fill="white" text-anchor="middle">专业青</text>
+
+  <rect x="330" y="160" width="120" height="80" fill="#059669" rx="8"/>
+  <text x="390" y="210" class="font-label-secondary" fill="white" text-anchor="middle">深绿</text>
+
+  <rect x="470" y="160" width="120" height="80" fill="#d97706" rx="8"/>
+  <text x="530" y="210" class="font-label-secondary" fill="white" text-anchor="middle">琥珀</text>
+
+  <!-- 使用说明 -->
+  <text x="50" y="320" class="font-title-section">使用说明</text>
+  <text x="50" y="360" class="font-label-secondary">1. 所有图表使用静态颜色值,无CSS变量</text>
+  <text x="50" y="390" class="font-label-secondary">2. 移除所有暗色模式媒体查询</text>
+  <text x="50" y="420" class="font-label-secondary">3. 文本标签使用实际SVG图标,无临时文本</text>
+  <text x="50" y="450" class="font-label-secondary">4. 深色系配色,专业企业级视觉</text>
+</svg>

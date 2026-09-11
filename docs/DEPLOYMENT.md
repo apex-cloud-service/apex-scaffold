@@ -1,5 +1,7 @@
 # Apex Scaffold 部署使用指南
 
+[查看部署流程图](diagrams/45_deployment_flow.svg)
+
 > 版本：1.1.3 ｜ 适用：dev / it / prod 全环境
 > 本文档覆盖三种部署方式：**java -jar 直接部署**、**Docker 单容器**、**Docker Compose 编排**，并给出环境变量、健康检查、日志监控、License、升级回滚、安全清单等完整说明。
 

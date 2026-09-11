@@ -575,4 +575,4 @@ CREATE INDEX idx_task_instance ON wf_task(process_instance_id);
 
 **文档版本**: v1.0  
 **最后更新**: 2026-09-02  
-**适用版本**: Apex Scaffold v1.4.0+
+**适用版本**: Apex Scaffold v1.2.0+

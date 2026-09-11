@@ -4,13 +4,13 @@
 
 本文档详细描述 Apex Scaffold 项目的后端技术栈选型、版本信息、架构设计以及各技术组件之间的协作关系。
 
-**架构图参考**: [19_backend_technology_stack.svg](../diagrams/19_backend_technology_stack.svg)
+**架构图参考**: [29_technology_stack_overview.svg](../diagrams/29_technology_stack_overview.svg)
 
 ---
 
 ## 🏗️ 技术栈架构图
 
-![后端技术栈架构](../diagrams/19_backend_technology_stack.svg)
+![后端技术栈架构](../diagrams/29_technology_stack_overview.svg)
 
 ---
 

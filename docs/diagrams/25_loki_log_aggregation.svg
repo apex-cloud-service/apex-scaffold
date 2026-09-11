@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 700" width="1400" height="700">
+  <defs><style>.title{font:700 32px sans-serif;fill:#0f172a;text-anchor:middle}.subtitle{font:500 14px sans-serif;fill:#64748b;text-anchor:middle}.box-title{font:600 14px sans-serif;fill:#0f172a}.text{font:400 11px sans-serif;fill:#475569}.code{font:400 10px monospace;fill:#2563eb}</style></defs>
+  <rect width="1400" height="700" fill="#fff"/>
+  <text x="700" y="40" class="title">25. Loki 日志聚合系统</text>
+  <text x="700" y="65" class="subtitle">Grafana Loki · LogQL查询 · Fluent Bit采集 · 7天保留 v3.0</text>
+  <rect x="50" y="90" width="650" height="280" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="2"/>
+  <text x="70" y="120" class="box-title">日志采集 (Fluent Bit)</text>
+  <text x="70" y="150" class="code">输入源: /var/log/apex/*.log (容器标准输出)</text>
+  <text x="70" y="178" class="text">过滤处理:</text>
+  <text x="70" y="196" class="code">• Parser: multiline Java异常堆栈合并</text>
+  <text x="70" y="214" class="code">• Filter: 添加标签 {app="apex",env="prod"}</text>
+  <text x="70" y="232" class="code">• Filter: 脱敏 (替换身份证/手机号)</text>
+  <text x="70" y="260" class="text">输出目标: Loki HTTP API (:3100/loki/api/v1/push)</text>
+  <text x="70" y="288" class="text">批量推送: 1MB或10秒间隔</text>
+  <text x="70" y="316" class="text">✅ DaemonSet部署,自动采集所有Pod日志</text>
+  <rect x="720" y="90" width="630" height="280" rx="8" fill="#f0fdf4" stroke="#059669" stroke-width="2"/>
+  <text x="740" y="120" class="box-title">LogQL查询语言</text>
+  <text x="740" y="150" class="code">{app="apex"} |= "ERROR" // 查询错误日志</text>
+  <text x="740" y="178" class="code">{app="apex"} |~ "userId:\\d+" // 正则匹配</text>
+  <text x="740" y="206" class="code">{app="apex"} | json | level="ERROR" // JSON解析</text>
+  <text x="740" y="234" class="code">sum by (level) (count_over_time({app="apex"}[5m]))</text>
+  <text x="750" y="252" class="text">统计5分钟内各级别日志数量</text>
+  <text x="740" y="290" class="text">Grafana Explore面板:</text>
+  <text x="740" y="310" class="code">• 实时tail日志流</text>
+  <text x="740" y="328" class="code">• 时间范围选择器</text>
+  <text x="740" y="346" class="code">• 高亮关键词、展开JSON</text>
+  <rect x="50" y="400" width="1300" height="250" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+  <text x="70" y="430" class="box-title">典型场景与最佳实践</text>
+  <text x="70" y="460" class="text">故障排查: {app="apex",traceId="d3a4e5f6"} 查询完整调用链路日志</text>
+  <text x="70" y="490" class="text">慢SQL分析: {app="apex"} |= "Slow SQL" | json | duration_ms &gt; 3000</text>
+  <text x="70" y="520" class="text">错误统计: rate({app="apex"} |= "ERROR" [5m]) 错误日志增长率,制作告警规则</text>
+  <text x="70" y="550" class="text">用户行为追踪: {app="apex"} | json | userId="12345" 查询单个用户的所有操作日志</text>
+  <text x="70" y="580" class="text">性能优化: 标签基数控制(label cardinality),避免高基数标签(如userId)</text>
+  <text x="70" y="610" class="text">存储优化: Compactor定期压缩,保留7天,自动删除过期日志</text>
+  <text x="70" y="640" class="text">✅ 与Zipkin集成: 日志中的traceId链接到Trace详情,一键跳转</text>
+  <text x="700" y="685" class="code" text-anchor="middle">© 2026 Apex Team · Loki日志聚合 v3.0</text>
+</svg>

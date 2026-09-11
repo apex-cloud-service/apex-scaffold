@@ -681,4 +681,4 @@ function hasCycle(nodes: Node[], edges: Edge[]): boolean {
 
 **文档版本**: v1.0  
 **最后更新**: 2026-09-02  
-**适用版本**: Apex Scaffold v1.4.0+
+**适用版本**: Apex Scaffold v1.2.0+

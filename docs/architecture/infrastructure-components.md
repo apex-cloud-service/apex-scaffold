@@ -4,13 +4,13 @@
 
 本文档详细描述 Apex Scaffold 项目的基础设施组件架构，包括应用服务、数据存储、监控可观测、网关负载均衡、容器编排、CI/CD 流水线等生产级部署方案。
 
-**架构图参考**: [20_infrastructure_components.svg](../diagrams/20_infrastructure_components.svg)
+**架构图参考**: [46_configuration_hierarchy.svg](../diagrams/46_configuration_hierarchy.svg)
 
 ---
 
 ## 🏗️ 基础设施架构图
 
-![基础设施组件架构](../diagrams/20_infrastructure_components.svg)
+![基础设施组件架构](../diagrams/46_configuration_hierarchy.svg)
 
 ---
 

@@ -468,3 +468,4 @@ services:
 ---
 
 **持续更新中...** 欢迎提交PR补充更多最佳实践!
+> 配套图表：[50 DDD 四层开发流程](diagrams/50_ddd_development_flow.svg)

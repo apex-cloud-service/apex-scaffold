@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" width="1600" height="1000">
+  <metadata>
+    <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/">
+      <rdf:Description>
+        <dc:title>Apex Scaffold 数据权限过滤图</dc:title>
+        <dc:creator>Apex Team</dc:creator>
+        <dc:date>2026-09-10</dc:date>
+        <dc:version>3.0</dc:version>
+        <dc:description>展示@DataScope数据权限过滤:AOP拦截+MyBatis-Plus动态SQL注入+5种数据范围</dc:description>
+      </rdf:Description>
+    </rdf:RDF>
+  </metadata>
+
+  <defs>
+    <style>
+      .title-main { font: 700 36px system-ui, sans-serif; fill: #0f172a; text-anchor: middle; }
+      .title-version { font: 500 14px system-ui, sans-serif; fill: #64748b; text-anchor: middle; }
+      .layer-title { font: 600 18px system-ui, sans-serif; fill: #ffffff; }
+      .box-title { font: 600 15px system-ui, sans-serif; fill: #0f172a; }
+      .code-label { font: 400 11px 'SF Mono', monospace; fill: #2563eb; }
+      .note-text { font: 400 12px system-ui, sans-serif; fill: #64748b; }
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/>
+    </marker>
+  </defs>
+
+  <rect width="1600" height="1000" fill="#ffffff"/>
+
+  <text x="800" y="50" class="title-main">Apex Scaffold 数据权限过滤</text>
+  <text x="800" y="80" class="title-version">@DataScope AOP拦截 + MyBatis-Plus SQL注入 · 5种数据范围 · 租户隔离 · v3.0</text>
+
+  <!-- 执行流程 -->
+  <rect x="50" y="110" width="1500" height="280" rx="12" fill="#eff6ff" stroke="#3b82f6" stroke-width="3"/>
+  <rect x="50" y="110" width="1500" height="45" rx="12" fill="#3b82f6"/>
+  <text x="80" y="140" class="layer-title">数据权限执行流程</text>
+
+  <rect x="80" y="180" width="280" height="180" rx="8" fill="#ffffff" stroke="#3b82f6" stroke-width="2"/>
+  <text x="100" y="205" class="box-title">1. AOP拦截</text>
+  <text x="100" y="230" class="code-label">@DataScope(type=DEPT_AND_CHILD)</text>
+  <text x="100" y="247" class="note-text">DataScopeAspect拦截方法</text>
+  <text x="100" y="264" class="note-text">解析注解获取过滤类型</text>
+  <text x="100" y="281" class="note-text">从SecurityContext获取当前用户</text>
+  <text x="100" y="298" class="code-label">UserContext.getCurrentUser()</text>
+  <text x="100" y="315" class="note-text">查询用户角色的data_scope</text>
+  <text x="100" y="332" class="note-text">✅ 管理员跳过过滤</text>
+
+  <rect x="390" y="180" width="280" height="180" rx="8" fill="#ffffff" stroke="#3b82f6" stroke-width="2"/>
+  <text x="410" y="205" class="box-title">2. 构造过滤条件</text>
+  <text x="410" y="230" class="code-label">buildDataScopeCondition()</text>
+  <text x="410" y="247" class="note-text">根据data_scope类型构造SQL</text>
+  <text x="410" y="264" class="note-text">ALL: 无过滤</text>
+  <text x="410" y="281" class="note-text">DEPT: dept_id = {userDeptId}</text>
+  <text x="410" y="298" class="note-text">DEPT_AND_CHILD: dept_id IN</text>
+  <text x="410" y="315" class="note-text">  (递归查询子部门)</text>
+  <text x="410" y="332" class="note-text">SELF: created_by = {userId}</text>
+
+  <rect x="700" y="180" width="280" height="180" rx="8" fill="#ffffff" stroke="#3b82f6" stroke-width="2"/>
+  <text x="720" y="205" class="box-title">3. SQL注入</text>
+  <text x="720" y="230" class="code-label">DataPermissionInterceptor</text>
+  <text x="720" y="247" class="note-text">MyBatis-Plus拦截器链</text>
+  <text x="720" y="264" class="note-text">拦截顺序: 多租户→数据权限→乐观锁</text>
+  <text x="720" y="281" class="code-label">修改原SQL:</text>
+  <text x="720" y="298" class="note-text">SELECT * FROM sys_user</text>
+  <text x="720" y="315" class="note-text">WHERE dept_id IN (1,2,3)</text>
+  <text x="720" y="332" class="note-text">AND tenant_id = 'xxx'</text>
+
+  <rect x="1010" y="180" width="280" height="180" rx="8" fill="#ffffff" stroke="#3b82f6" stroke-width="2"/>
+  <text x="1030" y="205" class="box-title">4. 执行查询</text>
+  <text x="1030" y="230" class="code-label">userMapper.selectList()</text>
+  <text x="1030" y="247" class="note-text">执行注入后的SQL</text>
+  <text x="1030" y="264" class="note-text">返回过滤后的数据</text>
+  <text x="1030" y="281" class="note-text">用户只能看到权限内的数据</text>
+  <text x="1030" y="298" class="code-label">subscribeOn(Schedulers.boundedElastic())</text>
+  <text x="1030" y="315" class="note-text">JDBC阻塞IO隔离到专用线程池</text>
+  <text x="1030" y="332" class="note-text">✅ 响应式非阻塞</text>
+
+  <line x1="220" y1="360" x2="530" y2="200" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="530" y1="360" x2="840" y2="200" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="840" y1="360" x2="1150" y2="200" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- 5种数据范围 -->
+  <rect x="50" y="430" width="1500" height="260" rx="12" fill="#f0fdf4" stroke="#059669" stroke-width="3"/>
+  <rect x="50" y="430" width="1500" height="45" rx="12" fill="#059669"/>
+  <text x="80" y="460" class="layer-title">5种数据范围类型 (DataScopeType)</text>
+
+  <rect x="80" y="500" width="260" height="160" rx="8" fill="#ffffff" stroke="#059669" stroke-width="2"/>
+  <text x="100" y="525" class="box-title">ALL (全部数据)</text>
+  <text x="100" y="550" class="code-label">data_scope = 1</text>
+  <text x="100" y="567" class="note-text">无SQL过滤</text>
+  <text x="100" y="584" class="note-text">适用角色: 超级管理员</text>
+  <text x="100" y="601" class="note-text">可见范围: 租户内所有数据</text>
+  <text x="100" y="618" class="code-label">WHERE tenant_id = 'xxx'</text>
+  <text x="100" y="635" class="note-text">✅ 仅租户隔离</text>
+
+  <rect x="370" y="500" width="260" height="160" rx="8" fill="#ffffff" stroke="#059669" stroke-width="2"/>
+  <text x="390" y="525" class="box-title">DEPT (本部门)</text>
+  <text x="390" y="550" class="code-label">data_scope = 2</text>
+  <text x="390" y="567" class="note-text">WHERE dept_id = {userDeptId}</text>
+  <text x="390" y="584" class="note-text">适用角色: 部门经理</text>
+  <text x="390" y="601" class="note-text">可见范围: 仅本部门数据</text>
+  <text x="390" y="618" class="note-text">示例: 研发部经理只看研发部</text>
+  <text x="390" y="635" class="note-text">✅ 部门级隔离</text>
+
+  <rect x="660" y="500" width="260" height="160" rx="8" fill="#ffffff" stroke="#059669" stroke-width="2"/>
+  <text x="680" y="525" class="box-title">DEPT_AND_CHILD (本部门及子部门)</text>
+  <text x="680" y="550" class="code-label">data_scope = 3</text>
+  <text x="680" y="567" class="note-text">WHERE dept_id IN (1,2,3,4)</text>
+  <text x="680" y="584" class="note-text">递归查询子部门ID列表</text>
+  <text x="680" y="601" class="note-text">适用角色: 总监/VP</text>
+  <text x="680" y="618" class="note-text">示例: CTO看技术线所有部门</text>
+  <text x="680" y="635" class="note-text">✅ 树形部门过滤</text>
+
+  <rect x="950" y="500" width="260" height="160" rx="8" fill="#ffffff" stroke="#059669" stroke-width="2"/>
+  <text x="970" y="525" class="box-title">SELF (仅本人)</text>
+  <text x="970" y="550" class="code-label">data_scope = 4</text>
+  <text x="970" y="567" class="note-text">WHERE created_by = {userId}</text>
+  <text x="970" y="584" class="note-text">适用角色: 普通员工</text>
+  <text x="970" y="601" class="note-text">可见范围: 仅自己创建的数据</text>
+  <text x="970" y="618" class="note-text">示例: 员工只看自己的工单</text>
+  <text x="970" y="635" class="note-text">✅ 用户级隔离</text>
+
+  <rect x="1240" y="500" width="260" height="160" rx="8" fill="#ffffff" stroke="#059669" stroke-width="2"/>
+  <text x="1260" y="525" class="box-title">CUSTOM (自定义)</text>
+  <text x="1260" y="550" class="code-label">data_scope = 5</text>
+  <text x="1260" y="567" class="note-text">sys_role_dept 关联表</text>
+  <text x="1260" y="584" class="note-text">WHERE dept_id IN</text>
+  <text x="1260" y="601" class="note-text">  (SELECT dept_id FROM</text>
+  <text x="1260" y="618" class="note-text">   sys_role_dept WHERE role_id=?)</text>
+  <text x="1260" y="635" class="note-text">✅ 手动指定可见部门</text>
+
+  <!-- 多租户+数据权限 -->
+  <rect x="50" y="730" width="1500" height="230" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="3"/>
+  <rect x="50" y="730" width="1500" height="45" rx="12" fill="#d97706"/>
+  <text x="80" y="760" class="layer-title">多租户隔离 + 数据权限 (双重过滤)</text>
+
+  <rect x="80" y="800" width="450" height="130" rx="8" fill="#ffffff" stroke="#d97706" stroke-width="2"/>
+  <text x="100" y="825" class="box-title">TenantLineInnerInterceptor (先执行)</text>
+  <text x="100" y="850" class="code-label">自动注入 WHERE tenant_id = 'xxx'</text>
+  <text x="100" y="867" class="note-text">从TenantContext获取租户ID</text>
+  <text x="100" y="884" class="note-text">sys_menu/sys_dict等全局表忽略</text>
+  <text x="100" y="901" class="code-label">ignoreTable("sys_menu","sys_dict_type")</text>
+  <text x="100" y="918" class="note-text">✅ SaaS级租户隔离</text>
+
+  <rect x="560" y="800" width="450" height="130" rx="8" fill="#ffffff" stroke="#d97706" stroke-width="2"/>
+  <text x="580" y="825" class="box-title">DataPermissionInterceptor (后执行)</text>
+  <text x="580" y="850" class="code-label">追加 AND dept_id IN (1,2,3)</text>
+  <text x="580" y="867" class="note-text">在租户隔离基础上再过滤部门</text>
+  <text x="580" y="884" class="note-text">保障租户内数据再按角色划分</text>
+  <text x="580" y="901" class="code-label">最终SQL: WHERE tenant_id='A' AND dept_id IN (1,2)</text>
+  <text x="580" y="918" class="note-text">✅ 双重隔离保障</text>
+
+  <rect x="1040" y="800" width="480" height="130" rx="8" fill="#ffffff" stroke="#d97706" stroke-width="2"/>
+  <text x="1060" y="825" class="box-title">使用示例</text>
+  <text x="1060" y="850" class="code-label">@DataScope(type=DataScopeType.DEPT_AND_CHILD)</text>
+  <text x="1060" y="867" class="code-label">public Mono&lt;List&lt;User&gt;&gt; listUsers() {</text>
+  <text x="1070" y="884" class="code-label">  return Mono.fromCallable(() → userMapper.selectList())</text>
+  <text x="1070" y="901" class="code-label">    .subscribeOn(Schedulers.boundedElastic());</text>
+  <text x="1060" y="918" class="code-label">}</text>
+
+  <text x="800" y="990" class="code-label" text-anchor="middle">© 2026 Apex Team · 数据权限过滤 v3.0 · @DataScope AOP + MyBatis-Plus拦截器</text>
+</svg>

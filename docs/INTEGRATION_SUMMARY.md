@@ -212,7 +212,7 @@ docs/reports/archive/
 **推荐阅读顺序**:
 1. [服务治理落地方案](architecture/service-governance-solution.md) - 整体方案
 2. [服务治理实现计划](architecture/service-governance-implementation.md) - 实施细节
-3. [微服务治理架构图](diagrams/18_microservice_governance.svg) - 架构设计
+3. [微服务治理架构图](diagrams/43_spi_plugin_architecture.svg) - 架构设计
 4. [微服务治理架构图](architecture/system-architecture.md) - 架构说明
 
 ### 场景 6: 历史项目回顾与审计

@@ -1,3 +1,5 @@
+> **专题架构图**：[工作流引擎生命周期](diagrams/60_workflow_engine_lifecycle.svg)
+
 # 轻量工作流引擎使用指南
 
 > **Enterprise License 特性** - 仅 Enterprise 版本可用

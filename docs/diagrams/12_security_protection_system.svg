@@ -1,494 +1,203 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 950">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1100" width="1600" height="1100">
+  <metadata>
+    <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/">
+      <rdf:Description>
+        <dc:title>Apex Scaffold 安全防护体系图</dc:title>
+        <dc:creator>Apex Team</dc:creator>
+        <dc:date>2026-09-10</dc:date>
+        <dc:version>3.0</dc:version>
+        <dc:description>展示7层安全防护:防重放/幂等/输入校验/XSS/SQL注入/扫描拦截/审计日志</dc:description>
+      </rdf:Description>
+    </rdf:RDF>
+  </metadata>
+
   <defs>
     <style>
-      
-      
-      text {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-        fill: #0f172a;
-      }
-      
-      .title {
-        font-size: 26px;
-        font-weight: 600;
-        fill: #0f172a;
-      }
-      
-      .subtitle {
-        font-size: 14px;
-        fill: #64748b;
-      }
-      
-      .label {
-        font-size: 14px;
-        font-weight: 500;
-      }
-      
-      .label-small {
-        font-size: 12px;
-        fill: #64748b;
-      }
-      
-      .box {
-        fill: #ffffff;
-        stroke: #e2e8f0;
-        stroke-width: 2;
-        rx: 8;
-      }
-      
-      .box-primary {
-        fill: #ffffff;
-        stroke: #4f46e5;
-        stroke-width: 2.5;
-        rx: 8;
-      }
-      
-      .box-danger {
-        fill: #ffffff;
-        stroke: #dc2626;
-        stroke-width: 2.5;
-        rx: 8;
-      }
-      
-      .box-warning {
-        fill: #ffffff;
-        stroke: #d97706;
-        stroke-width: 2.5;
-        rx: 8;
-      }
-      
-      .box-success {
-        fill: #ffffff;
-        stroke: #059669;
-        stroke-width: 2.5;
-        rx: 8;
-      }
-      
-      .box-info {
-        fill: #ffffff;
-        stroke: #0891b2;
-        stroke-width: 2.5;
-        rx: 8;
-      }
-      
-      .box-purple {
-        fill: #ffffff;
-        stroke: #7c3aed;
-        stroke-width: 2.5;
-        rx: 8;
-      }
-      
-      .arrow {
-        stroke: #64748b;
-        stroke-width: 2;
-        fill: none;
-        marker-end: url(#arrowhead);
-      }
-      
-      .shield-icon {
-        fill: none;
-        stroke: #059669;
-        stroke-width: 2.5;
-      }
+      .title-main { font: 700 36px system-ui, sans-serif; fill: #0f172a; text-anchor: middle; }
+      .title-version { font: 500 14px system-ui, sans-serif; fill: #64748b; text-anchor: middle; }
+      .layer-title { font: 600 18px system-ui, sans-serif; fill: #ffffff; }
+      .box-title { font: 600 14px system-ui, sans-serif; fill: #0f172a; }
+      .code-label { font: 400 11px 'SF Mono', monospace; fill: #2563eb; }
+      .note-text { font: 400 11px system-ui, sans-serif; fill: #64748b; }
     </style>
-    
-    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-      <polygon points="0 0, 10 3, 0 6" fill="#64748b" />
-    </marker>
-  
-    <!-- 云原生专业图标库 - 自动添加 -->
-    <g id="icon-kubernetes">
-      <path d="M10,2 L14,4 L18,2 L18,10 L14,12 L10,10 Z" fill="#326CE5" stroke="#1A4D8F" stroke-width="0.5"/>
-      <circle cx="14" cy="7" r="1.5" fill="white"/>
-      <line x1="14" y1="4" x2="14" y2="7" stroke="white" stroke-width="0.8"/>
-      <line x1="11" y1="5.5" x2="14" y2="7" stroke="white" stroke-width="0.8"/>
-      <line x1="17" y1="5.5" x2="14" y2="7" stroke="white" stroke-width="0.8"/>
-    </g>
-    <g id="icon-pod">
-      <rect x="4" y="4" width="12" height="12" rx="2" fill="#326CE5" stroke="#1A4D8F" stroke-width="1"/>
-      <rect x="6" y="6" width="3" height="3" rx="0.5" fill="white" opacity="0.9"/>
-      <rect x="10.5" y="6" width="3" height="3" rx="0.5" fill="white" opacity="0.9"/>
-      <rect x="6" y="10.5" width="3" height="3" rx="0.5" fill="white" opacity="0.9"/>
-      <rect x="10.5" y="10.5" width="3" height="3" rx="0.5" fill="white" opacity="0.9"/>
-    </g>
-    <g id="icon-deployment">
-      <rect x="3" y="5" width="10" height="10" rx="1.5" fill="#326CE5" stroke="#1A4D8F" stroke-width="1" opacity="0.3"/>
-      <rect x="5" y="3" width="10" height="10" rx="1.5" fill="#326CE5" stroke="#1A4D8F" stroke-width="1" opacity="0.6"/>
-      <rect x="7" y="1" width="10" height="10" rx="1.5" fill="#326CE5" stroke="#1A4D8F" stroke-width="1"/>
-      <path d="M10,4 L10,8 M8,6 L12,6" stroke="white" stroke-width="1.2" stroke-linecap="round"/>
-    </g>
-    <g id="icon-service">
-      <circle cx="10" cy="10" r="7" fill="none" stroke="#326CE5" stroke-width="1.5"/>
-      <circle cx="10" cy="10" r="2" fill="#326CE5"/>
-      <circle cx="10" cy="3" r="1.5" fill="#326CE5"/>
-      <circle cx="17" cy="10" r="1.5" fill="#326CE5"/>
-      <circle cx="10" cy="17" r="1.5" fill="#326CE5"/>
-      <circle cx="3" cy="10" r="1.5" fill="#326CE5"/>
-    </g>
-    <g id="icon-ingress">
-      <path d="M2,10 L10,2 L18,10" fill="none" stroke="#326CE5" stroke-width="1.5" stroke-linejoin="round"/>
-      <rect x="6" y="10" width="8" height="8" fill="#326CE5" stroke="#1A4D8F" stroke-width="1"/>
-      <path d="M8,13 L12,13 M10,11 L10,16" stroke="white" stroke-width="1" stroke-linecap="round"/>
-    </g>
-    <g id="icon-configmap">
-      <rect x="3" y="3" width="14" height="14" rx="2" fill="none" stroke="#326CE5" stroke-width="1.5"/>
-      <line x1="6" y1="7" x2="14" y2="7" stroke="#326CE5" stroke-width="1"/>
-      <line x1="6" y1="10" x2="14" y2="10" stroke="#326CE5" stroke-width="1"/>
-      <line x1="6" y1="13" x2="11" y2="13" stroke="#326CE5" stroke-width="1"/>
-    </g>
-    <g id="icon-secret">
-      <rect x="5" y="8" width="10" height="9" rx="1" fill="#326CE5" stroke="#1A4D8F" stroke-width="1"/>
-      <path d="M7,8 L7,6 C7,4.3 8.3,3 10,3 C11.7,3 13,4.3 13,6 L13,8" fill="none" stroke="#326CE5" stroke-width="1.5"/>
-      <circle cx="10" cy="12" r="1.2" fill="white"/>
-    </g>
-    <g id="icon-namespace">
-      <rect x="2" y="2" width="7" height="7" rx="1" fill="none" stroke="#326CE5" stroke-width="1.2"/>
-      <rect x="11" y="2" width="7" height="7" rx="1" fill="none" stroke="#326CE5" stroke-width="1.2"/>
-      <rect x="2" y="11" width="7" height="7" rx="1" fill="none" stroke="#326CE5" stroke-width="1.2"/>
-      <rect x="11" y="11" width="7" height="7" rx="1" fill="none" stroke="#326CE5" stroke-width="1.2"/>
-    </g>
-    <g id="icon-docker">
-      <rect x="6" y="8" width="2.5" height="2.5" fill="#2496ED"/>
-      <rect x="9" y="8" width="2.5" height="2.5" fill="#2496ED"/>
-      <rect x="12" y="8" width="2.5" height="2.5" fill="#2496ED"/>
-      <rect x="6" y="5" width="2.5" height="2.5" fill="#2496ED"/>
-      <rect x="9" y="5" width="2.5" height="2.5" fill="#2496ED"/>
-      <path d="M3,11 Q3,9 5,9 L15,9 Q17,9 17,11 Q19,11 19,13 Q19,15 17,15 L5,15 Q3,15 3,13 Q3,11 3,11 Z" 
-            fill="none" stroke="#2496ED" stroke-width="1.2"/>
-    </g>
-    <g id="icon-container">
-      <rect x="4" y="5" width="12" height="10" rx="1.5" fill="none" stroke="#2496ED" stroke-width="1.5"/>
-      <line x1="4" y1="8" x2="16" y2="8" stroke="#2496ED" stroke-width="1"/>
-      <line x1="4" y1="11.5" x2="16" y2="11.5" stroke="#2496ED" stroke-width="1"/>
-      <circle cx="6.5" cy="6.5" r="0.8" fill="#2496ED"/>
-      <circle cx="9" cy="6.5" r="0.8" fill="#2496ED"/>
-    </g>
-    <g id="icon-cloud-pro">
-      <path d="M6,12 C4,12 2.5,10.5 2.5,8.5 C2.5,7 3.5,5.7 5,5.3 C5,3.5 6.5,2 8.5,2 C9.8,2 11,2.7 11.6,3.8 
-               C12,3.6 12.5,3.5 13,3.5 C14.7,3.5 16,4.8 16,6.5 C17.2,6.8 18,7.9 18,9.2 C18,10.8 16.8,12 15.2,12 Z" 
-            fill="#4285F4" stroke="#2563EB" stroke-width="0.8" opacity="0.9"/>
-      <path d="M6,12 C4,12 2.5,10.5 2.5,8.5 C2.5,7 3.5,5.7 5,5.3" 
-            fill="none" stroke="white" stroke-width="0.5" opacity="0.5"/>
-    </g>
-    <g id="icon-aws">
-      <path d="M3,10 L6,8 L9,10 L6,12 Z" fill="#FF9900"/>
-      <path d="M9,10 L12,8 L15,10 L12,12 Z" fill="#FF9900"/>
-      <path d="M3,14 L17,14" stroke="#FF9900" stroke-width="1.5" stroke-linecap="round"/>
-      <path d="M15,14 L17,15" stroke="#FF9900" stroke-width="1.5" stroke-linecap="round"/>
-    </g>
-    <g id="icon-mysql">
-      <ellipse cx="10" cy="6" rx="6" ry="2.5" fill="#4479A1" stroke="#2F5F7F" stroke-width="0.8"/>
-      <path d="M4,6 L4,14 Q4,16.5 10,16.5 Q16,16.5 16,14 L16,6" 
-            fill="#4479A1" stroke="#2F5F7F" stroke-width="0.8"/>
-      <ellipse cx="10" cy="14" rx="6" ry="2.5" fill="#5D87A1" stroke="#2F5F7F" stroke-width="0.8"/>
-      <line x1="4" y1="10" x2="4" y2="11" stroke="white" stroke-width="0.5" opacity="0.5"/>
-    </g>
-    <g id="icon-redis">
-      <ellipse cx="10" cy="8" rx="7" ry="3" fill="#DC382D"/>
-      <ellipse cx="10" cy="12" rx="7" ry="3" fill="#C6302B"/>
-      <path d="M3,8 L3,12" stroke="#A41E11" stroke-width="0.8"/>
-      <path d="M17,8 L17,12" stroke="#A41E11" stroke-width="0.8"/>
-      <path d="M6,7 L8,8 L10,7 L12,8 L14,7" stroke="white" stroke-width="1" fill="none"/>
-    </g>
-    <g id="icon-mongodb">
-      <path d="M10,2 L12,8 L10,18 L8,8 Z" fill="#47A248" stroke="#3F8C40" stroke-width="0.8"/>
-      <ellipse cx="10" cy="8" rx="2" ry="6" fill="#47A248" opacity="0.7"/>
-    </g>
-    <g id="icon-postgresql">
-      <ellipse cx="10" cy="10" rx="6" ry="7" fill="#336791" stroke="#2A5373" stroke-width="1"/>
-      <path d="M7,7 Q10,5 13,7" fill="none" stroke="white" stroke-width="1" stroke-linecap="round"/>
-      <circle cx="8" cy="9" r="0.8" fill="white"/>
-      <circle cx="12" cy="9" r="0.8" fill="white"/>
-      <path d="M10,13 Q10,14 11,14" fill="none" stroke="white" stroke-width="0.8"/>
-    </g>
-    <g id="icon-kafka">
-      <circle cx="10" cy="10" r="7" fill="black"/>
-      <circle cx="10" cy="10" r="5.5" fill="white"/>
-      <path d="M7,10 L10,7 L13,10 L10,13 Z" fill="black"/>
-    </g>
-    <g id="icon-rabbitmq">
-      <circle cx="7" cy="8" r="2.5" fill="#FF6600"/>
-      <circle cx="13" cy="8" r="2.5" fill="#FF6600"/>
-      <path d="M5,10 L7,14 L10,12 L13,14 L15,10 Q15,16 10,16 Q5,16 5,10 Z" fill="#FF6600"/>
-      <circle cx="7" cy="7.5" r="0.8" fill="white"/>
-      <circle cx="13" cy="7.5" r="0.8" fill="white"/>
-    </g>
-    <g id="icon-rocketmq">
-      <path d="M10,3 L13,10 L10,17 L7,10 Z" fill="#D77310" stroke="#B85F0A" stroke-width="1"/>
-      <circle cx="10" cy="10" r="2" fill="#FFA500"/>
-      <path d="M8,17 L10,18 L12,17" stroke="#D77310" stroke-width="1.5" stroke-linecap="round"/>
-    </g>
-    <g id="icon-nginx">
-      <rect x="4" y="6" width="12" height="8" rx="1" fill="#009639" stroke="#007A2D" stroke-width="1"/>
-      <path d="M7,9 L10,13 L10,9 L13,13 L13,9" stroke="white" stroke-width="1.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-    </g>
-    <g id="icon-load-balancer-pro">
-      <rect x="6" y="2" width="8" height="3" rx="0.5" fill="#0891b2" stroke="#0e7490" stroke-width="0.8"/>
-      <line x1="10" y1="5" x2="10" y2="8" stroke="#64748b" stroke-width="1.5"/>
-      <circle cx="10" cy="9.5" r="1.5" fill="#0891b2"/>
-      <line x1="10" y1="11" x2="6" y2="14" stroke="#64748b" stroke-width="1"/>
-      <line x1="10" y1="11" x2="10" y2="14" stroke="#64748b" stroke-width="1"/>
-      <line x1="10" y1="11" x2="14" y2="14" stroke="#64748b" stroke-width="1"/>
-      <rect x="4" y="14" width="3" height="2.5" rx="0.5" fill="#059669"/>
-      <rect x="8.5" y="14" width="3" height="2.5" rx="0.5" fill="#059669"/>
-      <rect x="13" y="14" width="3" height="2.5" rx="0.5" fill="#059669"/>
-    </g>
-    <g id="icon-cdn-pro">
-      <circle cx="10" cy="5" r="2" fill="#10b981" stroke="#059669" stroke-width="0.8"/>
-      <circle cx="4" cy="12" r="2" fill="#10b981" stroke="#059669" stroke-width="0.8"/>
-      <circle cx="16" cy="12" r="2" fill="#10b981" stroke="#059669" stroke-width="0.8"/>
-      <circle cx="10" cy="15" r="2" fill="#10b981" stroke="#059669" stroke-width="0.8"/>
-      <line x1="10" y1="7" x2="5" y2="11" stroke="#64748b" stroke-width="1"/>
-      <line x1="10" y1="7" x2="15" y2="11" stroke="#64748b" stroke-width="1"/>
-      <line x1="5.5" y1="13" x2="9" y2="14" stroke="#64748b" stroke-width="1"/>
-      <line x1="14.5" y1="13" x2="11" y2="14" stroke="#64748b" stroke-width="1"/>
-    </g>
-    <g id="icon-prometheus">
-      <circle cx="10" cy="10" r="7" fill="#E6522C" stroke="#C14522" stroke-width="1"/>
-      <path d="M10,5 L10,10 L14,10" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
-      <circle cx="10" cy="10" r="1.5" fill="white"/>
-    </g>
-    <g id="icon-grafana">
-      <circle cx="10" cy="10" r="7" fill="#F46800"/>
-      <path d="M6,10 Q10,6 14,10 Q14,14 10,14 Q6,14 6,10" fill="#FFA500" opacity="0.7"/>
-      <path d="M10,7 L10,13 M7,10 L13,10" stroke="white" stroke-width="1.2"/>
-    </g>
-    <g id="icon-springboot">
-      <circle cx="10" cy="10" r="7" fill="#6DB33F"/>
-      <path d="M12,6 Q14,8 12,10 Q14,12 12,14" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
-      <path d="M8,6 Q6,8 8,10 Q6,12 8,14" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
-    </g>
-    <g id="icon-java">
-      <path d="M8,14 Q6,12 8,10 Q10,12 8,14" fill="#F89820"/>
-      <path d="M12,14 Q10,12 12,10 Q14,12 12,14" fill="#F89820"/>
-      <ellipse cx="10" cy="7" rx="4" ry="2" fill="#5382A1"/>
-    </g>
-    <g id="icon-react">
-      <ellipse cx="10" cy="10" rx="7" ry="3" fill="none" stroke="#61DAFB" stroke-width="1"/>
-      <ellipse cx="10" cy="10" rx="7" ry="3" fill="none" stroke="#61DAFB" stroke-width="1" transform="rotate(60 10 10)"/>
-      <ellipse cx="10" cy="10" rx="7" ry="3" fill="none" stroke="#61DAFB" stroke-width="1" transform="rotate(120 10 10)"/>
-      <circle cx="10" cy="10" r="1.5" fill="#61DAFB"/>
-    </g>
-    <g id="icon-vue">
-      <path d="M10,4 L6,12 L10,12 L14,12 Z" fill="#42B883"/>
-      <path d="M10,4 L8,8 L10,12 L12,8 Z" fill="#35495E"/>
-    </g>
-    <g id="icon-git">
-      <rect x="3" y="3" width="14" height="14" rx="2" fill="#F05032"/>
-      <path d="M12,8 L10,10 L8,8 L10,6 Z" fill="white"/>
-      <circle cx="7" cy="13" r="1.2" fill="white"/>
-      <circle cx="13" cy="13" r="1.2" fill="white"/>
-      <line x1="10" y1="10" x2="10" y2="13" stroke="white" stroke-width="1"/>
-    </g>
-    <g id="icon-elasticsearch">
-      <circle cx="10" cy="10" r="7" fill="#FEC514"/>
-      <path d="M6,10 L14,10 M6,8 L12,8 M6,12 L12,12" stroke="#343741" stroke-width="1.2" stroke-linecap="round"/>
-    </g>
-    <g id="icon-minio">
-      <rect x="4" y="6" width="12" height="8" rx="1" fill="#C72C48"/>
-      <rect x="6" y="8" width="3" height="4" fill="white" opacity="0.9"/>
-      <rect x="11" y="8" width="3" height="4" fill="white" opacity="0.9"/>
-    </g>
   </defs>
-  
-  <!-- Title -->
-  <text x="700" y="35" text-anchor="middle" class="title">安全防护体系</text>
-  <text x="700" y="58" text-anchor="middle" class="subtitle">XSS · SQL注入 · CSRF · 输入验证 · 安全响应头 · JWT认证 · 权限控制</text>
-  
-  <!-- Client Request -->
-  <rect x="550" y="90" width="300" height="60" class="box-primary"/>
-  <text x="700" y="115" text-anchor="middle" class="label" style="font-size: 16px; font-weight: 600;">客户端请求</text>
-  <text x="700" y="135" text-anchor="middle" class="label-small">HTTP/HTTPS Request</text>
-  
-  <path d="M 700 150 L 700 190" class="arrow"/>
-  
-  <!-- Security Layer -->
-  <rect x="100" y="190" width="1200" height="210" class="box-danger"/>
-  <text x="700" y="215" text-anchor="middle" class="label" style="font-size: 18px; font-weight: 600; fill: #dc2626;">安全防护层</text>
-  
-  <!-- Layer 1: Security Headers -->
-  <g transform="translate(120, 230)">
-    <rect x="0" y="0" width="270" height="150" class="box-info"/>
-    <text x="135" y="25" text-anchor="middle" class="label" style="fill: #0891b2; font-size: 15px; font-weight: 600;">安全响应头</text>
-    <text x="135" y="43" text-anchor="middle" class="label-small" style="font-size: 10px;">SecurityHeaderWebFilter</text>
-    
-    <text x="15" y="63" class="label-small" style="font-size: 10px;">• X-XSS-Protection: 0</text>
-    <text x="15" y="78" class="label-small" style="font-size: 10px;">• X-Content-Type-Options</text>
-    <text x="15" y="93" class="label-small" style="font-size: 10px;">• X-Frame-Options: DENY</text>
-    <text x="15" y="108" class="label-small" style="font-size: 10px;">• Content-Security-Policy</text>
-    <text x="15" y="123" class="label-small" style="font-size: 10px;">• HSTS (strict-transport)</text>
-    <text x="15" y="138" class="label-small" style="font-size: 10px;">• Referrer-Policy</text>
-  </g>
-  
-  <!-- Layer 2: Input Validation -->
-  <g transform="translate(410, 230)">
-    <rect x="0" y="0" width="270" height="150" class="box-warning"/>
-    <text x="135" y="25" text-anchor="middle" class="label" style="fill: #d97706; font-size: 15px; font-weight: 600;">输入验证过滤</text>
-    <text x="135" y="43" text-anchor="middle" class="label-small" style="font-size: 10px;">InputValidationFilter</text>
-    
-    <text x="15" y="63" class="label-small" style="font-size: 10px;">• XSS检测 (5种模式)</text>
-    <text x="15" y="78" class="label-small" style="font-size: 10px;">• SQL注入检测 (正则)</text>
-    <text x="15" y="93" class="label-small" style="font-size: 10px;">• 路径遍历检测 (../)</text>
-    <text x="15" y="108" class="label-small" style="font-size: 10px;">• 参数长度限制</text>
-    <text x="15" y="123" class="label-small" style="font-size: 10px;">• Content-Type白名单</text>
-    <text x="15" y="138" class="label-small" style="font-size: 10px;">• 请求体大小限制</text>
-  </g>
-  
-  <!-- Layer 3: JWT Authentication -->
-  <g transform="translate(700, 230)">
-    <rect x="0" y="0" width="270" height="150" class="box-success"/>
-    <text x="135" y="25" text-anchor="middle" class="label" style="fill: #059669; font-size: 15px; font-weight: 600;">JWT 认证</text>
-    <text x="135" y="43" text-anchor="middle" class="label-small" style="font-size: 10px;">JwtAuthenticationFilter</text>
-    
-    <text x="15" y="63" class="label-small" style="font-size: 10px;">• Token有效性校验</text>
-    <text x="15" y="78" class="label-small" style="font-size: 10px;">• 黑名单检查</text>
-    <text x="15" y="93" class="label-small" style="font-size: 10px;">• 双令牌机制</text>
-    <text x="15" y="108" class="label-small" style="font-size: 10px;">• Access: 2小时</text>
-    <text x="15" y="123" class="label-small" style="font-size: 10px;">• Refresh: 30天</text>
-    <text x="15" y="138" class="label-small" style="font-size: 10px;">• ≥32字节密钥</text>
-  </g>
-  
-  <!-- Layer 4: Rate Limiting -->
-  <g transform="translate(990, 230)">
-    <rect x="0" y="0" width="270" height="150" class="box-purple"/>
-    <text x="135" y="25" text-anchor="middle" class="label" style="fill: #7c3aed; font-size: 15px; font-weight: 600;">登录保护</text>
-    <text x="135" y="43" text-anchor="middle" class="label-small" style="font-size: 10px;">Login Protection</text>
-    
-    <text x="15" y="63" class="label-small" style="font-size: 10px;">• 单IP: 20次/窗口</text>
-    <text x="15" y="78" class="label-small" style="font-size: 10px;">• 单用户名: 5次/窗口</text>
-    <text x="15" y="93" class="label-small" style="font-size: 10px;">• 3次失败强制验证码</text>
-    <text x="15" y="108" class="label-small" style="font-size: 10px;">• 窗口: 900秒</text>
-    <text x="15" y="123" class="label-small" style="font-size: 10px;">• Redis失败计数</text>
-    <text x="15" y="138" class="label-small" style="font-size: 10px;">• 防爆破攻击</text>
-  </g>
-  
-  <path d="M 700 400 L 700 440" class="arrow"/>
-  
-  <!-- Business Layer -->
-  <rect x="500" y="440" width="400" height="70" class="box"/>
-  <text x="700" y="465" text-anchor="middle" class="label" style="font-size: 16px; font-weight: 600;">业务处理层</text>
-  <text x="700" y="485" text-anchor="middle" class="label-small">Handler → Service → Repository</text>
-  <text x="700" y="502" text-anchor="middle" class="label-small" style="font-size: 11px;">权限校验 · 数据权限 · 多租户隔离</text>
-  
-  <path d="M 700 510 L 700 550" class="arrow"/>
-  
-  <!-- Data Layer Security -->
-  <rect x="100" y="550" width="1200" height="180" class="box-primary"/>
-  <text x="700" y="575" text-anchor="middle" class="label" style="font-size: 18px; font-weight: 600; fill: #4f46e5;">数据层安全</text>
-  
-  <!-- SQL Injection Prevention -->
-  <g transform="translate(120, 590)">
-    <rect x="0" y="0" width="350" height="120" class="box-danger"/>
-    <text x="175" y="25" text-anchor="middle" class="label" style="fill: #dc2626; font-size: 15px; font-weight: 600;">SQL注入防护</text>
-    
-    <text x="15" y="48" class="label-small" style="font-size: 11px; font-weight: 600;">三层防护:</text>
-    <text x="15" y="66" class="label-small" style="font-size: 10px;">1. 输入预检 (正则检测)</text>
-    <text x="25" y="81" class="label-small" style="font-size: 9px;">· SQL关键字检测</text>
-    <text x="25" y="94" class="label-small" style="font-size: 9px;">· 特殊字符组合检测</text>
-    <text x="15" y="109" class="label-small" style="font-size: 10px;">2. MyBatis预编译 (#{} ✓)</text>
-    <text x="15" y="124" class="label-small" style="font-size: 10px;">3. Lambda安全查询</text>
-  </g>
-  
-  <!-- Password Security -->
-  <g transform="translate(490, 590)">
-    <rect x="0" y="0" width="350" height="120" class="box-warning"/>
-    <text x="175" y="25" text-anchor="middle" class="label" style="fill: #d97706; font-size: 15px; font-weight: 600;">密码安全</text>
-    
-    <text x="15" y="48" class="label-small" style="font-size: 11px;">• BCrypt加密 (salt=10)</text>
-    <text x="15" y="66" class="label-small" style="font-size: 11px;">• 防彩虹表攻击</text>
-    <text x="15" y="84" class="label-small" style="font-size: 11px;">• 密码强度要求</text>
-    <text x="15" y="102" class="label-small" style="font-size: 11px;">• 定期密码更新策略</text>
-  </g>
-  
-  <!-- Data Encryption -->
-  <g transform="translate(860, 590)">
-    <rect x="0" y="0" width="400" height="120" class="box-success"/>
-    <text x="200" y="25" text-anchor="middle" class="label" style="fill: #059669; font-size: 15px; font-weight: 600;">敏感数据处理</text>
-    
-    <text x="15" y="48" class="label-small" style="font-size: 11px;">• 数据库字段加密 (@FieldEncrypt)</text>
-    <text x="15" y="66" class="label-small" style="font-size: 11px;">• 手机号脱敏 (138****8000)</text>
-    <text x="15" y="84" class="label-small" style="font-size: 11px;">• 身份证脱敏 (显示前6后4位)</text>
-    <text x="15" y="102" class="label-small" style="font-size: 11px;">• 日志脱敏 (SensitiveDataUtil)</text>
-  </g>
-  
-  <!-- XSS Protection Detail -->
-  <g transform="translate(70, 760)">
-    <rect x="0" y="0" width="350" height="160" class="box-danger"/>
-    <text x="175" y="25" text-anchor="middle" class="label" style="fill: #dc2626; font-size: 15px; font-weight: 600;">XSS 防护详解</text>
-    
-    <text x="15" y="48" class="label-small" style="font-size: 11px; font-weight: 600;">5种检测模式:</text>
-    <text x="15" y="66" class="label-small" style="font-size: 10px;">1. &lt;script&gt; 标签检测</text>
-    <text x="15" y="82" class="label-small" style="font-size: 10px;">2. javascript: 协议检测</text>
-    <text x="15" y="98" class="label-small" style="font-size: 10px;">3. 事件处理器检测 (on*=)</text>
-    <text x="15" y="114" class="label-small" style="font-size: 10px;">4. iframe 嵌入检测</text>
-    <text x="15" y="130" class="label-small" style="font-size: 10px;">5. data:text/html 协议检测</text>
-    <text x="15" y="148" class="label-small" style="font-size: 10px; fill: #059669;">✓ 前端输出转义 (Vue 3自动)</text>
-  </g>
-  
-  <!-- Permission Control -->
-  <g transform="translate(440, 760)">
-    <rect x="0" y="0" width="300" height="160" class="box-info"/>
-    <text x="150" y="25" text-anchor="middle" class="label" style="fill: #0891b2; font-size: 15px; font-weight: 600;">权限控制</text>
-    
-    <text x="15" y="48" class="label-small" style="font-size: 11px; font-weight: 600;">接口级:</text>
-    <text x="15" y="66" class="label-small" style="font-size: 10px;">• @RequirePermission</text>
-    <text x="15" y="82" class="label-small" style="font-size: 10px;">• @RequireRole</text>
-    
-    <line x1="15" y1="90" x2="285" y2="90" stroke="#e2e8f0" stroke-width="1"/>
-    
-    <text x="15" y="108" class="label-small" style="font-size: 11px; font-weight: 600;">数据级:</text>
-    <text x="15" y="126" class="label-small" style="font-size: 10px;">• @DataScope (5层)</text>
-    <text x="15" y="142" class="label-small" style="font-size: 10px;">• 多租户隔离 (@TenantId)</text>
-  </g>
-  
-  <!-- CSRF Info -->
-  <g transform="translate(760, 760)">
-    <rect x="0" y="0" width="300" height="160" class="box-warning"/>
-    <text x="150" y="25" text-anchor="middle" class="label" style="fill: #d97706; font-size: 15px; font-weight: 600;">CSRF 策略</text>
-    
-    <text x="15" y="48" class="label-small" style="font-size: 11px; font-weight: 600;">当前状态:</text>
-    <text x="15" y="66" class="label-small" style="font-size: 10px;">✗ 禁用 (微信小程序场景)</text>
-    
-    <line x1="15" y1="74" x2="285" y2="74" stroke="#e2e8f0" stroke-width="1"/>
-    
-    <text x="15" y="92" class="label-small" style="font-size: 11px; font-weight: 600;">替代防护:</text>
-    <text x="15" y="110" class="label-small" style="font-size: 10px;">• JWT无状态认证</text>
-    <text x="15" y="126" class="label-small" style="font-size: 10px;">• Token过期机制</text>
-    <text x="15" y="142" class="label-small" style="font-size: 10px;">• 防重放 (@AntiReplay)</text>
-  </g>
-  
-  <!-- Anti-Replay -->
-  <g transform="translate(1080, 760)">
-    <rect x="0" y="0" width="260" height="160" class="box-purple"/>
-    <text x="130" y="25" text-anchor="middle" class="label" style="fill: #7c3aed; font-size: 15px; font-weight: 600;">防重放攻击</text>
-    
-    <text x="15" y="48" class="label-small" style="font-size: 10px;">@AntiReplay</text>
-    
-    <text x="15" y="66" class="label-small" style="font-size: 10px;">• 请求唯一标识</text>
-    <text x="15" y="82" class="label-small" style="font-size: 10px;">• Redis存储已处理</text>
-    <text x="15" y="98" class="label-small" style="font-size: 10px;">• TTL时间窗口</text>
-    <text x="15" y="114" class="label-small" style="font-size: 10px;">• 防止重复提交</text>
-    <text x="15" y="130" class="label-small" style="font-size: 10px;">• 配合@Idempotent</text>
-  </g>
-  
-  <!-- Legend -->
-  <g transform="translate(50, 90)">
-    <text x="0" y="0" class="label" style="font-size: 13px; font-weight: 600;">防护层级</text>
-    
-    <rect x="0" y="10" width="15" height="15" style="fill: none; stroke: #dc2626; stroke-width: 2.5;"/>
-    <text x="20" y="22" class="label-small">关键防护</text>
-    
-    <rect x="0" y="35" width="15" height="15" style="fill: none; stroke: #d97706; stroke-width: 2.5;"/>
-    <text x="20" y="47" class="label-small">输入验证</text>
-    
-    <rect x="0" y="60" width="15" height="15" style="fill: none; stroke: #059669; stroke-width: 2.5;"/>
-    <text x="20" y="72" class="label-small">认证授权</text>
-    
-    <rect x="0" y="85" width="15" height="15" style="fill: none; stroke: #0891b2; stroke-width: 2.5;"/>
-    <text x="20" y="97" class="label-small">数据安全</text>
-    
-    <rect x="0" y="110" width="15" height="15" style="fill: none; stroke: #7c3aed; stroke-width: 2.5;"/>
-    <text x="20" y="122" class="label-small">业务防护</text>
-  </g>
+
+  <rect width="1600" height="1100" fill="#ffffff"/>
+
+  <text x="800" y="50" class="title-main">Apex Scaffold 安全防护体系</text>
+  <text x="800" y="80" class="title-version">7层防护 · @AntiReplay防重放 · @IdempotentApi幂等 · XSS/SQL注入过滤 · 审计追踪 · v3.0</text>
+
+  <!-- L1 防重放攻击 -->
+  <rect x="50" y="110" width="740" height="200" rx="12" fill="#fef2f2" stroke="#ef4444" stroke-width="3"/>
+  <rect x="50" y="110" width="740" height="40" rx="12" fill="#ef4444"/>
+  <text x="80" y="138" class="layer-title">L1: 防重放攻击 @AntiReplay</text>
+
+  <rect x="80" y="170" width="330" height="120" rx="8" fill="#ffffff" stroke="#ef4444" stroke-width="2"/>
+  <text x="100" y="193" class="box-title">时间戳校验</text>
+  <text x="100" y="215" class="code-label">X-Timestamp: 1726012345678</text>
+  <text x="100" y="230" class="note-text">请求时间戳 (毫秒)</text>
+  <text x="100" y="245" class="note-text">时间窗口: 5分钟 (300秒)</text>
+  <text x="100" y="260" class="note-text">超时拒绝: ResultCode.REPLAY_ATTACK (5001)</text>
+  <text x="100" y="275" class="note-text">✅ 防止重放历史请求</text>
+
+  <rect x="440" y="170" width="330" height="120" rx="8" fill="#ffffff" stroke="#ef4444" stroke-width="2"/>
+  <text x="460" y="193" class="box-title">Nonce唯一性校验</text>
+  <text x="460" y="215" class="code-label">X-Nonce: uuid-random-string</text>
+  <text x="460" y="230" class="note-text">随机字符串 (UUID)</text>
+  <text x="460" y="245" class="note-text">Redis存储: apex:nonce:{nonce}</text>
+  <text x="460" y="260" class="note-text">TTL: 5分钟 (与时间窗口一致)</text>
+  <text x="460" y="275" class="note-text">✅ 同一nonce仅能使用一次</text>
+
+  <!-- L2 接口幂等 -->
+  <rect x="830" y="110" width="720" height="200" rx="12" fill="#fef3c7" stroke="#f59e0b" stroke-width="3"/>
+  <rect x="830" y="110" width="720" height="40" rx="12" fill="#f59e0b"/>
+  <text x="860" y="138" class="layer-title">L2: 接口幂等 @IdempotentApi</text>
+
+  <rect x="860" y="170" width="330" height="120" rx="8" fill="#ffffff" stroke="#f59e0b" stroke-width="2"/>
+  <text x="880" y="193" class="box-title">幂等键机制</text>
+  <text x="880" y="215" class="code-label">X-Idempotent-Key: biz-key-123</text>
+  <text x="880" y="230" class="note-text">业务幂等键 (前端生成)</text>
+  <text x="880" y="245" class="note-text">Redis存储: apex:idempotent:{key}</text>
+  <text x="880" y="260" class="note-text">TTL: 10分钟</text>
+  <text x="880" y="275" class="note-text">✅ 防止重复提交 (下单/支付)</text>
+
+  <rect x="1220" y="170" width="310" height="120" rx="8" fill="#ffffff" stroke="#f59e0b" stroke-width="2"/>
+  <text x="1240" y="193" class="box-title">状态校验</text>
+  <text x="1240" y="215" class="code-label">PROCESSING → 返回5002</text>
+  <text x="1240" y="230" class="note-text">重复请求返回"处理中"</text>
+  <text x="1240" y="245" class="code-label">COMPLETED → 返回5003</text>
+  <text x="1240" y="260" class="note-text">重复请求返回"已完成"</text>
+  <text x="1240" y="275" class="note-text">✅ 幂等保障</text>
+
+  <!-- L3 输入校验 -->
+  <rect x="50" y="340" width="740" height="200" rx="12" fill="#eff6ff" stroke="#3b82f6" stroke-width="3"/>
+  <rect x="50" y="340" width="740" height="40" rx="12" fill="#3b82f6"/>
+  <text x="80" y="368" class="layer-title">L3: 输入校验 Bean Validation + 自定义</text>
+
+  <rect x="80" y="400" width="330" height="120" rx="8" fill="#ffffff" stroke="#3b82f6" stroke-width="2"/>
+  <text x="100" y="423" class="box-title">JSR-303参数校验</text>
+  <text x="100" y="445" class="code-label">@NotBlank @Email @Size(max=50)</text>
+  <text x="100" y="460" class="note-text">Spring Validation自动校验</text>
+  <text x="100" y="475" class="note-text">校验失败: ResultCode.PARAM_INVALID (4000)</text>
+  <text x="100" y="490" class="note-text">国际化错误消息</text>
+  <text x="100" y="505" class="note-text">✅ 格式/长度/范围校验</text>
+
+  <rect x="440" y="400" width="330" height="120" rx="8" fill="#ffffff" stroke="#3b82f6" stroke-width="2"/>
+  <text x="460" y="423" class="box-title">业务规则校验</text>
+  <text x="460" y="445" class="code-label">用户名重复检查</text>
+  <text x="460" y="460" class="note-text">唯一性约束校验</text>
+  <text x="460" y="475" class="code-label">角色权限校验</text>
+  <text x="460" y="490" class="note-text">业务逻辑合法性</text>
+  <text x="460" y="505" class="note-text">✅ Service层校验</text>
+
+  <!-- L4 XSS防护 -->
+  <rect x="830" y="340" width="720" height="200" rx="12" fill="#f0fdf4" stroke="#059669" stroke-width="3"/>
+  <rect x="830" y="340" width="720" height="40" rx="12" fill="#059669"/>
+  <text x="860" y="368" class="layer-title">L4: XSS跨站脚本防护</text>
+
+  <rect x="860" y="400" width="330" height="120" rx="8" fill="#ffffff" stroke="#059669" stroke-width="2"/>
+  <text x="880" y="423" class="box-title">输入过滤</text>
+  <text x="880" y="445" class="code-label">XssFilter 全局过滤器</text>
+  <text x="880" y="460" class="note-text">转义: &lt; → &amp;lt; &gt; → &amp;gt;</text>
+  <text x="880" y="475" class="note-text">移除: &lt;script&gt; onclick= onerror=</text>
+  <text x="880" y="490" class="note-text">白名单: 富文本编辑器字段</text>
+  <text x="880" y="505" class="note-text">✅ 防止JS注入</text>
+
+  <rect x="1220" y="400" width="310" height="120" rx="8" fill="#ffffff" stroke="#059669" stroke-width="2"/>
+  <text x="1240" y="423" class="box-title">响应头防护</text>
+  <text x="1240" y="445" class="code-label">X-Content-Type-Options: nosniff</text>
+  <text x="1240" y="460" class="code-label">X-Frame-Options: DENY</text>
+  <text x="1240" y="475" class="code-label">X-XSS-Protection: 1; mode=block</text>
+  <text x="1240" y="490" class="note-text">CSP: Content-Security-Policy</text>
+  <text x="1240" y="505" class="note-text">✅ 浏览器端防护</text>
+
+  <!-- L5 SQL注入防护 -->
+  <rect x="50" y="570" width="740" height="200" rx="12" fill="#faf5ff" stroke="#a855f7" stroke-width="3"/>
+  <rect x="50" y="570" width="740" height="40" rx="12" fill="#a855f7"/>
+  <text x="80" y="598" class="layer-title">L5: SQL注入防护</text>
+
+  <rect x="80" y="630" width="330" height="120" rx="8" fill="#ffffff" stroke="#a855f7" stroke-width="2"/>
+  <text x="100" y="653" class="box-title">预编译语句</text>
+  <text x="100" y="675" class="code-label">MyBatis-Plus PreparedStatement</text>
+  <text x="100" y="690" class="note-text">参数化查询,自动转义</text>
+  <text x="100" y="705" class="code-label">WHERE username = ?</text>
+  <text x="100" y="720" class="note-text">禁止拼接SQL字符串</text>
+  <text x="100" y="735" class="note-text">✅ JDBC原生防护</text>
+
+  <rect x="440" y="630" width="330" height="120" rx="8" fill="#ffffff" stroke="#a855f7" stroke-width="2"/>
+  <text x="460" y="653" class="box-title">输入校验</text>
+  <text x="460" y="675" class="code-label">危险字符检测: ' " ; -- /*</text>
+  <text x="460" y="690" class="note-text">拦截SQL关键字: UNION SELECT DROP</text>
+  <text x="460" y="705" class="note-text">SqlInjectionValidator校验器</text>
+  <text x="460" y="720" class="code-label">@Valid @SqlSafe String username</text>
+  <text x="460" y="735" class="note-text">✅ 双重防护</text>
+
+  <!-- L6 扫描流量拦截 -->
+  <rect x="830" y="570" width="720" height="200" rx="12" fill="#fef2f2" stroke="#dc2626" stroke-width="3"/>
+  <rect x="830" y="570" width="720" height="40" rx="12" fill="#dc2626"/>
+  <text x="860" y="598" class="layer-title">L6: 扫描流量拦截 SecurityGuardFilter</text>
+
+  <rect x="860" y="630" width="330" height="120" rx="8" fill="#ffffff" stroke="#dc2626" stroke-width="2"/>
+  <text x="880" y="653" class="box-title">恶意路径拦截</text>
+  <text x="880" y="675" class="code-label">/.git /phpmyadmin /.env</text>
+  <text x="880" y="690" class="code-label">/actuator/env /druid/index.html</text>
+  <text x="880" y="705" class="note-text">探测路径黑名单</text>
+  <text x="880" y="720" class="note-text">返回: 404 Not Found</text>
+  <text x="880" y="735" class="note-text">✅ 隐藏敏感端点</text>
+
+  <rect x="1220" y="630" width="310" height="120" rx="8" fill="#ffffff" stroke="#dc2626" stroke-width="2"/>
+  <text x="1240" y="653" class="box-title">UA检查</text>
+  <text x="1240" y="675" class="code-label">拦截扫描器UA:</text>
+  <text x="1240" y="690" class="note-text">sqlmap, nmap, nikto, burp</text>
+  <text x="1240" y="705" class="note-text">masscan, metasploit</text>
+  <text x="1240" y="720" class="note-text">返回: 403 Forbidden</text>
+  <text x="1240" y="735" class="note-text">✅ 阻断自动化攻击</text>
+
+  <!-- L7 审计日志 -->
+  <rect x="50" y="800" width="1500" height="250" rx="12" fill="#fffbeb" stroke="#f59e0b" stroke-width="3"/>
+  <rect x="50" y="800" width="1500" height="40" rx="12" fill="#f59e0b"/>
+  <text x="80" y="828" class="layer-title">L7: 审计日志 @OperationLog 可追溯可回溯</text>
+
+  <rect x="80" y="860" width="340" height="160" rx="8" fill="#ffffff" stroke="#f59e0b" stroke-width="2"/>
+  <text x="100" y="883" class="box-title">操作审计 (sys_operation_log)</text>
+  <text x="100" y="905" class="code-label">@OperationLog("删除用户")</text>
+  <text x="100" y="920" class="note-text">记录: 操作人/时间/IP/UA</text>
+  <text x="100" y="935" class="note-text">请求参数/响应结果</text>
+  <text x="100" y="950" class="note-text">异步批量落库 (50条/批)</text>
+  <text x="100" y="965" class="note-text">保留180天</text>
+  <text x="100" y="980" class="note-text">租户隔离: tenant_id</text>
+  <text x="100" y="995" class="note-text">✅ 操作可追溯</text>
+
+  <rect x="450" y="860" width="340" height="160" rx="8" fill="#ffffff" stroke="#f59e0b" stroke-width="2"/>
+  <text x="470" y="883" class="box-title">登录日志 (sys_login_log)</text>
+  <text x="470" y="905" class="code-label">登录成功/失败记录</text>
+  <text x="470" y="920" class="note-text">用户名/IP/地理位置</text>
+  <text x="470" y="935" class="note-text">登录方式: 密码/微信/短信</text>
+  <text x="470" y="950" class="note-text">失败原因: 密码错误/账号冻结</text>
+  <text x="470" y="965" class="note-text">登录保护: 失败3次需验证码</text>
+  <text x="470" y="980" class="note-text">失败5次锁定15分钟</text>
+  <text x="470" y="995" class="note-text">✅ 暴力破解防护</text>
+
+  <rect x="820" y="860" width="340" height="160" rx="8" fill="#ffffff" stroke="#f59e0b" stroke-width="2"/>
+  <text x="840" y="883" class="box-title">API调用日志 (sys_api_call_log)</text>
+  <text x="840" y="905" class="code-label">API路径/方法/状态码</text>
+  <text x="840" y="920" class="note-text">响应时间/请求体大小</text>
+  <text x="840" y="935" class="note-text">慢查询: &gt;3秒</text>
+  <text x="840" y="950" class="note-text">错误追踪: 5xx错误</text>
+  <text x="840" y="965" class="note-text">Prometheus指标暴露</text>
+  <text x="840" y="980" class="note-text">Meilisearch全文索引</text>
+  <text x="840" y="995" class="note-text">✅ 性能可观测</text>
+
+  <rect x="1190" y="860" width="340" height="160" rx="8" fill="#ffffff" stroke="#f59e0b" stroke-width="2"/>
+  <text x="1210" y="883" class="box-title">运行时日志 (sys_runtime_log)</text>
+  <text x="1210" y="905" class="code-label">业务异常/系统错误</text>
+  <text x="1210" y="920" class="note-text">ERROR/WARN级别日志</text>
+  <text x="1210" y="935" class="note-text">堆栈跟踪 + traceId</text>
+  <text x="1210" y="950" class="note-text">Loki日志聚合</text>
+  <text x="1210" y="965" class="note-text">LogQL查询: {app="apex"}</text>
+  <text x="1210" y="980" class="note-text">告警规则: ERROR&gt;10/min</text>
+  <text x="1210" y="995" class="note-text">✅ 故障可排查</text>
+
+  <text x="800" y="1090" class="code-label" text-anchor="middle">© 2026 Apex Team · 安全防护体系 v3.0 · 7层防护 · 纵深防御 · 审计追踪</text>
 </svg>

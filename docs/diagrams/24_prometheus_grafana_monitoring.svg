@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 800" width="1400" height="800">
+  <defs><style>.title{font:700 32px sans-serif;fill:#0f172a;text-anchor:middle}.subtitle{font:500 14px sans-serif;fill:#64748b;text-anchor:middle}.box-title{font:600 14px sans-serif;fill:#0f172a}.text{font:400 11px sans-serif;fill:#475569}.code{font:400 10px monospace;fill:#2563eb}</style></defs>
+  <rect width="1400" height="800" fill="#fff"/>
+  <text x="700" y="40" class="title">24. Prometheus + Grafana 监控体系</text>
+  <text x="700" y="65" class="subtitle">66个监控面板 · apex_*指标前缀 · 全方位可观测 v3.0</text>
+  <rect x="50" y="90" width="650" height="330" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="2"/>
+  <text x="70" y="120" class="box-title">Prometheus指标采集</text>
+  <text x="70" y="150" class="code">management.endpoints.web.exposure.include=*</text>
+  <text x="70" y="168" class="code">management.metrics.export.prometheus.enabled=true</text>
+  <text x="70" y="196" class="text">采集端点: :8081/actuator/prometheus</text>
+  <text x="70" y="224" class="text">核心指标 (apex_*前缀):</text>
+  <text x="70" y="244" class="code">apex_slow_sql_total{sql_type="SELECT"}</text>
+  <text x="70" y="262" class="code">apex_slow_request_total{path="/api/xxx"}</text>
+  <text x="70" y="280" class="code">apex_cache_hit_rate{cache="L1|L2"}</text>
+  <text x="70" y="298" class="code">apex_circuit_breaker_state{name="xxx"}</text>
+  <text x="70" y="316" class="code">apex_rate_limit_total{result="pass|block"}</text>
+  <text x="70" y="334" class="code">jvm_memory_used_bytes, http_server_requests_seconds</text>
+  <text x="70" y="362" class="text">采集频率: 15秒/次 (scrape_interval)</text>
+  <text x="70" y="382" class="text">存储: 时序数据库,保留15天</text>
+  <rect x="720" y="90" width="630" height="330" rx="8" fill="#f0fdf4" stroke="#059669" stroke-width="2"/>
+  <text x="740" y="120" class="box-title">Grafana 66个监控面板分类</text>
+  <text x="740" y="150" class="code">应用层 (18个): QPS/RT/错误率/限流/熔断</text>
+  <text x="740" y="178" class="code">JVM层 (12个): 堆内存/GC/线程池/类加载</text>
+  <text x="740" y="206" class="code">数据库层 (10个): 慢SQL/连接池/QPS</text>
+  <text x="740" y="234" class="code">缓存层 (8个): 命中率/L1L2分布/Redis内存</text>
+  <text x="740" y="262" class="code">中间件层 (10个): RocketMQ堆积/MinIO容量</text>
+  <text x="740" y="290" class="code">业务层 (8个): 用户活跃/工作流吞吐/文件上传</text>
+  <text x="740" y="318" class="text">访问: http://localhost:3000 (admin/admin)</text>
+  <text x="740" y="346" class="text">Dashboard导入: JSON模型自动provisioning</text>
+  <text x="740" y="374" class="text">变量模板: $instance, $service (多环境切换)</text>
+  <text x="740" y="394" class="text">Grafana Alerting: 告警规则+通知渠道(邮件/webhook)</text>
+  <rect x="50" y="450" width="1300" height="300" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+  <text x="70" y="480" class="box-title">典型监控面板与告警规则</text>
+  <text x="70" y="510" class="text">1. API响应时间面板: P50/P95/P99分位数,超过500ms(P99)触发告警</text>
+  <text x="70" y="530" class="code">   histogram_quantile(0.99, rate(http_server_requests_seconds_bucket[5m]))</text>
+  <text x="70" y="560" class="text">2. 数据库连接池面板: Druid活跃连接数/等待线程数,连接池耗尽预警</text>
+  <text x="70" y="580" class="code">   druid_pool_active_count / druid_pool_max_active &gt; 0.8 触发告警</text>
+  <text x="70" y="610" class="text">3. 缓存命中率面板: L1/L2命中率趋势图,命中率&lt;70%需优化缓存策略</text>
+  <text x="70" y="640" class="text">4. JVM内存面板: 堆内存使用率,Old区&gt;80%持续5分钟触发Full GC预警</text>
+  <text x="70" y="670" class="text">5. 熔断器状态面板: CLOSED/OPEN/HALF_OPEN状态时序图,OPEN状态立即告警</text>
+  <text x="70" y="700" class="text">6. 消息队列积压面板: RocketMQ消费延迟,积压&gt;10000条触发扩容建议</text>
+  <text x="70" y="730" class="text">告警渠道: 邮件、Webhook(飞书/企业微信机器人)、PagerDuty(生产环境)</text>
+  <text x="700" y="785" class="code" text-anchor="middle">© 2026 Apex Team · Prometheus+Grafana监控体系 v3.0</text>
+</svg>

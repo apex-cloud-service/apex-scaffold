@@ -1,5 +1,7 @@
 # 配置项详解
 
+[查看配置层级图](diagrams/46_configuration_hierarchy.svg)
+
 本文档详细说明了 Apex Scaffold 的所有可配置项,帮助你根据实际需求定制系统行为。
 
 ## 📁 配置文件位置

@@ -2,6 +2,8 @@
 
 本文档提供Handler接口方法的SpringDoc注解模板，用于生成详细完整的API文档。
 
+> **配套架构图**: [OpenAPI 文档生成链路](diagrams/68_openapi_documentation_flow.svg)
+
 ## 必需的Import语句
 
 ```java

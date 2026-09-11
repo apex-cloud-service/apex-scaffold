@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1100" width="1600" height="1100">
+  <metadata>
+    <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/">
+      <rdf:Description>
+        <dc:title>Apex Scaffold 限流熔断机制图</dc:title>
+        <dc:creator>Apex Team</dc:creator>
+        <dc:date>2026-09-10</dc:date>
+        <dc:version>3.0</dc:version>
+        <dc:description>展示Sentinel流量控制+Resilience4j弹性容错:令牌桶/漏桶/热点/熔断器</dc:description>
+      </rdf:Description>
+    </rdf:RDF>
+  </metadata>
+
+  <defs>
+    <style>
+      .title-main { font: 700 36px system-ui, sans-serif; fill: #0f172a; text-anchor: middle; }
+      .title-version { font: 500 14px system-ui, sans-serif; fill: #64748b; text-anchor: middle; }
+      .layer-title { font: 600 18px system-ui, sans-serif; fill: #ffffff; }
+      .box-title { font: 600 15px system-ui, sans-serif; fill: #0f172a; }
+      .code-label { font: 400 11px 'SF Mono', monospace; fill: #2563eb; }
+      .note-text { font: 400 12px system-ui, sans-serif; fill: #64748b; }
+    </style>
+  </defs>
+
+  <rect width="1600" height="1100" fill="#ffffff"/>
+
+  <text x="800" y="50" class="title-main">Apex Scaffold 限流熔断机制</text>
+  <text x="800" y="80" class="title-version">Sentinel 1.8.9 + Resilience4j 2.2.0 · 三级容错 · 令牌桶60QPS · 熔断50%错误率 · v3.0</text>
+
+  <!-- Sentinel流量控制 -->
+  <rect x="50" y="110" width="750" height="450" rx="12" fill="#fef3c7" stroke="#f59e0b" stroke-width="3"/>
+  <rect x="50" y="110" width="750" height="45" rx="12" fill="#f59e0b"/>
+  <text x="80" y="140" class="layer-title">Sentinel 流量控制 (alibaba-sentinel 1.8.9)</text>
+
+  <rect x="80" y="180" width="330" height="160" rx="8" fill="#ffffff" stroke="#f59e0b" stroke-width="2"/>
+  <text x="100" y="205" class="box-title">@RateLimiter 通用限流</text>
+  <text x="100" y="230" class="code-label">@RateLimiter(count=60, timeWindow=10)</text>
+  <text x="100" y="247" class="note-text">限流算法: 滑动窗口</text>
+  <text x="100" y="264" class="note-text">60秒内最多10次请求</text>
+  <text x="100" y="281" class="note-text">超限: ResultCode.TOO_MANY_REQUESTS</text>
+  <text x="100" y="298" class="note-text">作用域: 方法级别</text>
+  <text x="100" y="315" class="code-label">示例: 登录接口 60秒/10次</text>
+
+  <rect x="440" y="180" width="330" height="160" rx="8" fill="#ffffff" stroke="#f59e0b" stroke-width="2"/>
+  <text x="460" y="205" class="box-title">@HotSpotRateLimit 热点限流</text>
+  <text x="460" y="230" class="code-label">@HotSpotRateLimit(paramIdx=0, count=10)</text>
+  <text x="460" y="247" class="note-text">参数级限流: 针对userId/IP</text>
+  <text x="460" y="264" class="note-text">防止单用户恶意刷接口</text>
+  <text x="460" y="281" class="note-text">LRU热点统计 + 令牌桶</text>
+  <text x="460" y="298" class="note-text">作用域: 参数级别</text>
+  <text x="460" y="315" class="code-label">示例: 单用户60秒/10次发送短信</text>
+
+  <rect x="80" y="365" width="330" height="175" rx="8" fill="#ffffff" stroke="#f59e0b" stroke-width="2"/>
+  <text x="100" y="390" class="box-title">@UserRateLimit 用户限流</text>
+  <text x="100" y="415" class="code-label">@UserRateLimit(count=100, period=60)</text>
+  <text x="100" y="432" class="note-text">基于用户ID限流</text>
+  <text x="100" y="449" class="note-text">自动从SecurityContext提取userId</text>
+  <text x="100" y="466" class="note-text">Redis存储: apex:ratelimit:user:{uid}</text>
+  <text x="100" y="483" class="note-text">失效策略: Redis不可用降级本地Guava</text>
+  <text x="100" y="500" class="code-label">示例: 单用户60秒/100次API调用</text>
+  <text x="100" y="517" class="note-text">✅ 支持跨实例共享限流状态</text>
+
+  <rect x="440" y="365" width="330" height="175" rx="8" fill="#ffffff" stroke="#f59e0b" stroke-width="2"/>
+  <text x="460" y="390" class="box-title">Dashboard监控 (可选)</text>
+  <text x="460" y="415" class="code-label">sentinel-dashboard:8858</text>
+  <text x="460" y="432" class="note-text">实时监控QPS/响应时间</text>
+  <text x="460" y="449" class="note-text">动态调整限流规则</text>
+  <text x="460" y="466" class="note-text">查看热点参数TOP10</text>
+  <text x="460" y="483" class="note-text">集群模式: Token Server</text>
+  <text x="460" y="500" class="code-label">配置: --profile enterprise</text>
+  <text x="460" y="517" class="note-text">⚠️ 生产环境需鉴权访问</text>
+
+  <!-- Resilience4j弹性容错 -->
+  <rect x="850" y="110" width="700" height="450" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="3"/>
+  <rect x="850" y="110" width="700" height="45" rx="12" fill="#3b82f6"/>
+  <text x="880" y="140" class="layer-title">Resilience4j 弹性容错 (io.github.resilience4j 2.2.0)</text>
+
+  <rect x="880" y="180" width="310" height="180" rx="8" fill="#ffffff" stroke="#3b82f6" stroke-width="2"/>
+  <text x="900" y="205" class="box-title">CircuitBreaker 熔断器</text>
+  <text x="900" y="230" class="code-label">失败率阈值: 50% (默认档)</text>
+  <text x="900" y="247" class="code-label">慢调用阈值: 5秒</text>
+  <text x="900" y="264" class="code-label">滑动窗口: 10次请求</text>
+  <text x="900" y="281" class="code-label">半开放试探: 5次</text>
+  <text x="900" y="298" class="code-label">熔断时长: 60秒</text>
+  <text x="900" y="330" class="note-text">状态机: CLOSED → OPEN → HALF_OPEN</text>
+  <text x="900" y="347" class="note-text">✅ OPEN时快速失败,降低下游压力</text>
+
+  <rect x="1220" y="180" width="300" height="180" rx="8" fill="#ffffff" stroke="#3b82f6" stroke-width="2"/>
+  <text x="1240" y="205" class="box-title">三档熔断策略</text>
+  <text x="1240" y="230" class="code-label">DEFAULT (默认): 50%/5s</text>
+  <text x="1250" y="247" class="note-text">平衡型,适用大多数场景</text>
+  <text x="1240" y="272" class="code-label">STRICT (严格): 30%/3s</text>
+  <text x="1250" y="289" class="note-text">敏感型,金融/支付场景</text>
+  <text x="1240" y="314" class="code-label">LENIENT (宽松): 70%/10s</text>
+  <text x="1250" y="331" class="note-text">容忍型,允许更多失败</text>
+  <text x="1240" y="356" class="note-text">✅ 通过配置动态切换档位</text>
+
+  <rect x="880" y="385" width="310" height="155" rx="8" fill="#ffffff" stroke="#3b82f6" stroke-width="2"/>
+  <text x="900" y="410" class="box-title">Retry 重试策略</text>
+  <text x="900" y="435" class="code-label">最大重试: 3次</text>
+  <text x="900" y="452" class="code-label">等待策略: 指数退避</text>
+  <text x="900" y="469" class="code-label">初始间隔: 100ms</text>
+  <text x="900" y="486" class="code-label">最大间隔: 1000ms</text>
+  <text x="900" y="503" class="code-label">重试异常: IOException/TimeoutException</text>
+  <text x="900" y="520" class="note-text">✅ 瞬时故障自动恢复</text>
+
+  <rect x="1220" y="385" width="300" height="155" rx="8" fill="#ffffff" stroke="#3b82f6" stroke-width="2"/>
+  <text x="1240" y="410" class="box-title">TimeLimiter 超时控制</text>
+  <text x="1240" y="435" class="code-label">默认超时: 10秒</text>
+  <text x="1240" y="452" class="code-label">取消策略: interrupt当前线程</text>
+  <text x="1240" y="469" class="note-text">防止慢调用阻塞线程池</text>
+  <text x="1240" y="486" class="note-text">超时自动触发熔断器计数</text>
+  <text x="1240" y="503" class="code-label">响应式: timeout(Duration)</text>
+  <text x="1240" y="520" class="note-text">✅ WebFlux异步超时控制</text>
+
+  <!-- 降级容错策略 -->
+  <rect x="50" y="600" width="1500" height="240" rx="12" fill="#f0fdf4" stroke="#059669" stroke-width="3"/>
+  <rect x="50" y="600" width="1500" height="45" rx="12" fill="#059669"/>
+  <text x="80" y="630" class="layer-title">降级容错策略 (Graceful Degradation)</text>
+
+  <rect x="80" y="670" width="320" height="150" rx="8" fill="#ffffff" stroke="#059669" stroke-width="2"/>
+  <text x="100" y="695" class="box-title">服务降级</text>
+  <text x="100" y="720" class="code-label">@CircuitBreaker(fallbackMethod)</text>
+  <text x="100" y="737" class="note-text">熔断后返回降级响应</text>
+  <text x="100" y="754" class="note-text">fallback: 返回默认值/缓存值</text>
+  <text x="100" y="771" class="note-text">示例: 推荐系统故障→返回热门榜单</text>
+  <text x="100" y="788" class="note-text">⚠️ fallback必须与原方法签名一致</text>
+  <text x="100" y="805" class="note-text">✅ 保障核心功能可用</text>
+
+  <rect x="430" y="670" width="320" height="150" rx="8" fill="#ffffff" stroke="#059669" stroke-width="2"/>
+  <text x="450" y="695" class="box-title">快照降级 (v1.3.0)</text>
+  <text x="450" y="720" class="code-label">apex.degrade.snapshot.enabled=true</text>
+  <text x="450" y="737" class="note-text">存储最近一次成功响应</text>
+  <text x="450" y="754" class="note-text">降级期间返回快照数据</text>
+  <text x="450" y="771" class="note-text">存储: 本地内存 或 Redis</text>
+  <text x="450" y="788" class="note-text">TTL: 1小时</text>
+  <text x="450" y="805" class="note-text">✅ 提升降级期间体验</text>
+
+  <rect x="780" y="670" width="320" height="150" rx="8" fill="#ffffff" stroke="#059669" stroke-width="2"/>
+  <text x="800" y="695" class="box-title">静默降级</text>
+  <text x="800" y="720" class="code-label">非核心功能静默失败</text>
+  <text x="800" y="737" class="note-text">埋点上报/统计分析失败→忽略</text>
+  <text x="800" y="754" class="note-text">不影响主流程</text>
+  <text x="800" y="771" class="note-text">日志记录错误便于排查</text>
+  <text x="800" y="788" class="code-label">doOnError(e → log.warn(...))</text>
+  <text x="800" y="805" class="note-text">✅ 防止雪崩</text>
+
+  <rect x="1130" y="670" width="390" height="150" rx="8" fill="#ffffff" stroke="#059669" stroke-width="2"/>
+  <text x="1150" y="695" class="box-title">DB降级读 (缓存兜底)</text>
+  <text x="1150" y="720" class="code-label">MultiLevelCacheService.getWithDbFallback()</text>
+  <text x="1150" y="737" class="note-text">MySQL故障时返回过期缓存</text>
+  <text x="1150" y="754" class="note-text">牺牲实时性换取可用性</text>
+  <text x="1150" y="771" class="note-text">适用场景: 读多写少的配置数据</text>
+  <text x="1150" y="788" class="code-label">onErrorResume(e → getFromExpiredCache())</text>
+  <text x="1150" y="805" class="note-text">✅ 企业版特性</text>
+
+  <!-- 监控指标 -->
+  <rect x="50" y="880" width="1500" height="180" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2"/>
+  <text x="70" y="910" class="box-title">Prometheus 监控指标</text>
+  <text x="70" y="940" class="code-label">resilience4j_circuitbreaker_state{name="userService"} → 0(CLOSED) | 1(OPEN) | 2(HALF_OPEN)</text>
+  <text x="70" y="960" class="code-label">resilience4j_circuitbreaker_failure_rate{name="userService"} → 当前失败率 (0-100%)</text>
+  <text x="70" y="980" class="code-label">sentinel_pass_qps / sentinel_block_qps → 通过/拒绝 QPS</text>
+  <text x="70" y="1000" class="code-label">apex_rate_limit_total{result="success|blocked"} → 限流统计</text>
+  <text x="70" y="1020" class="code-label">apex_circuit_breaker_events_total{event_type="success|error|fallback"} → 熔断事件</text>
+  <text x="70" y="1040" class="note-text">Grafana仪表盘: 66个监控面板包含完整限流熔断可视化</text>
+
+  <text x="800" y="1090" class="code-label" text-anchor="middle">© 2026 Apex Team · 限流熔断机制 v3.0 · Sentinel+Resilience4j双引擎</text>
+</svg>

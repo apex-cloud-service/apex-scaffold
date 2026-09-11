@@ -1,13 +1,14 @@
+> - [数据流一致性架构图](../diagrams/62_data_flow_consistency.svg)
 # Apex Scaffold 数据流转架构文档
 
-> 文档版本: v1.0  
-> 创建时间: 2026-09-04  
-> 适用版本: apex-scaffold v2.5.0+  
+> 文档版本: v1.0
+> 创建时间: 2026-09-04
+> 适用版本: apex-scaffold v2.5.0+
 > 数据流模式: 同步 + 异步 + 最终一致性
 
-> **配套架构图**:  
-> - [数据流转架构图](../diagrams/15_data_flow_architecture.svg)  
-> - [RocketMQ消息队列架构图](../diagrams/16_mq_architecture.svg)  
+> **配套架构图**:
+> - [数据流转架构图](../diagrams/62_data_flow_consistency.svg)
+> - [RocketMQ消息队列架构图](../diagrams/61_message_queue_reliability.svg)
 > - [业务流程文档](business-flows.md)
 
 ---
@@ -76,16 +77,16 @@ Apex Scaffold 系统中存在多种数据流模式，根据业务场景选择合
 ```java
 @Service
 public class UserQueryService {
-    
+
     @Autowired
     private RedisTemplate<String, User> redisTemplate;
-    
+
     @Autowired
     private UserRepository userRepository;
-    
+
     public Mono<User> getUserById(Long userId) {
         String cacheKey = "user:" + userId;
-        
+
         // 1. 先查缓存
         return Mono.fromCallable(() -> redisTemplate.opsForValue().get(cacheKey))
             .flatMap(cachedUser -> {
@@ -93,12 +94,12 @@ public class UserQueryService {
                     // Cache Hit
                     return Mono.just(cachedUser);
                 }
-                
+
                 // 2. Cache Miss，查询数据库
                 return userRepository.findById(userId)
                     .doOnNext(dbUser -> {
                         // 3. 写入缓存
-                        redisTemplate.opsForValue().set(cacheKey, dbUser, 
+                        redisTemplate.opsForValue().set(cacheKey, dbUser,
                             Duration.ofHours(1));
                     });
             });
@@ -174,7 +175,7 @@ T5: 请求B写缓存 (脏数据)
 @Transactional
 public Mono<Void> updateUser(User user) {
     String cacheKey = "user:" + user.getId();
-    
+
     return Mono.fromRunnable(() -> {
         // 1. 先删缓存
         redisTemplate.delete(cacheKey);
@@ -219,23 +220,23 @@ public Mono<User> registerUser(UserRegisterDTO dto) {
     return Mono.fromCallable(() -> {
         // 保存用户
         User user = userRepository.save(dto.toEntity()).block();
-        
+
         // 发送异步消息
         UserRegisterEvent event = new UserRegisterEvent(user.getId(), user.getEmail());
-        rocketMQTemplate.asyncSend("user-register-topic", event, 
+        rocketMQTemplate.asyncSend("user-register-topic", event,
             new SendCallback() {
                 @Override
                 public void onSuccess(SendResult result) {
                     log.info("消息发送成功: {}", result.getMsgId());
                 }
-                
+
                 @Override
                 public void onException(Throwable throwable) {
                     log.error("消息发送失败", throwable);
                     // 记录到失败表，定时任务重试
                 }
             });
-        
+
         return user;
     });
 }
@@ -246,7 +247,7 @@ public Mono<User> registerUser(UserRegisterDTO dto) {
     consumerGroup = "email-consumer-group"
 )
 public class UserRegisterConsumer implements RocketMQListener<UserRegisterEvent> {
-    
+
     @Override
     public void onMessage(UserRegisterEvent event) {
         try {
@@ -267,10 +268,10 @@ public class UserRegisterConsumer implements RocketMQListener<UserRegisterEvent>
 ```java
 @Service
 public class OrderService {
-    
+
     @Autowired
     private RocketMQTemplate rocketMQTemplate;
-    
+
     public Mono<Order> createOrder(OrderCreateDTO dto) {
         return Mono.fromCallable(() -> {
             // 发送事务消息
@@ -279,7 +280,7 @@ public class OrderService {
                 MessageBuilder.withPayload(dto).build(),
                 dto // arg参数传递给回调
             );
-            
+
             if (result.getLocalTransactionState() == LocalTransactionState.COMMIT_MESSAGE) {
                 return order;
             } else {
@@ -287,32 +288,32 @@ public class OrderService {
             }
         });
     }
-    
+
     // 本地事务回调
     @RocketMQTransactionListener
     public class OrderTransactionListener implements RocketMQLocalTransactionListener {
-        
+
         @Override
         public RocketMQLocalTransactionState executeLocalTransaction(Message msg, Object arg) {
             try {
                 OrderCreateDTO dto = (OrderCreateDTO) arg;
-                
+
                 // 执行本地事务：创建订单
                 Order order = orderRepository.save(dto.toEntity()).block();
-                
+
                 return RocketMQLocalTransactionState.COMMIT;
             } catch (Exception e) {
                 log.error("订单创建失败", e);
                 return RocketMQLocalTransactionState.ROLLBACK;
             }
         }
-        
+
         @Override
         public RocketMQLocalTransactionState checkLocalTransaction(Message msg) {
             // 回查本地事务状态
             String orderId = msg.getHeaders().get("orderId", String.class);
             boolean exists = orderRepository.existsById(orderId).block();
-            return exists ? RocketMQLocalTransactionState.COMMIT 
+            return exists ? RocketMQLocalTransactionState.COMMIT
                           : RocketMQLocalTransactionState.ROLLBACK;
         }
     }
@@ -324,7 +325,7 @@ public class OrderService {
 **重试策略**:
 ```
 重试次数: 16次
-重试间隔: 
+重试间隔:
   1次: 10s
   2次: 30s
   3次: 1min
@@ -350,7 +351,7 @@ public class OrderService {
     consumerGroup = "dlq-consumer-group"
 )
 public class DLQConsumer implements RocketMQListener<UserRegisterEvent> {
-    
+
     @Override
     public void onMessage(UserRegisterEvent event) {
         // 记录到数据库，人工介入处理
@@ -359,7 +360,7 @@ public class DLQConsumer implements RocketMQListener<UserRegisterEvent> {
             JSON.toJSONString(event),
             "重试16次后仍失败"
         ));
-        
+
         // 发送告警
         alertService.sendAlert("死信队列消息", event);
     }
@@ -386,13 +387,13 @@ async function uploadLargeFile(file) {
   const chunkSize = 2 * 1024 * 1024; // 2MB
   const chunks = Math.ceil(file.size / chunkSize);
   const fileHash = await calculateMD5(file);
-  
+
   // 1. 检查是否已上传 (秒传)
   const { data: existFile } = await axios.get(`/api/files/check?hash=${fileHash}`);
   if (existFile) {
     return existFile; // 秒传成功
   }
-  
+
   // 2. 初始化分片上传
   const { data: uploadId } = await axios.post('/api/files/init', {
     fileName: file.name,
@@ -400,14 +401,14 @@ async function uploadLargeFile(file) {
     fileHash: fileHash,
     chunks: chunks
   });
-  
+
   // 3. 并发上传分片
   const uploadPromises = [];
   for (let i = 0; i < chunks; i++) {
     const start = i * chunkSize;
     const end = Math.min(start + chunkSize, file.size);
     const chunk = file.slice(start, end);
-    
+
     uploadPromises.push(
       axios.post(`/api/files/upload-chunk`, chunk, {
         headers: {
@@ -419,14 +420,14 @@ async function uploadLargeFile(file) {
       })
     );
   }
-  
+
   await Promise.all(uploadPromises);
-  
+
   // 4. 通知服务端合并分片
   const { data: result } = await axios.post('/api/files/merge', {
     uploadId: uploadId
   });
-  
+
   return result;
 }
 ```
@@ -435,14 +436,14 @@ async function uploadLargeFile(file) {
 ```java
 @Service
 public class FileUploadService {
-    
+
     public Mono<FileInfo> mergeChunks(String uploadId) {
         return Mono.fromCallable(() -> {
             // 1. 获取所有分片路径
             String chunkDir = "/tmp/upload/" + uploadId;
             File[] chunkFiles = new File(chunkDir).listFiles();
             Arrays.sort(chunkFiles, Comparator.comparing(File::getName));
-            
+
             // 2. 合并分片
             String targetPath = "/upload/files/" + uploadId + ".dat";
             try (FileOutputStream fos = new FileOutputStream(targetPath)) {
@@ -450,10 +451,10 @@ public class FileUploadService {
                     Files.copy(chunkFile.toPath(), fos);
                 }
             }
-            
+
             // 3. 上传到对象存储
             String objectKey = minioService.uploadFile(new File(targetPath));
-            
+
             // 4. 保存元数据
             FileInfo fileInfo = fileInfoRepository.save(new FileInfo(
                 uploadId,
@@ -461,11 +462,11 @@ public class FileUploadService {
                 fileSize,
                 objectKey
             )).block();
-            
+
             // 5. 清理临时文件
             FileUtils.deleteDirectory(new File(chunkDir));
             new File(targetPath).delete();
-            
+
             return fileInfo;
         });
     }
@@ -498,23 +499,23 @@ public Set<Integer> getUploadedChunks(String uploadId) {
 async function resumeUpload(uploadId, file) {
   // 1. 获取已上传分片
   const { data: uploadedChunks } = await axios.get(`/api/files/uploaded-chunks?uploadId=${uploadId}`);
-  
+
   // 2. 跳过已上传分片，继续上传剩余分片
   const chunkSize = 2 * 1024 * 1024;
   const chunks = Math.ceil(file.size / chunkSize);
-  
+
   for (let i = 0; i < chunks; i++) {
     if (uploadedChunks.includes(i)) {
       continue; // 跳过已上传
     }
-    
+
     const start = i * chunkSize;
     const end = Math.min(start + chunkSize, file.size);
     const chunk = file.slice(start, end);
-    
+
     await uploadChunk(uploadId, i, chunk);
   }
-  
+
   // 3. 合并分片
   await axios.post('/api/files/merge', { uploadId });
 }
@@ -530,10 +531,10 @@ async function resumeUpload(uploadId, file) {
 ```java
 @Service
 public class ExternalApiService {
-    
+
     @Autowired
     private WebClient webClient;
-    
+
     public Mono<ExternalResponse> callExternalApi(ExternalRequest request) {
         return webClient.post()
             .uri("/external-api")
@@ -626,13 +627,13 @@ FlowRuleManager.loadRules(Arrays.asList(
 public Order createOrder(OrderDTO dto) {
     // 1. 创建订单
     Order order = orderRepository.save(dto.toEntity()).block();
-    
+
     // 2. 扣减库存 (跨库操作)
     inventoryService.deductStock(dto.getProductId(), dto.getQuantity());
-    
+
     // 3. 扣减账户余额 (跨库操作)
     accountService.deductBalance(dto.getUserId(), dto.getAmount());
-    
+
     return order;
 }
 ```
@@ -651,11 +652,11 @@ public Order createOrder(OrderDTO dto) {
 @Transactional
 public Order createOrder(OrderDTO dto) {
     Order order = orderRepository.save(dto.toEntity()).block();
-    
+
     // 发送异步消息
     OrderCreatedEvent event = new OrderCreatedEvent(order.getId());
     rocketMQTemplate.asyncSend("order-created-topic", event);
-    
+
     return order;
 }
 
@@ -675,7 +676,7 @@ public void retryFailedNotifications() {
     List<Order> ordersWithoutNotification = orderRepository
         .findOrdersWithoutNotification()
         .collectList().block();
-    
+
     for (Order order : ordersWithoutNotification) {
         notificationService.sendOrderNotification(order.getId());
     }
@@ -693,19 +694,19 @@ public void retryFailedNotifications() {
 // Canal订阅MySQL Binlog
 @CanalListener(destination = "example", schema = "apex_db", table = "sys_user")
 public class UserBinlogListener implements EntryHandler<User> {
-    
+
     @Override
     public void insert(User user) {
         // 插入时不处理 (懒加载)
     }
-    
+
     @Override
     public void update(User before, User after) {
         // 更新时删除缓存
         String cacheKey = "user:" + after.getId();
         redisTemplate.delete(cacheKey);
     }
-    
+
     @Override
     public void delete(User user) {
         // 删除时删除缓存
@@ -780,6 +781,6 @@ public class UserBinlogListener implements EntryHandler<User> {
 
 ---
 
-**文档维护者**: 架构团队  
-**审核状态**: 待人工审核  
+**文档维护者**: 架构团队
+**审核状态**: 待人工审核
 **下次更新**: 数据流架构变更后同步更新

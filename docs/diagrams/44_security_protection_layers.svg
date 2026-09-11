@@ -1,0 +1,202 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1500">
+  <defs>
+    <style>
+      .title { font-family: Arial, "PingFang SC", "Microsoft YaHei", sans-serif; font-size: 28px; font-weight: bold; fill: #0f172a; }
+      .subtitle { font-family: Arial, "PingFang SC", "Microsoft YaHei", sans-serif; font-size: 16px; fill: #475569; }
+      .section-title { font-family: Arial, "PingFang SC", "Microsoft YaHei", sans-serif; font-size: 18px; font-weight: bold; fill: #0f172a; }
+      .label { font-family: Arial, "PingFang SC", "Microsoft YaHei", sans-serif; font-size: 14px; fill: #0f172a; }
+      .small-label { font-family: Arial, "PingFang SC", "Microsoft YaHei", sans-serif; font-size: 12px; fill: #475569; }
+      .code { font-family: "Courier New", monospace; font-size: 12px; fill: #0f172a; }
+    </style>
+
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#4f46e5" />
+    </marker>
+  </defs>
+
+  <!-- 标题 -->
+  <text x="800" y="40" text-anchor="middle" class="title">安全防护层次图 (Security Protection Layers)</text>
+  <text x="800" y="65" text-anchor="middle" class="subtitle">7层防御体系 - 从网络层到数据层的全方位安全防护</text>
+
+  <!-- 图例 -->
+  <rect x="50" y="85" width="1500" height="30" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="100" y="105" class="label" font-weight="bold">防御层级:</text>
+  <rect x="220" y="92" width="20" height="16" fill="#ef4444"/>
+  <text x="250" y="105" class="small-label">L1网络层</text>
+  <rect x="350" y="92" width="20" height="16" fill="#f97316"/>
+  <text x="380" y="105" class="small-label">L2过滤层</text>
+  <rect x="480" y="92" width="20" height="16" fill="#f59e0b"/>
+  <text x="510" y="105" class="small-label">L3网关层</text>
+  <rect x="610" y="92" width="20" height="16" fill="#84cc16"/>
+  <text x="640" y="105" class="small-label">L4认证层</text>
+  <rect x="740" y="92" width="20" height="16" fill="#10b981"/>
+  <text x="770" y="105" class="small-label">L5应用层</text>
+  <rect x="870" y="92" width="20" height="16" fill="#06b6d4"/>
+  <text x="900" y="105" class="small-label">L6业务层</text>
+  <rect x="1000" y="92" width="20" height="16" fill="#3b82f6"/>
+  <text x="1030" y="105" class="small-label">L7数据层</text>
+
+  <!-- L1: 网络层防护 -->
+  <rect x="100" y="140" width="1400" height="140" rx="8" fill="#fee2e2" stroke="#ef4444" stroke-width="3"/>
+  <text x="800" y="170" text-anchor="middle" class="section-title" fill="#ef4444">L1 网络层防护 (Network Layer)</text>
+
+  <rect x="150" y="190" width="340" height="70" rx="6" fill="white" stroke="#ef4444" stroke-width="1.5"/>
+  <text x="320" y="215" text-anchor="middle" class="label" font-weight="bold">IP黑名单</text>
+  <text x="170" y="235" class="small-label">• GlobalGuardWebFilter (@Order=-200)</text>
+  <text x="170" y="250" class="small-label">• Redis: blacklist:ip:{ip}</text>
+
+  <rect x="530" y="190" width="340" height="70" rx="6" fill="white" stroke="#ef4444" stroke-width="1.5"/>
+  <text x="700" y="215" text-anchor="middle" class="label" font-weight="bold">IP限流</text>
+  <text x="550" y="235" class="small-label">• Sentinel 流控规则</text>
+  <text x="550" y="250" class="small-label">• 单IP QPS限制,防DDoS</text>
+
+  <rect x="910" y="190" width="550" height="70" rx="6" fill="white" stroke="#ef4444" stroke-width="1.5"/>
+  <text x="1185" y="215" text-anchor="middle" class="label" font-weight="bold">UA检查 + 扫描流量阻断</text>
+  <text x="930" y="235" class="small-label">• GlobalGuardWebFilter: 空UA拒绝</text>
+  <text x="930" y="250" class="small-label">• ScanTrafficGuardWebFilter (@Order=+5): 25类路径阻断(/.git, /phpmyadmin...)</text>
+
+  <!-- L2: 输入过滤层 -->
+  <rect x="100" y="300" width="1400" height="140" rx="8" fill="#fed7aa" stroke="#f97316" stroke-width="3"/>
+  <text x="800" y="330" text-anchor="middle" class="section-title" fill="#f97316">L2 输入过滤层 (Input Validation)</text>
+
+  <rect x="150" y="350" width="340" height="70" rx="6" fill="white" stroke="#f97316" stroke-width="1.5"/>
+  <text x="320" y="375" text-anchor="middle" class="label" font-weight="bold">XSS / SQL注入防护</text>
+  <text x="170" y="395" class="small-label">• InputValidationFilter (@Order=-180)</text>
+  <text x="170" y="410" class="small-label">• HTML标签转义,SQL关键词检测</text>
+
+  <rect x="530" y="350" width="340" height="70" rx="6" fill="white" stroke="#f97316" stroke-width="1.5"/>
+  <text x="700" y="375" text-anchor="middle" class="label" font-weight="bold">路径穿越 / 文件上传</text>
+  <text x="550" y="395" class="small-label">• 路径穿越检测 (../, \..\\)</text>
+  <text x="550" y="410" class="small-label">• 文件大小限制 (10MB)</text>
+
+  <rect x="910" y="350" width="550" height="70" rx="6" fill="white" stroke="#f97316" stroke-width="1.5"/>
+  <text x="1185" y="375" text-anchor="middle" class="label" font-weight="bold">Content-Type白名单</text>
+  <text x="930" y="395" class="small-label">• 只允许: application/json, multipart/form-data, application/x-www-form-urlencoded</text>
+  <text x="930" y="410" class="small-label">• 拒绝: text/html, application/xml (防XXE攻击)</text>
+
+  <!-- L3: API网关层 -->
+  <rect x="100" y="460" width="1400" height="140" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="3"/>
+  <text x="800" y="490" text-anchor="middle" class="section-title" fill="#f59e0b">L3 API网关层 (Gateway)</text>
+
+  <rect x="150" y="510" width="340" height="70" rx="6" fill="white" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="320" y="535" text-anchor="middle" class="label" font-weight="bold">路由验证</text>
+  <text x="170" y="555" class="small-label">• ApiGatewayFilter (@Order=+20)</text>
+  <text x="170" y="570" class="small-label">• 路由规则匹配,非法路径拒绝</text>
+
+  <rect x="530" y="510" width="340" height="70" rx="6" fill="white" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="700" y="535" text-anchor="middle" class="label" font-weight="bold">流控熔断</text>
+  <text x="550" y="555" class="small-label">• Sentinel 43条限流规则</text>
+  <text x="550" y="570" class="small-label">• Resilience4j 熔断降级</text>
+
+  <rect x="910" y="510" width="550" height="70" rx="6" fill="white" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="1185" y="535" text-anchor="middle" class="label" font-weight="bold">跨域CORS + 安全响应头</text>
+  <text x="930" y="555" class="small-label">• CORS预检请求处理</text>
+  <text x="930" y="570" class="small-label">• X-Frame-Options, X-Content-Type-Options, Strict-Transport-Security</text>
+
+  <!-- L4: 认证鉴权层 -->
+  <rect x="100" y="620" width="1400" height="180" rx="8" fill="#d9f99d" stroke="#84cc16" stroke-width="3"/>
+  <text x="800" y="650" text-anchor="middle" class="section-title" fill="#65a30d">L4 认证鉴权层 (Authentication &amp; Authorization)</text>
+
+  <rect x="150" y="670" width="340" height="110" rx="6" fill="white" stroke="#84cc16" stroke-width="1.5"/>
+  <text x="320" y="695" text-anchor="middle" class="label" font-weight="bold">JWT认证</text>
+  <text x="170" y="715" class="small-label">• Spring Security WebFlux</text>
+  <text x="170" y="730" class="small-label">• Access Token + Refresh Token</text>
+  <text x="170" y="745" class="small-label">• 无感知续期机制</text>
+  <text x="170" y="760" class="small-label">• Token签名验证 (HMAC SHA256)</text>
+
+  <rect x="530" y="670" width="340" height="110" rx="6" fill="white" stroke="#84cc16" stroke-width="1.5"/>
+  <text x="700" y="695" text-anchor="middle" class="label" font-weight="bold">RBAC权限</text>
+  <text x="550" y="715" class="small-label">• @RequirePermission / @RequireRole</text>
+  <text x="550" y="730" class="small-label">• 5层数据权限 (@DataScope)</text>
+  <text x="550" y="745" class="small-label">• 按钮级权限控制</text>
+  <text x="550" y="760" class="small-label">• 角色继承与权限缓存</text>
+
+  <rect x="910" y="670" width="550" height="110" rx="6" fill="white" stroke="#84cc16" stroke-width="1.5"/>
+  <text x="1185" y="695" text-anchor="middle" class="label" font-weight="bold">登录保护</text>
+  <text x="930" y="715" class="small-label">• 连续失败N次(默认3)强制验证码 (apex.security.login-protection)</text>
+  <text x="930" y="730" class="small-label">• 登录爆破防护: 账号锁定 (5次/15分钟)</text>
+  <text x="930" y="745" class="small-label">• 短信发送限流 (1次/60秒, 5次/天)</text>
+  <text x="930" y="760" class="small-label">• 图形验证码 + 短信验证码双因子</text>
+
+  <!-- L5: 应用层防护 -->
+  <rect x="100" y="820" width="1400" height="180" rx="8" fill="#a7f3d0" stroke="#10b981" stroke-width="3"/>
+  <text x="800" y="850" text-anchor="middle" class="section-title" fill="#059669">L5 应用层防护 (Application Layer)</text>
+
+  <rect x="150" y="870" width="420" height="110" rx="6" fill="white" stroke="#10b981" stroke-width="1.5"/>
+  <text x="360" y="895" text-anchor="middle" class="label" font-weight="bold">防重放攻击</text>
+  <text x="170" y="915" class="small-label">• @AntiReplay 注解 (AntiReplayAspect @Order=0)</text>
+  <text x="170" y="930" class="small-label">• 时间戳 + nonce 验证</text>
+  <text x="170" y="945" class="small-label">• Redis: replay:{nonce}, TTL 360秒</text>
+  <text x="170" y="960" class="small-label">• 错误码: 5001 (请求已过期或重复)</text>
+
+  <rect x="610" y="870" width="420" height="110" rx="6" fill="white" stroke="#10b981" stroke-width="1.5"/>
+  <text x="820" y="895" text-anchor="middle" class="label" font-weight="bold">接口幂等</text>
+  <text x="630" y="915" class="small-label">• @IdempotentApi (IdempotentApiAspect @Order=+10)</text>
+  <text x="630" y="930" class="small-label">• Idempotency-Key 请求头</text>
+  <text x="630" y="945" class="small-label">• Redis SETNX 并发控制</text>
+  <text x="630" y="960" class="small-label">• 错误码: 5002 (重复提交) / 5003 (缺少幂等键)</text>
+
+  <rect x="1070" y="870" width="420" height="110" rx="6" fill="white" stroke="#10b981" stroke-width="1.5"/>
+  <text x="1280" y="895" text-anchor="middle" class="label" font-weight="bold">参数校验</text>
+  <text x="1090" y="915" class="small-label">• Jakarta Validation (JSR-380)</text>
+  <text x="1090" y="930" class="small-label">• @Valid / @Validated 注解</text>
+  <text x="1090" y="945" class="small-label">• 自定义验证器 (手机号、身份证...)</text>
+  <text x="1090" y="960" class="small-label">• 统一异常处理返回 4xxx</text>
+
+  <!-- L6: 业务层防护 -->
+  <rect x="100" y="1020" width="1400" height="140" rx="8" fill="#bfdbfe" stroke="#06b6d4" stroke-width="3"/>
+  <text x="800" y="1050" text-anchor="middle" class="section-title" fill="#0891b2">L6 业务层防护 (Business Logic)</text>
+
+  <rect x="150" y="1070" width="340" height="70" rx="6" fill="white" stroke="#06b6d4" stroke-width="1.5"/>
+  <text x="320" y="1095" text-anchor="middle" class="label" font-weight="bold">内容审核</text>
+  <text x="170" y="1115" class="small-label">• 百度内容审核适配器</text>
+  <text x="170" y="1130" class="small-label">• 敏感词过滤 (文本/图片)</text>
+
+  <rect x="530" y="1070" width="340" height="70" rx="6" fill="white" stroke="#06b6d4" stroke-width="1.5"/>
+  <text x="700" y="1095" text-anchor="middle" class="label" font-weight="bold">操作审计</text>
+  <text x="550" y="1115" class="small-label">• @OperationLog 自动记录</text>
+  <text x="550" y="1130" class="small-label">• 异步批量落库 sys_operation_log</text>
+
+  <rect x="910" y="1070" width="550" height="70" rx="6" fill="white" stroke="#06b6d4" stroke-width="1.5"/>
+  <text x="1185" y="1095" text-anchor="middle" class="label" font-weight="bold">业务规则校验</text>
+  <text x="930" y="1115" class="small-label">• 领域层业务规则验证</text>
+  <text x="930" y="1130" class="small-label">• 状态机防非法状态转移, 业务异常抛 BusinessException</text>
+
+  <!-- L7: 数据层防护 -->
+  <rect x="100" y="1180" width="1400" height="140" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="3"/>
+  <text x="800" y="1210" text-anchor="middle" class="section-title" fill="#2563eb">L7 数据层防护 (Data Layer)</text>
+
+  <rect x="150" y="1230" width="340" height="70" rx="6" fill="white" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="320" y="1255" text-anchor="middle" class="label" font-weight="bold">数据加密</text>
+  <text x="170" y="1275" class="small-label">• 密码: BCrypt (强度10)</text>
+  <text x="170" y="1290" class="small-label">• 敏感字段: AES-256加密存储</text>
+
+  <rect x="530" y="1230" width="340" height="70" rx="6" fill="white" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="700" y="1255" text-anchor="middle" class="label" font-weight="bold">SQL注入防护</text>
+  <text x="550" y="1275" class="small-label">• MyBatis-Plus 参数化查询</text>
+  <text x="550" y="1290" class="small-label">• 禁止拼接SQL, PreparedStatement</text>
+
+  <rect x="910" y="1230" width="550" height="70" rx="6" fill="white" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="1185" y="1255" text-anchor="middle" class="label" font-weight="bold">数据权限隔离</text>
+  <text x="930" y="1275" class="small-label">• @DataScope 自动注入 WHERE 条件</text>
+  <text x="930" y="1290" class="small-label">• 多租户隔离 @TenantAware, 防越权访问</text>
+
+  <!-- 监控指标 -->
+  <rect x="50" y="1340" width="1500" height="140" rx="8" fill="#f0fdf4" stroke="#059669" stroke-width="2"/>
+  <text x="800" y="1370" text-anchor="middle" class="section-title" fill="#059669">监控指标 (Prometheus Metrics)</text>
+
+  <rect x="100" y="1390" width="480" height="70" rx="6" fill="white" stroke="#059669" stroke-width="1.5"/>
+  <text x="340" y="1415" text-anchor="middle" class="label" font-weight="bold">安全事件</text>
+  <text x="120" y="1435" class="code">apex.security.repeat.submit.rejected     # 重复提交拦截</text>
+  <text x="120" y="1450" class="code">apex.gateway.scan.blocked                 # 扫描流量阻断</text>
+
+  <rect x="620" y="1390" width="480" height="70" rx="6" fill="white" stroke="#059669" stroke-width="1.5"/>
+  <text x="860" y="1415" text-anchor="middle" class="label" font-weight="bold">认证相关</text>
+  <text x="640" y="1435" class="code">apex.auth.login.failed                    # 登录失败次数</text>
+  <text x="640" y="1450" class="code">apex.auth.captcha.required                # 验证码强制触发</text>
+
+  <rect x="1140" y="1390" width="400" height="70" rx="6" fill="white" stroke="#059669" stroke-width="1.5"/>
+  <text x="1340" y="1415" text-anchor="middle" class="label" font-weight="bold">流控熔断</text>
+  <text x="1160" y="1435" class="code">sentinel_*                 # Sentinel指标</text>
+  <text x="1160" y="1450" class="code">resilience4j_*             # 熔断器指标</text>
+</svg>

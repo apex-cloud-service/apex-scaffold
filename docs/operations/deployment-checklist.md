@@ -1,5 +1,7 @@
 # 工作流监控功能部署检查清单
 
+[查看部署检查流程图](../diagrams/49_deployment_checklist_flow.svg)
+
 ## ✅ 文件完整性检查
 
 ### 后端文件（8个）

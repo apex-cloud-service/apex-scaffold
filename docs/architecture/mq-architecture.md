@@ -1,13 +1,14 @@
+> - [消息队列可靠性架构图](../diagrams/61_message_queue_reliability.svg)
 # Apex Scaffold RocketMQ 消息队列架构文档
 
-> 文档版本: v1.0  
-> 创建时间: 2026-09-04  
-> 适用版本: apex-scaffold v2.5.0+  
+> 文档版本: v1.0
+> 创建时间: 2026-09-04
+> 适用版本: apex-scaffold v2.5.0+
 > RocketMQ版本: 5.x
 
-> **配套架构图**:  
-> - [RocketMQ消息队列架构图](../diagrams/16_mq_architecture.svg)  
-> - [数据流转架构图](../diagrams/15_data_flow_architecture.svg)
+> **配套架构图**:
+> - [RocketMQ消息队列架构图](../diagrams/61_message_queue_reliability.svg)
+> - [数据流转架构图](../diagrams/62_data_flow_consistency.svg)
 
 ---
 
@@ -218,16 +219,16 @@ nohup sh bin/mqbroker -c conf/broker-slave.conf &
 ```java
 @Service
 public class OrderProducerService {
-    
+
     @Autowired
     private RocketMQTemplate rocketMQTemplate;
-    
+
     public void sendOrderMessage(OrderDTO order) {
         SendResult result = rocketMQTemplate.syncSend(
             "order-topic",
             MessageBuilder.withPayload(order).build()
         );
-        
+
         if (result.getSendStatus() == SendStatus.SEND_OK) {
             log.info("消息发送成功: MsgId={}", result.getMsgId());
         } else {
@@ -250,7 +251,7 @@ public void sendAsyncMessage(UserDTO user) {
             public void onSuccess(SendResult result) {
                 log.info("消息发送成功: {}", result.getMsgId());
             }
-            
+
             @Override
             public void onException(Throwable throwable) {
                 log.error("消息发送失败", throwable);
@@ -312,17 +313,17 @@ rocketMQTemplate.syncSendOrderly(
 ```java
 @Service
 public class OrderTransactionService {
-    
+
     @Autowired
     private RocketMQTemplate rocketMQTemplate;
-    
+
     public void createOrderWithTransaction(OrderDTO dto) {
         TransactionSendResult result = rocketMQTemplate.sendMessageInTransaction(
             "order-topic",
             MessageBuilder.withPayload(dto).build(),
             dto // arg参数传递给回调
         );
-        
+
         log.info("事务消息发送结果: {}", result.getLocalTransactionState());
     }
 }
@@ -330,18 +331,18 @@ public class OrderTransactionService {
 @RocketMQTransactionListener
 @Component
 public class OrderTransactionListener implements RocketMQLocalTransactionListener {
-    
+
     @Autowired
     private OrderService orderService;
-    
+
     @Override
     public RocketMQLocalTransactionState executeLocalTransaction(Message msg, Object arg) {
         try {
             OrderDTO dto = (OrderDTO) arg;
-            
+
             // 执行本地事务
             Order order = orderService.createOrder(dto);
-            
+
             log.info("本地事务执行成功: orderId={}", order.getId());
             return RocketMQLocalTransactionState.COMMIT;
         } catch (Exception e) {
@@ -349,14 +350,14 @@ public class OrderTransactionListener implements RocketMQLocalTransactionListene
             return RocketMQLocalTransactionState.ROLLBACK;
         }
     }
-    
+
     @Override
     public RocketMQLocalTransactionState checkLocalTransaction(Message msg) {
         // 回查本地事务状态
         String orderId = msg.getHeaders().get("orderId", String.class);
         boolean exists = orderService.existsById(orderId);
-        
-        return exists ? RocketMQLocalTransactionState.COMMIT 
+
+        return exists ? RocketMQLocalTransactionState.COMMIT
                       : RocketMQLocalTransactionState.ROLLBACK;
     }
 }
@@ -411,7 +412,7 @@ rocketMQTemplate.syncSend("order-timeout-topic", message);
     messageModel = MessageModel.CLUSTERING // 默认
 )
 public class OrderConsumer implements RocketMQListener<OrderDTO> {
-    
+
     @Override
     public void onMessage(OrderDTO order) {
         log.info("接收到订单消息: {}", order.getOrderId());
@@ -431,7 +432,7 @@ public class OrderConsumer implements RocketMQListener<OrderDTO> {
     messageModel = MessageModel.BROADCASTING
 )
 public class ConfigUpdateConsumer implements RocketMQListener<ConfigDTO> {
-    
+
     @Override
     public void onMessage(ConfigDTO config) {
         // 每个消费者都会收到消息
@@ -447,7 +448,7 @@ public class ConfigUpdateConsumer implements RocketMQListener<ConfigDTO> {
 **平均分配策略** (默认):
 ```
 假设: 4个Queue, 2个Consumer
-结果: 
+结果:
   Consumer-1 消费 Queue 0, 1
   Consumer-2 消费 Queue 2, 3
 ```
@@ -471,7 +472,7 @@ public class ConfigUpdateConsumer implements RocketMQListener<ConfigDTO> {
     consumeMode = ConsumeMode.ORDERLY
 )
 public class OrderStatusConsumer implements RocketMQListener<OrderStatusDTO> {
-    
+
     @Override
     public void onMessage(OrderStatusDTO status) {
         // 保证同一订单的状态变更按顺序处理
@@ -489,7 +490,7 @@ public class OrderStatusConsumer implements RocketMQListener<OrderStatusDTO> {
     consumeThreadMax = 20
 )
 public class EmailConsumer implements RocketMQListener<EmailDTO> {
-    
+
     @Override
     public void onMessage(EmailDTO email) {
         // 并发处理，无顺序保证
@@ -508,7 +509,7 @@ public class EmailConsumer implements RocketMQListener<EmailDTO> {
     maxReconsumeTimes = 16 // 最大重试次数
 )
 public class PaymentConsumer implements RocketMQListener<PaymentDTO> {
-    
+
     @Override
     public void onMessage(PaymentDTO payment) {
         try {
@@ -528,12 +529,12 @@ public class PaymentConsumer implements RocketMQListener<PaymentDTO> {
     consumerGroup = "dlq-consumer-group"
 )
 public class PaymentDLQConsumer implements RocketMQListener<PaymentDTO> {
-    
+
     @Override
     public void onMessage(PaymentDTO payment) {
         // 记录到数据库，人工介入
         failedPaymentRepository.save(payment);
-        
+
         // 发送告警
         alertService.sendAlert("支付消息进入死信队列", payment);
     }
@@ -624,7 +625,7 @@ dLegerSelfId=n0
 @Scheduled(cron = "0 */10 * * * ?")
 public void processDLQMessages() {
     List<MessageExt> messages = consumer.pullDLQMessages();
-    
+
     for (MessageExt msg : messages) {
         // 人工审核后重新投递
         if (canRetry(msg)) {
@@ -657,7 +658,7 @@ producer.send(msg, new SendCallback() {
     public void onSuccess(SendResult result) {
         // 成功回调
     }
-    
+
     @Override
     public void onException(Throwable e) {
         // 失败回调
@@ -681,7 +682,7 @@ producer.send(msg, new SendCallback() {
     consumeMessageBatchMaxSize = 10 // 每次最多消费10条
 )
 public class BatchConsumer implements RocketMQListener<List<OrderDTO>> {
-    
+
     @Override
     public void onMessage(List<OrderDTO> orders) {
         // 批量处理
@@ -802,6 +803,6 @@ scrape_configs:
 
 ---
 
-**文档维护者**: 架构团队  
-**审核状态**: 待人工审核  
+**文档维护者**: 架构团队
+**审核状态**: 待人工审核
 **下次更新**: MQ架构变更后同步更新

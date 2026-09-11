@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1300" width="1600" height="1300">
+  <metadata>
+    <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/">
+      <rdf:Description>
+        <dc:title>Apex Scaffold 多级缓存架构图</dc:title>
+        <dc:creator>Apex Team</dc:creator>
+        <dc:date>2026-09-10</dc:date>
+        <dc:version>3.0</dc:version>
+        <dc:description>展示L1 Caffeine + L2 Redis双层缓存:读穿透/防击穿/防雪崩/DB降级读</dc:description>
+      </rdf:Description>
+    </rdf:RDF>
+  </metadata>
+
+  <defs>
+    <style>
+      .title-main { font: 700 36px system-ui, sans-serif; fill: #0f172a; text-anchor: middle; }
+      .title-version { font: 500 14px system-ui, sans-serif; fill: #64748b; text-anchor: middle; }
+      .layer-title { font: 600 18px system-ui, sans-serif; fill: #ffffff; }
+      .step-label { font: 500 13px system-ui, sans-serif; fill: #0f172a; }
+      .code-label { font: 400 11px 'SF Mono', monospace; fill: #2563eb; }
+      .note-text { font: 400 12px system-ui, sans-serif; fill: #64748b; }
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/>
+    </marker>
+    <marker id="arrow-success" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#059669"/>
+    </marker>
+    <marker id="arrow-error" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#dc2626"/>
+    </marker>
+  </defs>
+
+  <rect width="1600" height="1300" fill="#ffffff"/>
+
+  <text x="800" y="50" class="title-main">Apex Scaffold 多级缓存架构</text>
+  <text x="800" y="80" class="title-version">L1 Caffeine 10k条/5分钟 + L2 Redis Cluster 7天TTL · 命中率80-95% · 响应&lt;1ms · v3.0</text>
+
+  <!-- 请求入口 -->
+  <rect x="700" y="120" width="200" height="60" rx="8" fill="#4f46e5" stroke="#3730a3" stroke-width="2"/>
+  <text x="800" y="145" class="layer-title">应用层请求</text>
+  <text x="800" y="165" class="note-text" fill="white" text-anchor="middle">multiLevelCacheService.get()</text>
+
+  <line x1="800" y1="180" x2="800" y2="220" stroke="#64748b" stroke-width="3" marker-end="url(#arrow)"/>
+
+  <!-- L1 Caffeine本地缓存 -->
+  <rect x="50" y="220" width="700" height="320" rx="12" fill="#eff6ff" stroke="#3b82f6" stroke-width="3"/>
+  <rect x="50" y="220" width="700" height="50" rx="12" fill="#3b82f6"/>
+  <text x="80" y="250" class="layer-title">L1 本地缓存 (Caffeine 3.1.8)</text>
+  <text x="80" y="268" class="note-text" fill="white">进程内堆缓存 · W-TinyLFU算法 · 微秒级响应</text>
+
+  <rect x="80" y="300" width="280" height="220" rx="8" fill="#ffffff" stroke="#3b82f6" stroke-width="2"/>
+  <text x="100" y="325" class="step-label">核心配置</text>
+  <text x="100" y="350" class="code-label">最大条目: 10,000 (可配置)</text>
+  <text x="100" y="367" class="code-label">TTL: 5分钟 (L1默认)</text>
+  <text x="100" y="384" class="code-label">淘汰算法: W-TinyLFU</text>
+  <text x="100" y="401" class="code-label">响应时间: &lt;1ms</text>
+  <text x="100" y="418" class="code-label">命中率: 80-95% (热数据)</text>
+  <text x="100" y="435" class="code-label">序列化: Jackson JSON</text>
+  <text x="100" y="470" class="step-label">适用场景</text>
+  <text x="100" y="490" class="note-text">• 用户Session/Token (高频)</text>
+  <text x="100" y="505" class="note-text">• 字典配置 (几乎不变)</text>
+
+  <rect x="390" y="300" width="330" height="220" rx="8" fill="#ffffff" stroke="#3b82f6" stroke-width="2"/>
+  <text x="410" y="325" class="step-label">LocalCacheService 核心方法</text>
+  <text x="410" y="350" class="code-label">get(cacheName, key, Class&lt;T&gt;)</text>
+  <text x="420" y="367" class="note-text">从指定缓存区读取</text>
+  <text x="410" y="390" class="code-label">put(cacheName, key, value, ttl)</text>
+  <text x="420" y="407" class="note-text">写入并设置过期时间</text>
+  <text x="410" y="430" class="code-label">evict(cacheName, key)</text>
+  <text x="420" y="447" class="note-text">失效单个条目</text>
+  <text x="410" y="470" class="code-label">clear() / clearLocal()</text>
+  <text x="420" y="487" class="note-text">清空本地缓存</text>
+  <text x="410" y="510" class="note-text">✅ 全部返回 Mono (响应式)</text>
+
+  <!-- L1命中/未命中分支 -->
+  <path d="M800 540 L800 580 L650 580" stroke="#059669" stroke-width="3" marker-end="url(#arrow-success)"/>
+  <text x="750" y="570" class="step-label" fill="#059669">命中 80-95%</text>
+
+  <rect x="450" y="560" width="200" height="60" rx="8" fill="#f0fdf4" stroke="#059669" stroke-width="2"/>
+  <text x="550" y="585" class="step-label" text-anchor="middle" fill="#059669">直接返回结果</text>
+  <text x="550" y="605" class="code-label" text-anchor="middle">&lt;1ms 响应</text>
+
+  <path d="M800 540" x2="950" y2="580" stroke="#dc2626" stroke-width="3" marker-end="url(#arrow-error)" stroke-dasharray="6,4"/>
+  <text x="860" y="570" class="step-label" fill="#dc2626">未命中 5-20%</text>
+
+  <!-- L2 Redis分布式缓存 -->
+  <rect x="850" y="220" width="700" height="320" rx="12" fill="#f0fdf4" stroke="#059669" stroke-width="3"/>
+  <rect x="850" y="220" width="700" height="50" rx="12" fill="#059669"/>
+  <text x="880" y="250" class="layer-title">L2 分布式缓存 (Redis 7.x + Redisson 3.36.0)</text>
+  <text x="880" y="268" class="note-text" fill="white">跨实例共享 · 持久化 · 分布式锁</text>
+
+  <rect x="880" y="300" width="280" height="220" rx="8" fill="#ffffff" stroke="#059669" stroke-width="2"/>
+  <text x="900" y="325" class="step-label">核心配置</text>
+  <text x="900" y="350" class="code-label">连接模式: Redisson Client</text>
+  <text x="900" y="367" class="code-label">TTL: 1小时 - 7天 (可配)</text>
+  <text x="900" y="384" class="code-label">编码: StringCodec (JSON)</text>
+  <text x="900" y="401" class="code-label">响应时间: 1-5ms (同机房)</text>
+  <text x="900" y="418" class="code-label">命中率: 5-15% (温数据)</text>
+  <text x="900" y="435" class="code-label">Watchdog: 30s 续期</text>
+  <text x="900" y="470" class="step-label">Key前缀规范</text>
+  <text x="900" y="490" class="note-text">apex:{cacheName}:{key}</text>
+  <text x="900" y="505" class="note-text">apex:perm:{tid}:{uid}</text>
+
+  <rect x="1190" y="300" width="330" height="220" rx="8" fill="#ffffff" stroke="#059669" stroke-width="2"/>
+  <text x="1210" y="325" class="step-label">MultiLevelCacheService</text>
+  <text x="1210" y="350" class="code-label">get(cacheName, key, Class&lt;T&gt;)</text>
+  <text x="1220" y="367" class="note-text">L1→L2→DB 三级回源</text>
+  <text x="1210" y="390" class="code-label">put(cacheName, key, value, ttl)</text>
+  <text x="1220" y="407" class="note-text">写入L2 + 失效L1</text>
+  <text x="1210" y="430" class="code-label">evict(cacheName, key)</text>
+  <text x="1220" y="447" class="note-text">删除L2 + 失效L1</text>
+  <text x="1210" y="470" class="code-label">getWithLock() 防击穿</text>
+  <text x="1220" y="487" class="note-text">分布式锁 + 单次回源</text>
+  <text x="1210" y="510" class="note-text">✅ BlockingIoSchedulers.cache()</text>
+
+  <!-- L2命中回填L1 -->
+  <rect x="950" y="580" width="200" height="80" rx="8" fill="#fffbeb" stroke="#f59e0b" stroke-width="2"/>
+  <text x="1050" y="605" class="step-label" text-anchor="middle" fill="#f59e0b">L2命中 → 回填L1</text>
+  <text x="1050" y="625" class="code-label" text-anchor="middle">queryL2AndBackfillL1()</text>
+  <text x="1050" y="645" class="note-text" text-anchor="middle">异步写入L1加速后续访问</text>
+
+  <line x1="1050" y1="660" x2="1050" y2="700" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- 数据库层 -->
+  <rect x="50" y="700" width="1500" height="240" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="3"/>
+  <rect x="50" y="700" width="1500" height="50" rx="12" fill="#d97706"/>
+  <text x="80" y="730" class="layer-title">数据源层 (MySQL 8.x + MyBatis-Plus)</text>
+  <text x="80" y="748" class="note-text" fill="white">持久化存储 · 最终数据源 · 缓存未命中回源</text>
+
+  <rect x="80" y="780" width="450" height="140" rx="8" fill="#ffffff" stroke="#d97706" stroke-width="2"/>
+  <text x="100" y="805" class="step-label">Cache-Aside 模式</text>
+  <text x="100" y="830" class="code-label">读流程:</text>
+  <text x="110" y="847" class="note-text">1. 查L1 → 命中返回</text>
+  <text x="110" y="864" class="note-text">2. 查L2 → 命中回填L1返回</text>
+  <text x="110" y="881" class="note-text">3. 查DB → 写入L2+L1返回</text>
+  <text x="100" y="906" class="code-label">写流程 (Write-Through):</text>
+  <text x="110" y="923" class="note-text">先更新DB → 删除L2 → 失效L1</text>
+
+  <rect x="560" y="780" width="450" height="140" rx="8" fill="#ffffff" stroke="#d97706" stroke-width="2"/>
+  <text x="580" y="805" class="step-label">防护机制</text>
+  <text x="580" y="830" class="code-label">缓存击穿 (热key并发)</text>
+  <text x="590" y="847" class="note-text">• 分布式锁 (Redisson RLock)</text>
+  <text x="590" y="864" class="note-text">• 单实例回源DB,其他等待</text>
+  <text x="580" y="889" class="code-label">缓存穿透 (不存在的key)</text>
+  <text x="590" y="906" class="note-text">• 空值缓存 (EMPTY_VALUE标记)</text>
+  <text x="590" y="923" class="note-text">• TTL: 5分钟</text>
+
+  <rect x="1040" y="780" width="480" height="140" rx="8" fill="#ffffff" stroke="#d97706" stroke-width="2"/>
+  <text x="1060" y="805" class="step-label">企业版特性 (v1.3.0)</text>
+  <text x="1060" y="830" class="code-label">DB降级读 (数据库故障保护)</text>
+  <text x="1070" y="847" class="note-text">• DB不可用时,返回过期缓存</text>
+  <text x="1070" y="864" class="note-text">• 保障系统可用性 (牺牲实时性)</text>
+  <text x="1060" y="889" class="code-label">缓存雪崩防护</text>
+  <text x="1070" y="906" class="note-text">• 随机TTL: [3600s, 4200s]</text>
+  <text x="1070" y="923" class="note-text">• 避免大量key同时过期</text>
+
+  <!-- 数据流向标注 -->
+  <rect x="50" y="980" width="1500" height="280" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2"/>
+  <text x="70" y="1010" class="step-label">完整数据流时序图</text>
+
+  <text x="70" y="1040" class="code-label">1️⃣ 读请求到达 → multiLevelCacheService.get(cacheName, key, Class&lt;T&gt;)</text>
+  <text x="70" y="1060" class="code-label">2️⃣ 查询L1 (Caffeine) → cacheManager.getCache(cacheName).get(key)</text>
+  <text x="90" y="1077" class="note-text">✅ 命中: 直接返回 (80-95%概率, &lt;1ms)</text>
+  <text x="90" y="1094" class="note-text">❌ 未命中: 继续查询L2</text>
+
+  <text x="70" y="1119" class="code-label">3️⃣ 查询L2 (Redis) → redissonClient.getBucket(fullKey).get()</text>
+  <text x="90" y="1136" class="note-text">✅ 命中: 异步回填L1 + 返回结果 (5-15%概率, 1-5ms)</text>
+  <text x="90" y="1153" class="note-text">❌ 未命中: 回源数据库 (5%概率)</text>
+
+  <text x="70" y="1178" class="code-label">4️⃣ 回源数据库 → userRepository.findById(id).subscribeOn(Schedulers.boundedElastic())</text>
+  <text x="90" y="1195" class="note-text">• 查询结果写入L2 (TTL: 1h)</text>
+  <text x="90" y="1212" class="note-text">• 异步回填L1 (TTL: 5min)</text>
+  <text x="90" y="1229" class="note-text">• 返回结果给调用方</text>
+
+  <text x="800" y="1280" class="code-label" text-anchor="middle">© 2026 Apex Team · 多级缓存架构 v3.0 · 基于 MultiLevelCacheService/LocalCacheService 实际代码生成</text>
+</svg>

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 900" width="1400" height="900">
+  <defs>
+    <style>.title{font:700 32px sans-serif;fill:#0f172a;text-anchor:middle}.subtitle{font:500 14px sans-serif;fill:#64748b;text-anchor:middle}.box-title{font:600 14px sans-serif;fill:#0f172a}.text{font:400 11px sans-serif;fill:#475569}.code{font:400 10px monospace;fill:#2563eb}</style>
+  </defs>
+  <rect width="1400" height="900" fill="#fff"/>
+  <text x="700" y="40" class="title">14. Kubernetes 生产部署架构</text>
+  <text x="700" y="65" class="subtitle">HPA自动伸缩 · 滚动发布 · ConfigMap/Secret · Ingress路由 v3.0</text>
+
+  <rect x="50" y="90" width="650" height="360" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="2"/>
+  <text x="70" y="120" class="box-title">Deployment 部署清单</text>
+  <text x="70" y="150" class="text">apex-scaffold-deployment.yaml:</text>
+  <text x="80" y="170" class="code">replicas: 2 (初始副本数)</text>
+  <text x="80" y="188" class="code">image: apex-scaffold:1.0.0</text>
+  <text x="80" y="206" class="code">resources:</text>
+  <text x="90" y="224" class="code">requests: 512Mi/500m</text>
+  <text x="90" y="242" class="code">limits: 1024Mi/1000m</text>
+  <text x="80" y="270" class="code">livenessProbe: /actuator/health/liveness</text>
+  <text x="90" y="288" class="code">initialDelay:120s, period:30s</text>
+  <text x="80" y="316" class="code">readinessProbe: /actuator/health/readiness</text>
+  <text x="90" y="334" class="code">initialDelay:60s, period:10s</text>
+  <text x="80" y="362" class="code">strategy: RollingUpdate</text>
+  <text x="90" y="380" class="code">maxUnavailable:25%, maxSurge:25%</text>
+  <text x="70" y="410" class="text">零停机发布,健康检查保障</text>
+
+  <rect x="720" y="90" width="630" height="360" rx="8" fill="#f0fdf4" stroke="#059669" stroke-width="2"/>
+  <text x="740" y="120" class="box-title">HPA 水平自动伸缩</text>
+  <text x="740" y="150" class="text">apex-hpa.yaml:</text>
+  <text x="750" y="170" class="code">minReplicas: 2 (最小实例)</text>
+  <text x="750" y="188" class="code">maxReplicas: 10 (最大实例)</text>
+  <text x="750" y="216" class="code">metrics:</text>
+  <text x="760" y="234" class="code">- CPU利用率 &gt; 70% → 扩容</text>
+  <text x="760" y="252" class="code">- 内存利用率 &gt; 80% → 扩容</text>
+  <text x="760" y="270" class="code">- 自定义指标: QPS &gt; 1000 → 扩容</text>
+  <text x="750" y="298" class="code">behavior (缩放行为):</text>
+  <text x="760" y="316" class="code">scaleUp: 每60秒最多+2个Pod</text>
+  <text x="760" y="334" class="code">scaleDown: 每300秒最多-1个Pod</text>
+  <text x="740" y="362" class="text">应对突发流量,自动扩展计算资源</text>
+  <text x="740" y="380" class="text">Prometheus Adapter暴露自定义指标</text>
+
+  <rect x="50" y="480" width="650" height="180" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+  <text x="70" y="510" class="box-title">Service &amp; Ingress</text>
+  <text x="70" y="540" class="text">apex-service.yaml (ClusterIP):</text>
+  <text x="80" y="560" class="code">port:8080 → targetPort:8080</text>
+  <text x="80" y="578" class="code">selector: app=apex-scaffold</text>
+  <text x="70" y="606" class="text">apex-ingress.yaml (Nginx Ingress):</text>
+  <text x="80" y="626" class="code">host: api.apex.com → Service:8080</text>
+  <text x="80" y="644" class="code">TLS: cert-manager自动签发证书</text>
+
+  <rect x="720" y="480" width="630" height="180" rx="8" fill="#faf5ff" stroke="#a855f7" stroke-width="2"/>
+  <text x="740" y="510" class="box-title">ConfigMap &amp; Secret</text>
+  <text x="740" y="540" class="text">apex-configmap.yaml (应用配置):</text>
+  <text x="750" y="560" class="code">spring.profiles.active=prod,k8s</text>
+  <text x="750" y="578" class="code">logging.level=INFO</text>
+  <text x="740" y="606" class="text">apex-secret.yaml (敏感数据):</text>
+  <text x="750" y="626" class="code">DB_PASSWORD, JWT_SECRET (base64编码)</text>
+  <text x="750" y="644" class="code">挂载到/config/secrets路径</text>
+
+  <rect x="50" y="690" width="1300" height="170" rx="8" fill="#fef2f2" stroke="#ef4444" stroke-width="2"/>
+  <text x="70" y="720" class="box-title">生产最佳实践</text>
+  <text x="70" y="748" class="text">• PVC持久化: MySQL/Redis使用StatefulSet + PersistentVolumeClaim (动态供应存储)</text>
+  <text x="70" y="768" class="text">• 日志收集: Fluent Bit DaemonSet采集容器日志 → Loki聚合 → Grafana可视化</text>
+  <text x="70" y="788" class="text">• 监控告警: ServiceMonitor (Prometheus Operator) 自动发现Pod指标</text>
+  <text x="70" y="808" class="text">• 蓝绿发布: Argo Rollouts支持金丝雀发布 (5%流量试探 → 全量发布)</text>
+  <text x="70" y="828" class="text">• 命名空间隔离: dev/staging/prod环境独立,ResourceQuota限制资源</text>
+
+  <text x="700" y="885" class="code" text-anchor="middle">© 2026 Apex Team · Kubernetes生产部署架构 v3.0</text>
+</svg>

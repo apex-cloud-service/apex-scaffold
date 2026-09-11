@@ -2,7 +2,7 @@
 
 ## 概述
 
-Apex Scaffold 从 v2.0.0 开始集成 JMH (Java Microbenchmark Harness) 用于性能基准测试。JMH 是 OpenJDK 提供的专业微基准测试工具,能够准确测量 Java 代码的性能表现,避免常见的基准测试陷阱(如 JIT 编译优化、死代码消除等)。
+Apex Scaffold 从 v1.2.0 开始集成 JMH (Java Microbenchmark Harness) 用于性能基准测试。JMH 是 OpenJDK 提供的专业微基准测试工具,能够准确测量 Java 代码的性能表现,避免常见的基准测试陷阱(如 JIT 编译优化、死代码消除等)。
 
 ## 已实现的基准测试
 

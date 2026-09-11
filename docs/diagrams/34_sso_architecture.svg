@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 900" width="1400" height="900">
+  <defs>
+    <style>
+      .title{font:700 32px sans-serif;fill:#0f172a;text-anchor:middle}
+      .subtitle{font:500 14px sans-serif;fill:#64748b;text-anchor:middle}
+      .section-title{font:600 16px sans-serif;fill:#0f172a}
+      .text{font:400 10px sans-serif;fill:#475569}
+      .code{font:400 9px monospace;fill:#2563eb}
+      .layer-box{fill:#eff6ff;stroke:#3b82f6;stroke-width:2;rx:8}
+      .component-box{fill:#ffffff;stroke:#94a3b8;stroke-width:1.5;rx:6}
+      .primary-box{fill:#4f46e5;stroke:#4338ca;stroke-width:2;rx:6}
+      .success-box{fill:#059669;stroke:#047857;stroke-width:2;rx:6}
+      .warning-box{fill:#d97706;stroke:#b45309;stroke-width:2;rx:6}
+      .info-box{fill:#0891b2;stroke:#0e7490;stroke-width:2;rx:6}
+      .arrow{fill:none;stroke:#4f46e5;stroke-width:2.5;marker-end:url(#arrowhead)}
+      .dashed-arrow{fill:none;stroke:#64748b;stroke-width:2;stroke-dasharray:5,3;marker-end:url(#arrowhead-gray)}
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#4f46e5"/>
+    </marker>
+    <marker id="arrowhead-gray" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#64748b"/>
+    </marker>
+  </defs>
+
+  <text x="700" y="35" class="title">SSO 单点登录架构 (Single Sign-On)</text>
+  <text x="700" y="58" class="subtitle">基于JWT Token的统一认证体系 · Redis Session共享 · Cookie Domain策略</text>
+
+  <!-- 统一认证中心 UAC -->
+  <rect x="550" y="90" width="300" height="280" class="primary-box"/>
+  <text x="700" y="115" style="font:700 18px sans-serif;fill:#ffffff" text-anchor="middle">统一认证中心 (UAC)</text>
+  <text x="700" y="135" class="text" fill="#e0e7ff" text-anchor="middle">Unified Authentication Center</text>
+
+  <rect x="570" y="155" width="260" height="60" fill="#6366f1" stroke="#4f46e5" stroke-width="1.5" rx="4"/>
+  <text x="700" y="175" class="text" fill="#ffffff" text-anchor="middle" font-weight="600">JWT Token 颁发中心</text>
+  <text x="577" y="191" class="code" fill="#e0e7ff">• generateToken(userId): JWT</text>
+  <text x="577" y="203" class="code" fill="#e0e7ff">• validateToken(token): boolean</text>
+
+  <rect x="570" y="225" width="260" height="55" fill="#6366f1" stroke="#4f46e5" stroke-width="1.5" rx="4"/>
+  <text x="700" y="245" class="text" fill="#ffffff" text-anchor="middle" font-weight="600">Session管理服务</text>
+  <text x="577" y="261" class="code" fill="#e0e7ff">• Redis Session Store</text>
+  <text x="577" y="273" class="code" fill="#e0e7ff">• 跨应用Session共享</text>
+
+  <rect x="570" y="290" width="260" height="70" fill="#6366f1" stroke="#4f46e5" stroke-width="1.5" rx="4"/>
+  <text x="700" y="310" class="text" fill="#ffffff" text-anchor="middle" font-weight="600">用户认证服务</text>
+  <text x="577" y="326" class="code" fill="#e0e7ff">• 密码验证</text>
+  <text x="577" y="338" class="code" fill="#e0e7ff">• 微信登录</text>
+  <text x="577" y="350" class="code" fill="#e0e7ff">• Keycloak OIDC</text>
+
+  <!-- 多应用接入层 -->
+  <rect x="50" y="420" width="250" height="450" class="layer-box"/>
+  <text x="175" y="445" class="section-title" text-anchor="middle">多应用接入层</text>
+
+  <rect x="70" y="465" width="210" height="75" class="component-box"/>
+  <text x="175" y="485" class="text" text-anchor="middle" font-weight="600">应用A: apex-admin-web</text>
+  <text x="175" y="500" class="code" text-anchor="middle">管理后台 (Vue 3)</text>
+  <text x="77" y="515" class="code">域名: admin.apex-scaffold.com</text>
+  <text x="77" y="527" class="code">端口: 443 (HTTPS)</text>
+
+  <rect x="70" y="555" width="210" height="75" class="component-box"/>
+  <text x="175" y="575" class="text" text-anchor="middle" font-weight="600">应用B: apex-user-web</text>
+  <text x="175" y="590" class="code" text-anchor="middle">C端应用 (Vue 3)</text>
+  <text x="77" y="605" class="code">域名: user.apex-scaffold.com</text>
+  <text x="77" y="617" class="code">端口: 443 (HTTPS)</text>
+
+  <rect x="70" y="645" width="210" height="75" class="component-box"/>
+  <text x="175" y="665" class="text" text-anchor="middle" font-weight="600">应用C: apex-mobile-app</text>
+  <text x="175" y="680" class="code" text-anchor="middle">移动端 (微信小程序)</text>
+  <text x="77" y="695" class="code">平台: WeChat MiniProgram</text>
+  <text x="77" y="707" class="code">AppID: wx123456789</text>
+
+  <rect x="70" y="735" width="210" height="75" class="component-box"/>
+  <text x="175" y="755" class="text" text-anchor="middle" font-weight="600">应用D: third-party-app</text>
+  <text x="175" y="770" class="code" text-anchor="middle">第三方应用</text>
+  <text x="77" y="785" class="code">接入方式: OAuth2</text>
+  <text x="77" y="797" class="code">授权模式: authorization_code</text>
+
+  <path d="M 280,502 L 550,220" class="arrow"/>
+  <text x="415" y="360" class="code">首次登录</text>
+  <path d="M 280,592 L 550,260" class="arrow"/>
+  <text x="415" y="425" class="code">检测Token</text>
+  <path d="M 280,682 L 550,300" class="arrow"/>
+  <path d="M 280,772 L 550,340" class="arrow"/>
+
+  <!-- Session共享机制 -->
+  <rect x="920" y="90" width="430" height="280" class="success-box"/>
+  <text x="1135" y="115" style="font:700 18px sans-serif;fill:#ffffff" text-anchor="middle">Session共享机制</text>
+
+  <rect x="940" y="140" width="190" height="110" fill="#d1fae5" stroke="#059669" stroke-width="1.5" rx="4"/>
+  <text x="1035" y="160" class="text" text-anchor="middle" font-weight="600">Redis Session Store</text>
+  <text x="947" y="178" class="code">键格式:</text>
+  <text x="947" y="190" class="code">spring:session:apex:{sessionId}</text>
+  <text x="947" y="205" class="code">存储内容:</text>
+  <text x="952" y="217" class="code">• userId: 用户ID</text>
+  <text x="952" y="229" class="code">• roles: 角色列表</text>
+  <text x="952" y="241" class="code">• permissions: 权限列表</text>
+
+  <rect x="1145" y="140" width="190" height="110" fill="#d1fae5" stroke="#059669" stroke-width="1.5" rx="4"/>
+  <text x="1240" y="160" class="text" text-anchor="middle" font-weight="600">JWT Token统一验证</text>
+  <text x="1152" y="178" class="code">Token格式:</text>
+  <text x="1152" y="190" class="code">Bearer eyJhbGciOiJSUzI1NiIs...</text>
+  <text x="1152" y="205" class="code">验证方式:</text>
+  <text x="1157" y="217" class="code">• RS256签名验证</text>
+  <text x="1157" y="229" class="code">• 过期时间检查</text>
+  <text x="1157" y="241" class="code">• 黑名单检查(Redis)</text>
+
+  <rect x="940" y="265" width="390" height="95" fill="#d1fae5" stroke="#059669" stroke-width="1.5" rx="4"/>
+  <text x="1135" y="285" class="text" text-anchor="middle" font-weight="600">Cookie Domain共享策略</text>
+  <text x="947" y="303" class="code">Cookie配置:</text>
+  <text x="952" y="315" class="code">• Name: APEX_TOKEN</text>
+  <text x="952" y="327" class="code">• Domain: .apex-scaffold.com (一级域名共享)</text>
+  <text x="952" y="339" class="code">• Path: /</text>
+  <text x="952" y="351" class="code">• HttpOnly: true | Secure: true | SameSite: Lax</text>
+
+  <path d="M 850,220 L 920,220" class="arrow"/>
+
+  <!-- 认证流程 -->
+  <rect x="350" y="420" width="500" height="210" class="info-box"/>
+  <text x="600" y="445" style="font:700 16px sans-serif;fill:#ffffff" text-anchor="middle">认证流程</text>
+
+  <rect x="370" y="465" width="460" height="75" fill="#cffafe" stroke="#0891b2" stroke-width="1.5" rx="4"/>
+  <text x="600" y="485" class="text" text-anchor="middle" font-weight="600">首次登录流程 (应用A)</text>
+  <text x="377" y="500" class="code">1. 用户访问 https://admin.apex-scaffold.com</text>
+  <text x="377" y="512" class="code">2. 应用A检测无Token,302重定向到UAC登录页</text>
+  <text x="377" y="524" class="code">3. 用户输入用户名密码,UAC验证成功</text>
+  <text x="377" y="536" class="code">4. UAC生成JWT Token,设置Cookie (Domain: .apex-scaffold.com)</text>
+
+  <rect x="370" y="550" width="460" height="70" fill="#cffafe" stroke="#0891b2" stroke-width="1.5" rx="4"/>
+  <text x="600" y="570" class="text" text-anchor="middle" font-weight="600">免登录流程 (应用B)</text>
+  <text x="377" y="585" class="code">5. 用户访问 https://user.apex-scaffold.com</text>
+  <text x="377" y="597" class="code">6. 应用B检测Cookie中有Token,调用UAC验证</text>
+  <text x="377" y="609" class="code">7. Token有效,应用B自动登录,无需输入密码 ✅</text>
+
+  <!-- 单点登出 SLO -->
+  <rect x="920" y="420" width="430" height="210" class="warning-box"/>
+  <text x="1135" y="445" style="font:700 16px sans-serif;fill:#ffffff" text-anchor="middle">单点登出 (SLO)</text>
+
+  <rect x="940" y="465" width="390" height="155" fill="#fef3c7" stroke="#d97706" stroke-width="1.5" rx="4"/>
+  <text x="1135" y="485" class="text" text-anchor="middle" font-weight="600">登出流程</text>
+  <text x="947" y="503" class="code">1. 用户在应用A点击"退出登录"</text>
+  <text x="947" y="515" class="code">2. 应用A调用 UAC /api/v1/auth/logout</text>
+  <text x="947" y="527" class="code">3. UAC执行:</text>
+  <text x="952" y="539" class="code">• 将Token加入黑名单 (Redis, 30分钟TTL)</text>
+  <text x="952" y="551" class="code">• 通知所有应用Session失效 (SSE推送)</text>
+  <text x="952" y="563" class="code">• 清除Redis Session</text>
+  <text x="947" y="578" class="code">4. 应用A、B、C同时清除本地Session和Cookie</text>
+  <text x="947" y="590" class="code">5. 用户再次访问任何应用都需要重新登录</text>
+  <text x="947" y="605" class="text" font-weight="600">黑名单键: token:blacklist:{tokenId} → TTL: 30分钟</text>
+
+  <!-- 关键参数 -->
+  <rect x="50" y="680" width="1300" height="190" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2" rx="8"/>
+  <text x="700" y="705" class="section-title" text-anchor="middle">关键配置参数</text>
+
+  <rect x="70" y="725" width="300" height="130" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" rx="4"/>
+  <text x="220" y="745" class="text" text-anchor="middle" font-weight="600">Token生命周期</text>
+  <text x="77" y="763" class="code">• Access Token有效期: 2小时</text>
+  <text x="77" y="775" class="code">• Refresh Token有效期: 7天</text>
+  <text x="77" y="787" class="code">• Session有效期: 30分钟(滑动窗口)</text>
+  <text x="77" y="799" class="code">• Cookie有效期: 7天</text>
+  <text x="77" y="811" class="code">• 黑名单TTL: 30分钟</text>
+  <text x="77" y="826" class="text" font-size="9">自动续期: 剩余时间&lt;5分钟时前端自动刷新</text>
+  <text x="77" y="840" class="text" font-size="9">无感知登录: Token有效期内跨应用免登录</text>
+
+  <rect x="390" y="725" width="300" height="130" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" rx="4"/>
+  <text x="540" y="745" class="text" text-anchor="middle" font-weight="600">安全配置</text>
+  <text x="397" y="763" class="code">• HTTPS传输: 强制TLS 1.2+</text>
+  <text x="397" y="775" class="code">• Cookie安全属性:</text>
+  <text x="402" y="787" class="code">HttpOnly=true (防XSS)</text>
+  <text x="402" y="799" class="code">Secure=true (仅HTTPS)</text>
+  <text x="402" y="811" class="code">SameSite=Lax (防CSRF)</text>
+  <text x="397" y="826" class="text" font-size="9">• JWT签名: RS256 (RSA 2048位密钥)</text>
+  <text x="397" y="840" class="text" font-size="9">• Token黑名单: Redis分布式锁 + 30分钟过期</text>
+
+  <rect x="710" y="725" width="300" height="130" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" rx="4"/>
+  <text x="860" y="745" class="text" text-anchor="middle" font-weight="600">Session共享配置</text>
+  <text x="717" y="763" class="code">spring:</text>
+  <text x="722" y="775" class="code">session:</text>
+  <text x="727" y="787" class="code">store-type: redis</text>
+  <text x="727" y="799" class="code">redis:</text>
+  <text x="732" y="811" class="code">namespace: spring:session:apex</text>
+  <text x="732" y="823" class="code">flush-mode: immediate</text>
+  <text x="717" y="838" class="text" font-size="9">Redis Sentinel高可用 / Redis Cluster分片</text>
+
+  <rect x="1030" y="725" width="300" height="130" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" rx="4"/>
+  <text x="1180" y="745" class="text" text-anchor="middle" font-weight="600">性能指标</text>
+  <text x="1037" y="763" class="code">• 登录响应时间: &lt;200ms (P95)</text>
+  <text x="1037" y="775" class="code">• Token验证时间: &lt;50ms (P99)</text>
+  <text x="1037" y="787" class="code">• Session读取: &lt;10ms (Redis)</text>
+  <text x="1037" y="799" class="code">• 免登录成功率: >99.5%</text>
+  <text x="1037" y="811" class="code">• 并发登录: 10,000 QPS</text>
+  <text x="1037" y="826" class="text" font-size="9">压测环境: 4C8G × 3节点 + Redis Cluster 6主6从</text>
+  <text x="1037" y="840" class="text" font-size="9">生产环境: 支持100万日活用户同时在线</text>
+
+  <text x="700" y="885" class="code" text-anchor="middle">© 2026 Apex Team · SSO单点登录架构 v3.0</text>
+</svg>

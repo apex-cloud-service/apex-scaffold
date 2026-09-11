@@ -1,16 +1,16 @@
 # Apex Scaffold 业务流程文档
 
-> 文档版本: v1.0  
-> 创建时间: 2026-09-03  
+> 文档版本: v1.0
+> 创建时间: 2026-09-03
 > 适用版本: apex-scaffold v2.5.0+
 
-> **配套流程图**:  
-> - [JWT 登录认证流程图](../diagrams/04_login_auth_flow.svg)  
-> - [RBAC 权限校验流程图](../diagrams/05_permission_check_flow.svg)  
-> - [三级审批工作流图](../diagrams/06_workflow_approval_flow.svg)  
-> - [文件分片上传流程图](../diagrams/07_file_upload_flow.svg)  
-> - [数据流转架构图](../diagrams/15_data_flow_architecture.svg)  
-> - [RocketMQ消息队列架构图](../diagrams/16_mq_architecture.svg)
+> **配套流程图**:
+> - [JWT 登录认证流程图](../diagrams/04_login_authentication_flow.svg)
+> - [RBAC 权限校验流程图](../diagrams/05_permission_check_flow.svg)
+> - [三级审批工作流图](../diagrams/06_workflow_approval_flow.svg)
+> - [文件分片上传流程图](../diagrams/07_file_upload_flow.svg)
+> - [数据流转架构图](../diagrams/62_data_flow_consistency.svg)
+> - [RocketMQ消息队列架构图](../diagrams/61_message_queue_reliability.svg)
 
 ---
 
@@ -120,8 +120,8 @@ String refreshToken = jwtUtil.generateRefreshToken(userId);
 **Step 6**: 缓存Token到Redis
 ```java
 redisTemplate.opsForValue().set(
-  "token:" + userId, 
-  accessToken, 
+  "token:" + userId,
+  accessToken,
   2, TimeUnit.HOURS
 );
 ```
@@ -262,7 +262,7 @@ String requestMethod = "GET";
 
 boolean hasPermission = permissions.stream()
   .filter(p -> p.getResourceType().equals("API"))
-  .anyMatch(p -> 
+  .anyMatch(p ->
     PathMatcher.match(p.getApiPath(), requestPath) &&
     p.getApiMethod().equalsIgnoreCase(requestMethod)
   );
@@ -298,28 +298,28 @@ boolean hasPermission = permissions.stream()
 ```java
 @Component
 public class DataScopeInterceptor implements InnerInterceptor {
-  
+
   @Override
-  public void beforeQuery(Executor executor, 
-                          MappedStatement ms, 
-                          Object parameter, 
-                          RowBounds rowBounds, 
-                          ResultHandler resultHandler, 
+  public void beforeQuery(Executor executor,
+                          MappedStatement ms,
+                          Object parameter,
+                          RowBounds rowBounds,
+                          ResultHandler resultHandler,
                           BoundSql boundSql) {
-    
+
     // 1. 获取当前用户
     Long userId = SecurityContextHolder.getUserId();
-    
+
     // 2. 查询用户角色的数据范围
     Integer dataScope = roleService.getUserDataScope(userId);
-    
+
     // 3. 根据数据范围拼接SQL
     String sqlCondition = buildSqlCondition(userId, dataScope);
-    
+
     // 4. 动态添加WHERE条件
     String originalSql = boundSql.getSql();
     String newSql = injectDataScope(originalSql, sqlCondition);
-    
+
     // 5. 替换SQL
     ReflectionUtil.setFieldValue(boundSql, "sql", newSql);
   }
@@ -335,8 +335,8 @@ SELECT * FROM sys_user WHERE status = 1
 
 **数据权限改写后** (本部门及以下):
 ```sql
-SELECT * FROM sys_user 
-WHERE status = 1 
+SELECT * FROM sys_user
+WHERE status = 1
   AND dept_id IN (1, 2, 3, 5, 8)  -- 部门树
 ```
 
@@ -347,14 +347,14 @@ WHERE status = 1
 ```java
 @Component
 public class TenantInterceptor implements InnerInterceptor {
-  
+
   @Override
   public void beforeQuery(...) {
     String tenantId = TenantContext.getTenantId();
-    
+
     // 自动注入 tenant_id 条件
     String condition = " AND tenant_id = '" + tenantId + "'";
-    
+
     // SQL改写
     String newSql = originalSql + condition;
   }
@@ -364,17 +364,17 @@ public class TenantInterceptor implements InnerInterceptor {
 **租户上下文管理**:
 ```java
 public class TenantContext {
-  private static final ThreadLocal<String> TENANT_ID = 
+  private static final ThreadLocal<String> TENANT_ID =
     new ThreadLocal<>();
-  
+
   public static void setTenantId(String tenantId) {
     TENANT_ID.set(tenantId);
   }
-  
+
   public static String getTenantId() {
     return TENANT_ID.get();
   }
-  
+
   public static void clear() {
     TENANT_ID.remove();
   }
@@ -428,7 +428,7 @@ processInstanceRepository.save(instance);
 
 **Step 3**: 解析BPMN获取下一节点
 ```java
-WorkflowDefinition definition = 
+WorkflowDefinition definition =
   definitionRepository.findById(definitionId);
 String bpmnXml = definition.getBpmnXml();
 
@@ -574,7 +574,7 @@ file:
   storage:
     type: minio  # local / minio / tos
     max-size: 10MB
-    allowed-types: 
+    allowed-types:
       - image/jpeg
       - image/png
       - application/pdf
@@ -591,20 +591,20 @@ file:
 ```javascript
 function handleFileChange(event) {
   const file = event.target.files[0];
-  
+
   // 大小检查
   if (file.size > 10 * 1024 * 1024) {
     ElMessage.error('文件大小不能超过10MB');
     return;
   }
-  
+
   // 类型检查
   const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
   if (!allowedTypes.includes(file.type)) {
     ElMessage.error('不支持的文件类型');
     return;
   }
-  
+
   uploadFile(file);
 }
 ```
@@ -615,7 +615,7 @@ function uploadFile(file) {
   const formData = new FormData();
   formData.append('file', file);
   formData.append('bizType', 'avatar'); // 业务类型
-  
+
   axios.post('/admin-api/v1/files/upload', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
     onUploadProgress: (progressEvent) => {
@@ -690,7 +690,7 @@ filePart.transferTo(targetFile).block();
 ```java
 MinioClient minioClient = MinioClient.builder()
   .endpoint(minioConfig.getEndpoint())
-  .credentials(minioConfig.getAccessKey(), 
+  .credentials(minioConfig.getAccessKey(),
                minioConfig.getSecretKey())
   .build();
 
@@ -777,17 +777,17 @@ Authorization: Bearer {accessToken}
 public Mono<ResponseEntity<Resource>> download(@PathVariable Long fileId) {
   // 1. 查询文件元数据
   FileEntity file = fileRepository.findById(fileId).block();
-  
+
   // 2. 权限校验
   Long currentUserId = SecurityContextHolder.getUserId();
   if (!hasPermission(currentUserId, file)) {
     throw new BusinessException("无权限访问该文件");
   }
-  
+
   // 3. 返回文件流
   Resource resource = loadFileResource(file);
   return Mono.just(ResponseEntity.ok()
-    .header(HttpHeaders.CONTENT_DISPOSITION, 
+    .header(HttpHeaders.CONTENT_DISPOSITION,
             "attachment; filename=\"" + file.getOriginalName() + "\"")
     .body(resource));
 }
@@ -862,7 +862,7 @@ public void updateRolePermissions(Long roleId, List<Long> permissionIds) {
 @Scheduled(cron = "0 */30 * * * ?")
 public void checkTimeout() {
   List<Task> timeoutTasks = taskRepository
-    .findByStatusAndCreateTimeBefore("PENDING", 
+    .findByStatusAndCreateTimeBefore("PENDING",
                                      LocalDateTime.now().minusDays(2));
   // 发送提醒
 }
@@ -885,7 +885,7 @@ POST /admin-api/v1/workflow/tasks/{taskId}/delegate
 function uploadChunks(file) {
   const chunkSize = 2 * 1024 * 1024; // 2MB
   const chunks = Math.ceil(file.size / chunkSize);
-  
+
   for (let i = 0; i < chunks; i++) {
     const chunk = file.slice(i * chunkSize, (i + 1) * chunkSize);
     uploadChunk(chunk, i, chunks);
@@ -947,6 +947,6 @@ if (existFile != null) {
 
 ---
 
-**文档维护者**: 架构团队  
-**审核状态**: 待人工审核  
+**文档维护者**: 架构团队
+**审核状态**: 待人工审核
 **下次更新**: 业务流程变更后同步更新

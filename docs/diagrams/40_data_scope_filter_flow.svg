@@ -1,0 +1,197 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1200">
+  <defs>
+    <style>
+      .title { font-family: Arial, "PingFang SC", "Microsoft YaHei", sans-serif; font-size: 28px; font-weight: bold; fill: #0f172a; }
+      .subtitle { font-family: Arial, "PingFang SC", "Microsoft YaHei", sans-serif; font-size: 16px; fill: #475569; }
+      .section-title { font-family: Arial, "PingFang SC", "Microsoft YaHei", sans-serif; font-size: 18px; font-weight: bold; fill: #0f172a; }
+      .label { font-family: Arial, "PingFang SC", "Microsoft YaHei", sans-serif; font-size: 14px; fill: #0f172a; }
+      .small-label { font-family: Arial, "PingFang SC", "Microsoft YaHei", sans-serif; font-size: 12px; fill: #475569; }
+      .code { font-family: "Courier New", monospace; font-size: 12px; fill: #0f172a; }
+    </style>
+
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#4f46e5" />
+    </marker>
+  </defs>
+
+  <!-- 标题 -->
+  <text x="800" y="40" text-anchor="middle" class="title">数据权限过滤流程图 (Data Scope Filter Flow)</text>
+  <text x="800" y="65" text-anchor="middle" class="subtitle">MyBatis-Plus 拦截器自动注入 WHERE 条件实现行级数据隔离</text>
+
+  <!-- 第一部分:用户请求与权限装配 -->
+  <text x="50" y="110" class="section-title">1️⃣ 用户请求 → 权限装配</text>
+
+  <!-- 用户请求 -->
+  <rect x="100" y="130" width="200" height="60" rx="30" fill="#4f46e5" stroke="#4f46e5" stroke-width="2"/>
+  <text x="200" y="165" text-anchor="middle" class="label" fill="white">用户发起查询请求</text>
+
+  <!-- 箭头 -->
+  <line x1="300" y1="160" x2="380" y2="160" stroke="#4f46e5" stroke-width="2" marker-end="url(#arrowhead)"/>
+
+  <!-- 认证过滤器 -->
+  <rect x="380" y="130" width="220" height="60" rx="8" fill="#f0f9ff" stroke="#0891b2" stroke-width="2"/>
+  <text x="490" y="155" text-anchor="middle" class="label">认证过滤器</text>
+  <text x="490" y="175" text-anchor="middle" class="small-label">SecurityFilter</text>
+
+  <!-- 箭头 -->
+  <line x1="600" y1="160" x2="680" y2="160" stroke="#4f46e5" stroke-width="2" marker-end="url(#arrowhead)"/>
+
+  <!-- 写入MDC/Context -->
+  <rect x="680" y="130" width="240" height="60" rx="8" fill="#f0fdf4" stroke="#059669" stroke-width="2"/>
+  <text x="800" y="155" text-anchor="middle" class="label">写入用户信息到MDC</text>
+  <text x="800" y="175" text-anchor="middle" class="small-label">userId, deptId, dataScope</text>
+
+  <!-- 箭头 -->
+  <line x1="920" y1="160" x2="1000" y2="160" stroke="#4f46e5" stroke-width="2" marker-end="url(#arrowhead)"/>
+
+  <!-- Service调用 -->
+  <rect x="1000" y="130" width="200" height="60" rx="8" fill="#fffbeb" stroke="#d97706" stroke-width="2"/>
+  <text x="1100" y="155" text-anchor="middle" class="label">Service 层调用</text>
+  <text x="1100" y="175" text-anchor="middle" class="small-label">@DataScope 注解</text>
+
+  <!-- 第二部分:权限解析 -->
+  <text x="50" y="250" class="section-title">2️⃣ 权限信息解析</text>
+
+  <!-- DataScopeProvider -->
+  <rect x="100" y="270" width="500" height="80" rx="8" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+  <text x="350" y="295" text-anchor="middle" class="section-title">DataScopeProvider</text>
+  <text x="350" y="320" text-anchor="middle" class="small-label">优先级: DataScopeContext (ThreadLocal) > MDC</text>
+  <text x="350" y="340" text-anchor="middle" class="code">resolveDataScope() → DataScopeInfo</text>
+
+  <!-- 箭头分支 -->
+  <line x1="350" y1="350" x2="350" y2="400" stroke="#4f46e5" stroke-width="2" marker-end="url(#arrowhead)"/>
+
+  <!-- 五种权限类型 -->
+  <rect x="50" y="400" width="600" height="200" rx="8" fill="#f0f9ff" stroke="#0891b2" stroke-width="2"/>
+  <text x="350" y="425" text-anchor="middle" class="section-title">五种数据权限类型</text>
+
+  <!-- 类型1 -->
+  <rect x="70" y="440" width="160" height="50" rx="6" fill="white" stroke="#0891b2" stroke-width="1.5"/>
+  <text x="150" y="460" text-anchor="middle" class="label">全部数据权限</text>
+  <text x="150" y="478" text-anchor="middle" class="small-label">不注入条件</text>
+
+  <!-- 类型2 -->
+  <rect x="245" y="440" width="160" height="50" rx="6" fill="white" stroke="#0891b2" stroke-width="1.5"/>
+  <text x="325" y="460" text-anchor="middle" class="label">本部门数据</text>
+  <text x="325" y="478" text-anchor="middle" class="small-label">dept_id = 当前</text>
+
+  <!-- 类型3 -->
+  <rect x="420" y="440" width="160" height="50" rx="6" fill="white" stroke="#0891b2" stroke-width="1.5"/>
+  <text x="500" y="460" text-anchor="middle" class="label">本部门及以下</text>
+  <text x="500" y="478" text-anchor="middle" class="small-label">dept_id IN (...)</text>
+
+  <!-- 类型4 -->
+  <rect x="120" y="510" width="160" height="50" rx="6" fill="white" stroke="#0891b2" stroke-width="1.5"/>
+  <text x="200" y="530" text-anchor="middle" class="label">仅本人数据</text>
+  <text x="200" y="548" text-anchor="middle" class="small-label">user_id = 当前</text>
+
+  <!-- 类型5 -->
+  <rect x="320" y="510" width="160" height="50" rx="6" fill="white" stroke="#0891b2" stroke-width="1.5"/>
+  <text x="400" y="530" text-anchor="middle" class="label">自定义数据权限</text>
+  <text x="400" y="548" text-anchor="middle" class="small-label">dept_id IN (指定)</text>
+
+  <!-- 右侧说明框 -->
+  <rect x="700" y="270" width="450" height="180" rx="8" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+  <text x="925" y="295" text-anchor="middle" class="section-title">权限来源示例</text>
+
+  <text x="720" y="320" class="code">// 方式1: ThreadLocal 显式装配</text>
+  <text x="720" y="340" class="code">DataScopeContext.setDataScope(</text>
+  <text x="740" y="355" class="code">  DataScopeInfo.ofDept(100L)</text>
+  <text x="720" y="370" class="code">);</text>
+
+  <text x="720" y="395" class="code">// 方式2: MDC 自动读取</text>
+  <text x="720" y="415" class="code">MDC.get("apex.dataScope")</text>
+  <text x="720" y="435" class="code">MDC.get("apex.dataScopeDeptIds")</text>
+
+  <!-- 第三部分:SQL拦截与改写 -->
+  <text x="50" y="650" class="section-title">3️⃣ MyBatis-Plus 拦截器处理</text>
+
+  <!-- Repository调用 -->
+  <rect x="100" y="670" width="200" height="60" rx="8" fill="#fffbeb" stroke="#d97706" stroke-width="2"/>
+  <text x="200" y="695" text-anchor="middle" class="label">Repository 查询</text>
+  <text x="200" y="715" text-anchor="middle" class="small-label">selectList(...)</text>
+
+  <!-- 箭头 -->
+  <line x1="300" y1="700" x2="380" y2="700" stroke="#4f46e5" stroke-width="2" marker-end="url(#arrowhead)"/>
+
+  <!-- 拦截器 -->
+  <rect x="380" y="670" width="280" height="60" rx="8" fill="#f0fdf4" stroke="#059669" stroke-width="2"/>
+  <text x="520" y="695" text-anchor="middle" class="label">DataScopeInnerInterceptor</text>
+  <text x="520" y="715" text-anchor="middle" class="small-label">拦截 SELECT 语句</text>
+
+  <!-- 箭头 -->
+  <line x1="660" y1="700" x2="740" y2="700" stroke="#4f46e5" stroke-width="2" marker-end="url(#arrowhead)"/>
+
+  <!-- 判断节点 -->
+  <path d="M 840 670 L 940 700 L 840 730 L 740 700 Z" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+  <text x="840" y="705" text-anchor="middle" class="label">需要过滤?</text>
+
+  <!-- 不需要过滤分支 -->
+  <line x1="840" y1="670" x2="840" y2="620" stroke="#4f46e5" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="860" y="640" class="small-label">全部数据权限</text>
+
+  <!-- 需要过滤分支 -->
+  <line x1="940" y1="700" x2="1020" y2="700" stroke="#4f46e5" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="970" y="690" class="small-label">是</text>
+
+  <!-- SQL解析 -->
+  <rect x="1020" y="670" width="200" height="60" rx="8" fill="#f0f9ff" stroke="#0891b2" stroke-width="2"/>
+  <text x="1120" y="695" text-anchor="middle" class="label">SQL 解析</text>
+  <text x="1120" y="715" text-anchor="middle" class="small-label">JSqlParser</text>
+
+  <!-- 箭头 -->
+  <line x1="1220" y1="700" x2="1300" y2="700" stroke="#4f46e5" stroke-width="2" marker-end="url(#arrowhead)"/>
+
+  <!-- WHERE注入 -->
+  <rect x="1300" y="670" width="200" height="60" rx="8" fill="#f0fdf4" stroke="#059669" stroke-width="2"/>
+  <text x="1400" y="695" text-anchor="middle" class="label">注入 WHERE 条件</text>
+  <text x="1400" y="715" text-anchor="middle" class="small-label">dept_id / user_id</text>
+
+  <!-- 第四部分:SQL执行示例 -->
+  <text x="50" y="800" class="section-title">4️⃣ SQL 改写示例</text>
+
+  <!-- 原始SQL -->
+  <rect x="100" y="820" width="680" height="140" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2"/>
+  <text x="120" y="845" class="section-title">原始 SQL</text>
+  <text x="120" y="870" class="code">SELECT o.* FROM sys_order o</text>
+  <text x="120" y="890" class="code">WHERE o.status = 'PENDING'</text>
+  <text x="120" y="910" class="code">ORDER BY o.create_time DESC</text>
+  <text x="120" y="930" class="code">LIMIT 10</text>
+
+  <!-- 箭头 -->
+  <rect x="720" y="870" width="80" height="40" rx="20" fill="#4f46e5"/>
+  <text x="760" y="895" text-anchor="middle" class="label" fill="white">拦截器</text>
+
+  <!-- 改写后SQL -->
+  <rect x="840" y="820" width="680" height="140" rx="8" fill="#ecfdf5" stroke="#059669" stroke-width="2"/>
+  <text x="860" y="845" class="section-title">改写后 SQL (本部门数据)</text>
+  <text x="860" y="870" class="code">SELECT o.* FROM sys_order o</text>
+  <text x="860" y="890" class="code">WHERE o.status = 'PENDING'</text>
+  <text x="860" y="910" class="code" font-weight="bold">  AND o.dept_id = 100  -- 自动注入</text>
+  <text x="860" y="930" class="code">ORDER BY o.create_time DESC LIMIT 10</text>
+
+  <!-- 第五部分:多表JOIN场景 -->
+  <text x="50" y="1010" class="section-title">5️⃣ 多表 JOIN 场景 (指定别名)</text>
+
+  <!-- 注解配置 -->
+  <rect x="100" y="1030" width="680" height="100" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2"/>
+  <text x="120" y="1055" class="section-title">@DataScope 注解配置</text>
+  <text x="120" y="1080" class="code">@DataScope(deptAlias = "o", userAlias = "o")</text>
+  <text x="120" y="1100" class="code">public Mono&lt;PageResponse&lt;OrderDTO&gt;&gt; pageOrders() {</text>
+  <text x="140" y="1120" class="code">// SELECT o.* FROM sys_order o LEFT JOIN sys_dept d ...</text>
+
+  <!-- 箭头 -->
+  <rect x="720" y="1055" width="80" height="40" rx="20" fill="#4f46e5"/>
+  <text x="760" y="1080" text-anchor="middle" class="label" fill="white">注入</text>
+
+  <!-- 改写结果 -->
+  <rect x="840" y="1030" width="680" height="100" rx="8" fill="#ecfdf5" stroke="#059669" stroke-width="2"/>
+  <text x="860" y="1055" class="section-title">改写后 SQL</text>
+  <text x="860" y="1080" class="code">SELECT o.* FROM sys_order o</text>
+  <text x="860" y="1100" class="code">LEFT JOIN sys_dept d ON o.dept_id = d.id</text>
+  <text x="860" y="1120" class="code" font-weight="bold">WHERE o.dept_id IN (100, 101, 102)  -- 带别名注入</text>
+
+  <!-- 底部说明 -->
+  <rect x="50" y="1150" width="1500" height="40" rx="8" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+  <text x="800" y="1175" text-anchor="middle" class="small-label">⚠️ 响应式线程模型注意: 在 subscribeOn(BlockingIoSchedulers.jdbc()) 内部显式装配 DataScopeContext,或使用 ThreadLocal 透传调度器</text>
+</svg>

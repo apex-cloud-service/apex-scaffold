@@ -1,8 +1,8 @@
 # Sentinel 限流熔断降级架构
 
-> ## 架构图
+> ## 一、架构概览
 
-![Sentinel 限流熔断降级架构](../../diagrams/09_sentinel_rate_limit_circuit_breaker.svg)
+![Sentinel 限流熔断降级架构](../../diagrams/10_rate_limit_circuit_breaker.svg)
 
 ## 一、概述
 
@@ -913,4 +913,4 @@ logging:
 
 **版本**: v1.0.0  
 **最后更新**: 2026-09-04  
-**配套图表**: [Sentinel 限流熔断降级架构](../../diagrams/09_sentinel_rate_limit_circuit_breaker.svg)
+**配套图表**: [Sentinel 限流熔断降级架构](../../diagrams/10_rate_limit_circuit_breaker.svg)

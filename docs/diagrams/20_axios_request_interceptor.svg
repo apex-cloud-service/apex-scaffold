@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 700" width="1400" height="700">
+  <defs><style>.title{font:700 32px sans-serif;fill:#0f172a;text-anchor:middle}.subtitle{font:500 14px sans-serif;fill:#64748b;text-anchor:middle}.box-title{font:600 14px sans-serif;fill:#0f172a}.text{font:400 11px sans-serif;fill:#475569}.code{font:400 10px monospace;fill:#2563eb}</style></defs>
+  <rect width="1400" height="700" fill="#fff"/>
+  <text x="700" y="40" class="title">20. Axios请求拦截与封装</text>
+  <text x="700" y="65" class="subtitle">统一请求拦截 · JWT自动续期 · 错误处理 · 取消请求 v3.0</text>
+  <rect x="50" y="90" width="650" height="270" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="2"/>
+  <text x="70" y="120" class="box-title">请求拦截器</text>
+  <text x="70" y="145" class="code">axios.interceptors.request.use(config => {</text>
+  <text x="80" y="165" class="code">config.headers['Authorization'] = `Bearer ${token}`</text>
+  <text x="80" y="183" class="code">config.headers['X-Tenant-Id'] = tenantId</text>
+  <text x="80" y="201" class="code">config.headers['X-Request-Id'] = uuid()</text>
+  <text x="80" y="219" class="code">if (method === 'post') config.headers['Content-Type'] = 'application/json'</text>
+  <text x="80" y="237" class="code">return config</text>
+  <text x="70" y="257" class="code">})</text>
+  <text x="70" y="285" class="text">自动注入Token、租户ID、请求ID</text>
+  <text x="70" y="310" class="text">支持FormData/JSON自动识别</text>
+  <rect x="720" y="90" width="630" height="270" rx="8" fill="#f0fdf4" stroke="#059669" stroke-width="2"/>
+  <text x="740" y="120" class="box-title">响应拦截器</text>
+  <text x="740" y="145" class="code">axios.interceptors.response.use(response => {</text>
+  <text x="750" y="165" class="code">if (code === 200) return response.data</text>
+  <text x="750" y="183" class="code">if (code === 401) { // Token过期</text>
+  <text x="760" y="201" class="code">refreshToken().then(() => retry(originalRequest))</text>
+  <text x="750" y="219" class="code">}</text>
+  <text x="750" y="237" class="code">if (code === 403) router.push('/403')</text>
+  <text x="750" y="255" class="code">ElMessage.error(message)</text>
+  <text x="740" y="275" class="code">}, error => { handle network error })</text>
+  <text x="740" y="300" class="text">统一错误提示、自动Token续期</text>
+  <rect x="50" y="390" width="1300" height="260" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+  <text x="70" y="420" class="box-title">请求取消 &amp; 防抖节流</text>
+  <text x="70" y="445" class="code">const controller = new AbortController(); axios.get(url, { signal: controller.signal })</text>
+  <text x="70" y="465" class="code">路由切换时自动取消pending请求,防止内存泄漏</text>
+  <text x="70" y="495" class="text">防重复提交:</text>
+  <text x="70" y="515" class="code">pendingMap存储请求: ${method}:${url} → 重复请求取消前一个</text>
+  <text x="70" y="545" class="text">API封装示例:</text>
+  <text x="70" y="565" class="code">export const getUserList = (params) => request({ url: '/admin-api/v1/users', method: 'get', params })</text>
+  <text x="70" y="585" class="code">export const updateUser = (data) => request({ url: `/admin-api/v1/users/${data.id}`, method: 'put', data })</text>
+  <text x="70" y="615" class="text">✅ TypeScript类型推导: request&lt;ResponseType&gt;() 自动推断返回类型</text>
+  <text x="700" y="685" class="code" text-anchor="middle">© 2026 Apex Team · Axios请求封装 v3.0</text>
+</svg>

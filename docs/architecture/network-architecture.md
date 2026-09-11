@@ -1,13 +1,13 @@
 # Apex Scaffold 网络架构文档
 
-> 文档版本: v1.0  
-> 创建时间: 2026-09-04  
-> 适用版本: apex-scaffold v2.5.0+  
+> 文档版本: v1.0
+> 创建时间: 2026-09-04
+> 适用版本: apex-scaffold v2.5.0+
 > 网络模式: VPC + 安全分区隔离
 
-> **配套架构图**:  
-> - [网络架构拓扑图](../diagrams/14_network_architecture.svg)  
-> - [部署架构图](../diagrams/13_deployment_architecture.svg)
+> **配套架构图**:
+> - [网络架构拓扑图](../diagrams/02_physical_architecture.svg)
+> - [部署架构图](../diagrams/45_deployment_flow.svg)
 
 ---
 
@@ -97,24 +97,24 @@ upstream apex_backend {
 server {
     listen 443 ssl http2;
     server_name api.apex.com;
-    
+
     ssl_certificate /etc/nginx/ssl/apex.crt;
     ssl_certificate_key /etc/nginx/ssl/apex.key;
     ssl_protocols TLSv1.2 TLSv1.3;
     ssl_ciphers HIGH:!aNULL:!MD5;
-    
+
     location / {
         proxy_pass http://apex_backend;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
-        
+
         # 超时设置
         proxy_connect_timeout 5s;
         proxy_send_timeout 60s;
         proxy_read_timeout 60s;
-        
+
         # 限流
         limit_req zone=api_limit burst=100 nodelay;
     }
@@ -564,6 +564,6 @@ tcpdump -i eth0 port 3306 -w mysql.pcap
 
 ---
 
-**文档维护者**: 架构团队  
-**审核状态**: 待人工审核  
+**文档维护者**: 架构团队
+**审核状态**: 待人工审核
 **下次更新**: 网络架构变更后同步更新

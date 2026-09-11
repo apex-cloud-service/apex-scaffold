@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 900" width="1400" height="900">
+  <defs>
+    <style>.title{font:700 32px sans-serif;fill:#0f172a;text-anchor:middle}.subtitle{font:500 14px sans-serif;fill:#64748b;text-anchor:middle}.box-title{font:600 14px sans-serif;fill:#0f172a}.text{font:400 11px sans-serif;fill:#475569}.code{font:400 10px monospace;fill:#2563eb}</style>
+  </defs>
+  <rect width="1400" height="900" fill="#fff"/>
+  <text x="700" y="40" class="title">13. Docker Compose 本地开发环境</text>
+  <text x="700" y="65" class="subtitle">一键启动完整技术栈 · docker-compose.yml · 开发/测试环境 v3.0</text>
+
+  <rect x="50" y="90" width="650" height="380" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="2"/>
+  <text x="70" y="120" class="box-title">核心服务 (默认Profile)</text>
+  <text x="70" y="150" class="text">• apex-scaffold: Spring Boot应用</text>
+  <text x="80" y="168" class="code">ports: 8080(业务) 8081(管理)</text>
+  <text x="80" y="183" class="code">profile: default,dev</text>
+  <text x="70" y="210" class="text">• mysql: MySQL 8.0数据库</text>
+  <text x="80" y="228" class="code">port: 3306, apex_data库</text>
+  <text x="70" y="255" class="text">• redis: Redis 7.x缓存</text>
+  <text x="80" y="273" class="code">port: 6379</text>
+  <text x="70" y="300" class="text">• prometheus: 指标采集</text>
+  <text x="80" y="318" class="code">port: 9090</text>
+  <text x="70" y="345" class="text">• grafana: 可视化面板(66个)</text>
+  <text x="80" y="363" class="code">port: 3000, admin/admin</text>
+  <text x="70" y="390" class="text">• zipkin: 链路追踪(采样10%)</text>
+  <text x="80" y="408" class="code">port: 9411</text>
+  <text x="70" y="435" class="text">启动命令: docker compose up -d --build</text>
+
+  <rect x="720" y="90" width="630" height="380" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+  <text x="740" y="120" class="box-title">企业版服务 (--profile enterprise)</text>
+  <text x="740" y="150" class="text">• rocketmq-namesrv: MQ名称服务器</text>
+  <text x="750" y="168" class="code">port: 9876</text>
+  <text x="740" y="195" class="text">• rocketmq-broker: 消息代理</text>
+  <text x="750" y="213" class="code">port: 10909,10911,10912</text>
+  <text x="740" y="240" class="text">• minio: 对象存储(可选TOS)</text>
+  <text x="750" y="258" class="code">port: 9000(API) 9001(Console)</text>
+  <text x="740" y="285" class="text">• meilisearch: 全文搜索引擎</text>
+  <text x="750" y="303" class="code">port: 7700, CJK分词</text>
+  <text x="740" y="330" class="text">• loki: 日志聚合</text>
+  <text x="750" y="348" class="code">port: 3100, LogQL查询</text>
+  <text x="740" y="375" class="text">• sentinel-dashboard: 流控面板</text>
+  <text x="750" y="393" class="code">port: 8858</text>
+  <text x="740" y="420" class="text">• apex-admin-web: Vue前端(可选)</text>
+  <text x="750" y="438" class="code">port: 80, Nginx静态服务</text>
+
+  <rect x="50" y="500" width="1300" height="360" rx="8" fill="#f0fdf4" stroke="#059669" stroke-width="2"/>
+  <text x="70" y="530" class="box-title">健康检查 &amp; 数据持久化</text>
+  <text x="70" y="560" class="text">健康检查配置:</text>
+  <text x="80" y="580" class="code">apex: GET http://localhost:8081/actuator/health, interval:30s, timeout:10s, retries:3</text>
+  <text x="80" y="598" class="code">mysql: mysqladmin ping, interval:10s</text>
+  <text x="80" y="616" class="code">redis: redis-cli ping</text>
+  <text x="70" y="650" class="text">数据卷挂载 (持久化):</text>
+  <text x="80" y="670" class="code">mysql: ./data/mysql:/var/lib/mysql (数据库文件)</text>
+  <text x="80" y="688" class="code">redis: ./data/redis:/data (RDB/AOF持久化)</text>
+  <text x="80" y="706" class="code">minio: ./data/minio:/data (对象存储)</text>
+  <text x="80" y="724" class="code">prometheus: ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml</text>
+  <text x="80" y="742" class="code">grafana: ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards</text>
+  <text x="70" y="776" class="text">网络配置: apex-network (bridge模式), 所有服务互联互通</text>
+  <text x="70" y="800" class="text">环境变量注入: .env文件 (DB密码/JWT密钥/存储配置)</text>
+  <text x="70" y="824" class="text">开发调试: -f docker-compose.yml -f docker-compose.dev.yml (覆盖配置/热重载)</text>
+
+  <text x="700" y="885" class="code" text-anchor="middle">© 2026 Apex Team · Docker Compose本地开发环境 v3.0</text>
+</svg>

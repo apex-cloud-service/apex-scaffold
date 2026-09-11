@@ -6,31 +6,31 @@
 
 ## 14. 网络架构图
 
-![网络架构图](14_network_architecture.svg)
+![网络架构图](14_kubernetes_production_deployment.svg)
 
 ---
 
 ## 15. 数据流转架构图
 
-![数据流转架构图](15_data_flow_architecture.svg)
+![数据流转架构图](62_data_flow_consistency.svg)
 
 ---
 
 ## 16. RocketMQ消息队列架构图
 
-![消息队列架构图](16_mq_architecture.svg)
+![消息队列架构图](61_message_queue_reliability.svg)
 
 ---
 
 ## 17. 监控体系架构图
 
-![监控体系架构图](17_monitoring_architecture.svg)
+![监控体系架构图](24_prometheus_grafana_monitoring.svg)
 
 ---
 
 ## 18. 微服务治理架构图
 
-![微服务治理架构图](18_microservice_governance.svg)
+![微服务治理架构图](18_spring_cloud_gateway.svg)
 
 ---
 

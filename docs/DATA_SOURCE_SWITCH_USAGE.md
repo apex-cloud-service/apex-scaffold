@@ -1,4 +1,6 @@
-# 数据源动态切换使用指南（自定义 @DataSource 注解）
+# 数据源动态切换使用指南(自定义 @DataSource 注解)
+
+> **配套架构图**: [多数据源切换架构图](diagrams/41_datasource_switch_architecture.svg)
 
 ## 功能说明
 

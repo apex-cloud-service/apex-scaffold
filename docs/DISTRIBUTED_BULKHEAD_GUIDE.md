@@ -1,7 +1,7 @@
 # 分布式舱壁隔离使用指南
 
 > **Enterprise License 特性** - 仅 Enterprise 版本可用  
-> **配套架构图**: [Sentinel 限流熔断降级架构](diagrams/09_sentinel_rate_limit_circuit_breaker.svg)
+> **配套架构图**: [分布式 Bulkhead 隔离](diagrams/66_distributed_bulkhead_isolation.svg) · [Sentinel 限流熔断降级架构](diagrams/10_rate_limit_circuit_breaker.svg)
 
 ## 1. 概述
 

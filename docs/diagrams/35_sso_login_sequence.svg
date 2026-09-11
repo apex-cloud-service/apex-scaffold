@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 1000" width="1400" height="1000">
+  <defs>
+    <style>
+      .title{font:700 32px sans-serif;fill:#0f172a;text-anchor:middle}
+      .subtitle{font:500 14px sans-serif;fill:#64748b;text-anchor:middle}
+      .actor-title{font:600 12px sans-serif;fill:#0f172a;text-anchor:middle}
+      .text{font:400 10px sans-serif;fill:#475569}
+      .code{font:400 9px monospace;fill:#2563eb}
+      .step-text{font:500 10px sans-serif;fill:#1e293b}
+      .actor-box{fill:#4f46e5;stroke:#4338ca;stroke-width:2;rx:6}
+      .lifeline{fill:none;stroke:#cbd5e1;stroke-width:2;stroke-dasharray:5,5}
+      .activation{fill:#e0e7ff;stroke:#6366f1;stroke-width:1.5}
+      .arrow{fill:none;stroke:#4f46e5;stroke-width:2;marker-end:url(#arrowhead)}
+      .return-arrow{fill:none;stroke:#059669;stroke-width:2;stroke-dasharray:4,3;marker-end:url(#arrowhead-return)}
+      .note-box{fill:#fef3c7;stroke:#f59e0b;stroke-width:1.5;rx:4}
+      .phase-box{fill:#f8fafc;stroke:#cbd5e1;stroke-width:1.5;rx:6}
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#4f46e5"/>
+    </marker>
+    <marker id="arrowhead-return" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#059669"/>
+    </marker>
+  </defs>
+
+  <text x="700" y="35" class="title">SSO 单点登录流程时序图</text>
+  <text x="700" y="58" class="subtitle">首次登录 · 免登录 · 单点登出 · 基于Apex Scaffold实现</text>
+
+  <rect x="80" y="90" width="120" height="50" class="actor-box"/>
+  <text x="140" y="110" class="actor-title" fill="#ffffff">用户浏览器</text>
+  <text x="140" y="125" class="text" fill="#e0e7ff">User Browser</text>
+
+  <rect x="250" y="90" width="130" height="50" class="actor-box"/>
+  <text x="315" y="110" class="actor-title" fill="#ffffff">应用A</text>
+  <text x="315" y="125" class="text" fill="#e0e7ff">admin-web</text>
+
+  <rect x="430" y="90" width="160" height="50" class="actor-box"/>
+  <text x="510" y="110" class="actor-title" fill="#ffffff">统一认证中心</text>
+  <text x="510" y="125" class="text" fill="#e0e7ff">UAC</text>
+
+  <rect x="640" y="90" width="130" height="50" class="actor-box"/>
+  <text x="705" y="110" class="actor-title" fill="#ffffff">Redis Session</text>
+  <text x="705" y="125" class="text" fill="#e0e7ff">Session Store</text>
+
+  <rect x="820" y="90" width="130" height="50" class="actor-box"/>
+  <text x="885" y="110" class="actor-title" fill="#ffffff">应用B</text>
+  <text x="885" y="125" class="text" fill="#e0e7ff">user-web</text>
+
+  <rect x="1000" y="90" width="130" height="50" class="actor-box"/>
+  <text x="1065" y="110" class="actor-title" fill="#ffffff">Cookie</text>
+  <text x="1065" y="125" class="text" fill="#e0e7ff">Token存储</text>
+
+  <path d="M 140,140 L 140,950" class="lifeline"/>
+  <path d="M 315,140 L 315,950" class="lifeline"/>
+  <path d="M 510,140 L 510,950" class="lifeline"/>
+  <path d="M 705,140 L 705,950" class="lifeline"/>
+  <path d="M 885,140 L 885,950" class="lifeline"/>
+  <path d="M 1065,140 L 1065,950" class="lifeline"/>
+
+  <rect x="40" y="170" width="1310" height="40" class="phase-box"/>
+  <text x="695" y="195" class="step-text" text-anchor="middle">阶段1: 用户首次登录应用A</text>
+
+  <path d="M 140,230 L 315,230" class="arrow"/>
+  <text x="227" y="218" class="step-text">访问 admin.apex-scaffold.com</text>
+
+  <rect x="290" y="230" width="50" height="40" class="activation"/>
+  <path d="M 315,250 L 140,250" class="return-arrow"/>
+  <text x="227" y="238" class="code">检测无Token,302重定向</text>
+
+  <path d="M 140,280 L 510,280" class="arrow"/>
+  <text x="325" y="268" class="step-text">跳转UAC登录页</text>
+
+  <rect x="485" y="280" width="50" height="150" class="activation"/>
+  <rect x="430" y="300" width="160" height="40" class="note-box"/>
+  <text x="437" y="313" class="code">展示登录表单</text>
+  <text x="437" y="325" class="code">用户名 + 密码</text>
+
+  <path d="M 140,350 L 510,350" class="arrow"/>
+  <text x="325" y="338" class="step-text">POST /api/v1/auth/login</text>
+  <rect x="240" y="355" width="160" height="30" class="note-box"/>
+  <text x="247" y="368" class="code">username=zhangsan</text>
+  <text x="247" y="380" class="code">password=123456</text>
+
+  <path d="M 510,400 L 705,400" class="arrow"/>
+  <text x="607" y="388" class="code">验证成功,生成JWT</text>
+
+  <rect x="680" y="400" width="50" height="30" class="activation"/>
+  <path d="M 705,420 L 510,420" class="return-arrow"/>
+  <text x="607" y="408" class="code">Token已生成</text>
+
+  <path d="M 510,450 L 1065,450" class="arrow"/>
+  <text x="787" y="438" class="step-text">设置Cookie</text>
+  <rect x="700" y="455" width="280" height="45" class="note-box"/>
+  <text x="707" y="468" class="code">Set-Cookie: APEX_TOKEN=eyJhbGci...</text>
+  <text x="707" y="480" class="code">Domain=.apex-scaffold.com; HttpOnly; Secure</text>
+
+  <rect x="1040" y="450" width="50" height="40" class="activation"/>
+  <path d="M 510,500 L 140,500" class="return-arrow"/>
+  <text x="325" y="488" class="step-text">302重定向回应用A (携带Token)</text>
+
+  <path d="M 140,530 L 315,530" class="arrow"/>
+  <text x="227" y="518" class="step-text">重新访问应用A</text>
+
+  <rect x="290" y="530" width="50" height="40" class="activation"/>
+  <path d="M 315,550 L 140,550" class="return-arrow"/>
+  <text x="227" y="538" class="code">登录成功,访问首页 ✅</text>
+
+  <rect x="40" y="590" width="1310" height="40" class="phase-box"/>
+  <text x="695" y="615" class="step-text" text-anchor="middle">阶段2: 用户访问应用B (免登录)</text>
+
+  <path d="M 140,650 L 885,650" class="arrow"/>
+  <text x="512" y="638" class="step-text">访问 user.apex-scaffold.com</text>
+
+  <rect x="860" y="650" width="50" height="100" class="activation"/>
+  <path d="M 885,670 L 1065,670" class="arrow"/>
+  <text x="975" y="658" class="code">读取Cookie</text>
+
+  <rect x="1040" y="670" width="50" height="30" class="activation"/>
+  <path d="M 1065,690 L 885,690" class="return-arrow"/>
+  <text x="975" y="678" class="code">发现Token ✅</text>
+
+  <path d="M 885,720 L 510,720" class="arrow"/>
+  <text x="697" y="708" class="step-text">调用UAC验证Token</text>
+
+  <rect x="485" y="720" width="50" height="40" class="activation"/>
+  <path d="M 510,740 L 885,740" class="return-arrow"/>
+  <text x="697" y="728" class="code">Token有效 + 用户信息</text>
+
+  <path d="M 885,770 L 140,770" class="return-arrow"/>
+  <text x="512" y="758" class="step-text">自动登录成功,无需输入密码 ✅</text>
+
+  <rect x="40" y="810" width="1310" height="40" class="phase-box"/>
+  <text x="695" y="835" class="step-text" text-anchor="middle">阶段3: 单点登出 (任一应用退出,全部退出)</text>
+
+  <path d="M 140,870 L 315,870" class="arrow"/>
+  <text x="227" y="858" class="step-text">点击"退出登录"</text>
+
+  <rect x="290" y="870" width="50" height="80" class="activation"/>
+  <path d="M 315,890 L 510,890" class="arrow"/>
+  <text x="412" y="878" class="code">POST /api/v1/auth/logout</text>
+
+  <rect x="485" y="890" width="50" height="60" class="activation"/>
+  <path d="M 510,910 L 705,910" class="arrow"/>
+  <text x="607" y="898" class="code">Token加入黑名单 + 清除Session</text>
+
+  <rect x="680" y="910" width="50" height="40" class="activation"/>
+  <path d="M 510,940 L 885,940" class="arrow"/>
+  <text x="697" y="928" class="code">SSE推送:通知所有应用登出</text>
+
+  <path d="M 510,970 L 1065,970" class="arrow"/>
+  <text x="787" y="958" class="code">清除Cookie</text>
+
+  <text x="700" y="985" class="code" text-anchor="middle">© 2026 Apex Team · SSO单点登录流程时序图 v3.0</text>
+</svg>

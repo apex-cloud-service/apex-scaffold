@@ -1,7 +1,7 @@
 # DB 故障读降级使用指南
 
 > **Enterprise License 特性** - 仅 Enterprise 版本可用  
-> **配套架构图**: [多级缓存架构](diagrams/10_multi_level_cache_architecture.svg)
+> **配套架构图**: [读请求降级快照](diagrams/67_read_degradation_snapshot.svg) · [多级缓存架构](diagrams/09_multi_level_cache_architecture.svg)
 
 ## 1. 概述
 

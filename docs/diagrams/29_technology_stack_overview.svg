@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 700" width="1400" height="700">
+  <defs><style>.title{font:700 32px sans-serif;fill:#0f172a;text-anchor:middle}.subtitle{font:500 14px sans-serif;fill:#64748b;text-anchor:middle}.box-title{font:600 14px sans-serif;fill:#0f172a}.text{font:400 11px sans-serif;fill:#475569}.code{font:400 10px monospace;fill:#2563eb}</style></defs>
+  <rect width="1400" height="700" fill="#fff"/>
+  <text x="700" y="40" class="title">29. 技术栈总览与版本管理</text>
+  <text x="700" y="65" class="subtitle">60+技术组件 · pom.xml版本统一管理 · 依赖冲突解决 v3.0</text>
+  <rect x="50" y="90" width="430" height="280" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="2"/>
+  <text x="70" y="120" class="box-title">核心框架 (后端)</text>
+  <text x="70" y="145" class="code">Spring Boot: 3.5.15</text>
+  <text x="70" y="163" class="code">Spring Cloud: 2024.0.0</text>
+  <text x="70" y="181" class="code">Spring Cloud Alibaba: 2023.0.3.3</text>
+  <text x="70" y="199" class="code">WebFlux (Reactor): Netty 4.1.115</text>
+  <text x="70" y="227" class="code">MyBatis-Plus: 3.5.9</text>
+  <text x="70" y="245" class="code">Flyway: 10.23.1</text>
+  <text x="70" y="263" class="code">Redisson: 3.36.0</text>
+  <text x="70" y="281" class="code">Caffeine: 3.1.8</text>
+  <text x="70" y="309" class="code">Sentinel: 1.8.9</text>
+  <text x="70" y="327" class="code">Resilience4j: 2.2.0</text>
+  <text x="70" y="345" class="code">Micrometer: 1.14.2</text>
+  <rect x="500" y="90" width="430" height="280" rx="8" fill="#f0fdf4" stroke="#059669" stroke-width="2"/>
+  <text x="520" y="120" class="box-title">前端 + 中间件</text>
+  <text x="520" y="145" class="code">Vue: 3.5.13</text>
+  <text x="520" y="163" class="code">Element Plus: 2.9.1</text>
+  <text x="520" y="181" class="code">Vite: 6.0.7</text>
+  <text x="520" y="199" class="code">Pinia: 2.3.0</text>
+  <text x="520" y="227" class="code">MySQL: 8.0.40</text>
+  <text x="520" y="245" class="code">Redis: 7.4.2</text>
+  <text x="520" y="263" class="code">RocketMQ: 5.3.1</text>
+  <text x="520" y="281" class="code">MinIO: RELEASE.2025-01-12</text>
+  <text x="520" y="309" class="code">Nacos: 2.4.3</text>
+  <text x="520" y="327" class="code">Zipkin: 3.4.3</text>
+  <text x="520" y="345" class="code">Meilisearch: 1.12.5</text>
+  <rect x="950" y="90" width="400" height="280" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+  <text x="970" y="120" class="box-title">可观测性栈</text>
+  <text x="970" y="145" class="code">Prometheus: 2.55.1</text>
+  <text x="970" y="163" class="code">Grafana: 11.4.0</text>
+  <text x="970" y="181" class="code">Loki: 3.3.2</text>
+  <text x="970" y="199" class="code">Fluent Bit: 3.2.4</text>
+  <text x="970" y="227" class="code">SpringDoc OpenAPI: 2.8.1</text>
+  <text x="970" y="255" class="text">DevOps:</text>
+  <text x="970" y="275" class="code">Docker: 27.x</text>
+  <text x="970" y="293" class="code">Kubernetes: 1.32+</text>
+  <text x="970" y="311" class="code">GitHub Actions</text>
+  <text x="970" y="339" class="text">✅ 所有版本基于pom.xml实际配置</text>
+  <rect x="50" y="400" width="1300" height="250" rx="8" fill="#faf5ff" stroke="#a855f7" stroke-width="2"/>
+  <text x="70" y="430" class="box-title">版本管理策略</text>
+  <text x="70" y="460" class="code">统一版本管理: &lt;properties&gt;定义版本号,全局引用 ${spring-boot.version}</text>
+  <text x="70" y="490" class="code">BOM依赖管理: Spring Boot BOM → 传递依赖自动对齐,避免版本冲突</text>
+  <text x="70" y="520" class="code">依赖冲突解决: mvn dependency:tree 查看依赖树 → &lt;exclusions&gt;排除冲突版本</text>
+  <text x="70" y="550" class="code">安全更新: Dependabot自动检测漏洞 → 定期升级补丁版本 (每月一次)</text>
+  <text x="70" y="580" class="code">LTS版本选择: JDK 17 LTS (至2029年支持) · Spring Boot 3.x (至2026年支持)</text>
+  <text x="70" y="610" class="text">✅ 升级策略: 主版本保守(经过充分测试) · 补丁版本激进(及时修复CVE)</text>
+  <text x="70" y="640" class="text">完整技术栈清单: docs/architecture/technology-stack.md (60+组件详细说明)</text>
+  <text x="700" y="685" class="code" text-anchor="middle">© 2026 Apex Team · 技术栈总览 v3.0 · 完整29张SVG架构图集合</text>
+</svg>

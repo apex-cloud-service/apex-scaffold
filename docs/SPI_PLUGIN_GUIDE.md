@@ -1,8 +1,10 @@
 # SPI插件机制使用指南
 
+> **配套架构图**: [SPI插件架构图](diagrams/43_spi_plugin_architecture.svg)
+
 ## 概述
 
-Apex Scaffold 从 v2.0.0 开始支持通过 Java ServiceLoader 机制动态加载存储后端实现。这允许用户在不修改核心代码的情况下,通过添加新的 JAR 包来扩展支持的存储类型(如阿里云 OSS、AWS S3、腾讯云 COS 等)。
+Apex Scaffold 从 v1.2.0 开始支持通过 Java ServiceLoader 机制动态加载存储后端实现。这允许用户在不修改核心代码的情况下,通过添加新的 JAR 包来扩展支持的存储类型(如阿里云 OSS、AWS S3、腾讯云 COS 等)。
 
 ## 架构设计
 

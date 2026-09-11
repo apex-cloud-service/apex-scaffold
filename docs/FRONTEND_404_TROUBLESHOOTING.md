@@ -307,6 +307,8 @@ ls -1 /Users/work/apex-admin-web/src/views/system/*.vue \
 3. 重新登录（admin / admin123）
 4. 测试各个菜单页面
 
+![批次4图表](diagrams/57_dynamic_route_resolution.svg)
+
 ---
 
 **文档版本**: 1.0.0  

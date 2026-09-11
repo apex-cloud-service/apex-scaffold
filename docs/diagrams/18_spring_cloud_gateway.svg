@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 700" width="1400" height="700">
+  <defs><style>.title{font:700 32px sans-serif;fill:#0f172a;text-anchor:middle}.subtitle{font:500 14px sans-serif;fill:#64748b;text-anchor:middle}.box-title{font:600 14px sans-serif;fill:#0f172a}.text{font:400 11px sans-serif;fill:#475569}.code{font:400 10px monospace;fill:#2563eb}</style></defs>
+  <rect width="1400" height="700" fill="#fff"/>
+  <text x="700" y="40" class="title">18. API网关 Spring Cloud Gateway</text>
+  <text x="700" y="65" class="subtitle">统一入口 · 动态路由 · 限流熔断 · 跨域CORS · JWT验证 v3.0</text>
+
+  <rect x="50" y="90" width="650" height="270" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="2"/>
+  <text x="70" y="120" class="box-title">路由配置 (动态路由)</text>
+  <text x="70" y="150" class="code">spring.cloud.gateway.routes:</text>
+  <text x="70" y="178" class="code">- id: apex-scaffold-route</text>
+  <text x="80" y="196" class="code">uri: lb://apex-scaffold</text>
+  <text x="90" y="214" class="text">lb = LoadBalancer (Nacos服务发现)</text>
+  <text x="80" y="242" class="code">predicates:</text>
+  <text x="90" y="260" class="code">- Path=/api/**,/admin-api/**</text>
+  <text x="90" y="278" class="code">- Method=GET,POST,PUT,DELETE</text>
+  <text x="80" y="306" class="code">filters:</text>
+  <text x="90" y="324" class="code">- StripPrefix=1 (移除/api前缀)</text>
+  <text x="90" y="342" class="code">- AddRequestHeader=X-Gateway,true</text>
+
+  <rect x="720" y="90" width="630" height="270" rx="8" fill="#f0fdf4" stroke="#059669" stroke-width="2"/>
+  <text x="740" y="120" class="box-title">全局过滤器 (GlobalFilter链)</text>
+  <text x="740" y="150" class="text">执行顺序 (order值):</text>
+  <text x="740" y="178" class="code">1. LoggingFilter (记录请求日志)</text>
+  <text x="750" y="196" class="text">traceId, method, path, queryParams</text>
+  <text x="740" y="224" class="code">2. AuthenticationFilter (JWT验证)</text>
+  <text x="750" y="242" class="text">Authorization: Bearer {token}</text>
+  <text x="750" y="260" class="text">验证失败 → 401 Unauthorized</text>
+  <text x="740" y="288" class="code">3. RateLimitFilter (网关限流)</text>
+  <text x="750" y="306" class="text">Redis令牌桶, 1000 QPS/IP</text>
+  <text x="740" y="334" class="code">4. ResponseFilter (统一响应格式)</text>
+
+  <rect x="50" y="390" width="650" height="260" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+  <text x="70" y="420" class="box-title">限流与熔断</text>
+  <text x="70" y="450" class="text">RequestRateLimiter (Redis实现):</text>
+  <text x="70" y="470" class="code">redis-rate-limiter.replenishRate: 100</text>
+  <text x="80" y="488" class="text">令牌补充速率: 100个/秒</text>
+  <text x="70" y="516" class="code">redis-rate-limiter.burstCapacity: 200</text>
+  <text x="80" y="534" class="text">令牌桶容量: 200个</text>
+  <text x="70" y="562" class="text">CircuitBreaker (Resilience4j集成):</text>
+  <text x="70" y="582" class="code">- name: apex-circuit-breaker</text>
+  <text x="80" y="600" class="code">fallbackUri: forward:/fallback</text>
+  <text x="80" y="618" class="text">熔断降级: 返回503维护页面</text>
+
+  <rect x="720" y="390" width="630" height="260" rx="8" fill="#faf5ff" stroke="#a855f7" stroke-width="2"/>
+  <text x="740" y="420" class="box-title">跨域与安全</text>
+  <text x="740" y="450" class="text">CORS配置 (全局跨域):</text>
+  <text x="740" y="470" class="code">allowedOrigins: https://app.apex.com</text>
+  <text x="740" y="488" class="code">allowedMethods: GET,POST,PUT,DELETE</text>
+  <text x="740" y="506" class="code">allowedHeaders: Authorization,Content-Type</text>
+  <text x="740" y="524" class="code">maxAge: 3600 (预检缓存1小时)</text>
+  <text x="740" y="552" class="text">安全响应头:</text>
+  <text x="740" y="572" class="code">X-Content-Type-Options: nosniff</text>
+  <text x="740" y="590" class="code">X-Frame-Options: DENY</text>
+  <text x="740" y="608" class="code">Strict-Transport-Security: max-age=31536000</text>
+  <text x="740" y="626" class="code">Content-Security-Policy: default-src 'self'</text>
+
+  <text x="700" y="685" class="code" text-anchor="middle">© 2026 Apex Team · Spring Cloud Gateway v3.0</text>
+</svg>

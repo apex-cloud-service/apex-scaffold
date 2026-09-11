@@ -1,7 +1,5 @@
 # 自动重试策略
 
-> **配套流程图**: [自动重试策略流程](../../diagrams/11_auto_retry_strategy_flow.svg)
-
 ## 一、概述
 
 Apex Scaffold 提供了完善的自动重试机制，涵盖 **应用层重试（@AutoRetry）**、**响应式重试（Reactor Retry）**、**消息队列重试（RocketMQ）** 和 **领域事件重试（Outbox）**，通过指数退避、异常分类、幂等控制等策略，确保系统在临时性故障下的自动恢复能力。
@@ -619,5 +617,4 @@ apex_outbox_records{status="DEAD"} 3
 ---
 
 **版本**: v1.0.0  
-**最后更新**: 2026-09-04  
-**配套图表**: [自动重试策略流程](../../diagrams/11_auto_retry_strategy_flow.svg)
+**最后更新**: 2026-09-04

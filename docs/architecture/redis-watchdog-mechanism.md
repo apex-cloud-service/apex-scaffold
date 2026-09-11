@@ -1,3 +1,5 @@
+> **专题架构图**：[Redis Watchdog 分布式锁](../diagrams/64_redis_watchdog_lock.svg)
+
 # Redis Watchdog（看门狗）机制详解
 
 ## 📋 概述

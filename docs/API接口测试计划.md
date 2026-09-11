@@ -668,6 +668,8 @@ public void testUserLogin() {
 
 详见`测试环境配置.md`
 
+![批次4图表](diagrams/59_api_testing_feedback_loop.svg)
+
 ---
 
 **文档版本**: 1.0  

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 800" width="1400" height="800">
+  <defs><style>.title{font:700 32px sans-serif;fill:#0f172a;text-anchor:middle}.subtitle{font:500 14px sans-serif;fill:#64748b;text-anchor:middle}.box-title{font:600 14px sans-serif;fill:#0f172a}.text{font:400 11px sans-serif;fill:#475569}.code{font:400 10px monospace;fill:#2563eb}</style></defs>
+  <rect width="1400" height="800" fill="#fff"/>
+  <text x="700" y="40" class="title">16. 服务注册与发现 Nacos</text>
+  <text x="700" y="65" class="subtitle">Spring Cloud Alibaba · 动态配置中心 · 服务健康检查 v3.0</text>
+
+  <rect x="50" y="90" width="650" height="320" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="2"/>
+  <text x="70" y="120" class="box-title">服务注册 (Service Registry)</text>
+  <text x="70" y="150" class="code">spring.cloud.nacos.discovery:</text>
+  <text x="80" y="168" class="code">server-addr: nacos:8848</text>
+  <text x="80" y="186" class="code">namespace: prod</text>
+  <text x="80" y="204" class="code">group: APEX_GROUP</text>
+  <text x="80" y="222" class="code">service: apex-scaffold</text>
+  <text x="70" y="250" class="text">自动注册流程:</text>
+  <text x="70" y="270" class="code">1. 应用启动 → 注册实例</text>
+  <text x="80" y="288" class="text">IP:8080, metadata:version=1.0.0</text>
+  <text x="70" y="316" class="code">2. 心跳保持 (5秒/次)</text>
+  <text x="70" y="344" class="code">3. 优雅下线: PreDestroy注销</text>
+  <text x="70" y="372" class="text">服务发现: Ribbon负载均衡</text>
+  <text x="80" y="390" class="text">策略: RoundRobin/Random/WeightedRandom</text>
+
+  <rect x="720" y="90" width="630" height="320" rx="8" fill="#f0fdf4" stroke="#059669" stroke-width="2"/>
+  <text x="740" y="120" class="box-title">配置中心 (Config Center)</text>
+  <text x="740" y="150" class="code">spring.cloud.nacos.config:</text>
+  <text x="750" y="168" class="code">server-addr: nacos:8848</text>
+  <text x="750" y="186" class="code">file-extension: yaml</text>
+  <text x="750" y="204" class="code">refresh-enabled: true (动态刷新)</text>
+  <text x="740" y="232" class="text">配置层次:</text>
+  <text x="740" y="252" class="code">• 共享配置: shared-config.yaml</text>
+  <text x="750" y="270" class="text">全局通用配置(日志/线程池)</text>
+  <text x="740" y="298" class="code">• 扩展配置: extension-configs[]</text>
+  <text x="750" y="316" class="text">中间件配置(Redis/MySQL连接)</text>
+  <text x="740" y="344" class="code">• 应用配置: apex-scaffold-prod.yaml</text>
+  <text x="750" y="362" class="text">应用专属配置(业务参数)</text>
+  <text x="740" y="390" class="text">优先级: 应用 &gt; 扩展 &gt; 共享</text>
+
+  <rect x="50" y="440" width="650" height="310" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+  <text x="70" y="470" class="box-title">健康检查 &amp; 元数据</text>
+  <text x="70" y="500" class="text">健康检查配置:</text>
+  <text x="70" y="520" class="code">nacos.discovery.heart-beat-interval=5000</text>
+  <text x="70" y="538" class="code">nacos.discovery.heart-beat-timeout=15000</text>
+  <text x="70" y="556" class="code">nacos.discovery.ip-delete-timeout=30000</text>
+  <text x="70" y="584" class="text">实例元数据 (metadata):</text>
+  <text x="70" y="604" class="code">version: 1.0.0 (应用版本)</text>
+  <text x="70" y="622" class="code">zone: beijing (可用区)</text>
+  <text x="70" y="640" class="code">weight: 100 (权重,用于灰度发布)</text>
+  <text x="70" y="658" class="code">env: prod (环境标识)</text>
+  <text x="70" y="686" class="text">灰度发布支持:</text>
+  <text x="70" y="706" class="code">• 通过权重实现流量分配</text>
+  <text x="70" y="724" class="code">• 新版本weight=10, 旧版本weight=90</text>
+
+  <rect x="720" y="440" width="630" height="310" rx="8" fill="#faf5ff" stroke="#a855f7" stroke-width="2"/>
+  <text x="740" y="470" class="box-title">Nacos集群部署 (生产)</text>
+  <text x="740" y="500" class="text">三节点集群:</text>
+  <text x="740" y="520" class="code">• nacos-1:8848 (主节点)</text>
+  <text x="740" y="538" class="code">• nacos-2:8848 (从节点)</text>
+  <text x="740" y="556" class="code">• nacos-3:8848 (从节点)</text>
+  <text x="740" y="584" class="text">数据持久化: MySQL 8.0</text>
+  <text x="750" y="602" class="code">CREATE DATABASE nacos_config;</text>
+  <text x="750" y="620" class="code">初始化脚本: mysql-schema.sql</text>
+  <text x="740" y="648" class="text">高可用保障:</text>
+  <text x="740" y="668" class="code">• Raft协议保证一致性</text>
+  <text x="740" y="686" class="code">• 主节点故障自动选举</text>
+  <text x="740" y="704" class="code">• Nginx/ALB负载均衡</text>
+  <text x="740" y="722" class="code">• 配置变更实时推送(UDP 9848)</text>
+
+  <text x="700" y="785" class="code" text-anchor="middle">© 2026 Apex Team · Nacos服务注册与发现 v3.0</text>
+</svg>

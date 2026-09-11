@@ -1,5 +1,7 @@
 # 问题排查指南
 
+[查看故障排查决策树](diagrams/47_troubleshooting_decision_tree.svg)
+
 本文档汇总了使用 Apex Scaffold 时遇到的常见问题及解决方案。
 
 ## 🚀 启动问题

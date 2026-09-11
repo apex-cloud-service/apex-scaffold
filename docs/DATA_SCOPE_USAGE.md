@@ -1,4 +1,6 @@
-# 自定义数据权限使用指南（MyBatis-Plus 拦截器）
+# 自定义数据权限使用指南(MyBatis-Plus 拦截器)
+
+> **配套架构图**: [数据权限过滤流程图](diagrams/40_data_scope_filter_flow.svg)
 
 ## 功能说明
 

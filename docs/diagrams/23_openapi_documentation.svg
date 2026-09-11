@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 600" width="1400" height="600">
+  <defs><style>.title{font:700 32px sans-serif;fill:#0f172a;text-anchor:middle}.subtitle{font:500 14px sans-serif;fill:#64748b;text-anchor:middle}.box-title{font:600 14px sans-serif;fill:#0f172a}.text{font:400 11px sans-serif;fill:#475569}.code{font:400 10px monospace;fill:#2563eb}</style></defs>
+  <rect width="1400" height="600" fill="#fff"/>
+  <text x="700" y="40" class="title">23. OpenAPI文档生成</text>
+  <text x="700" y="65" class="subtitle">SpringDoc 2.8.1 · Swagger UI · 接口规范 · 在线调试 v3.0</text>
+  <rect x="50" y="90" width="660" height="450" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="2"/>
+  <text x="70" y="120" class="box-title">注解配置</text>
+  <text x="70" y="145" class="code">@Tag(name = "用户管理", description = "用户CRUD")</text>
+  <text x="70" y="163" class="code">public class UserHandler {</text>
+  <text x="80" y="193" class="code">@Operation(summary = "查询用户列表")</text>
+  <text x="80" y="211" class="code">@Parameters({</text>
+  <text x="90" y="229" class="code">@Parameter(name="page", description="页码"),</text>
+  <text x="90" y="247" class="code">@Parameter(name="size", description="每页条数")</text>
+  <text x="80" y="265" class="code">})</text>
+  <text x="80" y="283" class="code">@ApiResponse(responseCode="200", content=@Content(</text>
+  <text x="90" y="301" class="code">schema=@Schema(implementation=PageResult.class)))</text>
+  <text x="80" y="319" class="code">public Mono&lt;ServerResponse&gt; list(...) {...}</text>
+  <text x="70" y="349" class="code">}</text>
+  <text x="70" y="379" class="text">全局配置:</text>
+  <text x="70" y="399" class="code">springdoc.api-docs.enabled=true</text>
+  <text x="70" y="417" class="code">springdoc.swagger-ui.path=/doc.html</text>
+  <text x="70" y="435" class="code">springdoc.swagger-ui.tags-sorter=alpha</text>
+  <text x="70" y="463" class="text">访问地址: http://localhost:8080/doc.html</text>
+  <text x="70" y="493" class="text">自动生成:</text>
+  <text x="70" y="513" class="code">• 接口路径、方法、参数、响应</text>
+  <text x="70" y="531" class="code">• 请求示例、响应示例 (JSON Schema)</text>
+  <rect x="730" y="90" width="620" height="450" rx="8" fill="#f0fdf4" stroke="#059669" stroke-width="2"/>
+  <text x="750" y="120" class="box-title">Swagger UI界面</text>
+  <text x="750" y="145" class="text">功能特性:</text>
+  <text x="750" y="165" class="code">• 接口分组展示 (Tag维度)</text>
+  <text x="750" y="183" class="code">• 在线调试 (Try it out按钮)</text>
+  <text x="750" y="201" class="code">• 自动填充JWT Token (Authorize锁图标)</text>
+  <text x="750" y="219" class="code">• 请求/响应示例展示</text>
+  <text x="750" y="237" class="code">• 模型定义查看 (Schemas标签)</text>
+  <text x="750" y="265" class="text">安全配置:</text>
+  <text x="750" y="285" class="code">@SecurityScheme(name = "Bearer",</text>
+  <text x="760" y="303" class="code">type = SecuritySchemeType.HTTP,</text>
+  <text x="760" y="321" class="code">scheme = "bearer",</text>
+  <text x="760" y="339" class="code">bearerFormat = "JWT")</text>
+  <text x="750" y="369" class="text">生产环境:</text>
+  <text x="750" y="389" class="code">springdoc.api-docs.enabled=false</text>
+  <text x="750" y="407" class="text">禁用Swagger UI,避免接口泄露</text>
+  <text x="750" y="437" class="text">集成其他工具:</text>
+  <text x="750" y="457" class="code">• Postman: 导出OpenAPI 3.0 JSON</text>
+  <text x="750" y="475" class="code">• Apifox: 直接导入Swagger URL</text>
+  <text x="750" y="493" class="code">• 前端代码生成: openapi-generator-cli</text>
+  <text x="750" y="511" class="code">  生成TypeScript接口定义和API调用函数</text>
+  <text x="700" y="585" class="code" text-anchor="middle">© 2026 Apex Team · OpenAPI文档 v3.0</text>
+</svg>

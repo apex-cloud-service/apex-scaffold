@@ -2,7 +2,7 @@
 
 > 文档版本: v1.0  
 > 创建时间: 2026-09-03  
-> 适用版本: apex-scaffold v2.5.0+
+> 适用版本: apex-scaffold v1.2.0+
 
 ---
 
@@ -257,6 +257,17 @@ NACOS_AUTH_TOKEN=SecretKey012345678901234567890123456789012345678901234567890123
 GRAFANA_PASSWORD=your_grafana_password
 ```
 
+**完整环境变量配置**:
+
+查看 [环境变量管理指南](environment-variables.md) 了解所有 172 个环境变量的详细说明，包括：
+- 基础配置（Spring Boot、数据库、Redis、JWT）
+- 消息队列配置（RocketMQ、Outbox 模式）
+- 限流熔断配置（Sentinel）
+- 监控追踪配置（Prometheus、Zipkin）
+- 存储配置（Local、MinIO、火山引擎 TOS）
+- 安全配置（验证码、内容审核、防重放）
+- 服务治理配置（Governance 优雅关停）
+
 ### 2.4 启动服务
 
 ```bash
@@ -276,7 +287,222 @@ docker compose down
 docker compose down -v
 ```
 
-### 2.5 健康检查
+---
+
+### 2.5 Apex Governance 优雅关停机制 ⭐
+
+Apex Scaffold 内置了完善的服务治理机制（Apex Governance），实现应用的优雅关停和无损上下线。
+
+#### 2.5.1 核心特性
+
+| 特性 | 说明 | 默认配置 |
+|------|------|---------|
+| **自动环境识别** | 自动检测 Kubernetes/Docker Compose/Standalone 环境 | `auto` |
+| **Readiness 摘流** | 关停前通过 Spring Availability API 发布 REFUSING_TRAFFIC 状态 | 立即生效 |
+| **MQ 排空** | MQ 消费者停止接收新消息 + 等待在途消息处理完成 | 30 秒预算 |
+| **资源排空** | 通过统一截止时间并行排空所有注册的 DrainParticipant | 90 秒总预算 |
+| **强制关停** | 超时后调用资源 forceStop | 默认启用 |
+
+**重要说明**:
+
+- 数据库连接池和应用线程池的关闭由 Spring Bean 生命周期自动管理,非 Governance 直接执行
+- `readiness-withdraw-timeout` 配置参数存在但当前未在协调器中进行实际等待
+- MQ 排空参与者只有在 `MqConsumerService` 和 `DeadLetterQueueProcessor` Bean 同时存在时才注册
+
+#### 2.5.2 工作流程
+
+```
+1. 接收关停信号 (SIGTERM)
+   ↓
+2. GracefulShutdownCoordinator 转入 DRAINING 状态
+   ↓
+3. ReadinessStateController 发布 REFUSING_TRAFFIC 事件
+   ↓
+4. DeploymentGovernanceStrategy 通知平台层摘流
+   (Kubernetes: 通过 readiness probe  Compose: 依赖 healthcheck)
+   ↓
+5. ResourceDrainRegistry 停止所有参与者接收新任务
+   ↓
+6. 使用统一截止时间 (now + 90s) 并行排空所有参与者
+   - MQ 消费者停止接收新消息
+   - 在途 MQ 消息排空 (最多 30s)
+   - 死信队列处理器排空
+   ↓
+7. 超时未完成时强制停止所有参与者
+   ↓
+8. Spring Boot 原生 HTTP graceful shutdown 关闭 Web 服务器
+   ↓
+9. Spring 容器关闭,Bean 生命周期回调执行
+   (数据库连接池、线程池等资源在此阶段释放)
+```
+
+#### 2.5.3 关键配置
+
+**核心环境变量**:
+
+```bash
+# 启用 Governance（默认 true）
+APEX_GOVERNANCE_ENABLED=true
+
+# 部署模式（auto 自动识别 / kubernetes / compose）
+APEX_GOVERNANCE_DEPLOYMENT_MODE=auto
+
+# MQ 排空预算（在途消息处理时间）
+APEX_GOVERNANCE_MQ_DRAIN_TIMEOUT=30s
+
+# 总关停预算（所有资源共享）
+APEX_GOVERNANCE_SHUTDOWN_TIMEOUT=90s
+
+# Readiness 摘流后等待时间（流量传播延迟）
+APEX_GOVERNANCE_READINESS_WITHDRAW_TIMEOUT=5s
+
+# 超时后是否强制关停
+APEX_GOVERNANCE_FORCE_SHUTDOWN=true
+```
+
+**完整配置**: 查看 [环境变量管理指南 - Governance 配置](environment-variables.md#48-服务治理配置)
+
+#### 2.5.4 Kubernetes 集成
+
+**Liveness Probe**（存活探针）:
+```yaml
+livenessProbe:
+  httpGet:
+    path: /actuator/health/liveness
+    port: 8081
+  initialDelaySeconds: 60
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+```
+
+**Readiness Probe**（就绪探针）:
+```yaml
+readinessProbe:
+  httpGet:
+    path: /actuator/health/readiness
+    port: 8081
+  initialDelaySeconds: 30
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 2
+```
+
+**优雅终止配置**:
+
+当前仓库配置 (`k8s/deployment.yaml`):
+```yaml
+spec:
+  # terminationGracePeriodSeconds 当前未配置,使用 Kubernetes 默认值 30s
+  containers:
+  - name: apex-app
+    lifecycle:
+      preStop:
+        exec:
+          command: ["/bin/sh", "-c", "sleep 8"]  # 当前仓库配置为 8 秒
+```
+
+**生产环境推荐配置**:
+```yaml
+spec:
+  terminationGracePeriodSeconds: 120  # 推荐配置,给足够时间完成关停
+  containers:
+  - name: apex-app
+    lifecycle:
+      preStop:
+        exec:
+          command: ["/bin/sh", "-c", "sleep 8"]  # 预留时间让负载均衡器更新端点
+```
+
+**配置说明**:
+
+- `terminationGracePeriodSeconds: 120` 确保 Governance 有充足时间完成资源排空 (90s 总预算 + 30s 缓冲)
+- `preStop: sleep 8` 让 Kubernetes 端点控制器有时间从 Service 中移除 Pod
+- Compose 当前默认 `stop_grace_period: 105s`
+
+#### 2.5.5 关停验证
+
+**监控关停过程**:
+
+```bash
+# 1. 查看应用日志
+kubectl logs -f apex-app-xxx --tail=100
+
+# 2. 监控 Readiness 状态
+kubectl get pods -w
+
+# 3. 检查在途消息
+# 应用日志会输出：
+# "Draining MQ consumers... (30s budget)"
+# "All in-flight messages processed"
+```
+
+**关键日志**:
+
+```
+2026-09-09 10:00:00 INFO  GracefulShutdownManager - Shutdown signal received
+2026-09-09 10:00:00 INFO  GracefulShutdownCoordinator - Transitioning to DRAINING state
+2026-09-09 10:00:00 INFO  ReadinessStateController - Refusing traffic (readiness=REFUSING_TRAFFIC)
+2026-09-09 10:00:00 INFO  KubernetesGovernanceStrategy - Withdrawing from traffic (reason: SHUTDOWN)
+2026-09-09 10:00:00 INFO  ResourceDrainRegistry - Stopping all participants from accepting new tasks
+2026-09-09 10:00:00 INFO  MqDrainParticipant - Stopping MQ consumer and DLQ processor
+2026-09-09 10:00:15 INFO  MqDrainParticipant - All in-flight messages processed (15s used)
+2026-09-09 10:00:15 INFO  ResourceDrainRegistry - All participants drained successfully
+2026-09-09 10:00:15 INFO  GracefulShutdownCoordinator - Graceful shutdown completed (STOPPED)
+2026-09-09 10:00:15 INFO  Spring Container - Closing ApplicationContext
+(数据库连接池、线程池等资源在 Spring Bean 销毁回调中释放)
+```
+
+#### 2.5.6 常见问题
+
+**Q1: 关停时还有请求失败？**
+
+**A**: 增加 Kubernetes `preStop` 等待时间或调整负载均衡器配置,确保端点更新传播完成：
+```yaml
+preStop:
+  exec:
+    command: ["/bin/sh", "-c", "sleep 15"]  # 增加到 15 秒
+```
+
+注意: `APEX_GOVERNANCE_READINESS_WITHDRAW_TIMEOUT` 配置参数虽存在但当前未在协调器中实际执行等待。
+
+**Q2: MQ 消息未处理完就关停？**
+
+**A**: 增加 MQ 排空预算：
+```bash
+APEX_GOVERNANCE_MQ_DRAIN_TIMEOUT=60s  # 默认 30s
+```
+
+**Q3: 关停超时被 Kubernetes 强制杀死？**
+
+**A**: 增加 K8s terminationGracePeriodSeconds：
+```yaml
+terminationGracePeriodSeconds: 180  # 必须 > SHUTDOWN_TIMEOUT
+```
+
+#### 2.5.7 最佳实践
+
+1. **设置合理的超时时间**
+   - MQ 排空: 30-60 秒
+   - 总关停: 90-120 秒
+   - K8s terminationGracePeriod: 总关停 + 30 秒缓冲
+
+2. **监控关停指标**
+   - 关停耗时（应 < 总预算）
+   - 在途消息数量
+   - 失败请求数（应为 0）
+
+3. **灰度发布**
+   - 先更新一个实例，观察关停过程
+   - 确认无异常后再全量更新
+
+4. **告警配置**
+   - 关停超时告警
+   - 强制关停告警（说明预算不足）
+
+---
+
+### 2.6 健康检查
 
 ```bash
 # 检查应用健康状态

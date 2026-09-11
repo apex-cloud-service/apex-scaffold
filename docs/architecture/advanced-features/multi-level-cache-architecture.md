@@ -2,7 +2,7 @@
 
 > ## 架构图
 
-![多级缓存架构](../../diagrams/10_multi_level_cache_architecture.svg)
+![多级缓存架构](../../diagrams/09_multi_level_cache_architecture.svg)
 
 ## 一、概述
 
@@ -553,4 +553,4 @@ cacheService.delete(key)
 
 **版本**: v1.0.0  
 **最后更新**: 2026-09-04  
-**配套图表**: [多级缓存架构](../../diagrams/10_multi_level_cache_architecture.svg)
+**配套图表**: [多级缓存架构](../../diagrams/09_multi_level_cache_architecture.svg)

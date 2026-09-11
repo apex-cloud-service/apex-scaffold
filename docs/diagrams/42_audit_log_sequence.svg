@@ -1,0 +1,186 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1400">
+  <defs>
+    <style>
+      .title { font-family: Arial, "PingFang SC", "Microsoft YaHei", sans-serif; font-size: 28px; font-weight: bold; fill: #0f172a; }
+      .subtitle { font-family: Arial, "PingFang SC", "Microsoft YaHei", sans-serif; font-size: 16px; fill: #475569; }
+      .section-title { font-family: Arial, "PingFang SC", "Microsoft YaHei", sans-serif; font-size: 18px; font-weight: bold; fill: #0f172a; }
+      .label { font-family: Arial, "PingFang SC", "Microsoft YaHei", sans-serif; font-size: 14px; fill: #0f172a; }
+      .small-label { font-family: Arial, "PingFang SC", "Microsoft YaHei", sans-serif; font-size: 12px; fill: #475569; }
+      .code { font-family: "Courier New", monospace; font-size: 12px; fill: #0f172a; }
+    </style>
+
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#4f46e5" />
+    </marker>
+    <marker id="arrowhead-dashed" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#059669" />
+    </marker>
+  </defs>
+
+  <!-- 标题 -->
+  <text x="800" y="40" text-anchor="middle" class="title">审计日志记录时序图 (Operation Log Sequence)</text>
+  <text x="800" y="65" text-anchor="middle" class="subtitle">基于 @OperationLog 注解 + AOP 切面实现异步批量审计日志记录</text>
+
+  <!-- 参与者 -->
+  <text x="50" y="110" class="section-title">参与者 (Actors)</text>
+
+  <!-- 用户 -->
+  <rect x="100" y="130" width="120" height="50" rx="25" fill="#4f46e5" stroke="#4f46e5" stroke-width="2"/>
+  <text x="160" y="160" text-anchor="middle" class="label" fill="white">用户</text>
+  <line x1="160" y1="180" x2="160" y2="1340" stroke="#4f46e5" stroke-width="2" stroke-dasharray="5,5"/>
+
+  <!-- Handler -->
+  <rect x="300" y="130" width="160" height="50" rx="8" fill="#f0f9ff" stroke="#0891b2" stroke-width="2"/>
+  <text x="380" y="155" text-anchor="middle" class="label">Handler</text>
+  <text x="380" y="170" text-anchor="middle" class="small-label">@OperationLog</text>
+  <line x1="380" y1="180" x2="380" y2="1340" stroke="#0891b2" stroke-width="2" stroke-dasharray="5,5"/>
+
+  <!-- AOP切面 -->
+  <rect x="540" y="130" width="200" height="50" rx="8" fill="#f0fdf4" stroke="#059669" stroke-width="2"/>
+  <text x="640" y="155" text-anchor="middle" class="label">OperationLogAspect</text>
+  <text x="640" y="170" text-anchor="middle" class="small-label">切面拦截器</text>
+  <line x1="640" y1="180" x2="640" y2="1340" stroke="#059669" stroke-width="2" stroke-dasharray="5,5"/>
+
+  <!-- 异步队列 -->
+  <rect x="820" y="130" width="180" height="50" rx="8" fill="#fffbeb" stroke="#d97706" stroke-width="2"/>
+  <text x="910" y="155" text-anchor="middle" class="label">AsyncLogQueue</text>
+  <text x="910" y="170" text-anchor="middle" class="small-label">批量入队</text>
+  <line x1="910" y1="180" x2="910" y2="1340" stroke="#d97706" stroke-width="2" stroke-dasharray="5,5"/>
+
+  <!-- 数据库 -->
+  <rect x="1080" y="130" width="160" height="50" rx="8" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+  <text x="1160" y="155" text-anchor="middle" class="label">Database</text>
+  <text x="1160" y="170" text-anchor="middle" class="small-label">sys_operation_log</text>
+  <line x1="1160" y1="180" x2="1160" y2="1340" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="5,5"/>
+
+  <!-- 管理员 -->
+  <rect x="1320" y="130" width="120" height="50" rx="25" fill="#059669" stroke="#059669" stroke-width="2"/>
+  <text x="1380" y="160" text-anchor="middle" class="label" fill="white">管理员</text>
+  <line x1="1380" y1="180" x2="1380" y2="1340" stroke="#059669" stroke-width="2" stroke-dasharray="5,5"/>
+
+  <!-- 阶段1: 操作执行 -->
+  <text x="50" y="230" class="section-title">阶段1: 用户操作</text>
+
+  <!-- 步骤1: 用户请求 -->
+  <line x1="160" y1="250" x2="380" y2="250" stroke="#4f46e5" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="270" y="240" text-anchor="middle" class="small-label">POST /admin-api/v1/users</text>
+  <text x="270" y="265" text-anchor="middle" class="code">创建用户请求</text>
+
+  <!-- 步骤2: 切面拦截 -->
+  <line x1="380" y1="280" x2="640" y2="280" stroke="#0891b2" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="510" y="270" text-anchor="middle" class="small-label">切面拦截 (@Around)</text>
+
+  <!-- 激活框: 切面处理 -->
+  <rect x="620" y="300" width="40" height="160" fill="#e0f2fe" stroke="#0891b2" stroke-width="2"/>
+
+  <!-- 步骤3: 解析注解 -->
+  <rect x="700" y="310" width="400" height="30" rx="4" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+  <text x="900" y="330" text-anchor="middle" class="small-label">解析 @OperationLog(module="用户管理", type=INSERT)</text>
+
+  <!-- 步骤4: 获取操作人 -->
+  <rect x="700" y="355" width="400" height="30" rx="4" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+  <text x="900" y="375" text-anchor="middle" class="small-label">ReactiveSecurityContextHolder → 获取当前用户</text>
+
+  <!-- 步骤5: 记录请求参数 -->
+  <rect x="700" y="400" width="400" height="30" rx="4" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+  <text x="900" y="420" text-anchor="middle" class="small-label">序列化请求参数(排除password/token)</text>
+
+  <!-- 步骤6: 执行业务方法 -->
+  <line x1="640" y1="480" x2="380" y2="480" stroke="#0891b2" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="510" y="470" text-anchor="middle" class="small-label">执行业务方法</text>
+
+  <!-- 激活框: Handler处理 -->
+  <rect x="360" y="500" width="40" height="80" fill="#dbeafe" stroke="#0891b2" stroke-width="2"/>
+  <text x="450" y="520" class="small-label">创建用户</text>
+  <text x="450" y="540" class="small-label">数据库操作</text>
+  <text x="450" y="560" class="small-label">返回结果</text>
+
+  <!-- 步骤7: 返回结果 -->
+  <line x1="380" y1="600" x2="640" y2="600" stroke="#0891b2" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="510" y="590" text-anchor="middle" class="small-label">返回: Result&lt;UserDTO&gt;</text>
+
+  <!-- 步骤8: 记录响应结果 -->
+  <rect x="700" y="620" width="400" height="30" rx="4" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+  <text x="900" y="640" text-anchor="middle" class="small-label">序列化响应结果(按配置截断长度)</text>
+
+  <!-- 阶段2: 异步入队 -->
+  <text x="50" y="690" class="section-title">阶段2: 异步入队</text>
+
+  <!-- 步骤9: 构造日志对象 -->
+  <rect x="700" y="710" width="400" height="50" rx="4" fill="#e0f2fe" stroke="#0891b2" stroke-width="1.5"/>
+  <text x="900" y="730" text-anchor="middle" class="code">OperationLogEntity {</text>
+  <text x="920" y="750" text-anchor="middle" class="code">module, type, operator, request, response...</text>
+
+  <!-- 步骤10: 入队 -->
+  <line x1="640" y1="780" x2="910" y2="780" stroke="#059669" stroke-width="2" marker-end="url(#arrowhead-dashed)"/>
+  <text x="775" y="770" text-anchor="middle" class="small-label">异步入队 (非阻塞)</text>
+
+  <!-- 激活框: 队列 -->
+  <rect x="890" y="800" width="40" height="80" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+  <text x="980" y="820" class="small-label">日志对象缓冲</text>
+  <text x="980" y="840" class="small-label">达到批次阈值</text>
+  <text x="980" y="860" class="small-label">或超时触发</text>
+
+  <!-- 步骤11: 返回用户 -->
+  <line x1="640" y1="900" x2="380" y2="900" stroke="#059669" stroke-width="2" marker-end="url(#arrowhead-dashed)"/>
+  <text x="510" y="890" text-anchor="middle" class="small-label">切面完成(不等待入库)</text>
+
+  <line x1="380" y1="920" x2="160" y2="920" stroke="#0891b2" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="270" y="910" text-anchor="middle" class="small-label">HTTP 200 OK</text>
+  <text x="270" y="935" text-anchor="middle" class="code">{"code":0, "data":{...}}</text>
+
+  <!-- 阶段3: 批量入库 -->
+  <text x="50" y="980" class="section-title">阶段3: 批量入库</text>
+
+  <!-- 步骤12: 批量处理 -->
+  <rect x="830" y="1000" width="160" height="50" rx="4" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+  <text x="910" y="1020" text-anchor="middle" class="small-label">批量处理线程</text>
+  <text x="910" y="1040" text-anchor="middle" class="small-label">每批100条或5秒</text>
+
+  <!-- 步骤13: 批量插入 -->
+  <line x1="910" y1="1070" x2="1160" y2="1070" stroke="#d97706" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="1035" y="1060" text-anchor="middle" class="small-label">批量 INSERT</text>
+
+  <!-- 激活框: 数据库 -->
+  <rect x="1140" y="1090" width="40" height="60" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+  <text x="1220" y="1110" class="small-label">INSERT INTO</text>
+  <text x="1220" y="1130" class="small-label">sys_operation_log</text>
+
+  <!-- 步骤14: 确认 -->
+  <line x1="1160" y1="1170" x2="910" y2="1170" stroke="#d97706" stroke-width="2" stroke-dasharray="4,4" marker-end="url(#arrowhead)"/>
+  <text x="1035" y="1160" text-anchor="middle" class="small-label">入库成功</text>
+
+  <!-- 阶段4: 日志查询 -->
+  <text x="50" y="1220" class="section-title">阶段4: 查询审计</text>
+
+  <!-- 步骤15: 管理员查询 -->
+  <line x1="1380" y1="1240" x2="380" y2="1240" stroke="#059669" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="880" y="1230" text-anchor="middle" class="small-label">GET /admin-api/v1/audit-logs?page=1&amp;size=20</text>
+
+  <!-- 步骤16: 数据库查询 -->
+  <line x1="380" y1="1260" x2="1160" y2="1260" stroke="#0891b2" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="770" y="1250" text-anchor="middle" class="small-label">SELECT * FROM sys_operation_log ORDER BY id DESC</text>
+
+  <!-- 步骤17: 返回结果 -->
+  <line x1="1160" y1="1280" x2="380" y2="1280" stroke="#0891b2" stroke-width="2" stroke-dasharray="4,4" marker-end="url(#arrowhead)"/>
+  <text x="770" y="1270" text-anchor="middle" class="small-label">返回日志列表</text>
+
+  <line x1="380" y1="1300" x2="1380" y2="1300" stroke="#059669" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="880" y="1290" text-anchor="middle" class="small-label">PageResponse&lt;OperationLogDTO&gt;</text>
+
+  <!-- 图例 -->
+  <rect x="50" y="1340" width="1500" height="50" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2"/>
+  <text x="100" y="1365" class="label" font-weight="bold">图例:</text>
+
+  <line x1="180" y1="1360" x2="240" y2="1360" stroke="#4f46e5" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="260" y="1365" class="small-label">同步调用</text>
+
+  <line x1="380" y1="1360" x2="440" y2="1360" stroke="#059669" stroke-width="2" stroke-dasharray="4,4" marker-end="url(#arrowhead-dashed)"/>
+  <text x="460" y="1365" class="small-label">异步调用</text>
+
+  <rect x="600" y="1350" width="80" height="25" fill="#e0f2fe" stroke="#0891b2" stroke-width="1.5"/>
+  <text x="700" y="1367" class="small-label">激活状态</text>
+
+  <text x="820" y="1365" class="small-label">⚠️ 响应式: ReactiveSecurityContextHolder 获取操作人</text>
+  <text x="1200" y="1365" class="small-label">批量入库: 每批100条或5秒</text>
+</svg>

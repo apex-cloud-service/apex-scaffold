@@ -1,0 +1,173 @@
+sequenceDiagram
+    participant Client as 客户端
+    participant Handler as WorkflowHandler
+    participant WorkflowService as WorkflowService
+    participant TaskRepo as TaskRepository
+    participant InstanceRepo as ProcessInstanceRepository
+    participant DB as MySQL (阻塞池)
+    
+    Note over Client,DB: 工作流回退与转办流程（当前已实现功能）
+    
+    %% 任务回退
+    rect rgb(240, 248, 255)
+        Note over Client,DB: 流程回退到指定节点
+        
+        Client->>+Handler: POST /api/workflow/tasks/{taskId}/rollback
+        Note right of Client: {targetNodeCode, reason}
+        
+        Handler->>Handler: 从SecurityContext获取当前用户ID
+        Handler->>+WorkflowService: rollbackToNode(taskId, targetNodeCode, operatorId, reason)
+        
+        WorkflowService->>+TaskRepo: findById(taskId)
+        TaskRepo->>DB: SELECT * FROM workflow_task WHERE id=?
+        DB-->>TaskRepo: Task实体
+        TaskRepo-->>-WorkflowService: Task
+        
+        WorkflowService->>WorkflowService: task.setStatus("ROLLED_BACK")
+        WorkflowService->>WorkflowService: task.setCompletedTime(now)
+        
+        WorkflowService->>+TaskRepo: updateById(task)
+        TaskRepo->>DB: UPDATE workflow_task SET status='ROLLED_BACK'
+        DB-->>TaskRepo: 更新成功
+        TaskRepo-->>-WorkflowService: 完成
+        
+        WorkflowService->>+InstanceRepo: findById(processInstanceId)
+        InstanceRepo->>DB: SELECT * FROM workflow_instance WHERE id=?
+        DB-->>InstanceRepo: ProcessInstance
+        InstanceRepo-->>-WorkflowService: ProcessInstance
+        
+        WorkflowService->>WorkflowService: 创建新任务到目标节点
+        WorkflowService->>+TaskRepo: insert(newTask)
+        TaskRepo->>DB: INSERT INTO workflow_task
+        DB-->>TaskRepo: 新任务ID
+        TaskRepo-->>-WorkflowService: 完成
+        
+        WorkflowService-->>-Handler: 回退成功
+        Handler-->>-Client: 200 OK
+    end
+    
+    %% 任务转办
+    rect rgb(255, 250, 240)
+        Note over Client,DB: 转办任务给其他人(永久转移)
+        
+        Client->>+Handler: POST /api/workflow/tasks/{taskId}/transfer
+        Note right of Client: {newAssigneeId, reason}
+        
+        Handler->>+WorkflowService: transferTask(taskId, newAssigneeId, operatorId, reason)
+        
+        WorkflowService->>+TaskRepo: findById(taskId)
+        TaskRepo->>DB: SELECT * FROM workflow_task WHERE id=?
+        DB-->>TaskRepo: Task实体
+        TaskRepo-->>-WorkflowService: Task
+        
+        alt 任务不是PENDING状态
+            WorkflowService-->>Client: 400 只能转办待办任务
+        end
+        
+        alt 任务不属于当前操作人
+            WorkflowService-->>Client: 403 只能转办自己的任务
+        end
+        
+        WorkflowService->>WorkflowService: task.setTransferredFrom(operatorId)
+        WorkflowService->>WorkflowService: task.setAssigneeId(newAssigneeId)
+        
+        WorkflowService->>+TaskRepo: updateById(task)
+        TaskRepo->>DB: UPDATE workflow_task SET assignee_id=?, transferred_from=?
+        DB-->>TaskRepo: 更新成功
+        TaskRepo-->>-WorkflowService: 完成
+        
+        WorkflowService-->>-Handler: 转办成功
+        Handler-->>-Client: 200 OK
+    end
+    
+    %% 任务委派
+    rect rgb(240, 255, 240)
+        Note over Client,DB: 委派任务给其他人(临时转移)
+        
+        Client->>+Handler: POST /api/workflow/tasks/{taskId}/delegate
+        Note right of Client: {delegateToId, reason}
+        
+        Handler->>+WorkflowService: delegateTask(taskId, delegateToId, operatorId, reason)
+        
+        WorkflowService->>+TaskRepo: findById(taskId)
+        TaskRepo->>DB: SELECT * FROM workflow_task WHERE id=?
+        DB-->>TaskRepo: Task实体
+        TaskRepo-->>-WorkflowService: Task
+        
+        alt 任务不是PENDING状态
+            WorkflowService-->>Client: 400 只能委派待办任务
+        end
+        
+        WorkflowService->>WorkflowService: 创建DELEGATED状态任务
+        Note right of WorkflowService: delegatedTask.status = "DELEGATED"<br/>delegatedTask.assigneeId = delegateToId<br/>delegatedTask.transferredFrom = operatorId
+        
+        WorkflowService->>+TaskRepo: insert(delegatedTask)
+        TaskRepo->>DB: INSERT INTO workflow_task
+        DB-->>TaskRepo: 委派任务ID
+        TaskRepo-->>-WorkflowService: 完成
+        
+        WorkflowService-->>-Handler: 委派成功
+        Note right of WorkflowService: 受托人完成后任务回到原审批人
+        Handler-->>-Client: 200 OK
+    end
+    
+    %% 流程挂起与恢复
+    rect rgb(255, 240, 245)
+        Note over Client,DB: 挂起流程实例(暂停执行)
+        
+        Client->>+Handler: POST /api/workflow/instances/{instanceId}/suspend
+        Note right of Client: {reason}
+        
+        Handler->>+WorkflowService: suspendInstance(processInstanceId, operatorId, reason)
+        
+        WorkflowService->>+InstanceRepo: findById(processInstanceId)
+        InstanceRepo->>DB: SELECT * FROM workflow_instance WHERE id=?
+        DB-->>InstanceRepo: ProcessInstance
+        InstanceRepo-->>-WorkflowService: ProcessInstance
+        
+        alt 流程已完成或已驳回
+            WorkflowService-->>Client: 400 已完成或已驳回的流程无法挂起
+        end
+        
+        WorkflowService->>WorkflowService: instance.setSuspended(true)
+        WorkflowService->>WorkflowService: instance.setStatus("SUSPENDED")
+        
+        WorkflowService->>+InstanceRepo: updateById(instance)
+        InstanceRepo->>DB: UPDATE workflow_instance SET status='SUSPENDED', suspended=true
+        DB-->>InstanceRepo: 更新成功
+        InstanceRepo-->>-WorkflowService: 完成
+        
+        WorkflowService-->>-Handler: 挂起成功
+        Handler-->>-Client: 200 OK
+    end
+    
+    rect rgb(245, 255, 250)
+        Note over Client,DB: 恢复流程实例(继续执行)
+        
+        Client->>+Handler: POST /api/workflow/instances/{instanceId}/resume
+        Note right of Client: {reason}
+        
+        Handler->>+WorkflowService: resumeInstance(processInstanceId, operatorId, reason)
+        
+        WorkflowService->>+InstanceRepo: findById(processInstanceId)
+        InstanceRepo->>DB: SELECT * FROM workflow_instance WHERE id=?
+        DB-->>InstanceRepo: ProcessInstance
+        InstanceRepo-->>-WorkflowService: ProcessInstance
+        
+        alt 流程不是SUSPENDED状态
+            WorkflowService-->>Client: 400 只能恢复挂起状态的流程
+        end
+        
+        WorkflowService->>WorkflowService: instance.setSuspended(false)
+        WorkflowService->>WorkflowService: instance.setStatus("RUNNING")
+        
+        WorkflowService->>+InstanceRepo: updateById(instance)
+        InstanceRepo->>DB: UPDATE workflow_instance SET status='RUNNING', suspended=false
+        DB-->>InstanceRepo: 更新成功
+        InstanceRepo-->>-WorkflowService: 完成
+        
+        WorkflowService-->>-Handler: 恢复成功
+        Handler-->>-Client: 200 OK
+    end
+    
+    Note over Client,DB: 注:流程创建/待办查询/任务完成端点尚未在当前Router中确认
