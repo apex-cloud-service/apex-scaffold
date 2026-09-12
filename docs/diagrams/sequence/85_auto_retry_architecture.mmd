@@ -1,0 +1,58 @@
+graph TB
+    Client[客户端请求]
+    Handler[Handler层]
+    
+    subgraph AppLayer[应用层重试]
+        AutoRetryAspect[@AutoRetry AOP切面]
+        RetryConfig1[配置: maxAttempts=3<br/>backoff=指数退避<br/>200ms→400ms→800ms]
+    end
+    
+    subgraph ReactorLayer[Reactor响应式重试]
+        ReactorRetry[Reactor retry操作符]
+        RetryConfig2[配置: maxAttempts=5<br/>backoff+jitter<br/>100ms→200ms→400ms]
+    end
+    
+    subgraph CircuitLayer[熔断保护层]
+        CB[Resilience4j<br/>CircuitBreaker]
+        CBState{熔断器状态}
+    end
+    
+    subgraph RemoteLayer[远程调用层]
+        RemoteClient[RemoteApiClient<br/>WebClient]
+        ExternalAPI[外部API<br/>第三方服务]
+    end
+    
+    subgraph FallbackLayer[降级处理层]
+        Fallback[降级策略]
+        Cache[缓存降级数据]
+        Default[默认响应]
+    end
+    
+    Client --> Handler
+    Handler --> AutoRetryAspect
+    AutoRetryAspect --> RetryConfig1
+    RetryConfig1 --> ReactorRetry
+    
+    ReactorRetry --> RetryConfig2
+    RetryConfig2 --> CB
+    
+    CB --> CBState
+    CBState -->|CLOSED 关闭| RemoteClient
+    CBState -->|OPEN 打开| Fallback
+    CBState -->|HALF_OPEN 半开| RemoteClient
+    
+    RemoteClient --> ExternalAPI
+    ExternalAPI -.->|成功| Handler
+    ExternalAPI -.->|临时失败| ReactorRetry
+    ExternalAPI -.->|永久失败| Fallback
+    
+    Fallback --> Cache
+    Fallback --> Default
+    Cache -.->|降级数据| Handler
+    Default -.->|默认值| Handler
+    
+    style AutoRetryAspect fill:#3b82f6,color:#fff
+    style ReactorRetry fill:#8b5cf6,color:#fff
+    style CB fill:#f59e0b,color:#fff
+    style Fallback fill:#10b981,color:#fff
+    style ExternalAPI fill:#ef4444,color:#fff

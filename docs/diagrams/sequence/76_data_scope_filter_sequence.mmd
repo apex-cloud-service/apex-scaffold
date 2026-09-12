@@ -1,0 +1,83 @@
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#3b82f6','fontSize':'14px'}}}%%
+sequenceDiagram
+    participant Client as 客户端
+    participant Handler as OrderHandler
+    participant Service as OrderService<br/>@DataScope
+    participant Aspect as DataScopeAspect
+    participant Provider as DataScopeProvider
+    participant Context as DataScopeContext
+    participant Interceptor as DataScopeInterceptor<br/>(MyBatis-Plus)
+    participant MySQL as MySQL 8.x
+    
+    Note over Client,MySQL: 数据权限自动过滤流程
+    
+    Client->>Handler: GET /admin-api/v1/orders?page=1
+    activate Handler
+    
+    Handler->>Service: pageOrders(page, size)
+    Note right of Handler: 方法标注@DataScope
+    activate Service
+    
+    Service->>Aspect: AOP拦截
+    activate Aspect
+    Note right of Aspect: @Around切面
+    
+    Aspect->>Provider: getDataScope()
+    activate Provider
+    Note right of Provider: 获取当前用户<br/>数据权限范围
+    
+    Provider->>Context: 查询用户角色权限
+    activate Context
+    Note over Context: 1.全部数据权限<br/>2.本部门数据<br/>3.本部门及以下<br/>4.仅本人数据<br/>5.自定义部门
+    Context-->>Provider: DataScopeInfo
+    deactivate Context
+    
+    Provider-->>Aspect: 权限类型+可见部门列表
+    deactivate Provider
+    
+    Aspect->>Context: DataScopeContext.set(info)
+    Note right of Aspect: ThreadLocal存储
+    
+    Aspect->>Service: proceed()继续执行
+    deactivate Aspect
+    
+    Service->>Interceptor: MyBatis拦截器执行
+    activate Interceptor
+    Note right of Interceptor: beforeQuery拦截
+    
+    Interceptor->>Context: DataScopeContext.get()
+    Context-->>Interceptor: DataScopeInfo
+    
+    alt 全部数据权限
+        Interceptor->>Interceptor: 不注入过滤条件
+    else 本部门数据权限
+        Interceptor->>Interceptor: 注入WHERE dept_id = 100
+    else 本部门及以下
+        Interceptor->>Interceptor: 注入WHERE dept_id IN (100,101,102)
+    else 仅本人数据权限
+        Interceptor->>Interceptor: 注入WHERE user_id = 123
+    else 自定义数据权限
+        Interceptor->>Interceptor: 注入WHERE dept_id IN (100,105)
+    end
+    
+    Interceptor->>MySQL: SELECT * FROM sys_order<br/>WHERE ... AND dept_id IN (100,101)
+    activate MySQL
+    MySQL-->>Interceptor: 过滤后的结果集
+    deactivate MySQL
+    
+    Interceptor-->>Service: List<Order>
+    deactivate Interceptor
+    
+    Service->>Context: DataScopeContext.clear()
+    Note right of Service: 清理ThreadLocal
+    
+    Service-->>Handler: PageResponse<OrderDTO>
+    deactivate Service
+    
+    Handler-->>Client: 200 OK + 分页数据
+    deactivate Handler
+    
+    Note over Client,MySQL: 关键要点
+    Note over Aspect: AOP切面在方法执行前<br/>将权限信息存入ThreadLocal
+    Note over Interceptor: MyBatis拦截器自动改写SQL<br/>业务代码无感知
+    Note over Context: 请求结束后必须清理<br/>防止ThreadLocal泄漏

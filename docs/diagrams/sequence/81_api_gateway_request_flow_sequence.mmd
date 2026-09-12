@@ -1,0 +1,89 @@
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#3b82f6','fontSize':'14px'}}}%%
+sequenceDiagram
+    participant Client as 客户端
+    participant Nginx as Nginx/ALB负载均衡
+    participant Gateway as ApiGatewayFilter
+    participant Sentinel as Sentinel限流熔断
+    participant Auth as Spring Security认证
+    participant Router as RouterFunction路由
+    participant Handler as UserHandler
+    participant Service as UserService
+    
+    Note over Client,Service: API网关请求处理完整流程
+    
+    Client->>Nginx: HTTPS请求<br/>POST /api/v1/users
+    activate Nginx
+    Note right of Nginx: SSL终止<br/>负载均衡
+    
+    Nginx->>Gateway: 转发到应用<br/>X-Real-IP: 客户端IP
+    activate Gateway
+    Note right of Gateway: Order: HIGHEST_PRECEDENCE+20<br/>最前端过滤器
+    
+    Gateway->>Gateway: 生成/透传 X-Request-Id
+    Note right of Gateway: traceId写入MDC<br/>全链路日志关联
+    
+    Gateway->>Gateway: 记录请求开始时间
+    
+    Gateway->>Sentinel: 限流检查
+    activate Sentinel
+    
+    alt 限流规则命中
+        Sentinel--xGateway: FlowException
+        Gateway--xNginx: 429 Too Many Requests
+        Nginx--xClient: 429 + 限流提示
+    else 通过限流检查
+        Sentinel-->>Gateway: 通过
+        deactivate Sentinel
+        
+        Gateway->>Auth: 认证检查
+        activate Auth
+        
+        alt JWT Token无效
+            Auth--xGateway: UnauthorizedException
+            Gateway--xNginx: 401 Unauthorized
+            Nginx--xClient: 401 + 认证失败
+        else JWT Token有效
+            Auth-->>Gateway: 用户信息SecurityContext
+            deactivate Auth
+            
+            Gateway->>Router: 路由匹配
+            activate Router
+            Note right of Router: 函数式路由<br/>POST → UserHandler
+            
+            Router->>Handler: createUser(request)
+            activate Handler
+            
+            Handler->>Handler: 参数校验<br/>@Valid
+            Handler->>Handler: 权限检查<br/>@RequirePermission
+            
+            Handler->>Service: createUser(dto)
+            activate Service
+            Note right of Service: 业务逻辑执行
+            
+            Service-->>Handler: Mono<UserDTO>
+            deactivate Service
+            
+            Handler-->>Router: ServerResponse 201 Created
+            deactivate Handler
+            
+            Router-->>Gateway: 响应结果
+            deactivate Router
+            
+            Gateway->>Gateway: 记录响应时间
+            Note right of Gateway: 计算耗时<br/>P99: 50ms
+            
+            Gateway->>Gateway: 上报Prometheus指标
+            Note right of Gateway: apex_gateway_request_count<br/>apex_gateway_response_time
+            
+            Gateway-->>Nginx: 201 + UserDTO
+            deactivate Gateway
+            
+            Nginx-->>Client: 201 Created + 用户数据
+            deactivate Nginx
+        end
+    end
+    
+    Note over Client,Service: 监控指标
+    Note over Gateway: 请求计数、错误计数、响应时间P50/P95/P99
+    Note over Sentinel: 限流触发次数、拒绝率
+    Note over Auth: 认证成功率、Token过期率

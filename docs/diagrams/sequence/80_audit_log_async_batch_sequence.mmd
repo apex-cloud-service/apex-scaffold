@@ -1,0 +1,73 @@
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#3b82f6','fontSize':'14px'}}}%%
+sequenceDiagram
+    participant Client as 客户端
+    participant Handler as UserHandler
+    participant Aspect as OperationLogAspect
+    participant Service as UserService
+    participant Queue as BlockingQueue阻塞队列
+    participant Consumer as 消费者线程池
+    participant LogService as OperationLogService
+    participant Repo as OperationLogRepository
+    participant MySQL as sys_operation_log表
+    
+    Note over Client,MySQL: 操作审计日志异步批量落库流程
+    
+    Client->>Handler: POST /admin-api/v1/users
+    activate Handler
+    
+    Handler->>Aspect: AOP拦截 @OperationLog
+    activate Aspect
+    Note right of Aspect: 记录操作开始时间<br/>提取请求信息
+    
+    Aspect->>Service: createUser(request)
+    activate Service
+    Note right of Service: 执行业务逻辑<br/>数据库写入
+    
+    Service-->>Aspect: 返回UserDTO
+    deactivate Service
+    
+    Aspect->>Aspect: 计算执行时间<br/>构建审计日志对象
+    Note right of Aspect: operationTime<br/>executionTime<br/>requestParams<br/>responseResult
+    
+    Aspect->>Queue: 入队 offer(logEntity)
+    activate Queue
+    Note right of Queue: 异步队列<br/>容量10000<br/>非阻塞入队
+    
+    Aspect-->>Handler: 继续执行
+    deactivate Aspect
+    
+    Handler-->>Client: 200 OK + UserDTO
+    deactivate Handler
+    
+    Note over Queue,MySQL: 后台消费线程批量写入
+    
+    Consumer->>Queue: 批量取出 drainTo(batch, 100)
+    activate Consumer
+    Queue-->>Consumer: List<OperationLogEntity>
+    deactivate Queue
+    
+    Consumer->>LogService: saveBatch(logList)
+    activate LogService
+    Note right of LogService: 批量保存<br/>最多100条/次
+    
+    LogService->>Repo: batchInsert(entities)
+    activate Repo
+    Note right of Repo: subscribeOn<br/>boundedElastic<br/>JDBC阻塞操作隔离
+    
+    Repo->>MySQL: INSERT INTO sys_operation_log VALUES (...)
+    activate MySQL
+    MySQL-->>Repo: 插入成功
+    deactivate MySQL
+    
+    Repo-->>LogService: Mono<Void>
+    deactivate Repo
+    
+    LogService-->>Consumer: 保存完成
+    deactivate LogService
+    deactivate Consumer
+    
+    Note over Client,MySQL: 关键设计
+    Note over Aspect: AOP切面: 不阻塞主业务,异步入队
+    Note over Queue: 阻塞队列: 生产者-消费者模式,削峰填谷
+    Note over Consumer: 批量消费: 合并写入,降低DB压力
+    Note over Repo: 线程隔离: JDBC操作调度到专用线程池

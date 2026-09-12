@@ -1,0 +1,56 @@
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#4f46e5','primaryTextColor':'#fff','primaryBorderColor':'#3730a3','lineColor':'#64748b','secondaryColor':'#10b981','tertiaryColor':'#f3f4f6','noteBkgColor':'#fef3c7','noteTextColor':'#92400e'}}}%%
+stateDiagram-v2
+    [*] --> Running: 应用启动
+    
+    Running --> PreShutdown: 收到停机信号<br/>(SIGTERM/SIGINT)
+    
+    PreShutdown --> Pausing: 开始优雅停机
+    
+    Pausing --> NotAccepting: 停止接受新请求
+    
+    NotAccepting --> Draining: 等待现有请求完成<br/>(最长30秒)
+    
+    Draining --> Draining: 监控活跃请求数
+    Draining --> Cleanup: 所有请求完成<br/>或超时
+    
+    Cleanup --> ResourceRelease: 清理资源
+    
+    ResourceRelease --> Terminated: 释放完成
+    
+    Terminated --> [*]
+    
+    note right of Running
+        运行状态
+        - 接受新请求
+        - 处理业务逻辑
+        - 健康检查返回UP
+    end note
+    
+    note right of PreShutdown
+        停机准备
+        - 标记停机开始
+        - 通知观察者
+        - 健康检查返回DOWN
+    end note
+    
+    note right of NotAccepting
+        停止接入
+        - /actuator/health → DOWN
+        - 负载均衡器移除实例
+        - 新请求返回503
+    end note
+    
+    note right of Draining
+        请求排空
+        - 等待活跃请求完成
+        - 定时检查(每500ms)
+        - 超时保护(30s)
+    end note
+    
+    note right of Cleanup
+        资源清理
+        - 关闭线程池
+        - 断开数据库连接
+        - 释放Redis连接
+        - 关闭MQ连接
+    end note

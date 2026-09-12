@@ -1,0 +1,52 @@
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#3b82f6','fontSize':'14px'}}}%%
+sequenceDiagram
+    participant Client as 客户端
+    participant Handler as UserHandler
+    participant Service as UserService
+    participant EventLoop as Event Loop<br/>(Reactor)
+    participant BlockingPool as Blocking Pool<br/>(boundedElastic)
+    participant Mapper as MyBatis Mapper
+    participant MySQL as MySQL 8.x
+    
+    Note over Client,MySQL: 响应式请求处理流程
+    
+    Client->>Handler: HTTP请求<br/>GET /api/v1/users/123
+    activate Handler
+    
+    Handler->>Service: getUserById(123L)
+    Note right of Handler: 返回Mono<User><br/>非阻塞
+    
+    activate Service
+    Service->>EventLoop: subscribeOn(Schedulers.boundedElastic())
+    Note right of Service: 调度到阻塞线程池
+    
+    EventLoop->>BlockingPool: 调度JDBC操作
+    activate BlockingPool
+    
+    BlockingPool->>Mapper: selectById(123L)
+    activate Mapper
+    Note right of BlockingPool: JDBC阻塞操作<br/>隔离在专用线程池
+    
+    Mapper->>MySQL: SELECT * FROM sys_user<br/>WHERE id = 123
+    activate MySQL
+    MySQL-->>Mapper: 返回结果集
+    deactivate MySQL
+    
+    Mapper-->>BlockingPool: User对象
+    deactivate Mapper
+    
+    BlockingPool-->>EventLoop: 发射数据到Reactor
+    deactivate BlockingPool
+    
+    EventLoop-->>Service: Mono<User>
+    deactivate Service
+    
+    Service-->>Handler: map/flatMap转换
+    Note left of Service: 响应式操作符<br/>在Event Loop执行
+    
+    Handler-->>Client: ServerResponse<br/>200 OK + JSON
+    deactivate Handler
+    
+    Note over Client,MySQL: 线程模型说明
+    Note over EventLoop: Event Loop线程数: CPU核心数<br/>处理轻量级操作(map/filter)
+    Note over BlockingPool: Blocking Pool线程数: 32(可配置)<br/>隔离阻塞I/O操作(JDBC/Redis)

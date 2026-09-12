@@ -1,0 +1,56 @@
+graph TB
+    Request[客户端请求]
+    
+    Gateway[API网关<br/>ApiGatewayFilter]
+    
+    SentinelEntry[Sentinel Entry<br/>流量控制入口]
+    
+    RuleCheck{规则检查}
+    FlowRule[流控规则<br/>QPS限流]
+    HotParamRule[热点参数<br/>限流]
+    SystemRule[系统规则<br/>CPU/负载]
+    
+    CircuitBreaker[熔断器<br/>Resilience4j]
+    CBState{熔断器状态}
+    
+    RemoteAPI[远程API调用<br/>RemoteApiClient]
+    
+    Fallback[降级处理<br/>返回默认值]
+    Success[成功响应]
+    BlockException[限流拒绝<br/>429错误]
+    
+    Request --> Gateway
+    Gateway --> SentinelEntry
+    
+    SentinelEntry --> RuleCheck
+    RuleCheck --> FlowRule
+    RuleCheck --> HotParamRule
+    RuleCheck --> SystemRule
+    
+    FlowRule -->|通过| CircuitBreaker
+    FlowRule -->|拒绝| BlockException
+    
+    HotParamRule -->|通过| CircuitBreaker
+    HotParamRule -->|拒绝| BlockException
+    
+    SystemRule -->|通过| CircuitBreaker
+    SystemRule -->|拒绝| BlockException
+    
+    CircuitBreaker --> CBState
+    CBState -->|CLOSED 关闭| RemoteAPI
+    CBState -->|OPEN 打开| Fallback
+    CBState -->|HALF_OPEN 半开| RemoteAPI
+    
+    RemoteAPI -->|成功| Success
+    RemoteAPI -->|失败| CircuitBreaker
+    
+    Success --> Gateway
+    Fallback --> Gateway
+    BlockException --> Gateway
+    
+    style FlowRule fill:#3b82f6,color:#fff
+    style HotParamRule fill:#8b5cf6,color:#fff
+    style SystemRule fill:#06b6d4,color:#fff
+    style CircuitBreaker fill:#f59e0b,color:#fff
+    style Fallback fill:#10b981,color:#fff
+    style BlockException fill:#ef4444,color:#fff

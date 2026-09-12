@@ -1,0 +1,36 @@
+stateDiagram-v2
+    [*] --> CLOSED
+    
+    CLOSED --> OPEN : 失败率超过阈值50%<br/>或慢调用率超过50%
+    
+    OPEN --> HALF_OPEN : 等待60秒后<br/>自动尝试恢复
+    
+    HALF_OPEN --> CLOSED : 测试调用成功<br/>成功率达标
+    HALF_OPEN --> OPEN : 测试调用失败<br/>失败率仍高
+    
+    CLOSED --> CLOSED : 正常调用成功<br/>失败率低于阈值
+    OPEN --> OPEN : 等待期间<br/>所有调用快速失败
+    
+    note right of CLOSED
+        关闭状态
+        - 正常处理请求
+        - 记录失败率
+        - 滑动窗口100次调用
+        - 最小调用数10次
+    end note
+    
+    note right of OPEN
+        打开状态
+        - 快速失败所有请求
+        - 返回CircuitBreakerOpenException
+        - 等待60秒恢复期
+        - 触发降级逻辑
+    end note
+    
+    note right of HALF_OPEN
+        半开状态
+        - 允许5次测试调用
+        - 评估系统是否恢复
+        - 成功则关闭熔断器
+        - 失败则重新打开
+    end note

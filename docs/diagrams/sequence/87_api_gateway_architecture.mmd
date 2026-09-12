@@ -1,0 +1,67 @@
+graph TB
+    Internet[互联网客户端]
+    LB[负载均衡<br/>Nginx/ALB]
+    
+    subgraph GatewayLayer[API网关层 ApiGatewayFilter]
+        direction TB
+        TraceId[请求追踪<br/>X-Request-Id生成]
+        MDC[MDC上下文<br/>日志关联]
+        Timer[耗时统计<br/>startTime记录]
+    end
+    
+    subgraph SecurityLayer[安全控制层]
+        Sentinel[Sentinel限流<br/>QPS/并发/热点]
+        SpringSec[Spring Security<br/>JWT认证]
+        Permission[@RequirePermission<br/>权限校验]
+    end
+    
+    subgraph RoutingLayer[路由层]
+        Router[RouterFunction<br/>路由匹配]
+        HandlerMap[Handler映射表]
+    end
+    
+    subgraph BusinessLayer[业务处理层]
+        Handler[Handler处理器]
+        Service[Service服务]
+        Repository[Repository仓储]
+    end
+    
+    subgraph MonitorLayer[监控采集层]
+        Metrics[Prometheus指标]
+        SlowLog[慢请求日志<br/>阈值: 3000ms]
+        ErrorCount[错误计数器]
+    end
+    
+    Internet --> LB
+    LB --> TraceId
+    TraceId --> MDC
+    MDC --> Timer
+    
+    Timer --> Sentinel
+    Sentinel -->|通过| SpringSec
+    Sentinel -->|拒绝| Metrics
+    
+    SpringSec -->|认证成功| Router
+    SpringSec -->|认证失败| Metrics
+    
+    Router --> HandlerMap
+    HandlerMap --> Handler
+    
+    Handler --> Permission
+    Permission -->|有权限| Service
+    Permission -->|无权限| Metrics
+    
+    Service --> Repository
+    Repository -.->|响应| Handler
+    
+    Handler -.->|正常| Metrics
+    Handler -.->|异常| ErrorCount
+    Handler -.->|慢请求| SlowLog
+    
+    Metrics -.->|指标采集| Internet
+    
+    style TraceId fill:#3b82f6,color:#fff
+    style Sentinel fill:#8b5cf6,color:#fff
+    style SpringSec fill:#f59e0b,color:#fff
+    style Metrics fill:#10b981,color:#fff
+    style ErrorCount fill:#ef4444,color:#fff

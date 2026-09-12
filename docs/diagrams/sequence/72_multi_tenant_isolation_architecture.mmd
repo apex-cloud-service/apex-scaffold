@@ -1,0 +1,59 @@
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#4f46e5','secondaryColor':'#06b6d4','tertiaryColor':'#f3f4f6','fontSize':'14px'}}}%%
+graph TB
+    subgraph Request["请求入口"]
+        Client[客户端请求]
+        Header[X-Tenant-Id Header]
+    end
+    
+    subgraph Filter["过滤器层"]
+        TenantFilter[TenantWebFilter<br/>优先级: -100]
+        TenantContext[TenantContext<br/>ThreadLocal存储]
+    end
+    
+    subgraph Service["应用服务层"]
+        UserService[UserService]
+        OrderService[OrderService]
+    end
+    
+    subgraph Data["数据访问层"]
+        TenantInterceptor[TenantLineInnerInterceptor<br/>SQL拦截器]
+        DataScope[DataScopeInterceptor<br/>数据权限]
+        OptimisticLock[OptimisticLockerInterceptor<br/>乐观锁]
+    end
+    
+    subgraph Database["数据库层"]
+        MySQL[(MySQL 8.x<br/>tenant_id字段)]
+    end
+    
+    subgraph Cache["缓存层"]
+        RedisKey["Redis Key<br/>apex:tenant:TENANT_ID:*"]
+    end
+    
+    subgraph MQ["消息队列层"]
+        IdempotentKey["幂等Key<br/>tenant作用域"]
+    end
+    
+    Client -->|携带租户标识| Header
+    Header --> TenantFilter
+    TenantFilter -->|提取并验证| TenantContext
+    TenantContext --> UserService
+    TenantContext --> OrderService
+    
+    UserService --> TenantInterceptor
+    OrderService --> TenantInterceptor
+    
+    TenantInterceptor -->|拦截顺序: 1| DataScope
+    DataScope -->|拦截顺序: 2| OptimisticLock
+    OptimisticLock --> MySQL
+    
+    TenantContext -.->|租户隔离| RedisKey
+    TenantContext -.->|租户作用域| IdempotentKey
+    
+    style TenantFilter fill:#4f46e5,color:#fff
+    style TenantContext fill:#06b6d4,color:#fff
+    style TenantInterceptor fill:#10b981,color:#fff
+    style MySQL fill:#f59e0b,color:#fff
+    style RedisKey fill:#ef4444,color:#fff
+    
+    classDef criticalPath stroke:#ef4444,stroke-width:3px
+    class TenantFilter,TenantInterceptor criticalPath

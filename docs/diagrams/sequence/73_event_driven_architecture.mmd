@@ -1,0 +1,62 @@
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#3b82f6','fontSize':'14px'}}}%%
+graph TB
+    subgraph Producer["事件生产者"]
+        Domain[领域实体<br/>User/Order/Workflow]
+        DomainEvent[领域事件<br/>UserRegisteredEvent<br/>OrderCreatedEvent]
+        EventPublisher[DomainEventPublisher]
+    end
+    
+    subgraph Outbox["发件箱模式 Outbox"]
+        OutboxTable[(domain_event_outbox表<br/>event_id, event_type,<br/>payload, status)]
+        OutboxDispatcher[OutboxDispatcher<br/>定时补偿@Scheduled]
+    end
+    
+    subgraph MQ["消息队列 RocketMQ"]
+        Topic[Topic: domain-events]
+        Queue1[Queue: user-events]
+        Queue2[Queue: order-events]
+    end
+    
+    subgraph Consumer["事件消费者"]
+        Listener1[UserEventListener<br/>@RocketMQMessageListener]
+        Listener2[OrderEventListener]
+        IdempotentCheck[幂等消费检查<br/>Redis去重窗口30分钟]
+    end
+    
+    subgraph Handler["事件处理器"]
+        SendEmail[发送欢迎邮件]
+        UpdateCache[更新缓存]
+        SyncES[同步Elasticsearch]
+        NotifyUser[推送通知]
+    end
+    
+    Domain -->|发布事件| DomainEvent
+    DomainEvent --> EventPublisher
+    EventPublisher -->|事务内写入| OutboxTable
+    
+    OutboxTable -->|1. 立即投递| Topic
+    OutboxTable -.->|2. 补偿重发<br/>每5分钟| OutboxDispatcher
+    OutboxDispatcher -.->|重试失败事件| Topic
+    
+    Topic --> Queue1
+    Topic --> Queue2
+    
+    Queue1 --> Listener1
+    Queue2 --> Listener2
+    
+    Listener1 --> IdempotentCheck
+    Listener2 --> IdempotentCheck
+    
+    IdempotentCheck -->|首次消费| SendEmail
+    IdempotentCheck -->|首次消费| UpdateCache
+    IdempotentCheck -->|首次消费| SyncES
+    IdempotentCheck -->|首次消费| NotifyUser
+    IdempotentCheck -.->|重复消费| Reject[拒绝处理]
+    
+    style EventPublisher fill:#4f46e5,color:#fff
+    style OutboxTable fill:#06b6d4,color:#fff
+    style Topic fill:#f59e0b,color:#fff
+    style IdempotentCheck fill:#10b981,color:#fff
+    
+    classDef reliable stroke:#ef4444,stroke-width:3px,stroke-dasharray: 5 5
+    class OutboxDispatcher,IdempotentCheck reliable

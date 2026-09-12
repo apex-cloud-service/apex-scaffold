@@ -1,0 +1,59 @@
+graph TB
+    Request[HTTP请求]
+    Handler[Handler方法]
+    
+    subgraph AOPLayer[AOP拦截层]
+        Aspect[@OperationLog切面<br/>Order: LOWEST_PRECEDENCE]
+        LogBuilder[日志对象构建器]
+    end
+    
+    subgraph AsyncLayer[异步处理层]
+        Queue[BlockingQueue<br/>容量: 10000<br/>非阻塞入队]
+        Producer[生产者<br/>主业务线程]
+    end
+    
+    subgraph ConsumerLayer[消费者线程池]
+        Consumer1[消费者线程1]
+        Consumer2[消费者线程2]
+        Consumer3[消费者线程N]
+        BatchCollector[批量收集器<br/>最多100条/次]
+    end
+    
+    subgraph ServiceLayer[服务层]
+        LogService[OperationLogService<br/>批量落库服务]
+        Scheduler[BlockingIoSchedulers.jdbc<br/>JDBC专用线程池]
+    end
+    
+    subgraph PersistLayer[持久化层]
+        Repo[OperationLogRepository]
+        Mapper[MyBatis Mapper]
+        MySQL[(sys_operation_log表)]
+    end
+    
+    Request --> Handler
+    Handler --> Aspect
+    Aspect --> LogBuilder
+    
+    LogBuilder -->|操作信息| Producer
+    Producer -->|offer 非阻塞| Queue
+    Producer -.->|立即返回| Handler
+    
+    Queue -->|take 阻塞等待| Consumer1
+    Queue -->|take 阻塞等待| Consumer2
+    Queue -->|take 阻塞等待| Consumer3
+    
+    Consumer1 --> BatchCollector
+    Consumer2 --> BatchCollector
+    Consumer3 --> BatchCollector
+    
+    BatchCollector -->|批量日志列表| LogService
+    LogService -->|subscribeOn| Scheduler
+    Scheduler --> Repo
+    Repo --> Mapper
+    Mapper --> MySQL
+    
+    style Aspect fill:#3b82f6,color:#fff
+    style Queue fill:#8b5cf6,color:#fff
+    style BatchCollector fill:#f59e0b,color:#fff
+    style Scheduler fill:#10b981,color:#fff
+    style MySQL fill:#ef4444,color:#fff

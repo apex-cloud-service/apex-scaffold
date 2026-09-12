@@ -1,0 +1,79 @@
+graph TB
+    Client[HTTP客户端]
+    
+    subgraph NettyLayer[Netty事件循环层]
+        EventLoop1[EventLoop-1]
+        EventLoop2[EventLoop-2]
+        EventLoop3[EventLoop-3]
+        EventLoop4[EventLoop-4]
+        Boss[Boss线程<br/>接收连接]
+    end
+    
+    subgraph ReactiveLayer[响应式处理层]
+        Router[RouterFunction<br/>路由匹配]
+        Handler[Handler<br/>业务逻辑]
+        Pipeline[Reactor Pipeline<br/>Mono/Flux流]
+    end
+    
+    subgraph BlockingLayer[阻塞操作隔离层]
+        JDBCPool[JDBC线程池<br/>BlockingIoSchedulers.jdbc<br/>大小: 32线程]
+        CachePool[缓存线程池<br/>BlockingIoSchedulers.cache<br/>大小: 4线程]
+        RemotePool[远程调用线程池<br/>BlockingIoSchedulers.remote<br/>大小: 8线程]
+    end
+    
+    subgraph DataLayer[数据访问层]
+        MyBatis[MyBatis-Plus<br/>JDBC阻塞查询]
+        Redis[Redisson<br/>同步客户端]
+        WebClient[WebClient<br/>异步HTTP]
+    end
+    
+    subgraph DBLayer[数据库层]
+        MySQL[(MySQL 8.x)]
+        RedisDB[(Redis 7.x)]
+        ExtAPI[外部API]
+    end
+    
+    Client --> Boss
+    Boss --> EventLoop1
+    Boss --> EventLoop2
+    Boss --> EventLoop3
+    Boss --> EventLoop4
+    
+    EventLoop1 --> Router
+    EventLoop2 --> Router
+    EventLoop3 --> Router
+    EventLoop4 --> Router
+    
+    Router --> Handler
+    Handler --> Pipeline
+    
+    Pipeline -->|subscribeOn| JDBCPool
+    Pipeline -->|subscribeOn| CachePool
+    Pipeline -->|响应式调用| WebClient
+    
+    JDBCPool --> MyBatis
+    CachePool --> Redis
+    WebClient --> RemotePool
+    
+    MyBatis --> MySQL
+    Redis --> RedisDB
+    RemotePool --> ExtAPI
+    
+    MySQL -.->|结果集| MyBatis
+    RedisDB -.->|数据| Redis
+    ExtAPI -.->|响应| WebClient
+    
+    MyBatis -.->|Mono/Flux| Pipeline
+    Redis -.->|Mono/Flux| Pipeline
+    WebClient -.->|Mono/Flux| Pipeline
+    
+    Pipeline -.->|ServerResponse| EventLoop1
+    
+    style EventLoop1 fill:#3b82f6,color:#fff
+    style EventLoop2 fill:#3b82f6,color:#fff
+    style EventLoop3 fill:#3b82f6,color:#fff
+    style EventLoop4 fill:#3b82f6,color:#fff
+    style JDBCPool fill:#f59e0b,color:#fff
+    style CachePool fill:#10b981,color:#fff
+    style RemotePool fill:#8b5cf6,color:#fff
+    style MySQL fill:#ef4444,color:#fff

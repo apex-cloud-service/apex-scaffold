@@ -1,0 +1,47 @@
+graph TB
+    Client[客户端请求<br/>读写分离]
+    
+    Handler[UserHandler]
+    ReadService[@DataSource slave<br/>读操作]
+    WriteService[@DataSource master<br/>写操作]
+    
+    Aspect[DataSourceSwitchAspect<br/>AOP拦截]
+    SwitchLogic{切换逻辑判断}
+    
+    DSContext[DataSourceContext<br/>ThreadLocal栈]
+    BaomidouCtx[DynamicDataSource<br/>ContextHolder]
+    
+    DynamicDS[DynamicRouting<br/>DataSource]
+    MasterDS[Master DataSource<br/>HikariCP]
+    SlaveDS[Slave DataSource<br/>HikariCP]
+    
+    MasterDB[(MySQL Master<br/>读写)]
+    SlaveDB[(MySQL Slave<br/>只读)]
+    
+    Client --> Handler
+    Handler --> ReadService
+    Handler --> WriteService
+    
+    ReadService --> Aspect
+    WriteService --> Aspect
+    
+    Aspect --> SwitchLogic
+    SwitchLogic -->|读操作 slave| DSContext
+    SwitchLogic -->|写操作 master| DSContext
+    
+    DSContext -->|push| BaomidouCtx
+    BaomidouCtx --> DynamicDS
+    
+    DynamicDS -->|路由slave| SlaveDS
+    DynamicDS -->|路由master| MasterDS
+    
+    SlaveDS --> SlaveDB
+    MasterDS --> MasterDB
+    
+    MasterDB -.->|Binlog同步| SlaveDB
+    DSContext -.->|方法结束pop| BaomidouCtx
+    
+    style MasterDB fill:#ef4444,color:#fff
+    style SlaveDB fill:#10b981,color:#fff
+    style DSContext fill:#3b82f6,color:#fff
+    style DynamicDS fill:#f59e0b,color:#fff

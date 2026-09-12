@@ -1,0 +1,52 @@
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#4f46e5','primaryTextColor':'#fff','primaryBorderColor':'#3730a3','lineColor':'#64748b','secondaryColor':'#06b6d4','tertiaryColor':'#f3f4f6','noteBkgColor':'#fef3c7','noteTextColor':'#92400e'}}}%%
+stateDiagram-v2
+    [*] --> Draft: 创建工作流
+    
+    Draft --> Submitted: 提交审批
+    Draft --> Cancelled: 取消
+    
+    Submitted --> Approved: 审批通过
+    Submitted --> Rejected: 审批拒绝
+    Submitted --> Cancelled: 撤回
+    
+    Approved --> Completed: 流程完成
+    Approved --> Suspended: 暂停执行
+    
+    Rejected --> Draft: 重新编辑
+    Rejected --> Archived: 归档
+    
+    Suspended --> Approved: 恢复执行
+    Suspended --> Terminated: 强制终止
+    
+    Completed --> [*]
+    Cancelled --> [*]
+    Terminated --> [*]
+    Archived --> [*]
+    
+    note right of Draft
+        草稿状态
+        - 可编辑
+        - 可删除
+        - 未进入审批流
+    end note
+    
+    note right of Submitted
+        已提交状态
+        - 不可编辑
+        - 可撤回
+        - 等待审批
+    end note
+    
+    note right of Approved
+        审批通过状态
+        - 开始执行
+        - 可暂停
+        - 自动流转
+    end note
+    
+    note right of Completed
+        完成状态
+        - 流程结束
+        - 数据归档
+        - 不可修改
+    end note

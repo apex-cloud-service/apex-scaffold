@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mermaid 查看器测试页面</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .test-section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .test-section h2 {
+            color: #1e293b;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .status {
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-weight: 500;
+        }
+
+        .status.success {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .status.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+
+        .status.info {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .diagram-container {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .test-result {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8fafc;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+
+        .button {
+            background: #667eea;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin: 10px 5px;
+        }
+
+        .button:hover {
+            background: #5568d3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Mermaid 查看器功能测试</h1>
+            <p>验证 Mermaid 图表渲染功能</p>
+        </div>
+
+        <div class="test-section">
+            <h2>1️⃣ 基础功能测试</h2>
+            <div id="basicTest"></div>
+            <button class="button" onclick="runBasicTests()">运行基础测试</button>
+        </div>
+
+        <div class="test-section">
+            <h2>2️⃣ 流程图渲染测试</h2>
+            <div class="diagram-container">
+                <div class="mermaid">
+graph TB
+    A[开始] --> B{判断条件}
+    B -->|是| C[处理A]
+    B -->|否| D[处理B]
+    C --> E[结束]
+    D --> E
+                </div>
+            </div>
+            <div id="flowchartTest"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>3️⃣ 时序图渲染测试</h2>
+            <div class="diagram-container">
+                <div class="mermaid">
+sequenceDiagram
+    participant Client as 客户端
+    participant Server as 服务器
+    participant Database as 数据库
+    
+    Client->>Server: 发送请求
+    Server->>Database: 查询数据
+    Database-->>Server: 返回结果
+    Server-->>Client: 响应数据
+                </div>
+            </div>
+            <div id="sequenceTest"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>4️⃣ 状态机图渲染测试</h2>
+            <div class="diagram-container">
+                <div class="mermaid">
+stateDiagram-v2
+    [*] --> Draft
+    Draft --> Submitted: 提交
+    Submitted --> Approved: 通过
+    Submitted --> Rejected: 拒绝
+    Approved --> [*]
+    Rejected --> Draft: 重新编辑
+                </div>
+            </div>
+            <div id="stateTest"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>5️⃣ 实际文档加载测试</h2>
+            <button class="button" onclick="testDocumentLoad()">测试加载 Markdown 文档</button>
+            <div id="docLoadTest"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>📋 测试总结</h2>
+            <div id="summary"></div>
+            <button class="button" onclick="generateReport()">生成测试报告</button>
+        </div>
+    </div>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'base',
+            themeVariables: {
+                primaryColor: '#667eea',
+                primaryTextColor: '#1e293b',
+                primaryBorderColor: '#4f46e5',
+                lineColor: '#64748b',
+                secondaryColor: '#f1f5f9',
+                tertiaryColor: '#f8fafc'
+            }
+        });
+
+        const testResults = {
+            mermaidLoaded: false,
+            flowchartRendered: false,
+            sequenceRendered: false,
+            stateRendered: false,
+            documentLoadable: false
+        };
+
+        // 基础测试
+        function runBasicTests() {
+            const output = document.getElementById('basicTest');
+            let html = '<div class="test-result">';
+
+            // 测试 Mermaid 是否加载
+            if (typeof mermaid !== 'undefined') {
+                html += '<div class="status success">✅ Mermaid 库已成功加载</div>';
+                html += `<div class="status info">版本: ${mermaid.version || '未知'}</div>`;
+                testResults.mermaidLoaded = true;
+            } else {
+                html += '<div class="status error">❌ Mermaid 库加载失败</div>';
+            }
+
+            // 测试浏览器兼容性
+            const features = {
+                'SVG 支持': !!document.createElementNS,
+                'Fetch API': typeof fetch !== 'undefined',
+                'Promise': typeof Promise !== 'undefined',
+                'ES6 支持': typeof Symbol !== 'undefined'
+            };
+
+            html += '<div style="margin-top: 15px;"><strong>浏览器功能检查:</strong></div>';
+            for (const [feature, supported] of Object.entries(features)) {
+                if (supported) {
+                    html += `<div class="status success">✅ ${feature}</div>`;
+                } else {
+                    html += `<div class="status error">❌ ${feature}</div>`;
+                }
+            }
+
+            html += '</div>';
+            output.innerHTML = html;
+        }
+
+        // 检查图表渲染
+        setTimeout(() => {
+            const diagrams = document.querySelectorAll('.mermaid');
+            
+            diagrams.forEach((diagram, index) => {
+                const svg = diagram.querySelector('svg');
+                if (svg) {
+                    if (index === 0) {
+                        testResults.flowchartRendered = true;
+                        document.getElementById('flowchartTest').innerHTML = 
+                            '<div class="status success">✅ 流程图渲染成功</div>';
+                    } else if (index === 1) {
+                        testResults.sequenceRendered = true;
+                        document.getElementById('sequenceTest').innerHTML = 
+                            '<div class="status success">✅ 时序图渲染成功</div>';
+                    } else if (index === 2) {
+                        testResults.stateRendered = true;
+                        document.getElementById('stateTest').innerHTML = 
+                            '<div class="status success">✅ 状态机图渲染成功</div>';
+                    }
+                } else {
+                    if (index === 0) {
+                        document.getElementById('flowchartTest').innerHTML = 
+                            '<div class="status error">❌ 流程图渲染失败</div>';
+                    } else if (index === 1) {
+                        document.getElementById('sequenceTest').innerHTML = 
+                            '<div class="status error">❌ 时序图渲染失败</div>';
+                    } else if (index === 2) {
+                        document.getElementById('stateTest').innerHTML = 
+                            '<div class="status error">❌ 状态机图渲染失败</div>';
+                    }
+                }
+            });
+        }, 2000);
+
+        // 测试文档加载
+        async function testDocumentLoad() {
+            const output = document.getElementById('docLoadTest');
+            output.innerHTML = '<div class="status info">⏳ 正在测试文档加载...</div>';
+
+            try {
+                const response = await fetch('architecture/reactive-programming-guide.md');
+                if (response.ok) {
+                    const content = await response.text();
+                    const hasMermaid = content.includes('```mermaid');
+                    
+                    if (hasMermaid) {
+                        testResults.documentLoadable = true;
+                        output.innerHTML = `
+                            <div class="status success">✅ 文档加载成功</div>
+                            <div class="test-result">
+                                文件大小: ${(content.length / 1024).toFixed(2)} KB<br>
+                                包含 Mermaid 图表: 是<br>
+                                图表数量: ${(content.match(/\`\`\`mermaid/g) || []).length}
+                            </div>
+                        `;
+                    } else {
+                        output.innerHTML = '<div class="status error">❌ 文档中未找到 Mermaid 图表</div>';
+                    }
+                } else {
+                    output.innerHTML = `<div class="status error">❌ 文档加载失败 (HTTP ${response.status})</div>`;
+                }
+            } catch (error) {
+                output.innerHTML = `<div class="status error">❌ 加载错误: ${error.message}</div>`;
+            }
+        }
+
+        // 生成测试报告
+        function generateReport() {
+            const summary = document.getElementById('summary');
+            const total = Object.keys(testResults).length;
+            const passed = Object.values(testResults).filter(v => v).length;
+            const percentage = ((passed / total) * 100).toFixed(0);
+
+            let html = '<div class="test-result">';
+            html += `<h3>测试统计</h3>`;
+            html += `<p><strong>总测试项:</strong> ${total}</p>`;
+            html += `<p><strong>通过:</strong> ${passed}</p>`;
+            html += `<p><strong>失败:</strong> ${total - passed}</p>`;
+            html += `<p><strong>通过率:</strong> ${percentage}%</p>`;
+            html += '<hr style="margin: 15px 0;">';
+            html += '<h3>详细结果</h3>';
+            
+            for (const [key, value] of Object.entries(testResults)) {
+                const label = {
+                    mermaidLoaded: 'Mermaid 库加载',
+                    flowchartRendered: '流程图渲染',
+                    sequenceRendered: '时序图渲染',
+                    stateRendered: '状态机图渲染',
+                    documentLoadable: '文档加载功能'
+                }[key];
+                
+                const status = value ? '✅ 通过' : '❌ 失败';
+                html += `<p>${label}: ${status}</p>`;
+            }
+            
+            html += '</div>';
+
+            if (percentage === 100) {
+                html = '<div class="status success">🎉 所有测试通过! Mermaid 查看器工作正常。</div>' + html;
+            } else if (percentage >= 60) {
+                html = '<div class="status info">⚠️ 部分测试通过,但仍有问题需要修复。</div>' + html;
+            } else {
+                html = '<div class="status error">❌ 多项测试失败,需要检查配置。</div>' + html;
+            }
+
+            summary.innerHTML = html;
+        }
+
+        // 页面加载时自动运行基础测试
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                runBasicTests();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

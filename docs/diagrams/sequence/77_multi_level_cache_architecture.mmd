@@ -1,0 +1,55 @@
+graph TB
+    Client[客户端请求<br/>GET /api/v1/users/123]
+    Handler[UserHandler]
+    Service[UserService]
+    CacheService[MultiLevelCacheService]
+    
+    L1Cache[(L1 Caffeine<br/>10000条 60s<br/>命中率80-95%)]
+    L1Hit{L1命中?}
+    
+    L2Cache[(L2 Redis<br/>无限制 3600s<br/>命中率5-15%)]
+    L2Hit{L2命中?}
+    
+    SingleFlight[Single-Flight<br/>击穿防护]
+    NullCache[空值缓存<br/>穿透防护]
+    RandomTTL[随机TTL<br/>雪崩防护]
+    
+    Repo[UserRepository]
+    Mapper[MyBatis Mapper]
+    DB[(MySQL 8.x)]
+    
+    Client --> Handler
+    Handler --> Service
+    Service --> CacheService
+    
+    CacheService --> L1Hit
+    L1Hit -->|命中| L1Cache
+    L1Cache -->|返回 小于1ms| Service
+    
+    L1Hit -->|未命中| L2Hit
+    L2Hit -->|命中| L2Cache
+    L2Cache -->|返回 1-5ms| CacheService
+    CacheService -->|回填L1| L1Cache
+    
+    L2Hit -->|未命中| SingleFlight
+    SingleFlight --> Repo
+    Repo --> Mapper
+    Mapper --> DB
+    
+    DB -->|结果集| Mapper
+    Mapper -->|User对象| Repo
+    Repo -->|Mono User| CacheService
+    
+    CacheService -->|写入L2| L2Cache
+    CacheService -->|写入L1| L1Cache
+    CacheService -->|空值缓存| NullCache
+    
+    RandomTTL -.->|TTL随机偏移| L2Cache
+    RandomTTL -.->|防止同时过期| L1Cache
+    
+    style L1Cache fill:#10b981,color:#fff
+    style L2Cache fill:#3b82f6,color:#fff
+    style DB fill:#6366f1,color:#fff
+    style SingleFlight fill:#f59e0b,color:#fff
+    style NullCache fill:#ef4444,color:#fff
+    style RandomTTL fill:#8b5cf6,color:#fff

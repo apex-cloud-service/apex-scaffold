@@ -1,0 +1,80 @@
+sequenceDiagram
+    participant Client as 客户端租户A
+    participant Gateway as API网关
+    participant TenantFilter as TenantContextFilter
+    participant TenantCtx as TenantContext
+    participant Handler as UserHandler
+    participant Service as UserService
+    participant TenantInterceptor as TenantLineInterceptor
+    participant MyBatis as MyBatis-Plus
+    participant MySQL as MySQL数据库
+    
+    Note over Client,MySQL: 多租户数据隔离完整流程
+    
+    Client->>Gateway: POST /api/v1/users<br/>Header: X-Tenant-Id=TENANT_A
+    activate Gateway
+    
+    Gateway->>TenantFilter: 过滤器拦截<br/>Order: HIGHEST_PRECEDENCE+10
+    activate TenantFilter
+    Note right of TenantFilter: 提取租户头<br/>X-Tenant-Id
+    
+    TenantFilter->>TenantFilter: 验证租户ID格式<br/>检查租户状态
+    
+    alt 租户ID无效或租户已禁用
+        TenantFilter--xGateway: 403 Forbidden
+        Gateway--xClient: 租户无效
+    else 租户ID有效
+        TenantFilter->>TenantCtx: setTenantId(TENANT_A)
+        activate TenantCtx
+        Note right of TenantCtx: 写入ThreadLocal<br/>或Reactor Context
+        
+        TenantFilter-->>Gateway: 继续处理
+        deactivate TenantFilter
+        
+        Gateway->>Handler: 路由到业务Handler
+        activate Handler
+        
+        Handler->>Service: createUser(request)
+        activate Service
+        
+        Service->>MyBatis: INSERT用户数据
+        activate MyBatis
+        
+        MyBatis->>TenantInterceptor: SQL拦截<br/>beforeQuery
+        activate TenantInterceptor
+        Note right of TenantInterceptor: 从TenantContext获取<br/>租户ID: TENANT_A
+        
+        TenantInterceptor->>TenantInterceptor: 改写SQL<br/>自动添加WHERE条件
+        Note right of TenantInterceptor: INSERT INTO sys_user<br/>(id, name, tenant_id)<br/>VALUES (?, ?, 'TENANT_A')
+        
+        TenantInterceptor-->>MyBatis: 返回改写后SQL
+        deactivate TenantInterceptor
+        
+        MyBatis->>MySQL: 执行SQL<br/>tenant_id='TENANT_A'
+        activate MySQL
+        Note right of MySQL: 索引: idx_tenant_id<br/>确保隔离性能
+        
+        MySQL-->>MyBatis: 插入成功
+        deactivate MySQL
+        
+        MyBatis-->>Service: 返回结果
+        deactivate MyBatis
+        
+        Service-->>Handler: UserDTO
+        deactivate Service
+        
+        Handler-->>Gateway: 200 OK
+        deactivate Handler
+        
+        Gateway->>TenantCtx: 清理租户上下文<br/>doFinally
+        TenantCtx->>TenantCtx: remove ThreadLocal
+        deactivate TenantCtx
+        
+        Gateway-->>Client: 返回用户数据
+        deactivate Gateway
+    end
+    
+    Note over Client,MySQL: 关键保护点
+    Note over TenantFilter: 1. 入口验证租户头不可伪造
+    Note over TenantInterceptor: 2. SQL自动改写确保数据隔离
+    Note over MySQL: 3. 数据库索引保证查询性能

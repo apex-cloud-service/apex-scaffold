@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apex Scaffold Mermaid 图表查看器</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@11.1.0/marked.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --text-color: #1e293b;
+            --border-color: #e2e8f0;
+            --bg-light: #f8fafc;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .control-panel {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: var(--shadow);
+            margin-bottom: 25px;
+        }
+
+        .file-selector {
+            margin-bottom: 20px;
+        }
+
+        .file-selector label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--text-color);
+        }
+
+        .file-selector select {
+            width: 100%;
+            padding: 12px 15px;
+            font-size: 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .file-selector select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .view-mode {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .view-mode-btn {
+            padding: 10px 20px;
+            border: 2px solid var(--border-color);
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .view-mode-btn:hover {
+            border-color: var(--primary-color);
+            background: var(--bg-light);
+        }
+
+        .view-mode-btn.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .content-area {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: var(--shadow);
+            min-height: 500px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: #64748b;
+        }
+
+        .loading-spinner {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .error {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .error-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .error-text {
+            font-size: 1.2rem;
+            color: #64748b;
+        }
+
+        .diagram-container {
+            margin: 20px 0;
+            padding: 20px;
+            background: var(--bg-light);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            overflow-x: auto;
+        }
+
+        .diagram-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--text-color);
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .mermaid {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 200px;
+        }
+
+        .markdown-content {
+            line-height: 1.6;
+            color: var(--text-color);
+        }
+
+        .markdown-content h1 {
+            font-size: 2rem;
+            margin: 30px 0 20px;
+            color: var(--primary-color);
+            border-bottom: 3px solid var(--primary-color);
+            padding-bottom: 10px;
+        }
+
+        .markdown-content h2 {
+            font-size: 1.7rem;
+            margin: 25px 0 15px;
+            color: var(--text-color);
+        }
+
+        .markdown-content h3 {
+            font-size: 1.4rem;
+            margin: 20px 0 10px;
+            color: var(--text-color);
+        }
+
+        .markdown-content p {
+            margin: 15px 0;
+        }
+
+        .markdown-content ul, .markdown-content ol {
+            margin: 15px 0;
+            padding-left: 30px;
+        }
+
+        .markdown-content li {
+            margin: 8px 0;
+        }
+
+        .markdown-content code {
+            background: var(--bg-light);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #e11d48;
+        }
+
+        .markdown-content pre {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            color: inherit;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        .markdown-content th,
+        .markdown-content td {
+            border: 1px solid var(--border-color);
+            padding: 12px;
+            text-align: left;
+        }
+
+        .markdown-content th {
+            background: var(--bg-light);
+            font-weight: 600;
+        }
+
+        .stats-bar {
+            background: var(--bg-light);
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stat-label {
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+
+        .stat-value {
+            color: var(--primary-color);
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8rem;
+            }
+
+            .control-panel {
+                padding: 20px;
+            }
+
+            .content-area {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Mermaid 图表查看器</h1>
+            <p>支持渲染项目中所有 Mermaid 图表</p>
+        </div>
+
+        <div class="control-panel">
+            <div class="file-selector">
+                <label for="fileSelect">选择文档:</label>
+                <select id="fileSelect">
+                    <option value="">-- 请选择包含 Mermaid 图表的文档 --</option>
+                    <optgroup label="架构文档">
+                        <option value="architecture/reactive-programming-guide.md">WebFlux 响应式编程指南</option>
+                        <option value="architecture/multi-tenant-isolation-architecture.md">多租户数据隔离架构</option>
+                        <option value="architecture/service-governance-solution.md">服务治理落地方案</option>
+                        <option value="architecture/core-tech-diagrams-index.md">核心技术图表索引</option>
+                    </optgroup>
+                    <optgroup label="高级特性">
+                        <option value="architecture/advanced-features/multi-level-cache-complete-guide.md">多级缓存完整指南</option>
+                        <option value="architecture/advanced-features/circuit-breaker-rate-limit-guide.md">熔断器与限流指南</option>
+                    </optgroup>
+                    <optgroup label="功能文档">
+                        <option value="features/workflow-engine-guide.md">工作流引擎使用指南</option>
+                        <option value="MESSAGE_MIDDLEWARE.md">消息中间件使用说明</option>
+                        <option value="DATA_SCOPE_USAGE.md">数据权限使用指南</option>
+                    </optgroup>
+                    <optgroup label="使用指南">
+                        <option value="MERMAID_VIEWER_GUIDE.md">Mermaid 图表查看指南</option>
+                        <option value="diagrams/sequence/README.md">时序图源文件说明</option>
+                    </optgroup>
+                </select>
+            </div>
+
+            <div class="file-selector">
+                <label>查看模式:</label>
+                <div class="view-mode">
+                    <button class="view-mode-btn active" data-mode="all">完整文档</button>
+                    <button class="view-mode-btn" data-mode="diagrams">仅图表</button>
+                    <button class="view-mode-btn" data-mode="text">仅文本</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="statsBar" class="stats-bar" style="display: none;">
+            <div class="stat-item">
+                <span class="stat-label">文档:</span>
+                <span class="stat-value" id="docName">-</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">图表数量:</span>
+                <span class="stat-value" id="diagramCount">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">文档大小:</span>
+                <span class="stat-value" id="docSize">0 KB</span>
+            </div>
+        </div>
+
+        <div class="content-area" id="content">
+            <div class="loading">
+                <div class="loading-spinner">📄</div>
+                <div>请选择一个文档开始查看</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        mermaid.initialize({
+            startOnLoad: false,
+            theme: 'base',
+            themeVariables: {
+                primaryColor: '#667eea',
+                primaryTextColor: '#1e293b',
+                primaryBorderColor: '#4f46e5',
+                lineColor: '#64748b',
+                secondaryColor: '#f1f5f9',
+                tertiaryColor: '#f8fafc'
+            },
+            flowchart: {
+                curve: 'basis',
+                padding: 20
+            },
+            sequence: {
+                mirrorActors: true,
+                messageMargin: 60
+            },
+            securityLevel: 'loose'
+        });
+
+        let currentMode = 'all';
+        let currentContent = '';
+        let diagramCount = 0;
+
+        const fileSelect = document.getElementById('fileSelect');
+        const contentDiv = document.getElementById('content');
+        const statsBar = document.getElementById('statsBar');
+        const docName = document.getElementById('docName');
+        const diagramCountEl = document.getElementById('diagramCount');
+        const docSize = document.getElementById('docSize');
+        const viewModeBtns = document.querySelectorAll('.view-mode-btn');
+
+        // 文件选择事件
+        fileSelect.addEventListener('change', async (e) => {
+            const filePath = e.target.value;
+            if (!filePath) {
+                contentDiv.innerHTML = `
+                    <div class="loading">
+                        <div class="loading-spinner">📄</div>
+                        <div>请选择一个文档开始查看</div>
+                    </div>
+                `;
+                statsBar.style.display = 'none';
+                return;
+            }
+
+            await loadDocument(filePath);
+        });
+
+        // 查看模式切换
+        viewModeBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                viewModeBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentMode = btn.dataset.mode;
+                
+                if (currentContent) {
+                    renderContent(currentContent, currentMode);
+                }
+            });
+        });
+
+        // 加载文档
+        async function loadDocument(filePath) {
+            contentDiv.innerHTML = `
+                <div class="loading">
+                    <div class="loading-spinner">⏳</div>
+                    <div>正在加载文档...</div>
+                </div>
+            `;
+            statsBar.style.display = 'none';
+
+            try {
+                const response = await fetch(filePath);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const content = await response.text();
+                currentContent = content;
+
+                // 统计信息
+                const fileName = filePath.split('/').pop();
+                const size = (new Blob([content]).size / 1024).toFixed(2);
+                diagramCount = (content.match(/```mermaid/g) || []).length;
+
+                docName.textContent = fileName;
+                diagramCountEl.textContent = diagramCount;
+                docSize.textContent = `${size} KB`;
+                statsBar.style.display = 'flex';
+
+                // 渲染内容
+                await renderContent(content, currentMode);
+
+            } catch (error) {
+                console.error('加载文档失败:', error);
+                contentDiv.innerHTML = `
+                    <div class="error">
+                        <div class="error-icon">❌</div>
+                        <div class="error-text">
+                            加载文档失败: ${error.message}<br>
+                            <small>请确认文件路径正确: ${filePath}</small>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // 渲染内容
+        async function renderContent(content, mode) {
+            if (mode === 'diagrams') {
+                // 仅图表模式
+                const diagrams = extractDiagrams(content);
+                if (diagrams.length === 0) {
+                    contentDiv.innerHTML = `
+                        <div class="error">
+                            <div class="error-icon">📊</div>
+                            <div class="error-text">该文档不包含 Mermaid 图表</div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                let html = '';
+                for (let i = 0; i < diagrams.length; i++) {
+                    const diagram = diagrams[i];
+                    const id = `mermaid-${i}`;
+                    html += `
+                        <div class="diagram-container">
+                            <div class="diagram-title">图表 ${i + 1}${diagram.title ? ': ' + diagram.title : ''}</div>
+                            <div class="mermaid" id="${id}">${diagram.code}</div>
+                        </div>
+                    `;
+                }
+                contentDiv.innerHTML = html;
+                
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
+                const mermaidElements = contentDiv.querySelectorAll('.mermaid');
+                for (const element of mermaidElements) {
+                    try {
+                        await mermaid.run({ nodes: [element] });
+                    } catch (error) {
+                        console.error('Mermaid rendering error:', error);
+                        element.innerHTML = `<div style="color: red; padding: 20px;">图表渲染失败: ${error.message}</div>`;
+                    }
+                }
+
+            } else if (mode === 'text') {
+                // 仅文本模式（移除 Mermaid 代码块）
+                const textContent = content.replace(/```mermaid[\s\S]*?```/g, '[Mermaid 图表已隐藏]');
+                contentDiv.innerHTML = `<div class="markdown-content">${marked.parse(textContent)}</div>`;
+
+            } else {
+                // 完整文档模式
+                const htmlContent = await renderMarkdownWithMermaid(content);
+                contentDiv.innerHTML = `<div class="markdown-content">${htmlContent}</div>`;
+                
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
+                const mermaidElements = contentDiv.querySelectorAll('.mermaid');
+                for (const element of mermaidElements) {
+                    try {
+                        await mermaid.run({ nodes: [element] });
+                    } catch (error) {
+                        console.error('Mermaid rendering error:', error);
+                        element.innerHTML = `<div style="color: red; padding: 20px;">图表渲染失败: ${error.message}</div>`;
+                    }
+                }
+            }
+        }
+
+        // 提取 Mermaid 图表
+        function extractDiagrams(content) {
+            const diagrams = [];
+            const regex = /```mermaid\n([\s\S]*?)```/g;
+            let match;
+            let prevIndex = 0;
+
+            while ((match = regex.exec(content)) !== null) {
+                // 尝试获取图表标题（前一行的标题）
+                const beforeDiagram = content.substring(prevIndex, match.index);
+                const lines = beforeDiagram.split('\n');
+                const lastLine = lines[lines.length - 1] || '';
+                const title = lastLine.match(/###?\s+(.+)/) ? lastLine.match(/###?\s+(.+)/)[1] : '';
+
+                diagrams.push({
+                    code: match[1].trim(),
+                    title: title
+                });
+                prevIndex = match.index + match[0].length;
+            }
+
+            return diagrams;
+        }
+
+        // 渲染带 Mermaid 的 Markdown
+        async function renderMarkdownWithMermaid(content) {
+            let diagramId = 0;
+            
+            // 先替换 Mermaid 代码块为占位符
+            const placeholders = [];
+            content = content.replace(/```mermaid\n([\s\S]*?)```/g, (match, code) => {
+                const placeholder = `__MERMAID_PLACEHOLDER_${diagramId}__`;
+                placeholders.push({
+                    id: diagramId,
+                    code: code.trim()
+                });
+                diagramId++;
+                return placeholder;
+            });
+
+            // 转换 Markdown
+            let html = marked.parse(content);
+
+            // 替换占位符为 Mermaid div
+            placeholders.forEach(({ id, code }) => {
+                const mermaidDiv = `<div class="diagram-container"><div class="mermaid">${code}</div></div>`;
+                html = html.replace(`__MERMAID_PLACEHOLDER_${id}__`, mermaidDiv);
+            });
+
+            return html;
+        }
+
+        // 快捷键支持
+        document.addEventListener('keydown', (e) => {
+            if (e.key === '1' && e.altKey) {
+                e.preventDefault();
+                document.querySelector('[data-mode="all"]').click();
+            } else if (e.key === '2' && e.altKey) {
+                e.preventDefault();
+                document.querySelector('[data-mode="diagrams"]').click();
+            } else if (e.key === '3' && e.altKey) {
+                e.preventDefault();
+                document.querySelector('[data-mode="text"]').click();
+            }
+        });
+    </script>
+</body>
+</html>

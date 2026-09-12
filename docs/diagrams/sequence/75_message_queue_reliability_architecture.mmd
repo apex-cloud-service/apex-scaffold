@@ -1,0 +1,91 @@
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#3b82f6','fontSize':'14px'}}}%%
+graph TB
+    subgraph Producer["消息生产者"]
+        BizService[业务服务<br/>OrderService]
+        MqProducer[MqProducerService]
+        SendSync[同步发送]
+        SendAsync[异步发送]
+        SendOrderly[顺序发送]
+        SendTx[事务发送]
+    end
+    
+    subgraph Outbox["发件箱模式"]
+        OutboxTable[(domain_event_outbox<br/>event_id, payload,<br/>status, retry_count)]
+        OutboxDispatcher[OutboxDispatcher<br/>@Scheduled每5分钟]
+        RetryLogic{重试逻辑<br/>最多3次}
+    end
+    
+    subgraph RocketMQ["RocketMQ集群"]
+        NameServer[NameServer]
+        Broker[Broker]
+        Topic[Topic: order-events]
+        Queue1[Queue 0]
+        Queue2[Queue 1]
+        Queue3[Queue 2]
+    end
+    
+    subgraph Consumer["消息消费者"]
+        Listener[OrderEventListener<br/>@RocketMQMessageListener]
+        MqConsumer[MqConsumerService]
+        IdempotentCheck{幂等检查<br/>Redis去重}
+        BizHandler[业务处理器<br/>OrderEventHandler]
+    end
+    
+    subgraph Guarantee["可靠性保障"]
+        LocalTx[本地事务]
+        RetryMech[重试机制]
+        DeadLetter[死信队列]
+        Monitor[监控告警]
+    end
+    
+    BizService -->|1.发送消息| MqProducer
+    MqProducer --> SendSync
+    MqProducer --> SendAsync
+    MqProducer --> SendOrderly
+    MqProducer --> SendTx
+    
+    SendSync -->|同步写入| OutboxTable
+    SendAsync -->|异步写入| OutboxTable
+    SendOrderly -->|按hashKey路由| OutboxTable
+    SendTx -->|事务绑定| LocalTx
+    
+    OutboxTable -->|2.立即投递| NameServer
+    OutboxDispatcher -.->|3.定时补偿| OutboxTable
+    OutboxTable -->|状态:PENDING| RetryLogic
+    RetryLogic -->|重试| NameServer
+    RetryLogic -.->|失败3次| DeadLetter
+    
+    NameServer --> Broker
+    Broker --> Topic
+    Topic --> Queue1
+    Topic --> Queue2
+    Topic --> Queue3
+    
+    Queue1 --> Listener
+    Queue2 --> Listener
+    Queue3 --> Listener
+    
+    Listener -->|4.消费消息| MqConsumer
+    MqConsumer -->|5.幂等检查| IdempotentCheck
+    
+    IdempotentCheck -->|首次消费| BizHandler
+    IdempotentCheck -.->|重复消费| Reject[拒绝处理]
+    
+    BizHandler -->|6.ACK| Broker
+    BizHandler -.->|失败| RetryMech
+    RetryMech -.->|超过最大重试| DeadLetter
+    
+    LocalTx -.->|事务提交| NameServer
+    LocalTx -.->|事务回滚| Rollback[消息回滚]
+    
+    DeadLetter -.-> Monitor
+    Monitor -.->|告警| Alert[钉钉/邮件]
+    
+    style MqProducer fill:#4f46e5,color:#fff
+    style OutboxTable fill:#06b6d4,color:#fff
+    style IdempotentCheck fill:#10b981,color:#fff
+    style DeadLetter fill:#ef4444,color:#fff
+    style LocalTx fill:#f59e0b,color:#fff
+    
+    classDef reliable stroke:#ef4444,stroke-width:3px,stroke-dasharray: 5 5
+    class OutboxDispatcher,IdempotentCheck,RetryMech reliable
