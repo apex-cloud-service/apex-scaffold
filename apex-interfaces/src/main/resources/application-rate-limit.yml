@@ -1,0 +1,19 @@
+apex:
+  ratelimit:
+    local-fallback:
+      enabled: true
+      algorithm: SLIDING_WINDOW
+    token-bucket:
+      default-capacity: 100
+      default-refill-rate: 20.0
+    leaky-bucket:
+      default-capacity: 50
+      default-leak-rate: 10.0
+    sliding-window:
+      default-window-ms: 1000
+      default-bucket-count: 10
+    adaptive:
+      cpu-threshold: 0.7
+      memory-threshold: 0.85
+      thread-threshold: 0.8
+      degrade-factor: 0.2

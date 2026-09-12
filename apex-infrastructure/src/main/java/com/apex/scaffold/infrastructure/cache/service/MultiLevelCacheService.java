@@ -1,6 +1,7 @@
 package com.apex.scaffold.infrastructure.cache.service;
 
 import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
+import com.apex.scaffold.common.util.ratelimit.algorithm.TokenBucket;
 import com.apex.scaffold.domain.service.CacheService;
 import com.apex.scaffold.infrastructure.cache.config.CacheProperties;
 import com.apex.scaffold.infrastructure.cache.support.InFlightRequestMerge;
@@ -80,6 +81,8 @@ public class MultiLevelCacheService {
 
     /** 回源请求合并器：缓存击穿防护（Single-Flight），同一 key 并发回源只执行一次 */
     private final InFlightRequestMerge inFlight = new InFlightRequestMerge();
+
+    private final TokenBucket rebuildBucket = new TokenBucket(100, 20.0);
 
     private final LocalCacheService localCacheService;
 
@@ -273,24 +276,29 @@ public class MultiLevelCacheService {
         return get(key, clazz)
                 .switchIfEmpty(Mono.defer(() ->
                         // 缓存未命中，从 DB 回源（同 key 并发请求合并为一次）
-                        inFlight.join(key, () -> loader.get()
-                                .flatMap(dbValue -> {
-                                    if (dbValue == null) {
-                                        // 写入空值标记防止缓存穿透
-                                        return setEmptyMarker(key).then(Mono.empty());
-                                    }
-                                    // 写入 L2（Redis）和 L1（Caffeine）
-                                    return set(key, dbValue, ttl).thenReturn(dbValue);
-                                })
-                                .onErrorResume(this::isDataAccessException, ex -> {
-                                    // DB 故障读降级：尝试从过期缓存中读取旧数据
-                                    if (cacheProperties.getReadDegradation().isEnabled()) {
-                                        log.warn("DB 查询失败，尝试读降级从过期缓存返回, key: {}", key, ex);
-                                        return tryReadStaleCache(key, clazz);
-                                    }
-                                    // 降级未启用，直接传播异常
-                                    return Mono.error(ex);
-                                }))));
+                        inFlight.join(key, () -> {
+                            if (!rebuildBucket.tryAcquire()) {
+                                return Mono.error(new IllegalStateException("缓存回源速率受限"));
+                            }
+                            return loader.get()
+                                    .flatMap(dbValue -> {
+                                        if (dbValue == null) {
+                                            // 写入空值标记防止缓存穿透
+                                            return setEmptyMarker(key).then(Mono.empty());
+                                        }
+                                        // 写入 L2（Redis）和 L1（Caffeine）
+                                        return set(key, dbValue, ttl).thenReturn(dbValue);
+                                    })
+                                    .onErrorResume(this::isDataAccessException, ex -> {
+                                        // DB 故障读降级：尝试从过期缓存中读取旧数据
+                                        if (cacheProperties.getReadDegradation().isEnabled()) {
+                                            log.warn("DB 查询失败，尝试读降级从过期缓存返回, key: {}", key, ex);
+                                            return tryReadStaleCache(key, clazz);
+                                        }
+                                        // 降级未启用，直接传播异常
+                                        return Mono.error(ex);
+                                    });
+                        })));
     }
 
     /**

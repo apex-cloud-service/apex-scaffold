@@ -5,6 +5,7 @@ import static com.apex.scaffold.common.scheduler.BlockingIoSchedulers.cache;
 import com.apex.scaffold.common.annotation.UserRateLimit;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.util.ratelimit.LocalRateLimiter;
+import com.apex.scaffold.common.util.ratelimit.algorithm.RateLimitAlgorithm;
 import java.lang.reflect.Method;
 import java.util.UUID;
 import java.util.stream.IntStream;
@@ -96,6 +97,17 @@ public class UserRateLimitAspect {
     private boolean localFallbackEnabled = true;
 
     /**
+     * 本地降流算法类型
+     *
+     * <p>通过配置项 {@code apex.ratelimit.local-fallback.algorithm} 控制，
+     * 默认 SLIDING_WINDOW。可选值：TOKEN_BUCKET、LEAKY_BUCKET、SLIDING_WINDOW。
+     *
+     * @since 3.2.0
+     */
+    @Value("${apex.ratelimit.local-fallback.algorithm:SLIDING_WINDOW}")
+    private RateLimitAlgorithm localFallbackAlgorithm = RateLimitAlgorithm.SLIDING_WINDOW;
+
+    /**
      * 构造用户级别限流切面
      *
      * @param redissonClient Redisson 客户端
@@ -143,10 +155,14 @@ public class UserRateLimitAspect {
                 .onErrorResume(throwable -> {
                     // Step 2: Redis 异常，降级到本地限流
                     if (localFallbackEnabled && (redissonClient == null || isRedisException(throwable))) {
-                        log.warn("Redis 不可用，降级到本地限流, key: {}", rateKey, throwable);
+                        log.warn(
+                                "Redis 不可用，降级到本地限流, key: {}, algorithm: {}",
+                                rateKey,
+                                localFallbackAlgorithm,
+                                throwable);
                         return Mono.fromCallable(() -> {
-                                    LocalRateLimiter localLimiter =
-                                            LocalRateLimiter.of(rateKey, (int) rate, rateInterval * 1000L);
+                                    LocalRateLimiter localLimiter = LocalRateLimiter.of(
+                                            rateKey, (int) rate, rateInterval * 1000L, localFallbackAlgorithm);
                                     return localLimiter.tryAcquire();
                                 })
                                 .subscribeOn(cache())

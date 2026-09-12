@@ -1,11 +1,12 @@
 package com.apex.scaffold.common.util.ratelimit;
 
+import com.apex.scaffold.common.util.ratelimit.algorithm.RateLimitAlgorithm;
+import com.apex.scaffold.common.util.ratelimit.algorithm.RateLimitAlgorithmFactory;
+import com.apex.scaffold.common.util.ratelimit.algorithm.RateLimitStrategy;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.ReentrantLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,18 +14,31 @@ import org.slf4j.LoggerFactory;
  * 本地限流器（Redis 降级兜底）
  *
  * <p>当 Redis 或 Redisson 不可用时，作为分布式限流的本地降级方案。
- * 基于 {@link ReentrantLock} + 滑动窗口计数实现进程内限流，确保核心限流能力
- * 不因外部依赖故障而完全失效。
+ * 基于 {@link RateLimitStrategy} 策略接口实现进程内限流，支持三种算法：
+ * 滑动窗口（默认）、令牌桶、漏桶，确保核心限流能力不因外部依赖故障而完全失效。
  *
  * <h2>设计原理</h2>
  * <ul>
- *   <li><strong>滑动窗口</strong>：使用 {@link AtomicLong} 数组记录最近时间窗内的请求时间戳，
- *       通过遍历统计当前窗口内的有效请求数</li>
- *   <li><strong>公平锁保护</strong>：{@link ReentrantLock#tryLock()} 保护 check-then-record 原子性，
- *       消除高并发下的竞态条件（v1.2.0 从 {@code Semaphore} 重构）</li>
+ *   <li><strong>算法可插拔</strong>：v1.3.0 重构，内部委托给
+ *       {@link RateLimitStrategy} 策略接口，支持
+ *       {@link RateLimitAlgorithm#SLIDING_WINDOW}（默认）、
+ *       {@link RateLimitAlgorithm#TOKEN_BUCKET}、
+ *       {@link RateLimitAlgorithm#LEAKY_BUCKET} 三种算法</li>
+ *   <li><strong>高效滑动窗口</strong>：从 v1.2.0 的 O(n) 时间戳数组遍历
+ *       升级为 O(1) 桶分片计数，内存从 10000 个 AtomicLong 降至 10 个 long 槽位</li>
+ *   <li><strong>公平锁保护</strong>：策略内部使用 {@link java.util.concurrent.locks.ReentrantLock}
+ *       保护 check-then-record 原子性，消除高并发下的竞态条件</li>
  *   <li><strong>快速失败</strong>：超限时立即拒绝，不阻塞等待</li>
  *   <li><strong>自动恢复</strong>：窗口滑动后自动释放容量</li>
  * </ul>
+ *
+ * <h2>性能对比（v1.2.0 → v1.3.0）</h2>
+ * <table border="1">
+ *   <tr><th>指标</th><th>v1.2.0（时间戳数组）</th><th>v1.3.0（桶分片滑动窗口）</th></tr>
+ *   <tr><td>tryAcquire 时间复杂度</td><td>O(n), n=10000</td><td>O(1)</td></tr>
+ *   <tr><td>内存占用/实例</td><td>~80KB</td><td>~80B</td></tr>
+ *   <tr><td>1000 实例内存</td><td>~80MB</td><td>~80KB</td></tr>
+ * </table>
  *
  * <h2>内存管理</h2>
  * <p>INSTANCES Map 使用 {@link ConcurrentHashMap} 存储限流器实例。
@@ -32,8 +46,11 @@ import org.slf4j.LoggerFactory;
  * 推荐通过定时任务（如每10分钟）调用以防止内存泄漏。</p>
  *
  * @author Apex Team
- * @version 1.2.0
+ * @version 1.3.0
  * @since 1.0.0
+ * @see RateLimitStrategy
+ * @see RateLimitAlgorithmFactory
+ * @see com.apex.scaffold.common.util.ratelimit.algorithm.SlidingWindow
  */
 public class LocalRateLimiter {
     private static final Logger log = LoggerFactory.getLogger(LocalRateLimiter.class);
@@ -41,8 +58,8 @@ public class LocalRateLimiter {
     /** 默认窗口大小（毫秒） */
     private static final long DEFAULT_WINDOW_MS = 1000L;
 
-    /** 时间戳滚动条最大长度 */
-    private static final int MAX_RECORD_SIZE = 10000;
+    /** 默认算法类型 */
+    private static final RateLimitAlgorithm DEFAULT_ALGORITHM = RateLimitAlgorithm.SLIDING_WINDOW;
 
     /** 限流键 → 限流器实例映射 */
     private static final Map<String, LocalRateLimiter> INSTANCES = new ConcurrentHashMap<>(16);
@@ -53,35 +70,42 @@ public class LocalRateLimiter {
     /** 窗口大小（毫秒） */
     private final long windowMs;
 
-    /** 公平锁，保护 check-then-record 原子性，消除竞态条件 */
-    private final ReentrantLock lock = new ReentrantLock(true);
+    /** 算法类型 */
+    private final RateLimitAlgorithm algorithm;
 
-    /** 窗口内请求时间戳滚动数组 */
-    private final AtomicLong[] timestamps;
-
-    /** 当前写入位置 */
-    private final AtomicInteger cursor = new AtomicInteger(0);
+    /** 底层限流策略实例 */
+    private final RateLimitStrategy strategy;
 
     /** 最后访问时间，用于空闲检测 */
     private final AtomicLong lastAccessTime = new AtomicLong(System.currentTimeMillis());
 
     /**
-     * 构造本地限流器。
+     * 构造本地限流器（使用默认滑动窗口算法）。
      *
      * @param permits  窗口内允许的最大许可数
      * @param windowMs 窗口大小（毫秒）
      */
     LocalRateLimiter(int permits, long windowMs) {
-        this.permits = permits;
-        this.windowMs = windowMs > 0 ? windowMs : DEFAULT_WINDOW_MS;
-        this.timestamps = new AtomicLong[MAX_RECORD_SIZE];
-        for (int i = 0; i < MAX_RECORD_SIZE; i++) {
-            timestamps[i] = new AtomicLong(0);
-        }
+        this(permits, windowMs, DEFAULT_ALGORITHM);
     }
 
     /**
-     * 获取或创建本地限流器实例
+     * 构造本地限流器（指定算法类型）。
+     *
+     * @param permits  窗口内允许的最大许可数
+     * @param windowMs 窗口大小（毫秒）
+     * @param algorithm 算法类型
+     */
+    LocalRateLimiter(int permits, long windowMs, RateLimitAlgorithm algorithm) {
+        this.permits = permits;
+        this.windowMs = windowMs > 0 ? windowMs : DEFAULT_WINDOW_MS;
+        this.algorithm = algorithm != null ? algorithm : DEFAULT_ALGORITHM;
+        this.strategy = RateLimitAlgorithmFactory.createNew(this.algorithm, permits, permits, this.windowMs);
+        log.debug("本地限流器初始化, algorithm: {}, permits: {}, windowMs: {}", this.algorithm, permits, this.windowMs);
+    }
+
+    /**
+     * 获取或创建本地限流器实例（使用默认滑动窗口算法）
      *
      * <p>以 {@code key} 为唯一标识，复用已存在的限流器实例。
      * 适用于与 {@code @UserRateLimit} 注解配合使用。
@@ -92,55 +116,40 @@ public class LocalRateLimiter {
      * @return 本地限流器实例
      */
     public static LocalRateLimiter of(String key, int permits, long windowMs) {
+        return of(key, permits, windowMs, DEFAULT_ALGORITHM);
+    }
+
+    /**
+     * 获取或创建本地限流器实例（指定算法类型）
+     *
+     * @param key       限流键
+     * @param permits   窗口内允许的最大许可数
+     * @param windowMs  窗口大小（毫秒）
+     * @param algorithm 算法类型
+     * @return 本地限流器实例
+     * @since 1.3.0
+     */
+    public static LocalRateLimiter of(String key, int permits, long windowMs, RateLimitAlgorithm algorithm) {
         return INSTANCES.computeIfAbsent(key, k -> {
-            log.debug("创建本地限流器, key: {}, permits: {}, windowMs: {}", k, permits, windowMs);
-            return new LocalRateLimiter(permits, windowMs);
+            log.debug("创建本地限流器, key: {}, permits: {}, windowMs: {}, algorithm: {}", k, permits, windowMs, algorithm);
+            return new LocalRateLimiter(permits, windowMs, algorithm);
         });
     }
 
     /**
      * 尝试获取一个许可（非阻塞）。
      *
-     * <p>通过 {@link ReentrantLock} 保护 check-then-record 的原子性，
-     * 消除高并发下多线程同时通过计数检查的竞态条件。
+     * <p>委托给底层 {@link RateLimitStrategy} 执行限流判定。
      *
      * @return 获取成功返回 true，限流拒绝返回 false
      */
     public boolean tryAcquire() {
         lastAccessTime.set(System.currentTimeMillis());
-        long now = System.currentTimeMillis();
-        long cutoff = now - windowMs;
-
-        lock.lock();
-        try {
-            // Step 1: 统计滑动窗口内的有效请求数
-            int count = 0;
-            for (int i = 0; i < MAX_RECORD_SIZE; i++) {
-                long ts = timestamps[i].get();
-                if (ts > cutoff && ts <= now) {
-                    count++;
-                }
-            }
-
-            // Step 2: 判断是否超限
-            if (count >= permits) {
-                log.debug("本地限流器拒绝, 当前窗口计数: {}, 上限: {}", count, permits);
-                return false;
-            }
-
-            // Step 3: 记录本次请求时间戳（写入当前位置并轮转）
-            int pos = cursor.getAndUpdate(c -> (c + 1) % MAX_RECORD_SIZE);
-            timestamps[pos].set(now);
-            return true;
-        } finally {
-            lock.unlock();
-        }
+        return strategy.tryAcquire();
     }
 
     /**
      * 尝试获取指定数量的许可（非阻塞）。
-     *
-     * <p>通过 {@link ReentrantLock} 保护批量 check-then-record 的原子性。
      *
      * @param requiredPermits 需要获取的许可数
      * @return 获取成功返回 true，限流拒绝返回 false
@@ -150,32 +159,7 @@ public class LocalRateLimiter {
             return true;
         }
         lastAccessTime.set(System.currentTimeMillis());
-        long now = System.currentTimeMillis();
-        long cutoff = now - windowMs;
-
-        lock.lock();
-        try {
-            int count = 0;
-            for (int i = 0; i < MAX_RECORD_SIZE; i++) {
-                long ts = timestamps[i].get();
-                if (ts > cutoff && ts <= now) {
-                    count++;
-                }
-            }
-
-            if (count + requiredPermits > permits) {
-                log.debug("本地限流器拒绝, 当前窗口计数: {}, 请求: {}, 上限: {}", count, requiredPermits, permits);
-                return false;
-            }
-
-            for (int j = 0; j < requiredPermits; j++) {
-                int pos = cursor.getAndUpdate(c -> (c + 1) % MAX_RECORD_SIZE);
-                timestamps[pos].set(now);
-            }
-            return true;
-        } finally {
-            lock.unlock();
-        }
+        return strategy.tryAcquire(requiredPermits);
     }
 
     /**
@@ -184,16 +168,7 @@ public class LocalRateLimiter {
      * @return 当前窗口内的请求数
      */
     public int getCurrentCount() {
-        long now = System.currentTimeMillis();
-        long cutoff = now - windowMs;
-        int count = 0;
-        for (int i = 0; i < MAX_RECORD_SIZE; i++) {
-            long ts = timestamps[i].get();
-            if (ts > cutoff && ts <= now) {
-                count++;
-            }
-        }
-        return count;
+        return (int) strategy.getCurrentCount();
     }
 
     /**
@@ -215,6 +190,16 @@ public class LocalRateLimiter {
     }
 
     /**
+     * 获取当前使用的算法类型
+     *
+     * @return 算法类型枚举
+     * @since 1.3.0
+     */
+    public RateLimitAlgorithm getAlgorithm() {
+        return algorithm;
+    }
+
+    /**
      * 清理空闲限流器实例
      *
      * <p>定期调用以释放不再使用的限流器资源。
@@ -224,6 +209,7 @@ public class LocalRateLimiter {
      */
     public static void clearIdleInstances() {
         INSTANCES.clear();
+        RateLimitAlgorithmFactory.clearAll();
         log.debug("本地限流器实例已清理");
     }
 

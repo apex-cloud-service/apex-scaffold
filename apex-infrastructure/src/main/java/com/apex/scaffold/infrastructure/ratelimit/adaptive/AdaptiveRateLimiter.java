@@ -1,10 +1,15 @@
 package com.apex.scaffold.infrastructure.ratelimit.adaptive;
 
+import com.apex.scaffold.common.util.ratelimit.algorithm.RateLimitAlgorithm;
+import com.apex.scaffold.common.util.ratelimit.algorithm.RateLimitAlgorithmFactory;
+import com.apex.scaffold.common.util.ratelimit.algorithm.RateLimitStrategy;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.lang.management.MemoryUsage;
 import java.lang.management.OperatingSystemMXBean;
 import java.lang.management.ThreadMXBean;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
@@ -65,6 +70,9 @@ public class AdaptiveRateLimiter {
 
     /** 上一次采样时间戳 */
     private final AtomicLong lastSampleTime = new AtomicLong(0L);
+
+    /** 资源 → 自适应令牌桶策略实例映射 */
+    private final Map<String, RateLimitStrategy> adaptiveLimiters = new ConcurrentHashMap<>();
 
     /** 操作系统 MXBean */
     private final com.sun.management.OperatingSystemMXBean osBean;
@@ -247,5 +255,53 @@ public class AdaptiveRateLimiter {
         cachedAllowedQps.set(MAX_QPS);
         lastSampleTime.set(0L);
         log.info("自适应限流状态已重置");
+    }
+
+    /**
+     * 尝试获取自适应限流许可
+     *
+     * <p>基于系统负载指标动态调整令牌桶参数后执行限流判定。
+     * 负载越高，令牌桶容量和补充速率越低。
+     *
+     * @param resource 资源标识
+     * @param baseQps 基准 QPS
+     * @return 获取成功返回 true，限流拒绝返回 false
+     * @since 1.1.0
+     */
+    public boolean tryAcquireAdaptive(String resource, int baseQps) {
+        int allowedQps = getAllowedQps(resource, baseQps);
+        RateLimitStrategy limiter = adaptiveLimiters.computeIfAbsent(resource, k -> {
+            log.info("创建自适应令牌桶, resource: {}, capacity: {}, refillRate: {}", k, allowedQps, (double) allowedQps);
+            return RateLimitAlgorithmFactory.createNew(
+                    RateLimitAlgorithm.TOKEN_BUCKET, allowedQps, (double) allowedQps, 0);
+        });
+
+        boolean acquired = limiter.tryAcquire();
+        if (!acquired) {
+            log.debug("自适应限流拒绝, resource: {}, allowedQps: {}", resource, allowedQps);
+        }
+        return acquired;
+    }
+
+    /**
+     * 清理指定资源的自适应限流器
+     *
+     * @param resource 资源标识
+     * @since 1.1.0
+     */
+    public void clearResource(String resource) {
+        adaptiveLimiters.remove(resource);
+        log.debug("清理自适应限流器, resource: {}", resource);
+    }
+
+    /**
+     * 清理所有自适应限流器
+     *
+     * @since 1.1.0
+     */
+    public void clearAll() {
+        int size = adaptiveLimiters.size();
+        adaptiveLimiters.clear();
+        log.info("清理所有自适应限流器, 数量: {}", size);
     }
 }

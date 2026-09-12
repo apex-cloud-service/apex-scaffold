@@ -1,6 +1,7 @@
 package com.apex.scaffold.infrastructure.mq.service;
 
 import com.apex.scaffold.common.context.TenantContext;
+import com.apex.scaffold.common.util.ratelimit.algorithm.LeakyBucket;
 import jakarta.annotation.PreDestroy;
 import java.time.Duration;
 import java.time.Instant;
@@ -77,6 +78,12 @@ public class MqConsumerService {
     private static final String PROCESSING_PREFIX = "PROCESSING:";
 
     private static final String SUCCESS = "SUCCESS";
+
+    private static final long CONSUMER_BUCKET_CAPACITY = 50L;
+
+    private static final double CONSUMER_BUCKET_RATE = 10.0;
+
+    private final LeakyBucket consumerBucket = new LeakyBucket(CONSUMER_BUCKET_CAPACITY, CONSUMER_BUCKET_RATE);
 
     /** H2 修复：处理失败状态（含业务未执行成功或已执行部分后抛异常），失败窗口内不可重入，由 TTL 兜底。 */
     private static final String FAILED = "FAILED";
@@ -212,6 +219,10 @@ public class MqConsumerService {
 
         inFlight.incrementAndGet();
         try {
+            if (!consumerBucket.tryAcquire()) {
+                bucket.compareAndSet(token, null);
+                return ProcessingResult.failed(messageId, "消息消费速率受限，等待重试");
+            }
             boolean success = handler.handle(message);
             if (!success) {
                 // H2 修复：业务返回 false 但不代表"可重入"，CAS 为 FAILED 而非 null；
