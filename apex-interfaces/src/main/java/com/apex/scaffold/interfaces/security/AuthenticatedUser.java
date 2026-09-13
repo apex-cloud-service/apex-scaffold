@@ -25,11 +25,26 @@ public record AuthenticatedUser(Long userId, String openId, String tenantId, Lon
         this(userId, openId, tenantId, null);
     }
 
+    /**
+     * 获取认证主体的名称标识。
+     *
+     * <p>实现 {@link Principal#getName()} 接口，返回用户的 OpenID 作为主体名称。
+     *
+     * @return OpenID 字符串
+     */
     @Override
     public String getName() {
         return openId;
     }
 
+    /**
+     * 返回认证用户的字符串表示。
+     *
+     * <p>重写 {@link Object#toString()}，返回包含 userId、openId 和 tenantId 的字符串表示，
+     * 不包含 deptId 以保持输出简洁。
+     *
+     * @return 格式化的字符串表示
+     */
     @Override
     public String toString() {
         return "AuthenticatedUser[userId=" + userId + ", openId=" + openId + ", tenantId=" + tenantId + "]";

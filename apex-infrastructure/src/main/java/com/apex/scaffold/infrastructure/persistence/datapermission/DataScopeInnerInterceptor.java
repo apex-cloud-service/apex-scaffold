@@ -7,13 +7,12 @@ import com.apex.scaffold.common.context.DataScopeProvider;
 import com.baomidou.mybatisplus.core.exceptions.MybatisPlusException;
 import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
 import java.lang.reflect.Field;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.executor.Executor;
 import org.apache.ibatis.mapping.BoundSql;
 import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.session.ResultHandler;
 import org.apache.ibatis.session.RowBounds;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * MyBatis-Plus 数据权限拦截器（自定义数据权限）。
@@ -42,9 +41,8 @@ import org.slf4j.LoggerFactory;
  * @version 1.0.0
  * @since 2.3.0
  */
+@Slf4j
 public class DataScopeInnerInterceptor implements InnerInterceptor {
-
-    private static final Logger log = LoggerFactory.getLogger(DataScopeInnerInterceptor.class);
 
     /** 数据权限装配器 */
     private final DataScopeProvider dataScopeProvider;

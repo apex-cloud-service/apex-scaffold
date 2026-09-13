@@ -7,12 +7,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
+import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RBucket;
 import org.redisson.api.RKeys;
 import org.redisson.api.RedissonClient;
 import org.redisson.client.codec.StringCodec;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
@@ -50,11 +49,11 @@ import reactor.core.publisher.Mono;
  * @version 1.0.0
  * @since 1.0.0
  * @see LocalCacheService
- * @see MultiLevelCacheService
+ * @see InFlightRequestMerge
  */
+@Slf4j
 @Service
 public class CacheConsistencyService implements CacheConsistencyPort {
-    private static final Logger log = LoggerFactory.getLogger(CacheConsistencyService.class);
 
     /** 空值标记：用于缓存穿透防护 */
     private static final String EMPTY_VALUE = "__EMPTY__";

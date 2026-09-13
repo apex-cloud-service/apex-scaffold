@@ -14,14 +14,15 @@ import lombok.NoArgsConstructor;
  * 剔除敏感字段（如密码哈希），仅暴露会话管理所需信息。</p>
  *
  * @author Apex Team
- * @version 1.0.0
- * @since 2.2.0
+ * @version 1.2.0
+ * @since 1.0.0
  */
 @Schema(description = "在线用户")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+/**n * OnlineUserDTOn *n * <p>TODO: 补充类的详细说明n *n * @author Apex Teamn * @version 1.0.0n * @since 1.0.0n */
 public class OnlineUserDTO {
 
     /** 用户 ID */

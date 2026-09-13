@@ -1,5 +1,11 @@
 package com.apex.scaffold.interfaces.handler;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,66 +18,62 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
 /**
- * OAuth2 JWKS端点Handler
+ * OAuth2 JWKS 处理器（函数式端点）。
  *
- * <p>处理JSON Web Key Set (JWKS)公钥端点请求。
- * JWKS端点用于公开OAuth2授权服务器的公钥信息，
- * 客户端可以通过此端点获取密钥信息以验证JWT Token的签名。
+ * <p>提供 OAuth2 授权服务器的 JSON Web Key Set（JWKS）公开端点，
+ * 客户端可通过该端点获取 JWT 令牌签名验证所需的公钥元数据，
+ * 无需在客户端预置密钥即可完成令牌验签。</p>
  *
- * <h2>端点信息</h2>
+ * <h2>主要功能</h2>
  * <ul>
- *   <li>路径: {@code GET /oauth2/jwks}</li>
- *   <li>响应类型: application/json</li>
- *   <li>无需认证</li>
+ *   <li>暴露 JWKS 端点，返回签名密钥集（kty/kid/alg/use）</li>
+ *   <li>支持 HS256 对称签名密钥的元数据发布</li>
+ *   <li>配合 OAuth2 服务发现端点 {@code jwks_uri} 使用</li>
  * </ul>
  *
- * <h2>响应格式</h2>
- * <pre>{@code
- * {
- *   "keys": [
- *     {
- *       "kty": "oct",
- *       "kid": "apex-oauth2-key-2026",
- *       "alg": "HS256",
- *       "use": "sig"
- *     }
- *   ]
- * }
- * }</pre>
- *
- * <h2>密钥类型说明</h2>
+ * <h2>接口清单</h2>
  * <ul>
- *   <li>kty: oct - Octet sequence (对称密钥)</li>
- *   <li>kid: 密钥标识符</li>
- *   <li>alg: HS256 - HMAC-SHA256算法</li>
- *   <li>use: sig - 用于签名</li>
+ *   <li>GET /oauth2/jwks - 获取 JWT 公钥集（JWKS）</li>
  * </ul>
  *
  * @author Apex Team
- * @version 2.0.0
- * @since 2.0.0
+ * @version 1.2.0
+ * @since 1.0.0
+ * @see OAuth2DiscoveryHandler
  */
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@Tag(name = "OAuth2 JWKS", description = "OAuth2 JSON Web Key Set公钥端点,用于JWT令牌签名验证")
 public class OAuth2JwksHandler {
 
-    /**
-     * 处理JWKS公钥端点请求
-     *
-     * <p>返回OAuth2授权服务器使用的JWT密钥集信息。
-     * 由于当前使用HMAC对称加密，返回的是密钥元数据而非实际密钥值。
-     *
-     * <h3>注意事项</h3>
-     * <ul>
-     *   <li>对称密钥(HMAC)不应公开密钥值</li>
-     *   <li>仅公开密钥的元数据信息</li>
-     *   <li>客户端使用client_secret进行验证</li>
-     * </ul>
-     *
-     * @param request ServerRequest对象
-     * @return 包含JWKS信息的响应
-     */
+    @Operation(
+            operationId = "oauth2Jwks",
+            summary = "获取JWT公钥集(JWKS)",
+            description = "返回OAuth2授权服务器的JWT密钥集元数据,客户端可用于验证JWT令牌签名")
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "返回JWKS密钥集信息",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                examples =
+                                        @ExampleObject(
+                                                value =
+                                                        """
+                {
+                  "keys": [
+                    {
+                      "kty": "oct",
+                      "kid": "apex-oauth2-key-2026",
+                      "alg": "HS256",
+                      "use": "sig"
+                    }
+                  ]
+                }
+                """)))
+    })
     public Mono<ServerResponse> jwks(ServerRequest request) {
         Map<String, Object> jwksResponse = new HashMap<>();
 

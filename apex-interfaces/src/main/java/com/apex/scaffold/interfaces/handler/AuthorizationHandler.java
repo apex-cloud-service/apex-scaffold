@@ -33,33 +33,31 @@ import reactor.core.publisher.Mono;
  * 授权管理处理器（函数式端点）。
  *
  * <p>提供角色和权限的管理接口，包括角色/权限的 CRUD、用户的角色分配与移除、
- * 当前用户的角色/权限查询以及权限检查。
- * 具体业务逻辑由 {@link com.apex.scaffold.application.service.RoleService}、
+ * 当前用户的角色/权限查询。具体业务逻辑由
+ * {@link com.apex.scaffold.application.service.RoleService}、
  * {@link com.apex.scaffold.application.service.PermissionService} 和
  * {@link com.apex.scaffold.application.service.UserService} 协作实现。
+ * 路径参数中的数字字段通过 {@link #safeParseLong(String)} 安全解析，
+ * 解析失败时返回 400 错误响应。</p>
  *
- * <p>路由设计：
+ * <h2>接口清单</h2>
  * <ul>
- *   <li>GET /authorization/my-roles — 获取当前用户角色</li>
- *   <li>GET /authorization/my-permissions — 获取当前用户权限</li>
- *   <li>GET /authorization/check-permission — 检查权限</li>
- *   <li>GET /authorization/roles — 获取所有角色</li>
- *   <li>GET /authorization/permissions — 获取所有权限</li>
- *   <li>POST /authorization/roles — 创建角色</li>
- *   <li>PUT /authorization/roles — 更新角色</li>
- *   <li>DELETE /authorization/roles/{id} — 删除角色</li>
- *   <li>POST /authorization/permissions — 创建权限</li>
- *   <li>PUT /authorization/permissions — 更新权限</li>
- *   <li>DELETE /authorization/permissions/{id} — 删除权限</li>
- *   <li>POST /authorization/users/{userId}/roles/{roleId} — 分配角色</li>
- *   <li>DELETE /authorization/users/{userId}/roles/{roleId} — 移除角色</li>
+ *   <li>GET /api/v1/auth/roles/my - 获取当前用户角色</li>
+ *   <li>GET /api/v1/auth/permissions/my - 获取当前用户权限</li>
+ *   <li>GET /api/v1/auth/roles - 获取所有角色</li>
+ *   <li>GET /api/v1/auth/permissions - 获取所有权限</li>
+ *   <li>POST /api/v1/auth/roles - 创建角色</li>
+ *   <li>POST /api/v1/auth/roles/update - 更新角色</li>
+ *   <li>DELETE /api/v1/auth/roles/{id} - 删除角色</li>
+ *   <li>POST /api/v1/auth/permissions - 创建权限</li>
+ *   <li>POST /api/v1/auth/permissions/update - 更新权限</li>
+ *   <li>DELETE /api/v1/auth/permissions/{id} - 删除权限</li>
+ *   <li>POST /api/v1/auth/users/{userId}/roles/{roleId} - 分配角色</li>
+ *   <li>DELETE /api/v1/auth/users/{userId}/roles/{roleId} - 移除角色</li>
  * </ul>
  *
- * <p>异常处理模式：路径参数中的数字字段通过 {@link #safeParseLong(String)}
- * 安全解析，解析失败时返回 400 错误响应。
- *
  * @author Apex Team
- * @version 2.0.0
+ * @version 1.2.0
  * @since 1.0.0
  */
 @Slf4j

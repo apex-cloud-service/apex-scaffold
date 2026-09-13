@@ -4,8 +4,7 @@ import com.apex.scaffold.domain.gateway.WeChatGateway;
 import com.apex.scaffold.infrastructure.circuitbreaker.CircuitBreakerService;
 import com.apex.scaffold.infrastructure.wechat.service.WeChatAppService;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
@@ -27,10 +26,10 @@ import reactor.core.publisher.Mono;
  * @version 2.0.0
  * @since 1.0.0
  */
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class WeChatGatewayImpl implements WeChatGateway {
-    private static final Logger log = LoggerFactory.getLogger(WeChatGatewayImpl.class);
 
     /**
      * 微信应用服务

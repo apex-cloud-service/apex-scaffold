@@ -7,8 +7,7 @@ import com.apex.scaffold.common.enums.DataScopeType;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 
 /**
@@ -39,9 +38,8 @@ import org.slf4j.MDC;
  * @version 1.0.0
  * @since 2.3.0
  */
+@Slf4j
 public class MdcDataScopeProvider implements DataScopeProvider {
-
-    private static final Logger log = LoggerFactory.getLogger(MdcDataScopeProvider.class);
 
     /** MDC 键：当前用户 ID */
     public static final String MDC_USER_ID = "apex.userId";

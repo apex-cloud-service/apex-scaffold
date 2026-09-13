@@ -6,7 +6,9 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.apex.scaffold.application.assembler.TenantAssembler;
 import com.apex.scaffold.application.dto.admin.TenantCreateRequest;
+import com.apex.scaffold.application.dto.admin.TenantDTO;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.domain.model.entity.TenantEntity;
@@ -40,15 +42,28 @@ class TenantApplicationServiceTest {
     @Mock
     private TenantRepository tenantRepository;
 
+    @Mock
+    private TenantAssembler tenantAssembler;
+
     @InjectMocks
     private TenantApplicationService tenantApplicationService;
 
     private TenantEntity activeTenant;
+    private TenantDTO mockTenantDTO;
 
     @BeforeEach
     void setUp() {
         activeTenant = TenantEntity.create(TENANT_CODE, "Acme Corp", "admin-001", TenantQuota.of(100, 10240));
         activeTenant.setId(1L);
+
+        mockTenantDTO = new TenantDTO();
+        mockTenantDTO.setId(1L);
+        mockTenantDTO.setTenantCode(TENANT_CODE);
+        mockTenantDTO.setTenantName("Acme Corp");
+        mockTenantDTO.setAdminUserId("admin-001");
+        mockTenantDTO.setMaxUsers(100);
+        mockTenantDTO.setMaxStorageMb(10240);
+        mockTenantDTO.setStatus("ACTIVE");
     }
 
     @Test
@@ -63,6 +78,7 @@ class TenantApplicationServiceTest {
 
         when(tenantRepository.existsByCode(TENANT_CODE, null)).thenReturn(Mono.just(false));
         when(tenantRepository.insert(any(TenantEntity.class))).thenReturn(Mono.just(1));
+        when(tenantAssembler.toDTO(any(TenantEntity.class))).thenReturn(mockTenantDTO);
 
         tenantApplicationService
                 .createTenant(request)
@@ -110,8 +126,14 @@ class TenantApplicationServiceTest {
     @Test
     @DisplayName("disable - 正常租户停用成功")
     void disable_Success() {
+        TenantDTO disabledDTO = new TenantDTO();
+        disabledDTO.setId(1L);
+        disabledDTO.setTenantCode(TENANT_CODE);
+        disabledDTO.setStatus("DISABLED");
+
         when(tenantRepository.findByCode(TENANT_CODE)).thenReturn(Mono.just(activeTenant));
         when(tenantRepository.updateById(any(TenantEntity.class))).thenReturn(Mono.just(1));
+        when(tenantAssembler.toDTO(any(TenantEntity.class))).thenReturn(disabledDTO);
 
         tenantApplicationService
                 .disable(TENANT_CODE)
@@ -137,9 +159,15 @@ class TenantApplicationServiceTest {
     @Test
     @DisplayName("archive - 终态归档后任何迁移被拒绝")
     void archive_TerminalState() {
+        TenantDTO archivedDTO = new TenantDTO();
+        archivedDTO.setId(1L);
+        archivedDTO.setTenantCode(TENANT_CODE);
+        archivedDTO.setStatus("ARCHIVED");
+
         activeTenant.deactivate();
         when(tenantRepository.findByCode(TENANT_CODE)).thenReturn(Mono.just(activeTenant));
         when(tenantRepository.updateById(any(TenantEntity.class))).thenReturn(Mono.just(1));
+        when(tenantAssembler.toDTO(any(TenantEntity.class))).thenReturn(archivedDTO);
 
         tenantApplicationService
                 .archive(TENANT_CODE)
@@ -222,8 +250,15 @@ class TenantApplicationServiceTest {
     @Test
     @DisplayName("updateQuota - 更新配额成功")
     void updateQuota_Success() {
+        TenantDTO updatedDTO = new TenantDTO();
+        updatedDTO.setId(1L);
+        updatedDTO.setTenantCode(TENANT_CODE);
+        updatedDTO.setMaxUsers(200);
+        updatedDTO.setMaxStorageMb(20480);
+
         when(tenantRepository.findByCode(TENANT_CODE)).thenReturn(Mono.just(activeTenant));
         when(tenantRepository.updateById(any(TenantEntity.class))).thenReturn(Mono.just(1));
+        when(tenantAssembler.toDTO(any(TenantEntity.class))).thenReturn(updatedDTO);
 
         tenantApplicationService
                 .updateQuota(TENANT_CODE, 200, 20480)

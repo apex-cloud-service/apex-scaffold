@@ -554,7 +554,7 @@ tcpdump -i eth0 port 3306 -w mysql.pcap
 
 - [部署架构文档](deployment-architecture.md)
 - [系统架构设计文档](system-architecture.md)
-- [安全防护系统文档](../advanced-features/security-protection-system.md)
+- [安全防护系统文档](advanced-features/security-protection-system.md)
 
 ### 9.2 外部参考
 

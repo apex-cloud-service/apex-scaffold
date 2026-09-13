@@ -6,8 +6,7 @@ import com.apex.scaffold.domain.model.entity.ApiCallLogEntity;
 import com.apex.scaffold.domain.repository.ApiCallLogRepository;
 import com.apex.scaffold.infrastructure.persistence.mapper.ApiCallLogMapper;
 import com.apex.scaffold.infrastructure.persistence.po.ApiCallLogPO;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
 
@@ -27,9 +26,9 @@ import reactor.core.publisher.Mono;
  * @see ApiCallLogMapper
  * @see com.apex.scaffold.common.scheduler.BlockingIoSchedulers#event()
  */
+@Slf4j
 @Repository
 public class ApiCallLogRepositoryImpl implements ApiCallLogRepository {
-    private static final Logger log = LoggerFactory.getLogger(ApiCallLogRepositoryImpl.class);
 
     /** MyBatis-Plus Mapper。 */
     private final ApiCallLogMapper mapper;

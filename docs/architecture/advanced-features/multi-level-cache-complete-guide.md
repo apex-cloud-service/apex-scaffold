@@ -654,7 +654,7 @@ getBatch(keys);
 - [多级缓存架构SVG](../../diagrams/09_multi_level_cache_architecture.svg)
 - [缓存一致性方案](multi-level-cache-architecture.md)
 - [Redis配置最佳实践](../../CONFIGURATION.md#redis)
-- [性能优化指南](../../standards/backend-development-standards.md#性能优化)
+- [性能优化指南](../../04-development/backend-development-standards.md)
 
 ---
 

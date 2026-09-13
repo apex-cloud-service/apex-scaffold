@@ -3,8 +3,7 @@ package com.apex.scaffold.infrastructure.wechat.service;
 import com.apex.scaffold.infrastructure.wechat.config.WeChatAppProperties;
 import com.apex.scaffold.infrastructure.wechat.exception.WeChatApiException;
 import java.util.Map;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
@@ -41,9 +40,9 @@ import reactor.core.publisher.Mono;
  * @see WeChatApiException
  * @see WeChatAppProperties
  */
+@Slf4j
 @Service
 public class WeChatAppService {
-    private static final Logger log = LoggerFactory.getLogger(WeChatAppService.class);
 
     /**
      * 微信 API 返回的用户 OpenID 字段名

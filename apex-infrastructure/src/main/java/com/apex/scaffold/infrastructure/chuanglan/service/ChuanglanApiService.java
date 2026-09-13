@@ -5,8 +5,6 @@ import com.apex.scaffold.infrastructure.chuanglan.config.ChuanglanWebClientConfi
 import com.apex.scaffold.infrastructure.chuanglan.exception.ChuanglanApiException;
 import com.apex.scaffold.infrastructure.chuanglan.strategy.PhoneDecryptStrategy;
 import java.util.Map;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -63,7 +61,6 @@ import reactor.core.publisher.Mono;
  */
 @Service
 public class ChuanglanApiService {
-    private static final Logger log = LoggerFactory.getLogger(ChuanglanApiService.class);
 
     /** 短信子系统 Client。 */
     private final ChuanglanSmsClient smsClient;

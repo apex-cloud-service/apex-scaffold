@@ -11,8 +11,7 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
@@ -34,10 +33,10 @@ import reactor.core.publisher.Mono;
  * @author Apex Team
  * @version 1.0.0
  */
+@Slf4j
 @Repository
 @RequiredArgsConstructor
 public class CreditAccountRepositoryImpl implements CreditAccountRepository {
-    private static final Logger log = LoggerFactory.getLogger(CreditAccountRepositoryImpl.class);
 
     private final CreditAccountMapper mapper;
     private final CreditAccountPoConverter creditAccountPoConverter;

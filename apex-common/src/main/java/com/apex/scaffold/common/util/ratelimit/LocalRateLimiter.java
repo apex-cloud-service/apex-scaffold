@@ -7,8 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 本地限流器（Redis 降级兜底）
@@ -52,8 +51,8 @@ import org.slf4j.LoggerFactory;
  * @see RateLimitAlgorithmFactory
  * @see com.apex.scaffold.common.util.ratelimit.algorithm.SlidingWindow
  */
+@Slf4j
 public class LocalRateLimiter {
-    private static final Logger log = LoggerFactory.getLogger(LocalRateLimiter.class);
 
     /** 默认窗口大小（毫秒） */
     private static final long DEFAULT_WINDOW_MS = 1000L;

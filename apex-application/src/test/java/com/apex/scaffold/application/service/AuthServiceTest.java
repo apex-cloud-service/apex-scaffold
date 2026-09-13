@@ -10,6 +10,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.apex.scaffold.application.assembler.UserAssembler;
 import com.apex.scaffold.application.config.LoginProtectionProperties;
 import com.apex.scaffold.application.dto.LoginRequest;
 import com.apex.scaffold.application.dto.LoginResponse;
@@ -90,6 +91,9 @@ class AuthServiceTest {
     @Mock
     private LoginLogService loginLogService;
 
+    @Mock
+    private UserAssembler userAssembler;
+
     private UserEntity user;
     private LoginResponse loginResponse;
     private LoginRequest loginRequest;
@@ -116,7 +120,8 @@ class AuthServiceTest {
                 redisTemplate,
                 loginProtectionProperties,
                 captchaService,
-                loginLogService);
+                loginLogService,
+                userAssembler);
         ReflectionTestUtils.setField(authService, "accessTokenExpireMs", 7200000L);
         lenient()
                 .when(loginLogService.record(any(com.apex.scaffold.domain.model.entity.LoginLogEntity.class)))
@@ -322,6 +327,14 @@ class AuthServiceTest {
                 .thenReturn(Mono.just(true));
         // 模拟用户查询，验证刷新Token后返回用户信息（含性别）
         when(userService.getByOpenId("test_openid")).thenReturn(Mono.just(user));
+        when(userAssembler.toLoginResponse(any(UserEntity.class))).thenAnswer(invocation -> {
+            UserEntity entity = invocation.getArgument(0);
+            LoginResponse response = new LoginResponse();
+            response.setOpenId(entity.getOpenId());
+            response.setUserInfo(new LoginResponse.UserInfo());
+            response.getUserInfo().setNickName(entity.getNickName());
+            return response;
+        });
 
         authService
                 .refreshToken("valid_refresh_token", null)

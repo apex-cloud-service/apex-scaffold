@@ -1,8 +1,7 @@
 package com.apex.scaffold.infrastructure.storage.config;
 
 import io.minio.MinioClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
@@ -19,9 +18,9 @@ import org.springframework.context.annotation.Bean;
  * @version 1.0.0
  * @since 1.0.0
  */
+@Slf4j
 @AutoConfiguration
 public class MinioConfig {
-    private static final Logger log = LoggerFactory.getLogger(MinioConfig.class);
 
     /** 构造 MinIO 配置类 */
     public MinioConfig() {}

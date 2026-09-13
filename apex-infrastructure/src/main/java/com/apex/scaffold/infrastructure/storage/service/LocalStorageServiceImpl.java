@@ -10,8 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
@@ -58,10 +57,10 @@ import reactor.core.publisher.Mono;
  * @since 1.0.0
  * @see AbstractStorageService
  */
+@Slf4j
 @Service("localStorageService")
 @ConditionalOnProperty(name = "storage.local.enabled", havingValue = "true", matchIfMissing = true)
 public class LocalStorageServiceImpl extends AbstractStorageService {
-    private static final Logger log = LoggerFactory.getLogger(LocalStorageServiceImpl.class);
 
     /** 本地存储根路径，所有上传文件均限制在该目录内。 */
     private final Path storageBasePath;

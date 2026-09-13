@@ -7,10 +7,9 @@ import com.apex.scaffold.infrastructure.persistence.util.ApexLambdaQueryWrapper;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.session.SqlSession;
 import org.mybatis.spring.SqlSessionTemplate;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 
 /**
@@ -51,8 +50,8 @@ import reactor.core.publisher.Mono;
  * @see BaseEntity
  * @see BasePO
  */
+@Slf4j
 public abstract class BaseRepositoryImpl<E extends BaseEntity, PO extends BasePO> {
-    private static final Logger log = LoggerFactory.getLogger(BaseRepositoryImpl.class);
 
     /** MyBatis Mapper接口 */
     protected final org.apache.ibatis.annotations.Mapper mapper;

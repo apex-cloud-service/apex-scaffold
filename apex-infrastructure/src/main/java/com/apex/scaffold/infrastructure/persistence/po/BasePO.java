@@ -9,7 +9,10 @@ import com.baomidou.mybatisplus.annotation.Version;
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 /**
  * 持久化对象（PO）基类。
@@ -26,12 +29,15 @@ import lombok.Data;
  * @since 1.0.0
  */
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
+@SuperBuilder
+/**n * BasePO - 持久化对象n *n * <p>对应数据库表：TODO: 补充表名n *n * @author Apex Teamn * @version 1.0.0n * @since 1.0.0n */
 public class BasePO implements Serializable {
 
     /**
      * 构造基础持久化对象。
      */
-    public BasePO() {}
 
     /**
      * 序列化版本号。

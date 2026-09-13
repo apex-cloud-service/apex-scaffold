@@ -19,6 +19,13 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
  * 当前 {@code @Async} 仅用于 {@link com.apex.scaffold.interfaces.config.GracefulShutdownManager}
  * 的优雅停机事件监听，属于极低频调用。
  *
+ * <h2>主要功能</h2>
+ * <ul>
+ *   <li>通过 {@link org.springframework.scheduling.annotation.EnableAsync} 启用 Spring 异步方法支持</li>
+ *   <li>提供 {@code asyncExecutor} 线程池 Bean，供 {@code @Async} 注解的异步方法使用</li>
+ *   <li>在应用就绪后将该线程池注册到 {@link ResourceDrainRegistry}，参与优雅停机时的资源排空</li>
+ * </ul>
+ *
  * <h2>优化说明（Netty/线程池/IO 性能优化方案 P2-2）</h2>
  * <p>本类的 {@code asyncExecutor} 与 {@link ThreadPoolConfig#asyncTaskExecutor()}
  * 参数原完全一致（core=CPU×2, max=CPU×4, queue=200），在 8 核机器上合计 32-64 线程，
@@ -38,8 +45,10 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
  * </ul>
  *
  * @author Apex Team
- * @version 2.1.0
+ * @version 1.2.0
  * @since 1.0.0
+ * @see ThreadPoolConfig
+ * @see ResourceDrainRegistry
  */
 @Slf4j
 @Configuration

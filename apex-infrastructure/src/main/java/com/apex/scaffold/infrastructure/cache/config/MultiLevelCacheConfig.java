@@ -4,8 +4,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import io.micrometer.core.instrument.binder.MeterBinder;
 import java.util.concurrent.TimeUnit;
 import lombok.Data;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -49,12 +48,12 @@ import org.springframework.context.annotation.Bean;
  * @version 1.0.0
  * @since 1.0.0
  */
+@Slf4j
 @AutoConfiguration
 @EnableCaching
 @ConditionalOnProperty(prefix = "apex.features", name = "cache", havingValue = "true", matchIfMissing = true)
 @ConditionalOnClass(CaffeineCacheManager.class)
 public class MultiLevelCacheConfig {
-    private static final Logger log = LoggerFactory.getLogger(MultiLevelCacheConfig.class);
 
     /** 默认本地缓存最大条目数 */
     private static final int DEFAULT_LOCAL_MAX_SIZE = 10000;

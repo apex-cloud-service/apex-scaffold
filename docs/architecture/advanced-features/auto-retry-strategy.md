@@ -611,7 +611,7 @@ apex_outbox_records{status="DEAD"} 3
 
 - [高级功能使用指南](../../ADVANCED_FEATURES.md)
 - [安全防护全景评估](../../SECURITY_PROTECTIONS.md)
-- [MQ 重试配置加固计划](../../superpowers/plans/2026-08-30-mq-retry-configuration-hardening.md)
+- [MQ 重试配置加固计划](../../_archive/superpowers/plans/2026-08-30-mq-retry-configuration-hardening.md)
 - [配置项详解](../../CONFIGURATION.md)
 
 ---

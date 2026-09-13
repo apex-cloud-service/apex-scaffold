@@ -6,8 +6,7 @@ import com.apex.scaffold.infrastructure.chuanglan.service.ChuanglanApiService;
 import com.apex.scaffold.infrastructure.circuitbreaker.CircuitBreakerService;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
@@ -63,10 +62,10 @@ import reactor.core.publisher.Mono;
  * @see ChuanglanApiService
  * @see <a href="https://doc.chuanglan.com/document/SY88R0I8TCUPR1M3">创蓝闪验SDK服务端接口文档</a>
  */
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class ChuanglanGatewayImpl implements ChuanglanGateway {
-    private static final Logger log = LoggerFactory.getLogger(ChuanglanGatewayImpl.class);
 
     /**
      * 创蓝API服务

@@ -27,20 +27,27 @@ import reactor.core.publisher.Mono;
  *
  * <p>提供系统参数配置的查询、创建、更新、删除与启停管理 API，
  * 所有端点要求 {@code system:config:*} 权限。参数采用键值对模型，
- * 是管理系统运行时参数的基础能力。</p>
+ * 是管理系统运行时参数的基础能力。
  *
- * <h2>接口清单</h2>
+ * <h2>核心功能</h2>
  * <ul>
- *   <li>GET /admin-api/v1/configs - 查询参数配置列表</li>
- *   <li>GET /admin-api/v1/configs/{id} - 查询参数配置详情</li>
- *   <li>POST /admin-api/v1/configs - 创建参数配置</li>
- *   <li>PUT /admin-api/v1/configs/{id} - 更新参数配置</li>
- *   <li>DELETE /admin-api/v1/configs/{id} - 删除参数配置</li>
- *   <li>PUT /admin-api/v1/configs/{id}/status - 启用/停用参数配置</li>
+ *   <li>参数配置查询：查询参数配置列表与详情</li>
+ *   <li>参数配置管理：创建、更新、删除参数配置</li>
+ *   <li>参数启停管理：启用或停用参数配置</li>
+ * </ul>
+ *
+ * <h2>接口列表</h2>
+ * <ul>
+ *   <li>GET /admin-api/v1/configs — 查询参数配置列表</li>
+ *   <li>GET /admin-api/v1/configs/{id} — 查询参数配置详情</li>
+ *   <li>POST /admin-api/v1/configs — 创建参数配置</li>
+ *   <li>PUT /admin-api/v1/configs/{id} — 更新参数配置</li>
+ *   <li>DELETE /admin-api/v1/configs/{id} — 删除参数配置</li>
+ *   <li>PUT /admin-api/v1/configs/{id}/status — 启用/停用参数配置</li>
  * </ul>
  *
  * @author Apex Team
- * @version 1.0.0
+ * @version 1.2.0
  * @since 1.0.0
  * @see ConfigService
  */

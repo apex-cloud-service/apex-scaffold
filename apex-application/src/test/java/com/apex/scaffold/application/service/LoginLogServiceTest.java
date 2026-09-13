@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.apex.scaffold.application.assembler.LoginLogAssembler;
 import com.apex.scaffold.common.dto.PageResponse;
 import com.apex.scaffold.domain.model.entity.LoginLogEntity;
 import com.apex.scaffold.domain.repository.LoginLogRepository;
@@ -34,6 +35,9 @@ class LoginLogServiceTest {
 
     @Mock
     private LoginLogRepository loginLogRepository;
+
+    @Mock
+    private LoginLogAssembler loginLogAssembler;
 
     @InjectMocks
     private LoginLogService loginLogService;
@@ -71,6 +75,16 @@ class LoginLogServiceTest {
     void search_Success() {
         PageResponse<LoginLogEntity> page = PageResponse.of(List.of(logEntity), 1L, 1, 20);
         when(loginLogRepository.search("138", null, 1, 20)).thenReturn(Mono.just(page));
+        when(loginLogAssembler.toDTOList(any())).thenAnswer(invocation -> {
+            List<LoginLogEntity> entities = invocation.getArgument(0);
+            return entities.stream()
+                    .map(e -> com.apex.scaffold.application.dto.admin.LoginLogDTO.builder()
+                            .id(e.getId())
+                            .username(e.getUsername())
+                            .status(e.isSuccess() ? 0 : 1)
+                            .build())
+                    .toList();
+        });
 
         loginLogService
                 .search("138", null, 1, 20)

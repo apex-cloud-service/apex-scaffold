@@ -9,8 +9,7 @@ import com.baomidou.mybatisplus.extension.plugins.inner.OptimisticLockerInnerInt
 import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.TenantLineInnerInterceptor;
 import io.micrometer.core.instrument.MeterRegistry;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -48,10 +47,10 @@ import org.springframework.context.annotation.Bean;
  * @version 2.3.0
  * @since 1.0.0
  */
+@Slf4j
 @AutoConfiguration
 @EnableConfigurationProperties({SlowSqlProperties.class, DatabaseProperties.class})
 public class MybatisPlusConfig {
-    private static final Logger log = LoggerFactory.getLogger(MybatisPlusConfig.class);
 
     /** 是否启用多租户行级隔离（Enterprise 默认 true） */
     @org.springframework.beans.factory.annotation.Value("${apex.tenant.enabled:false}")

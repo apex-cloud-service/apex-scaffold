@@ -285,6 +285,7 @@ public class ApiRouter {
     public RouterFunction<ServerResponse> adminJobRoutes(JobHandler handler) {
         return RouterFunctions.route()
                 .path("/admin-api/v1/jobs", routes -> routes.GET("", handler::list)
+                        .GET("/page", handler::page)
                         .GET("/{id}", handler::detail)
                         .POST("", contentType(MediaType.APPLICATION_JSON), handler::create)
                         .PUT("/{id}", contentType(MediaType.APPLICATION_JSON), handler::update)

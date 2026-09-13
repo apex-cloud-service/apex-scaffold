@@ -9,8 +9,7 @@ import java.sql.SQLException;
 import java.util.Map;
 import java.util.function.ToDoubleFunction;
 import javax.sql.DataSource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -38,10 +37,9 @@ import org.springframework.stereotype.Component;
  * @see DruidDataSource
  * @see MeterRegistry
  */
+@Slf4j
 @Component
 public class DruidDataSourceMetricsBinder {
-
-    private static final Logger log = LoggerFactory.getLogger(DruidDataSourceMetricsBinder.class);
 
     /** 连接状态指标前缀 */
     private static final String CONNECTIONS_PREFIX = "druid.connections";

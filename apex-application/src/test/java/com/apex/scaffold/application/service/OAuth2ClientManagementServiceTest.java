@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
+import com.apex.scaffold.application.assembler.OAuth2ClientAssembler;
 import com.apex.scaffold.application.dto.OAuth2ClientRequest;
 import com.apex.scaffold.application.dto.OAuth2ClientResponse;
 import com.apex.scaffold.common.exception.BusinessException;
@@ -33,18 +34,26 @@ class OAuth2ClientManagementServiceTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
+    @Mock
+    private OAuth2ClientAssembler oAuth2ClientAssembler;
+
     @InjectMocks
     private OAuth2ClientManagementService clientManagementService;
 
     private OAuth2ClientRequest testRequest;
     private OAuth2RegisteredClientEntity testClient;
+    private OAuth2ClientResponse testResponse;
 
     @BeforeEach
     void setUp() {
         testRequest = createTestClientRequest();
         testClient = createTestClientEntity();
+        testResponse = createTestClientResponse();
 
         lenient().when(passwordEncoder.encode(anyString())).thenReturn("$2a$10$encrypted-secret");
+        lenient()
+                .when(oAuth2ClientAssembler.toResponse(any(OAuth2RegisteredClientEntity.class)))
+                .thenReturn(testResponse);
     }
 
     @Test
@@ -65,6 +74,7 @@ class OAuth2ClientManagementServiceTest {
         verify(clientRepository).findByClientId(testRequest.getClientId());
         verify(clientRepository).save(any(OAuth2RegisteredClientEntity.class));
         verify(passwordEncoder).encode(testRequest.getClientSecret());
+        verify(oAuth2ClientAssembler).toResponse(any(OAuth2RegisteredClientEntity.class));
     }
 
     @Test
@@ -266,5 +276,18 @@ class OAuth2ClientManagementServiceTest {
         entity.setClientSettings("{\"requireProofKey\":true,\"requireAuthorizationConsent\":false}");
         entity.setTokenSettings("{\"accessTokenTimeToLive\":7200,\"refreshTokenTimeToLive\":604800}");
         return entity;
+    }
+
+    private OAuth2ClientResponse createTestClientResponse() {
+        OAuth2ClientResponse response = new OAuth2ClientResponse();
+        response.setId("client-id-123");
+        response.setClientId("test-client");
+        response.setClientName("Test Client");
+        response.setClientAuthenticationMethods(Set.of("client_secret_basic"));
+        response.setAuthorizationGrantTypes(Set.of("authorization_code", "refresh_token"));
+        response.setRedirectUris(Set.of("http://localhost:3000/callback"));
+        response.setScopes(Set.of("read", "write"));
+        response.setIsPublicClient(false);
+        return response;
     }
 }

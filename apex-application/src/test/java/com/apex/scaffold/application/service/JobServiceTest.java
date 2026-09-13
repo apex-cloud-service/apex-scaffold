@@ -2,10 +2,13 @@ package com.apex.scaffold.application.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import com.apex.scaffold.application.assembler.JobAssembler;
+import com.apex.scaffold.application.dto.admin.JobDTO;
 import com.apex.scaffold.application.dto.admin.JobRequest;
 import com.apex.scaffold.application.job.JobScheduler;
 import com.apex.scaffold.common.context.TenantContext;
@@ -46,19 +49,28 @@ class JobServiceTest {
     @Mock
     private JobLogService jobLogService;
 
+    @Mock
+    private JobAssembler jobAssembler;
+
     @InjectMocks
     private JobService jobService;
 
-    /** 任务实体 */
     private JobEntity jobEntity;
+    private JobDTO jobDTO;
 
-    /**
-     * 初始化测试数据。
-     */
     @BeforeEach
     void setUp() {
         jobEntity = JobEntity.create("清理过期令牌", "SYSTEM", "tokenCleanupTask.cleanup()", "0 0 2 * * ?");
         jobEntity.setId(1L);
+
+        jobDTO = new JobDTO();
+        jobDTO.setId(1L);
+        jobDTO.setJobName("清理过期令牌");
+        jobDTO.setJobGroup("SYSTEM");
+        jobDTO.setInvokeTarget("tokenCleanupTask.cleanup()");
+        jobDTO.setCronExpression("0 0 2 * * ?");
+
+        lenient().when(jobAssembler.toDTO(any(JobEntity.class))).thenReturn(jobDTO);
     }
 
     /**
@@ -125,7 +137,7 @@ class JobServiceTest {
                     assertThat(error).isInstanceOf(BusinessException.class);
                     BusinessException exception = (BusinessException) error;
                     assertThat(exception.getCode()).isEqualTo(ResultCode.PARAM_ERROR.getCode());
-                    assertThat(exception.getMessage()).contains("Cron表达式非法").contains("日字段和周字段");
+                    assertThat(exception.getMessage()).contains("Cron 表达式格式不合法");
                 })
                 .verify();
 
@@ -254,6 +266,160 @@ class JobServiceTest {
                 .assertNext(jobs -> {
                     assertThat(jobs).hasSize(1);
                     assertThat(jobs.get(0).getJobName()).isEqualTo("清理过期令牌");
+                })
+                .verifyComplete();
+    }
+
+    /**
+     * 测试分页查询任务列表 - 无条件查询。
+     */
+    @Test
+    @DisplayName("pageJobs - 无条件分页查询成功")
+    void pageJobs_WithoutFiltersSuccess() {
+        com.apex.scaffold.application.dto.admin.JobQueryRequest queryRequest =
+                com.apex.scaffold.application.dto.admin.JobQueryRequest.builder()
+                        .pageNum(1)
+                        .pageSize(10)
+                        .build();
+
+        JobEntity job2 = JobEntity.create("数据备份", "SYSTEM", "backupTask.backup()", "0 0 3 * * ?");
+        job2.setId(2L);
+
+        when(jobRepository.countByCondition(null, null, null)).thenReturn(Mono.just(2L));
+        when(jobRepository.findByPage(null, null, null, 0, 10)).thenReturn(Mono.just(List.of(jobEntity, job2)));
+
+        JobDTO jobDTO2 = new JobDTO();
+        jobDTO2.setId(2L);
+        jobDTO2.setJobName("数据备份");
+        jobDTO2.setJobGroup("SYSTEM");
+        when(jobAssembler.toDTO(job2)).thenReturn(jobDTO2);
+
+        jobService
+                .pageJobs(queryRequest)
+                .as(StepVerifier::create)
+                .assertNext(pageResponse -> {
+                    assertThat(pageResponse.getTotal()).isEqualTo(2L);
+                    assertThat(pageResponse.getRecords()).hasSize(2);
+                    assertThat(pageResponse.getRecords().get(0).getJobName()).isEqualTo("清理过期令牌");
+                    assertThat(pageResponse.getRecords().get(1).getJobName()).isEqualTo("数据备份");
+                    assertThat(pageResponse.getPageNum()).isEqualTo(1);
+                    assertThat(pageResponse.getPageSize()).isEqualTo(10);
+                })
+                .verifyComplete();
+    }
+
+    /**
+     * 测试分页查询任务列表 - 按任务名称模糊查询。
+     */
+    @Test
+    @DisplayName("pageJobs - 按任务名称模糊查询成功")
+    void pageJobs_WithJobNameFilterSuccess() {
+        com.apex.scaffold.application.dto.admin.JobQueryRequest queryRequest =
+                com.apex.scaffold.application.dto.admin.JobQueryRequest.builder()
+                        .pageNum(1)
+                        .pageSize(10)
+                        .jobName("清理")
+                        .build();
+
+        when(jobRepository.countByCondition("清理", null, null)).thenReturn(Mono.just(1L));
+        when(jobRepository.findByPage("清理", null, null, 0, 10)).thenReturn(Mono.just(List.of(jobEntity)));
+
+        jobService
+                .pageJobs(queryRequest)
+                .as(StepVerifier::create)
+                .assertNext(pageResponse -> {
+                    assertThat(pageResponse.getTotal()).isEqualTo(1L);
+                    assertThat(pageResponse.getRecords()).hasSize(1);
+                    assertThat(pageResponse.getRecords().get(0).getJobName()).isEqualTo("清理过期令牌");
+                })
+                .verifyComplete();
+    }
+
+    /**
+     * 测试分页查询任务列表 - 按任务分组和状态查询。
+     */
+    @Test
+    @DisplayName("pageJobs - 按任务分组和状态查询成功")
+    void pageJobs_WithGroupAndStatusFilterSuccess() {
+        com.apex.scaffold.application.dto.admin.JobQueryRequest queryRequest =
+                com.apex.scaffold.application.dto.admin.JobQueryRequest.builder()
+                        .pageNum(1)
+                        .pageSize(10)
+                        .jobGroup("SYSTEM")
+                        .status(1)
+                        .build();
+
+        when(jobRepository.countByCondition(null, "SYSTEM", 1)).thenReturn(Mono.just(1L));
+        when(jobRepository.findByPage(null, "SYSTEM", 1, 0, 10)).thenReturn(Mono.just(List.of(jobEntity)));
+
+        jobService
+                .pageJobs(queryRequest)
+                .as(StepVerifier::create)
+                .assertNext(pageResponse -> {
+                    assertThat(pageResponse.getTotal()).isEqualTo(1L);
+                    assertThat(pageResponse.getRecords()).hasSize(1);
+                    assertThat(pageResponse.getRecords().get(0).getJobGroup()).isEqualTo("SYSTEM");
+                })
+                .verifyComplete();
+    }
+
+    /**
+     * 测试分页查询任务列表 - 空结果。
+     */
+    @Test
+    @DisplayName("pageJobs - 查询结果为空")
+    void pageJobs_EmptyResult() {
+        com.apex.scaffold.application.dto.admin.JobQueryRequest queryRequest =
+                com.apex.scaffold.application.dto.admin.JobQueryRequest.builder()
+                        .pageNum(1)
+                        .pageSize(10)
+                        .jobName("不存在的任务")
+                        .build();
+
+        when(jobRepository.countByCondition("不存在的任务", null, null)).thenReturn(Mono.just(0L));
+        when(jobRepository.findByPage("不存在的任务", null, null, 0, 10)).thenReturn(Mono.just(List.of()));
+
+        jobService
+                .pageJobs(queryRequest)
+                .as(StepVerifier::create)
+                .assertNext(pageResponse -> {
+                    assertThat(pageResponse.getTotal()).isEqualTo(0L);
+                    assertThat(pageResponse.getRecords()).isEmpty();
+                })
+                .verifyComplete();
+    }
+
+    /**
+     * 测试分页查询任务列表 - 第二页数据。
+     */
+    @Test
+    @DisplayName("pageJobs - 查询第二页数据成功")
+    void pageJobs_SecondPageSuccess() {
+        com.apex.scaffold.application.dto.admin.JobQueryRequest queryRequest =
+                com.apex.scaffold.application.dto.admin.JobQueryRequest.builder()
+                        .pageNum(2)
+                        .pageSize(5)
+                        .build();
+
+        JobEntity job2 = JobEntity.create("数据备份", "SYSTEM", "backupTask.backup()", "0 0 3 * * ?");
+        job2.setId(2L);
+
+        when(jobRepository.countByCondition(null, null, null)).thenReturn(Mono.just(6L));
+        when(jobRepository.findByPage(null, null, null, 5, 5)).thenReturn(Mono.just(List.of(job2)));
+
+        JobDTO jobDTO2 = new JobDTO();
+        jobDTO2.setId(2L);
+        jobDTO2.setJobName("数据备份");
+        when(jobAssembler.toDTO(job2)).thenReturn(jobDTO2);
+
+        jobService
+                .pageJobs(queryRequest)
+                .as(StepVerifier::create)
+                .assertNext(pageResponse -> {
+                    assertThat(pageResponse.getTotal()).isEqualTo(6L);
+                    assertThat(pageResponse.getRecords()).hasSize(1);
+                    assertThat(pageResponse.getPageNum()).isEqualTo(2);
+                    assertThat(pageResponse.getPageSize()).isEqualTo(5);
                 })
                 .verifyComplete();
     }

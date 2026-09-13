@@ -9,8 +9,10 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import lombok.Builder;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 /**
  * 用户协议同意记录持久化对象。
@@ -24,8 +26,11 @@ import lombok.Data;
  * @since 1.0.0
  */
 @Data
-@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@SuperBuilder
 @TableName("biz_user_consent")
+/**n * UserConsentPO - 持久化对象n *n * <p>对应数据库表：TODO: 补充表名n *n * @author Apex Teamn * @version 1.0.0n * @since 1.0.0n */
 public class UserConsentPO implements Serializable {
 
     @Serial

@@ -12,13 +12,14 @@ import lombok.NoArgsConstructor;
  * <p>用于流程实例列表展示。</p>
  *
  * @author Apex Team
- * @version 1.4.0
- * @since 1.4.0
+ * @version 1.2.0
+ * @since 1.0.0
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+/**n * WorkflowInstanceDTOn *n * <p>TODO: 补充类的详细说明n *n * @author Apex Teamn * @version 1.0.0n * @since 1.0.0n */
 public class WorkflowInstanceDTO {
 
     /** 流程实例 ID */

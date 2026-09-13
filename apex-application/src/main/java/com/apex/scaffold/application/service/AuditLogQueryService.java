@@ -22,6 +22,7 @@ import reactor.core.publisher.Mono;
  * @see AuditLogQueryRepository
  */
 @Service
+/**n * AuditLogQueryServicen *n * <p>TODO: 补充服务的详细说明n *n * @author Apex Teamn * @version 1.0.0n * @since 1.0.0n */
 public class AuditLogQueryService {
 
     /** 审计日志查询仓储（领域接口） */

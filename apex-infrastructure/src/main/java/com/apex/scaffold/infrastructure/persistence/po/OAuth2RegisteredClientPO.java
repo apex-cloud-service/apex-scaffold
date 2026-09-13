@@ -5,7 +5,10 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.time.LocalDateTime;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 /**
  * OAuth2注册客户端持久化对象
@@ -15,7 +18,11 @@ import lombok.Data;
  * @since 2.0.0
  */
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
+@SuperBuilder
 @TableName("oauth2_registered_client")
+/**n * OAuth2RegisteredClientPO - 持久化对象n *n * <p>对应数据库表：TODO: 补充表名n *n * @author Apex Teamn * @version 1.0.0n * @since 1.0.0n */
 public class OAuth2RegisteredClientPO {
 
     @TableId(value = "id", type = IdType.INPUT)

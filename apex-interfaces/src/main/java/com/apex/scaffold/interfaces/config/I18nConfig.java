@@ -11,7 +11,14 @@ import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
  *
  * <p>配置 Spring 多语言支持的 MessageSource 和 JSR-380 Bean Validation 的国际化消息源。
  * 使用 {@link ReloadableResourceBundleMessageSource} 支持运行时热加载语言资源文件，
- * 语言资源文件存放在 {@code classpath:i18n/} 目录下。
+ * 语言资源文件存放在 {@code classpath:i18n/} 目录下。</p>
+ *
+ * <h2>主要功能</h2>
+ * <ul>
+ *   <li>构建 {@link MessageSource} Bean，加载 {@code classpath:i18n/messages} 下的多语言资源文件</li>
+ *   <li>设置 UTF-8 编码、关闭系统区域回退、未找到 key 时返回 key 本身、缓存 3600 秒</li>
+ *   <li>将 MessageSource 注入 {@link LocalValidatorFactoryBean}，使 DTO 校验注解中的 {@code {key}} 占位符可被解析</li>
+ * </ul>
  *
  * <h2>支持的语言</h2>
  * <ul>
@@ -45,7 +52,7 @@ import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
  * </ol>
  *
  * @author Apex Team
- * @version 1.0.0
+ * @version 1.2.0
  * @since 1.0.0
  * @see com.apex.scaffold.interfaces.filter.LocaleWebFilter
  * @see com.apex.scaffold.interfaces.util.MessageUtils

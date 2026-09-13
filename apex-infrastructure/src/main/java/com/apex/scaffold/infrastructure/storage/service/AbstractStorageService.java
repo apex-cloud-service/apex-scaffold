@@ -6,8 +6,7 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Set;
 import java.util.UUID;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
 /**
@@ -50,8 +49,8 @@ import reactor.core.publisher.Mono;
  * @since 1.0.0
  * @see StorageService
  */
+@Slf4j
 public abstract class AbstractStorageService implements StorageService {
-    private static final Logger log = LoggerFactory.getLogger(AbstractStorageService.class);
 
     protected static final Set<String> ALLOWED_FILE_TYPES = Set.of(
             "image/jpeg",

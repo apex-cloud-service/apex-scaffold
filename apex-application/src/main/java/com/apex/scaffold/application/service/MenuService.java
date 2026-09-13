@@ -1,5 +1,6 @@
 package com.apex.scaffold.application.service;
 
+import com.apex.scaffold.application.assembler.MenuAssembler;
 import com.apex.scaffold.application.dto.admin.MenuDTO;
 import com.apex.scaffold.application.dto.admin.MenuRequest;
 import com.apex.scaffold.common.exception.BusinessException;
@@ -39,12 +40,18 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+/**n * MenuServicen *n * <p>TODO: 补充服务的详细说明n *n * @author Apex Teamn * @version 1.0.0n * @since 1.0.0n */
 public class MenuService {
 
     /**
      * 系统菜单仓储。
      */
     private final MenuRepository menuRepository;
+
+    /**
+     * 菜单对象转换器。
+     */
+    private final MenuAssembler menuAssembler;
 
     /**
      * 查询完整菜单树。
@@ -232,7 +239,7 @@ public class MenuService {
      * @return 菜单树根节点列表
      */
     private List<MenuDTO> buildTree(List<MenuEntity> entities) {
-        List<MenuDTO> nodes = entities.stream().map(this::toDTO).collect(Collectors.toList());
+        List<MenuDTO> nodes = entities.stream().map(menuAssembler::toDTO).collect(Collectors.toList());
         Map<Long, MenuDTO> byId = nodes.stream().collect(Collectors.toMap(MenuDTO::getId, node -> node));
         List<MenuDTO> roots = new ArrayList<>();
         for (MenuDTO node : nodes) {
@@ -260,28 +267,5 @@ public class MenuService {
     private void sortTree(List<MenuDTO> nodes) {
         nodes.sort(Comparator.comparing(MenuDTO::getSort, Comparator.nullsLast(Integer::compareTo)));
         nodes.forEach(node -> sortTree(node.getChildren()));
-    }
-
-    /**
-     * 将菜单实体转换为树节点 DTO。
-     *
-     * @param entity 菜单实体
-     * @return 菜单树节点
-     */
-    private MenuDTO toDTO(MenuEntity entity) {
-        MenuDTO dto = new MenuDTO();
-        dto.setId(entity.getId());
-        dto.setParentId(entity.getParentId());
-        dto.setMenuName(entity.getMenuName());
-        dto.setMenuType(entity.getMenuType());
-        dto.setPath(entity.getPath());
-        dto.setComponent(entity.getComponent());
-        dto.setPerms(entity.getPerms());
-        dto.setIcon(entity.getIcon());
-        dto.setSort(entity.getSort());
-        dto.setVisible(entity.getVisible());
-        dto.setStatus(entity.getStatus());
-        dto.setCreateTime(entity.getCreateTime());
-        return dto;
     }
 }

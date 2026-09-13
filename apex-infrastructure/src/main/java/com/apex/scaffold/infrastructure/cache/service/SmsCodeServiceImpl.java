@@ -3,8 +3,7 @@ package com.apex.scaffold.infrastructure.cache.service;
 import com.apex.scaffold.domain.service.SmsCodePurpose;
 import com.apex.scaffold.domain.service.SmsCodePurposeService;
 import com.apex.scaffold.domain.service.SmsCodeService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -24,9 +23,9 @@ import reactor.core.publisher.Mono;
  * @version 1.0.0
  * @since 3.2.0
  */
+@Slf4j
 @Service("defaultSmsCodeService")
 public class SmsCodeServiceImpl implements SmsCodeService, SmsCodePurposeService {
-    private static final Logger log = LoggerFactory.getLogger(SmsCodeServiceImpl.class);
 
     /** 真实短信验证码服务。 */
     private final SmsCodeService delegate;

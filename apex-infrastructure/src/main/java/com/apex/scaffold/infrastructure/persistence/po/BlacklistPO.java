@@ -2,8 +2,11 @@ package com.apex.scaffold.infrastructure.persistence.po;
 
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 /**
  * 黑名单持久化对象。
@@ -16,15 +19,18 @@ import lombok.EqualsAndHashCode;
  * @since 1.0.0
  */
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
+@SuperBuilder
 @EqualsAndHashCode(callSuper = true)
 @TableName("biz_blacklist")
+/**n * BlacklistPO - 持久化对象n *n * <p>对应数据库表：TODO: 补充表名n *n * @author Apex Teamn * @version 1.0.0n * @since 1.0.0n */
 public class BlacklistPO extends BasePO {
 
     /**
      * 创建拉黑关系实体对象。
      *
      */
-    public BlacklistPO() {}
 
     /**
      * 拉黑者用户 ID。

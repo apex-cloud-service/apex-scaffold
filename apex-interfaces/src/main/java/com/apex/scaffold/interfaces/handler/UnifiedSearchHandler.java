@@ -25,12 +25,23 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
 /**
- * 统一搜索 Handler
+ * 统一搜索处理器（函数式端点）。
  *
- * <p>提供全文搜索和索引管理 API。
+ * <p>提供系统资源的全文搜索与索引管理 API，支持按关键词在用户、角色、菜单、部门等
+ * 资源类型中进行全文检索，并提供索引重建能力用于索引损坏或数据不一致时的恢复。
+ * 搜索结果支持分页，索引重建操作会清空现有索引并重新建立。</p>
+ *
+ * <h2>接口清单</h2>
+ * <ul>
+ *   <li>GET /admin-api/v1/search - 全文搜索（支持 keyword/types/page/size 参数）</li>
+ *   <li>POST /admin-api/v1/search/rebuild - 重建搜索索引（支持按 type 重建）</li>
+ * </ul>
  *
  * @author Apex Team
- * @since 1.3.0
+ * @version 1.2.0
+ * @since 1.0.0
+ * @see SearchService
+ * @see IndexSyncService
  */
 @Slf4j
 @Component

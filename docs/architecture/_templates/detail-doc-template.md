@@ -316,16 +316,16 @@ example:
 ## 相关文档
 
 ### 架构文档
-- [系统架构设计](./system-architecture.md)
-- [技术选型文档](./backend-technology-stack.md)
+- [系统架构设计](../system-architecture.md)
+- [技术选型文档](../backend-technology-stack.md)
 
 ### 运维文档
-- [部署架构](./deployment-architecture.md)
-- [监控配置](../operations/monitoring-dashboard-configuration.md)
+- [部署架构](../deployment-architecture.md)
+- [监控配置](../../_archive/operations/monitoring-dashboard-configuration.md)
 
 ### 开发规范
-- [后端开发规范](../standards/backend-development-standards.md)
-- [前端开发规范](../standards/frontend-development-standards.md)
+- [后端开发规范](../../04-development/backend-development-standards.md)
+- [前端开发规范](../../04-development/frontend-development-standards.md)
 
 ### 外部资源
 - [官方文档](https://example.com)

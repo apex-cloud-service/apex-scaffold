@@ -13,14 +13,15 @@ import lombok.NoArgsConstructor;
  * <p>系统管理-租户管理的响应数据，包含租户基础信息、状态与配额。</p>
  *
  * @author Apex Team
- * @version 1.0.0
- * @since 1.3.0
+ * @version 1.2.0
+ * @since 1.0.0
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "租户信息")
+/**n * TenantDTOn *n * <p>TODO: 补充类的详细说明n *n * @author Apex Teamn * @version 1.0.0n * @since 1.0.0n */
 public class TenantDTO {
     @Schema(description = "租户ID")
     private Long id;

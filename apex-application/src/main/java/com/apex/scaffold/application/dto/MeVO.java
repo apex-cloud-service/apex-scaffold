@@ -11,7 +11,7 @@ import lombok.Data;
  * <p>用于展示当前登录用户的基本信息，包含用户ID、昵称、性别、生日、青少年模式状态等
  *
  * @author Apex Team
- * @version 1.0.0
+ * @version 1.2.0
  * @since 1.0.0
  */
 @Data

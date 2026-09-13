@@ -2,9 +2,11 @@ package com.apex.scaffold.application.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.apex.scaffold.application.assembler.MenuAssembler;
 import com.apex.scaffold.application.dto.admin.MenuDTO;
 import com.apex.scaffold.application.dto.admin.MenuRequest;
 import com.apex.scaffold.common.exception.BusinessException;
@@ -37,6 +39,9 @@ class MenuServiceTest {
     @Mock
     private MenuRepository menuRepository;
 
+    @Mock
+    private MenuAssembler menuAssembler;
+
     @InjectMocks
     private MenuService menuService;
 
@@ -45,6 +50,12 @@ class MenuServiceTest {
 
     /** 子菜单实体 */
     private MenuEntity childMenu;
+
+    /** 顶级目录 DTO */
+    private MenuDTO directoryDTO;
+
+    /** 子菜单 DTO */
+    private MenuDTO childMenuDTO;
 
     /**
      * 初始化测试数据。
@@ -55,6 +66,28 @@ class MenuServiceTest {
         directory.setId(1L);
         childMenu = MenuEntity.create(1L, "用户管理", 1, "system/user", "system/user/index", "system:user:list", 1);
         childMenu.setId(2L);
+
+        directoryDTO = new MenuDTO();
+        directoryDTO.setId(1L);
+        directoryDTO.setParentId(0L);
+        directoryDTO.setMenuName("系统管理");
+        directoryDTO.setMenuType(0);
+        directoryDTO.setPath("system");
+        directoryDTO.setComponent("system/index");
+        directoryDTO.setSort(1);
+
+        childMenuDTO = new MenuDTO();
+        childMenuDTO.setId(2L);
+        childMenuDTO.setParentId(1L);
+        childMenuDTO.setMenuName("用户管理");
+        childMenuDTO.setMenuType(1);
+        childMenuDTO.setPath("system/user");
+        childMenuDTO.setComponent("system/user/index");
+        childMenuDTO.setPerms("system:user:list");
+        childMenuDTO.setSort(1);
+
+        lenient().when(menuAssembler.toDTO(directory)).thenReturn(directoryDTO);
+        lenient().when(menuAssembler.toDTO(childMenu)).thenReturn(childMenuDTO);
     }
 
     /**

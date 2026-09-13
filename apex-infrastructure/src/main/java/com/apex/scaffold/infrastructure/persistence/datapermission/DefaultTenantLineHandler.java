@@ -3,9 +3,8 @@ package com.apex.scaffold.infrastructure.persistence.datapermission;
 import com.apex.scaffold.common.context.TenantContext;
 import com.baomidou.mybatisplus.extension.plugins.handler.TenantLineHandler;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
 import net.sf.jsqlparser.expression.StringValue;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * 多租户行级隔离处理器（TenantLineHandler）。
@@ -40,8 +39,8 @@ import org.slf4j.LoggerFactory;
  * @see TenantContext
  * @see com.apex.scaffold.interfaces.aspect.TenantAspect
  */
+@Slf4j
 public class DefaultTenantLineHandler implements TenantLineHandler {
-    private static final Logger log = LoggerFactory.getLogger(DefaultTenantLineHandler.class);
 
     /** 租户列名（与 V14 迁移及各实体 @TableField 保持一致） */
     public static final String TENANT_ID_COLUMN = "tenant_id";

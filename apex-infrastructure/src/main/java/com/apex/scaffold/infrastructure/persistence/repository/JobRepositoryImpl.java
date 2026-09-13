@@ -113,4 +113,66 @@ public class JobRepositoryImpl implements JobRepository {
     public Mono<Integer> deleteById(Long id) {
         return Mono.fromCallable(() -> jobMapper.deleteById(id)).subscribeOn(BlockingIoSchedulers.jdbc());
     }
+
+    /**
+     * 分页查询任务列表（支持条件筛选）。
+     *
+     * <p>根据任务名称、任务分组、状态等条件进行分页查询，支持模糊匹配和精确过滤。
+     * 查询结果按创建时间降序排列。</p>
+     *
+     * @param jobName 任务名称（模糊匹配），可为 null
+     * @param jobGroup 任务分组（精确匹配），可为 null
+     * @param status 任务状态（精确匹配），可为 null
+     * @param offset 分页偏移量
+     * @param pageSize 每页大小
+     * @return 任务实体列表
+     */
+    @Override
+    public Mono<List<JobEntity>> findByPage(
+            String jobName, String jobGroup, Integer status, Integer offset, Integer pageSize) {
+        return Mono.fromCallable(() -> {
+                    var wrapper = ConditionUtil.lambda(JobPO.class);
+                    if (jobName != null && !jobName.isBlank()) {
+                        wrapper.like(JobPO::getJobName, jobName);
+                    }
+                    if (jobGroup != null && !jobGroup.isBlank()) {
+                        wrapper.eq(JobPO::getJobGroup, jobGroup);
+                    }
+                    if (status != null) {
+                        wrapper.eq(JobPO::getStatus, status);
+                    }
+                    wrapper.orderByDesc(JobPO::getCreateTime).last("LIMIT " + offset + ", " + pageSize);
+                    return jobMapper.selectList(wrapper);
+                })
+                .subscribeOn(BlockingIoSchedulers.jdbc())
+                .map(jobPoConverter::toEntityList);
+    }
+
+    /**
+     * 统计任务总数（支持条件筛选）。
+     *
+     * <p>统计符合条件的任务总数，用于分页查询的总记录数计算。</p>
+     *
+     * @param jobName 任务名称（模糊匹配），可为 null
+     * @param jobGroup 任务分组（精确匹配），可为 null
+     * @param status 任务状态（精确匹配），可为 null
+     * @return 符合条件的任务总数
+     */
+    @Override
+    public Mono<Long> countByCondition(String jobName, String jobGroup, Integer status) {
+        return Mono.fromCallable(() -> {
+                    var wrapper = ConditionUtil.lambda(JobPO.class);
+                    if (jobName != null && !jobName.isBlank()) {
+                        wrapper.like(JobPO::getJobName, jobName);
+                    }
+                    if (jobGroup != null && !jobGroup.isBlank()) {
+                        wrapper.eq(JobPO::getJobGroup, jobGroup);
+                    }
+                    if (status != null) {
+                        wrapper.eq(JobPO::getStatus, status);
+                    }
+                    return jobMapper.selectCount(wrapper);
+                })
+                .subscribeOn(BlockingIoSchedulers.jdbc());
+    }
 }

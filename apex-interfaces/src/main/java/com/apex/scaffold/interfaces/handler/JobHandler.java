@@ -44,7 +44,7 @@ import reactor.core.publisher.Mono;
  * </ul>
  *
  * @author Apex Team
- * @version 1.0.0
+ * @version 1.2.0
  * @since 1.0.0
  * @see JobService
  */
@@ -89,6 +89,109 @@ public class JobHandler extends BaseHandler {
     })
     public Mono<ServerResponse> list(ServerRequest request) {
         return jobService.listJobs().flatMap(this::buildSuccess);
+    }
+
+    /**
+     * 分页查询任务列表（支持条件筛选）。
+     *
+     * <p>支持按任务名称模糊匹配、任务分组和状态精确筛选，并提供分页功能。
+     * 查询参数通过 Query String 传递，分页参数为必填项。</p>
+     *
+     * @param request HTTP 请求，查询参数包含 {@code pageNum}、{@code pageSize}、
+     *                {@code jobName}、{@code jobGroup}、{@code status}
+     * @return 带 traceId 的统一成功响应，data 为分页响应对象
+     * @throws com.apex.scaffold.common.exception.BusinessException 当分页参数缺失或非法时抛出
+     */
+    @RequirePermission("system:job:list")
+    @Operation(
+            operationId = "adminPageJobs",
+            summary = "分页查询定时任务列表",
+            description = "分页查询定时任务列表，支持按任务名称模糊匹配、任务分组和状态精确筛选。" + "查询结果按创建时间降序排列，返回分页信息和数据列表")
+    @Parameter(
+            name = "pageNum",
+            description = "页码（从1开始）",
+            required = true,
+            in = ParameterIn.QUERY,
+            schema = @Schema(type = "integer", minimum = "1", example = "1"))
+    @Parameter(
+            name = "pageSize",
+            description = "每页数量（1-100）",
+            required = true,
+            in = ParameterIn.QUERY,
+            schema = @Schema(type = "integer", minimum = "1", maximum = "100", example = "10"))
+    @Parameter(
+            name = "jobName",
+            description = "任务名称（支持模糊查询）",
+            required = false,
+            in = ParameterIn.QUERY,
+            schema = @Schema(type = "string", example = "数据同步"))
+    @Parameter(
+            name = "jobGroup",
+            description = "任务分组（精确匹配）",
+            required = false,
+            in = ParameterIn.QUERY,
+            schema = @Schema(type = "string", example = "DEFAULT"))
+    @Parameter(
+            name = "status",
+            description = "任务状态（0-停用，1-正常）",
+            required = false,
+            in = ParameterIn.QUERY,
+            schema = @Schema(type = "integer", example = "1"))
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "查询成功",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = com.apex.scaffold.common.dto.PageResponse.class))),
+        @ApiResponse(responseCode = "400", description = "参数错误，分页参数必填且必须为正整数"),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要system:job:list权限")
+    })
+    public Mono<ServerResponse> page(ServerRequest request) {
+        return Mono.defer(() -> {
+                    String pageNumStr = request.queryParam("pageNum").orElse(null);
+                    String pageSizeStr = request.queryParam("pageSize").orElse(null);
+
+                    if (pageNumStr == null || pageNumStr.isBlank()) {
+                        return Mono.error(new com.apex.scaffold.common.exception.BusinessException(
+                                com.apex.scaffold.common.result.ResultCode.PARAM_ERROR, "pageNum 必须为正整数"));
+                    }
+                    if (pageSizeStr == null || pageSizeStr.isBlank()) {
+                        return Mono.error(new com.apex.scaffold.common.exception.BusinessException(
+                                com.apex.scaffold.common.result.ResultCode.PARAM_ERROR, "pageSize 必须为 1-100 之间的正整数"));
+                    }
+
+                    int pageNum = safeParseInt(pageNumStr, -1);
+                    int pageSize = safeParseInt(pageSizeStr, -1);
+                    String jobName = request.queryParam("jobName").orElse(null);
+                    String jobGroup = request.queryParam("jobGroup").orElse(null);
+                    Integer status = request.queryParam("status")
+                            .filter(value -> !value.isBlank())
+                            .map(value -> safeParseInt(value, -1))
+                            .orElse(null);
+
+                    if (pageNum < 1) {
+                        return Mono.error(new com.apex.scaffold.common.exception.BusinessException(
+                                com.apex.scaffold.common.result.ResultCode.PARAM_ERROR, "pageNum 必须为正整数"));
+                    }
+                    if (pageSize < 1 || pageSize > 100) {
+                        return Mono.error(new com.apex.scaffold.common.exception.BusinessException(
+                                com.apex.scaffold.common.result.ResultCode.PARAM_ERROR, "pageSize 必须为 1-100 之间的正整数"));
+                    }
+
+                    com.apex.scaffold.application.dto.admin.JobQueryRequest queryRequest =
+                            com.apex.scaffold.application.dto.admin.JobQueryRequest.builder()
+                                    .pageNum(pageNum)
+                                    .pageSize(pageSize)
+                                    .jobName(jobName)
+                                    .jobGroup(jobGroup)
+                                    .status(status)
+                                    .build();
+
+                    return jobService.pageJobs(queryRequest);
+                })
+                .flatMap(this::buildSuccess);
     }
 
     /**

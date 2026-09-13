@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
  * 采用小写下划线格式，例如 {@code sys_user_sex}。</p>
  *
  * @author Apex Team
- * @version 1.0.0
+ * @version 1.2.0
  * @since 1.0.0
  */
 @Data
@@ -24,6 +24,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "字典类型创建/更新请求")
+/**n * DictTypeRequestn *n * <p>TODO: 补充类的详细说明n *n * @author Apex Teamn * @version 1.0.0n * @since 1.0.0n */
 public class DictTypeRequest {
 
     /**

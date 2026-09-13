@@ -24,20 +24,26 @@ import reactor.core.publisher.Mono;
  * 部门管理处理器（函数式端点）。
  *
  * <p>提供部门树查询与 CRUD API（C3 数据权限/部门体系），树形结构由
- * {@link DeptService} 内存组装，所有端点要求 {@code system:dept:*} 权限。</p>
+ * {@link DeptService} 内存组装，所有端点要求 {@code system:dept:*} 权限。
  *
- * <h2>接口清单</h2>
+ * <h2>核心功能</h2>
  * <ul>
- *   <li>GET /admin-api/v1/depts - 查询部门树</li>
- *   <li>GET /admin-api/v1/depts/{id} - 查询部门详情</li>
- *   <li>POST /admin-api/v1/depts - 新增部门</li>
- *   <li>PUT /admin-api/v1/depts/{id} - 更新部门</li>
- *   <li>DELETE /admin-api/v1/depts/{id} - 删除部门</li>
+ *   <li>部门树查询：查询完整的部门树形结构</li>
+ *   <li>部门 CRUD：新增、查询详情、更新、逻辑删除部门</li>
+ * </ul>
+ *
+ * <h2>接口列表</h2>
+ * <ul>
+ *   <li>GET /admin-api/v1/depts — 查询部门树</li>
+ *   <li>GET /admin-api/v1/depts/{id} — 查询部门详情</li>
+ *   <li>POST /admin-api/v1/depts — 新增部门</li>
+ *   <li>PUT /admin-api/v1/depts/{id} — 更新部门</li>
+ *   <li>DELETE /admin-api/v1/depts/{id} — 删除部门</li>
  * </ul>
  *
  * @author Apex Team
- * @version 1.0.0
- * @since 2.2.0
+ * @version 1.2.0
+ * @since 1.0.0
  * @see DeptService
  */
 @Component

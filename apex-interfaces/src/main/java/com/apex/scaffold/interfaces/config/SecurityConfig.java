@@ -27,7 +27,7 @@ import reactor.core.publisher.Mono;
  * 基于 Spring WebFlux Security 实现全响应式安全防护。
  * 集成了国际化支持，认证失败的错误消息会根据客户端的 Accept-Language 自动切换。
  *
- * <h2>核心安全配置</h2>
+ * <h2>主要功能</h2>
  * <ul>
  *   <li><b>JWT 认证</b>：通过 {@link JwtAuthenticationFilter} 实现无状态 Token 认证</li>
  *   <li><b>授权规则</b>：区分公开接口、管理员接口和需认证接口，管理端路径通过
@@ -37,6 +37,15 @@ import reactor.core.publisher.Mono;
  *       401（{@code auth.login_required}）。Token 过期的专用错误码
  *       40101（{@code auth.token_expired}）由 {@link JwtAuthenticationFilter}
  *       精确处理，确保前端能区分"需重新登录"与"通用未授权"场景</li>
+ *   <li><b>Keycloak OIDC 登录</b>：当 {@code keycloak.enabled=true} 时启用 OAuth2 登录并绑定成功处理器</li>
+ * </ul>
+ *
+ * <h2>配置属性</h2>
+ * <ul>
+ *   <li>{@code apex.features.rbac} — 是否启用 RBAC 细粒度角色授权（默认 true，basic 版本关闭）</li>
+ *   <li>{@code keycloak.enabled} — 是否启用 Keycloak OIDC 登录（默认 false）</li>
+ *   <li>{@code apex.security.admin-paths} / {@code apex.security.admin-roles} — 管理端路径与角色，
+ *       由 {@link SecurityProperties} 读取，支持 Nacos 动态刷新</li>
  * </ul>
  *
  * <h2>认证异常响应码策略</h2>
@@ -67,7 +76,7 @@ import reactor.core.publisher.Mono;
  * </ul>
  *
  * @author Apex Team
- * @version 3.1.0
+ * @version 1.2.0
  * @since 1.0.0
  * @see JwtAuthenticationFilter
  * @see MessageUtils

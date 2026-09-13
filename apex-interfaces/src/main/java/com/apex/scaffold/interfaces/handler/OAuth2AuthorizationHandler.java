@@ -6,6 +6,13 @@ import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.domain.model.entity.OAuth2AccessTokenEntity;
 import com.apex.scaffold.interfaces.security.AuthenticatedUser;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -20,46 +27,62 @@ import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Mono;
 
 /**
- * OAuth2授权端点Handler
+ * OAuth2 授权服务器处理器（函数式端点）。
  *
- * <p>处理OAuth2授权服务器的核心端点:
+ * <p>实现标准 OAuth2 授权服务器核心端点，支持授权码模式、客户端凭证模式、
+ * 密码模式和刷新令牌等授权流程，支持 PKCE 扩展以增强安全性。提供令牌颁发、
+ * 令牌撤销、令牌自省、用户授权同意管理等完整的 OAuth2 服务端能力。</p>
+ *
+ * <h2>接口清单</h2>
  * <ul>
- *   <li>/oauth2/authorize - 授权端点(授权码模式)</li>
- *   <li>/oauth2/token - Token端点(所有授权模式)</li>
- *   <li>/oauth2/revoke - Token撤销端点</li>
- *   <li>/oauth2/introspect - Token自省端点</li>
+ *   <li>GET /oauth2/authorize - OAuth2 授权端点，处理授权码模式的授权请求</li>
+ *   <li>POST /oauth2/token - OAuth2 令牌端点，根据不同 grant_type 换取访问令牌</li>
+ *   <li>POST /oauth2/revoke - OAuth2 令牌撤销端点，撤销指定的访问令牌或刷新令牌</li>
+ *   <li>POST /oauth2/introspect - OAuth2 令牌自省端点，验证令牌有效性并返回元数据</li>
+ *   <li>POST /oauth2/consent - 保存用户授权同意</li>
+ *   <li>POST /oauth2/consent/revoke - 撤销用户授权同意</li>
+ * </ul>
+ *
+ * <h2>支持的授权模式</h2>
+ * <ul>
+ *   <li>authorization_code：授权码模式，适用于服务端应用，支持 PKCE</li>
+ *   <li>client_credentials：客户端凭证模式，适用于服务间调用</li>
+ *   <li>password：密码模式，适用于受信任的第一方应用</li>
+ *   <li>refresh_token：刷新令牌模式，用于延长访问令牌有效期</li>
  * </ul>
  *
  * @author Apex Team
- * @version 2.0.0
- * @since 2.0.0
+ * @version 1.0.0
+ * @since 1.0.0
+ * @see OAuth2AuthorizationServiceImpl
  */
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@Tag(name = "OAuth2授权服务器", description = "OAuth2授权服务器核心端点,支持授权码、客户端凭证、密码和刷新令牌等授权模式")
 public class OAuth2AuthorizationHandler {
 
     private final OAuth2AuthorizationServiceImpl authorizationService;
 
-    /**
-     * 授权端点 - 授权码模式第一步
-     *
-     * <p>请求参数:
-     * <ul>
-     *   <li>response_type - 固定为"code"</li>
-     *   <li>client_id - 客户端ID</li>
-     *   <li>redirect_uri - 重定向URI</li>
-     *   <li>scope - 权限作用域(可选)</li>
-     *   <li>state - 状态参数(推荐,防CSRF)</li>
-     *   <li>code_challenge - PKCE challenge(PKCE必需)</li>
-     *   <li>code_challenge_method - PKCE方法,S256或plain</li>
-     * </ul>
-     *
-     * <p>响应: 重定向到redirect_uri?code=xxx&state=xxx
-     *
-     * @param request ServerRequest
-     * @return 重定向响应
-     */
+    @Operation(
+            operationId = "oauth2Authorize",
+            summary = "OAuth2授权端点",
+            description = "处理授权码模式的授权请求,支持PKCE扩展。用户授权后重定向到客户端并携带授权码")
+    @ApiResponses({
+        @ApiResponse(responseCode = "302", description = "授权成功,重定向到客户端redirect_uri并携带code和state参数"),
+        @ApiResponse(
+                responseCode = "400",
+                description = "请求参数错误",
+                content = @Content(schema = @Schema(implementation = Result.class))),
+        @ApiResponse(
+                responseCode = "401",
+                description = "用户未登录",
+                content = @Content(schema = @Schema(implementation = Result.class))),
+        @ApiResponse(
+                responseCode = "403",
+                description = "用户拒绝授权或未授予权限",
+                content = @Content(schema = @Schema(implementation = Result.class)))
+    })
     public Mono<ServerResponse> authorize(ServerRequest request) {
         String responseType = request.queryParam("response_type").orElse("");
         String clientId = request.queryParam("client_id").orElse("");
@@ -117,20 +140,19 @@ public class OAuth2AuthorizationHandler {
                         e -> buildErrorResponse(redirectUri, "server_error", e.getMessage(), state));
     }
 
-    /**
-     * Token端点 - 换取访问令牌
-     *
-     * <p>支持的授权模式(grant_type):
-     * <ul>
-     *   <li>authorization_code - 授权码模式</li>
-     *   <li>client_credentials - 客户端凭证模式</li>
-     *   <li>password - 密码模式</li>
-     *   <li>refresh_token - 刷新令牌</li>
-     * </ul>
-     *
-     * @param request ServerRequest
-     * @return Token响应
-     */
+    @Operation(
+            operationId = "oauth2Token",
+            summary = "OAuth2令牌端点",
+            description = "根据不同的grant_type换取访问令牌,支持授权码、客户端凭证、密码和刷新令牌模式")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "令牌颁发成功,返回access_token、token_type、expires_in等信息"),
+        @ApiResponse(responseCode = "400", description = "请求参数错误或grant_type不支持"),
+        @ApiResponse(responseCode = "401", description = "客户端认证失败或授权码无效")
+    })
+    @RequestBody(
+            description = "令牌请求参数(表单格式)",
+            required = true,
+            content = @Content(mediaType = "application/x-www-form-urlencoded"))
     public Mono<ServerResponse> token(ServerRequest request) {
         return request.formData().flatMap(formData -> {
             String grantType = formData.getFirst("grant_type");
@@ -149,12 +171,21 @@ public class OAuth2AuthorizationHandler {
         });
     }
 
-    /**
-     * Token撤销端点
-     *
-     * @param request ServerRequest
-     * @return 撤销结果
-     */
+    @Operation(operationId = "oauth2Revoke", summary = "OAuth2令牌撤销端点", description = "撤销指定的访问令牌或刷新令牌,使其立即失效")
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "令牌撤销成功",
+                content = @Content(schema = @Schema(implementation = Result.class))),
+        @ApiResponse(
+                responseCode = "400",
+                description = "缺少必需参数",
+                content = @Content(schema = @Schema(implementation = Result.class)))
+    })
+    @RequestBody(
+            description = "撤销请求参数:token(必需)、client_id(必需)",
+            required = true,
+            content = @Content(mediaType = "application/x-www-form-urlencoded"))
     public Mono<ServerResponse> revoke(ServerRequest request) {
         return request.formData().flatMap(formData -> {
             String token = formData.getFirst("token");
@@ -174,12 +205,15 @@ public class OAuth2AuthorizationHandler {
         });
     }
 
-    /**
-     * Token自省端点
-     *
-     * @param request ServerRequest
-     * @return Token信息
-     */
+    @Operation(operationId = "oauth2Introspect", summary = "OAuth2令牌自省端点", description = "验证令牌的有效性并返回令牌的元数据信息")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "返回令牌信息,active字段指示令牌是否有效"),
+        @ApiResponse(responseCode = "400", description = "缺少token参数")
+    })
+    @RequestBody(
+            description = "自省请求参数:token(必需)",
+            required = true,
+            content = @Content(mediaType = "application/x-www-form-urlencoded"))
     public Mono<ServerResponse> introspect(ServerRequest request) {
         return request.formData().flatMap(formData -> {
             String token = formData.getFirst("token");
@@ -208,12 +242,29 @@ public class OAuth2AuthorizationHandler {
         });
     }
 
-    /**
-     * 授权同意端点 - 保存用户授权同意
-     *
-     * @param request ServerRequest
-     * @return 保存结果
-     */
+    @Operation(operationId = "oauth2Consent", summary = "保存用户授权同意", description = "用户在授权页面同意或拒绝授权后调用此端点保存同意记录")
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "同意记录保存成功",
+                content = @Content(schema = @Schema(implementation = Result.class))),
+        @ApiResponse(
+                responseCode = "400",
+                description = "缺少必需参数",
+                content = @Content(schema = @Schema(implementation = Result.class))),
+        @ApiResponse(
+                responseCode = "401",
+                description = "用户未登录",
+                content = @Content(schema = @Schema(implementation = Result.class))),
+        @ApiResponse(
+                responseCode = "403",
+                description = "用户拒绝授权",
+                content = @Content(schema = @Schema(implementation = Result.class)))
+    })
+    @RequestBody(
+            description = "同意请求参数:client_id(必需)、scope(可选)、approved(必需,true或false)",
+            required = true,
+            content = @Content(mediaType = "application/x-www-form-urlencoded"))
     public Mono<ServerResponse> consent(ServerRequest request) {
         return request.formData()
                 .flatMap(formData -> {
@@ -253,12 +304,25 @@ public class OAuth2AuthorizationHandler {
                         .bodyValue(Result.error(e.getCode(), e.getMessage())));
     }
 
-    /**
-     * 撤销授权同意端点
-     *
-     * @param request ServerRequest
-     * @return 撤销结果
-     */
+    @Operation(operationId = "oauth2RevokeConsent", summary = "撤销用户授权同意", description = "用户撤销之前对某个客户端的授权同意")
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "授权同意撤销成功",
+                content = @Content(schema = @Schema(implementation = Result.class))),
+        @ApiResponse(
+                responseCode = "400",
+                description = "缺少client_id参数",
+                content = @Content(schema = @Schema(implementation = Result.class))),
+        @ApiResponse(
+                responseCode = "401",
+                description = "用户未登录",
+                content = @Content(schema = @Schema(implementation = Result.class)))
+    })
+    @RequestBody(
+            description = "撤销请求参数:client_id(必需)",
+            required = true,
+            content = @Content(mediaType = "application/x-www-form-urlencoded"))
     public Mono<ServerResponse> revokeConsent(ServerRequest request) {
         return request.formData()
                 .flatMap(formData -> {

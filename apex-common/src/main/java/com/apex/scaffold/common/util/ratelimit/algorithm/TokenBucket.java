@@ -2,8 +2,7 @@ package com.apex.scaffold.common.util.ratelimit.algorithm;
 
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 令牌桶限流算法实现
@@ -55,8 +54,8 @@ import org.slf4j.LoggerFactory;
  * @version 1.0.0
  * @since 1.3.0
  */
+@Slf4j
 public class TokenBucket {
-    private static final Logger log = LoggerFactory.getLogger(TokenBucket.class);
 
     /** 桶容量（最大令牌数） */
     private final long capacity;

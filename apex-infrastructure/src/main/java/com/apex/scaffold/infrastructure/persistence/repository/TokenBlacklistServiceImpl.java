@@ -9,8 +9,7 @@ import io.jsonwebtoken.JwtException;
 import java.time.Duration;
 import java.util.Date;
 import java.util.Objects;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -33,9 +32,9 @@ import reactor.core.publisher.Mono;
  * @version 2.0.0
  * @since 1.0.0
  */
+@Slf4j
 @Service
 public class TokenBlacklistServiceImpl implements TokenBlacklistService {
-    private static final Logger log = LoggerFactory.getLogger(TokenBlacklistServiceImpl.class);
 
     /** Redis 键前缀 */
     private static final String BLACKLIST_PREFIX = "token:blacklist:";

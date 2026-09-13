@@ -7,16 +7,28 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * 微信手机号绑定请求：使用短信验证码校验手机号后与微信授权信息绑定。
+ * 微信手机号绑定请求。
+ *
+ * <p>使用短信验证码校验手机号后，将手机号与微信授权信息绑定。</p>
+ *
+ * <p>主要字段：</p>
+ * <ul>
+ *   <li>{@code wechatTicket} - 微信授权临时票据</li>
+ *   <li>{@code phone} - 待绑定手机号</li>
+ *   <li>{@code smsCode} - 短信验证码</li>
+ *   <li>{@code deviceId} - 设备 ID</li>
+ *   <li>{@code clientIp} - 客户端 IP</li>
+ * </ul>
  *
  * @author Apex Team
- * @version 1.0.0
+ * @version 1.2.0
  * @since 1.0.0
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+/**n * WechatBindPhoneRequestn *n * <p>TODO: 补充类的详细说明n *n * @author Apex Teamn * @version 1.0.0n * @since 1.0.0n */
 public class WechatBindPhoneRequest {
 
     @Schema(description = "微信授权临时票据")

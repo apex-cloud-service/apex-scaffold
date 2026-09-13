@@ -35,6 +35,12 @@ public class OAuth2RegisteredClientRepositoryImpl implements OAuth2RegisteredCli
 
     private final OAuth2RegisteredClientMapper mapper;
 
+    /**
+     * 根据客户端ID查找OAuth2注册客户端
+     *
+     * @param clientId 客户端ID
+     * @return 包含客户端实体的Mono,如果不存在则为空Mono
+     */
     @Override
     public Mono<OAuth2RegisteredClientEntity> findByClientId(String clientId) {
         return Mono.fromCallable(() -> {
@@ -46,6 +52,12 @@ public class OAuth2RegisteredClientRepositoryImpl implements OAuth2RegisteredCli
                 .subscribeOn(BlockingIoSchedulers.jdbc());
     }
 
+    /**
+     * 根据主键ID查找OAuth2注册客户端
+     *
+     * @param id 主键ID
+     * @return 包含客户端实体的Mono,如果不存在则为空Mono
+     */
     @Override
     public Mono<OAuth2RegisteredClientEntity> findById(String id) {
         return Mono.fromCallable(() -> {
@@ -55,6 +67,14 @@ public class OAuth2RegisteredClientRepositoryImpl implements OAuth2RegisteredCli
                 .subscribeOn(BlockingIoSchedulers.jdbc());
     }
 
+    /**
+     * 保存或更新OAuth2注册客户端
+     *
+     * <p>如果客户端ID已存在则执行更新,否则执行插入。
+     *
+     * @param client 客户端实体
+     * @return 包含保存后客户端实体的Mono
+     */
     @Override
     public Mono<OAuth2RegisteredClientEntity> save(OAuth2RegisteredClientEntity client) {
         return Mono.fromCallable(() -> {
@@ -71,6 +91,12 @@ public class OAuth2RegisteredClientRepositoryImpl implements OAuth2RegisteredCli
                 .subscribeOn(BlockingIoSchedulers.jdbc());
     }
 
+    /**
+     * 根据主键ID删除OAuth2注册客户端
+     *
+     * @param id 主键ID
+     * @return 空Mono,表示删除操作完成
+     */
     @Override
     public Mono<Void> deleteById(String id) {
         return Mono.fromRunnable(() -> {
@@ -81,6 +107,13 @@ public class OAuth2RegisteredClientRepositoryImpl implements OAuth2RegisteredCli
                 .then();
     }
 
+    /**
+     * 分页查询所有OAuth2注册客户端
+     *
+     * @param page 页码,从1开始
+     * @param size 每页大小
+     * @return 包含客户端实体列表的Flux
+     */
     @Override
     public Flux<OAuth2RegisteredClientEntity> findAll(int page, int size) {
         return Mono.fromCallable(() -> {
@@ -91,11 +124,24 @@ public class OAuth2RegisteredClientRepositoryImpl implements OAuth2RegisteredCli
                 .flatMapMany(Flux::fromIterable);
     }
 
+    /**
+     * 统计OAuth2注册客户端总数
+     *
+     * @return 包含客户端总数的Mono
+     */
     @Override
     public Mono<Long> count() {
         return Mono.fromCallable(() -> mapper.selectCount(null)).subscribeOn(BlockingIoSchedulers.jdbc());
     }
 
+    /**
+     * 根据客户端名称模糊查询OAuth2注册客户端
+     *
+     * @param clientName 客户端名称(支持模糊匹配)
+     * @param page 页码,从1开始
+     * @param size 每页大小
+     * @return 包含匹配客户端实体列表的Flux
+     */
     @Override
     public Flux<OAuth2RegisteredClientEntity> findByClientNameLike(String clientName, int page, int size) {
         return Mono.fromCallable(() -> {

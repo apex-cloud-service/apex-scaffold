@@ -3,8 +3,7 @@ package com.apex.scaffold.infrastructure.wechat.service;
 import com.apex.scaffold.infrastructure.wechat.config.WeWorkProperties;
 import java.util.HashMap;
 import java.util.Map;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
@@ -43,9 +42,9 @@ import reactor.core.publisher.Mono;
  * @since 1.0.0
  * @see WeWorkProperties
  */
+@Slf4j
 @Service
 public class WeWorkService {
-    private static final Logger log = LoggerFactory.getLogger(WeWorkService.class);
 
     /**
      * 企业微信API基础URL

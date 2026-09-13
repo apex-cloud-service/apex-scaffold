@@ -35,36 +35,32 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
 /**
- * 认证处理器（函数式端点）
+ * 认证处理器（函数式端点）。
  *
- * <p>继承 {@link BaseHandler}，提供微信 APP 登录、Token 刷新、退出登录等认证相关 RESTful API，
- * 基于 Spring WebFlux 函数式编程模型实现。
- * 集成了国际化支持，错误消息会根据客户端的 Accept-Language 自动切换。
- * 错误响应统一通过 {@link BaseHandler#buildError(Integer, String, String, Object...)} 构建。
+ * <p>提供用户登录、注册、Token 刷新、退出登录和短信验证码发送等核心认证功能。
+ * 支持多种登录方式（微信登录、创蓝一键登录、短信验证码登录）和微信手机号绑定。
  *
  * <h2>核心功能</h2>
  * <ul>
- *   <li>微信 APP 登录：通过微信开放平台授权码换取登录态，返回 JWT Token</li>
- *   <li>Token 刷新：使用 refreshToken 换取新的 accessToken</li>
- *   <li>退出登录：使当前 Token 失效，清除用户登录态</li>
- *   <li>绑定微信手机号：获取并绑定用户微信手机号</li>
- *   <li>发送短信验证码：支持普通短信和创蓝短信平台</li>
+ *   <li>登录认证：支持微信授权、创蓝一键登录、短信验证码登录</li>
+ *   <li>用户注册：使用一次性票据完成注册流程</li>
+ *   <li>微信手机号绑定：注册前验证并绑定微信手机号</li>
+ *   <li>Token 管理：刷新 JWT Token、退出登录（撤销 Token）</li>
+ *   <li>短信验证码：发送微信短信验证码、创蓝短信验证码</li>
+ *   <li>手机号验证：创蓝手机号合法性验证</li>
  * </ul>
  *
  * <h2>安全特性</h2>
  * <ul>
- *   <li>集成 Sentinel 限流保护登录接口</li>
- *   <li>集成操作日志记录（{@link com.apex.scaffold.common.annotation.OperationLog}）</li>
- *   <li>基于请求头 Authorization 提取 JWT Token</li>
- *   <li>国际化错误消息：限流/参数校验/认证失败消息自动适配客户端语言</li>
+ *   <li>使用 {@link IdempotentApi} 防止重复注册和登录</li>
+ *   <li>使用 {@link OperationLog} 记录关键操作审计日志</li>
+ *   <li>集成 Sentinel 限流保护（{@link SentinelResource}）</li>
+ *   <li>支持业务指标和安全指标记录</li>
  * </ul>
  *
- * @author Apex Team
- * @version 3.0.0
- * @since 1.0.0
  * @see AuthService
+ * @see AuthRegistrationService
  * @see BaseHandler
- * @see RequestHandlerUtil
  */
 @Slf4j
 @Component

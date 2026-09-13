@@ -2,8 +2,11 @@ package com.apex.scaffold.infrastructure.persistence.po;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.time.LocalDateTime;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 /**
  * 登录日志持久化对象。
@@ -16,14 +19,17 @@ import lombok.EqualsAndHashCode;
  * @since 1.0.0
  */
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
+@SuperBuilder
 @EqualsAndHashCode(callSuper = true)
 @TableName("sys_login_log")
+/**n * LoginLogPO - 持久化对象n *n * <p>对应数据库表：TODO: 补充表名n *n * @author Apex Teamn * @version 1.0.0n * @since 1.0.0n */
 public class LoginLogPO extends BasePO {
 
     /**
      * 构造登录日志持久化对象。
      */
-    public LoginLogPO() {}
 
     /**
      * 登录账号。

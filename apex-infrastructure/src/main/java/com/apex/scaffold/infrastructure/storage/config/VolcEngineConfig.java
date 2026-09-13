@@ -3,8 +3,7 @@ package com.apex.scaffold.infrastructure.storage.config;
 import com.volcengine.tos.TOSV2;
 import com.volcengine.tos.TOSV2ClientBuilder;
 import lombok.Data;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -33,7 +32,6 @@ import org.springframework.context.annotation.Configuration;
  */
 @Data
 public class VolcEngineConfig {
-    private static final Logger log = LoggerFactory.getLogger(VolcEngineConfig.class);
 
     /** 是否启用火山云存储 */
     private boolean enabled = false;
@@ -59,6 +57,7 @@ public class VolcEngineConfig {
      * @author Apex Team
      * @version 1.0.0
      */
+    @Slf4j
     @Configuration
     @ConditionalOnProperty(name = "storage.volcengine.enabled", havingValue = "true")
     public static class VolcEngineTosConfig {

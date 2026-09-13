@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
  * 来源环境、结果与时间信息。</p>
  *
  * @author Apex Team
- * @version 1.0.0
+ * @version 1.2.0
  * @since 1.0.0
  */
 @Data
@@ -22,6 +22,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "登录日志响应")
+/**n * LoginLogDTOn *n * <p>TODO: 补充类的详细说明n *n * @author Apex Teamn * @version 1.0.0n * @since 1.0.0n */
 public class LoginLogDTO {
 
     /**

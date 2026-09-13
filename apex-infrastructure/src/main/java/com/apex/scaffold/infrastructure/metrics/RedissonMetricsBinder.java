@@ -4,11 +4,10 @@ import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.Node;
 import org.redisson.api.NodesGroup;
 import org.redisson.api.RedissonClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
@@ -40,10 +39,9 @@ import org.springframework.stereotype.Component;
  * @see RedissonClient
  * @see MeterRegistry
  */
+@Slf4j
 @Component
 public class RedissonMetricsBinder {
-
-    private static final Logger log = LoggerFactory.getLogger(RedissonMetricsBinder.class);
 
     /** 节点总数指标名 */
     static final String NODES_TOTAL = "redisson.nodes.total";

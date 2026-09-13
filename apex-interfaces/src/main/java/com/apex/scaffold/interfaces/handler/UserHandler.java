@@ -31,28 +31,33 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
 /**
- * 用户处理器（函数式端点）
+ * 用户处理器（函数式端点）。
  *
- * <p>
- * 提供用户信息管理的 RESTful API，基于 Spring WebFlux 函数式编程模型实现。
- * 包含用户信息查询和分页列表查询等功能。
+ * <p>提供用户信息管理的 RESTful API，基于 Spring WebFlux 函数式编程模型实现。
+ * 包含当前用户信息查询、按 ID 查询、分页列表查询，以及账号注销（短信二次验证）
+ * 等功能。项目 API 统一通过公开白名单访问，与当前用户相关的操作使用请求上下文中
+ * 可用的用户身份，并集成操作日志记录
+ * （{@link com.apex.scaffold.common.annotation.OperationLog}）。</p>
  *
  * <h2>核心功能</h2>
  * <ul>
  *   <li>获取当前登录用户信息</li>
- *   <li>根据用户ID查询用户信息</li>
+ *   <li>根据用户 ID 查询用户信息</li>
  *   <li>分页查询用户列表</li>
+ *   <li>发送账号注销验证码并注销当前账号</li>
  * </ul>
  *
- * <h2>安全控制</h2>
+ * <h2>接口清单</h2>
  * <ul>
- *   <li>与当前用户相关的操作仍使用请求上下文中可用的用户身份</li>
- *   <li>项目 API 统一通过公开白名单访问，不要求请求携带 Token</li>
- *   <li>集成操作日志记录（{@link com.apex.scaffold.common.annotation.OperationLog}）</li>
+ *   <li>GET /api/v1/user/info - 获取当前用户信息</li>
+ *   <li>GET /api/v1/user/{userId} - 根据 ID 获取用户信息</li>
+ *   <li>POST /api/v1/user/list - 分页查询用户列表</li>
+ *   <li>POST /api/v1/user/me/deletion-code - 发送账号注销验证码</li>
+ *   <li>DELETE /api/v1/user/me - 注销当前账号</li>
  * </ul>
  *
  * @author Apex Team
- * @version 2.0.0
+ * @version 1.2.0
  * @since 1.0.0
  * @see BaseHandler
  * @see UserService

@@ -8,8 +8,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.caffeine.CaffeineCacheManager;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -43,9 +42,9 @@ import reactor.core.publisher.Mono;
  * @see MultiLevelCacheService
  * @see CaffeineCacheManager
  */
+@Slf4j
 @Service
 public class LocalCacheService {
-    private static final Logger log = LoggerFactory.getLogger(LocalCacheService.class);
 
     /** 默认缓存名称 */
     private static final String DEFAULT_CACHE_NAME = "localCache";

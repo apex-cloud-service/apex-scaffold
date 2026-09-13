@@ -7,12 +7,11 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RBucket;
 import org.redisson.api.RKeys;
 import org.redisson.api.RedissonClient;
 import org.redisson.client.codec.StringCodec;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -36,9 +35,9 @@ import reactor.core.publisher.Mono;
  * @see CacheService
  * @see RedissonClient
  */
+@Slf4j
 @Service
 public class CacheServiceImpl implements CacheService {
-    private static final Logger log = LoggerFactory.getLogger(CacheServiceImpl.class);
 
     private final RedissonClient redissonClient;
 

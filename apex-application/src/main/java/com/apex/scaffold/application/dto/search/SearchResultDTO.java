@@ -6,17 +6,32 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * 搜索结果 DTO
+ * 搜索结果 DTO。
  *
- * <p>封装全文搜索返回的结果，供前端展示使用。
+ * <p>封装全文搜索返回的单条结果，供前端列表展示使用。</p>
+ *
+ * <p>主要字段：</p>
+ * <ul>
+ *   <li>{@code resourceType} - 资源类型</li>
+ *   <li>{@code resourceId} - 资源 ID</li>
+ *   <li>{@code title} - 主标题</li>
+ *   <li>{@code subtitle} - 副标题</li>
+ *   <li>{@code description} - 描述信息</li>
+ *   <li>{@code highlightSnippet} - 高亮片段（HTML 格式）</li>
+ *   <li>{@code score} - 相关性评分</li>
+ *   <li>{@code status} - 状态（1-启用，0-禁用）</li>
+ *   <li>{@code createdAt}/{@code updatedAt} - 创建与更新时间（格式化字符串）</li>
+ * </ul>
  *
  * @author Apex Team
- * @since 1.3.0
+ * @version 1.2.0
+ * @since 1.0.0
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+/**n * SearchResultDTOn *n * <p>TODO: 补充类的详细说明n *n * @author Apex Teamn * @version 1.0.0n * @since 1.0.0n */
 public class SearchResultDTO {
 
     /**

@@ -6,8 +6,7 @@ import com.apex.scaffold.infrastructure.chuanglan.exception.ChuanglanApiExceptio
 import com.apex.scaffold.infrastructure.chuanglan.strategy.PhoneDecryptStrategy;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
 import org.springframework.util.LinkedMultiValueMap;
@@ -25,8 +24,8 @@ import reactor.core.publisher.Mono;
  * @version 1.0.0
  * @since 3.3.0
  */
+@Slf4j
 public final class ChuanglanFlashClient {
-    private static final Logger log = LoggerFactory.getLogger(ChuanglanFlashClient.class);
 
     /** 闪验成功响应码。 */
     private static final String SUCCESS_CODE = "200000";

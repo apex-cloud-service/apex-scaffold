@@ -6,8 +6,7 @@ import com.apex.scaffold.infrastructure.chuanglan.config.ChuanglanWebClientConfi
 import com.apex.scaffold.infrastructure.chuanglan.exception.ChuanglanApiException;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -23,8 +22,8 @@ import reactor.core.publisher.Mono;
  * @version 1.0.0
  * @since 3.3.0
  */
+@Slf4j
 public final class ChuanglanSmsClient {
-    private static final Logger log = LoggerFactory.getLogger(ChuanglanSmsClient.class);
 
     /** 短信 v2 模板发送成功码。 */
     private static final String SEND_SUCCESS_CODE = "000000";

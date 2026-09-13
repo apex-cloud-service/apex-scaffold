@@ -2,8 +2,7 @@ package com.apex.scaffold.common.util.ratelimit.algorithm;
 
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 高效滑动窗口限流算法实现
@@ -50,8 +49,8 @@ import org.slf4j.LoggerFactory;
  * @version 1.0.0
  * @since 1.3.0
  */
+@Slf4j
 public class SlidingWindow {
-    private static final Logger log = LoggerFactory.getLogger(SlidingWindow.class);
 
     /** 默认子桶数量 */
     private static final int DEFAULT_BUCKET_COUNT = 10;

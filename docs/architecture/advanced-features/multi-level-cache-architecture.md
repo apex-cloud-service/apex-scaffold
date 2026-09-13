@@ -545,7 +545,7 @@ cacheService.delete(key)
 ## 七、相关文档
 
 - [DB 故障读降级使用指南](../../READ_DEGRADATION_GUIDE.md)
-- [缓存与三高能力增强计划](../../superpowers/plans/2026-08-30-cache-high-load-enhancement.md)
+- [缓存与三高能力增强计划](../../_archive/superpowers/plans/2026-08-30-cache-high-load-enhancement.md)
 - [配置项详解](../../CONFIGURATION.md)
 - [系统架构设计](../system-architecture.md)
 

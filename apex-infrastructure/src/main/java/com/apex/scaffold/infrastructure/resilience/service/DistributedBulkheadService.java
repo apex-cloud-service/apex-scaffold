@@ -8,10 +8,9 @@ import io.micrometer.core.instrument.MeterRegistry;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
+import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RPermitExpirableSemaphore;
 import org.redisson.api.RedissonClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -52,9 +51,9 @@ import reactor.core.publisher.Mono;
  * @see CircuitBreakerService
  * @see BulkheadProperties
  */
+@Slf4j
 @Service
 public class DistributedBulkheadService {
-    private static final Logger log = LoggerFactory.getLogger(DistributedBulkheadService.class);
 
     private static final String SEMAPHORE_KEY_PREFIX = "bulkhead:semaphore:";
 

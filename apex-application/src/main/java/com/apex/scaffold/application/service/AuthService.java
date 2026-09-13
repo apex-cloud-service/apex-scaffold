@@ -2,6 +2,7 @@ package com.apex.scaffold.application.service;
 
 import com.alibaba.csp.sentinel.annotation.SentinelResource;
 import com.alibaba.csp.sentinel.slots.block.BlockException;
+import com.apex.scaffold.application.assembler.UserAssembler;
 import com.apex.scaffold.application.config.LoginProtectionProperties;
 import com.apex.scaffold.application.dto.LoginRequest;
 import com.apex.scaffold.application.dto.LoginResponse;
@@ -68,6 +69,7 @@ import reactor.core.scheduler.Schedulers;
  */
 @Slf4j
 @Service
+/**n * AuthServicen *n * <p>TODO: 补充服务的详细说明n *n * @author Apex Teamn * @version 1.0.0n * @since 1.0.0n */
 public class AuthService {
 
     /** Token 类型标识 */
@@ -133,6 +135,9 @@ public class AuthService {
     /** 登录日志服务，用于记录每次登录尝试（成功/失败）。 */
     private final LoginLogService loginLogService;
 
+    /** 用户组装器，用于领域对象与DTO转换 */
+    private final UserAssembler userAssembler;
+
     /**
      * 构造方法注入依赖
      *
@@ -148,6 +153,7 @@ public class AuthService {
      * @param loginProtectionProperties 登录保护配置
      * @param captchaService 图形验证码服务
      * @param loginLogService 登录日志服务
+     * @param userAssembler 用户组装器
      */
     public AuthService(
             TokenService tokenService,
@@ -161,7 +167,8 @@ public class AuthService {
             ReactiveStringRedisTemplate redisTemplate,
             LoginProtectionProperties loginProtectionProperties,
             CaptchaService captchaService,
-            LoginLogService loginLogService) {
+            LoginLogService loginLogService,
+            UserAssembler userAssembler) {
         this.tokenService = tokenService;
         this.tokenBlacklistService = tokenBlacklistService;
         this.userService = userService;
@@ -174,6 +181,7 @@ public class AuthService {
         this.loginProtectionProperties = loginProtectionProperties;
         this.captchaService = captchaService;
         this.loginLogService = loginLogService;
+        this.userAssembler = userAssembler;
     }
 
     /**
@@ -738,24 +746,11 @@ public class AuthService {
             String newRefreshToken,
             String openId,
             com.apex.scaffold.domain.model.entity.UserEntity user) {
-        LoginResponse response = new LoginResponse();
+        LoginResponse response = userAssembler.toLoginResponse(user);
         response.setAccessToken(newAccessToken);
         response.setRefreshToken(newRefreshToken);
         response.setTokenType(TOKEN_TYPE);
         response.setExpiresIn(accessTokenExpireMs / 1000L);
-        response.setOpenId(openId);
-        response.setUnionId(user.getUnionId());
-
-        LoginResponse.UserInfo userInfo = new LoginResponse.UserInfo();
-        userInfo.setNickName(user.getNickName());
-        userInfo.setAvatarUrl(user.getAvatarUrl());
-        userInfo.setGender(user.getGender());
-        userInfo.setPhone(user.getPhone());
-        userInfo.setBirthday(user.getBirthday());
-        userInfo.setCountry(user.getCountry());
-        userInfo.setProvince(user.getProvince());
-        userInfo.setCity(user.getCity());
-        response.setUserInfo(userInfo);
         return response;
     }
 

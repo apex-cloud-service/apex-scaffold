@@ -3,8 +3,7 @@ package com.apex.scaffold.infrastructure.notification;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.util.concurrent.atomic.AtomicInteger;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
@@ -24,11 +23,11 @@ import reactor.core.publisher.Sinks;
  * @version 1.0.0
  * @since 2.2.0
  */
+@Slf4j
 @Service
 public class NotificationService {
 
     /** 日志记录器 */
-    private static final Logger log = LoggerFactory.getLogger(NotificationService.class);
 
     /** 消息广播流（多播，保留最近 100 条供迟到订阅者） */
     private final Sinks.Many<NotificationMessage> sink =

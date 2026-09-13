@@ -7,8 +7,8 @@ import com.apex.scaffold.domain.service.SmsCodeService;
 import java.security.SecureRandom;
 import java.time.Duration;
 import java.util.List;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.data.redis.core.script.RedisScript;
@@ -46,9 +46,10 @@ import reactor.core.publisher.Mono;
  * @see SmsCodeService
  * @see ChuanglanGateway
  */
+@Slf4j
+@RequiredArgsConstructor
 @Service("chuanglanSmsCodeService")
 public class ChuanglanSmsCodeServiceImpl implements SmsCodeService, SmsCodePurposeService {
-    private static final Logger log = LoggerFactory.getLogger(ChuanglanSmsCodeServiceImpl.class);
 
     /**
      * 原子比较并删除验证码的 Redis 脚本。
@@ -101,17 +102,6 @@ public class ChuanglanSmsCodeServiceImpl implements SmsCodeService, SmsCodePurpo
      * 创蓝短信网关
      */
     private final ChuanglanGateway chuanglanGateway;
-
-    /**
-     * P0-CL-1修复: 构造方法注入 ReactiveStringRedisTemplate 替代 ConcurrentHashMap.
-     *
-     * @param redisTemplate    Redis 响应式字符串模板
-     * @param chuanglanGateway 创蓝短信网关
-     */
-    public ChuanglanSmsCodeServiceImpl(ReactiveStringRedisTemplate redisTemplate, ChuanglanGateway chuanglanGateway) {
-        this.redisTemplate = redisTemplate;
-        this.chuanglanGateway = chuanglanGateway;
-    }
 
     /**
      * 发送短信验证码至指定手机号

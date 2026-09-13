@@ -589,7 +589,7 @@ DB_SLAVE_URL: jdbc:mysql://rds-slave.xxx.com:3306/apex_data
 
 - [网络架构文档](network-architecture.md)
 
-- [监控指南](../operations/monitoring.md)
+- [监控指南](../_archive/operations/monitoring.md)
 
 ***
 

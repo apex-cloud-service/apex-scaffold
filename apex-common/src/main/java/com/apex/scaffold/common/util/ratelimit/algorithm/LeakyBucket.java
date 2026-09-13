@@ -2,8 +2,7 @@ package com.apex.scaffold.common.util.ratelimit.algorithm;
 
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 漏桶限流算法实现
@@ -49,8 +48,8 @@ import org.slf4j.LoggerFactory;
  * @version 1.0.0
  * @since 1.3.0
  */
+@Slf4j
 public class LeakyBucket {
-    private static final Logger log = LoggerFactory.getLogger(LeakyBucket.class);
 
     /** 桶容量（最大缓冲请求数） */
     private final long capacity;

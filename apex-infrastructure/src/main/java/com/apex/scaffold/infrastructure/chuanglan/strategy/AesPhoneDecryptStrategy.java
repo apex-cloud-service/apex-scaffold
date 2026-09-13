@@ -7,8 +7,7 @@ import java.security.NoSuchAlgorithmException;
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 /**
@@ -40,9 +39,9 @@ import org.springframework.stereotype.Component;
  * @see PhoneDecryptStrategy
  * @see <a href="https://doc.chuanglan.com/document/SY88R0I8TCUPR1M3">创蓝闪验SDK服务端接口文档</a>
  */
+@Slf4j
 @Component
 public class AesPhoneDecryptStrategy implements PhoneDecryptStrategy {
-    private static final Logger log = LoggerFactory.getLogger(AesPhoneDecryptStrategy.class);
 
     /** 加密类型标识：AES */
     private static final String ENCRYPT_TYPE = "0";

@@ -15,7 +15,15 @@ import org.springframework.web.reactive.function.server.ServerResponse;
  * Keycloak 路由配置类
  *
  * <p>使用 WebFlux 函数式路由注册 Keycloak 相关的认证和管理接口。
- * 仅在 {@code keycloak.enabled=true} 时生效，确保集成开关可控。
+ * 仅在 {@code keycloak.enabled=true} 时生效，确保集成开关可控。</p>
+ *
+ * <h2>主要功能</h2>
+ * <ul>
+ *   <li>注册 OIDC 登录与回调路由，支持重定向到 Keycloak 完成认证</li>
+ *   <li>注册社交登录路由（GitHub / Google / 微信等第三方），统一回调处理</li>
+ *   <li>注册 Keycloak 用户同步与状态查询管理路由，供管理端调用</li>
+ *   <li>通过 {@link org.springframework.boot.autoconfigure.condition.ConditionalOnProperty} 按 {@code keycloak.enabled} 开关装配</li>
+ * </ul>
  *
  * <h2>注册的路由</h2>
  * <ul>
@@ -35,13 +43,18 @@ import org.springframework.web.reactive.function.server.ServerResponse;
  *   </li>
  * </ul>
  *
+ * <h2>配置属性</h2>
+ * <ul>
+ *   <li>{@code keycloak.enabled} — 是否启用 Keycloak 集成（默认 false，为 true 时本配置类才生效）</li>
+ * </ul>
+ *
  * <h2>安全说明</h2>
  * <p>认证路由已在 {@link com.apex.scaffold.common.constant.SystemConstants#PUBLIC_PATHS}
  * 中配置为公开访问，管理路由需要管理员权限。
  *
  * @author Apex Team
- * @version 1.0.0
- * @since 2.4.0
+ * @version 1.2.0
+ * @since 1.0.0
  * @see SocialLoginHandler
  * @see KeycloakAdminHandler
  */

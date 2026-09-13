@@ -159,11 +159,15 @@ public class MetricsWebFilter implements WebFilter {
     /**
      * 在响应没有显式状态码时，根据响应式结束信号推断最小可信状态。
      *
-     * <p>正常完成使用 HTTP 默认的 200；异常使用 500；客户端取消使用 499 约定，避免把取消请求
-     * 误算为服务端错误。</p>
+     * <p>响应式请求可能因以下原因结束而没有显式设置状态码：
+     * <ul>
+     *   <li><b>正常完成（ON_COMPLETE）</b>：使用 HTTP 默认的 200</li>
+     *   <li><b>异常终止（ON_ERROR）</b>：使用 500 表示服务端错误</li>
+     *   <li><b>客户端取消（CANCEL）</b>：使用 499 约定（Nginx 标准），避免误算为服务端错误</li>
+     * </ul>
      *
      * @param signalType 响应式请求结束信号
-     * @return 无显式状态码时使用的状态码
+     * @return 推断的 HTTP 状态码
      */
     private int fallbackStatusCode(SignalType signalType) {
         return switch (signalType) {

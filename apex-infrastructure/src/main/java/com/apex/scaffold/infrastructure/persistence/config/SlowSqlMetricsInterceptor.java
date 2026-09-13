@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.cache.CacheKey;
 import org.apache.ibatis.executor.Executor;
 import org.apache.ibatis.mapping.BoundSql;
@@ -20,8 +21,6 @@ import org.apache.ibatis.plugin.Plugin;
 import org.apache.ibatis.plugin.Signature;
 import org.apache.ibatis.session.ResultHandler;
 import org.apache.ibatis.session.RowBounds;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * 慢 SQL 指标采集拦截器（MyBatis 插件）。
@@ -42,6 +41,7 @@ import org.slf4j.LoggerFactory;
  * @since 2.3.0
  * @see SlowSqlProperties
  */
+@Slf4j
 @Intercepts({
     @Signature(
             type = Executor.class,
@@ -64,8 +64,6 @@ import org.slf4j.LoggerFactory;
             args = {MappedStatement.class, Object.class})
 })
 public class SlowSqlMetricsInterceptor implements Interceptor {
-
-    private static final Logger log = LoggerFactory.getLogger(SlowSqlMetricsInterceptor.class);
 
     /** SQL 执行耗时指标名。 */
     static final String METRIC_EXECUTION = "apex.sql.execution";

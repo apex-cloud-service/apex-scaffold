@@ -1,11 +1,10 @@
 package com.apex.scaffold.application.service;
 
+import com.apex.scaffold.application.assembler.SearchResultAssembler;
 import com.apex.scaffold.application.dto.search.SearchResultDTO;
 import com.apex.scaffold.common.context.TenantContext;
 import com.apex.scaffold.common.dto.PageResponse;
 import com.apex.scaffold.domain.search.SearchRepository;
-import com.apex.scaffold.domain.search.SearchResultEntity;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -25,11 +24,12 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+/**n * SearchServicen *n * <p>TODO: 补充服务的详细说明n *n * @author Apex Teamn * @version 1.0.0n * @since 1.0.0n */
 public class SearchService {
 
     private final SearchRepository searchRepository;
 
-    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private final SearchResultAssembler searchResultAssembler;
 
     /**
      * 执行全文搜索
@@ -59,28 +59,11 @@ public class SearchService {
         return searchRepository
                 .search(keyword, resourceTypes, tenantId, null, pageNum, pageSize)
                 .map(pageResponse -> {
-                    List<SearchResultDTO> dtos =
-                            pageResponse.getList().stream().map(this::toDTO).collect(Collectors.toList());
+                    List<SearchResultDTO> dtos = pageResponse.getList().stream()
+                            .map(searchResultAssembler::toDTO)
+                            .collect(Collectors.toList());
                     return PageResponse.of(dtos, pageResponse.getTotal(), pageNum, pageSize);
                 })
                 .doOnSuccess(result -> log.debug("Search completed: total={}", result.getTotal()));
-    }
-
-    /**
-     * Entity 转 DTO
-     */
-    private SearchResultDTO toDTO(SearchResultEntity entity) {
-        return SearchResultDTO.builder()
-                .resourceType(entity.getResourceType())
-                .resourceId(entity.getResourceId())
-                .title(entity.getTitle())
-                .subtitle(entity.getSubtitle())
-                .description(entity.getDescription())
-                .highlightSnippet(entity.getHighlightSnippet())
-                .score(entity.getScore())
-                .status(entity.getStatus())
-                .createdAt(entity.getCreatedAt() != null ? entity.getCreatedAt().format(FORMATTER) : null)
-                .updatedAt(entity.getUpdatedAt() != null ? entity.getUpdatedAt().format(FORMATTER) : null)
-                .build();
     }
 }

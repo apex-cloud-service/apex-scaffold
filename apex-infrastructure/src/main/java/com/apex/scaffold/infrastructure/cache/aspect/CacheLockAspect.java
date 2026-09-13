@@ -10,14 +10,13 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
+import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.core.DefaultParameterNameDiscoverer;
 import org.springframework.core.ParameterNameDiscoverer;
 import org.springframework.expression.EvaluationContext;
@@ -79,10 +78,10 @@ import org.springframework.stereotype.Component;
  * @see RedissonClient
  * @see RLock
  */
+@Slf4j
 @Aspect
 @Component
 public class CacheLockAspect {
-    private static final Logger log = LoggerFactory.getLogger(CacheLockAspect.class);
 
     /** SpEL 表达式前缀标识 */
     private static final String SPEL_PREFIX = "#";

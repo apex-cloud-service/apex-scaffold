@@ -1,0 +1,87 @@
+# Lychee 链接检查器配置
+# 文档: https://lychee.cli.rs/#/usage/config
+
+# 基础设置
+max_redirects = 5
+max_retries = 3
+max_concurrency = 10
+
+# 超时设置 (秒)
+timeout = 20
+
+# 接受的 HTTP 状态码
+accept = [200, 201, 204, 301, 302, 307, 308, 429]
+
+# 排除的 URL 模式
+exclude = [
+    # 本地开发地址
+    '^http://localhost',
+    '^https://localhost',
+    '^http://127\.0\.0\.1',
+    
+    # 文件协议
+    '^file://',
+    
+    # 本地路径
+    '^/Users/work',
+    
+    # 需要认证的内部服务
+    '^http://.*:8080',
+    '^http://.*:3000',
+    
+    # 邮件链接
+    '^mailto:',
+    
+    # 电话链接
+    '^tel:',
+    
+    # 占位符
+    'example\.com',
+    'your-domain\.com',
+]
+
+# 排除的路径
+exclude_path = [
+    'docs/_archive',
+    'docs/diagrams/_icon_sources',
+    'node_modules',
+    '.git',
+]
+
+# 排除的文件
+exclude_file = []
+
+# 包含的链接类型
+include_verbatim = false
+
+# 忽略不安全的 HTTPS
+insecure = false
+
+# HTTP 方法
+method = "get"
+
+# 自定义 HTTP 头
+headers = [
+    "Accept=text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "User-Agent=Mozilla/5.0 (compatible; Lychee/0.14.0)"
+]
+
+# 跳过私有链接
+skip_private = false
+
+# 输出格式
+format = "detailed"
+
+# 缓存设置
+cache = true
+max_cache_age = "2d"
+
+# 详细输出
+verbose = true
+
+# 不显示进度条
+no_progress = true
+
+# 仅检查本地链接
+# require_https = false
+# include_mail = false

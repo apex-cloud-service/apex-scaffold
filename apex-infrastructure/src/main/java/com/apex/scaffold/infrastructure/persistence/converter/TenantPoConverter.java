@@ -30,6 +30,7 @@ public interface TenantPoConverter {
      */
     @Mapping(target = "maxUsers", source = "quota.maxUsers")
     @Mapping(target = "maxStorageMb", source = "quota.maxStorageMb")
+    @Mapping(target = "version", source = "lockVersion")
     TenantPO toPo(TenantEntity entity);
 
     /**

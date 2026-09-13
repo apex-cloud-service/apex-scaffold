@@ -5,23 +5,32 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 /**
- * 分页请求参数
+ * 分页请求参数。
  *
- * <p>数据传输对象（DTO）
+ * <p>通用分页查询请求 DTO,承载页码、每页数量与排序条件。
+ * 所有分页列表接口均需继承或复用本对象。</p>
+ *
+ * <p>主要字段与校验规则:</p>
+ * <ul>
+ *   <li>{@code pageNum}:页码,从 1 开始,必填,最小值为 1。</li>
+ *   <li>{@code pageSize}:每页数量,必填,取值范围 1～100。</li>
+ *   <li>{@code orderBy}:排序字段名,可选。</li>
+ *   <li>{@code isAsc}:是否升序,可选,缺省为 {@code false}(降序)。</li>
+ * </ul>
  *
  * @author Apex Team
- * @version 1.0.0
+ * @version 1.2.0
  * @since 1.0.0
  */
 @Data
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@SuperBuilder
 public class PageRequest {
     /**
      * 页码
@@ -47,4 +56,16 @@ public class PageRequest {
     private String orderBy;
 
     private Boolean isAsc = false;
+
+    /**
+     * 计算分页偏移量。
+     *
+     * <p>根据当前页码和每页大小计算 SQL LIMIT 的偏移量。
+     * 公式：offset = (pageNum - 1) * pageSize</p>
+     *
+     * @return 分页偏移量
+     */
+    public Integer getOffset() {
+        return (pageNum - 1) * pageSize;
+    }
 }

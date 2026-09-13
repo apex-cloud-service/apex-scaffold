@@ -7,8 +7,7 @@ import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -69,9 +68,9 @@ import reactor.util.retry.Retry;
  * @see WebClient
  * @see ConnectionProvider
  */
+@Slf4j
 @Configuration
 public class WeChatWebClientConfig {
-    private static final Logger log = LoggerFactory.getLogger(WeChatWebClientConfig.class);
 
     /** 连接池最大连接数 */
     private static final int MAX_CONNECTIONS = 100;

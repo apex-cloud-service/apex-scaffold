@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
  * 点分命名风格，例如 {@code sys.site.name}。</p>
  *
  * @author Apex Team
- * @version 1.0.0
+ * @version 1.2.0
  * @since 1.0.0
  */
 @Data
@@ -23,6 +23,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "参数配置创建/更新请求")
+/**n * ConfigRequestn *n * <p>TODO: 补充类的详细说明n *n * @author Apex Teamn * @version 1.0.0n * @since 1.0.0n */
 public class ConfigRequest {
 
     /**

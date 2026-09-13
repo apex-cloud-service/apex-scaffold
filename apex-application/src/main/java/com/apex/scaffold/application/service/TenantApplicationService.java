@@ -1,5 +1,6 @@
 package com.apex.scaffold.application.service;
 
+import com.apex.scaffold.application.assembler.TenantAssembler;
 import com.apex.scaffold.application.dto.admin.TenantCreateRequest;
 import com.apex.scaffold.application.dto.admin.TenantDTO;
 import com.apex.scaffold.common.exception.BusinessException;
@@ -37,9 +38,12 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+/**n * TenantApplicationServicen *n * <p>TODO: 补充服务的详细说明n *n * @author Apex Teamn * @version 1.0.0n * @since 1.0.0n */
 public class TenantApplicationService {
 
     private final TenantRepository tenantRepository;
+
+    private final TenantAssembler tenantAssembler;
 
     /**
      * 查询全部租户。
@@ -49,7 +53,7 @@ public class TenantApplicationService {
     public Mono<List<TenantDTO>> listTenants() {
         return tenantRepository
                 .findAll()
-                .map(tenants -> tenants.stream().map(this::toDTO).toList());
+                .map(tenants -> tenants.stream().map(tenantAssembler::toDTO).toList());
     }
 
     /**
@@ -60,7 +64,7 @@ public class TenantApplicationService {
      * @throws BusinessException 当租户不存在时抛出 {@code TENANT_NOT_FOUND}
      */
     public Mono<TenantDTO> getByCode(String tenantCode) {
-        return requireByCode(tenantCode).map(this::toDTO);
+        return requireByCode(tenantCode).map(tenantAssembler::toDTO);
     }
 
     /**
@@ -84,7 +88,7 @@ public class TenantApplicationService {
             entity.setRemark(request.getRemark());
             return tenantRepository.insert(entity).map(rows -> {
                 log.info("创建租户成功，code: {}", entity.getTenantCode());
-                return toDTO(entity);
+                return tenantAssembler.toDTO(entity);
             });
         });
     }
@@ -170,7 +174,7 @@ public class TenantApplicationService {
             entity.setQuota(TenantQuota.of(maxUsers, maxStorageMb));
             return tenantRepository.updateById(entity).map(rows -> {
                 log.info("更新租户配额，code: {}, maxUsers: {}", tenantCode, maxUsers);
-                return toDTO(entity);
+                return tenantAssembler.toDTO(entity);
             });
         });
     }
@@ -247,31 +251,7 @@ public class TenantApplicationService {
                     }
                     return tenantRepository.updateById(entity).map(rows -> entity);
                 })
-                .map(this::toDTO)
+                .map(tenantAssembler::toDTO)
                 .doOnSuccess(e -> log.info("租户状态迁移成功，code: {}, op: {}", entity.getTenantCode(), operationName));
-    }
-
-    /**
-     * 将租户实体转换为 DTO。
-     *
-     * @param entity 租户实体
-     * @return 租户 DTO
-     */
-    private TenantDTO toDTO(TenantEntity entity) {
-        TenantDTO dto = new TenantDTO();
-        dto.setId(entity.getId());
-        dto.setTenantCode(entity.getTenantCode());
-        dto.setTenantName(entity.getTenantName());
-        dto.setAdminUserId(entity.getAdminUserId());
-        dto.setPackageCode(entity.getPackageCode());
-        dto.setExpireTime(entity.getExpireTime());
-        dto.setStatus(entity.getStatus() == null ? null : entity.getStatus().name());
-        if (entity.getQuota() != null) {
-            dto.setMaxUsers(entity.getQuota().getMaxUsers());
-            dto.setMaxStorageMb(entity.getQuota().getMaxStorageMb());
-        }
-        dto.setRemark(entity.getRemark());
-        dto.setCreateTime(entity.getCreateTime());
-        return dto;
     }
 }

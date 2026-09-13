@@ -14,13 +14,14 @@ import lombok.NoArgsConstructor;
  * 避免领域实体直接暴露给前端。
  *
  * @author Apex Team
- * @version 1.0.0
+ * @version 1.2.0
  * @since 1.0.0
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+/**n * OperationLogDTOn *n * <p>TODO: 补充类的详细说明n *n * @author Apex Teamn * @version 1.0.0n * @since 1.0.0n */
 public class OperationLogDTO {
     @Schema(description = "ID")
     private Long id;

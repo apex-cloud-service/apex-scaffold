@@ -1,8 +1,10 @@
 package com.apex.scaffold.application.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
+import com.apex.scaffold.application.assembler.AdminUserAssembler;
 import com.apex.scaffold.common.dto.PageResponse;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.result.ResultCode;
@@ -35,6 +37,9 @@ class AdminUserManagementServiceTest {
     @Mock
     private RoleRepository roles;
 
+    @Mock
+    private AdminUserAssembler adminUserAssembler;
+
     private AdminUserManagementService service;
 
     /**
@@ -42,7 +47,8 @@ class AdminUserManagementServiceTest {
      */
     @BeforeEach
     void setUp() {
-        service = new AdminUserManagementService(users, roles, null, null, null, null, null, null, null, null, null);
+        service = new AdminUserManagementService(
+                users, roles, null, null, null, null, null, null, null, null, null, adminUserAssembler);
     }
 
     /**
@@ -94,6 +100,13 @@ class AdminUserManagementServiceTest {
         RoleEntity managed = RoleEntity.create("审核管理员", "REVIEW_MANAGER", "");
         RoleEntity unmanaged = RoleEntity.create("普通用户", "USER", "");
         when(roles.findAll()).thenReturn(Mono.just(List.of(managed, unmanaged)));
+        when(adminUserAssembler.toRoleResponseList(any())).thenAnswer(invocation -> {
+            List<RoleEntity> entities = invocation.getArgument(0);
+            return entities.stream()
+                    .map(e -> new com.apex.scaffold.application.dto.admin.AdminRoleResponse(
+                            e.getId(), e.getName(), e.getCode()))
+                    .toList();
+        });
 
         StepVerifier.create(service.manageableRoles("admin-open-id"))
                 .assertNext(result -> {

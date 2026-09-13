@@ -3,8 +3,7 @@ package com.apex.scaffold.infrastructure.wechat.service;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
@@ -32,9 +31,9 @@ import reactor.core.publisher.Mono;
  * @version 1.0.0
  * @since 1.0.0
  */
+@Slf4j
 @Service
 public class WeChatTagService {
-    private static final Logger log = LoggerFactory.getLogger(WeChatTagService.class);
 
     /**
      * 微信API基础URL

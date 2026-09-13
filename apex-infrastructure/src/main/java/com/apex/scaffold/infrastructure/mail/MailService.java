@@ -1,8 +1,8 @@
 package com.apex.scaffold.infrastructure.mail;
 
 import jakarta.mail.internet.MimeMessage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -24,23 +24,15 @@ import org.springframework.stereotype.Service;
  * @since 2.2.0
  * @see JavaMailSender
  */
+@Slf4j
+@RequiredArgsConstructor
 @Service
 public class MailService {
 
     /** 日志记录器 */
-    private static final Logger log = LoggerFactory.getLogger(MailService.class);
 
     /** JavaMail 发送器（由 Spring Boot 自动配置提供） */
     private final JavaMailSender mailSender;
-
-    /**
-     * 构造邮件发送服务。
-     *
-     * @param mailSender JavaMail 发送器
-     */
-    public MailService(JavaMailSender mailSender) {
-        this.mailSender = mailSender;
-    }
 
     /**
      * 发送简单文本邮件。

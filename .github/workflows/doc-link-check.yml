@@ -1,0 +1,112 @@
+name: 文档链接检查
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'docs/**/*.md'
+      - '.github/workflows/doc-link-check.yml'
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'docs/**/*.md'
+  schedule:
+    - cron: '0 0 * * 1'
+  workflow_dispatch:
+
+jobs:
+  check-links:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+      
+      - name: 设置 Python 环境
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      - name: 安装依赖
+        run: |
+          pip install markdown-link-validator==0.2.0
+      
+      - name: 运行自定义链接检查脚本
+        id: custom-check
+        run: |
+          if [ -f "docs/fix_internal_links.py" ]; then
+            echo "运行自定义链接检查脚本..."
+            cd docs
+            python fix_internal_links.py --check-only
+          else
+            echo "自定义脚本不存在,跳过"
+          fi
+      
+      - name: 检查 Markdown 链接 (方案1: markdown-link-check)
+        uses: gaurav-nelson/github-action-markdown-link-check@v1
+        with:
+          config-file: '.github/markdown-link-check-config.json'
+          folder-path: 'docs/'
+          max-depth: -1
+          check-modified-files-only: 'no'
+          use-quiet-mode: 'no'
+          use-verbose-mode: 'yes'
+        continue-on-error: true
+      
+      - name: 检查死链 (方案2: lychee)
+        uses: lycheeverse/lychee-action@v1
+        with:
+          args: |
+            --verbose
+            --no-progress
+            --exclude-path=docs/_archive
+            --exclude-path=docs/diagrams/_icon_sources
+            --max-redirects=5
+            --timeout=20
+            'docs/**/*.md'
+          fail: true
+        continue-on-error: true
+      
+      - name: 生成链接检查报告
+        if: always()
+        run: |
+          echo "# 文档链接检查报告" > link-check-report.md
+          echo "" >> link-check-report.md
+          echo "## 检查时间" >> link-check-report.md
+          echo "$(date '+%Y-%m-%d %H:%M:%S')" >> link-check-report.md
+          echo "" >> link-check-report.md
+          echo "## 检查结果" >> link-check-report.md
+          echo "详细结果请查看 Actions 日志" >> link-check-report.md
+          
+          if [ -f "docs/LINK_CHECK_RESULTS.txt" ]; then
+            echo "" >> link-check-report.md
+            echo "## 失效链接详情" >> link-check-report.md
+            cat docs/LINK_CHECK_RESULTS.txt >> link-check-report.md
+          fi
+      
+      - name: 上传检查报告
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: link-check-report
+          path: |
+            link-check-report.md
+            .lycheecache
+          retention-days: 30
+      
+      - name: 评论 PR (如果有失效链接)
+        if: failure() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '⚠️ 文档链接检查发现问题，请检查 [Actions 日志](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) 获取详情。'
+            })

@@ -1,5 +1,6 @@
 package com.apex.scaffold.application.service;
 
+import com.apex.scaffold.application.assembler.ConfigAssembler;
 import com.apex.scaffold.application.dto.admin.ConfigDTO;
 import com.apex.scaffold.application.dto.admin.ConfigRequest;
 import com.apex.scaffold.common.exception.BusinessException;
@@ -33,6 +34,7 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+/**n * ConfigServicen *n * <p>TODO: 补充服务的详细说明n *n * @author Apex Teamn * @version 1.0.0n * @since 1.0.0n */
 public class ConfigService {
 
     /**
@@ -41,14 +43,17 @@ public class ConfigService {
     private final ConfigRepository configRepository;
 
     /**
+     * 参数配置对象转换器。
+     */
+    private final ConfigAssembler configAssembler;
+
+    /**
      * 查询全部参数配置。
      *
      * @return 参数配置 DTO 列表
      */
     public Mono<List<ConfigDTO>> listConfigs() {
-        return configRepository
-                .findAll()
-                .map(configs -> configs.stream().map(this::toDTO).toList());
+        return configRepository.findAll().map(configAssembler::toDTOList);
     }
 
     /**
@@ -156,24 +161,5 @@ public class ConfigService {
             }
             return configRepository.updateById(config).map(rows -> config);
         });
-    }
-
-    /**
-     * 将参数配置实体转换为 DTO。
-     *
-     * @param entity 参数配置实体
-     * @return 参数配置 DTO
-     */
-    private ConfigDTO toDTO(ConfigEntity entity) {
-        ConfigDTO dto = new ConfigDTO();
-        dto.setId(entity.getId());
-        dto.setConfigName(entity.getConfigName());
-        dto.setConfigKey(entity.getConfigKey());
-        dto.setConfigValue(entity.getConfigValue());
-        dto.setConfigType(entity.getConfigType());
-        dto.setStatus(entity.getStatus());
-        dto.setRemark(entity.getRemark());
-        dto.setCreateTime(entity.getCreateTime());
-        return dto;
     }
 }

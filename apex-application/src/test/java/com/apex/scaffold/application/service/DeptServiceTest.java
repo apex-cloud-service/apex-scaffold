@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import com.apex.scaffold.application.assembler.DeptAssembler;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.domain.model.entity.DeptEntity;
 import com.apex.scaffold.domain.repository.DeptRepository;
@@ -17,7 +18,8 @@ import reactor.test.StepVerifier;
 class DeptServiceTest {
 
     private final DeptRepository deptRepository = mock(DeptRepository.class);
-    private final DeptService service = new DeptService(deptRepository);
+    private final DeptAssembler deptAssembler = mock(DeptAssembler.class);
+    private final DeptService service = new DeptService(deptRepository, deptAssembler);
 
     @Test
     void returnsLockVersionForDepartmentDetail() {
@@ -25,6 +27,14 @@ class DeptServiceTest {
         stored.setId(10L);
         stored.setLockVersion(3);
         when(deptRepository.findById(10L)).thenReturn(Mono.just(stored));
+        when(deptAssembler.toDTO(any(DeptEntity.class))).thenAnswer(invocation -> {
+            DeptEntity entity = invocation.getArgument(0);
+            return com.apex.scaffold.application.dto.admin.DeptDTO.builder()
+                    .id(entity.getId())
+                    .name(entity.getName())
+                    .lockVersion(entity.getLockVersion())
+                    .build();
+        });
 
         StepVerifier.create(service.get(10L))
                 .assertNext(dept -> assertThat(dept.getLockVersion()).isEqualTo(3))
@@ -43,6 +53,14 @@ class DeptServiceTest {
             DeptEntity saved = invocation.getArgument(0);
             saved.setLockVersion(saved.getLockVersion() + 1);
             return Mono.just(saved);
+        });
+        when(deptAssembler.toDTO(any(DeptEntity.class))).thenAnswer(invocation -> {
+            DeptEntity entity = invocation.getArgument(0);
+            return com.apex.scaffold.application.dto.admin.DeptDTO.builder()
+                    .id(entity.getId())
+                    .name(entity.getName())
+                    .lockVersion(entity.getLockVersion())
+                    .build();
         });
 
         StepVerifier.create(service.update(10L, update))

@@ -25,16 +25,21 @@ import reactor.core.publisher.Mono;
  * <p>提供在线用户列表查询 API（C4 在线用户/会话管理），在线判定基于
  * {@code sys_user.last_heartbeat_time}（登录与活跃请求更新，最近 5 分钟
  * 有心跳视为在线）。强制下线由 {@code AdminUserManagementHandler} 的
- * 会话撤销端点承担。</p>
+ * 会话撤销端点承担。
  *
- * <h2>接口清单</h2>
+ * <h2>核心功能</h2>
  * <ul>
- *   <li>GET /admin-api/v1/online-users - 分页查询在线用户</li>
+ *   <li>在线用户分页查询：查询最近 5 分钟内有心跳的在线用户列表，按最后心跳时间倒序返回</li>
+ * </ul>
+ *
+ * <h2>接口列表</h2>
+ * <ul>
+ *   <li>GET /admin-api/v1/online-users — 分页查询在线用户</li>
  * </ul>
  *
  * @author Apex Team
- * @version 1.0.0
- * @since 2.2.0
+ * @version 1.2.0
+ * @since 1.0.0
  * @see OnlineUserQueryService
  */
 @Component

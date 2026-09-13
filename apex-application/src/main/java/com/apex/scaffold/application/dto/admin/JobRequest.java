@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
  * 格式；Cron 表达式为 6/7 段标准格式，最终合法性由服务端解析器校验。</p>
  *
  * @author Apex Team
- * @version 1.0.0
+ * @version 1.2.0
  * @since 1.0.0
  */
 @Data
@@ -25,6 +25,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "定时任务创建/更新请求")
+/**n * JobRequestn *n * <p>TODO: 补充类的详细说明n *n * @author Apex Teamn * @version 1.0.0n * @since 1.0.0n */
 public class JobRequest {
 
     /**

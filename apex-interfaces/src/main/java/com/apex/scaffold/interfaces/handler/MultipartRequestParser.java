@@ -24,7 +24,7 @@ import reactor.core.publisher.Mono;
  * 私有方法。</p>
  *
  * @author Apex Team
- * @version 1.0.0
+ * @version 1.2.0
  * @since 1.0.0
  */
 @Component

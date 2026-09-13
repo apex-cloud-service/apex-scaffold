@@ -6,21 +6,69 @@ import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * License 运行期重检调度器
+ * License运行期重检调度器
  *
- * <p>按 {@code apex.license.recheck-interval}（默认 1 小时）定时重新加载并验证
- * License 文件，实现：
+ * <p>本类负责在应用运行期间定期重新加载并验证License文件,实现License过期即时失效和续期自动生效。
+ * 通过守护线程定时执行重检任务,无需重启应用即可响应License文件的变更。</p>
+ *
+ * <h3>主要功能</h3>
  * <ul>
- *   <li><b>过期失效</b>：License 运行期到期后无需重启，商业功能即时拒绝</li>
- *   <li><b>续期生效</b>：替换/续期 License 文件后无需重启，自动恢复授权</li>
+ *   <li><b>过期即时失效</b>:License运行期到期后无需重启应用,商业功能立即拒绝访问</li>
+ *   <li><b>续期自动生效</b>:替换或续期License文件后无需重启应用,授权自动恢复</li>
+ *   <li><b>异常容错</b>:重检任务中的任何异常都被捕获并记录,不会导致调度线程终止</li>
+ *   <li><b>优雅关闭</b>:实现{@link AutoCloseable},应用关闭时自动终止调度线程</li>
  * </ul>
  *
- * <p>每次功能检查（{@link LicenseValidator#isFeatureEnabled(String)}）同样内置
- * 过期即时降级，重检间隔仅控制文件重新加载的频率。调度线程为守护线程，
- * 应用关闭时由 {@link #close()} 终止。</p>
+ * <h3>工作原理</h3>
+ * <p>调度器按{@code apex.license.recheck-interval}配置的间隔(默认1小时)定时执行以下流程:
+ * <ol>
+ *   <li>通过{@link LicenseValidator#refresh}触发License文件重新加载</li>
+ *   <li>调用{@link LicenseLoader#load}读取并解析License文件</li>
+ *   <li>验证签名、检查有效期、更新功能集缓存</li>
+ *   <li>如果验证失败,自动切换到降级模式(基础功能可用,商业功能拒绝)</li>
+ * </ol>
+ *
+ * <h3>与即时降级的配合</h3>
+ * <p>每次功能检查({@link LicenseValidator#isFeatureEnabled(String)})同样内置过期即时降级逻辑,
+ * 重检间隔仅控制文件重新加载的频率。这种设计确保:
+ * <ul>
+ *   <li>即使重检间隔较长,一旦License过期,功能检查仍会立即拒绝</li>
+ *   <li>重检任务失败时,已缓存的验证器仍可继续工作(直到过期)</li>
+ * </ul>
+ *
+ * <h3>线程安全</h3>
+ * <p>调度器使用单线程{@link ScheduledExecutorService},守护线程命名为{@code apex-license-recheck}。
+ * 应用关闭时,通过{@link #close()}方法调用{@code shutdownNow()}立即终止调度线程。</p>
+ *
+ * <h3>配置说明</h3>
+ * <p>通过{@code apex.license.recheck-interval}配置重检间隔:
+ * <ul>
+ *   <li>设置为正数(如{@code 1h}、{@code 30m})时启用定时重检</li>
+ *   <li>设置为0或负数时禁用重检,调度器不会创建线程</li>
+ *   <li>建议值:{@code 1h}(每小时重检一次),平衡及时性和系统开销</li>
+ * </ul>
+ *
+ * <h3>使用示例</h3>
+ * <pre>{@code
+ * // application.yml配置
+ * apex:
+ *   license:
+ *     recheck-interval: 1h  # 每小时重检一次
+ *
+ * // 由LicenseAutoConfiguration自动创建,无需手动实例化
+ * @Bean(destroyMethod = "close")
+ * public LicenseRevalidationScheduler licenseRevalidationScheduler(
+ *         LicenseValidator validator) {
+ *     return new LicenseRevalidationScheduler(validator, properties);
+ * }
+ * }</pre>
  *
  * @author Apex Team
- * @version 2.2.0
+ * @version 1.2.0
+ * @since 1.0.0
+ * @see LicenseValidator
+ * @see LicenseAutoConfiguration
+ * @see LicenseLoader
  */
 @Slf4j
 public class LicenseRevalidationScheduler implements AutoCloseable {
@@ -28,10 +76,16 @@ public class LicenseRevalidationScheduler implements AutoCloseable {
     private final ScheduledExecutorService executor;
 
     /**
-     * 创建调度器
+     * 创建License运行期重检调度器
      *
-     * @param validator 共享的验证器实例（与切面使用同一实例）
-     * @param properties License 配置
+     * <p>根据{@code apex.license.recheck-interval}配置决定是否启动定时重检:
+     * <ul>
+     *   <li>间隔>0时,创建守护线程并以固定延迟模式定时执行重检任务</li>
+     *   <li>间隔≤0时,不创建线程,调度器处于关闭状态</li>
+     * </ul>
+     *
+     * @param validator 共享的验证器实例,与{@link FeatureGateAspect}切面使用同一实例
+     * @param properties License配置,包含重检间隔等参数
      */
     public LicenseRevalidationScheduler(LicenseValidator validator, LicenseProperties properties) {
         long intervalMs = properties.getRecheckInterval() == null
@@ -52,7 +106,15 @@ public class LicenseRevalidationScheduler implements AutoCloseable {
         log.info("License 运行期重检已启动: 间隔 {}ms", intervalMs);
     }
 
-    /** 单次重检：任何异常都被吞掉（调度任务不允许因异常终止）。 */
+    /**
+     * 执行单次License重检任务
+     *
+     * <p>捕获所有异常并记录WARN日志,确保任何异常都不会导致调度任务终止。
+     * 这种容错设计保证即使某次重检失败(如文件被占用、网络异常),后续重检仍能正常执行。</p>
+     *
+     * @param validator 验证器实例,用于触发文件重新加载
+     * @param properties License配置,传递给加载器
+     */
     private void safeRefresh(LicenseValidator validator, LicenseProperties properties) {
         try {
             validator.refresh(() -> LicenseLoader.load(properties));

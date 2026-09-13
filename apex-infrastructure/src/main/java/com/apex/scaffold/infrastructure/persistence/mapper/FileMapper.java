@@ -24,6 +24,7 @@ import org.apache.ibatis.annotations.Update;
  * @since 1.0.0
  */
 @Mapper
+/**n * FileMappern *n * <p>TODO: 补充 Mapper 的详细说明n *n * @author Apex Teamn * @version 1.0.0n * @since 1.0.0n */
 public interface FileMapper extends BaseMapper<FilePO> {
     /**
      * 标记文件存储状态为已删除。

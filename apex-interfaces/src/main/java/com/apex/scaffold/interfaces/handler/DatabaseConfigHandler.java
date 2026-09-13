@@ -35,8 +35,8 @@ import reactor.core.publisher.Mono;
  * <p>密码仅用于一次性操作，不会被保存到系统中。</p>
  *
  * @author Apex Team
- * @version 1.0.0
- * @since 1.2.0
+ * @version 1.2.0
+ * @since 1.0.0
  * @see DatabaseConfigService
  */
 @Slf4j

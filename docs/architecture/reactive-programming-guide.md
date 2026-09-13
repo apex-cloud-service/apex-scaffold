@@ -477,8 +477,8 @@ public Mono<Void> completeTask(Long taskId, Long userId, String comment) {
 - [Spring WebFlux 文档](https://docs.spring.io/spring-framework/reference/web/webflux.html)
 
 ### 项目文档
-- [WebFlux Handler 总结](../webflux-handler-summary.md)
-- [后端开发规范](../standards/backend-development-standards.md)
+- [WebFlux Handler 总结](../_archive/webflux-handler-summary.md)
+- [后端开发规范](../04-development/backend-development-standards.md)
 
 ---
 

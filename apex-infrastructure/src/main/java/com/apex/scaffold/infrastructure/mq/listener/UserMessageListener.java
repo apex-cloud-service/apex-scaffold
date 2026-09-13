@@ -13,12 +13,11 @@ import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Consumer;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.annotation.ConsumeMode;
 import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.apache.rocketmq.spring.core.RocketMQListener;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -57,6 +56,7 @@ import org.springframework.stereotype.Component;
  * @see RocketMQListener
  * @see MqConsumerService
  */
+@Slf4j
 @Component
 @ConditionalOnProperty(prefix = "apex.features", name = "message-queue", havingValue = "true", matchIfMissing = true)
 @ConditionalOnClass(RocketMQTemplate.class)
@@ -75,7 +75,6 @@ import org.springframework.stereotype.Component;
         consumeMode = ConsumeMode.ORDERLY,
         maxReconsumeTimes = MqConstant.MAX_RECONSUME_TIMES)
 public class UserMessageListener implements RocketMQListener<Map<String, Object>> {
-    private static final Logger log = LoggerFactory.getLogger(UserMessageListener.class);
 
     /** MQ 消费者服务，用于处理消息并确保幂等性 */
     private final MqConsumerService mqConsumerService;

@@ -4,8 +4,11 @@ import com.apex.scaffold.infrastructure.persistence.po.BasePO;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.time.LocalDateTime;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 /**
  * {@code biz_content_moderation_review} 内容人工复核任务持久化对象。
@@ -15,8 +18,12 @@ import lombok.EqualsAndHashCode;
  * @since 1.0.0
  */
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
+@SuperBuilder
 @EqualsAndHashCode(callSuper = true)
 @TableName("biz_content_moderation_review")
+/**n * ContentModerationReviewPO - 持久化对象n *n * <p>对应数据库表：TODO: 补充表名n *n * @author Apex Teamn * @version 1.0.0n * @since 1.0.0n */
 public class ContentModerationReviewPO extends BasePO {
 
     @TableField("source_type")

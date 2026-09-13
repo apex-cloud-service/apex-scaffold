@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.apex.scaffold.application.assembler.AdminUserAssembler;
 import com.apex.scaffold.application.factory.UserDefaultsFactory;
 import com.apex.scaffold.application.service.AdminUserManagementService;
 import com.apex.scaffold.application.service.ProfileService;
@@ -172,7 +173,8 @@ class DataScopeServiceTest {
                         mock(UserComplianceRepository.class),
                         mock(UserDefaultsFactory.class),
                         mock(CacheConsistencyPort.class),
-                        mock(AccountDeletionPort.class)));
+                        mock(AccountDeletionPort.class),
+                        mock(AdminUserAssembler.class)));
         context.refresh();
         service = context.getBean(AdminUserManagementService.class);
     }

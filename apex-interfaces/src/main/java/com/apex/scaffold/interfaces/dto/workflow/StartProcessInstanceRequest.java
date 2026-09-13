@@ -5,7 +5,23 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 /**
- * 发起流程实例请求 DTO。
+ * 发起工作流实例请求 DTO。
+ *
+ * <p>用于启动一个新的工作流流程实例，将业务数据与流程引擎关联。
+ * 每个流程实例通过唯一的业务主键（businessKey）标识，支持携带流程上下文数据。
+ *
+ * <h2>使用场景</h2>
+ * <ul>
+ *   <li>请假申请：员工发起请假流程，businessKey 为请假单编号</li>
+ *   <li>采购审批：发起采购流程，businessKey 为采购单编号</li>
+ *   <li>合同审批：发起合同审批流程，businessKey 为合同编号</li>
+ * </ul>
+ *
+ * <h2>字段说明</h2>
+ * <ul>
+ *   <li>businessKey：业务主键，用于关联业务数据，最多 200 字符</li>
+ *   <li>contextJson：流程上下文数据（JSON 格式），包含流程所需的业务参数，最多 10000 字符</li>
+ * </ul>
  *
  * @author Apex Team
  * @version 1.3.0

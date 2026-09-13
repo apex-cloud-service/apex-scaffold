@@ -105,9 +105,12 @@ public class TraceFilter implements WebFilter {
     }
 
     /**
-     * 生成TraceId
+     * 生成新的 TraceId（UUID 格式，去连字符）。
      *
-     * @return 生成的TraceId
+     * <p>当请求头中不存在上游传递的 TraceId 时，本方法生成一个新的全局唯一标识符，
+     * 作为当前请求链路的起始 TraceId。
+     *
+     * @return 32 位十六进制字符串（UUID 去除连字符后的形式）
      */
     private String generateTraceId() {
         return UUID.randomUUID().toString().replace("-", "");

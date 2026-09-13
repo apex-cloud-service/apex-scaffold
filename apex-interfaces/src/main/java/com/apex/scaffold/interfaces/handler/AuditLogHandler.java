@@ -26,16 +26,21 @@ import reactor.core.publisher.Mono;
  * <p>提供操作审计日志（{@code sys_operation_log} 表）的分页查询 API，
  * 支撑管理后台「系统监控-审计日志」页面（C2 审计落库闭环）。
  * 审计写入由 {@code OperationLogAspect} 切面 + {@code OperationLogService}
- * 在业务方法执行后自动完成（写读同源），本 Handler 仅负责查询展示。</p>
+ * 在业务方法执行后自动完成（写读同源），本 Handler 仅负责查询展示。
  *
- * <h2>接口清单</h2>
+ * <h2>核心功能</h2>
  * <ul>
- *   <li>GET /admin-api/v1/audit-logs - 分页查询审计日志（支持 module/operatorName 过滤）</li>
+ *   <li>审计日志分页查询：支持按操作模块、操作人模糊匹配过滤</li>
+ * </ul>
+ *
+ * <h2>接口列表</h2>
+ * <ul>
+ *   <li>GET /admin-api/v1/audit-logs — 分页查询审计日志</li>
  * </ul>
  *
  * @author Apex Team
- * @version 1.0.0
- * @since 2.2.0
+ * @version 1.2.0
+ * @since 1.0.0
  * @see AuditLogQueryService
  */
 @Component

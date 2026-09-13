@@ -12,8 +12,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -43,9 +42,9 @@ import org.springframework.stereotype.Component;
  * @version 1.0.0
  * @since 1.0.0
  */
+@Slf4j
 @Component
 public class AdaptiveRateLimiter {
-    private static final Logger log = LoggerFactory.getLogger(AdaptiveRateLimiter.class);
 
     /** CPU 使用率采样间隔（毫秒） */
     private static final long SAMPLING_INTERVAL_MS = 2000L;

@@ -5,8 +5,7 @@ import com.apex.scaffold.infrastructure.wechat.exception.WeChatApiException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
@@ -66,10 +65,10 @@ import reactor.core.publisher.Mono;
  * @see WeChatAppProperties
  * @see WeChatAppService
  */
+@Slf4j
 @Service
 @SuppressWarnings({"AlibabaJavaNaming", "PMD.ClassNamingShouldBeCamelRule"})
 public class WeChatOAuthService {
-    private static final Logger log = LoggerFactory.getLogger(WeChatOAuthService.class);
 
     /**
      * 微信网页授权基础URL

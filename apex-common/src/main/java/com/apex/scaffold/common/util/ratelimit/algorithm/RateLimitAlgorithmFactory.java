@@ -2,8 +2,7 @@ package com.apex.scaffold.common.util.ratelimit.algorithm;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 限流算法策略工厂
@@ -46,8 +45,8 @@ import org.slf4j.LoggerFactory;
  * @version 1.0.0
  * @since 1.3.0
  */
+@Slf4j
 public final class RateLimitAlgorithmFactory {
-    private static final Logger log = LoggerFactory.getLogger(RateLimitAlgorithmFactory.class);
 
     /** 实例缓存：key → 策略实例 */
     private static final Map<String, RateLimitStrategy> CACHE = new ConcurrentHashMap<>();

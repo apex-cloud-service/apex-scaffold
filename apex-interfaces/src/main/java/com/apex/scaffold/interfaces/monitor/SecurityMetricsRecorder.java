@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
  * 限流拒绝、IP封禁、登录失败、XSS拦截、防重放拒绝和熔断器开启等安全事件。</p>
  *
  * @author Apex Team
- * @version 1.0.0
+ * @version 1.2.0
  * @since 1.0.0
  */
 @Component

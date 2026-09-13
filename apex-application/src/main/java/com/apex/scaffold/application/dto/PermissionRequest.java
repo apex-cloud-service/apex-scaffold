@@ -14,13 +14,14 @@ import lombok.NoArgsConstructor;
  * <p>用于创建或更新权限信息，包含权限名称、编码、类型、描述和状态。</p>
  *
  * @author Apex Team
- * @version 1.0.0
+ * @version 1.2.0
  * @since 1.0.0
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+/**n * PermissionRequestn *n * <p>TODO: 补充类的详细说明n *n * @author Apex Teamn * @version 1.0.0n * @since 1.0.0n */
 public class PermissionRequest {
 
     /**

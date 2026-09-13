@@ -12,8 +12,7 @@ import com.volcengine.tos.model.object.PreSignedURLOutput;
 import com.volcengine.tos.model.object.PutObjectInput;
 import java.io.InputStream;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -49,11 +48,11 @@ import reactor.core.publisher.Mono;
  * @see AbstractStorageService
  * @see TOSV2
  */
+@Slf4j
 @Service("volcEngineStorageService")
 @RequiredArgsConstructor
 @ConditionalOnProperty(name = "storage.volcengine.enabled", havingValue = "true", matchIfMissing = false)
 public class VolcEngineStorageServiceImpl extends AbstractStorageService {
-    private static final Logger log = LoggerFactory.getLogger(VolcEngineStorageServiceImpl.class);
 
     /** TOS 客户端，用于操作火山引擎对象存储服务 */
     private final TOSV2 tosClient;

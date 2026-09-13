@@ -2,10 +2,10 @@ package com.apex.scaffold.infrastructure.persistence.po;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 /**
  * 权限持久化对象
@@ -58,11 +58,12 @@ import lombok.NoArgsConstructor;
  * @see com.apex.scaffold.infrastructure.persistence.mapper.PermissionMapper
  */
 @Data
-@Builder
+@SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("sys_permission")
+/**n * PermissionPO - 持久化对象n *n * <p>对应数据库表：TODO: 补充表名n *n * @author Apex Teamn * @version 1.0.0n * @since 1.0.0n */
 public class PermissionPO extends BasePO {
 
     /**

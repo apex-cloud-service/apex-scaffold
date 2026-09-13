@@ -72,6 +72,7 @@ import reactor.core.publisher.Mono;
  * @since 1.0.0
  */
 @Service
+/**n * AuthRegistrationServicen *n * <p>TODO: 补充服务的详细说明n *n * @author Apex Teamn * @version 1.0.0n * @since 1.0.0n */
 public class AuthRegistrationService {
 
     /** 用户持久化服务，提供按 openId / phone 查询及创建 / 更新能力。 */

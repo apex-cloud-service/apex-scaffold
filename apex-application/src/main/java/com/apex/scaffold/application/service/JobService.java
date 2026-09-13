@@ -1,5 +1,6 @@
 package com.apex.scaffold.application.service;
 
+import com.apex.scaffold.application.assembler.JobAssembler;
 import com.apex.scaffold.application.dto.admin.JobDTO;
 import com.apex.scaffold.application.dto.admin.JobLogDTO;
 import com.apex.scaffold.application.dto.admin.JobRequest;
@@ -37,6 +38,7 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+/**n * JobServicen *n * <p>TODO: 补充服务的详细说明n *n * @author Apex Teamn * @version 1.0.0n * @since 1.0.0n */
 public class JobService {
 
     /**
@@ -55,6 +57,11 @@ public class JobService {
     private final JobLogService jobLogService;
 
     /**
+     * 任务对象转换器。
+     */
+    private final JobAssembler jobAssembler;
+
+    /**
      * 查询全部任务。
      *
      * @return 任务 DTO 列表
@@ -62,7 +69,42 @@ public class JobService {
     public Mono<List<JobDTO>> listJobs() {
         return jobRepository
                 .findAll()
-                .map(jobs -> jobs.stream().map(this::toDTO).toList());
+                .map(jobs -> jobs.stream().map(jobAssembler::toDTO).toList());
+    }
+
+    /**
+     * 分页查询任务列表（支持条件筛选）。
+     *
+     * <p>根据查询条件进行分页查询，支持按任务名称模糊匹配、任务分组和状态精确筛选。
+     * 查询结果按创建时间降序排列，返回分页响应对象。</p>
+     *
+     * @param request 查询请求，包含分页参数和筛选条件
+     * @return 分页响应，包含任务 DTO 列表和分页信息
+     */
+    public Mono<com.apex.scaffold.common.dto.PageResponse<JobDTO>> pageJobs(
+            com.apex.scaffold.application.dto.admin.JobQueryRequest request) {
+        return Mono.defer(() -> {
+                    String jobName = request.getJobName();
+                    String jobGroup = request.getJobGroup();
+                    Integer status = request.getStatus();
+                    Integer offset = request.getOffset();
+                    Integer pageSize = request.getPageSize();
+
+                    Mono<List<JobEntity>> listMono =
+                            jobRepository.findByPage(jobName, jobGroup, status, offset, pageSize);
+                    Mono<Long> countMono = jobRepository.countByCondition(jobName, jobGroup, status);
+
+                    return Mono.zip(listMono, countMono).map(tuple -> {
+                        List<JobEntity> entities = tuple.getT1();
+                        Long total = tuple.getT2();
+                        List<JobDTO> dtos =
+                                entities.stream().map(jobAssembler::toDTO).toList();
+                        return com.apex.scaffold.common.dto.PageResponse.of(
+                                dtos, total, request.getPageNum(), pageSize);
+                    });
+                })
+                .doOnSuccess(result ->
+                        log.debug("分页查询定时任务完成，total: {}, pageNum: {}", result.getTotal(), result.getPageNum()));
     }
 
     /**
@@ -204,34 +246,13 @@ public class JobService {
      * 校验 Cron 表达式合法性。
      *
      * @param cronExpression Cron 表达式
-     * @throws BusinessException 当表达式非法时抛出 {@code PARAM_ERROR}
+     * @throws BusinessException 解析失败时抛出
      */
     private void validateCron(String cronExpression) {
         try {
             new CronExpression(cronExpression);
         } catch (IllegalArgumentException e) {
-            throw new BusinessException(ResultCode.PARAM_ERROR, "Cron表达式非法: " + e.getMessage());
+            throw new BusinessException(ResultCode.PARAM_ERROR, "Cron 表达式格式不合法: " + e.getMessage());
         }
-    }
-
-    /**
-     * 将任务实体转换为 DTO。
-     *
-     * @param entity 任务实体
-     * @return 任务 DTO
-     */
-    private JobDTO toDTO(JobEntity entity) {
-        JobDTO dto = new JobDTO();
-        dto.setId(entity.getId());
-        dto.setJobName(entity.getJobName());
-        dto.setJobGroup(entity.getJobGroup());
-        dto.setInvokeTarget(entity.getInvokeTarget());
-        dto.setCronExpression(entity.getCronExpression());
-        dto.setMisfirePolicy(entity.getMisfirePolicy());
-        dto.setConcurrent(entity.getConcurrent());
-        dto.setStatus(entity.getStatus());
-        dto.setRemark(entity.getRemark());
-        dto.setCreateTime(entity.getCreateTime());
-        return dto;
     }
 }

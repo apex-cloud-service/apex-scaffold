@@ -1,5 +1,6 @@
 package com.apex.scaffold.application.service;
 
+import com.apex.scaffold.application.assembler.LoginLogAssembler;
 import com.apex.scaffold.application.dto.admin.LoginLogDTO;
 import com.apex.scaffold.common.dto.PageResponse;
 import com.apex.scaffold.domain.model.entity.LoginLogEntity;
@@ -23,12 +24,15 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+/**n * LoginLogServicen *n * <p>TODO: 补充服务的详细说明n *n * @author Apex Teamn * @version 1.0.0n * @since 1.0.0n */
 public class LoginLogService {
 
     /**
      * 登录日志仓储。
      */
     private final LoginLogRepository loginLogRepository;
+
+    private final LoginLogAssembler loginLogAssembler;
 
     /**
      * 记录一条登录日志。
@@ -58,25 +62,6 @@ public class LoginLogService {
         return loginLogRepository
                 .search(username, status, pageNum, boundedSize)
                 .map(page -> PageResponse.of(
-                        page.getList().stream().map(this::toDTO).toList(), page.getTotal(), pageNum, boundedSize));
-    }
-
-    /**
-     * 将登录日志实体转换为 DTO。
-     *
-     * @param entity 登录日志实体
-     * @return 登录日志 DTO
-     */
-    private LoginLogDTO toDTO(LoginLogEntity entity) {
-        LoginLogDTO dto = new LoginLogDTO();
-        dto.setId(entity.getId());
-        dto.setUsername(entity.getUsername());
-        dto.setIp(entity.getIp());
-        dto.setBrowser(entity.getBrowser());
-        dto.setOs(entity.getOs());
-        dto.setStatus(entity.getStatus());
-        dto.setMessage(entity.getMessage());
-        dto.setLoginTime(entity.getLoginTime());
-        return dto;
+                        loginLogAssembler.toDTOList(page.getList()), page.getTotal(), pageNum, boundedSize));
     }
 }

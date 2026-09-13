@@ -1346,6 +1346,13 @@ public class RouterOpenApiConfig {
                                 summary = "分页查询API调用日志",
                                 security = @SecurityRequirement(name = "BearerAuth")))
     })
+    /**
+     * API调用日志管理模块在线接口文档
+     *
+     * <p>提供API调用日志的查询接口,用于OpenAPI文档展示。
+     *
+     * @return 占位符路由函数
+     */
     public RouterFunction<ServerResponse> adminApiCallLogRoutesDocs() {
         return placeholderRoute("/__openapi_admin_api_call_log_placeholder");
     }
@@ -1470,6 +1477,13 @@ public class RouterOpenApiConfig {
                                 summary = "分页查询在线用户",
                                 security = @SecurityRequirement(name = "BearerAuth")))
     })
+    /**
+     * 在线用户管理模块在线接口文档
+     *
+     * <p>提供在线用户查询接口,用于OpenAPI文档展示。
+     *
+     * @return 占位符路由函数
+     */
     public RouterFunction<ServerResponse> adminOnlineUserRoutesDocs() {
         return placeholderRoute("/__openapi_admin_online_user_placeholder");
     }
@@ -1533,6 +1547,13 @@ public class RouterOpenApiConfig {
                                 description = "登录/注册/上传/信用变动等核心业务指标与近 10 分钟趋势",
                                 security = @SecurityRequirement(name = "BearerAuth")))
     })
+    /**
+     * 核心业务监控模块在线接口文档
+     *
+     * <p>提供核心业务指标查询接口,包括登录、注册、上传、信用变动等业务指标及近期趋势,用于OpenAPI文档展示。
+     *
+     * @return 占位符路由函数
+     */
     public RouterFunction<ServerResponse> adminMonitorRoutesDocs() {
         return placeholderRoute("/__openapi_admin_monitor_placeholder");
     }

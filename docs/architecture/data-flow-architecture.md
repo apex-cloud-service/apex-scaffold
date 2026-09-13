@@ -771,7 +771,7 @@ public class UserBinlogListener implements EntryHandler<User> {
 
 - [RocketMQ消息队列架构文档](mq-architecture.md)
 - [业务流程文档](business-flows.md)
-- [多级缓存架构文档](../advanced-features/multi-level-cache-architecture.md)
+- [多级缓存架构文档](advanced-features/multi-level-cache-architecture.md)
 
 ### 10.2 外部参考
 

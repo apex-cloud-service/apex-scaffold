@@ -14,21 +14,38 @@ import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
 /**
- * OAuth2路由配置
+ * OAuth2 路由配置
  *
- * <p>配置OAuth2授权服务器的端点路由,所有OAuth2相关请求通过/oauth2前缀访问。
+ * <p>使用 WebFlux 函数式路由注册 OAuth2 授权服务器的端点路由，所有 OAuth2 相关请求通过
+ * {@code /oauth2} 前缀访问；客户端管理接口通过 {@code /admin-api/v1/oauth2} 前缀访问。</p>
+ *
+ * <h2>主要功能</h2>
+ * <ul>
+ *   <li>注册 OAuth2 授权服务器标准端点：授权、Token、撤销、自省、JWKS、发现文档、同意页</li>
+ *   <li>注册 OAuth2 客户端管理接口：创建、更新、删除、查询、重置密钥</li>
+ *   <li>通过函数式路由 {@link RouterFunction} 聚合多个 Handler，保持路由与业务解耦</li>
+ * </ul>
  *
  * <h2>端点列表</h2>
  * <ul>
- *   <li>GET/POST /oauth2/authorize - 授权端点(授权码模式)</li>
- *   <li>POST /oauth2/token - Token端点(所有授权模式)</li>
- *   <li>POST /oauth2/revoke - Token撤销端点</li>
- *   <li>POST /oauth2/introspect - Token自省端点</li>
+ *   <li>GET/POST /oauth2/authorize - 授权端点（授权码模式）</li>
+ *   <li>POST /oauth2/token - Token 端点（所有授权模式）</li>
+ *   <li>POST /oauth2/revoke - Token 撤销端点</li>
+ *   <li>POST /oauth2/introspect - Token 自省端点</li>
+ *   <li>POST /oauth2/consent - 用户同意端点</li>
+ *   <li>POST /oauth2/consent/revoke - 撤销用户同意</li>
+ *   <li>GET /oauth2/jwks - JWKS 公钥端点</li>
+ *   <li>GET /.well-known/oauth-authorization-server - OAuth2 发现文档</li>
+ *   <li>CRUD /admin-api/v1/oauth2/clients - OAuth2 客户端管理</li>
  * </ul>
  *
  * @author Apex Team
- * @version 2.0.0
- * @since 2.0.0
+ * @version 1.2.0
+ * @since 1.0.0
+ * @see OAuth2AuthorizationHandler
+ * @see OAuth2ClientManagementHandler
+ * @see OAuth2JwksHandler
+ * @see OAuth2DiscoveryHandler
  */
 @Configuration
 @RequiredArgsConstructor

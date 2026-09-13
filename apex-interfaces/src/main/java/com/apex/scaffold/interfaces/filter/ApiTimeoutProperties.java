@@ -19,8 +19,8 @@ import org.springframework.stereotype.Component;
  * }</pre>
  *
  * @author Apex Team
- * @version 1.1.4
- * @since 1.1.4
+ * @version 1.2.0
+ * @since 1.0.0
  * @see GlobalResponseTimeoutWebFilter
  */
 @Data

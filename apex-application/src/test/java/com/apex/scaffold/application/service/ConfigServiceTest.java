@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.apex.scaffold.application.assembler.ConfigAssembler;
 import com.apex.scaffold.application.dto.admin.ConfigRequest;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.domain.model.entity.ConfigEntity;
@@ -35,6 +36,9 @@ class ConfigServiceTest {
 
     @Mock
     private ConfigRepository configRepository;
+
+    @Mock
+    private ConfigAssembler configAssembler;
 
     @InjectMocks
     private ConfigService configService;
@@ -187,6 +191,16 @@ class ConfigServiceTest {
     @DisplayName("listConfigs - 成功查询全部参数配置")
     void listConfigs_Success() {
         when(configRepository.findAll()).thenReturn(Mono.just(List.of(userConfig, builtinConfig)));
+        when(configAssembler.toDTOList(any())).thenAnswer(invocation -> {
+            List<ConfigEntity> entities = invocation.getArgument(0);
+            return entities.stream()
+                    .map(e -> com.apex.scaffold.application.dto.admin.ConfigDTO.builder()
+                            .id(e.getId())
+                            .configKey(e.getConfigKey())
+                            .configValue(e.getConfigValue())
+                            .build())
+                    .toList();
+        });
 
         configService
                 .listConfigs()

@@ -10,8 +10,7 @@ import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
@@ -28,9 +27,9 @@ import reactor.core.publisher.Mono;
  * @version 1.0.0
  * @since 1.0.0
  */
+@Slf4j
 @Service
 public class WeChatAppAdvancedService {
-    private static final Logger log = LoggerFactory.getLogger(WeChatAppAdvancedService.class);
 
     /** AccessToken 缓存键 */
     private static final String ACCESS_TOKEN_CACHE_KEY = "bais:wechat:access_token";

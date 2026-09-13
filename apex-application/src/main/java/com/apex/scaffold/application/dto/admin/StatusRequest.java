@@ -18,10 +18,11 @@ import io.swagger.v3.oas.annotations.media.Schema;
  * </ul>
  *
  * @author Apex Team
- * @version 1.0.0
- * @since 2.2.0
+ * @version 1.2.0
+ * @since 1.0.0
  */
 @Schema(description = "状态更新请求体（启用/停用）")
+/**n * StatusRequestn *n * <p>TODO: 补充类的详细说明n *n * @author Apex Teamn * @version 1.0.0n * @since 1.0.0n */
 public class StatusRequest {
 
     /** 是否启用：true-启用，false-停用 */

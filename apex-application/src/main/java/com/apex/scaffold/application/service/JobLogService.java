@@ -1,5 +1,6 @@
 package com.apex.scaffold.application.service;
 
+import com.apex.scaffold.application.assembler.JobLogAssembler;
 import com.apex.scaffold.application.dto.admin.JobLogDTO;
 import com.apex.scaffold.domain.model.entity.JobLogEntity;
 import com.apex.scaffold.domain.repository.JobLogRepository;
@@ -22,12 +23,18 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+/**n * JobLogServicen *n * <p>TODO: 补充服务的详细说明n *n * @author Apex Teamn * @version 1.0.0n * @since 1.0.0n */
 public class JobLogService {
 
     /**
      * 执行日志仓储。
      */
     private final JobLogRepository jobLogRepository;
+
+    /**
+     * 执行日志对象转换器。
+     */
+    private final JobLogAssembler jobLogAssembler;
 
     /**
      * 记录一条执行日志。
@@ -51,30 +58,6 @@ public class JobLogService {
      */
     public Mono<List<JobLogDTO>> findLatestByJobId(Long jobId, int limit) {
         int bounded = Math.min(Math.max(limit, 1), 100);
-        return jobLogRepository
-                .findLatestByJobId(jobId, bounded)
-                .map(logs -> logs.stream().map(this::toDTO).toList());
-    }
-
-    /**
-     * 将执行日志实体转换为 DTO。
-     *
-     * @param entity 执行日志实体
-     * @return 执行日志 DTO
-     */
-    private JobLogDTO toDTO(JobLogEntity entity) {
-        JobLogDTO dto = new JobLogDTO();
-        dto.setId(entity.getId());
-        dto.setJobId(entity.getJobId());
-        dto.setJobName(entity.getJobName());
-        dto.setJobGroup(entity.getJobGroup());
-        dto.setInvokeTarget(entity.getInvokeTarget());
-        dto.setJobMessage(entity.getJobMessage());
-        dto.setStatus(entity.getStatus());
-        dto.setExceptionInfo(entity.getExceptionInfo());
-        dto.setStartTime(entity.getStartTime());
-        dto.setEndTime(entity.getEndTime());
-        dto.setDuration(entity.getDuration());
-        return dto;
+        return jobLogRepository.findLatestByJobId(jobId, bounded).map(jobLogAssembler::toDTOList);
     }
 }

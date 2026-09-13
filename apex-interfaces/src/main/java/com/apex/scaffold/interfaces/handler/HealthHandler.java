@@ -20,21 +20,28 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
 /**
- * 健康检查处理器（函数式端点）
+ * 健康检查处理器（函数式端点）。
  *
- * <p>提供系统健康检查和状态查询接口。
+ * <p>提供系统健康检查、根路径探活和系统信息查询接口，
  * 系统描述信息会根据客户端语言偏好自动切换。
+ *
+ * <h2>核心功能</h2>
+ * <ul>
+ *   <li>健康检查：返回服务运行状态、时间戳、应用名称和版本</li>
+ *   <li>根路径探活：供负载均衡器和反向代理探测服务存活</li>
+ *   <li>系统信息：返回应用描述、版本、Java 版本、操作系统等运行环境信息</li>
+ * </ul>
  *
  * <h2>接口列表</h2>
  * <ul>
- *   <li>{@code /api/health} — 健康检查，返回服务运行状态</li>
- *   <li>{@code /api/info} — 系统信息，返回应用描述、版本、运行环境等</li>
+ *   <li>GET /api/v1/health — 健康检查，返回服务运行状态</li>
+ *   <li>GET / — 根路径探活，返回服务存活状态</li>
+ *   <li>GET /api/v1/info — 系统信息，返回应用描述、版本、运行环境等</li>
  * </ul>
  *
  * @author Apex Team
- * @version 2.0.0
+ * @version 1.2.0
  * @since 1.0.0
- * @extends BaseHandler
  * @see MessageUtils
  */
 @Slf4j

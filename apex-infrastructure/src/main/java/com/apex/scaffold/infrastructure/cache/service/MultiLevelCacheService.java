@@ -14,12 +14,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
+import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RBucket;
 import org.redisson.api.RKeys;
 import org.redisson.api.RedissonClient;
 import org.redisson.client.codec.StringCodec;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -69,9 +68,9 @@ import reactor.core.publisher.Mono;
  * @see CacheService
  * @see RedissonClient
  */
+@Slf4j
 @Service
 public class MultiLevelCacheService {
-    private static final Logger log = LoggerFactory.getLogger(MultiLevelCacheService.class);
 
     /** 空值标记：用于缓存穿透防护 */
     private static final String EMPTY_VALUE = "__EMPTY__";

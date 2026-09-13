@@ -1,5 +1,6 @@
 package com.apex.scaffold.application.service;
 
+import com.apex.scaffold.application.assembler.DeptAssembler;
 import com.apex.scaffold.application.dto.admin.DeptDTO;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.result.ResultCode;
@@ -24,18 +25,23 @@ import reactor.core.publisher.Mono;
  * @see DeptRepository
  */
 @Service
+/**n * DeptServicen *n * <p>TODO: 补充服务的详细说明n *n * @author Apex Teamn * @version 1.0.0n * @since 1.0.0n */
 public class DeptService {
 
     /** 部门仓储 */
     private final DeptRepository deptRepository;
+    /** 部门对象转换器 */
+    private final DeptAssembler deptAssembler;
 
     /**
      * 构造部门管理服务。
      *
      * @param deptRepository 部门仓储
+     * @param deptAssembler 部门对象转换器
      */
-    public DeptService(DeptRepository deptRepository) {
+    public DeptService(DeptRepository deptRepository, DeptAssembler deptAssembler) {
         this.deptRepository = deptRepository;
+        this.deptAssembler = deptAssembler;
     }
 
     /**
@@ -57,7 +63,7 @@ public class DeptService {
     public Mono<DeptDTO> get(Long id) {
         return deptRepository
                 .findById(id)
-                .map(this::toDto)
+                .map(deptAssembler::toDTO)
                 .switchIfEmpty(Mono.error(new BusinessException(ResultCode.NOT_FOUND)));
     }
 
@@ -71,7 +77,7 @@ public class DeptService {
      */
     public Mono<DeptDTO> create(DeptEntity dept) {
         dept.setId(null);
-        return resolveAncestors(dept).flatMap(d -> deptRepository.save(d)).map(this::toDto);
+        return resolveAncestors(dept).flatMap(d -> deptRepository.save(d)).map(deptAssembler::toDTO);
     }
 
     /**
@@ -91,7 +97,7 @@ public class DeptService {
                 .switchIfEmpty(Mono.error(new BusinessException(ResultCode.NOT_FOUND)))
                 .then(resolveAncestors(dept))
                 .flatMap(d -> deptRepository.save(d))
-                .map(this::toDto);
+                .map(deptAssembler::toDTO);
     }
 
     /**
@@ -135,7 +141,7 @@ public class DeptService {
      * @return 部门树根节点列表
      */
     private List<DeptDTO> buildTree(List<DeptEntity> all) {
-        List<DeptDTO> nodes = all.stream().map(this::toDto).toList();
+        List<DeptDTO> nodes = deptAssembler.toDTOList(all);
         Map<Long, DeptDTO> byId = nodes.stream().collect(Collectors.toMap(DeptDTO::getId, Function.identity()));
 
         return nodes.stream()
@@ -151,20 +157,5 @@ public class DeptService {
                     return parentId == 0L || parent == null;
                 })
                 .toList();
-    }
-
-    /** 实体 → DTO 转换。 */
-    private DeptDTO toDto(DeptEntity e) {
-        DeptDTO dto = new DeptDTO();
-        dto.setId(e.getId());
-        dto.setParentId(e.getParentId());
-        dto.setName(e.getName());
-        dto.setOrderNum(e.getOrderNum());
-        dto.setLeader(e.getLeader());
-        dto.setPhone(e.getPhone());
-        dto.setEmail(e.getEmail());
-        dto.setStatus(e.getStatus());
-        dto.setLockVersion(e.getLockVersion());
-        return dto;
     }
 }

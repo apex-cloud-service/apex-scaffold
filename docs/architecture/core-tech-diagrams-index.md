@@ -17,7 +17,7 @@
 ### 图表文件
 
 - **架构图**: [77_multi_level_cache_architecture.mmd](diagrams/sequence/77_multi_level_cache_architecture.mmd)
-- **详细文档**: [multi-level-cache-complete-guide.md](architecture/advanced-features/multi-level-cache-complete-guide.md)
+- **详细文档**: [multi-level-cache-complete-guide.md](advanced-features/multi-level-cache-complete-guide.md)
 
 ### 核心内容
 
@@ -41,7 +41,7 @@
 ### 图表文件
 
 - **时序图**: [78_auto_retry_mechanism_sequence.mmd](diagrams/sequence/78_auto_retry_mechanism_sequence.mmd)
-- **详细文档**: [auto-retry-strategy.md](architecture/advanced-features/auto-retry-strategy.md) (已有)
+- **详细文档**: [auto-retry-strategy.md](advanced-features/auto-retry-strategy.md) (已有)
 
 ### 核心内容
 
@@ -66,7 +66,7 @@
 
 - **架构图**: [79_datasource_switch_architecture.mmd](diagrams/sequence/79_datasource_switch_architecture.mmd)
 - **详细文档**: [DATA_SOURCE_SWITCH_USAGE.md](../../DATA_SOURCE_SWITCH_USAGE.md) (已有)
-- **配套SVG**: [41_datasource_switch_architecture.svg](diagrams/41_datasource_switch_architecture.svg)
+- **配套SVG**: [41_datasource_switch_architecture.svg](../diagrams/41_datasource_switch_architecture.svg)
 
 ### 核心内容
 
@@ -94,7 +94,7 @@
 
 - **时序图**: [80_audit_log_async_batch_sequence.mmd](diagrams/sequence/80_audit_log_async_batch_sequence.mmd)
 - **详细文档**: [AUDIT_LOG_USAGE.md](../../AUDIT_LOG_USAGE.md) (已有)
-- **配套SVG**: [42_audit_log_sequence.svg](diagrams/42_audit_log_sequence.svg)
+- **配套SVG**: [42_audit_log_sequence.svg](../diagrams/42_audit_log_sequence.svg)
 
 ### 核心内容
 
@@ -147,10 +147,10 @@
 ### 综合设计文档
 
 详见以下现有文档:
-- [backend-technology-stack.md](architecture/backend-technology-stack.md) - WebFlux响应式技术栈
-- [reactive-programming-guide.md](architecture/reactive-programming-guide.md) - 响应式编程模式
-- [service-governance-solution.md](architecture/service-governance-solution.md) - 服务治理与优雅停机
-- [sentinel-rate-limit-circuit-breaker.md](architecture/advanced-features/sentinel-rate-limit-circuit-breaker.md) - Sentinel限流熔断
+- [backend-technology-stack.md](backend-technology-stack.md) - WebFlux响应式技术栈
+- [reactive-programming-guide.md](reactive-programming-guide.md) - 响应式编程模式
+- [service-governance-solution.md](service-governance-solution.md) - 服务治理与优雅停机
+- [sentinel-rate-limit-circuit-breaker.md](advanced-features/sentinel-rate-limit-circuit-breaker.md) - Sentinel限流熔断
 
 ### 三高核心要素
 
@@ -254,9 +254,9 @@ Mermaid时序图/架构图统一放在`docs/diagrams/sequence/`目录,编号规�
 
 ### 架构文档
 
-- [01-logical-architecture-detail.md](architecture/01-logical-architecture-detail.md) - DDD四层架构详解
-- [backend-technology-stack.md](architecture/backend-technology-stack.md) - 后端技术栈全景
-- [system-architecture.md](architecture/system-architecture.md) - 系统架构总览
+- [01-logical-architecture-detail.md](01-logical-architecture-detail.md) - DDD四层架构详解
+- [backend-technology-stack.md](backend-technology-stack.md) - 后端技术栈全景
+- [system-architecture.md](system-architecture.md) - 系统架构总览
 
 ### 使用指南
 
@@ -266,7 +266,7 @@ Mermaid时序图/架构图统一放在`docs/diagrams/sequence/`目录,编号规�
 
 ### 开发规范
 
-- [backend-development-standards.md](standards/backend-development-standards.md) - 后端开发规范
+- [backend-development-standards.md](../04-development/backend-development-standards.md) - 后端开发规范
 - [BEST_PRACTICES.md](../../BEST_PRACTICES.md) - 最佳实践指南
 
 ---

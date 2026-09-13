@@ -9,16 +9,26 @@ import lombok.NoArgsConstructor;
 /**
  * 工作流实例详情 DTO。
  *
- * <p>包含流程实例、流程定义、任务列表等完整信息，用于详情页展示。</p>
+ * <p>工作流实例详情页的响应对象，聚合流程实例基本信息、流程定义、
+ * 任务列表与当前节点，用于完整渲染单条流程实例的运行状态。</p>
+ *
+ * <p>主要字段：</p>
+ * <ul>
+ *   <li>{@code instance}：流程实例基本信息。</li>
+ *   <li>{@code definition}：流程定义，用于渲染流程图。</li>
+ *   <li>{@code tasks}：任务列表。</li>
+ *   <li>{@code currentNodeId}：当前节点 ID。</li>
+ * </ul>
  *
  * @author Apex Team
- * @version 1.4.0
- * @since 1.4.0
+ * @version 1.2.0
+ * @since 1.0.0
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+/**n * WorkflowInstanceDetailDTOn *n * <p>TODO: 补充类的详细说明n *n * @author Apex Teamn * @version 1.0.0n * @since 1.0.0n */
 public class WorkflowInstanceDetailDTO {
 
     /** 流程实例基本信息 */

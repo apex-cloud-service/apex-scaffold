@@ -25,4 +25,5 @@ import org.apache.ibatis.annotations.Mapper;
  * @since 2.0.0
  */
 @Mapper
+/**n * OAuth2AuthorizationConsentMappern *n * <p>TODO: 补充 Mapper 的详细说明n *n * @author Apex Teamn * @version 1.0.0n * @since 1.0.0n */
 public interface OAuth2AuthorizationConsentMapper extends BaseMapper<OAuth2AuthorizationConsentPO> {}

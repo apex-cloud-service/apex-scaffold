@@ -14,8 +14,7 @@ import io.minio.http.Method;
 import java.io.InputStream;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -54,11 +53,11 @@ import reactor.core.publisher.Mono;
  * @see AbstractStorageService
  * @see MinioClient
  */
+@Slf4j
 @Service("minioStorageService")
 @RequiredArgsConstructor
 @ConditionalOnBean(MinioClient.class)
 public class MinioServiceImpl extends AbstractStorageService {
-    private static final Logger log = LoggerFactory.getLogger(MinioServiceImpl.class);
 
     /**
      * MinIO 客户端

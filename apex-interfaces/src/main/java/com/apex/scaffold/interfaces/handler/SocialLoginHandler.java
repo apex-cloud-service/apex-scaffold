@@ -1,6 +1,14 @@
 package com.apex.scaffold.interfaces.handler;
 
 import com.apex.scaffold.common.result.Result;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.net.URI;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,48 +19,41 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
 /**
- * 社交登录处理器
+ * 社交登录处理器（函数式端点）。
  *
- * <p>处理 OIDC 和第三方社交登录（GitHub/Google/微信）的认证流程。
- * 仅在 {@code keycloak.enabled=true} 时生效。
+ * <p>提供 Keycloak OIDC 登录和第三方社交登录（GitHub、Google、微信）的认证接口，
+ * 处理 OAuth2 授权流程的发起、回调和令牌交换。仅在 {@code keycloak.enabled=true} 时生效。</p>
  *
- * <h2>核心功能</h2>
+ * <h2>接口清单</h2>
  * <ul>
- *   <li>{@link #initiateOidcLogin} - 发起 Keycloak OIDC 登录</li>
- *   <li>{@link #initiateSocialLogin} - 发起第三方社交登录</li>
- *   <li>{@link #handleOidcCallback} - 处理 OIDC 回调，返回 Token</li>
+ *   <li>GET /auth/oidc/login - 发起 Keycloak OIDC 登录，重定向到 Keycloak 登录页面</li>
+ *   <li>GET /auth/social/{provider} - 发起第三方社交登录，支持 github、google、wechat</li>
+ *   <li>GET /auth/oidc/callback - 处理 OIDC 回调，验证并返回 Token 信息</li>
  * </ul>
  *
- * <h2>认证流程</h2>
- * <pre>
- * 1. 前端调用 /api/v1/auth/oidc/login 或 /api/v1/auth/social/{provider}/login
- * 2. 后端重定向到 Keycloak 或第三方 OAuth2 Provider
- * 3. 用户在 Keycloak 完成认证
- * 4. Keycloak 回调到 Spring Security OAuth2 Client
- * 5. OidcAuthenticationSuccessHandler 生成 JWT Token
- * 6. 重定向到前端 callback URL，携带 accessToken 和 refreshToken
- * </pre>
+ * <h2>支持的社交登录提供商</h2>
+ * <ul>
+ *   <li>github：GitHub OAuth2 登录</li>
+ *   <li>google：Google OAuth2 登录</li>
+ *   <li>wechat：微信 OAuth2 登录</li>
+ * </ul>
  *
  * @author Apex Team
  * @version 1.0.0
- * @since 2.4.0
- * @see com.apex.scaffold.interfaces.security.OidcAuthenticationSuccessHandler
+ * @since 1.0.0
  */
 @Slf4j
 @Component
 @RequiredArgsConstructor
 @ConditionalOnProperty(name = "keycloak.enabled", havingValue = "true")
+@Tag(name = "社交登录", description = "OIDC和第三方社交登录(GitHub/Google/微信)认证接口")
 public class SocialLoginHandler {
 
-    /**
-     * 发起 OIDC 登录
-     *
-     * <p>重定向到 Spring Security OAuth2 Client 的 {@code /oauth2/authorization/keycloak} 端点，
-     * 触发 OIDC 授权码流程。
-     *
-     * @param request HTTP 请求
-     * @return 302 重定向响应，跳转到 Keycloak 登录页
-     */
+    @Operation(
+            operationId = "initiateOidcLogin",
+            summary = "发起Keycloak OIDC登录",
+            description = "重定向到Keycloak登录页面,触发OIDC授权码流程")
+    @ApiResponses({@ApiResponse(responseCode = "302", description = "重定向到Keycloak登录页面")})
     public Mono<ServerResponse> initiateOidcLogin(ServerRequest request) {
         log.info("Initiating OIDC login");
 
@@ -61,19 +62,18 @@ public class SocialLoginHandler {
         return ServerResponse.temporaryRedirect(URI.create(redirectUrl)).build();
     }
 
-    /**
-     * 发起社交登录
-     *
-     * <p>根据 provider 参数重定向到对应的 OAuth2 Provider：
-     * <ul>
-     *   <li>github - GitHub OAuth2</li>
-     *   <li>google - Google OAuth2</li>
-     *   <li>wechat - 微信开放平台</li>
-     * </ul>
-     *
-     * @param request HTTP 请求，路径参数 {@code provider} 指定登录方式
-     * @return 302 重定向响应 或 400 错误（不支持的 provider）
-     */
+    @Operation(
+            operationId = "initiateSocialLogin",
+            summary = "发起第三方社交登录",
+            description = "根据provider参数重定向到对应的OAuth2提供商(github/google/wechat)")
+    @ApiResponses({
+        @ApiResponse(responseCode = "302", description = "重定向到第三方OAuth2提供商登录页面"),
+        @ApiResponse(
+                responseCode = "400",
+                description = "不支持的社交登录提供商",
+                content = @Content(schema = @Schema(implementation = Result.class)))
+    })
+    @Parameter(name = "provider", description = "社交登录提供商:github、google或wechat", required = true, in = ParameterIn.PATH)
     public Mono<ServerResponse> initiateSocialLogin(ServerRequest request) {
         String provider = request.pathVariable("provider");
         log.info("Initiating social login: provider={}", provider);
@@ -97,16 +97,17 @@ public class SocialLoginHandler {
         return ServerResponse.temporaryRedirect(URI.create(redirectUrl)).build();
     }
 
-    /**
-     * 处理 OIDC 回调
-     *
-     * <p>前端从重定向 URL 中提取 Token 后，可调用此接口验证并获取 Token 信息。
-     * 实际的 OIDC 回调由 Spring Security OAuth2 Client 和
-     * {@link com.apex.scaffold.interfaces.security.OidcAuthenticationSuccessHandler} 处理。
-     *
-     * @param request HTTP 请求，Query 参数包含 accessToken、refreshToken、userId
-     * @return 200 JSON 响应，包含 Token 信息 或 400 错误（缺少参数）
-     */
+    @Operation(operationId = "handleOidcCallback", summary = "处理OIDC回调", description = "验证并返回OIDC认证后的Token信息")
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "返回Token信息",
+                content = @Content(schema = @Schema(implementation = Result.class))),
+        @ApiResponse(
+                responseCode = "400",
+                description = "缺少必需的回调参数",
+                content = @Content(schema = @Schema(implementation = Result.class)))
+    })
     public Mono<ServerResponse> handleOidcCallback(ServerRequest request) {
         log.info("Handling OIDC callback");
 

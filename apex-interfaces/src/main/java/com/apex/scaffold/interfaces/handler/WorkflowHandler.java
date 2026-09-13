@@ -28,43 +28,40 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
 /**
- * 工作流 Handler。
+ * 工作流处理器（函数式端点）。
  *
  * <p>基于 WebFlux 函数式编程模型的工作流接口处理器，
- * 提供流程回退、任务转办、任务委派、流程挂起/恢复等功能。
+ * 提供流程发起、待办任务查询、任务审批、流程回退、任务转办、任务委派、
+ * 流程挂起/恢复以及实例查询与统计等功能。
+ *
+ * <h2>核心功能</h2>
+ * <ul>
+ *   <li>流程实例管理：发起流程实例、查询实例列表与详情</li>
+ *   <li>任务处理：查询待办任务、完成任务审批</li>
+ *   <li>任务流转：流程回退、任务转办、任务委派</li>
+ *   <li>流程控制：挂起与恢复流程实例</li>
+ *   <li>统计分析：工作流统计数据与趋势查询</li>
+ * </ul>
  *
  * <h2>接口列表</h2>
  * <ul>
- *   <li>POST /api/workflow/tasks/{taskId}/rollback - 流程回退</li>
- *   <li>POST /api/workflow/tasks/{taskId}/transfer - 任务转办</li>
- *   <li>POST /api/workflow/tasks/{taskId}/delegate - 任务委派</li>
- *   <li>POST /api/workflow/instances/{instanceId}/suspend - 挂起流程</li>
- *   <li>POST /api/workflow/instances/{instanceId}/resume - 恢复流程</li>
+ *   <li>POST /api/v1/workflows/{workflowCode}/instances — 发起流程实例</li>
+ *   <li>GET /api/v1/workflows/tasks/pending — 查询当前用户待办任务</li>
+ *   <li>POST /api/v1/workflows/tasks/{taskId}/complete — 完成任务审批</li>
+ *   <li>GET /admin-api/v1/workflows/instances — 查询工作流实例列表</li>
+ *   <li>GET /admin-api/v1/workflows/instances/{instanceId} — 查询流程实例详情</li>
+ *   <li>GET /admin-api/v1/workflows/statistics — 获取工作流统计数据</li>
+ *   <li>GET /admin-api/v1/workflows/statistics/trend — 获取工作流趋势数据</li>
+ *   <li>POST /api/workflow/tasks/{taskId}/rollback — 流程回退</li>
+ *   <li>POST /api/workflow/tasks/{taskId}/transfer — 任务转办</li>
+ *   <li>POST /api/workflow/tasks/{taskId}/delegate — 任务委派</li>
+ *   <li>POST /api/workflow/instances/{instanceId}/suspend — 挂起流程实例</li>
+ *   <li>POST /api/workflow/instances/{instanceId}/resume — 恢复流程实例</li>
  * </ul>
  *
- * <h2>请求示例</h2>
- * <pre>
- * POST /api/workflow/tasks/1000/rollback
- * Content-Type: application/json
- *
- * {
- *   "targetNodeCode": "manager_approval",
- *   "reason": "材料不完整，请补充后重新提交"
- * }
- * </pre>
- *
- * <h2>响应格式</h2>
- * <pre>
- * {
- *   "code": 0,
- *   "message": "操作成功",
- *   "data": null
- * }
- * </pre>
- *
  * @author Apex Team
- * @version 1.3.0
- * @since 1.3.0
+ * @version 1.2.0
+ * @since 1.0.0
  * @see WorkflowService
  */
 @Slf4j

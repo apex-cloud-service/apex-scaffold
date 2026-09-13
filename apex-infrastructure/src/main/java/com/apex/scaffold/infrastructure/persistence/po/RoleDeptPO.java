@@ -1,8 +1,11 @@
 package com.apex.scaffold.infrastructure.persistence.po;
 
 import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 /**
  * 角色-部门关联持久化对象。
@@ -16,8 +19,12 @@ import lombok.EqualsAndHashCode;
  * @see com.apex.scaffold.infrastructure.persistence.mapper.RoleDeptMapper
  */
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
+@SuperBuilder
 @EqualsAndHashCode(callSuper = true)
 @TableName("sys_role_dept")
+/**n * RoleDeptPO - 持久化对象n *n * <p>对应数据库表：TODO: 补充表名n *n * @author Apex Teamn * @version 1.0.0n * @since 1.0.0n */
 public class RoleDeptPO extends BasePO {
 
     /** 租户 ID */

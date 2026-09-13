@@ -1,5 +1,6 @@
 package com.apex.scaffold.application.service;
 
+import com.apex.scaffold.application.assembler.AdminUserAssembler;
 import com.apex.scaffold.application.dto.admin.AdminRoleResponse;
 import com.apex.scaffold.application.dto.admin.AdminUserCreateRequest;
 import com.apex.scaffold.application.dto.admin.AdminUserDetailResponse;
@@ -37,6 +38,7 @@ import reactor.core.publisher.Mono;
  * @since 1.0.0
  */
 @Service
+/**n * AdminUserManagementServicen *n * <p>TODO: 补充服务的详细说明n *n * @author Apex Teamn * @version 1.0.0n * @since 1.0.0n */
 public class AdminUserManagementService {
 
     /** 无活跃心跳/登录时判定为不活跃的天数阈值。 */
@@ -55,6 +57,7 @@ public class AdminUserManagementService {
     private final UserDefaultsFactory userDefaultsFactory;
     private final CacheConsistencyPort cacheConsistencyPort;
     private final AccountDeletionPort accountDeletionPort;
+    private final AdminUserAssembler adminUserAssembler;
 
     /**
      * 创建超级管理员用户管理服务。
@@ -70,6 +73,7 @@ public class AdminUserManagementService {
      * @param userDefaultsFactory 用户默认值工厂
      * @param cacheConsistencyPort 缓存一致性端口
      * @param accountDeletionPort 账号注销端口
+     * @param adminUserAssembler 管理后台用户对象转换器
      */
     public AdminUserManagementService(
             UserRepository userRepository,
@@ -82,7 +86,8 @@ public class AdminUserManagementService {
             UserComplianceRepository userComplianceRepository,
             UserDefaultsFactory userDefaultsFactory,
             CacheConsistencyPort cacheConsistencyPort,
-            AccountDeletionPort accountDeletionPort) {
+            AccountDeletionPort accountDeletionPort,
+            AdminUserAssembler adminUserAssembler) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.userRoleRepository = userRoleRepository;
@@ -94,6 +99,7 @@ public class AdminUserManagementService {
         this.userDefaultsFactory = userDefaultsFactory;
         this.cacheConsistencyPort = cacheConsistencyPort;
         this.accountDeletionPort = accountDeletionPort;
+        this.adminUserAssembler = adminUserAssembler;
     }
 
     /**
@@ -268,12 +274,15 @@ public class AdminUserManagementService {
      * @return 可配置角色列表
      */
     private Mono<List<AdminRoleResponse>> manageableRolesUnchecked() {
-        return roleRepository.findAll().map(roles -> roles.stream()
-                .filter(role -> role.getStatus() != null && role.getStatus() == 1)
-                .filter(role -> MANAGED_ROLE_CODES.contains(role.getCode()))
-                .map(this::toRole)
-                .sorted(java.util.Comparator.comparing(AdminRoleResponse::id))
-                .toList());
+        return roleRepository.findAll().map(roles -> {
+            List<RoleEntity> managedRoles = roles.stream()
+                    .filter(role -> role.getStatus() != null && role.getStatus() == 1)
+                    .filter(role -> MANAGED_ROLE_CODES.contains(role.getCode()))
+                    .toList();
+            return adminUserAssembler.toRoleResponseList(managedRoles).stream()
+                    .sorted(java.util.Comparator.comparing(AdminRoleResponse::id))
+                    .toList();
+        });
     }
 
     /**
@@ -465,7 +474,7 @@ public class AdminUserManagementService {
     private List<AdminRoleResponse> toRoles(List<RoleEntity> roles) {
         return roles.stream()
                 .filter(role -> MANAGED_ROLE_CODES.contains(role.getCode()))
-                .map(this::toRole)
+                .map(adminUserAssembler::toRoleResponse)
                 .toList();
     }
 
@@ -476,7 +485,7 @@ public class AdminUserManagementService {
      * @return 角色响应
      */
     private AdminRoleResponse toRole(RoleEntity role) {
-        return new AdminRoleResponse(role.getId(), role.getName(), role.getCode());
+        return adminUserAssembler.toRoleResponse(role);
     }
 
     /**
@@ -486,17 +495,7 @@ public class AdminUserManagementService {
      * @return 画像响应
      */
     private AdminUserProfileResponse toProfile(com.apex.scaffold.domain.model.entity.UserProfileEntity profile) {
-        return new AdminUserProfileResponse(
-                profile.getDatingGoal(),
-                profile.getMbti(),
-                profile.getHeightCm(),
-                profile.getSchool(),
-                profile.getEducationLevel(),
-                profile.getJob(),
-                profile.getBio(),
-                profile.getInterests(),
-                profile.isSocialUser(),
-                profile.getSocialUserAt());
+        return adminUserAssembler.toProfileResponse(profile);
     }
 
     /**

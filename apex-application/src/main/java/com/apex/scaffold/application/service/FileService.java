@@ -48,6 +48,7 @@ import reactor.core.publisher.Mono;
  * @see FileTypeValidator
  */
 @Service
+/**n * FileServicen *n * <p>TODO: 补充服务的详细说明n *n * @author Apex Teamn * @version 1.0.0n * @since 1.0.0n */
 public class FileService {
 
     private static final Set<String> ALLOWED_EXTENSIONS =

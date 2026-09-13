@@ -1,5 +1,6 @@
 package com.apex.scaffold.application.service;
 
+import com.apex.scaffold.application.assembler.OAuth2ClientAssembler;
 import com.apex.scaffold.application.dto.OAuth2ClientRequest;
 import com.apex.scaffold.application.dto.OAuth2ClientResponse;
 import com.apex.scaffold.common.exception.BusinessException;
@@ -27,10 +28,12 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+/**n * OAuth2ClientManagementServicen *n * <p>TODO: 补充服务的详细说明n *n * @author Apex Teamn * @version 1.0.0n * @since 1.0.0n */
 public class OAuth2ClientManagementService {
 
     private final OAuth2RegisteredClientRepository clientRepository;
     private final PasswordEncoder passwordEncoder;
+    private final OAuth2ClientAssembler oAuth2ClientAssembler;
 
     public Mono<OAuth2ClientResponse> createClient(OAuth2ClientRequest request) {
         return clientRepository
@@ -59,7 +62,7 @@ public class OAuth2ClientManagementService {
 
                     return clientRepository.save(entity);
                 }))
-                .map(this::toResponse);
+                .map(oAuth2ClientAssembler::toResponse);
     }
 
     public Mono<OAuth2ClientResponse> updateClient(String clientId, OAuth2ClientRequest request) {
@@ -97,7 +100,7 @@ public class OAuth2ClientManagementService {
 
                     return clientRepository.save(entity);
                 })
-                .map(this::toResponse);
+                .map(oAuth2ClientAssembler::toResponse);
     }
 
     public Mono<Void> deleteClient(String clientId) {
@@ -111,11 +114,11 @@ public class OAuth2ClientManagementService {
         return clientRepository
                 .findByClientId(clientId)
                 .switchIfEmpty(Mono.error(new BusinessException(ResultCode.NOT_FOUND, "客户端不存在")))
-                .map(this::toResponse);
+                .map(oAuth2ClientAssembler::toResponse);
     }
 
     public Flux<OAuth2ClientResponse> listClients(int page, int size) {
-        return clientRepository.findAll(page, size).map(this::toResponse);
+        return clientRepository.findAll(page, size).map(oAuth2ClientAssembler::toResponse);
     }
 
     public Mono<Long> countClients() {
@@ -133,22 +136,6 @@ public class OAuth2ClientManagementService {
                     return clientRepository.save(entity);
                 })
                 .thenReturn(newSecret);
-    }
-
-    private OAuth2ClientResponse toResponse(OAuth2RegisteredClientEntity entity) {
-        OAuth2ClientResponse response = new OAuth2ClientResponse();
-        response.setId(entity.getId());
-        response.setClientId(entity.getClientId());
-        response.setClientName(entity.getClientName());
-        response.setClientIdIssuedAt(entity.getClientIdIssuedAt());
-        response.setClientSecretExpiresAt(entity.getClientSecretExpiresAt());
-        response.setClientAuthenticationMethods(entity.getClientAuthenticationMethods());
-        response.setAuthorizationGrantTypes(entity.getAuthorizationGrantTypes());
-        response.setRedirectUris(entity.getRedirectUris());
-        response.setPostLogoutRedirectUris(entity.getPostLogoutRedirectUris());
-        response.setScopes(entity.getScopes());
-        response.setIsPublicClient(entity.isPublicClient());
-        return response;
     }
 
     private String buildClientSettings(OAuth2ClientRequest request) {

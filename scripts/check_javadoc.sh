@@ -51,11 +51,28 @@ find "$SCAN_PATH" -name "*.java" -type f | while read file; do
     if grep -q "public \(class\|interface\|enum\|@interface\|record\)" "$file"; then
         TOTAL_CLASSES=$((TOTAL_CLASSES + 1))
         
-        # 检查是否有JavaDoc注释
-        # 查找 /** 和 public class 之间的距离
-        if ! grep -B 5 "public \(class\|interface\|enum\|@interface\|record\)" "$file" | grep -q "/\*\*"; then
-            CLASSES_WITHOUT_DOC=$((CLASSES_WITHOUT_DOC + 1))
-            echo "$file" >> "$TMP_CLASSES"
+        # 查找类声明的行号（可能在注解后面）
+        class_line=$(grep -n "public \(class\|interface\|enum\|@interface\|record\)" "$file" | head -1 | cut -d: -f1)
+        
+        if [ -n "$class_line" ]; then
+            # 向前查找 100 行，查看是否有 JavaDoc 注释起始标记 /**
+            # 从文件开头到类声明行的内容中，查找最后一个 /** 的位置
+            javadoc_start=$(sed -n "1,${class_line}p" "$file" | grep -n "^/\*\*" | tail -1 | cut -d: -f1)
+            
+            if [ -z "$javadoc_start" ]; then
+                # 没有找到 JavaDoc 注释
+                CLASSES_WITHOUT_DOC=$((CLASSES_WITHOUT_DOC + 1))
+                echo "$file" >> "$TMP_CLASSES"
+            else
+                # 检查 JavaDoc 结束标记 */ 是否在类声明之前
+                javadoc_end=$(sed -n "${javadoc_start},${class_line}p" "$file" | grep -n "^ \*/" | tail -1 | cut -d: -f1)
+                
+                if [ -z "$javadoc_end" ]; then
+                    # JavaDoc 没有正确结束
+                    CLASSES_WITHOUT_DOC=$((CLASSES_WITHOUT_DOC + 1))
+                    echo "$file" >> "$TMP_CLASSES"
+                fi
+            fi
         fi
     fi
 done

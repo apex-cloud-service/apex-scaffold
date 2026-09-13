@@ -24,15 +24,20 @@ import reactor.core.publisher.Mono;
  *
  * <p>提供登录日志的分页回溯查询 API，要求 {@code system:login-log:list}
  * 权限。支持按登录账号模糊匹配与登录状态筛选，按登录时间倒序返回，
- * 支撑安全审计与异常登录排查。</p>
+ * 支撑安全审计与异常登录排查。
  *
- * <h2>接口清单</h2>
+ * <h2>核心功能</h2>
  * <ul>
- *   <li>GET /admin-api/v1/login-logs - 分页查询登录日志</li>
+ *   <li>登录日志分页查询：支持按登录账号模糊匹配与登录状态筛选，按登录时间倒序返回</li>
+ * </ul>
+ *
+ * <h2>接口列表</h2>
+ * <ul>
+ *   <li>GET /admin-api/v1/login-logs — 分页查询登录日志</li>
  * </ul>
  *
  * @author Apex Team
- * @version 1.0.0
+ * @version 1.2.0
  * @since 1.0.0
  * @see LoginLogService
  */

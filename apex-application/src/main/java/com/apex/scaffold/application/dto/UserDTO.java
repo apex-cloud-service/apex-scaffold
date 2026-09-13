@@ -14,13 +14,14 @@ import lombok.NoArgsConstructor;
  * <p>用于接口层返回用户的公开信息，避免领域实体直接暴露，包含用户基本信息、状态、登录时间等
  *
  * @author Apex Team
- * @version 1.0.0
+ * @version 1.2.0
  * @since 1.0.0
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+/**n * UserDTOn *n * <p>TODO: 补充类的详细说明n *n * @author Apex Teamn * @version 1.0.0n * @since 1.0.0n */
 public class UserDTO {
 
     /** 用户 ID，系统内部用户唯一标识。 */

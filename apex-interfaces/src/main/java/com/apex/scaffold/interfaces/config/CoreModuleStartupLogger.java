@@ -15,6 +15,14 @@ import org.springframework.stereotype.Component;
  * 在 Spring 容器完全初始化且所有 Bean 就绪后触发。一次性输出七个关键模块的配置状态，
  * 替代运维人员手动检查多个配置文件和日志片段的繁琐流程。</p>
  *
+ * <h2>主要功能</h2>
+ * <ul>
+ *   <li>监听 {@link ApplicationReadyEvent}，在应用完全就绪后输出核心模块加载状态</li>
+ *   <li>汇总输出 Profile 与端口、Nacos、Scheduling、Redis、MySQL、线程池、Sentinel 七项关键配置</li>
+ *   <li>日志中脱敏处理，不输出数据库密码、Redis 密码、JWT 密钥等敏感信息</li>
+ *   <li>各模块输出相互独立，某一模块配置缺失不影响其他模块的状态输出</li>
+ * </ul>
+ *
  * <h2>触发时机</h2>
  * <p>{@code ApplicationReadyEvent} 在以下阶段之后触发：</p>
  * <ol>
@@ -66,7 +74,7 @@ import org.springframework.stereotype.Component;
  * </ol>
  *
  * @author Apex Team
- * @version 1.1.0
+ * @version 1.2.0
  * @since 1.0.0
  * @see ApplicationReadyEvent
  * @see Environment

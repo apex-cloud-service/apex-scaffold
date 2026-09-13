@@ -5,6 +5,7 @@ import com.apex.scaffold.infrastructure.mq.annotation.Idempotent;
 import java.lang.reflect.Method;
 import java.time.Duration;
 import java.util.stream.IntStream;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -13,8 +14,6 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.redisson.api.RBucket;
 import org.redisson.api.RedissonClient;
 import org.redisson.client.codec.StringCodec;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -52,13 +51,13 @@ import org.springframework.stereotype.Component;
  * @see Idempotent
  * @see RedissonClient
  */
+@Slf4j
 @Aspect
 @Component
 @ConditionalOnProperty(prefix = "apex.features", name = "message-queue", havingValue = "true", matchIfMissing = true)
 @ConditionalOnClass(RocketMQTemplate.class)
 @ConditionalOnBean(RocketMQTemplate.class)
 public class IdempotentAspect {
-    private static final Logger log = LoggerFactory.getLogger(IdempotentAspect.class);
 
     /** Redis 幂等键前缀 */
     private static final String IDEMPOTENT_KEY_PREFIX = "idempotent:mq:";

@@ -2,8 +2,11 @@ package com.apex.scaffold.infrastructure.persistence.po;
 
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 /**
  * 举报工单持久化对象。
@@ -16,15 +19,18 @@ import lombok.EqualsAndHashCode;
  * @since 1.0.0
  */
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
+@SuperBuilder
 @EqualsAndHashCode(callSuper = true)
 @TableName("biz_report_ticket")
+/**n * ReportTicketPO - 持久化对象n *n * <p>对应数据库表：TODO: 补充表名n *n * @author Apex Teamn * @version 1.0.0n * @since 1.0.0n */
 public class ReportTicketPO extends BasePO {
 
     /**
      * 创建举报工单实体对象。
      *
      */
-    public ReportTicketPO() {}
 
     /**
      * 举报者用户 ID。

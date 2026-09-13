@@ -27,11 +27,27 @@ import org.springframework.scheduling.annotation.Scheduled;
 import reactor.core.publisher.Mono;
 
 /**
- * Prometheus指标监控配置类
+ * Prometheus 指标监控配置类
  *
  * <p>配置 JVM 内存、线程、CPU 等监控指标，以及安全相关的监控指标。
  * Redis 派生 Gauge 通过定时 SCAN 获取真实快照，并以 {@code up} 与最近成功时间标记采集状态；
- * Prometheus 抓取线程只读取原子快照，不执行阻塞 Redis 查询。
+ * Prometheus 抓取线程只读取原子快照，不执行阻塞 Redis 查询。</p>
+ *
+ * <h2>主要功能</h2>
+ * <ul>
+ *   <li>注册 JVM 内存、线程、CPU、进程内存、磁盘与网络等系统指标绑定器</li>
+ *   <li>注册限流拒绝、IP 封禁、登录失败、XSS 拦截、防重放、幂等重复提交、熔断器打开等安全计数器</li>
+ *   <li>通过定时 SCAN 异步刷新 IP 黑名单、Token 黑名单、活跃会话等 Redis 派生 Gauge，避免阻塞 Prometheus 抓取</li>
+ *   <li>采集 6 个阻塞 IO 专用线程池（jdbc/cache/storage/event/remote/general）的运行态快照并暴露为 Gauge</li>
+ * </ul>
+ *
+ * <h2>配置属性</h2>
+ * <ul>
+ *   <li>{@code apex.security.metrics-refresh-interval-ms} — Redis 安全派生指标刷新间隔（毫秒），默认 5000</li>
+ *   <li>{@code apex.security.metrics-initial-delay-ms} — Redis 安全派生指标首次刷新延迟（毫秒），默认 1000</li>
+ *   <li>{@code apex.blocking-io.snapshot-refresh-ms} — 阻塞 IO 线程池快照刷新间隔（毫秒），默认 3000</li>
+ *   <li>{@code apex.blocking-io.snapshot-initial-delay-ms} — 阻塞 IO 线程池快照首次刷新延迟（毫秒），默认 1500</li>
+ * </ul>
  *
  * <h2>安全监控指标</h2>
  * <ul>
@@ -58,8 +74,10 @@ import reactor.core.publisher.Mono;
  * 刷新周期由 {@code apex.blocking-io.snapshot-refresh-ms} 控制，默认 3 秒。</p>
  *
  * @author Apex Team
- * @version 2.3.0
+ * @version 1.2.0
  * @since 1.0.0
+ * @see io.micrometer.core.instrument.binder.MeterBinder
+ * @see BlockingIoSchedulers
  */
 @Configuration
 public class MetricsConfig {

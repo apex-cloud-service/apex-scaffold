@@ -1,6 +1,5 @@
 package com.apex.scaffold.application.event;
 
-import lombok.Getter;
 import org.springframework.context.ApplicationEvent;
 
 /**
@@ -11,7 +10,6 @@ import org.springframework.context.ApplicationEvent;
  * @author Apex Team
  * @since 1.3.0
  */
-@Getter
 public class ResourceIndexEvent extends ApplicationEvent {
 
     /**
@@ -62,6 +60,18 @@ public class ResourceIndexEvent extends ApplicationEvent {
          * 删除
          */
         DELETE
+    }
+
+    public Action getAction() {
+        return action;
+    }
+
+    public String getResourceType() {
+        return resourceType;
+    }
+
+    public String getResourceId() {
+        return resourceId;
     }
 
     @Override

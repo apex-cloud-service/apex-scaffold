@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
  * 「核心业务监控」板块与 Prometheus 消费：登录成功、注册成功、文件上传成功。</p>
  *
  * @author Apex Team
- * @version 1.0.0
+ * @version 1.2.0
  * @since 1.0.0
  */
 @Component

@@ -109,10 +109,17 @@ import lombok.AllArgsConstructor;
 ' "$file"
     fi
     
-    sed -i '' '/@Data$/,/@EqualsAndHashCode/a\
-@NoArgsConstructor\
+    if ! grep -q "@NoArgsConstructor" "$file"; then
+        sed -i '' '/@Data$/a\
+@NoArgsConstructor
+' "$file"
+    fi
+    
+    if ! grep -q "@AllArgsConstructor" "$file"; then
+        sed -i '' '/@NoArgsConstructor$/a\
 @AllArgsConstructor
 ' "$file"
+    fi
     
     echo "  ✅ 已添加: $file"
 }
