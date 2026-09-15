@@ -141,6 +141,8 @@ public final class SystemConstants {
     public static final List<String> PUBLIC_PATHS = List.of(
             "/",
             "/api/v1/auth/login",
+            "/api/v1/office/login",
+            "/api/v1/office/callback",
             "/api/v1/auth/register",
             "/api/v1/auth/wechat/bind-phone",
             "/api/v1/auth/refresh",

@@ -20,6 +20,18 @@
 # 服务治理：模式只在启动期解析一次，运行期不热切换
 # ============================================================
 apex:
+  office:
+    enabled: ${APEX_OFFICE_ENABLED:false}
+    login-tenant-id: ${APEX_OFFICE_LOGIN_TENANT_ID:}
+    timeout: 5s
+    max-retries: 2
+    platforms:
+      FEISHU:
+        enabled: false
+      DINGTALK:
+        enabled: false
+      WECOM:
+        enabled: false
   governance:
     # 是否启用统一 readiness、资源排空和优雅关停协调
     enabled: ${APEX_GOVERNANCE_ENABLED:true}

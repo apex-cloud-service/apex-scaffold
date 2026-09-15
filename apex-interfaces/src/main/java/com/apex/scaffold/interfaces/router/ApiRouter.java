@@ -21,6 +21,7 @@ import com.apex.scaffold.interfaces.handler.LoginLogHandler;
 import com.apex.scaffold.interfaces.handler.MenuHandler;
 import com.apex.scaffold.interfaces.handler.MonitorDashboardHandler;
 import com.apex.scaffold.interfaces.handler.NotificationSseHandler;
+import com.apex.scaffold.interfaces.handler.OfficeHandler;
 import com.apex.scaffold.interfaces.handler.OnlineUserHandler;
 import com.apex.scaffold.interfaces.handler.UserHandler;
 import org.springframework.context.annotation.Bean;
@@ -51,6 +52,33 @@ import org.springframework.web.reactive.function.server.ServerResponse;
  */
 @Configuration
 public class ApiRouter {
+
+    /** 办公平台统一认证与状态路由。 */
+    @Bean
+    @org.springdoc.core.annotations.RouterOperations({
+        @org.springdoc.core.annotations.RouterOperation(
+                path = "/api/v1/office/status",
+                method = org.springframework.web.bind.annotation.RequestMethod.GET,
+                beanClass = OfficeHandler.class,
+                beanMethod = "status"),
+        @org.springdoc.core.annotations.RouterOperation(
+                path = "/api/v1/office/login",
+                method = org.springframework.web.bind.annotation.RequestMethod.GET,
+                beanClass = OfficeHandler.class,
+                beanMethod = "start"),
+        @org.springdoc.core.annotations.RouterOperation(
+                path = "/api/v1/office/callback",
+                method = org.springframework.web.bind.annotation.RequestMethod.GET,
+                beanClass = OfficeHandler.class,
+                beanMethod = "callback")
+    })
+    public RouterFunction<ServerResponse> officeRoutes(OfficeHandler handler) {
+        return RouterFunctions.route()
+                .GET("/api/v1/office/status", handler::status)
+                .GET("/api/v1/office/login", handler::start)
+                .GET("/api/v1/office/callback", handler::callback)
+                .build();
+    }
 
     /** 超级管理员用户查询与角色配置路由。 */
     @Bean

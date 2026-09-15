@@ -1,3 +1,0 @@
-apex-interfaces/src/main/java/com/apex/scaffold/interfaces/handler/AuthHandler.java
-apex-interfaces/src/main/java/com/apex/scaffold/interfaces/router/DocumentRouter.java
-apex-interfaces/src/main/java/com/apex/scaffold/interfaces/router/ChartRouter.java
