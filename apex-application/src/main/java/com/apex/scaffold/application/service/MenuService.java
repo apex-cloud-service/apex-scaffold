@@ -265,7 +265,14 @@ public class MenuService {
      * @param nodes 待排序的节点列表
      */
     private void sortTree(List<MenuDTO> nodes) {
+        if (nodes == null) {
+            return;
+        }
         nodes.sort(Comparator.comparing(MenuDTO::getSort, Comparator.nullsLast(Integer::compareTo)));
-        nodes.forEach(node -> sortTree(node.getChildren()));
+        nodes.forEach(node -> {
+            if (node.getChildren() != null) {
+                sortTree(node.getChildren());
+            }
+        });
     }
 }

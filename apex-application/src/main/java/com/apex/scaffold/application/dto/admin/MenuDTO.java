@@ -106,7 +106,7 @@ public class MenuDTO {
      * <p>按显示顺序升序排列，无子节点时为空列表。</p>
      */
     @Schema(description = "子菜单列表")
-    private List<MenuDTO> children = new ArrayList<>();
+    private List<MenuDTO> children;
 
     /**
      * 添加子节点。
@@ -114,6 +114,9 @@ public class MenuDTO {
      * @param child 子菜单节点
      */
     public void addChild(MenuDTO child) {
+        if (this.children == null) {
+            this.children = new ArrayList<>();
+        }
         this.children.add(child);
     }
 }
