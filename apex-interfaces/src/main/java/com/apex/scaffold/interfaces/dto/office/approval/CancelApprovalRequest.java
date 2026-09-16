@@ -21,7 +21,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Schema(description = "撤销审批请求")
 public class CancelApprovalRequest {
-    
+
     /**
      * 撤销原因
      */

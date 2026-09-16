@@ -20,25 +20,28 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Schema(description = "发送消息响应")
 public class SendMessageResponse {
-    
+
     /**
      * 消息ID
      */
     @Schema(description = "消息ID", example = "123456")
     private Long messageId;
-    
+
     /**
      * 发送状态
      */
-    @Schema(description = "发送状态", example = "SUCCESS", allowableValues = {"PENDING", "SUCCESS", "FAILED"})
+    @Schema(
+            description = "发送状态",
+            example = "SUCCESS",
+            allowableValues = {"PENDING", "SUCCESS", "FAILED"})
     private String sendStatus;
-    
+
     /**
      * 平台消息ID
      */
     @Schema(description = "平台消息ID", example = "feishu_msg_1234567890")
     private String platformMessageId;
-    
+
     /**
      * 失败原因（仅当状态为FAILED时有值）
      */

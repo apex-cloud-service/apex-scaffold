@@ -2,6 +2,9 @@ package com.apex.scaffold.interfaces.assembler.office;
 
 import com.apex.scaffold.domain.office.approval.ApprovalProcess;
 import com.apex.scaffold.interfaces.dto.office.approval.ApprovalProcessResponse;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;
 
@@ -15,7 +18,7 @@ import org.mapstruct.ReportingPolicy;
  */
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface ApprovalProcessAssembler {
-    
+
     /**
      * 领域实体转响应DTO
      *
@@ -23,4 +26,17 @@ public interface ApprovalProcessAssembler {
      * @return 响应DTO
      */
     ApprovalProcessResponse toResponse(ApprovalProcess entity);
+
+    /**
+     * 字符串转列表（用于审批人ID转换）
+     *
+     * @param value 逗号分隔的字符串
+     * @return 字符串列表
+     */
+    default List<String> map(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return Collections.emptyList();
+        }
+        return Arrays.asList(value.split(","));
+    }
 }

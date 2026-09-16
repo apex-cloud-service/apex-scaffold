@@ -1,13 +1,11 @@
 package com.apex.scaffold.interfaces.dto.office.document;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
-import java.util.List;
 
 /**
  * 文档信息响应DTO
@@ -64,7 +62,9 @@ public class DocumentInfoResponse {
     @Schema(description = "文档扩展名", example = "docx")
     private String fileExtension;
 
-    @Schema(description = "文档MIME类型", example = "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+    @Schema(
+            description = "文档MIME类型",
+            example = "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
     private String mimeType;
 
     @Schema(description = "是否为文件夹", example = "false")

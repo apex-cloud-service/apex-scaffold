@@ -1207,6 +1207,16 @@ public class RouterOpenApiConfig {
                                 summary = "查询定时任务列表",
                                 security = @SecurityRequirement(name = "BearerAuth"))),
         @RouterOperation(
+                path = "/admin-api/v1/jobs/page",
+                method = RequestMethod.GET,
+                beanClass = JobHandler.class,
+                beanMethod = "page",
+                operation =
+                        @Operation(
+                                operationId = "adminPageJobs",
+                                summary = "分页查询定时任务",
+                                security = @SecurityRequirement(name = "BearerAuth"))),
+        @RouterOperation(
                 path = "/admin-api/v1/jobs/{id}",
                 method = RequestMethod.GET,
                 beanClass = JobHandler.class,

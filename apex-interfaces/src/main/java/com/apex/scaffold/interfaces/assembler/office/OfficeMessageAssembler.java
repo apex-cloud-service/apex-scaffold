@@ -1,10 +1,12 @@
 package com.apex.scaffold.interfaces.assembler.office;
 
-import com.apex.scaffold.application.office.command.SendMessageCommand;
+import com.apex.scaffold.application.office.message.SendMessageCommand;
+import com.apex.scaffold.domain.office.message.MessageContent;
 import com.apex.scaffold.domain.office.message.OfficeMessage;
 import com.apex.scaffold.interfaces.dto.office.message.MessageResponse;
 import com.apex.scaffold.interfaces.dto.office.message.SendMessageRequest;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 
 /**
@@ -17,7 +19,7 @@ import org.mapstruct.ReportingPolicy;
  */
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface OfficeMessageAssembler {
-    
+
     /**
      * 请求转命令
      *
@@ -25,12 +27,23 @@ public interface OfficeMessageAssembler {
      * @return 发送消息命令
      */
     SendMessageCommand toCommand(SendMessageRequest request);
-    
+
     /**
      * 实体转响应
      *
      * @param message 消息实体
      * @return 消息响应
      */
+    @Mapping(target = "content", expression = "java(mapContent(message.getContent()))")
     MessageResponse toResponse(OfficeMessage message);
+
+    /**
+     * 将MessageContent对象映射为字符串
+     *
+     * @param content 消息内容对象
+     * @return 消息内容字符串
+     */
+    default String mapContent(MessageContent content) {
+        return content != null ? content.getText() : null;
+    }
 }

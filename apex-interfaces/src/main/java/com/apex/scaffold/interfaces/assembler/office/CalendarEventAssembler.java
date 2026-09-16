@@ -2,12 +2,11 @@ package com.apex.scaffold.interfaces.assembler.office;
 
 import com.apex.scaffold.domain.office.calendar.CalendarEvent;
 import com.apex.scaffold.interfaces.dto.office.calendar.CalendarEventResponse;
+import java.util.List;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 import org.mapstruct.ReportingPolicy;
-
-import java.util.List;
 
 /**
  * 日历事件DTO转换器

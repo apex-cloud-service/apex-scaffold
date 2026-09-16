@@ -7,6 +7,15 @@ import com.apex.scaffold.interfaces.dto.office.approval.ApprovalProcessResponse;
 import com.apex.scaffold.interfaces.dto.office.approval.ApproveRequest;
 import com.apex.scaffold.interfaces.dto.office.approval.InitiateApprovalRequest;
 import com.apex.scaffold.interfaces.util.RequestHandlerUtil;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -41,11 +50,13 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@Tag(name = "办公平台审批管理", description = "办公平台审批流程发起、查询、审批操作、撤销等相关接口")
 public class OfficeApprovalHandler {
-    
+
     private final OfficeApprovalService approvalService;
     private final ApprovalProcessAssembler assembler;
-    
+    private final RequestHandlerUtil requestHandlerUtil;
+
     /**
      * 发起审批流程
      *
@@ -59,23 +70,48 @@ public class OfficeApprovalHandler {
      * @param request HTTP请求
      * @return 审批流程响应
      */
+    @Operation(summary = "发起审批流程", description = "在指定办公平台创建审批流程实例，支持飞书、钉钉、企业微信等平台")
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            required = true,
+            description = "审批发起请求信息",
+            content =
+                    @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = InitiateApprovalRequest.class)))
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "发起成功",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = ApprovalProcessResponse.class))),
+        @ApiResponse(
+                responseCode = "400",
+                description = "请求参数错误",
+                content = @Content(schema = @Schema(implementation = Result.class))),
+        @ApiResponse(
+                responseCode = "500",
+                description = "发起失败",
+                content = @Content(schema = @Schema(implementation = Result.class)))
+    })
     public Mono<ServerResponse> initiateApproval(ServerRequest request) {
         log.info("收到发起审批请求");
-        
-        return RequestHandlerUtil.validateAndMap(request, InitiateApprovalRequest.class)
+
+        return requestHandlerUtil
+                .validateAndMap(request, InitiateApprovalRequest.class)
                 .flatMap(req -> approvalService.initiateApproval(
                         req.getPlatform(),
                         req.getAppId(),
                         req.getProcessDefinitionId(),
                         req.getInitiatorId(),
-                        req.getFormData()
-                ))
+                        req.getFormData()))
                 .map(assembler::toResponse)
-                .flatMap(response -> RequestHandlerUtil.ok(Result.success(response)))
+                .flatMap(response -> requestHandlerUtil.ok(Result.success(response)))
                 .doOnSuccess(res -> log.info("发起审批成功"))
-                .onErrorResume(RequestHandlerUtil::handleError);
+                .onErrorResume(requestHandlerUtil::handleError);
     }
-    
+
     /**
      * 查询审批详情
      *
@@ -90,17 +126,40 @@ public class OfficeApprovalHandler {
      * @param request HTTP请求
      * @return 审批流程响应
      */
+    @Operation(summary = "查询审批流程详情", description = "根据流程实例ID查询审批流程的完整信息，包括基本信息、当前状态、审批记录和表单数据")
+    @Parameters({
+        @Parameter(
+                name = "processInstanceId",
+                in = ParameterIn.PATH,
+                required = true,
+                description = "流程实例ID",
+                schema = @Schema(type = "string"))
+    })
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "查询成功",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = ApprovalProcessResponse.class))),
+        @ApiResponse(
+                responseCode = "404",
+                description = "流程不存在",
+                content = @Content(schema = @Schema(implementation = Result.class)))
+    })
     public Mono<ServerResponse> getApprovalDetail(ServerRequest request) {
         String processInstanceId = request.pathVariable("processInstanceId");
         log.info("查询审批详情，流程实例ID：{}", processInstanceId);
-        
-        return approvalService.getApprovalDetail(processInstanceId)
+
+        return approvalService
+                .getApprovalDetail(processInstanceId)
                 .map(assembler::toResponse)
-                .flatMap(response -> RequestHandlerUtil.ok(Result.success(response)))
+                .flatMap(response -> requestHandlerUtil.ok(Result.success(response)))
                 .doOnSuccess(res -> log.debug("查询审批详情成功"))
-                .onErrorResume(RequestHandlerUtil::handleError);
+                .onErrorResume(requestHandlerUtil::handleError);
     }
-    
+
     /**
      * 执行审批操作
      *
@@ -115,23 +174,54 @@ public class OfficeApprovalHandler {
      * @param request HTTP请求
      * @return 更新后的审批流程响应
      */
+    @Operation(summary = "执行审批操作", description = "审批人对待审批流程执行操作，支持同意、拒绝、转审、加签等操作")
+    @Parameters({
+        @Parameter(
+                name = "processInstanceId",
+                in = ParameterIn.PATH,
+                required = true,
+                description = "流程实例ID",
+                schema = @Schema(type = "string"))
+    })
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            required = true,
+            description = "审批操作请求信息",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApproveRequest.class)))
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "审批操作成功",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = ApprovalProcessResponse.class))),
+        @ApiResponse(
+                responseCode = "400",
+                description = "请求参数错误",
+                content = @Content(schema = @Schema(implementation = Result.class))),
+        @ApiResponse(
+                responseCode = "403",
+                description = "无权审批此流程",
+                content = @Content(schema = @Schema(implementation = Result.class))),
+        @ApiResponse(
+                responseCode = "404",
+                description = "流程不存在",
+                content = @Content(schema = @Schema(implementation = Result.class)))
+    })
     public Mono<ServerResponse> approveProcess(ServerRequest request) {
         String processInstanceId = request.pathVariable("processInstanceId");
         log.info("收到审批操作请求，流程实例ID：{}", processInstanceId);
-        
-        return RequestHandlerUtil.validateAndMap(request, ApproveRequest.class)
+
+        return requestHandlerUtil
+                .validateAndMap(request, ApproveRequest.class)
                 .flatMap(req -> approvalService.approveProcess(
-                        processInstanceId,
-                        req.getApproverId(),
-                        req.getAction(),
-                        req.getComment()
-                ))
+                        processInstanceId, req.getApproverId(), req.getAction(), req.getComment()))
                 .map(assembler::toResponse)
-                .flatMap(response -> RequestHandlerUtil.ok(Result.success(response)))
+                .flatMap(response -> requestHandlerUtil.ok(Result.success(response)))
                 .doOnSuccess(res -> log.info("审批操作完成"))
-                .onErrorResume(RequestHandlerUtil::handleError);
+                .onErrorResume(requestHandlerUtil::handleError);
     }
-    
+
     /**
      * 撤销审批
      *
@@ -141,16 +231,44 @@ public class OfficeApprovalHandler {
      * @param request HTTP请求
      * @return 操作结果
      */
+    @Operation(summary = "撤销审批流程", description = "发起人撤销自己发起的审批流程，只有发起人可以撤销，且流程必须处于待审批或审批中状态")
+    @Parameters({
+        @Parameter(
+                name = "processInstanceId",
+                in = ParameterIn.PATH,
+                required = true,
+                description = "流程实例ID",
+                schema = @Schema(type = "string"))
+    })
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "撤销成功",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = Result.class))),
+        @ApiResponse(
+                responseCode = "403",
+                description = "无权撤销此流程",
+                content = @Content(schema = @Schema(implementation = Result.class))),
+        @ApiResponse(
+                responseCode = "404",
+                description = "流程不存在",
+                content = @Content(schema = @Schema(implementation = Result.class))),
+        @ApiResponse(
+                responseCode = "409",
+                description = "流程状态不允许撤销",
+                content = @Content(schema = @Schema(implementation = Result.class)))
+    })
     public Mono<ServerResponse> cancelApproval(ServerRequest request) {
         String processInstanceId = request.pathVariable("processInstanceId");
         log.info("撤销审批，流程实例ID：{}", processInstanceId);
-        
-        return approvalService.cancelApproval(processInstanceId)
-                .flatMap(success -> RequestHandlerUtil.ok(Result.success(success)))
+
+        return approvalService
+                .cancelApproval(processInstanceId)
+                .flatMap(success -> requestHandlerUtil.ok(Result.success(success)))
                 .doOnSuccess(res -> log.info("撤销审批完成"))
-                .onErrorResume(RequestHandlerUtil::handleError);
+                .onErrorResume(requestHandlerUtil::handleError);
     }
-    
+
     /**
      * 查询待审批列表
      *
@@ -165,19 +283,42 @@ public class OfficeApprovalHandler {
      * @param request HTTP请求
      * @return 待审批列表
      */
+    @Operation(summary = "查询待审批列表", description = "查询当前用户的待审批事项列表，包括待我审批的流程、流程基本信息、发起人信息和发起时间")
+    @Parameters({
+        @Parameter(
+                name = "approverId",
+                in = ParameterIn.QUERY,
+                required = true,
+                description = "审批人ID",
+                schema = @Schema(type = "string"))
+    })
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "查询成功",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = ApprovalProcessResponse.class))),
+        @ApiResponse(
+                responseCode = "400",
+                description = "请求参数错误",
+                content = @Content(schema = @Schema(implementation = Result.class)))
+    })
     public Mono<ServerResponse> getPendingApprovals(ServerRequest request) {
-        String approverId = request.queryParam("approverId")
-                .orElseThrow(() -> new IllegalArgumentException("审批人ID不能为空"));
+        String approverId =
+                request.queryParam("approverId").orElseThrow(() -> new IllegalArgumentException("审批人ID不能为空"));
         log.info("查询待审批列表，审批人：{}", approverId);
-        
-        return approvalService.getPendingApprovals(approverId)
+
+        return approvalService
+                .getPendingApprovals(approverId)
                 .map(assembler::toResponse)
                 .collectList()
-                .flatMap(list -> RequestHandlerUtil.ok(Result.success(list)))
+                .flatMap(list -> requestHandlerUtil.ok(Result.success(list)))
                 .doOnSuccess(res -> log.debug("查询待审批列表完成"))
-                .onErrorResume(RequestHandlerUtil::handleError);
+                .onErrorResume(requestHandlerUtil::handleError);
     }
-    
+
     /**
      * 查询我发起的审批
      *
@@ -191,16 +332,39 @@ public class OfficeApprovalHandler {
      * @param request HTTP请求
      * @return 我发起的审批列表
      */
+    @Operation(summary = "查询我发起的审批", description = "查询当前用户发起的所有审批流程，包括进行中、已完成和已撤销的流程")
+    @Parameters({
+        @Parameter(
+                name = "initiatorId",
+                in = ParameterIn.QUERY,
+                required = true,
+                description = "发起人ID",
+                schema = @Schema(type = "string"))
+    })
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "查询成功",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = ApprovalProcessResponse.class))),
+        @ApiResponse(
+                responseCode = "400",
+                description = "请求参数错误",
+                content = @Content(schema = @Schema(implementation = Result.class)))
+    })
     public Mono<ServerResponse> getMyInitiatedApprovals(ServerRequest request) {
-        String initiatorId = request.queryParam("initiatorId")
-                .orElseThrow(() -> new IllegalArgumentException("发起人ID不能为空"));
+        String initiatorId =
+                request.queryParam("initiatorId").orElseThrow(() -> new IllegalArgumentException("发起人ID不能为空"));
         log.info("查询我发起的审批，发起人：{}", initiatorId);
-        
-        return approvalService.getMyInitiatedApprovals(initiatorId)
+
+        return approvalService
+                .getMyInitiatedApprovals(initiatorId)
                 .map(assembler::toResponse)
                 .collectList()
-                .flatMap(list -> RequestHandlerUtil.ok(Result.success(list)))
+                .flatMap(list -> requestHandlerUtil.ok(Result.success(list)))
                 .doOnSuccess(res -> log.debug("查询我发起的审批完成"))
-                .onErrorResume(RequestHandlerUtil::handleError);
+                .onErrorResume(requestHandlerUtil::handleError);
     }
 }

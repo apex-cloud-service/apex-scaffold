@@ -23,35 +23,35 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Schema(description = "发起审批请求")
 public class InitiateApprovalRequest {
-    
+
     /**
      * 办公平台类型
      */
     @NotNull(message = "办公平台类型不能为空")
     @Schema(description = "办公平台类型", example = "FEISHU", required = true)
     private OfficePlatform platform;
-    
+
     /**
      * 应用ID
      */
     @NotNull(message = "应用ID不能为空")
     @Schema(description = "应用ID", example = "1", required = true)
     private Long appId;
-    
+
     /**
      * 流程定义ID
      */
     @NotBlank(message = "流程定义ID不能为空")
     @Schema(description = "流程定义ID（模板ID）", example = "approval_template_001", required = true)
     private String processDefinitionId;
-    
+
     /**
      * 发起人ID
      */
     @NotBlank(message = "发起人ID不能为空")
     @Schema(description = "发起人ID", example = "user_001", required = true)
     private String initiatorId;
-    
+
     /**
      * 表单数据
      */

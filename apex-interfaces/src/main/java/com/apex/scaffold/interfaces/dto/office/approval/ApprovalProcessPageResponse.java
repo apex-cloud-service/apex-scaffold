@@ -1,12 +1,11 @@
 package com.apex.scaffold.interfaces.dto.office.approval;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.List;
 
 /**
  * 审批流程分页响应
@@ -22,25 +21,25 @@ import java.util.List;
 @AllArgsConstructor
 @Schema(description = "审批流程分页响应")
 public class ApprovalProcessPageResponse {
-    
+
     /**
      * 审批流程列表
      */
     @Schema(description = "审批流程列表")
     private List<ApprovalProcessResponse> list;
-    
+
     /**
      * 总记录数
      */
     @Schema(description = "总记录数", example = "100")
     private Long total;
-    
+
     /**
      * 当前页码
      */
     @Schema(description = "当前页码", example = "1")
     private Integer page;
-    
+
     /**
      * 每页大小
      */

@@ -236,9 +236,7 @@ public class GlobalExceptionHandler {
 
         return Mono.deferContextual(ctx -> {
             Locale locale = ctx.getOrDefault(Locale.class, Locale.SIMPLIFIED_CHINESE);
-            String msg = ex.getMessage() != null && !ex.getMessage().isBlank()
-                    ? ex.getMessage()
-                    : messageUtils.get(locale, "sys.param_error");
+            String msg = messageUtils.get(locale, "sys.param_error");
             Result<Void> result = Result.error(ResultCode.PARAM_ERROR.getCode(), msg, traceId);
             return Mono.just(ResponseEntity.badRequest().body(result));
         });
@@ -291,12 +289,9 @@ public class GlobalExceptionHandler {
         log.warn("非法状态: {}, traceId: {}", ex.getMessage(), traceId);
 
         return Mono.deferContextual(ctx -> {
-            Locale locale = ctx.getOrDefault(Locale.class, Locale.SIMPLIFIED_CHINESE);
-            String msg = ex.getMessage() != null && !ex.getMessage().isBlank()
-                    ? ex.getMessage()
-                    : messageUtils.get(locale, "sys.param_error");
-            Result<Void> result = Result.error(ResultCode.PARAM_ERROR.getCode(), msg, traceId);
-            return Mono.just(ResponseEntity.badRequest().body(result));
+            String msg = ex.getMessage() != null && !ex.getMessage().isBlank() ? ex.getMessage() : "状态异常";
+            Result<Void> result = Result.error(ResultCode.ERROR.getCode(), msg, traceId);
+            return Mono.just(ResponseEntity.status(HttpStatus.CONFLICT).body(result));
         });
     }
 

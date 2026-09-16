@@ -7,16 +7,27 @@ import com.apex.scaffold.interfaces.assembler.office.CalendarEventAssembler;
 import com.apex.scaffold.interfaces.dto.office.calendar.CalendarEventResponse;
 import com.apex.scaffold.interfaces.dto.office.calendar.CreateCalendarEventRequest;
 import com.apex.scaffold.interfaces.dto.office.calendar.UpdateCalendarEventRequest;
+import com.apex.scaffold.interfaces.security.AuthenticatedUser;
 import com.apex.scaffold.interfaces.util.RequestHandlerUtil;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
-
-import java.time.LocalDateTime;
-import java.util.List;
 
 /**
  * 办公平台日历事件处理器
@@ -40,10 +51,12 @@ import java.util.List;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@Tag(name = "办公平台日历管理", description = "办公平台日历事件创建、查询、更新、删除等相关接口")
 public class OfficeCalendarHandler {
 
     private final OfficeCalendarService calendarService;
     private final CalendarEventAssembler assembler;
+    private final RequestHandlerUtil requestHandlerUtil;
 
     /**
      * 创建日历事件
@@ -53,34 +66,60 @@ public class OfficeCalendarHandler {
      * @param request ServerRequest对象，包含请求体和参数
      * @return Mono&lt;ServerResponse&gt; 包含创建成功的事件信息
      */
+    @Operation(summary = "创建日历事件", description = "在指定办公平台创建日历事件，支持设置标题、时间、参与者、提醒、循环规则等")
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            required = true,
+            description = "日历事件创建请求信息",
+            content =
+                    @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = CreateCalendarEventRequest.class)))
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "创建成功",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = CalendarEventResponse.class))),
+        @ApiResponse(
+                responseCode = "400",
+                description = "请求参数错误",
+                content = @Content(schema = @Schema(implementation = Result.class))),
+        @ApiResponse(
+                responseCode = "500",
+                description = "创建失败",
+                content = @Content(schema = @Schema(implementation = Result.class)))
+    })
     public Mono<ServerResponse> createCalendarEvent(ServerRequest request) {
         log.info("创建日历事件请求");
-        
-        return RequestHandlerUtil.validateAndMap(request, CreateCalendarEventRequest.class)
-                .flatMap(req -> {
+
+        return requestHandlerUtil
+                .validateAndMap(request, CreateCalendarEventRequest.class)
+                .flatMap(req -> getCurrentUserId().flatMap(userId -> {
                     CalendarEventType eventType = CalendarEventType.valueOf(req.getEventType());
-                    
-                    return calendarService.createCalendarEvent(
+
+                    return calendarService.createEvent(
                             req.getPlatform(),
                             req.getTitle(),
                             req.getDescription(),
+                            eventType,
+                            req.getOrganizerId() != null ? req.getOrganizerId() : userId,
+                            req.getOrganizerName(),
                             req.getStartTime(),
                             req.getEndTime(),
-                            req.getIsAllDay() != null && req.getIsAllDay(),
-                            eventType,
+                            req.getIsAllDay(),
                             req.getLocation(),
-                            req.getAttendeeIds(),
-                            req.getAttendeeNames(),
-                            req.getReminderMinutes(),
-                            req.getIsRecurring() != null && req.getIsRecurring(),
-                            req.getRecurrenceRule(),
-                            req.getOrganizerId(),
-                            req.getOrganizerName()
-                    );
-                })
+                            req.getAttendeeIds() != null ? req.getAttendeeIds().toArray(new String[0]) : new String[0],
+                            req.getAttendeeNames() != null
+                                    ? req.getAttendeeNames().toArray(new String[0])
+                                    : new String[0],
+                            null, // meetingRoomId
+                            req.getReminderMinutes());
+                }))
                 .map(assembler::toResponse)
-                .flatMap(response -> RequestHandlerUtil.ok(Result.success(response)))
-                .onErrorResume(RequestHandlerUtil::handleError);
+                .flatMap(response -> requestHandlerUtil.ok(Result.success(response)))
+                .onErrorResume(e -> requestHandlerUtil.handleError(e));
     }
 
     /**
@@ -91,15 +130,38 @@ public class OfficeCalendarHandler {
      * @param request ServerRequest对象，路径参数包含eventId
      * @return Mono&lt;ServerResponse&gt; 包含事件详细信息
      */
+    @Operation(summary = "查询日历事件详情", description = "根据事件ID查询日历事件的详细信息")
+    @Parameters({
+        @Parameter(
+                name = "eventId",
+                in = ParameterIn.PATH,
+                required = true,
+                description = "事件ID",
+                schema = @Schema(type = "integer", format = "int64"))
+    })
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "查询成功",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = CalendarEventResponse.class))),
+        @ApiResponse(
+                responseCode = "404",
+                description = "事件不存在",
+                content = @Content(schema = @Schema(implementation = Result.class)))
+    })
     public Mono<ServerResponse> getCalendarEventDetail(ServerRequest request) {
         String eventIdStr = request.pathVariable("eventId");
         Long eventId = Long.parseLong(eventIdStr);
         log.info("查询日历事件详情 - eventId: {}", eventId);
 
-        return calendarService.getCalendarEventDetail(eventId)
+        return calendarService
+                .getEventDetail(eventId)
                 .map(assembler::toResponse)
-                .flatMap(response -> RequestHandlerUtil.ok(Result.success(response)))
-                .onErrorResume(RequestHandlerUtil::handleError);
+                .flatMap(response -> requestHandlerUtil.ok(Result.success(response)))
+                .onErrorResume(e -> requestHandlerUtil.handleError(e));
     }
 
     /**
@@ -110,28 +172,56 @@ public class OfficeCalendarHandler {
      * @param request ServerRequest对象，包含eventId和更新内容
      * @return Mono&lt;ServerResponse&gt; 包含更新后的事件信息
      */
+    @Operation(summary = "更新日历事件", description = "更新指定日历事件的信息，包括标题、时间、参与者、提醒等")
+    @Parameters({
+        @Parameter(
+                name = "eventId",
+                in = ParameterIn.PATH,
+                required = true,
+                description = "事件ID",
+                schema = @Schema(type = "integer", format = "int64"))
+    })
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            required = true,
+            description = "日历事件更新请求信息",
+            content =
+                    @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = UpdateCalendarEventRequest.class)))
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "更新成功",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = CalendarEventResponse.class))),
+        @ApiResponse(
+                responseCode = "400",
+                description = "请求参数错误",
+                content = @Content(schema = @Schema(implementation = Result.class))),
+        @ApiResponse(
+                responseCode = "404",
+                description = "事件不存在",
+                content = @Content(schema = @Schema(implementation = Result.class)))
+    })
     public Mono<ServerResponse> updateCalendarEvent(ServerRequest request) {
         String eventIdStr = request.pathVariable("eventId");
         Long eventId = Long.parseLong(eventIdStr);
         log.info("更新日历事件 - eventId: {}", eventId);
 
-        return RequestHandlerUtil.validateAndMap(request, UpdateCalendarEventRequest.class)
-                .flatMap(req -> calendarService.updateCalendarEvent(
+        return requestHandlerUtil
+                .validateAndMap(request, UpdateCalendarEventRequest.class)
+                .flatMap(req -> calendarService.updateEvent(
                         eventId,
                         req.getTitle(),
                         req.getDescription(),
                         req.getStartTime(),
                         req.getEndTime(),
-                        req.getIsAllDay(),
-                        req.getLocation(),
-                        req.getAttendeeIds(),
-                        req.getAttendeeNames(),
-                        req.getReminderMinutes(),
-                        req.getRecurrenceRule()
-                ))
-                .map(assembler::toResponse)
-                .flatMap(response -> RequestHandlerUtil.ok(Result.success(response)))
-                .onErrorResume(RequestHandlerUtil::handleError);
+                        req.getAttendeeIds() != null ? req.getAttendeeIds().toArray(new String[0]) : new String[0],
+                        req.getLocation()))
+                .flatMap(success -> requestHandlerUtil.ok(Result.success(success)))
+                .onErrorResume(e -> requestHandlerUtil.handleError(e));
     }
 
     /**
@@ -142,14 +232,34 @@ public class OfficeCalendarHandler {
      * @param request ServerRequest对象，路径参数包含eventId
      * @return Mono&lt;ServerResponse&gt; 包含删除结果
      */
+    @Operation(summary = "删除日历事件", description = "删除指定的日历事件")
+    @Parameters({
+        @Parameter(
+                name = "eventId",
+                in = ParameterIn.PATH,
+                required = true,
+                description = "事件ID",
+                schema = @Schema(type = "integer", format = "int64"))
+    })
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "删除成功",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = Result.class))),
+        @ApiResponse(
+                responseCode = "404",
+                description = "事件不存在",
+                content = @Content(schema = @Schema(implementation = Result.class)))
+    })
     public Mono<ServerResponse> deleteCalendarEvent(ServerRequest request) {
         String eventIdStr = request.pathVariable("eventId");
         Long eventId = Long.parseLong(eventIdStr);
         log.info("删除日历事件 - eventId: {}", eventId);
 
-        return calendarService.deleteCalendarEvent(eventId)
-                .flatMap(success -> RequestHandlerUtil.ok(Result.success(success)))
-                .onErrorResume(RequestHandlerUtil::handleError);
+        return getCurrentUserId()
+                .flatMap(userId -> calendarService.deleteEvent(eventId, userId))
+                .flatMap(success -> requestHandlerUtil.ok(Result.success(success)))
+                .onErrorResume(e -> requestHandlerUtil.handleError(e));
     }
 
     /**
@@ -160,21 +270,54 @@ public class OfficeCalendarHandler {
      * @param request ServerRequest对象，查询参数包含organizerId、startTime、endTime
      * @return Mono&lt;ServerResponse&gt; 包含事件列表
      */
+    @Operation(summary = "查询时间范围内的日历事件", description = "查询指定时间范围内的所有日历事件")
+    @Parameters({
+        @Parameter(
+                name = "organizerId",
+                in = ParameterIn.QUERY,
+                required = true,
+                description = "组织者ID",
+                schema = @Schema(type = "string")),
+        @Parameter(
+                name = "startTime",
+                in = ParameterIn.QUERY,
+                required = true,
+                description = "开始时间（ISO格式）",
+                schema = @Schema(type = "string", format = "date-time")),
+        @Parameter(
+                name = "endTime",
+                in = ParameterIn.QUERY,
+                required = true,
+                description = "结束时间（ISO格式）",
+                schema = @Schema(type = "string", format = "date-time"))
+    })
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "查询成功",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = CalendarEventResponse.class))),
+        @ApiResponse(
+                responseCode = "400",
+                description = "请求参数错误",
+                content = @Content(schema = @Schema(implementation = Result.class)))
+    })
     public Mono<ServerResponse> getCalendarEventsByTimeRange(ServerRequest request) {
-        String organizerId = request.queryParam("organizerId").orElse("");
         String startTimeStr = request.queryParam("startTime").orElse("");
         String endTimeStr = request.queryParam("endTime").orElse("");
-        
-        log.info("查询时间范围内的日历事件 - organizerId: {}, startTime: {}, endTime: {}", 
-                organizerId, startTimeStr, endTimeStr);
+
+        log.info("查询时间范围内的日历事件 - startTime: {}, endTime: {}", startTimeStr, endTimeStr);
 
         LocalDateTime startTime = LocalDateTime.parse(startTimeStr);
         LocalDateTime endTime = LocalDateTime.parse(endTimeStr);
 
-        return calendarService.getCalendarEventsByTimeRange(organizerId, startTime, endTime)
-                .map(assembler::toResponseList)
-                .flatMap(response -> RequestHandlerUtil.ok(Result.success(response)))
-                .onErrorResume(RequestHandlerUtil::handleError);
+        return calendarService
+                .listEvents(startTime, endTime)
+                .map(events -> events.stream().map(assembler::toResponse).collect(java.util.stream.Collectors.toList()))
+                .flatMap(response -> requestHandlerUtil.ok(Result.success(response)))
+                .onErrorResume(e -> requestHandlerUtil.handleError(e));
     }
 
     /**
@@ -185,14 +328,37 @@ public class OfficeCalendarHandler {
      * @param request ServerRequest对象，查询参数包含userId
      * @return Mono&lt;ServerResponse&gt; 包含事件列表
      */
+    @Operation(summary = "查询我的日历事件", description = "查询当前用户组织或参与的所有日历事件")
+    @Parameters({
+        @Parameter(
+                name = "userId",
+                in = ParameterIn.QUERY,
+                required = true,
+                description = "用户ID",
+                schema = @Schema(type = "string"))
+    })
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "查询成功",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = CalendarEventResponse.class))),
+        @ApiResponse(
+                responseCode = "400",
+                description = "请求参数错误",
+                content = @Content(schema = @Schema(implementation = Result.class)))
+    })
     public Mono<ServerResponse> getMyCalendarEvents(ServerRequest request) {
         String userId = request.queryParam("userId").orElse("");
         log.info("查询我的日历事件 - userId: {}", userId);
 
-        return calendarService.getMyCalendarEvents(userId)
-                .map(assembler::toResponseList)
-                .flatMap(response -> RequestHandlerUtil.ok(Result.success(response)))
-                .onErrorResume(RequestHandlerUtil::handleError);
+        return calendarService
+                .getMyOrganizedEvents(userId)
+                .map(events -> events.stream().map(assembler::toResponse).collect(java.util.stream.Collectors.toList()))
+                .flatMap(response -> requestHandlerUtil.ok(Result.success(response)))
+                .onErrorResume(e -> requestHandlerUtil.handleError(e));
     }
 
     /**
@@ -203,16 +369,60 @@ public class OfficeCalendarHandler {
      * @param request ServerRequest对象，查询参数包含userId
      * @return Mono&lt;ServerResponse&gt; 包含事件列表
      */
+    @Operation(summary = "查询即将到来的日历事件", description = "查询指定用户即将到来的日历事件（未来7天内）")
+    @Parameters({
+        @Parameter(
+                name = "userId",
+                in = ParameterIn.QUERY,
+                required = true,
+                description = "用户ID",
+                schema = @Schema(type = "string"))
+    })
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "查询成功",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = CalendarEventResponse.class))),
+        @ApiResponse(
+                responseCode = "400",
+                description = "请求参数错误",
+                content = @Content(schema = @Schema(implementation = Result.class)))
+    })
     public Mono<ServerResponse> getUpcomingEvents(ServerRequest request) {
         String userId = request.queryParam("userId").orElse("");
-        log.info("查询即将到来的日历事件 - userId: {}", userId);
+        log.info("查询即将到来的事件 - userId: {}", userId);
 
+        // 查询未来7天的事件
         LocalDateTime now = LocalDateTime.now();
-        LocalDateTime endTime = now.plusDays(7);
+        LocalDateTime futureTime = now.plusDays(7);
 
-        return calendarService.getCalendarEventsByTimeRange(userId, now, endTime)
-                .map(assembler::toResponseList)
-                .flatMap(response -> RequestHandlerUtil.ok(Result.success(response)))
-                .onErrorResume(RequestHandlerUtil::handleError);
+        return calendarService
+                .listEvents(now, futureTime)
+                .map(events -> events.stream()
+                        .filter(event -> event.getOrganizerId().equals(userId)
+                                || (event.getParticipantIds() != null
+                                        && event.getParticipantIds().contains(userId)))
+                        .map(assembler::toResponse)
+                        .collect(java.util.stream.Collectors.toList()))
+                .flatMap(response -> requestHandlerUtil.ok(Result.success(response)))
+                .onErrorResume(e -> requestHandlerUtil.handleError(e));
+    }
+
+    /**
+     * 获取当前登录用户ID
+     *
+     * @return 当前用户ID
+     */
+    private Mono<String> getCurrentUserId() {
+        return ReactiveSecurityContextHolder.getContext()
+                .map(SecurityContext::getAuthentication)
+                .filter(Authentication::isAuthenticated)
+                .map(Authentication::getPrincipal)
+                .ofType(AuthenticatedUser.class)
+                .map(user -> String.valueOf(user.userId()))
+                .switchIfEmpty(Mono.error(new IllegalStateException("当前请求未包含有效认证用户")));
     }
 }

@@ -7,8 +7,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 /**
  * 创建文档请求DTO
  *
@@ -37,7 +35,10 @@ public class CreateDocumentRequest {
     private String title;
 
     @NotBlank(message = "文档类型不能为空")
-    @Schema(description = "文档类型", example = "DOC", requiredMode = Schema.RequiredMode.REQUIRED,
+    @Schema(
+            description = "文档类型",
+            example = "DOC",
+            requiredMode = Schema.RequiredMode.REQUIRED,
             allowableValues = {"DOC", "SHEET", "SLIDE", "MINDMAP", "FOLDER", "FILE"})
     private String documentType;
 

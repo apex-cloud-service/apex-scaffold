@@ -3,13 +3,12 @@ package com.apex.scaffold.interfaces.dto.office.calendar;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import java.time.LocalDateTime;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
-import java.util.List;
 
 /**
  * 创建日历事件请求DTO
@@ -50,7 +49,10 @@ public class CreateCalendarEventRequest {
     private Boolean isAllDay;
 
     @NotBlank(message = "事件类型不能为空")
-    @Schema(description = "事件类型", example = "MEETING", requiredMode = Schema.RequiredMode.REQUIRED, 
+    @Schema(
+            description = "事件类型",
+            example = "MEETING",
+            requiredMode = Schema.RequiredMode.REQUIRED,
             allowableValues = {"MEETING", "REMINDER", "OUT_OF_OFFICE", "BIRTHDAY", "ANNIVERSARY", "OTHER"})
     private String eventType;
 

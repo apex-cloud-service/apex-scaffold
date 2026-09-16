@@ -23,21 +23,21 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Schema(description = "审批操作请求")
 public class ApproveRequest {
-    
+
     /**
      * 审批人ID
      */
     @NotBlank(message = "审批人ID不能为空")
     @Schema(description = "审批人ID", example = "user_002", required = true)
     private String approverId;
-    
+
     /**
      * 审批操作
      */
     @NotNull(message = "审批操作不能为空")
     @Schema(description = "审批操作", example = "APPROVE", required = true)
     private ApprovalAction action;
-    
+
     /**
      * 审批意见
      */

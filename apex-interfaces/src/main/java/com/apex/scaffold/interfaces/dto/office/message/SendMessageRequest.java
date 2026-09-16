@@ -2,14 +2,11 @@ package com.apex.scaffold.interfaces.dto.office.message;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.List;
 
 /**
  * 发送消息请求 DTO
@@ -26,56 +23,65 @@ import java.util.List;
 @AllArgsConstructor
 @Schema(description = "发送消息请求")
 public class SendMessageRequest {
-    
+
     /**
      * 办公平台类型
      */
     @NotBlank(message = "平台类型不能为空")
-    @Schema(description = "办公平台类型", example = "FEISHU", requiredMode = Schema.RequiredMode.REQUIRED,
-        allowableValues = {"FEISHU", "DINGTALK", "WECOM"})
+    @Schema(
+            description = "办公平台类型",
+            example = "FEISHU",
+            requiredMode = Schema.RequiredMode.REQUIRED,
+            allowableValues = {"FEISHU", "DINGTALK", "WECOM"})
     private String platform;
-    
+
     /**
      * 目标类型
      */
     @NotBlank(message = "目标类型不能为空")
-    @Schema(description = "目标类型", example = "USER", requiredMode = Schema.RequiredMode.REQUIRED,
-        allowableValues = {"USER", "GROUP"})
+    @Schema(
+            description = "目标类型",
+            example = "USER",
+            requiredMode = Schema.RequiredMode.REQUIRED,
+            allowableValues = {"USER", "GROUP"})
     private String targetType;
-    
+
     /**
      * 接收用户ID列表（平台用户ID）
      */
     @Schema(description = "接收用户ID列表", example = "[\"user_001\", \"user_002\"]")
     private List<String> userIds;
-    
+
     /**
      * 接收群组ID列表（平台群组ID）
      */
     @Schema(description = "接收群组ID列表", example = "[\"group_001\"]")
     private List<String> groupIds;
-    
+
     /**
      * 消息类型
      */
     @NotBlank(message = "消息类型不能为空")
-    @Schema(description = "消息类型", example = "TEXT", requiredMode = Schema.RequiredMode.REQUIRED,
-        allowableValues = {"TEXT", "MARKDOWN", "CARD"})
+    @Schema(
+            description = "消息类型",
+            example = "TEXT",
+            requiredMode = Schema.RequiredMode.REQUIRED,
+            allowableValues = {"TEXT", "MARKDOWN", "CARD"})
     private String messageType;
-    
+
     /**
      * 消息内容（根据消息类型不同，格式不同）
      */
     @NotBlank(message = "消息内容不能为空")
     @Schema(description = "消息内容", example = "Hello, World!", requiredMode = Schema.RequiredMode.REQUIRED)
     private String content;
-    
+
     /**
      * 消息标题（可选，用于某些消息类型）
      */
     @Schema(description = "消息标题", example = "通知")
     private String title;
-    
+
     /**
      * 卡片JSON（当消息类型为CARD时必填）
      */
