@@ -341,7 +341,7 @@ public class CodeGenerator {
                 .collect(Collectors.toSet());
         String invalidState = "__INVALID_STATE__";
         while (states.contains(invalidState)) {
-            invalidState = "_" + invalidState;
+            invalidState = new StringBuilder("_").append(invalidState).toString();
         }
         return invalidState;
     }

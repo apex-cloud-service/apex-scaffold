@@ -1,8 +1,7 @@
 package com.apex.scaffold.license;
 
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ScheduledFuture;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -73,7 +72,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class LicenseRevalidationScheduler implements AutoCloseable {
 
-    private final ScheduledExecutorService executor;
+    private final ThreadPoolTaskScheduler executor;
+    private ScheduledFuture<?> refreshTask;
 
     /**
      * 创建License运行期重检调度器
@@ -96,13 +96,14 @@ public class LicenseRevalidationScheduler implements AutoCloseable {
             this.executor = null;
             return;
         }
-        this.executor = Executors.newSingleThreadScheduledExecutor(runnable -> {
-            Thread thread = new Thread(runnable, "apex-license-recheck");
-            thread.setDaemon(true);
-            return thread;
-        });
-        this.executor.scheduleWithFixedDelay(
-                () -> safeRefresh(validator, properties), intervalMs, intervalMs, TimeUnit.MILLISECONDS);
+        this.executor = new ThreadPoolTaskScheduler();
+        this.executor.setPoolSize(1);
+        this.executor.setThreadNamePrefix("apex-license-recheck-");
+        this.executor.setDaemon(true);
+        this.executor.initialize();
+        this.refreshTask = this.executor.scheduleWithFixedDelay(
+                () -> safeRefresh(validator, properties),
+                java.time.Duration.ofMillis(intervalMs));
         log.info("License 运行期重检已启动: 间隔 {}ms", intervalMs);
     }
 
@@ -125,8 +126,11 @@ public class LicenseRevalidationScheduler implements AutoCloseable {
 
     @Override
     public void close() {
+        if (refreshTask != null) {
+            refreshTask.cancel(false);
+        }
         if (executor != null) {
-            executor.shutdownNow();
+            executor.shutdown();
         }
     }
 }

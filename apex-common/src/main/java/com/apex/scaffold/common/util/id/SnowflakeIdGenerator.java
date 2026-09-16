@@ -28,6 +28,8 @@ package com.apex.scaffold.common.util.id;
 public class SnowflakeIdGenerator {
 
     /** 起始时间戳（2026-01-01），用于压缩时间戳位宽 */
+    private static final long CLOCK_ROLLBACK_TOLERANCE_MILLIS = 5L;
+
     private static final long EPOCH = 1767225600000L;
 
     /** 机器 ID 位数 */
@@ -100,7 +102,7 @@ public class SnowflakeIdGenerator {
         long timestamp = currentTimeMillis();
         if (timestamp < lastTimestamp) {
             long offset = lastTimestamp - timestamp;
-            if (offset > 5) {
+            if (offset > CLOCK_ROLLBACK_TOLERANCE_MILLIS) {
                 throw new IllegalStateException("时钟回拨超限，拒绝生成 ID: " + offset + "ms");
             }
             // 轻微回拨：等待时钟追平

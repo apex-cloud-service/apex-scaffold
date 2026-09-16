@@ -17,6 +17,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
 
+/**
+ * OAuth2 授权同意仓储实现
+ *
+ * <p>管理 OAuth2 授权同意信息的持久化操作
+ *
+ * @author Apex Team
+ */
 @Slf4j
 @Repository
 @RequiredArgsConstructor
@@ -39,7 +46,7 @@ public class OAuth2AuthorizationConsentRepositoryImpl implements OAuth2Authoriza
     @Override
     public Mono<OAuth2AuthorizationConsentEntity> save(OAuth2AuthorizationConsentEntity consent) {
         return Mono.fromCallable(() -> {
-                    OAuth2AuthorizationConsentPO po = toPO(consent);
+                    OAuth2AuthorizationConsentPO po = convertToPo(consent);
 
                     LambdaQueryWrapper<OAuth2AuthorizationConsentPO> wrapper = new LambdaQueryWrapper<>();
                     wrapper.eq(OAuth2AuthorizationConsentPO::getRegisteredClientId, consent.getClientId())
@@ -98,7 +105,7 @@ public class OAuth2AuthorizationConsentRepositoryImpl implements OAuth2Authoriza
         return entity;
     }
 
-    private OAuth2AuthorizationConsentPO toPO(OAuth2AuthorizationConsentEntity entity) {
+    private OAuth2AuthorizationConsentPO convertToPo(OAuth2AuthorizationConsentEntity entity) {
         OAuth2AuthorizationConsentPO po = new OAuth2AuthorizationConsentPO();
         po.setId(entity.getId());
         po.setRegisteredClientId(entity.getClientId());

@@ -50,6 +50,12 @@ public enum ResultCode {
     /** 参数错误 */
     PARAM_ERROR(400, "参数错误", "sys.param_error"),
 
+    /** 参数无效 */
+    PARAM_INVALID(40001, "参数无效", "sys.param_invalid"),
+
+    /** 业务错误 */
+    BUSINESS_ERROR(40002, "业务处理失败", "sys.business_error"),
+
     /** 未授权 */
     UNAUTHORIZED(401, "未授权", "sys.unauthorized"),
 

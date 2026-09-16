@@ -11,6 +11,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.KeyPair;
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
@@ -28,6 +29,14 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class LicenseGenerator {
+
+    private static final int GEN_KEYS_MIN_ARGS = 3;
+    private static final int GEN_LICENSE_MIN_ARGS = 4;
+    private static final int FEATURES_ARG_INDEX = 7;
+    private static final int FINGERPRINT_ARG_INDEX = 8;
+    private static final int RANDOM_BOUND = 10000;
+
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     private final ObjectMapper objectMapper = createObjectMapper();
     private final KeyPair keyPair;
@@ -169,7 +178,7 @@ public class LicenseGenerator {
      */
     private String generateLicenseId() {
         return "LIC-" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss")) + "-"
-                + Integer.toHexString((int) (Math.random() * 10000));
+                + Integer.toHexString(SECURE_RANDOM.nextInt(RANDOM_BOUND));
     }
 
     /**
@@ -231,7 +240,7 @@ public class LicenseGenerator {
      * @throws Exception 生成或保存失败
      */
     private static void handleGenKeys(String[] args) throws Exception {
-        if (args.length < 3) {
+        if (args.length < GEN_KEYS_MIN_ARGS) {
             throw new IllegalArgumentException("gen-keys 需要 <private.key> <public.key> 两个参数");
         }
         String privateKeyFile = args[1];
@@ -267,7 +276,7 @@ public class LicenseGenerator {
      * @throws Exception 加载密钥、生成或保存 License 失败
      */
     private static void handleGenLicense(String[] args) throws Exception {
-        if (args.length < 4) {
+        if (args.length < GEN_LICENSE_MIN_ARGS) {
             throw new IllegalArgumentException("gen-license 至少需要 <private.key> <public.key> <output.json> 三个参数");
         }
         String privateKeyFile = args[1];
@@ -277,11 +286,11 @@ public class LicenseGenerator {
                 args.length > 4 ? LicenseVersion.valueOf(args[4].toUpperCase()) : LicenseVersion.ENTERPRISE;
         String customerName = args.length > 5 ? args[5] : "示例客户";
         int validDays = args.length > 6 ? Integer.parseInt(args[6]) : 365;
-        String[] features = args.length > 7 && !args[7].startsWith("--") ? args[7].split(",") : null;
+        String[] features = args.length > FEATURES_ARG_INDEX && !args[FEATURES_ARG_INDEX].startsWith("--") ? args[FEATURES_ARG_INDEX].split(",") : null;
 
         // 解析 --fingerprint 可选参数
         String machineFingerprint = null;
-        for (int i = (features != null ? 8 : 7); i < args.length; i++) {
+        for (int i = (features != null ? FINGERPRINT_ARG_INDEX : FEATURES_ARG_INDEX); i < args.length; i++) {
             if ("--fingerprint".equals(args[i]) && i + 1 < args.length) {
                 machineFingerprint = args[i + 1];
                 break;

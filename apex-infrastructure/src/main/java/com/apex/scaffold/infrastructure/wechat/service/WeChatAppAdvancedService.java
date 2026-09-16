@@ -7,9 +7,11 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.ParameterizedTypeReference;
@@ -50,7 +52,7 @@ public class WeChatAppAdvancedService {
     private final Map<String, String> cache = new HashMap<>();
 
     /** 定时任务执行器，用于过期缓存清理（非 Spring Bean，服务内部实现细节） */
-    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+    private final ScheduledExecutorService scheduler = createScheduler();
 
     /**
      * HTTP 客户端，用于调用微信 API。
@@ -74,6 +76,22 @@ public class WeChatAppAdvancedService {
             WeChatAppProperties properties, @Qualifier("weChatApiWebClient") WebClient webClient) {
         this.properties = properties;
         this.webClient = webClient;
+    }
+
+    private static ScheduledExecutorService createScheduler() {
+        ThreadFactory threadFactory = new ThreadFactory() {
+            private final AtomicInteger counter = new AtomicInteger(1);
+
+            @Override
+            public Thread newThread(Runnable r) {
+                Thread thread = new Thread(r, "wechat-token-scheduler-" + counter.getAndIncrement());
+                thread.setDaemon(true);
+                return thread;
+            }
+        };
+        ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(1, threadFactory);
+        executor.setRemoveOnCancelPolicy(true);
+        return executor;
     }
 
     /**

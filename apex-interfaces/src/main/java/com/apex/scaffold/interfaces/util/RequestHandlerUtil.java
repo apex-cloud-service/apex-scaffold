@@ -193,4 +193,66 @@ public class RequestHandlerUtil {
                         request.remoteAddress().orElse(null), request.headers().header("X-Forwarded-For"), realIp))
                 .orElse("unknown");
     }
+
+    /**
+     * 验证并映射请求体
+     *
+     * <p>从请求体中反序列化对象并执行验证，支持自定义验证逻辑。
+     *
+     * @param request ServerRequest 当前 HTTP 请求
+     * @param clazz   请求体类型
+     * @param <T>     请求体泛型类型
+     * @return 验证通过的请求体对象 Mono
+     */
+    public <T> Mono<T> validateAndMap(ServerRequest request, Class<T> clazz) {
+        return handleRequestBody(request, clazz);
+    }
+
+    /**
+     * 验证并映射请求体（带自定义验证器）
+     *
+     * @param request         ServerRequest 当前 HTTP 请求
+     * @param clazz           请求体类型
+     * @param customValidator 自定义验证函数
+     * @param <T>             请求体泛型类型
+     * @return 验证通过的请求体对象 Mono
+     */
+    public <T> Mono<T> validateAndMap(
+            ServerRequest request, Class<T> clazz, java.util.function.Consumer<T> customValidator) {
+        return handleRequestBody(request, clazz).doOnNext(customValidator);
+    }
+
+    /**
+     * 构建成功响应（Result包装）
+     *
+     * @param result Result对象
+     * @param <T>    响应数据类型
+     * @return HTTP 200 JSON 响应的 Mono
+     */
+    public <T> Mono<ServerResponse> ok(Result<T> result) {
+        return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).bodyValue(result);
+    }
+
+    /**
+     * 获取租户ID
+     *
+     * @param request ServerRequest 当前 HTTP 请求
+     * @return 租户ID
+     */
+    public String getTenantId(ServerRequest request) {
+        return request.headers().firstHeader("X-Tenant-Id");
+    }
+
+    /**
+     * 统一错误处理
+     *
+     * @param throwable 异常
+     * @return 错误响应 Mono
+     */
+    public Mono<ServerResponse> handleError(Throwable throwable) {
+        if (throwable instanceof BusinessException businessException) {
+            return buildErrorResponse(businessException.getCode(), businessException.getMessage());
+        }
+        return buildErrorResponse(ResultCode.ERROR, throwable.getMessage());
+    }
 }

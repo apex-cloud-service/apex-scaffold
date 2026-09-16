@@ -21,6 +21,13 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
+/**
+ * Meilisearch 搜索适配器
+ *
+ * <p>实现全局搜索和索引同步功能，支持多种资源类型的搜索和索引管理
+ *
+ * @author Apex Team
+ */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -227,9 +234,11 @@ public class MeilisearchAdapter implements SearchRepository, IndexSyncPort {
 
     private Map<String, Object> fetchUserDocument(String resourceId) {
         UserPO user = userMapper.selectById(Long.parseLong(resourceId));
-        if (user == null || user.getStatus() == 0) return null;
+        if (user == null || user.getStatus() == 0) {
+            return null;
+        }
 
-        Map<String, Object> doc = new HashMap<>();
+        Map<String, Object> doc = new HashMap<>(16);
         doc.put("id", "user_" + resourceId);
         doc.put("resourceType", "user");
         doc.put("resourceId", resourceId);
@@ -246,9 +255,11 @@ public class MeilisearchAdapter implements SearchRepository, IndexSyncPort {
 
     private Map<String, Object> fetchRoleDocument(String resourceId) {
         RolePO role = roleMapper.selectById(Long.parseLong(resourceId));
-        if (role == null || role.getStatus() == 0) return null;
+        if (role == null || role.getStatus() == 0) {
+            return null;
+        }
 
-        Map<String, Object> doc = new HashMap<>();
+        Map<String, Object> doc = new HashMap<>(16);
         doc.put("id", "role_" + resourceId);
         doc.put("resourceType", "role");
         doc.put("resourceId", resourceId);
@@ -265,9 +276,11 @@ public class MeilisearchAdapter implements SearchRepository, IndexSyncPort {
 
     private Map<String, Object> fetchMenuDocument(String resourceId) {
         MenuPO menu = menuMapper.selectById(Long.parseLong(resourceId));
-        if (menu == null || menu.getStatus() == 0) return null;
+        if (menu == null || menu.getStatus() == 0) {
+            return null;
+        }
 
-        Map<String, Object> doc = new HashMap<>();
+        Map<String, Object> doc = new HashMap<>(16);
         doc.put("id", "menu_" + resourceId);
         doc.put("resourceType", "menu");
         doc.put("resourceId", resourceId);
@@ -278,9 +291,11 @@ public class MeilisearchAdapter implements SearchRepository, IndexSyncPort {
         doc.put("tenantId", "0");
         doc.put("createdAt", toTimestamp(menu.getCreateTime()));
         doc.put("updatedAt", toTimestamp(menu.getUpdateTime()));
-        Map<String, Object> extra = new HashMap<>();
+        Map<String, Object> extra = new HashMap<>(4);
         extra.put("menuType", menu.getMenuType());
-        if (menu.getIcon() != null) extra.put("icon", menu.getIcon());
+        if (menu.getIcon() != null) {
+            extra.put("icon", menu.getIcon());
+        }
         extra.put("sort", menu.getSort());
         doc.put("extra", extra);
         return doc;
@@ -288,9 +303,11 @@ public class MeilisearchAdapter implements SearchRepository, IndexSyncPort {
 
     private Map<String, Object> fetchDeptDocument(String resourceId) {
         DeptPO dept = deptMapper.selectById(Long.parseLong(resourceId));
-        if (dept == null || dept.getStatus() == 0) return null;
+        if (dept == null || dept.getStatus() == 0) {
+            return null;
+        }
 
-        Map<String, Object> doc = new HashMap<>();
+        Map<String, Object> doc = new HashMap<>(16);
         doc.put("id", "dept_" + resourceId);
         doc.put("resourceType", "dept");
         doc.put("resourceId", resourceId);
@@ -307,9 +324,11 @@ public class MeilisearchAdapter implements SearchRepository, IndexSyncPort {
 
     private Map<String, Object> fetchDictDocument(String resourceId) {
         DictDataPO dict = dictMapper.selectById(Long.parseLong(resourceId));
-        if (dict == null || dict.getStatus() == 0) return null;
+        if (dict == null || dict.getStatus() == 0) {
+            return null;
+        }
 
-        Map<String, Object> doc = new HashMap<>();
+        Map<String, Object> doc = new HashMap<>(16);
         doc.put("id", "dict_" + resourceId);
         doc.put("resourceType", "dict");
         doc.put("resourceId", resourceId);
@@ -326,9 +345,11 @@ public class MeilisearchAdapter implements SearchRepository, IndexSyncPort {
 
     private Map<String, Object> fetchConfigDocument(String resourceId) {
         ConfigPO config = configMapper.selectById(Long.parseLong(resourceId));
-        if (config == null) return null;
+        if (config == null) {
+            return null;
+        }
 
-        Map<String, Object> doc = new HashMap<>();
+        Map<String, Object> doc = new HashMap<>(16);
         doc.put("id", "config_" + resourceId);
         doc.put("resourceType", "config");
         doc.put("resourceId", resourceId);
@@ -473,7 +494,9 @@ public class MeilisearchAdapter implements SearchRepository, IndexSyncPort {
     }
 
     private String maskPhone(String phone) {
-        if (phone == null || phone.length() != 11) return phone;
+        if (phone == null || phone.length() != 11) {
+            return phone;
+        }
         return phone.substring(0, 3) + "****" + phone.substring(7);
     }
 
@@ -483,14 +506,18 @@ public class MeilisearchAdapter implements SearchRepository, IndexSyncPort {
             desc.append("负责人：").append(dept.getLeader());
         }
         if (dept.getPhone() != null) {
-            if (desc.length() > 0) desc.append(" / ");
+            if (desc.length() > 0) {
+                desc.append(" / ");
+            }
             desc.append("电话：").append(dept.getPhone());
         }
         return desc.toString();
     }
 
     private String maskSensitiveValue(String value) {
-        if (value == null || value.length() <= 4) return value;
+        if (value == null || value.length() <= 4) {
+            return value;
+        }
         return value.substring(0, 2) + "***" + value.substring(value.length() - 2);
     }
 }

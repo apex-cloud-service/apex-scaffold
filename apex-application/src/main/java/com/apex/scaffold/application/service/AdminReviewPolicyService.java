@@ -47,7 +47,9 @@ public class AdminReviewPolicyService {
      * @return 更新后的拒绝原因
      */
     public Mono<ReviewReason> update(Long id, ReviewReasonUpdateRequest request) {
-        if (id == null || id <= 0) return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "id不合法"));
+        if (id == null || id <= 0) {
+            return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "id不合法"));
+        }
         return repository.update(
                 id,
                 request.label().trim(),
@@ -70,7 +72,9 @@ public class AdminReviewPolicyService {
      */
     public Mono<ReviewReason> requireEnabled(String type, String code, String comment) {
         String normalizedCode = code == null ? "" : code.trim().toUpperCase(Locale.ROOT);
-        if (normalizedCode.isEmpty()) return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "拒绝原因不能为空"));
+        if (normalizedCode.isEmpty()) {
+            return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "拒绝原因不能为空"));
+        }
         return repository
                 .findEnabled(normalizeType(type), normalizedCode)
                 .switchIfEmpty(Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "拒绝原因已停用或不存在")))
@@ -87,7 +91,9 @@ public class AdminReviewPolicyService {
      */
     private String normalizeType(String type) {
         String value = type == null ? "" : type.trim().toUpperCase(Locale.ROOT);
-        if (!TYPES.contains(value)) throw new BusinessException(ResultCode.PARAM_ERROR, "不支持的审核类型");
+        if (!TYPES.contains(value)) {
+            throw new BusinessException(ResultCode.PARAM_ERROR, "不支持的审核类型");
+        }
         return value;
     }
 

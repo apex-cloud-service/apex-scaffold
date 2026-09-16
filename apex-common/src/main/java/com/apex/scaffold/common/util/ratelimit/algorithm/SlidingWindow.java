@@ -54,6 +54,7 @@ public class SlidingWindow {
 
     /** 默认子桶数量 */
     private static final int DEFAULT_BUCKET_COUNT = 10;
+    private static final int MIN_BUCKET_COUNT = 2;
 
     /** 窗口大小（毫秒） */
     private final long windowMs;
@@ -103,7 +104,7 @@ public class SlidingWindow {
         if (windowMs <= 0) {
             throw new IllegalArgumentException("窗口大小必须大于0, 实际值: " + windowMs);
         }
-        if (bucketCount < 2) {
+        if (bucketCount < MIN_BUCKET_COUNT) {
             throw new IllegalArgumentException("子桶数量至少为2, 实际值: " + bucketCount);
         }
         if (maxPermits <= 0) {

@@ -370,8 +370,11 @@ public class AdminUserManagementService {
                     if (target.getId().equals(pair.getT2().getId())) {
                         return Mono.error(new BusinessException(ResultCode.FORBIDDEN, "不能修改当前账号状态"));
                     }
-                    if (enabled) target.enable();
-                    else target.disable();
+                    if (enabled) {
+                        target.enable();
+                    } else {
+                        target.disable();
+                    }
                     return userRepository
                             .save(target)
                             .then(

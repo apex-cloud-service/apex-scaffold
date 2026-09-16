@@ -18,6 +18,16 @@ package com.apex.scaffold.common.util;
  */
 public final class DataMaskUtil {
 
+    private static final int PHONE_LENGTH = 11;
+    private static final int ID_CARD_SHORT_LENGTH = 15;
+    private static final int ID_CARD_LONG_LENGTH = 18;
+    private static final int MIN_EMAIL_LOCAL_LENGTH = 2;
+    private static final int MIN_CARD_LENGTH = 8;
+    private static final int MIN_ADDRESS_KEEP_LENGTH = 10;
+    private static final int SHORT_VALUE_LENGTH = 4;
+    private static final int TWO_CHARACTERS = 2;
+    private static final int FOUR_CHARACTERS = 4;
+
     private DataMaskUtil() {
         throw new UnsupportedOperationException("Utility class cannot be instantiated");
     }
@@ -37,8 +47,8 @@ public final class DataMaskUtil {
         // 去除空格和特殊字符
         String cleaned = phone.replaceAll("[\\s-]", "");
 
-        if (cleaned.length() != 11) {
-            return phone; // 非标准手机号,返回原值
+        if (cleaned.length() != PHONE_LENGTH) {
+            return phone;
         }
 
         return cleaned.substring(0, 3) + "****" + cleaned.substring(7);
@@ -58,8 +68,8 @@ public final class DataMaskUtil {
 
         String cleaned = idCard.trim();
 
-        if (cleaned.length() != 15 && cleaned.length() != 18) {
-            return idCard; // 非标准身份证,返回原值
+        if (cleaned.length() != ID_CARD_SHORT_LENGTH && cleaned.length() != ID_CARD_LONG_LENGTH) {
+            return idCard;
         }
 
         return cleaned.substring(0, 3) + "*".repeat(cleaned.length() - 7) + cleaned.substring(cleaned.length() - 4);
@@ -79,13 +89,13 @@ public final class DataMaskUtil {
 
         int atIndex = email.indexOf('@');
         if (atIndex <= 1) {
-            return email; // 无效邮箱,返回原值
+            return email;
         }
 
         String localPart = email.substring(0, atIndex);
         String domain = email.substring(atIndex);
 
-        if (localPart.length() <= 2) {
+        if (localPart.length() <= MIN_EMAIL_LOCAL_LENGTH) {
             return localPart.charAt(0) + "*" + domain;
         }
 
@@ -110,10 +120,10 @@ public final class DataMaskUtil {
         String trimmed = name.trim();
 
         if (trimmed.length() == 1) {
-            return trimmed; // 单字名,不脱敏
+            return trimmed;
         }
 
-        if (trimmed.length() == 2) {
+        if (trimmed.length() == TWO_CHARACTERS) {
             return trimmed.charAt(0) + "*";
         }
 
@@ -135,13 +145,13 @@ public final class DataMaskUtil {
 
         String cleaned = cardNo.replaceAll("[\\s-]", "");
 
-        if (cleaned.length() < 8) {
-            return cardNo; // 太短,返回原值
+        if (cleaned.length() < MIN_CARD_LENGTH) {
+            return cardNo;
         }
 
         // 每4位一组显示
         StringBuilder result = new StringBuilder();
-        result.append(cleaned.substring(0, 4));
+        result.append(cleaned.substring(0, FOUR_CHARACTERS));
         result.append(" ");
 
         int middleLength = cleaned.length() - 8;
@@ -150,7 +160,7 @@ public final class DataMaskUtil {
             result.append("**** ");
         }
 
-        if (middleLength % 4 != 0) {
+        if (middleLength % FOUR_CHARACTERS != 0) {
             result.append("**** ");
         }
 
@@ -173,7 +183,7 @@ public final class DataMaskUtil {
 
         // 简单策略: 保留前50%字符
         int keepLength = address.length() / 2;
-        if (keepLength < 10) {
+        if (keepLength < MIN_ADDRESS_KEEP_LENGTH) {
             keepLength = 10;
         }
 
@@ -193,8 +203,8 @@ public final class DataMaskUtil {
         }
 
         String[] parts = ipAddress.split("\\.");
-        if (parts.length != 4) {
-            return ipAddress; // 无效IP,返回原值
+        if (parts.length != FOUR_CHARACTERS) {
+            return ipAddress;
         }
 
         return parts[0] + "." + parts[1] + ".*.*";
@@ -214,7 +224,7 @@ public final class DataMaskUtil {
 
         int questionMarkIndex = url.indexOf('?');
         if (questionMarkIndex == -1) {
-            return url; // 无参数,返回原值
+            return url;
         }
 
         return url.substring(0, questionMarkIndex) + "?****";
@@ -233,8 +243,8 @@ public final class DataMaskUtil {
         }
 
         int length = value.length();
-        if (length <= 4) {
-            return "*".repeat(length); // 太短,全部脱敏
+        if (length <= SHORT_VALUE_LENGTH) {
+            return "*".repeat(length);
         }
 
         int keepStart = Math.max(1, length * 30 / 100);

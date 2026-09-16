@@ -20,7 +20,6 @@ import java.util.Locale;
  * @since 1.2.1
  */
 public enum OsFamily {
-
     /** Linux 系操作系统。 */
     LINUX,
     /** macOS 系操作系统。 */
@@ -29,6 +28,11 @@ public enum OsFamily {
     WINDOWS,
     /** 其他无法识别的操作系统。 */
     UNKNOWN;
+
+    private static final String LINUX_NAME = "linux";
+    private static final String MAC_NAME = "mac";
+    private static final String DARWIN_NAME = "darwin";
+    private static final String WINDOWS_NAME = "windows";
 
     /**
      * 根据 {@code os.name} 系统属性识别操作系统家族。
@@ -39,13 +43,13 @@ public enum OsFamily {
      */
     public static OsFamily detect() {
         String osName = System.getProperty("os.name", "").toLowerCase(Locale.ROOT);
-        if (osName.contains("linux")) {
+        if (osName.contains(LINUX_NAME)) {
             return LINUX;
         }
-        if (osName.contains("mac") || osName.contains("darwin")) {
+        if (osName.contains(MAC_NAME) || osName.contains(DARWIN_NAME)) {
             return MAC;
         }
-        if (osName.contains("windows")) {
+        if (osName.contains(WINDOWS_NAME)) {
             return WINDOWS;
         }
         return UNKNOWN;

@@ -57,6 +57,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public final class MachineFingerprintCollector {
 
+    private static final String LINE_SEPARATOR = "\n";
+
     private static final String SEPARATOR = "|";
 
     private MachineFingerprintCollector() {
@@ -200,7 +202,7 @@ public final class MachineFingerprintCollector {
     private static String collectBoardSerialMac() throws IOException, InterruptedException {
         String output = execCommand("system_profiler", "SPHardwareDataType");
         if (output != null) {
-            for (String line : output.split("\n")) {
+            for (String line : output.split(LINE_SEPARATOR)) {
                 if (line.contains("Serial Number")) {
                     String value = line.substring(line.indexOf(':') + 1).trim();
                     return value.isEmpty() ? "" : value;
@@ -216,7 +218,7 @@ public final class MachineFingerprintCollector {
     private static String collectBoardSerialWindows() throws IOException, InterruptedException {
         String output = execCommand("wmic", "baseboard", "get", "serialnumber");
         if (output != null) {
-            for (String line : output.split("\n")) {
+            for (String line : output.split(LINE_SEPARATOR)) {
                 String trimmed = line.trim();
                 if (!trimmed.isEmpty() && !trimmed.equalsIgnoreCase("SerialNumber")) {
                     return trimmed;

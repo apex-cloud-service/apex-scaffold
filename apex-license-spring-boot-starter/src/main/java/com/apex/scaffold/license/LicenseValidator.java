@@ -28,6 +28,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class LicenseValidator {
 
+    private static final String SIGNATURE_FIELD = "signature";
+    private static final int EXPIRATION_WARNING_DAYS = 30;
+
     private final ObjectMapper objectMapper;
     private final PublicKey publicKey;
     private final boolean machineFingerprintSkip;
@@ -199,12 +202,12 @@ public class LicenseValidator {
      */
     private void validateSignature(String json) throws Exception {
         var node = objectMapper.readTree(json);
-        if (!node.has("signature") || node.get("signature").isNull()) {
+        if (!node.has(SIGNATURE_FIELD) || node.get(SIGNATURE_FIELD).isNull()) {
             throw new LicenseException("License缺少签名字段");
         }
 
         // 移除 signature 字段后作为待验数据
-        ((com.fasterxml.jackson.databind.node.ObjectNode) node).remove("signature");
+        ((com.fasterxml.jackson.databind.node.ObjectNode) node).remove(SIGNATURE_FIELD);
         byte[] data = objectMapper.writeValueAsBytes(node);
         boolean valid = RsaUtil.verify(data, licenseInfo.getSignature(), publicKey);
 
@@ -276,7 +279,7 @@ public class LicenseValidator {
         }
 
         // 警告: 剩余30天内过期
-        if (licenseInfo.getRemainingDays() <= 30) {
+        if (licenseInfo.getRemainingDays() <= EXPIRATION_WARNING_DAYS) {
             log.warn("License将在{}天后过期,请及时续期", licenseInfo.getRemainingDays());
         }
     }
@@ -351,7 +354,7 @@ public class LicenseValidator {
         }
 
         if (licenseInfo.getMaxUsers() == null || licenseInfo.getMaxUsers() == -1) {
-            return true; // 无限制
+            return true;
         }
 
         return currentUserCount <= licenseInfo.getMaxUsers();
@@ -369,7 +372,7 @@ public class LicenseValidator {
         }
 
         if (licenseInfo.getMaxConcurrent() == null || licenseInfo.getMaxConcurrent() == -1) {
-            return true; // 无限制
+            return true;
         }
 
         return currentConcurrent <= licenseInfo.getMaxConcurrent();

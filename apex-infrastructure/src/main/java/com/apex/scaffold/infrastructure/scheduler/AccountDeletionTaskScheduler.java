@@ -30,8 +30,10 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class AccountDeletionTaskScheduler {
 
-    /** 本调度器实例唯一标识，用于并发任务认领防冲突。 */
+    /** 本调度器实例唯一标识,用于并发任务认领防冲突。 */
     private static final String WORKER_ID = "account-delete-" + UUID.randomUUID();
+
+    private static final int MAX_ERROR_MESSAGE_LENGTH = 500;
 
     /** 待办任务查询与认领 Mapper。 */
     private final AccountDeletionTaskMapper taskMapper;
@@ -97,8 +99,8 @@ public class AccountDeletionTaskScheduler {
      */
     private Mono<Void> markFailed(Long jobId, Throwable error) {
         String message = error.getMessage() == null ? error.getClass().getSimpleName() : error.getMessage();
-        if (message.length() > 500) {
-            message = message.substring(0, 500);
+        if (message.length() > MAX_ERROR_MESSAGE_LENGTH) {
+            message = message.substring(0, MAX_ERROR_MESSAGE_LENGTH);
         }
         String finalMessage = message;
         return Mono.fromRunnable(() -> taskMapper.markFailed(jobId, finalMessage))

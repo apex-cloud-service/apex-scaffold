@@ -73,10 +73,12 @@ import org.springframework.core.type.AnnotatedTypeMetadata;
 @Slf4j
 public class LicenseFeatureCondition implements Condition {
 
+    private static final String VALUE_ATTRIBUTE = "value";
+
     @Override
     public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
         var attributes = metadata.getAnnotationAttributes(ConditionalOnLicenseFeature.class.getName());
-        if (attributes == null || attributes.get("value") == null) {
+        if (attributes == null || attributes.get(VALUE_ATTRIBUTE) == null) {
             return false;
         }
         String feature = (String) attributes.get("value");

@@ -33,6 +33,8 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class OAuth2RegisteredClientRepositoryImpl implements OAuth2RegisteredClientRepository {
 
+    private static final String EMPTY_JSON_ARRAY = "[]";
+
     private final OAuth2RegisteredClientMapper mapper;
 
     /**
@@ -78,7 +80,7 @@ public class OAuth2RegisteredClientRepositoryImpl implements OAuth2RegisteredCli
     @Override
     public Mono<OAuth2RegisteredClientEntity> save(OAuth2RegisteredClientEntity client) {
         return Mono.fromCallable(() -> {
-                    OAuth2RegisteredClientPO po = toPO(client);
+                    OAuth2RegisteredClientPO po = convertToPo(client);
                     if (client.getId() != null && mapper.selectById(client.getId()) != null) {
                         mapper.updateById(po);
                         log.info("更新OAuth2客户端: clientId={}", client.getClientId());
@@ -182,7 +184,7 @@ public class OAuth2RegisteredClientRepositoryImpl implements OAuth2RegisteredCli
         return entity;
     }
 
-    private OAuth2RegisteredClientPO toPO(OAuth2RegisteredClientEntity entity) {
+    private OAuth2RegisteredClientPO convertToPo(OAuth2RegisteredClientEntity entity) {
         OAuth2RegisteredClientPO po = new OAuth2RegisteredClientPO();
         po.setId(entity.getId());
         po.setClientId(entity.getClientId());
@@ -219,7 +221,7 @@ public class OAuth2RegisteredClientRepositoryImpl implements OAuth2RegisteredCli
      * @return Set集合
      */
     private Set<String> parseJsonArray(String json) {
-        if (json == null || json.isEmpty() || "[]".equals(json)) {
+        if (json == null || json.isEmpty() || "[]".equals(json) || EMPTY_JSON_ARRAY.equals(json)) {
             return new HashSet<>();
         }
         String cleaned = json.replaceAll("[\\[\\]\"]", "");

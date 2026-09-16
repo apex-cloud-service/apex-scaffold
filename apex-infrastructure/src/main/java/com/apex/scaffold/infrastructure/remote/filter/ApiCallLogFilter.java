@@ -82,6 +82,9 @@ public final class ApiCallLogFilter {
      */
     public static final String ATTRIBUTE_TENANT_ID = "api-call-log.tenant-id";
 
+    /** 错误消息最大长度 */
+    private static final int MAX_ERROR_MESSAGE_LENGTH = 2000;
+
     /**
      * 返回一个 Consumer，用于将请求体文本写入日志属性。
      *
@@ -309,7 +312,7 @@ public final class ApiCallLogFilter {
     private String formatError(Throwable throwable) {
         StringBuilder sb = new StringBuilder();
         Throwable current = throwable;
-        while (current != null && sb.length() < 2000) {
+        while (current != null && sb.length() < MAX_ERROR_MESSAGE_LENGTH) {
             sb.append(current.getClass().getName()).append(": ").append(current.getMessage());
             StackTraceElement[] stack = current.getStackTrace();
             if (stack.length > 0) {
@@ -320,7 +323,7 @@ public final class ApiCallLogFilter {
                 sb.append("\nCaused by: ");
             }
         }
-        if (sb.length() > 2000) {
+        if (sb.length() >= MAX_ERROR_MESSAGE_LENGTH) {
             sb.setLength(1997);
             sb.append("...");
         }

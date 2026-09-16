@@ -20,6 +20,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class LicenseLoader {
 
+    private static final String CLASSPATH_PREFIX = "classpath:";
+
     /**
      * 加载公钥与 License 并验证
      *
@@ -53,13 +55,13 @@ public final class LicenseLoader {
             return inline.trim();
         }
         // 随包默认公钥
-        return readResourceOrFile("classpath:license/public.key");
+        return readResourceOrFile(CLASSPATH_PREFIX + "license/public.key");
     }
 
     /** 加载 License 文件（支持 classpath: 与文件系统路径）。 */
     private static void loadLicense(LicenseValidator validator, String licensePath) throws Exception {
-        if (licensePath.startsWith("classpath:")) {
-            String resourceName = licensePath.substring("classpath:".length());
+        if (licensePath.startsWith(CLASSPATH_PREFIX)) {
+            String resourceName = licensePath.substring(CLASSPATH_PREFIX.length());
             var resource = LicenseLoader.class.getClassLoader().getResource(resourceName);
             if (resource == null) {
                 throw new IllegalStateException("License文件不存在: " + licensePath);
@@ -73,8 +75,8 @@ public final class LicenseLoader {
 
     /** 读取 classpath 资源或文件系统文件内容。 */
     private static String readResourceOrFile(String path) throws Exception {
-        if (path.startsWith("classpath:")) {
-            String resourceName = path.substring("classpath:".length());
+        if (path.startsWith(CLASSPATH_PREFIX)) {
+            String resourceName = path.substring(CLASSPATH_PREFIX.length());
             var resource = LicenseLoader.class.getClassLoader().getResource(resourceName);
             if (resource == null) {
                 throw new IllegalStateException("资源不存在: " + path);

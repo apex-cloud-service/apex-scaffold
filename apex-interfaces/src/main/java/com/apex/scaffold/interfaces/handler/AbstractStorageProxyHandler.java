@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -67,6 +68,7 @@ import reactor.core.publisher.Mono;
  * @see StorageService
  */
 @Slf4j
+@Tag(name = "对象存储代理", description = "对象存储文件代理访问接口，支持MinIO和火山引擎TOS")
 public abstract class AbstractStorageProxyHandler {
 
     /** 文件元数据仓储；用于在签发存储 URL 前执行逻辑删除可见性校验。 */
