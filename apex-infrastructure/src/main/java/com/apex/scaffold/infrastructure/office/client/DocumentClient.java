@@ -1,8 +1,8 @@
 package com.apex.scaffold.infrastructure.office.client;
 
-import reactor.core.publisher.Mono;
-
+import com.apex.scaffold.domain.office.port.DocumentPort;
 import java.util.Map;
+import reactor.core.publisher.Mono;
 
 /**
  * 办公平台文档客户端接口
@@ -19,10 +19,13 @@ import java.util.Map;
  *   <li>文件上传下载的流式处理</li>
  * </ul>
  *
+ * <p>本接口继承 {@link DocumentPort}，作为 Infrastructure 层的适配器接口，
+ * 实现 Domain 层定义的端口接口，符合端口-适配器架构模式。
+ *
  * @author Apex Scaffold
  * @since 1.0.0
  */
-public interface DocumentClient {
+public interface DocumentClient extends DocumentPort {
 
     /**
      * 创建文档

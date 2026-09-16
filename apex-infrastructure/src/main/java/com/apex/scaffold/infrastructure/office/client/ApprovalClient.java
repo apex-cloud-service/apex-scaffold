@@ -1,8 +1,8 @@
 package com.apex.scaffold.infrastructure.office.client;
 
-import reactor.core.publisher.Mono;
-
+import com.apex.scaffold.domain.office.port.ApprovalPort;
 import java.util.Map;
+import reactor.core.publisher.Mono;
 
 /**
  * 办公平台审批客户端接口
@@ -16,12 +16,16 @@ import java.util.Map;
  *   <li>API请求的构建和发送</li>
  *   <li>响应结果的解析和错误处理</li>
  *   <li>平台特有参数的适配</li>
+ *   <li>审批流程状态的同步</li>
  * </ul>
+ *
+ * <p>本接口继承 {@link ApprovalPort}，作为 Infrastructure 层的适配器接口，
+ * 实现 Domain 层定义的端口接口，符合端口-适配器架构模式。
  *
  * @author Apex Scaffold
  * @since 1.0.0
  */
-public interface ApprovalClient {
+public interface ApprovalClient extends ApprovalPort {
 
     /**
      * 发起审批流程
@@ -34,12 +38,7 @@ public interface ApprovalClient {
      * @return 平台返回的审批实例ID
      */
     Mono<String> createApproval(
-            String templateId,
-            String initiatorId,
-            String[] approverIds,
-            Map<String, Object> formData,
-            String title
-    );
+            String templateId, String initiatorId, String[] approverIds, Map<String, Object> formData, String title);
 
     /**
      * 查询审批状态
@@ -58,12 +57,7 @@ public interface ApprovalClient {
      * @param comment 审批意见
      * @return 操作是否成功
      */
-    Mono<Boolean> approveProcess(
-            String platformInstanceId,
-            String approverId,
-            String action,
-            String comment
-    );
+    Mono<Boolean> approveProcess(String platformInstanceId, String approverId, String action, String comment);
 
     /**
      * 撤销审批流程

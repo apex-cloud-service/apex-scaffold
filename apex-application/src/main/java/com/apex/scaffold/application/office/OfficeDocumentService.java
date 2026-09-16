@@ -2,15 +2,14 @@ package com.apex.scaffold.application.office;
 
 import com.apex.scaffold.common.context.TenantContext;
 import com.apex.scaffold.domain.office.document.*;
-import com.apex.scaffold.infrastructure.office.client.DocumentClient;
+import com.apex.scaffold.domain.office.port.DocumentPort;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
 
 /**
  * 办公平台文档应用服务
@@ -24,6 +23,9 @@ import java.util.Map;
  *   <li>维护租户隔离和安全控制</li>
  * </ul>
  *
+ * <p>本服务依赖 {@link DocumentPort} 端口接口而非具体实现，
+ * 符合依赖倒置原则和端口-适配器架构模式。
+ *
  * @author Apex Scaffold
  * @since 1.0.0
  */
@@ -33,7 +35,7 @@ import java.util.Map;
 public class OfficeDocumentService {
 
     private final DocumentInfoRepository documentInfoRepository;
-    private final Map<String, DocumentClient> documentClients;
+    private final Map<String, DocumentPort> documentClients;
 
     /**
      * 创建文档
@@ -54,21 +56,19 @@ public class OfficeDocumentService {
             String title,
             DocumentType documentType,
             String ownerId,
-            String ownerName
-    ) {
-        log.info("创建文档 - platform: {}, folderId: {}, title: {}, type: {}",
-                platform, folderId, title, documentType);
+            String ownerName) {
+        log.info("创建文档 - platform: {}, folderId: {}, title: {}, type: {}", platform, folderId, title, documentType);
 
-        DocumentClient client = getDocumentClient(platform);
+        DocumentPort client = getDocumentClient(platform);
         String type = convertDocumentType(documentType);
 
         return client.createDocument(folderId, title, type)
                 .flatMap(platformDocumentId -> client.getDocumentDetail(platformDocumentId)
-                        .map(detail -> buildDocumentInfo(platform, platformDocumentId, detail, 
-                                documentType, ownerId, ownerName, folderId)))
+                        .map(detail -> buildDocumentInfo(
+                                platform, platformDocumentId, detail, documentType, ownerId, ownerName, folderId)))
                 .flatMap(documentInfoRepository::save)
-                .doOnSuccess(doc -> log.info("文档创建成功 - documentId: {}, platformDocumentId: {}",
-                        doc.getId(), doc.getPlatformDocumentId()))
+                .doOnSuccess(doc -> log.info(
+                        "文档创建成功 - documentId: {}, platformDocumentId: {}", doc.getId(), doc.getPlatformDocumentId()))
                 .doOnError(error -> log.error("文档创建失败 - title: {}", title, error));
     }
 
@@ -83,16 +83,16 @@ public class OfficeDocumentService {
     public Mono<DocumentInfo> getDocumentDetail(Long documentId) {
         log.info("查询文档详情 - documentId: {}", documentId);
 
-        return documentInfoRepository.findById(documentId)
+        return documentInfoRepository
+                .findById(documentId)
                 .switchIfEmpty(Mono.error(new RuntimeException("文档不存在: " + documentId)))
                 .flatMap(doc -> {
-                    DocumentClient client = getDocumentClient(doc.getPlatform());
-                    return client.getDocumentDetail(doc.getPlatformDocumentId())
-                            .map(detail -> {
-                                // 可以根据平台返回的最新信息更新文档
-                                updateDocumentFromPlatform(doc, detail);
-                                return doc;
-                            });
+                    DocumentPort client = getDocumentClient(doc.getPlatform());
+                    return client.getDocumentDetail(doc.getPlatformDocumentId()).map(detail -> {
+                        // 可以根据平台返回的最新信息更新文档
+                        updateDocumentFromPlatform(doc, detail);
+                        return doc;
+                    });
                 })
                 .doOnSuccess(doc -> log.info("文档详情查询成功 - documentId: {}", documentId))
                 .doOnError(error -> log.error("文档详情查询失败 - documentId: {}", documentId, error));
@@ -110,22 +110,21 @@ public class OfficeDocumentService {
     public Mono<Boolean> updateDocumentTitle(Long documentId, String newTitle) {
         log.info("更新文档标题 - documentId: {}, newTitle: {}", documentId, newTitle);
 
-        return documentInfoRepository.findById(documentId)
+        return documentInfoRepository
+                .findById(documentId)
                 .switchIfEmpty(Mono.error(new RuntimeException("文档不存在: " + documentId)))
                 .flatMap(doc -> {
-                    DocumentClient client = getDocumentClient(doc.getPlatform());
+                    DocumentPort client = getDocumentClient(doc.getPlatform());
                     return client.updateDocumentTitle(doc.getPlatformDocumentId(), newTitle)
                             .flatMap(success -> {
                                 if (success) {
                                     doc.updateTitle(newTitle);
-                                    return documentInfoRepository.update(doc)
-                                            .thenReturn(true);
+                                    return documentInfoRepository.update(doc).thenReturn(true);
                                 }
                                 return Mono.just(false);
                             });
                 })
-                .doOnSuccess(success -> log.info("文档标题更新成功 - documentId: {}, result: {}", 
-                        documentId, success))
+                .doOnSuccess(success -> log.info("文档标题更新成功 - documentId: {}, result: {}", documentId, success))
                 .doOnError(error -> log.error("文档标题更新失败 - documentId: {}", documentId, error));
     }
 
@@ -141,22 +140,21 @@ public class OfficeDocumentService {
     public Mono<Boolean> moveDocument(Long documentId, String targetFolderId) {
         log.info("移动文档 - documentId: {}, targetFolderId: {}", documentId, targetFolderId);
 
-        return documentInfoRepository.findById(documentId)
+        return documentInfoRepository
+                .findById(documentId)
                 .switchIfEmpty(Mono.error(new RuntimeException("文档不存在: " + documentId)))
                 .flatMap(doc -> {
-                    DocumentClient client = getDocumentClient(doc.getPlatform());
+                    DocumentPort client = getDocumentClient(doc.getPlatform());
                     return client.moveDocument(doc.getPlatformDocumentId(), targetFolderId)
                             .flatMap(success -> {
                                 if (success) {
                                     doc.setParentFolderId(targetFolderId);
-                                    return documentInfoRepository.update(doc)
-                                            .thenReturn(true);
+                                    return documentInfoRepository.update(doc).thenReturn(true);
                                 }
                                 return Mono.just(false);
                             });
                 })
-                .doOnSuccess(success -> log.info("文档移动成功 - documentId: {}, result: {}", 
-                        documentId, success))
+                .doOnSuccess(success -> log.info("文档移动成功 - documentId: {}, result: {}", documentId, success))
                 .doOnError(error -> log.error("文档移动失败 - documentId: {}", documentId, error));
     }
 
@@ -171,22 +169,26 @@ public class OfficeDocumentService {
      * @return 新文档信息
      */
     public Mono<DocumentInfo> copyDocument(Long documentId, String targetFolderId, String newTitle) {
-        log.info("复制文档 - documentId: {}, targetFolderId: {}, newTitle: {}", 
-                documentId, targetFolderId, newTitle);
+        log.info("复制文档 - documentId: {}, targetFolderId: {}, newTitle: {}", documentId, targetFolderId, newTitle);
 
-        return documentInfoRepository.findById(documentId)
+        return documentInfoRepository
+                .findById(documentId)
                 .switchIfEmpty(Mono.error(new RuntimeException("文档不存在: " + documentId)))
                 .flatMap(doc -> {
-                    DocumentClient client = getDocumentClient(doc.getPlatform());
+                    DocumentPort client = getDocumentClient(doc.getPlatform());
                     return client.copyDocument(doc.getPlatformDocumentId(), targetFolderId, newTitle)
                             .flatMap(newPlatformDocId -> client.getDocumentDetail(newPlatformDocId)
-                                    .map(detail -> buildDocumentInfo(doc.getPlatform(), newPlatformDocId, 
-                                            detail, doc.getDocumentType(), doc.getOwnerId(), 
-                                            doc.getOwnerName(), targetFolderId)))
+                                    .map(detail -> buildDocumentInfo(
+                                            doc.getPlatform(),
+                                            newPlatformDocId,
+                                            detail,
+                                            doc.getDocumentType(),
+                                            doc.getOwnerId(),
+                                            doc.getOwnerName(),
+                                            targetFolderId)))
                             .flatMap(documentInfoRepository::save);
                 })
-                .doOnSuccess(newDoc -> log.info("文档复制成功 - sourceId: {}, newId: {}", 
-                        documentId, newDoc.getId()))
+                .doOnSuccess(newDoc -> log.info("文档复制成功 - sourceId: {}, newId: {}", documentId, newDoc.getId()))
                 .doOnError(error -> log.error("文档复制失败 - documentId: {}", documentId, error));
     }
 
@@ -201,20 +203,19 @@ public class OfficeDocumentService {
     public Mono<Boolean> deleteDocument(Long documentId) {
         log.info("删除文档 - documentId: {}", documentId);
 
-        return documentInfoRepository.findById(documentId)
+        return documentInfoRepository
+                .findById(documentId)
                 .switchIfEmpty(Mono.error(new RuntimeException("文档不存在: " + documentId)))
                 .flatMap(doc -> {
-                    DocumentClient client = getDocumentClient(doc.getPlatform());
-                    return client.deleteDocument(doc.getPlatformDocumentId())
-                            .flatMap(success -> {
-                                if (success) {
-                                    return documentInfoRepository.deleteById(documentId);
-                                }
-                                return Mono.just(false);
-                            });
+                    DocumentPort client = getDocumentClient(doc.getPlatform());
+                    return client.deleteDocument(doc.getPlatformDocumentId()).flatMap(success -> {
+                        if (success) {
+                            return documentInfoRepository.deleteById(documentId);
+                        }
+                        return Mono.just(false);
+                    });
                 })
-                .doOnSuccess(success -> log.info("文档删除成功 - documentId: {}, result: {}", 
-                        documentId, success))
+                .doOnSuccess(success -> log.info("文档删除成功 - documentId: {}, result: {}", documentId, success))
                 .doOnError(error -> log.error("文档删除失败 - documentId: {}", documentId, error));
     }
 
@@ -229,17 +230,16 @@ public class OfficeDocumentService {
      * @return 分享链接
      */
     public Mono<String> shareDocument(Long documentId, String shareType, Long expireTime) {
-        log.info("分享文档 - documentId: {}, shareType: {}, expireTime: {}", 
-                documentId, shareType, expireTime);
+        log.info("分享文档 - documentId: {}, shareType: {}, expireTime: {}", documentId, shareType, expireTime);
 
-        return documentInfoRepository.findById(documentId)
+        return documentInfoRepository
+                .findById(documentId)
                 .switchIfEmpty(Mono.error(new RuntimeException("文档不存在: " + documentId)))
                 .flatMap(doc -> {
-                    DocumentClient client = getDocumentClient(doc.getPlatform());
+                    DocumentPort client = getDocumentClient(doc.getPlatform());
                     return client.shareDocument(doc.getPlatformDocumentId(), shareType, expireTime);
                 })
-                .doOnSuccess(shareLink -> log.info("文档分享成功 - documentId: {}, shareLink: {}", 
-                        documentId, shareLink))
+                .doOnSuccess(shareLink -> log.info("文档分享成功 - documentId: {}, shareLink: {}", documentId, shareLink))
                 .doOnError(error -> log.error("文档分享失败 - documentId: {}", documentId, error));
     }
 
@@ -255,10 +255,11 @@ public class OfficeDocumentService {
     public Mono<String> downloadDocument(Long documentId, String exportFormat) {
         log.info("下载文档 - documentId: {}, exportFormat: {}", documentId, exportFormat);
 
-        return documentInfoRepository.findById(documentId)
+        return documentInfoRepository
+                .findById(documentId)
                 .switchIfEmpty(Mono.error(new RuntimeException("文档不存在: " + documentId)))
                 .flatMap(doc -> {
-                    DocumentClient client = getDocumentClient(doc.getPlatform());
+                    DocumentPort client = getDocumentClient(doc.getPlatform());
                     return client.downloadDocument(doc.getPlatformDocumentId(), exportFormat);
                 })
                 .doOnSuccess(downloadUrl -> log.info("文档下载URL获取成功 - documentId: {}", documentId))
@@ -279,24 +280,18 @@ public class OfficeDocumentService {
      * @return 上传成功的文档信息
      */
     public Mono<DocumentInfo> uploadFile(
-            String platform,
-            String folderId,
-            String fileName,
-            String fileContent,
-            String ownerId,
-            String ownerName
-    ) {
+            String platform, String folderId, String fileName, String fileContent, String ownerId, String ownerName) {
         log.info("上传文件 - platform: {}, folderId: {}, fileName: {}", platform, folderId, fileName);
 
-        DocumentClient client = getDocumentClient(platform);
+        DocumentPort client = getDocumentClient(platform);
 
         return client.uploadFile(folderId, fileName, fileContent)
                 .flatMap(platformDocumentId -> client.getDocumentDetail(platformDocumentId)
-                        .map(detail -> buildDocumentInfo(platform, platformDocumentId, detail, 
-                                DocumentType.FILE, ownerId, ownerName, folderId)))
+                        .map(detail -> buildDocumentInfo(
+                                platform, platformDocumentId, detail, DocumentType.FILE, ownerId, ownerName, folderId)))
                 .flatMap(documentInfoRepository::save)
-                .doOnSuccess(doc -> log.info("文件上传成功 - documentId: {}, platformDocumentId: {}",
-                        doc.getId(), doc.getPlatformDocumentId()))
+                .doOnSuccess(doc -> log.info(
+                        "文件上传成功 - documentId: {}, platformDocumentId: {}", doc.getId(), doc.getPlatformDocumentId()))
                 .doOnError(error -> log.error("文件上传失败 - fileName: {}", fileName, error));
     }
 
@@ -311,9 +306,9 @@ public class OfficeDocumentService {
     public Mono<List<DocumentInfo>> listDocuments(String parentFolderId) {
         log.info("列出文件夹下的文档 - parentFolderId: {}", parentFolderId);
 
-        return documentInfoRepository.findByParentFolder(parentFolderId)
-                .doOnSuccess(list -> log.info("文档列表查询成功 - parentFolderId: {}, count: {}", 
-                        parentFolderId, list.size()))
+        return documentInfoRepository
+                .findByParentFolder(parentFolderId)
+                .doOnSuccess(list -> log.info("文档列表查询成功 - parentFolderId: {}, count: {}", parentFolderId, list.size()))
                 .doOnError(error -> log.error("文档列表查询失败 - parentFolderId: {}", parentFolderId, error));
     }
 
@@ -328,7 +323,8 @@ public class OfficeDocumentService {
     public Mono<List<DocumentInfo>> searchDocuments(String keyword) {
         log.info("搜索文档 - keyword: {}", keyword);
 
-        return documentInfoRepository.searchByTitle(keyword)
+        return documentInfoRepository
+                .searchByTitle(keyword)
                 .doOnSuccess(list -> log.info("文档搜索成功 - keyword: {}, count: {}", keyword, list.size()))
                 .doOnError(error -> log.error("文档搜索失败 - keyword: {}", keyword, error));
     }
@@ -344,7 +340,8 @@ public class OfficeDocumentService {
     public Mono<List<DocumentInfo>> getMyDocuments(String ownerId) {
         log.info("查询我的文档 - ownerId: {}", ownerId);
 
-        return documentInfoRepository.findByOwner(ownerId)
+        return documentInfoRepository
+                .findByOwner(ownerId)
                 .doOnSuccess(list -> log.info("我的文档查询成功 - ownerId: {}, count: {}", ownerId, list.size()))
                 .doOnError(error -> log.error("我的文档查询失败 - ownerId: {}", ownerId, error));
     }
@@ -360,25 +357,25 @@ public class OfficeDocumentService {
     public Mono<Boolean> archiveDocument(Long documentId) {
         log.info("归档文档 - documentId: {}", documentId);
 
-        return documentInfoRepository.findById(documentId)
+        return documentInfoRepository
+                .findById(documentId)
                 .switchIfEmpty(Mono.error(new RuntimeException("文档不存在: " + documentId)))
                 .flatMap(doc -> {
                     doc.archive();
-                    return documentInfoRepository.update(doc)
-                            .thenReturn(true);
+                    return documentInfoRepository.update(doc).thenReturn(true);
                 })
                 .doOnSuccess(success -> log.info("文档归档成功 - documentId: {}", documentId))
                 .doOnError(error -> log.error("文档归档失败 - documentId: {}", documentId, error));
     }
 
     /**
-     * 根据平台类型获取文档客户端
+     * 根据平台类型获取文档端口实现
      *
      * @param platform 平台类型
-     * @return 文档客户端实例
+     * @return 文档端口实例
      */
-    private DocumentClient getDocumentClient(String platform) {
-        DocumentClient client = documentClients.get(platform + "DocumentClient");
+    private DocumentPort getDocumentClient(String platform) {
+        DocumentPort client = documentClients.get(platform + "DocumentClient");
         if (client == null) {
             throw new RuntimeException("不支持的办公平台: " + platform);
         }
@@ -404,10 +401,13 @@ public class OfficeDocumentService {
             DocumentType documentType,
             String ownerId,
             String ownerName,
-            String parentFolderId
-    ) {
+            String parentFolderId) {
+        Long tenantId = TenantContext.currentTenantId()
+                .map(Long::parseLong)
+                .orElseThrow(() -> new IllegalStateException("租户ID未设置"));
+
         return DocumentInfo.builder()
-                .tenantId(TenantContext.currentTenantId())
+                .tenantId(tenantId)
                 .platform(platform)
                 .platformDocumentId(platformDocumentId)
                 .documentType(documentType)

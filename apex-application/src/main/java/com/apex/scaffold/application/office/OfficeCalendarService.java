@@ -2,15 +2,14 @@ package com.apex.scaffold.application.office;
 
 import com.apex.scaffold.common.context.TenantContext;
 import com.apex.scaffold.domain.office.calendar.*;
-import com.apex.scaffold.infrastructure.office.client.CalendarClient;
+import com.apex.scaffold.domain.office.port.CalendarPort;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
 
 /**
  * 办公平台日历应用服务
@@ -24,6 +23,9 @@ import java.util.Map;
  *   <li>维护租户隔离和安全控制</li>
  * </ul>
  *
+ * <p>本服务依赖 {@link CalendarPort} 端口接口而非具体实现，
+ * 符合依赖倒置原则和端口-适配器架构模式。
+ *
  * @author Apex Scaffold
  * @since 1.0.0
  */
@@ -33,7 +35,7 @@ import java.util.Map;
 public class OfficeCalendarService {
 
     private final CalendarEventRepository calendarEventRepository;
-    private final Map<String, CalendarClient> calendarClients;
+    private final Map<String, CalendarPort> calendarClients;
 
     /**
      * 创建日历事件
@@ -70,18 +72,26 @@ public class OfficeCalendarService {
             String[] participantIds,
             String[] participantNames,
             String meetingRoomId,
-            Integer reminderMinutes
-    ) {
-        log.info("创建日历事件 - platform: {}, title: {}, organizerId: {}, startTime: {}, endTime: {}",
-                platform, title, organizerId, startTime, endTime);
+            Integer reminderMinutes) {
+        log.info(
+                "创建日历事件 - platform: {}, title: {}, organizerId: {}, startTime: {}, endTime: {}",
+                platform,
+                title,
+                organizerId,
+                startTime,
+                endTime);
 
-        CalendarClient client = getCalendarClient(platform);
+        CalendarPort client = getCalendarClient(platform);
 
-        return client.createEvent(organizerId, title, description, startTime, endTime,
-                        participantIds, location, reminderMinutes)
+        return client.createEvent(
+                        organizerId, title, description, startTime, endTime, participantIds, location, reminderMinutes)
                 .flatMap(platformEventId -> {
+                    Long tenantId = TenantContext.currentTenantId()
+                            .map(Long::parseLong)
+                            .orElseThrow(() -> new IllegalStateException("租户ID未设置"));
+
                     CalendarEvent event = CalendarEvent.builder()
-                            .tenantId(TenantContext.currentTenantId())
+                            .tenantId(tenantId)
                             .platform(platform)
                             .platformEventId(platformEventId)
                             .title(title)
@@ -103,8 +113,8 @@ public class OfficeCalendarService {
 
                     return calendarEventRepository.save(event);
                 })
-                .doOnSuccess(event -> log.info("日历事件创建成功 - eventId: {}, platformEventId: {}",
-                        event.getId(), event.getPlatformEventId()))
+                .doOnSuccess(event -> log.info(
+                        "日历事件创建成功 - eventId: {}, platformEventId: {}", event.getId(), event.getPlatformEventId()))
                 .doOnError(error -> log.error("日历事件创建失败 - title: {}", title, error));
     }
 
@@ -119,15 +129,15 @@ public class OfficeCalendarService {
     public Mono<CalendarEvent> getEventDetail(Long eventId) {
         log.info("查询日历事件详情 - eventId: {}", eventId);
 
-        return calendarEventRepository.findById(eventId)
+        return calendarEventRepository
+                .findById(eventId)
                 .switchIfEmpty(Mono.error(new RuntimeException("日历事件不存在: " + eventId)))
                 .flatMap(event -> {
-                    CalendarClient client = getCalendarClient(event.getPlatform());
-                    return client.getEventDetail(event.getPlatformEventId())
-                            .map(detail -> {
-                                // 可以根据平台返回的最新信息更新事件
-                                return event;
-                            });
+                    CalendarPort client = getCalendarClient(event.getPlatform());
+                    return client.getEventDetail(event.getPlatformEventId()).map(detail -> {
+                        // 可以根据平台返回的最新信息更新事件
+                        return event;
+                    });
                 })
                 .doOnSuccess(event -> log.info("日历事件详情查询成功 - eventId: {}", eventId))
                 .doOnError(error -> log.error("日历事件详情查询失败 - eventId: {}", eventId, error));
@@ -154,39 +164,38 @@ public class OfficeCalendarService {
             LocalDateTime startTime,
             LocalDateTime endTime,
             String[] participantIds,
-            String location
-    ) {
+            String location) {
         log.info("更新日历事件 - eventId: {}, title: {}", eventId, title);
 
-        return calendarEventRepository.findById(eventId)
+        return calendarEventRepository
+                .findById(eventId)
                 .switchIfEmpty(Mono.error(new RuntimeException("日历事件不存在: " + eventId)))
                 .flatMap(event -> {
                     if (event.isCancelled()) {
                         return Mono.error(new RuntimeException("已取消的事件无法更新"));
                     }
 
-                    CalendarClient client = getCalendarClient(event.getPlatform());
+                    CalendarPort client = getCalendarClient(event.getPlatform());
                     return client.updateEvent(
-                            event.getPlatformEventId(),
-                            title,
-                            description,
-                            startTime,
-                            endTime,
-                            participantIds,
-                            location
-                    ).flatMap(success -> {
-                        if (success) {
-                            event.setTitle(title);
-                            event.setDescription(description);
-                            event.updateTime(startTime, endTime);
-                            event.setParticipantIds(convertToJson(participantIds));
-                            event.setLocation(location);
+                                    event.getPlatformEventId(),
+                                    title,
+                                    description,
+                                    startTime,
+                                    endTime,
+                                    participantIds,
+                                    location)
+                            .flatMap(success -> {
+                                if (success) {
+                                    event.setTitle(title);
+                                    event.setDescription(description);
+                                    event.updateTime(startTime, endTime);
+                                    event.setParticipantIds(convertToJson(participantIds));
+                                    event.setLocation(location);
 
-                            return calendarEventRepository.update(event)
-                                    .thenReturn(true);
-                        }
-                        return Mono.just(false);
-                    });
+                                    return calendarEventRepository.update(event).thenReturn(true);
+                                }
+                                return Mono.just(false);
+                            });
                 })
                 .doOnSuccess(success -> log.info("日历事件更新成功 - eventId: {}, result: {}", eventId, success))
                 .doOnError(error -> log.error("日历事件更新失败 - eventId: {}", eventId, error));
@@ -204,7 +213,8 @@ public class OfficeCalendarService {
     public Mono<Boolean> cancelEvent(Long eventId, String organizerId) {
         log.info("取消日历事件 - eventId: {}, organizerId: {}", eventId, organizerId);
 
-        return calendarEventRepository.findById(eventId)
+        return calendarEventRepository
+                .findById(eventId)
                 .switchIfEmpty(Mono.error(new RuntimeException("日历事件不存在: " + eventId)))
                 .flatMap(event -> {
                     if (!event.getOrganizerId().equals(organizerId)) {
@@ -215,13 +225,12 @@ public class OfficeCalendarService {
                         return Mono.error(new RuntimeException("事件已经被取消"));
                     }
 
-                    CalendarClient client = getCalendarClient(event.getPlatform());
+                    CalendarPort client = getCalendarClient(event.getPlatform());
                     return client.cancelEvent(event.getPlatformEventId(), organizerId)
                             .flatMap(success -> {
                                 if (success) {
                                     event.cancel();
-                                    return calendarEventRepository.update(event)
-                                            .thenReturn(true);
+                                    return calendarEventRepository.update(event).thenReturn(true);
                                 }
                                 return Mono.just(false);
                             });
@@ -242,14 +251,15 @@ public class OfficeCalendarService {
     public Mono<Boolean> deleteEvent(Long eventId, String organizerId) {
         log.info("删除日历事件 - eventId: {}, organizerId: {}", eventId, organizerId);
 
-        return calendarEventRepository.findById(eventId)
+        return calendarEventRepository
+                .findById(eventId)
                 .switchIfEmpty(Mono.error(new RuntimeException("日历事件不存在: " + eventId)))
                 .flatMap(event -> {
                     if (!event.getOrganizerId().equals(organizerId)) {
                         return Mono.error(new RuntimeException("只有组织者可以删除事件"));
                     }
 
-                    CalendarClient client = getCalendarClient(event.getPlatform());
+                    CalendarPort client = getCalendarClient(event.getPlatform());
                     return client.deleteEvent(event.getPlatformEventId(), organizerId)
                             .flatMap(success -> {
                                 if (success) {
@@ -274,7 +284,8 @@ public class OfficeCalendarService {
     public Mono<List<CalendarEvent>> listEvents(LocalDateTime startTime, LocalDateTime endTime) {
         log.info("查询日历事件列表 - startTime: {}, endTime: {}", startTime, endTime);
 
-        return calendarEventRepository.findByTimeRange(startTime, endTime)
+        return calendarEventRepository
+                .findByTimeRange(startTime, endTime)
                 .doOnSuccess(list -> log.info("日历事件列表查询成功 - count: {}", list.size()))
                 .doOnError(error -> log.error("日历事件列表查询失败", error));
     }
@@ -290,9 +301,9 @@ public class OfficeCalendarService {
     public Mono<List<CalendarEvent>> getMyOrganizedEvents(String organizerId) {
         log.info("查询我组织的事件列表 - organizerId: {}", organizerId);
 
-        return calendarEventRepository.findByOrganizer(organizerId)
-                .doOnSuccess(list -> log.info("我组织的事件列表查询成功 - organizerId: {}, count: {}",
-                        organizerId, list.size()))
+        return calendarEventRepository
+                .findByOrganizer(organizerId)
+                .doOnSuccess(list -> log.info("我组织的事件列表查询成功 - organizerId: {}, count: {}", organizerId, list.size()))
                 .doOnError(error -> log.error("我组织的事件列表查询失败 - organizerId: {}", organizerId, error));
     }
 
@@ -307,9 +318,10 @@ public class OfficeCalendarService {
     public Mono<List<CalendarEvent>> getMyParticipatedEvents(String participantId) {
         log.info("查询我参与的事件列表 - participantId: {}", participantId);
 
-        return calendarEventRepository.findByParticipant(participantId)
-                .doOnSuccess(list -> log.info("我参与的事件列表查询成功 - participantId: {}, count: {}",
-                        participantId, list.size()))
+        return calendarEventRepository
+                .findByParticipant(participantId)
+                .doOnSuccess(
+                        list -> log.info("我参与的事件列表查询成功 - participantId: {}, count: {}", participantId, list.size()))
                 .doOnError(error -> log.error("我参与的事件列表查询失败 - participantId: {}", participantId, error));
     }
 
@@ -323,25 +335,26 @@ public class OfficeCalendarService {
      * @param endTime 结束时间
      * @return 是否可用
      */
-    public Mono<Boolean> checkMeetingRoomAvailability(String meetingRoomId, LocalDateTime startTime, LocalDateTime endTime) {
-        log.info("检查会议室可用性 - meetingRoomId: {}, startTime: {}, endTime: {}",
-                meetingRoomId, startTime, endTime);
+    public Mono<Boolean> checkMeetingRoomAvailability(
+            String meetingRoomId, LocalDateTime startTime, LocalDateTime endTime) {
+        log.info("检查会议室可用性 - meetingRoomId: {}, startTime: {}, endTime: {}", meetingRoomId, startTime, endTime);
 
-        return calendarEventRepository.findByMeetingRoom(meetingRoomId, startTime, endTime)
+        return calendarEventRepository
+                .findByMeetingRoom(meetingRoomId, startTime, endTime)
                 .map(events -> events.isEmpty())
-                .doOnSuccess(available -> log.info("会议室可用性检查完成 - meetingRoomId: {}, available: {}",
-                        meetingRoomId, available))
+                .doOnSuccess(available ->
+                        log.info("会议室可用性检查完成 - meetingRoomId: {}, available: {}", meetingRoomId, available))
                 .doOnError(error -> log.error("会议室可用性检查失败 - meetingRoomId: {}", meetingRoomId, error));
     }
 
     /**
-     * 根据平台类型获取日历客户端
+     * 根据平台类型获取日历端口实现
      *
      * @param platform 平台类型
-     * @return 日历客户端实例
+     * @return 日历端口实例
      */
-    private CalendarClient getCalendarClient(String platform) {
-        CalendarClient client = calendarClients.get(platform + "CalendarClient");
+    private CalendarPort getCalendarClient(String platform) {
+        CalendarPort client = calendarClients.get(platform + "CalendarClient");
         if (client == null) {
             throw new RuntimeException("不支持的办公平台: " + platform);
         }

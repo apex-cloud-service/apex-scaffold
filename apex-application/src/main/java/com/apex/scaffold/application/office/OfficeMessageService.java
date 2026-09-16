@@ -2,15 +2,12 @@ package com.apex.scaffold.application.office;
 
 import com.apex.scaffold.domain.office.OfficePlatform;
 import com.apex.scaffold.domain.office.message.*;
-import com.apex.scaffold.infrastructure.office.client.DingtalkMessageClient;
-import com.apex.scaffold.infrastructure.office.client.FeishuMessageClient;
-import com.apex.scaffold.infrastructure.office.client.WecomMessageClient;
+import com.apex.scaffold.domain.office.port.MessagePort;
+import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
-
-import java.time.LocalDateTime;
 
 /**
  * 办公平台消息发送应用服务
@@ -26,6 +23,9 @@ import java.time.LocalDateTime;
  *   <li>提供消息发送的事务边界</li>
  * </ul>
  *
+ * <p>本服务依赖 {@link MessagePort} 端口接口而非具体实现，
+ * 符合依赖倒置原则和端口-适配器架构模式。
+ *
  * @author Apex Team
  * @since 1.3.0
  */
@@ -33,12 +33,12 @@ import java.time.LocalDateTime;
 @Service
 @RequiredArgsConstructor
 public class OfficeMessageService {
-    
+
     private final OfficeMessageRepository messageRepository;
-    private final FeishuMessageClient feishuMessageClient;
-    private final DingtalkMessageClient dingtalkMessageClient;
-    private final WecomMessageClient wecomMessageClient;
-    
+    private final MessagePort feishuMessageClient;
+    private final MessagePort dingTalkMessageClient;
+    private final MessagePort wecomMessageClient;
+
     /**
      * 发送消息
      *
@@ -57,30 +57,29 @@ public class OfficeMessageService {
      */
     public Mono<Long> sendMessage(OfficePlatform platform, MessageTarget target, MessageContent content) {
         log.info("开始发送消息，平台：{}，目标类型：{}", platform, target.getTargetType());
-        
+
         // 构建消息实体
         OfficeMessage message = OfficeMessage.builder()
-            .platform(platform)
-            .messageType(content.getType())
-            .target(target)
-            .content(content)
-            .sendStatus("PENDING")
-            .retryCount(0)
-            .createdAt(LocalDateTime.now())
-            .build();
-        
+                .platform(platform)
+                .messageType(content.getType())
+                .target(target)
+                .content(content)
+                .sendStatus("PENDING")
+                .retryCount(0)
+                .createdAt(LocalDateTime.now())
+                .build();
+
         // 验证消息
         if (!message.canSend()) {
             return Mono.error(new IllegalArgumentException("消息验证失败，请检查必填字段"));
         }
-        
+
         // 保存消息记录
-        return messageRepository.save(message)
-            .flatMap(savedMessage -> {
-                log.info("消息记录已保存，ID：{}", savedMessage.getId());
-                
-                // 根据平台发送消息
-                return sendToPlatform(platform, target, content)
+        return messageRepository.save(message).flatMap(savedMessage -> {
+            log.info("消息记录已保存，ID：{}", savedMessage.getId());
+
+            // 根据平台发送消息
+            return sendToPlatform(platform, target, content)
                     .flatMap(platformMessageId -> {
                         // 标记发送成功
                         savedMessage.markAsSent(platformMessageId);
@@ -93,9 +92,9 @@ public class OfficeMessageService {
                         return messageRepository.updateStatus(savedMessage);
                     })
                     .thenReturn(savedMessage.getId());
-            });
+        });
     }
-    
+
     /**
      * 根据平台路由到对应的客户端发送消息
      *
@@ -107,12 +106,12 @@ public class OfficeMessageService {
     private Mono<String> sendToPlatform(OfficePlatform platform, MessageTarget target, MessageContent content) {
         return switch (platform) {
             case FEISHU -> feishuMessageClient.sendMessage(target, content);
-            case DINGTALK -> dingtalkMessageClient.sendMessage(target, content);
+            case DINGTALK -> dingTalkMessageClient.sendMessage(target, content);
             case WECOM -> wecomMessageClient.sendMessage(target, content);
             default -> Mono.error(new IllegalArgumentException("不支持的平台：" + platform));
         };
     }
-    
+
     /**
      * 查询消息状态
      *
@@ -123,7 +122,7 @@ public class OfficeMessageService {
         log.info("查询消息状态，ID：{}", messageId);
         return messageRepository.findById(messageId);
     }
-    
+
     /**
      * 重新发送失败的消息
      *
@@ -132,28 +131,25 @@ public class OfficeMessageService {
      */
     public Mono<Boolean> resendMessage(Long messageId) {
         log.info("重新发送消息，ID：{}", messageId);
-        
-        return messageRepository.findById(messageId)
-            .flatMap(message -> {
-                if (!"FAILED".equals(message.getSendStatus())) {
-                    return Mono.error(new IllegalStateException("只能重新发送失败的消息"));
-                }
-                
-                // 重置状态为 PENDING
-                message.setSendStatus("PENDING");
-                
-                // 重新发送
-                return sendToPlatform(message.getPlatform(), message.getTarget(), message.getContent())
+
+        return messageRepository.findById(messageId).flatMap(message -> {
+            if (!"FAILED".equals(message.getSendStatus())) {
+                return Mono.error(new IllegalStateException("只能重新发送失败的消息"));
+            }
+
+            // 重置状态为 PENDING
+            message.setSendStatus("PENDING");
+
+            // 重新发送
+            return sendToPlatform(message.getPlatform(), message.getTarget(), message.getContent())
                     .flatMap(platformMessageId -> {
                         message.markAsSent(platformMessageId);
-                        return messageRepository.updateStatus(message)
-                            .thenReturn(true);
+                        return messageRepository.updateStatus(message).thenReturn(true);
                     })
                     .onErrorResume(error -> {
                         message.markAsFailed(error.getMessage());
-                        return messageRepository.updateStatus(message)
-                            .thenReturn(false);
+                        return messageRepository.updateStatus(message).thenReturn(false);
                     });
-            });
+        });
     }
 }

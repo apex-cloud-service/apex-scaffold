@@ -1,10 +1,10 @@
 package com.apex.scaffold.infrastructure.office.client;
 
-import reactor.core.publisher.Mono;
-
+import com.apex.scaffold.domain.office.port.CalendarPort;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import reactor.core.publisher.Mono;
 
 /**
  * 办公平台日历客户端接口
@@ -21,10 +21,13 @@ import java.util.Map;
  *   <li>时区转换和时间格式处理</li>
  * </ul>
  *
+ * <p>本接口继承 {@link CalendarPort}，作为 Infrastructure 层的适配器接口，
+ * 实现 Domain 层定义的端口接口，符合端口-适配器架构模式。
+ *
  * @author Apex Scaffold
  * @since 1.0.0
  */
-public interface CalendarClient {
+public interface CalendarClient extends CalendarPort {
 
     /**
      * 创建日历事件
@@ -47,8 +50,7 @@ public interface CalendarClient {
             LocalDateTime endTime,
             String[] participantIds,
             String location,
-            Integer reminderMinutes
-    );
+            Integer reminderMinutes);
 
     /**
      * 查询日历事件详情
@@ -77,8 +79,7 @@ public interface CalendarClient {
             LocalDateTime startTime,
             LocalDateTime endTime,
             String[] participantIds,
-            String location
-    );
+            String location);
 
     /**
      * 取消日历事件
