@@ -1,12 +1,11 @@
 package com.apex.scaffold.infrastructure.office.po;
 
 import com.baomidou.mybatisplus.annotation.*;
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
 
 /**
  * 文档信息持久化对象

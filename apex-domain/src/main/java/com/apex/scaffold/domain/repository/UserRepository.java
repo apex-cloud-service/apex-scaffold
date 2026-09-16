@@ -148,7 +148,15 @@ public interface UserRepository {
      */
     Mono<PageResponse<UserEntity>> findPage(Integer pageNum, Integer pageSize, String orderBy, Boolean isAsc);
 
-    /** 后台按用户 ID、手机号或昵称分页检索用户。 */
+    /**
+     * 后台按用户 ID、手机号或昵称分页检索用户。
+     *
+     * @param keyword 关键字（用户ID、手机号或昵称）
+     * @param status 用户状态
+     * @param pageNum 页码
+     * @param pageSize 每页条数
+     * @return 分页结果
+     */
     Mono<PageResponse<UserEntity>> searchForAdministration(
             String keyword, Integer status, Integer pageNum, Integer pageSize);
 }

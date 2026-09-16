@@ -159,7 +159,9 @@ public class ProfileUpdateRequest {
     /** 若本次传入生日，则必须满足产品允许的成人年龄范围。 */
     @AssertTrue(message = "年龄必须在18至100岁之间")
     public boolean isBirthdayInSupportedRange() {
-        if (birthday == null) return true;
+        if (birthday == null) {
+            return true;
+        }
         LocalDate today = LocalDate.now();
         return !birthday.isAfter(today.minusYears(18))
                 && !birthday.isBefore(today.minusYears(101).plusDays(1));

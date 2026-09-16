@@ -16,6 +16,13 @@ import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+/**
+ * 图表仓储实现
+ *
+ * <p>提供图表数据的持久化操作
+ *
+ * @author Apex Team
+ */
 @Repository
 @RequiredArgsConstructor
 public class ChartRepositoryImpl implements ChartRepository {

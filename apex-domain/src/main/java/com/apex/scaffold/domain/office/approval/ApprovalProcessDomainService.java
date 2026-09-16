@@ -11,7 +11,7 @@ import reactor.core.publisher.Mono;
  * @since 1.3.0
  */
 public interface ApprovalProcessDomainService {
-    
+
     /**
      * 发起审批
      *
@@ -19,7 +19,7 @@ public interface ApprovalProcessDomainService {
      * @return 发起后的审批流程
      */
     Mono<ApprovalProcess> initiateApproval(ApprovalProcess process);
-    
+
     /**
      * 同步审批状态
      *
@@ -27,7 +27,7 @@ public interface ApprovalProcessDomainService {
      * @return 同步后的审批流程
      */
     Mono<ApprovalProcess> syncApprovalStatus(Long processId);
-    
+
     /**
      * 撤销审批
      *
@@ -36,7 +36,7 @@ public interface ApprovalProcessDomainService {
      * @return 撤销后的审批流程
      */
     Mono<ApprovalProcess> cancelApproval(Long processId, String reason);
-    
+
     /**
      * 催办审批
      *

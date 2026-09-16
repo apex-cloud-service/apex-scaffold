@@ -10,9 +10,14 @@ package com.apex.scaffold.domain.workflow;
  * @since 1.0.0
  */
 public enum TaskStatus {
+    /** 待处理 */
     PENDING,
+    /** 已批准 */
     APPROVED,
+    /** 已拒绝 */
     REJECTED,
+    /** 已转交 */
     TRANSFERRED,
+    /** 已取消 */
     CANCELLED
 }

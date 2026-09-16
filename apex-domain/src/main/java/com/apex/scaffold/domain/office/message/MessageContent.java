@@ -16,14 +16,21 @@ public interface MessageContent {
      * @return 消息类型
      */
     MessageType getType();
-    
+
+    /**
+     * 获取消息文本内容
+     *
+     * @return 消息文本
+     */
+    String getText();
+
     /**
      * 验证消息内容是否有效
      *
      * @return 是否有效
      */
     boolean isValid();
-    
+
     /**
      * 转换为平台特定的消息格式
      *

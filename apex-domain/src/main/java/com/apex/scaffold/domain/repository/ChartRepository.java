@@ -34,13 +34,44 @@ import reactor.core.publisher.Mono;
  */
 public interface ChartRepository {
 
+    /**
+     * 保存图表实体。
+     *
+     * @param entity 图表实体
+     * @return 保存后的图表实体
+     */
     Mono<ChartEntity> save(ChartEntity entity);
 
+    /**
+     * 根据ID查询图表实体。
+     *
+     * @param id 图表ID
+     * @return 图表实体
+     */
     Mono<ChartEntity> findById(Long id);
 
+    /**
+     * 查询租户下所有图表。
+     *
+     * @param tenantId 租户ID
+     * @return 图表实体流
+     */
     Flux<ChartEntity> findAll(String tenantId);
 
+    /**
+     * 根据ID删除图表。
+     *
+     * @param id 图表ID
+     * @param tenantId 租户ID
+     * @return 空结果
+     */
     Mono<Void> deleteById(Long id, String tenantId);
 
+    /**
+     * 统计租户下图表数量。
+     *
+     * @param tenantId 租户ID
+     * @return 图表数量
+     */
     Mono<Long> count(String tenantId);
 }

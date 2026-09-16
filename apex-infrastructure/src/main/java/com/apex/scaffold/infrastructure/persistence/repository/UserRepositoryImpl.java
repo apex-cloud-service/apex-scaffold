@@ -49,6 +49,8 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class UserRepositoryImpl implements UserRepository {
 
+    private static final String ORDER_BY_ID = "id";
+
     /**
      * 用户Mapper
      *
@@ -380,12 +382,12 @@ public class UserRepositoryImpl implements UserRepository {
                             };
                     if (!defaultOrder && Boolean.TRUE.equals(isAsc)) {
                         wrapper.orderByAsc(orderColumn);
-                        if (!"id".equals(orderBy)) {
+                        if (!ORDER_BY_ID.equals(orderBy)) {
                             wrapper.orderByAsc(UserPO::getId);
                         }
                     } else {
                         wrapper.orderByDesc(orderColumn);
-                        if (!"id".equals(orderBy)) {
+                        if (!ORDER_BY_ID.equals(orderBy)) {
                             wrapper.orderByDesc(UserPO::getId);
                         }
                     }

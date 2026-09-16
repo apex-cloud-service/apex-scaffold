@@ -10,8 +10,12 @@ package com.apex.scaffold.domain.workflow;
  * @since 1.0.0
  */
 public enum ApproverType {
+    /** 指定用户 */
     SPECIFIED_USER,
+    /** 角色 */
     ROLE,
+    /** 上级 */
     SUPERIOR,
+    /** 发起人 */
     INITIATOR
 }

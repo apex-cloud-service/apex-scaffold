@@ -14,9 +14,22 @@ import reactor.core.publisher.Mono;
  */
 public interface SmsCodePurposeService {
 
-    /** @param phone 手机号 @param purpose 业务用途 @return 发送完成信号 */
+    /**
+     * 发送并存储短信验证码。
+     *
+     * @param phone 手机号
+     * @param purpose 业务用途
+     * @return 发送完成信号
+     */
     Mono<Void> sendAndStore(String phone, SmsCodePurpose purpose);
 
-    /** @param phone 手机号 @param code 验证码 @param purpose 业务用途 @return 验证是否通过 */
+    /**
+     * 验证短信验证码。
+     *
+     * @param phone 手机号
+     * @param code 验证码
+     * @param purpose 业务用途
+     * @return 验证是否通过
+     */
     Mono<Boolean> validate(String phone, String code, SmsCodePurpose purpose);
 }

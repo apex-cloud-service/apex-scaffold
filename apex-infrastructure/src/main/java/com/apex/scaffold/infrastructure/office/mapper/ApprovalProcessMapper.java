@@ -2,11 +2,10 @@ package com.apex.scaffold.infrastructure.office.mapper;
 
 import com.apex.scaffold.infrastructure.office.po.ApprovalProcessPO;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
-
-import java.util.List;
 
 /**
  * 审批流程Mapper接口
@@ -18,7 +17,7 @@ import java.util.List;
  */
 @Mapper
 public interface ApprovalProcessMapper extends BaseMapper<ApprovalProcessPO> {
-    
+
     /**
      * 根据平台实例ID查询
      *
@@ -26,10 +25,11 @@ public interface ApprovalProcessMapper extends BaseMapper<ApprovalProcessPO> {
      * @param tenantId 租户ID
      * @return 审批流程PO
      */
-    @Select("SELECT * FROM office_approval_process WHERE platform_instance_id = #{platformInstanceId} AND tenant_id = #{tenantId} AND deleted = 0")
-    ApprovalProcessPO selectByPlatformInstanceId(@Param("platformInstanceId") String platformInstanceId, 
-                                                   @Param("tenantId") Long tenantId);
-    
+    @Select(
+            "SELECT * FROM office_approval_process WHERE platform_instance_id = #{platformInstanceId} AND tenant_id = #{tenantId} AND deleted = 0")
+    ApprovalProcessPO selectByPlatformInstanceId(
+            @Param("platformInstanceId") String platformInstanceId, @Param("tenantId") Long tenantId);
+
     /**
      * 根据流程实例ID查询
      *
@@ -37,10 +37,11 @@ public interface ApprovalProcessMapper extends BaseMapper<ApprovalProcessPO> {
      * @param tenantId 租户ID
      * @return 审批流程PO
      */
-    @Select("SELECT * FROM office_approval_process WHERE process_instance_id = #{processInstanceId} AND tenant_id = #{tenantId} AND deleted = 0")
-    ApprovalProcessPO selectByProcessInstanceId(@Param("processInstanceId") String processInstanceId,
-                                                 @Param("tenantId") Long tenantId);
-    
+    @Select(
+            "SELECT * FROM office_approval_process WHERE process_instance_id = #{processInstanceId} AND tenant_id = #{tenantId} AND deleted = 0")
+    ApprovalProcessPO selectByProcessInstanceId(
+            @Param("processInstanceId") String processInstanceId, @Param("tenantId") Long tenantId);
+
     /**
      * 查询用户发起的审批流程列表
      *
@@ -48,10 +49,11 @@ public interface ApprovalProcessMapper extends BaseMapper<ApprovalProcessPO> {
      * @param tenantId 租户ID
      * @return 审批流程列表
      */
-    @Select("SELECT * FROM office_approval_process WHERE initiator_id = #{initiatorId} AND tenant_id = #{tenantId} AND deleted = 0 ORDER BY created_at DESC")
-    List<ApprovalProcessPO> selectByInitiator(@Param("initiatorId") String initiatorId,
-                                               @Param("tenantId") Long tenantId);
-    
+    @Select(
+            "SELECT * FROM office_approval_process WHERE initiator_id = #{initiatorId} AND tenant_id = #{tenantId} AND deleted = 0 ORDER BY created_at DESC")
+    List<ApprovalProcessPO> selectByInitiator(
+            @Param("initiatorId") String initiatorId, @Param("tenantId") Long tenantId);
+
     /**
      * 查询待审批列表
      *
@@ -61,8 +63,9 @@ public interface ApprovalProcessMapper extends BaseMapper<ApprovalProcessPO> {
      * @param tenantId 租户ID
      * @return 待审批流程列表
      */
-    @Select("SELECT * FROM office_approval_process WHERE JSON_CONTAINS(current_approver_ids, JSON_QUOTE(#{approverId})) " +
-            "AND status IN ('PENDING', 'IN_PROGRESS') AND tenant_id = #{tenantId} AND deleted = 0 ORDER BY created_at DESC")
-    List<ApprovalProcessPO> selectPendingByApprover(@Param("approverId") String approverId,
-                                                     @Param("tenantId") Long tenantId);
+    @Select(
+            "SELECT * FROM office_approval_process WHERE JSON_CONTAINS(current_approver_ids, JSON_QUOTE(#{approverId})) "
+                    + "AND status IN ('PENDING', 'IN_PROGRESS') AND tenant_id = #{tenantId} AND deleted = 0 ORDER BY created_at DESC")
+    List<ApprovalProcessPO> selectPendingByApprover(
+            @Param("approverId") String approverId, @Param("tenantId") Long tenantId);
 }

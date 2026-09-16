@@ -1,8 +1,7 @@
 package com.apex.scaffold.domain.office;
 
-import reactor.core.publisher.Mono;
-
 import java.util.List;
+import reactor.core.publisher.Mono;
 
 /**
  * 办公平台组织服务领域端口
@@ -41,10 +40,7 @@ public interface OfficeOrganizationService {
      * @return 部门列表和新游标
      */
     Mono<OrganizationSyncResult<OfficeDepartment>> fetchDepartments(
-        String tenantId,
-        OfficePlatform platform,
-        String cursor
-    );
+            String tenantId, OfficePlatform platform, String cursor);
 
     /**
      * 拉取成员列表
@@ -56,11 +52,7 @@ public interface OfficeOrganizationService {
      * @param cursor   同步游标（用于增量同步，首次传 null）
      * @return 成员列表和新游标
      */
-    Mono<OrganizationSyncResult<OfficeMember>> fetchMembers(
-        String tenantId,
-        OfficePlatform platform,
-        String cursor
-    );
+    Mono<OrganizationSyncResult<OfficeMember>> fetchMembers(String tenantId, OfficePlatform platform, String cursor);
 
     /**
      * 拉取指定部门的成员列表
@@ -74,11 +66,7 @@ public interface OfficeOrganizationService {
      * @return 成员列表和新游标
      */
     Mono<OrganizationSyncResult<OfficeMember>> fetchDepartmentMembers(
-        String tenantId,
-        OfficePlatform platform,
-        String externalDeptId,
-        String cursor
-    );
+            String tenantId, OfficePlatform platform, String externalDeptId, String cursor);
 
     /**
      * 组织同步结果
@@ -87,11 +75,7 @@ public interface OfficeOrganizationService {
      *
      * @param <T> 数据类型（OfficeDepartment 或 OfficeMember）
      */
-    record OrganizationSyncResult<T>(
-        List<T> data,
-        String nextCursor,
-        boolean hasMore
-    ) {
+    record OrganizationSyncResult<T>(List<T> data, String nextCursor, boolean hasMore) {
         /**
          * 创建空结果
          */

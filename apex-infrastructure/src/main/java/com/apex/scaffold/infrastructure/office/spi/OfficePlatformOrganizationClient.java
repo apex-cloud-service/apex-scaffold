@@ -40,10 +40,7 @@ public interface OfficePlatformOrganizationClient {
      * @return 部门列表和新游标
      */
     Mono<OfficeOrganizationService.OrganizationSyncResult<OfficeDepartment>> fetchDepartments(
-        String appId,
-        String secret,
-        String cursor
-    );
+            String appId, String secret, String cursor);
 
     /**
      * 拉取成员列表
@@ -56,10 +53,7 @@ public interface OfficePlatformOrganizationClient {
      * @return 成员列表和新游标
      */
     Mono<OfficeOrganizationService.OrganizationSyncResult<OfficeMember>> fetchMembers(
-        String appId,
-        String secret,
-        String cursor
-    );
+            String appId, String secret, String cursor);
 
     /**
      * 拉取指定部门的成员列表
@@ -73,9 +67,5 @@ public interface OfficePlatformOrganizationClient {
      * @return 成员列表和新游标
      */
     Mono<OfficeOrganizationService.OrganizationSyncResult<OfficeMember>> fetchDepartmentMembers(
-        String appId,
-        String secret,
-        String externalDeptId,
-        String cursor
-    );
+            String appId, String secret, String externalDeptId, String cursor);
 }

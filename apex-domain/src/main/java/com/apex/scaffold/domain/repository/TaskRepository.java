@@ -24,10 +24,28 @@ import reactor.core.publisher.Mono;
  */
 public interface TaskRepository {
 
+    /**
+     * 根据主键ID查询任务。
+     *
+     * @param id 任务ID
+     * @return 任务实体
+     */
     Mono<Task> findById(Long id);
 
+    /**
+     * 根据流程实例ID查询任务列表。
+     *
+     * @param processInstanceId 流程实例ID
+     * @return 任务列表
+     */
     Mono<List<Task>> findByProcessInstanceId(Long processInstanceId);
 
+    /**
+     * 根据审批人ID查询任务列表。
+     *
+     * @param assigneeId 审批人ID
+     * @return 任务列表
+     */
     Mono<List<Task>> findByAssignee(Long assigneeId);
 
     /**
@@ -40,9 +58,27 @@ public interface TaskRepository {
      */
     Flux<Task> findPendingTasks();
 
+    /**
+     * 插入任务。
+     *
+     * @param entity 任务实体
+     * @return 影响的行数
+     */
     Mono<Integer> insert(Task entity);
 
+    /**
+     * 根据ID更新任务。
+     *
+     * @param entity 任务实体
+     * @return 影响的行数
+     */
     Mono<Integer> updateById(Task entity);
 
+    /**
+     * 根据ID删除任务。
+     *
+     * @param id 任务ID
+     * @return 影响的行数
+     */
     Mono<Integer> deleteById(Long id);
 }

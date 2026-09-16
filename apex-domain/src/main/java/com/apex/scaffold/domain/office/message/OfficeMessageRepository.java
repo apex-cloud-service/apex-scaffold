@@ -19,7 +19,7 @@ public interface OfficeMessageRepository {
      * @return 保存后的消息（包含生成的ID）
      */
     Mono<OfficeMessage> save(OfficeMessage message);
-    
+
     /**
      * 根据ID查询消息
      *
@@ -27,7 +27,7 @@ public interface OfficeMessageRepository {
      * @return 消息实体
      */
     Mono<OfficeMessage> findById(Long id);
-    
+
     /**
      * 根据平台消息ID查询
      *
@@ -35,7 +35,7 @@ public interface OfficeMessageRepository {
      * @return 消息实体
      */
     Mono<OfficeMessage> findByPlatformMessageId(String platformMessageId);
-    
+
     /**
      * 更新消息状态
      *

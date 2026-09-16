@@ -3,16 +3,14 @@ package com.apex.scaffold.application.office;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.domain.office.*;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * 办公平台组织同步应用服务
@@ -62,26 +60,20 @@ public class OfficeOrganizationSyncService {
         log.info("开始同步部门，租户：{}，平台：{}，全量：{}", tenantId, platform, fullSync);
 
         return createOrGetSyncTask(tenantId, platform, fullSync)
-            .flatMap(task -> {
-                String cursor = fullSync ? null : task.getCursor();
-                return syncDepartmentsRecursive(tenantId, platform, cursor, 0, new ArrayList<>())
-                    .flatMap(result -> updateSyncTaskSuccess(task, result.nextCursor())
-                        .map(updatedTask -> SyncTaskResult.success(
-                            updatedTask.getId(),
-                            result.syncedCount(),
-                            "部门同步完成"
-                        ))
-                    )
-                    .onErrorResume(error -> {
-                        log.error("同步部门失败，租户：{}，平台：{}", tenantId, platform, error);
-                        return updateSyncTaskFailure(task, error.getMessage())
-                            .then(Mono.error(new BusinessException(
-                                ResultCode.BUSINESS_ERROR,
-                                "同步部门失败：" + error.getMessage()
-                            )));
-                    });
-            })
-            .as(transactionalOperator::transactional);
+                .flatMap(task -> {
+                    String cursor = fullSync ? null : task.getCursor();
+                    return syncDepartmentsRecursive(tenantId, platform, cursor, 0, new ArrayList<>())
+                            .flatMap(result -> updateSyncTaskSuccess(task, result.nextCursor())
+                                    .map(updatedTask -> SyncTaskResult.success(
+                                            updatedTask.getId(), result.syncedCount(), "部门同步完成")))
+                            .onErrorResume(error -> {
+                                log.error("同步部门失败，租户：{}，平台：{}", tenantId, platform, error);
+                                return updateSyncTaskFailure(task, error.getMessage())
+                                        .then(Mono.error(new BusinessException(
+                                                ResultCode.BUSINESS_ERROR, "同步部门失败：" + error.getMessage())));
+                            });
+                })
+                .as(transactionalOperator::transactional);
     }
 
     /**
@@ -99,26 +91,20 @@ public class OfficeOrganizationSyncService {
         log.info("开始同步成员，租户：{}，平台：{}，全量：{}", tenantId, platform, fullSync);
 
         return createOrGetSyncTask(tenantId, platform, fullSync)
-            .flatMap(task -> {
-                String cursor = fullSync ? null : task.getCursor();
-                return syncMembersRecursive(tenantId, platform, cursor, 0, new ArrayList<>())
-                    .flatMap(result -> updateSyncTaskSuccess(task, result.nextCursor())
-                        .map(updatedTask -> SyncTaskResult.success(
-                            updatedTask.getId(),
-                            result.syncedCount(),
-                            "成员同步完成"
-                        ))
-                    )
-                    .onErrorResume(error -> {
-                        log.error("同步成员失败，租户：{}，平台：{}", tenantId, platform, error);
-                        return updateSyncTaskFailure(task, error.getMessage())
-                            .then(Mono.error(new BusinessException(
-                                ResultCode.BUSINESS_ERROR,
-                                "同步成员失败：" + error.getMessage()
-                            )));
-                    });
-            })
-            .as(transactionalOperator::transactional);
+                .flatMap(task -> {
+                    String cursor = fullSync ? null : task.getCursor();
+                    return syncMembersRecursive(tenantId, platform, cursor, 0, new ArrayList<>())
+                            .flatMap(result -> updateSyncTaskSuccess(task, result.nextCursor())
+                                    .map(updatedTask -> SyncTaskResult.success(
+                                            updatedTask.getId(), result.syncedCount(), "成员同步完成")))
+                            .onErrorResume(error -> {
+                                log.error("同步成员失败，租户：{}，平台：{}", tenantId, platform, error);
+                                return updateSyncTaskFailure(task, error.getMessage())
+                                        .then(Mono.error(new BusinessException(
+                                                ResultCode.BUSINESS_ERROR, "同步成员失败：" + error.getMessage())));
+                            });
+                })
+                .as(transactionalOperator::transactional);
     }
 
     /**
@@ -130,10 +116,7 @@ public class OfficeOrganizationSyncService {
      * @return 组织映射
      */
     public Mono<OfficeOrganizationMapping> getDepartmentMapping(
-        String tenantId,
-        OfficePlatform platform,
-        String externalOrgId
-    ) {
+            String tenantId, OfficePlatform platform, String externalOrgId) {
         return officeRepository.findDepartmentMapping(tenantId, platform, externalOrgId);
     }
 
@@ -146,10 +129,7 @@ public class OfficeOrganizationSyncService {
      * @return 组织映射
      */
     public Mono<OfficeOrganizationMapping> getMemberMapping(
-        String tenantId,
-        OfficePlatform platform,
-        String externalUserId
-    ) {
+            String tenantId, OfficePlatform platform, String externalUserId) {
         return officeRepository.findMemberMapping(tenantId, platform, externalUserId);
     }
 
@@ -160,10 +140,7 @@ public class OfficeOrganizationSyncService {
      * @param platform 平台类型（可选）
      * @return 组织映射列表
      */
-    public Mono<List<OfficeOrganizationMapping>> listOrganizationMappings(
-        String tenantId,
-        OfficePlatform platform
-    ) {
+    public Mono<List<OfficeOrganizationMapping>> listOrganizationMappings(String tenantId, OfficePlatform platform) {
         return officeRepository.listOrganizationMappings(tenantId, platform);
     }
 
@@ -176,12 +153,7 @@ public class OfficeOrganizationSyncService {
      * @param size 每页大小
      * @return 同步任务列表
      */
-    public Mono<List<OfficeSyncTask>> listSyncTasks(
-        String tenantId,
-        OfficePlatform platform,
-        int page,
-        int size
-    ) {
+    public Mono<List<OfficeSyncTask>> listSyncTasks(String tenantId, OfficePlatform platform, int page, int size) {
         return officeRepository.listSyncTasks(tenantId, platform, page, size);
     }
 
@@ -191,165 +163,144 @@ public class OfficeOrganizationSyncService {
         if (fullSync) {
             return createNewSyncTask(tenantId, platform);
         }
-        return officeRepository.findLatestSyncTask(tenantId, platform)
-            .switchIfEmpty(createNewSyncTask(tenantId, platform));
+        return officeRepository
+                .findLatestSyncTask(tenantId, platform)
+                .switchIfEmpty(createNewSyncTask(tenantId, platform));
     }
 
     private Mono<OfficeSyncTask> createNewSyncTask(String tenantId, OfficePlatform platform) {
         OfficeSyncTask task = OfficeSyncTask.builder()
-            .tenantId(tenantId)
-            .platform(platform)
-            .state("RUNNING")
-            .cursor(null)
-            .failureMessage(null)
-            .version(0)
-            .deleted(0)
-            .build();
+                .tenantId(tenantId)
+                .platform(platform)
+                .state("RUNNING")
+                .cursor(null)
+                .failureMessage(null)
+                .version(0)
+                .deleted(0)
+                .build();
         return officeRepository.saveSyncTask(task);
     }
 
     private Mono<OfficeSyncTask> updateSyncTaskSuccess(OfficeSyncTask task, String nextCursor) {
         OfficeSyncTask updatedTask = OfficeSyncTask.builder()
-            .id(task.getId())
-            .tenantId(task.getTenantId())
-            .platform(task.getPlatform())
-            .state("SUCCESS")
-            .cursor(nextCursor)
-            .failureMessage(null)
-            .version(task.getVersion())
-            .deleted(task.getDeleted())
-            .build();
+                .id(task.getId())
+                .tenantId(task.getTenantId())
+                .platform(task.getPlatform())
+                .state("SUCCESS")
+                .cursor(nextCursor)
+                .failureMessage(null)
+                .version(task.getVersion())
+                .deleted(task.getDeleted())
+                .build();
         return officeRepository.saveSyncTask(updatedTask);
     }
 
     private Mono<OfficeSyncTask> updateSyncTaskFailure(OfficeSyncTask task, String errorMessage) {
         OfficeSyncTask updatedTask = OfficeSyncTask.builder()
-            .id(task.getId())
-            .tenantId(task.getTenantId())
-            .platform(task.getPlatform())
-            .state("FAILED")
-            .cursor(task.getCursor())
-            .failureMessage(errorMessage)
-            .version(task.getVersion())
-            .deleted(task.getDeleted())
-            .build();
+                .id(task.getId())
+                .tenantId(task.getTenantId())
+                .platform(task.getPlatform())
+                .state("FAILED")
+                .cursor(task.getCursor())
+                .failureMessage(errorMessage)
+                .version(task.getVersion())
+                .deleted(task.getDeleted())
+                .build();
         return officeRepository.saveSyncTask(updatedTask);
     }
 
     private Mono<SyncBatchResult> syncDepartmentsRecursive(
-        String tenantId,
-        OfficePlatform platform,
-        String cursor,
-        int syncedCount,
-        List<String> allCursors
-    ) {
-        return officeOrganizationService.fetchDepartments(tenantId, platform, cursor)
-            .flatMap(result -> {
-                if (result.data().isEmpty()) {
-                    return Mono.just(new SyncBatchResult(syncedCount, cursor));
-                }
+            String tenantId, OfficePlatform platform, String cursor, int syncedCount, List<String> allCursors) {
+        return officeOrganizationService
+                .fetchDepartments(tenantId, platform, cursor)
+                .flatMap(result -> {
+                    if (result.data().isEmpty()) {
+                        return Mono.just(new SyncBatchResult(syncedCount, cursor));
+                    }
 
-                return Flux.fromIterable(result.data())
-                    .flatMap(dept -> saveDepartmentMapping(tenantId, platform, dept))
-                    .collectList()
-                    .flatMap(mappings -> {
-                        int newSyncedCount = syncedCount + mappings.size();
-                        if (result.hasMore() && result.nextCursor() != null) {
-                            allCursors.add(result.nextCursor());
-                            return syncDepartmentsRecursive(
-                                tenantId,
-                                platform,
-                                result.nextCursor(),
-                                newSyncedCount,
-                                allCursors
-                            );
-                        }
-                        return Mono.just(new SyncBatchResult(newSyncedCount, result.nextCursor()));
-                    });
-            });
+                    return Flux.fromIterable(result.data())
+                            .flatMap(dept -> saveDepartmentMapping(tenantId, platform, dept))
+                            .collectList()
+                            .flatMap(mappings -> {
+                                int newSyncedCount = syncedCount + mappings.size();
+                                if (result.hasMore() && result.nextCursor() != null) {
+                                    allCursors.add(result.nextCursor());
+                                    return syncDepartmentsRecursive(
+                                            tenantId, platform, result.nextCursor(), newSyncedCount, allCursors);
+                                }
+                                return Mono.just(new SyncBatchResult(newSyncedCount, result.nextCursor()));
+                            });
+                });
     }
 
     private Mono<SyncBatchResult> syncMembersRecursive(
-        String tenantId,
-        OfficePlatform platform,
-        String cursor,
-        int syncedCount,
-        List<String> allCursors
-    ) {
-        return officeOrganizationService.fetchMembers(tenantId, platform, cursor)
-            .flatMap(result -> {
-                if (result.data().isEmpty()) {
-                    return Mono.just(new SyncBatchResult(syncedCount, cursor));
-                }
+            String tenantId, OfficePlatform platform, String cursor, int syncedCount, List<String> allCursors) {
+        return officeOrganizationService
+                .fetchMembers(tenantId, platform, cursor)
+                .flatMap(result -> {
+                    if (result.data().isEmpty()) {
+                        return Mono.just(new SyncBatchResult(syncedCount, cursor));
+                    }
 
-                return Flux.fromIterable(result.data())
-                    .flatMap(member -> saveMemberMapping(tenantId, platform, member))
-                    .collectList()
-                    .flatMap(mappings -> {
-                        int newSyncedCount = syncedCount + mappings.size();
-                        if (result.hasMore() && result.nextCursor() != null) {
-                            allCursors.add(result.nextCursor());
-                            return syncMembersRecursive(
-                                tenantId,
-                                platform,
-                                result.nextCursor(),
-                                newSyncedCount,
-                                allCursors
-                            );
-                        }
-                        return Mono.just(new SyncBatchResult(newSyncedCount, result.nextCursor()));
-                    });
-            });
+                    return Flux.fromIterable(result.data())
+                            .flatMap(member -> saveMemberMapping(tenantId, platform, member))
+                            .collectList()
+                            .flatMap(mappings -> {
+                                int newSyncedCount = syncedCount + mappings.size();
+                                if (result.hasMore() && result.nextCursor() != null) {
+                                    allCursors.add(result.nextCursor());
+                                    return syncMembersRecursive(
+                                            tenantId, platform, result.nextCursor(), newSyncedCount, allCursors);
+                                }
+                                return Mono.just(new SyncBatchResult(newSyncedCount, result.nextCursor()));
+                            });
+                });
     }
 
     private Mono<OfficeOrganizationMapping> saveDepartmentMapping(
-        String tenantId,
-        OfficePlatform platform,
-        OfficeDepartment dept
-    ) {
+            String tenantId, OfficePlatform platform, OfficeDepartment dept) {
         // 这里简化处理，实际应该调用内部的部门服务创建或查找 Apex 部门
         // 并返回 apexDeptId，这里用 externalOrgId 作为占位
         String apexDeptId = "apex-dept-" + dept.getExternalDeptId();
 
-        return officeRepository.findDepartmentMapping(tenantId, platform, dept.getExternalDeptId())
-            .switchIfEmpty(Mono.defer(() -> {
-                OfficeOrganizationMapping mapping = OfficeOrganizationMapping.builder()
-                    .tenantId(tenantId)
-                    .platform(platform)
-                    .externalOrgId(dept.getExternalDeptId())
-                    .externalUserId(null)
-                    .apexDeptId(apexDeptId)
-                    .apexUserId(null)
-                    .version(0)
-                    .deleted(0)
-                    .build();
-                return officeRepository.saveOrganizationMapping(mapping);
-            }));
+        return officeRepository
+                .findDepartmentMapping(tenantId, platform, dept.getExternalDeptId())
+                .switchIfEmpty(Mono.defer(() -> {
+                    OfficeOrganizationMapping mapping = OfficeOrganizationMapping.builder()
+                            .tenantId(tenantId)
+                            .platform(platform)
+                            .externalOrgId(dept.getExternalDeptId())
+                            .externalUserId(null)
+                            .apexDeptId(apexDeptId)
+                            .apexUserId(null)
+                            .version(0)
+                            .deleted(0)
+                            .build();
+                    return officeRepository.saveOrganizationMapping(mapping);
+                }));
     }
 
     private Mono<OfficeOrganizationMapping> saveMemberMapping(
-        String tenantId,
-        OfficePlatform platform,
-        OfficeMember member
-    ) {
+            String tenantId, OfficePlatform platform, OfficeMember member) {
         // 这里简化处理，实际应该调用内部的用户服务创建或查找 Apex 用户
         // 并返回 apexUserId，这里用 externalUserId 作为占位
         String apexUserId = "apex-user-" + member.getExternalUserId();
 
-        return officeRepository.findMemberMapping(tenantId, platform, member.getExternalUserId())
-            .switchIfEmpty(Mono.defer(() -> {
-                OfficeOrganizationMapping mapping = OfficeOrganizationMapping.builder()
-                    .tenantId(tenantId)
-                    .platform(platform)
-                    .externalOrgId(null)
-                    .externalUserId(member.getExternalUserId())
-                    .apexDeptId(null)
-                    .apexUserId(apexUserId)
-                    .version(0)
-                    .deleted(0)
-                    .build();
-                return officeRepository.saveOrganizationMapping(mapping);
-            }));
+        return officeRepository
+                .findMemberMapping(tenantId, platform, member.getExternalUserId())
+                .switchIfEmpty(Mono.defer(() -> {
+                    OfficeOrganizationMapping mapping = OfficeOrganizationMapping.builder()
+                            .tenantId(tenantId)
+                            .platform(platform)
+                            .externalOrgId(null)
+                            .externalUserId(member.getExternalUserId())
+                            .apexDeptId(null)
+                            .apexUserId(apexUserId)
+                            .version(0)
+                            .deleted(0)
+                            .build();
+                    return officeRepository.saveOrganizationMapping(mapping);
+                }));
     }
 
     private record SyncBatchResult(int syncedCount, String nextCursor) {}
@@ -357,12 +308,7 @@ public class OfficeOrganizationSyncService {
     /**
      * 同步任务结果
      */
-    public record SyncTaskResult(
-        Long taskId,
-        int syncedCount,
-        String message,
-        boolean success
-    ) {
+    public record SyncTaskResult(Long taskId, int syncedCount, String message, boolean success) {
         public static SyncTaskResult success(Long taskId, int syncedCount, String message) {
             return new SyncTaskResult(taskId, syncedCount, message, true);
         }

@@ -20,7 +20,7 @@ import reactor.core.publisher.Mono;
  * @since 1.3.0
  */
 public interface OfficeMessageService {
-    
+
     /**
      * 发送消息到办公平台
      *
@@ -31,7 +31,7 @@ public interface OfficeMessageService {
      * @return 发送后的消息实体（包含平台返回的消息 ID 和状态）
      */
     Mono<OfficeMessage> sendMessage(OfficeMessage message);
-    
+
     /**
      * 批量发送消息
      *
@@ -41,7 +41,7 @@ public interface OfficeMessageService {
      * @return 发送后的消息实体
      */
     Mono<OfficeMessage> sendBatchMessage(OfficeMessage message);
-    
+
     /**
      * 重试发送失败的消息
      *
@@ -51,7 +51,7 @@ public interface OfficeMessageService {
      * @return 重试后的消息实体
      */
     Mono<OfficeMessage> retryMessage(Long messageId);
-    
+
     /**
      * 查询消息发送状态
      *
@@ -61,7 +61,7 @@ public interface OfficeMessageService {
      * @return 消息实体
      */
     Mono<OfficeMessage> getMessageById(Long messageId);
-    
+
     /**
      * 撤回消息
      *

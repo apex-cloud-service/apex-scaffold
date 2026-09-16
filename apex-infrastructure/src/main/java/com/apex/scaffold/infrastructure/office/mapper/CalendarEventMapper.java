@@ -2,12 +2,11 @@ package com.apex.scaffold.infrastructure.office.mapper;
 
 import com.apex.scaffold.infrastructure.office.po.CalendarEventPO;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import java.time.LocalDateTime;
+import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
-
-import java.time.LocalDateTime;
-import java.util.List;
 
 /**
  * 日历事件Mapper接口
@@ -28,8 +27,10 @@ public interface CalendarEventMapper extends BaseMapper<CalendarEventPO> {
      * @param platformEventId 平台中的事件ID
      * @return 日历事件PO
      */
-    @Select("SELECT * FROM office_calendar_event WHERE platform = #{platform} AND platform_event_id = #{platformEventId} AND deleted = 0")
-    CalendarEventPO selectByPlatformAndEventId(@Param("platform") String platform, @Param("platformEventId") String platformEventId);
+    @Select(
+            "SELECT * FROM office_calendar_event WHERE platform = #{platform} AND platform_event_id = #{platformEventId} AND deleted = 0")
+    CalendarEventPO selectByPlatformAndEventId(
+            @Param("platform") String platform, @Param("platformEventId") String platformEventId);
 
     /**
      * 查询指定时间范围内的日历事件
@@ -38,12 +39,13 @@ public interface CalendarEventMapper extends BaseMapper<CalendarEventPO> {
      * @param endTime 结束时间
      * @return 日历事件列表
      */
-    @Select("SELECT * FROM office_calendar_event WHERE deleted = 0 AND " +
-            "((start_time >= #{startTime} AND start_time < #{endTime}) OR " +
-            "(end_time > #{startTime} AND end_time <= #{endTime}) OR " +
-            "(start_time <= #{startTime} AND end_time >= #{endTime})) " +
-            "ORDER BY start_time ASC")
-    List<CalendarEventPO> selectByTimeRange(@Param("startTime") LocalDateTime startTime, @Param("endTime") LocalDateTime endTime);
+    @Select("SELECT * FROM office_calendar_event WHERE deleted = 0 AND "
+            + "((start_time >= #{startTime} AND start_time < #{endTime}) OR "
+            + "(end_time > #{startTime} AND end_time <= #{endTime}) OR "
+            + "(start_time <= #{startTime} AND end_time >= #{endTime})) "
+            + "ORDER BY start_time ASC")
+    List<CalendarEventPO> selectByTimeRange(
+            @Param("startTime") LocalDateTime startTime, @Param("endTime") LocalDateTime endTime);
 
     /**
      * 查询指定组织者的日历事件
@@ -51,7 +53,8 @@ public interface CalendarEventMapper extends BaseMapper<CalendarEventPO> {
      * @param organizerId 组织者ID
      * @return 日历事件列表
      */
-    @Select("SELECT * FROM office_calendar_event WHERE organizer_id = #{organizerId} AND deleted = 0 ORDER BY start_time DESC")
+    @Select(
+            "SELECT * FROM office_calendar_event WHERE organizer_id = #{organizerId} AND deleted = 0 ORDER BY start_time DESC")
     List<CalendarEventPO> selectByOrganizer(@Param("organizerId") String organizerId);
 
     /**
@@ -60,7 +63,8 @@ public interface CalendarEventMapper extends BaseMapper<CalendarEventPO> {
      * @param participantId 参与人ID
      * @return 日历事件列表
      */
-    @Select("SELECT * FROM office_calendar_event WHERE participant_ids LIKE CONCAT('%', #{participantId}, '%') AND deleted = 0 ORDER BY start_time DESC")
+    @Select(
+            "SELECT * FROM office_calendar_event WHERE participant_ids LIKE CONCAT('%', #{participantId}, '%') AND deleted = 0 ORDER BY start_time DESC")
     List<CalendarEventPO> selectByParticipant(@Param("participantId") String participantId);
 
     /**
@@ -71,12 +75,13 @@ public interface CalendarEventMapper extends BaseMapper<CalendarEventPO> {
      * @param endTime 结束时间
      * @return 日历事件列表
      */
-    @Select("SELECT * FROM office_calendar_event WHERE meeting_room_id = #{meetingRoomId} AND deleted = 0 AND " +
-            "((start_time >= #{startTime} AND start_time < #{endTime}) OR " +
-            "(end_time > #{startTime} AND end_time <= #{endTime}) OR " +
-            "(start_time <= #{startTime} AND end_time >= #{endTime})) " +
-            "ORDER BY start_time ASC")
-    List<CalendarEventPO> selectByMeetingRoom(@Param("meetingRoomId") String meetingRoomId,
-                                               @Param("startTime") LocalDateTime startTime,
-                                               @Param("endTime") LocalDateTime endTime);
+    @Select("SELECT * FROM office_calendar_event WHERE meeting_room_id = #{meetingRoomId} AND deleted = 0 AND "
+            + "((start_time >= #{startTime} AND start_time < #{endTime}) OR "
+            + "(end_time > #{startTime} AND end_time <= #{endTime}) OR "
+            + "(start_time <= #{startTime} AND end_time >= #{endTime})) "
+            + "ORDER BY start_time ASC")
+    List<CalendarEventPO> selectByMeetingRoom(
+            @Param("meetingRoomId") String meetingRoomId,
+            @Param("startTime") LocalDateTime startTime,
+            @Param("endTime") LocalDateTime endTime);
 }

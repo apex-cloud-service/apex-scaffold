@@ -4,15 +4,14 @@ import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.domain.office.*;
 import com.apex.scaffold.infrastructure.office.spi.OfficePlatformOrganizationClient;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import reactor.core.publisher.Mono;
-
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
 
 /**
  * 办公平台组织服务实现
@@ -37,7 +36,7 @@ public class OfficeOrganizationServiceImpl implements OfficeOrganizationService 
 
     private final OfficeRepository officeRepository;
     private final List<OfficePlatformOrganizationClient> platformClients;
-    
+
     private Map<OfficePlatform, OfficePlatformOrganizationClient> clientMap;
 
     /**
@@ -46,105 +45,69 @@ public class OfficeOrganizationServiceImpl implements OfficeOrganizationService 
     private Map<OfficePlatform, OfficePlatformOrganizationClient> getClientMap() {
         if (clientMap == null) {
             clientMap = platformClients.stream()
-                .collect(Collectors.toMap(
-                    OfficePlatformOrganizationClient::platform,
-                    Function.identity()
-                ));
+                    .collect(Collectors.toMap(OfficePlatformOrganizationClient::platform, Function.identity()));
         }
         return clientMap;
     }
 
     @Override
     public Mono<OrganizationSyncResult<OfficeDepartment>> fetchDepartments(
-        String tenantId,
-        OfficePlatform platform,
-        String cursor
-    ) {
+            String tenantId, OfficePlatform platform, String cursor) {
         return getAppAndSecret(tenantId, platform)
-            .flatMap(appSecret -> {
-                OfficePlatformOrganizationClient client = getClientMap().get(platform);
-                if (client == null) {
-                    return Mono.error(new BusinessException(
-                        ResultCode.BUSINESS_ERROR,
-                        "不支持的平台类型：" + platform
-                    ));
-                }
-                return client.fetchDepartments(appSecret.appId(), appSecret.secret(), cursor);
-            })
-            .onErrorResume(e -> {
-                if (e instanceof BusinessException) {
-                    return Mono.error(e);
-                }
-                log.error("拉取部门失败，租户：{}，平台：{}", tenantId, platform, e);
-                return Mono.error(new BusinessException(
-                    ResultCode.BUSINESS_ERROR,
-                    "拉取部门失败：" + e.getMessage()
-                ));
-            });
+                .flatMap(appSecret -> {
+                    OfficePlatformOrganizationClient client = getClientMap().get(platform);
+                    if (client == null) {
+                        return Mono.error(new BusinessException(ResultCode.BUSINESS_ERROR, "不支持的平台类型：" + platform));
+                    }
+                    return client.fetchDepartments(appSecret.appId(), appSecret.secret(), cursor);
+                })
+                .onErrorResume(e -> {
+                    if (e instanceof BusinessException) {
+                        return Mono.error(e);
+                    }
+                    log.error("拉取部门失败，租户：{}，平台：{}", tenantId, platform, e);
+                    return Mono.error(new BusinessException(ResultCode.BUSINESS_ERROR, "拉取部门失败：" + e.getMessage()));
+                });
     }
 
     @Override
     public Mono<OrganizationSyncResult<OfficeMember>> fetchMembers(
-        String tenantId,
-        OfficePlatform platform,
-        String cursor
-    ) {
+            String tenantId, OfficePlatform platform, String cursor) {
         return getAppAndSecret(tenantId, platform)
-            .flatMap(appSecret -> {
-                OfficePlatformOrganizationClient client = getClientMap().get(platform);
-                if (client == null) {
-                    return Mono.error(new BusinessException(
-                        ResultCode.BUSINESS_ERROR,
-                        "不支持的平台类型：" + platform
-                    ));
-                }
-                return client.fetchMembers(appSecret.appId(), appSecret.secret(), cursor);
-            })
-            .onErrorResume(e -> {
-                if (e instanceof BusinessException) {
-                    return Mono.error(e);
-                }
-                log.error("拉取成员失败，租户：{}，平台：{}", tenantId, platform, e);
-                return Mono.error(new BusinessException(
-                    ResultCode.BUSINESS_ERROR,
-                    "拉取成员失败：" + e.getMessage()
-                ));
-            });
+                .flatMap(appSecret -> {
+                    OfficePlatformOrganizationClient client = getClientMap().get(platform);
+                    if (client == null) {
+                        return Mono.error(new BusinessException(ResultCode.BUSINESS_ERROR, "不支持的平台类型：" + platform));
+                    }
+                    return client.fetchMembers(appSecret.appId(), appSecret.secret(), cursor);
+                })
+                .onErrorResume(e -> {
+                    if (e instanceof BusinessException) {
+                        return Mono.error(e);
+                    }
+                    log.error("拉取成员失败，租户：{}，平台：{}", tenantId, platform, e);
+                    return Mono.error(new BusinessException(ResultCode.BUSINESS_ERROR, "拉取成员失败：" + e.getMessage()));
+                });
     }
 
     @Override
     public Mono<OrganizationSyncResult<OfficeMember>> fetchDepartmentMembers(
-        String tenantId,
-        OfficePlatform platform,
-        String externalDeptId,
-        String cursor
-    ) {
+            String tenantId, OfficePlatform platform, String externalDeptId, String cursor) {
         return getAppAndSecret(tenantId, platform)
-            .flatMap(appSecret -> {
-                OfficePlatformOrganizationClient client = getClientMap().get(platform);
-                if (client == null) {
-                    return Mono.error(new BusinessException(
-                        ResultCode.BUSINESS_ERROR,
-                        "不支持的平台类型：" + platform
-                    ));
-                }
-                return client.fetchDepartmentMembers(
-                    appSecret.appId(),
-                    appSecret.secret(),
-                    externalDeptId,
-                    cursor
-                );
-            })
-            .onErrorResume(e -> {
-                if (e instanceof BusinessException) {
-                    return Mono.error(e);
-                }
-                log.error("拉取部门成员失败，租户：{}，平台：，部门：{}", tenantId, platform, externalDeptId, e);
-                return Mono.error(new BusinessException(
-                    ResultCode.BUSINESS_ERROR,
-                    "拉取部门成员失败：" + e.getMessage()
-                ));
-            });
+                .flatMap(appSecret -> {
+                    OfficePlatformOrganizationClient client = getClientMap().get(platform);
+                    if (client == null) {
+                        return Mono.error(new BusinessException(ResultCode.BUSINESS_ERROR, "不支持的平台类型：" + platform));
+                    }
+                    return client.fetchDepartmentMembers(appSecret.appId(), appSecret.secret(), externalDeptId, cursor);
+                })
+                .onErrorResume(e -> {
+                    if (e instanceof BusinessException) {
+                        return Mono.error(e);
+                    }
+                    log.error("拉取部门成员失败，租户：{}，平台：，部门：{}", tenantId, platform, externalDeptId, e);
+                    return Mono.error(new BusinessException(ResultCode.BUSINESS_ERROR, "拉取部门成员失败：" + e.getMessage()));
+                });
     }
 
     /**
@@ -155,37 +118,27 @@ public class OfficeOrganizationServiceImpl implements OfficeOrganizationService 
      * @return 应用标识和密钥
      */
     private Mono<AppSecret> getAppAndSecret(String tenantId, OfficePlatform platform) {
-        return officeRepository.findApp(tenantId, platform)
-            .switchIfEmpty(Mono.error(new BusinessException(
-                ResultCode.BUSINESS_ERROR,
-                "未找到平台应用配置，请先配置应用信息"
-            )))
-            .flatMap(app -> {
-                if (!app.getEnabled()) {
-                    return Mono.error(new BusinessException(
-                        ResultCode.BUSINESS_ERROR,
-                        "平台应用未启用"
-                    ));
-                }
-                
-                String secretRef = app.getSecretReference();
-                if (secretRef == null || secretRef.isBlank()) {
-                    return Mono.error(new BusinessException(
-                        ResultCode.BUSINESS_ERROR,
-                        "应用密钥引用未配置"
-                    ));
-                }
-                
-                String secret = System.getenv(secretRef);
-                if (secret == null || secret.isBlank()) {
-                    return Mono.error(new BusinessException(
-                        ResultCode.BUSINESS_ERROR,
-                        "应用密钥未配置，请检查环境变量：" + secretRef
-                    ));
-                }
-                
-                return Mono.just(new AppSecret(app.getAppId(), secret));
-            });
+        return officeRepository
+                .findApp(tenantId, platform)
+                .switchIfEmpty(Mono.error(new BusinessException(ResultCode.BUSINESS_ERROR, "未找到平台应用配置，请先配置应用信息")))
+                .flatMap(app -> {
+                    if (!app.isEnabled()) {
+                        return Mono.error(new BusinessException(ResultCode.BUSINESS_ERROR, "平台应用未启用"));
+                    }
+
+                    String secretRef = app.getSecretReference();
+                    if (secretRef == null || secretRef.isBlank()) {
+                        return Mono.error(new BusinessException(ResultCode.BUSINESS_ERROR, "应用密钥引用未配置"));
+                    }
+
+                    String secret = System.getenv(secretRef);
+                    if (secret == null || secret.isBlank()) {
+                        return Mono.error(
+                                new BusinessException(ResultCode.BUSINESS_ERROR, "应用密钥未配置，请检查环境变量：" + secretRef));
+                    }
+
+                    return Mono.just(new AppSecret(app.getAppId(), secret));
+                });
     }
 
     private record AppSecret(String appId, String secret) {}

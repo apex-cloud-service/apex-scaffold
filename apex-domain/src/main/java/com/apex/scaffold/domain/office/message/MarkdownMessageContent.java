@@ -19,22 +19,27 @@ public class MarkdownMessageContent implements MessageContent {
      * Markdown 内容
      */
     String markdown;
-    
+
     /**
      * 纯文本标题（可选，用于通知场景）
      */
     String title;
-    
+
     @Override
     public MessageType getType() {
         return MessageType.MARKDOWN;
     }
-    
+
+    @Override
+    public String getText() {
+        return markdown;
+    }
+
     @Override
     public boolean isValid() {
         return markdown != null && !markdown.trim().isEmpty();
     }
-    
+
     @Override
     public Object toPlatformContent() {
         return markdown;

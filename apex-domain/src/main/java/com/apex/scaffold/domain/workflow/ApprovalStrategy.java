@@ -10,6 +10,8 @@ package com.apex.scaffold.domain.workflow;
  * @since 1.0.0
  */
 public enum ApprovalStrategy {
+    /** 或策略（一票通过） */
     OR,
+    /** 与策略（全票通过） */
     AND
 }

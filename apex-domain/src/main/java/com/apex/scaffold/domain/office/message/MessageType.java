@@ -13,12 +13,12 @@ public enum MessageType {
      * 纯文本消息
      */
     TEXT,
-    
+
     /**
      * Markdown 格式消息
      */
     MARKDOWN,
-    
+
     /**
      * 交互式卡片消息
      */

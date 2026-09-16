@@ -8,14 +8,13 @@ import com.apex.scaffold.infrastructure.office.po.ApprovalProcessPO;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.ArrayList;
+import java.util.List;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 import org.mapstruct.ReportingPolicy;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * 审批流程转换器
@@ -32,10 +31,10 @@ import java.util.List;
  */
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public abstract class ApprovalProcessConverter {
-    
+
     @Autowired
     protected ObjectMapper objectMapper;
-    
+
     /**
      * 领域实体转PO
      *
@@ -44,10 +43,10 @@ public abstract class ApprovalProcessConverter {
      */
     @Mapping(target = "platform", source = "platform", qualifiedByName = "platformToString")
     @Mapping(target = "status", source = "status", qualifiedByName = "statusToString")
-    @Mapping(target = "currentApproverIds", source = "currentApproverIds", qualifiedByName = "listToJson")
+    @Mapping(target = "currentApproverIds", source = "currentApproverIds")
     @Mapping(target = "records", source = "records", qualifiedByName = "recordsToJson")
     public abstract ApprovalProcessPO toPO(ApprovalProcess entity);
-    
+
     /**
      * PO转领域实体
      *
@@ -56,10 +55,10 @@ public abstract class ApprovalProcessConverter {
      */
     @Mapping(target = "platform", source = "platform", qualifiedByName = "stringToPlatform")
     @Mapping(target = "status", source = "status", qualifiedByName = "stringToStatus")
-    @Mapping(target = "currentApproverIds", source = "currentApproverIds", qualifiedByName = "jsonToList")
+    @Mapping(target = "currentApproverIds", source = "currentApproverIds")
     @Mapping(target = "records", source = "records", qualifiedByName = "jsonToRecords")
     public abstract ApprovalProcess toEntity(ApprovalProcessPO po);
-    
+
     /**
      * 平台枚举转字符串
      */
@@ -67,7 +66,7 @@ public abstract class ApprovalProcessConverter {
     protected String platformToString(OfficePlatform platform) {
         return platform != null ? platform.name() : null;
     }
-    
+
     /**
      * 字符串转平台枚举
      */
@@ -75,7 +74,7 @@ public abstract class ApprovalProcessConverter {
     protected OfficePlatform stringToPlatform(String platform) {
         return platform != null ? OfficePlatform.valueOf(platform) : null;
     }
-    
+
     /**
      * 状态枚举转字符串
      */
@@ -83,7 +82,7 @@ public abstract class ApprovalProcessConverter {
     protected String statusToString(ApprovalStatus status) {
         return status != null ? status.name() : null;
     }
-    
+
     /**
      * 字符串转状态枚举
      */
@@ -91,7 +90,7 @@ public abstract class ApprovalProcessConverter {
     protected ApprovalStatus stringToStatus(String status) {
         return status != null ? ApprovalStatus.valueOf(status) : null;
     }
-    
+
     /**
      * 列表转JSON字符串
      */
@@ -106,7 +105,7 @@ public abstract class ApprovalProcessConverter {
             return null;
         }
     }
-    
+
     /**
      * JSON字符串转列表
      */
@@ -121,7 +120,7 @@ public abstract class ApprovalProcessConverter {
             return new ArrayList<>();
         }
     }
-    
+
     /**
      * 审批记录列表转JSON
      */
@@ -136,7 +135,7 @@ public abstract class ApprovalProcessConverter {
             return null;
         }
     }
-    
+
     /**
      * JSON转审批记录列表
      */

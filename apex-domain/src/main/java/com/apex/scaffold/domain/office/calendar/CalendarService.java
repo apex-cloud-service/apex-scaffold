@@ -1,10 +1,9 @@
 package com.apex.scaffold.domain.office.calendar;
 
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-
 import java.time.LocalDateTime;
 import java.util.Map;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 /**
  * 日历服务领域接口
@@ -16,7 +15,7 @@ import java.util.Map;
  * @since 1.3.0
  */
 public interface CalendarService {
-    
+
     /**
      * 创建日历事件
      *
@@ -26,7 +25,7 @@ public interface CalendarService {
      * @return 创建的事件ID
      */
     Mono<String> createEvent(Long tenantId, Long appId, CalendarEvent event);
-    
+
     /**
      * 查询日历事件详情
      *
@@ -36,7 +35,7 @@ public interface CalendarService {
      * @return 事件详情
      */
     Mono<CalendarEvent> getEvent(Long tenantId, Long appId, String eventId);
-    
+
     /**
      * 更新日历事件
      *
@@ -46,7 +45,7 @@ public interface CalendarService {
      * @return 是否更新成功
      */
     Mono<Boolean> updateEvent(Long tenantId, Long appId, CalendarEvent event);
-    
+
     /**
      * 删除日历事件
      *
@@ -56,7 +55,7 @@ public interface CalendarService {
      * @return 是否删除成功
      */
     Mono<Boolean> deleteEvent(Long tenantId, Long appId, String eventId);
-    
+
     /**
      * 查询用户的日历事件列表
      *
@@ -67,8 +66,9 @@ public interface CalendarService {
      * @param endTime 结束时间
      * @return 事件列表
      */
-    Flux<CalendarEvent> listUserEvents(Long tenantId, Long appId, String userId, LocalDateTime startTime, LocalDateTime endTime);
-    
+    Flux<CalendarEvent> listUserEvents(
+            Long tenantId, Long appId, String userId, LocalDateTime startTime, LocalDateTime endTime);
+
     /**
      * 查询会议室空闲时段
      *
@@ -79,8 +79,9 @@ public interface CalendarService {
      * @param endTime 结束时间
      * @return 空闲时段列表
      */
-    Flux<Map<String, Object>> getFreeBusySlots(Long tenantId, Long appId, String roomId, LocalDateTime startTime, LocalDateTime endTime);
-    
+    Flux<Map<String, Object>> getFreeBusySlots(
+            Long tenantId, Long appId, String roomId, LocalDateTime startTime, LocalDateTime endTime);
+
     /**
      * 回复会议邀请
      *

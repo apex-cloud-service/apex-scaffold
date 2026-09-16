@@ -19,27 +19,32 @@ public class CardMessageContent implements MessageContent {
      * 卡片标题
      */
     String title;
-    
+
     /**
      * 卡片内容（JSON 格式）
      */
     String cardJson;
-    
+
     /**
      * 卡片类型（各平台定义）
      */
     String cardType;
-    
+
     @Override
     public MessageType getType() {
         return MessageType.CARD;
     }
-    
+
+    @Override
+    public String getText() {
+        return title != null ? title : cardJson;
+    }
+
     @Override
     public boolean isValid() {
         return cardJson != null && !cardJson.trim().isEmpty();
     }
-    
+
     @Override
     public Object toPlatformContent() {
         return cardJson;

@@ -1,11 +1,10 @@
 package com.apex.scaffold.domain.office.document;
 
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
 
 /**
  * 文档信息聚合根
@@ -189,8 +188,6 @@ public class DocumentInfo {
      * @return 如果有效返回true，否则返回false
      */
     private boolean isValidPermission(String permission) {
-        return "PRIVATE".equals(permission) 
-            || "PUBLIC".equals(permission) 
-            || "SHARED".equals(permission);
+        return "PRIVATE".equals(permission) || "PUBLIC".equals(permission) || "SHARED".equals(permission);
     }
 }

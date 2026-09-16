@@ -1,12 +1,11 @@
 package com.apex.scaffold.domain.office.message;
 
 import com.apex.scaffold.domain.office.OfficePlatform;
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
 
 /**
  * 办公平台消息聚合根
@@ -34,82 +33,82 @@ public class OfficeMessage {
      * 消息ID
      */
     private Long id;
-    
+
     /**
      * 租户ID
      */
     private String tenantId;
-    
+
     /**
      * 办公平台类型
      */
     private OfficePlatform platform;
-    
+
     /**
      * 消息类型
      */
     private MessageType messageType;
-    
+
     /**
      * 消息目标
      */
     private MessageTarget target;
-    
+
     /**
      * 消息内容
      */
     private MessageContent content;
-    
+
     /**
      * 发送状态（PENDING/SUCCESS/FAILED）
      */
     private String sendStatus;
-    
+
     /**
      * 平台消息ID（发送成功后由平台返回）
      */
     private String platformMessageId;
-    
+
     /**
      * 失败原因
      */
     private String failureReason;
-    
+
     /**
      * 重试次数
      */
     private Integer retryCount;
-    
+
     /**
      * 创建时间
      */
     private LocalDateTime createdAt;
-    
+
     /**
      * 发送时间
      */
     private LocalDateTime sentAt;
-    
+
     /**
      * 版本号（乐观锁）
      */
     private Integer version;
-    
+
     /**
      * 验证消息是否可以发送
      *
      * @return 是否可以发送
      */
     public boolean canSend() {
-        return platform != null 
-            && messageType != null 
-            && target != null 
-            && target.isValid()
-            && content != null 
-            && content.isValid()
-            && !"SUCCESS".equals(sendStatus);
+        return platform != null
+                && messageType != null
+                && target != null
+                && target.isValid()
+                && content != null
+                && content.isValid()
+                && !"SUCCESS".equals(sendStatus);
     }
-    
+
     /**
      * 标记消息发送成功
      *
@@ -120,7 +119,7 @@ public class OfficeMessage {
         this.platformMessageId = platformMessageId;
         this.sentAt = LocalDateTime.now();
     }
-    
+
     /**
      * 标记消息发送失败
      *

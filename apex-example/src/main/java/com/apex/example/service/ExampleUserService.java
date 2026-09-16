@@ -252,10 +252,17 @@ public class ExampleUserService {
      * @param phone 原始手机号
      * @return 脱敏后的手机号
      */
+    private static final int MIN_PHONE_LENGTH = 7;
+    private static final int PHONE_PREFIX_LENGTH = 3;
+    private static final int PHONE_SUFFIX_LENGTH = 4;
+    private static final String PHONE_MASK = "****";
+
     private String maskPhone(String phone) {
-        if (phone == null || phone.length() < 7) {
+        if (phone == null || phone.length() < MIN_PHONE_LENGTH) {
             return phone;
         }
-        return phone.substring(0, 3) + "****" + phone.substring(phone.length() - 4);
+        return phone.substring(0, PHONE_PREFIX_LENGTH)
+                + PHONE_MASK
+                + phone.substring(phone.length() - PHONE_SUFFIX_LENGTH);
     }
 }

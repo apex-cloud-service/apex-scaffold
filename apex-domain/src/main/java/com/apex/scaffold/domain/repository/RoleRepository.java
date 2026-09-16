@@ -22,6 +22,12 @@ public interface RoleRepository {
      */
     Mono<List<RoleEntity>> findByUserId(Long userId);
 
+    /**
+     * 查询角色的数据范围部门ID列表。
+     *
+     * @param roleIds 角色ID列表
+     * @return 数据范围部门ID列表
+     */
     default Mono<List<Long>> findDataScopeDeptIds(List<Long> roleIds) {
         return Mono.error(new IllegalStateException("Role data scope departments are not configured"));
     }

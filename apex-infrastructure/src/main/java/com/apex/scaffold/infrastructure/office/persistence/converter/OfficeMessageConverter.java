@@ -1,19 +1,15 @@
 package com.apex.scaffold.infrastructure.office.persistence.converter;
 
-import com.apex.scaffold.domain.office.message.MessageStatus;
 import com.apex.scaffold.domain.office.message.MessageType;
 import com.apex.scaffold.domain.office.message.OfficeMessage;
-import com.apex.scaffold.domain.office.message.RecipientType;
 import com.apex.scaffold.infrastructure.office.persistence.po.OfficeMessagePO;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.List;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.Named;
 import org.mapstruct.ReportingPolicy;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.List;
 
 /**
  * 办公消息转换器
@@ -25,10 +21,10 @@ import java.util.List;
  */
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public abstract class OfficeMessageConverter {
-    
+
     @Autowired
     protected ObjectMapper objectMapper;
-    
+
     /**
      * 领域实体转持久化对象
      *
@@ -36,11 +32,12 @@ public abstract class OfficeMessageConverter {
      * @return 持久化对象
      */
     @Mapping(target = "messageType", expression = "java(messageTypeToString(entity.getMessageType()))")
-    @Mapping(target = "recipientType", expression = "java(recipientTypeToString(entity.getRecipientType()))")
-    @Mapping(target = "recipientIds", expression = "java(listToJson(entity.getRecipientIds()))")
-    @Mapping(target = "status", expression = "java(statusToString(entity.getStatus()))")
+    @Mapping(target = "recipientType", expression = "java(targetTypeFromEntity(entity.getTarget()))")
+    @Mapping(target = "recipientIds", expression = "java(recipientIdsFromEntity(entity.getTarget()))")
+    @Mapping(target = "content", expression = "java(contentToJson(entity.getContent()))")
+    @Mapping(target = "status", source = "sendStatus")
     public abstract OfficeMessagePO toPO(OfficeMessage entity);
-    
+
     /**
      * 持久化对象转领域实体
      *
@@ -48,18 +45,81 @@ public abstract class OfficeMessageConverter {
      * @return 领域实体
      */
     @Mapping(target = "messageType", expression = "java(stringToMessageType(po.getMessageType()))")
-    @Mapping(target = "recipientType", expression = "java(stringToRecipientType(po.getRecipientType()))")
-    @Mapping(target = "recipientIds", expression = "java(jsonToList(po.getRecipientIds()))")
-    @Mapping(target = "status", expression = "java(stringToStatus(po.getStatus()))")
+    @Mapping(target = "target", expression = "java(targetFromPo(po))")
+    @Mapping(target = "content", ignore = true)
+    @Mapping(target = "sendStatus", source = "status")
     public abstract OfficeMessage toEntity(OfficeMessagePO po);
-    
+
+    /**
+     * 从 MessageTarget 提取目标类型
+     */
+    protected String targetTypeFromEntity(com.apex.scaffold.domain.office.message.MessageTarget target) {
+        return target != null ? target.getTargetType() : null;
+    }
+
+    /**
+     * 从 MessageTarget 提取接收者ID列表
+     */
+    protected String recipientIdsFromEntity(com.apex.scaffold.domain.office.message.MessageTarget target) {
+        if (target == null) {
+            return null;
+        }
+
+        if ("USER".equals(target.getTargetType()) && target.getUserIds() != null) {
+            return listToJson(target.getUserIds());
+        } else if ("GROUP".equals(target.getTargetType()) && target.getGroupIds() != null) {
+            return listToJson(target.getGroupIds());
+        }
+
+        return null;
+    }
+
+    /**
+     * 从 PO 构建 MessageTarget
+     */
+    protected com.apex.scaffold.domain.office.message.MessageTarget targetFromPo(OfficeMessagePO po) {
+        if (po.getRecipientType() == null) {
+            return null;
+        }
+
+        List<String> ids = jsonToList(po.getRecipientIds());
+
+        if ("USER".equals(po.getRecipientType())) {
+            return com.apex.scaffold.domain.office.message.MessageTarget.builder()
+                    .targetType("USER")
+                    .userIds(ids)
+                    .build();
+        } else if ("GROUP".equals(po.getRecipientType())) {
+            return com.apex.scaffold.domain.office.message.MessageTarget.builder()
+                    .targetType("GROUP")
+                    .groupIds(ids)
+                    .build();
+        }
+
+        return null;
+    }
+
+    /**
+     * 将 MessageContent 序列化为 JSON
+     */
+    protected String contentToJson(com.apex.scaffold.domain.office.message.MessageContent content) {
+        if (content == null) {
+            return null;
+        }
+        try {
+            return objectMapper.writeValueAsString(content.toPlatformContent());
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     /**
      * MessageType 转字符串
      */
     protected String messageTypeToString(MessageType messageType) {
         return messageType != null ? messageType.name() : null;
     }
-    
+
     /**
      * 字符串转 MessageType
      */
@@ -70,43 +130,7 @@ public abstract class OfficeMessageConverter {
             return null;
         }
     }
-    
-    /**
-     * RecipientType 转字符串
-     */
-    protected String recipientTypeToString(RecipientType recipientType) {
-        return recipientType != null ? recipientType.name() : null;
-    }
-    
-    /**
-     * 字符串转 RecipientType
-     */
-    protected RecipientType stringToRecipientType(String recipientType) {
-        try {
-            return recipientType != null ? RecipientType.valueOf(recipientType) : null;
-        } catch (IllegalArgumentException e) {
-            return null;
-        }
-    }
-    
-    /**
-     * MessageStatus 转字符串
-     */
-    protected String statusToString(MessageStatus status) {
-        return status != null ? status.name() : null;
-    }
-    
-    /**
-     * 字符串转 MessageStatus
-     */
-    protected MessageStatus stringToStatus(String status) {
-        try {
-            return status != null ? MessageStatus.valueOf(status) : null;
-        } catch (IllegalArgumentException e) {
-            return null;
-        }
-    }
-    
+
     /**
      * List 转 JSON 字符串
      */
@@ -120,7 +144,7 @@ public abstract class OfficeMessageConverter {
             return null;
         }
     }
-    
+
     /**
      * JSON 字符串转 List
      */

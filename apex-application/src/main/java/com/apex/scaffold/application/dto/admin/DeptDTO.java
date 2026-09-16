@@ -63,5 +63,5 @@ public class DeptDTO {
 
     /** 子部门列表 */
     @Schema(description = "子部门列表")
-    private List<DeptDTO> children = new ArrayList<>();
+    private List<DeptDTO> children;
 }

@@ -1,5 +1,6 @@
 package com.apex.scaffold.domain.office;
 
+import java.time.LocalDateTime;
 import lombok.Builder;
 import lombok.Value;
 
@@ -54,4 +55,10 @@ public class OfficeOrganizationMapping {
 
     /** 逻辑删除标记（0-未删除，1-已删除） */
     Integer deleted;
+
+    /** 创建时间 */
+    LocalDateTime createdAt;
+
+    /** 更新时间 */
+    LocalDateTime updatedAt;
 }

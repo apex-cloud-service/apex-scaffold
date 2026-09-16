@@ -15,13 +15,43 @@ import reactor.core.publisher.Mono;
  */
 public interface ApprovalRecordRepository {
 
+    /**
+     * 根据主键ID查询审批记录。
+     *
+     * @param id 审批记录ID
+     * @return 审批记录实体
+     */
     Mono<ApprovalRecordEntity> findById(Long id);
 
+    /**
+     * 根据流程实例ID查询审批记录列表。
+     *
+     * @param processInstanceId 流程实例ID
+     * @return 审批记录列表
+     */
     Mono<List<ApprovalRecordEntity>> findByProcessInstanceId(Long processInstanceId);
 
+    /**
+     * 根据任务ID查询审批记录列表。
+     *
+     * @param taskId 任务ID
+     * @return 审批记录列表
+     */
     Mono<List<ApprovalRecordEntity>> findByTaskId(Long taskId);
 
+    /**
+     * 插入审批记录。
+     *
+     * @param entity 审批记录实体
+     * @return 影响的行数
+     */
     Mono<Integer> insert(ApprovalRecordEntity entity);
 
+    /**
+     * 根据ID删除审批记录。
+     *
+     * @param id 审批记录ID
+     * @return 影响的行数
+     */
     Mono<Integer> deleteById(Long id);
 }

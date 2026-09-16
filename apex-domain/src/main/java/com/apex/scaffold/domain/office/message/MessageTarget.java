@@ -1,9 +1,8 @@
 package com.apex.scaffold.domain.office.message;
 
+import java.util.List;
 import lombok.Builder;
 import lombok.Value;
-
-import java.util.List;
 
 /**
  * 消息目标值对象
@@ -17,37 +16,26 @@ import java.util.List;
 @Value
 @Builder
 public class MessageTarget {
-    /**
-     * 目标类型（USER/GROUP）
-     */
+    private static final String TARGET_TYPE_USER = "USER";
+    private static final String TARGET_TYPE_GROUP = "GROUP";
+
     String targetType;
-    
-    /**
-     * 接收用户ID列表（平台用户ID）
-     */
+
     List<String> userIds;
-    
-    /**
-     * 接收群组ID列表（平台群组ID）
-     */
+
     List<String> groupIds;
-    
-    /**
-     * 验证消息目标是否有效
-     *
-     * @return 是否有效
-     */
+
     public boolean isValid() {
         if (targetType == null) {
             return false;
         }
-        
-        if ("USER".equals(targetType)) {
+
+        if (TARGET_TYPE_USER.equals(targetType)) {
             return userIds != null && !userIds.isEmpty();
-        } else if ("GROUP".equals(targetType)) {
+        } else if (TARGET_TYPE_GROUP.equals(targetType)) {
             return groupIds != null && !groupIds.isEmpty();
         }
-        
+
         return false;
     }
 }

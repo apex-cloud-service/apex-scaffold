@@ -14,5 +14,4 @@ import org.apache.ibatis.annotations.Mapper;
  * @since 1.3.0
  */
 @Mapper
-public interface OfficeMessageMapper extends BaseMapper<OfficeMessagePO> {
-}
+public interface OfficeMessageMapper extends BaseMapper<OfficeMessagePO> {}

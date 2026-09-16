@@ -103,7 +103,9 @@ public class OfficeApplicationService {
     public Mono<LoginResponse> login(
             OfficePlatform platform, String code, String state, String deviceId, String clientIp) {
         return Mono.defer(() -> {
-            if (platform == null || blank(code) || blank(state)) return denied();
+            if (platform == null || blank(code) || blank(state)) {
+                return denied();
+            }
             return tenant().flatMap(tenantId -> app(tenantId, platform).flatMap(app -> stateService
                     .consume(state, tenantId, platform.name(), app.getRedirectUri())
                     .filter(Boolean.TRUE::equals)

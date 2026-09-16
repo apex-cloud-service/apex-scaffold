@@ -8,8 +8,12 @@ package com.apex.scaffold.domain.moderation;
  * @since 1.0.0
  */
 public enum ContentModerationReviewStatus {
+    /** 待处理 */
     PENDING,
+    /** 审核中 */
     REVIEWING,
+    /** 已通过 */
     APPROVED,
+    /** 已拒绝 */
     REJECTED
 }

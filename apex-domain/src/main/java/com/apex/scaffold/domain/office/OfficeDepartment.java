@@ -1,9 +1,8 @@
 package com.apex.scaffold.domain.office;
 
+import java.time.LocalDateTime;
 import lombok.Builder;
 import lombok.Value;
-
-import java.time.LocalDateTime;
 
 /**
  * 办公平台部门值对象
@@ -66,9 +65,9 @@ public class OfficeDepartment {
             return 0;
         }
         return allDepartments.stream()
-            .filter(d -> d.getExternalDeptId().equals(this.parentId))
-            .findFirst()
-            .map(parent -> parent.getDepth(allDepartments) + 1)
-            .orElse(0);
+                .filter(d -> d.getExternalDeptId().equals(this.parentId))
+                .findFirst()
+                .map(parent -> parent.getDepth(allDepartments) + 1)
+                .orElse(0);
     }
 }

@@ -24,6 +24,9 @@ import reactor.core.publisher.Mono;
 @Repository
 @RequiredArgsConstructor
 public class ReviewReasonRepositoryImpl implements ReviewReasonRepository {
+
+    private static final String ERROR_MSG_CONFIG_MODIFIED = "配置已被修改，请刷新后重试";
+
     private final JdbcTemplate jdbcTemplate;
 
     /**
@@ -96,7 +99,9 @@ public class ReviewReasonRepositoryImpl implements ReviewReasonRepository {
                             sortOrder,
                             id,
                             expectedVersion);
-                    if (rows != 1) throw new BusinessException(ResultCode.PARAM_ERROR, "配置已被修改，请刷新后重试");
+                    if (rows != 1) {
+                        throw new BusinessException(ResultCode.PARAM_ERROR, ERROR_MSG_CONFIG_MODIFIED);
+                    }
                     return jdbcTemplate.queryForObject(
                             "SELECT id,review_type,code,label,description,enabled,require_comment,sort_order,version "
                                     + "FROM biz_admin_review_reason WHERE id=? AND deleted=0",

@@ -19,17 +19,22 @@ public class TextMessageContent implements MessageContent {
      * 文本内容
      */
     String text;
-    
+
     @Override
     public MessageType getType() {
         return MessageType.TEXT;
     }
-    
+
+    @Override
+    public String getText() {
+        return text;
+    }
+
     @Override
     public boolean isValid() {
         return text != null && !text.trim().isEmpty();
     }
-    
+
     @Override
     public Object toPlatformContent() {
         return text;

@@ -136,7 +136,8 @@ public interface OfficeRepository {
      * @param externalOrgId 外部部门标识，不能为空
      * @return 组织映射，不存在时返回空 Mono
      */
-    Mono<OfficeOrganizationMapping> findDepartmentMapping(String tenantId, OfficePlatform platform, String externalOrgId);
+    Mono<OfficeOrganizationMapping> findDepartmentMapping(
+            String tenantId, OfficePlatform platform, String externalOrgId);
 
     /**
      * 查询外部用户的映射关系

@@ -52,13 +52,35 @@ public interface ContentModerationReviewRepository {
      */
     Mono<Long> count(ContentModerationReviewStatus status, boolean mine, String reviewerOpenId);
 
-    /** 认领任务：PENDING → REVIEWING，乐观锁 CAS，并发下仅一人成功。 */
+    /**
+     * 认领任务：PENDING → REVIEWING，乐观锁 CAS，并发下仅一人成功。
+     *
+     * @param id 任务ID
+     * @param reviewerOpenId 审核员OpenId
+     * @param expectedVersion 预期版本号（乐观锁）
+     * @param claimedAt 认领时间
+     * @return 认领后的复核记录
+     */
     Mono<ContentModerationReview> claim(Long id, String reviewerOpenId, long expectedVersion, Instant claimedAt);
 
-    /** 裁决任务：REVIEWING → APPROVED/REJECTED，仅认领人可裁决，乐观锁 CAS。 */
+    /**
+     * 裁决任务：REVIEWING → APPROVED/REJECTED，仅认领人可裁决，乐观锁 CAS。
+     *
+     * @param id 任务ID
+     * @param reviewerOpenId 审核员OpenId
+     * @param to 目标状态（APPROVED或REJECTED）
+     * @param comment 裁决意见
+     * @param expectedVersion 预期版本号（乐观锁）
+     * @return 裁决后的复核记录
+     */
     Mono<ContentModerationReview> decide(
             Long id, String reviewerOpenId, ContentModerationReviewStatus to, String comment, long expectedVersion);
 
-    /** 把认领超过租约时长仍未裁决的任务重新开放为 PENDING。 */
+    /**
+     * 把认领超过租约时长仍未裁决的任务重新开放为 PENDING。
+     *
+     * @param claimedBefore 认领时间截止点，早于此时间的未裁决任务将被重新开放
+     * @return 重新开放的任务数量
+     */
     Mono<Integer> reopenStaleClaims(Instant claimedBefore);
 }

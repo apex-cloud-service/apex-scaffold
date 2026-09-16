@@ -34,11 +34,11 @@ import reactor.core.publisher.Mono;
 @Repository
 @RequiredArgsConstructor
 public class OfficeMessageRepositoryImpl implements OfficeMessageRepository {
-    
+
     private final OfficeMessageMapper messageMapper;
     private final OfficeMessageConverter messageConverter;
     private final BlockingIoSchedulers blockingIoSchedulers;
-    
+
     /**
      * 保存消息
      *
@@ -51,16 +51,17 @@ public class OfficeMessageRepositoryImpl implements OfficeMessageRepository {
     @Override
     public Mono<OfficeMessage> save(OfficeMessage message) {
         return Mono.fromCallable(() -> {
-            log.debug("保存消息记录，平台：{}，消息类型：{}", message.getPlatform(), message.getMessageType());
-            
-            OfficeMessagePO po = messageConverter.toMybatisPO(message);
-            messageMapper.insert(po);
-            
-            log.debug("消息记录已保存，ID：{}", po.getId());
-            return messageConverter.toDomain(po);
-        }).subscribeOn(blockingIoSchedulers.jdbc());
+                    log.debug("保存消息记录，平台：{}，消息类型：{}", message.getPlatform(), message.getMessageType());
+
+                    OfficeMessagePO po = messageConverter.toMybatisPO(message);
+                    messageMapper.insert(po);
+
+                    log.debug("消息记录已保存，ID：{}", po.getId());
+                    return messageConverter.toDomain(po);
+                })
+                .subscribeOn(blockingIoSchedulers.jdbc());
     }
-    
+
     /**
      * 根据ID查询消息
      *
@@ -70,18 +71,19 @@ public class OfficeMessageRepositoryImpl implements OfficeMessageRepository {
     @Override
     public Mono<OfficeMessage> findById(Long id) {
         return Mono.fromCallable(() -> {
-            log.debug("查询消息，ID：{}", id);
-            
-            OfficeMessagePO po = messageMapper.selectById(id);
-            if (po == null) {
-                log.warn("消息不存在，ID：{}", id);
-                return null;
-            }
-            
-            return messageConverter.toDomain(po);
-        }).subscribeOn(blockingIoSchedulers.jdbc());
+                    log.debug("查询消息，ID：{}", id);
+
+                    OfficeMessagePO po = messageMapper.selectById(id);
+                    if (po == null) {
+                        log.warn("消息不存在，ID：{}", id);
+                        return null;
+                    }
+
+                    return messageConverter.toDomain(po);
+                })
+                .subscribeOn(blockingIoSchedulers.jdbc());
     }
-    
+
     /**
      * 根据平台消息ID查询
      *
@@ -91,21 +93,22 @@ public class OfficeMessageRepositoryImpl implements OfficeMessageRepository {
     @Override
     public Mono<OfficeMessage> findByPlatformMessageId(String platformMessageId) {
         return Mono.fromCallable(() -> {
-            log.debug("根据平台消息ID查询，platformMessageId：{}", platformMessageId);
-            
-            LambdaQueryWrapper<OfficeMessagePO> wrapper = new LambdaQueryWrapper<>();
-            wrapper.eq(OfficeMessagePO::getPlatformMessageId, platformMessageId);
-            
-            OfficeMessagePO po = messageMapper.selectOne(wrapper);
-            if (po == null) {
-                log.warn("消息不存在，platformMessageId：{}", platformMessageId);
-                return null;
-            }
-            
-            return messageConverter.toDomain(po);
-        }).subscribeOn(blockingIoSchedulers.jdbc());
+                    log.debug("根据平台消息ID查询，platformMessageId：{}", platformMessageId);
+
+                    LambdaQueryWrapper<OfficeMessagePO> wrapper = new LambdaQueryWrapper<>();
+                    wrapper.eq(OfficeMessagePO::getPlatformMessageId, platformMessageId);
+
+                    OfficeMessagePO po = messageMapper.selectOne(wrapper);
+                    if (po == null) {
+                        log.warn("消息不存在，platformMessageId：{}", platformMessageId);
+                        return null;
+                    }
+
+                    return messageConverter.toDomain(po);
+                })
+                .subscribeOn(blockingIoSchedulers.jdbc());
     }
-    
+
     /**
      * 更新消息状态
      *
@@ -118,18 +121,19 @@ public class OfficeMessageRepositoryImpl implements OfficeMessageRepository {
     @Override
     public Mono<OfficeMessage> updateStatus(OfficeMessage message) {
         return Mono.fromCallable(() -> {
-            log.debug("更新消息状态，ID：{}，状态：{}", message.getId(), message.getSendStatus());
-            
-            OfficeMessagePO po = messageConverter.toMybatisPO(message);
-            int rows = messageMapper.updateById(po);
-            
-            if (rows == 0) {
-                log.warn("消息更新失败（乐观锁冲突或记录不存在），ID：{}", message.getId());
-                throw new IllegalStateException("消息更新失败");
-            }
-            
-            log.debug("消息状态已更新，ID：{}", message.getId());
-            return messageConverter.toDomain(messageMapper.selectById(po.getId()));
-        }).subscribeOn(blockingIoSchedulers.jdbc());
+                    log.debug("更新消息状态，ID：{}，状态：{}", message.getId(), message.getSendStatus());
+
+                    OfficeMessagePO po = messageConverter.toMybatisPO(message);
+                    int rows = messageMapper.updateById(po);
+
+                    if (rows == 0) {
+                        log.warn("消息更新失败（乐观锁冲突或记录不存在），ID：{}", message.getId());
+                        throw new IllegalStateException("消息更新失败");
+                    }
+
+                    log.debug("消息状态已更新，ID：{}", message.getId());
+                    return messageConverter.toDomain(messageMapper.selectById(po.getId()));
+                })
+                .subscribeOn(blockingIoSchedulers.jdbc());
     }
 }

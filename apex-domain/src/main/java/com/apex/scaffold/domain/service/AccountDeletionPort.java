@@ -14,15 +14,32 @@ import reactor.core.publisher.Mono;
  */
 public interface AccountDeletionPort {
 
-    /** @param command 注销命令 @return 已受理的任务信息 */
+    /**
+     * 停用账号并入队清理任务。
+     *
+     * @param command 注销命令
+     * @return 已受理的任务信息
+     */
     Mono<AcceptedDeletion> deactivateAndEnqueue(DeletionCommand command);
 
-    /** 管理端注销允许目标用户已处于禁用状态，但仍要求身份字段与锁定记录完全一致。 */
+    /**
+     * 管理端注销账号并入队清理任务。
+     *
+     * <p>管理端注销允许目标用户已处于禁用状态，但仍要求身份字段与锁定记录完全一致。</p>
+     *
+     * @param command 注销命令
+     * @return 已受理的任务信息
+     */
     default Mono<AcceptedDeletion> deactivateAndEnqueueByAdmin(DeletionCommand command) {
         return deactivateAndEnqueue(command);
     }
 
-    /** @param task 清理任务 @return 清理完成信号 */
+    /**
+     * 执行账号数据清理。
+     *
+     * @param task 清理任务
+     * @return 清理完成信号
+     */
     Mono<Void> cleanup(DeletionTask task);
 
     /**

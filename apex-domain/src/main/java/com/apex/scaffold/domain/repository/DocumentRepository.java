@@ -34,13 +34,44 @@ import reactor.core.publisher.Mono;
  */
 public interface DocumentRepository {
 
+    /**
+     * 保存文档实体。
+     *
+     * @param entity 文档实体
+     * @return 保存后的文档实体
+     */
     Mono<DocumentEntity> save(DocumentEntity entity);
 
+    /**
+     * 根据ID查询文档实体。
+     *
+     * @param id 文档ID
+     * @return 文档实体
+     */
     Mono<DocumentEntity> findById(Long id);
 
+    /**
+     * 查询租户下所有文档。
+     *
+     * @param tenantId 租户ID
+     * @return 文档实体流
+     */
     Flux<DocumentEntity> findAll(String tenantId);
 
+    /**
+     * 根据ID删除文档。
+     *
+     * @param id 文档ID
+     * @param tenantId 租户ID
+     * @return 空结果
+     */
     Mono<Void> deleteById(Long id, String tenantId);
 
+    /**
+     * 统计租户下文档数量。
+     *
+     * @param tenantId 租户ID
+     * @return 文档数量
+     */
     Mono<Long> count(String tenantId);
 }

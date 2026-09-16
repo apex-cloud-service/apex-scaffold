@@ -2,11 +2,10 @@ package com.apex.scaffold.infrastructure.office.persistence.mapper;
 
 import com.apex.scaffold.infrastructure.office.persistence.po.OfficeMessagePO;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
-
-import java.util.List;
 
 /**
  * 办公消息 Mapper 接口
@@ -18,7 +17,7 @@ import java.util.List;
  */
 @Mapper
 public interface OfficeMessageMapper extends BaseMapper<OfficeMessagePO> {
-    
+
     /**
      * 根据平台消息ID查询
      *
@@ -26,11 +25,11 @@ public interface OfficeMessageMapper extends BaseMapper<OfficeMessagePO> {
      * @param tenantId 租户ID
      * @return 消息PO
      */
-    @Select("SELECT * FROM office_message WHERE platform_message_id = #{platformMessageId} " +
-            "AND tenant_id = #{tenantId} AND deleted = 0 LIMIT 1")
-    OfficeMessagePO findByPlatformMessageId(@Param("platformMessageId") String platformMessageId,
-                                            @Param("tenantId") Long tenantId);
-    
+    @Select("SELECT * FROM office_message WHERE platform_message_id = #{platformMessageId} "
+            + "AND tenant_id = #{tenantId} AND deleted = 0 LIMIT 1")
+    OfficeMessagePO findByPlatformMessageId(
+            @Param("platformMessageId") String platformMessageId, @Param("tenantId") Long tenantId);
+
     /**
      * 查询失败的消息
      *
@@ -38,9 +37,8 @@ public interface OfficeMessageMapper extends BaseMapper<OfficeMessagePO> {
      * @param limit 最大数量
      * @return 消息列表
      */
-    @Select("SELECT * FROM office_message WHERE tenant_id = #{tenantId} " +
-            "AND status = 'FAILED' AND retry_count < max_retry_count " +
-            "AND deleted = 0 ORDER BY created_at ASC LIMIT #{limit}")
-    List<OfficeMessagePO> findFailedMessages(@Param("tenantId") Long tenantId,
-                                             @Param("limit") int limit);
+    @Select("SELECT * FROM office_message WHERE tenant_id = #{tenantId} "
+            + "AND status = 'FAILED' AND retry_count < max_retry_count "
+            + "AND deleted = 0 ORDER BY created_at ASC LIMIT #{limit}")
+    List<OfficeMessagePO> findFailedMessages(@Param("tenantId") Long tenantId, @Param("limit") int limit);
 }

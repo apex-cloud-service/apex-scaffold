@@ -1,10 +1,9 @@
 package com.apex.scaffold.domain.office;
 
-import lombok.Builder;
-import lombok.Value;
-
 import java.time.LocalDateTime;
 import java.util.List;
+import lombok.Builder;
+import lombok.Value;
 
 /**
  * 办公平台成员值对象

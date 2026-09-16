@@ -191,8 +191,11 @@ public class DocumentEntity extends BaseEntity {
     }
 
     public enum DocumentStatus {
+        /** 草稿 */
         DRAFT(0),
+        /** 正常 */
         NORMAL(1),
+        /** 已归档 */
         ARCHIVED(2);
 
         private final Integer code;
@@ -207,10 +210,15 @@ public class DocumentEntity extends BaseEntity {
     }
 
     public enum DocType {
+        /** 合同 */
         CONTRACT("contract"),
+        /** 报告 */
         REPORT("report"),
+        /** 提案 */
         PROPOSAL("proposal"),
+        /** 手册 */
         MANUAL("manual"),
+        /** 其他 */
         OTHER("other");
 
         private final String code;
@@ -225,9 +233,13 @@ public class DocumentEntity extends BaseEntity {
     }
 
     public enum Category {
+        /** 技术 */
         TECH("tech"),
+        /** 业务 */
         BUSINESS("business"),
+        /** 财务 */
         FINANCE("finance"),
+        /** 人力资源 */
         HR("hr");
 
         private final String code;

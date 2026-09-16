@@ -10,8 +10,12 @@ package com.apex.scaffold.domain.workflow;
  * @since 1.0.0
  */
 public enum WorkflowNodeType {
+    /** 开始节点 */
     START,
+    /** 审批节点 */
     APPROVAL,
+    /** 条件节点 */
     CONDITION,
+    /** 结束节点 */
     END
 }

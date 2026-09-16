@@ -10,10 +10,16 @@ package com.apex.scaffold.domain.workflow;
  * @since 1.0.0
  */
 public enum ProcessStatus {
+    /** 草稿 */
     DRAFT,
+    /** 运行中 */
     RUNNING,
+    /** 已批准 */
     APPROVED,
+    /** 已拒绝 */
     REJECTED,
+    /** 已取消 */
     CANCELLED,
+    /** 已终止 */
     TERMINATED
 }

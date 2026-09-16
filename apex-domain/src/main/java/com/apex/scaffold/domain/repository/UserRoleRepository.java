@@ -50,6 +50,12 @@ public interface UserRoleRepository {
      */
     Mono<Integer> insert(UserRoleEntity userRole);
 
-    /** 在单个数据库事务中把用户的后台角色替换为目标集合。 */
+    /**
+     * 在单个数据库事务中把用户的后台角色替换为目标集合。
+     *
+     * @param userId 用户ID
+     * @param roleIds 角色ID集合
+     * @return 替换完成信号
+     */
     Mono<Void> replaceRoles(Long userId, Set<Long> roleIds);
 }

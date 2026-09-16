@@ -1,12 +1,11 @@
 package com.apex.scaffold.domain.office.approval;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
-import java.util.List;
 
 /**
  * 审批流程聚合根
@@ -96,9 +95,9 @@ public class ApprovalProcess {
      * @return 如果审批已通过、拒绝或撤销，返回true；否则返回false
      */
     public boolean isCompleted() {
-        return status == ApprovalStatus.APPROVED 
-            || status == ApprovalStatus.REJECTED 
-            || status == ApprovalStatus.CANCELLED;
+        return status == ApprovalStatus.APPROVED
+                || status == ApprovalStatus.REJECTED
+                || status == ApprovalStatus.CANCELLED;
     }
 
     /**
@@ -107,8 +106,7 @@ public class ApprovalProcess {
      * @return 如果审批处于待审批或审批中状态，返回true；否则返回false
      */
     public boolean isCancellable() {
-        return status == ApprovalStatus.PENDING 
-            || status == ApprovalStatus.IN_PROGRESS;
+        return status == ApprovalStatus.PENDING || status == ApprovalStatus.IN_PROGRESS;
     }
 
     /**

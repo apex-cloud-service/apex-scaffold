@@ -158,6 +158,58 @@ public class OfficeRepositoryImpl implements OfficeRepository {
                                 .setSql("version = version + 1"))));
     }
 
+    @Override
+    public Mono<OfficeOrganizationMapping> saveOrganizationMapping(OfficeOrganizationMapping mapping) {
+        // TODO: 实现组织映射保存
+        return Mono.just(mapping);
+    }
+
+    @Override
+    public Mono<Integer> batchSaveOrganizationMappings(java.util.List<OfficeOrganizationMapping> mappings) {
+        // TODO: 实现批量保存组织映射
+        return Mono.just(mappings.size());
+    }
+
+    @Override
+    public Mono<OfficeOrganizationMapping> findDepartmentMapping(
+            String tenantId, OfficePlatform platform, String externalOrgId) {
+        // TODO: 实现部门映射查询
+        return Mono.empty();
+    }
+
+    @Override
+    public Mono<OfficeOrganizationMapping> findMemberMapping(
+            String tenantId, OfficePlatform platform, String externalUserId) {
+        // TODO: 实现成员映射查询
+        return Mono.empty();
+    }
+
+    @Override
+    public Mono<java.util.List<OfficeOrganizationMapping>> listOrganizationMappings(
+            String tenantId, OfficePlatform platform) {
+        // TODO: 实现组织映射列表查询
+        return Mono.just(java.util.Collections.emptyList());
+    }
+
+    @Override
+    public Mono<OfficeSyncTask> saveSyncTask(OfficeSyncTask task) {
+        // TODO: 实现同步任务保存
+        return Mono.just(task);
+    }
+
+    @Override
+    public Mono<OfficeSyncTask> findLatestSyncTask(String tenantId, OfficePlatform platform) {
+        // TODO: 实现最新同步任务查询
+        return Mono.empty();
+    }
+
+    @Override
+    public Mono<java.util.List<OfficeSyncTask>> listSyncTasks(
+            String tenantId, OfficePlatform platform, int page, int size) {
+        // TODO: 实现同步任务列表查询
+        return Mono.just(java.util.Collections.emptyList());
+    }
+
     /**
      * 校验更新影响行数
      *

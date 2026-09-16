@@ -124,7 +124,9 @@ public class OfficeAdminService {
      */
     public Mono<List<OfficeIdentityBinding>> listBindings(OfficePlatform platform, int page, int size) {
         return tenant().flatMap(tenant -> {
-            if (page < 1 || size < 1 || size > 100) return Mono.error(new BusinessException(ResultCode.PARAM_ERROR));
+            if (page < 1 || size < 1 || size > 100) {
+                return Mono.error(new BusinessException(ResultCode.PARAM_ERROR));
+            }
             return repository.listBindings(tenant, platform, page, size);
         });
     }
@@ -143,8 +145,9 @@ public class OfficeAdminService {
      */
     public Mono<Boolean> reviewBinding(Long id, Integer version, boolean approved) {
         return binding(id, version).flatMap(binding -> {
-            if (!"PENDING".equals(binding.getStatus()))
+            if (!"PENDING".equals(binding.getStatus())) {
                 return Mono.error(new BusinessException(ResultCode.PARAM_ERROR));
+            }
             Mono<Boolean> valid = approved
                     ? users.getById(binding.getUserId())
                             .filter(user -> binding.getUserId().equals(user.getId())
@@ -171,7 +174,9 @@ public class OfficeAdminService {
      */
     public Mono<Boolean> unbind(Long id, Integer version) {
         return binding(id, version).flatMap(binding -> {
-            if ("REVOKED".equals(binding.getStatus())) return Mono.error(new BusinessException(ResultCode.PARAM_ERROR));
+            if ("REVOKED".equals(binding.getStatus())) {
+                return Mono.error(new BusinessException(ResultCode.PARAM_ERROR));
+            }
             return repository.changeBindingStatus(binding.getTenantId(), id, version, binding.getStatus(), "REVOKED");
         });
     }
@@ -200,8 +205,9 @@ public class OfficeAdminService {
      * @throws BusinessException 版本号为 null、为负数或不匹配时
      */
     private void checkVersion(Integer expected, Integer actual) {
-        if (expected == null || expected < 0 || !expected.equals(actual))
+        if (expected == null || expected < 0 || !expected.equals(actual)) {
             throw new BusinessException(ResultCode.PARAM_ERROR);
+        }
     }
 
     /**

@@ -20,14 +20,14 @@ import reactor.core.publisher.Mono;
  * @since 1.3.0
  */
 public interface OfficePlatformMessageClient {
-    
+
     /**
      * 获取支持的平台类型
      *
      * @return 平台类型（FEISHU、DINGTALK、WECOM）
      */
     String getPlatform();
-    
+
     /**
      * 发送消息
      *
@@ -37,7 +37,7 @@ public interface OfficePlatformMessageClient {
      * @return 平台返回的消息ID
      */
     Mono<String> sendMessage(OfficeMessage message);
-    
+
     /**
      * 批量发送消息
      *
@@ -47,7 +47,7 @@ public interface OfficePlatformMessageClient {
      * @return 发送结果（成功数量、失败数量等）
      */
     Mono<String> sendBatchMessage(OfficeMessage message);
-    
+
     /**
      * 撤回消息
      *
