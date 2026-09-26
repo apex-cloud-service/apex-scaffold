@@ -7,6 +7,7 @@ import reactor.core.publisher.Mono;
  * 办公平台授权状态端口，提供租户范围内的限时签发与一次性消费。
  *
  * @author Apex Team
+ * @since 1.2.0
  */
 public interface OfficeState {
     /**

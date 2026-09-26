@@ -19,6 +19,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
  *
  * @author Apex Team
  * @version 1.1.4
+ * @since 1.1.4
  */
 @Configuration
 @RequiredArgsConstructor

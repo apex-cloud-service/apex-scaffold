@@ -16,6 +16,7 @@ import lombok.NoArgsConstructor;
  *
  * @author Apex Team
  * @version 2.2.0
+ * @since 2.2.0
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class LicenseLoader {

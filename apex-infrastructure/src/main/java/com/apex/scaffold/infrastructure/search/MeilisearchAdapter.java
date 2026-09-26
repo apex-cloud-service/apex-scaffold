@@ -27,6 +27,7 @@ import reactor.core.scheduler.Schedulers;
  * <p>实现全局搜索和索引同步功能，支持多种资源类型的搜索和索引管理
  *
  * @author Apex Team
+ * @since 1.2.0
  */
 @Slf4j
 @Component

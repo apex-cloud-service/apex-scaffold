@@ -38,6 +38,8 @@ import org.springframework.web.reactive.function.server.ServerResponse;
  *
  * <p>所有路由要求请求头 {@code Accept: application/json}，实际业务处理委托给 {@link ChartHandler}。
  *
+ * @author Apex Team
+ * @since 1.2.0
  * @see ChartHandler
  * @see org.springframework.web.reactive.function.server.RouterFunction
  */

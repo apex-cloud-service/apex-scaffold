@@ -23,6 +23,7 @@ import reactor.core.publisher.Mono;
  * <p>管理 OAuth2 授权同意信息的持久化操作
  *
  * @author Apex Team
+ * @since 1.2.0
  */
 @Slf4j
 @Repository

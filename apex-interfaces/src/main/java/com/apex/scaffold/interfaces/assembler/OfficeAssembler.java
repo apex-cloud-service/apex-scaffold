@@ -14,6 +14,7 @@ import org.mapstruct.ReportingPolicy;
  * 办公平台接口层对象转换器。
  *
  * @author Apex Team
+ * @since 1.2.0
  */
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface OfficeAssembler {

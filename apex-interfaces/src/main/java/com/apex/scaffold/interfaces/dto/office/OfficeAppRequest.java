@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
  * 办公平台应用配置请求。
  *
  * @author Apex Team
+ * @since 1.2.0
  */
 @Data
 @Builder

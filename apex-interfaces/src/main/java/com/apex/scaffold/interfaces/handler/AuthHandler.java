@@ -58,6 +58,8 @@ import reactor.core.publisher.Mono;
  *   <li>支持业务指标和安全指标记录</li>
  * </ul>
  *
+ * @author Apex Team
+ * @since 1.2.0
  * @see AuthService
  * @see AuthRegistrationService
  * @see BaseHandler

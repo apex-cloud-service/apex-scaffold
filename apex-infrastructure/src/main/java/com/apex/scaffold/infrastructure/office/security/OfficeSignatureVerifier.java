@@ -2,6 +2,8 @@ package com.apex.scaffold.infrastructure.office.security;
 
 /**
  * 办公平台回调签名校验端口。
+ * @author Apex Team
+ * @since 1.2.0
  */
 public interface OfficeSignatureVerifier {
     /**

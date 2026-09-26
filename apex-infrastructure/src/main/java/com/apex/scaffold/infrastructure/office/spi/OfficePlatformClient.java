@@ -5,6 +5,8 @@ import reactor.core.publisher.Mono;
 
 /**
  * 办公平台通用业务能力端口。
+ * @author Apex Team
+ * @since 1.2.0
  */
 public interface OfficePlatformClient {
     /**

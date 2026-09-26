@@ -19,6 +19,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
  * 办公平台管理端路由配置。
  *
  * @author Apex Team
+ * @since 1.2.0
  */
 @Configuration
 public class OfficeAdminRouter {

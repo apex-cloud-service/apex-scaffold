@@ -22,6 +22,7 @@ import reactor.core.publisher.Mono;
  * <p>提供图表数据的持久化操作
  *
  * @author Apex Team
+ * @since 1.2.0
  */
 @Repository
 @RequiredArgsConstructor

@@ -10,6 +10,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  *
  * @author Apex Team
  * @version 1.0.0
+ * @since 1.0.0
  */
 @SpringBootApplication(scanBasePackages = {"com.apex.example", "com.apex.scaffold"})
 public class ExampleApplication {

@@ -28,6 +28,7 @@ import org.springframework.context.annotation.Conditional;
  *
  * @author Apex Team
  * @version 2.2.0
+ * @since 2.2.0
  * @see LicenseFeatureCondition
  */
 @Documented

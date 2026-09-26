@@ -8,6 +8,8 @@ import org.springframework.stereotype.Component;
 
 /**
  * 基于 HMAC-SHA256 的办公平台回调签名校验实现。
+ * @author Apex Team
+ * @since 1.2.0
  */
 @Component
 public class HmacOfficeSignatureVerifier implements OfficeSignatureVerifier {

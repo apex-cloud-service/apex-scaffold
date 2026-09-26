@@ -20,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  * @author Apex Team
  * @version 2.2.0
+ * @since 2.2.0
  */
 @Slf4j
 public final class LicenseFeatureGate {
