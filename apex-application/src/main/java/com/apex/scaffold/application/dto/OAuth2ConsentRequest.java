@@ -1,5 +1,6 @@
 package com.apex.scaffold.application.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -33,6 +34,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Schema(description = "OAuth2授权同意请求DTO，用户在授权同意页面提交授权或拒绝决定")
 public class OAuth2ConsentRequest {
 
     /**
@@ -40,6 +42,7 @@ public class OAuth2ConsentRequest {
      *
      * <p>标识请求授权的第三方应用
      */
+    @Schema(description = "OAuth2客户端ID，标识请求授权的第三方应用", example = "apex-admin-web")
     private String clientId;
 
     /**
@@ -47,6 +50,7 @@ public class OAuth2ConsentRequest {
      *
      * <p>用于防止CSRF攻击，需要在整个授权流程中保持一致
      */
+    @Schema(description = "OAuth2 state参数，用于防止CSRF攻击，需与授权请求中保持一致", example = "xyz123")
     private String state;
 
     /**
@@ -54,6 +58,7 @@ public class OAuth2ConsentRequest {
      *
      * <p>例如: ["read", "write", "user:profile"]
      */
+    @Schema(description = "用户授权的权限作用域列表，如 read、write、user:profile")
     private List<String> scopes;
 
     /**
@@ -62,5 +67,6 @@ public class OAuth2ConsentRequest {
      * <p>true - 用户同意授权<br>
      * false - 用户拒绝授权
      */
+    @Schema(description = "用户是否同意授权：true-同意，false-拒绝", example = "true")
     private Boolean approved;
 }

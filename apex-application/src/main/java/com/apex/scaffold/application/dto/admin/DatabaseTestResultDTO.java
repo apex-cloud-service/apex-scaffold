@@ -1,5 +1,6 @@
 package com.apex.scaffold.application.dto.admin;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -26,20 +27,24 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Schema(name = "DatabaseTestResultDTO", description = "数据库连接测试结果响应")
 public class DatabaseTestResultDTO {
 
     /**
      * 是否成功。
      */
+    @Schema(description = "连接测试是否成功", example = "true")
     private Boolean success;
 
     /**
      * 提示信息。
      */
+    @Schema(description = "测试结果提示信息（失败时包含失败原因）", example = "连接成功")
     private String message;
 
     /**
      * 数据库版本（成功时返回）。
      */
+    @Schema(description = "数据库服务端版本号（仅连接成功时返回）", example = "8.0.36")
     private String version;
 }

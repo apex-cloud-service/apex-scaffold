@@ -1,5 +1,6 @@
 package com.apex.scaffold.interfaces.dto.workflow;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
@@ -34,9 +35,11 @@ import lombok.Data;
  * @since 1.3.0
  */
 @Data
+@Schema(description = "挂起工作流实例请求")
 public class SuspendInstanceRequest {
 
     @NotBlank(message = "挂起原因不能为空")
     @Size(max = 500, message = "挂起原因不能超过500字")
+    @Schema(description = "挂起原因，用于记录挂起说明和审计追溯，最多 500 字", example = "等待外部审批结果，暂时挂起流程", requiredMode = Schema.RequiredMode.REQUIRED)
     private String reason;
 }

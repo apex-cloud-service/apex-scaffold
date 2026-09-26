@@ -1,5 +1,6 @@
 package com.apex.scaffold.interfaces.dto.workflow;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
@@ -28,12 +29,15 @@ import lombok.Data;
  * @since 1.3.0
  */
 @Data
+@Schema(description = "发起工作流实例请求")
 public class StartProcessInstanceRequest {
 
     @NotBlank(message = "业务主键不能为空")
     @Size(max = 200, message = "业务主键不能超过200字符")
+    @Schema(description = "业务主键，用于关联业务数据（如请假单编号、采购单编号、合同编号），最多 200 字符", example = "LEAVE-20260926-0001", requiredMode = Schema.RequiredMode.REQUIRED)
     private String businessKey;
 
     @Size(max = 10000, message = "流程上下文不能超过10000字符")
+    @Schema(description = "流程上下文数据（JSON 格式），包含流程流转所需的业务参数，最多 10000 字符", example = "{\"days\":3,\"leaveType\":\"annual\"}")
     private String contextJson;
 }

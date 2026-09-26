@@ -1,5 +1,6 @@
 package com.apex.scaffold.interfaces.dto.workflow;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
@@ -26,8 +27,10 @@ import lombok.Data;
  * @since 1.3.0
  */
 @Data
+@Schema(description = "完成工作流任务请求")
 public class CompleteTaskRequest {
 
     @Size(max = 1000, message = "审批意见不能超过1000字")
+    @Schema(description = "审批意见或处理备注，用于流程追溯和审计，最多 1000 字", example = "同意，请按计划推进后续节点")
     private String comment;
 }

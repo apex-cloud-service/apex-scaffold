@@ -1,5 +1,6 @@
 package com.apex.scaffold.application.dto.admin;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -34,6 +35,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Schema(name = "DatabaseConfigRequest", description = "数据库配置请求（用于连接测试与部署配置生成，密码不会被持久化）")
 public class DatabaseConfigRequest {
 
     /**
@@ -50,6 +52,11 @@ public class DatabaseConfigRequest {
      * </ul>
      */
     @NotBlank(message = "数据库类型不能为空")
+    @Schema(
+            description = "数据库类型（mysql/postgresql/oracle/sqlserver）",
+            example = "mysql",
+            allowableValues = {"mysql", "postgresql", "oracle", "sqlserver"},
+            requiredMode = Schema.RequiredMode.REQUIRED)
     private String dbType;
 
     /**
@@ -60,6 +67,7 @@ public class DatabaseConfigRequest {
      * <p>示例：{@code localhost}、{@code 192.168.1.100}、{@code db.example.com}
      */
     @NotBlank(message = "主机地址不能为空")
+    @Schema(description = "数据库主机地址或 IP", example = "192.168.1.100", requiredMode = Schema.RequiredMode.REQUIRED)
     private String host;
 
     /**
@@ -80,6 +88,10 @@ public class DatabaseConfigRequest {
     @NotNull(message = "端口不能为空")
     @Min(value = 1, message = "端口必须在 1-65535 之间")
     @Max(value = 65535, message = "端口必须在 1-65535 之间")
+    @Schema(
+            description = "数据库端口（1-65535，MySQL 常用 3306，PostgreSQL 常用 5432）",
+            example = "3306",
+            requiredMode = Schema.RequiredMode.REQUIRED)
     private Integer port;
 
     /**
@@ -90,6 +102,7 @@ public class DatabaseConfigRequest {
      * <p>示例：{@code apex_scaffold}、{@code production_db}
      */
     @NotBlank(message = "数据库名不能为空")
+    @Schema(description = "数据库名称", example = "apex_scaffold", requiredMode = Schema.RequiredMode.REQUIRED)
     private String database;
 
     /**
@@ -100,6 +113,7 @@ public class DatabaseConfigRequest {
      * <p>建议：生产环境应使用专用账号，并遵循最小权限原则
      */
     @NotBlank(message = "用户名不能为空")
+    @Schema(description = "数据库用户名", example = "apex", requiredMode = Schema.RequiredMode.REQUIRED)
     private String username;
 
     /**
@@ -116,6 +130,10 @@ public class DatabaseConfigRequest {
      * </ul>
      */
     @NotBlank(message = "密码不能为空")
+    @Schema(
+            description = "数据库密码（仅用于一次性连接测试与配置生成，不会被持久化）",
+            example = "******",
+            requiredMode = Schema.RequiredMode.REQUIRED)
     private String password;
 
     /**
@@ -129,6 +147,7 @@ public class DatabaseConfigRequest {
      *   <li>PostgreSQL：{@code ssl=true&sslmode=require}</li>
      * </ul>
      */
+    @Schema(description = "附加 JDBC 连接参数（键值对形式，可为空）", example = "useSSL=false&serverTimezone=Asia/Shanghai")
     private String connectionParams;
 
     /**
@@ -145,5 +164,10 @@ public class DatabaseConfigRequest {
      * </ul>
      */
     @NotBlank(message = "部署环境不能为空")
+    @Schema(
+            description = "目标部署环境（dev-开发，test-测试，staging-预发布，production-生产）",
+            example = "dev",
+            allowableValues = {"dev", "test", "staging", "production"},
+            requiredMode = Schema.RequiredMode.REQUIRED)
     private String environment;
 }

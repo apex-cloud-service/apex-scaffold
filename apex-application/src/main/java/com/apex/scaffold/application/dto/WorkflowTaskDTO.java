@@ -1,5 +1,6 @@
 package com.apex.scaffold.application.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -41,6 +42,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Schema(description = "工作流任务DTO，用于前端展示待办任务和任务列表，承载单个任务节点的核心信息")
 public class WorkflowTaskDTO {
 
     /**
@@ -48,6 +50,7 @@ public class WorkflowTaskDTO {
      *
      * <p>任务的唯一标识。
      */
+    @Schema(description = "任务ID", example = "5001")
     private Long id;
 
     /**
@@ -55,6 +58,7 @@ public class WorkflowTaskDTO {
      *
      * <p>任务所属的流程实例标识，用于关联整个流程的上下文。
      */
+    @Schema(description = "所属流程实例ID", example = "3001")
     private Long instanceId;
 
     /**
@@ -64,6 +68,7 @@ public class WorkflowTaskDTO {
      *
      * <p>示例：{@code 部门经理审批}、{@code 财务复核}、{@code 总经理审批}
      */
+    @Schema(description = "任务名称，如 部门经理审批、财务复核", example = "部门经理审批")
     private String taskName;
 
     /**
@@ -77,6 +82,7 @@ public class WorkflowTaskDTO {
      *   <li>{@code SERVICE_TASK}：服务任务，系统自动执行</li>
      * </ul>
      */
+    @Schema(description = "任务类型：USER_TASK(人工任务)/SERVICE_TASK(服务任务)", example = "USER_TASK")
     private String taskType;
 
     /**
@@ -92,6 +98,7 @@ public class WorkflowTaskDTO {
      *   <li>{@code REJECTED}：已拒绝</li>
      * </ul>
      */
+    @Schema(description = "任务状态：PENDING(待处理)/IN_PROGRESS(处理中)/COMPLETED(已完成)/REJECTED(已拒绝)", example = "PENDING")
     private String status;
 
     /**
@@ -100,6 +107,7 @@ public class WorkflowTaskDTO {
      * <p>当前任务的处理人用户 ID。
      * 对于待办任务，此字段为分配到的处理人；对于已完成任务，此字段为实际办理人。
      */
+    @Schema(description = "办理人用户ID，待办任务为被分配人，已完成任务为实际办理人", example = "2001")
     private Long assigneeId;
 
     /**
@@ -109,6 +117,7 @@ public class WorkflowTaskDTO {
      *
      * <p>示例：{@code 张三}、{@code 李经理}
      */
+    @Schema(description = "办理人姓名", example = "李经理")
     private String assigneeName;
 
     /**
@@ -116,6 +125,7 @@ public class WorkflowTaskDTO {
      *
      * <p>任务开始处理的时间，通常是用户点击"办理"或任务被分配的时间。
      */
+    @Schema(description = "任务开始处理时间", example = "2026-09-26T10:05:00")
     private LocalDateTime startTime;
 
     /**
@@ -124,6 +134,7 @@ public class WorkflowTaskDTO {
      * <p>任务完成的时间，包括审批通过、驳回等所有终态的时间。
      * 未完成任务此字段为 null。
      */
+    @Schema(description = "任务完成时间（含通过、驳回等终态），未完成为空", example = "2026-09-26T11:00:00")
     private LocalDateTime completedTime;
 
     /**
@@ -133,6 +144,7 @@ public class WorkflowTaskDTO {
      *
      * <p>示例：{@code 同意}、{@code 需要补充材料}、{@code 金额超出审批范围，建议调整}
      */
+    @Schema(description = "审批意见，办理人处理任务时填写的意见或备注", example = "同意")
     private String comment;
 
     /**
@@ -140,6 +152,7 @@ public class WorkflowTaskDTO {
      *
      * <p>任务在流程定义中的节点标识，用于关联流程定义中的节点配置。
      */
+    @Schema(description = "流程定义中的节点ID", example = "node_2")
     private String nodeId;
 
     /**
@@ -147,5 +160,6 @@ public class WorkflowTaskDTO {
      *
      * <p>任务记录首次创建的时间。
      */
+    @Schema(description = "任务创建时间", example = "2026-09-26T10:00:00")
     private LocalDateTime createTime;
 }

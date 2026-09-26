@@ -1,5 +1,6 @@
 package com.apex.scaffold.application.dto.admin;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -26,20 +27,24 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Schema(name = "CurrentDatabaseInfoDTO", description = "当前数据库信息响应（部署环境自检与兼容诊断）")
 public class CurrentDatabaseInfoDTO {
 
     /**
      * 数据库类型。
      */
+    @Schema(description = "数据库类型（如 MySQL、PostgreSQL）", example = "MySQL")
     private String type;
 
     /**
      * 数据库版本。
      */
+    @Schema(description = "数据库服务端版本号", example = "8.0.36")
     private String version;
 
     /**
      * 驱动版本。
      */
+    @Schema(description = "JDBC 驱动版本号", example = "8.3.0")
     private String driverVersion;
 }

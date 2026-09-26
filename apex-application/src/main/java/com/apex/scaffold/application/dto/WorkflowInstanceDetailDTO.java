@@ -1,5 +1,6 @@
 package com.apex.scaffold.application.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -28,17 +29,22 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Schema(description = "工作流实例详情DTO，聚合流程实例基本信息、流程定义、任务列表与当前节点，用于实例详情页展示")
 public class WorkflowInstanceDetailDTO {
 
     /** 流程实例基本信息 */
+    @Schema(description = "流程实例基本信息")
     private WorkflowInstanceDTO instance;
 
     /** 流程定义（用于渲染流程图） */
+    @Schema(description = "流程定义，用于渲染流程图")
     private WorkflowDefinitionDTO definition;
 
     /** 任务列表 */
+    @Schema(description = "实例下的任务列表")
     private List<WorkflowTaskDTO> tasks;
 
     /** 当前节点 ID */
+    @Schema(description = "当前节点ID", example = "node_2")
     private String currentNodeId;
 }

@@ -4,8 +4,17 @@ import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.web.reactive.function.server.RequestPredicates.accept;
 
 import com.apex.scaffold.interfaces.handler.ChartHandler;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import org.springdoc.core.annotations.RouterOperation;
+import org.springdoc.core.annotations.RouterOperations;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.RouterFunctions;
 import org.springframework.web.reactive.function.server.ServerResponse;
@@ -45,6 +54,119 @@ public class ChartRouter {
      * @return 图表路由函数
      */
     @Bean
+    @RouterOperations({
+            @RouterOperation(
+                    path = "/admin-api/v1/charts",
+                    method = RequestMethod.GET,
+                    beanClass = ChartHandler.class,
+                    beanMethod = "query",
+                    operation = @Operation(
+                            summary = "分页查询图表列表",
+                            description = "按条件分页查询图表资源，支持类型与状态筛选",
+                            tags = {"图表管理"},
+                            responses = {
+                                @ApiResponse(responseCode = "200", description = "查询成功",
+                                        content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
+                            })),
+            @RouterOperation(
+                    path = "/admin-api/v1/charts",
+                    method = RequestMethod.POST,
+                    beanClass = ChartHandler.class,
+                    beanMethod = "create",
+                    operation = @Operation(
+                            summary = "创建图表",
+                            description = "根据请求参数创建新图表并返回图表标识",
+                            tags = {"图表管理"},
+                            responses = {
+                                @ApiResponse(responseCode = "200", description = "创建成功",
+                                        content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
+                            })),
+            @RouterOperation(
+                    path = "/admin-api/v1/charts/{id}",
+                    method = RequestMethod.GET,
+                    beanClass = ChartHandler.class,
+                    beanMethod = "getById",
+                    operation = @Operation(
+                            summary = "查询图表详情",
+                            description = "根据图表 ID 查询图表元数据",
+                            tags = {"图表管理"},
+                            parameters = {
+                                @Parameter(name = "id", description = "图表 ID", required = true,
+                                        in = ParameterIn.PATH, schema = @io.swagger.v3.oas.annotations.media.Schema(type = "string"))
+                            },
+                            responses = {
+                                @ApiResponse(responseCode = "200", description = "查询成功",
+                                        content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
+                            })),
+            @RouterOperation(
+                    path = "/admin-api/v1/charts/{id}/data",
+                    method = RequestMethod.GET,
+                    beanClass = ChartHandler.class,
+                    beanMethod = "getChartData",
+                    operation = @Operation(
+                            summary = "查询图表数据",
+                            description = "根据图表 ID 查询图表数据点、时间序列与统计值",
+                            tags = {"图表管理"},
+                            parameters = {
+                                @Parameter(name = "id", description = "图表 ID", required = true,
+                                        in = ParameterIn.PATH, schema = @io.swagger.v3.oas.annotations.media.Schema(type = "string"))
+                            },
+                            responses = {
+                                @ApiResponse(responseCode = "200", description = "查询成功",
+                                        content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
+                            })),
+            @RouterOperation(
+                    path = "/admin-api/v1/charts/{id}",
+                    method = RequestMethod.PUT,
+                    beanClass = ChartHandler.class,
+                    beanMethod = "update",
+                    operation = @Operation(
+                            summary = "更新图表配置",
+                            description = "根据图表 ID 更新图表配置信息",
+                            tags = {"图表管理"},
+                            parameters = {
+                                @Parameter(name = "id", description = "图表 ID", required = true,
+                                        in = ParameterIn.PATH, schema = @io.swagger.v3.oas.annotations.media.Schema(type = "string"))
+                            },
+                            responses = {
+                                @ApiResponse(responseCode = "200", description = "更新成功",
+                                        content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
+                            })),
+            @RouterOperation(
+                    path = "/admin-api/v1/charts/{id}",
+                    method = RequestMethod.DELETE,
+                    beanClass = ChartHandler.class,
+                    beanMethod = "delete",
+                    operation = @Operation(
+                            summary = "删除图表",
+                            description = "根据图表 ID 删除图表",
+                            tags = {"图表管理"},
+                            parameters = {
+                                @Parameter(name = "id", description = "图表 ID", required = true,
+                                        in = ParameterIn.PATH, schema = @io.swagger.v3.oas.annotations.media.Schema(type = "string"))
+                            },
+                            responses = {
+                                @ApiResponse(responseCode = "200", description = "删除成功",
+                                        content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
+                            })),
+            @RouterOperation(
+                    path = "/admin-api/v1/charts/{id}/status",
+                    method = RequestMethod.PUT,
+                    beanClass = ChartHandler.class,
+                    beanMethod = "updateStatus",
+                    operation = @Operation(
+                            summary = "变更图表状态",
+                            description = "根据图表 ID 变更图表状态（启用、停用等）",
+                            tags = {"图表管理"},
+                            parameters = {
+                                @Parameter(name = "id", description = "图表 ID", required = true,
+                                        in = ParameterIn.PATH, schema = @io.swagger.v3.oas.annotations.media.Schema(type = "string"))
+                            },
+                            responses = {
+                                @ApiResponse(responseCode = "200", description = "变更成功",
+                                        content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
+                            }))
+    })
     public RouterFunction<ServerResponse> chartRoutes(ChartHandler handler) {
         return RouterFunctions.route()
                 .path("/admin-api/v1/charts", builder -> builder.GET("", accept(APPLICATION_JSON), handler::query)

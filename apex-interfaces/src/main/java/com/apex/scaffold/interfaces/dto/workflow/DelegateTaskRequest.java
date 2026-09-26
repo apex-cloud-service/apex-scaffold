@@ -1,5 +1,6 @@
 package com.apex.scaffold.interfaces.dto.workflow;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -35,12 +36,15 @@ import lombok.Data;
  * @since 1.3.0
  */
 @Data
+@Schema(description = "工作流任务委派请求")
 public class DelegateTaskRequest {
 
     @NotNull(message = "受托人ID不能为空")
+    @Schema(description = "受托人用户 ID，必须是系统中的有效用户，受托人处理完成后任务回到委派人", example = "10002", requiredMode = Schema.RequiredMode.REQUIRED)
     private Long delegateToId;
 
     @NotBlank(message = "委派说明不能为空")
     @Size(max = 500, message = "委派说明不能超过500字")
+    @Schema(description = "委派说明，用于记录委派原因，最多 500 字", example = "本人出差，委派张三代为审批", requiredMode = Schema.RequiredMode.REQUIRED)
     private String reason;
 }

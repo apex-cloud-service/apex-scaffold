@@ -1,5 +1,6 @@
 package com.apex.scaffold.application.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -35,6 +36,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Schema(description = "工作流趋势统计DTO，提供每日流程发起数量和完成数量的时间序列，用于监控页趋势图表")
 public class WorkflowTrendDTO {
 
     /**
@@ -45,6 +47,7 @@ public class WorkflowTrendDTO {
      *
      * <p>示例：{@code ["2026-09-01", "2026-09-02", "2026-09-03"]}
      */
+    @Schema(description = "日期列表，格式 yyyy-MM-dd，按升序排列，与后续两个数量列表索引一一对应")
     private List<String> dates;
 
     /**
@@ -55,6 +58,7 @@ public class WorkflowTrendDTO {
      *
      * <p>示例：{@code [120, 135, 128]}（三天分别发起 120、135、128 个流程）
      */
+    @Schema(description = "每日发起数量列表，与 dates 索引对应")
     private List<Integer> startedCounts;
 
     /**
@@ -67,6 +71,7 @@ public class WorkflowTrendDTO {
      *
      * <p>注意：完成数量可能大于发起数量，因为可能完成的是之前发起的流程
      */
+    @Schema(description = "每日完成数量列表，与 dates 索引对应，完成数可能大于发起数（含以前发起的流程）")
     private List<Integer> completedCounts;
 
     /**

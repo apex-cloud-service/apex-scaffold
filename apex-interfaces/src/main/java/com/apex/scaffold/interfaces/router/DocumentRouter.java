@@ -4,8 +4,17 @@ import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.web.reactive.function.server.RequestPredicates.accept;
 
 import com.apex.scaffold.interfaces.handler.DocumentHandler;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import org.springdoc.core.annotations.RouterOperation;
+import org.springdoc.core.annotations.RouterOperations;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.RouterFunctions;
 import org.springframework.web.reactive.function.server.ServerResponse;
@@ -45,6 +54,119 @@ public class DocumentRouter {
      * @return 文档路由函数
      */
     @Bean
+    @RouterOperations({
+            @RouterOperation(
+                    path = "/admin-api/v1/documents",
+                    method = RequestMethod.GET,
+                    beanClass = DocumentHandler.class,
+                    beanMethod = "query",
+                    operation = @Operation(
+                            summary = "分页查询文档列表",
+                            description = "按条件分页查询文档资源，支持关键字筛选与状态过滤",
+                            tags = {"文档管理"},
+                            responses = {
+                                @ApiResponse(responseCode = "200", description = "查询成功",
+                                        content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
+                            })),
+            @RouterOperation(
+                    path = "/admin-api/v1/documents",
+                    method = RequestMethod.POST,
+                    beanClass = DocumentHandler.class,
+                    beanMethod = "create",
+                    operation = @Operation(
+                            summary = "创建文档",
+                            description = "根据请求参数创建新文档并返回文档标识",
+                            tags = {"文档管理"},
+                            responses = {
+                                @ApiResponse(responseCode = "200", description = "创建成功",
+                                        content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
+                            })),
+            @RouterOperation(
+                    path = "/admin-api/v1/documents/{id}",
+                    method = RequestMethod.GET,
+                    beanClass = DocumentHandler.class,
+                    beanMethod = "getById",
+                    operation = @Operation(
+                            summary = "查询文档详情",
+                            description = "根据文档 ID 查询文档元数据与内容概要",
+                            tags = {"文档管理"},
+                            parameters = {
+                                @Parameter(name = "id", description = "文档 ID", required = true,
+                                        in = ParameterIn.PATH, schema = @io.swagger.v3.oas.annotations.media.Schema(type = "string"))
+                            },
+                            responses = {
+                                @ApiResponse(responseCode = "200", description = "查询成功",
+                                        content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
+                            })),
+            @RouterOperation(
+                    path = "/admin-api/v1/documents/{id}",
+                    method = RequestMethod.PUT,
+                    beanClass = DocumentHandler.class,
+                    beanMethod = "update",
+                    operation = @Operation(
+                            summary = "更新文档信息",
+                            description = "根据文档 ID 更新文档基础信息",
+                            tags = {"文档管理"},
+                            parameters = {
+                                @Parameter(name = "id", description = "文档 ID", required = true,
+                                        in = ParameterIn.PATH, schema = @io.swagger.v3.oas.annotations.media.Schema(type = "string"))
+                            },
+                            responses = {
+                                @ApiResponse(responseCode = "200", description = "更新成功",
+                                        content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
+                            })),
+            @RouterOperation(
+                    path = "/admin-api/v1/documents/{id}",
+                    method = RequestMethod.DELETE,
+                    beanClass = DocumentHandler.class,
+                    beanMethod = "delete",
+                    operation = @Operation(
+                            summary = "删除文档",
+                            description = "根据文档 ID 删除文档",
+                            tags = {"文档管理"},
+                            parameters = {
+                                @Parameter(name = "id", description = "文档 ID", required = true,
+                                        in = ParameterIn.PATH, schema = @io.swagger.v3.oas.annotations.media.Schema(type = "string"))
+                            },
+                            responses = {
+                                @ApiResponse(responseCode = "200", description = "删除成功",
+                                        content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
+                            })),
+            @RouterOperation(
+                    path = "/admin-api/v1/documents/{id}/status",
+                    method = RequestMethod.PUT,
+                    beanClass = DocumentHandler.class,
+                    beanMethod = "updateStatus",
+                    operation = @Operation(
+                            summary = "变更文档状态",
+                            description = "根据文档 ID 变更文档状态（如发布、归档）",
+                            tags = {"文档管理"},
+                            parameters = {
+                                @Parameter(name = "id", description = "文档 ID", required = true,
+                                        in = ParameterIn.PATH, schema = @io.swagger.v3.oas.annotations.media.Schema(type = "string"))
+                            },
+                            responses = {
+                                @ApiResponse(responseCode = "200", description = "变更成功",
+                                        content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
+                            })),
+            @RouterOperation(
+                    path = "/admin-api/v1/documents/{id}/download",
+                    method = RequestMethod.GET,
+                    beanClass = DocumentHandler.class,
+                    beanMethod = "download",
+                    operation = @Operation(
+                            summary = "下载文档文件",
+                            description = "根据文档 ID 下载文档对应的文件流",
+                            tags = {"文档管理"},
+                            parameters = {
+                                @Parameter(name = "id", description = "文档 ID", required = true,
+                                        in = ParameterIn.PATH, schema = @io.swagger.v3.oas.annotations.media.Schema(type = "string"))
+                            },
+                            responses = {
+                                @ApiResponse(responseCode = "200", description = "下载成功",
+                                        content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
+                            }))
+    })
     public RouterFunction<ServerResponse> documentRoutes(DocumentHandler handler) {
         return RouterFunctions.route()
                 .path("/admin-api/v1/documents", builder -> builder.GET("", accept(APPLICATION_JSON), handler::query)
