@@ -12,6 +12,17 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
+/**
+ * 图表持久化对象。
+ *
+ * <p>对应 {@code doc_chart} 表，存储文档图表配置：图表名称、类型（折线/柱状/饼图等）、
+ * 分类、描述、数据源、ECharts 配置（JSON，经 JacksonTypeHandler 映射）、
+ * 创建人信息、状态与查看次数，并携带租户标识实现多租户隔离。
+ *
+ * @author Apex Team
+ * @version 1.2.0
+ * @since 1.2.0
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
