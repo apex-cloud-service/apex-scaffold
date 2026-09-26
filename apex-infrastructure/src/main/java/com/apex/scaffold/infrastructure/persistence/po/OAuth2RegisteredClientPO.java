@@ -22,7 +22,6 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 @SuperBuilder
 @TableName("oauth2_registered_client")
-/**n * OAuth2RegisteredClientPO - 持久化对象n *n * <p>对应数据库表：TODO: 补充表名n *n * @author Apex Teamn * @version 1.0.0n * @since 1.0.0n */
 public class OAuth2RegisteredClientPO {
 
     @TableId(value = "id", type = IdType.INPUT)
@@ -63,4 +62,28 @@ public class OAuth2RegisteredClientPO {
 
     @TableField("token_settings")
     private String tokenSettings;
+
+    /**
+     * 上一个客户端密钥（已加密）
+     *
+     * <p>密钥轮换后的旧密钥，用于宽限期认证（对应表列 {@code previous_client_secret}）。
+     */
+    @TableField("previous_client_secret")
+    private String previousClientSecret;
+
+    /**
+     * 密钥轮换时间
+     *
+     * <p>最近一次密钥轮换时间戳，从未轮换时为 {@code null}（对应表列 {@code secret_rotated_at}）。
+     */
+    @TableField("secret_rotated_at")
+    private LocalDateTime secretRotatedAt;
+
+    /**
+     * 密钥轮换次数
+     *
+     * <p>累计轮换计数，默认 0（对应表列 {@code secret_rotation_count}）。
+     */
+    @TableField("secret_rotation_count")
+    private Integer secretRotationCount;
 }

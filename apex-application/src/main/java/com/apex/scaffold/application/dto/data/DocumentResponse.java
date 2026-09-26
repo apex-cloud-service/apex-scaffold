@@ -38,7 +38,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "文档响应")
-/**n * DocumentResponsen *n * <p>TODO: 补充类的详细说明n *n * @author Apex Teamn * @version 1.0.0n * @since 1.0.0n */
 public class DocumentResponse {
 
     @Schema(description = "文档ID")

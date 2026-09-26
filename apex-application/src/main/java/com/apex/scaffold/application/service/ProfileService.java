@@ -60,7 +60,6 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-/**n * ProfileServicen *n * <p>TODO: 补充服务的详细说明n *n * @author Apex Teamn * @version 1.0.0n * @since 1.0.0n */
 public class ProfileService {
 
     private static final int VERIFICATION_REQUIRED_SAMPLE_COUNT = 3;

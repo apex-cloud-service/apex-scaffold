@@ -26,7 +26,6 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-/**n * ProfileUpdateRequestn *n * <p>TODO: 补充类的详细说明n *n * @author Apex Teamn * @version 1.0.0n * @since 1.0.0n */
 public class ProfileUpdateRequest {
 
     /** 性别编码，与系统用户字段保持一致：1 男，2 女。 */

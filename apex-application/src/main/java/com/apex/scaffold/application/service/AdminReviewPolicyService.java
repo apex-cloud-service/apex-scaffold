@@ -23,7 +23,6 @@ import reactor.core.publisher.Mono;
  */
 @Service
 @RequiredArgsConstructor
-/**n * AdminReviewPolicyServicen *n * <p>TODO: 补充服务的详细说明n *n * @author Apex Teamn * @version 1.0.0n * @since 1.0.0n */
 public class AdminReviewPolicyService {
     private static final java.util.Set<String> TYPES = java.util.Set.of("PHOTO", "INTEREST");
     private final ReviewReasonRepository repository;

@@ -38,7 +38,6 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 @SuperBuilder
 @TableName("oauth2_authorization_consent")
-/**n * OAuth2AuthorizationConsentPO - 持久化对象n *n * <p>对应数据库表：TODO: 补充表名n *n * @author Apex Teamn * @version 1.0.0n * @since 1.0.0n */
 public class OAuth2AuthorizationConsentPO {
 
     /**

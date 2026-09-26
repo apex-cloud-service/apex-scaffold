@@ -99,6 +99,20 @@
             <artifactId>springdoc-openapi-starter-webflux-api</artifactId>
         </dependency>
 
+        <!-- JWT 库（用于 JWT 测试功能） -->
+        <dependency>
+            <groupId>com.auth0</groupId>
+            <artifactId>java-jwt</artifactId>
+            <version>4.4.0</version>
+        </dependency>
+
+        <!-- 认证中心模块（OAuth2 客户端密钥轮换的安全审计服务） -->
+        <dependency>
+            <groupId>com.apex.scaffold</groupId>
+            <artifactId>apex-auth-center</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>com.alibaba.cloud</groupId>
             <artifactId>spring-cloud-starter-alibaba-sentinel</artifactId>

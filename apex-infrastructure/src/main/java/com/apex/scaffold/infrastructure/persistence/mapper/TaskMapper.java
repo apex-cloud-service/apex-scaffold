@@ -17,7 +17,6 @@ import org.apache.ibatis.annotations.Select;
  * @since 1.0.0
  */
 @Mapper
-/**n * TaskMappern *n * <p>TODO: 补充 Mapper 的详细说明n *n * @author Apex Teamn * @version 1.0.0n * @since 1.0.0n */
 public interface TaskMapper extends BaseMapper<TaskPO> {
 
     @Select("SELECT COUNT(*) FROM wf_task WHERE status = 'PENDING' AND deleted = 0")

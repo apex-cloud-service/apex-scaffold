@@ -20,7 +20,6 @@ import reactor.core.publisher.Mono;
  * @see UserService#findOnlineUsers(int, int)
  */
 @Service
-/**n * OnlineUserQueryServicen *n * <p>TODO: 补充服务的详细说明n *n * @author Apex Teamn * @version 1.0.0n * @since 1.0.0n */
 public class OnlineUserQueryService {
 
     /** 用户应用服务 */

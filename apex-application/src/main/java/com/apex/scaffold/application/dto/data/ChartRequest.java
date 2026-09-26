@@ -34,7 +34,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "图表创建/更新请求")
-/**n * ChartRequestn *n * <p>TODO: 补充类的详细说明n *n * @author Apex Teamn * @version 1.0.0n * @since 1.0.0n */
 public class ChartRequest {
 
     @Schema(description = "图表名称", example = "月度销售趋势")

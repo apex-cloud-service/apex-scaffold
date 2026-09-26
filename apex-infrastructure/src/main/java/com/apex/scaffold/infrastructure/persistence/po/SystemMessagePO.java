@@ -25,7 +25,6 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @EqualsAndHashCode(callSuper = true)
 @TableName("biz_system_message")
-/**n * SystemMessagePO - 持久化对象n *n * <p>对应数据库表：TODO: 补充表名n *n * @author Apex Teamn * @version 1.0.0n * @since 1.0.0n */
 public class SystemMessagePO extends BasePO {
 
     /** 接收用户 ID。 */

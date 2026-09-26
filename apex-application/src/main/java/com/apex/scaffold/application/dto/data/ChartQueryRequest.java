@@ -31,7 +31,6 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @EqualsAndHashCode(callSuper = true)
 @Schema(description = "图表查询请求")
-/**n * ChartQueryRequestn *n * <p>TODO: 补充类的详细说明n *n * @author Apex Teamn * @version 1.0.0n * @since 1.0.0n */
 public class ChartQueryRequest extends PageRequest {
 
     @Schema(description = "关键词(名称/描述)")

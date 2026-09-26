@@ -21,7 +21,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "文档创建/更新请求")
-/**n * DocumentRequestn *n * <p>TODO: 补充类的详细说明n *n * @author Apex Teamn * @version 1.0.0n * @since 1.0.0n */
 public class DocumentRequest {
 
     @Schema(description = "文档标题", example = "2024年度财务报告")

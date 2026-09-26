@@ -46,7 +46,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(name = "SendSmsRequest", description = "发送短信验证码请求")
-/**n * SendSmsRequestn *n * <p>TODO: 补充类的详细说明n *n * @author Apex Teamn * @version 1.0.0n * @since 1.0.0n */
 public class SendSmsRequest {
 
     /**

@@ -30,7 +30,6 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @EqualsAndHashCode(callSuper = true)
 @TableName("wf_process_instance")
-/**n * ProcessInstancePO - 持久化对象n *n * <p>对应数据库表：TODO: 补充表名n *n * @author Apex Teamn * @version 1.0.0n * @since 1.0.0n */
 public class ProcessInstancePO extends BasePO {
 
     private String tenantId;

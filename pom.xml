@@ -137,6 +137,7 @@
     <module>apex-infrastructure</module>
     <module>apex-application</module>
     <module>apex-interfaces</module>
+    <module>apex-auth-center</module>
     <module>apex-example</module>
     <module>apex-generator</module>
   </modules>

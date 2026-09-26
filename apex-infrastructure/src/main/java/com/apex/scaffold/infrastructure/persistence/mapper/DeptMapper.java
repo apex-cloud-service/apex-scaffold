@@ -104,5 +104,4 @@ import org.apache.ibatis.annotations.Mapper;
  * @see BaseMapper
  */
 @Mapper
-/**n * DeptMappern *n * <p>TODO: 补充 Mapper 的详细说明n *n * @author Apex Teamn * @version 1.0.0n * @since 1.0.0n */
 public interface DeptMapper extends BaseMapper<DeptPO> {}

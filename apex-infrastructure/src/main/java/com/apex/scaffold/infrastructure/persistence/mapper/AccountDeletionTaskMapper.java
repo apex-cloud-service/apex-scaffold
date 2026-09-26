@@ -16,7 +16,6 @@ import org.apache.ibatis.annotations.Update;
  * @since 1.0.0
  */
 @Mapper
-/**n * AccountDeletionTaskMappern *n * <p>TODO: 补充 Mapper 的详细说明n *n * @author Apex Teamn * @version 1.0.0n * @since 1.0.0n */
 public interface AccountDeletionTaskMapper extends BaseMapper<AccountDeletionTaskPO> {
 
     /** 找到一条待处理或锁超时任务。 */

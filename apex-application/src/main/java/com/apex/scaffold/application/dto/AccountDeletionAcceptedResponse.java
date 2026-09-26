@@ -44,7 +44,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(name = "AccountDeletionAcceptedResponse", description = "账号注销异步清理受理结果")
-/**n * AccountDeletionAcceptedResponsen *n * <p>TODO: 补充类的详细说明n *n * @author Apex Teamn * @version 1.0.0n * @since 1.0.0n */
 public class AccountDeletionAcceptedResponse {
 
     /**

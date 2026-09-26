@@ -2,6 +2,8 @@ package com.apex.scaffold.interfaces.handler;
 
 import com.apex.scaffold.application.dto.OAuth2ClientRequest;
 import com.apex.scaffold.application.service.OAuth2ClientManagementService;
+import com.apex.scaffold.common.annotation.OperationLog;
+import com.apex.scaffold.common.annotation.RequirePermission;
 import com.apex.scaffold.common.result.Result;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -47,6 +49,8 @@ public class OAuth2ClientManagementHandler {
 
     private final OAuth2ClientManagementService clientManagementService;
 
+    @RequirePermission("system:oauth2:client:create")
+    @OperationLog(module = "OAuth2客户端管理", type = OperationLog.OperationType.INSERT, description = "创建OAuth2客户端")
     @Operation(
             operationId = "createOAuth2Client",
             summary = "创建OAuth2客户端",
@@ -69,6 +73,8 @@ public class OAuth2ClientManagementHandler {
                         .bodyValue(Result.success(response)));
     }
 
+    @RequirePermission("system:oauth2:client:update")
+    @OperationLog(module = "OAuth2客户端管理", type = OperationLog.OperationType.UPDATE, description = "更新OAuth2客户端")
     @Operation(operationId = "updateOAuth2Client", summary = "更新OAuth2客户端", description = "更新指定客户端的配置信息")
     @ApiResponses({
         @ApiResponse(
@@ -89,6 +95,8 @@ public class OAuth2ClientManagementHandler {
                         .bodyValue(Result.success(response)));
     }
 
+    @RequirePermission("system:oauth2:client:delete")
+    @OperationLog(module = "OAuth2客户端管理", type = OperationLog.OperationType.DELETE, description = "删除OAuth2客户端")
     @Operation(operationId = "deleteOAuth2Client", summary = "删除OAuth2客户端", description = "删除指定的OAuth2客户端及其相关的令牌")
     @ApiResponses({
         @ApiResponse(
@@ -109,6 +117,7 @@ public class OAuth2ClientManagementHandler {
                         .bodyValue(Result.success("删除成功")));
     }
 
+    @RequirePermission("system:oauth2:client:query")
     @Operation(operationId = "getOAuth2Client", summary = "查询OAuth2客户端详情", description = "根据clientId查询客户端的详细信息")
     @ApiResponses({
         @ApiResponse(
@@ -127,6 +136,7 @@ public class OAuth2ClientManagementHandler {
                 .bodyValue(Result.success(response)));
     }
 
+    @RequirePermission("system:oauth2:client:query")
     @Operation(operationId = "listOAuth2Clients", summary = "分页查询OAuth2客户端列表", description = "分页查询所有OAuth2客户端")
     @ApiResponses({
         @ApiResponse(
@@ -155,6 +165,8 @@ public class OAuth2ClientManagementHandler {
                 });
     }
 
+    @RequirePermission("system:oauth2:client:secret:reset")
+    @OperationLog(module = "OAuth2客户端管理", type = OperationLog.OperationType.UPDATE, description = "重置OAuth2客户端密钥")
     @Operation(operationId = "resetOAuth2ClientSecret", summary = "重置客户端密钥", description = "重新生成指定客户端的clientSecret")
     @ApiResponses({
         @ApiResponse(

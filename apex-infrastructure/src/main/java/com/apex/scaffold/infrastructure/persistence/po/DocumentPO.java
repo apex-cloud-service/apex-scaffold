@@ -51,7 +51,6 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @EqualsAndHashCode(callSuper = true)
 @TableName(value = "doc_document", autoResultMap = true)
-/**n * DocumentPO - 持久化对象n *n * <p>对应数据库表：TODO: 补充表名n *n * @author Apex Teamn * @version 1.0.0n * @since 1.0.0n */
 public class DocumentPO extends BasePO {
 
     private static final long serialVersionUID = 1L;

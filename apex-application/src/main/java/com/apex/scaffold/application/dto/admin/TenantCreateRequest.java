@@ -25,7 +25,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "租户创建请求")
-/**n * TenantCreateRequestn *n * <p>TODO: 补充类的详细说明n *n * @author Apex Teamn * @version 1.0.0n * @since 1.0.0n */
 public class TenantCreateRequest {
     @Schema(description = "租户编码（全局唯一，创建后不可变更）", example = "T001")
     @NotBlank(message = "{tenant.code_not_blank}")

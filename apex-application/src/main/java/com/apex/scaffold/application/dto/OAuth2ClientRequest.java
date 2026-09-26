@@ -1,5 +1,6 @@
 package com.apex.scaffold.application.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -31,11 +32,11 @@ import lombok.NoArgsConstructor;
  * @version 1.2.0
  * @since 1.0.0
  */
+@Schema(description = "OAuth2客户端创建/更新请求")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-/**n * OAuth2ClientRequestn *n * <p>TODO: 补充类的详细说明n *n * @author Apex Teamn * @version 1.0.0n * @since 1.0.0n */
 public class OAuth2ClientRequest {
 
     /**
@@ -46,6 +47,7 @@ public class OAuth2ClientRequest {
      *
      * <p>命名建议：使用小写字母、数字和连字符，如 {@code apex-admin-web}
      */
+    @Schema(description = "客户端ID，全局唯一标识", example = "apex-admin-web")
     private String clientId;
 
     /**
@@ -61,6 +63,7 @@ public class OAuth2ClientRequest {
      *   <li>仅在服务端使用，不能嵌入前端代码</li>
      * </ul>
      */
+    @Schema(description = "客户端密钥，用于身份验证", example = "secret-abc123xyz")
     private String clientSecret;
 
     /**
@@ -70,6 +73,7 @@ public class OAuth2ClientRequest {
      *
      * <p>示例：{@code Apex 管理后台}、{@code 第三方数据分析平台}
      */
+    @Schema(description = "客户端名称，用于授权页面展示", example = "Apex管理后台")
     private String clientName;
 
     /**
@@ -82,6 +86,7 @@ public class OAuth2ClientRequest {
      *   <li>{@code none}：公开客户端（不推荐用于生产环境）</li>
      * </ul>
      */
+    @Schema(description = "客户端认证方式集合", example = "[\"client_secret_basic\", \"client_secret_post\"]")
     private Set<String> clientAuthenticationMethods;
 
     /**
@@ -96,6 +101,7 @@ public class OAuth2ClientRequest {
      *
      * <p>注意：授权码模式通常需要配合 {@code refresh_token} 使用
      */
+    @Schema(description = "授权类型集合", example = "[\"authorization_code\", \"refresh_token\"]")
     private Set<String> authorizationGrantTypes;
 
     /**
@@ -113,6 +119,7 @@ public class OAuth2ClientRequest {
      *
      * <p>示例：{@code https://admin.example.com/oauth/callback}
      */
+    @Schema(description = "授权成功后的重定向URI列表", example = "[\"https://admin.example.com/oauth/callback\"]")
     private Set<String> redirectUris;
 
     /**
@@ -123,6 +130,7 @@ public class OAuth2ClientRequest {
      *
      * <p>示例：{@code https://admin.example.com/logout-success}
      */
+    @Schema(description = "登出后的重定向URI列表", example = "[\"https://admin.example.com/logout-success\"]")
     private Set<String> postLogoutRedirectUris;
 
     /**
@@ -139,6 +147,7 @@ public class OAuth2ClientRequest {
      *
      * <p>实际授权时，用户可以选择授予部分或全部 scope
      */
+    @Schema(description = "授权范围集合", example = "[\"read\", \"write\", \"openid\", \"profile\"]")
     private Set<String> scopes;
 
     /**
@@ -155,6 +164,7 @@ public class OAuth2ClientRequest {
      *
      * <p>默认值：{@code false}
      */
+    @Schema(description = "是否要求PKCE验证", example = "true")
     private Boolean requireProofKey;
 
     /**
@@ -171,6 +181,7 @@ public class OAuth2ClientRequest {
      *
      * <p>默认值：{@code true}
      */
+    @Schema(description = "是否需要用户授权同意", example = "true")
     private Boolean requireAuthorizationConsent;
 
     /**
@@ -187,6 +198,7 @@ public class OAuth2ClientRequest {
      *
      * <p>默认值：{@code 3600L}（1 小时）
      */
+    @Schema(description = "访问令牌有效期（秒）", example = "3600")
     private Long accessTokenTimeToLive;
 
     /**
@@ -202,6 +214,7 @@ public class OAuth2ClientRequest {
      *
      * <p>默认值：{@code 2592000L}（30 天）
      */
+    @Schema(description = "刷新令牌有效期（秒）", example = "2592000")
     private Long refreshTokenTimeToLive;
 
     /**
@@ -218,5 +231,6 @@ public class OAuth2ClientRequest {
      *
      * <p>默认值：{@code 300L}（5 分钟）
      */
+    @Schema(description = "授权码有效期（秒）", example = "300")
     private Long authorizationCodeTimeToLive;
 }

@@ -1,5 +1,6 @@
 package com.apex.scaffold.domain.model.entity;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Set;
 import lombok.Data;
@@ -46,6 +47,78 @@ public class OAuth2RegisteredClientEntity {
     private String clientSettings;
 
     private String tokenSettings;
+
+    /**
+     * 上一个客户端密钥（已加密）
+     *
+     * <p>密钥轮换后的旧密钥，保留用于宽限期认证：客户端在轮换后的一段时间内
+     * 仍可使用旧密钥完成认证，避免密钥轮换导致客户端立即失联。
+     */
+    private String previousClientSecret;
+
+    /**
+     * 密钥轮换时间
+     *
+     * <p>最近一次密钥轮换的时间戳，用于审计与轮换周期统计；从未轮换时为 {@code null}。
+     */
+    private Instant secretRotatedAt;
+
+    /**
+     * 密钥轮换次数
+     *
+     * <p>累计轮换计数，初始为 0，每次轮换递增 1。
+     */
+    private int secretRotationCount;
+
+    /**
+     * 执行密钥轮换
+     *
+     * <p>轮换语义：
+     * <ol>
+     *   <li>当前密钥降级为宽限期密钥（{@code previousClientSecret}）</li>
+     *   <li>设置新密钥及其过期时间</li>
+     *   <li>记录轮换时间并递增轮换计数</li>
+     * </ol>
+     *
+     * @param encodedSecret 新的已加密客户端密钥（BCrypt），不允许为空
+     * @param expiresAt 新密钥的过期时间，不允许为空
+     */
+    public void rotateSecret(String encodedSecret, Instant expiresAt) {
+        this.previousClientSecret = this.clientSecret;
+        this.clientSecret = encodedSecret;
+        this.clientSecretExpiresAt = expiresAt;
+        this.secretRotatedAt = Instant.now();
+        this.secretRotationCount++;
+    }
+
+    /**
+     * 判断密钥是否已过期
+     *
+     * @return true-密钥已过有效期，false-仍在有效期内或未设置过期时间
+     */
+    public boolean isSecretExpired() {
+        return clientSecretExpiresAt != null && Instant.now().isAfter(clientSecretExpiresAt);
+    }
+
+    /**
+     * 即将过期判定阈值（天）
+     *
+     * <p>与密钥轮换服务的提醒阈值保持一致（30 天），用于驱动密钥轮换提醒。
+     */
+    public static final long EXPIRING_SOON_THRESHOLD_DAYS = 30;
+
+    /**
+     * 判断密钥是否即将过期（30 天内）
+     *
+     * @return true-密钥未过期但将在 30 天内到期
+     */
+    public boolean isSecretExpiringSoon() {
+        return clientSecretExpiresAt != null
+                && !isSecretExpired()
+                && Instant.now()
+                        .plus(Duration.ofDays(EXPIRING_SOON_THRESHOLD_DAYS))
+                        .isAfter(clientSecretExpiresAt);
+    }
 
     /**
      * 判断是否为公共客户端(无密钥)

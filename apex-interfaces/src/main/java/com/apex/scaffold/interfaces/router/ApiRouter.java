@@ -327,8 +327,19 @@ public class ApiRouter {
     /**
      * 系统管理-数据库配置路由（/admin-api/v1/database）。
      *
-     * <p>提供数据库连接测试、部署配置生成和当前数据库信息查询端点，
-     * 所有端点经 {@code RequirePermissionAspect} 校验 {@code system:database:*} 权限。</p>
+     * <p>提供数据库连接测试、部署配置生成、当前数据库信息查询，以及数据源
+     * 管理的完整 CRUD 与连接池监控端点。所有端点经 {@code RequirePermissionAspect}
+     * 校验 {@code system:database:*} 权限；数据源管理端点要求
+     * {@code system:database:datasource:*} 细粒度权限。</p>
+     *
+     * <h2>数据源管理端点</h2>
+     * <ul>
+     *   <li>GET /admin-api/v1/database/datasources - 分页查询数据源列表</li>
+     *   <li>POST /admin-api/v1/database/datasources - 创建数据源</li>
+     *   <li>PUT /admin-api/v1/database/datasources/{id} - 更新数据源</li>
+     *   <li>DELETE /admin-api/v1/database/datasources/{id} - 删除数据源</li>
+     *   <li>GET /admin-api/v1/database/datasources/{id}/metrics - 查询连接池监控指标</li>
+     * </ul>
      *
      * @param handler 数据库配置处理器
      * @return 数据库配置管理路由函数
@@ -343,6 +354,11 @@ public class ApiRouter {
                         contentType(MediaType.APPLICATION_JSON),
                         handler::generateConfig)
                 .GET("/admin-api/v1/database/current", handler::getCurrentInfo)
+                .path("/admin-api/v1/database/datasources", routes -> routes.GET("", handler::listDataSources)
+                        .POST("", contentType(MediaType.APPLICATION_JSON), handler::createDataSource)
+                        .PUT("/{id}", contentType(MediaType.APPLICATION_JSON), handler::updateDataSource)
+                        .DELETE("/{id}", handler::deleteDataSource)
+                        .GET("/{id}/metrics", handler::getDataSourceMetrics))
                 .build();
     }
 

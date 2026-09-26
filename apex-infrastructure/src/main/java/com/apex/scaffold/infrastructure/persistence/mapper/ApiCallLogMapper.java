@@ -16,5 +16,4 @@ import org.apache.ibatis.annotations.Mapper;
  * @see ApiCallLogPO
  */
 @Mapper
-/**n * ApiCallLogMappern *n * <p>TODO: 补充 Mapper 的详细说明n *n * @author Apex Teamn * @version 1.0.0n * @since 1.0.0n */
 public interface ApiCallLogMapper extends BaseMapper<ApiCallLogPO> {}
