@@ -1,7 +1,7 @@
 package com.apex.scaffold.application.service.impl;
 
 import com.apex.scaffold.application.service.OAuth2ClientSecretRotationService;
-import com.apex.scaffold.authcenter.infrastructure.audit.SecurityAuditService;
+import com.apex.scaffold.authcenter.domain.service.SecurityAuditService;
 import com.apex.scaffold.domain.model.entity.OAuth2RegisteredClientEntity;
 import com.apex.scaffold.domain.repository.OAuth2RegisteredClientRepository;
 import java.security.SecureRandom;

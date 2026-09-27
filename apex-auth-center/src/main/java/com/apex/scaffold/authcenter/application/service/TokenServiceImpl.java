@@ -4,9 +4,9 @@ import com.apex.scaffold.authcenter.domain.model.entity.TokenEntity;
 import com.apex.scaffold.authcenter.domain.model.vo.TokenPair;
 import com.apex.scaffold.authcenter.domain.repository.TokenRepository;
 import com.apex.scaffold.authcenter.domain.repository.UserRepository;
+import com.apex.scaffold.authcenter.domain.service.SecurityAuditService;
+import com.apex.scaffold.authcenter.domain.service.TokenEncryptionService;
 import com.apex.scaffold.authcenter.domain.service.TokenService;
-import com.apex.scaffold.authcenter.infrastructure.audit.SecurityAuditService;
-import com.apex.scaffold.infrastructure.encryption.TokenEncryptionService;
 import com.apex.scaffold.common.context.TenantContext;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.result.ResultCode;
@@ -122,7 +122,7 @@ public class TokenServiceImpl implements TokenService {
                     TokenEncryptionService.EncryptedToken encryptedRefresh = encryptionService.encrypt(refreshToken);
                     String accessTokenHash = encryptionService.hashToken(accessToken);
                     String refreshTokenHash = encryptionService.hashToken(refreshToken);
-                    
+
                     // 生成Token Family ID用于轮换检测
                     String tokenFamily = UUID.randomUUID().toString();
 
@@ -158,15 +158,14 @@ public class TokenServiceImpl implements TokenService {
                     return tokenRepository
                             .save(accessTokenEntity)
                             .then(tokenRepository.save(refreshTokenEntity))
-                            .flatMap(savedRefreshToken -> 
-                                auditService.logTokenIssued(userId, tenantId, clientIp, deviceId, "ACCESS+REFRESH")
+                            .flatMap(savedRefreshToken -> auditService
+                                    .logTokenIssued(userId, tenantId, clientIp, deviceId, "ACCESS+REFRESH")
                                     .thenReturn(TokenPair.builder()
-                                        .accessToken(accessToken)
-                                        .refreshToken(refreshToken)
-                                        .expiresIn(ACCESS_TOKEN_EXPIRE_MS / 1000)
-                                        .tokenType("Bearer")
-                                        .build())
-                            );
+                                            .accessToken(accessToken)
+                                            .refreshToken(refreshToken)
+                                            .expiresIn(ACCESS_TOKEN_EXPIRE_MS / 1000)
+                                            .tokenType("Bearer")
+                                            .build()));
                 })
                 .doOnSuccess(pair -> log.info("Token签发成功: userId={}, tenantId={}", userId, tenantId))
                 .doOnError(e ->
@@ -234,19 +233,22 @@ public class TokenServiceImpl implements TokenService {
 
                     // 检测Token重放攻击：如果Token已被撤销，说明可能是重放攻击
                     if (tokenEntity.isRevoked()) {
-                        log.warn("检测到可疑的Token刷新尝试: 使用已撤销的refresh token, userId={}, jti={}", 
-                            tokenEntity.getUserId(), tokenEntity.getJti());
-                        
+                        log.warn(
+                                "检测到可疑的Token刷新尝试: 使用已撤销的refresh token, userId={}, jti={}",
+                                tokenEntity.getUserId(),
+                                tokenEntity.getJti());
+
                         // 记录Token重放攻击审计日志
-                        return auditService.logTokenReplayAttack(
-                                tokenEntity.getUserId(), 
-                                tokenEntity.getTenantId(), 
-                                tokenEntity.getClientIp(), 
-                                tokenEntity.getJti())
-                            .then(tokenRepository.revokeByUserId(tokenEntity.getUserId(), tokenEntity.getTenantId()))
-                            .then(Mono.error(new BusinessException(
-                                ResultCode.UNAUTHORIZED, 
-                                "检测到安全威胁，已撤销所有会话，请重新登录")));
+                        return auditService
+                                .logTokenReplayAttack(
+                                        tokenEntity.getUserId(),
+                                        tokenEntity.getTenantId(),
+                                        tokenEntity.getClientIp(),
+                                        tokenEntity.getJti())
+                                .then(tokenRepository.revokeByUserId(
+                                        tokenEntity.getUserId(), tokenEntity.getTenantId()))
+                                .then(Mono.error(
+                                        new BusinessException(ResultCode.UNAUTHORIZED, "检测到安全威胁，已撤销所有会话，请重新登录")));
                     }
 
                     // 实施Token轮换：撤销旧的refresh token
@@ -255,25 +257,22 @@ public class TokenServiceImpl implements TokenService {
                             .flatMap(revoked -> {
                                 if (!revoked) {
                                     log.error("Token轮换失败: 无法撤销旧token, jti={}", tokenEntity.getJti());
-                                    return Mono.error(new BusinessException(
-                                        ResultCode.ERROR, 
-                                        "Token刷新失败"));
+                                    return Mono.error(new BusinessException(ResultCode.ERROR, "Token刷新失败"));
                                 }
-                                
+
                                 // 签发新的Token对（包含新的refresh token）
                                 return issueToken(
-                                        tokenEntity.getUserId(),
-                                        tokenEntity.getTenantId(),
-                                        tokenEntity.getDeviceId(),
-                                        tokenEntity.getClientIp())
-                                    .flatMap(newTokenPair -> 
-                                        auditService.logTokenRefreshed(
-                                            tokenEntity.getUserId(),
-                                            tokenEntity.getTenantId(),
-                                            tokenEntity.getClientIp(),
-                                            tokenEntity.getJti())
-                                        .thenReturn(newTokenPair)
-                                    );
+                                                tokenEntity.getUserId(),
+                                                tokenEntity.getTenantId(),
+                                                tokenEntity.getDeviceId(),
+                                                tokenEntity.getClientIp())
+                                        .flatMap(newTokenPair -> auditService
+                                                .logTokenRefreshed(
+                                                        tokenEntity.getUserId(),
+                                                        tokenEntity.getTenantId(),
+                                                        tokenEntity.getClientIp(),
+                                                        tokenEntity.getJti())
+                                                .thenReturn(newTokenPair));
                             })
                             .contextWrite(TenantContext.withTenant(tokenEntity.getTenantId()));
                 })
@@ -286,26 +285,26 @@ public class TokenServiceImpl implements TokenService {
         try {
             Claims claims = JwtUtil.parseToken(token);
             String jti = claims.get("jti", String.class);
-            
+
             if (jti == null || jti.isBlank()) {
                 return Mono.error(new BusinessException(ResultCode.UNAUTHORIZED, "Token格式错误"));
             }
-            
+
             return tokenRepository
                     .findByJti(jti)
                     .switchIfEmpty(Mono.error(new BusinessException(ResultCode.NOT_FOUND, "Token不存在")))
                     .flatMap(tokenEntity -> {
                         // 记录撤销原因和操作人
                         tokenEntity.revoke("user:" + tokenEntity.getUserId(), "manual");
-                        return tokenRepository.update(tokenEntity)
-                            .then(auditService.logTokenRevoked(
-                                tokenEntity.getUserId(),
-                                null, // username需要从UserService获取
-                                tokenEntity.getTenantId(),
-                                jti,
-                                "manual",
-                                tokenEntity.getClientIp()
-                            ));
+                        return tokenRepository
+                                .update(tokenEntity)
+                                .then(auditService.logTokenRevoked(
+                                        tokenEntity.getUserId(),
+                                        null, // username需要从UserService获取
+                                        tokenEntity.getTenantId(),
+                                        jti,
+                                        "manual",
+                                        tokenEntity.getClientIp()));
                     })
                     .doOnSuccess(v -> log.info("Token撤销成功: jti={}", jti))
                     .doOnError(e -> log.error("Token撤销失败: {}", e.getMessage()));
@@ -316,9 +315,11 @@ public class TokenServiceImpl implements TokenService {
 
     @Override
     public Mono<Void> revokeAllUserTokens(Long userId, String tenantId) {
-        return tokenRepository.revokeByUserId(userId, tenantId)
-            .doOnSuccess(count -> log.info("已撤销用户所有Token: userId={}, tenantId={}, count={}", userId, tenantId, count))
-            .then();
+        return tokenRepository
+                .revokeByUserId(userId, tenantId)
+                .doOnSuccess(
+                        count -> log.info("已撤销用户所有Token: userId={}, tenantId={}, count={}", userId, tenantId, count))
+                .then();
     }
 
     @Override

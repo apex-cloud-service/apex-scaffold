@@ -41,7 +41,7 @@ class LayeringArchTest {
             .resideInAPackage("..domain..")
             .should()
             .dependOnClassesThat()
-            .resideInAnyPackage("..interfaces..", "..infrastructure..");
+            .resideInAnyPackage("com.apex.scaffold..interfaces..", "com.apex.scaffold..infrastructure..");
 
     /**
      * Application 层不应依赖 Interfaces 层或 Infrastructure 实现。
@@ -65,7 +65,7 @@ class LayeringArchTest {
             .haveSimpleNameNotEndingWith("LogService")
             .should()
             .dependOnClassesThat()
-            .resideInAnyPackage("..interfaces..", "..infrastructure..");
+            .resideInAnyPackage("com.apex.scaffold..interfaces..", "com.apex.scaffold..infrastructure..");
 
     /**
      * 普通 Spring JDBC 事务不得标注返回 {@link Mono} 的响应式方法。
@@ -96,7 +96,7 @@ class LayeringArchTest {
             .resideInAPackage("..infrastructure..")
             .should()
             .dependOnClassesThat()
-            .resideInAnyPackage("..interfaces..");
+            .resideInAnyPackage("com.apex.scaffold..interfaces..");
 
     /**
      * Domain 层不应依赖 MyBatis-Plus 等持久化框架。
