@@ -1,6 +1,11 @@
 package com.apex.scaffold.infrastructure.mq.service;
 
 import com.apex.scaffold.common.context.TenantContext;
+import com.apex.scaffold.infrastructure.outbox.entity.MessageOutboxEntity;
+import com.apex.scaffold.infrastructure.outbox.service.MessageOutboxService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.Duration;
 import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -73,6 +78,12 @@ public class MqProducerService {
      * <p>用于发送 RocketMQ 消息，提供同步、异步、单向和事务等多种发送方式。
      */
     private final RocketMQTemplate rocketMQTemplate;
+
+    /** JSON 序列化器，用于消息体写入发件箱前的持久化 */
+    private final ObjectMapper objectMapper;
+
+    /** 消息发件箱服务，用于投递状态管理与发送失败兜底 */
+    private final MessageOutboxService messageOutboxService;
 
     /**
      * 同步发送消息
@@ -249,6 +260,96 @@ public class MqProducerService {
      */
     public RocketMQLocalTransactionState commitTransaction() {
         return RocketMQLocalTransactionState.COMMIT;
+    }
+
+    /**
+     * 同步发送消息并写入发件箱（Outbox 模式）
+     *
+     * <p>先将消息以 PENDING 状态持久化到发件箱，再尝试同步投递；投递成功后标记
+     * DELIVERED，投递失败时保留 PENDING 记录并重新抛出异常，由发件箱调度器后续
+     * 重试，确保消息最终不丢。本方法为阻塞 API，仅供同步调用边界使用。
+     *
+     * @param topic   消息主题，不能为空
+     * @param tag     消息标签，用于消息过滤和分类
+     * @param message 消息体对象（JSON 序列化后落箱）
+     * @return SendResult 同步发送结果
+     */
+    public SendResult sendSyncWithOutbox(String topic, String tag, Map<String, Object> message) {
+        MessageOutboxEntity outbox = buildOutboxEntity(topic, tag, message);
+        messageOutboxService.append(outbox).block(Duration.ofSeconds(SYNC_SEND_TIMEOUT_MS));
+        try {
+            SendResult result = sendSync(topic, tag, message);
+            messageOutboxService
+                    .markAsDelivered(outbox.getMessageId())
+                    .block(Duration.ofSeconds(SYNC_SEND_TIMEOUT_MS));
+            return result;
+        } catch (RuntimeException e) {
+            log.error("消息发送失败，发件箱记录保留 PENDING 状态待调度重试: messageId={}, topic: {}",
+                    outbox.getMessageId(), topic, e);
+            throw e;
+        }
+    }
+
+    /**
+     * 异步发送消息，失败时兜底写入发件箱（Outbox 模式）
+     *
+     * <p>优先异步投递；投递回调异常或发送过程抛出异常时，将消息以 PENDING 状态
+     * 落入发件箱，由发件箱调度器后续重试，确保消息不丢。
+     *
+     * @param topic   消息主题，不能为空
+     * @param tag     消息标签，用于消息过滤和分类
+     * @param message 消息体对象（JSON 序列化后落箱）
+     */
+    public void sendAsyncWithFallback(String topic, String tag, Map<String, Object> message) {
+        MessageOutboxEntity outbox = buildOutboxEntity(topic, tag, message);
+        try {
+            sendAsync(topic, tag, message, new SendCallback() {
+                @Override
+                public void onSuccess(SendResult sendResult) {
+                    log.debug("异步发送消息成功, messageId: {}, topic: {}", outbox.getMessageId(), topic);
+                }
+
+                @Override
+                public void onException(Throwable e) {
+                    fallbackToOutbox(outbox, e);
+                }
+            });
+        } catch (RuntimeException e) {
+            fallbackToOutbox(outbox, e);
+        }
+    }
+
+    /**
+     * 构建发件箱消息实体，投递状态与重试参数等默认值由 {@link MessageOutboxService#append} 补齐。
+     */
+    private MessageOutboxEntity buildOutboxEntity(String topic, String tag, Map<String, Object> message) {
+        String payload;
+        try {
+            payload = objectMapper.writeValueAsString(message);
+        } catch (JsonProcessingException e) {
+            log.warn("消息体 JSON 序列化失败，回退为 toString 形式落箱: topic: {}", topic, e);
+            payload = String.valueOf(message);
+        }
+        return MessageOutboxEntity.builder()
+                .messageId(UUID.randomUUID().toString())
+                .topic(topic)
+                .tag(tag)
+                .payload(payload)
+                .messageType("JSON")
+                .build();
+    }
+
+    /**
+     * 发送失败兜底：将消息落入发件箱（PENDING），由发件箱调度器重试投递。
+     */
+    private void fallbackToOutbox(MessageOutboxEntity outbox, Throwable cause) {
+        log.error("消息发送失败，已落入发件箱待重试: messageId={}, topic: {}",
+                outbox.getMessageId(), outbox.getTopic(), cause);
+        messageOutboxService
+                .append(outbox)
+                .subscribe(
+                        saved -> { },
+                        err -> log.error("发件箱落库失败: messageId={}", outbox.getMessageId(), err));
     }
 
     private String destination(String topic, String tag) {

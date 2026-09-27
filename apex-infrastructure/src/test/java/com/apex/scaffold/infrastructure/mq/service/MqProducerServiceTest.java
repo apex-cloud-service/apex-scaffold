@@ -11,6 +11,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.apex.scaffold.common.context.TenantContext;
+import com.apex.scaffold.infrastructure.outbox.service.MessageOutboxService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Map;
 import org.apache.rocketmq.client.producer.SendCallback;
 import org.apache.rocketmq.client.producer.SendResult;
@@ -46,6 +48,9 @@ class MqProducerServiceTest {
     @Mock
     private SendResult sendResult;
 
+    @Mock
+    private MessageOutboxService messageOutboxService;
+
     private MqProducerService service;
 
     /**
@@ -53,7 +58,7 @@ class MqProducerServiceTest {
      */
     @BeforeEach
     void setUp() {
-        service = new MqProducerService(rocketMQTemplate);
+        service = new MqProducerService(rocketMQTemplate, new ObjectMapper(), messageOutboxService);
     }
 
     @AfterEach
