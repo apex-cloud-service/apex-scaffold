@@ -28,20 +28,40 @@ public class WorkflowDefinitionPO extends BasePO {
 
     private String workflowCode;
 
+    /**
+     * 获取工作流编码（兼容方法，实际返回 workflowCode 字段值）。
+     *
+     * @return 工作流编码
+     */
     public String getCode() {
         return workflowCode;
     }
 
+    /**
+     * 设置工作流编码（兼容方法，实际写入 workflowCode 字段）。
+     *
+     * @param code 工作流编码
+     */
     public void setCode(String code) {
         this.workflowCode = code;
     }
 
     private String workflowName;
 
+    /**
+     * 获取工作流名称（兼容方法，实际返回 workflowName 字段值）。
+     *
+     * @return 工作流名称
+     */
     public String getName() {
         return workflowName;
     }
 
+    /**
+     * 设置工作流名称（兼容方法，实际写入 workflowName 字段）。
+     *
+     * @param name 工作流名称
+     */
     public void setName(String name) {
         this.workflowName = name;
     }

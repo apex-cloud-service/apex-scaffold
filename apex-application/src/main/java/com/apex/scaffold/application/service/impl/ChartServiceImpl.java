@@ -42,6 +42,14 @@ public class ChartServiceImpl implements ChartService {
     private final ChartAssembler chartAssembler;
     private final Random random = new Random();
 
+    /**
+     * 创建图表
+     *
+     * <p>图表归属当前租户（取自 {@link TenantContext}），创建人固定为 system。
+     *
+     * @param request 图表创建请求（含图表名称、类型、分类、描述、数据源、配置与状态）
+     * @return 新建图表的响应
+     */
     @Override
     public Mono<ChartResponse> create(ChartRequest request) {
         return Mono.justOrEmpty(TenantContext.currentTenantId())
@@ -66,6 +74,15 @@ public class ChartServiceImpl implements ChartService {
                 .map(chartAssembler::toResponse);
     }
 
+    /**
+     * 更新图表信息
+     *
+     * <p>校验图表归属当前租户后方可更新，请求中非空字段生效。
+     *
+     * @param id 图表 ID
+     * @param request 图表更新请求
+     * @return 更新后的图表响应；图表不存在或无租户权限时 Mono 以 BusinessException 错误终止
+     */
     @Override
     public Mono<ChartResponse> update(Long id, ChartRequest request) {
         return Mono.justOrEmpty(TenantContext.currentTenantId()).flatMap(tenantId -> chartRepository
@@ -90,12 +107,26 @@ public class ChartServiceImpl implements ChartService {
                 .map(chartAssembler::toResponse));
     }
 
+    /**
+     * 删除图表
+     *
+     * <p>按当前租户隔离删除指定图表。
+     *
+     * @param id 图表 ID
+     * @return 完成信号
+     */
     @Override
     public Mono<Void> delete(Long id) {
         return Mono.justOrEmpty(TenantContext.currentTenantId())
                 .flatMap(tenantId -> chartRepository.deleteById(id, tenantId));
     }
 
+    /**
+     * 按 ID 查询图表详情
+     *
+     * @param id 图表 ID
+     * @return 图表响应；图表不存在时 Mono 以 BusinessException 错误终止
+     */
     @Override
     public Mono<ChartResponse> getById(Long id) {
         return chartRepository
@@ -104,6 +135,14 @@ public class ChartServiceImpl implements ChartService {
                 .map(chartAssembler::toResponse);
     }
 
+    /**
+     * 分页查询图表列表
+     *
+     * <p>在当前租户范围内按关键词、图表类型、分类、状态条件过滤后内存分页。
+     *
+     * @param request 图表查询请求（含关键词、类型、分类、状态与分页参数）
+     * @return 分页结果
+     */
     @Override
     public Mono<PageResponse<ChartResponse>> query(ChartQueryRequest request) {
         return Mono.justOrEmpty(TenantContext.currentTenantId()).flatMap(tenantId -> chartRepository
@@ -120,6 +159,15 @@ public class ChartServiceImpl implements ChartService {
                 }));
     }
 
+    /**
+     * 更新图表状态
+     *
+     * <p>校验图表归属当前租户后方可更新状态。
+     *
+     * @param id 图表 ID
+     * @param status 目标状态
+     * @return 完成信号；图表不存在或无租户权限时 Mono 以 BusinessException 错误终止
+     */
     @Override
     public Mono<Void> updateStatus(Long id, Integer status) {
         return Mono.justOrEmpty(TenantContext.currentTenantId()).flatMap(tenantId -> chartRepository
@@ -135,6 +183,14 @@ public class ChartServiceImpl implements ChartService {
                 .then());
     }
 
+    /**
+     * 获取图表展示数据
+     *
+     * <p>当前数据为按图表类型随机生成的演示数据，生产环境需接入真实数据源。
+     *
+     * @param id 图表 ID
+     * @return 图表数据（坐标轴与数据系列）；图表不存在时 Mono 以 BusinessException 错误终止
+     */
     @Override
     public Mono<ChartDataResponse> getChartData(Long id) {
         return chartRepository
@@ -143,6 +199,14 @@ public class ChartServiceImpl implements ChartService {
                 .map(entity -> generateChartData(entity.getChartType(), entity.getChartName()));
     }
 
+    /**
+     * 增加图表浏览计数
+     *
+     * <p>将指定图表的浏览计数加一并保存，图表不存在时直接完成。
+     *
+     * @param id 图表 ID
+     * @return 完成信号
+     */
     @Override
     public Mono<Void> incrementViewCount(Long id) {
         return chartRepository

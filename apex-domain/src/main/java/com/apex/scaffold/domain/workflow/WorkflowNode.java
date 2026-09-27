@@ -30,6 +30,14 @@ public class WorkflowNode implements Serializable {
 
     protected WorkflowNode() {}
 
+    /**
+     * 创建基础工作流节点
+     *
+     * @param nodeId 节点唯一标识
+     * @param nodeType 节点类型（开始/审批/条件/结束）
+     * @param nodeName 节点名称
+     * @return 已初始化的工作流节点
+     */
     public static WorkflowNode create(String nodeId, WorkflowNodeType nodeType, String nodeName) {
         WorkflowNode node = new WorkflowNode();
         node.nodeId = nodeId;
@@ -38,6 +46,16 @@ public class WorkflowNode implements Serializable {
         return node;
     }
 
+    /**
+     * 创建审批节点
+     *
+     * @param nodeId 节点唯一标识
+     * @param nodeName 节点名称
+     * @param approverType 审批人类型（指定用户/角色/上级/发起人）
+     * @param approverValue 审批人取值（含义由审批人类型决定，如用户 ID 或角色标识）
+     * @param approvalStrategy 审批通过策略，为 null 时默认使用或策略（OR）
+     * @return 已初始化的审批节点
+     */
     public static WorkflowNode createApprovalNode(
             String nodeId,
             String nodeName,
@@ -51,39 +69,85 @@ public class WorkflowNode implements Serializable {
         return node;
     }
 
+    /**
+     * 设置节点超时配置
+     *
+     * @param timeoutHours 超时小时数
+     * @param timeoutAction 超时后的处理动作
+     */
     public void setTimeout(Integer timeoutHours, String timeoutAction) {
         this.timeoutHours = timeoutHours;
         this.timeoutAction = timeoutAction;
     }
 
+    /**
+     * 设置节点唯一标识
+     *
+     * @param nodeId 节点唯一标识
+     */
     public void setNodeId(String nodeId) {
         this.nodeId = nodeId;
     }
 
+    /**
+     * 设置节点类型
+     *
+     * @param nodeType 节点类型（开始/审批/条件/结束）
+     */
     public void setNodeType(WorkflowNodeType nodeType) {
         this.nodeType = nodeType;
     }
 
+    /**
+     * 设置节点名称
+     *
+     * @param nodeName 节点名称
+     */
     public void setNodeName(String nodeName) {
         this.nodeName = nodeName;
     }
 
+    /**
+     * 设置审批人类型
+     *
+     * @param approverType 审批人类型（指定用户/角色/上级/发起人）
+     */
     public void setApproverType(ApproverType approverType) {
         this.approverType = approverType;
     }
 
+    /**
+     * 设置审批人取值
+     *
+     * @param approverValue 审批人取值（含义由审批人类型决定，如用户 ID 或角色标识）
+     */
     public void setApproverValue(String approverValue) {
         this.approverValue = approverValue;
     }
 
+    /**
+     * 设置审批通过策略
+     *
+     * @param approvalStrategy 审批通过策略（或策略/与策略）
+     */
     public void setApprovalStrategy(ApprovalStrategy approvalStrategy) {
         this.approvalStrategy = approvalStrategy;
     }
 
+    /**
+     * 设置超时小时数
+     *
+     * @param timeoutHours 超时小时数
+     */
     public void setTimeoutHours(Integer timeoutHours) {
         this.timeoutHours = timeoutHours;
     }
 
+    /**
+     * 设置超时后的处理动作
+     *
+     * @param timeoutAction 超时后的处理动作
+     */
     public void setTimeoutAction(String timeoutAction) {
         this.timeoutAction = timeoutAction;
     }

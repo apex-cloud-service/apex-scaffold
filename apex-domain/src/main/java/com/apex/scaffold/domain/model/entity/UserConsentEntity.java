@@ -47,37 +47,65 @@ public class UserConsentEntity extends BaseEntity {
     /** 设备 ID 摘要。 */
     private String deviceId;
 
-    /** Sets userId. For persistence/construction use only. */
+    /**
+     * Sets userId. For persistence/construction use only.
+     *
+     * @param value 用户 ID
+     */
     public void setUserId(Long value) {
         this.userId = value;
     }
 
-    /** Sets policyType. For persistence/construction use only. */
+    /**
+     * Sets policyType. For persistence/construction use only.
+     *
+     * @param value 策略类型
+     */
     public void setPolicyType(String value) {
         this.policyType = value;
     }
 
-    /** Sets version. For persistence/construction use only. */
+    /**
+     * Sets version. For persistence/construction use only.
+     *
+     * @param value 同意的策略版本号
+     */
     public void setVersion(String value) {
         this.version = value;
     }
 
-    /** Sets agreed. For persistence/construction use only. */
+    /**
+     * Sets agreed. For persistence/construction use only.
+     *
+     * @param value 是否同意（0-不同意，1-同意）
+     */
     public void setAgreed(Integer value) {
         this.agreed = value;
     }
 
-    /** Sets agreedAt. For persistence/construction use only. */
+    /**
+     * Sets agreedAt. For persistence/construction use only.
+     *
+     * @param value 同意时间
+     */
     public void setAgreedAt(LocalDateTime value) {
         this.agreedAt = value;
     }
 
-    /** Sets channel. For persistence/construction use only. */
+    /**
+     * Sets channel. For persistence/construction use only.
+     *
+     * @param value 同意操作的来源渠道
+     */
     public void setChannel(String value) {
         this.channel = value;
     }
 
-    /** Sets deviceId. For persistence/construction use only. */
+    /**
+     * Sets deviceId. For persistence/construction use only.
+     *
+     * @param value 设备 ID 摘要
+     */
     public void setDeviceId(String value) {
         this.deviceId = value;
     }

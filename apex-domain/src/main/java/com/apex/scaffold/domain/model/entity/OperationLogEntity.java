@@ -83,97 +83,173 @@ public class OperationLogEntity extends BaseEntity {
     /** 追踪 ID。 */
     private String traceId;
 
-    /** Sets module. For persistence/construction use only. */
+    /**
+     * Sets module. For persistence/construction use only.
+     *
+     * @param value 操作所属业务模块
+     */
     public void setModule(String value) {
         this.module = value;
     }
 
-    /** Sets operationType. For persistence/construction use only. */
+    /**
+     * Sets operationType. For persistence/construction use only.
+     *
+     * @param value 操作类型（如 CREATE/UPDATE/DELETE）
+     */
     public void setOperationType(String value) {
         this.operationType = value;
     }
 
-    /** Sets description. For persistence/construction use only. */
+    /**
+     * Sets description. For persistence/construction use only.
+     *
+     * @param value 操作描述
+     */
     public void setDescription(String value) {
         this.description = value;
     }
 
-    /** Sets requestMethod. For persistence/construction use only. */
+    /**
+     * Sets requestMethod. For persistence/construction use only.
+     *
+     * @param value HTTP 请求方法（GET/POST/PUT/DELETE 等）
+     */
     public void setRequestMethod(String value) {
         this.requestMethod = value;
     }
 
-    /** Sets requestUri. For persistence/construction use only. */
+    /**
+     * Sets requestUri. For persistence/construction use only.
+     *
+     * @param value 请求的 URI 路径
+     */
     public void setRequestUri(String value) {
         this.requestUri = value;
     }
 
-    /** Sets requestParams. For persistence/construction use only. */
+    /**
+     * Sets requestParams. For persistence/construction use only.
+     *
+     * @param value 请求参数（JSON 格式，敏感字段已脱敏）
+     */
     public void setRequestParams(String value) {
         this.requestParams = value;
     }
 
-    /** Sets responseResult. For persistence/construction use only. */
+    /**
+     * Sets responseResult. For persistence/construction use only.
+     *
+     * @param value 响应结果（JSON 格式）
+     */
     public void setResponseResult(String value) {
         this.responseResult = value;
     }
 
-    /** Sets status. For persistence/construction use only. */
+    /**
+     * Sets status. For persistence/construction use only.
+     *
+     * @param value 操作状态（0-成功，1-失败）
+     */
     public void setStatus(Integer value) {
         this.status = value;
     }
 
-    /** Sets errorMsg. For persistence/construction use only. */
+    /**
+     * Sets errorMsg. For persistence/construction use only.
+     *
+     * @param value 操作失败时的错误信息，成功时为 null
+     */
     public void setErrorMsg(String value) {
         this.errorMsg = value;
     }
 
-    /** Sets executionTime. For persistence/construction use only. */
+    /**
+     * Sets executionTime. For persistence/construction use only.
+     *
+     * @param value 操作执行耗时（毫秒）
+     */
     public void setExecutionTime(Long value) {
         this.executionTime = value;
     }
 
-    /** Sets ip. For persistence/construction use only. */
+    /**
+     * Sets ip. For persistence/construction use only.
+     *
+     * @param value 操作发起的客户端 IP
+     */
     public void setIp(String value) {
         this.ip = value;
     }
 
-    /** Sets location. For persistence/construction use only. */
+    /**
+     * Sets location. For persistence/construction use only.
+     *
+     * @param value 客户端 IP 归属地
+     */
     public void setLocation(String value) {
         this.location = value;
     }
 
-    /** Sets userId. For persistence/construction use only. */
+    /**
+     * Sets userId. For persistence/construction use only.
+     *
+     * @param value 操作用户 ID
+     */
     public void setUserId(Long value) {
         this.userId = value;
     }
 
-    /** Sets userName. For persistence/construction use only. */
+    /**
+     * Sets userName. For persistence/construction use only.
+     *
+     * @param value 操作用户名
+     */
     public void setUserName(String value) {
         this.userName = value;
     }
 
-    /** Sets operationTime. For persistence/construction use only. */
+    /**
+     * Sets operationTime. For persistence/construction use only.
+     *
+     * @param value 操作发生时间
+     */
     public void setOperationTime(LocalDateTime value) {
         this.operationTime = value;
     }
 
-    /** Sets deviceType. For persistence/construction use only. */
+    /**
+     * Sets deviceType. For persistence/construction use only.
+     *
+     * @param value 操作使用的设备类型
+     */
     public void setDeviceType(String value) {
         this.deviceType = value;
     }
 
-    /** Sets browser. For persistence/construction use only. */
+    /**
+     * Sets browser. For persistence/construction use only.
+     *
+     * @param value 操作使用的浏览器类型
+     */
     public void setBrowser(String value) {
         this.browser = value;
     }
 
-    /** Sets os. For persistence/construction use only. */
+    /**
+     * Sets os. For persistence/construction use only.
+     *
+     * @param value 操作使用的操作系统
+     */
     public void setOs(String value) {
         this.os = value;
     }
 
-    /** Sets traceId. For persistence/construction use only. */
+    /**
+     * Sets traceId. For persistence/construction use only.
+     *
+     * @param value 关联的链路追踪 ID
+     */
     public void setTraceId(String value) {
         this.traceId = value;
     }

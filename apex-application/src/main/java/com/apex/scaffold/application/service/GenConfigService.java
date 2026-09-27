@@ -32,6 +32,16 @@ public class GenConfigService {
         "/Users/work/apex-scaffold/output", "/tmp/apex-gen", "./output", "../output"
     };
 
+    /**
+     * 创建代码生成配置
+     *
+     * <p>先对输出路径执行安全校验（非空、禁止路径遍历、白名单内）；
+     * 领域仓储尚未接入，校验通过后抛出未实现业务异常。
+     *
+     * @param request 代码生成配置请求（含数据源 ID、表名、实体名、包名、模块名、输出路径等）
+     * @return 创建后的配置 DTO；输出路径不合法时 Mono 以 BusinessException（PARAM_ERROR）错误终止，
+     *         其余情况 Mono 以 BusinessException（ERROR）错误终止（持久化用例未实现）
+     */
     public Mono<GenConfigDTO> create(GenConfigRequest request) {
         return validateOutputPath(request.getOutputPath()).then(Mono.defer(() -> {
             log.info("创建代码生成配置: tableName={}, entityName={}", request.getTableName(), request.getEntityName());
@@ -40,6 +50,17 @@ public class GenConfigService {
         }));
     }
 
+    /**
+     * 更新代码生成配置
+     *
+     * <p>先对输出路径执行安全校验（非空、禁止路径遍历、白名单内）；
+     * 领域仓储尚未接入，校验通过后抛出未实现业务异常。
+     *
+     * @param id 配置 ID
+     * @param request 代码生成配置请求（含待更新的配置项）
+     * @return 更新后的配置 DTO；输出路径不合法时 Mono 以 BusinessException（PARAM_ERROR）错误终止，
+     *         其余情况 Mono 以 BusinessException（ERROR）错误终止（持久化用例未实现）
+     */
     public Mono<GenConfigDTO> update(Long id, GenConfigRequest request) {
         return validateOutputPath(request.getOutputPath()).then(Mono.defer(() -> {
             log.info("更新代码生成配置: id={}, tableName={}", id, request.getTableName());
@@ -48,24 +69,60 @@ public class GenConfigService {
         }));
     }
 
+    /**
+     * 删除代码生成配置
+     *
+     * <p>领域仓储尚未接入，调用即抛出未实现业务异常。
+     *
+     * @param id 配置 ID
+     * @return 删除结果；当前 Mono 以 BusinessException（ERROR）错误终止（持久化用例未实现）
+     */
     public Mono<Boolean> delete(Long id) {
         log.info("删除代码生成配置: id={}", id);
         return Mono.error(new BusinessException(
                 ResultCode.ERROR, "TODO: 需要在 domain 层创建 GenConfigEntity 和 GenConfigRepository 后完善此方法"));
     }
 
+    /**
+     * 按 ID 查询代码生成配置
+     *
+     * <p>领域仓储尚未接入，调用即抛出未实现业务异常。
+     *
+     * @param id 配置 ID
+     * @return 配置 DTO；当前 Mono 以 BusinessException（ERROR）错误终止（持久化用例未实现）
+     */
     public Mono<GenConfigDTO> findById(Long id) {
         log.debug("查询代码生成配置: id={}", id);
         return Mono.error(new BusinessException(
                 ResultCode.ERROR, "TODO: 需要在 domain 层创建 GenConfigEntity 和 GenConfigRepository 后完善此方法"));
     }
 
+    /**
+     * 按数据源分页查询代码生成配置
+     *
+     * <p>领域仓储尚未接入，调用即抛出未实现业务异常。
+     *
+     * @param datasourceId 数据源 ID
+     * @param pageNum 页码
+     * @param pageSize 每页条数
+     * @return 分页结果；当前 Mono 以 BusinessException（ERROR）错误终止（持久化用例未实现）
+     */
     public Mono<PageResponse<GenConfigDTO>> list(Long datasourceId, int pageNum, int pageSize) {
         log.debug("分页查询代码生成配置: datasourceId={}, pageNum={}, pageSize={}", datasourceId, pageNum, pageSize);
         return Mono.error(new BusinessException(
                 ResultCode.ERROR, "TODO: 需要在 domain 层创建 GenConfigEntity 和 GenConfigRepository 后完善此方法"));
     }
 
+    /**
+     * 按配置分页查询代码生成历史
+     *
+     * <p>领域仓储尚未接入，调用即抛出未实现业务异常。
+     *
+     * @param configId 代码生成配置 ID
+     * @param pageNum 页码
+     * @param pageSize 每页条数
+     * @return 分页结果；当前 Mono 以 BusinessException（ERROR）错误终止（持久化用例未实现）
+     */
     public Mono<PageResponse<GenConfigDTO>> listHistory(Long configId, int pageNum, int pageSize) {
         log.debug("分页查询代码生成历史: configId={}, pageNum={}, pageSize={}", configId, pageNum, pageSize);
         return Mono.error(new BusinessException(

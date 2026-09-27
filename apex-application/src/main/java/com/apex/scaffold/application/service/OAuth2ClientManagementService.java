@@ -34,6 +34,15 @@ public class OAuth2ClientManagementService {
     private final PasswordEncoder passwordEncoder;
     private final OAuth2ClientAssembler oAuth2ClientAssembler;
 
+    /**
+     * 注册 OAuth2 客户端
+     *
+     * <p>校验客户端 ID 唯一后创建客户端记录，密钥经 {@link PasswordEncoder} 加密存储，
+     * 并写入客户端设置（PKCE、授权同意）与令牌设置（各类令牌 TTL）。
+     *
+     * @param request 客户端注册请求（含客户端 ID、名称、认证方式、授权类型、回调地址、作用域及令牌配置）
+     * @return 创建后的客户端响应；客户端 ID 已存在时 Mono 以 BusinessException（PARAM_ERROR）错误终止
+     */
     public Mono<OAuth2ClientResponse> createClient(OAuth2ClientRequest request) {
         return clientRepository
                 .findByClientId(request.getClientId())
@@ -64,6 +73,15 @@ public class OAuth2ClientManagementService {
                 .map(oAuth2ClientAssembler::toResponse);
     }
 
+    /**
+     * 更新 OAuth2 客户端
+     *
+     * <p>按客户端 ID 更新客户端配置，请求中非空字段生效，客户端设置与令牌设置整体重建。
+     *
+     * @param clientId 客户端 ID
+     * @param request 客户端更新请求
+     * @return 更新后的客户端响应；客户端不存在时 Mono 以 BusinessException（NOT_FOUND）错误终止
+     */
     public Mono<OAuth2ClientResponse> updateClient(String clientId, OAuth2ClientRequest request) {
         return clientRepository
                 .findByClientId(clientId)
@@ -102,6 +120,12 @@ public class OAuth2ClientManagementService {
                 .map(oAuth2ClientAssembler::toResponse);
     }
 
+    /**
+     * 删除 OAuth2 客户端
+     *
+     * @param clientId 客户端 ID
+     * @return 完成信号；客户端不存在时 Mono 以 BusinessException（NOT_FOUND）错误终止
+     */
     public Mono<Void> deleteClient(String clientId) {
         return clientRepository
                 .findByClientId(clientId)
@@ -109,6 +133,12 @@ public class OAuth2ClientManagementService {
                 .flatMap(entity -> clientRepository.deleteById(entity.getId()));
     }
 
+    /**
+     * 查询 OAuth2 客户端详情
+     *
+     * @param clientId 客户端 ID
+     * @return 客户端响应；客户端不存在时 Mono 以 BusinessException（NOT_FOUND）错误终止
+     */
     public Mono<OAuth2ClientResponse> getClient(String clientId) {
         return clientRepository
                 .findByClientId(clientId)
@@ -116,14 +146,34 @@ public class OAuth2ClientManagementService {
                 .map(oAuth2ClientAssembler::toResponse);
     }
 
+    /**
+     * 分页查询 OAuth2 客户端列表
+     *
+     * @param page 页码（从 0 开始）
+     * @param size 每页条数
+     * @return 当前页客户端响应流
+     */
     public Flux<OAuth2ClientResponse> listClients(int page, int size) {
         return clientRepository.findAll(page, size).map(oAuth2ClientAssembler::toResponse);
     }
 
+    /**
+     * 统计 OAuth2 客户端总数
+     *
+     * @return 客户端总数
+     */
     public Mono<Long> countClients() {
         return clientRepository.count();
     }
 
+    /**
+     * 重置 OAuth2 客户端密钥
+     *
+     * <p>生成新的随机密钥并加密落库，明文密钥仅在本次返回中可见，请妥善保存。
+     *
+     * @param clientId 客户端 ID
+     * @return 新生成的明文密钥；客户端不存在时 Mono 以 BusinessException（NOT_FOUND）错误终止
+     */
     public Mono<String> resetClientSecret(String clientId) {
         String newSecret = UUID.randomUUID().toString().replace("-", "");
 

@@ -38,7 +38,11 @@ public class DeptRepositoryImpl implements DeptRepository {
         this.deptMapper = deptMapper;
     }
 
-    /** 查询全部未删除部门（按显示顺序升序）。 */
+    /**
+     * 查询全部未删除部门（按显示顺序升序）。
+     *
+     * @return 部门实体列表
+     */
     @Override
     public Mono<List<DeptEntity>> findAll() {
         return Mono.fromCallable(() ->
@@ -50,7 +54,12 @@ public class DeptRepositoryImpl implements DeptRepository {
                 .subscribeOn(BlockingIoSchedulers.jdbc());
     }
 
-    /** 根据 ID 查询部门。 */
+    /**
+     * 根据 ID 查询部门。
+     *
+     * @param id 部门 ID
+     * @return 部门实体，不存在时返回 {@code Mono.empty()}
+     */
     @Override
     public Mono<DeptEntity> findById(Long id) {
         return Mono.fromCallable(() -> deptMapper.selectById(id))
@@ -58,7 +67,14 @@ public class DeptRepositoryImpl implements DeptRepository {
                 .map(this::toEntity);
     }
 
-    /** 保存部门（新增或更新）。 */
+    /**
+     * 保存部门（新增或更新）。
+     *
+     * @param dept 部门实体
+     * @return 保存后的部门实体
+     * @throws IllegalStateException 新增部门失败时抛出
+     * @throws OptimisticLockingFailureException 部门并发更新冲突时抛出
+     */
     @Override
     public Mono<DeptEntity> save(DeptEntity dept) {
         return Mono.fromCallable(() -> {
@@ -77,7 +93,12 @@ public class DeptRepositoryImpl implements DeptRepository {
                 .map(this::toEntity);
     }
 
-    /** 逻辑删除部门。 */
+    /**
+     * 逻辑删除部门。
+     *
+     * @param id 部门 ID
+     * @return 是否删除成功
+     */
     @Override
     public Mono<Boolean> deleteById(Long id) {
         return Mono.fromCallable(() -> deptMapper.deleteById(id) > 0).subscribeOn(BlockingIoSchedulers.jdbc());

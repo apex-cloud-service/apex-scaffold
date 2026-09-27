@@ -34,22 +34,38 @@ public class OnboardingGuideAnswerEntity extends BaseEntity {
     /** 选中的选项ID */
     private String selectedOptionId;
 
-    /** Sets userId. For persistence/construction use only. */
+    /**
+     * Sets userId. For persistence/construction use only.
+     *
+     * @param value 用户 ID
+     */
     public void setUserId(Long value) {
         this.userId = value;
     }
 
-    /** Sets scene. For persistence/construction use only. */
+    /**
+     * Sets scene. For persistence/construction use only.
+     *
+     * @param value 场景标识
+     */
     public void setScene(String value) {
         this.scene = value;
     }
 
-    /** Sets questionId. For persistence/construction use only. */
+    /**
+     * Sets questionId. For persistence/construction use only.
+     *
+     * @param value 问题 ID
+     */
     public void setQuestionId(String value) {
         this.questionId = value;
     }
 
-    /** Sets selectedOptionId. For persistence/construction use only. */
+    /**
+     * Sets selectedOptionId. For persistence/construction use only.
+     *
+     * @param value 选中的选项 ID
+     */
     public void setSelectedOptionId(String value) {
         this.selectedOptionId = value;
     }

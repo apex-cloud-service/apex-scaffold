@@ -49,6 +49,15 @@ public class OAuth2ClientManagementHandler {
 
     private final OAuth2ClientManagementService clientManagementService;
 
+    /**
+     * 创建 OAuth2 客户端。
+     *
+     * <p>解析请求体中的客户端注册信息，调用应用服务创建新的 OAuth2 客户端应用，
+     * 生成 clientId 与 clientSecret（BCrypt 加密存储，明文仅本次返回）。</p>
+     *
+     * @param request 服务器请求，请求体为 {@link OAuth2ClientRequest} JSON
+     * @return 包含新建客户端信息的 {@code Result} 响应（Mono，参数非法或创建失败时发出错误信号）
+     */
     @RequirePermission("system:oauth2:client:create")
     @OperationLog(module = "OAuth2客户端管理", type = OperationLog.OperationType.INSERT, description = "创建OAuth2客户端")
     @Operation(
@@ -73,6 +82,15 @@ public class OAuth2ClientManagementHandler {
                         .bodyValue(Result.success(response)));
     }
 
+    /**
+     * 更新 OAuth2 客户端配置。
+     *
+     * <p>根据路径中的 clientId 定位客户端，用请求体中的配置信息更新该客户端，
+     * 客户端不存在时返回 404 错误。</p>
+     *
+     * @param request 服务器请求，路径变量 clientId 标识目标客户端，请求体为 {@link OAuth2ClientRequest} JSON
+     * @return 包含更新后客户端信息的 {@code Result} 响应（Mono，客户端不存在或参数非法时发出错误信号）
+     */
     @RequirePermission("system:oauth2:client:update")
     @OperationLog(module = "OAuth2客户端管理", type = OperationLog.OperationType.UPDATE, description = "更新OAuth2客户端")
     @Operation(operationId = "updateOAuth2Client", summary = "更新OAuth2客户端", description = "更新指定客户端的配置信息")
@@ -95,6 +113,14 @@ public class OAuth2ClientManagementHandler {
                         .bodyValue(Result.success(response)));
     }
 
+    /**
+     * 删除 OAuth2 客户端。
+     *
+     * <p>根据路径中的 clientId 删除指定客户端及其关联的全部令牌，删除成功后返回提示消息。</p>
+     *
+     * @param request 服务器请求，路径变量 clientId 标识待删除的客户端
+     * @return 包含"删除成功"提示的 {@code Result} 响应（Mono，客户端不存在时发出错误信号）
+     */
     @RequirePermission("system:oauth2:client:delete")
     @OperationLog(module = "OAuth2客户端管理", type = OperationLog.OperationType.DELETE, description = "删除OAuth2客户端")
     @Operation(operationId = "deleteOAuth2Client", summary = "删除OAuth2客户端", description = "删除指定的OAuth2客户端及其相关的令牌")
@@ -117,6 +143,14 @@ public class OAuth2ClientManagementHandler {
                         .bodyValue(Result.success("删除成功")));
     }
 
+    /**
+     * 查询 OAuth2 客户端详情。
+     *
+     * <p>根据路径中的 clientId 查询客户端的详细信息，包括回调地址、授权类型、权限范围等配置。</p>
+     *
+     * @param request 服务器请求，路径变量 clientId 标识目标客户端
+     * @return 包含客户端详情的 {@code Result} 响应（Mono，客户端不存在时发出错误信号）
+     */
     @RequirePermission("system:oauth2:client:query")
     @Operation(operationId = "getOAuth2Client", summary = "查询OAuth2客户端详情", description = "根据clientId查询客户端的详细信息")
     @ApiResponses({
@@ -136,6 +170,15 @@ public class OAuth2ClientManagementHandler {
                 .bodyValue(Result.success(response)));
     }
 
+    /**
+     * 分页查询 OAuth2 客户端列表。
+     *
+     * <p>按页码与页大小分页查询所有 OAuth2 客户端，返回客户端列表、总数及分页信息；
+     * page 与 size 缺省时分别取 1 和 10。</p>
+     *
+     * @param request 服务器请求，查询参数 page 为页码（默认 1），size 为每页条数（默认 10）
+     * @return 包含 list（客户端列表）、total（总数）、page、size 的 {@code Result} 响应（Mono）
+     */
     @RequirePermission("system:oauth2:client:query")
     @Operation(operationId = "listOAuth2Clients", summary = "分页查询OAuth2客户端列表", description = "分页查询所有OAuth2客户端")
     @ApiResponses({
@@ -165,6 +208,15 @@ public class OAuth2ClientManagementHandler {
                 });
     }
 
+    /**
+     * 重置 OAuth2 客户端密钥。
+     *
+     * <p>重新生成指定客户端的 clientSecret（新密钥 BCrypt 加密存储，明文仅本次返回），
+     * 响应中同时返回 clientId 与新的 clientSecret。</p>
+     *
+     * @param request 服务器请求，路径变量 clientId 标识目标客户端
+     * @return 包含 clientId 与新 clientSecret 的 {@code Result} 响应（Mono，客户端不存在时发出错误信号）
+     */
     @RequirePermission("system:oauth2:client:secret:reset")
     @OperationLog(module = "OAuth2客户端管理", type = OperationLog.OperationType.UPDATE, description = "重置OAuth2客户端密钥")
     @Operation(operationId = "resetOAuth2ClientSecret", summary = "重置客户端密钥", description = "重新生成指定客户端的clientSecret")

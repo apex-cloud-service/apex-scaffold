@@ -42,12 +42,31 @@ public class OAuth2ClientSecretRotationServiceImpl implements OAuth2ClientSecret
     private static final long DEFAULT_EXPIRY_DAYS = 90;
     private static final long EXPIRING_SOON_THRESHOLD_DAYS = 30;
 
+    /**
+     * 轮换客户端密钥（默认有效期）
+     *
+     * <p>生成新的随机密钥并加密落库，有效期默认 90 天，同时记录密钥轮换审计日志。
+     *
+     * @param clientId 客户端 ID
+     * @param operatorUserId 执行轮换的操作人用户 ID，可为 null 表示系统操作
+     * @return 新生成的明文密钥（仅本次返回可见，落库为加密后密钥）；客户端不存在或为 public 客户端时 Mono 以 IllegalArgumentException 错误终止
+     */
     @Override
     public Mono<String> rotateClientSecret(String clientId, Long operatorUserId) {
         Instant expiresAt = Instant.now().plusSeconds(DEFAULT_EXPIRY_DAYS * 24 * 60 * 60);
         return rotateClientSecretWithCustomExpiry(clientId, expiresAt, operatorUserId);
     }
 
+    /**
+     * 以自定义过期时间轮换客户端密钥
+     *
+     * <p>生成新的随机密钥并加密落库，过期时间由调用方指定，同时记录密钥轮换审计日志。
+     *
+     * @param clientId 客户端 ID
+     * @param expiresAt 新密钥的过期时间
+     * @param operatorUserId 执行轮换的操作人用户 ID，可为 null 表示系统操作
+     * @return 新生成的明文密钥（仅本次返回可见，落库为加密后密钥）；客户端不存在或为 public 客户端时 Mono 以 IllegalArgumentException 错误终止
+     */
     @Override
     public Mono<String> rotateClientSecretWithCustomExpiry(String clientId, Instant expiresAt, Long operatorUserId) {
         return clientRepository
@@ -94,6 +113,18 @@ public class OAuth2ClientSecretRotationServiceImpl implements OAuth2ClientSecret
                 });
     }
 
+    /**
+     * 校验客户端密钥
+     *
+     * <p>校验规则：public 客户端无密钥，直接视为有效；当前密钥匹配返回 true；
+     * 密钥已过期返回 false 并记录过期密钥使用审计事件；当前密钥不匹配但旧密钥
+     * （轮换宽限期内）匹配返回 true 并记录旧密钥使用审计事件；均不匹配返回 false
+     * 并记录认证失败审计事件；客户端不存在时返回 false。
+     *
+     * @param clientId 客户端 ID
+     * @param clientSecret 待校验的明文密钥
+     * @return 密钥是否有效
+     */
     @Override
     public Mono<Boolean> validateClientSecret(String clientId, String clientSecret) {
         return clientRepository
@@ -177,6 +208,13 @@ public class OAuth2ClientSecretRotationServiceImpl implements OAuth2ClientSecret
                 .defaultIfEmpty(false);
     }
 
+    /**
+     * 筛查密钥已过期的客户端
+     *
+     * <p>遍历全部客户端，过滤出密钥已过期的非 public 客户端。
+     *
+     * @return 密钥已过期的客户端 ID 流
+     */
     @Override
     public Flux<String> findClientsWithExpiredSecrets() {
         return clientRepository
@@ -187,6 +225,13 @@ public class OAuth2ClientSecretRotationServiceImpl implements OAuth2ClientSecret
                 .doOnNext(clientId -> log.warn("Found client with expired secret: ", clientId));
     }
 
+    /**
+     * 筛查密钥即将过期的客户端
+     *
+     * <p>遍历全部客户端，过滤出密钥在临期阈值（默认 30 天）内即将过期的非 public 客户端。
+     *
+     * @return 密钥即将过期的客户端 ID 流
+     */
     @Override
     public Flux<String> findClientsWithExpiringSoonSecrets() {
         return clientRepository
@@ -197,12 +242,30 @@ public class OAuth2ClientSecretRotationServiceImpl implements OAuth2ClientSecret
                 .doOnNext(clientId -> log.info("Found client with expiring soon secret: {}", clientId));
     }
 
+    /**
+     * 安排客户端密钥轮换计划
+     *
+     * <p>当前实现仅记录调度日志，不进行持久化调度，立即返回完成信号。
+     *
+     * @param clientId 客户端 ID
+     * @param scheduledTime 计划执行轮换的时间
+     * @return 完成信号
+     */
     @Override
     public Mono<Void> scheduleSecretRotation(String clientId, Instant scheduledTime) {
         log.info("Scheduling secret rotation for clientId={} at {}", clientId, scheduledTime);
         return Mono.empty();
     }
 
+    /**
+     * 通知客户端密钥即将过期
+     *
+     * <p>查询指定客户端，当密钥处于临期状态时记录警告日志。
+     * 当前实现仅记录日志，未对接外部通知渠道。
+     *
+     * @param clientId 客户端 ID
+     * @return 完成信号
+     */
     @Override
     public Mono<Void> notifyClientSecretExpiring(String clientId) {
         return clientRepository.findByClientId(clientId).flatMap(client -> {

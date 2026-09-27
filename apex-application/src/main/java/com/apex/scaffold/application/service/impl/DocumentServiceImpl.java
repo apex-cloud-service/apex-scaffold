@@ -41,6 +41,15 @@ public class DocumentServiceImpl implements DocumentService {
     private final DocumentRepository documentRepository;
     private final DocumentAssembler documentAssembler;
 
+    /**
+     * 创建文档
+     *
+     * <p>文档归属当前租户（取自 {@link TenantContext}），创建人固定为 system，
+     * 可选附件、标签与初始状态。
+     *
+     * @param request 文档创建请求（含标题、文档类型、分类、内容、附件、标签与状态）
+     * @return 新建文档的响应
+     */
     @Override
     public Mono<DocumentResponse> create(DocumentRequest request) {
         return Mono.justOrEmpty(TenantContext.currentTenantId())
@@ -67,6 +76,15 @@ public class DocumentServiceImpl implements DocumentService {
                 .map(documentAssembler::toResponse);
     }
 
+    /**
+     * 更新文档信息
+     *
+     * <p>校验文档归属当前租户后方可更新，请求中非空字段生效。
+     *
+     * @param id 文档 ID
+     * @param request 文档更新请求
+     * @return 更新后的文档响应；文档不存在或无租户权限时 Mono 以 BusinessException 错误终止
+     */
     @Override
     public Mono<DocumentResponse> update(Long id, DocumentRequest request) {
         return Mono.justOrEmpty(TenantContext.currentTenantId()).flatMap(tenantId -> documentRepository
@@ -93,12 +111,26 @@ public class DocumentServiceImpl implements DocumentService {
                 .map(documentAssembler::toResponse));
     }
 
+    /**
+     * 删除文档
+     *
+     * <p>按当前租户隔离删除指定文档。
+     *
+     * @param id 文档 ID
+     * @return 完成信号
+     */
     @Override
     public Mono<Void> delete(Long id) {
         return Mono.justOrEmpty(TenantContext.currentTenantId())
                 .flatMap(tenantId -> documentRepository.deleteById(id, tenantId));
     }
 
+    /**
+     * 按 ID 查询文档详情
+     *
+     * @param id 文档 ID
+     * @return 文档响应；文档不存在时 Mono 以 BusinessException 错误终止
+     */
     @Override
     public Mono<DocumentResponse> getById(Long id) {
         return documentRepository
@@ -107,6 +139,14 @@ public class DocumentServiceImpl implements DocumentService {
                 .map(documentAssembler::toResponse);
     }
 
+    /**
+     * 分页查询文档列表
+     *
+     * <p>在当前租户范围内按关键词、文档类型、分类、状态条件过滤后内存分页。
+     *
+     * @param request 文档查询请求（含关键词、类型、分类、状态与分页参数）
+     * @return 分页结果
+     */
     @Override
     public Mono<PageResponse<DocumentResponse>> query(DocumentQueryRequest request) {
         return Mono.justOrEmpty(TenantContext.currentTenantId()).flatMap(tenantId -> documentRepository
@@ -123,6 +163,15 @@ public class DocumentServiceImpl implements DocumentService {
                 }));
     }
 
+    /**
+     * 更新文档状态
+     *
+     * <p>校验文档归属当前租户后方可更新状态。
+     *
+     * @param id 文档 ID
+     * @param status 目标状态
+     * @return 完成信号；文档不存在或无租户权限时 Mono 以 BusinessException 错误终止
+     */
     @Override
     public Mono<Void> updateStatus(Long id, Integer status) {
         return Mono.justOrEmpty(TenantContext.currentTenantId()).flatMap(tenantId -> documentRepository
@@ -138,6 +187,14 @@ public class DocumentServiceImpl implements DocumentService {
                 .then());
     }
 
+    /**
+     * 增加文档浏览计数
+     *
+     * <p>将指定文档的浏览计数加一并保存，文档不存在时直接完成。
+     *
+     * @param id 文档 ID
+     * @return 完成信号
+     */
     @Override
     public Mono<Void> incrementViewCount(Long id) {
         return documentRepository
@@ -149,6 +206,14 @@ public class DocumentServiceImpl implements DocumentService {
                 .then();
     }
 
+    /**
+     * 增加文档下载计数
+     *
+     * <p>将指定文档的下载计数加一并保存，文档不存在时直接完成。
+     *
+     * @param id 文档 ID
+     * @return 完成信号
+     */
     @Override
     public Mono<Void> incrementDownloadCount(Long id) {
         return documentRepository

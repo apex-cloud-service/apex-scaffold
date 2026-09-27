@@ -38,18 +38,38 @@ public class ProcessInstancePO extends BasePO {
 
     private String businessKey;
 
+    /**
+     * 获取流程编码（兼容方法，实际返回 businessKey 字段值）。
+     *
+     * @return 流程编码
+     */
     public String getProcessCode() {
         return businessKey;
     }
 
+    /**
+     * 设置流程编码（兼容方法，实际写入 businessKey 字段）。
+     *
+     * @param processCode 流程编码
+     */
     public void setProcessCode(String processCode) {
         this.businessKey = processCode;
     }
 
+    /**
+     * 获取流程标题（兼容方法，实际返回 remark 字段值）。
+     *
+     * @return 流程标题
+     */
     public String getTitle() {
         return remark;
     }
 
+    /**
+     * 设置流程标题（兼容方法，实际写入 remark 字段）。
+     *
+     * @param title 流程标题
+     */
     public void setTitle(String title) {
         this.remark = title;
     }

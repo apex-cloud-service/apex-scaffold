@@ -81,32 +81,56 @@ public class CreditAccountEntity extends BaseEntity {
      */
     private LocalDate dailyFavoriteDate;
 
-    /** Sets version. For persistence/construction use only. */
+    /**
+     * Sets version. For persistence/construction use only.
+     *
+     * @param value 乐观锁版本号
+     */
     public void setVersion(Long value) {
         this.version = value;
     }
 
-    /** Sets userId. For persistence/construction use only. */
+    /**
+     * Sets userId. For persistence/construction use only.
+     *
+     * @param value 用户 ID
+     */
     public void setUserId(Long value) {
         this.userId = value;
     }
 
-    /** Sets balance. For persistence/construction use only. */
+    /**
+     * Sets balance. For persistence/construction use only.
+     *
+     * @param value 积分余额（上限 2000）
+     */
     public void setBalance(Long value) {
         this.balance = value;
     }
 
-    /** Sets todayLoginBonus. For persistence/construction use only. */
+    /**
+     * Sets todayLoginBonus. For persistence/construction use only.
+     *
+     * @param value 今日登录奖励领取状态（true-已领取，false-未领取）
+     */
     public void setTodayLoginBonus(Boolean value) {
         this.todayLoginBonus = value;
     }
 
-    /** Sets dailyFavoriteTotal. For persistence/construction use only. */
+    /**
+     * Sets dailyFavoriteTotal. For persistence/construction use only.
+     *
+     * @param value 当日收藏累计获得积分
+     */
     public void setDailyFavoriteTotal(Long value) {
         this.dailyFavoriteTotal = value;
     }
 
-    /** Sets dailyFavoriteDate. For persistence/construction use only. */
+    /**
+     * Sets dailyFavoriteDate. For persistence/construction use only.
+     *
+     * @param value 收藏积分统计日期
+     */
     public void setDailyFavoriteDate(LocalDate value) {
         this.dailyFavoriteDate = value;
     }

@@ -43,6 +43,14 @@ public class ChartHandler {
 
     private final ChartService chartService;
 
+    /**
+     * 处理创建图表请求。
+     *
+     * <p>解析请求体为 {@link ChartRequest}，调用应用服务创建图表。
+     *
+     * @param request HTTP 请求对象，请求体为图表配置信息 JSON
+     * @return 包含新建图表信息的统一成功响应
+     */
     @Operation(summary = "创建图表")
     @PreAuthorize("hasAuthority('data:chart:create')")
     public Mono<ServerResponse> create(ServerRequest request) {
@@ -51,6 +59,14 @@ public class ChartHandler {
                 .flatMap(result -> ServerResponse.ok().bodyValue(Result.success(result)));
     }
 
+    /**
+     * 处理更新图表请求。
+     *
+     * <p>根据路径中的图表 ID 解析请求体并更新图表配置信息。
+     *
+     * @param request HTTP 请求对象，路径参数包含图表 ID，请求体为图表配置信息 JSON
+     * @return 包含更新后图表信息的统一成功响应
+     */
     @Operation(summary = "更新图表")
     @PreAuthorize("hasAuthority('data:chart:update')")
     public Mono<ServerResponse> update(ServerRequest request) {
@@ -60,6 +76,14 @@ public class ChartHandler {
                 .flatMap(result -> ServerResponse.ok().bodyValue(Result.success(result)));
     }
 
+    /**
+     * 处理删除图表请求。
+     *
+     * <p>根据路径中的图表 ID 删除指定图表。
+     *
+     * @param request HTTP 请求对象，路径参数包含图表 ID
+     * @return 删除成功的统一成功响应
+     */
     @Operation(summary = "删除图表")
     @PreAuthorize("hasAuthority('data:chart:delete')")
     public Mono<ServerResponse> delete(ServerRequest request) {
@@ -67,6 +91,14 @@ public class ChartHandler {
         return chartService.delete(id).then(ServerResponse.ok().bodyValue(Result.success()));
     }
 
+    /**
+     * 处理查询图表详情请求。
+     *
+     * <p>根据路径中的图表 ID 查询并返回图表详情。
+     *
+     * @param request HTTP 请求对象，路径参数包含图表 ID
+     * @return 包含图表详情的统一成功响应
+     */
     @Operation(summary = "查询图表详情")
     @PreAuthorize("hasAuthority('data:chart:query')")
     public Mono<ServerResponse> getById(ServerRequest request) {
@@ -74,6 +106,14 @@ public class ChartHandler {
         return chartService.getById(id).flatMap(result -> ServerResponse.ok().bodyValue(Result.success(result)));
     }
 
+    /**
+     * 处理查询图表数据请求。
+     *
+     * <p>先对指定图表累加浏览计数，再查询并返回图表的渲染数据。
+     *
+     * @param request HTTP 请求对象，路径参数包含图表 ID
+     * @return 包含图表数据的统一成功响应
+     */
     @Operation(summary = "查询图表数据")
     @PreAuthorize("hasAuthority('data:chart:query')")
     public Mono<ServerResponse> getChartData(ServerRequest request) {
@@ -84,6 +124,15 @@ public class ChartHandler {
                 .flatMap(result -> ServerResponse.ok().bodyValue(Result.success(result)));
     }
 
+    /**
+     * 处理分页查询图表列表请求。
+     *
+     * <p>从查询参数构建过滤条件（关键字、图表类型、分类、状态、页码、每页数量），
+     * 调用应用服务分页查询图表列表。
+     *
+     * @param request HTTP 请求对象，查询参数包含 keyword、chartType、category、status、page、size
+     * @return 包含图表分页结果的统一成功响应
+     */
     @Operation(summary = "分页查询图表列表")
     @PreAuthorize("hasAuthority('data:chart:query')")
     public Mono<ServerResponse> query(ServerRequest request) {
@@ -100,6 +149,14 @@ public class ChartHandler {
                 .bodyValue(Result.success(result)));
     }
 
+    /**
+     * 处理更新图表状态请求。
+     *
+     * <p>解析请求体中的目标状态，并更新指定图表的状态。
+     *
+     * @param request HTTP 请求对象，路径参数包含图表 ID，请求体包含状态值
+     * @return 更新成功的统一成功响应
+     */
     @Operation(summary = "更新图表状态")
     @PreAuthorize("hasAuthority('data:chart:update')")
     public Mono<ServerResponse> updateStatus(ServerRequest request) {

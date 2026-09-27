@@ -84,85 +84,153 @@ public class ApiCallLogEntity extends BaseEntity {
 
     /* ---- Setters: 仅供持久层使用 ---- */
 
-    /** Sets serviceName. For persistence/construction use only. */
+    /**
+     * Sets serviceName. For persistence/construction use only.
+     *
+     * @param value 目标服务名称，如 wechat / chuanglan / baidu-image / face-analysis
+     */
     public void setServiceName(String value) {
         this.serviceName = value;
     }
 
-    /** Sets method. For persistence/construction use only. */
+    /**
+     * Sets method. For persistence/construction use only.
+     *
+     * @param value HTTP 请求方法，如 GET / POST / PUT / DELETE
+     */
     public void setMethod(String value) {
         this.method = value;
     }
 
-    /** Sets path. For persistence/construction use only. */
+    /**
+     * Sets path. For persistence/construction use only.
+     *
+     * @param value 请求路径（不含 host），如 /api/v1/login
+     */
     public void setPath(String value) {
         this.path = value;
     }
 
-    /** Sets url. For persistence/construction use only. */
+    /**
+     * Sets url. For persistence/construction use only.
+     *
+     * @param value 完整请求 URL（包含 query 参数）
+     */
     public void setUrl(String value) {
         this.url = value;
     }
 
-    /** Sets requestHeaders. For persistence/construction use only. */
+    /**
+     * Sets requestHeaders. For persistence/construction use only.
+     *
+     * @param value 请求头（JSON 格式，敏感字段已脱敏）
+     */
     public void setRequestHeaders(String value) {
         this.requestHeaders = value;
     }
 
-    /** Sets requestBody. For persistence/construction use only. */
+    /**
+     * Sets requestBody. For persistence/construction use only.
+     *
+     * @param value 请求体（超过默认限制时截断）
+     */
     public void setRequestBody(String value) {
         this.requestBody = value;
     }
 
-    /** Sets responseStatus. For persistence/construction use only. */
+    /**
+     * Sets responseStatus. For persistence/construction use only.
+     *
+     * @param value HTTP 响应状态码，如 200 / 404 / 500；无响应时为 null
+     */
     public void setResponseStatus(String value) {
         this.responseStatus = value;
     }
 
-    /** Sets responseHeaders. For persistence/construction use only. */
+    /**
+     * Sets responseHeaders. For persistence/construction use only.
+     *
+     * @param value 响应头（JSON 格式）
+     */
     public void setResponseHeaders(String value) {
         this.responseHeaders = value;
     }
 
-    /** Sets responseBody. For persistence/construction use only. */
+    /**
+     * Sets responseBody. For persistence/construction use only.
+     *
+     * @param value 响应体（超过默认限制时截断）
+     */
     public void setResponseBody(String value) {
         this.responseBody = value;
     }
 
-    /** Sets executionTime. For persistence/construction use only. */
+    /**
+     * Sets executionTime. For persistence/construction use only.
+     *
+     * @param value 执行耗时（毫秒）
+     */
     public void setExecutionTime(Long value) {
         this.executionTime = value;
     }
 
-    /** Sets status. For persistence/construction use only. */
+    /**
+     * Sets status. For persistence/construction use only.
+     *
+     * @param value 调用状态：0-成功 1-客户端错误 2-服务端错误 3-网络异常
+     */
     public void setStatus(Integer value) {
         this.status = value;
     }
 
-    /** Sets errorMsg. For persistence/construction use only. */
+    /**
+     * Sets errorMsg. For persistence/construction use only.
+     *
+     * @param value 错误信息（异常时记录）
+     */
     public void setErrorMsg(String value) {
         this.errorMsg = value;
     }
 
-    /** Sets traceId. For persistence/construction use only. */
+    /**
+     * Sets traceId. For persistence/construction use only.
+     *
+     * @param value 链路追踪 ID
+     */
     public void setTraceId(String value) {
         this.traceId = value;
     }
-    /** Gets traceId. */
+    /**
+     * Gets traceId.
+     *
+     * @return 链路追踪 ID
+     */
     public String getTraceId() {
         return traceId;
     }
 
-    /** Sets requestId. For persistence/construction use only. */
+    /**
+     * Sets requestId. For persistence/construction use only.
+     *
+     * @param value 请求唯一标识（UUID，由 Filter 自动生成）
+     */
     public void setRequestId(String value) {
         this.requestId = value;
     }
-    /** Gets requestId. */
+    /**
+     * Gets requestId.
+     *
+     * @return 请求唯一标识（UUID，由 Filter 自动生成）
+     */
     public String getRequestId() {
         return requestId;
     }
 
-    /** Sets callTime. For persistence/construction use only. */
+    /**
+     * Sets callTime. For persistence/construction use only.
+     *
+     * @param value 调用发生时间
+     */
     public void setCallTime(LocalDateTime value) {
         this.callTime = value;
     }

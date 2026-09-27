@@ -31,6 +31,20 @@ public class ApprovalRecordEntity extends BaseEntity {
         super();
     }
 
+    /**
+     * 创建审批记录实体
+     *
+     * @param tenantId 租户 ID
+     * @param processInstanceId 所属流程实例 ID
+     * @param taskId 关联的任务 ID
+     * @param nodeId 审批节点 ID
+     * @param nodeName 审批节点名称
+     * @param approverId 审批人用户 ID
+     * @param approverName 审批人姓名
+     * @param action 审批动作（通过/拒绝/转交等任务状态）
+     * @param comment 审批意见
+     * @return 已初始化时间戳的审批记录实体
+     */
     public static ApprovalRecordEntity create(
             Long tenantId,
             Long processInstanceId,
@@ -55,38 +69,83 @@ public class ApprovalRecordEntity extends BaseEntity {
         return record;
     }
 
+    /**
+     * 设置租户 ID
+     *
+     * @param tenantId 租户 ID
+     */
     public void setTenantId(Long tenantId) {
         this.tenantId = tenantId;
     }
 
+    /**
+     * 设置所属流程实例 ID
+     *
+     * @param processInstanceId 所属流程实例 ID
+     */
     public void setProcessInstanceId(Long processInstanceId) {
         this.processInstanceId = processInstanceId;
     }
 
+    /**
+     * 设置关联的任务 ID
+     *
+     * @param taskId 关联的任务 ID
+     */
     public void setTaskId(Long taskId) {
         this.taskId = taskId;
     }
 
+    /**
+     * 设置审批节点 ID
+     *
+     * @param nodeId 审批节点 ID
+     */
     public void setNodeId(String nodeId) {
         this.nodeId = nodeId;
     }
 
+    /**
+     * 设置审批节点名称
+     *
+     * @param nodeName 审批节点名称
+     */
     public void setNodeName(String nodeName) {
         this.nodeName = nodeName;
     }
 
+    /**
+     * 设置审批人用户 ID
+     *
+     * @param approverId 审批人用户 ID
+     */
     public void setApproverId(Long approverId) {
         this.approverId = approverId;
     }
 
+    /**
+     * 设置审批人姓名
+     *
+     * @param approverName 审批人姓名
+     */
     public void setApproverName(String approverName) {
         this.approverName = approverName;
     }
 
+    /**
+     * 设置审批动作
+     *
+     * @param action 审批动作（通过/拒绝/转交等任务状态）
+     */
     public void setAction(TaskStatus action) {
         this.action = action;
     }
 
+    /**
+     * 设置审批意见
+     *
+     * @param comment 审批意见
+     */
     public void setComment(String comment) {
         this.comment = comment;
     }

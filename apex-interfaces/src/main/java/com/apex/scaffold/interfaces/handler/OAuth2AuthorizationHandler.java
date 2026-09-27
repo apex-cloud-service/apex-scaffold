@@ -64,6 +64,17 @@ public class OAuth2AuthorizationHandler {
 
     private final OAuth2AuthorizationServiceImpl authorizationService;
 
+    /**
+     * 处理 OAuth2 授权码模式的授权请求。
+     *
+     * <p>校验 response_type、client_id、redirect_uri 等参数后，检查用户是否已对该客户端授权同意：
+     * 已同意则生成授权码并 302 重定向回客户端 redirect_uri（携带 code 与 state），
+     * 未同意或校验失败时重定向携带错误信息，缺少必需参数时返回 400。
+     *
+     * @param request HTTP 请求对象，查询参数包含 response_type、client_id、redirect_uri、scope、state、
+     *                code_challenge、code_challenge_method
+     * @return 授权成功后的重定向响应，参数错误时返回 400 错误响应
+     */
     @Operation(
             operationId = "oauth2Authorize",
             summary = "OAuth2授权端点",
@@ -140,6 +151,15 @@ public class OAuth2AuthorizationHandler {
                         e -> buildErrorResponse(redirectUri, "server_error", e.getMessage(), state));
     }
 
+    /**
+     * 处理 OAuth2 令牌端点请求。
+     *
+     * <p>解析表单参数中的 grant_type，分发到授权码、客户端凭证、密码或刷新令牌
+     * 等对应模式换取访问令牌；缺少 grant_type 或模式不支持时返回错误响应。
+     *
+     * @param request HTTP 请求对象，表单参数包含 grant_type 及各模式所需字段
+     * @return 包含 access_token、token_type、expires_in 等信息的令牌响应，失败时返回错误响应
+     */
     @Operation(
             operationId = "oauth2Token",
             summary = "OAuth2令牌端点",
@@ -171,6 +191,14 @@ public class OAuth2AuthorizationHandler {
         });
     }
 
+    /**
+     * 处理 OAuth2 令牌撤销请求。
+     *
+     * <p>撤销指定的访问令牌或刷新令牌，使其立即失效；缺少 token 或 client_id 参数时返回 400。
+     *
+     * @param request HTTP 请求对象，表单参数包含 token、client_id
+     * @return 撤销成功的统一成功响应，缺少必需参数时返回 400 错误响应
+     */
     @Operation(operationId = "oauth2Revoke", summary = "OAuth2令牌撤销端点", description = "撤销指定的访问令牌或刷新令牌,使其立即失效")
     @ApiResponses({
         @ApiResponse(
@@ -205,6 +233,15 @@ public class OAuth2AuthorizationHandler {
         });
     }
 
+    /**
+     * 处理 OAuth2 令牌自省请求。
+     *
+     * <p>验证令牌的有效性并返回令牌元数据（active、client_id、user_id、scope、exp）；
+     * 令牌无效或不存在时返回 active=false，缺少 token 参数时返回 400。
+     *
+     * @param request HTTP 请求对象，表单参数包含 token
+     * @return 包含令牌元数据信息的响应，缺少 token 参数时返回 400 错误响应
+     */
     @Operation(operationId = "oauth2Introspect", summary = "OAuth2令牌自省端点", description = "验证令牌的有效性并返回令牌的元数据信息")
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "返回令牌信息,active字段指示令牌是否有效"),
@@ -242,6 +279,16 @@ public class OAuth2AuthorizationHandler {
         });
     }
 
+    /**
+     * 处理保存用户授权同意请求。
+     *
+     * <p>用户在授权页面同意或拒绝授权后保存同意记录：approved 为 true 时保存
+     * 当前用户对指定客户端的授权同意；缺少必需参数时返回 400，用户未登录时返回 401，
+     * 拒绝授权时返回 403。
+     *
+     * @param request HTTP 请求对象，表单参数包含 client_id、scope、approved
+     * @return 保存成功的统一成功响应，参数缺失或未登录时返回对应错误响应
+     */
     @Operation(operationId = "oauth2Consent", summary = "保存用户授权同意", description = "用户在授权页面同意或拒绝授权后调用此端点保存同意记录")
     @ApiResponses({
         @ApiResponse(
@@ -304,6 +351,15 @@ public class OAuth2AuthorizationHandler {
                         .bodyValue(Result.error(e.getCode(), e.getMessage())));
     }
 
+    /**
+     * 处理撤销用户授权同意请求。
+     *
+     * <p>撤销当前登录用户对指定客户端的授权同意记录；缺少 client_id 参数时返回 400，
+     * 用户未登录时返回 401。
+     *
+     * @param request HTTP 请求对象，表单参数包含 client_id
+     * @return 撤销成功的统一成功响应，参数缺失或未登录时返回对应错误响应
+     */
     @Operation(operationId = "oauth2RevokeConsent", summary = "撤销用户授权同意", description = "用户撤销之前对某个客户端的授权同意")
     @ApiResponses({
         @ApiResponse(

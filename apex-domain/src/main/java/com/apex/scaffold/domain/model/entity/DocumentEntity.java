@@ -64,54 +64,119 @@ public class DocumentEntity extends BaseEntity {
     private Integer downloadCount;
     private String tenantId;
 
+    /**
+     * 设置文档标题。仅供持久层回填使用。
+     *
+     * @param value 文档标题
+     */
     public void setTitle(String value) {
         this.title = value;
     }
 
+    /**
+     * 设置文档类型。仅供持久层回填使用。
+     *
+     * @param value 文档类型（contract/report/proposal/manual/other）
+     */
     public void setDocType(String value) {
         this.docType = value;
     }
 
+    /**
+     * 设置文档分类。仅供持久层回填使用。
+     *
+     * @param value 文档分类（tech/business/finance/hr）
+     */
     public void setCategory(String value) {
         this.category = value;
     }
 
+    /**
+     * 设置文档正文内容。仅供持久层回填使用。
+     *
+     * @param value 文档的正文内容
+     */
     public void setContent(String value) {
         this.content = value;
     }
 
+    /**
+     * 设置文档文件访问地址。仅供持久层回填使用。
+     *
+     * @param value 关联文件的对象存储 URL
+     */
     public void setFileUrl(String value) {
         this.fileUrl = value;
     }
 
+    /**
+     * 设置文件大小。仅供持久层回填使用。
+     *
+     * @param value 关联文件的大小（字节）
+     */
     public void setFileSize(Long value) {
         this.fileSize = value;
     }
 
+    /**
+     * 设置文档作者 ID。仅供持久层回填使用。
+     *
+     * @param value 文档创建者的用户 ID
+     */
     public void setAuthorId(Long value) {
         this.authorId = value;
     }
 
+    /**
+     * 设置文档作者姓名。仅供持久层回填使用。
+     *
+     * @param value 文档创建者的姓名
+     */
     public void setAuthorName(String value) {
         this.authorName = value;
     }
 
+    /**
+     * 设置文档状态。仅供持久层回填使用。
+     *
+     * @param value 文档状态码（0-草稿 1-正常 2-已归档）
+     */
     public void setStatus(Integer value) {
         this.status = value;
     }
 
+    /**
+     * 设置文档标签列表。仅供持久层回填使用。
+     *
+     * @param value 文档的标签集合
+     */
     public void setTags(List<String> value) {
         this.tags = value;
     }
 
+    /**
+     * 设置浏览计数。仅供持久层回填使用。
+     *
+     * @param value 文档累计浏览次数
+     */
     public void setViewCount(Integer value) {
         this.viewCount = value;
     }
 
+    /**
+     * 设置下载计数。仅供持久层回填使用。
+     *
+     * @param value 文档累计下载次数
+     */
     public void setDownloadCount(Integer value) {
         this.downloadCount = value;
     }
 
+    /**
+     * 设置租户 ID。仅供持久层回填使用。
+     *
+     * @param value 文档所属租户的唯一标识
+     */
     public void setTenantId(String value) {
         this.tenantId = value;
     }
@@ -120,6 +185,20 @@ public class DocumentEntity extends BaseEntity {
         super();
     }
 
+    /**
+     * 创建草稿状态的文档实体。
+     *
+     * <p>工厂方法，初始化文档基本信息并将状态置为草稿，浏览和下载计数归零。</p>
+     *
+     * @param title 文档标题
+     * @param docType 文档类型（contract/report/proposal/manual/other）
+     * @param category 文档分类（tech/business/finance/hr）
+     * @param content 文档的正文内容
+     * @param authorId 文档创建者的用户 ID
+     * @param authorName 文档创建者的姓名
+     * @param tenantId 文档所属租户的唯一标识
+     * @return 初始化完成的草稿状态文档实体
+     */
     public static DocumentEntity create(
             String title,
             String docType,
@@ -143,6 +222,15 @@ public class DocumentEntity extends BaseEntity {
         return entity;
     }
 
+    /**
+     * 更新文档的基本信息，并刷新实体更新时间。
+     *
+     * @param title 新的文档标题
+     * @param docType 新的文档类型（contract/report/proposal/manual/other）
+     * @param category 新的文档分类（tech/business/finance/hr）
+     * @param content 新的文档正文内容
+     * @param tags 新的文档标签集合
+     */
     public void updateInfo(String title, String docType, String category, String content, List<String> tags) {
         this.title = title;
         this.docType = docType;
@@ -152,40 +240,73 @@ public class DocumentEntity extends BaseEntity {
         touch();
     }
 
+    /**
+     * 为文档关联文件附件，并刷新实体更新时间。
+     *
+     * @param fileUrl 附件的对象存储访问 URL
+     * @param fileSize 附件文件大小（字节）
+     */
     public void attachFile(String fileUrl, Long fileSize) {
         this.fileUrl = fileUrl;
         this.fileSize = fileSize;
         touch();
     }
 
+    /**
+     * 发布文档，将状态从草稿切换为正常，并刷新实体更新时间。
+     */
     public void publish() {
         this.status = DocumentStatus.NORMAL.getCode();
         touch();
     }
 
+    /**
+     * 归档文档，将状态切换为已归档，并刷新实体更新时间。
+     */
     public void archive() {
         this.status = DocumentStatus.ARCHIVED.getCode();
         touch();
     }
 
+    /**
+     * 浏览计数加一，并刷新实体更新时间。
+     */
     public void incrementViewCount() {
         this.viewCount = (this.viewCount == null ? 0 : this.viewCount) + 1;
         touch();
     }
 
+    /**
+     * 下载计数加一，并刷新实体更新时间。
+     */
     public void incrementDownloadCount() {
         this.downloadCount = (this.downloadCount == null ? 0 : this.downloadCount) + 1;
         touch();
     }
 
+    /**
+     * 判断文档是否处于草稿状态。
+     *
+     * @return true-草稿状态，false-其他状态
+     */
     public boolean isDraft() {
         return status != null && status.equals(DocumentStatus.DRAFT.getCode());
     }
 
+    /**
+     * 判断文档是否处于正常（已发布）状态。
+     *
+     * @return true-正常状态，false-其他状态
+     */
     public boolean isNormal() {
         return status != null && status.equals(DocumentStatus.NORMAL.getCode());
     }
 
+    /**
+     * 判断文档是否处于已归档状态。
+     *
+     * @return true-已归档状态，false-其他状态
+     */
     public boolean isArchived() {
         return status != null && status.equals(DocumentStatus.ARCHIVED.getCode());
     }
@@ -204,6 +325,11 @@ public class DocumentEntity extends BaseEntity {
             this.code = code;
         }
 
+        /**
+         * 获取文档状态的数据库存储码。
+         *
+         * @return 状态码（0-草稿 1-正常 2-已归档）
+         */
         public Integer getCode() {
             return code;
         }
@@ -227,6 +353,11 @@ public class DocumentEntity extends BaseEntity {
             this.code = code;
         }
 
+        /**
+         * 获取文档类型的字符串编码。
+         *
+         * @return 类型编码（contract/report/proposal/manual/other）
+         */
         public String getCode() {
             return code;
         }
@@ -248,6 +379,11 @@ public class DocumentEntity extends BaseEntity {
             this.code = code;
         }
 
+        /**
+         * 获取文档分类的字符串编码。
+         *
+         * @return 分类编码（tech/business/finance/hr）
+         */
         public String getCode() {
             return code;
         }
