@@ -1,3 +1,9 @@
+-- ============================================================
+-- V57: 添加办公平台相关表及菜单权限（MySQL）
+-- 变更内容：创建消息模板、消息、消息接收人、部门、员工、
+--           同步历史等办公平台表及配套索引；以 ON DUPLICATE KEY
+--           幂等地初始化办公平台菜单与权限种子数据。
+-- ============================================================
 CREATE TABLE IF NOT EXISTS `off_message_template` (
     `id` BIGINT NOT NULL AUTO_INCREMENT,
     `template_code` VARCHAR(64) NOT NULL,

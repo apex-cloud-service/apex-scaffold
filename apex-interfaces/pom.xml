@@ -229,6 +229,13 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- H2 内存数据库：数据权限等需要真实 MyBatis 链路的单元测试替代外部 MySQL -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
+
         <!-- 内嵌 Redis（无 Docker 替代方案） -->
         <dependency>
             <groupId>com.github.codemonstur</groupId>
