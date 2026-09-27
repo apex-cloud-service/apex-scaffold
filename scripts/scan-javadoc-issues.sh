@@ -124,11 +124,34 @@ done > javadoc-issues-since.txt
 SINCE_COUNT=$(wc -l < javadoc-issues-since.txt | tr -d ' ')
 log_info "    发现 ${SINCE_COUNT} 个文件缺少 @since"
 
+###############################################################################
+# 统计剥离注释后"非 @Override 且带参数"的 public 方法声明数
+#
+# - @Override 实现类的方法文档通常在接口上，文件级 @param 计数天然偏低，
+#   统计时排除，避免对实现类产生启发式误报；
+# - 无参方法不需要 @param 标签，"public 方法多"不等于"缺 @param"，
+#   因此只统计签名带参数的方法，与 @param 数量才有可比性。
+###############################################################################
+count_public_methods() {
+    awk '
+    /^[[:space:]]*public[[:space:]]+[^()]*[[:space:]][a-z][A-Za-z0-9]*[[:space:]]*\(.+\)/ {
+        if (!override) count++
+        override = 0
+        next
+    }
+    /^[[:space:]]*@Override([[:space:]]|$)/ { override = 1; next }
+    /^[[:space:]]*@/ { next }
+    /^[[:space:]]*$/ { next }
+    { override = 0 }
+    END { print count + 0 }
+    ' "$1" 2>/dev/null
+}
+
 # 4. 查找 public 方法可能缺少 JavaDoc 的文件（启发式：剥离注释后统计）
 log_info "==> [4/4] 查找可能缺少方法级 JavaDoc 的文件..."
 safe_find "apex-*/src/main/java" "*.java" | while read -r file; do
-    # 统计剥离注释后的 public 方法声明数量与 @param 数量
-    PUBLIC_METHOD_COUNT=$(strip_comments "$file" | grep -cE '^[[:space:]]*public[[:space:]]+[^()]*[[:space:]][a-z][A-Za-z0-9]*[[:space:]]*\(' || true)
+    # 统计非 @Override 的 public 方法声明数量与 @param 数量
+    PUBLIC_METHOD_COUNT=$(count_public_methods "$file")
     PUBLIC_METHOD_COUNT=$(printf '%s' "$PUBLIC_METHOD_COUNT" | tr -d '[:space:]')
     [ -z "$PUBLIC_METHOD_COUNT" ] && PUBLIC_METHOD_COUNT=0
     PARAM_COUNT=$(grep -c "@param" "$file" 2>/dev/null || true)
