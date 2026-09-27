@@ -54,6 +54,7 @@ public class SlidingWindow {
 
     /** 默认子桶数量 */
     private static final int DEFAULT_BUCKET_COUNT = 10;
+
     private static final int MIN_BUCKET_COUNT = 2;
 
     /** 窗口大小（毫秒） */

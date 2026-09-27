@@ -4,7 +4,7 @@ import reactor.core.publisher.Mono;
 
 /**
  * 加密服务接口
- * 
+ *
  * 提供数据加密和解密功能
  * @author Apex Team
  * @since 1.2.0
@@ -13,7 +13,7 @@ public interface EncryptionService {
 
     /**
      * 加密数据
-     * 
+     *
      * @param plaintext 明文
      * @return 密文
      */
@@ -21,7 +21,7 @@ public interface EncryptionService {
 
     /**
      * 解密数据
-     * 
+     *
      * @param ciphertext 密文
      * @return 明文
      */
@@ -29,7 +29,7 @@ public interface EncryptionService {
 
     /**
      * 计算哈希值
-     * 
+     *
      * @param data 数据
      * @return 哈希值
      */
