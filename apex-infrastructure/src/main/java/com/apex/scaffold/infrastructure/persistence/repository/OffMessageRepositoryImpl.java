@@ -6,9 +6,13 @@ import com.apex.scaffold.domain.model.entity.OffMessageEntity;
 import com.apex.scaffold.domain.repository.OffMessageRepository;
 import com.apex.scaffold.infrastructure.persistence.converter.OffMessagePoConverter;
 import com.apex.scaffold.infrastructure.persistence.mapper.OffMessageMapper;
+import com.apex.scaffold.infrastructure.persistence.mapper.OffMessageRecipientMapper;
 import com.apex.scaffold.infrastructure.persistence.po.OffMessagePO;
+import com.apex.scaffold.infrastructure.persistence.po.OffMessageRecipientPO;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import java.util.Comparator;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
@@ -25,6 +29,7 @@ import reactor.core.publisher.Mono;
 public class OffMessageRepositoryImpl implements OffMessageRepository {
 
     private final OffMessageMapper mapper;
+    private final OffMessageRecipientMapper recipientMapper;
     private final OffMessagePoConverter converter;
 
     @Override
@@ -45,14 +50,26 @@ public class OffMessageRepositoryImpl implements OffMessageRepository {
     @Override
     public Flux<OffMessageEntity> findByRecipientId(Long recipientId, Integer pageNum, Integer pageSize) {
         return Mono.fromCallable(() -> {
-                    Page<OffMessagePO> page = new Page<>(pageNum, pageSize);
-                    mapper.selectPage(
-                            page, new LambdaQueryWrapper<OffMessagePO>().orderByDesc(OffMessagePO::getSendTime));
-                    return page.getRecords();
+                    // 接收人维度数据在关联表 off_message_recipient，先按接收人分页取消息 ID，再批量加载消息本体
+                    Page<OffMessageRecipientPO> page = new Page<>(pageNum, pageSize);
+                    recipientMapper.selectPage(
+                            page,
+                            new LambdaQueryWrapper<OffMessageRecipientPO>()
+                                    .eq(OffMessageRecipientPO::getRecipientId, recipientId));
+                    List<Long> messageIds = page.getRecords().stream()
+                            .map(OffMessageRecipientPO::getMessageId)
+                            .toList();
+                    if (messageIds.isEmpty()) {
+                        return List.<OffMessageEntity>of();
+                    }
+                    return mapper.selectBatchIds(messageIds).stream()
+                            .sorted(Comparator.comparing(
+                                    OffMessagePO::getSendTime, Comparator.nullsLast(Comparator.reverseOrder())))
+                            .map(converter::toEntity)
+                            .toList();
                 })
                 .subscribeOn(BlockingIoSchedulers.jdbc())
-                .flatMapMany(Flux::fromIterable)
-                .map(converter::toEntity);
+                .flatMapMany(Flux::fromIterable);
     }
 
     @Override
@@ -100,13 +117,16 @@ public class OffMessageRepositoryImpl implements OffMessageRepository {
 
     @Override
     public Mono<Long> countByRecipientId(Long recipientId) {
-        return Mono.fromCallable(() -> mapper.selectCount(new LambdaQueryWrapper<OffMessagePO>()))
+        return Mono.fromCallable(() -> recipientMapper.selectCount(new LambdaQueryWrapper<OffMessageRecipientPO>()
+                        .eq(OffMessageRecipientPO::getRecipientId, recipientId)))
                 .subscribeOn(BlockingIoSchedulers.jdbc());
     }
 
     @Override
     public Mono<Long> countUnreadByRecipientId(Long recipientId) {
-        return Mono.fromCallable(() -> mapper.selectCount(new LambdaQueryWrapper<OffMessagePO>()))
+        return Mono.fromCallable(() -> recipientMapper.selectCount(new LambdaQueryWrapper<OffMessageRecipientPO>()
+                        .eq(OffMessageRecipientPO::getRecipientId, recipientId)
+                        .eq(OffMessageRecipientPO::getReadStatus, false)))
                 .subscribeOn(BlockingIoSchedulers.jdbc());
     }
 
