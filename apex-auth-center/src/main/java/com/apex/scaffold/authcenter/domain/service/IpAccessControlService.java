@@ -13,7 +13,7 @@ public interface IpAccessControlService {
 
     /**
      * 检查IP是否被允许访问
-     * 
+     *
      * @param ipAddress 客户端IP地址
      * @param tenantId 租户ID
      * @return true-允许访问, false-拒绝访问
@@ -28,8 +28,8 @@ public interface IpAccessControlService {
     /**
      * 添加IP到黑名单
      */
-    Mono<IpAccessControl> addToBlacklist(String ipAddress, String tenantId, String description, 
-                                          Integer durationMinutes, String operator);
+    Mono<IpAccessControl> addToBlacklist(
+            String ipAddress, String tenantId, String description, Integer durationMinutes, String operator);
 
     /**
      * 从白名单移除IP

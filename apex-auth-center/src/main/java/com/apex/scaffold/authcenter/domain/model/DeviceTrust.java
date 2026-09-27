@@ -1,11 +1,10 @@
 package com.apex.scaffold.authcenter.domain.model;
 
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
 
 /**
  * 设备信任管理领域模型
@@ -121,22 +120,22 @@ public class DeviceTrust {
          * 桌面电脑
          */
         DESKTOP,
-        
+
         /**
          * 笔记本电脑
          */
         LAPTOP,
-        
+
         /**
          * 手机
          */
         MOBILE,
-        
+
         /**
          * 平板
          */
         TABLET,
-        
+
         /**
          * 未知
          */
@@ -151,22 +150,22 @@ public class DeviceTrust {
          * 未信任 - 需要完整MFA
          */
         UNTRUSTED(0),
-        
+
         /**
          * 低信任 - 需要MFA
          */
         LOW(1),
-        
+
         /**
          * 中信任 - 定期需要MFA
          */
         MEDIUM(2),
-        
+
         /**
          * 高信任 - 很少需要MFA
          */
         HIGH(3),
-        
+
         /**
          * 完全信任 - 免除MFA（限30天）
          */
@@ -196,22 +195,22 @@ public class DeviceTrust {
          * 待验证
          */
         PENDING,
-        
+
         /**
          * 已激活
          */
         ACTIVE,
-        
+
         /**
          * 已过期
          */
         EXPIRED,
-        
+
         /**
          * 已撤销
          */
         REVOKED,
-        
+
         /**
          * 已锁定（检测到异常）
          */
@@ -283,20 +282,20 @@ public class DeviceTrust {
      */
     public void calculateRiskScore() {
         int score = 0;
-        
+
         // 基于信任级别
         score += (5 - trustLevel.getLevel()) * 20; // 0-80分
-        
+
         // 基于使用频率（低频使用增加风险）
         if (authCount != null && authCount < 5) {
             score += 20;
         }
-        
+
         // 基于时间（长时间未使用增加风险）
         if (lastAuthAt != null && lastAuthAt.plusDays(30).isBefore(LocalDateTime.now())) {
             score += 20;
         }
-        
+
         this.riskScore = Math.min(100, score);
     }
 }

@@ -4,6 +4,7 @@ import com.apex.scaffold.authcenter.domain.model.DeviceTrust;
 import com.apex.scaffold.authcenter.domain.service.DeviceTrustService;
 import com.apex.scaffold.authcenter.infrastructure.repository.DeviceTrustRepository;
 import com.apex.scaffold.common.audit.AuditLogService;
+import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
@@ -11,8 +12,6 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
-import java.time.LocalDateTime;
 
 /**
  * 设备信任管理服务实现
@@ -30,59 +29,71 @@ public class DeviceTrustServiceImpl implements DeviceTrustService {
     private static final int DEFAULT_TRUST_DAYS = 30;
 
     @Override
-    public Mono<DeviceTrust> registerDevice(String userId, String tenantId, String deviceId,
-                                            String deviceName, DeviceTrust.DeviceType deviceType,
-                                            String deviceFingerprint, String ip, String location,
-                                            String metadata) {
+    public Mono<DeviceTrust> registerDevice(
+            String userId,
+            String tenantId,
+            String deviceId,
+            String deviceName,
+            DeviceTrust.DeviceType deviceType,
+            String deviceFingerprint,
+            String ip,
+            String location,
+            String metadata) {
         // 检查设备是否已注册
-        return deviceTrustRepository.findByUserIdAndDeviceId(userId, deviceId)
-            .flatMap(existing -> {
-                // 设备已存在，更新信息
-                existing.updateLastUsed(ip, location);
-                existing.setUpdatedAt(LocalDateTime.now());
-                return deviceTrustRepository.save(existing);
-            })
-            .switchIfEmpty(
-                // 新设备注册
-                Mono.defer(() -> {
-                    DeviceTrust newDevice = DeviceTrust.builder()
-                        .userId(userId)
-                        .tenantId(tenantId)
-                        .deviceId(deviceId)
-                        .deviceName(deviceName)
-                        .deviceType(deviceType)
-                        .deviceFingerprint(deviceFingerprint)
-                        .trustLevel(DeviceTrust.TrustLevel.UNTRUSTED)
-                        .status(DeviceTrust.TrustStatus.PENDING)
-                        .firstAuthAt(LocalDateTime.now())
-                        .lastAuthAt(LocalDateTime.now())
-                        .lastIp(ip)
-                        .lastLocation(location)
-                        .authCount(1)
-                        .riskScore(50)
-                        .metadata(metadata)
-                        .expiresAt(LocalDateTime.now().plusDays(DEFAULT_TRUST_DAYS))
-                        .createdAt(LocalDateTime.now())
-                        .build();
-                    
-                    return deviceTrustRepository.save(newDevice)
-                        .doOnSuccess(saved -> {
-                            auditLogService.log("DEVICE_REGISTERED", userId, tenantId,
-                                "注册新设备: " + deviceName, saved.getId().toString(), null)
-                                .subscribe();
-                            log.info("注册新设备: userId={}, deviceId={}, name={}", userId, deviceId, deviceName);
-                        });
+        return deviceTrustRepository
+                .findByUserIdAndDeviceId(userId, deviceId)
+                .flatMap(existing -> {
+                    // 设备已存在，更新信息
+                    existing.updateLastUsed(ip, location);
+                    existing.setUpdatedAt(LocalDateTime.now());
+                    return deviceTrustRepository.save(existing);
                 })
-            );
+                .switchIfEmpty(
+                        // 新设备注册
+                        Mono.defer(() -> {
+                            DeviceTrust newDevice = DeviceTrust.builder()
+                                    .userId(userId)
+                                    .tenantId(tenantId)
+                                    .deviceId(deviceId)
+                                    .deviceName(deviceName)
+                                    .deviceType(deviceType)
+                                    .deviceFingerprint(deviceFingerprint)
+                                    .trustLevel(DeviceTrust.TrustLevel.UNTRUSTED)
+                                    .status(DeviceTrust.TrustStatus.PENDING)
+                                    .firstAuthAt(LocalDateTime.now())
+                                    .lastAuthAt(LocalDateTime.now())
+                                    .lastIp(ip)
+                                    .lastLocation(location)
+                                    .authCount(1)
+                                    .riskScore(50)
+                                    .metadata(metadata)
+                                    .expiresAt(LocalDateTime.now().plusDays(DEFAULT_TRUST_DAYS))
+                                    .createdAt(LocalDateTime.now())
+                                    .build();
+
+                            return deviceTrustRepository.save(newDevice).doOnSuccess(saved -> {
+                                auditLogService
+                                        .log(
+                                                "DEVICE_REGISTERED",
+                                                userId,
+                                                tenantId,
+                                                "注册新设备: " + deviceName,
+                                                saved.getId().toString(),
+                                                null)
+                                        .subscribe();
+                                log.info("注册新设备: userId={}, deviceId={}, name={}", userId, deviceId, deviceName);
+                            });
+                        }));
     }
 
     @Override
     @Cacheable(value = "device-trust", key = "#userId + ':' + #deviceId")
     public Mono<DeviceTrust.TrustLevel> verifyDeviceTrust(String userId, String deviceId) {
-        return deviceTrustRepository.findByUserIdAndDeviceId(userId, deviceId)
-            .filter(device -> device.isActive() && !device.isExpired())
-            .map(DeviceTrust::getTrustLevel)
-            .defaultIfEmpty(DeviceTrust.TrustLevel.UNTRUSTED);
+        return deviceTrustRepository
+                .findByUserIdAndDeviceId(userId, deviceId)
+                .filter(device -> device.isActive() && !device.isExpired())
+                .map(DeviceTrust::getTrustLevel)
+                .defaultIfEmpty(DeviceTrust.TrustLevel.UNTRUSTED);
     }
 
     /**
@@ -97,20 +108,21 @@ public class DeviceTrustServiceImpl implements DeviceTrustService {
     @Override
     @CacheEvict(value = "device-trust", key = "#userId + ':' + #deviceId")
     public Mono<Void> updateDeviceUsage(String userId, String deviceId, String ip, String location) {
-        return deviceTrustRepository.findByUserIdAndDeviceId(userId, deviceId)
-            .flatMap(device -> {
-                device.updateLastUsed(ip, location);
-                device.calculateRiskScore();
-                device.setUpdatedAt(LocalDateTime.now());
-                
-                // 自动提升信任级别（基于使用频率）
-                if (device.getAuthCount() > 10 && device.getTrustLevel() == DeviceTrust.TrustLevel.UNTRUSTED) {
-                    device.upgradeTrustLevel();
-                }
-                
-                return deviceTrustRepository.save(device);
-            })
-            .then();
+        return deviceTrustRepository
+                .findByUserIdAndDeviceId(userId, deviceId)
+                .flatMap(device -> {
+                    device.updateLastUsed(ip, location);
+                    device.calculateRiskScore();
+                    device.setUpdatedAt(LocalDateTime.now());
+
+                    // 自动提升信任级别（基于使用频率）
+                    if (device.getAuthCount() > 10 && device.getTrustLevel() == DeviceTrust.TrustLevel.UNTRUSTED) {
+                        device.upgradeTrustLevel();
+                    }
+
+                    return deviceTrustRepository.save(device);
+                })
+                .then();
     }
 
     /**
@@ -123,23 +135,32 @@ public class DeviceTrustServiceImpl implements DeviceTrustService {
     @Override
     @CacheEvict(value = "device-trust", allEntries = true)
     public Mono<Void> upgradeTrustLevel(Long deviceId, String operator) {
-        return deviceTrustRepository.findById(deviceId)
-            .flatMap(device -> {
-                DeviceTrust.TrustLevel oldLevel = device.getTrustLevel();
-                device.upgradeTrustLevel();
-                device.setUpdatedAt(LocalDateTime.now());
-                
-                return deviceTrustRepository.save(device)
-                    .doOnSuccess(saved -> {
-                        auditLogService.log("DEVICE_TRUST_UPGRADED", operator, device.getTenantId(),
-                            String.format("提升设备信任级别: %s -> %s", oldLevel, saved.getTrustLevel()),
-                            saved.getId().toString(), null)
-                            .subscribe();
-                        log.info("提升设备信任级别: deviceId={}, {} -> {}, operator={}",
-                            deviceId, oldLevel, saved.getTrustLevel(), operator);
+        return deviceTrustRepository
+                .findById(deviceId)
+                .flatMap(device -> {
+                    DeviceTrust.TrustLevel oldLevel = device.getTrustLevel();
+                    device.upgradeTrustLevel();
+                    device.setUpdatedAt(LocalDateTime.now());
+
+                    return deviceTrustRepository.save(device).doOnSuccess(saved -> {
+                        auditLogService
+                                .log(
+                                        "DEVICE_TRUST_UPGRADED",
+                                        operator,
+                                        device.getTenantId(),
+                                        String.format("提升设备信任级别: %s -> %s", oldLevel, saved.getTrustLevel()),
+                                        saved.getId().toString(),
+                                        null)
+                                .subscribe();
+                        log.info(
+                                "提升设备信任级别: deviceId={}, {} -> {}, operator={}",
+                                deviceId,
+                                oldLevel,
+                                saved.getTrustLevel(),
+                                operator);
                     });
-            })
-            .then();
+                })
+                .then();
     }
 
     /**
@@ -152,23 +173,32 @@ public class DeviceTrustServiceImpl implements DeviceTrustService {
     @Override
     @CacheEvict(value = "device-trust", allEntries = true)
     public Mono<Void> downgradeTrustLevel(Long deviceId, String operator) {
-        return deviceTrustRepository.findById(deviceId)
-            .flatMap(device -> {
-                DeviceTrust.TrustLevel oldLevel = device.getTrustLevel();
-                device.downgradeTrustLevel();
-                device.setUpdatedAt(LocalDateTime.now());
-                
-                return deviceTrustRepository.save(device)
-                    .doOnSuccess(saved -> {
-                        auditLogService.log("DEVICE_TRUST_DOWNGRADED", operator, device.getTenantId(),
-                            String.format("降低设备信任级别: %s -> %s", oldLevel, saved.getTrustLevel()),
-                            saved.getId().toString(), null)
-                            .subscribe();
-                        log.info("降低设备信任级别: deviceId={}, {} -> {}, operator={}",
-                            deviceId, oldLevel, saved.getTrustLevel(), operator);
+        return deviceTrustRepository
+                .findById(deviceId)
+                .flatMap(device -> {
+                    DeviceTrust.TrustLevel oldLevel = device.getTrustLevel();
+                    device.downgradeTrustLevel();
+                    device.setUpdatedAt(LocalDateTime.now());
+
+                    return deviceTrustRepository.save(device).doOnSuccess(saved -> {
+                        auditLogService
+                                .log(
+                                        "DEVICE_TRUST_DOWNGRADED",
+                                        operator,
+                                        device.getTenantId(),
+                                        String.format("降低设备信任级别: %s -> %s", oldLevel, saved.getTrustLevel()),
+                                        saved.getId().toString(),
+                                        null)
+                                .subscribe();
+                        log.info(
+                                "降低设备信任级别: deviceId={}, {} -> {}, operator={}",
+                                deviceId,
+                                oldLevel,
+                                saved.getTrustLevel(),
+                                operator);
                     });
-            })
-            .then();
+                })
+                .then();
     }
 
     /**
@@ -181,22 +211,27 @@ public class DeviceTrustServiceImpl implements DeviceTrustService {
     @Override
     @CacheEvict(value = "device-trust", allEntries = true)
     public Mono<Void> revokeDeviceTrust(Long deviceId, String operator) {
-        return deviceTrustRepository.findById(deviceId)
-            .flatMap(device -> {
-                device.setStatus(DeviceTrust.TrustStatus.REVOKED);
-                device.setTrustLevel(DeviceTrust.TrustLevel.UNTRUSTED);
-                device.setUpdatedAt(LocalDateTime.now());
-                
-                return deviceTrustRepository.save(device)
-                    .doOnSuccess(saved -> {
-                        auditLogService.log("DEVICE_TRUST_REVOKED", operator, device.getTenantId(),
-                            "撤销设备信任: " + device.getDeviceName(),
-                            saved.getId().toString(), null)
-                            .subscribe();
+        return deviceTrustRepository
+                .findById(deviceId)
+                .flatMap(device -> {
+                    device.setStatus(DeviceTrust.TrustStatus.REVOKED);
+                    device.setTrustLevel(DeviceTrust.TrustLevel.UNTRUSTED);
+                    device.setUpdatedAt(LocalDateTime.now());
+
+                    return deviceTrustRepository.save(device).doOnSuccess(saved -> {
+                        auditLogService
+                                .log(
+                                        "DEVICE_TRUST_REVOKED",
+                                        operator,
+                                        device.getTenantId(),
+                                        "撤销设备信任: " + device.getDeviceName(),
+                                        saved.getId().toString(),
+                                        null)
+                                .subscribe();
                         log.info("撤销设备信任: deviceId={}, operator={}", deviceId, operator);
                     });
-            })
-            .then();
+                })
+                .then();
     }
 
     /**
@@ -207,8 +242,7 @@ public class DeviceTrustServiceImpl implements DeviceTrustService {
      */
     @Override
     public Flux<DeviceTrust> getUserTrustedDevices(String userId) {
-        return deviceTrustRepository.findByUserId(userId)
-            .filter(device -> device.isActive() && !device.isExpired());
+        return deviceTrustRepository.findByUserId(userId).filter(device -> device.isActive() && !device.isExpired());
     }
 
     /**
@@ -220,11 +254,12 @@ public class DeviceTrustServiceImpl implements DeviceTrustService {
      */
     @Override
     public Mono<Boolean> isDeviceTrusted(String userId, String deviceId) {
-        return deviceTrustRepository.findByUserIdAndDeviceId(userId, deviceId)
-            .map(device -> device.isActive() && 
-                           !device.isExpired() && 
-                           device.getTrustLevel().getLevel() >= DeviceTrust.TrustLevel.MEDIUM.getLevel())
-            .defaultIfEmpty(false);
+        return deviceTrustRepository
+                .findByUserIdAndDeviceId(userId, deviceId)
+                .map(device -> device.isActive()
+                        && !device.isExpired()
+                        && device.getTrustLevel().getLevel() >= DeviceTrust.TrustLevel.MEDIUM.getLevel())
+                .defaultIfEmpty(false);
     }
 
     /**
@@ -235,56 +270,63 @@ public class DeviceTrustServiceImpl implements DeviceTrustService {
      */
     @Override
     public Mono<Integer> calculateDeviceRiskScore(Long deviceId) {
-        return deviceTrustRepository.findById(deviceId)
-            .map(device -> {
-                device.calculateRiskScore();
-                deviceTrustRepository.save(device).subscribe();
-                return device.getRiskScore();
-            })
-            .defaultIfEmpty(100);
+        return deviceTrustRepository
+                .findById(deviceId)
+                .map(device -> {
+                    device.calculateRiskScore();
+                    deviceTrustRepository.save(device).subscribe();
+                    return device.getRiskScore();
+                })
+                .defaultIfEmpty(100);
     }
 
     @Override
     public Mono<Boolean> detectDeviceAnomaly(String userId, String deviceId, String ip, String location) {
-        return deviceTrustRepository.findByUserIdAndDeviceId(userId, deviceId)
-            .map(device -> {
-                boolean anomaly = false;
-                
-                // 检测IP变化
-                if (device.getLastIp() != null && !device.getLastIp().equals(ip)) {
-                    // IP发生变化，检查是否跨国/跨地区
-                    if (device.getLastLocation() != null && !isSameRegion(device.getLastLocation(), location)) {
-                        anomaly = true;
-                        log.warn("检测到设备异常: 位置变化 {} -> {}", device.getLastLocation(), location);
+        return deviceTrustRepository
+                .findByUserIdAndDeviceId(userId, deviceId)
+                .map(device -> {
+                    boolean anomaly = false;
+
+                    // 检测IP变化
+                    if (device.getLastIp() != null && !device.getLastIp().equals(ip)) {
+                        // IP发生变化，检查是否跨国/跨地区
+                        if (device.getLastLocation() != null && !isSameRegion(device.getLastLocation(), location)) {
+                            anomaly = true;
+                            log.warn("检测到设备异常: 位置变化 {} -> {}", device.getLastLocation(), location);
+                        }
                     }
-                }
-                
-                // 检测长时间未使用
-                if (device.getLastAuthAt() != null && 
-                    device.getLastAuthAt().plusDays(90).isBefore(LocalDateTime.now())) {
-                    anomaly = true;
-                    log.warn("检测到设备异常: 长时间未使用");
-                }
-                
-                // 检测风险评分
-                if (device.isHighRisk()) {
-                    anomaly = true;
-                    log.warn("检测到设备异常: 风险评分过高 {}", device.getRiskScore());
-                }
-                
-                if (anomaly) {
-                    // 降低信任级别
-                    device.downgradeTrustLevel();
-                    device.setStatus(DeviceTrust.TrustStatus.LOCKED);
-                    deviceTrustRepository.save(device).subscribe();
-                    
-                    auditLogService.log(userId, device.getTenantId(),
-                        "检测到设备异常: " + device.getDeviceName(), "DEVICE_ANOMALY_DETECTED", "FAILURE", null);
-                }
-                
-                return anomaly;
-            })
-            .defaultIfEmpty(false);
+
+                    // 检测长时间未使用
+                    if (device.getLastAuthAt() != null
+                            && device.getLastAuthAt().plusDays(90).isBefore(LocalDateTime.now())) {
+                        anomaly = true;
+                        log.warn("检测到设备异常: 长时间未使用");
+                    }
+
+                    // 检测风险评分
+                    if (device.isHighRisk()) {
+                        anomaly = true;
+                        log.warn("检测到设备异常: 风险评分过高 {}", device.getRiskScore());
+                    }
+
+                    if (anomaly) {
+                        // 降低信任级别
+                        device.downgradeTrustLevel();
+                        device.setStatus(DeviceTrust.TrustStatus.LOCKED);
+                        deviceTrustRepository.save(device).subscribe();
+
+                        auditLogService.log(
+                                userId,
+                                device.getTenantId(),
+                                "检测到设备异常: " + device.getDeviceName(),
+                                "DEVICE_ANOMALY_DETECTED",
+                                "FAILURE",
+                                null);
+                    }
+
+                    return anomaly;
+                })
+                .defaultIfEmpty(false);
     }
 
     /**
@@ -294,18 +336,14 @@ public class DeviceTrustServiceImpl implements DeviceTrustService {
      */
     @Override
     public Mono<Long> cleanupExpiredDevices() {
-        return deviceTrustRepository.findByStatusAndExpiresAtBefore(
-                DeviceTrust.TrustStatus.ACTIVE, 
-                LocalDateTime.now()
-            )
-            .flatMap(device -> {
-                device.setStatus(DeviceTrust.TrustStatus.EXPIRED);
-                return deviceTrustRepository.save(device);
-            })
-            .count()
-            .doOnSuccess(count -> 
-                log.info("清理过期设备: {} 个", count)
-            );
+        return deviceTrustRepository
+                .findByStatusAndExpiresAtBefore(DeviceTrust.TrustStatus.ACTIVE, LocalDateTime.now())
+                .flatMap(device -> {
+                    device.setStatus(DeviceTrust.TrustStatus.EXPIRED);
+                    return deviceTrustRepository.save(device);
+                })
+                .count()
+                .doOnSuccess(count -> log.info("清理过期设备: {} 个", count));
     }
 
     /**
@@ -330,21 +368,25 @@ public class DeviceTrustServiceImpl implements DeviceTrustService {
     @Override
     @CacheEvict(value = "device-trust", allEntries = true)
     public Mono<Void> extendDeviceTrust(Long deviceId, int days, String operator) {
-        return deviceTrustRepository.findById(deviceId)
-            .flatMap(device -> {
-                LocalDateTime newExpiry = device.getExpiresAt().plusDays(days);
-                device.setExpiresAt(newExpiry);
-                device.setUpdatedAt(LocalDateTime.now());
-                
-                return deviceTrustRepository.save(device)
-                    .doOnSuccess(saved -> {
-                        auditLogService.log(operator, device.getTenantId(),
-                            String.format("延长设备信任有效期 %d 天至 %s", days, newExpiry), "DEVICE_TRUST_EXTENDED", "SUCCESS", null);
-                        log.info("延长设备信任有效期: deviceId={}, days={}, operator={}", 
-                            deviceId, days, operator);
+        return deviceTrustRepository
+                .findById(deviceId)
+                .flatMap(device -> {
+                    LocalDateTime newExpiry = device.getExpiresAt().plusDays(days);
+                    device.setExpiresAt(newExpiry);
+                    device.setUpdatedAt(LocalDateTime.now());
+
+                    return deviceTrustRepository.save(device).doOnSuccess(saved -> {
+                        auditLogService.log(
+                                operator,
+                                device.getTenantId(),
+                                String.format("延长设备信任有效期 %d 天至 %s", days, newExpiry),
+                                "DEVICE_TRUST_EXTENDED",
+                                "SUCCESS",
+                                null);
+                        log.info("延长设备信任有效期: deviceId={}, days={}, operator={}", deviceId, days, operator);
                     });
-            })
-            .then();
+                })
+                .then();
     }
 
     /**

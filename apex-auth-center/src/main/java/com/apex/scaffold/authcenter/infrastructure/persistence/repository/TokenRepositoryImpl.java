@@ -217,16 +217,15 @@ public class TokenRepositoryImpl implements TokenRepository {
     public Mono<Integer> revokeByTokenFamily(String tokenFamily, String revokedBy, String reason) {
         return JdbcTenantScope.call(
                 null,
-                t ->
-                        mapper.update(
-                                null,
-                                JdbcTenantScope.<TokenPO>update(t)
-                                        .eq("token_family", tokenFamily)
-                                        .eq("revoked", 0)
-                                        .set("revoked", 1)
-                                        .set("revoked_at", LocalDateTime.now())
-                                        .set("revoked_by", revokedBy)
-                                        .set("revoke_reason", reason)));
+                t -> mapper.update(
+                        null,
+                        JdbcTenantScope.<TokenPO>update(t)
+                                .eq("token_family", tokenFamily)
+                                .eq("revoked", 0)
+                                .set("revoked", 1)
+                                .set("revoked_at", LocalDateTime.now())
+                                .set("revoked_by", revokedBy)
+                                .set("revoke_reason", reason)));
     }
 
     @Override

@@ -4,7 +4,7 @@ import reactor.core.publisher.Mono;
 
 /**
  * 密钥管理服务接口
- * 
+ *
  * 支持多种密钥管理系统：
  * - AWS KMS (Key Management Service)
  * - HashiCorp Vault
@@ -17,7 +17,7 @@ public interface KeyManagementService {
 
     /**
      * 加密数据
-     * 
+     *
      * @param plaintext 明文数据
      * @param keyId 密钥ID
      * @return 加密后的密文（Base64编码）
@@ -26,7 +26,7 @@ public interface KeyManagementService {
 
     /**
      * 解密数据
-     * 
+     *
      * @param ciphertext 密文数据（Base64编码）
      * @param keyId 密钥ID
      * @return 解密后的明文
@@ -35,7 +35,7 @@ public interface KeyManagementService {
 
     /**
      * 生成数据密钥
-     * 
+     *
      * @param keyId 主密钥ID
      * @return 数据密钥对（明文密钥 + 加密后的密钥）
      */
@@ -43,7 +43,7 @@ public interface KeyManagementService {
 
     /**
      * 轮换密钥
-     * 
+     *
      * @param keyId 密钥ID
      * @return 新密钥ID
      */
@@ -51,7 +51,7 @@ public interface KeyManagementService {
 
     /**
      * 获取密钥元数据
-     * 
+     *
      * @param keyId 密钥ID
      * @return 密钥元数据
      */
@@ -59,7 +59,7 @@ public interface KeyManagementService {
 
     /**
      * 禁用密钥
-     * 
+     *
      * @param keyId 密钥ID
      * @return 是否成功
      */
@@ -67,7 +67,7 @@ public interface KeyManagementService {
 
     /**
      * 启用密钥
-     * 
+     *
      * @param keyId 密钥ID
      * @return 是否成功
      */
@@ -93,10 +93,15 @@ public interface KeyManagementService {
      */
     interface KeyMetadata {
         String getKeyId();
+
         String getKeyArn();
+
         String getAlgorithm();
+
         String getKeyState();
+
         java.time.Instant getCreationDate();
+
         boolean isEnabled();
     }
 }

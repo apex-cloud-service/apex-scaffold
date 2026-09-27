@@ -1,11 +1,10 @@
 package com.apex.scaffold.authcenter.domain.model;
 
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
 
 /**
  * 生物识别认证配置领域模型
@@ -91,22 +90,22 @@ public class BiometricAuth {
          * 指纹识别
          */
         FINGERPRINT,
-        
+
         /**
          * 人脸识别
          */
         FACE_ID,
-        
+
         /**
          * 虹膜识别
          */
         IRIS,
-        
+
         /**
          * 声纹识别
          */
         VOICE,
-        
+
         /**
          * WebAuthn/FIDO2（支持硬件安全密钥）
          */
@@ -121,17 +120,17 @@ public class BiometricAuth {
          * 待激活
          */
         PENDING,
-        
+
         /**
          * 已激活
          */
         ACTIVE,
-        
+
         /**
          * 已禁用
          */
         DISABLED,
-        
+
         /**
          * 已锁定
          */
@@ -161,7 +160,7 @@ public class BiometricAuth {
      */
     public void incrementFailedAttempts() {
         this.failedAttempts = (this.failedAttempts == null ? 0 : this.failedAttempts) + 1;
-        
+
         // 失败5次后锁定
         if (this.failedAttempts >= 5) {
             this.status = AuthStatus.LOCKED;

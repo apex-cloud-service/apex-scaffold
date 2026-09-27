@@ -13,7 +13,7 @@ public interface BiometricAuthService {
 
     /**
      * 注册生物识别认证
-     * 
+     *
      * @param userId 用户ID
      * @param tenantId 租户ID
      * @param type 生物识别类型
@@ -22,22 +22,24 @@ public interface BiometricAuthService {
      * @param publicKey 公钥（WebAuthn）
      * @return 注册结果
      */
-    Mono<BiometricAuth> registerBiometric(String userId, String tenantId, 
-                                           BiometricAuth.BiometricType type,
-                                           String deviceId, String deviceName, 
-                                           String publicKey);
+    Mono<BiometricAuth> registerBiometric(
+            String userId,
+            String tenantId,
+            BiometricAuth.BiometricType type,
+            String deviceId,
+            String deviceName,
+            String publicKey);
 
     /**
      * 验证生物识别
-     * 
+     *
      * @param userId 用户ID
      * @param type 生物识别类型
      * @param challenge 挑战数据
      * @param signature 签名
      * @return 验证是否成功
      */
-    Mono<Boolean> verifyBiometric(String userId, BiometricAuth.BiometricType type,
-                                   String challenge, String signature);
+    Mono<Boolean> verifyBiometric(String userId, BiometricAuth.BiometricType type, String challenge, String signature);
 
     /**
      * 启用生物识别认证
@@ -82,17 +84,10 @@ public interface BiometricAuthService {
     /**
      * WebAuthn注册挑战
      */
-    record RegistrationChallenge(
-        String challenge,
-        String userId,
-        long timeout
-    ) {}
+    record RegistrationChallenge(String challenge, String userId, long timeout) {}
 
     /**
      * WebAuthn认证挑战
      */
-    record AuthenticationChallenge(
-        String challenge,
-        long timeout
-    ) {}
+    record AuthenticationChallenge(String challenge, long timeout) {}
 }

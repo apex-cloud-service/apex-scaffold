@@ -13,7 +13,7 @@ public interface DeviceTrustService {
 
     /**
      * 注册新设备
-     * 
+     *
      * @param userId 用户ID
      * @param tenantId 租户ID
      * @param deviceId 设备ID
@@ -25,14 +25,20 @@ public interface DeviceTrustService {
      * @param metadata 设备元数据
      * @return 设备信任记录
      */
-    Mono<DeviceTrust> registerDevice(String userId, String tenantId, String deviceId,
-                                     String deviceName, DeviceTrust.DeviceType deviceType,
-                                     String deviceFingerprint, String ip, String location,
-                                     String metadata);
+    Mono<DeviceTrust> registerDevice(
+            String userId,
+            String tenantId,
+            String deviceId,
+            String deviceName,
+            DeviceTrust.DeviceType deviceType,
+            String deviceFingerprint,
+            String ip,
+            String location,
+            String metadata);
 
     /**
      * 验证设备信任
-     * 
+     *
      * @param userId 用户ID
      * @param deviceId 设备ID
      * @return 信任级别
@@ -76,7 +82,7 @@ public interface DeviceTrustService {
 
     /**
      * 检测设备异常
-     * 
+     *
      * @param userId 用户ID
      * @param deviceId 设备ID
      * @param ip 当前IP

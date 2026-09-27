@@ -13,7 +13,7 @@ public interface MfaService {
 
     /**
      * 启用TOTP多因素认证
-     * 
+     *
      * @param userId 用户ID
      * @param tenantId 租户ID
      * @return TOTP密钥和二维码URL
@@ -22,7 +22,7 @@ public interface MfaService {
 
     /**
      * 验证并激活TOTP
-     * 
+     *
      * @param userId 用户ID
      * @param code 验证码
      * @return 激活结果和备用验证码
@@ -46,7 +46,7 @@ public interface MfaService {
 
     /**
      * 验证MFA代码
-     * 
+     *
      * @param userId 用户ID
      * @param code 验证码
      * @param type MFA类型
@@ -87,24 +87,15 @@ public interface MfaService {
     /**
      * TOTP设置信息
      */
-    record TotpSetupInfo(
-        String secret,
-        String qrCodeUrl,
-        String manualEntryKey
-    ) {}
+    record TotpSetupInfo(String secret, String qrCodeUrl, String manualEntryKey) {}
 
     /**
      * MFA激活结果
      */
-    record MfaActivationResult(
-        boolean success,
-        String[] backupCodes
-    ) {}
+    record MfaActivationResult(boolean success, String[] backupCodes) {}
 
     /**
      * 备用验证码结果
      */
-    record BackupCodesResult(
-        String[] codes
-    ) {}
+    record BackupCodesResult(String[] codes) {}
 }

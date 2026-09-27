@@ -41,7 +41,8 @@ public class JwtKeyRepositoryImpl implements JwtKeyRepository {
     }
 
     private Mono<JwtKeyEntity> insert(JwtKeyEntity jwtKey) {
-        String sql = """
+        String sql =
+                """
                 INSERT INTO jwt_keys (key_version, encrypted_secret, algorithm, status,
                     activated_at, expires_at, rotation_reason, operator_user_id,
                     operator_username, created_at, updated_at, remark)
@@ -70,7 +71,8 @@ public class JwtKeyRepositoryImpl implements JwtKeyRepository {
     }
 
     private Mono<JwtKeyEntity> update(JwtKeyEntity jwtKey) {
-        String sql = """
+        String sql =
+                """
                 UPDATE jwt_keys SET
                     status = :status,
                     deprecated_at = :deprecatedAt,
@@ -102,11 +104,7 @@ public class JwtKeyRepositoryImpl implements JwtKeyRepository {
     @Override
     public Mono<JwtKeyEntity> findById(Long id) {
         String sql = "SELECT * FROM jwt_keys WHERE id = :id";
-        return databaseClient
-                .sql(sql)
-                .bind("id", id)
-                .map(this::mapRow)
-                .one();
+        return databaseClient.sql(sql).bind("id", id).map(this::mapRow).one();
     }
 
     /**
@@ -154,7 +152,8 @@ public class JwtKeyRepositoryImpl implements JwtKeyRepository {
      */
     @Override
     public Flux<JwtKeyEntity> findExpiringSoonKeys() {
-        String sql = """
+        String sql =
+                """
                 SELECT * FROM jwt_keys
                 WHERE status = 'ACTIVE'
                 AND expires_at <= :expirationThreshold

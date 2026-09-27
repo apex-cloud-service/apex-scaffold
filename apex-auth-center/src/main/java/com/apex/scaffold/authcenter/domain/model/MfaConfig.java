@@ -1,11 +1,10 @@
 package com.apex.scaffold.authcenter.domain.model;
 
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
 
 /**
  * 多因素认证(MFA)配置领域模型
@@ -86,17 +85,17 @@ public class MfaConfig {
          * TOTP - 基于时间的一次性密码（Google Authenticator）
          */
         TOTP,
-        
+
         /**
          * SMS - 短信验证码
          */
         SMS,
-        
+
         /**
          * EMAIL - 邮箱验证码
          */
         EMAIL,
-        
+
         /**
          * BACKUP_CODE - 备用验证码
          */
@@ -111,17 +110,17 @@ public class MfaConfig {
          * 待激活 - 已配置但未完成验证
          */
         PENDING,
-        
+
         /**
          * 已激活 - 正常使用中
          */
         ACTIVE,
-        
+
         /**
          * 已禁用 - 用户主动禁用
          */
         DISABLED,
-        
+
         /**
          * 已锁定 - 验证失败次数过多
          */
@@ -151,7 +150,7 @@ public class MfaConfig {
      */
     public void incrementFailedAttempts() {
         this.failedAttempts = (this.failedAttempts == null ? 0 : this.failedAttempts) + 1;
-        
+
         // 失败5次后锁定
         if (this.failedAttempts >= 5) {
             this.status = MfaStatus.LOCKED;

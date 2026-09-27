@@ -1,15 +1,14 @@
 package com.apex.scaffold.authcenter.domain.permission;
 
+import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Set;
-
 /**
  * 资源级权限定义
- * 
+ *
  * 支持细粒度的资源访问控制，例如：
  * - 用户只能访问自己的订单
  * - 部门经理可以访问本部门的数据
@@ -75,22 +74,22 @@ public class ResourcePermission {
          * 全局范围
          */
         GLOBAL,
-        
+
         /**
          * 租户范围
          */
         TENANT,
-        
+
         /**
          * 部门范围
          */
         DEPARTMENT,
-        
+
         /**
          * 个人范围
          */
         PERSONAL,
-        
+
         /**
          * 自定义范围
          */
@@ -104,15 +103,15 @@ public class ResourcePermission {
         if (this.resourceType != null && !this.resourceType.equals(resourceType)) {
             return false;
         }
-        
+
         if (this.resourceId != null && !this.resourceId.equals(resourceId)) {
             return false;
         }
-        
+
         if (this.action != null && !this.action.equals(action)) {
             return false;
         }
-        
+
         return true;
     }
 }

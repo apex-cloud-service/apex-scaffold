@@ -1,11 +1,10 @@
 package com.apex.scaffold.authcenter.domain.model;
 
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
 
 /**
  * IP访问控制领域模型
@@ -86,7 +85,7 @@ public class IpAccessControl {
          * 白名单 - 只允许列表中的IP访问
          */
         WHITELIST,
-        
+
         /**
          * 黑名单 - 禁止列表中的IP访问
          */

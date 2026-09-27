@@ -2,7 +2,6 @@ package com.apex.scaffold.authcenter.application.scheduler;
 
 import com.apex.scaffold.authcenter.application.service.JwtKeyRotationService;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -49,8 +48,8 @@ public class JwtKeyRotationScheduler {
         jwtKeyRotationService
                 .findExpiringSoonKeys()
                 .doOnNext(key -> {
-                    long daysUntilExpiry =
-                            java.time.temporal.ChronoUnit.DAYS.between(java.time.LocalDateTime.now(), key.getExpiresAt());
+                    long daysUntilExpiry = java.time.temporal.ChronoUnit.DAYS.between(
+                            java.time.LocalDateTime.now(), key.getExpiresAt());
                     log.warn(
                             "告警：JWT密钥即将过期！版本={}, 剩余天数={}, 过期时间={}",
                             key.getKeyVersion(),
@@ -61,13 +60,15 @@ public class JwtKeyRotationScheduler {
                     // alertService.sendKeyExpiryAlert(key.getKeyVersion(), daysUntilExpiry);
                 })
                 .count()
-                .subscribe(count -> {
-                    if (count > 0) {
-                        log.warn("发现{}个即将过期的JWT密钥，请尽快安排密钥轮换", count);
-                    } else {
-                        log.info("JWT密钥状态正常，没有即将过期的密钥");
-                    }
-                }, error -> log.error("JWT密钥过期检查任务执行失败", error));
+                .subscribe(
+                        count -> {
+                            if (count > 0) {
+                                log.warn("发现{}个即将过期的JWT密钥，请尽快安排密钥轮换", count);
+                            } else {
+                                log.info("JWT密钥状态正常，没有即将过期的密钥");
+                            }
+                        },
+                        error -> log.error("JWT密钥过期检查任务执行失败", error));
     }
 
     /**

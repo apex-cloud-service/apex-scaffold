@@ -4,6 +4,8 @@ import com.apex.scaffold.authcenter.domain.model.IpAccessControl;
 import com.apex.scaffold.authcenter.domain.service.IpAccessControlService;
 import com.apex.scaffold.authcenter.infrastructure.repository.IpAccessControlRepository;
 import com.apex.scaffold.common.audit.AuditLogService;
+import java.time.LocalDateTime;
+import java.util.Comparator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
@@ -12,12 +14,9 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.time.LocalDateTime;
-import java.util.Comparator;
-
 /**
  * IP访问控制服务实现
- * 
+ *
  * 安全策略：
  * 1. 黑名单优先：先检查黑名单，在黑名单中直接拒绝
  * 2. 白名单生效：如果配置了白名单，只允许白名单中的IP
@@ -37,7 +36,7 @@ public class IpAccessControlServiceImpl implements IpAccessControlService {
 
     /**
      * 检查IP是否被允许访问
-     * 
+     *
      * 策略优先级：
      * 1. 黑名单匹配 -> 拒绝
      * 2. 白名单存在 && 白名单不匹配 -> 拒绝
@@ -55,63 +54,66 @@ public class IpAccessControlServiceImpl implements IpAccessControlService {
         }
 
         return Mono.zip(
-            // 检查黑名单
-            checkBlacklist(ipAddress, tenantId),
-            // 检查白名单
-            checkWhitelist(ipAddress, tenantId),
-            // 判断是否存在白名单规则
-            hasWhitelistRules(tenantId)
-        ).map(tuple -> {
-            boolean inBlacklist = tuple.getT1();
-            boolean inWhitelist = tuple.getT2();
-            boolean hasWhitelist = tuple.getT3();
+                        // 检查黑名单
+                        checkBlacklist(ipAddress, tenantId),
+                        // 检查白名单
+                        checkWhitelist(ipAddress, tenantId),
+                        // 判断是否存在白名单规则
+                        hasWhitelistRules(tenantId))
+                .map(tuple -> {
+                    boolean inBlacklist = tuple.getT1();
+                    boolean inWhitelist = tuple.getT2();
+                    boolean hasWhitelist = tuple.getT3();
 
-            // 1. 黑名单中直接拒绝
-            if (inBlacklist) {
-                log.warn("IP访问被拒绝(黑名单): ip={}, tenantId={}", ipAddress, tenantId);
-                return false;
-            }
+                    // 1. 黑名单中直接拒绝
+                    if (inBlacklist) {
+                        log.warn("IP访问被拒绝(黑名单): ip={}, tenantId={}", ipAddress, tenantId);
+                        return false;
+                    }
 
-            // 2. 如果配置了白名单，必须在白名单中
-            if (hasWhitelist && !inWhitelist) {
-                log.warn("IP访问被拒绝(不在白名单): ip={}, tenantId=", ipAddress, tenantId);
-                return false;
-            }
+                    // 2. 如果配置了白名单，必须在白名单中
+                    if (hasWhitelist && !inWhitelist) {
+                        log.warn("IP访问被拒绝(不在白名单): ip={}, tenantId=", ipAddress, tenantId);
+                        return false;
+                    }
 
-            // 3. 其他情况允许
-            return true;
-        });
+                    // 3. 其他情况允许
+                    return true;
+                });
     }
 
     /**
      * 检查IP是否在黑名单中
      */
     private Mono<Boolean> checkBlacklist(String ipAddress, String tenantId) {
-        return repository.findByTenantIdAndType(tenantId, IpAccessControl.AccessControlType.BLACKLIST)
-            .filter(IpAccessControl::isActive)
-            .sort(Comparator.comparing(IpAccessControl::getPriority))
-            .filter(rule -> rule.matches(ipAddress))
-            .hasElements();
+        return repository
+                .findByTenantIdAndType(tenantId, IpAccessControl.AccessControlType.BLACKLIST)
+                .filter(IpAccessControl::isActive)
+                .sort(Comparator.comparing(IpAccessControl::getPriority))
+                .filter(rule -> rule.matches(ipAddress))
+                .hasElements();
     }
 
     /**
      * 检查IP是否在白名单中
      */
     private Mono<Boolean> checkWhitelist(String ipAddress, String tenantId) {
-        return repository.findByTenantIdAndType(tenantId, IpAccessControl.AccessControlType.WHITELIST)
-            .filter(IpAccessControl::isActive)
-            .sort(Comparator.comparing(IpAccessControl::getPriority))
-            .filter(rule -> rule.matches(ipAddress))
-            .hasElements();
+        return repository
+                .findByTenantIdAndType(tenantId, IpAccessControl.AccessControlType.WHITELIST)
+                .filter(IpAccessControl::isActive)
+                .sort(Comparator.comparing(IpAccessControl::getPriority))
+                .filter(rule -> rule.matches(ipAddress))
+                .hasElements();
     }
 
     /**
      * 判断是否存在白名单规则
      */
     private Mono<Boolean> hasWhitelistRules(String tenantId) {
-        return repository.findByTenantIdAndType(tenantId, IpAccessControl.AccessControlType.WHITELIST)
-            .filter(IpAccessControl::isActive)
-            .hasElements();
+        return repository
+                .findByTenantIdAndType(tenantId, IpAccessControl.AccessControlType.WHITELIST)
+                .filter(IpAccessControl::isActive)
+                .hasElements();
     }
 
     /**
@@ -125,25 +127,23 @@ public class IpAccessControlServiceImpl implements IpAccessControlService {
      */
     @Override
     @CacheEvict(value = "ip-access-control", allEntries = true)
-    public Mono<IpAccessControl> addToWhitelist(String ipAddress, String tenantId, 
-                                                 String description, String operator) {
+    public Mono<IpAccessControl> addToWhitelist(
+            String ipAddress, String tenantId, String description, String operator) {
         IpAccessControl rule = IpAccessControl.builder()
-            .tenantId(tenantId)
-            .ipAddress(ipAddress)
-            .type(IpAccessControl.AccessControlType.WHITELIST)
-            .description(description)
-            .enabled(true)
-            .priority(100)
-            .createdAt(LocalDateTime.now())
-            .createdBy(operator)
-            .build();
+                .tenantId(tenantId)
+                .ipAddress(ipAddress)
+                .type(IpAccessControl.AccessControlType.WHITELIST)
+                .description(description)
+                .enabled(true)
+                .priority(100)
+                .createdAt(LocalDateTime.now())
+                .createdBy(operator)
+                .build();
 
-        return repository.save(rule)
-            .doOnSuccess(saved -> {
-                auditLogService.log(operator, tenantId,
-                    "添加IP白名单: " + ipAddress, "IP_WHITELIST_ADD", "SUCCESS", null);
-                log.info("添加IP白名单: ip={}, tenantId={}, operator={}", ipAddress, tenantId, operator);
-            });
+        return repository.save(rule).doOnSuccess(saved -> {
+            auditLogService.log(operator, tenantId, "添加IP白名单: " + ipAddress, "IP_WHITELIST_ADD", "SUCCESS", null);
+            log.info("添加IP白名单: ip={}, tenantId={}, operator={}", ipAddress, tenantId, operator);
+        });
     }
 
     /**
@@ -158,33 +158,37 @@ public class IpAccessControlServiceImpl implements IpAccessControlService {
      */
     @Override
     @CacheEvict(value = "ip-access-control", allEntries = true)
-    public Mono<IpAccessControl> addToBlacklist(String ipAddress, String tenantId, String description, 
-                                                 Integer durationMinutes, String operator) {
-        LocalDateTime expiresAt = durationMinutes != null 
-            ? LocalDateTime.now().plusMinutes(durationMinutes) 
-            : null;
+    public Mono<IpAccessControl> addToBlacklist(
+            String ipAddress, String tenantId, String description, Integer durationMinutes, String operator) {
+        LocalDateTime expiresAt = durationMinutes != null ? LocalDateTime.now().plusMinutes(durationMinutes) : null;
 
         IpAccessControl rule = IpAccessControl.builder()
-            .tenantId(tenantId)
-            .ipAddress(ipAddress)
-            .type(IpAccessControl.AccessControlType.BLACKLIST)
-            .description(description)
-            .enabled(true)
-            .priority(100)
-            .expiresAt(expiresAt)
-            .createdAt(LocalDateTime.now())
-            .createdBy(operator)
-            .build();
+                .tenantId(tenantId)
+                .ipAddress(ipAddress)
+                .type(IpAccessControl.AccessControlType.BLACKLIST)
+                .description(description)
+                .enabled(true)
+                .priority(100)
+                .expiresAt(expiresAt)
+                .createdAt(LocalDateTime.now())
+                .createdBy(operator)
+                .build();
 
-        return repository.save(rule)
-            .doOnSuccess(saved -> {
-                auditLogService.log(operator, tenantId,
-                    "添加IP黑名单: " + ipAddress + 
-                    (durationMinutes != null ? ", 持续时间: " + durationMinutes + "分钟" : ""), 
-                    "IP_BLACKLIST_ADD", "SUCCESS", null);
-                log.warn("添加IP黑名单: ip={}, tenantId={}, duration={}, operator={}", 
-                    ipAddress, tenantId, durationMinutes, operator);
-            });
+        return repository.save(rule).doOnSuccess(saved -> {
+            auditLogService.log(
+                    operator,
+                    tenantId,
+                    "添加IP黑名单: " + ipAddress + (durationMinutes != null ? ", 持续时间: " + durationMinutes + "分钟" : ""),
+                    "IP_BLACKLIST_ADD",
+                    "SUCCESS",
+                    null);
+            log.warn(
+                    "添加IP黑名单: ip={}, tenantId={}, duration={}, operator={}",
+                    ipAddress,
+                    tenantId,
+                    durationMinutes,
+                    operator);
+        });
     }
 
     /**
@@ -197,11 +201,10 @@ public class IpAccessControlServiceImpl implements IpAccessControlService {
     @Override
     @CacheEvict(value = "ip-access-control", allEntries = true)
     public Mono<Void> removeFromWhitelist(String ipAddress, String tenantId) {
-        return repository.deleteByIpAddressAndTenantIdAndType(
-            ipAddress, tenantId, IpAccessControl.AccessControlType.WHITELIST
-        ).doOnSuccess(count -> 
-            log.info("从白名单移除IP: ip={}, tenantId={}, count={}", ipAddress, tenantId, count)
-        ).then();
+        return repository
+                .deleteByIpAddressAndTenantIdAndType(ipAddress, tenantId, IpAccessControl.AccessControlType.WHITELIST)
+                .doOnSuccess(count -> log.info("从白名单移除IP: ip={}, tenantId={}, count={}", ipAddress, tenantId, count))
+                .then();
     }
 
     /**
@@ -214,11 +217,10 @@ public class IpAccessControlServiceImpl implements IpAccessControlService {
     @Override
     @CacheEvict(value = "ip-access-control", allEntries = true)
     public Mono<Void> removeFromBlacklist(String ipAddress, String tenantId) {
-        return repository.deleteByIpAddressAndTenantIdAndType(
-            ipAddress, tenantId, IpAccessControl.AccessControlType.BLACKLIST
-        ).doOnSuccess(count -> 
-            log.info("从黑名单移除IP: ip={}, tenantId={}, count={}", ipAddress, tenantId, count)
-        ).then();
+        return repository
+                .deleteByIpAddressAndTenantIdAndType(ipAddress, tenantId, IpAccessControl.AccessControlType.BLACKLIST)
+                .doOnSuccess(count -> log.info("从黑名单移除IP: ip={}, tenantId={}, count={}", ipAddress, tenantId, count))
+                .then();
     }
 
     /**
@@ -229,8 +231,9 @@ public class IpAccessControlServiceImpl implements IpAccessControlService {
      */
     @Override
     public Flux<IpAccessControl> getWhitelist(String tenantId) {
-        return repository.findByTenantIdAndType(tenantId, IpAccessControl.AccessControlType.WHITELIST)
-            .sort(Comparator.comparing(IpAccessControl::getPriority));
+        return repository
+                .findByTenantIdAndType(tenantId, IpAccessControl.AccessControlType.WHITELIST)
+                .sort(Comparator.comparing(IpAccessControl::getPriority));
     }
 
     /**
@@ -241,8 +244,9 @@ public class IpAccessControlServiceImpl implements IpAccessControlService {
      */
     @Override
     public Flux<IpAccessControl> getBlacklist(String tenantId) {
-        return repository.findByTenantIdAndType(tenantId, IpAccessControl.AccessControlType.BLACKLIST)
-            .sort(Comparator.comparing(IpAccessControl::getPriority));
+        return repository
+                .findByTenantIdAndType(tenantId, IpAccessControl.AccessControlType.BLACKLIST)
+                .sort(Comparator.comparing(IpAccessControl::getPriority));
     }
 
     /**
@@ -253,10 +257,9 @@ public class IpAccessControlServiceImpl implements IpAccessControlService {
     @Override
     @CacheEvict(value = "ip-access-control", allEntries = true)
     public Mono<Long> cleanupExpiredRules() {
-        return repository.deleteExpired(LocalDateTime.now())
-            .doOnSuccess(count -> 
-                log.info("清理过期IP访问规则: count={}", count)
-            );
+        return repository
+                .deleteExpired(LocalDateTime.now())
+                .doOnSuccess(count -> log.info("清理过期IP访问规则: count={}", count));
     }
 
     /**
@@ -269,17 +272,16 @@ public class IpAccessControlServiceImpl implements IpAccessControlService {
     @Override
     @CacheEvict(value = "ip-access-control", allEntries = true)
     public Mono<Void> enableRule(Long ruleId, String operator) {
-        return repository.findById(ruleId)
-            .flatMap(rule -> {
-                rule.setEnabled(true);
-                rule.setUpdatedAt(LocalDateTime.now());
-                rule.setUpdatedBy(operator);
-                return repository.save(rule);
-            })
-            .doOnSuccess(rule -> 
-                log.info("启用IP访问规则: ruleId={}, operator={}", ruleId, operator)
-            )
-            .then();
+        return repository
+                .findById(ruleId)
+                .flatMap(rule -> {
+                    rule.setEnabled(true);
+                    rule.setUpdatedAt(LocalDateTime.now());
+                    rule.setUpdatedBy(operator);
+                    return repository.save(rule);
+                })
+                .doOnSuccess(rule -> log.info("启用IP访问规则: ruleId={}, operator={}", ruleId, operator))
+                .then();
     }
 
     /**
@@ -292,17 +294,16 @@ public class IpAccessControlServiceImpl implements IpAccessControlService {
     @Override
     @CacheEvict(value = "ip-access-control", allEntries = true)
     public Mono<Void> disableRule(Long ruleId, String operator) {
-        return repository.findById(ruleId)
-            .flatMap(rule -> {
-                rule.setEnabled(false);
-                rule.setUpdatedAt(LocalDateTime.now());
-                rule.setUpdatedBy(operator);
-                return repository.save(rule);
-            })
-            .doOnSuccess(rule -> 
-                log.info("禁用IP访问规则: ruleId={}, operator={}", ruleId, operator)
-            )
-            .then();
+        return repository
+                .findById(ruleId)
+                .flatMap(rule -> {
+                    rule.setEnabled(false);
+                    rule.setUpdatedAt(LocalDateTime.now());
+                    rule.setUpdatedBy(operator);
+                    return repository.save(rule);
+                })
+                .doOnSuccess(rule -> log.info("禁用IP访问规则: ruleId={}, operator={}", ruleId, operator))
+                .then();
     }
 
     /**
@@ -315,15 +316,19 @@ public class IpAccessControlServiceImpl implements IpAccessControlService {
     @Override
     @CacheEvict(value = "ip-access-control", allEntries = true)
     public Mono<Void> deleteRule(Long ruleId, String operator) {
-        return repository.findById(ruleId)
-            .flatMap(rule -> {
-                auditLogService.log(operator, rule.getTenantId(),
-                    "删除IP访问规则: " + rule.getIpAddress(), "IP_RULE_DELETE", "SUCCESS", null);
-                return repository.deleteById(ruleId);
-            })
-            .doOnSuccess(v -> 
-                log.info("删除IP访问规则: ruleId={}, operator={}", ruleId, operator)
-            );
+        return repository
+                .findById(ruleId)
+                .flatMap(rule -> {
+                    auditLogService.log(
+                            operator,
+                            rule.getTenantId(),
+                            "删除IP访问规则: " + rule.getIpAddress(),
+                            "IP_RULE_DELETE",
+                            "SUCCESS",
+                            null);
+                    return repository.deleteById(ruleId);
+                })
+                .doOnSuccess(v -> log.info("删除IP访问规则: ruleId={}, operator={}", ruleId, operator));
     }
 
     /**
@@ -336,16 +341,13 @@ public class IpAccessControlServiceImpl implements IpAccessControlService {
     @Override
     @CacheEvict(value = "ip-access-control", allEntries = true)
     public Mono<Long> batchImportRules(Flux<IpAccessControl> rules, String operator) {
-        return rules
-            .map(rule -> {
-                rule.setCreatedAt(LocalDateTime.now());
-                rule.setCreatedBy(operator);
-                return rule;
-            })
-            .flatMap(repository::save)
-            .count()
-            .doOnSuccess(count -> 
-                log.info("批量导入IP访问规则: count={}, operator={}", count, operator)
-            );
+        return rules.map(rule -> {
+                    rule.setCreatedAt(LocalDateTime.now());
+                    rule.setCreatedBy(operator);
+                    return rule;
+                })
+                .flatMap(repository::save)
+                .count()
+                .doOnSuccess(count -> log.info("批量导入IP访问规则: count={}, operator={}", count, operator));
     }
 }

@@ -1,12 +1,11 @@
 package com.apex.scaffold.authcenter.infrastructure.repository;
 
 import com.apex.scaffold.authcenter.domain.model.IpAccessControl;
+import java.time.LocalDateTime;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
-import java.time.LocalDateTime;
 
 /**
  * IP访问控制存储库
@@ -29,8 +28,8 @@ public interface IpAccessControlRepository extends ReactiveCrudRepository<IpAcce
     /**
      * 删除指定的IP规则
      */
-    Mono<Long> deleteByIpAddressAndTenantIdAndType(String ipAddress, String tenantId, 
-                                                     IpAccessControl.AccessControlType type);
+    Mono<Long> deleteByIpAddressAndTenantIdAndType(
+            String ipAddress, String tenantId, IpAccessControl.AccessControlType type);
 
     /**
      * 删除过期的规则

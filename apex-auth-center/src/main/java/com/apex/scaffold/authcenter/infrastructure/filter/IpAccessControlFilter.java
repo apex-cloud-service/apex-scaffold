@@ -2,6 +2,7 @@ package com.apex.scaffold.authcenter.infrastructure.filter;
 
 import com.apex.scaffold.authcenter.domain.service.IpAccessControlService;
 import com.apex.scaffold.common.audit.AuditLogService;
+import java.net.InetSocketAddress;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
@@ -12,11 +13,9 @@ import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
-import java.net.InetSocketAddress;
-
 /**
  * IP访问控制过滤器
- * 
+ *
  * 在所有请求处理之前执行IP访问控制检查
  * Order = -100 确保在认证过滤器之前执行
  * @author Apex Team
@@ -35,7 +34,7 @@ public class IpAccessControlFilter implements WebFilter {
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
         // 获取客户端IP
         String clientIp = getClientIp(exchange);
-        
+
         // 获取租户ID（从请求头或JWT中获取）
         String tenantId = getTenantId(exchange);
 
@@ -44,37 +43,46 @@ public class IpAccessControlFilter implements WebFilter {
             return chain.filter(exchange);
         }
 
-        return ipAccessControlService.isAccessAllowed(clientIp, tenantId)
-            .flatMap(allowed -> {
-                if (allowed) {
-                    // 允许访问，继续过滤链
-                    return chain.filter(exchange);
-                } else {
-                    // 拒绝访问，返回403
-                    log.warn("IP访问被拒绝: ip={}, tenantId={}, path={}", 
-                        clientIp, tenantId, exchange.getRequest().getPath());
-                    
-                    // 记录审计日志
-                    auditLogService.log("system", tenantId, "IP_ACCESS_DENIED",
-                        exchange.getRequest().getPath().value(), 
-                        "DENIED", 
-                        null).subscribe();
-                    
+        return ipAccessControlService
+                .isAccessAllowed(clientIp, tenantId)
+                .flatMap(allowed -> {
+                    if (allowed) {
+                        // 允许访问，继续过滤链
+                        return chain.filter(exchange);
+                    } else {
+                        // 拒绝访问，返回403
+                        log.warn(
+                                "IP访问被拒绝: ip={}, tenantId={}, path={}",
+                                clientIp,
+                                tenantId,
+                                exchange.getRequest().getPath());
+
+                        // 记录审计日志
+                        auditLogService
+                                .log(
+                                        "system",
+                                        tenantId,
+                                        "IP_ACCESS_DENIED",
+                                        exchange.getRequest().getPath().value(),
+                                        "DENIED",
+                                        null)
+                                .subscribe();
+
+                        exchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN);
+                        return exchange.getResponse().setComplete();
+                    }
+                })
+                .onErrorResume(error -> {
+                    // 发生错误时默认拒绝访问
+                    log.error("IP访问控制检查失败: ip={}, error={}", clientIp, error.getMessage(), error);
                     exchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN);
                     return exchange.getResponse().setComplete();
-                }
-            })
-            .onErrorResume(error -> {
-                // 发生错误时默认拒绝访问
-                log.error("IP访问控制检查失败: ip={}, error={}", clientIp, error.getMessage(), error);
-                exchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN);
-                return exchange.getResponse().setComplete();
-            });
+                });
     }
 
     /**
      * 获取客户端真实IP地址
-     * 
+     *
      * 优先级：
      * 1. X-Forwarded-For（反向代理）
      * 2. X-Real-IP（Nginx）
@@ -105,7 +113,7 @@ public class IpAccessControlFilter implements WebFilter {
 
     /**
      * 获取租户ID
-     * 
+     *
      * 优先级：
      * 1. X-Tenant-Id 请求头
      * 2. JWT Token中的租户信息（后续可扩展）
@@ -132,10 +140,10 @@ public class IpAccessControlFilter implements WebFilter {
      * 判断是否为白名单路径（不需要IP控制）
      */
     private boolean isWhitelistedPath(String path) {
-        return path.startsWith("/actuator/") ||
-               path.startsWith("/health") ||
-               path.startsWith("/metrics") ||
-               path.startsWith("/swagger-ui") ||
-               path.startsWith("/v3/api-docs");
+        return path.startsWith("/actuator/")
+                || path.startsWith("/health")
+                || path.startsWith("/metrics")
+                || path.startsWith("/swagger-ui")
+                || path.startsWith("/v3/api-docs");
     }
 }

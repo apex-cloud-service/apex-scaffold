@@ -159,10 +159,14 @@ public class DataSourceManagementService {
                         entity.setUsername(request.getUsername());
                         entity.setPassword(encryptedPassword);
                         entity.setMinIdle(request.getMinIdle() != null ? request.getMinIdle() : DEFAULT_MIN_IDLE);
-                        entity.setMaxPoolSize(request.getMaxPoolSize() != null ? request.getMaxPoolSize() : DEFAULT_MAX_POOL_SIZE);
+                        entity.setMaxPoolSize(
+                                request.getMaxPoolSize() != null ? request.getMaxPoolSize() : DEFAULT_MAX_POOL_SIZE);
                         entity.setConnectionTimeout(
-                                request.getConnectionTimeout() != null ? request.getConnectionTimeout() : DEFAULT_CONNECTION_TIMEOUT_MS);
-                        entity.setIdleTimeout(request.getIdleTimeout() != null ? request.getIdleTimeout() : DEFAULT_IDLE_TIMEOUT_MS);
+                                request.getConnectionTimeout() != null
+                                        ? request.getConnectionTimeout()
+                                        : DEFAULT_CONNECTION_TIMEOUT_MS);
+                        entity.setIdleTimeout(
+                                request.getIdleTimeout() != null ? request.getIdleTimeout() : DEFAULT_IDLE_TIMEOUT_MS);
                         entity.setStatus(1);
                         entity.setTenantId(tenantId);
                         return datasourceRepository.insert(entity);
@@ -203,15 +207,20 @@ public class DataSourceManagementService {
                                     existing.setUrl(request.getUrl());
                                     existing.setUsername(request.getUsername());
                                     existing.setPassword(encryptedPassword);
-                                    existing.setMinIdle(request.getMinIdle() != null ? request.getMinIdle() : DEFAULT_MIN_IDLE);
+                                    existing.setMinIdle(
+                                            request.getMinIdle() != null ? request.getMinIdle() : DEFAULT_MIN_IDLE);
                                     existing.setMaxPoolSize(
-                                            request.getMaxPoolSize() != null ? request.getMaxPoolSize() : DEFAULT_MAX_POOL_SIZE);
+                                            request.getMaxPoolSize() != null
+                                                    ? request.getMaxPoolSize()
+                                                    : DEFAULT_MAX_POOL_SIZE);
                                     existing.setConnectionTimeout(
                                             request.getConnectionTimeout() != null
                                                     ? request.getConnectionTimeout()
                                                     : 30000L);
                                     existing.setIdleTimeout(
-                                            request.getIdleTimeout() != null ? request.getIdleTimeout() : DEFAULT_IDLE_TIMEOUT_MS);
+                                            request.getIdleTimeout() != null
+                                                    ? request.getIdleTimeout()
+                                                    : DEFAULT_IDLE_TIMEOUT_MS);
                                     return datasourceRepository.update(existing);
                                 })
                                 .flatMap(rows -> {
@@ -343,10 +352,14 @@ public class DataSourceManagementService {
                         config.setUsername(entity.getUsername());
                         config.setPassword(plainPassword);
                         config.setMinimumIdle(entity.getMinIdle() != null ? entity.getMinIdle() : DEFAULT_MIN_IDLE);
-                        config.setMaximumPoolSize(entity.getMaxPoolSize() != null ? entity.getMaxPoolSize() : DEFAULT_MAX_POOL_SIZE);
+                        config.setMaximumPoolSize(
+                                entity.getMaxPoolSize() != null ? entity.getMaxPoolSize() : DEFAULT_MAX_POOL_SIZE);
                         config.setConnectionTimeout(
-                                entity.getConnectionTimeout() != null ? entity.getConnectionTimeout() : DEFAULT_CONNECTION_TIMEOUT_MS);
-                        config.setIdleTimeout(entity.getIdleTimeout() != null ? entity.getIdleTimeout() : DEFAULT_IDLE_TIMEOUT_MS);
+                                entity.getConnectionTimeout() != null
+                                        ? entity.getConnectionTimeout()
+                                        : DEFAULT_CONNECTION_TIMEOUT_MS);
+                        config.setIdleTimeout(
+                                entity.getIdleTimeout() != null ? entity.getIdleTimeout() : DEFAULT_IDLE_TIMEOUT_MS);
                         config.setPoolName("SysDatasource-" + entity.getId());
                         config.setAutoCommit(true);
                         config.setConnectionTestQuery("SELECT 1");

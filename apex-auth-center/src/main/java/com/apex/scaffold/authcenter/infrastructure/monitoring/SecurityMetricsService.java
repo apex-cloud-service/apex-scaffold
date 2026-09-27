@@ -3,16 +3,15 @@ package com.apex.scaffold.authcenter.infrastructure.monitoring;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-
 import java.time.Duration;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
 /**
  * 安全监控指标服务
- * 
+ *
  * 集成Prometheus暴露以下监控指标：
  * - 认证成功/失败次数
  * - 登录尝试次数
@@ -28,7 +27,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class SecurityMetricsService {
 
     private final MeterRegistry meterRegistry;
-    
+
     // 计数器
     private final Counter authSuccessCounter;
     private final Counter authFailureCounter;
@@ -37,12 +36,12 @@ public class SecurityMetricsService {
     private final Counter tokenRevokedCounter;
     private final Counter bruteForceDetectedCounter;
     private final Counter permissionDeniedCounter;
-    
+
     // 计时器
     private final Timer authenticationTimer;
     private final Timer tokenValidationTimer;
     private final Timer permissionCheckTimer;
-    
+
     // 实时统计
     private final ConcurrentHashMap<String, AtomicInteger> activeSessionsByUser;
     private final ConcurrentHashMap<String, AtomicInteger> failedLoginsByIp;
@@ -51,50 +50,45 @@ public class SecurityMetricsService {
         this.meterRegistry = meterRegistry;
         this.activeSessionsByUser = new ConcurrentHashMap<>();
         this.failedLoginsByIp = new ConcurrentHashMap<>();
-        
+
         // 初始化计数器
-        this.authSuccessCounter = Counter.builder("auth.success.total")
-            .description("认证成功总次数")
-            .register(meterRegistry);
-            
+        this.authSuccessCounter =
+                Counter.builder("auth.success.total").description("认证成功总次数").register(meterRegistry);
+
         this.authFailureCounter = Counter.builder("auth.failure.total")
-            .description("认证失败总次数")
-            .tag("reason", "invalid_credentials")
-            .register(meterRegistry);
-            
-        this.tokenIssuedCounter = Counter.builder("token.issued.total")
-            .description("Token颁发总次数")
-            .register(meterRegistry);
-            
+                .description("认证失败总次数")
+                .tag("reason", "invalid_credentials")
+                .register(meterRegistry);
+
+        this.tokenIssuedCounter =
+                Counter.builder("token.issued.total").description("Token颁发总次数").register(meterRegistry);
+
         this.tokenRefreshedCounter = Counter.builder("token.refreshed.total")
-            .description("Token刷新总次数")
-            .register(meterRegistry);
-            
-        this.tokenRevokedCounter = Counter.builder("token.revoked.total")
-            .description("Token撤销总次数")
-            .register(meterRegistry);
-            
+                .description("Token刷新总次数")
+                .register(meterRegistry);
+
+        this.tokenRevokedCounter =
+                Counter.builder("token.revoked.total").description("Token撤销总次数").register(meterRegistry);
+
         this.bruteForceDetectedCounter = Counter.builder("security.bruteforce.detected.total")
-            .description("检测到的暴力破解攻击次数")
-            .register(meterRegistry);
-            
+                .description("检测到的暴力破解攻击次数")
+                .register(meterRegistry);
+
         this.permissionDeniedCounter = Counter.builder("permission.denied.total")
-            .description("权限拒绝总次数")
-            .register(meterRegistry);
-        
+                .description("权限拒绝总次数")
+                .register(meterRegistry);
+
         // 初始化计时器
-        this.authenticationTimer = Timer.builder("auth.duration")
-            .description("认证耗时")
-            .register(meterRegistry);
-            
+        this.authenticationTimer =
+                Timer.builder("auth.duration").description("认证耗时").register(meterRegistry);
+
         this.tokenValidationTimer = Timer.builder("token.validation.duration")
-            .description("Token验证耗时")
-            .register(meterRegistry);
-            
-        this.permissionCheckTimer = Timer.builder("permission.check.duration")
-            .description("权限检查耗时")
-            .register(meterRegistry);
-        
+                .description("Token验证耗时")
+                .register(meterRegistry);
+
+        this.permissionCheckTimer =
+                Timer.builder("permission.check.duration").description("权限检查耗时").register(meterRegistry);
+
         // 注册Gauge指标
         meterRegistry.gauge("auth.active.sessions", activeSessionsByUser, map -> map.size());
         meterRegistry.gauge("auth.failed.logins.ips", failedLoginsByIp, map -> map.size());
@@ -109,18 +103,18 @@ public class SecurityMetricsService {
      */
     public void recordAuthSuccess(String userId, String tenantId, String method) {
         authSuccessCounter.increment();
-        
+
         Counter.builder("auth.success.by.method")
-            .tag("method", method)
-            .tag("tenant", tenantId)
-            .register(meterRegistry)
-            .increment();
-        
+                .tag("method", method)
+                .tag("tenant", tenantId)
+                .register(meterRegistry)
+                .increment();
+
         // 更新活跃会话数
-        activeSessionsByUser.computeIfAbsent(userId, k -> 
-            meterRegistry.gauge("auth.active.sessions.by.user", new AtomicInteger(0))
-        ).incrementAndGet();
-        
+        activeSessionsByUser
+                .computeIfAbsent(userId, k -> meterRegistry.gauge("auth.active.sessions.by.user", new AtomicInteger(0)))
+                .incrementAndGet();
+
         log.info("认证成功: userId={}, tenantId={}, method={}", userId, tenantId, method);
     }
 
@@ -133,23 +127,21 @@ public class SecurityMetricsService {
      */
     public void recordAuthFailure(String username, String reason, String ipAddress) {
         authFailureCounter.increment();
-        
+
         Counter.builder("auth.failure.by.reason")
-            .tag("reason", reason)
-            .register(meterRegistry)
-            .increment();
-        
+                .tag("reason", reason)
+                .register(meterRegistry)
+                .increment();
+
         // 记录失败IP
-        AtomicInteger failCount = failedLoginsByIp.computeIfAbsent(ipAddress, k -> 
-            new AtomicInteger(0)
-        );
+        AtomicInteger failCount = failedLoginsByIp.computeIfAbsent(ipAddress, k -> new AtomicInteger(0));
         failCount.incrementAndGet();
-        
+
         // 清理旧的失败记录（超过100个IP时清理计数为0的）
         if (failedLoginsByIp.size() > 100) {
             failedLoginsByIp.entrySet().removeIf(entry -> entry.getValue().get() == 0);
         }
-        
+
         log.warn("认证失败: username={}, reason={}, ip={}", username, reason, ipAddress);
     }
 
@@ -161,11 +153,11 @@ public class SecurityMetricsService {
      */
     public void recordTokenIssued(String userId, String tokenType) {
         tokenIssuedCounter.increment();
-        
+
         Counter.builder("token.issued.by.type")
-            .tag("type", tokenType)
-            .register(meterRegistry)
-            .increment();
+                .tag("type", tokenType)
+                .register(meterRegistry)
+                .increment();
     }
 
     /**
@@ -185,11 +177,11 @@ public class SecurityMetricsService {
      */
     public void recordTokenRevoked(String userId, String reason) {
         tokenRevokedCounter.increment();
-        
+
         Counter.builder("token.revoked.by.reason")
-            .tag("reason", reason)
-            .register(meterRegistry)
-            .increment();
+                .tag("reason", reason)
+                .register(meterRegistry)
+                .increment();
     }
 
     /**
@@ -200,12 +192,12 @@ public class SecurityMetricsService {
      */
     public void recordBruteForceDetected(String identifier, String type) {
         bruteForceDetectedCounter.increment();
-        
+
         Counter.builder("security.bruteforce.by.type")
-            .tag("type", type)
-            .register(meterRegistry)
-            .increment();
-        
+                .tag("type", type)
+                .register(meterRegistry)
+                .increment();
+
         log.error("检测到暴力破解攻击: identifier={}, type={}", identifier, type);
     }
 
@@ -218,13 +210,13 @@ public class SecurityMetricsService {
      */
     public void recordPermissionDenied(String userId, String resource, String action) {
         permissionDeniedCounter.increment();
-        
+
         Counter.builder("permission.denied.by.resource")
-            .tag("resource", resource)
-            .tag("action", action)
-            .register(meterRegistry)
-            .increment();
-        
+                .tag("resource", resource)
+                .tag("action", action)
+                .register(meterRegistry)
+                .increment();
+
         log.warn("权限拒绝: userId={}, resource={}, action={}", userId, resource, action);
     }
 
@@ -236,11 +228,11 @@ public class SecurityMetricsService {
      */
     public void recordAuthDuration(Duration duration, boolean success) {
         authenticationTimer.record(duration);
-        
+
         Timer.builder("auth.duration.by.result")
-            .tag("success", String.valueOf(success))
-            .register(meterRegistry)
-            .record(duration);
+                .tag("success", String.valueOf(success))
+                .register(meterRegistry)
+                .record(duration);
     }
 
     /**
@@ -251,11 +243,11 @@ public class SecurityMetricsService {
      */
     public void recordTokenValidationDuration(Duration duration, boolean valid) {
         tokenValidationTimer.record(duration);
-        
+
         Timer.builder("token.validation.duration.by.result")
-            .tag("valid", String.valueOf(valid))
-            .register(meterRegistry)
-            .record(duration);
+                .tag("valid", String.valueOf(valid))
+                .register(meterRegistry)
+                .record(duration);
     }
 
     /**
@@ -266,11 +258,11 @@ public class SecurityMetricsService {
      */
     public void recordPermissionCheckDuration(Duration duration, boolean allowed) {
         permissionCheckTimer.record(duration);
-        
+
         Timer.builder("permission.check.duration.by.result")
-            .tag("allowed", String.valueOf(allowed))
-            .register(meterRegistry)
-            .record(duration);
+                .tag("allowed", String.valueOf(allowed))
+                .register(meterRegistry)
+                .record(duration);
     }
 
     /**

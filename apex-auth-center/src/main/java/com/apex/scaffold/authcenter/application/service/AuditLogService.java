@@ -35,8 +35,8 @@ public interface AuditLogService {
      * @param entity 关联实体对象（可为null）
      * @return 完成信号
      */
-    default Mono<Void> log(String eventType, String userId, String tenantId, 
-                           String action, String resourceId, Object entity) {
+    default Mono<Void> log(
+            String eventType, String userId, String tenantId, String action, String resourceId, Object entity) {
         Long userIdLong = null;
         try {
             if (userId != null && !userId.isEmpty()) {
@@ -45,18 +45,18 @@ public interface AuditLogService {
         } catch (NumberFormatException e) {
             // userId 不是数字格式，保持为 null
         }
-        
+
         AuditLogEntity auditLog = AuditLogEntity.builder()
-            .tenantId(tenantId)
-            .userId(userIdLong)
-            .username(userId)
-            .eventType(eventType)
-            .eventStatus("SUCCESS")
-            .action(action)
-            .resourceId(resourceId)
-            .riskLevel("MEDIUM")
-            .build();
-            
+                .tenantId(tenantId)
+                .userId(userIdLong)
+                .username(userId)
+                .eventType(eventType)
+                .eventStatus("SUCCESS")
+                .action(action)
+                .resourceId(resourceId)
+                .riskLevel("MEDIUM")
+                .build();
+
         return log(auditLog).then();
     }
 
