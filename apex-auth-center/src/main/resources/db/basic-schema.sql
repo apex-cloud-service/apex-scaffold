@@ -125,9 +125,18 @@ CREATE TABLE IF NOT EXISTS auth_token (
     expires_at TIMESTAMP,
     revoked INT DEFAULT 0,
     revoked_at TIMESTAMP,
+    revoked_by VARCHAR(4096),
+    revoke_reason VARCHAR(4096),
+    last_used_at TIMESTAMP,
+    use_count INT,
     device_id VARCHAR(4096),
     client_ip VARCHAR(4096),
     user_agent VARCHAR(4096),
+    token_hash VARCHAR(4096),
+    token_iv VARCHAR(4096),
+    token_family VARCHAR(4096),
+    previous_jti VARCHAR(4096),
+    rotation_count INT,
     created_at TIMESTAMP
 );
 
@@ -171,4 +180,74 @@ CREATE TABLE IF NOT EXISTS auth_user_role (
     user_id BIGINT,
     role_id BIGINT,
     created_at TIMESTAMP
+);
+
+-- ===== R2DBC 仓储实体表（basic profile 下与上方 JDBC 共享同一 H2 内存库） =====
+
+CREATE TABLE IF NOT EXISTS ip_access_control (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    tenant_id VARCHAR(4096),
+    ip_address VARCHAR(4096),
+    type VARCHAR(4096),
+    description VARCHAR(4096),
+    enabled BOOLEAN,
+    priority INT,
+    expires_at TIMESTAMP,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP,
+    created_by VARCHAR(4096),
+    updated_by VARCHAR(4096)
+);
+
+CREATE TABLE IF NOT EXISTS biometric_auth (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id VARCHAR(4096),
+    tenant_id VARCHAR(4096),
+    type VARCHAR(4096),
+    template_id VARCHAR(4096),
+    device_id VARCHAR(4096),
+    device_name VARCHAR(4096),
+    public_key VARCHAR(4096),
+    status VARCHAR(4096),
+    last_auth_at TIMESTAMP,
+    failed_attempts INT,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS device_trust (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id VARCHAR(4096),
+    tenant_id VARCHAR(4096),
+    device_id VARCHAR(4096),
+    device_name VARCHAR(4096),
+    device_type VARCHAR(4096),
+    device_fingerprint VARCHAR(4096),
+    trust_level VARCHAR(4096),
+    status VARCHAR(4096),
+    first_auth_at TIMESTAMP,
+    last_auth_at TIMESTAMP,
+    last_ip VARCHAR(4096),
+    last_location VARCHAR(4096),
+    auth_count INT,
+    risk_score INT,
+    metadata VARCHAR(4096),
+    expires_at TIMESTAMP,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS mfa_config (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id VARCHAR(4096),
+    tenant_id VARCHAR(4096),
+    type VARCHAR(4096),
+    status VARCHAR(4096),
+    secret VARCHAR(4096),
+    backup_codes VARCHAR(4096),
+    device_info VARCHAR(4096),
+    last_verified_at TIMESTAMP,
+    failed_attempts INT,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
 );

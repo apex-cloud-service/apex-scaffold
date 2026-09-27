@@ -2,6 +2,7 @@ package com.apex.scaffold.authcenter.infrastructure.repository;
 
 import com.apex.scaffold.authcenter.domain.model.IpAccessControl;
 import java.time.LocalDateTime;
+import org.springframework.data.r2dbc.repository.Query;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
@@ -32,8 +33,9 @@ public interface IpAccessControlRepository extends ReactiveCrudRepository<IpAcce
             String ipAddress, String tenantId, IpAccessControl.AccessControlType type);
 
     /**
-     * 删除过期的规则
+     * 删除过期的规则（方法名无法派生查询，使用显式SQL）
      */
+    @Query("DELETE FROM ip_access_control WHERE expires_at < :now")
     Mono<Long> deleteExpired(LocalDateTime now);
 
     /**

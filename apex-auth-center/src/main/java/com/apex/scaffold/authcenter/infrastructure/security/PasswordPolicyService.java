@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 /**
@@ -22,7 +21,6 @@ import reactor.core.publisher.Mono;
  * @since 1.2.0
  */
 @Slf4j
-@Service
 public class PasswordPolicyService {
 
     // 密码长度限制

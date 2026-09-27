@@ -16,7 +16,6 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
-import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 /**
@@ -45,7 +44,6 @@ import reactor.core.publisher.Mono;
  * @since 2026-09-25
  */
 @Slf4j
-@Service
 public class JwtKeyRotationService {
 
     private static final String REDIS_KEY_PREFIX = "jwt:keys:";

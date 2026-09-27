@@ -11,7 +11,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import javax.crypto.SecretKey;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Service;
 
 /**
  * JWT密钥轮换服务
@@ -38,7 +37,6 @@ import org.springframework.stereotype.Service;
  * @since 2026-09-25
  */
 @Slf4j
-@Service
 public class JwtKeyRotationService {
 
     /**
