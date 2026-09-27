@@ -21,11 +21,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 /**
- * 数据源动态切换端到端测试（双 MySQL schema + Baomidou DynamicRoutingDataSource）。
+ * 数据源动态切换端到端测试（双 H2 内存库 + Baomidou DynamicRoutingDataSource）。
  *
  * <p>验证自定义 {@link DataSourceContext} + Baomidou 切换引擎的路由正确性：
  * 主库/从库（探针表标记值不同）在不同切换状态下的实际选库结果，与
- * {@code DataSourceSwitchAspect} 的切换调用完全一致（push 两处 / pop 两处）。</p>
+ * {@code DataSourceSwitchAspect} 的切换调用完全一致（push 两处 / pop 两处）。
+ * 两个独立 H2 内存库等价替代原双 MySQL schema，保证无外部数据库时自包含运行。</p>
  *
  * @author Apex Team
  */
@@ -38,8 +39,8 @@ class DataSourceSwitchE2eTest {
 
     @BeforeAll
     static void setUpRoutingDataSource() throws Exception {
-        masterDs = mysqlDataSource("datasource_master", "MASTER");
-        slaveDs = mysqlDataSource("datasource_slave", "SLAVE");
+        masterDs = h2DataSource("ds_master_test", "MASTER");
+        slaveDs = h2DataSource("ds_slave_test", "SLAVE");
 
         DynamicDataSourceProvider provider = () -> {
             Map<String, DataSource> map = new HashMap<>();
@@ -135,28 +136,15 @@ class DataSourceSwitchE2eTest {
     }
 
     /**
-     * 创建带探针表（标记值）的 MySQL 独立 schema 数据源。
+     * 创建带探针表（标记值）的 H2 内存库独立数据源（MySQL 兼容模式，库名唯一互不干扰）。
      */
-    private static HikariDataSource mysqlDataSource(String dbName, String marker) throws Exception {
-        String host = System.getProperty("DB_MASTER_HOST", "127.0.0.1");
-        String port = System.getProperty("DB_MASTER_PORT", "3306");
-        String user = System.getProperty("DB_MASTER_USERNAME", "root");
-        String pass = System.getProperty("DB_MASTER_PASSWORD", "apex-root");
-        String fullDbName = "apex_unit_ds_" + dbName;
-        String serverUrl = "jdbc:mysql://" + host + ":" + port
-                + "/?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai"
-                + "&allowPublicKeyRetrieval=true&useSSL=false";
-        try (Connection admin = java.sql.DriverManager.getConnection(serverUrl, user, pass);
-                Statement create = admin.createStatement()) {
-            create.execute("CREATE DATABASE IF NOT EXISTS `" + fullDbName + "`");
-        }
+    private static HikariDataSource h2DataSource(String dbName, String marker) throws Exception {
         HikariDataSource ds = new HikariDataSource();
-        ds.setJdbcUrl("jdbc:mysql://" + host + ":" + port + "/" + fullDbName
-                + "?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai"
-                + "&allowPublicKeyRetrieval=true&useSSL=false");
-        ds.setUsername(user);
-        ds.setPassword(pass);
-        ds.setDriverClassName("com.mysql.cj.jdbc.Driver");
+        ds.setJdbcUrl("jdbc:h2:mem:" + dbName + ";MODE=MySQL;DATABASE_TO_LOWER=TRUE"
+                + ";CASE_INSENSITIVE_IDENTIFIERS=TRUE;DB_CLOSE_DELAY=-1");
+        ds.setUsername("sa");
+        ds.setPassword("");
+        ds.setDriverClassName("org.h2.Driver");
         try (Connection connection = ds.getConnection();
                 Statement statement = connection.createStatement()) {
             statement.execute("DROP TABLE IF EXISTS routing_probe");

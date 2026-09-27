@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -85,7 +86,8 @@ class OutboxIntegrationTest {
         mqProducerService.sendSyncWithOutbox(MqConstant.TOPIC_USER, MqConstant.TAG_USER_REGISTER, message);
 
         ArgumentCaptor<MessageOutboxEntity> insertCaptor = ArgumentCaptor.forClass(MessageOutboxEntity.class);
-        verify(messageOutboxMapper).insert(insertCaptor.capture());
+        // append 经 BlockingIoSchedulers.jdbc() 异步落库，必须带超时等待，避免套件冷启动下的竞速失败
+        verify(messageOutboxMapper, timeout(2000)).insert(insertCaptor.capture());
         MessageOutboxEntity persisted = insertCaptor.getValue();
         assertThat(persisted.getTopic()).isEqualTo(MqConstant.TOPIC_USER);
         assertThat(persisted.getTag()).isEqualTo(MqConstant.TAG_USER_REGISTER);
@@ -93,7 +95,7 @@ class OutboxIntegrationTest {
         assertThat(persisted.getPayload()).contains("test-user-123");
         assertThat(persisted.getMessageId()).isNotBlank();
 
-        verify(messageOutboxMapper).update(isNull(), any());
+        verify(messageOutboxMapper, timeout(2000)).update(isNull(), any());
     }
 
     /**
@@ -115,7 +117,7 @@ class OutboxIntegrationTest {
         mqProducerService.sendAsyncWithFallback("INVALID_TOPIC", MqConstant.TAG_USER_LOGIN, message);
 
         ArgumentCaptor<MessageOutboxEntity> insertCaptor = ArgumentCaptor.forClass(MessageOutboxEntity.class);
-        verify(messageOutboxMapper).insert(insertCaptor.capture());
+        verify(messageOutboxMapper, timeout(2000)).insert(insertCaptor.capture());
         MessageOutboxEntity persisted = insertCaptor.getValue();
         assertThat(persisted.getTopic()).isEqualTo("INVALID_TOPIC");
         assertThat(persisted.getStatus()).isEqualTo(MessageOutboxEntity.Status.PENDING);

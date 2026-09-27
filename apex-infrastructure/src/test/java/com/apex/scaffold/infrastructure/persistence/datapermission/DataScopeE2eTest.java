@@ -28,10 +28,11 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 /**
- * 数据权限拦截器端到端测试（MySQL + 真实 MyBatis-Plus 执行）。
+ * 数据权限拦截器端到端测试（H2 内存库 MySQL 兼容模式 + 真实 MyBatis-Plus 执行）。
  *
  * <p>验证完整的"装配上下文 → 拦截器改写 SQL → 数据库执行"链路：
- * 不同数据权限范围下 {@code sys_user} 查询结果被正确过滤，且分页/未装配场景不受影响。</p>
+ * 不同数据权限范围下 {@code sys_user} 查询结果被正确过滤，且分页/未装配场景不受影响。
+ * H2 内存库替代外部 MySQL，保证无数据库环境下测试自包含运行。</p>
  *
  * <p>该测试为同步执行路径（查询与装配同线程），是 MyBatis-Plus 拦截器的标准生效方式；
  * 响应式应用的线程切换注意事项见 {@code docs/DATA_SCOPE.md}。</p>
@@ -46,25 +47,15 @@ class DataScopeE2eTest {
 
     @BeforeAll
     static void setUpFactory() throws Exception {
-        String host = System.getProperty("DB_MASTER_HOST", "127.0.0.1");
-        String port = System.getProperty("DB_MASTER_PORT", "3306");
-        String user = System.getProperty("DB_MASTER_USERNAME", "root");
-        String pass = System.getProperty("DB_MASTER_PASSWORD", "apex-root");
-        String dbName = "apex_unit_datascope";
-        String serverUrl = "jdbc:mysql://" + host + ":" + port
-                + "/?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai"
-                + "&allowPublicKeyRetrieval=true&useSSL=false";
-        try (Connection admin = java.sql.DriverManager.getConnection(serverUrl, user, pass);
-                Statement create = admin.createStatement()) {
-            create.execute("CREATE DATABASE IF NOT EXISTS `" + dbName + "`");
-        }
+        // 使用 H2 内存库（MySQL 兼容模式）替代外部 MySQL，保证无数据库环境下测试自包含运行：
+        // - DB_CLOSE_DELAY=-1：连接池关闭连接后数据库保留，随 JVM 生命周期存续；
+        // - DATABASE_TO_LOWER/CASE_INSENSITIVE_IDENTIFIERS：与 MySQL 大小写行为对齐。
         dataSource = new HikariDataSource();
-        dataSource.setJdbcUrl("jdbc:mysql://" + host + ":" + port + "/" + dbName
-                + "?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai"
-                + "&allowPublicKeyRetrieval=true&useSSL=false");
-        dataSource.setUsername(user);
-        dataSource.setPassword(pass);
-        dataSource.setDriverClassName("com.mysql.cj.jdbc.Driver");
+        dataSource.setJdbcUrl("jdbc:h2:mem:data_scope_test;MODE=MySQL;DATABASE_TO_LOWER=TRUE"
+                + ";CASE_INSENSITIVE_IDENTIFIERS=TRUE;DB_CLOSE_DELAY=-1");
+        dataSource.setUsername("sa");
+        dataSource.setPassword("");
+        dataSource.setDriverClassName("org.h2.Driver");
 
         try (Connection conn = dataSource.getConnection();
                 Statement st = conn.createStatement()) {

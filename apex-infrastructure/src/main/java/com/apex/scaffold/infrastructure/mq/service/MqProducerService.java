@@ -279,13 +279,10 @@ public class MqProducerService {
         messageOutboxService.append(outbox).block(Duration.ofSeconds(SYNC_SEND_TIMEOUT_MS));
         try {
             SendResult result = sendSync(topic, tag, message);
-            messageOutboxService
-                    .markAsDelivered(outbox.getMessageId())
-                    .block(Duration.ofSeconds(SYNC_SEND_TIMEOUT_MS));
+            messageOutboxService.markAsDelivered(outbox.getMessageId()).block(Duration.ofSeconds(SYNC_SEND_TIMEOUT_MS));
             return result;
         } catch (RuntimeException e) {
-            log.error("消息发送失败，发件箱记录保留 PENDING 状态待调度重试: messageId={}, topic: {}",
-                    outbox.getMessageId(), topic, e);
+            log.error("消息发送失败，发件箱记录保留 PENDING 状态待调度重试: messageId={}, topic: {}", outbox.getMessageId(), topic, e);
             throw e;
         }
     }
@@ -343,13 +340,10 @@ public class MqProducerService {
      * 发送失败兜底：将消息落入发件箱（PENDING），由发件箱调度器重试投递。
      */
     private void fallbackToOutbox(MessageOutboxEntity outbox, Throwable cause) {
-        log.error("消息发送失败，已落入发件箱待重试: messageId={}, topic: {}",
-                outbox.getMessageId(), outbox.getTopic(), cause);
+        log.error("消息发送失败，已落入发件箱待重试: messageId={}, topic: {}", outbox.getMessageId(), outbox.getTopic(), cause);
         messageOutboxService
                 .append(outbox)
-                .subscribe(
-                        saved -> { },
-                        err -> log.error("发件箱落库失败: messageId={}", outbox.getMessageId(), err));
+                .subscribe(saved -> {}, err -> log.error("发件箱落库失败: messageId={}", outbox.getMessageId(), err));
     }
 
     private String destination(String topic, String tag) {

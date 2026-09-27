@@ -12,25 +12,22 @@ import org.junit.jupiter.api.Test;
 /**
  * P6Spy 集成契约测试。
  *
- * <p>验证 dev 环境 SQL 日志代理的基础设施可用性：
+ * <p>验证 SQL 日志代理的基础设施可用性：
  * <ul>
  *   <li>{@code spy.properties} 存在于 classpath（p6spy 无配置则无法初始化代理）</li>
- *   <li>{@link P6SpyDriver} 可加载并代理真实驱动（dev 为 MySQL，见 spy.properties driverlist）</li>
+ *   <li>{@link P6SpyDriver} 可加载并按 URL 前缀自动委派真实驱动
+ *       （spy.properties driverlist 注册 MySQL 驱动供 dev 使用，H2 经 DriverManager SPI 自动发现）</li>
  *   <li>经 {@code jdbc:p6spy:} URL 能真实执行 SQL 并取回结果</li>
  * </ul>
  *
- * <p>不依赖 Spring 上下文，纯 JDBC 层验证，快速且无外部依赖。
+ * <p>不依赖 Spring 上下文与外部数据库，纯 JDBC 层验证：探针经 P6Spy 代理 H2 内存库
+ * （MySQL 兼容模式）执行，验证代理层转发与 SQL 执行链路本身。
  */
 class P6SpyIntegrationContractTest {
 
-    /** dev 数据源 URL（与 application-dev.yml 保持一致，经 P6Spy 代理 MySQL）。 */
-    private static final String DEV_URL = "jdbc:p6spy:mysql://127.0.0.1:3306/apex_data"
-            + "?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai"
-            + "&allowPublicKeyRetrieval=true&useSSL=false";
-    /** dev 数据库凭据（与 application-dev.yml 默认值一致，可经环境变量覆盖）。 */
-    private static final String DEV_USER = System.getenv().getOrDefault("DB_MASTER_USERNAME", "root");
-
-    private static final String DEV_PASSWORD = System.getenv().getOrDefault("DB_MASTER_PASSWORD", "apex-root");
+    /** 探针 URL：经 P6Spy 代理 H2 内存库（MySQL 兼容模式），无外部依赖。 */
+    private static final String PROBE_URL = "jdbc:p6spy:h2:mem:p6spy_contract_test;MODE=MySQL"
+            + ";DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE";
 
     @Test
     void spyPropertiesIsPresentOnClasspath() {
@@ -47,10 +44,10 @@ class P6SpyIntegrationContractTest {
 
     @Test
     void p6SpyDriverProxiesRealJdbcUrl() throws Exception {
-        // driverlist 中注册的 MySQL 驱动必须可用（P6SpyDriver 按 URL 前缀自动委派）
+        // P6SpyDriver 按 URL 前缀自动委派真实驱动（H2 经 DriverManager SPI 发现）
         assertThat(P6SpyDriver.class).isNotNull();
 
-        try (Connection conn = DriverManager.getConnection(DEV_URL, DEV_USER, DEV_PASSWORD);
+        try (Connection conn = DriverManager.getConnection(PROBE_URL, "sa", "");
                 Statement stmt = conn.createStatement()) {
             stmt.execute("CREATE TABLE IF NOT EXISTS p6spy_probe (id INT PRIMARY KEY, name VARCHAR(32))");
             stmt.execute("DELETE FROM p6spy_probe");

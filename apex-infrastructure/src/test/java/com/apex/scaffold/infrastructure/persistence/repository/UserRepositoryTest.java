@@ -43,25 +43,15 @@ class UserRepositoryTest {
 
     @BeforeAll
     static void setUpFactory() throws Exception {
-        String host = System.getProperty("DB_MASTER_HOST", "127.0.0.1");
-        String port = System.getProperty("DB_MASTER_PORT", "3306");
-        String user = System.getProperty("DB_MASTER_USERNAME", "root");
-        String pass = System.getProperty("DB_MASTER_PASSWORD", "apex-root");
-        String dbName = "apex_unit_userrepository";
-        String serverUrl = "jdbc:mysql://" + host + ":" + port
-                + "/?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai"
-                + "&allowPublicKeyRetrieval=true&useSSL=false";
-        try (Connection admin = java.sql.DriverManager.getConnection(serverUrl, user, pass);
-                Statement create = admin.createStatement()) {
-            create.execute("CREATE DATABASE IF NOT EXISTS `" + dbName + "`");
-        }
+        // 使用 H2 内存库（MySQL 兼容模式）替代外部 MySQL，保证无数据库环境下测试自包含运行：
+        // - DB_CLOSE_DELAY=-1：连接池关闭连接后数据库保留，随 JVM 生命周期存续；
+        // - DATABASE_TO_LOWER/CASE_INSENSITIVE_IDENTIFIERS：与 MySQL 大小写行为对齐。
         dataSource = new HikariDataSource();
-        dataSource.setJdbcUrl("jdbc:mysql://" + host + ":" + port + "/" + dbName
-                + "?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai"
-                + "&allowPublicKeyRetrieval=true&useSSL=false");
-        dataSource.setUsername(user);
-        dataSource.setPassword(pass);
-        dataSource.setDriverClassName("com.mysql.cj.jdbc.Driver");
+        dataSource.setJdbcUrl("jdbc:h2:mem:user_repo_test;MODE=MySQL;DATABASE_TO_LOWER=TRUE"
+                + ";CASE_INSENSITIVE_IDENTIFIERS=TRUE;DB_CLOSE_DELAY=-1");
+        dataSource.setUsername("sa");
+        dataSource.setPassword("");
+        dataSource.setDriverClassName("org.h2.Driver");
 
         try (Connection connection = dataSource.getConnection();
                 Statement statement = connection.createStatement()) {
