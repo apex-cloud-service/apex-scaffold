@@ -9,10 +9,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.PathItem;
 import io.swagger.v3.oas.models.Paths;
-import io.swagger.v3.oas.models.media.Schema;
-import io.swagger.v3.oas.models.parameters.Parameter;
 import io.swagger.v3.oas.models.responses.ApiResponses;
-import io.swagger.v3.oas.models.Components;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayDeque;
@@ -171,8 +168,7 @@ class RouterOpenApiCoverageTest {
         for (RouterOperation route : documentedOperations()) {
             String opId = route.operation().operationId();
             io.swagger.v3.oas.models.Operation operation = findOperation(openApi, opId);
-            boolean isGetOrDelete = route.method()[0] == RequestMethod.GET
-                    || route.method()[0] == RequestMethod.DELETE;
+            boolean isGetOrDelete = route.method()[0] == RequestMethod.GET || route.method()[0] == RequestMethod.DELETE;
             if (isGetOrDelete && !declaredBodyOps.contains(opId)) {
                 assertThat(operation.getRequestBody())
                         .as(opId + " GET/DELETE 不应有请求体")
@@ -182,9 +178,7 @@ class RouterOpenApiCoverageTest {
             if (!declaredBodyOps.contains(opId)) {
                 continue;
             }
-            assertThat(operation.getRequestBody())
-                    .as(opId + " 应声明请求体")
-                    .isNotNull();
+            assertThat(operation.getRequestBody()).as(opId + " 应声明请求体").isNotNull();
             assertThat(operation.getRequestBody().getContent())
                     .as(opId + " 请求体应声明内容")
                     .isNotNull();
@@ -220,9 +214,7 @@ class RouterOpenApiCoverageTest {
             String opId = route.operation().operationId();
             io.swagger.v3.oas.models.Operation operation = findOperation(openApi, opId);
             String successCode = "deleteCurrentUser".equals(opId) ? "202" : "200";
-            assertThat(operation.getResponses())
-                    .as(opId + " 应有成功响应")
-                    .containsKey(successCode);
+            assertThat(operation.getResponses()).as(opId + " 应有成功响应").containsKey(successCode);
             var content = operation.getResponses().get(successCode).getContent();
             assertThat(content).as(opId + " 成功响应应有内容").isNotNull();
             if (sseOps.contains(opId)) {
@@ -279,9 +271,7 @@ class RouterOpenApiCoverageTest {
             String opId = entry.getKey();
             io.swagger.v3.oas.models.Operation operation = findOperation(openApi, opId);
             assertThat(operation).as(opId + " 应存在于文档中").isNotNull();
-            assertThat(operation.getParameters())
-                    .as(opId + " 应声明查询参数")
-                    .isNotNull();
+            assertThat(operation.getParameters()).as(opId + " 应声明查询参数").isNotNull();
             for (Object param : entry.getValue()) {
                 String name = (String) param.getClass().getMethod("name").invoke(param);
                 assertThat(operation.getParameters())

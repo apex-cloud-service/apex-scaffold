@@ -3,8 +3,8 @@ package com.apex.scaffold.infrastructure.office.client.dingtalk;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.domain.office.OfficePlatform;
+import com.apex.scaffold.infrastructure.office.client.AbstractOfficeApiSupport;
 import com.apex.scaffold.infrastructure.office.client.ApprovalClient;
-import com.apex.scaffold.infrastructure.office.client.OfficeApiSupport;
 import com.apex.scaffold.infrastructure.office.config.OfficePlatformProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.HashMap;
@@ -13,8 +13,15 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+/**
+ * 钉钉审批 API 客户端。
+ *
+ * @author Apex Team
+ * @version 1.0.0
+ * @since 1.3.0
+ */
 @Component("dingtalkApprovalClient")
-public class DingtalkApprovalClient extends OfficeApiSupport implements ApprovalClient {
+public class DingtalkApprovalClient extends AbstractOfficeApiSupport implements ApprovalClient {
     private final ObjectMapper objectMapper;
 
     public DingtalkApprovalClient(
@@ -26,7 +33,7 @@ public class DingtalkApprovalClient extends OfficeApiSupport implements Approval
     @Override
     public Mono<String> createApproval(
             String templateId, String initiatorId, String[] approverIds, Map<String, Object> formData, String title) {
-        Map<String, Object> body = new HashMap<>();
+        Map<String, Object> body = new HashMap<>(4);
         body.put("processCode", required(templateId, "钉钉 processCode"));
         body.put("originatorUserId", required(initiatorId, "钉钉 initiatorId"));
         body.put("title", required(title, "钉钉审批标题"));

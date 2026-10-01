@@ -242,8 +242,7 @@ public class AuthHandler extends BaseHandler {
      * @param request 服务器请求对象，包含 {@code Authorization} 请求头（Bearer Token）
      * @return 包含退出结果的响应对象，成功时返回成功信息
      */
-    @Operation(
-            operationId = "authLogout", summary = "退出登录", description = "使当前Token失效，清除用户登录态")
+    @Operation(operationId = "authLogout", summary = "退出登录", description = "使当前Token失效，清除用户登录态")
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",
@@ -282,8 +281,7 @@ public class AuthHandler extends BaseHandler {
      * @param request 服务器请求对象，包含 {@code Authorization} 请求头和手机号授权凭证（JSON 格式）
      * @return 包含绑定结果的响应对象，成功时返回已绑定的手机号
      */
-    @Operation(
-            operationId = "bindPhone", summary = "绑定微信手机号", description = "获取并绑定用户微信手机号")
+    @Operation(operationId = "bindPhone", summary = "绑定微信手机号", description = "获取并绑定用户微信手机号")
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",
@@ -318,10 +316,7 @@ public class AuthHandler extends BaseHandler {
      * @param request 服务器请求对象，包含注册信息（JSON格式）
      * @return 包含注册结果和登录令牌的响应对象
      */
-    @Operation(
-            operationId = "authRegister",
-            summary = "用户注册",
-            description = "使用登录或微信绑定流程签发的一次性票据完成注册，注册成功后返回登录令牌")
+    @Operation(operationId = "authRegister", summary = "用户注册", description = "使用登录或微信绑定流程签发的一次性票据完成注册，注册成功后返回登录令牌")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
             required = true,
             description = "注册请求信息",
@@ -361,10 +356,7 @@ public class AuthHandler extends BaseHandler {
      * @param request 服务器请求对象，包含微信绑定手机号信息（JSON格式）
      * @return 包含绑定或注册票据的响应对象
      */
-    @Operation(
-            operationId = "bindWechatPhone",
-            summary = "微信绑定手机号",
-            description = "微信未绑定账号时验证手机号，已注册则绑定登录，未注册则返回注册票据")
+    @Operation(operationId = "bindWechatPhone", summary = "微信绑定手机号", description = "微信未绑定账号时验证手机号，已注册则绑定登录，未注册则返回注册票据")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
             required = true,
             description = "微信绑定手机号请求信息",
@@ -406,10 +398,7 @@ public class AuthHandler extends BaseHandler {
      * @param request 服务器请求对象，包含手机号信息（JSON 格式）
      * @return 包含发送结果的响应对象
      */
-    @Operation(
-            operationId = "sendSmsCode",
-            summary = "发送短信验证码",
-            description = "向指定手机号发送短信验证码，用于短信验证码登录")
+    @Operation(operationId = "sendSmsCode", summary = "发送短信验证码", description = "向指定手机号发送短信验证码，用于短信验证码登录")
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",
@@ -439,10 +428,7 @@ public class AuthHandler extends BaseHandler {
      * @param request 服务器请求对象，包含手机号信息（JSON 格式）
      * @return 包含发送结果的响应对象
      */
-    @Operation(
-            operationId = "sendClSmsCode",
-            summary = "发送创蓝短信验证码",
-            description = "通过创蓝253短信平台向指定手机号发送验证码，用于创蓝短信验证码登录")
+    @Operation(operationId = "sendClSmsCode", summary = "发送创蓝短信验证码", description = "通过创蓝253短信平台向指定手机号发送验证码，用于创蓝短信验证码登录")
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",

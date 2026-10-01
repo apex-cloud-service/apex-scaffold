@@ -18,8 +18,16 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+/**
+ * 钉钉消息 API 客户端。
+ *
+ * @author Apex Team
+ * @version 1.0.0
+ * @since 1.3.0
+ */
 @Component
-public class DingTalkMessageClient extends OfficeApiSupport implements MessagePort {
+public class DingTalkMessageClient extends AbstractOfficeApiSupport implements MessagePort {
+    private static final String USER_TARGET_TYPE = "USER";
     private final ObjectMapper objectMapper;
 
     public DingTalkMessageClient(
@@ -31,7 +39,7 @@ public class DingTalkMessageClient extends OfficeApiSupport implements MessagePo
     @Override
     public Mono<String> sendMessage(MessageTarget target, MessageContent content) {
         validate(target, content);
-        if (!"USER".equals(target.getTargetType())) {
+        if (!USER_TARGET_TYPE.equals(target.getTargetType())) {
             return Mono.error(new BusinessException(ResultCode.BUSINESS_ERROR, "钉钉应用工作通知仅支持用户目标"));
         }
         return accessToken()
@@ -76,7 +84,7 @@ public class DingTalkMessageClient extends OfficeApiSupport implements MessagePo
     }
 
     private Map<String, Object> messageBody(MessageTarget target, MessageContent content) {
-        Map<String, Object> body = new HashMap<>();
+        Map<String, Object> body = new HashMap<>(4);
         body.put("agent_id", required(properties.getAgentId(), "钉钉 agentId"));
         body.put("userid_list", target.getUserIds().stream().collect(Collectors.joining(",")));
         body.put("msg", messageContent(content));
@@ -87,7 +95,7 @@ public class DingTalkMessageClient extends OfficeApiSupport implements MessagePo
         String type = content.getType() == MessageType.CARD
                 ? "action_card"
                 : content.getType() == MessageType.MARKDOWN ? "markdown" : "text";
-        Map<String, Object> value = new HashMap<>();
+        Map<String, Object> value = new HashMap<>(3);
         value.put("msgtype", type);
         if (content.getType() == MessageType.TEXT) {
             value.put("text", Map.of("content", content.getText()));

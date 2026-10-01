@@ -8,9 +8,9 @@ import com.apex.scaffold.domain.office.message.OfficeMessage;
 import com.apex.scaffold.domain.office.message.OfficeMessageRepository;
 import com.apex.scaffold.domain.office.message.TextMessageContent;
 import com.apex.scaffold.domain.office.port.MessagePort;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
@@ -30,8 +30,12 @@ class OfficeMessageSendServiceTest {
     @Mock
     private MessagePort wecomMessageClient;
 
-    @InjectMocks
     private OfficeMessageService service;
+
+    @BeforeEach
+    void setUp() {
+        service = new OfficeMessageService(repository, feishuMessageClient, dingTalkMessageClient, wecomMessageClient);
+    }
 
     @Test
     void getMessageStatus_missingMessageCompletesEmpty() {

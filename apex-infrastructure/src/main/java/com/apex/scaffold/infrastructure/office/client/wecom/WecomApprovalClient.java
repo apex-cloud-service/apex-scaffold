@@ -3,8 +3,8 @@ package com.apex.scaffold.infrastructure.office.client.wecom;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.domain.office.OfficePlatform;
+import com.apex.scaffold.infrastructure.office.client.AbstractOfficeApiSupport;
 import com.apex.scaffold.infrastructure.office.client.ApprovalClient;
-import com.apex.scaffold.infrastructure.office.client.OfficeApiSupport;
 import com.apex.scaffold.infrastructure.office.config.OfficePlatformProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.HashMap;
@@ -13,8 +13,15 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+/**
+ * 企业微信审批 API 客户端。
+ *
+ * @author Apex Team
+ * @version 1.0.0
+ * @since 1.3.0
+ */
 @Component("wecomApprovalClient")
-public class WecomApprovalClient extends OfficeApiSupport implements ApprovalClient {
+public class WecomApprovalClient extends AbstractOfficeApiSupport implements ApprovalClient {
     public WecomApprovalClient(
             WebClient.Builder builder, OfficePlatformProperties properties, ObjectMapper objectMapper) {
         super(builder, properties, OfficePlatform.WECOM, "https://qyapi.weixin.qq.com");
@@ -23,7 +30,7 @@ public class WecomApprovalClient extends OfficeApiSupport implements ApprovalCli
     @Override
     public Mono<String> createApproval(
             String templateId, String initiatorId, String[] approverIds, Map<String, Object> formData, String title) {
-        Map<String, Object> body = new HashMap<>();
+        Map<String, Object> body = new HashMap<>(3);
         body.put("creator_userid", required(initiatorId, "企业微信 initiatorId"));
         body.put("template_id", required(templateId, "企业微信 templateId"));
         body.put("apply_data", formData == null ? Map.of() : formData);

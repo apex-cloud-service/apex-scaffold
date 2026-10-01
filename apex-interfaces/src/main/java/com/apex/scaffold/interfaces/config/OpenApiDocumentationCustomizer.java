@@ -575,7 +575,8 @@ final class OpenApiDocumentationCustomizer {
         if (OP_ID_GET_LOCAL_FILE_CONTENT.equals(operationId)) {
             ensureContent(success, "application/octet-stream", new StringSchema().format("binary"));
         } else if (OP_ID_STREAM_NOTIFICATIONS.equals(operationId)) {
-            ensureContent(success, "text/event-stream", new StringSchema().description("SSE 事件流，event 类型为 notification"));
+            ensureContent(
+                    success, "text/event-stream", new StringSchema().description("SSE 事件流，event 类型为 notification"));
         } else {
             ensureSuccessContent(success, operationId, components);
         }

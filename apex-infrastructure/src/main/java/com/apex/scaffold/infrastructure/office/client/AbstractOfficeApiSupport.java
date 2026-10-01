@@ -16,12 +16,13 @@ import reactor.core.publisher.Mono;
  * @version 1.0.0
  * @since 1.3.0
  */
-public abstract class OfficeApiSupport {
+public abstract class AbstractOfficeApiSupport {
+    private static final String SUCCESS_CODE = "0";
     private final Duration timeout;
     protected final WebClient webClient;
     protected final OfficePlatformProperties.Platform properties;
 
-    protected OfficeApiSupport(
+    protected AbstractOfficeApiSupport(
             WebClient.Builder builder,
             OfficePlatformProperties platformProperties,
             com.apex.scaffold.domain.office.OfficePlatform platform,
@@ -113,7 +114,7 @@ public abstract class OfficeApiSupport {
         if (code == null) {
             code = body.get("errcode");
         }
-        if (code != null && !"0".equals(code.toString())) {
+        if (code != null && !SUCCESS_CODE.equals(code.toString())) {
             throw new BusinessException(
                     ResultCode.BUSINESS_ERROR,
                     "办公平台 API 调用失败：" + code + " " + body.getOrDefault("msg", body.get("errmsg")));

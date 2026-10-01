@@ -105,8 +105,7 @@ public class UserHandler extends BaseHandler {
      * @return 包含用户详情的响应对象，成功时返回 {@link UserDTO}
      * @throws com.apex.scaffold.common.exception.BusinessException 当用户不存在时抛出
      */
-    @Operation(
-            operationId = "getCurrentUserInfo", summary = "获取当前用户信息", description = "获取当前登录用户的详细信息")
+    @Operation(operationId = "getCurrentUserInfo", summary = "获取当前用户信息", description = "获取当前登录用户的详细信息")
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",
@@ -139,8 +138,7 @@ public class UserHandler extends BaseHandler {
      * @return 包含用户详情的响应对象，成功时返回 {@link UserDTO}
      */
     @Parameters({@Parameter(name = "userId", in = ParameterIn.PATH, required = true, description = "用户ID")})
-    @Operation(
-            operationId = "getUserById", summary = "根据ID获取用户信息", description = "获取指定用户的详细信息")
+    @Operation(operationId = "getUserById", summary = "根据ID获取用户信息", description = "获取指定用户的详细信息")
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",
@@ -182,8 +180,7 @@ public class UserHandler extends BaseHandler {
      * @param request 服务器请求对象，包含 JSON 格式的分页查询参数
      * @return 包含分页查询结果的响应对象，成功时返回 {@code PageResponse<UserDTO>}
      */
-    @Operation(
-            operationId = "listUsers", summary = "分页查询用户列表", description = "分页查询用户列表，无需携带 Token")
+    @Operation(operationId = "listUsers", summary = "分页查询用户列表", description = "分页查询用户列表，无需携带 Token")
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",
@@ -254,10 +251,7 @@ public class UserHandler extends BaseHandler {
      * @param request 服务器请求
      * @return 202 受理响应
      */
-    @Operation(
-            operationId = "deleteCurrentUser",
-            summary = "注销当前账号",
-            description = "短信二次验证通过后立即失效账号，返回异步清理任务标识")
+    @Operation(operationId = "deleteCurrentUser", summary = "注销当前账号", description = "短信二次验证通过后立即失效账号，返回异步清理任务标识")
     @ApiResponses({
         @ApiResponse(responseCode = "202", description = "账号已失效，清理任务已受理"),
         @ApiResponse(responseCode = "400", description = "验证码错误或请求参数不合法"),

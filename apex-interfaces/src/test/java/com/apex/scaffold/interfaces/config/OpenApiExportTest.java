@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.PathItem;
 import io.swagger.v3.oas.models.responses.ApiResponses;
-import java.io.IOException;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -55,8 +54,7 @@ class OpenApiExportTest {
         Path yamlFile = dir.resolve("openapi.yaml");
         try {
             ObjectMapper yamlMapper =
-                    new com.fasterxml.jackson.dataformat.yaml.YAMLMapper()
-                            .enable(SerializationFeature.INDENT_OUTPUT);
+                    new com.fasterxml.jackson.dataformat.yaml.YAMLMapper().enable(SerializationFeature.INDENT_OUTPUT);
             Files.writeString(yamlFile, yamlMapper.writeValueAsString(openApi));
         } catch (NoClassDefFoundError ignored) {
             // YAML 模块不可用时跳过 YAML 导出

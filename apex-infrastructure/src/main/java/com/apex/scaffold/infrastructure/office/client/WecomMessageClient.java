@@ -18,8 +18,16 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+/**
+ * 企业微信消息 API 客户端。
+ *
+ * @author Apex Team
+ * @version 1.0.0
+ * @since 1.3.0
+ */
 @Component
-public class WecomMessageClient extends OfficeApiSupport implements MessagePort {
+public class WecomMessageClient extends AbstractOfficeApiSupport implements MessagePort {
+    private static final String USER_TARGET_TYPE = "USER";
     private final ObjectMapper objectMapper;
 
     public WecomMessageClient(
@@ -67,9 +75,9 @@ public class WecomMessageClient extends OfficeApiSupport implements MessagePort 
     }
 
     private Map<String, Object> messageBody(MessageTarget target, MessageContent content) {
-        Map<String, Object> body = new HashMap<>();
+        Map<String, Object> body = new HashMap<>(4);
         body.put("agentid", required(properties.getAgentId(), "企业微信 agentId"));
-        if ("USER".equals(target.getTargetType())) {
+        if (USER_TARGET_TYPE.equals(target.getTargetType())) {
             body.put("touser", target.getUserIds().stream().collect(Collectors.joining("|")));
         } else {
             body.put("touser", "@all");
@@ -79,7 +87,7 @@ public class WecomMessageClient extends OfficeApiSupport implements MessagePort 
     }
 
     private Map<String, Object> messageContent(MessageContent content) {
-        Map<String, Object> value = new HashMap<>();
+        Map<String, Object> value = new HashMap<>(2);
         if (content.getType() == MessageType.TEXT) {
             value.put("msgtype", "text");
             value.put("text", Map.of("content", content.getText()));

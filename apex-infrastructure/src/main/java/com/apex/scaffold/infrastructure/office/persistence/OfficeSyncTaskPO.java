@@ -8,6 +8,13 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import java.time.LocalDateTime;
 import lombok.Data;
 
+/**
+ * 办公平台同步任务持久化对象。
+ *
+ * @author Apex Team
+ * @version 1.0.0
+ * @since 1.3.0
+ */
 @Data
 @TableName("office_sync_task")
 public class OfficeSyncTaskPO {

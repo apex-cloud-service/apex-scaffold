@@ -137,14 +137,16 @@ public class DeptHandler extends BaseHandler {
         @ApiResponse(
                 responseCode = "200",
                 description = "创建成功",
-                content =
-                        @Content(mediaType = "application/json", schema = @Schema(implementation = DeptDTO.class))),
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = DeptDTO.class))),
         @ApiResponse(responseCode = "400", description = "参数校验失败或部门名称已存在"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要system:dept:add权限")
     })
     @OperationLog(module = "部门管理", type = OperationLog.OperationType.INSERT, description = "新增部门")
     public Mono<ServerResponse> create(ServerRequest request) {
-        return parseBody(request, DeptDTO.class).map(this::toEntity).flatMap(deptService::create).flatMap(this::buildSuccess);
+        return parseBody(request, DeptDTO.class)
+                .map(this::toEntity)
+                .flatMap(deptService::create)
+                .flatMap(this::buildSuccess);
     }
 
     /**
@@ -171,8 +173,7 @@ public class DeptHandler extends BaseHandler {
         @ApiResponse(
                 responseCode = "200",
                 description = "更新成功",
-                content =
-                        @Content(mediaType = "application/json", schema = @Schema(implementation = DeptDTO.class))),
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = DeptDTO.class))),
         @ApiResponse(responseCode = "400", description = "参数校验失败"),
         @ApiResponse(responseCode = "404", description = "部门不存在"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要system:dept:edit权限")

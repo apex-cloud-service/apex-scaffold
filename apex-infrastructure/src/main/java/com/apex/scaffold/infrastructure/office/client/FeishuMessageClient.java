@@ -25,7 +25,7 @@ import reactor.core.publisher.Mono;
  * @since 1.3.0
  */
 @Component
-public class FeishuMessageClient extends OfficeApiSupport implements MessagePort {
+public class FeishuMessageClient extends AbstractOfficeApiSupport implements MessagePort {
     private final ObjectMapper objectMapper;
 
     public FeishuMessageClient(
@@ -81,7 +81,7 @@ public class FeishuMessageClient extends OfficeApiSupport implements MessagePort
     }
 
     private Map<String, Object> messageBody(MessageTarget target, MessageContent content) {
-        Map<String, Object> body = new HashMap<>();
+        Map<String, Object> body = new HashMap<>(3);
         body.put("receive_id", targetId(target));
         body.put("msg_type", messageType(content));
         body.put("content", contentJson(content));
