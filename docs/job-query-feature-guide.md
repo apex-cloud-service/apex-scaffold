@@ -81,7 +81,7 @@
   - 新增 `countByCondition()` 方法：统计符合条件的任务数量
 
 #### 3. Infrastructure层
-- **[apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/repository/JobRepositoryImpl.java](file:///Users/work/apex-scaffold/apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/repository/JobRepositoryImpl.java#L109-L144)**
+- **[apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/repository/JobRepositoryImpl.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/persistence/repository/JobRepositoryImpl.java)**
   - 实现动态SQL查询逻辑
   - 使用MyBatis-Plus LambdaQueryWrapper构建动态查询条件
   - 使用BlockingScheduler隔离阻塞I/O操作
@@ -113,7 +113,7 @@
 ### 前端文件
 
 #### 1. API函数
-- **[apex-admin-web/src/api/job.ts](file:///Users/work/apex-admin-web/src/api/job.ts)**
+- **apex-admin-web/src/api/job.ts（目标不存在，无已核实替代文件；原路径：`file:///Users/work/apex-admin-web/src/api/job.ts`）**
   - 新增 `pageJobs()` 函数
   - 参数类型定义：JobPageParams
 

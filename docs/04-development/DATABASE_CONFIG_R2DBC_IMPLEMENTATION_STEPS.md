@@ -792,7 +792,7 @@ mvnd spring-boot:run -pl apex-interfaces
 
 1. [R2DBC 迁移方案](./DATABASE_CONFIG_R2DBC_MIGRATION.md) - 技术方案文档
 2. [API 测试报告](./DATABASE_CONFIG_API_TEST_REPORT.md) - 接口测试结果
-3. [前端实施文档](../apex-admin-web/DATABASE_CONFIG_IMPLEMENTATION.md) - 前端对接文档
+3. 前端实施文档（目标不存在，无已核实替代文件；原路径：`../apex-admin-web/DATABASE_CONFIG_IMPLEMENTATION.md`） - 前端对接文档
 
 ---
 

@@ -267,34 +267,34 @@ cd /Users/work/apex-scaffold
 
 ### 主文档 (必读)
 
-1. [项目最终交付报告.md](file:///Users/work/apex-scaffold/.trae/documents/项目最终交付报告.md) ⭐⭐⭐ **最重要**
+1. [项目最终交付报告.md](final-delivery-report.md) ⭐⭐⭐ **最重要**
    - 完整的交付清单
    - 所有工作总结
    - 执行指南索引
 
-2. [后端项目任务完成总结报告.md](file:///Users/work/apex-scaffold/.trae/documents/后端项目任务完成总结报告.md) ⭐⭐ **后端总结**
+2. [后端项目任务完成总结报告.md](../../backend-completion-summary.md) ⭐⭐ **后端总结**
    - 后端所有完成工作
    - 监控配置详情
    - JavaDoc评估结果
 
-3. [前端项目任务完成总结报告.md](file:///Users/work/apex-scaffold/.trae/documents/前端项目任务完成总结报告.md) ⭐⭐ **前端总结**
+3. [前端项目任务完成总结报告.md](../../frontend-completion-summary.md) ⭐⭐ **前端总结**
    - 前端所有完成工作
    - 组件使用说明
    - 修改指南
 
 ### 实施指南 (执行时参考)
 
-4. [后续任务完整实施方案.md](file:///Users/work/apex-scaffold/.trae/documents/后续任务完整实施方案.md) ⭐ **Grafana PromQL**
+4. [后续任务完整实施方案.md](../task-implementations/follow-up-tasks-plan.md) ⭐ **Grafana PromQL**
    - 24个监控面板PromQL查询
    - 告警规则完整配置
    - Zipkin集成方案
 
-5. [前端组件使用指南.md](file:///Users/work/apex-scaffold/.trae/documents/前端组件使用指南.md) ⭐ **组件使用**
+5. [前端组件使用指南.md](../../../../04-development/frontend/component-guide.md) ⭐ **组件使用**
    - EmptyState完整示例
    - validate使用方法
    - 修改前后对比
 
-6. [前端按钮权限控制补充执行脚本.md](file:///Users/work/apex-scaffold/.trae/documents/前端按钮权限控制补充执行脚本.md) ⭐ **权限控制**
+6. [前端按钮权限控制补充执行脚本.md](../task-implementations/frontend-button-permission-script.md) ⭐ **权限控制**
    - 7个页面详细修改位置
    - 25个权限码配置
    - 完整代码示例
@@ -304,11 +304,11 @@ cd /Users/work/apex-scaffold
 7. [alert-rules.yml](file:///Users/work/apex-scaffold/config/monitoring/prometheus/alert-rules.yml) - 告警规则
 8. [alertmanager.yml](file:///Users/work/apex-scaffold/config/monitoring/prometheus/alertmanager.yml) - 告警管理
 9. [zipkin.yml](file:///Users/work/apex-scaffold/config/monitoring/grafana/provisioning/datasources/zipkin.yml) - Zipkin配置
-10. [frontend_button_permission_config.sql](file:///Users/work/apex-scaffold/frontend_button_permission_config.sql) - SQL脚本
+10. frontend_button_permission_config.sql（目标不存在，无已核实替代文件；原路径：`file:///Users/work/apex-scaffold/frontend_button_permission_config.sql`） - SQL脚本
 
 ### 工具脚本
 
-11. [deploy_monitoring_configs.sh](file:///Users/work/apex-scaffold/deploy_monitoring_configs.sh) - 监控部署
+11. deploy_monitoring_configs.sh（目标不存在，无已核实替代文件；原路径：`file:///Users/work/apex-scaffold/deploy_monitoring_configs.sh`） - 监控部署
 12. [start_mysql_and_run_sql.sh](file:///Users/work/apex-scaffold/start_mysql_and_run_sql.sh) - MySQL启动
 13. [check_javadoc.sh](file:///Users/work/apex-scaffold/scripts/check_javadoc.sh) - JavaDoc检查
 

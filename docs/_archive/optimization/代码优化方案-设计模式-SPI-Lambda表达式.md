@@ -778,8 +778,8 @@ mvnd pmd:check
 **内部文档**:
 - [AGENTS.md](file:///Users/work/apex-scaffold/AGENTS.md) - AI 编码行为准则
 - [策略模式指南](file:///Users/work/apex-scaffold/docs/architecture/strategy-pattern-guide.md)
-- [SPI 插件机制](file:///Users/work/apex-scaffold/docs/SPI_PLUGIN_GUIDE.md)
-- [开发者手册](file:///Users/work/apex-scaffold/docs/DEVELOPER_HANDBOOK.md)
+- [SPI 插件机制](../../01-guides/spi-plugin-guide.md)
+- [开发者手册](../../01-guides/developer-handbook.md)
 
 **外部资源**:
 - 《Effective Java (第3版)》 - Joshua Bloch

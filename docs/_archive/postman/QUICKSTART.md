@@ -227,7 +227,7 @@ pm.environment.set("userId", jsonData.data.id);
 遇到问题？
 
 1. 查看 [README.md](./README.md)
-2. 查看 [API接口测试计划](../API接口测试计划.md)
+2. 查看 [API接口测试计划](../../06-testing/api-test-plan.md)
 3. 联系团队成员
 
 ---

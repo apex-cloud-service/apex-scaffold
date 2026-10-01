@@ -124,9 +124,9 @@ jmap -heap <pid>
 
 ## 🔗 快速链接
 
-- 📖 [详细文档](./xxx-detail.md)
-- 🎯 [技术决策文档](./xxx-decision.md)
-- 💼 [商业价值说明](./xxx-business-value.md)
+- 📖 详细文档（示例目标不存在，待补充；原路径：`./xxx-detail.md`）
+- 🎯 技术决策文档（示例目标不存在，待补充；原路径：`./xxx-decision.md`）
+- 💼 商业价值说明（示例目标不存在，待补充；原路径：`./xxx-business-value.md`）
 - 📊 [Grafana监控面板](http://grafana.apex-scaffold.com/d/xxx)
 - 🔍 [Kibana日志查询](http://kibana.apex-scaffold.com/app/xxx)
 

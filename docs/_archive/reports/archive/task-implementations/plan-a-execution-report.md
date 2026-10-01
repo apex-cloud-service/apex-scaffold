@@ -23,7 +23,7 @@
 - 需要点击界面添加每个面板
 - 需要调整可视化属性
 
-**执行指南**: 见文档 [后续任务完整实施方案.md](../后续任务完整实施方案.md)
+**执行指南**: 见文档 [后续任务完整实施方案.md](follow-up-tasks-plan.md)
 
 **预计人工时间**: 2小时(复制粘贴PromQL + 配置)
 
@@ -53,7 +53,7 @@
 6. `src/views/system/database/index.vue` - 已有示例
 7. `src/views/system/job/index.vue` - 已有示例
 
-**执行指南**: 见文档 [前端组件使用指南.md](../前端组件使用指南.md)
+**执行指南**: 见文档 [前端组件使用指南.md](../../../../04-development/frontend/component-guide.md)
 
 **预计人工时间**: 2-3小时(复制粘贴示例代码 + 测试)
 
@@ -222,11 +222,11 @@ cd /Users/work/apex-scaffold
 ## 📚 执行指南索引
 
 **Grafana配置**:
-- [后续任务完整实施方案.md](../后续任务完整实施方案.md) - 24个PromQL查询
+- [后续任务完整实施方案.md](follow-up-tasks-plan.md) - 24个PromQL查询
 
 **前端修改**:
-- [前端组件使用指南.md](../前端组件使用指南.md) - 完整示例
-- [前端按钮权限控制补充执行脚本.md](../前端按钮权限控制补充执行脚本.md) - 详细步骤
+- [前端组件使用指南.md](../../../../04-development/frontend/component-guide.md) - 完整示例
+- [前端按钮权限控制补充执行脚本.md](frontend-button-permission-script.md) - 详细步骤
 
 **JavaDoc检查**:
 ```bash

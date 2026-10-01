@@ -690,11 +690,11 @@ SaaS场景需要支持多租户,保证数据隔离与安全。
 
 ### 8.1 内部文档
 
-- [前后端API路由对比清单](/.trae/documents/前后端API路由对比清单.md)
+- [前后端API路由对比清单](../_archive/api/route-mapping.md)
 
-- [配置文件完整性检查报告](/.trae/documents/配置文件完整性检查报告.md)
+- [配置文件完整性检查报告](../_archive/operations/configuration.md)
 
-- [Grafana监控面板增强方案](/.trae/documents/Grafana监控面板增强方案.md)
+- [Grafana监控面板增强方案](../_archive/operations/monitoring.md)
 
 ### 8.2 外部参考
 

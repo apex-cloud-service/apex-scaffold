@@ -756,7 +756,7 @@ TraceID: a1b2c3d4e5f67890
 
 - [系统架构文档](system-architecture.md)
 - [基础设施架构文档](infrastructure-components.md)
-- [技术生态全景图](technology-ecosystem.md)
+- 技术生态全景图（目标不存在，无已核实替代文件；原路径：`technology-ecosystem.md`）
 - [部署架构文档](deployment-architecture.md)
 
 ---

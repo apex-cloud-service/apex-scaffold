@@ -269,25 +269,25 @@ chmod +x quick-start.sh
 ## 📚 文档导航
 
 ### 快速开始
-- 📖 [最终完成报告](file:///Users/work/apex-scaffold/docs/final-completion-report.md) - **推荐阅读**
-- 📖 [后端完成检查清单](file:///Users/work/apex-scaffold/docs/backend-completion-checklist.md)
-- 📖 [前端更新确认文档](file:///Users/work/apex-scaffold/docs/frontend-update-confirmation.md)
+- 📖 [最终完成报告](../../_archive/final-completion-report.md) - **推荐阅读**
+- 📖 [后端完成检查清单](../../_archive/backend-completion-checklist.md)
+- 📖 [前端更新确认文档](../../04-development/frontend/frontend-update-confirmation.md)
 
 ### 技术文档
 - 📖 [Redis Watchdog 机制](file:///Users/work/apex-scaffold/docs/architecture/redis-watchdog-mechanism.md)
-- 📖 [工作流引擎使用指南](file:///Users/work/apex-scaffold/docs/features/workflow-engine-guide.md)
-- 📖 [WebFlux Handler 总结](file:///Users/work/apex-scaffold/docs/webflux-handler-summary.md)
+- 📖 [工作流引擎使用指南](workflow-engine-guide.md)
+- 📖 [WebFlux Handler 总结](../../_archive/webflux-handler-summary.md)
 
 ### 实施文档
-- 📖 [实施总结](file:///Users/work/apex-scaffold/docs/implementation-summary.md)
-- 📖 [工作总结](file:///Users/work/apex-scaffold/docs/work-summary.md)
+- 📖 [实施总结](../../_archive/implementation-summary.md)
+- 📖 [工作总结](../../_archive/work-summary.md)
 
 ### 前端文档
-- 📖 [前端代码更新指南](file:///Users/work/apex-scaffold/docs/frontend-code-update-guide.md)
-- 📖 [前端调整指南](file:///Users/work/apex-scaffold/docs/frontend-adjustment-guide.md)
+- 📖 [前端代码更新指南](../../04-development/frontend/frontend-code-update-guide.md)
+- 📖 [前端调整指南](../../04-development/frontend/frontend-adjustment-guide.md)
 
 ### 测试文档
-- 📖 [联调测试指南](file:///Users/work/apex-scaffold/docs/integration-test-guide.md)
+- 📖 [联调测试指南](../../06-testing/integration-test-guide.md)
 
 ---
 
@@ -382,9 +382,9 @@ chmod +x quick-start.sh
 ## 📞 后续支持
 
 如有问题或需要补充，请参考以下文档：
-- [最终完成报告](file:///Users/work/apex-scaffold/docs/final-completion-report.md)
-- [联调测试指南](file:///Users/work/apex-scaffold/docs/integration-test-guide.md)
-- [后端完成检查清单](file:///Users/work/apex-scaffold/docs/backend-completion-checklist.md)
+- [最终完成报告](../../_archive/final-completion-report.md)
+- [联调测试指南](../../06-testing/integration-test-guide.md)
+- [后端完成检查清单](../../_archive/backend-completion-checklist.md)
 
 ---
 

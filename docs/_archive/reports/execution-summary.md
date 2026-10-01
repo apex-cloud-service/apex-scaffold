@@ -34,7 +34,7 @@
 - ✅ `src/router/dynamic.ts` - 路由已注册(L31)
 
 #### 2.1.3 前后端路由对接验证
-**生成文档**: [前后端API路由对比清单.md](/.trae/documents/前后端API路由对比清单.md)
+**生成文档**: [前后端API路由对比清单.md](../api/route-mapping.md)
 
 **验证结果**:
 - 前端API总数: 56个
@@ -55,7 +55,7 @@
 ### 2.2 配置文件与数据库验证 (P0 - 已完成 ✅)
 
 #### 2.2.1 配置文件完整性检查
-**生成文档**: [配置文件完整性检查报告.md](/.trae/documents/配置文件完整性检查报告.md)
+**生成文档**: [配置文件完整性检查报告.md](../operations/configuration.md)
 
 **配置文件清单** (8个环境配置):
 - ✅ application.yml (公共配置)
@@ -118,7 +118,7 @@
 
 ### 2.3 Grafana监控面板增强 (P1 - 已完成 ✅)
 
-**生成文档**: [Grafana监控面板增强方案.md](/.trae/documents/Grafana监控面板增强方案.md)
+**生成文档**: [Grafana监控面板增强方案.md](../operations/monitoring.md)
 
 #### 2.3.1 现状分析
 

@@ -5,7 +5,7 @@
 > **整合文档数**: 51 个  
 > **状态**: ✅ 已完成
 
-**🔍 快速搜索**: [打开文档搜索工具](doc-search.html) - 支持关键词搜索、分类过滤、实时预览
+**🔍 快速搜索**: [打开文档搜索工具](../doc-search.html) - 支持关键词搜索、分类过滤、实时预览
 
 ---
 
@@ -340,13 +340,13 @@ docs/reports/archive/
 
 ### 新人入职
 
-1. 阅读 [ARCHITECTURE_INDEX.md](ARCHITECTURE_INDEX.md) 了解架构全貌
+1. 阅读 [ARCHITECTURE_INDEX.md](../02-architecture/architecture-index.md) 了解架构全貌
 2. 根据岗位查看对应开发规范 ([后端](../04-development/backend-development-standards.md) / [前端](../04-development/frontend-development-standards.md))
-3. 查阅 [QUICK_START.md](QUICK_START.md) 快速启动项目
+3. 查阅 [QUICK_START.md](../00-getting-started/quickstart.md) 快速启动项目
 
 ### 功能开发
 
-1. 搜索 [ARCHITECTURE_INDEX.md](ARCHITECTURE_INDEX.md) 中的关键词
+1. 搜索 [ARCHITECTURE_INDEX.md](../02-architecture/architecture-index.md) 中的关键词
 2. 按场景阅读推荐文档
 3. 参考示例代码和最佳实践
 
@@ -358,7 +358,7 @@ docs/reports/archive/
 
 ### 问题排查
 
-1. 查看 [TROUBLESHOOTING.md](TROUBLESHOOTING.md) 常见问题
+1. 查看 [TROUBLESHOOTING.md](../01-guides/troubleshooting.md) 常见问题
 2. 搜索相关关键词定位文档
 3. 查阅历史报告归档了解已知问题
 
@@ -374,14 +374,14 @@ docs/reports/archive/
 
 ### 总体索引
 
-- **架构文档总索引**: [ARCHITECTURE_INDEX.md](ARCHITECTURE_INDEX.md)
+- **架构文档总索引**: [ARCHITECTURE_INDEX.md](../02-architecture/architecture-index.md)
 - **项目主文档**: [README.md](../README.md)
-- **快速开始**: [QUICK_START.md](QUICK_START.md)
+- **快速开始**: [QUICK_START.md](../00-getting-started/quickstart.md)
 
 ### 专项索引
 
 - **集成文档索引**: [integration/README.md](integration/README.md)
-- **API 文档**: [API_DOCUMENTATION_PREVIEW.md](API_DOCUMENTATION_PREVIEW.md)
+- **API 文档**: [API_DOCUMENTATION_PREVIEW.md](../03-api/api-documentation-preview.md)
 - **Postman 测试**: [postman/README.md](postman/README.md)
 
 ### 完整报告

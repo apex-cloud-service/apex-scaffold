@@ -248,7 +248,7 @@ mvnd pmd:check
 
 ### 相关文档
 - [MapStruct 官方文档](https://mapstruct.org/documentation/stable/reference/html/)
-- [项目开发规范](AGENTS.md)
+- [项目开发规范](../../../AGENTS.md)
 - [Spring Boot 集成指南](https://mapstruct.org/documentation/spring-extensions/reference/html/)
 
 ---

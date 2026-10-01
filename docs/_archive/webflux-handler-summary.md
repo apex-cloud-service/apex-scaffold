@@ -50,7 +50,7 @@
 
 | 文档 | 说明 |
 |------|------|
-| [frontend-code-update-guide.md](file:///Users/work/apex-scaffold/docs/frontend-code-update-guide.md) | 前端代码更新完整指南 |
+| [frontend-code-update-guide.md](../04-development/frontend/frontend-code-update-guide.md) | 前端代码更新完整指南 |
 
 #### 📋 需要更新的前端文件
 
@@ -75,7 +75,7 @@
 | 文件 | 说明 |
 |------|------|
 | [test-workflow-api.sh](file:///Users/work/apex-scaffold/test-workflow-api.sh) | Shell 脚本，自动测试 5 个接口 |
-| [integration-test-guide.md](file:///Users/work/apex-scaffold/docs/integration-test-guide.md) | 完整的联调测试文档 |
+| [integration-test-guide.md](../06-testing/integration-test-guide.md) | 完整的联调测试文档 |
 
 #### 📋 测试覆盖
 
@@ -257,7 +257,7 @@ curl -X POST 'http://localhost:8080/api/workflow/tasks/1000/rollback' \
 
 #### 方式 3：使用 Postman
 
-1. 导入接口集合（参考 [integration-test-guide.md](file:///Users/work/apex-scaffold/docs/integration-test-guide.md)）
+1. 导入接口集合（参考 [integration-test-guide.md](../06-testing/integration-test-guide.md)）
 2. 配置环境变量 `BASE_URL=http://localhost:8080`
 3. 依次执行 5 个接口测试
 
@@ -365,7 +365,7 @@ public class WorkflowRouter {
 由于工具限制，前端代码无法直接修改，**必须手动完成以下步骤**：
 
 1. ✅ **更新类型定义**（src/types/workflow.ts）
-   - 按照 [frontend-code-update-guide.md](file:///Users/work/apex-scaffold/docs/frontend-code-update-guide.md) 的「第一部分」更新
+   - 按照 [frontend-code-update-guide.md](../04-development/frontend/frontend-code-update-guide.md) 的「第一部分」更新
 
 2. ✅ **更新 API 接口**（src/api/workflow.ts）
    - 按照文档「第二部分」添加 5 个 API 方法
@@ -454,7 +454,7 @@ axios.interceptors.request.use(config => {
 ### 9.1 短期（1 周内）
 
 1. **完成前端代码更新**
-   - 按照 [frontend-code-update-guide.md](file:///Users/work/apex-scaffold/docs/frontend-code-update-guide.md) 更新所有文件
+   - 按照 [frontend-code-update-guide.md](../04-development/frontend/frontend-code-update-guide.md) 更新所有文件
 
 2. **执行联调测试**
    - 运行测试脚本验证接口

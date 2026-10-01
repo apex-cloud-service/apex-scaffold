@@ -175,7 +175,7 @@ python3 fix_internal_links.py
 
 ## 🔗 相关文件
 
-- 扫描脚本: [fix_internal_links.py](fix_internal_links.py)
+- 扫描脚本: fix_internal_links.py（目标不存在，无已核实替代文件；原路径：`fix_internal_links.py`）
 - 详细报告: [LINK_FIX_REPORT_DETAILED.md](LINK_FIX_REPORT_DETAILED.md)
 - 文档重组报告: [DOCS_REORGANIZATION_REPORT.md](DOCS_REORGANIZATION_REPORT.md)
 

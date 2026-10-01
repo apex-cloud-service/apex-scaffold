@@ -1787,9 +1787,9 @@ enabled = false
 
 - [系统架构设计](../../architecture/system-architecture.md)
 
-- [运维部署指南](./deployment-guide.md)
+- 运维部署指南（目标不存在，无已核实替代文件；原路径：`./deployment-guide.md`）
 
-- [监控告警SOP](./monitoring-sop.md)
+- 监控告警SOP（目标不存在，无已核实替代文件；原路径：`./monitoring-sop.md`）
 
 ***
 

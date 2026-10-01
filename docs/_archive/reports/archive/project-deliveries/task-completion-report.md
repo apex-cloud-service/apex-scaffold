@@ -89,7 +89,7 @@ cd config/monitoring
 docker-compose restart grafana
 ```
 
-**参考文档**: [Grafana监控平台现状与配置总结.md](file:///Users/work/apex-scaffold/.trae/documents/Grafana监控平台现状与配置总结.md)
+**参考文档**: [Grafana监控平台现状与配置总结.md](../../../operations/grafana-status-summary.md)
 
 **预计工时**: 2天
 
@@ -112,7 +112,7 @@ docker-compose restart grafana
 - P1 Warning: 30分钟内响应
 - P2 Info: 2小时内响应
 
-**参考文档**: [Grafana监控平台现状与配置总结.md](file:///Users/work/apex-scaffold/.trae/documents/Grafana监控平台现状与配置总结.md) 中的告警规则章节
+**参考文档**: [Grafana监控平台现状与配置总结.md](../../../operations/grafana-status-summary.md) 中的告警规则章节
 
 **预计工时**: 1天
 
@@ -377,20 +377,20 @@ SELECT COUNT(*) AS '新增权限数' FROM sys_menu WHERE menu_type = 2 AND perms
 所有文档位于: `/Users/work/apex-scaffold/.trae/documents/`
 
 ### 核心文档
-1. [任务执行完成报告.md](file:///Users/work/apex-scaffold/.trae/documents/任务执行完成报告.md) ⭐ **本文档**
-2. [任务执行最终总结报告.md](file:///Users/work/apex-scaffold/.trae/documents/任务执行最终总结报告.md) - 完整总结
+1. [任务执行完成报告.md](task-completion-report.md) ⭐ **本文档**
+2. [任务执行最终总结报告.md](task-final-summary.md) - 完整总结
 
 ### 实施指南
-3. [前端按钮权限控制补充执行脚本.md](file:///Users/work/apex-scaffold/.trae/documents/前端按钮权限控制补充执行脚本.md)
-4. [数据库SQL脚本执行指南.md](file:///Users/work/apex-scaffold/.trae/documents/数据库SQL脚本执行指南.md)
-5. [Grafana监控平台现状与配置总结.md](file:///Users/work/apex-scaffold/.trae/documents/Grafana监控平台现状与配置总结.md)
+3. [前端按钮权限控制补充执行脚本.md](../task-implementations/frontend-button-permission-script.md)
+4. [数据库SQL脚本执行指南.md](../../../operations/sql-execution-guide.md)
+5. [Grafana监控平台现状与配置总结.md](../../../operations/grafana-status-summary.md)
 
 ### 审计报告
-6. [前端页面审计报告.md](file:///Users/work/apex-scaffold/.trae/documents/前端页面审计报告.md)
-7. [前端按钮权限控制补充指南.md](file:///Users/work/apex-scaffold/.trae/documents/前端按钮权限控制补充指南.md)
+6. [前端页面审计报告.md](../../../../04-development/frontend/page-audit-report.md)
+7. [前端按钮权限控制补充指南.md](../../../../04-development/frontend/button-permission-guide.md)
 
 ### 代码文件
-- [frontend_button_permission_config.sql](file:///Users/work/apex-scaffold/frontend_button_permission_config.sql) - SQL脚本
+- frontend_button_permission_config.sql（目标不存在，无已核实替代文件；原路径：`file:///Users/work/apex-scaffold/frontend_button_permission_config.sql`） - SQL脚本
 - [check_javadoc.sh](file:///Users/work/apex-scaffold/scripts/check_javadoc.sh) - JavaDoc检查工具
 
 ---

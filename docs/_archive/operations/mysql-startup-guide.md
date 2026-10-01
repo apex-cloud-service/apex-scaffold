@@ -364,7 +364,7 @@ SQL脚本执行成功后:
 1. **修改前端代码**
    - 打开 `/Users/work/apex-admin-web` 项目
    - 为Vue组件添加 `v-permission` 指令
-   - 参考: [前端按钮权限控制补充执行脚本.md](./前端按钮权限控制补充执行脚本.md)
+   - 参考: [前端按钮权限控制补充执行脚本.md](../reports/archive/task-implementations/frontend-button-permission-script.md)
 
 2. **测试验证**
    ```bash
@@ -388,9 +388,9 @@ SQL脚本执行成功后:
 
 ## 📚 相关文档
 
-- [数据库SQL脚本执行指南.md](./数据库SQL脚本执行指南.md) - 详细SQL执行指南
-- [前端按钮权限控制补充执行脚本.md](./前端按钮权限控制补充执行脚本.md) - 前端修改指南
-- [任务执行完成报告.md](./任务执行完成报告.md) - 整体任务报告
+- [数据库SQL脚本执行指南.md](sql-execution-guide.md) - 详细SQL执行指南
+- [前端按钮权限控制补充执行脚本.md](../reports/archive/task-implementations/frontend-button-permission-script.md) - 前端修改指南
+- [任务执行完成报告.md](../reports/archive/project-deliveries/task-completion-report.md) - 整体任务报告
 
 ---
 

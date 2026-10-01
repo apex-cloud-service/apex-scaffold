@@ -221,13 +221,13 @@ EOF
 
 ## 完整文档清单
 
-1. ✅ [前端实施文档](file:///Users/work/apex-admin-web/DATABASE_CONFIG_IMPLEMENTATION.md)
-2. ✅ [后端实施文档](file:///Users/work/apex-scaffold/docs/DATABASE_CONFIG_BACKEND_IMPLEMENTATION.md)
-3. ✅ [对接说明文档](file:///Users/work/apex-admin-web/FRONTEND_BACKEND_INTEGRATION.md)
-4. ✅ [快速参考文档](file:///Users/work/apex-scaffold/DATABASE_CONFIG_QUICK_REFERENCE.md)
-5. ✅ [菜单 SQL 说明](file:///Users/work/apex-scaffold/docs/DATABASE_CONFIG_MENU_SQL_GUIDE.md)
-6. ✅ [手动执行说明](file:///Users/work/apex-scaffold/docs/DATABASE_CONFIG_MENU_MANUAL_EXECUTION.md)
-7. ✅ [本测试报告](file:///Users/work/apex-scaffold/docs/DATABASE_CONFIG_INTEGRATION_TEST_REPORT.md)
+1. ✅ 前端实施文档（目标不存在，无已核实替代文件；原路径：`file:///Users/work/apex-admin-web/DATABASE_CONFIG_IMPLEMENTATION.md`）
+2. ✅ [后端实施文档](DATABASE_CONFIG_BACKEND_IMPLEMENTATION.md)
+3. ✅ 对接说明文档（目标不存在，无已核实替代文件；原路径：`file:///Users/work/apex-admin-web/FRONTEND_BACKEND_INTEGRATION.md`）
+4. ✅ [快速参考文档](DATABASE_CONFIG_QUICK_REFERENCE.md)
+5. ✅ [菜单 SQL 说明](DATABASE_CONFIG_MENU_SQL_GUIDE.md)
+6. ✅ [手动执行说明](DATABASE_CONFIG_MENU_MANUAL_EXECUTION.md)
+7. ✅ [本测试报告](DATABASE_CONFIG_INTEGRATION_TEST_REPORT.md)
 
 ## 总结
 

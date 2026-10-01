@@ -602,19 +602,19 @@ mvnd clean test -P basic
 ### A. 文件路径速查
 
 **示例文件**:
-- [LoginRequest.java](../apex-application/src/main/java/com/apex/scaffold/application/dto/LoginRequest.java)
-- [UserPO.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/persistence/po/UserPO.java)
-- [RoleMapper.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/persistence/mapper/RoleMapper.java)
-- [UserService.java](../apex-application/src/main/java/com/apex/scaffold/application/service/UserService.java)
+- [LoginRequest.java](../../../../apex-application/src/main/java/com/apex/scaffold/application/dto/LoginRequest.java)
+- [UserPO.java](../../../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/persistence/po/UserPO.java)
+- [RoleMapper.java](../../../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/persistence/mapper/RoleMapper.java)
+- [UserService.java](../../../../apex-application/src/main/java/com/apex/scaffold/application/service/UserService.java)
 
 **工具脚本**:
-- [batch-add-lombok.sh](../scripts/batch-add-lombok.sh)
-- [batch-add-javadoc.sh](../scripts/batch-add-javadoc.sh)
+- [batch-add-lombok.sh](../../../../scripts/batch-add-lombok.sh)
+- [batch-add-javadoc.sh](../../../../scripts/batch-add-javadoc.sh)
 
 **文档**:
 - [PHASE2_FIX_EXAMPLES.md](../../../_archive/PHASE2_FIX_EXAMPLES.md)
-- [JAVADOC_GUIDE.md](../docs/JAVADOC_GUIDE.md)
-- [LOMBOK_GUIDE.md](../docs/LOMBOK_GUIDE.md)
+- [JAVADOC_GUIDE.md](../../../04-development/javadoc-guide.md)
+- [LOMBOK_GUIDE.md](../../../04-development/lombok-guide.md)
 
 ---
 

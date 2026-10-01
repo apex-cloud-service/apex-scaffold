@@ -713,10 +713,10 @@ public void init() {
 
 ### 9.1 内部文档
 
-- [配置清单](file://.trae/documents/configuration-inventory.md) - 172 个环境变量完整清单
+- [配置清单](../../05-operations/configuration-inventory.md) - 172 个环境变量完整清单
 - [部署指南](deployment.md) - 生产部署完整流程
-- [安全防护](../SECURITY_PROTECTIONS.md) - 安全配置详解
-- [AGENTS.md](../../AGENTS.md) - AI 编码规范（包含环境变量使用规范）
+- [安全防护](../../05-operations/security-protections.md) - 安全配置详解
+- [AGENTS.md](../../../AGENTS.md) - AI 编码规范（包含环境变量使用规范）
 
 ### 9.2 外部资源
 

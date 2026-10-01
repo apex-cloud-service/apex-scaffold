@@ -281,13 +281,13 @@ open http://localhost:3000
 ## 📚 核心文档快速导航
 
 **必读文档**:
-1. [后续任务完整实施方案.md](file:///Users/work/apex-scaffold/.trae/documents/后续任务完整实施方案.md) ⭐ **Grafana面板PromQL查询**
-2. [后续任务完成总结.md](file:///Users/work/apex-scaffold/.trae/documents/后续任务完成总结.md) ⭐ **本次执行总结**
+1. [后续任务完整实施方案.md](../task-implementations/follow-up-tasks-plan.md) ⭐ **Grafana面板PromQL查询**
+2. [后续任务完成总结.md](../task-implementations/follow-up-tasks-summary.md) ⭐ **本次执行总结**
 
 **实施指南**:
-3. [任务执行完成报告.md](file:///Users/work/apex-scaffold/.trae/documents/任务执行完成报告.md) - 整体进度
-4. [MySQL启动与SQL执行指南.md](file:///Users/work/apex-scaffold/.trae/documents/MySQL启动与SQL执行指南.md) - 数据库操作
-5. [前端按钮权限控制补充执行脚本.md](file:///Users/work/apex-scaffold/.trae/documents/前端按钮权限控制补充执行脚本.md) - 前端修改
+3. [任务执行完成报告.md](task-completion-report.md) - 整体进度
+4. [MySQL启动与SQL执行指南.md](../../../operations/mysql-startup-guide.md) - 数据库操作
+5. [前端按钮权限控制补充执行脚本.md](../task-implementations/frontend-button-permission-script.md) - 前端修改
 
 **配置文件**:
 - [alert-rules.yml](file:///Users/work/apex-scaffold/config/monitoring/prometheus/alert-rules.yml) - 告警规则
@@ -295,11 +295,11 @@ open http://localhost:3000
 - [zipkin.yml](file:///Users/work/apex-scaffold/config/monitoring/grafana/provisioning/datasources/zipkin.yml) - Zipkin配置
 
 **前端组件**:
-- [EmptyState.vue](file:///Users/work/apex-scaffold/frontend-components/EmptyState.vue) - 空状态组件
-- [validate.ts](file:///Users/work/apex-scaffold/frontend-components/validate.ts) - 表单校验
+- EmptyState.vue（目标不存在，无已核实替代文件；原路径：`file:///Users/work/apex-scaffold/frontend-components/EmptyState.vue`） - 空状态组件
+- validate.ts（目标不存在，无已核实替代文件；原路径：`file:///Users/work/apex-scaffold/frontend-components/validate.ts`） - 表单校验
 
 **部署脚本**:
-- [deploy_monitoring_configs.sh](file:///Users/work/apex-scaffold/deploy_monitoring_configs.sh) - 监控部署
+- deploy_monitoring_configs.sh（目标不存在，无已核实替代文件；原路径：`file:///Users/work/apex-scaffold/deploy_monitoring_configs.sh`） - 监控部署
 - [start_mysql_and_run_sql.sh](file:///Users/work/apex-scaffold/start_mysql_and_run_sql.sh) - MySQL启动
 - [check_javadoc.sh](file:///Users/work/apex-scaffold/scripts/check_javadoc.sh) - JavaDoc检查
 

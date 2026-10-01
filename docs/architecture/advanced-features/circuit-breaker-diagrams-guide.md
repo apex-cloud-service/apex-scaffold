@@ -14,15 +14,15 @@
 
 在GitHub或GitLab代码仓库中直接查看以下Mermaid源文件,会自动渲染为图表:
 
-1. **[Sentinel熔断限流架构图](../../../diagrams/sequence/82_sentinel_circuit_breaker_flow.mmd)**
+1. **[Sentinel熔断限流架构图](../../diagrams/sequence/82_sentinel_circuit_breaker_flow.mmd)**
    - 展示Sentinel与Resilience4j双引擎协作流程
    - 包含流控规则、熔断器状态判断、降级处理
 
-2. **[Resilience4j熔断器状态机](../../../diagrams/sequence/83_resilience4j_state_machine.mmd)**
+2. **[Resilience4j熔断器状态机](../../diagrams/sequence/83_resilience4j_state_machine.mmd)**
    - 展示CLOSED/OPEN/HALF_OPEN三种状态转换
    - 包含每种状态的触发条件和行为说明
 
-3. **[热点参数限流时序图](../../../diagrams/sequence/84_rate_limit_hotspot_sequence.mmd)**
+3. **[热点参数限流时序图](../../diagrams/sequence/84_rate_limit_hotspot_sequence.mmd)**
    - 展示Sentinel热点参数限流完整流程
    - 包含双重保护机制(Sentinel + UserRateLimit)
 

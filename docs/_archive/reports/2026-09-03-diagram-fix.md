@@ -161,9 +161,9 @@ done
 ## 📁 相关文件
 
 ### 生成的文档
-- [系统架构设计文档](./系统架构设计文档.md)
-- [数据库设计文档](./数据库设计文档.md)
-- [业务流程文档](./业务流程文档.md)
+- [系统架构设计文档](../../architecture/system-architecture.md)
+- [数据库设计文档](../../architecture/database-design.md)
+- [业务流程文档](../../architecture/business-flows.md)
 
 ### 图表文件目录
 ```

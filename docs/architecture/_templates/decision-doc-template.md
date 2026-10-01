@@ -328,9 +328,9 @@ curl http://localhost:8080/health
 ## 9. 相关文档
 
 ### 内部文档
-- [详细架构文档](./xxx-detail.md)
-- [快速参考卡](./xxx-quick-ref.md)
-- [商业价值说明](./xxx-business-value.md)
+- 详细架构文档（示例目标不存在，待补充；原路径：`./xxx-detail.md`）
+- 快速参考卡（示例目标不存在，待补充；原路径：`./xxx-quick-ref.md`）
+- 商业价值说明（示例目标不存在，待补充；原路径：`./xxx-business-value.md`）
 
 ### 技术文档
 - [方案A官方文档](https://example.com/docs)

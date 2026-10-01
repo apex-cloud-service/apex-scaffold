@@ -135,7 +135,7 @@ WHERE menu_type = 2 AND perms LIKE 'system:%';"
 
 **修改内容**: 为所有操作按钮添加 `v-permission="'xxx'"` 指令
 
-**参考文档**: [前端按钮权限控制补充执行脚本.md](./.trae/documents/前端按钮权限控制补充执行脚本.md)
+**参考文档**: [前端按钮权限控制补充执行脚本.md](../task-implementations/frontend-button-permission-script.md)
 
 **预计耗时**: 1-2小时
 
@@ -174,7 +174,7 @@ npm run dev
 4. 配置告警规则
 5. 测试验证
 
-**参考文档**: [Grafana监控平台现状与配置总结.md](./.trae/documents/Grafana监控平台现状与配置总结.md)
+**参考文档**: [Grafana监控平台现状与配置总结.md](../../../operations/grafana-status-summary.md)
 
 **预计耗时**: 2-3天
 
@@ -307,16 +307,16 @@ npm run dev
 
 ### 核心文档
 
-1. [实施计划](file:///Users/work/apex-scaffold/.trae/documents/前后端完善与监控增强实施计划.md) - 总体规划
-2. [前端审计报告](file:///Users/work/apex-scaffold/.trae/documents/前端页面审计报告.md) - 现状分析
-3. [权限控制指南](file:///Users/work/apex-scaffold/.trae/documents/前端按钮权限控制补充指南.md) - 理论方法
-4. [权限控制执行脚本](file:///Users/work/apex-scaffold/.trae/documents/前端按钮权限控制补充执行脚本.md) - 具体步骤
-5. [SQL执行指南](file:///Users/work/apex-scaffold/.trae/documents/数据库SQL脚本执行指南.md) - SQL执行
-6. [监控配置总结](file:///Users/work/apex-scaffold/.trae/documents/Grafana监控平台现状与配置总结.md) - 监控方案
+1. [实施计划](../../../../08-project-management/plans/monitoring-enhancement-plan.md) - 总体规划
+2. [前端审计报告](../../../../04-development/frontend/page-audit-report.md) - 现状分析
+3. [权限控制指南](../../../../04-development/frontend/button-permission-guide.md) - 理论方法
+4. [权限控制执行脚本](../task-implementations/frontend-button-permission-script.md) - 具体步骤
+5. [SQL执行指南](../../../operations/sql-execution-guide.md) - SQL执行
+6. [监控配置总结](../../../operations/grafana-status-summary.md) - 监控方案
 
 ### 代码文件
 
-- [SQL脚本](file:///Users/work/apex-scaffold/frontend_button_permission_config.sql) - 数据库配置
+- SQL脚本（目标不存在，无已核实替代文件；原路径：`file:///Users/work/apex-scaffold/frontend_button_permission_config.sql`） - 数据库配置
 
 ---
 

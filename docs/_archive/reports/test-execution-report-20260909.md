@@ -325,9 +325,9 @@ apex-generator/target/surefire-reports/        # 代码生成器模块测试报�
 
 ### 相关文档
 
-- [测试完整性和报告计划](file:///Users/work/apex-scaffold/.trae/documents/test-completeness-and-reporting_plan.md)
+- [测试完整性和报告计划](../technical/test-completeness-plan.md)
 - [项目 README](file:///Users/work/apex-scaffold/README.md)
-- [开发规范](file:///Users/work/apex-scaffold/AGENT.md)
+- 开发规范（目标不存在，无已核实替代文件；原路径：`file:///Users/work/apex-scaffold/AGENT.md`）
 
 ---
 

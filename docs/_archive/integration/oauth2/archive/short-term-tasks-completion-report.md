@@ -390,9 +390,9 @@ open apex-application/target/site/jacoco/index.html
 
 ## 📚 相关文档
 
-- **实施指南**: [oauth2_test_tasks_implementation_guide.md](file:///Users/work/apex-scaffold/.trae/documents/oauth2_test_tasks_implementation_guide.md)
-- **修复报告**: [oauth2_unit_test_fix_report.md](file:///Users/work/apex-scaffold/.trae/documents/oauth2_unit_test_fix_report.md)
-- **mvnd标准**: [mvnd_build_standard.md](file:///Users/work/apex-scaffold/.trae/documents/mvnd_build_standard.md)
+- **实施指南**: [oauth2_test_tasks_implementation_guide.md](test-tasks-implementation-guide.md)
+- **修复报告**: [oauth2_unit_test_fix_report.md](unit-test-fix-report.md)
+- **mvnd标准**: [mvnd_build_standard.md](../../../../04-development/mvnd-build-standard.md)
 
 ---
 

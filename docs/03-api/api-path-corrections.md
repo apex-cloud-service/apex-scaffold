@@ -9,7 +9,7 @@
 
 ## 一、概述
 
-本文档基于 [实现一致性修正报告](../../.trae/documents/implementation-consistency-fix-report.md) 的发现,说明实际 API 路径与参数,纠正历史文档中的错误描述。
+本文档基于 [实现一致性修正报告](../_archive/trae-reports/2026-09/implementation-consistency-fix-report.md) 的发现,说明实际 API 路径与参数,纠正历史文档中的错误描述。
 
 ### 1.1 核心变更
 
@@ -521,7 +521,7 @@ const beforeUpload = (file: File) => {
 ## 八、参考资料
 
 ### 8.1 内部文档
-- [实现一致性修正报告](../../.trae/documents/implementation-consistency-fix-report.md)
+- [实现一致性修正报告](../_archive/trae-reports/2026-09/implementation-consistency-fix-report.md)
 - [四张时序图](../diagrams/sequence/)
 - [环境变量管理指南](../_archive/operations/environment-variables.md)
 

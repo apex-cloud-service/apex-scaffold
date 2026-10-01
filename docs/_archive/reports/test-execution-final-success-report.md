@@ -382,7 +382,7 @@ apex-*/target/site/jacoco/index.html
 
 - [项目 AGENTS 规范](file:///Users/work/apex-scaffold/AGENTS.md)
 - [项目 README](file:///Users/work/apex-scaffold/README.md)
-- [测试计划](file:///Users/work/apex-scaffold/.trae/documents/test-completeness-and-reporting_plan.md)
+- [测试计划](../technical/test-completeness-plan.md)
 
 ---
 

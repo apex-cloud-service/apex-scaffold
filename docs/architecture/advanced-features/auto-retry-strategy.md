@@ -609,10 +609,10 @@ apex_outbox_records{status="DEAD"} 3
 
 ## 六、相关文档
 
-- [高级功能使用指南](../../ADVANCED_FEATURES.md)
-- [安全防护全景评估](../../SECURITY_PROTECTIONS.md)
+- [高级功能使用指南](../../05-operations/advanced-features.md)
+- [安全防护全景评估](../../05-operations/security-protections.md)
 - [MQ 重试配置加固计划](../../_archive/superpowers/plans/2026-08-30-mq-retry-configuration-hardening.md)
-- [配置项详解](../../CONFIGURATION.md)
+- [配置项详解](../../05-operations/configuration.md)
 
 ---
 

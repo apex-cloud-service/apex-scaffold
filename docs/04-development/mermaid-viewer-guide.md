@@ -22,7 +22,7 @@ Apex Scaffold 项目文档中包含大量 Mermaid 流程图、时序图、状态
 
 **使用步骤**：
 
-1. 在浏览器中打开：[docs/mermaid-viewer.html](./mermaid-viewer.html)
+1. 在浏览器中打开：[docs/mermaid-viewer.html](../mermaid-viewer.html)
 
 2. 从下拉菜单选择要查看的文档
 

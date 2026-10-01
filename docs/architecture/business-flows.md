@@ -916,9 +916,9 @@ if (existFile != null) {
 
 ### 7.1 相关文档
 
-- [系统架构设计文档](/.trae/documents/系统架构设计文档.md)
-- [数据库设计文档](/.trae/documents/数据库设计文档.md)
-- [配置文件完整性检查报告](/.trae/documents/配置文件完整性检查报告.md)
+- [系统架构设计文档](system-architecture.md)
+- [数据库设计文档](database-design.md)
+- [配置文件完整性检查报告](../_archive/operations/configuration.md)
 
 ### 7.2 状态码说明
 

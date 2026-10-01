@@ -16,7 +16,7 @@
 - 授权更新和续期
 - 常见问题处理
 
-### [商业版本](./commercial-versions.md)
+### [商业版本](COMMERCIAL_VERSIONS.md)
 
 商业版本功能对比和说明
 

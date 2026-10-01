@@ -303,9 +303,9 @@ npm run dev
 
 ## 📚 相关文档
 
-- [后端完成报告](/Users/work/apex-scaffold/.trae/documents/phase-2-3-backend-completion-report.md)
+- [后端完成报告](phase-2-3-backend-completion-report.md)
 - [API接口文档](http://localhost:8080/swagger-ui.html)（启动后端后访问）
-- [开发规范](AGENTS.md)
+- [开发规范](../../../../AGENTS.md)
 
 ## ✅ 验证清单
 

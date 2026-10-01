@@ -276,8 +276,8 @@ cd /Users/work/apex-scaffold
    - npm run build验证
 
 **参考文档**:
-- [前端组件使用指南.md](file:///Users/work/apex-scaffold/.trae/documents/前端组件使用指南.md)
-- [前端按钮权限控制补充执行脚本.md](file:///Users/work/apex-scaffold/.trae/documents/前端按钮权限控制补充执行脚本.md)
+- [前端组件使用指南.md](../../../../04-development/frontend/component-guide.md)
+- [前端按钮权限控制补充执行脚本.md](../task-implementations/frontend-button-permission-script.md)
 
 ---
 
@@ -397,28 +397,28 @@ cd /Users/work/apex-scaffold
 
 ### 总结报告
 
-1. [项目最终交付报告.md](file:///Users/work/apex-scaffold/.trae/documents/项目最终交付报告.md) ⭐ **本文档**
-2. [后端项目任务完成总结报告.md](file:///Users/work/apex-scaffold/.trae/documents/后端项目任务完成总结报告.md)
-3. [前端项目任务完成总结报告.md](file:///Users/work/apex-scaffold/.trae/documents/前端项目任务完成总结报告.md)
-4. [项目最终总结报告.md](file:///Users/work/apex-scaffold/.trae/documents/项目最终总结报告.md)
+1. [项目最终交付报告.md](final-delivery-report.md) ⭐ **本文档**
+2. [后端项目任务完成总结报告.md](../../backend-completion-summary.md)
+3. [前端项目任务完成总结报告.md](../../frontend-completion-summary.md)
+4. [项目最终总结报告.md](final-project-summary.md)
 
 ### 实施指南
 
-5. [后续任务完整实施方案.md](file:///Users/work/apex-scaffold/.trae/documents/后续任务完整实施方案.md) - Grafana PromQL
-6. [前端组件使用指南.md](file:///Users/work/apex-scaffold/.trae/documents/前端组件使用指南.md) - 组件使用
-7. [前端按钮权限控制补充执行脚本.md](file:///Users/work/apex-scaffold/.trae/documents/前端按钮权限控制补充执行脚本.md) - 权限控制
-8. [MySQL启动与SQL执行指南.md](file:///Users/work/apex-scaffold/.trae/documents/MySQL启动与SQL执行指南.md) - 数据库
+5. [后续任务完整实施方案.md](../task-implementations/follow-up-tasks-plan.md) - Grafana PromQL
+6. [前端组件使用指南.md](../../../../04-development/frontend/component-guide.md) - 组件使用
+7. [前端按钮权限控制补充执行脚本.md](../task-implementations/frontend-button-permission-script.md) - 权限控制
+8. [MySQL启动与SQL执行指南.md](../../../operations/mysql-startup-guide.md) - 数据库
 
 ### 配置文件
 
 9. [alert-rules.yml](file:///Users/work/apex-scaffold/config/monitoring/prometheus/alert-rules.yml) - 告警规则
 10. [alertmanager.yml](file:///Users/work/apex-scaffold/config/monitoring/prometheus/alertmanager.yml) - 告警管理
 11. [zipkin.yml](file:///Users/work/apex-scaffold/config/monitoring/grafana/provisioning/datasources/zipkin.yml) - Zipkin
-12. [frontend_button_permission_config.sql](file:///Users/work/apex-scaffold/frontend_button_permission_config.sql) - SQL
+12. frontend_button_permission_config.sql（目标不存在，无已核实替代文件；原路径：`file:///Users/work/apex-scaffold/frontend_button_permission_config.sql`） - SQL
 
 ### 工具脚本
 
-13. [deploy_monitoring_configs.sh](file:///Users/work/apex-scaffold/deploy_monitoring_configs.sh) - 监控部署
+13. deploy_monitoring_configs.sh（目标不存在，无已核实替代文件；原路径：`file:///Users/work/apex-scaffold/deploy_monitoring_configs.sh`） - 监控部署
 14. [start_mysql_and_run_sql.sh](file:///Users/work/apex-scaffold/start_mysql_and_run_sql.sh) - MySQL启动
 15. [check_javadoc.sh](file:///Users/work/apex-scaffold/scripts/check_javadoc.sh) - JavaDoc检查
 

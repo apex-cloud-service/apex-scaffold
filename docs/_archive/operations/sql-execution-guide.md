@@ -292,8 +292,8 @@ mvnd spring-boot:run -pl apex-interfaces
 
 ## 🔗 相关文档
 
-- [前端按钮权限控制补充执行脚本.md](./.trae/documents/前端按钮权限控制补充执行脚本.md)
-- [前端按钮权限控制补充指南.md](./.trae/documents/前端按钮权限控制补充指南.md)
+- [前端按钮权限控制补充执行脚本.md](../reports/archive/task-implementations/frontend-button-permission-script.md)
+- [前端按钮权限控制补充指南.md](../../04-development/frontend/button-permission-guide.md)
 
 ---
 

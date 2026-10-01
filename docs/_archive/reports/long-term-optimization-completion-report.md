@@ -220,7 +220,7 @@
 
 ### 四、知识沉淀 - 开发者手册 2.0
 
-**文件**: [docs/DEVELOPER_HANDBOOK.md](file:///Users/work/apex-scaffold/docs/DEVELOPER_HANDBOOK.md)
+**文件**: [docs/DEVELOPER_HANDBOOK.md](../../01-guides/developer-handbook.md)
 
 **文档规模**: 约 650 行,18,000+ 字
 
@@ -386,7 +386,7 @@
 
 ### 给开发者
 
-1. 📖 **快速上手**: 阅读 [开发者手册 2.0](file:///Users/work/apex-scaffold/docs/DEVELOPER_HANDBOOK.md)
+1. 📖 **快速上手**: 阅读 [开发者手册 2.0](../../01-guides/developer-handbook.md)
 2. 🔧 **响应式开发**: 参考 [WebFlux 响应式编程指南](file:///Users/work/apex-scaffold/docs/architecture/reactive-programming-guide.md)
 3. 🎨 **设计模式**: 学习 [策略模式实现指南](file:///Users/work/apex-scaffold/docs/architecture/strategy-pattern-guide.md)
 4. ✅ **代码质量**: 提交前运行 `./scripts/ci/check-doc-consistency.sh`

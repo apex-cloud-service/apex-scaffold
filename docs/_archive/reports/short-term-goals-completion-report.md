@@ -389,7 +389,7 @@ if ! echo "${basename}" | grep -qE '^V[0-9]+__[a-zA-Z0-9_]+\.sql$'; then
 1. 📖 **快速查阅接口**: 查看 [API_ROUTES.md](file:///Users/work/apex-scaffold/docs/API_ROUTES.md)
 2. ⚙️ **配置环境**: 参考 [.env.example](file:///Users/work/apex-scaffold/.env.example)
 3. ✅ **提交前检查**: 运行 `./scripts/ci/check-doc-consistency.sh`
-4. 📚 **完整文档**: 查看 [开发者手册 2.0](file:///Users/work/apex-scaffold/docs/DEVELOPER_HANDBOOK.md)
+4. 📚 **完整文档**: 查看 [开发者手册 2.0](../../01-guides/developer-handbook.md)
 
 ### 给团队负责人
 

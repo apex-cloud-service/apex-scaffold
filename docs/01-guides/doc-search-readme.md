@@ -258,7 +258,7 @@ ls -la /Users/work/apex-scaffold/docs/integration/oauth2/integration-guide.md
 | [DOC_SEARCH_GUIDE.md](doc-search-guide.md) | 详细使用指南 |
 | [DOC_SEARCH_FIX.md](doc-search-fix.md) | 链接修复说明 |
 | [DOC_SEARCH_CHANGELOG.md](doc-search-changelog.md) | 更新日志 |
-| [link-test.html](link-test.html) | 链接测试页面 |
+| [link-test.html](../link-test.html) | 链接测试页面 |
 
 ---
 

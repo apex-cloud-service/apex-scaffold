@@ -903,9 +903,9 @@ logging:
 
 ## 十、相关文档
 
-- [分布式舱壁隔离使用指南](../../DISTRIBUTED_BULKHEAD_GUIDE.md)
-- [安全防护全景评估](../../SECURITY_PROTECTIONS.md)
-- [配置项详解](../../CONFIGURATION.md)
+- [分布式舱壁隔离使用指南](../../01-guides/distributed-bulkhead-guide.md)
+- [安全防护全景评估](../../05-operations/security-protections.md)
+- [配置项详解](../../05-operations/configuration.md)
 - [系统架构设计](../system-architecture.md)
 - [Sentinel 官方文档](https://sentinelguard.io/)
 

@@ -31,7 +31,7 @@
 
 #### Grafana 24个新增监控面板
 
-**文件**: [后续任务完整实施方案.md](./后续任务完整实施方案.md)
+**文件**: [后续任务完整实施方案.md](follow-up-tasks-plan.md)
 
 **包含内容**:
 - ✅ 8个JVM深度监控面板
@@ -128,7 +128,7 @@
 
 #### JavaDoc质量检查脚本
 
-**文件**: [scripts/check_javadoc.sh](../scripts/check_javadoc.sh)
+**文件**: [scripts/check_javadoc.sh](../../../../../scripts/check_javadoc.sh)
 
 **功能**:
 - 自动扫描Java文件
@@ -138,7 +138,7 @@
 
 #### MySQL启动与SQL执行脚本
 
-**文件**: [start_mysql_and_run_sql.sh](../start_mysql_and_run_sql.sh)
+**文件**: [start_mysql_and_run_sql.sh](../../../../../start_mysql_and_run_sql.sh)
 
 **功能**:
 - 自动检查Docker状态
@@ -329,12 +329,12 @@ cd /Users/work/apex-scaffold
 
 ### 核心文档
 
-**主文档**: [后续任务完整实施方案.md](file:///Users/work/apex-scaffold/.trae/documents/后续任务完整实施方案.md) ⭐
+**主文档**: [后续任务完整实施方案.md](follow-up-tasks-plan.md) ⭐
 
 **基础文档**:
-1. [Grafana监控平台现状与配置总结.md](file:///Users/work/apex-scaffold/.trae/documents/Grafana监控平台现状与配置总结.md) - 监控基础
-2. [任务执行完成报告.md](file:///Users/work/apex-scaffold/.trae/documents/任务执行完成报告.md) - 整体进度
-3. [MySQL启动与SQL执行指南.md](file:///Users/work/apex-scaffold/.trae/documents/MySQL启动与SQL执行指南.md) - 数据库操作
+1. [Grafana监控平台现状与配置总结.md](../../../operations/grafana-status-summary.md) - 监控基础
+2. [任务执行完成报告.md](../project-deliveries/task-completion-report.md) - 整体进度
+3. [MySQL启动与SQL执行指南.md](../../../operations/mysql-startup-guide.md) - 数据库操作
 
 ### 代码文件
 
@@ -343,7 +343,7 @@ cd /Users/work/apex-scaffold
 - [start_mysql_and_run_sql.sh](file:///Users/work/apex-scaffold/start_mysql_and_run_sql.sh) - MySQL一键启动
 
 **SQL脚本**:
-- [frontend_button_permission_config.sql](file:///Users/work/apex-scaffold/frontend_button_permission_config.sql) - 权限配置
+- frontend_button_permission_config.sql（目标不存在，无已核实替代文件；原路径：`file:///Users/work/apex-scaffold/frontend_button_permission_config.sql`） - 权限配置
 
 ---
 

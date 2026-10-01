@@ -228,16 +228,16 @@ npm run dev
 ## 📚 相关文档
 
 1. **后端开发文档**
-   - [后端完成报告](/Users/work/apex-scaffold/.trae/documents/phase-2-3-backend-completion-report.md)
-   - [开发规范](AGENTS.md)
+   - [后端完成报告](phase-2-3-backend-completion-report.md)
+   - [开发规范](../../../../AGENTS.md)
 
 2. **前端开发文档**
-   - [前端集成报告](/Users/work/apex-scaffold/.trae/documents/frontend-integration-report.md)
+   - [前端集成报告](frontend-integration-report.md)
    - [API接口文档](http://localhost:8080/swagger-ui.html)
 
 3. **数据库文档**
-   - [MySQL菜单脚本](/Users/work/apex-scaffold/.trae/documents/menu-config.sql)
-   - [PostgreSQL菜单脚本](/Users/work/apex-scaffold/.trae/documents/menu-config-pg.sql)
+   - MySQL菜单脚本（目标不存在，无已核实替代文件；原路径：`/Users/work/apex-scaffold/.trae/documents/menu-config.sql`）
+   - PostgreSQL菜单脚本（目标不存在，无已核实替代文件；原路径：`/Users/work/apex-scaffold/.trae/documents/menu-config-pg.sql`）
 
 ## 🎉 完成总结
 

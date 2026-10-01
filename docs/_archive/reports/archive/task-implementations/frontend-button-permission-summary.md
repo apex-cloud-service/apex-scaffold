@@ -25,7 +25,7 @@
 
 ### 1. 执行脚本文档
 
-**文件**: [前端按钮权限控制补充执行脚本.md](./前端按钮权限控制补充执行脚本.md)
+**文件**: [前端按钮权限控制补充执行脚本.md](frontend-button-permission-script.md)
 
 **内容**:
 - 完整的Vue文件修改位置和代码对比
@@ -275,9 +275,9 @@ npm run dev
 ## 📞 技术支持
 
 如遇到问题,请参考以下文档:
-1. [前端按钮权限控制补充指南.md](./前端按钮权限控制补充指南.md) - 详细实施指南
-2. [前端按钮权限控制补充执行脚本.md](./前端按钮权限控制补充执行脚本.md) - 执行步骤
-3. [前端页面审计报告.md](./前端页面审计报告.md) - 现状分析
+1. [前端按钮权限控制补充指南.md](../../../../04-development/frontend/button-permission-guide.md) - 详细实施指南
+2. [前端按钮权限控制补充执行脚本.md](frontend-button-permission-script.md) - 执行步骤
+3. [前端页面审计报告.md](../../../../04-development/frontend/page-audit-report.md) - 现状分析
 
 或联系:
 - 前端负责人

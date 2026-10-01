@@ -16,7 +16,7 @@
 
 ### 图表文件
 
-- **架构图**: [77_multi_level_cache_architecture.mmd](diagrams/sequence/77_multi_level_cache_architecture.mmd)
+- **架构图**: [77_multi_level_cache_architecture.mmd](../diagrams/sequence/77_multi_level_cache_architecture.mmd)
 - **详细文档**: [multi-level-cache-complete-guide.md](advanced-features/multi-level-cache-complete-guide.md)
 
 ### 核心内容
@@ -40,7 +40,7 @@
 
 ### 图表文件
 
-- **时序图**: [78_auto_retry_mechanism_sequence.mmd](diagrams/sequence/78_auto_retry_mechanism_sequence.mmd)
+- **时序图**: [78_auto_retry_mechanism_sequence.mmd](../diagrams/sequence/78_auto_retry_mechanism_sequence.mmd)
 - **详细文档**: [auto-retry-strategy.md](advanced-features/auto-retry-strategy.md) (已有)
 
 ### 核心内容
@@ -64,8 +64,8 @@
 
 ### 图表文件
 
-- **架构图**: [79_datasource_switch_architecture.mmd](diagrams/sequence/79_datasource_switch_architecture.mmd)
-- **详细文档**: [DATA_SOURCE_SWITCH_USAGE.md](../../DATA_SOURCE_SWITCH_USAGE.md) (已有)
+- **架构图**: [79_datasource_switch_architecture.mmd](../diagrams/sequence/79_datasource_switch_architecture.mmd)
+- **详细文档**: [DATA_SOURCE_SWITCH_USAGE.md](../01-guides/data-source-switch-usage.md) (已有)
 - **配套SVG**: [41_datasource_switch_architecture.svg](../diagrams/41_datasource_switch_architecture.svg)
 
 ### 核心内容
@@ -92,8 +92,8 @@
 
 ### 图表文件
 
-- **时序图**: [80_audit_log_async_batch_sequence.mmd](diagrams/sequence/80_audit_log_async_batch_sequence.mmd)
-- **详细文档**: [AUDIT_LOG_USAGE.md](../../AUDIT_LOG_USAGE.md) (已有)
+- **时序图**: [80_audit_log_async_batch_sequence.mmd](../diagrams/sequence/80_audit_log_async_batch_sequence.mmd)
+- **详细文档**: [AUDIT_LOG_USAGE.md](../01-guides/audit-log-usage.md) (已有)
 - **配套SVG**: [42_audit_log_sequence.svg](../diagrams/42_audit_log_sequence.svg)
 
 ### 核心内容
@@ -117,9 +117,9 @@
 
 ### 图表文件
 
-- **时序图**: [81_api_gateway_request_flow_sequence.mmd](diagrams/sequence/81_api_gateway_request_flow_sequence.mmd)
+- **时序图**: [81_api_gateway_request_flow_sequence.mmd](../diagrams/sequence/81_api_gateway_request_flow_sequence.mmd)
 - **详细文档**: 待补充完整的API网关文档
-- **配套SVG**: [28_api_gateway_detail.svg](diagrams/28_api_gateway_detail.svg)
+- **配套SVG**: 28_api_gateway_detail.svg（目标不存在，无已核实替代文件；原路径：`diagrams/28_api_gateway_detail.svg`）
 
 ### 核心内容
 
@@ -260,14 +260,14 @@ Mermaid时序图/架构图统一放在`docs/diagrams/sequence/`目录,编号规�
 
 ### 使用指南
 
-- [DATA_SCOPE_USAGE.md](../../DATA_SCOPE_USAGE.md) - 数据权限使用指南
-- [MESSAGE_MIDDLEWARE.md](../../MESSAGE_MIDDLEWARE.md) - 消息中间件使用说明
-- [CONFIGURATION.md](../../CONFIGURATION.md) - 配置文件完整说明
+- [DATA_SCOPE_USAGE.md](../01-guides/data-scope-usage.md) - 数据权限使用指南
+- [MESSAGE_MIDDLEWARE.md](../01-guides/message-middleware.md) - 消息中间件使用说明
+- [CONFIGURATION.md](../05-operations/configuration.md) - 配置文件完整说明
 
 ### 开发规范
 
 - [backend-development-standards.md](../04-development/backend-development-standards.md) - 后端开发规范
-- [BEST_PRACTICES.md](../../BEST_PRACTICES.md) - 最佳实践指南
+- [BEST_PRACTICES.md](../01-guides/best-practices.md) - 最佳实践指南
 
 ---
 

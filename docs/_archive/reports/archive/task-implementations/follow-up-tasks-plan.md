@@ -161,7 +161,7 @@ increase(jvm_gc_pause_seconds_bucket[5m])
 
 **Sentinel治理监控 (6个面板)**
 
-参考 [Grafana监控平台现状与配置总结.md](./Grafana监控平台现状与配置总结.md) 中的完整PromQL查询。
+参考 [Grafana监控平台现状与配置总结.md](../../../operations/grafana-status-summary.md) 中的完整PromQL查询。
 
 **网关性能监控 (5个面板)**
 
@@ -925,9 +925,9 @@ docker-compose restart grafana
 
 ## 📚 相关文档
 
-- [Grafana监控平台现状与配置总结.md](./Grafana监控平台现状与配置总结.md)
+- [Grafana监控平台现状与配置总结.md](../../../operations/grafana-status-summary.md)
 - [前端开发规范.md](../../../../04-development/frontend-development-standards.md)
-- [任务执行完成报告.md](./任务执行完成报告.md)
+- [任务执行完成报告.md](../project-deliveries/task-completion-report.md)
 
 ---
 

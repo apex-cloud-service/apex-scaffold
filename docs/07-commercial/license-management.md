@@ -64,7 +64,7 @@ java -cp "<apex-common.jar>:<依赖>" com.apex.scaffold.common.license.LicenseGe
 ./scripts/license/generate-license.sh STANDARD "示例公司" 365 jwt_auth,rbac,redis_cache
 ```
 
-脚本会自动使用各版本默认功能集（与 [LICENSE-COMMERCIAL.md](../LICENSE-COMMERCIAL.md) 版本对照一致），产物输出到 `dist/license/`。
+脚本会自动使用各版本默认功能集（与 [LICENSE-COMMERCIAL.md](../../LICENSE-COMMERCIAL.md) 版本对照一致），产物输出到 `dist/license/`。
 
 也可以使用 CLI 手动生成：
 

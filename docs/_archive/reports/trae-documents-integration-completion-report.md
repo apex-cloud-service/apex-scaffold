@@ -203,7 +203,7 @@ cd /Users/work/apex-scaffold/.trae/documents/
 
 ### 主要入口
 
-1. **架构文档总索引**: [docs/ARCHITECTURE_INDEX.md](../ARCHITECTURE_INDEX.md)
+1. **架构文档总索引**: [docs/ARCHITECTURE_INDEX.md](../../02-architecture/architecture-index.md)
 2. **集成文档索引**: [docs/integration/README.md](../integration/README.md)
 3. **项目主 README**: [README.md](../../README.md)
 

@@ -144,7 +144,7 @@ grep -r '```mermaid' --include='*.md' . | cut -d: -f1 | sort | uniq
 ## 🧪 测试页面
 
 **创建的测试文件**：
-- 📄 [test-mermaid-viewer.html](./test-mermaid-viewer.html)
+- 📄 [test-mermaid-viewer.html](../test-mermaid-viewer.html)
 
 **测试内容**：
 1. 基础功能测试 - Mermaid 库加载检查
@@ -199,7 +199,7 @@ open http://localhost:8765/test-mermaid-viewer.html
 2. **功能完整**：支持三种查看模式，满足不同使用场景
 3. **用户友好**：美观的 UI 设计，清晰的操作指引
 4. **性能优良**：图表渲染速度快，文档加载流畅
-5. **文档完善**：提供了详细的使用指南 ([MERMAID_VIEWER_GUIDE.md](./MERMAID_VIEWER_GUIDE.md))
+5. **文档完善**：提供了详细的使用指南 ([MERMAID_VIEWER_GUIDE.md](../04-development/mermaid-viewer-guide.md))
 
 ---
 
@@ -227,7 +227,7 @@ open http://localhost:8765/test-mermaid-viewer.html
 
 ### 添加新文档
 
-当添加包含 Mermaid 图表的新文档时，更新 [mermaid-viewer.html](./mermaid-viewer.html)：
+当添加包含 Mermaid 图表的新文档时，更新 [mermaid-viewer.html](../mermaid-viewer.html)：
 
 ```html
 <select id="fileSelect">
@@ -247,8 +247,8 @@ open http://localhost:8765/test-mermaid-viewer.html
 
 ## 📚 相关文档
 
-- [Mermaid 图表查看指南](./MERMAID_VIEWER_GUIDE.md) - 完整使用说明
-- [文档中心首页](./README.md) - 所有文档索引
+- [Mermaid 图表查看指南](../04-development/mermaid-viewer-guide.md) - 完整使用说明
+- [文档中心首页](../README.md) - 所有文档索引
 - [Mermaid 官方文档](https://mermaid.js.org/) - 语法参考
 
 ---

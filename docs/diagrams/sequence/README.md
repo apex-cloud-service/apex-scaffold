@@ -260,10 +260,10 @@ Note over A,B: 跨越注释
 
 ## 📚 相关文档
 
-- [架构文档索引](../../ARCHITECTURE_INDEX.md) - 29 张架构图完整索引
+- [架构文档索引](../../02-architecture/architecture-index.md) - 29 张架构图完整索引
 - [DDD 四层架构](../../architecture/01-logical-architecture-detail.md)
-- [工作流引擎指南](../../WORKFLOW_GUIDE.md)
-- [存储 SPI 指南](../../SPI_PLUGIN_GUIDE.md)
+- [工作流引擎指南](../../01-guides/workflow-guide.md)
+- [存储 SPI 指南](../../01-guides/spi-plugin-guide.md)
 
 ---
 

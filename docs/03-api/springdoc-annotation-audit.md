@@ -247,7 +247,7 @@
 
 ## 📚 参考资源
 
-- [SpringDoc注解模板.md](file:///Users/work/apex-scaffold/docs/SpringDoc注解模板.md) - 完整的注解模板和使用指南
+- [SpringDoc注解模板.md](springdoc-annotation-templates.md) - 完整的注解模板和使用指南
 - Swagger UI: http://localhost:8080/doc.html
 - OpenAPI规范: https://swagger.io/specification/
 

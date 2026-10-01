@@ -148,15 +148,15 @@ cd /Users/work/apex-scaffold
 ## 📚 核心文档索引
 
 **项目总结**:
-- [项目最终总结报告.md](file:///Users/work/apex-scaffold/.trae/documents/项目最终总结报告.md) ⭐ **主报告**
+- [项目最终总结报告.md](final-project-summary.md) ⭐ **主报告**
 
 **实施指南**:
-- [后续任务完整实施方案.md](file:///Users/work/apex-scaffold/.trae/documents/后续任务完整实施方案.md) - Grafana PromQL
-- [前端组件使用指南.md](file:///Users/work/apex-scaffold/.trae/documents/前端组件使用指南.md) - 组件使用
-- [前端按钮权限控制补充执行脚本.md](file:///Users/work/apex-scaffold/.trae/documents/前端按钮权限控制补充执行脚本.md) - 前端修改
+- [后续任务完整实施方案.md](../task-implementations/follow-up-tasks-plan.md) - Grafana PromQL
+- [前端组件使用指南.md](../../../../04-development/frontend/component-guide.md) - 组件使用
+- [前端按钮权限控制补充执行脚本.md](../task-implementations/frontend-button-permission-script.md) - 前端修改
 
 **执行脚本**:
-- [deploy_monitoring_configs.sh](file:///Users/work/apex-scaffold/deploy_monitoring_configs.sh)
+- deploy_monitoring_configs.sh（目标不存在，无已核实替代文件；原路径：`file:///Users/work/apex-scaffold/deploy_monitoring_configs.sh`）
 - [start_mysql_and_run_sql.sh](file:///Users/work/apex-scaffold/start_mysql_and_run_sql.sh)
 - [scripts/check_javadoc.sh](file:///Users/work/apex-scaffold/scripts/check_javadoc.sh)
 

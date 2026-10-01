@@ -817,9 +817,9 @@ spring:
 
 ### 9.1 内部文档
 
-- [系统架构设计文档](/.trae/documents/系统架构设计文档.md)
+- [系统架构设计文档](system-architecture.md)
 
-- [配置文件完整性检查报告](/.trae/documents/配置文件完整性检查报告.md)
+- [配置文件完整性检查报告](../_archive/operations/configuration.md)
 
 ### 9.2 外部参考
 

@@ -405,7 +405,7 @@ docs/
    - 验证检查结果
 
 2. **整理计划文档**  
-   [project-documentation-and-database-reorganization-plan.md](file:///Users/work/apex-scaffold/.trae/documents/project-documentation-and-database-reorganization-plan.md)
+   project-documentation-and-database-reorganization-plan.md（目标不存在，无已核实替代文件；原路径：`file:///Users/work/apex-scaffold/.trae/documents/project-documentation-and-database-reorganization-plan.md`）
    - 整理策略和方案
    - 执行步骤和验证方法
 

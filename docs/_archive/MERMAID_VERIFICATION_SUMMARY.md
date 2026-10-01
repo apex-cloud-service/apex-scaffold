@@ -8,7 +8,7 @@
 
 ## 🎯 验证目标
 
-验证 [mermaid-viewer.html](./mermaid-viewer.html) 能否正常渲染项目文档中的 Mermaid 图表。
+验证 [mermaid-viewer.html](../mermaid-viewer.html) 能否正常渲染项目文档中的 Mermaid 图表。
 
 ---
 
@@ -113,7 +113,7 @@ graph LR
 ## 🧪 测试页面
 
 **创建的测试文件**：
-- 📄 [test-mermaid-viewer.html](./test-mermaid-viewer.html)
+- 📄 [test-mermaid-viewer.html](../test-mermaid-viewer.html)
 
 **测试页面功能**：
 1. ✅ 基础功能自动测试
@@ -197,7 +197,7 @@ http://localhost:8765/mermaid-viewer.html
 
 ### 详细文档
 
-完整使用说明请查看：[Mermaid 图表查看指南](./MERMAID_VIEWER_GUIDE.md)
+完整使用说明请查看：[Mermaid 图表查看指南](../04-development/mermaid-viewer-guide.md)
 
 ---
 
@@ -243,11 +243,11 @@ mermaid.initialize({
 
 ## 📋 相关文档
 
-- 📄 [mermaid-viewer.html](./mermaid-viewer.html) - 主查看器
-- 📄 [test-mermaid-viewer.html](./test-mermaid-viewer.html) - 测试页面
-- 📖 [MERMAID_VIEWER_GUIDE.md](./MERMAID_VIEWER_GUIDE.md) - 使用指南
+- 📄 [mermaid-viewer.html](../mermaid-viewer.html) - 主查看器
+- 📄 [test-mermaid-viewer.html](../test-mermaid-viewer.html) - 测试页面
+- 📖 [MERMAID_VIEWER_GUIDE.md](../04-development/mermaid-viewer-guide.md) - 使用指南
 - 📊 [MERMAID_VIEWER_VERIFICATION_REPORT.md](./MERMAID_VIEWER_VERIFICATION_REPORT.md) - 详细验证报告
-- 📚 [README.md](./README.md) - 文档中心首页
+- 📚 [README.md](../README.md) - 文档中心首页
 
 ---
 

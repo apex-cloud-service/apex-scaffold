@@ -30,7 +30,7 @@
 - ✅ 分析交互状态完整性
 - ✅ 评估代码质量
 
-**产出**: [前端页面审计报告.md](file:///Users/work/apex-scaffold/.trae/documents/前端页面审计报告.md) (277行)
+**产出**: [前端页面审计报告.md](../../../../04-development/frontend/page-audit-report.md) (277行)
 
 #### 1.2 监控配置验证
 - ✅ Management端点配置验证
@@ -38,7 +38,7 @@
 - ✅ 24个监控面板PromQL查询准备
 - ✅ 监控配置文件位置确认
 
-**产出**: [Grafana监控平台现状与配置总结.md](file:///Users/work/apex-scaffold/.trae/documents/Grafana监控平台现状与配置总结.md) (542行)
+**产出**: [Grafana监控平台现状与配置总结.md](../../../operations/grafana-status-summary.md) (542行)
 
 #### 1.3 代码统计分析
 - ✅ 统计783个Java文件
@@ -57,9 +57,9 @@
 - ✅ 执行脚本文档(488行)
 
 **产出**: 
-- [前端按钮权限控制补充指南.md](file:///Users/work/apex-scaffold/.trae/documents/前端按钮权限控制补充指南.md)
-- [前端按钮权限控制补充执行脚本.md](file:///Users/work/apex-scaffold/.trae/documents/前端按钮权限控制补充执行脚本.md)
-- [frontend_button_permission_config.sql](file:///Users/work/apex-scaffold/frontend_button_permission_config.sql)
+- [前端按钮权限控制补充指南.md](../../../../04-development/frontend/button-permission-guide.md)
+- [前端按钮权限控制补充执行脚本.md](../task-implementations/frontend-button-permission-script.md)
+- frontend_button_permission_config.sql（目标不存在，无已核实替代文件；原路径：`file:///Users/work/apex-scaffold/frontend_button_permission_config.sql`）
 
 #### 2.2 监控增强方案
 - ✅ 24个新增面板PromQL查询
@@ -68,7 +68,7 @@
 - ✅ Zipkin集成方案
 
 **产出**:
-- [后续任务完整实施方案.md](file:///Users/work/apex-scaffold/.trae/documents/后续任务完整实施方案.md) (850行)
+- [后续任务完整实施方案.md](../task-implementations/follow-up-tasks-plan.md) (850行)
 - [config/monitoring/prometheus/alert-rules.yml](file:///Users/work/apex-scaffold/config/monitoring/prometheus/alert-rules.yml) (189行)
 - [config/monitoring/prometheus/alertmanager.yml](file:///Users/work/apex-scaffold/config/monitoring/prometheus/alertmanager.yml) (70行)
 - [config/monitoring/grafana/provisioning/datasources/zipkin.yml](file:///Users/work/apex-scaffold/config/monitoring/grafana/provisioning/datasources/zipkin.yml) (30行)
@@ -81,7 +81,7 @@
 **产出**:
 - [scripts/check_javadoc.sh](file:///Users/work/apex-scaffold/scripts/check_javadoc.sh)
 - [start_mysql_and_run_sql.sh](file:///Users/work/apex-scaffold/start_mysql_and_run_sql.sh)
-- [deploy_monitoring_configs.sh](file:///Users/work/apex-scaffold/deploy_monitoring_configs.sh)
+- deploy_monitoring_configs.sh（目标不存在，无已核实替代文件；原路径：`file:///Users/work/apex-scaffold/deploy_monitoring_configs.sh`）
 
 ---
 
@@ -93,9 +93,9 @@
 - ✅ 组件已复制到前端项目
 
 **产出**:
-- [frontend-components/EmptyState.vue](file:///Users/work/apex-scaffold/frontend-components/EmptyState.vue)
-- [frontend-components/validate.ts](file:///Users/work/apex-scaffold/frontend-components/validate.ts)
-- [前端组件使用指南.md](file:///Users/work/apex-scaffold/.trae/documents/前端组件使用指南.md)
+- frontend-components/EmptyState.vue（目标不存在，无已核实替代文件；原路径：`file:///Users/work/apex-scaffold/frontend-components/EmptyState.vue`）
+- frontend-components/validate.ts（目标不存在，无已核实替代文件；原路径：`file:///Users/work/apex-scaffold/frontend-components/validate.ts`）
+- [前端组件使用指南.md](../../../../04-development/frontend/component-guide.md)
 
 #### 3.2 监控配置实施
 - ✅ 17条告警规则配置完成
@@ -198,7 +198,7 @@ cd /Users/work/apex-scaffold
 **执行方式**:
 1. 访问 http://localhost:3000 (admin/admin)
 2. 打开现有Dashboard
-3. 按照[后续任务完整实施方案.md](file:///Users/work/apex-scaffold/.trae/documents/后续任务完整实施方案.md)逐个添加面板
+3. 按照[后续任务完整实施方案.md](../task-implementations/follow-up-tasks-plan.md)逐个添加面板
 4. 复制PromQL查询
 5. 配置面板属性和阈值
 6. 保存并导出JSON
@@ -230,8 +230,8 @@ cd /Users/work/apex-scaffold
 - 使用 `validate` 规则校验表单
 
 **参考文档**:
-- [前端按钮权限控制补充执行脚本.md](file:///Users/work/apex-scaffold/.trae/documents/前端按钮权限控制补充执行脚本.md)
-- [前端组件使用指南.md](file:///Users/work/apex-scaffold/.trae/documents/前端组件使用指南.md)
+- [前端按钮权限控制补充执行脚本.md](../task-implementations/frontend-button-permission-script.md)
+- [前端组件使用指南.md](../../../../04-development/frontend/component-guide.md)
 
 ---
 
@@ -512,9 +512,9 @@ cd /Users/work/apex-scaffold
 所有文档位于: `/Users/work/apex-scaffold/.trae/documents/`
 
 **关键文档**:
-- [任务执行最终完成报告.md](file:///Users/work/apex-scaffold/.trae/documents/任务执行最终完成报告.md) - 执行指南
-- [后续任务完整实施方案.md](file:///Users/work/apex-scaffold/.trae/documents/后续任务完整实施方案.md) - PromQL查询
-- [前端组件使用指南.md](file:///Users/work/apex-scaffold/.trae/documents/前端组件使用指南.md) - 组件使用
+- [任务执行最终完成报告.md](task-final-completion.md) - 执行指南
+- [后续任务完整实施方案.md](../task-implementations/follow-up-tasks-plan.md) - PromQL查询
+- [前端组件使用指南.md](../../../../04-development/frontend/component-guide.md) - 组件使用
 
 **一键命令**:
 ```bash

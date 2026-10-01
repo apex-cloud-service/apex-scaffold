@@ -216,7 +216,7 @@ npm run dev
 ## 🎯 功能演示
 
 ### 1. 统计看板
-![统计看板](示意图)
+统计看板（示例目标不存在，待补充；原路径：`示意图`）
 - **今日发起**: 显示今天新发起的流程数量
 - **运行中**: 显示当前正在运行的流程总数
 - **待办任务**: 显示所有待处理的任务数量
@@ -340,13 +340,13 @@ npm run dev
 ## 📚 相关文档
 
 1. **使用指南**
-   - [工作流监控使用指南](docs/WORKFLOW_MONITOR_GUIDE.md)
-   - [工作流设计器使用指南](docs/WORKFLOW_DESIGNER_GUIDE.md)
+   - [工作流监控使用指南](../../01-guides/workflow-monitor-guide.md)
+   - [工作流设计器使用指南](../../01-guides/workflow-designer-guide.md)
 
 2. **实现文档**
-   - [实现进度报告](.trae/documents/工作流可视化设计器实现进度报告.md)
-   - [前端完整代码文件](.trae/documents/前端完整代码文件.md)
-   - [前端文件创建完成报告](.trae/documents/前端文件创建完成报告.md)
+   - [实现进度报告](workflow-progress.md)
+   - [前端完整代码文件](frontend-code-files.md)
+   - [前端文件创建完成报告](frontend-creation-report.md)
 
 3. **API 文档**
    - 启动后端后访问: http://localhost:8080/doc.html

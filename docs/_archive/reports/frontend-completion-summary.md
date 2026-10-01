@@ -260,7 +260,7 @@ const formRules = {
 3. 按照文档逐个页面修改
 4. 使用全局搜索替换可加快速度
 
-**参考文档**: [前端按钮权限控制补充执行脚本.md](../前端按钮权限控制补充执行脚本.md)
+**参考文档**: [前端按钮权限控制补充执行脚本.md](archive/task-implementations/frontend-button-permission-script.md)
 
 **示例**:
 ```vue
@@ -280,7 +280,7 @@ const formRules = {
 2. 替换现有的空数据展示
 3. 添加操作按钮
 
-**参考文档**: [前端组件使用指南.md](../前端组件使用指南.md)
+**参考文档**: [前端组件使用指南.md](../../04-development/frontend/component-guide.md)
 
 #### 任务3: 应用表单校验规则 (30分钟)
 
@@ -430,13 +430,13 @@ npm run build  # 构建验证
 ## 📚 执行指南索引
 
 **组件使用**:
-- [前端组件使用指南.md](file:///Users/work/apex-scaffold/.trae/documents/前端组件使用指南.md)
+- [前端组件使用指南.md](../../04-development/frontend/component-guide.md)
 
 **权限控制**:
-- [前端按钮权限控制补充执行脚本.md](file:///Users/work/apex-scaffold/.trae/documents/前端按钮权限控制补充执行脚本.md)
+- [前端按钮权限控制补充执行脚本.md](archive/task-implementations/frontend-button-permission-script.md)
 
 **理论方法**:
-- [前端按钮权限控制补充指南.md](file:///Users/work/apex-scaffold/.trae/documents/前端按钮权限控制补充指南.md)
+- [前端按钮权限控制补充指南.md](../../04-development/frontend/button-permission-guide.md)
 
 ---
 

@@ -220,7 +220,7 @@ curl -X POST http://localhost:8080/api/v1/auth/login \
 
 ### 后端开发
 - [后端开发规范](../04-development/backend-development-standards.md)
-- [WebFlux响应式编程最佳实践](architecture/reactive-programming-guide.md)
+- [WebFlux响应式编程最佳实践](../architecture/reactive-programming-guide.md)
 - [MyBatis-Plus使用指南](../01-guides/best-practices.md)
 
 ### 前端开发

@@ -396,10 +396,10 @@ NPV = -50 + 227/1.08 + 227/1.08² + 227/1.08³
 
 ### 8.2 参考资料
 
-- [技术白皮书](./whitepaper.pdf)
-- [架构设计文档](./architecture.md)
-- [性能测试报告](./performance-report.pdf)
-- [客户案例集](./case-studies.pdf)
+- 技术白皮书（示例目标不存在，待补充；原路径：`./whitepaper.pdf`）
+- 架构设计文档（示例目标不存在，待补充；原路径：`./architecture.md`）
+- 性能测试报告（示例目标不存在，待补充；原路径：`./performance-report.pdf`）
+- 客户案例集（示例目标不存在，待补充；原路径：`./case-studies.pdf`）
 
 ---
 

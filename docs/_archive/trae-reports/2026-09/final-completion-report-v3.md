@@ -189,29 +189,29 @@
 
 ### 一、评审与规划文档（.trae/documents/）
 
-1. [project-documentation-and-configuration-review-plan.md](file:///Users/work/apex-scaffold/.trae/documents/project-documentation-and-configuration-review-plan.md) - 五阶段实施计划
-2. [documentation-optimization-plan.md](file:///Users/work/apex-scaffold/.trae/documents/documentation-optimization-plan.md) - 文档与图表优化计划
+1. [project-documentation-and-configuration-review-plan.md](../../../08-project-management/plans/documentation-review-plan.md) - 五阶段实施计划
+2. [documentation-optimization-plan.md](documentation-optimization-plan.md) - 文档与图表优化计划
 
 ### 二、分析报告文档（.trae/documents/）
 
-3. [phase1-issues-report.md](file:///Users/work/apex-scaffold/.trae/documents/phase1-issues-report.md) - 阶段 1 问题清单
-4. [configuration-inventory.md](file:///Users/work/apex-scaffold/.trae/documents/configuration-inventory.md) - 172 个环境变量清单
-5. [scripts-review-report.md](file:///Users/work/apex-scaffold/.trae/documents/scripts-review-report.md) - 25 个脚本评审
-6. [svg-diagrams-review-report.md](file:///Users/work/apex-scaffold/.trae/documents/svg-diagrams-review-report.md) - 29 张 SVG 图表评审
-7. [phase4-assessment-report.md](file:///Users/work/apex-scaffold/.trae/documents/phase4-assessment-report.md) - 架构图完善评估
-8. [svg-deep-verification-report.md](file:///Users/work/apex-scaffold/.trae/documents/svg-deep-verification-report.md) - 图表深度验证
-9. [p0-fix-completion-report.md](file:///Users/work/apex-scaffold/.trae/documents/p0-fix-completion-report.md) - P0 问题修复总结
-10. [final-completion-report-v2.md](file:///Users/work/apex-scaffold/.trae/documents/final-completion-report-v2.md) - 最终完成报告 v2.0
+3. [phase1-issues-report.md](phase1-issues-report.md) - 阶段 1 问题清单
+4. [configuration-inventory.md](../../../05-operations/configuration-inventory.md) - 172 个环境变量清单
+5. [scripts-review-report.md](scripts-review-report.md) - 25 个脚本评审
+6. [svg-diagrams-review-report.md](svg-diagrams-review-report.md) - 29 张 SVG 图表评审
+7. [phase4-assessment-report.md](phase4-assessment-report.md) - 架构图完善评估
+8. [svg-deep-verification-report.md](svg-deep-verification-report.md) - 图表深度验证
+9. [p0-fix-completion-report.md](p0-fix-completion-report.md) - P0 问题修复总结
+10. [final-completion-report-v2.md](final-completion-report-v2.md) - 最终完成报告 v2.0
 11. ⭐ **final-completion-report-v3.md** - 最终完成报告 v3.0（本文档）
 
 ### 三、运维指南文档（docs/operations/）
 
-12. ⭐ [environment-variables.md](file:///Users/work/apex-scaffold/docs/operations/environment-variables.md) - 环境变量管理指南（172 个变量完整说明）
-13. ⭐ [deployment.md](file:///Users/work/apex-scaffold/docs/operations/deployment.md) - 部署指南（新增 Governance 优雅关停）
+12. ⭐ [environment-variables.md](../../operations/environment-variables.md) - 环境变量管理指南（172 个变量完整说明）
+13. ⭐ [deployment.md](../../operations/deployment.md) - 部署指南（新增 Governance 优雅关停）
 
 ### 四、开发指南文档（docs/）
 
-14. ⭐ [QUICKSTART.md](file:///Users/work/apex-scaffold/docs/QUICKSTART.md) - 5 分钟快速开始指南
+14. ⭐ [QUICKSTART.md](../../../00-getting-started/quickstart.md) - 5 分钟快速开始指南
 
 ### 五、时序图文档（docs/diagrams/sequence/）⭐
 
@@ -224,7 +224,7 @@
 ### 六、优化文档
 
 20. [README.md](file:///Users/work/apex-scaffold/README.md) - 修复 3 处版本号，添加 3 个徽章，优化快速开始
-21. [ARCHITECTURE_INDEX.md](file:///Users/work/apex-scaffold/docs/ARCHITECTURE_INDEX.md) - 更新文档版本号 v1.5
+21. [ARCHITECTURE_INDEX.md](../../../02-architecture/architecture-index.md) - 更新文档版本号 v1.5
 
 ---
 
@@ -328,17 +328,17 @@
 
 ### 给开发者
 
-1. 📖 **快速上手**: 阅读 [QUICKSTART.md](file:///Users/work/apex-scaffold/docs/QUICKSTART.md)（5 分钟启动）
-2. 🏗️ **理解架构**: 阅读 [ARCHITECTURE_INDEX.md](file:///Users/work/apex-scaffold/docs/ARCHITECTURE_INDEX.md)（29 张架构图 + 4 张时序图）
-3. 🔧 **配置环境**: 参考 [environment-variables.md](file:///Users/work/apex-scaffold/docs/operations/environment-variables.md)（172 个变量）
+1. 📖 **快速上手**: 阅读 [QUICKSTART.md](../../../00-getting-started/quickstart.md)（5 分钟启动）
+2. 🏗️ **理解架构**: 阅读 [ARCHITECTURE_INDEX.md](../../../02-architecture/architecture-index.md)（29 张架构图 + 4 张时序图）
+3. 🔧 **配置环境**: 参考 [environment-variables.md](../../operations/environment-variables.md)（172 个变量）
 4. ⏱️ **理解流程**: 查看 [时序图](file:///Users/work/apex-scaffold/docs/diagrams/sequence/)（登录、权限、工作流、文件上传）
 
 ### 给运维人员
 
-1. 🚀 **部署应用**: 阅读 [deployment.md](file:///Users/work/apex-scaffold/docs/operations/deployment.md)
-2. 🛡️ **优雅关停**: 了解 [Governance 机制](file:///Users/work/apex-scaffold/docs/operations/deployment.md#25-apex-governance-优雅关停机制-)
-3. 📊 **配置监控**: 阅读 [monitoring.md](file:///Users/work/apex-scaffold/docs/operations/monitoring.md)
-4. 🔐 **管理配置**: 使用 [environment-variables.md](file:///Users/work/apex-scaffold/docs/operations/environment-variables.md)
+1. 🚀 **部署应用**: 阅读 [deployment.md](../../operations/deployment.md)
+2. 🛡️ **优雅关停**: 了解 [Governance 机制](../../operations/deployment.md#25-apex-governance-优雅关停机制-)
+3. 📊 **配置监控**: 阅读 [monitoring.md](../../operations/monitoring.md)
+4. 🔐 **管理配置**: 使用 [environment-variables.md](../../operations/environment-variables.md)
 
 ### 给项目经理
 

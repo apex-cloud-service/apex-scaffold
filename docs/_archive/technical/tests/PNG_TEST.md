@@ -8,10 +8,10 @@
 ## 方法 1: 相对路径 + Markdown 语法
 
 ### 缩略图（1000px）
-![01_logical_architecture_thumb](./docs/diagrams/thumb/01_logical_architecture_thumb.png)
+01_logical_architecture_thumb（目标不存在，无已核实替代文件；原路径：`./docs/diagrams/thumb/01_logical_architecture_thumb.png`）
 
 ### 高清图（2000px）
-![01_logical_architecture](./docs/diagrams/01_logical_architecture.png)
+01_logical_architecture（目标不存在，无已核实替代文件；原路径：`./docs/diagrams/01_logical_architecture.png`）
 
 ---
 
@@ -28,17 +28,17 @@
 ## 方法 3: Markdown 图片 + 相对路径（无 ./）
 
 ### 缩略图
-![thumb](docs/diagrams/thumb/01_logical_architecture_thumb.png)
+thumb（目标不存在，无已核实替代文件；原路径：`docs/diagrams/thumb/01_logical_architecture_thumb.png`）
 
 ### 高清图
-![full](docs/diagrams/01_logical_architecture.png)
+full（目标不存在，无已核实替代文件；原路径：`docs/diagrams/01_logical_architecture.png`）
 
 ---
 
 ## 方法 4: 图片链接列表
 
-1. [缩略图 PNG](./docs/diagrams/thumb/01_logical_architecture_thumb.png)
-2. [高清图 PNG](./docs/diagrams/01_logical_architecture.png)
+1. 缩略图 PNG（目标不存在，无已核实替代文件；原路径：`./docs/diagrams/thumb/01_logical_architecture_thumb.png`）
+2. 高清图 PNG（目标不存在，无已核实替代文件；原路径：`./docs/diagrams/01_logical_architecture.png`）
 3. [SVG 矢量图](../../../diagrams/01_logical_architecture.svg)
 
 ---

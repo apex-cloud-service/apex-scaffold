@@ -9,7 +9,7 @@
 
 ## 一、概述
 
-本文档基于 [实现一致性修正报告](../../.trae/documents/implementation-consistency-fix-report.md) 的发现,提供 Kubernetes 生产环境的配置优化建议,确保 Apex Governance 优雅关停机制正常工作。
+本文档基于 [实现一致性修正报告](../trae-reports/2026-09/implementation-consistency-fix-report.md) 的发现,提供 Kubernetes 生产环境的配置优化建议,确保 Apex Governance 优雅关停机制正常工作。
 
 ### 1.1 当前配置状态
 
@@ -411,7 +411,7 @@ groups:
 
 ### 7.1 内部文档
 - [部署运维文档 - Apex Governance 章节](deployment.md#25-apex-governance-优雅关停机制-)
-- [实现一致性修正报告](../../.trae/documents/implementation-consistency-fix-report.md)
+- [实现一致性修正报告](../trae-reports/2026-09/implementation-consistency-fix-report.md)
 - [环境变量管理指南](environment-variables.md#48-服务治理配置)
 
 ### 7.2 Kubernetes 官方文档

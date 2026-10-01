@@ -441,8 +441,8 @@ DB_PASSWORD=your-db-password
 
 ## 📚 相关文档
 
-- 📘 [OAuth2接入指南](./oauth2_integration_guide.md)
-- 📗 [SSO实现方案](./sso_oauth2_implementation_plan.md)
+- 📘 [OAuth2接入指南](../../../01-guides/oauth2-integration-guide.md)
+- 📗 SSO实现方案（目标不存在，无已核实替代文件；原路径：`./sso_oauth2_implementation_plan.md`）
 - 📙 [RFC 6749 - OAuth 2.0](https://tools.ietf.org/html/rfc6749)
 - 📕 [RFC 7636 - PKCE](https://tools.ietf.org/html/rfc7636)
 

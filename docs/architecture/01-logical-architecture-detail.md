@@ -190,5 +190,5 @@ Spring WebFlux 和 Reactor 管理 HTTP 流程不意味着底层 JDBC、MyBatis�
 
 - [系统架构说明](system-architecture.md)
 
-- [架构图索引](../ARCHITECTURE_INDEX.md)
+- [架构图索引](../02-architecture/architecture-index.md)
 

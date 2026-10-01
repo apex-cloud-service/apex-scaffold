@@ -87,7 +87,7 @@ API 接口文档、规范和版本管理。
 商业版本、授权管理和销售资料。
 
 - [授权管理](./07-commercial/license-management.md) - 授权系统
-- [商业版本](./07-commercial/commercial-versions.md) - 版本对比
+- [商业版本](07-commercial/COMMERCIAL_VERSIONS.md) - 版本对比
 - [销售资料](./07-commercial/sales/) - 销售支持文档
 
 ### [08. 项目管理](./08-project-management/)

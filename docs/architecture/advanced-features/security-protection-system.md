@@ -651,9 +651,9 @@ redis-cli SREM apex:security:blacklist "192.168.1.100"
 
 ## 七、相关文档
 
-- [安全防护全景评估](../../SECURITY_PROTECTIONS.md)
+- [安全防护全景评估](../../05-operations/security-protections.md)
 - [Sentinel 限流熔断架构](./sentinel-rate-limit-circuit-breaker.md)
-- [配置项详解](../../CONFIGURATION.md)
+- [配置项详解](../../05-operations/configuration.md)
 - [系统架构设计](../system-architecture.md)
 
 ---

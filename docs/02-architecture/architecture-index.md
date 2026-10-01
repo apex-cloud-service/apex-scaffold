@@ -5,7 +5,7 @@
 > 适用版本: apex-scaffold v1.2.0+\
 > 技术栈版本: Spring Boot 3.5.15 | Java 17 | Reactor 3.6.13 | Vue 3.5.13
 
-**🔍 快速搜索**: [打开文档搜索工具](doc-search.html) - 支持关键词搜索、分类过滤、实时预览
+**🔍 快速搜索**: [打开文档搜索工具](../doc-search.html) - 支持关键词搜索、分类过滤、实时预览
 
 本文档提供Apex Scaffold项目所有架构图表和技术文档的快速索引。
 
