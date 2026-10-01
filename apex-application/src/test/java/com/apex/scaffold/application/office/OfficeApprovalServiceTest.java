@@ -1,5 +1,6 @@
 package com.apex.scaffold.application.office;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -8,13 +9,13 @@ import com.apex.scaffold.domain.office.OfficePlatform;
 import com.apex.scaffold.domain.office.approval.ApprovalProcess;
 import com.apex.scaffold.domain.office.approval.ApprovalProcessRepository;
 import com.apex.scaffold.domain.office.port.ApprovalPort;
-import java.lang.reflect.Field;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
@@ -28,14 +29,14 @@ class OfficeApprovalServiceTest {
     @Mock
     private ApprovalPort client;
 
-    @InjectMocks
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
     private OfficeApprovalService service;
 
     @BeforeEach
-    void setUp() throws Exception {
-        Field field = OfficeApprovalService.class.getDeclaredField("approvalClients");
-        field.setAccessible(true);
-        field.set(service, new HashMap<>(Map.of("feishuApprovalClient", client)));
+    void setUp() {
+        service = new OfficeApprovalService(
+                repository, new HashMap<>(Map.of("feishuApprovalClient", client)), objectMapper);
     }
 
     @Test
@@ -53,7 +54,11 @@ class OfficeApprovalServiceTest {
             StepVerifier.create(service.initiateApproval(OfficePlatform.FEISHU, 1L, "tpl", "user", "{}"))
                     .expectNext(saved)
                     .verifyComplete();
-            verify(repository).save(any(ApprovalProcess.class));
+
+            ArgumentCaptor<ApprovalProcess> processCaptor = ArgumentCaptor.forClass(ApprovalProcess.class);
+            verify(repository).save(processCaptor.capture());
+            assertThat(processCaptor.getValue().getFormData()).isEqualTo("{}");
+            assertThat(processCaptor.getValue().getCurrentApproverIds()).isEqualTo("[]");
         } finally {
             TenantContext.restoreTenantId(previousTenantId);
         }

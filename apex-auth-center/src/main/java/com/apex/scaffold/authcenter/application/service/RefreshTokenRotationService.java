@@ -4,8 +4,8 @@ import com.apex.scaffold.authcenter.domain.model.entity.TokenEntity;
 import com.apex.scaffold.authcenter.domain.model.vo.TokenPair;
 import com.apex.scaffold.authcenter.domain.repository.TokenRepository;
 import com.apex.scaffold.authcenter.domain.repository.UserRepository;
-import com.apex.scaffold.authcenter.domain.service.SecurityAuditService;
 import com.apex.scaffold.authcenter.domain.service.TokenEncryptionService;
+import com.apex.scaffold.common.audit.SecurityAuditService;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.common.util.JwtUtil;
@@ -61,6 +61,8 @@ public class RefreshTokenRotationService {
     private static final long ACCESS_TOKEN_EXPIRE_MS = 2 * 60 * 60 * 1000L;
     private static final long REFRESH_TOKEN_EXPIRE_MS = 7 * 24 * 60 * 60 * 1000L;
 
+    private static final String TOKEN_TYPE_REFRESH = "REFRESH";
+
     private final TokenRepository tokenRepository;
     private final UserRepository userRepository;
     private final TokenEncryptionService encryptionService;
@@ -73,6 +75,7 @@ public class RefreshTokenRotationService {
      * @param oldRefreshToken 旧的Refresh Token
      * @return 新的TokenPair（包含新的Access Token和Refresh Token）
      */
+    @SuppressWarnings("PMD.MethodTooLongRule")
     public Mono<TokenPair> rotateRefreshToken(String oldRefreshToken) {
         log.debug("开始Refresh Token轮换");
 
@@ -84,7 +87,7 @@ public class RefreshTokenRotationService {
             String tenantId = claims.get("tenantId", String.class);
             String tokenType = claims.get("tokenType", String.class);
 
-            if (!"REFRESH".equals(tokenType)) {
+            if (!TOKEN_TYPE_REFRESH.equals(tokenType)) {
                 return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "必须使用Refresh Token"));
             }
 
@@ -238,14 +241,14 @@ public class RefreshTokenRotationService {
                 .switchIfEmpty(Mono.error(new BusinessException(ResultCode.NOT_FOUND, "用户不存在")))
                 .flatMap(user -> {
                     // 生成JWT Token
-                    Map<String, Object> accessClaims = new HashMap<>();
+                    Map<String, Object> accessClaims = new HashMap<>(16);
                     accessClaims.put("jti", newAccessJti);
                     accessClaims.put("userId", userId);
                     accessClaims.put("tenantId", tenantId);
                     accessClaims.put("tokenType", "ACCESS");
                     accessClaims.put("deviceId", deviceId);
 
-                    Map<String, Object> refreshClaims = new HashMap<>();
+                    Map<String, Object> refreshClaims = new HashMap<>(16);
                     refreshClaims.put("jti", newRefreshJti);
                     refreshClaims.put("userId", userId);
                     refreshClaims.put("tenantId", tenantId);

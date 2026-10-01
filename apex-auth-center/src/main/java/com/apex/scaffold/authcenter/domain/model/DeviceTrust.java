@@ -284,19 +284,20 @@ public class DeviceTrust {
     /**
      * 计算风险评分
      */
+    private static final int LOW_AUTH_COUNT_THRESHOLD = 5;
+
+    private static final int DAYS_UNUSED_THRESHOLD = 30;
+
     public void calculateRiskScore() {
         int score = 0;
 
-        // 基于信任级别
-        score += (5 - trustLevel.getLevel()) * 20; // 0-80分
+        score += (LOW_AUTH_COUNT_THRESHOLD - trustLevel.getLevel()) * 20;
 
-        // 基于使用频率（低频使用增加风险）
-        if (authCount != null && authCount < 5) {
+        if (authCount != null && authCount < LOW_AUTH_COUNT_THRESHOLD) {
             score += 20;
         }
 
-        // 基于时间（长时间未使用增加风险）
-        if (lastAuthAt != null && lastAuthAt.plusDays(30).isBefore(LocalDateTime.now())) {
+        if (lastAuthAt != null && lastAuthAt.plusDays(DAYS_UNUSED_THRESHOLD).isBefore(LocalDateTime.now())) {
             score += 20;
         }
 

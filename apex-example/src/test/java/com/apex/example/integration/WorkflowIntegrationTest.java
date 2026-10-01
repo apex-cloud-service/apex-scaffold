@@ -1,12 +1,13 @@
 package com.apex.example.integration;
 
+import com.apex.example.repository.ExampleUserMapper;
 import com.apex.scaffold.domain.model.workflow.WorkflowDefinition;
 import com.apex.scaffold.infrastructure.persistence.mapper.WorkflowDefinitionMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.test.web.reactive.server.WebTestClient;
 
 /**
  * 工作流引擎集成测试（License Feature: workflow）
@@ -25,8 +26,22 @@ import org.springframework.http.MediaType;
 @Disabled("工作流表未在 apex-example 测试数据库中创建，暂时禁用")
 class WorkflowIntegrationTest extends BaseIntegrationTest {
 
-    @Autowired
-    private WorkflowDefinitionMapper workflowDefinitionMapper;
+    private final WorkflowDefinitionMapper workflowDefinitionMapper;
+
+    /**
+     * 构造器注入共享测试依赖与工作流 Mapper。
+     *
+     * @param webTestClient            响应式 Web 测试客户端
+     * @param exampleUserMapper        示例用户 Mapper
+     * @param workflowDefinitionMapper 工作流定义 Mapper
+     */
+    public WorkflowIntegrationTest(
+            WebTestClient webTestClient,
+            ExampleUserMapper exampleUserMapper,
+            WorkflowDefinitionMapper workflowDefinitionMapper) {
+        super(webTestClient, exampleUserMapper);
+        this.workflowDefinitionMapper = workflowDefinitionMapper;
+    }
 
     @BeforeEach
     void setUpWorkflow() {

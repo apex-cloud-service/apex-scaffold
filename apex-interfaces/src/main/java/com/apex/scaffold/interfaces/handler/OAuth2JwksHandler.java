@@ -41,12 +41,21 @@ import reactor.core.publisher.Mono;
  * @since 1.0.0
  * @see OAuth2DiscoveryHandler
  */
+@SuppressWarnings("checkstyle:TypeName")
 @Slf4j
 @Component
 @RequiredArgsConstructor
 @Tag(name = "OAuth2 JWKS", description = "OAuth2 JSON Web Key Set公钥端点,用于JWT令牌签名验证")
 public class OAuth2JwksHandler {
 
+    /**
+     * 获取 JWT 公钥集（JWKS）
+     *
+     * <p>返回 OAuth2 授权服务器的 JWT 密钥集元数据，客户端可用于验证 JWT 令牌签名。</p>
+     *
+     * @param request 服务器请求对象
+     * @return 包含 JWT 公钥集（JWKS）的响应对象
+     */
     @Operation(
             operationId = "oauth2Jwks",
             summary = "获取JWT公钥集(JWKS)",
@@ -75,9 +84,9 @@ public class OAuth2JwksHandler {
                 """)))
     })
     public Mono<ServerResponse> jwks(ServerRequest request) {
-        Map<String, Object> jwksResponse = new HashMap<>();
+        Map<String, Object> jwksResponse = new HashMap<>(2);
 
-        Map<String, Object> key = new HashMap<>();
+        Map<String, Object> key = new HashMap<>(8);
         key.put("kty", "oct");
         key.put("kid", "apex-oauth2-key-2026");
         key.put("alg", "HS256");

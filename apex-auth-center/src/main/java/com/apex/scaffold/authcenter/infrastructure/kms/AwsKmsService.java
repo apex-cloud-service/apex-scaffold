@@ -28,6 +28,7 @@ import software.amazon.awssdk.services.kms.model.*;
 @Slf4j
 @Service
 @ConditionalOnProperty(name = "security.kms.provider", havingValue = "aws")
+@SuppressWarnings("PMD.ServiceOrDaoClassShouldEndWithImplRule")
 public class AwsKmsService implements KeyManagementService {
 
     private final KmsAsyncClient kmsClient;
@@ -157,11 +158,10 @@ public class AwsKmsService implements KeyManagementService {
                 .onErrorReturn(false);
     }
 
-    /**
-     * 掩码密钥ID（仅显示前8位和后4位）
-     */
+    private static final int MIN_KEY_ID_LENGTH_FOR_MASK = 12;
+
     private String maskKeyId(String keyId) {
-        if (keyId == null || keyId.length() < 12) {
+        if (keyId == null || keyId.length() < MIN_KEY_ID_LENGTH_FOR_MASK) {
             return "***";
         }
         return keyId.substring(0, 8) + "****" + keyId.substring(keyId.length() - 4);

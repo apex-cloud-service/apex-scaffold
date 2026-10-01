@@ -1,64 +1,84 @@
 package com.apex.scaffold.infrastructure.office.client.wecom;
 
+import com.apex.scaffold.common.exception.BusinessException;
+import com.apex.scaffold.common.result.ResultCode;
+import com.apex.scaffold.domain.office.OfficePlatform;
 import com.apex.scaffold.infrastructure.office.client.ApprovalClient;
+import com.apex.scaffold.infrastructure.office.client.OfficeApiSupport;
+import com.apex.scaffold.infrastructure.office.config.OfficePlatformProperties;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.HashMap;
 import java.util.Map;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
-/**
- * 企业微信审批客户端实现
- *
- * <p>封装企业微信开放平台审批相关API调用。
- * 当前为最小化实现，待完善企业微信API集成。
- *
- * @author Apex Team
- * @since 1.3.0
- */
-@Slf4j
-@Component
-@RequiredArgsConstructor
-public class WecomApprovalClient implements ApprovalClient {
+@Component("wecomApprovalClient")
+public class WecomApprovalClient extends OfficeApiSupport implements ApprovalClient {
+    public WecomApprovalClient(
+            WebClient.Builder builder, OfficePlatformProperties properties, ObjectMapper objectMapper) {
+        super(builder, properties, OfficePlatform.WECOM, "https://qyapi.weixin.qq.com");
+    }
 
     @Override
     public Mono<String> createApproval(
             String templateId, String initiatorId, String[] approverIds, Map<String, Object> formData, String title) {
-        log.warn("企业微信审批创建功能待实现，模板：{}，发起人：{}", templateId, initiatorId);
-        // TODO: 集成企业微信审批API
-        return Mono.just("wecom_mock_instance_" + System.currentTimeMillis());
+        Map<String, Object> body = new HashMap<>();
+        body.put("creator_userid", required(initiatorId, "企业微信 initiatorId"));
+        body.put("template_id", required(templateId, "企业微信 templateId"));
+        body.put("apply_data", formData == null ? Map.of() : formData);
+        return token().flatMap(accessToken -> call(
+                response -> text(response.get("sp_no"), "企业微信 sp_no"),
+                postJson("/cgi-bin/oa/applyevent?access_token=" + accessToken, body)));
     }
 
     @Override
     public Mono<String> getApprovalStatus(String platformInstanceId) {
-        log.warn("企业微信审批状态查询功能待实现，实例：{}", platformInstanceId);
-        // TODO: 集成企业微信审批API
-        return Mono.just("PENDING");
+        return getApprovalDetail(platformInstanceId).map(detail -> normalizeStatus(detail.get("sp_status")));
     }
 
     @Override
     public Mono<Boolean> approveProcess(String platformInstanceId, String approverId, String action, String comment) {
-        log.warn("企业微信审批操作功能待实现，实例：{}，操作：{}", platformInstanceId, action);
-        // TODO: 集成企业微信审批API
-        return Mono.just(true);
+        return Mono.error(new BusinessException(ResultCode.BUSINESS_ERROR, "企业微信审批操作需要审批节点上下文，当前端口不支持"));
     }
 
     @Override
     public Mono<Boolean> cancelApproval(String platformInstanceId, String initiatorId) {
-        log.warn("企业微信审批撤销功能待实现，实例：{}", platformInstanceId);
-        // TODO: 集成企业微信审批API
-        return Mono.just(true);
+        return Mono.error(new BusinessException(ResultCode.BUSINESS_ERROR, "企业微信 OA 审批不提供通用撤销接口"));
     }
 
     @Override
     public Mono<Map<String, Object>> getApprovalDetail(String platformInstanceId) {
-        log.warn("企业微信审批详情查询功能待实现，实例：{}", platformInstanceId);
-        // TODO: 集成企业微信审批API
-        return Mono.just(Map.of("status", "PENDING"));
+        return token().flatMap(accessToken -> call(
+                body -> body,
+                postJson(
+                        "/cgi-bin/oa/getapprovaldetail?access_token=" + accessToken,
+                        Map.of("sp_no", required(platformInstanceId, "企业微信 sp_no")))));
     }
 
     @Override
     public String getPlatformType() {
         return "wecom";
+    }
+
+    private Mono<String> token() {
+        return call(
+                body -> text(body.get("access_token"), "企业微信 access_token"),
+                getAccessToken(
+                        "/cgi-bin/gettoken",
+                        Map.of(
+                                "corpid", required(properties.getAppId(), "企业微信 corpId"),
+                                "corpsecret", secret("企业微信"))));
+    }
+
+    private String normalizeStatus(Object value) {
+        String status = value == null ? "UNKNOWN" : value.toString();
+        return switch (status) {
+            case "1" -> "PENDING";
+            case "2" -> "APPROVED";
+            case "3" -> "REJECTED";
+            case "4" -> "CANCELLED";
+            default -> "IN_PROGRESS";
+        };
     }
 }

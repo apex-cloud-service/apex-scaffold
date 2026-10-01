@@ -43,8 +43,11 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class SecurityMonitoringService {
 
-    // Redis键前缀
+    /**
+     * Redis键前缀
+     */
     private static final String REDIS_METRIC_LOGIN_SUCCESS = "metric:login:success";
+
     private static final String REDIS_METRIC_LOGIN_FAIL = "metric:login:fail";
     private static final String REDIS_METRIC_TOKEN_VALIDATE_SUCCESS = "metric:token:validate:success";
     private static final String REDIS_METRIC_TOKEN_VALIDATE_FAIL = "metric:token:validate:fail";
@@ -52,20 +55,28 @@ public class SecurityMonitoringService {
     private static final String REDIS_METRIC_USER_LOCKED = "metric:user:locked";
     private static final String REDIS_METRIC_TOKEN_REPLAY = "metric:token:replay";
 
-    // 告警阈值
-    private static final double LOGIN_FAILURE_RATE_THRESHOLD = 0.30; // 30%
+    /**
+     * 登录失败率告警阈值(30%)
+     */
+    private static final double LOGIN_FAILURE_RATE_THRESHOLD = 0.30;
+
     private static final long TOKEN_VALIDATE_FAIL_THRESHOLD = 100;
     private static final long IP_ACTIVITY_THRESHOLD = 20;
     private static final long USER_LOCKED_THRESHOLD = 10;
 
-    // 指标窗口期
+    /**
+     * 指标窗口期
+     */
     private static final Duration METRIC_WINDOW = Duration.ofMinutes(1);
 
     private final ReactiveRedisTemplate<String, String> redisTemplate;
     private final UnifiedAuditService auditService;
 
-    // 内存计数器（用于快速统计，定期同步到Redis）
+    /**
+     * 内存计数器（用于快速统计，定期同步到Redis）
+     */
     private final AtomicLong loginSuccessCounter = new AtomicLong(0);
+
     private final AtomicLong loginFailCounter = new AtomicLong(0);
     private final AtomicLong tokenValidateSuccessCounter = new AtomicLong(0);
     private final AtomicLong tokenValidateFailCounter = new AtomicLong(0);
@@ -394,9 +405,9 @@ public class SecurityMonitoringService {
     }
 
     /**
-     * 定期同步内存计数器到日志（每分钟）
+     * 定期同步内存计数器到日志（每分钟一次）
      */
-    @Scheduled(fixedRate = 60000) // 每分钟
+    @Scheduled(fixedRate = 60000)
     public void syncMetricsToLog() {
         long loginSuccess = loginSuccessCounter.getAndSet(0);
         long loginFail = loginFailCounter.getAndSet(0);
@@ -487,7 +498,7 @@ public class SecurityMonitoringService {
          * @return 包含各安全指标、失败率和采集时间的 Map
          */
         public Map<String, Object> toMap() {
-            Map<String, Object> map = new HashMap<>();
+            Map<String, Object> map = new HashMap<>(16);
             map.put("loginSuccess", loginSuccess);
             map.put("loginFail", loginFail);
             map.put("loginFailureRate", String.format("%.2f%%", getLoginFailureRate() * 100));

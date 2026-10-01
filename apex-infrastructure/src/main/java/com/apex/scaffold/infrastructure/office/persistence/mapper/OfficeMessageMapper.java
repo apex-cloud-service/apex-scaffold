@@ -38,7 +38,7 @@ public interface OfficeMessageMapper extends BaseMapper<OfficeMessagePO> {
      * @return 消息列表
      */
     @Select("SELECT * FROM office_message WHERE tenant_id = #{tenantId} "
-            + "AND status = 'FAILED' AND retry_count < max_retry_count "
+            + "AND send_status = 'FAILED' AND retry_count < max_retry_count "
             + "AND deleted = 0 ORDER BY created_at ASC LIMIT #{limit}")
     List<OfficeMessagePO> findFailedMessages(@Param("tenantId") Long tenantId, @Param("limit") int limit);
 }

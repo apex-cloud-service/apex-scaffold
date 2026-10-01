@@ -52,10 +52,22 @@ import reactor.core.publisher.Mono;
  * @version 2.0.0
  * @since 2.0.0
  */
+@SuppressWarnings("PMD.ClassNamingShouldBeCamelRule")
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class OAuth2AuthorizationServiceImpl implements OAuth2AuthorizationService {
+
+    private static final String GRANT_TYPE_AUTHORIZATION_CODE = "authorization_code";
+    private static final String GRANT_TYPE_CLIENT_CREDENTIALS = "client_credentials";
+    private static final String GRANT_TYPE_PASSWORD = "password";
+    private static final String PKCE_METHOD_S256 = "S256";
+    private static final String PKCE_METHOD_PLAIN = "plain";
+    private static final String TOKEN_TYPE_BEARER = "Bearer";
+    private static final String TOKEN_TYPE_OAUTH2 = "oauth2";
+    private static final int CODE_VERIFIER_MIN_LENGTH = 43;
+    private static final int CODE_VERIFIER_MAX_LENGTH = 128;
+    private static final int DEFAULT_MAP_CAPACITY = 16;
 
     private final OAuth2RegisteredClientRepository clientRepository;
     private final OAuth2AuthorizationConsentRepository consentRepository;
@@ -85,12 +97,20 @@ public class OAuth2AuthorizationServiceImpl implements OAuth2AuthorizationServic
                 .findByClientId(clientId)
                 .switchIfEmpty(Mono.error(new BusinessException(ResultCode.UNAUTHORIZED, "无效的客户端ID")))
                 .flatMap(client -> {
-                    if (!client.supportsGrantType("authorization_code")) {
+                    if (!client.supportsGrantType(GRANT_TYPE_AUTHORIZATION_CODE)) {
                         return Mono.error(new BusinessException(ResultCode.UNAUTHORIZED, "客户端不支持授权码模式"));
                     }
 
                     if (!client.getRedirectUris().contains(redirectUri)) {
                         return Mono.error(new BusinessException(ResultCode.UNAUTHORIZED, "无效的重定向URI"));
+                    }
+
+                    if (codeChallenge != null && codeChallengeMethod != null) {
+                        if (!PKCE_METHOD_S256.equals(codeChallengeMethod)
+                                && !PKCE_METHOD_PLAIN.equals(codeChallengeMethod)) {
+                            return Mono.error(
+                                    new BusinessException(ResultCode.PARAM_INVALID, "不支持的 code_challenge_method"));
+                        }
                     }
 
                     String code = generateRandomCode();
@@ -144,7 +164,7 @@ public class OAuth2AuthorizationServiceImpl implements OAuth2AuthorizationServic
     public Mono<OAuth2AccessTokenEntity> clientCredentialsGrant(String clientId, String clientSecret, String scope) {
 
         return validateClient(clientId, clientSecret).flatMap(client -> {
-            if (!client.supportsGrantType("client_credentials")) {
+            if (!client.supportsGrantType(GRANT_TYPE_CLIENT_CREDENTIALS)) {
                 return Mono.error(new BusinessException(ResultCode.UNAUTHORIZED, "客户端不支持客户端凭证模式"));
             }
 
@@ -157,7 +177,7 @@ public class OAuth2AuthorizationServiceImpl implements OAuth2AuthorizationServic
             String clientId, String clientSecret, String username, String password, String scope) {
 
         return validateClient(clientId, clientSecret).flatMap(client -> {
-            if (!client.supportsGrantType("password")) {
+            if (!client.supportsGrantType(GRANT_TYPE_PASSWORD)) {
                 return Mono.error(new BusinessException(ResultCode.UNAUTHORIZED, "客户端不支持密码模式"));
             }
 
@@ -231,7 +251,7 @@ public class OAuth2AuthorizationServiceImpl implements OAuth2AuthorizationServic
 
         OAuth2AccessTokenEntity entity = new OAuth2AccessTokenEntity();
         entity.setTokenValue(accessToken);
-        entity.setTokenType("Bearer");
+        entity.setTokenType(TOKEN_TYPE_BEARER);
         entity.setClientId(clientId);
         entity.setUserId(userId);
         entity.setScope(scope);
@@ -243,7 +263,7 @@ public class OAuth2AuthorizationServiceImpl implements OAuth2AuthorizationServic
     }
 
     private String generateJwtToken(String clientId, String userId, String scope, Duration ttl) {
-        Map<String, Object> claims = new HashMap<>();
+        Map<String, Object> claims = new HashMap<>(DEFAULT_MAP_CAPACITY);
         claims.put("client_id", clientId);
         if (userId != null) {
             claims.put("user_id", userId);
@@ -251,7 +271,7 @@ public class OAuth2AuthorizationServiceImpl implements OAuth2AuthorizationServic
         if (scope != null) {
             claims.put("scope", scope);
         }
-        claims.put("type", "oauth2");
+        claims.put("type", TOKEN_TYPE_OAUTH2);
 
         String subject = userId != null ? userId : clientId;
         return JwtUtil.generateToken(subject, claims, ttl.toMillis());
@@ -327,6 +347,7 @@ public class OAuth2AuthorizationServiceImpl implements OAuth2AuthorizationServic
         return UUID.randomUUID().toString().replace("-", "");
     }
 
+    @SuppressWarnings("PMD.LowerCamelCaseVariableNamingRule")
     private boolean verifyPKCE(String codeVerifier, String codeChallenge, String method) {
         if (codeVerifier == null || codeChallenge == null) {
             return false;
@@ -339,11 +360,11 @@ public class OAuth2AuthorizationServiceImpl implements OAuth2AuthorizationServic
 
         try {
             String computed;
-            if ("S256".equals(method)) {
+            if (PKCE_METHOD_S256.equals(method)) {
                 MessageDigest digest = MessageDigest.getInstance("SHA-256");
                 byte[] hash = digest.digest(codeVerifier.getBytes(StandardCharsets.US_ASCII));
                 computed = Base64.getUrlEncoder().withoutPadding().encodeToString(hash);
-            } else if ("plain".equals(method)) {
+            } else if (PKCE_METHOD_PLAIN.equals(method)) {
                 computed = codeVerifier;
             } else {
                 log.warn("不支持的 code_challenge_method: {}", method);
@@ -363,7 +384,7 @@ public class OAuth2AuthorizationServiceImpl implements OAuth2AuthorizationServic
         }
 
         int length = codeVerifier.length();
-        if (length < 43 || length > 128) {
+        if (length < CODE_VERIFIER_MIN_LENGTH || length > CODE_VERIFIER_MAX_LENGTH) {
             return false;
         }
 

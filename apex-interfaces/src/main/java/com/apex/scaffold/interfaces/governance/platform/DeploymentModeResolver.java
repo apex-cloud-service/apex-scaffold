@@ -20,6 +20,7 @@ public class DeploymentModeResolver {
     private static final String PLATFORM_ENV = "APEX_DEPLOYMENT_PLATFORM";
     private static final String KUBERNETES_SERVICE_HOST = "KUBERNETES_SERVICE_HOST";
     private static final String SERVICE_ACCOUNT_TOKEN = "/var/run/secrets/kubernetes.io/serviceaccount/token";
+    private static final String PLATFORM_VALUE_COMPOSE = "compose";
 
     /**
      * 解析最终部署模式。
@@ -48,7 +49,7 @@ public class DeploymentModeResolver {
         if (hasKubernetesEvidence(environment)) {
             modes.add(DeploymentMode.KUBERNETES);
         }
-        if ("compose".equalsIgnoreCase(environment.get(PLATFORM_ENV))) {
+        if (PLATFORM_VALUE_COMPOSE.equalsIgnoreCase(environment.get(PLATFORM_ENV))) {
             modes.add(DeploymentMode.COMPOSE);
         }
         return modes;

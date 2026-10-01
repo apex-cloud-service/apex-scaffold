@@ -20,9 +20,10 @@ import org.springframework.data.relational.core.mapping.Table;
 @Table("ip_access_control")
 public class IpAccessControl {
 
-    /**
-     * 主键ID
-     */
+    private static final String CIDR_SEPARATOR = "/";
+    private static final String WILDCARD_CHAR = "*";
+    private static final int IP_OCTET_COUNT = 4;
+
     @Id
     private Long id;
 
@@ -118,18 +119,15 @@ public class IpAccessControl {
             return false;
         }
 
-        // 精确匹配
         if (ipAddress.equals(targetIp)) {
             return true;
         }
 
-        // CIDR匹配
-        if (ipAddress.contains("/")) {
+        if (ipAddress.contains(CIDR_SEPARATOR)) {
             return matchesCidr(targetIp, ipAddress);
         }
 
-        // 通配符匹配（如 192.168.1.*）
-        if (ipAddress.contains("*")) {
+        if (ipAddress.contains(WILDCARD_CHAR)) {
             return matchesWildcard(targetIp, ipAddress);
         }
 
@@ -162,12 +160,12 @@ public class IpAccessControl {
         String[] targetParts = targetIp.split("\\.");
         String[] patternParts = pattern.split("\\.");
 
-        if (targetParts.length != 4 || patternParts.length != 4) {
+        if (targetParts.length != IP_OCTET_COUNT || patternParts.length != IP_OCTET_COUNT) {
             return false;
         }
 
-        for (int i = 0; i < 4; i++) {
-            if (!"*".equals(patternParts[i]) && !targetParts[i].equals(patternParts[i])) {
+        for (int i = 0; i < IP_OCTET_COUNT; i++) {
+            if (!WILDCARD_CHAR.equals(patternParts[i]) && !targetParts[i].equals(patternParts[i])) {
                 return false;
             }
         }
@@ -181,7 +179,7 @@ public class IpAccessControl {
     private long ipToLong(String ipAddress) {
         String[] octets = ipAddress.split("\\.");
         long result = 0;
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < IP_OCTET_COUNT; i++) {
             result |= (Long.parseLong(octets[i]) << (24 - (8 * i)));
         }
         return result;

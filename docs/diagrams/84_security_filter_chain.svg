@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 800" width="1400" height="800">
+  <defs>
+    <style>
+      .title-main { font: 700 28px system-ui, sans-serif; fill: #f8fafc; }
+      .title-sub { font: 500 13px system-ui, sans-serif; fill: #94a3b8; }
+      .layer-title { font: 600 16px system-ui, sans-serif; fill: #ffffff; }
+      .section-title { font: 600 14px system-ui, sans-serif; fill: #f8fafc; }
+      .label-text { font: 500 12px system-ui, sans-serif; fill: #e2e8f0; }
+      .code-text { font: 400 11px 'SF Mono', monospace; fill: #38bdf8; }
+      .note-text { font: 400 11px system-ui, sans-serif; fill: #cbd5e1; }
+      .highlight { font: 600 12px system-ui, sans-serif; fill: #fbbf24; }
+      .success-text { font: 600 11px system-ui, sans-serif; fill: #34d399; }
+      .error-text { font: 600 11px system-ui, sans-serif; fill: #f87171; }
+    </style>
+    <linearGradient id="grad-primary" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e40af;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1e3a8a;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="grad-success" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#059669;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#047857;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="grad-error" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#dc2626;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#b91c1c;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="grad-warning" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#d97706;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#b45309;stop-opacity:1" />
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/>
+    </marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#34d399"/>
+    </marker>
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#f87171"/>
+    </marker>
+  </defs>
+
+  <rect width="1400" height="800" fill="#0f172a"/>
+
+  <text x="700" y="35" class="title-main" text-anchor="middle">Spring Security WebFlux 过滤器链架构</text>
+  <text x="700" y="55" class="title-sub" text-anchor="middle">JWT认证 · OAuth2资源服务器 · RBAC授权 · CORS跨域 · 国际化异常处理 · Reactor Context传递</text>
+
+  <rect x="40" y="80" width="260" height="250" rx="8" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+  <rect x="40" y="80" width="260" height="35" rx="8" fill="url(#grad-primary)"/>
+  <text x="60" y="103" class="layer-title">1. 请求入口</text>
+
+  <rect x="60" y="130" width="220" height="180" rx="6" fill="#0f172a" stroke="#475569" stroke-width="1.5"/>
+  <text x="80" y="152" class="section-title">客户端请求</text>
+  <text x="80" y="168" class="code-text">GET /admin-api/v1/users</text>
+  <text x="80" y="184" class="code-text">Authorization: Bearer {JWT}</text>
+  <text x="80" y="200" class="code-text">Accept-Language: zh-CN</text>
+  <line x1="80" y1="210" x2="250" y2="210" stroke="#334155" stroke-width="1"/>
+  <text x="80" y="228" class="section-title">LocaleWebFilter</text>
+  <text x="90" y="244" class="note-text">▸ 解析 Accept-Language</text>
+  <text x="90" y="260" class="note-text">▸ 写入 Reactor Context</text>
+  <text x="90" y="276" class="note-text">▸ 供下游国际化使用</text>
+  <text x="90" y="292" class="code-text">ctx.put(Locale.class, locale)</text>
+
+  <line x1="170" y1="330" x2="170" y2="355" stroke="#64748b" stroke-width="3" marker-end="url(#arrow)"/>
+
+  <rect x="40" y="355" width="260" height="380" rx="8" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+  <rect x="40" y="355" width="260" height="35" rx="8" fill="url(#grad-success)"/>
+  <text x="60" y="378" class="layer-title">2. JWT认证过滤器</text>
+
+  <rect x="60" y="405" width="220" height="310" rx="6" fill="#0f172a" stroke="#475569" stroke-width="1.5"/>
+  <text x="80" y="427" class="section-title">JwtAuthenticationFilter</text>
+  <text x="80" y="443" class="code-text">SecurityWebFiltersOrder</text>
+  <text x="90" y="459" class="code-text">.AUTHENTICATION</text>
+  <line x1="80" y1="469" x2="250" y2="469" stroke="#334155" stroke-width="1"/>
+  <text x="80" y="487" class="section-title">流程</text>
+  <text x="80" y="503" class="label-text">1. 判断公开路径</text>
+  <text x="90" y="519" class="code-text">PUBLIC_PATHS.contains(path)</text>
+  <text x="90" y="535" class="success-text">→ 放行</text>
+  <text x="80" y="553" class="label-text">2. 提取 JWT Token</text>
+  <text x="90" y="569" class="code-text">Authorization: Bearer {token}</text>
+  <text x="80" y="587" class="label-text">3. 验证Token</text>
+  <text x="90" y="603" class="code-text">JwtUtil.parseToken(token)</text>
+  <text x="90" y="619" class="note-text">▸ 签名校验</text>
+  <text x="90" y="635" class="note-text">▸ 过期检查</text>
+  <text x="90" y="651" class="note-text">▸ 黑名单检查</text>
+  <text x="80" y="669" class="label-text">4. 加载用户权限</text>
+  <text x="90" y="685" class="code-text">getUserAuthorities(openId)</text>
+  <text x="90" y="701" class="note-text">▸ Caffeine缓存 (60秒TTL)</text>
+
+  <line x1="300" y1="545" x2="335" y2="545" stroke="#64748b" stroke-width="3" marker-end="url(#arrow)"/>
+
+  <rect x="335" y="80" width="330" height="250" rx="8" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+  <rect x="335" y="80" width="330" height="35" rx="8" fill="url(#grad-warning)"/>
+  <text x="355" y="103" class="layer-title">3. OAuth2资源服务器过滤器</text>
+
+  <rect x="355" y="130" width="290" height="180" rx="6" fill="#0f172a" stroke="#475569" stroke-width="1.5"/>
+  <text x="375" y="152" class="section-title">OAuth2ResourceServerFilter</text>
+  <text x="375" y="168" class="code-text">SecurityWebFiltersOrder</text>
+  <text x="385" y="184" class="code-text">.AUTHENTICATION + 1</text>
+  <line x1="375" y1="194" x2="615" y2="194" stroke="#334155" stroke-width="1"/>
+  <text x="375" y="212" class="section-title">Keycloak OIDC 集成</text>
+  <text x="375" y="228" class="code-text">keycloak.enabled=true</text>
+  <text x="385" y="244" class="note-text">▸ 验证 OAuth2 Access Token</text>
+  <text x="385" y="260" class="note-text">▸ Keycloak 公钥验证签名</text>
+  <text x="385" y="276" class="note-text">▸ 解析用户信息和角色</text>
+  <text x="375" y="292" class="highlight">OidcAuthenticationSuccessHandler</text>
+
+  <line x1="500" y1="330" x2="500" y2="355" stroke="#64748b" stroke-width="3" marker-end="url(#arrow)"/>
+
+  <rect x="335" y="355" width="330" height="380" rx="8" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+  <rect x="335" y="355" width="330" height="35" rx="8" fill="url(#grad-primary)"/>
+  <text x="355" y="378" class="layer-title">4. 授权规则匹配</text>
+
+  <rect x="355" y="405" width="290" height="310" rx="6" fill="#0f172a" stroke="#475569" stroke-width="1.5"/>
+  <text x="375" y="427" class="section-title">authorizeExchange 配置</text>
+  <text x="375" y="443" class="code-text">http.authorizeExchange(exchanges → {</text>
+  <line x1="375" y1="453" x2="615" y2="453" stroke="#334155" stroke-width="1"/>
+  <text x="375" y="471" class="label-text">公开路径 (permitAll)</text>
+  <text x="385" y="487" class="code-text">/api/v1/auth/login</text>
+  <text x="385" y="503" class="code-text">/api/v1/health</text>
+  <text x="385" y="519" class="code-text">/swagger-ui/**</text>
+  <line x1="375" y1="529" x2="615" y2="529" stroke="#334155" stroke-width="1"/>
+  <text x="375" y="547" class="label-text">管理端路径 (hasAnyRole)</text>
+  <text x="385" y="563" class="code-text">/admin-api/v1/**</text>
+  <text x="385" y="579" class="highlight">→ ADMIN, SUPER_ADMIN</text>
+  <text x="385" y="595" class="note-text">SecurityProperties (Nacos动态刷新)</text>
+  <line x1="375" y1="605" x2="615" y2="605" stroke="#334155" stroke-width="1"/>
+  <text x="375" y="623" class="label-text">业务接口 (authenticated)</text>
+  <text x="385" y="639" class="code-text">/api/v1/**</text>
+  <text x="385" y="655" class="note-text">要求有效 JWT</text>
+  <line x1="375" y1="665" x2="615" y2="665" stroke="#334155" stroke-width="1"/>
+  <text x="375" y="683" class="label-text">RBAC 开关</text>
+  <text x="385" y="699" class="code-text">apex.features.rbac=true (默认)</text>
+
+  <line x1="665" y1="545" x2="700" y2="545" stroke="#64748b" stroke-width="3" marker-end="url(#arrow)"/>
+
+  <rect x="700" y="80" width="330" height="250" rx="8" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+  <rect x="700" y="80" width="330" height="35" rx="8" fill="url(#grad-success)"/>
+  <text x="720" y="103" class="layer-title">5. SecurityContext 装配</text>
+
+  <rect x="720" y="130" width="290" height="180" rx="6" fill="#0f172a" stroke="#475569" stroke-width="1.5"/>
+  <text x="740" y="152" class="section-title">认证信息构建</text>
+  <text x="740" y="168" class="code-text">UsernamePasswordAuthenticationToken</text>
+  <text x="750" y="184" class="code-text">principal: openId</text>
+  <text x="750" y="200" class="code-text">credentials: null</text>
+  <text x="750" y="216" class="code-text">authorities: [ROLE_ADMIN, ...]</text>
+  <line x1="740" y1="226" x2="980" y2="226" stroke="#334155" stroke-width="1"/>
+  <text x="740" y="244" class="section-title">写入 SecurityContext</text>
+  <text x="740" y="260" class="code-text">ReactiveSecurityContextHolder</text>
+  <text x="750" y="276" class="code-text">.withAuthentication(auth)</text>
+  <text x="740" y="292" class="note-text">• 通过 Reactor Context 传递</text>
+
+  <line x1="865" y1="330" x2="865" y2="355" stroke="#64748b" stroke-width="3" marker-end="url(#arrow)"/>
+
+  <rect x="700" y="355" width="330" height="380" rx="8" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+  <rect x="700" y="355" width="330" height="35" rx="8" fill="url(#grad-error)"/>
+  <text x="720" y="378" class="layer-title">6. 异常处理(国际化)</text>
+
+  <rect x="720" y="405" width="290" height="150" rx="6" fill="#0f172a" stroke="#475569" stroke-width="1.5"/>
+  <text x="740" y="427" class="section-title">authenticationEntryPoint</text>
+  <text x="740" y="443" class="error-text">401 Unauthorized</text>
+  <text x="740" y="459" class="code-text">Mono.deferContextual(ctx → {</text>
+  <text x="750" y="475" class="code-text">Locale locale = ctx.get(Locale);</text>
+  <text x="750" y="491" class="code-text">String msg = messageUtils.get(</text>
+  <text x="760" y="507" class="code-text">locale, "auth.login_required");</text>
+  <text x="750" y="523" class="code-text">return ResponseUtil.unauthorized();</text>
+  <text x="740" y="539" class="code-text">})</text>
+
+  <rect x="720" y="570" width="290" height="125" rx="6" fill="#0f172a" stroke="#475569" stroke-width="1.5"/>
+  <text x="740" y="592" class="section-title">accessDeniedHandler</text>
+  <text x="740" y="608" class="error-text">403 Forbidden</text>
+  <text x="740" y="624" class="code-text">Mono.deferContextual(ctx → {</text>
+  <text x="750" y="640" class="code-text">String msg = messageUtils.get(</text>
+  <text x="760" y="656" class="code-text">locale, "auth.access_denied");</text>
+  <text x="750" y="672" class="code-text">return ResponseUtil.forbidden();</text>
+  <text x="740" y="688" class="code-text">})</text>
+
+  <line x1="1030" y1="545" x2="1065" y2="545" stroke="#34d399" stroke-width="3" marker-end="url(#arrow-green)"/>
+
+  <rect x="1065" y="80" width="295" height="655" rx="8" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+  <rect x="1065" y="80" width="295" height="35" rx="8" fill="url(#grad-success)"/>
+  <text x="1085" y="103" class="layer-title">7. 业务处理与响应</text>
+
+  <rect x="1085" y="130" width="255" height="180" rx="6" fill="#0f172a" stroke="#475569" stroke-width="1.5"/>
+  <text x="1105" y="152" class="section-title">Handler 业务逻辑</text>
+  <text x="1105" y="168" class="code-text">@RequiresPermission("user:list")</text>
+  <text x="1105" y="184" class="code-text">public Mono&lt;Result&lt;Page&gt;&gt;</text>
+  <text x="1115" y="200" class="code-text">listUsers(ServerRequest req) {</text>
+  <text x="1125" y="216" class="note-text">▸ 从 SecurityContext 获取用户</text>
+  <text x="1125" y="232" class="note-text">▸ 执行业务查询</text>
+  <text x="1125" y="248" class="note-text">▸ 应用数据权限过滤</text>
+  <text x="1125" y="264" class="note-text">▸ 返回 Result 响应</text>
+  <text x="1115" y="280" class="code-text">}</text>
+  <text x="1105" y="296" class="success-text">200 OK</text>
+
+  <rect x="1085" y="325" width="255" height="190" rx="6" fill="#0f172a" stroke="#475569" stroke-width="1.5"/>
+  <text x="1105" y="347" class="section-title">错误码响应策略</text>
+  <text x="1105" y="363" class="code-text">Token过期: 40101</text>
+  <text x="1115" y="379" class="note-text">auth.token_expired</text>
+  <text x="1115" y="395" class="note-text">JwtAuthenticationFilter 精确处理</text>
+  <text x="1105" y="413" class="code-text">未认证: 401</text>
+  <text x="1115" y="429" class="note-text">auth.login_required</text>
+  <text x="1105" y="447" class="code-text">权限不足: 403</text>
+  <text x="1115" y="463" class="note-text">auth.access_denied</text>
+  <text x="1105" y="481" class="code-text">幂等拒绝: 40102</text>
+  <text x="1115" y="497" class="note-text">REPEAT_SUBMIT</text>
+
+  <rect x="1085" y="530" width="255" height="185" rx="6" fill="#0f172a" stroke="#475569" stroke-width="1.5"/>
+  <text x="1105" y="552" class="section-title">安全增强特性</text>
+  <text x="1105" y="568" class="highlight">▸ CORS 跨域配置</text>
+  <text x="1115" y="584" class="note-text">WebFlux CORS 全局配置</text>
+  <text x="1105" y="600" class="highlight">▸ CSRF 禁用</text>
+  <text x="1115" y="616" class="note-text">微信小程序场景不需要</text>
+  <text x="1105" y="632" class="highlight">▸ Token 黑名单</text>
+  <text x="1115" y="648" class="note-text">注销/强制下线 Token 拉黑</text>
+  <text x="1105" y="664" class="highlight">▸ 敏感路径权限刷新</text>
+  <text x="1115" y="680" class="note-text">管理端强制刷新权限缓存</text>
+  <text x="1105" y="696" class="highlight">▸ 国际化错误消息</text>
+  <text x="1115" y="712" class="note-text">zh-CN / en-US 自动切换</text>
+
+  <text x="20" y="785" class="note-text">© 2026 Apex Team · 安全过滤器链架构 v1.0</text>
+</svg>

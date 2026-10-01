@@ -21,7 +21,39 @@ import org.mapstruct.ReportingPolicy;
         implementationName = "CalendarEventDtoAssemblerImpl")
 public interface CalendarEventAssembler {
 
+    /**
+     *
+     *
+     * 将日历事件实体转换为DTO。
+     *
+     *
+     *
+     *
+     *
+     * @param entity 日历事件实体
+     *
+     *
+     * @return 日历事件DTO
+     *
+     *
+     */
     CalendarEventDTO toDto(OfficeCalendarEventEntity entity);
 
+    /**
+     *
+     *
+     * 将日历事件DTO转换为实体。
+     *
+     *
+     *
+     *
+     *
+     * @param dto 日历事件DTO
+     *
+     *
+     * @return 日历事件实体
+     *
+     *
+     */
     OfficeCalendarEventEntity toEntity(CalendarEventDTO dto);
 }

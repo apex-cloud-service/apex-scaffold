@@ -17,20 +17,70 @@ public interface BiometricAuthRepository extends ReactiveCrudRepository<Biometri
     /**
      * 根据用户ID查询所有生物识别配置
      */
+    /**
+     * TODO: Add method description
+     * @return TODO
+     */
+    /**
+     * TODO: Add method description
+     *
+     * @param userId TODO
+     * @return TODO
+     */
     Flux<BiometricAuth> findByUserId(String userId);
 
     /**
      * 根据用户ID和类型查询生物识别配置
+     */
+    /**
+     * TODO: Add method description
+     * @return TODO
+     */
+    /**
+     * TODO: Add method description
+     * @return TODO
+     */
+    /**
+     * TODO: Add method description
+     *
+     * @param userId TODO
+     * @param type TODO
+     * @return TODO
      */
     Mono<BiometricAuth> findByUserIdAndType(String userId, BiometricAuth.BiometricType type);
 
     /**
      * 根据设备ID查询生物识别配置
      */
+    /**
+     * TODO: Add method description
+     * @return TODO
+     */
+    /**
+     * TODO: Add method description
+     *
+     * @param deviceId TODO
+     * @return TODO
+     */
     Flux<BiometricAuth> findByDeviceId(String deviceId);
 
     /**
      * 删除用户的指定类型生物识别配置
+     */
+    /**
+     * TODO: Add method description
+     * @return TODO
+     */
+    /**
+     * TODO: Add method description
+     * @return TODO
+     */
+    /**
+     * TODO: Add method description
+     *
+     * @param userId TODO
+     * @param type TODO
+     * @return TODO
      */
     Mono<Long> deleteByUserIdAndType(String userId, BiometricAuth.BiometricType type);
 }

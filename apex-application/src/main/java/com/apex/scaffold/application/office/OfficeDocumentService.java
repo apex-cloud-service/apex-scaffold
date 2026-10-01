@@ -34,6 +34,12 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class OfficeDocumentService {
 
+    private static final String FIELD_LAST_MODIFIED_TIME = "lastModifiedTime";
+
+    private static final String FIELD_URL = "url";
+
+    private static final String FIELD_TITLE = "title";
+
     private final DocumentInfoRepository documentInfoRepository;
     private final Map<String, DocumentPort> documentClients;
 
@@ -411,9 +417,9 @@ public class OfficeDocumentService {
                 .platform(platform)
                 .platformDocumentId(platformDocumentId)
                 .documentType(documentType)
-                .title((String) detail.getOrDefault("title", ""))
+                .title((String) detail.getOrDefault(FIELD_TITLE, ""))
                 .path((String) detail.get("path"))
-                .url((String) detail.get("url"))
+                .url((String) detail.get(FIELD_URL))
                 .ownerId(ownerId)
                 .ownerName(ownerName)
                 .parentFolderId(parentFolderId)
@@ -430,14 +436,14 @@ public class OfficeDocumentService {
      * @param detail 平台返回的详情
      */
     private void updateDocumentFromPlatform(DocumentInfo doc, Map<String, Object> detail) {
-        if (detail.containsKey("title")) {
-            doc.setTitle((String) detail.get("title"));
+        if (detail.containsKey(FIELD_TITLE)) {
+            doc.setTitle((String) detail.get(FIELD_TITLE));
         }
-        if (detail.containsKey("url")) {
-            doc.setUrl((String) detail.get("url"));
+        if (detail.containsKey(FIELD_URL)) {
+            doc.setUrl((String) detail.get(FIELD_URL));
         }
-        if (detail.containsKey("lastModifiedTime")) {
-            doc.setLastModifiedTime((LocalDateTime) detail.get("lastModifiedTime"));
+        if (detail.containsKey(FIELD_LAST_MODIFIED_TIME)) {
+            doc.setLastModifiedTime((LocalDateTime) detail.get(FIELD_LAST_MODIFIED_TIME));
         }
     }
 

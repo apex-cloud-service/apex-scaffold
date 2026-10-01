@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 800" width="1400" height="800">
+  <metadata>
+    <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/">
+      <rdf:Description>
+        <dc:title>滑动窗口限流算法</dc:title>
+        <dc:creator>Apex Team</dc:creator>
+        <dc:date>2026-09-17</dc:date>
+        <dc:version>1.0</dc:version>
+        <dc:description>SlidingWindow 滑动窗口限流算法 - 桶分片O(1)计数,时间窗口滑动,高效内存占用</dc:description>
+      </rdf:Description>
+    </rdf:RDF>
+  </metadata>
+
+  <defs>
+    <style>
+      .title-main { font: 700 32px system-ui, sans-serif; fill: #0f172a; text-anchor: middle; }
+      .title-version { font: 500 14px system-ui, sans-serif; fill: #64748b; text-anchor: middle; }
+      .section-title { font: 600 18px system-ui, sans-serif; fill: #ffffff; }
+      .step-label { font: 500 14px system-ui, sans-serif; fill: #0f172a; }
+      .code-label { font: 400 10px 'SF Mono', monospace; fill: #2563eb; }
+      .note-text { font: 400 11px system-ui, sans-serif; fill: #64748b; }
+      .param-text { font: 500 11px system-ui, sans-serif; fill: #0891b2; }
+      .bucket-text { font: 600 11px system-ui, sans-serif; fill: #ffffff; text-anchor: middle; }
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/>
+    </marker>
+    <marker id="arrow-slide" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#0891b2"/>
+    </marker>
+    <marker id="arrow-accept" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#059669"/>
+    </marker>
+    <marker id="arrow-reject" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#dc2626"/>
+    </marker>
+  </defs>
+
+  <rect width="1400" height="800" fill="#ffffff"/>
+
+  <text x="700" y="40" class="title-main">滑动窗口限流算法 (Sliding Window)</text>
+  <text x="700" y="65" class="title-version">桶分片O(1)计数 · 时间窗口滑动 · 固定内存占用 · ReentrantLock 线程安全</text>
+
+  <!-- 核心参数区 -->
+  <rect x="50" y="100" width="600" height="180" rx="12" fill="#eff6ff" stroke="#4f46e5" stroke-width="3"/>
+  <rect x="50" y="100" width="600" height="45" rx="12" fill="#4f46e5"/>
+  <text x="70" y="130" class="section-title">核心参数配置</text>
+
+  <rect x="70" y="165" width="170" height="95" rx="8" fill="#ffffff" stroke="#4f46e5" stroke-width="2"/>
+  <text x="90" y="190" class="step-label">窗口大小 (windowMs)</text>
+  <text x="90" y="210" class="param-text">时间窗口: 1000ms</text>
+  <text x="90" y="228" class="note-text">统计时间范围</text>
+  <text x="90" y="244" class="note-text">1秒内最大请求数</text>
+
+  <rect x="260" y="165" width="170" height="95" rx="8" fill="#ffffff" stroke="#4f46e5" stroke-width="2"/>
+  <text x="280" y="190" class="step-label">子桶数量 (bucketCount)</text>
+  <text x="280" y="210" class="param-text">子桶数: 10</text>
+  <text x="280" y="228" class="note-text">每桶100ms</text>
+  <text x="280" y="244" class="note-text">精度vs性能平衡</text>
+
+  <rect x="450" y="165" width="180" height="95" rx="8" fill="#ffffff" stroke="#4f46e5" stroke-width="2"/>
+  <text x="470" y="190" class="step-label">最大许可 (maxPermits)</text>
+  <text x="470" y="210" class="param-text">上限: 100</text>
+  <text x="470" y="228" class="note-text">窗口内最大请求</text>
+  <text x="470" y="244" class="note-text">超出拒绝</text>
+
+  <!-- 滑动窗口可视化 -->
+  <rect x="700" y="100" width="650" height="400" rx="12" fill="#f0fdf4" stroke="#059669" stroke-width="3"/>
+  <rect x="700" y="100" width="650" height="45" rx="12" fill="#059669"/>
+  <text x="720" y="130" class="section-title">滑动窗口与子桶分片</text>
+
+  <!-- 时间轴 -->
+  <line x1="730" y1="180" x2="1320" y2="180" stroke="#64748b" stroke-width="2"/>
+  <text x="730" y="175" class="note-text">时间轴 →</text>
+
+  <!-- 子桶可视化 (10个桶) -->
+  <rect x="730" y="200" width="55" height="70" rx="4" fill="#e0f2fe" stroke="#0891b2" stroke-width="2" opacity="0.3"/>
+  <text x="757" y="240" class="bucket-text" fill="#64748b">0</text>
+  <text x="757" y="260" class="note-text" text-anchor="middle">过期</text>
+
+  <rect x="790" y="200" width="55" height="70" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+  <text x="817" y="240" class="bucket-text" fill="#3b82f6">8</text>
+  <text x="817" y="260" class="note-text" text-anchor="middle">100ms</text>
+
+  <rect x="850" y="200" width="55" height="70" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+  <text x="877" y="240" class="bucket-text" fill="#3b82f6">12</text>
+  <text x="877" y="260" class="note-text" text-anchor="middle">200ms</text>
+
+  <rect x="910" y="200" width="55" height="70" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+  <text x="937" y="240" class="bucket-text" fill="#3b82f6">15</text>
+  <text x="937" y="260" class="note-text" text-anchor="middle">300ms</text>
+
+  <rect x="970" y="200" width="55" height="70" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+  <text x="997" y="240" class="bucket-text" fill="#3b82f6">10</text>
+  <text x="997" y="260" class="note-text" text-anchor="middle">400ms</text>
+
+  <rect x="1030" y="200" width="55" height="70" rx="4" fill="#bbf7d0" stroke="#059669" stroke-width="3"/>
+  <text x="1057" y="240" class="bucket-text" fill="#059669">20</text>
+  <text x="1057" y="260" class="note-text" text-anchor="middle">当前桶</text>
+
+  <rect x="1090" y="200" width="55" height="70" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+  <text x="1117" y="240" class="bucket-text" fill="#3b82f6">18</text>
+  <text x="1117" y="260" class="note-text" text-anchor="middle">600ms</text>
+
+  <rect x="1150" y="200" width="55" height="70" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+  <text x="1177" y="240" class="bucket-text" fill="#3b82f6">9</text>
+  <text x="1177" y="260" class="note-text" text-anchor="middle">700ms</text>
+
+  <rect x="1210" y="200" width="55" height="70" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+  <text x="1237" y="240" class="bucket-text" fill="#3b82f6">7</text>
+  <text x="1237" y="260" class="note-text" text-anchor="middle">800ms</text>
+
+  <rect x="1270" y="200" width="55" height="70" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+  <text x="1297" y="240" class="bucket-text" fill="#3b82f6">1</text>
+  <text x="1297" y="260" class="note-text" text-anchor="middle">900ms</text>
+
+  <!-- 窗口范围标注 -->
+  <line x1="790" y1="190" x2="1325" y2="190" stroke="#059669" stroke-width="3"/>
+  <circle cx="790" cy="190" r="5" fill="#059669"/>
+  <circle cx="1325" cy="190" r="5" fill="#059669"/>
+  <text x="1057" y="305" class="param-text" text-anchor="middle">← 1000ms 窗口 (10个子桶) →</text>
+
+  <!-- 统计信息 -->
+  <rect x="730" y="330" width="590" height="155" rx="8" fill="#ffffff" stroke="#059669" stroke-width="2"/>
+  <text x="750" y="355" class="step-label">窗口统计 (T = 500ms)</text>
+  
+  <text x="750" y="380" class="code-label">buckets[0-9]: [0, 8, 12, 15, 10, 20, 18, 9, 7, 1]</text>
+  <text x="750" y="398" class="code-label">窗口内总计数 = 8+12+15+10+20+18+9+7+1 = 100</text>
+  <text x="750" y="416" class="code-label">当前桶索引 = (T - windowStart) / bucketTimeMs % bucketCount = 5</text>
+  
+  <text x="750" y="441" class="param-text">✓ 时间复杂度: O(bucketCount) = O(10)</text>
+  <text x="750" y="459" class="param-text">✓ 内存占用: 固定 bucketCount 个 long 槽位</text>
+  <text x="750" y="477" class="note-text">vs 朴素滑动窗口: O(n) 遍历10000个时间戳, n个AtomicLong</text>
+
+  <!-- 算法流程区 -->
+  <rect x="50" y="300" width="600" height="200" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="3"/>
+  <rect x="50" y="300" width="600" height="45" rx="12" fill="#d97706"/>
+  <text x="70" y="330" class="section-title">tryAcquire() 算法流程</text>
+
+  <rect x="70" y="365" width="270" height="120" rx="8" fill="#ffffff" stroke="#d97706" stroke-width="2"/>
+  <text x="90" y="388" class="step-label">Step 1: 清理过期桶</text>
+  <text x="90" y="408" class="code-label">long windowStart = now - windowMs;</text>
+  <text x="90" y="423" class="code-label">for (int i = 0; i < bucketCount; i++) {</text>
+  <text x="95" y="438" class="code-label">  if (bucketStartTimes[i] < windowStart) {</text>
+  <text x="100" y="453" class="code-label">    buckets[i] = 0; // 清零过期桶</text>
+  <text x="100" y="468" class="code-label">    bucketStartTimes[i] = now;</text>
+  <text x="95" y="480" class="code-label">  } else total += buckets[i];</text>
+
+  <rect x="360" y="365" width="270" height="120" rx="8" fill="#ffffff" stroke="#d97706" stroke-width="2"/>
+  <text x="380" y="388" class="step-label">Step 2: 检查并累加</text>
+  <text x="380" y="408" class="code-label">if (total + required > maxPermits) {</text>
+  <text x="385" y="423" class="code-label">  return false; // 超限拒绝</text>
+  <text x="380" y="438" class="code-label">}</text>
+  <text x="380" y="453" class="code-label">int idx = locateBucketIndex(now);</text>
+  <text x="380" y="468" class="code-label">buckets[idx] += required;</text>
+  <text x="380" y="480" class="code-label">return true;</text>
+
+  <!-- 时序示例 -->
+  <rect x="50" y="520" width="1300" height="220" rx="12" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2"/>
+  <text x="70" y="550" class="step-label">使用示例与性能对比</text>
+
+  <text x="70" y="575" class="code-label">// 创建滑动窗口: 1秒窗口, 10个子桶, 最大100请求</text>
+  <text x="70" y="590" class="code-label">SlidingWindow window = new SlidingWindow(1000, 10, 100);</text>
+  
+  <text x="70" y="610" class="code-label">// 尝试通过1个请求</text>
+  <text x="70" y="625" class="code-label">if (window.tryAcquire()) {</text>
+  <text x="85" y="640" class="code-label">    // 处理请求</text>
+  <text x="70" y="655" class="code-label">}</text>
+  
+  <text x="70" y="675" class="code-label">// 尝试通过5个请求</text>
+  <text x="70" y="690" class="code-label">if (window.tryAcquire(5)) {</text>
+  <text x="85" y="705" class="code-label">    // 批量处理</text>
+  <text x="70" y="720" class="code-label">}</text>
+
+  <!-- 性能对比表 -->
+  <rect x="700" y="555" width="630" height="170" rx="8" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+  <text x="720" y="580" class="step-label">算法对比 (桶分片 vs 朴素滑动窗口)</text>
+  
+  <line x1="720" y1="595" x2="1310" y2="595" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="740" y="610" class="param-text">维度</text>
+  <text x="900" y="610" class="param-text">朴素滑动窗口</text>
+  <text x="1120" y="610" class="param-text">桶分片滑动窗口 (本实现)</text>
+  
+  <line x1="720" y1="618" x2="1310" y2="618" stroke="#cbd5e1" stroke-width="1"/>
+  
+  <text x="740" y="638" class="note-text">时间复杂度</text>
+  <text x="900" y="638" class="code-label">O(n), n=10000</text>
+  <text x="1120" y="638" class="code-label" fill="#059669">O(1), n=bucketCount=10</text>
+  
+  <text x="740" y="660" class="note-text">内存占用</text>
+  <text x="900" y="660" class="code-label">10000 个 AtomicLong</text>
+  <text x="1120" y="660" class="code-label" fill="#059669">bucketCount 个 long</text>
+  
+  <text x="740" y="682" class="note-text">计数精度</text>
+  <text x="900" y="682" class="code-label">精确 (时间戳级)</text>
+  <text x="1120" y="682" class="code-label">近似 (子桶粒度)</text>
+  
+  <text x="740" y="704" class="note-text">适用场景</text>
+  <text x="900" y="704" class="code-label">低 QPS</text>
+  <text x="1120" y="704" class="code-label" fill="#059669">高 QPS、生产环境</text>
+
+  <text x="700" y="770" class="code-label" text-anchor="middle">© 2026 Apex Team · 滑动窗口限流算法 v1.0 · com.apex.scaffold.common.util.ratelimit.algorithm.SlidingWindow</text>
+</svg>

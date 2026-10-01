@@ -67,7 +67,7 @@ public class WorkflowStatisticsService {
 
                     // 转换状态分布 List<Map> 为 Map<String, Integer>
                     List<Map<String, Object>> statusList = processInstanceMapper.statusDistribution();
-                    Map<String, Integer> statusMap = new HashMap<>();
+                    Map<String, Integer> statusMap = new HashMap<>(16);
                     if (statusList != null) {
                         for (Map<String, Object> row : statusList) {
                             String status = (String) row.get("status");
@@ -93,9 +93,9 @@ public class WorkflowStatisticsService {
     public Mono<WorkflowTrendDTO> getTrend(int days) {
         return Mono.fromCallable(() -> {
                     WorkflowTrendDTO trend = new WorkflowTrendDTO();
-                    List<String> dates = new ArrayList<>();
-                    List<Integer> startedCounts = new ArrayList<>();
-                    List<Integer> completedCounts = new ArrayList<>();
+                    List<String> dates = new ArrayList<>(16);
+                    List<Integer> startedCounts = new ArrayList<>(16);
+                    List<Integer> completedCounts = new ArrayList<>(16);
 
                     LocalDate today = LocalDate.now();
                     for (int i = days - 1; i >= 0; i--) {
@@ -130,7 +130,7 @@ public class WorkflowStatisticsService {
      * 转换 List<Map> 为 Map<LocalDate, Integer>。
      */
     private Map<LocalDate, Integer> convertToDateMap(List<Map<String, Object>> list) {
-        Map<LocalDate, Integer> result = new HashMap<>();
+        Map<LocalDate, Integer> result = new HashMap<>(16);
         if (list != null) {
             for (Map<String, Object> row : list) {
                 Object dateObj = row.get("date");

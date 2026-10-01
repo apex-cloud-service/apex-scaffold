@@ -21,6 +21,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Schema(description = "用户DTO")
 public class UserDTO {
 
     /** 用户 ID，系统内部用户唯一标识。 */

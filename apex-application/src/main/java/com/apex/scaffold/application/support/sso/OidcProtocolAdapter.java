@@ -28,16 +28,27 @@ import reactor.core.publisher.Mono;
  * 同时支持构造 OIDC 登出 URL、基于 Discovery 文档获取元数据及端点连通性测试。
  *
  * @author Apex Team
- * @version 1.2.0
- * @since 1.2.0
+ * @version 1.TOKEN_PARTS_COUNT.0
+ * @since 1.TOKEN_PARTS_COUNT.0
  */
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class OidcProtocolAdapter implements SsoProtocolAdapter {
 
-    // OIDC State CSRF防护
-    private static final String OIDC_STATE_PREFIX = "oidc:state:";
+    private static final String CLAIM_ATTRIBUTES = "attributes";
+
+    private static final String CLAIM_NAME = "name";
+
+    private static final String CLAIM_EMAIL = "email";
+
+    private static final int TOKEN_PARTS_COUNT = 2;
+
+    /**
+     * OIDC State CSRF防护
+     */
+    private static final String STATE_CACHE_PREFIX = "oidc:state:";
+
     private static final Duration STATE_TTL = Duration.ofMinutes(10);
 
     private final WebClient.Builder webClientBuilder;
@@ -55,7 +66,7 @@ public class OidcProtocolAdapter implements SsoProtocolAdapter {
 
         // 将state存储到Redis用于后续验证（10分钟有效期）
         return storeState(state, callbackUrl).then(Mono.fromCallable(() -> {
-            Map<String, Object> result = new HashMap<>();
+            Map<String, Object> result = new HashMap<>(16);
 
             StringBuilder authUrl = new StringBuilder(authEndpoint)
                     .append("?response_type=code")
@@ -147,7 +158,7 @@ public class OidcProtocolAdapter implements SsoProtocolAdapter {
     @Override
     public Mono<Map<String, Object>> logout(Map<String, Object> config, String sessionToken) {
         return Mono.fromCallable(() -> {
-            Map<String, Object> result = new HashMap<>();
+            Map<String, Object> result = new HashMap<>(16);
             String logoutEndpoint = (String) config.get("logoutEndpoint");
             if (logoutEndpoint != null && !logoutEndpoint.isBlank()) {
                 String postLogoutRedirectUri = (String) config.get("postLogoutRedirectUri");
@@ -173,7 +184,7 @@ public class OidcProtocolAdapter implements SsoProtocolAdapter {
         String discoveryUrl = (String) config.get("discoveryUrl");
         if (discoveryUrl == null || discoveryUrl.isBlank()) {
             return Mono.fromCallable(() -> {
-                Map<String, Object> metadata = new HashMap<>();
+                Map<String, Object> metadata = new HashMap<>(16);
                 metadata.put("protocol", "OIDC");
                 metadata.put("authEndpoint", config.get("authEndpoint"));
                 metadata.put("tokenEndpoint", config.get("tokenEndpoint"));
@@ -202,7 +213,7 @@ public class OidcProtocolAdapter implements SsoProtocolAdapter {
                 .onErrorResume(e -> {
                     log.warn("获取 OIDC Discovery 失败: {}", e.getMessage());
                     return Mono.fromCallable(() -> {
-                        Map<String, Object> metadata = new HashMap<>();
+                        Map<String, Object> metadata = new HashMap<>(16);
                         metadata.put("protocol", "OIDC");
                         metadata.put("error", e.getMessage());
                         return metadata;
@@ -217,7 +228,7 @@ public class OidcProtocolAdapter implements SsoProtocolAdapter {
             String authEndpoint = (String) config.get("authEndpoint");
             if (authEndpoint == null || authEndpoint.isBlank()) {
                 return Mono.fromCallable(() -> {
-                    Map<String, Object> result = new HashMap<>();
+                    Map<String, Object> result = new HashMap<>(16);
                     result.put("success", false);
                     result.put("message", "OIDC discoveryUrl 或 authEndpoint 配置缺失");
                     return result;
@@ -238,14 +249,14 @@ public class OidcProtocolAdapter implements SsoProtocolAdapter {
                 .toBodilessEntity()
                 .timeout(Duration.ofSeconds(5))
                 .map(response -> {
-                    Map<String, Object> result = new HashMap<>();
+                    Map<String, Object> result = new HashMap<>(16);
                     result.put("success", response.getStatusCode().is2xxSuccessful());
                     result.put("message", "OIDC 端点可访问");
                     result.put("statusCode", response.getStatusCode().value());
                     return result;
                 })
                 .onErrorResume(e -> {
-                    Map<String, Object> result = new HashMap<>();
+                    Map<String, Object> result = new HashMap<>(16);
                     result.put("success", false);
                     result.put("message", "OIDC 连接失败: " + e.getMessage());
                     return Mono.just(result);
@@ -268,7 +279,7 @@ public class OidcProtocolAdapter implements SsoProtocolAdapter {
         return Mono.fromCallable(() -> {
             try {
                 String[] parts = idToken.split("\\.");
-                if (parts.length < 2) {
+                if (parts.length < TOKEN_PARTS_COUNT) {
                     throw new RuntimeException("ID Token 格式无效");
                 }
 
@@ -276,18 +287,18 @@ public class OidcProtocolAdapter implements SsoProtocolAdapter {
                 @SuppressWarnings("unchecked")
                 Map<String, Object> claims = objectMapper.readValue(payloadJson, Map.class);
 
-                Map<String, Object> userInfo = new HashMap<>();
+                Map<String, Object> userInfo = new HashMap<>(16);
                 userInfo.put("userId", claims.getOrDefault("sub", ""));
                 userInfo.put("username", claims.getOrDefault("preferred_username", claims.get("sub")));
 
-                Map<String, String> attributes = new HashMap<>();
-                if (claims.containsKey("email")) {
-                    attributes.put("email", String.valueOf(claims.get("email")));
+                Map<String, String> attributes = new HashMap<>(16);
+                if (claims.containsKey(CLAIM_EMAIL)) {
+                    attributes.put(CLAIM_EMAIL, String.valueOf(claims.get(CLAIM_EMAIL)));
                 }
-                if (claims.containsKey("name")) {
-                    attributes.put("name", String.valueOf(claims.get("name")));
+                if (claims.containsKey(CLAIM_NAME)) {
+                    attributes.put(CLAIM_NAME, String.valueOf(claims.get(CLAIM_NAME)));
                 }
-                userInfo.put("attributes", attributes);
+                userInfo.put(CLAIM_ATTRIBUTES, attributes);
 
                 return userInfo;
             } catch (Exception e) {
@@ -310,19 +321,19 @@ public class OidcProtocolAdapter implements SsoProtocolAdapter {
                         @SuppressWarnings("unchecked")
                         Map<String, Object> userInfoData = objectMapper.readValue(userInfoJson, Map.class);
 
-                        Map<String, Object> userInfo = new HashMap<>();
+                        Map<String, Object> userInfo = new HashMap<>(16);
                         userInfo.put("userId", userInfoData.getOrDefault("sub", ""));
                         userInfo.put(
                                 "username", userInfoData.getOrDefault("preferred_username", userInfoData.get("sub")));
 
-                        Map<String, String> attributes = new HashMap<>();
-                        if (userInfoData.containsKey("email")) {
-                            attributes.put("email", String.valueOf(userInfoData.get("email")));
+                        Map<String, String> attributes = new HashMap<>(16);
+                        if (userInfoData.containsKey(CLAIM_EMAIL)) {
+                            attributes.put(CLAIM_EMAIL, String.valueOf(userInfoData.get(CLAIM_EMAIL)));
                         }
-                        if (userInfoData.containsKey("name")) {
-                            attributes.put("name", String.valueOf(userInfoData.get("name")));
+                        if (userInfoData.containsKey(CLAIM_NAME)) {
+                            attributes.put(CLAIM_NAME, String.valueOf(userInfoData.get(CLAIM_NAME)));
                         }
-                        userInfo.put("attributes", attributes);
+                        userInfo.put(CLAIM_ATTRIBUTES, attributes);
 
                         return Mono.just(userInfo);
                     } catch (Exception e) {
@@ -333,11 +344,11 @@ public class OidcProtocolAdapter implements SsoProtocolAdapter {
 
     private Map<String, Object> mergeUserInfo(Map<String, Object> idTokenClaims, Map<String, Object> userInfo) {
         Map<String, Object> merged = new HashMap<>(idTokenClaims);
-        if (userInfo.containsKey("attributes")) {
+        if (userInfo.containsKey(CLAIM_ATTRIBUTES)) {
             @SuppressWarnings("unchecked")
-            Map<String, String> idTokenAttrs = (Map<String, String>) merged.get("attributes");
+            Map<String, String> idTokenAttrs = (Map<String, String>) merged.get(CLAIM_ATTRIBUTES);
             @SuppressWarnings("unchecked")
-            Map<String, String> userInfoAttrs = (Map<String, String>) userInfo.get("attributes");
+            Map<String, String> userInfoAttrs = (Map<String, String>) userInfo.get(CLAIM_ATTRIBUTES);
             idTokenAttrs.putAll(userInfoAttrs);
         }
         return merged;
@@ -357,7 +368,7 @@ public class OidcProtocolAdapter implements SsoProtocolAdapter {
      * @return 存储成功返回Mono.empty()
      */
     private Mono<Void> storeState(String state, String callbackUrl) {
-        String key = OIDC_STATE_PREFIX + state;
+        String key = STATE_CACHE_PREFIX + state;
         return redisTemplate
                 .opsForValue()
                 .set(key, callbackUrl, STATE_TTL)
@@ -372,7 +383,7 @@ public class OidcProtocolAdapter implements SsoProtocolAdapter {
      * @return true表示有效，false表示无效或已过期
      */
     private Mono<Boolean> validateState(String state) {
-        String key = OIDC_STATE_PREFIX + state;
+        String key = STATE_CACHE_PREFIX + state;
         return redisTemplate.hasKey(key);
     }
 
@@ -383,7 +394,7 @@ public class OidcProtocolAdapter implements SsoProtocolAdapter {
      * @return 删除成功返回Mono.empty()
      */
     private Mono<Void> deleteState(String state) {
-        String key = OIDC_STATE_PREFIX + state;
+        String key = STATE_CACHE_PREFIX + state;
         return redisTemplate.delete(key).then().doOnSuccess(v -> log.debug("OIDC State已删除: state={}", state));
     }
 }

@@ -18,7 +18,39 @@ import org.mapstruct.ReportingPolicy;
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface DepartmentAssembler {
 
+    /**
+     *
+     *
+     * 将部门实体转换为DTO。
+     *
+     *
+     *
+     *
+     *
+     * @param entity 部门实体
+     *
+     *
+     * @return 部门DTO
+     *
+     *
+     */
     DepartmentDTO toDto(OffDepartmentEntity entity);
 
+    /**
+     *
+     *
+     * 将部门DTO转换为实体。
+     *
+     *
+     *
+     *
+     *
+     * @param dto 部门DTO
+     *
+     *
+     * @return 部门实体
+     *
+     *
+     */
     OffDepartmentEntity toEntity(DepartmentDTO dto);
 }

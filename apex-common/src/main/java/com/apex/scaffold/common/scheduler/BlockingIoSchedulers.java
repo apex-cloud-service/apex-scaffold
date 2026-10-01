@@ -9,7 +9,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
@@ -142,7 +142,6 @@ public final class BlockingIoSchedulers {
      *
      * @param properties 阻塞 I/O 参数配置（允许为 null，此时回退至系统属性默认值）
      */
-    @Autowired(required = false)
     public void setProperties(ApexBlockingIoProperties properties) {
         if (properties == null) {
             return;
@@ -162,9 +161,13 @@ public final class BlockingIoSchedulers {
 
     /**
      * 供 Spring 生命周期管理创建实例（Scheduler 本身是 static final 字段，
-     * 本构造器仅用于触发 {@link PreDestroy} 回调）。
+     * 本构造器仅用于触发 {@link PreDestroy} 回调并注入可选的阻塞 I/O 配置）。
+     *
+     * @param propertiesProvider 阻塞 I/O 配置属性提供者（可选，未注册时回退至系统属性默认值）
      */
-    public BlockingIoSchedulers() {}
+    public BlockingIoSchedulers(ObjectProvider<ApexBlockingIoProperties> propertiesProvider) {
+        setProperties(propertiesProvider.getIfAvailable());
+    }
 
     /**
      * 获取 JDBC 专用 Scheduler。

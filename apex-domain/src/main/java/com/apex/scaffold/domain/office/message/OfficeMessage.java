@@ -130,4 +130,22 @@ public class OfficeMessage {
         this.failureReason = reason;
         this.retryCount = (this.retryCount == null ? 0 : this.retryCount) + 1;
     }
+
+    /**
+     * 验证消息是否可以撤回
+     *
+     * <p>只有发送成功且已获得平台消息ID的消息才能撤回。
+     *
+     * @return 是否可以撤回
+     */
+    public boolean canRecall() {
+        return "SUCCESS".equals(sendStatus) && platformMessageId != null && !platformMessageId.isBlank();
+    }
+
+    /**
+     * 标记消息已撤回
+     */
+    public void markAsRecalled() {
+        this.sendStatus = "RECALLED";
+    }
 }

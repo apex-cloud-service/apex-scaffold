@@ -35,6 +35,11 @@ public record UserMessagePayload(
         String updatedFields,
         Map<String, Object> raw) {
 
+    /** 租户 ID 校验正则（字母、数字、点、下划线、连字符）。 */
+    private static final String TENANT_ID_REGEX = "[A-Za-z0-9._-]{1,64}";
+    /** 租户 ID 最大长度。 */
+    private static final int MAX_TENANT_ID_LENGTH = 64;
+
     /**
      * 从 RocketMQ 动态消息创建类型化载荷。
      *
@@ -47,7 +52,7 @@ public record UserMessagePayload(
         }
         Map<String, Object> snapshot = Collections.unmodifiableMap(new LinkedHashMap<>(message));
         String tenantId = text(snapshot, "tenantId", null);
-        if (tenantId == null || !tenantId.matches("[A-Za-z0-9._-]{1,64}")) {
+        if (tenantId == null || !tenantId.matches(TENANT_ID_REGEX)) {
             throw new IllegalArgumentException("用户MQ消息缺少合法租户ID");
         }
         return new UserMessagePayload(

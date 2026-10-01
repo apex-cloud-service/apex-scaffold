@@ -60,6 +60,10 @@ import reactor.core.publisher.Mono;
 @Service
 public class TokenServiceImpl implements TokenService {
 
+    private static final String JSON_START_BRACE = "{";
+    private static final String JWT_CLAIM_TYPE = "type";
+    private static final String JWT_CLAIM_SUB = "sub";
+
     /** AccessToken 的 JWT claims 中 type 字段值 */
     private static final String TOKEN_TYPE_ACCESS = "access";
 
@@ -320,7 +324,7 @@ public class TokenServiceImpl implements TokenService {
             }
             try {
                 Map<String, Object> claims = JwtUtil.parseToken(refreshToken);
-                String tokenType = (String) claims.get("type");
+                String tokenType = (String) claims.get(JWT_CLAIM_TYPE);
                 if (!TOKEN_TYPE_REFRESH.equals(tokenType)) {
                     return Mono.just(false);
                 }
@@ -360,7 +364,7 @@ public class TokenServiceImpl implements TokenService {
             return false;
         }
         // 新格式：以 '{' 开头的 JSON 对象
-        if (storedValue.startsWith("{")) {
+        if (storedValue.startsWith(JSON_START_BRACE)) {
             try {
                 TokenStoreEntry entry = JsonUtil.fromJson(storedValue, TokenStoreEntry.class);
                 return entry != null && token.equals(entry.getToken());
@@ -430,10 +434,10 @@ public class TokenServiceImpl implements TokenService {
         }
         try {
             Map<String, Object> claims = JwtUtil.parseToken(oldRefreshToken);
-            if (!TOKEN_TYPE_REFRESH.equals(claims.get("type"))) {
+            if (!TOKEN_TYPE_REFRESH.equals(claims.get(JWT_CLAIM_TYPE))) {
                 return false;
             }
-            if (!subject.equals(claims.get("sub"))) {
+            if (!subject.equals(claims.get(JWT_CLAIM_SUB))) {
                 return false;
             }
             return !JwtUtil.isTokenExpired(oldRefreshToken);
@@ -557,7 +561,7 @@ public class TokenServiceImpl implements TokenService {
             if (storedValue == null) {
                 return Mono.empty();
             }
-            if (storedValue.startsWith("{")) {
+            if (storedValue.startsWith(JSON_START_BRACE)) {
                 try {
                     TokenStoreEntry entry = JsonUtil.fromJson(storedValue, TokenStoreEntry.class);
                     if (entry != null

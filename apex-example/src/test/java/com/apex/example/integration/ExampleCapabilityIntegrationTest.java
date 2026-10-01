@@ -2,9 +2,11 @@ package com.apex.example.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.apex.example.repository.ExampleUserMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
+import org.springframework.test.web.reactive.server.WebTestClient;
 
 /**
  * 脚手架核心能力演示集成测试
@@ -20,6 +22,16 @@ import org.springframework.http.MediaType;
  * @since 1.1.4
  */
 class ExampleCapabilityIntegrationTest extends BaseIntegrationTest {
+
+    /**
+     * 构造器注入共享测试依赖并传递给基类。
+     *
+     * @param webTestClient     响应式 Web 测试客户端
+     * @param exampleUserMapper 示例用户 Mapper
+     */
+    public ExampleCapabilityIntegrationTest(WebTestClient webTestClient, ExampleUserMapper exampleUserMapper) {
+        super(webTestClient, exampleUserMapper);
+    }
 
     /**
      * 缓存读穿端点：应返回统一成功响应且包含底层加载次数。

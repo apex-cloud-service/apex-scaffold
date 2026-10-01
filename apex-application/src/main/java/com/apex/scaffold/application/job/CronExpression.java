@@ -42,6 +42,15 @@ import java.util.TreeSet;
  */
 public final class CronExpression {
 
+    private static final int CRON_MIN_FIELDS = 6;
+    private static final int CRON_MAX_FIELDS = 7;
+    private static final int DAY_FIELD_INDEX = 3;
+    private static final int WEEK_FIELD_INDEX = 5;
+    private static final String WILDCARD = "*";
+    private static final String QUESTION_MARK = "?";
+    private static final String COMMA = ",";
+    private static final int JWT_PARTS_COUNT = 2;
+
     /** 月名称简写到数值的映射。 */
     private static final Map<String, Integer> MONTH_NAMES = Map.ofEntries(
             Map.entry("JAN", 1),
@@ -113,7 +122,7 @@ public final class CronExpression {
         this.expression = expression.trim();
 
         String[] fields = this.expression.split("\\s+");
-        if (fields.length < 6 || fields.length > 7) {
+        if (fields.length < CRON_MIN_FIELDS || fields.length > CRON_MAX_FIELDS) {
             throw new IllegalArgumentException("Cron表达式必须包含6段（秒-周）或7段（秒-年），当前为 " + fields.length + " 段");
         }
 
@@ -123,34 +132,36 @@ public final class CronExpression {
         parseField(fields[1], 0, 59, null, minutes);
         parseField(fields[2], 0, 23, null, hours);
 
-        String dayField = fields[3];
-        this.dayFieldSpecified = !"*".equals(dayField) && !"?".equals(dayField);
+        String dayField = fields[DAY_FIELD_INDEX];
+        this.dayFieldSpecified = !WILDCARD.equals(dayField) && !QUESTION_MARK.equals(dayField);
         parseField(dayField, 1, 31, null, daysOfMonth);
 
         parseField(fields[4], 1, 12, MONTH_NAMES, months);
 
-        String weekField = fields[5];
-        this.weekFieldSpecified = !"*".equals(weekField) && !"?".equals(weekField);
+        String weekField = fields[WEEK_FIELD_INDEX];
+        this.weekFieldSpecified = !WILDCARD.equals(weekField) && !QUESTION_MARK.equals(weekField);
         parseField(weekField, 1, 7, DAY_OF_WEEK_NAMES, daysOfWeek);
 
-        if (fields.length == 7) {
+        if (fields.length == CRON_MAX_FIELDS) {
             parseField(fields[6], 1970, 2099, null, years);
         }
     }
 
     private void validateQuestionMarks(String[] fields) {
         for (int index = 0; index < fields.length; index++) {
-            if (index != 3 && index != 5 && fields[index].contains("?")) {
+            if (index != DAY_FIELD_INDEX && index != WEEK_FIELD_INDEX && fields[index].contains(QUESTION_MARK)) {
                 throw new IllegalArgumentException("问号只能用于日字段或周字段");
             }
         }
 
-        String dayField = fields[3];
-        String weekField = fields[5];
-        if ((dayField.contains("?") && !"?".equals(dayField)) || (weekField.contains("?") && !"?".equals(weekField))) {
+        String dayField = fields[DAY_FIELD_INDEX];
+        String weekField = fields[WEEK_FIELD_INDEX];
+        boolean dayHasQuestionMark = dayField.contains(QUESTION_MARK) && !QUESTION_MARK.equals(dayField);
+        boolean weekHasQuestionMark = weekField.contains(QUESTION_MARK) && !QUESTION_MARK.equals(weekField);
+        if (dayHasQuestionMark || weekHasQuestionMark) {
             throw new IllegalArgumentException("问号必须单独用于日字段或周字段");
         }
-        if ("?".equals(dayField) == "?".equals(weekField)) {
+        if (QUESTION_MARK.equals(dayField) == QUESTION_MARK.equals(weekField)) {
             throw new IllegalArgumentException("日字段和周字段必须且只能有一个使用问号");
         }
     }
@@ -165,13 +176,13 @@ public final class CronExpression {
      * @param target 目标取值集合
      */
     private void parseField(String field, int min, int max, Map<String, Integer> names, BitSet target) {
-        if ("*".equals(field) || "?".equals(field)) {
+        if (WILDCARD.equals(field) || QUESTION_MARK.equals(field)) {
             target.set(0, max - min + 1);
             return;
         }
 
         TreeSet<Integer> values = new TreeSet<>();
-        for (String part : field.split(",")) {
+        for (String part : field.split(COMMA)) {
             String stepStr = null;
             String rangeStr = part;
             int slashIndex = part.indexOf('/');
@@ -307,7 +318,8 @@ public final class CronExpression {
      * @return 1-7，1 表示周日
      */
     private int toCronDayOfWeek(LocalDateTime t) {
-        int iso = t.getDayOfWeek().getValue(); // 1=周一 .. 7=周日
+        // 1=周一 .. 7=周日
+        int iso = t.getDayOfWeek().getValue();
         return iso == 7 ? 1 : iso + 1;
     }
 

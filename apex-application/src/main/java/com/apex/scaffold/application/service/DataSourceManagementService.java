@@ -65,6 +65,8 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class DataSourceManagementService {
 
+    private static final String PATH_SEPARATOR = "/";
+
     /** 响应中用户名脱敏保留的前缀长度。 */
     private static final int USERNAME_MASK_PREFIX = 2;
 
@@ -473,7 +475,7 @@ public class DataSourceManagementService {
      */
     private void maskSensitiveFields(DataSourceResponse response) {
         String url = response.getUrl();
-        if (url != null && url.contains("/")) {
+        if (url != null && url.contains(PATH_SEPARATOR)) {
             int lastSlash = url.lastIndexOf('/');
             response.setUrl(url.substring(0, lastSlash + 1) + "***");
         }

@@ -65,6 +65,8 @@ import reactor.core.publisher.Mono;
 @ConditionalOnProperty(name = "keycloak.enabled", havingValue = "true")
 public class KeycloakUserSyncService {
 
+    private static final int HTTP_STATUS_CREATED = 201;
+
     /** Keycloak Admin Client（阻塞式 API） */
     private final Keycloak keycloakAdminClient;
 
@@ -193,7 +195,7 @@ public class KeycloakUserSyncService {
                             .users()
                             .create(kcUser);
 
-                    if (response.getStatus() != 201) {
+                    if (response.getStatus() != HTTP_STATUS_CREATED) {
                         throw new RuntimeException("Failed to create user in Keycloak: status=" + response.getStatus());
                     }
 

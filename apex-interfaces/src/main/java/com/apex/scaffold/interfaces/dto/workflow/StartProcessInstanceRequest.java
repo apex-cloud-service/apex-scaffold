@@ -34,10 +34,15 @@ public class StartProcessInstanceRequest {
 
     @NotBlank(message = "业务主键不能为空")
     @Size(max = 200, message = "业务主键不能超过200字符")
-    @Schema(description = "业务主键，用于关联业务数据（如请假单编号、采购单编号、合同编号），最多 200 字符", example = "LEAVE-20260926-0001", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(
+            description = "业务主键，用于关联业务数据（如请假单编号、采购单编号、合同编号），最多 200 字符",
+            example = "LEAVE-20260926-0001",
+            requiredMode = Schema.RequiredMode.REQUIRED)
     private String businessKey;
 
     @Size(max = 10000, message = "流程上下文不能超过10000字符")
-    @Schema(description = "流程上下文数据（JSON 格式），包含流程流转所需的业务参数，最多 10000 字符", example = "{\"days\":3,\"leaveType\":\"annual\"}")
+    @Schema(
+            description = "流程上下文数据（JSON 格式），包含流程流转所需的业务参数，最多 10000 字符",
+            example = "{\"days\":3,\"leaveType\":\"annual\"}")
     private String contextJson;
 }

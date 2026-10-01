@@ -26,10 +26,15 @@ import org.springframework.stereotype.Service;
 @Service
 public class SecurityMetricsService {
 
+    private static final int MAX_FAILED_LOGIN_IPS_CACHE_SIZE = 100;
+
     private final MeterRegistry meterRegistry;
 
-    // 计数器
+    /**
+     * 计数器
+     */
     private final Counter authSuccessCounter;
+
     private final Counter authFailureCounter;
     private final Counter tokenIssuedCounter;
     private final Counter tokenRefreshedCounter;
@@ -37,13 +42,19 @@ public class SecurityMetricsService {
     private final Counter bruteForceDetectedCounter;
     private final Counter permissionDeniedCounter;
 
-    // 计时器
+    /**
+     * 计时器
+     */
     private final Timer authenticationTimer;
+
     private final Timer tokenValidationTimer;
     private final Timer permissionCheckTimer;
 
-    // 实时统计
+    /**
+     * 实时统计
+     */
     private final ConcurrentHashMap<String, AtomicInteger> activeSessionsByUser;
+
     private final ConcurrentHashMap<String, AtomicInteger> failedLoginsByIp;
 
     public SecurityMetricsService(MeterRegistry meterRegistry) {
@@ -133,12 +144,10 @@ public class SecurityMetricsService {
                 .register(meterRegistry)
                 .increment();
 
-        // 记录失败IP
         AtomicInteger failCount = failedLoginsByIp.computeIfAbsent(ipAddress, k -> new AtomicInteger(0));
         failCount.incrementAndGet();
 
-        // 清理旧的失败记录（超过100个IP时清理计数为0的）
-        if (failedLoginsByIp.size() > 100) {
+        if (failedLoginsByIp.size() > MAX_FAILED_LOGIN_IPS_CACHE_SIZE) {
             failedLoginsByIp.entrySet().removeIf(entry -> entry.getValue().get() == 0);
         }
 

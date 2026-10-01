@@ -19,15 +19,45 @@ public interface IpAccessControlRepository extends ReactiveCrudRepository<IpAcce
     /**
      * 根据租户ID和类型查询规则
      */
+    /**
+     * TODO: Add method description
+     * @return TODO
+     */
+    /**
+     * TODO: Add method description
+     * @return TODO
+     */
+    /**
+     * TODO: Add method description
+     *
+     * @param tenantId TODO
+     * @param type TODO
+     * @return TODO
+     */
     Flux<IpAccessControl> findByTenantIdAndType(String tenantId, IpAccessControl.AccessControlType type);
 
     /**
      * 根据租户ID查询所有规则
      */
+    /**
+     * TODO: Add method description
+     * @return TODO
+     */
+    /**
+     * TODO: Add method description
+     *
+     * @param tenantId TODO
+     * @return TODO
+     */
     Flux<IpAccessControl> findByTenantId(String tenantId);
 
     /**
-     * 删除指定的IP规则
+     * 删除指定IP和租户的访问控制规则
+     *
+     * @param ipAddress IP地址
+     * @param tenantId 租户ID
+     * @param type 控制类型
+     * @return 删除的记录数量
      */
     Mono<Long> deleteByIpAddressAndTenantIdAndType(
             String ipAddress, String tenantId, IpAccessControl.AccessControlType type);
@@ -36,10 +66,24 @@ public interface IpAccessControlRepository extends ReactiveCrudRepository<IpAcce
      * 删除过期的规则（方法名无法派生查询，使用显式SQL）
      */
     @Query("DELETE FROM ip_access_control WHERE expires_at < :now")
+    /**
+     * TODO: Add method description
+     * @return TODO
+     */
+    /**
+     * TODO: Add method description
+     *
+     * @param now TODO
+     * @return TODO
+     */
     Mono<Long> deleteExpired(LocalDateTime now);
 
     /**
      * 查询启用的规则
+     */
+    /**
+     * TODO: Add method description
+     * @return TODO
      */
     Flux<IpAccessControl> findByEnabledTrue();
 }

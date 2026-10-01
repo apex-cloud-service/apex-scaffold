@@ -69,6 +69,7 @@ import reactor.core.publisher.Mono;
  * @since 1.1.0
  * @see <a href="https://tools.ietf.org/html/rfc8414">RFC 8414</a>
  */
+@SuppressWarnings("checkstyle:TypeName")
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -83,6 +84,14 @@ public class OAuth2DiscoveryHandler {
     @Value("${server.port:8080}")
     private int serverPort;
 
+    /**
+     * OAuth2服务器元数据发现
+     *
+     * <p>返回符合 RFC 8414 标准的 OAuth2 授权服务器元数据，客户端可通过此端点自动发现服务器配置。</p>
+     *
+     * @param request 服务器请求对象
+     * @return 包含 OAuth2 服务器元数据的响应对象
+     */
     @Operation(
             operationId = "oauth2Discovery",
             summary = "OAuth2服务器元数据发现",
@@ -113,7 +122,7 @@ public class OAuth2DiscoveryHandler {
     public Mono<ServerResponse> discovery(ServerRequest request) {
         String issuer = String.format("http://localhost:%d", serverPort);
 
-        Map<String, Object> metadata = new HashMap<>();
+        Map<String, Object> metadata = new HashMap<>(16);
         metadata.put("issuer", issuer);
         metadata.put("authorization_endpoint", issuer + "/oauth2/authorize");
         metadata.put("token_endpoint", issuer + "/oauth2/token");

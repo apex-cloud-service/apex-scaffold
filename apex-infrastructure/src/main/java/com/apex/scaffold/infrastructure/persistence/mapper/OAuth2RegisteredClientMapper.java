@@ -12,4 +12,5 @@ import org.apache.ibatis.annotations.Mapper;
  * @since 2.0.0
  */
 @Mapper
+@SuppressWarnings("PMD.ClassNamingShouldBeCamelRule")
 public interface OAuth2RegisteredClientMapper extends BaseMapper<OAuth2RegisteredClientPO> {}

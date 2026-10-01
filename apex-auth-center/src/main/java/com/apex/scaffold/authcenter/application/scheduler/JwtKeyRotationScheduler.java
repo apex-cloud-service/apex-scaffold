@@ -125,7 +125,6 @@ public class JwtKeyRotationScheduler {
      *
      * <p><b>注意</b>：此任务默认注释掉，需要启用自动轮换时取消注释。
      */
-    // @Scheduled(cron = "0 0 4 1 */3 ?") // 每季度第一天凌晨4点
     public void autoRotateKey() {
         log.info("开始执行JWT密钥自动轮换任务");
 

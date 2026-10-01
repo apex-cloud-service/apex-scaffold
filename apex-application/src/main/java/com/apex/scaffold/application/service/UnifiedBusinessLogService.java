@@ -28,6 +28,11 @@ import reactor.core.scheduler.Schedulers;
 @RequiredArgsConstructor
 public class UnifiedBusinessLogService {
 
+    private static final String LOG_TYPE_LOGIN = "login";
+    private static final String LOG_TYPE_OPERATION = "operation";
+    private static final String LOG_TYPE_API = "api";
+    private static final int DEFAULT_CAPACITY = 16;
+
     private final LoginLogMapper loginLogMapper;
     private final OperationLogMapper operationLogMapper;
     private final ApiCallLogMapper apiCallLogMapper;
@@ -54,23 +59,20 @@ public class UnifiedBusinessLogService {
             int pageSize) {
 
         return Mono.fromCallable(() -> {
-                    List<UnifiedBusinessLogDTO> allLogs = new ArrayList<>();
+                    List<UnifiedBusinessLogDTO> allLogs = new ArrayList<>(DEFAULT_CAPACITY);
 
-                    // 查询登录日志
-                    if (logType == null || "login".equals(logType)) {
+                    if (logType == null || LOG_TYPE_LOGIN.equals(logType)) {
                         List<UnifiedBusinessLogDTO> loginLogs = queryLoginLogs(startTime, endTime, username, pageSize);
                         allLogs.addAll(loginLogs);
                     }
 
-                    // 查询操作日志
-                    if (logType == null || "operation".equals(logType)) {
+                    if (logType == null || LOG_TYPE_OPERATION.equals(logType)) {
                         List<UnifiedBusinessLogDTO> operationLogs =
                                 queryOperationLogs(startTime, endTime, username, module, pageSize);
                         allLogs.addAll(operationLogs);
                     }
 
-                    // 查询API调用日志
-                    if (logType == null || "api".equals(logType)) {
+                    if (logType == null || LOG_TYPE_API.equals(logType)) {
                         List<UnifiedBusinessLogDTO> apiLogs = queryApiLogs(startTime, endTime, username, pageSize);
                         allLogs.addAll(apiLogs);
                     }
@@ -78,17 +80,16 @@ public class UnifiedBusinessLogService {
                     // 按时间倒序排序
                     allLogs.sort((a, b) -> b.getTimestamp().compareTo(a.getTimestamp()));
 
-                    // 分页
                     int start = (pageNum - 1) * pageSize;
                     int end = Math.min(start + pageSize, allLogs.size());
                     List<UnifiedBusinessLogDTO> pagedLogs =
-                            start < allLogs.size() ? allLogs.subList(start, end) : new ArrayList<>();
+                            start < allLogs.size() ? allLogs.subList(start, end) : new ArrayList<>(DEFAULT_CAPACITY);
 
                     return PageResponse.of(pagedLogs, (long) allLogs.size(), pageNum, pageSize);
                 })
                 .subscribeOn(Schedulers.boundedElastic())
                 .doOnError(e -> log.error("Query unified business logs failed", e))
-                .onErrorReturn(PageResponse.of(new ArrayList<>(), 0L, pageNum, pageSize));
+                .onErrorReturn(PageResponse.of(new ArrayList<>(DEFAULT_CAPACITY), 0L, pageNum, pageSize));
     }
 
     private List<UnifiedBusinessLogDTO> queryLoginLogs(
@@ -109,7 +110,7 @@ public class UnifiedBusinessLogService {
         return logs.stream()
                 .map(log -> UnifiedBusinessLogDTO.builder()
                         .id(log.getId().toString())
-                        .logType("login")
+                        .logType(LOG_TYPE_LOGIN)
                         .timestamp(log.getLoginTime())
                         .username(log.getUsername())
                         .module("用户登录")
@@ -144,7 +145,7 @@ public class UnifiedBusinessLogService {
         return logs.stream()
                 .map(log -> UnifiedBusinessLogDTO.builder()
                         .id(log.getId().toString())
-                        .logType("operation")
+                        .logType(LOG_TYPE_OPERATION)
                         .timestamp(log.getCreateTime())
                         .username(log.getUserName())
                         .module(log.getModule())
@@ -171,7 +172,7 @@ public class UnifiedBusinessLogService {
         return logs.stream()
                 .map(log -> UnifiedBusinessLogDTO.builder()
                         .id(log.getId().toString())
-                        .logType("api")
+                        .logType(LOG_TYPE_API)
                         .timestamp(log.getCallTime())
                         .username("")
                         .module("API调用")
@@ -197,19 +198,19 @@ public class UnifiedBusinessLogService {
         return Mono.fromCallable(() -> {
                     long total = 0;
 
-                    if (logType == null || "login".equals(logType)) {
+                    if (logType == null || LOG_TYPE_LOGIN.equals(logType)) {
                         LambdaQueryWrapper<LoginLogPO> wrapper = new LambdaQueryWrapper<>();
                         wrapper.ge(LoginLogPO::getLoginTime, startTime).le(LoginLogPO::getLoginTime, endTime);
                         total += loginLogMapper.selectCount(wrapper);
                     }
 
-                    if (logType == null || "operation".equals(logType)) {
+                    if (logType == null || LOG_TYPE_OPERATION.equals(logType)) {
                         LambdaQueryWrapper<OperationLogPO> wrapper = new LambdaQueryWrapper<>();
                         wrapper.ge(OperationLogPO::getCreateTime, startTime).le(OperationLogPO::getCreateTime, endTime);
                         total += operationLogMapper.selectCount(wrapper);
                     }
 
-                    if (logType == null || "api".equals(logType)) {
+                    if (logType == null || LOG_TYPE_API.equals(logType)) {
                         LambdaQueryWrapper<ApiCallLogPO> wrapper = new LambdaQueryWrapper<>();
                         wrapper.ge(ApiCallLogPO::getCallTime, startTime).le(ApiCallLogPO::getCallTime, endTime);
                         total += apiCallLogMapper.selectCount(wrapper);

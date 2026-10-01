@@ -15,19 +15,94 @@ import reactor.core.publisher.Mono;
  * @version 1.2.0
  * @since 1.2.0
  */
+@SuppressWarnings("PMD.ClassNamingShouldBeCamelRule")
 public interface OAuth2ClientSecretRotationService {
 
+    /**
+     * 轮换客户端密钥。
+     *
+     * @param clientId 客户端ID
+     * @param operatorUserId 操作人用户ID
+     * @return 轮换结果（新密钥）
+     */
     Mono<String> rotateClientSecret(String clientId, Long operatorUserId);
 
+    /**
+     * 使用自定义过期时间轮换客户端密钥。
+     *
+     * @param clientId 客户端ID
+     * @param expiresAt 过期时间
+     * @param operatorUserId 操作人用户ID
+     * @return 轮换结果（新密钥）
+     */
     Mono<String> rotateClientSecretWithCustomExpiry(String clientId, Instant expiresAt, Long operatorUserId);
 
+    /**
+     * 验证客户端密钥。
+     *
+     * @param clientId 客户端ID
+     * @param clientSecret 客户端密钥
+     * @return 验证结果（true表示有效）
+     */
     Mono<Boolean> validateClientSecret(String clientId, String clientSecret);
 
+    /**
+     *
+     *
+     * 查找密钥已过期的客户端。
+     *
+     *
+     *
+     *
+     *
+     * @return 客户端列表
+     *
+     *
+     */
     Flux<String> findClientsWithExpiredSecrets();
 
+    /**
+     *
+     *
+     * 查找密钥即将过期的客户端。
+     *
+     *
+     *
+     *
+     *
+     * @param days 天数
+     *
+     *
+     * @return 客户端列表
+     *
+     *
+     */
     Flux<String> findClientsWithExpiringSoonSecrets();
 
+    /**
+     * 调度密钥轮换。
+     *
+     * @param clientId 客户端ID
+     * @param scheduledTime 调度时间
+     * @return 调度结果
+     */
     Mono<Void> scheduleSecretRotation(String clientId, Instant scheduledTime);
 
+    /**
+     *
+     *
+     * 通知客户端密钥即将过期。
+     *
+     *
+     *
+     *
+     *
+     * @param clientId 客户端ID
+     *
+     *
+     * @return 通知结果
+     *
+     *
+     */
     Mono<Void> notifyClientSecretExpiring(String clientId);
 }

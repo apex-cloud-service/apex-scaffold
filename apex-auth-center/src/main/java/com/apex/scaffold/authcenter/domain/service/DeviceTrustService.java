@@ -48,35 +48,140 @@ public interface DeviceTrustService {
     /**
      * 更新设备使用信息
      */
+    /**
+     * TODO: Add method description
+     * @return TODO
+     */
+    /**
+     * TODO: Add method description
+     * @return TODO
+     */
+    /**
+     * TODO: Add method description
+     * @return TODO
+     */
+    /**
+     * TODO: Add method description
+     * @return TODO
+     */
+    /**
+     * TODO: Add method description
+     *
+     * @param userId TODO
+     * @param deviceId TODO
+     * @param ip TODO
+     * @param location TODO
+     * @return TODO
+     */
     Mono<Void> updateDeviceUsage(String userId, String deviceId, String ip, String location);
 
     /**
      * 提升设备信任级别
+     */
+    /**
+     * TODO: Add method description
+     * @return TODO
+     */
+    /**
+     * TODO: Add method description
+     * @return TODO
+     */
+    /**
+     * TODO: Add method description
+     *
+     * @param deviceId TODO
+     * @param operator TODO
+     * @return TODO
      */
     Mono<Void> upgradeTrustLevel(Long deviceId, String operator);
 
     /**
      * 降低设备信任级别
      */
+    /**
+     * TODO: Add method description
+     * @return TODO
+     */
+    /**
+     * TODO: Add method description
+     * @return TODO
+     */
+    /**
+     * TODO: Add method description
+     *
+     * @param deviceId TODO
+     * @param operator TODO
+     * @return TODO
+     */
     Mono<Void> downgradeTrustLevel(Long deviceId, String operator);
 
     /**
      * 撤销设备信任
+     */
+    /**
+     * TODO: Add method description
+     * @return TODO
+     */
+    /**
+     * TODO: Add method description
+     * @return TODO
+     */
+    /**
+     * TODO: Add method description
+     *
+     * @param deviceId TODO
+     * @param operator TODO
+     * @return TODO
      */
     Mono<Void> revokeDeviceTrust(Long deviceId, String operator);
 
     /**
      * 查询用户的可信设备列表
      */
+    /**
+     * TODO: Add method description
+     * @return TODO
+     */
+    /**
+     * TODO: Add method description
+     *
+     * @param userId TODO
+     * @return TODO
+     */
     Flux<DeviceTrust> getUserTrustedDevices(String userId);
 
     /**
      * 检查设备是否可信
      */
+    /**
+     * TODO: Add method description
+     * @return TODO
+     */
+    /**
+     * TODO: Add method description
+     * @return TODO
+     */
+    /**
+     * TODO: Add method description
+     *
+     * @param userId TODO
+     * @param deviceId TODO
+     * @return TODO
+     */
     Mono<Boolean> isDeviceTrusted(String userId, String deviceId);
 
     /**
      * 计算设备风险评分
+     */
+    /**
+     * TODO: Add method description
+     * @return TODO
+     */
+    /**
+     * TODO: Add method description
+     *
+     * @param deviceId TODO
+     * @return TODO
      */
     Mono<Integer> calculateDeviceRiskScore(Long deviceId);
 
@@ -94,15 +199,49 @@ public interface DeviceTrustService {
     /**
      * 清理过期设备
      */
+    /**
+     * TODO: Add method description
+     * @return TODO
+     */
     Mono<Long> cleanupExpiredDevices();
 
     /**
      * 获取设备详情
      */
+    /**
+     * TODO: Add method description
+     * @return TODO
+     */
+    /**
+     * TODO: Add method description
+     *
+     * @param deviceId TODO
+     * @return TODO
+     */
     Mono<DeviceTrust> getDeviceDetails(Long deviceId);
 
     /**
      * 延长设备信任有效期
+     */
+    /**
+     * TODO: Add method description
+     * @return TODO
+     */
+    /**
+     * TODO: Add method description
+     * @return TODO
+     */
+    /**
+     * TODO: Add method description
+     * @return TODO
+     */
+    /**
+     * TODO: Add method description
+     *
+     * @param deviceId TODO
+     * @param days TODO
+     * @param operator TODO
+     * @return TODO
      */
     Mono<Void> extendDeviceTrust(Long deviceId, int days, String operator);
 }

@@ -1,7 +1,7 @@
 package com.apex.scaffold.application.service.impl;
 
 import com.apex.scaffold.application.service.OAuth2ClientSecretRotationService;
-import com.apex.scaffold.authcenter.domain.service.SecurityAuditService;
+import com.apex.scaffold.common.audit.SecurityAuditService;
 import com.apex.scaffold.domain.model.entity.OAuth2RegisteredClientEntity;
 import com.apex.scaffold.domain.repository.OAuth2RegisteredClientRepository;
 import java.security.SecureRandom;
@@ -28,6 +28,7 @@ import reactor.core.publisher.Mono;
  * @version 1.2.0
  * @since 1.2.0
  */
+@SuppressWarnings("PMD.ClassNamingShouldBeCamelRule")
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -87,7 +88,7 @@ public class OAuth2ClientSecretRotationServiceImpl implements OAuth2ClientSecret
                             .save(client)
                             .flatMap(saved -> {
                                 // 记录审计日志
-                                Map<String, Object> details = new HashMap<>();
+                                Map<String, Object> details = new HashMap<>(16);
                                 details.put("clientId", clientId);
                                 details.put("clientName", saved.getClientName());
                                 details.put("expiresAt", expiresAt);
@@ -138,7 +139,7 @@ public class OAuth2ClientSecretRotationServiceImpl implements OAuth2ClientSecret
                         log.warn("Client secret expired for clientId={}", clientId);
 
                         // 记录过期密钥使用尝试
-                        Map<String, Object> details = new HashMap<>();
+                        Map<String, Object> details = new HashMap<>(16);
                         details.put("clientId", clientId);
                         details.put("reason", "SECRET_EXPIRED");
                         details.put("expiresAt", client.getClientSecretExpiresAt());
@@ -167,7 +168,7 @@ public class OAuth2ClientSecretRotationServiceImpl implements OAuth2ClientSecret
                             log.info("Client authenticated with previous secret: clientId={}", clientId);
 
                             // 记录使用旧密钥认证
-                            Map<String, Object> details = new HashMap<>();
+                            Map<String, Object> details = new HashMap<>(16);
                             details.put("clientId", clientId);
                             details.put("message", "Client used previous secret (within grace period)");
                             details.put("rotatedAt", client.getSecretRotatedAt());
@@ -189,7 +190,7 @@ public class OAuth2ClientSecretRotationServiceImpl implements OAuth2ClientSecret
                     log.warn("Client secret validation failed for clientId={}", clientId);
 
                     // 记录认证失败
-                    Map<String, Object> details = new HashMap<>();
+                    Map<String, Object> details = new HashMap<>(16);
                     details.put("clientId", clientId);
                     details.put("reason", "INVALID_SECRET");
 

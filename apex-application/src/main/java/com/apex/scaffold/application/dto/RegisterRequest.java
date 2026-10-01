@@ -28,6 +28,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Schema(description = "注册请求")
 public class RegisterRequest {
 
     /**

@@ -19,11 +19,35 @@ import org.mapstruct.ReportingPolicy;
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface ApprovalRecordPoConverter {
 
+    /**
+     * TODO: Add method description
+     *
+     * @param entity TODO
+     * @return TODO
+     */
     ApprovalRecordPO toPo(ApprovalRecord entity);
 
+    /**
+     * TODO: Add method description
+     *
+     * @param po TODO
+     * @return TODO
+     */
     ApprovalRecord toEntity(ApprovalRecordPO po);
 
+    /**
+     * TODO: Add method description
+     *
+     * @param entities TODO
+     * @return TODO
+     */
     List<ApprovalRecordPO> toPoList(List<ApprovalRecord> entities);
 
+    /**
+     * TODO: Add method description
+     *
+     * @param pos TODO
+     * @return TODO
+     */
     List<ApprovalRecord> toEntityList(List<ApprovalRecordPO> pos);
 }

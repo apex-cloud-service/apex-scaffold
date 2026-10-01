@@ -22,16 +22,66 @@ import org.mapstruct.ReportingPolicy;
  */
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface SysSsoProviderAssembler {
+    /**
+     * 将SSO提供商请求转换为实体。
+     *
+     * @param request SSO提供商请求
+     * @return SSO提供商实体
+     */
     SysSsoProviderEntity toEntity(SsoProviderRequest request);
 
+    /**
+     *
+     *
+     * 将SSO提供商实体转换为DTO。
+     *
+     *
+     *
+     *
+     *
+     * @param entity SSO提供商实体
+     *
+     *
+     * @return SSO提供商DTO
+     *
+     *
+     */
     SsoProviderDTO toDTO(SysSsoProviderEntity entity);
 
+    /**
+     *
+     *
+     * 将SSO提供商实体列表转换为DTO列表。
+     *
+     *
+     *
+     *
+     *
+     * @param entities SSO提供商实体列表
+     *
+     *
+     * @return SSO提供商DTO列表
+     *
+     *
+     */
     List<SsoProviderDTO> toDTOList(List<SysSsoProviderEntity> entities);
 
+    /**
+     * 将布尔值映射为整数（true -> 1, false/null -> 0）。
+     *
+     * @param value 布尔值
+     * @return 整数值（1 或 0）
+     */
     default Integer map(Boolean value) {
         return value != null && value ? 1 : 0;
     }
 
+    /**
+     * 将整数映射为布尔值（1 -> true, 其他 -> false）。
+     *
+     * @param value 整数值
+     * @return 布尔值
+     */
     default Boolean map(Integer value) {
         return value != null && value == 1;
     }

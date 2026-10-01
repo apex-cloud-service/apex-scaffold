@@ -1,67 +1,115 @@
 package com.apex.scaffold.infrastructure.office.client;
 
+import com.apex.scaffold.common.exception.BusinessException;
+import com.apex.scaffold.common.result.ResultCode;
+import com.apex.scaffold.domain.office.OfficePlatform;
+import com.apex.scaffold.domain.office.message.CardMessageContent;
 import com.apex.scaffold.domain.office.message.MessageContent;
 import com.apex.scaffold.domain.office.message.MessageTarget;
+import com.apex.scaffold.domain.office.message.MessageType;
 import com.apex.scaffold.domain.office.port.MessagePort;
+import com.apex.scaffold.infrastructure.office.config.OfficePlatformProperties;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
+import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
-/**
- * 钉钉消息发送客户端
- *
- * <p>封装钉钉消息发送相关的 API 调用，支持文本、Markdown、卡片等多种消息类型。
- * 使用响应式编程模型，所有操作返回 Mono。
- *
- * <p>功能特性：
- * <ul>
- *   <li>支持发送工作通知消息</li>
- *   <li>支持发送群消息</li>
- *   <li>支持多种消息格式（文本、Markdown、ActionCard）</li>
- *   <li>支持消息发送结果查询</li>
- * </ul>
- *
- * <p>本类实现 {@link MessagePort}，作为 Infrastructure 层的适配器，
- * 实现 Domain 层定义的端口接口，符合端口-适配器架构模式。
- *
- * @author Apex Team
- * @since 1.3.0
- */
-public class DingTalkMessageClient implements MessagePort {
+@Component
+public class DingTalkMessageClient extends OfficeApiSupport implements MessagePort {
+    private final ObjectMapper objectMapper;
 
-    /**
-     * 发送消息
-     *
-     * @param target 消息目标（用户或群组）
-     * @param content 消息内容
-     * @return 平台消息ID
-     */
+    public DingTalkMessageClient(
+            WebClient.Builder builder, OfficePlatformProperties properties, ObjectMapper objectMapper) {
+        super(builder, properties, OfficePlatform.DINGTALK, "https://oapi.dingtalk.com");
+        this.objectMapper = objectMapper;
+    }
+
     @Override
     public Mono<String> sendMessage(MessageTarget target, MessageContent content) {
-        // TODO: 实现钉钉消息发送逻辑
-        // 1. 构建钉钉消息请求体
-        // 2. 调用钉钉 API
-        // 3. 解析响应获取任务ID
-        return Mono.just("dingtalk_msg_" + System.currentTimeMillis());
+        validate(target, content);
+        if (!"USER".equals(target.getTargetType())) {
+            return Mono.error(new BusinessException(ResultCode.BUSINESS_ERROR, "钉钉应用工作通知仅支持用户目标"));
+        }
+        return accessToken()
+                .flatMap(token -> call(
+                        body -> text(body.get("task_id"), "task_id"),
+                        postJson(
+                                "/topapi/message/corpconversation/asyncsend_v2?access_token=" + token,
+                                messageBody(target, content))));
     }
 
-    /**
-     * 查询消息状态
-     *
-     * @param messageId 平台消息ID
-     * @return 消息状态信息
-     */
     @Override
     public Mono<String> queryMessageStatus(String messageId) {
-        // TODO: 实现消息状态查询
-        return Mono.just("SUCCESS");
+        return Mono.error(new BusinessException(ResultCode.BUSINESS_ERROR, "钉钉应用消息不支持通用状态查询"));
     }
 
-    /**
-     * 获取支持的平台类型
-     *
-     * @return 平台类型标识
-     */
+    @Override
+    public Mono<Boolean> recallMessage(String messageId) {
+        required(messageId, "钉钉 task_id");
+        return accessToken()
+                .flatMap(token -> call(
+                        body -> Boolean.TRUE,
+                        postJson(
+                                "/topapi/message/corpconversation/recall?access_token=" + token,
+                                Map.of(
+                                        "agent_id",
+                                        required(properties.getAgentId(), "钉钉 agentId"),
+                                        "msg_task_id",
+                                        messageId))));
+    }
+
     @Override
     public String getPlatformType() {
         return "dingtalk";
+    }
+
+    private Mono<String> accessToken() {
+        return call(
+                body -> text(body.get("access_token"), "钉钉 access_token"),
+                postJson(
+                        "/gettoken",
+                        Map.of("appkey", required(properties.getAppId(), "钉钉 appId"), "appsecret", secret("钉钉"))));
+    }
+
+    private Map<String, Object> messageBody(MessageTarget target, MessageContent content) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("agent_id", required(properties.getAgentId(), "钉钉 agentId"));
+        body.put("userid_list", target.getUserIds().stream().collect(Collectors.joining(",")));
+        body.put("msg", messageContent(content));
+        return body;
+    }
+
+    private Map<String, Object> messageContent(MessageContent content) {
+        String type = content.getType() == MessageType.CARD
+                ? "action_card"
+                : content.getType() == MessageType.MARKDOWN ? "markdown" : "text";
+        Map<String, Object> value = new HashMap<>();
+        value.put("msgtype", type);
+        if (content.getType() == MessageType.TEXT) {
+            value.put("text", Map.of("content", content.getText()));
+        } else if (content.getType() == MessageType.MARKDOWN) {
+            value.put("markdown", Map.of("title", content.getText(), "text", content.getText()));
+        } else {
+            try {
+                value.put(
+                        "action_card", objectMapper.readValue(((CardMessageContent) content).getCardJson(), Map.class));
+            } catch (JsonProcessingException error) {
+                throw new BusinessException(ResultCode.BUSINESS_ERROR, "钉钉卡片内容不是合法 JSON");
+            }
+        }
+        return value;
+    }
+
+    private void validate(MessageTarget target, MessageContent content) {
+        if (target == null || !target.isValid()) {
+            throw new BusinessException(ResultCode.BUSINESS_ERROR, "钉钉消息目标无效");
+        }
+        if (content == null || !content.isValid()) {
+            throw new BusinessException(ResultCode.BUSINESS_ERROR, "钉钉消息内容无效");
+        }
     }
 }

@@ -132,8 +132,8 @@ final class OpenApiDocumentationCustomizer {
             Map.entry("adminCreateJob", JobRequest.class),
             Map.entry("adminUpdateJob", JobRequest.class),
             Map.entry("adminUpdateJobStatus", StatusRequest.class),
-            Map.entry("adminCreateDept", com.apex.scaffold.domain.model.entity.DeptEntity.class),
-            Map.entry("adminUpdateDept", com.apex.scaffold.domain.model.entity.DeptEntity.class));
+            Map.entry("adminCreateDept", DeptDTO.class),
+            Map.entry("adminUpdateDept", DeptDTO.class));
 
     /** 操作对应的查询参数定义，key 为 operationId，value 为该操作支持的查询参数列表。 */
     private static final Map<String, List<QueryParameter>> QUERY_PARAMETERS = queryParameters();
@@ -202,8 +202,8 @@ final class OpenApiDocumentationCustomizer {
             Map.entry("adminListAuditLogs", AuditLogDTO.class),
             Map.entry("adminListApiCallLogs", ApiCallLogDTO.class),
             Map.entry("adminListOnlineUsers", OnlineUserDTO.class),
-            Map.entry("adminDeptTree", DeptDTO.class),
-            Map.entry("adminDeptDetail", DeptDTO.class),
+            Map.entry("adminListDepts", DeptDTO.class),
+            Map.entry("adminGetDept", DeptDTO.class),
             Map.entry("adminCreateDept", DeptDTO.class),
             Map.entry("adminUpdateDept", DeptDTO.class),
             Map.entry("monitorOverview", MonitorOverviewResponse.class),
@@ -229,7 +229,16 @@ final class OpenApiDocumentationCustomizer {
             "adminListAuditLogs",
             "adminListApiCallLogs",
             "adminListOnlineUsers",
-            "adminDeptTree");
+            "adminListDepts");
+
+    /** 特殊操作 ID 常量 */
+    private static final String OP_ID_VALIDATE_MOBILE = "validateMobile";
+
+    private static final String OP_ID_GET_LOCAL_FILE_CONTENT = "getLocalFileContent";
+    private static final String OP_ID_STREAM_NOTIFICATIONS = "streamNotifications";
+    private static final String OP_ID_AUTH_LOGIN = "authLogin";
+    private static final String OP_ID_DELETE_CURRENT_USER = "deleteCurrentUser";
+    private static final String OP_ID_SEND_ACCOUNT_DELETION_CODE = "sendAccountDeletionCode";
 
     /** 匿名访问路径判断器，用于确定哪些接口无需 Bearer Token 鉴权。 */
     private final Predicate<String> publicPath;
@@ -426,7 +435,7 @@ final class OpenApiDocumentationCustomizer {
             operation.setRequestBody(multipartRequestBody(formFields));
             return;
         }
-        if ("validateMobile".equals(operationId)) {
+        if (OP_ID_VALIDATE_MOBILE.equals(operationId)) {
             operation.setRequestBody(requestBody(
                     "本机号校验表单",
                     "application/x-www-form-urlencoded",
@@ -563,12 +572,14 @@ final class OpenApiDocumentationCustomizer {
         operation.setResponses(responses);
         String successCode = operationId != null && ASYNC_ACCEPTED_OPERATION_IDS.contains(operationId) ? "202" : "200";
         ApiResponse success = responses.computeIfAbsent(successCode, ignored -> new ApiResponse().description("请求成功"));
-        if ("getLocalFileContent".equals(operationId)) {
+        if (OP_ID_GET_LOCAL_FILE_CONTENT.equals(operationId)) {
             ensureContent(success, "application/octet-stream", new StringSchema().format("binary"));
+        } else if (OP_ID_STREAM_NOTIFICATIONS.equals(operationId)) {
+            ensureContent(success, "text/event-stream", new StringSchema().description("SSE 事件流，event 类型为 notification"));
         } else {
             ensureSuccessContent(success, operationId, components);
         }
-        if ("authLogin".equals(operationId)) {
+        if (OP_ID_AUTH_LOGIN.equals(operationId)) {
             documentLoginFlow(operation, success);
         }
         addErrorResponse(responses, "400", "请求参数格式错误、缺失或未通过业务校验");
@@ -576,7 +587,7 @@ final class OpenApiDocumentationCustomizer {
             addErrorResponse(responses, "401", "未认证、访问令牌无效或已过期（code=401 为未携带Token，code=40101 为Token已过期需重新登录）");
             addErrorResponse(responses, "403", "已认证，但没有访问该资源的权限");
         }
-        if ("deleteCurrentUser".equals(operationId)) {
+        if (OP_ID_DELETE_CURRENT_USER.equals(operationId)) {
             addErrorResponse(responses, "409", "会员权益尚未过期，或注销已重复提交/账号已失效");
         }
         addErrorResponse(responses, "429", "请求过于频繁，请稍后重试");
@@ -661,8 +672,9 @@ final class OpenApiDocumentationCustomizer {
      * @param operationId 操作唯一标识
      */
     private void addAccountDeletionSuccessExample(ApiResponse response, String operationId) {
-        if (operationId == null
-                || !("sendAccountDeletionCode".equals(operationId) || "deleteCurrentUser".equals(operationId))) {
+        boolean isAccountDeletionOp =
+                OP_ID_SEND_ACCOUNT_DELETION_CODE.equals(operationId) || OP_ID_DELETE_CURRENT_USER.equals(operationId);
+        if (operationId == null || !isAccountDeletionOp) {
             return;
         }
         MediaType json = response.getContent().get("application/json");
@@ -670,7 +682,7 @@ final class OpenApiDocumentationCustomizer {
             return;
         }
         Map<String, Example> examples = new LinkedHashMap<>();
-        if ("sendAccountDeletionCode".equals(operationId)) {
+        if (OP_ID_SEND_ACCOUNT_DELETION_CODE.equals(operationId)) {
             examples.put(
                     "sent",
                     new Example()
@@ -720,7 +732,7 @@ final class OpenApiDocumentationCustomizer {
                 dataType = new ArraySchema().items(dataType);
             }
             json.setSchema(successEnvelope(dataType));
-        } else if ("deleteCurrentUser".equals(operationId)) {
+        } else if (OP_ID_DELETE_CURRENT_USER.equals(operationId)) {
             json.setSchema(successEnvelope(accountDeletionAcceptedSchema()));
         } else if (dataSchema == null) {
             json.setSchema(schemaReference(SUCCESS_SCHEMA));

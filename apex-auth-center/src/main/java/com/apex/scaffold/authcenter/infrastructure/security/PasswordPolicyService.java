@@ -23,17 +23,26 @@ import reactor.core.publisher.Mono;
 @Slf4j
 public class PasswordPolicyService {
 
-    // 密码长度限制
     private static final int MIN_LENGTH = 12;
     private static final int MAX_LENGTH = 64;
 
-    // 正则表达式
+    private static final int MIN_CONSECUTIVE_CHARS_THRESHOLD = 3;
+    private static final int MIN_SEQUENTIAL_CHARS_THRESHOLD = 4;
+    private static final int MIN_PASSWORD_LENGTH_FOR_SCORE_2 = 12;
+    private static final int MIN_PASSWORD_LENGTH_FOR_SCORE_1 = 8;
+    private static final int SCORE_VERY_STRONG_THRESHOLD = 8;
+    private static final int SCORE_STRONG_THRESHOLD = 6;
+    private static final int SCORE_MEDIUM_THRESHOLD = 4;
+    private static final int WEAK_PASSWORD_SCORE_PENALTY = 3;
+
     private static final Pattern UPPERCASE_PATTERN = Pattern.compile("[A-Z]");
     private static final Pattern LOWERCASE_PATTERN = Pattern.compile("[a-z]");
     private static final Pattern DIGIT_PATTERN = Pattern.compile("[0-9]");
     private static final Pattern SPECIAL_CHAR_PATTERN = Pattern.compile("[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>/?]");
 
-    // 常见弱密码黑名单
+    /**
+     * 常见弱密码黑名单
+     */
     private static final List<String> WEAK_PASSWORDS = List.of(
             "password",
             "123456",
@@ -109,13 +118,11 @@ public class PasswordPolicyService {
                     errors.add("密码过于简单，请使用更复杂的密码");
                 }
 
-                // 6. 检查连续字符
-                if (hasConsecutiveChars(password, 3)) {
+                if (hasConsecutiveChars(password, MIN_CONSECUTIVE_CHARS_THRESHOLD)) {
                     errors.add("密码不能包含3个或更多连续相同字符");
                 }
 
-                // 7. 检查连续数字或字母
-                if (hasSequentialChars(password, 4)) {
+                if (hasSequentialChars(password, MIN_SEQUENTIAL_CHARS_THRESHOLD)) {
                     errors.add("密码不能包含4个或更多连续递增/递减的字符（如1234、abcd）");
                 }
             }
@@ -165,25 +172,44 @@ public class PasswordPolicyService {
 
             int score = 0;
 
-            // 长度评分
-            if (password.length() >= 12) score += 2;
-            else if (password.length() >= 8) score += 1;
+            if (password.length() >= MIN_PASSWORD_LENGTH_FOR_SCORE_2) {
+                score += 2;
+            } else if (password.length() >= MIN_PASSWORD_LENGTH_FOR_SCORE_1) {
+                score += 1;
+            }
 
-            // 复杂度评分
-            if (UPPERCASE_PATTERN.matcher(password).find()) score += 1;
-            if (LOWERCASE_PATTERN.matcher(password).find()) score += 1;
-            if (DIGIT_PATTERN.matcher(password).find()) score += 1;
-            if (SPECIAL_CHAR_PATTERN.matcher(password).find()) score += 2;
+            if (UPPERCASE_PATTERN.matcher(password).find()) {
+                score += 1;
+            }
+            if (LOWERCASE_PATTERN.matcher(password).find()) {
+                score += 1;
+            }
+            if (DIGIT_PATTERN.matcher(password).find()) {
+                score += 1;
+            }
+            if (SPECIAL_CHAR_PATTERN.matcher(password).find()) {
+                score += 2;
+            }
 
-            // 扣分项
-            if (isWeakPassword(password)) score -= 3;
-            if (hasConsecutiveChars(password, 3)) score -= 1;
-            if (hasSequentialChars(password, 4)) score -= 1;
+            if (isWeakPassword(password)) {
+                score -= WEAK_PASSWORD_SCORE_PENALTY;
+            }
+            if (hasConsecutiveChars(password, MIN_CONSECUTIVE_CHARS_THRESHOLD)) {
+                score -= 1;
+            }
+            if (hasSequentialChars(password, MIN_SEQUENTIAL_CHARS_THRESHOLD)) {
+                score -= 1;
+            }
 
-            // 根据分数返回强度
-            if (score >= 8) return PasswordStrength.VERY_STRONG;
-            if (score >= 6) return PasswordStrength.STRONG;
-            if (score >= 4) return PasswordStrength.MEDIUM;
+            if (score >= SCORE_VERY_STRONG_THRESHOLD) {
+                return PasswordStrength.VERY_STRONG;
+            }
+            if (score >= SCORE_STRONG_THRESHOLD) {
+                return PasswordStrength.STRONG;
+            }
+            if (score >= SCORE_MEDIUM_THRESHOLD) {
+                return PasswordStrength.MEDIUM;
+            }
             return PasswordStrength.WEAK;
         });
     }
@@ -271,8 +297,12 @@ public class PasswordPolicyService {
 
             for (int j = 1; j < count; j++) {
                 int diff = password.charAt(i + j) - password.charAt(i + j - 1);
-                if (diff != 1) isAscending = false;
-                if (diff != -1) isDescending = false;
+                if (diff != 1) {
+                    isAscending = false;
+                }
+                if (diff != -1) {
+                    isDescending = false;
+                }
             }
 
             if (isAscending || isDescending) {
@@ -287,9 +317,13 @@ public class PasswordPolicyService {
      * 密码强度枚举
      */
     public enum PasswordStrength {
+        /** 弱密码 */
         WEAK("弱"),
+        /** 中等强度密码 */
         MEDIUM("中等"),
+        /** 强密码 */
         STRONG("强"),
+        /** 极强密码 */
         VERY_STRONG("极强");
 
         private final String description;

@@ -7,8 +7,10 @@ import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
 import com.apex.scaffold.domain.office.*;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
@@ -32,8 +34,13 @@ import reactor.core.publisher.Mono;
 @Repository
 @RequiredArgsConstructor
 public class OfficeRepositoryImpl implements OfficeRepository {
+
+    private static final int DEFAULT_PAGE_SIZE = 100;
+
     private final OfficeAppMapper apps;
     private final OfficeBindingMapper bindings;
+    private final OfficeOrganizationMappingMapper organizationMappings;
+    private final OfficeSyncTaskMapper syncTasks;
     private final OfficePersistenceConverter converter;
 
     @Override
@@ -67,7 +74,9 @@ public class OfficeRepositoryImpl implements OfficeRepository {
                 po.setDeleted(0);
                 changed = apps.insert(po);
             } else {
-                if (po.getVersion() == null) throw new BusinessException(ResultCode.PARAM_ERROR);
+                if (po.getVersion() == null) {
+                    throw new BusinessException(ResultCode.PARAM_ERROR);
+                }
                 Integer version = po.getVersion();
                 po.setVersion(version + 1);
                 changed = apps.update(
@@ -79,7 +88,9 @@ public class OfficeRepositoryImpl implements OfficeRepository {
                                 .eq("version", version)
                                 .eq("deleted", 0));
             }
-            if (changed != 1) throw new BusinessException(ResultCode.PARAM_ERROR);
+            if (changed != 1) {
+                throw new BusinessException(ResultCode.PARAM_ERROR);
+            }
             return converter.toApp(po);
         });
     }
@@ -126,7 +137,9 @@ public class OfficeRepositoryImpl implements OfficeRepository {
     public Mono<java.util.List<OfficeIdentityBinding>> listBindings(
             String tenantId, OfficePlatform platform, int page, int size) {
         return scoped(tenantId, () -> {
-            if (page < 1 || size < 1 || size > 100) throw new BusinessException(ResultCode.PARAM_ERROR);
+            if (page < 1 || size < 1 || size > DEFAULT_PAGE_SIZE) {
+                throw new BusinessException(ResultCode.PARAM_ERROR);
+            }
             return bindings
                     .selectList(new QueryWrapper<OfficeBindingPO>()
                             .eq("tenant_id", tenantId)
@@ -160,54 +173,164 @@ public class OfficeRepositoryImpl implements OfficeRepository {
 
     @Override
     public Mono<OfficeOrganizationMapping> saveOrganizationMapping(OfficeOrganizationMapping mapping) {
-        // TODO: 实现组织映射保存
-        return Mono.just(mapping);
+        return scoped(mapping.getTenantId(), () -> {
+            OfficeOrganizationMappingPO po = converter.toOrganizationMappingPo(mapping);
+            if (po.getId() == null) {
+                po.setVersion(0);
+                po.setDeleted(0);
+                if (organizationMappings.insert(po) != 1) {
+                    throw new BusinessException(ResultCode.PARAM_ERROR);
+                }
+            } else {
+                int version = requireVersion(po.getVersion());
+                po.setVersion(version + 1);
+                if (organizationMappings.update(
+                                po,
+                                new UpdateWrapper<OfficeOrganizationMappingPO>()
+                                        .eq("id", po.getId())
+                                        .eq("tenant_id", mapping.getTenantId())
+                                        .eq("platform", mapping.getPlatform().name())
+                                        .eq("version", version)
+                                        .eq("deleted", 0))
+                        != 1) {
+                    throw new BusinessException(ResultCode.PARAM_ERROR);
+                }
+            }
+            return converter.toOrganizationMapping(po);
+        });
     }
 
     @Override
-    public Mono<Integer> batchSaveOrganizationMappings(java.util.List<OfficeOrganizationMapping> mappings) {
-        // TODO: 实现批量保存组织映射
-        return Mono.just(mappings.size());
+    public Mono<Integer> batchSaveOrganizationMappings(List<OfficeOrganizationMapping> mappings) {
+        return Flux.fromIterable(mappings)
+                .flatMap(this::saveOrganizationMapping)
+                .collectList()
+                .map(List::size);
     }
 
     @Override
     public Mono<OfficeOrganizationMapping> findDepartmentMapping(
             String tenantId, OfficePlatform platform, String externalOrgId) {
-        // TODO: 实现部门映射查询
-        return Mono.empty();
+        return scoped(
+                tenantId,
+                () -> converter.toOrganizationMapping(
+                        organizationMappings.selectOne(organizationMappingQuery(tenantId, platform)
+                                .eq("external_org_id", externalOrgId)
+                                .isNull("external_user_id"))));
     }
 
     @Override
     public Mono<OfficeOrganizationMapping> findMemberMapping(
             String tenantId, OfficePlatform platform, String externalUserId) {
-        // TODO: 实现成员映射查询
-        return Mono.empty();
+        return scoped(
+                tenantId,
+                () -> converter.toOrganizationMapping(
+                        organizationMappings.selectOne(new QueryWrapper<OfficeOrganizationMappingPO>()
+                                .eq("tenant_id", tenantId)
+                                .eq("platform", platform.name())
+                                .eq("external_user_id", externalUserId)
+                                .eq("deleted", 0))));
     }
 
     @Override
-    public Mono<java.util.List<OfficeOrganizationMapping>> listOrganizationMappings(
-            String tenantId, OfficePlatform platform) {
-        // TODO: 实现组织映射列表查询
-        return Mono.just(java.util.Collections.emptyList());
+    public Mono<List<OfficeOrganizationMapping>> listOrganizationMappings(String tenantId, OfficePlatform platform) {
+        return scoped(
+                tenantId,
+                () ->
+                        organizationMappings
+                                .selectList(organizationMappingQuery(tenantId, platform)
+                                        .orderByAsc("id"))
+                                .stream()
+                                .map(converter::toOrganizationMapping)
+                                .toList());
     }
 
     @Override
     public Mono<OfficeSyncTask> saveSyncTask(OfficeSyncTask task) {
-        // TODO: 实现同步任务保存
-        return Mono.just(task);
+        return scoped(task.getTenantId(), () -> {
+            OfficeSyncTaskPO po = converter.toSyncTaskPo(task);
+            if (po.getId() == null) {
+                po.setVersion(0);
+                po.setDeleted(0);
+                if (syncTasks.insert(po) != 1) {
+                    throw new BusinessException(ResultCode.PARAM_ERROR);
+                }
+            } else {
+                int version = requireVersion(po.getVersion());
+                po.setVersion(version + 1);
+                if (syncTasks.update(
+                                po,
+                                new UpdateWrapper<OfficeSyncTaskPO>()
+                                        .eq("id", po.getId())
+                                        .eq("tenant_id", task.getTenantId())
+                                        .eq("platform", task.getPlatform().name())
+                                        .eq("version", version)
+                                        .eq("deleted", 0))
+                        != 1) {
+                    throw new BusinessException(ResultCode.PARAM_ERROR);
+                }
+            }
+            return converter.toSyncTask(po);
+        });
     }
 
     @Override
     public Mono<OfficeSyncTask> findLatestSyncTask(String tenantId, OfficePlatform platform) {
-        // TODO: 实现最新同步任务查询
-        return Mono.empty();
+        return scoped(
+                tenantId,
+                () -> converter.toSyncTask(syncTasks.selectOne(new QueryWrapper<OfficeSyncTaskPO>()
+                        .eq("tenant_id", tenantId)
+                        .eq("platform", platform.name())
+                        .eq("deleted", 0)
+                        .orderByDesc("id")
+                        .last("LIMIT 1"))));
     }
 
     @Override
-    public Mono<java.util.List<OfficeSyncTask>> listSyncTasks(
-            String tenantId, OfficePlatform platform, int page, int size) {
-        // TODO: 实现同步任务列表查询
-        return Mono.just(java.util.Collections.emptyList());
+    public Mono<List<OfficeSyncTask>> listSyncTasks(String tenantId, OfficePlatform platform, int page, int size) {
+        return scoped(tenantId, () -> {
+            validatePage(page, size);
+            return syncTasks
+                    .selectList(syncTaskQuery(tenantId, platform)
+                            .orderByDesc("id")
+                            .last("LIMIT " + size + " OFFSET " + ((long) (page - 1) * size)))
+                    .stream()
+                    .map(converter::toSyncTask)
+                    .toList();
+        });
+    }
+
+    private QueryWrapper<OfficeOrganizationMappingPO> organizationMappingQuery(
+            String tenantId, OfficePlatform platform) {
+        QueryWrapper<OfficeOrganizationMappingPO> query = new QueryWrapper<OfficeOrganizationMappingPO>()
+                .eq("tenant_id", tenantId)
+                .eq("deleted", 0);
+        if (platform != null) {
+            query.eq("platform", platform.name());
+        }
+        return query;
+    }
+
+    private QueryWrapper<OfficeSyncTaskPO> syncTaskQuery(String tenantId, OfficePlatform platform) {
+        QueryWrapper<OfficeSyncTaskPO> query =
+                new QueryWrapper<OfficeSyncTaskPO>().eq("tenant_id", tenantId).eq("deleted", 0);
+        if (platform != null) {
+            query.eq("platform", platform.name());
+        }
+        return query;
+    }
+
+    private int requireVersion(Integer version) {
+        if (version == null || version < 0) {
+            throw new BusinessException(ResultCode.PARAM_ERROR);
+        }
+        return version;
+    }
+
+    private void validatePage(int page, int size) {
+        if (page < 1 || size < 1 || size > DEFAULT_PAGE_SIZE) {
+            throw new BusinessException(ResultCode.PARAM_ERROR);
+        }
     }
 
     /**
@@ -218,7 +341,9 @@ public class OfficeRepositoryImpl implements OfficeRepository {
      * @throws BusinessException 影响行数不为 1 时（记录不存在或版本冲突）
      */
     private boolean changed(int count) {
-        if (count != 1) throw new BusinessException(ResultCode.PARAM_ERROR);
+        if (count != 1) {
+            throw new BusinessException(ResultCode.PARAM_ERROR);
+        }
         return true;
     }
 

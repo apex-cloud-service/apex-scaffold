@@ -243,7 +243,7 @@ public class ChartServiceImpl implements ChartService {
 
     private ChartDataResponse generateChartData(String chartType, String chartName) {
         List<String> xAxis = Arrays.asList("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun");
-        List<ChartDataResponse.ChartSeries> series = new ArrayList<>();
+        List<ChartDataResponse.ChartSeries> series = new ArrayList<>(16);
 
         switch (chartType) {
             case "line":
@@ -262,6 +262,9 @@ public class ChartServiceImpl implements ChartService {
                 xAxis = Arrays.asList("Metric 1", "Metric 2", "Metric 3", "Metric 4", "Metric 5");
                 series.add(createSeries("Series 1", "radar", 5));
                 break;
+
+            default:
+                break;
         }
 
         return ChartDataResponse.builder()
@@ -274,7 +277,7 @@ public class ChartServiceImpl implements ChartService {
     }
 
     private ChartDataResponse.ChartSeries createSeries(String name, String type, int count) {
-        List<Object> data = new ArrayList<>();
+        List<Object> data = new ArrayList<>(16);
         for (int i = 0; i < count; i++) {
             data.add(random.nextInt(100) + 50);
         }

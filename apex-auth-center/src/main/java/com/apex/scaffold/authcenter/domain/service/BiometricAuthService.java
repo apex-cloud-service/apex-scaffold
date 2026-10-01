@@ -44,40 +44,140 @@ public interface BiometricAuthService {
     /**
      * 启用生物识别认证
      */
+    /**
+     * TODO: Add method description
+     * @return TODO
+     */
+    /**
+     * TODO: Add method description
+     * @return TODO
+     */
+    /**
+     * TODO: Add method description
+     *
+     * @param id TODO
+     * @param operator TODO
+     * @return TODO
+     */
     Mono<Void> enableBiometric(Long id, String operator);
 
     /**
      * 禁用生物识别认证
+     */
+    /**
+     * TODO: Add method description
+     * @return TODO
+     */
+    /**
+     * TODO: Add method description
+     * @return TODO
+     */
+    /**
+     * TODO: Add method description
+     *
+     * @param id TODO
+     * @param operator TODO
+     * @return TODO
      */
     Mono<Void> disableBiometric(Long id, String operator);
 
     /**
      * 删除生物识别认证
      */
+    /**
+     * TODO: Add method description
+     * @return TODO
+     */
+    /**
+     * TODO: Add method description
+     * @return TODO
+     */
+    /**
+     * TODO: Add method description
+     *
+     * @param id TODO
+     * @param operator TODO
+     * @return TODO
+     */
     Mono<Void> deleteBiometric(Long id, String operator);
 
     /**
      * 查询用户的生物识别配置
+     */
+    /**
+     * TODO: Add method description
+     * @return TODO
+     */
+    /**
+     * TODO: Add method description
+     *
+     * @param userId TODO
+     * @return TODO
      */
     Flux<BiometricAuth> getUserBiometrics(String userId);
 
     /**
      * 检查用户是否启用了生物识别
      */
+    /**
+     * TODO: Add method description
+     * @return TODO
+     */
+    /**
+     * TODO: Add method description
+     *
+     * @param userId TODO
+     * @return TODO
+     */
     Mono<Boolean> isBiometricEnabled(String userId);
 
     /**
      * 解锁生物识别
+     */
+    /**
+     * TODO: Add method description
+     * @return TODO
+     */
+    /**
+     * TODO: Add method description
+     * @return TODO
+     */
+    /**
+     * TODO: Add method description
+     *
+     * @param id TODO
+     * @param operator TODO
+     * @return TODO
      */
     Mono<Void> unlockBiometric(Long id, String operator);
 
     /**
      * 生成WebAuthn注册挑战
      */
+    /**
+     * TODO: Add method description
+     * @return TODO
+     */
+    /**
+     * TODO: Add method description
+     *
+     * @param userId TODO
+     * @return TODO
+     */
     Mono<RegistrationChallenge> createRegistrationChallenge(String userId);
 
     /**
      * 生成WebAuthn认证挑战
+     */
+    /**
+     * TODO: Add method description
+     * @return TODO
+     */
+    /**
+     * TODO: Add method description
+     *
+     * @param userId TODO
+     * @return TODO
      */
     Mono<AuthenticationChallenge> createAuthenticationChallenge(String userId);
 

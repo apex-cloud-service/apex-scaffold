@@ -49,6 +49,8 @@ import reactor.core.publisher.Mono;
 @Order(Ordered.HIGHEST_PRECEDENCE + 30)
 public class LoggingFilter implements WebFilter {
 
+    private static final String REFERER_PLACEHOLDER = "-";
+
     private static final String[] EXCLUDED_PREFIXES = {
         "/actuator", "/health", "/favicon.ico", "/swagger-ui", "/v3/api-docs", "/webjars", "/doc.html"
     };
@@ -211,7 +213,7 @@ public class LoggingFilter implements WebFilter {
                 .append(truncate(userAgent, 80))
                 .append(" CT=")
                 .append(truncate(contentType, 60));
-        if (referer != null && !referer.isEmpty() && !"-".equals(referer)) {
+        if (referer != null && !referer.isEmpty() && !REFERER_PLACEHOLDER.equals(referer)) {
             sb.append(" referer=").append(truncate(referer, 120));
         }
         return sb.toString();

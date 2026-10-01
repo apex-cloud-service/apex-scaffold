@@ -551,6 +551,7 @@ public class AuthRegistrationService {
      * @param request 注册请求
      * @throws BusinessException 性别或生日不合法（code={@link ResultCode#PARAM_ERROR}）
      */
+    @SuppressWarnings("PMD.AvoidComplexConditionRule")
     private void validateRegistrationProfile(RegisterRequest request) {
         LocalDate birthday = request.getBirthday();
         if (request.getGender() == null

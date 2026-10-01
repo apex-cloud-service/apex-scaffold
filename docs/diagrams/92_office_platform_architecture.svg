@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1800 1280" width="1800" height="1280">
+  <defs>
+    <style>
+      .title{font:700 32px sans-serif;fill:#0f172a;text-anchor:middle}
+      .subtitle{font:500 13px sans-serif;fill:#64748b;text-anchor:middle}
+      .layer-title{font:600 18px sans-serif;fill:#fff}
+      .box-title{font:600 14px sans-serif;fill:#0f172a}
+      .box-desc{font:400 11px sans-serif;fill:#475569}
+      .code{font:500 10px monospace;fill:#2563eb}
+      .highlight{font:600 11px sans-serif;fill:#dc2626}
+      .tag{font:600 10px sans-serif;fill:#fff}
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/>
+    </marker>
+    <marker id="arrow-down" viewBox="0 0 10 10" refX="5" refY="9" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 5 10 L 10 0 z" fill="#64748b"/>
+    </marker>
+  </defs>
+
+  <rect width="1800" height="1280" fill="#fff"/>
+  <text x="900" y="42" class="title">办公平台集成架构</text>
+  <text x="900" y="67" class="subtitle">飞书 / 钉钉 / 企业微信 · 端口-适配器 · 四大业务子域（消息·审批·日历·文档） · 多租户隔离 · v1.0</text>
+
+  <!-- Interfaces Layer -->
+  <rect x="50" y="100" width="1700" height="150" rx="10" fill="#3b82f6" opacity="0.08" stroke="#3b82f6" stroke-width="2"/>
+  <rect x="50" y="100" width="140" height="150" rx="10" fill="#3b82f6"/>
+  <text x="120" y="175" class="layer-title" text-anchor="middle">接口层</text>
+  <text x="120" y="195" class="layer-title" text-anchor="middle" font-size="12">Interfaces</text>
+
+  <rect x="210" y="120" width="240" height="110" rx="6" fill="#fff" stroke="#bfdbfe" stroke-width="1.5"/>
+  <text x="230" y="143" class="box-title">OfficeHandler</text>
+  <text x="230" y="162" class="box-desc">OAuth 登录 / 回调 / 状态</text>
+  <text x="230" y="180" class="code">GET /api/v1/office/{login,callback,status}</text>
+  <text x="230" y="200" class="box-desc">→ OfficeApplicationService</text>
+
+  <rect x="470" y="120" width="240" height="110" rx="6" fill="#fff" stroke="#bfdbfe" stroke-width="1.5"/>
+  <text x="490" y="143" class="box-title">OfficeAdminHandler</text>
+  <text x="490" y="162" class="box-desc">应用配置 / 绑定审批</text>
+  <text x="490" y="180" class="code">/admin-api/v1/office/apps,bindings</text>
+  <text x="490" y="200" class="box-desc">→ OfficeAdminService</text>
+
+  <rect x="730" y="120" width="240" height="110" rx="6" fill="#fff" stroke="#bfdbfe" stroke-width="1.5"/>
+  <text x="750" y="143" class="box-title">OfficeApprovalHandler</text>
+  <text x="750" y="162" class="box-desc">审批流程 CRUD / 催办</text>
+  <text x="750" y="180" class="code">/api/v1/office/approvals/**</text>
+  <text x="750" y="200" class="box-desc">→ ApprovalProcessApplicationService</text>
+
+  <rect x="990" y="120" width="240" height="110" rx="6" fill="#fff" stroke="#bfdbfe" stroke-width="1.5"/>
+  <text x="1010" y="143" class="box-title">OfficeMessageHandler</text>
+  <text x="1010" y="162" class="box-desc">消息发送 / 查询</text>
+  <text x="1010" y="180" class="code">/api/v1/office/messages/**</text>
+  <text x="1010" y="200" class="box-desc">→ OfficeMessageService</text>
+
+  <rect x="1250" y="120" width="240" height="110" rx="6" fill="#fff" stroke="#bfdbfe" stroke-width="1.5"/>
+  <text x="1270" y="143" class="box-title">OfficeCalendarHandler</text>
+  <text x="1270" y="162" class="box-desc">日程 CRUD / 会议室</text>
+  <text x="1270" y="180" class="code">/api/v1/office/calendar-events/**</text>
+  <text x="1270" y="200" class="box-desc">→ OfficeCalendarService</text>
+
+  <rect x="1510" y="120" width="220" height="110" rx="6" fill="#fff" stroke="#bfdbfe" stroke-width="1.5"/>
+  <text x="1530" y="143" class="box-title">OfficeDocumentHandler</text>
+  <text x="1530" y="162" class="box-desc">文档管理 / 权限 / 分享</text>
+  <text x="1530" y="180" class="code">/api/v1/office/documents/**</text>
+  <text x="1530" y="200" class="box-desc">→ OfficeDocumentService</text>
+
+  <line x1="900" y1="250" x2="900" y2="280" stroke="#64748b" stroke-width="2" marker-end="url(#arrow-down)"/>
+
+  <!-- Application Layer -->
+  <rect x="50" y="280" width="1700" height="150" rx="10" fill="#10b981" opacity="0.08" stroke="#10b981" stroke-width="2"/>
+  <rect x="50" y="280" width="140" height="150" rx="10" fill="#10b981"/>
+  <text x="120" y="355" class="layer-title" text-anchor="middle">应用层</text>
+  <text x="120" y="375" class="layer-title" text-anchor="middle" font-size="12">Application</text>
+
+  <rect x="210" y="300" width="300" height="110" rx="6" fill="#fff" stroke="#a7f3d0" stroke-width="1.5"/>
+  <text x="230" y="323" class="box-title">OfficeApplicationService</text>
+  <text x="230" y="342" class="box-desc">OAuth 编排 · state 签发/消费</text>
+  <text x="230" y="360" class="code">Duration.ofMinutes(5) (state TTL)</text>
+  <text x="230" y="380" class="box-desc">依赖 OfficeState · ApprovalPort 等端口</text>
+
+  <rect x="530" y="300" width="300" height="110" rx="6" fill="#fff" stroke="#a7f3d0" stroke-width="1.5"/>
+  <text x="550" y="323" class="box-title">ApprovalProcessApplicationService</text>
+  <text x="550" y="342" class="box-desc">审批发起/撤销/催办/分页查询</text>
+  <text x="550" y="360" class="code">queryProcesses / countProcesses</text>
+  <text x="550" y="380" class="box-desc">→ ApprovalProcessRepository</text>
+
+  <rect x="850" y="300" width="280" height="110" rx="6" fill="#fff" stroke="#a7f3d0" stroke-width="1.5"/>
+  <text x="870" y="323" class="box-title">OfficeMessageService</text>
+  <text x="870" y="342" class="box-desc">文本/Markdown/卡片消息</text>
+  <text x="870" y="360" class="code">MessagePort → 平台适配</text>
+  <text x="870" y="380" class="box-desc">OfficeMessageApplicationService</text>
+
+  <rect x="1150" y="300" width="280" height="110" rx="6" fill="#fff" stroke="#a7f3d0" stroke-width="1.5"/>
+  <text x="1170" y="323" class="box-title">OfficeCalendarService</text>
+  <text x="1170" y="342" class="box-desc">日程/会议/会议室可用性</text>
+  <text x="1170" y="360" class="code">CalendarPort → 平台适配</text>
+  <text x="1170" y="380" class="box-desc">CalendarEventRepository</text>
+
+  <rect x="1450" y="300" width="280" height="110" rx="6" fill="#fff" stroke="#a7f3d0" stroke-width="1.5"/>
+  <text x="1470" y="323" class="box-title">OfficeDocumentService</text>
+  <text x="1470" y="342" class="box-desc">文档元数据/权限/分享</text>
+  <text x="1470" y="360" class="code">DocumentPort → 平台适配</text>
+  <text x="1470" y="380" class="box-desc">DocumentInfoRepository</text>
+
+  <line x1="900" y1="430" x2="900" y2="460" stroke="#64748b" stroke-width="2" marker-end="url(#arrow-down)"/>
+
+  <!-- Domain Layer -->
+  <rect x="50" y="460" width="1700" height="200" rx="10" fill="#8b5cf6" opacity="0.08" stroke="#8b5cf6" stroke-width="2"/>
+  <rect x="50" y="460" width="140" height="200" rx="10" fill="#8b5cf6"/>
+  <text x="120" y="550" class="layer-title" text-anchor="middle">领域层</text>
+  <text x="120" y="570" class="layer-title" text-anchor="middle" font-size="12">Domain</text>
+
+  <!-- Ports column -->
+  <rect x="210" y="480" width="300" height="160" rx="6" fill="#fff" stroke="#ddd6fe" stroke-width="1.5"/>
+  <text x="230" y="503" class="box-title">端口（Ports）</text>
+  <text x="230" y="523" class="code">ApprovalPort    ← 审批</text>
+  <text x="230" y="541" class="code">MessagePort     ← 消息</text>
+  <text x="230" y="559" class="code">CalendarPort    ← 日历</text>
+  <text x="230" y="577" class="code">DocumentPort    ← 文档</text>
+  <text x="230" y="595" class="code">OfficeState     ← state 管理</text>
+  <text x="230" y="615" class="box-desc">出站端口，由 Infrastructure 实现</text>
+
+  <!-- Entities & Repos -->
+  <rect x="530" y="480" width="300" height="160" rx="6" fill="#fff" stroke="#ddd6fe" stroke-width="1.5"/>
+  <text x="550" y="503" class="box-title">聚合 &amp; 仓储</text>
+  <text x="550" y="523" class="code">ApprovalProcess / Repository</text>
+  <text x="550" y="541" class="code">OfficeMessage / Repository</text>
+  <text x="550" y="559" class="code">CalendarEvent / Repository</text>
+  <text x="550" y="577" class="code">DocumentInfo / Repository</text>
+  <text x="550" y="595" class="code">OfficePlatformApp / IdentityBinding</text>
+  <text x="550" y="615" class="box-desc">ApprovalStatus · MessageType 等枚举</text>
+
+  <rect x="850" y="480" width="280" height="160" rx="6" fill="#fff" stroke="#ddd6fe" stroke-width="1.5"/>
+  <text x="870" y="503" class="box-title">领域服务</text>
+  <text x="870" y="523" class="code">ApprovalProcessDomainService</text>
+  <text x="870" y="541" class="code">OfficeMessageService (domain)</text>
+  <text x="870" y="559" class="code">CalendarService</text>
+  <text x="870" y="577" class="code">OfficeOrganizationService</text>
+  <text x="870" y="600" class="box-desc">封装审批/消息等核心业务规则</text>
+
+  <rect x="1150" y="480" width="280" height="160" rx="6" fill="#fff" stroke="#ddd6fe" stroke-width="1.5"/>
+  <text x="1170" y="503" class="box-title">平台配置聚合</text>
+  <text x="1170" y="523" class="code">OfficePlatform (枚举)</text>
+  <text x="1170" y="541" class="code">  FEISHU / DINGTALK / WECOM</text>
+  <text x="1170" y="559" class="code">OfficePlatformApp</text>
+  <text x="1170" y="577" class="code">OfficeIdentityBinding</text>
+  <text x="1170" y="595" class="code">OfficeRepository</text>
+  <text x="1170" y="615" class="box-desc">多租户平台应用 &amp; 绑定记录</text>
+
+  <rect x="1450" y="480" width="280" height="160" rx="6" fill="#fff" stroke="#ddd6fe" stroke-width="1.5"/>
+  <text x="1470" y="503" class="box-title">跨域能力</text>
+  <text x="1470" y="523" class="code">OfficeOAuthClient (端口)</text>
+  <text x="1470" y="541" class="code">OfficeOrganizationMapping</text>
+  <text x="1470" y="559" class="code">OfficeSyncTask</text>
+  <text x="1470" y="577" class="code">OfficeDepartment / OfficeMember</text>
+  <text x="1470" y="600" class="box-desc">OAuth &amp; 组织架构同步能力</text>
+
+  <line x1="900" y1="660" x2="900" y2="690" stroke="#64748b" stroke-width="2" marker-end="url(#arrow-down)"/>
+
+  <!-- Infrastructure Layer -->
+  <rect x="50" y="690" width="1700" height="230" rx="10" fill="#f59e0b" opacity="0.08" stroke="#f59e0b" stroke-width="2"/>
+  <rect x="50" y="690" width="140" height="230" rx="10" fill="#f59e0b"/>
+  <text x="120" y="790" class="layer-title" text-anchor="middle">基础设施层</text>
+  <text x="120" y="810" class="layer-title" text-anchor="middle" font-size="12">Infrastructure</text>
+
+  <!-- Clients -->
+  <rect x="210" y="710" width="500" height="190" rx="6" fill="#fff" stroke="#fde68a" stroke-width="1.5"/>
+  <text x="230" y="733" class="box-title">平台客户端（适配器实现 Ports）</text>
+  <text x="230" y="755" class="code">AbstractOfficeClient (统一 OAuth)</text>
+  <rect x="230" y="765" width="140" height="30" rx="4" fill="#eff6ff"/>
+  <text x="300" y="785" class="tag" fill="#2563eb" text-anchor="middle">FeishuOfficeClient</text>
+  <rect x="380" y="765" width="140" height="30" rx="4" fill="#f0fdf4"/>
+  <text x="450" y="785" class="tag" fill="#16a34a" text-anchor="middle">DingTalkOfficeClient</text>
+  <rect x="530" y="765" width="160" height="30" rx="4" fill="#fef2f2"/>
+  <text x="610" y="785" class="tag" fill="#dc2626" text-anchor="middle">WeComOfficeClient</text>
+  <text x="230" y="815" class="code">FeishuApprovalClient / DingtalkApprovalClient</text>
+  <text x="230" y="833" class="code">FeishuMessageClient / DingTalkMessageClient / WecomMessageClient</text>
+  <text x="230" y="851" class="code">FeishuOrganizationClient / ... / CalendarClient / DocumentClient</text>
+  <text x="230" y="875" class="box-desc">通过 OfficePlatformCapabilities 声明能力，按平台注入对应 Port 实现</text>
+
+  <!-- Persistence -->
+  <rect x="730" y="710" width="420" height="190" rx="6" fill="#fff" stroke="#fde68a" stroke-width="1.5"/>
+  <text x="750" y="733" class="box-title">持久化（MyBatis-Plus + Flyway）</text>
+  <text x="750" y="755" class="code">OfficeRepositoryImpl</text>
+  <text x="750" y="773" class="code">ApprovalProcessRepositoryImpl</text>
+  <text x="750" y="791" class="code">OfficeMessageRepositoryImpl</text>
+  <text x="750" y="809" class="code">CalendarEventRepositoryImpl</text>
+  <text x="750" y="827" class="code">DocumentInfoRepositoryImpl</text>
+  <text x="750" y="850" class="box-desc">PO + Mapper + MapStruct Converter</text>
+  <text x="750" y="868" class="box-desc">V29/V30/V31/V32 (pg+mysql) · V57 (mysql off_*)</text>
+
+  <!-- Security & Config -->
+  <rect x="1170" y="710" width="560" height="190" rx="6" fill="#fff" stroke="#fde68a" stroke-width="1.5"/>
+  <text x="1190" y="733" class="box-title">安全 / 配置 / 调度</text>
+  <rect x="1190" y="745" width="250" height="60" rx="4" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+  <text x="1205" y="765" class="box-title">OfficeStateService (Redis)</text>
+  <text x="1205" y="783" class="box-desc">state 签发/消费，CAS 原子防重放</text>
+  <text x="1205" y="799" class="code">setIfAbsent(key, binding, ttl)</text>
+  <rect x="1450" y="745" width="260" height="60" rx="4" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+  <text x="1465" y="765" class="box-title">OfficePlatformProperties</text>
+  <text x="1465" y="783" class="box-desc">apex.office.* 配置绑定</text>
+  <text x="1465" y="799" class="code">enabled / timeout / maxRetries / platforms</text>
+  <text x="1190" y="830" class="code">HmacOfficeSignatureVerifier · OfficeWebClientConfig</text>
+  <text x="1190" y="850" class="box-desc">所有阻塞 I/O 经 BlockingIoSchedulers 隔离（jdbc/remote）</text>
+  <text x="1190" y="868" class="box-desc">多租户：TenantContext + TenantLineInnerInterceptor 行级隔离</text>
+
+  <line x1="900" y1="920" x2="900" y2="950" stroke="#64748b" stroke-width="2" marker-end="url(#arrow-down)"/>
+
+  <!-- External Platforms -->
+  <rect x="50" y="950" width="1700" height="150" rx="10" fill="#ef4444" opacity="0.06" stroke="#ef4444" stroke-width="2"/>
+  <rect x="50" y="950" width="140" height="150" rx="10" fill="#ef4444"/>
+  <text x="120" y="1025" class="layer-title" text-anchor="middle">外部平台</text>
+  <text x="120" y="1045" class="layer-title" text-anchor="middle" font-size="12">3rd Party</text>
+
+  <rect x="210" y="970" width="480" height="110" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="2"/>
+  <text x="450" y="1000" class="box-title" text-anchor="middle" font-size="18">飞书 Feishu / Lark</text>
+  <text x="450" y="1025" class="box-desc" text-anchor="middle">OAuth · 审批 · 消息 · 日历 · 文档 · 组织</text>
+  <text x="450" y="1045" class="code" text-anchor="middle">open.feishu.cn</text>
+  <text x="450" y="1065" class="box-desc" text-anchor="middle">→ Feishu*Client 适配</text>
+
+  <rect x="710" y="970" width="480" height="110" rx="8" fill="#f0fdf4" stroke="#16a34a" stroke-width="2"/>
+  <text x="950" y="1000" class="box-title" text-anchor="middle" font-size="18">钉钉 DingTalk</text>
+  <text x="950" y="1025" class="box-desc" text-anchor="middle">OAuth · 审批 · 消息 · 日历 · 文档 · 组织</text>
+  <text x="950" y="1045" class="code" text-anchor="middle">open.dingtalk.com</text>
+  <text x="950" y="1065" class="box-desc" text-anchor="middle">→ DingTalk*Client 适配</text>
+
+  <rect x="1210" y="970" width="520" height="110" rx="8" fill="#fef2f2" stroke="#dc2626" stroke-width="2"/>
+  <text x="1470" y="1000" class="box-title" text-anchor="middle" font-size="18">企业微信 WeCom</text>
+  <text x="1470" y="1025" class="box-desc" text-anchor="middle">OAuth · 审批 · 消息 · 日历 · 文档 · 组织</text>
+  <text x="1470" y="1045" class="code" text-anchor="middle">developer.work.weixin.qq.com</text>
+  <text x="1470" y="1065" class="box-desc" text-anchor="middle">→ WeCom*Client 适配</text>
+
+  <!-- Cross-cutting notes -->
+  <rect x="50" y="1120" width="1700" height="110" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="70" y="1148" class="box-title">横切关注点</text>
+  <text x="70" y="1172" class="code">① 租户隔离：TenantContext 透传 → MyBatis-Plus TenantLineInnerInterceptor 自动追加 tenant_id 条件</text>
+  <text x="70" y="1192" class="code">② State 防重放：Redis setIfAbsent + 单次消费（CAS），TTL 当前硬编码 5 分钟</text>
+  <text x="70" y="1212" class="code">③ 阻塞隔离：JDBC 走 BlockingIoSchedulers.jdbc()，外部 SDK/HTTP 走 .remote()</text>
+  <text x="70" y="1232" class="code">④ 依赖倒置：Application 依赖 Domain 端口（Port），Infrastructure 提供适配器实现</text>
+
+  <text x="900" y="1265" class="code" text-anchor="middle">© 2026 Apex Team · 办公平台集成架构 v1.0</text>
+</svg>

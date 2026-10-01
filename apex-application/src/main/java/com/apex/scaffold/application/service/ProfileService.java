@@ -506,10 +506,10 @@ public class ProfileService {
                 tags = new ArrayList<>((List<String>) JsonUtil.fromJson(existingInterestsJson, List.class));
             } catch (Exception e) {
                 log.warn("解析已有兴趣标签失败，将重新初始化，existingInterestsJson: {}", existingInterestsJson, e);
-                tags = new ArrayList<>();
+                tags = new ArrayList<>(16);
             }
         } else {
-            tags = new ArrayList<>();
+            tags = new ArrayList<>(16);
         }
         if (!tags.contains(newTag)) {
             tags.add(newTag);

@@ -1,0 +1,144 @@
+<svg viewBox="0 0 1400 800" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a237e;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#283593;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#0d47a1;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1565c0;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+
+  <rect width="1400" height="800" fill="#0a0e27"/>
+
+  <text x="700" y="40" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="#ffffff" text-anchor="middle">本地限流器架构 (LocalRateLimiter)</text>
+  <text x="700" y="70" font-family="Arial, sans-serif" font-size="14" fill="#64b5f6" text-anchor="middle">基于策略模式的三算法可插拔限流方案</text>
+
+  <rect x="50" y="100" width="320" height="620" rx="8" fill="url(#grad1)" stroke="#42a5f5" stroke-width="2" filter="url(#shadow)"/>
+  <text x="210" y="130" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#ffffff" text-anchor="middle">LocalRateLimiter</text>
+  
+  <rect x="70" y="150" width="280" height="80" rx="6" fill="#1565c0" stroke="#64b5f6" stroke-width="1.5"/>
+  <text x="210" y="175" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">核心属性</text>
+  <text x="80" y="195" font-family="Arial, sans-serif" font-size="11" fill="#e3f2fd">• permits: 窗口内许可总数</text>
+  <text x="80" y="210" font-family="Arial, sans-serif" font-size="11" fill="#e3f2fd">• windowMs: 窗口大小(毫秒)</text>
+  <text x="80" y="225" font-family="Arial, sans-serif" font-size="11" fill="#e3f2fd">• algorithm: 算法类型枚举</text>
+
+  <rect x="70" y="245" width="280" height="100" rx="6" fill="#1565c0" stroke="#64b5f6" stroke-width="1.5"/>
+  <text x="210" y="270" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">策略委托</text>
+  <text x="80" y="290" font-family="Arial, sans-serif" font-size="11" fill="#e3f2fd">• strategy: RateLimitStrategy</text>
+  <text x="80" y="305" font-family="Arial, sans-serif" font-size="11" fill="#90caf9">由 RateLimitAlgorithmFactory</text>
+  <text x="80" y="320" font-family="Arial, sans-serif" font-size="11" fill="#90caf9">根据算法类型创建具体实现</text>
+  <text x="80" y="335" font-family="Arial, sans-serif" font-size="11" fill="#ffab91">[v1.3.0 可插拔设计]</text>
+
+  <rect x="70" y="360" width="280" height="110" rx="6" fill="#1565c0" stroke="#64b5f6" stroke-width="1.5"/>
+  <text x="210" y="385" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">核心方法</text>
+  <text x="80" y="405" font-family="Arial, sans-serif" font-size="11" fill="#e3f2fd">• tryAcquire(): boolean</text>
+  <text x="80" y="420" font-family="Arial, sans-serif" font-size="11" fill="#e3f2fd">• tryAcquire(permits): boolean</text>
+  <text x="80" y="435" font-family="Arial, sans-serif" font-size="11" fill="#e3f2fd">• getCurrentCount(): int</text>
+  <text x="80" y="450" font-family="Arial, sans-serif" font-size="11" fill="#90caf9">→ 委托给 strategy.tryAcquire()</text>
+  <text x="80" y="465" font-family="Arial, sans-serif" font-size="11" fill="#90caf9">→ O(1) 时间复杂度保证</text>
+
+  <rect x="70" y="485" width="280" height="110" rx="6" fill="#1565c0" stroke="#64b5f6" stroke-width="1.5"/>
+  <text x="210" y="510" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">实例管理</text>
+  <text x="80" y="530" font-family="Arial, sans-serif" font-size="11" fill="#e3f2fd">• INSTANCES: ConcurrentHashMap</text>
+  <text x="80" y="545" font-family="Arial, sans-serif" font-size="11" fill="#e3f2fd">• of(key, permits, windowMs)</text>
+  <text x="80" y="560" font-family="Arial, sans-serif" font-size="11" fill="#e3f2fd">• clearIdle(idleThresholdMs)</text>
+  <text x="80" y="575" font-family="Arial, sans-serif" font-size="11" fill="#90caf9">按空闲时间清理防内存泄漏</text>
+  <text x="80" y="590" font-family="Arial, sans-serif" font-size="11" fill="#ffab91">[推荐10分钟调度清理]</text>
+
+  <rect x="70" y="610" width="280" height="90" rx="6" fill="#0d47a1" stroke="#64b5f6" stroke-width="1.5"/>
+  <text x="210" y="635" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#ffd54f" text-anchor="middle">性能优化 v1.3.0</text>
+  <text x="80" y="655" font-family="Arial, sans-serif" font-size="11" fill="#fff9c4">• 时间复杂度: O(n) → O(1)</text>
+  <text x="80" y="670" font-family="Arial, sans-serif" font-size="11" fill="#fff9c4">• 内存占用: ~80KB → ~80B</text>
+  <text x="80" y="685" font-family="Arial, sans-serif" font-size="11" fill="#fff9c4">• 1000实例: ~80MB → ~80KB</text>
+
+  <rect x="420" y="100" width="300" height="280" rx="8" fill="url(#grad2)" stroke="#42a5f5" stroke-width="2" filter="url(#shadow)"/>
+  <text x="570" y="130" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#ffffff" text-anchor="middle">RateLimitAlgorithmFactory</text>
+  
+  <rect x="440" y="150" width="260" height="70" rx="6" fill="#1565c0" stroke="#64b5f6" stroke-width="1.5"/>
+  <text x="570" y="175" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">算法工厂</text>
+  <text x="450" y="195" font-family="Arial, sans-serif" font-size="11" fill="#e3f2fd">createNew(algorithm, capacity,</text>
+  <text x="450" y="210" font-family="Arial, sans-serif" font-size="11" fill="#e3f2fd">          refillRate, windowMs)</text>
+
+  <rect x="440" y="235" width="260" height="130" rx="6" fill="#1565c0" stroke="#64b5f6" stroke-width="1.5"/>
+  <text x="570" y="260" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">策略缓存</text>
+  <text x="450" y="280" font-family="Arial, sans-serif" font-size="11" fill="#e3f2fd">STRATEGIES: ConcurrentHashMap</text>
+  <text x="450" y="295" font-family="Arial, sans-serif" font-size="11" fill="#90caf9">→ key = algorithm + params</text>
+  <text x="450" y="310" font-family="Arial, sans-serif" font-size="11" fill="#90caf9">→ 共享实例复用</text>
+  <text x="450" y="325" font-family="Arial, sans-serif" font-size="11" fill="#90caf9">→ 减少对象创建开销</text>
+  <text x="450" y="340" font-family="Arial, sans-serif" font-size="11" fill="#90caf9">→ clearAll() 清理所有实例</text>
+  <text x="450" y="355" font-family="Arial, sans-serif" font-size="11" fill="#ffab91">[并发安全]</text>
+
+  <rect x="420" y="400" width="300" height="320" rx="8" fill="url(#grad2)" stroke="#42a5f5" stroke-width="2" filter="url(#shadow)"/>
+  <text x="570" y="430" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#ffffff" text-anchor="middle">三种算法实现</text>
+  
+  <rect x="440" y="450" width="260" height="75" rx="6" fill="#00897b" stroke="#4db6ac" stroke-width="1.5"/>
+  <text x="570" y="475" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">SlidingWindow (默认)</text>
+  <text x="450" y="495" font-family="Arial, sans-serif" font-size="11" fill="#e0f2f1">• 桶分片滑动窗口 O(1)</text>
+  <text x="450" y="510" font-family="Arial, sans-serif" font-size="11" fill="#e0f2f1">• 精确限流、内存低</text>
+
+  <rect x="440" y="535" width="260" height="75" rx="6" fill="#6a1b9a" stroke="#ab47bc" stroke-width="1.5"/>
+  <text x="570" y="560" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">TokenBucket</text>
+  <text x="450" y="580" font-family="Arial, sans-serif" font-size="11" fill="#f3e5f5">• 支持突发流量</text>
+  <text x="450" y="595" font-family="Arial, sans-serif" font-size="11" fill="#f3e5f5">• capacity + refillRate</text>
+
+  <rect x="440" y="620" width="260" height="75" rx="6" fill="#bf360c" stroke="#ff6e40" stroke-width="1.5"/>
+  <text x="570" y="645" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">LeakyBucket</text>
+  <text x="450" y="665" font-family="Arial, sans-serif" font-size="11" fill="#fbe9e7">• 平滑输出流量</text>
+  <text x="450" y="680" font-family="Arial, sans-serif" font-size="11" fill="#fbe9e7">• capacity + leakRate</text>
+
+  <rect x="770" y="100" width="580" height="620" rx="8" fill="url(#grad1)" stroke="#42a5f5" stroke-width="2" filter="url(#shadow)"/>
+  <text x="1060" y="130" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#ffffff" text-anchor="middle">并发安全与使用流程</text>
+
+  <rect x="790" y="150" width="540" height="130" rx="6" fill="#1565c0" stroke="#64b5f6" stroke-width="1.5"/>
+  <text x="1060" y="175" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">ReentrantLock 保护</text>
+  <text x="800" y="195" font-family="Arial, sans-serif" font-size="11" fill="#e3f2fd">每个策略实例内部使用 ReentrantLock(公平锁) 保护：</text>
+  <text x="800" y="210" font-family="Arial, sans-serif" font-size="11" fill="#90caf9">1. lock.lock() - 获取锁</text>
+  <text x="800" y="225" font-family="Arial, sans-serif" font-size="11" fill="#90caf9">2. 检查当前计数 vs 阈值</text>
+  <text x="800" y="240" font-family="Arial, sans-serif" font-size="11" fill="#90caf9">3. 记录新请求 (check-then-record 原子性)</text>
+  <text x="800" y="255" font-family="Arial, sans-serif" font-size="11" fill="#90caf9">4. lock.unlock() - 释放锁</text>
+  <text x="800" y="270" font-family="Arial, sans-serif" font-size="11" fill="#ffab91">→ 消除高并发竞态条件</text>
+
+  <rect x="790" y="295" width="540" height="150" rx="6" fill="#1565c0" stroke="#64b5f6" stroke-width="1.5"/>
+  <text x="1060" y="320" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">典型使用场景</text>
+  <text x="800" y="340" font-family="Arial, sans-serif" font-size="11" fill="#e3f2fd">1. Redis/Redisson 降级兜底</text>
+  <text x="810" y="355" font-family="Arial, sans-serif" font-size="11" fill="#90caf9">→ 分布式限流不可用时保底保护</text>
+  <text x="800" y="375" font-family="Arial, sans-serif" font-size="11" fill="#e3f2fd">2. 单机限流快速失败</text>
+  <text x="810" y="390" font-family="Arial, sans-serif" font-size="11" fill="#90caf9">→ 超限立即拒绝，不阻塞线程</text>
+  <text x="800" y="410" font-family="Arial, sans-serif" font-size="11" fill="#e3f2fd">3. 缓存回源保护</text>
+  <text x="810" y="425" font-family="Arial, sans-serif" font-size="11" fill="#90caf9">→ 防止缓存雪崩时数据库击穿</text>
+
+  <rect x="790" y="460" width="540" height="130" rx="6" fill="#1565c0" stroke="#64b5f6" stroke-width="1.5"/>
+  <text x="1060" y="485" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">配置示例</text>
+  <text x="800" y="505" font-family="monospace" font-size="10" fill="#a5d6a7">LocalRateLimiter limiter = LocalRateLimiter.of(</text>
+  <text x="810" y="520" font-family="monospace" font-size="10" fill="#a5d6a7">  "api:user:login",          // 限流键</text>
+  <text x="810" y="535" font-family="monospace" font-size="10" fill="#a5d6a7">  100,                       // 100 QPS</text>
+  <text x="810" y="550" font-family="monospace" font-size="10" fill="#a5d6a7">  1000L,                     // 1秒窗口</text>
+  <text x="810" y="565" font-family="monospace" font-size="10" fill="#a5d6a7">  RateLimitAlgorithm.SLIDING_WINDOW);</text>
+  <text x="800" y="580" font-family="monospace" font-size="10" fill="#a5d6a7">if (!limiter.tryAcquire()) { reject(); }</text>
+
+  <rect x="790" y="605" width="540" height="100" rx="6" fill="#0d47a1" stroke="#64b5f6" stroke-width="1.5"/>
+  <text x="1060" y="630" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#ffd54f" text-anchor="middle">内存管理最佳实践</text>
+  <text x="800" y="650" font-family="Arial, sans-serif" font-size="11" fill="#fff9c4">• 定时任务: 每10分钟调用 clearIdle(30 * 60 * 1000L)</text>
+  <text x="800" y="665" font-family="Arial, sans-serif" font-size="11" fill="#fff9c4">• 清理阈值: 空闲超过30分钟的实例</text>
+  <text x="800" y="680" font-family="Arial, sans-serif" font-size="11" fill="#fff9c4">• 防止内存泄漏: INSTANCES Map 无限增长</text>
+  <text x="800" y="695" font-family="Arial, sans-serif" font-size="11" fill="#fff9c4">• 热点实例: 活跃实例自动保留</text>
+
+  <path d="M 370 300 L 420 300" stroke="#64b5f6" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="395" y="295" font-family="Arial, sans-serif" font-size="10" fill="#64b5f6" text-anchor="middle">创建</text>
+
+  <path d="M 570 380 L 570 400" stroke="#4db6ac" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="600" y="395" font-family="Arial, sans-serif" font-size="10" fill="#4db6ac">返回具体算法</text>
+
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#64b5f6" />
+    </marker>
+  </defs>
+
+  <text x="700" y="770" font-family="Arial, sans-serif" font-size="11" fill="#546e7a" text-anchor="middle">© 2026 Apex Team · 本地限流器架构 v1.0 · apex-common/util/ratelimit/LocalRateLimiter.java</text>
+</svg>

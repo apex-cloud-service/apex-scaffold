@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -u
+
 ###############################################################################
 # check-springdoc-annotations-v2.sh - SpringDoc注解检查脚本（使用公共库重构版）
 #
@@ -45,6 +47,10 @@ parse_arguments() {
                 shift
                 ;;
             --report|-r)
+                if [[ $# -lt 2 || -z ${2:-} || $2 == -* ]]; then
+                    log_error "$1 需要报告文件路径"
+                    exit 1
+                fi
                 REPORT_FILE="$2"
                 shift 2
                 ;;
@@ -134,10 +140,18 @@ check_router_annotations() {
     fi
 
     # 使用公共函数库的 safe_find
-    local router_files=$(safe_find "$router_dir" "*Router.java")
+    local router_files
+    if router_files=$(safe_find "$router_dir" "*Router.java"); then
+        :
+    else
+        local find_status=$?
+        return "$find_status"
+    fi
 
-    for router_file in $router_files; do
-        local router_name=$(basename "$router_file" .java)
+    while IFS= read -r router_file; do
+        [[ -n "$router_file" ]] || continue
+        local router_name
+        router_name=$(basename "$router_file" .java)
 
         # 跳过基础设施类（不计入总数，否则缺失统计永远无法归零）
         if [[ "$router_name" == "MethodNotAllowedRouter" ]]; then
@@ -153,14 +167,23 @@ check_router_annotations() {
             log_to_report "[✓] $router_name"
 
             if [ $VERBOSE -eq 1 ]; then
-                local op_count=$(safe_count "@RouterOperation(" "$router_file")
-                log_info "  包含 $op_count 个路由操作"
+                local op_count
+                if op_count=$(safe_count "@RouterOperation(" "$router_file"); then
+                    log_info "  包含 $op_count 个路由操作"
+                else
+                    local count_status=$?
+                    return "$count_status"
+                fi
             fi
         else
+            local annotation_status=$?
+            if [ "$annotation_status" -ne 1 ]; then
+                return "$annotation_status"
+            fi
             log_failure "$router_name 缺少 @RouterOperations 注解"
             log_to_report "[✗] $router_name - 缺少注解"
         fi
-    done
+    done <<< "$router_files"
 
     echo ""
     log_info "Router 类统计: 总数=$ROUTER_TOTAL, 已注解=$ROUTER_WITH_ANNOTATION, 缺失=$((ROUTER_TOTAL - ROUTER_WITH_ANNOTATION))"
@@ -187,10 +210,18 @@ check_handler_annotations() {
     fi
 
     # 使用公共函数库的 safe_find
-    local handler_files=$(safe_find "$handler_dir" "*Handler.java")
+    local handler_files
+    if handler_files=$(safe_find "$handler_dir" "*Handler.java"); then
+        :
+    else
+        local find_status=$?
+        return "$find_status"
+    fi
 
-    for handler_file in $handler_files; do
-        local handler_name=$(basename "$handler_file" .java)
+    while IFS= read -r handler_file; do
+        [[ -n "$handler_file" ]] || continue
+        local handler_name
+        handler_name=$(basename "$handler_file" .java)
         HANDLER_TOTAL=$((HANDLER_TOTAL + 1))
 
         # 剥离注释后统计真实端点方法（排除 JavaDoc 代码示例误计），
@@ -204,11 +235,14 @@ check_handler_annotations() {
         method_count=$((method_count - excluded_count))
         HANDLER_METHOD_TOTAL=$((HANDLER_METHOD_TOTAL + method_count))
 
-        local operation_count=$(safe_count "@Operation(" "$handler_file")
+        local operation_count=$(strip_java_comments "$handler_file" | grep -c "@Operation(" || true)
+        operation_count=$(printf '%s' "$operation_count" | tr -d '[:space:]')
+        [ -z "$operation_count" ] && operation_count=0
+        if [ "$operation_count" -gt "$method_count" ]; then
+            operation_count=$method_count
+        fi
         HANDLER_METHOD_WITH_OPERATION=$((HANDLER_METHOD_WITH_OPERATION + operation_count))
-
         local missing=$((method_count - operation_count))
-        [ "$missing" -lt 0 ] && missing=0
 
         if safe_eq "$missing" 0; then
             log_success "$handler_name (方法:$method_count, @Operation:$operation_count)"
@@ -217,7 +251,7 @@ check_handler_annotations() {
             log_warn "$handler_name (方法:$method_count, @Operation:$operation_count, 缺失:$missing)"
             log_to_report "[⚠] $handler_name - 方法:$method_count, 注解:$operation_count, 缺失:$missing"
         fi
-    done
+    done <<< "$handler_files"
 
     echo ""
     log_info "Handler 统计: 类数=$HANDLER_TOTAL, 方法总数=$HANDLER_METHOD_TOTAL"
@@ -255,15 +289,24 @@ check_dto_schema_annotations() {
         log_to_report "模块: $module_name"
 
         # 使用 safe_find_custom 查找 DTO 文件
-        local dto_files=$(safe_find_custom "$dto_dir" -name "*.java" | \
-            grep -v "PO.java" | grep -v "Entity.java" | grep -v "DO.java")
+        local dto_files
+        local dto_candidates
+        if dto_candidates=$(safe_find_custom "$dto_dir" -name "*.java"); then
+            :
+        else
+            local find_status=$?
+            return "$find_status"
+        fi
+        dto_files=$(printf '%s\n' "$dto_candidates" | grep -v "PO.java" | grep -v "Entity.java" | grep -v "DO.java" || true)
 
         local module_dto_count=0
         local module_with_schema=0
         local module_schema_count=0
 
-        for dto_file in $dto_files; do
-            local dto_name=$(basename "$dto_file" .java)
+        while IFS= read -r dto_file; do
+            [[ -n "$dto_file" ]] || continue
+            local dto_name
+            dto_name=$(basename "$dto_file" .java)
             module_dto_count=$((module_dto_count + 1))
             DTO_TOTAL=$((DTO_TOTAL + 1))
 
@@ -281,7 +324,7 @@ check_dto_schema_annotations() {
                 log_warn "$dto_name 没有 @Schema 注解"
                 log_to_report "[⚠] $dto_name - 缺少 @Schema 注解"
             fi
-        done
+        done <<< "$dto_files"
 
         log_info "$module_name: DTO=$module_dto_count, 有注解=$module_with_schema, @Schema总数=$module_schema_count"
         log_to_report "  统计: DTO=$module_dto_count, 有注解=$module_with_schema, @Schema总数=$module_schema_count"
@@ -324,10 +367,17 @@ generate_summary() {
 
     # 使用公共函数库的 calculate_percentage
     echo "覆盖率统计:"
-    echo "  Router @RouterOperations: $(calculate_percentage $ROUTER_WITH_ANNOTATION $ROUTER_TOTAL)%"
-    echo "  Handler @Operation: $(calculate_percentage $HANDLER_METHOD_WITH_OPERATION $HANDLER_METHOD_TOTAL)%"
-    echo "  DTO @Schema: $(calculate_percentage $DTO_WITH_SCHEMA $DTO_TOTAL)%"
+    local router_coverage=$(calculate_percentage "$ROUTER_WITH_ANNOTATION" "$ROUTER_TOTAL")
+    local handler_coverage=$(calculate_percentage "$HANDLER_METHOD_WITH_OPERATION" "$HANDLER_METHOD_TOTAL")
+    local dto_coverage=$(calculate_percentage "$DTO_WITH_SCHEMA" "$DTO_TOTAL")
+    echo "  Router @RouterOperations: ${router_coverage}%"
+    echo "  Handler @Operation: ${handler_coverage}%"
+    echo "  DTO @Schema: ${dto_coverage}%"
     echo ""
+    log_to_report "覆盖率:"
+    log_to_report "  Router @RouterOperations: ${router_coverage}%"
+    log_to_report "  Handler @Operation: ${handler_coverage}%"
+    log_to_report "  DTO @Schema: ${dto_coverage}%"
 
     # 判断是否通过
     local router_missing=$((ROUTER_TOTAL - ROUTER_WITH_ANNOTATION))
@@ -362,7 +412,10 @@ main() {
 
     # 初始化报告文件
     if [ -n "$REPORT_FILE" ]; then
-        : > "$REPORT_FILE"
+        if [ -d "$REPORT_FILE" ] || ! : > "$REPORT_FILE"; then
+            log_error "报告文件不可写: $REPORT_FILE"
+            exit 1
+        fi
         log_to_report "SpringDoc/Swagger 注解完整性检查报告"
         log_to_report "生成时间: $(date '+%Y-%m-%d %H:%M:%S')"
         log_to_report "项目路径: $PROJECT_ROOT"
@@ -370,13 +423,29 @@ main() {
     fi
 
     # 执行检查
+    local check_status=0
     check_router_annotations
+    local router_status=$?
+    if [ "$router_status" -ne 0 ]; then
+        check_status=$router_status
+    fi
     check_handler_annotations
+    local handler_status=$?
+    if [ "$handler_status" -ne 0 ] && [ "$check_status" -eq 0 ]; then
+        check_status=$handler_status
+    fi
     check_dto_schema_annotations
+    local dto_status=$?
+    if [ "$dto_status" -ne 0 ] && [ "$check_status" -eq 0 ]; then
+        check_status=$dto_status
+    fi
 
     # 生成报告
     generate_summary
     local result=$?
+    if [ "$check_status" -ne 0 ]; then
+        result=$check_status
+    fi
 
     [ -n "$REPORT_FILE" ] && log_info "详细报告已保存到: $REPORT_FILE"
 

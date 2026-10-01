@@ -90,12 +90,24 @@ public abstract class AbstractStorageService implements StorageService {
      *
      * @return 异步操作结果
      */
+    /**
+     * TODO: Add method description
+     *
+     * @param bucketName TODO
+     * @return TODO
+     */
     protected abstract Mono<Void> ensureBucketExistsInternal(String bucketName);
 
     /**
      * 创建存储桶
      *
      * @return 异步操作结果
+     */
+    /**
+     * TODO: Add method description
+     *
+     * @param bucketName TODO
+     * @return TODO
      */
     protected abstract Mono<Void> createBucketInternal(String bucketName);
 
@@ -292,6 +304,13 @@ public abstract class AbstractStorageService implements StorageService {
      * @param fileName   文件名
      * @return 删除结果，true 表示删除成功，false 表示删除失败
      */
+    /**
+     * TODO: Add method description
+     *
+     * @param bucketName TODO
+     * @param fileName TODO
+     * @return TODO
+     */
     protected abstract boolean doDelete(String bucketName, String fileName);
 
     /**
@@ -299,6 +318,13 @@ public abstract class AbstractStorageService implements StorageService {
      *
      * @param fileName   文件名
      * @return true 表示文件存在，false 表示文件不存在
+     */
+    /**
+     * TODO: Add method description
+     *
+     * @param bucketName TODO
+     * @param fileName TODO
+     * @return TODO
      */
     protected abstract boolean doExists(String bucketName, String fileName);
 

@@ -34,6 +34,9 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class OfficeMessageService {
 
+    private static final String STATUS_FAILED = "FAILED";
+    private static final int MAX_RETRY_COUNT = 3;
+
     private final OfficeMessageRepository messageRepository;
     private final MessagePort feishuMessageClient;
     private final MessagePort dingTalkMessageClient;
@@ -133,8 +136,11 @@ public class OfficeMessageService {
         log.info("重新发送消息，ID：{}", messageId);
 
         return messageRepository.findById(messageId).flatMap(message -> {
-            if (!"FAILED".equals(message.getSendStatus())) {
+            if (!STATUS_FAILED.equals(message.getSendStatus())) {
                 return Mono.error(new IllegalStateException("只能重新发送失败的消息"));
+            }
+            if (message.getRetryCount() != null && message.getRetryCount() >= MAX_RETRY_COUNT) {
+                return Mono.error(new IllegalStateException("消息重试次数已达上限"));
             }
 
             // 重置状态为 PENDING
@@ -151,5 +157,45 @@ public class OfficeMessageService {
                         return messageRepository.updateStatus(message).thenReturn(false);
                     });
         });
+    }
+
+    /**
+     * 撤回消息
+     *
+     * <p>只能撤回发送成功且已获得平台消息ID的消息。撤回成功后消息状态更新为 RECALLED。
+     *
+     * @param messageId 消息ID
+     * @return 是否撤回成功
+     */
+    public Mono<Boolean> recallMessage(Long messageId) {
+        log.info("撤回消息，ID：{}", messageId);
+
+        return messageRepository.findById(messageId).flatMap(message -> {
+            if (!message.canRecall()) {
+                return Mono.error(new IllegalStateException("消息状态不支持撤回"));
+            }
+
+            return recallOnPlatform(message.getPlatform(), message.getPlatformMessageId())
+                    .flatMap(recalled -> {
+                        message.markAsRecalled();
+                        return messageRepository.updateStatus(message).thenReturn(recalled);
+                    });
+        });
+    }
+
+    /**
+     * 根据平台路由到对应的客户端撤回消息
+     *
+     * @param platform 办公平台
+     * @param platformMessageId 平台消息ID
+     * @return 撤回是否成功
+     */
+    private Mono<Boolean> recallOnPlatform(OfficePlatform platform, String platformMessageId) {
+        return switch (platform) {
+            case FEISHU -> feishuMessageClient.recallMessage(platformMessageId);
+            case DINGTALK -> dingTalkMessageClient.recallMessage(platformMessageId);
+            case WECOM -> wecomMessageClient.recallMessage(platformMessageId);
+            default -> Mono.error(new IllegalArgumentException("不支持的平台：" + platform));
+        };
     }
 }

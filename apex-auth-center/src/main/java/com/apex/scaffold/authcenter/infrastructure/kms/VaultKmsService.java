@@ -33,6 +33,7 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @Service
 @ConditionalOnProperty(name = "security.kms.provider", havingValue = "vault")
+@SuppressWarnings("PMD.ServiceOrDaoClassShouldEndWithImplRule")
 public class VaultKmsService implements KeyManagementService {
 
     private final WebClient webClient;

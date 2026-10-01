@@ -1,0 +1,526 @@
+{
+  "dashboard": {
+    "title": "Apex Scaffold 缓存监控 v2",
+    "tags": ["cache", "performance", "apex-scaffold", "optimized"],
+    "timezone": "Asia/Shanghai",
+    "editable": true,
+    "graphTooltip": 1,
+    "time": {
+      "from": "now-6h",
+      "to": "now"
+    },
+    "timepicker": {
+      "refresh_intervals": ["10s", "30s", "1m", "5m", "15m", "30m"],
+      "time_options": ["5m", "15m", "1h", "6h", "12h", "24h", "2d", "7d"]
+    },
+    "templating": {
+      "list": [
+        {
+          "name": "environment",
+          "type": "query",
+          "datasource": "Prometheus",
+          "query": "label_values(cache_requests_total, environment)",
+          "current": {
+            "text": "All",
+            "value": "$__all"
+          },
+          "includeAll": true,
+          "multi": false,
+          "refresh": 1
+        }
+      ]
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "📊 缓存命中率总览",
+        "type": "timeseries",
+        "gridPos": {"x": 0, "y": 0, "w": 8, "h": 9},
+        "targets": [
+          {
+            "expr": "sum(rate(cache_hits_total{application=\"apex-scaffold\",environment=~\"$environment\"}[5m])) / sum(rate(cache_requests_total{application=\"apex-scaffold\",environment=~\"$environment\"}[5m]))",
+            "legendFormat": "总命中率",
+            "refId": "A"
+          },
+          {
+            "expr": "sum(rate(l1_cache_hits_total{application=\"apex-scaffold\",environment=~\"$environment\"}[5m])) / sum(rate(l1_cache_requests_total{application=\"apex-scaffold\",environment=~\"$environment\"}[5m]))",
+            "legendFormat": "L1 (Caffeine)",
+            "refId": "B"
+          },
+          {
+            "expr": "sum(rate(l2_cache_hits_total{application=\"apex-scaffold\",environment=~\"$environment\"}[5m])) / sum(rate(l2_cache_requests_total{application=\"apex-scaffold\",environment=~\"$environment\"}[5m]))",
+            "legendFormat": "L2 (Redis)",
+            "refId": "C"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percentunit",
+            "min": 0,
+            "max": 1,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 0.6, "color": "orange"},
+                {"value": 0.75, "color": "yellow"},
+                {"value": 0.85, "color": "green"}
+              ]
+            }
+          }
+        },
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "bottom",
+            "calcs": ["mean", "lastNotNull"]
+          }
+        },
+        "alert": {
+          "name": "缓存命中率告警",
+          "conditions": [
+            {
+              "evaluator": {"params": [0.75], "type": "lt"},
+              "operator": {"type": "and"},
+              "query": {"params": ["A", "10m", "now"]},
+              "reducer": {"params": [], "type": "avg"},
+              "type": "query"
+            }
+          ],
+          "executionErrorState": "alerting",
+          "frequency": "2m",
+          "for": "10m",
+          "handler": 1,
+          "message": "⚠️ 缓存命中率持续低于 75%，当前: {{ $value | humanizePercentage }}",
+          "noDataState": "no_data"
+        }
+      },
+      {
+        "id": 2,
+        "title": "💾 布隆过滤器容量",
+        "type": "gauge",
+        "gridPos": {"x": 8, "y": 0, "w": 4, "h": 4},
+        "targets": [
+          {
+            "expr": "apex_cache_bloom_filter_count{application=\"apex-scaffold\",environment=~\"$environment\"} / apex_cache_bloom_filter_capacity{application=\"apex-scaffold\",environment=~\"$environment\"}",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percentunit",
+            "min": 0,
+            "max": 1,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 0.6, "color": "yellow"},
+                {"value": 0.75, "color": "orange"},
+                {"value": 0.85, "color": "red"}
+              ]
+            }
+          }
+        },
+        "options": {
+          "showThresholdLabels": true,
+          "showThresholdMarkers": true
+        }
+      },
+      {
+        "id": 3,
+        "title": "📈 缓存 QPS",
+        "type": "stat",
+        "gridPos": {"x": 12, "y": 0, "w": 4, "h": 4},
+        "targets": [
+          {
+            "expr": "sum(rate(cache_requests_total{application=\"apex-scaffold\",environment=~\"$environment\"}[1m]))",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "reqps",
+            "decimals": 0,
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "blue"},
+                {"value": 100, "color": "green"},
+                {"value": 1000, "color": "yellow"}
+              ]
+            }
+          }
+        },
+        "options": {
+          "graphMode": "area",
+          "colorMode": "background",
+          "textMode": "value_and_name"
+        }
+      },
+      {
+        "id": 4,
+        "title": "⏱️ P95 锁等待时间",
+        "type": "stat",
+        "gridPos": {"x": 16, "y": 0, "w": 4, "h": 4},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(apex_cache_lock_wait_duration_seconds_bucket{application=\"apex-scaffold\",environment=~\"$environment\"}[5m])) * 1000",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ms",
+            "decimals": 1,
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 200, "color": "yellow"},
+                {"value": 500, "color": "orange"},
+                {"value": 1000, "color": "red"}
+              ]
+            }
+          }
+        },
+        "options": {
+          "graphMode": "area",
+          "colorMode": "background"
+        },
+        "alert": {
+          "name": "锁等待时间过长",
+          "conditions": [
+            {
+              "evaluator": {"params": [1000], "type": "gt"},
+              "operator": {"type": "and"},
+              "query": {"params": ["A", "5m", "now"]},
+              "reducer": {"params": [], "type": "avg"},
+              "type": "query"
+            }
+          ],
+          "executionErrorState": "alerting",
+          "frequency": "2m",
+          "for": "5m",
+          "handler": 1,
+          "message": "⚠️ 分布式锁 P95 等待时间超过 1000ms: {{ $value }}ms",
+          "noDataState": "ok"
+        }
+      },
+      {
+        "id": 5,
+        "title": "🔄 TTL Jitter 统计",
+        "type": "stat",
+        "gridPos": {"x": 20, "y": 0, "w": 4, "h": 4},
+        "targets": [
+          {
+            "expr": "sum(increase(apex_cache_ttl_jitter_applied_total{application=\"apex-scaffold\",environment=~\"$environment\"}[1h]))",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "color": {"mode": "palette-classic"}
+          }
+        },
+        "options": {
+          "graphMode": "area",
+          "colorMode": "value",
+          "textMode": "value_and_name"
+        }
+      },
+      {
+        "id": 6,
+        "title": "⚠️ 缓存异常告警面板",
+        "type": "timeseries",
+        "gridPos": {"x": 8, "y": 4, "w": 16, "h": 5},
+        "targets": [
+          {
+            "expr": "rate(apex_cache_penetration_blocked_total{application=\"apex-scaffold\",environment=~\"$environment\"}[1m]) * 60",
+            "legendFormat": "🛡️ 穿透拦截/分钟",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(apex_cache_lock_failed_total{application=\"apex-scaffold\",environment=~\"$environment\"}[1m]) * 60",
+            "legendFormat": "🔒 击穿检测/分钟",
+            "refId": "B"
+          },
+          {
+            "expr": "rate(apex_cache_read_degradation_total{application=\"apex-scaffold\",environment=~\"$environment\"}[1m]) * 60",
+            "legendFormat": "⚠️ 读降级/分钟",
+            "refId": "C"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "custom": {
+              "lineWidth": 2,
+              "fillOpacity": 10
+            }
+          }
+        },
+        "alert": {
+          "name": "缓存异常综合告警",
+          "conditions": [
+            {
+              "evaluator": {"params": [50], "type": "gt"},
+              "operator": {"type": "or"},
+              "query": {"params": ["A", "5m", "now"]},
+              "reducer": {"params": [], "type": "avg"},
+              "type": "query"
+            },
+            {
+              "evaluator": {"params": [5], "type": "gt"},
+              "operator": {"type": "or"},
+              "query": {"params": ["B", "3m", "now"]},
+              "reducer": {"params": [], "type": "avg"},
+              "type": "query"
+            },
+            {
+              "evaluator": {"params": [0], "type": "gt"},
+              "operator": {"type": "or"},
+              "query": {"params": ["C", "1m", "now"]},
+              "reducer": {"params": [], "type": "avg"},
+              "type": "query"
+            }
+          ],
+          "executionErrorState": "alerting",
+          "frequency": "1m",
+          "handler": 1,
+          "message": "🚨 检测到缓存异常：穿透={{ $values.A.Value }}/分，击穿={{ $values.B.Value }}/分，降级={{ $values.C.Value }}/分",
+          "noDataState": "ok"
+        }
+      },
+      {
+        "id": 7,
+        "title": "🛡️ 缓存穿透防护详情",
+        "type": "timeseries",
+        "gridPos": {"x": 0, "y": 9, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "rate(apex_cache_penetration_blocked_total{application=\"apex-scaffold\",environment=~\"$environment\"}[1m]) * 60",
+            "legendFormat": "布隆过滤器拦截",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(apex_cache_empty_marker_hits_total{application=\"apex-scaffold\",environment=~\"$environment\"}[1m]) * 60",
+            "legendFormat": "空值标记命中",
+            "refId": "B"
+          },
+          {
+            "expr": "rate(apex_cache_db_fallback_total{application=\"apex-scaffold\",environment=~\"$environment\"}[1m]) * 60",
+            "legendFormat": "DB 回源",
+            "refId": "C"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "custom": {"lineWidth": 2}
+          }
+        },
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "right",
+            "calcs": ["mean", "max", "last"]
+          }
+        }
+      },
+      {
+        "id": 8,
+        "title": "🔒 缓存击穿防护详情",
+        "type": "timeseries",
+        "gridPos": {"x": 12, "y": 9, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "rate(apex_cache_lock_success_total{application=\"apex-scaffold\",environment=~\"$environment\"}[1m]) * 60",
+            "legendFormat": "分布式锁成功",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(apex_cache_lock_failed_total{application=\"apex-scaffold\",environment=~\"$environment\"}[1m]) * 60",
+            "legendFormat": "分布式锁失败",
+            "refId": "B"
+          },
+          {
+            "expr": "rate(apex_cache_inflight_merge_total{application=\"apex-scaffold\",environment=~\"$environment\"}[1m]) * 60",
+            "legendFormat": "Single-Flight 合并",
+            "refId": "C"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "custom": {"lineWidth": 2}
+          }
+        },
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "right",
+            "calcs": ["mean", "max", "last"]
+          }
+        }
+      },
+      {
+        "id": 9,
+        "title": "📊 缓存请求流量分析",
+        "type": "timeseries",
+        "gridPos": {"x": 0, "y": 17, "w": 12, "h": 7},
+        "targets": [
+          {
+            "expr": "sum(rate(cache_requests_total{application=\"apex-scaffold\",environment=~\"$environment\"}[1m]))",
+            "legendFormat": "总请求",
+            "refId": "A"
+          },
+          {
+            "expr": "sum(rate(cache_hits_total{application=\"apex-scaffold\",environment=~\"$environment\"}[1m]))",
+            "legendFormat": "命中",
+            "refId": "B"
+          },
+          {
+            "expr": "sum(rate(cache_misses_total{application=\"apex-scaffold\",environment=~\"$environment\"}[1m]))",
+            "legendFormat": "未命中",
+            "refId": "C"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "reqps",
+            "custom": {
+              "lineWidth": 2,
+              "fillOpacity": 20,
+              "stacking": {"mode": "none"}
+            }
+          }
+        },
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "bottom",
+            "calcs": ["mean", "max", "last"]
+          }
+        }
+      },
+      {
+        "id": 10,
+        "title": "⏱️ 分布式锁性能监控",
+        "type": "timeseries",
+        "gridPos": {"x": 12, "y": 17, "w": 12, "h": 7},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, rate(apex_cache_lock_wait_duration_seconds_bucket{application=\"apex-scaffold\",environment=~\"$environment\"}[5m])) * 1000",
+            "legendFormat": "P50",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(apex_cache_lock_wait_duration_seconds_bucket{application=\"apex-scaffold\",environment=~\"$environment\"}[5m])) * 1000",
+            "legendFormat": "P95",
+            "refId": "B"
+          },
+          {
+            "expr": "histogram_quantile(0.99, rate(apex_cache_lock_wait_duration_seconds_bucket{application=\"apex-scaffold\",environment=~\"$environment\"}[5m])) * 1000",
+            "legendFormat": "P99",
+            "refId": "C"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ms",
+            "custom": {"lineWidth": 2}
+          }
+        }
+      },
+      {
+        "id": 11,
+        "title": "🔥 缓存预热状态",
+        "type": "timeseries",
+        "gridPos": {"x": 0, "y": 24, "w": 12, "h": 6},
+        "targets": [
+          {
+            "expr": "rate(apex_cache_prewarm_success_total{application=\"apex-scaffold\",environment=~\"$environment\"}[5m]) * 60",
+            "legendFormat": "预热成功",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(apex_cache_prewarm_failed_total{application=\"apex-scaffold\",environment=~\"$environment\"}[5m]) * 60",
+            "legendFormat": "预热失败",
+            "refId": "B"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short"
+          }
+        },
+        "alert": {
+          "name": "缓存预热失败告警",
+          "conditions": [
+            {
+              "evaluator": {"params": [1], "type": "gt"},
+              "operator": {"type": "and"},
+              "query": {"params": ["B", "10m", "now"]},
+              "reducer": {"params": [], "type": "sum"},
+              "type": "query"
+            }
+          ],
+          "executionErrorState": "alerting",
+          "frequency": "5m",
+          "for": "10m",
+          "handler": 1,
+          "message": "⚠️ 缓存预热出现失败，失败次数: {{ $value }}",
+          "noDataState": "ok"
+        }
+      },
+      {
+        "id": 12,
+        "title": "🔌 Redis 连接池监控",
+        "type": "timeseries",
+        "gridPos": {"x": 12, "y": 24, "w": 12, "h": 6},
+        "targets": [
+          {
+            "expr": "redis_connection_active{application=\"apex-scaffold\",environment=~\"$environment\"}",
+            "legendFormat": "活跃连接",
+            "refId": "A"
+          },
+          {
+            "expr": "redis_connection_idle{application=\"apex-scaffold\",environment=~\"$environment\"}",
+            "legendFormat": "空闲连接",
+            "refId": "B"
+          },
+          {
+            "expr": "redis_connection_total{application=\"apex-scaffold\",environment=~\"$environment\"}",
+            "legendFormat": "总连接数",
+            "refId": "C"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short"
+          }
+        }
+      }
+    ],
+    "refresh": "30s",
+    "schemaVersion": 30,
+    "style": "dark",
+    "version": 2,
+    "annotations": {
+      "list": [
+        {
+          "datasource": "Prometheus",
+          "enable": true,
+          "expr": "changes(up{application=\"apex-scaffold\"}[5m]) > 0",
+          "iconColor": "blue",
+          "name": "应用重启",
+          "tagKeys": "environment"
+        }
+      ]
+    }
+  }
+}

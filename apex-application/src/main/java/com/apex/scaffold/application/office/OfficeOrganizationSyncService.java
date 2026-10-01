@@ -62,7 +62,7 @@ public class OfficeOrganizationSyncService {
         return createOrGetSyncTask(tenantId, platform, fullSync)
                 .flatMap(task -> {
                     String cursor = fullSync ? null : task.getCursor();
-                    return syncDepartmentsRecursive(tenantId, platform, cursor, 0, new ArrayList<>())
+                    return syncDepartmentsRecursive(tenantId, platform, cursor, 0, new ArrayList<>(16))
                             .flatMap(result -> updateSyncTaskSuccess(task, result.nextCursor())
                                     .map(updatedTask -> SyncTaskResult.success(
                                             updatedTask.getId(), result.syncedCount(), "部门同步完成")))
@@ -93,7 +93,7 @@ public class OfficeOrganizationSyncService {
         return createOrGetSyncTask(tenantId, platform, fullSync)
                 .flatMap(task -> {
                     String cursor = fullSync ? null : task.getCursor();
-                    return syncMembersRecursive(tenantId, platform, cursor, 0, new ArrayList<>())
+                    return syncMembersRecursive(tenantId, platform, cursor, 0, new ArrayList<>(16))
                             .flatMap(result -> updateSyncTaskSuccess(task, result.nextCursor())
                                     .map(updatedTask -> SyncTaskResult.success(
                                             updatedTask.getId(), result.syncedCount(), "成员同步完成")))

@@ -40,6 +40,9 @@ public class ResumeInstanceRequest {
 
     @NotBlank(message = "恢复原因不能为空")
     @Size(max = 500, message = "恢复原因不能超过500字")
-    @Schema(description = "恢复原因，用于记录恢复说明和审计追溯，最多 500 字", example = "补充资料已提交完成，恢复流程执行", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(
+            description = "恢复原因，用于记录恢复说明和审计追溯，最多 500 字",
+            example = "补充资料已提交完成，恢复流程执行",
+            requiredMode = Schema.RequiredMode.REQUIRED)
     private String reason;
 }

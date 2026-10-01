@@ -56,11 +56,20 @@ import reactor.core.publisher.Mono;
  * @since 1.0.0
  * @see OAuth2AuthorizationServiceImpl
  */
+@SuppressWarnings("checkstyle:TypeName")
 @Slf4j
 @Component
 @RequiredArgsConstructor
 @Tag(name = "OAuth2授权服务器", description = "OAuth2授权服务器核心端点,支持授权码、客户端凭证、密码和刷新令牌等授权模式")
 public class OAuth2AuthorizationHandler {
+
+    private static final String RESPONSE_TYPE_CODE = "code";
+    private static final String GRANT_TYPE_AUTH_CODE = "authorization_code";
+    private static final String GRANT_TYPE_CLIENT_CREDENTIALS = "client_credentials";
+    private static final String GRANT_TYPE_PASSWORD = "password";
+    private static final String GRANT_TYPE_REFRESH_TOKEN = "refresh_token";
+    private static final String APPROVED_VALUE_TRUE = "true";
+    private static final int INITIAL_MAP_CAPACITY = 8;
 
     private final OAuth2AuthorizationServiceImpl authorizationService;
 
@@ -103,7 +112,7 @@ public class OAuth2AuthorizationHandler {
         String codeChallenge = request.queryParam("code_challenge").orElse(null);
         String codeChallengeMethod = request.queryParam("code_challenge_method").orElse("plain");
 
-        if (!"code".equals(responseType)) {
+        if (!RESPONSE_TYPE_CODE.equals(responseType)) {
             return buildErrorResponse(redirectUri, "unsupported_response_type", "不支持的response_type", state);
         }
 
@@ -182,10 +191,10 @@ public class OAuth2AuthorizationHandler {
             }
 
             return switch (grantType) {
-                case "authorization_code" -> handleAuthorizationCodeGrant(formData);
-                case "client_credentials" -> handleClientCredentialsGrant(formData);
-                case "password" -> handlePasswordGrant(formData);
-                case "refresh_token" -> handleRefreshTokenGrant(formData);
+                case GRANT_TYPE_AUTH_CODE -> handleAuthorizationCodeGrant(formData);
+                case GRANT_TYPE_CLIENT_CREDENTIALS -> handleClientCredentialsGrant(formData);
+                case GRANT_TYPE_PASSWORD -> handlePasswordGrant(formData);
+                case GRANT_TYPE_REFRESH_TOKEN -> handleRefreshTokenGrant(formData);
                 default -> buildTokenErrorResponse("unsupported_grant_type", "不支持的grant_type");
             };
         });
@@ -264,7 +273,7 @@ public class OAuth2AuthorizationHandler {
             return authorizationService
                     .validateToken(token)
                     .map(tokenEntity -> {
-                        Map<String, Object> result = new HashMap<>();
+                        Map<String, Object> result = new HashMap<>(INITIAL_MAP_CAPACITY);
                         result.put("active", true);
                         result.put("client_id", tokenEntity.getClientId());
                         result.put("user_id", tokenEntity.getUserId());
@@ -333,7 +342,7 @@ public class OAuth2AuthorizationHandler {
                             })
                             .switchIfEmpty(Mono.error(new BusinessException(ResultCode.UNAUTHORIZED, "用户未登录")))
                             .flatMap(userId -> {
-                                if ("true".equals(approved)) {
+                                if (APPROVED_VALUE_TRUE.equals(approved)) {
                                     return authorizationService
                                             .saveConsent(clientId, userId, scope)
                                             .then(ServerResponse.ok()
@@ -457,7 +466,7 @@ public class OAuth2AuthorizationHandler {
     }
 
     private Mono<ServerResponse> buildTokenSuccessResponse(OAuth2AccessTokenEntity token) {
-        Map<String, Object> response = new HashMap<>();
+        Map<String, Object> response = new HashMap<>(INITIAL_MAP_CAPACITY);
         response.put("access_token", token.getTokenValue());
         response.put("token_type", token.getTokenType());
         response.put("expires_in", token.getExpiresIn());
@@ -468,7 +477,7 @@ public class OAuth2AuthorizationHandler {
     }
 
     private Mono<ServerResponse> buildTokenErrorResponse(String error, String errorDescription) {
-        Map<String, Object> response = new HashMap<>();
+        Map<String, Object> response = new HashMap<>(4);
         response.put("error", error);
         response.put("error_description", errorDescription);
 

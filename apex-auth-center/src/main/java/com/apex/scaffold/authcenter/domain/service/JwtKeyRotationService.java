@@ -49,13 +49,19 @@ public class JwtKeyRotationService {
     private static final String REDIS_KEY_ALL = "jwt:keys:all";
     private static final String REDIS_KEY_PREFIX = "jwt:key:";
 
-    // 密钥轮换周期：30天
+    /**
+     * 密钥轮换周期：30天
+     */
     private static final long ROTATION_PERIOD_DAYS = 30;
 
-    // 密钥宽限期：7天（旧密钥在宽限期内仍可用于验证）
+    /**
+     * 密钥宽限期：7天（旧密钥在宽限期内仍可用于验证）
+     */
     private static final long GRACE_PERIOD_DAYS = 7;
 
-    // RSA密钥长度
+    /**
+     * RSA密钥长度
+     */
     private static final int KEY_SIZE = 2048;
 
     private final ReactiveRedisTemplate<String, String> redisTemplate;
@@ -256,11 +262,11 @@ public class JwtKeyRotationService {
     }
 
     /**
-     * 定时任务：每天检查是否需要轮换密钥
+     * 定时任务：每天凌晨2点检查是否需要轮换密钥
      *
-     * <p>轮换条件：当前密钥的创建时间超过30天</p>
+     * <p>轮换条件：当前密钥的创建时间超过30天
      */
-    @Scheduled(cron = "0 0 2 * * ?") // 每天凌晨2点执行
+    @Scheduled(cron = "0 0 2 * * ?")
     public void scheduledKeyRotation() {
         log.info("执行定时JWT密钥轮换检查");
 

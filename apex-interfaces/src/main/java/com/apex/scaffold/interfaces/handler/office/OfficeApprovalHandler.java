@@ -1,6 +1,7 @@
 package com.apex.scaffold.interfaces.handler.office;
 
 import com.apex.scaffold.application.office.OfficeApprovalService;
+import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.interfaces.assembler.office.ApprovalProcessAssembler;
 import com.apex.scaffold.interfaces.dto.office.approval.ApprovalProcessResponse;
@@ -70,6 +71,7 @@ public class OfficeApprovalHandler {
      * @param request HTTP请求
      * @return 审批流程响应
      */
+    @OperationLog(module = "办公平台审批管理", type = OperationLog.OperationType.INSERT, description = "发起审批流程")
     @Operation(summary = "发起审批流程", description = "在指定办公平台创建审批流程实例，支持飞书、钉钉、企业微信等平台")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
             required = true,
@@ -174,6 +176,7 @@ public class OfficeApprovalHandler {
      * @param request HTTP请求
      * @return 更新后的审批流程响应
      */
+    @OperationLog(module = "办公平台审批管理", type = OperationLog.OperationType.UPDATE, description = "执行审批操作")
     @Operation(summary = "执行审批操作", description = "审批人对待审批流程执行操作，支持同意、拒绝、转审、加签等操作")
     @Parameters({
         @Parameter(
@@ -231,6 +234,7 @@ public class OfficeApprovalHandler {
      * @param request HTTP请求
      * @return 操作结果
      */
+    @OperationLog(module = "办公平台审批管理", type = OperationLog.OperationType.DELETE, description = "撤销审批流程")
     @Operation(summary = "撤销审批流程", description = "发起人撤销自己发起的审批流程，只有发起人可以撤销，且流程必须处于待审批或审批中状态")
     @Parameters({
         @Parameter(

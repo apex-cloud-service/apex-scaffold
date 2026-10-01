@@ -35,19 +35,133 @@ import reactor.core.publisher.Mono;
  */
 public interface DocumentService {
 
+    /**
+     *
+     *
+     * 创建文档。
+     *
+     *
+     *
+     *
+     *
+     * @param request 文档创建请求
+     *
+     *
+     * @return 创建的文档
+     *
+     *
+     */
     Mono<DocumentResponse> create(DocumentRequest request);
 
+    /**
+     *
+     *
+     * 更新文档。
+     *
+     *
+     *
+     *
+     *
+     * @param id 文档ID
+     *
+     *
+     * @param request 文档更新请求
+     *
+     *
+     * @return 更新后的文档
+     *
+     *
+     */
     Mono<DocumentResponse> update(Long id, DocumentRequest request);
 
+    /**
+     *
+     *
+     * 删除文档。
+     *
+     *
+     *
+     *
+     *
+     * @param id 文档ID
+     *
+     *
+     * @return 删除结果
+     *
+     *
+     */
     Mono<Void> delete(Long id);
 
+    /**
+     * 根据ID查询文档。
+     *
+     * @param id 文档ID
+     * @return 文档详情
+     */
     Mono<DocumentResponse> getById(Long id);
 
+    /**
+     *
+     *
+     * 查询文档列表。
+     *
+     *
+     *
+     *
+     *
+     * @param request 查询请求
+     *
+     *
+     * @return 文档列表
+     *
+     *
+     */
     Mono<PageResponse<DocumentResponse>> query(DocumentQueryRequest request);
 
+    /**
+     *
+     *
+     * 更新文档状态。
+     *
+     *
+     *
+     *
+     *
+     * @param id 文档ID
+     *
+     *
+     * @param status 新状态
+     *
+     *
+     * @return 更新结果
+     *
+     *
+     */
     Mono<Void> updateStatus(Long id, Integer status);
 
+    /**
+     *
+     *
+     * 增加文档查看次数。
+     *
+     *
+     *
+     *
+     *
+     * @param id 文档ID
+     *
+     *
+     * @return 更新结果
+     *
+     *
+     */
     Mono<Void> incrementViewCount(Long id);
 
+    /**
+     * 增加文档下载次数。
+     *
+     * @param id 文档ID
+     * @return 更新结果
+     */
     Mono<Void> incrementDownloadCount(Long id);
 }

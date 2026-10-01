@@ -1,0 +1,15 @@
+FROM eclipse-temurin:17-jre-alpine
+RUN apk add --no-cache tzdata wget
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+WORKDIR /app
+COPY apex-interfaces/target/apex-interfaces-1.2.0-executable.jar /app/app.jar
+RUN mkdir -p /app/logs /app/data/storage && chown -R appuser:appgroup /app/logs /app/data/storage
+ENV JAVA_OPTS="-Xms512m -Xmx1024m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:MetaspaceSize=256m -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/app/logs/heapdump.hprof -XX:+ExitOnOutOfMemoryError -Dfile.encoding=UTF-8 -Djava.security.egd=file:/dev/./urandom"
+ENV SPRING_PROFILES_ACTIVE="prod,enterprise"
+ENV TZ="Asia/Shanghai"
+ENV MANAGEMENT_SERVER_ADDRESS="0.0.0.0"
+EXPOSE 8080 8081
+HEALTHCHECK --interval=30s --timeout=5s --start-period=90s --retries=3 \
+  CMD wget -qO- http://127.0.0.1:8081/actuator/health/readiness | grep -q UP || exit 1
+USER appuser
+ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -jar /app/app.jar"]

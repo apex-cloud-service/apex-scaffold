@@ -36,6 +36,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Schema(description = "权限DTO")
 public class PermissionDTO {
 
     /**

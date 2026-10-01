@@ -1,0 +1,376 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1800 1400" width="1800" height="1400">
+  <metadata>
+    <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+             xmlns:dc="http://purl.org/dc/elements/1.1/">
+      <rdf:Description>
+        <dc:title>代码生成器模板系统架构</dc:title>
+        <dc:creator>Apex Team</dc:creator>
+        <dc:date>2026-09-25</dc:date>
+        <dc:version>1.0</dc:version>
+        <dc:description>展示apex-generator的DDD五层代码生成器架构和FreeMarker模板系统</dc:description>
+      </rdf:Description>
+    </rdf:RDF>
+  </metadata>
+
+  <defs>
+    <style>
+      .title-main {
+        font: 700 36px system-ui, sans-serif;
+        fill: #0f172a;
+        text-anchor: middle;
+      }
+      .title-version {
+        font: 500 14px system-ui, sans-serif;
+        fill: #64748b;
+        text-anchor: middle;
+      }
+      .section-title {
+        font: 600 20px system-ui, sans-serif;
+        fill: #ffffff;
+      }
+      .section-desc {
+        font: 400 13px system-ui, sans-serif;
+        fill: #ffffff;
+        opacity: 0.95;
+      }
+      .box-title {
+        font: 600 15px system-ui, sans-serif;
+        fill: #0f172a;
+      }
+      .box-item {
+        font: 400 12px system-ui, sans-serif;
+        fill: #475569;
+      }
+      .code-label {
+        font: 500 11px 'SF Mono', monospace;
+        fill: #2563eb;
+      }
+      .highlight {
+        font: 600 11px system-ui, sans-serif;
+        fill: #dc2626;
+      }
+      .badge {
+        font: 600 10px system-ui, sans-serif;
+        fill: #ffffff;
+        text-anchor: middle;
+      }
+      .arrow-label {
+        font: 500 12px system-ui, sans-serif;
+        fill: #64748b;
+        text-anchor: middle;
+      }
+    </style>
+
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/>
+    </marker>
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#3b82f6"/>
+    </marker>
+  </defs>
+
+  <rect width="1800" height="1400" fill="#ffffff"/>
+
+  <text x="900" y="45" class="title-main">Apex Generator 代码生成器模板系统</text>
+  <text x="900" y="73" class="title-version">DDD 五层架构 · 18个FreeMarker模板 · 13个后端+4个前端文件 · 一键生成完整CRUD模块 · v1.2.0</text>
+
+  <!-- 输入：表结构定义 -->
+  <g id="input">
+    <rect x="60" y="110" width="400" height="280" rx="10" fill="#3b82f6" opacity="0.1" stroke="#3b82f6" stroke-width="2"/>
+    <rect x="60" y="110" width="400" height="45" rx="10" fill="#3b82f6"/>
+    <text x="80" y="140" class="section-title">输入: 表结构定义 (JSON)</text>
+
+    <rect x="80" y="175" width="360" height="200" rx="6" fill="#ffffff" stroke="#dbeafe" stroke-width="2"/>
+    <text x="100" y="198" class="box-title">TableDefinition.json</text>
+    <text x="100" y="220" class="code-label">{</text>
+    <text x="120" y="237" class="code-label">"module": "demo",</text>
+    <text x="120" y="254" class="code-label">"entityName": "Product",</text>
+    <text x="120" y="271" class="code-label">"tableName": "biz_product",</text>
+    <text x="120" y="288" class="code-label">"tableComment": "商品",</text>
+    <text x="120" y="305" class="code-label">"fields": [</text>
+    <text x="140" y="322" class="code-label">{ "name": "productName",</text>
+    <text x="150" y="339" class="code-label">"type": "String",</text>
+    <text x="150" y="356" class="code-label">"required": true }</text>
+    <text x="120" y="370" class="code-label">]</text>
+    <text x="100" y="385" class="code-label">}</text>
+
+    <rect x="240" y="175" width="180" height="25" rx="4" fill="#10b981"/>
+    <text x="330" y="193" class="badge">7种类型支持</text>
+  </g>
+
+  <line x1="260" y1="390" x2="260" y2="440" stroke="#3b82f6" stroke-width="3" marker-end="url(#arrow-blue)"/>
+  <text x="280" y="420" class="arrow-label">JSON解析</text>
+
+  <!-- 模板引擎 -->
+  <g id="template-engine">
+    <rect x="60" y="450" width="400" height="420" rx="10" fill="#8b5cf6" opacity="0.1" stroke="#8b5cf6" stroke-width="2"/>
+    <rect x="60" y="450" width="400" height="45" rx="10" fill="#8b5cf6"/>
+    <text x="80" y="480" class="section-title">模板引擎: FreeMarker 2.3.33</text>
+
+    <rect x="80" y="515" width="360" height="340" rx="6" fill="#ffffff" stroke="#c4b5fd" stroke-width="2"/>
+    <text x="100" y="538" class="box-title">18个模板文件 (.ftl)</text>
+    
+    <text x="100" y="560" class="highlight">后端模板 (13个)</text>
+    <text x="100" y="580" class="box-item">① entity.ftl → ProductEntity.java</text>
+    <text x="100" y="597" class="box-item">② repository.ftl → ProductRepository.java</text>
+    <text x="100" y="614" class="box-item">③ po.ftl → ProductPO.java</text>
+    <text x="100" y="631" class="box-item">④ mapper.ftl → ProductMapper.java</text>
+    <text x="100" y="648" class="box-item">⑤ converter.ftl → ProductPoConverter.java</text>
+    <text x="100" y="665" class="box-item">⑥ repositoryImpl.ftl → ProductRepositoryImpl.java</text>
+    <text x="100" y="682" class="box-item">⑦ dtoRequest.ftl → ProductRequest.java</text>
+    <text x="100" y="699" class="box-item">⑧ dtoResponse.ftl → ProductDTO.java</text>
+    <text x="100" y="716" class="box-item">⑨ service.ftl → ProductService.java</text>
+    <text x="100" y="733" class="box-item">⑩ handler.ftl → ProductHandler.java</text>
+    <text x="100" y="750" class="box-item">⑪ routerFragment.ftl → 路由片段</text>
+    <text x="100" y="767" class="box-item">⑫ migrationFragment.ftl → Flyway SQL</text>
+    <text x="100" y="784" class="box-item">⑬ serviceTest.ftl → ProductServiceTest.java</text>
+
+    <text x="100" y="810" class="highlight">前端模板 (4个)</text>
+    <text x="100" y="830" class="box-item">① frontendApi.ftl → product.ts (API封装)</text>
+    <text x="100" y="845" class="box-item">② frontendList.ftl → index.vue (列表页)</text>
+
+    <rect x="240" y="505" width="180" height="25" rx="4" fill="#f59e0b"/>
+    <text x="330" y="523" class="badge">18个模板文件</text>
+  </g>
+
+  <line x1="260" y1="870" x2="260" y2="920" stroke="#8b5cf6" stroke-width="3" marker-end="url(#arrow)"/>
+  <text x="280" y="900" class="arrow-label">模板渲染</text>
+
+  <!-- 输出：生成文件 -->
+  <g id="output-backend">
+    <rect x="60" y="930" width="400" height="420" rx="10" fill="#10b981" opacity="0.1" stroke="#10b981" stroke-width="2"/>
+    <rect x="60" y="930" width="400" height="45" rx="10" fill="#10b981"/>
+    <text x="80" y="960" class="section-title">输出: 后端代码 (13个文件)</text>
+
+    <rect x="80" y="995" width="360" height="340" rx="6" fill="#ffffff" stroke="#d1fae5" stroke-width="2"/>
+    
+    <text x="100" y="1020" class="box-title">DDD 五层架构</text>
+    
+    <text x="100" y="1045" class="highlight">① Domain层 (2个)</text>
+    <text x="120" y="1062" class="code-label">ProductEntity.java</text>
+    <text x="120" y="1077" class="code-label">ProductRepository.java</text>
+
+    <text x="100" y="1100" class="highlight">② Infrastructure层 (4个)</text>
+    <text x="120" y="1117" class="code-label">ProductPO.java</text>
+    <text x="120" y="1132" class="code-label">ProductMapper.java</text>
+    <text x="120" y="1147" class="code-label">ProductPoConverter.java</text>
+    <text x="120" y="1162" class="code-label">ProductRepositoryImpl.java</text>
+
+    <text x="100" y="1185" class="highlight">③ Application层 (3个)</text>
+    <text x="120" y="1202" class="code-label">ProductRequest.java (DTO)</text>
+    <text x="120" y="1217" class="code-label">ProductDTO.java (响应)</text>
+    <text x="120" y="1232" class="code-label">ProductService.java</text>
+
+    <text x="100" y="1255" class="highlight">④ Interfaces层 (1个)</text>
+    <text x="120" y="1272" class="code-label">ProductHandler.java</text>
+
+    <text x="100" y="1295" class="highlight">⑤ 辅助文件 (3个)</text>
+    <text x="120" y="1312" class="code-label">路由片段 / Flyway SQL / 单元测试</text>
+  </g>
+
+  <!-- 模板变量映射 -->
+  <g id="template-variables">
+    <rect x="520" y="110" width="720" height="420" rx="10" fill="#f59e0b" opacity="0.1" stroke="#f59e0b" stroke-width="2"/>
+    <rect x="520" y="110" width="720" height="45" rx="10" fill="#f59e0b"/>
+    <text x="540" y="140" class="section-title">模板变量映射 (Data Model)</text>
+
+    <rect x="540" y="175" width="680" height="340" rx="6" fill="#ffffff" stroke="#fef3c7" stroke-width="2"/>
+    <text x="560" y="198" class="box-title">变量上下文 (Map&lt;String, Object&gt;)</text>
+
+    <rect x="560" y="215" width="320" height="285" rx="4" fill="#fffbeb" stroke="#fbbf24" stroke-width="1.5"/>
+    <text x="580" y="238" class="box-title">基础变量</text>
+    <text x="580" y="260" class="code-label">module → "demo"</text>
+    <text x="580" y="277" class="code-label">entityName → "Product"</text>
+    <text x="580" y="294" class="code-label">entityVar → "product"</text>
+    <text x="580" y="311" class="code-label">tableName → "biz_product"</text>
+    <text x="580" y="328" class="code-label">tableComment → "商品"</text>
+    <text x="580" y="345" class="code-label">className → "ProductEntity"</text>
+    <text x="580" y="362" class="code-label">packageBase → "com.apex.scaffold"</text>
+    <text x="580" y="379" class="code-label">author → "Apex Generator"</text>
+    <text x="580" y="396" class="code-label">date → "2026-09-25"</text>
+    <text x="580" y="413" class="code-label">migrationVersion → "3"</text>
+    <text x="580" y="435" class="box-title">字段列表</text>
+    <text x="580" y="457" class="code-label">fields → List&lt;FieldDefinition&gt;</text>
+    <text x="600" y="474" class="box-item">name / type / comment</text>
+    <text x="600" y="489" class="box-item">required / columnName</text>
+
+    <rect x="900" y="215" width="300" height="285" rx="4" fill="#fef3c7" stroke="#fbbf24" stroke-width="1.5"/>
+    <text x="920" y="238" class="box-title">类型映射</text>
+    <text x="920" y="260" class="code-label">Java → SQL</text>
+    <text x="920" y="280" class="box-item">String → VARCHAR(255)</text>
+    <text x="920" y="297" class="box-item">Long → BIGINT</text>
+    <text x="920" y="314" class="box-item">Integer → INT</text>
+    <text x="920" y="331" class="box-item">BigDecimal → DECIMAL(19,2)</text>
+    <text x="920" y="348" class="box-item">Boolean → TINYINT(1)</text>
+    <text x="920" y="365" class="box-item">Double → DOUBLE</text>
+    <text x="920" y="382" class="box-item">LocalDateTime → DATETIME(6)</text>
+    
+    <text x="920" y="407" class="code-label">Java → TS</text>
+    <text x="920" y="427" class="box-item">String / Long → string</text>
+    <text x="920" y="444" class="box-item">Integer / Double → number</text>
+    <text x="920" y="461" class="box-item">Boolean → boolean</text>
+    <text x="920" y="478" class="box-item">LocalDateTime → string (ISO)</text>
+  </g>
+
+  <!-- 生成流程 -->
+  <g id="generation-flow">
+    <rect x="520" y="560" width="720" height="310" rx="10" fill="#0891b2" opacity="0.1" stroke="#0891b2" stroke-width="2"/>
+    <rect x="520" y="560" width="720" height="45" rx="10" fill="#0891b2"/>
+    <text x="540" y="590" class="section-title">生成流程</text>
+
+    <rect x="540" y="625" width="330" height="230" rx="6" fill="#ffffff" stroke="#cffafe" stroke-width="2"/>
+    <text x="560" y="648" class="box-title">1. 解析阶段</text>
+    <text x="560" y="670" class="box-item">① 读取 JSON 文件</text>
+    <text x="560" y="687" class="box-item">② Jackson 解析为 TableDefinition</text>
+    <text x="560" y="704" class="box-item">③ 字段名转换 (驼峰 → 下划线)</text>
+    <text x="560" y="721" class="box-item">④ 类型映射 (Java → SQL/TS)</text>
+    <text x="560" y="738" class="box-item">⑤ 校验必填字段</text>
+    
+    <text x="560" y="765" class="box-title">2. 渲染阶段</text>
+    <text x="560" y="787" class="box-item">⑥ 加载 FreeMarker 模板</text>
+    <text x="560" y="804" class="box-item">⑦ 填充变量上下文</text>
+    <text x="560" y="821" class="box-item">⑧ 模板渲染 (18次)</text>
+    <text x="560" y="838" class="box-item">⑨ 输出文件到目标目录</text>
+
+    <rect x="890" y="625" width="330" height="230" rx="6" fill="#ffffff" stroke="#cffafe" stroke-width="2"/>
+    <text x="910" y="648" class="box-title">3. 使用脚本</text>
+    <text x="910" y="670" class="code-label">./scripts/codegen/generate.sh \</text>
+    <text x="920" y="687" class="code-label">-i examples/product.json \</text>
+    <text x="920" y="704" class="code-label">-o ./generated \</text>
+    <text x="920" y="721" class="code-label">-v 3 \</text>
+    <text x="920" y="738" class="code-label">-f /path/to/apex-admin-web</text>
+    
+    <text x="910" y="765" class="box-title">参数说明</text>
+    <text x="910" y="787" class="box-item">-i: 输入JSON文件</text>
+    <text x="910" y="804" class="box-item">-o: 输出目录</text>
+    <text x="910" y="821" class="box-item">-v: Flyway迁移版本号</text>
+    <text x="910" y="838" class="box-item">-f: 前端项目路径(可选)</text>
+  </g>
+
+  <!-- 前端代码生成 -->
+  <g id="output-frontend">
+    <rect x="520" y="930" width="720" height="420" rx="10" fill="#ec4899" opacity="0.1" stroke="#ec4899" stroke-width="2"/>
+    <rect x="520" y="930" width="720" height="45" rx="10" fill="#ec4899"/>
+    <text x="540" y="960" class="section-title">输出: 前端代码 (4个文件) - 可选</text>
+
+    <rect x="540" y="995" width="680" height="340" rx="6" fill="#ffffff" stroke="#fbcfe8" stroke-width="2"/>
+    <text x="560" y="1020" class="box-title">Vue 3 + TypeScript + Element Plus</text>
+
+    <rect x="560" y="1040" width="320" height="280" rx="4" fill="#fce7f3" stroke="#f9a8d4" stroke-width="1.5"/>
+    <text x="580" y="1063" class="box-title">① API 封装</text>
+    <text x="580" y="1085" class="code-label">src/api/demo/product.ts</text>
+    <text x="580" y="1105" class="box-item">• ProductDTO 接口定义</text>
+    <text x="580" y="1122" class="box-item">• CRUD API 函数</text>
+    <text x="580" y="1139" class="box-item">• Result&lt;T&gt; 类型解包</text>
+    <text x="580" y="1156" class="box-item">• JSDoc 注释</text>
+
+    <text x="580" y="1183" class="box-title">② 列表页</text>
+    <text x="580" y="1205" class="code-label">src/views/demo/product/index.vue</text>
+    <text x="580" y="1225" class="box-item">• 关键字搜索</text>
+    <text x="580" y="1242" class="box-item">• el-table 表格</text>
+    <text x="580" y="1259" class="box-item">• 分页组件</text>
+    <text x="580" y="1276" class="box-item">• 新增/编辑/删除按钮</text>
+    <text x="580" y="1293" class="box-item">• 权限指令 v-permission</text>
+
+    <rect x="900" y="1040" width="300" height="280" rx="4" fill="#fce7f3" stroke="#f9a8d4" stroke-width="1.5"/>
+    <text x="920" y="1063" class="box-title">③ 表单组件</text>
+    <text x="920" y="1085" class="code-label">src/views/demo/product/form.vue</text>
+    <text x="920" y="1105" class="box-item">• el-form 表单</text>
+    <text x="920" y="1122" class="box-item">• 字段校验规则</text>
+    <text x="920" y="1139" class="box-item">• v-model 双向绑定</text>
+    <text x="920" y="1156" class="box-item">• validate() 暴露</text>
+
+    <text x="920" y="1183" class="box-title">④ 路由注册说明</text>
+    <text x="920" y="1205" class="code-label">ProductRouteFragment.txt</text>
+    <text x="920" y="1225" class="box-item">• VIEW_REGISTRY 注册</text>
+    <text x="920" y="1242" class="box-item">• sys_menu 菜单数据</text>
+    <text x="920" y="1259" class="box-item">• 权限码说明</text>
+    <text x="920" y="1276" class="box-item">• 接入步骤说明</text>
+  </g>
+
+  <!-- 核心特性 -->
+  <g id="features">
+    <rect x="1280" y="110" width="460" height="760" rx="10" fill="#7c3aed" opacity="0.1" stroke="#7c3aed" stroke-width="2"/>
+    <rect x="1280" y="110" width="460" height="45" rx="10" fill="#7c3aed"/>
+    <text x="1300" y="140" class="section-title">核心特性</text>
+
+    <rect x="1300" y="175" width="420" height="680" rx="6" fill="#ffffff" stroke="#ede9fe" stroke-width="2"/>
+    
+    <text x="1320" y="200" class="box-title">✅ 完整 DDD 五层架构</text>
+    <text x="1320" y="220" class="box-item">• 严格遵循领域驱动设计</text>
+    <text x="1320" y="237" class="box-item">• Entity/Repository/Service/Handler</text>
+    <text x="1320" y="254" class="box-item">• MapStruct 转换器</text>
+
+    <text x="1320" y="280" class="box-title">✅ 代码风格一致</text>
+    <text x="1320" y="300" class="box-item">• Lombok 注解 (@Data/@Builder)</text>
+    <text x="1320" y="317" class="box-item">• Javadoc 完整注释</text>
+    <text x="1320" y="334" class="box-item">• WebFlux 函数式端点</text>
+    <text x="1320" y="351" class="box-item">• 响应式编程 (Mono/Flux)</text>
+
+    <text x="1320" y="377" class="box-title">✅ 开箱即用</text>
+    <text x="1320" y="397" class="box-item">• 生成即可编译</text>
+    <text x="1320" y="414" class="box-item">• 包含单元测试</text>
+    <text x="1320" y="431" class="box-item">• Flyway 迁移脚本</text>
+    <text x="1320" y="448" class="box-item">• 路由注册指南</text>
+
+    <text x="1320" y="474" class="box-title">✅ 权限集成</text>
+    <text x="1320" y="494" class="box-item">• @RequirePermission 注解</text>
+    <text x="1320" y="511" class="box-item">• 权限点: {module}:{entity}:list</text>
+    <text x="1320" y="528" class="box-item">• 前端 v-permission 指令</text>
+
+    <text x="1320" y="554" class="box-title">✅ 租户隔离</text>
+    <text x="1320" y="574" class="box-item">• 自动注入 tenant_id 字段</text>
+    <text x="1320" y="591" class="box-item">• BaseEntity 基类集成</text>
+    <text x="1320" y="608" class="box-item">• 数据自动隔离</text>
+
+    <text x="1320" y="634" class="box-title">✅ 前端集成 (可选)</text>
+    <text x="1320" y="654" class="box-item">• Vue 3 + TS 列表/表单页</text>
+    <text x="1320" y="671" class="box-item">• Element Plus 组件</text>
+    <text x="1320" y="688" class="box-item">• 类型安全 API 封装</text>
+    <text x="1320" y="705" class="box-item">• 动态路由注册说明</text>
+
+    <text x="1320" y="731" class="box-title">✅ 扩展性</text>
+    <text x="1320" y="751" class="box-item">• FreeMarker 模板可定制</text>
+    <text x="1320" y="768" class="box-item">• 支持自定义字段类型</text>
+    <text x="1320" y="785" class="box-item">• 支持自定义校验规则</text>
+    <text x="1320" y="802" class="box-item">• 模板热更新</text>
+
+    <rect x="1320" y="825" width="380" height="20" rx="4" fill="#7c3aed"/>
+    <text x="1510" y="839" class="badge">独立模块 · 零依赖主工程</text>
+  </g>
+
+  <!-- 技术栈 -->
+  <g id="tech-stack">
+    <rect x="1280" y="930" width="460" height="420" rx="10" fill="#0891b2" opacity="0.1" stroke="#0891b2" stroke-width="2"/>
+    <rect x="1280" y="930" width="460" height="45" rx="10" fill="#0891b2"/>
+    <text x="1300" y="960" class="section-title">技术栈与依赖</text>
+
+    <rect x="1300" y="995" width="420" height="340" rx="6" fill="#ffffff" stroke="#cffafe" stroke-width="2"/>
+    
+    <text x="1320" y="1020" class="box-title">核心依赖</text>
+    <text x="1320" y="1042" class="code-label">FreeMarker: 2.3.33</text>
+    <text x="1340" y="1059" class="box-item">模板引擎</text>
+    
+    <text x="1320" y="1082" class="code-label">Jackson: 2.18.x</text>
+    <text x="1340" y="1099" class="box-item">JSON 解析</text>
+
+    <text x="1320" y="1122" class="code-label">Lombok: 1.18.36</text>
+    <text x="1340" y="1139" class="box-item">代码生成注解</text>
+
+    <text x="1320" y="1167" class="box-title">生成目标</text>
+    <text x="1320" y="1189" class="box-item">• 后端: 13 个 Java 文件</text>
+    <text x="1320" y="1206" class="box-item">• 前端: 4 个 Vue/TS 文件</text>
+    <text x="1320" y="1223" class="box-item">• 总计: 18 个模板 → 17 个文件</text>
+
+    <text x="1320" y="1251" class="box-title">启动方式</text>
+    <text x="1320" y="1273" class="code-label">./scripts/codegen/generate.sh</text>
+    <text x="1340" y="1290" class="box-item">自动构建 apex-generator.jar</text>
+    <text x="1340" y="1307" class="box-item">执行代码生成</text>
+    <text x="1340" y="1324" class="box-item">输出到指定目录</text>
+  </g>
+
+  <text x="900" y="1385" class="code-label" text-anchor="middle">© 2026 Apex Team · 代码生成器架构 v1.0 · 完整94张SVG架构图集合</text>
+</svg>

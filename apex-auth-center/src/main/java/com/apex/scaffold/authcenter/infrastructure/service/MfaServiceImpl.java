@@ -150,7 +150,8 @@ public class MfaServiceImpl implements MfaService {
                 .tenantId(tenantId)
                 .type(MfaConfig.MfaType.SMS)
                 .status(MfaConfig.MfaStatus.ACTIVE)
-                .deviceInfo(phoneNumber) // 存储手机号
+                // 存储手机号
+                .deviceInfo(phoneNumber)
                 .failedAttempts(0)
                 .createdAt(LocalDateTime.now())
                 .build();
@@ -176,7 +177,8 @@ public class MfaServiceImpl implements MfaService {
                 .tenantId(tenantId)
                 .type(MfaConfig.MfaType.EMAIL)
                 .status(MfaConfig.MfaStatus.ACTIVE)
-                .deviceInfo(email) // 存储邮箱
+                // 存储邮箱
+                .deviceInfo(email)
                 .failedAttempts(0)
                 .createdAt(LocalDateTime.now())
                 .build();
@@ -262,7 +264,8 @@ public class MfaServiceImpl implements MfaService {
     private Mono<Boolean> verifyOtpCode(MfaConfig config, String code) {
         // 从Redis或缓存中获取验证码进行比对
         // 这里简化实现，实际应该从缓存中读取
-        return Mono.just(false); // TODO: 实现OTP验证逻辑
+        // TODO: 实现OTP验证逻辑
+        return Mono.just(false);
     }
 
     /**

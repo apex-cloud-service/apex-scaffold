@@ -71,6 +71,8 @@ public class MqProducerService {
     private static final String MESSAGE_ID_HEADER = "apex-message-id";
     private static final String TENANT_ID_HEADER = "tenantId";
     private static final String ROCKETMQ_KEYS_HEADER = "KEYS";
+    /** JSON 序列化中 null 值的字符串表示。 */
+    private static final String NULL_STRING = "null";
 
     /**
      * RocketMQ 模板
@@ -362,7 +364,7 @@ public class MqProducerService {
             headers.forEach(builder::setHeader);
         }
         String messageId = headers == null ? null : String.valueOf(headers.get(MESSAGE_ID_HEADER));
-        if (messageId == null || "null".equals(messageId) || messageId.isBlank()) {
+        if (messageId == null || NULL_STRING.equals(messageId) || messageId.isBlank()) {
             messageId = UUID.randomUUID().toString();
         }
         builder.setHeader(MESSAGE_ID_HEADER, messageId);

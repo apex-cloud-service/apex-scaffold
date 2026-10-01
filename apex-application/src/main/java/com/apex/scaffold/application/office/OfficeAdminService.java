@@ -35,6 +35,12 @@ import reactor.core.publisher.Mono;
 @Service
 @RequiredArgsConstructor
 public class OfficeAdminService {
+
+    private static final String STATUS_REVOKED = "REVOKED";
+
+    private static final String STATUS_PENDING = "PENDING";
+
+    private static final int DEFAULT_PAGE_SIZE = 100;
     private final OfficeRepository repository;
     private final UserService users;
     private final OfficeAdminAssembler assembler;
@@ -118,13 +124,13 @@ public class OfficeAdminService {
      *
      * @param platform 平台类型（为 null 时查询所有平台）
      * @param page 页码（从 1 开始）
-     * @param size 每页大小（1-100）
+     * @param size 每页大小（1-DEFAULT_PAGE_SIZE）
      * @return 绑定列表
      * @throws BusinessException 分页参数无效时返回 PARAM_ERROR
      */
     public Mono<List<OfficeIdentityBinding>> listBindings(OfficePlatform platform, int page, int size) {
         return tenant().flatMap(tenant -> {
-            if (page < 1 || size < 1 || size > 100) {
+            if (page < 1 || size < 1 || size > DEFAULT_PAGE_SIZE) {
                 return Mono.error(new BusinessException(ResultCode.PARAM_ERROR));
             }
             return repository.listBindings(tenant, platform, page, size);
@@ -145,7 +151,7 @@ public class OfficeAdminService {
      */
     public Mono<Boolean> reviewBinding(Long id, Integer version, boolean approved) {
         return binding(id, version).flatMap(binding -> {
-            if (!"PENDING".equals(binding.getStatus())) {
+            if (!STATUS_PENDING.equals(binding.getStatus())) {
                 return Mono.error(new BusinessException(ResultCode.PARAM_ERROR));
             }
             Mono<Boolean> valid = approved
@@ -158,7 +164,7 @@ public class OfficeAdminService {
                             .thenReturn(true)
                     : Mono.just(true);
             return valid.flatMap(ignored -> repository.changeBindingStatus(
-                    binding.getTenantId(), id, version, "PENDING", approved ? "APPROVED" : "REJECTED"));
+                    binding.getTenantId(), id, version, STATUS_PENDING, approved ? "APPROVED" : "REJECTED"));
         });
     }
 
@@ -174,10 +180,11 @@ public class OfficeAdminService {
      */
     public Mono<Boolean> unbind(Long id, Integer version) {
         return binding(id, version).flatMap(binding -> {
-            if ("REVOKED".equals(binding.getStatus())) {
+            if (STATUS_REVOKED.equals(binding.getStatus())) {
                 return Mono.error(new BusinessException(ResultCode.PARAM_ERROR));
             }
-            return repository.changeBindingStatus(binding.getTenantId(), id, version, binding.getStatus(), "REVOKED");
+            return repository.changeBindingStatus(
+                    binding.getTenantId(), id, version, binding.getStatus(), STATUS_REVOKED);
         });
     }
 

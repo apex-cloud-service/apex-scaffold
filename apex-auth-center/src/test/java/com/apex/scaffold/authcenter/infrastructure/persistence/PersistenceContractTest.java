@@ -1,0 +1,93 @@
+package com.apex.scaffold.authcenter.infrastructure.persistence;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verifyNoInteractions;
+
+import com.apex.scaffold.common.context.TenantContext;
+import com.apex.scaffold.common.exception.BusinessException;
+import com.baomidou.mybatisplus.core.MybatisConfiguration;
+import com.baomidou.mybatisplus.core.metadata.TableInfo;
+import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
+import com.tngtech.archunit.core.importer.ClassFileImporter;
+import com.tngtech.archunit.lang.syntax.ArchRuleDefinition;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
+import org.apache.ibatis.builder.MapperBuilderAssistant;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.reactivestreams.Publisher;
+import reactor.core.publisher.Flux;
+import reactor.test.StepVerifier;
+
+class PersistenceContractTest {
+    private static final String PREFIX = "com.apex.scaffold.authcenter.";
+
+    @AfterEach
+    void clearTenant() {
+        TenantContext.clear();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"User", "Token", "Permission", "Role", "Session", "AuditLog"})
+    void everyOperationRejectsMissingTenantBeforeDatabaseAccess(String name) throws Exception {
+        Constructor<?> constructor = Class.forName(
+                        PREFIX + "infrastructure.persistence.repository." + name + "RepositoryImpl")
+                .getConstructors()[0];
+        Object[] dependencies = Arrays.stream(constructor.getParameterTypes())
+                .map(type -> mock(type))
+                .toArray();
+        Object repository = constructor.newInstance(dependencies);
+        Class<?> contract = Class.forName(PREFIX + "domain.repository." + name + "Repository");
+        for (Method method : contract.getMethods()) {
+            Object[] args = new Object[method.getParameterCount()];
+            for (int index = 0; index < args.length; index++) {
+                Class<?> type = method.getParameterTypes()[index];
+                if (type == Long.class) {
+                    args[index] = 1L;
+                } else if (type == String.class) {
+                    args[index] = "tenant-a";
+                } else if (type == LocalDateTime.class) {
+                    args[index] = LocalDateTime.now();
+                } else if (type == Iterable.class) {
+                    args[index] = List.of(1L);
+                } else {
+                    args[index] = type.getConstructor().newInstance();
+                }
+            }
+            Publisher<?> result = (Publisher<?>) method.invoke(repository, args);
+            StepVerifier.create(Flux.from(result))
+                    .expectError(BusinessException.class)
+                    .verify();
+            verifyNoInteractions(dependencies);
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"Role", "Permission", "Session"})
+    void numericLogicDeleteUsesSmallintLiterals(String name) throws Exception {
+        Class<?> po = Class.forName(PREFIX + "infrastructure.persistence.po." + name + "PO");
+        MapperBuilderAssistant assistant = new MapperBuilderAssistant(new MybatisConfiguration(), name);
+        assistant.setCurrentNamespace(name);
+        TableInfo table = TableInfoHelper.initTableInfo(assistant, po);
+        assertThat(table.isWithLogicDelete()).isTrue();
+        assertThat(table.getLogicDeleteSql(false, true)).contains("deleted=0");
+        assertThat(table.getLogicDeleteSql(false, false)).contains("deleted=1");
+    }
+
+    @Test
+    void domainDoesNotDependOnPersistenceOrFrameworks() {
+        ArchRuleDefinition.noClasses()
+                .that()
+                .resideInAPackage(PREFIX + "domain..")
+                .should()
+                .dependOnClassesThat()
+                .resideInAnyPackage(PREFIX + "infrastructure..", "com.baomidou..", "org.apache.ibatis..")
+                .check(new ClassFileImporter().importPackages(PREFIX));
+    }
+}

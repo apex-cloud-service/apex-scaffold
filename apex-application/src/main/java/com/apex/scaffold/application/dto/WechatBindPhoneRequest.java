@@ -28,6 +28,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Schema(description = "微信手机号绑定请求")
 public class WechatBindPhoneRequest {
 
     @Schema(description = "微信授权临时票据")

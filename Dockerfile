@@ -20,7 +20,14 @@ ARG BUILD_PROFILE=enterprise
 
 WORKDIR /app
 
-# 配置 Maven 镜像加速（阿里云），可移除或替换为内网镜像
+# 安装项目固定版本的 Maven Daemon，并配置 Maven 镜像加速。
+ENV SDKMAN_DIR=/root/.sdkman
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends curl zip unzip \
+  && rm -rf /var/lib/apt/lists/* \
+  && curl -s "https://get.sdkman.io" | bash \
+  && bash -c "source \"${SDKMAN_DIR}/bin/sdkman-init.sh\" && sdk install mvnd 2.0.0-rc-3"
+
 RUN mkdir -p /usr/share/maven/ref && printf '%s\n' \
   '<?xml version="1.0" encoding="UTF-8"?>' \
   '<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0">' \
@@ -46,11 +53,11 @@ COPY apex-generator/pom.xml apex-generator/
 COPY apex-license-spring-boot-starter/pom.xml apex-license-spring-boot-starter/
 
 # 预下载依赖（仅 pom 变更时该层才失效）
-RUN mvn -B dependency:go-offline || true
+RUN mvnd dependency:go-offline || true
 
 # 拷贝全部源码并构建（跳过测试；单元/集成测试由 CI 阶段执行）
 COPY . .
-RUN mvn -B clean package -DskipTests -P "${BUILD_PROFILE}"
+RUN mvnd clean package -DskipTests -P "${BUILD_PROFILE}"
 
 # ============================================================
 # 2. Runtime Stage（仅含 JRE + 可执行 jar）

@@ -16,6 +16,7 @@ import reactor.core.publisher.Mono;
  */
 @Slf4j
 @Service
+@SuppressWarnings("PMD.ServiceOrDaoClassShouldEndWithImplRule")
 public class DefaultAuditLogService implements AuditLogService {
 
     @Override

@@ -1,0 +1,153 @@
+global:
+  # 全局配置
+  resolve_timeout: 5m
+  smtp_smarthost: 'smtp.example.com:587'
+  smtp_from: 'alerts@apex-scaffold.com'
+  smtp_auth_username: 'alerts@apex-scaffold.com'
+  smtp_auth_password: '${SMTP_PASSWORD}'
+  smtp_require_tls: true
+
+# 告警路由规则
+route:
+  # 默认接收者
+  receiver: 'default'
+  # 分组标签
+  group_by: ['alertname', 'cluster', 'service']
+  # 分组等待时间
+  group_wait: 10s
+  # 分组间隔时间
+  group_interval: 10s
+  # 重复告警间隔
+  repeat_interval: 12h
+
+  # 子路由
+  routes:
+    # 关键安全告警 - 立即通知
+    - match:
+        severity: critical
+        category: security
+      receiver: 'security-team'
+      group_wait: 0s
+      group_interval: 5m
+      repeat_interval: 1h
+
+    # 基础设施告警
+    - match:
+        category: infrastructure
+      receiver: 'ops-team'
+      group_wait: 30s
+      repeat_interval: 4h
+
+    # 性能告警
+    - match:
+        category: performance
+      receiver: 'dev-team'
+      group_wait: 1m
+      repeat_interval: 6h
+
+    # 业务告警
+    - match:
+        category: business
+      receiver: 'product-team'
+      group_wait: 2m
+      repeat_interval: 12h
+
+# 告警抑制规则
+inhibit_rules:
+  # 服务下线时抑制其他告警
+  - source_match:
+      alertname: 'ServiceDown'
+    target_match_re:
+      alertname: '.*'
+    equal: ['job']
+
+  # 数据库下线时抑制认证失败告警
+  - source_match:
+      alertname: 'MySQLDown'
+    target_match:
+      alertname: 'HighAuthenticationFailureRate'
+
+# 接收者配置
+receivers:
+  # 默认接收者
+  - name: 'default'
+    webhook_configs:
+      - url: 'http://host.docker.internal:8080/api/webhooks/alerts'
+        send_resolved: true
+
+  # 安全团队 - 多渠道通知
+  - name: 'security-team'
+    email_configs:
+      - to: 'security-team@apex-scaffold.com'
+        headers:
+          Subject: '[CRITICAL] 安全告警: {{ .GroupLabels.alertname }}'
+        html: |
+          <h2>🚨 安全告警</h2>
+          <p><strong>告警名称:</strong> {{ .GroupLabels.alertname }}</p>
+          <p><strong>严重程度:</strong> {{ .CommonLabels.severity }}</p>
+          <p><strong>详细信息:</strong></p>
+          {{ range .Alerts }}
+          <ul>
+            <li><strong>描述:</strong> {{ .Annotations.description }}</li>
+            <li><strong>时间:</strong> {{ .StartsAt }}</li>
+            <li><strong>标签:</strong> {{ .Labels }}</li>
+          </ul>
+          {{ end }}
+
+    webhook_configs:
+      - url: 'http://host.docker.internal:8080/api/webhooks/alerts/security'
+        send_resolved: true
+    
+    # 企业微信通知（可选）
+    wechat_configs:
+      - corp_id: '${WECHAT_CORP_ID}'
+        api_secret: '${WECHAT_API_SECRET}'
+        to_party: 'security'
+        agent_id: '${WECHAT_AGENT_ID}'
+        message: |
+          告警: {{ .GroupLabels.alertname }}
+          严重程度: {{ .CommonLabels.severity }}
+          {{ range .Alerts }}
+          描述: {{ .Annotations.description }}
+          {{ end }}
+
+    # 钉钉通知（可选）
+    # webhook_configs:
+    #   - url: 'https://oapi.dingtalk.com/robot/send?access_token=${DINGTALK_TOKEN}'
+
+  # 运维团队
+  - name: 'ops-team'
+    email_configs:
+      - to: 'ops-team@apex-scaffold.com'
+        headers:
+          Subject: '[OPS] 基础设施告警: {{ .GroupLabels.alertname }}'
+
+    webhook_configs:
+      - url: 'http://host.docker.internal:8080/api/webhooks/alerts/ops'
+        send_resolved: true
+
+  # 开发团队
+  - name: 'dev-team'
+    email_configs:
+      - to: 'dev-team@apex-scaffold.com'
+        headers:
+          Subject: '[DEV] 性能告警: {{ .GroupLabels.alertname }}'
+
+    webhook_configs:
+      - url: 'http://host.docker.internal:8080/api/webhooks/alerts/dev'
+        send_resolved: true
+
+  # 产品团队
+  - name: 'product-team'
+    email_configs:
+      - to: 'product-team@apex-scaffold.com'
+        headers:
+          Subject: '[PRODUCT] 业务告警: {{ .GroupLabels.alertname }}'
+
+    webhook_configs:
+      - url: 'http://host.docker.internal:8080/api/webhooks/alerts/product'
+        send_resolved: true
+
+# 模板配置
+templates:
+  - '/etc/alertmanager/templates/*.tmpl'

@@ -152,6 +152,7 @@ public class TraceLoggingSpanHandler extends SpanHandler {
                 case SLOW -> TraceLoggingSpanHandler.log.warn("[Span-慢] {}", render());
                 case CLIENT_ERROR -> TraceLoggingSpanHandler.log.warn("[Span-警告] {}", render());
                 case NORMAL -> TraceLoggingSpanHandler.log.info("[Span] {}", render());
+                default -> TraceLoggingSpanHandler.log.info("[Span] {}", render());
             }
         }
 

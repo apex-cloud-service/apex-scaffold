@@ -1,0 +1,89 @@
+--- /dev/null
++++ b/Users/work/apex-admin-web/src/stores/user.ts
+@@ -1,10 +1,11 @@
+ /**
+  * 用户会话状态
+  * ------------------------------------------------------------------
+  * 管理 Token、当前用户身份与登录/登出动作。
+  */
+ import { defineStore } from 'pinia'
+-import { ref } from 'vue'
++import { ref, computed } from 'vue'
+ import { getToken, setToken, setRefreshToken, clearSession, setIdentity, getIdentity } from '@/utils/auth'
+ import { login as loginApi, logout as logoutApi, getMyPermissions, getMyRoles } from '@/api/auth'
+ import { getCurrentUserInfo } from '@/api/user'
+ import type { LoginResult, UserIdentity } from '@/types'
+@@ -100,5 +101,14 @@
+     initialized.value = false
+   }
+ 
+-  return { token, identity, permissions, initialized, login, loadIdentity, logout, clearLocal }
++  const userInfo = computed(() => identity.value)
++  const loadUserInfo = loadIdentity
++
++  return { 
++    token, 
++    identity, 
++    permissions, 
++    initialized, 
++    login, 
++    loadIdentity, 
++    logout, 
++    clearLocal,
++    userInfo,
++    loadUserInfo
++  }
+ })
+
+--- a/Users/work/apex-admin-web/src/types/index.ts
++++ b/Users/work/apex-admin-web/src/types/index.ts
+@@ -XX,X +XX,X @@
+ export interface PageResponse<T> {
+   total: number
+   current: number
+   size: number
+   pages: number
+   data: T[]
++  records?: T[]
+ }
+
+--- a/Users/work/apex-admin-web/src/views/office/organization/index.vue
++++ b/Users/work/apex-admin-web/src/views/office/organization/index.vue
+@@ -103,7 +103,7 @@
+ import { ElMessage, ElMessageBox, ElTree } from 'element-plus'
+ import { Refresh, Download, Delete } from '@element-plus/icons-vue'
+ import { useRouter } from 'vue-router'
+ import { useUserStore } from '@/stores/user'
+-import { getSyncStatus, syncOrganization, type SyncStatus, type SyncLog, type OrgNode } from '@/api/office'
++import { getSyncStatus, syncOrganization, type OfficeSyncStatus } from '@/api/office'
+ 
+ const router = useRouter()
+ const userStore = useUserStore()
+@@ -127,17 +127,17 @@
+ const loading = ref(false)
+ const lastSyncTime = ref<string | null>(null)
+ const orgNodeCount = ref(0)
+-const syncLogs = ref<SyncLog[]>([])
+-const orgTree = ref<OrgNode[]>([])
++const syncLogs = ref<any[]>([])
++const orgTree = ref<any[]>([])
+ 
+ const loadSyncStatus = async () => {
+-  const data = await getSyncStatus()
+-  syncLogs.value = data.logs || []
++  const data = await getSyncStatus(userStore.identity?.tenantId || 0)
++  syncLogs.value = (data as any).logs || []
+   lastSyncTime.value = syncLogs.value[0]?.syncTime || null
+   
+-  orgTree.value = data.orgTree || []
++  orgTree.value = (data as any).orgTree || []
+   orgNodeCount.value = orgTree.value.length
+ }
+ 
+ const handleSync = async () => {
+   try {
+-    await syncOrganization()
++    await syncOrganization(userStore.identity?.tenantId || 0)
+     ElMessage.success('同步成功')
+     await loadSyncStatus()
+   } catch (error) {

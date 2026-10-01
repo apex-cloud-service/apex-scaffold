@@ -36,6 +36,14 @@ public interface MessagePort {
     Mono<String> queryMessageStatus(String messageId);
 
     /**
+     * 撤回消息
+     *
+     * @param messageId 平台消息ID
+     * @return 撤回是否成功
+     */
+    Mono<Boolean> recallMessage(String messageId);
+
+    /**
      * 获取支持的平台类型
      *
      * @return 平台类型标识（feishu/dingtalk/wecom）

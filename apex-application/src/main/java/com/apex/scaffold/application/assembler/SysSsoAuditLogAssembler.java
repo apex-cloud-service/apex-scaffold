@@ -19,7 +19,34 @@ import org.mapstruct.ReportingPolicy;
  */
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface SysSsoAuditLogAssembler {
+    /**
+     *
+     * 将SSO审计日志实体转换为DTO。
+     *
+     *
+     *
+     * @param entity SSO审计日志实体
+     *
+     * @return SSO审计日志DTO
+     *
+     */
     SsoAuditLogDTO toDTO(SysSsoAuditLogEntity entity);
 
+    /**
+     *
+     *
+     * 将SSO审计日志实体列表转换为DTO列表。
+     *
+     *
+     *
+     *
+     *
+     * @param entities SSO审计日志实体列表
+     *
+     *
+     * @return SSO审计日志DTO列表
+     *
+     *
+     */
     List<SsoAuditLogDTO> toDTOList(List<SysSsoAuditLogEntity> entities);
 }

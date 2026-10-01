@@ -3,6 +3,7 @@ package com.apex.scaffold.interfaces.handler;
 import com.apex.scaffold.application.service.WorkflowService;
 import com.apex.scaffold.application.workflow.WorkflowQueryService;
 import com.apex.scaffold.application.workflow.WorkflowStatisticsService;
+import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.annotation.TenantAware;
 import com.apex.scaffold.common.dto.PageResponse;
 import com.apex.scaffold.common.result.Result;
@@ -93,6 +94,7 @@ public class WorkflowHandler extends BaseHandler {
      * @param request ServerRequest，路径参数 workflowCode，请求体 StartProcessInstanceRequest
      * @return ServerResponse，包含流程实例
      */
+    @OperationLog(module = "工作流管理", type = OperationLog.OperationType.INSERT, description = "发起流程实例")
     @Operation(operationId = "startProcessInstance", summary = "发起流程实例", description = "根据流程编码创建新的流程实例")
     @Parameter(
             name = "workflowCode",
@@ -169,6 +171,7 @@ public class WorkflowHandler extends BaseHandler {
      * @param request ServerRequest，路径参数 taskId，请求体 CompleteTaskRequest
      * @return ServerResponse，包含操作结果
      */
+    @OperationLog(module = "工作流管理", type = OperationLog.OperationType.UPDATE, description = "完成任务")
     @Operation(operationId = "completeTask", summary = "完成任务", description = "审批通过任务")
     @Parameter(
             name = "taskId",
@@ -342,6 +345,7 @@ public class WorkflowHandler extends BaseHandler {
      * @param request ServerRequest，路径参数 taskId，请求体 RollbackTaskRequest
      * @return ServerResponse，包含操作结果
      */
+    @OperationLog(module = "工作流管理", type = OperationLog.OperationType.UPDATE, description = "流程回退")
     @Operation(operationId = "rollbackTask", summary = "流程回退", description = "将工作流任务回退到指定的前置节点")
     @Parameter(
             name = "taskId",
@@ -380,6 +384,7 @@ public class WorkflowHandler extends BaseHandler {
      * @param request ServerRequest，路径参数 taskId，请求体 TransferTaskRequest
      * @return ServerResponse，包含操作结果
      */
+    @OperationLog(module = "工作流管理", type = OperationLog.OperationType.UPDATE, description = "任务转办")
     @Operation(operationId = "transferTask", summary = "任务转办", description = "将当前待办任务转交给其他用户处理，任务责任人变更")
     @Parameter(
             name = "taskId",
@@ -419,6 +424,7 @@ public class WorkflowHandler extends BaseHandler {
      * @param request ServerRequest，路径参数 taskId，请求体 DelegateTaskRequest
      * @return ServerResponse，包含操作结果
      */
+    @OperationLog(module = "工作流管理", type = OperationLog.OperationType.UPDATE, description = "任务委派")
     @Operation(operationId = "delegateTask", summary = "任务委派", description = "将当前待办任务临时委托给其他用户处理，委托人完成后任务回到原责任人")
     @Parameter(
             name = "taskId",
@@ -458,6 +464,7 @@ public class WorkflowHandler extends BaseHandler {
      * @param request ServerRequest，路径参数 instanceId，请求体 SuspendInstanceRequest
      * @return ServerResponse，包含操作结果
      */
+    @OperationLog(module = "工作流管理", type = OperationLog.OperationType.UPDATE, description = "挂起流程实例")
     @Operation(operationId = "suspendInstance", summary = "挂起流程实例", description = "暂停流程实例的执行，所有待办任务无法审批，直到恢复流程")
     @Parameter(
             name = "instanceId",
@@ -496,6 +503,7 @@ public class WorkflowHandler extends BaseHandler {
      * @param request ServerRequest，路径参数 instanceId，请求体 ResumeInstanceRequest
      * @return ServerResponse，包含操作结果
      */
+    @OperationLog(module = "工作流管理", type = OperationLog.OperationType.UPDATE, description = "恢复流程实例")
     @Operation(operationId = "resumeInstance", summary = "恢复流程实例", description = "恢复挂起的流程实例，允许待办任务继续审批和流转")
     @Parameter(
             name = "instanceId",

@@ -18,6 +18,7 @@ import org.mapstruct.ReportingPolicy;
  * @since 1.0.0
  */
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
+@SuppressWarnings("PMD.LowerCamelCaseVariableNamingRule")
 public interface DocumentInfoConverter {
 
     /**

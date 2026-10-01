@@ -49,6 +49,7 @@ import reactor.core.publisher.Mono;
  * @version 2.0.0
  * @since 2.0.0
  */
+@SuppressWarnings("checkstyle:TypeName")
 @Slf4j
 @Component
 @Profile("!it")

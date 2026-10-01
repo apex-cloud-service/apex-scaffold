@@ -23,12 +23,26 @@ public class BruteForcePrevention {
 
     private final ReactiveStringRedisTemplate redisTemplate;
 
-    // 配置参数
-    private static final int MAX_ATTEMPTS = 5; // 最大失败次数
-    private static final Duration LOCKOUT_DURATION = Duration.ofMinutes(15); // 锁定时长
-    private static final Duration ATTEMPT_WINDOW = Duration.ofMinutes(30); // 统计窗口
+    /**
+     * 最大失败尝试次数
+     */
+    private static final int MAX_ATTEMPTS = 5;
 
-    // Redis Key前缀
+    /**
+     * 账号锁定时长
+     */
+    private static final Duration LOCKOUT_DURATION = Duration.ofMinutes(30);
+
+    /**
+     * 失败计数时间窗口
+     */
+    private static final Duration ATTEMPT_WINDOW = Duration.ofMinutes(15);
+
+    /**
+     * 剩余次数告警阈值
+     */
+    private static final int WARNING_REMAINING_ATTEMPTS_THRESHOLD = 2;
+
     private static final String ATTEMPTS_BY_USERNAME_PREFIX = "brute_force:attempts:username:";
     private static final String ATTEMPTS_BY_IP_PREFIX = "brute_force:attempts:ip:";
     private static final String LOCKOUT_BY_USERNAME_PREFIX = "brute_force:lockout:username:";
@@ -79,7 +93,7 @@ public class BruteForcePrevention {
 
                     int remainingAttempts = MAX_ATTEMPTS - Math.max(usernameAttempts, ipAttempts);
 
-                    if (remainingAttempts <= 2) {
+                    if (remainingAttempts <= WARNING_REMAINING_ATTEMPTS_THRESHOLD) {
                         log.warn("用户 {} (IP: {}) 剩余登录尝试次数: {}", username, clientIp, remainingAttempts);
                     }
 

@@ -8,7 +8,7 @@ import com.apex.scaffold.interfaces.util.MessageUtils;
 import com.apex.scaffold.interfaces.util.ResponseUtil;
 import java.util.Locale;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -105,8 +105,7 @@ public class SecurityConfig {
     private final SecurityProperties securityProperties;
 
     /** Keycloak OIDC 认证成功处理器（可选，仅在 keycloak.enabled=true 时注入） */
-    @Autowired(required = false)
-    private OidcAuthenticationSuccessHandler oidcAuthenticationSuccessHandler;
+    private final ObjectProvider<OidcAuthenticationSuccessHandler> oidcAuthenticationSuccessHandlerProvider;
 
     /** Keycloak 启用开关 */
     @Value("${keycloak.enabled:false}")
@@ -173,8 +172,9 @@ public class SecurityConfig {
                             return ResponseUtil.forbidden(exchange, msg);
                         })));
 
-        if (keycloakEnabled && oidcAuthenticationSuccessHandler != null) {
-            httpSecurity.oauth2Login(oauth2 -> oauth2.authenticationSuccessHandler(oidcAuthenticationSuccessHandler));
+        OidcAuthenticationSuccessHandler successHandler = oidcAuthenticationSuccessHandlerProvider.getIfAvailable();
+        if (keycloakEnabled && successHandler != null) {
+            httpSecurity.oauth2Login(oauth2 -> oauth2.authenticationSuccessHandler(successHandler));
         }
 
         return httpSecurity.build();

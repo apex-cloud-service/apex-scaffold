@@ -136,6 +136,17 @@ public class MonitorMetricsCollector {
     private static final String M_BUSINESS_UPLOAD = "apex.business.upload";
     private static final String M_BUSINESS_CREDIT_CHANGE = "apex.business.credit.change";
 
+    private static final String POOL_TYPE_JDBC = "jdbc";
+    private static final String POOL_TYPE_CACHE = "cache";
+    private static final String POOL_TYPE_STORAGE = "storage";
+    private static final String POOL_TYPE_EVENT = "event";
+    private static final String POOL_TYPE_REMOTE = "remote";
+    private static final String POOL_TYPE_GENERAL = "general";
+
+    private static final double MIN_SAMPLE_INTERVAL_SECONDS = 0.5;
+    private static final double MAX_SAMPLE_INTERVAL_SECONDS = 60;
+    private static final long MILLISECONDS_PER_MINUTE = 60_000;
+
     /* ==================== 依赖与配置 ==================== */
 
     private final MeterRegistry meterRegistry;
@@ -441,7 +452,7 @@ public class MonitorMetricsCollector {
                         tx = sample[1];
                     }
                 }
-                long speed = -1; // 链路速率 Java 无法直接获取
+                long speed = -1;
                 list.add(new MonitorSystemResponse.NetworkUsage(net.getName(), net.isUp(), speed, rx, tx, 0, 0, false));
             }
             if (linux && !list.isEmpty()) {
@@ -489,7 +500,7 @@ public class MonitorMetricsCollector {
         long now = System.nanoTime();
         if (!lastNetSample.isEmpty() && lastNetSampleNanos > 0) {
             double seconds = (now - lastNetSampleNanos) / 1_000_000_000.0;
-            if (seconds > 0.5 && seconds < 60) {
+            if (seconds > MIN_SAMPLE_INTERVAL_SECONDS && seconds < MAX_SAMPLE_INTERVAL_SECONDS) {
                 List<MonitorSystemResponse.NetworkUsage> updated = new ArrayList<>();
                 for (MonitorSystemResponse.NetworkUsage usage : usages) {
                     long[] prev = lastNetSample.get(usage.name());
@@ -528,7 +539,13 @@ public class MonitorMetricsCollector {
     private Map<String, MonitorSystemResponse.BlockingIoPool> blockingIoPools() {
         Map<String, MonitorSystemResponse.BlockingIoPool> pools = new LinkedHashMap<>();
         double up = gauge("apex.blocking.io.up", "type", "scheduler_query");
-        for (String pool : List.of("jdbc", "cache", "storage", "event", "remote", "general")) {
+        for (String pool : List.of(
+                POOL_TYPE_JDBC,
+                POOL_TYPE_CACHE,
+                POOL_TYPE_STORAGE,
+                POOL_TYPE_EVENT,
+                POOL_TYPE_REMOTE,
+                POOL_TYPE_GENERAL)) {
             pools.put(
                     pool,
                     new MonitorSystemResponse.BlockingIoPool(
@@ -828,7 +845,7 @@ public class MonitorMetricsCollector {
      * @param current 当前累计值
      */
     private void recordTrend(String key, String name, String unit, double current) {
-        long minute = System.currentTimeMillis() / 60_000;
+        long minute = System.currentTimeMillis() / MILLISECONDS_PER_MINUTE;
         double previous = businessLastValue.getOrDefault(key, Double.NaN);
         double delta = Double.isNaN(previous) ? 0 : Math.max(0, current - previous);
         businessLastValue.put(key, current);

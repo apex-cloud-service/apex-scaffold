@@ -6,4 +6,5 @@ package com.apex.scaffold.infrastructure.office.spi;
  * @author Apex Team
  * @since 1.2.0
  */
+@SuppressWarnings("PMD.ClassNamingShouldBeCamelRule")
 public interface OfficeOAuthClient extends com.apex.scaffold.domain.office.OfficeOAuthClient {}

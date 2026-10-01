@@ -4,6 +4,8 @@ import com.apex.scaffold.common.context.TenantContext;
 import com.apex.scaffold.domain.office.OfficePlatform;
 import com.apex.scaffold.domain.office.approval.*;
 import com.apex.scaffold.domain.office.port.ApprovalPort;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +40,7 @@ public class OfficeApprovalService {
 
     private final ApprovalProcessRepository approvalProcessRepository;
     private final Map<String, ApprovalPort> approvalClients;
+    private final ObjectMapper objectMapper;
 
     /**
      * 发起审批流程
@@ -57,8 +60,10 @@ public class OfficeApprovalService {
         String templateId = processDefinitionId;
         String processInstanceId = java.util.UUID.randomUUID().toString();
         String title = "审批流程-" + processInstanceId;
-        String initiatorName = initiatorId; // 简化处理，实际应查询用户名
-        String[] approverIds = new String[0]; // 从表单数据中提取或使用默认值
+        // 简化处理，实际应查询用户名
+        String initiatorName = initiatorId;
+        // 从表单数据中提取或使用默认值
+        String[] approverIds = new String[0];
 
         // 将JSON字符串转换为Map（简化处理，实际应使用JSON解析器）
         Map<String, Object> formDataMap = new java.util.HashMap<>();
@@ -278,13 +283,25 @@ public class OfficeApprovalService {
     /**
      * 将对象转换为JSON字符串
      *
+     * <p>对于已经是JSON字符串的入参（如表单数据），直接原样返回，避免二次转义；
+     * 其他对象（如审批人ID数组）通过 {@link ObjectMapper} 序列化为合法JSON。
+     *
      * @param obj 对象
-     * @return JSON字符串
+     * @return JSON字符串；入参为null时返回null
      */
     private String convertToJson(Object obj) {
-        // 实际实现中应使用ObjectMapper
-        // 这里简化处理
-        return obj != null ? obj.toString() : null;
+        if (obj == null) {
+            return null;
+        }
+        if (obj instanceof String json) {
+            return json;
+        }
+        try {
+            return objectMapper.writeValueAsString(obj);
+        } catch (JsonProcessingException e) {
+            log.error("对象序列化为JSON失败，类型：{}", obj.getClass().getName(), e);
+            throw new IllegalStateException("对象序列化为JSON失败", e);
+        }
     }
 
     /**

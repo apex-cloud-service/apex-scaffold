@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1400" height="1800" viewBox="0 0 1400 1800">
+  <defs>
+    <style type="text/css">
+      text { font-family: 'Segoe UI', Arial, sans-serif; fill: #e5e7eb; }
+      .title { font-size: 18px; font-weight: bold; fill: #f9fafb; }
+      .participant { font-size: 13px; font-weight: 600; fill: #f9fafb; }
+      .message { font-size: 12px; fill: #d1d5db; }
+      .note { font-size: 11px; fill: #9ca3af; }
+      .copyright { font-size: 10px; fill: #6b7280; }
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#60a5fa" />
+    </marker>
+    <marker id="arrowhead-async" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#34d399" />
+    </marker>
+    <marker id="arrowhead-error" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#f87171" />
+    </marker>
+  </defs>
+  
+  <rect width="1400" height="1800" fill="#0f172a"/>
+  
+  <text x="700" y="30" text-anchor="middle" class="title">自动重试机制完整流程 (三层重试机制)</text>
+  
+  <g id="participants">
+    <rect x="50" y="60" width="120" height="50" fill="#1e293b" stroke="#3b82f6" stroke-width="2" rx="5"/>
+    <text x="110" y="90" text-anchor="middle" class="participant">客户端</text>
+    
+    <rect x="200" y="60" width="140" height="50" fill="#1e293b" stroke="#3b82f6" stroke-width="2" rx="5"/>
+    <text x="270" y="90" text-anchor="middle" class="participant">RemoteApiHandler</text>
+    
+    <rect x="370" y="60" width="130" height="50" fill="#1e293b" stroke="#3b82f6" stroke-width="2" rx="5"/>
+    <text x="435" y="90" text-anchor="middle" class="participant">OrderService</text>
+    
+    <rect x="530" y="60" width="130" height="50" fill="#1e293b" stroke="#3b82f6" stroke-width="2" rx="5"/>
+    <text x="595" y="90" text-anchor="middle" class="participant">@AutoRetry切面</text>
+    
+    <rect x="690" y="60" width="130" height="50" fill="#1e293b" stroke="#3b82f6" stroke-width="2" rx="5"/>
+    <text x="755" y="90" text-anchor="middle" class="participant">Reactor Retry</text>
+    
+    <rect x="850" y="60" width="140" height="50" fill="#1e293b" stroke="#3b82f6" stroke-width="2" rx="5"/>
+    <text x="920" y="90" text-anchor="middle" class="participant">RemoteApiClient</text>
+    
+    <rect x="1020" y="60" width="150" height="50" fill="#1e293b" stroke="#3b82f6" stroke-width="2" rx="5"/>
+    <text x="1095" y="90" text-anchor="middle" class="participant">Resilience4j熔断器</text>
+    
+    <rect x="1200" y="60" width="150" height="50" fill="#1e293b" stroke="#3b82f6" stroke-width="2" rx="5"/>
+    <text x="1275" y="90" text-anchor="middle" class="participant">外部API第三方服务</text>
+  </g>
+  
+  <g id="lifelines">
+    <line x1="110" y1="110" x2="110" y2="1700" stroke="#374151" stroke-width="1" stroke-dasharray="5,5"/>
+    <line x1="270" y1="110" x2="270" y2="1700" stroke="#374151" stroke-width="1" stroke-dasharray="5,5"/>
+    <line x1="435" y1="110" x2="435" y2="1700" stroke="#374151" stroke-width="1" stroke-dasharray="5,5"/>
+    <line x1="595" y1="110" x2="595" y2="1700" stroke="#374151" stroke-width="1" stroke-dasharray="5,5"/>
+    <line x1="755" y1="110" x2="755" y2="1700" stroke="#374151" stroke-width="1" stroke-dasharray="5,5"/>
+    <line x1="920" y1="110" x2="920" y2="1700" stroke="#374151" stroke-width="1" stroke-dasharray="5,5"/>
+    <line x1="1095" y1="110" x2="1095" y2="1700" stroke="#374151" stroke-width="1" stroke-dasharray="5,5"/>
+    <line x1="1275" y1="110" x2="1275" y2="1700" stroke="#374151" stroke-width="1" stroke-dasharray="5,5"/>
+  </g>
+  
+  <g id="messages">
+    <line x1="110" y1="150" x2="270" y2="150" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrowhead)"/>
+    <text x="190" y="145" text-anchor="middle" class="message">POST /api/v1/orders/sync</text>
+    
+    <line x1="270" y1="180" x2="435" y2="180" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrowhead)"/>
+    <text x="352" y="175" text-anchor="middle" class="message">syncOrderToERP(orderId)</text>
+    
+    <line x1="435" y1="210" x2="595" y2="210" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrowhead)"/>
+    <text x="515" y="205" text-anchor="middle" class="message">AOP拦截 @AutoRetry(maxAttempts=3)</text>
+    
+    <rect x="610" y="225" width="280" height="45" fill="#1e3a4a" stroke="#3b82f6" stroke-width="1" rx="3"/>
+    <text x="750" y="242" text-anchor="middle" class="note">应用层重试</text>
+    <text x="750" y="260" text-anchor="middle" class="note">指数退避 200ms→400ms→800ms</text>
+    
+    <line x1="595" y1="290" x2="920" y2="290" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrowhead)"/>
+    <text x="757" y="285" text-anchor="middle" class="message">callErpApi(request)</text>
+    
+    <line x1="920" y1="320" x2="755" y2="320" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrowhead)"/>
+    <text x="837" y="315" text-anchor="middle" class="message">retry(Retry.backoff(5, 100ms))</text>
+    
+    <rect x="770" y="335" width="280" height="45" fill="#1e3a4a" stroke="#3b82f6" stroke-width="1" rx="3"/>
+    <text x="910" y="352" text-anchor="middle" class="note">Reactor响应式重试</text>
+    <text x="910" y="370" text-anchor="middle" class="note">退避+抖动 100ms→200ms→400ms</text>
+    
+    <line x1="755" y1="400" x2="1095" y2="400" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrowhead)"/>
+    <text x="925" y="395" text-anchor="middle" class="message">decorateCall(apiCall)</text>
+    
+    <rect x="1110" y="415" width="200" height="45" fill="#1e3a4a" stroke="#3b82f6" stroke-width="1" rx="3"/>
+    <text x="1210" y="432" text-anchor="middle" class="note">熔断器状态检查</text>
+    <text x="1210" y="450" text-anchor="middle" class="note">CLOSED/OPEN/HALF_OPEN</text>
+    
+    <rect x="700" y="480" width="620" height="600" fill="#1a2332" stroke="#10b981" stroke-width="2" rx="5" opacity="0.3"/>
+    <text x="710" y="500" class="message" fill="#10b981" font-weight="bold">场景1: 熔断器关闭 - 成功响应</text>
+    
+    <line x1="1095" y1="520" x2="1275" y2="520" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrowhead)"/>
+    <text x="1185" y="515" text-anchor="middle" class="message">HTTP POST /erp/api/orders</text>
+    
+    <line x1="1275" y1="550" x2="1095" y2="550" stroke="#34d399" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arrowhead-async)"/>
+    <text x="1185" y="545" text-anchor="middle" class="message" fill="#34d399">200 OK + 订单数据</text>
+    
+    <line x1="1095" y1="580" x2="755" y2="580" stroke="#34d399" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arrowhead-async)"/>
+    <text x="925" y="575" text-anchor="middle" class="message" fill="#34d399">成功</text>
+    
+    <line x1="755" y1="610" x2="920" y2="610" stroke="#34d399" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arrowhead-async)"/>
+    <text x="837" y="605" text-anchor="middle" class="message" fill="#34d399">Mono&lt;Response&gt;</text>
+    
+    <line x1="920" y1="640" x2="595" y2="640" stroke="#34d399" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arrowhead-async)"/>
+    <text x="757" y="635" text-anchor="middle" class="message" fill="#34d399">返回结果</text>
+    
+    <line x1="595" y1="670" x2="435" y2="670" stroke="#34d399" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arrowhead-async)"/>
+    <text x="515" y="665" text-anchor="middle" class="message" fill="#34d399">成功</text>
+    
+    <line x1="435" y1="700" x2="270" y2="700" stroke="#34d399" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arrowhead-async)"/>
+    <text x="352" y="695" text-anchor="middle" class="message" fill="#34d399">OrderDTO</text>
+    
+    <line x1="270" y1="730" x2="110" y2="730" stroke="#34d399" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arrowhead-async)"/>
+    <text x="190" y="725" text-anchor="middle" class="message" fill="#34d399">200 OK + 订单数据</text>
+    
+    <rect x="700" y="770" width="620" height="700" fill="#332e1a" stroke="#f59e0b" stroke-width="2" rx="5" opacity="0.3"/>
+    <text x="710" y="790" class="message" fill="#fbbf24" font-weight="bold">场景2: 临时错误 - 重试成功</text>
+    
+    <line x1="1095" y1="810" x2="1275" y2="810" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrowhead)"/>
+    <text x="1185" y="805" text-anchor="middle" class="message">HTTP POST (第1次)</text>
+    
+    <line x1="1275" y1="840" x2="1095" y2="840" stroke="#f87171" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arrowhead-error)"/>
+    <text x="1185" y="835" text-anchor="middle" class="message" fill="#f87171">503 Service Unavailable</text>
+    
+    <rect x="1110" y="855" width="180" height="35" fill="#3a1e1e" stroke="#ef4444" stroke-width="1" rx="3"/>
+    <text x="1200" y="872" text-anchor="middle" class="note" fill="#fca5a5">记录失败 失败率计数+1</text>
+    
+    <line x1="1095" y1="910" x2="755" y2="910" stroke="#f87171" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arrowhead-error)"/>
+    <text x="925" y="905" text-anchor="middle" class="message" fill="#f87171">TimeoutException</text>
+    
+    <rect x="770" y="925" width="150" height="35" fill="#3a1e1e" stroke="#ef4444" stroke-width="1" rx="3"/>
+    <text x="845" y="942" text-anchor="middle" class="note" fill="#fca5a5">第1次重试 延迟100ms</text>
+    
+    <line x1="755" y1="980" x2="1095" y2="980" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrowhead)"/>
+    <text x="925" y="975" text-anchor="middle" class="message">重试调用</text>
+    
+    <line x1="1095" y1="1010" x2="1275" y2="1010" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrowhead)"/>
+    <text x="1185" y="1005" text-anchor="middle" class="message">HTTP POST (重试1)</text>
+    
+    <line x1="1275" y1="1040" x2="1095" y2="1040" stroke="#f87171" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arrowhead-error)"/>
+    <text x="1185" y="1035" text-anchor="middle" class="message" fill="#f87171">504 Gateway Timeout</text>
+    
+    <line x1="1095" y1="1070" x2="755" y2="1070" stroke="#f87171" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arrowhead-error)"/>
+    <text x="925" y="1065" text-anchor="middle" class="message" fill="#f87171">TimeoutException</text>
+    
+    <rect x="770" y="1085" width="150" height="35" fill="#3a1e1e" stroke="#ef4444" stroke-width="1" rx="3"/>
+    <text x="845" y="1102" text-anchor="middle" class="note" fill="#fca5a5">第2次重试 延迟200ms</text>
+    
+    <line x1="755" y1="1140" x2="1095" y2="1140" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrowhead)"/>
+    <text x="925" y="1135" text-anchor="middle" class="message">重试调用</text>
+    
+    <line x1="1095" y1="1170" x2="1275" y2="1170" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrowhead)"/>
+    <text x="1185" y="1165" text-anchor="middle" class="message">HTTP POST (重试2)</text>
+    
+    <line x1="1275" y1="1200" x2="1095" y2="1200" stroke="#34d399" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arrowhead-async)"/>
+    <text x="1185" y="1195" text-anchor="middle" class="message" fill="#34d399">200 OK 成功</text>
+    
+    <line x1="1095" y1="1230" x2="755" y2="1230" stroke="#34d399" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arrowhead-async)"/>
+    <text x="925" y="1225" text-anchor="middle" class="message" fill="#34d399">成功</text>
+    
+    <line x1="755" y1="1260" x2="920" y2="1260" stroke="#34d399" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arrowhead-async)"/>
+    <text x="837" y="1255" text-anchor="middle" class="message" fill="#34d399">Mono&lt;Response&gt;</text>
+    
+    <line x1="920" y1="1290" x2="595" y2="1290" stroke="#34d399" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arrowhead-async)"/>
+    <text x="757" y="1285" text-anchor="middle" class="message" fill="#34d399">返回结果</text>
+    
+    <line x1="595" y1="1320" x2="435" y2="1320" stroke="#34d399" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arrowhead-async)"/>
+    <text x="515" y="1315" text-anchor="middle" class="message" fill="#34d399">成功</text>
+    
+    <line x1="435" y1="1350" x2="270" y2="1350" stroke="#34d399" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arrowhead-async)"/>
+    <text x="352" y="1345" text-anchor="middle" class="message" fill="#34d399">OrderDTO</text>
+    
+    <line x1="270" y1="1380" x2="110" y2="1380" stroke="#34d399" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arrowhead-async)"/>
+    <text x="190" y="1375" text-anchor="middle" class="message" fill="#34d399">200 OK + 订单数据</text>
+    
+    <rect x="700" y="1420" width="620" height="180" fill="#331a1a" stroke="#dc2626" stroke-width="2" rx="5" opacity="0.3"/>
+    <text x="710" y="1440" class="message" fill="#f87171" font-weight="bold">场景3: 熔断器打开 - 快速失败</text>
+    
+    <line x1="1095" y1="1460" x2="920" y2="1460" stroke="#f87171" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arrowhead-error)"/>
+    <text x="1007" y="1455" text-anchor="middle" class="message" fill="#f87171">CircuitBreakerOpenException</text>
+    
+    <rect x="930" y="1475" width="150" height="35" fill="#3a1e1e" stroke="#ef4444" stroke-width="1" rx="3"/>
+    <text x="1005" y="1492" text-anchor="middle" class="note" fill="#fca5a5">快速失败 不调用外部API</text>
+    
+    <line x1="920" y1="1530" x2="595" y2="1530" stroke="#f87171" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arrowhead-error)"/>
+    <text x="757" y="1525" text-anchor="middle" class="message" fill="#f87171">熔断器打开</text>
+    
+    <line x1="595" y1="1560" x2="435" y2="1560" stroke="#f59e0b" stroke-width="2" stroke-dasharray="5,5"/>
+    <text x="515" y="1555" text-anchor="middle" class="message" fill="#fbbf24">降级处理</text>
+    
+    <line x1="435" y1="1590" x2="270" y2="1590" stroke="#f59e0b" stroke-width="2" stroke-dasharray="5,5"/>
+    <text x="352" y="1585" text-anchor="middle" class="message" fill="#fbbf24">返回降级数据</text>
+  </g>
+  
+  <g id="key-points">
+    <rect x="100" y="1630" width="1200" height="100" fill="#1e293b" stroke="#3b82f6" stroke-width="2" rx="5"/>
+    <text x="700" y="1655" text-anchor="middle" class="message" font-weight="bold" fill="#60a5fa">关键要点</text>
+    <text x="120" y="1680" class="note">• AOP切面重试 (AutoRetryAspect): 幂等业务方法,最多3次,指数退避 200ms→400ms→800ms</text>
+    <text x="120" y="1700" class="note">• Reactor重试: 外部API调用,最多5次,退避+抖动 100ms→200ms→400ms</text>
+    <text x="120" y="1720" class="note">• 熔断器 (Resilience4j): 失败率&gt;50%打开,60s后半开探测,保护下游服务</text>
+  </g>
+  
+  <text x="700" y="1780" text-anchor="middle" class="copyright">© 2026 Apex Scaffold Team | Auto Retry Mechanism Sequence Diagram</text>
+</svg>

@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 800" width="1400" height="800">
+  <metadata>
+    <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/">
+      <rdf:Description>
+        <dc:title>漏桶限流算法</dc:title>
+        <dc:creator>Apex Team</dc:creator>
+        <dc:date>2026-09-17</dc:date>
+        <dc:version>1.0</dc:version>
+        <dc:description>LeakyBucket 漏桶限流算法 - 固定速率漏水,严格平滑输出,惰性计算模式</dc:description>
+      </rdf:Description>
+    </rdf:RDF>
+  </metadata>
+
+  <defs>
+    <style>
+      .title-main { font: 700 32px system-ui, sans-serif; fill: #0f172a; text-anchor: middle; }
+      .title-version { font: 500 14px system-ui, sans-serif; fill: #64748b; text-anchor: middle; }
+      .section-title { font: 600 18px system-ui, sans-serif; fill: #ffffff; }
+      .step-label { font: 500 14px system-ui, sans-serif; fill: #0f172a; }
+      .code-label { font: 400 10px 'SF Mono', monospace; fill: #2563eb; }
+      .note-text { font: 400 11px system-ui, sans-serif; fill: #64748b; }
+      .param-text { font: 500 11px system-ui, sans-serif; fill: #0891b2; }
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/>
+    </marker>
+    <marker id="arrow-leak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#0891b2"/>
+    </marker>
+    <marker id="arrow-accept" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#059669"/>
+    </marker>
+    <marker id="arrow-reject" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#dc2626"/>
+    </marker>
+  </defs>
+
+  <rect width="1400" height="800" fill="#ffffff"/>
+
+  <text x="700" y="40" class="title-main">漏桶限流算法 (Leaky Bucket)</text>
+  <text x="700" y="65" class="title-version">固定速率漏水 · 严格平滑输出 · 惰性计算 · ReentrantLock 线程安全</text>
+
+  <!-- 核心参数区 -->
+  <rect x="50" y="100" width="450" height="180" rx="12" fill="#eff6ff" stroke="#4f46e5" stroke-width="3"/>
+  <rect x="50" y="100" width="450" height="45" rx="12" fill="#4f46e5"/>
+  <text x="70" y="130" class="section-title">核心参数配置</text>
+
+  <rect x="70" y="165" width="200" height="95" rx="8" fill="#ffffff" stroke="#4f46e5" stroke-width="2"/>
+  <text x="90" y="190" class="step-label">桶容量 (capacity)</text>
+  <text x="90" y="210" class="param-text">最大缓冲: 50</text>
+  <text x="90" y="228" class="note-text">决定缓冲队列大小</text>
+  <text x="90" y="244" class="note-text">超出容量直接拒绝</text>
+
+  <rect x="290" y="165" width="200" height="95" rx="8" fill="#ffffff" stroke="#4f46e5" stroke-width="2"/>
+  <text x="310" y="190" class="step-label">漏水速率 (leakRate)</text>
+  <text x="310" y="210" class="param-text">请求/秒: 10.0</text>
+  <text x="310" y="228" class="note-text">恒定处理速率</text>
+  <text x="310" y="244" class="note-text">惰性计算: 请求时漏水</text>
+
+  <!-- 漏桶可视化 -->
+  <rect x="550" y="100" width="350" height="400" rx="12" fill="#f0fdf4" stroke="#059669" stroke-width="3"/>
+  <rect x="550" y="100" width="350" height="45" rx="12" fill="#059669"/>
+  <text x="570" y="130" class="section-title">漏桶状态</text>
+
+  <!-- 桶的形状 (倒梯形) -->
+  <path d="M 660 190 L 640 430 Q 640 440 650 440 L 800 440 Q 810 440 810 430 L 790 190 Q 790 185 785 185 L 665 185 Q 660 185 660 190 Z" fill="#e0f2fe" stroke="#0891b2" stroke-width="3"/>
+  
+  <!-- 容量刻度 -->
+  <line x1="620" y1="200" x2="640" y2="200" stroke="#64748b" stroke-width="2"/>
+  <text x="610" y="205" class="note-text" text-anchor="end">50</text>
+  <line x1="620" y1="260" x2="640" y2="260" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="3,3"/>
+  <text x="610" y="265" class="note-text" text-anchor="end">37</text>
+  <line x1="620" y1="320" x2="640" y2="320" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="3,3"/>
+  <text x="610" y="325" class="note-text" text-anchor="end">25</text>
+  <line x1="620" y1="380" x2="640" y2="380" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="3,3"/>
+  <text x="610" y="385" class="note-text" text-anchor="end">12</text>
+  <line x1="620" y1="440" x2="650" y2="440" stroke="#64748b" stroke-width="2"/>
+  <text x="610" y="445" class="note-text" text-anchor="end">0</text>
+
+  <!-- 当前水位 -->
+  <path d="M 652 320 L 642 430 Q 642 437 648 437 L 800 437 Q 806 437 806 430 L 798 320 Z" fill="#0891b2" opacity="0.8"/>
+  <text x="725" y="385" class="section-title" text-anchor="middle">30 水量</text>
+  
+  <!-- 请求注入箭头 -->
+  <line x1="725" y1="170" x2="725" y2="185" stroke="#059669" stroke-width="4" marker-end="url(#arrow-accept)"/>
+  <text x="725" y="165" class="param-text" text-anchor="middle">请求注入</text>
+
+  <!-- 漏水箭头 -->
+  <line x1="725" y1="445" x2="725" y2="475" stroke="#0891b2" stroke-width="4" marker-end="url(#arrow-leak)"/>
+  <text x="725" y="492" class="param-text" text-anchor="middle">-10/秒 恒定漏水</text>
+
+  <!-- 时间轴 -->
+  <text x="725" y="465" class="code-label" text-anchor="middle">waterLevel: 30</text>
+
+  <!-- 算法流程区 -->
+  <rect x="50" y="300" width="450" height="200" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="3"/>
+  <rect x="50" y="300" width="450" height="45" rx="12" fill="#d97706"/>
+  <text x="70" y="330" class="section-title">tryAcquire() 算法流程</text>
+
+  <rect x="70" y="365" width="200" height="120" rx="8" fill="#ffffff" stroke="#d97706" stroke-width="2"/>
+  <text x="90" y="388" class="step-label">Step 1: 惰性漏水</text>
+  <text x="90" y="408" class="code-label">long now = System.nanoTime();</text>
+  <text x="90" y="423" class="code-label">long elapsed = now - lastLeakTime;</text>
+  <text x="90" y="438" class="code-label">long leaked = </text>
+  <text x="95" y="453" class="code-label">  elapsed * leakRate / 1e9;</text>
+  <text x="90" y="468" class="code-label">waterLevel = max(0,</text>
+  <text x="95" y="480" class="code-label">  current - leaked);</text>
+
+  <rect x="290" y="365" width="200" height="120" rx="8" fill="#ffffff" stroke="#d97706" stroke-width="2"/>
+  <text x="310" y="388" class="step-label">Step 2: 检查并注入</text>
+  <text x="310" y="408" class="code-label">if (waterLevel + required</text>
+  <text x="315" y="423" class="code-label">    <= capacity) {</text>
+  <text x="315" y="438" class="code-label">  waterLevel += required;</text>
+  <text x="315" y="453" class="code-label">  return true; // 接受</text>
+  <text x="310" y="468" class="code-label">} else {</text>
+  <text x="315" y="480" class="code-label">  return false; // 桶满</text>
+
+  <!-- 时序示例 -->
+  <rect x="950" y="100" width="400" height="400" rx="12" fill="#fef2f2" stroke="#dc2626" stroke-width="3"/>
+  <rect x="950" y="100" width="400" height="45" rx="12" fill="#dc2626"/>
+  <text x="970" y="130" class="section-title">请求处理时序图</text>
+
+  <!-- 时间轴 -->
+  <line x1="970" y1="180" x2="1330" y2="180" stroke="#cbd5e1" stroke-width="2"/>
+  <text x="970" y="175" class="note-text">时间 →</text>
+
+  <!-- T0: 初始状态 -->
+  <circle cx="1000" cy="180" r="5" fill="#4f46e5"/>
+  <text x="1000" y="200" class="note-text" text-anchor="middle">T0</text>
+  <text x="1000" y="215" class="code-label" text-anchor="middle">水位: 0</text>
+
+  <!-- T1: 注入30个请求 -->
+  <circle cx="1100" cy="180" r="5" fill="#059669"/>
+  <line x1="1000" y1="180" x2="1100" y2="180" stroke="#059669" stroke-width="2" marker-end="url(#arrow-accept)"/>
+  <text x="1100" y="200" class="note-text" text-anchor="middle">T1 (+100ms)</text>
+  <text x="1100" y="215" class="code-label" text-anchor="middle">注入: 30</text>
+  <text x="1100" y="230" class="code-label" text-anchor="middle" fill="#059669">✓ 接受</text>
+  <text x="1100" y="245" class="param-text" text-anchor="middle">水位: 29 (0+30-1)</text>
+
+  <!-- T2: 注入25个请求 -->
+  <circle cx="1200" cy="180" r="5" fill="#dc2626"/>
+  <line x1="1100" y1="180" x2="1200" y2="180" stroke="#dc2626" stroke-width="2" marker-end="url(#arrow-reject)"/>
+  <text x="1200" y="200" class="note-text" text-anchor="middle">T2 (+200ms)</text>
+  <text x="1200" y="215" class="code-label" text-anchor="middle">注入: 25</text>
+  <text x="1200" y="230" class="code-label" text-anchor="middle" fill="#dc2626">✗ 桶满</text>
+  <text x="1200" y="245" class="param-text" text-anchor="middle">水位: 27 (29-2<50)</text>
+
+  <!-- T3: 漏水后再注入 -->
+  <circle cx="1300" cy="180" r="5" fill="#059669"/>
+  <line x1="1200" y1="180" x2="1300" y2="180" stroke="#059669" stroke-width="2" marker-end="url(#arrow-accept)"/>
+  <text x="1300" y="200" class="note-text" text-anchor="middle">T3 (+3s)</text>
+  <text x="1300" y="215" class="code-label" text-anchor="middle">注入: 20</text>
+  <text x="1300" y="230" class="code-label" text-anchor="middle" fill="#059669">✓ 接受</text>
+  <text x="1300" y="245" class="param-text" text-anchor="middle">水位: 17 (27-30+20)</text>
+
+  <!-- 特性说明与对比 -->
+  <rect x="970" y="270" width="360" height="215" rx="8" fill="#ffffff" stroke="#dc2626" stroke-width="2"/>
+  <text x="990" y="295" class="step-label">算法特性与对比</text>
+  
+  <text x="990" y="318" class="param-text">✓ 严格平滑输出</text>
+  <text x="1000" y="333" class="note-text">输出速率恒定,不受请求波动影响</text>
+  
+  <text x="990" y="356" class="param-text">✗ 不支持突发流量</text>
+  <text x="1000" y="371" class="note-text">vs 令牌桶: 桶满可突发消耗</text>
+  
+  <text x="990" y="394" class="param-text">✓ 下游保护强</text>
+  <text x="1000" y="409" class="note-text">适合处理能力有限的场景</text>
+  
+  <text x="990" y="432" class="param-text">✓ 惰性计算高效</text>
+  <text x="1000" y="447" class="note-text">无后台线程, 按时间差漏水</text>
+  
+  <text x="990" y="470" class="code-label">适用场景: MQ消费 / 下游限流 / 平滑处理</text>
+
+  <!-- 代码示例 -->
+  <rect x="50" y="520" width="1300" height="220" rx="12" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2"/>
+  <text x="70" y="550" class="step-label">使用示例与核心代码</text>
+
+  <text x="70" y="575" class="code-label">// 创建漏桶: 容量50, 每秒漏水10个请求</text>
+  <text x="70" y="590" class="code-label">LeakyBucket bucket = new LeakyBucket(50, 10);</text>
+  
+  <text x="70" y="610" class="code-label">// 尝试注入1个请求</text>
+  <text x="70" y="625" class="code-label">if (bucket.tryAcquire()) {</text>
+  <text x="85" y="640" class="code-label">    // 处理请求</text>
+  <text x="70" y="655" class="code-label">}</text>
+  
+  <text x="70" y="675" class="code-label">// 尝试注入5个请求</text>
+  <text x="70" y="690" class="code-label">if (bucket.tryAcquire(5)) {</text>
+  <text x="85" y="705" class="code-label">    // 批量处理</text>
+  <text x="70" y="720" class="code-label">}</text>
+
+  <text x="700" y="575" class="code-label">// 惰性漏水核心算法</text>
+  <text x="700" y="590" class="code-label">private void leakWater() {</text>
+  <text x="715" y="605" class="code-label">    long now = System.nanoTime();</text>
+  <text x="715" y="620" class="code-label">    long elapsedNanos = now - lastLeakTimeNanos.get();</text>
+  <text x="715" y="635" class="code-label">    long leakedAmount = (long)(elapsedNanos * leakRate / 1e9);</text>
+  <text x="715" y="650" class="code-label">    if (leakedAmount > 0 && lastLeakTimeNanos.compareAndSet(last, now)) {</text>
+  <text x="730" y="665" class="code-label">        long newLevel = Math.max(0, current - leakedAmount);</text>
+  <text x="730" y="680" class="code-label">        waterLevel.set(newLevel);</text>
+  <text x="715" y="695" class="code-label">    }</text>
+  <text x="700" y="710" class="code-label">}</text>
+
+  <text x="700" y="770" class="code-label" text-anchor="middle">© 2026 Apex Team · 漏桶限流算法 v1.0 · com.apex.scaffold.common.util.ratelimit.algorithm.LeakyBucket</text>
+</svg>

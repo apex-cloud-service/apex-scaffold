@@ -21,9 +21,47 @@ import org.mapstruct.ReportingPolicy;
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface OffMessageAssembler {
 
+    /**
+     *
+     *
+     * 将消息实体转换为DTO。
+     *
+     *
+     *
+     *
+     *
+     * @param entity 消息实体
+     *
+     *
+     * @return 消息DTO
+     *
+     *
+     */
     MessageDTO toDTO(OffMessageEntity entity);
 
+    /**
+     *
+     *
+     * 将消息实体列表转换为DTO列表。
+     *
+     *
+     *
+     *
+     *
+     * @param entities 消息实体列表
+     *
+     *
+     * @return 消息DTO列表
+     *
+     *
+     */
     List<MessageDTO> toDTOList(List<OffMessageEntity> entities);
 
+    /**
+     * 将发送消息请求转换为消息实体。
+     *
+     * @param request 发送消息请求
+     * @return 消息实体
+     */
     OffMessageEntity toEntity(SendMessageRequest request);
 }

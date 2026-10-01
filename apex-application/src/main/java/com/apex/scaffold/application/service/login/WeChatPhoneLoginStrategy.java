@@ -173,9 +173,7 @@ public class WeChatPhoneLoginStrategy extends AbstractPhoneLoginStrategy {
             user.setAvatarUrl(wxUserInfo.getAvatarUrl());
         }
         // 性别合并策略：注册时选定的性别不可被微信覆盖，仅数据库为空时从微信同步
-        if (user.getGender() == null
-                && wxUserInfo.getGender() != null
-                && (wxUserInfo.getGender() == 1 || wxUserInfo.getGender() == 2)) {
+        if (shouldSyncGenderFromWechat(user, wxUserInfo)) {
             user.setGender(wxUserInfo.getGender());
         }
         if (wxUserInfo.getCountry() != null && !wxUserInfo.getCountry().isBlank()) {
@@ -190,6 +188,22 @@ public class WeChatPhoneLoginStrategy extends AbstractPhoneLoginStrategy {
         if (wxUserInfo.getLanguage() != null && !wxUserInfo.getLanguage().isBlank()) {
             user.setLanguage(wxUserInfo.getLanguage());
         }
+    }
+
+    /**
+     * 判断是否应该从微信同步性别信息。
+     *
+     * <p>业务规则：仅当用户性别为空且微信提供了有效性别值（1-男性或2-女性）时才同步。
+     * 微信性别枚举：1-男性，2-女性，0-未设置。
+     *
+     * @param user 用户实体
+     * @param wxUserInfo 微信用户信息
+     * @return true 表示应该同步性别
+     */
+    private boolean shouldSyncGenderFromWechat(UserEntity user, WeChatGateway.WeChatUserInfo wxUserInfo) {
+        return user.getGender() == null
+                && wxUserInfo.getGender() != null
+                && (wxUserInfo.getGender() == 1 || wxUserInfo.getGender() == 2);
     }
 
     /**

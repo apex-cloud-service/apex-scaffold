@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 800" width="1400" height="800">
+  <defs>
+    <style>
+      .title-main { font: 700 28px system-ui, sans-serif; fill: #f8fafc; }
+      .title-sub { font: 500 13px system-ui, sans-serif; fill: #94a3b8; }
+      .layer-title { font: 600 16px system-ui, sans-serif; fill: #ffffff; }
+      .section-title { font: 600 14px system-ui, sans-serif; fill: #f8fafc; }
+      .label-text { font: 500 12px system-ui, sans-serif; fill: #e2e8f0; }
+      .code-text { font: 400 11px 'SF Mono', monospace; fill: #38bdf8; }
+      .note-text { font: 400 11px system-ui, sans-serif; fill: #cbd5e1; }
+      .highlight { font: 600 12px system-ui, sans-serif; fill: #fbbf24; }
+    </style>
+    <linearGradient id="grad-primary" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e40af;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1e3a8a;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="grad-success" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#059669;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#047857;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="grad-warning" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#d97706;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#b45309;stop-opacity:1" />
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/>
+    </marker>
+    <marker id="arrow-white" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#e2e8f0"/>
+    </marker>
+  </defs>
+
+  <rect width="1400" height="800" fill="#0f172a"/>
+
+  <text x="700" y="35" class="title-main" text-anchor="middle">操作日志切面架构 (OperationLogAspect)</text>
+  <text x="700" y="55" class="title-sub" text-anchor="middle">AOP拦截 · 异步批量入库 · 响应式/同步双模式 · 阻塞队列 · Reactor Context传递</text>
+
+  <rect x="40" y="80" width="680" height="330" rx="8" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+  <rect x="40" y="80" width="680" height="35" rx="8" fill="url(#grad-primary)"/>
+  <text x="60" y="103" class="layer-title">1. AOP拦截与注解解析</text>
+
+  <rect x="60" y="130" width="310" height="260" rx="6" fill="#0f172a" stroke="#475569" stroke-width="1.5"/>
+  <text x="80" y="152" class="section-title">@Around 切面入口</text>
+  <text x="80" y="172" class="code-text">@Around("@annotation(operationLog)")</text>
+  <text x="80" y="188" class="label-text">• 拦截标注 @OperationLog 的方法</text>
+  <text x="80" y="204" class="label-text">• 捕获 traceId 和 tenantId</text>
+  <text x="80" y="220" class="label-text">• 构建 OperationLogEntity</text>
+  <line x1="80" y1="230" x2="340" y2="230" stroke="#334155" stroke-width="1"/>
+  <text x="80" y="248" class="section-title">注解属性读取</text>
+  <text x="80" y="264" class="code-text">module: 模块名称</text>
+  <text x="80" y="278" class="code-text">type: 操作类型(QUERY/CREATE/UPDATE)</text>
+  <text x="80" y="292" class="code-text">description: 操作描述</text>
+  <line x1="80" y1="302" x2="340" y2="302" stroke="#334155" stroke-width="1"/>
+  <text x="80" y="320" class="section-title">请求信息提取</text>
+  <text x="80" y="336" class="label-text">• 解析 ServerRequest/ServerWebExchange</text>
+  <text x="80" y="352" class="label-text">• 提取 URI、Method、IP、User-Agent</text>
+  <text x="80" y="368" class="label-text">• 记录请求参数(可配置截断长度)</text>
+
+  <rect x="390" y="130" width="310" height="260" rx="6" fill="#0f172a" stroke="#475569" stroke-width="1.5"/>
+  <text x="410" y="152" class="section-title">返回类型判断</text>
+  <text x="410" y="172" class="code-text">isMonoReturnType(joinPoint)</text>
+  <text x="410" y="188" class="highlight">▸ Mono → 响应式处理</text>
+  <text x="410" y="204" class="highlight">▸ 其他 → 同步处理</text>
+  <line x1="410" y1="214" x2="670" y2="214" stroke="#334155" stroke-width="1"/>
+  <text x="410" y="232" class="section-title">配置参数</text>
+  <text x="410" y="248" class="code-text">operation-log.enabled: true</text>
+  <text x="410" y="262" class="code-text">operation-log.log-params: true</text>
+  <text x="410" y="276" class="code-text">operation-log.log-result: true</text>
+  <text x="410" y="290" class="code-text">max-param-length: 2000</text>
+  <text x="410" y="304" class="code-text">max-result-length: 2000</text>
+  <line x1="410" y1="314" x2="670" y2="314" stroke="#334155" stroke-width="1"/>
+  <text x="410" y="332" class="section-title">User-Agent 解析</text>
+  <text x="410" y="348" class="label-text">• 浏览器: Chrome/Edge/Safari/Firefox</text>
+  <text x="410" y="364" class="label-text">• 设备: Mobile/Tablet/Desktop</text>
+  <text x="410" y="380" class="label-text">• 操作系统: Windows/macOS/iOS/Android</text>
+
+  <line x1="360" y1="260" x2="390" y2="260" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <rect x="40" y="430" width="420" height="320" rx="8" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+  <rect x="40" y="430" width="420" height="35" rx="8" fill="url(#grad-success)"/>
+  <text x="60" y="453" class="layer-title">2. 响应式处理链路 (Mono)</text>
+
+  <rect x="60" y="480" width="380" height="250" rx="6" fill="#0f172a" stroke="#475569" stroke-width="1.5"/>
+  <text x="80" y="502" class="section-title">flatMap 成功链路</text>
+  <text x="80" y="518" class="code-text">((Mono) joinPoint.proceed())</text>
+  <text x="90" y="534" class="label-text">.flatMap(result → {</text>
+  <text x="100" y="550" class="code-text">logEntity.setStatus(0);</text>
+  <text x="100" y="566" class="code-text">setResponseInfo(result);</text>
+  <text x="100" y="582" class="code-text">completeLog(startTime);</text>
+  <text x="100" y="598" class="highlight">return enrichUserInfo(logEntity)</text>
+  <text x="110" y="614" class="code-text">.doFinally(s → enqueue(tenantId))</text>
+  <text x="110" y="630" class="code-text">.thenReturn(result);</text>
+  <text x="90" y="646" class="label-text">})</text>
+  <line x1="80" y1="656" x2="410" y2="656" stroke="#334155" stroke-width="1"/>
+  <text x="80" y="674" class="section-title">onErrorResume 异常链路</text>
+  <text x="90" y="690" class="label-text">.onErrorResume(error → {</text>
+  <text x="100" y="706" class="code-text">logEntity.setStatus(1);</text>
+  <text x="100" y="722" class="code-text">logEntity.setErrorMsg(error);</text>
+  <rect x="470" y="430" width="450" height="320" rx="8" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+  <rect x="470" y="430" width="450" height="35" rx="8" fill="url(#grad-warning)"/>
+  <text x="490" y="453" class="layer-title">3. 同步处理链路 (非Mono)</text>
+
+  <rect x="490" y="480" width="410" height="250" rx="6" fill="#0f172a" stroke="#475569" stroke-width="1.5"/>
+  <text x="510" y="502" class="section-title">try-catch-finally 结构</text>
+  <text x="510" y="518" class="code-text">try {</text>
+  <text x="520" y="534" class="code-text">Object result = joinPoint.proceed();</text>
+  <text x="520" y="550" class="code-text">logEntity.setStatus(0);</text>
+  <text x="520" y="566" class="code-text">setResponseInfo(result);</text>
+  <text x="520" y="582" class="code-text">return result;</text>
+  <text x="510" y="598" class="code-text">} catch (Exception e) {</text>
+  <text x="520" y="614" class="code-text">logEntity.setStatus(1);</text>
+  <text x="520" y="630" class="code-text">logEntity.setErrorMsg(e);</text>
+  <text x="520" y="646" class="code-text">throw e;</text>
+  <text x="510" y="662" class="code-text">} finally {</text>
+  <text x="520" y="678" class="highlight">enrichUserInfoSync(logEntity);</text>
+  <text x="520" y="694" class="code-text">completeLog(startTime);</text>
+  <text x="520" y="710" class="code-text">enqueueLog(tenantId);</text>
+  <text x="510" y="726" class="code-text">}</text>
+
+  <rect x="940" y="80" width="420" height="670" rx="8" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+  <rect x="940" y="80" width="420" height="35" rx="8" fill="url(#grad-primary)"/>
+  <text x="960" y="103" class="layer-title">4. 异步批量入库与租户传递</text>
+
+  <rect x="960" y="130" width="380" height="180" rx="6" fill="#0f172a" stroke="#475569" stroke-width="1.5"/>
+  <text x="980" y="152" class="section-title">用户信息补全</text>
+  <text x="980" y="168" class="code-text">enrichUserInfo(logEntity): Mono&lt;Void&gt;</text>
+  <text x="990" y="184" class="label-text">▸ ReactiveSecurityContextHolder.getContext()</text>
+  <text x="990" y="200" class="label-text">▸ auth.getName() → openId</text>
+  <text x="990" y="216" class="label-text">▸ userService.getByOpenId(openId)</text>
+  <text x="990" y="232" class="label-text">▸ 填充 userId 和 userName</text>
+  <line x1="980" y1="242" x2="1320" y2="242" stroke="#334155" stroke-width="1"/>
+  <text x="980" y="260" class="section-title">同步路径降级</text>
+  <text x="980" y="276" class="code-text">enrichUserInfoSync(logEntity)</text>
+  <text x="990" y="292" class="label-text">▸ SecurityContextHolder.getContext()</text>
+  <text x="990" y="308" class="label-text">▸ 仅填充 userName (openId)</text>
+
+  <rect x="960" y="325" width="380" height="210" rx="6" fill="#0f172a" stroke="#475569" stroke-width="1.5"/>
+  <text x="980" y="347" class="section-title">租户上下文传递</text>
+  <text x="980" y="363" class="code-text">String tenantIdAtEntry = TenantContext</text>
+  <text x="990" y="379" class="code-text">.currentTenantId().orElse(null);</text>
+  <text x="980" y="395" class="highlight">关键设计: 切面入口捕获租户ID</text>
+  <text x="990" y="411" class="note-text">• 异步切线程后 ThreadLocal 丢失</text>
+  <text x="990" y="427" class="note-text">• 传参到 saveAsync 显式安装/恢复</text>
+  <text x="990" y="443" class="note-text">• 保证 MyBatis 租户拦截器正确读取</text>
+  <line x1="980" y1="453" x2="1320" y2="453" stroke="#334155" stroke-width="1"/>
+  <text x="980" y="471" class="section-title">异步入库</text>
+  <text x="980" y="487" class="code-text">enqueueLog(logEntity, tenantIdAtEntry)</text>
+  <text x="990" y="503" class="label-text">▸ operationLogService.saveAsync()</text>
+  <text x="990" y="519" class="label-text">▸ 阻塞队列 + 批量写入</text>
+  <text x="990" y="535" class="label-text">▸ 消费线程显式装配租户上下文</text>
+
+  <rect x="960" y="550" width="380" height="180" rx="6" fill="#0f172a" stroke="#475569" stroke-width="1.5"/>
+  <text x="980" y="572" class="section-title">批量入库机制</text>
+  <text x="980" y="588" class="code-text">BlockingQueue&lt;LogTask&gt; queue</text>
+  <text x="990" y="604" class="label-text">▸ 生产者: 切面线程 offer(logEntity)</text>
+  <text x="990" y="620" class="label-text">▸ 消费者: 专用线程池 take() 批量</text>
+  <text x="990" y="636" class="label-text">▸ 批量大小: 100条 或 5秒超时</text>
+  <text x="990" y="652" class="label-text">▸ 阻塞IO隔离: BlockingIoSchedulers.jdbc()</text>
+  <line x1="980" y1="662" x2="1320" y2="662" stroke="#334155" stroke-width="1"/>
+  <text x="980" y="680" class="section-title">性能优化</text>
+  <text x="990" y="696" class="label-text">• 异步处理不阻塞业务请求</text>
+  <text x="990" y="712" class="label-text">• 批量合并减少数据库写入次数</text>
+
+  <line x1="360" y1="600" x2="470" y2="600" stroke="#e2e8f0" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arrow-white)"/>
+  <line x1="720" y1="430" x2="720" y2="390" stroke="#e2e8f0" stroke-width="2" marker-end="url(#arrow-white)"/>
+  <line x1="720" y1="390" x2="940" y2="390" stroke="#e2e8f0" stroke-width="2" marker-end="url(#arrow-white)"/>
+
+  <text x="20" y="785" class="note-text">© 2026 Apex Team · 操作日志切面架构 v1.0</text>
+</svg>

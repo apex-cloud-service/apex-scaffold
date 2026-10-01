@@ -41,7 +41,11 @@ public class BiometricAuthServiceImpl implements BiometricAuthService {
     private final ReactiveStringRedisTemplate redisTemplate;
 
     private static final String CHALLENGE_PREFIX = "biometric:challenge:";
-    private static final long CHALLENGE_TIMEOUT = 60000L; // 60秒
+
+    /**
+     * 认证挑战超时时间(60秒)
+     */
+    private static final long CHALLENGE_TIMEOUT = 60000L;
 
     @Override
     public Mono<BiometricAuth> registerBiometric(

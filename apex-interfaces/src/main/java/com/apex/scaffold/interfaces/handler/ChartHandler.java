@@ -3,6 +3,7 @@ package com.apex.scaffold.interfaces.handler;
 import com.apex.scaffold.application.dto.data.ChartQueryRequest;
 import com.apex.scaffold.application.dto.data.ChartRequest;
 import com.apex.scaffold.application.service.ChartService;
+import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.result.Result;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -51,6 +52,7 @@ public class ChartHandler {
      * @param request HTTP 请求对象，请求体为图表配置信息 JSON
      * @return 包含新建图表信息的统一成功响应
      */
+    @OperationLog(module = "图表管理", type = OperationLog.OperationType.INSERT, description = "创建图表")
     @Operation(summary = "创建图表")
     @PreAuthorize("hasAuthority('data:chart:create')")
     public Mono<ServerResponse> create(ServerRequest request) {
@@ -67,6 +69,7 @@ public class ChartHandler {
      * @param request HTTP 请求对象，路径参数包含图表 ID，请求体为图表配置信息 JSON
      * @return 包含更新后图表信息的统一成功响应
      */
+    @OperationLog(module = "图表管理", type = OperationLog.OperationType.UPDATE, description = "更新图表")
     @Operation(summary = "更新图表")
     @PreAuthorize("hasAuthority('data:chart:update')")
     public Mono<ServerResponse> update(ServerRequest request) {
@@ -84,6 +87,7 @@ public class ChartHandler {
      * @param request HTTP 请求对象，路径参数包含图表 ID
      * @return 删除成功的统一成功响应
      */
+    @OperationLog(module = "图表管理", type = OperationLog.OperationType.DELETE, description = "删除图表")
     @Operation(summary = "删除图表")
     @PreAuthorize("hasAuthority('data:chart:delete')")
     public Mono<ServerResponse> delete(ServerRequest request) {
@@ -157,6 +161,7 @@ public class ChartHandler {
      * @param request HTTP 请求对象，路径参数包含图表 ID，请求体包含状态值
      * @return 更新成功的统一成功响应
      */
+    @OperationLog(module = "图表管理", type = OperationLog.OperationType.UPDATE, description = "更新图表状态")
     @Operation(summary = "更新图表状态")
     @PreAuthorize("hasAuthority('data:chart:update')")
     public Mono<ServerResponse> updateStatus(ServerRequest request) {
@@ -167,7 +172,9 @@ public class ChartHandler {
     }
 
     @Data
-    private static class UpdateStatusRequest {
+    @io.swagger.v3.oas.annotations.media.Schema(description = "图表状态更新请求")
+    public static class UpdateStatusRequest {
+        @io.swagger.v3.oas.annotations.media.Schema(description = "图表状态：0-草稿，1-正常", example = "1")
         private Integer status;
     }
 }

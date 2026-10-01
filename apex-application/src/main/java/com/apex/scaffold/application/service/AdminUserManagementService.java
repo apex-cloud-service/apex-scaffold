@@ -40,6 +40,10 @@ import reactor.core.publisher.Mono;
 @Service
 public class AdminUserManagementService {
 
+    private static final int MAX_RETRY_COUNT = 5;
+
+    private static final int DEFAULT_PAGE_SIZE = 100;
+
     /** 无活跃心跳/登录时判定为不活跃的天数阈值。 */
     private static final long INACTIVE_DAYS_THRESHOLD = 30L;
 
@@ -113,13 +117,13 @@ public class AdminUserManagementService {
      * @param keyword 搜索关键字，可为空
      * @param status 状态过滤，可为空
      * @param pageNum 页码，从 1 开始
-     * @param pageSize 每页条数，限制在 1 到 100
+     * @param pageSize 每页条数，限制在 1 到 DEFAULT_PAGE_SIZE
      * @return 用户摘要分页结果
      */
     @DataScope
     public Mono<PageResponse<AdminUserSummaryResponse>> search(
             String operatorOpenId, String keyword, Integer status, int pageNum, int pageSize) {
-        if (pageNum < 1 || pageSize < 1 || pageSize > 100) {
+        if (pageNum < 1 || pageSize < 1 || pageSize > DEFAULT_PAGE_SIZE) {
             return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "分页参数不合法"));
         }
         return assertSuperAdmin(operatorOpenId)
@@ -457,7 +461,8 @@ public class AdminUserManagementService {
      */
     private String activityStatus(UserEntity user) {
         java.time.LocalDateTime now = java.time.LocalDateTime.now();
-        if (user.getLastHeartbeatTime() != null && user.getLastHeartbeatTime().isAfter(now.minusMinutes(5))) {
+        if (user.getLastHeartbeatTime() != null
+                && user.getLastHeartbeatTime().isAfter(now.minusMinutes(MAX_RETRY_COUNT))) {
             return "ONLINE";
         }
         if (user.getLastLoginTime() != null

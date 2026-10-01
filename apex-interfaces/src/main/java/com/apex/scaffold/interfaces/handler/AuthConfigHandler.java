@@ -1,0 +1,449 @@
+package com.apex.scaffold.interfaces.handler;
+
+import com.apex.scaffold.application.dto.admin.JwtConfigRequest;
+import com.apex.scaffold.application.dto.admin.JwtTestRequest;
+import com.apex.scaffold.application.dto.admin.JwtTestResponse;
+import com.apex.scaffold.application.dto.admin.PermissionSyncResult;
+import com.apex.scaffold.application.dto.admin.SecurityPolicyRequest;
+import com.apex.scaffold.application.dto.admin.SessionConfigRequest;
+import com.apex.scaffold.application.service.*;
+import com.apex.scaffold.common.annotation.OperationLog;
+import com.apex.scaffold.common.annotation.RequirePermission;
+import com.apex.scaffold.interfaces.util.MessageUtils;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Validator;
+import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.server.ServerRequest;
+import org.springframework.web.reactive.function.server.ServerResponse;
+import reactor.core.publisher.Mono;
+
+/**
+ * 认证授权配置处理器(函数式端点)。
+ *
+ * <p>提供系统认证授权配置的管理 API,包括 JWT 配置、会话配置、安全策略配置的查询和更新,
+ * 以及权限同步功能。同时提供别名路由,复用现有的 OAuth2 客户端、在线会话、登录日志和权限列表查询服务。
+ *
+ * <h2>核心功能</h2>
+ * <ul>
+ *   <li>JWT 配置管理:查询和更新 JWT 签发者、密钥、令牌有效期等配置</li>
+ *   <li>会话配置管理:查询和更新会话超时、并发控制、记住我等配置</li>
+ *   <li>安全策略管理:查询和更新密码策略、登录锁定、验证码等配置</li>
+ *   <li>权限同步:扫描代码中的 @RequirePermission 注解,对比数据库,返回新增和废弃的权限码清单</li>
+ *   <li>别名路由:复用现有服务,提供统一的认证授权配置入口</li>
+ * </ul>
+ *
+ * <h2>接口清单</h2>
+ * <ul>
+ *   <li>GET /admin-api/v1/auth/config/jwt - 查询 JWT 配置</li>
+ *   <li>PUT /admin-api/v1/auth/config/jwt - 更新 JWT 配置</li>
+ *   <li>GET /admin-api/v1/auth/config/session - 查询会话配置</li>
+ *   <li>PUT /admin-api/v1/auth/config/session - 更新会话配置</li>
+ *   <li>GET /admin-api/v1/auth/config/security - 查询安全策略</li>
+ *   <li>PUT /admin-api/v1/auth/config/security - 更新安全策略</li>
+ *   <li>POST /admin-api/v1/auth/config/permissions/sync - 同步权限码</li>
+ *   <li>GET /admin-api/v1/auth/config/oauth2/clients - OAuth2 客户端列表(别名)</li>
+ *   <li>GET /admin-api/v1/auth/config/sessions - 在线会话列表(别名)</li>
+ *   <li>POST /admin-api/v1/auth/config/sessions/kickout - 踢出会话(别名)</li>
+ *   <li>GET /admin-api/v1/auth/config/login-logs - 登录日志列表(别名)</li>
+ *   <li>GET /admin-api/v1/auth/config/permissions - 权限列表(别名)</li>
+ * </ul>
+ *
+ * @author Apex Team
+ * @version 1.0.0
+ * @since 1.0.0
+ */
+@Component
+@Tag(name = "后台-认证授权配置", description = "系统认证授权配置管理,包括 JWT、会话、安全策略和权限同步")
+public class AuthConfigHandler extends BaseHandler {
+
+    private final SysJwtConfigService jwtConfigService;
+    private final SysSessionConfigService sessionConfigService;
+    private final SysSecurityPolicyService securityPolicyService;
+    private final PermissionSyncService permissionSyncService;
+    private final OAuth2ClientManagementService oauth2ClientManagementService;
+    private final OnlineUserQueryService onlineUserQueryService;
+    private final LoginLogService loginLogService;
+    private final PermissionService permissionService;
+
+    public AuthConfigHandler(
+            SysJwtConfigService jwtConfigService,
+            SysSessionConfigService sessionConfigService,
+            SysSecurityPolicyService securityPolicyService,
+            PermissionSyncService permissionSyncService,
+            OAuth2ClientManagementService oauth2ClientManagementService,
+            OnlineUserQueryService onlineUserQueryService,
+            LoginLogService loginLogService,
+            PermissionService permissionService,
+            MessageUtils messageUtils,
+            Validator validator) {
+        super(messageUtils, validator);
+        this.jwtConfigService = jwtConfigService;
+        this.sessionConfigService = sessionConfigService;
+        this.securityPolicyService = securityPolicyService;
+        this.permissionSyncService = permissionSyncService;
+        this.oauth2ClientManagementService = oauth2ClientManagementService;
+        this.onlineUserQueryService = onlineUserQueryService;
+        this.loginLogService = loginLogService;
+        this.permissionService = permissionService;
+    }
+
+    /**
+     * 查询当前租户的 JWT 配置。
+     *
+     * <p>返回 JWT 签发者、签名算法、令牌有效期等配置信息。
+     * 密钥字段自动掩码为 "******",不暴露真实密钥。
+     *
+     * @param request HTTP 请求
+     * @return 带 traceId 的统一成功响应,data 为 JWT 配置 DTO
+     */
+    @RequirePermission("system:auth:config:jwt:query")
+    @Operation(
+            operationId = "getJwtConfig",
+            summary = "查询 JWT 配置",
+            description = "查询当前租户的 JWT 令牌配置,包括签发者、签名算法、令牌有效期等。密钥字段已脱敏")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "查询成功"),
+        @ApiResponse(responseCode = "401", description = "未授权,需要登录"),
+        @ApiResponse(responseCode = "403", description = "权限不足,需要 system:auth:config:jwt:query 权限"),
+        @ApiResponse(responseCode = "404", description = "JWT 配置不存在")
+    })
+    public Mono<ServerResponse> getJwtConfig(ServerRequest request) {
+        return jwtConfigService.getByTenantId().flatMap(this::buildSuccess);
+    }
+
+    /**
+     * 更新当前租户的 JWT 配置。
+     *
+     * <p>更新 JWT 签发者、签名算法、令牌有效期等配置。
+     * 更新后会发布 {@code JwtConfigUpdatedEvent} 事件,通知相关组件刷新配置。
+     *
+     * @param request HTTP 请求,请求体包含 JWT 配置信息
+     * @return 带 traceId 的统一成功响应,data 为更新后的 JWT 配置 DTO
+     */
+    @RequirePermission("system:auth:config:jwt:edit")
+    @Operation(operationId = "updateJwtConfig", summary = "更新 JWT 配置", description = "更新当前租户的 JWT 令牌配置,更新后立即生效")
+    @RequestBody(description = "JWT 配置更新请求", required = true, content = @Content(mediaType = "application/json"))
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "更新成功"),
+        @ApiResponse(responseCode = "400", description = "参数校验失败"),
+        @ApiResponse(responseCode = "401", description = "未授权,需要登录"),
+        @ApiResponse(responseCode = "403", description = "权限不足,需要 system:auth:config:jwt:edit 权限"),
+        @ApiResponse(responseCode = "404", description = "JWT 配置不存在")
+    })
+    @OperationLog(module = "认证授权配置", type = OperationLog.OperationType.UPDATE, description = "更新 JWT 配置")
+    public Mono<ServerResponse> updateJwtConfig(ServerRequest request) {
+        return parseBody(request, JwtConfigRequest.class)
+                .flatMap(jwtConfigService::update)
+                .flatMap(this::buildSuccess);
+    }
+
+    /**
+     * 查询当前租户的会话配置。
+     *
+     * <p>返回会话超时时间、最大并发会话数、并发控制策略、记住我功能等配置信息。
+     *
+     * @param request HTTP 请求
+     * @return 带 traceId 的统一成功响应,data 为会话配置 DTO
+     */
+    @RequirePermission("system:auth:config:session:query")
+    @Operation(operationId = "getSessionConfig", summary = "查询会话配置", description = "查询当前租户的会话管理配置,包括会话超时、并发控制、记住我功能等")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "查询成功"),
+        @ApiResponse(responseCode = "401", description = "未授权,需要登录"),
+        @ApiResponse(responseCode = "403", description = "权限不足,需要 system:auth:config:session:query 权限"),
+        @ApiResponse(responseCode = "404", description = "会话配置不存在")
+    })
+    public Mono<ServerResponse> getSessionConfig(ServerRequest request) {
+        return sessionConfigService.getByTenantId().flatMap(this::buildSuccess);
+    }
+
+    /**
+     * 更新当前租户的会话配置。
+     *
+     * <p>更新会话超时时间、最大并发会话数、并发控制策略、记住我功能等配置。
+     * 更新后立即生效,影响新建的会话。
+     *
+     * @param request HTTP 请求,请求体包含会话配置信息
+     * @return 带 traceId 的统一成功响应,data 为更新后的会话配置 DTO
+     */
+    @RequirePermission("system:auth:config:session:edit")
+    @Operation(operationId = "updateSessionConfig", summary = "更新会话配置", description = "更新当前租户的会话管理配置,更新后对新会话立即生效")
+    @RequestBody(description = "会话配置更新请求", required = true, content = @Content(mediaType = "application/json"))
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "更新成功"),
+        @ApiResponse(responseCode = "400", description = "参数校验失败"),
+        @ApiResponse(responseCode = "401", description = "未授权,需要登录"),
+        @ApiResponse(responseCode = "403", description = "权限不足,需要 system:auth:config:session:edit 权限"),
+        @ApiResponse(responseCode = "404", description = "会话配置不存在")
+    })
+    @OperationLog(module = "认证授权配置", type = OperationLog.OperationType.UPDATE, description = "更新会话配置")
+    public Mono<ServerResponse> updateSessionConfig(ServerRequest request) {
+        return parseBody(request, SessionConfigRequest.class)
+                .flatMap(sessionConfigService::update)
+                .flatMap(this::buildSuccess);
+    }
+
+    /**
+     * 查询当前租户的安全策略配置。
+     *
+     * <p>返回密码策略(最小长度、复杂度要求、过期天数)、登录锁定策略(失败次数、锁定时长)、
+     * 验证码策略等配置信息。
+     *
+     * @param request HTTP 请求
+     * @return 带 traceId 的统一成功响应,data 为安全策略配置 DTO
+     */
+    @RequirePermission("system:auth:config:security:query")
+    @Operation(
+            operationId = "getSecurityPolicy",
+            summary = "查询安全策略",
+            description = "查询当前租户的安全策略配置,包括密码策略、登录锁定策略、验证码策略等")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "查询成功"),
+        @ApiResponse(responseCode = "401", description = "未授权,需要登录"),
+        @ApiResponse(responseCode = "403", description = "权限不足,需要 system:auth:config:security:query 权限"),
+        @ApiResponse(responseCode = "404", description = "安全策略不存在")
+    })
+    public Mono<ServerResponse> getSecurityPolicy(ServerRequest request) {
+        return securityPolicyService.getByTenantId().flatMap(this::buildSuccess);
+    }
+
+    /**
+     * 更新当前租户的安全策略配置。
+     *
+     * <p>更新密码策略、登录锁定策略、验证码策略等配置。
+     * 更新后立即生效,影响新的登录和密码验证。
+     *
+     * @param request HTTP 请求,请求体包含安全策略配置信息
+     * @return 带 traceId 的统一成功响应,data 为更新后的安全策略配置 DTO
+     */
+    @RequirePermission("system:auth:config:security:edit")
+    @Operation(operationId = "updateSecurityPolicy", summary = "更新安全策略", description = "更新当前租户的安全策略配置,更新后立即生效")
+    @RequestBody(description = "安全策略配置更新请求", required = true, content = @Content(mediaType = "application/json"))
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "更新成功"),
+        @ApiResponse(responseCode = "400", description = "参数校验失败"),
+        @ApiResponse(responseCode = "401", description = "未授权,需要登录"),
+        @ApiResponse(responseCode = "403", description = "权限不足,需要 system:auth:config:security:edit 权限"),
+        @ApiResponse(responseCode = "404", description = "安全策略不存在")
+    })
+    @OperationLog(module = "认证授权配置", type = OperationLog.OperationType.UPDATE, description = "更新安全策略")
+    public Mono<ServerResponse> updateSecurityPolicy(ServerRequest request) {
+        return parseBody(request, SecurityPolicyRequest.class)
+                .flatMap(securityPolicyService::update)
+                .flatMap(this::buildSuccess);
+    }
+
+    /**
+     * 同步权限码。
+     *
+     * <p>扫描 Spring 容器中所有 Bean 的方法,提取 {@code @RequirePermission} 注解标注的权限码,
+     * 与数据库中的 {@code sys_permission} 表对比,返回新增和废弃的权限码清单。
+     * 管理员可以根据清单手动决定是否批量写入或删除权限。
+     *
+     * @param request HTTP 请求
+     * @return 带 traceId 的统一成功响应,data 为权限同步结果(包含新增列表和废弃列表)
+     */
+    @RequirePermission("system:auth:config:permission:sync")
+    @Operation(
+            operationId = "syncPermissions",
+            summary = "同步权限码",
+            description = "扫描代码中的 @RequirePermission 注解,对比数据库,返回新增和废弃的权限码清单")
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "同步成功",
+                content = @Content(schema = @Schema(implementation = PermissionSyncResult.class))),
+        @ApiResponse(responseCode = "401", description = "未授权,需要登录"),
+        @ApiResponse(responseCode = "403", description = "权限不足,需要 system:auth:config:permission:sync 权限")
+    })
+    @OperationLog(module = "认证授权配置", type = OperationLog.OperationType.SELECT, description = "同步权限码")
+    public Mono<ServerResponse> syncPermissions(ServerRequest request) {
+        return permissionSyncService.syncPermissions().flatMap(this::buildSuccess);
+    }
+
+    /**
+     * 查询 OAuth2 客户端列表(别名路由)。
+     *
+     * <p>委托给 {@link OAuth2ClientManagementService},复用现有的 OAuth2 客户端查询逻辑。
+     *
+     * @param request HTTP 请求,支持分页参数 page、size
+     * @return 带 traceId 的统一成功响应,data 为 OAuth2 客户端分页列表
+     */
+    @RequirePermission("system:oauth2:client:list")
+    @Operation(
+            operationId = "listOAuth2ClientsAlias",
+            summary = "查询 OAuth2 客户端列表",
+            description = "分页查询 OAuth2 客户端列表,支持按客户端 ID 和名称模糊查询")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "查询成功"),
+        @ApiResponse(responseCode = "401", description = "未授权,需要登录"),
+        @ApiResponse(responseCode = "403", description = "权限不足,需要 system:oauth2:client:list 权限")
+    })
+    public Mono<ServerResponse> listOAuth2Clients(ServerRequest request) {
+        int page = safeParseInt(request.queryParam("page").orElse("1"), 1);
+        int size = safeParseInt(request.queryParam("size").orElse("20"), 20);
+
+        return oauth2ClientManagementService
+                .listClients(page, size)
+                .collectList()
+                .flatMap(this::buildSuccess);
+    }
+
+    /**
+     * 查询在线会话列表(别名路由)。
+     *
+     * <p>委托给 {@link OnlineUserQueryService},复用现有的在线用户查询逻辑。
+     *
+     * @param request HTTP 请求,支持分页参数 page、size
+     * @return 带 traceId 的统一成功响应,data 为在线用户分页列表
+     */
+    @RequirePermission("system:online-user:list")
+    @Operation(operationId = "listOnlineSessionsAlias", summary = "查询在线会话列表", description = "分页查询最近5分钟内有心跳的在线用户列表")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "查询成功"),
+        @ApiResponse(responseCode = "401", description = "未授权,需要登录"),
+        @ApiResponse(responseCode = "403", description = "权限不足,需要 system:online-user:list 权限")
+    })
+    public Mono<ServerResponse> listOnlineSessions(ServerRequest request) {
+        int page = safeParseInt(request.queryParam("page").orElse("1"), 1);
+        int size = safeParseInt(request.queryParam("size").orElse("20"), 20);
+
+        return onlineUserQueryService.findOnlineUsers(page, size).flatMap(this::buildSuccess);
+    }
+
+    /**
+     * 踢出会话(别名路由)。
+     *
+     * <p>注意:实际的踢出会话功能由 {@link com.apex.scaffold.interfaces.handler.AdminUserManagementHandler#revokeSessions}
+     * 实现,本方法仅作为别名路由占位。前端应直接调用 {@code POST /admin-api/v1/users/{userId}/sessions/revoke} 接口。
+     *
+     * @param request HTTP 请求,路径参数 userId 或请求体包含用户 ID
+     * @return 带 traceId 的统一成功响应,data 为 {"revokedTokens": 撤销数}
+     */
+    @RequirePermission("staff:session:revoke")
+    @Operation(
+            operationId = "kickoutSessionAlias",
+            summary = "踢出会话",
+            description = "强制撤销指定用户的全部会话,使其需要重新登录。建议直接调用 POST /admin-api/v1/users/{userId}/sessions/revoke")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "踢出成功"),
+        @ApiResponse(responseCode = "400", description = "用户 ID 格式错误"),
+        @ApiResponse(responseCode = "401", description = "未授权,需要登录"),
+        @ApiResponse(responseCode = "403", description = "权限不足,需要 staff:session:revoke 权限"),
+        @ApiResponse(responseCode = "404", description = "用户不存在")
+    })
+    @OperationLog(module = "认证授权配置", type = OperationLog.OperationType.UPDATE, description = "踢出会话")
+    public Mono<ServerResponse> kickoutSession(ServerRequest request) {
+        return buildSuccess(java.util.Map.of("message", "请直接调用 POST /admin-api/v1/users/{userId}/sessions/revoke 接口"));
+    }
+
+    /**
+     * 查询登录日志列表(别名路由)。
+     *
+     * <p>委托给 {@link LoginLogService},复用现有的登录日志查询逻辑。
+     *
+     * @param request HTTP 请求,支持分页参数 page、size 和查询参数 username、status
+     * @return 带 traceId 的统一成功响应,data 为登录日志分页列表
+     */
+    @RequirePermission("system:log:login:list")
+    @Operation(operationId = "listLoginLogsAlias", summary = "查询登录日志列表", description = "分页查询登录日志,支持按账号和状态筛选")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "查询成功"),
+        @ApiResponse(responseCode = "401", description = "未授权,需要登录"),
+        @ApiResponse(responseCode = "403", description = "权限不足,需要 system:log:login:list 权限")
+    })
+    public Mono<ServerResponse> listLoginLogs(ServerRequest request) {
+        String username = request.queryParam("username").orElse(null);
+        Integer status = request.queryParam("status").map(Integer::parseInt).orElse(null);
+        int page = safeParseInt(request.queryParam("page").orElse("1"), 1);
+        int size = safeParseInt(request.queryParam("size").orElse("20"), 20);
+
+        return loginLogService.search(username, status, page, size).flatMap(this::buildSuccess);
+    }
+
+    /**
+     * 查询权限列表(别名路由)。
+     *
+     * <p>委托给 {@link PermissionService},复用现有的权限查询逻辑。
+     *
+     * @param request HTTP 请求
+     * @return 带 traceId 的统一成功响应,data 为权限列表
+     */
+    @RequirePermission("system:permission:list")
+    @Operation(operationId = "listPermissionsAlias", summary = "查询权限列表", description = "查询系统中所有已定义的权限列表")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "查询成功"),
+        @ApiResponse(responseCode = "401", description = "未授权,需要登录"),
+        @ApiResponse(responseCode = "403", description = "权限不足,需要 system:permission:list 权限")
+    })
+    public Mono<ServerResponse> listPermissions(ServerRequest request) {
+        return permissionService.getAllPermissions().flatMap(this::buildSuccess);
+    }
+
+    /**
+     * JWT 配置测试。
+     *
+     * <p>使用当前租户的 JWT 配置生成测试 Token，并解码验证，用于测试配置是否正确。
+     * 该功能主要用于管理员在配置 JWT 参数后，快速验证配置是否生效。
+     *
+     * <h2>测试流程</h2>
+     * <ol>
+     *   <li>管理员提供测试载荷（Payload）和可选的过期时间</li>
+     *   <li>系统使用当前租户的 JWT 配置生成测试 Token</li>
+     *   <li>系统使用相同的配置解码并验证 Token</li>
+     *   <li>返回 Token 字符串、解码结果和验证状态</li>
+     * </ol>
+     *
+     * <h2>使用场景</h2>
+     * <ul>
+     *   <li>新租户初始化 JWT 配置后的验证</li>
+     *   <li>修改 JWT 签名算法或密钥后的测试</li>
+     *   <li>排查 JWT 相关问题时的诊断工具</li>
+     * </ul>
+     *
+     * <h2>安全说明</h2>
+     * <ul>
+     *   <li>生成的测试 Token 仅用于配置验证，不应用于生产环境的身份认证</li>
+     *   <li>测试 Token 的有效期建议设置较短（如 5-10 分钟），避免安全风险</li>
+     *   <li>测试操作会记录操作日志，便于审计追踪</li>
+     * </ul>
+     *
+     * @param request HTTP 请求，请求体包含测试载荷
+     * @return 带 traceId 的统一成功响应，data 为测试结果（Token 和解码信息）
+     */
+    @RequirePermission("system:auth:config:jwt:test")
+    @Operation(
+            operationId = "testJwtConfig",
+            summary = "JWT 配置测试",
+            description = "使用当前 JWT 配置生成测试 Token 并验证，用于测试配置是否正确")
+    @RequestBody(
+            description = "JWT 测试请求",
+            required = true,
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = JwtTestRequest.class)))
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "测试成功，返回生成的 Token 和解码信息",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = JwtTestResponse.class))),
+        @ApiResponse(responseCode = "400", description = "参数校验失败"),
+        @ApiResponse(responseCode = "401", description = "未授权，需要登录"),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要 system:auth:config:jwt:test 权限"),
+        @ApiResponse(responseCode = "404", description = "JWT 配置不存在"),
+        @ApiResponse(responseCode = "500", description = "JWT 配置错误或测试失败")
+    })
+    @OperationLog(module = "认证授权配置", type = OperationLog.OperationType.OTHER, description = "JWT 配置测试")
+    public Mono<ServerResponse> testJwtConfig(ServerRequest request) {
+        return parseBody(request, JwtTestRequest.class)
+                .flatMap(jwtConfigService::testJwt)
+                .flatMap(this::buildSuccess);
+    }
+}

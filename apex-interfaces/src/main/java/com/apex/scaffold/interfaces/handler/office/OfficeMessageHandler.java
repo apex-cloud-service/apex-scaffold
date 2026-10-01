@@ -1,6 +1,9 @@
 package com.apex.scaffold.interfaces.handler.office;
 
 import com.apex.scaffold.application.office.OfficeMessageService;
+import com.apex.scaffold.common.annotation.IdempotentApi;
+import com.apex.scaffold.common.annotation.OperationLog;
+import com.apex.scaffold.common.annotation.RequirePermission;
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.domain.office.OfficePlatform;
 import com.apex.scaffold.domain.office.message.*;
@@ -35,6 +38,18 @@ import reactor.core.publisher.Mono;
  *   <li>发送消息 - 支持文本、Markdown、卡片等多种消息类型</li>
  *   <li>查询消息状态 - 根据消息ID查询发送状态</li>
  *   <li>重新发送消息 - 重新发送失败的消息</li>
+ *   <li>撤回消息 - 撤回已发送成功的消息</li>
+ * </ul>
+ *
+ * <p>安全保障：
+ * <ul>
+ *   <li>权限校验：所有接口均配置 {@code @RequirePermission} 注解，权限编码遵循
+ *       {@code office:message:<action>} 规则，已在 Flyway 迁移脚本
+ *       {@code V33__add_office_platform_menus.sql} 中登记</li>
+ *   <li>操作审计：发送、重发、撤回等写操作配置 {@code @OperationLog} 注解，
+ *       记录操作模块、类型与描述，不保存请求/响应体（消息内容可能包含业务敏感信息）</li>
+ *   <li>幂等保护：发送、重发、撤回等写操作配置 {@code @IdempotentApi} 注解，
+ *       防止客户端网络重试导致的消息重复发送/重复撤回</li>
  * </ul>
  *
  * @author Apex Team
@@ -91,6 +106,14 @@ public class OfficeMessageHandler {
                 description = "消息发送失败",
                 content = @Content(schema = @Schema(implementation = Result.class)))
     })
+    @RequirePermission("office:message:send")
+    @OperationLog(
+            module = "办公平台",
+            type = OperationLog.OperationType.INSERT,
+            description = "发送办公平台消息",
+            saveRequest = false,
+            saveResponse = false)
+    @IdempotentApi
     public Mono<ServerResponse> sendMessage(ServerRequest request) {
         return requestHandlerUtil
                 .validateAndMap(request, SendMessageRequest.class)
@@ -159,6 +182,7 @@ public class OfficeMessageHandler {
                 description = "消息不存在",
                 content = @Content(schema = @Schema(implementation = Result.class)))
     })
+    @RequirePermission("office:message:query")
     public Mono<ServerResponse> getMessageStatus(ServerRequest request) {
         Long messageId = Long.parseLong(request.pathVariable("messageId"));
         log.info("查询消息状态，ID：{}", messageId);
@@ -212,6 +236,14 @@ public class OfficeMessageHandler {
                 description = "消息不存在",
                 content = @Content(schema = @Schema(implementation = Result.class)))
     })
+    @RequirePermission("office:message:resend")
+    @OperationLog(
+            module = "办公平台",
+            type = OperationLog.OperationType.UPDATE,
+            description = "重新发送失败的办公平台消息",
+            saveRequest = false,
+            saveResponse = false)
+    @IdempotentApi
     public Mono<ServerResponse> resendMessage(ServerRequest request) {
         Long messageId = Long.parseLong(request.pathVariable("messageId"));
         log.info("重新发送消息，ID：{}", messageId);
@@ -222,6 +254,59 @@ public class OfficeMessageHandler {
                 .flatMap(result -> ServerResponse.ok().bodyValue(result))
                 .onErrorResume(error -> {
                     log.error("重新发送消息失败，ID：{}，原因：{}", messageId, error.getMessage());
+                    return ServerResponse.ok().bodyValue(Result.error(error.getMessage()));
+                });
+    }
+
+    /**
+     * 撤回消息
+     *
+     * <p>撤回发送成功的消息。只能撤回状态为 SUCCESS 且已获得平台消息ID的消息。
+     *
+     * @param request HTTP 请求
+     * @return 撤回结果
+     */
+    @Operation(summary = "撤回消息", description = "撤回发送成功的消息。只能撤回状态为SUCCESS且已获得平台消息ID的消息")
+    @Parameters({
+        @Parameter(
+                name = "messageId",
+                in = ParameterIn.PATH,
+                required = true,
+                description = "消息ID",
+                schema = @Schema(type = "integer", format = "int64"))
+    })
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "撤回成功",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = Result.class))),
+        @ApiResponse(
+                responseCode = "400",
+                description = "消息状态不允许撤回",
+                content = @Content(schema = @Schema(implementation = Result.class))),
+        @ApiResponse(
+                responseCode = "404",
+                description = "消息不存在",
+                content = @Content(schema = @Schema(implementation = Result.class)))
+    })
+    @RequirePermission("office:message:recall")
+    @OperationLog(
+            module = "办公平台",
+            type = OperationLog.OperationType.UPDATE,
+            description = "撤回已发送成功的办公平台消息",
+            saveRequest = false,
+            saveResponse = false)
+    @IdempotentApi
+    public Mono<ServerResponse> recallMessage(ServerRequest request) {
+        Long messageId = Long.parseLong(request.pathVariable("messageId"));
+        log.info("撤回消息，ID：{}", messageId);
+
+        return messageService
+                .recallMessage(messageId)
+                .map(Result::success)
+                .flatMap(result -> ServerResponse.ok().bodyValue(result))
+                .onErrorResume(error -> {
+                    log.error("撤回消息失败，ID：{}，原因：{}", messageId, error.getMessage());
                     return ServerResponse.ok().bodyValue(Result.error(error.getMessage()));
                 });
     }

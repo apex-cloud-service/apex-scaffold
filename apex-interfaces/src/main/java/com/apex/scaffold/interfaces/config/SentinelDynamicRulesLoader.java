@@ -118,6 +118,10 @@ import org.springframework.stereotype.Component;
         matchIfMissing = true)
 public class SentinelDynamicRulesLoader {
 
+    private static final String RULES_KEY_FLOW = "flowRules";
+    private static final String RULES_KEY_DEGRADE = "degradeRules";
+    private static final String RULES_KEY_SYSTEM = "systemRules";
+
     @Value("${apex.sentinel.rules-file:classpath:config/sentinel/sentinel-rules.json}")
     private String rulesFilePath;
 
@@ -154,23 +158,20 @@ public class SentinelDynamicRulesLoader {
 
             JsonNode root = objectMapper.readTree(inputStream);
 
-            // 加载流控规则
-            if (root.has("flowRules")) {
-                List<FlowRule> flowRules = parseFlowRules(root.get("flowRules"));
+            if (root.has(RULES_KEY_FLOW)) {
+                List<FlowRule> flowRules = parseFlowRules(root.get(RULES_KEY_FLOW));
                 FlowRuleManager.loadRules(flowRules);
                 log.info("加载 {} 条流控规则", flowRules.size());
             }
 
-            // 加载降级规则
-            if (root.has("degradeRules")) {
-                List<DegradeRule> degradeRules = parseDegradeRules(root.get("degradeRules"));
+            if (root.has(RULES_KEY_DEGRADE)) {
+                List<DegradeRule> degradeRules = parseDegradeRules(root.get(RULES_KEY_DEGRADE));
                 DegradeRuleManager.loadRules(degradeRules);
                 log.info("加载 {} 条降级规则", degradeRules.size());
             }
 
-            // 加载系统规则
-            if (root.has("systemRules")) {
-                List<SystemRule> systemRules = parseSystemRules(root.get("systemRules"));
+            if (root.has(RULES_KEY_SYSTEM)) {
+                List<SystemRule> systemRules = parseSystemRules(root.get(RULES_KEY_SYSTEM));
                 SystemRuleManager.loadRules(systemRules);
                 log.info("加载 {} 条系统规则", systemRules.size());
             }
@@ -220,23 +221,20 @@ public class SentinelDynamicRulesLoader {
      * @param root 规则文件 JSON 根节点
      */
     private void applyRules(JsonNode root) {
-        // 加载流控规则
-        if (root.has("flowRules")) {
-            List<FlowRule> flowRules = parseFlowRules(root.get("flowRules"));
+        if (root.has(RULES_KEY_FLOW)) {
+            List<FlowRule> flowRules = parseFlowRules(root.get(RULES_KEY_FLOW));
             FlowRuleManager.loadRules(flowRules);
             log.info("加载 {} 条流控规则", flowRules.size());
         }
 
-        // 加载降级规则
-        if (root.has("degradeRules")) {
-            List<DegradeRule> degradeRules = parseDegradeRules(root.get("degradeRules"));
+        if (root.has(RULES_KEY_DEGRADE)) {
+            List<DegradeRule> degradeRules = parseDegradeRules(root.get(RULES_KEY_DEGRADE));
             DegradeRuleManager.loadRules(degradeRules);
             log.info("加载 {} 条降级规则", degradeRules.size());
         }
 
-        // 加载系统规则
-        if (root.has("systemRules")) {
-            List<SystemRule> systemRules = parseSystemRules(root.get("systemRules"));
+        if (root.has(RULES_KEY_SYSTEM)) {
+            List<SystemRule> systemRules = parseSystemRules(root.get(RULES_KEY_SYSTEM));
             SystemRuleManager.loadRules(systemRules);
             log.info("加载 {} 条系统规则", systemRules.size());
         }

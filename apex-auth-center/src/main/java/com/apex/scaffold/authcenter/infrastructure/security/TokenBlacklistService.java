@@ -25,8 +25,11 @@ public class TokenBlacklistService {
 
     private final ReactiveStringRedisTemplate redisTemplate;
 
-    // Redis Key前缀
+    /**
+     * Redis Key前缀
+     */
     private static final String BLACKLIST_PREFIX = "token:blacklist:";
+
     private static final String USER_TOKENS_PREFIX = "token:user:";
 
     public TokenBlacklistService(ReactiveStringRedisTemplate redisTemplate) {
@@ -245,12 +248,19 @@ public class TokenBlacklistService {
      * 撤销原因枚举
      */
     public enum RevokeReason {
+        /** 用户主动登出 */
         USER_LOGOUT("用户主动登出"),
+        /** 密码已修改 */
         PASSWORD_CHANGED("密码已修改"),
+        /** 账户被锁定 */
         ACCOUNT_LOCKED("账户被锁定"),
+        /** 安全事件 */
         SECURITY_BREACH("安全事件"),
+        /** Token泄露 */
         TOKEN_COMPROMISED("Token泄露"),
+        /** 管理员撤销 */
         ADMIN_REVOKED("管理员撤销"),
+        /** Token过期 */
         EXPIRED("Token过期");
 
         private final String description;

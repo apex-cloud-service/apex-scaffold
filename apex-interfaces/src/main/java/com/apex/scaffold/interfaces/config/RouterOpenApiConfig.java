@@ -687,19 +687,19 @@ public class RouterOpenApiConfig {
                 method = RequestMethod.GET,
                 beanClass = HealthHandler.class,
                 beanMethod = "health",
-                operation = @Operation(operationId = "health", summary = "健康检查")),
+                operation = @Operation(operationId = "healthCheck", summary = "健康检查")),
         @RouterOperation(
                 path = "/api/v1/info",
                 method = RequestMethod.GET,
                 beanClass = HealthHandler.class,
                 beanMethod = "info",
-                operation = @Operation(operationId = "info", summary = "系统信息")),
+                operation = @Operation(operationId = "getSystemInfo", summary = "系统信息")),
         @RouterOperation(
                 path = "/",
                 method = RequestMethod.GET,
                 beanClass = HealthHandler.class,
                 beanMethod = "root",
-                operation = @Operation(operationId = "root", summary = "根路径探活"))
+                operation = @Operation(operationId = "rootProbe", summary = "根路径探活"))
     })
     /**
      * 构建健康检查（探活）接口的 OpenAPI 占位路由，保证 OpenAPI 文档分组展示。

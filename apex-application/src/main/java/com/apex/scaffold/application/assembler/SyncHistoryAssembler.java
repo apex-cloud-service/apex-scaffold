@@ -18,7 +18,39 @@ import org.mapstruct.ReportingPolicy;
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface SyncHistoryAssembler {
 
+    /**
+     *
+     *
+     * 将同步历史实体转换为DTO。
+     *
+     *
+     *
+     *
+     *
+     * @param entity 同步历史实体
+     *
+     *
+     * @return 同步历史DTO
+     *
+     *
+     */
     SyncHistoryDTO toDto(OffSyncHistoryEntity entity);
 
+    /**
+     *
+     *
+     * 将同步历史DTO转换为实体。
+     *
+     *
+     *
+     *
+     *
+     * @param dto 同步历史DTO
+     *
+     *
+     * @return 同步历史实体
+     *
+     *
+     */
     OffSyncHistoryEntity toEntity(SyncHistoryDTO dto);
 }

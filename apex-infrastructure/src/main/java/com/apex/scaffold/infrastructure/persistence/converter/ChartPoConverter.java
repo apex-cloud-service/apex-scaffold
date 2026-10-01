@@ -18,7 +18,19 @@ import org.mapstruct.MappingConstants;
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
 public interface ChartPoConverter {
 
+    /**
+     * TODO: Add method description
+     *
+     * @param po TODO
+     * @return TODO
+     */
     ChartEntity toEntity(ChartPO po);
 
+    /**
+     * TODO: Add method description
+     *
+     * @param entity TODO
+     * @return TODO
+     */
     ChartPO toPo(ChartEntity entity);
 }

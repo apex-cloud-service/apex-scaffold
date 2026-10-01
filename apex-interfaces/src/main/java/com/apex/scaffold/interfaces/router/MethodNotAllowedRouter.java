@@ -40,6 +40,8 @@ import reactor.core.publisher.Mono;
 @Component
 public class MethodNotAllowedRouter implements RouterFunction<ServerResponse>, Ordered {
 
+    private static final String API_PATH_PREFIX = "/api/";
+
     private final List<RouterFunction<ServerResponse>> delegates;
 
     /**
@@ -62,7 +64,7 @@ public class MethodNotAllowedRouter implements RouterFunction<ServerResponse>, O
     public Mono<HandlerFunction<ServerResponse>> route(@NonNull ServerRequest request) {
         String path = request.path();
 
-        if (!path.startsWith("/api/")) {
+        if (!path.startsWith(API_PATH_PREFIX)) {
             return Mono.empty();
         }
 

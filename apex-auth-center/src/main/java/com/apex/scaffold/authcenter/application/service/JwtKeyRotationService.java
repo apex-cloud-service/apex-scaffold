@@ -2,8 +2,8 @@ package com.apex.scaffold.authcenter.application.service;
 
 import com.apex.scaffold.authcenter.domain.model.entity.JwtKeyEntity;
 import com.apex.scaffold.authcenter.domain.repository.JwtKeyRepository;
-import com.apex.scaffold.authcenter.domain.service.SecurityAuditService;
 import com.apex.scaffold.authcenter.domain.service.TokenEncryptionService;
+import com.apex.scaffold.common.audit.SecurityAuditService;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.result.ResultCode;
 import java.security.SecureRandom;
@@ -200,8 +200,8 @@ public class JwtKeyRotationService {
                     auditService.logKeyRevocation(keyVersion, reason, operatorUsername);
                 })
                 .flatMap(revokedKey -> {
-                    // 吊销ACTIVE密钥后，自动触发密钥轮换
-                    if ("ACTIVE".equals(revokedKey.getStatus())) {
+                    String activeStatus = "ACTIVE";
+                    if (activeStatus.equals(revokedKey.getStatus())) {
                         log.info("检测到ACTIVE密钥被吊销，自动触发密钥轮换");
                         return rotateKey("SECURITY_INCIDENT", operatorUserId, operatorUsername)
                                 .thenReturn(revokedKey);

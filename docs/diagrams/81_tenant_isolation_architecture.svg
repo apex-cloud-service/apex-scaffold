@@ -1,0 +1,159 @@
+<svg viewBox="0 0 1400 800" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a237e;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#283593;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#0d47a1;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1565c0;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="layerGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#00695c;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#00897b;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.3"/>
+    </filter>
+    <marker id="arrowBlue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#64b5f6" />
+    </marker>
+    <marker id="arrowGreen" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#4db6ac" />
+    </marker>
+  </defs>
+
+  <rect width="1400" height="800" fill="#0a0e27"/>
+
+  <text x="700" y="40" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="#ffffff" text-anchor="middle">租户隔离架构 (Tenant Isolation)</text>
+  <text x="700" y="70" font-family="Arial, sans-serif" font-size="14" fill="#64b5f6" text-anchor="middle">基于 ThreadLocal + Reactor Context 的 C10 多租户数据隔离</text>
+
+  <rect x="50" y="100" width="380" height="260" rx="8" fill="url(#grad1)" stroke="#42a5f5" stroke-width="2" filter="url(#shadow)"/>
+  <text x="240" y="130" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#ffffff" text-anchor="middle">TenantContext 核心</text>
+  
+  <rect x="70" y="150" width="340" height="90" rx="6" fill="#1565c0" stroke="#64b5f6" stroke-width="1.5"/>
+  <text x="240" y="175" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">ThreadLocal 存储</text>
+  <text x="80" y="195" font-family="Arial, sans-serif" font-size="10" fill="#e3f2fd">private static final ThreadLocal&lt;String&gt;</text>
+  <text x="90" y="210" font-family="Arial, sans-serif" font-size="10" fill="#e3f2fd">TENANT_ID = new ThreadLocal&lt;&gt;();</text>
+  <text x="80" y="227" font-family="Arial, sans-serif" font-size="10" fill="#90caf9">→ 线程级租户上下文</text>
+
+  <rect x="70" y="255" width="340" height="90" rx="6" fill="#1565c0" stroke="#64b5f6" stroke-width="1.5"/>
+  <text x="240" y="280" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">Reactor Context 传播</text>
+  <text x="80" y="300" font-family="monospace" font-size="9" fill="#a5d6a7">Context.of(REACTOR_CONTEXT_KEY,</text>
+  <text x="90" y="313" font-family="monospace" font-size="9" fill="#a5d6a7">          tenantId)</text>
+  <text x="80" y="328" font-family="Arial, sans-serif" font-size="10" fill="#90caf9">→ 响应式链路传播租户 ID</text>
+
+  <rect x="50" y="380" width="380" height="340" rx="8" fill="url(#grad1)" stroke="#42a5f5" stroke-width="2" filter="url(#shadow)"/>
+  <text x="240" y="410" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#ffffff" text-anchor="middle">租户上下文生命周期</text>
+  
+  <rect x="70" y="430" width="340" height="75" rx="6" fill="#2e7d32" stroke="#66bb6a" stroke-width="1.5"/>
+  <text x="240" y="455" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">1. 装配 (setTenantId)</text>
+  <text x="80" y="475" font-family="Arial, sans-serif" font-size="10" fill="#e8f5e9">String prev = TenantContext.setTenantId(id);</text>
+  <text x="80" y="490" font-family="Arial, sans-serif" font-size="10" fill="#c8e6c9">→ 请求入口（WebFilter/认证层）</text>
+
+  <rect x="70" y="520" width="340" height="75" rx="6" fill="#1565c0" stroke="#64b5f6" stroke-width="1.5"/>
+  <text x="240" y="545" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">2. 读取 (currentTenantId)</text>
+  <text x="80" y="565" font-family="Arial, sans-serif" font-size="10" fill="#e3f2fd">Optional&lt;String&gt; id = currentTenantId();</text>
+  <text x="80" y="580" font-family="Arial, sans-serif" font-size="10" fill="#90caf9">→ 业务层/持久化层/缓存层</text>
+
+  <rect x="70" y="610" width="340" height="90" rx="6" fill="#c62828" stroke="#ef5350" stroke-width="1.5"/>
+  <text x="240" y="635" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">3. 清理 (clear)</text>
+  <text x="80" y="655" font-family="Arial, sans-serif" font-size="10" fill="#ffebee">TenantContext.clear();</text>
+  <text x="80" y="670" font-family="Arial, sans-serif" font-size="10" fill="#ffcdd2">→ 请求结束（finally 块）</text>
+  <text x="80" y="685" font-family="Arial, sans-serif" font-size="10" fill="#ffcdd2">→ 防止线程复用导致跨租户泄漏</text>
+
+  <rect x="460" y="100" width="450" height="260" rx="8" fill="url(#grad1)" stroke="#42a5f5" stroke-width="2" filter="url(#shadow)"/>
+  <text x="685" y="130" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#ffffff" text-anchor="middle">数据隔离层</text>
+  
+  <rect x="480" y="150" width="200" height="90" rx="6" fill="url(#layerGrad)" stroke="#4db6ac" stroke-width="1.5"/>
+  <text x="580" y="175" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">MyBatis-Plus 拦截器</text>
+  <text x="490" y="195" font-family="Arial, sans-serif" font-size="10" fill="#e0f2f1">TenantLineInnerInterceptor</text>
+  <text x="490" y="210" font-family="Arial, sans-serif" font-size="10" fill="#b2dfdb">→ 自动注入 tenant_id</text>
+  <text x="490" y="225" font-family="Arial, sans-serif" font-size="10" fill="#b2dfdb">→ WHERE/UPDATE/DELETE</text>
+
+  <rect x="700" y="150" width="190" height="90" rx="6" fill="url(#layerGrad)" stroke="#4db6ac" stroke-width="1.5"/>
+  <text x="795" y="175" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">Redis Key 前缀</text>
+  <text x="710" y="195" font-family="Arial, sans-serif" font-size="10" fill="#e0f2f1">tenant:{tenantId}:key</text>
+  <text x="710" y="210" font-family="Arial, sans-serif" font-size="10" fill="#b2dfdb">→ 缓存键隔离</text>
+  <text x="710" y="225" font-family="Arial, sans-serif" font-size="10" fill="#b2dfdb">→ 防止跨租户访问</text>
+
+  <rect x="480" y="255" width="410" height="90" rx="6" fill="url(#layerGrad)" stroke="#4db6ac" stroke-width="1.5"/>
+  <text x="685" y="280" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">消息队列租户标识</text>
+  <text x="490" y="300" font-family="Arial, sans-serif" font-size="10" fill="#e0f2f1">消息体/Header 包含 tenant_id 字段</text>
+  <text x="490" y="315" font-family="Arial, sans-serif" font-size="10" fill="#b2dfdb">→ 消费者通过 TenantContext.setTenantId() 恢复上下文</text>
+  <text x="490" y="330" font-family="Arial, sans-serif" font-size="10" fill="#b2dfdb">→ 防止消息消费时租户标识丢失</text>
+
+  <rect x="460" y="380" width="450" height="165" rx="8" fill="url(#grad1)" stroke="#42a5f5" stroke-width="2" filter="url(#shadow)"/>
+  <text x="685" y="410" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#ffffff" text-anchor="middle">Reactor Hook 自动传播</text>
+  
+  <rect x="480" y="430" width="410" height="100" rx="6" fill="#1565c0" stroke="#64b5f6" stroke-width="1.5"/>
+  <text x="685" y="455" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">全局 Hook 注册</text>
+  <text x="490" y="475" font-family="monospace" font-size="9" fill="#a5d6a7">Schedulers.onScheduleHook(KEY, runnable -&gt; {</text>
+  <text x="500" y="488" font-family="monospace" font-size="9" fill="#a5d6a7">  String tenantId = TENANT_ID.get();</text>
+  <text x="500" y="501" font-family="monospace" font-size="9" fill="#a5d6a7">  return () -&gt; wrap(tenantId, runnable);</text>
+  <text x="490" y="514" font-family="monospace" font-size="9" fill="#a5d6a7">});</text>
+  <text x="490" y="527" font-family="Arial, sans-serif" font-size="10" fill="#90caf9">→ 跨调度器自动传播租户上下文</text>
+
+  <rect x="460" y="565" width="450" height="155" rx="8" fill="url(#grad1)" stroke="#42a5f5" stroke-width="2" filter="url(#shadow)"/>
+  <text x="685" y="595" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#ffffff" text-anchor="middle">安全防护</text>
+  
+  <rect x="480" y="615" width="410" height="90" rx="6" fill="#c62828" stroke="#ef5350" stroke-width="1.5"/>
+  <text x="685" y="640" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">租户权限校验</text>
+  <text x="490" y="660" font-family="Arial, sans-serif" font-size="10" fill="#ffebee">✗ 禁止外部请求覆盖服务端租户上下文</text>
+  <text x="490" y="675" font-family="Arial, sans-serif" font-size="10" fill="#ffcdd2">✗ 更新/删除操作必须校验租户权限</text>
+  <text x="490" y="690" font-family="Arial, sans-serif" font-size="10" fill="#ffcdd2">✗ 防止跨租户数据访问和越权操作</text>
+
+  <rect x="940" y="100" width="410" height="620" rx="8" fill="url(#grad1)" stroke="#42a5f5" stroke-width="2" filter="url(#shadow)"/>
+  <text x="1145" y="130" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#ffffff" text-anchor="middle">典型使用场景</text>
+  
+  <rect x="960" y="150" width="370" height="110" rx="6" fill="#1565c0" stroke="#64b5f6" stroke-width="1.5"/>
+  <text x="1145" y="175" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">场景 1: HTTP 请求</text>
+  <text x="970" y="193" font-family="monospace" font-size="9" fill="#a5d6a7">// WebFilter 入口</text>
+  <text x="970" y="206" font-family="monospace" font-size="9" fill="#a5d6a7">String tenantId = extractFromToken(request);</text>
+  <text x="970" y="219" font-family="monospace" font-size="9" fill="#a5d6a7">String prev = TenantContext.setTenantId(id);</text>
+  <text x="970" y="232" font-family="monospace" font-size="9" fill="#a5d6a7">try { chain.filter(); }</text>
+  <text x="970" y="245" font-family="monospace" font-size="9" fill="#a5d6a7">finally { TenantContext.restoreTenantId(prev); }</text>
+
+  <rect x="960" y="275" width="370" height="110" rx="6" fill="#1565c0" stroke="#64b5f6" stroke-width="1.5"/>
+  <text x="1145" y="300" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">场景 2: MyBatis 查询</text>
+  <text x="970" y="318" font-family="monospace" font-size="9" fill="#a5d6a7">// Service 层</text>
+  <text x="970" y="331" font-family="monospace" font-size="9" fill="#a5d6a7">userMapper.selectById(userId);</text>
+  <text x="970" y="346" font-family="monospace" font-size="9" fill="#a5d6a7">// 拦截器自动改写 SQL:</text>
+  <text x="970" y="359" font-family="monospace" font-size="9" fill="#90caf9">SELECT * FROM user WHERE id=?</text>
+  <text x="970" y="372" font-family="monospace" font-size="9" fill="#90caf9">  AND tenant_id='tenant_001'</text>
+
+  <rect x="960" y="400" width="370" height="110" rx="6" fill="#1565c0" stroke="#64b5f6" stroke-width="1.5"/>
+  <text x="1145" y="425" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">场景 3: Redis 缓存</text>
+  <text x="970" y="443" font-family="monospace" font-size="9" fill="#a5d6a7">// 缓存服务</text>
+  <text x="970" y="456" font-family="monospace" font-size="9" fill="#a5d6a7">String key = buildTenantKey("user:123");</text>
+  <text x="970" y="469" font-family="monospace" font-size="9" fill="#90caf9">// 实际 key:</text>
+  <text x="970" y="482" font-family="monospace" font-size="9" fill="#90caf9">tenant:tenant_001:user:123</text>
+  <text x="970" y="495" font-family="monospace" font-size="9" fill="#a5d6a7">redisTemplate.opsForValue().get(key);</text>
+
+  <rect x="960" y="525" width="370" height="110" rx="6" fill="#1565c0" stroke="#64b5f6" stroke-width="1.5"/>
+  <text x="1145" y="550" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">场景 4: RocketMQ 消费</text>
+  <text x="970" y="568" font-family="monospace" font-size="9" fill="#a5d6a7">// 消费者入口</text>
+  <text x="970" y="581" font-family="monospace" font-size="9" fill="#a5d6a7">String tenantId = msg.getProperty("tenantId");</text>
+  <text x="970" y="594" font-family="monospace" font-size="9" fill="#a5d6a7">TenantContext.setTenantId(tenantId);</text>
+  <text x="970" y="607" font-family="monospace" font-size="9" fill="#a5d6a7">try { businessLogic(); }</text>
+  <text x="970" y="620" font-family="monospace" font-size="9" fill="#a5d6a7">finally { TenantContext.clear(); }</text>
+
+  <rect x="960" y="650" width="370" height="55" rx="6" fill="#0d47a1" stroke="#64b5f6" stroke-width="1.5"/>
+  <text x="1145" y="675" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#ffd54f" text-anchor="middle">架构测试保障</text>
+  <text x="970" y="693" font-family="Arial, sans-serif" font-size="10" fill="#fff9c4">ArchUnit 测试: 确保租户隔离规则执行</text>
+
+  <path d="M 430 255 L 460 255" stroke="#4db6ac" stroke-width="2" marker-end="url(#arrowGreen)"/>
+  <text x="445" y="250" font-family="Arial, sans-serif" font-size="10" fill="#4db6ac">隔离</text>
+  
+  <path d="M 685 360 L 685 380" stroke="#64b5f6" stroke-width="2" marker-end="url(#arrowBlue)"/>
+  <text x="700" y="375" font-family="Arial, sans-serif" font-size="10" fill="#64b5f6">传播</text>
+
+  <path d="M 910 190 L 940 190" stroke="#64b5f6" stroke-width="2" marker-end="url(#arrowBlue)"/>
+  <text x="925" y="185" font-family="Arial, sans-serif" font-size="10" fill="#64b5f6">应用</text>
+
+  <rect x="50" y="735" width="1300" height="50" rx="6" fill="#0d47a1" stroke="#64b5f6" stroke-width="1.5"/>
+  <text x="700" y="755" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#ffd54f" text-anchor="middle">核心设计原则</text>
+  <text x="60" y="773" font-family="Arial, sans-serif" font-size="10" fill="#fff9c4">✓ ThreadLocal + Reactor Context 双层传播  ✓ MyBatis-Plus 自动 SQL 改写  ✓ Redis Key 前缀隔离  ✓ 消息队列租户标识传递  ✓ 请求结束强制清理防泄漏  ✓ ArchUnit 架构测试保障</text>
+
+  <text x="700" y="798" font-family="Arial, sans-serif" font-size="11" fill="#546e7a" text-anchor="middle">© 2026 Apex Team · 租户隔离架构 v1.0 · apex-common/context/TenantContext.java</text>
+</svg>

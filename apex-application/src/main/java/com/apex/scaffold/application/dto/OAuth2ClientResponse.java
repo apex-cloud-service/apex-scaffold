@@ -34,6 +34,7 @@ import lombok.NoArgsConstructor;
  * @since 2.0.0
  * @see OAuth2ClientRequest
  */
+@SuppressWarnings("PMD.ClassNamingShouldBeCamelRule")
 @Schema(description = "OAuth2客户端响应数据传输对象")
 @Data
 @Builder

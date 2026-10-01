@@ -71,8 +71,10 @@ public class SearchIndexReconciliationJob {
                         .syncIncremental(resourceType, sinceTimestamp)
                         .doOnSuccess(c -> log.info("Incremental sync completed: type={}, count={}", resourceType, c))
                         .doOnError(e -> log.error("Incremental sync failed: type={}", resourceType, e))
-                        .onErrorReturn(0L) // 单个类型失败不影响其他类型
-                        .block(); // 阻塞等待完成
+                        // 单个类型失败不影响其他类型
+                        .onErrorReturn(0L)
+                        // 阻塞等待完成
+                        .block();
 
                 if (count != null) {
                     totalCount += count;

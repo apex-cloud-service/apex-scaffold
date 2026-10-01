@@ -1,0 +1,85 @@
+name: Frontend CI
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'apex-admin-web/**'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'apex-admin-web/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: apex-admin-web/package-lock.json
+    
+    - name: Install dependencies
+      working-directory: apex-admin-web
+      run: npm ci
+    
+    - name: Run type check
+      working-directory: apex-admin-web
+      run: npm run build
+    
+    - name: Run unit tests
+      working-directory: apex-admin-web
+      run: npm run test:coverage
+    
+    - name: Upload coverage
+      uses: codecov/codecov-action@v3
+      with:
+        directory: apex-admin-web/coverage
+    
+    - name: Run E2E tests
+      working-directory: apex-admin-web
+      run: npm run test:e2e
+    
+    - name: Upload E2E report
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: playwright-report
+        path: apex-admin-web/playwright-report/
+
+  build:
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: apex-admin-web/package-lock.json
+    
+    - name: Install dependencies
+      working-directory: apex-admin-web
+      run: npm ci
+    
+    - name: Build
+      working-directory: apex-admin-web
+      run: npm run build
+    
+    - name: Analyze bundle
+      working-directory: apex-admin-web
+      run: npm run analyze
+    
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: dist
+        path: apex-admin-web/dist/

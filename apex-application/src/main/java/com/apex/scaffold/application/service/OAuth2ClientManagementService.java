@@ -25,6 +25,7 @@ import reactor.core.publisher.Mono;
  * @version 2.0.0
  * @since 2.0.0
  */
+@SuppressWarnings("PMD.ClassNamingShouldBeCamelRule")
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -188,7 +189,7 @@ public class OAuth2ClientManagementService {
     }
 
     private String buildClientSettings(OAuth2ClientRequest request) {
-        Map<String, Object> settings = new HashMap<>();
+        Map<String, Object> settings = new HashMap<>(16);
         settings.put("@class", "java.util.HashMap");
 
         if (request.getRequireProofKey() != null) {
@@ -203,7 +204,7 @@ public class OAuth2ClientManagementService {
     }
 
     private String buildTokenSettings(OAuth2ClientRequest request) {
-        Map<String, Object> settings = new HashMap<>();
+        Map<String, Object> settings = new HashMap<>(16);
         settings.put("@class", "java.util.HashMap");
 
         if (request.getAuthorizationCodeTimeToLive() != null) {

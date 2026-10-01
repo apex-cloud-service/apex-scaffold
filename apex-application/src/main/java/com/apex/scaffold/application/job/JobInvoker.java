@@ -34,6 +34,13 @@ import org.springframework.util.StringUtils;
 @RequiredArgsConstructor
 public class JobInvoker {
 
+    private static final String ARG_SEPARATOR = " ";
+    private static final String ARG_DELIMITER = ",";
+    private static final String BOOLEAN_TRUE = "true";
+    private static final String BOOLEAN_FALSE = "false";
+    private static final String INTEGER_PATTERN = "-?\\d+";
+    private static final String DECIMAL_PATTERN = "-?\\d+\\.\\d+";
+
     /**
      * Spring 应用上下文，用于按 Bean 名称查找任务目标。
      */
@@ -104,7 +111,7 @@ public class JobInvoker {
      * @return 参数列表
      */
     private List<Object> parseArgs(String argsText) {
-        List<Object> args = new ArrayList<>();
+        List<Object> args = new ArrayList<>(16);
         if (argsText.isEmpty()) {
             return args;
         }
@@ -126,7 +133,9 @@ public class JobInvoker {
                 }
                 index = comma < 0 ? argsText.length() : comma + 1;
             }
-            while (index < argsText.length() && (argsText.charAt(index) == ' ' || argsText.charAt(index) == ',')) {
+            while (index < argsText.length()
+                    && (argsText.charAt(index) == ARG_SEPARATOR.charAt(0)
+                            || argsText.charAt(index) == ARG_DELIMITER.charAt(0))) {
                 index++;
             }
         }
@@ -140,17 +149,17 @@ public class JobInvoker {
      * @return 推断后的对象（整数/小数/布尔/字符串）
      */
     private Object coerce(String token) {
-        if ("true".equalsIgnoreCase(token) || "false".equalsIgnoreCase(token)) {
+        if (BOOLEAN_TRUE.equalsIgnoreCase(token) || BOOLEAN_FALSE.equalsIgnoreCase(token)) {
             return Boolean.parseBoolean(token);
         }
-        if (token.matches("-?\\d+")) {
+        if (token.matches(INTEGER_PATTERN)) {
             try {
                 return Long.parseLong(token);
             } catch (NumberFormatException ignored) {
                 return Integer.parseInt(token);
             }
         }
-        if (token.matches("-?\\d+\\.\\d+")) {
+        if (token.matches(DECIMAL_PATTERN)) {
             return Double.parseDouble(token);
         }
         return token;

@@ -202,7 +202,7 @@ public class JwtKeyRotationService {
      */
     private KeyInfo generateNewKey() {
         SecretKey key = Keys.secretKeyFor(io.jsonwebtoken.SignatureAlgorithm.HS256);
-        String keyId = "key-" + System.currentTimeMillis();
+        String keyId = "key-" + java.util.UUID.randomUUID();
         LocalDateTime createdAt = LocalDateTime.now();
 
         return new KeyInfo(keyId, key, createdAt);

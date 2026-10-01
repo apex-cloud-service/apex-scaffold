@@ -1,0 +1,101 @@
+# ============================================================
+# RocketMQ 增强配置（生产环境）
+# ============================================================
+apex:
+  mq:
+    # ---------- 生产者增强配置 ----------
+    producer:
+      # 发送超时时间（毫秒）
+      send-timeout-ms: ${APEX_MQ_PRODUCER_SEND_TIMEOUT:3000}
+      
+      # 同步发送失败重试次数（不含首次）
+      retry-times-when-send-failed: ${APEX_MQ_PRODUCER_RETRY_SYNC:2}
+      
+      # 异步发送失败重试次数（不含首次）
+      retry-times-when-send-async-failed: ${APEX_MQ_PRODUCER_RETRY_ASYNC:2}
+      
+      # 发送失败是否重试其他 Broker
+      retry-another-broker-when-not-store-ok: false
+      
+      # 最大消息体大小（字节），4MB
+      max-message-size: 4194304
+      
+      # 消息体压缩阈值（字节），4KB
+      compress-msg-body-over-howmuch: 4096
+      
+      # 批量发送配置
+      batch:
+        enabled: false  # 生产环境谨慎启用，需确保消息顺序性要求
+        max-batch-size: 32
+        max-batch-bytes: 131072  # 128KB
+        batch-wait-ms: 100
+      
+      # 熔断器配置
+      circuit-breaker:
+        enabled: true
+        failure-rate-threshold: 50.0  # 失败率阈值 50%
+        slow-call-duration-threshold: 5000  # 慢调用阈值 5s
+        slow-call-rate-threshold: 100.0
+        wait-duration-in-open-state: 60000  # 熔断持续 60s
+        permitted-number-of-calls-in-half-open-state: 10
+        sliding-window-size: 100
+        minimum-number-of-calls: 10
+      
+      # 故障降级配置
+      fallback:
+        enabled: true
+        strategy: OUTBOX  # 降级策略：OUTBOX（写入 Outbox 表）或 LOG（仅记录日志）
+        throw-exception-after-fallback: false
+      
+      # 监控指标开关
+      metrics-enabled: true
+    
+    # ---------- 消费者增强配置 ----------
+    consumer:
+      enabled: true
+      
+      # 消费线程数（根据实际业务调整）
+      min-consume-thread: ${APEX_MQ_CONSUMER_MIN_THREADS:20}
+      max-consume-thread: ${APEX_MQ_CONSUMER_MAX_THREADS:64}
+      
+      # 消费超时时间（分钟）
+      consume-timeout-minutes: 15
+      
+      # 消息最大重试次数
+      max-reconsume-times: 16
+      
+      # 每次拉取的消息数量
+      pull-batch-size: 32
+      
+      # 拉取消息的间隔（毫秒），0 表示不等待
+      pull-interval-ms: 0
+      
+      # 消费模式：CLUSTERING（集群）或 BROADCASTING（广播）
+      message-model: CLUSTERING
+      
+      # 流量控制配置
+      flow-control:
+        enabled: true
+        max-consume-rate: 1000  # 最大消费速率（消息/秒），0 不限制
+        slow-consumer-threshold-ms: 5000  # 慢消费阈值 5s
+        slow-consumer-alert-threshold: 30.0  # 慢消费告警阈值 30%
+        adaptive-enabled: false  # 是否启用自适应流控
+      
+      # 死信队列配置
+      dlq:
+        enabled: true
+        max-retry-before-dlq: 16  # 进入死信队列前的最大重试次数
+        dlq-handler-enabled: true  # 是否启用死信队列自动处理器
+        dlq-message-retention-hours: 72  # 死信消息保留时间 72 小时
+        alert-on-dlq-message: true  # 是否自动告警死信消息
+      
+      # 幂等性配置
+      idempotent:
+        enabled: true
+        ttl-minutes: 30  # 幂等性记录 TTL 30 分钟
+        local-cache-enabled: true  # 是否使用本地缓存作为一级缓存
+        local-cache-max-size: 10000
+        local-cache-ttl-minutes: 10
+      
+      # 监控指标开关
+      metrics-enabled: true

@@ -19,7 +19,6 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
@@ -44,8 +43,16 @@ import reactor.core.publisher.Mono;
 @DisplayName("工作流 Handler 集成测试")
 class WorkflowHandlerIntegrationTest {
 
-    @Autowired
     private WebTestClient webTestClient;
+
+    /**
+     * 构造器注入 WebTestClient（Spring Boot 测试框架自动解析构造器参数）。
+     *
+     * @param webTestClient 响应式 Web 测试客户端
+     */
+    public WorkflowHandlerIntegrationTest(WebTestClient webTestClient) {
+        this.webTestClient = webTestClient;
+    }
 
     @BeforeEach
     void setUpAuthentication() {

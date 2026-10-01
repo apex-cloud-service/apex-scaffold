@@ -34,12 +34,22 @@ import reactor.core.scheduler.Schedulers;
 @RequiredArgsConstructor
 public class MeilisearchAdapter implements SearchRepository, IndexSyncPort {
 
+    private static final int PHONE_NUMBER_LENGTH = 11;
+    private static final int MIN_MASK_LENGTH = 4;
+    /** 手机号脱敏时保留的前缀位数。 */
+    private static final int PHONE_MASK_PREFIX_LENGTH = 3;
+    /** 手机号脱敏时后缀起始位置。 */
+    private static final int PHONE_MASK_SUFFIX_START = 7;
+
     private final Client meilisearchClient;
     private final MeilisearchProperties properties;
     private final ObjectMapper objectMapper;
 
-    // Mappers
+    /**
+     * Mappers
+     */
     private final UserMapper userMapper;
+
     private final RoleMapper roleMapper;
     private final MenuMapper menuMapper;
     private final DeptMapper deptMapper;
@@ -495,10 +505,10 @@ public class MeilisearchAdapter implements SearchRepository, IndexSyncPort {
     }
 
     private String maskPhone(String phone) {
-        if (phone == null || phone.length() != 11) {
+        if (phone == null || phone.length() != PHONE_NUMBER_LENGTH) {
             return phone;
         }
-        return phone.substring(0, 3) + "****" + phone.substring(7);
+        return phone.substring(0, PHONE_MASK_PREFIX_LENGTH) + "****" + phone.substring(PHONE_MASK_SUFFIX_START);
     }
 
     private String buildDeptDescription(DeptPO dept) {
@@ -516,7 +526,7 @@ public class MeilisearchAdapter implements SearchRepository, IndexSyncPort {
     }
 
     private String maskSensitiveValue(String value) {
-        if (value == null || value.length() <= 4) {
+        if (value == null || value.length() <= MIN_MASK_LENGTH) {
             return value;
         }
         return value.substring(0, 2) + "***" + value.substring(value.length() - 2);

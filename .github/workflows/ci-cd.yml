@@ -8,7 +8,7 @@ on:
 
 env:
   JAVA_VERSION: '17'
-  MAVEN_VERSION: '3.9'
+  MVND_VERSION: '2.0.0-rc-3'
 
 jobs:
   # ============================================
@@ -37,11 +37,24 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
       
+      - name: Set up Maven Daemon
+        run: |
+          curl -s "https://get.sdkman.io" | bash
+          source "$HOME/.sdkman/bin/sdkman-init.sh"
+          sdk install mvnd "${MVND_VERSION}"
+          echo "$HOME/.sdkman/candidates/mvnd/current/bin" >> "$GITHUB_PATH"
+
       - name: Compile and check code style
-        run: mvn -B clean compile spotless:check
+        run: mvnd clean compile spotless:check
       
       - name: Run PMD static analysis
-        run: mvn -B pmd:check || true
+        run: mvnd pmd:check || true
+
+      - name: Check SpringDoc annotation coverage
+        run: bash scripts/ci/check-springdoc-coverage.sh
+
+      - name: Run SpringDoc check script regression tests
+        run: python3 scripts/test/test-springdoc-checks.py
   
   # ============================================
   # 单元测试
@@ -69,8 +82,15 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
       
+      - name: Set up Maven Daemon
+        run: |
+          curl -s "https://get.sdkman.io" | bash
+          source "$HOME/.sdkman/bin/sdkman-init.sh"
+          sdk install mvnd "${MVND_VERSION}"
+          echo "$HOME/.sdkman/candidates/mvnd/current/bin" >> "$GITHUB_PATH"
+
       - name: Run unit tests
-        run: mvn -B clean test -P basic
+        run: mvnd clean test -P basic
       
       - name: Upload test results
         if: always()
@@ -140,8 +160,15 @@ jobs:
         run: |
           mysql -h 127.0.0.1 -P 3306 -u root -proot123 apex_example < apex-example/src/main/resources/db/init.sql
       
+      - name: Set up Maven Daemon
+        run: |
+          curl -s "https://get.sdkman.io" | bash
+          source "$HOME/.sdkman/bin/sdkman-init.sh"
+          sdk install mvnd "${MVND_VERSION}"
+          echo "$HOME/.sdkman/candidates/mvnd/current/bin" >> "$GITHUB_PATH"
+
       - name: Run integration tests
-        run: mvn -B verify -P standard -Dskip.unit.tests=true
+        run: mvnd verify -P standard -Dskip.unit.tests=true
         env:
           SPRING_DATASOURCE_URL: jdbc:mysql://localhost:3306/apex_example?useSSL=false&serverTimezone=Asia/Shanghai
           SPRING_DATASOURCE_USERNAME: root
@@ -176,8 +203,15 @@ jobs:
           distribution: 'temurin'
           cache: maven
       
+      - name: Set up Maven Daemon
+        run: |
+          curl -s "https://get.sdkman.io" | bash
+          source "$HOME/.sdkman/bin/sdkman-init.sh"
+          sdk install mvnd "${MVND_VERSION}"
+          echo "$HOME/.sdkman/candidates/mvnd/current/bin" >> "$GITHUB_PATH"
+
       - name: Build JAR
-        run: mvn -B clean package -DskipTests -P enterprise
+        run: mvnd clean package -DskipTests -P enterprise
       
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -220,15 +254,27 @@ jobs:
           distribution: 'temurin'
           cache: maven
       
+      - name: Set up Maven Daemon
+        run: |
+          curl -s "https://get.sdkman.io" | bash
+          source "$HOME/.sdkman/bin/sdkman-init.sh"
+          sdk install mvnd "${MVND_VERSION}"
+          echo "$HOME/.sdkman/candidates/mvnd/current/bin" >> "$GITHUB_PATH"
+
       - name: Build project
-        run: mvn -B clean package -DskipTests -P enterprise
-      
+        run: mvnd clean package -DskipTests -P enterprise
+
+      - name: Archive OpenAPI documentation
+        run: bash scripts/dev/openapi/archive-openapi.sh --version "${GITHUB_REF_NAME#v}"
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
             apex-interfaces/target/*.jar
             apex-example/target/*.jar
+            docs/03-api/openapi/openapi-latest.json
+            docs/03-api/openapi/openapi-latest.yaml
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

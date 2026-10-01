@@ -22,6 +22,14 @@ public abstract class AbstractProductionConfigValidator {
     protected static final Set<String> PLACEHOLDER_VALUES =
             Set.of("minioadmin", "admin", "password", "your-access-key", "your-secret-key");
 
+    /** 错误消息常量 */
+    private static final String MSG_NOT_CONFIGURED = " 未设置";
+
+    private static final String MSG_DEFAULT_CREDENTIAL = " 不得使用默认或占位凭据";
+    private static final String MSG_INVALID_HTTP_URL = " 必须是有效的 HTTP(S) 地址";
+    private static final String SCHEME_HTTP = "http";
+    private static final String SCHEME_HTTPS = "https";
+
     /**
      * Spring 容器初始化后调用的校验入口，委托子类实现具体的校验逻辑。
      *
@@ -59,7 +67,9 @@ public abstract class AbstractProductionConfigValidator {
      * @throws IllegalStateException 当配置值为空时
      */
     protected void requireText(String name, String value) {
-        if (isBlank(value)) throw invalid(name + " 未设置");
+        if (isBlank(value)) {
+            throw invalid(name + MSG_NOT_CONFIGURED);
+        }
     }
 
     /**
@@ -71,7 +81,9 @@ public abstract class AbstractProductionConfigValidator {
      */
     protected void requireSecret(String name, String value) {
         requireText(name, value);
-        if (PLACEHOLDER_VALUES.contains(value.trim().toLowerCase(Locale.ROOT))) throw invalid(name + " 不得使用默认或占位凭据");
+        if (PLACEHOLDER_VALUES.contains(value.trim().toLowerCase(Locale.ROOT))) {
+            throw invalid(name + MSG_DEFAULT_CREDENTIAL);
+        }
     }
 
     /**
@@ -86,10 +98,12 @@ public abstract class AbstractProductionConfigValidator {
         try {
             URI uri = URI.create(value);
             String scheme = uri.getScheme();
-            if (uri.getHost() == null || !("http".equalsIgnoreCase(scheme) || "https".equalsIgnoreCase(scheme)))
-                throw invalid(name + " 必须是有效的 HTTP(S) 地址");
+            if (uri.getHost() == null
+                    || !(SCHEME_HTTP.equalsIgnoreCase(scheme) || SCHEME_HTTPS.equalsIgnoreCase(scheme))) {
+                throw invalid(name + MSG_INVALID_HTTP_URL);
+            }
         } catch (IllegalArgumentException e) {
-            throw invalid(name + " 必须是有效的 HTTP(S) 地址", e);
+            throw invalid(name + MSG_INVALID_HTTP_URL, e);
         }
     }
 

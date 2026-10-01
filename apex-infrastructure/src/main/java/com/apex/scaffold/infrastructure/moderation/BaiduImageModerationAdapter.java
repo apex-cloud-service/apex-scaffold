@@ -46,6 +46,12 @@ import reactor.core.publisher.Mono;
 @ConditionalOnProperty(prefix = "image.moderation.baidu", name = "enabled", havingValue = "true")
 public class BaiduImageModerationAdapter implements ImageModerationPort {
 
+    private static final String JSON_FIELD_PROBABILITY = "probability";
+    private static final int HTTP_STATUS_OK = 200;
+    private static final int HTTP_STATUS_REDIRECT_THRESHOLD = 300;
+    /** 百度云审核结论类型：审核失败。 */
+    private static final int CONCLUSION_TYPE_FAILED = 4;
+
     private static final String PROVIDER = "BAIDU_IMAGE_CENSOR";
     private static final int TOKEN_INVALID = 110;
     private static final int TOKEN_EXPIRED = 111;
@@ -169,7 +175,7 @@ public class BaiduImageModerationAdapter implements ImageModerationPort {
                 .POST(HttpRequest.BodyPublishers.ofString(formBody, StandardCharsets.UTF_8))
                 .build();
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-        if (response.statusCode() < 200 || response.statusCode() >= 300) {
+        if (response.statusCode() < HTTP_STATUS_OK || response.statusCode() >= HTTP_STATUS_REDIRECT_THRESHOLD) {
             throw new IllegalStateException("百度云图片审核 HTTP 调用失败，状态码=" + response.statusCode());
         }
         JsonNode root = JsonUtil.getObjectMapper().readTree(response.body());
@@ -195,7 +201,7 @@ public class BaiduImageModerationAdapter implements ImageModerationPort {
      */
     ImageModerationResult mapResponse(JsonNode root) {
         int conclusionType = root.path("conclusionType").asInt(0);
-        if (conclusionType == 4) {
+        if (conclusionType == CONCLUSION_TYPE_FAILED) {
             throw new IllegalStateException("百度云图片审核返回审核失败");
         }
         ModerationDecision overallDecision = mapDecision(conclusionType);
@@ -251,15 +257,17 @@ public class BaiduImageModerationAdapter implements ImageModerationPort {
      * @return 命中概率（百分比），无法计算时返回 {@code null}
      */
     private BigDecimal probability(JsonNode item) {
-        if (item.has("probability") && item.path("probability").isNumber()) {
-            return percentage(item.path("probability").decimalValue());
+        if (item.has(JSON_FIELD_PROBABILITY)
+                && item.path(JSON_FIELD_PROBABILITY).isNumber()) {
+            return percentage(item.path(JSON_FIELD_PROBABILITY).decimalValue());
         }
         BigDecimal highest = null;
         JsonNode stars = item.path("stars");
         if (stars.isArray()) {
             for (JsonNode star : stars) {
-                if (star.path("probability").isNumber()) {
-                    BigDecimal candidate = percentage(star.path("probability").decimalValue());
+                if (star.path(JSON_FIELD_PROBABILITY).isNumber()) {
+                    BigDecimal candidate =
+                            percentage(star.path(JSON_FIELD_PROBABILITY).decimalValue());
                     if (highest == null || candidate.compareTo(highest) > 0) {
                         highest = candidate;
                     }
@@ -320,7 +328,7 @@ public class BaiduImageModerationAdapter implements ImageModerationPort {
                 .GET()
                 .build();
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-        if (response.statusCode() < 200 || response.statusCode() >= 300) {
+        if (response.statusCode() < HTTP_STATUS_OK || response.statusCode() >= HTTP_STATUS_REDIRECT_THRESHOLD) {
             throw new IllegalStateException("百度云 Access Token 获取失败，状态码=" + response.statusCode());
         }
         JsonNode root = JsonUtil.getObjectMapper().readTree(response.body());
@@ -330,7 +338,8 @@ public class BaiduImageModerationAdapter implements ImageModerationPort {
             throw new IllegalStateException("百度云 Access Token 获取失败，错误码="
                     + root.path("error").asText(root.path("error_code").asText("unknown")));
         }
-        long usableSeconds = Math.max(1, expiresIn - Math.min(300, Math.max(30, expiresIn / 10)));
+        long usableSeconds =
+                Math.max(1, expiresIn - Math.min(HTTP_STATUS_REDIRECT_THRESHOLD, Math.max(30, expiresIn / 10)));
         return new CachedToken(token, Instant.now().plusSeconds(usableSeconds));
     }
 

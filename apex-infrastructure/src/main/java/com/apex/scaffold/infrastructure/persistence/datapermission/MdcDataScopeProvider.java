@@ -41,6 +41,8 @@ import org.slf4j.MDC;
 @Slf4j
 public class MdcDataScopeProvider implements DataScopeProvider {
 
+    private static final String COMMA_SEPARATOR = ",";
+
     /** MDC 键：当前用户 ID */
     public static final String MDC_USER_ID = "apex.userId";
 
@@ -95,7 +97,7 @@ public class MdcDataScopeProvider implements DataScopeProvider {
             return List.of();
         }
         List<Long> ids = new ArrayList<>();
-        for (String part : value.split(",")) {
+        for (String part : value.split(COMMA_SEPARATOR)) {
             Long id = parseLongSafe(part.trim());
             if (id != null) {
                 ids.add(id);

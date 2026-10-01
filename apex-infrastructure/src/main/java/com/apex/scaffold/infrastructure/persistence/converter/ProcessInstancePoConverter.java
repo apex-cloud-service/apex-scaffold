@@ -19,11 +19,35 @@ import org.mapstruct.ReportingPolicy;
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface ProcessInstancePoConverter {
 
+    /**
+     * TODO: Add method description
+     *
+     * @param entity TODO
+     * @return TODO
+     */
     ProcessInstancePO toPo(ProcessInstance entity);
 
+    /**
+     * TODO: Add method description
+     *
+     * @param po TODO
+     * @return TODO
+     */
     ProcessInstance toEntity(ProcessInstancePO po);
 
+    /**
+     * TODO: Add method description
+     *
+     * @param entities TODO
+     * @return TODO
+     */
     List<ProcessInstancePO> toPoList(List<ProcessInstance> entities);
 
+    /**
+     * TODO: Add method description
+     *
+     * @param pos TODO
+     * @return TODO
+     */
     List<ProcessInstance> toEntityList(List<ProcessInstancePO> pos);
 }

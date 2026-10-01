@@ -1,15 +1,19 @@
 package com.apex.scaffold.infrastructure.office.persistence.converter;
 
+import com.apex.scaffold.domain.office.message.CardMessageContent;
+import com.apex.scaffold.domain.office.message.MarkdownMessageContent;
 import com.apex.scaffold.domain.office.message.MessageType;
 import com.apex.scaffold.domain.office.message.OfficeMessage;
+import com.apex.scaffold.domain.office.message.TextMessageContent;
 import com.apex.scaffold.infrastructure.office.persistence.po.OfficeMessagePO;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.annotation.Resource;
 import java.util.List;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * 办公消息转换器
@@ -20,10 +24,20 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @since 1.3.0
  */
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
+@SuppressWarnings({"PMD.AbstractClassShouldStartWithAbstractNamingRule", "PMD.LowerCamelCaseVariableNamingRule"})
 public abstract class OfficeMessageConverter {
 
-    @Autowired
-    protected ObjectMapper objectMapper;
+    /** 消息接收者类型：用户。 */
+    private static final String TARGET_TYPE_USER = "USER";
+    /** 消息接收者类型：群组。 */
+    private static final String TARGET_TYPE_GROUP = "GROUP";
+
+    /**
+     * MapStruct 生成的实现类无法声明带参构造器，故采用 JSR-250 {@code @Resource} 字段注入，
+     * 以避免使用 Spring {@code @Autowired}。
+     */
+    @Resource
+    private ObjectMapper objectMapper = new ObjectMapper();
 
     /**
      * 领域实体转持久化对象
@@ -36,6 +50,7 @@ public abstract class OfficeMessageConverter {
     @Mapping(target = "recipientIds", expression = "java(recipientIdsFromEntity(entity.getTarget()))")
     @Mapping(target = "content", expression = "java(contentToJson(entity.getContent()))")
     @Mapping(target = "status", source = "sendStatus")
+    @Mapping(target = "resultMessage", source = "failureReason")
     public abstract OfficeMessagePO toPO(OfficeMessage entity);
 
     /**
@@ -46,8 +61,9 @@ public abstract class OfficeMessageConverter {
      */
     @Mapping(target = "messageType", expression = "java(stringToMessageType(po.getMessageType()))")
     @Mapping(target = "target", expression = "java(targetFromPo(po))")
-    @Mapping(target = "content", ignore = true)
+    @Mapping(target = "content", expression = "java(contentFromJson(po))")
     @Mapping(target = "sendStatus", source = "status")
+    @Mapping(target = "failureReason", source = "resultMessage")
     public abstract OfficeMessage toEntity(OfficeMessagePO po);
 
     /**
@@ -65,9 +81,9 @@ public abstract class OfficeMessageConverter {
             return null;
         }
 
-        if ("USER".equals(target.getTargetType()) && target.getUserIds() != null) {
+        if (TARGET_TYPE_USER.equals(target.getTargetType()) && target.getUserIds() != null) {
             return listToJson(target.getUserIds());
-        } else if ("GROUP".equals(target.getTargetType()) && target.getGroupIds() != null) {
+        } else if (TARGET_TYPE_GROUP.equals(target.getTargetType()) && target.getGroupIds() != null) {
             return listToJson(target.getGroupIds());
         }
 
@@ -84,19 +100,49 @@ public abstract class OfficeMessageConverter {
 
         List<String> ids = jsonToList(po.getRecipientIds());
 
-        if ("USER".equals(po.getRecipientType())) {
+        if (TARGET_TYPE_USER.equals(po.getRecipientType())) {
             return com.apex.scaffold.domain.office.message.MessageTarget.builder()
-                    .targetType("USER")
+                    .targetType(TARGET_TYPE_USER)
                     .userIds(ids)
                     .build();
-        } else if ("GROUP".equals(po.getRecipientType())) {
+        } else if (TARGET_TYPE_GROUP.equals(po.getRecipientType())) {
             return com.apex.scaffold.domain.office.message.MessageTarget.builder()
-                    .targetType("GROUP")
+                    .targetType(TARGET_TYPE_GROUP)
                     .groupIds(ids)
                     .build();
         }
 
         return null;
+    }
+
+    /**
+     * 从持久化对象恢复消息内容
+     */
+    protected com.apex.scaffold.domain.office.message.MessageContent contentFromJson(OfficeMessagePO po) {
+        if (po.getContent() == null || po.getContent().isBlank()) {
+            return null;
+        }
+        try {
+            MessageType type = stringToMessageType(po.getMessageType());
+            JsonNode node = objectMapper.readTree(po.getContent());
+            JsonNode data = node.has("data") ? node.get("data") : node;
+            return switch (type) {
+                case TEXT -> TextMessageContent.builder()
+                        .text(data.has("text") ? data.get("text").asText() : data.asText())
+                        .build();
+                case MARKDOWN -> MarkdownMessageContent.builder()
+                        .markdown(data.has("markdown") ? data.get("markdown").asText() : data.asText())
+                        .title(data.has("title") ? data.get("title").asText() : null)
+                        .build();
+                case CARD -> CardMessageContent.builder()
+                        .cardJson(data.has("cardJson") ? data.get("cardJson").asText() : data.asText())
+                        .title(data.has("title") ? data.get("title").asText() : null)
+                        .cardType(data.has("cardType") ? data.get("cardType").asText() : null)
+                        .build();
+            };
+        } catch (Exception e) {
+            throw new IllegalArgumentException("办公消息内容格式无效", e);
+        }
     }
 
     /**
@@ -107,9 +153,9 @@ public abstract class OfficeMessageConverter {
             return null;
         }
         try {
-            return objectMapper.writeValueAsString(content.toPlatformContent());
+            return objectMapper.writeValueAsString(content);
         } catch (Exception e) {
-            return null;
+            throw new IllegalArgumentException("办公消息内容无法序列化", e);
         }
     }
 

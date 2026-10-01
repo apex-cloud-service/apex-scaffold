@@ -52,6 +52,8 @@ import reactor.core.publisher.Mono;
 @Tag(name = "后台-定时任务", description = "定时任务管理与执行日志")
 public class JobHandler extends BaseHandler {
 
+    private static final int DEFAULT_PAGE_SIZE_LIMIT = 100;
+
     /**
      * 定时任务应用服务。
      */
@@ -175,7 +177,7 @@ public class JobHandler extends BaseHandler {
                         return Mono.error(new com.apex.scaffold.common.exception.BusinessException(
                                 com.apex.scaffold.common.result.ResultCode.PARAM_ERROR, "pageNum 必须为正整数"));
                     }
-                    if (pageSize < 1 || pageSize > 100) {
+                    if (pageSize < 1 || pageSize > DEFAULT_PAGE_SIZE_LIMIT) {
                         return Mono.error(new com.apex.scaffold.common.exception.BusinessException(
                                 com.apex.scaffold.common.result.ResultCode.PARAM_ERROR, "pageSize 必须为 1-100 之间的正整数"));
                     }

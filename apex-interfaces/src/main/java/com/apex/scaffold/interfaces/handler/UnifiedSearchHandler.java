@@ -49,6 +49,8 @@ import reactor.core.publisher.Mono;
 @Tag(name = "全文搜索", description = "系统资源全文搜索与索引管理接口")
 public class UnifiedSearchHandler {
 
+    private static final int MAX_PAGE_SIZE = 100;
+
     private final SearchService searchService;
     private final IndexSyncService indexSyncService;
 
@@ -106,9 +108,8 @@ public class UnifiedSearchHandler {
         int page = parseIntParam(request, "page", 1);
         int size = parseIntParam(request, "size", 20);
 
-        // 限制分页大小
-        if (size > 100) {
-            size = 100;
+        if (size > MAX_PAGE_SIZE) {
+            size = MAX_PAGE_SIZE;
         }
         if (size < 1) {
             size = 20;

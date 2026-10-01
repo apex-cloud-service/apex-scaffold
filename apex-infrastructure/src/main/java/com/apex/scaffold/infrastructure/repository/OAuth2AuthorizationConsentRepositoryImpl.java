@@ -28,6 +28,7 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @Repository
 @RequiredArgsConstructor
+@SuppressWarnings("PMD.ClassNamingShouldBeCamelRule")
 public class OAuth2AuthorizationConsentRepositoryImpl implements OAuth2AuthorizationConsentRepository {
 
     private final OAuth2AuthorizationConsentMapper mapper;

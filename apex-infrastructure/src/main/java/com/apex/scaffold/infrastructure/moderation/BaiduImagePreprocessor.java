@@ -33,6 +33,8 @@ final class BaiduImagePreprocessor {
     private static final int MIN_DIMENSION = 128;
     private static final long MAX_PIXELS = 36_000_000L;
     private static final float MIN_JPEG_QUALITY = 0.55F;
+    private static final int MAX_RESIZE_ATTEMPTS = 8;
+    private static final float JPEG_QUALITY_STEP = 0.08F;
 
     private final int maxBase64Bytes;
     private final int maxDimension;
@@ -128,9 +130,9 @@ final class BaiduImagePreprocessor {
             throw new IllegalArgumentException("图片宽高比例过大，缩放后最短边不足 " + MIN_DIMENSION + " 像素");
         }
 
-        for (int resizeAttempt = 0; resizeAttempt < 8; resizeAttempt++) {
+        for (int resizeAttempt = 0; resizeAttempt < MAX_RESIZE_ATTEMPTS; resizeAttempt++) {
             BufferedImage rgb = resizeToRgb(source, width, height);
-            for (float quality = initialJpegQuality; quality >= MIN_JPEG_QUALITY; quality -= 0.08F) {
+            for (float quality = initialJpegQuality; quality >= MIN_JPEG_QUALITY; quality -= JPEG_QUALITY_STEP) {
                 byte[] encoded = encodeJpeg(rgb, quality);
                 if (base64Length(encoded.length) <= maxBase64Bytes) {
                     return encoded;

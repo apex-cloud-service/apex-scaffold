@@ -1,67 +1,110 @@
 package com.apex.scaffold.infrastructure.office.client;
 
+import com.apex.scaffold.common.exception.BusinessException;
+import com.apex.scaffold.common.result.ResultCode;
+import com.apex.scaffold.domain.office.OfficePlatform;
+import com.apex.scaffold.domain.office.message.CardMessageContent;
 import com.apex.scaffold.domain.office.message.MessageContent;
 import com.apex.scaffold.domain.office.message.MessageTarget;
+import com.apex.scaffold.domain.office.message.MessageType;
 import com.apex.scaffold.domain.office.port.MessagePort;
+import com.apex.scaffold.infrastructure.office.config.OfficePlatformProperties;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
+import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
-/**
- * 企业微信消息发送客户端
- *
- * <p>封装企业微信消息发送相关的 API 调用，支持文本、Markdown、卡片等多种消息类型。
- * 使用响应式编程模型，所有操作返回 Mono。
- *
- * <p>功能特性：
- * <ul>
- *   <li>支持发送应用消息</li>
- *   <li>支持发送群消息</li>
- *   <li>支持多种消息格式（文本、Markdown、图文卡片）</li>
- *   <li>支持消息发送结果查询</li>
- * </ul>
- *
- * <p>本类实现 {@link MessagePort}，作为 Infrastructure 层的适配器，
- * 实现 Domain 层定义的端口接口，符合端口-适配器架构模式。
- *
- * @author Apex Team
- * @since 1.3.0
- */
-public class WecomMessageClient implements MessagePort {
+@Component
+public class WecomMessageClient extends OfficeApiSupport implements MessagePort {
+    private final ObjectMapper objectMapper;
 
-    /**
-     * 发送消息
-     *
-     * @param target 消息目标（用户或群组）
-     * @param content 消息内容
-     * @return 平台消息ID
-     */
+    public WecomMessageClient(
+            WebClient.Builder builder, OfficePlatformProperties properties, ObjectMapper objectMapper) {
+        super(builder, properties, OfficePlatform.WECOM, "https://qyapi.weixin.qq.com");
+        this.objectMapper = objectMapper;
+    }
+
     @Override
     public Mono<String> sendMessage(MessageTarget target, MessageContent content) {
-        // TODO: 实现企业微信消息发送逻辑
-        // 1. 构建企业微信消息请求体
-        // 2. 调用企业微信 API
-        // 3. 解析响应获取消息ID
-        return Mono.just("wecom_msg_" + System.currentTimeMillis());
+        validate(target, content);
+        return accessToken()
+                .flatMap(token -> call(
+                        body -> text(body.get("msgid"), "企业微信 msgid"),
+                        postJson("/cgi-bin/message/send?access_token=" + token, messageBody(target, content))));
     }
 
-    /**
-     * 查询消息状态
-     *
-     * @param messageId 平台消息ID
-     * @return 消息状态信息
-     */
     @Override
     public Mono<String> queryMessageStatus(String messageId) {
-        // TODO: 实现消息状态查询
-        return Mono.just("SUCCESS");
+        return Mono.error(new BusinessException(ResultCode.BUSINESS_ERROR, "企业微信应用消息不支持通用状态查询"));
     }
 
-    /**
-     * 获取支持的平台类型
-     *
-     * @return 平台类型标识
-     */
+    @Override
+    public Mono<Boolean> recallMessage(String messageId) {
+        required(messageId, "企业微信 msgid");
+        return accessToken()
+                .flatMap(token -> call(
+                        body -> Boolean.TRUE,
+                        postJson("/cgi-bin/message/recall?access_token=" + token, Map.of("msgid", messageId))));
+    }
+
     @Override
     public String getPlatformType() {
         return "wecom";
+    }
+
+    private Mono<String> accessToken() {
+        return call(
+                body -> text(body.get("access_token"), "企业微信 access_token"),
+                getAccessToken(
+                        "/cgi-bin/gettoken",
+                        Map.of(
+                                "corpid", required(properties.getAppId(), "企业微信 corpId"),
+                                "corpsecret", secret("企业微信"))));
+    }
+
+    private Map<String, Object> messageBody(MessageTarget target, MessageContent content) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("agentid", required(properties.getAgentId(), "企业微信 agentId"));
+        if ("USER".equals(target.getTargetType())) {
+            body.put("touser", target.getUserIds().stream().collect(Collectors.joining("|")));
+        } else {
+            body.put("touser", "@all");
+        }
+        body.putAll(messageContent(content));
+        return body;
+    }
+
+    private Map<String, Object> messageContent(MessageContent content) {
+        Map<String, Object> value = new HashMap<>();
+        if (content.getType() == MessageType.TEXT) {
+            value.put("msgtype", "text");
+            value.put("text", Map.of("content", content.getText()));
+        } else if (content.getType() == MessageType.MARKDOWN) {
+            value.put("msgtype", "markdown");
+            value.put("markdown", Map.of("content", content.getText()));
+        } else {
+            try {
+                value.put("msgtype", "template_card");
+                value.put(
+                        "template_card",
+                        objectMapper.readValue(((CardMessageContent) content).getCardJson(), Map.class));
+            } catch (JsonProcessingException error) {
+                throw new BusinessException(ResultCode.BUSINESS_ERROR, "企业微信卡片内容不是合法 JSON");
+            }
+        }
+        return value;
+    }
+
+    private void validate(MessageTarget target, MessageContent content) {
+        if (target == null || !target.isValid()) {
+            throw new BusinessException(ResultCode.BUSINESS_ERROR, "企业微信消息目标无效");
+        }
+        if (content == null || !content.isValid()) {
+            throw new BusinessException(ResultCode.BUSINESS_ERROR, "企业微信消息内容无效");
+        }
     }
 }

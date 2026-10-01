@@ -49,6 +49,14 @@ import reactor.core.publisher.Mono;
 @Tag(name = "社交登录", description = "OIDC和第三方社交登录(GitHub/Google/微信)认证接口")
 public class SocialLoginHandler {
 
+    /**
+     * 发起 Keycloak OIDC 登录
+     *
+     * <p>重定向到 Keycloak 登录页面，触发 OIDC 授权码流程。</p>
+     *
+     * @param request 服务器请求对象
+     * @return 302 重定向到 Keycloak 登录页面的响应对象
+     */
     @Operation(
             operationId = "initiateOidcLogin",
             summary = "发起Keycloak OIDC登录",
@@ -62,6 +70,14 @@ public class SocialLoginHandler {
         return ServerResponse.temporaryRedirect(URI.create(redirectUrl)).build();
     }
 
+    /**
+     * 发起第三方社交登录
+     *
+     * <p>根据 provider 参数重定向到对应的 OAuth2 提供商（github/google/wechat）。</p>
+     *
+     * @param request 服务器请求对象，包含路径参数 provider
+     * @return 302 重定向到第三方 OAuth2 提供商登录页面的响应对象
+     */
     @Operation(
             operationId = "initiateSocialLogin",
             summary = "发起第三方社交登录",
@@ -97,6 +113,14 @@ public class SocialLoginHandler {
         return ServerResponse.temporaryRedirect(URI.create(redirectUrl)).build();
     }
 
+    /**
+     * 处理 OIDC 回调
+     *
+     * <p>验证并返回 OIDC 认证后的 Token 信息。</p>
+     *
+     * @param request 服务器请求对象，包含 OIDC 回调参数
+     * @return 包含 OIDC 认证 Token 信息的响应对象
+     */
     @Operation(operationId = "handleOidcCallback", summary = "处理OIDC回调", description = "验证并返回OIDC认证后的Token信息")
     @ApiResponses({
         @ApiResponse(

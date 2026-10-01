@@ -65,7 +65,7 @@ JWT 配置测试功能（文档模块 1，核心能力 testJwt）：
 | 问题 | 归因 | 建议 |
 |------|------|------|
 | FlywayMigrationVersionTest 失败 | 历史 mysql 迁移存在同版本号重复（V26×5/V27×3/V28×3）且与 postgresql 版本集不对齐（mysql V26/V27 vs pg V47/V48） | 需团队决策：Flyway repair 或补齐对齐占位脚本 |
-| LayeringArchTest 53 处违规 | 用户 apex-auth-center 模块 application→infrastructure 依赖设计（51 处）+ 恢复的 OAuth2ClientSecretRotationServiceImpl（2 处） | 架构评审后决定模块边界 |
+| ~~LayeringArchTest 53 处违规~~ | ✅ **已解决（2026-09-30）**：`apex-application` 移除对 `apex-auth-center` 的跨模块依赖，`SecurityAuditService` 接口+实现下沉至 `apex-common`，`apex-interfaces` 排除对 `authcenter` 包的组件扫描；重跑 `mvn -pl apex-interfaces -am test -Dtest=LayeringArchTest` 结果为 **6/6 通过，0 违规** | 已闭环，无需进一步处理 |
 | SentinelDynamicRulesLoaderTest 失败 | 规则 fixture 含 2 条 system rule 而断言期望 1 条 | 修正 fixture 或断言 |
 | DataScopeServiceTest 失败 | 需要本地 MySQL（环境连接失败） | 启动本地 MySQL 后重跑 |
 | PMD 违规（199+65+50） | 全部为预存文件；本次新增文件仅 2 处魔术常量（DEFAULT_* 常量已定义待生效确认） | 预存部分专项清理 |
@@ -77,3 +77,45 @@ JWT 配置测试功能（文档模块 1，核心能力 testJwt）：
 **新增**：SysDatasource、SysDatasourceRepository（domain）；SysDatasourcePO、SysDatasourceMapper、SysDatasourcePoConverter、SysDatasourceRepositoryImpl（infrastructure）；DataSourceAssembler、DataSourceManagementService（application）；DatabaseConfigHandler 5 方法、ApiRouter 5 路由（interfaces）；Flyway mysql V49/V50、postgresql V49/V50；测试 2 个类 15 用例。
 
 **修改**：OAuth2ClientManagementHandler（权限注解）、DatabaseConfigHandler（扩展）、ApiRouter（扩展）、CacheProperties（事故恢复）、OAuth2RegisteredClientEntity/PO（轮换字段）、SentinelDynamicRulesLoader（loadRulesFromFile）、AGENTS.md（恢复扩展版）、apex-application/pom.xml（java-jwt、auth-center 依赖）、根 pom（模块注册）、basic-schema.sql（补头注释）。
+
+## 六、追加：apex-application / apex-auth-center 模块 Bean 冲突修复（2026-09-30）
+
+> 本节记录第四节中"LayeringArchTest 53 处违规"问题的后续闭环处理过程，独立于上述数据源管理相关改动。
+
+### 6.1 问题背景
+
+`apex-interfaces`（主应用 `Application.java`）与 `apex-auth-center`（独立应用 `AuthCenterApplication.java`）此前因组件扫描范围重叠、且 `apex-application` 显式依赖 `apex-auth-center`，导致：
+1. `LayeringArchTest` 判定 `apex-auth-center` 内 `application→infrastructure` 违规 51 处 + `apex-application` 中恢复的 `OAuth2ClientSecretRotationServiceImpl` 引用违规 2 处，合计 53 处。
+2. 主应用启动时存在潜在 `ConflictingBeanDefinitionException` 风险（两个 `@SpringBootApplication` 的组件扫描范围交叉）。
+
+### 6.2 修复方案与改动
+
+| 改动 | 说明 |
+|------|------|
+| `SecurityAuditService` 接口+实现下沉 | 由 `apex-auth-center` 迁移至 `apex-common`（`com.apex.scaffold.common.audit`），作为跨模块共享的安全审计能力 |
+| 删除死代码 | 移除 `apex-auth-center` 下不再被引用的 `JwtKeyManagementHandler`、旧 `SecurityAuditServiceImplTest` |
+| 更新内部引用 | `JwtKeyRotationServiceTest`、`RefreshTokenRotationServiceTest`、`TokenServiceImplTest`、`OAuth2ClientSecretRotationServiceImpl` 的 import 路径改指向 `com.apex.scaffold.common.audit.SecurityAuditService` |
+| 移除跨模块依赖 | `apex-application/pom.xml` 移除对 `apex-auth-center` 的模块依赖 |
+| 组件扫描隔离 | `apex-interfaces/Application.java` 的 `@ComponentScan` 增加 `excludeFilters` 排除 `com.apex.scaffold.authcenter.*` 包 |
+| 回退过渡性补丁 | `AuditLogAssembler`、`PermissionAssembler`、`RoleAssembler` 的 `@Mapper` 注解移除临时性 `implementationName` 属性 |
+| 新增测试 | `apex-common` 下新增 `SecurityAuditServiceImplTest`，覆盖登录/登出、Token 签发与验证、暴力破解、权限拒绝、密钥轮换等约 29 个场景 |
+
+### 6.3 验证结果
+
+- 编译：`apex-common`、`apex-domain`、`apex-infrastructure`、`apex-application`、`apex-interfaces`、`apex-auth-center` 全部通过。
+- 单元测试：六模块合计约 1988 个测试全部通过，无回归。
+- 架构测试：重跑 `mvn -pl apex-interfaces -am test -Dtest=LayeringArchTest -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false`：
+
+  ```
+  [INFO] Running com.apex.scaffold.arch.LayeringArchTest
+  [INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 22.63 s
+  [INFO] BUILD SUCCESS
+  ```
+
+  第四节记录的 53 处违规**全部清零**。
+- 启动验证：以完整 classpath 方式启动主应用，`ConflictingBeanDefinitionException` 不再出现；剩余报错均为本地缺少 MySQL/Redis 连接的环境性问题，与本次架构改动无关。
+
+### 6.4 遗留说明
+
+- `apex-auth-center` 作为独立部署应用，与 `apex-interfaces` 主应用运行时 classpath 互不包含，因此两者即使存在同名 Bean/Mapper 也不会在运行时冲突；但这属于"部署拓扑侥幸隔离"而非"显式防御"，若未来两模块合并部署需重新评估。
+- 项目未使用显式 `@MapperScan`，MyBatis-Plus 依赖 Spring Boot 自动配置默认扫描规则（以各自主启动类所在包为根），当前两个应用包路径不重叠，暂无冲突风险。

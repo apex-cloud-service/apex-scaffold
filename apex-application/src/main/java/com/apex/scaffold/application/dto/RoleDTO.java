@@ -20,6 +20,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Schema(description = "角色DTO")
 public class RoleDTO {
 
     /**

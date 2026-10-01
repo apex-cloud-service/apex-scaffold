@@ -94,6 +94,7 @@ public class LokiAdapter implements RuntimeLogRepository {
                 .onErrorReturn(0L);
     }
 
+    @SuppressWarnings("PMD.LowerCamelCaseVariableNamingRule")
     private String buildLogQLQuery(String level, String logger, String message) {
         StringBuilder query = new StringBuilder("{job=\"apex-scaffold\"}");
 

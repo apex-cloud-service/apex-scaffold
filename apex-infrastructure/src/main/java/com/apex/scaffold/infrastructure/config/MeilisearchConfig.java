@@ -40,12 +40,16 @@ import org.springframework.validation.annotation.Validated;
  *
  * <h3>使用示例</h3>
  * <pre>{@code
- * @Autowired
- * private Client meilisearchClient;
+ * @Service
+ * @RequiredArgsConstructor
+ * public class SearchService {
  *
- * public void indexDocument() {
- *     Index index = meilisearchClient.index("apex_system_resources");
- *     index.addDocuments("[{\"id\":\"user_1\",\"title\":\"张三\"}]");
+ *     private final Client meilisearchClient;
+ *
+ *     public void indexDocument() {
+ *         Index index = meilisearchClient.index("apex_system_resources");
+ *         index.addDocuments("[{\"id\":\"user_1\",\"title\":\"张三\"}]");
+ *     }
  * }
  * }</pre>
  *

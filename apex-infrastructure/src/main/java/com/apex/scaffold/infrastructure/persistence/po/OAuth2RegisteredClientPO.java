@@ -22,6 +22,7 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 @SuperBuilder
 @TableName("oauth2_registered_client")
+@SuppressWarnings("PMD.ClassNamingShouldBeCamelRule")
 public class OAuth2RegisteredClientPO {
 
     @TableId(value = "id", type = IdType.INPUT)

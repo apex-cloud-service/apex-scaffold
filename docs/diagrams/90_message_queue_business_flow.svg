@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1800 1300" width="1800" height="1300">
+  <defs>
+    <style>
+      .title{font:700 32px sans-serif;fill:#0f172a;text-anchor:middle}
+      .subtitle{font:500 13px sans-serif;fill:#64748b;text-anchor:middle}
+      .phase-title{font:600 18px sans-serif;fill:#fff}
+      .step-title{font:600 14px sans-serif;fill:#0f172a}
+      .step-desc{font:400 11px sans-serif;fill:#475569}
+      .code{font:500 10px monospace;fill:#2563eb}
+      .highlight{font:600 11px sans-serif;fill:#dc2626}
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/>
+    </marker>
+  </defs>
+  
+  <rect width="1800" height="1300" fill="#fff"/>
+  <text x="900" y="40" class="title">RocketMQ 消息队列完整业务流程</text>
+  <text x="900" y="65" class="subtitle">生产者发送 → Broker持久化 → 消费者拉取 → 失败重试 → 死信队列 → 幂等性保障 · v1.0</text>
+  
+  <rect x="50" y="100" width="550" height="380" rx="8" fill="#3b82f6" opacity="0.1" stroke="#3b82f6" stroke-width="2"/>
+  <rect x="50" y="100" width="550" height="40" rx="8" fill="#3b82f6"/>
+  <text x="70" y="128" class="phase-title">① 生产者发送消息</text>
+  
+  <rect x="70" y="160" width="510" height="300" rx="6" fill="#fff" stroke="#dbeafe" stroke-width="2"/>
+  <text x="90" y="183" class="step-title">MqProducerService 发送消息</text>
+  <text x="90" y="210" class="code">// 同步发送 (默认)</text>
+  <text x="90" y="227" class="code">mqProducerService.send(</text>
+  <text x="110" y="244" class="code">topic: "USER_REGISTER_EVENT",</text>
+  <text x="110" y="261" class="code">tags: "REGISTER",</text>
+  <text x="110" y="278" class="code">body: {"userId": 1001, "username": "张三"}</text>
+  <text x="90" y="295" class="code">);</text>
+  
+  <text x="90" y="325" class="code">// 异步发送</text>
+  <text x="90" y="342" class="code">mqProducerService.sendAsync(topic, body, callback);</text>
+  
+  <text x="90" y="372" class="code">// 延迟消息 (订单超时取消)</text>
+  <text x="90" y="389" class="code">mqProducerService.sendDelay(topic, body,</text>
+  <text x="110" y="406" class="code">delayLevel: 16); // 30分钟后</text>
+  
+  <text x="90" y="436" class="code">// 事务消息 (分布式事务)</text>
+  <text x="90" y="453" class="code">mqProducerService.sendTransaction(topic, body, localTxExecutor);</text>
+  
+  <line x1="325" y1="480" x2="325" y2="510" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+  
+  <rect x="650" y="100" width="550" height="380" rx="8" fill="#10b981" opacity="0.1" stroke="#10b981" stroke-width="2"/>
+  <rect x="650" y="100" width="550" height="40" rx="8" fill="#10b981"/>
+  <text x="670" y="128" class="phase-title">② Broker 持久化</text>
+  
+  <rect x="670" y="160" width="510" height="300" rx="6" fill="#fff" stroke="#d1fae5" stroke-width="2"/>
+  <text x="690" y="183" class="step-title">RocketMQ Broker 存储机制</text>
+  
+  <text x="690" y="210" class="code">1. CommitLog (顺序写入)</text>
+  <text x="710" y="227" class="step-desc">所有消息顺序追加到CommitLog文件</text>
+  <text x="710" y="244" class="step-desc">1GB单文件,写满自动切换</text>
+  
+  <text x="690" y="274" class="code">2. ConsumeQueue (索引)</text>
+  <text x="710" y="291" class="step-desc">按Topic+Tag分类索引</text>
+  <text x="710" y="308" class="step-desc">记录消息在CommitLog的offset</text>
+  
+  <text x="690" y="338" class="code">3. IndexFile (辅助索引)</text>
+  <text x="710" y="355" class="step-desc">按MessageKey/MessageId快速查找</text>
+  
+  <text x="690" y="385" class="highlight">持久化策略:</text>
+  <text x="690" y="405" class="code">• 同步刷盘: 每条消息立即写磁盘</text>
+  <text x="710" y="422" class="step-desc">(高可靠,低吞吐)</text>
+  <text x="690" y="439" class="code">• 异步刷盘: PageCache批量刷盘</text>
+  <text x="710" y="456" class="step-desc">(高吞吐,极端情况丢消息)</text>
+  
+  <line x1="925" y1="480" x2="925" y2="510" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+  
+  <rect x="50" y="520" width="550" height="330" rx="8" fill="#f59e0b" opacity="0.1" stroke="#f59e0b" stroke-width="2"/>
+  <rect x="50" y="520" width="550" height="40" rx="8" fill="#f59e0b"/>
+  <text x="70" y="548" class="phase-title">③ 消费者拉取消息</text>
+  
+  <rect x="70" y="580" width="510" height="250" rx="6" fill="#fff" stroke="#fef3c7" stroke-width="2"/>
+  <text x="90" y="603" class="step-title">MqConsumerService 消费消息</text>
+  
+  <text x="90" y="630" class="code">@MessageListener(</text>
+  <text x="110" y="647" class="code">topic = "USER_REGISTER_EVENT",</text>
+  <text x="110" y="664" class="code">tags = "REGISTER",</text>
+  <text x="110" y="681" class="code">consumerGroup = "user-service-group"</text>
+  <text x="90" y="698" class="code">)</text>
+  <text x="90" y="715" class="code">public ConsumeResult onMessage(Message msg) {</text>
+  <text x="110" y="732" class="code">String body = new String(msg.getBody());</text>
+  <text x="110" y="749" class="code">UserRegisterEvent event = JSON.parse(body);</text>
+  <text x="110" y="773" class="highlight">// 业务处理</text>
+  <text x="110" y="790" class="code">sendWelcomeEmail(event.getUserId());</text>
+  <text x="110" y="813" class="code">return ConsumeResult.SUCCESS;</text>
+  <text x="90" y="830" class="code">}</text>
+  
+  <line x1="325" y1="850" x2="325" y2="880" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+  
+  <rect x="650" y="520" width="550" height="330" rx="8" fill="#8b5cf6" opacity="0.1" stroke="#8b5cf6" stroke-width="2"/>
+  <rect x="650" y="520" width="550" height="40" rx="8" fill="#8b5cf6"/>
+  <text x="670" y="548" class="phase-title">④ 消费失败重试机制</text>
+  
+  <rect x="670" y="580" width="510" height="250" rx="6" fill="#fff" stroke="#c4b5fd" stroke-width="2"/>
+  <text x="690" y="603" class="step-title">自动重试 + 死信队列</text>
+  
+  <text x="690" y="630" class="code">1. 消费失败返回 RECONSUME_LATER</text>
+  <text x="710" y="647" class="step-desc">消息进入重试队列: %RETRY%user-service-group</text>
+  
+  <text x="690" y="677" class="code">2. 重试延迟策略 (16次)</text>
+  <text x="710" y="694" class="step-desc">10s, 30s, 1m, 2m, 3m, 4m, 5m, 6m,</text>
+  <text x="710" y="711" class="step-desc">7m, 8m, 9m, 10m, 20m, 30m, 1h, 2h</text>
+  
+  <text x="690" y="741" class="highlight">3. 超过16次 → 死信队列</text>
+  <text x="710" y="758" class="code">%DLQ%user-service-group</text>
+  <text x="710" y="775" class="step-desc">需要人工介入处理</text>
+  
+  <text x="690" y="805" class="code">4. 死信队列监控告警</text>
+  <text x="710" y="822" class="step-desc">DLQ消息累积 → 触发告警</text>
+  
+  <line x1="925" y1="850" x2="925" y2="880" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+  
+  <rect x="50" y="890" width="550" height="330" rx="8" fill="#ef4444" opacity="0.1" stroke="#ef4444" stroke-width="2"/>
+  <rect x="50" y="890" width="550" height="40" rx="8" fill="#ef4444"/>
+  <text x="70" y="918" class="phase-title">⑤ 消息幂等性保障</text>
+  
+  <rect x="70" y="950" width="510" height="250" rx="6" fill="#fff" stroke="#fecaca" stroke-width="2"/>
+  <text x="90" y="973" class="step-title">防止重复消费</text>
+  
+  <text x="90" y="1000" class="code">@Idempotent(key = "#msg.msgId")</text>
+  <text x="90" y="1017" class="code">public ConsumeResult onMessage(Message msg) {</text>
+  <text x="110" y="1034" class="code">String msgId = msg.getMsgId();</text>
+  <text x="110" y="1058" class="highlight">// 1. 检查业务去重表</text>
+  <text x="110" y="1075" class="code">if (consumedMsgRepository.exists(msgId)) {</text>
+  <text x="130" y="1092" class="code">return ConsumeResult.SUCCESS;</text>
+  <text x="110" y="1109" class="code">}</text>
+  <text x="110" y="1133" class="highlight">// 2. 业务处理 + 记录消费</text>
+  <text x="110" y="1150" class="code">@Transactional</text>
+  <text x="110" y="1167" class="code">processBusinessLogic();</text>
+  <text x="110" y="1184" class="code">consumedMsgRepository.save(msgId);</text>
+  <text x="90" y="1201" class="code">}</text>
+  
+  <rect x="650" y="890" width="550" height="330" rx="8" fill="#0891b2" opacity="0.1" stroke="#0891b2" stroke-width="2"/>
+  <rect x="650" y="890" width="550" height="40" rx="8" fill="#0891b2"/>
+  <text x="670" y="918" class="phase-title">⑥ 核心特性总结</text>
+  
+  <rect x="670" y="950" width="250" height="250" rx="6" fill="#fff" stroke="#cffafe" stroke-width="1.5"/>
+  <text x="690" y="973" class="step-title">可靠性保障</text>
+  <text x="690" y="993" class="code">✅ Outbox模式投递</text>
+  <text x="710" y="1010" class="step-desc">本地事务 + 消息投递</text>
+  <text x="690" y="1030" class="code">✅ 失败降级策略</text>
+  <text x="710" y="1047" class="step-desc">LOG/OUTBOX/LOCAL_QUEUE</text>
+  <text x="690" y="1067" class="code">✅ 分布式事务</text>
+  <text x="710" y="1084" class="step-desc">事务消息 + 本地事务</text>
+  <text x="690" y="1104" class="code">✅ 消费幂等</text>
+  <text x="710" y="1121" class="step-desc">业务去重表 + AOP切面</text>
+  <text x="690" y="1141" class="code">✅ 顺序消息</text>
+  <text x="710" y="1158" class="step-desc">按MessageKey保证顺序</text>
+  <text x="690" y="1178" class="code">✅ 延迟消息</text>
+  <text x="710" y="1195" class="step-desc">18个延迟级别</text>
+  
+  <rect x="940" y="950" width="240" height="250" rx="6" fill="#fff" stroke="#cffafe" stroke-width="1.5"/>
+  <text x="960" y="973" class="step-title">性能优化</text>
+  <text x="960" y="993" class="code">• 批量发送</text>
+  <text x="980" y="1010" class="step-desc">减少网络开销</text>
+  <text x="960" y="1030" class="code">• 异步发送</text>
+  <text x="980" y="1047" class="step-desc">不阻塞主流程</text>
+  <text x="960" y="1067" class="code">• 消息压缩</text>
+  <text x="980" y="1084" class="step-desc">大消息自动压缩</text>
+  <text x="960" y="1104" class="code">• 并发消费</text>
+  <text x="980" y="1121" class="step-desc">线程池并行处理</text>
+  <text x="960" y="1141" class="code">• 租户上下文</text>
+  <text x="980" y="1158" class="step-desc">自动注入tenantId</text>
+  <text x="960" y="1178" class="code">• 监控告警</text>
+  <text x="980" y="1195" class="step-desc">消息堆积/DLQ告警</text>
+  
+  <text x="900" y="1285" class="code" text-anchor="middle">© 2026 Apex Team · RocketMQ消息队列流程 v1.0 · 完整90张SVG架构图集合</text>
+</svg>

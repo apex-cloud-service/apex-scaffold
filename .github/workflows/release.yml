@@ -4,7 +4,7 @@ name: Release Pipeline
 # Apex Scaffold 发布流水线（C13 CD）
 # 触发：推送 v* 标签（如 v1.1.3）时，执行三档构建并上传发布产物。
 # 产物：dist/apex-scaffold-<version>-<profile>.zip（basic/standard/enterprise）
-# 说明：CI 容器使用 temurin + Maven（容器原生），与本地 sdkman+mvnd 环境互补。
+# 说明：CI 使用 SDKMAN 管理 Maven Daemon，与本地构建环境保持一致。
 # ================================================================
 
 on:
@@ -14,7 +14,7 @@ on:
 
 env:
   JAVA_VERSION: '17'
-  MAVEN_VERSION: '3.9'
+  MVND_VERSION: '2.0.0-rc-3'
 
 jobs:
   # ============================================
@@ -34,12 +34,19 @@ jobs:
           java-version: ${{ env.JAVA_VERSION }}
           cache: maven
 
+      - name: Set up Maven Daemon
+        run: |
+          curl -s "https://get.sdkman.io" | bash
+          source "$HOME/.sdkman/bin/sdkman-init.sh"
+          sdk install mvnd "${MVND_VERSION}"
+          echo "$HOME/.sdkman/candidates/mvnd/current/bin" >> "$GITHUB_PATH"
+
       - name: Extract version from tag
         id: version
         run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
 
       - name: Build basic tier
-        run: mvn -B -q clean package -Pbasic -DskipTests
+        run: mvnd -q clean package -Pbasic -DskipTests
         env:
           MAVEN_OPTS: -Xmx1024m
 
@@ -51,7 +58,7 @@ jobs:
             LICENSE LICENSE-COMMERCIAL.md docs config docker-compose.yml Dockerfile k8s scripts
 
       - name: Build standard tier
-        run: mvn -B -q clean package -Pstandard -DskipTests
+        run: mvnd -B -q clean package -Pstandard -DskipTests
         env:
           MAVEN_OPTS: -Xmx1024m
 
@@ -62,7 +69,7 @@ jobs:
             LICENSE LICENSE-COMMERCIAL.md docs config docker-compose.yml Dockerfile k8s scripts
 
       - name: Build enterprise tier
-        run: mvn -B -q clean package -Penterprise -DskipTests
+        run: mvnd -B -q clean package -Penterprise -DskipTests
         env:
           MAVEN_OPTS: -Xmx1024m
 

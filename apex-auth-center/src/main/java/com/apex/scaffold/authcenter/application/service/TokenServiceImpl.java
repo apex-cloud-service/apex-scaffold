@@ -4,9 +4,9 @@ import com.apex.scaffold.authcenter.domain.model.entity.TokenEntity;
 import com.apex.scaffold.authcenter.domain.model.vo.TokenPair;
 import com.apex.scaffold.authcenter.domain.repository.TokenRepository;
 import com.apex.scaffold.authcenter.domain.repository.UserRepository;
-import com.apex.scaffold.authcenter.domain.service.SecurityAuditService;
 import com.apex.scaffold.authcenter.domain.service.TokenEncryptionService;
 import com.apex.scaffold.authcenter.domain.service.TokenService;
+import com.apex.scaffold.common.audit.SecurityAuditService;
 import com.apex.scaffold.common.context.TenantContext;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.result.ResultCode;
@@ -78,6 +78,7 @@ public class TokenServiceImpl implements TokenService {
     private static final long REFRESH_TOKEN_EXPIRE_MS = 7 * 24 * 60 * 60 * 1000L;
 
     @Override
+    @SuppressWarnings("PMD.MethodTooLongRule")
     public Mono<TokenPair> issueToken(Long userId, String tenantId, String deviceId, String clientIp) {
         log.debug("开始签发Token: userId={}, tenantId={}, deviceId={}", userId, tenantId, deviceId);
 

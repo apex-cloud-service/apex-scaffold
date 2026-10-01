@@ -91,6 +91,14 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class WorkflowService {
 
+    private static final String STATUS_SUSPENDED = "SUSPENDED";
+
+    private static final String STATUS_REJECTED = "REJECTED";
+
+    private static final String STATUS_COMPLETED = "COMPLETED";
+
+    private static final String STATUS_PENDING = "PENDING";
+
     private final WorkflowDefinitionRepository workflowDefinitionRepository;
     private final ProcessInstanceRepository processInstanceRepository;
     private final TaskRepository taskRepository;
@@ -165,7 +173,7 @@ public class WorkflowService {
         return taskRepository
                 .findById(taskId)
                 .flatMap(task -> {
-                    task.setStatus("COMPLETED");
+                    task.setStatus(STATUS_COMPLETED);
                     task.setCompletedTime(LocalDateTime.now());
                     return taskRepository.updateById(task);
                 })
@@ -186,12 +194,12 @@ public class WorkflowService {
         return taskRepository
                 .findById(taskId)
                 .flatMap(task -> {
-                    task.setStatus("REJECTED");
+                    task.setStatus(STATUS_REJECTED);
                     task.setCompletedTime(LocalDateTime.now());
                     return taskRepository.updateById(task);
                 })
                 .flatMap(count -> processInstanceRepository.findById(taskId).flatMap(instance -> {
-                    instance.setStatus("REJECTED");
+                    instance.setStatus(STATUS_REJECTED);
                     instance.setEndTime(LocalDateTime.now());
                     return processInstanceRepository.updateById(instance);
                 }))
@@ -264,7 +272,7 @@ public class WorkflowService {
                                 Task newTask = new Task();
                                 newTask.setProcessInstanceId(instance.getId());
                                 newTask.setNodeCode(targetNodeCode);
-                                newTask.setStatus("PENDING");
+                                newTask.setStatus(STATUS_PENDING);
                                 newTask.setAssigneeId(operatorId);
                                 newTask.setCreatedTime(LocalDateTime.now());
                                 return taskRepository.insert(newTask);
@@ -319,7 +327,7 @@ public class WorkflowService {
         return taskRepository
                 .findById(taskId)
                 .flatMap(task -> {
-                    if (!"PENDING".equals(task.getStatus())) {
+                    if (!STATUS_PENDING.equals(task.getStatus())) {
                         return Mono.error(new IllegalStateException("只能转办待办任务"));
                     }
                     if (!task.getAssigneeId().equals(operatorId)) {
@@ -376,7 +384,7 @@ public class WorkflowService {
         return taskRepository
                 .findById(taskId)
                 .flatMap(task -> {
-                    if (!"PENDING".equals(task.getStatus())) {
+                    if (!STATUS_PENDING.equals(task.getStatus())) {
                         return Mono.error(new IllegalStateException("只能委派待办任务"));
                     }
                     if (!task.getAssigneeId().equals(operatorId)) {
@@ -434,14 +442,14 @@ public class WorkflowService {
         return processInstanceRepository
                 .findById(processInstanceId)
                 .flatMap(instance -> {
-                    if ("COMPLETED".equals(instance.getStatus()) || "REJECTED".equals(instance.getStatus())) {
+                    if (STATUS_COMPLETED.equals(instance.getStatus()) || STATUS_REJECTED.equals(instance.getStatus())) {
                         return Mono.error(new IllegalStateException("已完成或已驳回的流程无法挂起"));
                     }
-                    if ("SUSPENDED".equals(instance.getStatus())) {
+                    if (STATUS_SUSPENDED.equals(instance.getStatus())) {
                         return Mono.error(new IllegalStateException("流程已处于挂起状态"));
                     }
                     instance.setSuspended(true);
-                    instance.setStatus("SUSPENDED");
+                    instance.setStatus(STATUS_SUSPENDED);
                     return processInstanceRepository.updateById(instance);
                 })
                 .then();
@@ -487,7 +495,7 @@ public class WorkflowService {
         return processInstanceRepository
                 .findById(processInstanceId)
                 .flatMap(instance -> {
-                    if (!"SUSPENDED".equals(instance.getStatus())) {
+                    if (!STATUS_SUSPENDED.equals(instance.getStatus())) {
                         return Mono.error(new IllegalStateException("只能恢复挂起状态的流程"));
                     }
                     instance.setSuspended(false);

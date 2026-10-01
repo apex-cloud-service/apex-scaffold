@@ -78,7 +78,7 @@ if [[ ! -f "${PRIVATE_KEY}" || ! -f "${PUBLIC_KEY}" ]]; then
   exit 1
 fi
 
-# 构建 classpath（统一使用 mvnd + sdkman JDK；无 sdkman 时回退系统 mvn）
+# 构建 classpath（统一使用 SDKMAN 管理的 mvnd）
 # 先确保 apex-common 已构建（离线优先，失败回退在线）
 if [[ -f "$HOME/.sdkman/bin/sdkman-init.sh" ]]; then
   # shellcheck disable=SC1091
@@ -86,16 +86,12 @@ if [[ -f "$HOME/.sdkman/bin/sdkman-init.sh" ]]; then
 fi
 # LicenseGenerator 位于卖方内部模块 apex-license-tools（发行源码已剥离）
 CP_FILE="$(mktemp)"
-if command -v mvnd >/dev/null 2>&1; then
-  MAVEN_OPTS="-Xmx512m" mvnd -o -q dependency:build-classpath -pl apex-license-tools -Dmdep.outputFile="${CP_FILE}" 2>/dev/null \
-    || MAVEN_OPTS="-Xmx512m" mvnd -q dependency:build-classpath -pl apex-license-tools -Dmdep.outputFile="${CP_FILE}"
-elif command -v mvn >/dev/null 2>&1; then
-  mvn -q -o dependency:build-classpath -pl apex-license-tools -Dmdep.outputFile="${CP_FILE}" 2>/dev/null \
-    || mvn -q dependency:build-classpath -pl apex-license-tools -Dmdep.outputFile="${CP_FILE}"
-else
-  echo "❌ 未找到 mvnd/mvn，请先安装: sdk install mvnd"
+if ! command -v mvnd >/dev/null 2>&1; then
+  echo "❌ 未找到 mvnd，请先安装: sdk install mvnd 2.0.0-rc-3"
   exit 1
 fi
+MAVEN_OPTS="-Xmx512m" mvnd -o -q dependency:build-classpath -pl apex-license-tools -Dmdep.outputFile="${CP_FILE}" 2>/dev/null \
+  || MAVEN_OPTS="-Xmx512m" mvnd -q dependency:build-classpath -pl apex-license-tools -Dmdep.outputFile="${CP_FILE}"
 CP="apex-license-tools/target/classes:apex-license-spring-boot-starter/target/classes:apex-common/target/classes:$(cat "${CP_FILE}")"
 rm -f "${CP_FILE}"
 

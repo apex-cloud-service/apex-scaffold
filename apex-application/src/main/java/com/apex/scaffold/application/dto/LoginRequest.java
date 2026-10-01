@@ -62,6 +62,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Schema(description = "登录请求")
 public class LoginRequest {
 
     /**

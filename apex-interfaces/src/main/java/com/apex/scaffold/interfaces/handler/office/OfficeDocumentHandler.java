@@ -1,6 +1,7 @@
 package com.apex.scaffold.interfaces.handler.office;
 
 import com.apex.scaffold.application.office.OfficeDocumentService;
+import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.domain.office.document.DocumentType;
 import com.apex.scaffold.interfaces.assembler.office.DocumentInfoAssembler;
@@ -64,6 +65,7 @@ public class OfficeDocumentHandler {
      * @param request ServerRequest对象，包含请求体和参数
      * @return Mono&lt;ServerResponse&gt; 包含创建成功的文档信息
      */
+    @OperationLog(module = "办公平台文档管理", type = OperationLog.OperationType.INSERT, description = "创建文档")
     @Operation(summary = "创建文档", description = "在指定办公平台创建新文档，支持多种文档类型")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
             required = true,
@@ -118,6 +120,7 @@ public class OfficeDocumentHandler {
      * @param request ServerRequest对象，包含文件内容和参数
      * @return Mono&lt;ServerResponse&gt; 包含上传成功的文档信息
      */
+    @OperationLog(module = "办公平台文档管理", type = OperationLog.OperationType.INSERT, description = "上传文件")
     @Operation(summary = "上传文件", description = "上传文件到指定办公平台，文件内容需Base64编码")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
             required = true,
@@ -348,6 +351,7 @@ public class OfficeDocumentHandler {
      * @param request ServerRequest对象，路径参数包含documentId
      * @return Mono&lt;ServerResponse&gt; 包含删除结果
      */
+    @OperationLog(module = "办公平台文档管理", type = OperationLog.OperationType.DELETE, description = "删除文档")
     @Operation(summary = "删除文档", description = "删除指定的文档")
     @Parameters({
         @Parameter(
@@ -386,6 +390,7 @@ public class OfficeDocumentHandler {
      * @param request ServerRequest对象，路径参数包含documentId，查询参数包含targetFolderId
      * @return Mono&lt;ServerResponse&gt; 包含移动后的文档信息
      */
+    @OperationLog(module = "办公平台文档管理", type = OperationLog.OperationType.UPDATE, description = "移动文档")
     @Operation(summary = "移动文档", description = "移动文档到指定的文件夹")
     @Parameters({
         @Parameter(
@@ -435,6 +440,7 @@ public class OfficeDocumentHandler {
      * @param request ServerRequest对象，路径参数包含documentId，查询参数包含targetFolderId
      * @return Mono&lt;ServerResponse&gt; 包含复制后的文档信息
      */
+    @OperationLog(module = "办公平台文档管理", type = OperationLog.OperationType.INSERT, description = "复制文档")
     @Operation(summary = "复制文档", description = "复制指定的文档到目标文件夹")
     @Parameters({
         @Parameter(

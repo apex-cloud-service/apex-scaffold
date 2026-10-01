@@ -36,6 +36,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Schema(description = "手机号校验响应")
 public class MobileValidateResponse {
 
     /**

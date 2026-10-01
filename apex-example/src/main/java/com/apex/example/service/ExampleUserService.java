@@ -254,6 +254,7 @@ public class ExampleUserService {
      * @return 脱敏后的手机号
      */
     private static final int MIN_PHONE_LENGTH = 7;
+
     private static final int PHONE_PREFIX_LENGTH = 3;
     private static final int PHONE_SUFFIX_LENGTH = 4;
     private static final String PHONE_MASK = "****";

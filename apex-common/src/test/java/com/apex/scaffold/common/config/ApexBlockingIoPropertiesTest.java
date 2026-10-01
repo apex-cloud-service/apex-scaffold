@@ -5,10 +5,10 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import jakarta.annotation.Resource;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -62,8 +62,11 @@ class ApexBlockingIoPropertiesTest {
     @DisplayName("默认值基线验证")
     class DefaultValuesBaseline {
 
-        /** 被测试的配置属性对象，由 Spring 上下文自动注入。 */
-        @Autowired
+        /**
+         * 被测试的配置属性对象。{@code @Nested} 内部类的构造器首参为外部类实例，
+         * 无法通过构造器注入 Spring Bean，故采用 JSR-250 {@code @Resource} 字段注入。
+         */
+        @Resource
         private ApexBlockingIoProperties properties;
 
         /**
@@ -144,8 +147,11 @@ class ApexBlockingIoPropertiesTest {
     @DisplayName("自定义属性覆盖验证")
     class CustomPropertyOverride {
 
-        /** 被测试的配置属性对象，由 Spring 上下文自动注入。 */
-        @Autowired
+        /**
+         * 被测试的配置属性对象。{@code @Nested} 内部类的构造器首参为外部类实例，
+         * 无法通过构造器注入 Spring Bean，故采用 JSR-250 {@code @Resource} 字段注入。
+         */
+        @Resource
         private ApexBlockingIoProperties properties;
 
         /**

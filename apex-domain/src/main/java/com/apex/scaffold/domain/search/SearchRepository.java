@@ -75,19 +75,25 @@ import reactor.core.publisher.Mono;
  *
  * <h3>使用示例</h3>
  * <pre>{@code
- * // 在 Application Service 中注入本接口
- * @Autowired
- * private SearchRepository searchRepository;
+ * // 在 Application Service 中通过构造器注入本接口
+ * @Service
+ * @RequiredArgsConstructor
+ * public class SearchApplicationService {
  *
- * // 跨类型混合搜索
- * Mono<PageResponse<SearchResultEntity>> results = searchRepository.search(
- *     "张三",                      // 关键词
- *     Set.of("user", "role"),    // 搜索范围：用户和角色
- *     1L,                         // 租户ID（从 SecurityContext 获取）
- *     1001L,                      // 当前用户ID（从 SecurityContext 获取）
- *     1,                          // 页码
- *     20                          // 每页大小
- * );
+ *     private final SearchRepository searchRepository;
+ *
+ *     public Mono<PageResponse<SearchResultEntity>> searchUsers(String keyword) {
+ *         // 跨类型混合搜索
+ *         return searchRepository.search(
+ *             keyword,                    // 关键词
+ *             Set.of("user", "role"),    // 搜索范围：用户和角色
+ *             1L,                         // 租户ID（从 SecurityContext 获取）
+ *             1001L,                      // 当前用户ID（从 SecurityContext 获取）
+ *             1,                          // 页码
+ *             20                          // 每页大小
+ *         );
+ *     }
+ * }
  * }</pre>
  *
  * <h3>实现注意事项</h3>

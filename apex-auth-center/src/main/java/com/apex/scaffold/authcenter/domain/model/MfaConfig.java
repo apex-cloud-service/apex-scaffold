@@ -152,11 +152,12 @@ public class MfaConfig {
     /**
      * 增加失败次数
      */
+    private static final int MAX_FAILED_ATTEMPTS = 5;
+
     public void incrementFailedAttempts() {
         this.failedAttempts = (this.failedAttempts == null ? 0 : this.failedAttempts) + 1;
 
-        // 失败5次后锁定
-        if (this.failedAttempts >= 5) {
+        if (this.failedAttempts >= MAX_FAILED_ATTEMPTS) {
             this.status = MfaStatus.LOCKED;
         }
     }

@@ -18,6 +18,14 @@
     <name>apex-application</name>
     <description>Apex Scaffold - Application Module</description>
 
+    <!--
+      - 说明（2026-09-30）：本模块已移除对 apex-auth-center 的模块依赖。
+      - 原因：apex-auth-center 是独立部署的认证中心应用，此前 apex-application 引入该依赖
+      -       仅为了使用其内部的 SecurityAuditService（用于 OAuth2 客户端密钥轮换审计），
+      -       这属于跨应用边界的反向依赖，会导致 LayeringArchTest 架构违规及潜在的组件扫描/
+      -       Bean 冲突风险。SecurityAuditService 接口与实现已下沉至 apex-common，
+      -       本模块通过既有的 apex-common 依赖即可获得该能力，无需再依赖 apex-auth-center。
+      -->
     <dependencies>
         <dependency>
             <groupId>com.apex.scaffold</groupId>
@@ -104,13 +112,6 @@
             <groupId>com.auth0</groupId>
             <artifactId>java-jwt</artifactId>
             <version>4.4.0</version>
-        </dependency>
-
-        <!-- 认证中心模块（OAuth2 客户端密钥轮换的安全审计服务） -->
-        <dependency>
-            <groupId>com.apex.scaffold</groupId>
-            <artifactId>apex-auth-center</artifactId>
-            <version>${project.version}</version>
         </dependency>
 
         <dependency>

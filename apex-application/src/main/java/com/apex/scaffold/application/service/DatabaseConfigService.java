@@ -39,6 +39,19 @@ import reactor.core.scheduler.Schedulers;
 @RequiredArgsConstructor
 public class DatabaseConfigService {
 
+    private static final String ERROR_TIMEOUT = "timeout";
+
+    private static final String ERROR_CONNECT_TIMEOUT = "connect timed out";
+
+    private static final String ERROR_CONNECTION_REFUSED = "Connection refused";
+
+    private static final String ERROR_UNKNOWN_DATABASE = "Unknown database";
+
+    private static final String ERROR_ACCESS_DENIED = "Access denied";
+
+    private static final String DB_TYPE_MYSQL = "mysql";
+    private static final String DB_TYPE_POSTGRESQL = "postgresql";
+
     private final DataSource dataSource;
 
     @Value("${spring.datasource.url:}")
@@ -144,8 +157,8 @@ public class DatabaseConfigService {
      */
     private String getTestQuery(String dbType) {
         return switch (dbType.toLowerCase()) {
-            case "mysql" -> "SELECT 1";
-            case "postgresql", "postgres" -> "SELECT 1";
+            case DB_TYPE_MYSQL -> "SELECT 1";
+            case DB_TYPE_POSTGRESQL, "postgres" -> "SELECT 1";
             default -> "SELECT 1";
         };
     }
@@ -158,8 +171,8 @@ public class DatabaseConfigService {
      */
     private String getVersionQuery(String dbType) {
         return switch (dbType.toLowerCase()) {
-            case "mysql" -> "SELECT VERSION()";
-            case "postgresql", "postgres" -> "SELECT version()";
+            case DB_TYPE_MYSQL -> "SELECT VERSION()";
+            case DB_TYPE_POSTGRESQL, "postgres" -> "SELECT version()";
             default -> "SELECT VERSION()";
         };
     }
@@ -176,13 +189,13 @@ public class DatabaseConfigService {
             message = e.getClass().getSimpleName();
         }
 
-        if (message.contains("Access denied")) {
+        if (message.contains(ERROR_ACCESS_DENIED)) {
             return "认证失败，请检查用户名和密码";
-        } else if (message.contains("Unknown database")) {
+        } else if (message.contains(ERROR_UNKNOWN_DATABASE)) {
             return "数据库不存在";
-        } else if (message.contains("Connection refused") || message.contains("connect timed out")) {
+        } else if (message.contains(ERROR_CONNECTION_REFUSED) || message.contains(ERROR_CONNECT_TIMEOUT)) {
             return "无法连接到数据库服务器，请检查主机和端口";
-        } else if (message.contains("timeout")) {
+        } else if (message.contains(ERROR_TIMEOUT)) {
             return "连接超时";
         } else {
             return message;
@@ -254,10 +267,10 @@ public class DatabaseConfigService {
      */
     private String buildJdbcUrl(DatabaseConfigRequest request) {
         String baseUrl;
-        if ("mysql".equalsIgnoreCase(request.getDbType())) {
+        if (DB_TYPE_MYSQL.equalsIgnoreCase(request.getDbType())) {
             baseUrl =
                     String.format("jdbc:mysql://%s:%d/%s", request.getHost(), request.getPort(), request.getDatabase());
-        } else if ("postgresql".equalsIgnoreCase(request.getDbType())) {
+        } else if (DB_TYPE_POSTGRESQL.equalsIgnoreCase(request.getDbType())) {
             baseUrl = String.format(
                     "jdbc:postgresql://%s:%d/%s", request.getHost(), request.getPort(), request.getDatabase());
         } else {
@@ -279,8 +292,9 @@ public class DatabaseConfigService {
      * @return YAML 格式配置
      */
     private String generateYamlConfig(DatabaseConfigRequest request) {
-        String driver =
-                "mysql".equalsIgnoreCase(request.getDbType()) ? "com.mysql.cj.jdbc.Driver" : "org.postgresql.Driver";
+        String driver = DB_TYPE_MYSQL.equalsIgnoreCase(request.getDbType())
+                ? "com.mysql.cj.jdbc.Driver"
+                : "org.postgresql.Driver";
 
         String jdbcUrl = buildJdbcUrl(request);
 
@@ -309,8 +323,9 @@ public class DatabaseConfigService {
      * @return 环境变量格式配置
      */
     private String generateEnvConfig(DatabaseConfigRequest request) {
-        String driver =
-                "mysql".equalsIgnoreCase(request.getDbType()) ? "com.mysql.cj.jdbc.Driver" : "org.postgresql.Driver";
+        String driver = DB_TYPE_MYSQL.equalsIgnoreCase(request.getDbType())
+                ? "com.mysql.cj.jdbc.Driver"
+                : "org.postgresql.Driver";
 
         String jdbcUrl = buildJdbcUrl(request);
 
@@ -331,9 +346,9 @@ public class DatabaseConfigService {
      * @return Docker Compose 格式配置
      */
     private String generateDockerComposeConfig(DatabaseConfigRequest request) {
-        String image = "mysql".equalsIgnoreCase(request.getDbType()) ? "mysql:8.0" : "postgres:15";
+        String image = DB_TYPE_MYSQL.equalsIgnoreCase(request.getDbType()) ? "mysql:8.0" : "postgres:15";
 
-        String envPrefix = "mysql".equalsIgnoreCase(request.getDbType()) ? "MYSQL" : "POSTGRES";
+        String envPrefix = DB_TYPE_MYSQL.equalsIgnoreCase(request.getDbType()) ? "MYSQL" : "POSTGRES";
 
         return String.format(
                 """
@@ -372,6 +387,6 @@ public class DatabaseConfigService {
                 request.getUsername(),
                 envPrefix,
                 request.getPassword(),
-                "mysql".equalsIgnoreCase(request.getDbType()) ? "mysql" : "postgresql");
+                DB_TYPE_MYSQL.equalsIgnoreCase(request.getDbType()) ? "mysql" : "postgresql");
     }
 }

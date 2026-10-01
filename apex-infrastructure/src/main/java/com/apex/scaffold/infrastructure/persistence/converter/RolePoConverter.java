@@ -29,10 +29,22 @@ public interface RolePoConverter {
     @org.mapstruct.Mapping(target = "dataScope", source = "dataScope")
     RolePO toPo(RoleEntity entity);
 
+    /**
+     * TODO: Add method description
+     *
+     * @param type TODO
+     * @return TODO
+     */
     default Integer map(DataScopeType type) {
         return type == null ? null : type.getCode();
     }
 
+    /**
+     * TODO: Add method description
+     *
+     * @param code TODO
+     * @return TODO
+     */
     default DataScopeType map(Integer code) {
         if (code == null) {
             return null;

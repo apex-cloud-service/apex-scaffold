@@ -31,6 +31,7 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @Repository
 @RequiredArgsConstructor
+@SuppressWarnings("PMD.ClassNamingShouldBeCamelRule")
 public class OAuth2RegisteredClientRepositoryImpl implements OAuth2RegisteredClientRepository {
 
     private static final String EMPTY_JSON_ARRAY = "[]";
@@ -221,7 +222,7 @@ public class OAuth2RegisteredClientRepositoryImpl implements OAuth2RegisteredCli
      * @return Set集合
      */
     private Set<String> parseJsonArray(String json) {
-        if (json == null || json.isEmpty() || "[]".equals(json) || EMPTY_JSON_ARRAY.equals(json)) {
+        if (json == null || json.isEmpty() || EMPTY_JSON_ARRAY.equals(json)) {
             return new HashSet<>();
         }
         String cleaned = json.replaceAll("[\\[\\]\"]", "");

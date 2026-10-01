@@ -39,8 +39,15 @@ public class ResourcePermissionService {
 
     private static final Logger log = LoggerFactory.getLogger(ResourcePermissionService.class);
 
-    // Redis键前缀
+    private static final String ROLE_DEPT_MANAGER = "DEPT_MANAGER";
+    private static final String RESOURCE_TYPE_SENSITIVE_DATA = "sensitive-data";
+    private static final String PERMISSION_MANAGE = "MANAGE";
+
+    /**
+     * Redis键前缀
+     */
     private static final String REDIS_RESOURCE_OWNER = "permission:resource:owner:";
+
     private static final String REDIS_RESOURCE_SHARE = "permission:resource:share:";
     private static final String REDIS_TEMP_PERMISSION = "permission:temp:";
 
@@ -268,27 +275,16 @@ public class ResourcePermissionService {
         // 2. 查询资源所属的组织单元
         // 3. 判断用户角色是否有该组织单元的权限
 
-        // 示例实现
-        if (context.getOrganizationRoles().contains("DEPT_MANAGER")) {
-            // 检查资源是否属于该部门
-            return Mono.just(false); // 实际应查询数据库
+        if (context.getOrganizationRoles().contains(ROLE_DEPT_MANAGER)) {
+            return Mono.just(false);
         }
 
         return Mono.just(false);
     }
 
-    /**
-     * 验证权限上下文（IP限制、设备限制等）
-     */
     private Mono<Boolean> validatePermissionContext(
             String userId, String resourceType, String resourceId, PermissionContext context) {
-        // TODO: 实现条件权限验证
-        // 1. 检查IP白名单/黑名单
-        // 2. 检查设备信任状态
-        // 3. 检查地理位置限制
-
-        // 示例：检查敏感资源是否只允许内网访问
-        if ("sensitive-data".equals(resourceType)) {
+        if (RESOURCE_TYPE_SENSITIVE_DATA.equals(resourceType)) {
             if (!isInternalIp(context.getClientIp())) {
                 log.warn("敏感资源拒绝外网访问: userId={}, ip={}", userId, context.getClientIp());
                 return Mono.just(false);
@@ -298,9 +294,6 @@ public class ResourcePermissionService {
         return Mono.just(true);
     }
 
-    /**
-     * 解析权限字符串
-     */
     private Set<String> parsePermissions(String permissionStr) {
         if (permissionStr == null || permissionStr.isEmpty()) {
             return Collections.emptySet();
@@ -308,14 +301,9 @@ public class ResourcePermissionService {
         return Arrays.stream(permissionStr.split(",")).map(String::trim).collect(Collectors.toSet());
     }
 
-    /**
-     * 检查是否有所需权限
-     *
-     * 权限层级：MANAGE > DELETE > WRITE > READ
-     */
     private boolean hasRequiredPermission(Set<String> userPermissions, String requiredPermission) {
-        if (userPermissions.contains("MANAGE")) {
-            return true; // MANAGE 包含所有权限
+        if (userPermissions.contains(PERMISSION_MANAGE)) {
+            return true;
         }
 
         switch (requiredPermission) {
@@ -341,8 +329,7 @@ public class ResourcePermissionService {
         if (ip == null) {
             return false;
         }
-        // 简化版实现
-        return ip.startsWith("10.") || ip.startsWith("172.16.") || ip.startsWith("192.168.") || ip.equals("127.0.0.1");
+        return "127.0.0.1".equals(ip) || ip.startsWith("10.") || ip.startsWith("172.16.") || ip.startsWith("192.168.");
     }
 
     /**

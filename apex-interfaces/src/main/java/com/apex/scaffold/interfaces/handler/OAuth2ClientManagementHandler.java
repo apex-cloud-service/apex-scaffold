@@ -41,6 +41,7 @@ import reactor.core.publisher.Mono;
  * @since 1.0.0
  * @see OAuth2ClientManagementService
  */
+@SuppressWarnings("checkstyle:TypeName")
 @Slf4j
 @Component
 @RequiredArgsConstructor

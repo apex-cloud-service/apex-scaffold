@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1800 1400" width="1800" height="1400">
+  <defs>
+    <style>
+      .title{font:700 32px sans-serif;fill:#0f172a;text-anchor:middle}
+      .subtitle{font:500 13px sans-serif;fill:#64748b;text-anchor:middle}
+      .phase-title{font:600 18px sans-serif;fill:#fff}
+      .step-title{font:600 14px sans-serif;fill:#0f172a}
+      .step-desc{font:400 11px sans-serif;fill:#475569}
+      .code{font:500 10px monospace;fill:#2563eb}
+      .highlight{font:600 11px sans-serif;fill:#dc2626}
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/>
+    </marker>
+  </defs>
+  
+  <rect width="1800" height="1400" fill="#fff"/>
+  <text x="900" y="40" class="title">缓存更新策略与一致性保障</text>
+  <text x="900" y="65" class="subtitle">Cache-Aside · Write-Through · 延迟双删 · Canal Binlog监听 · 分布式锁 · 最终一致性 · v1.0</text>
+  
+  <!-- Cache-Aside 模式 -->
+  <rect x="50" y="100" width="550" height="300" rx="8" fill="#3b82f6" opacity="0.1" stroke="#3b82f6" stroke-width="2"/>
+  <rect x="50" y="100" width="550" height="40" rx="8" fill="#3b82f6"/>
+  <text x="70" y="128" class="phase-title">① Cache-Aside 模式 (旁路缓存)</text>
+  
+  <rect x="70" y="160" width="250" height="220" rx="6" fill="#fff" stroke="#dbeafe" stroke-width="2"/>
+  <text x="90" y="183" class="step-title">读操作流程</text>
+  <text x="90" y="203" class="code">1. 查询缓存 (Redis)</text>
+  <text x="110" y="220" class="code">GET cache:user:1001</text>
+  <text x="90" y="243" class="code">2. 缓存命中 → 直接返回</text>
+  <text x="90" y="266" class="code">3. 缓存未命中 →</text>
+  <text x="110" y="283" class="code">查询数据库 (MySQL)</text>
+  <text x="110" y="300" class="code">SELECT * FROM user</text>
+  <text x="110" y="317" class="code">WHERE id = 1001</text>
+  <text x="90" y="340" class="code">4. 写入缓存 (异步)</text>
+  <text x="110" y="357" class="code">SET cache:user:1001</text>
+  <text x="110" y="370" class="code">EX 3600</text>
+  
+  <rect x="340" y="160" width="240" height="220" rx="6" fill="#fff" stroke="#dbeafe" stroke-width="2"/>
+  <text x="360" y="183" class="step-title">写操作流程</text>
+  <text x="360" y="203" class="code">1. 更新数据库</text>
+  <text x="380" y="220" class="code">UPDATE user SET</text>
+  <text x="380" y="237" class="code">name = '新名称'</text>
+  <text x="380" y="254" class="code">WHERE id = 1001</text>
+  <text x="360" y="277" class="highlight">2. 删除缓存 (先删)</text>
+  <text x="380" y="294" class="code">DEL cache:user:1001</text>
+  <text x="360" y="317" class="step-desc">为什么删除而不更新?</text>
+  <text x="360" y="334" class="step-desc">• 避免缓存更新失败</text>
+  <text x="360" y="351" class="step-desc">• 懒加载,按需重建</text>
+  <text x="360" y="368" class="step-desc">• 简化逻辑</text>
+  
+  <!-- Write-Through 模式 -->
+  <rect x="50" y="430" width="550" height="240" rx="8" fill="#10b981" opacity="0.1" stroke="#10b981" stroke-width="2"/>
+  <rect x="50" y="430" width="550" height="40" rx="8" fill="#10b981"/>
+  <text x="70" y="458" class="phase-title">② Write-Through 模式 (写穿)</text>
+  
+  <rect x="70" y="490" width="510" height="160" rx="6" fill="#fff" stroke="#d1fae5" stroke-width="2"/>
+  <text x="90" y="513" class="step-title">同步写入缓存和数据库</text>
+  <text x="90" y="533" class="code">@Transactional</text>
+  <text x="90" y="550" class="code">public void updateUser(User user) {</text>
+  <text x="110" y="567" class="code">// 1. 更新数据库</text>
+  <text x="110" y="584" class="code">userRepository.update(user);</text>
+  <text x="110" y="607" class="code">// 2. 同步更新缓存</text>
+  <text x="110" y="624" class="code">cacheService.set("cache:user:" + user.getId(), user);</text>
+  <text x="90" y="641" class="code">}</text>
+  
+  <!-- 延迟双删策略 -->
+  <rect x="50" y="700" width="550" height="300" rx="8" fill="#f59e0b" opacity="0.1" stroke="#f59e0b" stroke-width="2"/>
+  <rect x="50" y="700" width="550" height="40" rx="8" fill="#f59e0b"/>
+  <text x="70" y="728" class="phase-title">③ 延迟双删策略 (防止并发脏读)</text>
+  
+  <rect x="70" y="760" width="510" height="220" rx="6" fill="#fff" stroke="#fef3c7" stroke-width="2"/>
+  <text x="90" y="783" class="step-title">解决缓存与数据库不一致问题</text>
+  <text x="90" y="803" class="code">public void updateUser(User user) {</text>
+  <text x="110" y="820" class="highlight">// 1. 第一次删除缓存</text>
+  <text x="110" y="837" class="code">cacheService.delete("cache:user:" + user.getId());</text>
+  <text x="110" y="860" class="code">// 2. 更新数据库</text>
+  <text x="110" y="877" class="code">userRepository.update(user);</text>
+  <text x="110" y="900" class="highlight">// 3. 延迟500ms后再次删除缓存</text>
+  <text x="110" y="917" class="code">CompletableFuture.runAsync(() -> {</text>
+  <text x="130" y="934" class="code">Thread.sleep(500);</text>
+  <text x="130" y="951" class="code">cacheService.delete("cache:user:" + user.getId());</text>
+  <text x="110" y="968" class="code">});</text>
+  <text x="90" y="985" class="code">}</text>
+  
+  <!-- Canal Binlog 监听 -->
+  <rect x="650" y="100" width="550" height="320" rx="8" fill="#8b5cf6" opacity="0.1" stroke="#8b5cf6" stroke-width="2"/>
+  <rect x="650" y="100" width="550" height="40" rx="8" fill="#8b5cf6"/>
+  <text x="670" y="128" class="phase-title">④ Canal Binlog 监听异步刷新</text>
+  
+  <rect x="670" y="160" width="510" height="240" rx="6" fill="#fff" stroke="#c4b5fd" stroke-width="2"/>
+  <text x="690" y="183" class="step-title">基于MySQL Binlog的最终一致性</text>
+  <text x="690" y="210" class="code">MySQL Binlog → Canal Server → MQ → Cache Service</text>
+  <text x="690" y="237" class="code">@CanalEventListener</text>
+  <text x="690" y="254" class="code">public void onUpdate(CanalEntry entry) {</text>
+  <text x="710" y="271" class="code">if (entry.getTableName().equals("user")) {</text>
+  <text x="730" y="288" class="code">Long userId = entry.getPrimaryKey();</text>
+  <text x="730" y="311" class="highlight">// 删除缓存,触发懒加载</text>
+  <text x="730" y="328" class="code">cacheService.delete("cache:user:" + userId);</text>
+  <text x="710" y="345" class="code">}</text>
+  <text x="690" y="362" class="code">}</text>
+  <text x="690" y="385" class="step-desc">优点: 解耦、最终一致、不影响主流程性能</text>
+  
+  <!-- 分布式锁保证原子性 -->
+  <rect x="650" y="450" width="550" height="280" rx="8" fill="#ef4444" opacity="0.1" stroke="#ef4444" stroke-width="2"/>
+  <rect x="650" y="450" width="550" height="40" rx="8" fill="#ef4444"/>
+  <text x="670" y="478" class="phase-title">⑤ 分布式锁保证更新原子性</text>
+  
+  <rect x="670" y="510" width="510" height="200" rx="6" fill="#fff" stroke="#fecaca" stroke-width="2"/>
+  <text x="690" y="533" class="step-title">防止并发更新导致数据不一致</text>
+  <text x="690" y="553" class="code">String lockKey = "lock:user:" + userId;</text>
+  <text x="690" y="570" class="code">RLock lock = redisson.getLock(lockKey);</text>
+  <text x="690" y="593" class="code">try {</text>
+  <text x="710" y="610" class="highlight">lock.lock(10, TimeUnit.SECONDS);</text>
+  <text x="710" y="633" class="code">// 删除缓存</text>
+  <text x="710" y="650" class="code">cacheService.delete("cache:user:" + userId);</text>
+  <text x="710" y="667" class="code">// 更新数据库</text>
+  <text x="710" y="684" class="code">userRepository.update(user);</text>
+  <text x="690" y="701" class="code">} finally {</text>
+  <text x="710" y="718" class="code">lock.unlock();</text>
+  <text x="690" y="735" class="code">}</text>
+  
+  <!-- 缓存降级与容灾 -->
+  <rect x="650" y="760" width="550" height="240" rx="8" fill="#0891b2" opacity="0.1" stroke="#0891b2" stroke-width="2"/>
+  <rect x="650" y="760" width="550" height="40" rx="8" fill="#0891b2"/>
+  <text x="670" y="788" class="phase-title">⑥ 缓存降级与最终一致性保障</text>
+  
+  <rect x="670" y="820" width="250" height="160" rx="6" fill="#fff" stroke="#cffafe" stroke-width="2"/>
+  <text x="690" y="843" class="step-title">Redis故障降级</text>
+  <text x="690" y="863" class="code">1. Redis连接失败</text>
+  <text x="710" y="880" class="code">→ 降级到本地缓存</text>
+  <text x="710" y="897" class="code">(Caffeine)</text>
+  <text x="690" y="920" class="code">2. 数据库故障</text>
+  <text x="710" y="937" class="code">→ 返回过期缓存</text>
+  <text x="710" y="954" class="code">(Snapshot Fallback)</text>
+  <text x="690" y="973" class="highlight">v1.3.0 DB故障读降级</text>
+  
+  <rect x="940" y="820" width="240" height="160" rx="6" fill="#fff" stroke="#cffafe" stroke-width="2"/>
+  <text x="960" y="843" class="step-title">最终一致性保障</text>
+  <text x="960" y="863" class="code">• 定时任务对账</text>
+  <text x="980" y="880" class="step-desc">每小时检查缓存</text>
+  <text x="980" y="897" class="step-desc">与数据库一致性</text>
+  <text x="960" y="920" class="code">• 手动刷新接口</text>
+  <text x="980" y="937" class="step-desc">管理员触发</text>
+  <text x="980" y="954" class="step-desc">缓存重建</text>
+  
+  <!-- 缓存更新策略对比 -->
+  <rect x="50" y="1030" width="1700" height="320" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+  <text x="70" y="1060" class="step-title">⑦ 缓存更新策略对比与选择</text>
+  
+  <rect x="70" y="1080" width="400" height="250" rx="6" fill="#fff" stroke="#fbbf24" stroke-width="1.5"/>
+  <text x="90" y="1103" class="step-title">Cache-Aside (推荐)</text>
+  <text x="90" y="1123" class="code">优点:</text>
+  <text x="110" y="1140" class="step-desc">• 简单易懂,广泛使用</text>
+  <text x="110" y="1157" class="step-desc">• 懒加载,减少无效写入</text>
+  <text x="110" y="1174" class="step-desc">• 性能好,缓存穿透少</text>
+  <text x="90" y="1197" class="code">缺点:</text>
+  <text x="110" y="1214" class="step-desc">• 并发场景可能不一致</text>
+  <text x="110" y="1231" class="step-desc">• 需要延迟双删补偿</text>
+  <text x="90" y="1254" class="highlight">适用场景: 读多写少</text>
+  <text x="90" y="1271" class="highlight">Apex采用: Cache-Aside + 延迟双删</text>
+  <text x="90" y="1288" class="code">+ MultiLevelCacheService实现</text>
+  <text x="90" y="1305" class="code">+ L1(Caffeine) + L2(Redis)</text>
+  
+  <rect x="490" y="1080" width="400" height="250" rx="6" fill="#fff" stroke="#fbbf24" stroke-width="1.5"/>
+  <text x="510" y="1103" class="step-title">Write-Through</text>
+  <text x="510" y="1123" class="code">优点:</text>
+  <text x="530" y="1140" class="step-desc">• 强一致性</text>
+  <text x="530" y="1157" class="step-desc">• 缓存始终有效</text>
+  <text x="510" y="1180" class="code">缺点:</text>
+  <text x="530" y="1197" class="step-desc">• 性能开销大</text>
+  <text x="530" y="1214" class="step-desc">• 写入延迟高</text>
+  <text x="530" y="1231" class="step-desc">• 无效写入多</text>
+  <text x="510" y="1254" class="highlight">适用场景: 强一致性要求</text>
+  
+  <rect x="910" y="1080" width="420" height="250" rx="6" fill="#fff" stroke="#fbbf24" stroke-width="1.5"/>
+  <text x="930" y="1103" class="step-title">Canal Binlog 异步刷新</text>
+  <text x="930" y="1123" class="code">优点:</text>
+  <text x="950" y="1140" class="step-desc">• 完全解耦</text>
+  <text x="950" y="1157" class="step-desc">• 不影响主流程性能</text>
+  <text x="950" y="1174" class="step-desc">• 支持多种缓存策略</text>
+  <text x="930" y="1197" class="code">缺点:</text>
+  <text x="950" y="1214" class="step-desc">• 延迟(秒级)</text>
+  <text x="950" y="1231" class="step-desc">• 需要额外基础设施</text>
+  <text x="930" y="1254" class="highlight">适用场景: 最终一致性可接受</text>
+  <text x="930" y="1271" class="code">Apex扩展方案: Canal + RocketMQ</text>
+  <text x="930" y="1288" class="code">配合延迟双删,双重保障</text>
+  
+  <text x="900" y="1385" class="code" text-anchor="middle">© 2026 Apex Team · 缓存一致性策略 v1.0 · 完整89张SVG架构图集合</text>
+</svg>

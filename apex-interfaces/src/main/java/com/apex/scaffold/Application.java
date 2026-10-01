@@ -5,6 +5,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.r2dbc.R2dbcAutoConfiguration;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.scheduling.annotation.EnableAsync;
 
 /**
@@ -21,9 +23,17 @@ import org.springframework.scheduling.annotation.EnableAsync;
  * @version 1.0.0
  * @since 1.0.0
  */
-@SpringBootApplication(
-        scanBasePackages = "com.apex.scaffold",
-        exclude = {R2dbcAutoConfiguration.class})
+@SpringBootApplication(exclude = {R2dbcAutoConfiguration.class})
+// 说明（2026-09-30）：显式排除 com.apex.scaffold.authcenter.* 包的组件扫描。
+// apex-auth-center 是独立部署的认证中心应用（拥有自己的 @SpringBootApplication 入口
+// AuthCenterApplication），主应用不应扫描并装配其内部 Bean（Handler/Service/Repository 等）。
+// 此排除是防止两个应用组件扫描范围交叉导致 ConflictingBeanDefinitionException 的显式防御，
+// 而非依赖“两应用 classpath 隔离部署”这一隐式前提。
+@ComponentScan(
+        basePackages = "com.apex.scaffold",
+        excludeFilters = {
+            @ComponentScan.Filter(type = FilterType.REGEX, pattern = "com\\.apex\\.scaffold\\.authcenter\\..*")
+        })
 @ConfigurationPropertiesScan(basePackages = "com.apex.scaffold")
 @EnableAsync
 @EnableDiscoveryClient

@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +35,9 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 @ConditionalOnProperty(prefix = "apex.events.outbox", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class DomainEventOutboxDispatcher {
+
+    private static final int SHUTDOWN_TIMEOUT_SECONDS = 30;
+
     private static final Logger log = LoggerFactory.getLogger(DomainEventOutboxDispatcher.class);
 
     /** Outbox 存储。 */
@@ -69,7 +71,7 @@ public class DomainEventOutboxDispatcher {
     private int retentionDeliveredHours;
 
     /** DEAD 记录保留天数。 */
-    @Value("${apex.events.outbox.retention-dead-days:30}")
+    @Value("${apex.events.outbox.retention-dead-days:7}")
     private int retentionDeadDays;
 
     /** 保留策略清理单批删除行数上限。 */
@@ -176,12 +178,19 @@ public class DomainEventOutboxDispatcher {
             if (deliveryExecutor == null) {
                 int configuredParallelism = Math.max(1, parallelism);
                 AtomicInteger sequence = new AtomicInteger();
-                deliveryExecutor = Executors.newFixedThreadPool(configuredParallelism, task -> {
-                    Thread thread = new Thread(task, "outbox-delivery-" + sequence.incrementAndGet());
-                    thread.setUncaughtExceptionHandler(
-                            (worker, error) -> log.error("Outbox 投递线程异常, thread={}", worker.getName(), error));
-                    return thread;
-                });
+                int corePoolSize = configuredParallelism;
+                deliveryExecutor = new java.util.concurrent.ThreadPoolExecutor(
+                        corePoolSize,
+                        corePoolSize,
+                        0L,
+                        java.util.concurrent.TimeUnit.MILLISECONDS,
+                        new java.util.concurrent.LinkedBlockingQueue<>(),
+                        task -> {
+                            Thread thread = new Thread(task, "outbox-delivery-" + sequence.incrementAndGet());
+                            thread.setUncaughtExceptionHandler(
+                                    (worker, error) -> log.error("Outbox 投递线程异常, thread={}", worker.getName(), error));
+                            return thread;
+                        });
             }
             return deliveryExecutor;
         }
@@ -196,7 +205,7 @@ public class DomainEventOutboxDispatcher {
         }
         current.shutdown();
         try {
-            if (!current.awaitTermination(30, TimeUnit.SECONDS)) {
+            if (!current.awaitTermination(SHUTDOWN_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
                 current.shutdownNow();
             }
         } catch (InterruptedException exception) {

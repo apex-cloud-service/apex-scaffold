@@ -23,11 +23,16 @@ public class AccountLockService {
 
     private final ReactiveStringRedisTemplate redisTemplate;
 
-    // Redis Key前缀
+    /**
+     * Redis Key前缀
+     */
     private static final String LOCK_PREFIX = "account:lock:";
+
     private static final String LOCK_REASON_PREFIX = "account:lock:reason:";
 
-    // 默认临时锁定时长
+    /**
+     * 默认临时锁定时长
+     */
     private static final Duration DEFAULT_LOCK_DURATION = Duration.ofMinutes(15);
 
     public AccountLockService(ReactiveStringRedisTemplate redisTemplate) {
@@ -238,11 +243,17 @@ public class AccountLockService {
      * 锁定原因枚举
      */
     public enum LockReason {
+        /** 暴力破解攻击 */
         BRUTE_FORCE("暴力破解攻击"),
+        /** 可疑活动 */
         SUSPICIOUS_ACTIVITY("可疑活动"),
+        /** 管理员手动锁定 */
         MANUAL_LOCK("管理员手动锁定"),
+        /** 违反安全策略 */
         POLICY_VIOLATION("违反安全策略"),
+        /** 密码过期 */
         PASSWORD_EXPIRED("密码过期"),
+        /** 多设备异常登录 */
         MULTIPLE_DEVICES("多设备异常登录");
 
         private final String description;

@@ -174,7 +174,33 @@
 
 ---
 
-## 七、图表使用说明
+## 七、办公平台集成架构
+
+### 图表文件
+
+- **架构图**: [92_office_platform_architecture.svg](../diagrams/92_office_platform_architecture.svg)
+- **详细文档**: [office-platform-integration-guide.md](../01-guides/office-platform-integration-guide.md)
+
+### 核心内容
+
+- 飞书 / 钉钉 / 企业微信 三大平台统一适配
+- 端口-适配器架构：Domain 定义 Port（ApprovalPort/MessagePort/CalendarPort/DocumentPort），Infrastructure 提供平台客户端实现
+- 四大业务子域：消息、审批、日历、文档
+- 横切能力：多租户隔离（TenantContext + TenantLineInnerInterceptor）、State 防重放（Redis CAS）、阻塞 I/O 隔离（BlockingIoSchedulers）
+- 四层架构：Interfaces（Handlers/Routers）→ Application（Services）→ Domain（Ports/Aggregates）→ Infrastructure（Clients/Persistence）
+
+### 关键设计
+
+| 维度 | 实现方式 |
+|------|---------|
+| 平台适配 | `AbstractOfficeClient` 统一 OAuth，各平台子类覆盖业务方法 |
+| 租户隔离 | `TenantContext` 透传，MyBatis-Plus 行级拦截器自动追加 `tenant_id` |
+| State 安全 | Redis `setIfAbsent` 原子签发，单次消费防重放 |
+| 阻塞隔离 | JDBC → `BlockingIoSchedulers.jdbc()`，外部 HTTP/SDK → `.remote()` |
+
+---
+
+## 八、图表使用说明
 
 ### 查看Mermaid图表
 
@@ -220,7 +246,7 @@ graph TB
 
 ---
 
-## 八、架构图维护规范
+## 九、架构图维护规范
 
 ### 新增图表编号规则
 
@@ -250,7 +276,7 @@ Mermaid时序图/架构图统一放在`docs/diagrams/sequence/`目录,编号规�
 
 ---
 
-## 九、相关文档索引
+## 十、相关文档索引
 
 ### 架构文档
 
@@ -271,7 +297,7 @@ Mermaid时序图/架构图统一放在`docs/diagrams/sequence/`目录,编号规�
 
 ---
 
-## 十、总结
+## 十一、总结
 
 ### 新增图表统计
 

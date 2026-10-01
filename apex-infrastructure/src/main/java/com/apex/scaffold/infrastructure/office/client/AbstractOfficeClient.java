@@ -8,6 +8,9 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 abstract class AbstractOfficeClient implements OfficeOAuthClient, OfficePlatformClient {
+    /** 接口返回成功的错误码。 */
+    private static final String SUCCESS_CODE = "0";
+
     private final java.time.Duration timeout;
     protected final WebClient webClient;
     protected final OfficePlatformProperties.Platform properties;
@@ -123,7 +126,7 @@ abstract class AbstractOfficeClient implements OfficeOAuthClient, OfficePlatform
 
     private String identity(Map<?, ?> body, String key, boolean nested) {
         Object error = body.containsKey("errcode") ? body.get("errcode") : body.get("code");
-        if (error != null && !"0".equals(error.toString())) {
+        if (error != null && !SUCCESS_CODE.equals(error.toString())) {
             throw new com.apex.scaffold.common.exception.BusinessException(
                     com.apex.scaffold.common.result.ResultCode.LOGIN_FAILED);
         }

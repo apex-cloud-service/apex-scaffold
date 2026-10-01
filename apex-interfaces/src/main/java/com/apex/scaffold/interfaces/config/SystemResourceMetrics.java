@@ -159,6 +159,12 @@ public class SystemResourceMetrics implements MeterBinder {
     /** 允许抛出受检异常的 long 供应商。 */
     @FunctionalInterface
     private interface ThrowingLongSupplier {
+        /**
+         * 获取 long 值
+         *
+         * @return long 值
+         * @throws Exception 执行过程中的异常
+         */
         long getAsLong() throws Exception;
     }
 
@@ -179,6 +185,12 @@ public class SystemResourceMetrics implements MeterBinder {
     /** 允许抛出受检异常的 int 供应商。 */
     @FunctionalInterface
     private interface ThrowingIntSupplier {
+        /**
+         * 获取 int 值
+         *
+         * @return int 值
+         * @throws Exception 执行过程中的异常
+         */
         int getAsInt() throws Exception;
     }
 }

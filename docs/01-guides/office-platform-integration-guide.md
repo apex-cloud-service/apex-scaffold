@@ -108,8 +108,10 @@ mvnd -pl apex-interfaces flyway:migrate
 ```
 
 迁移文件：
-- `V29__add_office_platform_tables.sql` - 核心表（平台应用、绑定记录）
+- `V29__create_office_platform_tables.sql` - 核心表（平台应用、绑定记录）
 - `V30__add_office_admin_permissions.sql` - 管理端权限
+- `V31__create_office_message_table.sql` - 办公消息表
+- `V32__create_office_approval_process_table.sql` - 审批流程表
 
 ### 2.4 启动应用
 
@@ -166,48 +168,109 @@ docker run -d \
 ```
 apex-domain          领域层
 ├── office/
-│   ├── OfficePlatform.java           平台枚举
-│   ├── OfficePlatformApp.java        应用配置聚合
-│   ├── OfficeIdentityBinding.java    绑定记录聚合
-│   ├── OfficeRepository.java         仓储接口
-│   └── OfficeState.java              状态管理端口
+│   ├── OfficePlatform.java              平台枚举
+│   ├── OfficePlatformApp.java           应用配置聚合
+│   ├── OfficeIdentityBinding.java       绑定记录聚合
+│   ├── OfficeRepository.java            仓储接口
+│   ├── OfficeState.java                 状态管理端口
+│   ├── OfficeOAuthClient.java           OAuth 客户端端口
+│   ├── approval/                        审批子域
+│   │   ├── ApprovalProcess.java         审批流程聚合
+│   │   ├── ApprovalStatus.java          审批状态枚举
+│   │   ├── ApprovalProcessRepository.java
+│   │   └── ApprovalProcessDomainService.java
+│   ├── message/                         消息子域
+│   │   ├── OfficeMessage.java           聚合根（canRecall()/markAsRecalled()）
+│   │   ├── OfficeMessageRepository.java
+│   │   └── OfficeMessageService.java
+│   ├── calendar/                        日历子域
+│   │   ├── CalendarEvent.java
+│   │   ├── CalendarEventRepository.java
+│   │   └── CalendarService.java
+│   ├── document/                        文档子域
+│   │   ├── DocumentInfo.java
+│   │   └── DocumentInfoRepository.java
+│   └── port/                            端口（SPI）
+│       ├── ApprovalPort.java
+│       ├── MessagePort.java
+│       ├── CalendarPort.java
+│       └── DocumentPort.java
 
 apex-application     应用层
 ├── office/
-│   ├── OfficeApplicationService.java OAuth 认证流程
-│   ├── OfficeAdminService.java       管理员绑定审批
-│   └── OfficeAdminAssembler.java     DTO 转换
+│   ├── OfficeApplicationService.java    OAuth 认证流程
+│   ├── OfficeAdminService.java          管理员绑定审批
+│   ├── OfficeAdminAssembler.java        DTO 转换
+│   ├── OfficeApprovalService.java       审批编排
+│   ├── OfficeMessageService.java        消息编排
+│   ├── OfficeCalendarService.java       日历编排
+│   ├── OfficeDocumentService.java       文档编排
+│   ├── OfficeOrganizationSyncService.java  组织同步
+│   ├── approval/
+│   │   ├── ApprovalProcessApplicationService.java
+│   │   └── command/InitiateApprovalCommand.java
+│   └── message/
+│       ├── OfficeMessageApplicationService.java
+│       └── command/SendMessageCommand.java
 
 apex-infrastructure  基础设施层
 ├── office/
-│   ├── client/                       平台客户端
+│   ├── client/                          平台客户端
 │   │   ├── AbstractOfficeClient.java    统一 OAuth 实现
 │   │   ├── FeishuOfficeClient.java      飞书客户端
 │   │   ├── DingTalkOfficeClient.java    钉钉客户端
-│   │   └── WeComOfficeClient.java       企微客户端
+│   │   ├── WeComOfficeClient.java       企微客户端
+│   │   ├── feishu/FeishuApprovalClient.java
+│   │   ├── dingtalk/DingtalkApprovalClient.java
+│   │   └── wecom/WecomApprovalClient.java
 │   ├── config/
-│   │   └── OfficePlatformProperties.java 配置属性
-│   ├── persistence/
-│   │   ├── OfficeRepositoryImpl.java    仓储实现
-│   │   ├── po/                          PO 对象
-│   │   ├── mapper/                      MyBatis Mapper
-│   │   └── converter/                   MapStruct 转换
+│   │   ├── OfficePlatformProperties.java 配置属性
+│   │   └── OfficeWebClientConfig.java
+│   ├── persistence/                     平台应用/绑定持久化
+│   │   ├── OfficeRepositoryImpl.java
+│   │   ├── OfficeAppPO.java / OfficeAppMapper.java
+│   │   ├── OfficeBindingPO.java / OfficeBindingMapper.java
+│   │   ├── OfficePersistenceConverter.java
+│   │   └── po/mapper/converter/         消息子域持久化
+│   ├── repository/                      审批/日历/文档仓储实现
+│   │   ├── ApprovalProcessRepositoryImpl.java
+│   │   ├── CalendarEventRepositoryImpl.java
+│   │   └── DocumentInfoRepositoryImpl.java
+│   ├── converter/                       审批/日历/文档转换器
+│   ├── mapper/                          审批/日历/文档 Mapper
+│   ├── po/                              审批/日历/文档 PO
+│   ├── service/                         领域服务实现
+│   │   ├── ApprovalProcessDomainServiceImpl.java
+│   │   ├── OfficeMessageServiceImpl.java
+│   │   └── OfficeOrganizationServiceImpl.java
 │   ├── security/
-│   │   └── OfficeStateService.java      Redis State 管理
+│   │   ├── OfficeStateService.java      Redis State 管理
+│   │   ├── OfficeSignatureVerifier.java
+│   │   └── HmacOfficeSignatureVerifier.java
 │   └── spi/
-│       ├── OfficeOAuthClient.java       OAuth SPI
-│       └── OfficePlatformClient.java    业务能力 SPI
+│       ├── OfficeOAuthClient.java
+│       ├── OfficePlatformClient.java
+│       ├── OfficePlatformCapabilities.java
+│       ├── OfficePlatformMessageClient.java
+│       └── OfficePlatformOrganizationClient.java
 
 apex-interfaces      接口层
 ├── handler/
-│   ├── OfficeHandler.java            公开接口（登录、回调）
-│   └── OfficeAdminHandler.java       管理接口（配置、审批）
+│   ├── OfficeHandler.java               公开接口（登录、回调、状态）
+│   ├── OfficeAdminHandler.java          管理接口（配置、审批）
+│   └── office/                          业务能力 Handler
+│       ├── OfficeApprovalHandler.java
+│       ├── OfficeMessageHandler.java
+│       ├── OfficeCalendarHandler.java
+│       ├── OfficeDocumentHandler.java
+│       └── OfficeOrganizationHandler.java
 ├── router/
-│   ├── ApiRouter.java                公开路由
-│   └── OfficeAdminRouter.java        管理路由
-├── dto/office/                       请求响应 DTO
+│   ├── ApiRouter.java                   公开 OAuth 路由（含 officeRoutes）
+│   ├── OfficeAdminRouter.java           管理路由
+│   └── OfficeIntegrationRouter.java     审批/日历集成路由
+├── dto/office/                          请求响应 DTO
 └── assembler/
-    └── OfficeAssembler.java          接口层转换
+    └── OfficeAssembler.java             接口层转换
 ```
 
 ### 3.2 核心流程
@@ -421,6 +484,46 @@ public Mono<ServerResponse> createApp(ServerRequest request) {
    }
    ```
 
+### 4.2.1 消息撤回能力
+
+消息撤回是消息发送能力的延伸，覆盖三个平台的撤回 API，遵循相同的分层调用链路：
+
+```
+DELETE /api/office/messages/{messageId}
+  → OfficeMessageHandler.recallMessage
+  → OfficeMessageService.recallMessage（校验 canRecall() → 按平台路由 → 更新状态为 RECALLED）
+  → {Feishu|DingTalk|Wecom}MessageClient.recallMessage（调第三方 API）
+```
+
+**撤回前置条件**（`OfficeMessage.canRecall()`）：消息状态必须为 `SUCCESS` 且已获得平台消息 ID（`platformMessageId` 非空），否则撤回请求返回 400。
+
+**应用服务实现**：
+```java
+// OfficeMessageService.java
+public Mono<Boolean> recallMessage(Long messageId) {
+    return messageRepository.findById(messageId).flatMap(message -> {
+        if (!message.canRecall()) {
+            return Mono.error(new IllegalStateException("消息状态不支持撤回"));
+        }
+        return recallOnPlatform(message.getPlatform(), message.getPlatformMessageId())
+                .flatMap(recalled -> {
+                    message.markAsRecalled();
+                    return messageRepository.updateStatus(message).thenReturn(recalled);
+                });
+    });
+}
+```
+
+**三平台撤回 API 契约**：
+
+| 平台 | Method | 地址 | 请求体/参数 |
+|------|--------|------|--------------|
+| 飞书 | DELETE | `https://open.feishu.cn/open-apis/im/v1/messages/{messageId}` | Header：`Authorization: Bearer {tenant_access_token}` |
+| 钉钉 | POST | `https://oapi.dingtalk.com/topapi/message/corpconversation/recall?access_token={token}` | Body：`{"agent_id": ..., "msg_task_id": messageId}` |
+| 企业微信 | POST | `https://qyapi.weixin.qq.com/cgi-bin/message/recall?access_token={token}` | Body：`{"msgid": messageId}` |
+
+三个客户端均通过 `OfficeApiSupport` 提供的通用 HTTP 封装（`postJson`/`deleteWithHeaders`）发起请求，调用不抛异常即视为撤回成功（未逐一解析响应体中的业务错误码，接入新平台时需按需补充）。
+
 ### 4.3 测试开发
 
 #### 单元测试示例
@@ -455,7 +558,7 @@ void sendMessageWithValidAppAndReceiver() {
 @SpringBootTest
 @ActiveProfiles("test")
 class OfficeIntegrationTest {
-    @Autowired
+    @Resource
     private WebTestClient webClient;
     
     @Test

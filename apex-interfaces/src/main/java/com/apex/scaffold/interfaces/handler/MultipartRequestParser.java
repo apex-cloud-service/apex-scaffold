@@ -30,6 +30,12 @@ import reactor.core.publisher.Mono;
 @Component
 public class MultipartRequestParser {
 
+    /** 错误消息常量 */
+    private static final String MSG_MISSING_FILE_FIELD = "缺少文件字段: ";
+
+    private static final String MSG_MISSING_FORM_FIELD = "缺少表单字段: ";
+    private static final String MSG_EMPTY_FILE = "文件不能为空: ";
+
     /**
      * 将 HTTP 请求解析为 multipart 字段映射。
      *
@@ -50,7 +56,9 @@ public class MultipartRequestParser {
      */
     public Part requiredFile(MultiValueMap<String, Part> parts, String name) {
         Part part = parts.getFirst(name);
-        if (part == null) throw new BusinessException(ResultCode.PARAM_ERROR, "缺少文件字段: " + name);
+        if (part == null) {
+            throw new BusinessException(ResultCode.PARAM_ERROR, MSG_MISSING_FILE_FIELD + name);
+        }
         return part;
     }
 
@@ -94,7 +102,9 @@ public class MultipartRequestParser {
      */
     public String requiredField(MultiValueMap<String, Part> parts, String name) {
         String value = field(parts, name, null);
-        if (value == null || value.isBlank()) throw new BusinessException(ResultCode.PARAM_ERROR, "缺少表单字段: " + name);
+        if (value == null || value.isBlank()) {
+            throw new BusinessException(ResultCode.PARAM_ERROR, MSG_MISSING_FORM_FIELD + name);
+        }
         return value;
     }
 
@@ -135,7 +145,9 @@ public class MultipartRequestParser {
      */
     public int intField(MultiValueMap<String, Part> parts, String name, int defaultValue) {
         String value = field(parts, name, null);
-        if (value == null || value.isBlank()) return defaultValue;
+        if (value == null || value.isBlank()) {
+            return defaultValue;
+        }
         try {
             return Integer.parseInt(value);
         } catch (NumberFormatException e) {
@@ -154,7 +166,9 @@ public class MultipartRequestParser {
             try {
                 byte[] bytes = new byte[buffer.readableByteCount()];
                 buffer.read(bytes);
-                if (bytes.length == 0) return parameterError("文件不能为空: " + filePart.filename());
+                if (bytes.length == 0) {
+                    return parameterError(MSG_EMPTY_FILE + filePart.filename());
+                }
                 return Mono.just(new ByteArrayResource(bytes) {
                     /**
                      * 返回原始的 multipart 文件名。

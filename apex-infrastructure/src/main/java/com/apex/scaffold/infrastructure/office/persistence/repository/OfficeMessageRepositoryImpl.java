@@ -7,7 +7,9 @@ import com.apex.scaffold.domain.office.message.OfficeMessageRepository;
 import com.apex.scaffold.infrastructure.office.persistence.converter.OfficeMessageConverter;
 import com.apex.scaffold.infrastructure.office.persistence.mapper.OfficeMessageMapper;
 import com.apex.scaffold.infrastructure.office.persistence.po.OfficeMessagePO;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
@@ -44,7 +46,10 @@ public class OfficeMessageRepositoryImpl implements OfficeMessageRepository {
     @Override
     public Mono<OfficeMessage> findById(Long id) {
         return Mono.fromCallable(() -> {
-                    OfficeMessagePO po = mapper.selectById(id);
+                    Long tenantId = currentTenantId();
+                    QueryWrapper<OfficeMessagePO> wrapper = new QueryWrapper<>();
+                    wrapper.eq("tenant_id", tenantId).eq("id", id).last("LIMIT 1");
+                    OfficeMessagePO po = mapper.selectOne(wrapper);
                     return po != null ? converter.toEntity(po) : null;
                 })
                 .subscribeOn(blockingIoSchedulers.jdbc())
@@ -61,9 +66,9 @@ public class OfficeMessageRepositoryImpl implements OfficeMessageRepository {
                     Long tenantId = TenantContext.currentTenantId()
                             .map(Long::valueOf)
                             .orElseThrow(() -> new IllegalStateException("租户上下文未设置"));
-                    LambdaQueryWrapper<OfficeMessagePO> wrapper = new LambdaQueryWrapper<>();
-                    wrapper.eq(OfficeMessagePO::getTenantId, tenantId)
-                            .eq(OfficeMessagePO::getPlatformMessageId, platformMessageId)
+                    QueryWrapper<OfficeMessagePO> wrapper = new QueryWrapper<>();
+                    wrapper.eq("tenant_id", tenantId)
+                            .eq("platform_message_id", platformMessageId)
                             .last("LIMIT 1");
                     OfficeMessagePO po = mapper.selectOne(wrapper);
                     return po != null ? converter.toEntity(po) : null;
@@ -79,11 +84,35 @@ public class OfficeMessageRepositoryImpl implements OfficeMessageRepository {
     @Override
     public Mono<OfficeMessage> updateStatus(OfficeMessage message) {
         return Mono.fromCallable(() -> {
+                    Long tenantId = currentTenantId();
                     OfficeMessagePO po = converter.toPO(message);
-                    mapper.updateById(po);
-                    return converter.toEntity(mapper.selectById(po.getId()));
+                    if (!tenantId.equals(po.getTenantId())) {
+                        throw new IllegalStateException("消息不属于当前租户");
+                    }
+                    UpdateWrapper<OfficeMessagePO> update = new UpdateWrapper<>();
+                    update.eq("tenant_id", tenantId)
+                            .eq("id", po.getId())
+                            .eq("version", po.getVersion())
+                            .set("send_status", po.getStatus())
+                            .set("platform_message_id", po.getPlatformMessageId())
+                            .set("failure_reason", po.getResultMessage())
+                            .set("retry_count", po.getRetryCount())
+                            .set("sent_at", po.getSentAt())
+                            .set("updated_at", LocalDateTime.now())
+                            .setSql("version = version + 1");
+                    if (mapper.update(null, update) == 0) {
+                        throw new IllegalStateException("消息状态更新冲突");
+                    }
+                    po.setVersion(po.getVersion() + 1);
+                    return converter.toEntity(po);
                 })
                 .subscribeOn(blockingIoSchedulers.jdbc())
                 .doOnSuccess(updated -> log.debug("消息状态已更新，ID：{}", updated.getId()));
+    }
+
+    private Long currentTenantId() {
+        return TenantContext.currentTenantId()
+                .map(Long::valueOf)
+                .orElseThrow(() -> new IllegalStateException("租户上下文未设置"));
     }
 }

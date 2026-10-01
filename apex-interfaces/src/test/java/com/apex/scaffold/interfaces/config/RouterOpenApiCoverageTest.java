@@ -9,7 +9,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.PathItem;
 import io.swagger.v3.oas.models.Paths;
+import io.swagger.v3.oas.models.media.Schema;
+import io.swagger.v3.oas.models.parameters.Parameter;
 import io.swagger.v3.oas.models.responses.ApiResponses;
+import io.swagger.v3.oas.models.Components;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -100,6 +104,190 @@ class RouterOpenApiCoverageTest {
             assertThat(route.beanClass().getAnnotation(Tag.class))
                     .as(route.beanClass().getName())
                     .isNotNull();
+        }
+    }
+
+    /**
+     * 验证 Router 声明与 Handler 方法使用同一个 operationId。
+     *
+     * @throws Exception 当 Handler 方法反射解析失败时
+     */
+    @Test
+    void shouldKeepRouterAndHandlerOperationIdsInSync() throws Exception {
+        for (RouterOperation route : documentedOperations()) {
+            Method handlerMethod = route.beanClass().getMethod(route.beanMethod(), ServerRequest.class);
+            Operation handlerOperation = handlerMethod.getAnnotation(Operation.class);
+            assertThat(handlerOperation)
+                    .as(route.path() + " " + route.beanMethod())
+                    .isNotNull();
+            assertThat(handlerOperation.operationId())
+                    .as(route.path() + " " + route.beanMethod())
+                    .isEqualTo(route.operation().operationId());
+        }
+    }
+
+    /**
+     * 验证 OpenAPI Customizer 按 operationId 维护的契约映射没有孤儿键。
+     *
+     * @throws Exception 当反射读取配置字段失败时
+     */
+    @Test
+    void shouldKeepCustomizerOperationMapsFreeOfOrphans() throws Exception {
+        Set<String> operationIds = documentedOperations().stream()
+                .map(route -> route.operation().operationId())
+                .collect(java.util.stream.Collectors.toSet());
+
+        for (Field field : OpenApiDocumentationCustomizer.class.getDeclaredFields()) {
+            if (!Map.class.isAssignableFrom(field.getType())) {
+                continue;
+            }
+            field.setAccessible(true);
+            Object value = field.get(null);
+            assertThat(value).as(field.getName()).isInstanceOf(Map.class);
+            Map<?, ?> mapping = (Map<?, ?>) value;
+            assertThat(mapping.keySet())
+                    .as(field.getName())
+                    .allMatch(key -> key instanceof String && operationIds.contains(key));
+        }
+    }
+
+    /**
+     * 验证定制后请求体媒体类型与 Customizer 契约映射一致。
+     *
+     * <p>JSON 请求体操作应为 application/json，multipart 操作应为 multipart/form-data，
+     * GET/DELETE 等无请求体操作不应声明 requestBody。</p>
+     */
+    @Test
+    void shouldApplyCorrectRequestMediaTypesAfterCustomization() {
+        OpenAPI openApi = customizedOpenApi();
+        Set<String> jsonOps = operationIdsFromMap("JSON_REQUEST_TYPES");
+        Set<String> multipartOps = operationIdsFromMap("MULTIPART_REQUEST_FIELDS");
+        Set<String> declaredBodyOps = new HashSet<>();
+        declaredBodyOps.addAll(jsonOps);
+        declaredBodyOps.addAll(multipartOps);
+        declaredBodyOps.add("validateMobile");
+        declaredBodyOps.add("deleteCurrentUser");
+
+        for (RouterOperation route : documentedOperations()) {
+            String opId = route.operation().operationId();
+            io.swagger.v3.oas.models.Operation operation = findOperation(openApi, opId);
+            boolean isGetOrDelete = route.method()[0] == RequestMethod.GET
+                    || route.method()[0] == RequestMethod.DELETE;
+            if (isGetOrDelete && !declaredBodyOps.contains(opId)) {
+                assertThat(operation.getRequestBody())
+                        .as(opId + " GET/DELETE 不应有请求体")
+                        .isNull();
+                continue;
+            }
+            if (!declaredBodyOps.contains(opId)) {
+                continue;
+            }
+            assertThat(operation.getRequestBody())
+                    .as(opId + " 应声明请求体")
+                    .isNotNull();
+            assertThat(operation.getRequestBody().getContent())
+                    .as(opId + " 请求体应声明内容")
+                    .isNotNull();
+            if (multipartOps.contains(opId)) {
+                assertThat(operation.getRequestBody().getContent().keySet())
+                        .as(opId + " 应为 multipart/form-data")
+                        .contains("multipart/form-data");
+            } else if ("validateMobile".equals(opId)) {
+                assertThat(operation.getRequestBody().getContent().keySet())
+                        .as(opId + " 应为 application/x-www-form-urlencoded")
+                        .contains("application/x-www-form-urlencoded");
+            } else {
+                assertThat(operation.getRequestBody().getContent().keySet())
+                        .as(opId + " 应为 application/json")
+                        .contains("application/json");
+            }
+        }
+    }
+
+    /**
+     * 验证定制后响应媒体类型符合接口语义。
+     *
+     * <p>SSE 操作为 text/event-stream，文件下载为 application/octet-stream 二进制，
+     * 其余操作的成功响应为 application/json。</p>
+     */
+    @Test
+    void shouldApplyCorrectResponseMediaTypesAfterCustomization() {
+        OpenAPI openApi = customizedOpenApi();
+        Set<String> octetStreamOps = Set.of("getLocalFileContent");
+        Set<String> sseOps = Set.of("streamNotifications");
+
+        for (RouterOperation route : documentedOperations()) {
+            String opId = route.operation().operationId();
+            io.swagger.v3.oas.models.Operation operation = findOperation(openApi, opId);
+            String successCode = "deleteCurrentUser".equals(opId) ? "202" : "200";
+            assertThat(operation.getResponses())
+                    .as(opId + " 应有成功响应")
+                    .containsKey(successCode);
+            var content = operation.getResponses().get(successCode).getContent();
+            assertThat(content).as(opId + " 成功响应应有内容").isNotNull();
+            if (sseOps.contains(opId)) {
+                assertThat(content.keySet())
+                        .as(opId + " SSE 应为 text/event-stream")
+                        .contains("text/event-stream");
+            } else if (octetStreamOps.contains(opId)) {
+                assertThat(content.keySet())
+                        .as(opId + " 文件下载应为 application/octet-stream")
+                        .contains("application/octet-stream");
+            } else {
+                assertThat(content.keySet())
+                        .as(opId + " 普通接口应为 application/json")
+                        .contains("application/json");
+            }
+        }
+    }
+
+    /**
+     * 验证 Customizer 引用的所有请求/响应 DTO 类都具有类级 @Schema 注解。
+     *
+     * @throws Exception 当反射读取字段失败时
+     */
+    @Test
+    void shouldExposeSchemaAnnotationsOnReferencedDtos() throws Exception {
+        for (String fieldName : List.of("JSON_REQUEST_TYPES", "RESPONSE_TYPES")) {
+            Field field = OpenApiDocumentationCustomizer.class.getDeclaredField(fieldName);
+            field.setAccessible(true);
+            Map<?, ?> mapping = (Map<?, ?>) field.get(null);
+            for (Object value : mapping.values()) {
+                assertThat(value).as(fieldName).isInstanceOf(Class.class);
+                Class<?> dtoClass = (Class<?>) value;
+                assertThat(dtoClass.getAnnotation(io.swagger.v3.oas.annotations.media.Schema.class))
+                        .as(fieldName + " -> " + dtoClass.getName())
+                        .isNotNull();
+            }
+        }
+    }
+
+    /**
+     * 验证声明了查询参数的操作在定制后参数确实出现在 OpenAPI 操作中。
+     *
+     * @throws Exception 当反射读取字段失败时
+     */
+    @Test
+    @SuppressWarnings("unchecked")
+    void shouldDeclareQueryParametersForDocumentedEndpoints() throws Exception {
+        Field field = OpenApiDocumentationCustomizer.class.getDeclaredField("QUERY_PARAMETERS");
+        field.setAccessible(true);
+        Map<String, List<?>> queryParams = (Map<String, List<?>>) field.get(null);
+
+        OpenAPI openApi = customizedOpenApi();
+        for (Map.Entry<String, List<?>> entry : queryParams.entrySet()) {
+            String opId = entry.getKey();
+            io.swagger.v3.oas.models.Operation operation = findOperation(openApi, opId);
+            assertThat(operation).as(opId + " 应存在于文档中").isNotNull();
+            assertThat(operation.getParameters())
+                    .as(opId + " 应声明查询参数")
+                    .isNotNull();
+            for (Object param : entry.getValue()) {
+                String name = (String) param.getClass().getMethod("name").invoke(param);
+                assertThat(operation.getParameters())
+                        .as(opId + " 应声明查询参数 " + name)
+                        .anyMatch(p -> name.equals(p.getName()) && "query".equals(p.getIn()));
+            }
         }
     }
 
@@ -261,6 +449,62 @@ class RouterOpenApiCoverageTest {
             }
         }
         return operations;
+    }
+
+    /**
+     * 构建包含全部文档操作并经过 Customizer 增强的 OpenAPI 实例。
+     *
+     * @return 已定制的 OpenAPI 文档
+     */
+    private OpenAPI customizedOpenApi() {
+        OpenAPI openApi = new SpringDocConfig().apexOpenApi();
+        Paths paths = new Paths();
+        for (RouterOperation route : documentedOperations()) {
+            PathItem pathItem = paths.computeIfAbsent(route.path(), ignored -> new PathItem());
+            io.swagger.v3.oas.models.Operation operation = new io.swagger.v3.oas.models.Operation()
+                    .operationId(route.operation().operationId())
+                    .summary(route.operation().summary())
+                    .responses(new ApiResponses());
+            for (RequestMethod method : route.method()) {
+                pathItem.operation(PathItem.HttpMethod.valueOf(method.name()), operation);
+            }
+        }
+        openApi.setPaths(paths);
+        new SpringDocConfig().openApiCustomizer().customise(openApi);
+        return openApi;
+    }
+
+    /**
+     * 按 operationId 在定制后的 OpenAPI 中查找操作。
+     *
+     * @param openApi 已定制的 OpenAPI 文档
+     * @param operationId 操作唯一标识
+     * @return 匹配的 OpenAPI 操作；未找到时返回 {@code null}
+     */
+    private io.swagger.v3.oas.models.Operation findOperation(OpenAPI openApi, String operationId) {
+        return openApi.getPaths().values().stream()
+                .flatMap(pathItem -> pathItem.readOperations().stream())
+                .filter(operation -> operationId.equals(operation.getOperationId()))
+                .findFirst()
+                .orElse(null);
+    }
+
+    /**
+     * 反射读取 Customizer 指定 Map 字段的 key 集合。
+     *
+     * @param fieldName 字段名
+     * @return operationId 集合
+     */
+    @SuppressWarnings("unchecked")
+    private Set<String> operationIdsFromMap(String fieldName) {
+        try {
+            Field field = OpenApiDocumentationCustomizer.class.getDeclaredField(fieldName);
+            field.setAccessible(true);
+            Map<String, ?> map = (Map<String, ?>) field.get(null);
+            return map.keySet();
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException("无法读取字段 " + fieldName, e);
+        }
     }
 
     /** HTTP 方法与绝对路径组成的接口身份。 */

@@ -46,6 +46,12 @@ import reactor.core.publisher.Mono;
 @ConditionalOnProperty(prefix = "text.moderation.baidu", name = "enabled", havingValue = "true")
 public class BaiduTextModerationAdapter implements TextModerationPort {
 
+    private static final String JSON_FIELD_PROBABILITY = "probability";
+    private static final int HTTP_STATUS_OK = 200;
+    private static final int HTTP_STATUS_REDIRECT_THRESHOLD = 300;
+    /** 百度云审核结论类型：审核失败。 */
+    private static final int CONCLUSION_TYPE_FAILED = 4;
+
     private static final String PROVIDER = "BAIDU_TEXT_CENSOR";
     private static final int TOKEN_INVALID = 110;
     private static final int TOKEN_EXPIRED = 111;
@@ -171,7 +177,7 @@ public class BaiduTextModerationAdapter implements TextModerationPort {
                 }
                 throw new IllegalStateException("百度云文本审核 HTTP 调用失败，状态码=" + status);
             }
-            if (status < 200 || status >= 300) {
+            if (status < HTTP_STATUS_OK || status >= HTTP_STATUS_REDIRECT_THRESHOLD) {
                 throw new IllegalStateException("百度云文本审核 HTTP 调用失败，状态码=" + status);
             }
             JsonNode root = JsonUtil.getObjectMapper().readTree(response.body());
@@ -272,7 +278,7 @@ public class BaiduTextModerationAdapter implements TextModerationPort {
      */
     TextModerationResult mapResponse(JsonNode root) {
         int conclusionType = root.path("conclusionType").asInt(0);
-        if (conclusionType == 4) {
+        if (conclusionType == CONCLUSION_TYPE_FAILED) {
             throw new IllegalStateException("百度云文本审核返回审核失败");
         }
         ModerationDecision overallDecision = mapDecision(conclusionType);
@@ -331,8 +337,8 @@ public class BaiduTextModerationAdapter implements TextModerationPort {
         JsonNode hits = item.path("hits");
         if (hits.isArray()) {
             for (JsonNode hit : hits) {
-                if (hit.path("probability").isNumber()) {
-                    BigDecimal candidate = hit.path("probability")
+                if (hit.path(JSON_FIELD_PROBABILITY).isNumber()) {
+                    BigDecimal candidate = hit.path(JSON_FIELD_PROBABILITY)
                             .decimalValue()
                             .multiply(BigDecimal.valueOf(100))
                             .setScale(4, RoundingMode.HALF_UP);
@@ -342,8 +348,8 @@ public class BaiduTextModerationAdapter implements TextModerationPort {
                 }
             }
         }
-        if (highest == null && item.path("probability").isNumber()) {
-            highest = item.path("probability")
+        if (highest == null && item.path(JSON_FIELD_PROBABILITY).isNumber()) {
+            highest = item.path(JSON_FIELD_PROBABILITY)
                     .decimalValue()
                     .multiply(BigDecimal.valueOf(100))
                     .setScale(4, RoundingMode.HALF_UP);
@@ -392,7 +398,7 @@ public class BaiduTextModerationAdapter implements TextModerationPort {
                 .GET()
                 .build();
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-        if (response.statusCode() < 200 || response.statusCode() >= 300) {
+        if (response.statusCode() < HTTP_STATUS_OK || response.statusCode() >= HTTP_STATUS_REDIRECT_THRESHOLD) {
             throw new IllegalStateException("百度云 Access Token 获取失败，状态码=" + response.statusCode());
         }
         JsonNode root = JsonUtil.getObjectMapper().readTree(response.body());
@@ -402,7 +408,8 @@ public class BaiduTextModerationAdapter implements TextModerationPort {
             throw new IllegalStateException("百度云 Access Token 获取失败，错误码="
                     + root.path("error").asText(root.path("error_code").asText("unknown")));
         }
-        long usableSeconds = Math.max(1, expiresIn - Math.min(300, Math.max(30, expiresIn / 10)));
+        long usableSeconds =
+                Math.max(1, expiresIn - Math.min(HTTP_STATUS_REDIRECT_THRESHOLD, Math.max(30, expiresIn / 10)));
         return new CachedToken(token, Instant.now().plusSeconds(usableSeconds));
     }
 

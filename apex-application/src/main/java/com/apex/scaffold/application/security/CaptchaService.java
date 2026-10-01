@@ -43,6 +43,10 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class CaptchaService {
 
+    private static final int CAPTCHA_WIDTH = 40;
+
+    private static final int CAPTCHA_LENGTH = 4;
+
     /**
      * 验证码缓存键前缀。
      */
@@ -133,7 +137,7 @@ public class CaptchaService {
      * @return 随机验证码
      */
     private String randomCode() {
-        int length = Math.min(Math.max(properties.getLength(), 4), 6);
+        int length = Math.min(Math.max(properties.getLength(), CAPTCHA_LENGTH), 6);
         StringBuilder sb = new StringBuilder(length);
         for (int i = 0; i < length; i++) {
             sb.append(CHARSET.charAt(random.nextInt(CHARSET.length())));
@@ -159,7 +163,7 @@ public class CaptchaService {
             g.fillRect(0, 0, IMAGE_WIDTH, IMAGE_HEIGHT);
 
             // 干扰线
-            for (int i = 0; i < 4; i++) {
+            for (int i = 0; i < CAPTCHA_LENGTH; i++) {
                 g.setColor(randomColor(100, 200));
                 int x1 = random.nextInt(IMAGE_WIDTH);
                 int y1 = random.nextInt(IMAGE_HEIGHT);
@@ -174,14 +178,14 @@ public class CaptchaService {
                 g.setColor(randomColor(20, 120));
                 int x = 12 + i * 26;
                 int y = 32 + random.nextInt(8);
-                double angle = (random.nextDouble() - 0.5) * 0.4;
+                double angle = (random.nextDouble() - 0.5) * 0.3;
                 g.rotate(angle, x + 10, y);
                 g.drawString(String.valueOf(code.charAt(i)), x, y);
                 g.rotate(-angle, x + 10, y);
             }
 
             // 噪点
-            for (int i = 0; i < 40; i++) {
+            for (int i = 0; i < CAPTCHA_WIDTH; i++) {
                 g.setColor(randomColor(0, 200));
                 g.fillRect(random.nextInt(IMAGE_WIDTH), random.nextInt(IMAGE_HEIGHT), 1, 1);
             }

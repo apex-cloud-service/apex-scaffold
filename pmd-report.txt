@@ -1,0 +1,635 @@
+[INFO] Scanning for projects...
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Build Order:
+[INFO] 
+[INFO] apex-application                                                   [jar]
+[INFO] apex-interfaces                                                    [jar]
+[INFO] 
+[INFO] -----------------< com.apex.scaffold:apex-application >-----------------
+[INFO] Building apex-application 1.2.0                                    [1/2]
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- jacoco:0.8.12:prepare-agent (default) @ apex-application ---
+[INFO] Skipping JaCoCo execution because property jacoco.skip is set.
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ apex-application ---
+[INFO] Copying 0 resource from src/main/resources to target/classes
+[INFO] Copying 1 resource from src/main/resources to target/classes
+[INFO] 
+[INFO] --- compiler:3.13.0:compile (default-compile) @ apex-application ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 273 source files with javac [debug parameters release 17] to target/classes
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/LoginRequest.java:[74,20] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/admin/DataSourceRequest.java:[157,21] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/admin/DataSourceRequest.java:[173,21] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/admin/DataSourceRequest.java:[186,18] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/admin/DataSourceRequest.java:[199,18] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/PageRequest.java:[58,21] @SuperBuilder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/CalendarEventDTO.java:[23,1] Use of @NoArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/CalendarEventDTO.java:[24,1] Use of @AllArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/data/DocumentRequest.java:[21,1] Use of @NoArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/data/DocumentRequest.java:[22,1] Use of @AllArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/admin/SecurityPolicyRequest.java:[23,1] Use of @NoArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/admin/SecurityPolicyRequest.java:[24,1] Use of @AllArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/office/OfficeAppCommand.java:[30,1] Use of @NoArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/office/OfficeAppCommand.java:[31,1] Use of @AllArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/admin/JobQueryRequest.java:[31,1] Use of @NoArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/admin/JobQueryRequest.java:[32,1] Use of @AllArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/admin/AuditLogDTO.java:[38,1] Use of @NoArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/admin/AuditLogDTO.java:[39,1] Use of @AllArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/admin/DeptDTO.java:[23,1] Use of @NoArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/admin/DeptDTO.java:[24,1] Use of @AllArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/admin/ConfigDTO.java:[22,1] Use of @NoArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/admin/ConfigDTO.java:[23,1] Use of @AllArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/EmployeeDTO.java:[83,1] Use of @NoArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/EmployeeDTO.java:[84,1] Use of @AllArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/PageResponse.java:[22,1] Use of @NoArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/PageResponse.java:[23,1] Use of @AllArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/log/RuntimeLogDTO.java:[33,1] Use of @NoArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/log/RuntimeLogDTO.java:[34,1] Use of @AllArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/CreditResponse.java:[47,1] Use of @NoArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/CreditResponse.java:[48,1] Use of @AllArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/admin/GenConfigRequest.java:[23,1] Use of @NoArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/admin/GenConfigRequest.java:[24,1] Use of @AllArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/PermissionDTO.java:[37,1] Use of @NoArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/PermissionDTO.java:[38,1] Use of @AllArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/office/message/SendMessageCommand.java:[21,1] Use of @NoArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/office/message/SendMessageCommand.java:[22,1] Use of @AllArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/admin/SsoStatisticsDTO.java:[28,1] Use of @NoArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/admin/SsoStatisticsDTO.java:[29,1] Use of @AllArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/admin/DatabaseTestResultDTO.java:[28,1] Use of @NoArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/admin/DatabaseTestResultDTO.java:[29,1] Use of @AllArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/data/ChartDataResponse.java:[30,1] Use of @NoArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/data/ChartDataResponse.java:[31,1] Use of @AllArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/data/ChartDataResponse.java:[52,5] Use of @NoArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/data/ChartDataResponse.java:[53,5] Use of @AllArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/WorkflowDefinitionDTO.java:[22,1] Use of @NoArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/WorkflowDefinitionDTO.java:[23,1] Use of @AllArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/WorkflowDefinitionDTO.java:[62,5] Use of @NoArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/WorkflowDefinitionDTO.java:[63,5] Use of @AllArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/WorkflowDefinitionDTO.java:[106,5] Use of @NoArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/WorkflowDefinitionDTO.java:[107,5] Use of @AllArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/ProfileUpdateRequest.java:[27,1] Use of @NoArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/ProfileUpdateRequest.java:[28,1] Use of @AllArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/admin/GenTemplateRequest.java:[22,1] Use of @NoArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/admin/GenTemplateRequest.java:[23,1] Use of @AllArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/WxPhoneRequest.java:[25,1] Use of @NoArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/WxPhoneRequest.java:[26,1] Use of @AllArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/admin/GenDatasourceRequest.java:[23,1] Use of @NoArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/admin/GenDatasourceRequest.java:[24,1] Use of @AllArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/SendSmsRequest.java:[46,1] Use of @NoArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/SendSmsRequest.java:[47,1] Use of @AllArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/admin/JobDTO.java:[22,1] Use of @NoArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/admin/JobDTO.java:[23,1] Use of @AllArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/OAuth2ConsentRequest.java:[35,1] Use of @NoArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/OAuth2ConsentRequest.java:[36,1] Use of @AllArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/admin/MenuDTO.java:[25,1] Use of @NoArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/admin/MenuDTO.java:[26,1] Use of @AllArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/LoginResponse.java:[20,1] Use of @NoArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/LoginResponse.java:[21,1] Use of @AllArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/LoginResponse.java:[138,5] Use of @NoArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/LoginResponse.java:[139,5] Use of @AllArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/MessageDTO.java:[23,1] Use of @NoArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/MessageDTO.java:[24,1] Use of @AllArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/admin/PermissionSyncResultDTO.java:[21,1] Use of @NoArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/admin/PermissionSyncResultDTO.java:[22,1] Use of @AllArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/data/DocumentResponse.java:[38,1] Use of @NoArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/data/DocumentResponse.java:[39,1] Use of @AllArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/RegisterRequest.java:[29,1] Use of @NoArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/RegisterRequest.java:[30,1] Use of @AllArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/admin/SecurityPolicyDTO.java:[21,1] Use of @NoArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/admin/SecurityPolicyDTO.java:[22,1] Use of @AllArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/admin/DictDataDTO.java:[21,1] Use of @NoArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/admin/DictDataDTO.java:[22,1] Use of @AllArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/admin/JobRequest.java:[25,1] Use of @NoArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/admin/JobRequest.java:[26,1] Use of @AllArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/admin/SsoProviderDTO.java:[28,1] Use of @NoArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/admin/SsoProviderDTO.java:[29,1] Use of @AllArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/LoginRequest.java:[63,1] Use of @NoArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/LoginRequest.java:[64,1] Use of @AllArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/OAuth2ClientResponse.java:[40,1] Use of @NoArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/OAuth2ClientResponse.java:[41,1] Use of @AllArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/WorkflowInstanceDTO.java:[21,1] Use of @NoArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/WorkflowInstanceDTO.java:[22,1] Use of @AllArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/data/ChartQueryRequest.java:[29,1] Use of @NoArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/data/ChartQueryRequest.java:[30,1] Use of @AllArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/admin/DictDataRequest.java:[23,1] Use of @NoArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/admin/DictDataRequest.java:[24,1] Use of @AllArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/admin/TenantDTO.java:[21,1] Use of @NoArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/admin/TenantDTO.java:[22,1] Use of @AllArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/OperationLogDTO.java:[22,1] Use of @NoArgsConstructor is flagged according to lombok configuration.
+[WARNING] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/OperationLogDTO.java:[23,1] Use of @AllArgsConstructor is flagged according to lombok configuration.
+[INFO] /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/service/login/PasswordLoginStrategy.java: /Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/service/login/PasswordLoginStrategy.java has additional uses or overrides of a deprecated API that is marked for removal.
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ apex-application ---
+[INFO] skip non existing resourceDirectory /Users/work/apex-scaffold/apex-application/src/test/resources
+[INFO] 
+[INFO] --- compiler:3.13.0:testCompile (default-testCompile) @ apex-application ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 71 source files with javac [debug parameters release 17] to target/test-classes
+[WARNING] /Users/work/apex-scaffold/apex-application/src/test/java/com/apex/scaffold/application/service/login/PasswordLoginStrategyTest.java:[92,37] build(com.apex.scaffold.domain.model.entity.UserEntity,java.lang.String,java.lang.String,boolean) in com.apex.scaffold.application.service.login.LoginResponseHelper has been deprecated and marked for removal
+[INFO] /Users/work/apex-scaffold/apex-application/src/test/java/com/apex/scaffold/application/service/AuthRegistrationServiceTest.java: Some input files use unchecked or unsafe operations.
+[INFO] /Users/work/apex-scaffold/apex-application/src/test/java/com/apex/scaffold/application/service/AuthRegistrationServiceTest.java: Recompile with -Xlint:unchecked for details.
+[INFO] 
+[INFO] --- surefire:3.2.5:test (default-test) @ apex-application ---
+[INFO] Tests are skipped.
+[INFO] 
+[INFO] --- jacoco:0.8.12:report (application-report) @ apex-application ---
+[INFO] Skipping JaCoCo execution because property jacoco.skip is set.
+[INFO] 
+[INFO] --- jacoco:0.8.12:check (application-coverage-check) @ apex-application ---
+[INFO] Skipping JaCoCo execution because property jacoco.skip is set.
+[INFO] 
+[INFO] --- jar:3.4.2:jar (default-jar) @ apex-application ---
+[INFO] Building jar: /Users/work/apex-scaffold/apex-application/target/apex-application-1.2.0.jar
+[INFO] 
+[INFO] --- failsafe:3.2.5:integration-test (default) @ apex-application ---
+[INFO] Tests are skipped.
+[INFO] 
+[INFO] >>> pmd:3.19.0:check (p3c-pmd-check) > :pmd @ apex-application >>>
+[INFO] 
+[INFO] --- pmd:3.19.0:pmd (pmd) @ apex-application ---
+[INFO] PMD version: 6.49.0
+[WARNING] Rule /Users/work/apex-scaffold/apex-application/target/pmd/rulesets/ali-comment.xml/CommentsMustBeJavadocFormatRule does not mention attribute language='java', please mention it explicitly to be compatible with PMD 7
+[WARNING] Rule /Users/work/apex-scaffold/apex-application/target/pmd/rulesets/ali-comment.xml/AbstractMethodOrInterfaceMethodMustUseJavadocRule does not mention attribute language='java', please mention it explicitly to be compatible with PMD 7
+[WARNING] Rule /Users/work/apex-scaffold/apex-application/target/pmd/rulesets/ali-comment.xml/ClassMustHaveAuthorRule does not mention attribute language='java', please mention it explicitly to be compatible with PMD 7
+[WARNING] Rule /Users/work/apex-scaffold/apex-application/target/pmd/rulesets/ali-comment.xml/EnumConstantsMustHaveCommentRule does not mention attribute language='java', please mention it explicitly to be compatible with PMD 7
+[WARNING] Rule /Users/work/apex-scaffold/apex-application/target/pmd/rulesets/ali-comment.xml/AvoidCommentBehindStatementRule does not mention attribute language='java', please mention it explicitly to be compatible with PMD 7
+[WARNING] Rule /Users/work/apex-scaffold/apex-application/target/pmd/rulesets/ali-comment.xml/RemoveCommentedCodeRule does not mention attribute language='java', please mention it explicitly to be compatible with PMD 7
+[WARNING] Rule /Users/work/apex-scaffold/apex-application/target/pmd/rulesets/ali-constant.xml/UpperEllRule does not mention attribute language='java', please mention it explicitly to be compatible with PMD 7
+[WARNING] Rule /Users/work/apex-scaffold/apex-application/target/pmd/rulesets/ali-constant.xml/UndefineMagicConstantRule does not mention attribute language='java', please mention it explicitly to be compatible with PMD 7
+[WARNING] Rule /Users/work/apex-scaffold/apex-application/target/pmd/rulesets/ali-set.xml/ClassCastExceptionWithToArrayRule does not mention attribute language='java', please mention it explicitly to be compatible with PMD 7
+[WARNING] Rule /Users/work/apex-scaffold/apex-application/target/pmd/rulesets/ali-set.xml/UnsupportedExceptionWithModifyAsListRule does not mention attribute language='java', please mention it explicitly to be compatible with PMD 7
+[WARNING] Rule /Users/work/apex-scaffold/apex-application/target/pmd/rulesets/ali-set.xml/ClassCastExceptionWithSubListToArrayListRule does not mention attribute language='java', please mention it explicitly to be compatible with PMD 7
+[WARNING] Rule /Users/work/apex-scaffold/apex-application/target/pmd/rulesets/ali-set.xml/ConcurrentExceptionWithModifyOriginSubListRule does not mention attribute language='java', please mention it explicitly to be compatible with PMD 7
+[WARNING] Rule /Users/work/apex-scaffold/apex-application/target/pmd/rulesets/ali-set.xml/DontModifyInForeachCircleRule does not mention attribute language='java', please mention it explicitly to be compatible with PMD 7
+[WARNING] Rule /Users/work/apex-scaffold/apex-application/target/pmd/rulesets/ali-set.xml/CollectionInitShouldAssignCapacityRule does not mention attribute language='java', please mention it explicitly to be compatible with PMD 7
+[WARNING] Rule /Users/work/apex-scaffold/apex-application/target/pmd/rulesets/ali-comment.xml/CommentsMustBeJavadocFormatRule does not mention attribute language='java', please mention it explicitly to be compatible with PMD 7
+[WARNING] Rule /Users/work/apex-scaffold/apex-application/target/pmd/rulesets/ali-comment.xml/AbstractMethodOrInterfaceMethodMustUseJavadocRule does not mention attribute language='java', please mention it explicitly to be compatible with PMD 7
+[WARNING] Rule /Users/work/apex-scaffold/apex-application/target/pmd/rulesets/ali-comment.xml/ClassMustHaveAuthorRule does not mention attribute language='java', please mention it explicitly to be compatible with PMD 7
+[WARNING] Rule /Users/work/apex-scaffold/apex-application/target/pmd/rulesets/ali-comment.xml/EnumConstantsMustHaveCommentRule does not mention attribute language='java', please mention it explicitly to be compatible with PMD 7
+[WARNING] Rule /Users/work/apex-scaffold/apex-application/target/pmd/rulesets/ali-comment.xml/AvoidCommentBehindStatementRule does not mention attribute language='java', please mention it explicitly to be compatible with PMD 7
+[WARNING] Rule /Users/work/apex-scaffold/apex-application/target/pmd/rulesets/ali-comment.xml/RemoveCommentedCodeRule does not mention attribute language='java', please mention it explicitly to be compatible with PMD 7
+[WARNING] Rule /Users/work/apex-scaffold/apex-application/target/pmd/rulesets/ali-constant.xml/UpperEllRule does not mention attribute language='java', please mention it explicitly to be compatible with PMD 7
+[WARNING] Rule /Users/work/apex-scaffold/apex-application/target/pmd/rulesets/ali-constant.xml/UndefineMagicConstantRule does not mention attribute language='java', please mention it explicitly to be compatible with PMD 7
+[WARNING] Rule /Users/work/apex-scaffold/apex-application/target/pmd/rulesets/ali-set.xml/ClassCastExceptionWithToArrayRule does not mention attribute language='java', please mention it explicitly to be compatible with PMD 7
+[WARNING] Rule /Users/work/apex-scaffold/apex-application/target/pmd/rulesets/ali-set.xml/UnsupportedExceptionWithModifyAsListRule does not mention attribute language='java', please mention it explicitly to be compatible with PMD 7
+[WARNING] Rule /Users/work/apex-scaffold/apex-application/target/pmd/rulesets/ali-set.xml/ClassCastExceptionWithSubListToArrayListRule does not mention attribute language='java', please mention it explicitly to be compatible with PMD 7
+[WARNING] Rule /Users/work/apex-scaffold/apex-application/target/pmd/rulesets/ali-set.xml/ConcurrentExceptionWithModifyOriginSubListRule does not mention attribute language='java', please mention it explicitly to be compatible with PMD 7
+[WARNING] Rule /Users/work/apex-scaffold/apex-application/target/pmd/rulesets/ali-set.xml/DontModifyInForeachCircleRule does not mention attribute language='java', please mention it explicitly to be compatible with PMD 7
+[WARNING] Rule /Users/work/apex-scaffold/apex-application/target/pmd/rulesets/ali-set.xml/CollectionInitShouldAssignCapacityRule does not mention attribute language='java', please mention it explicitly to be compatible with PMD 7
+[WARNING] Use of deprecated attribute 'ClassOrInterfaceDeclaration/@Image' by XPath rule 'BooleanPropertyShouldNotStartWithIsRule' (in ruleset 'AlibabaJavaNaming'), please use @SimpleName instead
+[WARNING] Use of deprecated attribute 'FieldDeclaration/@Array' by XPath rule 'ArrayNamingShouldHaveBracketRule' (in ruleset 'AlibabaJavaNaming')
+[ERROR] aktStatus is NULL: maximum Iterations exceeded, abort 0
+[ERROR] aktStatus is NULL: maximum Iterations exceeded, abort 0
+[ERROR] aktStatus is NULL: maximum Iterations exceeded, abort 0
+[WARNING] Use of deprecated attribute 'LocalVariableDeclaration/@Array' by XPath rule 'ArrayNamingShouldHaveBracketRule' (in ruleset 'AlibabaJavaNaming')
+[WARNING] Use of deprecated attribute 'ConditionalExpression/@Ternary' by XPath rule 'AvoidComplexConditionRule' (in ruleset 'AlibabaJavaFlowControl')
+[WARNING] Use of deprecated attribute 'ReferenceType/@Array' by XPath rule 'ArrayNamingShouldHaveBracketRule' (in ruleset 'AlibabaJavaNaming')
+[ERROR] aktStatus is NULL: maximum Iterations exceeded, abort 0
+[ERROR] aktStatus is NULL: maximum Iterations exceeded, abort 0
+[ERROR] aktStatus is NULL: maximum Iterations exceeded, abort 0
+[ERROR] aktStatus is NULL: maximum Iterations exceeded, abort 0
+[WARNING] Use of deprecated attribute 'AdditiveExpression/@Image' in a findChildNodesWithXPath navigation, please use @Operator instead
+java.lang.RuntimeException: Use of deprecated attribute 'AdditiveExpression/@Image' in a findChildNodesWithXPath navigation, please use @Operator instead
+    at net.sourceforge.pmd.lang.ast.xpath.internal.DeprecatedAttrLogger$AdhocLoggerImpl.recordUsageOf (DeprecatedAttrLogger.java:113)
+    at net.sourceforge.pmd.lang.ast.xpath.internal.ContextualizedNavigator.getAttributeStringValue (ContextualizedNavigator.java:24)
+    at org.jaxen.function.StringFunction.evaluate (StringFunction.java:278)
+    at org.jaxen.expr.DefaultEqualityExpr.evaluateObjectObject (DefaultEqualityExpr.java:152)
+    at org.jaxen.expr.DefaultEqualityExpr.evaluateSetSet (DefaultEqualityExpr.java:126)
+    at org.jaxen.expr.DefaultEqualityExpr.evaluate (DefaultEqualityExpr.java:97)
+    at org.jaxen.expr.DefaultAndExpr.evaluate (DefaultAndExpr.java:82)
+    at org.jaxen.expr.DefaultPredicate.evaluate (DefaultPredicate.java:95)
+    at org.jaxen.expr.PredicateSet.applyPredicate (PredicateSet.java:269)
+    at org.jaxen.expr.PredicateSet.evaluatePredicates (PredicateSet.java:244)
+    at org.jaxen.expr.DefaultNameStep.evaluate (DefaultNameStep.java:291)
+    at org.jaxen.expr.DefaultLocationPath.evaluate (DefaultLocationPath.java:140)
+    at org.jaxen.expr.DefaultXPathExpr.asList (DefaultXPathExpr.java:102)
+    at org.jaxen.BaseXPath.selectNodesForContext (BaseXPath.java:677)
+    at org.jaxen.BaseXPath.selectNodes (BaseXPath.java:216)
+    at net.sourceforge.pmd.lang.ast.AbstractNode.findChildNodesWithXPath (AbstractNode.java:528)
+    at com.alibaba.p3c.pmd.lang.java.rule.oop.StringConcatRule.checkStringConcat (StringConcatRule.java:76)
+    at com.alibaba.p3c.pmd.lang.java.rule.oop.StringConcatRule.visit (StringConcatRule.java:57)
+    at net.sourceforge.pmd.lang.java.ast.ASTWhileStatement.jjtAccept (ASTWhileStatement.java:66)
+    at net.sourceforge.pmd.lang.java.rule.AbstractJavaRule.visit (AbstractJavaRule.java:225)
+    at net.sourceforge.pmd.lang.java.rule.AbstractJavaRule.visit (AbstractJavaRule.java:662)
+    at net.sourceforge.pmd.lang.java.ast.ASTStatement.jjtAccept (ASTStatement.java:25)
+    at net.sourceforge.pmd.lang.java.rule.AbstractJavaRule.visit (AbstractJavaRule.java:225)
+    at net.sourceforge.pmd.lang.java.rule.AbstractJavaRule.visit (AbstractJavaRule.java:677)
+    at net.sourceforge.pmd.lang.java.ast.ASTBlockStatement.jjtAccept (ASTBlockStatement.java:25)
+    at net.sourceforge.pmd.lang.java.rule.AbstractJavaRule.visit (AbstractJavaRule.java:225)
+    at net.sourceforge.pmd.lang.java.rule.AbstractJavaRule.visit (AbstractJavaRule.java:672)
+    at net.sourceforge.pmd.lang.java.ast.ASTBlock.jjtAccept (ASTBlock.java:27)
+    at net.sourceforge.pmd.lang.java.rule.AbstractJavaRule.visit (AbstractJavaRule.java:225)
+    at net.sourceforge.pmd.lang.java.rule.AbstractJavaRule.visit (AbstractJavaRule.java:452)
+    at net.sourceforge.pmd.lang.java.ast.ASTMethodDeclaration.jjtAccept (ASTMethodDeclaration.java:37)
+    at net.sourceforge.pmd.lang.java.rule.AbstractJavaRule.visit (AbstractJavaRule.java:225)
+    at net.sourceforge.pmd.lang.java.rule.AbstractJavaRule.visit (AbstractJavaRule.java:272)
+    at net.sourceforge.pmd.lang.java.ast.ASTClassOrInterfaceBodyDeclaration.jjtAccept (ASTClassOrInterfaceBodyDeclaration.java:44)
+    at net.sourceforge.pmd.lang.java.rule.AbstractJavaRule.visit (AbstractJavaRule.java:225)
+    at net.sourceforge.pmd.lang.java.rule.AbstractJavaRule.visit (AbstractJavaRule.java:267)
+    at net.sourceforge.pmd.lang.java.ast.ASTClassOrInterfaceBody.jjtAccept (ASTClassOrInterfaceBody.java:35)
+    at net.sourceforge.pmd.lang.java.rule.AbstractJavaRule.visit (AbstractJavaRule.java:225)
+    at net.sourceforge.pmd.lang.java.rule.AbstractJavaRule.visit (AbstractJavaRule.java:237)
+    at net.sourceforge.pmd.lang.java.ast.ASTClassOrInterfaceDeclaration.jjtAccept (ASTClassOrInterfaceDeclaration.java:55)
+    at net.sourceforge.pmd.lang.java.rule.AbstractJavaRule.visit (AbstractJavaRule.java:225)
+    at net.sourceforge.pmd.lang.java.rule.AbstractJavaRule.visit (AbstractJavaRule.java:422)
+    at net.sourceforge.pmd.lang.java.ast.ASTTypeDeclaration.jjtAccept (ASTTypeDeclaration.java:39)
+    at net.sourceforge.pmd.lang.java.rule.AbstractJavaRule.visit (AbstractJavaRule.java:225)
+    at net.sourceforge.pmd.lang.java.rule.AbstractJavaRule.visit (AbstractJavaRule.java:397)
+    at com.alibaba.p3c.pmd.lang.java.rule.AbstractAliRule.visit (AbstractAliRule.java:60)
+    at net.sourceforge.pmd.lang.java.ast.ASTCompilationUnit.jjtAccept (ASTCompilationUnit.java:44)
+    at net.sourceforge.pmd.lang.java.rule.AbstractJavaRule.visitAll (AbstractJavaRule.java:167)
+    at net.sourceforge.pmd.lang.java.rule.AbstractJavaRule.apply (AbstractJavaRule.java:161)
+    at net.sourceforge.pmd.RuleSet.apply (RuleSet.java:670)
+    at net.sourceforge.pmd.RuleSets.apply (RuleSets.java:163)
+    at net.sourceforge.pmd.SourceCodeProcessor.processSource (SourceCodeProcessor.java:209)
+    at net.sourceforge.pmd.SourceCodeProcessor.processSourceCodeWithoutCache (SourceCodeProcessor.java:118)
+    at net.sourceforge.pmd.SourceCodeProcessor.processSourceCode (SourceCodeProcessor.java:100)
+    at net.sourceforge.pmd.SourceCodeProcessor.processSourceCode (SourceCodeProcessor.java:62)
+    at net.sourceforge.pmd.processor.PmdRunnable.call (PmdRunnable.java:89)
+    at net.sourceforge.pmd.processor.PmdRunnable.call (PmdRunnable.java:30)
+    at java.util.concurrent.FutureTask.run (FutureTask.java:264)
+    at java.util.concurrent.Executors$RunnableAdapter.call (Executors.java:539)
+    at java.util.concurrent.FutureTask.run (FutureTask.java:264)
+    at java.util.concurrent.ThreadPoolExecutor.runWorker (ThreadPoolExecutor.java:1136)
+    at java.util.concurrent.ThreadPoolExecutor$Worker.run (ThreadPoolExecutor.java:635)
+    at java.lang.Thread.run (Thread.java:842)
+[ERROR] aktStatus is NULL: maximum Iterations exceeded, abort 0
+[ERROR] aktStatus is NULL: maximum Iterations exceeded, abort 0
+[ERROR] aktStatus is NULL: maximum Iterations exceeded, abort 0
+[ERROR] aktStatus is NULL: maximum Iterations exceeded, abort 0
+[ERROR] aktStatus is NULL: maximum Iterations exceeded, abort 0
+[ERROR] aktStatus is NULL: maximum Iterations exceeded, abort 0
+[ERROR] aktStatus is NULL: maximum Iterations exceeded, abort 0
+[ERROR] aktStatus is NULL: maximum Iterations exceeded, abort 0
+[ERROR] aktStatus is NULL: maximum Iterations exceeded, abort 0
+[ERROR] aktStatus is NULL: maximum Iterations exceeded, abort 0
+[WARNING] Use of deprecated attribute 'ClassOrInterfaceDeclaration/@Image' by XPath rule 'ServiceOrDaoClassShouldEndWithImplRule' (in ruleset 'AlibabaJavaNaming'), please use @SimpleName instead
+[ERROR] aktStatus is NULL: maximum Iterations exceeded, abort 0
+[ERROR] aktStatus is NULL: maximum Iterations exceeded, abort 0
+[ERROR] aktStatus is NULL: maximum Iterations exceeded, abort 0
+[ERROR] aktStatus is NULL: maximum Iterations exceeded, abort 0
+[ERROR] aktStatus is NULL: maximum Iterations exceeded, abort 0
+[ERROR] aktStatus is NULL: maximum Iterations exceeded, abort 0
+[ERROR] aktStatus is NULL: maximum Iterations exceeded, abort 0
+[INFO] Rendering content with org.apache.maven.skins:maven-default-skin:jar:1.3 skin.
+[INFO] 
+[INFO] <<< pmd:3.19.0:check (p3c-pmd-check) < :pmd @ apex-application <<<
+[INFO] 
+[INFO] 
+[INFO] --- pmd:3.19.0:check (p3c-pmd-check) @ apex-application ---
+[INFO] PMD version: 6.49.0
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.ApprovalProcessAssembler:24 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【toDto】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.ApprovalProcessAssembler:26 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【toEntity】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.CalendarEventAssembler:24 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【toDto】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.CalendarEventAssembler:26 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【toEntity】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.DepartmentAssembler:21 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【toDto】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.DepartmentAssembler:23 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【toEntity】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.EmployeeAssembler:21 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【toDto】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.EmployeeAssembler:23 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【toEntity】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.OAuth2ClientAssembler:18 Rule:ClassNamingShouldBeCamelRule Priority:3 【OAuth2ClientAssembler】不符合UpperCamelCase命名风格.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.OffMessageAssembler:24 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【toDTO】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.OffMessageAssembler:26 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【toDTOList】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.OffMessageAssembler:28 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【toEntity】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.OffMessageTemplateAssembler:23 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【toDTO】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.OffMessageTemplateAssembler:25 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【toDTOList】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.OffMessageTemplateAssembler:27 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【toEntity】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.SearchResultAssembler:24 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【toDTO】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.SearchResultAssembler:26 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【formatDateTime】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.SyncHistoryAssembler:21 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【toDto】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.SyncHistoryAssembler:23 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【toEntity】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.SysSsoAuditLogAssembler:22 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【toDTO】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.SysSsoAuditLogAssembler:24 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【toDTOList】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.SysSsoProviderAssembler:25 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【toEntity】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.SysSsoProviderAssembler:27 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【toDTO】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.SysSsoProviderAssembler:29 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【toDTOList】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.SysSsoProviderAssembler:31 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【map】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.SysSsoProviderAssembler:35 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【map】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.SysSsoSessionAssembler:22 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【toDTO】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.SysSsoSessionAssembler:24 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【toDTOList】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.dto.OAuth2ClientResponse:42 Rule:ClassNamingShouldBeCamelRule Priority:3 【OAuth2ClientResponse】不符合UpperCamelCase命名风格.
+[INFO] PMD Failure: com.apex.scaffold.application.dto.OAuth2ConsentRequest:38 Rule:ClassNamingShouldBeCamelRule Priority:3 【OAuth2ConsentRequest】不符合UpperCamelCase命名风格.
+[INFO] PMD Failure: com.apex.scaffold.application.job.CronExpression:321 Rule:AvoidCommentBehindStatementRule Priority:3 请不要使用行尾注释.
+[INFO] PMD Failure: com.apex.scaffold.application.job.SearchIndexReconciliationJob:74 Rule:AvoidCommentBehindStatementRule Priority:3 请不要使用行尾注释.
+[INFO] PMD Failure: com.apex.scaffold.application.listener.ResourceIndexEventListener:49 Rule:SwitchStatementRule Priority:2 switch块缺少default语句.
+[INFO] PMD Failure: com.apex.scaffold.application.office.OfficeAdminService:127 Rule:UndefineMagicConstantRule Priority:3 魔法值【100】.
+[INFO] PMD Failure: com.apex.scaffold.application.office.OfficeAdminService:148 Rule:UndefineMagicConstantRule Priority:3 魔法值【"PENDING"】.
+[INFO] PMD Failure: com.apex.scaffold.application.office.OfficeAdminService:177 Rule:UndefineMagicConstantRule Priority:3 魔法值【"REVOKED"】.
+[INFO] PMD Failure: com.apex.scaffold.application.office.OfficeApprovalService:60 Rule:AvoidCommentBehindStatementRule Priority:3 请不要使用行尾注释.
+[INFO] PMD Failure: com.apex.scaffold.application.office.OfficeApprovalService:61 Rule:AvoidCommentBehindStatementRule Priority:3 请不要使用行尾注释.
+[INFO] PMD Failure: com.apex.scaffold.application.office.OfficeDocumentService:433 Rule:UndefineMagicConstantRule Priority:3 魔法值【"title"】.
+[INFO] PMD Failure: com.apex.scaffold.application.office.OfficeDocumentService:436 Rule:UndefineMagicConstantRule Priority:3 魔法值【"url"】.
+[INFO] PMD Failure: com.apex.scaffold.application.office.OfficeDocumentService:439 Rule:UndefineMagicConstantRule Priority:3 魔法值【"lastModifiedTime"】.
+[INFO] PMD Failure: com.apex.scaffold.application.office.OfficeMessageService:136 Rule:UndefineMagicConstantRule Priority:3 魔法值【"FAILED"】.
+[INFO] PMD Failure: com.apex.scaffold.application.office.message.OfficeMessageApplicationService:113 Rule:UndefineMagicConstantRule Priority:3 魔法值【"SUCCESS"】.
+[INFO] PMD Failure: com.apex.scaffold.application.office.message.OfficeMessageApplicationService:209 Rule:UndefineMagicConstantRule Priority:3 魔法值【"SUCCESS"】.
+[INFO] PMD Failure: com.apex.scaffold.application.security.CaptchaService:162 Rule:UndefineMagicConstantRule Priority:3 魔法值【4】.
+[INFO] PMD Failure: com.apex.scaffold.application.security.CaptchaService:184 Rule:UndefineMagicConstantRule Priority:3 魔法值【40】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.AdminUserManagementService:122 Rule:UndefineMagicConstantRule Priority:3 魔法值【100】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.AdminUserManagementService:460 Rule:UndefineMagicConstantRule Priority:3 魔法值【5】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.AuthRegistrationService:556 Rule:AvoidComplexConditionRule Priority:3 请不要在条件中使用复杂的表达式。.
+[INFO] PMD Failure: com.apex.scaffold.application.service.ChartService:41 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【create】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.service.ChartService:43 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【update】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.service.ChartService:45 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【delete】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.service.ChartService:47 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【getById】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.service.ChartService:49 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【query】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.service.ChartService:51 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【updateStatus】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.service.ChartService:53 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【getChartData】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.service.ChartService:55 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【incrementViewCount】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.service.DataSourceManagementService:476 Rule:UndefineMagicConstantRule Priority:3 魔法值【"/"】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.DatabaseConfigService:179 Rule:UndefineMagicConstantRule Priority:3 魔法值【"Access denied"】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.DatabaseConfigService:181 Rule:UndefineMagicConstantRule Priority:3 魔法值【"Unknown database"】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.DatabaseConfigService:183 Rule:UndefineMagicConstantRule Priority:3 魔法值【"Connection refused"】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.DatabaseConfigService:183 Rule:UndefineMagicConstantRule Priority:3 魔法值【"connect timed out"】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.DatabaseConfigService:185 Rule:UndefineMagicConstantRule Priority:3 魔法值【"timeout"】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.DatabaseConfigService:257 Rule:UndefineMagicConstantRule Priority:3 魔法值【"mysql"】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.DatabaseConfigService:260 Rule:UndefineMagicConstantRule Priority:3 魔法值【"postgresql"】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.DocumentService:38 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【create】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.service.DocumentService:40 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【update】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.service.DocumentService:42 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【delete】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.service.DocumentService:44 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【getById】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.service.DocumentService:46 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【query】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.service.DocumentService:48 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【updateStatus】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.service.DocumentService:50 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【incrementViewCount】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.service.DocumentService:52 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【incrementDownloadCount】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.service.GenConfigService:137 Rule:UndefineMagicConstantRule Priority:3 魔法值【".."】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.MenuService:223 Rule:AvoidComplexConditionRule Priority:3 请不要在条件中使用复杂的表达式。.
+[INFO] PMD Failure: com.apex.scaffold.application.service.OAuth2AuthorizationServiceImpl:58 Rule:ClassNamingShouldBeCamelRule Priority:3 【OAuth2AuthorizationServiceImpl】不符合UpperCamelCase命名风格.
+[INFO] PMD Failure: com.apex.scaffold.application.service.OAuth2AuthorizationServiceImpl:88 Rule:UndefineMagicConstantRule Priority:3 魔法值【"authorization_code"】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.OAuth2AuthorizationServiceImpl:147 Rule:UndefineMagicConstantRule Priority:3 魔法值【"client_credentials"】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.OAuth2AuthorizationServiceImpl:160 Rule:UndefineMagicConstantRule Priority:3 魔法值【"password"】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.OAuth2AuthorizationServiceImpl:330 Rule:LowerCamelCaseVariableNamingRule Priority:2 方法名【verifyPKCE】不符合lowerCamelCase命名风格.
+[INFO] PMD Failure: com.apex.scaffold.application.service.OAuth2AuthorizationServiceImpl:342 Rule:UndefineMagicConstantRule Priority:3 魔法值【"S256"】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.OAuth2AuthorizationServiceImpl:346 Rule:UndefineMagicConstantRule Priority:3 魔法值【"plain"】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.OAuth2AuthorizationServiceImpl:366 Rule:UndefineMagicConstantRule Priority:3 魔法值【128】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.OAuth2AuthorizationServiceImpl:366 Rule:UndefineMagicConstantRule Priority:3 魔法值【43】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.OAuth2ClientManagementService:31 Rule:ClassNamingShouldBeCamelRule Priority:3 【OAuth2ClientManagementService】不符合UpperCamelCase命名风格.
+[INFO] PMD Failure: com.apex.scaffold.application.service.OAuth2ClientSecretRotationService:18 Rule:ClassNamingShouldBeCamelRule Priority:3 【OAuth2ClientSecretRotationService】不符合UpperCamelCase命名风格.
+[INFO] PMD Failure: com.apex.scaffold.application.service.OAuth2ClientSecretRotationService:20 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【rotateClientSecret】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.service.OAuth2ClientSecretRotationService:22 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【rotateClientSecretWithCustomExpiry】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.service.OAuth2ClientSecretRotationService:24 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【validateClientSecret】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.service.OAuth2ClientSecretRotationService:26 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【findClientsWithExpiredSecrets】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.service.OAuth2ClientSecretRotationService:28 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【findClientsWithExpiringSoonSecrets】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.service.OAuth2ClientSecretRotationService:30 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【scheduleSecretRotation】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.service.OAuth2ClientSecretRotationService:32 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【notifyClientSecretExpiring】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.service.SysJwtConfigService:255 Rule:RemoveCommentedCodeRule Priority:3 及时清理不再使用的代码段或配置信息。.
+[INFO] PMD Failure: com.apex.scaffold.application.service.UnifiedBusinessLogService:60 Rule:UndefineMagicConstantRule Priority:3 魔法值【"login"】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.UnifiedBusinessLogService:66 Rule:UndefineMagicConstantRule Priority:3 魔法值【"operation"】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.UnifiedBusinessLogService:73 Rule:UndefineMagicConstantRule Priority:3 魔法值【"api"】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.UnifiedBusinessLogService:200 Rule:UndefineMagicConstantRule Priority:3 魔法值【"login"】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.UnifiedBusinessLogService:206 Rule:UndefineMagicConstantRule Priority:3 魔法值【"operation"】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.UnifiedBusinessLogService:212 Rule:UndefineMagicConstantRule Priority:3 魔法值【"api"】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.UserService:397 Rule:UndefineMagicConstantRule Priority:3 魔法值【100】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.WorkflowService:322 Rule:UndefineMagicConstantRule Priority:3 魔法值【"PENDING"】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.WorkflowService:379 Rule:UndefineMagicConstantRule Priority:3 魔法值【"PENDING"】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.WorkflowService:437 Rule:UndefineMagicConstantRule Priority:3 魔法值【"COMPLETED"】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.WorkflowService:437 Rule:UndefineMagicConstantRule Priority:3 魔法值【"REJECTED"】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.WorkflowService:440 Rule:UndefineMagicConstantRule Priority:3 魔法值【"SUSPENDED"】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.WorkflowService:490 Rule:UndefineMagicConstantRule Priority:3 魔法值【"SUSPENDED"】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.impl.ChartServiceImpl:248 Rule:SwitchStatementRule Priority:2 switch块缺少default语句.
+[INFO] PMD Failure: com.apex.scaffold.application.service.impl.OAuth2ClientSecretRotationServiceImpl:34 Rule:ClassNamingShouldBeCamelRule Priority:3 【OAuth2ClientSecretRotationServiceImpl】不符合UpperCamelCase命名风格.
+[INFO] PMD Failure: com.apex.scaffold.application.service.login.WeChatCodeLoginStrategy:196 Rule:AvoidComplexConditionRule Priority:3 请不要在条件中使用复杂的表达式。.
+[INFO] PMD Failure: com.apex.scaffold.application.service.login.WeChatCodeLoginStrategy:254 Rule:AvoidComplexConditionRule Priority:3 请不要在条件中使用复杂的表达式。.
+[INFO] PMD Failure: com.apex.scaffold.application.service.login.WeChatCodeLoginStrategy:254 Rule:UndefineMagicConstantRule Priority:3 魔法值【2】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.login.WeChatPhoneLoginStrategy:176 Rule:AvoidComplexConditionRule Priority:3 请不要在条件中使用复杂的表达式。.
+[INFO] PMD Failure: com.apex.scaffold.application.support.CodeTemplateEngine:93 Rule:UndefineMagicConstantRule Priority:3 魔法值【"."】.
+[INFO] PMD Failure: com.apex.scaffold.application.support.DataSourcePoolManager:126 Rule:UndefineMagicConstantRule Priority:3 魔法值【"-"】.
+[INFO] PMD Failure: com.apex.scaffold.application.support.MetadataReader:144 Rule:UndefineMagicConstantRule Priority:3 魔法值【"postgresql"】.
+[INFO] PMD Failure: com.apex.scaffold.application.support.sso.OidcProtocolAdapter:39 Rule:CommentsMustBeJavadocFormatRule Priority:3 字段【OIDC_STATE_PREFIX】必须使用javadoc形式的注释.
+[INFO] PMD Failure: com.apex.scaffold.application.support.sso.OidcProtocolAdapter:271 Rule:UndefineMagicConstantRule Priority:3 魔法值【2】.
+[INFO] PMD Failure: com.apex.scaffold.application.support.sso.OidcProtocolAdapter:284 Rule:UndefineMagicConstantRule Priority:3 魔法值【"email"】.
+[INFO] PMD Failure: com.apex.scaffold.application.support.sso.OidcProtocolAdapter:287 Rule:UndefineMagicConstantRule Priority:3 魔法值【"name"】.
+[INFO] PMD Failure: com.apex.scaffold.application.support.sso.OidcProtocolAdapter:319 Rule:UndefineMagicConstantRule Priority:3 魔法值【"email"】.
+[INFO] PMD Failure: com.apex.scaffold.application.support.sso.OidcProtocolAdapter:322 Rule:UndefineMagicConstantRule Priority:3 魔法值【"name"】.
+[INFO] PMD Failure: com.apex.scaffold.application.support.sso.OidcProtocolAdapter:336 Rule:UndefineMagicConstantRule Priority:3 魔法值【"attributes"】.
+[INFO] PMD Failure: com.apex.scaffold.application.support.sso.SamlProtocolAdapter:213 Rule:MethodTooLongRule Priority:3 方法【authenticate】的总行数不要超过80行。.
+[INFO] PMD Failure: com.apex.scaffold.application.support.sso.SamlProtocolAdapter:237 Rule:UndefineMagicConstantRule Priority:3 魔法值【"Response"】.
+[INFO] PMD Failure: com.apex.scaffold.application.support.sso.SamlProtocolAdapter:656 Rule:UndefineMagicConstantRule Priority:3 魔法值【"SHA1withRSA"】.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.AdminUserAssemblerImpl:20 Rule:ClassMustHaveAuthorRule Priority:3 【AdminUserAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.ApiCallLogAssemblerImpl:16 Rule:ClassMustHaveAuthorRule Priority:3 【ApiCallLogAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.ApprovalProcessDtoAssemblerImpl:14 Rule:ClassMustHaveAuthorRule Priority:3 【ApprovalProcessDtoAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.AuditLogAssemblerImpl:16 Rule:ClassMustHaveAuthorRule Priority:3 【AuditLogAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.CalendarEventDtoAssemblerImpl:14 Rule:ClassMustHaveAuthorRule Priority:3 【CalendarEventDtoAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.ChartAssemblerImpl:18 Rule:ClassMustHaveAuthorRule Priority:3 【ChartAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.ConfigAssemblerImpl:16 Rule:ClassMustHaveAuthorRule Priority:3 【ConfigAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.DataSourceAssemblerImpl:16 Rule:ClassMustHaveAuthorRule Priority:3 【DataSourceAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.DepartmentAssemblerImpl:14 Rule:ClassMustHaveAuthorRule Priority:3 【DepartmentAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.DeptAssemblerImpl:16 Rule:ClassMustHaveAuthorRule Priority:3 【DeptAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.DictAssemblerImpl:20 Rule:ClassMustHaveAuthorRule Priority:3 【DictAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.DocumentAssemblerImpl:16 Rule:ClassMustHaveAuthorRule Priority:3 【DocumentAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.EmployeeAssemblerImpl:14 Rule:ClassMustHaveAuthorRule Priority:3 【EmployeeAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.GenConfigAssemblerImpl:17 Rule:ClassMustHaveAuthorRule Priority:3 【GenConfigAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.GenDatasourceAssemblerImpl:17 Rule:ClassMustHaveAuthorRule Priority:3 【GenDatasourceAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.GenTemplateAssemblerImpl:17 Rule:ClassMustHaveAuthorRule Priority:3 【GenTemplateAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.JobAssemblerImpl:19 Rule:ClassMustHaveAuthorRule Priority:3 【JobAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.JobLogAssemblerImpl:16 Rule:ClassMustHaveAuthorRule Priority:3 【JobLogAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.LoginLogAssemblerImpl:16 Rule:ClassMustHaveAuthorRule Priority:3 【LoginLogAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.MenuAssemblerImpl:17 Rule:ClassMustHaveAuthorRule Priority:3 【MenuAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.OAuth2ClientAssemblerImpl:18 Rule:ClassNamingShouldBeCamelRule Priority:3 【OAuth2ClientAssemblerImpl】不符合UpperCamelCase命名风格.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.OAuth2ClientAssemblerImpl:18 Rule:ClassMustHaveAuthorRule Priority:3 【OAuth2ClientAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.OffMessageAssemblerImpl:17 Rule:ClassMustHaveAuthorRule Priority:3 【OffMessageAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.OffMessageTemplateAssemblerImpl:18 Rule:ClassMustHaveAuthorRule Priority:3 【OffMessageTemplateAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.OnlineUserAssemblerImpl:16 Rule:ClassMustHaveAuthorRule Priority:3 【OnlineUserAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.OperationLogAssemblerImpl:16 Rule:ClassMustHaveAuthorRule Priority:3 【OperationLogAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.PermissionAssemblerImpl:17 Rule:ClassMustHaveAuthorRule Priority:3 【PermissionAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.ProfileAssemblerImpl:19 Rule:ClassMustHaveAuthorRule Priority:3 【ProfileAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.RoleAssemblerImpl:17 Rule:ClassMustHaveAuthorRule Priority:3 【RoleAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.SearchResultAssemblerImpl:14 Rule:ClassMustHaveAuthorRule Priority:3 【SearchResultAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.SyncHistoryAssemblerImpl:14 Rule:ClassMustHaveAuthorRule Priority:3 【SyncHistoryAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.SysJwtConfigAssemblerImpl:15 Rule:ClassMustHaveAuthorRule Priority:3 【SysJwtConfigAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.SysSecurityPolicyAssemblerImpl:15 Rule:ClassMustHaveAuthorRule Priority:3 【SysSecurityPolicyAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.SysSessionConfigAssemblerImpl:15 Rule:ClassMustHaveAuthorRule Priority:3 【SysSessionConfigAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.SysSsoAuditLogAssemblerImpl:16 Rule:ClassMustHaveAuthorRule Priority:3 【SysSsoAuditLogAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.SysSsoProviderAssemblerImpl:17 Rule:ClassMustHaveAuthorRule Priority:3 【SysSsoProviderAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.SysSsoSessionAssemblerImpl:16 Rule:ClassMustHaveAuthorRule Priority:3 【SysSsoSessionAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.TenantAssemblerImpl:16 Rule:ClassMustHaveAuthorRule Priority:3 【TenantAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.UserAssemblerImpl:17 Rule:ClassMustHaveAuthorRule Priority:3 【UserAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.UserAssemblerImpl:92 Rule:MethodTooLongRule Priority:3 方法【mergeUpdate】的总行数不要超过80行。.
+[INFO] PMD Failure: com.apex.scaffold.application.office.OfficeAdminAssemblerImpl:14 Rule:ClassMustHaveAuthorRule Priority:3 【OfficeAdminAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.ApprovalProcessAssembler:24 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【toDto】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.ApprovalProcessAssembler:26 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【toEntity】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.CalendarEventAssembler:24 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【toDto】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.CalendarEventAssembler:26 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【toEntity】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.DepartmentAssembler:21 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【toDto】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.DepartmentAssembler:23 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【toEntity】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.EmployeeAssembler:21 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【toDto】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.EmployeeAssembler:23 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【toEntity】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.OAuth2ClientAssembler:18 Rule:ClassNamingShouldBeCamelRule Priority:3 【OAuth2ClientAssembler】不符合UpperCamelCase命名风格.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.OffMessageAssembler:24 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【toDTO】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.OffMessageAssembler:26 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【toDTOList】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.OffMessageAssembler:28 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【toEntity】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.OffMessageTemplateAssembler:23 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【toDTO】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.OffMessageTemplateAssembler:25 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【toDTOList】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.OffMessageTemplateAssembler:27 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【toEntity】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.SearchResultAssembler:24 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【toDTO】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.SearchResultAssembler:26 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【formatDateTime】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.SyncHistoryAssembler:21 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【toDto】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.SyncHistoryAssembler:23 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【toEntity】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.SysSsoAuditLogAssembler:22 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【toDTO】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.SysSsoAuditLogAssembler:24 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【toDTOList】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.SysSsoProviderAssembler:25 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【toEntity】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.SysSsoProviderAssembler:27 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【toDTO】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.SysSsoProviderAssembler:29 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【toDTOList】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.SysSsoProviderAssembler:31 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【map】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.SysSsoProviderAssembler:35 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【map】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.SysSsoSessionAssembler:22 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【toDTO】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.SysSsoSessionAssembler:24 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【toDTOList】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.dto.OAuth2ClientResponse:42 Rule:ClassNamingShouldBeCamelRule Priority:3 【OAuth2ClientResponse】不符合UpperCamelCase命名风格.
+[INFO] PMD Failure: com.apex.scaffold.application.dto.OAuth2ConsentRequest:38 Rule:ClassNamingShouldBeCamelRule Priority:3 【OAuth2ConsentRequest】不符合UpperCamelCase命名风格.
+[INFO] PMD Failure: com.apex.scaffold.application.job.CronExpression:321 Rule:AvoidCommentBehindStatementRule Priority:3 请不要使用行尾注释.
+[INFO] PMD Failure: com.apex.scaffold.application.job.SearchIndexReconciliationJob:74 Rule:AvoidCommentBehindStatementRule Priority:3 请不要使用行尾注释.
+[INFO] PMD Failure: com.apex.scaffold.application.listener.ResourceIndexEventListener:49 Rule:SwitchStatementRule Priority:2 switch块缺少default语句.
+[INFO] PMD Failure: com.apex.scaffold.application.office.OfficeAdminService:127 Rule:UndefineMagicConstantRule Priority:3 魔法值【100】.
+[INFO] PMD Failure: com.apex.scaffold.application.office.OfficeAdminService:148 Rule:UndefineMagicConstantRule Priority:3 魔法值【"PENDING"】.
+[INFO] PMD Failure: com.apex.scaffold.application.office.OfficeAdminService:177 Rule:UndefineMagicConstantRule Priority:3 魔法值【"REVOKED"】.
+[INFO] PMD Failure: com.apex.scaffold.application.office.OfficeApprovalService:60 Rule:AvoidCommentBehindStatementRule Priority:3 请不要使用行尾注释.
+[INFO] PMD Failure: com.apex.scaffold.application.office.OfficeApprovalService:61 Rule:AvoidCommentBehindStatementRule Priority:3 请不要使用行尾注释.
+[INFO] PMD Failure: com.apex.scaffold.application.office.OfficeDocumentService:433 Rule:UndefineMagicConstantRule Priority:3 魔法值【"title"】.
+[INFO] PMD Failure: com.apex.scaffold.application.office.OfficeDocumentService:436 Rule:UndefineMagicConstantRule Priority:3 魔法值【"url"】.
+[INFO] PMD Failure: com.apex.scaffold.application.office.OfficeDocumentService:439 Rule:UndefineMagicConstantRule Priority:3 魔法值【"lastModifiedTime"】.
+[INFO] PMD Failure: com.apex.scaffold.application.office.OfficeMessageService:136 Rule:UndefineMagicConstantRule Priority:3 魔法值【"FAILED"】.
+[INFO] PMD Failure: com.apex.scaffold.application.office.message.OfficeMessageApplicationService:113 Rule:UndefineMagicConstantRule Priority:3 魔法值【"SUCCESS"】.
+[INFO] PMD Failure: com.apex.scaffold.application.office.message.OfficeMessageApplicationService:209 Rule:UndefineMagicConstantRule Priority:3 魔法值【"SUCCESS"】.
+[INFO] PMD Failure: com.apex.scaffold.application.security.CaptchaService:162 Rule:UndefineMagicConstantRule Priority:3 魔法值【4】.
+[INFO] PMD Failure: com.apex.scaffold.application.security.CaptchaService:184 Rule:UndefineMagicConstantRule Priority:3 魔法值【40】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.AdminUserManagementService:122 Rule:UndefineMagicConstantRule Priority:3 魔法值【100】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.AdminUserManagementService:460 Rule:UndefineMagicConstantRule Priority:3 魔法值【5】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.AuthRegistrationService:556 Rule:AvoidComplexConditionRule Priority:3 请不要在条件中使用复杂的表达式。.
+[INFO] PMD Failure: com.apex.scaffold.application.service.ChartService:41 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【create】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.service.ChartService:43 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【update】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.service.ChartService:45 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【delete】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.service.ChartService:47 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【getById】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.service.ChartService:49 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【query】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.service.ChartService:51 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【updateStatus】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.service.ChartService:53 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【getChartData】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.service.ChartService:55 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【incrementViewCount】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.service.DataSourceManagementService:476 Rule:UndefineMagicConstantRule Priority:3 魔法值【"/"】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.DatabaseConfigService:179 Rule:UndefineMagicConstantRule Priority:3 魔法值【"Access denied"】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.DatabaseConfigService:181 Rule:UndefineMagicConstantRule Priority:3 魔法值【"Unknown database"】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.DatabaseConfigService:183 Rule:UndefineMagicConstantRule Priority:3 魔法值【"Connection refused"】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.DatabaseConfigService:183 Rule:UndefineMagicConstantRule Priority:3 魔法值【"connect timed out"】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.DatabaseConfigService:185 Rule:UndefineMagicConstantRule Priority:3 魔法值【"timeout"】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.DatabaseConfigService:257 Rule:UndefineMagicConstantRule Priority:3 魔法值【"mysql"】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.DatabaseConfigService:260 Rule:UndefineMagicConstantRule Priority:3 魔法值【"postgresql"】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.DocumentService:38 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【create】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.service.DocumentService:40 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【update】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.service.DocumentService:42 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【delete】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.service.DocumentService:44 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【getById】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.service.DocumentService:46 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【query】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.service.DocumentService:48 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【updateStatus】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.service.DocumentService:50 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【incrementViewCount】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.service.DocumentService:52 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【incrementDownloadCount】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.service.GenConfigService:137 Rule:UndefineMagicConstantRule Priority:3 魔法值【".."】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.MenuService:223 Rule:AvoidComplexConditionRule Priority:3 请不要在条件中使用复杂的表达式。.
+[INFO] PMD Failure: com.apex.scaffold.application.service.OAuth2AuthorizationServiceImpl:58 Rule:ClassNamingShouldBeCamelRule Priority:3 【OAuth2AuthorizationServiceImpl】不符合UpperCamelCase命名风格.
+[INFO] PMD Failure: com.apex.scaffold.application.service.OAuth2AuthorizationServiceImpl:88 Rule:UndefineMagicConstantRule Priority:3 魔法值【"authorization_code"】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.OAuth2AuthorizationServiceImpl:147 Rule:UndefineMagicConstantRule Priority:3 魔法值【"client_credentials"】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.OAuth2AuthorizationServiceImpl:160 Rule:UndefineMagicConstantRule Priority:3 魔法值【"password"】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.OAuth2AuthorizationServiceImpl:330 Rule:LowerCamelCaseVariableNamingRule Priority:2 方法名【verifyPKCE】不符合lowerCamelCase命名风格.
+[INFO] PMD Failure: com.apex.scaffold.application.service.OAuth2AuthorizationServiceImpl:342 Rule:UndefineMagicConstantRule Priority:3 魔法值【"S256"】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.OAuth2AuthorizationServiceImpl:346 Rule:UndefineMagicConstantRule Priority:3 魔法值【"plain"】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.OAuth2AuthorizationServiceImpl:366 Rule:UndefineMagicConstantRule Priority:3 魔法值【128】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.OAuth2AuthorizationServiceImpl:366 Rule:UndefineMagicConstantRule Priority:3 魔法值【43】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.OAuth2ClientManagementService:31 Rule:ClassNamingShouldBeCamelRule Priority:3 【OAuth2ClientManagementService】不符合UpperCamelCase命名风格.
+[INFO] PMD Failure: com.apex.scaffold.application.service.OAuth2ClientSecretRotationService:18 Rule:ClassNamingShouldBeCamelRule Priority:3 【OAuth2ClientSecretRotationService】不符合UpperCamelCase命名风格.
+[INFO] PMD Failure: com.apex.scaffold.application.service.OAuth2ClientSecretRotationService:20 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【rotateClientSecret】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.service.OAuth2ClientSecretRotationService:22 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【rotateClientSecretWithCustomExpiry】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.service.OAuth2ClientSecretRotationService:24 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【validateClientSecret】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.service.OAuth2ClientSecretRotationService:26 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【findClientsWithExpiredSecrets】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.service.OAuth2ClientSecretRotationService:28 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【findClientsWithExpiringSoonSecrets】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.service.OAuth2ClientSecretRotationService:30 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【scheduleSecretRotation】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.service.OAuth2ClientSecretRotationService:32 Rule:AbstractMethodOrInterfaceMethodMustUseJavadocRule Priority:3 接口方法【notifyClientSecretExpiring】必须使用javadoc注释.
+[INFO] PMD Failure: com.apex.scaffold.application.service.SysJwtConfigService:255 Rule:RemoveCommentedCodeRule Priority:3 及时清理不再使用的代码段或配置信息。.
+[INFO] PMD Failure: com.apex.scaffold.application.service.UnifiedBusinessLogService:60 Rule:UndefineMagicConstantRule Priority:3 魔法值【"login"】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.UnifiedBusinessLogService:66 Rule:UndefineMagicConstantRule Priority:3 魔法值【"operation"】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.UnifiedBusinessLogService:73 Rule:UndefineMagicConstantRule Priority:3 魔法值【"api"】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.UnifiedBusinessLogService:200 Rule:UndefineMagicConstantRule Priority:3 魔法值【"login"】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.UnifiedBusinessLogService:206 Rule:UndefineMagicConstantRule Priority:3 魔法值【"operation"】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.UnifiedBusinessLogService:212 Rule:UndefineMagicConstantRule Priority:3 魔法值【"api"】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.UserService:397 Rule:UndefineMagicConstantRule Priority:3 魔法值【100】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.WorkflowService:322 Rule:UndefineMagicConstantRule Priority:3 魔法值【"PENDING"】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.WorkflowService:379 Rule:UndefineMagicConstantRule Priority:3 魔法值【"PENDING"】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.WorkflowService:437 Rule:UndefineMagicConstantRule Priority:3 魔法值【"COMPLETED"】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.WorkflowService:437 Rule:UndefineMagicConstantRule Priority:3 魔法值【"REJECTED"】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.WorkflowService:440 Rule:UndefineMagicConstantRule Priority:3 魔法值【"SUSPENDED"】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.WorkflowService:490 Rule:UndefineMagicConstantRule Priority:3 魔法值【"SUSPENDED"】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.impl.ChartServiceImpl:248 Rule:SwitchStatementRule Priority:2 switch块缺少default语句.
+[INFO] PMD Failure: com.apex.scaffold.application.service.impl.OAuth2ClientSecretRotationServiceImpl:34 Rule:ClassNamingShouldBeCamelRule Priority:3 【OAuth2ClientSecretRotationServiceImpl】不符合UpperCamelCase命名风格.
+[INFO] PMD Failure: com.apex.scaffold.application.service.login.WeChatCodeLoginStrategy:196 Rule:AvoidComplexConditionRule Priority:3 请不要在条件中使用复杂的表达式。.
+[INFO] PMD Failure: com.apex.scaffold.application.service.login.WeChatCodeLoginStrategy:254 Rule:AvoidComplexConditionRule Priority:3 请不要在条件中使用复杂的表达式。.
+[INFO] PMD Failure: com.apex.scaffold.application.service.login.WeChatCodeLoginStrategy:254 Rule:UndefineMagicConstantRule Priority:3 魔法值【2】.
+[INFO] PMD Failure: com.apex.scaffold.application.service.login.WeChatPhoneLoginStrategy:176 Rule:AvoidComplexConditionRule Priority:3 请不要在条件中使用复杂的表达式。.
+[INFO] PMD Failure: com.apex.scaffold.application.support.CodeTemplateEngine:93 Rule:UndefineMagicConstantRule Priority:3 魔法值【"."】.
+[INFO] PMD Failure: com.apex.scaffold.application.support.DataSourcePoolManager:126 Rule:UndefineMagicConstantRule Priority:3 魔法值【"-"】.
+[INFO] PMD Failure: com.apex.scaffold.application.support.MetadataReader:144 Rule:UndefineMagicConstantRule Priority:3 魔法值【"postgresql"】.
+[INFO] PMD Failure: com.apex.scaffold.application.support.sso.OidcProtocolAdapter:39 Rule:CommentsMustBeJavadocFormatRule Priority:3 字段【OIDC_STATE_PREFIX】必须使用javadoc形式的注释.
+[INFO] PMD Failure: com.apex.scaffold.application.support.sso.OidcProtocolAdapter:271 Rule:UndefineMagicConstantRule Priority:3 魔法值【2】.
+[INFO] PMD Failure: com.apex.scaffold.application.support.sso.OidcProtocolAdapter:284 Rule:UndefineMagicConstantRule Priority:3 魔法值【"email"】.
+[INFO] PMD Failure: com.apex.scaffold.application.support.sso.OidcProtocolAdapter:287 Rule:UndefineMagicConstantRule Priority:3 魔法值【"name"】.
+[INFO] PMD Failure: com.apex.scaffold.application.support.sso.OidcProtocolAdapter:319 Rule:UndefineMagicConstantRule Priority:3 魔法值【"email"】.
+[INFO] PMD Failure: com.apex.scaffold.application.support.sso.OidcProtocolAdapter:322 Rule:UndefineMagicConstantRule Priority:3 魔法值【"name"】.
+[INFO] PMD Failure: com.apex.scaffold.application.support.sso.OidcProtocolAdapter:336 Rule:UndefineMagicConstantRule Priority:3 魔法值【"attributes"】.
+[INFO] PMD Failure: com.apex.scaffold.application.support.sso.SamlProtocolAdapter:213 Rule:MethodTooLongRule Priority:3 方法【authenticate】的总行数不要超过80行。.
+[INFO] PMD Failure: com.apex.scaffold.application.support.sso.SamlProtocolAdapter:237 Rule:UndefineMagicConstantRule Priority:3 魔法值【"Response"】.
+[INFO] PMD Failure: com.apex.scaffold.application.support.sso.SamlProtocolAdapter:656 Rule:UndefineMagicConstantRule Priority:3 魔法值【"SHA1withRSA"】.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.AdminUserAssemblerImpl:20 Rule:ClassMustHaveAuthorRule Priority:3 【AdminUserAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.ApiCallLogAssemblerImpl:16 Rule:ClassMustHaveAuthorRule Priority:3 【ApiCallLogAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.ApprovalProcessDtoAssemblerImpl:14 Rule:ClassMustHaveAuthorRule Priority:3 【ApprovalProcessDtoAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.AuditLogAssemblerImpl:16 Rule:ClassMustHaveAuthorRule Priority:3 【AuditLogAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.CalendarEventDtoAssemblerImpl:14 Rule:ClassMustHaveAuthorRule Priority:3 【CalendarEventDtoAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.ChartAssemblerImpl:18 Rule:ClassMustHaveAuthorRule Priority:3 【ChartAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.ConfigAssemblerImpl:16 Rule:ClassMustHaveAuthorRule Priority:3 【ConfigAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.DataSourceAssemblerImpl:16 Rule:ClassMustHaveAuthorRule Priority:3 【DataSourceAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.DepartmentAssemblerImpl:14 Rule:ClassMustHaveAuthorRule Priority:3 【DepartmentAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.DeptAssemblerImpl:16 Rule:ClassMustHaveAuthorRule Priority:3 【DeptAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.DictAssemblerImpl:20 Rule:ClassMustHaveAuthorRule Priority:3 【DictAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.DocumentAssemblerImpl:16 Rule:ClassMustHaveAuthorRule Priority:3 【DocumentAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.EmployeeAssemblerImpl:14 Rule:ClassMustHaveAuthorRule Priority:3 【EmployeeAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.GenConfigAssemblerImpl:17 Rule:ClassMustHaveAuthorRule Priority:3 【GenConfigAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.GenDatasourceAssemblerImpl:17 Rule:ClassMustHaveAuthorRule Priority:3 【GenDatasourceAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.GenTemplateAssemblerImpl:17 Rule:ClassMustHaveAuthorRule Priority:3 【GenTemplateAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.JobAssemblerImpl:19 Rule:ClassMustHaveAuthorRule Priority:3 【JobAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.JobLogAssemblerImpl:16 Rule:ClassMustHaveAuthorRule Priority:3 【JobLogAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.LoginLogAssemblerImpl:16 Rule:ClassMustHaveAuthorRule Priority:3 【LoginLogAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.MenuAssemblerImpl:17 Rule:ClassMustHaveAuthorRule Priority:3 【MenuAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.OAuth2ClientAssemblerImpl:18 Rule:ClassNamingShouldBeCamelRule Priority:3 【OAuth2ClientAssemblerImpl】不符合UpperCamelCase命名风格.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.OAuth2ClientAssemblerImpl:18 Rule:ClassMustHaveAuthorRule Priority:3 【OAuth2ClientAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.OffMessageAssemblerImpl:17 Rule:ClassMustHaveAuthorRule Priority:3 【OffMessageAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.OffMessageTemplateAssemblerImpl:18 Rule:ClassMustHaveAuthorRule Priority:3 【OffMessageTemplateAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.OnlineUserAssemblerImpl:16 Rule:ClassMustHaveAuthorRule Priority:3 【OnlineUserAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.OperationLogAssemblerImpl:16 Rule:ClassMustHaveAuthorRule Priority:3 【OperationLogAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.PermissionAssemblerImpl:17 Rule:ClassMustHaveAuthorRule Priority:3 【PermissionAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.ProfileAssemblerImpl:19 Rule:ClassMustHaveAuthorRule Priority:3 【ProfileAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.RoleAssemblerImpl:17 Rule:ClassMustHaveAuthorRule Priority:3 【RoleAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.SearchResultAssemblerImpl:14 Rule:ClassMustHaveAuthorRule Priority:3 【SearchResultAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.SyncHistoryAssemblerImpl:14 Rule:ClassMustHaveAuthorRule Priority:3 【SyncHistoryAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.SysJwtConfigAssemblerImpl:15 Rule:ClassMustHaveAuthorRule Priority:3 【SysJwtConfigAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.SysSecurityPolicyAssemblerImpl:15 Rule:ClassMustHaveAuthorRule Priority:3 【SysSecurityPolicyAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.SysSessionConfigAssemblerImpl:15 Rule:ClassMustHaveAuthorRule Priority:3 【SysSessionConfigAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.SysSsoAuditLogAssemblerImpl:16 Rule:ClassMustHaveAuthorRule Priority:3 【SysSsoAuditLogAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.SysSsoProviderAssemblerImpl:17 Rule:ClassMustHaveAuthorRule Priority:3 【SysSsoProviderAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.SysSsoSessionAssemblerImpl:16 Rule:ClassMustHaveAuthorRule Priority:3 【SysSsoSessionAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.TenantAssemblerImpl:16 Rule:ClassMustHaveAuthorRule Priority:3 【TenantAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.UserAssemblerImpl:17 Rule:ClassMustHaveAuthorRule Priority:3 【UserAssemblerImpl】缺少包含@author的注释信息.
+[INFO] PMD Failure: com.apex.scaffold.application.assembler.UserAssemblerImpl:92 Rule:MethodTooLongRule Priority:3 方法【mergeUpdate】的总行数不要超过80行。.
+[INFO] PMD Failure: com.apex.scaffold.application.office.OfficeAdminAssemblerImpl:14 Rule:ClassMustHaveAuthorRule Priority:3 【OfficeAdminAssemblerImpl】缺少包含@author的注释信息.
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Summary for apex-application 1.2.0:
+[INFO] 
+[INFO] apex-application ................................... FAILURE [ 27.057 s]
+[INFO] apex-interfaces .................................... SKIPPED
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  27.943 s
+[INFO] Finished at: 2026-09-29T16:22:49+08:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-pmd-plugin:3.19.0:check (p3c-pmd-check) on project apex-application: You have 167 PMD violations. For more details see: /Users/work/apex-scaffold/apex-application/target/pmd.xml -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

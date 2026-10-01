@@ -48,6 +48,8 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class WeChatCodeLoginStrategy implements LoginStrategy {
 
+    private static final int WECHAT_OPENID_TYPE = 2;
+
     /** 微信网关，用于调用微信开放平台接口 */
     private final WeChatGateway weChatGateway;
 
@@ -82,7 +84,7 @@ public class WeChatCodeLoginStrategy implements LoginStrategy {
      * </ol>
      *
      * <h3>性别字段处理</h3>
-     * <p>登录时从微信用户信息中获取 gender 字段（0-未知/1-男/2-女），
+     * <p>登录时从微信用户信息中获取 gender 字段（0-未知/1-男/WECHAT_OPENID_TYPE-女），
      * 若用户已在系统中注册且数据库已存有性别值，则保持数据库原值不变（注册时选定的性别不可被微信覆盖）。
      * 若数据库中性别为空且微信返回了有效性别值，则更新为微信性别。
      *
@@ -168,7 +170,7 @@ public class WeChatCodeLoginStrategy implements LoginStrategy {
      * 遵循以下合并规则以确保数据安全：</p>
      * <ul>
      *   <li><b>性别</b>：优先保留数据库中已有的性别（注册时选定不可覆盖）；
-     *        仅当数据库性别为空且微信返回有效性别（1-男/2-女）时才写入</li>
+     *        仅当数据库性别为空且微信返回有效性别（1-男/WECHAT_OPENID_TYPE-女）时才写入</li>
      *   <li><b>昵称</b>：微信昵称不为空时更新</li>
      *   <li><b>头像</b>：微信头像URL不为空时更新</li>
      *   <li><b>地区</b>：微信返回的国家/省份/城市信息不为空时更新</li>
@@ -193,9 +195,7 @@ public class WeChatCodeLoginStrategy implements LoginStrategy {
             user.setAvatarUrl(wxUserInfo.getAvatarUrl());
         }
         // 性别合并策略：注册时选定的性别不可被微信覆盖，仅数据库为空时从微信同步
-        if (user.getGender() == null
-                && wxUserInfo.getGender() != null
-                && (wxUserInfo.getGender() == 1 || wxUserInfo.getGender() == 2)) {
+        if (shouldSyncGenderFromWechat(user, wxUserInfo)) {
             user.setGender(wxUserInfo.getGender());
         }
         if (wxUserInfo.getCountry() != null && !wxUserInfo.getCountry().isBlank()) {
@@ -210,6 +210,34 @@ public class WeChatCodeLoginStrategy implements LoginStrategy {
         if (wxUserInfo.getLanguage() != null && !wxUserInfo.getLanguage().isBlank()) {
             user.setLanguage(wxUserInfo.getLanguage());
         }
+    }
+
+    /**
+     * 判断是否应该从微信同步性别信息。
+     *
+     * <p>业务规则：仅当用户性别为空且微信提供了有效性别值（1-男性或2-女性）时才同步。
+     * 微信性别枚举：1-男性，2-女性，0-未设置。
+     *
+     * @param user 用户实体
+     * @param wxUserInfo 微信用户信息
+     * @return true 表示应该同步性别
+     */
+    private boolean shouldSyncGenderFromWechat(UserEntity user, WeChatGateway.WeChatUserInfo wxUserInfo) {
+        return user.getGender() == null
+                && wxUserInfo.getGender() != null
+                && (wxUserInfo.getGender() == 1 || wxUserInfo.getGender() == WECHAT_OPENID_TYPE);
+    }
+
+    /**
+     * 检查微信性别值是否有效。
+     *
+     * <p>有效性别值：1-男性，2-女性，0-未设置不同步。
+     *
+     * @param gender 微信性别值
+     * @return true 表示有效
+     */
+    private boolean isValidWechatGender(Integer gender) {
+        return gender != null && (gender == 1 || gender == WECHAT_OPENID_TYPE);
     }
 
     /**
@@ -251,7 +279,8 @@ public class WeChatCodeLoginStrategy implements LoginStrategy {
             payload.setProvince(wxUserInfo.getProvince());
             payload.setCity(wxUserInfo.getCity());
             payload.setLanguage(wxUserInfo.getLanguage());
-            if (wxUserInfo.getGender() != null && (wxUserInfo.getGender() == 1 || wxUserInfo.getGender() == 2)) {
+            // 性别数据同步：仅同步有效性别值（1-男性，2-女性），0-未设置不同步
+            if (isValidWechatGender(wxUserInfo.getGender())) {
                 payload.setGender(wxUserInfo.getGender());
             }
         }

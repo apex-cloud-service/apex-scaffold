@@ -2,11 +2,12 @@ package com.apex.scaffold.interfaces.config;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.keycloak.admin.client.Keycloak;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
@@ -45,13 +46,12 @@ import org.springframework.test.context.TestPropertySource;
             "keycloak.user-sync-enabled=true",
             "keycloak.frontend-callback-url=http://localhost:3000/auth/callback"
         })
+@RequiredArgsConstructor
 class KeycloakConfigTest {
 
-    @Autowired(required = false)
-    private KeycloakConfig keycloakConfig;
+    private final ObjectProvider<KeycloakConfig> keycloakConfigProvider;
 
-    @Autowired(required = false)
-    private Keycloak keycloakAdminClient;
+    private final ObjectProvider<Keycloak> keycloakAdminClientProvider;
 
     /**
      * 验证 KeycloakConfig Bean 被正确创建
@@ -59,7 +59,7 @@ class KeycloakConfigTest {
     @Test
     @DisplayName("KeycloakConfig Bean 应被正确创建")
     void keycloakConfigShouldBeCreated() {
-        assertThat(keycloakConfig).isNotNull();
+        assertThat(keycloakConfigProvider.getIfAvailable()).isNotNull();
     }
 
     /**
@@ -68,6 +68,7 @@ class KeycloakConfigTest {
     @Test
     @DisplayName("配置属性应被正确绑定")
     void configPropertiesShouldBeBindCorrectly() {
+        KeycloakConfig keycloakConfig = keycloakConfigProvider.getIfAvailable();
         assertThat(keycloakConfig).isNotNull();
         assertThat(keycloakConfig.getServerUrl()).isEqualTo("http://localhost:8180");
         assertThat(keycloakConfig.getRealm()).isEqualTo("test-realm");
@@ -86,6 +87,6 @@ class KeycloakConfigTest {
     @Test
     @DisplayName("Keycloak Admin Client Bean 应被正确创建")
     void keycloakAdminClientShouldBeCreated() {
-        assertThat(keycloakAdminClient).isNotNull();
+        assertThat(keycloakAdminClientProvider.getIfAvailable()).isNotNull();
     }
 }

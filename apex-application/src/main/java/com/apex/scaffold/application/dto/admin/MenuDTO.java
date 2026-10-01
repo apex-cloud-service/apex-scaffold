@@ -114,7 +114,7 @@ public class MenuDTO {
      */
     public void addChild(MenuDTO child) {
         if (this.children == null) {
-            this.children = new ArrayList<>();
+            this.children = new ArrayList<>(16);
         }
         this.children.add(child);
     }

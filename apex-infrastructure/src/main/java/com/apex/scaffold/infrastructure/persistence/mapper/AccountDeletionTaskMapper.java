@@ -23,6 +23,12 @@ public interface AccountDeletionTaskMapper extends BaseMapper<AccountDeletionTas
             + "WHERE deleted=0 AND ((status IN ('PENDING','FAILED') AND attempts < 10) "
             + "OR (status='CLEANING' AND locked_at < #{staleBefore})) "
             + "ORDER BY id LIMIT 1")
+    /**
+     * TODO: Add method description
+     *
+     * @param staleBefore TODO
+     * @return TODO
+     */
     AccountDeletionTaskPO findNextCandidate(@Param("staleBefore") LocalDateTime staleBefore);
 
     /** 竞争领取任务。 */
@@ -30,6 +36,15 @@ public interface AccountDeletionTaskMapper extends BaseMapper<AccountDeletionTas
             + "locked_at=#{now}, locked_by=#{workerId}, update_time=NOW() "
             + "WHERE id=#{id} AND deleted=0 AND (status IN ('PENDING','FAILED') "
             + "OR (status='CLEANING' AND locked_at < #{staleBefore}))")
+    /**
+     * TODO: Add method description
+     *
+     * @param id TODO
+     * @param now TODO
+     * @param workerId TODO
+     * @param staleBefore TODO
+     * @return TODO
+     */
     int claim(
             @Param("id") Long id,
             @Param("now") LocalDateTime now,
@@ -39,10 +54,24 @@ public interface AccountDeletionTaskMapper extends BaseMapper<AccountDeletionTas
     /** 标记清理完成。 */
     @Update("UPDATE sys_account_deletion_task SET status='COMPLETED', completed_at=#{now}, "
             + "locked_at=NULL, locked_by=NULL, update_time=NOW() WHERE id=#{id} AND deleted=0")
+    /**
+     * TODO: Add method description
+     *
+     * @param id TODO
+     * @param now TODO
+     * @return TODO
+     */
     int markCompleted(@Param("id") Long id, @Param("now") LocalDateTime now);
 
     /** 标记清理失败并允许后续重试。 */
     @Update("UPDATE sys_account_deletion_task SET status='FAILED', last_error=#{error}, "
             + "locked_at=NULL, locked_by=NULL, update_time=NOW() WHERE id=#{id} AND deleted=0")
+    /**
+     * TODO: Add method description
+     *
+     * @param id TODO
+     * @param error TODO
+     * @return TODO
+     */
     int markFailed(@Param("id") Long id, @Param("error") String error);
 }

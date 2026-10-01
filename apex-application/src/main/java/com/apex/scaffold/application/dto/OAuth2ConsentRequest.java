@@ -30,6 +30,7 @@ import lombok.NoArgsConstructor;
  * @version 2.0.0
  * @since 2.0.0
  */
+@SuppressWarnings("PMD.ClassNamingShouldBeCamelRule")
 @Data
 @Builder
 @NoArgsConstructor

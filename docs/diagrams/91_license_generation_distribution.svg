@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1800 1300" width="1800" height="1300">
+  <defs>
+    <style>
+      .title{font:700 32px sans-serif;fill:#0f172a;text-anchor:middle}
+      .subtitle{font:500 13px sans-serif;fill:#64748b;text-anchor:middle}
+      .phase-title{font:600 18px sans-serif;fill:#fff}
+      .step-title{font:600 14px sans-serif;fill:#0f172a}
+      .step-desc{font:400 11px sans-serif;fill:#475569}
+      .code{font:500 10px monospace;fill:#2563eb}
+      .highlight{font:600 11px sans-serif;fill:#dc2626}
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/>
+    </marker>
+  </defs>
+  
+  <rect width="1800" height="1300" fill="#fff"/>
+  <text x="900" y="40" class="title">License 生成与分发完整流程</text>
+  <text x="900" y="65" class="subtitle">密钥对生成 → 机器指纹采集 → License签发 → 客户部署 → 应用验证 → 运行时门控 · v1.0</text>
+  
+  <rect x="50" y="100" width="550" height="280" rx="8" fill="#3b82f6" opacity="0.1" stroke="#3b82f6" stroke-width="2"/>
+  <rect x="50" y="100" width="550" height="40" rx="8" fill="#3b82f6"/>
+  <text x="70" y="128" class="phase-title">① 密钥对生成 (卖方初始化)</text>
+  
+  <rect x="70" y="160" width="510" height="200" rx="6" fill="#fff" stroke="#dbeafe" stroke-width="2"/>
+  <text x="90" y="183" class="step-title">生成 RSA 2048 位密钥对</text>
+  <text x="90" y="210" class="code">./scripts/license/gen-keypair.sh</text>
+  <text x="90" y="233" class="highlight">↓ 生成密钥文件</text>
+  <text x="90" y="257" class="code">• private_key.pem (私钥,卖方持有)</text>
+  <text x="110" y="274" class="step-desc">用于签发License</text>
+  <text x="110" y="291" class="step-desc">绝对保密,不能泄露</text>
+  <text x="90" y="314" class="code">• public_key.pem (公钥,集成到应用)</text>
+  <text x="110" y="331" class="step-desc">用于验证License</text>
+  <text x="110" y="348" class="step-desc">打包到应用JAR包</text>
+  
+  <line x1="325" y1="380" x2="325" y2="410" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+  
+  <rect x="650" y="100" width="550" height="280" rx="8" fill="#10b981" opacity="0.1" stroke="#10b981" stroke-width="2"/>
+  <rect x="650" y="100" width="550" height="40" rx="8" fill="#10b981"/>
+  <text x="670" y="128" class="phase-title">② 客户采集机器指纹</text>
+  
+  <rect x="670" y="160" width="510" height="200" rx="6" fill="#fff" stroke="#d1fae5" stroke-width="2"/>
+  <text x="690" y="183" class="step-title">采集唯一硬件标识</text>
+  <text x="690" y="210" class="code">./scripts/license/gen-fingerprint.sh</text>
+  <text x="690" y="233" class="highlight">↓ 采集以下信息</text>
+  <text x="690" y="257" class="code">• CPU ID / 序列号</text>
+  <text x="690" y="274" class="code">• 主板序列号</text>
+  <text x="690" y="291" class="code">• MAC地址 (网卡物理地址)</text>
+  <text x="690" y="308" class="code">• 硬盘序列号</text>
+  <text x="690" y="331" class="highlight">↓ 生成机器指纹</text>
+  <text x="690" y="354" class="code">machine_fingerprint.txt</text>
+  
+  <line x1="925" y1="380" x2="925" y2="410" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+  
+  <rect x="50" y="420" width="550" height="320" rx="8" fill="#f59e0b" opacity="0.1" stroke="#f59e0b" stroke-width="2"/>
+  <rect x="50" y="420" width="550" height="40" rx="8" fill="#f59e0b"/>
+  <text x="70" y="448" class="phase-title">③ 卖方签发License</text>
+  
+  <rect x="70" y="480" width="510" height="240" rx="6" fill="#fff" stroke="#fef3c7" stroke-width="2"/>
+  <text x="90" y="503" class="step-title">使用私钥签发License文件</text>
+  <text x="90" y="530" class="code">./scripts/license/issue-license.sh \</text>
+  <text x="110" y="547" class="code">--fingerprint machine_fingerprint.txt \</text>
+  <text x="110" y="564" class="code">--features "feature_a,feature_b,feature_c" \</text>
+  <text x="110" y="581" class="code">--expire-date "2027-12-31" \</text>
+  <text x="110" y="598" class="code">--max-users 100</text>
+  
+  <text x="90" y="625" class="highlight">↓ 生成License内容</text>
+  <text x="90" y="649" class="code">{</text>
+  <text x="110" y="666" class="code">"machineFingerprint": "abc123...",</text>
+  <text x="110" y="683" class="code">"features": ["FEATURE_A", "FEATURE_B"],</text>
+  <text x="110" y="700" class="code">"signature": "RSA签名..."</text>
+  <text x="90" y="717" class="code">}</text>
+  
+  <line x1="325" y1="740" x2="325" y2="770" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+  
+  <rect x="650" y="420" width="550" height="320" rx="8" fill="#8b5cf6" opacity="0.1" stroke="#8b5cf6" stroke-width="2"/>
+  <rect x="650" y="420" width="550" height="40" rx="8" fill="#8b5cf6"/>
+  <text x="670" y="448" class="phase-title">④ 客户部署License</text>
+  
+  <rect x="670" y="480" width="510" height="240" rx="6" fill="#fff" stroke="#c4b5fd" stroke-width="2"/>
+  <text x="690" y="503" class="step-title">将License文件部署到应用服务器</text>
+  <text x="690" y="530" class="code">1. 接收 license.lic 文件</text>
+  <text x="710" y="547" class="step-desc">(卖方通过加密邮件/加密U盘交付)</text>
+  
+  <text x="690" y="577" class="code">2. 部署到指定路径</text>
+  <text x="710" y="594" class="code">/opt/apex-scaffold/config/license.lic</text>
+  
+  <text x="690" y="624" class="code">3. 配置环境变量</text>
+  <text x="710" y="641" class="code">export LICENSE_PATH=/opt/.../license.lic</text>
+  
+  <text x="690" y="671" class="code">4. 重启应用</text>
+  <text x="710" y="688" class="code">systemctl restart apex-scaffold</text>
+  <text x="710" y="705" class="step-desc">应用启动时自动加载并验证License</text>
+  
+  <line x1="925" y1="740" x2="925" y2="770" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+  
+  <rect x="50" y="780" width="550" height="450" rx="8" fill="#ef4444" opacity="0.1" stroke="#ef4444" stroke-width="2"/>
+  <rect x="50" y="780" width="550" height="40" rx="8" fill="#ef4444"/>
+  <text x="70" y="808" class="phase-title">⑤ 应用启动时验证License</text>
+  
+  <rect x="70" y="840" width="510" height="370" rx="6" fill="#fff" stroke="#fecaca" stroke-width="2"/>
+  <text x="90" y="863" class="step-title">LicenseValidator 验证流程</text>
+  
+  <text x="90" y="890" class="code">@PostConstruct</text>
+  <text x="90" y="907" class="code">public void validateLicense() {</text>
+  
+  <text x="110" y="934" class="highlight">// 1. 读取License文件</text>
+  <text x="110" y="951" class="code">License license = loadLicense();</text>
+  
+  <text x="110" y="978" class="highlight">// 2. 验证签名 (使用公钥)</text>
+  <text x="110" y="995" class="code">if (!verifySignature(license)) {</text>
+  <text x="130" y="1012" class="code">throw new LicenseException("签名验证失败");</text>
+  <text x="110" y="1029" class="code">}</text>
+  
+  <text x="110" y="1056" class="highlight">// 3. 验证机器指纹</text>
+  <text x="110" y="1073" class="code">String currentFingerprint = MachineInfo.get();</text>
+  <text x="110" y="1090" class="code">if (!license.matches(currentFingerprint)) {</text>
+  <text x="130" y="1107" class="code">throw new LicenseException("机器指纹不匹配");</text>
+  <text x="110" y="1124" class="code">}</text>
+  
+  <text x="110" y="1151" class="highlight">// 4. 验证有效期</text>
+  <text x="110" y="1168" class="code">if (license.isExpired()) {</text>
+  <text x="130" y="1185" class="code">throw new LicenseException("License已过期");</text>
+  <text x="110" y="1202" class="code">}</text>
+  
+  <text x="90" y="1225" class="code">}</text>
+  
+  <line x1="325" y1="1230" x2="325" y2="1260" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+  
+  <rect x="650" y="780" width="550" height="450" rx="8" fill="#0891b2" opacity="0.1" stroke="#0891b2" stroke-width="2"/>
+  <rect x="650" y="780" width="550" height="40" rx="8" fill="#0891b2"/>
+  <text x="670" y="808" class="phase-title">⑥ 运行时功能门控</text>
+  
+  <rect x="670" y="840" width="510" height="370" rx="6" fill="#fff" stroke="#cffafe" stroke-width="2"/>
+  <text x="690" y="863" class="step-title">@FeatureGate 注解拦截</text>
+  
+  <text x="690" y="890" class="code">@FeatureGate("ADVANCED_ANALYTICS")</text>
+  <text x="690" y="907" class="code">@RequirePermission("report:analytics:view")</text>
+  <text x="690" y="924" class="code">public Mono&lt;Result&lt;Report&gt;&gt; generateReport() {</text>
+  <text x="710" y="941" class="code">// 高级分析功能</text>
+  <text x="710" y="958" class="code">return analyticsService.generate();</text>
+  <text x="690" y="975" class="code">}</text>
+  
+  <text x="690" y="1005" class="highlight">FeatureGateAspect 切面验证:</text>
+  <text x="690" y="1029" class="code">@Around("@annotation(FeatureGate)")</text>
+  <text x="690" y="1046" class="code">public Object checkFeature(ProceedingJoinPoint pjp) {</text>
+  <text x="710" y="1063" class="code">String feature = getAnnotation(pjp).value();</text>
+  <text x="710" y="1087" class="highlight">if (!licenseService.hasFeature(feature)) {</text>
+  <text x="730" y="1104" class="code">return Mono.error(</text>
+  <text x="750" y="1121" class="code">new FeatureNotLicensedException(</text>
+  <text x="770" y="1138" class="code">"功能未授权: " + feature</text>
+  <text x="750" y="1155" class="code">)</text>
+  <text x="730" y="1172" class="code">);</text>
+  <text x="710" y="1189" class="code">}</text>
+  <text x="710" y="1206" class="code">return pjp.proceed();</text>
+  <text x="690" y="1223" class="code">}</text>
+  
+  <rect x="1250" y="100" width="500" height="1130" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+  <text x="1270" y="130" class="step-title">License 安全保障</text>
+  
+  <rect x="1270" y="150" width="460" height="150" rx="6" fill="#fff" stroke="#fbbf24" stroke-width="1.5"/>
+  <text x="1290" y="173" class="step-title">防篡改机制</text>
+  <text x="1290" y="193" class="code">✅ RSA数字签名</text>
+  <text x="1310" y="210" class="step-desc">任何修改立即失效</text>
+  <text x="1290" y="230" class="code">✅ 公钥指纹校验</text>
+  <text x="1310" y="247" class="step-desc">防止公钥被替换</text>
+  <text x="1290" y="267" class="code">✅ License内容加密</text>
+  <text x="1310" y="284" class="step-desc">Base64 + AES加密</text>
+  
+  <rect x="1270" y="320" width="460" height="150" rx="6" fill="#fff" stroke="#fbbf24" stroke-width="1.5"/>
+  <text x="1290" y="343" class="step-title">防盗用机制</text>
+  <text x="1290" y="363" class="code">✅ 机器指纹绑定</text>
+  <text x="1310" y="380" class="step-desc">License绑定特定机器</text>
+  <text x="1290" y="400" class="code">✅ 离线验证</text>
+  <text x="1310" y="417" class="step-desc">无需联网激活</text>
+  <text x="1290" y="437" class="code">✅ 防虚拟机检测</text>
+  <text x="1310" y="454" class="step-desc">检测Docker/VM环境</text>
+  
+  <rect x="1270" y="490" width="460" height="150" rx="6" fill="#fff" stroke="#fbbf24" stroke-width="1.5"/>
+  <text x="1290" y="513" class="step-title">功能控制</text>
+  <text x="1290" y="533" class="code">✅ 功能级授权</text>
+  <text x="1310" y="550" class="step-desc">@FeatureGate门控</text>
+  <text x="1290" y="570" class="code">✅ 用户数限制</text>
+  <text x="1310" y="587" class="step-desc">maxUsers配额检查</text>
+  <text x="1290" y="607" class="code">✅ 有效期管理</text>
+  <text x="1310" y="624" class="step-desc">自动过期提醒</text>
+  
+  <rect x="1270" y="660" width="460" height="150" rx="6" fill="#fff" stroke="#fbbf24" stroke-width="1.5"/>
+  <text x="1290" y="683" class="step-title">License类型</text>
+  <text x="1290" y="703" class="code">• 试用版 (Trial)</text>
+  <text x="1310" y="720" class="step-desc">30天,部分功能</text>
+  <text x="1290" y="740" class="code">• 标准版 (Standard)</text>
+  <text x="1310" y="757" class="step-desc">永久,基础功能</text>
+  <text x="1290" y="777" class="code">• 企业版 (Enterprise)</text>
+  <text x="1310" y="794" class="step-desc">永久,全部功能</text>
+  
+  <rect x="1270" y="830" width="460" height="180" rx="6" fill="#fff" stroke="#fbbf24" stroke-width="1.5"/>
+  <text x="1290" y="853" class="step-title">监控与审计</text>
+  <text x="1290" y="873" class="code">✅ License使用日志</text>
+  <text x="1310" y="890" class="step-desc">记录验证/功能调用</text>
+  <text x="1290" y="910" class="code">✅ 过期提醒</text>
+  <text x="1310" y="927" class="step-desc">到期前30/15/7天告警</text>
+  <text x="1290" y="947" class="code">✅ 异常告警</text>
+  <text x="1310" y="964" class="step-desc">验证失败自动告警</text>
+  <text x="1290" y="984" class="code">✅ 管理后台</text>
+  <text x="1310" y="1001" class="step-desc">License信息查看</text>
+  
+  <rect x="1270" y="1030" width="460" height="180" rx="6" fill="#fee2e2" stroke="#fca5a5" stroke-width="2"/>
+  <text x="1290" y="1053" class="step-title">应急方案</text>
+  <text x="1290" y="1073" class="code">⚠️ License丢失</text>
+  <text x="1310" y="1090" class="step-desc">凭机器指纹重新签发</text>
+  <text x="1290" y="1110" class="code">⚠️ 服务器更换</text>
+  <text x="1310" y="1127" class="step-desc">重新采集指纹+签发</text>
+  <text x="1290" y="1147" class="code">⚠️ License过期</text>
+  <text x="1310" y="1164" class="step-desc">宽限期3天只读模式</text>
+  <text x="1290" y="1184" class="code">⚠️ 验证失败</text>
+  <text x="1310" y="1201" class="step-desc">应用拒绝启动</text>
+  
+  <text x="900" y="1285" class="code" text-anchor="middle">© 2026 Apex Team · License生成分发流程 v1.0 · 完整91张SVG架构图集合</text>
+</svg>

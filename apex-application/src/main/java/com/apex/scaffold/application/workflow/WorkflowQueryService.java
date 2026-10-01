@@ -110,27 +110,27 @@ public class WorkflowQueryService {
                     WorkflowInstanceDetailDTO detail = new WorkflowInstanceDetailDTO();
 
                     // 查询流程实例
-                    ProcessInstancePO instancePO = processInstanceMapper.selectById(instanceId);
-                    if (instancePO == null) {
+                    ProcessInstancePO processInstance = processInstanceMapper.selectById(instanceId);
+                    if (processInstance == null) {
                         return null;
                     }
 
                     // 查询流程定义
-                    WorkflowDefinitionPO definitionPO =
-                            workflowDefinitionMapper.selectById(instancePO.getWorkflowDefinitionId());
-                    detail.setInstance(convertToInstanceDTO(instancePO, definitionPO));
-                    detail.setCurrentNodeId(instancePO.getCurrentNodeCode());
+                    WorkflowDefinitionPO workflowDefinition =
+                            workflowDefinitionMapper.selectById(processInstance.getWorkflowDefinitionId());
+                    detail.setInstance(convertToInstanceDTO(processInstance, workflowDefinition));
+                    detail.setCurrentNodeId(processInstance.getCurrentNodeCode());
 
-                    if (definitionPO != null) {
-                        detail.setDefinition(convertToDefinitionDTO(definitionPO));
+                    if (workflowDefinition != null) {
+                        detail.setDefinition(convertToDefinitionDTO(workflowDefinition));
                     }
 
                     // 查询任务列表
-                    List<TaskPO> taskPOs = taskMapper.selectList(new LambdaQueryWrapper<TaskPO>()
+                    List<TaskPO> taskList = taskMapper.selectList(new LambdaQueryWrapper<TaskPO>()
                             .eq(TaskPO::getProcessInstanceId, instanceId)
                             .orderByDesc(TaskPO::getCreateTime));
                     List<WorkflowTaskDTO> tasks =
-                            taskPOs.stream().map(this::convertToTaskDTO).collect(Collectors.toList());
+                            taskList.stream().map(this::convertToTaskDTO).collect(Collectors.toList());
                     detail.setTasks(tasks);
 
                     return detail;
@@ -173,24 +173,24 @@ public class WorkflowQueryService {
      */
     public Mono<WorkflowDefinitionDTO> getDefinitionDetail(String workflowCode) {
         return Mono.fromCallable(() -> {
-                    WorkflowDefinitionPO definitionPO =
+                    WorkflowDefinitionPO workflowDefinition =
                             workflowDefinitionMapper.selectOne(new LambdaQueryWrapper<WorkflowDefinitionPO>()
                                     .eq(WorkflowDefinitionPO::getWorkflowCode, workflowCode));
-                    if (definitionPO == null) {
+                    if (workflowDefinition == null) {
                         return null;
                     }
-                    return convertToDefinitionDTO(definitionPO);
+                    return convertToDefinitionDTO(workflowDefinition);
                 })
                 .subscribeOn(Schedulers.boundedElastic());
     }
 
     public Mono<WorkflowDefinitionDTO> getDefinitionDetail(Long definitionId) {
         return Mono.fromCallable(() -> {
-                    WorkflowDefinitionPO definitionPO = workflowDefinitionMapper.selectById(definitionId);
-                    if (definitionPO == null) {
+                    WorkflowDefinitionPO workflowDefinition = workflowDefinitionMapper.selectById(definitionId);
+                    if (workflowDefinition == null) {
                         return null;
                     }
-                    return convertToDefinitionDTO(definitionPO);
+                    return convertToDefinitionDTO(workflowDefinition);
                 })
                 .subscribeOn(Schedulers.boundedElastic());
     }
@@ -205,7 +205,8 @@ public class WorkflowQueryService {
         dto.setStatus(po.getStatus());
         dto.setSuspended(Boolean.TRUE.equals(po.getSuspended()) || "SUSPENDED".equals(po.getStatus()));
         dto.setInitiatorId(po.getInitiatorId());
-        dto.setInitiatorName("用户-" + po.getInitiatorId()); // 简化映射，实际应关联用户表
+        // 简化映射，实际应关联用户表
+        dto.setInitiatorName("用户-" + po.getInitiatorId());
         dto.setBusinessKey(po.getBusinessKey());
         dto.setCurrentNodeId(po.getCurrentNodeCode());
         dto.setStartTime(po.getStartTime());
@@ -219,10 +220,12 @@ public class WorkflowQueryService {
         dto.setId(po.getId());
         dto.setInstanceId(po.getProcessInstanceId());
         dto.setTaskName(po.getTaskName());
-        dto.setTaskType("USER_TASK"); // 简化映射
+        // 简化映射
+        dto.setTaskType("USER_TASK");
         dto.setStatus(po.getStatus());
         dto.setAssigneeId(po.getAssigneeId());
-        dto.setAssigneeName("用户-" + po.getAssigneeId()); // 简化映射
+        // 简化映射
+        dto.setAssigneeName("用户-" + po.getAssigneeId());
         dto.setComment(po.getRemark());
         dto.setNodeId(po.getNodeCode());
         dto.setStartTime(po.getCreateTime());
@@ -255,7 +258,7 @@ public class WorkflowQueryService {
                                 nodesJson.stream().map(this::convertToNodeDTO).collect(Collectors.toList());
                         dto.setNodes(nodes);
                     } else {
-                        dto.setNodes(new ArrayList<>());
+                        dto.setNodes(new ArrayList<>(16));
                     }
 
                     // 解析连线
@@ -266,20 +269,20 @@ public class WorkflowQueryService {
                                 edgesJson.stream().map(this::convertToEdgeDTO).collect(Collectors.toList());
                         dto.setEdges(edges);
                     } else {
-                        dto.setEdges(new ArrayList<>());
+                        dto.setEdges(new ArrayList<>(16));
                     }
                 } else {
-                    dto.setNodes(new ArrayList<>());
-                    dto.setEdges(new ArrayList<>());
+                    dto.setNodes(new ArrayList<>(16));
+                    dto.setEdges(new ArrayList<>(16));
                 }
             } else {
-                dto.setNodes(new ArrayList<>());
-                dto.setEdges(new ArrayList<>());
+                dto.setNodes(new ArrayList<>(16));
+                dto.setEdges(new ArrayList<>(16));
             }
         } catch (Exception e) {
             log.error("解析 DAG JSON 失败", e);
-            dto.setNodes(new ArrayList<>());
-            dto.setEdges(new ArrayList<>());
+            dto.setNodes(new ArrayList<>(16));
+            dto.setEdges(new ArrayList<>(16));
         }
 
         return dto;
@@ -298,7 +301,7 @@ public class WorkflowQueryService {
 
         @SuppressWarnings("unchecked")
         Map<String, Object> position = (Map<String, Object>) json.get("position");
-        node.setPosition(position != null ? position : new HashMap<>());
+        node.setPosition(position != null ? position : new HashMap<>(16));
 
         return node;
     }

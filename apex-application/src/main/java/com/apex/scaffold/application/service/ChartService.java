@@ -38,19 +38,143 @@ import reactor.core.publisher.Mono;
  */
 public interface ChartService {
 
+    /**
+     *
+     *
+     * 创建图表。
+     *
+     *
+     *
+     *
+     *
+     * @param request 图表创建请求
+     *
+     *
+     * @return 创建的图表
+     *
+     *
+     */
     Mono<ChartResponse> create(ChartRequest request);
 
+    /**
+     *
+     *
+     * 更新图表。
+     *
+     *
+     *
+     *
+     *
+     * @param id 图表ID
+     *
+     *
+     * @param request 图表更新请求
+     *
+     *
+     * @return 更新后的图表
+     *
+     *
+     */
     Mono<ChartResponse> update(Long id, ChartRequest request);
 
+    /**
+     *
+     *
+     * 删除图表。
+     *
+     *
+     *
+     *
+     *
+     * @param id 图表ID
+     *
+     *
+     * @return 删除结果
+     *
+     *
+     */
     Mono<Void> delete(Long id);
 
+    /**
+     * 根据ID查询图表。
+     *
+     * @param id 图表ID
+     * @return 图表详情
+     */
     Mono<ChartResponse> getById(Long id);
 
+    /**
+     *
+     *
+     * 查询图表列表。
+     *
+     *
+     *
+     *
+     *
+     * @param request 查询请求
+     *
+     *
+     * @return 图表列表
+     *
+     *
+     */
     Mono<PageResponse<ChartResponse>> query(ChartQueryRequest request);
 
+    /**
+     *
+     *
+     * 更新图表状态。
+     *
+     *
+     *
+     *
+     *
+     * @param id 图表ID
+     *
+     *
+     * @param status 新状态
+     *
+     *
+     * @return 更新结果
+     *
+     *
+     */
     Mono<Void> updateStatus(Long id, Integer status);
 
+    /**
+     *
+     *
+     * 获取图表数据。
+     *
+     *
+     *
+     *
+     *
+     * @param id 图表ID
+     *
+     *
+     * @return 图表数据
+     *
+     *
+     */
     Mono<ChartDataResponse> getChartData(Long id);
 
+    /**
+     *
+     *
+     * 增加图表查看次数。
+     *
+     *
+     *
+     *
+     *
+     * @param id 图表ID
+     *
+     *
+     * @return 更新结果
+     *
+     *
+     */
     Mono<Void> incrementViewCount(Long id);
 }

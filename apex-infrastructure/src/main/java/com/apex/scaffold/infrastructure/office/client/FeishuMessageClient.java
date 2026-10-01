@@ -1,67 +1,129 @@
 package com.apex.scaffold.infrastructure.office.client;
 
+import com.apex.scaffold.common.exception.BusinessException;
+import com.apex.scaffold.common.result.ResultCode;
+import com.apex.scaffold.domain.office.OfficePlatform;
+import com.apex.scaffold.domain.office.message.CardMessageContent;
 import com.apex.scaffold.domain.office.message.MessageContent;
 import com.apex.scaffold.domain.office.message.MessageTarget;
+import com.apex.scaffold.domain.office.message.MessageType;
 import com.apex.scaffold.domain.office.port.MessagePort;
+import com.apex.scaffold.infrastructure.office.config.OfficePlatformProperties;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.HashMap;
+import java.util.Map;
+import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 /**
- * 飞书消息发送客户端
- *
- * <p>封装飞书消息发送相关的 API 调用，支持文本、Markdown、卡片等多种消息类型。
- * 使用响应式编程模型，所有操作返回 Mono。
- *
- * <p>功能特性：
- * <ul>
- *   <li>支持发送消息给个人用户</li>
- *   <li>支持发送消息到群组</li>
- *   <li>支持多种消息格式（文本、Markdown、交互式卡片）</li>
- *   <li>支持消息发送结果查询</li>
- * </ul>
- *
- * <p>本类实现 {@link MessagePort}，作为 Infrastructure 层的适配器，
- * 实现 Domain 层定义的端口接口，符合端口-适配器架构模式。
+ * 飞书消息 API 客户端。
  *
  * @author Apex Team
+ * @version 1.0.0
  * @since 1.3.0
  */
-public class FeishuMessageClient implements MessagePort {
+@Component
+public class FeishuMessageClient extends OfficeApiSupport implements MessagePort {
+    private final ObjectMapper objectMapper;
 
-    /**
-     * 发送消息
-     *
-     * @param target 消息目标（用户或群组）
-     * @param content 消息内容
-     * @return 平台消息ID
-     */
+    public FeishuMessageClient(
+            WebClient.Builder builder, OfficePlatformProperties properties, ObjectMapper objectMapper) {
+        super(builder, properties, OfficePlatform.FEISHU, "https://open.feishu.cn");
+        this.objectMapper = objectMapper;
+    }
+
     @Override
     public Mono<String> sendMessage(MessageTarget target, MessageContent content) {
-        // TODO: 实现飞书消息发送逻辑
-        // 1. 构建飞书消息请求体
-        // 2. 调用飞书 API
-        // 3. 解析响应获取消息ID
-        return Mono.just("feishu_msg_" + System.currentTimeMillis());
+        validate(target, content);
+        return tenantToken()
+                .flatMap(token -> call(
+                        body -> {
+                            Map<?, ?> data = (Map<?, ?>) body.get("data");
+                            return text(data == null ? null : data.get("message_id"), "message_id");
+                        },
+                        postJson(
+                                "/open-apis/im/v1/messages?receive_id_type=" + receiveType(target),
+                                messageBody(target, content),
+                                Map.of("Authorization", "Bearer " + token))));
     }
 
-    /**
-     * 查询消息状态
-     *
-     * @param messageId 平台消息ID
-     * @return 消息状态信息
-     */
     @Override
     public Mono<String> queryMessageStatus(String messageId) {
-        // TODO: 实现消息状态查询
-        return Mono.just("SUCCESS");
+        required(messageId, "飞书 messageId");
+        return tenantToken()
+                .flatMap(token -> getJsonWithHeaders(
+                        "/open-apis/im/v1/messages/" + messageId, Map.of("Authorization", "Bearer " + token)))
+                .map(body -> "EXISTS");
     }
 
-    /**
-     * 获取支持的平台类型
-     *
-     * @return 平台类型标识
-     */
+    @Override
+    public Mono<Boolean> recallMessage(String messageId) {
+        required(messageId, "飞书 messageId");
+        return tenantToken()
+                .flatMap(token -> deleteWithHeaders(
+                        "/open-apis/im/v1/messages/" + messageId, Map.of("Authorization", "Bearer " + token)))
+                .thenReturn(Boolean.TRUE);
+    }
+
     @Override
     public String getPlatformType() {
         return "feishu";
+    }
+
+    private Mono<String> tenantToken() {
+        return call(
+                body -> text(body.get("tenant_access_token"), "tenant_access_token"),
+                postJson(
+                        "/open-apis/auth/v3/tenant_access_token/internal",
+                        Map.of("app_id", required(properties.getAppId(), "飞书 appId"), "app_secret", secret("飞书"))));
+    }
+
+    private Map<String, Object> messageBody(MessageTarget target, MessageContent content) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("receive_id", targetId(target));
+        body.put("msg_type", messageType(content));
+        body.put("content", contentJson(content));
+        return body;
+    }
+
+    private String contentJson(MessageContent content) {
+        try {
+            if (content.getType() == MessageType.TEXT) {
+                return objectMapper.writeValueAsString(Map.of("text", content.getText()));
+            }
+            if (content.getType() == MessageType.MARKDOWN) {
+                return objectMapper.writeValueAsString(Map.of("text", content.getText()));
+            }
+            String cardJson = ((CardMessageContent) content).getCardJson();
+            return objectMapper.writeValueAsString(
+                    objectMapper.readValue(cardJson, new TypeReference<Map<String, Object>>() {}));
+        } catch (Exception error) {
+            throw new IllegalArgumentException("飞书消息内容不是合法 JSON", error);
+        }
+    }
+
+    private String messageType(MessageContent content) {
+        return content.getType() == MessageType.CARD ? "interactive" : "text";
+    }
+
+    private String receiveType(MessageTarget target) {
+        return "USER".equals(target.getTargetType()) ? "open_id" : "chat_id";
+    }
+
+    private String targetId(MessageTarget target) {
+        return "USER".equals(target.getTargetType())
+                ? target.getUserIds().get(0)
+                : target.getGroupIds().get(0);
+    }
+
+    private void validate(MessageTarget target, MessageContent content) {
+        if (target == null || !target.isValid()) {
+            throw new BusinessException(ResultCode.BUSINESS_ERROR, "飞书消息目标无效");
+        }
+        if (content == null || !content.isValid()) {
+            throw new BusinessException(ResultCode.BUSINESS_ERROR, "飞书消息内容无效");
+        }
     }
 }

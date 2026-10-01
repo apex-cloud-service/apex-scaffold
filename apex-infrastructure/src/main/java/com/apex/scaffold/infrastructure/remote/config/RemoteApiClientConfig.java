@@ -15,9 +15,9 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.netty.resources.ConnectionProvider;
 
 /**
- * {@link RemoteApiClient} 构造配置 —— 替代 {@code @Service} + {@code @Autowired} 的 Bean 定义方式。
+ * {@link RemoteApiClient} 构造配置 —— 替代 {@code @Service} + 字段注入 的 Bean 定义方式。
  *
- * <p>所有依赖均通过构造器注入，不使用 {@code @Autowired}、{@code @Qualifier} 或字段注入。
+ * <p>所有依赖均通过构造器注入，不使用字段注入、{@code @Qualifier} 或 setter 注入。
  * 可选依赖通过 {@link ObjectProvider#getIfAvailable()} 安全获取。</p>
  *
  * <p>配置读取链路：

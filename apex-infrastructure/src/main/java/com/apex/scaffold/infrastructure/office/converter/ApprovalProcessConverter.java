@@ -8,13 +8,13 @@ import com.apex.scaffold.infrastructure.office.po.ApprovalProcessPO;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 import org.mapstruct.ReportingPolicy;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * 审批流程转换器
@@ -30,10 +30,15 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @since 1.3.0
  */
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
+@SuppressWarnings({"PMD.AbstractClassShouldStartWithAbstractNamingRule", "PMD.LowerCamelCaseVariableNamingRule"})
 public abstract class ApprovalProcessConverter {
 
-    @Autowired
-    protected ObjectMapper objectMapper;
+    /**
+     * MapStruct 生成的实现类无法声明带参构造器，故采用 JSR-250 {@code @Resource} 字段注入，
+     * 以避免使用 Spring {@code @Autowired}。
+     */
+    @Resource
+    private ObjectMapper objectMapper;
 
     /**
      * 领域实体转PO

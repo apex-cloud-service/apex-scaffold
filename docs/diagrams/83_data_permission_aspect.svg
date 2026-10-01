@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 800" width="1400" height="800">
+  <defs>
+    <style>
+      .title-main { font: 700 28px system-ui, sans-serif; fill: #f8fafc; }
+      .title-sub { font: 500 13px system-ui, sans-serif; fill: #94a3b8; }
+      .layer-title { font: 600 16px system-ui, sans-serif; fill: #ffffff; }
+      .section-title { font: 600 14px system-ui, sans-serif; fill: #f8fafc; }
+      .label-text { font: 500 12px system-ui, sans-serif; fill: #e2e8f0; }
+      .code-text { font: 400 11px 'SF Mono', monospace; fill: #38bdf8; }
+      .note-text { font: 400 11px system-ui, sans-serif; fill: #cbd5e1; }
+      .highlight { font: 600 12px system-ui, sans-serif; fill: #fbbf24; }
+      .type-text { font: 600 11px system-ui, sans-serif; fill: #a78bfa; }
+    </style>
+    <linearGradient id="grad-primary" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#0ea5e9;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0284c7;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="grad-success" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#059669;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#047857;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="grad-warning" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#d97706;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#b45309;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="grad-purple" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#7c3aed;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#6d28d9;stop-opacity:1" />
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/>
+    </marker>
+    <marker id="arrow-white" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#e2e8f0"/>
+    </marker>
+  </defs>
+
+  <rect width="1400" height="800" fill="#0f172a"/>
+
+  <text x="700" y="35" class="title-main" text-anchor="middle">数据权限切面架构 (@DataScope)</text>
+  <text x="700" y="55" class="title-sub" text-anchor="middle">AOP装配上下文 · MyBatis-Plus拦截器 · SQL动态改写 · 多租户叠加 · 部门/用户级权限控制</text>
+
+  <rect x="40" y="80" width="420" height="310" rx="8" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+  <rect x="40" y="80" width="420" height="35" rx="8" fill="url(#grad-primary)"/>
+  <text x="60" y="103" class="layer-title">1. @DataScope 注解与AOP切面</text>
+
+  <rect x="60" y="130" width="380" height="240" rx="6" fill="#0f172a" stroke="#475569" stroke-width="1.5"/>
+  <text x="80" y="152" class="section-title">DataScopeAspect 切面拦截</text>
+  <text x="80" y="168" class="code-text">@Around("@annotation(dataScope)")</text>
+  <text x="80" y="184" class="label-text">拦截 Service 层标注 @DataScope 的方法</text>
+  <line x1="80" y1="194" x2="410" y2="194" stroke="#334155" stroke-width="1"/>
+  <text x="80" y="212" class="section-title">注解配置参数</text>
+  <text x="80" y="228" class="code-text">type: DataScopeType (权限类型)</text>
+  <text x="90" y="244" class="type-text">▸ ALL - 全部数据(不注入条件)</text>
+  <text x="90" y="260" class="type-text">▸ DEPT - 本部门数据</text>
+  <text x="90" y="276" class="type-text">▸ DEPT_AND_CHILD - 本部门及子部门</text>
+  <text x="90" y="292" class="type-text">▸ SELF - 仅本人数据</text>
+  <text x="90" y="308" class="type-text">▸ CUSTOM - 自定义部门集合</text>
+  <text x="80" y="326" class="code-text">deptColumn: "dept_id" (默认)</text>
+  <text x="80" y="342" class="code-text">userColumn: "user_id" (默认)</text>
+  <text x="80" y="358" class="code-text">alias: "" (表别名)</text>
+
+  <rect x="480" y="80" width="450" height="310" rx="8" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+  <rect x="480" y="80" width="450" height="35" rx="8" fill="url(#grad-success)"/>
+  <text x="500" y="103" class="layer-title">2. DataScopeProvider 权限解析</text>
+
+  <rect x="500" y="130" width="410" height="240" rx="6" fill="#0f172a" stroke="#475569" stroke-width="1.5"/>
+  <text x="520" y="152" class="section-title">MdcDataScopeProvider 解析顺序</text>
+  <text x="520" y="168" class="highlight">1. DataScopeContext (ThreadLocal)</text>
+  <text x="530" y="184" class="note-text">切面/业务代码显式装配，优先级最高</text>
+  <text x="520" y="200" class="highlight">2. MDC 键读取</text>
+  <text x="530" y="216" class="code-text">apex.userId - 当前用户ID</text>
+  <text x="530" y="232" class="code-text">apex.deptId - 当前部门ID</text>
+  <text x="530" y="248" class="code-text">apex.dataScope - 权限类型(1-5)</text>
+  <text x="530" y="264" class="code-text">apex.dataScopeDeptIds - 可见部门集合</text>
+  <line x1="520" y1="274" x2="880" y2="274" stroke="#334155" stroke-width="1"/>
+  <text x="520" y="292" class="section-title">DataScopeInfo 数据模型</text>
+  <text x="520" y="308" class="code-text">type: DataScopeType</text>
+  <text x="520" y="324" class="code-text">userId: Long (当前用户)</text>
+  <text x="520" y="340" class="code-text">deptId: Long (当前部门)</text>
+  <text x="520" y="356" class="code-text">deptIds: Set&lt;Long&gt; (可见部门集合)</text>
+
+  <rect x="950" y="80" width="410" height="310" rx="8" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+  <rect x="950" y="80" width="410" height="35" rx="8" fill="url(#grad-warning)"/>
+  <text x="970" y="103" class="layer-title">3. DataScopeContext 上下文传递</text>
+
+  <rect x="970" y="130" width="370" height="240" rx="6" fill="#0f172a" stroke="#475569" stroke-width="1.5"/>
+  <text x="990" y="152" class="section-title">响应式路径 (Mono/Flux)</text>
+  <text x="990" y="168" class="code-text">return mono</text>
+  <text x="1000" y="184" class="code-text">.doFirst(() →装配上下文)</text>
+  <text x="1000" y="200" class="code-text">.contextWrite(ctx → ctx.put(</text>
+  <text x="1010" y="216" class="code-text">DataScopeContext.KEY, scope))</text>
+  <text x="1000" y="232" class="code-text">.doFinally(s → 释放上下文)</text>
+  <text x="990" y="248" class="note-text">• 订阅时装配，终止时释放</text>
+  <text x="990" y="264" class="note-text">• 通过 Reactor Context 跨线程传递</text>
+  <line x1="990" y1="274" x2="1310" y2="274" stroke="#334155" stroke-width="1"/>
+  <text x="990" y="292" class="section-title">同步路径 (try-finally)</text>
+  <text x="990" y="308" class="code-text">try {</text>
+  <text x="1000" y="324" class="code-text">DataScopeContext.set(scope);</text>
+  <text x="1000" y="340" class="code-text">return joinPoint.proceed();</text>
+  <text x="990" y="356" class="code-text">} finally { context.clear(); }</text>
+
+  <line x1="250" y1="390" x2="250" y2="415" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="705" y1="390" x2="705" y2="415" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="1155" y1="390" x2="1155" y2="415" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <rect x="40" y="415" width="650" height="320" rx="8" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+  <rect x="40" y="415" width="650" height="35" rx="8" fill="url(#grad-purple)"/>
+  <text x="60" y="438" class="layer-title">4. MyBatis-Plus 拦截器 SQL 改写</text>
+
+  <rect x="60" y="465" width="610" height="250" rx="6" fill="#0f172a" stroke="#475569" stroke-width="1.5"/>
+  <text x="80" y="487" class="section-title">DataScopeInnerInterceptor.beforeQuery()</text>
+  <text x="80" y="503" class="code-text">1. 读取 DataScopeContext 当前配置</text>
+  <text x="80" y="519" class="code-text">2. 解析 DataScopeProvider 权限范围</text>
+  <text x="80" y="535" class="code-text">3. JSqlParser 解析原始SQL</text>
+  <text x="80" y="551" class="code-text">4. 根据权限类型动态注入WHERE条件</text>
+  <text x="80" y="567" class="code-text">5. 反射改写 BoundSql.sql 字段</text>
+  <line x1="80" y1="577" x2="640" y2="577" stroke="#334155" stroke-width="1"/>
+  <text x="80" y="595" class="section-title">SQL 改写示例</text>
+  <text x="80" y="611" class="code-text">原始: SELECT * FROM sys_order WHERE status=1</text>
+  <line x1="80" y1="620" x2="640" y2="620" stroke="#475569" stroke-width="1" stroke-dasharray="3,3"/>
+  <text x="80" y="636" class="type-text">ALL: 不注入条件</text>
+  <text x="80" y="652" class="type-text">DEPT: AND dept_id = 100</text>
+  <text x="80" y="668" class="type-text">DEPT_AND_CHILD: AND dept_id IN (100,101,102)</text>
+  <text x="80" y="684" class="type-text">SELF: AND user_id = 123</text>
+  <text x="80" y="700" class="type-text">CUSTOM: AND dept_id IN (100,105)</text>
+
+  <rect x="710" y="415" width="650" height="320" rx="8" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+  <rect x="710" y="415" width="650" height="35" rx="8" fill="url(#grad-success)"/>
+  <text x="730" y="438" class="layer-title">5. 多租户叠加与阻塞线程隔离</text>
+
+  <rect x="730" y="465" width="300" height="250" rx="6" fill="#0f172a" stroke="#475569" stroke-width="1.5"/>
+  <text x="750" y="487" class="section-title">租户隔离叠加</text>
+  <text x="750" y="503" class="highlight">TenantLineInnerInterceptor</text>
+  <text x="760" y="519" class="note-text">↓ 自动注入租户条件</text>
+  <text x="750" y="535" class="code-text">AND tenant_id = 'T001'</text>
+  <text x="760" y="551" class="note-text">↓ 叠加数据权限</text>
+  <text x="750" y="567" class="highlight">DataScopeInnerInterceptor</text>
+  <text x="760" y="583" class="note-text">↓ 注入部门/用户条件</text>
+  <text x="750" y="599" class="code-text">AND dept_id IN (100,101)</text>
+  <line x1="750" y1="609" x2="1000" y2="609" stroke="#334155" stroke-width="1"/>
+  <text x="750" y="627" class="section-title">最终SQL</text>
+  <text x="750" y="643" class="code-text">SELECT * FROM sys_order</text>
+  <text x="750" y="659" class="code-text">WHERE status = 1</text>
+  <text x="750" y="675" class="code-text">AND tenant_id = 'T001'</text>
+  <text x="750" y="691" class="code-text">AND dept_id IN (100,101)</text>
+
+  <rect x="1050" y="465" width="290" height="250" rx="6" fill="#0f172a" stroke="#475569" stroke-width="1.5"/>
+  <text x="1070" y="487" class="section-title">阻塞线程隔离</text>
+  <text x="1070" y="503" class="code-text">Mono.fromCallable(() →</text>
+  <text x="1080" y="519" class="code-text">repository.query())</text>
+  <text x="1070" y="535" class="highlight">.subscribeOn(</text>
+  <text x="1080" y="551" class="highlight">BlockingIoSchedulers.jdbc())</text>
+  <text x="1070" y="567" class="note-text">• JDBC查询在专用线程池执行</text>
+  <text x="1070" y="583" class="note-text">• DataScopeContext需线程可见</text>
+  <text x="1070" y="599" class="note-text">• Reactor Context自动传递</text>
+  <line x1="1070" y1="609" x2="1310" y2="609" stroke="#334155" stroke-width="1"/>
+  <text x="1070" y="627" class="section-title">放行语义</text>
+  <text x="1070" y="643" class="note-text">• 无法解析权限时放行(WARN日志)</text>
+  <text x="1070" y="659" class="note-text">• 解析/改写失败不阻断业务</text>
+  <text x="1070" y="675" class="note-text">• ALL权限类型不注入条件</text>
+  <text x="1070" y="691" class="note-text">• 未装配上下文查询零开销</text>
+
+  <line x1="460" y1="250" x2="480" y2="250" stroke="#e2e8f0" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arrow-white)"/>
+  <line x1="930" y1="250" x2="950" y2="250" stroke="#e2e8f0" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arrow-white)"/>
+
+  <text x="20" y="785" class="note-text">© 2026 Apex Team · 数据权限切面架构 v1.0</text>
+</svg>

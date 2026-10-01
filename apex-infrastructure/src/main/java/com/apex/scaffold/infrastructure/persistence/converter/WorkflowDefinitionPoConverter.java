@@ -19,11 +19,35 @@ import org.mapstruct.ReportingPolicy;
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface WorkflowDefinitionPoConverter {
 
+    /**
+     * TODO: Add method description
+     *
+     * @param entity TODO
+     * @return TODO
+     */
     WorkflowDefinitionPO toPo(WorkflowDefinition entity);
 
+    /**
+     * TODO: Add method description
+     *
+     * @param po TODO
+     * @return TODO
+     */
     WorkflowDefinition toEntity(WorkflowDefinitionPO po);
 
+    /**
+     * TODO: Add method description
+     *
+     * @param entities TODO
+     * @return TODO
+     */
     List<WorkflowDefinitionPO> toPoList(List<WorkflowDefinition> entities);
 
+    /**
+     * TODO: Add method description
+     *
+     * @param pos TODO
+     * @return TODO
+     */
     List<WorkflowDefinition> toEntityList(List<WorkflowDefinitionPO> pos);
 }

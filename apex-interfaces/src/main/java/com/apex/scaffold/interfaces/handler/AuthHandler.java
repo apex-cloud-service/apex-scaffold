@@ -124,6 +124,7 @@ public class AuthHandler extends BaseHandler {
      * @return 包含登录结果的响应对象，成功时返回 {@link LoginResponse}（含 JWT Token 和用户信息）
      */
     @Operation(
+            operationId = "authLogin",
             summary = "用户登录",
             description = "统一认证入口；支持微信授权码、手机号短信验证码和手机号一键登录。" + "客户端必须根据 data.nextAction 判断是登录完成、注册还是微信绑定手机号。")
     @ApiResponses({
@@ -193,6 +194,7 @@ public class AuthHandler extends BaseHandler {
      * @return 包含刷新结果的响应对象，成功时返回新的 {@link LoginResponse}（含新的 Token 对）
      */
     @Operation(
+            operationId = "authRefresh",
             summary = "刷新Token",
             description = "使用refreshToken换取新的accessToken，延长用户登录态。"
                     + "refreshToken 通过请求体 JSON 传递，避免 Token 出现在 URL 查询参数而被访问日志记录。",
@@ -240,7 +242,8 @@ public class AuthHandler extends BaseHandler {
      * @param request 服务器请求对象，包含 {@code Authorization} 请求头（Bearer Token）
      * @return 包含退出结果的响应对象，成功时返回成功信息
      */
-    @Operation(summary = "退出登录", description = "使当前Token失效，清除用户登录态")
+    @Operation(
+            operationId = "authLogout", summary = "退出登录", description = "使当前Token失效，清除用户登录态")
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",
@@ -279,7 +282,8 @@ public class AuthHandler extends BaseHandler {
      * @param request 服务器请求对象，包含 {@code Authorization} 请求头和手机号授权凭证（JSON 格式）
      * @return 包含绑定结果的响应对象，成功时返回已绑定的手机号
      */
-    @Operation(summary = "绑定微信手机号", description = "获取并绑定用户微信手机号")
+    @Operation(
+            operationId = "bindPhone", summary = "绑定微信手机号", description = "获取并绑定用户微信手机号")
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",
@@ -314,7 +318,10 @@ public class AuthHandler extends BaseHandler {
      * @param request 服务器请求对象，包含注册信息（JSON格式）
      * @return 包含注册结果和登录令牌的响应对象
      */
-    @Operation(summary = "用户注册", description = "使用登录或微信绑定流程签发的一次性票据完成注册，注册成功后返回登录令牌")
+    @Operation(
+            operationId = "authRegister",
+            summary = "用户注册",
+            description = "使用登录或微信绑定流程签发的一次性票据完成注册，注册成功后返回登录令牌")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
             required = true,
             description = "注册请求信息",
@@ -354,7 +361,10 @@ public class AuthHandler extends BaseHandler {
      * @param request 服务器请求对象，包含微信绑定手机号信息（JSON格式）
      * @return 包含绑定或注册票据的响应对象
      */
-    @Operation(summary = "微信绑定手机号", description = "微信未绑定账号时验证手机号，已注册则绑定登录，未注册则返回注册票据")
+    @Operation(
+            operationId = "bindWechatPhone",
+            summary = "微信绑定手机号",
+            description = "微信未绑定账号时验证手机号，已注册则绑定登录，未注册则返回注册票据")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
             required = true,
             description = "微信绑定手机号请求信息",
@@ -396,7 +406,10 @@ public class AuthHandler extends BaseHandler {
      * @param request 服务器请求对象，包含手机号信息（JSON 格式）
      * @return 包含发送结果的响应对象
      */
-    @Operation(summary = "发送短信验证码", description = "向指定手机号发送短信验证码，用于短信验证码登录")
+    @Operation(
+            operationId = "sendSmsCode",
+            summary = "发送短信验证码",
+            description = "向指定手机号发送短信验证码，用于短信验证码登录")
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",
@@ -426,7 +439,10 @@ public class AuthHandler extends BaseHandler {
      * @param request 服务器请求对象，包含手机号信息（JSON 格式）
      * @return 包含发送结果的响应对象
      */
-    @Operation(summary = "发送创蓝短信验证码", description = "通过创蓝253短信平台向指定手机号发送验证码，用于创蓝短信验证码登录")
+    @Operation(
+            operationId = "sendClSmsCode",
+            summary = "发送创蓝短信验证码",
+            description = "通过创蓝253短信平台向指定手机号发送验证码，用于创蓝短信验证码登录")
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",
@@ -480,7 +496,10 @@ public class AuthHandler extends BaseHandler {
      * @return 包含校验结果的响应对象
      * @see <a href="https://doc.chuanglan.com/document/SY88R0I8TCUPR1M3">创蓝闪验SDK服务端接口文档</a>
      */
-    @Operation(summary = "本机号校验", description = "调用创蓝闪验本机号校验API，校验当前流量卡的手机号与传入的手机号码是否一致")
+    @Operation(
+            operationId = "validateMobile",
+            summary = "本机号校验",
+            description = "调用创蓝闪验本机号校验API，校验当前流量卡的手机号与传入的手机号码是否一致")
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",

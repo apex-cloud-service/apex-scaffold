@@ -88,6 +88,7 @@ public class StorageProductionConfigValidator extends AbstractProductionConfigVa
             case "minio" -> validateMinio();
             case "volcengine" -> validateVolcEngine();
             case "local" -> validateLocal();
+            case "" -> throw invalid("STORAGE_DEFAULT_TYPE 不能为空");
             default -> throw invalid("STORAGE_DEFAULT_TYPE 仅支持 local、minio 或 volcengine");
         }
     }

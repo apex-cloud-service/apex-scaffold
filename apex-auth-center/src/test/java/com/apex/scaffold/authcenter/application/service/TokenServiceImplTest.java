@@ -9,8 +9,8 @@ import com.apex.scaffold.authcenter.domain.model.entity.UserEntity;
 import com.apex.scaffold.authcenter.domain.model.vo.TokenPair;
 import com.apex.scaffold.authcenter.domain.repository.TokenRepository;
 import com.apex.scaffold.authcenter.domain.repository.UserRepository;
-import com.apex.scaffold.authcenter.domain.service.SecurityAuditService;
 import com.apex.scaffold.authcenter.domain.service.TokenEncryptionService;
+import com.apex.scaffold.common.audit.SecurityAuditService;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.util.JwtUtil;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -34,6 +34,10 @@ import reactor.test.StepVerifier;
 
 /**
  * TokenServiceImpl 单元测试
+ *
+ * <p>说明（2026-09-30）：{@code SecurityAuditService} 已由 authcenter 内部下沉至
+ * {@code apex-common}，本类仅同步更新其 import 路径为
+ * {@code com.apex.scaffold.common.audit.SecurityAuditService}，其余 Mock 依赖与断言逻辑保持不变。
  *
  * @author Apex Scaffold Team
  * @since 2026-09-21

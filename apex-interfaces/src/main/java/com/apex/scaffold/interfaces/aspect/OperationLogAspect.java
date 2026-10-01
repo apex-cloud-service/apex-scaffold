@@ -64,6 +64,19 @@ import reactor.core.publisher.Mono;
 @Component
 public class OperationLogAspect {
 
+    /** IP 地址相关常量 */
+    private static final String IP_UNKNOWN = "unknown";
+
+    private static final String IPV6_LOCALHOST_FULL = "0:0:0:0:0:0:0:1";
+    private static final String IPV6_LOCALHOST_SHORT = "::1";
+    private static final String IP_PREFIX_LOOPBACK = "127.";
+    private static final String IP_PREFIX_PRIVATE_10 = "10.";
+    private static final String IP_PREFIX_PRIVATE_192 = "192.168.";
+    private static final String IP_PREFIX_PRIVATE_172 = "172.";
+    private static final int IP_PRIVATE_172_RANGE_START = 16;
+    private static final int IP_PRIVATE_172_RANGE_END = 31;
+    private static final int IP_SPLIT_PARTS_THRESHOLD = 2;
+
     /** Jackson ObjectMapper */
     private final ObjectMapper objectMapper;
 
@@ -355,23 +368,23 @@ public class OperationLogAspect {
      * @return 操作地点描述，无法识别时返回 "未知"
      */
     private String resolveLocation(String ip) {
-        if (ip == null || ip.isBlank() || "unknown".equalsIgnoreCase(ip)) {
+        if (ip == null || ip.isBlank() || IP_UNKNOWN.equalsIgnoreCase(ip)) {
             return null;
         }
         // 本地回环
-        if (ip.startsWith("127.") || "0:0:0:0:0:0:0:1".equals(ip) || "::1".equals(ip)) {
+        if (ip.startsWith(IP_PREFIX_LOOPBACK) || IPV6_LOCALHOST_FULL.equals(ip) || IPV6_LOCALHOST_SHORT.equals(ip)) {
             return "本地";
         }
         // 内网地址
-        if (ip.startsWith("10.") || ip.startsWith("192.168.")) {
+        if (ip.startsWith(IP_PREFIX_PRIVATE_10) || ip.startsWith(IP_PREFIX_PRIVATE_192)) {
             return "内网";
         }
-        if (ip.startsWith("172.")) {
+        if (ip.startsWith(IP_PREFIX_PRIVATE_172)) {
             String[] parts = ip.split("\\.");
-            if (parts.length >= 2) {
+            if (parts.length >= IP_SPLIT_PARTS_THRESHOLD) {
                 try {
                     int second = Integer.parseInt(parts[1]);
-                    if (second >= 16 && second <= 31) {
+                    if (second >= IP_PRIVATE_172_RANGE_START && second <= IP_PRIVATE_172_RANGE_END) {
                         return "内网";
                     }
                 } catch (NumberFormatException ignored) {

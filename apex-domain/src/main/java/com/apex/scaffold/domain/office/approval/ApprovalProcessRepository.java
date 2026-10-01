@@ -48,6 +48,29 @@ public interface ApprovalProcessRepository {
     Mono<ApprovalProcess> findByPlatformAndInstanceId(String platform, String platformInstanceId);
 
     /**
+     * 按条件分页查询审批流程
+     *
+     * @param tenantId 租户ID
+     * @param platform 办公平台类型（可选，为null时不限制）
+     * @param status 审批状态（可选，为null时不限制）
+     * @param page 页码（从1开始）
+     * @param size 每页数量
+     * @return 审批流程列表
+     */
+    Mono<List<ApprovalProcess>> findByConditions(
+            Long tenantId, String platform, ApprovalStatus status, int page, int size);
+
+    /**
+     * 按条件统计审批流程数量
+     *
+     * @param tenantId 租户ID
+     * @param platform 办公平台类型（可选，为null时不限制）
+     * @param status 审批状态（可选，为null时不限制）
+     * @return 审批流程数量
+     */
+    Mono<Long> countByConditions(Long tenantId, String platform, ApprovalStatus status);
+
+    /**
      * 查询指定发起人的审批流程列表
      *
      * @param initiatorId 发起人ID

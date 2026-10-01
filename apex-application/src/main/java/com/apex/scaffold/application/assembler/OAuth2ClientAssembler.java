@@ -14,6 +14,7 @@ import org.mapstruct.ReportingPolicy;
  * @version 1.0.0
  * @since 1.0.0
  */
+@SuppressWarnings("PMD.ClassNamingShouldBeCamelRule")
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface OAuth2ClientAssembler {
 

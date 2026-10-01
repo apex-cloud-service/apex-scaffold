@@ -1,5 +1,6 @@
 package com.apex.scaffold.interfaces.handler;
 
+import com.apex.scaffold.application.dto.admin.DeptDTO;
 import com.apex.scaffold.application.service.DeptService;
 import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.annotation.RequirePermission;
@@ -131,19 +132,19 @@ public class DeptHandler extends BaseHandler {
     @RequestBody(
             description = "部门创建请求信息",
             required = true,
-            content = @Content(mediaType = "application/json", schema = @Schema(implementation = DeptEntity.class)))
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = DeptDTO.class)))
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",
                 description = "创建成功",
                 content =
-                        @Content(mediaType = "application/json", schema = @Schema(implementation = DeptEntity.class))),
+                        @Content(mediaType = "application/json", schema = @Schema(implementation = DeptDTO.class))),
         @ApiResponse(responseCode = "400", description = "参数校验失败或部门名称已存在"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要system:dept:add权限")
     })
     @OperationLog(module = "部门管理", type = OperationLog.OperationType.INSERT, description = "新增部门")
     public Mono<ServerResponse> create(ServerRequest request) {
-        return parseBody(request, DeptEntity.class).flatMap(deptService::create).flatMap(this::buildSuccess);
+        return parseBody(request, DeptDTO.class).map(this::toEntity).flatMap(deptService::create).flatMap(this::buildSuccess);
     }
 
     /**
@@ -165,13 +166,13 @@ public class DeptHandler extends BaseHandler {
     @RequestBody(
             description = "部门更新请求信息",
             required = true,
-            content = @Content(mediaType = "application/json", schema = @Schema(implementation = DeptEntity.class)))
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = DeptDTO.class)))
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",
                 description = "更新成功",
                 content =
-                        @Content(mediaType = "application/json", schema = @Schema(implementation = DeptEntity.class))),
+                        @Content(mediaType = "application/json", schema = @Schema(implementation = DeptDTO.class))),
         @ApiResponse(responseCode = "400", description = "参数校验失败"),
         @ApiResponse(responseCode = "404", description = "部门不存在"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要system:dept:edit权限")
@@ -179,7 +180,8 @@ public class DeptHandler extends BaseHandler {
     @OperationLog(module = "部门管理", type = OperationLog.OperationType.UPDATE, description = "更新部门")
     public Mono<ServerResponse> update(ServerRequest request) {
         long id = requirePositiveId(request);
-        return parseBody(request, DeptEntity.class)
+        return parseBody(request, DeptDTO.class)
+                .map(this::toEntity)
                 .flatMap(dept -> deptService.update(id, dept))
                 .flatMap(this::buildSuccess);
     }
@@ -211,5 +213,23 @@ public class DeptHandler extends BaseHandler {
         return deptService
                 .delete(requirePositiveId(request))
                 .flatMap(deleted -> buildSuccess(java.util.Map.of("deleted", deleted)));
+    }
+
+    /**
+     * 将部门请求 DTO 转换为领域实体。
+     *
+     * @param dto 部门请求 DTO
+     * @return 部门领域实体
+     */
+    private DeptEntity toEntity(DeptDTO dto) {
+        DeptEntity entity = new DeptEntity();
+        entity.setParentId(dto.getParentId());
+        entity.setName(dto.getName());
+        entity.setOrderNum(dto.getOrderNum());
+        entity.setLeader(dto.getLeader());
+        entity.setPhone(dto.getPhone());
+        entity.setEmail(dto.getEmail());
+        entity.setStatus(dto.getStatus());
+        return entity;
     }
 }

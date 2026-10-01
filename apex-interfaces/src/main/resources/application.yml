@@ -23,15 +23,29 @@ apex:
   office:
     enabled: ${APEX_OFFICE_ENABLED:false}
     login-tenant-id: ${APEX_OFFICE_LOGIN_TENANT_ID:}
-    timeout: 5s
-    max-retries: 2
+    timeout: ${APEX_OFFICE_TIMEOUT:5s}
+    max-retries: ${APEX_OFFICE_MAX_RETRIES:2}
     platforms:
       FEISHU:
-        enabled: false
+        enabled: ${FEISHU_ENABLED:false}
+        app-id: ${FEISHU_APP_ID:}
+        secret-reference: ${FEISHU_SECRET_REFERENCE:FEISHU_SECRET}
+        redirect-uri: ${FEISHU_REDIRECT_URI:}
+        signing-secret-reference: ${FEISHU_SIGNING_SECRET_REFERENCE:FEISHU_SIGNING_SECRET}
       DINGTALK:
-        enabled: false
+        enabled: ${DINGTALK_ENABLED:false}
+        app-id: ${DINGTALK_APP_ID:}
+        secret-reference: ${DINGTALK_SECRET_REFERENCE:DINGTALK_SECRET}
+        agent-id: ${DINGTALK_AGENT_ID:}
+        redirect-uri: ${DINGTALK_REDIRECT_URI:}
+        signing-secret-reference: ${DINGTALK_SIGNING_SECRET_REFERENCE:DINGTALK_SIGNING_SECRET}
       WECOM:
-        enabled: false
+        enabled: ${WECOM_ENABLED:false}
+        app-id: ${WECOM_CORP_ID:}
+        secret-reference: ${WECOM_SECRET_REFERENCE:WECOM_SECRET}
+        agent-id: ${WECOM_AGENT_ID:}
+        redirect-uri: ${WECOM_REDIRECT_URI:}
+        signing-secret-reference: ${WECOM_SIGNING_SECRET_REFERENCE:WECOM_SIGNING_SECRET}
   governance:
     # 是否启用统一 readiness、资源排空和优雅关停协调
     enabled: ${APEX_GOVERNANCE_ENABLED:true}

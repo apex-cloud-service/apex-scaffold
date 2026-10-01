@@ -35,6 +35,7 @@ public class OfficePlatformProperties {
         private String secretReference;
         private String redirectUri;
         private String signingSecretReference;
+        private String agentId;
         private java.util.Set<String> scopes = new java.util.HashSet<>();
     }
 }

@@ -24,6 +24,9 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class R2dbcTestConfig {
 
+    private static final String DB_TYPE_MYSQL = "mysql";
+    private static final String DB_TYPE_POSTGRESQL = "postgresql";
+
     /**
      * 创建临时 R2DBC 连接工厂用于测试。
      *
@@ -47,11 +50,11 @@ public class R2dbcTestConfig {
                 .option(PASSWORD, password)
                 .option(CONNECT_TIMEOUT, Duration.ofSeconds(5));
 
-        if ("mysql".equalsIgnoreCase(dbType)) {
+        if (DB_TYPE_MYSQL.equalsIgnoreCase(dbType)) {
             optionsBuilder.option(Option.valueOf("sslMode"), "DISABLED");
         }
 
-        if ("postgresql".equalsIgnoreCase(dbType)) {
+        if (DB_TYPE_POSTGRESQL.equalsIgnoreCase(dbType)) {
             optionsBuilder.option(Option.valueOf("sslMode"), "DISABLE");
         }
 

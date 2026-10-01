@@ -3,6 +3,7 @@ package com.apex.scaffold.interfaces.handler;
 import com.apex.scaffold.application.dto.data.DocumentQueryRequest;
 import com.apex.scaffold.application.dto.data.DocumentRequest;
 import com.apex.scaffold.application.service.DocumentService;
+import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.result.Result;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -51,6 +52,7 @@ public class DocumentHandler {
      * @param request HTTP 请求对象，请求体为文档信息 JSON
      * @return 包含新建文档信息的统一成功响应
      */
+    @OperationLog(module = "文档管理", type = OperationLog.OperationType.INSERT, description = "创建文档")
     @Operation(summary = "创建文档")
     @PreAuthorize("hasAuthority('data:document:create')")
     public Mono<ServerResponse> create(ServerRequest request) {
@@ -67,6 +69,7 @@ public class DocumentHandler {
      * @param request HTTP 请求对象，路径参数包含文档 ID，请求体为文档信息 JSON
      * @return 包含更新后文档信息的统一成功响应
      */
+    @OperationLog(module = "文档管理", type = OperationLog.OperationType.UPDATE, description = "更新文档")
     @Operation(summary = "更新文档")
     @PreAuthorize("hasAuthority('data:document:update')")
     public Mono<ServerResponse> update(ServerRequest request) {
@@ -84,6 +87,7 @@ public class DocumentHandler {
      * @param request HTTP 请求对象，路径参数包含文档 ID
      * @return 删除成功的统一成功响应
      */
+    @OperationLog(module = "文档管理", type = OperationLog.OperationType.DELETE, description = "删除文档")
     @Operation(summary = "删除文档")
     @PreAuthorize("hasAuthority('data:document:delete')")
     public Mono<ServerResponse> delete(ServerRequest request) {
@@ -142,6 +146,7 @@ public class DocumentHandler {
      * @param request HTTP 请求对象，路径参数包含文档 ID，请求体包含状态值
      * @return 更新成功的统一成功响应
      */
+    @OperationLog(module = "文档管理", type = OperationLog.OperationType.UPDATE, description = "更新文档状态")
     @Operation(summary = "更新文档状态")
     @PreAuthorize("hasAuthority('data:document:update')")
     public Mono<ServerResponse> updateStatus(ServerRequest request) {
@@ -159,6 +164,7 @@ public class DocumentHandler {
      * @param request HTTP 请求对象，路径参数包含文档 ID
      * @return 包含附件下载地址的统一成功响应，无附件时返回 400 错误响应
      */
+    @OperationLog(module = "文档管理", type = OperationLog.OperationType.DOWNLOAD, description = "下载文档")
     @Operation(summary = "下载文档")
     @PreAuthorize("hasAuthority('data:document:download')")
     public Mono<ServerResponse> download(ServerRequest request) {
@@ -175,7 +181,9 @@ public class DocumentHandler {
     }
 
     @Data
-    private static class UpdateStatusRequest {
+    @io.swagger.v3.oas.annotations.media.Schema(description = "文档状态更新请求")
+    public static class UpdateStatusRequest {
+        @io.swagger.v3.oas.annotations.media.Schema(description = "文档状态：0-草稿，1-正常，2-归档", example = "1")
         private Integer status;
     }
 }

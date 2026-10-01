@@ -22,6 +22,7 @@ echo "开始构建项目..."
 if [[ -f "$HOME/.sdkman/bin/sdkman-init.sh" ]]; then
   # shellcheck disable=SC1091
   source "$HOME/.sdkman/bin/sdkman-init.sh"
+  sdk env
 fi
 
 # 校验 mvnd 可用（sdkman 安装: sdk install mvnd）

@@ -228,7 +228,8 @@ public class MqConsumerService {
                 // H2 修复：业务返回 false 但不代表"可重入"，CAS 为 FAILED 而非 null；
                 // 只有明确抛出 TransientFailureException/DAO 死锁/Redis 瞬态异常时才允许删除 PROCESSING
                 if (!bucket.compareAndSet(token, FAILED)) {
-                    bucket.compareAndSet(token, null); // 兜底：无法转 FAILED 时保守释放（罕见）
+                    // 兜底：无法转 FAILED 时保守释放（罕见）
+                    bucket.compareAndSet(token, null);
                 }
                 bucket.expire(getTtl());
                 log.warn("消息处理失败, messageId: {}", messageId);

@@ -27,6 +27,7 @@ public class DeviceTrustServiceImpl implements DeviceTrustService {
     private final AuditLogService auditLogService;
 
     private static final int DEFAULT_TRUST_DAYS = 30;
+    private static final int AUTH_COUNT_THRESHOLD_FOR_TRUST_UPGRADE = 10;
 
     @Override
     public Mono<DeviceTrust> registerDevice(
@@ -115,8 +116,8 @@ public class DeviceTrustServiceImpl implements DeviceTrustService {
                     device.calculateRiskScore();
                     device.setUpdatedAt(LocalDateTime.now());
 
-                    // 自动提升信任级别（基于使用频率）
-                    if (device.getAuthCount() > 10 && device.getTrustLevel() == DeviceTrust.TrustLevel.UNTRUSTED) {
+                    if (device.getAuthCount() > AUTH_COUNT_THRESHOLD_FOR_TRUST_UPGRADE
+                            && device.getTrustLevel() == DeviceTrust.TrustLevel.UNTRUSTED) {
                         device.upgradeTrustLevel();
                     }
 

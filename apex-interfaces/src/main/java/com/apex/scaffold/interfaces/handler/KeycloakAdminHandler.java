@@ -1,5 +1,6 @@
 package com.apex.scaffold.interfaces.handler;
 
+import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.interfaces.service.KeycloakUserSyncService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -58,6 +59,15 @@ public class KeycloakAdminHandler {
     /** Keycloak 用户同步服务 */
     private final KeycloakUserSyncService keycloakUserSyncService;
 
+    /**
+     * 全量同步 Keycloak 用户
+     *
+     * <p>从 Keycloak 批量拉取所有用户并同步到本地数据库，适用于初始化或数据修复场景。</p>
+     *
+     * @param request 服务器请求对象
+     * @return 包含全量同步结果的响应对象
+     */
+    @OperationLog(module = "用户同步管理", type = OperationLog.OperationType.UPDATE, description = "全量同步Keycloak用户")
     @Operation(
             operationId = "syncAllKeycloakUsers",
             summary = "全量同步Keycloak用户",
@@ -85,6 +95,15 @@ public class KeycloakAdminHandler {
                 });
     }
 
+    /**
+     * 同步单个 Keycloak 用户
+     *
+     * <p>根据 Keycloak Sub（用户唯一标识）同步指定用户到本地数据库。</p>
+     *
+     * @param request 服务器请求对象，包含 Keycloak Sub 路径参数
+     * @return 包含单个用户同步结果的响应对象
+     */
+    @OperationLog(module = "用户同步管理", type = OperationLog.OperationType.UPDATE, description = "同步单个Keycloak用户")
     @Operation(
             operationId = "syncKeycloakUser",
             summary = "同步单个Keycloak用户",
@@ -118,6 +137,14 @@ public class KeycloakAdminHandler {
                 });
     }
 
+    /**
+     * 查询 Keycloak 集成状态
+     *
+     * <p>返回当前 Keycloak 集成的启用状态和连接状态，用于健康检查和监控。</p>
+     *
+     * @param request 服务器请求对象
+     * @return 包含 Keycloak 集成状态的响应对象
+     */
     @Operation(
             operationId = "getKeycloakStatus",
             summary = "查询Keycloak集成状态",

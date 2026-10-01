@@ -142,6 +142,7 @@ public class FileHandler extends BaseHandler {
      * @return 包含完整 {@link FileUploadResult} 的统一响应对象
      */
     @Operation(
+            operationId = "fileUpload",
             summary = "上传图片",
             deprecated = true,
             description =
@@ -551,7 +552,7 @@ public class FileHandler extends BaseHandler {
      * @param request 服务器请求对象，包含 {@code bucketName} 和 {@code fileName} 查询参数
      * @return 包含文件存在状态的响应对象，成功时返回 {@code true} 或 {@code false}
      */
-    @Operation(operationId = "checkFileExists", summary = "检查文件是否存在", description = "查询指定文件是否已存在于对象存储系统中，返回布尔值表示文件是否存在")
+    @Operation(operationId = "fileExists", summary = "检查文件是否存在", description = "查询指定文件是否已存在于对象存储系统中，返回布尔值表示文件是否存在")
     @Parameters({
         @Parameter(
                 name = "bucketName",
@@ -600,7 +601,7 @@ public class FileHandler extends BaseHandler {
      * @return 流式文件响应
      */
     @Operation(
-            operationId = "getFileContent",
+            operationId = "getLocalFileContent",
             summary = "读取本地存储文件",
             description = "仅用于 local 存储模式，按服务端固定桶流式读取文件内容并返回，主要为本地存储提供可访问 URL")
     @Parameters({

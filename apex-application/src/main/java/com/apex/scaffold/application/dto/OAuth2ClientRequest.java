@@ -37,6 +37,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@SuppressWarnings("PMD.ClassNamingShouldBeCamelRule")
 public class OAuth2ClientRequest {
 
     /**

@@ -152,6 +152,7 @@ public class TokenEncryptionServiceImpl implements TokenEncryptionService {
      * 生成随机IV（初始化向量）
      * 每次加密使用不同的IV，增强安全性
      */
+    @SuppressWarnings("PMD.LowerCamelCaseVariableNamingRule")
     private byte[] generateIV() {
         byte[] iv = new byte[IV_LENGTH];
         new SecureRandom().nextBytes(iv);

@@ -1,6 +1,7 @@
 package com.apex.scaffold.interfaces.handler.office;
 
 import com.apex.scaffold.application.office.OfficeCalendarService;
+import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.domain.office.calendar.CalendarEventType;
 import com.apex.scaffold.interfaces.assembler.office.CalendarEventAssembler;
@@ -66,6 +67,7 @@ public class OfficeCalendarHandler {
      * @param request ServerRequest对象，包含请求体和参数
      * @return Mono&lt;ServerResponse&gt; 包含创建成功的事件信息
      */
+    @OperationLog(module = "办公平台日历管理", type = OperationLog.OperationType.INSERT, description = "创建日历事件")
     @Operation(summary = "创建日历事件", description = "在指定办公平台创建日历事件，支持设置标题、时间、参与者、提醒、循环规则等")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
             required = true,
@@ -172,6 +174,7 @@ public class OfficeCalendarHandler {
      * @param request ServerRequest对象，包含eventId和更新内容
      * @return Mono&lt;ServerResponse&gt; 包含更新后的事件信息
      */
+    @OperationLog(module = "办公平台日历管理", type = OperationLog.OperationType.UPDATE, description = "更新日历事件")
     @Operation(summary = "更新日历事件", description = "更新指定日历事件的信息，包括标题、时间、参与者、提醒等")
     @Parameters({
         @Parameter(
@@ -232,6 +235,7 @@ public class OfficeCalendarHandler {
      * @param request ServerRequest对象，路径参数包含eventId
      * @return Mono&lt;ServerResponse&gt; 包含删除结果
      */
+    @OperationLog(module = "办公平台日历管理", type = OperationLog.OperationType.DELETE, description = "删除日历事件")
     @Operation(summary = "删除日历事件", description = "删除指定的日历事件")
     @Parameters({
         @Parameter(

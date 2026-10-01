@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1200" width="1600" height="1200">
+  <defs>
+    <style>
+      .title{font:700 32px sans-serif;fill:#0f172a;text-anchor:middle}
+      .subtitle{font:500 14px sans-serif;fill:#64748b;text-anchor:middle}
+      .phase-title{font:600 18px sans-serif;fill:#fff}
+      .step-title{font:600 14px sans-serif;fill:#0f172a}
+      .step-desc{font:400 11px sans-serif;fill:#475569}
+      .code{font:500 10px monospace;fill:#2563eb}
+      .highlight{font:600 11px sans-serif;fill:#dc2626}
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/>
+    </marker>
+  </defs>
+  
+  <rect width="1600" height="1200" fill="#fff"/>
+  <text x="800" y="40" class="title">多租户数据隔离完整流程</text>
+  <text x="800" y="65" class="subtitle">HTTP请求 → TenantContext装配 → SQL自动注入 → 数据隔离 · 三层防护机制 · v1.0</text>
+  
+  <rect x="50" y="100" width="350" height="180" rx="8" fill="#3b82f6" opacity="0.1" stroke="#3b82f6" stroke-width="2"/>
+  <rect x="50" y="100" width="350" height="40" rx="8" fill="#3b82f6"/>
+  <text x="70" y="128" class="phase-title">① HTTP请求入口</text>
+  <rect x="70" y="160" width="310" height="100" rx="6" fill="#fff" stroke="#dbeafe" stroke-width="2"/>
+  <text x="90" y="183" class="step-title">客户端发起请求</text>
+  <text x="90" y="203" class="code">GET /api/users?name=张三</text>
+  <text x="90" y="220" class="code">Header: X-Tenant-Id: tenant_001</text>
+  <text x="90" y="237" class="code">Authorization: Bearer eyJhbGc...</text>
+  <text x="90" y="253" class="step-desc">租户ID通过Header或JWT Token传递</text>
+  
+  <line x1="225" y1="280" x2="225" y2="315" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+  
+  <rect x="50" y="325" width="350" height="220" rx="8" fill="#10b981" opacity="0.1" stroke="#10b981" stroke-width="2"/>
+  <rect x="50" y="325" width="350" height="40" rx="8" fill="#10b981"/>
+  <text x="70" y="353" class="phase-title">② 租户上下文装配</text>
+  <rect x="70" y="385" width="310" height="140" rx="6" fill="#fff" stroke="#d1fae5" stroke-width="2"/>
+  <text x="90" y="408" class="step-title">TenantWebFilter 过滤器</text>
+  <text x="90" y="428" class="code">1. 从Header提取: X-Tenant-Id</text>
+  <text x="90" y="445" class="code">2. 从JWT提取: claims.get("tenantId")</text>
+  <text x="90" y="462" class="code">3. 验证租户ID非空且合法</text>
+  <text x="90" y="479" class="code">4. TenantContext.setTenantId(tenantId)</text>
+  <text x="90" y="496" class="code">5. ThreadLocal存储: TENANT_ID.set()</text>
+  <text x="90" y="513" class="code">6. ReactorContext传播: context.put(KEY)</text>
+  
+  <line x1="225" y1="545" x2="225" y2="580" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+  
+  <rect x="50" y="590" width="350" height="200" rx="8" fill="#8b5cf6" opacity="0.1" stroke="#8b5cf6" stroke-width="2"/>
+  <rect x="50" y="590" width="350" height="40" rx="8" fill="#8b5cf6"/>
+  <text x="70" y="618" class="phase-title">③ 业务逻辑处理</text>
+  <rect x="70" y="650" width="310" height="120" rx="6" fill="#fff" stroke="#c4b5fd" stroke-width="2"/>
+  <text x="90" y="673" class="step-title">Handler → Service → Repository</text>
+  <text x="90" y="693" class="code">UserHandler.listUsers(query)</text>
+  <text x="90" y="710" class="code">  → UserService.findUsers()</text>
+  <text x="90" y="727" class="code">    → UserRepository.selectList()</text>
+  <text x="90" y="750" class="step-desc">✅ 业务代码无需感知租户逻辑</text>
+  <text x="90" y="765" class="step-desc">✅ 由基础设施层自动处理</text>
+  
+  <line x1="400" y1="450" x2="480" y2="450" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+  
+  <rect x="490" y="100" width="520" height="690" rx="8" fill="#f59e0b" opacity="0.1" stroke="#f59e0b" stroke-width="2"/>
+  <rect x="490" y="100" width="520" height="40" rx="8" fill="#f59e0b"/>
+  <text x="510" y="128" class="phase-title">④ MyBatis-Plus SQL拦截</text>
+  
+  <rect x="510" y="160" width="480" height="130" rx="6" fill="#fff" stroke="#fef3c7" stroke-width="2"/>
+  <text x="530" y="183" class="step-title">DefaultTenantLineHandler 拦截器</text>
+  <text x="530" y="203" class="code">原始SQL: SELECT * FROM biz_user WHERE name = ?</text>
+  <text x="530" y="223" class="highlight">↓ 自动注入租户条件</text>
+  <text x="530" y="243" class="code">改写SQL: SELECT * FROM biz_user</text>
+  <text x="550" y="260" class="code">WHERE tenant_id = 'tenant_001'</text>
+  <text x="550" y="277" class="code">AND name = ?</text>
+  
+  <rect x="510" y="310" width="480" height="150" rx="6" fill="#fff" stroke="#fef3c7" stroke-width="2"/>
+  <text x="530" y="333" class="step-title">关键实现逻辑</text>
+  <text x="530" y="353" class="code">@Override</text>
+  <text x="530" y="370" class="code">public Expression getTenantId() {</text>
+  <text x="550" y="387" class="code">String tenantId = TenantContext</text>
+  <text x="570" y="404" class="code">.currentTenantId().orElse(null);</text>
+  <text x="550" y="421" class="code">return new StringValue(tenantId);</text>
+  <text x="530" y="438" class="code">}</text>
+  <text x="530" y="453" class="step-desc">从ThreadLocal读取tenant_id并注入SQL</text>
+  
+  <rect x="510" y="480" width="230" height="120" rx="6" fill="#fffbeb" stroke="#fbbf24" stroke-width="1.5"/>
+  <text x="530" y="503" class="step-title">忽略表清单</text>
+  <text x="530" y="523" class="code">sys_config</text>
+  <text x="530" y="540" class="code">sys_dict_type</text>
+  <text x="530" y="557" class="code">sys_dict_data</text>
+  <text x="530" y="574" class="code">sys_tenant (租户表本身)</text>
+  <text x="530" y="591" class="step-desc">公共数据表不过滤</text>
+  
+  <rect x="760" y="480" width="230" height="120" rx="6" fill="#fffbeb" stroke="#fbbf24" stroke-width="1.5"/>
+  <text x="780" y="503" class="step-title">特殊场景处理</text>
+  <text x="780" y="523" class="code">@IgnoreTenantIsolation</text>
+  <text x="780" y="540" class="step-desc">超级管理员查询</text>
+  <text x="780" y="557" class="step-desc">跨租户统计</text>
+  <text x="780" y="574" class="step-desc">系统维护任务</text>
+  <text x="780" y="591" class="highlight">⚠️ 需要特殊权限</text>
+  
+  <rect x="510" y="620" width="480" height="150" rx="6" fill="#fff" stroke="#fef3c7" stroke-width="2"/>
+  <text x="530" y="643" class="step-title">SQL执行与结果返回</text>
+  <text x="530" y="663" class="code">执行SQL: SELECT * FROM biz_user</text>
+  <text x="560" y="680" class="code">WHERE tenant_id = 'tenant_001'</text>
+  <text x="560" y="697" class="code">AND name = '张三'</text>
+  <text x="530" y="720" class="highlight">✅ 只返回当前租户的数据</text>
+  <text x="530" y="737" class="highlight">✅ 自动隔离其他租户数据</text>
+  <text x="530" y="754" class="step-desc">Result: [User{id=1, name=张三, tenantId=tenant_001}]</text>
+  
+  <line x1="750" y1="790" x2="750" y2="825" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+  
+  <rect x="1030" y="100" width="520" height="550" rx="8" fill="#0891b2" opacity="0.1" stroke="#0891b2" stroke-width="2"/>
+  <rect x="1030" y="100" width="520" height="40" rx="8" fill="#0891b2"/>
+  <text x="1050" y="128" class="phase-title">⑤ 三层防护机制</text>
+  
+  <rect x="1050" y="160" width="480" height="110" rx="6" fill="#fff" stroke="#cffafe" stroke-width="2"/>
+  <text x="1070" y="183" class="step-title">第一层: WebFilter过滤器</text>
+  <text x="1070" y="203" class="code">• 验证租户ID非空</text>
+  <text x="1070" y="220" class="code">• 验证租户状态(启用/禁用)</text>
+  <text x="1070" y="237" class="code">• 验证用户归属租户</text>
+  <text x="1070" y="254" class="highlight">⚠️ 拒绝无租户ID请求</text>
+  
+  <rect x="1050" y="290" width="480" height="110" rx="6" fill="#fff" stroke="#cffafe" stroke-width="2"/>
+  <text x="1070" y="313" class="step-title">第二层: SQL拦截器</text>
+  <text x="1070" y="333" class="code">• 自动注入WHERE tenant_id = ?</text>
+  <text x="1070" y="350" class="code">• UPDATE/DELETE强制租户条件</text>
+  <text x="1070" y="367" class="code">• 防止跨租户数据泄漏</text>
+  <text x="1070" y="384" class="highlight">⚠️ SQL层面强制隔离</text>
+  
+  <rect x="1050" y="420" width="480" height="110" rx="6" fill="#fff" stroke="#cffafe" stroke-width="2"/>
+  <text x="1070" y="443" class="step-title">第三层: 数据库约束</text>
+  <text x="1070" y="463" class="code">• tenant_id字段NOT NULL</text>
+  <text x="1070" y="480" class="code">• 复合唯一索引(tenant_id + ...)</text>
+  <text x="1070" y="497" class="code">• 外键约束租户一致性</text>
+  <text x="1070" y="514" class="highlight">⚠️ 数据库层面最后防线</text>
+  
+  <rect x="1050" y="550" width="480" height="80" rx="6" fill="#fee2e2" stroke="#fca5a5" stroke-width="2"/>
+  <text x="1070" y="573" class="step-title">安全保障</text>
+  <text x="1070" y="593" class="step-desc">✅ ThreadLocal在请求结束时自动清理(try-finally)</text>
+  <text x="1070" y="610" class="step-desc">✅ 审计日志记录所有租户数据访问</text>
+  <text x="1070" y="627" class="step-desc">✅ 定期安全审计检查租户数据泄漏</text>
+  
+  <rect x="50" y="835" width="1500" height="330" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+  <text x="70" y="865" class="step-title">⑥ 完整执行链路示例</text>
+  <rect x="70" y="885" width="1460" height="260" rx="6" fill="#fff" stroke="#fbbf24" stroke-width="1.5"/>
+  <text x="90" y="910" class="code">1. 客户端请求: GET /api/users?name=张三</text>
+  <text x="110" y="927" class="code">Header: X-Tenant-Id=tenant_001, Authorization=Bearer...</text>
+  <text x="90" y="950" class="code">2. TenantWebFilter提取: tenantId=tenant_001</text>
+  <text x="110" y="967" class="code">TenantContext.setTenantId("tenant_001") → ThreadLocal.set()</text>
+  <text x="90" y="990" class="code">3. Handler调用: UserHandler.listUsers(name="张三")</text>
+  <text x="110" y="1007" class="code">→ UserService.findUsers() → UserRepository.selectList()</text>
+  <text x="90" y="1030" class="code">4. MyBatis拦截: 原SQL "SELECT * FROM biz_user WHERE name = ?"</text>
+  <text x="110" y="1047" class="highlight">→ 改写为 "SELECT * FROM biz_user WHERE tenant_id = 'tenant_001' AND name = ?"</text>
+  <text x="90" y="1070" class="code">5. MySQL执行: 只返回tenant_001的数据</text>
+  <text x="110" y="1087" class="code">Result: [User{id=1, name=张三, tenantId=tenant_001}]</text>
+  <text x="90" y="1110" class="code">6. 请求结束: TenantContext.clear() → ThreadLocal.remove()</text>
+  <text x="110" y="1127" class="highlight">✅ 自动清理,防止ThreadLocal泄漏</text>
+  
+  <text x="800" y="1185" class="code" text-anchor="middle">© 2026 Apex Team · 多租户数据隔离流程 v1.0 · 完整89张SVG架构图集合</text>
+</svg>

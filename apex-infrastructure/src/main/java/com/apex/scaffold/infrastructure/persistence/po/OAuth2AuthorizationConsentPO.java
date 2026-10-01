@@ -38,6 +38,7 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 @SuperBuilder
 @TableName("oauth2_authorization_consent")
+@SuppressWarnings("PMD.ClassNamingShouldBeCamelRule")
 public class OAuth2AuthorizationConsentPO {
 
     /**

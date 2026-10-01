@@ -32,6 +32,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
  *   <li>POST /api/office/messages - 发送消息</li>
  *   <li>GET /api/office/messages/{messageId} - 查询消息状态</li>
  *   <li>POST /api/office/messages/{messageId}/resend - 重新发送消息</li>
+ *   <li>DELETE /api/office/messages/{messageId} - 撤回消息</li>
  * </ul>
  *
  * @author Apex Team
@@ -158,6 +159,37 @@ public class OfficeMessageRouter {
                                     @ApiResponse(responseCode = "400", description = "消息状态不允许重新发送"),
                                     @ApiResponse(responseCode = "404", description = "消息不存在"),
                                     @ApiResponse(responseCode = "500", description = "服务器内部错误")
+                                })),
+        @RouterOperation(
+                path = "/api/office/messages/{messageId}",
+                method = RequestMethod.DELETE,
+                beanClass = OfficeMessageHandler.class,
+                beanMethod = "recallMessage",
+                operation =
+                        @Operation(
+                                operationId = "recallMessage",
+                                summary = "撤回消息",
+                                description = "撤回发送成功的消息。只能撤回状态为 SUCCESS 且已获得平台消息ID的消息",
+                                tags = {"办公平台-消息发送"},
+                                parameters = {
+                                    @Parameter(
+                                            name = "messageId",
+                                            description = "消息ID",
+                                            required = true,
+                                            in = ParameterIn.PATH,
+                                            schema = @Schema(type = "integer", format = "int64", example = "123456"))
+                                },
+                                responses = {
+                                    @ApiResponse(
+                                            responseCode = "200",
+                                            description = "撤回成功",
+                                            content =
+                                                    @Content(
+                                                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                                            schema = @Schema(implementation = Boolean.class))),
+                                    @ApiResponse(responseCode = "400", description = "消息状态不允许撤回"),
+                                    @ApiResponse(responseCode = "404", description = "消息不存在"),
+                                    @ApiResponse(responseCode = "500", description = "服务器内部错误")
                                 }))
     })
     public RouterFunction<ServerResponse> messageRoutes() {
@@ -165,7 +197,8 @@ public class OfficeMessageRouter {
                 .path("/api/office/messages", builder -> builder.POST(
                                 "", accept(MediaType.APPLICATION_JSON), messageHandler::sendMessage)
                         .GET("/{messageId}", messageHandler::getMessageStatus)
-                        .POST("/{messageId}/resend", messageHandler::resendMessage))
+                        .POST("/{messageId}/resend", messageHandler::resendMessage)
+                        .DELETE("/{messageId}", messageHandler::recallMessage))
                 .build();
     }
 }

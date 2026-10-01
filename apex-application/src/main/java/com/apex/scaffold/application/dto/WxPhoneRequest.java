@@ -24,6 +24,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Schema(description = "微信手机号快捷验证请求")
 public class WxPhoneRequest {
 
     @Schema(description = "微信手机号快捷验证 code（临时凭证）")

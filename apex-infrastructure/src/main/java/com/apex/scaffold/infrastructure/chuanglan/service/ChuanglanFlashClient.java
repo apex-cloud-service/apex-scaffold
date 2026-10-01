@@ -32,6 +32,8 @@ public final class ChuanglanFlashClient {
 
     /** 当前支持的 AES 加密类型。 */
     private static final String AES_ENCRYPT_TYPE = "0";
+    /** JSON 序列化中 null 值的字符串表示。 */
+    private static final String NULL_STRING = "null";
 
     /** Map 泛型响应类型。 */
     private static final ParameterizedTypeReference<Map<String, Object>> MAP_TYPE =
@@ -181,7 +183,7 @@ public final class ChuanglanFlashClient {
         Object encrypted = data.get("mobileName");
         if (encrypted != null) {
             String value = String.valueOf(encrypted);
-            if (!"null".equals(value) && !value.isBlank()) {
+            if (!NULL_STRING.equals(value) && !value.isBlank()) {
                 data.put("phone", decryptStrategy.decrypt(value, appKey));
             }
         }

@@ -3,11 +3,13 @@ package com.apex.example.integration;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.apex.example.dto.CreateUserRequest;
+import com.apex.example.repository.ExampleUserMapper;
 import com.apex.scaffold.common.result.Result;
 import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
+import org.springframework.test.web.reactive.server.WebTestClient;
 
 /**
  * 用户API集成测试
@@ -27,6 +29,16 @@ import org.springframework.http.MediaType;
  */
 @DisplayName("用户API集成测试")
 class UserApiIntegrationTest extends BaseIntegrationTest {
+
+    /**
+     * 构造器注入共享测试依赖并传递给基类。
+     *
+     * @param webTestClient     响应式 Web 测试客户端
+     * @param exampleUserMapper 示例用户 Mapper
+     */
+    public UserApiIntegrationTest(WebTestClient webTestClient, ExampleUserMapper exampleUserMapper) {
+        super(webTestClient, exampleUserMapper);
+    }
 
     private static final String BASE_URL = "/api/example/users";
 

@@ -48,6 +48,8 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class UserService {
 
+    private static final int DEFAULT_PAGE_SIZE = 100;
+
     /**
      * 用户仓储
      *
@@ -394,7 +396,7 @@ public class UserService {
      * @return 分页响应结果，包含用户列表和分页信息
      */
     public Mono<PageResponse<UserEntity>> findPage(Integer pageNum, Integer pageSize, String orderBy, Boolean isAsc) {
-        if (pageNum == null || pageNum < 1 || pageSize == null || pageSize < 1 || pageSize > 100) {
+        if (pageNum == null || pageNum < 1 || pageSize == null || pageSize < 1 || pageSize > DEFAULT_PAGE_SIZE) {
             return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "分页参数非法"));
         }
         boolean defaultOrder = orderBy == null || orderBy.isBlank();

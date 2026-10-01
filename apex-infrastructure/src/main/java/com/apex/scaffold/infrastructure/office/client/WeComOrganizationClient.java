@@ -159,7 +159,8 @@ public class WeComOrganizationClient implements OfficePlatformOrganizationClient
                 .name((String) item.get("name"))
                 .parentId(String.valueOf(item.get("parentid")))
                 .order((Integer) item.get("order"))
-                .memberCount(0) // 企业微信部门列表不直接返回成员数
+                // 企业微信部门列表不直接返回成员数
+                .memberCount(0)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();

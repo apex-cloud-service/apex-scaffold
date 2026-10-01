@@ -28,6 +28,8 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class GenConfigService {
 
+    private static final String PARENT_DIR = "..";
+
     private static final String[] ALLOWED_OUTPUT_PATHS = {
         "/Users/work/apex-scaffold/output", "/tmp/apex-gen", "./output", "../output"
     };
@@ -134,7 +136,7 @@ public class GenConfigService {
             return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "输出路径不能为空"));
         }
 
-        if (outputPath.contains("..")) {
+        if (outputPath.contains(PARENT_DIR)) {
             return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "输出路径不能包含 '..'，存在路径遍历安全风险"));
         }
 

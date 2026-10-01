@@ -59,6 +59,8 @@ public class UnifiedBusinessLogHandler {
 
     private final UnifiedBusinessLogService unifiedBusinessLogService;
 
+    private static final int MAX_PAGE_SIZE = 100;
+
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     /**
@@ -138,8 +140,8 @@ public class UnifiedBusinessLogHandler {
             int pageNum = parseIntParam(request, "page", 1);
             int pageSize = parseIntParam(request, "size", 20);
 
-            if (pageSize > 100) {
-                pageSize = 100;
+            if (pageSize > MAX_PAGE_SIZE) {
+                pageSize = MAX_PAGE_SIZE;
             }
 
             LocalDateTime startTime = startTimeStr != null

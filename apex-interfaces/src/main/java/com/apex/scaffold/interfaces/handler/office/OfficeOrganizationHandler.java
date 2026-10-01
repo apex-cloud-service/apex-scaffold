@@ -1,6 +1,7 @@
 package com.apex.scaffold.interfaces.handler.office;
 
 import com.apex.scaffold.application.office.OfficeOrganizationSyncService;
+import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.domain.office.OfficePlatform;
 import com.apex.scaffold.interfaces.dto.office.organization.OrganizationMappingResponse;
@@ -48,6 +49,9 @@ import reactor.core.publisher.Mono;
 @Tag(name = "办公平台组织同步", description = "办公平台组织架构同步接口")
 public class OfficeOrganizationHandler {
 
+    private static final String SYNC_TYPE_DEPARTMENT = "DEPARTMENT";
+    private static final String SYNC_TYPE_MEMBER = "MEMBER";
+
     private final OfficeOrganizationSyncService organizationSyncService;
     private final RequestHandlerUtil requestHandlerUtil;
 
@@ -60,6 +64,7 @@ public class OfficeOrganizationHandler {
      * @param request HTTP 请求
      * @return 同步结果，包含任务ID、同步数量和状态消息
      */
+    @OperationLog(module = "办公平台组织同步", type = OperationLog.OperationType.UPDATE, description = "同步组织")
     @Operation(
             summary = "同步组织",
             description = "从外部办公平台同步部门或成员信息，支持全量和增量同步",
@@ -96,11 +101,11 @@ public class OfficeOrganizationHandler {
                     OfficePlatform platform = OfficePlatform.valueOf(req.getPlatform());
 
                     Mono<SyncOrganizationResponse> syncMono;
-                    if ("DEPARTMENT".equals(req.getSyncType())) {
+                    if (SYNC_TYPE_DEPARTMENT.equals(req.getSyncType())) {
                         syncMono = organizationSyncService
                                 .syncDepartments(tenantId, platform, req.getFullSync())
                                 .map(this::toSyncResponse);
-                    } else if ("MEMBER".equals(req.getSyncType())) {
+                    } else if (SYNC_TYPE_MEMBER.equals(req.getSyncType())) {
                         syncMono = organizationSyncService
                                 .syncMembers(tenantId, platform, req.getFullSync())
                                 .map(this::toSyncResponse);

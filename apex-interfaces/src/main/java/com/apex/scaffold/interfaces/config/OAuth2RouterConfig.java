@@ -22,7 +22,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
  * <h2>主要功能</h2>
  * <ul>
  *   <li>注册 OAuth2 授权服务器标准端点：授权、Token、撤销、自省、JWKS、发现文档、同意页</li>
- *   <li>注册 OAuth2 客户端管理接口：创建、更新、删除、查询、重置密钥</li>
+ *   <li>注册 OAuth2 客户端管理接口:创建、更新、删除、查询、重置密钥</li>
  *   <li>通过函数式路由 {@link RouterFunction} 聚合多个 Handler，保持路由与业务解耦</li>
  * </ul>
  *
@@ -47,6 +47,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
  * @see OAuth2JwksHandler
  * @see OAuth2DiscoveryHandler
  */
+@SuppressWarnings("checkstyle:TypeName")
 @Configuration
 @RequiredArgsConstructor
 public class OAuth2RouterConfig {

@@ -8,27 +8,299 @@ Apex Scaffold 是 Java 17、Spring Boot 3.5.15、Spring WebFlux 的多模块项�
 
 - **Java 版本**：由 `.sdkmanrc` 指定（当前 `17.0.12-oracle`），使用 SDKMAN 管理，禁止手动修改 `JAVA_HOME` 或使用其他 JDK 版本。
 - **构建工具**：使用 Maven Daemon（mvnd）而非 Maven（mvn），版本由 `.sdkmanrc` 指定（当前 `2.0.0-rc-3`），所有构建命令必须使用 `mvnd`。
+- **构建环境**：优先通过 SDKMAN 加载 `.sdkmanrc` 中的 Java 和 `mvnd` 版本；仓库中需要准备构建环境的脚本使用 `scripts/build/init-build-env.sh`。
+- **禁止回退**：不得在实际构建、测试、打包、依赖解析或发布脚本中调用 `mvn`；未找到 `mvnd` 时应直接失败并提示安装 SDKMAN 版本，不得回退到系统 Maven。
 - **项目版本与依赖**：以根 [pom.xml](pom.xml) 为准。
 
-根 POM 当前包含：
+根 POM 当前包含以下模块（以根 [pom.xml](pom.xml) 中 `<modules>` 顺序为准）：
 
-- `apex-common`：公共结果、异常、注解、常量、上下文、工具和调度器。
-- `apex-domain`：领域模型、领域服务、领域事件和仓储接口。
-- `apex-application`：用例编排、应用服务、事务边界和 DTO 转换。
-- `apex-infrastructure`：仓储、MyBatis-Plus、缓存、消息、存储和外部服务适配器。
-- `apex-interfaces`：WebFlux 路由、Handler、安全、过滤器、配置、OpenAPI、i18n、Flyway 和启动入口。
-- `apex-example`：示例应用和测试。
-- `apex-generator`：独立的 DDD 代码生成器。
-- `apex-license-spring-boot-starter`、`apex-license-tools`：授权相关模块，涉及发行时先确认商业代码隔离要求。
+- `apex-common`：公共基础模块，提供统一响应体、异常体系、注解、常量、上下文（租户、用户、请求）、工具类和调度器基础设施。所有业务模块均可依赖。
+- `apex-license-spring-boot-starter`：授权校验 Spring Boot Starter，提供运行时许可证校验能力，被 `apex-interfaces` 依赖。
+- `apex-license-tools`：授权生成与管理工具，依赖 `apex-license-spring-boot-starter`，用于离线生成和签发许可证。
+- `apex-domain`：领域层，包含聚合根、实体、值对象、领域服务、领域事件和仓储接口（Port）。只依赖 `apex-common`，不得依赖任何上层模块。
+- `apex-infrastructure`：基础设施层，实现领域层定义的仓储接口，包含 MyBatis-Plus Mapper/PO、Redis/Caffeine 缓存、RocketMQ 消息、MinIO/TOS 存储、外部服务适配器（Office、Keycloak、KMS 等）。依赖 `apex-domain` 和 `apex-common`。
+- `apex-application`：应用层，用例编排、应用服务、事务边界、DTO/Assembler 转换、事件监听和定时任务调度。依赖 `apex-domain`、`apex-common` 和 `apex-infrastructure`。
+- `apex-interfaces`：接口层，WebFlux 函数式 Router + Handler、安全过滤器链、AOP 切面（权限、审计、幂等、防重放、数据权限等）、配置类、OpenAPI 文档、i18n 资源、Flyway 迁移脚本和主启动入口 `Application.java`。依赖 `apex-application`、`apex-infrastructure`、`apex-domain` 和 `apex-license-spring-boot-starter`。
+- `apex-auth-center`：独立认证中心模块，采用与主应用相同的 DDD 分层（application/domain/infrastructure/interfaces），负责认证、授权、MFA/TOTP、JWT 密钥轮换、会话管理、审计日志、KMS 集成、IP 访问控制、设备信任、生物识别、暴力破解防护等。有独立启动类 `AuthCenterApplication.java` 和独立 Flyway 迁移（V44–V52）。依赖 `apex-common` 和 `apex-infrastructure`。
+- `apex-example`：示例模块，演示完整 DDD + WebFlux 链路的集成用法，依赖 `apex-interfaces` 及其下层所有模块。
+- `apex-generator`：独立的 DDD 代码生成器，不依赖其他业务模块，根据数据库表结构生成 entity/mapper/po 等模板代码。
 
 依赖方向保持为：
 
 ```text
-interfaces → application → domain ← infrastructure
-                  common  ← 各模块按需依赖
+interfaces ──▶ application ──▶ domain ◀── infrastructure
+     │              │               │              │
+     └──▶ license-spring-boot-starter              │
+                    │                              │
+              license-tools                        │
+                                                   │
+auth-center ───────────────────────────────────────┘
+     │
+     └──▶ common ◀── 所有模块按需依赖
 ```
 
-`domain` 不得依赖 application、interfaces 或 infrastructure。修改跨层代码时运行已有架构测试。
+核心约束：
+
+- `domain` 不得依赖 `application`、`interfaces` 或 `infrastructure`。
+- `application` 可依赖 `domain`、`common` 和 `infrastructure`，但不得反向依赖 `interfaces`。
+- `interfaces` 是主应用的最上层，依赖 `application`、`infrastructure`、`domain` 和 `license-spring-boot-starter`。
+- `apex-auth-center` 是独立的认证子系统，依赖 `common` 和 `infrastructure`，不依赖主应用的 `application`/`interfaces` 层。
+- `apex-example` 和 `apex-generator` 分别用于示例演示和代码生成，不参与生产依赖链。
+
+修改跨层代码时运行已有架构测试（ArchUnit），确保依赖方向不被破坏。
+
+## 核心架构图示
+
+以下图表基于项目真实代码结构绘制，用于辅助理解模块协作和请求处理链路。
+
+### 项目模块与运行边界图
+
+下图按“启动边界、运行时调用链、构建辅助模块”展示项目结构。主应用和认证中心分别由独立启动类装配；主应用通过组件扫描排除 `com.apex.scaffold.authcenter..*`，因此认证中心内部的 `UserMapper`、`UserConverter` 不属于主应用用户查询链。
+
+```mermaid
+graph LR
+    subgraph MainApp[主应用 apex-interfaces 启动边界]
+        direction TB
+        entry["Application<br/>Spring Boot + WebFlux<br/>排除 authcenter 包扫描"]
+        web["接口层<br/>WebFilter / SecurityConfig<br/>ApiRouter / Handler"]
+        app["apex-application<br/>UserService / WorkflowService<br/>用例编排 / 缓存 / 事务"]
+        domain["apex-domain<br/>Entity / Domain Service<br/>Repository Port / Domain Event"]
+        infra["apex-infrastructure<br/>RepositoryImpl / Mapper / PO<br/>Redis / MQ / Storage / 外部适配器"]
+        common["apex-common<br/>Result / Exception / Annotation<br/>Context / Scheduler / Utility"]
+        db[("MySQL / PostgreSQL")]
+        cache[("Redis / Caffeine")]
+        entry --> web --> app --> domain --> infra
+        infra --> db
+        app --> cache
+        web --> common
+        app --> common
+        domain --> common
+        infra --> common
+    end
+
+    subgraph AuthApp[独立认证中心 apex-auth-center]
+        authEntry["AuthCenterApplication<br/>独立 Spring Boot 入口"]
+        authWeb["authcenter interfaces<br/>认证 / 授权 / MFA / 会话"]
+        authApp["authcenter application / domain"]
+        authInfra["authcenter infrastructure<br/>独立 UserMapper / UserConverter"]
+        authDb[("认证中心数据库/表")]
+        authEntry --> authWeb --> authApp --> authInfra --> authDb
+        authWeb --> common
+        authApp --> common
+        authInfra --> common
+    end
+
+    subgraph BuildOnly[构建或辅助模块]
+        starter["apex-license-spring-boot-starter<br/>运行时许可证校验"]
+        tools["apex-license-tools<br/>离线许可证工具"]
+        example["apex-example<br/>集成示例"]
+        generator["apex-generator<br/>代码生成器"]
+        tools --> starter
+        example --> web
+        starter --> common
+    end
+
+    web --> starter
+    generator -."生成模板，不参与运行时链路".-> domain
+```
+
+**图中边界与依赖说明**：
+
+- `Application` 是主应用入口，负责装配 WebFlux、异步任务、配置属性和服务发现；`AuthCenterApplication` 是认证中心的独立入口，二者不是同一个 Spring ApplicationContext。
+- 主应用依赖方向为 `interfaces -> application -> domain`，基础设施实现 `domain` 定义的 Repository Port；当前 `application -> infrastructure` 是项目实际存在的直接依赖，不能在文档中简化为纯粹的六边形依赖。
+- `apex-common` 提供 `Result`、异常、注解、上下文、工具和 `BlockingIoSchedulers`，不承载具体业务用例。
+- 主应用用户查询链使用 `UserService -> domain.UserRepository -> infrastructure.UserRepositoryImpl -> UserMapper/UserPoConverter`；认证中心使用自己的同名仓储、Mapper 和 Converter，不能交叉引用。
+- `apex-example` 用于集成示例，`apex-generator` 用于生成模板，二者不是生产请求的必经模块；许可证 Starter 是主应用运行时能力，许可证 Tools 是离线工具。
+
+**模块职责细化**：
+
+- **apex-common**：统一响应体、错误码、业务异常、权限/审计/幂等/防重放/数据权限注解、租户和请求上下文、脱敏和 TraceId 工具，以及按 JDBC、缓存、存储、事件、远程调用和通用任务划分的阻塞 I/O Scheduler。
+- **apex-domain**：领域实体、值对象、领域服务、领域事件和 Repository Port。它表达业务规则和抽象边界，不直接实现 MyBatis、Redis 或对象存储访问。
+- **apex-infrastructure**：实现 Repository Port，使用 MyBatis-Plus Mapper/PO 访问数据库，并承载 Redis/Caffeine、RocketMQ、MinIO/TOS、Keycloak、KMS 等适配器。同步调用通过语义化 Scheduler 隔离。
+- **apex-application**：以 `UserService` 等应用服务编排用例，处理缓存、事务、领域对象组合和 Assembler 转换；它把接口层请求转换为领域调用，再把结果交回接口层。
+- **apex-interfaces**：由 `Application` 启动，包含 WebFilter、Spring Security、`ApiRouter`、Handler、AOP、OpenAPI、异常处理、配置和主应用 Flyway 资源。
+- **apex-auth-center**：独立认证子系统，内部拥有自己的 application/domain/infrastructure/interfaces 分层、认证中心数据库边界和 Flyway 资源，负责认证、授权、MFA/TOTP、JWT、会话、审计和风控能力。
+
+**运行时装配与数据边界**：
+
+- 主应用从 `Application` 启动，组件扫描覆盖 `com.apex.scaffold`，但通过正则排除 `com.apex.scaffold.authcenter..*`；因此主应用启动时不会把认证中心的 Handler、Service、Mapper 或配置注册到同一个容器中。
+- `AuthCenterApplication` 负责认证中心自己的组件装配、配置和迁移资源。认证中心可以与主应用共享 `apex-common` 的基础类型，但运行时数据库、请求入口和用户转换链保持独立。
+- 图中的箭头表示模块依赖或运行时调用方向，不表示所有模块都在同一个进程中执行。`apex-example`、`apex-generator` 和 `apex-license-tools` 是构建或辅助用途，不应被理解为生产请求的运行时下游。
+- 从数据模型看，`UserPO` 是基础设施持久化模型，`UserEntity` 是应用与领域之间传递的业务模型，`UserDTO` 是接口响应模型。三者分层转换可以避免数据库字段、领域规则和 API 契约相互泄漏。
+- 从部署边界看，主应用和认证中心可以独立启动、独立配置和独立演进；需要跨系统调用时，应通过明确的认证协议或远程适配器完成，不能直接引用对方的内部 Mapper 或 Converter。
+
+### 请求业务处理流程图
+
+下图将应用级 WebFilter、Spring Security 内部链、函数式路由、业务调用和三类异常出口分开表示。过滤器的实际先后顺序由 `@Order` 和 Spring Security 的过滤器位置共同决定，不应概括为所有 WebFilter 都先于安全链。
+
+```mermaid
+flowchart TD
+    A["客户端 HTTP 请求"] --> B["应用级 WebFilter<br/>TraceFilter<br/>BraveWebTracingFilter<br/>Timeout / Locale / Gateway<br/>Logging / Guard / RateLimit / InputValidation / SecurityHeader"]
+    B --> C["Spring Security WebFilterChain<br/>SecurityConfig"]
+    C --> D{"authorizeExchange<br/>是否命中 PUBLIC_PATHS?"}
+    D -->|是| G["permitAll<br/>继续路由"]
+    D -->|否| E["认证过滤器位置<br/>JwtAuthenticationFilter<br/>OAuth2 Resource Server Filter"]
+    E --> F{"认证与授权结果"}
+    F -->|未认证| F401["authenticationEntryPoint<br/>HTTP 401"]
+    F -->|无权限| F403["accessDeniedHandler<br/>HTTP 403"]
+    F -->|通过| G
+    G --> H["ApiRouter.apiRoutes<br/>/api/v1 -> buildApiRoutes"]
+    H --> I["buildUserRoutes<br/>GET /user/{userId}<br/>UserHandler.getUserById"]
+    I --> J["Handler 参数处理<br/>safeParseLong / RequestHandlerUtil"]
+    J --> K["横切能力按注解和业务语义生效<br/>OperationLog / RequirePermission / DataScope<br/>IdempotentApi / AntiReplay"]
+    K --> L["Application Service<br/>UserService.getById"]
+    L --> M{"@Cacheable user:id<br/>命中缓存?"}
+    M -->|是| N["返回缓存中的 UserEntity"]
+    M -->|否| O["domain.UserRepository Port"]
+    O --> P["UserRepositoryImpl<br/>Mono.fromCallable + jdbc Scheduler"]
+    P --> Q["UserMapper.selectById<br/>MyBatis-Plus"]
+    Q --> R[("MySQL / PostgreSQL")]
+    R --> S["UserPO"]
+    S --> T["UserPoConverter<br/>PO -> UserEntity"]
+    T --> U["返回 Mono<UserEntity>"]
+    U --> V["UserAssembler<br/>Entity -> UserDTO"]
+    N --> V
+    V --> W["BaseHandler.buildSuccess<br/>Result<UserDTO> + ServerResponse"]
+    J -->|参数非法| X400["buildError(PARAM_ERROR)<br/>HTTP 400"]
+    U -->|空 Mono| X404["switchIfEmpty(USER_NOT_FOUND)<br/>HTTP 404"]
+    P -->|数据库/基础设施异常| X500["异常进入 WebFlux 异常边界"]
+    W --> Z["响应沿 Router / Security / WebFilter 返回客户端"]
+    F401 --> Z
+    F403 --> Z
+    X400 --> Z
+    X404 --> Z
+    X500 --> Y{"异常类型"}
+    Y -->|业务/参数/技术异常| Y1["GlobalExceptionHandler<br/>@RestControllerAdvice 或 WebExceptionHandler"]
+    Y -->|Sentinel 流控/降级| Y2["SentinelExceptionHandler<br/>429 / 503 / 403"]
+    Y1 --> Z
+    Y2 --> Z
+```
+
+**业务处理阶段说明**：
+
+1. **请求上下文建立**：`TraceFilter` 位于最前端，提取或生成 `X-Trace-Id`，写入交换对象属性、响应头和 Reactor Context，并在结束时清理 MDC。`LocaleWebFilter` 负责语言上下文，日志、指标、限流和安全头过滤器负责横切能力。
+2. **安全决策**：`SecurityConfig.securityWebFilterChain` 先处理 `SystemConstants.PUBLIC_PATHS` 的 `permitAll` 规则，再按认证用户路径、管理路径和 `anyExchange().authenticated()` 处理其余请求。JWT 和 OAuth2 过滤器位于 Spring Security 的认证位置；401 由认证入口处理，403 由拒绝访问处理器处理。
+3. **函数式路由**：主应用通过 `ApiRouter.apiRoutes` 建立 `/api/v1` 路径，再由 `buildApiRoutes` 分发到 `/auth`、`/user`、`/file` 等子路由。用户查询实际由 `buildUserRoutes` 注册到 `UserHandler.getUserById`，不存在独立的 `UserRouter`。
+4. **Handler 与横切能力**：Handler 负责读取路径或请求体、构造响应式链并调用 Application Service。`@OperationLog`、`@RequirePermission`、`@DataScope`、`@IdempotentApi` 和 `@AntiReplay` 是否生效，取决于具体 Handler 方法的实际注解和业务风险；不能把所有注解都强加到每个接口。
+5. **应用服务与缓存**：`UserService.getById` 使用 `@Cacheable(value = "user:id")`，缓存命中时可以直接返回用户实体；未命中时才调用领域 Repository。缓存具体由配置的缓存实现承载，文档不应把每次查询固定描述为直接访问数据库。
+6. **领域 Port 与基础设施实现**：Application 依赖领域层的 `UserRepository` 接口，运行时由 `UserRepositoryImpl` 实现。该实现调用 `UserMapper.selectById`，并通过 `UserPoConverter` 将 `UserPO` 转换为 `UserEntity`。
+7. **阻塞 I/O 隔离**：MyBatis/JDBC 是同步阻塞调用，Repository 使用 `Mono.fromCallable(...).subscribeOn(BlockingIoSchedulers.jdbc())` 将其移出 Netty 事件循环；这表示“响应式封装 + 阻塞线程隔离”，不表示 JDBC 本身是非阻塞的。
+8. **结果与异常出口**：成功结果经 `UserAssembler.toDTO` 和 `BaseHandler.buildSuccess` 生成 `Result<T>`。参数错误和空结果由 Handler 构造 400/404；安全 401/403 在 SecurityConfig 内处理；Sentinel 异常由专门处理器处理；普通业务、参数和技术异常才进入 `GlobalExceptionHandler` 的 Advice 或 WebFlux 兜底。
+
+### 用户 ID 查询时序图
+
+以 `GET /api/v1/user/{userId}` 为例，图中同时展示路由注册、认证边界、缓存命中/未命中、领域 Port 与基础设施实现，以及参数错误、用户不存在和异常返回路径。
+
+```mermaid
+sequenceDiagram
+    participant Client as 客户端
+    participant Filter as 应用级 WebFilter
+    participant Security as SecurityWebFilterChain
+    participant Router as ApiRouter
+    participant Handler as UserHandler
+    participant Aspect as OperationLog/AOP
+    participant Service as UserService
+    participant Cache as user:id Cache
+    participant Port as domain.UserRepository
+    participant Repo as UserRepositoryImpl
+    participant Mapper as UserMapper
+    participant DB as MySQL/PostgreSQL
+    participant Converter as UserPoConverter
+    participant Assembler as UserAssembler
+    participant Error as 异常处理边界
+
+    Client->>Filter: GET /api/v1/user/{userId}
+    Filter->>Filter: TraceId / Locale / 日志 / 限流 / 安全头
+    Filter->>Security: 进入 SecurityWebFilterChain
+    Security->>Security: PUBLIC_PATHS 匹配与 JWT/OAuth2 认证
+    alt 未认证或无权限
+        Security-->>Client: 401 authenticationEntryPoint 或 403 accessDeniedHandler
+    else 认证通过或公开路径
+        Security->>Router: 继续路由
+        Router->>Router: apiRoutes -> buildApiRoutes -> buildUserRoutes
+        Router->>Handler: getUserById(request)
+        Handler->>Handler: safeParseLong(pathVariable("userId"))
+        alt userId 非法
+            Handler-->>Client: 400 PARAM_ERROR
+        else userId 有效
+            Handler->>Aspect: 执行 @OperationLog 等实际注解切面
+            Aspect-->>Handler: 横切处理通过
+            Handler->>Service: getById(userId)
+            Service->>Cache: 查询 user:id
+            alt 缓存命中
+                Cache-->>Service: UserEntity
+            else 缓存未命中
+                Service->>Port: findById(userId)
+                Port->>Repo: UserRepositoryImpl.findById
+                Repo->>Mapper: selectById(userId)
+                Mapper->>DB: 同步 MyBatis/JDBC 查询
+                DB-->>Mapper: UserPO 或空结果
+                Mapper-->>Repo: UserPO
+                Repo->>Repo: subscribeOn(BlockingIoSchedulers.jdbc())
+                Repo->>Converter: UserPO -> UserEntity
+                Converter-->>Repo: UserEntity
+                Repo-->>Port: Mono<UserEntity>
+                Port-->>Service: Mono<UserEntity>
+                Service->>Cache: 回填 user:id（按缓存配置）
+            end
+            alt 用户不存在
+                Service-->>Handler: Mono.empty()
+                Handler-->>Client: 404 USER_NOT_FOUND
+            else 用户存在
+                Service-->>Handler: UserEntity
+                Handler->>Assembler: toDTO(user)
+                Assembler-->>Handler: UserDTO
+                Handler->>Handler: buildSuccess(dto)
+                Handler-->>Router: Mono<ServerResponse>
+                Router-->>Security: 返回响应
+                Security-->>Filter: 返回响应
+                Filter-->>Client: 200 Result<UserDTO> + traceId
+            end
+        end
+    end
+
+    opt 业务/参数/基础设施异常
+        Handler->>Error: 异常进入 WebFlux 边界
+        Error-->>Client: GlobalExceptionHandler 统一错误响应
+    end
+```
+
+**时序交互说明**：
+
+1. TraceId 在最前端过滤器生成或接收，并通过 Reactor Context 传播；它不是由 Handler 临时生成的请求标识。
+2. 安全链只对 `PUBLIC_PATHS` 精确匹配路径执行 `permitAll`；其他路径最终受认证规则约束。用户查询接口是否需要 Token，以 `SecurityConfig` 的路径规则为准，不以 Handler Javadoc 为准。
+3. 用户查询路由实际注册在 `ApiRouter.buildUserRoutes`：`GET /api/v1/user/{userId}` 映射到 `UserHandler.getUserById`。
+4. Handler 先调用 `safeParseLong`；非法路径参数直接返回 `PARAM_ERROR`，不会访问 Service 或数据库。
+5. `UserService.getById` 先经过 `user:id` 缓存抽象；只有缓存未命中才调用 `UserRepository`。
+6. `UserRepository` 是领域 Port，`UserRepositoryImpl` 是基础设施实现；主应用使用 `UserPoConverter`，不要与认证中心的 `UserConverter` 混淆。
+7. `UserMapper` 继承 MyBatis-Plus `BaseMapper<UserPO>`，`selectById` 是同步数据库调用，使用 `BlockingIoSchedulers.jdbc()` 隔离阻塞线程。
+8. 数据库返回空记录时，Repository 返回空 `Mono`，Handler 通过 `switchIfEmpty(buildError(ResultCode.USER_NOT_FOUND, traceId))` 返回 404；成功时经过 `UserPoConverter` 和 `UserAssembler` 完成两次模型转换。
+9. 成功响应由 `BaseHandler.buildSuccess` 生成 `Result<UserDTO>` 并交给 `ServerResponse`；响应再沿函数式路由、安全链和应用级过滤器返回客户端。
+10. 认证异常、授权异常、Sentinel 限流/降级异常和普通函数式业务异常拥有不同处理器；不能把所有异常都描述为由 `GlobalExceptionHandler` 单一路径处理。
+
+**参与者职责与分支含义**：
+
+- `Filter` 代表一组应用级 WebFilter，而不是单个统一过滤器。它们负责请求上下文、链路追踪、语言、日志、限流、输入防护和响应头等横切能力；其中具体执行顺序由 `@Order` 和过滤器注册方式决定。
+- `SecurityWebFilterChain` 负责“请求能否进入业务路由”的安全判断，不负责查询用户业务数据。`PUBLIC_PATHS` 命中时跳过认证要求，但不代表跳过所有应用级过滤器；非公开路径则继续经过 JWT/OAuth2 认证和授权判断。
+- `ApiRouter` 只负责把 HTTP 方法和路径映射到 Handler。它不执行 `UserService` 查询，也不负责把 `UserPO` 转换成 `UserDTO`；这些职责分别属于 Handler/Application Service 和 Converter/Assembler。
+- `UserHandler` 是接口适配层。它负责从 `ServerRequest` 读取路径参数、判断参数是否可解析、组合 `Mono` 链并选择成功或业务错误响应。`safeParseLong` 返回空值时，链路在 Handler 内结束，不会继续访问缓存或数据库。
+- `OperationLog/AOP` 只表示实际存在的横切切面执行点。切面是否参与当前请求，要以目标方法是否声明相应注解以及切面匹配条件为准；时序图中的 `@OperationLog` 对应当前 `getUserById` 方法的实际审计记录。
+- `UserService` 负责用例编排和缓存抽象，`UserRepository` 负责领域层定义的查询契约，`UserRepositoryImpl` 负责把契约落到 MyBatis-Plus 和数据库。这样可以把业务调用者与具体持久化技术隔离开。
+- `Cache` 的命中分支不会触发 `UserRepository`、`UserMapper` 和数据库调用；未命中分支才会执行完整的持久化链路，并在缓存策略允许时回填 `user:id`。缓存回填属于缓存实现策略，不应在业务代码中重复手工拼装同一套查询逻辑。
+- `UserPoConverter` 和 `UserAssembler` 位于不同转换边界：前者将 `UserPO` 转为领域/应用可用的 `UserEntity`，后者将 `UserEntity` 转为对外暴露的 `UserDTO`。如果用户不存在，转换器不会被调用，空 `Mono` 会由 Handler 转成 `USER_NOT_FOUND`。
+- 时序图中的 `Error` 是异常处理边界的抽象参与者，不是一个具体业务类。安全异常在 SecurityConfig 的入口或拒绝处理器结束，Sentinel 异常进入 Sentinel 专用处理器，普通业务和技术异常才进入统一 WebFlux 异常处理路径。
+
+**分支阅读方式**：
+
+- 先沿主路径阅读：`Client -> Filter -> Security -> Router -> Handler -> Service`，这部分描述所有请求都要经过的入口和业务编排。
+- 再阅读缓存分支：命中时直接返回 `UserEntity`；未命中时进入 `Port -> Repo -> Mapper -> DB -> Converter`，最后回到 Service。
+- 最后阅读结果分支：成功路径经过 `UserAssembler` 和 `buildSuccess` 返回 200；非法参数返回 400；空结果返回 404；认证/授权、Sentinel 和普通异常分别在各自边界结束。
+
+**响应式与线程模型**：
+
+- Handler、Service、Repository 之间使用 `Mono`/`Flux` 组合，不在请求链中调用 `.block()`。
+- `Mono.fromCallable` 只负责把同步调用封装进 Reactor；真正的线程隔离由 `subscribeOn(BlockingIoSchedulers.jdbc())` 完成。
+- 缓存、对象存储、远程 SDK、事件持久化等其他阻塞调用分别使用 `cache()`、`storage()`、`remote()`、`event()` 等语义化 Scheduler，不能一律套用 JDBC 调度器。
 
 ## 实现约定
 
@@ -86,9 +358,9 @@ public class XxxRouter {
 ```
 
 **Handler 实现规范**：
-- Handler 方法必须添加详细的中文 JavaDoc，说明接口功能、业务逻辑、参数和返回值。
+- Handler 方法按现有代码模式补充必要的 JavaDoc，复杂或非直观的业务逻辑应说明功能、参数和返回值。
 - 使用构造器注入依赖（配合 `@RequiredArgsConstructor`），禁止使用 `@Autowired` 字段注入。
-- 所有写操作必须添加 `@OperationLog` 注解记录操作日志。
+- 具有业务副作用的写操作必须添加 `@OperationLog` 注解记录操作日志；幂等、防重放和数据权限注解按接口的业务语义和现有实现按需使用。
 - 敏感操作必须添加权限校验注解（`@RequirePermission`）和数据权限注解（`@DataScope`）。
 - 返回值统一使用 `Result<T>` 封装，通过 `buildSuccess()` 或 `buildError()` 构建响应。
 
@@ -133,7 +405,7 @@ public class XxxRouter {
 2. **Infrastructure 层**（`apex-infrastructure`）：
    - 创建持久化对象（PO）对应数据库表结构
    - 编写 MyBatis-Plus Mapper 接口（继承 `BaseMapper<PO>`）
-   - 实现 Repository 接口（使用 MapStruct Converter 进行 PO ↔ 实体转换）
+   - 实现 Repository 接口；PO ↔ 实体转换优先沿用现有的 MapStruct Converter 模式
    - 实现外部服务适配器（如第三方 API 调用、对象存储、消息队列）
    - 阻塞操作必须使用 `BlockingIoSchedulers` 隔离
 
@@ -141,7 +413,7 @@ public class XxxRouter {
    - 编写应用服务（Application Service）编排用例流程
    - 定义事务边界（使用 `TransactionalOperator` 或 `@Transactional`）
    - 创建 DTO（Data Transfer Object）用于跨层数据传输
-   - 使用 MapStruct Assembler 实现 DTO ↔ 领域实体转换
+   - DTO ↔ 领域实体转换优先沿用现有的 MapStruct Assembler 模式
    - 处理领域事件监听和发布
 
 4. **Interfaces 层**（`apex-interfaces`）：
@@ -152,7 +424,9 @@ public class XxxRouter {
    - 配置统一异常处理和响应转换
 
 5. **数据库迁移**（Flyway）：
-   - 在 `apex-interfaces/src/main/resources/db/migration/` 按数据库类型（`mysql`/`postgresql`）追加脚本
+   - 主应用迁移脚本位于 `apex-interfaces/src/main/resources/db/migration/{mysql,postgresql}/`
+   - 认证中心迁移脚本位于 `apex-auth-center/src/main/resources/db/migration/{mysql,postgresql}/`（另有 `auth/` 子目录存放认证中心 schema 种子）
+   - 根据变更所属模块选择对应目录，按数据库类型追加脚本
    - 禁止修改已执行的迁移脚本（版本号不可回退或重复）
 
 **数据库迁移规范**：
@@ -169,10 +443,10 @@ public class XxxRouter {
 - 更新和删除操作必须校验租户权限，防止跨租户数据访问
 
 **事务管理规范**：
-- 事务边界应位于 Application 层，Service 方法使用 `@Transactional` 注解
-- WebFlux 环境需使用 `TransactionalOperator` 而非声明式 `@Transactional`
-- 避免事务方法中包含远程调用、长时间阻塞操作
-- 乐观锁冲突使用 `@OptimisticLockRetry` 注解自动重试
+- 事务边界通常位于 Application 层，具体方式以调用链和现有实现为准。
+- 响应式 WebFlux 链路使用 `TransactionalOperator` 包裹 Reactor 链；同步阻塞边界使用同步 `@Transactional`。
+- 不要在事务方法中包含远程调用或长时间阻塞操作。
+- 乐观锁冲突是否使用 `@OptimisticLockRetry`，按现有业务实现和冲突处理语义决定。
 
 **时间字段使用规范**：
 - MySQL 数据库必须使用 `DATETIME` 类型，**严禁使用 `TIMESTAMP` 类型**（后者范围限制为 1970-2038，存在 Y2038 问题）
@@ -207,7 +481,7 @@ public class XxxRouter {
 
 **异常处理规范**：
 - 业务异常统一使用 `BusinessException`，构造时传入 `ResultCode` 枚举
-- 技术异常（如 `DataAccessException`、`TimeoutException`）在 `GlobalExceptionHandler` 统一捕获，转换为标准 `Result` 响应
+- 普通技术异常（如 `DataAccessException`、`TimeoutException`）进入统一 WebFlux 异常边界并转换为标准 `Result` 响应；安全认证/授权异常由 `authenticationEntryPoint`、`accessDeniedHandler` 处理，Sentinel 流控与降级异常由 `SentinelExceptionHandler` 处理
 - 参数校验异常（`MethodArgumentNotValidException`）自动转换为 400 错误，错误信息支持国际化
 - WebFlux 响应式异常使用 `onErrorResume()` 或 `onErrorReturn()` 处理，避免异常传播到最外层
 - 日志记录异常时必须包含完整堆栈信息、TraceId 和业务上下文参数
@@ -234,12 +508,9 @@ public class XxxRouter {
 - 权限不足时返回 403 错误，错误信息明确说明缺少的权限
 
 **写操作防护**：
-- 所有写操作（POST/PUT/DELETE）必须添加以下防护措施：
-  - `@OperationLog`：记录操作日志（操作人、操作类型、请求参数、响应结果、IP 地址）
-  - `@IdempotentApi`：防止重复提交（客户端需携带 `Idempotency-Key` 请求头）
-  - `@AntiReplay`：防重放攻击（客户端需携带 `X-Timestamp` 和 `X-Nonce` 请求头）
-  - `@DataScope`：确保只能操作有权限的数据
-  - 租户上下文校验：确保跨租户数据访问被正确拦截
+- 具有业务副作用的写操作（POST/PUT/DELETE）必须添加 `@OperationLog`，记录操作人、操作类型、请求参数、响应结果和 IP 地址。
+- `@IdempotentApi`、`@AntiReplay`、`@DataScope`、限流和权限注解按接口的业务语义、风险和现有实现按需使用。
+- 涉及租户数据的操作必须进行租户上下文校验，确保跨租户数据访问被正确拦截。
 
 **敏感操作限流**：
 - 使用 `@SentinelResource` 注解标记需要限流保护的方法
@@ -306,10 +577,10 @@ public class XxxRouter {
 - **阻塞操作隔离**：消费者中的数据库操作必须使用 `BlockingIoSchedulers.jdbc()` 或 `.event()`
 
 **领域事件机制**：
-- 领域事件在 Domain 层定义，使用 `DomainEvent` 接口标记
-- Application 层通过 `DomainEventPublisher` 发布事件（同步或异步）
+- 领域事件类继承 `com.apex.scaffold.common.event.AbstractDomainEvent` 抽象类（位于 `apex-common` 模块）
+- Application 层通过 `DomainEventPublisher` 发布事件（`publish(AbstractDomainEvent)` 返回 `Mono<Void>`）
 - 使用 Outbox 模式保证事件发布的可靠性（事件先写入 Outbox 表，异步发送到 MQ）
-- 事件消费者实现 `DomainEventListener` 接口，按事件类型路由
+- 事件消费者实现 `DomainEventHandler<T extends BaseDomainEvent>` 接口，按事件类型路由
 
 **限流与熔断策略**：
 - **限流算法**：
@@ -388,7 +659,7 @@ public class FeatureProperties {
 - 优先使用 `@ConfigurationProperties` + 构造器注入，避免使用 `@Value` 散落在代码中
 - 配置类必须提供合理的默认值，避免强制要求所有环境都配置
 - 使用 `@Validated` + JSR-303 注解校验配置合法性（如 `@NotBlank`、`@Min`、`@Max`）
-- 敏感配置字段使用 `@Sensitive` 注解标记，防止日志泄露
+- 敏感配置字段不得在日志中明文输出，必要时通过自定义 `toString()` 或日志脱敏处理
 
 **条件装配**：
 - 使用 `@ConditionalOnProperty` 控制功能模块的启用/禁用：
@@ -421,23 +692,13 @@ public class FeatureProperties {
 ### 代码风格与开发规范
 
 - **代码格式化**：遵循 Spotless；修改后运行 `mvnd spotless:check`。
-- **对象转换**：所有涉及对象转换的场景（实体与 PO、DTO 与实体、VO 与 DTO 等）必须使用 MapStruct 实现，禁止手写转换代码。Converter 和 Assembler 使用 `@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)`。
+- **对象转换**：对象转换优先沿用现有的 MapStruct Converter 和 Assembler 模式；是否使用 MapStruct 以及具体 `@Mapper` 配置以目标模块现有实现和转换复杂度为准。
 - **依赖注入规范**：
   - **严禁使用 `@Autowired` 注解**进行字段注入或 setter 注入。
   - Service、Component、Handler 和配置类必须使用构造器注入，配合 Lombok 的 `@RequiredArgsConstructor` 注解实现。
   - 构造器注入的优势：编译时检查依赖完整性、支持 final 字段、便于单元测试、避免循环依赖。
-- **Lombok 使用规范**：
-  - Service、Component 和配置类优先使用 `@RequiredArgsConstructor` 实现构造器注入。
-  - DTO、Request、Response、VO 和领域实体必须使用 Lombok 注解（`@Data`、`@Builder`、`@AllArgsConstructor`、`@NoArgsConstructor` 等）。
-  - 禁止手写 getter、setter、equals、hashCode、toString、构造器等可由 Lombok 生成的样板代码。
-  - 禁止使用 `@SneakyThrows`、`val`、`var` 和 `@Synchronized`。
-- **代码注释规范**：
-  - 所有 public/protected 类必须添加类级别的中文 JavaDoc，说明类的职责、主要功能和使用场景。
-  - 所有 public/protected 方法必须添加方法级别的中文 JavaDoc，说明方法功能、参数含义、返回值和可能抛出的异常。
-  - 重写的方法（`@Override`）如果父类/接口已有清晰注释可省略，但如果有特殊实现逻辑或业务含义必须补充说明。
-  - private 方法如果逻辑复杂或不直观，建议添加简要注释说明意图。
-  - 不要添加无意义的样板注释或与代码重复的废话注释。
-  - 使用 `scripts/scan-javadoc-issues.sh` 扫描 JavaDoc 问题，`scripts/batch-add-javadoc.sh` 批量添加缺失的 JavaDoc。
+- **Lombok 使用规范**：Service、Component、配置类、DTO、Request、Response、VO 和实体优先沿用现有 Lombok 模式；使用何种 Lombok 注解以及是否保留手写方法，应根据类的可变性、继承关系和现有代码判断。避免引入 `@SneakyThrows`、`val`、`var` 和 `@Synchronized`，除非已有模式明确需要。
+- **代码注释规范**：JavaDoc 按现有模块和类的模式维护；对公开 API、复杂逻辑和非直观业务规则优先补充必要说明，简单 getter/setter、重写方法或已有清晰契约的代码无需机械补充。需要检查时可使用仓库中存在的 `scripts/dev/check/scan-javadoc-issues.sh`、`scripts/dev/format/batch-add-javadoc.sh`。
 - **包名约定**：主模块使用 `com.apex.scaffold.*`，example 使用现有 `com.apex.example`。
 - **依赖管理**：引入依赖前先检查根 POM 和目标模块是否已有可复用能力。
 
@@ -792,7 +1053,7 @@ source "${SCRIPT_DIR}/lib/common.sh"
 3. **保持代码简洁**：使用公共函数可以大幅减少代码量（通常减少30-50%）
 4. **统一错误处理**：使用 `require_*` 函数进行依赖检查
 5. **规范日志输出**：使用 `log_*` 函数保持输出风格统一
-6. **性能优化**：公共函数已经过性能优化，开销极小（< 2%）
+6. **性能优化**：公共函数的性能影响应通过实际场景验证，不在规范中预设固定指标。
 
 ## 测试策略与质量保证
 
@@ -846,10 +1107,7 @@ source "${SCRIPT_DIR}/lib/common.sh"
   - 混合场景压测：模拟真实流量比例
   - 缓存预热后的性能表现
   - 数据库连接池、线程池的资源使用情况
-- **性能基准**：
-  - 查询接口 P95 < 200ms
-  - 写操作接口 P95 < 500ms
-  - QPS 目标根据业务场景设定
+- **性能基准**：性能目标根据具体业务场景、部署环境和实际压测结果确定，不在本规范中预设固定响应时间或 QPS。
 
 ### 测试执行与验证
 
@@ -874,8 +1132,7 @@ mvnd clean test jacoco:report
 **测试策略**：
 - 修改响应式、缓存、消息、安全、租户或架构代码时，**先跑受影响模块测试**，再根据变更范围运行全量测试
 - 外部服务测试使用对应 Profile（basic/dev/prod），并先确认依赖的基础设施已准备好
-- 新增功能必须补充单元测试和集成测试，测试覆盖率不低于 80%
-- 重要业务逻辑（如支付、权限、审计）测试覆盖率要求 90% 以上
+- 新增功能应根据风险和变更范围补充合适的单元测试、集成测试或架构测试；覆盖率作为参考指标，不设置未经项目配置确认的统一硬门槛
 
 **测试重点**：
 - **参数边界**：空值、空字符串、空集合、最大/最小值、特殊字符
@@ -922,7 +1179,7 @@ open target/site/jacoco/index.html
 - [ ] `mvnd spotless:check` 通过（代码格式规范）
 - [ ] `mvnd pmd:check` 通过（静态代码分析无警告）
 - [ ] `mvnd test` 通过（单元测试全部通过）
-- [ ] 测试覆盖率达标（新增代码覆盖率 > 80%）
+- [ ] 已根据变更范围补充并通过必要测试；如项目配置了覆盖率规则，再按项目配置执行
 - [ ] ArchUnit 测试通过（架构规则验证）
 - [ ] 集成测试通过（如果修改了核心模块）
 
@@ -947,7 +1204,7 @@ mvnd --version   # 应显示 Maven Daemon 2.0.0-rc-3
 ```properties
 # SDKMAN 环境配置
 java=17.0.12-oracle
-maven=2.0.0-rc-3
+mvnd=2.0.0-rc-3
 ```
 
 ### 常用构建命令
@@ -999,63 +1256,17 @@ mvnd clean test jacoco:report
 
 ### 项目脚本工具
 
-项目提供了丰富的脚本工具，位于 `scripts/` 目录，按功能分类：
+脚本路径以仓库当前文件为准。常用且已核实存在的脚本包括：
 
-**开发辅助脚本**（`scripts/dev/`）：
-- **代码生成**：
-  - `codegen/generate.sh`：DDD 代码生成器，根据配置自动生成 Entity、Repository、Service、Handler
-  - 使用方式：配置 `apex-generator` 模块的生成模板，运行脚本自动生成代码框架
-  
-- **代码格式化**：
-  - `format/batch-add-javadoc.sh`：批量为缺失 JavaDoc 的类和方法添加标准注释模板
-  - `format/batch-add-lombok.sh`：批量为 DTO/PO/VO 类添加 Lombok 注解（`@Data`、`@Builder` 等）
-  
-- **代码检查**：
-  - `check/scan-javadoc-issues.sh`：扫描项目中缺失或不规范的 JavaDoc 注释
-  - `check/scan-lombok-issues.sh`：检查 Lombok 使用问题（如手写 getter/setter、缺少注解）
-  - `check/check-springdoc-annotations.sh`：检查 Router 和 Handler 的 SpringDoc 注解完整性
-  - `check/check-port-conflicts.sh`：检查配置文件中的端口冲突
+- 构建环境：`scripts/build/init-build-env.sh`、`scripts/build/build.sh`
+- 代码检查：`scripts/dev/check/check-springdoc-annotations.sh`、`scripts/dev/check/check-springdoc-annotations-v2.sh`、`scripts/dev/check/scan-javadoc-issues.sh`、`scripts/dev/check/scan-lombok-issues.sh`、`scripts/dev/check/check-port-conflicts.sh`、`scripts/dev/check/check-flyway-timestamp-usage.sh`
+- 格式与辅助：`scripts/dev/format/batch-add-javadoc.sh`、`scripts/dev/format/batch-add-lombok.sh`、`scripts/codegen/generate.sh`
+- 迁移测试：`scripts/test/test-mysql-migration.sh`、`scripts/test/test-postgresql-migration.sh`、`scripts/test/check-migration-integrity.sh`
+- 测试与诊断：`scripts/test/generate-test-report.sh`、`scripts/test/generate-comprehensive-test-report.sh`、`scripts/test/jvm-diagnostics-test.sh`、`scripts/diagnostics/jvm-diagnostics.sh`
+- 部署与运维：`scripts/deploy/start.sh`、`scripts/deploy/stop.sh`、`scripts/deploy/app.sh`、`scripts/backup/db-backup.sh`、`scripts/backup/db-restore.sh`
+- API 与配置：`scripts/utils/export-api-docs.sh`、`scripts/utils/extract-env-vars.sh`、`scripts/ci/check-doc-consistency.sh`、`scripts/ci/check-doc-links.sh`
 
-**测试与诊断脚本**（`scripts/test/`）：
-- `jvm-diagnostics-test.sh`：JVM 诊断测试，检测内存泄漏、线程死锁、CPU 高负载
-- `generate-test-report.sh`：生成测试报告（HTML 格式），汇总单元测试和集成测试结果
-
-**部署相关脚本**（`scripts/deploy/`）：
-- **应用服务管理**：
-  - `service/start.sh`：启动应用（支持指定 Profile 和 JVM 参数）
-  - `service/stop.sh`：停止应用（优雅关闭，等待请求处理完成）
-  - `service/app.sh`：应用管理脚本（start/stop/restart/status）
-  
-- **Docker 部署**：
-  - `docker/pull-infra-images.sh`：拉取基础设施 Docker 镜像（MySQL、Redis、RocketMQ、Grafana）
-  - `docker/deploy-monitoring.sh`：部署监控服务（Prometheus、Grafana、Loki、Alloy）
-
-**运维相关脚本**（`scripts/ops/`）：
-- **数据库备份**：
-  - `backup/db-backup.sh`：数据库备份脚本（支持 MySQL 和 PostgreSQL）
-  - `backup/db-restore.sh`：数据库恢复脚本
-  
-- **监控服务**：
-  - `monitoring/start-monitoring.sh`：启动监控服务（Grafana + Prometheus + Loki）
-  - `monitoring/grafana/`：Grafana Dashboard 配置脚本
-  
-- **JVM 诊断**：
-  - `diagnostics/jvm-diagnostics.sh`：JVM 运行时诊断（线程 dump、堆 dump、GC 日志分析）
-
-**CI/CD 脚本**（`scripts/ci/`）：
-- `check-doc-consistency.sh`：检查文档一致性（README、架构图、API 文档）
-- `check-doc-links.sh`：检查文档中的链接有效性
-
-**工具脚本**（`scripts/utils/`）：
-- `export-api-docs.sh`：导出 Swagger API 文档为 JSON/YAML 格式
-- `extract-env-vars.sh`：从配置文件提取环境变量列表
-- `batch-verify-svg.sh`：批量验证 SVG 文件格式和有效性
-
-**性能测试脚本**（`scripts/bench/`）：
-- `bench.sh`：性能基准测试脚本（使用 JMeter 或 K6）
-
-**授权管理脚本**（`scripts/license/`）：
-- `generate-license.sh`：生成授权文件（用于商业版本授权管理）
+使用脚本前先查看脚本内容和帮助信息，不能根据文件名推断未验证的功能、参数或运行结果。
 
 ### 脚本使用最佳实践
 
@@ -1069,16 +1280,16 @@ mvnd clean test jacoco:report
 **脚本执行权限**：
 ```bash
 # 为脚本添加执行权限
-chmod +x scripts/dev/codegen/generate.sh
+chmod +x scripts/codegen/generate.sh
 
 # 执行脚本
-./scripts/dev/codegen/generate.sh
+./scripts/codegen/generate.sh
 ```
 
 **查看脚本帮助**：
 ```bash
-# 大多数脚本支持 --help 参数
-./scripts/dev/codegen/generate.sh --help
+# 支持 --help 的脚本可查看用法
+./scripts/codegen/generate.sh --help
 ```
 
 **测试策略**：
@@ -1089,11 +1300,11 @@ chmod +x scripts/dev/codegen/generate.sh
 - 集成测试使用 `@SpringBootTest`，单元测试使用 Mockito 模拟依赖
 
 **性能与监控规范**：
-- 接口响应时间 P95 应控制在合理范围（查询 < 200ms，写操作 < 500ms）
-- 数据库查询必须添加合适的索引，避免全表扫描
+- 接口响应时间、吞吐量和资源使用情况根据业务场景与实际压测结果评估
+- 数据库查询根据访问模式和执行计划评估索引需求
 - 热点数据使用多级缓存（Caffeine L1 + Redis L2），缓存 key 必须包含租户标识
 - 使用 Micrometer 暴露业务指标，关键操作添加 `@Timed` 注解
-- Sentinel 限流规则应覆盖所有写操作和敏感接口
+- Sentinel 或其他限流规则按实际风险和业务场景覆盖需要保护的接口
 - 使用 Grafana 监控 JVM、数据库连接池、缓存命中率、限流/熔断指标
 - 日志必须包含 TraceId，支持分布式链路追踪
 
@@ -1111,7 +1322,7 @@ chmod +x scripts/dev/codegen/generate.sh
 - 所有面向用户的消息必须使用 i18n key，不得硬编码中文或英文
 - i18n 资源文件位于 `apex-interfaces/src/main/resources/i18n/`，支持 zh_CN、en_US、zh_TW、th_TH 四种语言
 - 新增错误码或提示消息时，必须在所有语言文件中添加对应的翻译
-- 使用 `MessageUtils.getMessage(key)` 获取国际化消息，会根据请求的 `Accept-Language` 自动选择语言
+- 使用注入的 `MessageUtils` 实例获取国际化消息：`messageUtils.get(code)` 返回 `Mono<String>`（响应式）或 `messageUtils.get(locale, code)` 返回 `String`，会根据请求的 `Accept-Language` 自动选择语言
 
 ### 前后端分离与接口契约
 
@@ -1129,14 +1340,13 @@ chmod +x scripts/dev/codegen/generate.sh
 **接口契约规范**：
 - 所有接口统一使用 `Result<T>` 封装响应，包含 `code`、`msg`、`data`、`traceId` 字段。
 - Request/Response DTO 字段命名统一使用 **camelCase**（驼峰命名），不使用下划线。
-- 分页响应使用 `PageResponse<T>`，包含 `total`、`page`、`pageSize`、`list` 字段。
+- 分页响应使用 `PageResponse<T>`，包含 `total`、`pageNum`、`pageSize`、`list`、`pages`、`hasNext` 字段。
 - 时间字段统一使用 ISO 8601 格式字符串（`yyyy-MM-dd'T'HH:mm:ss`）或时间戳（Long 类型毫秒数）。
 - 枚举类型在接口层传输时使用字符串或数值，DTO 中添加清晰的注释说明可选值。
 
 **API 版本管理**：
-- 管理后台接口路径前缀：`/admin-api/v1/`
-- 业务 API 接口路径前缀：`/api/v1/`
-- OAuth2/OIDC 标准接口路径前缀：`/oauth2/`、`/.well-known/`
+- 当前 Router 中实际存在管理端接口路径 `/admin-api/v1/`、业务接口路径 `/api/v1/`，以及 OAuth2 和 `well-known` 相关路径。
+- 新增或修改接口时必须以 `apex-interfaces` 中实际 Router 注册的路径为准，不要仅依据路径前缀推断完整 API。
 
 **跨域与安全**：
 - CORS 配置在 `SecurityConfig` 中统一管理，不在接口层单独配置。
@@ -1178,36 +1388,24 @@ git status --short
 提交前必须确认以下规范已遵守：
 
 - [ ] **接口实现方式**：所有 HTTP 接口使用 Handler 方式，无 `@Controller`/`@RestController` 注解式接口
-- [ ] **SpringDoc/Swagger 注解**：
-  - Router 方法已添加 `@RouterOperation` 或 `@RouterOperations` 注解
-  - Handler 方法已添加详细的中文 JavaDoc
-  - Request/Response DTO 已添加 `@Schema` 注解说明类和字段
-  - 接口参数已添加 `@Parameter` 注解
-  - 接口已添加 `@Operation` 注解说明摘要、描述、标签和响应状态码
-- [ ] **对象转换**：所有对象转换使用 MapStruct，无手写转换代码
-- [ ] **Lombok 注解**：DTO/PO/VO/Entity 使用 Lombok 注解，无手写 getter/setter/equals/hashCode/toString
+- [ ] **SpringDoc/Swagger 注解**：Router 和 DTO 按现有 Router、Handler 及 SpringDoc 模式补充必要元数据；公开 API 的描述应完整且与实际路由一致
+- [ ] **对象转换**：优先沿用目标模块现有的 MapStruct Converter/Assembler 模式，特殊转换按实际复杂度处理
+- [ ] **Lombok 注解**：优先沿用目标模块现有 Lombok 模式，避免机械添加或删除生成方法
 - [ ] **依赖注入**：Service/Component/Handler 使用 `@RequiredArgsConstructor` 构造器注入，**严禁使用 `@Autowired` 注解**进行字段注入或 setter 注入
 - [ ] **构建工具**：所有命令使用 `mvnd`，无 `mvn` 命令
-- [ ] **代码注释完整性**：
-  - 所有 public/protected 类已添加类级别中文 JavaDoc
-  - 所有 public/protected 方法已添加方法级别中文 JavaDoc（含参数、返回值、异常说明）
-  - 重写方法（`@Override`）如有特殊逻辑已补充说明
-  - 无样板注释或废话注释
+- [ ] **代码注释完整性**：公开 API、复杂逻辑和非直观业务规则已有必要 JavaDoc；没有为简单代码机械添加样板注释
 - [ ] **参数校验**：Request DTO 已添加 JSR-303/Jakarta Validation 注解（`@NotNull`、`@NotBlank`、`@Size` 等）
 - [ ] **异常处理**：业务异常使用 `BusinessException` + `ResultCode`，无裸 `RuntimeException` 或魔法数字
 - [ ] **租户隔离**：
   - 缓存 key、消息体、异步任务包含租户标识
   - 更新/删除操作已校验租户权限
   - 使用 `TenantContext.currentTenantId()` 获取租户 ID
-- [ ] **事务管理**：事务边界在 Application 层，WebFlux 使用 `TransactionalOperator`
+- [ ] **事务管理**：响应式链路使用 `TransactionalOperator`，同步阻塞事务边界使用 `@Transactional`，并与现有调用链保持一致
 - [ ] **阻塞 I/O 隔离**：JDBC/MyBatis/同步 Redis/文件 I/O 使用 `BlockingIoSchedulers` 隔离，无 `.block()` 调用，**严禁使用 `Schedulers.boundedElastic()`**
 - [ ] **安全防护**：
-  - 写操作已添加 `@IdempotentApi` 和 `@OperationLog` 注解
-  - 敏感操作已添加 `@SentinelResource` 限流保护
-  - 管理端点已在 Flyway 种子数据中登记权限
-  - 权限校验使用 `@RequirePermission` 注解
-  - 数据权限使用 `@DataScope` 注解
-  - 防重放攻击使用 `@AntiReplay` 注解
+  - 具有业务副作用的写操作已添加 `@OperationLog`
+  - `@IdempotentApi`、`@AntiReplay`、`@DataScope`、限流和权限注解按业务语义及现有实现按需使用
+  - 管理端点权限与 Flyway 种子数据保持一致
 - [ ] **数据库迁移**：Flyway 脚本命名规范（`V{版本号}__{描述}.sql`），版本号递增，脚本幂等
 - [ ] **代码格式**：`mvnd spotless:check` 通过
 - [ ] **代码质量**：`mvnd pmd:check` 通过
@@ -1289,36 +1487,36 @@ style: apply Lombok annotations to DTOs
 **敏感信息脱敏**：
 - **严禁记录**：密码、Token、证书、私钥、完整银行卡号、完整身份证号
 - **需要脱敏**：手机号（`138****5678`）、邮箱（`u***@example.com`）、姓名（`张*`）
-- 使用脱敏工具类：`DesensitizationUtil.maskPhone(phone)`、`DesensitizationUtil.maskIdCard(idCard)`
+- 使用脱敏工具类：`DataMaskUtil.maskPhone(phone)`、`DataMaskUtil.maskEmail(email)`、`DataMaskUtil.maskIdCard(idCard)` 等
 - 示例：
   ```java
-  log.info("用户注册: phone={}, email={}", 
-           DesensitizationUtil.maskPhone(phone), 
-           DesensitizationUtil.maskEmail(email));
+  log.info("用户注册: phone={}, email={}",
+           DataMaskUtil.maskPhone(phone),
+           DataMaskUtil.maskEmail(email));
   ```
 
 ### 业务审计日志
 
 **操作日志（`@OperationLog`）**：
-- 所有写操作（POST/PUT/DELETE）必须添加 `@OperationLog` 注解
-- 自动记录到 `sys_operation_log` 表，包含以下字段：
-  - `operator_id`：操作人 ID
-  - `operator_name`：操作人姓名
-  - `operation_type`：操作类型（CREATE/UPDATE/DELETE/QUERY/EXPORT）
-  - `module_name`：模块名称（如"用户管理"）
-  - `business_type`：业务类型（如"新增用户"）
+- 具有业务副作用的写操作（POST/PUT/DELETE）必须添加 `@OperationLog` 注解；查询、导出等操作是否记录日志按业务审计要求和现有实现决定。
+- 自动记录到 `sys_operation_log` 表，核心字段包括：
+  - `user_id`：操作用户 ID
+  - `user_name`：操作用户名
+  - `operation_type`：操作类型（INSERT/UPDATE/DELETE/SELECT/LOGIN/LOGOUT/UPLOAD/DOWNLOAD/EXPORT/IMPORT/OTHER）
+  - `module`：操作模块（如"用户管理"）
+  - `description`：操作描述（如"新增用户"）
   - `request_method`：HTTP 方法（GET/POST/PUT/DELETE）
   - `request_uri`：请求 URI
   - `request_params`：请求参数（JSON 格式，敏感字段已脱敏）
-  - `response_result`：响应结果（JSON 格式）
-  - `ip_address`：客户端 IP
-  - `location`：IP 归属地
-  - `user_agent`：浏览器信息
-  - `execute_time`：执行耗时（毫秒）
-  - `status`：执行状态（SUCCESS/FAIL）
+  - `response_result`：响应结果
+  - `status`：操作状态（0-成功，1-失败）
+  - `execution_time`：执行时间（毫秒）
+  - `ip`：操作 IP
+  - `trace_id`：链路追踪 ID
+  - `tenant_id`：租户 ID（多租户隔离）
   - `error_msg`：错误信息（失败时）
-  - `create_time`：操作时间
-  - `tenant_id`：租户 ID
+  - `operation_time`：操作时间
+  - `create_time` / `update_time`：记录创建/更新时间
 
 **登录日志（自动记录）**：
 - 记录到 `sys_login_log` 表，包含登录成功/失败信息
@@ -1376,22 +1574,15 @@ sum(rate({app="apex-scaffold"} | json | level="ERROR" [5m])) by (requestUri)
 - 条件日志：使用 `log.isDebugEnabled()` 避免不必要的字符串拼接
 
 **监控指标暴露**：
-- 使用 Micrometer 暴露业务指标：
-  - 接口 QPS、响应时间（P50/P95/P99）
-  - 缓存命中率、缓存穿透次数
-  - 限流拒绝次数、熔断次数
-  - 数据库连接池状态、线程池状态
-- 关键操作添加 `@Timed` 注解：
+- 如现有模块已接入 Micrometer，则按实际监控需求暴露接口、缓存、限流、连接池或线程池指标。
+- 关键操作是否添加 `@Timed` 注解，按现有监控配置和观测需求决定：
   ```java
   @Timed(value = "user.login", description = "用户登录耗时")
   public Mono<ServerResponse> login(ServerRequest request) { ... }
   ```
 
 **告警配置**：
-- ERROR 日志告警：5 分钟内 ERROR 日志超过 10 条触发告警
-- 接口超时告警：P95 响应时间超过 1000ms 触发告警
-- 限流告警：限流拒绝率超过 10% 触发告警
-- 缓存告警：缓存命中率低于 80% 触发告警
+- 告警阈值根据环境、业务基线和实际运行数据配置，不在本规范中预设固定数值
 
 ## 编译故障排查与诊断
 
@@ -1845,9 +2036,9 @@ mvnd clean compile -pl apex-interfaces 2>&1 | grep "cannot find symbol\|cannot b
 - 使用 IDE 的自动导入时要仔细检查导入的包是否正确
 
 **阻塞 I/O 调度器**:
-- `BlockingIoSchedulers` 提供静态方法: `jdbc()`, `cache()`, `storage()`, `remote()`, `general()`
+- `BlockingIoSchedulers` 提供静态方法: `jdbc()`, `cache()`, `storage()`, `event()`, `remote()`, `general()`
 - 没有 `getScheduler(String)` 方法
-- 选择合适的调度器: LDAP/HTTP 远程调用使用 `remote()`,数据库使用 `jdbc()`
+- 选择合适的调度器: LDAP/HTTP 远程调用使用 `remote()`,数据库使用 `jdbc()`,Outbox/日志入库使用 `event()`
 
 ### 增量编译验证
 

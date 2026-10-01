@@ -20,12 +20,26 @@ import org.apache.ibatis.annotations.Select;
 public interface TaskMapper extends BaseMapper<TaskPO> {
 
     @Select("SELECT COUNT(*) FROM wf_task WHERE status = 'PENDING' AND deleted = 0")
+    /**
+     * TODO: Add method description
+     * @return TODO
+     */
     Integer countPendingTasks();
 
     @Select(
             "SELECT COUNT(*) FROM wf_task WHERE status = 'PENDING' AND timeout_at IS NOT NULL AND timeout_at <= #{now} AND timeout_handled = 0 AND deleted = 0")
+    /**
+     * TODO: Add method description
+     *
+     * @param now TODO
+     * @return TODO
+     */
     Integer countTimeoutTasks(@Param("now") LocalDateTime now);
 
     @Select("SELECT COUNT(*) FROM wf_task WHERE transferred_from IS NOT NULL AND deleted = 0")
+    /**
+     * TODO: Add method description
+     * @return TODO
+     */
     Integer countTransferredTasks();
 }

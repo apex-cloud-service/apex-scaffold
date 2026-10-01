@@ -19,11 +19,35 @@ import org.mapstruct.ReportingPolicy;
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface TaskPoConverter {
 
+    /**
+     * TODO: Add method description
+     *
+     * @param entity TODO
+     * @return TODO
+     */
     TaskPO toPo(Task entity);
 
+    /**
+     * TODO: Add method description
+     *
+     * @param po TODO
+     * @return TODO
+     */
     Task toEntity(TaskPO po);
 
+    /**
+     * TODO: Add method description
+     *
+     * @param entities TODO
+     * @return TODO
+     */
     List<TaskPO> toPoList(List<Task> entities);
 
+    /**
+     * TODO: Add method description
+     *
+     * @param pos TODO
+     * @return TODO
+     */
     List<Task> toEntityList(List<TaskPO> pos);
 }

@@ -220,12 +220,25 @@ public class MenuService {
      * @throws BusinessException 按钮类型缺少权限标识时抛出
      */
     private Mono<Void> validateButtonPerms(MenuRequest request) {
-        if (request.getMenuType() != null
-                && request.getMenuType() == 2
-                && (request.getPerms() == null || request.getPerms().isBlank())) {
+        if (isButtonTypeMenuMissingPerms(request)) {
             return Mono.error(new BusinessException(ResultCode.MENU_PERMS_REQUIRED));
         }
         return Mono.empty();
+    }
+
+    /**
+     * 检查是否为按钮类型菜单且缺少权限标识。
+     *
+     * <p>业务规则：按钮类型菜单（menuType=2）必须配置权限标识，
+     * 权限标识用于后端权限校验，缺失则无法控制按钮访问。
+     *
+     * @param request 菜单请求体
+     * @return true 表示是按钮类型且缺少权限标识
+     */
+    private boolean isButtonTypeMenuMissingPerms(MenuRequest request) {
+        return request.getMenuType() != null
+                && request.getMenuType() == 2
+                && (request.getPerms() == null || request.getPerms().isBlank());
     }
 
     /**
@@ -240,7 +253,7 @@ public class MenuService {
     private List<MenuDTO> buildTree(List<MenuEntity> entities) {
         List<MenuDTO> nodes = entities.stream().map(menuAssembler::toDTO).collect(Collectors.toList());
         Map<Long, MenuDTO> byId = nodes.stream().collect(Collectors.toMap(MenuDTO::getId, node -> node));
-        List<MenuDTO> roots = new ArrayList<>();
+        List<MenuDTO> roots = new ArrayList<>(16);
         for (MenuDTO node : nodes) {
             if (node.getParentId() == null || node.getParentId() == MenuEntity.ROOT_PARENT_ID) {
                 roots.add(node);

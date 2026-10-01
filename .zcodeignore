@@ -1,0 +1,128 @@
+# ===== Maven / 构建产物 =====
+target/
+**/target/
+build/
+out/
+dist/
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+*.zip
+*.tar.gz
+*.tar.bz2
+*.pom
+*.lastUpdated
+*.flattened-pom.xml
+
+# ===== IDE 与编辑器 =====
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.project
+.classpath
+.settings/
+.factorypath
+*.launch
+*.prefs
+
+# ===== 文件系统 / 系统生成 =====
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*.swo
+*~
+# macOS 资源分支
+.Spotlight-V100
+.Trashes
+
+# ===== 日志与运行时 =====
+logs/
+*.log
+*.pid
+hs_err_pid*.log
+
+# ===== 本地配置与密钥（不入库）=====
+application-local.yml
+application-local.yaml
+application-local.properties
+application-dev-local.yml
+config/license/private.key
+*.pem
+*.key
+*.keystore
+*.truststore
+*.lic
+*.license
+
+# ===== 环境变量 =====
+.env
+.env.*
+!.env.example
+
+# ===== 测试与覆盖率报告 =====
+stress-test-reports/
+coverage-report/
+**/jacoco.exec
+*.exec
+
+# ===== 前后端依赖 / 缓存 =====
+node_modules/
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ===== 临时与备份 =====
+tmp/
+temp/
+backups/
+*.tmp
+*.bak
+
+# ===== JRebel / 个人插件配置 =====
+rebel.xml
+rebel-remote.xml
+
+# ===== 工具链本地状态 =====
+.workbuddy/
+.idea/*
+*.log.{err,out}
+
+# ===== 发布产物 =====
+dist/
+release/
+
+# ===== ↑ 以上同步自 .gitignore（「从 .gitignore 同步」只重写以上部分）=====
+.git/
+.hg/
+.svn/
+bower_components/
+jspm_packages/
+__pycache__/
+site-packages/
+venv/
+coverage/
+htmlcov/
+lcov-report/
+cmakefiles/
+cmake-build-*/
+bazel-*/
+pods/
+deriveddata/
+storybook-static/
+playwright-report/
+test-results/
+allure-results/
+allure-report/
+cdk.out/
+*.egg-info/
+*.dist-info/
+eggs/
+pip-wheel-metadata/
+wheels/
+# ----- ↑ 以上为 ZCode 默认排除规则（自定义规则请写在本行下方，不会被同步/恢复改动）-----
+# 自定义规则写在下方（本行提示可删除）

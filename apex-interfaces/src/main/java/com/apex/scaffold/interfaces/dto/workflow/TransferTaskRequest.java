@@ -40,11 +40,17 @@ import lombok.Data;
 public class TransferTaskRequest {
 
     @NotNull(message = "新审批人ID不能为空")
-    @Schema(description = "新执行人用户 ID，必须是系统中的有效用户，转办后原执行人不再参与后续处理", example = "10003", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(
+            description = "新执行人用户 ID，必须是系统中的有效用户，转办后原执行人不再参与后续处理",
+            example = "10003",
+            requiredMode = Schema.RequiredMode.REQUIRED)
     private Long newAssigneeId;
 
     @NotBlank(message = "转办原因不能为空")
     @Size(max = 500, message = "转办原因不能超过500字")
-    @Schema(description = "转办原因，用于记录转办说明，最多 500 字", example = "原审批人已调岗，转交给新的部门负责人", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(
+            description = "转办原因，用于记录转办说明，最多 500 字",
+            example = "原审批人已调岗，转交给新的部门负责人",
+            requiredMode = Schema.RequiredMode.REQUIRED)
     private String reason;
 }

@@ -57,6 +57,8 @@ import reactor.core.publisher.Mono;
 @Tag(name = "运行时日志", description = "运行时日志查询接口")
 public class RuntimeLogHandler {
 
+    private static final int MAX_LOG_LIMIT = 1000;
+
     private final RuntimeLogService runtimeLogService;
 
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -131,8 +133,8 @@ public class RuntimeLogHandler {
             String message = request.queryParam("message").orElse(null);
             int limit = parseIntParam(request, "limit", 100);
 
-            if (limit > 1000) {
-                limit = 1000;
+            if (limit > MAX_LOG_LIMIT) {
+                limit = MAX_LOG_LIMIT;
             }
 
             LocalDateTime startTime = startTimeStr != null

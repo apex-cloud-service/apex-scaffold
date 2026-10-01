@@ -51,11 +51,13 @@ public class OfficeMessagePO {
     /**
      * 接收者类型（USER、DEPARTMENT、GROUP、USER_LIST）
      */
+    @TableField("target_type")
     private String recipientType;
 
     /**
      * 接收者ID列表（JSON数组）
      */
+    @TableField("target_user_ids")
     private String recipientIds;
 
     /**
@@ -78,6 +80,7 @@ public class OfficeMessagePO {
     /**
      * 发送状态（PENDING、SENDING、SUCCESS、FAILED、PARTIAL_SUCCESS）
      */
+    @TableField("send_status")
     private String status;
 
     /**
@@ -88,6 +91,7 @@ public class OfficeMessagePO {
     /**
      * 发送结果消息
      */
+    @TableField("failure_reason")
     private String resultMessage;
 
     /**

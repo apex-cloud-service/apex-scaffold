@@ -17,7 +17,8 @@ echo "初始化构建环境..."
 if [[ -f "$HOME/.sdkman/bin/sdkman-init.sh" ]]; then
   # shellcheck disable=SC1091
   source "$HOME/.sdkman/bin/sdkman-init.sh"
-  echo "✅ 已加载 sdkman"
+  sdk env
+  echo "✅ 已加载 sdkman 项目环境"
 else
   echo "⚠️ 未找到 sdkman（$HOME/.sdkman），请安装: https://sdkman.io"
 fi

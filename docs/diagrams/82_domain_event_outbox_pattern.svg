@@ -1,0 +1,185 @@
+<svg viewBox="0 0 1400 800" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a237e;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#283593;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="pendingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ef6c00;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#fb8c00;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="processingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1565c0;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1976d2;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="deliveredGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2e7d32;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#43a047;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="deadGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#c62828;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#e53935;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.3"/>
+    </filter>
+    <marker id="arrowBlue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#64b5f6" />
+    </marker>
+    <marker id="arrowGreen" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#66bb6a" />
+    </marker>
+    <marker id="arrowOrange" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#ffa726" />
+    </marker>
+  </defs>
+
+  <rect width="1400" height="800" fill="#0a0e27"/>
+
+  <text x="700" y="40" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="#ffffff" text-anchor="middle">领域事件 Outbox 模式 (Domain Event Outbox Pattern)</text>
+  <text x="700" y="70" font-family="Arial, sans-serif" font-size="14" fill="#64b5f6" text-anchor="middle">事务保证 + 异步投递 + 指数退避重试 + 死信处理</text>
+
+  <rect x="50" y="100" width="380" height="300" rx="8" fill="url(#grad1)" stroke="#42a5f5" stroke-width="2" filter="url(#shadow)"/>
+  <text x="240" y="130" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#ffffff" text-anchor="middle">1. 事件发布 (本地事务)</text>
+  
+  <rect x="70" y="150" width="340" height="100" rx="6" fill="#1565c0" stroke="#64b5f6" stroke-width="1.5"/>
+  <text x="240" y="175" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">业务操作 + 事件写入</text>
+  <text x="80" y="195" font-family="monospace" font-size="9" fill="#a5d6a7">@Transactional</text>
+  <text x="80" y="208" font-family="monospace" font-size="9" fill="#a5d6a7">void createUser(User user) {</text>
+  <text x="90" y="221" font-family="monospace" font-size="9" fill="#a5d6a7">  userRepository.save(user);</text>
+  <text x="90" y="234" font-family="monospace" font-size="9" fill="#a5d6a7">  outboxStore.append(</text>
+  <text x="100" y="245" font-family="monospace" font-size="9" fill="#a5d6a7">    new UserCreatedEvent(userId));</text>
+  <text x="80" y="258" font-family="monospace" font-size="9" fill="#a5d6a7">}</text>
+
+  <rect x="70" y="265" width="340" height="120" rx="6" fill="#0d47a1" stroke="#64b5f6" stroke-width="1.5"/>
+  <text x="240" y="290" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#ffd54f" text-anchor="middle">Outbox 表结构</text>
+  <text x="80" y="308" font-family="monospace" font-size="9" fill="#fff9c4">sys_domain_event_outbox:</text>
+  <text x="85" y="321" font-family="monospace" font-size="9" fill="#fff9c4">• id (主键)</text>
+  <text x="85" y="334" font-family="monospace" font-size="9" fill="#fff9c4">• event_id (唯一约束，幂等)</text>
+  <text x="85" y="347" font-family="monospace" font-size="9" fill="#fff9c4">• event_class, payload (JSON)</text>
+  <text x="85" y="360" font-family="monospace" font-size="9" fill="#fff9c4">• status (PENDING/PROCESSING/DELIVERED/DEAD)</text>
+  <text x="85" y="373" font-family="monospace" font-size="9" fill="#fff9c4">• attempts, next_attempt_at, locked_by</text>
+
+  <rect x="460" y="100" width="880" height="300" rx="8" fill="url(#grad1)" stroke="#42a5f5" stroke-width="2" filter="url(#shadow)"/>
+  <text x="900" y="130" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#ffffff" text-anchor="middle">2. 后台投递 (DomainEventOutboxDispatcher)</text>
+  
+  <rect x="480" y="150" width="190" height="110" rx="6" fill="url(#pendingGrad)" stroke="#ffa726" stroke-width="2"/>
+  <text x="575" y="175" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">PENDING</text>
+  <text x="490" y="195" font-family="Arial, sans-serif" font-size="10" fill="#fff3e0">待投递状态</text>
+  <text x="490" y="210" font-family="Arial, sans-serif" font-size="10" fill="#ffe0b2">• 初始状态</text>
+  <text x="490" y="225" font-family="Arial, sans-serif" font-size="10" fill="#ffe0b2">• 失败重试后恢复</text>
+  <text x="490" y="240" font-family="Arial, sans-serif" font-size="10" fill="#ffe0b2">• 等待被领取</text>
+  <text x="490" y="253" font-family="Arial, sans-serif" font-size="9" fill="#ffab91">next_attempt_at &lt;= NOW</text>
+
+  <rect x="690" y="150" width="190" height="110" rx="6" fill="url(#processingGrad)" stroke="#42a5f5" stroke-width="2"/>
+  <text x="785" y="175" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">PROCESSING</text>
+  <text x="700" y="195" font-family="Arial, sans-serif" font-size="10" fill="#e3f2fd">处理中状态</text>
+  <text x="700" y="210" font-family="Arial, sans-serif" font-size="10" fill="#90caf9">• 已被领取</text>
+  <text x="700" y="225" font-family="Arial, sans-serif" font-size="10" fill="#90caf9">• locked_by = workerId</text>
+  <text x="700" y="240" font-family="Arial, sans-serif" font-size="10" fill="#90caf9">• 投递中</text>
+  <text x="700" y="253" font-family="Arial, sans-serif" font-size="9" fill="#64b5f6">超时自动恢复 PENDING</text>
+
+  <rect x="900" y="150" width="190" height="110" rx="6" fill="url(#deliveredGrad)" stroke="#66bb6a" stroke-width="2"/>
+  <text x="995" y="175" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">DELIVERED</text>
+  <text x="910" y="195" font-family="Arial, sans-serif" font-size="10" fill="#e8f5e9">已投递状态</text>
+  <text x="910" y="210" font-family="Arial, sans-serif" font-size="10" fill="#c8e6c9">• 投递成功</text>
+  <text x="910" y="225" font-family="Arial, sans-serif" font-size="10" fill="#c8e6c9">• 监听器执行完成</text>
+  <text x="910" y="240" font-family="Arial, sans-serif" font-size="10" fill="#c8e6c9">• delivered_at 记录</text>
+  <text x="910" y="253" font-family="Arial, sans-serif" font-size="9" fill="#81c784">7天后自动删除</text>
+
+  <rect x="1110" y="150" width="210" height="110" rx="6" fill="url(#deadGrad)" stroke="#ef5350" stroke-width="2"/>
+  <text x="1215" y="175" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">DEAD</text>
+  <text x="1120" y="195" font-family="Arial, sans-serif" font-size="10" fill="#ffebee">死信状态</text>
+  <text x="1120" y="210" font-family="Arial, sans-serif" font-size="10" fill="#ffcdd2">• 超过重试上限 (8次)</text>
+  <text x="1120" y="225" font-family="Arial, sans-serif" font-size="10" fill="#ffcdd2">• 需人工排查</text>
+  <text x="1120" y="240" font-family="Arial, sans-serif" font-size="10" fill="#ffcdd2">• last_error 记录</text>
+  <text x="1120" y="253" font-family="Arial, sans-serif" font-size="9" fill="#ef9a9a">30天后自动删除</text>
+
+  <rect x="480" y="275" width="840" height="110" rx="6" fill="#1565c0" stroke="#64b5f6" stroke-width="1.5"/>
+  <text x="900" y="300" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">定时调度 (@Scheduled)</text>
+  <text x="490" y="318" font-family="monospace" font-size="9" fill="#a5d6a7">@Scheduled(fixedDelay=1000) // 每秒轮询</text>
+  <text x="490" y="331" font-family="monospace" font-size="9" fill="#a5d6a7">void dispatch() {</text>
+  <text x="500" y="344" font-family="monospace" font-size="9" fill="#a5d6a7">  String workerId = UUID.randomUUID();</text>
+  <text x="500" y="357" font-family="monospace" font-size="9" fill="#a5d6a7">  List&lt;OutboxEventRecord&gt; batch =</text>
+  <text x="510" y="370" font-family="monospace" font-size="9" fill="#a5d6a7">    outboxStore.claim(workerId, 50, 120s);</text>
+  <text x="490" y="380" font-family="monospace" font-size="9" fill="#a5d6a7">}</text>
+
+  <path d="M 575 260 L 575 275 L 785 275 L 785 260" stroke="#ffa726" stroke-width="2" marker-end="url(#arrowOrange)" fill="none"/>
+  <text x="680" y="270" font-family="Arial, sans-serif" font-size="10" fill="#ffa726" text-anchor="middle">领取</text>
+
+  <path d="M 785 260 L 785 295 L 995 295 L 995 260" stroke="#66bb6a" stroke-width="2" marker-end="url(#arrowGreen)" fill="none" stroke-dasharray="5,5"/>
+  <text x="890" y="290" font-family="Arial, sans-serif" font-size="10" fill="#66bb6a" text-anchor="middle">成功</text>
+
+  <path d="M 875 260 L 875 315 L 575 315 L 575 260" stroke="#ef5350" stroke-width="2" marker-end="url(#arrowOrange)" fill="none" stroke-dasharray="5,5"/>
+  <text x="725" y="310" font-family="Arial, sans-serif" font-size="10" fill="#ef5350" text-anchor="middle">失败重试</text>
+
+  <path d="M 970 260 L 970 335 L 1215 335 L 1215 260" stroke="#ef5350" stroke-width="2" fill="none" stroke-dasharray="3,3"/>
+  <text x="1090" y="330" font-family="Arial, sans-serif" font-size="10" fill="#ef5350" text-anchor="middle">超限</text>
+
+  <rect x="50" y="420" width="380" height="300" rx="8" fill="url(#grad1)" stroke="#42a5f5" stroke-width="2" filter="url(#shadow)"/>
+  <text x="240" y="450" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#ffffff" text-anchor="middle">指数退避重试</text>
+  
+  <rect x="70" y="470" width="340" height="110" rx="6" fill="#1565c0" stroke="#64b5f6" stroke-width="1.5"/>
+  <text x="240" y="495" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">退避策略</text>
+  <text x="80" y="513" font-family="monospace" font-size="9" fill="#a5d6a7">delaySeconds = min(300,</text>
+  <text x="90" y="526" font-family="monospace" font-size="9" fill="#a5d6a7">  1 &lt;&lt; min(attempts, 8));</text>
+  <text x="80" y="543" font-family="Arial, sans-serif" font-size="10" fill="#90caf9">第1次: 2秒后</text>
+  <text x="80" y="558" font-family="Arial, sans-serif" font-size="10" fill="#90caf9">第2次: 4秒后</text>
+  <text x="80" y="573" font-family="Arial, sans-serif" font-size="10" fill="#90caf9">第8次: 256秒后 (封顶300秒)</text>
+
+  <rect x="70" y="595" width="340" height="110" rx="6" fill="#0d47a1" stroke="#64b5f6" stroke-width="1.5"/>
+  <text x="240" y="620" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#ffd54f" text-anchor="middle">配置参数</text>
+  <text x="80" y="638" font-family="Arial, sans-serif" font-size="10" fill="#fff9c4">apex.events.outbox:</text>
+  <text x="85" y="653" font-family="Arial, sans-serif" font-size="9" fill="#fff9c4">• enabled: true</text>
+  <text x="85" y="666" font-family="Arial, sans-serif" font-size="9" fill="#fff9c4">• batch-size: 50 (单批领取数)</text>
+  <text x="85" y="679" font-family="Arial, sans-serif" font-size="9" fill="#fff9c4">• max-attempts: 8 (最大重试)</text>
+  <text x="85" y="692" font-family="Arial, sans-serif" font-size="9" fill="#fff9c4">• lock-timeout-seconds: 120</text>
+
+  <rect x="460" y="420" width="440" height="300" rx="8" fill="url(#grad1)" stroke="#42a5f5" stroke-width="2" filter="url(#shadow)"/>
+  <text x="680" y="450" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#ffffff" text-anchor="middle">事务保证</text>
+  
+  <rect x="480" y="470" width="400" height="110" rx="6" fill="#2e7d32" stroke="#66bb6a" stroke-width="1.5"/>
+  <text x="680" y="495" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">原子性保证</text>
+  <text x="490" y="513" font-family="Arial, sans-serif" font-size="10" fill="#e8f5e9">✓ 业务数据 + 事件记录在同一事务</text>
+  <text x="490" y="528" font-family="Arial, sans-serif" font-size="10" fill="#c8e6c9">✓ 业务成功 → 事件必写入</text>
+  <text x="490" y="543" font-family="Arial, sans-serif" font-size="10" fill="#c8e6c9">✓ 业务回滚 → 事件不写入</text>
+  <text x="490" y="558" font-family="Arial, sans-serif" font-size="10" fill="#c8e6c9">✓ event_id 唯一约束 → 幂等</text>
+  <text x="490" y="573" font-family="Arial, sans-serif" font-size="10" fill="#ffab91">避免消息丢失 / 双写不一致</text>
+
+  <rect x="480" y="595" width="400" height="110" rx="6" fill="#1565c0" stroke="#64b5f6" stroke-width="1.5"/>
+  <text x="680" y="620" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">投递保证</text>
+  <text x="490" y="638" font-family="Arial, sans-serif" font-size="10" fill="#e3f2fd">✓ At-Least-Once 投递语义</text>
+  <text x="490" y="653" font-family="Arial, sans-serif" font-size="10" fill="#90caf9">✓ 批次领取 (workerId 隔离)</text>
+  <text x="490" y="668" font-family="Arial, sans-serif" font-size="10" fill="#90caf9">✓ 处理超时自动恢复 PENDING</text>
+  <text x="490" y="683" font-family="Arial, sans-serif" font-size="10" fill="#90caf9">✓ 投递失败指数退避重试</text>
+  <text x="490" y="698" font-family="Arial, sans-serif" font-size="10" fill="#ffab91">监听器需支持幂等</text>
+
+  <rect x="930" y="420" width="410" height="300" rx="8" fill="url(#grad1)" stroke="#42a5f5" stroke-width="2" filter="url(#shadow)"/>
+  <text x="1135" y="450" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#ffffff" text-anchor="middle">保留策略与监控</text>
+  
+  <rect x="950" y="470" width="370" height="110" rx="6" fill="#1565c0" stroke="#64b5f6" stroke-width="1.5"/>
+  <text x="1135" y="495" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">定期清理</text>
+  <text x="960" y="513" font-family="monospace" font-size="9" fill="#a5d6a7">@Scheduled(fixedDelay=3600000)</text>
+  <text x="960" y="526" font-family="monospace" font-size="9" fill="#a5d6a7">void purgeRetained() {</text>
+  <text x="970" y="539" font-family="monospace" font-size="9" fill="#a5d6a7">  deleteDeliveredOlderThan(168h);</text>
+  <text x="970" y="552" font-family="monospace" font-size="9" fill="#a5d6a7">  deleteDeadOlderThan(30d);</text>
+  <text x="960" y="565" font-family="monospace" font-size="9" fill="#a5d6a7">}</text>
+  <text x="960" y="575" font-family="Arial, sans-serif" font-size="9" fill="#90caf9">防止 Outbox 表无限增长</text>
+
+  <rect x="950" y="595" width="370" height="110" rx="6" fill="#0d47a1" stroke="#64b5f6" stroke-width="1.5"/>
+  <text x="1135" y="620" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#ffd54f" text-anchor="middle">监控指标</text>
+  <text x="960" y="638" font-family="monospace" font-size="9" fill="#fff9c4">countByStatus():</text>
+  <text x="970" y="651" font-family="Arial, sans-serif" font-size="10" fill="#fff9c4">• PENDING 积压量</text>
+  <text x="970" y="664" font-family="Arial, sans-serif" font-size="10" fill="#fff9c4">• PROCESSING 处理中数量</text>
+  <text x="970" y="677" font-family="Arial, sans-serif" font-size="10" fill="#fff9c4">• DEAD 死信数量 (告警)</text>
+  <text x="960" y="695" font-family="Arial, sans-serif" font-size="9" fill="#ffab91">OutboxMetricsReporter 采集</text>
+
+  <path d="M 430 255 L 460 255" stroke="#64b5f6" stroke-width="2" marker-end="url(#arrowBlue)"/>
+  <text x="445" y="250" font-family="Arial, sans-serif" font-size="10" fill="#64b5f6" text-anchor="middle">写入</text>
+
+  <rect x="50" y="735" width="1300" height="50" rx="6" fill="#0d47a1" stroke="#64b5f6" stroke-width="1.5"/>
+  <text x="700" y="755" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#ffd54f" text-anchor="middle">设计亮点</text>
+  <text x="60" y="773" font-family="Arial, sans-serif" font-size="10" fill="#fff9c4">✓ 事务保证 (避免双写不一致)  ✓ At-Least-Once (可靠投递)  ✓ 指数退避 (智能重试)  ✓ 死信隔离 (人工补偿)  ✓ 批次领取 (高效并发)  ✓ 超时恢复 (防止卡死)  ✓ 保留策略 (自动清理)</text>
+
+  <text x="700" y="798" font-family="Arial, sans-serif" font-size="11" fill="#546e7a" text-anchor="middle">© 2026 Apex Team · 领域事件Outbox模式 v1.0 · apex-infrastructure/event/DomainEventOutboxStore.java</text>
+</svg>

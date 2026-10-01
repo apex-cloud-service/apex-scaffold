@@ -19,7 +19,34 @@ import org.mapstruct.ReportingPolicy;
  */
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface SysSsoSessionAssembler {
+    /**
+     *
+     * 将SSO会话实体转换为DTO。
+     *
+     *
+     *
+     * @param entity SSO会话实体
+     *
+     * @return SSO会话DTO
+     *
+     */
     SsoSessionDTO toDTO(SysSsoSessionEntity entity);
 
+    /**
+     *
+     *
+     * 将SSO会话实体列表转换为DTO列表。
+     *
+     *
+     *
+     *
+     *
+     * @param entities SSO会话实体列表
+     *
+     *
+     * @return SSO会话DTO列表
+     *
+     *
+     */
     List<SsoSessionDTO> toDTOList(List<SysSsoSessionEntity> entities);
 }

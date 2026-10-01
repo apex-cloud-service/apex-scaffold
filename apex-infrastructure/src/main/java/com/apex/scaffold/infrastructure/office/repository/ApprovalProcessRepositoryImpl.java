@@ -4,9 +4,12 @@ import com.apex.scaffold.common.context.TenantContext;
 import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
 import com.apex.scaffold.domain.office.approval.ApprovalProcess;
 import com.apex.scaffold.domain.office.approval.ApprovalProcessRepository;
+import com.apex.scaffold.domain.office.approval.ApprovalStatus;
 import com.apex.scaffold.infrastructure.office.converter.ApprovalProcessConverter;
 import com.apex.scaffold.infrastructure.office.mapper.ApprovalProcessMapper;
 import com.apex.scaffold.infrastructure.office.po.ApprovalProcessPO;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -96,6 +99,44 @@ public class ApprovalProcessRepositoryImpl implements ApprovalProcessRepository 
                         log.debug("根据流程实例ID查询成功：{}", processInstanceId);
                     }
                 });
+    }
+
+    @Override
+    public Mono<List<ApprovalProcess>> findByConditions(
+            Long tenantId, String platform, ApprovalStatus status, int page, int size) {
+        return Mono.fromCallable(() -> {
+                    Page<ApprovalProcessPO> pageParam = new Page<>(page, size);
+                    LambdaQueryWrapper<ApprovalProcessPO> wrapper = new LambdaQueryWrapper<>();
+                    wrapper.eq(ApprovalProcessPO::getTenantId, tenantId);
+                    if (platform != null) {
+                        wrapper.eq(ApprovalProcessPO::getPlatform, platform);
+                    }
+                    if (status != null) {
+                        wrapper.eq(ApprovalProcessPO::getStatus, status.name());
+                    }
+                    wrapper.orderByDesc(ApprovalProcessPO::getCreatedAt);
+                    Page<ApprovalProcessPO> result = mapper.selectPage(pageParam, wrapper);
+                    return result.getRecords().stream().map(converter::toEntity).toList();
+                })
+                .subscribeOn(blockingIoSchedulers.jdbc())
+                .doOnSuccess(list -> log.debug("条件查询审批流程完成，租户：{}，数量：{}", tenantId, list.size()));
+    }
+
+    @Override
+    public Mono<Long> countByConditions(Long tenantId, String platform, ApprovalStatus status) {
+        return Mono.fromCallable(() -> {
+                    LambdaQueryWrapper<ApprovalProcessPO> wrapper = new LambdaQueryWrapper<>();
+                    wrapper.eq(ApprovalProcessPO::getTenantId, tenantId);
+                    if (platform != null) {
+                        wrapper.eq(ApprovalProcessPO::getPlatform, platform);
+                    }
+                    if (status != null) {
+                        wrapper.eq(ApprovalProcessPO::getStatus, status.name());
+                    }
+                    return mapper.selectCount(wrapper);
+                })
+                .subscribeOn(blockingIoSchedulers.jdbc())
+                .doOnSuccess(count -> log.debug("统计审批流程数量完成，租户：{}，数量：{}", tenantId, count));
     }
 
     @Override

@@ -17,20 +17,70 @@ public interface MfaConfigRepository extends ReactiveCrudRepository<MfaConfig, L
     /**
      * 根据用户ID查询所有MFA配置
      */
+    /**
+     * TODO: Add method description
+     * @return TODO
+     */
+    /**
+     * TODO: Add method description
+     *
+     * @param userId TODO
+     * @return TODO
+     */
     Flux<MfaConfig> findByUserId(String userId);
 
     /**
      * 根据用户ID和类型查询MFA配置
+     */
+    /**
+     * TODO: Add method description
+     * @return TODO
+     */
+    /**
+     * TODO: Add method description
+     * @return TODO
+     */
+    /**
+     * TODO: Add method description
+     *
+     * @param userId TODO
+     * @param type TODO
+     * @return TODO
      */
     Mono<MfaConfig> findByUserIdAndType(String userId, MfaConfig.MfaType type);
 
     /**
      * 根据租户ID查询所有MFA配置
      */
+    /**
+     * TODO: Add method description
+     * @return TODO
+     */
+    /**
+     * TODO: Add method description
+     *
+     * @param tenantId TODO
+     * @return TODO
+     */
     Flux<MfaConfig> findByTenantId(String tenantId);
 
     /**
      * 删除用户的指定类型MFA配置
+     */
+    /**
+     * TODO: Add method description
+     * @return TODO
+     */
+    /**
+     * TODO: Add method description
+     * @return TODO
+     */
+    /**
+     * TODO: Add method description
+     *
+     * @param userId TODO
+     * @param type TODO
+     * @return TODO
      */
     Mono<Long> deleteByUserIdAndType(String userId, MfaConfig.MfaType type);
 }

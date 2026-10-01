@@ -78,6 +78,12 @@ public class IpRateLimitWebFilter implements WebFilter {
     /** CIDR 网段分隔符 */
     private static final String CIDR_SEPARATOR = "/";
 
+    /** 路径模式变量起始标识 */
+    private static final String PATTERN_VARIABLE_START = "{";
+
+    /** 路径模式通配符标识 */
+    private static final String PATTERN_WILDCARD = "*";
+
     /** Redis 响应式模板 */
     private final ReactiveStringRedisTemplate redisTemplate;
 
@@ -354,7 +360,7 @@ public class IpRateLimitWebFilter implements WebFilter {
      * @return 匹配时返回 {@code true}
      */
     private boolean isPathPatternMatch(String configuredPath, PathContainer requestPath) {
-        if (!configuredPath.contains("{") && !configuredPath.contains("*")) {
+        if (!configuredPath.contains(PATTERN_VARIABLE_START) && !configuredPath.contains(PATTERN_WILDCARD)) {
             return false;
         }
         try {

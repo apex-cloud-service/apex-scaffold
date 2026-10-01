@@ -107,7 +107,7 @@ public class DomainEventOutboxStore {
      * @return 状态到数量的映射；空表返回空 Map
      */
     public Map<String, Long> countByStatus() {
-        Map<String, Long> counts = new HashMap<>();
+        Map<String, Long> counts = new HashMap<>(16);
         String sql = "SELECT status, COUNT(*) FROM sys_domain_event_outbox GROUP BY status";
         try (Connection connection = dataSource.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql);

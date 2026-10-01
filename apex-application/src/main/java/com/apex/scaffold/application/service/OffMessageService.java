@@ -171,7 +171,7 @@ public class OffMessageService {
             return Mono.empty();
         }
 
-        List<OffMessageRecipientEntity> recipients = new ArrayList<>();
+        List<OffMessageRecipientEntity> recipients = new ArrayList<>(16);
         for (Long recipientId : recipientIds) {
             OffMessageRecipientEntity recipient = new OffMessageRecipientEntity();
             recipient.setMessageId(message.getId());

@@ -1,8 +1,8 @@
 package com.apex.scaffold.license;
 
 import java.util.concurrent.ScheduledFuture;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
 /**
  * License运行期重检调度器
@@ -102,8 +102,7 @@ public class LicenseRevalidationScheduler implements AutoCloseable {
         this.executor.setDaemon(true);
         this.executor.initialize();
         this.refreshTask = this.executor.scheduleWithFixedDelay(
-                () -> safeRefresh(validator, properties),
-                java.time.Duration.ofMillis(intervalMs));
+                () -> safeRefresh(validator, properties), java.time.Duration.ofMillis(intervalMs));
         log.info("License 运行期重检已启动: 间隔 {}ms", intervalMs);
     }
 

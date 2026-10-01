@@ -60,6 +60,9 @@ import reactor.core.publisher.Mono;
 @Tag(name = "后台-用户管理", description = "超级管理员用户查询和后台角色配置")
 public class AdminUserManagementHandler extends BaseHandler {
 
+    /** 错误消息常量 */
+    private static final String MSG_INVALID_USER_ID = "userId格式错误";
+
     private final AdminUserManagementService service;
 
     /**
@@ -368,7 +371,9 @@ public class AdminUserManagementHandler extends BaseHandler {
      */
     private Long userId(ServerRequest request) {
         Long userId = safeParseLong(request.pathVariable("userId"));
-        if (userId == null || userId <= 0) throw new BusinessException(ResultCode.PARAM_ERROR, "userId格式错误");
+        if (userId == null || userId <= 0) {
+            throw new BusinessException(ResultCode.PARAM_ERROR, MSG_INVALID_USER_ID);
+        }
         return userId;
     }
 }

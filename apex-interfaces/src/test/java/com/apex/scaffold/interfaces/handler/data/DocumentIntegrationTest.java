@@ -2,10 +2,10 @@ package com.apex.scaffold.interfaces.handler.data;
 
 import com.apex.scaffold.application.dto.data.DocumentRequest;
 import java.util.Arrays;
+import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
@@ -14,10 +14,10 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureWebTestClient
 @DisplayName("文档管理集成测试")
+@RequiredArgsConstructor
 class DocumentIntegrationTest {
 
-    @Autowired
-    private WebTestClient webTestClient;
+    private final WebTestClient webTestClient;
 
     private DocumentRequest createRequest;
 

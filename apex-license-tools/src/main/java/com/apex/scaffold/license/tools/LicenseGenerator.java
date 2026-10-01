@@ -286,7 +286,9 @@ public class LicenseGenerator {
                 args.length > 4 ? LicenseVersion.valueOf(args[4].toUpperCase()) : LicenseVersion.ENTERPRISE;
         String customerName = args.length > 5 ? args[5] : "示例客户";
         int validDays = args.length > 6 ? Integer.parseInt(args[6]) : 365;
-        String[] features = args.length > FEATURES_ARG_INDEX && !args[FEATURES_ARG_INDEX].startsWith("--") ? args[FEATURES_ARG_INDEX].split(",") : null;
+        String[] features = args.length > FEATURES_ARG_INDEX && !args[FEATURES_ARG_INDEX].startsWith("--")
+                ? args[FEATURES_ARG_INDEX].split(",")
+                : null;
 
         // 解析 --fingerprint 可选参数
         String machineFingerprint = null;

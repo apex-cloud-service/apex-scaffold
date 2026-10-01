@@ -21,7 +21,19 @@ import org.mapstruct.ReportingPolicy;
         implementationName = "ApprovalProcessDtoAssemblerImpl")
 public interface ApprovalProcessAssembler {
 
+    /**
+     * 将审批流程实体转换为 DTO。
+     *
+     * @param entity 审批流程实体
+     * @return 审批流程 DTO
+     */
     ApprovalProcessDTO toDto(OfficeApprovalProcessEntity entity);
 
+    /**
+     * 将审批流程 DTO 转换为实体。
+     *
+     * @param dto 审批流程 DTO
+     * @return 审批流程实体
+     */
     OfficeApprovalProcessEntity toEntity(ApprovalProcessDTO dto);
 }

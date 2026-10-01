@@ -31,13 +31,14 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
+@Schema(description = "分页请求参数")
 public class PageRequest {
     /**
      * 页码
      *
      * <p>从1开始，默认为1
      */
-    @Schema(description = "页码")
+    @Schema(description = "页码，从 1 开始", example = "1", minimum = "1")
     @NotNull(message = "{param.not_null}")
     @Min(value = 1, message = "页码必须大于等于1")
     private Integer pageNum;
@@ -47,14 +48,16 @@ public class PageRequest {
      *
      * <p>默认为10，最大值一般不超过100
      */
-    @Schema(description = "每页数量")
+    @Schema(description = "每页数量，取值范围 1～100", example = "10", minimum = "1", maximum = "100")
     @NotNull(message = "{param.not_null}")
     @Min(value = 1, message = "每页大小必须大于等于1")
     @Max(value = 100, message = "每页大小必须小于等于100")
     private Integer pageSize;
 
+    @Schema(description = "排序字段名，可选", example = "createTime")
     private String orderBy;
 
+    @Schema(description = "是否升序，缺省为 false（降序）", example = "false")
     private Boolean isAsc = false;
 
     /**
