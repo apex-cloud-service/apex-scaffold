@@ -105,16 +105,12 @@
     <maven-surefire-plugin.version>3.2.5</maven-surefire-plugin.version>
     <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
     <maven-javadoc-plugin.version>3.6.3</maven-javadoc-plugin.version>
-    <sonar.version>3.11.0.3922</sonar.version>
+    <sonar.version>5.8.0.7211</sonar.version>
     <maven.version>3.9.16</maven.version>
     <sonar.host.url>http://localhost:9000</sonar.host.url>
-    <sonar.login>${env.SONAR_LOGIN}</sonar.login>
-    <sonar.password>${env.SONAR_PASSWORD}</sonar.password>
-    <sonar.sources>src/main/java</sonar.sources>
-    <sonar.tests>src/test/java</sonar.tests>
-    <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
-    <sonar.junit.reportsPath>target/surefire-reports</sonar.junit.reportsPath>
-    <sonar.jacoco.reportPaths>target/jacoco.exec</sonar.jacoco.reportPaths>
+    <sonar.projectKey>apex-scaffold</sonar.projectKey>
+    <sonar.projectName>Apex Scaffold</sonar.projectName>
+    <sonar.coverage.jacoco.xmlReportPaths>target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
     <maven-pmd-plugin.version>3.19.0</maven-pmd-plugin.version>
     <maven-enforcer-plugin.version>3.4.1</maven-enforcer-plugin.version>
     <spotless.version>2.43.0</spotless.version>

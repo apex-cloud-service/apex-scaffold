@@ -41,6 +41,10 @@ import reactor.core.publisher.Mono;
 @EnableConfigurationProperties(JwtProperties.class)
 @Import({EncryptionKeyProvider.class, DefaultAuditLogService.class, DefaultEncryptionService.class})
 public class AuthCenterConfig {
+    private static final String OAUTH2_INTROSPECT_PATH = "/oauth2/introspect";
+    private static final String OAUTH2_REVOKE_PATH = "/oauth2/revoke";
+    private static final String OAUTH2_TOKEN_PATH = "/oauth2/token";
+
     private static final String BEARER_PREFIX = "Bearer ";
     private static final String LOGIN_PATH = "/auth/v1/login";
 
@@ -111,15 +115,22 @@ public class AuthCenterConfig {
                     return exchange.getResponse().setComplete();
                 }))
                 .authorizeExchange(exchanges -> exchanges
-                        .pathMatchers(LOGIN_PATH, "/auth/v1/refresh")
+                        .pathMatchers(
+                                LOGIN_PATH,
+                                "/auth/v1/refresh",
+                                "/.well-known/openid-configuration",
+                                "/.well-known/jwks.json",
+                                OAUTH2_TOKEN_PATH,
+                                OAUTH2_REVOKE_PATH,
+                                OAUTH2_INTROSPECT_PATH)
                         .permitAll()
                         .anyExchange()
                         .authenticated())
                 .addFilterAt(bearer, SecurityWebFiltersOrder.AUTHENTICATION)
                 .addFilterAfter(
                         (exchange, chain) -> {
-                            if (LOGIN_PATH.equals(
-                                    exchange.getRequest().getPath().value())) {
+                            if (List.of(LOGIN_PATH, OAUTH2_TOKEN_PATH, OAUTH2_REVOKE_PATH, OAUTH2_INTROSPECT_PATH)
+                                    .contains(exchange.getRequest().getPath().value())) {
                                 String tenant = environment.getProperty("auth-center.login-tenant", "default");
                                 return chain.filter(exchange).contextWrite(TenantContext.withTenant(tenant));
                             }

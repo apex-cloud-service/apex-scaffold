@@ -126,7 +126,10 @@ class AuthCenterOpenApiIntegrationTest {
                 .fields()
                 .forEachRemaining(path -> path.getValue().fields().forEachRemaining(method -> {
                     if (Set.of("get", "post", "put", "delete", "patch").contains(method.getKey())) {
-                        actual.add(method.getKey() + " " + path.getKey());
+                        if (!path.getKey().startsWith("/oauth2/")
+                                && !path.getKey().startsWith("/.well-known/")) {
+                            actual.add(method.getKey() + " " + path.getKey());
+                        }
                         assertThat(operationIds.add(
                                         method.getValue().path("operationId").asText()))
                                 .isTrue();
@@ -162,6 +165,33 @@ class AuthCenterOpenApiIntegrationTest {
         assertThat(expected).hasSize(45);
         assertThat(actual).containsExactlyInAnyOrderElementsOf(expected);
         assertLocalReferencesResolve(document);
+    }
+
+    @Test
+    void oauthProtocolOperationsAreDocumented() {
+        Map.of(
+                        "/oauth2/authorize",
+                        "get",
+                        "/oauth2/token",
+                        "post",
+                        "/oauth2/revoke",
+                        "post",
+                        "/oauth2/introspect",
+                        "post")
+                .forEach((path, method) -> {
+                    assertThat(document.path("paths")
+                                    .path(path)
+                                    .path(method)
+                                    .path("operationId")
+                                    .asText())
+                            .isNotBlank();
+                    assertThat(document.path("paths")
+                                    .path(path)
+                                    .path(method)
+                                    .path("summary")
+                                    .asText())
+                            .isNotBlank();
+                });
     }
 
     @Test

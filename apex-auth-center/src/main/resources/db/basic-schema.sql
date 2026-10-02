@@ -251,3 +251,26 @@ CREATE TABLE IF NOT EXISTS mfa_config (
     created_at TIMESTAMP,
     updated_at TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS oauth2_authorization (
+    id VARCHAR(100) PRIMARY KEY,
+    tenant_id VARCHAR(100) NOT NULL,
+    registered_client_id VARCHAR(100) NOT NULL,
+    client_id VARCHAR(100) NOT NULL,
+    principal_name VARCHAR(200) NOT NULL,
+    authorization_grant_type VARCHAR(50) NOT NULL,
+    authorized_scopes VARCHAR(1000) NOT NULL,
+    redirect_uri VARCHAR(1000),
+    code_challenge VARCHAR(128),
+    code_challenge_method VARCHAR(10),
+    authorization_code_hash CHAR(64) UNIQUE,
+    authorization_code_expires_at TIMESTAMP,
+    access_token_hash CHAR(64) UNIQUE,
+    access_token_expires_at TIMESTAMP,
+    refresh_token_hash CHAR(64) UNIQUE,
+    refresh_token_expires_at TIMESTAMP,
+    revoked BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_oauth2_tenant_client ON oauth2_authorization(tenant_id, client_id);

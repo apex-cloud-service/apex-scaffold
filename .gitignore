@@ -95,3 +95,4 @@ rebel-remote.xml
 # ===== 发布产物 =====
 dist/
 release/
+.scannerwork/
