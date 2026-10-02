@@ -1,3 +1,6 @@
+-- V53: 创建 OAuth2 授权表（PostgreSQL）
+-- 变更内容：存储 OAuth2 授权码、access token、refresh token 的哈希值，
+--           支撑标准 OAuth2 授权服务器端点。
 CREATE TABLE oauth2_authorization (
     id VARCHAR(100) PRIMARY KEY,
     registered_client_id VARCHAR(100) NOT NULL,
