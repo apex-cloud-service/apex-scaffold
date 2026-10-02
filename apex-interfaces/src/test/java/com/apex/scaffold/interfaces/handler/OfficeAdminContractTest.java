@@ -13,7 +13,15 @@ class OfficeAdminContractTest {
     void managementEndpointsHavePermissionAuditAndIdempotency() throws Exception {
         Class<?> handler = Class.forName("com.apex.scaffold.interfaces.handler.OfficeAdminHandler");
         for (String name : new String[] {
-            "listApps", "getApp", "createApp", "updateApp", "deleteApp", "listBindings", "reviewBinding", "unbind"
+            "listApps",
+            "getApp",
+            "createApp",
+            "updateApp",
+            "deleteApp",
+            "listBindings",
+            "listBindingsPage",
+            "reviewBinding",
+            "unbind"
         }) {
             java.lang.reflect.Method method = handler.getMethod(name, ServerRequest.class);
             assertThat(method.getAnnotation(RequirePermission.class)).isNotNull();
@@ -52,7 +60,7 @@ class OfficeAdminContractTest {
         var routes = router.getMethod("officeAdminRoutes", handler)
                 .getAnnotation(org.springdoc.core.annotations.RouterOperations.class)
                 .value();
-        assertThat(routes).hasSize(8);
+        assertThat(routes).hasSize(9);
         java.util.Set<String> ids = new java.util.HashSet<>();
         for (var route : routes) {
             var method = handler.getMethod(route.beanMethod(), ServerRequest.class);

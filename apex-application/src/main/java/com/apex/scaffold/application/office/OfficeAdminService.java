@@ -2,6 +2,7 @@ package com.apex.scaffold.application.office;
 
 import com.apex.scaffold.application.service.UserService;
 import com.apex.scaffold.common.context.TenantContext;
+import com.apex.scaffold.common.dto.PageResponse;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.domain.office.*;
@@ -134,6 +135,26 @@ public class OfficeAdminService {
                 return Mono.error(new BusinessException(ResultCode.PARAM_ERROR));
             }
             return repository.listBindings(tenant, platform, page, size);
+        });
+    }
+
+    /**
+     * 分页查询身份绑定列表，支持状态过滤并返回真实总数。
+     *
+     * @param platform 平台类型
+     * @param status 绑定状态（PENDING/APPROVED/REJECTED/REVOKED），为 null 时不过滤
+     * @param page 页码（从 1 开始）
+     * @param size 每页大小（1-DEFAULT_PAGE_SIZE）
+     * @return 绑定分页结果
+     * @throws BusinessException 分页参数无效时返回 PARAM_ERROR
+     */
+    public Mono<PageResponse<OfficeIdentityBinding>> listBindingsPage(
+            OfficePlatform platform, String status, int page, int size) {
+        return tenant().flatMap(tenant -> {
+            if (page < 1 || size < 1 || size > DEFAULT_PAGE_SIZE) {
+                return Mono.error(new BusinessException(ResultCode.PARAM_ERROR));
+            }
+            return repository.listBindingsPage(tenant, platform, status, page, size);
         });
     }
 

@@ -1,5 +1,6 @@
 package com.apex.scaffold.domain.office;
 
+import com.apex.scaffold.common.dto.PageResponse;
 import java.util.List;
 import reactor.core.publisher.Mono;
 
@@ -91,6 +92,19 @@ public interface OfficeRepository {
      * @return 绑定关系列表，可能为空列表
      */
     Mono<List<OfficeIdentityBinding>> listBindings(String tenantId, OfficePlatform platform, int page, int size);
+
+    /**
+     * 分页查询租户的身份绑定列表，支持状态过滤并返回真实总数。
+     *
+     * @param tenantId 租户标识，不能为空
+     * @param platform 平台类型，为 null 时查询所有平台
+     * @param status 绑定状态（PENDING/APPROVED/REJECTED/REVOKED），为 null 时不过滤
+     * @param page 页码，从 1 开始
+     * @param size 每页大小
+     * @return 绑定关系分页结果，包含真实总数
+     */
+    Mono<PageResponse<OfficeIdentityBinding>> listBindingsPage(
+            String tenantId, OfficePlatform platform, String status, int page, int size);
 
     /**
      * 原子修改绑定状态

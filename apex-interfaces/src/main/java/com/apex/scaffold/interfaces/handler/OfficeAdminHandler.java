@@ -4,6 +4,7 @@ import com.apex.scaffold.application.office.OfficeAdminService;
 import com.apex.scaffold.common.annotation.IdempotentApi;
 import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.annotation.RequirePermission;
+import com.apex.scaffold.common.dto.PageResponse;
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.domain.office.OfficePlatform;
 import com.apex.scaffold.interfaces.assembler.OfficeAssembler;
@@ -240,7 +241,7 @@ public class OfficeAdminHandler {
             })
     @RequirePermission("office:binding:list")
     public Mono<ServerResponse> listBindings(ServerRequest request) {
-        return parsePlatform(request)
+        return parsePlatformFromQuery(request)
                 .flatMap(platform -> {
                     int page = request.queryParam("page").map(Integer::parseInt).orElse(1);
                     int size = request.queryParam("size").map(Integer::parseInt).orElse(20);
@@ -248,6 +249,51 @@ public class OfficeAdminHandler {
                 })
                 .map(bindings ->
                         bindings.stream().map(assembler::toBindingResponse).toList())
+                .flatMap(responses -> ServerResponse.ok().bodyValue(Result.success(responses)));
+    }
+
+    /**
+     * 分页查询指定平台的身份绑定列表，支持状态过滤并返回真实总数。
+     *
+     * @param request HTTP 请求，查询参数包含平台、状态和分页信息
+     * @return 绑定分页响应
+     */
+    @Operation(
+            operationId = "listOfficeBindingsPage",
+            summary = "分页查询办公平台绑定列表",
+            description = "分页查询指定平台的身份绑定记录，支持按状态过滤并返回真实总数",
+            parameters = {
+                @Parameter(name = "platform", description = "平台类型", required = true, example = "FEISHU"),
+                @Parameter(
+                        name = "status",
+                        description = "绑定状态（PENDING/APPROVED/REJECTED/REVOKED）",
+                        required = false,
+                        example = "PENDING"),
+                @Parameter(name = "page", description = "页码", required = true, example = "1"),
+                @Parameter(name = "size", description = "每页数量", required = true, example = "20")
+            },
+            responses = {
+                @ApiResponse(
+                        responseCode = "200",
+                        description = "查询成功",
+                        content = @Content(schema = @Schema(implementation = Result.class)))
+            })
+    @RequirePermission("office:binding:list")
+    public Mono<ServerResponse> listBindingsPage(ServerRequest request) {
+        return parsePlatformFromQuery(request)
+                .flatMap(platform -> {
+                    String status = request.queryParam("status").orElse(null);
+                    int page = request.queryParam("page").map(Integer::parseInt).orElse(1);
+                    int size = request.queryParam("size").map(Integer::parseInt).orElse(20);
+                    return service.listBindingsPage(platform, status, page, size);
+                })
+                .map(page -> PageResponse.of(
+                        page.getList().stream()
+                                .map(assembler::toBindingResponse)
+                                .toList(),
+                        page.getTotal(),
+                        page.getPageNum(),
+                        page.getPageSize()))
                 .flatMap(responses -> ServerResponse.ok().bodyValue(Result.success(responses)));
     }
 
@@ -328,6 +374,27 @@ public class OfficeAdminHandler {
      */
     private Mono<OfficePlatform> parsePlatform(ServerRequest request) {
         String value = request.pathVariable("platform");
+        try {
+            return Mono.just(OfficePlatform.valueOf(value.toUpperCase(java.util.Locale.ROOT)));
+        } catch (IllegalArgumentException error) {
+            return Mono.error(new com.apex.scaffold.common.exception.BusinessException(
+                    com.apex.scaffold.common.result.ResultCode.PARAM_ERROR));
+        }
+    }
+
+    /**
+     * 从查询参数中解析平台类型
+     *
+     * @param request HTTP 请求
+     * @return 平台类型
+     * @throws com.apex.scaffold.common.exception.BusinessException 平台参数无效或缺失时
+     */
+    private Mono<OfficePlatform> parsePlatformFromQuery(ServerRequest request) {
+        String value = request.queryParam("platform").orElse(null);
+        if (value == null || value.isBlank()) {
+            return Mono.error(new com.apex.scaffold.common.exception.BusinessException(
+                    com.apex.scaffold.common.result.ResultCode.PARAM_ERROR));
+        }
         try {
             return Mono.just(OfficePlatform.valueOf(value.toUpperCase(java.util.Locale.ROOT)));
         } catch (IllegalArgumentException error) {

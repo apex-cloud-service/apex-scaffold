@@ -1,6 +1,7 @@
 package com.apex.scaffold.infrastructure.office.persistence;
 
 import com.apex.scaffold.common.context.TenantContext;
+import com.apex.scaffold.common.dto.PageResponse;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
@@ -150,6 +151,28 @@ public class OfficeRepositoryImpl implements OfficeRepository {
                     .stream()
                     .map(converter::toBinding)
                     .toList();
+        });
+    }
+
+    @Override
+    public Mono<PageResponse<OfficeIdentityBinding>> listBindingsPage(
+            String tenantId, OfficePlatform platform, String status, int page, int size) {
+        return scoped(tenantId, () -> {
+            validatePage(page, size);
+            QueryWrapper<OfficeBindingPO> base = new QueryWrapper<OfficeBindingPO>()
+                    .eq("tenant_id", tenantId)
+                    .eq("platform", platform.name())
+                    .eq("deleted", 0);
+            if (status != null && !status.isBlank()) {
+                base.eq("status", status);
+            }
+            Long total = bindings.selectCount(base);
+            java.util.List<OfficeIdentityBinding> list = bindings
+                    .selectList(base.orderByAsc("id").last("LIMIT " + size + " OFFSET " + ((long) (page - 1) * size)))
+                    .stream()
+                    .map(converter::toBinding)
+                    .toList();
+            return PageResponse.of(list, total, page, size);
         });
     }
 

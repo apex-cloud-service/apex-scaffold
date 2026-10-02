@@ -56,6 +56,10 @@ public class OfficeAdminRouter {
                 beanClass = OfficeAdminHandler.class,
                 beanMethod = "listBindings"),
         @RouterOperation(
+                path = "/admin-api/v1/office/bindings/page",
+                beanClass = OfficeAdminHandler.class,
+                beanMethod = "listBindingsPage"),
+        @RouterOperation(
                 path = "/admin-api/v1/office/bindings/{id}/review",
                 beanClass = OfficeAdminHandler.class,
                 beanMethod = "reviewBinding"),
@@ -139,6 +143,35 @@ public class OfficeAdminRouter {
                                 .in(ParameterIn.QUERY)
                                 .required(true)
                                 .example("FEISHU"))
+                        .parameter(parameterBuilder()
+                                .name("page")
+                                .description("页码")
+                                .in(ParameterIn.QUERY)
+                                .required(true)
+                                .example("1"))
+                        .parameter(parameterBuilder()
+                                .name("size")
+                                .description("每页数量")
+                                .in(ParameterIn.QUERY)
+                                .required(true)
+                                .example("20"))
+                        .response(responseBuilder().responseCode("200").description("查询成功")))
+                .GET("/admin-api/v1/office/bindings/page", handler::listBindingsPage, ops -> ops.operationId(
+                                "listOfficeBindingsPage")
+                        .summary("分页查询办公平台绑定列表")
+                        .tag("办公平台管理")
+                        .parameter(parameterBuilder()
+                                .name("platform")
+                                .description("平台类型")
+                                .in(ParameterIn.QUERY)
+                                .required(true)
+                                .example("FEISHU"))
+                        .parameter(parameterBuilder()
+                                .name("status")
+                                .description("绑定状态（PENDING/APPROVED/REJECTED/REVOKED）")
+                                .in(ParameterIn.QUERY)
+                                .required(false)
+                                .example("PENDING"))
                         .parameter(parameterBuilder()
                                 .name("page")
                                 .description("页码")

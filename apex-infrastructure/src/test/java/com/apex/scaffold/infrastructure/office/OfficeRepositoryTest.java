@@ -287,6 +287,54 @@ class OfficeRepositoryTest {
     }
 
     @Test
+    void listBindingsPageFiltersByStatusAndReturnsTotal() {
+        TenantContext.setTenantId("tenant-a");
+        when(bindings.selectCount(any(Wrapper.class))).thenAnswer(call -> {
+            Wrapper<?> query = call.getArgument(0);
+            assertThat(query.getSqlSegment()).contains("tenant_id", "platform", "status", "deleted");
+            return 5L;
+        });
+        when(bindings.selectList(any(Wrapper.class))).thenAnswer(call -> {
+            Wrapper<?> query = call.getArgument(0);
+            assertThat(query.getSqlSegment())
+                    .contains("tenant_id", "platform", "status", "deleted", "ORDER BY id", "LIMIT 20 OFFSET 0");
+            OfficeBindingPO po = new OfficeBindingPO();
+            po.setId(9L);
+            po.setTenantId("tenant-a");
+            po.setPlatform(OfficePlatform.FEISHU);
+            po.setStatus("PENDING");
+            po.setUserId(7L);
+            po.setExternalUserId("external");
+            return java.util.List.of(po);
+        });
+
+        StepVerifier.create(repository.listBindingsPage("tenant-a", OfficePlatform.FEISHU, "PENDING", 1, 20))
+                .assertNext(page -> {
+                    assertThat(page.getTotal()).isEqualTo(5L);
+                    assertThat(page.getPageNum()).isEqualTo(1);
+                    assertThat(page.getPageSize()).isEqualTo(20);
+                    assertThat(page.getList()).hasSize(1);
+                    assertThat(page.getList().get(0).getStatus()).isEqualTo("PENDING");
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    void listBindingsPageOmitsStatusWhenNull() {
+        TenantContext.setTenantId("tenant-a");
+        when(bindings.selectCount(any(Wrapper.class))).thenAnswer(call -> {
+            Wrapper<?> query = call.getArgument(0);
+            assertThat(query.getSqlSegment()).doesNotContain("status");
+            return 3L;
+        });
+        when(bindings.selectList(any(Wrapper.class))).thenReturn(java.util.List.of());
+
+        StepVerifier.create(repository.listBindingsPage("tenant-a", OfficePlatform.FEISHU, null, 1, 20))
+                .assertNext(page -> assertThat(page.getTotal()).isEqualTo(3L))
+                .verifyComplete();
+    }
+
+    @Test
     void deleteIsVersionedLogicalDeletion() {
         TenantContext.setTenantId("tenant-a");
         when(apps.update(isNull(), any(Wrapper.class))).thenAnswer(call -> {

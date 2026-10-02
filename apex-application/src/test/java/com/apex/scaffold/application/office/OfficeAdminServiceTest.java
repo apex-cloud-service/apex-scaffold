@@ -5,6 +5,7 @@ import static org.mockito.Mockito.*;
 
 import com.apex.scaffold.application.service.UserService;
 import com.apex.scaffold.common.context.TenantContext;
+import com.apex.scaffold.common.dto.PageResponse;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.domain.model.entity.UserEntity;
 import com.apex.scaffold.domain.office.*;
@@ -125,6 +126,33 @@ class OfficeAdminServiceTest {
         when(repository.changeBindingStatus("tenant-a", 9L, 0, "APPROVED", "REVOKED"))
                 .thenReturn(Mono.just(true));
         StepVerifier.create(service.unbind(9L, 0)).expectNext(true).verifyComplete();
+    }
+
+    @Test
+    void listBindingsPageReturnsPageResponseWithTotal() {
+        TenantContext.setTenantId("tenant-a");
+        OfficeIdentityBinding binding = binding("PENDING");
+        PageResponse<OfficeIdentityBinding> page = PageResponse.of(java.util.List.of(binding), 1L, 1, 20);
+        when(repository.listBindingsPage("tenant-a", OfficePlatform.FEISHU, "PENDING", 1, 20))
+                .thenReturn(Mono.just(page));
+
+        StepVerifier.create(service.listBindingsPage(OfficePlatform.FEISHU, "PENDING", 1, 20))
+                .assertNext(result -> {
+                    assertThat(result.getTotal()).isEqualTo(1L);
+                    assertThat(result.getPageNum()).isEqualTo(1);
+                    assertThat(result.getPageSize()).isEqualTo(20);
+                    assertThat(result.getList()).hasSize(1);
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    void listBindingsPageRejectsInvalidPageSize() {
+        TenantContext.setTenantId("tenant-a");
+        StepVerifier.create(service.listBindingsPage(OfficePlatform.FEISHU, null, 1, 101))
+                .expectError(BusinessException.class)
+                .verify();
+        verifyNoInteractions(repository);
     }
 
     private OfficeAppCommand command() {
