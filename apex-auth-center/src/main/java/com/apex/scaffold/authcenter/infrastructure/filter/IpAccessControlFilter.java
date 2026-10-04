@@ -43,38 +43,36 @@ public class IpAccessControlFilter implements WebFilter {
 
         return ipAccessControlService
                 .isAccessAllowed(clientIp, tenantId)
+                .onErrorResume(error -> {
+                    // 发生错误时默认拒绝访问
+                    log.error("IP访问控制检查失败: ip={}, error={}", clientIp, error.getMessage(), error);
+                    return Mono.just(false);
+                })
                 .flatMap(allowed -> {
                     if (allowed) {
                         // 允许访问，继续过滤链
                         return chain.filter(exchange);
-                    } else {
-                        // 拒绝访问，返回403
-                        log.warn(
-                                "IP访问被拒绝: ip={}, tenantId={}, path={}",
-                                clientIp,
-                                tenantId,
-                                exchange.getRequest().getPath());
-
-                        // 记录审计日志
-                        auditLogService
-                                .log(
-                                        "system",
-                                        tenantId,
-                                        "IP_ACCESS_DENIED",
-                                        exchange.getRequest().getPath().value(),
-                                        "DENIED",
-                                        null)
-                                .subscribe();
-
-                        exchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN);
-                        return exchange.getResponse().setComplete();
                     }
-                })
-                .onErrorResume(error -> {
-                    // 发生错误时默认拒绝访问
-                    log.error("IP访问控制检查失败: ip={}, error={}", clientIp, error.getMessage(), error);
-                    exchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN);
-                    return exchange.getResponse().setComplete();
+
+                    // 拒绝访问，先完成审计再返回403
+                    log.warn(
+                            "IP访问被拒绝: ip={}, tenantId={}, path={}",
+                            clientIp,
+                            tenantId,
+                            exchange.getRequest().getPath());
+
+                    return auditLogService
+                            .log(
+                                    "system",
+                                    tenantId,
+                                    "IP_ACCESS_DENIED",
+                                    exchange.getRequest().getPath().value(),
+                                    "DENIED",
+                                    null)
+                            .then(Mono.defer(() -> {
+                                exchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN);
+                                return exchange.getResponse().setComplete();
+                            }));
                 });
     }
 

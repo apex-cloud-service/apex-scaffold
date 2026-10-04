@@ -49,7 +49,6 @@ public class OfficeMessageRouter {
      *
      * @return 路由函数
      */
-    @Bean
     @RouterOperations({
         @RouterOperation(
                 path = "/api/office/messages",
@@ -192,6 +191,7 @@ public class OfficeMessageRouter {
                                     @ApiResponse(responseCode = "500", description = "服务器内部错误")
                                 }))
     })
+    @Bean
     public RouterFunction<ServerResponse> messageRoutes() {
         return RouterFunctions.route()
                 .path("/api/office/messages", builder -> builder.POST(

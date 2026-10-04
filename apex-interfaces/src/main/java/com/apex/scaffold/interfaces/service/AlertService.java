@@ -5,8 +5,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.event.EventListener;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -54,6 +54,15 @@ public class AlertService {
      * @return 是否发送成功
      */
     public Mono<Boolean> sendAlert(AlertEvent alertEvent) {
+        return sendAlert(alertEvent, null);
+    }
+
+    @EventListener
+    public void handleAlertEvent(AlertEvent alertEvent) {
+        sendAlert(alertEvent).subscribe();
+    }
+
+    private Mono<Boolean> sendAlert(AlertEvent alertEvent, String phone) {
         String webhook = dingdingWebhook;
         if (webhook == null || webhook.isBlank()) {
             return Mono.just(false);
@@ -61,7 +70,7 @@ public class AlertService {
         String webhookUrl = webhook.trim();
 
         try {
-            Map<String, Object> message = buildDingTalkMessage(alertEvent);
+            Map<String, Object> message = buildDingTalkMessage(alertEvent, phone);
             return webClient
                     .post()
                     .uri(webhookUrl)
@@ -70,10 +79,10 @@ public class AlertService {
                     .retrieve()
                     .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
                     .map(response -> {
-                        Integer errcode = (Integer) response.get("errcode");
-                        return errcode == null || Objects.equals(errcode, 0);
+                        Object errcode = response.get("errcode");
+                        return errcode == null || (errcode instanceof Number number && number.intValue() == 0);
                     })
-                    .onErrorResume(e -> Mono.just(false));
+                    .onErrorReturn(false);
         } catch (Exception e) {
             return Mono.just(false);
         }
@@ -82,24 +91,28 @@ public class AlertService {
     /**
      * 发送紧急告警
      *
-     * <p>目前未实现
+     * <p>发送钉钉 Markdown 告警并@指定手机号
      *
      * @param alertEvent 告警事件
      * @param phone 电话号码
      * @return 是否发送成功
      */
     public Mono<Boolean> sendUrgentAlert(AlertEvent alertEvent, String phone) {
-        return Mono.just(false);
+        if (phone == null || phone.isBlank()) {
+            return Mono.just(false);
+        }
+        return sendAlert(alertEvent, phone.trim());
     }
 
     /**
      * 构建钉钉消息
      *
      * @param alertEvent 告警事件
+     * @param phone 手机号，为 null 时不添加@信息
      * @return 钉钉消息
      */
-    private Map<String, Object> buildDingTalkMessage(AlertEvent alertEvent) {
-        Map<String, Object> params = new HashMap<>(2);
+    private Map<String, Object> buildDingTalkMessage(AlertEvent alertEvent, String phone) {
+        Map<String, Object> params = new HashMap<>(3);
         params.put("msgtype", "markdown");
 
         StringBuilder content = new StringBuilder(512);
@@ -124,6 +137,9 @@ public class AlertService {
         markdown.put("text", content.toString());
 
         params.put("markdown", markdown);
+        if (phone != null) {
+            params.put("at", Map.of("atMobiles", java.util.List.of(phone), "isAtAll", false));
+        }
 
         return params;
     }

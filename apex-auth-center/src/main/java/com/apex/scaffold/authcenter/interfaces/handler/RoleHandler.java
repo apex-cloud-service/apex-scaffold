@@ -6,6 +6,8 @@ import com.apex.scaffold.authcenter.application.dto.RoleDTO;
 import com.apex.scaffold.authcenter.application.service.RoleService;
 import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.annotation.OperationLog.OperationType;
+import com.apex.scaffold.common.annotation.RequireAdminRole;
+import com.apex.scaffold.common.annotation.RequireResourcePermission;
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.common.util.TraceIdUtil;
@@ -354,6 +356,8 @@ public class RoleHandler {
      * @return 分配成功响应
      */
     @OperationLog(module = "角色管理", type = OperationType.UPDATE, description = "为角色分配权限")
+    @RequireAdminRole
+    @RequireResourcePermission(resourceType = "role", resourceIdExpression = "#request.roleId", permission = "MANAGE", errorMessage = "无权修改该角色权限")
     @Operation(
             operationId = "assignPermissions",
             summary = "为角色分配权限",
@@ -374,9 +378,8 @@ public class RoleHandler {
                     @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = AssignPermissionsRequest.class)))
-    public Mono<ServerResponse> assignPermissions(ServerRequest request) {
-        return request.bodyToMono(AssignPermissionsRequest.class)
-                .flatMap(req -> roleService.assignPermissions(req.getRoleId(), req.getPermissionIds()))
+    public Mono<ServerResponse> assignPermissions(AssignPermissionsRequest request) {
+        return roleService.assignPermissions(request.getRoleId(), request.getPermissionIds())
                 .then(buildSuccess(null))
                 .onErrorResume(this::handleError);
     }

@@ -4,6 +4,9 @@ import com.apex.scaffold.authcenter.domain.model.MfaConfig;
 import com.apex.scaffold.authcenter.domain.service.MfaService;
 import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.annotation.OperationLog.OperationType;
+import com.apex.scaffold.common.annotation.RequireAdminRole;
+import com.apex.scaffold.common.annotation.RequireResourcePermission;
+import com.apex.scaffold.common.context.TenantContext;
 import com.apex.scaffold.common.result.Result;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -128,9 +131,7 @@ public class MfaManagementHandler {
         String userId = request.attribute("userId")
                 .map(Object::toString)
                 .orElseThrow(() -> new IllegalArgumentException("userId is required"));
-        String tenantId = request.attribute("tenantId")
-                .map(Object::toString)
-                .orElseThrow(() -> new IllegalArgumentException("tenantId is required"));
+        String tenantId = tenantId(request);
 
         return mfaService
                 .enableTotp(userId, tenantId)
@@ -202,9 +203,10 @@ public class MfaManagementHandler {
                 .map(Object::toString)
                 .orElseThrow(() -> new IllegalArgumentException("userId is required"));
         String code = request.queryParam("code").orElseThrow(() -> new IllegalArgumentException("code is required"));
+        String tenantId = tenantId(request);
 
         return mfaService
-                .verifyAndActivateTotp(userId, code)
+                .verifyAndActivateTotp(userId, code, tenantId)
                 .flatMap(result -> ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(Result.success(result)))
@@ -272,9 +274,7 @@ public class MfaManagementHandler {
         String userId = request.attribute("userId")
                 .map(Object::toString)
                 .orElseThrow(() -> new IllegalArgumentException("userId is required"));
-        String tenantId = request.attribute("tenantId")
-                .map(Object::toString)
-                .orElseThrow(() -> new IllegalArgumentException("tenantId is required"));
+        String tenantId = tenantId(request);
         String phoneNumber = request.queryParam("phoneNumber")
                 .orElseThrow(() -> new IllegalArgumentException("phoneNumber is required"));
 
@@ -348,9 +348,7 @@ public class MfaManagementHandler {
         String userId = request.attribute("userId")
                 .map(Object::toString)
                 .orElseThrow(() -> new IllegalArgumentException("userId is required"));
-        String tenantId = request.attribute("tenantId")
-                .map(Object::toString)
-                .orElseThrow(() -> new IllegalArgumentException("tenantId is required"));
+        String tenantId = tenantId(request);
         String email = request.queryParam("email").orElseThrow(() -> new IllegalArgumentException("email is required"));
 
         return mfaService
@@ -424,9 +422,10 @@ public class MfaManagementHandler {
                 .orElseThrow(() -> new IllegalArgumentException("userId is required"));
         String typeStr = request.pathVariable("type");
         MfaConfig.MfaType type = MfaConfig.MfaType.valueOf(typeStr);
+        String tenantId = tenantId(request);
 
         return mfaService
-                .disableMfa(userId, type)
+                .disableMfa(userId, type, tenantId)
                 .then(ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(Result.success(null)))
@@ -502,9 +501,10 @@ public class MfaManagementHandler {
         String code = request.queryParam("code").orElseThrow(() -> new IllegalArgumentException("code is required"));
         String typeStr = request.queryParam("type").orElseThrow(() -> new IllegalArgumentException("type is required"));
         MfaConfig.MfaType type = MfaConfig.MfaType.valueOf(typeStr);
+        String tenantId = tenantId(request);
 
         return mfaService
-                .verifyMfaCode(userId, code, type)
+                .verifyMfaCode(userId, code, type, tenantId)
                 .flatMap(result -> ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(Result.success(result)))
@@ -580,9 +580,10 @@ public class MfaManagementHandler {
                 .orElseThrow(() -> new IllegalArgumentException("userId is required"));
         String typeStr = request.queryParam("type").orElseThrow(() -> new IllegalArgumentException("type is required"));
         MfaConfig.MfaType type = MfaConfig.MfaType.valueOf(typeStr);
+        String tenantId = tenantId(request);
 
         return mfaService
-                .sendMfaCode(userId, type)
+                .sendMfaCode(userId, type, tenantId)
                 .then(ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(Result.success(null)))
@@ -643,7 +644,7 @@ public class MfaManagementHandler {
                 .orElseThrow(() -> new IllegalArgumentException("userId is required"));
 
         return mfaService
-                .getUserMfaConfigs(userId)
+                .getUserMfaConfigs(userId, tenantId(request))
                 .collectList()
                 .flatMap(configs -> ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
@@ -699,7 +700,7 @@ public class MfaManagementHandler {
                 .orElseThrow(() -> new IllegalArgumentException("userId is required"));
 
         return mfaService
-                .isMfaEnabled(userId)
+                .isMfaEnabled(userId, tenantId(request))
                 .flatMap(enabled -> ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(Result.success(enabled)))
@@ -767,7 +768,7 @@ public class MfaManagementHandler {
                 .orElseThrow(() -> new IllegalArgumentException("userId is required"));
 
         return mfaService
-                .regenerateBackupCodes(userId)
+                .regenerateBackupCodes(userId, tenantId(request))
                 .flatMap(result -> ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(Result.success(result)))
@@ -840,7 +841,7 @@ public class MfaManagementHandler {
         String code = request.queryParam("code").orElseThrow(() -> new IllegalArgumentException("code is required"));
 
         return mfaService
-                .verifyBackupCode(userId, code)
+                .verifyBackupCode(userId, code, tenantId(request))
                 .flatMap(result -> ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(Result.success(result)))
@@ -893,6 +894,8 @@ public class MfaManagementHandler {
      * @return 解锁成功的响应
      */
     @OperationLog(module = "MFA管理", type = OperationType.UPDATE, description = "解锁MFA")
+    @RequireAdminRole
+    @RequireResourcePermission(resourceType = "mfa", resourceIdExpression = "#request.queryParam('userId').orElse('')", permission = "MANAGE", errorMessage = "无权解锁该用户MFA")
     @Operation(operationId = "unlockMfa", summary = "解锁MFA（管理员）", description = "管理员强制解锁用户因验证失败过多而被锁定的MFA")
     @Parameter(name = "userId", description = "要解锁的用户ID", required = true, example = "1001")
     @Parameter(
@@ -925,13 +928,33 @@ public class MfaManagementHandler {
         String operator = request.attribute("userId")
                 .map(Object::toString)
                 .orElseThrow(() -> new IllegalArgumentException("operator is required"));
+        String tenantId = tenantId(request);
 
-        return mfaService
-                .unlockMfa(userId, type, operator)
+        return mfaService.unlockMfa(userId, type, operator, tenantId)
                 .then(ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(Result.success(null)))
                 .onErrorResume(this::handleError);
+    }
+
+    /**
+     * 从请求上下文中解析可信的租户标识。
+     *
+     * <p>租户标识由认证过滤器在服务端写入请求属性，不允许由客户端请求头覆盖。
+     * 当请求属性缺失时，回退到当前线程租户上下文；若两者均不可用则抛出异常。
+     *
+     * @param request 当前服务端请求
+     * @return 非空、非空白的租户标识
+     */
+    private String tenantId(ServerRequest request) {
+        String tenantId = request.attribute("tenantId")
+                .map(Object::toString)
+                .orElseGet(() -> TenantContext.currentTenantId()
+                        .orElseThrow(() -> new IllegalArgumentException("tenantId is required")));
+        if (tenantId == null || tenantId.isBlank()) {
+            throw new IllegalArgumentException("tenantId is required");
+        }
+        return tenantId;
     }
 
     private Mono<ServerResponse> handleError(Throwable error) {

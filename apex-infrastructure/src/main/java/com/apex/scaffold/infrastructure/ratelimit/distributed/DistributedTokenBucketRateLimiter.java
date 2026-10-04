@@ -206,9 +206,7 @@ public class DistributedTokenBucketRateLimiter {
                 .execute(script, keys, args)
                 .next()
                 .map(result -> result == 1L)
-                .doOnError(e -> log.error("Redis 限流执行失败，资源: {}", resource, e))
-                // Redis 故障时默认拒绝
-                .onErrorReturn(false);
+                .doOnError(e -> log.error("Redis 限流执行失败，资源: {}", resource, e));
     }
 
     /**

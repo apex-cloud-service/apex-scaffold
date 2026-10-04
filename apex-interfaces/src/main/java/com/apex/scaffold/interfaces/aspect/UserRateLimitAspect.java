@@ -154,7 +154,7 @@ public class UserRateLimitAspect {
                 .subscribeOn(cache())
                 .onErrorResume(throwable -> {
                     // Step 2: Redis 异常，降级到本地限流
-                    if (localFallbackEnabled && (redissonClient == null || isRedisException(throwable))) {
+                    if (shouldUseLocalFallback(throwable)) {
                         log.warn(
                                 "Redis 不可用，降级到本地限流, key: {}, algorithm: {}",
                                 rateKey,
@@ -188,6 +188,10 @@ public class UserRateLimitAspect {
                         return Mono.error(e);
                     }
                 });
+    }
+
+    private boolean shouldUseLocalFallback(Throwable throwable) {
+        return localFallbackEnabled && (redissonClient == null || isRedisException(throwable));
     }
 
     /**

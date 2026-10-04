@@ -148,6 +148,20 @@ class IpAccessControlServiceImplTest {
     }
 
     @Test
+    @DisplayName("添加IP白名单时审计失败应使操作失败")
+    void addToWhitelist_AuditFailure_FailsOperation() {
+        when(repository.save(any(IpAccessControl.class))).thenReturn(Mono.just(whitelistRule));
+        when(auditLogService.log(anyString(), anyString(), anyString(), anyString(), anyString(), any()))
+                .thenReturn(Mono.error(new IllegalStateException("审计服务不可用")));
+
+        StepVerifier.create(ipAccessControlService.addToWhitelist(testIp, tenantId, "测试白名单", operator))
+                .expectErrorMessage("审计服务不可用")
+                .verify();
+
+        verify(repository).save(any(IpAccessControl.class));
+    }
+
+    @Test
     @DisplayName("添加IP到黑名单 - 永久封禁")
     void addToBlacklist_Permanent() {
         // Given
@@ -264,11 +278,11 @@ class IpAccessControlServiceImplTest {
         IpAccessControl disabledRule =
                 IpAccessControl.builder().id(1L).enabled(false).build();
 
-        when(repository.findById(1L)).thenReturn(Mono.just(disabledRule));
+        when(repository.findByIdAndTenantId(1L, tenantId)).thenReturn(Mono.just(disabledRule));
         when(repository.save(any(IpAccessControl.class))).thenReturn(Mono.just(whitelistRule));
 
         // When & Then
-        StepVerifier.create(ipAccessControlService.enableRule(1L, operator)).verifyComplete();
+        StepVerifier.create(ipAccessControlService.enableRule(1L, tenantId, operator)).verifyComplete();
 
         ArgumentCaptor<IpAccessControl> captor = ArgumentCaptor.forClass(IpAccessControl.class);
         verify(repository, times(1)).save(captor.capture());
@@ -276,14 +290,25 @@ class IpAccessControlServiceImplTest {
     }
 
     @Test
+    @DisplayName("启用规则 - 跨租户时不更新")
+    void enableRule_DifferentTenant_DoesNotUpdate() {
+        when(repository.findByIdAndTenantId(1L, "tenant-other")).thenReturn(Mono.empty());
+
+        StepVerifier.create(ipAccessControlService.enableRule(1L, "tenant-other", operator))
+                .verifyComplete();
+
+        verify(repository, never()).save(any(IpAccessControl.class));
+    }
+
+    @Test
     @DisplayName("禁用规则 - 成功")
     void disableRule_Success() {
         // Given
-        when(repository.findById(1L)).thenReturn(Mono.just(whitelistRule));
+        when(repository.findByIdAndTenantId(1L, tenantId)).thenReturn(Mono.just(whitelistRule));
         when(repository.save(any(IpAccessControl.class))).thenReturn(Mono.just(whitelistRule));
 
         // When & Then
-        StepVerifier.create(ipAccessControlService.disableRule(1L, operator)).verifyComplete();
+        StepVerifier.create(ipAccessControlService.disableRule(1L, tenantId, operator)).verifyComplete();
 
         ArgumentCaptor<IpAccessControl> captor = ArgumentCaptor.forClass(IpAccessControl.class);
         verify(repository, times(1)).save(captor.capture());
@@ -291,18 +316,30 @@ class IpAccessControlServiceImplTest {
     }
 
     @Test
+    @DisplayName("删除规则 - 跨租户时不删除")
+    void deleteRule_DifferentTenant_DoesNotDelete() {
+        when(repository.findByIdAndTenantId(1L, "tenant-other")).thenReturn(Mono.empty());
+
+        StepVerifier.create(ipAccessControlService.deleteRule(1L, "tenant-other", operator))
+                .verifyComplete();
+
+        verify(repository, never()).deleteByIdAndTenantId(anyLong(), anyString());
+        verify(auditLogService, never()).log(anyString(), anyString(), anyString(), anyString(), anyString(), any());
+    }
+
+    @Test
     @DisplayName("删除规则 - 成功")
     void deleteRule_Success() {
         // Given
-        when(repository.findById(1L)).thenReturn(Mono.just(whitelistRule));
-        when(repository.deleteById(1L)).thenReturn(Mono.empty());
+        when(repository.findByIdAndTenantId(1L, tenantId)).thenReturn(Mono.just(whitelistRule));
+        when(repository.deleteByIdAndTenantId(1L, tenantId)).thenReturn(Mono.just(1L));
         when(auditLogService.log(anyString(), anyString(), anyString(), anyString(), anyString(), any()))
                 .thenReturn(Mono.empty());
 
         // When & Then
-        StepVerifier.create(ipAccessControlService.deleteRule(1L, operator)).verifyComplete();
+        StepVerifier.create(ipAccessControlService.deleteRule(1L, tenantId, operator)).verifyComplete();
 
-        verify(repository, times(1)).deleteById(1L);
+        verify(repository).deleteByIdAndTenantId(1L, tenantId);
     }
 
     @Test

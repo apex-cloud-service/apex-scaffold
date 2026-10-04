@@ -52,7 +52,7 @@ class IpAccessControlHandlerTest {
         void shouldAddSuccessfully() {
             ServerRequest request = mock(ServerRequest.class);
             when(request.queryParam("ipAddress")).thenReturn(Optional.of("192.168.1.100"));
-            when(request.queryParam("tenantId")).thenReturn(Optional.of("tenant-1"));
+            when(request.attribute("tenantId")).thenReturn(Optional.of("tenant-1"));
             when(request.queryParam("description")).thenReturn(Optional.of("办公网"));
             when(request.attribute("userId")).thenReturn(Optional.of("admin-1"));
             IpAccessControl rule = new IpAccessControl();
@@ -72,7 +72,7 @@ class IpAccessControlHandlerTest {
         void shouldPassNullWhenDescriptionAbsent() {
             ServerRequest request = mock(ServerRequest.class);
             when(request.queryParam("ipAddress")).thenReturn(Optional.of("192.168.1.100"));
-            when(request.queryParam("tenantId")).thenReturn(Optional.of("tenant-1"));
+            when(request.attribute("tenantId")).thenReturn(Optional.of("tenant-1"));
             when(request.queryParam("description")).thenReturn(Optional.empty());
             when(request.attribute("userId")).thenReturn(Optional.of("admin-1"));
             when(ipAccessControlService.addToWhitelist("192.168.1.100", "tenant-1", null, "admin-1"))
@@ -100,7 +100,7 @@ class IpAccessControlHandlerTest {
         void shouldHandleServiceError() {
             ServerRequest request = mock(ServerRequest.class);
             when(request.queryParam("ipAddress")).thenReturn(Optional.of("192.168.1.100"));
-            when(request.queryParam("tenantId")).thenReturn(Optional.of("tenant-1"));
+            when(request.attribute("tenantId")).thenReturn(Optional.of("tenant-1"));
             when(request.queryParam("description")).thenReturn(Optional.empty());
             when(request.attribute("userId")).thenReturn(Optional.of("admin-1"));
             when(ipAccessControlService.addToWhitelist("192.168.1.100", "tenant-1", null, "admin-1"))
@@ -122,7 +122,7 @@ class IpAccessControlHandlerTest {
         void shouldAddSuccessfullyWithDuration() {
             ServerRequest request = mock(ServerRequest.class);
             when(request.queryParam("ipAddress")).thenReturn(Optional.of("203.0.113.5"));
-            when(request.queryParam("tenantId")).thenReturn(Optional.of("tenant-1"));
+            when(request.attribute("tenantId")).thenReturn(Optional.of("tenant-1"));
             when(request.queryParam("description")).thenReturn(Optional.of("暴力破解"));
             when(request.queryParam("durationMinutes")).thenReturn(Optional.of("1440"));
             when(request.attribute("userId")).thenReturn(Optional.of("admin-1"));
@@ -142,7 +142,7 @@ class IpAccessControlHandlerTest {
         void shouldPassNullDurationWhenAbsent() {
             ServerRequest request = mock(ServerRequest.class);
             when(request.queryParam("ipAddress")).thenReturn(Optional.of("203.0.113.5"));
-            when(request.queryParam("tenantId")).thenReturn(Optional.of("tenant-1"));
+            when(request.attribute("tenantId")).thenReturn(Optional.of("tenant-1"));
             when(request.queryParam("description")).thenReturn(Optional.empty());
             when(request.queryParam("durationMinutes")).thenReturn(Optional.empty());
             when(request.attribute("userId")).thenReturn(Optional.of("admin-1"));
@@ -162,7 +162,7 @@ class IpAccessControlHandlerTest {
         void shouldThrowWhenOperatorMissing() {
             ServerRequest request = mock(ServerRequest.class);
             when(request.queryParam("ipAddress")).thenReturn(Optional.of("203.0.113.5"));
-            when(request.queryParam("tenantId")).thenReturn(Optional.of("tenant-1"));
+            when(request.attribute("tenantId")).thenReturn(Optional.of("tenant-1"));
             when(request.queryParam("description")).thenReturn(Optional.empty());
             when(request.queryParam("durationMinutes")).thenReturn(Optional.empty());
             when(request.attribute("userId")).thenReturn(Optional.empty());
@@ -180,7 +180,7 @@ class IpAccessControlHandlerTest {
         void shouldRemoveSuccessfully() {
             ServerRequest request = mock(ServerRequest.class);
             when(request.queryParam("ipAddress")).thenReturn(Optional.of("192.168.1.100"));
-            when(request.queryParam("tenantId")).thenReturn(Optional.of("tenant-1"));
+            when(request.attribute("tenantId")).thenReturn(Optional.of("tenant-1"));
             when(ipAccessControlService.removeFromWhitelist("192.168.1.100", "tenant-1"))
                     .thenReturn(Mono.empty());
 
@@ -197,7 +197,7 @@ class IpAccessControlHandlerTest {
         void shouldHandleServiceError() {
             ServerRequest request = mock(ServerRequest.class);
             when(request.queryParam("ipAddress")).thenReturn(Optional.of("192.168.1.100"));
-            when(request.queryParam("tenantId")).thenReturn(Optional.of("tenant-1"));
+            when(request.attribute("tenantId")).thenReturn(Optional.of("tenant-1"));
             when(ipAccessControlService.removeFromWhitelist("192.168.1.100", "tenant-1"))
                     .thenReturn(Mono.error(new IllegalArgumentException("规则不存在")));
 
@@ -217,7 +217,7 @@ class IpAccessControlHandlerTest {
         void shouldRemoveSuccessfully() {
             ServerRequest request = mock(ServerRequest.class);
             when(request.queryParam("ipAddress")).thenReturn(Optional.of("203.0.113.5"));
-            when(request.queryParam("tenantId")).thenReturn(Optional.of("tenant-1"));
+            when(request.attribute("tenantId")).thenReturn(Optional.of("tenant-1"));
             when(ipAccessControlService.removeFromBlacklist("203.0.113.5", "tenant-1"))
                     .thenReturn(Mono.empty());
 
@@ -234,7 +234,7 @@ class IpAccessControlHandlerTest {
         void shouldThrowWhenTenantIdMissing() {
             ServerRequest request = mock(ServerRequest.class);
             when(request.queryParam("ipAddress")).thenReturn(Optional.of("203.0.113.5"));
-            when(request.queryParam("tenantId")).thenReturn(Optional.empty());
+            when(request.attribute("tenantId")).thenReturn(Optional.empty());
 
             assertThrows(IllegalArgumentException.class, () -> handler.removeFromBlacklist(request));
         }
@@ -248,7 +248,7 @@ class IpAccessControlHandlerTest {
         @DisplayName("应返回白名单规则列表")
         void shouldReturnWhitelist() {
             ServerRequest request = mock(ServerRequest.class);
-            when(request.queryParam("tenantId")).thenReturn(Optional.of("tenant-1"));
+            when(request.attribute("tenantId")).thenReturn(Optional.of("tenant-1"));
             when(ipAccessControlService.getWhitelist("tenant-1"))
                     .thenReturn(Flux.just(new IpAccessControl(), new IpAccessControl()));
 
@@ -264,7 +264,7 @@ class IpAccessControlHandlerTest {
         @DisplayName("无白名单时应返回空列表且200")
         void shouldReturnEmptyListWhenNoRules() {
             ServerRequest request = mock(ServerRequest.class);
-            when(request.queryParam("tenantId")).thenReturn(Optional.of("tenant-1"));
+            when(request.attribute("tenantId")).thenReturn(Optional.of("tenant-1"));
             when(ipAccessControlService.getWhitelist("tenant-1")).thenReturn(Flux.empty());
 
             StepVerifier.create(handler.getWhitelist(request))
@@ -282,7 +282,7 @@ class IpAccessControlHandlerTest {
         @DisplayName("应返回黑名单规则列表")
         void shouldReturnBlacklist() {
             ServerRequest request = mock(ServerRequest.class);
-            when(request.queryParam("tenantId")).thenReturn(Optional.of("tenant-1"));
+            when(request.attribute("tenantId")).thenReturn(Optional.of("tenant-1"));
             when(ipAccessControlService.getBlacklist("tenant-1")).thenReturn(Flux.just(new IpAccessControl()));
 
             StepVerifier.create(handler.getBlacklist(request))
@@ -297,7 +297,7 @@ class IpAccessControlHandlerTest {
         @DisplayName("缺少tenantId时应抛出参数校验异常")
         void shouldThrowWhenTenantIdMissing() {
             ServerRequest request = mock(ServerRequest.class);
-            when(request.queryParam("tenantId")).thenReturn(Optional.empty());
+            when(request.attribute("tenantId")).thenReturn(Optional.empty());
 
             assertThrows(IllegalArgumentException.class, () -> handler.getBlacklist(request));
         }
@@ -313,14 +313,15 @@ class IpAccessControlHandlerTest {
             ServerRequest request = mock(ServerRequest.class);
             when(request.pathVariable("ruleId")).thenReturn("1001");
             when(request.attribute("userId")).thenReturn(Optional.of("admin-1"));
-            when(ipAccessControlService.enableRule(1001L, "admin-1")).thenReturn(Mono.empty());
+            when(request.attribute("tenantId")).thenReturn(Optional.of("tenant-1"));
+            when(ipAccessControlService.enableRule(1001L, "tenant-1", "admin-1")).thenReturn(Mono.empty());
 
             StepVerifier.create(handler.enableRule(request))
                     .assertNext(response ->
                             assertThat(response.statusCode().is2xxSuccessful()).isTrue())
                     .verifyComplete();
 
-            verify(ipAccessControlService).enableRule(1001L, "admin-1");
+            verify(ipAccessControlService).enableRule(1001L, "tenant-1", "admin-1");
         }
 
         @Test
@@ -329,7 +330,8 @@ class IpAccessControlHandlerTest {
             ServerRequest request = mock(ServerRequest.class);
             when(request.pathVariable("ruleId")).thenReturn("1001");
             when(request.attribute("userId")).thenReturn(Optional.of("admin-1"));
-            when(ipAccessControlService.enableRule(1001L, "admin-1"))
+            when(request.attribute("tenantId")).thenReturn(Optional.of("tenant-1"));
+            when(ipAccessControlService.enableRule(1001L, "tenant-1", "admin-1"))
                     .thenReturn(Mono.error(new IllegalArgumentException("规则不存在")));
 
             StepVerifier.create(handler.enableRule(request))
@@ -358,14 +360,15 @@ class IpAccessControlHandlerTest {
             ServerRequest request = mock(ServerRequest.class);
             when(request.pathVariable("ruleId")).thenReturn("1001");
             when(request.attribute("userId")).thenReturn(Optional.of("admin-1"));
-            when(ipAccessControlService.disableRule(1001L, "admin-1")).thenReturn(Mono.empty());
+            when(request.attribute("tenantId")).thenReturn(Optional.of("tenant-1"));
+            when(ipAccessControlService.disableRule(1001L, "tenant-1", "admin-1")).thenReturn(Mono.empty());
 
             StepVerifier.create(handler.disableRule(request))
                     .assertNext(response ->
                             assertThat(response.statusCode().is2xxSuccessful()).isTrue())
                     .verifyComplete();
 
-            verify(ipAccessControlService).disableRule(1001L, "admin-1");
+            verify(ipAccessControlService).disableRule(1001L, "tenant-1", "admin-1");
         }
 
         @Test
@@ -389,14 +392,15 @@ class IpAccessControlHandlerTest {
             ServerRequest request = mock(ServerRequest.class);
             when(request.pathVariable("ruleId")).thenReturn("1001");
             when(request.attribute("userId")).thenReturn(Optional.of("admin-1"));
-            when(ipAccessControlService.deleteRule(1001L, "admin-1")).thenReturn(Mono.empty());
+            when(request.attribute("tenantId")).thenReturn(Optional.of("tenant-1"));
+            when(ipAccessControlService.deleteRule(1001L, "tenant-1", "admin-1")).thenReturn(Mono.empty());
 
             StepVerifier.create(handler.deleteRule(request))
                     .assertNext(response ->
                             assertThat(response.statusCode().is2xxSuccessful()).isTrue())
                     .verifyComplete();
 
-            verify(ipAccessControlService).deleteRule(1001L, "admin-1");
+            verify(ipAccessControlService).deleteRule(1001L, "tenant-1", "admin-1");
         }
 
         @Test
@@ -405,7 +409,8 @@ class IpAccessControlHandlerTest {
             ServerRequest request = mock(ServerRequest.class);
             when(request.pathVariable("ruleId")).thenReturn("1001");
             when(request.attribute("userId")).thenReturn(Optional.of("admin-1"));
-            when(ipAccessControlService.deleteRule(1001L, "admin-1"))
+            when(request.attribute("tenantId")).thenReturn(Optional.of("tenant-1"));
+            when(ipAccessControlService.deleteRule(1001L, "tenant-1", "admin-1"))
                     .thenReturn(Mono.error(new IllegalArgumentException("规则不存在")));
 
             StepVerifier.create(handler.deleteRule(request))
@@ -455,7 +460,7 @@ class IpAccessControlHandlerTest {
         void shouldReturnTrueWhenAllowed() {
             ServerRequest request = mock(ServerRequest.class);
             when(request.queryParam("ipAddress")).thenReturn(Optional.of("192.168.1.100"));
-            when(request.queryParam("tenantId")).thenReturn(Optional.of("tenant-1"));
+            when(request.attribute("tenantId")).thenReturn(Optional.of("tenant-1"));
             when(ipAccessControlService.isAccessAllowed("192.168.1.100", "tenant-1"))
                     .thenReturn(Mono.just(true));
 
@@ -472,7 +477,7 @@ class IpAccessControlHandlerTest {
         void shouldReturnFalseWhenDenied() {
             ServerRequest request = mock(ServerRequest.class);
             when(request.queryParam("ipAddress")).thenReturn(Optional.of("203.0.113.5"));
-            when(request.queryParam("tenantId")).thenReturn(Optional.of("tenant-1"));
+            when(request.attribute("tenantId")).thenReturn(Optional.of("tenant-1"));
             when(ipAccessControlService.isAccessAllowed("203.0.113.5", "tenant-1"))
                     .thenReturn(Mono.just(false));
 

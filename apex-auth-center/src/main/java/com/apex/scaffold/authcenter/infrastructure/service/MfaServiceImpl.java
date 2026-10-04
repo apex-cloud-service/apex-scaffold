@@ -4,19 +4,26 @@ import com.apex.scaffold.authcenter.domain.model.MfaConfig;
 import com.apex.scaffold.authcenter.domain.service.MfaService;
 import com.apex.scaffold.authcenter.infrastructure.repository.MfaConfigRepository;
 import com.apex.scaffold.common.audit.AuditLogService;
+import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
 import com.apex.scaffold.common.security.EncryptionService;
+import com.apex.scaffold.domain.service.SmsCodeService;
+import com.apex.scaffold.infrastructure.mail.MailService;
 import dev.samstevens.totp.code.*;
 import dev.samstevens.totp.qr.QrData;
 import dev.samstevens.totp.secret.DefaultSecretGenerator;
 import dev.samstevens.totp.time.SystemTimeProvider;
 import java.security.SecureRandom;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.IntStream;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
+import org.springframework.data.redis.core.script.RedisScript;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -34,8 +41,19 @@ public class MfaServiceImpl implements MfaService {
     private final MfaConfigRepository mfaConfigRepository;
     private final EncryptionService encryptionService;
     private final AuditLogService auditLogService;
+    private final ReactiveStringRedisTemplate redisTemplate;
+    private final SmsCodeService smsCodeService;
+    private final MailService mailService;
 
     private static final String ISSUER = "Apex Scaffold";
+    private static final String OTP_KEY_PREFIX = "mfa:otp:";
+    private static final Duration OTP_TTL = Duration.ofMinutes(5);
+    private static final RedisScript<Long> VERIFY_OTP_SCRIPT = new DefaultRedisScript<>(
+            "local value = redis.call('GET', KEYS[1]); "
+                    + "if not value then return 0; end; "
+                    + "if value == ARGV[1] then redis.call('DEL', KEYS[1]); return 1; end; "
+                    + "return -1;",
+            Long.class);
     private static final int BACKUP_CODES_COUNT = 10;
     private static final int BACKUP_CODE_LENGTH = 8;
 
@@ -82,9 +100,10 @@ public class MfaServiceImpl implements MfaService {
     }
 
     @Override
-    public Mono<MfaActivationResult> verifyAndActivateTotp(String userId, String code) {
+    public Mono<MfaActivationResult> verifyAndActivateTotp(
+            String userId, String code, String tenantId) {
         return mfaConfigRepository
-                .findByUserIdAndType(userId, MfaConfig.MfaType.TOTP)
+                .findByUserIdAndTypeAndTenantId(userId, MfaConfig.MfaType.TOTP, tenantId)
                 .flatMap(config -> {
                     if (config.isActive()) {
                         return Mono.error(new IllegalStateException("TOTP已经激活"));
@@ -194,19 +213,21 @@ public class MfaServiceImpl implements MfaService {
      *
      * @param userId 用户ID
      * @param type 要禁用的MFA类型
+     * @param tenantId 租户ID
      * @return 完成信号
      */
     @Override
-    @CacheEvict(value = "mfa-config", key = "#userId")
-    public Mono<Void> disableMfa(String userId, MfaConfig.MfaType type) {
+    @CacheEvict(value = "mfa-config", key = "#tenantId + ':' + #userId")
+    public Mono<Void> disableMfa(
+            String userId, MfaConfig.MfaType type, String tenantId) {
         return mfaConfigRepository
-                .findByUserIdAndType(userId, type)
+                .findByUserIdAndTypeAndTenantId(userId, type, tenantId)
                 .flatMap(config -> {
                     config.setStatus(MfaConfig.MfaStatus.DISABLED);
                     config.setUpdatedAt(LocalDateTime.now());
                     return mfaConfigRepository.save(config);
                 })
-                .doOnSuccess(config -> {
+                .doOnNext(config -> {
                     auditLogService.log(
                             userId, config.getTenantId(), "禁用多因素认证: " + type, "MFA_DISABLED", "SUCCESS", null);
                     log.info("用户禁用MFA: userId={}, type={}", userId, type);
@@ -215,9 +236,10 @@ public class MfaServiceImpl implements MfaService {
     }
 
     @Override
-    public Mono<Boolean> verifyMfaCode(String userId, String code, MfaConfig.MfaType type) {
+    public Mono<Boolean> verifyMfaCode(
+            String userId, String code, MfaConfig.MfaType type, String tenantId) {
         return mfaConfigRepository
-                .findByUserIdAndType(userId, type)
+                .findByUserIdAndTypeAndTenantId(userId, type, tenantId)
                 .flatMap(config -> {
                     if (!config.isActive()) {
                         return Mono.just(false);
@@ -240,21 +262,11 @@ public class MfaServiceImpl implements MfaService {
      * 验证TOTP代码
      */
     private Mono<Boolean> verifyTotpCode(MfaConfig config, String code) {
-        return encryptionService.decrypt(config.getSecret()).map(secret -> {
+        return encryptionService.decrypt(config.getSecret()).flatMap(secret -> {
             CodeVerifier verifier = new DefaultCodeVerifier(new DefaultCodeGenerator(), new SystemTimeProvider());
-
             boolean isValid = verifier.isValidCode(secret, code);
-
-            if (isValid) {
-                config.updateLastVerified();
-            } else {
-                config.incrementFailedAttempts();
-            }
-
-            config.setUpdatedAt(LocalDateTime.now());
-            mfaConfigRepository.save(config).subscribe();
-
-            return isValid;
+            updateVerificationState(config, isValid);
+            return mfaConfigRepository.save(config).thenReturn(isValid);
         });
     }
 
@@ -262,43 +274,55 @@ public class MfaServiceImpl implements MfaService {
      * 验证OTP代码（SMS/Email）
      */
     private Mono<Boolean> verifyOtpCode(MfaConfig config, String code) {
-        // 从Redis或缓存中获取验证码进行比对
-        // 这里简化实现，实际应该从缓存中读取
-        // TODO: 实现OTP验证逻辑
-        return Mono.just(false);
+        if (config.getDeviceInfo() == null || config.getDeviceInfo().isBlank()) {
+            return Mono.just(false);
+        }
+        Mono<Boolean> validation = config.getType() == MfaConfig.MfaType.SMS
+                ? smsCodeService.validate(config.getDeviceInfo(), code)
+                : redisTemplate.execute(VERIFY_OTP_SCRIPT, List.of(otpKey(config)), code)
+                        .next().defaultIfEmpty(0L).map(result -> result == 1L);
+        return validation.flatMap(valid -> {
+            updateVerificationState(config, valid);
+            return mfaConfigRepository.save(config).thenReturn(valid);
+        });
+    }
+
+    private void updateVerificationState(MfaConfig config, boolean valid) {
+        if (valid) {
+            config.updateLastVerified();
+        } else {
+            config.incrementFailedAttempts();
+        }
+        config.setUpdatedAt(LocalDateTime.now());
+    }
+
+    private String otpKey(MfaConfig config) {
+        return OTP_KEY_PREFIX + config.getTenantId() + ":" + config.getUserId() + ":" + config.getType();
     }
 
     /**
      * 验证备用验证码
      */
     private Mono<Boolean> verifyBackupCodeInternal(MfaConfig config, String code) {
-        return encryptionService.decrypt(config.getBackupCodes()).map(backupCodesStr -> {
-            List<String> codes = new ArrayList<>(Arrays.asList(backupCodesStr.split(",")));
+        return encryptionService.decrypt(config.getBackupCodes())
+                .flatMap(backupCodesStr -> {
+                    List<String> codes = new ArrayList<>(Arrays.asList(backupCodesStr.split(",")));
+                    if (codes.contains(code)) {
+                        codes.remove(code);
+                        String updatedCodes = String.join(",", codes);
+                        return encryptionService.encrypt(updatedCodes)
+                                .flatMap(encrypted -> {
+                                    config.setBackupCodes(encrypted);
+                                    config.updateLastVerified();
+                                    config.setUpdatedAt(LocalDateTime.now());
+                                    return mfaConfigRepository.save(config).thenReturn(true);
+                                });
+                    }
 
-            if (codes.contains(code)) {
-                // 使用后移除该验证码
-                codes.remove(code);
-                String updatedCodes = String.join(",", codes);
-
-                encryptionService
-                        .encrypt(updatedCodes)
-                        .doOnNext(encrypted -> {
-                            config.setBackupCodes(encrypted);
-                            config.updateLastVerified();
-                            config.setUpdatedAt(LocalDateTime.now());
-                            mfaConfigRepository.save(config).subscribe();
-                        })
-                        .subscribe();
-
-                return true;
-            }
-
-            config.incrementFailedAttempts();
-            config.setUpdatedAt(LocalDateTime.now());
-            mfaConfigRepository.save(config).subscribe();
-
-            return false;
-        });
+                    config.incrementFailedAttempts();
+                    config.setUpdatedAt(LocalDateTime.now());
+                    return mfaConfigRepository.save(config).thenReturn(false);
+                });
     }
 
     /**
@@ -306,44 +330,56 @@ public class MfaServiceImpl implements MfaService {
      *
      * @param userId 用户ID
      * @param type MFA类型
+     * @param tenantId 租户ID
      * @return 完成信号
      */
     @Override
-    public Mono<Void> sendMfaCode(String userId, MfaConfig.MfaType type) {
-        return mfaConfigRepository.findByUserIdAndType(userId, type).flatMap(config -> {
-            // 生成6位数字验证码
-            String code = String.format("%06d", new SecureRandom().nextInt(999999));
-
-            // 存储到Redis，5分钟有效期
-            // TODO: 实现验证码发送逻辑（SMS/Email）
-
-            log.info("发送MFA验证码: userId={}, type={}", userId, type);
-            return Mono.empty();
-        });
+    public Mono<Void> sendMfaCode(
+            String userId, MfaConfig.MfaType type, String tenantId) {
+        return mfaConfigRepository.findByUserIdAndTypeAndTenantId(userId, type, tenantId)
+                .switchIfEmpty(Mono.error(new IllegalArgumentException("MFA配置不存在")))
+                .flatMap(config -> {
+                    if (!config.isActive() || config.getDeviceInfo() == null || config.getDeviceInfo().isBlank()) {
+                        return Mono.error(new IllegalStateException("MFA配置不可用"));
+                    }
+                    if (type == MfaConfig.MfaType.SMS) {
+                        return smsCodeService.sendAndStore(config.getDeviceInfo());
+                    }
+                    String code = String.format("%06d", new SecureRandom().nextInt(1_000_000));
+                    return redisTemplate.opsForValue().set(otpKey(config), code, OTP_TTL)
+                            .flatMap(stored -> Boolean.TRUE.equals(stored)
+                                    ? Mono.fromRunnable(() -> mailService.sendSimple(
+                                            config.getDeviceInfo(), "MFA验证码", "您的验证码是：" + code))
+                                            .subscribeOn(BlockingIoSchedulers.remote()).then()
+                                    : Mono.error(new IllegalStateException("验证码安全存储失败")));
+                })
+                .doOnSuccess(ignored -> log.info("MFA验证码发送完成: userId={}, type={}", userId, type));
     }
 
     /**
      * 查询用户的全部MFA配置
      *
      * @param userId 用户ID
+     * @param tenantId 租户ID
      * @return 该用户的MFA配置流
      */
     @Override
-    @Cacheable(value = "mfa-config", key = "#userId")
-    public Flux<MfaConfig> getUserMfaConfigs(String userId) {
-        return mfaConfigRepository.findByUserId(userId);
+    @Cacheable(value = "mfa-config", key = "#tenantId + ':' + #userId")
+    public Flux<MfaConfig> getUserMfaConfigs(String userId, String tenantId) {
+        return mfaConfigRepository.findByUserIdAndTenantId(userId, tenantId);
     }
 
     /**
      * 检查用户是否启用了任一处于激活状态的MFA
      *
      * @param userId 用户ID
+     * @param tenantId 租户ID
      * @return 存在激活状态的MFA配置时为true，否则为false
      */
     @Override
-    public Mono<Boolean> isMfaEnabled(String userId) {
+    public Mono<Boolean> isMfaEnabled(String userId, String tenantId) {
         return mfaConfigRepository
-                .findByUserId(userId)
+                .findByUserIdAndTenantId(userId, tenantId)
                 .filter(MfaConfig::isActive)
                 .hasElements();
     }
@@ -352,12 +388,13 @@ public class MfaServiceImpl implements MfaService {
      * 重新生成TOTP备用验证码，覆盖原有备用码并记录审计日志
      *
      * @param userId 用户ID
+     * @param tenantId 租户ID
      * @return 新的备用验证码结果
      */
     @Override
-    public Mono<BackupCodesResult> regenerateBackupCodes(String userId) {
+    public Mono<BackupCodesResult> regenerateBackupCodes(String userId, String tenantId) {
         return mfaConfigRepository
-                .findByUserIdAndType(userId, MfaConfig.MfaType.TOTP)
+                .findByUserIdAndTypeAndTenantId(userId, MfaConfig.MfaType.TOTP, tenantId)
                 .flatMap(config -> {
                     String[] backupCodes = generateBackupCodes();
                     String backupCodesStr = String.join(",", backupCodes);
@@ -387,11 +424,12 @@ public class MfaServiceImpl implements MfaService {
      *
      * @param userId 用户ID
      * @param code 备用验证码
+     * @param tenantId 租户ID
      * @return 验证通过返回true，验证失败或配置不存在返回false
      */
     @Override
-    public Mono<Boolean> verifyBackupCode(String userId, String code) {
-        return verifyMfaCode(userId, code, MfaConfig.MfaType.BACKUP_CODE);
+    public Mono<Boolean> verifyBackupCode(String userId, String code, String tenantId) {
+        return verifyMfaCode(userId, code, MfaConfig.MfaType.BACKUP_CODE, tenantId);
     }
 
     /**
@@ -400,19 +438,21 @@ public class MfaServiceImpl implements MfaService {
      * @param userId 被解锁的用户ID
      * @param type 要解锁的MFA类型
      * @param operator 执行解锁操作的运维人员标识
+     * @param tenantId 租户ID
      * @return 完成信号
      */
     @Override
-    @CacheEvict(value = "mfa-config", key = "#userId")
-    public Mono<Void> unlockMfa(String userId, MfaConfig.MfaType type, String operator) {
+    @CacheEvict(value = "mfa-config", key = "#tenantId + ':' + #userId")
+    public Mono<Void> unlockMfa(
+            String userId, MfaConfig.MfaType type, String operator, String tenantId) {
         return mfaConfigRepository
-                .findByUserIdAndType(userId, type)
+                .findByUserIdAndTypeAndTenantId(userId, type, tenantId)
                 .flatMap(config -> {
                     config.resetFailedAttempts();
                     config.setUpdatedAt(LocalDateTime.now());
                     return mfaConfigRepository.save(config);
                 })
-                .doOnSuccess(config -> {
+                .doOnNext(config -> {
                     auditLogService.log(
                             operator, config.getTenantId(), "解锁MFA账户: " + userId, "MFA_UNLOCKED", "SUCCESS", null);
                     log.info("管理员解锁MFA账户: userId={}, operator={}", userId, operator);

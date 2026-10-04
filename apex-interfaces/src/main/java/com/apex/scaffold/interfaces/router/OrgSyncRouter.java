@@ -31,7 +31,6 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 @Configuration
 public class OrgSyncRouter {
 
-    @Bean
     @RouterOperations({
         @RouterOperation(
                 path = "/admin-api/v1/org/departments",
@@ -66,6 +65,8 @@ public class OrgSyncRouter {
                 beanClass = OrgSyncHandler.class,
                 beanMethod = "getSyncHistory")
     })
+    @Bean
+    @SuppressWarnings("PMD.MethodTooLongRule")
     public RouterFunction<ServerResponse> orgSyncRoutes(OrgSyncHandler handler) {
         return SpringdocRouteBuilder.route()
                 .GET("/admin-api/v1/org/departments", handler::getDepartmentList, ops -> ops.operationId(

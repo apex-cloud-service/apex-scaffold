@@ -36,6 +36,11 @@ public interface IpAccessControlRepository extends ReactiveCrudRepository<IpAcce
      */
     Flux<IpAccessControl> findByTenantIdAndType(String tenantId, IpAccessControl.AccessControlType type);
 
+    Mono<IpAccessControl> findByIdAndTenantId(Long id, String tenantId);
+
+    @Query("DELETE FROM ip_access_control WHERE id = :id AND tenant_id = :tenantId")
+    Mono<Long> deleteByIdAndTenantId(Long id, String tenantId);
+
     /**
      * 根据租户ID查询所有规则
      */

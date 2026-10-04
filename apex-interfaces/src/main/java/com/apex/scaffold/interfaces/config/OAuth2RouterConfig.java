@@ -47,7 +47,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
  * @see OAuth2JwksHandler
  * @see OAuth2DiscoveryHandler
  */
-@SuppressWarnings("checkstyle:TypeName")
+@SuppressWarnings({"checkstyle:TypeName", "PMD.ClassNamingShouldBeCamelRule"})
 @Configuration
 @RequiredArgsConstructor
 public class OAuth2RouterConfig {

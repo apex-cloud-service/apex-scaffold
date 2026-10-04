@@ -51,6 +51,23 @@ public class RequestHandlerUtil {
     }
 
     /**
+     * 验证由路径参数构造的请求对象
+     *
+     * @param value 待验证的请求对象
+     * @param <T>     请求体泛型类型
+     * @return 验证通过的请求体对象 Mono
+     */
+    public <T> Mono<T> validateAndMap(T value) {
+        return Mono.defer(() -> {
+            Set<ConstraintViolation<T>> violations = validator.validate(value);
+            if (!violations.isEmpty()) {
+                return Mono.error(new BusinessException(ResultCode.PARAM_ERROR));
+            }
+            return Mono.just(value);
+        });
+    }
+
+    /**
      * 验证并映射请求体
      *
      * @param request ServerRequest 当前 HTTP 请求

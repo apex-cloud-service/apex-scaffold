@@ -1,3 +1,6 @@
+auth-center:
+  authorization-reader-user-id: ${AUTH_CENTER_AUTHORIZATION_READER_USER_ID:}
+
 server:
   port: 8081
 

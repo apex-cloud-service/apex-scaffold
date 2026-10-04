@@ -4,6 +4,7 @@ import com.apex.scaffold.authcenter.domain.model.IpAccessControl;
 import com.apex.scaffold.authcenter.domain.service.IpAccessControlService;
 import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.annotation.OperationLog.OperationType;
+import com.apex.scaffold.common.context.TenantContext;
 import com.apex.scaffold.common.result.Result;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -120,8 +121,7 @@ public class IpAccessControlHandler {
     public Mono<ServerResponse> addToWhitelist(ServerRequest request) {
         String ipAddress = request.queryParam("ipAddress")
                 .orElseThrow(() -> new IllegalArgumentException("ipAddress is required"));
-        String tenantId =
-                request.queryParam("tenantId").orElseThrow(() -> new IllegalArgumentException("tenantId is required"));
+        String tenantId = tenantId(request);
         String description = request.queryParam("description").orElse(null);
         String operator = request.attribute("userId")
                 .map(Object::toString)
@@ -187,8 +187,7 @@ public class IpAccessControlHandler {
     public Mono<ServerResponse> addToBlacklist(ServerRequest request) {
         String ipAddress = request.queryParam("ipAddress")
                 .orElseThrow(() -> new IllegalArgumentException("ipAddress is required"));
-        String tenantId =
-                request.queryParam("tenantId").orElseThrow(() -> new IllegalArgumentException("tenantId is required"));
+        String tenantId = tenantId(request);
         String description = request.queryParam("description").orElse(null);
         Integer durationMinutes =
                 request.queryParam("durationMinutes").map(Integer::parseInt).orElse(null);
@@ -250,8 +249,7 @@ public class IpAccessControlHandler {
     public Mono<ServerResponse> removeFromWhitelist(ServerRequest request) {
         String ipAddress = request.queryParam("ipAddress")
                 .orElseThrow(() -> new IllegalArgumentException("ipAddress is required"));
-        String tenantId =
-                request.queryParam("tenantId").orElseThrow(() -> new IllegalArgumentException("tenantId is required"));
+        String tenantId = tenantId(request);
 
         return ipAccessControlService
                 .removeFromWhitelist(ipAddress, tenantId)
@@ -308,8 +306,7 @@ public class IpAccessControlHandler {
     public Mono<ServerResponse> removeFromBlacklist(ServerRequest request) {
         String ipAddress = request.queryParam("ipAddress")
                 .orElseThrow(() -> new IllegalArgumentException("ipAddress is required"));
-        String tenantId =
-                request.queryParam("tenantId").orElseThrow(() -> new IllegalArgumentException("tenantId is required"));
+        String tenantId = tenantId(request);
 
         return ipAccessControlService
                 .removeFromBlacklist(ipAddress, tenantId)
@@ -356,8 +353,7 @@ public class IpAccessControlHandler {
             description = "参数错误",
             content = @Content(schema = @Schema(implementation = Result.class)))
     public Mono<ServerResponse> getWhitelist(ServerRequest request) {
-        String tenantId =
-                request.queryParam("tenantId").orElseThrow(() -> new IllegalArgumentException("tenantId is required"));
+        String tenantId = tenantId(request);
 
         return ipAccessControlService
                 .getWhitelist(tenantId)
@@ -406,8 +402,7 @@ public class IpAccessControlHandler {
             description = "参数错误",
             content = @Content(schema = @Schema(implementation = Result.class)))
     public Mono<ServerResponse> getBlacklist(ServerRequest request) {
-        String tenantId =
-                request.queryParam("tenantId").orElseThrow(() -> new IllegalArgumentException("tenantId is required"));
+        String tenantId = tenantId(request);
 
         return ipAccessControlService
                 .getBlacklist(tenantId)
@@ -463,7 +458,7 @@ public class IpAccessControlHandler {
                 .orElseThrow(() -> new IllegalArgumentException("operator is required"));
 
         return ipAccessControlService
-                .enableRule(ruleId, operator)
+                .enableRule(ruleId, tenantId(request), operator)
                 .then(ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(Result.success(null)))
@@ -516,7 +511,7 @@ public class IpAccessControlHandler {
                 .orElseThrow(() -> new IllegalArgumentException("operator is required"));
 
         return ipAccessControlService
-                .disableRule(ruleId, operator)
+                .disableRule(ruleId, tenantId(request), operator)
                 .then(ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(Result.success(null)))
@@ -570,7 +565,7 @@ public class IpAccessControlHandler {
                 .orElseThrow(() -> new IllegalArgumentException("operator is required"));
 
         return ipAccessControlService
-                .deleteRule(ruleId, operator)
+                .deleteRule(ruleId, tenantId(request), operator)
                 .then(ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(Result.success(null)))
@@ -680,8 +675,7 @@ public class IpAccessControlHandler {
     public Mono<ServerResponse> checkAccess(ServerRequest request) {
         String ipAddress = request.queryParam("ipAddress")
                 .orElseThrow(() -> new IllegalArgumentException("ipAddress is required"));
-        String tenantId =
-                request.queryParam("tenantId").orElseThrow(() -> new IllegalArgumentException("tenantId is required"));
+        String tenantId = tenantId(request);
 
         return ipAccessControlService
                 .isAccessAllowed(ipAddress, tenantId)
@@ -689,6 +683,17 @@ public class IpAccessControlHandler {
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(Result.success(allowed)))
                 .onErrorResume(this::handleError);
+    }
+
+    private String tenantId(ServerRequest request) {
+        String tenantId = request.attribute("tenantId")
+                .map(Object::toString)
+                .orElseGet(() -> TenantContext.currentTenantId()
+                        .orElseThrow(() -> new IllegalArgumentException("tenantId is required")));
+        if (tenantId == null || tenantId.isBlank()) {
+            throw new IllegalArgumentException("tenantId is required");
+        }
+        return tenantId;
     }
 
     private Mono<ServerResponse> handleError(Throwable error) {

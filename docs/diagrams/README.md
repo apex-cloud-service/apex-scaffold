@@ -1,8 +1,8 @@
 # Apex Scaffold SVG 架构图表使用指南
 
-> 版本: v3.1 | 最后更新: 2026-09-11 | 图表总数: 69张
+> 本索引登记部分既有 SVG 和 Mermaid 源文件；编号不是文件总数，登记不代表图表验证通过。
 
-本目录包含 Apex Scaffold 项目的完整架构图表集合,所有图表均为 SVG 格式,支持高清缩放和跨平台查看。
+本目录包含 Apex Scaffold 项目的既有 SVG 图表和 `sequence/` 下的 Mermaid 源文件。部分图表保留历史设计，接口、配置和运行边界应以当前代码及配套文档为准。本轮同步索引，尚未重新渲染 Mermaid 或执行 SVG 全量验证。
 
 ---
 
@@ -19,7 +19,7 @@
 | 前端技术栈与响应式编程图 | 5张  | 19-23      | Vue 3、Axios、WebFlux、i18n、OpenAPI |
 | 监控可观测性图      | 2张  | 24-25      | Prometheus/Grafana、Loki日志 |
 | 高级架构与技术栈图    | 5张  | 26-29      | 容灾、消息队列、全文搜索、技术栈总览 |
-| **总计**       | **69张** | **01-69** | **全方位架构可视化** |
+| 登记范围 | 部分登记 | 01-29、84-86、92 | 其他图表见架构索引和时序图索引 |
 
 ---
 
@@ -40,10 +40,10 @@
    - ✅ 支持 GitHub、GitLab、Notion 在线预览
    - ✅ 支持打印输出和PDF转换
 
-3. **基于实际实现**: 所有技术栈版本号与项目配置一致
-   - 版本号来源: `pom.xml` / `package.json`
-   - 代码统计: 基于实际Grep/Glob统计
-   - 架构决策: 与代码实现完全对应
+3. **核对实现边界**: 技术栈版本以 `pom.xml` 和实际配置为准
+   - 图内数量、性能指标和部署拓扑可能属于历史记录或设计目标
+   - 图表存在不表示对应服务已部署或联调通过
+   - 当前统一授权契约见下方入口，旧图不覆盖全部当前行为
 
 4. **专业视觉**: SVG矢量图形,高清缩放无损
    - 1400×700\~900 标准画布尺寸
@@ -118,13 +118,26 @@
 | 28 | `28_meilisearch_fulltext_search.svg`        | Meilisearch全文搜索 | CJK分词+拼音搜索,毫秒级响应        |
 | 29 | `29_technology_stack_overview.svg`          | 技术栈总览与版本管理     | 60+组件,BOM管理,依赖冲突解决      |
 
+### 当前认证与统一授权入口
+
+| 文件 | 用途与边界 |
+| --- | --- |
+| [84_security_filter_chain.svg](84_security_filter_chain.svg) | 既有安全过滤器链图，运行时顺序以安全配置为准 |
+| [85_auth_center_architecture.svg](85_auth_center_architecture.svg) | 既有认证中心架构图，主应用与认证中心是独立 Spring ApplicationContext |
+| [86_token_lifecycle_management.svg](86_token_lifecycle_management.svg) | 既有 Token 生命周期图，认证中心刷新会撤销旧 Refresh Token 并签发新 Token 对 |
+| [业务流程与统一授权时序](../architecture/business-flows.md) | 本轮按当前代码同步的登录、登出和远程授权流程；Mermaid 未重新渲染 |
+| [时序图索引](sequence/README.md) | Mermaid 文件清单及旧权限缓存图的适用边界 |
+| [统一授权配置](../05-operations/configuration.md#认证中心统一授权) | HTTPS、显式映射、读取账号 Token、缓存和失败策略 |
+
+84–86 的以上 SVG 在 `sequence/` 下没有同名 Mermaid 源文件；同编号的其他 `.mmd` 是不同主题，不能互作生成源。30–39 的 OAuth2、SSO、Keycloak 图为既有专题设计，不能据此声称主应用登录已迁移到认证中心。图 31 的本地权限查询、1 小时缓存和图 67 的读快照降级不代表当前远程统一授权策略：统一授权默认关闭，启用后走 HTTPS，缓存默认关闭、TTL 为 0–30 秒，失败拒绝且不使用过期缓存或本地权限回退。
+
 ### 92 办公平台集成
 
 | 编号 | 文件名                                         | 标题             | 说明                       |
 | -- | ------------------------------------------- | -------------- | ------------------------ |
 | 92 | `92_office_platform_architecture.svg`       | 办公平台集成架构      | 飞书/钉钉/企业微信,端口-适配器,消息/审批/日历/文档四大子域,多租户隔离 |
 
-> 注：本清单当前仅完整登记至 29 号，30–91 号图表（工作流、多租户、缓存、消息、License 等）待补全登记。
+> 注：本清单当前仅完整登记至 29 号，30–83、87–91 号图表（工作流、多租户、缓存、消息、License 等）未在本清单逐项登记。
 
 ---
 
@@ -136,7 +149,7 @@
 1. `01_logical_architecture.svg` - 理解DDD四层分层设计
 2. `03_technical_architecture.svg` - 了解技术栈全貌
 3. `02_physical_architecture.svg` - 理解部署拓扑
-4. `04_login_auth_flow.svg` - 理解登录认证流程
+4. `04_login_authentication_flow.svg` - 理解登录认证流程
 5. `19_frontend_vue3_architecture.svg` - 理解前端架构(前端开发)
 
 ### 场景2: 生产部署 - 上线环境配置
@@ -163,14 +176,14 @@
 1. `19_frontend_vue3_architecture.svg` - 前端组件架构
 2. `20_axios_request_interceptor.svg` - 请求拦截流程
 3. `18_spring_cloud_gateway.svg` - API网关路由
-4. `04_login_auth_flow.svg` - 登录认证完整流程
+4. `04_login_authentication_flow.svg` - 登录认证完整流程
 5. `23_openapi_documentation.svg` - API文档规范
 
 ### 场景5: 安全审计 - 系统安全检查
 
 **推荐顺序**:
 1. `12_security_protection_system.svg` - 7层安全防护体系
-2. `04_login_auth_flow.svg` - JWT认证机制
+2. `04_login_authentication_flow.svg` - JWT认证机制
 3. `05_permission_check_flow.svg` - RBAC权限模型
 4. `11_data_permission_filter.svg` - 数据权限过滤
 5. `02_physical_architecture.svg` - 网络安全分区
@@ -281,8 +294,8 @@ chrome --headless --print-to-pdf=output.pdf input.svg
 **文档维护者**: 架构团队  
 **最后更新**: 2026-09-10  
 **文档版本**: v3.0  
-**图表总数**: 69张（01-69号图表）
+**登记状态**: 部分登记；不声明全量验证通过
 
 ---
 
-© 2026 Apex Team · 所有架构图表遵循项目实际实现,版本号与代码配置完全一致
+© 2026 Apex Team · 图表包含历史设计，当前契约以代码、配置和配套文档为准

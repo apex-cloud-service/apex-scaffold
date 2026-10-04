@@ -78,7 +78,6 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 public class RouterOpenApiConfig {
 
     /** 认证模块在线接口文档。 */
-    @Bean
     @RouterOperations({
         @RouterOperation(
                 path = "/api/v1/auth/login",
@@ -285,6 +284,7 @@ public class RouterOpenApiConfig {
                                                                                 implementation =
                                                                                         WxPhoneRequest.class)))))
     })
+    @Bean
     /**
      * 构建登录认证接口的 OpenAPI 占位路由，保证 OpenAPI 文档分组展示。
      *
@@ -295,7 +295,6 @@ public class RouterOpenApiConfig {
     }
 
     /** 授权（角色与权限）模块在线接口文档。 */
-    @Bean
     @RouterOperations({
         @RouterOperation(
                 path = "/api/v1/auth/roles/my",
@@ -480,6 +479,7 @@ public class RouterOpenApiConfig {
                 beanMethod = "removeRoleFromUser",
                 operation = @Operation(operationId = "removeRoleFromUser", summary = "移除用户角色"))
     })
+    @Bean
     /**
      * 构建授权（角色与权限）接口的 OpenAPI 占位路由，保证 OpenAPI 文档分组展示。
      *
@@ -490,7 +490,6 @@ public class RouterOpenApiConfig {
     }
 
     /** 用户模块在线接口文档。 */
-    @Bean
     @RouterOperations({
         @RouterOperation(
                 path = "/api/v1/user/info",
@@ -575,6 +574,7 @@ public class RouterOpenApiConfig {
                                                                                         AccountDeletionRequest
                                                                                                 .class)))))
     })
+    @Bean
     /**
      * 构建个人中心（用户账号）接口的 OpenAPI 占位路由，保证 OpenAPI 文档分组展示。
      *
@@ -585,7 +585,6 @@ public class RouterOpenApiConfig {
     }
 
     /** 文件模块在线接口文档。 */
-    @Bean
     @RouterOperations({
         @RouterOperation(
                 path = "/api/v1/file/upload",
@@ -670,6 +669,7 @@ public class RouterOpenApiConfig {
                 beanMethod = "content",
                 operation = @Operation(operationId = "getLocalFileContent", summary = "读取本地存储文件"))
     })
+    @Bean
     /**
      * 构建文件上传下载接口的 OpenAPI 占位路由，保证 OpenAPI 文档分组展示。
      *
@@ -680,7 +680,6 @@ public class RouterOpenApiConfig {
     }
 
     /** 健康检查模块在线接口文档。 */
-    @Bean
     @RouterOperations({
         @RouterOperation(
                 path = "/api/v1/health",
@@ -701,6 +700,7 @@ public class RouterOpenApiConfig {
                 beanMethod = "root",
                 operation = @Operation(operationId = "rootProbe", summary = "根路径探活"))
     })
+    @Bean
     /**
      * 构建健康检查（探活）接口的 OpenAPI 占位路由，保证 OpenAPI 文档分组展示。
      *
@@ -711,7 +711,6 @@ public class RouterOpenApiConfig {
     }
 
     /** 后台用户管理模块在线接口文档。 */
-    @Bean
     @RouterOperations({
         @RouterOperation(
                 path = "/admin-api/v1/users",
@@ -905,6 +904,7 @@ public class RouterOpenApiConfig {
                                                                                 implementation =
                                                                                         AdminRoleResponse.class)))))
     })
+    @Bean
     /**
      * 构建系统管理-用户管理接口的 OpenAPI 占位路由，保证 OpenAPI 文档分组展示。
      *
@@ -915,7 +915,6 @@ public class RouterOpenApiConfig {
     }
 
     /** 系统管理-菜单模块在线接口文档。 */
-    @Bean
     @RouterOperations({
         @RouterOperation(
                 path = "/admin-api/v1/menus",
@@ -978,6 +977,7 @@ public class RouterOpenApiConfig {
                                 summary = "启用或停用菜单",
                                 security = @SecurityRequirement(name = "BearerAuth")))
     })
+    @Bean
     /**
      * 构建系统管理-菜单管理接口的 OpenAPI 占位路由，保证 OpenAPI 文档分组展示。
      *
@@ -988,7 +988,6 @@ public class RouterOpenApiConfig {
     }
 
     /** 系统管理-字典模块在线接口文档。 */
-    @Bean
     @RouterOperations({
         @RouterOperation(
                 path = "/admin-api/v1/dict/types",
@@ -1111,6 +1110,7 @@ public class RouterOpenApiConfig {
                                 summary = "启用或停用字典数据",
                                 security = @SecurityRequirement(name = "BearerAuth")))
     })
+    @Bean
     /**
      * 构建系统管理-字典管理接口的 OpenAPI 占位路由，保证 OpenAPI 文档分组展示。
      *
@@ -1121,7 +1121,6 @@ public class RouterOpenApiConfig {
     }
 
     /** 系统管理-参数配置模块在线接口文档。 */
-    @Bean
     @RouterOperations({
         @RouterOperation(
                 path = "/admin-api/v1/configs",
@@ -1184,6 +1183,7 @@ public class RouterOpenApiConfig {
                                 summary = "启用或停用参数配置",
                                 security = @SecurityRequirement(name = "BearerAuth")))
     })
+    @Bean
     /**
      * 构建系统管理-参数配置接口的 OpenAPI 占位路由，保证 OpenAPI 文档分组展示。
      *
@@ -1194,7 +1194,6 @@ public class RouterOpenApiConfig {
     }
 
     /** 系统管理-定时任务模块在线接口文档。 */
-    @Bean
     @RouterOperations({
         @RouterOperation(
                 path = "/admin-api/v1/jobs",
@@ -1287,6 +1286,7 @@ public class RouterOpenApiConfig {
                                 summary = "查询任务执行日志",
                                 security = @SecurityRequirement(name = "BearerAuth")))
     })
+    @Bean
     /**
      * 构建系统管理-定时任务接口的 OpenAPI 占位路由，保证 OpenAPI 文档分组展示。
      *
@@ -1297,7 +1297,6 @@ public class RouterOpenApiConfig {
     }
 
     /** 系统管理-登录日志模块在线接口文档。 */
-    @Bean
     @RouterOperations({
         @RouterOperation(
                 path = "/admin-api/v1/login-logs",
@@ -1310,6 +1309,7 @@ public class RouterOpenApiConfig {
                                 summary = "分页查询登录日志",
                                 security = @SecurityRequirement(name = "BearerAuth")))
     })
+    @Bean
     /**
      * 构建系统管理-登录日志接口的 OpenAPI 占位路由，保证 OpenAPI 文档分组展示。
      *
@@ -1320,7 +1320,6 @@ public class RouterOpenApiConfig {
     }
 
     /** 系统管理-审计日志模块在线接口文档。 */
-    @Bean
     @RouterOperations({
         @RouterOperation(
                 path = "/admin-api/v1/audit-logs",
@@ -1333,6 +1332,7 @@ public class RouterOpenApiConfig {
                                 summary = "分页查询审计日志",
                                 security = @SecurityRequirement(name = "BearerAuth")))
     })
+    @Bean
     /**
      * 构建系统管理-审计日志接口的 OpenAPI 占位路由，保证 OpenAPI 文档分组展示。
      *
@@ -1343,7 +1343,6 @@ public class RouterOpenApiConfig {
     }
 
     /** 系统管理-API调用日志模块在线接口文档。 */
-    @Bean
     @RouterOperations({
         @RouterOperation(
                 path = "/admin-api/v1/api-call-logs",
@@ -1356,6 +1355,7 @@ public class RouterOpenApiConfig {
                                 summary = "分页查询API调用日志",
                                 security = @SecurityRequirement(name = "BearerAuth")))
     })
+    @Bean
     /**
      * API调用日志管理模块在线接口文档
      *
@@ -1367,7 +1367,6 @@ public class RouterOpenApiConfig {
         return placeholderRoute("/__openapi_admin_api_call_log_placeholder");
     }
     /** 系统管理-部门管理模块在线接口文档。 */
-    @Bean
     @RouterOperations({
         @RouterOperation(
                 path = "/admin-api/v1/depts",
@@ -1420,6 +1419,7 @@ public class RouterOpenApiConfig {
                                 summary = "删除部门",
                                 security = @SecurityRequirement(name = "BearerAuth")))
     })
+    @Bean
     /**
      * 构建系统管理-部门管理接口的 OpenAPI 占位路由，保证 OpenAPI 文档分组展示。
      *
@@ -1429,7 +1429,6 @@ public class RouterOpenApiConfig {
         return placeholderRoute("/__openapi_admin_dept_placeholder");
     }
     /** 数据导出-Excel 在线接口文档。 */
-    @Bean
     @RouterOperations({
         @RouterOperation(
                 path = "/admin-api/v1/export/users",
@@ -1442,6 +1441,7 @@ public class RouterOpenApiConfig {
                                 summary = "导出用户列表（xlsx）",
                                 security = @SecurityRequirement(name = "BearerAuth")))
     })
+    @Bean
     /**
      * 构建系统管理-数据导出接口的 OpenAPI 占位路由，保证 OpenAPI 文档分组展示。
      *
@@ -1452,7 +1452,6 @@ public class RouterOpenApiConfig {
     }
 
     /** 站内通知 SSE 在线接口文档。 */
-    @Bean
     @RouterOperations({
         @RouterOperation(
                 path = "/api/v1/notifications/stream",
@@ -1465,6 +1464,7 @@ public class RouterOpenApiConfig {
                                 summary = "订阅当前用户通知流（SSE）",
                                 security = @SecurityRequirement(name = "BearerAuth")))
     })
+    @Bean
     /**
      * 构建消息通知（SSE 推送）接口的 OpenAPI 占位路由，保证 OpenAPI 文档分组展示。
      *
@@ -1474,7 +1474,6 @@ public class RouterOpenApiConfig {
         return placeholderRoute("/__openapi_notification_sse_placeholder");
     }
     /** 系统管理-在线用户模块在线接口文档。 */
-    @Bean
     @RouterOperations({
         @RouterOperation(
                 path = "/admin-api/v1/online-users",
@@ -1487,6 +1486,7 @@ public class RouterOpenApiConfig {
                                 summary = "分页查询在线用户",
                                 security = @SecurityRequirement(name = "BearerAuth")))
     })
+    @Bean
     /**
      * 在线用户管理模块在线接口文档
      *
@@ -1499,7 +1499,6 @@ public class RouterOpenApiConfig {
     }
 
     /** 监控大盘模块在线接口文档。 */
-    @Bean
     @RouterOperations({
         @RouterOperation(
                 path = "/admin-api/v1/monitor/overview",
@@ -1557,6 +1556,7 @@ public class RouterOpenApiConfig {
                                 description = "登录/注册/上传/信用变动等核心业务指标与近 10 分钟趋势",
                                 security = @SecurityRequirement(name = "BearerAuth")))
     })
+    @Bean
     /**
      * 核心业务监控模块在线接口文档
      *
@@ -1569,7 +1569,6 @@ public class RouterOpenApiConfig {
     }
 
     /** 图形验证码模块在线接口文档。 */
-    @Bean
     @RouterOperations({
         @RouterOperation(
                 path = "/api/v1/auth/captcha",
@@ -1592,6 +1591,7 @@ public class RouterOpenApiConfig {
                                 summary = "校验图形验证码",
                                 security = {}))
     })
+    @Bean
     /**
      * 构建图形验证码接口的 OpenAPI 占位路由，保证 OpenAPI 文档分组展示。
      *
@@ -1602,7 +1602,6 @@ public class RouterOpenApiConfig {
     }
 
     /** 统一搜索模块在线接口文档。 */
-    @Bean
     @RouterOperations({
         @RouterOperation(
                 path = "/admin-api/v1/search",
@@ -1627,6 +1626,7 @@ public class RouterOpenApiConfig {
                                 description = "重建全文搜索索引，用于索引数据更新或修复",
                                 security = @SecurityRequirement(name = "BearerAuth")))
     })
+    @Bean
     /**
      * 构建统一搜索接口的 OpenAPI 占位路由，保证 OpenAPI 文档分组展示。
      *
@@ -1637,7 +1637,6 @@ public class RouterOpenApiConfig {
     }
 
     /** 工作流操作模块在线接口文档。 */
-    @Bean
     @RouterOperations({
         @RouterOperation(
                 path = "/api/workflow/tasks/{taskId}/rollback",
@@ -1780,6 +1779,7 @@ public class RouterOpenApiConfig {
                                                 responseCode = "200",
                                                 content = @Content(schema = @Schema(implementation = Void.class)))))
     })
+    @Bean
     /**
      * 构建工作流操作接口的 OpenAPI 占位路由，保证 OpenAPI 文档分组展示。
      *

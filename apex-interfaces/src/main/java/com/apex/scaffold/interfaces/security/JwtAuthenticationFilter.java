@@ -135,6 +135,8 @@ public class JwtAuthenticationFilter implements WebFilter {
     /** 角色仓储，用于根据用户ID查询用户角色列表 */
     private final RoleRepository roleRepository;
 
+    private final com.apex.scaffold.application.service.UnifiedAuthorizationService unifiedAuthorizationService;
+
     /** AccessToken 过期时间（毫秒） */
     @Value("${jwt.access-token-expire:" + DEFAULT_ACCESS_TOKEN_EXPIRE_MS + "}")
     private long accessTokenExpireMs;
@@ -169,6 +171,18 @@ public class JwtAuthenticationFilter implements WebFilter {
             MessageUtils messageUtils,
             UserRepository userRepository,
             RoleRepository roleRepository) {
+        this(tokenBlacklistService, tokenService, messageUtils, userRepository, roleRepository, null);
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public JwtAuthenticationFilter(
+            TokenBlacklistService tokenBlacklistService,
+            TokenService tokenService,
+            MessageUtils messageUtils,
+            UserRepository userRepository,
+            RoleRepository roleRepository,
+            com.apex.scaffold.application.service.UnifiedAuthorizationService unifiedAuthorizationService) {
+        this.unifiedAuthorizationService = unifiedAuthorizationService;
         this.tokenBlacklistService = tokenBlacklistService;
         this.tokenService = tokenService;
         this.messageUtils = messageUtils;
@@ -373,8 +387,22 @@ public class JwtAuthenticationFilter implements WebFilter {
                                     "apex.authenticatedUser",
                                     new AuthenticatedUser(
                                             user.getId(), user.getOpenId(), user.getTenantId(), user.getDeptId()));
+                    if (user.getTenantId() != null && !user.getTenantId().isBlank()) {
+                        exchange.getAttributes().put("tenantId", user.getTenantId());
+                    }
                     if (user.getDeptId() != null) {
                         exchange.getAttributes().put("apex.deptId", user.getDeptId());
+                    }
+                    if (unifiedAuthorizationService != null && unifiedAuthorizationService.enabled()) {
+                        if (user.getTenantId() == null || user.getTenantId().isBlank()) {
+                            return Mono.error(new IllegalStateException("Trusted tenant required"));
+                        }
+                        return unifiedAuthorizationService
+                                .roles(user.getId())
+                                .map(this::buildAuthoritiesFromRoles)
+                                .map(authorities -> Tuples.of(user, authorities))
+                                .contextWrite(
+                                        com.apex.scaffold.common.context.TenantContext.withTenant(user.getTenantId()));
                     }
                     List<SimpleGrantedAuthority> cached =
                             forceFreshRoles ? null : userRolesCache.getIfPresent(user.getId());
@@ -459,7 +487,12 @@ public class JwtAuthenticationFilter implements WebFilter {
                 authorities);
         SecurityContext securityContext = new SecurityContextImpl(authentication);
         return chain.filter(exchange)
-                .contextWrite(ReactiveSecurityContextHolder.withSecurityContext(Mono.just(securityContext)));
+                .contextWrite(ReactiveSecurityContextHolder.withSecurityContext(Mono.just(securityContext)))
+                .contextWrite(context -> user.getTenantId() == null
+                        ? context
+                        : context.put(
+                                com.apex.scaffold.common.context.TenantContext.REACTOR_CONTEXT_KEY,
+                                user.getTenantId()));
     }
 
     /**

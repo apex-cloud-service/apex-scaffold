@@ -2,7 +2,6 @@ package com.apex.scaffold.authcenter.interfaces.handler;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -103,16 +102,18 @@ class MfaManagementHandlerTest {
         void shouldActivateTotpSuccessfully() {
             ServerRequest request = mock(ServerRequest.class);
             when(request.attribute("userId")).thenReturn(Optional.of("user-1"));
+            when(request.attribute("tenantId")).thenReturn(Optional.of("tenant-1"));
             when(request.queryParam("code")).thenReturn(Optional.of("123456"));
             MfaActivationResult result = new MfaActivationResult(true, new String[] {"CODE1", "CODE2"});
-            when(mfaService.verifyAndActivateTotp("user-1", "123456")).thenReturn(Mono.just(result));
+            when(mfaService.verifyAndActivateTotp("user-1", "123456", "tenant-1"))
+                    .thenReturn(Mono.just(result));
 
             StepVerifier.create(handler.activateTotp(request))
                     .assertNext(response ->
                             assertThat(response.statusCode().is2xxSuccessful()).isTrue())
                     .verifyComplete();
 
-            verify(mfaService).verifyAndActivateTotp("user-1", "123456");
+            verify(mfaService).verifyAndActivateTotp("user-1", "123456", "tenant-1");
         }
 
         @Test
@@ -219,15 +220,17 @@ class MfaManagementHandlerTest {
         void shouldDisableMfaSuccessfully() {
             ServerRequest request = mock(ServerRequest.class);
             when(request.attribute("userId")).thenReturn(Optional.of("user-1"));
+            when(request.attribute("tenantId")).thenReturn(Optional.of("tenant-1"));
             when(request.pathVariable("type")).thenReturn("TOTP");
-            when(mfaService.disableMfa("user-1", MfaConfig.MfaType.TOTP)).thenReturn(Mono.empty());
+            when(mfaService.disableMfa("user-1", MfaConfig.MfaType.TOTP, "tenant-1"))
+                    .thenReturn(Mono.empty());
 
             StepVerifier.create(handler.disableMfa(request))
                     .assertNext(response ->
                             assertThat(response.statusCode().is2xxSuccessful()).isTrue())
                     .verifyComplete();
 
-            verify(mfaService).disableMfa("user-1", MfaConfig.MfaType.TOTP);
+            verify(mfaService).disableMfa("user-1", MfaConfig.MfaType.TOTP, "tenant-1");
         }
 
         @Test
@@ -250,9 +253,10 @@ class MfaManagementHandlerTest {
         void shouldReturnTrueWhenCodeValid() {
             ServerRequest request = mock(ServerRequest.class);
             when(request.attribute("userId")).thenReturn(Optional.of("user-1"));
+            when(request.attribute("tenantId")).thenReturn(Optional.of("tenant-1"));
             when(request.queryParam("code")).thenReturn(Optional.of("123456"));
             when(request.queryParam("type")).thenReturn(Optional.of("TOTP"));
-            when(mfaService.verifyMfaCode("user-1", "123456", MfaConfig.MfaType.TOTP))
+            when(mfaService.verifyMfaCode("user-1", "123456", MfaConfig.MfaType.TOTP, "tenant-1"))
                     .thenReturn(Mono.just(true));
 
             StepVerifier.create(handler.verifyMfaCode(request))
@@ -260,7 +264,7 @@ class MfaManagementHandlerTest {
                             assertThat(response.statusCode().is2xxSuccessful()).isTrue())
                     .verifyComplete();
 
-            verify(mfaService).verifyMfaCode("user-1", "123456", MfaConfig.MfaType.TOTP);
+            verify(mfaService).verifyMfaCode("user-1", "123456", MfaConfig.MfaType.TOTP, "tenant-1");
         }
 
         @Test
@@ -284,15 +288,17 @@ class MfaManagementHandlerTest {
         void shouldSendMfaCodeSuccessfully() {
             ServerRequest request = mock(ServerRequest.class);
             when(request.attribute("userId")).thenReturn(Optional.of("user-1"));
+            when(request.attribute("tenantId")).thenReturn(Optional.of("tenant-1"));
             when(request.queryParam("type")).thenReturn(Optional.of("SMS"));
-            when(mfaService.sendMfaCode("user-1", MfaConfig.MfaType.SMS)).thenReturn(Mono.empty());
+            when(mfaService.sendMfaCode("user-1", MfaConfig.MfaType.SMS, "tenant-1"))
+                    .thenReturn(Mono.empty());
 
             StepVerifier.create(handler.sendMfaCode(request))
                     .assertNext(response ->
                             assertThat(response.statusCode().is2xxSuccessful()).isTrue())
                     .verifyComplete();
 
-            verify(mfaService).sendMfaCode("user-1", MfaConfig.MfaType.SMS);
+            verify(mfaService).sendMfaCode("user-1", MfaConfig.MfaType.SMS, "tenant-1");
         }
 
         @Test
@@ -300,8 +306,9 @@ class MfaManagementHandlerTest {
         void shouldHandleServiceError() {
             ServerRequest request = mock(ServerRequest.class);
             when(request.attribute("userId")).thenReturn(Optional.of("user-1"));
+            when(request.attribute("tenantId")).thenReturn(Optional.of("tenant-1"));
             when(request.queryParam("type")).thenReturn(Optional.of("TOTP"));
-            when(mfaService.sendMfaCode("user-1", MfaConfig.MfaType.TOTP))
+            when(mfaService.sendMfaCode("user-1", MfaConfig.MfaType.TOTP, "tenant-1"))
                     .thenReturn(Mono.error(new IllegalArgumentException("TOTP无需发送验证码")));
 
             StepVerifier.create(handler.sendMfaCode(request))
@@ -320,19 +327,22 @@ class MfaManagementHandlerTest {
         void shouldReturnConfigsSuccessfully() {
             ServerRequest request = mock(ServerRequest.class);
             when(request.attribute("userId")).thenReturn(Optional.of("user-1"));
+            when(request.attribute("tenantId")).thenReturn(Optional.of("tenant-1"));
             MfaConfig config = MfaConfig.builder()
                     .userId("user-1")
+                    .tenantId("tenant-1")
                     .type(MfaConfig.MfaType.TOTP)
                     .status(MfaConfig.MfaStatus.ACTIVE)
                     .build();
-            when(mfaService.getUserMfaConfigs("user-1")).thenReturn(Flux.just(config));
+            when(mfaService.getUserMfaConfigs("user-1", "tenant-1"))
+                    .thenReturn(Flux.just(config));
 
             StepVerifier.create(handler.getUserMfaConfigs(request))
                     .assertNext(response ->
                             assertThat(response.statusCode().is2xxSuccessful()).isTrue())
                     .verifyComplete();
 
-            verify(mfaService).getUserMfaConfigs("user-1");
+            verify(mfaService).getUserMfaConfigs("user-1", "tenant-1");
         }
 
         @Test
@@ -340,7 +350,8 @@ class MfaManagementHandlerTest {
         void shouldReturnEmptyListWhenNoConfigs() {
             ServerRequest request = mock(ServerRequest.class);
             when(request.attribute("userId")).thenReturn(Optional.of("user-1"));
-            when(mfaService.getUserMfaConfigs("user-1")).thenReturn(Flux.empty());
+            when(request.attribute("tenantId")).thenReturn(Optional.of("tenant-1"));
+            when(mfaService.getUserMfaConfigs("user-1", "tenant-1")).thenReturn(Flux.empty());
 
             StepVerifier.create(handler.getUserMfaConfigs(request))
                     .assertNext(response ->
@@ -358,14 +369,15 @@ class MfaManagementHandlerTest {
         void shouldReturnTrueWhenMfaEnabled() {
             ServerRequest request = mock(ServerRequest.class);
             when(request.attribute("userId")).thenReturn(Optional.of("user-1"));
-            when(mfaService.isMfaEnabled("user-1")).thenReturn(Mono.just(true));
+            when(request.attribute("tenantId")).thenReturn(Optional.of("tenant-1"));
+            when(mfaService.isMfaEnabled("user-1", "tenant-1")).thenReturn(Mono.just(true));
 
             StepVerifier.create(handler.checkMfaStatus(request))
                     .assertNext(response ->
                             assertThat(response.statusCode().is2xxSuccessful()).isTrue())
                     .verifyComplete();
 
-            verify(mfaService).isMfaEnabled("user-1");
+            verify(mfaService).isMfaEnabled("user-1", "tenant-1");
         }
     }
 
@@ -378,15 +390,16 @@ class MfaManagementHandlerTest {
         void shouldRegenerateSuccessfully() {
             ServerRequest request = mock(ServerRequest.class);
             when(request.attribute("userId")).thenReturn(Optional.of("user-1"));
+            when(request.attribute("tenantId")).thenReturn(Optional.of("tenant-1"));
             BackupCodesResult result = new BackupCodesResult(List.of("A1", "A2").toArray(new String[0]));
-            when(mfaService.regenerateBackupCodes("user-1")).thenReturn(Mono.just(result));
+            when(mfaService.regenerateBackupCodes("user-1", "tenant-1")).thenReturn(Mono.just(result));
 
             StepVerifier.create(handler.regenerateBackupCodes(request))
                     .assertNext(response ->
                             assertThat(response.statusCode().is2xxSuccessful()).isTrue())
                     .verifyComplete();
 
-            verify(mfaService).regenerateBackupCodes("user-1");
+            verify(mfaService).regenerateBackupCodes("user-1", "tenant-1");
         }
 
         @Test
@@ -394,7 +407,8 @@ class MfaManagementHandlerTest {
         void shouldHandleServiceError() {
             ServerRequest request = mock(ServerRequest.class);
             when(request.attribute("userId")).thenReturn(Optional.of("user-1"));
-            when(mfaService.regenerateBackupCodes("user-1"))
+            when(request.attribute("tenantId")).thenReturn(Optional.of("tenant-1"));
+            when(mfaService.regenerateBackupCodes("user-1", "tenant-1"))
                     .thenReturn(Mono.error(new IllegalStateException("用户未启用任何MFA")));
 
             StepVerifier.create(handler.regenerateBackupCodes(request))
@@ -413,15 +427,17 @@ class MfaManagementHandlerTest {
         void shouldVerifySuccessfully() {
             ServerRequest request = mock(ServerRequest.class);
             when(request.attribute("userId")).thenReturn(Optional.of("user-1"));
+            when(request.attribute("tenantId")).thenReturn(Optional.of("tenant-1"));
             when(request.queryParam("code")).thenReturn(Optional.of("ABCD1234"));
-            when(mfaService.verifyBackupCode("user-1", "ABCD1234")).thenReturn(Mono.just(true));
+            when(mfaService.verifyBackupCode("user-1", "ABCD1234", "tenant-1"))
+                    .thenReturn(Mono.just(true));
 
             StepVerifier.create(handler.verifyBackupCode(request))
                     .assertNext(response ->
                             assertThat(response.statusCode().is2xxSuccessful()).isTrue())
                     .verifyComplete();
 
-            verify(mfaService).verifyBackupCode("user-1", "ABCD1234");
+            verify(mfaService).verifyBackupCode("user-1", "ABCD1234", "tenant-1");
         }
 
         @Test
@@ -446,7 +462,8 @@ class MfaManagementHandlerTest {
             when(request.queryParam("userId")).thenReturn(Optional.of("user-1"));
             when(request.queryParam("type")).thenReturn(Optional.of("TOTP"));
             when(request.attribute("userId")).thenReturn(Optional.of("admin-1"));
-            when(mfaService.unlockMfa("user-1", MfaConfig.MfaType.TOTP, "admin-1"))
+            when(request.attribute("tenantId")).thenReturn(Optional.of("tenant-1"));
+            when(mfaService.unlockMfa("user-1", MfaConfig.MfaType.TOTP, "admin-1", "tenant-1"))
                     .thenReturn(Mono.empty());
 
             StepVerifier.create(handler.unlockMfa(request))
@@ -454,7 +471,7 @@ class MfaManagementHandlerTest {
                             assertThat(response.statusCode().is2xxSuccessful()).isTrue())
                     .verifyComplete();
 
-            verify(mfaService).unlockMfa(eq("user-1"), eq(MfaConfig.MfaType.TOTP), eq("admin-1"));
+            verify(mfaService).unlockMfa("user-1", MfaConfig.MfaType.TOTP, "admin-1", "tenant-1");
         }
 
         @Test
@@ -473,7 +490,8 @@ class MfaManagementHandlerTest {
             when(request.queryParam("userId")).thenReturn(Optional.of("user-1"));
             when(request.queryParam("type")).thenReturn(Optional.of("SMS"));
             when(request.attribute("userId")).thenReturn(Optional.of("admin-1"));
-            when(mfaService.unlockMfa("user-1", MfaConfig.MfaType.SMS, "admin-1"))
+            when(request.attribute("tenantId")).thenReturn(Optional.of("tenant-1"));
+            when(mfaService.unlockMfa("user-1", MfaConfig.MfaType.SMS, "admin-1", "tenant-1"))
                     .thenReturn(Mono.error(new IllegalStateException("MFA未锁定")));
 
             StepVerifier.create(handler.unlockMfa(request))

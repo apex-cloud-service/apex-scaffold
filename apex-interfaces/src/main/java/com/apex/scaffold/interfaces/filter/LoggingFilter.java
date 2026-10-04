@@ -66,6 +66,7 @@ public class LoggingFilter implements WebFilter {
      * @return 过滤链执行结果
      */
     @Override
+    @SuppressWarnings("PMD.MethodTooLongRule")
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
         String path = request.getPath().value();

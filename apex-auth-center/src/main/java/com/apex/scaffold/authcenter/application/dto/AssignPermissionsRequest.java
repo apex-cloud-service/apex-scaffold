@@ -26,10 +26,10 @@ import lombok.NoArgsConstructor;
 public class AssignPermissionsRequest {
 
     @NotNull(message = "角色ID不能为空")
-    @Schema(description = "角色ID", example = "1", required = true)
+    @Schema(description = "角色ID", example = "1", requiredMode = Schema.RequiredMode.REQUIRED)
     private Long roleId;
 
     @NotEmpty(message = "权限ID集合不能为空")
-    @Schema(description = "权限ID集合", example = "[1, 2, 3]", required = true)
+    @Schema(description = "权限ID集合", example = "[1, 2, 3]", requiredMode = Schema.RequiredMode.REQUIRED)
     private Set<Long> permissionIds;
 }

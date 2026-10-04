@@ -12,8 +12,10 @@ import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import com.apex.scaffold.authcenter.AuthCenterBasicTestConfiguration;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
@@ -23,6 +25,7 @@ import org.springframework.test.context.TestConstructor;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@Import(AuthCenterBasicTestConfiguration.class)
 @AutoConfigureWebTestClient
 @ActiveProfiles("basic")
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
@@ -31,6 +34,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 class AuthCenterOpenApiIntegrationTest {
     private static final String CONTRACTS =
             """
+            get|/auth/v1/authorization/users/{userId}|queryUnifiedAuthorization||UnifiedAuthorizationResult|userId:path:true:integer:int64:
             post|/auth/v1/login|login|LoginRequest|LoginResponse|
             post|/auth/v1/logout/{userId}|logout|||userId:path:true:integer:int64:
             post|/auth/v1/refresh|refreshToken|RefreshTokenRequest|TokenPair|
@@ -86,8 +90,6 @@ class AuthCenterOpenApiIntegrationTest {
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {
         registry.add("jwt.secret", () -> UUID.randomUUID().toString() + UUID.randomUUID());
-        // JDBC 与 R2DBC 必须指向同一 H2 内存库：spring.sql.init 的建表脚本由 R2DBC 初始化器执行，
-        // 若两者不一致，R2DBC 侧的 schema 不会落到 JDBC 数据源，导致建表缺失
         registry.add(
                 "spring.datasource.url",
                 () -> "jdbc:h2:mem:authdocs;MODE=MySQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE");
@@ -119,7 +121,7 @@ class AuthCenterOpenApiIntegrationTest {
     }
 
     @Test
-    void allFortyFiveOperationsMatchExplicitContracts() {
+    void allFortySixOperationsMatchExplicitContracts() {
         Set<String> actual = new HashSet<>();
         Set<String> operationIds = new HashSet<>();
         document.path("paths")
@@ -139,32 +141,62 @@ class AuthCenterOpenApiIntegrationTest {
         CONTRACTS.lines().filter(line -> !line.isBlank()).forEach(line -> {
             String[] contract = line.strip().split("[|]", -1);
             expected.add(contract[0] + " " + contract[1]);
-            JsonNode operation = document.path("paths").path(contract[1]).path(contract[0]);
-            assertThat(operation.path("operationId").asText()).as(contract[1]).isEqualTo(contract[2]);
-            assertThat(operation.path("summary").asText()).isNotBlank();
-            assertThat(operation.path("description").asText()).isNotBlank();
-            assertParameters(operation, contract[5]);
-            assertBody(operation, contract[3]);
-            JsonNode success = operation.path("responses").path("200");
-            if (contract[4].isEmpty()) {
-                assertThat(success.has("content")).isFalse();
-            } else {
-                assertThat(success.at("/content/application~1json/schema/$ref").asText())
-                        .isEqualTo("#/components/schemas/" + contract[4]);
-            }
-            if (Set.of("login", "refreshToken").contains(contract[2])) {
-                assertThat(operation.path("security").isMissingNode()
-                                || operation.path("security").isEmpty())
-                        .isTrue();
-            } else {
-                assertThat(operation.path("security").get(0).has("bearerAuth")).isTrue();
-                assertThat(operation.path("responses").path("401").has("content"))
-                        .isFalse();
-            }
+            assertOperationContract(contract);
         });
-        assertThat(expected).hasSize(45);
+        assertThat(expected).hasSize(46);
         assertThat(actual).containsExactlyInAnyOrderElementsOf(expected);
         assertLocalReferencesResolve(document);
+    }
+
+    @Test
+    void unifiedAuthorizationDocumentsPathSecurityAndSchema() {
+        JsonNode path = document.path("paths").path("/auth/v1/authorization/users/{userId}");
+        assertThat(path.fieldNames()).toIterable().containsExactly("get");
+        JsonNode operation = path.path("get");
+        assertParameters(operation, "userId:path:true:integer:int64:");
+        assertThat(operation.path("parameters").path(0).at("/schema/minimum").asInt())
+                .isEqualTo(1);
+        assertThat(operation.path("security")).hasSize(1);
+        JsonNode requirement = operation.path("security").path(0);
+        assertThat(requirement.fieldNames()).toIterable().containsExactly("bearerAuth");
+        assertThat(requirement.path("bearerAuth").isArray()).isTrue();
+        assertThat(requirement.path("bearerAuth")).isEmpty();
+        assertThat(operation.path("responses").fieldNames())
+                .toIterable()
+                .containsExactlyInAnyOrder("200", "400", "401", "403");
+        for (String status : new String[] {"401"}) {
+            assertThat(operation.path("responses").path(status).has("content")).isFalse();
+        }
+        for (String status : new String[] {"400", "403"}) {
+            assertThat(operation
+                            .path("responses")
+                            .path(status)
+                            .at("/content/application~1json/schema/$ref")
+                            .asText())
+                    .isEqualTo("#/components/schemas/Result");
+        }
+        assertEnvelope("UnifiedAuthorizationResult");
+        assertThat(property(schema("UnifiedAuthorizationResult"), "data")
+                        .path("$ref")
+                        .asText())
+                .isEqualTo("#/components/schemas/UnifiedAuthorizationResponse");
+        JsonNode snapshot = schema("UnifiedAuthorizationResponse");
+        assertThat(snapshot.path("properties").fieldNames())
+                .toIterable()
+                .containsExactlyInAnyOrder("tenantId", "userId", "permissions", "roles");
+        assertThat(property(snapshot, "tenantId").path("type").asText()).isEqualTo("string");
+        assertThat(property(snapshot, "userId").path("type").asText()).isEqualTo("integer");
+        assertThat(property(snapshot, "userId").path("format").asText()).isEqualTo("int64");
+        assertThat(property(snapshot, "permissions").path("type").asText()).isEqualTo("array");
+        assertThat(property(snapshot, "permissions").at("/items/type").asText()).isEqualTo("string");
+        assertThat(property(snapshot, "roles").path("type").asText()).isEqualTo("array");
+        String roleRef = property(snapshot, "roles").at("/items/$ref").asText();
+        assertThat(roleRef).startsWith("#/components/schemas/");
+        JsonNode role = document.at(roleRef.substring(1));
+        assertThat(role.path("properties").fieldNames()).toIterable().containsExactlyInAnyOrder("code", "dataScope");
+        for (String field : new String[] {"code", "dataScope"}) {
+            assertThat(property(role, field).path("type").asText()).isEqualTo("string");
+        }
     }
 
     @Test
@@ -179,58 +211,35 @@ class AuthCenterOpenApiIntegrationTest {
                         "/oauth2/introspect",
                         "post")
                 .forEach((path, method) -> {
-                    assertThat(document.path("paths")
-                                    .path(path)
-                                    .path(method)
-                                    .path("operationId")
-                                    .asText())
-                            .isNotBlank();
-                    assertThat(document.path("paths")
-                                    .path(path)
-                                    .path(method)
-                                    .path("summary")
-                                    .asText())
-                            .isNotBlank();
+                    JsonNode operation = document.path("paths").path(path).path(method);
+                    assertThat(operation.path("operationId").asText()).isNotBlank();
+                    assertThat(operation.path("summary").asText()).isNotBlank();
                 });
     }
 
     @Test
     void wrappedResponsesRetainTheirConcreteDataTypes() {
         Map.of(
-                        "RoleResult",
-                        "RoleDTO",
-                        "PermissionResult",
-                        "PermissionDTO",
-                        "SessionResult",
-                        "SessionDTO",
-                        "AuthConfigResult",
-                        "AuthConfigDTO",
-                        "AuditLogResult",
-                        "AuditLogDTO",
-                        "MfaSetupResult",
-                        "MfaSetupResponse",
-                        "OnlineStatisticsResult",
-                        "OnlineStatistics",
-                        "MfaStatusResult",
-                        "MfaStatus")
+                        "RoleResult", "RoleDTO",
+                        "PermissionResult", "PermissionDTO",
+                        "SessionResult", "SessionDTO",
+                        "AuthConfigResult", "AuthConfigDTO",
+                        "AuditLogResult", "AuditLogDTO",
+                        "MfaSetupResult", "MfaSetupResponse",
+                        "OnlineStatisticsResult", "OnlineStatistics",
+                        "MfaStatusResult", "MfaStatus")
                 .forEach((wrapper, dataType) -> {
                     assertEnvelope(wrapper);
                     assertThat(property(schema(wrapper), "data").path("$ref").asText())
                             .endsWith("/" + dataType);
                 });
         Map.of(
-                        "RoleListResult",
-                        "RoleDTO",
-                        "PermissionListResult",
-                        "PermissionDTO",
-                        "SessionListResult",
-                        "SessionDTO",
-                        "AuthConfigListResult",
-                        "AuthConfigDTO",
-                        "AuditLogListResult",
-                        "AuditLogDTO",
-                        "OnlineSessionsResult",
-                        "SessionEntity")
+                        "RoleListResult", "RoleDTO",
+                        "PermissionListResult", "PermissionDTO",
+                        "SessionListResult", "SessionDTO",
+                        "AuthConfigListResult", "AuthConfigDTO",
+                        "AuditLogListResult", "AuditLogDTO",
+                        "OnlineSessionsResult", "SessionEntity")
                 .forEach((wrapper, itemType) -> {
                     assertEnvelope(wrapper);
                     JsonNode data = property(schema(wrapper), "data");
@@ -289,7 +298,6 @@ class AuthCenterOpenApiIntegrationTest {
         assertThat(schema("RefreshTokenRequest").path("required").toString()).contains("refreshToken");
         assertThat(schema("LoginResponse").path("properties").has("code")).isFalse();
         assertThat(schema("TokenPair").path("properties").has("data")).isFalse();
-        // TokenPair 当前契约包含 refreshTokenJti（共5个字段）
         assertThat(schema("TokenPair").path("properties").size()).isEqualTo(5);
         assertThat(property(schema("TokenPair"), "expiresIn").path("format").asText())
                 .isEqualTo("int64");
@@ -327,7 +335,6 @@ class AuthCenterOpenApiIntegrationTest {
                 .returnResult()
                 .getResponseBody();
         assertThat(refreshed).isNotNull();
-        // TokenPair 当前契约包含 refreshTokenJti（共5个字段）
         assertThat(refreshed.size()).isEqualTo(5);
         assertThat(refreshed.path("refreshToken").asText())
                 .isNotEqualTo(login.path("refreshToken").asText());
@@ -371,6 +378,30 @@ class AuthCenterOpenApiIntegrationTest {
                 .isUnauthorized();
     }
 
+    private void assertOperationContract(String[] contract) {
+        JsonNode operation = document.path("paths").path(contract[1]).path(contract[0]);
+        assertThat(operation.path("operationId").asText()).as(contract[1]).isEqualTo(contract[2]);
+        assertThat(operation.path("summary").asText()).isNotBlank();
+        assertThat(operation.path("description").asText()).isNotBlank();
+        assertParameters(operation, contract[5]);
+        assertBody(operation, contract[3]);
+        JsonNode success = operation.path("responses").path("200");
+        if (contract[4].isEmpty()) {
+            assertThat(success.has("content")).isFalse();
+        } else {
+            assertThat(success.at("/content/application~1json/schema/$ref").asText())
+                    .isEqualTo("#/components/schemas/" + contract[4]);
+        }
+        if (Set.of("login", "refreshToken").contains(contract[2])) {
+            assertThat(operation.path("security").isMissingNode()
+                            || operation.path("security").isEmpty())
+                    .isTrue();
+        } else {
+            assertThat(operation.path("security").get(0).has("bearerAuth")).isTrue();
+            assertThat(operation.path("responses").path("401").has("content")).isFalse();
+        }
+    }
+
     private JsonNode login() {
         return client.post()
                 .uri("/auth/v1/login")
@@ -398,7 +429,9 @@ class AuthCenterOpenApiIntegrationTest {
             assertThat(parameter).as(fields[0]).isNotNull();
             assertThat(parameter.path("in").asText()).isEqualTo(fields[1]);
             assertThat(parameter.path("required").asBoolean()).isEqualTo(Boolean.parseBoolean(fields[2]));
-            assertThat(parameter.at("/schema/type").asText()).isEqualTo(fields[3]);
+            assertThat(parameter.at("/schema/type").asText())
+                    .as(parameter.toString())
+                    .isEqualTo(fields[3]);
             assertThat(parameter.at("/schema/format").asText()).isEqualTo(fields[4]);
             assertThat(parameter.at("/schema/default").asText()).isEqualTo(fields[5]);
             assertThat(parameter.path("description").asText()).isNotBlank();

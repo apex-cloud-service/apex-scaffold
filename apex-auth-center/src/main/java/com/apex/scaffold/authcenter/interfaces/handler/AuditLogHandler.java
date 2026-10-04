@@ -6,6 +6,10 @@ import com.apex.scaffold.authcenter.application.dto.AuditLogQueryRequest;
 import com.apex.scaffold.authcenter.application.service.AuditLogService;
 import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.annotation.OperationLog.OperationType;
+import com.apex.scaffold.common.context.TenantContext;
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
+import com.apex.scaffold.common.annotation.RequireAdminRole;
+import com.apex.scaffold.common.annotation.RequireResourcePermission;
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.common.util.TraceIdUtil;
@@ -812,6 +816,8 @@ public class AuditLogHandler {
      * @return HTTP响应
      */
     @OperationLog(module = "审计日志", type = OperationType.DELETE, description = "清理过期日志")
+    @RequireAdminRole
+    @RequireResourcePermission(resourceType = "audit-logs", resourceIdExpression = "#request.queryParam('tenantId').orElse('')", permission = "MANAGE", errorMessage = "无权清理该租户审计日志")
     @Operation(operationId = "cleanupExpiredLogs", summary = "清理过期日志", description = "清理指定保留天数之前的审计日志")
     @io.swagger.v3.oas.annotations.Parameter(
             name = "retentionDays",
@@ -833,22 +839,26 @@ public class AuditLogHandler {
             description = "权限不足，需要管理员权限",
             content = @Content(schema = @Schema(implementation = Result.class)))
     public Mono<ServerResponse> cleanupExpiredLogs(ServerRequest request) {
-        String tenantId =
-                request.queryParam("tenantId").orElseThrow(() -> new IllegalArgumentException("tenantId is required"));
         String beforeTimeStr = request.queryParam("beforeTime")
                 .orElseThrow(() -> new IllegalArgumentException("beforeTime is required"));
         LocalDateTime beforeTime = LocalDateTime.parse(beforeTimeStr);
 
-        log.info("Cleaning up expired logs: beforeTime={}, tenantId={}", beforeTime, tenantId);
-
-        return auditLogService
-                .cleanupExpiredLogs(beforeTime, tenantId)
-                .flatMap(count -> ServerResponse.ok()
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .bodyValue(Result.success(count)))
-                .onErrorResume(e -> {
-                    log.error("Failed to cleanup expired logs: beforeTime={}, tenantId={}", beforeTime, tenantId, e);
-                    return buildError(ResultCode.ERROR, TraceIdUtil.getTraceId());
+        return ReactiveSecurityContextHolder.getContext()
+                .map(securityContext -> securityContext.getAuthentication().getDetails())
+                .ofType(String.class)
+                .switchIfEmpty(Mono.defer(() -> Mono.justOrEmpty(TenantContext.currentTenantId().orElse(null))))
+                .switchIfEmpty(Mono.error(new IllegalStateException("tenant context is required")))
+                .flatMap(tenantId -> {
+                    log.info("Cleaning up expired logs: beforeTime={}, tenantId={}", beforeTime, tenantId);
+                    return auditLogService
+                            .cleanupExpiredLogs(beforeTime, tenantId)
+                            .flatMap(count -> ServerResponse.ok()
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .bodyValue(Result.success(count)))
+                            .onErrorResume(e -> {
+                                log.error("Failed to cleanup expired logs: beforeTime={}, tenantId={}", beforeTime, tenantId, e);
+                                return buildError(ResultCode.ERROR, TraceIdUtil.getTraceId());
+                            });
                 });
     }
 

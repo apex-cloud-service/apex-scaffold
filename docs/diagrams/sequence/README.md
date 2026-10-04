@@ -4,18 +4,42 @@
 > **创建日期**: 2026-09-09  
 > **格式**: Mermaid 语法
 
-本目录包含 Apex Scaffold 项目核心业务流程的时序图，使用 Mermaid 语法编写。
+本目录包含业务时序图、状态机和架构图的 Mermaid 源文件。以下清单按实际文件登记；本轮没有重新渲染或验证这些源文件。旧图中的缓存和登录机制可能属于历史设计，当前行为见配套文档。
 
 ---
 
 ## 📋 时序图清单
 
-| 序号 | 文件名 | 说明 | 参与者数量 |
-|------|--------|------|-----------|
-| 30 | `30_user_login_sequence.mmd` | 用户登录认证时序图 | 6 个 |
-| 31 | `31_permission_check_sequence.mmd` | RBAC 权限校验时序图 | 8 个 |
-| 32 | `32_workflow_approval_sequence.mmd` | 工作流审批时序图 | 10 个 |
-| 33 | `33_file_upload_sequence.mmd` | 文件上传时序图 | 12 个 |
+| 编号 | 文件 | 主题（按文件名） |
+| --- | --- | --- |
+| 30 | [30_user_login_sequence.mmd](30_user_login_sequence.mmd) | user_login_sequence |
+| 31 | [31_permission_check_sequence.mmd](31_permission_check_sequence.mmd) | permission_check_sequence |
+| 32 | [32_workflow_approval_sequence.mmd](32_workflow_approval_sequence.mmd) | workflow_approval_sequence |
+| 33 | [33_file_upload_sequence.mmd](33_file_upload_sequence.mmd) | file_upload_sequence |
+| 70 | [70_workflow_engine_state_machine.mmd](70_workflow_engine_state_machine.mmd) | workflow_engine_state_machine |
+| 71 | [71_graceful_shutdown_state_machine.mmd](71_graceful_shutdown_state_machine.mmd) | graceful_shutdown_state_machine |
+| 72 | [72_multi_tenant_isolation_architecture.mmd](72_multi_tenant_isolation_architecture.mmd) | multi_tenant_isolation_architecture |
+| 73 | [73_event_driven_architecture.mmd](73_event_driven_architecture.mmd) | event_driven_architecture |
+| 74 | [74_webflux_reactive_call_chain.mmd](74_webflux_reactive_call_chain.mmd) | webflux_reactive_call_chain |
+| 75 | [75_message_queue_reliability_architecture.mmd](75_message_queue_reliability_architecture.mmd) | message_queue_reliability_architecture |
+| 76 | [76_data_scope_filter_sequence.mmd](76_data_scope_filter_sequence.mmd) | data_scope_filter_sequence |
+| 77 | [77_multi_level_cache_architecture.mmd](77_multi_level_cache_architecture.mmd) | multi_level_cache_architecture |
+| 78 | [78_auto_retry_mechanism_sequence.mmd](78_auto_retry_mechanism_sequence.mmd) | auto_retry_mechanism_sequence |
+| 79 | [79_datasource_switch_architecture.mmd](79_datasource_switch_architecture.mmd) | datasource_switch_architecture |
+| 80 | [80_audit_log_async_batch_sequence.mmd](80_audit_log_async_batch_sequence.mmd) | audit_log_async_batch_sequence |
+| 81 | [81_api_gateway_request_flow_sequence.mmd](81_api_gateway_request_flow_sequence.mmd) | api_gateway_request_flow_sequence |
+| 82 | [82_sentinel_circuit_breaker_flow.mmd](82_sentinel_circuit_breaker_flow.mmd) | sentinel_circuit_breaker_flow |
+| 83 | [83_resilience4j_state_machine.mmd](83_resilience4j_state_machine.mmd) | resilience4j_state_machine |
+| 84 | [84_rate_limit_hotspot_sequence.mmd](84_rate_limit_hotspot_sequence.mmd) | rate_limit_hotspot_sequence |
+| 85 | [85_auto_retry_architecture.mmd](85_auto_retry_architecture.mmd) | auto_retry_architecture |
+| 86 | [86_audit_log_architecture.mmd](86_audit_log_architecture.mmd) | audit_log_architecture |
+| 87 | [87_api_gateway_architecture.mmd](87_api_gateway_architecture.mmd) | api_gateway_architecture |
+| 88 | [88_webflux_reactive_architecture.mmd](88_webflux_reactive_architecture.mmd) | webflux_reactive_architecture |
+| 89 | [89_multi_tenant_data_isolation_sequence.mmd](89_multi_tenant_data_isolation_sequence.mmd) | multi_tenant_data_isolation_sequence |
+
+当前统一授权时序见 [业务流程文档](../../architecture/business-flows.md)，配置见 [统一授权配置](../../05-operations/configuration.md#认证中心统一授权)。主应用保留 `/api/v1/auth/*`，认证中心使用 `/auth/v1/*`，二者独立启动。
+
+认证相关既有 SVG 位于父目录：[安全链](../84_security_filter_chain.svg)、[认证中心](../85_auth_center_architecture.svg)、[Token 生命周期](../86_token_lifecycle_management.svg)。本目录没有它们的同名 `.mmd` 源文件；84–86 的 Mermaid 文件主题分别是限流、重试和审计，不能按编号关联。
 
 ---
 
@@ -64,59 +88,17 @@ done
 
 ### 30. 用户登录认证时序图
 
-**核心流程**:
-1. 客户端提交登录请求（用户名、密码、验证码）
-2. 验证图形验证码（Redis 缓存）
-3. 查询用户信息并验证密码（BCrypt）
-4. 生成 JWT Token（Access Token + Refresh Token）
-5. 缓存 Token 到 Redis（2 小时 + 7 天）
-6. 返回 Token 给客户端
-7. 后续请求携带 Token 验证
-8. Token 自动续期机制（剩余 < 30 分钟时）
+该源文件保留历史登录设计，图内固定 TTL 和自动续期描述不作为当前认证中心契约。主应用登录为 `POST /api/v1/auth/login`；认证中心登录为 `POST /auth/v1/login`，刷新为 `POST /auth/v1/refresh`。认证中心刷新撤销旧 Refresh Token 并返回新 Token 对，客户端必须保存新的 Token 对。
 
-**涉及组件**:
-- API Gateway
-- AuthService
-- JwtService
-- Redis
-- Database
-
-**关键配置**:
-- `JWT_SECRET`: JWT 签名密钥
-- `JWT_ACCESS_EXPIRE`: Access Token 有效期（2 小时）
-- `JWT_REFRESH_EXPIRE`: Refresh Token 有效期（7 天）
-- `APEX_CAPTCHA_ENABLED`: 是否启用验证码
+认证中心登出为 `POST /auth/v1/logout/{userId}`，要求 Bearer ACCESS Token，路径用户必须是当前认证用户，租户来自可信认证上下文，成功返回 HTTP 200 空响应体。详细示例见 [认证中心 README](../../../apex-auth-center/README.md)。
 
 ---
 
 ### 31. RBAC 权限校验时序图
 
-**核心流程**:
-1. 请求进入权限拦截器
-2. 解析 JWT Token 获取用户 ID
-3. 查询用户权限（优先缓存，缓存未命中查库）
-4. 检查用户是否有访问权限
-5. AOP 切面二次校验 `@RequirePermission` 注解
-6. 数据权限过滤（`@DataScope` 注解）
-7. 动态拼接 SQL 实现部门级数据隔离
-8. 响应数据脱敏（`@DataMask` 注解）
+该源文件描述本地 RBAC 和 1 小时权限缓存，属于历史设计，不能用于配置当前统一授权。当前 `apex.features.auth-center-permission` 默认关闭，关闭时保留本地授权；开启时使用主租户/用户到中心租户/用户的显式映射，通过 HTTPS 查询 `/auth/v1/authorization/users/{userId}`。
 
-**涉及组件**:
-- API Gateway
-- Interceptor
-- PermissionService
-- AOP Aspect
-- Redis
-- Database
-
-**关键配置**:
-- `APEX_REDIS_KEY_PREFIX`: Redis 键前缀
-- 权限缓存 TTL: 1 小时
-
-**权限缓存键**:
-```
-user:permissions:{userId}
-```
+远程读取使用专用账号 ACCESS Token；认证中心校验读取账号和目标账号同租户、启用、未锁定、未软删除。主应用只显式映射 `SELF`/`ALL` 数据范围。统一授权缓存默认关闭，TTL 为 0–30 秒，键包含主租户和主用户，快照独立校验 `expiresAt`。远程失败不回退本地权限或过期缓存；3 秒超时和 Resilience4j 默认熔断器用于保护远程调用。
 
 ---
 
@@ -260,7 +242,7 @@ Note over A,B: 跨越注释
 
 ## 📚 相关文档
 
-- [架构文档索引](../../02-architecture/architecture-index.md) - 29 张架构图完整索引
+- [架构文档索引](../../02-architecture/architecture-index.md) - 既有图表及验证边界
 - [DDD 四层架构](../../architecture/01-logical-architecture-detail.md)
 - [工作流引擎指南](../../01-guides/workflow-guide.md)
 - [存储 SPI 指南](../../01-guides/spi-plugin-guide.md)

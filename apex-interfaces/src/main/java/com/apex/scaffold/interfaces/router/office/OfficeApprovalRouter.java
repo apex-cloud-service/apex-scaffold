@@ -52,7 +52,6 @@ public class OfficeApprovalRouter {
      * @param handler 审批处理器
      * @return 路由函数
      */
-    @Bean
     @RouterOperations({
         @RouterOperation(
                 path = BASE_PATH,
@@ -268,6 +267,7 @@ public class OfficeApprovalRouter {
                                                                                             .class)))
                                 }))
     })
+    @Bean
     public RouterFunction<ServerResponse> approvalRoutes(OfficeApprovalHandler handler) {
         return RouterFunctions.nest(
                 path(BASE_PATH),

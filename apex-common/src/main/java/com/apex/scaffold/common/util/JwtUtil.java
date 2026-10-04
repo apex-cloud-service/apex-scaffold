@@ -86,7 +86,7 @@ public class JwtUtil {
      *
      * @param properties JWT 配置属性对象
      */
-    public static void applyConfig(JwtProperties properties) {
+    public static synchronized void applyConfig(JwtProperties properties) {
         if (properties == null) {
             log.warn("JwtUtil.applyConfig 收到 null 参数，保持当前默认值");
             return;
@@ -114,7 +114,7 @@ public class JwtUtil {
         } catch (IllegalStateException e) {
             log.debug("JWT密钥未在配置文件中设置,将依赖环境变量或系统属性");
         }
-        ConfigHolder.configured = true;
+        ConfigHolder.configured = ConfigHolder.secret != null;
         log.info(
                 "JwtUtil 已应用外部配置: defaultExpireTime={}ms, minSecretLength={}, secretConfigured={}",
                 ConfigHolder.defaultExpireTime,

@@ -1042,6 +1042,11 @@
               <goals>
                 <goal>prepare-agent</goal>
               </goals>
+              <configuration>
+                <includes>
+                  <include>com/apex/*</include>
+                </includes>
+              </configuration>
             </execution>
             <execution>
               <id>report</id>

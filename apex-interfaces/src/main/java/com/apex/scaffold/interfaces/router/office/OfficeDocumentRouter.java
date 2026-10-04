@@ -56,7 +56,6 @@ public class OfficeDocumentRouter {
      *
      * @return RouterFunction 路由函数
      */
-    @Bean
     @RouterOperations({
         @RouterOperation(
                 path = BASE_PATH,
@@ -359,6 +358,7 @@ public class OfficeDocumentRouter {
                                     @ApiResponse(responseCode = "500", description = "服务器内部错误")
                                 }))
     })
+    @Bean
     public RouterFunction<ServerResponse> officeDocumentRoutes() {
         return RouterFunctions.route(POST(BASE_PATH).and(accept(MediaType.APPLICATION_JSON)), handler::createDocument)
                 .andRoute(POST(BASE_PATH + "/upload").and(accept(MediaType.APPLICATION_JSON)), handler::uploadFile)

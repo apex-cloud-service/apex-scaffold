@@ -92,6 +92,77 @@ class JwtAuthenticationFilterTest {
     }
 
     @Test
+    void centralAuthoritiesIgnoreRequestTenantAndLocalRoles() {
+        com.apex.scaffold.domain.gateway.UnifiedAuthorizationGateway gateway =
+                org.mockito.Mockito.mock(com.apex.scaffold.domain.gateway.UnifiedAuthorizationGateway.class);
+        com.apex.scaffold.application.service.UnifiedAuthorizationService unified =
+                new com.apex.scaffold.application.service.UnifiedAuthorizationService(
+                        gateway,
+                        new org.springframework.mock.env.MockEnvironment()
+                                .withProperty("apex.features.auth-center-permission", "true"));
+        JwtAuthenticationFilter central = new JwtAuthenticationFilter(
+                tokenBlacklistService, null, messageUtils, userRepository, roleRepository, unified);
+        UserEntity user = UserEntity.create(TEST_OPEN_ID, "reader");
+        user.setId(7L);
+        user.setTenantId("main");
+        when(userRepository.findByOpenId(TEST_OPEN_ID)).thenReturn(Mono.just(user));
+        when(tokenBlacklistService.isBlacklisted(VALID_TOKEN)).thenReturn(Mono.just(false));
+        when(gateway.query("main", 7L))
+                .thenReturn(Mono.just(new com.apex.scaffold.domain.gateway.UnifiedAuthorizationGateway.Authorization(
+                        "main",
+                        7L,
+                        java.util.List.of(),
+                        java.util.List.of(new com.apex.scaffold.domain.gateway.UnifiedAuthorizationGateway.Role(
+                                "AUDITOR", "SELF")))));
+        Claims centralClaims = mockClaims();
+        jwtUtilMockedStatic.when(() -> JwtUtil.parseToken(VALID_TOKEN)).thenReturn(centralClaims);
+        when(chain.filter(any(ServerWebExchange.class)))
+                .thenAnswer(invocation ->
+                        org.springframework.security.core.context.ReactiveSecurityContextHolder.getContext()
+                                .switchIfEmpty(Mono.error(new AssertionError("Missing authentication")))
+                                .doOnNext(context -> assertThat(
+                                                context.getAuthentication().getAuthorities())
+                                        .extracting(org.springframework.security.core.GrantedAuthority::getAuthority)
+                                        .containsExactly("ROLE_AUDITOR"))
+                                .then(Mono.deferContextual(context -> {
+                                    assertThat(context.<String>get(
+                                                    com.apex.scaffold.common.context.TenantContext.REACTOR_CONTEXT_KEY))
+                                            .isEqualTo("main");
+                                    return Mono.empty();
+                                })));
+        ServerWebExchange exchange = MockServerWebExchange.from(MockServerHttpRequest.get("/internal/user/profile")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + VALID_TOKEN)
+                .header("X-Tenant-Id", "foreign")
+                .build());
+        StepVerifier.create(central.filter(exchange, chain)).verifyComplete();
+        verifyNoInteractions(roleRepository);
+        verify(gateway).query("main", 7L);
+    }
+
+    @Test
+    void centralFailureReturnsUnavailableWithoutLocalFallback() {
+        com.apex.scaffold.application.service.UnifiedAuthorizationService unified =
+                org.mockito.Mockito.mock(com.apex.scaffold.application.service.UnifiedAuthorizationService.class);
+        when(unified.enabled()).thenReturn(true);
+        when(unified.roles(7L)).thenReturn(Mono.error(new IllegalStateException("Unavailable")));
+        JwtAuthenticationFilter central = new JwtAuthenticationFilter(
+                tokenBlacklistService, null, messageUtils, userRepository, roleRepository, unified);
+        UserEntity user = UserEntity.create(TEST_OPEN_ID, "reader");
+        user.setId(7L);
+        user.setTenantId("main");
+        when(userRepository.findByOpenId(TEST_OPEN_ID)).thenReturn(Mono.just(user));
+        when(tokenBlacklistService.isBlacklisted(VALID_TOKEN)).thenReturn(Mono.just(false));
+        Claims centralClaims = mockClaims();
+        jwtUtilMockedStatic.when(() -> JwtUtil.parseToken(VALID_TOKEN)).thenReturn(centralClaims);
+        ServerWebExchange exchange = MockServerWebExchange.from(MockServerHttpRequest.get("/internal/user/profile")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + VALID_TOKEN)
+                .build());
+        StepVerifier.create(central.filter(exchange, chain)).verifyComplete();
+        assertThat(exchange.getResponse().getStatusCode()).isEqualTo(HttpStatusCode.valueOf(503));
+        verifyNoInteractions(roleRepository, chain);
+    }
+
+    @Test
     @DisplayName("普通业务接口未提供Token应返回401")
     void filter_withProjectV1ApiWithoutToken_shouldReturnUnauthorized() {
         MockServerHttpRequest request =

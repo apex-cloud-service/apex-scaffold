@@ -1,5 +1,6 @@
 package com.apex.scaffold.infrastructure.mq.alert;
 
+import com.apex.scaffold.common.exception.AlertEvent;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.util.Map;
@@ -8,6 +9,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -51,6 +53,7 @@ import org.springframework.stereotype.Component;
 public class MqAlertManager {
 
     private final MeterRegistry meterRegistry;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Value("${apex.mq.alert.lag-warning-threshold:10000}")
     private long lagWarningThreshold;
@@ -81,8 +84,9 @@ public class MqAlertManager {
     private final Counter sendFailAlertCounter;
     private final Counter consumeFailAlertCounter;
 
-    public MqAlertManager(MeterRegistry meterRegistry) {
+    public MqAlertManager(MeterRegistry meterRegistry, ApplicationEventPublisher eventPublisher) {
         this.meterRegistry = meterRegistry;
+        this.eventPublisher = eventPublisher;
 
         // 注册告警计数器
         this.lagAlertCounter =
@@ -106,6 +110,9 @@ public class MqAlertManager {
      * @param lag           积压量
      */
     public void alertLag(String consumerGroup, long lag) {
+        if (lag < lagWarningThreshold) {
+            return;
+        }
         String alertKey = "lag_" + consumerGroup;
 
         if (!shouldAlert(alertKey)) {
@@ -122,7 +129,7 @@ public class MqAlertManager {
                 lagWarningThreshold,
                 lagCriticalThreshold);
 
-        sendAlert(level, message);
+        publishAlert(level, message);
         lagAlertCounter.increment();
         updateAlertTime(alertKey);
     }
@@ -134,6 +141,9 @@ public class MqAlertManager {
      * @param rate          死信消息速率（msg/s）
      */
     public void alertDlq(String consumerGroup, double rate) {
+        if (rate < dlqWarningRate) {
+            return;
+        }
         String alertKey = "dlq_" + consumerGroup;
 
         if (!shouldAlert(alertKey)) {
@@ -146,7 +156,7 @@ public class MqAlertManager {
                 "【死信队列告警】消费者 %s 死信消息速率: %.2f msg/s (阈值: 警告-%.0f, 严重-%.0f)",
                 consumerGroup, rate, dlqWarningRate, dlqCriticalRate);
 
-        sendAlert(level, message);
+        publishAlert(level, message);
         dlqAlertCounter.increment();
         updateAlertTime(alertKey);
     }
@@ -158,6 +168,9 @@ public class MqAlertManager {
      * @param failRate 失败率
      */
     public void alertSendFail(String topic, double failRate) {
+        if (failRate < sendFailRateThreshold) {
+            return;
+        }
         String alertKey = "send_fail_" + topic;
 
         if (!shouldAlert(alertKey)) {
@@ -169,7 +182,7 @@ public class MqAlertManager {
         String message = String.format(
                 "【消息发送失败告警】主题 %s 发送失败率: %.2f%% (阈值: %.2f%%)", topic, failRate * 100, sendFailRateThreshold * 100);
 
-        sendAlert(level, message);
+        publishAlert(level, message);
         sendFailAlertCounter.increment();
         updateAlertTime(alertKey);
     }
@@ -181,6 +194,9 @@ public class MqAlertManager {
      * @param failRate      失败率
      */
     public void alertConsumeFail(String consumerGroup, double failRate) {
+        if (failRate < consumeFailRateThreshold) {
+            return;
+        }
         String alertKey = "consume_fail_" + consumerGroup;
 
         if (!shouldAlert(alertKey)) {
@@ -193,7 +209,7 @@ public class MqAlertManager {
                 "【消息消费失败告警】消费者 %s 消费失败率: %.2f%% (阈值: %.2f%%)",
                 consumerGroup, failRate * 100, consumeFailRateThreshold * 100);
 
-        sendAlert(level, message);
+        publishAlert(level, message);
         consumeFailAlertCounter.increment();
         updateAlertTime(alertKey);
     }
@@ -213,7 +229,7 @@ public class MqAlertManager {
 
         String message = String.format("【消息降级告警】主题 %s 触发降级: %s", topic, reason);
 
-        sendAlert(AlertLevel.WARNING, message);
+        publishAlert(AlertLevel.WARNING, message);
         updateAlertTime(alertKey);
     }
 
@@ -224,13 +240,17 @@ public class MqAlertManager {
      * @return 是否应该告警
      */
     private boolean shouldAlert(String alertKey) {
-        Long lastTime = lastAlertTime.get(alertKey);
-        if (lastTime == null) {
-            return true;
-        }
-
-        long elapsed = System.currentTimeMillis() - lastTime;
-        return elapsed >= cooldownMs;
+        long now = System.currentTimeMillis();
+        AtomicLong decision = new AtomicLong();
+        lastAlertTime.compute(alertKey, (key, lastTime) -> {
+            if (lastTime == null || now - lastTime >= cooldownMs) {
+                decision.set(now);
+                return now;
+            }
+            decision.set(0L);
+            return lastTime;
+        });
+        return decision.get() == now;
     }
 
     /**
@@ -249,31 +269,35 @@ public class MqAlertManager {
      * @param level   告警级别
      * @param message 告警消息
      */
-    private void sendAlert(AlertLevel level, String message) {
+    private void publishAlert(AlertLevel level, String message) {
         switch (level) {
-            case INFO:
-                log.info(message);
-                break;
-            case WARNING:
+            case INFO, WARNING:
                 log.warn(message);
                 break;
-            case ERROR:
+            case ERROR, CRITICAL:
                 log.error(message);
-                break;
-            case CRITICAL:
-                log.error(message);
-                // TODO: 发送紧急通知（钉钉/企业微信/短信）
                 break;
             default:
                 log.warn("未知告警级别: {}, message={}", level, message);
                 break;
         }
 
-        // TODO: 集成告警通知渠道
-        // - 钉钉机器人
-        // - 企业微信机器人
-        // - 邮件通知
-        // - 短信通知（严重告警）
+        eventPublisher.publishEvent(AlertEvent.builder()
+                .exceptionType("MQ_" + level.name())
+                .message(message)
+                .serviceName("apex-scaffold")
+                .level(toAlertLevel(level))
+                .count(1)
+                .build());
+    }
+
+    private AlertEvent.AlertLevel toAlertLevel(AlertLevel level) {
+        return switch (level) {
+            case INFO -> AlertEvent.AlertLevel.INFO;
+            case WARNING -> AlertEvent.AlertLevel.WARNING;
+            case ERROR -> AlertEvent.AlertLevel.ERROR;
+            case CRITICAL -> AlertEvent.AlertLevel.CRITICAL;
+        };
     }
 
     /**

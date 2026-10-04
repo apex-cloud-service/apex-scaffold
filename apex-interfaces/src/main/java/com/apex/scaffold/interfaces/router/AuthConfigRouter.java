@@ -32,7 +32,6 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 @Configuration
 public class AuthConfigRouter {
 
-    @Bean
     @RouterOperations({
         @RouterOperation(
                 path = "/admin-api/v1/auth/config/jwt",
@@ -73,7 +72,7 @@ public class AuthConfigRouter {
                 path = "/admin-api/v1/auth/config/oauth2/clients",
                 method = RequestMethod.GET,
                 beanClass = AuthConfigHandler.class,
-                beanMethod = "listOAuth2Clients"),
+                beanMethod = "listOauth2Clients"),
         @RouterOperation(
                 path = "/admin-api/v1/auth/config/sessions",
                 method = RequestMethod.GET,
@@ -100,6 +99,8 @@ public class AuthConfigRouter {
                 beanClass = AuthConfigHandler.class,
                 beanMethod = "testJwtConfig")
     })
+    @Bean
+    @SuppressWarnings("PMD.MethodTooLongRule")
     public RouterFunction<ServerResponse> authConfigRoutes(AuthConfigHandler handler) {
         return SpringdocRouteBuilder.route()
                 .GET("/admin-api/v1/auth/config/jwt", handler::getJwtConfig, ops -> ops.operationId("getJwtConfig")
@@ -148,7 +149,7 @@ public class AuthConfigRouter {
                         .summary("同步权限码")
                         .tag("后台-认证授权配置")
                         .response(responseBuilder().responseCode("200").description("同步成功")))
-                .GET("/admin-api/v1/auth/config/oauth2/clients", handler::listOAuth2Clients, ops -> ops.operationId(
+                .GET("/admin-api/v1/auth/config/oauth2/clients", handler::listOauth2Clients, ops -> ops.operationId(
                                 "listOAuth2ClientsAlias")
                         .summary("查询 OAuth2 客户端列表")
                         .tag("后台-认证授权配置")

@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
  *
  * <p>对应数据库表 auth_mfa_config
  *
- * @author Apex Scaffold Team
+ * @author Apex Team
  * @since 2026-09-21
  */
 @Data

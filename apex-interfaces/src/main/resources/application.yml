@@ -20,6 +20,13 @@
 # 服务治理：模式只在启动期解析一次，运行期不热切换
 # ============================================================
 apex:
+  features:
+    auth-center-permission: ${APEX_AUTH_CENTER_PERMISSION_ENABLED:false}
+  auth-center-permission:
+    base-url: ${APEX_AUTH_CENTER_BASE_URL:}
+    access-token: ${APEX_AUTH_CENTER_ACCESS_TOKEN:}
+    cache-seconds: ${APEX_AUTH_CENTER_CACHE_SECONDS:0}
+    mappings: []
   office:
     enabled: ${APEX_OFFICE_ENABLED:false}
     login-tenant-id: ${APEX_OFFICE_LOGIN_TENANT_ID:}

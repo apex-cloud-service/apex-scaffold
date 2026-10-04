@@ -147,12 +147,15 @@ public class TraceLoggingSpanHandler extends SpanHandler {
          * @param slowThresholdMs 慢请求阈值（毫秒）
          */
         void log(long slowThresholdMs) {
-            switch (levelOf(slowThresholdMs)) {
-                case ERROR -> TraceLoggingSpanHandler.log.error("[Span-错误] {}", render(), error);
-                case SLOW -> TraceLoggingSpanHandler.log.warn("[Span-慢] {}", render());
-                case CLIENT_ERROR -> TraceLoggingSpanHandler.log.warn("[Span-警告] {}", render());
-                case NORMAL -> TraceLoggingSpanHandler.log.info("[Span] {}", render());
-                default -> TraceLoggingSpanHandler.log.info("[Span] {}", render());
+            LogLevel level = levelOf(slowThresholdMs);
+            if (level == LogLevel.ERROR) {
+                TraceLoggingSpanHandler.log.error("[Span-错误] {}", render(), error);
+            } else if (level == LogLevel.SLOW) {
+                TraceLoggingSpanHandler.log.warn("[Span-慢] {}", render());
+            } else if (level == LogLevel.CLIENT_ERROR) {
+                TraceLoggingSpanHandler.log.warn("[Span-警告] {}", render());
+            } else {
+                TraceLoggingSpanHandler.log.info("[Span] {}", render());
             }
         }
 

@@ -140,10 +140,12 @@ public class IpAccessControlServiceImpl implements IpAccessControlService {
                 .createdBy(operator)
                 .build();
 
-        return repository.save(rule).doOnSuccess(saved -> {
-            auditLogService.log(operator, tenantId, "添加IP白名单: " + ipAddress, "IP_WHITELIST_ADD", "SUCCESS", null);
-            log.info("添加IP白名单: ip={}, tenantId={}, operator={}", ipAddress, tenantId, operator);
-        });
+        return repository.save(rule)
+                .flatMap(saved -> auditLogService
+                        .log(operator, tenantId, "添加IP白名单: " + ipAddress, "IP_WHITELIST_ADD", "SUCCESS", null)
+                        .thenReturn(saved))
+                .doOnNext(saved -> log.info(
+                        "添加IP白名单: ip={}, tenantId={}, operator={}", ipAddress, tenantId, operator));
     }
 
     /**
@@ -174,21 +176,26 @@ public class IpAccessControlServiceImpl implements IpAccessControlService {
                 .createdBy(operator)
                 .build();
 
-        return repository.save(rule).doOnSuccess(saved -> {
-            auditLogService.log(
-                    operator,
-                    tenantId,
-                    "添加IP黑名单: " + ipAddress + (durationMinutes != null ? ", 持续时间: " + durationMinutes + "分钟" : ""),
-                    "IP_BLACKLIST_ADD",
-                    "SUCCESS",
-                    null);
-            log.warn(
-                    "添加IP黑名单: ip={}, tenantId={}, duration={}, operator={}",
-                    ipAddress,
-                    tenantId,
-                    durationMinutes,
-                    operator);
-        });
+        return repository.save(rule)
+                .flatMap(saved -> auditLogService
+                        .log(
+                                operator,
+                                tenantId,
+                                "添加IP黑名单: "
+                                        + ipAddress
+                                        + (durationMinutes != null
+                                                ? ", 持续时间: " + durationMinutes + "分钟"
+                                                : ""),
+                                "IP_BLACKLIST_ADD",
+                                "SUCCESS",
+                                null)
+                        .thenReturn(saved))
+                .doOnNext(saved -> log.warn(
+                        "添加IP黑名单: ip={}, tenantId={}, duration={}, operator={}",
+                        ipAddress,
+                        tenantId,
+                        durationMinutes,
+                        operator));
     }
 
     /**
@@ -271,9 +278,9 @@ public class IpAccessControlServiceImpl implements IpAccessControlService {
      */
     @Override
     @CacheEvict(value = "ip-access-control", allEntries = true)
-    public Mono<Void> enableRule(Long ruleId, String operator) {
+    public Mono<Void> enableRule(Long ruleId, String tenantId, String operator) {
         return repository
-                .findById(ruleId)
+                .findByIdAndTenantId(ruleId, tenantId)
                 .flatMap(rule -> {
                     rule.setEnabled(true);
                     rule.setUpdatedAt(LocalDateTime.now());
@@ -293,9 +300,9 @@ public class IpAccessControlServiceImpl implements IpAccessControlService {
      */
     @Override
     @CacheEvict(value = "ip-access-control", allEntries = true)
-    public Mono<Void> disableRule(Long ruleId, String operator) {
+    public Mono<Void> disableRule(Long ruleId, String tenantId, String operator) {
         return repository
-                .findById(ruleId)
+                .findByIdAndTenantId(ruleId, tenantId)
                 .flatMap(rule -> {
                     rule.setEnabled(false);
                     rule.setUpdatedAt(LocalDateTime.now());
@@ -315,19 +322,18 @@ public class IpAccessControlServiceImpl implements IpAccessControlService {
      */
     @Override
     @CacheEvict(value = "ip-access-control", allEntries = true)
-    public Mono<Void> deleteRule(Long ruleId, String operator) {
+    public Mono<Void> deleteRule(Long ruleId, String tenantId, String operator) {
         return repository
-                .findById(ruleId)
-                .flatMap(rule -> {
-                    auditLogService.log(
-                            operator,
-                            rule.getTenantId(),
-                            "删除IP访问规则: " + rule.getIpAddress(),
-                            "IP_RULE_DELETE",
-                            "SUCCESS",
-                            null);
-                    return repository.deleteById(ruleId);
-                })
+                .findByIdAndTenantId(ruleId, tenantId)
+                .flatMap(rule -> repository
+                         .deleteByIdAndTenantId(ruleId, tenantId)
+                        .then(auditLogService.log(
+                                operator,
+                                rule.getTenantId(),
+                                "删除IP访问规则: " + rule.getIpAddress(),
+                                "IP_RULE_DELETE",
+                                "SUCCESS",
+                                null)))
                 .doOnSuccess(v -> log.info("删除IP访问规则: ruleId={}, operator={}", ruleId, operator));
     }
 

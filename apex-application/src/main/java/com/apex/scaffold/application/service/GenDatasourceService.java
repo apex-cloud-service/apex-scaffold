@@ -3,176 +3,158 @@ package com.apex.scaffold.application.service;
 import com.apex.scaffold.application.dto.admin.GenDatasourceDTO;
 import com.apex.scaffold.application.dto.admin.GenDatasourceRequest;
 import com.apex.scaffold.application.support.DataSourcePoolManager;
+import com.apex.scaffold.common.context.TenantContext;
 import com.apex.scaffold.common.dto.PageResponse;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.result.ResultCode;
-import com.apex.scaffold.common.util.PasswordUtil;
+import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
+import com.apex.scaffold.common.security.ConfigEncryptionService;
+import com.apex.scaffold.domain.model.generator.DbType;
+import com.apex.scaffold.domain.model.generator.GenDatasourceEntity;
+import com.apex.scaffold.domain.repository.GenConfigRepository;
+import com.apex.scaffold.domain.repository.GenDatasourceRepository;
 import java.time.Duration;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 /**
- * 代码生成数据源服务
- *
- * <p>提供代码生成数据源的管理功能，包括数据源的创建、更新、删除、查询和连接测试。
- * 数据源密码在存储时使用 {@link PasswordUtil#encryptPassword} 加密，
- * 查询时返回掩码 "******"，保护敏感信息。
- *
- * <h2>核心功能</h2>
- * <ul>
- *   <li>创建数据源：校验连接有效性后持久化，密码自动加密</li>
- *   <li>更新数据源：支持更新连接信息，密码自动加密</li>
- *   <li>删除数据源：同时关闭关联的连接池</li>
- *   <li>查询数据源：密码字段返回掩码</li>
- *   <li>测试连接：5 秒超时，失败返回具体错误信息</li>
- * </ul>
- *
- * <h2>安全约束</h2>
- * <ul>
- *   <li>密码存储：使用 BCrypt 加密，不可逆</li>
- *   <li>密码传输：HTTPS 传输明文，后端存储密文</li>
- *   <li>密码展示：查询接口返回掩码 "******"</li>
- *   <li>连接测试：超时 5 秒，防止长时间阻塞</li>
- * </ul>
+ * 代码生成数据源应用服务。
  *
  * @author Apex Team
  * @version 1.0.0
- * @since 1.0.0
+ * @since 1.2.0
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class GenDatasourceService {
 
-    private final DataSourcePoolManager dataSourcePoolManager;
-
     private static final int CONNECTION_TEST_TIMEOUT_SECONDS = 5;
+    private static final String MASKED_PASSWORD = "******";
 
-    /**
-     * 创建代码生成数据源
-     *
-     * <p>创建前先测试数据库连接，连接成功后持久化数据源配置。
-     * 密码字段使用 {@link PasswordUtil#encryptPassword} 加密存储。
-     *
-     * @param request 数据源请求参数
-     * @return 创建成功的数据源 DTO
-     */
+    private final DataSourcePoolManager dataSourcePoolManager;
+    private final GenDatasourceRepository datasourceRepository;
+    private final GenConfigRepository configRepository;
+    private final ConfigEncryptionService encryptionService;
+
     public Mono<GenDatasourceDTO> create(GenDatasourceRequest request) {
-        return testConnection(request.getJdbcUrl(), request.getUsername(), request.getPassword())
-                .flatMap(valid -> {
-                    if (!valid) {
-                        return Mono.error(new BusinessException(ResultCode.DB_ERROR, "数据库连接测试失败，请检查连接配置"));
-                    }
-
-                    log.info("创建代码生成数据源成功: name={}, dbType={}", request.getName(), request.getDbType());
-                    return Mono.error(new BusinessException(
-                            ResultCode.ERROR,
-                            "TODO: 需要在 domain 层创建 GenDatasourceEntity 和 GenDatasourceRepository 后完善此方法"));
-                });
+        return tenantId().flatMap(tenant -> testConnection(request.getJdbcUrl(), request.getUsername(), request.getPassword())
+                .filter(Boolean.TRUE::equals)
+                .switchIfEmpty(Mono.error(new BusinessException(ResultCode.DB_ERROR, "数据库连接测试失败，请检查连接配置")))
+                .then(datasourceRepository.findByNameAndTenantId(request.getName(), tenant))
+                .flatMap(existing -> existing.isPresent()
+                        ? Mono.error(new BusinessException(ResultCode.BUSINESS_ERROR, "数据源名称已存在"))
+                        : Mono.just(toEntity(request, tenant)))
+                .flatMap(entity -> datasourceRepository.insert(entity).thenReturn(toDTO(entity))));
     }
 
-    /**
-     * 更新代码生成数据源
-     *
-     * <p>更新时重新测试数据库连接，连接成功后更新配置。
-     * 密码字段如果发生变化，使用 {@link PasswordUtil#encryptPassword} 加密存储。
-     *
-     * @param id 数据源 ID
-     * @param request 数据源请求参数
-     * @return 更新后的数据源 DTO
-     */
     public Mono<GenDatasourceDTO> update(Long id, GenDatasourceRequest request) {
-        return testConnection(request.getJdbcUrl(), request.getUsername(), request.getPassword())
-                .flatMap(valid -> {
-                    if (!valid) {
-                        return Mono.error(new BusinessException(ResultCode.DB_ERROR, "数据库连接测试失败，请检查连接配置"));
-                    }
-
-                    dataSourcePoolManager.closeDataSource(id);
-                    log.info("更新代码生成数据源成功: id={}, name={}", id, request.getName());
-                    return Mono.error(new BusinessException(
-                            ResultCode.ERROR,
-                            "TODO: 需要在 domain 层创建 GenDatasourceEntity 和 GenDatasourceRepository 后完善此方法"));
-                });
+        return tenantId().flatMap(tenant -> datasourceRepository.findById(id)
+                .switchIfEmpty(Mono.error(new BusinessException(ResultCode.NOT_FOUND, "数据源不存在")))
+                .flatMap(entity -> requireTenant(entity.getTenantId(), tenant).thenReturn(entity))
+                .flatMap(entity -> {
+                    String password = MASKED_PASSWORD.equals(request.getPassword())
+                            ? encryptionService.decrypt(entity.getPassword()) : request.getPassword();
+                    return testConnection(request.getJdbcUrl(), request.getUsername(), password)
+                            .filter(Boolean.TRUE::equals)
+                            .switchIfEmpty(Mono.error(new BusinessException(ResultCode.DB_ERROR, "数据库连接测试失败，请检查连接配置")))
+                            .then(Mono.fromSupplier(() -> {
+                                copy(request, entity, tenant, password);
+                                return entity;
+                            }));
+                })
+                .flatMap(entity -> datasourceRepository.updateById(entity).thenReturn(toDTO(entity)))
+                .doOnSuccess(value -> dataSourcePoolManager.closeDataSource(tenant, id)));
     }
 
-    /**
-     * 删除代码生成数据源
-     *
-     * <p>删除数据源的同时关闭关联的数据库连接池，释放资源。
-     *
-     * @param id 数据源 ID
-     * @return 删除结果
-     */
     public Mono<Boolean> delete(Long id) {
-        dataSourcePoolManager.closeDataSource(id);
-        log.info("删除代码生成数据源: id={}", id);
-        return Mono.error(new BusinessException(
-                ResultCode.ERROR, "TODO: 需要在 domain 层创建 GenDatasourceEntity 和 GenDatasourceRepository 后完善此方法"));
+        return tenantId().flatMap(tenant -> datasourceRepository.findById(id)
+                .switchIfEmpty(Mono.error(new BusinessException(ResultCode.NOT_FOUND, "数据源不存在")))
+                .flatMap(entity -> requireTenant(entity.getTenantId(), tenant))
+                .then(configRepository.findByDatasourceId(id))
+                .flatMap(configs -> configs.isEmpty()
+                        ? datasourceRepository.deleteById(id).map(rows -> rows > 0)
+                        : Mono.error(new BusinessException(ResultCode.BUSINESS_ERROR, "数据源仍被生成配置引用")))
+                .doOnSuccess(deleted -> dataSourcePoolManager.closeDataSource(tenant, id)));
     }
 
-    /**
-     * 根据 ID 查询代码生成数据源
-     *
-     * <p>密码字段返回掩码 "******"，不暴露真实密码。
-     *
-     * @param id 数据源 ID
-     * @return 数据源 DTO
-     */
     public Mono<GenDatasourceDTO> findById(Long id) {
-        log.debug("查询代码生成数据源: id={}", id);
-        return Mono.error(new BusinessException(
-                ResultCode.ERROR, "TODO: 需要在 domain 层创建 GenDatasourceEntity 和 GenDatasourceRepository 后完善此方法"));
+        return tenantId().flatMap(tenant -> datasourceRepository.findById(id)
+                .switchIfEmpty(Mono.error(new BusinessException(ResultCode.NOT_FOUND, "数据源不存在")))
+                .flatMap(entity -> requireTenant(entity.getTenantId(), tenant).thenReturn(toDTO(entity))));
     }
 
-    /**
-     * 分页查询代码生成数据源列表
-     *
-     * <p>密码字段返回掩码 "******"，不暴露真实密码。
-     *
-     * @param name 数据源名称（模糊查询，可选）
-     * @param pageNum 页码
-     * @param pageSize 每页大小
-     * @return 分页结果
-     */
     public Mono<PageResponse<GenDatasourceDTO>> list(String name, int pageNum, int pageSize) {
-        log.debug("分页查询代码生成数据源: name={}, pageNum={}, pageSize={}", name, pageNum, pageSize);
-        return Mono.error(new BusinessException(
-                ResultCode.ERROR, "TODO: 需要在 domain 层创建 GenDatasourceEntity 和 GenDatasourceRepository 后完善此方法"));
+        return tenantId().flatMap(tenant -> datasourceRepository.findByTenantId(tenant)
+                .map(items -> items.stream()
+                        .filter(item -> name == null || name.isBlank() || item.getName().contains(name))
+                        .map(this::toDTO)
+                        .toList())
+                .map(items -> {
+                    int from = Math.min(Math.max(pageNum - 1, 0) * pageSize, items.size());
+                    int to = Math.min(from + pageSize, items.size());
+                    return PageResponse.of(items.subList(from, to), (long) items.size(), pageNum, pageSize);
+                }));
     }
 
-    /**
-     * 测试数据库连接
-     *
-     * <p>使用临时连接池测试数据库连接，超时时间为 5 秒。
-     * 连接失败时返回 {@code false}，成功返回 {@code true}。
-     *
-     * @param id 数据源 ID
-     * @return 连接测试结果
-     */
     public Mono<Boolean> testConnection(Long id) {
-        log.info("测试代码生成数据源连接: id={}", id);
-        return Mono.error(new BusinessException(
-                ResultCode.ERROR, "TODO: 需要在 domain 层创建 GenDatasourceEntity 和 GenDatasourceRepository 后完善此方法"));
+        return tenantId().flatMap(tenant -> datasourceRepository.findById(id)
+                .switchIfEmpty(Mono.error(new BusinessException(ResultCode.NOT_FOUND, "数据源不存在")))
+                .flatMap(entity -> requireTenant(entity.getTenantId(), tenant)
+                        .then(testConnection(entity.getParams(), entity.getUsername(), encryptionService.decrypt(entity.getPassword())))));
     }
 
-    /**
-     * 测试数据库连接（内部方法）
-     *
-     * @param jdbcUrl JDBC URL
-     * @param username 用户名
-     * @param password 密码
-     * @return 连接测试结果
-     */
     private Mono<Boolean> testConnection(String jdbcUrl, String username, String password) {
-        return dataSourcePoolManager
-                .testConnection(jdbcUrl, username, password, CONNECTION_TEST_TIMEOUT_SECONDS)
+        return dataSourcePoolManager.testConnection(jdbcUrl, username, password, CONNECTION_TEST_TIMEOUT_SECONDS)
                 .timeout(Duration.ofSeconds(CONNECTION_TEST_TIMEOUT_SECONDS + 1))
-                .onErrorResume(e -> {
-                    log.error("数据库连接测试失败: jdbcUrl={}", jdbcUrl, e);
-                    return Mono.just(false);
-                });
+                .onErrorReturn(false);
+    }
+
+    private Mono<String> tenantId() {
+        return Mono.deferContextual(context -> {
+            String tenant = context.getOrDefault(TenantContext.REACTOR_CONTEXT_KEY, null);
+            return tenant == null || tenant.isBlank()
+                    ? Mono.error(new BusinessException(ResultCode.FORBIDDEN, "租户上下文不能为空"))
+                    : Mono.just(tenant);
+        });
+    }
+
+    private Mono<Void> requireTenant(String actual, String expected) {
+        return expected.equals(actual)
+                ? Mono.empty()
+                : Mono.error(new BusinessException(ResultCode.FORBIDDEN, "无权访问其他租户的数据"));
+    }
+
+    private GenDatasourceEntity toEntity(GenDatasourceRequest request, String tenant) {
+        GenDatasourceEntity entity = new GenDatasourceEntity();
+        copy(request, entity, tenant, request.getPassword());
+        return entity;
+    }
+
+    private void copy(GenDatasourceRequest request, GenDatasourceEntity entity, String tenant, String password) {
+        entity.setTenantId(tenant);
+        entity.setName(request.getName());
+        entity.setDbType(DbType.valueOf(request.getDbType().toUpperCase()));
+        entity.setParams(request.getJdbcUrl());
+        entity.setUsername(request.getUsername());
+        entity.setPassword(encryptionService.encrypt(password));
+        entity.setStatus(1);
+    }
+
+    private GenDatasourceDTO toDTO(GenDatasourceEntity entity) {
+        return GenDatasourceDTO.builder()
+                .id(entity.getId())
+                .tenantId(entity.getTenantId())
+                .name(entity.getName())
+                .dbType(entity.getDbType() == null ? null : entity.getDbType().name().toLowerCase())
+                .jdbcUrl(entity.getParams())
+                .username(entity.getUsername())
+                .password(MASKED_PASSWORD)
+                .createTime(entity.getCreateTime())
+                .updateTime(entity.getUpdateTime())
+                .build();
     }
 }

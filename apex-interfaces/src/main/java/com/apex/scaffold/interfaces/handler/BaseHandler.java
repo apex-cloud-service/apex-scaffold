@@ -278,7 +278,7 @@ public abstract class BaseHandler {
         if (id == null || id <= 0) {
             throw new BusinessException(ResultCode.PARAM_ERROR, "id格式错误");
         }
-        return id;
+        return id.longValue();
     }
 
     /**

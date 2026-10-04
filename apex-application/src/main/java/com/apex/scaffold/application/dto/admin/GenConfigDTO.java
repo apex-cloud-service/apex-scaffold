@@ -32,6 +32,14 @@ public class GenConfigDTO {
     @Schema(description = "数据源 ID", example = "1")
     private Long datasourceId;
 
+    private String configName;
+
+    private String tableNames;
+
+    private String templateIds;
+
+    private String extraConfig;
+
     @Schema(description = "数据源名称", example = "主库数据源")
     private String datasourceName;
 

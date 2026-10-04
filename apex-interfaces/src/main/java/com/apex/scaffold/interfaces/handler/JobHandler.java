@@ -77,7 +77,6 @@ public class JobHandler extends BaseHandler {
      * @param request HTTP 请求
      * @return 带 traceId 的统一成功响应，data 为任务 DTO 列表
      */
-    @RequirePermission("system:job:list")
     @Operation(operationId = "adminListJobs", summary = "查询定时任务列表", description = "查询系统中所有定时任务的列表，包含任务名称、调度表达式、执行状态等信息")
     @ApiResponses({
         @ApiResponse(
@@ -89,6 +88,7 @@ public class JobHandler extends BaseHandler {
                                 array = @ArraySchema(schema = @Schema(implementation = JobDTO.class)))),
         @ApiResponse(responseCode = "403", description = "权限不足，需要system:job:list权限")
     })
+    @RequirePermission("system:job:list")
     public Mono<ServerResponse> list(ServerRequest request) {
         return jobService.listJobs().flatMap(this::buildSuccess);
     }
@@ -104,7 +104,6 @@ public class JobHandler extends BaseHandler {
      * @return 带 traceId 的统一成功响应，data 为分页响应对象
      * @throws com.apex.scaffold.common.exception.BusinessException 当分页参数缺失或非法时抛出
      */
-    @RequirePermission("system:job:list")
     @Operation(
             operationId = "adminPageJobs",
             summary = "分页查询定时任务列表",
@@ -150,6 +149,8 @@ public class JobHandler extends BaseHandler {
         @ApiResponse(responseCode = "400", description = "参数错误，分页参数必填且必须为正整数"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要system:job:list权限")
     })
+    @RequirePermission("system:job:list")
+    @SuppressWarnings("PMD.MethodTooLongRule")
     public Mono<ServerResponse> page(ServerRequest request) {
         return Mono.defer(() -> {
                     String pageNumStr = request.queryParam("pageNum").orElse(null);
@@ -203,7 +204,6 @@ public class JobHandler extends BaseHandler {
      * @return 带 traceId 的统一成功响应，data 为任务实体
      * @throws BusinessException 当 {@code id} 非法时抛出
      */
-    @RequirePermission("system:job:query")
     @Operation(operationId = "adminGetJob", summary = "查询任务详情", description = "根据任务ID查询定时任务的详细信息，包含完整的调度配置和执行策略")
     @Parameter(
             name = "id",
@@ -220,6 +220,7 @@ public class JobHandler extends BaseHandler {
         @ApiResponse(responseCode = "404", description = "任务不存在"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要system:job:query权限")
     })
+    @RequirePermission("system:job:query")
     public Mono<ServerResponse> detail(ServerRequest request) {
         return jobService.getJob(requirePositiveId(request)).flatMap(this::buildSuccess);
     }
@@ -234,7 +235,6 @@ public class JobHandler extends BaseHandler {
      * @return 带 traceId 的统一成功响应，data 为已创建的任务实体
      * @throws BusinessException 当请求体为空时抛出
      */
-    @RequirePermission("system:job:add")
     @Operation(
             operationId = "adminCreateJob",
             summary = "创建定时任务",
@@ -251,6 +251,7 @@ public class JobHandler extends BaseHandler {
         @ApiResponse(responseCode = "400", description = "参数校验失败或Cron表达式不合法"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要system:job:add权限")
     })
+    @RequirePermission("system:job:add")
     @OperationLog(module = "定时任务", type = OperationLog.OperationType.INSERT, description = "创建定时任务")
     public Mono<ServerResponse> create(ServerRequest request) {
         return parseBody(request, JobRequest.class)
@@ -265,7 +266,6 @@ public class JobHandler extends BaseHandler {
      * @return 带 traceId 的统一成功响应，data 为已更新的任务实体
      * @throws BusinessException 当 {@code id} 非法或请求体为空时抛出
      */
-    @RequirePermission("system:job:edit")
     @Operation(
             operationId = "adminUpdateJob",
             summary = "更新定时任务",
@@ -289,6 +289,7 @@ public class JobHandler extends BaseHandler {
         @ApiResponse(responseCode = "404", description = "任务不存在"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要system:job:edit权限")
     })
+    @RequirePermission("system:job:edit")
     @OperationLog(module = "定时任务", type = OperationLog.OperationType.UPDATE, description = "更新定时任务")
     public Mono<ServerResponse> update(ServerRequest request) {
         Long id = requirePositiveId(request);
@@ -306,7 +307,6 @@ public class JobHandler extends BaseHandler {
      * @return 带 traceId 的统一成功响应，data 为 {@code {"deleted": 是否删除成功}}
      * @throws BusinessException 当 {@code id} 非法时抛出
      */
-    @RequirePermission("system:job:remove")
     @Operation(operationId = "adminDeleteJob", summary = "删除定时任务", description = "删除指定的定时任务，删除后会自动取消该任务的调度。历史执行日志会保留")
     @Parameter(
             name = "id",
@@ -320,6 +320,7 @@ public class JobHandler extends BaseHandler {
         @ApiResponse(responseCode = "404", description = "任务不存在"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要system:job:remove权限")
     })
+    @RequirePermission("system:job:remove")
     @OperationLog(module = "定时任务", type = OperationLog.OperationType.DELETE, description = "删除定时任务")
     public Mono<ServerResponse> delete(ServerRequest request) {
         return jobService
@@ -336,7 +337,6 @@ public class JobHandler extends BaseHandler {
      * @return 带 traceId 的统一成功响应，data 为更新后的任务实体
      * @throws BusinessException 当 {@code id} 非法或请求体为空时抛出
      */
-    @RequirePermission("system:job:edit")
     @Operation(
             operationId = "adminUpdateJobStatus",
             summary = "启用或停用定时任务",
@@ -360,6 +360,7 @@ public class JobHandler extends BaseHandler {
         @ApiResponse(responseCode = "404", description = "任务不存在"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要system:job:edit权限")
     })
+    @RequirePermission("system:job:edit")
     @OperationLog(module = "定时任务", type = OperationLog.OperationType.UPDATE, description = "更新任务状态")
     public Mono<ServerResponse> updateStatus(ServerRequest request) {
         Long id = requirePositiveId(request);
@@ -377,7 +378,6 @@ public class JobHandler extends BaseHandler {
      * @return 带 traceId 的统一成功响应，data 为 {@code {"triggered": true}}
      * @throws BusinessException 当 {@code id} 非法时抛出
      */
-    @RequirePermission("system:job:run")
     @Operation(
             operationId = "adminRunJob",
             summary = "立即执行一次任务",
@@ -394,6 +394,7 @@ public class JobHandler extends BaseHandler {
         @ApiResponse(responseCode = "404", description = "任务不存在"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要system:job:run权限")
     })
+    @RequirePermission("system:job:run")
     @OperationLog(module = "定时任务", type = OperationLog.OperationType.UPDATE, description = "手动触发任务")
     public Mono<ServerResponse> runOnce(ServerRequest request) {
         return jobService.runOnce(requirePositiveId(request)).then(buildSuccess(java.util.Map.of("triggered", true)));
@@ -407,7 +408,6 @@ public class JobHandler extends BaseHandler {
      * @return 带 traceId 的统一成功响应，data 为执行日志 DTO 列表
      * @throws BusinessException 当 {@code id} 非法时抛出
      */
-    @RequirePermission("system:job:query")
     @Operation(
             operationId = "adminListJobLogs",
             summary = "查询任务执行日志",
@@ -436,6 +436,7 @@ public class JobHandler extends BaseHandler {
         @ApiResponse(responseCode = "404", description = "任务不存在"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要system:job:query权限")
     })
+    @RequirePermission("system:job:query")
     public Mono<ServerResponse> logs(ServerRequest request) {
         int limit = safeParseInt(request.queryParam("limit").orElse(null), 20);
         return jobService.listLogs(requirePositiveId(request), limit).flatMap(this::buildSuccess);

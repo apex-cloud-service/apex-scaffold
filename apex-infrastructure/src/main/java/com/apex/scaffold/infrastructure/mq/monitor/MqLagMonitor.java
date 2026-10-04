@@ -3,11 +3,15 @@ package com.apex.scaffold.infrastructure.mq.monitor;
 import com.apex.scaffold.infrastructure.mq.alert.MqAlertManager;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
+import jakarta.annotation.PreDestroy;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
+import org.apache.rocketmq.remoting.protocol.admin.ConsumeStats;
+import org.apache.rocketmq.remoting.protocol.admin.OffsetWrapper;
+import org.apache.rocketmq.tools.admin.DefaultMQAdminExt;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -46,7 +50,6 @@ import org.springframework.stereotype.Component;
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class MqLagMonitor {
 
     private static final int MAX_CONSUMER_COUNT = 32;
@@ -54,6 +57,19 @@ public class MqLagMonitor {
     private final MeterRegistry meterRegistry;
     private final MqAlertManager alertManager;
     private final Map<String, DefaultMQPushConsumer> consumers = new ConcurrentHashMap<>();
+    private final DefaultMQAdminExt adminClient;
+    private volatile boolean adminStarted;
+
+    @Autowired
+    public MqLagMonitor(MeterRegistry meterRegistry, MqAlertManager alertManager) {
+        this(meterRegistry, alertManager, new DefaultMQAdminExt());
+    }
+
+    MqLagMonitor(MeterRegistry meterRegistry, MqAlertManager alertManager, DefaultMQAdminExt adminClient) {
+        this.meterRegistry = meterRegistry;
+        this.alertManager = alertManager;
+        this.adminClient = adminClient;
+    }
 
     @Value("${apex.mq.monitor.lag.warning-threshold:10000}")
     private long warningThreshold;
@@ -117,35 +133,40 @@ public class MqLagMonitor {
      * @return 积压消息数量
      */
     private long getConsumerLag(String consumerGroup) {
-        // TODO: 需要升级 RocketMQ 版本或使用 RocketMQ Dashboard API
-        // 当前 rocketmq-tools 包中 ConsumeStats API 不可用
-        // 临时方案：通过其他方式获取积压量，或集成 RocketMQ Console
-        log.debug("消费者 {} 的积压量监控暂未实现，需要集成 RocketMQ Dashboard API", consumerGroup);
-        return 0;
-
-        /* 原始实现（依赖 rocketmq-tools 5.x API）：
-        try (DefaultMQAdminExt adminExt = new DefaultMQAdminExt()) {
-            adminExt.setNamesrvAddr(nameServer);
-            adminExt.setInstanceName("admin-" + System.currentTimeMillis());
-            adminExt.start();
-
-            ConsumeStats consumeStats = adminExt.examineConsumeStats(consumerGroup);
-            if (consumeStats == null) {
+        try {
+            startAdminClientIfNecessary();
+            ConsumeStats consumeStats = adminClient.examineConsumeStats(consumerGroup);
+            if (consumeStats == null || consumeStats.getOffsetTable() == null) {
                 return 0;
             }
-
-            long totalLag = 0;
-            for (Map.Entry<MessageQueue, Long> entry : consumeStats.getOffsetTable().entrySet()) {
-                totalLag += entry.getValue();
-            }
-
-            return totalLag;
-
+            return consumeStats.getOffsetTable().values().stream()
+                    .mapToLong(this::queueLag)
+                    .sum();
         } catch (Exception e) {
             log.error("获取消费者 {} 积压量失败", consumerGroup, e);
             return 0;
         }
-        */
+    }
+
+    private synchronized void startAdminClientIfNecessary() throws Exception {
+        if (adminStarted) {
+            return;
+        }
+        adminClient.setNamesrvAddr(nameServer);
+        adminClient.start();
+        adminStarted = true;
+    }
+
+    private long queueLag(OffsetWrapper offset) {
+        return Math.max(0L, offset.getBrokerOffset() - offset.getConsumerOffset());
+    }
+
+    @PreDestroy
+    public synchronized void shutdownAdminClient() {
+        if (adminStarted) {
+            adminClient.shutdown();
+            adminStarted = false;
+        }
     }
 
     /**

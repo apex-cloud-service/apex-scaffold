@@ -58,7 +58,6 @@ public class ChartRouter {
      * @param handler 图表业务处理器
      * @return 图表路由函数
      */
-    @Bean
     @RouterOperations({
         @RouterOperation(
                 path = "/admin-api/v1/charts",
@@ -268,6 +267,7 @@ public class ChartRouter {
                                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
                                 }))
     })
+    @Bean
     public RouterFunction<ServerResponse> chartRoutes(ChartHandler handler) {
         return RouterFunctions.route()
                 .path("/admin-api/v1/charts", builder -> builder.GET("", accept(APPLICATION_JSON), handler::query)

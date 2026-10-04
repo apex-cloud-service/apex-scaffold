@@ -48,6 +48,37 @@ jwt:
 - 使用强随机字符串生成器: `openssl rand -base64 48`
 - 定期轮换密钥
 
+### 认证中心统一授权
+
+主应用使用 `apex.features.auth-center-permission` 切换权限、JWT 角色和数据范围的数据源，默认 `false`。开启后，缺失可信映射、中心故障、超时或身份不一致均拒绝授权，不回退本地角色或权限。
+
+```yaml
+apex:
+  features:
+    auth-center-permission: ${APEX_AUTH_CENTER_PERMISSION_ENABLED:false}
+  auth-center-permission:
+    base-url: ${APEX_AUTH_CENTER_BASE_URL:}
+    access-token: ${APEX_AUTH_CENTER_ACCESS_TOKEN:}
+    cache-seconds: ${APEX_AUTH_CENTER_CACHE_SECONDS:0}
+    mappings:
+      - main-tenant-id: main
+        main-user-id: 7
+        center-tenant-id: center
+        center-user-id: 99
+```
+
+映射由服务端配置维护，必须唯一，禁止把两个系统的用户 ID 或租户 ID 默认视为相同。租户取自主应用数据库用户；中心查询租户取自 Bearer Token，请求租户头不能覆盖它。`base-url` 必须使用 HTTPS，不允许用户信息、查询参数或片段。
+
+认证中心独立配置 `auth-center.authorization-reader-user-id`，通过环境变量 `AUTH_CENTER_AUTHORIZATION_READER_USER_ID` 指定专用读取账号。主应用的 Token 必须是该账号的有效 ACCESS Token，所属租户必须与映射的中心租户一致。不同中心租户应使用各自的部署配置和读取凭据。每次中心查询均检查读取账号与目标账号的状态、锁定和软删除。读取账号不需要管理员角色。凭据由部署侧安全注入并负责在过期前轮换；当前适配器不自动登录或刷新 Token。
+
+缓存默认关闭。启用时 `cache-seconds` 允许 0–30 秒，撤权和账号停用最多存在该 TTL 的延迟。缓存键包含主租户与用户，快照独立检查有效期，过期缓存不参与故障降级。当前没有跨实例主动撤权失效机制；修改映射或读取凭据后，应清理授权缓存或等待 TTL 到期再接入流量。
+
+中心支持 `SELF`、`ALL`、`DEPT`、`DEPT_AND_CHILD`：SELF 使用主应用用户 ID，DEPT 和 DEPT_AND_CHILD 使用主应用已认证且启用的部门信息。中心角色、部门 ID 不复制到主库；`CUSTOM`、空值和未知范围默认拒绝。主应用仍负责原有 JWT 身份认证；本配置统一的是授权数据源。
+
+授权读取请求为 `GET {base-url}/auth/v1/authorization/users/{centerUserId}`，使用配置的 Bearer ACCESS Token。成功响应是 `Result`，`data` 包含中心租户/用户身份、权限编码和角色数据范围；客户端校验成功码与映射身份后转换为主应用身份。客户端超时为 3 秒，使用名为 `auth-center-permission` 的 Resilience4j 默认熔断器；当前没有为该熔断器提供独立配置项。
+
+中心默认监听 8081，HTTPS 入口须由实际部署提供；示例本地 HTTP 地址不能直接用于主应用远程授权配置。参见[认证中心说明](../../apex-auth-center/README.md)、[验证矩阵](../../apex-auth-center/TESTING.md)和[业务时序](../architecture/business-flows.md)。
+
 ### RBAC权限配置
 
 ```yaml

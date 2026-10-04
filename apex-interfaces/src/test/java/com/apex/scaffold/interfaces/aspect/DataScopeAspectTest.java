@@ -33,6 +33,19 @@ class DataScopeAspectTest {
     }
 
     @Test
+    void springContextMustInjectBothDataScopeProviders() {
+        DataScopeProvider syncProvider = Optional::empty;
+        ReactiveDataScopeProvider reactiveProvider = Mono::empty;
+        try (var context = new org.springframework.context.annotation.AnnotationConfigApplicationContext()) {
+            context.registerBean(DataScopeProvider.class, () -> syncProvider);
+            context.registerBean(ReactiveDataScopeProvider.class, () -> reactiveProvider);
+            context.register(DataScopeAspect.class);
+            context.refresh();
+            assertThat(context.getBean(DataScopeAspect.class)).isNotNull();
+        }
+    }
+
+    @Test
     void shouldHaveSinglePublicConstructorForSpringInjection() {
         Constructor<?>[] publicConstructors = Arrays.stream(DataScopeAspect.class.getDeclaredConstructors())
                 .filter(constructor -> java.lang.reflect.Modifier.isPublic(constructor.getModifiers()))

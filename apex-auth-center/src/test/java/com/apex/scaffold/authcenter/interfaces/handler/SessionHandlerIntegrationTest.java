@@ -22,6 +22,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -148,8 +149,13 @@ class SessionHandlerIntegrationTest {
     void testTerminateUserSessions_Success() {
         when(sessionService.terminateUserSessions(anyLong(), anyString())).thenReturn(Mono.empty());
 
+        UsernamePasswordAuthenticationToken authentication =
+                new UsernamePasswordAuthenticationToken("admin", "", java.util.List.of());
+        authentication.setDetails("default");
+
         webTestClient
                 .mutateWith(SecurityMockServerConfigurers.csrf())
+                .mutateWith(SecurityMockServerConfigurers.mockAuthentication(authentication))
                 .delete()
                 .uri("/auth/v1/sessions/user/100")
                 .exchange()
@@ -446,8 +452,13 @@ class SessionHandlerIntegrationTest {
     })
     void testTerminateUserSessionsPassesTenant(String uri, String tenantId) {
         when(sessionService.terminateUserSessions(100L, tenantId)).thenReturn(Mono.empty());
+        UsernamePasswordAuthenticationToken authentication =
+                new UsernamePasswordAuthenticationToken("admin", "", java.util.List.of());
+        authentication.setDetails(tenantId);
+
         webTestClient
                 .mutateWith(SecurityMockServerConfigurers.csrf())
+                .mutateWith(SecurityMockServerConfigurers.mockAuthentication(authentication))
                 .delete()
                 .uri(uri)
                 .exchange()

@@ -4,6 +4,8 @@ import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Base64;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
@@ -192,22 +194,22 @@ public class ClientSecretRotationService {
                             .defaultIfEmpty(false);
                 })
                 .defaultIfEmpty(false)
-                .doOnNext(valid -> {
-                    if (!valid) {
-                        log.warn("OAuth2客户端密钥验证失败: clientId={}", clientId);
-
-                        // 记录安全事件
-                        auditService
-                                .logSecurityEvent(
-                                        "INVALID_CLIENT_SECRET",
-                                        null,
-                                        null,
-                                        null,
-                                        "MEDIUM",
-                                        "客户端使用了无效的密钥",
-                                        java.util.Map.of("clientId", clientId))
-                                .subscribe();
+                .flatMap(valid -> {
+                    if (valid) {
+                        return Mono.just(true);
                     }
+
+                    log.warn("OAuth2客户端密钥验证失败: clientId={}", clientId);
+                    return auditService
+                            .logSecurityEvent(
+                                    "INVALID_CLIENT_SECRET",
+                                    null,
+                                    null,
+                                    null,
+                                    "MEDIUM",
+                                    "客户端使用了无效的密钥",
+                                    new LinkedHashMap<>(Map.of("clientId", clientId)))
+                            .thenReturn(false);
                 });
     }
 
@@ -362,7 +364,7 @@ public class ClientSecretRotationService {
                                     null,
                                     "HIGH",
                                     reason,
-                                    java.util.Map.of("clientId", clientId))
+                                    new LinkedHashMap<>(Map.of("clientId", clientId)))
                             .thenReturn(newSecret);
                 })
                 .flatMap(newSecret -> {

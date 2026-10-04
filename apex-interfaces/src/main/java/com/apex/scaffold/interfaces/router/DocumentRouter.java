@@ -58,7 +58,6 @@ public class DocumentRouter {
      * @param handler 文档业务处理器
      * @return 文档路由函数
      */
-    @Bean
     @RouterOperations({
         @RouterOperation(
                 path = "/admin-api/v1/documents",
@@ -275,6 +274,7 @@ public class DocumentRouter {
                                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
                                 }))
     })
+    @Bean
     public RouterFunction<ServerResponse> documentRoutes(DocumentHandler handler) {
         return RouterFunctions.route()
                 .path("/admin-api/v1/documents", builder -> builder.GET("", accept(APPLICATION_JSON), handler::query)

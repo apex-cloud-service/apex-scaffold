@@ -61,14 +61,13 @@ class DistributedTokenBucketRateLimiterTest {
     }
 
     @Test
-    void testTryAcquire_RedisError_ReturnsFalse() {
-        // 模拟 Redis 故障
+    void testTryAcquire_RedisError_PropagatesError() {
         when(reactiveRedisTemplate.execute(any(RedisScript.class), anyList(), anyList()))
                 .thenReturn(Flux.error(new RuntimeException("Redis connection error")));
 
         StepVerifier.create(rateLimiter.tryAcquire("test-resource", 100, 10))
-                .expectNext(false) // 错误时默认拒绝
-                .verifyComplete();
+                .expectErrorMessage("Redis connection error")
+                .verify();
     }
 
     @Test

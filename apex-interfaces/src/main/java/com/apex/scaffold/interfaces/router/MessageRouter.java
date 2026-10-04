@@ -69,7 +69,6 @@ public class MessageRouter {
      * @param handler MessageHandler 实例
      * @return RouterFunction 路由函数
      */
-    @Bean(name = "internalMessageRoutes")
     @RouterOperations({
         @RouterOperation(
                 path = "/api/v1/messages",
@@ -260,6 +259,7 @@ public class MessageRouter {
                                                                                     "{\"code\": 200, \"msg\": \"success\", \"data\": 5}")))
                                 }))
     })
+    @Bean(name = "internalMessageRoutes")
     public RouterFunction<ServerResponse> messageRoutes(MessageHandler handler) {
         return RouterFunctions.route()
                 .path("/api/v1/messages", routes -> routes.POST(
@@ -282,7 +282,6 @@ public class MessageRouter {
      * @param handler MessageTemplateHandler 实例
      * @return RouterFunction 路由函数
      */
-    @Bean
     @RouterOperations({
         @RouterOperation(
                 path = "/admin-api/v1/message-templates/{templateCode}",
@@ -439,6 +438,7 @@ public class MessageRouter {
                                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
                                 }))
     })
+    @Bean
     public RouterFunction<ServerResponse> messageTemplateRoutes(MessageTemplateHandler handler) {
         return RouterFunctions.route()
                 .path("/admin-api/v1/message-templates", routes -> routes.GET("", handler::getEnabledTemplates)

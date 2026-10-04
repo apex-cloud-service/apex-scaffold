@@ -1,6 +1,9 @@
 package com.apex.scaffold.authcenter.config;
 
+import com.apex.scaffold.authcenter.application.service.RoleService;
+import com.apex.scaffold.authcenter.application.service.UnifiedAuthorizationQueryService;
 import com.apex.scaffold.authcenter.domain.service.IpAccessControlService;
+import com.apex.scaffold.authcenter.domain.service.ResourcePermissionService;
 import com.apex.scaffold.authcenter.domain.service.TokenService;
 import com.apex.scaffold.authcenter.infrastructure.filter.IpAccessControlFilter;
 import com.apex.scaffold.common.audit.AuditLogService;
@@ -16,6 +19,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
+import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -41,6 +45,24 @@ import reactor.core.publisher.Mono;
 @EnableConfigurationProperties(JwtProperties.class)
 @Import({EncryptionKeyProvider.class, DefaultAuditLogService.class, DefaultEncryptionService.class})
 public class AuthCenterConfig {
+    @Bean
+    public ResourcePermissionService domainResourcePermissionService(
+            ReactiveStringRedisTemplate redisTemplate,
+            UnifiedAuthorizationQueryService authorizationQueryService) {
+        return new ResourcePermissionService(redisTemplate, authorizationQueryService);
+    }
+
+    static List<org.springframework.security.core.authority.SimpleGrantedAuthority> toAuthorities(
+            List<com.apex.scaffold.authcenter.domain.model.entity.RoleEntity> roles) {
+        return roles.stream()
+                .map(role -> role.getCode())
+                .filter(code -> code != null && !code.isBlank())
+                .map(code -> code.startsWith("ROLE_") ? code : "ROLE_" + code)
+                .distinct()
+                .map(org.springframework.security.core.authority.SimpleGrantedAuthority::new)
+                .toList();
+    }
+
     private static final String OAUTH2_INTROSPECT_PATH = "/oauth2/introspect";
     private static final String OAUTH2_REVOKE_PATH = "/oauth2/revoke";
     private static final String OAUTH2_TOKEN_PATH = "/oauth2/token";
@@ -78,33 +100,13 @@ public class AuthCenterConfig {
 
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(
-            ServerHttpSecurity http, TokenService tokens, JwtProperties jwt, Environment environment) {
+            ServerHttpSecurity http,
+            TokenService tokens,
+            RoleService roles,
+            JwtProperties jwt,
+            Environment environment) {
         JwtUtil.applyConfig(jwt);
-        AuthenticationWebFilter bearer = new AuthenticationWebFilter(
-                (org.springframework.security.authentication.ReactiveAuthenticationManager) authentication ->
-                        tokens.validateToken(authentication.getCredentials().toString())
-                                .filter(token -> "ACCESS".equals(token.getTokenType()))
-                                .switchIfEmpty(Mono.error(new BadCredentialsException("Unauthorized")))
-                                .map(token -> {
-                                    UsernamePasswordAuthenticationToken principal =
-                                            new UsernamePasswordAuthenticationToken(
-                                                    token.getUserId().toString(), "", List.of());
-                                    principal.setDetails(token.getTenantId());
-                                    return (org.springframework.security.core.Authentication) principal;
-                                })
-                                .onErrorMap(error -> new BadCredentialsException("Unauthorized")));
-        bearer.setSecurityContextRepository(NoOpServerSecurityContextRepository.getInstance());
-        bearer.setServerAuthenticationConverter(exchange -> {
-            String header = exchange.getRequest().getHeaders().getFirst("Authorization");
-            if (header == null || !header.regionMatches(true, 0, BEARER_PREFIX, 0, BEARER_PREFIX.length())) {
-                return Mono.empty();
-            }
-            return Mono.just(new UsernamePasswordAuthenticationToken("", header.substring(BEARER_PREFIX.length())));
-        });
-        bearer.setAuthenticationFailureHandler((filterExchange, exception) -> {
-            filterExchange.getExchange().getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
-            return filterExchange.getExchange().getResponse().setComplete();
-        });
+        AuthenticationWebFilter bearer = bearerAuthenticationFilter(tokens, roles);
         return http.csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
                 .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
@@ -146,5 +148,46 @@ public class AuthCenterConfig {
                         },
                         SecurityWebFiltersOrder.AUTHENTICATION)
                 .build();
+    }
+
+    private AuthenticationWebFilter bearerAuthenticationFilter(TokenService tokens, RoleService roles) {
+        AuthenticationWebFilter bearer = new AuthenticationWebFilter(
+                (org.springframework.security.authentication.ReactiveAuthenticationManager) authentication ->
+                        tokens.validateToken(authentication.getCredentials().toString())
+                                .filter(token -> "ACCESS".equals(token.getTokenType())
+                                        && token.getUserId() != null
+                                        && token.getUserId() > 0
+                                        && token.getTenantId() != null
+                                        && !token.getTenantId().isBlank())
+                                .switchIfEmpty(Mono.error(new BadCredentialsException("Unauthorized")))
+                                .flatMap(token -> Mono.defer(() -> roles.getUserRoles(
+                                                token.getUserId(), token.getTenantId())
+                                        .filter(role ->
+                                                token.getTenantId().equals(role.getTenantId()) && role.isValid())
+                                        .collectList()
+                                        .map(assignedRoles -> {
+                                            UsernamePasswordAuthenticationToken principal =
+                                                    new UsernamePasswordAuthenticationToken(
+                                                            token.getUserId().toString(),
+                                                            "",
+                                                            toAuthorities(assignedRoles));
+                                            principal.setDetails(token.getTenantId());
+                                            return (org.springframework.security.core.Authentication) principal;
+                                        })
+                                        .contextWrite(TenantContext.withTenant(token.getTenantId()))))
+                                .onErrorMap(error -> new BadCredentialsException("Unauthorized")));
+        bearer.setSecurityContextRepository(NoOpServerSecurityContextRepository.getInstance());
+        bearer.setServerAuthenticationConverter(exchange -> {
+            String header = exchange.getRequest().getHeaders().getFirst("Authorization");
+            if (header == null || !header.regionMatches(true, 0, BEARER_PREFIX, 0, BEARER_PREFIX.length())) {
+                return Mono.empty();
+            }
+            return Mono.just(new UsernamePasswordAuthenticationToken("", header.substring(BEARER_PREFIX.length())));
+        });
+        bearer.setAuthenticationFailureHandler((filterExchange, exception) -> {
+            filterExchange.getExchange().getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+            return filterExchange.getExchange().getResponse().setComplete();
+        });
+        return bearer;
     }
 }

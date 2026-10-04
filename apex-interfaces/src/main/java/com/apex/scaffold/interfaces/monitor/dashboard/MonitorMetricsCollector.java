@@ -155,7 +155,7 @@ public class MonitorMetricsCollector {
     private final ObjectProvider<CircuitBreakerRegistry> circuitBreakerRegistryProvider;
 
     /** RocketMQ 模板（可能未接入）。 */
-    private final ObjectProvider<RocketMQTemplate> rocketMQTemplateProvider;
+    private final ObjectProvider<RocketMQTemplate> rocketMqTemplateProvider;
 
     @Value("${spring.application.name:apex-scaffold}")
     private String applicationName;
@@ -191,15 +191,15 @@ public class MonitorMetricsCollector {
      *
      * @param meterRegistry Micrometer 指标注册表
      * @param circuitBreakerRegistryProvider 熔断器注册表提供器
-     * @param rocketMQTemplateProvider RocketMQ 模板提供器
+     * @param rocketMqTemplateProvider RocketMQ 模板提供器
      */
     public MonitorMetricsCollector(
             MeterRegistry meterRegistry,
             ObjectProvider<CircuitBreakerRegistry> circuitBreakerRegistryProvider,
-            ObjectProvider<RocketMQTemplate> rocketMQTemplateProvider) {
+            ObjectProvider<RocketMQTemplate> rocketMqTemplateProvider) {
         this.meterRegistry = meterRegistry;
         this.circuitBreakerRegistryProvider = circuitBreakerRegistryProvider;
-        this.rocketMQTemplateProvider = rocketMQTemplateProvider;
+        this.rocketMqTemplateProvider = rocketMqTemplateProvider;
     }
 
     /* ==================== 概览 ==================== */
@@ -618,7 +618,7 @@ public class MonitorMetricsCollector {
      * @return 消息中间件指标
      */
     private MonitorMiddlewareResponse.MqStats mqStats() {
-        RocketMQTemplate template = rocketMQTemplateProvider.getIfAvailable();
+        RocketMQTemplate template = rocketMqTemplateProvider.getIfAvailable();
         if (template == null || template.getProducer() == null) {
             return new MonitorMiddlewareResponse.MqStats(false, "RocketMQ", rocketMqNameServer, null, "未接入", 0);
         }

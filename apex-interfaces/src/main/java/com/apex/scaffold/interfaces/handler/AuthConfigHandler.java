@@ -277,7 +277,7 @@ public class AuthConfigHandler extends BaseHandler {
      */
     @RequirePermission("system:oauth2:client:list")
     @Operation(
-            operationId = "listOAuth2ClientsAlias",
+            operationId = "listOauth2ClientsAlias",
             summary = "查询 OAuth2 客户端列表",
             description = "分页查询 OAuth2 客户端列表,支持按客户端 ID 和名称模糊查询")
     @ApiResponses({
@@ -285,7 +285,7 @@ public class AuthConfigHandler extends BaseHandler {
         @ApiResponse(responseCode = "401", description = "未授权,需要登录"),
         @ApiResponse(responseCode = "403", description = "权限不足,需要 system:oauth2:client:list 权限")
     })
-    public Mono<ServerResponse> listOAuth2Clients(ServerRequest request) {
+    public Mono<ServerResponse> listOauth2Clients(ServerRequest request) {
         int page = safeParseInt(request.queryParam("page").orElse("1"), 1);
         int size = safeParseInt(request.queryParam("size").orElse("20"), 20);
 

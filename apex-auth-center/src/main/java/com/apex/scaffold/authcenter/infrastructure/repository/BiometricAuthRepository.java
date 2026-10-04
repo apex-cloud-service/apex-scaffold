@@ -15,72 +15,23 @@ import reactor.core.publisher.Mono;
 public interface BiometricAuthRepository extends ReactiveCrudRepository<BiometricAuth, Long> {
 
     /**
-     * 根据用户ID查询所有生物识别配置
+     * 根据用户和租户查询所有生物识别配置。
      */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
-     *
-     * @param userId TODO
-     * @return TODO
-     */
-    Flux<BiometricAuth> findByUserId(String userId);
+    Flux<BiometricAuth> findByUserIdAndTenantId(String userId, String tenantId);
 
     /**
-     * 根据用户ID和类型查询生物识别配置
+     * 根据用户、类型和租户查询生物识别配置。
      */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
-     *
-     * @param userId TODO
-     * @param type TODO
-     * @return TODO
-     */
-    Mono<BiometricAuth> findByUserIdAndType(String userId, BiometricAuth.BiometricType type);
+    Mono<BiometricAuth> findByUserIdAndTypeAndTenantId(
+            String userId, BiometricAuth.BiometricType type, String tenantId);
 
     /**
-     * 根据设备ID查询生物识别配置
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
-     *
-     * @param deviceId TODO
-     * @return TODO
+     * 根据设备ID查询生物识别配置。
      */
     Flux<BiometricAuth> findByDeviceId(String deviceId);
 
     /**
-     * 删除用户的指定类型生物识别配置
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
-     *
-     * @param userId TODO
-     * @param type TODO
-     * @return TODO
+     * 删除用户的指定类型生物识别配置。
      */
     Mono<Long> deleteByUserIdAndType(String userId, BiometricAuth.BiometricType type);
 }

@@ -56,7 +56,7 @@ import reactor.core.publisher.Mono;
  * @since 1.0.0
  * @see OAuth2AuthorizationServiceImpl
  */
-@SuppressWarnings("checkstyle:TypeName")
+@SuppressWarnings({"checkstyle:TypeName", "PMD.ClassNamingShouldBeCamelRule"})
 @Slf4j
 @Component
 @RequiredArgsConstructor

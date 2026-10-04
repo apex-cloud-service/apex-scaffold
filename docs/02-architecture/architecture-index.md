@@ -13,9 +13,9 @@
 
 ## ✅ SVG 图表质量状态
 
-**最近更新**: 2026-09-11 | **图表总数**: 69 张 | **本批验证范围**: 全部 156 个 SVG 文件 | **状态**: 全部 SVG 已通过 XML 解析验证
+**本轮范围**: 统一授权相关文档与索引同步。未执行 SVG 全量 XML 验证、跨查看器验证或 Mermaid 重新渲染。下列历史处理记录不作为本轮验证结果；图表编号和登记数量不等于实际文件总数。
 
-### 兼容性验证
+### 历史兼容性记录（本轮未复验）
 
 | 验证项          | 状态   | 说明                                            |
 | ------------ | ---- | --------------------------------------------- |
@@ -64,7 +64,7 @@
 - ✅ 更清晰的文本标签（移除临时性文本标记）
 - ✅ 专业的 SVG 图标系统（云、用户、防火墙、负载均衡器等）
 
-**结论**: 全部 29 张 SVG 图表状态优秀，视觉专业度大幅提升，可在各类查看器中正常显示。
+**历史记录边界**: 上述视觉处理记录不证明当前全部 SVG 可解析或在所有查看器中正常显示；XML 问题和运行时行为仍需分别验证。
 
 ***
 
@@ -136,7 +136,24 @@
 | 28 | **Meilisearch全文搜索** | [28\_meilisearch\_fulltext\_search.svg](../diagrams/28_meilisearch_fulltext_search.svg)                                   | 展示索引配置、CJK分词、拼音搜索、LogQL查询、数据同步及典型使用场景                            |
 | 29 | **技术栈总览与版本管理**  | [29\_technology\_stack\_overview.svg](../diagrams/29_technology_stack_overview.svg)                                       | 展示60+技术组件的完整清单、版本号、依赖关系、BOM管理及升级策略，基于pom.xml/package.json实际配置 |
 
-### 认证授权与SSO架构图 (10张) - 2026-09-11 ⭐
+### 当前统一授权文档与图表入口
+
+| 入口 | 说明 |
+| --- | --- |
+| [业务流程与统一授权时序](../architecture/business-flows.md) | 当前主应用 JWT 身份认证与 HTTPS 远程授权链路；Mermaid 尚未重新渲染 |
+| [统一授权 ADR](../architecture/system-architecture.md) | ADR-AUTH-CENTER-001，独立容器、显式映射和失败拒绝策略 |
+| [统一授权配置](../05-operations/configuration.md#认证中心统一授权) | 默认关闭、HTTPS、读取账号 Token、0–30 秒 TTL、3 秒超时与默认熔断 |
+| [认证中心 README](../../apex-auth-center/README.md) | `/auth/v1/*` 契约、Refresh Token 轮换、登出空响应体 |
+| [认证中心 TESTING](../../apex-auth-center/TESTING.md) | 操作步骤与预期行为，未执行项明确标注 |
+| [SpringDoc 审计](../03-api/springdoc-annotation-audit.md) | 主应用与认证中心范围，区分 Handler 注解、Router 元数据和运行时 OpenAPI |
+| [安全过滤器链 SVG](../diagrams/84_security_filter_chain.svg) | 既有安全链图，本轮未重绘或验证 |
+| [认证中心架构 SVG](../diagrams/85_auth_center_architecture.svg) | 既有认证中心图，主应用与认证中心独立 Spring ApplicationContext |
+| [Token 生命周期 SVG](../diagrams/86_token_lifecycle_management.svg) | 既有生命周期图，以当前 TokenServiceImpl 和接口契约为准 |
+| [Mermaid 源文件索引](../diagrams/sequence/README.md) | 实际文件清单；旧图 31 的本地权限与 1 小时缓存不代表远程授权实现 |
+
+上述 84–86 SVG 没有同名 Mermaid 源文件；同编号 Mermaid 为不同主题。当前统一授权只映射 `SELF`/`ALL`，缓存默认关闭，失败不使用过期缓存或本地权限回退。以下 30–39 为既有认证、OAuth2、SSO 和 Keycloak 专题设计，不能据此认为主应用登录已经迁移、服务已部署或联调通过。
+
+### 认证授权与SSO架构图 (10张) - 历史专题设计
 
 | 序号 | 名称 | 文件 | 说明 |
 | -- | -- | -- | -- |
@@ -202,8 +219,8 @@
 | -- | -- | -- | -- |
 | 65 | **License 验证流程** | [65_license_validation_flow.svg](../diagrams/65_license_validation_flow.svg) | 展示 License 加载、RSA 签名、公钥指纹、机器指纹、有效期与商业能力门控 |
 | 66 | **分布式 Bulkhead 隔离** | [66_distributed_bulkhead_isolation.svg](../diagrams/66_distributed_bulkhead_isolation.svg) | 展示按下游资源划分并发舱壁、独立容量、超时、熔断与降级 |
-| 67 | **读请求降级快照** | [67_read_degradation_snapshot.svg](../diagrams/67_read_degradation_snapshot.svg) | 展示正常查询、快照写入、依赖异常与只读快照返回链路 |
-| 68 | **OpenAPI 文档生成链路** | [68_openapi_documentation_flow.svg](../diagrams/68_openapi_documentation_flow.svg) | 展示 Handler、SpringDoc 注解、OpenAPI JSON、Swagger UI 与联调工具链路 |
+| 67 | **读请求降级快照** | [67_read_degradation_snapshot.svg](../diagrams/67_read_degradation_snapshot.svg) | 历史读请求降级设计；不适用于当前统一授权，远程失败不使用过期授权快照 |
+| 68 | **OpenAPI 文档生成链路** | [68_openapi_documentation_flow.svg](../diagrams/68_openapi_documentation_flow.svg) | 展示文档生成链路；认证中心 OAuth2 和统一授权元数据位于 Router，运行时 OpenAPI 尚待验证 |
 | 69 | **i18n 消息处理链路** | [69_i18n_message_flow.svg](../diagrams/69_i18n_message_flow.svg) | 展示请求语言、消息键、MessageSource、资源包与统一响应的国际化链路 |
 
 ### 专题架构图 (5张) - 2026-09-11 ⭐
@@ -216,7 +233,7 @@
 | 63 | **全文搜索处理流水线** | [63_fulltext_search_pipeline.svg](../diagrams/63_fulltext_search_pipeline.svg) | 展示数据写入、索引同步、查询和重建流程 |
 | 64 | **Redis Watchdog 分布式锁** | [64_redis_watchdog_lock.svg](../diagrams/64_redis_watchdog_lock.svg) | 展示获取锁、自动续期、释放与故障行为 |
 
-**总计**: 64张架构图 (已全部重新生成,基于项目实际实现情况)
+**登记范围**: 既有编号 01–69 及认证相关 84–86；本索引不是全量文件统计，不声明全部重新生成或验证通过。
 
 ***
 

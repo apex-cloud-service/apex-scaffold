@@ -119,6 +119,7 @@ public class OidcAuthenticationSuccessHandler implements ServerAuthenticationSuc
      * @return {@link Mono<Void>} 异步完成信号
      */
     @Override
+    @SuppressWarnings("PMD.MethodTooLongRule")
     public Mono<Void> onAuthenticationSuccess(WebFilterExchange webFilterExchange, Authentication authentication) {
 
         if (!(authentication.getPrincipal() instanceof OidcUser oidcUser)) {

@@ -2,6 +2,7 @@ package com.apex.scaffold.authcenter.domain.service;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -96,7 +97,7 @@ public class BruteForceProtectionService {
                                 clientIp,
                                 "MEDIUM",
                                 "用户尝试登录已锁定的账户",
-                                Map.of("username", username, "reason", "account_locked"))
+                                new LinkedHashMap<>(Map.of("username", username, "reason", "account_locked")))
                         .then(Mono.error(new RuntimeException("账户已被锁定，请30分钟后重试或联系管理员")));
             }
 
@@ -111,7 +112,7 @@ public class BruteForceProtectionService {
                                 clientIp,
                                 "HIGH",
                                 "被锁定的IP尝试登录",
-                                Map.of("ip", clientIp, "reason", "ip_blocked"))
+                                new LinkedHashMap<>(Map.of("ip", clientIp, "reason", "ip_blocked")))
                         .then(Mono.error(new RuntimeException("您的IP地址已被锁定，请1小时后重试")));
             }
 
@@ -297,10 +298,10 @@ public class BruteForceProtectionService {
                         null,
                         "HIGH",
                         "用户因登录失败次数过多被自动锁定",
-                        Map.of(
+                        new LinkedHashMap<>(Map.of(
                                 "username", username,
                                 "lockDuration", USER_LOCK_DURATION.toMinutes() + "分钟",
-                                "maxAttempts", USER_MAX_ATTEMPTS)))
+                                "maxAttempts", USER_MAX_ATTEMPTS))))
                 .then();
     }
 
@@ -324,10 +325,10 @@ public class BruteForceProtectionService {
                         clientIp,
                         "HIGH",
                         "IP因登录失败次数过多被自动锁定",
-                        Map.of(
+                        new LinkedHashMap<>(Map.of(
                                 "ip", clientIp,
                                 "lockDuration", IP_LOCK_DURATION.toMinutes() + "分钟",
-                                "maxAttempts", IP_MAX_ATTEMPTS)))
+                                "maxAttempts", IP_MAX_ATTEMPTS))))
                 .then();
     }
 

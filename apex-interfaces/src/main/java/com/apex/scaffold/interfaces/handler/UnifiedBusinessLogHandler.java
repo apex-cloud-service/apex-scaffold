@@ -130,6 +130,7 @@ public class UnifiedBusinessLogHandler {
         @ApiResponse(responseCode = "400", description = "参数错误，例如时间格式不正确"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要 system:log:business:query 权限")
     })
+    @SuppressWarnings("PMD.MethodTooLongRule")
     public Mono<ServerResponse> queryLogs(ServerRequest request) {
         try {
             String logType = request.queryParam("logType").orElse(null);
@@ -189,7 +190,6 @@ public class UnifiedBusinessLogHandler {
      * @param request HTTP 请求，包含查询参数 logType、startTime、endTime
      * @return 带 traceId 的统一成功响应，data 为日志总数（Long类型）
      */
-    @RequirePermission("system:log:business:query")
     @Operation(
             operationId = "countUnifiedBusinessLogs",
             summary = "统计业务日志数量",
@@ -214,6 +214,7 @@ public class UnifiedBusinessLogHandler {
                 in = ParameterIn.QUERY,
                 schema = @Schema(type = "string", example = "2024-01-31 23:59:59"))
     })
+    @RequirePermission("system:log:business:query")
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",

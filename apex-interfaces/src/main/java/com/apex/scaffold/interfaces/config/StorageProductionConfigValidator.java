@@ -19,6 +19,10 @@ import org.springframework.context.annotation.Profile;
 @Profile("prod")
 public class StorageProductionConfigValidator extends AbstractProductionConfigValidator {
 
+    private static final String TYPE_MINIO = "minio";
+    private static final String TYPE_VOLCENGINE = "volcengine";
+    private static final String TYPE_LOCAL = "local";
+
     private final String defaultType;
     private final String bucketName;
     private final String minioEndpoint;
@@ -84,12 +88,16 @@ public class StorageProductionConfigValidator extends AbstractProductionConfigVa
     protected void doValidate() {
         requireText("STORAGE_BUCKET_NAME", bucketName);
         String normalizedType = defaultType == null ? "" : defaultType.trim().toLowerCase(Locale.ROOT);
-        switch (normalizedType) {
-            case "minio" -> validateMinio();
-            case "volcengine" -> validateVolcEngine();
-            case "local" -> validateLocal();
-            case "" -> throw invalid("STORAGE_DEFAULT_TYPE 不能为空");
-            default -> throw invalid("STORAGE_DEFAULT_TYPE 仅支持 local、minio 或 volcengine");
+        if (TYPE_MINIO.equals(normalizedType)) {
+            validateMinio();
+        } else if (TYPE_VOLCENGINE.equals(normalizedType)) {
+            validateVolcEngine();
+        } else if (TYPE_LOCAL.equals(normalizedType)) {
+            validateLocal();
+        } else if (normalizedType.isEmpty()) {
+            throw invalid("STORAGE_DEFAULT_TYPE 不能为空");
+        } else {
+            throw invalid("STORAGE_DEFAULT_TYPE 仅支持 local、minio 或 volcengine");
         }
     }
 

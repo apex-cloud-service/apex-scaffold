@@ -19,16 +19,13 @@ import org.springframework.scheduling.annotation.EnableAsync;
  * 迁移脚本（{@code classpath:db/migration/}）进行 DDL 变更，
  * 确保各环境 schema 的一致性。
  *
+ * <p>主应用显式排除认证中心包的组件扫描，避免独立认证中心应用的 Bean 被重复装配。
+ *
  * @author Apex Team
  * @version 1.0.0
  * @since 1.0.0
  */
 @SpringBootApplication(exclude = {R2dbcAutoConfiguration.class})
-// 说明（2026-09-30）：显式排除 com.apex.scaffold.authcenter.* 包的组件扫描。
-// apex-auth-center 是独立部署的认证中心应用（拥有自己的 @SpringBootApplication 入口
-// AuthCenterApplication），主应用不应扫描并装配其内部 Bean（Handler/Service/Repository 等）。
-// 此排除是防止两个应用组件扫描范围交叉导致 ConflictingBeanDefinitionException 的显式防御，
-// 而非依赖“两应用 classpath 隔离部署”这一隐式前提。
 @ComponentScan(
         basePackages = "com.apex.scaffold",
         excludeFilters = {

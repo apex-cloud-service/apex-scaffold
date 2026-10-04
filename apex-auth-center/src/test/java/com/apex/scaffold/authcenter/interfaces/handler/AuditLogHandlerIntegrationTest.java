@@ -20,6 +20,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -334,7 +336,12 @@ class AuditLogHandlerIntegrationTest {
         when(auditLogService.cleanupExpiredLogs(any(LocalDateTime.class), anyString()))
                 .thenReturn(Mono.just(5L));
 
+        UsernamePasswordAuthenticationToken authentication =
+                new UsernamePasswordAuthenticationToken("admin", "", java.util.List.of());
+        authentication.setDetails("test-tenant");
+
         webTestClient
+                .mutateWith(SecurityMockServerConfigurers.mockAuthentication(authentication))
                 .delete()
                 .uri("/api/v1/auth/audit-logs/cleanup?tenantId=test-tenant&beforeTime=2024-01-01T00:00:00")
                 .exchange()
@@ -535,7 +542,12 @@ class AuditLogHandlerIntegrationTest {
         when(auditLogService.cleanupExpiredLogs(any(LocalDateTime.class), anyString()))
                 .thenReturn(reactor.core.publisher.Mono.error(new IllegalStateException("service unavailable")));
 
+        UsernamePasswordAuthenticationToken authentication =
+                new UsernamePasswordAuthenticationToken("admin", "", java.util.List.of());
+        authentication.setDetails("test-tenant");
+
         webTestClient
+                .mutateWith(SecurityMockServerConfigurers.mockAuthentication(authentication))
                 .delete()
                 .uri("/api/v1/auth/audit-logs/cleanup?tenantId=test-tenant&beforeTime=2024-01-01T00:00:00")
                 .exchange()

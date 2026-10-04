@@ -32,6 +32,7 @@ public class SecurityContextDataScopeProvider implements ReactiveDataScopeProvid
 
     private final RoleRepository roleRepository;
     private final DeptRepository deptRepository;
+    private final com.apex.scaffold.application.service.UnifiedAuthorizationService unifiedAuthorizationService;
 
     /**
      * 构建数据权限提供者。
@@ -40,6 +41,15 @@ public class SecurityContextDataScopeProvider implements ReactiveDataScopeProvid
      * @param deptRepository 部门仓储，用于校验部门状态与解析部门及其子部门
      */
     public SecurityContextDataScopeProvider(RoleRepository roleRepository, DeptRepository deptRepository) {
+        this(roleRepository, deptRepository, null);
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public SecurityContextDataScopeProvider(
+            RoleRepository roleRepository,
+            DeptRepository deptRepository,
+            com.apex.scaffold.application.service.UnifiedAuthorizationService unifiedAuthorizationService) {
+        this.unifiedAuthorizationService = unifiedAuthorizationService;
         this.roleRepository = roleRepository;
         this.deptRepository = deptRepository;
     }
@@ -59,6 +69,15 @@ public class SecurityContextDataScopeProvider implements ReactiveDataScopeProvid
     private Mono<DataScopeInfo> resolve(AuthenticatedUser user) {
         if (user.userId() == null) {
             return Mono.error(new IllegalStateException("Authenticated user id is required"));
+        }
+        if (unifiedAuthorizationService != null && unifiedAuthorizationService.enabled()) {
+            if (user.tenantId() == null || user.tenantId().isBlank()) {
+                return Mono.error(new IllegalStateException("Trusted tenant required"));
+            }
+            return unifiedAuthorizationService
+                    .roles(user.userId())
+                    .flatMap(roles -> resolve(user, roles))
+                    .contextWrite(com.apex.scaffold.common.context.TenantContext.withTenant(user.tenantId()));
         }
         return roleRepository
                 .findByUserId(user.userId())
@@ -111,19 +130,28 @@ public class SecurityContextDataScopeProvider implements ReactiveDataScopeProvid
         return requireDept(user).flatMap(deptId -> nullSafeMono(deptRepository::findAll)
                 .switchIfEmpty(Mono.error(new IllegalStateException("No enabled department data scope")))
                 .flatMap(departments -> {
-                    List<Long> ids = departments.stream()
-                            .filter(this::isEnabled)
-                            .filter(dept -> Objects.equals(dept.getId(), deptId)
-                                    || containsAncestor(dept.getAncestors(), deptId))
-                            .map(DeptEntity::getId)
-                            .filter(Objects::nonNull)
-                            .distinct()
-                            .toList();
-                    if (ids.isEmpty()) {
+                    if (!hasEnabledMainDepartment(departments, deptId)) {
                         return Mono.error(new IllegalStateException("No enabled department data scope"));
                     }
+                    List<Long> ids = collectEnabledDepartmentIds(departments, deptId);
                     return Mono.just(DataScopeInfo.ofDeptAndChild(deptId, ids));
                 }));
+    }
+
+    private boolean hasEnabledMainDepartment(List<DeptEntity> departments, Long deptId) {
+        return departments.stream()
+                .filter(dept -> Objects.equals(dept.getId(), deptId))
+                .anyMatch(this::isEnabled);
+    }
+
+    private List<Long> collectEnabledDepartmentIds(List<DeptEntity> departments, Long deptId) {
+        return departments.stream()
+                .filter(this::isEnabled)
+                .filter(dept -> Objects.equals(dept.getId(), deptId) || containsAncestor(dept.getAncestors(), deptId))
+                .map(DeptEntity::getId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
     }
 
     private Mono<DataScopeInfo> resolveCustom(List<RoleEntity> roles) {

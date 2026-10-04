@@ -23,6 +23,8 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class PermissionService {
 
+    private final UnifiedAuthorizationService unifiedAuthorizationService;
+
     /**
      * 权限仓储。
      *
@@ -39,6 +41,9 @@ public class PermissionService {
      * @return 权限列表
      */
     public Mono<List<PermissionEntity>> getPermissionsByUserId(Long userId) {
+        if (unifiedAuthorizationService != null && unifiedAuthorizationService.enabled()) {
+            return unifiedAuthorizationService.permissions(userId);
+        }
         return permissionRepository.findByUserId(userId);
     }
 

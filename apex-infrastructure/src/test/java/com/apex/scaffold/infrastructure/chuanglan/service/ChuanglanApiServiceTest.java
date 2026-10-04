@@ -86,6 +86,7 @@ class ChuanglanApiServiceTest {
 
         lenient().when(chuanglanProperties.getSms()).thenReturn(smsConfig);
         lenient().when(chuanglanProperties.getFlash()).thenReturn(flashConfig);
+        lenient().when(decryptStrategy.getEncryptType()).thenReturn("0");
 
         chuanglanApiService =
                 new ChuanglanApiService(chuanglanProperties, webClient, decryptStrategy, new ChuanglanRequestSigner());
@@ -250,6 +251,22 @@ class ChuanglanApiServiceTest {
                         assertThat(respData.get("phone")).isNull();
                     })
                     .verifyComplete();
+        }
+
+        /**
+         * 测试闪验API返回非200000错误码，期望抛出 ChuanglanApiException。
+         */
+        @Test
+        @DisplayName("未配置加密策略应抛出ChuanglanApiException")
+        void exchangeTokenForPhone_UnsupportedEncryptType_ThrowsException() {
+            StepVerifier.create(
+                            chuanglanApiService.exchangeTokenForPhone(
+                                    "test-token", null, "1", null))
+                    .expectErrorMatches(throwable -> throwable instanceof ChuanglanApiException
+                            && "UNSUPPORTED_ENCRYPT_TYPE".equals(
+                                    ((ChuanglanApiException) throwable).getErrorCode()))
+                    .verify();
+            verifyNoInteractions(webClient);
         }
 
         /**

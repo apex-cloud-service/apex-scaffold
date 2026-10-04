@@ -64,7 +64,6 @@ public class GeneratorAdminRouter {
      * @param generatorHandler 代码生成执行处理器
      * @return 路由函数
      */
-    @Bean
     @RouterOperations({
         @RouterOperation(
                 path = "/admin-api/v1/generator/datasources",
@@ -119,6 +118,8 @@ public class GeneratorAdminRouter {
                 beanClass = CodeGeneratorHandler.class,
                 beanMethod = "generate")
     })
+    @Bean
+    @SuppressWarnings("PMD.MethodTooLongRule")
     public RouterFunction<ServerResponse> generatorAdminRoutes(
             GenDatasourceHandler datasourceHandler,
             GenConfigHandler configHandler,

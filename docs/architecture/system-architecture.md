@@ -562,7 +562,23 @@ public interface UserRepository {
 
 ## 六、架构决策记录 (ADR)
 
-### ADR-001: 采用Spring WebFlux响应式框架
+正式编号以[逻辑架构 ADR-001](01-logical-architecture-decision.md)、[部署 ADR-002–008](02-physical-architecture-decision.md)及[技术 ADR-009–015](03-technical-architecture-decision.md)为准。下列旧决策摘要不再复用冲突编号，历史性能结果未在本轮重新验证。
+
+### ADR-AUTH-CENTER-001：独立认证中心的远程授权集成
+
+**状态**：方案已批准；当前代码具备渐进授权接入，部署与集成验收待执行。
+
+**决策**：主应用与 `AuthCenterApplication` 保持独立 Spring ApplicationContext，主应用扫描排除 authcenter 包。共享基础类型，不直接调用中心内部仓储或 Mapper。主应用身份认证继续使用原有 JWT 链，授权数据通过领域端口 `UnifiedAuthorizationGateway` 与 HTTPS 适配器接入中心。
+
+**实现边界**：`apex.features.auth-center-permission` 默认关闭。开启后以可信主租户/用户解析服务端唯一映射，使用专用读取账号 ACCESS Token 查询 `/auth/v1/authorization/users/{userId}`；中心租户来自 Token，中心检查读取账号和目标账号的状态。客户端验证响应身份并转换回主应用身份；映射 SELF、ALL、DEPT、DEPT_AND_CHILD 数据范围，CUSTOM、空值和未知范围拒绝。
+
+**取舍**：3 秒请求超时与默认熔断器限制远程故障影响；错误拒绝授权。缓存默认关闭，可配置 0–30 秒，存在 TTL 撤权延迟；没有过期缓存降级或本地权限回退。专用凭据由部署侧轮换，适配器不自动刷新。跨实例主动失效、生产 sys_* 数据迁移和整体认证迁移仍需独立推进，不能登记为已完成。
+
+**迁移资源**：认证中心当前激活 `classpath:db/migration/mysql`；未激活的 `db/migration/auth/*/V51` 重复脚本已从当前工作区移除，不表示数据库迁移已执行。
+
+**验证依据**：[配置说明](../05-operations/configuration.md#认证中心统一授权)、[登录与授权时序](business-flows.md)、[验证矩阵](../../apex-auth-center/TESTING.md)。本 ADR 的状态不代表测试通过或已部署。
+
+### 历史决策摘要：采用 Spring WebFlux（正式编号 ADR-009）
 
 **决策日期**: 2024-Q2\
 **状态**: 已采纳 ✅
@@ -583,7 +599,7 @@ public interface UserRepository {
 
 ***
 
-### ADR-002: 采用DDD分层架构
+### 历史决策摘要：采用 DDD（正式编号 ADR-001）
 
 **决策日期**: 2024-Q3\
 **状态**: 已采纳 ✅
@@ -606,7 +622,7 @@ public interface UserRepository {
 
 ***
 
-### ADR-003: 多租户架构tenant\_id字段隔离
+### 历史决策摘要：多租户 tenant_id 字段隔离
 
 **决策日期**: 2024-Q4\
 **状态**: 已采纳 ✅

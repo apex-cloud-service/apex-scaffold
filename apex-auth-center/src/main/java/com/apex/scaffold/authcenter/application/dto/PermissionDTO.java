@@ -30,22 +30,22 @@ public class PermissionDTO {
 
     @NotBlank(message = "权限编码不能为空")
     @Size(max = 100, message = "权限编码长度不能超过100")
-    @Schema(description = "权限编码", example = "user:read", required = true)
+    @Schema(description = "权限编码", example = "user:read", requiredMode = Schema.RequiredMode.REQUIRED)
     private String code;
 
     @NotBlank(message = "权限名称不能为空")
     @Size(max = 100, message = "权限名称长度不能超过100")
-    @Schema(description = "权限名称", example = "查看用户", required = true)
+    @Schema(description = "权限名称", example = "查看用户", requiredMode = Schema.RequiredMode.REQUIRED)
     private String name;
 
     @NotBlank(message = "资源标识不能为空")
     @Size(max = 200, message = "资源标识长度不能超过200")
-    @Schema(description = "资源标识", example = "user", required = true)
+    @Schema(description = "资源标识", example = "user", requiredMode = Schema.RequiredMode.REQUIRED)
     private String resource;
 
     @NotBlank(message = "操作类型不能为空")
     @Size(max = 50, message = "操作类型长度不能超过50")
-    @Schema(description = "操作类型", example = "read", required = true)
+    @Schema(description = "操作类型", example = "read", requiredMode = Schema.RequiredMode.REQUIRED)
     private String action;
 
     @Size(max = 500, message = "权限描述长度不能超过500")

@@ -20,6 +20,7 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
+import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
@@ -40,6 +41,7 @@ import reactor.core.publisher.Mono;
  * @since 1.0.0
  */
 @Aspect
+@Component
 @RequiredArgsConstructor
 public class ResourcePermissionAspect {
 
@@ -196,12 +198,13 @@ public class ResourcePermissionAspect {
         // 获取设备ID（从请求头）
         String deviceId = extractDeviceId(joinPoint);
 
+        String tenantId = authentication.getDetails() instanceof String value ? value : null;
         return new PermissionContext(
                 isSuperAdmin,
-                // TODO: 从用户信息中获取组织角色
                 Collections.emptySet(),
                 clientIp,
-                deviceId);
+                deviceId,
+                tenantId);
     }
 
     /**

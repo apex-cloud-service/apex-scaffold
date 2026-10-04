@@ -5,13 +5,25 @@ import com.apex.scaffold.application.dto.admin.TableInfoDTO;
 import com.apex.scaffold.application.support.CodeTemplateEngine;
 import com.apex.scaffold.application.support.DataSourcePoolManager;
 import com.apex.scaffold.application.support.MetadataReader;
+import com.apex.scaffold.common.context.TenantContext;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
+import com.apex.scaffold.common.security.ConfigEncryptionService;
+import com.apex.scaffold.domain.model.generator.GenConfigEntity;
+import com.apex.scaffold.domain.model.generator.GenDatasourceEntity;
+import com.apex.scaffold.domain.model.generator.GenHistoryEntity;
+import com.apex.scaffold.domain.model.generator.GenTemplateEntity;
+import com.apex.scaffold.domain.repository.GenConfigRepository;
+import com.apex.scaffold.domain.repository.GenDatasourceRepository;
+import com.apex.scaffold.domain.repository.GenHistoryRepository;
+import com.apex.scaffold.domain.repository.GenTemplateRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -22,7 +34,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -46,6 +57,12 @@ public class CodeGenerationService {
     private final DataSourcePoolManager dataSourcePoolManager;
     private final MetadataReader metadataReader;
     private final CodeTemplateEngine templateEngine;
+    private final GenConfigRepository configRepository;
+    private final GenDatasourceRepository datasourceRepository;
+    private final GenTemplateRepository templateRepository;
+    private final GenHistoryRepository historyRepository;
+    private final ConfigEncryptionService encryptionService;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     /**
      * 模板编译缓存
@@ -53,7 +70,7 @@ public class CodeGenerationService {
      * value: 编译后的模板对象
      * @since 1.2.0
      */
-    private final ConcurrentHashMap<String, Object> templateCache = new ConcurrentHashMap<>(256);
+    private final ConcurrentHashMap<String, String> templateCache = new ConcurrentHashMap<>(256);
 
     /**
      * 获取数据源表列表
@@ -64,9 +81,14 @@ public class CodeGenerationService {
      */
     public Flux<String> getTables(Long datasourceId) {
         log.debug("获取数据源表列表: datasourceId={}", datasourceId);
-        return Mono.error(new BusinessException(
-                        ResultCode.ERROR, "TODO: 需要在 domain 层创建 GenDatasourceEntity 和 GenDatasourceRepository 后完善此方法"))
-                .flatMapMany(ds -> Flux.empty());
+        return tenantId().flatMapMany(tenant -> datasourceForTenant(datasourceId)
+                .flatMapMany(datasource -> dataSourcePoolManager.getOrCreateDataSource(
+                                tenant,
+                                datasourceId,
+                                datasource.getParams(),
+                                datasource.getUsername(),
+                                encryptionService.decrypt(datasource.getPassword()))
+                        .flatMapMany(pool -> metadataReader.getTables(pool, datasource.getDbType().name().toLowerCase()))));
     }
 
     /**
@@ -78,12 +100,22 @@ public class CodeGenerationService {
      * @return 表结构信息
      * @since 1.2.0
      */
-    @Cacheable(value = "table-metadata", key = "#datasourceId + ':' + #tableName")
     public Mono<TableInfoDTO> getTableColumns(Long datasourceId, String tableName) {
         log.debug("获取表列信息(缓存未命中): datasourceId={}, tableName={}", datasourceId, tableName);
-        return Mono.<TableInfoDTO>error(new BusinessException(
-                        ResultCode.ERROR, "TODO: 需要在 domain 层创建 GenDatasourceEntity 和 GenDatasourceRepository 后完善此方法"))
-                .cache(Duration.ofMinutes(10));
+        return tenantId()
+                .flatMap(tenant -> datasourceForTenant(datasourceId)
+                        .flatMap(datasource -> dataSourcePoolManager
+                                .getOrCreateDataSource(
+                                        tenant,
+                                        datasourceId,
+                                        datasource.getParams(),
+                                        datasource.getUsername(),
+                                        encryptionService.decrypt(datasource.getPassword()))
+                                .flatMap(pool -> metadataReader.getTableColumns(
+                                        pool,
+                                        datasource.getDbType().name().toLowerCase(),
+                                        tableName)))
+                        .cache(Duration.ofMinutes(10)));
     }
 
     /**
@@ -95,8 +127,19 @@ public class CodeGenerationService {
      */
     public Mono<List<GeneratedFileDTO>> generate(Long configId) {
         log.info("开始代码生成: configId={}", configId);
-        return Mono.error(new BusinessException(
-                ResultCode.ERROR, "TODO: 需要在 domain 层创建 GenConfigEntity、GenTemplateEntity 和相关 Repository 后完善此方法"));
+        return tenantId().flatMap(tenant -> configRepository.findById(configId)
+                .switchIfEmpty(Mono.error(new BusinessException(ResultCode.NOT_FOUND, "生成配置不存在")))
+                .flatMap(config -> requireTenant(config.getTenantId(), tenant).thenReturn(config))
+                .flatMap(config -> datasourceForTenant(config.getDatasourceId())
+                        .flatMap(datasource -> templates(config.getTemplateIds(), tenant)
+                                .flatMap(templateList -> tables(config.getTableNames())
+                                        .flatMapMany(Flux::fromIterable)
+                                        .concatMap(table -> getTableColumns(config.getDatasourceId(), table)
+                                                .flatMap(info -> executeGeneration(config, datasource, templateList, info)))
+                                        .flatMapIterable(files -> files)
+                                        .collectList()
+                                        .flatMap(files -> saveHistory(config, tenant, files).thenReturn(files)))
+                                .onErrorResume(error -> saveFailure(config, tenant, error).then(Mono.error(error))))));
     }
 
     /**
@@ -111,46 +154,20 @@ public class CodeGenerationService {
      * @since 1.2.0
      */
     private Mono<List<GeneratedFileDTO>> executeGeneration(
-            Object config, Object datasource, List<Object> templates, TableInfoDTO tableInfo) {
-        return Mono.fromCallable(() -> {
-                    List<GeneratedFileDTO> results = new ArrayList<>(16);
-
-                    Map<String, Object> dataModel = buildDataModel(config, tableInfo);
-
-                    for (Object template : templates) {
-                        try {
-                            // 使用缓存的模板编译结果
-                            String content = renderTemplateWithCache(template, dataModel);
-                            String outputFilePath = buildOutputFilePath(config, template, dataModel);
-
-                            writeFile(outputFilePath, content);
-
-                            GeneratedFileDTO fileDTO = GeneratedFileDTO.builder()
-                                    .fileType(getTemplateType(template))
-                                    .filePath(outputFilePath)
-                                    .fileName(Paths.get(outputFilePath)
-                                            .getFileName()
-                                            .toString())
-                                    .fileSize((long) content.getBytes().length)
-                                    .success(true)
-                                    .build();
-                            results.add(fileDTO);
-
-                            log.info("生成文件成功: {}", outputFilePath);
-                        } catch (Exception e) {
-                            log.error("生成文件失败: template={}", template, e);
-                            GeneratedFileDTO fileDTO = GeneratedFileDTO.builder()
-                                    .fileType(getTemplateType(template))
-                                    .success(false)
-                                    .errorMessage(e.getMessage())
-                                    .build();
-                            results.add(fileDTO);
-                        }
-                    }
-
-                    return results;
-                })
-                .subscribeOn(BlockingIoSchedulers.storage());
+            GenConfigEntity config, GenDatasourceEntity datasource, List<GenTemplateEntity> templates, TableInfoDTO tableInfo) {
+        Map<String, Object> dataModel = buildDataModel(config, tableInfo);
+        return Flux.fromIterable(templates)
+                .concatMap(template -> templateEngine.render(template.getTemplateContent(), dataModel)
+                        .flatMap(content -> Mono.fromCallable(() -> {
+                            String output = buildOutputFilePath(config, template, dataModel);
+                            writeFile(config.getOutputPath(), output, content);
+                            return GeneratedFileDTO.builder().fileType(template.getTemplateType()).filePath(output)
+                                    .fileName(Paths.get(output).getFileName().toString())
+                                    .fileSize((long) content.getBytes(StandardCharsets.UTF_8).length).success(true).build();
+                        }).subscribeOn(BlockingIoSchedulers.storage()))
+                        .onErrorResume(error -> Mono.just(GeneratedFileDTO.builder().fileType(template.getTemplateType())
+                                .success(false).errorMessage(error.getMessage()).build())))
+                .collectList();
     }
 
     /**
@@ -161,94 +178,140 @@ public class CodeGenerationService {
      * @return 数据模型
      * @since 1.2.0
      */
-    private Map<String, Object> buildDataModel(Object config, TableInfoDTO tableInfo) {
+    private Map<String, Object> buildDataModel(GenConfigEntity config, TableInfoDTO tableInfo) {
         Map<String, Object> model = new HashMap<>(8);
 
         model.put("tableName", tableInfo.getTableName());
         model.put("tableComment", tableInfo.getTableComment());
         model.put("columns", tableInfo.getColumns());
-
-        model.put("author", "Apex Team");
+        model.put("packageName", config.getPackageName());
+        model.put("moduleName", config.getModuleName());
+        model.put("author", config.getAuthor());
         model.put("datetime", LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
         model.put("date", LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
 
         return model;
     }
 
-    /**
-     * 渲染模板(带缓存)
-     * 使用ConcurrentHashMap缓存编译后的模板,避免重复编译
-     *
-     * @param template 模板对象
-     * @param dataModel 数据模型
-     * @return 渲染后的内容
-     * @since 1.2.0
-     */
-    private String renderTemplateWithCache(Object template, Map<String, Object> dataModel) {
-        String templateContent = getTemplateContent(template);
-        String cacheKey = String.valueOf(templateContent.hashCode());
+    private Mono<List<GenTemplateEntity>> templates(String value, String tenant) {
+        List<Long> templateIds = ids(value);
+        if (templateIds.isEmpty()) {
+            return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "未配置代码模板"));
+        }
+        return Flux.fromIterable(templateIds)
+                .concatMap(id -> templateRepository.findById(id)
+                        .switchIfEmpty(Mono.error(new BusinessException(ResultCode.NOT_FOUND, "代码模板不存在"))))
+                .handle((template, sink) -> {
+                    boolean allowed = tenant.equals(template.getTenantId())
+                            || (Integer.valueOf(1).equals(template.getIsBuiltin()) && "system".equals(template.getTenantId()));
+                    if (allowed) {
+                        sink.next(template);
+                    } else {
+                        sink.error(new BusinessException(ResultCode.FORBIDDEN, "无权使用该代码模板"));
+                    }
+                })
+                .cast(GenTemplateEntity.class)
+                .collectList();
+    }
 
-        Object compiledTemplate = templateCache.computeIfAbsent(cacheKey, key -> {
-            log.debug("编译模板并缓存: key={}", key);
-            return compileTemplate(templateContent);
+    private Mono<List<String>> tables(String json) {
+        if (json == null || json.isBlank()) {
+            return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "未配置生成表"));
+        }
+        try {
+            List<String> names = objectMapper.readValue(json,
+                    objectMapper.getTypeFactory().constructCollectionType(List.class, String.class));
+            return names.isEmpty() || names.stream().anyMatch(name -> name == null || name.isBlank())
+                    ? Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "生成表配置不合法"))
+                    : Mono.just(names);
+        } catch (Exception e) {
+            return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "生成表配置不合法"));
+        }
+    }
+
+    private List<Long> ids(String json) {
+        if (json == null || json.isBlank()) {
+            return List.of();
+        }
+        try {
+            return objectMapper.readValue(json, objectMapper.getTypeFactory().constructCollectionType(List.class, Long.class));
+        } catch (Exception e) {
+            return List.of();
+        }
+    }
+
+    private Mono<GenDatasourceEntity> datasourceForTenant(Long id) {
+        return tenantId().flatMap(tenant -> datasourceRepository.findById(id)
+                .switchIfEmpty(Mono.error(new BusinessException(ResultCode.NOT_FOUND, "数据源不存在")))
+                .flatMap(entity -> requireTenant(entity.getTenantId(), tenant).thenReturn(entity)));
+    }
+
+    private Mono<String> tenantId() {
+        return Mono.deferContextual(context -> {
+            String tenant = context.getOrDefault(TenantContext.REACTOR_CONTEXT_KEY, null);
+            return tenant == null || tenant.isBlank()
+                    ? Mono.error(new BusinessException(ResultCode.FORBIDDEN, "租户上下文不能为空"))
+                    : Mono.just(tenant);
         });
-
-        return renderCompiledTemplate(compiledTemplate, dataModel);
     }
 
-    /**
-     * 获取模板内容
-     * TODO: 实现从template对象获取内容的逻辑
-     * @since 1.2.0
-     */
-    private String getTemplateContent(Object template) {
-        return "";
+    private Mono<Void> requireTenant(String actual, String expected) {
+        return expected.equals(actual) ? Mono.empty()
+                : Mono.error(new BusinessException(ResultCode.FORBIDDEN, "无权访问其他租户的数据"));
     }
 
-    /**
-     * 编译模板
-     * TODO: 使用实际的模板引擎编译
-     * @since 1.2.0
-     */
-    private Object compileTemplate(String templateContent) {
-        return templateContent;
+    private Mono<Void> saveHistory(GenConfigEntity config, String tenant, List<GeneratedFileDTO> files) {
+        GenHistoryEntity history = history(config, tenant);
+        history.setStatus(files.stream().allMatch(file -> Boolean.TRUE.equals(file.getSuccess())) ? "SUCCESS" : "FAILED");
+        try {
+            history.setGeneratedFiles(objectMapper.writeValueAsString(files));
+        } catch (Exception e) {
+            history.setGeneratedFiles("[]");
+        }
+        return historyRepository.insert(history).then();
     }
 
-    /**
-     * 渲染已编译的模板
-     * TODO: 使用实际的模板引擎渲染
-     * @since 1.2.0
-     */
-    private String renderCompiledTemplate(Object compiledTemplate, Map<String, Object> dataModel) {
-        return compiledTemplate.toString();
+    private Mono<Void> saveFailure(GenConfigEntity config, String tenant, Throwable error) {
+        GenHistoryEntity history = history(config, tenant);
+        history.setStatus("FAILED");
+        history.setErrorMessage(error.getMessage());
+        return historyRepository.insert(history).then();
     }
 
-    /**
-     * 旧的渲染方法(保留用于向后兼容)
-     * @deprecated 使用 renderTemplateWithCache 替代
-     * @since 1.2.0
-     */
-    @Deprecated
-    private String renderTemplate(Object template, Map<String, Object> dataModel) {
-        return "";
+    private GenHistoryEntity history(GenConfigEntity config, String tenant) {
+        GenHistoryEntity history = new GenHistoryEntity();
+        history.setConfigId(config.getId());
+        history.setOutputPath(config.getOutputPath());
+        history.setTenantId(tenant);
+        return history;
     }
 
     /**
      * 构建输出文件路径
-     * TODO: 实现根据配置和模板生成输出路径
      * @since 1.2.0
      */
-    private String buildOutputFilePath(Object config, Object template, Map<String, Object> dataModel) {
-        return "";
+    private String buildOutputFilePath(GenConfigEntity config, GenTemplateEntity template, Map<String, Object> dataModel) {
+        Path root = Paths.get(config.getOutputPath()).toAbsolutePath().normalize();
+        String name = String.valueOf(dataModel.get("tableName"));
+        String relative = template.getTemplatePath();
+        if (relative == null || relative.isBlank()) {
+            relative = template.getTemplateType() + "/" + name + (template.getFileSuffix() == null ? "" : template.getFileSuffix());
+        } else {
+            relative = relative.replace("${tableName}", name);
+        }
+        Path target = root.resolve(relative).normalize();
+        if (!target.startsWith(root)) {
+            throw new BusinessException(ResultCode.PARAM_ERROR, "模板输出路径超出配置目录");
+        }
+        return target.toString();
     }
 
     /**
      * 获取模板类型
-     * TODO: 实现从template对象获取类型的逻辑
      * @since 1.2.0
      */
-    private String getTemplateType(Object template) {
-        return "entity";
+    private String getTemplateType(GenTemplateEntity template) {
+        return template.getTemplateType();
     }
 
     /**
@@ -259,10 +322,23 @@ public class CodeGenerationService {
      * @throws IOException IO异常
      * @since 1.2.0
      */
-    private void writeFile(String filePath, String content) throws IOException {
-        Path path = Paths.get(filePath);
-        Files.createDirectories(path.getParent());
-        Files.writeString(path, content);
+    private void writeFile(String rootPath, String filePath, String content) throws IOException {
+        Path root = Paths.get(rootPath).toAbsolutePath().normalize();
+        Path path = Paths.get(filePath).toAbsolutePath().normalize();
+        if (!path.startsWith(root)) {
+            throw new BusinessException(ResultCode.PARAM_ERROR, "模板输出路径超出配置目录");
+        }
+        Path parent = path.getParent();
+        if (parent != null) {
+            Files.createDirectories(parent);
+            if (!parent.toRealPath().startsWith(root.toRealPath())) {
+                throw new BusinessException(ResultCode.PARAM_ERROR, "模板输出路径包含非法符号链接");
+            }
+        }
+        if (Files.exists(path) && Files.isSymbolicLink(path)) {
+            throw new BusinessException(ResultCode.PARAM_ERROR, "禁止覆盖符号链接文件");
+        }
+        Files.writeString(path, content, StandardCharsets.UTF_8);
     }
 
     /**

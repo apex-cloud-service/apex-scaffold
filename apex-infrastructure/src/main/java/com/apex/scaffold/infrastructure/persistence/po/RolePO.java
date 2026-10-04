@@ -35,10 +35,10 @@ import lombok.experimental.SuperBuilder;
  * <h2>数据权限类型</h2>
  * <ul>
  *   <li>{@code 1}：全部数据权限</li>
- *   <li>{@code 2}：自定义数据权限</li>
- *   <li>{@code 3}：本部门数据权限</li>
- *   <li>{@code 4}：本部门及以下数据权限</li>
- *   <li>{@code 5}：仅本人数据权限</li>
+ *   <li>{@code 2}：本部门数据权限</li>
+ *   <li>{@code 3}：本部门及以下数据权限</li>
+ *   <li>{@code 4}：仅本人数据权限</li>
+ *   <li>{@code 5}：自定义数据权限</li>
  * </ul>
  *
  * <h2>使用示例</h2>
@@ -120,13 +120,13 @@ public class RolePO extends BasePO {
      * <p>数据权限类型：
      * <ul>
      *   <li>{@code 1}：全部数据权限 - 可访问所有数据</li>
-     *   <li>{@code 2}：自定义数据权限 - 通过配置指定可访问的部门</li>
-     *   <li>{@code 3}：本部门数据权限 - 仅可访问本部门数据</li>
-     *   <li>{@code 4}：本部门及以下数据权限 - 可访问本部门及下级部门数据</li>
-     *   <li>{@code 5}：仅本人数据权限 - 仅可访问自己创建的数据</li>
+     *   <li>{@code 2}：本部门数据权限 - 仅可访问本部门数据</li>
+     *   <li>{@code 3}：本部门及以下数据权限 - 可访问本部门及下级部门数据</li>
+     *   <li>{@code 4}：仅本人数据权限 - 仅可访问自己创建的数据</li>
+     *   <li>{@code 5}：自定义数据权限 - 通过配置指定可访问的部门</li>
      * </ul>
      *
-     * <p>默认值：{@code 5}（仅本人数据权限）
+     * <p>数据库默认值为 {@code NULL}；未配置的数据范围由授权解析器拒绝。
      */
     private Integer dataScope;
 

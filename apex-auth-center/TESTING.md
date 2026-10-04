@@ -1,5 +1,7 @@
 # 认证中心核心功能验证指南
 
+本文是验证步骤与预期行为，不是测试通过报告。需分别验证独立认证中心和主应用授权开关；两者的登录入口与用户 ID 不可混用。
+
 ## 测试环境
 
 - **应用端口**: 8081
@@ -8,6 +10,8 @@
   - 用户名: `admin` / 密码: `password123`
   - 用户名: `user` / 密码: `password123`
 - **租户ID**: `default`
+- 示例账户来自 `V46__insert_test_users.sql`（admin=1001、user=1002、tenant1/test=1003），密码为脚本声明值；须确认实际迁移及密码可用。
+- 启动前注入 `JWT_SECRET`、`TOKEN_ENCRYPTION_KEY` 和 `CONFIG_ENCRYPTION_KEY`；统一授权联调另需配置读取账号及 HTTPS 入口。
 
 ## 前置准备
 
@@ -54,7 +58,7 @@ curl -X POST http://localhost:8081/auth/v1/login \
 **期望响应** (HTTP 200):
 ```json
 {
-  "userId": 1,
+  "userId": 1001,
   "username": "admin",
   "tenantId": "default",
   "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
@@ -65,10 +69,10 @@ curl -X POST http://localhost:8081/auth/v1/login \
 ```
 
 **验证点**:
-- ✅ HTTP 状态码 200
-- ✅ 返回 `accessToken` 和 `refreshToken`
-- ✅ `expiresIn` 为 7200（2小时）
-- ✅ `userId` 和 `username` 正确
+- 检查： HTTP 状态码 200
+- 检查： 返回 `accessToken` 和 `refreshToken`
+- 检查： `expiresIn` 为 7200（2小时）
+- 检查： `userId` 和 `username` 正确
 
 ---
 
@@ -91,9 +95,9 @@ curl -X POST http://localhost:8081/auth/v1/login \
 ```
 
 **验证点**:
-- ✅ HTTP 状态码 401
-- ✅ 返回错误提示
-- ✅ 数据库 `failed_login_attempts` 递增
+- 检查： HTTP 状态码 401
+- 检查： 返回错误提示
+- 检查： 数据库 `failed_login_attempts` 递增
 
 ---
 
@@ -119,9 +123,9 @@ done
 - 第5次: HTTP 403 "账户已锁定，请稍后重试"
 
 **验证点**:
-- ✅ 5次失败后账户锁定
-- ✅ `status` 设置为 2
-- ✅ `locked_until` 设置为 30 分钟后
+- 检查： 5次失败后账户锁定
+- 检查： `status` 设置为 2
+- 检查： `locked_until` 设置为 30 分钟后
 
 ---
 
@@ -138,7 +142,7 @@ RESPONSE=$(curl -s -X POST http://localhost:8081/auth/v1/login \
   }')
 
 REFRESH_TOKEN=$(echo $RESPONSE | jq -r '.refreshToken')
-echo "Refresh Token: $REFRESH_TOKEN"
+test -n "$REFRESH_TOKEN"
 ```
 
 **步骤2**: 使用 `refreshToken` 刷新
@@ -161,9 +165,9 @@ curl -X POST http://localhost:8081/auth/v1/refresh \
 ```
 
 **验证点**:
-- ✅ HTTP 状态码 200
-- ✅ 返回新的 `accessToken`
-- ✅ `refreshToken` 不变（不轮换）
+- 检查： HTTP 状态码 200
+- 检查： 返回新的 `accessToken`
+- 检查： `refreshToken` 轮换，旧令牌被撤销；保存新的 Access/Refresh Token
 
 ---
 
@@ -186,28 +190,19 @@ echo "User ID: $USER_ID"
 
 **步骤2**: 登出
 ```bash
-curl -X POST "http://localhost:8081/auth/v1/logout/$USER_ID?tenantId=default" \
-  -H "Content-Type: application/json"
+curl -X POST "http://localhost:8081/auth/v1/logout/$USER_ID" \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -o /dev/null -w "%{http_code}"
 ```
 
-**期望响应** (HTTP 200):
-```
-登出成功
-```
+**期望响应**：HTTP 200，空响应体。路径用户必须与 Token 用户一致；请求租户参数不能覆盖 Token 租户。
 
-**步骤3**: 验证 Token 已撤销
-```bash
-# 使用已撤销的 Token（需要实现受保护接口才能验证）
-curl -X GET http://localhost:8081/auth/v1/verify \
-  -H "Authorization: Bearer $ACCESS_TOKEN"
-```
-
-**期望**: HTTP 401 "Token已撤销"
+**步骤3**: 使用已撤销 Token 重试上面的登出请求，应被安全链拒绝。不要调用未注册的 `/auth/v1/verify`。同时检查同租户该用户的 Token 撤销记录。
 
 **验证点**:
-- ✅ 登出成功
-- ✅ 数据库 `auth_token` 表对应记录 `revoked=1`
-- ✅ 已撤销 Token 无法通过验证
+- 检查： 登出成功
+- 检查： 数据库 `auth_token` 表对应记录 `revoked=1`
+- 检查： 已撤销 Token 无法通过验证
 
 ---
 
@@ -230,8 +225,8 @@ curl -X POST http://localhost:8081/auth/v1/login \
 ```
 
 **验证点**:
-- ✅ 跨租户登录失败
-- ✅ 用户名匹配但租户不匹配时拒绝
+- 检查： 跨租户登录失败
+- 检查： 用户名匹配但租户不匹配时拒绝
 
 ---
 
@@ -253,7 +248,7 @@ ORDER BY created_at DESC
 LIMIT 10;
 ```
 
-### 查询审计日志（如果实现）
+### 查询审计日志
 ```sql
 SELECT user_id, event_type, event_status, client_ip, created_at
 FROM auth_audit_log
@@ -285,10 +280,10 @@ vi apex-auth-center/src/main/resources/application.yml
 -- 查看当前 Flyway 版本
 SELECT * FROM flyway_schema_history ORDER BY installed_rank DESC;
 
--- 如果需要清空重建
-DROP DATABASE apex_auth;
-CREATE DATABASE apex_auth CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
 ```
+
+当前激活迁移路径为 `classpath:db/migration/mysql`。先核对历史表、脚本版本及校验和，再按环境制定修复方案；不要直接删除数据库。
 
 ### Q3: 登录返回 500 错误
 **解决**:
@@ -314,66 +309,47 @@ echo "YOUR_TOKEN" | jq -R 'split(".") | .[1] | @base64d | fromjson'
 
 ---
 
-## 自动化测试脚本
+## 统一授权验证矩阵
+
+先在中心准备启用且未锁定的独立读取账号，将其 ID 配置到 `AUTH_CENTER_AUTHORIZATION_READER_USER_ID`，取得该账号的有效 ACCESS Token。主应用配置唯一映射与 HTTPS 入口；映射示例仅为结构示例，不会创建账号。
 
 ```bash
-#!/bin/bash
-# test-auth-center.sh - 自动化验证脚本
-
-BASE_URL="http://localhost:8081"
-
-echo "=== 测试1: 用户登录 ==="
-LOGIN_RESPONSE=$(curl -s -X POST $BASE_URL/auth/v1/login \
-  -H "Content-Type: application/json" \
-  -d '{
-    "username": "admin",
-    "password": "password123",
-    "tenantId": "default"
-  }')
-
-if echo "$LOGIN_RESPONSE" | jq -e '.accessToken' > /dev/null; then
-  echo "✅ 登录成功"
-  ACCESS_TOKEN=$(echo $LOGIN_RESPONSE | jq -r '.accessToken')
-  REFRESH_TOKEN=$(echo $LOGIN_RESPONSE | jq -r '.refreshToken')
-  USER_ID=$(echo $LOGIN_RESPONSE | jq -r '.userId')
-else
-  echo "❌ 登录失败"
-  echo "$LOGIN_RESPONSE"
-  exit 1
-fi
-
-echo ""
-echo "=== 测试2: Token 刷新 ==="
-REFRESH_RESPONSE=$(curl -s -X POST $BASE_URL/auth/v1/refresh \
-  -H "Content-Type: application/json" \
-  -d "{\"refreshToken\": \"$REFRESH_TOKEN\"}")
-
-if echo "$REFRESH_RESPONSE" | jq -e '.accessToken' > /dev/null; then
-  echo "✅ Token 刷新成功"
-else
-  echo "❌ Token 刷新失败"
-  echo "$REFRESH_RESPONSE"
-fi
-
-echo ""
-echo "=== 测试3: 用户登出 ==="
-LOGOUT_RESPONSE=$(curl -s -X POST "$BASE_URL/auth/v1/logout/$USER_ID?tenantId=default")
-
-if [ "$LOGOUT_RESPONSE" == "登出成功" ]; then
-  echo "✅ 登出成功"
-else
-  echo "❌ 登出失败: $LOGOUT_RESPONSE"
-fi
-
-echo ""
-echo "=== 所有测试完成 ==="
+curl --fail-with-body -sS "$AUTH_CENTER_HTTPS_URL/auth/v1/authorization/users/$CENTER_USER_ID" \
+  -H "Authorization: Bearer $AUTH_CENTER_READER_TOKEN" | jq '.data'
 ```
 
-**运行**:
+成功时核对 `data.tenantId`、`data.userId` 与中心映射一致，`permissions` 仅含有效权限编码，`roles` 含有效角色编码与范围。不要输出或保存真实 Token 到测试报告。
+
+| 场景 | 预期与检查点 |
+| --- | --- |
+| 开关关闭 | 主应用保持原有授权来源；中心故障不影响该分支 |
+| 开关开启、有效映射、缓存 0 | 权限与角色来自中心，不能依赖本地角色或 Token 中旧角色放行 |
+| 无 Token、失效 Token | 安全链拒绝请求；记录实际 HTTP 状态 |
+| 非读取账号的有效 Token | 403；管理员身份不能替代读取账号资格 |
+| 路径不是正整数 | 合资格读取账号请求返回 400 |
+| 读取账号/目标账号停用、锁定、软删除或跨租户 | 拒绝读取，不能返回授权快照 |
+| 主租户上下文缺失、映射缺失或重复 | 拒绝授权，不能默认按相同 ID 查询 |
+| 中心响应租户/用户不匹配、列表无效 | 客户端拒绝响应，不能回退本地权限 |
+| HTTPS 配置非法、中心不可达、超时、熔断 | 受保护主应用请求拒绝授权；超时 3 秒，无过期缓存降级 |
+| 缓存 0–30 秒 | 验证主租户/用户隔离、快照过期及撤权后的 TTL 延迟 |
+| TTL 小于 0 或大于 30 | `UnifiedAuthorizationService` 构造失败 |
+| 部门/自定义范围 | DEPT 与 DEPT_AND_CHILD 使用主应用已认证且启用的部门信息；CUSTOM、空值和未知中心范围拒绝，中心部门 ID 不直接用于主库 |
+
+本矩阵包含中心端 HTTP 和主应用服务/切面验证；远程异常的最终 HTTP 状态取决于调用路径的异常处理，不能把所有失败都断言为 403。
+
+## 自动化与文档检查
+
+从仓库根目录加载 `.sdkmanrc` 环境后运行。以下是待执行命令，不表示已经通过；服务联调另需数据库、缓存、账号与 HTTPS 入口。
+
 ```bash
-chmod +x test-auth-center.sh
-./test-auth-center.sh
+sdk env
+mvnd -pl apex-auth-center -am test
+mvnd -pl apex-auth-center -am spotless:check pmd:check
+bash scripts/ci/check-doc-consistency.sh
+bash scripts/ci/check-springdoc-coverage.sh
 ```
+
+已有针对性测试包括 `UnifiedAuthorizationQueryServiceTest`、`UnifiedAuthorizationHandlerTest`、主应用 `UnifiedAuthorizationServiceTest`、`AuthCenterPermissionClientTest`、`RequirePermissionAspectTest`、`JwtAuthenticationFilterTest` 和数据权限测试。SpringDoc 脚本当前扫描主应用，不能代替认证中心 Router 审计或运行时 `/v3/api-docs` 验证。
 
 ---
 
@@ -386,8 +362,11 @@ chmod +x test-auth-center.sh
 | 账户锁定 | ⬜ | |
 | Token 刷新 | ⬜ | |
 | 用户登出 | ⬜ | |
-| 租户隔离 | ⬜ | |
+| 租户隔离 | 未执行 | |
+| 统一授权与失败拒绝 | 未执行 | |
+| 缓存隔离与撤权延迟 | 未执行 | |
+| 运行时 OpenAPI 契约 | 未执行 | |
 
 **测试人**: ____________  
-**测试日期**: 2026-09-20  
+**测试日期**: ____________
 **版本**: v1.2.0

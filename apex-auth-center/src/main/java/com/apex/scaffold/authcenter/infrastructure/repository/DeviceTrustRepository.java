@@ -28,7 +28,7 @@ public interface DeviceTrustRepository extends ReactiveCrudRepository<DeviceTrus
      * @param userId TODO
      * @return TODO
      */
-    Flux<DeviceTrust> findByUserId(String userId);
+    Flux<DeviceTrust> findByUserIdAndTenantId(String userId, String tenantId);
 
     /**
      * 根据用户ID和设备ID查询
@@ -48,7 +48,7 @@ public interface DeviceTrustRepository extends ReactiveCrudRepository<DeviceTrus
      * @param deviceId TODO
      * @return TODO
      */
-    Mono<DeviceTrust> findByUserIdAndDeviceId(String userId, String deviceId);
+    Mono<DeviceTrust> findByUserIdAndDeviceIdAndTenantId(String userId, String deviceId, String tenantId);
 
     /**
      * 根据状态和过期时间查询

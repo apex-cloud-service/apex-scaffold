@@ -35,6 +35,8 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class RoleService {
 
+    private final UnifiedAuthorizationService unifiedAuthorizationService;
+
     /**
      * 角色仓储。
      *
@@ -62,6 +64,9 @@ public class RoleService {
      * @return 角色列表
      */
     public Mono<List<RoleEntity>> getRolesByUserId(Long userId) {
+        if (unifiedAuthorizationService != null && unifiedAuthorizationService.enabled()) {
+            return unifiedAuthorizationService.roles(userId);
+        }
         return roleRepository.findByUserId(userId);
     }
 

@@ -124,6 +124,7 @@ public class RuntimeLogHandler {
         @ApiResponse(responseCode = "400", description = "参数错误，例如时间格式不正确"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要 system:log:runtime:query 权限")
     })
+    @SuppressWarnings("PMD.MethodTooLongRule")
     public Mono<ServerResponse> queryLogs(ServerRequest request) {
         try {
             String startTimeStr = request.queryParam("startTime").orElse(null);
@@ -178,7 +179,6 @@ public class RuntimeLogHandler {
      * @param request HTTP请求
      * @return 日志数量
      */
-    @RequirePermission("system:log:runtime:query")
     @Operation(operationId = "countRuntimeLogs", summary = "统计运行时日志数量", description = "统计指定条件下的运行时日志总数，支持按时间范围和日志级别过滤")
     @io.swagger.v3.oas.annotations.Parameters({
         @Parameter(
@@ -200,6 +200,7 @@ public class RuntimeLogHandler {
                 in = ParameterIn.QUERY,
                 schema = @Schema(type = "string"))
     })
+    @RequirePermission("system:log:runtime:query")
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",

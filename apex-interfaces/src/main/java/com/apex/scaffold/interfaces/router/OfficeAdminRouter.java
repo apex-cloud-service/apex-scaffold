@@ -29,7 +29,6 @@ public class OfficeAdminRouter {
      * @param handler 办公平台管理端处理器
      * @return 路由函数
      */
-    @Bean
     @RouterOperations({
         @RouterOperation(
                 path = "/admin-api/v1/office/apps",
@@ -68,6 +67,8 @@ public class OfficeAdminRouter {
                 beanClass = OfficeAdminHandler.class,
                 beanMethod = "unbind")
     })
+    @Bean
+    @SuppressWarnings("PMD.MethodTooLongRule")
     public RouterFunction<ServerResponse> officeAdminRoutes(OfficeAdminHandler handler) {
         return SpringdocRouteBuilder.route()
                 .GET("/admin-api/v1/office/apps", handler::listApps, ops -> ops.operationId("listOfficeApps")

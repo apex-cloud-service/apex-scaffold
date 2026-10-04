@@ -69,7 +69,7 @@ import reactor.core.publisher.Mono;
  * @since 1.1.0
  * @see <a href="https://tools.ietf.org/html/rfc8414">RFC 8414</a>
  */
-@SuppressWarnings("checkstyle:TypeName")
+@SuppressWarnings({"checkstyle:TypeName", "PMD.ClassNamingShouldBeCamelRule"})
 @Slf4j
 @Component
 @RequiredArgsConstructor

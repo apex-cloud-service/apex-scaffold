@@ -76,25 +76,29 @@ public class BiometricAuthServiceImpl implements BiometricAuthService {
 
                     return biometricAuthRepository.save(auth);
                 })
-                .doOnSuccess(saved -> {
-                    auditLogService
-                            .log(
-                                    "BIOMETRIC_REGISTERED",
-                                    userId,
-                                    tenantId,
-                                    "注册生物识别认证: " + type + ", 设备: " + deviceName,
-                                    saved.getId().toString(),
-                                    null)
-                            .subscribe();
-                    log.info("用户注册生物识别: userId={}, type={}, device={}", userId, type, deviceName);
-                });
+                .flatMap(saved ->
+                        auditLogService
+                                .log(
+                                        "BIOMETRIC_REGISTERED",
+                                        userId,
+                                        tenantId,
+                                        "注册生物识别认证: " + type + ", 设备: " + deviceName,
+                                        saved.getId().toString(),
+                                        null)
+                                .thenReturn(saved))
+                .doOnNext(saved ->
+                        log.info("用户注册生物识别: userId={}, type={}, device={}", userId, type, deviceName));
     }
 
     @Override
     public Mono<Boolean> verifyBiometric(
-            String userId, BiometricAuth.BiometricType type, String challenge, String signature) {
+            String userId,
+            String tenantId,
+            BiometricAuth.BiometricType type,
+            String challenge,
+            String signature) {
         return biometricAuthRepository
-                .findByUserIdAndType(userId, type)
+                .findByUserIdAndTypeAndTenantId(userId, type, tenantId)
                 .flatMap(auth -> {
                     if (!auth.isActive()) {
                         return Mono.just(false);
@@ -105,7 +109,7 @@ public class BiometricAuthServiceImpl implements BiometricAuthService {
                     }
 
                     // 验证挑战是否存在且未过期
-                    return verifyChallenge(userId, challenge).flatMap(challengeValid -> {
+                    return verifyChallenge(userId, tenantId, challenge).flatMap(challengeValid -> {
                         if (!challengeValid) {
                             return Mono.just(false);
                         }
@@ -144,18 +148,17 @@ public class BiometricAuthServiceImpl implements BiometricAuthService {
                     auth.setUpdatedAt(LocalDateTime.now());
                     return biometricAuthRepository.save(auth);
                 })
-                .doOnSuccess(auth -> {
-                    auditLogService
-                            .log(
-                                    "BIOMETRIC_ENABLED",
-                                    operator,
-                                    auth.getTenantId(),
-                                    "启用生物识别: userId=" + auth.getUserId() + ", type=" + auth.getType(),
-                                    auth.getId().toString(),
-                                    null)
-                            .subscribe();
-                    log.info("启用生物识别: id={}, operator={}", id, operator);
-                })
+                .flatMap(auth ->
+                        auditLogService
+                                .log(
+                                        "BIOMETRIC_ENABLED",
+                                        operator,
+                                        auth.getTenantId(),
+                                        "启用生物识别: userId=" + auth.getUserId() + ", type=" + auth.getType(),
+                                        auth.getId().toString(),
+                                        null)
+                                .thenReturn(auth))
+                .doOnNext(auth -> log.info("启用生物识别: id={}, operator={}", id, operator))
                 .then();
     }
 
@@ -176,18 +179,17 @@ public class BiometricAuthServiceImpl implements BiometricAuthService {
                     auth.setUpdatedAt(LocalDateTime.now());
                     return biometricAuthRepository.save(auth);
                 })
-                .doOnSuccess(auth -> {
-                    auditLogService
-                            .log(
-                                    "BIOMETRIC_DISABLED",
-                                    operator,
-                                    auth.getTenantId(),
-                                    "禁用生物识别: userId=" + auth.getUserId() + ", type=" + auth.getType(),
-                                    auth.getId().toString(),
-                                    null)
-                            .subscribe();
-                    log.info("禁用生物识别: id={}, operator={}", id, operator);
-                })
+                .flatMap(auth ->
+                        auditLogService
+                                .log(
+                                        "BIOMETRIC_DISABLED",
+                                        operator,
+                                        auth.getTenantId(),
+                                        "禁用生物识别: userId=" + auth.getUserId() + ", type=" + auth.getType(),
+                                        auth.getId().toString(),
+                                        null)
+                                .thenReturn(auth))
+                .doOnNext(auth -> log.info("禁用生物识别: id={}, operator={}", id, operator))
                 .then();
     }
 
@@ -203,18 +205,16 @@ public class BiometricAuthServiceImpl implements BiometricAuthService {
     public Mono<Void> deleteBiometric(Long id, String operator) {
         return biometricAuthRepository
                 .findById(id)
-                .flatMap(auth -> {
-                    auditLogService
-                            .log(
-                                    "BIOMETRIC_DELETED",
-                                    operator,
-                                    auth.getTenantId(),
-                                    "删除生物识别: userId=" + auth.getUserId() + ", type=" + auth.getType(),
-                                    auth.getId().toString(),
-                                    null)
-                            .subscribe();
-                    return biometricAuthRepository.deleteById(id);
-                })
+                .flatMap(auth ->
+                        biometricAuthRepository
+                                .deleteById(id)
+                                .then(auditLogService.log(
+                                        "BIOMETRIC_DELETED",
+                                        operator,
+                                        auth.getTenantId(),
+                                        "删除生物识别: userId=" + auth.getUserId() + ", type=" + auth.getType(),
+                                        auth.getId().toString(),
+                                        null)))
                 .doOnSuccess(v -> log.info("删除生物识别: id={}, operator={}", id, operator));
     }
 
@@ -225,9 +225,9 @@ public class BiometricAuthServiceImpl implements BiometricAuthService {
      * @return 该用户的生物识别配置流
      */
     @Override
-    @Cacheable(value = "biometric-auth", key = "#userId")
-    public Flux<BiometricAuth> getUserBiometrics(String userId) {
-        return biometricAuthRepository.findByUserId(userId);
+    @Cacheable(value = "biometric-auth", key = "#tenantId + ':' + #userId")
+    public Flux<BiometricAuth> getUserBiometrics(String userId, String tenantId) {
+        return biometricAuthRepository.findByUserIdAndTenantId(userId, tenantId);
     }
 
     /**
@@ -237,9 +237,9 @@ public class BiometricAuthServiceImpl implements BiometricAuthService {
      * @return 存在激活状态的配置时为true，否则为false
      */
     @Override
-    public Mono<Boolean> isBiometricEnabled(String userId) {
+    public Mono<Boolean> isBiometricEnabled(String userId, String tenantId) {
         return biometricAuthRepository
-                .findByUserId(userId)
+                .findByUserIdAndTenantId(userId, tenantId)
                 .filter(BiometricAuth::isActive)
                 .hasElements();
     }
@@ -261,18 +261,17 @@ public class BiometricAuthServiceImpl implements BiometricAuthService {
                     auth.setUpdatedAt(LocalDateTime.now());
                     return biometricAuthRepository.save(auth);
                 })
-                .doOnSuccess(auth -> {
-                    auditLogService
-                            .log(
-                                    "BIOMETRIC_UNLOCKED",
-                                    operator,
-                                    auth.getTenantId(),
-                                    "解锁生物识别: userId=" + auth.getUserId() + ", type=" + auth.getType(),
-                                    auth.getId().toString(),
-                                    null)
-                            .subscribe();
-                    log.info("解锁生物识别: id={}, operator={}", id, operator);
-                })
+                .flatMap(auth ->
+                        auditLogService
+                                .log(
+                                        "BIOMETRIC_UNLOCKED",
+                                        operator,
+                                        auth.getTenantId(),
+                                        "解锁生物识别: userId=" + auth.getUserId() + ", type=" + auth.getType(),
+                                        auth.getId().toString(),
+                                        null)
+                                .thenReturn(auth))
+                .doOnNext(auth -> log.info("解锁生物识别: id={}, operator={}", id, operator))
                 .then();
     }
 
@@ -283,9 +282,9 @@ public class BiometricAuthServiceImpl implements BiometricAuthService {
      * @return 包含挑战串、用户ID和有效期的注册挑战对象
      */
     @Override
-    public Mono<RegistrationChallenge> createRegistrationChallenge(String userId) {
+    public Mono<RegistrationChallenge> createRegistrationChallenge(String userId, String tenantId) {
         String challenge = generateChallenge();
-        String key = CHALLENGE_PREFIX + userId + ":registration";
+        String key = CHALLENGE_PREFIX + tenantId + ":" + userId + ":registration";
 
         return redisTemplate
                 .opsForValue()
@@ -300,9 +299,9 @@ public class BiometricAuthServiceImpl implements BiometricAuthService {
      * @return 包含挑战串和有效期的认证挑战对象
      */
     @Override
-    public Mono<AuthenticationChallenge> createAuthenticationChallenge(String userId) {
+    public Mono<AuthenticationChallenge> createAuthenticationChallenge(String userId, String tenantId) {
         String challenge = generateChallenge();
-        String key = CHALLENGE_PREFIX + userId + ":authentication";
+        String key = CHALLENGE_PREFIX + tenantId + ":" + userId + ":authentication";
 
         return redisTemplate
                 .opsForValue()
@@ -322,20 +321,19 @@ public class BiometricAuthServiceImpl implements BiometricAuthService {
     /**
      * 验证挑战是否有效
      */
-    private Mono<Boolean> verifyChallenge(String userId, String challenge) {
-        String key = CHALLENGE_PREFIX + userId + ":authentication";
+    private Mono<Boolean> verifyChallenge(String userId, String tenantId, String challenge) {
+        String key = CHALLENGE_PREFIX + tenantId + ":" + userId + ":authentication";
 
         return redisTemplate
                 .opsForValue()
                 .get(key)
-                .map(storedChallenge -> storedChallenge.equals(challenge))
-                .defaultIfEmpty(false)
-                .doOnNext(valid -> {
-                    if (valid) {
-                        // 验证后删除挑战
-                        redisTemplate.delete(key).subscribe();
+                .flatMap(storedChallenge -> {
+                    if (!storedChallenge.equals(challenge)) {
+                        return Mono.just(false);
                     }
-                });
+                    return redisTemplate.delete(key).thenReturn(true);
+                })
+                .defaultIfEmpty(false);
     }
 
     /**

@@ -29,10 +29,18 @@ public class GenConfigRequest {
     @NotNull(message = "数据源 ID 不能为空")
     private Long datasourceId;
 
+    private String configName;
+
     @Schema(description = "表名", example = "sys_user", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "表名不能为空")
     @Size(max = 200, message = "表名长度不能超过200")
     private String tableName;
+
+    private String tableNames;
+
+    private String templateIds;
+
+    private String extraConfig;
 
     @Schema(description = "实体类名", example = "User", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "实体类名不能为空")

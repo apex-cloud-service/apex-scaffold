@@ -39,7 +39,12 @@ public interface BiometricAuthService {
      * @param signature 签名
      * @return 验证是否成功
      */
-    Mono<Boolean> verifyBiometric(String userId, BiometricAuth.BiometricType type, String challenge, String signature);
+    Mono<Boolean> verifyBiometric(
+            String userId,
+            String tenantId,
+            BiometricAuth.BiometricType type,
+            String challenge,
+            String signature);
 
     /**
      * 启用生物识别认证
@@ -114,7 +119,7 @@ public interface BiometricAuthService {
      * @param userId TODO
      * @return TODO
      */
-    Flux<BiometricAuth> getUserBiometrics(String userId);
+    Flux<BiometricAuth> getUserBiometrics(String userId, String tenantId);
 
     /**
      * 检查用户是否启用了生物识别
@@ -129,7 +134,7 @@ public interface BiometricAuthService {
      * @param userId TODO
      * @return TODO
      */
-    Mono<Boolean> isBiometricEnabled(String userId);
+    Mono<Boolean> isBiometricEnabled(String userId, String tenantId);
 
     /**
      * 解锁生物识别
@@ -164,7 +169,7 @@ public interface BiometricAuthService {
      * @param userId TODO
      * @return TODO
      */
-    Mono<RegistrationChallenge> createRegistrationChallenge(String userId);
+    Mono<RegistrationChallenge> createRegistrationChallenge(String userId, String tenantId);
 
     /**
      * 生成WebAuthn认证挑战
@@ -179,7 +184,7 @@ public interface BiometricAuthService {
      * @param userId TODO
      * @return TODO
      */
-    Mono<AuthenticationChallenge> createAuthenticationChallenge(String userId);
+    Mono<AuthenticationChallenge> createAuthenticationChallenge(String userId, String tenantId);
 
     /**
      * WebAuthn注册挑战

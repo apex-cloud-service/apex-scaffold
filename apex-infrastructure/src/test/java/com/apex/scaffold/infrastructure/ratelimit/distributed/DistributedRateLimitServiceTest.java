@@ -89,6 +89,17 @@ class DistributedRateLimitServiceTest {
     }
 
     @Test
+    void testTryAcquire_RedisError_FallbackToLocal_RejectsAfterCapacity() {
+        properties.getRules().get(0).setCapacity(2);
+        when(rateLimiter.tryAcquire(anyString(), anyLong(), anyDouble(), anyInt()))
+                .thenReturn(Mono.error(new RuntimeException("Redis error")));
+
+        StepVerifier.create(service.tryAcquire("/api/v1/users").repeat(2))
+                .expectNext(true, true, false)
+                .verifyComplete();
+    }
+
+    @Test
     void testTryAcquire_RedisError_NoFallback_Reject() {
         when(rateLimiter.tryAcquire(anyString(), anyLong(), anyDouble(), anyInt()))
                 .thenReturn(Mono.error(new RuntimeException("Redis error")));

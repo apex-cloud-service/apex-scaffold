@@ -2,6 +2,7 @@ package com.apex.scaffold.common.audit;
 
 import java.util.HashMap;
 import java.util.Map;
+import com.apex.scaffold.common.util.TraceIdUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -37,6 +38,19 @@ class SecurityAuditServiceImplTest {
         StepVerifier.create(securityAuditService.logLoginSuccess(
                         1L, "admin", "tenant1", "192.168.1.1", "Mozilla/5.0", "device-001"))
                 .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("审计事件读取当前TraceId")
+    void testAuditEventUsesCurrentTraceId() {
+        String traceId = "audit-trace-001";
+        TraceIdUtil.setTraceId(traceId);
+
+        StepVerifier.create(securityAuditService.logSecurityEvent(
+                        "TRACE_EVENT", "trace event", 1L, "admin", "tenant1", "test")
+                .contextWrite(TraceIdUtil.withTraceIdContext(traceId)))
+                .verifyComplete();
+        TraceIdUtil.clear();
     }
 
     @Test

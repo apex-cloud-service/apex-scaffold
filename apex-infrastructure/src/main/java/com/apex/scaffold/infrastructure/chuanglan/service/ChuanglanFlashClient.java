@@ -6,6 +6,7 @@ import com.apex.scaffold.infrastructure.chuanglan.exception.ChuanglanApiExceptio
 import com.apex.scaffold.infrastructure.chuanglan.strategy.PhoneDecryptStrategy;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
@@ -30,8 +31,6 @@ public final class ChuanglanFlashClient {
     /** 闪验成功响应码。 */
     private static final String SUCCESS_CODE = "200000";
 
-    /** 当前支持的 AES 加密类型。 */
-    private static final String AES_ENCRYPT_TYPE = "0";
     /** JSON 序列化中 null 值的字符串表示。 */
     private static final String NULL_STRING = "null";
 
@@ -86,8 +85,10 @@ public final class ChuanglanFlashClient {
         ChuanglanProperties.FlashPlatform platformConfig = config.getPlatformConfig(platform);
         String effectiveEncryptType =
                 encryptType == null || encryptType.isBlank() ? config.getEncryptType() : encryptType;
-        if (!AES_ENCRYPT_TYPE.equals(effectiveEncryptType)) {
-            return Mono.error(new ChuanglanApiException("UNSUPPORTED_ENCRYPT_TYPE", "当前服务仅支持AES手机号解密(encryptType=0)"));
+        if (!Objects.equals(effectiveEncryptType, decryptStrategy.getEncryptType())) {
+            return Mono.error(new ChuanglanApiException(
+                    "UNSUPPORTED_ENCRYPT_TYPE",
+                    "未配置手机号解密策略: encryptType=" + effectiveEncryptType));
         }
         // 使用 MultiValueMap 而非 LinkedHashMap：Spring WebFlux 的 FormHttpMessageWriter
         // 只能序列化 MultiValueMap，bodyValue(LinkedHashMap) + form-urlencoded 会抛 UnsupportedMediaTypeException

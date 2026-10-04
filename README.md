@@ -39,6 +39,14 @@ Apex Scaffold 是一款基于 **Spring Boot 3** + **Spring WebFlux** + **DDD领�
 
 ***
 
+### 独立认证中心与统一授权
+
+`apex-interfaces` 与 `apex-auth-center` 分别启动，拥有独立 Spring ApplicationContext；主应用扫描排除 `com.apex.scaffold.authcenter..*`。主应用保留 `/api/v1/auth/*` 的 JWT 身份认证，认证中心提供 `/auth/v1/*` 接口。
+
+`apex.features.auth-center-permission` 默认关闭。开启后，权限、角色和数据范围经领域端口 `UnifiedAuthorizationGateway`，由 HTTPS 适配器查询 `GET /auth/v1/authorization/users/{userId}`。服务端必须配置唯一的用户/租户映射和专用读取账号 ACCESS Token；远程失败拒绝授权。缓存默认禁用，TTL 为 0–30 秒。中心支持 `SELF`、`ALL`、`DEPT`、`DEPT_AND_CHILD`；`CUSTOM`、空值和未知范围拒绝。
+
+详见 [认证中心 README](apex-auth-center/README.md)、[验证指南](apex-auth-center/TESTING.md)、[配置说明](docs/05-operations/configuration.md#认证中心统一授权)及[登录与授权时序](docs/architecture/business-flows.md)。这些说明反映当前代码，不表示已完成部署、生产数据迁移或联调验证。
+
 ## 🏗️ 系统架构图示
 
 ### DDD 四层逻辑架构图
@@ -168,7 +176,7 @@ Apex Scaffold 是一款基于 **Spring Boot 3** + **Spring WebFlux** + **DDD领�
 
 | 技术             | 说明        |
 | -------------- | --------- |
-| Maven          | 3.9.x构建工具 |
+| Maven Daemon   | 2.0.0-rc-3（mvnd） |
 | Docker         | 容器化       |
 | Docker Compose | 本地编排      |
 | Kubernetes     | 生产编排(可选)  |
@@ -182,7 +190,7 @@ Apex Scaffold 是一款基于 **Spring Boot 3** + **Spring WebFlux** + **DDD领�
 
 - **JDK**: 17+
 
-- **Maven**: 3.9+
+- **Maven Daemon**: 2.0.0-rc-3，使用 SDKMAN 加载 `.sdkmanrc`
 
 - **MySQL**: 8.0+
 
@@ -259,7 +267,7 @@ sdk install mvnd 2.0.0-rc-3
 
 ### 5. 启动后端
 
-**方式 1: 使用 mvnd（推荐，速度快 3 倍）**
+**方式 1: 使用 mvnd**
 
 ```bash
 mvnd spring-boot:run

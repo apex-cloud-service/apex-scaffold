@@ -69,7 +69,6 @@ public class WorkflowRouter {
      * @param handler WorkflowHandler
      * @return RouterFunction
      */
-    @Bean
     @RouterOperations({
         @RouterOperation(
                 path = "/admin-api/v1/workflows/instances",
@@ -180,6 +179,7 @@ public class WorkflowRouter {
                                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
                                 }))
     })
+    @Bean
     public RouterFunction<ServerResponse> adminWorkflowQueryRoutes(WorkflowHandler handler) {
         return RouterFunctions.route()
                 .path("/admin-api/v1/workflows", builder -> builder.GET("/instances", handler::listInstances)
@@ -197,7 +197,6 @@ public class WorkflowRouter {
      * @param handler WorkflowHandler
      * @return RouterFunction
      */
-    @Bean
     @RouterOperations({
         @RouterOperation(
                 path = "/api/v1/workflows/{workflowCode}/instances",
@@ -302,6 +301,7 @@ public class WorkflowRouter {
                                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
                                 }))
     })
+    @Bean
     public RouterFunction<ServerResponse> workflowApiRoutes(WorkflowHandler handler) {
         return RouterFunctions.route()
                 .path("/api/v1/workflows", builder -> builder.POST(
@@ -321,7 +321,6 @@ public class WorkflowRouter {
      * @param handler WorkflowHandler
      * @return RouterFunction
      */
-    @Bean
     @RouterOperations({
         @RouterOperation(
                 path = "/api/workflow/tasks/{taskId}/rollback",
@@ -504,6 +503,7 @@ public class WorkflowRouter {
                                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
                                 }))
     })
+    @Bean
     public RouterFunction<ServerResponse> workflowRoutes(WorkflowHandler handler) {
         return RouterFunctions.route()
                 .path("/api/workflow", builder -> builder.POST(

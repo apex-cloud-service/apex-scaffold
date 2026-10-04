@@ -160,7 +160,7 @@ public interface IpAccessControlService {
      * @param operator TODO
      * @return TODO
      */
-    Mono<Void> enableRule(Long ruleId, String operator);
+    Mono<Void> enableRule(Long ruleId, String tenantId, String operator);
 
     /**
      * 禁用规则
@@ -180,7 +180,7 @@ public interface IpAccessControlService {
      * @param operator TODO
      * @return TODO
      */
-    Mono<Void> disableRule(Long ruleId, String operator);
+    Mono<Void> disableRule(Long ruleId, String tenantId, String operator);
 
     /**
      * 删除规则
@@ -200,7 +200,7 @@ public interface IpAccessControlService {
      * @param operator TODO
      * @return TODO
      */
-    Mono<Void> deleteRule(Long ruleId, String operator);
+    Mono<Void> deleteRule(Long ruleId, String tenantId, String operator);
 
     /**
      * 批量导入规则

@@ -4,6 +4,8 @@ import com.apex.scaffold.authcenter.application.assembler.SessionAssembler;
 import com.apex.scaffold.authcenter.application.service.SessionService;
 import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.annotation.OperationLog.OperationType;
+import com.apex.scaffold.common.annotation.RequireAdminRole;
+import com.apex.scaffold.common.annotation.RequireResourcePermission;
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.common.util.TraceIdUtil;
@@ -17,6 +19,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
+import com.apex.scaffold.common.context.TenantContext;
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import reactor.core.publisher.Mono;
 
 /**
@@ -146,6 +150,8 @@ public class SessionHandler {
      * @return 操作成功返回空响应体
      */
     @OperationLog(module = "会话管理", type = OperationType.DELETE, description = "终止会话")
+    @RequireAdminRole
+    @RequireResourcePermission(resourceType = "session", resourceIdExpression = "#request.pathVariable('sessionId')", permission = "MANAGE", errorMessage = "无权终止该会话")
     @Operation(operationId = "terminateSession", summary = "终止会话", description = "强制终止指定会话，token立即失效，用户需重新登录")
     @Parameter(name = "sessionId", description = "会话ID", required = true, example = "session_abc123xyz")
     @ApiResponse(
@@ -158,7 +164,7 @@ public class SessionHandler {
             content = @Content(schema = @Schema(implementation = Result.class)))
     @ApiResponse(
             responseCode = "403",
-            description = "权限不足 - 只能终止自己的会话或需要管理员权限",
+            description = "权限不足 - 需要管理员权限",
             content = @Content(schema = @Schema(implementation = Result.class)))
     @ApiResponse(
             responseCode = "500",
@@ -206,6 +212,8 @@ public class SessionHandler {
      * @return 操作成功返回空响应体
      */
     @OperationLog(module = "会话管理", type = OperationType.DELETE, description = "批量下线用户所有会话")
+    @RequireAdminRole
+    @RequireResourcePermission(resourceType = "user-sessions", resourceIdExpression = "#request.pathVariable('userId')", permission = "MANAGE", errorMessage = "无权终止该用户的会话")
     @Operation(
             operationId = "terminateUserSessions",
             summary = "批量下线用户所有会话",
@@ -230,9 +238,13 @@ public class SessionHandler {
             content = @Content(schema = @Schema(implementation = Result.class)))
     public Mono<ServerResponse> terminateUserSessions(ServerRequest request) {
         String userId = request.pathVariable("userId");
-        String tenantId = request.queryParam("tenantId").orElse("default");
-        return sessionService
-                .terminateUserSessions(Long.parseLong(userId), tenantId)
+        return ReactiveSecurityContextHolder.getContext()
+                .map(securityContext -> securityContext.getAuthentication().getDetails())
+                .ofType(String.class)
+                .switchIfEmpty(Mono.defer(() -> Mono.justOrEmpty(TenantContext.currentTenantId().orElse(null))))
+                .switchIfEmpty(Mono.error(new IllegalStateException("tenant context is required")))
+                .flatMap(tenantId -> sessionService
+                        .terminateUserSessions(Long.parseLong(userId), tenantId))
                 .then(buildSuccess(null))
                 .onErrorResume(this::handleError);
     }

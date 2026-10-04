@@ -4,6 +4,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyNoInteractions;
 
+import com.apex.scaffold.authcenter.infrastructure.persistence.po.PermissionPO;
+import com.apex.scaffold.authcenter.infrastructure.persistence.po.RolePO;
+import com.apex.scaffold.infrastructure.persistence.po.UserRolePO;
+import com.apex.scaffold.domain.model.entity.UserRoleEntity;
+import com.apex.scaffold.infrastructure.persistence.converter.UserRolePoConverter;
 import com.apex.scaffold.common.context.TenantContext;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.baomidou.mybatisplus.core.MybatisConfiguration;
@@ -78,6 +83,26 @@ class PersistenceContractTest {
         assertThat(table.isWithLogicDelete()).isTrue();
         assertThat(table.getLogicDeleteSql(false, true)).contains("deleted=0");
         assertThat(table.getLogicDeleteSql(false, false)).contains("deleted=1");
+    }
+
+    @Test
+    void authorizationPOsReflectSchemaColumnNamesAndFields() throws Exception {
+        var resourceField = PermissionPO.class.getDeclaredField("resourceIdentifier");
+        assertThat(resourceField
+                        .getAnnotation(com.baomidou.mybatisplus.annotation.TableField.class)
+                        .value())
+                .isEqualTo("resource");
+        assertThat(RolePO.class.getDeclaredField("dataScope")).isNotNull();
+        assertThat(RolePO.class.getDeclaredField("tenantId")).isNotNull();
+        assertThat(PermissionPO.class.getDeclaredField("tenantId")).isNotNull();
+    }
+
+    @Test
+    void userRoleTenantIdIsMappedAcrossDomainAndPersistence() throws Exception {
+        assertThat(UserRoleEntity.class.getDeclaredField("tenantId")).isNotNull();
+        assertThat(UserRolePO.class.getDeclaredField("tenantId")).isNotNull();
+        assertThat(UserRolePoConverter.class.getMethod("toPo", UserRoleEntity.class)).isNotNull();
+        assertThat(UserRolePoConverter.class.getMethod("toEntity", UserRolePO.class)).isNotNull();
     }
 
     @Test

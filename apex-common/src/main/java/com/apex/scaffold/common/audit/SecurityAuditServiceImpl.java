@@ -1,5 +1,6 @@
 package com.apex.scaffold.common.audit;
 
+import com.apex.scaffold.common.util.TraceIdUtil;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -628,40 +629,44 @@ public class SecurityAuditServiceImpl implements SecurityAuditService {
      * @return 始终返回 {@link Mono#empty()}，代表日志写入已完成（同步操作，不会失败）
      */
     private Mono<Void> logAuditEvent(AuditEvent event) {
-        event.setTimestamp(LocalDateTime.now());
+        return Mono.deferContextual(context -> {
+            event.setTimestamp(LocalDateTime.now());
 
-        // 结构化日志输出（支持日志采集系统解析）
-        Map<String, Object> logData = new HashMap<>(16);
-        logData.put("eventType", event.getEventType());
-        logData.put("timestamp", event.getTimestamp());
-        logData.put("success", event.isSuccess());
-        logData.put("severity", event.getSeverity());
+            Map<String, Object> logData = new HashMap<>(16);
+            if (event.getMetadata() != null) {
+                logData.putAll(event.getMetadata());
+            }
+            logData.put("eventType", event.getEventType());
+            logData.put("timestamp", event.getTimestamp());
+            logData.put("success", event.isSuccess());
+            logData.put("severity", event.getSeverity());
+            logData.put("traceId", TraceIdUtil.getTraceId(context));
 
-        if (event.getUserId() != null) {
-            logData.put("userId", event.getUserId());
-        }
-        if (event.getUsername() != null) {
-            logData.put("username", event.getUsername());
-        }
-        if (event.getTenantId() != null) {
-            logData.put("tenantId", event.getTenantId());
-        }
-        if (event.getClientIp() != null) {
-            logData.put("clientIp", event.getClientIp());
-        }
-        if (event.getDeviceId() != null) {
-            logData.put("deviceId", event.getDeviceId());
-        }
-        if (event.getReason() != null) {
-            logData.put("reason", event.getReason());
-        }
-        if (event.getMetadata() != null) {
-            logData.putAll(event.getMetadata());
-        }
+            if (event.getUserId() != null) {
+                logData.put("userId", event.getUserId());
+            }
+            if (event.getUsername() != null) {
+                logData.put("username", event.getUsername());
+            }
+            if (event.getTenantId() != null) {
+                logData.put("tenantId", event.getTenantId());
+            }
+            if (event.getClientIp() != null) {
+                logData.put("clientIp", event.getClientIp());
+            }
+            if (event.getUserAgent() != null) {
+                logData.put("userAgent", event.getUserAgent());
+            }
+            if (event.getDeviceId() != null) {
+                logData.put("deviceId", event.getDeviceId());
+            }
+            if (event.getReason() != null) {
+                logData.put("reason", event.getReason());
+            }
 
-        log.info("SECURITY_AUDIT: {} | {}", event.getEventType(), event.getMessage(), logData);
-
-        return Mono.empty();
+            log.info("SECURITY_AUDIT: {} | {} | {}", event.getEventType(), event.getMessage(), logData);
+            return Mono.empty();
+        });
     }
 
     /**

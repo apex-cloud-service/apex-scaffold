@@ -1,5 +1,6 @@
 package com.apex.scaffold.infrastructure.ratelimit.distributed;
 
+import com.apex.scaffold.common.util.ratelimit.LocalRateLimiter;
 import com.apex.scaffold.infrastructure.ratelimit.distributed.DistributedRateLimitProperties.RateLimitRule;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -98,14 +99,28 @@ public class DistributedRateLimitService {
 
                     // 根据配置决定是否降级到本地限流
                     if (properties.isFallbackToLocal()) {
-                        log.warn("Redis 不可用，降级到本地限流（暂时放行）");
-                        return Mono.just(true); // 简化实现：暂时放行
-                        // TODO: 集成本地限流器作为降级
+                        log.warn("Redis 不可用，降级到本地限流，资源: {}", resource);
+                        LocalRateLimiter localRateLimiter = LocalRateLimiter.of(
+                                localLimiterKey(resource, rule),
+                                Math.toIntExact(rule.getCapacity()),
+                                localWindowMs(rule));
+                        return Mono.fromSupplier(() -> localRateLimiter.tryAcquire(permits));
                     } else {
                         // 快速失败：Redis 故障时拒绝请求
                         return Mono.just(false);
                     }
                 });
+    }
+
+    private String localLimiterKey(String resource, RateLimitRule rule) {
+        return resource + ":" + rule.getCapacity() + ":" + rule.getRefillRate();
+    }
+
+    private long localWindowMs(RateLimitRule rule) {
+        if (rule.getRefillRate() <= 0) {
+            return 1000L;
+        }
+        return Math.max(1000L, Math.round(1000d * rule.getCapacity() / rule.getRefillRate()));
     }
 
     /**

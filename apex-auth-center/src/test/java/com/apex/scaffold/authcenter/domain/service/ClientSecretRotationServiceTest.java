@@ -185,6 +185,25 @@ class ClientSecretRotationServiceTest {
     }
 
     @Test
+    @DisplayName("验证客户端密钥 - 安全审计失败向调用方传播")
+    void testValidateClientSecret_AuditFailurePropagates() {
+        String clientId = "test-client";
+        String clientSecret = "wrong-secret";
+        RuntimeException auditFailure = new RuntimeException("audit unavailable");
+
+        when(valueOperations.get("oauth2:client:test-client:secret:current"))
+                .thenReturn(Mono.just("correct-hash"));
+        when(valueOperations.get("oauth2:client:test-client:secret:pending"))
+                .thenReturn(Mono.just("another-hash"));
+        when(auditService.logSecurityEvent(any(), any(), any(), any(), any(), any(), any()))
+                .thenReturn(Mono.error(auditFailure));
+
+        StepVerifier.create(service.validateClientSecret(clientId, clientSecret))
+                .expectErrorMatches(error -> error == auditFailure)
+                .verify();
+    }
+
+    @Test
     @DisplayName("清理过期密钥 - 已超过宽限期")
     void testCleanupExpiredSecrets_Expired() {
         String clientId = "test-client";

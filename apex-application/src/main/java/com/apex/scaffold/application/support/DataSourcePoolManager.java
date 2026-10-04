@@ -56,9 +56,10 @@ public class DataSourcePoolManager {
      * @param password 密码
      * @return 数据源实例
      */
-    public Mono<DataSource> getOrCreateDataSource(Long datasourceId, String jdbcUrl, String username, String password) {
+    public Mono<DataSource> getOrCreateDataSource(
+            String tenantId, Long datasourceId, String jdbcUrl, String username, String password) {
         return Mono.fromCallable(() -> {
-            String key = buildKey(datasourceId, jdbcUrl, username);
+            String key = buildKey(tenantId, datasourceId, jdbcUrl, username);
 
             HikariDataSource dataSource = DATA_SOURCE_POOL.computeIfAbsent(key, k -> {
                 HikariConfig config = new HikariConfig();
@@ -123,9 +124,9 @@ public class DataSourcePoolManager {
      *
      * @param datasourceId 数据源 ID
      */
-    public void closeDataSource(Long datasourceId) {
+    public void closeDataSource(String tenantId, Long datasourceId) {
         DATA_SOURCE_POOL.entrySet().removeIf(entry -> {
-            if (entry.getKey().startsWith(datasourceId + HYPHEN_SEPARATOR)) {
+            if (entry.getKey().startsWith(tenantId + HYPHEN_SEPARATOR + datasourceId + HYPHEN_SEPARATOR)) {
                 HikariDataSource ds = entry.getValue();
                 if (!ds.isClosed()) {
                     ds.close();
@@ -158,7 +159,7 @@ public class DataSourcePoolManager {
      * @param username 用户名
      * @return 唯一键
      */
-    private String buildKey(Long datasourceId, String jdbcUrl, String username) {
-        return datasourceId + HYPHEN_SEPARATOR + jdbcUrl + HYPHEN_SEPARATOR + username;
+    private String buildKey(String tenantId, Long datasourceId, String jdbcUrl, String username) {
+        return tenantId + HYPHEN_SEPARATOR + datasourceId + HYPHEN_SEPARATOR + jdbcUrl + HYPHEN_SEPARATOR + username;
     }
 }

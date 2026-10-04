@@ -43,7 +43,7 @@ public interface DeviceTrustService {
      * @param deviceId 设备ID
      * @return 信任级别
      */
-    Mono<DeviceTrust.TrustLevel> verifyDeviceTrust(String userId, String deviceId);
+    Mono<DeviceTrust.TrustLevel> verifyDeviceTrust(String userId, String tenantId, String deviceId);
 
     /**
      * 更新设备使用信息
@@ -73,7 +73,7 @@ public interface DeviceTrustService {
      * @param location TODO
      * @return TODO
      */
-    Mono<Void> updateDeviceUsage(String userId, String deviceId, String ip, String location);
+    Mono<Void> updateDeviceUsage(String userId, String tenantId, String deviceId, String ip, String location);
 
     /**
      * 提升设备信任级别
@@ -148,7 +148,7 @@ public interface DeviceTrustService {
      * @param userId TODO
      * @return TODO
      */
-    Flux<DeviceTrust> getUserTrustedDevices(String userId);
+    Flux<DeviceTrust> getUserTrustedDevices(String userId, String tenantId);
 
     /**
      * 检查设备是否可信
@@ -168,7 +168,7 @@ public interface DeviceTrustService {
      * @param deviceId TODO
      * @return TODO
      */
-    Mono<Boolean> isDeviceTrusted(String userId, String deviceId);
+    Mono<Boolean> isDeviceTrusted(String userId, String tenantId, String deviceId);
 
     /**
      * 计算设备风险评分
@@ -194,7 +194,7 @@ public interface DeviceTrustService {
      * @param location 当前位置
      * @return 是否异常
      */
-    Mono<Boolean> detectDeviceAnomaly(String userId, String deviceId, String ip, String location);
+    Mono<Boolean> detectDeviceAnomaly(String userId, String tenantId, String deviceId, String ip, String location);
 
     /**
      * 清理过期设备

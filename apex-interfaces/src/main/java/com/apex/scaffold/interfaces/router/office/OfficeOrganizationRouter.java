@@ -52,7 +52,6 @@ public class OfficeOrganizationRouter {
      *
      * @return 路由函数
      */
-    @Bean
     @RouterOperations({
         @RouterOperation(
                 path = BASE_PATH + "/sync",
@@ -201,6 +200,7 @@ public class OfficeOrganizationRouter {
                                 },
                                 responses = {@ApiResponse(responseCode = "200", description = "查询成功")}))
     })
+    @Bean
     public RouterFunction<ServerResponse> officeOrganizationRoutes() {
         return RouterFunctions.route()
                 .path(BASE_PATH, builder -> builder.POST(

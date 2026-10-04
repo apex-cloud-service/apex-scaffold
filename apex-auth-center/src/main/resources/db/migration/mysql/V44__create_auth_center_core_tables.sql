@@ -1,5 +1,5 @@
 -- ============================================================
--- Flyway迁移脚本：V1__create_auth_center_core_tables.sql
+-- Flyway迁移脚本：V44__create_auth_center_core_tables.sql
 -- 描述：创建统一认证授权中心核心数据表
 -- 作者：Apex Team
 -- 日期：2026-09-20

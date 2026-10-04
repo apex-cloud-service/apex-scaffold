@@ -2,7 +2,7 @@
 
 > 文档版本: v1.0
 > 创建时间: 2026-09-03
-> 适用版本: apex-scaffold v2.5.0+
+> 适用范围: 当前工作区授权实现；其他业务章节保留既有设计说明
 
 > **配套流程图**:
 > - [JWT 登录认证流程图](../diagrams/04_login_authentication_flow.svg)
@@ -28,358 +28,83 @@
 
 ## 二、用户登录认证流程
 
-### 2.1 流程概述
+### 2.1 两个独立入口
 
-**目标**: 验证用户身份,签发JWT Token,建立会话
+| 运行边界 | 登录 / 刷新 / 登出 | 身份与响应 |
+| --- | --- | --- |
+| 主应用 `apex-interfaces` | `POST /api/v1/auth/login`、`/api/v1/auth/refresh`、`/api/v1/auth/logout` | 原有 `AuthHandler -> AuthService` 登录策略链与主应用用户身份 |
+| 认证中心 `apex-auth-center`（默认 8081） | `POST /auth/v1/login`、`/auth/v1/refresh`、`/auth/v1/logout/{userId}` | 独立认证中心身份；登录直接返回 `LoginResponse`，刷新直接返回 `TokenPair` |
 
-**涉及组件**:
-- 前端: Vue 3 + Axios
-- 后端: Spring WebFlux + JWT
-- 数据库: MySQL (sys_user表)
-- 缓存: Redis (Token存储)
+主应用通过组件扫描排除 `com.apex.scaffold.authcenter..*`，两个入口不属于同一 Spring ApplicationContext。统一授权开关不把主应用登录迁入认证中心，也不让主应用直接信任中心用户 ID。
 
-**认证方式**:
-1. 账号密码登录 (username + password)
-2. 微信登录 (OpenID + UnionID)
-3. 手机号登录 (phone + 验证码)
+### 2.2 认证中心登录与 Token 生命周期
 
-### 2.2 账号密码登录流程
+`AuthenticationHandler.login` 接收用户名、密码、租户和可选设备 ID，调用 `AuthenticationApplicationService.login`；认证服务检查用户和凭据，再通过 `TokenServiceImpl` 签发与存储 Token。默认 Access Token 有效期由 `jwt.expiration=7200000` 指定，Refresh Token 由 `jwt.refresh-expiration=604800000` 指定。
 
-#### 2.2.1 前端流程
+`POST /auth/v1/refresh` 请求体为 `{ "refreshToken": "..." }`。实际 `TokenServiceImpl.refreshToken` 校验令牌类型，撤销旧 Refresh Token，再签发新 Token 对；客户端必须保存新的两种令牌。应用服务中旧的“不轮换”注释不代表实际行为。
 
-**Step 1**: 用户输入
-- 用户在登录页面输入`username`和`password`
-- 前端进行基础校验(非空、长度)
+`POST /auth/v1/logout/{userId}` 携带 Bearer ACCESS Token。路径 ID 必须与认证用户一致，租户取自认证上下文；撤销该用户在该租户的全部 Token，成功返回 HTTP 200 空响应体。实际测试步骤和开发种子前提见[认证中心验证指南](../../apex-auth-center/TESTING.md)。
 
-**Step 2**: 提交登录请求
-```javascript
-POST /admin-api/v1/auth/login
-Content-Type: application/json
+## 三、权限校验与统一授权流程
 
-{
-  "username": "admin",
-  "password": "123456"
-}
+### 3.1 授权来源和信任边界
+
+`apex.features.auth-center-permission=false` 为默认值，保留原有本地权限与角色分支。开启后，`PermissionService`、`RoleService` 通过 `UnifiedAuthorizationService` 获取中心授权；JWT 角色构造、`@RequirePermission` 与数据权限链据此使用中心授权来源。主应用数据库用户及可信 Reactor 租户上下文确定主身份，客户端租户头不能替代可信身份。
+
+领域端口 `UnifiedAuthorizationGateway` 由 `AuthCenterPermissionClient` 实现。适配器解析配置中的唯一用户/租户映射，通过 HTTPS 请求 `GET /auth/v1/authorization/users/{centerUserId}`，携带专用读取账号 ACCESS Token。中心使用 Token 租户，检查读取账号与目标账号的状态，并返回有效角色和去重权限编码。
+
+### 3.2 授权查询时序
+
+```mermaid
+sequenceDiagram
+    participant Client as 客户端
+    participant Main as 主应用 JWT 与权限链
+    participant Service as UnifiedAuthorizationService
+    participant Cache as AuthorizationCache
+    participant Remote as AuthCenterPermissionClient
+    participant Center as 中心安全链与授权 Handler
+    participant Query as UnifiedAuthorizationQueryService
+    Client->>Main: 主应用 Bearer Token 与业务请求
+    alt 开关关闭
+        Main->>Main: 使用原有本地授权分支
+    else 开关开启
+        Main->>Service: 可信主租户与用户，查询权限/角色
+        opt TTL 为 0 至 30 秒
+            Service->>Cache: 按主租户与用户读取快照
+            Cache-->>Service: 快照及独立 expiresAt
+        end
+        alt 无有效缓存（默认 TTL 0）
+            Service->>Remote: UnifiedAuthorizationGateway.query
+            Remote->>Remote: 唯一映射与 HTTPS / 凭据校验
+            Remote->>Center: GET /auth/v1/authorization/users/{centerUserId}
+            Center->>Center: 验证读取账号 Token，租户来自认证上下文
+            Center->>Query: queryForReader(tenant, readerId, targetId)
+            Query->>Query: 同租户账号状态与有效角色权限检查
+            Query-->>Center: 中心授权快照
+            Center-->>Remote: Result 包装响应
+            Remote->>Remote: 校验成功码、中心身份与条目
+            Remote-->>Service: 转换为主应用 tenantId / userId
+            opt 缓存开启
+                Service->>Cache: 写入快照及有效期
+            end
+        end
+        Service-->>Main: 权限编码、角色及数据范围
+        Main->>Main: 权限匹配与数据范围限制
+    end
+    Main-->>Client: 业务响应或拒绝
 ```
 
-**Step 3**: 接收响应
-- 成功: 200 OK,返回`{accessToken, refreshToken, userInfo}`
-- 失败: 401 Unauthorized,显示错误提示
+图展示当前调用边界，不表示已完成 Mermaid 渲染验证或服务联调。关闭开关时在主应用服务层选择本地分支，不调用统一授权服务查询。
 
-**Step 4**: 存储Token
-```javascript
-localStorage.setItem('accessToken', response.data.accessToken)
-localStorage.setItem('refreshToken', response.data.refreshToken)
-```
+### 3.3 缓存、异常与数据范围
 
-#### 2.2.2 后端流程
+缓存默认关闭，配置 `cache-seconds` 允许 0–30 秒。缓存键为 `auth-center:authorization:v1:{Base64URL主租户}:{主用户ID}`，快照独立检查有效期；启用缓存后撤权与停用最多有该 TTL 延迟，目前无跨实例主动失效机制。
 
-**Step 1**: 参数验证
-- 校验username/password非空
-- 校验用户名格式(4-20字符,字母数字下划线)
-- 校验密码格式(6-20字符)
+远程请求超时 3 秒，使用 Resilience4j 默认熔断器。缺少可信上下文、映射缺失/重复、无效凭据、中心异常或响应身份不一致时拒绝授权，不回退本地角色权限，也不使用过期缓存。最终 HTTP 状态由所在安全链或异常处理路径决定。
 
-**Step 2**: 查询用户
-```java
-Mono<User> user = userRepository.findByUsername(username);
-```
+中心范围映射 `SELF`、`ALL`、`DEPT` 和 `DEPT_AND_CHILD`。SELF 使用主应用用户 ID；ALL 不取消租户隔离；DEPT 和 DEPT_AND_CHILD 使用主应用已认证且启用的部门信息。CUSTOM、空值和未知范围拒绝；角色/部门 ID 不复制到主库。开关不会迁移生产 `sys_*` 数据。
 
-**Step 3**: 用户存在性检查
-- 用户不存在 → 返回`401 用户不存在`
-- 用户状态禁用 → 返回`401 账号已禁用`
-
-**Step 4**: 密码验证
-```java
-boolean matches = BCrypt.checkpw(password, user.getPassword());
-```
-
-- 密码错误 → 返回`401 密码错误`
-- 密码正确 → 继续
-
-**Step 5**: 生成JWT Token
-```java
-String accessToken = jwtUtil.generateAccessToken(userId);
-String refreshToken = jwtUtil.generateRefreshToken(userId);
-```
-
-**Token结构**:
-- **AccessToken**: 有效期2小时,用于API请求认证
-- **RefreshToken**: 有效期7天,用于刷新AccessToken
-
-**JWT Payload**:
-```json
-{
-  "sub": "10001",           // 用户ID
-  "username": "admin",      // 用户名
-  "roles": ["ADMIN"],       // 角色列表
-  "iat": 1693728000,        // 签发时间
-  "exp": 1693735200         // 过期时间
-}
-```
-
-**Step 6**: 缓存Token到Redis
-```java
-redisTemplate.opsForValue().set(
-  "token:" + userId,
-  accessToken,
-  2, TimeUnit.HOURS
-);
-```
-
-**Step 7**: 记录登录日志
-```java
-LoginLog log = LoginLog.builder()
-  .userId(userId)
-  .username(username)
-  .ip(request.getRemoteAddr())
-  .status(1) // 成功
-  .loginTime(LocalDateTime.now())
-  .build();
-loginLogRepository.save(log);
-```
-
-**Step 8**: 返回响应
-```json
-{
-  "code": 200,
-  "message": "登录成功",
-  "data": {
-    "accessToken": "eyJhbGciOiJIUzI1NiIs...",
-    "refreshToken": "eyJhbGciOiJIUzI1NiIs...",
-    "userInfo": {
-      "userId": 10001,
-      "username": "admin",
-      "nickName": "管理员",
-      "avatarUrl": "https://...",
-      "roles": ["ADMIN"]
-    }
-  }
-}
-```
-
-### 2.3 Token刷新流程
-
-**场景**: AccessToken过期,使用RefreshToken刷新
-
-**请求**:
-```javascript
-POST /admin-api/v1/auth/refresh
-Content-Type: application/json
-
-{
-  "refreshToken": "eyJhbGciOiJIUzI1NiIs..."
-}
-```
-
-**后端处理**:
-1. 验证RefreshToken有效性
-2. 提取userId
-3. 生成新的AccessToken
-4. 更新Redis缓存
-5. 返回新Token
-
-### 2.4 登出流程
-
-**请求**:
-```javascript
-POST /admin-api/v1/auth/logout
-Authorization: Bearer {accessToken}
-```
-
-**后端处理**:
-1. 解析Token获取userId
-2. 删除Redis中的Token缓存
-3. 记录登出日志
-4. 返回成功
-
----
-
-## 三、权限校验流程
-
-### 3.1 流程概述
-
-**权限模型**: RBAC (Role-Based Access Control) + 数据权限
-
-**权限层级**:
-1. **接口权限** (API Permission): 控制用户能否访问某个API
-2. **按钮权限** (Button Permission): 控制前端按钮显示
-3. **数据权限** (Data Scope): 控制用户能查看哪些数据
-
-### 3.2 RBAC权限校验流程
-
-#### 3.2.1 请求拦截
-
-**Step 1**: 接收API请求
-```
-GET /admin-api/v1/users?deptId=1
-Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
-```
-
-**Step 2**: JWT Token解析
-```java
-String token = request.getHeaders().getFirst("Authorization")
-  .replace("Bearer ", "");
-Claims claims = jwtUtil.parseToken(token);
-Long userId = claims.get("sub", Long.class);
-```
-
-**Step 3**: Token有效性检查
-- Token格式错误 → `401 Token格式错误`
-- Token已过期 → `401 Token已过期`
-- Redis中Token不存在 → `401 Token已失效`
-
-#### 3.2.2 角色权限查询
-
-**Step 4**: 查询用户角色
-```sql
-SELECT r.* FROM sys_role r
-INNER JOIN sys_user_role ur ON r.id = ur.role_id
-WHERE ur.user_id = ? AND r.deleted = 0
-```
-
-**Step 5**: 查询角色权限
-```sql
-SELECT p.* FROM sys_permission p
-INNER JOIN sys_role_permission rp ON p.id = rp.permission_id
-WHERE rp.role_id IN (?) AND p.deleted = 0
-```
-
-**权限缓存策略**:
-```java
-// 缓存用户权限列表 (1小时)
-@Cacheable(value = "user:permissions", key = "#userId")
-public List<Permission> getUserPermissions(Long userId) {
-  // 查询逻辑
-}
-```
-
-#### 3.2.3 权限匹配
-
-**Step 6**: API路径匹配
-```java
-String requestPath = "/admin-api/v1/users";
-String requestMethod = "GET";
-
-boolean hasPermission = permissions.stream()
-  .filter(p -> p.getResourceType().equals("API"))
-  .anyMatch(p ->
-    PathMatcher.match(p.getApiPath(), requestPath) &&
-    p.getApiMethod().equalsIgnoreCase(requestMethod)
-  );
-```
-
-**匹配规则**:
-- 精确匹配: `/admin-api/v1/users` == `/admin-api/v1/users`
-- 通配符匹配: `/admin-api/v1/users/*` 匹配 `/admin-api/v1/users/123`
-- 方法匹配: GET、POST、PUT、DELETE
-
-**Step 7**: 权限判断
-- 有权限 → 继续执行
-- 无权限 → `403 Forbidden 无操作权限`
-
-### 3.3 数据权限过滤流程
-
-#### 3.3.1 数据范围定义
-
-**数据权限范围枚举**:
-
-| dataScope | 说明 | SQL条件 |
-|-----------|------|---------|
-| `1` | 全部数据权限 | 无限制 |
-| `2` | 自定义数据权限 | `dept_id IN (指定部门)` |
-| `3` | 本部门数据权限 | `dept_id = 用户部门` |
-| `4` | 本部门及以下数据权限 | `dept_id IN (部门树)` |
-| `5` | 仅本人数据权限 | `create_user = 用户ID` |
-
-#### 3.3.2 数据权限拦截器
-
-**MyBatis-Plus拦截器实现**:
-
-```java
-@Component
-public class DataScopeInterceptor implements InnerInterceptor {
-
-  @Override
-  public void beforeQuery(Executor executor,
-                          MappedStatement ms,
-                          Object parameter,
-                          RowBounds rowBounds,
-                          ResultHandler resultHandler,
-                          BoundSql boundSql) {
-
-    // 1. 获取当前用户
-    Long userId = SecurityContextHolder.getUserId();
-
-    // 2. 查询用户角色的数据范围
-    Integer dataScope = roleService.getUserDataScope(userId);
-
-    // 3. 根据数据范围拼接SQL
-    String sqlCondition = buildSqlCondition(userId, dataScope);
-
-    // 4. 动态添加WHERE条件
-    String originalSql = boundSql.getSql();
-    String newSql = injectDataScope(originalSql, sqlCondition);
-
-    // 5. 替换SQL
-    ReflectionUtil.setFieldValue(boundSql, "sql", newSql);
-  }
-}
-```
-
-**SQL改写示例**:
-
-**原始SQL**:
-```sql
-SELECT * FROM sys_user WHERE status = 1
-```
-
-**数据权限改写后** (本部门及以下):
-```sql
-SELECT * FROM sys_user
-WHERE status = 1
-  AND dept_id IN (1, 2, 3, 5, 8)  -- 部门树
-```
-
-#### 3.3.3 租户隔离
-
-**多租户自动注入**:
-
-```java
-@Component
-public class TenantInterceptor implements InnerInterceptor {
-
-  @Override
-  public void beforeQuery(...) {
-    String tenantId = TenantContext.getTenantId();
-
-    // 自动注入 tenant_id 条件
-    String condition = " AND tenant_id = '" + tenantId + "'";
-
-    // SQL改写
-    String newSql = originalSql + condition;
-  }
-}
-```
-
-**租户上下文管理**:
-```java
-public class TenantContext {
-  private static final ThreadLocal<String> TENANT_ID =
-    new ThreadLocal<>();
-
-  public static void setTenantId(String tenantId) {
-    TENANT_ID.set(tenantId);
-  }
-
-  public static String getTenantId() {
-    return TENANT_ID.get();
-  }
-
-  public static void clear() {
-    TENANT_ID.remove();
-  }
-}
-```
+配置与部署前提见[配置说明](../05-operations/configuration.md#认证中心统一授权)，架构选择见[系统架构 ADR](system-architecture.md#adr-auth-center-001独立认证中心的远程授权集成)，图表适用边界见[时序图索引](../diagrams/sequence/README.md)。
 
 ---
 
@@ -799,6 +524,8 @@ public Mono<ResponseEntity<Resource>> download(@PathVariable Long fileId) {
 
 ### 6.1 登录流程优化
 
+以下为既有设计建议，示例路径不作为当前已注册接口；当前登录、刷新与登出契约见第 2 节。
+
 **优化点1**: 验证码防暴力破解
 ```java
 // 登录失败3次后要求验证码
@@ -826,6 +553,8 @@ GET /oauth/authorize
 ```
 
 ### 6.2 权限校验优化
+
+以下为历史本地授权优化建议，不适用于当前远程统一授权。统一授权缓存默认关闭、TTL 上限 30 秒，尚无跨实例主动失效；不得按下面的 1 小时缓存或预加载示例配置远程授权。
 
 **优化点1**: 权限缓存
 ```java

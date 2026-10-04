@@ -36,7 +36,6 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 @Configuration
 public class SsoAdminRouter {
 
-    @Bean
     @RouterOperations({
         @RouterOperation(
                 path = "/admin-api/v1/sso/providers",
@@ -88,6 +87,8 @@ public class SsoAdminRouter {
                 beanClass = SsoAuditLogHandler.class,
                 beanMethod = "getStatistics")
     })
+    @Bean
+    @SuppressWarnings("PMD.MethodTooLongRule")
     public RouterFunction<ServerResponse> ssoAdminRoutes(
             SsoProviderHandler providerHandler, SsoSessionHandler sessionHandler, SsoAuditLogHandler auditLogHandler) {
         return SpringdocRouteBuilder.route()

@@ -39,7 +39,6 @@ public class OfficeIntegrationRouter {
 
     private static final String BASE_PATH = "/api/v1/office";
 
-    @Bean
     @RouterOperations({
         @RouterOperation(
                 path = BASE_PATH + "/approvals",
@@ -505,6 +504,7 @@ public class OfficeIntegrationRouter {
                                     @ApiResponse(responseCode = "400", description = "请求参数错误或无权限删除")
                                 }))
     })
+    @Bean
     public RouterFunction<ServerResponse> officeIntegrationRoutes(OfficeIntegrationHandler handler) {
         return RouterFunctions.route()
                 .path(BASE_PATH, routes -> routes.GET("/approvals", handler::getApprovalList)

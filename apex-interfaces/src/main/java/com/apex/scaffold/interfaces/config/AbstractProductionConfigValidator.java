@@ -98,8 +98,8 @@ public abstract class AbstractProductionConfigValidator {
         try {
             URI uri = URI.create(value);
             String scheme = uri.getScheme();
-            if (uri.getHost() == null
-                    || !(SCHEME_HTTP.equalsIgnoreCase(scheme) || SCHEME_HTTPS.equalsIgnoreCase(scheme))) {
+            boolean httpScheme = SCHEME_HTTP.equalsIgnoreCase(scheme) || SCHEME_HTTPS.equalsIgnoreCase(scheme);
+            if (uri.getHost() == null || !httpScheme) {
                 throw invalid(name + MSG_INVALID_HTTP_URL);
             }
         } catch (IllegalArgumentException e) {

@@ -1,14 +1,14 @@
 package com.apex.scaffold.interfaces.aspect;
 
 import com.apex.scaffold.application.service.PermissionService;
-import com.apex.scaffold.application.service.UserService;
 import com.apex.scaffold.common.annotation.Logical;
 import com.apex.scaffold.common.annotation.RequirePermission;
+import com.apex.scaffold.common.context.TenantContext;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.result.ResultCode;
+import com.apex.scaffold.interfaces.security.AuthenticatedUser;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +17,7 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -28,15 +29,6 @@ import reactor.core.publisher.Mono;
  *
  * <p>拦截标注 {@link RequirePermission} 的方法，基于当前登录用户权限进行校验。
  * 支持 AND/OR 逻辑关系的多权限组合校验和 RBAC 角色模型。</p>
- *
- * <h2>校验流程</h2>
- * <ol>
- *   <li>从 {@link ReactiveSecurityContextHolder} 获取当前认证信息</li>
- *   <li>通过 {@link UserService} 获取用户信息</li>
- *   <li>先检查是否拥有管理员角色（ROLE_ADMIN），管理员直接放行</li>
- *   <li>通过 {@link PermissionService} 拉取用户权限列表</li>
- *   <li>根据注解的 {@link Logical} 关系（AND/OR）进行权限匹配</li>
- * </ol>
  *
  * @author Apex Team
  * @version 1.0.0
@@ -50,29 +42,15 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class RequirePermissionAspect {
 
-    private final UserService userService;
     private final PermissionService permissionService;
 
-    /**
-     * 环绕通知，对目标方法执行权限校验。
-     *
-     * <p>根据返回值类型（Mono/Flux/同步）自动适配响应式或同步校验路径。
-     * 权限不足时抛出 {@link BusinessException}({@code FORBIDDEN})。</p>
-     *
-     * @param joinPoint 切点
-     * @param requirePermission 权限校验注解
-     * @return 方法执行结果（Mono/Flux 或同步值）
-     */
     @Around("@annotation(requirePermission)")
     public Object around(ProceedingJoinPoint joinPoint, RequirePermission requirePermission) {
-        Mono<Boolean> allowed = isAllowed(requirePermission);
-
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         Class<?> returnType = signature.getReturnType();
 
         if (Mono.class.isAssignableFrom(returnType)) {
-            return allowed.flatMap(ok -> ok
-                    ? Mono.defer(() -> {
+            return authorize(requirePermission).flatMap(user -> Mono.defer(() -> {
                         try {
                             return (Mono<?>) joinPoint.proceed();
                         } catch (Throwable e) {
@@ -80,12 +58,11 @@ public class RequirePermissionAspect {
                             return Mono.error(e);
                         }
                     })
-                    : Mono.error(new BusinessException(ResultCode.FORBIDDEN)));
+                    .contextWrite(TenantContext.withTenant(user.tenantId())));
         }
 
         if (Flux.class.isAssignableFrom(returnType)) {
-            return allowed.flatMapMany(ok -> ok
-                    ? Flux.defer(() -> {
+            return authorize(requirePermission).flatMapMany(user -> Flux.defer(() -> {
                         try {
                             return (Flux<?>) joinPoint.proceed();
                         } catch (Throwable e) {
@@ -93,68 +70,39 @@ public class RequirePermissionAspect {
                             return Flux.error(e);
                         }
                     })
-                    : Flux.error(new BusinessException(ResultCode.FORBIDDEN)));
+                    .contextWrite(TenantContext.withTenant(user.tenantId())));
         }
 
-        try {
-            return joinPoint.proceed();
-        } catch (Throwable e) {
-            log.error("执行目标方法失败: {}", e.getMessage(), e);
-            return Mono.error(e);
-        }
+        throw new BusinessException(ResultCode.FORBIDDEN);
     }
 
-    /**
-     * 校验当前用户是否拥有指定权限
-     *
-     * @param requirePermission 权限注解
-     * @return true-有权限，false-无权限
-     */
-    private Mono<Boolean> isAllowed(RequirePermission requirePermission) {
+    private Mono<AuthenticatedUser> authorize(RequirePermission requirePermission) {
         List<String> requiredCodes = parseCodes(requirePermission.value());
         if (requiredCodes.isEmpty()) {
-            return Mono.just(true);
+            return Mono.error(new BusinessException(ResultCode.FORBIDDEN));
         }
 
         return ReactiveSecurityContextHolder.getContext()
-                .map(ctx -> ctx.getAuthentication())
-                .filter(Objects::nonNull)
-                .map(Authentication::getName)
-                .switchIfEmpty(Mono.error(new BusinessException(ResultCode.UNAUTHORIZED)))
-                .flatMap(userService::getByOpenId)
+                .flatMap(context -> Mono.justOrEmpty(context.getAuthentication()))
+                .filter(Authentication::isAuthenticated)
+                .filter(authentication -> !(authentication instanceof AnonymousAuthenticationToken))
+                .flatMap(authentication -> Mono.justOrEmpty(authentication.getPrincipal()))
+                .ofType(AuthenticatedUser.class)
+                .filter(user -> user.userId() != null)
                 .switchIfEmpty(Mono.error(new BusinessException(ResultCode.UNAUTHORIZED)))
                 .flatMap(user -> {
-                    return hasAdminRole().flatMap(isAdmin -> {
-                        if (isAdmin) {
-                            return Mono.just(true);
-                        }
-                        return permissionService
-                                .getPermissionsByUserId(user.getId())
-                                .map(permissions -> permissions.stream()
-                                        .map(p -> p.getCode() == null ? "" : p.getCode())
-                                        .collect(Collectors.toSet()))
-                                .map(userCodes ->
-                                        checkPermission(userCodes, requiredCodes, requirePermission.logical()));
-                    });
+                    if (user.tenantId() == null || user.tenantId().isBlank()) {
+                        return Mono.error(new BusinessException(ResultCode.FORBIDDEN));
+                    }
+                    return Mono.defer(() -> permissionService.getPermissionsByUserId(user.userId()))
+                            .map(permissions -> permissions.stream()
+                                    .map(permission -> permission.getCode() == null ? "" : permission.getCode())
+                                    .collect(Collectors.toSet()))
+                            .filter(userCodes -> checkPermission(userCodes, requiredCodes, requirePermission.logical()))
+                            .switchIfEmpty(Mono.error(new BusinessException(ResultCode.FORBIDDEN)))
+                            .thenReturn(user)
+                            .contextWrite(TenantContext.withTenant(user.tenantId()));
                 });
-    }
-
-    /**
-     * 检查当前用户是否拥有管理员角色（ROLE_ADMIN）。
-     *
-     * <p>从 {@link ReactiveSecurityContextHolder} 中提取认证信息，
-     * 遍历用户权限集合查找 {@code ROLE_ADMIN} 标识。</p>
-     *
-     * @return 是否为管理员，认证信息为空时返回 false
-     */
-    private Mono<Boolean> hasAdminRole() {
-        return ReactiveSecurityContextHolder.getContext().map(ctx -> {
-            Authentication auth = ctx.getAuthentication();
-            if (auth == null) {
-                return false;
-            }
-            return auth.getAuthorities().stream().anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
-        });
     }
 
     /**

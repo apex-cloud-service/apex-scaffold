@@ -25,11 +25,19 @@ public class UserRoleEntity extends BaseEntity {
     /** 创建用户角色关联实体对象。 */
     public UserRoleEntity() {}
 
+    /** 租户 ID。 */
+    private String tenantId;
+
     /** 用户 ID。 */
     private Long userId;
 
     /** 角色 ID。 */
     private Long roleId;
+
+    /** Sets tenantId. For persistence/construction use only. */
+    public void setTenantId(String value) {
+        this.tenantId = value;
+    }
 
     /** Sets userId. For persistence/construction use only. */
     public void setUserId(Long value) {

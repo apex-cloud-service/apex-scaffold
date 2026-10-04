@@ -31,12 +31,12 @@ public class RoleDTO {
 
     @NotBlank(message = "角色编码不能为空")
     @Size(max = 50, message = "角色编码长度不能超过50")
-    @Schema(description = "角色编码", example = "ROLE_ADMIN", required = true)
+    @Schema(description = "角色编码", example = "ROLE_ADMIN", requiredMode = Schema.RequiredMode.REQUIRED)
     private String code;
 
     @NotBlank(message = "角色名称不能为空")
     @Size(max = 100, message = "角色名称长度不能超过100")
-    @Schema(description = "角色名称", example = "系统管理员", required = true)
+    @Schema(description = "角色名称", example = "系统管理员", requiredMode = Schema.RequiredMode.REQUIRED)
     private String name;
 
     @Size(max = 500, message = "角色描述长度不能超过500")

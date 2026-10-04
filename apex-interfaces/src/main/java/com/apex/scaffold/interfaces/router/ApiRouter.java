@@ -63,7 +63,6 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 public class ApiRouter {
 
     /** 办公平台统一认证与状态路由。 */
-    @Bean
     @RouterOperations({
         @RouterOperation(
                 path = "/api/v1/office/status",
@@ -114,6 +113,7 @@ public class ApiRouter {
                                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
                                 }))
     })
+    @Bean
     public RouterFunction<ServerResponse> officeRoutes(OfficeHandler handler) {
         return RouterFunctions.route()
                 .GET("/api/v1/office/status", handler::status)
@@ -123,7 +123,6 @@ public class ApiRouter {
     }
 
     /** 超级管理员用户查询与角色配置路由。 */
-    @Bean
     @RouterOperations({
         @RouterOperation(
                 path = "/admin-api/v1/staff-roles",
@@ -294,6 +293,7 @@ public class ApiRouter {
                                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
                                 }))
     })
+    @Bean
     public RouterFunction<ServerResponse> adminUserManagementRoutes(AdminUserManagementHandler handler) {
         return RouterFunctions.route()
                 .GET("/admin-api/v1/staff-roles", handler::roles)
@@ -316,7 +316,6 @@ public class ApiRouter {
      * @param handler 系统菜单处理器
      * @return 菜单管理路由函数
      */
-    @Bean
     @RouterOperations({
         @RouterOperation(
                 path = "/admin-api/v1/menus",
@@ -447,6 +446,7 @@ public class ApiRouter {
                                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
                                 }))
     })
+    @Bean
     public RouterFunction<ServerResponse> adminMenuRoutes(MenuHandler handler) {
         return RouterFunctions.route()
                 .path("/admin-api/v1/menus", routes -> routes.GET("", handler::tree)
@@ -467,7 +467,6 @@ public class ApiRouter {
      * @param handler 系统字典处理器
      * @return 字典管理路由函数
      */
-    @Bean
     @RouterOperations({
         @RouterOperation(
                 path = "/admin-api/v1/dict/types",
@@ -726,6 +725,7 @@ public class ApiRouter {
                                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
                                 }))
     })
+    @Bean
     public RouterFunction<ServerResponse> adminDictRoutes(DictHandler handler) {
         return RouterFunctions.route()
                 .path("/admin-api/v1/dict/types", types -> types.GET("", handler::listTypes)
@@ -752,7 +752,6 @@ public class ApiRouter {
      * @param handler 登录日志处理器
      * @return 登录日志管理路由函数
      */
-    @Bean
     @RouterOperations({
         @RouterOperation(
                 path = "/admin-api/v1/login-logs",
@@ -771,6 +770,7 @@ public class ApiRouter {
                                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
                                 }))
     })
+    @Bean
     public RouterFunction<ServerResponse> adminLoginLogRoutes(LoginLogHandler handler) {
         return RouterFunctions.route()
                 .GET("/admin-api/v1/login-logs", handler::list)
@@ -787,7 +787,6 @@ public class ApiRouter {
      * @return 审计日志管理路由函数
      * @since 2.2.0
      */
-    @Bean
     @RouterOperations({
         @RouterOperation(
                 path = "/admin-api/v1/audit-logs",
@@ -806,6 +805,7 @@ public class ApiRouter {
                                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
                                 }))
     })
+    @Bean
     public RouterFunction<ServerResponse> adminAuditLogRoutes(AuditLogHandler handler) {
         return RouterFunctions.route()
                 .GET("/admin-api/v1/audit-logs", handler::list)
@@ -823,7 +823,6 @@ public class ApiRouter {
      * @return API 调用日志管理路由函数
      * @since 2.3.0
      */
-    @Bean
     @RouterOperations({
         @RouterOperation(
                 path = "/admin-api/v1/api-call-logs",
@@ -842,6 +841,7 @@ public class ApiRouter {
                                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
                                 }))
     })
+    @Bean
     public RouterFunction<ServerResponse> adminApiCallLogRoutes(ApiCallLogHandler handler) {
         return RouterFunctions.route()
                 .GET("/admin-api/v1/api-call-logs", handler::list)
@@ -857,7 +857,6 @@ public class ApiRouter {
      * @return 部门管理路由函数
      * @since 2.2.0
      */
-    @Bean
     @RouterOperations({
         @RouterOperation(
                 path = "/admin-api/v1/depts",
@@ -964,6 +963,7 @@ public class ApiRouter {
                                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
                                 }))
     })
+    @Bean
     public RouterFunction<ServerResponse> adminDeptRoutes(DeptHandler handler) {
         return RouterFunctions.route()
                 .GET("/admin-api/v1/depts", handler::listTree)
@@ -983,7 +983,6 @@ public class ApiRouter {
      * @return 导出路由函数
      * @since 2.2.0
      */
-    @Bean
     @RouterOperations({
         @RouterOperation(
                 path = "/admin-api/v1/export/users",
@@ -1002,6 +1001,7 @@ public class ApiRouter {
                                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
                                 }))
     })
+    @Bean
     public RouterFunction<ServerResponse> adminExportRoutes(ExcelExportHandler handler) {
         return RouterFunctions.route()
                 .GET("/admin-api/v1/export/users", handler::exportUsers)
@@ -1017,7 +1017,6 @@ public class ApiRouter {
      * @return SSE 推送路由函数
      * @since 2.2.0
      */
-    @Bean
     @RouterOperations({
         @RouterOperation(
                 path = "/api/v1/notifications/stream",
@@ -1040,6 +1039,7 @@ public class ApiRouter {
                                                             schema = @Schema(implementation = String.class)))
                                 }))
     })
+    @Bean
     public RouterFunction<ServerResponse> notificationSseRoutes(NotificationSseHandler handler) {
         return RouterFunctions.route()
                 .GET("/api/v1/notifications/stream", handler::stream)
@@ -1055,7 +1055,6 @@ public class ApiRouter {
      * @return 在线用户管理路由函数
      * @since 2.2.0
      */
-    @Bean
     @RouterOperations({
         @RouterOperation(
                 path = "/admin-api/v1/online-users",
@@ -1074,6 +1073,7 @@ public class ApiRouter {
                                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
                                 }))
     })
+    @Bean
     public RouterFunction<ServerResponse> adminOnlineUserRoutes(OnlineUserHandler handler) {
         return RouterFunctions.route()
                 .GET("/admin-api/v1/online-users", handler::list)
@@ -1090,7 +1090,6 @@ public class ApiRouter {
      * @return 监控路由函数
      * @since 2.3.0
      */
-    @Bean
     @RouterOperations({
         @RouterOperation(
                 path = "/admin-api/v1/monitor/overview",
@@ -1173,6 +1172,7 @@ public class ApiRouter {
                                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
                                 }))
     })
+    @Bean
     public RouterFunction<ServerResponse> adminMonitorRoutes(MonitorDashboardHandler handler) {
         return RouterFunctions.route()
                 .path("/admin-api/v1/monitor", routes -> routes.GET("/overview", handler::overview)
@@ -1191,7 +1191,6 @@ public class ApiRouter {
      * @param handler 图形验证码处理器
      * @return 验证码路由函数
      */
-    @Bean
     @RouterOperations({
         @RouterOperation(
                 path = "/api/v1/auth/captcha",
@@ -1226,6 +1225,7 @@ public class ApiRouter {
                                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
                                 }))
     })
+    @Bean
     public RouterFunction<ServerResponse> captchaRoutes(CaptchaHandler handler) {
         return RouterFunctions.route()
                 .GET("/api/v1/auth/captcha", handler::generate)
@@ -1243,7 +1243,6 @@ public class ApiRouter {
      * @param handler 定时任务处理器
      * @return 定时任务管理路由函数
      */
-    @Bean
     @RouterOperations({
         @RouterOperation(
                 path = "/admin-api/v1/jobs",
@@ -1438,6 +1437,7 @@ public class ApiRouter {
                                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
                                 }))
     })
+    @Bean
     public RouterFunction<ServerResponse> adminJobRoutes(JobHandler handler) {
         return RouterFunctions.route()
                 .path("/admin-api/v1/jobs", routes -> routes.GET("", handler::list)
@@ -1473,7 +1473,6 @@ public class ApiRouter {
      * @return 数据库配置管理路由函数
      * @since 1.2.0
      */
-    @Bean
     @RouterOperations({
         @RouterOperation(
                 path = "/admin-api/v1/database/test",
@@ -1628,6 +1627,7 @@ public class ApiRouter {
                                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
                                 }))
     })
+    @Bean
     public RouterFunction<ServerResponse> adminDatabaseConfigRoutes(DatabaseConfigHandler handler) {
         return RouterFunctions.route()
                 .POST("/admin-api/v1/database/test", contentType(MediaType.APPLICATION_JSON), handler::testConnection)
@@ -1653,7 +1653,6 @@ public class ApiRouter {
      * @param handler 系统参数配置处理器
      * @return 参数配置管理路由函数
      */
-    @Bean
     @RouterOperations({
         @RouterOperation(
                 path = "/admin-api/v1/configs",
@@ -1784,6 +1783,7 @@ public class ApiRouter {
                                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
                                 }))
     })
+    @Bean
     public RouterFunction<ServerResponse> adminConfigRoutes(ConfigHandler handler) {
         return RouterFunctions.route()
                 .path("/admin-api/v1/configs", routes -> routes.GET("", handler::list)
@@ -1805,7 +1805,6 @@ public class ApiRouter {
      * @param healthHandler 健康检查处理器
      * @return 路由函数
      */
-    @Bean
     @RouterOperations({
         @RouterOperation(
                 path = "/api/v1/health",
@@ -2420,6 +2419,7 @@ public class ApiRouter {
                                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
                                 }))
     })
+    @Bean
     public RouterFunction<ServerResponse> apiRoutes(
             AuthHandler authHandler,
             AuthorizationHandler authorizationHandler,
@@ -2559,7 +2559,6 @@ public class ApiRouter {
      * @return 搜索路由函数
      * @since 1.3.0
      */
-    @Bean
     @RouterOperations({
         @RouterOperation(
                 path = "/admin-api/v1/search",
@@ -2594,6 +2593,7 @@ public class ApiRouter {
                                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
                                 }))
     })
+    @Bean
     public RouterFunction<ServerResponse> unifiedSearchRoutes(
             com.apex.scaffold.interfaces.handler.UnifiedSearchHandler handler) {
         return RouterFunctions.route()
@@ -2611,7 +2611,6 @@ public class ApiRouter {
      * @return 日志路由函数
      * @since 1.3.0
      */
-    @Bean
     @RouterOperations({
         @RouterOperation(
                 path = "/admin-api/v1/logs/runtime",
@@ -2646,6 +2645,7 @@ public class ApiRouter {
                                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
                                 }))
     })
+    @Bean
     public RouterFunction<ServerResponse> runtimeLogRoutes(
             com.apex.scaffold.interfaces.handler.RuntimeLogHandler handler) {
         return RouterFunctions.route()
@@ -2663,7 +2663,6 @@ public class ApiRouter {
      * @return 日志路由函数
      * @since 1.3.0
      */
-    @Bean
     @RouterOperations({
         @RouterOperation(
                 path = "/admin-api/v1/logs/business",
@@ -2698,6 +2697,7 @@ public class ApiRouter {
                                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
                                 }))
     })
+    @Bean
     public RouterFunction<ServerResponse> businessLogRoutes(
             com.apex.scaffold.interfaces.handler.UnifiedBusinessLogHandler handler) {
         return RouterFunctions.route()
