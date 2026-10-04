@@ -391,7 +391,7 @@ SELECT COUNT(*) AS '新增权限数' FROM sys_menu WHERE menu_type = 2 AND perms
 
 ### 代码文件
 - frontend_button_permission_config.sql（目标不存在，无已核实替代文件；原路径：`file:///Users/work/apex-scaffold/frontend_button_permission_config.sql`） - SQL脚本
-- [check_javadoc.sh](file:///Users/work/apex-scaffold/scripts/check_javadoc.sh) - JavaDoc检查工具
+- [check_javadoc.sh](../../../../../scripts/check_javadoc.sh) - JavaDoc检查工具
 
 ---
 

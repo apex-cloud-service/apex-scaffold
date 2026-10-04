@@ -260,19 +260,19 @@ scripts/
 
 本次任务生成了以下专业审计报告:
 
-1. **[SVG架构图表与代码实现对齐度综合报告](file:///Users/work/apex-scaffold/docs/reports/svg-code-alignment-comprehensive-report.md)**
+1. **[SVG架构图表与代码实现对齐度综合报告](reports/svg-code-alignment-comprehensive-report.md)**
    - 82张图表逐一对比验证
    - 版本号一致性检查
    - 组件数量统计验证
    - P0/P1/P2修复建议
 
-2. **[项目文档整体对齐度报告](file:///Users/work/apex-scaffold/docs/PROJECT_DOCUMENTATION_ALIGNMENT_REPORT.md)**
+2. **[项目文档整体对齐度报告](PROJECT_DOCUMENTATION_ALIGNMENT_REPORT.md)**
    - 全项目维度审计 (文档/脚本/测试/图表)
    - 分维度评分 (7个维度)
    - 趋势分析与改进建议
    - 验证清单与脚本
 
-3. **[SVG修复完成报告](file:///Users/work/apex-scaffold/docs/reports/svg-fixes-summary.md)**
+3. **[SVG修复完成报告](reports/svg-fixes-summary.md)**
    - P0/P1修复详情
    - 修复前后对比
    - 验证结果展示

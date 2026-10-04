@@ -998,10 +998,10 @@ public class User {
 
 ## 完整示例参考
 
-- **PO 类**：[UserPO.java](file:///Users/work/apex-scaffold/apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/persistence/po/UserPO.java)
-- **DTO 类**：[LoginRequest.java](file:///Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/LoginRequest.java)
-- **Service 类**：[AuthService.java](file:///Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/service/AuthService.java)
-- **Repository 实现**：[UserRepositoryImpl.java](file:///Users/work/apex-scaffold/apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/persistence/repository/UserRepositoryImpl.java)
+- **PO 类**：[UserPO.java](../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/persistence/po/UserPO.java)
+- **DTO 类**：[LoginRequest.java](../../apex-application/src/main/java/com/apex/scaffold/application/dto/LoginRequest.java)
+- **Service 类**：[AuthService.java](../../apex-application/src/main/java/com/apex/scaffold/application/service/AuthService.java)
+- **Repository 实现**：[UserRepositoryImpl.java](../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/persistence/repository/UserRepositoryImpl.java)
 
 ---
 

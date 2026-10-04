@@ -1,6 +1,6 @@
 # Apex Scaffold 备份/恢复工具
 
-数据库与关键目录的备份/恢复脚本，支持宿主机直连与 Docker 容器两种部署场景（与 [docs/DEPLOYMENT.md](../docs/DEPLOYMENT.md) §13 对齐）。
+数据库与关键目录的备份/恢复脚本，支持宿主机直连与 Docker 容器两种部署场景（与 [docs/DEPLOYMENT.md](../../docs/05-operations/deployment.md) §13 对齐）。
 
 ## 文件清单
 

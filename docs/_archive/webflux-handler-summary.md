@@ -16,14 +16,14 @@
 
 | 类型 | 文件/类名 | 说明 |
 |------|----------|------|
-| Handler | [WorkflowHandler.java](file:///Users/work/apex-scaffold/apex-interfaces/src/main/java/com/apex/scaffold/interfaces/handler/WorkflowHandler.java) | 工作流 Handler，包含 5 个接口方法 |
-| Router | [WorkflowRouter.java](file:///Users/work/apex-scaffold/apex-interfaces/src/main/java/com/apex/scaffold/interfaces/router/WorkflowRouter.java) | 路由配置，使用函数式风格 |
-| DTO | [RollbackTaskRequest.java](file:///Users/work/apex-scaffold/apex-interfaces/src/main/java/com/apex/scaffold/interfaces/dto/workflow/RollbackTaskRequest.java) | 流程回退请求 DTO |
-| DTO | [TransferTaskRequest.java](file:///Users/work/apex-scaffold/apex-interfaces/src/main/java/com/apex/scaffold/interfaces/dto/workflow/TransferTaskRequest.java) | 任务转办请求 DTO |
-| DTO | [DelegateTaskRequest.java](file:///Users/work/apex-scaffold/apex-interfaces/src/main/java/com/apex/scaffold/interfaces/dto/workflow/DelegateTaskRequest.java) | 任务委派请求 DTO |
-| DTO | [SuspendInstanceRequest.java](file:///Users/work/apex-scaffold/apex-interfaces/src/main/java/com/apex/scaffold/interfaces/dto/workflow/SuspendInstanceRequest.java) | 挂起流程请求 DTO |
-| DTO | [ResumeInstanceRequest.java](file:///Users/work/apex-scaffold/apex-interfaces/src/main/java/com/apex/scaffold/interfaces/dto/workflow/ResumeInstanceRequest.java) | 恢复流程请求 DTO |
-| Test | [WorkflowHandlerIntegrationTest.java](file:///Users/work/apex-scaffold/apex-interfaces/src/test/java/com/apex/scaffold/interfaces/handler/WorkflowHandlerIntegrationTest.java) | WebFlux 集成测试，8 个测试用例 |
+| Handler | [WorkflowHandler.java](../../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/handler/WorkflowHandler.java) | 工作流 Handler，包含 5 个接口方法 |
+| Router | [WorkflowRouter.java](../../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/router/WorkflowRouter.java) | 路由配置，使用函数式风格 |
+| DTO | [RollbackTaskRequest.java](../../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/dto/workflow/RollbackTaskRequest.java) | 流程回退请求 DTO |
+| DTO | [TransferTaskRequest.java](../../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/dto/workflow/TransferTaskRequest.java) | 任务转办请求 DTO |
+| DTO | [DelegateTaskRequest.java](../../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/dto/workflow/DelegateTaskRequest.java) | 任务委派请求 DTO |
+| DTO | [SuspendInstanceRequest.java](../../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/dto/workflow/SuspendInstanceRequest.java) | 挂起流程请求 DTO |
+| DTO | [ResumeInstanceRequest.java](../../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/dto/workflow/ResumeInstanceRequest.java) | 恢复流程请求 DTO |
+| Test | [WorkflowHandlerIntegrationTest.java](../../apex-interfaces/src/test/java/com/apex/scaffold/interfaces/handler/WorkflowHandlerIntegrationTest.java) | WebFlux 集成测试，8 个测试用例 |
 
 #### 📋 技术特点
 
@@ -74,7 +74,7 @@
 
 | 文件 | 说明 |
 |------|------|
-| [test-workflow-api.sh](file:///Users/work/apex-scaffold/test-workflow-api.sh) | Shell 脚本，自动测试 5 个接口 |
+| [test-workflow-api.sh](../../test-workflow-api.sh) | Shell 脚本，自动测试 5 个接口 |
 | [integration-test-guide.md](../06-testing/integration-test-guide.md) | 完整的联调测试文档 |
 
 #### 📋 测试覆盖

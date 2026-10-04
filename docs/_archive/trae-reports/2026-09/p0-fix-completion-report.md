@@ -193,7 +193,7 @@ rm /Users/work/apex-scaffold/database_config_menu.sql
 ### 立即行动
 
 1. ✅ **创建环境变量参考文档**
-   - 建议路径：`docs/operations/environment-variables.md`
+   - 建议路径：`docs/_archive/operations/environment-variables.md`
    - 包含所有 172 个变量的完整说明
    - 标注必填/可选、默认值、Profile 范围
 

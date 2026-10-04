@@ -61,4 +61,4 @@ docker compose -f config/monitoring/docker-compose.yml up -d
 ## 详细文档
 
 - 大盘面板与告警规则说明：[grafana/README.md](./grafana/README.md)
-- 微服务演进与可观测性整体盘点：[docs/ARCHITECTURE_EVOLUTION.md](../../docs/ARCHITECTURE_EVOLUTION.md)
+- 微服务演进与可观测性整体盘点：[docs/ARCHITECTURE_EVOLUTION.md](../../docs/02-architecture/architecture-evolution.md)

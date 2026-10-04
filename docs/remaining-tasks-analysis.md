@@ -34,8 +34,8 @@
 
 #### 已实现部分
 ✅ **规则外部化**：
-- 文件：[SentinelDynamicRulesLoader.java](file:///Users/work/apex-scaffold/apex-interfaces/src/main/java/com/apex/scaffold/interfaces/config/SentinelDynamicRulesLoader.java)
-- 规则文件：[sentinel-rules.json](file:///Users/work/apex-scaffold/config/sentinel/sentinel-rules.json)
+- 文件：[SentinelDynamicRulesLoader.java](../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/config/SentinelDynamicRulesLoader.java)
+- 规则文件：[sentinel-rules.json](../config/sentinel/sentinel-rules.json)
 - 功能：启动时从 JSON 文件加载规则
 
 ✅ **动态加载接口**：
@@ -62,7 +62,7 @@ public void loadRulesFromFile(String filePath) {
 ### 2.2 ✅ 布隆过滤器定时重建（已完成 100%）
 
 #### 完整实现
-✅ **定时任务**：[BloomFilterRebuildTask.java](file:///Users/work/apex-scaffold/apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/task/BloomFilterRebuildTask.java)
+✅ **定时任务**：[BloomFilterRebuildTask.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/task/BloomFilterRebuildTask.java)
 ```java
 @Scheduled(cron = "${apex.cache.bloom-filter.rebuild.cron:0 0 3 * * ?}")
 public void rebuildBloomFilters() {
@@ -98,7 +98,7 @@ public boolean manualRebuild() {
 ### 2.3 ❌ 自适应采样器（未实现 0%）
 
 #### 当前实现
-❌ **固定采样率**：[TraceConfig.java:58](file:///Users/work/apex-scaffold/apex-interfaces/src/main/java/com/apex/scaffold/interfaces/config/TraceConfig.java#L58)
+❌ **固定采样率**：[TraceConfig.java:58](../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/config/TraceConfig.java#L58)
 ```java
 @Value("${trace.sampling-rate:1.0}")
 private float samplingRate;
@@ -150,7 +150,7 @@ public class AdaptiveSampler extends Sampler {
 #### 当前实现
 ❌ **仅本地限流**：
 - [LocalRateLimiter.java](../apex-common/src/main/java/com/apex/scaffold/common/util/ratelimit/LocalRateLimiter.java) - Guava RateLimiter
-- [AdaptiveRateLimiter.java](file:///Users/work/apex-scaffold/apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/ratelimit/adaptive/AdaptiveRateLimiter.java) - 自适应本地限流
+- [AdaptiveRateLimiter.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/ratelimit/adaptive/AdaptiveRateLimiter.java) - 自适应本地限流
 
 问题：
 - 无法跨实例共享限流配额
@@ -198,7 +198,7 @@ apex:
 ### 2.5 ✅ 完整的告警规则库（已完成 95%）
 
 #### 已实现
-✅ **告警规则文件**：[alert-rules.yml](file:///Users/work/apex-scaffold/config/monitoring/prometheus/alert-rules.yml)
+✅ **告警规则文件**：[alert-rules.yml](../config/monitoring/prometheus/alert-rules.yml)
 
 **已有规则分类**（12+ 条）：
 1. **JVM 告警**（5 条）
@@ -247,16 +247,16 @@ apex:
 
 #### 已实现
 ✅ **企业微信集成**：
-- 服务：[WeWorkService.java](file:///Users/work/apex-scaffold/apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/wechat/service/WeWorkService.java)
-- 客户端：[WecomMessageClient.java](file:///Users/work/apex-scaffold/apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/office/client/WecomMessageClient.java)
-- 配置：[WeWorkProperties.java](file:///Users/work/apex-scaffold/apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/wechat/config/WeWorkProperties.java)
+- 服务：[WeWorkService.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/wechat/service/WeWorkService.java)
+- 客户端：[WecomMessageClient.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/office/client/WecomMessageClient.java)
+- 配置：[WeWorkProperties.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/wechat/config/WeWorkProperties.java)
 
 ✅ **钉钉集成**：
-- 客户端：[DingTalkMessageClient.java](file:///Users/work/apex-scaffold/apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/office/client/DingTalkMessageClient.java)
-- 组织架构：[DingTalkOrganizationClient.java](file:///Users/work/apex-scaffold/apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/office/client/DingTalkOrganizationClient.java)
+- 客户端：[DingTalkMessageClient.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/office/client/DingTalkMessageClient.java)
+- 组织架构：[DingTalkOrganizationClient.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/office/client/DingTalkOrganizationClient.java)
 
 ✅ **消息服务抽象**：
-- 接口：[OfficePlatformMessageClient.java](file:///Users/work/apex-scaffold/apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/office/spi/OfficePlatformMessageClient.java)
+- 接口：[OfficePlatformMessageClient.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/office/spi/OfficePlatformMessageClient.java)
 - 实现：支持文本、Markdown、卡片等多种消息类型
 
 #### 需要配置

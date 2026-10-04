@@ -455,8 +455,8 @@ Co-authored-by: Kiro AI Assistant
 
 - [测试执行报告](test-execution-final-success-report.md)
 - [代码变更摘要](code-changes-summary.md)
-- [项目规范](file:///Users/work/apex-scaffold/AGENTS.md)
-- [项目 README](file:///Users/work/apex-scaffold/README.md)
+- [项目规范](../../../AGENTS.md)
+- [项目 README](../../../README.md)
 
 ---
 

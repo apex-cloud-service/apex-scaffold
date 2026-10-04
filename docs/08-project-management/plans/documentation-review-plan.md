@@ -372,7 +372,7 @@
 **目标**: 指导用户如何管理环境变量
 
 **输出**:
-- `docs/operations/environment-variables.md`
+- `docs/_archive/operations/environment-variables.md`
 - 包含：设置方式、优先级、最佳实践、故障排查
 
 ### 阶段 3: SQL 脚本 Flyway 迁移（Phase 3）

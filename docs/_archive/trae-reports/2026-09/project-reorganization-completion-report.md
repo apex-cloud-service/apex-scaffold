@@ -98,7 +98,7 @@ frontend_button_permission_config.sql （已整合到 Flyway）
 
 ### 1.2 .trae/documents/ 目录整理（54 个文件精简）
 
-详细内容请参考：[documents-integration-report.md](file:///Users/work/apex-scaffold/docs/_archive/trae-reports/2026-09/documents-integration-report.md)
+详细内容请参考：[documents-integration-report.md](documents-integration-report.md)
 
 **整合到 docs/ 正式目录**（12 个）:
 - 5 个前端开发指南 → `docs/04-development/frontend/`
@@ -399,7 +399,7 @@ docs/
 ## 📞 相关文档
 
 1. **文档整合详细报告**  
-   [documents-integration-report.md](file:///Users/work/apex-scaffold/docs/_archive/trae-reports/2026-09/documents-integration-report.md)
+   [documents-integration-report.md](documents-integration-report.md)
    - 详细的文件分类清单
    - 完整的移动操作记录
    - 验证检查结果

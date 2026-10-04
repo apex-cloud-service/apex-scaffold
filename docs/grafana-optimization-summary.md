@@ -144,8 +144,8 @@
 ### 7. 文档完善
 
 **更新文档**:
-- [README.md](file:///Users/work/apex-scaffold/config/monitoring/grafana/README.md) - 完整的使用指南
-- [grafana-dashboard-optimization.md](file:///Users/work/apex-scaffold/docs/grafana-dashboard-optimization.md) - 优化方案详解
+- [README.md](../config/monitoring/grafana/README.md) - 完整的使用指南
+- [grafana-dashboard-optimization.md](grafana-dashboard-optimization.md) - 优化方案详解
 
 **文档内容**:
 - ✅ 面板使用最佳实践

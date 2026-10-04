@@ -23,7 +23,7 @@
 |------|---------|------|
 | 代码审计 | ✅ 完成 | 识别14个安全问题 |
 | 风险评估 | ✅ 完成 | 5个P0严重问题 |
-| 评审报告 | ✅ 完成 | [auth-security-review-report.md](file:///Users/work/apex-scaffold/docs/reviews/auth-security-review-report.md) |
+| 评审报告 | ✅ 完成 | [auth-security-review-report.md](reviews/auth-security-review-report.md) |
 
 ### 阶段二：P0严重问题修复 (已完成)
 
@@ -94,7 +94,7 @@ apex-common/src/test/java/.../security/
 ### 工具和脚本 (2个)
 
 ```
-tools/
+scripts/utils/
 └── ConfigEncryptionTool.java                    ✨ 配置加密命令行工具
 
 apex-interfaces/src/main/resources/db/migration/mysql/
@@ -158,7 +158,7 @@ String plainToken = encryptionService.decrypt(encryptedToken);
 - ✅ 检测重放攻击：使用已撤销Token触发安全警报
 - ✅ 记录完整审计日志
 
-**关键代码**: [TokenServiceImpl.java:206-229](file:///Users/work/apex-scaffold/apex-auth-center/src/main/java/com/apex/scaffold/authcenter/application/service/TokenServiceImpl.java#L206-L229)
+**关键代码**: [TokenServiceImpl.java:206-229](../apex-auth-center/src/main/java/com/apex/scaffold/authcenter/application/service/TokenServiceImpl.java#L206-L229)
 
 **安全流程**:
 ```
@@ -236,7 +236,7 @@ security:
 - ✅ 应用启动时自动解密
 - ✅ 支持数据库密码、API密钥、JWT密钥等
 
-**关键代码**: [ConfigEncryptionService.java](file:///Users/work/apex-scaffold/apex-common/src/main/java/com/apex/scaffold/common/security/ConfigEncryptionService.java)
+**关键代码**: [ConfigEncryptionService.java](../apex-common/src/main/java/com/apex/scaffold/common/security/ConfigEncryptionService.java)
 
 **使用示例**:
 ```yaml
@@ -260,7 +260,7 @@ jwt:
 - ✅ 支持基于用户名和IP的双重防护
 - ✅ 自动解锁机制
 
-**关键代码**: [BruteForcePrevention.java](file:///Users/work/apex-scaffold/apex-auth-center/src/main/java/com/apex/scaffold/authcenter/infrastructure/security/BruteForcePrevention.java)
+**关键代码**: [BruteForcePrevention.java](../apex-auth-center/src/main/java/com/apex/scaffold/authcenter/infrastructure/security/BruteForcePrevention.java)
 
 ---
 
@@ -273,7 +273,7 @@ jwt:
 - ✅ 不能使用常见弱密码
 - ✅ 不能包含连续字符
 
-**关键代码**: [PasswordPolicyService.java](file:///Users/work/apex-scaffold/apex-auth-center/src/main/java/com/apex/scaffold/authcenter/infrastructure/security/PasswordPolicyService.java)
+**关键代码**: [PasswordPolicyService.java](../apex-auth-center/src/main/java/com/apex/scaffold/authcenter/infrastructure/security/PasswordPolicyService.java)
 
 ---
 
@@ -285,7 +285,7 @@ jwt:
 - ✅ 记录锁定原因和时间
 - ✅ 支持延长锁定时间
 
-**关键代码**: [AccountLockService.java](file:///Users/work/apex-scaffold/apex-auth-center/src/main/java/com/apex/scaffold/authcenter/infrastructure/security/AccountLockService.java)
+**关键代码**: [AccountLockService.java](../apex-auth-center/src/main/java/com/apex/scaffold/authcenter/infrastructure/security/AccountLockService.java)
 
 ---
 
@@ -297,7 +297,7 @@ jwt:
 - ✅ 支持按用户批量撤销Token
 - ✅ 自动清理过期Token
 
-**关键代码**: [TokenBlacklistService.java](file:///Users/work/apex-scaffold/apex-auth-center/src/main/java/com/apex/scaffold/authcenter/infrastructure/security/TokenBlacklistService.java)
+**关键代码**: [TokenBlacklistService.java](../apex-auth-center/src/main/java/com/apex/scaffold/authcenter/infrastructure/security/TokenBlacklistService.java)
 
 ---
 
@@ -305,12 +305,12 @@ jwt:
 
 提供了完整的命令行工具用于配置加密管理。
 
-**工具文件**: [ConfigEncryptionTool.java](file:///Users/work/apex-scaffold/tools/ConfigEncryptionTool.java)
+**工具文件**: [ConfigEncryptionTool.java](../scripts/utils/ConfigEncryptionTool.java)
 
 ### 编译工具
 
 ```bash
-cd /Users/work/apex-scaffold/tools
+cd /Users/work/apex-scaffold/scripts/utils
 javac ConfigEncryptionTool.java
 ```
 
@@ -480,12 +480,12 @@ tail -f /var/log/apex-scaffold/application.log | grep "SECURITY_AUDIT"
 
 ### 核心文档
 
-1. **[安全评审报告](file:///Users/work/apex-scaffold/docs/reviews/auth-security-review-report.md)**
+1. **[安全评审报告](reviews/auth-security-review-report.md)**
    - 完整的安全评审结果
    - 14个安全问题的详细分析
    - 修复方案和优先级
 
-2. **[安全修复实施指南](file:///Users/work/apex-scaffold/docs/guides/security-fixes-implementation-guide.md)**
+2. **[安全修复实施指南](guides/security-fixes-implementation-guide.md)**
    - 详细的部署步骤
    - 测试验证方法
    - 监控指标配置
@@ -494,9 +494,9 @@ tail -f /var/log/apex-scaffold/application.log | grep "SECURITY_AUDIT"
 
 ### 技术文档
 
-3. [OAuth2集成指南](file:///Users/work/apex-scaffold/docs/01-guides/oauth2-integration-guide.md)
-4. [SSO配置指南](file:///Users/work/apex-scaffold/docs/01-guides/sso-oauth2-keycloak-complete.md)
-5. [统一认证中心设计](file:///Users/work/apex-scaffold/.trae/documents/unified-auth-center-design.md)
+3. [OAuth2集成指南](01-guides/oauth2-integration-guide.md)
+4. [SSO配置指南](01-guides/sso-oauth2-keycloak-complete.md)
+5. [统一认证中心设计](./_archive/trae-documents/unified-auth-center-design.md)
 
 ---
 
@@ -594,7 +594,7 @@ tail -f /var/log/apex-scaffold/application.log | grep "SECURITY_AUDIT"
 
 如有问题或需要进一步协助，请查阅：
 
-1. **文档**: [安全修复实施指南](file:///Users/work/apex-scaffold/docs/guides/security-fixes-implementation-guide.md)
+1. **文档**: [安全修复实施指南](guides/security-fixes-implementation-guide.md)
 2. **代码**: 所有新增代码都有详细注释
 3. **工具**: ConfigEncryptionTool 提供完整使用说明
 

@@ -392,7 +392,7 @@ k8s/
 
 **任务**:
 1. README.md优化
-2. QUICK_START.md简化
+2. 00-getting-started/quickstart.md简化
 3. DEPLOYMENT.md补充
 4. API_DOCUMENTATION.md生成
 

@@ -179,9 +179,9 @@ curl -X POST 'http://localhost:8080/api/workflow/instances/100/resume' \
 
 ## 三、自动化测试脚本
 
-### 3.1 创建测试脚本
+### 3.1 测试脚本
 
-**文件**：`test-workflow-api.sh`
+**文件**：`scripts/test/test-workflow-api.sh`
 
 ```bash
 #!/bin/bash
@@ -305,10 +305,10 @@ echo "========================================="
 
 ```bash
 # 赋予执行权限
-chmod +x test-workflow-api.sh
+chmod +x scripts/test/test-workflow-api.sh
 
 # 执行测试
-./test-workflow-api.sh
+./scripts/test/test-workflow-api.sh
 ```
 
 ---
@@ -602,7 +602,7 @@ ab -n 100 -c 10 -T 'application/json' \
 - ✅ 前端 API 接口：5 个 API 方法
 - ✅ 前端 UI 组件：TaskActions.vue
 - ✅ 前端页面更新：InstanceDetail.vue
-- ✅ 测试脚本：test-workflow-api.sh
+- ✅ 测试脚本：scripts/test/test-workflow-api.sh
 - ✅ 联调文档：本文档
 
 ### 10.2 后续工作

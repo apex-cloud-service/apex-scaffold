@@ -98,7 +98,7 @@
 
 #### 优化 1: 敏感信息脱敏
 
-**文件**: [SensitiveDataMasker.java](file:///Users/work/apex-scaffold/apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/logging/SensitiveDataMasker.java)
+**文件**: [SensitiveDataMasker.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/logging/SensitiveDataMasker.java)
 
 **功能**:
 - 自动识别并脱敏敏感字段（password、idCard、mobile、bankCard）
@@ -113,7 +113,7 @@ log.info(maskedLog);
 
 #### 优化 2: 日志采样器
 
-**文件**: [LogSampler.java](file:///Users/work/apex-scaffold/apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/logging/LogSampler.java)
+**文件**: [LogSampler.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/logging/LogSampler.java)
 
 **功能**:
 - 高频日志自动采样（如循环中的日志）
@@ -132,7 +132,7 @@ apex:
 
 #### 优化 3: 日志监控告警
 
-**文件**: [alert-rules.yml](file:///Users/work/apex-scaffold/config/monitoring/prometheus/alert-rules.yml)
+**文件**: [alert-rules.yml](../config/monitoring/prometheus/alert-rules.yml)
 
 **新增告警规则**（8 个）:
 ```yaml
@@ -159,7 +159,7 @@ apex:
 
 #### 优化 1: 网关监控指标增强
 
-**文件**: [GatewayMetrics.java](file:///Users/work/apex-scaffold/apex-interfaces/src/main/java/com/apex/scaffold/interfaces/metrics/GatewayMetrics.java)
+**文件**: [GatewayMetrics.java](../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/metrics/GatewayMetrics.java)
 
 **新增指标**（6 个）:
 ```java
@@ -191,7 +191,7 @@ Counter.builder("apex.gateway.circuitbreaker.triggered")
 
 #### 优化 2: 网关告警规则
 
-**文件**: [alert-rules.yml](file:///Users/work/apex-scaffold/config/monitoring/prometheus/alert-rules.yml)
+**文件**: [alert-rules.yml](../config/monitoring/prometheus/alert-rules.yml)
 
 **新增告警规则**（6 个）:
 ```yaml
@@ -245,7 +245,7 @@ Counter.builder("apex.gateway.circuitbreaker.triggered")
 
 #### 优化 3: 网关性能配置
 
-**文件**: [application-prod.yml](file:///Users/work/apex-scaffold/apex-interfaces/src/main/resources/application-prod.yml)
+**文件**: [application-prod.yml](../apex-interfaces/src/main/resources/application-prod.yml)
 
 **优化配置**:
 ```yaml

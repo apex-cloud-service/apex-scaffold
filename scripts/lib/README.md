@@ -694,8 +694,8 @@ A: 库函数经过优化，性能开销极小（< 1%）。主要优势在于代�
 
 ## 参考资料
 
-- [项目开发规范](file:///Users/work/apex-scaffold/AGENTS.md)
-- [脚本权限修复报告](file:///Users/work/apex-scaffold/.trae/documents/脚本权限问题修复详细报告.md)
+- [项目开发规范](../../AGENTS.md)
+- [脚本权限修复报告](../../docs/_archive/trae-documents/脚本权限问题修复详细报告.md)
 - [Bash 脚本最佳实践](https://google.github.io/styleguide/shellguide.html)
 
 ---

@@ -175,9 +175,6 @@
 ```yaml
 - name: Check SpringDoc annotation coverage
   run: bash scripts/ci/check-springdoc-coverage.sh
-
-- name: Run SpringDoc check script regression tests
-  run: python3 scripts/test/test-springdoc-checks.py
 ```
 
 ### release 任务

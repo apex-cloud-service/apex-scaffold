@@ -108,7 +108,7 @@ apex_api_* 指标 + Prometheus + 10 条告警 + Grafana 14 面板、Zipkin 链�
 ### 3.5 文档同步
 目标文件：
 - `docs/LICENSE_MANAGEMENT.md`：新增「机器指纹绑定」章节——采集（`gen-fingerprint`）→ 签发（`--fingerprint`）→ 激活三步流程；说明 `apex.license.machine-fingerprint-skip`（测试）与 `apex.license.machine-fingerprint-override`（容器/K8s）两个配置；说明容器场景的建议（节点名+命名空间哈希）。
-- `docs/COMMERCIAL_VERSIONS.md`：机器指纹相关条目标注为"Enterprise 档"或"全档可选"，与实现对齐。
+- `docs/07-commercial/COMMERCIAL_VERSIONS.md`：机器指纹相关条目标注为"Enterprise 档"或"全档可选"，与实现对齐。
 - `docs/COMMERCIAL_IMPROVEMENT_TASKS.md`：Task 2.4 状态更新（机器指纹"已落地"，标注测试/文档同步随本轮完成）。
 
 ### 3.6 验收标准

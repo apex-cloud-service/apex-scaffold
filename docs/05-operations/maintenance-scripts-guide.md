@@ -86,10 +86,7 @@ cat docs/reports/link-check-$(date +%Y%m%d).md
 如果检查发现断裂链接：
 
 ```bash
-# 自动修复工具
-python3 scripts/utils/fix-doc-links.py
-
-# 手动检查
+# 链接检查
 ./scripts/ci/check-doc-links.sh
 ```
 
@@ -717,13 +714,11 @@ ls logs/link-check-*.log | wc -l
 
 - [脚本索引](../../README.md) - 所有脚本总索引
 - [维护脚本详细文档](../../scripts/ops/maintenance/README.md) - 维护脚本完整指南
-- [链接修复工具](../../scripts/utils/fix-doc-links.py) - 自动修复工具
 - [文档结构规范](../DOCS_STRUCTURE_STANDARD.md) - 文档组织规范
 
 ### 工具
 
 - [链接检查脚本](../../scripts/ci/check-doc-links.sh) - CI 中使用的检查脚本
-- [链接修复工具](../../scripts/utils/fix-doc-links.py) - Python 自动修复工具
 
 ---
 

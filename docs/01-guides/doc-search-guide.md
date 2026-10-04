@@ -48,7 +48,7 @@
 - **文档标题**: "OAuth2 集成指南"
 - **文档描述**: "集成操作指南和最佳实践"
 - **标签**: OAuth2, 认证, SSO
-- **文件路径**: integration/oauth2/integration-guide.md
+- **文件路径**: _archive/integration/oauth2/integration-guide.md
 
 ### 搜索示例
 

@@ -102,7 +102,7 @@
    mvnd clean compile -P basic
    ```
    
-   检查 [`pmd-exclude.properties`](../../pmd-exclude.properties) 是否正确加载。
+   检查 [`pmd-exclude.properties`](../../config/pmd-exclude.properties) 是否正确加载。
 
 2. **批量添加 Mapper 接口 JavaDoc** (2-3小时)
    

@@ -26,9 +26,9 @@
 - 日志文件: `logs/link-check-YYYYMMDD.log`
 - 检查报告: `docs/reports/link-check-YYYYMMDD.md`
 
-**自动修复** (可选):
+**自动检查** (可选):
 ```bash
-python3 scripts/utils/fix-doc-links.py
+./scripts/ci/check-doc-links.sh
 ```
 
 ---
@@ -273,7 +273,6 @@ ls -lt logs/quarterly-archive-*.log 2>/dev/null | head -1
 - [DOCS_STRUCTURE_STANDARD.md](../../../docs/DOCS_STRUCTURE_STANDARD.md) - 文档结构规范
 - [scripts/README.md](../../README.md) - 脚本索引
 - [scripts/ci/check-doc-links.sh](../../ci/check-doc-links.sh) - 链接检查脚本
-- [scripts/utils/fix-doc-links.py](../../utils/fix-doc-links.py) - 链接修复工具
 
 ---
 

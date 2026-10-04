@@ -344,7 +344,7 @@ interfaces → application → domain ← infrastructure
 
 ### 配置文件
 
-- [PMD排除规则](../../pmd-exclude.properties) - PMD检查排除配置
+- [PMD排除规则](../../config/pmd-exclude.properties) - PMD检查排除配置
 - [数据库迁移脚本 V41-MySQL](../../apex-interfaces/src/main/resources/db/migration/mysql/V41__add_generator_auth_sso_office_tables.sql)
 - [数据库迁移脚本 V41-PostgreSQL](../../apex-interfaces/src/main/resources/db/migration/postgresql/V41__add_generator_auth_sso_office_tables.sql)
 - 数据库迁移脚本 V42-MySQL（目标不存在，无已核实替代文件；原路径：`../../apex-interfaces/src/main/resources/db/migration/mysql/V42__add_office_platform_tables.sql`）

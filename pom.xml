@@ -949,7 +949,7 @@
             <ruleset>rulesets/java/ali-other.xml</ruleset>
             <ruleset>rulesets/java/ali-set.xml</ruleset>
           </rulesets>
-          <excludeFromFailureFile>pmd-exclude.properties</excludeFromFailureFile>
+          <excludeFromFailureFile>config/pmd-exclude.properties</excludeFromFailureFile>
           <printFailingErrors>true</printFailingErrors>
           <verbose>true</verbose>
           <failOnViolation>true</failOnViolation>

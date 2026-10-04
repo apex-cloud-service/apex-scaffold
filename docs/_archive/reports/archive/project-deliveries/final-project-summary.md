@@ -69,9 +69,9 @@
 
 **产出**:
 - [后续任务完整实施方案.md](../task-implementations/follow-up-tasks-plan.md) (850行)
-- [config/monitoring/prometheus/alert-rules.yml](file:///Users/work/apex-scaffold/config/monitoring/prometheus/alert-rules.yml) (189行)
-- [config/monitoring/prometheus/alertmanager.yml](file:///Users/work/apex-scaffold/config/monitoring/prometheus/alertmanager.yml) (70行)
-- [config/monitoring/grafana/provisioning/datasources/zipkin.yml](file:///Users/work/apex-scaffold/config/monitoring/grafana/provisioning/datasources/zipkin.yml) (30行)
+- [config/monitoring/prometheus/alert-rules.yml](../../../../../config/monitoring/prometheus/alert-rules.yml) (189行)
+- [config/monitoring/prometheus/alertmanager.yml](../../../../../config/monitoring/prometheus/alertmanager.yml) (70行)
+- [config/monitoring/grafana/provisioning/datasources/zipkin.yml](../../../../../config/monitoring/grafana/provisioning/datasources/zipkin.yml) (30行)
 
 #### 2.3 工具开发
 - ✅ JavaDoc质量检查脚本(320行)
@@ -79,8 +79,8 @@
 - ✅ 监控配置部署脚本(150行)
 
 **产出**:
-- [scripts/check_javadoc.sh](file:///Users/work/apex-scaffold/scripts/check_javadoc.sh)
-- [start_mysql_and_run_sql.sh](file:///Users/work/apex-scaffold/start_mysql_and_run_sql.sh)
+- [scripts/check_javadoc.sh](../../../../../scripts/check_javadoc.sh)
+- [start_mysql_and_run_sql.sh](../../../../../start_mysql_and_run_sql.sh)
 - deploy_monitoring_configs.sh（目标不存在，无已核实替代文件；原路径：`file:///Users/work/apex-scaffold/deploy_monitoring_configs.sh`）
 
 ---

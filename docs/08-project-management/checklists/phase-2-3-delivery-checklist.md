@@ -420,7 +420,7 @@ public Mono<SyncTaskResult> syncDepartments(String tenantId, OfficePlatform plat
 如有问题，请参考：
 1. **实施计划**：`.trae/documents/phase-2-3-implementation-plan.md`
 2. **快速指南**：`.trae/documents/phase-2-3-quick-guide.md`
-3. **前端指南**：`.trae/documents/phase-3-frontend-guide.md`
+3. **前端指南**：`frontend-docs/phase-3-frontend-guide.md`（独立前端仓库 `apex-admin-web`）
 4. **代码示例**：组织同步功能的完整实现
 5. **API 文档**：启动项目后访问 `/swagger-ui.html`
 

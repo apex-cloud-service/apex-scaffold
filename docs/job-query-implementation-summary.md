@@ -333,10 +333,10 @@ SELECT * FROM sys_role_permission WHERE role_id = 1 AND permission_id = 2042;
 
 | 文档名称 | 路径 | 说明 |
 |---------|------|------|
-| API接口文档 | [docs/api/job-pagination-api.md](file:///Users/work/apex-scaffold/docs/api/job-pagination-api.md) | 详细的接口参数、响应格式、错误码说明 |
-| 测试报告 | [docs/test-reports/job-pagination-test-report.md](file:///Users/work/apex-scaffold/docs/test-reports/job-pagination-test-report.md) | 测试用例、覆盖率、测试结论 |
-| 功能使用指南 | [docs/job-query-feature-guide.md](file:///Users/work/apex-scaffold/docs/job-query-feature-guide.md) | 完整的功能说明、部署步骤、FAQ |
-| 项目编码规范 | [AGENTS.md](file:///Users/work/apex-scaffold/AGENTS.md) | 项目编码、测试、提交规范 |
+| API接口文档 | [docs/api/job-pagination-api.md](api/job-pagination-api.md) | 详细的接口参数、响应格式、错误码说明 |
+| 测试报告 | [docs/test-reports/job-pagination-test-report.md](test-reports/job-pagination-test-report.md) | 测试用例、覆盖率、测试结论 |
+| 功能使用指南 | [docs/job-query-feature-guide.md](job-query-feature-guide.md) | 完整的功能说明、部署步骤、FAQ |
+| 项目编码规范 | [AGENTS.md](../AGENTS.md) | 项目编码、测试、提交规范 |
 
 ---
 

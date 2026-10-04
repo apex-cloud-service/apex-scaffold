@@ -97,16 +97,16 @@
 
 | 链接文本 | 原路径 | 建议修复 |
 |----------|---------|----------|
-| 5 分钟快速上手 | `./QUICK_START.md` | `./00-getting-started/quickstart.md` |
+| 5 分钟快速上手 | `./00-getting-started/quickstart.md` | `./00-getting-started/quickstart.md` |
 | 项目配置指南 | `./CONFIGURATION.md` | `./05-operations/configuration.md` |
 | 环境变量指南 | `./ENVIRONMENT_VARIABLES.md` | ❌ 未找到目标 |
-| 架构文档索引 | `./ARCHITECTURE_INDEX.md` | `./02-architecture/architecture-index.md` |
+| 架构文档索引 | `./02-architecture/architecture-index.md` | `./02-architecture/architecture-index.md` |
 | DDD 四层架构详解 | `./architecture/01-logical-architecture-detail.md` | `../architecture/01-logical-architecture-detail.md` |
 | 系统架构概览 | `./architecture/system-architecture.md` | `../architecture/system-architecture.md` |
 | **WebFlux 响应式编程指南** | `./architecture/reactive-programming-guide.md` | `../architecture/reactive-programming-guide.md` |
 | **策略模式实现指南** | `./architecture/strategy-pattern-guide.md` | `../architecture/strategy-pattern-guide.md` |
 | WebFlux Handler 实现总结 | `./webflux-handler-summary.md` | `../_archive/webflux-handler-summary.md` |
-| 后端开发规范 | `./standards/backend-development-standards.md` | `../04-development/backend-development-standards.md` |
+| 后端开发规范 | `./04-development/backend-development-standards.md` | `../04-development/backend-development-standards.md` |
 | 代码生成器使用 | `./CODEGEN.md` | `./04-development/codegen.md` |
 | 开发最佳实践 | `./BEST_PRACTICES.md` | `./01-guides/best-practices.md` |
 | Lombok 使用指南 | `./LOMBOK_GUIDE.md` | `./04-development/lombok-guide.md` |
@@ -123,11 +123,11 @@
 | 代码生成器使用 | `./CODEGEN.md` | `./04-development/codegen.md` |
 | Lombok 使用指南 | `./LOMBOK_GUIDE.md` | `./04-development/lombok-guide.md` |
 | Javadoc 编写指南 | `./JAVADOC_GUIDE.md` | `./04-development/javadoc-guide.md` |
-| 快速上手 | `./QUICK_START.md` | `./00-getting-started/quickstart.md` |
+| 快速上手 | `./00-getting-started/quickstart.md` | `./00-getting-started/quickstart.md` |
 | DDD 四层架构详解 | `./architecture/01-logical-architecture-detail.md` | `../architecture/01-logical-architecture-detail.md` |
 | WebFlux 响应式编程指南 | `./architecture/reactive-programming-guide.md` | `../architecture/reactive-programming-guide.md` |
 | 策略模式实现指南 | `./architecture/strategy-pattern-guide.md` | `../architecture/strategy-pattern-guide.md` |
-| 后端开发规范 | `./standards/backend-development-standards.md` | `../04-development/backend-development-standards.md` |
+| 后端开发规范 | `./04-development/backend-development-standards.md` | `../04-development/backend-development-standards.md` |
 | 项目文档目录 | `/Users/work/apex-scaffold/docs` | ❌ 未找到目标 |
 | 架构图集 | `/Users/work/apex-scaffold/docs/architecture` | ❌ 未找到目标 |
 | 53 质量门禁流水线 | `diagrams/53_quality_gate_pipeline.svg` | ❌ 未找到目标 |
@@ -148,7 +148,7 @@
 | 架构文档总索引 | `ARCHITECTURE_INDEX.md` | `02-architecture/architecture-index.md` |
 | 文档整合摘要 | `INTEGRATION_SUMMARY.md` | `../_archive/INTEGRATION_SUMMARY.md` |
 | 集成文档索引 | `integration/README.md` | `README.md` |
-| 快速开始 | `QUICK_START.md` | `00-getting-started/quickstart.md` |
+| 快速开始 | `00-getting-started/quickstart.md` | `00-getting-started/quickstart.md` |
 
 ### 📄 01-guides/doc-search-readme.md
 
@@ -357,11 +357,11 @@
 | standards/backend-development-standards.md | `standards/backend-development-standards.md` | `../04-development/backend-development-standards.md` |
 | standards/frontend-development-standards.md | `standards/frontend-development-standards.md` | `../04-development/frontend-development-standards.md` |
 | api/route-mapping.md | `api/route-mapping.md` | `../_archive/api/route-mapping.md` |
-| QUICK\_START.md | `QUICK_START.md` | `00-getting-started/quickstart.md` |
+| QUICK\_START.md | `00-getting-started/quickstart.md` | `00-getting-started/quickstart.md` |
 | README.md | `README.md` | `../01-guides/README.md` |
 | BEST\_PRACTICES.md | `BEST_PRACTICES.md` | `01-guides/best-practices.md` |
 | README.md | `README.md` | `../01-guides/README.md` |
-| QUICK\_START.md | `QUICK_START.md` | `00-getting-started/quickstart.md` |
+| QUICK\_START.md | `00-getting-started/quickstart.md` | `00-getting-started/quickstart.md` |
 | 系统架构设计文档 | `architecture/system-architecture.md` | `../architecture/system-architecture.md` |
 | DDD 四层逻辑架构图 | `diagrams/01_logical_architecture.svg` | ❌ 未找到目标 |
 | 全栈技术选型全景图 | `diagrams/03_technical_architecture.svg` | ❌ 未找到目标 |
@@ -444,7 +444,7 @@
 | 链接文本 | 原路径 | 建议修复 |
 |----------|---------|----------|
 | 项目SpringDoc注解模板 | `./SpringDoc注解模板.md` | ❌ 未找到目标 |
-| 后端开发规范 | `./standards/backend-development-standards.md` | `../04-development/backend-development-standards.md` |
+| 后端开发规范 | `./04-development/backend-development-standards.md` | `../04-development/backend-development-standards.md` |
 
 ### 📄 04-development/DATABASE_CONFIG_R2DBC_IMPLEMENTATION_STEPS.md
 
@@ -488,7 +488,7 @@
 
 | 链接文本 | 原路径 | 建议修复 |
 |----------|---------|----------|
-| docs/mermaid-viewer.html | `./mermaid-viewer.html` | ❌ 未找到目标 |
+| docs/mermaid-viewer.html | `../mermaid-viewer.html` | ❌ 未找到目标 |
 | WebFlux 响应式编程指南 | `./architecture/reactive-programming-guide.md` | `../architecture/reactive-programming-guide.md` |
 | 多租户隔离架构 | `./architecture/multi-tenant-isolation-architecture.md` | `../architecture/multi-tenant-isolation-architecture.md` |
 | 服务治理落地方案 | `./architecture/service-governance-solution.md` | `../architecture/service-governance-solution.md` |
@@ -497,10 +497,10 @@
 | 消息中间件说明 | `./MESSAGE_MIDDLEWARE.md` | ❌ 未找到目标 |
 | 数据权限使用指南 | `./DATA_SCOPE_USAGE.md` | ❌ 未找到目标 |
 | 多级缓存完整指南 | `./architecture/advanced-features/multi-level-cache-complete-guide.md` | `../architecture/advanced-features/multi-level-cache-complete-guide.md` |
-| mermaid-viewer.html | `./mermaid-viewer.html` | ❌ 未找到目标 |
-| mermaid-viewer.html | `./mermaid-viewer.html` | ❌ 未找到目标 |
-| Mermaid 查看器 | `./mermaid-viewer.html` | ❌ 未找到目标 |
-| 项目架构文档索引 | `./ARCHITECTURE_INDEX.md` | `./02-architecture/architecture-index.md` |
+| mermaid-viewer.html | `../mermaid-viewer.html` | ❌ 未找到目标 |
+| mermaid-viewer.html | `../mermaid-viewer.html` | ❌ 未找到目标 |
+| Mermaid 查看器 | `../mermaid-viewer.html` | ❌ 未找到目标 |
+| 项目架构文档索引 | `./02-architecture/architecture-index.md` | `./02-architecture/architecture-index.md` |
 
 ### 📄 05-operations/advanced-features.md
 
@@ -560,8 +560,8 @@
 
 | 链接文本 | 原路径 | 建议修复 |
 |----------|---------|----------|
-| 快速开始指南 | `QUICK_START.md` | `00-getting-started/quickstart.md` |
-| 快速开始 | `QUICK_START.md` | `00-getting-started/quickstart.md` |
+| 快速开始指南 | `00-getting-started/quickstart.md` | `00-getting-started/quickstart.md` |
+| 快速开始 | `00-getting-started/quickstart.md` | `00-getting-started/quickstart.md` |
 | 架构设计 | `architecture.md` | `02-architecture/architecture-overview.md` |
 | 配置说明 | `CONFIGURATION.md` | `05-operations/configuration.md` |
 | 最佳实践 | `BEST_PRACTICES.md` | `01-guides/best-practices.md` |
@@ -580,7 +580,7 @@
 
 | 链接文本 | 原路径 | 建议修复 |
 |----------|---------|----------|
-| COMMERCIAL_VERSIONS.md | `../../docs/COMMERCIAL_VERSIONS.md` | `COMMERCIAL_VERSIONS.md` |
+| COMMERCIAL_VERSIONS.md | `../../docs/07-commercial/COMMERCIAL_VERSIONS.md` | `COMMERCIAL_VERSIONS.md` |
 
 ### 📄 08-project-management/features/workflow-engine-guide.md
 
@@ -588,7 +588,7 @@
 |----------|---------|----------|
 | 工作流实现方案 | `../reports/workflow-implementation.md` | `../../_archive/reports/workflow-implementation.md` |
 | 工作流进度报告 | `../reports/workflow-progress.md` | `../../_archive/reports/workflow-progress.md` |
-| 后端开发规范 | `../standards/backend-development-standards.md` | `../../04-development/backend-development-standards.md` |
+| 后端开发规范 | `../04-development/backend-development-standards.md` | `../../04-development/backend-development-standards.md` |
 
 ### 📄 08-project-management/plans/ai-assisted/PHASE2A_COMPLETION_REPORT.md
 
@@ -655,21 +655,21 @@
 | ARCHITECTURE_INDEX.md | `ARCHITECTURE_INDEX.md` | `02-architecture/architecture-index.md` |
 | 后端 | `standards/backend-development-standards.md` | `../04-development/backend-development-standards.md` |
 | 前端 | `standards/frontend-development-standards.md` | `../04-development/frontend-development-standards.md` |
-| QUICK_START.md | `QUICK_START.md` | `00-getting-started/quickstart.md` |
+| 00-getting-started/quickstart.md | `00-getting-started/quickstart.md` | `00-getting-started/quickstart.md` |
 | ARCHITECTURE_INDEX.md | `ARCHITECTURE_INDEX.md` | `02-architecture/architecture-index.md` |
 | TROUBLESHOOTING.md | `TROUBLESHOOTING.md` | `01-guides/troubleshooting.md` |
 | ARCHITECTURE_INDEX.md | `ARCHITECTURE_INDEX.md` | `02-architecture/architecture-index.md` |
-| QUICK_START.md | `QUICK_START.md` | `00-getting-started/quickstart.md` |
+| 00-getting-started/quickstart.md | `00-getting-started/quickstart.md` | `00-getting-started/quickstart.md` |
 | API_DOCUMENTATION_PREVIEW.md | `API_DOCUMENTATION_PREVIEW.md` | ❌ 未找到目标 |
 
 ### 📄 _archive/MERMAID_VERIFICATION_SUMMARY.md
 
 | 链接文本 | 原路径 | 建议修复 |
 |----------|---------|----------|
-| mermaid-viewer.html | `./mermaid-viewer.html` | ❌ 未找到目标 |
+| mermaid-viewer.html | `../mermaid-viewer.html` | ❌ 未找到目标 |
 | test-mermaid-viewer.html | `./test-mermaid-viewer.html` | ❌ 未找到目标 |
 | Mermaid 图表查看指南 | `./MERMAID_VIEWER_GUIDE.md` | ❌ 未找到目标 |
-| mermaid-viewer.html | `./mermaid-viewer.html` | ❌ 未找到目标 |
+| mermaid-viewer.html | `../mermaid-viewer.html` | ❌ 未找到目标 |
 | test-mermaid-viewer.html | `./test-mermaid-viewer.html` | ❌ 未找到目标 |
 | MERMAID_VIEWER_GUIDE.md | `./MERMAID_VIEWER_GUIDE.md` | ❌ 未找到目标 |
 | README.md | `./README.md` | `../01-guides/README.md` |
@@ -680,7 +680,7 @@
 |----------|---------|----------|
 | test-mermaid-viewer.html | `./test-mermaid-viewer.html` | ❌ 未找到目标 |
 | MERMAID_VIEWER_GUIDE.md | `./MERMAID_VIEWER_GUIDE.md` | ❌ 未找到目标 |
-| mermaid-viewer.html | `./mermaid-viewer.html` | ❌ 未找到目标 |
+| mermaid-viewer.html | `../mermaid-viewer.html` | ❌ 未找到目标 |
 | Mermaid 图表查看指南 | `./MERMAID_VIEWER_GUIDE.md` | ❌ 未找到目标 |
 | 文档中心首页 | `./README.md` | `../01-guides/README.md` |
 
@@ -720,7 +720,7 @@
 | 打开文档搜索工具 | `../doc-search.html` | ❌ 未找到目标 |
 | 系统架构文档 | `../architecture/system-architecture.md` | `../../architecture/system-architecture.md` |
 | 安全防护体系 | `../architecture/advanced-features/security-protection-system.md` | `../../architecture/advanced-features/security-protection-system.md` |
-| 后端开发规范 | `../standards/backend-development-standards.md` | `../../04-development/backend-development-standards.md` |
+| 后端开发规范 | `../04-development/backend-development-standards.md` | `../../04-development/backend-development-standards.md` |
 
 ### 📄 _archive/integration/oauth2/implementation-report.md
 
@@ -748,7 +748,7 @@
 | 链接文本 | 原路径 | 建议修复 |
 |----------|---------|----------|
 | 安全防护 | `../SECURITY_PROTECTIONS.md` | `../05-operations/security-protections.md` |
-| AGENTS.md | `../../AGENTS.md` | ❌ 未找到目标 |
+| AGENTS.md | `../../../../AGENTS.md` | ❌ 未找到目标 |
 
 ### 📄 _archive/operations/k8s-production-optimization.md
 
@@ -816,13 +816,13 @@
 | 系统架构设计文档 | `./docs/architecture/system-architecture.md` | `../../architecture/system-architecture.md` |
 | 数据库设计文档 | `./docs/architecture/database-design.md` | `../../architecture/database-design.md` |
 | 业务流程文档 | `./docs/architecture/business-flows.md` | `../../architecture/business-flows.md` |
-| 部署运维文档 | `./docs/operations/deployment.md` | `../../05-operations/deployment.md` |
-| Grafana监控面板增强方案 | `./docs/operations/monitoring.md` | `../operations/monitoring.md` |
-| 配置文件完整性检查报告 | `./docs/operations/configuration.md` | `../../05-operations/configuration.md` |
-| 部署检查清单 | `./docs/operations/deployment-checklist.md` | `../integration/oauth2/pkce/deployment-checklist.md` |
-| 前后端API路由对比清单 | `./docs/api/route-mapping.md` | `../api/route-mapping.md` |
-| 前端迁移指南 | `./docs/frontend/migration-guide.md` | `../../04-development/frontend/migration-guide.md` |
-| 路由配置与启动指南 | `./docs/frontend/routing-guide.md` | `../../04-development/frontend/routing-guide.md` |
+| 部署运维文档 | `./docs/05-operations/deployment.md` | `../../05-operations/deployment.md` |
+| Grafana监控面板增强方案 | `./docs/_archive/operations/monitoring-dashboard-configuration.md` | `../operations/monitoring.md` |
+| 配置文件完整性检查报告 | `./docs/05-operations/configuration.md` | `../../05-operations/configuration.md` |
+| 部署检查清单 | `./docs/_archive/operations/deployment-checklist.md` | `../integration/oauth2/pkce/deployment-checklist.md` |
+| 前后端API路由对比清单 | `./docs/_archive/api/route-mapping.md` | `../api/route-mapping.md` |
+| 前端迁移指南 | `./docs/04-development/frontend/migration-guide.md` | `../../04-development/frontend/migration-guide.md` |
+| 路由配置与启动指南 | `./docs/04-development/frontend/routing-guide.md` | `../../04-development/frontend/routing-guide.md` |
 | 系统架构设计 | `./architecture/system-architecture.md` | `../../architecture/system-architecture.md` |
 | 数据库设计 | `./architecture/database-design.md` | `../../architecture/database-design.md` |
 | 业务流程 | `./architecture/business-flows.md` | `../../architecture/business-flows.md` |
@@ -965,7 +965,7 @@
 
 | 链接文本 | 原路径 | 建议修复 |
 |----------|---------|----------|
-| docs/ARCHITECTURE_INDEX.md | `../ARCHITECTURE_INDEX.md` | `../02-architecture/architecture-index.md` |
+| docs/ARCHITECTURE_INDEX.md | `../02-architecture/architecture-index.md` | `../02-architecture/architecture-index.md` |
 | docs/frontend/component-guide.md | `../frontend/component-guide.md` | `../../04-development/frontend/component-guide.md` |
 | docs/commercial/sales-execution-plan.md | `../commercial/sales-execution-plan.md` | `../../07-commercial/sales-execution-plan.md` |
 
@@ -985,14 +985,14 @@
 | 链接文本 | 原路径 | 建议修复 |
 |----------|---------|----------|
 | 图表名称 | `diagrams/XX_xxx.svg` | ❌ 未找到目标 |
-| ARCHITECTURE_INDEX.md | `../ARCHITECTURE_INDEX.md` | `../02-architecture/architecture-index.md` |
+| ARCHITECTURE_INDEX.md | `../02-architecture/architecture-index.md` | `../02-architecture/architecture-index.md` |
 
 ### 📄 _archive/reports/文档图表优化方案_2026-09-11.md
 
 | 链接文本 | 原路径 | 建议修复 |
 |----------|---------|----------|
 | 现有39张图表 | `../diagrams/` | ❌ 未找到目标 |
-| ARCHITECTURE_INDEX.md | `../ARCHITECTURE_INDEX.md` | `../02-architecture/architecture-index.md` |
+| ARCHITECTURE_INDEX.md | `../02-architecture/architecture-index.md` | `../02-architecture/architecture-index.md` |
 
 ### 📄 _archive/technical/tests/PNG_TEST.md
 
@@ -1011,7 +1011,7 @@
 | 链接文本 | 原路径 | 建议修复 |
 |----------|---------|----------|
 | DDD四层架构详解 | `../architecture/01-logical-architecture-detail.md` | `../../architecture/01-logical-architecture-detail.md` |
-| 开发规范 | `../standards/backend-development-standards.md` | `../../04-development/backend-development-standards.md` |
+| 开发规范 | `../04-development/backend-development-standards.md` | `../../04-development/backend-development-standards.md` |
 | 故障排查指南 | `../TROUBLESHOOTING.md` | `../01-guides/troubleshooting.md` |
 
 ### 📄 _archive/认证授权体系文档总结报告.md
@@ -1031,7 +1031,7 @@
 
 | 链接文本 | 原路径 | 建议修复 |
 |----------|---------|----------|
-| 架构图索引 | `../ARCHITECTURE_INDEX.md` | `../02-architecture/architecture-index.md` |
+| 架构图索引 | `../02-architecture/architecture-index.md` | `../02-architecture/architecture-index.md` |
 
 ### 📄 architecture/02-physical-architecture-detail.md
 
@@ -1064,8 +1064,8 @@
 | 系统架构设计 | `./system-architecture.md` | `../system-architecture.md` |
 | 技术选型文档 | `./backend-technology-stack.md` | `../backend-technology-stack.md` |
 | 部署架构 | `./deployment-architecture.md` | `../deployment-architecture.md` |
-| 监控配置 | `../operations/monitoring-dashboard-configuration.md` | `../../_archive/operations/monitoring-dashboard-configuration.md` |
-| 后端开发规范 | `../standards/backend-development-standards.md` | `../../04-development/backend-development-standards.md` |
+| 监控配置 | `../_archive/operations/monitoring-dashboard-configuration.md` | `../../_archive/operations/monitoring-dashboard-configuration.md` |
+| 后端开发规范 | `../04-development/backend-development-standards.md` | `../../04-development/backend-development-standards.md` |
 | 前端开发规范 | `../standards/frontend-development-standards.md` | `../../04-development/frontend-development-standards.md` |
 
 ### 📄 architecture/_templates/quick-ref-template.md
@@ -1092,7 +1092,7 @@
 | Sentinel熔断限流架构图 | `../../../diagrams/sequence/82_sentinel_circuit_breaker_flow.mmd` | ❌ 未找到目标 |
 | Resilience4j熔断器状态机 | `../../../diagrams/sequence/83_resilience4j_state_machine.mmd` | ❌ 未找到目标 |
 | 热点参数限流时序图 | `../../../diagrams/sequence/84_rate_limit_hotspot_sequence.mmd` | ❌ 未找到目标 |
-| 后端开发规范 | `../../standards/backend-development-standards.md` | `../../04-development/backend-development-standards.md` |
+| 后端开发规范 | `../../04-development/backend-development-standards.md` | `../../04-development/backend-development-standards.md` |
 
 ### 📄 architecture/advanced-features/multi-level-cache-architecture.md
 
@@ -1107,7 +1107,7 @@
 | 链接文本 | 原路径 | 建议修复 |
 |----------|---------|----------|
 | Redis配置最佳实践 | `../../CONFIGURATION.md#redis` | `../../05-operations/configuration.md#redis` |
-| 性能优化指南 | `../../standards/backend-development-standards.md#性能优化` | `../../04-development/backend-development-standards.md#性能优化` |
+| 性能优化指南 | `../../04-development/backend-development-standards.md#性能优化` | `../../04-development/backend-development-standards.md#性能优化` |
 
 ### 📄 architecture/advanced-features/security-protection-system.md
 
@@ -1201,13 +1201,13 @@
 | 链接文本 | 原路径 | 建议修复 |
 |----------|---------|----------|
 | WebFlux Handler 总结 | `../webflux-handler-summary.md` | `../_archive/webflux-handler-summary.md` |
-| 后端开发规范 | `../standards/backend-development-standards.md` | `../04-development/backend-development-standards.md` |
+| 后端开发规范 | `../04-development/backend-development-standards.md` | `../04-development/backend-development-standards.md` |
 
 ### 📄 architecture/redis-watchdog-mechanism.md
 
 | 链接文本 | 原路径 | 建议修复 |
 |----------|---------|----------|
-| 后端开发规范 | `../standards/backend-development-standards.md` | `../04-development/backend-development-standards.md` |
+| 后端开发规范 | `../04-development/backend-development-standards.md` | `../04-development/backend-development-standards.md` |
 
 ### 📄 architecture/system-architecture.md
 
@@ -1221,13 +1221,13 @@
 
 | 链接文本 | 原路径 | 建议修复 |
 |----------|---------|----------|
-| ../ARCHITECTURE_INDEX.md | `../ARCHITECTURE_INDEX.md` | `../02-architecture/architecture-index.md` |
+| ../02-architecture/architecture-index.md | `../02-architecture/architecture-index.md` | `../02-architecture/architecture-index.md` |
 
 ### 📄 diagrams/sequence/README.md
 
 | 链接文本 | 原路径 | 建议修复 |
 |----------|---------|----------|
-| 架构文档索引 | `../../ARCHITECTURE_INDEX.md` | `../../02-architecture/architecture-index.md` |
+| 架构文档索引 | `../../02-architecture/architecture-index.md` | `../../02-architecture/architecture-index.md` |
 | 工作流引擎指南 | `../../WORKFLOW_GUIDE.md` | ❌ 未找到目标 |
 | 存储 SPI 指南 | `../../SPI_PLUGIN_GUIDE.md` | ❌ 未找到目标 |
 

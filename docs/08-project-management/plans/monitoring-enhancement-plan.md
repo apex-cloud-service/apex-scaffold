@@ -116,7 +116,7 @@
 - 必须标注: @author Apex Team、@version、@since
 
 #### 前端代码注释情况
-根据 `/docs/standards/frontend-development-standards.md`:
+根据前端规范（已迁移至独立前端仓库 `apex-admin-web` 的 `frontend-docs/frontend-development-standards.md`）:
 - ✅ 已有完整的前端开发规范文档
 - ⚠️ 实际代码注释覆盖率未明确
 - ⚠️ TypeScript类型定义完整但缺少注释说明
@@ -413,7 +413,7 @@
 
 **注释规范文档**:
 - ✅ 后端: `/docs/JAVADOC_GUIDE.md` - 783行完整规范
-- ✅ 前端: `/docs/standards/frontend-development-standards.md` - 541行规范
+- ✅ 前端: `frontend-docs/frontend-development-standards.md`（独立前端仓库 `apex-admin-web`） - 541行规范
 
 **注释要求**:
 - 后端: 所有public/protected类、方法、字段必须有JavaDoc

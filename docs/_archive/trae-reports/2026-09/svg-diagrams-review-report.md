@@ -461,7 +461,7 @@
 
 3. **在 Markdown 中引用**:
    ```markdown
-   ![逻辑架构](docs/diagrams/01_logical_architecture.svg)
+   ![逻辑架构](../../../diagrams/01_logical_architecture.svg)
    ```
 
 ### 图表更新流程

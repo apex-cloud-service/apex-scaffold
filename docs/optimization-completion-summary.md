@@ -11,25 +11,25 @@
 ### ✅ 核心优化项（100% 完成）
 
 #### 1. BloomFilter 完整集成
-- ✅ 核心服务实现：[BloomFilterService.java](file:///Users/work/apex-scaffold/apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/filter/BloomFilterService.java)
-- ✅ 启动预热器：[BloomFilterCacheWarmer.java](file:///Users/work/apex-scaffold/apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/loader/BloomFilterCacheWarmer.java)
+- ✅ 核心服务实现：[BloomFilterService.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/filter/BloomFilterService.java)
+- ✅ 启动预热器：[BloomFilterCacheWarmer.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/loader/BloomFilterCacheWarmer.java)
   - 新增 `@Order(Ordered.HIGHEST_PRECEDENCE)` 确保优先执行
-- ✅ 多级缓存集成：[MultiLevelCacheService.java](file:///Users/work/apex-scaffold/apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/service/MultiLevelCacheService.java)
+- ✅ 多级缓存集成：[MultiLevelCacheService.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/service/MultiLevelCacheService.java)
   - 读取路径集成 BloomFilter 过滤
   - 回源成功自动更新 BloomFilter
 - ✅ 命名空间提取：`extractNamespace()` 方法支持分域隔离
 
 #### 2. 定时重建机制
-- ✅ 重建任务：[BloomFilterRebuildTask.java](file:///Users/work/apex-scaffold/apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/task/BloomFilterRebuildTask.java)
+- ✅ 重建任务：[BloomFilterRebuildTask.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/task/BloomFilterRebuildTask.java)
   - 默认每天凌晨 3 点自动重建
   - 支持手动触发 `manualRebuild()`
   - 完整的异常处理和日志记录
-- ✅ 重建监控指标：[BloomFilterRebuildMetrics.java](file:///Users/work/apex-scaffold/apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/metrics/BloomFilterRebuildMetrics.java)
+- ✅ 重建监控指标：[BloomFilterRebuildMetrics.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/metrics/BloomFilterRebuildMetrics.java)
   - `bloom_filter_rebuild_success_total` - 成功次数
   - `bloom_filter_rebuild_failures_total` - 失败次数
 
 #### 3. 监控指标体系
-- ✅ 查询指标采集：[BloomFilterMetrics.java](file:///Users/work/apex-scaffold/apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/metrics/BloomFilterMetrics.java)
+- ✅ 查询指标采集：[BloomFilterMetrics.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/metrics/BloomFilterMetrics.java)
   - `cache_bloom_filter_hits_total` - 过滤掉的请求数
   - `cache_bloom_filter_pass_total` - 通过的请求数
   - `cache_bloom_filter_false_positives_total` - 误判次数
@@ -39,29 +39,29 @@
 - ✅ 业务层误判上报接口 `recordFalsePositive()`
 
 #### 4. 配置管理完善
-- ✅ 配置属性类：[CacheProperties.java](file:///Users/work/apex-scaffold/apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/config/CacheProperties.java)
+- ✅ 配置属性类：[CacheProperties.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/config/CacheProperties.java)
   - 新增 `BloomFilter.Rebuild` 嵌套配置
   - 新增 `BloomFilter.Metrics` 嵌套配置
-- ✅ 分域容量配置：[BloomFilterNamespaceProperties.java](file:///Users/work/apex-scaffold/apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/config/BloomFilterNamespaceProperties.java)
+- ✅ 分域容量配置：[BloomFilterNamespaceProperties.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/config/BloomFilterNamespaceProperties.java)
   - 支持命名空间独立配置
   - 支持自适应扩容开关
-- ✅ 开发环境配置：[application.yml](file:///Users/work/apex-scaffold/apex-interfaces/src/main/resources/application.yml)
+- ✅ 开发环境配置：[application.yml](../apex-interfaces/src/main/resources/application.yml)
   - 完整的 BloomFilter 配置段
   - 分域容量示例配置
-- ✅ 生产环境配置：[application-prod.yml](file:///Users/work/apex-scaffold/apex-interfaces/src/main/resources/application-prod.yml)
+- ✅ 生产环境配置：[application-prod.yml](../apex-interfaces/src/main/resources/application-prod.yml)
   - 4 个命名空间容量配置（user/order/media/product）
   - 定时重建和监控指标启用
 
 #### 5. 测试覆盖
-- ✅ BloomFilter 服务测试：[BloomFilterServiceTest.java](file:///Users/work/apex-scaffold/apex-infrastructure/src/test/java/com/apex/scaffold/infrastructure/cache/filter/BloomFilterServiceTest.java) - 8 个用例
-- ✅ 定时重建测试：[BloomFilterRebuildTaskTest.java](file:///Users/work/apex-scaffold/apex-infrastructure/src/test/java/com/apex/scaffold/infrastructure/cache/task/BloomFilterRebuildTaskTest.java) - 4 个用例
-- ✅ Sentinel 规则加载测试：[SentinelDynamicRulesLoaderTest.java](file:///Users/work/apex-scaffold/apex-interfaces/src/test/java/com/apex/scaffold/interfaces/config/SentinelDynamicRulesLoaderTest.java) - 4 个用例
-- ✅ 集成测试框架：[MultiLevelCacheServiceBloomFilterIntegrationTest.java](file:///Users/work/apex-scaffold/apex-infrastructure/src/test/java/com/apex/scaffold/infrastructure/cache/service/MultiLevelCacheServiceBloomFilterIntegrationTest.java)
+- ✅ BloomFilter 服务测试：[BloomFilterServiceTest.java](../apex-infrastructure/src/test/java/com/apex/scaffold/infrastructure/cache/filter/BloomFilterServiceTest.java) - 8 个用例
+- ✅ 定时重建测试：[BloomFilterRebuildTaskTest.java](../apex-infrastructure/src/test/java/com/apex/scaffold/infrastructure/cache/task/BloomFilterRebuildTaskTest.java) - 4 个用例
+- ✅ Sentinel 规则加载测试：[SentinelDynamicRulesLoaderTest.java](../apex-interfaces/src/test/java/com/apex/scaffold/interfaces/config/SentinelDynamicRulesLoaderTest.java) - 4 个用例
+- ✅ 集成测试框架：[MultiLevelCacheServiceBloomFilterIntegrationTest.java](../apex-infrastructure/src/test/java/com/apex/scaffold/infrastructure/cache/service/MultiLevelCacheServiceBloomFilterIntegrationTest.java)
 
 #### 6. 文档完善
-- ✅ 基础设施总评审：[infrastructure-review-report.md](file:///Users/work/apex-scaffold/docs/infrastructure-review-report.md)
-- ✅ 缓存深度评审补充：[cache-review-supplement.md](file:///Users/work/apex-scaffold/docs/cache-review-supplement.md)
-- ✅ 缓存最终评审报告：[cache-review-final.md](file:///Users/work/apex-scaffold/docs/cache-review-final.md)
+- ✅ 基础设施总评审：[infrastructure-review-report.md](infrastructure-review-report.md)
+- ✅ 缓存深度评审补充：[cache-review-supplement.md](cache-review-supplement.md)
+- ✅ 缓存最终评审报告：[cache-review-final.md](cache-review-final.md)
 
 ---
 

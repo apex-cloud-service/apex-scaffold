@@ -325,7 +325,7 @@ example:
 
 ### 开发规范
 - [后端开发规范](../../04-development/backend-development-standards.md)
-- [前端开发规范](../../04-development/frontend-development-standards.md)
+- 前端开发规范：已迁移至独立前端仓库 `apex-admin-web` 的 `frontend-docs/frontend-development-standards.md`
 
 ### 外部资源
 - [官方文档](https://example.com)

@@ -189,8 +189,8 @@ open apex-auth-center/target/site/jacoco/index.html
 ## 文档
 
 - **测试指南**: [TESTING.md](./TESTING.md)
-- **设计方案**: [unified-auth-center-design.md](../.trae/documents/unified-auth-center-design.md)
-- **历史阶段报告（不作为当前验证结果）**: [auth-center-stage2-complete.md](../.trae/documents/auth-center-stage2-complete.md)
+- **设计方案**: [unified-auth-center-design.md](../docs/_archive/trae-documents/unified-auth-center-design.md)
+- **历史阶段报告（不作为当前验证结果）**: [auth-center-stage2-complete.md](../docs/_archive/trae-documents/auth-center-stage2-complete.md)
 
 ## 技术栈
 

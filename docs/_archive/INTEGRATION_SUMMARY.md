@@ -342,7 +342,7 @@ docs/reports/archive/
 
 1. 阅读 [ARCHITECTURE_INDEX.md](../02-architecture/architecture-index.md) 了解架构全貌
 2. 根据岗位查看对应开发规范 ([后端](../04-development/backend-development-standards.md) / [前端](../04-development/frontend-development-standards.md))
-3. 查阅 [QUICK_START.md](../00-getting-started/quickstart.md) 快速启动项目
+3. 查阅 [00-getting-started/quickstart.md](../00-getting-started/quickstart.md) 快速启动项目
 
 ### 功能开发
 
@@ -376,7 +376,7 @@ docs/reports/archive/
 
 - **架构文档总索引**: [ARCHITECTURE_INDEX.md](../02-architecture/architecture-index.md)
 - **项目主文档**: [README.md](../README.md)
-- **快速开始**: [QUICK_START.md](../00-getting-started/quickstart.md)
+- **快速开始**: [00-getting-started/quickstart.md](../00-getting-started/quickstart.md)
 
 ### 专项索引
 

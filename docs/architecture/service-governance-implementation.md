@@ -12,14 +12,14 @@
 
 ## 1. 当前状态与实现结论
 
-- [GracefulShutdownManager.java](file:///Users/work/apex-scaffold/apex-interfaces/src/main/java/com/apex/scaffold/interfaces/config/GracefulShutdownManager.java) 已实现 `SmartLifecycle`，但使用固定 15 秒 `Thread.sleep`，未主动切换 readiness、未统一管理 MQ/线程池排空。
-- [application.yml](file:///Users/work/apex-scaffold/apex-interfaces/src/main/resources/application.yml) 已启用 `server.shutdown=graceful`，管理端口默认 `8081`，readiness 包含 `readinessState,db,redis`，但关停时没有主动设置拒绝流量。
-- [SentinelConfig.java](file:///Users/work/apex-scaffold/apex-interfaces/src/main/java/com/apex/scaffold/interfaces/config/SentinelConfig.java) 已有流控、熔断和系统保护规则；本次不改变业务资源规则，仅使其与治理状态解耦。
-- [SentinelNacosDataSourceConfig.java](file:///Users/work/apex-scaffold/apex-interfaces/src/main/java/com/apex/scaffold/interfaces/config/SentinelNacosDataSourceConfig.java) 已接入动态规则；本次仅在必要处补充生命周期和失败策略配置，不把 Nacos 故障误判为应用存活失败。
-- [MqConsumerService.java](file:///Users/work/apex-scaffold/apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/mq/service/MqConsumerService.java)、[UserMessageListener.java](file:///Users/work/apex-scaffold/apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/mq/listener/UserMessageListener.java)、[DeadLetterQueueProcessor.java](file:///Users/work/apex-scaffold/apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/mq/listener/DeadLetterQueueProcessor.java) 需要提供停止 intake、in-flight 计数和 deadline drain 能力。
-- [ThreadPoolConfig.java](file:///Users/work/apex-scaffold/apex-interfaces/src/main/java/com/apex/scaffold/interfaces/config/ThreadPoolConfig.java) 与 [AsyncConfig.java](file:///Users/work/apex-scaffold/apex-interfaces/src/main/java/com/apex/scaffold/interfaces/config/AsyncConfig.java) 各自管理关闭等待，需接入统一资源排空协议，避免等待时间叠加。
-- [k8s/deployment.yaml](file:///Users/work/apex-scaffold/k8s/deployment.yaml) 已存在 probes 与 HPA；[docker-compose.yml](file:///Users/work/apex-scaffold/docker-compose.yml) 已有基础服务，但应用缺少 readiness healthcheck 和 stop grace 配置。
-- [scripts/deploy/app.sh](file:///Users/work/apex-scaffold/scripts/deploy/app.sh)、[scripts/deploy/start.sh](file:///Users/work/apex-scaffold/scripts/deploy/start.sh)、[scripts/deploy/stop.sh](file:///Users/work/apex-scaffold/scripts/deploy/stop.sh) 需要统一检查管理端口 readiness 和退出码。
+- [GracefulShutdownManager.java](../../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/config/GracefulShutdownManager.java) 已实现 `SmartLifecycle`，但使用固定 15 秒 `Thread.sleep`，未主动切换 readiness、未统一管理 MQ/线程池排空。
+- [application.yml](../../apex-interfaces/src/main/resources/application.yml) 已启用 `server.shutdown=graceful`，管理端口默认 `8081`，readiness 包含 `readinessState,db,redis`，但关停时没有主动设置拒绝流量。
+- [SentinelConfig.java](../../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/config/SentinelConfig.java) 已有流控、熔断和系统保护规则；本次不改变业务资源规则，仅使其与治理状态解耦。
+- [SentinelNacosDataSourceConfig.java](../../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/config/SentinelNacosDataSourceConfig.java) 已接入动态规则；本次仅在必要处补充生命周期和失败策略配置，不把 Nacos 故障误判为应用存活失败。
+- [MqConsumerService.java](../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/mq/service/MqConsumerService.java)、[UserMessageListener.java](../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/mq/listener/UserMessageListener.java)、[DeadLetterQueueProcessor.java](../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/mq/listener/DeadLetterQueueProcessor.java) 需要提供停止 intake、in-flight 计数和 deadline drain 能力。
+- [ThreadPoolConfig.java](../../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/config/ThreadPoolConfig.java) 与 [AsyncConfig.java](../../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/config/AsyncConfig.java) 各自管理关闭等待，需接入统一资源排空协议，避免等待时间叠加。
+- [k8s/deployment.yaml](../../k8s/deployment.yaml) 已存在 probes 与 HPA；[docker-compose.yml](../../docker-compose.yml) 已有基础服务，但应用缺少 readiness healthcheck 和 stop grace 配置。
+- [scripts/deploy/app.sh](../../scripts/deploy/app.sh)、[scripts/deploy/start.sh](../../scripts/deploy/start.sh)、[scripts/deploy/stop.sh](../../scripts/deploy/stop.sh) 需要统一检查管理端口 readiness 和退出码。
 - 未找到 `AGENTS.md` 和 `docs/guide/代码开发规范.md`，实现遵循已加载 Java/Spring 规范与仓库现有 Javadoc、配置注释、测试命名风格。
 
 ## 2. 明确的设计决策
@@ -73,7 +73,7 @@
 - `k8s/pod-disruption-budget.yaml`：新增稳定版本 PDB。
 - `scripts/deploy/app.sh`、`start.sh`、`stop.sh`：统一 readiness、超时、强杀和退出码。
 - `scripts/deploy/apex-scaffold.service`：与应用总关停预算一致。
-- `quick-start.sh`：修复硬编码路径和管理端口健康检查。
+- `scripts/dev/quick-start.sh`：修复硬编码路径和管理端口健康检查。
 - `docs/architecture/system-architecture.md` 或现有部署文档：补充治理模式、状态机、部署迁移和故障策略。
 - `k8s/README.md`：补充探针、HPA、PDB 和 selector 约定。
 - `k8s/validate-manifests.sh`：若仓库无现成 manifest 校验工具则新增，用于本地/CI 静态校验。
@@ -184,14 +184,14 @@
 - Modify: `scripts/deploy/start.sh`
 - Modify: `scripts/deploy/stop.sh`
 - Modify: `scripts/deploy/apex-scaffold.service`
-- Modify: `quick-start.sh`
+- Modify: `scripts/dev/quick-start.sh`
 - Create if absent: `k8s/validate-manifests.sh`
 
 - [ ] YAML 为每个治理参数增加中文注释，环境变量只作为注入入口；统一 `MANAGEMENT_SERVER_ADDRESS`、management port、readiness URL 和总关停预算。
 - [ ] Compose 增加 `healthcheck` 检查 `http://127.0.0.1:8081/actuator/health/readiness`、`stop_grace_period`，依赖方从 `service_started` 改为 `service_healthy`；修正 Redis 健康检查认证参数。
 - [ ] `app.sh` 使用 `set -Eeuo pipefail`，启动轮询 readiness，停止时使用 SIGTERM、等待统一 timeout、超时执行 `kill -9` 并返回非零码；不得在强杀后输出成功。
 - [ ] `start.sh` 和 `stop.sh` 传递 deployment mode 和 timeout，不改变用户传入的 Compose 参数；所有输出不包含敏感配置。
-- [ ] systemd `TimeoutStopSec` 大于应用 drain deadline 并预留传播缓冲；`quick-start.sh` 去掉机器相关绝对路径，改检查管理端口 readiness。
+- [ ] systemd `TimeoutStopSec` 大于应用 drain deadline 并预留传播缓冲；`scripts/dev/quick-start.sh` 去掉机器相关绝对路径，改检查管理端口 readiness。
 - [ ] manifest 校验脚本使用仓库已有工具；若无工具，至少校验 YAML 可解析、探针路径、selector 标签、termination grace 和 HPA 引用存在，失败返回非零码。
 
 ### Task 7：Kubernetes 迁移配置

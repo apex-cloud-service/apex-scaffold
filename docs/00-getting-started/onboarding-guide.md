@@ -224,7 +224,7 @@ curl -X POST http://localhost:8080/api/v1/auth/login \
 - [MyBatis-Plus使用指南](../01-guides/best-practices.md)
 
 ### 前端开发
-- [前端开发规范](../04-development/frontend-development-standards.md)
+- 前端开发规范：已迁移至独立前端仓库 `apex-admin-web` 的 `frontend-docs/frontend-development-standards.md`
 - [Vue 3 Composition API实践](../architecture/frontend-technology-stack.md)
 - [API路由映射](../_archive/api/route-mapping.md)
 

@@ -647,14 +647,14 @@ long count = users.stream()
 ## 项目代码索引
 
 **优秀实践参考**:
-- 配置验证批处理: [ApexBlockingIoProperties.java](file:///Users/work/apex-scaffold/apex-common/src/main/java/com/apex/scaffold/common/config/ApexBlockingIoProperties.java#L194-L213)
-- 策略自动注册: [LoginStrategyProvider.java](file:///Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/service/login/LoginStrategyProvider.java#L72-L78)
-- 响应式链式操作: [CacheServiceImpl.java](file:///Users/work/apex-scaffold/apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/service/CacheServiceImpl.java#L142-L167)
-- 阻塞 IO 隔离: [SubscriptionRepositoryImpl.java](file:///Users/work/apex-scaffold/apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/persistence/repository/SubscriptionRepositoryImpl.java#L55-L65)
+- 配置验证批处理: [ApexBlockingIoProperties.java](../../../apex-common/src/main/java/com/apex/scaffold/common/config/ApexBlockingIoProperties.java#L194-L213)
+- 策略自动注册: [LoginStrategyProvider.java](../../../apex-application/src/main/java/com/apex/scaffold/application/service/login/LoginStrategyProvider.java#L72-L78)
+- 响应式链式操作: [CacheServiceImpl.java](../../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/service/CacheServiceImpl.java#L142-L167)
+- 阻塞 IO 隔离: [SubscriptionRepositoryImpl.java](../../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/persistence/repository/SubscriptionRepositoryImpl.java#L55-L65)
 
 **待优化代码**:
-- 限流器清理: [LocalRateLimiter.java#L246-L260](file:///Users/work/apex-scaffold/apex-common/src/main/java/com/apex/scaffold/common/util/ratelimit/LocalRateLimiter.java#L246-L260)
-- 部门树构建: [DeptService.java#L137-L151](file:///Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/service/DeptService.java#L137-L151)
+- 限流器清理: [LocalRateLimiter.java#L246-L260](../../../apex-common/src/main/java/com/apex/scaffold/common/util/ratelimit/LocalRateLimiter.java#L246-L260)
+- 部门树构建: [DeptService.java#L137-L151](../../../apex-application/src/main/java/com/apex/scaffold/application/service/DeptService.java#L137-L151)
 
 ---
 

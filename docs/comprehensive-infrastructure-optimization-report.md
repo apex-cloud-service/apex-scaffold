@@ -48,11 +48,11 @@
 #### 优化项
 
 1. **BloomFilter 防穿透**
-   - 文件: [BloomFilterService.java](file:///Users/work/apex-scaffold/apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/filter/BloomFilterService.java)
+   - 文件: [BloomFilterService.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/filter/BloomFilterService.java)
    - 效果: 100万元素仅需1.2MB内存，O(k)时间复杂度
 
 2. **Sentinel 规则外部化**
-   - 文件: [SentinelDynamicRulesLoader.java](file:///Users/work/apex-scaffold/apex-interfaces/src/main/java/com/apex/scaffold/interfaces/config/SentinelDynamicRulesLoader.java)
+   - 文件: [SentinelDynamicRulesLoader.java](../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/config/SentinelDynamicRulesLoader.java)
    - 效果: 规则修改无需重启，支持热更新
 
 3. **链路追踪采样率提升**
@@ -100,12 +100,12 @@
 #### 优化项
 
 1. **敏感信息脱敏**
-   - 文件: [SensitiveDataMasker.java](file:///Users/work/apex-scaffold/apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/logging/SensitiveDataMasker.java)
+   - 文件: [SensitiveDataMasker.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/logging/SensitiveDataMasker.java)
    - 支持格式: JSON、XML、URL 参数
    - 性能开销: < 1ms
 
 2. **日志采样**
-   - 文件: [LogSampler.java](file:///Users/work/apex-scaffold/apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/logging/LogSampler.java)
+   - 文件: [LogSampler.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/logging/LogSampler.java)
    - 策略: 时间窗口采样
    - ERROR 日志: 强制输出，不采样
 
@@ -128,7 +128,7 @@
 #### 优化项
 
 1. **监控指标增强**
-   - 文件: [GatewayMetrics.java](file:///Users/work/apex-scaffold/apex-interfaces/src/main/java/com/apex/scaffold/interfaces/metrics/GatewayMetrics.java)
+   - 文件: [GatewayMetrics.java](../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/metrics/GatewayMetrics.java)
    - 新增指标: 6 个
    - 覆盖维度: 连接、队列、限流、熔断
 
@@ -184,10 +184,10 @@
 
 | 文档 | 字数 | 用途 |
 |-----|------|------|
-| [infrastructure-review-report.md](file:///Users/work/apex-scaffold/docs/infrastructure-review-report.md) | 8000+ | 基础设施评审报告（缓存、熔断、限流） |
-| [rocketmq-production-optimization.md](file:///Users/work/apex-scaffold/docs/rocketmq-production-optimization.md) | 15000+ | RocketMQ 生产优化完整报告 |
-| [logging-gateway-production-optimization.md](file:///Users/work/apex-scaffold/docs/logging-gateway-production-optimization.md) | 12000+ | 日志和网关生产优化报告 |
-| [rocketmq-optimization-summary.md](file:///Users/work/apex-scaffold/docs/rocketmq-optimization-summary.md) | 3000+ | RocketMQ 优化快速参考 |
+| [infrastructure-review-report.md](infrastructure-review-report.md) | 8000+ | 基础设施评审报告（缓存、熔断、限流） |
+| [rocketmq-production-optimization.md](rocketmq-production-optimization.md) | 15000+ | RocketMQ 生产优化完整报告 |
+| [logging-gateway-production-optimization.md](logging-gateway-production-optimization.md) | 12000+ | 日志和网关生产优化报告 |
+| [rocketmq-optimization-summary.md](rocketmq-optimization-summary.md) | 3000+ | RocketMQ 优化快速参考 |
 
 **总计**: **4 份完整文档，40,000+ 字** ✅
 
@@ -208,12 +208,12 @@
 
 | 配置文件 | 优化内容 |
 |---------|---------|
-| [application.yml](file:///Users/work/apex-scaffold/apex-interfaces/src/main/resources/application.yml) | 基础配置、日志级别、追踪采样率 |
-| [application-prod.yml](file:///Users/work/apex-scaffold/apex-interfaces/src/main/resources/application-prod.yml) | 生产环境配置、RocketMQ、Netty 性能调优 |
-| [logback-spring.xml](file:///Users/work/apex-scaffold/apex-interfaces/src/main/resources/logback-spring.xml) | 日志配置、Appender、Logger 规则 |
-| [alert-rules.yml](file:///Users/work/apex-scaffold/config/monitoring/prometheus/alert-rules.yml) | Prometheus 告警规则（22 个） |
-| [rocketmq-prod.yml](file:///Users/work/apex-scaffold/config/rocketmq-prod.yml) | RocketMQ 生产环境增强配置 |
-| [sentinel-rules.json](file:///Users/work/apex-scaffold/config/sentinel/sentinel-rules.json) | Sentinel 流控规则外部化 |
+| [application.yml](../apex-interfaces/src/main/resources/application.yml) | 基础配置、日志级别、追踪采样率 |
+| [application-prod.yml](../apex-interfaces/src/main/resources/application-prod.yml) | 生产环境配置、RocketMQ、Netty 性能调优 |
+| [logback-spring.xml](../apex-interfaces/src/main/resources/logback-spring.xml) | 日志配置、Appender、Logger 规则 |
+| [alert-rules.yml](../config/monitoring/prometheus/alert-rules.yml) | Prometheus 告警规则（22 个） |
+| [rocketmq-prod.yml](../config/rocketmq-prod.yml) | RocketMQ 生产环境增强配置 |
+| [sentinel-rules.json](../config/sentinel/sentinel-rules.json) | Sentinel 流控规则外部化 |
 
 ---
 

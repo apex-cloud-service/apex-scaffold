@@ -1277,7 +1277,7 @@ const handleSearch = useDebounceFn((keyword: string) => {
 
 ## 9. 开发规范
 
-详见 [前端开发规范文档](../04-development/frontend-development-standards.md)
+详见 独立前端仓库 `apex-admin-web` 的 `frontend-docs/frontend-development-standards.md`（前端开发规范文档）
 
 ---
 
@@ -1407,10 +1407,8 @@ apex-admin-web/
 
 ### C. 相关文档
 
-- [前端开发规范](../04-development/frontend-development-standards.md)
+- 前端开发规范、前端迁移指南、路由配置指南：已迁移至独立前端仓库 `apex-admin-web` 的 `frontend-docs/` 目录
 - [API路由映射](../_archive/api/route-mapping.md)
-- [前端迁移指南](../04-development/frontend/migration-guide.md)
-- [路由配置指南](../04-development/frontend/routing-guide.md)
 
 ---
 

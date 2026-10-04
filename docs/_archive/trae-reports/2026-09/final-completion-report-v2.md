@@ -159,15 +159,15 @@
 
 ### 五、时序图文档（docs/diagrams/sequence/）⭐ 新增
 
-14. [30_user_login_sequence.mmd](file:///Users/work/apex-scaffold/docs/diagrams/sequence/30_user_login_sequence.mmd) - 用户登录认证时序图
-15. [31_permission_check_sequence.mmd](file:///Users/work/apex-scaffold/docs/diagrams/sequence/31_permission_check_sequence.mmd) - RBAC 权限校验时序图
-16. [32_workflow_approval_sequence.mmd](file:///Users/work/apex-scaffold/docs/diagrams/sequence/32_workflow_approval_sequence.mmd) - 工作流审批时序图
-17. [33_file_upload_sequence.mmd](file:///Users/work/apex-scaffold/docs/diagrams/sequence/33_file_upload_sequence.mmd) - 文件上传时序图
-18. [sequence/README.md](file:///Users/work/apex-scaffold/docs/diagrams/sequence/README.md) - 时序图使用指南
+14. [30_user_login_sequence.mmd](../../../diagrams/sequence/30_user_login_sequence.mmd) - 用户登录认证时序图
+15. [31_permission_check_sequence.mmd](../../../diagrams/sequence/31_permission_check_sequence.mmd) - RBAC 权限校验时序图
+16. [32_workflow_approval_sequence.mmd](../../../diagrams/sequence/32_workflow_approval_sequence.mmd) - 工作流审批时序图
+17. [33_file_upload_sequence.mmd](../../../diagrams/sequence/33_file_upload_sequence.mmd) - 文件上传时序图
+18. [sequence/README.md](../../../diagrams/sequence/README.md) - 时序图使用指南
 
 ### 六、优化文档
 
-19. [README.md](file:///Users/work/apex-scaffold/README.md) - 修复 3 处版本号，添加 3 个徽章，优化快速开始
+19. [README.md](../../../../README.md) - 修复 3 处版本号，添加 3 个徽章，优化快速开始
 20. [ARCHITECTURE_INDEX.md](../../../02-architecture/architecture-index.md) - 更新文档版本号 v1.5
 
 ---
@@ -190,7 +190,7 @@
 
 ### 新增文件（18 个）⭐
 
-- ✅ docs/operations/environment-variables.md（新增）
+- ✅ docs/_archive/operations/environment-variables.md（新增）
 - ✅ docs/QUICKSTART.md（新增）
 - ✅ docs/diagrams/sequence/*.mmd（4 张时序图，新增）
 - ✅ docs/diagrams/sequence/README.md（时序图指南，新增）
@@ -270,7 +270,7 @@
 1. 📖 **快速上手**: 阅读 [QUICKSTART.md](../../../00-getting-started/quickstart.md)（5 分钟启动）
 2. 🏗️ **理解架构**: 阅读 [ARCHITECTURE_INDEX.md](../../../02-architecture/architecture-index.md)（29 张架构图 + 4 张时序图）
 3. 🔧 **配置环境**: 参考 [environment-variables.md](../../operations/environment-variables.md)（172 个变量）
-4. ⏱️ **理解流程**: 查看 [时序图](file:///Users/work/apex-scaffold/docs/diagrams/sequence/)（登录、权限、工作流、文件上传）
+4. ⏱️ **理解流程**: 查看 [时序图](../../../diagrams/sequence)（登录、权限、工作流、文件上传）
 
 ### 给运维人员
 

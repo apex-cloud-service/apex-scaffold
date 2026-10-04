@@ -69,4 +69,4 @@
 | K8s 部署脚本 | - | - | ✅ |
 | 企业支持 | - | 邮件 5 工作日 | 专属客服 2 小时 |
 
-> 详细对比见 [docs/COMMERCIAL_VERSIONS.md](docs/COMMERCIAL_VERSIONS.md)
+> 详细对比见 [docs/07-commercial/COMMERCIAL_VERSIONS.md](docs/07-commercial/COMMERCIAL_VERSIONS.md)

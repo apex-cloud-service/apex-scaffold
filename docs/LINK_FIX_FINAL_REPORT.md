@@ -34,10 +34,10 @@
 - `FAQ.md` → `01-guides/troubleshooting.md`
 
 **文件**: `01-guides/developer-handbook.md` （17 个链接）
-- `./QUICK_START.md` → `../00-getting-started/quickstart.md`
+- `./00-getting-started/quickstart.md` → `../00-getting-started/quickstart.md`
 - `./CONFIGURATION.md` → `../05-operations/configuration.md`
 - `./ENVIRONMENT_VARIABLES.md` → `../05-operations/configuration.md`
-- `./ARCHITECTURE_INDEX.md` → `../02-architecture/architecture-index.md`
+- `./02-architecture/architecture-index.md` → `../02-architecture/architecture-index.md`
 - `./CODEGEN.md` → `../04-development/codegen.md`
 - `./BEST_PRACTICES.md` → `../01-guides/best-practices.md`
 - `./LOMBOK_GUIDE.md` → `../04-development/lombok-guide.md`
@@ -90,7 +90,7 @@
 
 ### 1. 大写文件名 → 小写文件名
 ```
-QUICK_START.md → quickstart.md
+00-getting-started/quickstart.md → quickstart.md
 CONFIGURATION.md → configuration.md
 BEST_PRACTICES.md → best-practices.md
 ```

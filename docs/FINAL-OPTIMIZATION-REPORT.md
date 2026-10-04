@@ -279,15 +279,15 @@ ratelimit_distributed_redis_errors_total
 
 | 序号 | 文档名称 | 字数 | 说明 |
 |-----|---------|------|------|
-| 1 | [infrastructure-review-report.md](file:///Users/work/apex-scaffold/docs/infrastructure-review-report.md) | 8,000+ | 基础设施总体评审 |
-| 2 | [rocketmq-production-optimization.md](file:///Users/work/apex-scaffold/docs/rocketmq-production-optimization.md) | 15,000+ | RocketMQ 生产优化 |
-| 3 | [rocketmq-auto-handler-guide.md](file:///Users/work/apex-scaffold/docs/rocketmq-auto-handler-guide.md) | 15,000+ | 消息自动处理指南 |
-| 4 | [rocketmq-auto-handler-summary.md](file:///Users/work/apex-scaffold/docs/rocketmq-auto-handler-summary.md) | 5,000+ | 消息自动处理总结 |
-| 5 | [logging-gateway-production-optimization.md](file:///Users/work/apex-scaffold/docs/logging-gateway-production-optimization.md) | 12,000+ | 日志和网关优化 |
-| 6 | [distributed-ratelimit-implementation.md](file:///Users/work/apex-scaffold/docs/distributed-ratelimit-implementation.md) | 8,000+ | 分布式限流实现 |
-| 7 | [grafana-dashboard-optimization.md](file:///Users/work/apex-scaffold/docs/grafana-dashboard-optimization.md) | 12,000+ | Grafana 面板优化 |
-| 8 | [comprehensive-infrastructure-optimization-report.md](file:///Users/work/apex-scaffold/docs/comprehensive-infrastructure-optimization-report.md) | 10,000+ | 综合优化报告 |
-| 9 | [FINAL-OPTIMIZATION-REPORT.md](file:///Users/work/apex-scaffold/docs/FINAL-OPTIMIZATION-REPORT.md) | 本文档 | 最终优化报告 |
+| 1 | [infrastructure-review-report.md](infrastructure-review-report.md) | 8,000+ | 基础设施总体评审 |
+| 2 | [rocketmq-production-optimization.md](rocketmq-production-optimization.md) | 15,000+ | RocketMQ 生产优化 |
+| 3 | [rocketmq-auto-handler-guide.md](rocketmq-auto-handler-guide.md) | 15,000+ | 消息自动处理指南 |
+| 4 | [rocketmq-auto-handler-summary.md](rocketmq-auto-handler-summary.md) | 5,000+ | 消息自动处理总结 |
+| 5 | [logging-gateway-production-optimization.md](logging-gateway-production-optimization.md) | 12,000+ | 日志和网关优化 |
+| 6 | [distributed-ratelimit-implementation.md](distributed-ratelimit-implementation.md) | 8,000+ | 分布式限流实现 |
+| 7 | [grafana-dashboard-optimization.md](grafana-dashboard-optimization.md) | 12,000+ | Grafana 面板优化 |
+| 8 | [comprehensive-infrastructure-optimization-report.md](comprehensive-infrastructure-optimization-report.md) | 10,000+ | 综合优化报告 |
+| 9 | [FINAL-OPTIMIZATION-REPORT.md](FINAL-OPTIMIZATION-REPORT.md) | 本文档 | 最终优化报告 |
 
 ---
 

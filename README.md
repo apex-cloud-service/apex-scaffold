@@ -244,7 +244,7 @@ REDIS_PASSWORD=your_redis_password
 JWT_SECRET=your-secret-key-at-least-32-bytes
 ```
 
-**完整配置说明**: 查看 [环境变量管理指南](docs/operations/environment-variables.md)（172 个环境变量详细说明）
+**完整配置说明**: 查看 [环境变量管理指南](docs/_archive/operations/environment-variables.md)（172 个环境变量详细说明）
 
 ---
 
@@ -446,15 +446,15 @@ spring:
 
 ### 📑 文档索引快速入口
 
-**🔍 [文档搜索工具](./docs/doc-search.html)** - 支持关键词搜索、分类过滤、实时预览 ([使用说明](./docs/DOC_SEARCH_GUIDE.md))
+**🔍 [文档搜索工具](./docs/doc-search.html)** - 支持关键词搜索、分类过滤、实时预览 ([使用说明](./docs/01-guides/doc-search-guide.md))
 
 | 索引类型 | 文档路径 | 说明 |
 |---------|---------|------|
-| **🏗️ 架构文档总索引** | [ARCHITECTURE_INDEX.md](./docs/ARCHITECTURE_INDEX.md) | 29张架构图 + 场景化查找 + 关键词索引 |
-| **🔌 集成文档索引** | [integration/README.md](./docs/integration/README.md) | OAuth2/PKCE 认证集成完整指南 |
-| **📊 文档整合摘要** | [INTEGRATION_SUMMARY.md](./docs/INTEGRATION_SUMMARY.md) | 51个整合文档索引 + 按场景/关键词查找 |
-| **📋 快速开始** | [QUICK_START.md](./docs/QUICK_START.md) | 5分钟快速启动项目 |
-| **🔧 最佳实践** | [BEST_PRACTICES.md](./docs/BEST_PRACTICES.md) | 开发和运维最佳实践 |
+| **🏗️ 架构文档总索引** | [ARCHITECTURE_INDEX.md](./docs/02-architecture/architecture-index.md) | 29张架构图 + 场景化查找 + 关键词索引 |
+| **🔌 集成文档索引** | [integration/README.md](./docs/01-guides/office-platform-integration-guide.md) | OAuth2/PKCE 认证集成完整指南 |
+| **📊 文档整合摘要** | [INTEGRATION_SUMMARY.md](./docs/_archive/INTEGRATION_SUMMARY.md) | 51个整合文档索引 + 按场景/关键词查找 |
+| **📋 快速开始** | [00-getting-started/quickstart.md](./docs/00-getting-started/quickstart.md) | 5分钟快速启动项目 |
+| **🔧 最佳实践** | [BEST_PRACTICES.md](./docs/01-guides/best-practices.md) | 开发和运维最佳实践 |
 
 ### 架构文档
 
@@ -466,7 +466,7 @@ spring:
 
   - 技术栈全景 · [技术架构图](docs/diagrams/03_technical_architecture.svg) [\[PNG\]](docs/diagrams/03_technical_architecture.svg)
 
-  - 架构演进路线 · [演进文档](./docs/ARCHITECTURE_EVOLUTION.md)
+  - 架构演进路线 · [演进文档](./docs/02-architecture/architecture-evolution.md)
 
 - [数据库设计文档](./docs/architecture/database-design.md) · 配套图表:
 
@@ -480,7 +480,7 @@ spring:
 
 - [业务流程文档](./docs/architecture/business-flows.md) · 配套图表:
 
-  - 登录认证流程(JWT双令牌) · [流程图](docs/diagrams/04_login_auth_flow.svg) [\[PNG\]](docs/diagrams/04_login_auth_flow.svg)
+  - 登录认证流程(JWT双令牌) · [流程图](docs/diagrams/04_login_authentication_flow.svg) [\[PNG\]](docs/diagrams/04_login_authentication_flow.svg)
 
   - 权限校验流程(RBAC+L5数据权限) · [流程图](docs/diagrams/05_permission_check_flow.svg) [\[PNG\]](docs/diagrams/05_permission_check_flow.svg)
 
@@ -490,7 +490,7 @@ spring:
 
 ### 运维部署
 
-- [部署运维文档](./docs/operations/deployment.md)
+- [部署运维文档](./docs/05-operations/deployment.md)
 
   - 单机 / Docker Compose / Kubernetes 三种部署方式
 
@@ -498,31 +498,27 @@ spring:
 
   - 告警规则与运维SOP
 
-- [Grafana监控面板增强方案](./docs/operations/monitoring.md)
+- [Grafana监控面板增强方案](./docs/_archive/operations/monitoring-dashboard-configuration.md)
 
   - 66个专业监控面板 (JVM/Sentinel/网关/熔断器)
 
-- [配置文件完整性检查报告](./docs/operations/configuration.md)
+- [配置文件完整性检查报告](./docs/05-operations/configuration.md)
 
   - 8套环境配置 + 20个Flyway脚本审计结论
 
-- [部署检查清单](./docs/operations/deployment-checklist.md)
+- [部署检查清单](./docs/_archive/operations/deployment-checklist.md)
 
   - 部署前检查项、验证步骤
 
 ### API与前端
 
-- [前后端API路由对比清单](./docs/api/route-mapping.md)
+- [前后端API路由对比清单](./docs/_archive/api/route-mapping.md)
 
   - 56个前后端接口对齐验证,零404风险
 
-- [前端迁移指南](./docs/frontend/migration-guide.md)
+- 前端迁移指南、路由配置与启动指南
 
-  - Vue 3 + Vite + TypeScript 前端迁移完整指南
-
-- [路由配置与启动指南](./docs/frontend/routing-guide.md)
-
-  - 前端路由配置、启动步骤
+  - Vue 3 + Vite + TypeScript 前端相关文档已迁移至独立前端仓库 `apex-admin-web` 的 `frontend-docs/` 目录（`migration-guide.md`、`routing-guide.md` 等）
 
 ### 📊 可视化图表速查 (8张)
 
@@ -533,7 +529,7 @@ spring:
 | 🏛️ **架构图**  | DDD四层逻辑架构图  | [📄 查看](docs/diagrams/01_logical_architecture.svg)   | [🖼️ 下载](docs/diagrams/01_logical_architecture.svg)   |
 | 🏛️ **架构图**  | 网络物理部署架构图   | [📄 查看](docs/diagrams/02_physical_architecture.svg)  | [🖼️ 下载](docs/diagrams/02_physical_architecture.svg)  |
 | 🏛️ **架构图**  | 全栈技术选型全景图   | [📄 查看](docs/diagrams/03_technical_architecture.svg) | [🖼️ 下载](docs/diagrams/03_technical_architecture.svg) |
-| 🔀 **流程图**   | JWT登录认证流程图  | [📄 查看](docs/diagrams/04_login_auth_flow.svg)        | [🖼️ 下载](docs/diagrams/04_login_auth_flow.svg)        |
+| 🔀 **流程图**   | JWT登录认证流程图  | [📄 查看](docs/diagrams/04_login_authentication_flow.svg)        | [🖼️ 下载](docs/diagrams/04_login_authentication_flow.svg)        |
 | 🔀 **流程图**   | RBAC权限校验流程图 | [📄 查看](docs/diagrams/05_permission_check_flow.svg)  | [🖼️ 下载](docs/diagrams/05_permission_check_flow.svg)  |
 | 🔀 **流程图**   | 三级审批工作流图    | [📄 查看](docs/diagrams/06_workflow_approval_flow.svg) | [🖼️ 下载](docs/diagrams/06_workflow_approval_flow.svg) |
 | 🔀 **流程图**   | 文件分片上传流程图   | [📄 查看](docs/diagrams/07_file_upload_flow.svg)       | [🖼️ 下载](docs/diagrams/07_file_upload_flow.svg)       |
@@ -634,7 +630,7 @@ java -server \
   -jar apex-interfaces-1.2.0.jar
 ```
 
-**完整环境变量配置**: 查看 [环境变量管理指南](docs/operations/environment-variables.md) 了解所有 172 个环境变量的详细说明。
+**完整环境变量配置**: 查看 [环境变量管理指南](docs/_archive/operations/environment-variables.md) 了解所有 172 个环境变量的详细说明。
 
 ***
 

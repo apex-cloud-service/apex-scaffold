@@ -132,7 +132,7 @@
 - ✅ Infrastructure 层: 9 个类添加 `@author` 注释
 
 **PMD 配置优化**:
-- ✅ 创建 [`pmd-exclude.properties`](../../pmd-exclude.properties) 排除规则文件
+- ✅ 创建 [`pmd-exclude.properties`](../../config/pmd-exclude.properties) 排除规则文件
 - ✅ 更新 [`apex-infrastructure/pom.xml`](../../apex-infrastructure/pom.xml) PMD 配置
 - ✅ 排除 MapStruct 自动生成类
 - ✅ 排除 OAuth2* 标准命名类
@@ -271,7 +271,7 @@ interface SsoProtocolAdapter {
 **原因**: 约 166 个历史遗留 PMD 违规(主要是 Mapper 接口方法缺少 JavaDoc)。
 
 **解决方案**: 
-- 已创建 [`pmd-exclude.properties`](../../pmd-exclude.properties) 排除规则
+- 已创建 [`pmd-exclude.properties`](../../config/pmd-exclude.properties) 排除规则
 - 需要批量添加 Mapper 接口 JavaDoc(预估 2-3 小时)
 
 **优先级**: 🟡 中等
@@ -352,7 +352,7 @@ interface SsoProtocolAdapter {
 - [后续工作指导](next-steps-guide.md) - 详细的后续任务和实施步骤(15,000字)
 
 ### 配置文件
-- [PMD 排除规则](../../pmd-exclude.properties) - PMD 检查排除配置
+- [PMD 排除规则](../../config/pmd-exclude.properties) - PMD 检查排除配置
 
 ---
 

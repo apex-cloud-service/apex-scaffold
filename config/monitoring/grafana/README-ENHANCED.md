@@ -221,10 +221,10 @@ groups:
 
 ## 🔗 相关文档
 
-- [基础监控面板配置指南](../../docs/operations/monitoring-dashboard-configuration.md)
+- [基础监控面板配置指南](../../../docs/_archive/operations/monitoring-dashboard-configuration.md)
 - [Prometheus 配置说明](../prometheus/prometheus.yml)
 - [告警规则配置](../prometheus/alert-rules.yml)
-- [监控架构图](../../docs/diagrams/24_grafana_dashboard_architecture.svg)
+- [监控架构图](../../../docs/diagrams/24_prometheus_grafana_monitoring.svg)
 
 ---
 

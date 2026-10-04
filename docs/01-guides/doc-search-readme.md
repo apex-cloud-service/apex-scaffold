@@ -14,7 +14,7 @@
 
 ```bash
 cd /Users/work/apex-scaffold
-./start-doc-search.sh
+./scripts/utils/start-doc-search.sh
 ```
 
 脚本会自动:
@@ -137,7 +137,7 @@ http://localhost:8080/docs/link-test.html
 
 1. **启动服务器**
    ```bash
-   ./start-doc-search.sh
+   ./scripts/utils/start-doc-search.sh
    ```
 
 2. **打开搜索工具**

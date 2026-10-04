@@ -522,9 +522,9 @@ mvnd test -Dtest="OAuth2AuthorizationServiceImplTest" -pl apex-application
 
 | 文件类型 | 路径 |
 |---------|------|
-| **实现类** | [OAuth2AuthorizationServiceImpl.java](file:///Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/service/OAuth2AuthorizationServiceImpl.java) |
-| **实体类** | [OAuth2AuthorizationCodeEntity.java](file:///Users/work/apex-scaffold/apex-domain/src/main/java/com/apex/scaffold/domain/model/entity/OAuth2AuthorizationCodeEntity.java) |
-| **测试类** | [OAuth2AuthorizationServiceImplTest.java](file:///Users/work/apex-scaffold/apex-application/src/test/java/com/apex/scaffold/application/service/OAuth2AuthorizationServiceImplTest.java) |
+| **实现类** | [OAuth2AuthorizationServiceImpl.java](../../../../../apex-application/src/main/java/com/apex/scaffold/application/service/OAuth2AuthorizationServiceImpl.java) |
+| **实体类** | [OAuth2AuthorizationCodeEntity.java](../../../../../apex-domain/src/main/java/com/apex/scaffold/domain/model/entity/OAuth2AuthorizationCodeEntity.java) |
+| **测试类** | [OAuth2AuthorizationServiceImplTest.java](../../../../../apex-application/src/test/java/com/apex/scaffold/application/service/OAuth2AuthorizationServiceImplTest.java) |
 | **验证计划** | [pkce_verification_plan.md](../pkce/verification-plan.md) |
 | **单元测试报告** | [pkce_unit_test_report.md](../pkce/unit-test-report.md) |
 | **E2E 测试脚本** | [pkce_e2e_test_script.md](pkce-e2e-test-script.md) |

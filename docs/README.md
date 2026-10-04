@@ -33,20 +33,20 @@
 
 - [架构总览](./02-architecture/architecture-overview.md) - 系统架构概览
 - [架构演进](./02-architecture/architecture-evolution.md) - 架构演进历程
-- [逻辑架构](architecture/01-logical-architecture-detail.md) - DDD 四层架构
-- [物理架构](architecture/02-physical-architecture-detail.md) - 部署架构
-- [技术架构](architecture/03-technical-architecture-detail.md) - 技术栈全景
-- [数据库设计](architecture/database-design.md) - 数据模型设计
-- [多级缓存](architecture/advanced-features/multi-level-cache-complete-guide.md) - 缓存架构
+- [逻辑架构](./02-architecture/architecture-index.md) - DDD 四层架构
+- [物理架构](./02-architecture/architecture-overview.md) - 部署架构
+- [技术架构](./02-architecture/architecture-overview.md) - 技术栈全景
+- [数据库设计](./architecture/database-design.md) - 数据模型设计
+- [多级缓存](./05-operations/advanced-features.md) - 缓存架构
 
 ### [03. API 文档](./03-api/)
 
 API 接口文档、规范和版本管理。
 
-- [路由映射](_archive/api/route-mapping.md) - 前后端路由对应
+- [路由映射](./03-api/api-routes.md) - 前后端路由对应
 - [API 版本管理](./03-api/api-version-management.md) - 版本控制策略
 - [SpringDoc 注解](./03-api/springdoc-annotation-templates.md) - API 文档注解
-- [数据管理 API](_archive/api/data-management-api.md) - 数据管理接口
+- [数据管理 API](./03-api/) - 数据管理接口
 
 **在线文档**: 启动项目后访问
 - Swagger UI: http://localhost:8080/swagger-ui.html
@@ -61,9 +61,8 @@ API 接口文档、规范和版本管理。
 - [Lombok 指南](./04-development/lombok-guide.md) - Lombok 使用
 - [JMH 基准测试](./04-development/jmh-benchmark-guide.md) - 性能测试
 - [SVG 维护](./04-development/svg-maintenance-guide.md) - 图表维护
-- [前端开发](./04-development/frontend/) - 前端开发指南
 - [后端开发规范](./04-development/backend-development-standards.md) - 后端规范
-- [前端开发规范](./04-development/frontend-development-standards.md) - 前端规范
+- 前端开发文档：已迁移至独立前端仓库 `apex-admin-web` 的 `frontend-docs/` 目录
 
 ### [05. 运维部署](./05-operations/)
 
@@ -87,7 +86,7 @@ API 接口文档、规范和版本管理。
 商业版本、授权管理和销售资料。
 
 - [授权管理](./07-commercial/license-management.md) - 授权系统
-- [商业版本](07-commercial/COMMERCIAL_VERSIONS.md) - 版本对比
+- [商业版本](./07-commercial/COMMERCIAL_VERSIONS.md) - 版本对比
 - [销售资料](./07-commercial/sales/) - 销售支持文档
 
 ### [08. 项目管理](./08-project-management/)

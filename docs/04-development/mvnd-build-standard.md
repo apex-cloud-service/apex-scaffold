@@ -277,8 +277,8 @@ abc   12345  127.0.0.1:12345     Idle    450M     2 minutes ago
 
 ## 📚 相关文档
 
-- **README.md**: [快速开始 - 使用mvnd构建](file:///Users/work/apex-scaffold/README.md#L254-L263)
-- **.sdkmanrc**: [SDKMAN项目配置](file:///Users/work/apex-scaffold/.sdkmanrc)
+- **README.md**: [快速开始 - 使用mvnd构建](../../README.md#L254-L263)
+- **.sdkmanrc**: [SDKMAN项目配置](../../.sdkmanrc)
 - **OAuth2测试文档**: [单元测试修复报告](../_archive/integration/oauth2/archive/unit-test-fix-report.md)
 
 ---

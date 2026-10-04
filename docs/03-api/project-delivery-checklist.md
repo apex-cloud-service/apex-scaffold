@@ -239,7 +239,7 @@
 #### PMD 配置优化
 
 **文件**:
-- ✅ [`pmd-exclude.properties`](../../pmd-exclude.properties) - PMD 排除规则配置
+- ✅ [`pmd-exclude.properties`](../../config/pmd-exclude.properties) - PMD 排除规则配置
 - ✅ [`apex-infrastructure/pom.xml`](../../apex-infrastructure/pom.xml) - PMD 插件配置
 
 **排除内容**:

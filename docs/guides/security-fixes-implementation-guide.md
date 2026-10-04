@@ -652,4 +652,4 @@ apex_login_failures_total         # 登录失败总数
 - [安全评审报告](../reviews/auth-security-review-report.md)
 - [OAuth2集成指南](../01-guides/oauth2-integration-guide.md)
 - [SSO配置指南](../01-guides/sso-oauth2-keycloak-complete.md)
-- [统一认证中心设计](../../.trae/documents/unified-auth-center-design.md)
+- [统一认证中心设计](../_archive/trae-documents/unified-auth-center-design.md)

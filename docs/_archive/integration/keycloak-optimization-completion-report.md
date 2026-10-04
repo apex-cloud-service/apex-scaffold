@@ -282,7 +282,7 @@ mvnd clean package -DskipTests -T 1C
 
 2. **文档完善**
    - 更新 `README.md`，说明 mvnd 使用要求
-   - 更新 `QUICK_START.md`，添加 Grafana 新端口
+   - 更新 `00-getting-started/quickstart.md`，添加 Grafana 新端口
 
 3. **监控配置**
    - 验证 Grafana 3100 端口在 Prometheus 配置中的更新

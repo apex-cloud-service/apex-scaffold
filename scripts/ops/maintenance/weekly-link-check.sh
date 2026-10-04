@@ -115,13 +115,10 @@ generate_report() {
 
 ## 修复建议
 
-如果发现断裂链接，可使用以下工具修复：
+如果发现断裂链接，可使用以下工具检查：
 
 \`\`\`bash
-# 自动修复工具
-python3 scripts/utils/fix-doc-links.py
-
-# 手动检查
+# 链接检查工具
 ./scripts/ci/check-doc-links.sh
 \`\`\`
 

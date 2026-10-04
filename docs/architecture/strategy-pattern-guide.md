@@ -848,8 +848,8 @@ public abstract class AbstractLoginStrategy implements LoginStrategy {
 ## 七、参考资料
 
 ### 项目实现
-- [LoginStrategy.java](file:///Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/service/login/LoginStrategy.java)
-- [DeploymentGovernanceStrategy.java](file:///Users/work/apex-scaffold/apex-interfaces/src/main/java/com/apex/scaffold/interfaces/governance/platform/DeploymentGovernanceStrategy.java)
+- [LoginStrategy.java](../../apex-application/src/main/java/com/apex/scaffold/application/service/login/LoginStrategy.java)
+- [DeploymentGovernanceStrategy.java](../../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/governance/platform/DeploymentGovernanceStrategy.java)
 
 ### 设计文档
 - [服务治理方案](./service-governance-solution.md)

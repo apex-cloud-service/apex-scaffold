@@ -52,8 +52,8 @@
 ### 1. Spring Cloud 版本严重滞后 ❌ (P0高优先级)
 
 **影响图表**: 
-- [29_technology_stack_overview.svg](file:///Users/work/apex-scaffold/docs/diagrams/29_technology_stack_overview.svg)
-- [03_technical_architecture.svg](file:///Users/work/apex-scaffold/docs/diagrams/03_technical_architecture.svg)
+- [29_technology_stack_overview.svg](../diagrams/29_technology_stack_overview.svg)
+- [03_technical_architecture.svg](../diagrams/03_technical_architecture.svg)
 
 | 组件 | 图表显示 | 实际版本 | 差异 |
 |------|---------|---------|------|
@@ -81,7 +81,7 @@
 ### 2. 组件数量严重偏低 ❌ (P1中优先级)
 
 **影响图表**:
-- [01_logical_architecture.svg](file:///Users/work/apex-scaffold/docs/diagrams/01_logical_architecture.svg)
+- [01_logical_architecture.svg](../diagrams/01_logical_architecture.svg)
 
 #### 详细统计对比
 

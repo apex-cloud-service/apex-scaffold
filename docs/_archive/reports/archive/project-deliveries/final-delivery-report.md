@@ -411,16 +411,16 @@ cd /Users/work/apex-scaffold
 
 ### 配置文件
 
-9. [alert-rules.yml](file:///Users/work/apex-scaffold/config/monitoring/prometheus/alert-rules.yml) - 告警规则
-10. [alertmanager.yml](file:///Users/work/apex-scaffold/config/monitoring/prometheus/alertmanager.yml) - 告警管理
-11. [zipkin.yml](file:///Users/work/apex-scaffold/config/monitoring/grafana/provisioning/datasources/zipkin.yml) - Zipkin
+9. [alert-rules.yml](../../../../../config/monitoring/prometheus/alert-rules.yml) - 告警规则
+10. [alertmanager.yml](../../../../../config/monitoring/prometheus/alertmanager.yml) - 告警管理
+11. [zipkin.yml](../../../../../config/monitoring/grafana/provisioning/datasources/zipkin.yml) - Zipkin
 12. frontend_button_permission_config.sql（目标不存在，无已核实替代文件；原路径：`file:///Users/work/apex-scaffold/frontend_button_permission_config.sql`） - SQL
 
 ### 工具脚本
 
 13. deploy_monitoring_configs.sh（目标不存在，无已核实替代文件；原路径：`file:///Users/work/apex-scaffold/deploy_monitoring_configs.sh`） - 监控部署
-14. [start_mysql_and_run_sql.sh](file:///Users/work/apex-scaffold/start_mysql_and_run_sql.sh) - MySQL启动
-15. [check_javadoc.sh](file:///Users/work/apex-scaffold/scripts/check_javadoc.sh) - JavaDoc检查
+14. [start_mysql_and_run_sql.sh](../../../../../start_mysql_and_run_sql.sh) - MySQL启动
+15. [check_javadoc.sh](../../../../../scripts/check_javadoc.sh) - JavaDoc检查
 
 ---
 

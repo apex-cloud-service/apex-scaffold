@@ -615,11 +615,11 @@ echo "回滚完成"
 
 ## 附录 C: 相关文档
 
-1. [RocketMQ 消息自动处理使用指南](file:///Users/work/apex-scaffold/docs/rocketmq-auto-handler-guide.md)
-2. [RocketMQ 消息自动处理优化总结](file:///Users/work/apex-scaffold/docs/rocketmq-auto-handler-summary.md)
-3. [RocketMQ 配置验证报告](file:///Users/work/apex-scaffold/docs/rocketmq-config-verification.md)
-4. [RocketMQ 生产优化报告](file:///Users/work/apex-scaffold/docs/rocketmq-production-optimization.md)
-5. [Apex Scaffold 最终优化报告](file:///Users/work/apex-scaffold/docs/FINAL-OPTIMIZATION-REPORT.md)
+1. [RocketMQ 消息自动处理使用指南](rocketmq-auto-handler-guide.md)
+2. [RocketMQ 消息自动处理优化总结](rocketmq-auto-handler-summary.md)
+3. [RocketMQ 配置验证报告](rocketmq-config-verification.md)
+4. [RocketMQ 生产优化报告](rocketmq-production-optimization.md)
+5. [Apex Scaffold 最终优化报告](FINAL-OPTIMIZATION-REPORT.md)
 
 ---
 

@@ -296,7 +296,7 @@
 ### 技术文档
 - [OAuth2集成指南](../01-guides/oauth2-integration-guide.md)
 - [SSO配置指南](../01-guides/sso-oauth2-keycloak-complete.md)
-- [统一认证中心设计](../../.trae/documents/unified-auth-center-design.md)
+- [统一认证中心设计](../_archive/trae-documents/unified-auth-center-design.md)
 
 ### 数据库文档
 - [OAuth2表结构](../../apex-interfaces/src/main/resources/db/migration/mysql/V25__oauth2_authorization_server_schema.sql)

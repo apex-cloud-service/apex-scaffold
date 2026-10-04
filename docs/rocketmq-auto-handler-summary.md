@@ -292,10 +292,10 @@ alertManager.resetCooldown("lag_user-group");
 
 | 文档 | 说明 |
 |-----|------|
-| [rocketmq-auto-handler-guide.md](file:///Users/work/apex-scaffold/docs/rocketmq-auto-handler-guide.md) | 完整使用指南（15,000+ 字） |
-| [rocketmq-production-optimization.md](file:///Users/work/apex-scaffold/docs/rocketmq-production-optimization.md) | 生产优化报告 |
-| [application.yml](file:///Users/work/apex-scaffold/apex-interfaces/src/main/resources/application.yml) | 基础配置 |
-| [application-prod.yml](file:///Users/work/apex-scaffold/apex-interfaces/src/main/resources/application-prod.yml) | 生产配置 |
+| [rocketmq-auto-handler-guide.md](rocketmq-auto-handler-guide.md) | 完整使用指南（15,000+ 字） |
+| [rocketmq-production-optimization.md](rocketmq-production-optimization.md) | 生产优化报告 |
+| [application.yml](../apex-interfaces/src/main/resources/application.yml) | 基础配置 |
+| [application-prod.yml](../apex-interfaces/src/main/resources/application-prod.yml) | 生产配置 |
 
 ---
 

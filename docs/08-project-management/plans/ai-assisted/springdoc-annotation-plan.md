@@ -716,7 +716,7 @@ mvnd pmd:check
 ### 10.4 已有文档
 
 - [SpringDoc 注解完整性报告](../../../03-api/springdoc-annotation-audit.md)
-- [SpringDoc 覆盖报告](../../../../test-reports/springdoc-coverage-report.md)
+- [SpringDoc 覆盖报告](../../../test-reports/springdoc-coverage-report.md)
 - [JavaDoc 补充任务总结](../../../reports/javadoc-补充任务总结报告-20260913.md)
 
 ---

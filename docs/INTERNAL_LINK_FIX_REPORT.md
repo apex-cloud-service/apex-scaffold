@@ -35,7 +35,7 @@
 - `CONFIGURATION.md` → 应该链接到 `05-operations/configuration.md`
 - `TROUBLESHOOTING.md` → 应该链接到 `01-guides/troubleshooting.md`
 - `BEST_PRACTICES.md` → 应该链接到 `01-guides/best-practices.md`
-- `QUICK_START.md` → 应该链接到 `00-getting-started/quickstart.md`
+- `00-getting-started/quickstart.md` → 应该链接到 `00-getting-started/quickstart.md`
 - `DEPLOYMENT.md` → 应该链接到 `05-operations/deployment.md`
 
 #### 缺失的指南文档
@@ -81,7 +81,7 @@
 
 **示例 2**: `01-guides/developer-handbook.md`
 ```markdown
-❌ [架构文档索引](./ARCHITECTURE_INDEX.md)
+❌ [架构文档索引](./02-architecture/architecture-index.md)
 ✅ [架构文档索引](../02-architecture/architecture-index.md)
 ```
 
@@ -99,7 +99,7 @@
 
 2. **01-guides/developer-handbook.md** (多个失效链接)
    - 将所有 `./XXXX.md` 更新为正确的相对路径
-   - 例如: `./ARCHITECTURE_INDEX.md` → `../02-architecture/architecture-index.md`
+   - 例如: `./02-architecture/architecture-index.md` → `../02-architecture/architecture-index.md`
 
 3. **architecture/** 目录下的文档
    - 修复指向不存在文档的链接

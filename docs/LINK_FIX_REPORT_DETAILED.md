@@ -46,8 +46,8 @@
 
 ### 01-guides/developer-handbook.md
 - 链接文本: `5 分钟快速上手`
-  原始路径: `./QUICK_START.md`
-  解析路径: `01-guides/QUICK_START.md`
+  原始路径: `./00-getting-started/quickstart.md`
+  解析路径: `01-guides/00-getting-started/quickstart.md`
 - 链接文本: `项目配置指南`
   原始路径: `./CONFIGURATION.md`
   解析路径: `01-guides/CONFIGURATION.md`
@@ -55,7 +55,7 @@
   原始路径: `./ENVIRONMENT_VARIABLES.md`
   解析路径: `01-guides/ENVIRONMENT_VARIABLES.md`
 - 链接文本: `架构文档索引`
-  原始路径: `./ARCHITECTURE_INDEX.md`
+  原始路径: `./02-architecture/architecture-index.md`
   解析路径: `01-guides/ARCHITECTURE_INDEX.md`
 - 链接文本: `代码生成器使用`
   原始路径: `./CODEGEN.md`
@@ -97,8 +97,8 @@
   原始路径: `./JAVADOC_GUIDE.md`
   解析路径: `01-guides/JAVADOC_GUIDE.md`
 - 链接文本: `快速上手`
-  原始路径: `./QUICK_START.md`
-  解析路径: `01-guides/QUICK_START.md`
+  原始路径: `./00-getting-started/quickstart.md`
+  解析路径: `01-guides/00-getting-started/quickstart.md`
 - 链接文本: `项目文档目录`
   原始路径: `/Users/work/apex-scaffold/docs`
   解析路径: `Users/work/apex-scaffold/docs`
@@ -117,8 +117,8 @@
   原始路径: `integration/README.md`
   解析路径: `01-guides/integration/README.md`
 - 链接文本: `快速开始`
-  原始路径: `QUICK_START.md`
-  解析路径: `01-guides/QUICK_START.md`
+  原始路径: `00-getting-started/quickstart.md`
+  解析路径: `01-guides/00-getting-started/quickstart.md`
 
 ### 01-guides/doc-search-readme.md
 - 链接文本: `ARCHITECTURE_INDEX.md`
@@ -181,8 +181,8 @@
   原始路径: `operations/deployment-checklist.md`
   解析路径: `02-architecture/operations/deployment-checklist.md`
 - 链接文本: `QUICK\_START.md`
-  原始路径: `QUICK_START.md`
-  解析路径: `02-architecture/QUICK_START.md`
+  原始路径: `00-getting-started/quickstart.md`
+  解析路径: `02-architecture/00-getting-started/quickstart.md`
 - 链接文本: `README.md`
   原始路径: `README.md`
   解析路径: `02-architecture/README.md`
@@ -193,8 +193,8 @@
   原始路径: `README.md`
   解析路径: `02-architecture/README.md`
 - 链接文本: `QUICK\_START.md`
-  原始路径: `QUICK_START.md`
-  解析路径: `02-architecture/QUICK_START.md`
+  原始路径: `00-getting-started/quickstart.md`
+  解析路径: `02-architecture/00-getting-started/quickstart.md`
 - 链接文本: `部署检查清单`
   原始路径: `operations/deployment-checklist.md`
   解析路径: `02-architecture/operations/deployment-checklist.md`
@@ -216,7 +216,7 @@
 
 ### 04-development/mermaid-viewer-guide.md
 - 链接文本: `docs/mermaid-viewer.html`
-  原始路径: `./mermaid-viewer.html`
+  原始路径: `../mermaid-viewer.html`
   解析路径: `04-development/mermaid-viewer.html`
 - 链接文本: `消息中间件说明`
   原始路径: `./MESSAGE_MIDDLEWARE.md`
@@ -225,16 +225,16 @@
   原始路径: `./DATA_SCOPE_USAGE.md`
   解析路径: `04-development/DATA_SCOPE_USAGE.md`
 - 链接文本: `mermaid-viewer.html`
-  原始路径: `./mermaid-viewer.html`
+  原始路径: `../mermaid-viewer.html`
   解析路径: `04-development/mermaid-viewer.html`
 - 链接文本: `mermaid-viewer.html`
-  原始路径: `./mermaid-viewer.html`
+  原始路径: `../mermaid-viewer.html`
   解析路径: `04-development/mermaid-viewer.html`
 - 链接文本: `Mermaid 查看器`
-  原始路径: `./mermaid-viewer.html`
+  原始路径: `../mermaid-viewer.html`
   解析路径: `04-development/mermaid-viewer.html`
 - 链接文本: `项目架构文档索引`
-  原始路径: `./ARCHITECTURE_INDEX.md`
+  原始路径: `./02-architecture/architecture-index.md`
   解析路径: `04-development/ARCHITECTURE_INDEX.md`
 
 ### 05-operations/advanced-features.md
@@ -294,11 +294,11 @@
 
 ### 07-commercial/RELEASE_v1.0.0.md
 - 链接文本: `快速开始指南`
-  原始路径: `QUICK_START.md`
-  解析路径: `07-commercial/QUICK_START.md`
+  原始路径: `00-getting-started/quickstart.md`
+  解析路径: `07-commercial/00-getting-started/quickstart.md`
 - 链接文本: `快速开始`
-  原始路径: `QUICK_START.md`
-  解析路径: `07-commercial/QUICK_START.md`
+  原始路径: `00-getting-started/quickstart.md`
+  解析路径: `07-commercial/00-getting-started/quickstart.md`
 - 链接文本: `架构设计`
   原始路径: `architecture.md`
   解析路径: `07-commercial/architecture.md`
@@ -361,9 +361,9 @@
 - 链接文本: `ARCHITECTURE_INDEX.md`
   原始路径: `ARCHITECTURE_INDEX.md`
   解析路径: `_archive/ARCHITECTURE_INDEX.md`
-- 链接文本: `QUICK_START.md`
-  原始路径: `QUICK_START.md`
-  解析路径: `_archive/QUICK_START.md`
+- 链接文本: `00-getting-started/quickstart.md`
+  原始路径: `00-getting-started/quickstart.md`
+  解析路径: `_archive/00-getting-started/quickstart.md`
 - 链接文本: `ARCHITECTURE_INDEX.md`
   原始路径: `ARCHITECTURE_INDEX.md`
   解析路径: `_archive/ARCHITECTURE_INDEX.md`
@@ -373,16 +373,16 @@
 - 链接文本: `ARCHITECTURE_INDEX.md`
   原始路径: `ARCHITECTURE_INDEX.md`
   解析路径: `_archive/ARCHITECTURE_INDEX.md`
-- 链接文本: `QUICK_START.md`
-  原始路径: `QUICK_START.md`
-  解析路径: `_archive/QUICK_START.md`
+- 链接文本: `00-getting-started/quickstart.md`
+  原始路径: `00-getting-started/quickstart.md`
+  解析路径: `_archive/00-getting-started/quickstart.md`
 - 链接文本: `API_DOCUMENTATION_PREVIEW.md`
   原始路径: `API_DOCUMENTATION_PREVIEW.md`
   解析路径: `_archive/API_DOCUMENTATION_PREVIEW.md`
 
 ### _archive/MERMAID_VERIFICATION_SUMMARY.md
 - 链接文本: `mermaid-viewer.html`
-  原始路径: `./mermaid-viewer.html`
+  原始路径: `../mermaid-viewer.html`
   解析路径: `_archive/mermaid-viewer.html`
 - 链接文本: `test-mermaid-viewer.html`
   原始路径: `./test-mermaid-viewer.html`
@@ -391,7 +391,7 @@
   原始路径: `./MERMAID_VIEWER_GUIDE.md`
   解析路径: `_archive/MERMAID_VIEWER_GUIDE.md`
 - 链接文本: `mermaid-viewer.html`
-  原始路径: `./mermaid-viewer.html`
+  原始路径: `../mermaid-viewer.html`
   解析路径: `_archive/mermaid-viewer.html`
 - 链接文本: `test-mermaid-viewer.html`
   原始路径: `./test-mermaid-viewer.html`
@@ -411,7 +411,7 @@
   原始路径: `./MERMAID_VIEWER_GUIDE.md`
   解析路径: `_archive/MERMAID_VIEWER_GUIDE.md`
 - 链接文本: `mermaid-viewer.html`
-  原始路径: `./mermaid-viewer.html`
+  原始路径: `../mermaid-viewer.html`
   解析路径: `_archive/mermaid-viewer.html`
 - 链接文本: `Mermaid 图表查看指南`
   原始路径: `./MERMAID_VIEWER_GUIDE.md`
@@ -508,7 +508,7 @@
   原始路径: `../SECURITY_PROTECTIONS.md`
   解析路径: `_archive/SECURITY_PROTECTIONS.md`
 - 链接文本: `AGENTS.md`
-  原始路径: `../../AGENTS.md`
+  原始路径: `../../../../AGENTS.md`
   解析路径: `AGENTS.md`
 
 ### _archive/operations/k8s-production-optimization.md
@@ -597,13 +597,13 @@
   原始路径: `./.trae/documents/Grafana监控面板增强方案.md`
   解析路径: `_archive/reports/.trae/documents/Grafana监控面板增强方案.md`
 - 链接文本: `部署运维文档`
-  原始路径: `./docs/operations/deployment.md`
+  原始路径: `./docs/05-operations/deployment.md`
   解析路径: `_archive/reports/docs/operations/deployment.md`
 - 链接文本: `配置文件完整性检查报告`
-  原始路径: `./docs/operations/configuration.md`
+  原始路径: `./docs/05-operations/configuration.md`
   解析路径: `_archive/reports/docs/operations/configuration.md`
 - 链接文本: `部署检查清单`
-  原始路径: `./docs/operations/deployment-checklist.md`
+  原始路径: `./docs/_archive/operations/deployment-checklist.md`
   解析路径: `_archive/reports/docs/operations/deployment-checklist.md`
 
 ### _archive/reports/2026-09-03-png-display-fix.md
@@ -785,7 +785,7 @@
 
 ### _archive/reports/trae-documents-integration-completion-report.md
 - 链接文本: `docs/ARCHITECTURE_INDEX.md`
-  原始路径: `../ARCHITECTURE_INDEX.md`
+  原始路径: `../02-architecture/architecture-index.md`
   解析路径: `_archive/ARCHITECTURE_INDEX.md`
 
 ### _archive/reports/workflow-monitor-complete.md
@@ -813,7 +813,7 @@
   原始路径: `diagrams/XX_xxx.svg`
   解析路径: `_archive/reports/diagrams/XX_xxx.svg`
 - 链接文本: `ARCHITECTURE_INDEX.md`
-  原始路径: `../ARCHITECTURE_INDEX.md`
+  原始路径: `../02-architecture/architecture-index.md`
   解析路径: `_archive/ARCHITECTURE_INDEX.md`
 
 ### _archive/reports/文档图表优化方案_2026-09-11.md
@@ -821,7 +821,7 @@
   原始路径: `../diagrams/`
   解析路径: `_archive/diagrams`
 - 链接文本: `ARCHITECTURE_INDEX.md`
-  原始路径: `../ARCHITECTURE_INDEX.md`
+  原始路径: `../02-architecture/architecture-index.md`
   解析路径: `_archive/ARCHITECTURE_INDEX.md`
 
 ### _archive/technical/tests/PNG_TEST.md
@@ -874,7 +874,7 @@
 
 ### architecture/01-logical-architecture-detail.md
 - 链接文本: `架构图索引`
-  原始路径: `../ARCHITECTURE_INDEX.md`
+  原始路径: `../02-architecture/architecture-index.md`
   解析路径: `ARCHITECTURE_INDEX.md`
 
 ### architecture/_templates/business-value-template.md
@@ -1017,13 +1017,13 @@
   解析路径: `.trae/documents/Grafana监控面板增强方案.md`
 
 ### diagrams/README.md
-- 链接文本: `../ARCHITECTURE_INDEX.md`
-  原始路径: `../ARCHITECTURE_INDEX.md`
+- 链接文本: `../02-architecture/architecture-index.md`
+  原始路径: `../02-architecture/architecture-index.md`
   解析路径: `ARCHITECTURE_INDEX.md`
 
 ### diagrams/sequence/README.md
 - 链接文本: `架构文档索引`
-  原始路径: `../../ARCHITECTURE_INDEX.md`
+  原始路径: `../../02-architecture/architecture-index.md`
   解析路径: `ARCHITECTURE_INDEX.md`
 - 链接文本: `工作流引擎指南`
   原始路径: `../../WORKFLOW_GUIDE.md`

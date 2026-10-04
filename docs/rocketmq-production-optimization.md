@@ -33,20 +33,20 @@
 
 | 组件 | 文件 | 功能 |
 |-----|------|------|
-| 生产者配置 | [RocketMqProducerConfig.java](file:///Users/work/apex-scaffold/apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/mq/config/RocketMqProducerConfig.java) | 生产者增强配置管理 |
-| 消费者配置 | [RocketMqConsumerConfig.java](file:///Users/work/apex-scaffold/apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/mq/config/RocketMqConsumerConfig.java) | 消费者增强配置管理 |
-| 生产者监控 | [MqProducerMetrics.java](file:///Users/work/apex-scaffold/apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/mq/metrics/MqProducerMetrics.java) | 生产者监控指标采集 |
-| 消费者监控 | [MqConsumerMetrics.java](file:///Users/work/apex-scaffold/apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/mq/metrics/MqConsumerMetrics.java) | 消费者监控指标采集 |
-| 生产配置文件 | [rocketmq-prod.yml](file:///Users/work/apex-scaffold/config/rocketmq-prod.yml) | 生产环境优化配置 |
+| 生产者配置 | [RocketMqProducerConfig.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/mq/config/RocketMqProducerConfig.java) | 生产者增强配置管理 |
+| 消费者配置 | [RocketMqConsumerConfig.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/mq/config/RocketMqConsumerConfig.java) | 消费者增强配置管理 |
+| 生产者监控 | [MqProducerMetrics.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/mq/metrics/MqProducerMetrics.java) | 生产者监控指标采集 |
+| 消费者监控 | [MqConsumerMetrics.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/mq/metrics/MqConsumerMetrics.java) | 消费者监控指标采集 |
+| 生产配置文件 | [rocketmq-prod.yml](../config/rocketmq-prod.yml) | 生产环境优化配置 |
 
 ### 1.3 优化现有组件
 
 | 组件 | 优化内容 |
 |-----|---------|
-| [MqProducerService.java](file:///Users/work/apex-scaffold/apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/mq/service/MqProducerService.java) | 增加超时控制、故障降级处理 |
-| [MqConsumerService.java](file:///Users/work/apex-scaffold/apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/mq/service/MqConsumerService.java) | 增加配置集成、监控指标 |
-| [alert-rules.yml](file:///Users/work/apex-scaffold/config/monitoring/prometheus/alert-rules.yml) | 新增 8 个 RocketMQ 告警规则 |
-| [application-prod.yml](file:///Users/work/apex-scaffold/apex-interfaces/src/main/resources/application-prod.yml) | 完善生产环境 RocketMQ 配置 |
+| [MqProducerService.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/mq/service/MqProducerService.java) | 增加超时控制、故障降级处理 |
+| [MqConsumerService.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/mq/service/MqConsumerService.java) | 增加配置集成、监控指标 |
+| [alert-rules.yml](../config/monitoring/prometheus/alert-rules.yml) | 新增 8 个 RocketMQ 告警规则 |
+| [application-prod.yml](../apex-interfaces/src/main/resources/application-prod.yml) | 完善生产环境 RocketMQ 配置 |
 
 ---
 
@@ -311,7 +311,7 @@ mq_consumer_lag                      # 消费积压
 | 重复消息过多 | > 10 msg/s | info |
 | 消息降级频繁 | > 0.1 msg/s | critical |
 
-**配置文件**: [alert-rules.yml](file:///Users/work/apex-scaffold/config/monitoring/prometheus/alert-rules.yml)
+**配置文件**: [alert-rules.yml](../config/monitoring/prometheus/alert-rules.yml)
 
 #### 故障转移
 

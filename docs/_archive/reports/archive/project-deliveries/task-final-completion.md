@@ -290,9 +290,9 @@ open http://localhost:3000
 5. [前端按钮权限控制补充执行脚本.md](../task-implementations/frontend-button-permission-script.md) - 前端修改
 
 **配置文件**:
-- [alert-rules.yml](file:///Users/work/apex-scaffold/config/monitoring/prometheus/alert-rules.yml) - 告警规则
-- [alertmanager.yml](file:///Users/work/apex-scaffold/config/monitoring/prometheus/alertmanager.yml) - 告警管理
-- [zipkin.yml](file:///Users/work/apex-scaffold/config/monitoring/grafana/provisioning/datasources/zipkin.yml) - Zipkin配置
+- [alert-rules.yml](../../../../../config/monitoring/prometheus/alert-rules.yml) - 告警规则
+- [alertmanager.yml](../../../../../config/monitoring/prometheus/alertmanager.yml) - 告警管理
+- [zipkin.yml](../../../../../config/monitoring/grafana/provisioning/datasources/zipkin.yml) - Zipkin配置
 
 **前端组件**:
 - EmptyState.vue（目标不存在，无已核实替代文件；原路径：`file:///Users/work/apex-scaffold/frontend-components/EmptyState.vue`） - 空状态组件
@@ -300,8 +300,8 @@ open http://localhost:3000
 
 **部署脚本**:
 - deploy_monitoring_configs.sh（目标不存在，无已核实替代文件；原路径：`file:///Users/work/apex-scaffold/deploy_monitoring_configs.sh`） - 监控部署
-- [start_mysql_and_run_sql.sh](file:///Users/work/apex-scaffold/start_mysql_and_run_sql.sh) - MySQL启动
-- [check_javadoc.sh](file:///Users/work/apex-scaffold/scripts/check_javadoc.sh) - JavaDoc检查
+- [start_mysql_and_run_sql.sh](../../../../../start_mysql_and_run_sql.sh) - MySQL启动
+- [check_javadoc.sh](../../../../../scripts/check_javadoc.sh) - JavaDoc检查
 
 ---
 

@@ -114,8 +114,8 @@
 
 ### 三、测试脚本（2 个文件）
 
-- ✅ test-workflow-api.sh - 后端接口自动化测试
-- ✅ quick-start.sh - 快速启动脚本
+- ✅ scripts/test/test-workflow-api.sh - 后端接口自动化测试
+- ✅ scripts/dev/quick-start.sh - 快速启动脚本
 
 ---
 
@@ -252,16 +252,16 @@ mvnd spring-boot:run -pl apex-interfaces
 
 ```bash
 cd /Users/work/apex-scaffold
-chmod +x test-workflow-api.sh
-./test-workflow-api.sh
+chmod +x scripts/test/test-workflow-api.sh
+./scripts/test/test-workflow-api.sh
 ```
 
 ### 4. 使用快速启动脚本
 
 ```bash
 cd /Users/work/apex-scaffold
-chmod +x quick-start.sh
-./quick-start.sh
+chmod +x scripts/dev/quick-start.sh
+./scripts/dev/quick-start.sh
 ```
 
 ---
@@ -271,10 +271,10 @@ chmod +x quick-start.sh
 ### 快速开始
 - 📖 [最终完成报告](../../_archive/final-completion-report.md) - **推荐阅读**
 - 📖 [后端完成检查清单](../../_archive/backend-completion-checklist.md)
-- 📖 [前端更新确认文档](../../04-development/frontend/frontend-update-confirmation.md)
+- 前端更新确认文档：已迁移至独立前端仓库 `apex-admin-web` 的 `frontend-docs/`
 
 ### 技术文档
-- 📖 [Redis Watchdog 机制](file:///Users/work/apex-scaffold/docs/architecture/redis-watchdog-mechanism.md)
+- 📖 [Redis Watchdog 机制](../../architecture/redis-watchdog-mechanism.md)
 - 📖 [工作流引擎使用指南](workflow-engine-guide.md)
 - 📖 [WebFlux Handler 总结](../../_archive/webflux-handler-summary.md)
 
@@ -283,8 +283,7 @@ chmod +x quick-start.sh
 - 📖 [工作总结](../../_archive/work-summary.md)
 
 ### 前端文档
-- 📖 [前端代码更新指南](../../04-development/frontend/frontend-code-update-guide.md)
-- 📖 [前端调整指南](../../04-development/frontend/frontend-adjustment-guide.md)
+- 前端代码更新指南、前端调整指南：已迁移至独立前端仓库 `apex-admin-web` 的 `frontend-docs/` 目录
 
 ### 测试文档
 - 📖 [联调测试指南](../../06-testing/integration-test-guide.md)

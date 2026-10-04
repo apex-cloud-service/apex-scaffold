@@ -133,10 +133,10 @@
 
 ### 运维部署
 
-- [部署运维文档](./docs/operations/deployment.md)
+- [部署运维文档](./docs/05-operations/deployment.md)
 - [Grafana监控面板增强方案](../operations/monitoring.md)
-- [配置文件完整性检查报告](./docs/operations/configuration.md)
-- [部署检查清单](./docs/operations/deployment-checklist.md)
+- [配置文件完整性检查报告](./docs/05-operations/configuration.md)
+- [部署检查清单](./docs/_archive/operations/deployment-checklist.md)
 
 ### API与前端
 

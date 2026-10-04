@@ -673,19 +673,19 @@ public class RedisKeyConstants {
 
 ### 示例 1：完整的 PO 类
 
-参考项目中的 [UserPO.java](file:///Users/work/apex-scaffold/apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/persistence/po/UserPO.java)
+参考项目中的 [UserPO.java](../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/persistence/po/UserPO.java)
 
 ### 示例 2：完整的 Mapper 接口
 
-参考项目中的 [UserMapper.java](file:///Users/work/apex-scaffold/apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/persistence/mapper/UserMapper.java)
+参考项目中的 [UserMapper.java](../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/persistence/mapper/UserMapper.java)
 
 ### 示例 3：完整的 Converter 接口
 
-参考项目中的 [UserPoConverter.java](file:///Users/work/apex-scaffold/apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/persistence/converter/UserPoConverter.java)
+参考项目中的 [UserPoConverter.java](../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/persistence/converter/UserPoConverter.java)
 
 ### 示例 4：完整的 DTO 类
 
-参考项目中的 [LoginRequest.java](file:///Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/dto/LoginRequest.java)
+参考项目中的 [LoginRequest.java](../../apex-application/src/main/java/com/apex/scaffold/application/dto/LoginRequest.java)
 
 ---
 

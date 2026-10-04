@@ -86,7 +86,7 @@
 #### 2.3 .trae 目录最终状态
 
 ✅ **只保留当前计划文档**:
-- ../../.trae/documents/project-cleanup-and-reorganization-plan.md (本次计划)
+- ../_archive/trae-documents/project-cleanup-and-reorganization-plan.md (本次计划)
 
 ---
 

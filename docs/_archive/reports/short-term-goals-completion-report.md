@@ -39,7 +39,7 @@
 
 #### 1.3 交付成果
 
-**文件**: [docs/API_ROUTES.md](file:///Users/work/apex-scaffold/docs/API_ROUTES.md)
+**文件**: [docs/API_ROUTES.md](../../API_ROUTES.md)
 
 **文档规模**: 约 800 行，涵盖 7 大功能模块
 
@@ -119,7 +119,7 @@
 
 #### 2.3 修改文件
 
-**文件**: [scripts/ci/check-doc-consistency.sh](file:///Users/work/apex-scaffold/scripts/ci/check-doc-consistency.sh)
+**文件**: [scripts/ci/check-doc-consistency.sh](../../../scripts/ci/check-doc-consistency.sh)
 
 **关键修改**:
 
@@ -185,7 +185,7 @@ README_PROJECT_VERSION=$(grep -m 1 'Apex_Scaffold-v' README.md | grep -oE 'v[0-9
 
 #### 3.3 修改文件
 
-**文件**: [.env.example](file:///Users/work/apex-scaffold/.env.example)
+**文件**: [.env.example](../../../.env.example)
 
 **关键数据**:
 
@@ -241,7 +241,7 @@ README_PROJECT_VERSION=$(grep -m 1 'Apex_Scaffold-v' README.md | grep -oE 'v[0-9
 
 #### 4.3 修改文件
 
-**文件**: [scripts/ci/check-doc-consistency.sh](file:///Users/work/apex-scaffold/scripts/ci/check-doc-consistency.sh)
+**文件**: [scripts/ci/check-doc-consistency.sh](../../../scripts/ci/check-doc-consistency.sh)
 
 **关键修改**:
 
@@ -386,8 +386,8 @@ if ! echo "${basename}" | grep -qE '^V[0-9]+__[a-zA-Z0-9_]+\.sql$'; then
 
 ### 给开发者
 
-1. 📖 **快速查阅接口**: 查看 [API_ROUTES.md](file:///Users/work/apex-scaffold/docs/API_ROUTES.md)
-2. ⚙️ **配置环境**: 参考 [.env.example](file:///Users/work/apex-scaffold/.env.example)
+1. 📖 **快速查阅接口**: 查看 [API_ROUTES.md](../../API_ROUTES.md)
+2. ⚙️ **配置环境**: 参考 [.env.example](../../../.env.example)
 3. ✅ **提交前检查**: 运行 `./scripts/ci/check-doc-consistency.sh`
 4. 📚 **完整文档**: 查看 [开发者手册 2.0](../../01-guides/developer-handbook.md)
 

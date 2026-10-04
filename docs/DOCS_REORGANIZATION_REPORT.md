@@ -16,7 +16,7 @@
 - ✅ 创建了 11 个专业化目录结构
 - ✅ 迁移了 125+ 个文档到新结构
 - ✅ 清理了 45 个备份文件
-- ✅ 合并了重复文档（QUICKSTART.md 和 QUICK_START.md）
+- ✅ 合并了重复文档（QUICKSTART.md 和 00-getting-started/quickstart.md）
 - ✅ 归档了历史报告和临时文档
 - ✅ 生成了新的主索引和子目录索引
 
@@ -70,7 +70,7 @@ docs/
 - **已迁移到新结构**: 125 个文档
 - **已归档**: 100+ 个历史报告
 - **根目录剩余**: 1 个（README.md）
-- **重复文档合并**: 2 个（QUICKSTART.md + QUICK_START.md → quickstart.md）
+- **重复文档合并**: 2 个（QUICKSTART.md + 00-getting-started/quickstart.md → quickstart.md）
 
 ### 清理统计
 
@@ -95,7 +95,7 @@ docs/
 ### 1. 快速开始文档 (00-getting-started)
 
 迁移的文档：
-- QUICKSTART.md → quickstart.md（合并了 QUICK_START.md）
+- QUICKSTART.md → quickstart.md（合并了 00-getting-started/quickstart.md）
 - EXAMPLE_GUIDE.md → example-guide.md
 - EXAMPLES_SUMMARY.md → examples-summary.md
 - ONBOARDING_ARCHITECTURE_GUIDE.md → onboarding-guide.md
@@ -184,7 +184,7 @@ docs/
 ```
 docs/
 ├── QUICKSTART.md
-├── QUICK_START.md
+├── 00-getting-started/quickstart.md
 ├── BEST_PRACTICES.md
 ├── API_VERSION_MANAGEMENT.md
 ├── DEPLOYMENT.md
@@ -205,7 +205,7 @@ docs/
 
 合并了重复的快速开始文档：
 - `QUICKSTART.md` (更详细，311 行)
-- `QUICK_START.md` (更简洁，247 行)
+- `00-getting-started/quickstart.md` (更简洁，247 行)
 - **合并后**: `00-getting-started/quickstart.md` (418 行，保留了两者的最佳内容)
 
 ### 3. 命名规范
@@ -241,7 +241,7 @@ docs/
 由于文档路径发生了变化，以下类型的链接需要更新：
 
 1. **快速开始链接**
-   - 从 `QUICKSTART.md` 或 `QUICK_START.md` 改为 `00-getting-started/quickstart.md`
+   - 从 `QUICKSTART.md` 或 `00-getting-started/quickstart.md` 改为 `00-getting-started/quickstart.md`
 
 2. **架构文档链接**
    - 从 `ARCHITECTURE_*.md` 改为 `02-architecture/*`
@@ -263,7 +263,7 @@ docs/
 # 查找所有包含旧路径的文档
 cd /Users/work/apex-scaffold/docs
 grep -r "QUICKSTART.md" . --include="*.md"
-grep -r "QUICK_START.md" . --include="*.md"
+grep -r "00-getting-started/quickstart.md" . --include="*.md"
 grep -r "DEPLOYMENT.md" . --include="*.md"
 grep -r "CONFIGURATION.md" . --include="*.md"
 
@@ -279,7 +279,7 @@ find . -name "*.md" -type f -exec sed -i '' 's|DEPLOYMENT\.md|05-operations/depl
 - [x] 分析现有 docs 目录结构和文档清单
 - [x] 创建新的目录结构 (00-getting-started 到 _templates)
 - [x] 系统性迁移文档到新结构
-- [x] 合并重复文档 (QUICKSTART.md + QUICK_START.md)
+- [x] 合并重复文档 (QUICKSTART.md + 00-getting-started/quickstart.md)
 - [x] 清理 diagrams 目录中的备份文件 (45 个)
 - [x] 归档临时报告和历史文档到 _archive
 - [x] 生成新的主 README.md

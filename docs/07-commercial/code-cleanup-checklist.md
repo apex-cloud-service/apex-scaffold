@@ -300,7 +300,7 @@ docs/
 ├── COMMERCIAL_OPTIMIZATION_PROPOSAL.md # ⚠️ 包含业务场景描述
 ├── ARCHITECTURE_USAGE_GUIDE.md         # ✅ 通用
 ├── DEPLOYMENT.md                       # ✅ 通用
-├── QUICK_START.md                      # ✅ 通用
+├── 00-getting-started/quickstart.md                      # ✅ 通用
 └── ...（70+文档）
 ```
 

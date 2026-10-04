@@ -377,7 +377,7 @@
 
 ### B. 路由注册机制
 
-所有路由在 [ApiRouter.java](file:///Users/work/apex-scaffold/apex-interfaces/src/main/java/com/apex/scaffold/interfaces/router/ApiRouter.java) 和 [WorkflowRouter.java](file:///Users/work/apex-scaffold/apex-interfaces/src/main/java/com/apex/scaffold/interfaces/router/WorkflowRouter.java) 中以 `@Bean` 方式注册，返回 `RouterFunction<ServerResponse>`。
+所有路由在 [ApiRouter.java](../../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/router/ApiRouter.java) 和 [WorkflowRouter.java](../../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/router/WorkflowRouter.java) 中以 `@Bean` 方式注册，返回 `RouterFunction<ServerResponse>`。
 
 **示例**：
 ```java
@@ -402,7 +402,7 @@ Handler 负责：
 2. 调用 Application 层 Service 执行业务逻辑
 3. 构建 `ServerResponse` 返回统一响应
 
-所有 Handler 继承自 [BaseHandler](file:///Users/work/apex-scaffold/apex-interfaces/src/main/java/com/apex/scaffold/interfaces/handler/BaseHandler.java)，提供统一的参数解析、响应构建和国际化支持。
+所有 Handler 继承自 [BaseHandler](../../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/handler/BaseHandler.java)，提供统一的参数解析、响应构建和国际化支持。
 
 ### D. 安全机制
 

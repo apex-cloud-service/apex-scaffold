@@ -44,7 +44,7 @@
 
 #### 2.1 创建文档一致性检查脚本
 
-**文件**: [scripts/ci/check-doc-consistency.sh](file:///Users/work/apex-scaffold/scripts/ci/check-doc-consistency.sh)
+**文件**: [scripts/ci/check-doc-consistency.sh](../../../scripts/ci/check-doc-consistency.sh)
 
 **检查项目**:
 
@@ -85,7 +85,7 @@
 
 #### 2.2 GitHub Actions CI 配置
 
-**文件**: [.github/workflows/doc-consistency-check.yml](file:///Users/work/apex-scaffold/.github/workflows/doc-consistency-check.yml)
+**文件**: [.github/workflows/doc-consistency-check.yml](../../../.github/workflows/doc-consistency-check.yml)
 
 **触发条件**:
 - Push 到 `main` 或 `develop` 分支
@@ -109,7 +109,7 @@
 
 #### 3.1 WebFlux 响应式编程指南
 
-**文件**: [docs/architecture/reactive-programming-guide.md](file:///Users/work/apex-scaffold/docs/architecture/reactive-programming-guide.md)
+**文件**: [docs/architecture/reactive-programming-guide.md](../../architecture/reactive-programming-guide.md)
 
 **文档规模**: 约 560 行,15,000+ 字
 
@@ -156,7 +156,7 @@
 
 #### 3.2 策略模式实现指南
 
-**文件**: [docs/architecture/strategy-pattern-guide.md](file:///Users/work/apex-scaffold/docs/architecture/strategy-pattern-guide.md)
+**文件**: [docs/architecture/strategy-pattern-guide.md](../../architecture/strategy-pattern-guide.md)
 
 **文档规模**: 约 680 行,20,000+ 字
 
@@ -387,8 +387,8 @@
 ### 给开发者
 
 1. 📖 **快速上手**: 阅读 [开发者手册 2.0](../../01-guides/developer-handbook.md)
-2. 🔧 **响应式开发**: 参考 [WebFlux 响应式编程指南](file:///Users/work/apex-scaffold/docs/architecture/reactive-programming-guide.md)
-3. 🎨 **设计模式**: 学习 [策略模式实现指南](file:///Users/work/apex-scaffold/docs/architecture/strategy-pattern-guide.md)
+2. 🔧 **响应式开发**: 参考 [WebFlux 响应式编程指南](../../architecture/reactive-programming-guide.md)
+3. 🎨 **设计模式**: 学习 [策略模式实现指南](../../architecture/strategy-pattern-guide.md)
 4. ✅ **代码质量**: 提交前运行 `./scripts/ci/check-doc-consistency.sh`
 
 ### 给团队负责人

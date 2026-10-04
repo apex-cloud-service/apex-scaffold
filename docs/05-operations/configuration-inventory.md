@@ -565,7 +565,7 @@ REDIS_PASSWORD=${K8S_SECRET_REDIS_PASSWORD}
    - 标注必填/可选、默认值、Profile 范围
 
 3. ✅ **创建配置管理文档**
-   - `docs/operations/environment-variables.md`
+   - `docs/_archive/operations/environment-variables.md`
    - 环境变量设置方式
    - 优先级规则
    - 最佳实践

@@ -351,7 +351,7 @@ V29__device_trust.sql                        ✅
 
 ### 已创建文档
 
-1. ✅ [安全评审报告](file:///Users/work/apex-scaffold/docs/reviews/auth-security-review-report.md)  
+1. ✅ [安全评审报告](../reviews/auth-security-review-report.md)  
    - 14个安全问题详细分析
    - 修复方案和代码示例
    - 生产环境准备度评估
@@ -361,12 +361,12 @@ V29__device_trust.sql                        ✅
    - 配置示例
    - 测试验证方法
 
-3. ✅ 安全功能完成总结（目标不存在，无已核实替代文件；原路径：`file:///Users/work/apex-scaffold/docs/security/SECURITY-FEATURES-COMPLETION-SUMMARY.md`）  
+3. ✅ 安全功能完成总结（目标不存在，无已核实替代文件；原路径：`./SECURITY-OPTIMIZATION-COMPLETION-REPORT.md`）  
    - P1功能实现细节
    - 使用示例
    - API文档
 
-4. ✅ [本报告 - 安全优化完成报告](file:///Users/work/apex-scaffold/docs/security/SECURITY-OPTIMIZATION-COMPLETION-REPORT.md)
+4. ✅ [本报告 - 安全优化完成报告](SECURITY-OPTIMIZATION-COMPLETION-REPORT.md)
 
 ### 已更新文档
 

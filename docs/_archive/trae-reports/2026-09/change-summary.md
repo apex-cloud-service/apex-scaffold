@@ -182,7 +182,7 @@ java -jar apex-interfaces/target/apex-interfaces-1.2.0.jar
 
 #### environment-variables.md（新增）
 
-**路径**: `docs/operations/environment-variables.md`
+**路径**: `docs/_archive/operations/environment-variables.md`
 
 **内容**:
 - 总计约 600 行
@@ -454,7 +454,7 @@ java -jar apex-interfaces/target/apex-interfaces-1.2.0.jar
 - java -jar apex-scaffold-2.5.0.jar
 + java -jar apex-interfaces-1.2.0.jar
 
-+ **完整环境变量配置**: 查看 [环境变量管理指南](docs/operations/environment-variables.md) 了解所有 172 个环境变量的详细说明。
++ **完整环境变量配置**: 查看 [环境变量管理指南](../../operations/environment-variables.md) 了解所有 172 个环境变量的详细说明。
 ```
 
 ---
@@ -551,7 +551,7 @@ java -jar apex-interfaces/target/apex-interfaces-1.2.0.jar
 ```markdown
 **完整环境变量配置**: 
 
-查看 [环境变量管理指南](environment-variables.md) 了解所有 172 个环境变量的详细说明，包括：
+查看 [环境变量管理指南](../../operations/environment-variables.md) 了解所有 172 个环境变量的详细说明，包括：
 - 基础配置（Spring Boot、数据库、Redis、JWT）
 - 消息队列配置（RocketMQ、Outbox 模式）
 - 限流熔断配置（Sentinel）

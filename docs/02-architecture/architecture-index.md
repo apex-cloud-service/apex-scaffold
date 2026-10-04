@@ -299,7 +299,7 @@
 | 文档名称        | 文件路径                                                                                       | 说明                   |
 | ----------- | ------------------------------------------------------------------------------------------ | -------------------- |
 | **后端开发规范**  | [standards/backend-development-standards.md](../04-development/backend-development-standards.md)   | Java/Spring Boot开发规范 |
-| **前端开发规范**  | [standards/frontend-development-standards.md](../04-development/frontend-development-standards.md) | Vue/TypeScript开发规范   |
+| **前端开发规范**  | 独立前端仓库 `apex-admin-web` 的 `frontend-docs/frontend-development-standards.md` | Vue/TypeScript开发规范   |
 | **API路由映射** | [api/route-mapping.md](../_archive/api/route-mapping.md)                                               | 前后端API路由对照表          |
 
 ### 快速开始文档
@@ -357,7 +357,7 @@
 **推荐阅读顺序**:
 
 1. [后端开发规范](../04-development/backend-development-standards.md) - 编码规范
-2. [前端开发规范](../04-development/frontend-development-standards.md) - 前端规范
+2. 前端开发规范（位于独立前端仓库 `apex-admin-web` 的 `frontend-docs/`） - 前端规范
 3. [业务流程文档](../architecture/business-flows.md) - 业务流程
 4. [数据库设计文档](../architecture/database-design.md) - 数据库设计
 5. [API路由映射](../_archive/api/route-mapping.md) - API设计
@@ -398,7 +398,7 @@
 2. [前端技术栈文档](../architecture/frontend-technology-stack.md) - 前端实现细节
 3. [后端技术栈文档](../architecture/backend-technology-stack.md) - 后端实现细节
 4. [API路由映射](../_archive/api/route-mapping.md) - API接口对照
-5. [前端开发规范](../04-development/frontend-development-standards.md) - 前端编码规范
+5. 前端开发规范（位于独立前端仓库 `apex-admin-web` 的 `frontend-docs/`） - 前端编码规范
 
 ### 场景10: 监控体系配置 - 搭建监控大盘 ⭐
 

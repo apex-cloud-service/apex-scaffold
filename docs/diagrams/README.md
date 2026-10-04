@@ -285,7 +285,7 @@ chrome --headless --print-to-pdf=output.pdf input.svg
 ## 📞 支持与反馈
 
 - **项目仓库**: [GitHub/GitLab地址]
-- **技术文档**: [../ARCHITECTURE_INDEX.md](../02-architecture/architecture-index.md)
+- **技术文档**: [../02-architecture/architecture-index.md](../02-architecture/architecture-index.md)
 - **问题反馈**: 提交Issue或联系架构团队
 - **版本历史**: 查看 `ARCHITECTURE_INDEX.md` 更新记录
 

@@ -971,9 +971,9 @@ mvnd test -P basic
 
 ## 📚 参考文档
 
-- [AGENTS.md](file:///Users/work/apex-scaffold/AGENTS.md) - 项目开发规范
-- [docs/DOCS_REORGANIZATION_REPORT.md](file:///Users/work/apex-scaffold/docs/DOCS_REORGANIZATION_REPORT.md) - 上次文档重组报告
-- [docs/04-development/backend-development-standards.md](file:///Users/work/apex-scaffold/docs/04-development/backend-development-standards.md) - 后端开发规范
+- [AGENTS.md](../../../../AGENTS.md) - 项目开发规范
+- [docs/DOCS_REORGANIZATION_REPORT.md](../../../DOCS_REORGANIZATION_REPORT.md) - 上次文档重组报告
+- [docs/04-development/backend-development-standards.md](../../../04-development/backend-development-standards.md) - 后端开发规范
 - [Flyway Documentation](https://flywaydb.org/documentation/) - Flyway 官方文档
 
 ---

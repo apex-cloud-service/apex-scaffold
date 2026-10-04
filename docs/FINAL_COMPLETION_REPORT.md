@@ -173,23 +173,23 @@
 
 ## 4️⃣ 生成的专业报告 (4份)
 
-1. **[SVG架构图表与代码实现对齐度综合报告](file:///Users/work/apex-scaffold/docs/reports/svg-code-alignment-comprehensive-report.md)**
+1. **[SVG架构图表与代码实现对齐度综合报告](reports/svg-code-alignment-comprehensive-report.md)**
    - 82张图表逐一验证
    - 版本号一致性检查
    - 组件数量统计对比
    - P0/P1/P2修复建议
 
-2. **[项目文档整体对齐度报告](file:///Users/work/apex-scaffold/docs/PROJECT_DOCUMENTATION_ALIGNMENT_REPORT.md)**
+2. **[项目文档整体对齐度报告](PROJECT_DOCUMENTATION_ALIGNMENT_REPORT.md)**
    - 7维度综合评分
    - 文档/脚本/测试/图表全覆盖
    - 趋势分析与改进建议
 
-3. **[SVG修复完成报告](file:///Users/work/apex-scaffold/docs/reports/svg-fixes-summary.md)**
+3. **[SVG修复完成报告](reports/svg-fixes-summary.md)**
    - P0/P1修复详情
    - 修复前后对比
    - 验证脚本与指南
 
-4. **[任务完成总结报告](file:///Users/work/apex-scaffold/docs/TASK_COMPLETION_REPORT.md)**
+4. **[任务完成总结报告](TASK_COMPLETION_REPORT.md)**
    - 完整执行记录
    - 交付物清单
    - 后续建议

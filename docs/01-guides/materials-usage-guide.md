@@ -99,7 +99,7 @@
 
 **推荐内容**（快速参考卡片）：
 
-1. **快速上手** - `QUICK_START.md`
+1. **快速上手** - `00-getting-started/quickstart.md`
 2. **架构速查** - `01-logical-architecture-quick-ref.md`
 3. **部署速查** - `02-physical-architecture-quick-ref.md`
 4. **技术栈速查** - `03-technical-architecture-quick-ref.md`
@@ -289,7 +289,7 @@ rsvg-convert -w 1920 docs/diagrams/01_logical_architecture.svg > output.png
 ## 🔗 相关资源
 
 - **架构索引**: `docs/ARCHITECTURE_INDEX.md`
-- **快速开始**: `docs/QUICK_START.md`
+- **快速开始**: `docs/00-getting-started/quickstart.md`
 - **源码仓库**: https://github.com/your-org/apex-scaffold
 - **在线文档**: https://docs.your-domain.com/apex-scaffold
 

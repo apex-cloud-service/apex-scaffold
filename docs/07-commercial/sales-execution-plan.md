@@ -724,7 +724,7 @@ gh release create v1.2.0 \
 | Docker部署 | docker-compose.yml | 应用栈 |
 | 基础设施 | docker-compose.infra.yml | MySQL/Redis/MQ等 |
 | K8s部署 | k8s/ | 部署+金丝雀 |
-| 版本说明 | docs/COMMERCIAL_VERSIONS.md | 三档功能矩阵 |
+| 版本说明 | docs/07-commercial/COMMERCIAL_VERSIONS.md | 三档功能矩阵 |
 | 商业协议 | LICENSE-COMMERCIAL.md | 授权条款 |
 | License管理 | docs/LICENSE_MANAGEMENT.md | 安装/续期指南 |
 | 销售材料 | docs/sales/ | 4份采购材料 |

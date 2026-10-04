@@ -26,26 +26,10 @@ jobs:
       - name: 检出代码
         uses: actions/checkout@v4
       
-      - name: 设置 Python 环境
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-          cache: 'pip'
-      
-      - name: 安装依赖
-        run: |
-          pip install markdown-link-validator==0.2.0
-      
-      - name: 运行自定义链接检查脚本
+      - name: 运行内部链接检查脚本
         id: custom-check
-        run: |
-          if [ -f "docs/fix_internal_links.py" ]; then
-            echo "运行自定义链接检查脚本..."
-            cd docs
-            python fix_internal_links.py --check-only
-          else
-            echo "自定义脚本不存在,跳过"
-          fi
+        run: bash scripts/ci/check-doc-links.sh
+        continue-on-error: true
       
       - name: 检查 Markdown 链接 (方案1: markdown-link-check)
         uses: gaurav-nelson/github-action-markdown-link-check@v1

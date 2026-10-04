@@ -157,8 +157,8 @@ cd /Users/work/apex-scaffold
 
 **执行脚本**:
 - deploy_monitoring_configs.sh（目标不存在，无已核实替代文件；原路径：`file:///Users/work/apex-scaffold/deploy_monitoring_configs.sh`）
-- [start_mysql_and_run_sql.sh](file:///Users/work/apex-scaffold/start_mysql_and_run_sql.sh)
-- [scripts/check_javadoc.sh](file:///Users/work/apex-scaffold/scripts/check_javadoc.sh)
+- [start_mysql_and_run_sql.sh](../../../../../start_mysql_and_run_sql.sh)
+- [scripts/check_javadoc.sh](../../../../../scripts/check_javadoc.sh)
 
 ---
 

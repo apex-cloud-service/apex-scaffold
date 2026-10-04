@@ -286,7 +286,7 @@ apex-*/target/jacoco.exec                   # 覆盖率原始数据
 
 - [初始测试报告](test-execution-report-20260909.md)
 - [测试计划](../technical/test-completeness-plan.md)
-- [项目 README](file:///Users/work/apex-scaffold/README.md)
+- [项目 README](../../../README.md)
 
 ---
 

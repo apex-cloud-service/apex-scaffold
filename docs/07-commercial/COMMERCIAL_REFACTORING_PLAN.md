@@ -377,7 +377,7 @@ apex-interfaces/src/main/resources/db/migration/
   1. **删除** `docs/COMMERCIAL_INCREMENTAL_ANALYSIS.md`（标题与内容大量引用 原社交业务项目、`com.apex` 等，属内部分析文档，不适合对外）；
   2. **重写** `docs/COMMERCIAL_IMPROVEMENT_TASKS.md`：清除所有 业务引用，更新任务状态为当前方案；
   3. **重写** `docs/COMMERCIAL_GAP_ANALYSIS.md`：清除 业务引用；
-  4. **更新** `docs/COMMERCIAL_VERSIONS.md`：清除 业务引用（如有）；
+  4. **更新** `docs/07-commercial/COMMERCIAL_VERSIONS.md`：清除 业务引用（如有）；
   5. 全部 docs 文件 grep `业务`/`业务`/`业务` 并逐条清除；
   6. **更新** `CHANGELOG.md`：清除 `[Unreleased]` 段中"移除业务耦合代码(待后续迭代)"等引用，改为实际进展；
   7. **更新** `README.md`：确认无 业务引用。

@@ -17,7 +17,7 @@ path: "integration/oauth2/integration-guide.md"
 
 **修复后**:
 ```javascript
-path: "./integration/oauth2/integration-guide.md"
+path: "./_archive/integration/oauth2/integration-guide.md"
 ```
 
 ### 2. 链接打开函数优化
@@ -49,7 +49,7 @@ function openDoc(event, path) {
 - ✅ `./reports/` - 报告文档 (3个)
 - ✅ `./technical/` - 技术文档
 - ✅ `./api/` - API 文档
-- ✅ 根目录文档 (QUICK_START.md, BEST_PRACTICES.md 等)
+- ✅ 根目录文档 (00-getting-started/quickstart.md, BEST_PRACTICES.md 等)
 
 **总计**: 80+ 个文档路径全部修复
 
@@ -84,7 +84,7 @@ python3 -m http.server 8080
 # http://localhost:8080/docs/link-test.html
 ```
 
-测试页面 ([link-test.html](file:///Users/work/apex-scaffold/docs/link-test.html)) 包含:
+测试页面 ([link-test.html](../link-test.html)) 包含:
 - 6 个测试链接
 - 详细的测试说明
 - 结果分析指导
