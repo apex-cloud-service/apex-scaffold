@@ -2,6 +2,7 @@ package com.apex.scaffold.infrastructure.cache.service;
 
 import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
 import com.apex.scaffold.domain.service.CacheConsistencyPort;
+import com.apex.scaffold.infrastructure.cache.config.CacheProperties;
 import com.apex.scaffold.infrastructure.cache.support.InFlightRequestMerge;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Duration;
@@ -79,18 +80,25 @@ public class CacheConsistencyService implements CacheConsistencyPort {
 
     private final ObjectMapper objectMapper;
 
+    private final CacheProperties cacheProperties;
+
     /**
      * 构造缓存一致性服务
      *
      * @param cacheManager   Spring缓存管理器（管理Caffeine本地缓存）
      * @param redissonClient Redisson客户端（管理Redis分布式缓存）
      * @param objectMapper   JSON序列化器
+     * @param cacheProperties 缓存配置属性（延迟双删等高级特性开关）
      */
     public CacheConsistencyService(
-            CacheManager cacheManager, RedissonClient redissonClient, ObjectMapper objectMapper) {
+            CacheManager cacheManager,
+            RedissonClient redissonClient,
+            ObjectMapper objectMapper,
+            CacheProperties cacheProperties) {
         this.cacheManager = cacheManager;
         this.redissonClient = redissonClient;
         this.objectMapper = objectMapper;
+        this.cacheProperties = cacheProperties;
     }
 
     /**
@@ -167,8 +175,22 @@ public class CacheConsistencyService implements CacheConsistencyPort {
             return Mono.just(false);
         }
 
-        String fullKey = buildFullKey(cacheName, key);
+        return deleteBothLevels(cacheName, key)
+                .doOnSuccess(result -> log.info("缓存删除完成, cacheName: {}, key: {}, success: {}", cacheName, key, result))
+                .doOnError(e -> log.error("缓存删除失败, cacheName: {}, key: {}", cacheName, key, e));
+    }
 
+    /**
+     * 删除单个键的两级缓存（L2 Redis → L1 Caffeine）
+     *
+     * <p>抽取自 {@link #evict(String, String)} 的核心逻辑，供单次删除与延迟双删复用。
+     *
+     * @param cacheName 缓存名称/前缀
+     * @param key       缓存键
+     * @return L2 是否删除了至少一个键
+     */
+    private Mono<Boolean> deleteBothLevels(String cacheName, String key) {
+        String fullKey = buildFullKey(cacheName, key);
         return Mono.fromCallable(() -> {
                     // Step 1: 删除 L2（Redis）
                     RKeys rKeys = redissonClient.getKeys();
@@ -180,9 +202,78 @@ public class CacheConsistencyService implements CacheConsistencyPort {
                 .flatMap(l2Deleted -> {
                     // Step 2: 删除 L1（Caffeine）
                     return evictL1Cache(cacheName, key).thenReturn(l2Deleted);
+                });
+    }
+
+    /**
+     * 失效指定缓存键（异步延迟双删）。
+     *
+     * <p>针对并发读写导致缓存脏数据的经典场景（第八部分 §2.4 问题 1）：
+     * 线程 A 读取 DB 旧值 → 线程 B 更新 DB 并删除缓存 → 线程 A 将旧值写回缓存，
+     * 导致缓存脏数据。</p>
+     *
+     * <p>本方法在「立即删除」两级缓存之后，延迟 {@code delayMillis} 毫秒
+     * <strong>异步</strong>再执行一次删除，以覆盖延迟写回的旧值。第二次删除采用
+     * fire-and-forget 方式在 {@link BlockingIoSchedulers#cache()} 线程池上执行，
+     * 不阻塞主业务响应，避免给更新接口引入额外延迟。</p>
+     *
+     * <p>每次删除失败时按配置重试，重试仍失败则记录日志交由补偿机制兜底
+     * （对应 §2.4 问题 3）。当 {@code apex.cache.double-delete.enabled=false} 时
+     * 退化为单次删除，行为与 {@link #evict(String, String)} 一致。</p>
+     *
+     * @param cacheName 缓存名称/前缀
+     * @param key       缓存键
+     * @return 首次删除是否成功（第二次删除在后台异步执行，不参与返回值）
+     */
+    @Override
+    public Mono<Boolean> evictWithDelayedDoubleDelete(String cacheName, String key) {
+        if (key == null || cacheName == null) {
+            log.warn("缓存键或缓存名称为空，跳过延迟双删");
+            return Mono.just(false);
+        }
+
+        CacheProperties.DoubleDelete config = cacheProperties.getDoubleDelete();
+        if (config == null || !config.isEnabled()) {
+            return evict(cacheName, key);
+        }
+
+        int retryTimes = Math.max(0, config.getRetryTimes());
+        long delayMillis = Math.max(0, config.getDelayMillis());
+
+        return deleteBothLevels(cacheName, key)
+                .retry(retryTimes)
+                .doOnSuccess(deleted -> {
+                    scheduleSecondDelete(cacheName, key, delayMillis, retryTimes);
+                    log.info(
+                            "延迟双删：首次删除完成，已调度 {}ms 后异步二次删除, cacheName: {}, key: {}",
+                            delayMillis, cacheName, key);
                 })
-                .doOnSuccess(result -> log.info("缓存删除完成, cacheName: {}, key: {}, success: {}", cacheName, key, result))
-                .doOnError(e -> log.error("缓存删除失败, cacheName: {}, key: {}", cacheName, key, e));
+                .doOnError(e -> log.error(
+                        "缓存首次删除失败（重试 {} 次后），需补偿机制兜底, cacheName: {}, key: {}",
+                        retryTimes, cacheName, key, e));
+    }
+
+    /**
+     * 调度第二次删除（异步，fire-and-forget）
+     *
+     * <p>延迟 {@code delayMillis} 毫秒后在缓存线程池上执行第二次删除，
+     * 覆盖并发场景下延迟写回的旧值。异常仅记录日志，不向调用方传播。
+     *
+     * @param cacheName   缓存名称/前缀
+     * @param key         缓存键
+     * @param delayMillis 延迟毫秒数
+     * @param retryTimes  重试次数
+     */
+    private void scheduleSecondDelete(String cacheName, String key, long delayMillis, int retryTimes) {
+        Mono.delay(Duration.ofMillis(delayMillis), BlockingIoSchedulers.cache())
+                .then(deleteBothLevels(cacheName, key).retry(retryTimes))
+                .subscribe(
+                        deleted -> log.debug(
+                                "延迟双删：二次删除完成, cacheName: {}, key: {}, deleted: {}",
+                                cacheName, key, deleted),
+                        e -> log.error(
+                                "延迟双删：二次删除失败（重试 {} 次后），需补偿机制兜底, cacheName: {}, key: {}",
+                                retryTimes, cacheName, key, e));
     }
 
     /**

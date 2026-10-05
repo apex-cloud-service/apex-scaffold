@@ -108,7 +108,7 @@ class AccountDeletionServiceTest {
         when(tokenBlacklistService.revokeSubject(eq(OPEN_ID), anyLong())).thenReturn(Mono.empty());
         when(tokenService.deleteToken(OPEN_ID)).thenReturn(Mono.just(2L));
         when(authTicketService.revokeIdentity(PHONE, OPEN_ID)).thenReturn(Mono.empty());
-        when(cacheConsistencyPort.evict(anyString(), anyString())).thenReturn(Mono.just(true));
+        when(cacheConsistencyPort.evictWithDelayedDoubleDelete(anyString(), anyString())).thenReturn(Mono.just(true));
     }
 
     /**
@@ -202,8 +202,8 @@ class AccountDeletionServiceTest {
         verify(tokenBlacklistService).revokeSubject(eq(OPEN_ID), anyLong());
         verify(tokenService).deleteToken(OPEN_ID);
         verify(authTicketService).revokeIdentity(PHONE, OPEN_ID);
-        verify(cacheConsistencyPort).evict("user:id", String.valueOf(USER_ID));
-        verify(cacheConsistencyPort).evict("user:openId", OPEN_ID);
+        verify(cacheConsistencyPort).evictWithDelayedDoubleDelete("user:id", String.valueOf(USER_ID));
+        verify(cacheConsistencyPort).evictWithDelayedDoubleDelete("user:openId", OPEN_ID);
     }
 
     /**

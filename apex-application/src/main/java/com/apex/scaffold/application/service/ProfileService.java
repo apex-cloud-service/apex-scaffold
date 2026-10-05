@@ -238,8 +238,8 @@ public class ProfileService {
                             .subscribeOn(jdbc());
                 })
                 .then(Mono.when(
-                        cacheConsistencyService.evict("user:id", String.valueOf(user.getId())),
-                        cacheConsistencyService.evict("user:openId", openId)))
+                        cacheConsistencyService.evictWithDelayedDoubleDelete("user:id", String.valueOf(user.getId())),
+                        cacheConsistencyService.evictWithDelayedDoubleDelete("user:openId", openId)))
                 .then(getMe(openId));
     }
 

@@ -59,7 +59,9 @@ class UserServiceTest {
         testUser.setNickName("Test User");
         testUser.setPhone("13800138000");
 
-        lenient().when(cacheConsistencyService.evict(anyString(), anyString())).thenReturn(Mono.just(true));
+        lenient()
+                .when(cacheConsistencyService.evictWithDelayedDoubleDelete(anyString(), anyString()))
+                .thenReturn(Mono.just(true));
     }
 
     @Test

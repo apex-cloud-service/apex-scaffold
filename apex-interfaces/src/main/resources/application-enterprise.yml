@@ -80,6 +80,16 @@ apex:
   # 💡 适用于可用性优先、一致性要求不严格的场景（如商品详情、用户资料）
   # ⚠️ 降级返回的是过期数据，业务需评估数据时效性风险
   cache:
+    # ✅ 延迟双删：更新 DB 后先立即删除缓存，延迟再删一次，防止并发读写脏数据
+    # 💡 第二次删除异步执行，不阻塞更新接口响应
+    double-delete:
+      # ✅ 启用延迟双删
+      enabled: true
+      # 第二次删除的延迟时间（毫秒）
+      delay-millis: 500
+      # 每次删除失败的最大重试次数
+      retry-times: 3
+
     read-degradation:
       # ✅ 启用读降级（Enterprise 特性，默认 true）
       enabled: true

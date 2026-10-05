@@ -255,9 +255,10 @@ public class AdminUserManagementService {
                             return userProfileRepository.save(profile);
                         }))
                 .then(Mono.when(
-                        cacheConsistencyPort.evict("user:id", String.valueOf(userId)),
+                        cacheConsistencyPort.evictWithDelayedDoubleDelete("user:id", String.valueOf(userId)),
                         requiredUser(userId)
-                                .flatMap(user -> cacheConsistencyPort.evict("user:openId", user.getOpenId()))))
+                                .flatMap(user -> cacheConsistencyPort.evictWithDelayedDoubleDelete(
+                                        "user:openId", user.getOpenId()))))
                 .then(detailUnchecked(userId));
     }
 

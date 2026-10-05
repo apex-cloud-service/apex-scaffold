@@ -259,10 +259,11 @@ public class UserService {
                 .flatMap(existing -> mergeFields(existing, user))
                 .flatMap(userRepository::save)
                 .flatMap(updated -> {
-                    // 使用缓存一致性服务清除多级缓存
+                    // 使用缓存一致性服务清除多级缓存（延迟双删，防止并发读写脏数据）
                     return Mono.when(
-                                    cacheConsistencyService.evict("user:id", String.valueOf(userId)),
-                                    cacheConsistencyService.evict("user:openId", openId))
+                                    cacheConsistencyService.evictWithDelayedDoubleDelete(
+                                            "user:id", String.valueOf(userId)),
+                                    cacheConsistencyService.evictWithDelayedDoubleDelete("user:openId", openId))
                             .thenReturn(updated);
                 })
                 .doOnSuccess(u -> log.info("用户更新成功，userId: {}", u.getId()))
@@ -336,10 +337,10 @@ public class UserService {
                     return userRepository.save(user).map(u -> user);
                 })
                 .flatMap(user -> {
-                    // P0-12修复(SV-9): 补充 user:openId 缓存驱逐，防止通过OpenID查询时返回旧登录信息
+                    // P0-12修复(SV-9): 补充 user:openId 缓存驱逐（延迟双删），防止通过OpenID查询时返回旧登录信息
                     return cacheConsistencyService
-                            .evict("user:id", String.valueOf(userId))
-                            .then(cacheConsistencyService.evict("user:openId", user.getOpenId()))
+                            .evictWithDelayedDoubleDelete("user:id", String.valueOf(userId))
+                            .then(cacheConsistencyService.evictWithDelayedDoubleDelete("user:openId", user.getOpenId()))
                             .thenReturn(true);
                 })
                 .defaultIfEmpty(false)
@@ -378,9 +379,9 @@ public class UserService {
                     return userRepository.save(user).map(u -> true);
                 })
                 .flatMap(result -> {
-                    // 使用缓存一致性服务清除多级缓存
+                    // 使用缓存一致性服务清除多级缓存（延迟双删，防止并发读写脏数据）
                     return cacheConsistencyService
-                            .evict("user:id", String.valueOf(userId))
+                            .evictWithDelayedDoubleDelete("user:id", String.valueOf(userId))
                             .thenReturn(result);
                 })
                 .defaultIfEmpty(false)

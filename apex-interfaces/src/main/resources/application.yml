@@ -839,6 +839,15 @@ operation-log:
       default-ttl: 3600
       # 批量操作每批条目数（mget/mset/Pipeline）
       batch-size: 100
+    # ---------- 延迟双删（防止并发读写缓存脏数据） ----------
+    # ✅ 更新 DB 后先立即删除缓存，延迟再删一次；第二次删除异步执行，不阻塞业务响应
+    double-delete:
+      # ✅ 是否启用（默认 true）
+      enabled: ${APEX_CACHE_DOUBLE_DELETE_ENABLED:true}
+      # 第二次删除的延迟时间（毫秒，默认 500）
+      delay-millis: ${APEX_CACHE_DOUBLE_DELETE_DELAY_MILLIS:500}
+      # 每次删除失败的最大重试次数（默认 3）
+      retry-times: ${APEX_CACHE_DOUBLE_DELETE_RETRY_TIMES:3}
   # ---------- Redis 键前缀与 Redisson 配置 ----------
   redis:
     # Redis 键统一前缀：多应用共用同一 Redis 实例时用前缀隔离（如 apex-prod:）

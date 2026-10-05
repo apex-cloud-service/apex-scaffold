@@ -38,6 +38,18 @@ public class CacheProperties {
     private Prewarm prewarm = new Prewarm();
 
     /**
+     * 延迟双删配置
+     *
+     * <p>用于解决并发读写导致的缓存脏数据问题（Cache-Aside 模式的经典缺陷）：
+     * 线程 A 读 DB 旧值后、写回缓存前，线程 B 更新 DB 并删除缓存，
+     * 导致线程 A 将旧值写回缓存，形成脏数据。
+     *
+     * <p>延迟双删策略：更新 DB 后立即删除缓存 → 延迟一段时间 → 再删除一次缓存，
+     * 以覆盖延迟到达的旧值写回请求。当禁用时退化为单次删除（仅立即删除）。
+     */
+    private DoubleDelete doubleDelete = new DoubleDelete();
+
+    /**
      * DB 故障读降级配置（Enterprise License 特性）
      *
      * <p>当数据库不可用时，允许从缓存（L1/L2）读取过期数据作为降级兜底，
@@ -115,5 +127,37 @@ public class CacheProperties {
          * 确保基础组件（数据源、Redis 连接）已就绪。
          */
         private long startupDelaySeconds = 30;
+    }
+
+    /**
+     * 延迟双删配置项
+     *
+     * <p>控制并发读写场景下的一致性保障行为（{@code apex.cache.double-delete.*}）。
+     */
+    @Data
+    public static class DoubleDelete {
+
+        /**
+         * 是否启用延迟双删（默认 true）
+         *
+         * <p>启用后，删除缓存将在「立即删除 → 延迟 → 再删除」两阶段执行，
+         * 以覆盖并发场景下延迟写回的旧值。禁用后仅执行一次立即删除。
+         */
+        private boolean enabled = true;
+
+        /**
+         * 第二次删除的延迟时间（毫秒，默认 500ms）
+         *
+         * <p>延迟时间应略大于「一次数据库读 + 写回缓存」的耗时，
+         * 通常与主从复制延迟或业务读耗时相当。
+         */
+        private long delayMillis = 500;
+
+        /**
+         * 每次删除的最大重试次数（默认 3）
+         *
+         * <p>删除失败时按此值重试；重试仍失败则记录日志，交由补偿机制兜底。
+         */
+        private int retryTimes = 3;
     }
 }

@@ -116,7 +116,9 @@ class ProfileServiceTest {
                 .thenAnswer(invocation -> UserComplianceEntity.create(invocation.getArgument(0)));
         lenient().when(subscriptionRepository.findActiveByUserId(anyLong())).thenReturn(Mono.empty());
         lenient().when(creditAccountRepository.findByUserId(anyLong())).thenReturn(Mono.empty());
-        lenient().when(cacheConsistencyService.evict(anyString(), anyString())).thenReturn(Mono.just(true));
+        lenient()
+                .when(cacheConsistencyService.evictWithDelayedDoubleDelete(anyString(), anyString()))
+                .thenReturn(Mono.just(true));
     }
 
     @Test
@@ -277,8 +279,8 @@ class ProfileServiceTest {
         assertThat(userCaptor.getValue().getGender()).isEqualTo(1);
         assertThat(userCaptor.getValue().getBirthday()).isEqualTo(LocalDate.of(1998, 8, 6));
         assertThat(userCaptor.getValue().getCity()).isEqualTo("上海");
-        verify(cacheConsistencyService).evict("user:id", "1");
-        verify(cacheConsistencyService).evict("user:openId", "test_openid");
+        verify(cacheConsistencyService).evictWithDelayedDoubleDelete("user:id", "1");
+        verify(cacheConsistencyService).evictWithDelayedDoubleDelete("user:openId", "test_openid");
     }
 
     /**
