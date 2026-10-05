@@ -1,8 +1,8 @@
 package com.apex.scaffold.interfaces.handler;
 
-import com.apex.scaffold.application.service.WorkflowService;
-import com.apex.scaffold.application.workflow.WorkflowQueryService;
-import com.apex.scaffold.application.workflow.WorkflowStatisticsService;
+import com.apex.scaffold.workflow.application.query.WorkflowQueryService;
+import com.apex.scaffold.workflow.application.query.WorkflowStatisticsService;
+import com.apex.scaffold.workflow.application.service.WorkflowService;
 import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.annotation.TenantAware;
 import com.apex.scaffold.common.dto.PageResponse;

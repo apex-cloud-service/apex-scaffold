@@ -9,7 +9,7 @@
     <parent>
         <groupId>com.apex.scaffold</groupId>
         <artifactId>apex-scaffold</artifactId>
-        <version>1.2.0</version>
+        <version>1.3.1</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -30,6 +30,12 @@
         <dependency>
             <groupId>com.apex.scaffold</groupId>
             <artifactId>apex-domain</artifactId>
+        </dependency>
+        <!-- 工作流模块：提供工作流应用服务（WorkflowService/QueryService/StatisticsService），
+             供接口层 WorkflowRouter/WorkflowHandler 调用；工作流对外路由与处理器保留在本模块。 -->
+        <dependency>
+            <groupId>com.apex.scaffold</groupId>
+            <artifactId>apex-workflow</artifactId>
         </dependency>
         <!-- License 授权校验 Starter：License 校验 + FeatureGate 功能门控切面 -->
         <dependency>

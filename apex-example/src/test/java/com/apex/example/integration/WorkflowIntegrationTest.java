@@ -1,8 +1,8 @@
 package com.apex.example.integration;
 
 import com.apex.example.repository.ExampleUserMapper;
-import com.apex.scaffold.domain.model.workflow.WorkflowDefinition;
-import com.apex.scaffold.infrastructure.persistence.mapper.WorkflowDefinitionMapper;
+import com.apex.scaffold.workflow.domain.model.WorkflowDefinition;
+import com.apex.scaffold.workflow.infrastructure.persistence.mapper.WorkflowDefinitionMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
