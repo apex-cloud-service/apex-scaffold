@@ -2,7 +2,7 @@
 
 **版本**: v1.1（含本机沙箱基线实测）  
 **状态**: ✅ 含 2026-08-28 实测基线（沙箱环境）；正式交付建议按 §5 在目标环境复核  
-**适用版本**: Apex Scaffold v1.2.0（Java 17 / Spring Boot 3.5 / WebFlux / Netty）
+**适用版本**: Apex Scaffold v1.3.1（Java 17 / Spring Boot 3.5 / WebFlux / Netty）
 
 ---
 

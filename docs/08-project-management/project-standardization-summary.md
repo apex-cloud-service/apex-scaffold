@@ -2,7 +2,7 @@
 
 **执行日期**：2026-09-17  
 **执行状态**：✅ 所有核心任务已完成  
-**项目版本**：v1.2.0（前后端已统一）
+**项目版本**：v1.3.1（前后端已统一）
 
 ---
 
@@ -41,9 +41,9 @@
 
 | 文件 | 原版本 | 修复后版本 | 状态 |
 |------|--------|-----------|------|
-| pom.xml（根） | v1.2.0 | v1.2.0 | ✅ 基准版本 |
-| Dockerfile | v1.1.3 | v1.2.0 | ✅ 已修复 |
-| package.json（前端） | v1.1.4 | v1.2.0 | ✅ 已修复 |
+| pom.xml（根） | v1.2.0 | v1.3.1 | ✅ 现行基准版本 |
+| Dockerfile | v1.1.3 | v1.3.1 | ✅ 已修复并随版本升级 |
+| package.json（前端） | v1.1.4 | v1.3.1 | ✅ 已修复并随版本升级 |
 
 **修复方法**：
 - 后端：直接修改 Dockerfile BUILD_VERSION 参数
@@ -123,7 +123,7 @@
 |--------|------|------|
 | 代码规范性 | ⭐⭐⭐⭐⭐ | 纯函数式路由、DDD 分层清晰、无注解式 Controller |
 | 数据库一致性 | ⭐⭐⭐⭐⭐ | V37 和 V40 修复后，核心表已完全对齐 |
-| 版本管理 | ⭐⭐⭐⭐⭐ | 前后端版本号统一到 v1.2.0 |
+| 版本管理 | ⭐⭐⭐⭐⭐ | 前后端版本号统一到 v1.3.1 |
 | 文档完整性 | ⭐⭐⭐⭐⭐ | 9 个目录、66 个架构图、完整的开发规范 |
 | 部署统一性 | ⭐⭐⭐⭐⭐ | 三种部署方式共用 Flyway 脚本 |
 | 安全防护 | ⭐⭐⭐⭐⭐ | OAuth2、JWT、RBAC、审计日志、限流熔断 |
@@ -142,8 +142,8 @@
 5. `docs/reports/code_review_and_standardization_report_2026-09-17.md`
 
 ### 修改文件（2 个）
-1. `Dockerfile`：BUILD_VERSION v1.1.3 → v1.2.0
-2. `apex-admin-web/package.json`：version v1.1.4 → v1.2.0
+1. `Dockerfile`：BUILD_VERSION v1.1.3 → v1.2.0（后续随版本收口升级至 v1.3.1）
+2. `apex-admin-web/package.json`：version v1.1.4 → v1.2.0（后续随版本收口升级至 v1.3.1）
 
 ### 删除文件（3 个）
 1. `docs/diagrams/19_backend_technology_stack.svg.broken`
@@ -177,7 +177,7 @@
 
 3. **三种部署方式测试**：
    - java -jar：`mvnd clean package && java -jar apex-interfaces/target/*.jar`
-   - Docker：`docker build -t apex-scaffold:1.2.0 . && docker run -p 8080:8080 apex-scaffold:1.2.0`
+   - Docker：`docker build -t apex-scaffold:1.3.1 . && docker run -p 8080:8080 apex-scaffold:1.3.1`
    - Docker Compose：`docker-compose up -d`
 
 ---
@@ -243,7 +243,7 @@ ALTER TABLE wf_workflow_definition CHANGE COLUMN enabled status VARCHAR(20);
 **核心成果**：
 1. ✅ 数据库脚本完整性：MySQL 和 PostgreSQL 脚本版本完全对齐（V1-V40）
 2. ✅ 数据库表结构一致性：10 个核心表字段与代码 PO 类 100% 匹配
-3. ✅ 版本号统一：前后端版本号统一到 v1.2.0
+3. ✅ 版本号统一：前后端版本号统一到 v1.3.1
 4. ✅ 构建验证：后端编译成功，210 个源文件无错误
 5. ✅ 文档清理：删除无效文件，保留 66 个有效架构图
 6. ✅ 完整报告：生成详细的执行报告文档

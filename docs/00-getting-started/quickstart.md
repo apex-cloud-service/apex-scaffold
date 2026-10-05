@@ -1,7 +1,7 @@
 # Apex Scaffold 快速开始指南
 
 > **预计时间**: 5 分钟  
-> **适用版本**: v1.2.0+  
+> **适用版本**: v1.3.1+  
 > **最后更新**: 2026-09-12
 
 本指南帮助您在 5 分钟内从零开始运行 Apex Scaffold 项目。
@@ -182,7 +182,7 @@ curl http://localhost:8080/api/v1/health
     "status": "UP",
     "timestamp": "2026-09-12T12:00:00",
     "application": "apex-scaffold",
-    "version": "1.2.0"
+    "version": "1.3.1"
   },
   "traceId": null
 }
@@ -381,10 +381,10 @@ mvnd -T 4 clean package
 java -Xms512m -Xmx1024m \
      -XX:+UseG1GC \
      -XX:MaxGCPauseMillis=200 \
-     -jar apex-interfaces-1.2.0.jar
+     -jar apex-interfaces-1.3.1.jar
 
 # 2. 启用 Profile
-java -jar apex-interfaces-1.2.0.jar \
+java -jar apex-interfaces-1.3.1.jar \
      --spring.profiles.active=prod,enterprise
 ```
 

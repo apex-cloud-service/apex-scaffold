@@ -1,7 +1,7 @@
 # 幂等 / 重试 / 攻击防护全景评估
 
 > 适用范围:apex-scaffold(Java 17 · Spring Boot 3.5 · WebFlux 纯响应式)\
-> 评估日期:2026-08-28 · 对应版本:v1.2.0+\
+> 评估日期:2026-08-28 · 对应版本:v1.3.1+\
 > 目的:回答「项目是否已实现幂等、重试机制,是否已拦截恶意攻击,相关防护是否齐备」,\
 > 并记录本轮(2026-08-28)补齐的缺口与落地方式。\
 > **配套架构图**: [安全防护体系图](../diagrams/12_security_protection_system.svg) | [安全防护层次图](../diagrams/44_security_protection_layers.svg)

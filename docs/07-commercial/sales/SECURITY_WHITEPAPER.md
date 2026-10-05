@@ -1,7 +1,7 @@
 # Apex Scaffold 安全白皮书
 
 **版本**: v1.0  
-**适用版本**: Apex Scaffold v1.2.0（Java 17 / Spring Boot 3.5 / WebFlux）  
+**适用版本**: Apex Scaffold v1.3.1（Java 17 / Spring Boot 3.5 / WebFlux）  
 **定位**: 面向企业采购安全评审的说明材料；所有内容基于代码库实际实现，可审计验证。
 
 ---

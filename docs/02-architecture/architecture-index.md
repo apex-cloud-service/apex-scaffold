@@ -2,7 +2,7 @@
 
 > 文档版本: v2.7\
 > 最后更新: 2026-09-11\
-> 适用版本: apex-scaffold v1.2.0+\
+> 适用版本: apex-scaffold v1.3.1+\
 > 技术栈版本: Spring Boot 3.5.15 | Java 17 | Reactor 3.6.13 | Vue 3.5.13
 
 **🔍 快速搜索**: [打开文档搜索工具](../doc-search.html) - 支持关键词搜索、分类过滤、实时预览
@@ -103,20 +103,20 @@
 
 | 序号 | 名称                      | 文件                                                                                                           | 说明                                                                     |
 | -- | ----------------------- | ------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------- |
-| 13 | **Docker Compose本地开发环境** | [13\_docker\_compose\_local\_dev.svg](../diagrams/49_deployment_checklist_flow.svg)                             | 展示一键启动完整技术栈的docker-compose配置，包含核心服务和企业版服务，支持健康检查和数据持久化                |
-| 14 | **Kubernetes生产部署架构**    | [14\_kubernetes\_production\_deployment.svg](../diagrams/45_deployment_flow.svg)               | 展示Deployment、HPA自动伸缩、Service/Ingress、ConfigMap/Secret等K8s核心资源及生产最佳实践 |
-| 15 | **CI/CD流水线架构**          | [15\_cicd\_pipeline.svg](../diagrams/53_quality_gate_pipeline.svg)                                                      | 展示GitHub Actions构建、测试、安全扫描、Docker镜像构建、多环境部署完整流水线                    |
-| 16 | **Nacos服务注册与发现**        | [16\_nacos\_service\_discovery.svg](../diagrams/46_configuration_hierarchy.svg)                                 | 展示服务注册、配置中心、健康检查、元数据管理及Nacos 3节点集群部署                                 |
-| 17 | **Zipkin分布式链路追踪**       | [17\_zipkin\_distributed\_tracing.svg](../diagrams/38_unified_auth_architecture.svg)                           | 展示Micrometer Tracing、10%采样率、TraceId/SpanId结构及典型调用链路示例                |
-| 18 | **Spring Cloud Gateway** | [18\_spring\_cloud\_gateway.svg](../diagrams/57_dynamic_route_resolution.svg)                                       | 展示动态路由、全局过滤器链、限流熔断、跨域CORS、安全响应头等API网关核心功能                          |
+| 13 | **Docker Compose本地开发环境** | [13\_docker\_compose\_local\_dev.svg](../diagrams/13_docker_compose_local_dev.svg)                             | 展示一键启动完整技术栈的docker-compose配置，包含核心服务和企业版服务，支持健康检查和数据持久化                |
+| 14 | **Kubernetes生产部署架构**    | [14\_kubernetes\_production\_deployment.svg](../diagrams/14_kubernetes_production_deployment.svg)               | 展示Deployment、HPA自动伸缩、Service/Ingress、ConfigMap/Secret等K8s核心资源及生产最佳实践 |
+| 15 | **CI/CD流水线架构**          | [15\_cicd\_pipeline.svg](../diagrams/15_cicd_pipeline.svg)                                                      | 展示GitHub Actions构建、测试、安全扫描、Docker镜像构建、多环境部署完整流水线                    |
+| 16 | **Nacos服务注册与发现**        | [16\_nacos\_service\_discovery.svg](../diagrams/16_nacos_service_discovery.svg)                                 | 展示服务注册、配置中心、健康检查、元数据管理及Nacos 3节点集群部署                                 |
+| 17 | **Zipkin分布式链路追踪**       | [17\_zipkin\_distributed\_tracing.svg](../diagrams/17_zipkin_distributed_tracing.svg)                           | 展示Micrometer Tracing、10%采样率、TraceId/SpanId结构及典型调用链路示例                |
+| 18 | **Spring Cloud Gateway** | [18\_spring\_cloud\_gateway.svg](../diagrams/18_spring_cloud_gateway.svg)                                       | 展示动态路由、全局过滤器链、限流熔断、跨域CORS、安全响应头等API网关核心功能                          |
 
 ### 前端技术栈与响应式编程图 (5张) - 2026-09-10 ⭐
 
 | 序号 | 名称                   | 文件                                                                                                     | 说明                                                             |
 | -- | -------------------- | ------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------- |
-| 19 | **前端Vue3组件架构**       | [19\_frontend\_vue3\_architecture.svg](../diagrams/55_frontend_api_integration.svg)                     | 展示Vue 3 Composition API、Pinia状态管理、Element Plus、目录结构及核心特性    |
-| 20 | **Axios请求拦截与封装**     | [20\_axios\_request\_interceptor.svg](../diagrams/54_api_contract_flow.svg)                       | 展示请求/响应拦截器、JWT自动续期、错误处理、请求取消及防重复提交                           |
-| 21 | **WebFlux响应式编程**      | [21\_webflux\_reactive\_programming.svg](../diagrams/51_webflux_blocking_io_isolation.svg)                 | 展示Reactor 3响应式流、Mono/Flux操作符、线程池隔离策略及最佳实践                     |
+| 19 | **前端Vue3组件架构**       | [19\_frontend\_vue3\_architecture.svg](../diagrams/19_frontend_vue3_architecture.svg)                     | 展示Vue 3 Composition API、Pinia状态管理、Element Plus、目录结构及核心特性    |
+| 20 | **Axios请求拦截与封装**     | [20\_axios\_request\_interceptor.svg](../diagrams/20_axios_request_interceptor.svg)                       | 展示请求/响应拦截器、JWT自动续期、错误处理、请求取消及防重复提交                           |
+| 21 | **WebFlux响应式编程**      | [21\_webflux\_reactive\_programming.svg](../diagrams/21_webflux_reactive_programming.svg)                 | 展示Reactor 3响应式流、Mono/Flux操作符、线程池隔离策略及最佳实践                     |
 | 22 | **国际化i18n多语言支持**     | [22\_i18n\_internationalization.svg](../diagrams/22_i18n_internationalization.svg)                         | 展示Spring MessageSource后端i18n、Vue-i18n前端多语言、错误码国际化及语言联动        |
 | 23 | **OpenAPI文档生成**       | [23\_openapi\_documentation.svg](../diagrams/23_openapi_documentation.svg)                                 | 展示SpringDoc注解配置、Swagger UI在线调试、安全配置及Postman/Apifox集成         |
 

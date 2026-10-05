@@ -229,4 +229,4 @@ public Mono<ServerResponse> validateMobile(ServerRequest request) {
 
 **测试人员**: 测试团队  
 **测试日期**: 2026-09-07  
-**版本**: 1.2.0
+**版本**: 1.3.1

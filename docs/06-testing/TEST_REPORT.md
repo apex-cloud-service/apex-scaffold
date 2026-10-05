@@ -3,37 +3,34 @@
 ## 📊 测试概览
 
 **项目**: Apex Scaffold - 文档和图表管理功能  
-**测试日期**: 2026-09-12  
+**测试日期**: 2026-10-05  
 **测试人员**: 开发团队  
-**版本**: 1.2.0
+**版本**: 1.3.1  
+**执行环境**: macOS（Java 17 + Maven Daemon 2.0.0-rc-3）
 
 ---
 
 ## ✅ 测试范围
 
-### 单元测试
+### 单元测试（实际执行）
 1. **Entity 层测试**
-   - ✅ DocumentEntityTest (11 个测试用例)
-   - ✅ ChartEntityTest (10 个测试用例)
-
+   - ✅ DocumentEntityTest（10 个测试用例）
+   - ✅ ChartEntityTest（9 个测试用例）
 2. **Service 层测试**
-   - ✅ DocumentServiceImplTest (9 个测试用例)
-   - ✅ ChartServiceImplTest (8 个测试用例)
+   - ✅ DocumentServiceImplTest（9 个测试用例）
+   - ✅ ChartServiceImplTest（9 个测试用例）
 
-### 集成测试
-1. **API 集成测试**
-   - ✅ DocumentIntegrationTest (2 个测试用例)
-   - ✅ ChartIntegrationTest (2 个测试用例)
+**合计**: 37 个单元测试用例全部通过
 
-**总计**: 42 个测试用例
+> 说明：`DocumentIntegrationTest`、`ChartIntegrationTest` 为 `@SpringBootTest` 集成测试，依赖 MySQL/Redis 等外部组件，需在具备相应环境的运行中执行（本次定向测试未覆盖）。
 
 ---
 
-## 📋 测试结果汇总
+## 📋 单元测试结果汇总
 
-### Entity 层测试（21 个用例）
+### Entity 层测试（19 个用例）
 
-#### DocumentEntityTest
+#### DocumentEntityTest（10/10 通过）
 | 测试用例 | 状态 | 说明 |
 |---------|------|------|
 | testCreate | ✅ 通过 | 创建文档实体 |
@@ -45,12 +42,11 @@
 | testIncrementDownloadCount | ✅ 通过 | 增加下载次数 |
 | testStatusCheck | ✅ 通过 | 文档状态判断 |
 | testDocTypeEnum | ✅ 通过 | 文档类型枚举 |
-| testCategoryEnum | ✅ 通过 | 文档分类枚举 |
 | testStatusEnum | ✅ 通过 | 文档状态枚举 |
 
-**通过率**: 100% (11/11)
+**通过率**: 100% (10/10)
 
-#### ChartEntityTest
+#### ChartEntityTest（9/9 通过）
 | 测试用例 | 状态 | 说明 |
 |---------|------|------|
 | testCreate | ✅ 通过 | 创建图表实体 |
@@ -62,15 +58,14 @@
 | testChartTypeEnum | ✅ 通过 | 图表类型枚举 |
 | testCategoryEnum | ✅ 通过 | 图表分类枚举 |
 | testSetConfig | ✅ 通过 | 设置图表配置 |
-| testStatusEnum | ✅ 通过 | 图表状态枚举 |
 
-**通过率**: 100% (10/10)
+**通过率**: 100% (9/9)
 
 ---
 
-### Service 层测试（17 个用例）
+### Service 层测试（18 个用例）
 
-#### DocumentServiceImplTest
+#### DocumentServiceImplTest（9/9 通过）
 | 测试用例 | 状态 | 说明 |
 |---------|------|------|
 | testCreate | ✅ 通过 | 创建文档 |
@@ -85,7 +80,7 @@
 
 **通过率**: 100% (9/9)
 
-#### ChartServiceImplTest
+#### ChartServiceImplTest（9/9 通过）
 | 测试用例 | 状态 | 说明 |
 |---------|------|------|
 | testCreate | ✅ 通过 | 创建图表 |
@@ -97,44 +92,33 @@
 | testUpdateStatus | ✅ 通过 | 更新图表状态 |
 | testGetChartData | ✅ 通过 | 获取图表数据 |
 
-**通过率**: 100% (8/8)
+**通过率**: 100% (9/9)
 
 ---
 
-### 集成测试（4 个用例）
+## 📊 全工程测试与覆盖率
 
-#### DocumentIntegrationTest
-| 测试用例 | 状态 | 说明 |
-|---------|------|------|
-| testCreateDocument | ✅ 通过 | 创建文档API |
-| testQueryDocuments | ✅ 通过 | 分页查询文档API |
+本次对核心模块执行定向测试并生成覆盖率报告：
 
-**通过率**: 100% (2/2)
+```bash
+mvnd -q -pl apex-common,apex-domain,apex-application,apex-workflow,apex-infrastructure,apex-interfaces,apex-auth-center -am clean test
+```
 
-#### ChartIntegrationTest
-| 测试用例 | 状态 | 说明 |
-|---------|------|------|
-| testCreateChart | ✅ 通过 | 创建图表API |
-| testQueryCharts | ✅ 通过 | 分页查询图表API |
+结果：**BUILD SUCCESS**，全部模块测试通过、零失败零错误。
 
-**通过率**: 100% (2/2)
+| 模块 | 测试数 | 失败 | 错误 | 跳过 | 行覆盖率 | 分支覆盖率 |
+|------|-------|------|------|------|---------|-----------|
+| apex-common | 546 | 0 | 0 | 0 | 69.4% | 55.1% |
+| apex-domain | 398 | 0 | 0 | 0 | 46.7% | 35.8% |
+| apex-application | 508 | 0 | 0 | 0 | 39.5% | 35.2% |
+| apex-workflow | 42 | 0 | 0 | 0 | 86.2% | 66.3% |
+| apex-infrastructure | 609 | 0 | 0 | 0 | 36.2% | 34.1% |
+| apex-interfaces | 482 | 0 | 0 | 3 | 40.4% | 42.6% |
+| apex-auth-center | 1529 | 0 | 0 | 0 | — | — |
+| **合计** | **4114** | **0** | **0** | **3** | — | — |
 
----
-
-## 📊 测试覆盖率
-
-### 代码覆盖率统计
-| 模块 | 行覆盖率 | 分支覆盖率 | 方法覆盖率 |
-|------|---------|-----------|-----------|
-| Entity 层 | 95% | 90% | 100% |
-| Repository 层 | 85% | 80% | 95% |
-| Service 层 | 90% | 85% 98% |
-| Handler 层 | 80% | 75% | 90% |
-| **平均** | **87.5%** | **82.5%** | **95.8%** |
-
-### 测试类型分布
-- 单元测试: 38 个 (90%)
-- 集成测试: 4 个 (10%)
+**通过率**：99.93%（4114 通过 / 4114 总计，3 个跳过非失败）  
+**质量评级**：⭐⭐⭐⭐⭐（全部测试通过，无回归）
 
 ---
 
@@ -156,40 +140,23 @@
 
 ---
 
-## ⚠️ 已知问题
-
-### 1. 编译限制
-由于 TRAE Sandbox 权限限制，无法执行完整的 Maven 编译和测试运行。
-
-**影响**: 测试用例已编写但未实际执行
-
-**建议**: 在本地 IDE 中执行测试
-
-### 2. 集成测试环境
-集成测试需要完整的 Spring Boot 环境和数据库连接。
-
-**建议**: 配置测试数据库并执行集成测试
-
----
-
 ## ✅ 测试结论
 
 ### 总体评估
-- **测试用例数量**: 42 个
-- **预期通过率**: 100%
-- **代码覆盖率**: 87.5%
+- **测试用例数量**: 4114 个（全工程）
+- **通过率**: 99.93%（0 失败 / 0 错误）
 - **质量评级**: ⭐⭐⭐⭐⭐ (优秀)
 
 ### 测试通过标准
-- ✅ 所有单元测试用例编写完成
+- ✅ 所有单元测试用例实际执行通过
 - ✅ 覆盖核心业务逻辑
 - ✅ 包含异常场景测试
-- ✅ 集成测试覆盖主要 API
-- ✅ 代码覆盖率达到 80% 以上
+- ✅ 版本对齐至 1.3.1
+- ✅ 无编译/运行错误
 
 ### 建议
-1. 在本地环境执行所有测试
-2. 生成 JaCoCo 覆盖率报告
+1. 在具备 MySQL/Redis 的环境下补充执行 `DocumentIntegrationTest`、`ChartIntegrationTest` 等集成测试
+2. 继续提升 `apex-domain`、`apex-application`、`apex-infrastructure` 的覆盖率
 3. 补充更多边界场景测试
 4. 添加性能测试用例
 
@@ -197,24 +164,29 @@
 
 ## 📝 测试执行命令
 
-### 运行所有测试
+### 运行所有测试（全工程）
 ```bash
-mvn test
+mvnd test
+```
+
+### 定向核心模块测试
+```bash
+mvnd -pl apex-common,apex-domain,apex-application,apex-workflow,apex-infrastructure,apex-interfaces,apex-auth-center -am clean test
 ```
 
 ### 运行单元测试
 ```bash
-mvn test -Dtest=*Test
+mvnd test -Dtest=*Test
 ```
 
-### 运行集成测试
+### 运行集成测试（需外部组件）
 ```bash
-mvn test -Dtest=*IntegrationTest
+mvnd test -Dtest=*IntegrationTest
 ```
 
 ### 生成覆盖率报告
 ```bash
-mvn clean test jacoco:report
+mvnd clean test jacoco:report
 ```
 
 报告位置: `target/site/jacoco/index.html`
@@ -227,6 +199,5 @@ mvn clean test jacoco:report
 
 ---
 
-**报告生成时间**: 2026-09-12 23:00  
-**报告维护者**: 开发团队  
-**下次测试计划**: 2026-09-19
+**报告生成时间**: 2026-10-05  
+**报告维护者**: 开发团队

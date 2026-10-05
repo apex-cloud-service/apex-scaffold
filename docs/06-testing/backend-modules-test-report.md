@@ -64,7 +64,7 @@ JWT 配置测试功能（文档模块 1，核心能力 testJwt）：
 
 | 问题 | 归因 | 建议 |
 |------|------|------|
-| FlywayMigrationVersionTest 失败 | 历史 mysql 迁移存在同版本号重复（V26×5/V27×3/V28×3）且与 postgresql 版本集不对齐（mysql V26/V27 vs pg V47/V48） | 需团队决策：Flyway repair 或补齐对齐占位脚本 |
+| ~~FlywayMigrationVersionTest 失败~~ | ✅ **已解决**：历史 mysql 迁移的同版本号重复（V26×5/V27×3/V28×3）及与 postgresql 版本集不对齐问题已通过补齐对齐占位脚本闭环。当前 `apex-interfaces` 与 `apex-auth-center` 的 mysql/postgresql 迁移目录均为 **V1–V58 完整、无重复、无缺号**（postgresql V51–V58 为对齐占位），符合 FlywayMigrationVersionTest 的"两库版本一致"契约 | 已闭环，无需进一步处理 |
 | ~~LayeringArchTest 53 处违规~~ | ✅ **已解决（2026-09-30）**：`apex-application` 移除对 `apex-auth-center` 的跨模块依赖，`SecurityAuditService` 接口+实现下沉至 `apex-common`，`apex-interfaces` 排除对 `authcenter` 包的组件扫描；重跑 `mvn -pl apex-interfaces -am test -Dtest=LayeringArchTest` 结果为 **6/6 通过，0 违规** | 已闭环，无需进一步处理 |
 | SentinelDynamicRulesLoaderTest 失败 | 规则 fixture 含 2 条 system rule 而断言期望 1 条 | 修正 fixture 或断言 |
 | DataScopeServiceTest 失败 | 需要本地 MySQL（环境连接失败） | 启动本地 MySQL 后重跑 |

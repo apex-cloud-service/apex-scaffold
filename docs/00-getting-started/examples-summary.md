@@ -106,7 +106,7 @@ public class UserPO extends BasePO {
  * </ul>
  *
  * @author Apex Team
- * @version 1.2.0
+ * @version 1.3.1
  * @since 1.0.0
  * @see BasePO
  */
@@ -214,7 +214,7 @@ private String tenantId;
  * </ul>
  *
  * @author Apex Team
- * @version 1.2.0
+ * @version 1.3.1
  * @since 1.0.0
  * @see UserPO
  * @see BaseMapper
@@ -298,7 +298,7 @@ int banForPhotoReports(@Param("userId") Long userId);
  * </ul>
  *
  * @author Apex Team
- * @version 1.2.0
+ * @version 1.3.1
  * @since 1.0.0
  * @see UserEntity
  * @see UserPO
@@ -434,7 +434,7 @@ public class LoginRequest {
 2. **列表展示**：使用 `<ul>/<li>` 列表展示功能点、场景、注意事项
 3. **代码示例**：使用 `<pre>{@code}</pre>` 提供实际使用示例
 4. **SQL 语义**：Mapper 方法展示完整 SQL，便于理解
-5. **版本标注**：`@version` 更新为 1.2.0，`@since` 准确标注
+5. **版本标注**：`@version` 更新为 1.3.1，`@since` 准确标注
 6. **链接引用**：使用 `{@link}` 和 `@see` 关联相关类
 7. **Lombok 完整**：显式声明 `@Builder`、`@NoArgsConstructor`、`@AllArgsConstructor`
 8. **敏感字段**：在 `@ToString` 中排除密码、Token 等敏感字段（示例中已体现）

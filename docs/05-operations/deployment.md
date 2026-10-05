@@ -366,9 +366,9 @@ curl http://localhost:8081/actuator/health
 docker stop apex-scaffold && docker rm apex-scaffold
 
 # 升级：构建新镜像 → 重建容器
-docker build -t apex-scaffold:1.2.0 .
+docker build -t apex-scaffold:1.3.1 .
 docker stop apex-scaffold && docker rm apex-scaffold
-docker run -d --name apex-scaffold ...（同上参数，镜像换 1.2.0）
+docker run -d --name apex-scaffold ...（同上参数，镜像换 1.3.1）
 ```
 
 > 容器内管理端口默认监听 `0.0.0.0`（镜像已设 `MANAGEMENT_SERVER_ADDRESS=0.0.0.0`），
@@ -773,13 +773,13 @@ export SENTINEL_TRANSPORT_PORT=8719   # 同机多实例须唯一
 
 ```bash
 # java -jar（systemd）
-sudo cp apex-interfaces-1.2.0-executable.jar /opt/apex-scaffold/app.jar
+sudo cp apex-interfaces-1.3.1-executable.jar /opt/apex-scaffold/app.jar
 sudo systemctl restart apex-scaffold
 
 # Docker 单容器
-docker build -t apex-scaffold:1.2.0 .
+docker build -t apex-scaffold:1.3.1 .
 docker stop apex-scaffold && docker rm apex-scaffold
-docker run -d --name apex-scaffold ...（同 §5.2 参数，镜像 1.2.0）
+docker run -d --name apex-scaffold ...（同 §5.2 参数，镜像 1.3.1）
 
 # Docker Compose
 docker compose build                                  # 用新代码重建
