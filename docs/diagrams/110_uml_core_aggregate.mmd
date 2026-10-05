@@ -1,0 +1,64 @@
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#eef2ff','primaryTextColor':'#0f172a','primaryBorderColor':'#4338ca','lineColor':'#64748b','fontFamily':'sans-serif'}}}%%
+classDiagram
+    direction LR
+
+    class BaseEntity {
+        «abstract · 领域基类»
+        # Long id
+        # LocalDateTime createTime
+        # LocalDateTime updateTime
+        # Integer lockVersion
+        # Integer deleted
+        # initTimestamps()
+        # touch()
+        + isDeleted() boolean
+        + markAsDeleted()
+        + restore()
+        + isNew() boolean
+        + setId(id)
+        + setLockVersion(v)
+    }
+    note for BaseEntity "implements Serializable\n@Getter 只读，状态变更经领域行为驱动\n构造器默认 deleted = NOT_DELETED(0)"
+
+    class LogicalDeletion {
+        «enumeration»
+        NOT_DELETED(0)
+        DELETED(1)
+        + getCode() Integer
+        + fromCode(code) LogicalDeletion
+    }
+
+    class User {
+        «aggregate root · 示例»
+        - Long id
+        - String username
+        - String email
+        - String phone
+        - Integer status
+        - LocalDateTime createdAt
+        - LocalDateTime updatedAt
+    }
+
+    class BasePO {
+        «persistence object · 持久化基类»
+        - Long id
+        - LocalDateTime createTime
+        - LocalDateTime updateTime
+        - Integer version
+        - Integer deleted
+        + getLockVersion() Integer
+        + setLockVersion(lockVersion)
+    }
+    note for BasePO "implements Serializable · @SuperBuilder\n@TableId(ASSIGN_ID 雪花)\n@Version 乐观锁 · @TableLogic 逻辑删除\n@TableField 元对象处理器自动填充"
+
+    class BasePO_LogicalDeletion {
+        «enumeration»
+        NOT_DELETED(0)
+        DELETED(1)
+        + getCode() Integer
+    }
+
+    User --|> BaseEntity : extends
+    BaseEntity ..> LogicalDeletion : «use»
+    BasePO ..> BaseEntity : «map» 转换器映射
+    BasePO ..> BasePO_LogicalDeletion : «use»

@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 900" width="1400" height="900">
+  <defs>
+    <style>
+      .title{font:700 30px sans-serif;fill:#0f172a;text-anchor:middle}
+      .subtitle{font:500 13px sans-serif;fill:#64748b;text-anchor:middle}
+      .cls-name{font:700 13px sans-serif;fill:#0f172a;text-anchor:middle}
+      .cls-stereo{font:500 10px sans-serif;fill:#64748b;text-anchor:middle}
+      .field{font:400 10px monospace;fill:#334155}
+      .method{font:400 10px monospace;fill:#4338ca}
+      .rel{font:500 10px sans-serif;fill:#64748b}
+      .pkg{font:700 12px sans-serif;fill:#fff}
+      .legend{font:500 11px sans-serif;fill:#475569}
+      .note{font:500 11px sans-serif;fill:#64748b}
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#4338ca"/></marker>
+    <marker id="arrow-o" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#94a3b8"/></marker>
+    <marker id="triangle" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" orient="auto"><path d="M 0 1 L 11 6 L 0 11 z" fill="#ffffff" stroke="#4338ca"/></marker>
+  </defs>
+  <rect width="1400" height="900" fill="#fff"/>
+  <text x="700" y="38" class="title">UML 类图：apex-domain 核心聚合基类与会话实体</text>
+  <text x="700" y="60" class="subtitle">com.apex.scaffold.domain.model · DDD 领域基类 · 逻辑删除 / 乐观锁 / 时间戳 · v1.3.1</text>
+
+  <!-- Domain layer package boundary -->
+  <rect x="20" y="84" width="800" height="700" rx="10" fill="#4338ca" opacity="0.05" stroke="#4338ca" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <rect x="20" y="84" width="330" height="30" rx="8" fill="#4338ca"/>
+  <text x="38" y="104" class="pkg">domain.model (领域层 · 纯领域模型)</text>
+
+  <!-- BaseEntity abstract -->
+  <rect x="50" y="134" width="350" height="380" rx="6" fill="#eef2ff" stroke="#4338ca" stroke-width="1.8"/>
+  <text x="225" y="156" class="cls-stereo">«abstract · 领域基类»</text>
+  <text x="225" y="176" class="cls-name" style="font-style:italic">BaseEntity</text>
+  <text x="225" y="194" class="cls-stereo">implements Serializable</text>
+  <line x1="50" y1="204" x2="400" y2="204" stroke="#c7d2fe"/>
+  <text x="64" y="222" class="field"># id: Long</text>
+  <text x="64" y="238" class="field"># createTime: LocalDateTime</text>
+  <text x="64" y="254" class="field"># updateTime: LocalDateTime</text>
+  <text x="64" y="270" class="field"># lockVersion: Integer   (乐观锁)</text>
+  <text x="64" y="286" class="field"># deleted: Integer   (逻辑删除)</text>
+  <line x1="50" y1="296" x2="400" y2="296" stroke="#c7d2fe"/>
+  <text x="64" y="314" class="method"># initTimestamps()</text>
+  <text x="64" y="330" class="method"># touch()</text>
+  <text x="64" y="346" class="method">+ isDeleted(): boolean</text>
+  <text x="64" y="362" class="method">+ markAsDeleted() / restore()</text>
+  <text x="64" y="378" class="method">+ isNew(): boolean</text>
+  <text x="64" y="394" class="method">+ setId(id) / setCreateTime(t)</text>
+  <text x="64" y="410" class="method">+ setLockVersion(v) / setDeleted(d)</text>
+  <line x1="50" y1="420" x2="400" y2="420" stroke="#c7d2fe"/>
+  <text x="64" y="438" class="field">@Getter 只读 · 领域行为驱动状态变更</text>
+  <text x="64" y="454" class="field">构造器默认 deleted = NOT_DELETED(0)</text>
+  <text x="64" y="470" class="field">序列化 serialVersionUID = 1L</text>
+  <text x="64" y="494" class="method">«nested» enum LogicalDeletion</text>
+  <text x="64" y="508" class="field">   NOT_DELETED(0) · DELETED(1)</text>
+
+  <!-- LogicalDeletion enum -->
+  <rect x="450" y="134" width="340" height="140" rx="6" fill="#f5f3ff" stroke="#7c3aed" stroke-width="1.4"/>
+  <text x="620" y="156" class="cls-stereo">«enumeration»</text>
+  <text x="620" y="176" class="cls-name">LogicalDeletion</text>
+  <line x1="450" y1="186" x2="790" y2="186" stroke="#ddd6fe"/>
+  <text x="464" y="204" class="field">NOT_DELETED(0)  未删除</text>
+  <text x="464" y="220" class="field">DELETED(1)      已删除</text>
+  <line x1="450" y1="230" x2="790" y2="230" stroke="#ddd6fe"/>
+  <text x="464" y="248" class="method">+ getCode(): Integer</text>
+  <text x="464" y="264" class="method">+ fromCode(code): LogicalDeletion</text>
+
+  <!-- User aggregate -->
+  <rect x="450" y="304" width="340" height="210" rx="6" fill="#eef2ff" stroke="#4338ca" stroke-width="1.6"/>
+  <text x="620" y="326" class="cls-stereo">«aggregate root · 示例»</text>
+  <text x="620" y="346" class="cls-name">User</text>
+  <line x1="450" y1="356" x2="790" y2="356" stroke="#c7d2fe"/>
+  <text x="464" y="374" class="field">- id: Long</text>
+  <text x="464" y="390" class="field">- username: String</text>
+  <text x="464" y="406" class="field">- email: String</text>
+  <text x="464" y="422" class="field">- phone: String</text>
+  <text x="464" y="438" class="field">- status: Integer</text>
+  <text x="464" y="454" class="field">- createdAt: LocalDateTime</text>
+  <text x="464" y="470" class="field">- updatedAt: LocalDateTime</text>
+  <line x1="450" y1="480" x2="790" y2="480" stroke="#c7d2fe"/>
+  <text x="464" y="498" class="field">@Data · 参考示例骨架</text>
+
+  <!-- note box in domain -->
+  <rect x="450" y="536" width="340" height="220" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.2"/>
+  <text x="620" y="558" class="cls-stereo">«领域基类设计约束»</text>
+  <text x="620" y="578" class="cls-name">DDD 领域层规范</text>
+  <line x1="450" y1="588" x2="790" y2="588" stroke="#e2e8f0"/>
+  <text x="464" y="608" class="field">· 抽象基类禁止外部直接改字段</text>
+  <text x="464" y="626" class="field">· 状态变更经领域行为方法驱动</text>
+  <text x="464" y="644" class="field">· lockVersion 持久化层映射到 version 列</text>
+  <text x="464" y="662" class="field">· 逻辑删除默认过滤已删记录</text>
+  <text x="464" y="680" class="field">· 无 Web / 持久化框架依赖</text>
+  <text x="464" y="698" class="field">· Serializable 支持分布式传输</text>
+  <text x="464" y="722" class="field">· 基础设施 PO 通过转换器映射</text>
+  <text x="464" y="740" class="field">  为领域实体（依赖倒置）</text>
+
+  <!-- ===== Infrastructure layer ===== -->
+  <rect x="850" y="84" width="530" height="700" rx="10" fill="#d97706" opacity="0.05" stroke="#d97706" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <rect x="850" y="84" width="300" height="30" rx="8" fill="#d97706"/>
+  <text x="868" y="104" class="pkg">common.persistence.po (基础设施层)</text>
+
+  <!-- BasePO -->
+  <rect x="880" y="134" width="470" height="330" rx="6" fill="#fff7ed" stroke="#d97706" stroke-width="1.6"/>
+  <text x="1115" y="156" class="cls-stereo">«persistence object · 持久化基类»</text>
+  <text x="1115" y="176" class="cls-name">BasePO</text>
+  <text x="1115" y="194" class="cls-stereo">implements Serializable  ·  @SuperBuilder</text>
+  <line x1="880" y1="204" x2="1350" y2="204" stroke="#fde68a"/>
+  <text x="894" y="222" class="field">- id: Long   @TableId(ASSIGN_ID 雪花)</text>
+  <text x="894" y="238" class="field">- createTime   @TableField(fill=INSERT)</text>
+  <text x="894" y="254" class="field">- updateTime   @TableField(fill=INSERT_UPDATE)</text>
+  <text x="894" y="270" class="field">- version: Integer   @Version</text>
+  <text x="894" y="286" class="field">- deleted: Integer   @TableLogic</text>
+  <line x1="880" y1="296" x2="1350" y2="296" stroke="#fde68a"/>
+  <text x="894" y="314" class="method">+ getLockVersion(): Integer   (= version)</text>
+  <text x="894" y="330" class="method">+ setLockVersion(lockVersion)</text>
+  <line x1="880" y1="340" x2="1350" y2="340" stroke="#fde68a"/>
+  <text x="894" y="358" class="method">«nested» enum LogicalDeletion</text>
+  <text x="894" y="374" class="field">   NOT_DELETED(0) · DELETED(1) · getCode()</text>
+  <line x1="880" y1="384" x2="1350" y2="384" stroke="#fde68a"/>
+  <text x="894" y="402" class="field">getLockVersion/setLockVersion 作为</text>
+  <text x="894" y="418" class="field">领域实体 lockVersion ↔ version 的桥接属性</text>
+  <text x="894" y="442" class="field">MyBatis-Plus 注解：元对象处理器自动填充</text>
+
+  <!-- Mapping note -->
+  <rect x="880" y="494" width="470" height="262" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.2"/>
+  <text x="1115" y="516" class="cls-stereo">«基础设施映射约定»</text>
+  <text x="1115" y="536" class="cls-name">领域实体 ↔ 持久化对象 转换</text>
+  <line x1="880" y1="546" x2="1350" y2="546" stroke="#e2e8f0"/>
+  <text x="894" y="566" class="field">· BaseEntity.lockVersion  ⇄  BasePO.version</text>
+  <text x="894" y="584" class="field">· BaseEntity.deleted      ⇄  BasePO.deleted (@TableLogic)</text>
+  <text x="894" y="602" class="field">· BaseEntity.createTime/updateTime ⇄ PO 同名字段</text>
+  <text x="894" y="620" class="field">· 转换器（Converter/Mapper）负责双向映射</text>
+  <text x="894" y="638" class="field">· 乐观锁版本由 MyBatis-Plus 自动递增</text>
+  <text x="894" y="656" class="field">· 领域层定义契约，基础设施层实现</text>
+  <line x1="880" y1="666" x2="1350" y2="666" stroke="#e2e8f0"/>
+  <text x="894" y="686" class="field">各模块 PO 继承 BasePO：</text>
+  <text x="894" y="704" class="field">  UserPO · RolePO · PermissionPO · TokenPO</text>
+  <text x="894" y="722" class="field">  WorkflowDefinitionPO · ProcessInstancePO · TaskPO</text>
+  <text x="894" y="740" class="field">  ApprovalProcessPO · CalendarEventPO · DocumentPO</text>
+
+  <!-- relationships -->
+  <!-- User extends BaseEntity (triangle hollow, generalization) -->
+  <line x1="450" y1="400" x2="400" y2="360" stroke="#4338ca" stroke-width="1.5" marker-end="url(#triangle)"/>
+  <text x="360" y="396" class="rel">extends</text>
+
+  <!-- BaseEntity uses LogicalDeletion -->
+  <line x1="400" y1="204" x2="450" y2="204" stroke="#7c3aed" stroke-width="1.3" marker-end="url(#arrow)"/>
+  <text x="404" y="196" class="rel">«use»</text>
+
+  <!-- BasePO ..> BaseEntity mapping dashed (dependency, infra to domain) -->
+  <line x1="880" y1="299" x2="400" y2="299" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="5 3" marker-end="url(#arrow-o)"/>
+  <text x="560" y="291" class="rel">«map» 转换器映射（version ⇄ lockVersion）</text>
+
+  <!-- legend / note -->
+  <rect x="20" y="800" width="1360" height="72" rx="6" fill="#f8fafc" stroke="#e2e8f0"/>
+  <text x="38" y="822" class="legend">① 领域层：BaseEntity（抽象基类，@Getter 只读）+ LogicalDeletion（逻辑删除枚举）+ User（示例聚合根，@Data）</text>
+  <text x="38" y="842" class="legend">② 基础设施层：BasePO（@TableId/@Version/@TableLogic，MyBatis-Plus 注解）作为所有持久化对象基类</text>
+  <text x="38" y="862" class="legend">③ 桥接：getLockVersion/setLockVersion 将领域 lockVersion 映射到数据库 version 列，实现依赖倒置与并发安全</text>
+</svg>

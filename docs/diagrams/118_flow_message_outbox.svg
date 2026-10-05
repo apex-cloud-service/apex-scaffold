@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1500 1040" width="1500" height="1040">
+  <metadata>
+    <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/">
+      <rdf:Description>
+        <dc:title>Apex Scaffold 消息发件箱（Outbox）业务流程图</dc:title>
+        <dc:creator>Apex Team</dc:creator>
+        <dc:date>2026-10-05</dc:date>
+        <dc:version>1.3.1</dc:version>
+        <dc:description>Outbox 模式端到端：业务事务落箱 → 调度扫描 → 分布式锁投递 → 指数退避重试 → 死信 → 保留清理</dc:description>
+      </rdf:Description>
+    </rdf:RDF>
+  </metadata>
+
+  <defs>
+    <style>
+      .title { font: 700 30px system-ui, sans-serif; fill: #0f172a; text-anchor: middle; }
+      .subtitle { font: 500 13px system-ui, sans-serif; fill: #64748b; text-anchor: middle; }
+      .phase { font: 600 13px system-ui, sans-serif; fill: #ffffff; }
+      .node-title { font: 600 13px system-ui, sans-serif; fill: #0f172a; text-anchor: middle; }
+      .node-sub { font: 400 10px system-ui, sans-serif; fill: #64748b; text-anchor: middle; }
+      .node-actor { font: 500 10px 'SF Mono', monospace; fill: #2563eb; text-anchor: middle; }
+      .edge { font: 500 10px system-ui, sans-serif; fill: #475569; text-anchor: middle; }
+      .note { font: 400 11px system-ui, sans-serif; fill: #64748b; }
+      .legend { font: 400 11px system-ui, sans-serif; fill: #475569; }
+      .lane { font: 600 12px system-ui, sans-serif; fill: #334155; text-anchor: middle; }
+    </style>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#4f46e5"/>
+    </marker>
+    <marker id="ag" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#94a3b8"/>
+    </marker>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#dc2626"/>
+    </marker>
+  </defs>
+
+  <rect width="1500" height="1040" fill="#ffffff"/>
+  <text x="750" y="42" class="title">Apex Scaffold 消息发件箱（Outbox）业务流程图</text>
+  <text x="750" y="66" class="subtitle">本地消息表保证业务与消息最终一致 · 落箱 → 调度 → 锁投递 → 退避重试 → 死信 → 清理 · v1.3.1</text>
+
+  <!-- Lane headers -->
+  <rect x="40" y="92" width="1420" height="30" rx="6" fill="#f1f5f9"/>
+  <text x="270" y="112" class="lane">① 业务事务内落箱</text>
+  <text x="700" y="112" class="lane">② 调度扫描与投递</text>
+  <text x="1080" y="112" class="lane">③ 重试与死信</text>
+  <text x="1330" y="112" class="lane">④ 保留与清理</text>
+  <line x1="500" y1="92" x2="500" y2="720" stroke="#e2e8f0" stroke-width="1"/>
+  <line x1="900" y1="92" x2="900" y2="720" stroke="#e2e8f0" stroke-width="1"/>
+  <line x1="1240" y1="92" x2="1240" y2="720" stroke="#e2e8f0" stroke-width="1"/>
+
+  <!-- ===== Column 1: 业务事务内落箱 ===== -->
+  <rect x="70" y="140" width="400" height="60" rx="7" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.8"/>
+  <text x="270" y="164" class="node-title">业务操作（同事务）</text>
+  <text x="270" y="182" class="node-sub">领域事件 / 业务消息触发落箱</text>
+
+  <line x1="270" y1="200" x2="270" y2="226" stroke="#4f46e5" stroke-width="1.6" marker-end="url(#a)"/>
+
+  <rect x="70" y="228" width="400" height="74" rx="7" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.8"/>
+  <text x="270" y="252" class="node-title">发件箱写入服务</text>
+  <text x="270" y="270" class="node-sub">MessageOutboxServiceImpl.append（业务消息）</text>
+  <text x="270" y="286" class="node-sub">DomainEventOutboxStore.append（领域事件）</text>
+  <text x="270" y="301" class="node-actor">INSERT sys_message_outbox</text>
+
+  <line x1="270" y1="302" x2="270" y2="328" stroke="#4f46e5" stroke-width="1.6" marker-end="url(#a)"/>
+
+  <rect x="70" y="330" width="400" height="86" rx="7" fill="#ecfdf5" stroke="#059669" stroke-width="1.8"/>
+  <text x="270" y="354" class="node-title">落箱默认字段</text>
+  <text x="270" y="374" class="node-sub">status = PENDING · attempts = 0 · max_attempts = 5</text>
+  <text x="270" y="392" class="node-sub">retry_delay_seconds = 10 · next_attempt_at = now</text>
+  <text x="270" y="410" class="node-sub">lock_timeout_seconds = 300 · tenant_id</text>
+
+  <line x1="270" y1="416" x2="270" y2="442" stroke="#4f46e5" stroke-width="1.6" marker-end="url(#a)"/>
+
+  <rect x="70" y="444" width="400" height="86" rx="7" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.8"/>
+  <text x="270" y="468" class="node-title">MqProducerService.sendSyncWithOutbox</text>
+  <text x="270" y="486" class="node-sub">先落箱（PENDING）→ 同步发送 RocketMQ</text>
+  <text x="270" y="502" class="node-sub">成功 → markAsDelivered（DELIVERED）</text>
+  <text x="270" y="518" class="node-sub">失败 → 保留 PENDING 并抛出（交调度器重试）</text>
+
+  <!-- note: async fallback -->
+  <rect x="70" y="548" width="400" height="70" rx="7" fill="#fffbeb" stroke="#d97706" stroke-width="1.4" stroke-dasharray="5,3"/>
+  <text x="270" y="570" class="node-title">异步发送兜底</text>
+  <text x="270" y="588" class="node-sub">sendAsyncWithFallback 回调失败 → fallbackToOutbox</text>
+  <text x="270" y="604" class="node-sub">messageId = UUID · message_type = BUSINESS_MESSAGE</text>
+
+  <line x1="470" y1="360" x2="530" y2="360" stroke="#4f46e5" stroke-width="1.6" marker-end="url(#a)"/>
+
+  <!-- ===== Column 2: 调度扫描与投递 ===== -->
+  <rect x="530" y="140" width="340" height="74" rx="7" fill="#ecfdf5" stroke="#059669" stroke-width="1.8"/>
+  <text x="700" y="164" class="node-title">调度器扫描</text>
+  <text x="700" y="182" class="node-sub">@Scheduled fixedDelay = 5000ms</text>
+  <text x="700" y="198" class="node-actor">MessageOutboxDispatcher.dispatch()</text>
+
+  <line x1="700" y1="214" x2="700" y2="240" stroke="#059669" stroke-width="1.6" marker-end="url(#a)"/>
+
+  <rect x="530" y="242" width="340" height="70" rx="7" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.8"/>
+  <text x="700" y="266" class="node-title">① 释放过期锁</text>
+  <text x="700" y="284" class="node-sub">releaseExpiredLocks()</text>
+  <text x="700" y="300" class="node-sub">locked_at &lt; now - lock_timeout_seconds</text>
+
+  <line x1="700" y1="312" x2="700" y2="338" stroke="#059669" stroke-width="1.6" marker-end="url(#a)"/>
+
+  <rect x="530" y="340" width="340" height="64" rx="7" fill="#ecfdf5" stroke="#059669" stroke-width="1.8"/>
+  <text x="700" y="364" class="node-title">② 拉取待投递</text>
+  <text x="700" y="382" class="node-sub">fetchPendingMessages(100)</text>
+  <text x="700" y="398" class="node-sub">status = PENDING</text>
+
+  <line x1="700" y1="404" x2="700" y2="430" stroke="#059669" stroke-width="1.6" marker-end="url(#a)"/>
+
+  <rect x="530" y="432" width="340" height="76" rx="7" fill="#fffbeb" stroke="#d97706" stroke-width="1.6"/>
+  <text x="700" y="456" class="node-title">③ CAS 抢分布式锁</text>
+  <text x="700" y="474" class="node-sub">lockMessage(messageId, instanceId)</text>
+  <text x="700" y="490" class="node-sub">WHERE locked_by IS NULL → status = PROCESSING</text>
+  <text x="700" y="505" class="node-sub">抢锁失败 → 跳过（他实例占用）</text>
+
+  <line x1="700" y1="508" x2="700" y2="534" stroke="#059669" stroke-width="1.6" marker-end="url(#a)"/>
+
+  <rect x="530" y="536" width="340" height="66" rx="7" fill="#ecfdf5" stroke="#059669" stroke-width="1.8"/>
+  <text x="700" y="560" class="node-title">④ 投递到 RocketMQ</text>
+  <text x="700" y="578" class="node-sub">mqProducerService.sendSync(topic, tag, payload)</text>
+  <text x="700" y="594" class="node-sub">header：apex-message-id / KEYS / tenantId</text>
+
+  <!-- ===== Column 3: 重试与死信 ===== -->
+  <rect x="930" y="140" width="290" height="110" rx="7" fill="#fffbeb" stroke="#d97706" stroke-width="1.8"/>
+  <text x="1075" y="164" class="node-title">投递失败（未耗尽）</text>
+  <line x1="945" y1="176" x2="1205" y2="176" stroke="#fde68a" stroke-width="1"/>
+  <text x="1075" y="198" class="node-sub">markAsFailed → status = PENDING</text>
+  <text x="1075" y="218" class="node-sub">attempts + 1</text>
+  <text x="1075" y="238" class="node-sub">next_attempt_at = now + delay</text>
+
+  <line x1="870" y1="200" x2="930" y2="195" stroke="#d97706" stroke-width="1.6" marker-end="url(#a)"/>
+
+  <rect x="930" y="266" width="290" height="96" rx="7" fill="#fef2f2" stroke="#dc2626" stroke-width="1.6"/>
+  <text x="1075" y="290" class="node-title" fill="#b91c1c">投递失败（已耗尽）</text>
+  <line x1="945" y1="302" x2="1205" y2="302" stroke="#fecaca" stroke-width="1"/>
+  <text x="1075" y="324" class="node-sub">attempts &gt;= max_attempts（默认 5）</text>
+  <text x="1075" y="344" class="node-sub">status = DEAD（死信）· last_error</text>
+
+  <line x1="870" y1="270" x2="930" y2="300" stroke="#dc2626" stroke-width="1.6" marker-end="url(#ar)"/>
+
+  <rect x="930" y="378" width="290" height="96" rx="7" fill="#fef2f2" stroke="#dc2626" stroke-width="1.4"/>
+  <text x="1075" y="402" class="node-title">死信处置</text>
+  <line x1="945" y1="414" x2="1205" y2="414" stroke="#fecaca" stroke-width="1"/>
+  <text x="1075" y="436" class="node-sub">告警（MqAlertManager）</text>
+  <text x="1075" y="456" class="node-sub">人工介入 / 再次 append 复活</text>
+
+  <line x1="1075" y1="362" x2="1075" y2="378" stroke="#dc2626" stroke-width="1.4" marker-end="url(#ar)"/>
+
+  <line x1="1075" y1="250" x2="1075" y2="266" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="3,3"/>
+
+  <!-- ===== Column 4: 保留与清理 ===== -->
+  <rect x="1270" y="140" width="190" height="150" rx="7" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.6"/>
+  <text x="1365" y="164" class="node-title">保留策略</text>
+  <line x1="1285" y1="176" x2="1445" y2="176" stroke="#bfdbfe" stroke-width="1"/>
+  <text x="1365" y="198" class="node-sub">DELIVERED</text>
+  <text x="1365" y="216" class="node-sub">保留 168h（7 天）</text>
+  <text x="1365" y="242" class="node-sub">DEAD</text>
+  <text x="1365" y="260" class="node-sub">保留 7 天</text>
+  <text x="1365" y="282" class="node-sub" fill="#64748b">retention-enabled</text>
+
+  <line x1="1220" y1="200" x2="1270" y2="200" stroke="#94a3b8" stroke-width="1.4" stroke-dasharray="4,3" marker-end="url(#ag)"/>
+
+  <rect x="1270" y="306" width="190" height="120" rx="7" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.6"/>
+  <text x="1365" y="330" class="node-title">分批物理删除</text>
+  <line x1="1285" y1="342" x2="1445" y2="342" stroke="#bfdbfe" stroke-width="1"/>
+  <text x="1365" y="364" class="node-sub">purgeRetained()</text>
+  <text x="1365" y="384" class="node-sub">batch-size = 5000</text>
+  <text x="1365" y="404" class="node-sub">deleteDelivered / deleteDead</text>
+
+  <line x1="1220" y1="420" x2="1270" y2="410" stroke="#3b82f6" stroke-width="1.6" marker-end="url(#a)"/>
+
+  <!-- ===== 状态机与重试公式 section ===== -->
+  <rect x="40" y="740" width="1420" height="130" rx="8" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.4"/>
+  <text x="60" y="764" class="phase" fill="#334155" style="font-size:14px">消息状态机与重试公式（sys_message_outbox.status · 与 sys_domain_event_outbox 状态一致）</text>
+
+  <rect x="60" y="780" width="440" height="74" rx="7" fill="#ffffff" stroke="#059669" stroke-width="1.4"/>
+  <text x="80" y="804" class="node-sub" text-anchor="start">PENDING ──lockMessage/CAS──▶ PROCESSING</text>
+  <text x="80" y="824" class="node-sub" text-anchor="start">PROCESSING ──成功──▶ DELIVERED ──保留期──▶ 删除</text>
+  <text x="80" y="844" class="node-sub" text-anchor="start">PROCESSING ──未耗尽──▶ PENDING（清锁）</text>
+
+  <rect x="520" y="780" width="420" height="74" rx="7" fill="#fef2f2" stroke="#dc2626" stroke-width="1.4"/>
+  <text x="540" y="804" class="node-sub" text-anchor="start">PROCESSING ──耗尽──▶ DEAD ──保留期──▶ 删除</text>
+  <text x="540" y="824" class="node-sub" text-anchor="start">DEAD ──再次 append（幂等）──▶ PENDING 复活</text>
+  <text x="540" y="844" class="node-sub" text-anchor="start">PROCESSING ──锁超时──▶ 清锁恢复</text>
+
+  <rect x="960" y="780" width="480" height="74" rx="7" fill="#fffbeb" stroke="#d97706" stroke-width="1.4"/>
+  <text x="980" y="804" class="node-sub" text-anchor="start">业务消息退避：delay = retry_delay_seconds × 2^(attempts-1)</text>
+  <text x="980" y="824" class="node-sub" text-anchor="start">→ 10s / 20s / 40s / 80s / 160s（attempts ≥ 5 → DEAD）</text>
+  <text x="980" y="844" class="node-sub" text-anchor="start">领域事件退避：delay = min(300, 2^attempts) 秒（max_attempts = 8）</text>
+
+  <!-- Footer notes -->
+  <text x="60" y="898" class="note" style="font-weight:600">关键业务规则与风险提示：</text>
+  <text x="60" y="920" class="note">1. 仓库内并存两套发件箱：业务消息 sys_message_outbox（→RocketMQ，MessageOutboxServiceImpl/MessageOutboxDispatcher，max_attempts=5，轮询 5s）与领域事件 sys_domain_event_outbox（→Spring 本地事件，DomainEventOutboxStore/DomainEventOutboxDispatcher，max_attempts=8，轮询 1s）。</text>
+  <text x="60" y="940" class="note">2. 多实例并发投递靠 locked_by 乐观锁 + CAS UPDATE 保证互斥；锁超时（业务 300s / 领域事件 120s）后可被其他实例重新领取，领域事件侧领取时会同步恢复 status=PENDING。</text>
+  <text x="60" y="960" class="note">3. 事务语义：业务消息 append 为单表 INSERT，当前无「业务+消息同事务」调用点；领域事件 appendSync(Connection) 为同事务写入预留 API 但暂无调用方，故原子性依赖「先落箱+重试」的最终一致。</text>
+  <text x="60" y="980" class="note">4. 风险：releaseExpiredLocks 仅清锁未改回 PENDING，业务消息超时记录可能滞留 PROCESSING 无法再被扫描；batchSize 硬编码 100 未读配置；V45 MySQL 脚本存在编码损坏迹象需核实。</text>
+
+  <!-- Legend -->
+  <line x1="60" y1="1010" x2="110" y2="1010" stroke="#4f46e5" stroke-width="1.8" marker-end="url(#a)"/>
+  <text x="120" y="1014" class="legend">主流程</text>
+  <line x1="220" y1="1010" x2="270" y2="1010" stroke="#94a3b8" stroke-width="1.4" stroke-dasharray="4,3" marker-end="url(#ag)"/>
+  <text x="280" y="1014" class="legend">关联/保留</text>
+  <line x1="400" y1="1010" x2="450" y2="1010" stroke="#dc2626" stroke-width="1.6" marker-end="url(#ar)"/>
+  <text x="460" y="1014" class="legend">失败/死信</text>
+  <rect x="600" y="1000" width="14" height="14" rx="3" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.4"/>
+  <text x="622" y="1014" class="legend">落箱</text>
+  <rect x="690" y="1000" width="14" height="14" rx="3" fill="#ecfdf5" stroke="#059669" stroke-width="1.4"/>
+  <text x="712" y="1014" class="legend">调度/投递</text>
+  <rect x="810" y="1000" width="14" height="14" rx="3" fill="#fffbeb" stroke="#d97706" stroke-width="1.4"/>
+  <text x="832" y="1014" class="legend">重试</text>
+  <rect x="900" y="1000" width="14" height="14" rx="3" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.4"/>
+  <text x="922" y="1014" class="legend">保留清理</text>
+
+  <text x="750" y="1034" class="note" text-anchor="middle">数据源：apex-infrastructure（outbox/service/impl/MessageOutboxServiceImpl · outbox/dispatcher/MessageOutboxDispatcher · outbox/mapper/MessageOutboxMapper · event/DomainEventOutboxStore · event/DomainEventOutboxDispatcher · event/DomainEventPublisherImpl · mq/service/MqProducerService · mq/config/RocketMqProducerConfig）、迁移 mysql/V45（sys_message_outbox）与 V1（sys_domain_event_outbox）</text>
+</svg>

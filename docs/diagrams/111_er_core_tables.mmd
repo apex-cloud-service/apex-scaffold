@@ -1,0 +1,99 @@
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#eef2ff','primaryTextColor':'#0f172a','primaryBorderColor':'#4f46e5','lineColor':'#2563eb','fontFamily':'system-ui, sans-serif'}}}%%
+erDiagram
+    sys_tenant ||--o{ sys_user : "tenant_id"
+    sys_tenant ||--o{ sys_role : "tenant_id"
+    sys_dept ||--o{ sys_user : "dept_id"
+    sys_dept ||--o{ sys_dept : "parent_id 树形"
+
+    sys_user ||--o{ sys_user_role : "user_id"
+    sys_role ||--o{ sys_user_role : "role_id"
+    sys_role ||--o{ sys_role_permission : "role_id"
+    sys_permission ||--o{ sys_role_permission : "permission_id"
+    sys_role ||--o{ sys_role_menu : "role_id"
+    sys_menu ||--o{ sys_role_menu : "menu_id"
+    sys_menu ||--o{ sys_menu : "parent_id 树形"
+
+    sys_user {
+        bigint id PK
+        varchar username UK
+        varchar password
+        varchar open_id UK
+        varchar phone
+        varchar email
+        varchar keycloak_sub UK
+        bigint dept_id FK
+        bigint tenant_id FK
+        int status
+        int version
+        tinyint deleted
+    }
+
+    sys_role {
+        bigint id PK
+        varchar role_name
+        varchar role_key
+        int data_scope
+        bigint tenant_id FK
+        int status
+        tinyint deleted
+    }
+
+    sys_permission {
+        bigint id PK
+        varchar name
+        varchar code
+        varchar description
+        int type
+        int status
+        tinyint deleted
+    }
+
+    sys_menu {
+        bigint id PK
+        bigint parent_id FK
+        varchar menu_name
+        varchar menu_type
+        varchar path
+        varchar component
+        varchar perms
+        tinyint deleted
+    }
+
+    sys_dept {
+        bigint id PK
+        bigint parent_id FK
+        varchar ancestors
+        varchar name
+        varchar leader
+        int status
+        tinyint deleted
+    }
+
+    sys_tenant {
+        bigint id PK
+        varchar tenant_code UK
+        varchar tenant_name
+        varchar admin_user_id
+        varchar package_code
+        varchar status
+        int max_users
+        int max_storage_mb
+    }
+
+    sys_user_role {
+        bigint id PK
+        bigint user_id FK
+        bigint role_id FK
+        bigint tenant_id FK
+    }
+
+    sys_role_permission {
+        bigint id PK
+        bigint role_id FK
+        bigint permission_id FK
+    }
+
+    sys_role_menu {
+        bigint role_id FK
+        bigint menu_id FK
+    }

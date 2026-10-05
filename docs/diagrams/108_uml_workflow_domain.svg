@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 900" width="1400" height="900">
+  <defs>
+    <style>
+      .title{font:700 30px sans-serif;fill:#0f172a;text-anchor:middle}
+      .subtitle{font:500 13px sans-serif;fill:#64748b;text-anchor:middle}
+      .cls-name{font:700 13px sans-serif;fill:#0f172a;text-anchor:middle}
+      .cls-stereo{font:500 10px sans-serif;fill:#64748b;text-anchor:middle}
+      .field{font:400 10px monospace;fill:#334155}
+      .method{font:400 10px monospace;fill:#4338ca}
+      .rel{font:500 10px sans-serif;fill:#64748b}
+      .pkg{font:700 12px sans-serif;fill:#fff}
+      .legend{font:500 11px sans-serif;fill:#475569}
+      .note{font:500 11px sans-serif;fill:#64748b}
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#059669"/></marker>
+    <marker id="diamond" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="10" markerHeight="10" orient="auto"><path d="M 0 6 L 6 1 L 12 6 L 6 11 z" fill="#ffffff" stroke="#059669"/></marker>
+  </defs>
+  <rect width="1400" height="900" fill="#fff"/>
+  <text x="700" y="38" class="title">UML 类图：apex-workflow 工作流领域模型</text>
+  <text x="700" y="60" class="subtitle">com.apex.scaffold.workflow.domain · DAG 驱动的审批工作流引擎 · 纯领域模型 · v1.3.1</text>
+
+  <!-- package boundary -->
+  <rect x="40" y="84" width="1320" height="750" rx="10" fill="#059669" opacity="0.05" stroke="#059669" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <rect x="40" y="84" width="300" height="30" rx="8" fill="#059669"/>
+  <text x="58" y="104" class="pkg">workflow.domain.model</text>
+
+  <!-- WorkflowDefinition -->
+  <rect x="70" y="140" width="330" height="250" rx="6" fill="#ecfdf5" stroke="#059669" stroke-width="1.6"/>
+  <text x="235" y="162" class="cls-stereo">«aggregate root · 流程模板»</text>
+  <text x="235" y="182" class="cls-name">WorkflowDefinition</text>
+  <line x1="70" y1="192" x2="400" y2="192" stroke="#a7f3d0"/>
+  <text x="84" y="210" class="field">- id: Long</text>
+  <text x="84" y="226" class="field">- workflowCode: String</text>
+  <text x="84" y="242" class="field">- workflowName: String</text>
+  <text x="84" y="258" class="field">- version: Integer</text>
+  <text x="84" y="274" class="field">- dagJson: String   (nodes + edges)</text>
+  <text x="84" y="290" class="field">- enabled: Integer</text>
+  <text x="84" y="306" class="field">- createBy / updateBy: Long</text>
+  <line x1="70" y1="316" x2="400" y2="316" stroke="#a7f3d0"/>
+  <text x="84" y="334" class="method">+ instantiate(businessKey): ProcessInstance</text>
+  <text x="84" y="350" class="method">+ isPublished(): boolean</text>
+
+  <!-- ProcessInstance -->
+  <rect x="540" y="140" width="350" height="272" rx="6" fill="#ecfdf5" stroke="#059669" stroke-width="1.6"/>
+  <text x="715" y="162" class="cls-stereo">«aggregate root · 运行实例»</text>
+  <text x="715" y="182" class="cls-name">ProcessInstance</text>
+  <line x1="540" y1="192" x2="890" y2="192" stroke="#a7f3d0"/>
+  <text x="554" y="210" class="field">- id: Long</text>
+  <text x="554" y="226" class="field">- workflowDefinitionId: Long</text>
+  <text x="554" y="242" class="field">- businessKey: String</text>
+  <text x="554" y="258" class="field">- currentNodeKey: String</text>
+  <text x="554" y="274" class="field">- status: String (RUNNING/SUSPENDED/COMPLETED/REJECTED/TERMINATED)</text>
+  <text x="554" y="290" class="field">- initiatorId: Long</text>
+  <text x="554" y="306" class="field">- contextJson: String</text>
+  <text x="554" y="322" class="field">- suspended: Boolean</text>
+  <line x1="540" y1="332" x2="890" y2="332" stroke="#a7f3d0"/>
+  <text x="554" y="350" class="method">+ start() / advance()</text>
+  <text x="554" y="366" class="method">+ suspend() / resume()</text>
+  <text x="554" y="382" class="method">+ complete() / reject(reason)</text>
+  <text x="554" y="398" class="method">+ terminate()</text>
+
+  <!-- Task -->
+  <rect x="1030" y="140" width="330" height="272" rx="6" fill="#ecfdf5" stroke="#059669" stroke-width="1.6"/>
+  <text x="1195" y="162" class="cls-stereo">«entity · 任务»</text>
+  <text x="1195" y="182" class="cls-name">Task</text>
+  <line x1="1030" y1="192" x2="1360" y2="192" stroke="#a7f3d0"/>
+  <text x="1044" y="210" class="field">- id: Long</text>
+  <text x="1044" y="226" class="field">- processInstanceId: Long</text>
+  <text x="1044" y="242" class="field">- nodeKey / nodeCode / nodeName: String</text>
+  <text x="1044" y="258" class="field">- assigneeId: Long</text>
+  <text x="1044" y="274" class="field">- status: String (PENDING/COMPLETED/REJECTED/ROLLED_BACK/DELEGATED/CANCELLED)</text>
+  <text x="1044" y="290" class="field">- dueDate / timeoutAt: LocalDateTime</text>
+  <text x="1044" y="306" class="field">- timeoutStrategy: String (ESCALATE/AUTO_COMPLETE/NOTIFY)</text>
+  <text x="1044" y="322" class="field">- transferredFrom: Long</text>
+  <line x1="1030" y1="332" x2="1360" y2="332" stroke="#a7f3d0"/>
+  <text x="1044" y="350" class="method">+ approve() / reject(comment)</text>
+  <text x="1044" y="366" class="method">+ transfer(to) / delegate(to)</text>
+  <text x="1044" y="382" class="method">+ rollback() / cancel()</text>
+  <text x="1044" y="398" class="method">+ hasTimeoutPolicy(): boolean</text>
+
+  <!-- ApprovalRecord -->
+  <rect x="70" y="470" width="330" height="180" rx="6" fill="#ecfdf5" stroke="#059669" stroke-width="1.6"/>
+  <text x="235" y="492" class="cls-stereo">«entity · 审批留痕»</text>
+  <text x="235" y="512" class="cls-name">ApprovalRecord</text>
+  <line x1="70" y1="522" x2="400" y2="522" stroke="#a7f3d0"/>
+  <text x="84" y="540" class="field">- id: Long</text>
+  <text x="84" y="556" class="field">- processInstanceId / taskId: Long</text>
+  <text x="84" y="572" class="field">- approverId: Long</text>
+  <text x="84" y="588" class="field">- action: String (APPROVE/REJECT/TRANSFER/DELEGATE/ROLLBACK)</text>
+  <text x="84" y="604" class="field">- comment: String</text>
+  <line x1="70" y1="614" x2="400" y2="614" stroke="#a7f3d0"/>
+  <text x="84" y="632" class="method">+ toSnapshot(): String</text>
+
+  <!-- repositories -->
+  <rect x="540" y="470" width="350" height="180" rx="6" fill="#fff7ed" stroke="#d97706" stroke-width="1.4"/>
+  <text x="715" y="492" class="cls-stereo" fill="#b45309">«repository (contract)»</text>
+  <text x="715" y="512" class="cls-name">工作流仓库接口</text>
+  <line x1="540" y1="522" x2="890" y2="522" stroke="#fde68a"/>
+  <text x="554" y="540" class="method">WorkflowDefinitionRepository</text>
+  <text x="554" y="556" class="method">ProcessInstanceRepository</text>
+  <text x="554" y="572" class="method">TaskRepository</text>
+  <text x="554" y="588" class="method">+ findByCode(code, version)</text>
+  <text x="554" y="604" class="method">+ findById(id) / findByBusinessKey(key)</text>
+  <text x="554" y="620" class="method">+ save(entity) / update(entity)</text>
+
+  <!-- DAG constraint box -->
+  <rect x="1030" y="470" width="330" height="180" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.2"/>
+  <text x="1195" y="492" class="cls-stereo">«领域规则»</text>
+  <text x="1195" y="512" class="cls-name">DAG 引擎约束</text>
+  <line x1="1030" y1="522" x2="1360" y2="522" stroke="#e2e8f0"/>
+  <text x="1044" y="542" class="field">· 流程定义以 DAG（nodes+edges）JSON 描述</text>
+  <text x="1044" y="562" class="field">· 运行实例基于版本化的定义实例化</text>
+  <text x="1044" y="582" class="field">· 每个节点生成一个 Task，分配给审批人</text>
+  <text x="1044" y="602" class="field">· 节点条件由 contextJson 中的业务变量判定</text>
+  <text x="1044" y="622" class="field">· 超时策略：ESCALATE / AUTO_COMPLETE / NOTIFY</text>
+
+  <!-- relationships -->
+  <line x1="400" y1="265" x2="540" y2="265" stroke="#059669" stroke-width="1.4" marker-end="url(#arrow)"/>
+  <text x="450" y="256" class="rel">1 实例化 *</text>
+
+  <line x1="890" y1="280" x2="1030" y2="280" stroke="#059669" stroke-width="1.4" marker-end="url(#arrow)"/>
+  <text x="930" y="271" class="rel">1 生成 *</text>
+
+  <line x1="890" y1="330" x2="1030" y2="330" stroke="#059669" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <text x="940" y="321" class="rel">1..*</text>
+
+  <line x1="235" y1="390" x2="715" y2="470" stroke="#059669" stroke-width="1.3" marker-end="url(#arrow)"/>
+  <text x="380" y="436" class="rel">审批动作→ 留痕</text>
+  <line x1="890" y1="412" x2="715" y2="470" stroke="#94a3b8" stroke-width="1.1" stroke-dasharray="4 3" marker-end="url(#arrow-o)"/>
+
+  <line x1="445" y1="430" x2="735" y2="470" stroke="#94a3b8" stroke-width="1.1" stroke-dasharray="4 3" marker-end="url(#arrow-o)"/>
+  <text x="560" y="452" class="rel">«use» 基础设施实现 (PO/Mapper)</text>
+
+  <!-- legend / note -->
+  <rect x="40" y="700" width="1320" height="60" rx="6" fill="#f8fafc" stroke="#e2e8f0"/>
+  <text x="58" y="722" class="legend">① WorkflowDefinition（流程模板）→ ② ProcessInstance（运行实例，聚合根）→ ③ Task（节点任务）→ ④ ApprovalRecord（审批留痕）</text>
+  <text x="58" y="744" class="legend">状态机：RUNNING → SUSPENDED → COMPLETED / REJECTED / TERMINATED；仓库接口定义在领域层，实现下沉到基础设施层</text>
+
+  <text x="700" y="790" class="note" text-anchor="middle">纯领域模型，@Data + 行为方法封装；无持久化与 Web 依赖，遵循 DDD 领域层约束</text>
+</svg>

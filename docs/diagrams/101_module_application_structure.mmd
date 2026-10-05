@@ -1,0 +1,37 @@
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#0891b2','primaryTextColor':'#0f172a','primaryBorderColor':'#0891b2','lineColor':'#64748b','fontFamily':'sans-serif'}}}%%
+flowchart TB
+  subgraph Svc["用例编排 service"]
+    S1["service / service.impl 核心业务用例(事务边界)"]
+    S2["service.auth / service.login 认证编排"]
+    S3["office / office.approval 办公协同用例"]
+    S4["support / support.sso SSO 会话"]
+  end
+
+  subgraph JobSched["调度/事件"]
+    J1["job / scheduler 定时任务"]
+    J2["event / listener 事件处理"]
+  end
+
+  subgraph Dto["数据传输/装配"]
+    D1["dto / dto.request / dto.admin / dto.data"]
+    D2["assembler / factory 装配与构造"]
+    D3["workflow 工作流编排"]
+  end
+
+  subgraph Guard["安全守卫"]
+    G1["guard / security 权限与数据范围"]
+  end
+
+  DOMAIN["apex-domain"]
+  INFRA["apex-infrastructure"]
+  IF["apex-interfaces"]
+
+  DOMAIN --> Svc
+  INFRA --> Svc
+  Svc --> Dto
+  Svc --> JobSched
+  Svc --> Guard
+  Dto --> IF
+
+  NOTE["承载用例编排与事务边界，是领域能力对外的应用门面，无 Web 细节"]
+  Svc -.-> NOTE

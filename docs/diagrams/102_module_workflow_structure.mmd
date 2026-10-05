@@ -1,0 +1,41 @@
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#059669','primaryTextColor':'#0f172a','primaryBorderColor':'#059669','lineColor':'#64748b','fontFamily':'sans-serif'}}}%%
+flowchart TB
+  subgraph IF["接口层 interfaces"]
+    I1["router · WebFlux RouterFunction"]
+    I2["handler · HandlerFunction"]
+    I3["dto · 请求/响应模型"]
+  end
+
+  subgraph APP["应用层 application"]
+    A1["service / query · 流转与查询用例(事务边界)"]
+    A2["scheduler · 超时/催办定时任务"]
+    A3["dto · 应用 DTO"]
+  end
+
+  subgraph DOM["领域层 domain"]
+    D1["model · 状态机定义/节点/转移/审批任务"]
+    D2["repository · 仓储接口(领域契约)"]
+  end
+
+  subgraph INF["基础设施层 infrastructure"]
+    N1["persistence.po / mapper (MyBatis-Plus)"]
+    N2["converter · PO ↔ 领域模型"]
+    N3["repository · 实现 domain.repository"]
+  end
+
+  COMMON["apex-common"]
+  DOMAIN["apex-domain"]
+  IFACE["apex-interfaces 聚合对外"]
+
+  COMMON --> DOM
+  DOMAIN --> DOM
+  I1 --> I2 --> A1
+  A1 --> D1
+  A1 --> D2
+  A2 --> A1
+  D2 -. "被实现" .-> N3
+  N1 --> N2 --> N3
+  I1 --> IFACE
+
+  NOTE["自包含 DDD 四层的工作流引擎：状态机与审批任务为核心领域模型，可通过 apex-interfaces 聚合暴露"]
+  DOM -.-> NOTE

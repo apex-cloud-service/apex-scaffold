@@ -1,0 +1,140 @@
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#ecfdf5','primaryTextColor':'#0f172a','primaryBorderColor':'#059669','lineColor':'#64748b','fontFamily':'sans-serif'}}}%%
+classDiagram
+    direction TB
+
+    class OfficePlatformApp {
+        «aggregate root · 平台应用配置»
+        - Long id
+        - String tenantId
+        - OfficePlatform platform
+        - String appId
+        - String secretReference
+        - String redirectUri
+        - String signingSecretReference
+        - String capabilities
+        - boolean enabled
+        - Integer version
+        - Integer deleted
+    }
+    note for OfficePlatformApp "@Value 不可变\n仅存 secret 引用名，不落库密钥\n每租户-平台唯一启用配置"
+
+    class OfficeMessage {
+        «aggregate root · 办公消息»
+        - Long id
+        - String tenantId
+        - OfficePlatform platform
+        - MessageType messageType
+        - MessageTarget target
+        - MessageContent content
+        - String sendStatus
+        - String platformMessageId
+        - String failureReason
+        - Integer retryCount
+        - Integer version
+        + canSend() boolean
+        + markAsSent(platformMessageId)
+        + markAsFailed(reason)
+        + canRecall() boolean
+    }
+    note for OfficeMessage "sendStatus: PENDING/SUCCESS/FAILED/RECALLED\n支持文本/Markdown/卡片消息"
+
+    class MessageContent {
+        «interface»
+        + getType() MessageType
+        + getText() String
+        + isValid() boolean
+        + toPlatformContent() Object
+    }
+    class TextMessageContent
+    class MarkdownMessageContent
+    class CardMessageContent
+
+    class ApprovalProcess {
+        «aggregate root · 审批流程»
+        - Long id
+        - Long tenantId
+        - String platform
+        - String platformInstanceId
+        - String processInstanceId
+        - String templateId
+        - String title
+        - String initiatorId
+        - ApprovalStatus status
+        - List~ApprovalRecord~ records
+        - String currentApproverIds
+        - Integer version
+        + isCompleted() boolean
+        + isCancellable() boolean
+        + updateStatus(newStatus)
+        + addRecord(record)
+    }
+    note for ApprovalProcess "ApprovalStatus 6 态:\nPENDING/IN_PROGRESS/APPROVED/REJECTED/CANCELLED/TRANSFERRED"
+
+    class ApprovalRecord {
+        «value object · 审批记录»
+        - String approverId
+        - String approverName
+        - ApprovalAction action
+        - String comment
+        - LocalDateTime approvalTime
+        - Boolean isCurrent
+        - Integer nodeOrder
+    }
+
+    class CalendarEvent {
+        «aggregate root · 日历事件»
+        - Long id
+        - Long tenantId
+        - String platform
+        - String platformEventId
+        - String title
+        - CalendarEventType eventType
+        - LocalDateTime startTime
+        - LocalDateTime endTime
+        - String participantIds
+        - String meetingRoomId
+        - String status
+        + cancel() / confirm()
+        + updateTime(start, end)
+        + isTimeRangeValid() boolean
+    }
+
+    class DocumentInfo {
+        «aggregate root · 文档信息»
+        - Long id
+        - Long tenantId
+        - String platform
+        - String platformDocumentId
+        - DocumentType documentType
+        - String permission
+        - String collaboratorIds
+        - Boolean isArchived
+        + archive() / unarchive()
+        + updateTitle(newTitle)
+        + updatePermission(permission)
+    }
+
+    class OfficeMember {
+        «value object · 成员»
+        - String externalUserId
+        - String name
+        - List~String~ deptIds
+        - String status
+        - String position
+        + isActive() boolean
+        + belongsToDept(deptId) boolean
+    }
+
+    class OfficeMessagePort {
+        «outbound port · 消息端口»
+    }
+
+    OfficeMessage *-- MessageContent : content 组合
+    OfficeMessage *-- MessageTarget : target 组合
+    ApprovalProcess o-- ApprovalRecord : records 聚合
+    ApprovalProcess *-- ApprovalStatus : 状态机
+    MessageContent <|.. TextMessageContent : 实现
+    MessageContent <|.. MarkdownMessageContent : 实现
+    MessageContent <|.. CardMessageContent : 实现
+    OfficeMessage ..> OfficeMessagePort : «use» 发送/查询/撤回
+    OfficePlatformApp ..> OfficePlatform : «use» 平台枚举

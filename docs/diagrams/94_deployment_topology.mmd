@@ -1,0 +1,50 @@
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#4f46e5','primaryTextColor':'#fff','primaryBorderColor':'#3730a3','lineColor':'#64748b','secondaryColor':'#0891b2','tertiaryColor':'#f3f4f6','noteBkgColor':'#fef3c7','noteTextColor':'#92400e'}}}%%
+flowchart TB
+    subgraph ACCESS["接入层 Ingress"]
+        A1["Nginx / K8s Ingress<br/>HTTPS 终止 · 反向代理"]
+        A2["Spring Cloud Gateway<br/>动态路由 · 限流熔断 · CORS"]
+        A3["负载均衡<br/>K8s Service"]
+        A4["Blackbox Exporter<br/>:9115"]
+    end
+
+    subgraph APPS["应用集群 Apps (HPA)"]
+        P1["apex 主应用 :8081<br/>Application (apex-interfaces)"]
+        P2["apex-auth-center<br/>AuthCenterApplication"]
+        P3["apex-example<br/>ExampleApplication"]
+        P4["健康检查<br/>/api/v1/health"]
+        P5["滚动发布<br/>GracefulShutdown"]
+    end
+
+    subgraph GOV["治理/配置 Governance"]
+        G1["Nacos v2.3.2<br/>服务发现 + 配置中心 · Raft"]
+        G2["Sentinel Dashboard 1.8.2<br/>:8858 · api :8719"]
+        G3["Sentinel 规则推送<br/>Resilience4j 舱壁"]
+        G4["配置分层<br/>Nacos 远程 + 本地 profile"]
+    end
+
+    subgraph MW["中间件 Middleware"]
+        M1["MySQL 8.0 :3306<br/>apex_data / apex_test"]
+        M2["Redis 7 :6379<br/>缓存 · 分布式锁 · AOF"]
+        M3["RocketMQ 5.3.1<br/>:9876 / :10911"]
+        M4["MinIO<br/>S3 对象存储"]
+        M5["Meilisearch :7700<br/>全文检索"]
+    end
+
+    subgraph ID["身份/授权 Identity"]
+        I1["Keycloak<br/>OIDC/SSO · Realm/Client"]
+        I2["apex-auth-center 统一授权<br/>OAuth2 · 远程权限校验"]
+        I3["Token 生命周期<br/>Access 3600s / Refresh 2592000s · PKCE"]
+    end
+
+    subgraph OBS["可观测 Observability"]
+        O1["Prometheus v2.53 :9090<br/>保留 15d"]
+        O2["Grafana 11.1 :3200<br/>大盘 · 告警"]
+        O3["Zipkin 3.4 :9411<br/>链路追踪"]
+        O4["Loki<br/>日志聚合 7d"]
+        O5["Actuator<br/>apex_* 指标"]
+    end
+
+    ACCESS --> APPS --> GOV --> MW --> ID --> OBS
+
+    ENV["环境隔离：dev（本地 compose 127.0.0.1） · test（apex_test） · prod（K8s Namespace + Secret + Nacos prod）"]
+    MW -.-> ENV

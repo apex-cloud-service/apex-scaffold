@@ -1,0 +1,150 @@
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#eef2ff','primaryTextColor':'#0f172a','primaryBorderColor':'#4f46e5','lineColor':'#64748b','fontFamily':'sans-serif'}}}%%
+classDiagram
+    direction TB
+    class UserEntity {
+        <<aggregate root>>
+        -Long id
+        -String tenantId
+        -String username
+        -String passwordHash
+        -Integer status
+        -Integer failedLoginAttempts
+        -LocalDateTime lockedUntil
+        +isActive() boolean
+        +isLocked() boolean
+        +recordLoginFailure()
+        +recordLoginSuccess(ip)
+        +unlock()
+        +disable() / enable()
+    }
+    class RoleEntity {
+        <<entity>>
+        -Long id
+        -String tenantId
+        -String code
+        -String name
+        -String dataScope
+        -Boolean enabled
+        -Set~Long~ permissionIds
+        +addPermission(id)
+        +removePermission(id)
+        +hasPermission(id) boolean
+        +isSuperRole() boolean
+    }
+    class PermissionEntity {
+        <<entity>>
+        -Long id
+        -String tenantId
+        -String code
+        -String name
+        -String resourceType
+        -String resourceIdentifier
+        -String action
+        +matchesAction(action) boolean
+        +matchesResource(res) boolean
+        +isValid() boolean
+    }
+    class TokenEntity {
+        <<aggregate root>>
+        -Long id
+        -String tenantId
+        -Long userId
+        -String tokenType
+        -String jti
+        -String tokenFamily
+        -LocalDateTime expiresAt
+        -Integer revoked
+        -Integer rotationCount
+        +isExpired() boolean
+        +isRevoked() boolean
+        +isValid() boolean
+        +revoke(by, reason)
+        +recordUsage()
+    }
+    class SessionEntity {
+        <<entity>>
+        -Long id
+        -String tenantId
+        -Long userId
+        -String sessionId
+        -String deviceInfo
+        -String clientIp
+        -LocalDateTime expiresAt
+        +isExpired() boolean
+        +touch()
+    }
+    class JwtKeyEntity {
+        <<entity>>
+        -String kid
+        -String algorithm
+        -String publicKey
+        -String privateKey
+        -Boolean active
+        +rotate()
+        +activate() / deactivate()
+    }
+    class MfaConfigEntity {
+        <<entity>>
+        -Long userId
+        -String tenantId
+        -String mfaType
+        -Boolean enabled
+        -Boolean verified
+        +enable() / disable()
+    }
+    class TotpEntity {
+        <<entity>>
+        -Long userId
+        -String secret
+        -List~String~ recoveryCodes
+        -Boolean enabled
+        +verify(code) boolean
+    }
+    class AuditLogEntity {
+        <<entity>>
+        -String eventType
+        -Long userId
+        -String tenantId
+        -String detail
+        +toRecord() AuditLogRecord
+    }
+    class AuthConfigEntity {
+        <<entity>>
+        -String tenantId
+        -String configKey
+        -String configValue
+        -Boolean enabled
+        +apply()
+    }
+    class TokenPair {
+        <<value object>>
+        +String accessToken
+        +String refreshToken
+        +Long expiresIn
+    }
+    class AuthDomainServices {
+        <<domain service>>
+        AuthenticationProtocol
+        MfaService
+        TokenService
+        JwtKeyRotationService
+        BruteForceProtectionService
+        DeviceTrustService
+        IpAccessControl
+        PasswordPolicyService
+        ResourcePermissionService
+        SecurityMonitoringService
+    }
+
+    UserEntity "1" --> "*" TokenEntity : 拥有
+    UserEntity "1" --> "*" SessionEntity : 建立会话
+    UserEntity "1" --> "0..1" MfaConfigEntity : 启用
+    UserEntity "1" --> "0..1" TotpEntity : 绑定
+    RoleEntity "1" o-- "*" PermissionEntity : 聚合
+    TokenEntity ..> JwtKeyEntity : «use» 签发/校验
+    AuthDomainServices ..> UserEntity : 编排
+    AuthDomainServices ..> TokenEntity : 编排
+
+    note for UserEntity "连续登录失败 5 次自动锁定 30 分钟；租户内用户名唯一；密码 BCrypt/Argon2"
+    note for TokenEntity "访问令牌 2h / 刷新令牌 7d；tokenFamily 追踪轮换；SHA-256 哈希存储"
+    note for AuthDomainServices "领域层服务，仅表达业务规则，不依赖持久化与框架实现（DDD 约束）"

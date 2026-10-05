@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1500 1100" width="1500" height="1100">
+  <metadata>
+    <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/">
+      <rdf:Description>
+        <dc:title>Apex Scaffold 统一登录（SSO / 多通道认证）业务流程图</dc:title>
+        <dc:creator>Apex Team</dc:creator>
+        <dc:date>2026-10-05</dc:date>
+        <dc:version>1.3.1</dc:version>
+        <dc:description>多通道登录：密码/短信/OAuth2(PKCE)/Keycloak/社交 → 令牌签发 → 安全加固链路 → 业务 API 校验</dc:description>
+      </rdf:Description>
+    </rdf:RDF>
+  </metadata>
+
+  <defs>
+    <style>
+      .title { font: 700 30px system-ui, sans-serif; fill: #0f172a; text-anchor: middle; }
+      .subtitle { font: 500 13px system-ui, sans-serif; fill: #64748b; text-anchor: middle; }
+      .phase { font: 600 13px system-ui, sans-serif; fill: #334155; }
+      .node-title { font: 600 12.5px system-ui, sans-serif; fill: #0f172a; text-anchor: middle; }
+      .node-sub { font: 400 10px system-ui, sans-serif; fill: #64748b; text-anchor: middle; }
+      .node-route { font: 500 9.5px 'SF Mono', monospace; fill: #2563eb; text-anchor: middle; }
+      .edge { font: 500 10px system-ui, sans-serif; fill: #475569; text-anchor: middle; }
+      .note { font: 400 11px system-ui, sans-serif; fill: #64748b; }
+      .legend { font: 400 11px system-ui, sans-serif; fill: #475569; }
+    </style>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#4f46e5"/>
+    </marker>
+    <marker id="ag" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#94a3b8"/>
+    </marker>
+  </defs>
+
+  <rect width="1500" height="1100" fill="#ffffff"/>
+
+  <text x="750" y="42" class="title">Apex Scaffold 统一登录（SSO / 多通道认证）业务流程图</text>
+  <text x="750" y="66" class="subtitle">密码 / 短信 / OAuth2(PKCE) / Keycloak OIDC / 社交 五通道 → 统一令牌签发 → 安全加固 → 业务 API 校验 · v1.3.1</text>
+
+  <!-- ============ Phase 1: 多通道认证入口 ============ -->
+  <rect x="40" y="92" width="700" height="330" rx="8" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.6"/>
+  <text x="60" y="116" class="phase">① 多通道认证入口（认证中心 / 业务平面）</text>
+
+  <!-- 密码登录 -->
+  <rect x="60" y="132" width="320" height="118" rx="7" fill="#ffffff" stroke="#4f46e5" stroke-width="1.8"/>
+  <text x="220" y="154" class="node-title">用户名密码登录</text>
+  <text x="220" y="172" class="node-route">POST /auth/v1/login</text>
+  <text x="220" y="190" class="node-sub">AuthenticationRouter → AuthenticationHandler</text>
+  <text x="220" y="206" class="node-sub">AuthenticationApplicationService 校验凭据</text>
+  <text x="220" y="222" class="node-sub">401 无效 / 403 禁用/锁定/租户不匹配</text>
+  <text x="220" y="240" class="node-sub" fill="#2563eb">→ TokenService 签发 access+refresh</text>
+
+  <!-- 短信登录 -->
+  <rect x="400" y="132" width="320" height="118" rx="7" fill="#ffffff" stroke="#4f46e5" stroke-width="1.8"/>
+  <text x="560" y="154" class="node-title">短信验证码登录</text>
+  <text x="560" y="172" class="node-route">POST /api/auth/sms/code → /api/auth/login</text>
+  <text x="560" y="190" class="node-sub">AuthService(@SentinelResource authLogin) 限流</text>
+  <text x="560" y="206" class="node-sub">LoginStrategyProvider → SmsLoginStrategy</text>
+  <text x="560" y="222" class="node-sub">验证码 5min · 一次性 · 失败3次→图形验证码</text>
+  <text x="560" y="240" class="node-sub" fill="#2563eb">新用户→REGISTER_REQUIRED / 已存在→发令牌</text>
+
+  <!-- OAuth2 授权码 -->
+  <rect x="60" y="262" width="320" height="140" rx="7" fill="#ffffff" stroke="#4f46e5" stroke-width="1.8"/>
+  <text x="220" y="284" class="node-title">OAuth2 授权码（PKCE S256）</text>
+  <text x="220" y="302" class="node-route">GET /oauth2/authorize</text>
+  <text x="220" y="320" class="node-sub">OauthEndpointHandler → OAuth2Service</text>
+  <text x="220" y="336" class="node-sub">签发授权码（5 分钟 · PKCE S256）</text>
+  <text x="220" y="352" class="node-sub">重定向 code → redirect_uri</text>
+  <text x="220" y="368" class="node-sub">POST /oauth2/token 换发 access+refresh</text>
+  <text x="220" y="386" class="node-route">grant: authorization_code / password / client_credentials / refresh_token</text>
+
+  <!-- Keycloak OIDC -->
+  <rect x="400" y="262" width="320" height="140" rx="7" fill="#ffffff" stroke="#4f46e5" stroke-width="1.8"/>
+  <text x="560" y="284" class="node-title">Keycloak OIDC SSO</text>
+  <text x="560" y="302" class="node-route">GET /auth/oidc/login → Keycloak</text>
+  <text x="560" y="320" class="node-sub">@ConditionalOnProperty(keycloak.enabled=true)</text>
+  <text x="560" y="336" class="node-sub">回调 OidcAuthenticationSuccessHandler</text>
+  <text x="560" y="352" class="node-sub">findByKeycloakSub → 存在/新建(keycloak_sub)</text>
+  <text x="560" y="368" class="node-sub">生成本地 access+refresh</text>
+  <text x="560" y="386" class="node-sub">302 → frontendCallbackUrl?accessToken=…</text>
+
+  <!-- ============ Phase 2: 令牌签发中心 ============ -->
+  <rect x="780" y="92" width="680" height="330" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.6"/>
+  <text x="800" y="116" class="phase">② 统一令牌签发与生命周期（TokenService）</text>
+
+  <rect x="800" y="132" width="300" height="170" rx="7" fill="#ffffff" stroke="#3b82f6" stroke-width="1.8"/>
+  <text x="950" y="154" class="node-title">JWT 密钥管理（V26 jwt_keys）</text>
+  <text x="950" y="172" class="node-sub">256 位 HS256 · AES-256 加密存储</text>
+  <text x="950" y="188" class="node-sub">v20260925_001 版本号 · 寿命 90 天</text>
+  <text x="950" y="204" class="node-sub">状态机 PENDING→ACTIVE→ROTATING</text>
+  <text x="950" y="220" class="node-sub">→DEPRECATED→REVOKED</text>
+  <text x="950" y="238" class="node-sub">JwtKeyRotationService + Scheduler</text>
+  <text x="950" y="256" class="node-sub">getUsableKeySecrets=ACTIVE+ROTATING</text>
+  <text x="950" y="276" class="node-sub">应急吊销自动触发轮换</text>
+
+  <rect x="1120" y="132" width="320" height="170" rx="7" fill="#ffffff" stroke="#3b82f6" stroke-width="1.8"/>
+  <text x="1280" y="154" class="node-title">令牌轮换与重放检测（V42）</text>
+  <text x="1280" y="172" class="node-sub">access 2h / refresh 7d · type=access|refresh</text>
+  <text x="1280" y="188" class="node-sub">token_family / previous_jti / rotation_count</text>
+  <text x="1280" y="204" class="node-sub">RefreshTokenRotationService + Redis</text>
+  <text x="1280" y="222" class="node-sub">token:used: / token:family:revoked:</text>
+  <text x="1280" y="240" class="node-sub">刷新一次性·重放即整族吊销</text>
+  <text x="1280" y="258" class="node-sub">token_rotation_history / token_security_event</text>
+  <text x="1280" y="276" class="node-sub">分布式锁 + 设备指纹一致性 + isSubjectRevoked</text>
+
+  <!-- 刷新与撤销 -->
+  <rect x="800" y="314" width="640" height="90" rx="7" fill="#ffffff" stroke="#3b82f6" stroke-width="1.6"/>
+  <text x="1120" y="336" class="node-title">访问令牌刷新 / 注销撤销</text>
+  <text x="1120" y="354" class="node-route">POST /auth/v1/refresh（一次性轮换） · POST /auth/v1/logout/{userId}</text>
+  <text x="1120" y="372" class="node-sub">撤销用户全部令牌 → blacklist → JwtAuthenticationFilter.isBlacklisted 拦截</text>
+  <text x="1120" y="390" class="node-sub">滑动续期：剩余 &lt; 阈值(1800s) → 响应头 X-New-Access-Token 下发新令牌</text>
+
+  <!-- ============ Phase 3: 安全加固链路 ============ -->
+  <rect x="40" y="440" width="1420" height="300" rx="8" fill="#f0fdf4" stroke="#059669" stroke-width="1.6"/>
+  <text x="60" y="464" class="phase" fill="#059669">③ 安全加固链路（登录前后二次校验）</text>
+
+  <!-- IP 控制 -->
+  <rect x="60" y="480" width="300" height="120" rx="7" fill="#ffffff" stroke="#059669" stroke-width="1.8"/>
+  <text x="210" y="502" class="node-title">IP 访问控制（V53）</text>
+  <text x="210" y="520" class="node-route">IpAccessControlFilter @Order(-100)</text>
+  <text x="210" y="538" class="node-sub">黑名单优先 → 拒绝 403</text>
+  <text x="210" y="554" class="node-sub">白名单未命中 → 拒绝；否则放行</text>
+  <text x="210" y="570" class="node-sub">CIDR / 通配符 · priority 排序</text>
+  <text x="210" y="588" class="node-sub">X-Forwarded-For → X-Real-IP → Remote</text>
+
+  <!-- MFA -->
+  <rect x="380" y="480" width="320" height="120" rx="7" fill="#ffffff" stroke="#059669" stroke-width="1.8"/>
+  <text x="540" y="502" class="node-title">MFA 多因素认证（V27 mfa_config）</text>
+  <text x="540" y="520" class="node-route">/api/v1/mfa/verify · /api/mfa/totp/*</text>
+  <text x="540" y="538" class="node-sub">TOTP(RFC6238 30s) / SMS / EMAIL / BACKUP</text>
+  <text x="540" y="554" class="node-sub">secret &amp; backup_codes 加密存储</text>
+  <text x="540" y="570" class="node-sub">OTP 5min · 邮箱 Lua 原子校验</text>
+  <text x="540" y="588" class="node-sub">状态 PENDING/ACTIVE/DISABLED/LOCKED</text>
+
+  <!-- 生物识别 -->
+  <rect x="720" y="480" width="320" height="120" rx="7" fill="#ffffff" stroke="#059669" stroke-width="1.8"/>
+  <text x="880" y="502" class="node-title">生物识别（V55 biometric_auth）</text>
+  <text x="880" y="520" class="node-route">/api/v1/biometric/verify</text>
+  <text x="880" y="538" class="node-sub">FINGERPRINT / FACE_ID / IRIS / VOICE / WEBAUTHN</text>
+  <text x="880" y="554" class="node-sub">挑战存 Redis · TTL 60s · 32B 随机数</text>
+  <text x="880" y="570" class="node-sub">SHA256withRSA 签名验证 · public_key</text>
+  <text x="880" y="588" class="node-sub">uk(user_id, device_id, type)</text>
+
+  <!-- 设备信任 -->
+  <rect x="1060" y="480" width="380" height="120" rx="7" fill="#ffffff" stroke="#059669" stroke-width="1.8"/>
+  <text x="1250" y="502" class="node-title">设备信任（V56 device_trust）</text>
+  <text x="1250" y="520" class="node-sub">UNTRUSTED/LOW/MEDIUM/HIGH/FULL</text>
+  <text x="1250" y="536" class="node-sub">新设备 PENDING · riskScore=50</text>
+  <text x="1250" y="552" class="node-sub">认证 10 次升级 · 信任期 30 天</text>
+  <text x="1250" y="568" class="node-sub">异常检测：位置变更/长期未用→降级锁定</text>
+  <text x="1250" y="584" class="node-sub">isDeviceTrusted 判定 ≥ MEDIUM</text>
+
+  <!-- 防爆破 -->
+  <rect x="60" y="614" width="1380" height="108" rx="7" fill="#fffbeb" stroke="#d97706" stroke-width="1.6"/>
+  <text x="750" y="636" class="node-title">登录防爆破与账号锁定（Redis 计数 · V48）</text>
+  <text x="750" y="654" class="node-sub">login:fail:ip: / login:fail:username: 计数 → 达阈值(默认3) 要求图形验证码</text>
+  <text x="750" y="672" class="node-sub">sys_user 增强：failed_login_attempts / last_failed_login_at / is_locked / lock_reason / locked_until</text>
+  <text x="750" y="690" class="node-sub">password_history 防重用 · login_history 记录成功/可疑登录 · security_audit_log 全量审计</text>
+  <text x="750" y="708" class="node-sub">oauth2_client_secret_history · trusted_device · encryption_key（V48 安全增强表）</text>
+
+  <!-- ============ Phase 4: 业务 API 校验 ============ -->
+  <rect x="40" y="758" width="1420" height="220" rx="8" fill="#fdf2f8" stroke="#ec4899" stroke-width="1.6"/>
+  <text x="60" y="782" class="phase" fill="#ec4899">④ 业务 API 过滤器（令牌校验）</text>
+
+  <rect x="60" y="800" width="650" height="160" rx="7" fill="#ffffff" stroke="#ec4899" stroke-width="1.8"/>
+  <text x="385" y="822" class="node-title">JwtAuthenticationFilter（SecurityWebFiltersOrder.AUTHENTICATION）</text>
+  <text x="80" y="842" class="node-sub" text-anchor="start">1. 命中 PUBLIC_PATHS 直接放行</text>
+  <text x="80" y="860" class="node-sub" text-anchor="start">2. Authorization: Bearer 提取令牌 → isBlacklisted 拦截</text>
+  <text x="80" y="878" class="node-sub" text-anchor="start">3. JwtUtil.parseToken 验签 · 要求 type==access（拒 refresh）</text>
+  <text x="80" y="896" class="node-sub" text-anchor="start">4. isSubjectRevoked 主体撤销检查</text>
+  <text x="80" y="914" class="node-sub" text-anchor="start">5. 滑动续期（X-New-Access-Token）+ 按 openId 加载用户</text>
+  <text x="80" y="932" class="node-sub" text-anchor="start">6. 权限 Caffeine 缓存(60s) / UnifiedAuthorizationService</text>
+  <text x="80" y="950" class="node-sub" text-anchor="start">7. 写入 ReactiveSecurityContextHolder + TenantContext</text>
+
+  <rect x="740" y="800" width="700" height="160" rx="7" fill="#ffffff" stroke="#ec4899" stroke-width="1.8"/>
+  <text x="1090" y="822" class="node-title">OAuth2ResourceServerFilter（addFilterAfter）</text>
+  <text x="760" y="842" class="node-sub" text-anchor="start">1. 仅处理 /oauth2/api/** 前缀路径</text>
+  <text x="760" y="860" class="node-sub" text-anchor="start">2. authorizationService.validateToken 校验</text>
+  <text x="760" y="878" class="node-sub" text-anchor="start">3. scope → SCOPE_* 权限（大写 · :→_）</text>
+  <text x="760" y="896" class="node-sub" text-anchor="start">4. 主体 = userId / clientId</text>
+  <text x="760" y="914" class="node-sub" text-anchor="start">5. 写入 exchange 属性 oauth2.clientId / oauth2.userId</text>
+  <text x="760" y="934" class="node-sub" text-anchor="start">OAuth2 内置客户端：apex-admin-web(授权码+PKCE)</text>
+  <text x="760" y="950" class="node-sub" text-anchor="start">apex-m2m-service(客户端凭据) · apex-mobile-app(强制 PKCE)</text>
+
+  <!-- Footer -->
+  <text x="60" y="1010" class="note">数据源：apex-auth-center（AuthenticationRouter/Handler · TokenService · JwtKeyRotationService · RefreshTokenRotationService · MfaRouter/MfaServiceImpl/TotpService · BiometricAuthServiceImpl · DeviceTrustServiceImpl · IpAccessControlServiceImpl/Filter · OauthEndpoint/OauthToken/OauthMetadataRouter）；apex-interfaces（SecurityConfig · JwtAuthenticationFilter · OAuth2ResourceServerFilter · OidcAuthenticationSuccessHandler · KeycloakUserSyncService · SocialLoginHandler）；apex-application（AuthService · LoginStrategyProvider · SmsLoginStrategy · AbstractPhoneLoginStrategy）</text>
+  <text x="60" y="1040" class="note">迁移：V25 OAuth2 四表 · V26 jwt_keys · V27 mfa_config · V37/V51 keycloak_sub · V42 token 加密/轮换 · V48 安全增强 · V50 权限码 · V52/V58 撤销追踪 · V53 IP · V55 生物识别 · V56 设备信任</text>
+
+  <!-- Legend -->
+  <line x1="1030" y1="1040" x2="1080" y2="1040" stroke="#4f46e5" stroke-width="1.8"/>
+  <text x="1090" y="1044" class="legend">认证入口</text>
+  <rect x="1170" y="1034" width="14" height="14" rx="3" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.4"/>
+  <text x="1192" y="1048" class="legend">令牌签发</text>
+  <rect x="1300" y="1034" width="14" height="14" rx="3" fill="#f0fdf4" stroke="#059669" stroke-width="1.4"/>
+  <text x="1322" y="1048" class="legend">安全加固</text>
+  <rect x="1420" y="1034" width="14" height="14" rx="3" fill="#fdf2f8" stroke="#ec4899" stroke-width="1.4"/>
+  <text x="1442" y="1048" class="legend">业务校验</text>
+</svg>

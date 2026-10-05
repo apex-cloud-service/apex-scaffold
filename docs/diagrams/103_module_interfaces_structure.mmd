@@ -1,0 +1,43 @@
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#0891b2','primaryTextColor':'#0f172a','primaryBorderColor':'#0891b2','lineColor':'#64748b','fontFamily':'sans-serif'}}}%%
+flowchart TB
+  subgraph Web["Web 入口"]
+    W1["router / router.office · RouterFunction"]
+    W2["handler / handler.office · HandlerFunction"]
+    W3["dto / assembler · 协议模型与转换"]
+  end
+
+  subgraph Cross["横切"]
+    C1["filter · WebFilter 过滤链"]
+    C2["aspect · 日志/权限/幂等切面"]
+    C3["exception · GlobalExceptionHandler"]
+    C4["security · 安全过滤链"]
+  end
+
+  subgraph Gov["治理入口"]
+    G1["governance.lifecycle 优雅停机"]
+    G2["governance.config 配置"]
+    G3["governance.platform compose/k8s/standalone"]
+    G4["metrics / monitor / dashboard"]
+  end
+
+  APP["apex-application"]
+  INFRA["apex-infrastructure"]
+  DOM["apex-domain"]
+  WF["apex-workflow"]
+  LIC["apex-license-starter"]
+  EX["apex-example 可执行入口"]
+
+  C1 --> W1 --> W2 --> APP
+  W2 --> W3
+  C2 --> W2
+  C3 --> W2
+  C4 --> W1
+  INFRA --> APP
+  DOM --> APP
+  WF --> W1
+  LIC --> W1
+  W1 --> EX
+  Gov --> G4
+
+  NOTE["各层依赖汇合点与唯一 HTTP 出口，承载治理与可观测入口，反应式全链路"]
+  W1 -.-> NOTE

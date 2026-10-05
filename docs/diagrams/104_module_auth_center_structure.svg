@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 900" width="1400" height="900">
+  <defs>
+    <style>
+      .title{font:700 32px sans-serif;fill:#0f172a;text-anchor:middle}
+      .subtitle{font:500 13px sans-serif;fill:#64748b;text-anchor:middle}
+      .grp{font:600 13px sans-serif;fill:#fff}
+      .box-title{font:600 12px sans-serif;fill:#0f172a}
+      .box-desc{font:400 10px sans-serif;fill:#475569}
+      .code{font:500 9.5px monospace;fill:#2563eb}
+      .note{font:500 11px sans-serif;fill:#64748b}
+      .legend{font:500 11px sans-serif;fill:#475569}
+      .layer-title{font:600 15px sans-serif;fill:#fff}
+      .layer-sub{font:500 10.5px sans-serif;fill:#fff;opacity:.9}
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#4f46e5"/>
+    </marker>
+  </defs>
+  <rect width="1400" height="900" fill="#fff"/>
+  <text x="700" y="40" class="title">模块结构：apex-auth-center</text>
+  <text x="700" y="64" class="subtitle">com.apex.scaffold.authcenter · 自包含 DDD 四层 · 统一认证中心（MFA/生物识别/令牌）· v1.3.1</text>
+
+  <rect x="40" y="92" width="430" height="740" rx="10" fill="#4f46e5" opacity="0.06" stroke="#4f46e5" stroke-width="2"/>
+  <rect x="40" y="92" width="430" height="40" rx="10" fill="#4f46e5"/>
+  <text x="60" y="118" class="grp">包结构（com.apex.scaffold.authcenter.*）</text>
+  <text x="60" y="150" class="code">├─ domain</text>
+  <text x="60" y="172" class="code">│  ├─ model / model.entity / model.vo</text>
+  <text x="60" y="194" class="code">│  ├─ permission / repository / service</text>
+  <text x="60" y="216" class="code">│  └─ 领域服务：Mfa/Biometric/Token…</text>
+  <text x="60" y="238" class="code">├─ application</text>
+  <text x="60" y="260" class="code">│  ├─ service / service.impl</text>
+  <text x="60" y="282" class="code">│  ├─ assembler / dto / aspect / scheduler</text>
+  <text x="60" y="304" class="code">├─ infrastructure</text>
+  <text x="60" y="326" class="code">│  ├─ persistence（entity/po/mapper/repository）</text>
+  <text x="60" y="348" class="code">│  ├─ crypto / encryption / kms / security</text>
+  <text x="60" y="370" class="code">│  ├─ filter / audit / monitoring / scheduler</text>
+  <text x="60" y="392" class="code">├─ interfaces</text>
+  <text x="60" y="414" class="code">│  ├─ controller / handler / router / dto</text>
+  <text x="60" y="436" class="code">│  └─ 统一授权端点 / OAuth2 端点</text>
+  <text x="60" y="458" class="code">└─ config</text>
+
+  <text x="60" y="506" class="legend" font-weight="600">职责定位</text>
+  <text x="60" y="532" class="box-desc">• 独立 DDD 四层的认证域</text>
+  <text x="60" y="554" class="box-desc">• 统一授权、MFA、生物识别、令牌生命周期</text>
+  <text x="60" y="576" class="box-desc">• 拥有独立 auth_* 数据表（V44-V52）</text>
+
+  <text x="60" y="624" class="legend" font-weight="600">依赖</text>
+  <text x="60" y="650" class="box-desc">→ 依赖 apex-common + infrastructure + application</text>
+  <text x="60" y="672" class="box-desc">→ infra 自有加密/KMS/安全实现</text>
+  <text x="60" y="694" class="box-desc">← 作为认证服务可独立部署</text>
+
+  <!-- right -->
+  <rect x="500" y="92" width="860" height="150" rx="10" fill="#6366f1" opacity="0.08" stroke="#6366f1" stroke-width="1.5"/>
+  <text x="520" y="118" class="layer-title" fill="#6366f1">接口层 · interfaces</text>
+  <text x="520" y="138" class="layer-sub" fill="#6366f1">controller/handler/router/dto · 统一授权 + OAuth2 端点</text>
+  <rect x="520" y="150" width="270" height="76" rx="6" fill="#fff" stroke="#c7d2fe" stroke-width="1.5"/>
+  <text x="533" y="172" class="box-title">认证/统一授权</text>
+  <text x="533" y="192" class="code">AuthenticationHandler · UnifiedAuthorization</text>
+  <text x="533" y="212" class="box-desc">OauthToken/Endpoint/Metadata</text>
+  <rect x="800" y="150" width="280" height="76" rx="6" fill="#fff" stroke="#c7d2fe" stroke-width="1.5"/>
+  <text x="813" y="172" class="box-title">策略管理</text>
+  <text x="813" y="192" class="code">Mfa / Permission / Role / Session</text>
+  <text x="813" y="212" class="box-desc">IpAccessControl / AuditLog / Config</text>
+
+  <rect x="500" y="254" width="860" height="150" rx="10" fill="#6366f1" opacity="0.08" stroke="#6366f1" stroke-width="1.5"/>
+  <text x="520" y="280" class="layer-title" fill="#6366f1">应用层 · application</text>
+  <text x="520" y="300" class="layer-sub" fill="#6366f1">service · assembler · dto · aspect · scheduler</text>
+  <rect x="520" y="312" width="270" height="76" rx="6" fill="#fff" stroke="#c7d2fe" stroke-width="1.5"/>
+  <text x="533" y="334" class="box-title">用例编排</text>
+  <text x="533" y="354" class="code">认证/令牌/会话应用服务</text>
+  <text x="533" y="374" class="box-desc">事务边界</text>
+  <rect x="800" y="312" width="280" height="76" rx="6" fill="#fff" stroke="#c7d2fe" stroke-width="1.5"/>
+  <text x="813" y="334" class="box-title">支撑</text>
+  <text x="813" y="354" class="code">assembler · aspect · scheduler</text>
+  <text x="813" y="374" class="box-desc">DTO 转换 / 切面 / 定时任务</text>
+
+  <rect x="500" y="416" width="860" height="150" rx="10" fill="#059669" opacity="0.08" stroke="#059669" stroke-width="1.5"/>
+  <text x="520" y="442" class="layer-title" fill="#059669">领域层 · domain</text>
+  <text x="520" y="462" class="layer-sub" fill="#059669">model · permission · repository · service</text>
+  <rect x="520" y="474" width="270" height="76" rx="6" fill="#fff" stroke="#a7f3d0" stroke-width="1.5"/>
+  <text x="533" y="496" class="box-title">核心实体</text>
+  <text x="533" y="516" class="code">UserEntity · TokenEntity · JwtKeyEntity</text>
+  <text x="533" y="536" class="box-desc">Session · Mfa · Totp · AuditLog</text>
+  <rect x="800" y="474" width="280" height="76" rx="6" fill="#fff" stroke="#a7f3d0" stroke-width="1.5"/>
+  <text x="813" y="496" class="box-title">领域服务/仓储</text>
+  <text x="813" y="516" class="code">AuthenticationProtocol · MfaService</text>
+  <text x="813" y="536" class="box-desc">JwtKeyRotation · BruteForce · DeviceTrust</text>
+
+  <rect x="500" y="578" width="860" height="150" rx="10" fill="#d97706" opacity="0.08" stroke="#d97706" stroke-width="1.5"/>
+  <text x="520" y="604" class="layer-title" fill="#d97706">基础设施层 · infrastructure</text>
+  <text x="520" y="624" class="layer-sub" fill="#d97706">persistence · crypto · kms · security · filter · audit</text>
+  <rect x="520" y="636" width="270" height="76" rx="6" fill="#fff" stroke="#fed7aa" stroke-width="1.5"/>
+  <text x="533" y="658" class="box-title">持久化</text>
+  <text x="533" y="678" class="code">mapper/repository（auth_* 表）</text>
+  <text x="533" y="698" class="box-desc">V44-V52 独立迁移</text>
+  <rect x="800" y="636" width="280" height="76" rx="6" fill="#fff" stroke="#fed7aa" stroke-width="1.5"/>
+  <text x="813" y="658" class="box-title">安全/加密</text>
+  <text x="813" y="678" class="code">crypto · encryption · kms · security</text>
+  <text x="813" y="698" class="box-desc">filter · audit · monitoring</text>
+
+  <line x1="700" y1="242" x2="700" y2="254" stroke="#4f46e5" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="700" y1="404" x2="700" y2="416" stroke="#4f46e5" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="700" y1="566" x2="700" y2="578" stroke="#4f46e5" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <text x="700" y="762" class="note" text-anchor="middle">apex-auth-center 独立封装统一认证能力：统一授权 + OAuth2 + MFA + 生物识别 + 令牌/会话生命周期</text>
+  <text x="700" y="790" class="note" text-anchor="middle">自有 auth_* 表与加密/KMS 实现，可与主应用聚合部署，也可独立运行</text>
+  <text x="700" y="872" class="note" text-anchor="middle">领域核心：AuthenticationProtocol / JwtKeyRotation / MfaService / BruteForceProtection</text>
+</svg>

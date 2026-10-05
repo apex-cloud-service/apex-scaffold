@@ -1,0 +1,68 @@
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#4f46e5','primaryTextColor':'#fff','primaryBorderColor':'#3730a3','lineColor':'#64748b','secondaryColor':'#0891b2','tertiaryColor':'#f3f4f6','noteBkgColor':'#fef3c7','noteTextColor':'#92400e'}}}%%
+flowchart TB
+    subgraph L1["客户端层 Clients"]
+        C1["Vue 3 SPA 前端<br/>Composition API · Pinia · Axios"]
+        C2["移动端 / 桌面端<br/>H5 · 小程序 · SDK"]
+        C3["办公平台 飞书/钉钉/企微<br/>OAuth · 消息 · 审批 · 日历 · 文档"]
+        C4["第三方 / OpenAPI<br/>REST · OAuth2 · Webhook"]
+    end
+
+    subgraph L2["网关/过滤层 Filters"]
+        F1["GlobalGuardWebFilter"]
+        F2["JwtAuthenticationFilter"]
+        F3["IpRateLimitWebFilter"]
+        F4["SecurityHeaderWebFilter"]
+        F5["TraceFilter"]
+        F6["ApiGatewayFilter"]
+    end
+
+    subgraph L3["接口层 Interfaces (apex-interfaces)"]
+        I1["认证/会话 Handler<br/>AuthHandler · SsoAuthHandler"]
+        I2["用户/角色/权限 Handler"]
+        I3["工作流 Handler<br/>WorkflowHandler"]
+        I4["办公平台 Handler<br/>OfficeHandler"]
+        I5["监控/通知<br/>MonitorDashboard · SSE"]
+        I6["路由/切面<br/>Router · Aspect"]
+    end
+
+    subgraph L4["应用层 Application (apex-application)"]
+        A1["AuthService<br/>LoginStrategyProvider"]
+        A2["UserService / RoleService"]
+        A3["WorkflowService<br/>Query · Statistics · Timeout"]
+        A4["OfficeApplicationService"]
+        A5["SSO 协议适配<br/>OIDC/SAML/CAS/LDAP"]
+        A6["支撑能力<br/>Assembler · Job · Listener"]
+    end
+
+    subgraph L5["领域层 Domain (apex-domain · workflow)"]
+        D1["核心聚合<br/>User · Role · Permission · Dept · Tenant · Menu"]
+        D2["工作流领域模型<br/>WorkflowDefinition · ProcessInstance · Task · ApprovalRecord"]
+        D3["办公平台领域<br/>ApprovalProcess · CalendarEvent · DocumentInfo · OfficeMessage"]
+        D4["领域事件<br/>DomainEventBus · Outbox"]
+        D5["仓储接口<br/>Repository (Port)"]
+    end
+
+    subgraph L6["基础设施层 Infrastructure (apex-infrastructure)"]
+        P1["持久化<br/>MyBatis-Plus Mapper/PO · 数据权限 · 多租户"]
+        P2["多级缓存<br/>Caffeine L1 + Redis L2"]
+        P3["消息队列<br/>RocketMQ 生产/消费 · Outbox · 死信"]
+        P4["对象存储<br/>MinIO · 火山引擎 · Local"]
+        P5["远程调用<br/>AuthCenter 权限客户端"]
+        P6["韧性治理<br/>Sentinel · Resilience4j"]
+    end
+
+    subgraph L7["数据/外部 Data & Services"]
+        X1["MySQL<br/>Flyway V1-V58"]
+        X2["Redis<br/>缓存/分布式锁"]
+        X3["RocketMQ"]
+        X4["MinIO"]
+        X5["Meilisearch"]
+        X6["Keycloak<br/>OIDC/SSO"]
+        X7["Nacos<br/>注册/配置"]
+        X8["可观测<br/>Prometheus/Grafana/Loki/Zipkin"]
+    end
+
+    L1 --> L2 --> L3 --> L4 --> L5 --> L6 --> L7
+
+    NOTE["跨切模块：apex-common（通用能力/上下文/限流算法） · apex-license-spring-boot-starter（授权门控） · apex-auth-center（独立认证中心 ApplicationContext） · apex-generator / apex-example"]
+    L6 -.-> NOTE

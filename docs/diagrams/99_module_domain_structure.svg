@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 900" width="1400" height="900">
+  <defs>
+    <style>
+      .title{font:700 32px sans-serif;fill:#0f172a;text-anchor:middle}
+      .subtitle{font:500 13px sans-serif;fill:#64748b;text-anchor:middle}
+      .grp{font:600 13px sans-serif;fill:#fff}
+      .box-title{font:600 12px sans-serif;fill:#0f172a}
+      .box-desc{font:400 10px sans-serif;fill:#475569}
+      .code{font:500 9.5px monospace;fill:#2563eb}
+      .note{font:500 11px sans-serif;fill:#64748b}
+      .legend{font:500 11px sans-serif;fill:#475569}
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#059669"/>
+    </marker>
+  </defs>
+  <rect width="1400" height="900" fill="#fff"/>
+  <text x="700" y="40" class="title">模块结构：apex-domain</text>
+  <text x="700" y="64" class="subtitle">com.apex.scaffold.domain · 领域层 · 聚合根 / 实体 / 领域服务 / 仓储接口 · v1.3.1</text>
+
+  <rect x="40" y="92" width="430" height="740" rx="10" fill="#059669" opacity="0.06" stroke="#059669" stroke-width="2"/>
+  <rect x="40" y="92" width="430" height="40" rx="10" fill="#059669"/>
+  <text x="60" y="118" class="grp">包结构（com.apex.scaffold.domain.*）</text>
+  <text x="60" y="148" class="code">├─ model / model.entity / model.valueobject</text>
+  <text x="60" y="170" class="code">│  ├─ model.admin / system / record / sso</text>
+  <text x="60" y="192" class="code">│  ├─ model.generator / moderation / workflow</text>
+  <text x="60" y="214" class="code">│  └─ model.exception</text>
+  <text x="60" y="236" class="code">├─ enums / event / gateway / port</text>
+  <text x="60" y="258" class="code">├─ repository / repository(workflow)</text>
+  <text x="60" y="280" class="code">├─ service / workflow / search / log</text>
+  <text x="60" y="302" class="code">├─ office / office.port</text>
+  <text x="60" y="324" class="code">│  ├─ office.approval / calendar</text>
+  <text x="60" y="346" class="code">│  ├─ office.document / message</text>
+  <text x="60" y="368" class="code">└─ moderation</text>
+
+  <text x="60" y="416" class="legend" font-weight="600">职责定位</text>
+  <text x="60" y="442" class="box-desc">• 承载业务规则、状态流转与不变式</text>
+  <text x="60" y="464" class="box-desc">• 定义仓库接口与出站端口（port）</text>
+  <text x="60" y="486" class="box-desc">• 领域事件定义（event）</text>
+  <text x="60" y="508" class="box-desc">• 无 Web / 无基础设施实现，纯领域语义</text>
+
+  <text x="60" y="556" class="legend" font-weight="600">依赖</text>
+  <text x="60" y="582" class="box-desc">→ 依赖 apex-common（L0 基础）</text>
+  <text x="60" y="604" class="box-desc">→ 不依赖 infra/app 等具体实现</text>
+  <text x="60" y="626" class="box-desc">← 被 infrastructure / application / workflow</text>
+  <text x="60" y="648" class="box-desc">    / interfaces 依赖（依赖深度 L1）</text>
+
+  <!-- right: core aggregates / services -->
+  <rect x="500" y="92" width="860" height="250" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="520" y="120" class="box-title" font-size="14">领域模型（model.*）</text>
+  <rect x="520" y="136" width="270" height="190" rx="6" fill="#fff" stroke="#a7f3d0" stroke-width="1.5"/>
+  <text x="533" y="158" class="box-title">账号 / 权限（admin / system）</text>
+  <text x="533" y="178" class="code">SysUser · SysRole · SysMenu</text>
+  <text x="533" y="196" class="code">权限集合 · 租户归属</text>
+  <text x="533" y="214" class="box-desc">聚合根 + 值对象（valueobject）</text>
+  <text x="533" y="232" class="code">状态枚举 enums</text>
+  <text x="533" y="258" class="box-title">办公协同（office.*）</text>
+  <text x="533" y="278" class="code">approval / calendar / document / message</text>
+  <text x="533" y="296" class="box-desc">含 office.port 出站端口定义</text>
+  <rect x="800" y="136" width="270" height="190" rx="6" fill="#fff" stroke="#a7f3d0" stroke-width="1.5"/>
+  <text x="813" y="158" class="box-title">工作流 / 通用（workflow / generator）</text>
+  <text x="813" y="178" class="code">WorkflowInstance · ApprovalTask</text>
+  <text x="813" y="196" class="code">工作流定义模型</text>
+  <text x="813" y="214" class="code">TableDefinition · FieldDefinition</text>
+  <text x="813" y="232" class="box-desc">代码生成元模型（generator）</text>
+  <text x="813" y="258" class="box-title">治理 / 检索（moderation / search / log）</text>
+  <text x="813" y="278" class="code">moderation 内容审核模型</text>
+  <text x="813" y="296" class="box-desc">search 检索模型 · log 日志模型</text>
+  <rect x="1080" y="136" width="270" height="190" rx="6" fill="#fff" stroke="#a7f3d0" stroke-width="1.5"/>
+  <text x="1093" y="158" class="box-title">业务支撑（record / sso / entity）</text>
+  <text x="1093" y="178" class="code">record 业务单据</text>
+  <text x="1093" y="196" class="code">sso 单点登录模型</text>
+  <text x="1093" y="214" class="code">entity 基础实体基类</text>
+  <text x="1093" y="232" class="code">exception 领域异常</text>
+  <text x="1093" y="258" class="box-title">领域服务（service / workflow）</text>
+  <text x="1093" y="278" class="code">业务编排规则</text>
+  <text x="1093" y="296" class="box-desc">无状态，依赖 domain contract</text>
+
+  <!-- right: contracts -->
+  <rect x="500" y="362" width="860" height="250" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="520" y="390" class="box-title" font-size="14">契约 / 端口（面向接口）</text>
+  <rect x="520" y="406" width="270" height="150" rx="6" fill="#fff" stroke="#a7f3d0" stroke-width="1.5"/>
+  <text x="533" y="428" class="box-title">仓储接口（repository / workflow.repository）</text>
+  <text x="533" y="448" class="code">IRepository&lt;T&gt; · 工作流仓储</text>
+  <text x="533" y="468" class="box-desc">由基础设施层实现</text>
+  <text x="533" y="488" class="box-desc">DB 存取契约与领域解耦</text>
+  <rect x="800" y="406" width="270" height="150" rx="6" fill="#fff" stroke="#a7f3d0" stroke-width="1.5"/>
+  <text x="813" y="428" class="box-title">出站端口（port / office.port / gateway）</text>
+  <text x="813" y="448" class="code">网关 / 外部服务端口</text>
+  <text x="813" y="468" class="code">办公三方适配端口</text>
+  <text x="813" y="488" class="box-desc">被 infrastructure 反向依赖实现</text>
+  <rect x="1080" y="406" width="270" height="150" rx="6" fill="#fff" stroke="#a7f3d0" stroke-width="1.5"/>
+  <text x="1093" y="428" class="box-title">领域事件（event）</text>
+  <text x="1093" y="448" class="code">DomainEvent 子类</text>
+  <text x="1093" y="468" class="box-desc">审批完成 / 单据变更等</text>
+  <text x="1093" y="488" class="box-desc">经 Outbox 异步发布</text>
+
+  <rect x="500" y="632" width="860" height="200" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="520" y="660" class="box-title" font-size="14">设计约束</text>
+  <text x="520" y="690" class="box-desc">1. 纯领域语义：不出现 Spring 注解之外的技术实现细节。</text>
+  <text x="520" y="718" class="box-desc">2. 依赖倒置：仓储/端口为接口，方向由领域指向基础设施。</text>
+  <text x="520" y="746" class="box-desc">3. 聚合内强一致，聚合间通过领域事件解耦。</text>
+  <text x="786" y="660" class="box-title" font-size="14">典型引用方</text>
+  <text x="786" y="690" class="box-desc">apex-infrastructure（实现仓储/端口）</text>
+  <text x="786" y="718" class="box-desc">apex-application · apex-workflow · apex-interfaces</text>
+  <text x="786" y="746" class="note">apex-common 提供基类与契约，本模块扩展领域语义</text>
+
+  <text x="700" y="872" class="note" text-anchor="middle">apex-domain 承载业务规则与反向外依赖，是 DDD 的中心内核（依赖深度 L1）</text>
+</svg>

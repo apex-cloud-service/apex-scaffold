@@ -1,0 +1,35 @@
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#059669','primaryTextColor':'#0f172a','primaryBorderColor':'#059669','lineColor':'#64748b','fontFamily':'sans-serif'}}}%%
+flowchart TB
+  subgraph Model["model.* 领域模型"]
+    M1["账号/权限 admin / system"]
+    M2["办公协同 office (approval/calendar/document/message)"]
+    M3["工作流 workflow"]
+    M4["代码生成元模型 generator"]
+    M5["治理/检索 moderation / search / log"]
+    M6["支撑 record / sso / entity / exception"]
+    M7["值对象 valueobject · 枚举 enums"]
+  end
+
+  subgraph Contract["契约 / 端口"]
+    C1["仓储接口 repository / workflow.repository"]
+    C2["出站端口 port / office.port / gateway"]
+    C3["领域事件 event"]
+  end
+
+  subgraph Svc["领域服务 service / workflow"]
+    S1[业务编排规则·无状态]
+  end
+
+  COMMON["apex-common (L0)"]
+  INFRA["apex-infrastructure 实现仓储/端口"]
+
+  COMMON --> Model
+  COMMON --> Contract
+  Model --> Svc
+  Contract -. "依赖倒置：由基础设施实现" .-> INFRA
+  S1 --> C1
+  S1 --> C2
+  S1 --> C3
+
+  NOTE["apex-domain 承载业务规则与反向外依赖，是 DDD 中心内核"]
+  Contract -.-> NOTE

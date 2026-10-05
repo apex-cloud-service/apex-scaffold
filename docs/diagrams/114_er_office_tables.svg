@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 1000" width="1400" height="1000">
+  <metadata>
+    <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/">
+      <rdf:Description>
+        <dc:title>Apex Scaffold 协同办公平台数据表 ER 图</dc:title>
+        <dc:creator>Apex Team</dc:creator>
+        <dc:date>2026-10-05</dc:date>
+        <dc:version>1.3.1</dc:version>
+        <dc:description>协同办公平台（飞书/钉钉/企业微信 多平台接入 · 消息 · 审批 · 日历 · 文档 · 组织同步）实体关系，数据源 MySQL Flyway V29-V57</dc:description>
+      </rdf:Description>
+    </rdf:RDF>
+  </metadata>
+
+  <defs>
+    <style>
+      .title { font: 700 30px system-ui, sans-serif; fill: #0f172a; text-anchor: middle; }
+      .subtitle { font: 500 13px system-ui, sans-serif; fill: #64748b; text-anchor: middle; }
+      .grp { font: 600 14px system-ui, sans-serif; }
+      .tbl { font: 600 13px system-ui, sans-serif; fill: #ffffff; text-anchor: middle; }
+      .pk { font: 600 11px 'SF Mono', monospace; fill: #dc2626; }
+      .fk { font: 600 11px 'SF Mono', monospace; fill: #2563eb; }
+      .field { font: 400 11px 'SF Mono', monospace; fill: #475569; }
+      .type { font: 400 10px 'SF Mono', monospace; fill: #94a3b8; }
+      .note { font: 400 11px system-ui, sans-serif; fill: #64748b; }
+      .rel { font: 400 10px system-ui, sans-serif; fill: #64748b; text-anchor: middle; }
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2563eb"/>
+    </marker>
+    <marker id="arrow-gray" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#94a3b8"/>
+    </marker>
+  </defs>
+
+  <rect width="1400" height="1000" fill="#ffffff"/>
+
+  <text x="700" y="42" class="title">Apex Scaffold 协同办公平台数据表 ER 图</text>
+  <text x="700" y="66" class="subtitle">数据源：MySQL Flyway V29-V57 · 飞书/钉钉/企业微信 多平台集成 + 消息 + 审批 + 日历 + 文档 + 组织同步 · v1.3.1</text>
+
+  <!-- ============ Group 1: 平台接入与身份映射 ============ -->
+  <rect x="40" y="92" width="640" height="360" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.6"/>
+  <text x="60" y="116" class="grp" fill="#3b82f6">平台接入与应用授权（office_platform_app）</text>
+
+  <!-- office_platform_app -->
+  <rect x="60" y="132" width="600" height="150" rx="6" fill="#ffffff" stroke="#3b82f6" stroke-width="1.8"/>
+  <rect x="60" y="132" width="600" height="28" rx="6" fill="#3b82f6"/>
+  <text x="360" y="151" class="tbl">office_platform_app</text>
+  <text x="70" y="178" class="pk">● id (PK)</text>
+  <text x="70" y="195" class="field">tenant_id</text><text x="300" y="195" class="type">BIGINT 租户</text>
+  <text x="70" y="210" class="field">platform</text><text x="300" y="210" class="type">FEISHU/DINGTALK/WECOM</text>
+  <text x="70" y="225" class="field">app_id / secret_reference</text>
+  <text x="70" y="240" class="field">redirect_uri / capabilities</text>
+  <text x="70" y="255" class="field">enabled / version / deleted</text>
+  <text x="70" y="275" class="type">uk(tenant_id, platform)；V29 创建</text>
+
+  <!-- office_identity_binding -->
+  <rect x="60" y="296" width="600" height="140" rx="6" fill="#ffffff" stroke="#3b82f6" stroke-width="1.6"/>
+  <rect x="60" y="296" width="600" height="28" rx="6" fill="#3b82f6"/>
+  <text x="360" y="315" class="tbl">office_identity_binding</text>
+  <text x="70" y="342" class="pk">● id (PK)</text>
+  <text x="70" y="357" class="fk">◆ tenant_id / user_id</text><text x="300" y="357" class="type">Apex 用户</text>
+  <text x="70" y="372" class="field">platform</text><text x="300" y="372" class="type">外部平台</text>
+  <text x="70" y="387" class="fk">◆ external_user_id</text><text x="300" y="387" class="type">外部用户ID</text>
+  <text x="70" y="402" class="field">status / enabled / version</text>
+  <text x="70" y="422" class="type">uk(tenant,platform,external_user_id)；V29</text>
+
+  <!-- ============ Group 2: 组织与通讯录同步 ============ -->
+  <rect x="720" y="92" width="640" height="360" rx="8" fill="#ecfdf5" stroke="#059669" stroke-width="1.6"/>
+  <text x="740" y="116" class="grp" fill="#059669">组织通讯录同步（V57 off_*)</text>
+
+  <!-- off_department -->
+  <rect x="740" y="132" width="300" height="160" rx="6" fill="#ffffff" stroke="#059669" stroke-width="1.8"/>
+  <rect x="740" y="132" width="300" height="28" rx="6" fill="#059669"/>
+  <text x="890" y="151" class="tbl">off_department</text>
+  <text x="750" y="178" class="pk">● id (PK)</text>
+  <text x="750" y="195" class="field">dept_code</text><text x="930" y="195" class="type">VARCHAR(64)</text>
+  <text x="750" y="210" class="field">dept_name / parent_id / dept_path</text>
+  <text x="750" y="225" class="field">dept_level / sort_order</text>
+  <text x="750" y="240" class="field">leader_id / phone / email / status</text>
+  <text x="750" y="255" class="field">sync_source / external_id / tenant_id</text>
+  <text x="750" y="275" class="type">uk(dept_code, tenant_id, deleted)；树形 parent_id</text>
+
+  <!-- off_employee -->
+  <rect x="740" y="306" width="300" height="130" rx="6" fill="#ffffff" stroke="#059669" stroke-width="1.6"/>
+  <rect x="740" y="306" width="300" height="28" rx="6" fill="#059669"/>
+  <text x="890" y="325" class="tbl">off_employee</text>
+  <text x="750" y="352" class="pk">● id (PK)</text>
+  <text x="750" y="367" class="field">employee_code / employee_name</text>
+  <text x="750" y="382" class="fk">◆ dept_id → off_department</text>
+  <text x="750" y="397" class="field">position / mobile / email / hire_date</text>
+  <text x="750" y="412" class="field">user_id / sync_source / external_id</text>
+  <text x="750" y="430" class="type">uk(employee_code, tenant_id, deleted)</text>
+
+  <!-- off_sync_history -->
+  <rect x="1060" y="132" width="280" height="130" rx="6" fill="#ffffff" stroke="#059669" stroke-width="1.6"/>
+  <rect x="1060" y="132" width="280" height="28" rx="6" fill="#059669"/>
+  <text x="1200" y="151" class="tbl">off_sync_history</text>
+  <text x="1070" y="178" class="pk">● id (PK)</text>
+  <text x="1070" y="193" class="field">sync_type / sync_source</text>
+  <text x="1070" y="208" class="field">sync_status / start_time / end_time</text>
+  <text x="1070" y="223" class="field">dept_count / employee_count</text>
+  <text x="1070" y="238" class="field">error_message / tenant_id</text>
+  <text x="1070" y="255" class="type">V57；同步批次记录</text>
+
+  <!-- office_organization_mapping -->
+  <rect x="1060" y="276" width="280" height="158" rx="6" fill="#ffffff" stroke="#059669" stroke-width="1.6"/>
+  <rect x="1060" y="276" width="280" height="28" rx="6" fill="#059669"/>
+  <text x="1200" y="295" class="tbl">office_organization_mapping</text>
+  <text x="1070" y="322" class="pk">● id (PK)</text>
+  <text x="1070" y="337" class="field">tenant_id / platform</text>
+  <text x="1070" y="352" class="fk">◆ external_org_id / external_user_id</text>
+  <text x="1070" y="367" class="fk">◆ apex_dept_id / apex_user_id</text>
+  <text x="1070" y="382" class="field">enabled / version / deleted</text>
+  <text x="1070" y="418" class="type">V29；uk(tenant,platform,external_org_id)</text>
+
+  <!-- ============ Group 3: 消息与内容 ============ -->
+  <rect x="40" y="470" width="900" height="330" rx="8" fill="#fdf2f8" stroke="#ec4899" stroke-width="1.6"/>
+  <text x="60" y="494" class="grp" fill="#ec4899">消息中心（业务消息 · 模板 · 收件人）</text>
+
+  <!-- off_message_template -->
+  <rect x="60" y="510" width="280" height="150" rx="6" fill="#ffffff" stroke="#ec4899" stroke-width="1.8"/>
+  <rect x="60" y="510" width="280" height="28" rx="6" fill="#ec4899"/>
+  <text x="200" y="529" class="tbl">off_message_template</text>
+  <text x="70" y="556" class="pk">● id (PK)</text>
+  <text x="70" y="571" class="field">template_code</text><text x="240" y="571" class="type">VARCHAR(64)</text>
+  <text x="70" y="586" class="field">template_name / template_type</text>
+  <text x="70" y="601" class="field">template_content / variables</text>
+  <text x="70" y="616" class="field">enabled / tenant_id</text>
+  <text x="70" y="640" class="type">V57；uk(template_code, tenant_id, deleted)</text>
+
+  <!-- off_message -->
+  <rect x="360" y="510" width="280" height="150" rx="6" fill="#ffffff" stroke="#ec4899" stroke-width="1.8"/>
+  <rect x="360" y="510" width="280" height="28" rx="6" fill="#ec4899"/>
+  <text x="500" y="529" class="tbl">off_message</text>
+  <text x="370" y="556" class="pk">● id (PK)</text>
+  <text x="370" y="571" class="field">message_code</text><text x="540" y="571" class="type">VARCHAR(64)</text>
+  <text x="370" y="586" class="fk">◆ template_id → off_message_template</text>
+  <text x="370" y="601" class="field">subject / content / message_type</text>
+  <text x="370" y="616" class="field">priority / sender_id / status</text>
+  <text x="370" y="631" class="field">send_time / expire_time / tenant_id</text>
+  <text x="370" y="649" class="type">V57；消息主体</text>
+
+  <!-- off_message_recipient -->
+  <rect x="660" y="510" width="260" height="130" rx="6" fill="#ffffff" stroke="#ec4899" stroke-width="1.6"/>
+  <rect x="660" y="510" width="260" height="28" rx="6" fill="#ec4899"/>
+  <text x="790" y="529" class="tbl">off_message_recipient</text>
+  <text x="670" y="556" class="pk">● id (PK)</text>
+  <text x="670" y="571" class="fk">◆ message_id</text><text x="840" y="571" class="type">→ off_message</text>
+  <text x="670" y="586" class="field">recipient_id / recipient_type</text>
+  <text x="670" y="601" class="field">read_status / read_time</text>
+  <text x="670" y="618" class="type">V57；uk(message_id, recipient_id, deleted)</text>
+
+  <!-- office_message (V31) -->
+  <rect x="60" y="676" width="860" height="108" rx="6" fill="#ffffff" stroke="#ec4899" stroke-width="1.4"/>
+  <rect x="60" y="676" width="860" height="26" rx="6" fill="#ec4899"/>
+  <text x="490" y="694" class="tbl">office_message（V31 平台消息 · 对外发送）</text>
+  <text x="70" y="718" class="field">tenant_id / platform / app_id / message_type</text>
+  <text x="70" y="733" class="field">recipient_type / recipient_ids / title / content</text>
+  <text x="70" y="748" class="field">status: PENDING/SENDING/SUCCESS/FAILED/PARTIAL_SUCCESS</text>
+  <text x="70" y="763" class="field">platform_message_id / retry_count / max_retry_count / sent_at</text>
+  <text x="70" y="782" class="type">V31；向第三方平台(飞书/钉钉/企微)推送消息</text>
+
+  <!-- ============ Group 4: 审批 / 日历 / 文档 ============ -->
+  <rect x="960" y="470" width="400" height="330" rx="8" fill="#fffbeb" stroke="#d97706" stroke-width="1.6"/>
+  <text x="980" y="494" class="grp" fill="#d97706">审批 · 日历 · 文档（V32-V35）</text>
+
+  <!-- office_approval_process -->
+  <rect x="980" y="510" width="360" height="88" rx="6" fill="#ffffff" stroke="#d97706" stroke-width="1.8"/>
+  <rect x="980" y="510" width="360" height="26" rx="6" fill="#d97706"/>
+  <text x="1160" y="528" class="tbl">office_approval_process</text>
+  <text x="990" y="552" class="field">platform / platform_instance_id</text>
+  <text x="990" y="567" class="field">template_id / title / status / form_data</text>
+  <text x="990" y="582" class="field">initiator_id / current_approver_ids</text>
+  <text x="990" y="597" class="type">V32；审批实例双向同步</text>
+
+  <!-- office_calendar_event -->
+  <rect x="980" y="612" width="360" height="88" rx="6" fill="#ffffff" stroke="#d97706" stroke-width="1.6"/>
+  <rect x="980" y="612" width="360" height="26" rx="6" fill="#d97706"/>
+  <text x="1160" y="630" class="tbl">office_calendar_event</text>
+  <text x="990" y="654" class="field">platform / platform_event_id / title</text>
+  <text x="990" y="669" class="field">organizer_id / start_time / end_time</text>
+  <text x="990" y="684" class="field">participant_ids / recurrence_rule / status</text>
+  <text x="990" y="699" class="type">V34；日历事件同步</text>
+
+  <!-- office_document_info -->
+  <rect x="980" y="714" width="360" height="72" rx="6" fill="#ffffff" stroke="#d97706" stroke-width="1.6"/>
+  <rect x="980" y="714" width="360" height="26" rx="6" fill="#d97706"/>
+  <text x="1160" y="732" class="tbl">office_document_info</text>
+  <text x="990" y="756" class="field">platform / platform_document_id / type</text>
+  <text x="990" y="771" class="field">owner_id / parent_folder_id / is_folder / permission</text>
+  <text x="990" y="786" class="type">V35；文档(夹)同步</text>
+
+  <!-- ============ Footer ============ -->
+  <text x="700" y="850" class="note" text-anchor="middle">核心关系：office_platform_app 定义平台应用 → office_identity_binding 绑定第三方身份 → office_organization_mapping 映射组织/人员；</text>
+  <text x="700" y="874" class="note" text-anchor="middle">消息体系双轨：off_*（V57 内部门户消息：模板→消息→收件人） 与 office_message（V31 对外推送平台消息）；</text>
+  <text x="700" y="898" class="note" text-anchor="middle">off_department 树形(parent_id) 1—N off_employee(dept_id)；off_sync_history 记录每次通讯录同步批次。</text>
+
+  <!-- legend -->
+  <text x="60" y="936" class="pk">● 主键</text>
+  <text x="180" y="936" class="fk">◆ 外键/关键字段</text>
+  <text x="360" y="936" class="field">普通字段</text>
+  <text x="480" y="936" class="type">类型/取值域</text>
+  <text x="700" y="936" class="note">数据源：V29 平台接入、V31 消息、V32 审批、V34 日历、V35 文档、V57 off_* 通讯录</text>
+</svg>

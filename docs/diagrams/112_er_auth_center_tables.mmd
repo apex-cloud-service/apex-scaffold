@@ -1,0 +1,145 @@
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#eff6ff','primaryTextColor':'#0f172a','primaryBorderColor':'#3b82f6','lineColor':'#2563eb','fontSize':'13px'}}}%%
+erDiagram
+    OAUTH2_REGISTERED_CLIENT ||--o{ OAUTH2_AUTHORIZATION : "registered_client_id"
+    OAUTH2_REGISTERED_CLIENT ||--o{ OAUTH2_AUTHORIZATION_CONSENT : "registered_client_id"
+    OAUTH2_SCOPE_PERMISSION }o--o{ OAUTH2_REGISTERED_CLIENT : "scope"
+
+    SYS_USER ||--o{ OAUTH2_AUTHORIZATION : "principal_name"
+    SYS_USER ||--o{ OAUTH2_AUTHORIZATION_CONSENT : "principal_name"
+    SYS_USER ||--o{ MFA_CONFIG : "user_id"
+    SYS_USER ||--o{ BIOMETRIC_AUTH : "user_id"
+    SYS_USER ||--o{ DEVICE_TRUST : "user_id"
+    SYS_USER ||--o{ LOGIN_HISTORY : "user_id"
+    SYS_USER ||--o{ SECURITY_AUDIT_LOG : "user_id"
+    SYS_USER ||--o{ TOKEN_ROTATION_HISTORY : "user_id"
+
+    OAUTH2_REGISTERED_CLIENT {
+        varchar id PK "客户端主键"
+        varchar client_id UK "客户端标识"
+        varchar client_secret "客户端密钥"
+        varchar client_name "客户端名称"
+        text authorization_grant_types "授权类型"
+        text redirect_uris "回调地址"
+        text scopes "授权范围"
+        varchar previous_client_secret "V47 上一版密钥"
+        timestamp secret_rotated_at "V47 轮换时间"
+        int secret_rotation_count "V47 轮换次数"
+    }
+
+    OAUTH2_AUTHORIZATION {
+        varchar id PK "授权主键"
+        varchar registered_client_id FK "关联客户端"
+        varchar principal_name "资源所有者"
+        varchar authorization_grant_type "授权类型"
+        varchar access_token_hash "V42 Token 哈希"
+        varchar token_family "V42 Token 家族"
+        varchar revoked_at "V42/V58 撤销时间"
+        varchar revoked_by "V58 撤销人"
+        varchar device_id "V48 设备指纹"
+    }
+
+    OAUTH2_AUTHORIZATION_CONSENT {
+        varchar registered_client_id PK "客户端(联合主键)"
+        varchar principal_name PK "用户(联合主键)"
+        text authorities "已授权限"
+    }
+
+    OAUTH2_SCOPE_PERMISSION {
+        bigint id PK "主键"
+        varchar scope "授权范围"
+        varchar permission_code "权限编码"
+        varchar description "描述"
+    }
+
+    OAUTH2_AUDIT_LOG {
+        bigint id PK "主键"
+        varchar client_id "客户端"
+        varchar principal_name "主体"
+        varchar event_type "事件类型"
+        tinyint success "是否成功"
+    }
+
+    JWT_KEYS {
+        bigint id PK "主键"
+        varchar key_version UK "密钥版本"
+        varchar encrypted_secret "AES-256 加密密钥"
+        varchar algorithm "HS256/RS256"
+        varchar status "PENDING/ACTIVE/ROTATING/DEPRECATED/REVOKED"
+        timestamp activated_at "激活时间"
+        timestamp expires_at "过期时间"
+        varchar rotation_reason "轮换原因"
+    }
+
+    MFA_CONFIG {
+        bigint id PK "主键"
+        varchar user_id "用户"
+        bigint tenant_id "租户"
+        varchar type "TOTP/SMS/EMAIL/BACKUP_CODE"
+        varchar status "状态"
+        text backup_codes "备用码"
+        timestamp last_verified_at "最近验证时间"
+        int failed_attempts "失败次数"
+    }
+
+    BIOMETRIC_AUTH {
+        bigint id PK "主键"
+        varchar user_id "用户"
+        bigint tenant_id "租户"
+        varchar type "FINGERPRINT/FACE_ID/IRIS/VOICE/WEBAUTHN"
+        varchar template_id "模板标识"
+        varchar device_id "设备标识"
+        varchar public_key "公钥"
+        varchar status "状态"
+        timestamp last_auth_at "最近认证时间"
+    }
+
+    DEVICE_TRUST {
+        bigint id PK "主键"
+        varchar user_id "用户"
+        bigint tenant_id "租户"
+        varchar device_id "设备标识"
+        varchar device_fingerprint "设备指纹"
+        varchar trust_level "信任等级"
+        int risk_score "风险评分"
+        int auth_count "认证次数"
+        timestamp last_auth_at "最近认证时间"
+    }
+
+    LOGIN_HISTORY {
+        bigint id PK "主键"
+        varchar user_id "用户"
+        varchar username "用户名"
+        varchar login_type "登录方式"
+        tinyint success "是否成功"
+        varchar client_ip "客户端 IP"
+        varchar device_id "设备标识"
+        tinyint is_suspicious "是否可疑"
+    }
+
+    IP_ACCESS_CONTROL {
+        bigint id PK "主键"
+        bigint tenant_id "租户"
+        varchar ip_address "IP 地址"
+        varchar type "WHITELIST/BLACKLIST"
+        tinyint enabled "是否启用"
+        int priority "优先级"
+        timestamp expires_at "过期时间"
+    }
+
+    SECURITY_AUDIT_LOG {
+        bigint id PK "主键"
+        varchar event_type "事件类型"
+        varchar user_id "用户"
+        varchar username "用户名"
+        varchar client_ip "客户端 IP"
+        tinyint success "是否成功"
+        varchar failure_reason "失败原因"
+    }
+
+    TOKEN_ROTATION_HISTORY {
+        bigint id PK "主键"
+        varchar user_id "用户"
+        varchar token_family "Token 家族"
+        varchar previous_jti "上一 JTI"
+        int rotation_count "轮换次数"
+    }

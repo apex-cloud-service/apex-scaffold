@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 990" width="1400" height="990">
+  <defs>
+    <style>
+      .title{font:700 30px sans-serif;fill:#0f172a;text-anchor:middle}
+      .subtitle{font:500 13px sans-serif;fill:#64748b;text-anchor:middle}
+      .cls-name{font:700 13px sans-serif;fill:#0f172a;text-anchor:middle}
+      .cls-stereo{font:500 10px sans-serif;fill:#64748b;text-anchor:middle}
+      .field{font:400 10px monospace;fill:#334155}
+      .method{font:400 10px monospace;fill:#047857}
+      .rel{font:500 10px sans-serif;fill:#64748b}
+      .pkg{font:700 12px sans-serif;fill:#fff}
+      .legend{font:500 11px sans-serif;fill:#475569}
+      .note{font:500 11px sans-serif;fill:#64748b}
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#059669"/></marker>
+    <marker id="arrow-o" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#94a3b8"/></marker>
+    <marker id="diamond" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="10" markerHeight="10" orient="auto"><path d="M 0 6 L 6 1 L 12 6 L 6 11 z" fill="#ffffff" stroke="#059669"/></marker>
+  </defs>
+  <rect width="1400" height="990" fill="#fff"/>
+  <text x="700" y="38" class="title">UML 类图：apex-domain 办公协同领域模型</text>
+  <text x="700" y="60" class="subtitle">com.apex.scaffold.domain.office · 飞书 / 钉钉 / 企业微信 多平台聚合 · 端口-适配器 · v1.3.1</text>
+
+  <!-- package boundary -->
+  <rect x="20" y="84" width="1360" height="836" rx="10" fill="#059669" opacity="0.05" stroke="#059669" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <rect x="20" y="84" width="330" height="30" rx="8" fill="#059669"/>
+  <text x="38" y="104" class="pkg">office (model · message · approval · calendar · document · port)</text>
+
+  <!-- ===== Row 1 ===== -->
+
+  <!-- OfficePlatformApp -->
+  <rect x="40" y="130" width="400" height="256" rx="6" fill="#ecfdf5" stroke="#059669" stroke-width="1.6"/>
+  <text x="240" y="152" class="cls-stereo">«aggregate root · 平台应用配置»</text>
+  <text x="240" y="172" class="cls-name">OfficePlatformApp</text>
+  <line x1="40" y1="182" x2="440" y2="182" stroke="#a7f3d0"/>
+  <text x="54" y="200" class="field">- id: Long</text>
+  <text x="54" y="216" class="field">- tenantId: String</text>
+  <text x="54" y="232" class="field">- platform: OfficePlatform</text>
+  <text x="54" y="248" class="field">- appId: String   (ClientId/CorpId)</text>
+  <text x="54" y="264" class="field">- secretReference: String   (仅存引用名)</text>
+  <text x="54" y="280" class="field">- redirectUri: String</text>
+  <text x="54" y="296" class="field">- signingSecretReference: String</text>
+  <text x="54" y="312" class="field">- capabilities: String   (逗号分隔)</text>
+  <text x="54" y="328" class="field">- enabled: boolean</text>
+  <text x="54" y="344" class="field">- version / deleted: Integer</text>
+  <line x1="40" y1="352" x2="440" y2="352" stroke="#a7f3d0"/>
+  <text x="54" y="370" class="method">@Value 不可变 · 每租户-平台唯一启用</text>
+
+  <!-- OfficeMessage -->
+  <rect x="500" y="130" width="400" height="300" rx="6" fill="#ecfdf5" stroke="#059669" stroke-width="1.6"/>
+  <text x="700" y="152" class="cls-stereo">«aggregate root · 办公消息»</text>
+  <text x="700" y="172" class="cls-name">OfficeMessage</text>
+  <line x1="500" y1="182" x2="900" y2="182" stroke="#a7f3d0"/>
+  <text x="514" y="200" class="field">- id: Long</text>
+  <text x="514" y="216" class="field">- tenantId: String</text>
+  <text x="514" y="232" class="field">- platform: OfficePlatform</text>
+  <text x="514" y="248" class="field">- messageType: MessageType</text>
+  <text x="514" y="264" class="field">- target: MessageTarget</text>
+  <text x="514" y="280" class="field">- content: MessageContent</text>
+  <text x="514" y="296" class="field">- sendStatus: String (PENDING/SUCCESS/FAILED/RECALLED)</text>
+  <text x="514" y="312" class="field">- platformMessageId: String</text>
+  <text x="514" y="328" class="field">- failureReason / retryCount</text>
+  <text x="514" y="344" class="field">- createdAt / sentAt / version</text>
+  <line x1="500" y1="352" x2="900" y2="352" stroke="#a7f3d0"/>
+  <text x="514" y="370" class="method">+ canSend(): boolean</text>
+  <text x="514" y="386" class="method">+ markAsSent(platformMessageId)</text>
+  <text x="514" y="402" class="method">+ markAsFailed(reason)</text>
+  <text x="514" y="418" class="method">+ canRecall(): boolean</text>
+
+  <!-- ApprovalProcess -->
+  <rect x="960" y="130" width="400" height="300" rx="6" fill="#ecfdf5" stroke="#059669" stroke-width="1.6"/>
+  <text x="1160" y="152" class="cls-stereo">«aggregate root · 审批流程»</text>
+  <text x="1160" y="172" class="cls-name">ApprovalProcess</text>
+  <line x1="960" y1="182" x2="1360" y2="182" stroke="#a7f3d0"/>
+  <text x="974" y="200" class="field">- id: Long</text>
+  <text x="974" y="216" class="field">- tenantId: Long</text>
+  <text x="974" y="232" class="field">- platform: String (feishu/dingtalk/wecom)</text>
+  <text x="974" y="248" class="field">- platformInstanceId: String</text>
+  <text x="974" y="264" class="field">- processInstanceId: String</text>
+  <text x="974" y="280" class="field">- templateId / title: String</text>
+  <text x="974" y="296" class="field">- initiatorId / initiatorName: String</text>
+  <text x="974" y="312" class="field">- status: ApprovalStatus (6 态)</text>
+  <text x="974" y="328" class="field">- records: List&lt;ApprovalRecord&gt;</text>
+  <text x="974" y="344" class="field">- currentApproverIds: String   (JSON)</text>
+  <line x1="960" y1="352" x2="1360" y2="352" stroke="#a7f3d0"/>
+  <text x="974" y="370" class="method">+ isCompleted(): boolean</text>
+  <text x="974" y="386" class="method">+ isCancellable(): boolean</text>
+  <text x="974" y="402" class="method">+ updateStatus(newStatus)</text>
+  <text x="974" y="418" class="method">+ addRecord(record)</text>
+
+  <!-- ===== Row 2 ===== -->
+
+  <!-- CalendarEvent -->
+  <rect x="40" y="456" width="400" height="250" rx="6" fill="#ecfdf5" stroke="#059669" stroke-width="1.6"/>
+  <text x="240" y="478" class="cls-stereo">«aggregate root · 日历事件»</text>
+  <text x="240" y="498" class="cls-name">CalendarEvent</text>
+  <line x1="40" y1="508" x2="440" y2="508" stroke="#a7f3d0"/>
+  <text x="54" y="526" class="field">- id: Long</text>
+  <text x="54" y="542" class="field">- tenantId: Long</text>
+  <text x="54" y="558" class="field">- platform: String</text>
+  <text x="54" y="574" class="field">- platformEventId: String</text>
+  <text x="54" y="590" class="field">- title / description: String</text>
+  <text x="54" y="606" class="field">- eventType: CalendarEventType</text>
+  <text x="54" y="622" class="field">- startTime / endTime: LocalDateTime</text>
+  <text x="54" y="638" class="field">- participantIds / meetingRoomId</text>
+  <text x="54" y="654" class="field">- status: String (TENTATIVE/CONFIRMED/CANCELLED)</text>
+  <line x1="40" y1="662" x2="440" y2="662" stroke="#a7f3d0"/>
+  <text x="54" y="680" class="method">+ cancel() / confirm()</text>
+  <text x="54" y="696" class="method">+ updateTime(start, end)  /  isTimeRangeValid()</text>
+
+  <!-- DocumentInfo -->
+  <rect x="500" y="456" width="400" height="250" rx="6" fill="#ecfdf5" stroke="#059669" stroke-width="1.6"/>
+  <text x="700" y="478" class="cls-stereo">«aggregate root · 文档信息»</text>
+  <text x="700" y="498" class="cls-name">DocumentInfo</text>
+  <line x1="500" y1="508" x2="900" y2="508" stroke="#a7f3d0"/>
+  <text x="514" y="526" class="field">- id: Long</text>
+  <text x="514" y="542" class="field">- tenantId: Long</text>
+  <text x="514" y="558" class="field">- platform: String</text>
+  <text x="514" y="574" class="field">- platformDocumentId: String</text>
+  <text x="514" y="590" class="field">- documentType: DocumentType</text>
+  <text x="514" y="606" class="field">- title / path / url: String</text>
+  <text x="514" y="622" class="field">- permission: String (PRIVATE/PUBLIC/SHARED)</text>
+  <text x="514" y="638" class="field">- collaboratorIds: String   (JSON)</text>
+  <text x="514" y="654" class="field">- isArchived: Boolean</text>
+  <line x1="500" y1="662" x2="900" y2="662" stroke="#a7f3d0"/>
+  <text x="514" y="680" class="method">+ archive() / unarchive()  /  isPublic()</text>
+  <text x="514" y="696" class="method">+ updateTitle(newTitle)  /  updatePermission(p)</text>
+
+  <!-- OfficeMember -->
+  <rect x="960" y="456" width="400" height="250" rx="6" fill="#ecfdf5" stroke="#059669" stroke-width="1.6"/>
+  <text x="1160" y="478" class="cls-stereo">«value object · 成员»</text>
+  <text x="1160" y="498" class="cls-name">OfficeMember</text>
+  <line x1="960" y1="508" x2="1360" y2="508" stroke="#a7f3d0"/>
+  <text x="974" y="526" class="field">- externalUserId: String</text>
+  <text x="974" y="542" class="field">- name / mobile / email / avatar</text>
+  <text x="974" y="558" class="field">- deptIds: List&lt;String&gt;   (支持多部门)</text>
+  <text x="974" y="574" class="field">- status: String (ACTIVE/INACTIVE)</text>
+  <text x="974" y="590" class="field">- position / jobNumber: String</text>
+  <text x="974" y="606" class="field">- createdAt / updatedAt: LocalDateTime</text>
+  <line x1="960" y1="640" x2="1360" y2="640" stroke="#a7f3d0"/>
+  <text x="974" y="658" class="method">+ isActive(): boolean</text>
+  <text x="974" y="674" class="method">+ belongsToDept(deptId): boolean</text>
+  <text x="974" y="690" class="method">+ getPrimaryDeptId(): String</text>
+
+  <!-- ===== Row 3 ===== -->
+
+  <!-- MessageContent hierarchy -->
+  <rect x="40" y="740" width="400" height="160" rx="6" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="240" y="762" class="cls-stereo" fill="#1d4ed8">«interface»</text>
+  <text x="240" y="782" class="cls-name">MessageContent</text>
+  <line x1="40" y1="792" x2="440" y2="792" stroke="#bfdbfe"/>
+  <text x="54" y="810" class="method" fill="#1d4ed8">+ getType(): MessageType</text>
+  <text x="54" y="826" class="method" fill="#1d4ed8">+ getText(): String  /  isValid(): boolean</text>
+  <text x="54" y="842" class="method" fill="#1d4ed8">+ toPlatformContent(): Object</text>
+  <text x="54" y="866" class="field">实现：TextMessageContent · MarkdownMessageContent</text>
+  <text x="54" y="884" class="field">           · CardMessageContent</text>
+
+  <!-- Ports -->
+  <rect x="500" y="740" width="860" height="160" rx="6" fill="#fff7ed" stroke="#d97706" stroke-width="1.4"/>
+  <text x="930" y="762" class="cls-stereo" fill="#b45309">«outbound port · 出站端口（依赖倒置）»</text>
+  <text x="930" y="782" class="cls-name">办公协同端口接口</text>
+  <line x1="500" y1="792" x2="1360" y2="792" stroke="#fde68a"/>
+  <text x="514" y="810" class="method" fill="#b45309">MessagePort: sendMessage(target, content) · queryMessageStatus(id) · recallMessage(id) · getPlatformType()</text>
+  <text x="514" y="828" class="method" fill="#b45309">ApprovalPort: 发起审批 / 查询审批详情 / 撤销审批</text>
+  <text x="514" y="846" class="method" fill="#b45309">CalendarPort: 创建日程 / 更新日程 / 查询忙闲</text>
+  <text x="514" y="864" class="method" fill="#b45309">DocumentPort: 上传文档 / 获取文档 / 管理权限</text>
+  <text x="514" y="884" class="field">由领域层定义，基础设施层实现（DingTalk/Feishu/WeCom Client），应用层依赖接口</text>
+
+  <!-- ===== relationships ===== -->
+  <!-- OfficeMessage content composition -->
+  <line x1="600" y1="430" x2="300" y2="740" stroke="#059669" stroke-width="1.3" marker-end="url(#arrow)"/>
+  <text x="330" y="600" class="rel">content 组合 1</text>
+
+  <!-- ApprovalProcess aggregates ApprovalRecord (diamond at process side) -->
+  <line x1="1160" y1="430" x2="1160" y2="470" stroke="#059669" stroke-width="1.3" marker-start="url(#diamond)"/>
+  <text x="1000" y="452" class="rel">records 聚合 1 .. *</text>
+  <rect x="1080" y="470" width="160" height="0" fill="none"/>
+
+  <!-- OfficePlatformApp ..> OfficePlatform use -->
+  <line x1="140" y1="386" x2="120" y2="456" stroke="#94a3b8" stroke-width="1.1" stroke-dasharray="4 3" marker-end="url(#arrow-o)"/>
+  <text x="60" y="424" class="rel">«use»</text>
+
+  <!-- ports ..> aggregates use -->
+  <line x1="700" y1="740" x2="700" y2="430" stroke="#94a3b8" stroke-width="1.1" stroke-dasharray="4 3" marker-end="url(#arrow-o)"/>
+  <text x="710" y="600" class="rel">«use» 适配器实现端口</text>
+
+  <line x1="960" y1="820" x2="1360" y2="430" stroke="#94a3b8" stroke-width="1.0" stroke-dasharray="4 3" marker-end="url(#arrow-o)" opacity="0.6"/>
+
+  <!-- legend / note -->
+  <rect x="20" y="932" width="1360" height="44" rx="6" fill="#f8fafc" stroke="#e2e8f0"/>
+  <text x="38" y="952" class="legend">聚合根：OfficePlatformApp（平台应用配置）· OfficeMessage（消息）· ApprovalProcess（审批）· CalendarEvent（日历）· DocumentInfo（文档）</text>
+  <text x="38" y="968" class="legend">值对象：OfficeMember（成员）· ApprovalRecord（审批记录）；端口：MessagePort / ApprovalPort / CalendarPort / DocumentPort，实现下沉基础设施层</text>
+</svg>

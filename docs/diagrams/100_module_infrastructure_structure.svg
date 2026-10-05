@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 900" width="1400" height="900">
+  <defs>
+    <style>
+      .title{font:700 32px sans-serif;fill:#0f172a;text-anchor:middle}
+      .subtitle{font:500 13px sans-serif;fill:#64748b;text-anchor:middle}
+      .grp{font:600 13px sans-serif;fill:#fff}
+      .box-title{font:600 12px sans-serif;fill:#0f172a}
+      .box-desc{font:400 10px sans-serif;fill:#475569}
+      .code{font:500 9.5px monospace;fill:#2563eb}
+      .note{font:500 11px sans-serif;fill:#64748b}
+      .legend{font:500 11px sans-serif;fill:#475569}
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#d97706"/>
+    </marker>
+  </defs>
+  <rect width="1400" height="900" fill="#fff"/>
+  <text x="700" y="40" class="title">模块结构：apex-infrastructure</text>
+  <text x="700" y="64" class="subtitle">com.apex.scaffold.infrastructure · 基础设施层 · 实现领域契约 · 能力最重的模块 · v1.3.1</text>
+
+  <rect x="40" y="92" width="430" height="740" rx="10" fill="#d97706" opacity="0.06" stroke="#d97706" stroke-width="2"/>
+  <rect x="40" y="92" width="430" height="40" rx="10" fill="#d97706"/>
+  <text x="60" y="118" class="grp">包结构（com.apex.scaffold.infrastructure.*）</text>
+  <text x="60" y="148" class="code">├─ persistence / persistence.mapper / po</text>
+  <text x="60" y="170" class="code">│  ├─ repository / converter / aspect</text>
+  <text x="60" y="192" class="code">│  ├─ datapermission / listener / service</text>
+  <text x="60" y="214" class="code">├─ cache（config/aspect/metrics/prewarm/task）</text>
+  <text x="60" y="236" class="code">├─ mq（config/aspect/listener/dlq/monitor）</text>
+  <text x="60" y="258" class="code">├─ ratelimit（local/distributed/adaptive）</text>
+  <text x="60" y="280" class="code">├─ outbox（entity/mapper/service/dispatcher）</text>
+  <text x="60" y="302" class="code">├─ office（client: dingtalk/feishu/wecom）</text>
+  <text x="60" y="324" class="code">│  ├─ office.persistence / converter / mapper</text>
+  <text x="60" y="346" class="code">│  └─ office.service / spi / security / repository</text>
+  <text x="60" y="368" class="code">├─ security / encryption / oauth2 / wechat</text>
+  <text x="60" y="390" class="code">├─ resilience / circuitbreaker / chaos</text>
+  <text x="60" y="412" class="code">├─ event / scheduler / audit / log / logging</text>
+  <text x="60" y="434" class="code">├─ remote / storage / excel / mail / metrics</text>
+  <text x="60" y="456" class="code">└─ search / moderation / notification / config</text>
+
+  <text x="60" y="504" class="legend" font-weight="600">职责定位</text>
+  <text x="60" y="530" class="box-desc">• 唯一允许触碰 DB/MQ/Redis/外部 SDK 的层</text>
+  <text x="60" y="552" class="box-desc">• 实现 domain/port 与 repository 接口</text>
+  <text x="60" y="574" class="box-desc">• 提供跨切基础设施能力（缓存/限流/熔断/消息）</text>
+
+  <text x="60" y="622" class="legend" font-weight="600">依赖</text>
+  <text x="60" y="648" class="box-desc">→ 依赖 apex-domain + apex-common</text>
+  <text x="60" y="670" class="box-desc">→ 依赖 MyBatis / Redis / RocketMQ 等 vendor</text>
+  <text x="60" y="692" class="box-desc">← 被 application / interfaces / auth-center 依赖</text>
+
+  <!-- right: capability grid -->
+  <rect x="500" y="92" width="860" height="250" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="520" y="120" class="box-title" font-size="14">持久化与数据</text>
+  <rect x="520" y="136" width="270" height="190" rx="6" fill="#fff" stroke="#fed7aa" stroke-width="1.5"/>
+  <text x="533" y="158" class="box-title">persistence</text>
+  <text x="533" y="178" class="code">mapper / po / repository</text>
+  <text x="533" y="196" class="code">datapermission 数据权限</text>
+  <text x="533" y="214" class="code">converter / listener / aspect</text>
+  <text x="533" y="240" class="box-title">multi-tenant / audit</text>
+  <text x="533" y="260" class="code">租户隔离 SQL 注入</text>
+  <text x="533" y="278" class="code">审计字段自动填充</text>
+  <rect x="800" y="136" width="270" height="190" rx="6" fill="#fff" stroke="#fed7aa" stroke-width="1.5"/>
+  <text x="813" y="158" class="box-title">cache</text>
+  <text x="813" y="178" class="code">config / aspect / wrapper</text>
+  <text x="813" y="196" class="code">metrics / prewarm / task</text>
+  <text x="813" y="214" class="code">loader / support / filter</text>
+  <text x="813" y="240" class="box-title">多级缓存</text>
+  <text x="813" y="260" class="code">本地+Redis 一致性</text>
+  <text x="813" y="278" class="code">失效/穿透/雪崩防护</text>
+  <rect x="1080" y="136" width="270" height="190" rx="6" fill="#fff" stroke="#fed7aa" stroke-width="1.5"/>
+  <text x="1093" y="158" class="box-title">outbox / event</text>
+  <text x="1093" y="178" class="code">entity / mapper / service</text>
+  <text x="1093" y="196" class="code">dispatcher 轮询分发</text>
+  <text x="1093" y="214" class="code">event 领域事件落库</text>
+  <text x="1093" y="240" class="box-title">分布式事务</text>
+  <text x="1093" y="260" class="code">本地消息表 Outbox</text>
+  <text x="1093" y="278" class="code">幂等消费保障</text>
+
+  <rect x="500" y="362" width="860" height="250" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="520" y="390" class="box-title" font-size="14">运行时能力</text>
+  <rect x="520" y="406" width="270" height="190" rx="6" fill="#fff" stroke="#fed7aa" stroke-width="1.5"/>
+  <text x="533" y="428" class="box-title">mq</text>
+  <text x="533" y="448" class="code">config / listener / handler</text>
+  <text x="533" y="468" class="code">dlq 死信 · monitor · metrics</text>
+  <text x="533" y="488" class="code">aspect / constant / protocol</text>
+  <text x="533" y="514" class="box-title">RocketMQ</text>
+  <text x="533" y="534" class="code">可靠消息 / 告警</text>
+  <text x="533" y="552" class="code">消费失败重试</text>
+  <rect x="800" y="406" width="270" height="190" rx="6" fill="#fff" stroke="#fed7aa" stroke-width="1.5"/>
+  <text x="813" y="428" class="box-title">ratelimit / resilience</text>
+  <text x="813" y="448" class="code">local / distributed / adaptive</text>
+  <text x="813" y="468" class="code">resilience / circuitbreaker</text>
+  <text x="813" y="488" class="code">chaos 混沌实验</text>
+  <text x="813" y="514" class="box-title">容错</text>
+  <text x="813" y="534" class="code">限流降级熔断</text>
+  <text x="813" y="552" class="code">自适应避让</text>
+  <rect x="1080" y="406" width="270" height="190" rx="6" fill="#fff" stroke="#fed7aa" stroke-width="1.5"/>
+  <text x="1093" y="428" class="box-title">security / 外部集成</text>
+  <text x="1093" y="448" class="code">security · encryption · oauth2</text>
+  <text x="1093" y="468" class="code">wechat · remote · storage</text>
+  <text x="1093" y="488" class="code">mail · excel · notification</text>
+  <text x="1093" y="514" class="box-title">国际化渠道</text>
+  <text x="1093" y="534" class="code">企业微信/短信/邮件</text>
+  <text x="1093" y="552" class="code">对象存储/远程调用</text>
+
+  <rect x="500" y="632" width="860" height="200" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="520" y="660" class="box-title" font-size="14">办公协同适配</text>
+  <text x="520" y="690" class="box-desc">office：dingtalk / feishu / wecom 三方客户端封装</text>
+  <text x="520" y="718" class="box-desc">含 office.persistence / converter / mapper / repository / security / spi / service</text>
+  <text x="520" y="746" class="box-desc">作为 domain.office.port 的实现方，对接审批/日历/文档/消息</text>
+  <text x="1040" y="660" class="box-title" font-size="14">关键 Trace</text>
+  <text x="1040" y="690" class="box-desc">调度 scheduler / 日志 logging / 指标 metrics</text>
+  <text x="1040" y="718" class="box-desc">审计 audit / 检索 search / 审核 moderation</text>
+  <text x="1040" y="746" class="code">集中承载基础设施技术细节</text>
+
+  <text x="700" y="872" class="note" text-anchor="middle">apex-infrastructure 是 DDD 依赖倒置的落地层：实现 domain 端口，供应用与接口层调用</text>
+</svg>

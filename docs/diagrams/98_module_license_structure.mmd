@@ -1,0 +1,33 @@
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#0891b2','primaryTextColor':'#0f172a','primaryBorderColor':'#0891b2','lineColor':'#64748b','fontFamily':'sans-serif'}}}%%
+flowchart TB
+  subgraph Starter["apex-license-spring-boot-starter"]
+    A1[LicenseAutoConfiguration 自动配置]
+    A2[LicenseLoader 加载 license.key]
+    A3[MachineFingerprintCollector 指纹采集]
+    A4[LicenseValidator 指纹/有效期/版本校验]
+    A5[LicenseFeatureGate + FeatureGateAspect 特性开关]
+    A6[LicenseRevalidationScheduler 定时复检]
+    A7[ConditionalOnLicenseFeature 条件装配]
+    A1 --> A2 --> A3 --> A4 --> A5
+    A6 --> A4
+    A7 --> A5
+  end
+
+  subgraph Tools["apex-license-tools"]
+    T1[LicenseGenerator 签发工具]
+  end
+
+  subgraph Model["apex-common.license 模型"]
+    M1[LicenseInfo]
+    M2[LicenseVersion]
+  end
+
+  T1 -- "私钥签名" --> LIC[(license.key 许可证文件)]
+  LIC -- "公钥验签" --> A2
+  T1 --> M1
+  A4 --> M1
+  T1 --> M2
+  A4 --> M2
+
+  NOTE["授权闭环：签发(tools) → 分发 → 启动验签(starter) → 运行期复检"]
+  A4 -.-> NOTE

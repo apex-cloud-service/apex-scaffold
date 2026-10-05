@@ -75,7 +75,7 @@
 
 | 编号 | 文件名                                   | 标题        | 说明                     |
 | -- | ------------------------------------- | --------- | ---------------------- |
-| 08 | `08_database_er_diagram.svg`          | 数据库ER图    | 40+表结构,Flyway V1-V26完整迁移历史 |
+| 08 | `08_database_er_diagram.svg`          | 数据库ER图    | 40+表结构,Flyway V1-V58完整迁移历史(mysql 为准) |
 | 09 | `09_multi_level_cache_architecture.svg` | 多级缓存架构    | Caffeine L1 + Redis L2,80-95%命中率 |
 | 10 | `10_rate_limit_circuit_breaker.svg`   | 限流熔断机制    | Sentinel+Resilience4j,三档熔断策略 |
 | 11 | `11_data_permission_filter.svg`       | 数据权限过滤    | @DataScope AOP + MyBatis-Plus SQL注入 |

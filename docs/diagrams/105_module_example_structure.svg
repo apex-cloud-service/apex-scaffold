@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 860" width="1400" height="860">
+  <defs>
+    <style>
+      .title{font:700 32px sans-serif;fill:#0f172a;text-anchor:middle}
+      .subtitle{font:500 13px sans-serif;fill:#64748b;text-anchor:middle}
+      .grp{font:600 13px sans-serif;fill:#fff}
+      .box-title{font:600 12px sans-serif;fill:#0f172a}
+      .box-desc{font:400 10px sans-serif;fill:#475569}
+      .code{font:500 9.5px monospace;fill:#2563eb}
+      .note{font:500 11px sans-serif;fill:#64748b}
+      .legend{font:500 11px sans-serif;fill:#475569}
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#0891b2"/>
+    </marker>
+  </defs>
+  <rect width="1400" height="860" fill="#fff"/>
+  <text x="700" y="40" class="title">模块结构：apex-example</text>
+  <text x="700" y="64" class="subtitle">com.apex.example · 示例应用 · 可执行入口（组合全部核心模块）· v1.3.1</text>
+
+  <rect x="40" y="92" width="430" height="700" rx="10" fill="#0891b2" opacity="0.06" stroke="#0891b2" stroke-width="2"/>
+  <rect x="40" y="92" width="430" height="40" rx="10" fill="#0891b2"/>
+  <text x="60" y="118" class="grp">包结构（com.apex.example.*）</text>
+  <text x="60" y="150" class="code">├─ ExampleApplication（启动入口）</text>
+  <text x="60" y="172" class="code">├─ config</text>
+  <text x="60" y="194" class="code">├─ handler（示例端点处理）</text>
+  <text x="60" y="216" class="code">├─ dto</text>
+  <text x="60" y="238" class="code">├─ service</text>
+  <text x="60" y="260" class="code">├─ repository</text>
+  <text x="60" y="282" class="code">├─ model</text>
+  <text x="60" y="304" class="code">└─ cache</text>
+
+  <text x="60" y="352" class="legend" font-weight="600">职责定位</text>
+  <text x="60" y="378" class="box-desc">• 全量组合依赖的可执行示例</text>
+  <text x="60" y="400" class="box-desc">• 演示核心能力：路由/缓存/导入导出</text>
+  <text x="60" y="422" class="box-desc">• 作为最佳实践模板供参考</text>
+
+  <text x="60" y="470" class="legend" font-weight="600">依赖</text>
+  <text x="60" y="496" class="box-desc">→ 依赖 common + domain + application</text>
+  <text x="60" y="518" class="box-desc">   + infrastructure + interfaces（全部核心）</text>
+  <text x="60" y="540" class="box-desc">← 依赖深度 L5（顶级组合交付）</text>
+
+  <!-- right -->
+  <rect x="500" y="92" width="860" height="250" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="520" y="120" class="box-title" font-size="14">示例能力</text>
+  <rect x="520" y="136" width="270" height="190" rx="6" fill="#fff" stroke="#99f6e4" stroke-width="1.5"/>
+  <text x="533" y="158" class="box-title">用户示例</text>
+  <text x="533" y="178" class="code">ExampleUserHandler</text>
+  <text x="533" y="196" class="code">ExampleUserService</text>
+  <text x="533" y="214" class="code">ExampleUserMapper</text>
+  <text x="533" y="232" class="box-desc">ExampleUser CRUD + 导出 DTO</text>
+  <text x="533" y="258" class="box-title">网关示例</text>
+  <text x="533" y="278" class="code">ExampleCapabilityHandler/Service</text>
+  <text x="533" y="296" class="box-desc">能力路由演示</text>
+  <rect x="800" y="136" width="270" height="190" rx="6" fill="#fff" stroke="#99f6e4" stroke-width="1.5"/>
+  <text x="813" y="158" class="box-title">路由集成</text>
+  <text x="813" y="178" class="code">ExampleRouterConfig</text>
+  <text x="813" y="196" class="box-desc">注册示例端点路由</text>
+  <text x="813" y="214" class="box-desc">与 interfaces 路由聚合</text>
+  <text x="813" y="258" class="box-title">DTO</text>
+  <text x="813" y="278" class="code">CreateUserRequest · UserResponse</text>
+  <text x="813" y="296" class="code">ExampleUserExportDTO</text>
+  <rect x="1080" y="136" width="270" height="190" rx="6" fill="#fff" stroke="#99f6e4" stroke-width="1.5"/>
+  <text x="1093" y="158" class="box-title">缓存预热</text>
+  <text x="1093" y="178" class="code">UserCachePrewarmStrategy</text>
+  <text x="1093" y="196" class="box-desc">多级缓存预热示例</text>
+  <text x="1093" y="214" class="box-desc">启动加载到 Redis</text>
+  <text x="1093" y="258" class="box-title">模型</text>
+  <text x="1093" y="278" class="code">ExampleUser</text>
+  <text x="1093" y="296" class="box-desc">示例实体定义</text>
+
+  <rect x="500" y="362" width="860" height="180" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="520" y="390" class="box-title" font-size="14">组合装载示意</text>
+  <rect x="520" y="406" width="250" height="120" rx="6" fill="#fff" stroke="#99f6e4" stroke-width="1.5"/>
+  <text x="533" y="428" class="box-title">ExampleApplication</text>
+  <text x="533" y="448" class="code">@SpringBootApplication</text>
+  <text x="533" y="468" class="box-desc">扫描 assembler 组合</text>
+  <text x="533" y="488" class="box-desc">启动 interfaces 路由</text>
+  <text x="533" y="508" class="box-desc">加载 license 校验</text>
+  <rect x="790" y="406" width="260" height="120" rx="6" fill="#fff" stroke="#99f6e4" stroke-width="1.5"/>
+  <text x="803" y="428" class="box-title">config</text>
+  <text x="803" y="448" class="code">application.yaml 装配</text>
+  <text x="803" y="468" class="box-desc">数据源/Redis/MQ 连接</text>
+  <text x="803" y="488" class="box-desc">认证/租户配置</text>
+  <text x="1060" y="406" width="280" height="120" rx="6" fill="#fff" stroke="#99f6e4" stroke-width="1.5"/>
+  <text x="1073" y="428" class="box-title">演示链路</text>
+  <text x="1073" y="448" class="code">HTTP → interfaces → application</text>
+  <text x="1073" y="468" class="box-desc">→ domain → infrastructure</text>
+  <text x="1073" y="488" class="box-desc">→ DB/Redis</text>
+  <line x1="770" y1="466" x2="790" y2="466" stroke="#0891b2" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="1050" y1="466" x2="1060" y2="466" stroke="#0891b2" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <rect x="500" y="562" width="860" height="230" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="520" y="590" class="box-title" font-size="14">设计约束</text>
+  <text x="520" y="620" class="box-desc">1. 仅演示与组合，不重复实现底层能力。</text>
+  <text x="520" y="648" class="box-desc">2. 作为依赖最深（L5）的组合交付，验证各模块可协作。</text>
+  <text x="520" y="676" class="box-desc">3. 提供缓存预热、导入导出等进阶示例。</text>
+  <text x="780" y="590" class="box-title" font-size="14">典型引用方</text>
+  <text x="780" y="620" class="box-desc">以 apex-example 为蓝本接入真实业务入口</text>
+  <text x="780" y="648" class="box-desc">interfaces 提供底层路由/治理，example 负责编排演示域</text>
+  <text x="780" y="676" class="note">示例强调无模板化代码，组件通过 Spring 装配自动注入</text>
+
+  <text x="700" y="838" class="note" text-anchor="middle">apex-example 是可执行示例应用：全量组合核心模块，演示路由/缓存/导入导出等实战能力与最佳实践</text>
+</svg>

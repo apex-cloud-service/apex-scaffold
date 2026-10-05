@@ -1,0 +1,58 @@
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#eef2ff','primaryTextColor':'#0f172a','primaryBorderColor':'#4f46e5','lineColor':'#64748b','fontFamily':'sans-serif'}}}%%
+flowchart TB
+    ROOT["模块结构：apex-common<br/>com.apex.scaffold.common · 通用基础能力 · 无启动入口 · 被 9 个模块依赖 · v1.3.1"]
+
+    subgraph PKG["包结构（com.apex.scaffold.common.*）"]
+        direction TB
+        P1["dto / result / context / enums"]
+        P2["exception / error / constant"]
+        P3["util / util.ratelimit / util.ratelimit.algorithm"]
+        P4["util.id / id"]
+        P5["config / security / annotation"]
+        P6["scheduler / state / spi"]
+        P7["audit / event"]
+        P8["persistence / persistence.util / persistence.po"]
+        P9["governance"]
+        P10["license"]
+        P1 --> P2 --> P3 --> P4 --> P5 --> P6 --> P7 --> P8 --> P9 --> P10
+    end
+
+    subgraph CAP["核心能力域"]
+        direction LR
+        C1["统一模型<br/>dto / result / enums<br/>exception / error<br/>R&lt;T&gt; · PageResult · ErrorCode<br/>BizException"]
+        C2["上下文 / 安全<br/>context / security<br/>annotation<br/>TenantContext · UserContext<br/>@DataScope · @Idempotent"]
+        C3["限流算法<br/>util.ratelimit.algorithm<br/>util.id / id<br/>TokenBucket · LeakyBucket<br/>SlidingWindow · Snowflake"]
+        C4["事件 / SPI / 治理<br/>event / spi / governance<br/>state / scheduler<br/>DomainEvent · ExtensionPoint<br/>StateMachine · RetryPolicy"]
+        C1 --- C2 --- C3 --- C4
+    end
+
+    subgraph SUP["通用支撑组件"]
+        direction LR
+        S1["persistence<br/>持久化基类与工具<br/>BasePO · BaseMapper 约定<br/>persistence.util<br/>多租户 / 数据权限 SQL 注入支持<br/>字段自动填充（审计字段）"]
+        S2["audit<br/>审计日志抽象<br/>OperationLog · AuditEvent<br/>异步批量落库契约<br/>配合 interfaces 层 OperationLogAspect"]
+        S3["license（模型）<br/>License 数据模型 / 校验契约<br/>LicenseInfo · LicenseStatus<br/>与 license-starter 配合<br/>（本模块仅定义，不含自动配置）"]
+        S1 --- S2 --- S3
+    end
+
+    subgraph RULE["设计约束 · 职责定位"]
+        direction TB
+        R0["职责定位：跨模块复用的通用能力，零业务耦合"]
+        R1["1. 无业务语义：不得出现 User/Role/Workflow 等领域概念，保证可被所有层安全引用。"]
+        R2["2. 无 Web 层依赖：不引入 spring-boot-starter-web/webflux，避免污染反应式栈。"]
+        R3["3. 限流算法为纯函数式实现，可被本地限流与 Sentinel 自适应策略共同复用。"]
+        R4["4. 上下文使用 ThreadLocal + Reactor Context 双通道，兼容 WebFlux 异步链路。"]
+        R5["5. 事件/SPI 作为领域与基础设施的解耦契约，不含具体实现。"]
+        R6["依赖：仅依赖 Spring 基础 / 工具库（无内部模块）；被除 generator 外所有模块依赖（依赖深度 L0）"]
+        R7["典型引用方：apex-domain · apex-infrastructure · apex-application · apex-workflow · apex-interfaces<br/>apex-auth-center · apex-example · apex-license-spring-boot-starter"]
+        R0 --> R1 --> R2 --> R3 --> R4 --> R5 --> R6 --> R7
+    end
+
+    NOTE["apex-common 是全局依赖根（L0），承载通用能力/上下文/限流算法/持久化与事件契约<br/>唯一不依赖 apex-common 的内部模块：apex-generator（独立模板引擎）"]
+
+    ROOT --> PKG
+    ROOT --> CAP
+    ROOT --> SUP
+    ROOT --> RULE
+    CAP --> SUP
+    SUP --> RULE
+    RULE --> NOTE

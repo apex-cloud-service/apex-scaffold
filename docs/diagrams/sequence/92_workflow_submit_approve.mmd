@@ -1,0 +1,100 @@
+sequenceDiagram
+    autonumber
+    participant App as 客户端
+    participant Router as WorkflowRouter<br/>(WebFlux 函数式)
+    participant Handler as WorkflowHandler
+    participant Svc as WorkflowService<br/>DDD 命令编排
+    participant DefRepo as WorkflowDefinitionRepository
+    participant InstRepo as ProcessInstanceRepository
+    participant TaskRepo as TaskRepository
+    participant DB as MySQL（阻塞池）
+
+    Note over App,DB: 工作流提交流转：发起实例 → 待办 → 审批完成。引擎为轻量 DAG，静态节点流转
+
+    rect rgb(239, 246, 255)
+        Note over App,DB: ① 发起流程实例
+        App->>+Router: POST /api/v1/workflows/{workflowCode}/instances
+        Note right of App: {businessKey, initiatorId, contextJson}
+        Router->>+Handler: startProcessInstance(req)
+        Handler->>+Svc: startProcessInstance(code, businessKey, initiatorId, contextJson)
+        Svc->>+DefRepo: findByCode(code)
+        DefRepo->>DB: SELECT * FROM workflow_definition WHERE code=?
+        DB-->>DefRepo: WorkflowDefinition（含 DAG JSON）
+        DefRepo-->>-Svc: definition
+        Svc->>Svc: 组装 ProcessInstance<br/>status="RUNNING", businessKey, contextJson
+        Svc->>+InstRepo: insert(instance)
+        InstRepo->>DB: INSERT INTO workflow_instance
+        DB-->>InstRepo: 实例 ID
+        InstRepo-->>-Svc: 保存成功
+        Svc-->>-Handler: ProcessInstance
+        Handler-->>-App: 200 {instanceId, status:"RUNNING"}
+        Note right of Svc: 静态 DAG：当前实现未按 DAG 自动推进创建首个待办任务
+    end
+
+    rect rgb(255, 251, 235)
+        Note over App,DB: ② 查询当前用户待办
+        App->>+Router: GET /api/v1/workflows/tasks/pending
+        Router->>+Handler: listPendingTasks(pageNum, pageSize)
+        Handler->>+Svc: getPendingTasks(assigneeId)
+        Svc->>+TaskRepo: findByAssignee(assigneeId)
+        TaskRepo->>DB: SELECT * FROM workflow_task WHERE assignee_id=? AND status='PENDING'
+        DB-->>TaskRepo: Task 列表
+        TaskRepo-->>-Svc: List<Task>
+        Svc-->>-Handler: 待办列表
+        Handler-->>-App: 200 {tasks, page}
+    end
+
+    rect rgb(240, 253, 244)
+        Note over App,DB: ③ 审批通过（completeTask）
+        App->>+Router: POST /api/v1/workflows/tasks/{taskId}/complete
+        Router->>+Handler: completeTask(taskId, {operatorId, comment})
+        Handler->>+Svc: completeTask(taskId, approverId, comment)
+        Svc->>+TaskRepo: findById(taskId)
+        TaskRepo->>DB: SELECT * FROM workflow_task WHERE id=?
+        DB-->>TaskRepo: Task
+        TaskRepo-->>-Svc: task
+        Svc->>Svc: task.status = "COMPLETED"<br/>task.completedTime = now
+        Svc->>+TaskRepo: updateById(task)
+        TaskRepo->>DB: UPDATE workflow_task SET status='COMPLETED'
+        DB-->>TaskRepo: 更新成功
+        TaskRepo-->>-Svc: 1
+        Svc-->>-Handler: 完成
+        Handler-->>-App: 200 OK
+        Note right of Svc: 缺陷：当前 completeTask 不驱动流程实例状态流转，也未见下一节点任务创建
+    end
+
+    rect rgb(255, 247, 237)
+        Note over App,DB: ④ 驳回（rejectTask）与超时自动处理
+        App->>+Router: POST /api/workflow/tasks/{taskId}/rollback
+        Router->>+Handler: rollbackTask(req)
+        Handler->>+Svc: rollbackToNode(taskId, targetNodeCode, operatorId, reason)
+        Svc->>+TaskRepo: findById(taskId)
+        TaskRepo-->>-Svc: task
+        Svc->>Svc: task.status = "ROLLED_BACK"
+        Svc->>+TaskRepo: updateById(task) + 创建新待办任务
+        TaskRepo->>DB: UPDATE + INSERT workflow_task
+        DB-->>TaskRepo: 保存成功
+        TaskRepo-->>-Svc: 完成
+        Svc-->>-App: 200 OK
+
+        Note over Svc: WorkflowTimeoutHandler @Scheduled(fixedDelay=300s)<br/>扫描 PENDING 且 timeout_at 过期任务
+        Svc->>Svc: 策略 = ESCALATE/AUTO_COMPLETE/NOTIFY
+        alt ESCALATE
+            Svc->>Svc: transferTask(taskId, 1L=系统管理员, "任务超时自动升级")
+        else AUTO_COMPLETE
+            Svc->>Svc: completeTask(taskId, assigneeId, "系统自动审批（超时）")
+        else NOTIFY
+            Note over Svc: 仅记录日志，任务保持 PENDING
+        end
+    end
+
+    rect rgb(250, 245, 255)
+        Note over App,DB: ⑤ 转办 / 委派 / 挂起 / 恢复（操作类端点）
+        App->>Router: POST /api/workflow/tasks/{taskId}/transfer → transferTask<br/>POST /api/workflow/tasks/{taskId}/delegate → delegateTask
+        Note right of Router: 校验：仅 PENDING 且归属当前操作人
+        App->>Router: POST /api/workflow/instances/{instanceId}/suspend → suspendInstance<br/>POST /api/workflow/instances/{instanceId}/resume → resumeInstance
+        Note right of Router: 校验：已完成/已驳回不可挂起；仅 SUSPENDED 可恢复
+        Router-->>App: 200 / 4xx（平台校验错误）
+    end
+
+    Note over App,DB: 缺陷：rejectTask 中 processInstanceRepository.findById(taskId) 使用了任务ID而非实例ID，流程状态定位可能串号

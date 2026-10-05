@@ -1,0 +1,63 @@
+%%{
+  init: {
+    'theme': 'base',
+    'themeVariables': {
+      'primaryColor': '#eef2ff',
+      'primaryTextColor': '#0f172a',
+      'primaryBorderColor': '#4f46e5',
+      'lineColor': '#475569',
+      'fontFamily': 'system-ui, sans-serif'
+    }
+  }
+}%%
+flowchart TD
+    subgraph P1["① 租户上下文装配"]
+        A1["HTTP 请求进入<br/>X-Tenant-Id 头 / JWT Claim"] --> A2["JwtAuthenticationFilter<br/>解析 JWT，从 sys_user.tenant_id<br/>取可信租户"]
+        A2 --> A3["TenantContext.setTenantId()<br/>ThreadLocal + Reactor Context"]
+        A3 --> A4["Reactor 全局 Hook<br/>onScheduleHook / onEachOperator<br/>跨线程传播租户"]
+        A4 --> A5["TenantAspect<br/>@TenantAware 方法级装配"]
+    end
+
+    subgraph P2["② 行级 SQL 隔离"]
+        A5 --> B1["MyBatis-Plus<br/>TenantLineInnerInterceptor"]
+        B1 --> B2["DefaultTenantLineHandler.getTenantId()<br/>取 TenantContext.currentTenantId()"]
+        B2 --> B3{"ignoreTable?<br/>IGNORE_TABLES 白名单"}
+        B3 -- "是（15 张平台级表）" --> B4["不加租户条件<br/>sys_menu/sys_role/sys_tenant/<br/>sys_config/flyway_schema_history/..."]
+        B3 -- "否" --> B5["改写 SQL<br/>自动追加 WHERE tenant_id = ?"]
+        B5 --> B6["执行 → MySQL<br/>索引 idx_tenant_id"]
+        B2 -. "上下文未装配" .-> BX["抛 IllegalStateException<br/>拒绝执行租户 SQL"]
+    end
+
+    subgraph P3["③ 租户生命周期（TenantApplicationService）"]
+        C1["创建租户<br/>→ status = ACTIVE"] --> C2{"状态流转"}
+        C2 --> C3["ACTIVE → DISABLED<br/>禁用（可恢复）"]
+        C2 --> C4["ACTIVE/FROZEN → DEACTIVATED<br/>停用"]
+        C2 --> C5["DEACTIVATED → ARCHIVED<br/>归档"]
+        C2 --> C6["FROZEN<br/>冻结（超配额/欠费）"]
+        C3 -. "恢复" .-> C1
+        C4 -. "恢复" .-> C1
+    end
+
+    subgraph P4["④ 配额约束"]
+        D1["TenantQuota 校验"] --> D2["max_users 最大用户数<br/>NULL=不限制"]
+        D1 --> D3["max_storage_mb 最大存储<br/>NULL=不限制"]
+        D2 --> D4{"超限?"}
+        D3 --> D4
+        D4 -- "是" --> D5["拒绝写入 / 冻结租户"]
+        D4 -- "否" --> D6["放行"]
+    end
+
+    B6 --> C1
+    A5 --> D1
+
+    classDef ctx fill:#eef2ff,stroke:#4f46e5,stroke-width:1.8px,color:#0f172a;
+    classDef sql fill:#ecfdf5,stroke:#059669,stroke-width:1.8px,color:#0f172a;
+    classDef life fill:#eff6ff,stroke:#3b82f6,stroke-width:1.8px,color:#0f172a;
+    classDef quota fill:#fffbeb,stroke:#d97706,stroke-width:1.8px,color:#0f172a;
+    classDef warn fill:#fef2f2,stroke:#dc2626,stroke-width:1.4px,color:#b91c1c,stroke-dasharray:5 3;
+
+    class A1,A2,A3,A4,A5 ctx;
+    class B1,B2,B3,B4,B5,B6 sql;
+    class C1,C2,C3,C4,C5,C6 life;
+    class D1,D2,D3,D4,D5,D6 quota;
+    class BX warn;

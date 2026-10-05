@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 940" width="1400" height="940">
+  <metadata>
+    <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/">
+      <rdf:Description>
+        <dc:title>Apex Scaffold 核心 RBAC 数据表 ER 图</dc:title>
+        <dc:creator>Apex Team</dc:creator>
+        <dc:date>2026-10-05</dc:date>
+        <dc:version>1.3.1</dc:version>
+        <dc:description>核心 RBAC 实体关系：用户/角色/权限/菜单/部门/租户及相关联表，数据源 MySQL Flyway V1-V58</dc:description>
+      </rdf:Description>
+    </rdf:RDF>
+  </metadata>
+
+  <defs>
+    <style>
+      .title { font: 700 30px system-ui, sans-serif; fill: #0f172a; text-anchor: middle; }
+      .subtitle { font: 500 13px system-ui, sans-serif; fill: #64748b; text-anchor: middle; }
+      .grp { font: 600 14px system-ui, sans-serif; }
+      .tbl { font: 600 13px system-ui, sans-serif; fill: #ffffff; text-anchor: middle; }
+      .pk { font: 600 11px 'SF Mono', monospace; fill: #dc2626; }
+      .fk { font: 600 11px 'SF Mono', monospace; fill: #2563eb; }
+      .field { font: 400 11px 'SF Mono', monospace; fill: #475569; }
+      .type { font: 400 10px 'SF Mono', monospace; fill: #94a3b8; }
+      .note { font: 400 11px system-ui, sans-serif; fill: #64748b; }
+      .legend { font: 400 11px system-ui, sans-serif; fill: #475569; }
+      .rel { font: 400 10px system-ui, sans-serif; fill: #64748b; text-anchor: middle; }
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2563eb"/>
+    </marker>
+  </defs>
+
+  <rect width="1400" height="940" fill="#ffffff"/>
+
+  <text x="700" y="42" class="title">Apex Scaffold 核心 RBAC 数据表 ER 图</text>
+  <text x="700" y="66" class="subtitle">数据源：MySQL Flyway V1-V58（mysql 为准） · 多租户隔离 · MyBatis-Plus 逻辑删除 · v1.3.1</text>
+
+  <!-- ============ Group: 组织与租户 ============ -->
+  <rect x="40" y="92" width="640" height="360" rx="8" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.6"/>
+  <text x="60" y="116" class="grp" fill="#4f46e5">组织与租户（sys_tenant / sys_dept / sys_user）</text>
+
+  <!-- sys_tenant -->
+  <rect x="60" y="132" width="210" height="150" rx="6" fill="#ffffff" stroke="#ec4899" stroke-width="1.6"/>
+  <rect x="60" y="132" width="210" height="28" rx="6" fill="#ec4899"/>
+  <text x="165" y="151" class="tbl">sys_tenant</text>
+  <text x="70" y="178" class="pk">● id (PK)</text>
+  <text x="70" y="195" class="field">tenant_code</text><text x="210" y="195" class="type">VARCHAR(64)</text>
+  <text x="70" y="210" class="field">tenant_name</text><text x="210" y="210" class="type">VARCHAR(128)</text>
+  <text x="70" y="225" class="field">admin_user_id</text><text x="210" y="225" class="type">VARCHAR(64)</text>
+  <text x="70" y="240" class="field">package_code</text>
+  <text x="70" y="255" class="field">status</text><text x="210" y="255" class="type">ACTIVE...</text>
+  <text x="70" y="270" class="field">max_users/max_storage_mb</text>
+
+  <!-- sys_user -->
+  <rect x="300" y="132" width="360" height="300" rx="6" fill="#ffffff" stroke="#4f46e5" stroke-width="1.8"/>
+  <rect x="300" y="132" width="360" height="28" rx="6" fill="#4f46e5"/>
+  <text x="480" y="151" class="tbl">sys_user</text>
+  <text x="310" y="178" class="pk">● id (PK)</text>
+  <text x="310" y="195" class="field">username</text><text x="500" y="195" class="type">VARCHAR(50) uk</text>
+  <text x="310" y="210" class="field">ра​s​s​wо​r​d</text><text x="500" y="210" class="type">VARCHAR(100)</text>
+  <text x="310" y="225" class="field">nick_name</text><text x="500" y="225" class="type">VARCHAR</text>
+  <text x="310" y="240" class="field">open_id / union_id</text><text x="500" y="240" class="type">VARCHAR(64) uk</text>
+  <text x="310" y="255" class="field">access_token / refresh_token</text>
+  <text x="310" y="270" class="field">phone / email</text><text x="500" y="270" class="type">VARCHAR uk</text>
+  <text x="310" y="285" class="field">keycloak_sub</text><text x="500" y="285" class="type">VARCHAR(255)</text>
+  <text x="310" y="300" class="fk">◆ dept_id (FK)</text><text x="500" y="300" class="type">BIGINT</text>
+  <text x="310" y="315" class="fk">◆ tenant_id (FK)</text>
+  <text x="310" y="330" class="field">avatar_url / gender / country</text>
+  <text x="310" y="345" class="field">status / last_login_time / version</text>
+  <text x="310" y="360" class="field">create_time / update_time / deleted</text>
+  <text x="310" y="378" class="type">V3 登录；V6 dept_id；V14 tenant_id；V37/V51 Keycloak</text>
+  <text x="310" y="395" class="type">V42 email；V9 生日/入职；V48 锁定/密码策略字段</text>
+  <text x="310" y="420" class="note">支持本地 JWT 认证与 Keycloak SSO（uk_keycloak_sub）</text>
+
+  <!-- sys_dept -->
+  <rect x="60" y="300" width="210" height="140" rx="6" fill="#ffffff" stroke="#7c3aed" stroke-width="1.6"/>
+  <rect x="60" y="300" width="210" height="28" rx="6" fill="#7c3aed"/>
+  <text x="165" y="319" class="tbl">sys_dept</text>
+  <text x="70" y="346" class="pk">● id (PK)</text>
+  <text x="70" y="363" class="fk">◆ parent_id (FK)</text><text x="210" y="363" class="type">BIGINT</text>
+  <text x="70" y="378" class="field">ancestors</text><text x="210" y="378" class="type">VARCHAR</text>
+  <text x="70" y="393" class="field">name</text><text x="210" y="393" class="type">VARCHAR(50)</text>
+  <text x="70" y="408" class="field">order_num</text>
+  <text x="70" y="423" class="field">leader / phone / email</text>
+  <text x="70" y="438" class="field">status / version / deleted</text>
+  <text x="70" y="455" class="type">树形结构；V6 创建；V19 租户完整性</text>
+
+  <!-- ============ Group: 权限模型 ============ -->
+  <rect x="720" y="92" width="640" height="360" rx="8" fill="#ecfdf5" stroke="#059669" stroke-width="1.6"/>
+  <text x="740" y="116" class="grp" fill="#059669">权限模型（sys_permission / sys_menu / 关联表）</text>
+
+  <!-- sys_permission -->
+  <rect x="740" y="132" width="280" height="180" rx="6" fill="#ffffff" stroke="#059669" stroke-width="1.6"/>
+  <rect x="740" y="132" width="280" height="28" rx="6" fill="#059669"/>
+  <text x="880" y="151" class="tbl">sys_permission</text>
+  <text x="750" y="178" class="pk">● id (PK)</text>
+  <text x="750" y="195" class="field">name</text><text x="920" y="195" class="type">VARCHAR</text>
+  <text x="750" y="210" class="field">code</text><text x="920" y="210" class="type">VARCHAR(100)</text>
+  <text x="750" y="225" class="field">description</text>
+  <text x="750" y="240" class="field">type</text><text x="920" y="240" class="type">INT</text>
+  <text x="750" y="255" class="field">status</text>
+  <text x="750" y="270" class="field">create_time / update_time</text>
+  <text x="750" y="285" class="field">deleted</text>
+  <text x="750" y="303" class="type">V2 种子权限；V57 办公消息权限(3300-3302)</text>
+
+  <!-- sys_menu -->
+  <rect x="1050" y="132" width="290" height="180" rx="6" fill="#ffffff" stroke="#d97706" stroke-width="1.6"/>
+  <rect x="1050" y="132" width="290" height="28" rx="6" fill="#d97706"/>
+  <text x="1195" y="151" class="tbl">sys_menu</text>
+  <text x="1060" y="178" class="pk">● id (PK)</text>
+  <text x="1060" y="195" class="fk">◆ parent_id (FK)</text><text x="1230" y="195" class="type">BIGINT</text>
+  <text x="1060" y="210" class="field">menu_name</text>
+  <text x="1060" y="225" class="field">menu_type</text><text x="1230" y="225" class="type">M/C/F</text>
+  <text x="1060" y="240" class="field">path / component</text>
+  <text x="1060" y="255" class="field">perms</text><text x="1230" y="255" class="type">VARCHAR</text>
+  <text x="1060" y="270" class="field">icon / sort_order / visible</text>
+  <text x="1060" y="285" class="field">status / deleted</text>
+  <text x="1060" y="303" class="type">树形结构；V25 OAuth2 菜单 300/3001-3005</text>
+
+  <!-- sys_role -->
+  <rect x="740" y="330" width="280" height="110" rx="6" fill="#ffffff" stroke="#0891b2" stroke-width="1.6"/>
+  <rect x="740" y="330" width="280" height="28" rx="6" fill="#0891b2"/>
+  <text x="880" y="349" class="tbl">sys_role</text>
+  <text x="750" y="376" class="pk">● id (PK)</text>
+  <text x="750" y="393" class="field">role_name / role_key</text><text x="920" y="393" class="type">VARCHAR(50)</text>
+  <text x="750" y="408" class="field">data_scope</text><text x="920" y="408" class="type">INT (V18)</text>
+  <text x="750" y="423" class="fk">◆ tenant_id (FK)</text>
+  <text x="750" y="438" class="field">status / version / deleted</text>
+
+  <!-- sys_user_role -->
+  <rect x="1050" y="330" width="135" height="110" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.6"/>
+  <rect x="1050" y="330" width="135" height="28" rx="6" fill="#f59e0b"/>
+  <text x="1117" y="349" class="tbl">sys_user_role</text>
+  <text x="1060" y="376" class="pk">● id (PK)</text>
+  <text x="1060" y="393" class="fk">◆ user_id</text>
+  <text x="1060" y="408" class="fk">◆ role_id</text>
+  <text x="1060" y="423" class="fk">◆ tenant_id</text>
+
+  <!-- sys_role_permission -->
+  <rect x="1205" y="330" width="135" height="110" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.6"/>
+  <rect x="1205" y="330" width="135" height="28" rx="6" fill="#f59e0b"/>
+  <text x="1272" y="349" class="tbl">sys_role_perm</text>
+  <text x="1215" y="376" class="pk">● id (PK)</text>
+  <text x="1215" y="393" class="fk">◆ role_id</text>
+  <text x="1215" y="408" class="fk">◆ permission_id</text>
+  <text x="1215" y="425" class="type">uk(role,perm)</text>
+
+  <!-- ============ Group: 多租户/日志 ============ -->
+  <rect x="40" y="470" width="1320" height="60" rx="8" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.4"/>
+  <text x="60" y="494" class="grp" fill="#64748b">多租户与审计扩展表（V6 数据权限 · V15/V19 租户隔离 · V12 审计日志）</text>
+  <text x="60" y="516" class="note">sys_role_menu(role_id, menu_id) 角色-菜单关联 · sys_login_log 登录日志 · sys_operation_log 操作日志 · sys_api_call_log 接口调用日志 · sys_config/sys_dict_* 系统配置与字典</text>
+
+  <!-- ============ Relationships ============ -->
+  <!-- sys_user.dept_id -> sys_dept.id -->
+  <line x1="300" y1="300" x2="270" y2="360" stroke="#2563eb" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <text x="300" y="345" class="rel">N:1</text>
+  <!-- sys_dept.parent_id self -->
+  <path d="M 60 400 C 30 400 30 340 60 340" fill="none" stroke="#2563eb" stroke-width="1.4" stroke-dasharray="4,3"/>
+  <text x="30" y="375" class="rel" transform="rotate(-90 30 375)">自引用</text>
+  <!-- sys_user_role.user_id -> sys_user.id -->
+  <line x1="1050" y1="390" x2="660" y2="290" stroke="#2563eb" stroke-width="1.6" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+  <text x="855" y="330" class="rel">N:N</text>
+  <!-- sys_user_role.role_id -> sys_role.id -->
+  <line x1="1050" y1="420" x2="1020" y2="400" stroke="#2563eb" stroke-width="1.6" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+  <!-- sys_role_permission.permission_id -> sys_permission.id -->
+  <line x1="1272" y1="330" x2="1020" y2="270" stroke="#2563eb" stroke-width="1.6" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+  <text x="1160" y="300" class="rel">N:N</text>
+  <!-- sys_role_permission.role_id -> sys_role.id -->
+  <line x1="1272" y1="380" x2="1020" y2="400" stroke="#2563eb" stroke-width="1.6" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+  <!-- sys_user.tenant_id -> sys_tenant.id -->
+  <line x1="300" y1="260" x2="270" y2="220" stroke="#2563eb" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <text x="278" y="245" class="rel">N:1</text>
+
+  <!-- legend -->
+  <rect x="40" y="550" width="1320" height="120" rx="8" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.4"/>
+  <text x="60" y="576" class="grp" fill="#0f172a">图例 · Legend</text>
+  <text x="60" y="602" class="pk">● PK</text><text x="120" y="602" class="legend">主键 Primary Key</text>
+  <text x="330" y="602" class="fk">◆ FK</text><text x="390" y="602" class="legend">外键 Foreign Key</text>
+  <text x="640" y="602" class="field">field</text><text x="720" y="602" class="legend">字段名</text>
+  <text x="810" y="602" class="type">TYPE</text><text x="890" y="602" class="legend">字段类型</text>
+  <rect x="1010" y="592" width="14" height="14" fill="#fef3c7" stroke="#f59e0b"/>
+  <text x="1032" y="604" class="legend">关联表（N:N）</text>
+  <text x="60" y="628" class="legend">实线箭头 = 外键引用方向（指向被引用表主键）；虚线箭头 = 关联表逻辑引用；自引用 = 树形层级（parent_id）</text>
+  <text x="60" y="650" class="legend">所有核心表均含 create_time/update_time/version/deleted（MyBatis-Plus 逻辑删除 + 乐观锁）；tenant_id 实现行级多租户隔离</text>
+
+  <text x="700" y="700" class="note" text-anchor="middle">数据源：apex-interfaces/src/main/resources/db/migration/mysql/V1__init_schema.sql 等 · 权限模型为 RBAC + 数据权限（data_scope）</text>
+  <text x="700" y="722" class="note" text-anchor="middle">同步修正：Flyway 实际版本 V1-V58（原文档误写 V1-V26）</text>
+</svg>

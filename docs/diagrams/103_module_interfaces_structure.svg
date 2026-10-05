@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 900" width="1400" height="900">
+  <defs>
+    <style>
+      .title{font:700 32px sans-serif;fill:#0f172a;text-anchor:middle}
+      .subtitle{font:500 13px sans-serif;fill:#64748b;text-anchor:middle}
+      .grp{font:600 13px sans-serif;fill:#fff}
+      .box-title{font:600 12px sans-serif;fill:#0f172a}
+      .box-desc{font:400 10px sans-serif;fill:#475569}
+      .code{font:500 9.5px monospace;fill:#2563eb}
+      .note{font:500 11px sans-serif;fill:#64748b}
+      .legend{font:500 11px sans-serif;fill:#475569}
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#0891b2"/>
+    </marker>
+  </defs>
+  <rect width="1400" height="900" fill="#fff"/>
+  <text x="700" y="40" class="title">模块结构：apex-interfaces</text>
+  <text x="700" y="64" class="subtitle">com.apex.scaffold.interfaces · 接口层 · Router/Handler/Aspect/治理入口 · v1.3.1</text>
+
+  <rect x="40" y="92" width="430" height="740" rx="10" fill="#0891b2" opacity="0.06" stroke="#0891b2" stroke-width="2"/>
+  <rect x="40" y="92" width="430" height="40" rx="10" fill="#0891b2"/>
+  <text x="60" y="118" class="grp">包结构（com.apex.scaffold.interfaces.*）</text>
+  <text x="60" y="148" class="code">├─ router / router.office</text>
+  <text x="60" y="170" class="code">├─ handler / handler.office</text>
+  <text x="60" y="192" class="code">│  └─ handler.office.*（approval/calendar…）</text>
+  <text x="60" y="214" class="code">├─ aspect（横切切面）</text>
+  <text x="60" y="236" class="code">├─ assembler / assembler.office</text>
+  <text x="60" y="258" class="code">├─ dto / dto.office / dto.workflow / dto.monitor</text>
+  <text x="60" y="280" class="code">├─ filter（Web 过滤器）</text>
+  <text x="60" y="302" class="code">├─ exception（全局异常处理）</text>
+  <text x="60" y="324" class="code">├─ security / service / util / config</text>
+  <text x="60" y="346" class="code">├─ governance</text>
+  <text x="60" y="368" class="code">│  ├─ governance.lifecycle</text>
+  <text x="60" y="390" class="code">│  ├─ governance.config</text>
+  <text x="60" y="412" class="code">│  └─ governance.platform（compose/k8s/standalone）</text>
+  <text x="60" y="434" class="code">├─ metrics / monitor / monitor.dashboard</text>
+
+  <text x="60" y="482" class="legend" font-weight="600">职责定位</text>
+  <text x="60" y="508" class="box-desc">• HTTP 入口：RouterFunction + Handler 组合</text>
+  <text x="60" y="530" class="box-desc">• 全局异常、过滤器、AOP 切面集中处</text>
+  <text x="60" y="552" class="box-desc">• 治理入口：生命周期/健康/平台适配</text>
+  <text x="60" y="574" class="box-desc">• 聚合各模块路由，为应用提供唯一 HTTP 面</text>
+
+  <text x="60" y="622" class="legend" font-weight="600">依赖</text>
+  <text x="60" y="648" class="box-desc">→ 依赖 application + infrastructure + domain</text>
+  <text x="60" y="670" class="box-desc">   + workflow + license-starter（依赖汇合点）</text>
+  <text x="60" y="692" class="box-desc">← 作为可执行入口被 apex-example 依赖</text>
+
+  <!-- right -->
+  <rect x="500" y="92" width="860" height="250" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="520" y="120" class="box-title" font-size="14">Web 入口</text>
+  <rect x="520" y="136" width="270" height="190" rx="6" fill="#fff" stroke="#99f6e4" stroke-width="1.5"/>
+  <text x="533" y="158" class="box-title">router / handler</text>
+  <text x="533" y="178" class="code">RouterFunction 路由注册</text>
+  <text x="533" y="196" class="code">HandlerFunction 处理</text>
+  <text x="533" y="214" class="box-desc">office 子域独立路由</text>
+  <text x="533" y="240" class="box-title">dto / assembler</text>
+  <text x="533" y="260" class="code">dto.office / dto.workflow</text>
+  <text x="533" y="278" class="box-desc">assembler 转换为应用 DTO</text>
+  <rect x="800" y="136" width="270" height="190" rx="6" fill="#fff" stroke="#99f6e4" stroke-width="1.5"/>
+  <text x="813" y="158" class="box-title">filter / aspect / exception</text>
+  <text x="813" y="178" class="code">WebFilter 过滤链</text>
+  <text x="813" y="196" class="code">AOP 切面（日志/权限/幂等）</text>
+  <text x="813" y="214" class="code">GlobalExceptionHandler</text>
+  <text x="813" y="232" class="box-desc">统一错误响应</text>
+  <text x="813" y="258" class="box-title">security</text>
+  <text x="813" y="278" class="code">安全过滤链集成</text>
+  <text x="813" y="296" class="box-desc">鉴权/令牌解析入口</text>
+  <rect x="1080" y="136" width="270" height="190" rx="6" fill="#fff" stroke="#99f6e4" stroke-width="1.5"/>
+  <text x="1093" y="158" class="box-title">governance（治理入口）</text>
+  <text x="1093" y="178" class="code">governance.lifecycle</text>
+  <text x="1093" y="196" class="code">governance.config</text>
+  <text x="1093" y="214" class="code">platform: compose/k8s/standalone</text>
+  <text x="1093" y="232" class="box-desc">优雅停机 / 健康 / 就绪探针</text>
+  <text x="1093" y="258" class="box-title">metrics / monitor</text>
+  <text x="1093" y="278" class="code">指标采集 endpoint</text>
+  <text x="1093" y="296" class="box-desc">监控看板数据</text>
+
+  <rect x="500" y="362" width="860" height="250" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="520" y="390" class="box-title" font-size="14">请求处理链（WebFlux）</text>
+  <rect x="520" y="406" width="170" height="190" rx="6" fill="#fff" stroke="#99f6e4" stroke-width="1.5"/>
+  <text x="533" y="428" class="box-title">1. filter</text>
+  <text x="533" y="448" class="box-desc">WebFilter 链</text>
+  <text x="533" y="468" class="code">TraceId 注入</text>
+  <text x="533" y="488" class="code">租户上下文</text>
+  <text x="533" y="508" class="box-desc">安全过滤</text>
+  <text x="533" y="528" class="box-desc">请求日志</text>
+  <rect x="700" y="406" width="170" height="190" rx="6" fill="#fff" stroke="#99f6e4" stroke-width="1.5"/>
+  <text x="713" y="428" class="box-title">2. router</text>
+  <text x="713" y="448" class="box-desc">路由匹配</text>
+  <text x="713" y="468" class="code">谓词/路径</text>
+  <text x="713" y="488" class="box-desc">转发至 Handler</text>
+  <text x="713" y="508" class="box-desc">office 路由聚合</text>
+  <rect x="880" y="406" width="170" height="190" rx="6" fill="#fff" stroke="#99f6e4" stroke-width="1.5"/>
+  <text x="893" y="428" class="box-title">3. handler</text>
+  <text x="893" y="448" class="box-desc">解析请求 DTO</text>
+  <text x="893" y="468" class="code">调用 application</text>
+  <text x="893" y="488" class="box-desc">组装响应</text>
+  <text x="893" y="508" class="code">Mono/Flux 返回</text>
+  <rect x="1060" y="406" width="290" height="190" rx="6" fill="#fff" stroke="#99f6e4" stroke-width="1.5"/>
+  <text x="1073" y="428" class="box-title">4. aspect / exception</text>
+  <text x="1073" y="448" class="code">@OperationLog 操作日志</text>
+  <text x="1073" y="468" class="code">@DataScope 数据权限</text>
+  <text x="1073" y="488" class="code">@Idempotent 幂等</text>
+  <text x="1073" y="508" class="box-desc">异常 → 统一错误体</text>
+  <line x1="690" y1="501" x2="700" y2="501" stroke="#0891b2" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="870" y1="501" x2="880" y2="501" stroke="#0891b2" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="1050" y1="501" x2="1060" y2="501" stroke="#0891b2" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <rect x="500" y="632" width="860" height="200" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="520" y="660" class="box-title" font-size="14">设计约束</text>
+  <text x="520" y="690" class="box-desc">1. 仅做协议适配与切面编排，业务规则不落于此处。</text>
+  <text x="520" y="718" class="box-desc">2. 反应式全链路：Handler 返回 Mono/Flux，禁止阻塞调用。</text>
+  <text x="520" y="746" class="box-desc">3. 治理能力（生命周期/探针/平台）集中于此，便于多形态部署。</text>
+  <text x="1040" y="660" class="box-title" font-size="14">依赖汇合点</text>
+  <text x="1040" y="690" class="box-desc">application · infrastructure · domain · workflow</text>
+  <text x="1040" y="718" class="box-desc">· license-starter —— 唯一依赖全部核心模块处</text>
+  <text x="1040" y="746" class="note">因此也是唯一可执行入口的承载模块</text>
+
+  <text x="700" y="872" class="note" text-anchor="middle">apex-interfaces 是各层的依赖汇合点与唯一 HTTP 出口，同时承载治理与可观测入口</text>
+</svg>

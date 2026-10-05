@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 860" width="1400" height="860">
+  <defs>
+    <style>
+      .title{font:700 32px sans-serif;fill:#0f172a;text-anchor:middle}
+      .subtitle{font:500 13px sans-serif;fill:#64748b;text-anchor:middle}
+      .grp{font:600 13px sans-serif;fill:#fff}
+      .box-title{font:600 12px sans-serif;fill:#0f172a}
+      .box-desc{font:400 10px sans-serif;fill:#475569}
+      .code{font:500 9.5px monospace;fill:#2563eb}
+      .note{font:500 11px sans-serif;fill:#64748b}
+      .legend{font:500 11px sans-serif;fill:#475569}
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#0891b2"/>
+    </marker>
+  </defs>
+  <rect width="1400" height="860" fill="#fff"/>
+  <text x="700" y="40" class="title">模块结构：apex-license（starter + tools）</text>
+  <text x="700" y="64" class="subtitle">com.apex.scaffold.license / license.tools · 授权校验与许可证签发 · v1.3.1</text>
+
+  <rect x="40" y="92" width="430" height="700" rx="10" fill="#0891b2" opacity="0.06" stroke="#0891b2" stroke-width="2"/>
+  <rect x="40" y="92" width="430" height="40" rx="10" fill="#0891b2"/>
+  <text x="60" y="118" class="grp">包结构（starter）</text>
+  <text x="60" y="148" class="code">com.apex.scaffold.license.*</text>
+  <text x="60" y="176" class="code">├─ LicenseAutoConfiguration</text>
+  <text x="60" y="198" class="code">├─ LicenseValidator · LicenseLoader</text>
+  <text x="60" y="220" class="code">├─ LicenseProperties</text>
+  <text x="60" y="242" class="code">├─ MachineFingerprintCollector</text>
+  <text x="60" y="264" class="code">├─ LicenseInfo · LicenseVersion</text>
+  <text x="60" y="286" class="code">├─ LicenseFeatureGate · FeatureGateAspect</text>
+  <text x="60" y="308" class="code">├─ ConditionalOnLicenseFeature</text>
+  <text x="60" y="330" class="code">├─ LicenseRevalidationScheduler</text>
+  <text x="60" y="352" class="code">├─ OsFamily · RsaUtil · LicenseException</text>
+
+  <text x="60" y="394" class="legend" font-weight="600">包结构（tools）</text>
+  <text x="60" y="420" class="code">com.apex.scaffold.license.tools</text>
+  <text x="60" y="442" class="code">└─ LicenseGenerator（生成许可证文件）</text>
+
+  <text x="60" y="492" class="legend" font-weight="600">职责定位</text>
+  <text x="60" y="518" class="box-desc">• 启动期加载并校验许可证，防止未授权运行</text>
+  <text x="60" y="540" class="box-desc">• 基于机器指纹（网卡/CPU/OS 家族）绑定授权</text>
+  <text x="60" y="562" class="box-desc">• 定时重校验 + 特性开关（Feature Gate）</text>
+  <text x="60" y="584" class="box-desc">• tools 负责离线的许可证签发（LicenseGenerator）</text>
+
+  <text x="60" y="632" class="legend" font-weight="600">依赖</text>
+  <text x="60" y="658" class="box-desc">→ 依赖 apex-common（模型/工具）</text>
+  <text x="60" y="680" class="box-desc">→ vendor 依赖 spring-boot-autoconfigure</text>
+  <text x="60" y="702" class="box-desc">← tools 依赖 starter（校验契约）</text>
+
+  <!-- right: starter runtime flow -->
+  <rect x="500" y="92" width="860" height="210" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="520" y="120" class="box-title" font-size="14">启动期校验流程（LicenseValidator）</text>
+  <rect x="520" y="136" width="160" height="146" rx="6" fill="#fff" stroke="#99f6e4" stroke-width="1.5"/>
+  <text x="533" y="158" class="box-title">加载</text>
+  <text x="533" y="178" class="box-desc">LicenseAutoConfiguration</text>
+  <text x="533" y="196" class="code">license.key/license.file</text>
+  <text x="533" y="214" class="box-desc">LicenseLoader 读取</text>
+  <text x="533" y="232" class="code">RSA 公钥验签</text>
+  <text x="533" y="250" class="code">OsFamily / RsaUtil</text>
+  <rect x="690" y="136" width="160" height="146" rx="6" fill="#fff" stroke="#99f6e4" stroke-width="1.5"/>
+  <text x="703" y="158" class="box-title">指纹采集</text>
+  <text x="703" y="178" class="box-desc">MachineFingerprintCollector</text>
+  <text x="703" y="196" class="code">网卡 MAC 指纹</text>
+  <text x="703" y="214" class="code">CPU 序列号</text>
+  <text x="703" y="232" class="code">OS 家族</text>
+  <text x="703" y="250" class="code">机器指纹摘要</text>
+  <rect x="860" y="136" width="160" height="146" rx="6" fill="#fff" stroke="#99f6e4" stroke-width="1.5"/>
+  <text x="873" y="158" class="box-title">校验/匹配</text>
+  <text x="873" y="178" class="box-desc">LicenseValidator 比对</text>
+  <text x="873" y="196" class="code">指纹一致性</text>
+  <text x="873" y="214" class="code">有效期检查</text>
+  <text x="873" y="232" class="code">版本兼容</text>
+  <text x="873" y="250" class="code">LicenseException</text>
+  <rect x="1030" y="136" width="300" height="146" rx="6" fill="#fff" stroke="#99f6e4" stroke-width="1.5"/>
+  <text x="1043" y="158" class="box-title">批准 / 拒绝</text>
+  <text x="1043" y="178" class="box-desc">成功 → 释放 FeatureGate + 启动</text>
+  <text x="1043" y="196" class="box-desc">失败 → 抛 LicenseException 阻止启动</text>
+  <text x="1043" y="214" class="box-title" font-size="11">运行期：</text>
+  <text x="1043" y="232" class="box-desc">LicenseRevalidationScheduler 定时复检</text>
+  <text x="1043" y="250" class="box-desc">@ConditionalOnLicenseFeature 控制能力</text>
+  <line x1="680" y1="209" x2="690" y2="209" stroke="#0891b2" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="850" y1="209" x2="860" y2="209" stroke="#0891b2" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="1020" y1="209" x2="1030" y2="209" stroke="#0891b2" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- right: tools issuance -->
+  <rect x="500" y="322" width="860" height="180" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="520" y="350" class="box-title" font-size="14">签发工具（LicenseGenerator）</text>
+  <rect x="520" y="366" width="260" height="120" rx="6" fill="#fff" stroke="#99f6e4" stroke-width="1.5"/>
+  <text x="533" y="388" class="box-title">输入</text>
+  <text x="533" y="408" class="code">机器指纹 / 有效天数</text>
+  <text x="533" y="428" class="code">版本 / 授权 pkg 清单</text>
+  <text x="533" y="448" class="box-desc">CLI 参数或配置文件</text>
+  <text x="533" y="466" class="code">RSA 私钥签名</text>
+  <rect x="790" y="366" width="260" height="120" rx="6" fill="#fff" stroke="#99f6e4" stroke-width="1.5"/>
+  <text x="803" y="388" class="box-title">输出</text>
+  <text x="803" y="408" class="code">license.key（签名载荷）</text>
+  <text x="803" y="428" class="code">LicenseInfo 序列化</text>
+  <text x="803" y="448" class="box-desc">交付给 deployed 机器</text>
+  <text x="803" y="466" class="code">LicenseVersion 约定</text>
+  <rect x="1060" y="366" width="280" height="120" rx="6" fill="#fff" stroke="#99f6e4" stroke-width="1.5"/>
+  <text x="1073" y="388" class="box-title">与 starter 的配合</text>
+  <text x="1073" y="408" class="box-desc">签发端用私钥签名，</text>
+  <text x="1073" y="428" class="box-desc">校验端用公钥验签</text>
+  <text x="1073" y="448" class="box-desc">二者共享 LicenseInfo / LicenseVersion</text>
+  <text x="1073" y="466" class="code">(license-tools → license-starter)</text>
+  <line x1="780" y1="426" x2="790" y2="426" stroke="#0891b2" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="1050" y1="426" x2="1060" y2="426" stroke="#0891b2" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <rect x="500" y="522" width="860" height="270" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="520" y="550" class="box-title" font-size="14">设计约束</text>
+  <text x="520" y="580" class="box-desc">1. 公钥随应用分发用于盲验签，私钥仅存于签发工具，禁止入仓库。</text>
+  <text x="520" y="608" class="box-desc">2. 校验为纯确定性逻辑，可在启动早期（Bean 装配前）执行。</text>
+  <text x="520" y="636" class="box-desc">3. 机器指纹采用多因子组合（MAC+CPU+OS），降低误绑定与绕开概率。</text>
+  <text x="520" y="664" class="box-desc">4. 特性开关通过 Aspect + Condition 注入，无侵入业务代码。</text>
+  <text x="520" y="704" class="box-title" font-size="14">典型引用方</text>
+  <text x="520" y="734" class="box-desc">apex-interfaces（授权入口校验）· apex-common.license（模型）</text>
+  <text x="520" y="772" class="note">license-starter 提供自动配置，license-tools 仅含 LicenseGenerator 单一签发入口</text>
+
+  <text x="700" y="838" class="note" text-anchor="middle">授权能力闭环：签发（tools）→ 分发 → 启动验签（starter）→ 运行期复检</text>
+</svg>

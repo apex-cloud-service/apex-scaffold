@@ -1,0 +1,93 @@
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#eef2ff','primaryTextColor':'#0f172a','primaryBorderColor':'#4f46e5','lineColor':'#2563eb','fontSize':'13px'}}}%%
+erDiagram
+    WF_WORKFLOW_DEFINITION ||--o{ WF_PROCESS_INSTANCE : "workflow_definition_id"
+    WF_PROCESS_INSTANCE ||--o{ WF_TASK : "process_instance_id"
+    WF_PROCESS_INSTANCE ||--o{ WF_APPROVAL_RECORD : "process_instance_id"
+    WF_PROCESS_INSTANCE ||--o{ WF_ROLLBACK_HISTORY : "process_instance_id"
+    WF_TASK ||--o{ WF_APPROVAL_RECORD : "task_id"
+    WF_TASK ||--o{ WF_TASK_HISTORY : "task_id"
+    WF_PROCESS_INSTANCE ||--o{ WF_TASK_HISTORY : "process_instance_id"
+
+    WF_WORKFLOW_DEFINITION {
+        bigint id PK "主键"
+        varchar workflow_code UK "工作流编码"
+        varchar workflow_name "工作流名称"
+        int version UK "版本号"
+        text node_config_json "节点配置 DAG 定义"
+        varchar status "DRAFT/ACTIVE/ARCHIVED"
+        varchar description "描述"
+        varchar tenant_id "租户 ID"
+        datetime create_time "创建时间"
+        datetime update_time "更新时间"
+        tinyint deleted "逻辑删除"
+    }
+
+    WF_PROCESS_INSTANCE {
+        bigint id PK "主键"
+        bigint workflow_definition_id FK "工作流定义"
+        varchar business_key UK "业务主键"
+        varchar current_node_key "当前节点"
+        varchar status "RUNNING/COMPLETED/REJECTED/CANCELLED/SUSPENDED"
+        bigint initiator_id "发起人"
+        text context_json "流程上下文"
+        datetime start_time "开始时间"
+        datetime end_time "结束时间"
+        varchar tenant_id "租户 ID"
+        tinyint suspended "V21 是否挂起"
+        varchar suspend_reason "挂起原因"
+        datetime suspend_time "挂起时间"
+        datetime resume_time "恢复时间"
+    }
+
+    WF_TASK {
+        bigint id PK "主键"
+        bigint process_instance_id FK "流程实例"
+        varchar node_key "节点 KEY"
+        varchar node_name "节点名称"
+        bigint assignee_id "办理人"
+        varchar status "PENDING/COMPLETED/REJECTED/CANCELLED/TRANSFERRED"
+        datetime due_date "到期时间"
+        datetime completed_time "完成时间"
+        datetime timeout_at "V21 超时时间"
+        varchar timeout_action "超时动作 AUTO_APPROVE/AUTO_REJECT/REMIND"
+        tinyint timeout_handled "超时是否处理"
+        bigint transferred_from "V21 转办来源"
+        datetime transferred_time "转办时间"
+        bigint delegated_from "委派来源"
+        datetime delegated_time "委派时间"
+        tinyint delegation_completed "委派是否完成"
+    }
+
+    WF_APPROVAL_RECORD {
+        bigint id PK "主键"
+        bigint process_instance_id FK "流程实例"
+        bigint task_id FK "任务"
+        bigint approver_id "审批人"
+        varchar action "APPROVE/REJECT/TRANSFER/CANCEL"
+        varchar comment "审批意见"
+        varchar tenant_id "租户 ID"
+    }
+
+    WF_TASK_HISTORY {
+        bigint id PK "主键"
+        bigint task_id FK "任务"
+        bigint process_instance_id FK "流程实例"
+        varchar action_type "CREATE/COMPLETE/REJECT/TRANSFER/DELEGATE/TIMEOUT"
+        bigint operator_id "操作人"
+        varchar operator_name "操作人姓名"
+        varchar from_status "原状态"
+        varchar to_status "目标状态"
+        varchar comment "备注"
+        datetime action_time "操作时间"
+    }
+
+    WF_ROLLBACK_HISTORY {
+        bigint id PK "主键"
+        bigint process_instance_id FK "流程实例"
+        varchar from_node_id "回退前节点"
+        varchar to_node_id "回退目标节点"
+        varchar rollback_reason "回退原因"
+        bigint operator_id "操作人"
+        varchar operator_name "操作人姓名"
+        datetime rollback_time "回退时间"
+    }

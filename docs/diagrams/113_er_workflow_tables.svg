@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 900" width="1400" height="900">
+  <metadata>
+    <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/">
+      <rdf:Description>
+        <dc:title>Apex Scaffold 工作流引擎数据表 ER 图</dc:title>
+        <dc:creator>Apex Team</dc:creator>
+        <dc:date>2026-10-05</dc:date>
+        <dc:version>1.3.1</dc:version>
+        <dc:description>轻量工作流引擎（定义/实例/任务/审批记录/历史）实体关系，数据源 MySQL Flyway V20-V21</dc:description>
+      </rdf:Description>
+    </rdf:RDF>
+  </metadata>
+
+  <defs>
+    <style>
+      .title { font: 700 30px system-ui, sans-serif; fill: #0f172a; text-anchor: middle; }
+      .subtitle { font: 500 13px system-ui, sans-serif; fill: #64748b; text-anchor: middle; }
+      .grp { font: 600 14px system-ui, sans-serif; }
+      .tbl { font: 600 13px system-ui, sans-serif; fill: #ffffff; text-anchor: middle; }
+      .pk { font: 600 11px 'SF Mono', monospace; fill: #dc2626; }
+      .fk { font: 600 11px 'SF Mono', monospace; fill: #2563eb; }
+      .field { font: 400 11px 'SF Mono', monospace; fill: #475569; }
+      .type { font: 400 10px 'SF Mono', monospace; fill: #94a3b8; }
+      .note { font: 400 11px system-ui, sans-serif; fill: #64748b; }
+      .rel { font: 400 10px system-ui, sans-serif; fill: #64748b; text-anchor: middle; }
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2563eb"/>
+    </marker>
+    <marker id="arrow-gray" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#94a3b8"/>
+    </marker>
+  </defs>
+
+  <rect width="1400" height="900" fill="#ffffff"/>
+
+  <text x="700" y="42" class="title">Apex Scaffold 工作流引擎数据表 ER 图</text>
+  <text x="700" y="66" class="subtitle">数据源：MySQL Flyway V20-V21 · DAG 定义 + 流程实例 + 任务流转 + 审批记录 + 回退历史 · v1.3.1</text>
+
+  <!-- ============ Group 1: 工作流定义 ============ -->
+  <rect x="40" y="92" width="620" height="270" rx="8" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.6"/>
+  <text x="60" y="116" class="grp" fill="#4f46e5">工作流定义（DAG 模板 · Enterprise 特性门控）</text>
+
+  <!-- wf_workflow_definition -->
+  <rect x="60" y="132" width="580" height="212" rx="6" fill="#ffffff" stroke="#4f46e5" stroke-width="1.8"/>
+  <rect x="60" y="132" width="580" height="28" rx="6" fill="#4f46e5"/>
+  <text x="350" y="151" class="tbl">wf_workflow_definition</text>
+  <text x="70" y="178" class="pk">● id (PK)</text>
+  <text x="70" y="195" class="field">workflow_code</text><text x="290" y="195" class="type">VARCHAR(100) uk(code,version)</text>
+  <text x="70" y="210" class="field">workflow_name</text><text x="290" y="210" class="type">VARCHAR(200)</text>
+  <text x="70" y="225" class="field">version</text><text x="290" y="225" class="type">INT DEFAULT 1</text>
+  <text x="70" y="240" class="field">node_config_json</text><text x="290" y="240" class="type">TEXT (DAG 节点配置)</text>
+  <text x="70" y="255" class="field">status</text><text x="290" y="255" class="type">DRAFT/ACTIVE/ARCHIVED</text>
+  <text x="70" y="270" class="field">description / tenant_id</text>
+  <text x="70" y="285" class="field">create_time / update_time</text>
+  <text x="70" y="300" class="field">deleted</text><text x="290" y="300" class="type">TINYINT 逻辑删除</text>
+  <text x="70" y="320" class="type">V21 注：另有历史遗留表 wf_definition（同名语义），V21 为其补充</text>
+  <text x="70" y="335" class="type">version / is_latest / previous_version_id 版本管理字段</text>
+
+  <!-- ============ Group 2: 流程实例 ============ -->
+  <rect x="700" y="92" width="660" height="270" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.6"/>
+  <text x="720" y="116" class="grp" fill="#3b82f6">流程实例（运行时状态机）</text>
+
+  <!-- wf_process_instance -->
+  <rect x="720" y="132" width="620" height="212" rx="6" fill="#ffffff" stroke="#3b82f6" stroke-width="1.8"/>
+  <rect x="720" y="132" width="620" height="28" rx="6" fill="#3b82f6"/>
+  <text x="1030" y="151" class="tbl">wf_process_instance</text>
+  <text x="730" y="178" class="pk">● id (PK)</text>
+  <text x="730" y="195" class="fk">◆ workflow_definition_id</text><text x="1000" y="195" class="type">BIGINT FK → 定义</text>
+  <text x="730" y="210" class="field">business_key</text><text x="1000" y="210" class="type">VARCHAR(200) uk</text>
+  <text x="730" y="225" class="field">current_node_key</text><text x="1000" y="225" class="type">VARCHAR(100)</text>
+  <text x="730" y="240" class="field">status</text><text x="1000" y="240" class="type">RUNNING/COMPLETED/REJECTED</text>
+  <text x="730" y="255" class="field">initiator_id / context_json</text>
+  <text x="730" y="270" class="field">start_time / end_time</text>
+  <text x="730" y="285" class="field">tenant_id / create_time / update_time / deleted</text>
+  <text x="730" y="305" class="type">V21 挂起增强：suspended / suspend_reason</text>
+  <text x="730" y="320" class="type">suspend_time / resume_time</text>
+  <text x="730" y="338" class="type">状态：RUNNING/COMPLETED/REJECTED/CANCELLED/SUSPENDED</text>
+
+  <!-- ============ Group 3: 任务与审批 ============ -->
+  <rect x="40" y="382" width="900" height="330" rx="8" fill="#ecfdf5" stroke="#059669" stroke-width="1.6"/>
+  <text x="60" y="406" class="grp" fill="#059669">任务流转与审批（待办 · 转办 · 委派 · 超时 · 审批记录）</text>
+
+  <!-- wf_task -->
+  <rect x="60" y="422" width="420" height="270" rx="6" fill="#ffffff" stroke="#059669" stroke-width="1.8"/>
+  <rect x="60" y="422" width="420" height="28" rx="6" fill="#059669"/>
+  <text x="270" y="441" class="tbl">wf_task</text>
+  <text x="70" y="468" class="pk">● id (PK)</text>
+  <text x="70" y="485" class="fk">◆ process_instance_id</text><text x="300" y="485" class="type">FK → 实例</text>
+  <text x="70" y="500" class="field">node_key / node_name</text>
+  <text x="70" y="515" class="fk">◆ assignee_id</text><text x="300" y="515" class="type">BIGINT 处理人</text>
+  <text x="70" y="530" class="field">status</text><text x="300" y="530" class="type">PENDING/COMPLETED...</text>
+  <text x="70" y="545" class="field">due_date / completed_time</text>
+  <text x="70" y="560" class="field">tenant_id / create_time / update_time / deleted</text>
+  <text x="70" y="580" class="type">V21 超时字段：timeout_at / timeout_action</text>
+  <text x="70" y="595" class="type">timeout_action: AUTO_APPROVE/AUTO_REJECT/REMIND</text>
+  <text x="70" y="610" class="type">timeout_handled</text>
+  <text x="70" y="630" class="type">V21 转办/委派：transferred_from / transferred_time</text>
+  <text x="70" y="645" class="type">delegated_from / delegated_time / delegation_completed</text>
+  <text x="70" y="668" class="fk">状态：PENDING/COMPLETED/CANCELLED/TRANSFERRED</text>
+
+  <!-- wf_approval_record -->
+  <rect x="520" y="422" width="400" height="180" rx="6" fill="#ffffff" stroke="#059669" stroke-width="1.6"/>
+  <rect x="520" y="422" width="400" height="28" rx="6" fill="#059669"/>
+  <text x="720" y="441" class="tbl">wf_approval_record</text>
+  <text x="530" y="468" class="pk">● id (PK)</text>
+  <text x="530" y="485" class="fk">◆ process_instance_id</text><text x="760" y="485" class="type">FK → 实例</text>
+  <text x="530" y="500" class="fk">◆ task_id</text><text x="760" y="500" class="type">FK → 任务</text>
+  <text x="530" y="515" class="fk">◆ approver_id</text><text x="760" y="515" class="type">BIGINT 审批人</text>
+  <text x="530" y="530" class="field">action</text><text x="760" y="530" class="type">APPROVE/REJECT/CANCEL</text>
+  <text x="530" y="545" class="field">comment</text><text x="760" y="545" class="type">VARCHAR(1000)</text>
+  <text x="530" y="560" class="field">tenant_id / create_time / deleted</text>
+  <text x="530" y="585" class="type">审计：每次审批动作落库</text>
+
+  <!-- wf_task_history -->
+  <rect x="520" y="618" width="400" height="120" rx="6" fill="#ffffff" stroke="#059669" stroke-width="1.6"/>
+  <rect x="520" y="618" width="400" height="26" rx="6" fill="#059669"/>
+  <text x="720" y="636" class="tbl">wf_task_history</text>
+  <text x="530" y="660" class="pk">● id (PK)</text>
+  <text x="530" y="675" class="fk">◆ task_id / process_instance_id</text>
+  <text x="530" y="690" class="field">action_type / operator_id / operator_name</text>
+  <text x="530" y="705" class="field">from_status / to_status / action_time</text>
+  <text x="530" y="722" class="type">V21；action: CREATE/COMPLETE/REJECT/TRANSFER/DELEGATE/TIMEOUT</text>
+
+  <!-- ============ Group 4: 回退历史 ============ -->
+  <rect x="960" y="382" width="400" height="330" rx="8" fill="#fffbeb" stroke="#d97706" stroke-width="1.6"/>
+  <text x="980" y="406" class="grp" fill="#d97706">流程回退</text>
+
+  <!-- wf_rollback_history -->
+  <rect x="980" y="422" width="360" height="200" rx="6" fill="#ffffff" stroke="#d97706" stroke-width="1.8"/>
+  <rect x="980" y="422" width="360" height="28" rx="6" fill="#d97706"/>
+  <text x="1160" y="441" class="tbl">wf_rollback_history</text>
+  <text x="990" y="468" class="pk">● id (PK)</text>
+  <text x="990" y="485" class="fk">◆ process_instance_id</text><text x="1240" y="485" class="type">FK → 实例</text>
+  <text x="990" y="500" class="field">from_node_id / to_node_id</text>
+  <text x="990" y="515" class="field">rollback_reason</text>
+  <text x="990" y="530" class="fk">◆ operator_id / operator_name</text>
+  <text x="990" y="545" class="field">rollback_time</text>
+  <text x="990" y="560" class="field">create_time</text>
+  <text x="990" y="585" class="type">V21；记录节点回退轨迹</text>
+  <text x="990" y="605" class="note">支撑“退回上一节点/指定节点”的</text>
+  <text x="990" y="620" class="note">全链路审计。</text>
+
+  <!-- relationships -->
+  <line x1="720" y1="330" x2="620" y2="330" stroke="#2563eb" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <text x="670" y="324" class="rel">N:1</text>
+  <line x1="480" y1="540" x2="520" y2="500" stroke="#2563eb" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <text x="500" y="512" class="rel">N:1</text>
+  <line x1="920" y1="520" x2="980" y2="520" stroke="#94a3b8" stroke-width="1.4" stroke-dasharray="4,3" marker-end="url(#arrow-gray)"/>
+  <text x="950" y="512" class="rel">N:1</text>
+
+  <text x="700" y="760" class="note" text-anchor="middle">核心关系：wf_workflow_definition 1—N wf_process_instance 1—N wf_task 1—N wf_approval_record；wf_task_history 记录任务全生命周期流转，wf_rollback_history 记录节点回退</text>
+  <text x="700" y="784" class="note" text-anchor="middle">状态机：实例 RUNNING→COMPLETED/REJECTED/CANCELLED/SUSPENDED；任务 PENDING→COMPLETED/CANCELLED/TRANSFERRED</text>
+
+  <text x="700" y="828" class="note" text-anchor="middle">数据源：V20 创建核心表（wf_workflow_definition / wf_process_instance / wf_task / wf_approval_record），V21 增强（挂起/超时/转办/委派 + wf_task_history / wf_rollback_history）</text>
+
+  <!-- legend -->
+  <rect x="40" y="848" width="1320" height="0" fill="none"/>
+  <text x="60" y="862" class="pk">● 主键</text>
+  <text x="180" y="862" class="fk">◆ 外键/关键字段</text>
+  <text x="360" y="862" class="field">普通字段</text>
+  <text x="480" y="862" class="type">类型/取值域</text>
+</svg>

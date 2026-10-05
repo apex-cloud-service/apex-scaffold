@@ -1,0 +1,41 @@
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#0891b2','primaryTextColor':'#0f172a','primaryBorderColor':'#0891b2','lineColor':'#64748b','fontFamily':'sans-serif'}}}%%
+flowchart TB
+  subgraph Meta["元模型"]
+    M1["TableDefinition / FieldDefinition"]
+    M2["StateMachineDefinition / StateTransitionDefinition"]
+    M3["DatabaseDeploymentConfig"]
+  end
+
+  subgraph Engine["生成引擎"]
+    E1["GeneratorCli · CLI 入口"]
+    E2["CodeGenerator · 解析与渲染"]
+  end
+
+  subgraph Tpl["Freemarker 模板 resources/templates"]
+    T1["后端: entity/po/mapper/repository/repositoryImpl"]
+    T2["后端: service/converter/handler/dtoRequest/dtoResponse"]
+    T3["迁移/部署: migrationFragment/databaseDeployment"]
+    T4["前端: api/form/list/routeFragment"]
+    T5["测试: serviceTest"]
+  end
+
+  OUT["输出：全栈代码 + Flyway 迁移片段 + 部署脚本"]
+
+  E1 --> M1
+  E1 --> M2
+  E1 --> M3
+  E1 --> E2
+  M1 --> E2
+  M2 --> E2
+  M3 --> E2
+  E2 --> T1
+  E2 --> T2
+  E2 --> T3
+  E2 --> T4
+  E2 --> T5
+  T1 --> OUT
+  T3 --> OUT
+  T4 --> OUT
+
+  NOTE["独立代码生成引擎：不依赖 apex-common 与其他业务模块，纯工具，运行期不加载"]
+  E2 -.-> NOTE

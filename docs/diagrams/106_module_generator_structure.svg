@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 860" width="1400" height="860">
+  <defs>
+    <style>
+      .title{font:700 32px sans-serif;fill:#0f172a;text-anchor:middle}
+      .subtitle{font:500 13px sans-serif;fill:#64748b;text-anchor:middle}
+      .grp{font:600 13px sans-serif;fill:#fff}
+      .box-title{font:600 12px sans-serif;fill:#0f172a}
+      .box-desc{font:400 10px sans-serif;fill:#475569}
+      .code{font:500 9.5px monospace;fill:#2563eb}
+      .note{font:500 11px sans-serif;fill:#64748b}
+      .legend{font:500 11px sans-serif;fill:#475569}
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#0891b2"/>
+    </marker>
+  </defs>
+  <rect width="1400" height="860" fill="#fff"/>
+  <text x="700" y="40" class="title">模块结构：apex-generator</text>
+  <text x="700" y="64" class="subtitle">com.apex.scaffold.generator · 独立代码生成引擎 · CLI + Freemarker 模板 · v1.3.1</text>
+
+  <rect x="40" y="92" width="430" height="700" rx="10" fill="#0891b2" opacity="0.06" stroke="#0891b2" stroke-width="2"/>
+  <rect x="40" y="92" width="430" height="40" rx="10" fill="#0891b2"/>
+  <text x="60" y="118" class="grp">包结构（com.apex.scaffold.generator）</text>
+  <text x="60" y="150" class="code">├─ CodeGenerator（生成引擎核心）</text>
+  <text x="60" y="172" class="code">├─ GeneratorCli（CLI 入口）</text>
+  <text x="60" y="194" class="code">├─ 元模型定义</text>
+  <text x="60" y="216" class="code">│  ├─ TableDefinition / FieldDefinition</text>
+  <text x="60" y="238" class="code">│  ├─ DatabaseDeploymentConfig</text>
+  <text x="60" y="260" class="code">│  ├─ StateMachineDefinition</text>
+  <text x="60" y="282" class="code">│  └─ StateTransitionDefinition</text>
+  <text x="60" y="304" class="code">└─ resources/templates（freemarker .ftl）</text>
+  <text x="60" y="326" class="code">   ├─ 后端：entity/po/mapper/repository</text>
+  <text x="60" y="348" class="code">   │         service/handler/converter</text>
+  <text x="60" y="370" class="code">   ├─ 迁移：migrationFragment/databaseDeployment</text>
+  <text x="60" y="392" class="code">   └─ 前端：api/form/list/routeFragment</text>
+
+  <text x="60" y="440" class="legend" font-weight="600">职责定位</text>
+  <text x="60" y="466" class="box-desc">• 从表/元模型一键生成全栈代码</text>
+  <text x="60" y="488" class="box-desc">• 支持状态机定义生成</text>
+  <text x="60" y="510" class="box-desc">• 数据库部署配置生成</text>
+  <text x="60" y="532" class="box-desc">• 可独立 CLI 运行，不参与运行时</text>
+
+  <text x="60" y="580" class="legend" font-weight="600">依赖</text>
+  <text x="60" y="606" class="box-desc">→ 依赖 freemarker + jackson + slf4j</text>
+  <text x="60" y="628" class="box-desc">→ 无内部 apex 依赖（标注 L0 独立）</text>
+  <text x="60" y="650" class="box-desc">← 是唯一不依赖 apex-common 的模块</text>
+
+  <!-- right -->
+  <rect x="500" y="92" width="860" height="250" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="520" y="120" class="box-title" font-size="14">生成流程</text>
+  <rect x="520" y="136" width="170" height="190" rx="6" fill="#fff" stroke="#99f6e4" stroke-width="1.5"/>
+  <text x="533" y="158" class="box-title">1. 输入</text>
+  <text x="533" y="178" class="box-desc">GeneratorCli 读配置</text>
+  <text x="533" y="196" class="code">表/字段定义</text>
+  <text x="533" y="214" class="code">状态机定义</text>
+  <text x="533" y="232" class="box-desc">DB 部署配置</text>
+  <rect x="700" y="136" width="170" height="190" rx="6" fill="#fff" stroke="#99f6e4" stroke-width="1.5"/>
+  <text x="713" y="158" class="box-title">2. 建模</text>
+  <text x="713" y="178" class="box-desc">CodeGenerator 解析</text>
+  <text x="713" y="196" class="code">TableDefinition</text>
+  <text x="713" y="214" class="code">FieldDefinition</text>
+  <text x="713" y="232" class="code">StateMachine…</text>
+  <rect x="880" y="136" width="170" height="190" rx="6" fill="#fff" stroke="#99f6e4" stroke-width="1.5"/>
+  <text x="893" y="158" class="box-title">3. 渲染</text>
+  <text x="893" y="178" class="box-desc">Freemarker 模板</text>
+  <text x="893" y="196" class="code">entity/po/mapper</text>
+  <text x="893" y="214" class="code">service/handler</text>
+  <text x="893" y="232" class="code">迁移/前端</text>
+  <rect x="1060" y="136" width="280" height="190" rx="6" fill="#fff" stroke="#99f6e4" stroke-width="1.5"/>
+  <text x="1073" y="158" class="box-title">4. 输出</text>
+  <text x="1073" y="178" class="code">后端/前端代码文件</text>
+  <text x="1073" y="196" class="code">Flyway 迁移片段</text>
+  <text x="1073" y="214" class="code">数据库部署脚本</text>
+  <text x="1073" y="232" class="box-desc">测试用例（serviceTest）</text>
+  <line x1="690" y1="231" x2="700" y2="231" stroke="#0891b2" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="870" y1="231" x2="880" y2="231" stroke="#0891b2" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="1050" y1="231" x2="1060" y2="231" stroke="#0891b2" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <rect x="500" y="362" width="860" height="180" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="520" y="390" class="box-title" font-size="14">模板体系（resources/templates）</text>
+  <rect x="520" y="406" width="270" height="120" rx="6" fill="#fff" stroke="#99f6e4" stroke-width="1.5"/>
+  <text x="533" y="428" class="box-title">后端</text>
+  <text x="533" y="448" class="code">entity / po / mapper / repository</text>
+  <text x="533" y="468" class="code">repositoryImpl / service / converter</text>
+  <text x="533" y="488" class="code">handler / dtoRequest / dtoResponse</text>
+  <rect x="800" y="406" width="270" height="120" rx="6" fill="#fff" stroke="#99f6e4" stroke-width="1.5"/>
+  <text x="813" y="428" class="box-title">数据库/部署</text>
+  <text x="813" y="448" class="code">migrationFragment · 迁移片段</text>
+  <text x="813" y="468" class="code">databaseDeployment · 部署配置</text>
+  <text x="1080" y="406" width="280" height="120" rx="6" fill="#fff" stroke="#99f6e4" stroke-width="1.5"/>
+  <text x="1093" y="428" class="box-title">前端</text>
+  <text x="1093" y="448" class="code">api / form / list / routeFragment</text>
+  <text x="1093" y="468" class="box-desc">配套 serviceTest 测试模板</text>
+
+  <rect x="500" y="562" width="860" height="230" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="520" y="590" class="box-title" font-size="14">设计约束</text>
+  <text x="520" y="620" class="box-desc">1. 完全独立：不依赖 apex-common 与其他业务模块。</text>
+  <text x="520" y="648" class="box-desc">2. 生成产物遵循 DDD 分层命名，可直接落入目标模块。</text>
+  <text x="520" y="676" class="box-desc">3. 元模型与模板分离，新增生成类型仅需扩展模板。</text>
+  <text x="780" y="590" class="box-title" font-size="14">运行方式</text>
+  <text x="780" y="620" class="code">CLI：mvn -pl apex-generator exec:java</text>
+  <text x="780" y="648" class="box-desc">纯工具模块，运行期不加载</text>
+  <text x="780" y="676" class="note">与 52_codegen_pipeline.svg 相互呼应</text>
+
+  <text x="700" y="838" class="note" text-anchor="middle">apex-generator 是独立代码生成引擎（L0 无内部依赖）：以元模型 + Freemarker 模板全栈产出代码/迁移/前端</text>
+</svg>

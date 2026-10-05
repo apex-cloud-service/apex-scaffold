@@ -1,0 +1,83 @@
+sequenceDiagram
+    autonumber
+    participant Caller as 业务服务<br/>(Service)
+    participant CacheSvc as CacheConsistencyService
+    participant Merge as InFlightRequestMerge<br/>(Single-Flight)
+    participant L1 as L1 缓存<br/>(Caffeine 5min)
+    participant L2 as L2 缓存<br/>(Redisson/Redis 1h)
+
+    Note over Caller,L2: 多级缓存一致性：L1 Caffeine(JVM) + L2 Redis(分布式)，Write-Through + Single-Flight 回源合并 + 空值标记防穿透
+
+    rect rgb(238, 242, 255)
+    Note over Caller,L2: ① 读取路径 get()：L1 → L2 → 未命中（不回源）
+    Caller->>+CacheSvc: get(cacheName, key)
+    CacheSvc->>CacheSvc: buildFullKey = cacheName + ":" + key
+    CacheSvc->>+L1: getIfPresent(fullKey)
+    alt L1 命中
+        L1-->>-CacheSvc: 命中值
+        CacheSvc-->>-Caller: 返回值（反序列化）
+    else L1 未命中
+        L1-->>CacheSvc: null
+        CacheSvc->>+L2: get(fullKey)
+        alt L2 命中 且 非空值标记
+            L2-->>-CacheSvc: 序列化值
+            CacheSvc->>L1: put(fullKey) 回填 L1（5min + jitter）
+            CacheSvc-->>Caller: 返回值
+        else L2 命中 __EMPTY__ 空值标记
+            L2-->>CacheSvc: "__EMPTY__"
+            CacheSvc-->>-Caller: null（防穿透，5min TTL + jitter）
+        else L2 未命中
+            L2-->>-CacheSvc: null
+            CacheSvc-->>Caller: null（由调用方决定是否回源）
+        end
+    end
+    end
+
+    rect rgb(240, 253, 244)
+    Note over Caller,L2: ② 回源合并 getWithLoader()：Single-Flight 缓存击穿保护
+    Caller->>+CacheSvc: getWithLoader(cacheName, key, loader)
+    CacheSvc->>+Merge: join(cacheName+":"+key, loader)
+    alt 已有同 key 回源进行中
+        Merge-->>CacheSvc: 共享同一 Mono（合并在途请求）
+    else 首个请求
+        Merge->>+L2: 执行 loader 回源（DB/远程）
+        L2-->>-Merge: 加载结果
+        Merge-->>-CacheSvc: Mono<T>
+    end
+    Merge-->>-CacheSvc: 结果
+    CacheSvc->>L1: put(fullKey) 回填 L1
+    CacheSvc->>L2: put(fullKey) 写入 L2（1h + jitter）
+    CacheSvc-->>-Caller: 返回值
+    end
+
+    rect rgb(255, 247, 237)
+    Note over Caller,L2: ③ 写入路径 put()：Write-Through（先写 L2，再失效 L1）
+    Caller->>+CacheSvc: put(cacheName, key, value)
+    CacheSvc->>CacheSvc: toStoreValue(value)<br/>（String/Number/Boolean 直存，其他 Jackson JSON）
+    CacheSvc->>+L2: set(fullKey, 序列化值, ttl=1h ± 10% jitter)
+    L2-->>-CacheSvc: OK
+    CacheSvc->>+L1: invalidate(fullKey) 失效本地 L1
+    L1-->>-CacheSvc: OK
+    CacheSvc-->>-Caller: 完成
+    end
+
+    rect rgb(254, 242, 242)
+    Note over Caller,L2: ④ 失效/清理：evict / evictBatch / clear / 空值标记
+    Caller->>+CacheSvc: evict(cacheName, key)
+    CacheSvc->>+L2: delete(fullKey) 先删 L2
+    L2-->>-CacheSvc: 完成
+    CacheSvc->>+L1: invalidate(fullKey) 再删 L1
+    L1-->>-CacheSvc: 完成
+    CacheSvc-->>-Caller: 完成
+
+    Caller->>CacheSvc: evictBatch / clear（批量/全量失效）
+    CacheSvc->>L2: 批量 delete / clear 对应 cacheName
+    CacheSvc->>L1: 批量 invalidate / invalidateAll
+
+    Caller->>CacheSvc: setEmptyMarker(cacheName, key)
+    CacheSvc->>L2: set(fullKey, "__EMPTY__", ttl=5min ± jitter)
+    CacheSvc->>L1: put(fullKey, 空值标记) 防缓存穿透
+    CacheSvc-->>-Caller: 完成
+    end
+
+    Note over Caller,L2: 关键点：L2 为分布式真源，L1 为本地加速；写时先 L2 后 L1 保证跨节点可见性；jitter ±10% 防雪崩；__EMPTY__ 5min 防穿透；InFlightRequestMerge 防击穿。阻塞式 Redisson 调用经 BlockingIoSchedulers.cache() 隔离

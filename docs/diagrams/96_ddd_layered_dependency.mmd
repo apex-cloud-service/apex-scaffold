@@ -1,0 +1,32 @@
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#059669','primaryTextColor':'#fff','primaryBorderColor':'#047857','lineColor':'#64748b','secondaryColor':'#0891b2','tertiaryColor':'#f3f4f6','noteBkgColor':'#fef3c7','noteTextColor':'#92400e'}}}%%
+flowchart TB
+    subgraph IF["用户接口层 Interfaces (apex-interfaces)"]
+        I1["Handler / Router<br/>REST 路由 · DTO 转换 · 参数校验"]
+        I2["Aspect 切面<br/>DataScope · 幂等 · 操作日志 · TenantAspect"]
+        I3["Assembler / Converter<br/>DTO ↔ VO ↔ Domain"]
+    end
+
+    subgraph APP["应用层 Application (apex-application)"]
+        A1["应用服务 Service<br/>用例编排 · 事务边界"]
+        A2["命令 / 查询<br/>CQRS · 分页"]
+        A3["事件监听 / Job<br/>领域事件订阅 · 定时任务"]
+    end
+
+    subgraph DOM["领域层 Domain (apex-domain · workflow)"]
+        D1["聚合根 / 实体<br/>User · Role · Permission · WorkflowDefinition · Task"]
+        D2["领域服务 / 策略<br/>业务规则 · 不变量校验"]
+        D3["仓储接口 Port<br/>Repository 抽象（依赖倒置）"]
+    end
+
+    subgraph INF["基础设施层 Infrastructure (apex-infrastructure)"]
+        P1["仓储实现<br/>MyBatis-Plus Mapper / PO · 数据权限 · 多租户"]
+        P2["技术设施<br/>缓存 · MQ · 存储 · 远程"]
+        P3["外部适配<br/>Keycloak / 办公平台 / 邮件"]
+    end
+
+    IF --> APP --> DOM
+    INF -.实现.-> D3
+    P1 -.实现.-> D3
+
+    NOTE["依赖倒置（DIP）：高层策略不依赖低层细节，二者均依赖抽象（仓储接口 / 端口）。领域层零框架依赖。"]
+    DOM -.-> NOTE

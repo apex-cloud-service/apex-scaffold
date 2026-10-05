@@ -1,0 +1,58 @@
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#4f46e5','primaryTextColor':'#fff','primaryBorderColor':'#3730a3','lineColor':'#64748b','secondaryColor':'#0891b2','tertiaryColor':'#f3f4f6','noteBkgColor':'#fef3c7','noteTextColor':'#92400e'}}}%%
+flowchart LR
+    subgraph C["apex-common L0"]
+        C1["通用能力 / 上下文 / 限流算法"]
+        GEN["apex-generator (独立)"]
+    end
+
+    subgraph L1["L1"]
+        LS["license-starter<br/>授权门控 AutoConfig"]
+        D["apex-domain<br/>领域模型 / 仓储接口"]
+    end
+
+    subgraph L2["L2"]
+        LT["license-tools<br/>LicenseGenerator"]
+        I["apex-infrastructure<br/>持久化/缓存/MQ/存储"]
+        W["apex-workflow<br/>工作流引擎"]
+    end
+
+    subgraph L3["L3"]
+        APP["apex-application<br/>应用服务编排"]
+    end
+
+    subgraph L4["L4"]
+        IF["apex-interfaces<br/>Handler/Router · Application"]
+        AUTH["apex-auth-center<br/>独立认证中心"]
+    end
+
+    subgraph L5["L5"]
+        EX["apex-example<br/>示例应用"]
+    end
+
+    C1 --> LS
+    C1 --> D
+    LS --> LT
+    C1 --> I
+    D --> I
+    C1 --> W
+    D --> W
+    C1 --> APP
+    D --> APP
+    I --> APP
+    W --> APP
+    I --> IF
+    APP --> IF
+    D --> IF
+    W --> IF
+    LS --> IF
+    C1 --> AUTH
+    I --> AUTH
+    APP --> AUTH
+    C1 --> EX
+    D --> EX
+    APP --> EX
+    I --> EX
+    IF --> EX
+
+    NOTE["依赖方向严格单向：common → domain → infrastructure → application → interfaces，无循环依赖；apex-generator 独立不依赖内部模块"]
+    I -.-> NOTE

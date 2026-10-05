@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1500 1040" width="1500" height="1040">
+  <metadata>
+    <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/">
+      <rdf:Description>
+        <dc:title>Apex Scaffold 多租户隔离业务流程图</dc:title>
+        <dc:creator>Apex Team</dc:creator>
+        <dc:date>2026-10-05</dc:date>
+        <dc:version>1.3.1</dc:version>
+        <dc:description>共享库+共享Schema+行级 tenant_id 隔离：上下文装配→SQL 自动改写→租户生命周期→配额约束</dc:description>
+      </rdf:Description>
+    </rdf:RDF>
+  </metadata>
+
+  <defs>
+    <style>
+      .title { font: 700 30px system-ui, sans-serif; fill: #0f172a; text-anchor: middle; }
+      .subtitle { font: 500 13px system-ui, sans-serif; fill: #64748b; text-anchor: middle; }
+      .phase { font: 600 13px system-ui, sans-serif; fill: #ffffff; }
+      .node-title { font: 600 13px system-ui, sans-serif; fill: #0f172a; text-anchor: middle; }
+      .node-sub { font: 400 10px system-ui, sans-serif; fill: #64748b; text-anchor: middle; }
+      .node-actor { font: 500 10px 'SF Mono', monospace; fill: #2563eb; text-anchor: middle; }
+      .edge { font: 500 10px system-ui, sans-serif; fill: #475569; text-anchor: middle; }
+      .note { font: 400 11px system-ui, sans-serif; fill: #64748b; }
+      .legend { font: 400 11px system-ui, sans-serif; fill: #475569; }
+      .lane { font: 600 12px system-ui, sans-serif; fill: #334155; text-anchor: middle; }
+    </style>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#4f46e5"/>
+    </marker>
+    <marker id="ag" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#94a3b8"/>
+    </marker>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#dc2626"/>
+    </marker>
+  </defs>
+
+  <rect width="1500" height="1040" fill="#ffffff"/>
+  <text x="750" y="42" class="title">Apex Scaffold 多租户隔离业务流程图</text>
+  <text x="750" y="66" class="subtitle">共享库 + 共享 Schema + 行级 tenant_id · 上下文装配 → SQL 改写 → 生命周期 → 配额 · v1.3.1</text>
+
+  <!-- Lane headers -->
+  <rect x="40" y="92" width="1420" height="30" rx="6" fill="#f1f5f9"/>
+  <text x="270" y="112" class="lane">① 租户上下文装配</text>
+  <text x="700" y="112" class="lane">② 行级 SQL 隔离</text>
+  <text x="1080" y="112" class="lane">③ 租户生命周期</text>
+  <text x="1330" y="112" class="lane">④ 配额约束</text>
+  <line x1="500" y1="92" x2="500" y2="700" stroke="#e2e8f0" stroke-width="1"/>
+  <line x1="900" y1="92" x2="900" y2="700" stroke="#e2e8f0" stroke-width="1"/>
+  <line x1="1240" y1="92" x2="1240" y2="700" stroke="#e2e8f0" stroke-width="1"/>
+
+  <!-- ===== Column 1: 租户上下文装配 ===== -->
+  <rect x="70" y="140" width="400" height="64" rx="7" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.8"/>
+  <text x="270" y="164" class="node-title">HTTP 请求进入</text>
+  <text x="270" y="182" class="node-sub">X-Tenant-Id 头 / JWT Claim 携带租户标识</text>
+  <text x="270" y="197" class="node-actor">网关 → 安全过滤器链</text>
+
+  <line x1="270" y1="204" x2="270" y2="230" stroke="#4f46e5" stroke-width="1.6" marker-end="url(#a)"/>
+
+  <rect x="70" y="232" width="400" height="74" rx="7" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.8"/>
+  <text x="270" y="256" class="node-title">JwtAuthenticationFilter 解析</text>
+  <text x="270" y="274" class="node-sub">校验 JWT → 从 sys_user.tenant_id 取可信租户</text>
+  <text x="270" y="290" class="node-sub">（不以客户端头为唯一信任来源）</text>
+  <text x="270" y="303" class="node-actor">apex-interfaces/security</text>
+
+  <line x1="270" y1="306" x2="270" y2="332" stroke="#4f46e5" stroke-width="1.6" marker-end="url(#a)"/>
+
+  <rect x="70" y="334" width="400" height="70" rx="7" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.8"/>
+  <text x="270" y="358" class="node-title">TenantContext.setTenantId()</text>
+  <text x="270" y="376" class="node-sub">ThreadLocal&lt;String&gt; + Reactor Context 双通道</text>
+  <text x="270" y="392" class="node-sub">请求结束 finally 调 clear() 防跨租户泄漏</text>
+
+  <line x1="270" y1="404" x2="270" y2="430" stroke="#4f46e5" stroke-width="1.6" marker-end="url(#a)"/>
+
+  <rect x="70" y="432" width="400" height="72" rx="7" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.8"/>
+  <text x="270" y="456" class="node-title">Reactor 全局 Hook 传播</text>
+  <text x="270" y="474" class="node-sub">Schedulers.onScheduleHook + Hooks.onEachOperator</text>
+  <text x="270" y="490" class="node-sub">TenantContextSubscriber 跨线程恢复上下文</text>
+
+  <line x1="270" y1="504" x2="270" y2="530" stroke="#4f46e5" stroke-width="1.6" marker-end="url(#a)"/>
+
+  <rect x="70" y="532" width="400" height="66" rx="7" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.8"/>
+  <text x="270" y="556" class="node-title">TenantAspect 方法级装配</text>
+  <text x="270" y="574" class="node-sub">@TenantAware 注解切面（如 WorkflowHandler）</text>
+  <text x="270" y="590" class="node-actor">apex-interfaces/aspect/TenantAspect</text>
+
+  <!-- ===== Column 2: 行级 SQL 隔离 ===== -->
+  <rect x="530" y="140" width="340" height="70" rx="7" fill="#ecfdf5" stroke="#059669" stroke-width="1.8"/>
+  <text x="700" y="164" class="node-title">MyBatis-Plus 拦截器</text>
+  <text x="700" y="182" class="node-sub">TenantLineInnerInterceptor</text>
+  <text x="700" y="198" class="node-actor">MybatisPlusConfig 注册</text>
+
+  <line x1="700" y1="210" x2="700" y2="236" stroke="#059669" stroke-width="1.6" marker-end="url(#a)"/>
+
+  <rect x="530" y="238" width="340" height="76" rx="7" fill="#ecfdf5" stroke="#059669" stroke-width="1.8"/>
+  <text x="700" y="262" class="node-title">DefaultTenantLineHandler</text>
+  <text x="700" y="280" class="node-sub">getTenantId() ← TenantContext.currentTenantId()</text>
+  <text x="700" y="296" class="node-sub">上下文缺失 → 抛 IllegalStateException</text>
+  <text x="700" y="309" class="node-actor">TENANT_ID_COLUMN = "tenant_id"</text>
+
+  <line x1="700" y1="314" x2="700" y2="340" stroke="#059669" stroke-width="1.6" marker-end="url(#a)"/>
+
+  <rect x="530" y="342" width="340" height="70" rx="7" fill="#fffbeb" stroke="#d97706" stroke-width="1.6"/>
+  <text x="700" y="366" class="node-title">ignoreTable? 白名单判定</text>
+  <text x="700" y="384" class="node-sub">15 张平台级表排除租户隔离</text>
+  <text x="700" y="400" class="node-sub">sys_menu / sys_permission / sys_role / sys_role_permission</text>
+
+  <line x1="700" y1="412" x2="700" y2="438" stroke="#059669" stroke-width="1.6" marker-end="url(#a)"/>
+
+  <rect x="530" y="440" width="340" height="76" rx="7" fill="#ecfdf5" stroke="#059669" stroke-width="1.8"/>
+  <text x="700" y="464" class="node-title">改写 SQL 自动追加条件</text>
+  <text x="700" y="482" class="node-sub">WHERE tenant_id = '当前租户'</text>
+  <text x="700" y="498" class="node-sub">INSERT 自动补 tenant_id 列值</text>
+  <text x="700" y="511" class="node-actor">SQL 重写（JSqlParser）</text>
+
+  <line x1="700" y1="516" x2="700" y2="542" stroke="#059669" stroke-width="1.6" marker-end="url(#a)"/>
+
+  <rect x="530" y="544" width="340" height="54" rx="7" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.6"/>
+  <text x="700" y="566" class="node-title">执行 → MySQL</text>
+  <text x="700" y="584" class="node-sub">索引 idx_tenant_id 保障隔离查询性能</text>
+
+  <!-- warn: no TenantWebFilter -->
+  <rect x="530" y="620" width="340" height="60" rx="7" fill="#fef2f2" stroke="#dc2626" stroke-width="1.4" stroke-dasharray="5,3"/>
+  <text x="700" y="642" class="node-title" fill="#b91c1c">⚠ 文档中的 TenantWebFilter 未实现</text>
+  <text x="700" y="660" class="node-sub">实际入口为 JwtAuthenticationFilter + TenantAspect</text>
+
+  <line x1="470" y1="565" x2="530" y2="560" stroke="#4f46e5" stroke-width="1.6" marker-end="url(#a)"/>
+
+  <!-- ===== Column 3: 租户生命周期 ===== -->
+  <rect x="930" y="140" width="290" height="60" rx="7" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.8"/>
+  <text x="1075" y="164" class="node-title">创建租户</text>
+  <text x="1075" y="182" class="node-sub">TenantApplicationService → status = ACTIVE</text>
+
+  <line x1="1075" y1="200" x2="1075" y2="226" stroke="#3b82f6" stroke-width="1.6" marker-end="url(#a)"/>
+
+  <rect x="930" y="228" width="290" height="300" rx="7" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.8"/>
+  <text x="1075" y="252" class="node-title">状态机流转（sys_tenant.status）</text>
+  <line x1="945" y1="264" x2="1205" y2="264" stroke="#bfdbfe" stroke-width="1"/>
+  <text x="945" y="288" class="node-sub" text-anchor="start">ACTIVE      正常可用</text>
+  <text x="945" y="312" class="node-sub" text-anchor="start">DISABLED    禁用（可恢复）</text>
+  <text x="945" y="336" class="node-sub" text-anchor="start">FROZEN      冻结（超配额/欠费）</text>
+  <text x="945" y="360" class="node-sub" text-anchor="start">DEACTIVATED 停用</text>
+  <text x="945" y="384" class="node-sub" text-anchor="start">ARCHIVED    归档（终态）</text>
+  <line x1="945" y1="400" x2="1205" y2="400" stroke="#bfdbfe" stroke-width="1"/>
+  <text x="945" y="422" class="node-sub" text-anchor="start">ACTIVE → DISABLED / FROZEN</text>
+  <text x="945" y="444" class="node-sub" text-anchor="start">DISABLED / FROZEN → ACTIVE（恢复）</text>
+  <text x="945" y="466" class="node-sub" text-anchor="start">ACTIVE → DEACTIVATED → ARCHIVED</text>
+  <text x="945" y="492" class="node-sub" text-anchor="start" fill="#b91c1c">sys_tenant 不参与行级隔离</text>
+  <text x="945" y="512" class="node-sub" text-anchor="start" fill="#b91c1c">（平台管理员统一维护）</text>
+
+  <line x1="870" y1="300" x2="930" y2="290" stroke="#4f46e5" stroke-width="1.6" marker-end="url(#a)"/>
+
+  <!-- ===== Column 4: 配额约束 ===== -->
+  <rect x="1270" y="140" width="190" height="150" rx="7" fill="#fffbeb" stroke="#d97706" stroke-width="1.6"/>
+  <text x="1365" y="164" class="node-title">TenantQuota</text>
+  <line x1="1285" y1="176" x2="1445" y2="176" stroke="#fde68a" stroke-width="1"/>
+  <text x="1365" y="198" class="node-sub">max_users</text>
+  <text x="1365" y="216" class="node-sub">最大用户数</text>
+  <text x="1365" y="240" class="node-sub">max_storage_mb</text>
+  <text x="1365" y="258" class="node-sub">最大存储容量</text>
+  <text x="1365" y="280" class="node-sub" fill="#64748b">NULL = 不限制</text>
+
+  <line x1="1220" y1="200" x2="1270" y2="200" stroke="#94a3b8" stroke-width="1.4" stroke-dasharray="4,3" marker-end="url(#ag)"/>
+
+  <rect x="1270" y="306" width="190" height="120" rx="7" fill="#fef2f2" stroke="#dc2626" stroke-width="1.6"/>
+  <text x="1365" y="330" class="node-title">超限处置</text>
+  <line x1="1285" y1="342" x2="1445" y2="342" stroke="#fecaca" stroke-width="1"/>
+  <text x="1365" y="364" class="node-sub">拒绝写入</text>
+  <text x="1365" y="384" class="node-sub">或</text>
+  <text x="1365" y="404" class="node-sub">冻结租户 FROZEN</text>
+
+  <line x1="1220" y1="360" x2="1270" y2="360" stroke="#4f46e5" stroke-width="1.6" marker-end="url(#a)"/>
+
+  <!-- ===== 白名单详情 section (bottom) ===== -->
+  <rect x="40" y="720" width="1420" height="128" rx="8" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.4"/>
+  <text x="60" y="744" class="phase" fill="#334155" style="font-size:14px">DefaultTenantLineHandler.IGNORE_TABLES —— 15 张不参与租户行级隔离的平台级表</text>
+
+  <rect x="60" y="760" width="440" height="72" rx="7" fill="#ffffff" stroke="#94a3b8" stroke-width="1.4"/>
+  <text x="80" y="784" class="node-sub" text-anchor="start">sys_menu · sys_permission · sys_role · sys_role_permission</text>
+  <text x="80" y="804" class="node-sub" text-anchor="start">sys_dict · sys_dict_item · sys_dict_type · sys_dict_data</text>
+  <text x="80" y="824" class="node-sub" text-anchor="start">sys_tenant · sys_config · sys_oss</text>
+
+  <rect x="520" y="760" width="420" height="72" rx="7" fill="#ffffff" stroke="#94a3b8" stroke-width="1.4"/>
+  <text x="540" y="784" class="node-sub" text-anchor="start">flyway_schema_history</text>
+  <text x="540" y="804" class="node-sub" text-anchor="start">scheduler_job · scheduler_job_log</text>
+  <text x="540" y="824" class="node-sub" text-anchor="start">sys_domain_event_outbox</text>
+
+  <rect x="960" y="760" width="480" height="72" rx="7" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.4"/>
+  <text x="980" y="784" class="node-sub" text-anchor="start">参与隔离：sys_user / sys_dept / 业务表（含 tenant_id 列 + idx_tenant_id）</text>
+  <text x="980" y="804" class="node-sub" text-anchor="start">sys_message_outbox 含 tenant_id 并建索引，参与隔离</text>
+  <text x="980" y="824" class="node-sub" text-anchor="start">忽略表由超级管理员统一维护，避免租户上下文缺失导致查询失败</text>
+
+  <!-- Footer notes -->
+  <text x="60" y="878" class="note" style="font-weight:600">关键业务规则与风险提示：</text>
+  <text x="60" y="900" class="note">1. 隔离模型为「共享库 + 共享 Schema + 行级 tenant_id」，由 TenantLineInnerInterceptor 在 SQL 层自动注入 WHERE tenant_id = ?，业务代码无需手写租户条件。</text>
+  <text x="60" y="920" class="note">2. 上下文传播依赖 Reactor 全局 Hook（onScheduleHook / onEachOperator）+ TenantContextSubscriber；异步/跨线程场景必须经 TenantContext.withTenant 或 Hook 恢复，否则 getTenantId() 抛 IllegalStateException。</text>
+  <text x="60" y="940" class="note">3. 租户状态 ACTIVE/DISABLED/FROZEN/DEACTIVATED/ARCHIVED 决定可用性；FROZEN 常用于配额超限或欠费，DEACTIVATED/ARCHIVED 为退出路径，恢复仅允许回到 ACTIVE。</text>
+  <text x="60" y="960" class="note">4. 风险：TenantWebFilter/TenantContextReactorHolder 仅存在于文档，实际以 JwtAuthenticationFilter 从 sys_user.tenant_id 取可信租户；跨租户泄漏防护依赖 finally clear() 与 Hook 正确性。</text>
+
+  <!-- Legend -->
+  <line x1="60" y1="990" x2="110" y2="990" stroke="#4f46e5" stroke-width="1.8" marker-end="url(#a)"/>
+  <text x="120" y="994" class="legend">主流程</text>
+  <line x1="220" y1="990" x2="270" y2="990" stroke="#94a3b8" stroke-width="1.4" stroke-dasharray="4,3" marker-end="url(#ag)"/>
+  <text x="280" y="994" class="legend">关联/配额</text>
+  <line x1="400" y1="990" x2="450" y2="990" stroke="#dc2626" stroke-width="1.4" stroke-dasharray="5,3"/>
+  <text x="460" y="994" class="legend">实现缺口/风险</text>
+  <rect x="600" y="980" width="14" height="14" rx="3" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.4"/>
+  <text x="622" y="994" class="legend">上下文装配</text>
+  <rect x="730" y="980" width="14" height="14" rx="3" fill="#ecfdf5" stroke="#059669" stroke-width="1.4"/>
+  <text x="752" y="994" class="legend">SQL 隔离</text>
+  <rect x="840" y="980" width="14" height="14" rx="3" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.4"/>
+  <text x="862" y="994" class="legend">生命周期</text>
+  <rect x="950" y="980" width="14" height="14" rx="3" fill="#fffbeb" stroke="#d97706" stroke-width="1.4"/>
+  <text x="972" y="994" class="legend">配额约束</text>
+
+  <text x="750" y="1024" class="note" text-anchor="middle">数据源：apex-common（context/TenantContext · annotation/TenantAware）、apex-infrastructure（persistence/datapermission/DefaultTenantLineHandler · config/MybatisPlusConfig · po/TenantPO）、apex-interfaces（aspect/TenantAspect · security/JwtAuthenticationFilter）、apex-application（service/TenantApplicationService）、apex-domain（repository/TenantRepository · model/entity/TenantEntity · valueobject/TenantQuota）、迁移 mysql/V17</text>
+</svg>

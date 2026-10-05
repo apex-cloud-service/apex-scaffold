@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 760" width="1400" height="760">
+  <metadata>
+    <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/">
+      <rdf:Description>
+        <dc:title>Apex Scaffold 认证中心数据表 ER 图</dc:title>
+        <dc:creator>Apex Team</dc:creator>
+        <dc:date>2026-10-05</dc:date>
+        <dc:version>1.3.1</dc:version>
+        <dc:description>认证中心（OAuth2/JWT/MFA/设备信任/Token 生命周期）实体关系，数据源 MySQL Flyway V25-V58</dc:description>
+      </rdf:Description>
+    </rdf:RDF>
+  </metadata>
+
+  <defs>
+    <style>
+      .title { font: 700 30px system-ui, sans-serif; fill: #0f172a; text-anchor: middle; }
+      .subtitle { font: 500 13px system-ui, sans-serif; fill: #64748b; text-anchor: middle; }
+      .grp { font: 600 14px system-ui, sans-serif; }
+      .tbl { font: 600 13px system-ui, sans-serif; fill: #ffffff; text-anchor: middle; }
+      .pk { font: 600 11px 'SF Mono', monospace; fill: #dc2626; }
+      .fk { font: 600 11px 'SF Mono', monospace; fill: #2563eb; }
+      .field { font: 400 11px 'SF Mono', monospace; fill: #475569; }
+      .type { font: 400 10px 'SF Mono', monospace; fill: #94a3b8; }
+      .note { font: 400 11px system-ui, sans-serif; fill: #64748b; }
+      .legend { font: 400 11px system-ui, sans-serif; fill: #475569; }
+      .rel { font: 400 10px system-ui, sans-serif; fill: #64748b; text-anchor: middle; }
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2563eb"/>
+    </marker>
+    <marker id="arrow-gray" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#94a3b8"/>
+    </marker>
+  </defs>
+
+  <rect width="1400" height="760" fill="#ffffff"/>
+
+  <text x="700" y="42" class="title">Apex Scaffold 认证中心数据表 ER 图</text>
+  <text x="700" y="66" class="subtitle">数据源：MySQL Flyway V25-V58 · OAuth2 + JWT 密钥轮换 + MFA + 设备信任 + Token 生命周期 · v1.3.1</text>
+
+  <!-- ============ Group 1: OAuth2 授权服务器 ============ -->
+  <rect x="40" y="92" width="640" height="400" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.6"/>
+  <text x="60" y="116" class="grp" fill="#3b82f6">OAuth2 授权服务器（Spring Authorization Server 1.4.0）</text>
+
+  <!-- oauth2_registered_client -->
+  <rect x="60" y="132" width="280" height="200" rx="6" fill="#ffffff" stroke="#3b82f6" stroke-width="1.8"/>
+  <rect x="60" y="132" width="280" height="28" rx="6" fill="#3b82f6"/>
+  <text x="200" y="151" class="tbl">oauth2_registered_client</text>
+  <text x="70" y="178" class="pk">● id (PK VARCHAR)</text>
+  <text x="70" y="195" class="field">client_id</text><text x="250" y="195" class="type">VARCHAR uk_client_id</text>
+  <text x="70" y="210" class="field">client_secret</text><text x="250" y="210" class="type">VARCHAR(200)</text>
+  <text x="70" y="225" class="field">client_name / grant_types</text>
+  <text x="70" y="240" class="field">redirect_uris / scopes</text>
+  <text x="70" y="255" class="field">client_settings / token_settings</text>
+  <text x="70" y="272" class="type">V47 轮换字段(V3 前)</text>
+  <text x="70" y="287" class="fk">previous_client_secret</text>
+  <text x="70" y="302" class="fk">secret_rotated_at / rotation_count</text>
+
+  <!-- oauth2_authorization -->
+  <rect x="380" y="132" width="280" height="250" rx="6" fill="#ffffff" stroke="#3b82f6" stroke-width="1.8"/>
+  <rect x="380" y="132" width="280" height="28" rx="6" fill="#3b82f6"/>
+  <text x="520" y="151" class="tbl">oauth2_authorization</text>
+  <text x="390" y="178" class="pk">● id (PK VARCHAR)</text>
+  <text x="390" y="195" class="fk">◆ registered_client_id (FK)</text>
+  <text x="390" y="210" class="field">principal_name</text>
+  <text x="390" y="225" class="field">authorization_grant_type</text>
+  <text x="390" y="240" class="field">authorization_code / metadata</text>
+  <text x="390" y="255" class="field">access_token / scopes</text>
+  <text x="390" y="270" class="field">refresh_token / metadata</text>
+  <text x="390" y="285" class="field">oidc_id_token</text>
+  <text x="390" y="300" class="field">user_code / device_code</text>
+  <text x="390" y="317" class="type">V42/V48/V58 增强：</text>
+  <text x="390" y="332" class="field">access_token_hash / token_family</text>
+  <text x="390" y="347" class="field">revoked_at / revoked_by / device_id</text>
+
+  <!-- oauth2_authorization_consent -->
+  <rect x="60" y="350" width="280" height="130" rx="6" fill="#ffffff" stroke="#2563eb" stroke-width="1.6"/>
+  <rect x="60" y="350" width="280" height="28" rx="6" fill="#2563eb"/>
+  <text x="200" y="369" class="tbl">oauth2_authorization_consent</text>
+  <text x="70" y="396" class="pk">● registered_client_id</text>
+  <text x="70" y="411" class="pk">● principal_name</text>
+  <text x="70" y="426" class="field">authorities</text>
+  <text x="70" y="443" class="type">复合主键(客户端+用户)</text>
+
+  <!-- oauth2_scope_permission -->
+  <rect x="380" y="350" width="280" height="130" rx="6" fill="#ffffff" stroke="#2563eb" stroke-width="1.6"/>
+  <rect x="380" y="350" width="280" height="28" rx="6" fill="#2563eb"/>
+  <text x="520" y="369" class="tbl">oauth2_scope_permission</text>
+  <text x="390" y="396" class="pk">● id (PK)</text>
+  <text x="390" y="411" class="field">scope</text><text x="500" y="411" class="type">VARCHAR(100)</text>
+  <text x="390" y="426" class="field">permission_code</text><text x="500" y="426" class="type">SCOPE_*</text>
+  <text x="390" y="441" class="field">description</text>
+  <text x="390" y="456" class="type">uk(scope, permission_code)</text>
+
+  <!-- ============ Group 2: 安全认证扩展 ============ -->
+  <rect x="720" y="92" width="640" height="400" rx="8" fill="#fdf2f8" stroke="#ec4899" stroke-width="1.6"/>
+  <text x="740" y="116" class="grp" fill="#ec4899">安全认证扩展（JWT 密钥 · MFA · 生物识别 · 设备信任）</text>
+
+  <!-- jwt_keys -->
+  <rect x="740" y="132" width="290" height="180" rx="6" fill="#ffffff" stroke="#d97706" stroke-width="1.8"/>
+  <rect x="740" y="132" width="290" height="28" rx="6" fill="#d97706"/>
+  <text x="885" y="151" class="tbl">jwt_keys</text>
+  <text x="750" y="178" class="pk">● id (PK)</text>
+  <text x="750" y="195" class="field">key_version</text><text x="930" y="195" class="type">VARCHAR v20260925</text>
+  <text x="750" y="210" class="field">encrypted_secret</text><text x="930" y="210" class="type">AES-256</text>
+  <text x="750" y="225" class="field">algorithm</text><text x="930" y="225" class="type">HS256/RS256</text>
+  <text x="750" y="240" class="field">status</text><text x="930" y="240" class="type">ACTIVE/ROTATING</text>
+  <text x="750" y="255" class="field">activated_at / expires_at</text>
+  <text x="750" y="270" class="field">deprecated_at / revoked_at</text>
+  <text x="750" y="285" class="field">rotation_reason</text><text x="930" y="285" class="type">SCHEDULED...</text>
+  <text x="750" y="303" class="type">V26；V48 另建 jwt_key_version</text>
+
+  <!-- mfa_config -->
+  <rect x="1060" y="132" width="280" height="150" rx="6" fill="#ffffff" stroke="#ec4899" stroke-width="1.8"/>
+  <rect x="1060" y="132" width="280" height="28" rx="6" fill="#ec4899"/>
+  <text x="1200" y="151" class="tbl">mfa_config</text>
+  <text x="1070" y="178" class="pk">● id (PK)</text>
+  <text x="1070" y="195" class="fk">◆ user_id</text><text x="1240" y="195" class="type">VARCHAR(64) uk</text>
+  <text x="1070" y="210" class="fk">◆ tenant_id</text>
+  <text x="1070" y="225" class="field">type</text><text x="1240" y="225" class="type">TOTP/SMS/EMAIL</text>
+  <text x="1070" y="240" class="field">secret / backup_codes</text>
+  <text x="1070" y="255" class="field">status / failed_attempts</text>
+  <text x="1070" y="270" class="field">last_verified_at</text>
+  <text x="1070" y="285" class="type">V27；uk(user_id,type)</text>
+
+  <!-- biometric_auth -->
+  <rect x="740" y="300" width="290" height="180" rx="6" fill="#ffffff" stroke="#ec4899" stroke-width="1.6"/>
+  <rect x="740" y="300" width="290" height="28" rx="6" fill="#ec4899"/>
+  <text x="885" y="319" class="tbl">biometric_auth</text>
+  <text x="750" y="346" class="pk">● id (PK)</text>
+  <text x="750" y="363" class="fk">◆ user_id</text><text x="930" y="363" class="type">VARCHAR(64)</text>
+  <text x="750" y="378" class="fk">◆ tenant_id</text>
+  <text x="750" y="393" class="field">type</text><text x="930" y="393" class="type">FACE_ID/WEBAUTHN</text>
+  <text x="750" y="408" class="field">template_id / public_key</text>
+  <text x="750" y="423" class="fk">◆ device_id</text><text x="930" y="423" class="type">VARCHAR(128)</text>
+  <text x="750" y="438" class="field">status / failed_attempts</text>
+  <text x="750" y="453" class="field">last_auth_at</text>
+  <text x="750" y="468" class="type">V55；uk(user,device,type)</text>
+
+  <!-- device_trust -->
+  <rect x="1060" y="300" width="280" height="180" rx="6" fill="#ffffff" stroke="#ec4899" stroke-width="1.6"/>
+  <rect x="1060" y="300" width="280" height="28" rx="6" fill="#ec4899"/>
+  <text x="1200" y="319" class="tbl">device_trust</text>
+  <text x="1070" y="346" class="pk">● id (PK)</text>
+  <text x="1070" y="363" class="fk">◆ user_id</text><text x="1220" y="363" class="type">VARCHAR(64) uk</text>
+  <text x="1070" y="378" class="fk">◆ tenant_id</text>
+  <text x="1070" y="393" class="fk">◆ device_id</text><text x="1220" y="393" class="type">VARCHAR(128)</text>
+  <text x="1070" y="408" class="field">device_type / fingerprint</text>
+  <text x="1070" y="423" class="field">trust_level</text><text x="1220" y="423" class="type">UNTRUSTED-FULL</text>
+  <text x="1070" y="438" class="field">risk_score / auth_count</text>
+  <text x="1070" y="455" class="field">status / last_auth_at</text>
+  <text x="1070" y="470" class="type">V56；uk(user,device)</text>
+
+  <!-- ============ Group 3: Token 生命周期 ============ -->
+  <rect x="40" y="508" width="1320" height="160" rx="8" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.4"/>
+  <text x="60" y="532" class="grp" fill="#64748b">Token 生命周期与安全审计（ip_access_control / login_history / security_audit_log）</text>
+
+  <!-- login_history -->
+  <rect x="60" y="548" width="320" height="100" rx="6" fill="#ffffff" stroke="#94a3b8" stroke-width="1.4"/>
+  <rect x="60" y="548" width="320" height="26" rx="6" fill="#94a3b8"/>
+  <text x="220" y="566" class="tbl">login_history</text>
+  <text x="70" y="590" class="field">user_id / username / login_type</text>
+  <text x="70" y="605" class="field">success / client_ip / device_id</text>
+  <text x="70" y="620" class="field">is_suspicious / location</text>
+  <text x="70" y="637" class="type">V48 安全增强创建</text>
+
+  <!-- ip_access_control -->
+  <rect x="420" y="548" width="320" height="100" rx="6" fill="#ffffff" stroke="#94a3b8" stroke-width="1.4"/>
+  <rect x="420" y="548" width="320" height="26" rx="6" fill="#94a3b8"/>
+  <text x="580" y="566" class="tbl">ip_access_control</text>
+  <text x="430" y="590" class="field">tenant_id / ip_address / type</text>
+  <text x="430" y="605" class="field">WHITELIST / BLACKLIST</text>
+  <text x="430" y="620" class="field">enabled / priority / expires_at</text>
+  <text x="430" y="637" class="type">V53 创建</text>
+
+  <!-- security_audit_log -->
+  <rect x="780" y="548" width="320" height="100" rx="6" fill="#ffffff" stroke="#94a3b8" stroke-width="1.4"/>
+  <rect x="780" y="548" width="320" height="26" rx="6" fill="#94a3b8"/>
+  <text x="940" y="566" class="tbl">security_audit_log</text>
+  <text x="790" y="590" class="field">event_type / user_id / username</text>
+  <text x="790" y="605" class="field">client_ip / device_id</text>
+  <text x="790" y="620" class="field">success / failure_reason</text>
+  <text x="790" y="637" class="type">V48 创建</text>
+
+  <!-- oauth2 audit -->
+  <text x="60" y="680" class="note">其他安全表：oauth2_audit_log（V25 OAuth2 审计）；token_rotation_history / token_security_event / encryption_key_version（V42）；encryption_key / password_history / trusted_device / oauth2_client_secret_history（V48）；oauth2_token 扩展（V48/V52/V58）</text>
+
+  <!-- relationships -->
+  <line x1="380" y1="210" x2="340" y2="240" stroke="#2563eb" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <text x="355" y="230" class="rel">N:1</text>
+  <path d="M 60 400 C 30 400 30 250 60 250" fill="none" stroke="#94a3b8" stroke-width="1.4" stroke-dasharray="4,3"/>
+  <path d="M 660 250 C 700 250 700 320 740 320" fill="none" stroke="#94a3b8" stroke-width="1.4" stroke-dasharray="4,3"/>
+
+  <text x="330" y="720" class="note" text-anchor="middle">数据源：V25 oauth2、V26 jwt_keys、V27 mfa_config、V42 token 加密、V47 client secret 轮换、V48 安全增强、V53 IP 访问控制、V55 生物识别、V56 设备信任、V58 token 撤销追踪</text>
+</svg>

@@ -1,0 +1,68 @@
+sequenceDiagram
+    autonumber
+    participant Client as 客户端
+    participant Router as AuthenticationRouter<br/>/auth/v1/api
+    participant Service as LoginService<br/>(apex-auth-center)
+    participant MfaSvc as MfaService
+    participant BioSvc as BiometricAuthService
+    participant DeviceSvc as DeviceTrustService
+    participant TokenSvc as TokenService
+    participant Cache as Redis（令牌）
+    participant DB as MySQL
+
+    Note over Client,DB: 登录安全加固链路：MFA(TOTP) + 生物识别(WebAuthn) + 设备信任
+
+    Client->>+Router: POST /auth/v1/register/fido/options<br/>（发起生物识别注册）
+    Router->>+BioSvc: registerOptions(userId, deviceId)
+    BioSvc-->>-Router: 生成公钥挑战 options
+    Router-->>-Client: 200 {challenge, rp, user}
+
+    Client->>Client: 客户端生成密钥对<br/>SHA256withRSA 签名
+    Client->>+Router: POST /auth/v1/register/fido/verify
+    Router->>+BioSvc: verifyRegistration(credential)
+    BioSvc->>BioSvc: 校验签名 + 存储公钥
+    BioSvc-->>-Router: 注册成功
+    Router-->>-Client: 200 绑定完成
+
+    Note over Client,Router: 后续登录：输入账号 + 密码/验证码 通过后
+
+    Client->>+Service: login(request)
+    Service->>Service: 校验基础凭据（密码/短信）
+
+    opt MFA 已开启（MFA_CONFIG）
+        Service->>+MfaSvc: validateTotp(secret, code)
+        MfaSvc->>MfaSvc: RFC 6238 TOTP 校时 + 步进校验
+        MfaSvc-->>-Service: 校验结果
+        alt TOTP 失败
+            Service-->>Client: 401 MFA_INVALID
+        end
+    end
+
+    opt 需要生物识别二次确认
+        Service->>+BioSvc: verifyAssertion(credentialId, signature)
+        BioSvc->>BioSvc: SHA256withRSA 验签
+        BioSvc-->>-Service: 校验结果
+        alt 验签失败
+            Service-->>Client: 401 BIOMETRIC_INVALID
+        end
+    end
+
+    opt 设备信任增强（DEVICE_TRUST）
+        Service->>+DeviceSvc: evaluateTrust(deviceId, risk)
+        DeviceSvc->>Cache: GET device_trust:{deviceId}
+        DeviceSvc-->>-Service: 信任等级 / 需额外验证
+        alt 低信任且高敏操作
+            Service-->>Client: 需要 MFA 二次验证
+        end
+    end
+
+    Service->>+TokenSvc: issueTokenPair(userId, deviceId)
+    TokenSvc->>Cache: SET token:access:{jjti}（2h）
+    TokenSvc->>Cache: SET token:refresh:{jjti}（7d）
+    TokenSvc-->>-Service: access + refresh 令牌对
+    Service->>Cache: DEL login:fail:* 清零失败计数
+    Service->>DB: INSERT INTO login_history（成功）
+    Service-->>-Router: LoginResponse
+    Router-->>-Client: 200 {accessToken, refreshToken}
+
+    Note over Client,DB: 关键点：MFA/生物识别/设备信任为可选加固层，按租户/安全策略叠加启用

@@ -1,0 +1,168 @@
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#eff6ff','primaryTextColor':'#0f172a','primaryBorderColor':'#3b82f6','lineColor':'#2563eb','fontSize':'13px'}}}%%
+erDiagram
+    OFFICE_PLATFORM_APP ||--o{ OFFICE_IDENTITY_BINDING : "platform"
+    OFFICE_IDENTITY_BINDING ||--o{ OFFICE_ORGANIZATION_MAPPING : "platform"
+    OFF_DEPARTMENT ||--o{ OFF_DEPARTMENT : "parent_id 树形"
+    OFF_DEPARTMENT ||--o{ OFF_EMPLOYEE : "dept_id"
+    OFF_MESSAGE_TEMPLATE ||--o{ OFF_MESSAGE : "template_id"
+    OFF_MESSAGE ||--o{ OFF_MESSAGE_RECIPIENT : "message_id"
+
+    OFFICE_PLATFORM_APP {
+        bigint id PK "主键"
+        bigint tenant_id "租户"
+        varchar platform UK "FEISHU/DINGTALK/WECOM"
+        varchar app_id "应用标识"
+        varchar secret_reference "密钥引用"
+        varchar redirect_uri "回调地址"
+        text capabilities "能力集"
+        tinyint enabled "是否启用"
+    }
+
+    OFFICE_IDENTITY_BINDING {
+        bigint id PK "主键"
+        bigint tenant_id "租户"
+        varchar platform "外部平台"
+        varchar external_user_id "外部用户ID"
+        varchar user_id "Apex 用户"
+        varchar status "状态"
+        tinyint enabled "是否启用"
+    }
+
+    OFFICE_ORGANIZATION_MAPPING {
+        bigint id PK "主键"
+        bigint tenant_id "租户"
+        varchar platform "平台"
+        varchar external_org_id "外部组织ID"
+        varchar external_user_id "外部用户ID"
+        bigint apex_dept_id "Apex 部门"
+        bigint apex_user_id "Apex 用户"
+    }
+
+    OFFICE_SYNC_TASK {
+        bigint id PK "主键"
+        bigint tenant_id "租户"
+        varchar platform "平台"
+        varchar cursor_value "增量游标"
+        varchar state "同步状态"
+        varchar failure_message "失败信息"
+    }
+
+    OFF_DEPARTMENT {
+        bigint id PK "主键"
+        varchar dept_code UK "部门编码"
+        varchar dept_name "部门名称"
+        bigint parent_id "上级部门"
+        varchar dept_path "层级路径"
+        int dept_level "层级"
+        bigint leader_id "负责人"
+        varchar status "状态"
+        varchar sync_source "同步来源"
+        varchar external_id "外部ID"
+        bigint tenant_id "租户"
+    }
+
+    OFF_EMPLOYEE {
+        bigint id PK "主键"
+        varchar employee_code UK "工号"
+        varchar employee_name "姓名"
+        bigint dept_id FK "所属部门"
+        varchar position "职位"
+        varchar mobile "手机"
+        varchar email "邮箱"
+        varchar user_id "关联用户"
+        varchar sync_source "同步来源"
+        varchar external_id "外部ID"
+    }
+
+    OFF_SYNC_HISTORY {
+        bigint id PK "主键"
+        varchar sync_type "同步类型"
+        varchar sync_source "同步来源"
+        varchar sync_status "状态"
+        datetime start_time "开始时间"
+        datetime end_time "结束时间"
+        int dept_count "部门数"
+        int employee_count "员工数"
+        varchar error_message "错误信息"
+    }
+
+    OFF_MESSAGE_TEMPLATE {
+        bigint id PK "主键"
+        varchar template_code UK "模板编码"
+        varchar template_name "模板名称"
+        varchar template_type "模板类型"
+        text template_content "模板内容"
+        text variables "变量定义"
+        tinyint enabled "是否启用"
+        bigint tenant_id "租户"
+    }
+
+    OFF_MESSAGE {
+        bigint id PK "主键"
+        varchar message_code UK "消息编码"
+        bigint template_id FK "关联模板"
+        varchar subject "标题"
+        text content "内容"
+        varchar message_type "类型"
+        varchar priority "优先级"
+        varchar sender_id "发送人"
+        varchar status "状态"
+        datetime send_time "发送时间"
+        datetime expire_time "过期时间"
+    }
+
+    OFF_MESSAGE_RECIPIENT {
+        bigint id PK "主键"
+        bigint message_id FK "消息"
+        varchar recipient_id "收件人"
+        varchar recipient_type "收件类型"
+        tinyint read_status "已读状态"
+        datetime read_time "已读时间"
+    }
+
+    OFFICE_MESSAGE {
+        bigint id PK "主键"
+        varchar platform "平台"
+        varchar app_id "应用"
+        varchar message_type "消息类型"
+        varchar recipient_ids "收件人ID集"
+        varchar title "标题"
+        text content "内容"
+        varchar status "PENDING/SENDING/SUCCESS/FAILED/PARTIAL_SUCCESS"
+        varchar retry_count "重试次数"
+        varchar sent_at "发送时间"
+    }
+
+    OFFICE_APPROVAL_PROCESS {
+        bigint id PK "主键"
+        varchar platform "平台"
+        varchar platform_instance_id "平台实例ID"
+        varchar template_id "审批模板"
+        varchar title "标题"
+        varchar initiator_id "发起人"
+        varchar status "状态"
+        text form_data "表单数据"
+    }
+
+    OFFICE_CALENDAR_EVENT {
+        bigint id PK "主键"
+        varchar platform "平台"
+        varchar platform_event_id "平台事件ID"
+        varchar title "标题"
+        varchar organizer_id "组织者"
+        datetime start_time "开始时间"
+        datetime end_time "结束时间"
+        varchar participant_ids "参与人"
+        varchar recurrence_rule "重复规则"
+    }
+
+    OFFICE_DOCUMENT_INFO {
+        bigint id PK "主键"
+        varchar platform "平台"
+        varchar platform_document_id "平台文档ID"
+        varchar document_type "文档类型"
+        varchar parent_folder_id "父文件夹"
+        varchar owner_id "所有者"
+        tinyint is_folder "是否文件夹"
+        varchar permission "权限"
+    }

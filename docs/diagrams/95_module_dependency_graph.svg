@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 900" width="1400" height="900">
+  <defs>
+    <style>
+      .title{font:700 32px sans-serif;fill:#0f172a;text-anchor:middle}
+      .subtitle{font:500 13px sans-serif;fill:#64748b;text-anchor:middle}
+      .col-title{font:600 12px sans-serif;fill:#64748b;text-anchor:middle}
+      .box-title{font:600 13px sans-serif;fill:#0f172a;text-anchor:middle}
+      .box-desc{font:400 10px sans-serif;fill:#475569;text-anchor:middle}
+      .note{font:500 11px sans-serif;fill:#64748b}
+      .legend{font:500 11px sans-serif;fill:#475569}
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#94a3b8"/>
+    </marker>
+  </defs>
+
+  <rect width="1400" height="900" fill="#fff"/>
+  <text x="700" y="40" class="title">模块依赖关系图（11 个 Maven 模块）</text>
+  <text x="700" y="64" class="subtitle">按依赖深度从左到右分层 · 箭头指向被依赖方 · 数据源：各模块 pom.xml · v1.3.1</text>
+
+  <!-- column titles -->
+  <text x="130" y="100" class="col-title">L0 基础</text>
+  <text x="350" y="100" class="col-title">L1</text>
+  <text x="570" y="100" class="col-title">L2</text>
+  <text x="790" y="100" class="col-title">L3 应用</text>
+  <text x="1010" y="100" class="col-title">L4 组合</text>
+  <text x="1230" y="100" class="col-title">L5 交付</text>
+
+  <!-- edges (drawn first, under boxes) -->
+  <g stroke="#94a3b8" stroke-width="1.4" fill="none" opacity="0.75">
+    <line x1="220" y1="422" x2="258" y2="422" marker-end="url(#arrow)"/>
+    <line x1="220" y1="422" x2="258" y2="512" marker-end="url(#arrow)"/>
+    <line x1="220" y1="422" x2="478" y2="472" marker-end="url(#arrow)"/>
+    <line x1="220" y1="422" x2="478" y2="572" marker-end="url(#arrow)"/>
+    <line x1="220" y1="422" x2="698" y2="472" marker-end="url(#arrow)"/>
+    <line x1="220" y1="422" x2="918" y2="512" marker-end="url(#arrow)"/>
+    <line x1="220" y1="422" x2="1138" y2="472" marker-end="url(#arrow)"/>
+    <line x1="440" y1="422" x2="478" y2="372" marker-end="url(#arrow)"/>
+    <line x1="440" y1="512" x2="478" y2="472" marker-end="url(#arrow)"/>
+    <line x1="440" y1="512" x2="478" y2="572" marker-end="url(#arrow)"/>
+    <line x1="440" y1="512" x2="698" y2="472" marker-end="url(#arrow)"/>
+    <line x1="440" y1="512" x2="918" y2="422" marker-end="url(#arrow)"/>
+    <line x1="440" y1="512" x2="1138" y2="472" marker-end="url(#arrow)"/>
+    <line x1="660" y1="472" x2="698" y2="472" marker-end="url(#arrow)"/>
+    <line x1="660" y1="472" x2="918" y2="422" marker-end="url(#arrow)"/>
+    <line x1="660" y1="472" x2="918" y2="512" marker-end="url(#arrow)"/>
+    <line x1="660" y1="472" x2="1138" y2="472" marker-end="url(#arrow)"/>
+    <line x1="660" y1="572" x2="918" y2="422" marker-end="url(#arrow)"/>
+    <line x1="880" y1="472" x2="918" y2="422" marker-end="url(#arrow)"/>
+    <line x1="880" y1="472" x2="918" y2="512" marker-end="url(#arrow)"/>
+    <line x1="880" y1="472" x2="1138" y2="472" marker-end="url(#arrow)"/>
+    <line x1="1100" y1="422" x2="1138" y2="472" marker-end="url(#arrow)"/>
+  </g>
+
+  <!-- L0 -->
+  <rect x="40" y="390" width="180" height="64" rx="8" fill="#4f46e5" opacity="0.1" stroke="#4f46e5" stroke-width="2"/>
+  <text x="130" y="416" class="box-title">apex-common</text>
+  <text x="130" y="436" class="box-desc">通用能力/上下文/限流</text>
+  <rect x="40" y="480" width="180" height="64" rx="8" fill="#4f46e5" opacity="0.1" stroke="#4f46e5" stroke-width="2"/>
+  <text x="130" y="506" class="box-title">apex-generator</text>
+  <text x="130" y="526" class="box-desc">代码生成 CLI</text>
+
+  <!-- L1 -->
+  <rect x="260" y="390" width="180" height="64" rx="8" fill="#0891b2" opacity="0.1" stroke="#0891b2" stroke-width="2"/>
+  <text x="350" y="416" class="box-title">license-starter</text>
+  <text x="350" y="436" class="box-desc">授权门控 AutoConfig</text>
+  <rect x="260" y="480" width="180" height="64" rx="8" fill="#059669" opacity="0.1" stroke="#059669" stroke-width="2"/>
+  <text x="350" y="506" class="box-title">apex-domain</text>
+  <text x="350" y="526" class="box-desc">领域模型/仓储接口</text>
+
+  <!-- L2 -->
+  <rect x="480" y="340" width="180" height="64" rx="8" fill="#0891b2" opacity="0.1" stroke="#0891b2" stroke-width="2"/>
+  <text x="570" y="366" class="box-title">license-tools</text>
+  <text x="570" y="386" class="box-desc">LicenseGenerator</text>
+  <rect x="480" y="440" width="180" height="64" rx="8" fill="#d97706" opacity="0.1" stroke="#d97706" stroke-width="2"/>
+  <text x="570" y="466" class="box-title">apex-infrastructure</text>
+  <text x="570" y="486" class="box-desc">持久化/缓存/MQ/存储</text>
+  <rect x="480" y="540" width="180" height="64" rx="8" fill="#059669" opacity="0.1" stroke="#059669" stroke-width="2"/>
+  <text x="570" y="566" class="box-title">apex-workflow</text>
+  <text x="570" y="586" class="box-desc">工作流引擎</text>
+
+  <!-- L3 -->
+  <rect x="700" y="440" width="180" height="64" rx="8" fill="#0891b2" opacity="0.14" stroke="#0891b2" stroke-width="2.5"/>
+  <text x="790" y="466" class="box-title">apex-application</text>
+  <text x="790" y="486" class="box-desc">应用服务编排</text>
+
+  <!-- L4 -->
+  <rect x="920" y="390" width="180" height="64" rx="8" fill="#6366f1" opacity="0.12" stroke="#6366f1" stroke-width="2.5"/>
+  <text x="1010" y="416" class="box-title">apex-interfaces</text>
+  <text x="1010" y="436" class="box-desc">Handler/Router · Application</text>
+  <rect x="920" y="480" width="180" height="64" rx="8" fill="#6366f1" opacity="0.12" stroke="#6366f1" stroke-width="2.5"/>
+  <text x="1010" y="506" class="box-title">apex-auth-center</text>
+  <text x="1010" y="526" class="box-desc">独立认证中心</text>
+
+  <!-- L5 -->
+  <rect x="1140" y="440" width="180" height="64" rx="8" fill="#475569" opacity="0.1" stroke="#475569" stroke-width="2.5"/>
+  <text x="1230" y="466" class="box-title">apex-example</text>
+  <text x="1230" y="486" class="box-desc">示例应用</text>
+
+  <!-- legend -->
+  <rect x="40" y="650" width="1320" height="200" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="60" y="680" class="legend" font-weight="600">依赖要点</text>
+  <text x="60" y="706" class="legend">• apex-common 为全局基础，被 9 个模块依赖；apex-generator 独立（仅模板引擎，不依赖内部模块）。</text>
+  <text x="60" y="730" class="legend">• 依赖方向严格单向：common → domain → infrastructure → application → interfaces，无循环依赖。</text>
+  <text x="60" y="754" class="legend">• apex-workflow 直接依赖 domain/common（不依赖 application），由 apex-interfaces 组合装配。</text>
+  <text x="60" y="778" class="legend">• apex-auth-center 复用 common/infrastructure/application，运行于独立 Spring ApplicationContext（AuthCenterApplication）。</text>
+  <text x="60" y="802" class="legend">• apex-interfaces 为可运行入口（Application），聚合 application/infrastructure/domain/workflow/license-starter。</text>
+  <text x="60" y="826" class="legend">• apex-example 依赖 apex-interfaces，作为脚手架示例独立启动（ExampleApplication）。</text>
+
+  <text x="700" y="878" class="note" text-anchor="middle">颜色：品牌 #4f46e5（基础）· 应用 #0891b2 · 领域 #059669 · 基础设施 #d97706 · 组合/交付 #6366f1/#475569</text>
+</svg>

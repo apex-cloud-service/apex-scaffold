@@ -1,0 +1,38 @@
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#d97706','primaryTextColor':'#0f172a','primaryBorderColor':'#d97706','lineColor':'#64748b','fontFamily':'sans-serif'}}}%%
+flowchart TB
+  subgraph Persist["持久化与数据"]
+    P1["persistence mapper/po/repository/converter"]
+    P2["datapermission 数据权限 SQL 注入"]
+    P3["cache 多级缓存 config/aspect/prewarm/metrics"]
+    P4["outbox 本地消息表 entity/mapper/dispatcher"]
+    P5["event 领域事件落库"]
+  end
+
+  subgraph Runtime["运行时能力"]
+    R1["mq config/listener/dlq/monitor (RocketMQ)"]
+    R2["ratelimit local/distributed/adaptive"]
+    R3["resilience / circuitbreaker / chaos"]
+    R4["security / encryption / oauth2 / wechat"]
+    R5["remote / storage / excel / mail / notification"]
+  end
+
+  subgraph Office["办公协同适配"]
+    O1["office.client dingtalk/feishu/wecom"]
+    O2["office.persistence / repository / spi / security"]
+  end
+
+  subgraph Cross["跨切"]
+    X1["scheduler / logging / metrics / audit / search / moderation"]
+  end
+
+  DOMAIN["apex-domain 端口与仓储接口"]
+  APP["apex-application / apex-interfaces"]
+
+  DOMAIN -. "被实现" .-> Persist
+  DOMAIN -. "被实现" .-> Office
+  Persist --> APP
+  Runtime --> APP
+  Office --> APP
+
+  NOTE["唯一允许触碰 DB/MQ/Redis/外部 SDK 的层，承载依赖倒置落地"]
+  Persist -.-> NOTE

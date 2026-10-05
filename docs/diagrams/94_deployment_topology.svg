@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 900" width="1400" height="900">
+  <defs>
+    <style>
+      .title{font:700 32px sans-serif;fill:#0f172a;text-anchor:middle}
+      .subtitle{font:500 13px sans-serif;fill:#64748b;text-anchor:middle}
+      .layer-title{font:600 17px sans-serif;fill:#fff}
+      .layer-sub{font:500 11px sans-serif;fill:#fff;opacity:.85}
+      .box-title{font:600 13px sans-serif;fill:#0f172a}
+      .box-desc{font:400 10.5px sans-serif;fill:#475569}
+      .code{font:500 10px monospace;fill:#2563eb}
+      .note{font:500 11px sans-serif;fill:#64748b}
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/>
+    </marker>
+  </defs>
+
+  <rect width="1400" height="900" fill="#fff"/>
+  <text x="700" y="40" class="title">Apex Scaffold 部署拓扑（本地一键 / 生产 K8s）</text>
+  <text x="700" y="64" class="subtitle">docker-compose.infra.yml · Nacos · RocketMQ · Sentinel · Prometheus/Grafana/Zipkin · v1.3.1</text>
+
+  <!-- Access Layer -->
+  <rect x="40" y="90" width="1320" height="76" rx="10" fill="#4f46e5" opacity="0.08" stroke="#4f46e5" stroke-width="2"/>
+  <rect x="40" y="90" width="130" height="76" rx="10" fill="#4f46e5"/>
+  <text x="105" y="122" class="layer-title" text-anchor="middle">接入层</text>
+  <text x="105" y="142" class="layer-sub" text-anchor="middle">Ingress</text>
+  <rect x="185" y="102" width="290" height="52" rx="6" fill="#fff" stroke="#c7d2fe" stroke-width="1.5"/>
+  <text x="200" y="122" class="box-title">Nginx / K8s Ingress</text>
+  <text x="200" y="140" class="box-desc">HTTPS 终止 · 反向代理 · 静态资源</text>
+  <rect x="485" y="102" width="290" height="52" rx="6" fill="#fff" stroke="#c7d2fe" stroke-width="1.5"/>
+  <text x="500" y="122" class="box-title">Spring Cloud Gateway</text>
+  <text x="500" y="140" class="box-desc">动态路由 · 限流熔断 · CORS</text>
+  <rect x="785" y="102" width="280" height="52" rx="6" fill="#fff" stroke="#c7d2fe" stroke-width="1.5"/>
+  <text x="800" y="122" class="box-title">负载均衡</text>
+  <text x="800" y="140" class="box-desc">K8s Service · Round Robin</text>
+  <rect x="1075" y="102" width="269" height="52" rx="6" fill="#fff" stroke="#c7d2fe" stroke-width="1.5"/>
+  <text x="1090" y="122" class="box-title">Blackbox Exporter</text>
+  <text x="1090" y="140" class="box-desc">:9115 健康探针</text>
+
+  <line x1="700" y1="166" x2="700" y2="184" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Application Cluster -->
+  <rect x="40" y="186" width="1320" height="96" rx="10" fill="#0891b2" opacity="0.08" stroke="#0891b2" stroke-width="2"/>
+  <rect x="40" y="186" width="130" height="96" rx="10" fill="#0891b2"/>
+  <text x="105" y="224" class="layer-title" text-anchor="middle">应用集群</text>
+  <text x="105" y="244" class="layer-sub" text-anchor="middle">Apps</text>
+  <text x="105" y="262" class="layer-sub" text-anchor="middle" font-size="9">HPA 弹性伸缩</text>
+  <rect x="185" y="200" width="230" height="68" rx="6" fill="#fff" stroke="#a5f3fc" stroke-width="1.5"/>
+  <text x="198" y="222" class="box-title">apex 主应用</text>
+  <text x="198" y="240" class="box-desc">:8081 · Jetty/Netty 响应式</text>
+  <text x="198" y="256" class="code">Application (apex-interfaces)</text>
+  <rect x="425" y="200" width="230" height="68" rx="6" fill="#fff" stroke="#a5f3fc" stroke-width="1.5"/>
+  <text x="438" y="222" class="box-title">apex-auth-center</text>
+  <text x="438" y="240" class="box-desc">独立认证中心上下文</text>
+  <text x="438" y="256" class="code">AuthCenterApplication</text>
+  <rect x="665" y="200" width="230" height="68" rx="6" fill="#fff" stroke="#a5f3fc" stroke-width="1.5"/>
+  <text x="678" y="222" class="box-title">apex-example</text>
+  <text x="678" y="240" class="box-desc">脚手架示例应用</text>
+  <text x="678" y="256" class="code">ExampleApplication</text>
+  <rect x="905" y="200" width="200" height="68" rx="6" fill="#fff" stroke="#a5f3fc" stroke-width="1.5"/>
+  <text x="918" y="222" class="box-title">健康检查</text>
+  <text x="918" y="240" class="box-desc">readiness/liveness</text>
+  <text x="918" y="256" class="code">/api/v1/health</text>
+  <rect x="1115" y="200" width="229" height="68" rx="6" fill="#fff" stroke="#a5f3fc" stroke-width="1.5"/>
+  <text x="1128" y="222" class="box-title">滚动发布</text>
+  <text x="1128" y="240" class="box-desc">灰度 · 优雅停机</text>
+  <text x="1128" y="256" class="code">GracefulShutdown</text>
+
+  <line x1="700" y1="282" x2="700" y2="300" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Service Governance -->
+  <rect x="40" y="302" width="1320" height="88" rx="10" fill="#6366f1" opacity="0.08" stroke="#6366f1" stroke-width="2"/>
+  <rect x="40" y="302" width="130" height="88" rx="10" fill="#6366f1"/>
+  <text x="105" y="338" class="layer-title" text-anchor="middle">治理/配置</text>
+  <text x="105" y="358" class="layer-sub" text-anchor="middle">Governance</text>
+  <rect x="185" y="316" width="300" height="60" rx="6" fill="#fff" stroke="#c7d2fe" stroke-width="1.5"/>
+  <text x="198" y="338" class="box-title">Nacos v2.3.2</text>
+  <text x="198" y="356" class="box-desc">服务发现 + 配置中心 · Raft 集群</text>
+  <text x="198" y="371" class="code">:18848 (mapped) / :8848</text>
+  <rect x="495" y="316" width="300" height="60" rx="6" fill="#fff" stroke="#c7d2fe" stroke-width="1.5"/>
+  <text x="508" y="338" class="box-title">Sentinel Dashboard 1.8.2</text>
+  <text x="508" y="356" class="box-desc">流控 · 熔断降级 · 热点参数</text>
+  <text x="508" y="371" class="code">:8858 · api :8719</text>
+  <rect x="805" y="316" width="260" height="60" rx="6" fill="#fff" stroke="#c7d2fe" stroke-width="1.5"/>
+  <text x="818" y="338" class="box-title">Sentinel 规则推送</text>
+  <text x="818" y="356" class="box-desc">本地规则 + Dashboard</text>
+  <text x="818" y="371" class="code">Resilience4j 舱壁</text>
+  <rect x="1075" y="316" width="269" height="60" rx="6" fill="#fff" stroke="#c7d2fe" stroke-width="1.5"/>
+  <text x="1088" y="338" class="box-title">配置分层</text>
+  <text x="1088" y="356" class="box-desc">Nacos 远程 + 本地 profile</text>
+  <text x="1088" y="371" class="code">bootstrap / application</text>
+
+  <line x1="700" y1="390" x2="700" y2="408" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Middleware -->
+  <rect x="40" y="410" width="1320" height="96" rx="10" fill="#059669" opacity="0.08" stroke="#059669" stroke-width="2"/>
+  <rect x="40" y="410" width="130" height="96" rx="10" fill="#059669"/>
+  <text x="105" y="448" class="layer-title" text-anchor="middle">中间件</text>
+  <text x="105" y="468" class="layer-sub" text-anchor="middle">Middleware</text>
+  <rect x="185" y="424" width="215" height="68" rx="6" fill="#fff" stroke="#a7f3d0" stroke-width="1.5"/>
+  <text x="198" y="446" class="box-title">MySQL 8.0</text>
+  <text x="198" y="464" class="box-desc">apex_data / apex_test</text>
+  <text x="198" y="480" class="code">:3306 · utf8mb4</text>
+  <rect x="410" y="424" width="215" height="68" rx="6" fill="#fff" stroke="#a7f3d0" stroke-width="1.5"/>
+  <text x="423" y="446" class="box-title">Redis 7</text>
+  <text x="423" y="464" class="box-desc">缓存 · 分布式锁 · AOF</text>
+  <text x="423" y="480" class="code">:6379</text>
+  <rect x="635" y="424" width="215" height="68" rx="6" fill="#fff" stroke="#a7f3d0" stroke-width="1.5"/>
+  <text x="648" y="446" class="box-title">RocketMQ 5.3.1</text>
+  <text x="648" y="464" class="box-desc">Namesrv + Broker</text>
+  <text x="648" y="480" class="code">:9876 / :10911</text>
+  <rect x="860" y="424" width="215" height="68" rx="6" fill="#fff" stroke="#a7f3d0" stroke-width="1.5"/>
+  <text x="873" y="446" class="box-title">MinIO</text>
+  <text x="873" y="464" class="box-desc">S3 对象存储</text>
+  <text x="873" y="480" class="code">StorageService</text>
+  <rect x="1085" y="424" width="259" height="68" rx="6" fill="#fff" stroke="#a7f3d0" stroke-width="1.5"/>
+  <text x="1098" y="446" class="box-title">Meilisearch</text>
+  <text x="1098" y="464" class="box-desc">全文检索索引</text>
+  <text x="1098" y="480" class="code">:7700</text>
+
+  <line x1="700" y1="506" x2="700" y2="524" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Identity -->
+  <rect x="40" y="526" width="1320" height="80" rx="10" fill="#0891b2" opacity="0.06" stroke="#0891b2" stroke-width="2"/>
+  <rect x="40" y="526" width="130" height="80" rx="10" fill="#0891b2" opacity="0.85"/>
+  <text x="105" y="560" class="layer-title" text-anchor="middle">身份/授权</text>
+  <text x="105" y="580" class="layer-sub" text-anchor="middle">Identity</text>
+  <rect x="185" y="540" width="360" height="52" rx="6" fill="#fff" stroke="#a5f3fc" stroke-width="1.5"/>
+  <text x="200" y="560" class="box-title">Keycloak</text>
+  <text x="200" y="578" class="box-desc">OIDC/SSO 身份提供方 · Realm/Client · User Sync</text>
+  <rect x="555" y="540" width="360" height="52" rx="6" fill="#fff" stroke="#a5f3fc" stroke-width="1.5"/>
+  <text x="570" y="560" class="box-title">apex-auth-center 统一授权</text>
+  <text x="570" y="578" class="box-desc">OAuth2 授权服务器 · 远程权限校验（HTTPS）</text>
+  <rect x="925" y="540" width="419" height="52" rx="6" fill="#fff" stroke="#a5f3fc" stroke-width="1.5"/>
+  <text x="940" y="560" class="box-title">Token 生命周期</text>
+  <text x="940" y="578" class="box-desc">Access 3600s / Refresh 2592000s · PKCE(S256) · 撤销与轮换</text>
+
+  <line x1="700" y1="606" x2="700" y2="624" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Observability -->
+  <rect x="40" y="626" width="1320" height="88" rx="10" fill="#d97706" opacity="0.08" stroke="#d97706" stroke-width="2"/>
+  <rect x="40" y="626" width="130" height="88" rx="10" fill="#d97706"/>
+  <text x="105" y="662" class="layer-title" text-anchor="middle">可观测</text>
+  <text x="105" y="682" class="layer-sub" text-anchor="middle">Observability</text>
+  <rect x="185" y="640" width="255" height="60" rx="6" fill="#fff" stroke="#fde68a" stroke-width="1.5"/>
+  <text x="198" y="662" class="box-title">Prometheus v2.53</text>
+  <text x="198" y="680" class="box-desc">指标采集 · 保留 15d</text>
+  <text x="198" y="695" class="code">:9090 · alert-rules.yml</text>
+  <rect x="450" y="640" width="255" height="60" rx="6" fill="#fff" stroke="#fde68a" stroke-width="1.5"/>
+  <text x="463" y="662" class="box-title">Grafana 11.1</text>
+  <text x="463" y="680" class="box-desc">可视化大盘 · 告警</text>
+  <text x="463" y="695" class="code">:3200 (mapped) / :3000</text>
+  <rect x="715" y="640" width="255" height="60" rx="6" fill="#fff" stroke="#fde68a" stroke-width="1.5"/>
+  <text x="728" y="662" class="box-title">Zipkin 3.4</text>
+  <text x="728" y="680" class="box-desc">分布式链路追踪</text>
+  <text x="728" y="695" class="code">:9411 · Micrometer Tracing</text>
+  <rect x="980" y="640" width="180" height="60" rx="6" fill="#fff" stroke="#fde68a" stroke-width="1.5"/>
+  <text x="993" y="662" class="box-title">Loki</text>
+  <text x="993" y="680" class="box-desc">日志聚合</text>
+  <text x="993" y="695" class="code">7 天保留</text>
+  <rect x="1170" y="640" width="174" height="60" rx="6" fill="#fff" stroke="#fde68a" stroke-width="1.5"/>
+  <text x="1183" y="662" class="box-title">Actuator</text>
+  <text x="1183" y="680" class="box-desc">健康/指标端点</text>
+  <text x="1183" y="695" class="code">apex_* 指标前缀</text>
+
+  <text x="700" y="752" class="note" text-anchor="middle">部署形态：本地开发 docker compose -f docker-compose.infra.yml up -d（127.0.0.1 直连） · 生产 Kubernetes（HPA/ConfigMap/Secret/滚动发布）</text>
+  <text x="700" y="774" class="note" text-anchor="middle">运维入口：Nacos 18848 / Sentinel 8858 / Zipkin 9411 / Prometheus 9090 / Grafana 3200 / MinIO 9000</text>
+  <text x="700" y="796" class="note" text-anchor="middle">配置来源：config/monitoring（prometheus.yml / alert-rules.yml / grafana provisioning）</text>
+
+  <rect x="40" y="820" width="1320" height="56" rx="10" fill="#475569" opacity="0.08" stroke="#475569" stroke-width="2"/>
+  <text x="60" y="846" class="box-title">环境隔离</text>
+  <text x="60" y="864" class="box-desc">dev（本地 compose，127.0.0.1）· test（apex_test 库）· prod（K8s Namespace 隔离，Secret 注入凭据，Nacos prod 命名空间）</text>
+
+  <text x="700" y="893" class="note" text-anchor="middle" font-size="10">端口映射以本机实际占用为准（Nacos 8848→18848，Grafana 3000→3200）；JVM 调优参数见 docker-compose.infra.yml 注释</text>
+</svg>
