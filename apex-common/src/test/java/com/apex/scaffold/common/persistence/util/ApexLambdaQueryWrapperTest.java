@@ -1,13 +1,16 @@
-package com.apex.scaffold.infrastructure.persistence.util;
+package com.apex.scaffold.common.persistence.util;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.apex.scaffold.infrastructure.persistence.po.UserPO;
+import com.apex.scaffold.common.persistence.po.BasePO;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.ibatis.builder.MapperBuilderAssistant;
 import org.apache.ibatis.session.Configuration;
+import lombok.Data;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -15,9 +18,7 @@ import org.junit.jupiter.api.Test;
 /**
  * {@link ApexLambdaQueryWrapper} 的单元测试。
  *
- * <p>覆盖 {@code eqIfPresent}、{@code likeIfPresent}、{@code inIfPresent}、
- * {@code betweenIfPresent} 与泛型 {@code ifPresent} 在 null / 空白 / 空集合 / 有效值
- * 等场景下的条件追加行为。
+ * <p>验证公共查询包装器对实体列解析、空值、空白字符串、空集合和有效值的处理行为。
  *
  * @author Apex Team
  * @version 1.1.0
@@ -26,54 +27,42 @@ import org.junit.jupiter.api.Test;
 @DisplayName("ApexLambdaQueryWrapper 单元测试")
 class ApexLambdaQueryWrapperTest {
 
-    /**
-     * 初始化 MyBatis-Plus Lambda 缓存，保证 SFunction 可正确解析列名。
-     */
     @BeforeAll
     static void initLambdaCache() {
         Configuration configuration = new Configuration();
         MapperBuilderAssistant assistant = new MapperBuilderAssistant(configuration, "apex-lambda-wrapper-test");
-        assistant.setCurrentNamespace("com.apex.scaffold.infrastructure.persistence.util.ApexLambdaQueryWrapperTest");
-        TableInfoHelper.initTableInfo(assistant, UserPO.class);
+        assistant.setCurrentNamespace(ApexLambdaQueryWrapperTest.class.getName());
+        TableInfoHelper.initTableInfo(assistant, TestPO.class);
     }
 
-    /**
-     * {@code eqIfPresent} 在值为 null 时不追加条件，值存在时追加等于条件。
-     */
     @Test
     @DisplayName("eqIfPresent - 值为空时不追加条件，值存在时追加条件")
     void eqIfPresent_shouldConditionallyAppendClause() {
-        ApexLambdaQueryWrapper<UserPO> wrapper = ConditionUtil.lambda(UserPO.class);
+        ApexLambdaQueryWrapper<TestPO> wrapper = ConditionUtil.lambda(TestPO.class);
 
-        wrapper.eqIfPresent(UserPO::getId, null);
+        wrapper.eqIfPresent(TestPO::getId, null);
         assertThat(wrapper.getSqlSegment()).isBlank();
 
-        wrapper.eqIfPresent(UserPO::getId, 1L);
+        wrapper.eqIfPresent(TestPO::getId, 1L);
         assertThat(wrapper.getSqlSegment()).containsIgnoringCase("id");
     }
 
-    /**
-     * {@code eqIfPresent(String)} 在空白字符串时不追加条件，非空时追加条件。
-     */
     @Test
     @DisplayName("eqIfPresent(String) - 空白字符串不追加条件，非空追加条件")
     void eqIfPresentString_shouldSkipBlankAndAppendWhenHasText() {
-        ApexLambdaQueryWrapper<UserPO> wrapper = ConditionUtil.lambda(UserPO.class);
+        ApexLambdaQueryWrapper<TestPO> wrapper = ConditionUtil.lambda(TestPO.class);
 
-        wrapper.eqIfPresent(UserPO::getOpenId, " ");
+        wrapper.eqIfPresent(TestPO::getOpenId, " ");
         assertThat(wrapper.getSqlSegment()).isBlank();
 
-        wrapper.eqIfPresent(UserPO::getOpenId, "alice");
+        wrapper.eqIfPresent(TestPO::getOpenId, "alice");
         assertThat(wrapper.getSqlSegment()).containsIgnoringCase("open_id");
     }
 
-    /**
-     * {@code ifPresent} 对 null / 空白字符串 / 空集合不触发 consumer，其他值触发。
-     */
     @Test
     @DisplayName("ifPresent - null/空白/空集合不触发 consumer，其余值触发")
     void ifPresent_shouldHandleDifferentValueTypes() {
-        ApexLambdaQueryWrapper<UserPO> wrapper = new ApexLambdaQueryWrapper<>();
+        ApexLambdaQueryWrapper<TestPO> wrapper = new ApexLambdaQueryWrapper<>();
         AtomicInteger called = new AtomicInteger(0);
 
         wrapper.ifPresent(null, (w, v) -> called.incrementAndGet());
@@ -82,5 +71,13 @@ class ApexLambdaQueryWrapperTest {
         wrapper.ifPresent(1, (w, v) -> called.incrementAndGet());
 
         assertThat(called.get()).isEqualTo(1);
+    }
+
+    /** 测试用持久化实体，仅用于验证公共 Lambda 列解析行为。 */
+    @Data
+    @TableName("test_po")
+    static class TestPO extends BasePO {
+        @TableField("open_id")
+        private String openId;
     }
 }

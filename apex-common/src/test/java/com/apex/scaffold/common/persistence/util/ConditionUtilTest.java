@@ -1,4 +1,4 @@
-package com.apex.scaffold.infrastructure.persistence.util;
+package com.apex.scaffold.common.persistence.util;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -10,10 +10,12 @@ import org.junit.jupiter.api.Test;
  * {@link ConditionUtil} 的单元测试。
  *
  * @author Apex Team
+ * @version 1.0.0
  * @since 1.0.0
  */
 @DisplayName("ConditionUtil 单元测试")
 class ConditionUtilTest {
+
     @Test
     @DisplayName("ifPresent - 值存在时执行 consumer，值为空时跳过")
     void ifPresent_shouldRunConsumerOnlyWhenValuePresent() {

@@ -1,12 +1,14 @@
-package com.apex.scaffold.infrastructure.persistence.util;
+package com.apex.scaffold.common.persistence.util;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
+import java.util.Collection;
 import java.util.function.Consumer;
 
 /**
- * 条件构建工具类
+ * MyBatis-Plus 查询条件构建工具。
  *
- * <p>提供ifPresent条件查询机制，只有当值存在时才添加查询条件
+ * <p>提供统一的条件包装器创建方法，以及仅在筛选值有效时执行条件追加逻辑的辅助方法。
  *
  * @author Apex Team
  * @version 1.0.0
@@ -14,25 +16,24 @@ import java.util.function.Consumer;
  */
 public final class ConditionUtil {
 
-    /** 私有构造方法，防止实例化 */
     private ConditionUtil() {}
 
     /**
-     * 创建增强型 Lambda 查询包装器
+     * 创建增强型 Lambda 查询包装器。
      *
      * @param <T> 实体类型
-     * @return ApexLambdaQueryWrapper
+     * @return 新建的查询包装器
      */
     public static <T> ApexLambdaQueryWrapper<T> lambda() {
         return new ApexLambdaQueryWrapper<>();
     }
 
     /**
-     * 创建增强型 Lambda 查询包装器（带实体类）
+     * 创建绑定实体类型的增强型 Lambda 查询包装器。
      *
-     * @param entityClass 实体类类型
+     * @param entityClass 实体类型
      * @param <T> 实体类型
-     * @return ApexLambdaQueryWrapper
+     * @return 新建的查询包装器
      */
     public static <T> ApexLambdaQueryWrapper<T> lambda(Class<T> entityClass) {
         ApexLambdaQueryWrapper<T> wrapper = new ApexLambdaQueryWrapper<>();
@@ -41,16 +42,17 @@ public final class ConditionUtil {
     }
 
     /**
-     * 如果值不为null，则添加条件
+     * 仅当值非 null 时执行条件追加逻辑。
      *
      * @param wrapper 查询包装器
      * @param value 条件值
-     * @param consumer 条件消费者
-     * @param <T> 值类型
+     * @param consumer 条件追加逻辑
+     * @param <T> 条件值类型
      * @param <R> 实体类型
-     * @return 查询包装器
+     * @return 原查询包装器
      */
-    public static <T, R> LambdaQueryWrapper<R> ifPresent(LambdaQueryWrapper<R> wrapper, T value, Consumer<T> consumer) {
+    public static <T, R> LambdaQueryWrapper<R> ifPresent(
+            LambdaQueryWrapper<R> wrapper, T value, Consumer<T> consumer) {
         if (value != null) {
             consumer.accept(value);
         }
@@ -58,13 +60,13 @@ public final class ConditionUtil {
     }
 
     /**
-     * 如果字符串不为空，则添加条件
+     * 仅当字符串非 null 且非空白时执行条件追加逻辑。
      *
      * @param wrapper 查询包装器
-     * @param value 字符串值
-     * @param consumer 条件消费者
+     * @param value 字符串条件值
+     * @param consumer 条件追加逻辑
      * @param <R> 实体类型
-     * @return 查询包装器
+     * @return 原查询包装器
      */
     public static <R> LambdaQueryWrapper<R> ifPresentStr(
             LambdaQueryWrapper<R> wrapper, String value, Consumer<String> consumer) {
@@ -75,13 +77,13 @@ public final class ConditionUtil {
     }
 
     /**
-     * 如果条件为true，则添加条件
+     * 仅当条件为 true 时执行条件追加逻辑。
      *
      * @param wrapper 查询包装器
-     * @param condition 条件
-     * @param consumer 条件消费者
+     * @param condition 条件标记
+     * @param consumer 条件追加逻辑
      * @param <R> 实体类型
-     * @return 查询包装器
+     * @return 原查询包装器
      */
     public static <R> LambdaQueryWrapper<R> ifTrue(
             LambdaQueryWrapper<R> wrapper, Boolean condition, Runnable consumer) {
@@ -92,9 +94,9 @@ public final class ConditionUtil {
     }
 
     /**
-     * 创建条件构建器
+     * 创建链式条件构建器。
      *
-     * @param entityClass 实体类
+     * @param entityClass 实体类型
      * @param <T> 实体类型
      * @return 条件构建器
      */
@@ -103,35 +105,35 @@ public final class ConditionUtil {
     }
 
     /**
-     * 条件构建器
-     *
-     * <p>链式构建查询条件
+     * 使用链式 API 按需构造 Lambda 查询条件。
      *
      * @param <T> 实体类型
+     * @author Apex Team
+     * @version 1.0.0
+     * @since 1.0.0
      */
     public static class ConditionBuilder<T> {
 
-        /** MyBatis-Plus Lambda 查询包装器 */
         private final LambdaQueryWrapper<T> wrapper;
 
         /**
-         * 构造条件构建器
+         * 创建条件构建器并绑定实体类型。
          *
-         * @param entityClass 实体类类型
+         * @param entityClass 实体类型
          */
         public ConditionBuilder(Class<T> entityClass) {
             this.wrapper = new LambdaQueryWrapper<>();
+            this.wrapper.setEntityClass(entityClass);
         }
 
         /**
-         * 如果值不为null，则添加等于条件
+         * 条件值非 null 时追加等于条件。
          *
          * @param value 条件值
-         * @param column 字段
-         * @return 条件构建器
+         * @param column 数据库列
+         * @return 当前构建器
          */
-        public ConditionBuilder<T> eqIfPresent(
-                Object value, com.baomidou.mybatisplus.core.toolkit.support.SFunction<T, ?> column) {
+        public ConditionBuilder<T> eqIfPresent(Object value, SFunction<T, ?> column) {
             if (value != null) {
                 wrapper.eq(column, value);
             }
@@ -139,14 +141,13 @@ public final class ConditionUtil {
         }
 
         /**
-         * 如果字符串不为空，则添加等于条件
+         * 字符串非空白时追加等于条件。
          *
-         * @param value 字符串值
-         * @param column 字段
-         * @return 条件构建器
+         * @param value 字符串条件值
+         * @param column 数据库列
+         * @return 当前构建器
          */
-        public ConditionBuilder<T> eqIfPresentStr(
-                String value, com.baomidou.mybatisplus.core.toolkit.support.SFunction<T, ?> column) {
+        public ConditionBuilder<T> eqIfPresentStr(String value, SFunction<T, ?> column) {
             if (value != null && !value.trim().isEmpty()) {
                 wrapper.eq(column, value);
             }
@@ -154,14 +155,13 @@ public final class ConditionUtil {
         }
 
         /**
-         * 如果字符串不为空，则添加模糊查询条件
+         * 字符串非空白时追加模糊查询条件。
          *
-         * @param value 字符串值
-         * @param column 字段
-         * @return 条件构建器
+         * @param value 字符串条件值
+         * @param column 数据库列
+         * @return 当前构建器
          */
-        public ConditionBuilder<T> likeIfPresent(
-                String value, com.baomidou.mybatisplus.core.toolkit.support.SFunction<T, ?> column) {
+        public ConditionBuilder<T> likeIfPresent(String value, SFunction<T, ?> column) {
             if (value != null && !value.trim().isEmpty()) {
                 wrapper.like(column, value);
             }
@@ -169,14 +169,13 @@ public final class ConditionUtil {
         }
 
         /**
-         * 如果字符串不为空，则添加右模糊查询条件
+         * 字符串非空白时追加右模糊查询条件。
          *
-         * @param value 字符串值
-         * @param column 字段
-         * @return 条件构建器
+         * @param value 字符串条件值
+         * @param column 数据库列
+         * @return 当前构建器
          */
-        public ConditionBuilder<T> likeRightIfPresent(
-                String value, com.baomidou.mybatisplus.core.toolkit.support.SFunction<T, ?> column) {
+        public ConditionBuilder<T> likeRightIfPresent(String value, SFunction<T, ?> column) {
             if (value != null && !value.trim().isEmpty()) {
                 wrapper.likeRight(column, value);
             }
@@ -184,14 +183,13 @@ public final class ConditionUtil {
         }
 
         /**
-         * 如果值不为null，则添加IN条件
+         * 集合非空时追加 IN 条件。
          *
          * @param values 条件值集合
-         * @param column 字段
-         * @return 条件构建器
+         * @param column 数据库列
+         * @return 当前构建器
          */
-        public ConditionBuilder<T> inIfPresent(
-                java.util.Collection<?> values, com.baomidou.mybatisplus.core.toolkit.support.SFunction<T, ?> column) {
+        public ConditionBuilder<T> inIfPresent(Collection<?> values, SFunction<T, ?> column) {
             if (values != null && !values.isEmpty()) {
                 wrapper.in(column, values);
             }
@@ -199,15 +197,14 @@ public final class ConditionUtil {
         }
 
         /**
-         * 如果值不为null，则添加范围条件
+         * 按可用端点追加 BETWEEN、GE 或 LE 条件。
          *
-         * @param start 开始值
+         * @param start 起始值
          * @param end 结束值
-         * @param column 字段
-         * @return 条件构建器
+         * @param column 数据库列
+         * @return 当前构建器
          */
-        public ConditionBuilder<T> betweenIfPresent(
-                Object start, Object end, com.baomidou.mybatisplus.core.toolkit.support.SFunction<T, ?> column) {
+        public ConditionBuilder<T> betweenIfPresent(Object start, Object end, SFunction<T, ?> column) {
             if (start != null && end != null) {
                 wrapper.between(column, start, end);
             } else if (start != null) {
@@ -219,14 +216,13 @@ public final class ConditionUtil {
         }
 
         /**
-         * 如果值不为null，则添加大于等于条件
+         * 条件值非 null 时追加大于等于条件。
          *
          * @param value 条件值
-         * @param column 字段
-         * @return 条件构建器
+         * @param column 数据库列
+         * @return 当前构建器
          */
-        public ConditionBuilder<T> geIfPresent(
-                Object value, com.baomidou.mybatisplus.core.toolkit.support.SFunction<T, ?> column) {
+        public ConditionBuilder<T> geIfPresent(Object value, SFunction<T, ?> column) {
             if (value != null) {
                 wrapper.ge(column, value);
             }
@@ -234,14 +230,13 @@ public final class ConditionUtil {
         }
 
         /**
-         * 如果值不为null，则添加小于等于条件
+         * 条件值非 null 时追加小于等于条件。
          *
          * @param value 条件值
-         * @param column 字段
-         * @return 条件构建器
+         * @param column 数据库列
+         * @return 当前构建器
          */
-        public ConditionBuilder<T> leIfPresent(
-                Object value, com.baomidou.mybatisplus.core.toolkit.support.SFunction<T, ?> column) {
+        public ConditionBuilder<T> leIfPresent(Object value, SFunction<T, ?> column) {
             if (value != null) {
                 wrapper.le(column, value);
             }
@@ -249,14 +244,13 @@ public final class ConditionUtil {
         }
 
         /**
-         * 如果条件为true，则添加条件
+         * 条件标记为 true 时执行自定义条件追加逻辑。
          *
-         * @param condition 条件
-         * @param consumer 条件消费者
-         * @return 条件构建器
+         * @param condition 条件标记
+         * @param consumer 条件追加逻辑
+         * @return 当前构建器
          */
-        public ConditionBuilder<T> ifTrue(
-                boolean condition, java.util.function.Consumer<LambdaQueryWrapper<T>> consumer) {
+        public ConditionBuilder<T> ifTrue(boolean condition, Consumer<LambdaQueryWrapper<T>> consumer) {
             if (condition) {
                 consumer.accept(wrapper);
             }
@@ -264,9 +258,9 @@ public final class ConditionUtil {
         }
 
         /**
-         * 构建查询包装器
+         * 获取已构造的查询包装器。
          *
-         * @return LambdaQueryWrapper
+         * @return 当前查询包装器
          */
         public LambdaQueryWrapper<T> build() {
             return wrapper;

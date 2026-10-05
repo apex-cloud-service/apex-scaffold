@@ -1,6 +1,6 @@
 package com.apex.scaffold.infrastructure.persistence.aspect;
 
-import com.apex.scaffold.infrastructure.persistence.po.BasePO;
+import com.apex.scaffold.common.persistence.po.BasePO;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.dao.OptimisticLockingFailureException;

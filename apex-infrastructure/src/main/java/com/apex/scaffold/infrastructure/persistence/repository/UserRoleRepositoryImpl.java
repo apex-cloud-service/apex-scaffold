@@ -6,7 +6,7 @@ import com.apex.scaffold.domain.repository.UserRoleRepository;
 import com.apex.scaffold.infrastructure.persistence.converter.UserRolePoConverter;
 import com.apex.scaffold.infrastructure.persistence.mapper.UserRoleMapper;
 import com.apex.scaffold.infrastructure.persistence.po.UserRolePO;
-import com.apex.scaffold.infrastructure.persistence.util.ConditionUtil;
+import com.apex.scaffold.common.persistence.util.ConditionUtil;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;

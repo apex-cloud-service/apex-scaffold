@@ -6,7 +6,7 @@ import com.apex.scaffold.domain.repository.JobRepository;
 import com.apex.scaffold.infrastructure.persistence.converter.JobPoConverter;
 import com.apex.scaffold.infrastructure.persistence.mapper.JobMapper;
 import com.apex.scaffold.infrastructure.persistence.po.JobPO;
-import com.apex.scaffold.infrastructure.persistence.util.ConditionUtil;
+import com.apex.scaffold.common.persistence.util.ConditionUtil;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;

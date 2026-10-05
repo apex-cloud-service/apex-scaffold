@@ -6,7 +6,7 @@ import com.apex.scaffold.domain.repository.DictDataRepository;
 import com.apex.scaffold.infrastructure.persistence.converter.DictDataPoConverter;
 import com.apex.scaffold.infrastructure.persistence.mapper.DictDataMapper;
 import com.apex.scaffold.infrastructure.persistence.po.DictDataPO;
-import com.apex.scaffold.infrastructure.persistence.util.ConditionUtil;
+import com.apex.scaffold.common.persistence.util.ConditionUtil;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import java.util.List;
 import lombok.RequiredArgsConstructor;

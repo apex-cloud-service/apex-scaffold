@@ -2,8 +2,8 @@ package com.apex.scaffold.infrastructure.persistence.repository;
 
 import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
 import com.apex.scaffold.domain.model.entity.BaseEntity;
-import com.apex.scaffold.infrastructure.persistence.po.BasePO;
-import com.apex.scaffold.infrastructure.persistence.util.ApexLambdaQueryWrapper;
+import com.apex.scaffold.common.persistence.po.BasePO;
+import com.apex.scaffold.common.persistence.util.ApexLambdaQueryWrapper;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import java.util.List;

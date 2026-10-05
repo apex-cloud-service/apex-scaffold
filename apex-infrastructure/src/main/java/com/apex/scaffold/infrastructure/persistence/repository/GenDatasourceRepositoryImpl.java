@@ -6,7 +6,7 @@ import com.apex.scaffold.domain.repository.GenDatasourceRepository;
 import com.apex.scaffold.infrastructure.persistence.converter.GenDatasourcePoConverter;
 import com.apex.scaffold.infrastructure.persistence.mapper.GenDatasourceMapper;
 import com.apex.scaffold.infrastructure.persistence.po.GenDatasourcePO;
-import com.apex.scaffold.infrastructure.persistence.util.ConditionUtil;
+import com.apex.scaffold.common.persistence.util.ConditionUtil;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;

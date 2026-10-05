@@ -6,7 +6,7 @@ import com.apex.scaffold.domain.repository.SysSessionConfigRepository;
 import com.apex.scaffold.infrastructure.persistence.converter.SysSessionConfigPoConverter;
 import com.apex.scaffold.infrastructure.persistence.mapper.SysSessionConfigMapper;
 import com.apex.scaffold.infrastructure.persistence.po.SysSessionConfigPO;
-import com.apex.scaffold.infrastructure.persistence.util.ConditionUtil;
+import com.apex.scaffold.common.persistence.util.ConditionUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;

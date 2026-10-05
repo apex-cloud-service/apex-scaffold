@@ -6,7 +6,7 @@ import com.apex.scaffold.infrastructure.persistence.mapper.RolePermissionMapper;
 import com.apex.scaffold.infrastructure.persistence.mapper.UserRoleMapper;
 import com.apex.scaffold.infrastructure.persistence.po.RolePermissionPO;
 import com.apex.scaffold.infrastructure.persistence.po.UserRolePO;
-import com.apex.scaffold.infrastructure.persistence.util.ConditionUtil;
+import com.apex.scaffold.common.persistence.util.ConditionUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

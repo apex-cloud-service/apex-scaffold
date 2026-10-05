@@ -7,7 +7,7 @@ import com.apex.scaffold.domain.repository.DocumentRepository;
 import com.apex.scaffold.infrastructure.persistence.converter.DocumentPoConverter;
 import com.apex.scaffold.infrastructure.persistence.mapper.DocumentMapper;
 import com.apex.scaffold.infrastructure.persistence.po.DocumentPO;
-import com.apex.scaffold.infrastructure.persistence.util.ConditionUtil;
+import com.apex.scaffold.common.persistence.util.ConditionUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;

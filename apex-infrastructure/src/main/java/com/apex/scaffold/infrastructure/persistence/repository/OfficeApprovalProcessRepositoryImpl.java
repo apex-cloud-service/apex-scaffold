@@ -6,7 +6,7 @@ import com.apex.scaffold.domain.model.entity.OfficeApprovalProcessEntity;
 import com.apex.scaffold.domain.repository.OfficeApprovalProcessRepository;
 import com.apex.scaffold.infrastructure.persistence.converter.OfficeApprovalProcessPoConverter;
 import com.apex.scaffold.infrastructure.persistence.mapper.OfficeApprovalProcessMapper;
-import com.apex.scaffold.infrastructure.persistence.po.BasePO;
+import com.apex.scaffold.common.persistence.po.BasePO;
 import com.apex.scaffold.infrastructure.persistence.po.OfficeApprovalProcessPO;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;

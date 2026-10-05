@@ -6,7 +6,7 @@ import com.apex.scaffold.domain.repository.SysJwtConfigRepository;
 import com.apex.scaffold.infrastructure.persistence.converter.SysJwtConfigPoConverter;
 import com.apex.scaffold.infrastructure.persistence.mapper.SysJwtConfigMapper;
 import com.apex.scaffold.infrastructure.persistence.po.SysJwtConfigPO;
-import com.apex.scaffold.infrastructure.persistence.util.ConditionUtil;
+import com.apex.scaffold.common.persistence.util.ConditionUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;

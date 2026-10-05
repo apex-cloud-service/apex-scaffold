@@ -6,7 +6,7 @@ import com.apex.scaffold.domain.repository.GenHistoryRepository;
 import com.apex.scaffold.infrastructure.persistence.converter.GenHistoryPoConverter;
 import com.apex.scaffold.infrastructure.persistence.mapper.GenHistoryMapper;
 import com.apex.scaffold.infrastructure.persistence.po.GenHistoryPO;
-import com.apex.scaffold.infrastructure.persistence.util.ConditionUtil;
+import com.apex.scaffold.common.persistence.util.ConditionUtil;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;

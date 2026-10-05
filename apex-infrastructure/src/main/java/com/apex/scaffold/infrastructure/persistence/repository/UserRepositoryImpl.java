@@ -8,7 +8,7 @@ import com.apex.scaffold.domain.repository.UserRepository;
 import com.apex.scaffold.infrastructure.persistence.converter.UserPoConverter;
 import com.apex.scaffold.infrastructure.persistence.mapper.UserMapper;
 import com.apex.scaffold.infrastructure.persistence.po.UserPO;
-import com.apex.scaffold.infrastructure.persistence.util.ConditionUtil;
+import com.apex.scaffold.common.persistence.util.ConditionUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;

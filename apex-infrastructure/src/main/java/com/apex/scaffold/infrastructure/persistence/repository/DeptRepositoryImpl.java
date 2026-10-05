@@ -6,7 +6,7 @@ import com.apex.scaffold.domain.model.entity.DeptEntity;
 import com.apex.scaffold.domain.repository.DeptRepository;
 import com.apex.scaffold.infrastructure.persistence.mapper.DeptMapper;
 import com.apex.scaffold.infrastructure.persistence.po.DeptPO;
-import com.apex.scaffold.infrastructure.persistence.util.ConditionUtil;
+import com.apex.scaffold.common.persistence.util.ConditionUtil;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.dao.OptimisticLockingFailureException;

@@ -6,7 +6,7 @@ import com.apex.scaffold.domain.repository.GenTemplateRepository;
 import com.apex.scaffold.infrastructure.persistence.converter.GenTemplatePoConverter;
 import com.apex.scaffold.infrastructure.persistence.mapper.GenTemplateMapper;
 import com.apex.scaffold.infrastructure.persistence.po.GenTemplatePO;
-import com.apex.scaffold.infrastructure.persistence.util.ConditionUtil;
+import com.apex.scaffold.common.persistence.util.ConditionUtil;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;

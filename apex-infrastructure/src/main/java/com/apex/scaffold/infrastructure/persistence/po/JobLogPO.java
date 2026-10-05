@@ -1,5 +1,6 @@
 package com.apex.scaffold.infrastructure.persistence.po;
 
+import com.apex.scaffold.common.persistence.po.BasePO;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;

@@ -6,7 +6,7 @@ import com.apex.scaffold.domain.repository.SysSecurityPolicyRepository;
 import com.apex.scaffold.infrastructure.persistence.converter.SysSecurityPolicyPoConverter;
 import com.apex.scaffold.infrastructure.persistence.mapper.SysSecurityPolicyMapper;
 import com.apex.scaffold.infrastructure.persistence.po.SysSecurityPolicyPO;
-import com.apex.scaffold.infrastructure.persistence.util.ConditionUtil;
+import com.apex.scaffold.common.persistence.util.ConditionUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
