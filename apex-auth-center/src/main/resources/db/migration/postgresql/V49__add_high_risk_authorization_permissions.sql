@@ -1,3 +1,6 @@
+-- V49: 新增高风险操作授权权限（PostgreSQL）
+-- 变更内容：为高危操作（如解锁 MFA）新增权限编码 mfa:unlock，并绑定到默认管理员角色；
+-- 使用 ON CONFLICT DO NOTHING 保证迁移幂等性，避免重复插入造成冲突。
 INSERT INTO auth_permission
     (id, tenant_id, code, name, resource, action, description, enabled, created_at, updated_at)
 VALUES

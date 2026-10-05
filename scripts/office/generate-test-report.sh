@@ -19,6 +19,7 @@ set -euo pipefail
 # 目录配置
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+PROJECT_VERSION=$(awk '/<parent>/,/<\/parent>/{next} /<version>/{print; exit}' "$PROJECT_ROOT/pom.xml" | sed 's/.*<version>\(.*\)<\/version>.*/\1/')
 REPORT_DIR="$PROJECT_ROOT/target/reports/office"
 
 # 颜色定义
@@ -62,7 +63,7 @@ generate_markdown_report() {
 ## 1. 测试概述
 
 **测试时间**：TIMESTAMP_PLACEHOLDER  
-**测试版本**：1.2.0  
+**测试版本**：VERSION_PLACEHOLDER  
 **测试范围**：飞书、钉钉、企业微信三大办公平台集成
 
 ## 2. 测试环境
@@ -304,6 +305,7 @@ EOF
 
     # 替换占位符
     sed -i.bak "s/TIMESTAMP_PLACEHOLDER/$timestamp/g" "$report_file"
+    sed -i.bak "s/VERSION_PLACEHOLDER/$PROJECT_VERSION/g" "$report_file"
     sed -i.bak "s/TEST_RESULT_PLACEHOLDER/✅ 通过 (7\/7)/g" "$report_file"
     rm -f "$report_file.bak"
     

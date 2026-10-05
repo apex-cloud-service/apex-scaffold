@@ -261,7 +261,7 @@ main() {
         echo ""
         echo "启动命令示例:"
         echo "  cd $BACKEND_DIR"
-        echo "  java -jar apex-interfaces/target/apex-interfaces-1.2.0.jar"
+        echo "  java -jar apex-interfaces/target/apex-interfaces-1.3.1.jar"
         echo ""
         exit 1
     fi

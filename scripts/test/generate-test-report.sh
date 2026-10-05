@@ -3,13 +3,18 @@
 
 set -euo pipefail
 
-PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+source "${SCRIPT_DIR}/../lib/common.sh"
+
 REPORT_DIR="$PROJECT_ROOT/target/reports"
 SUMMARY_DIR="$REPORT_DIR/summary"
 
 mkdir -p "$SUMMARY_DIR"
 
-echo "开始生成测试报告..."
+PROJECT_VERSION=$(awk '/<parent>/,/<\/parent>/{next} /<version>/{print; exit}' "$PROJECT_ROOT/pom.xml" | sed 's/.*<version>\(.*\)<\/version>.*/\1/')
+
+echo "开始生成测试报告（项目版本: ${PROJECT_VERSION}）..."
 
 # 统计测试结果
 total=0
@@ -43,7 +48,7 @@ cat > "$SUMMARY_DIR/test-report.md" << 'MDEOF'
 # Apex Scaffold 测试执行报告
 
 **生成时间**: TIMESTAMP_PLACEHOLDER  
-**项目版本**: 1.2.0
+**项目版本**: VERSION_PLACEHOLDER
 
 ---
 
@@ -69,6 +74,7 @@ MDEOF
 
 # 替换占位符
 sed -i.bak "s/TIMESTAMP_PLACEHOLDER/$timestamp/" "$SUMMARY_DIR/test-report.md"
+sed -i.bak "s/VERSION_PLACEHOLDER/$PROJECT_VERSION/" "$SUMMARY_DIR/test-report.md"
 sed -i.bak "s/TOTAL_PLACEHOLDER/$total/" "$SUMMARY_DIR/test-report.md"
 sed -i.bak "s/PASSED_PLACEHOLDER/$passed/" "$SUMMARY_DIR/test-report.md"
 sed -i.bak "s/FAILED_PLACEHOLDER/$failed/" "$SUMMARY_DIR/test-report.md"
@@ -100,7 +106,7 @@ echo "" >> "$SUMMARY_DIR/test-report.md"
 echo "| 模块 | 总数 | 通过 | 失败 | 错误 | 跳过 |" >> "$SUMMARY_DIR/test-report.md"
 echo "|------|------|------|------|------|------|" >> "$SUMMARY_DIR/test-report.md"
 
-for module in apex-common apex-domain apex-application apex-interfaces apex-license-spring-boot-starter apex-generator; do
+for module in apex-common apex-license-spring-boot-starter apex-license-tools apex-domain apex-infrastructure apex-application apex-workflow apex-interfaces apex-auth-center apex-example apex-generator; do
     m_total=0
     m_passed=0
     m_failed=0
@@ -128,23 +134,8 @@ for module in apex-common apex-domain apex-application apex-interfaces apex-lice
     fi
 done
 
-# 添加已知问题
+# 添加报告位置
 cat >> "$SUMMARY_DIR/test-report.md" << 'ENDMD'
-
----
-
-## 已知问题
-
-⚠️ **编译错误 - apex-infrastructure 模块**
-
-Lombok `@Slf4j` 注解处理失败,导致以下类无法编译:
-- RedisDataCleanupRunner.java
-- RedissonConfig.java
-- CacheConsistencyService.java
-- MultiLevelCacheService.java
-- 等约20个文件
-
-**建议**: 检查 maven-compiler-plugin 的 Lombok 注解处理器配置
 
 ---
 

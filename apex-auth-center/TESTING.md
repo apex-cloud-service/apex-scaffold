@@ -369,4 +369,4 @@ bash scripts/ci/check-springdoc-coverage.sh
 
 **测试人**: ____________  
 **测试日期**: ____________
-**版本**: v1.2.0
+**版本**: v1.3.1

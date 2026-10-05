@@ -65,5 +65,5 @@ kubectl apply -n argo-rollouts -f https://github.com/argoproj/argo-rollouts/rele
 
 ## 版本标签约定
 
-- Deployment labels `version` 与镜像 tag 保持一致（当前 v1.2.0）
+- Deployment labels `version` 与镜像 tag 保持一致（当前 v1.3.1）
 - 灰度期间金丝雀使用 `track: canary` 标签，与稳定版按 `track` 维度隔离，便于日志/指标对比

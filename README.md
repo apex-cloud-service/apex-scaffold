@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![Apex Scaffold](https://img.shields.io/badge/Apex_Scaffold-v1.2.0-blue)
+![Apex Scaffold](https://img.shields.io/badge/Apex_Scaffold-v1.3.1-blue)
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.5.15-brightgreen)
 ![Java](https://img.shields.io/badge/Java-17-orange)
 ![License](https://img.shields.io/badge/license-Apache%202.0-blue)
@@ -283,7 +283,7 @@ mvnd spring-boot:run
 
 ```bash
 mvnd clean package -DskipTests
-java -jar apex-interfaces/target/apex-interfaces-1.2.0.jar
+java -jar apex-interfaces/target/apex-interfaces-1.3.1.jar
 ```
 
 **方式 4: 使用 Docker Compose**
@@ -627,7 +627,7 @@ java -server \
   -XX:MaxGCPauseMillis=200 \
   -XX:+HeapDumpOnOutOfMemoryError \
   -XX:HeapDumpPath=/logs/heapdump.hprof \
-  -jar apex-interfaces-1.2.0.jar
+  -jar apex-interfaces-1.3.1.jar
 ```
 
 **完整环境变量配置**: 查看 [环境变量管理指南](docs/_archive/operations/environment-variables.md) 了解所有 172 个环境变量的详细说明。

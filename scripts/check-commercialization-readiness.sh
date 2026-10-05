@@ -136,7 +136,7 @@ check_module_structure() {
     print_header "检查4: 模块结构"
     
     # 检查核心模块
-    MODULES=("apex-common" "apex-domain" "apex-application" "apex-infrastructure" "apex-interfaces" "apex-example" "apex-generator")
+    MODULES=("apex-common" "apex-domain" "apex-application" "apex-workflow" "apex-infrastructure" "apex-interfaces" "apex-example" "apex-generator")
     
     for module in "${MODULES[@]}"; do
         if [ -d "$module" ]; then

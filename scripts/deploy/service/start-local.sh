@@ -38,4 +38,4 @@ export JAVA_OPTS="-Xms512m -Xmx1024m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:M
 # 启动应用
 echo "启动 Apex Scaffold 应用..."
 cd "${PROJECT_ROOT}"
-java $JAVA_OPTS -jar apex-interfaces/target/apex-interfaces-1.2.0-executable.jar
+java $JAVA_OPTS -jar apex-interfaces/target/apex-interfaces-1.3.1-executable.jar
