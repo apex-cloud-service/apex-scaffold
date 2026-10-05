@@ -20,7 +20,8 @@ Apex Scaffold 是 Java 17、Spring Boot 3.5.15、Spring WebFlux 的多模块项�
 - `apex-domain`：领域层，包含聚合根、实体、值对象、领域服务、领域事件和仓储接口（Port）。只依赖 `apex-common`，不得依赖任何上层模块。
 - `apex-infrastructure`：基础设施层，实现领域层定义的仓储接口，包含 MyBatis-Plus Mapper/PO、Redis/Caffeine 缓存、RocketMQ 消息、MinIO/TOS 存储、外部服务适配器（Office、Keycloak、KMS 等）。依赖 `apex-domain` 和 `apex-common`。
 - `apex-application`：应用层，用例编排、应用服务、事务边界、DTO/Assembler 转换、事件监听和定时任务调度。依赖 `apex-domain`、`apex-common` 和 `apex-infrastructure`。
-- `apex-interfaces`：接口层，WebFlux 函数式 Router + Handler、安全过滤器链、AOP 切面（权限、审计、幂等、防重放、数据权限等）、配置类、OpenAPI 文档、i18n 资源、Flyway 迁移脚本和主启动入口 `Application.java`。依赖 `apex-application`、`apex-infrastructure`、`apex-domain` 和 `apex-license-spring-boot-starter`。
+- `apex-workflow`：工作流独立模块，遵循与主应用一致的 DDD 分层，内部包含 `application`（服务/查询/调度/DTO）、`domain`（领域模型/仓储契约）和 `infrastructure`（专属持久化）三层。依赖 `apex-domain` 和 `apex-common`，不依赖 `apex-infrastructure`；对外由 `apex-interfaces` 通过 `apex-workflow` 依赖引用其应用服务。
+- `apex-interfaces`：接口层，WebFlux 函数式 Router + Handler、安全过滤器链、AOP 切面（权限、审计、幂等、防重放、数据权限等）、配置类、OpenAPI 文档、i18n 资源、Flyway 迁移脚本和主启动入口 `Application.java`。依赖 `apex-application`、`apex-workflow`、`apex-infrastructure`、`apex-domain` 和 `apex-license-spring-boot-starter`。
 - `apex-auth-center`：独立认证中心模块，采用与主应用相同的 DDD 分层（application/domain/infrastructure/interfaces），负责认证、授权、MFA/TOTP、JWT 密钥轮换、会话管理、审计日志、KMS 集成、IP 访问控制、设备信任、生物识别、暴力破解防护等。有独立启动类 `AuthCenterApplication.java` 和独立 Flyway 迁移（V44–V52）。依赖 `apex-common` 和 `apex-infrastructure`。
 - `apex-example`：示例模块，演示完整 DDD + WebFlux 链路的集成用法，依赖 `apex-interfaces` 及其下层所有模块。
 - `apex-generator`：独立的 DDD 代码生成器，不依赖其他业务模块，根据数据库表结构生成 entity/mapper/po 等模板代码。
@@ -29,21 +30,26 @@ Apex Scaffold 是 Java 17、Spring Boot 3.5.15、Spring WebFlux 的多模块项�
 
 ```text
 interfaces ──▶ application ──▶ domain ◀── infrastructure
-     │              │               │              │
-     └──▶ license-spring-boot-starter              │
-                    │                              │
-              license-tools                        │
-                                                   │
-auth-center ───────────────────────────────────────┘
+     │   │          │              │              │
+     │   └──▶ workflow ──▶ domain ─┘              │
+     │              │                             │
+     └──▶ license-spring-boot-starter             │
+                    │                             │
+              license-tools                       │
+                                                  │
+auth-center ──────────────────────────────────────┘
      │
      └──▶ common ◀── 所有模块按需依赖
+
+workflow ──▶ common（不依赖 infrastructure，共享持久化设施 BasePO/ConditionUtil/ApexLambdaQueryWrapper 位于 common）
 ```
 
 核心约束：
 
 - `domain` 不得依赖 `application`、`interfaces` 或 `infrastructure`。
 - `application` 可依赖 `domain`、`common` 和 `infrastructure`，但不得反向依赖 `interfaces`。
-- `interfaces` 是主应用的最上层，依赖 `application`、`infrastructure`、`domain` 和 `license-spring-boot-starter`。
+- `workflow` 为独立分层模块，可依赖 `domain` 和 `common`，不得依赖 `infrastructure`（共享持久化设施已下沉至 `common`），也不得被 `domain`/`infrastructure` 反向依赖。
+- `interfaces` 是主应用的最上层，依赖 `application`、`workflow`、`infrastructure`、`domain` 和 `license-spring-boot-starter`。
 - `apex-auth-center` 是独立的认证子系统，依赖 `common` 和 `infrastructure`，不依赖主应用的 `application`/`interfaces` 层。
 - `apex-example` 和 `apex-generator` 分别用于示例演示和代码生成，不参与生产依赖链。
 
@@ -63,13 +69,20 @@ graph LR
         direction TB
         entry["Application<br/>Spring Boot + WebFlux<br/>排除 authcenter 包扫描"]
         web["接口层<br/>WebFilter / SecurityConfig<br/>ApiRouter / Handler"]
-        app["apex-application<br/>UserService / WorkflowService<br/>用例编排 / 缓存 / 事务"]
+        app["apex-application<br/>UserService<br/>用例编排 / 缓存 / 事务"]
+        workflow["apex-workflow ★<br/>WorkflowService / QueryService<br/>领域模型 / 专属持久化"]
         domain["apex-domain<br/>Entity / Domain Service<br/>Repository Port / Domain Event"]
         infra["apex-infrastructure<br/>RepositoryImpl / Mapper / PO<br/>Redis / MQ / Storage / 外部适配器"]
         common["apex-common<br/>Result / Exception / Annotation<br/>Context / Scheduler / Utility"]
         db[("MySQL / PostgreSQL")]
         cache[("Redis / Caffeine")]
-        entry --> web --> app --> domain --> infra
+        entry --> web
+        web --> app
+        web --> workflow
+        app --> domain
+        domain --> infra
+        workflow --> domain
+        workflow --> common
         infra --> db
         app --> cache
         web --> common
@@ -108,6 +121,7 @@ graph LR
 
 - `Application` 是主应用入口，负责装配 WebFlux、异步任务、配置属性和服务发现；`AuthCenterApplication` 是认证中心的独立入口，二者不是同一个 Spring ApplicationContext。
 - 主应用依赖方向为 `interfaces -> application -> domain`，基础设施实现 `domain` 定义的 Repository Port；当前 `application -> infrastructure` 是项目实际存在的直接依赖，不能在文档中简化为纯粹的六边形依赖。
+- `apex-workflow` 是独立的 DDD 分层模块，依赖 `domain` 和 `common`，**不依赖 `infrastructure`**；共享持久化设施 `BasePO`、`ConditionUtil`、`ApexLambdaQueryWrapper` 已从 `infrastructure` 下沉至 `common`，从而消除了工作流模块与基础设施模块间的循环依赖。接口层通过 `apex-workflow` 依赖引用其应用服务，对外 HTTP 路由保持不变。
 - `apex-common` 提供 `Result`、异常、注解、上下文、工具和 `BlockingIoSchedulers`，不承载具体业务用例。
 - 主应用用户查询链使用 `UserService -> domain.UserRepository -> infrastructure.UserRepositoryImpl -> UserMapper/UserPoConverter`；认证中心使用自己的同名仓储、Mapper 和 Converter，不能交叉引用。
 - `apex-example` 用于集成示例，`apex-generator` 用于生成模板，二者不是生产请求的必经模块；许可证 Starter 是主应用运行时能力，许可证 Tools 是离线工具。
@@ -118,6 +132,7 @@ graph LR
 - **apex-domain**：领域实体、值对象、领域服务、领域事件和 Repository Port。它表达业务规则和抽象边界，不直接实现 MyBatis、Redis 或对象存储访问。
 - **apex-infrastructure**：实现 Repository Port，使用 MyBatis-Plus Mapper/PO 访问数据库，并承载 Redis/Caffeine、RocketMQ、MinIO/TOS、Keycloak、KMS 等适配器。同步调用通过语义化 Scheduler 隔离。
 - **apex-application**：以 `UserService` 等应用服务编排用例，处理缓存、事务、领域对象组合和 Assembler 转换；它把接口层请求转换为领域调用，再把结果交回接口层。
+- **apex-workflow**：独立工作流模块，内部自带 application（服务/查询/调度/DTO）、domain（领域模型/仓储契约）、infrastructure（专属持久化）三层，承载工作流引擎、办公审批集成与监控统计；依赖 `apex-domain` 和 `apex-common`，不依赖 `apex-infrastructure`，由接口层引用其应用服务。
 - **apex-interfaces**：由 `Application` 启动，包含 WebFilter、Spring Security、`ApiRouter`、Handler、AOP、OpenAPI、异常处理、配置和主应用 Flyway 资源。
 - **apex-auth-center**：独立认证子系统，内部拥有自己的 application/domain/infrastructure/interfaces 分层、认证中心数据库边界和 Flyway 资源，负责认证、授权、MFA/TOTP、JWT、会话、审计和风控能力。
 
