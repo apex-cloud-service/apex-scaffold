@@ -92,6 +92,9 @@ rebel-remote.xml
 .idea/*
 *.log.{err,out}
 
+# ===== Agent / 协作工具工作区 =====
+.trae/
+
 # ===== 发布产物 =====
 dist/
 release/
