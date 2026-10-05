@@ -164,15 +164,31 @@ T3: 线程 A 将旧值（10）写入缓存
 结果：缓存=10，DB=20（不一致）
 ```
 
-**解决方案**：延迟双删
+**解决方案**：延迟双删（异步，第二次删除不阻塞业务响应）
 
 ```java
-public Mono<Void> updateData(String key, Object newValue) {
-    return dbRepository.update(key, newValue)
-        .then(cacheService.delete(key))              // 第一次删除
-        .delayElement(Duration.ofMillis(500))        // 延迟 500ms
-        .then(cacheService.delete(key))              // 第二次删除
-        .then();
+@Override
+public Mono<Boolean> evictWithDelayedDoubleDelete(String cacheName, String key) {
+    if (key == null || cacheName == null) {
+        return Mono.just(false);
+    }
+    CacheProperties.DoubleDelete config = cacheProperties.getDoubleDelete();
+    if (config == null || !config.isEnabled()) {
+        return evict(cacheName, key);            // 未启用时退化为单次删除
+    }
+    int retryTimes = Math.max(0, config.getRetryTimes());
+    long delayMillis = Math.max(0, config.getDelayMillis());
+
+    // 第一次删除（L2→L1），失败按配置重试
+    return deleteBothLevels(cacheName, key)
+        .retry(retryTimes)
+        .doOnSuccess(deleted ->
+            // 延迟 delayMillis 后异步二次删除（fire-and-forget，不阻塞响应）
+            Mono.delay(Duration.ofMillis(delayMillis), BlockingIoSchedulers.cache())
+                .then(deleteBothLevels(cacheName, key).retry(retryTimes))
+                .subscribe(
+                    ignored -> { },
+                    e -> log.error("延迟双删二次删除失败，交由补偿机制兜底", e)));
 }
 ```
 
@@ -233,6 +249,12 @@ apex:
     read-degradation:
       enabled: true                    # 启用读降级
       max-stale-seconds: 3600          # 最大过期时间 1 小时
+
+    # 延迟双删配置（防止并发读写脏数据）
+    double-delete:
+      enabled: true                    # 启用延迟双删（默认 true）
+      delay-millis: 500                # 第二次删除延迟（毫秒，默认 500）
+      retry-times: 3                   # 每次删除失败的最大重试次数（默认 3）
 ```
 
 ### 3.2 基本使用

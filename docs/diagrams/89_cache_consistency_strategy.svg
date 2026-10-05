@@ -72,17 +72,16 @@
   
   <rect x="70" y="760" width="510" height="220" rx="6" fill="#fff" stroke="#fef3c7" stroke-width="2"/>
   <text x="90" y="783" class="step-title">解决缓存与数据库不一致问题</text>
-  <text x="90" y="803" class="code">public void updateUser(User user) {</text>
-  <text x="110" y="820" class="highlight">// 1. 第一次删除缓存</text>
-  <text x="110" y="837" class="code">cacheService.delete("cache:user:" + user.getId());</text>
-  <text x="110" y="860" class="code">// 2. 更新数据库</text>
-  <text x="110" y="877" class="code">userRepository.update(user);</text>
-  <text x="110" y="900" class="highlight">// 3. 延迟500ms后再次删除缓存</text>
-  <text x="110" y="917" class="code">CompletableFuture.runAsync(() -> {</text>
-  <text x="130" y="934" class="code">Thread.sleep(500);</text>
-  <text x="130" y="951" class="code">cacheService.delete("cache:user:" + user.getId());</text>
-  <text x="110" y="968" class="code">});</text>
-  <text x="90" y="985" class="code">}</text>
+  <text x="90" y="803" class="code">// 更新 DB 后调用（异步延迟双删）</text>
+  <text x="110" y="820" class="highlight">cacheConsistencyService</text>
+  <text x="110" y="837" class="highlight">    .evictWithDelayedDoubleDelete(</text>
+  <text x="110" y="854" class="highlight">        cacheName, key);</text>
+  <text x="90" y="877" class="step-desc">内部流程:</text>
+  <text x="110" y="894" class="code">1. deleteBothLevels(key) 删除 L2+L1</text>
+  <text x="130" y="911" class="code">   .retry(retryTimes)  // 失败重试</text>
+  <text x="110" y="934" class="code">2. Mono.delay(delayMillis)</text>
+  <text x="130" y="951" class="code">   → 异步二次删除 (不阻塞响应)</text>
+  <text x="130" y="968" class="code">   → 失败记录日志,补偿兜底</text>
   
   <!-- Canal Binlog 监听 -->
   <rect x="650" y="100" width="550" height="320" rx="8" fill="#8b5cf6" opacity="0.1" stroke="#8b5cf6" stroke-width="2"/>

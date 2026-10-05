@@ -172,22 +172,17 @@ T5: 请求B写缓存 (脏数据)
 
 **解决方案: 延时双删**:
 ```java
-@Transactional
 public Mono<Void> updateUser(User user) {
-    String cacheKey = "user:" + user.getId();
-
-    return Mono.fromRunnable(() -> {
-        // 1. 先删缓存
-        redisTemplate.delete(cacheKey);
-    })
-    .then(userRepository.save(user)) // 2. 写数据库
-    .then(Mono.fromRunnable(() -> {
-        // 3. 再删缓存 (延迟1秒)
-        CompletableFuture.delayedExecutor(1, TimeUnit.SECONDS)
-            .execute(() -> redisTemplate.delete(cacheKey));
-    }));
+    // 1. 先删缓存（L2→L1）
+    return Mono.just(user)
+        .then(userRepository.save(user)) // 2. 写数据库
+        .then(cacheConsistencyService
+            // 3. 延迟双删：立即删除 + 延迟再删（异步，不阻塞响应）
+            .evictWithDelayedDoubleDelete("user:id", user.getId().toString()).then());
 }
 ```
+
+> 注: `evictWithDelayedDoubleDelete` 内部执行「立即删除两级缓存 → 延迟 `delayMillis`（可配置，默认 500ms）→ 异步二次删除」,并带失败重试(`retry-times`),失败时记录日志交由补偿机制兜底。
 
 ---
 

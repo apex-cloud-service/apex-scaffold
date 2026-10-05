@@ -254,16 +254,20 @@ T3: 线程A将旧值(10)写入缓存
 **解决方案**:
 
 ```java
+@Autowired
+private CacheConsistencyPort cacheConsistencyService;
+
 @Override
 public Mono<Void> updateWithDelayedDelete(String key, Object newValue) {
     return userRepository.update(newValue)
-        .then(cacheService.evict(key))
-        .delayElement(Duration.ofMillis(500))
-        .then(cacheService.evict(key));
+        .then(cacheConsistencyService
+            // 延迟双删：立即删除 + 延迟再删（异步，不阻塞响应）
+            .evictWithDelayedDoubleDelete(cacheName, key)
+            .then());
 }
 ```
 
-**原理**: 延迟500ms后再删除一次缓存,确保慢查询线程写入的旧值被清除。
+**原理**: 更新后调用 `evictWithDelayedDoubleDelete`,内部先立即删除两级缓存(L2→L1),延迟 `delayMillis`(默认 500ms)后再异步删除一次,确保慢查询线程写入的旧值被清除;每次删除带失败重试(`retry-times`),失败记录日志交由补偿兜底。
 
 ### 3.3 Write-Through模式 (高级)
 
