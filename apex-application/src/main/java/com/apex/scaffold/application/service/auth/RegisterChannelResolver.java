@@ -1,6 +1,7 @@
 package com.apex.scaffold.application.service.auth;
 
 import com.apex.scaffold.application.dto.LoginRequest;
+import com.apex.scaffold.common.enums.ClientType;
 import com.apex.scaffold.domain.enums.LoginType;
 import com.apex.scaffold.domain.enums.RegisterChannel;
 
@@ -33,6 +34,15 @@ public final class RegisterChannelResolver {
     /**
      * 从登录请求解析注册来源。
      *
+     * <p>解析优先级（批次 2/3 多端改造）：
+     * <ol>
+     *   <li>显式客户端标识 {@code X-Client-Type} 请求头 / {@code clientType} 请求体字段
+     *       （AuthHandler 已将请求头回填到请求体）—— 可直接映射到注册来源</li>
+     *   <li>登录方式推导：{@code WX_MINI} → 小程序、{@code PASSWORD} → PC Web</li>
+     *   <li>{@code platform} 推导：android/ios/harmony/h5</li>
+     *   <li>均无法识别时返回 {@link RegisterChannel#UNKNOWN}，与改造前行为兼容</li>
+     * </ol>
+     *
      * @param request 登录请求，允许为 {@code null}
      * @return 注册来源；无法识别时返回 {@link RegisterChannel#UNKNOWN}
      */
@@ -40,10 +50,23 @@ public final class RegisterChannelResolver {
         if (request == null) {
             return RegisterChannel.UNKNOWN;
         }
-        String loginType = request.getLoginType();
-        if (loginType != null && LoginType.PASSWORD.name().equalsIgnoreCase(loginType.trim())) {
-            return RegisterChannel.PC_WEB;
+        // 1. 显式客户端标识优先（X-Client-Type / clientType）
+        RegisterChannel fromClientType = fromClientType(request.getClientType());
+        if (fromClientType != null) {
+            return fromClientType;
         }
+        // 2. 登录方式推导
+        String loginType = request.getLoginType();
+        if (loginType != null && !loginType.isBlank()) {
+            String normalized = loginType.trim().toUpperCase();
+            if (LoginType.PASSWORD.name().equals(normalized)) {
+                return RegisterChannel.PC_WEB;
+            }
+            if (LoginType.WX_MINI.name().equals(normalized)) {
+                return RegisterChannel.MINI_PROGRAM;
+            }
+        }
+        // 3. platform 推导
         String platform = request.getPlatform();
         if (platform == null || platform.isBlank()) {
             return RegisterChannel.UNKNOWN;
@@ -54,6 +77,27 @@ public final class RegisterChannelResolver {
             case "harmony" -> RegisterChannel.APP_HARMONY;
             case "h5" -> RegisterChannel.H5;
             default -> RegisterChannel.UNKNOWN;
+        };
+    }
+
+    /**
+     * 客户端类型编码到注册来源的映射。
+     *
+     * @param clientType 客户端类型编码，可为 {@code null}
+     * @return 对应注册来源；UNKNOWN 或无法映射时返回 {@code null}（交由后续规则推导）
+     */
+    private static RegisterChannel fromClientType(String clientType) {
+        ClientType type = ClientType.fromCode(clientType);
+        return switch (type) {
+            case PC_ADMIN -> RegisterChannel.PC_ADMIN;
+            case PC_WEB -> RegisterChannel.PC_WEB;
+            case WECHAT_MP -> RegisterChannel.WECHAT_MP;
+            case MINI_PROGRAM -> RegisterChannel.MINI_PROGRAM;
+            case APP_ANDROID -> RegisterChannel.APP_ANDROID;
+            case APP_IOS -> RegisterChannel.APP_IOS;
+                // harmony 无 ClientType 常量，由 platform 推导分支兜底（APP_HARMONY）
+            case H5 -> RegisterChannel.H5;
+            case UNKNOWN -> null;
         };
     }
 }

@@ -60,4 +60,15 @@ public class AuthTicketPayload {
 
     /** 注册来源（{@link com.apex.scaffold.domain.enums.RegisterChannel} 编码），从登录请求推导。 */
     private String registerChannel;
+
+    /**
+     * 社交渠道（{@link com.apex.scaffold.domain.enums.SocialChannel} 编码）。
+     *
+     * <p>标识票据中 openId 所属的微信渠道（开放平台 App / 小程序 / 公众号），
+     * 注册/绑定完成后据此写入 {@code sys_user_social} 对应渠道的绑定行；
+     * 为空时按 WECHAT_APP 处理（兼容批次 1 之前的存量票据）。
+     *
+     * @since 3.3.0
+     */
+    private String channel;
 }

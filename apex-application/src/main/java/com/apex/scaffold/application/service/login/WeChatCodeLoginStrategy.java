@@ -305,6 +305,8 @@ public class WeChatCodeLoginStrategy implements LoginStrategy {
         payload.setWechatRefreshToken(refreshToken);
         payload.setWechatTokenExpireTime(tokenExpireTime);
         payload.setRegisterChannel(RegisterChannelResolver.resolve(request).name());
+        // 该票据中的 openId 属于微信开放平台 App 渠道，注册/绑定后写 WECHAT_APP 绑定行
+        payload.setChannel(SocialChannel.WECHAT_APP.name());
         // 将微信用户资料（昵称、头像、地区等）写入票据，确保注册阶段不会丢失
         if (wxUserInfo != null) {
             payload.setNickName(wxUserInfo.getNickname());

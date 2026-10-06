@@ -23,13 +23,15 @@ class LoginTypeTest {
 
         /**
          *
-         * <p>v2.2.0 起新增 {@link LoginType#PASSWORD}（账号密码登录）。</p>
+         * <p>v2.2.0 起新增 {@link LoginType#PASSWORD}（账号密码登录）；
+         * v3.3.0 起新增 {@link LoginType#WX_MINI}（微信小程序登录）。</p>
          */
         @Test
-        @DisplayName("应包含 6 个枚举常量（含 PASSWORD）")
-        void shouldHaveSixConstants() {
-            assertThat(LoginType.values()).hasSize(6);
+        @DisplayName("应包含 7 个枚举常量（含 PASSWORD 与 WX_MINI）")
+        void shouldHaveSevenConstants() {
+            assertThat(LoginType.values()).hasSize(7);
             assertThat(LoginType.valueOf("PASSWORD")).isEqualTo(LoginType.PASSWORD);
+            assertThat(LoginType.valueOf("WX_MINI")).isEqualTo(LoginType.WX_MINI);
         }
 
         @Test

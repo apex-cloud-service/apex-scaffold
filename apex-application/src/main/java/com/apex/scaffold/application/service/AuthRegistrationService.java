@@ -218,7 +218,9 @@ public class AuthRegistrationService {
         return userService
                 .getByPhone(payload.getPhone())
                 .flatMap(existing -> isSameRegistrationIdentity(existing, payload)
-                        ? buildLoginResponse(existing, request.getDeviceId(), request.getClientIp(), true, clientType)
+                        ? recordSocialBinding(existing, payload)
+                                .then(buildLoginResponse(
+                                        existing, request.getDeviceId(), request.getClientIp(), true, clientType))
                         : Mono.<LoginResponse>error(new BusinessException(ResultCode.USER_ALREADY_EXISTS)))
                 .switchIfEmpty(Mono.defer(() -> completeOrCreateUser(payload, request)
                         .flatMap(user -> buildLoginResponse(
@@ -282,6 +284,20 @@ public class AuthRegistrationService {
      */
     private Mono<LoginResponse> bindAgainstPhoneUser(
             AuthTicketPayload payload, WechatBindPhoneRequest request, UserEntity openUser) {
+        // 小程序渠道：手机号账户直接挂载小程序社交绑定（sys_user_social），不覆写
+        // sys_user.open_id（该列保留开放平台 App 主身份），允许多渠道并存
+        if (resolveChannel(payload) == SocialChannel.WECHAT_MINI) {
+            String clientType = com.apex.scaffold.common.enums.ClientType.fromCode(payload.getRegisterChannel())
+                    .name();
+            return userService
+                    .getByPhone(request.getPhone())
+                    .flatMap(phoneUser -> recordSocialBinding(phoneUser, payload)
+                            .then(buildLoginResponse(
+                                    phoneUser, request.getDeviceId(), request.getClientIp(), false, clientType)))
+                    .switchIfEmpty(Mono.defer(() -> userService
+                            .assertPhoneRegistrationAllowed(request.getPhone())
+                            .then(issueRegistrationTicket(payload, request.getPhone()))));
+        }
         return userService
                 .getByPhone(request.getPhone())
                 .flatMap(phoneUser -> {
@@ -343,26 +359,26 @@ public class AuthRegistrationService {
     }
 
     /**
-     * 登记微信开放平台社交身份绑定（多端统一账户归一数据基础）。
+     * 登记社交身份绑定（多端统一账户归一数据基础）。
      *
      * <p>幂等：重复绑定同一（渠道, OpenID）仅同步 UnionID；失败仅告警不阻断
-     * 注册/绑定主流程，绑定记录可在后续登录时补写。</p>
+     * 注册/绑定主流程，绑定记录可在后续登录时补写。渠道取票据载荷记录值
+     * （开放平台 App / 小程序 / 公众号），缺省按 WECHAT_APP 兼容存量票据。</p>
      *
      * @param user    绑定目标用户实体
-     * @param payload 票据载荷（含 openId / unionId）
+     * @param payload 票据载荷（含 openId / unionId / channel）
      * @return 空 Mono
      */
     private Mono<Void> recordSocialBinding(UserEntity user, AuthTicketPayload payload) {
         if (user == null || payload == null) {
             return Mono.empty();
         }
+        SocialChannel channel = SocialChannel.fromCode(payload.getChannel());
+        if (channel == null) {
+            channel = SocialChannel.WECHAT_APP;
+        }
         return userSocialService
-                .upsertBinding(
-                        user.getId(),
-                        user.getTenantId(),
-                        SocialChannel.WECHAT_APP,
-                        payload.getOpenId(),
-                        payload.getUnionId())
+                .upsertBinding(user.getId(), user.getTenantId(), channel, payload.getOpenId(), payload.getUnionId())
                 .onErrorResume(error -> {
                     log.warn("微信社交身份绑定记录失败(不阻断主流程): userId={}, error={}", user.getId(), error.getMessage());
                     return Mono.empty();
@@ -402,8 +418,9 @@ public class AuthRegistrationService {
         registration.setProvince(wechat.getProvince());
         registration.setCity(wechat.getCity());
         registration.setLanguage(wechat.getLanguage());
-        // 传递注册来源：登录推导的 register_channel 随票据透传到注册落库
+        // 传递注册来源与社交渠道：注册落库写 sys_user.register_channel 与 sys_user_social.channel
         registration.setRegisterChannel(wechat.getRegisterChannel());
+        registration.setChannel(wechat.getChannel());
         return authTicketService.issue(registration).map(ticket -> {
             LoginResponse response = new LoginResponse();
             response.setNextAction(AuthNextAction.REGISTER_REQUIRED.name());
@@ -439,6 +456,13 @@ public class AuthRegistrationService {
         if (payload.getOpenId() == null || payload.getOpenId().isBlank()) {
             return userService.create(newRegisteredUser(payload, request));
         }
+        // 小程序渠道：openId 不写 sys_user.open_id（该列保留开放平台 App 主身份），
+        // 统一以 PHONE_ 占位建号并写 WECHAT_MINI 社交绑定行
+        if (resolveChannel(payload) == SocialChannel.WECHAT_MINI) {
+            return userService
+                    .create(newMiniProgramUser(payload, request))
+                    .flatMap(created -> recordSocialBinding(created, payload).thenReturn(created));
+        }
         return userService
                 .getByOpenId(payload.getOpenId())
                 .flatMap(existing -> {
@@ -452,6 +476,35 @@ public class AuthRegistrationService {
                         .create(newRegisteredUser(payload, request))
                         .flatMap(
                                 created -> recordSocialBinding(created, payload).thenReturn(created))));
+    }
+
+    /**
+     * 解析票据载荷中的社交渠道（缺省按 WECHAT_APP 兼容存量票据）。
+     *
+     * @param payload 票据载荷
+     * @return 社交渠道
+     */
+    private SocialChannel resolveChannel(AuthTicketPayload payload) {
+        SocialChannel channel = SocialChannel.fromCode(payload.getChannel());
+        return channel == null ? SocialChannel.WECHAT_APP : channel;
+    }
+
+    /**
+     * 构建小程序渠道的新用户实体。
+     *
+     * <p>与 {@link #newRegisteredUser(AuthTicketPayload, RegisterRequest)} 的差异仅在于
+     * {@code openId}：小程序 OpenID 不写入 {@code sys_user.open_id}（避免覆写
+     * 开放平台 App 主身份），统一使用 {@code PHONE_ + UUID} 占位，小程序身份
+     * 由 {@code sys_user_social}（渠道=WECHAT_MINI）承载。</p>
+     *
+     * @param payload 注册票据载荷
+     * @param request 注册请求
+     * @return openId 为 PHONE_ 占位的新用户实体
+     */
+    private UserEntity newMiniProgramUser(AuthTicketPayload payload, RegisterRequest request) {
+        UserEntity user = newRegisteredUser(payload, request);
+        user.setOpenId("PHONE_" + java.util.UUID.randomUUID().toString().replace("-", ""));
+        return user;
     }
 
     /**
