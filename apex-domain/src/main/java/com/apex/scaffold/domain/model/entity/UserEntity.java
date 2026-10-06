@@ -97,6 +97,7 @@ public class UserEntity extends BaseEntity {
      *
      * @since 2.2.0
      */
+    @ToString.Exclude
     private String password;
 
     /**
@@ -119,6 +120,7 @@ public class UserEntity extends BaseEntity {
      * @see #refreshToken
      * @see #tokenExpireTime
      */
+    @ToString.Exclude
     private String accessToken;
 
     /**
@@ -130,6 +132,7 @@ public class UserEntity extends BaseEntity {
      * @see #accessToken
      * @see #tokenExpireTime
      */
+    @ToString.Exclude
     private String refreshToken;
 
     /**

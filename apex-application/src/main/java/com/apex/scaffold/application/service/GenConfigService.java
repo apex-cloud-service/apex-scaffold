@@ -9,7 +9,6 @@ import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
 import com.apex.scaffold.domain.model.generator.GenConfigEntity;
-import com.apex.scaffold.domain.model.generator.GenDatasourceEntity;
 import com.apex.scaffold.domain.repository.GenConfigRepository;
 import com.apex.scaffold.domain.repository.GenDatasourceRepository;
 import com.apex.scaffold.domain.repository.GenHistoryRepository;
@@ -35,56 +34,96 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class GenConfigService {
 
-    private static final String[] ALLOWED_OUTPUT_PATHS = {
-        "/Users/work/apex-scaffold/output", "/tmp/apex-gen"
-    };
+    private static final String[] ALLOWED_OUTPUT_PATHS = {"/Users/work/apex-scaffold/output", "/tmp/apex-gen"};
 
     private final GenConfigRepository configRepository;
     private final GenDatasourceRepository datasourceRepository;
     private final GenHistoryRepository historyRepository;
     private final ObjectMapper objectMapper;
 
+    /**
+     * 创建代码生成配置。
+     *
+     * <p>校验输出路径白名单与数据源租户归属后写入新配置。</p>
+     *
+     * @param request 生成配置创建请求
+     * @return 创建后的生成配置 DTO
+     */
     public Mono<GenConfigDTO> create(GenConfigRequest request) {
-        return tenantId()
-                .flatMap(tenant -> validateOutputPath(request.getOutputPath())
-                        .then(Mono.defer(() -> datasourceRepository.findById(request.getDatasourceId())))
-                        .publishOn(BlockingIoSchedulers.jdbc())
+        return tenantId().flatMap(tenant -> validateOutputPath(request.getOutputPath())
+                .then(Mono.defer(() -> datasourceRepository.findById(request.getDatasourceId())))
+                .publishOn(BlockingIoSchedulers.jdbc())
+                .switchIfEmpty(Mono.error(new BusinessException(ResultCode.NOT_FOUND, "数据源不存在")))
+                .flatMap(datasource -> requireTenant(datasource.getTenantId(), tenant))
+                .then(Mono.defer(() -> {
+                    GenConfigEntity entity = toEntity(request, tenant);
+                    return configRepository.insert(entity).thenReturn(toDTO(entity));
+                })));
+    }
+
+    /**
+     * 更新代码生成配置。
+     *
+     * <p>校验配置与数据源的租户归属后按请求内容更新原记录。</p>
+     *
+     * @param id 配置 ID
+     * @param request 生成配置更新请求
+     * @return 更新后的生成配置 DTO
+     */
+    public Mono<GenConfigDTO> update(Long id, GenConfigRequest request) {
+        return tenantId().flatMap(tenant -> validateOutputPath(request.getOutputPath())
+                .then(Mono.defer(() -> configRepository.findById(id)))
+                .switchIfEmpty(Mono.error(new BusinessException(ResultCode.NOT_FOUND, "生成配置不存在")))
+                .flatMap(entity -> requireTenant(entity.getTenantId(), tenant).thenReturn(entity))
+                .flatMap(entity -> datasourceRepository
+                        .findById(request.getDatasourceId())
                         .switchIfEmpty(Mono.error(new BusinessException(ResultCode.NOT_FOUND, "数据源不存在")))
                         .flatMap(datasource -> requireTenant(datasource.getTenantId(), tenant))
                         .then(Mono.defer(() -> {
-                            GenConfigEntity entity = toEntity(request, tenant);
-                            return configRepository.insert(entity).thenReturn(toDTO(entity));
-                        })));
+                            copy(request, entity, tenant);
+                            return configRepository.updateById(entity).thenReturn(toDTO(entity));
+                        }))));
     }
 
-    public Mono<GenConfigDTO> update(Long id, GenConfigRequest request) {
-        return tenantId()
-                .flatMap(tenant -> validateOutputPath(request.getOutputPath())
-                        .then(Mono.defer(() -> configRepository.findById(id)))
-                        .switchIfEmpty(Mono.error(new BusinessException(ResultCode.NOT_FOUND, "生成配置不存在")))
-                        .flatMap(entity -> requireTenant(entity.getTenantId(), tenant).thenReturn(entity))
-                        .flatMap(entity -> datasourceRepository.findById(request.getDatasourceId())
-                                .switchIfEmpty(Mono.error(new BusinessException(ResultCode.NOT_FOUND, "数据源不存在")))
-                                .flatMap(datasource -> requireTenant(datasource.getTenantId(), tenant))
-                                .then(Mono.defer(() -> {
-                                    copy(request, entity, tenant);
-                                    return configRepository.updateById(entity).thenReturn(toDTO(entity));
-                                }))));
-    }
-
+    /**
+     * 删除代码生成配置。
+     *
+     * <p>校验租户归属后执行删除，返回是否删除成功。</p>
+     *
+     * @param id 配置 ID
+     * @return 是否删除成功
+     */
     public Mono<Boolean> delete(Long id) {
-        return tenantId().flatMap(tenant -> configRepository.findById(id)
+        return tenantId().flatMap(tenant -> configRepository
+                .findById(id)
                 .switchIfEmpty(Mono.error(new BusinessException(ResultCode.NOT_FOUND, "生成配置不存在")))
                 .flatMap(entity -> requireTenant(entity.getTenantId(), tenant).thenReturn(entity))
                 .then(Mono.defer(() -> configRepository.deleteById(id)))
                 .map(rows -> rows > 0));
     }
 
+    /**
+     * 按 ID 查询代码生成配置。
+     *
+     * <p>校验租户归属，配置不存在时返回空 Mono。</p>
+     *
+     * @param id 配置 ID
+     * @return 生成配置 DTO，不存在时返回空 Mono
+     */
     public Mono<GenConfigDTO> findById(Long id) {
-        return tenantId().flatMap(tenant -> configRepository.findById(id)
+        return tenantId().flatMap(tenant -> configRepository
+                .findById(id)
                 .flatMap(entity -> requireTenant(entity.getTenantId(), tenant).thenReturn(toDTO(entity))));
     }
 
+    /**
+     * 分页查询当前租户的代码生成配置。
+     *
+     * @param datasourceId 数据源 ID，为空时查询全部
+     * @param pageNum 页码（从 1 开始）
+     * @param pageSize 每页大小
+     * @return 生成配置分页结果
+     */
     public Mono<PageResponse<GenConfigDTO>> list(Long datasourceId, int pageNum, int pageSize) {
         return tenantId().flatMap(tenant -> (datasourceId == null
                         ? configRepository.findAll()
@@ -96,15 +135,23 @@ public class GenConfigService {
                 .map(items -> page(items, pageNum, pageSize)));
     }
 
+    /**
+     * 分页查询指定代码生成配置的生成历史。
+     *
+     * @param configId 配置 ID
+     * @param pageNum 页码（从 1 开始）
+     * @param pageSize 每页大小
+     * @return 生成历史分页结果
+     */
     public Mono<PageResponse<GenHistoryDTO>> listHistory(Long configId, int pageNum, int pageSize) {
         validatePage(pageNum, pageSize);
-        return findById(configId)
-                .flatMap(config -> historyRepository.findByConfigId(configId)
-                        .map(items -> items.stream()
-                                .filter(item -> config.getTenantId().equals(item.getTenantId()))
-                                .map(this::toHistoryDTO)
-                                .toList())
-                        .map(items -> pageHistory(items, pageNum, pageSize)));
+        return findById(configId).flatMap(config -> historyRepository
+                .findByConfigId(configId)
+                .map(items -> items.stream()
+                        .filter(item -> config.getTenantId().equals(item.getTenantId()))
+                        .map(this::toHistoryDTO)
+                        .toList())
+                .map(items -> pageHistory(items, pageNum, pageSize)));
     }
 
     private Mono<String> tenantId() {
@@ -216,8 +263,8 @@ public class GenConfigService {
             return null;
         }
         try {
-            List<String> tables = objectMapper.readValue(value, objectMapper.getTypeFactory()
-                    .constructCollectionType(List.class, String.class));
+            List<String> tables = objectMapper.readValue(
+                    value, objectMapper.getTypeFactory().constructCollectionType(List.class, String.class));
             return tables.isEmpty() ? null : tables.get(0);
         } catch (Exception e) {
             return value;
@@ -236,8 +283,6 @@ public class GenConfigService {
                 break;
             }
         }
-        return allowed
-                ? Mono.empty()
-                : Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "输出路径必须在允许的路径白名单内"));
+        return allowed ? Mono.empty() : Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "输出路径必须在允许的路径白名单内"));
     }
 }

@@ -1,12 +1,12 @@
 package com.apex.scaffold.infrastructure.persistence.repository;
 
+import com.apex.scaffold.common.persistence.util.ConditionUtil;
 import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
 import com.apex.scaffold.domain.model.entity.JobLogEntity;
 import com.apex.scaffold.domain.repository.JobLogRepository;
 import com.apex.scaffold.infrastructure.persistence.converter.JobLogPoConverter;
 import com.apex.scaffold.infrastructure.persistence.mapper.JobLogMapper;
 import com.apex.scaffold.infrastructure.persistence.po.JobLogPO;
-import com.apex.scaffold.common.persistence.util.ConditionUtil;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;

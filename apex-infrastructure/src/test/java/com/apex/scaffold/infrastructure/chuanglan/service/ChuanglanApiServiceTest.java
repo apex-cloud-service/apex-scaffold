@@ -259,12 +259,9 @@ class ChuanglanApiServiceTest {
         @Test
         @DisplayName("未配置加密策略应抛出ChuanglanApiException")
         void exchangeTokenForPhone_UnsupportedEncryptType_ThrowsException() {
-            StepVerifier.create(
-                            chuanglanApiService.exchangeTokenForPhone(
-                                    "test-token", null, "1", null))
+            StepVerifier.create(chuanglanApiService.exchangeTokenForPhone("test-token", null, "1", null))
                     .expectErrorMatches(throwable -> throwable instanceof ChuanglanApiException
-                            && "UNSUPPORTED_ENCRYPT_TYPE".equals(
-                                    ((ChuanglanApiException) throwable).getErrorCode()))
+                            && "UNSUPPORTED_ENCRYPT_TYPE".equals(((ChuanglanApiException) throwable).getErrorCode()))
                     .verify();
             verifyNoInteractions(webClient);
         }

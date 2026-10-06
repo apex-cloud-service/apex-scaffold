@@ -905,6 +905,7 @@ operation-log:
       resources: []
   # ---------- 安全配置 ----------
   security:
+    data-encryption-key: ${APEX_DATA_ENCRYPTION_KEY:}
     guard:
       # ✅ 安全守卫总开关（UA 检查等基础防护）
       enabled: true
@@ -1048,3 +1049,8 @@ grafana:
   # Grafana Explore 路径
   explore-path: /explore
 
+
+security:
+  config:
+    encryption:
+      key: ${CONFIG_ENCRYPTION_KEY:}

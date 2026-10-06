@@ -7,6 +7,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 import com.apex.scaffold.common.dto.PageResponse;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.domain.model.entity.UserEntity;
@@ -16,9 +19,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -294,5 +300,61 @@ class UserServiceTest {
                 .verifyComplete();
 
         verify(userRepository).findPage(1, 10, "nick_name", true);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"create", "update", "token", "login", "id", "openId"})
+    void repositoryFailuresDoNotLeakCredentials(String operation) {
+        RuntimeException failure = new RuntimeException(
+                "password=private-password access_token=private-access refresh_token=private-refresh",
+                new IllegalStateException("client_secret=private-client-secret"));
+        lenient().when(userRepository.save(any(UserEntity.class))).thenReturn(Mono.error(failure));
+        lenient().when(userRepository.findById(1L)).thenReturn(Mono.just(testUser));
+        lenient()
+                .when(userAssembler.mergeUpdate(any(UserEntity.class), any(UserEntity.class)))
+                .thenReturn(testUser);
+        Logger logger = (Logger) LoggerFactory.getLogger(UserService.class);
+        ListAppender<ILoggingEvent> appender = new ListAppender<>();
+        appender.start();
+        logger.addAppender(appender);
+        try {
+            Mono<?> result =
+                    switch (operation) {
+                        case "create" -> userService.create(testUser);
+                        case "update" -> userService.update(testUser);
+                        case "token" -> userService.updateTokenInfo(1L, "private-access", "private-refresh", null);
+                        case "login" -> userService.updateLoginInfo(1L, "127.0.0.1");
+                        case "id" -> {
+                            when(userRepository.findById(1L)).thenReturn(Mono.error(failure));
+                            yield userService.getById(1L);
+                        }
+                        case "openId" -> {
+                            when(userRepository.findByOpenId(testUser.getOpenId()))
+                                    .thenReturn(Mono.error(failure));
+                            yield userService.getByOpenId(testUser.getOpenId());
+                        }
+                        default -> throw new IllegalArgumentException(operation);
+                    };
+            StepVerifier.create(result)
+                    .expectErrorSatisfies(error ->
+                            org.assertj.core.api.Assertions.assertThat(error).isSameAs(failure))
+                    .verify();
+            org.assertj.core.api.Assertions.assertThat(appender.list)
+                    .filteredOn(event -> event.getLevel() == ch.qos.logback.classic.Level.ERROR)
+                    .isNotEmpty()
+                    .allSatisfy(event -> {
+                        org.assertj.core.api.Assertions.assertThat(event.getFormattedMessage())
+                                .doesNotContain(
+                                        "private-password",
+                                        "private-access",
+                                        "private-refresh",
+                                        "private-client-secret");
+                        org.assertj.core.api.Assertions.assertThat(event.getThrowableProxy())
+                                .isNull();
+                    });
+        } finally {
+            logger.detachAppender(appender);
+            appender.stop();
+        }
     }
 }

@@ -67,6 +67,29 @@ class AntiReplayAspectTest {
     private static final String TEST_NONCE = "550e8400-e29b-41d4-a716-446655440000";
 
     @Test
+    void samplesRepeatedRejectionsWithoutDroppingMetrics() throws Throwable {
+        ServerWebExchange exchange = createMockExchange(null, TEST_NONCE);
+        when(joinPoint.getArgs()).thenReturn(new Object[] {exchange});
+        ch.qos.logback.classic.Logger logger =
+                (ch.qos.logback.classic.Logger) org.slf4j.LoggerFactory.getLogger(AntiReplayAspect.class);
+        ch.qos.logback.core.read.ListAppender<ch.qos.logback.classic.spi.ILoggingEvent> appender =
+                new ch.qos.logback.core.read.ListAppender<>();
+        appender.start();
+        logger.addAppender(appender);
+        try {
+            for (int i = 0; i < 16; i++) {
+                assertThatThrownBy(() -> aspect.around(joinPoint, annotation)).isInstanceOf(BusinessException.class);
+            }
+            assertThat(appender.list).hasSize(5);
+            assertThat(appender.list.get(4).getFormattedMessage()).contains("16");
+            verify(securityMetricsRecorder, org.mockito.Mockito.times(16)).recordAntiReplayRejected();
+        } finally {
+            logger.detachAppender(appender);
+            appender.stop();
+        }
+    }
+
+    @Test
     @DisplayName("新鲜请求（有效时间戳 + 新 Nonce）时应正常执行方法")
     void shouldAllowFreshRequest() throws Throwable {
         long now = Instant.now().getEpochSecond();

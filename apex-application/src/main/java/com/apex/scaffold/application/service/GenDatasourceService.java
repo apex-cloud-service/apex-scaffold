@@ -7,14 +7,12 @@ import com.apex.scaffold.common.context.TenantContext;
 import com.apex.scaffold.common.dto.PageResponse;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.result.ResultCode;
-import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
 import com.apex.scaffold.common.security.ConfigEncryptionService;
 import com.apex.scaffold.domain.model.generator.DbType;
 import com.apex.scaffold.domain.model.generator.GenDatasourceEntity;
 import com.apex.scaffold.domain.repository.GenConfigRepository;
 import com.apex.scaffold.domain.repository.GenDatasourceRepository;
 import java.time.Duration;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -40,24 +38,44 @@ public class GenDatasourceService {
     private final GenConfigRepository configRepository;
     private final ConfigEncryptionService encryptionService;
 
+    /**
+     * 创建代码生成数据源。
+     *
+     * <p>先测试数据库连接连通性，再校验同租户下名称唯一后写入新数据源。</p>
+     *
+     * @param request 数据源创建请求
+     * @return 创建后的数据源 DTO
+     */
     public Mono<GenDatasourceDTO> create(GenDatasourceRequest request) {
-        return tenantId().flatMap(tenant -> testConnection(request.getJdbcUrl(), request.getUsername(), request.getPassword())
-                .filter(Boolean.TRUE::equals)
-                .switchIfEmpty(Mono.error(new BusinessException(ResultCode.DB_ERROR, "数据库连接测试失败，请检查连接配置")))
-                .then(datasourceRepository.findByNameAndTenantId(request.getName(), tenant))
-                .flatMap(existing -> existing.isPresent()
-                        ? Mono.error(new BusinessException(ResultCode.BUSINESS_ERROR, "数据源名称已存在"))
-                        : Mono.just(toEntity(request, tenant)))
-                .flatMap(entity -> datasourceRepository.insert(entity).thenReturn(toDTO(entity))));
+        return tenantId()
+                .flatMap(tenant -> testConnection(request.getJdbcUrl(), request.getUsername(), request.getPassword())
+                        .filter(Boolean.TRUE::equals)
+                        .switchIfEmpty(Mono.error(new BusinessException(ResultCode.DB_ERROR, "数据库连接测试失败，请检查连接配置")))
+                        .then(datasourceRepository.findByNameAndTenantId(request.getName(), tenant))
+                        .flatMap(existing -> existing.isPresent()
+                                ? Mono.error(new BusinessException(ResultCode.BUSINESS_ERROR, "数据源名称已存在"))
+                                : Mono.just(toEntity(request, tenant)))
+                        .flatMap(entity -> datasourceRepository.insert(entity).thenReturn(toDTO(entity))));
     }
 
+    /**
+     * 更新代码生成数据源。
+     *
+     * <p>密码为掩码时沿用原解密密码，连接测试通过后更新并关闭对应连接池缓存。</p>
+     *
+     * @param id 数据源 ID
+     * @param request 数据源更新请求
+     * @return 更新后的数据源 DTO
+     */
     public Mono<GenDatasourceDTO> update(Long id, GenDatasourceRequest request) {
-        return tenantId().flatMap(tenant -> datasourceRepository.findById(id)
+        return tenantId().flatMap(tenant -> datasourceRepository
+                .findById(id)
                 .switchIfEmpty(Mono.error(new BusinessException(ResultCode.NOT_FOUND, "数据源不存在")))
                 .flatMap(entity -> requireTenant(entity.getTenantId(), tenant).thenReturn(entity))
                 .flatMap(entity -> {
                     String password = MASKED_PASSWORD.equals(request.getPassword())
-                            ? encryptionService.decrypt(entity.getPassword()) : request.getPassword();
+                            ? encryptionService.decrypt(entity.getPassword())
+                            : request.getPassword();
                     return testConnection(request.getJdbcUrl(), request.getUsername(), password)
                             .filter(Boolean.TRUE::equals)
                             .switchIfEmpty(Mono.error(new BusinessException(ResultCode.DB_ERROR, "数据库连接测试失败，请检查连接配置")))
@@ -70,8 +88,17 @@ public class GenDatasourceService {
                 .doOnSuccess(value -> dataSourcePoolManager.closeDataSource(tenant, id)));
     }
 
+    /**
+     * 删除代码生成数据源。
+     *
+     * <p>数据源仍被生成配置引用时拒绝删除，完成后关闭对应连接池缓存。</p>
+     *
+     * @param id 数据源 ID
+     * @return 是否删除成功
+     */
     public Mono<Boolean> delete(Long id) {
-        return tenantId().flatMap(tenant -> datasourceRepository.findById(id)
+        return tenantId().flatMap(tenant -> datasourceRepository
+                .findById(id)
                 .switchIfEmpty(Mono.error(new BusinessException(ResultCode.NOT_FOUND, "数据源不存在")))
                 .flatMap(entity -> requireTenant(entity.getTenantId(), tenant))
                 .then(configRepository.findByDatasourceId(id))
@@ -81,16 +108,35 @@ public class GenDatasourceService {
                 .doOnSuccess(deleted -> dataSourcePoolManager.closeDataSource(tenant, id)));
     }
 
+    /**
+     * 按 ID 查询代码生成数据源。
+     *
+     * <p>校验租户归属，数据源不存在时返回错误信号。</p>
+     *
+     * @param id 数据源 ID
+     * @return 数据源 DTO（密码已脱敏），不存在时返回错误信号
+     */
     public Mono<GenDatasourceDTO> findById(Long id) {
-        return tenantId().flatMap(tenant -> datasourceRepository.findById(id)
+        return tenantId().flatMap(tenant -> datasourceRepository
+                .findById(id)
                 .switchIfEmpty(Mono.error(new BusinessException(ResultCode.NOT_FOUND, "数据源不存在")))
                 .flatMap(entity -> requireTenant(entity.getTenantId(), tenant).thenReturn(toDTO(entity))));
     }
 
+    /**
+     * 分页查询当前租户的数据源，支持按名称模糊过滤。
+     *
+     * @param name 名称关键字，为空时查询全部
+     * @param pageNum 页码
+     * @param pageSize 每页大小
+     * @return 数据源分页结果
+     */
     public Mono<PageResponse<GenDatasourceDTO>> list(String name, int pageNum, int pageSize) {
-        return tenantId().flatMap(tenant -> datasourceRepository.findByTenantId(tenant)
+        return tenantId().flatMap(tenant -> datasourceRepository
+                .findByTenantId(tenant)
                 .map(items -> items.stream()
-                        .filter(item -> name == null || name.isBlank() || item.getName().contains(name))
+                        .filter(item ->
+                                name == null || name.isBlank() || item.getName().contains(name))
                         .map(this::toDTO)
                         .toList())
                 .map(items -> {
@@ -100,15 +146,26 @@ public class GenDatasourceService {
                 }));
     }
 
+    /**
+     * 测试指定数据源的数据库连接连通性。
+     *
+     * @param id 数据源 ID
+     * @return 连接成功返回 true，失败或超时返回 false
+     */
     public Mono<Boolean> testConnection(Long id) {
-        return tenantId().flatMap(tenant -> datasourceRepository.findById(id)
+        return tenantId().flatMap(tenant -> datasourceRepository
+                .findById(id)
                 .switchIfEmpty(Mono.error(new BusinessException(ResultCode.NOT_FOUND, "数据源不存在")))
                 .flatMap(entity -> requireTenant(entity.getTenantId(), tenant)
-                        .then(testConnection(entity.getParams(), entity.getUsername(), encryptionService.decrypt(entity.getPassword())))));
+                        .then(testConnection(
+                                entity.getParams(),
+                                entity.getUsername(),
+                                encryptionService.decrypt(entity.getPassword())))));
     }
 
     private Mono<Boolean> testConnection(String jdbcUrl, String username, String password) {
-        return dataSourcePoolManager.testConnection(jdbcUrl, username, password, CONNECTION_TEST_TIMEOUT_SECONDS)
+        return dataSourcePoolManager
+                .testConnection(jdbcUrl, username, password, CONNECTION_TEST_TIMEOUT_SECONDS)
                 .timeout(Duration.ofSeconds(CONNECTION_TEST_TIMEOUT_SECONDS + 1))
                 .onErrorReturn(false);
     }
@@ -149,7 +206,10 @@ public class GenDatasourceService {
                 .id(entity.getId())
                 .tenantId(entity.getTenantId())
                 .name(entity.getName())
-                .dbType(entity.getDbType() == null ? null : entity.getDbType().name().toLowerCase())
+                .dbType(
+                        entity.getDbType() == null
+                                ? null
+                                : entity.getDbType().name().toLowerCase())
                 .jdbcUrl(entity.getParams())
                 .username(entity.getUsername())
                 .password(MASKED_PASSWORD)

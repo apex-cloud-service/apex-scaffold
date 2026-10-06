@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -36,7 +35,6 @@ import reactor.core.publisher.Mono;
  * @see RequirePermission
  * @see PermissionService
  */
-@Slf4j
 @Aspect
 @Component
 @RequiredArgsConstructor
@@ -44,6 +42,17 @@ public class RequirePermissionAspect {
 
     private final PermissionService permissionService;
 
+    /**
+     * 环绕通知：对标注 {@link RequirePermission} 的方法执行权限校验。
+     *
+     * <p>方法返回 Mono 或 Flux 时，先完成权限校验再放行原方法调用，并将租户上下文写入
+     * Reactor Context；其他返回类型不支持响应式校验，直接抛出禁止访问异常。</p>
+     *
+     * @param joinPoint 切点，代表被拦截的目标方法调用
+     * @param requirePermission 目标方法上的 {@link RequirePermission} 注解
+     * @return 原方法的执行结果（Mono、Flux 或同步返回值）
+     * @throws BusinessException 目标方法返回类型不是 Mono 或 Flux 时抛出
+     */
     @Around("@annotation(requirePermission)")
     public Object around(ProceedingJoinPoint joinPoint, RequirePermission requirePermission) {
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
@@ -54,7 +63,6 @@ public class RequirePermissionAspect {
                         try {
                             return (Mono<?>) joinPoint.proceed();
                         } catch (Throwable e) {
-                            log.error("执行目标方法失败: {}", e.getMessage(), e);
                             return Mono.error(e);
                         }
                     })
@@ -66,7 +74,6 @@ public class RequirePermissionAspect {
                         try {
                             return (Flux<?>) joinPoint.proceed();
                         } catch (Throwable e) {
-                            log.error("执行目标方法失败: {}", e.getMessage(), e);
                             return Flux.error(e);
                         }
                     })

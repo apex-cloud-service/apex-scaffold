@@ -244,13 +244,10 @@ public class CacheConsistencyService implements CacheConsistencyPort {
                 .retry(retryTimes)
                 .doOnSuccess(deleted -> {
                     scheduleSecondDelete(cacheName, key, delayMillis, retryTimes);
-                    log.info(
-                            "延迟双删：首次删除完成，已调度 {}ms 后异步二次删除, cacheName: {}, key: {}",
-                            delayMillis, cacheName, key);
+                    log.info("延迟双删：首次删除完成，已调度 {}ms 后异步二次删除, cacheName: {}, key: {}", delayMillis, cacheName, key);
                 })
-                .doOnError(e -> log.error(
-                        "缓存首次删除失败（重试 {} 次后），需补偿机制兜底, cacheName: {}, key: {}",
-                        retryTimes, cacheName, key, e));
+                .doOnError(e ->
+                        log.error("缓存首次删除失败（重试 {} 次后），需补偿机制兜底, cacheName: {}, key: {}", retryTimes, cacheName, key, e));
     }
 
     /**
@@ -268,12 +265,14 @@ public class CacheConsistencyService implements CacheConsistencyPort {
         Mono.delay(Duration.ofMillis(delayMillis), BlockingIoSchedulers.cache())
                 .then(deleteBothLevels(cacheName, key).retry(retryTimes))
                 .subscribe(
-                        deleted -> log.debug(
-                                "延迟双删：二次删除完成, cacheName: {}, key: {}, deleted: {}",
-                                cacheName, key, deleted),
+                        deleted ->
+                                log.debug("延迟双删：二次删除完成, cacheName: {}, key: {}, deleted: {}", cacheName, key, deleted),
                         e -> log.error(
                                 "延迟双删：二次删除失败（重试 {} 次后），需补偿机制兜底, cacheName: {}, key: {}",
-                                retryTimes, cacheName, key, e));
+                                retryTimes,
+                                cacheName,
+                                key,
+                                e));
     }
 
     /**
@@ -442,7 +441,7 @@ public class CacheConsistencyService implements CacheConsistencyPort {
                                 // 写入空值标记防止缓存穿透
                                 return setEmptyMarker(cacheName, key).then(Mono.empty());
                             }
-                            // 写入两级缓存
+                            // 回填两级缓存，并向下游返回加载到的值
                             return put(cacheName, key, dbValue).thenReturn(dbValue);
                         }))));
     }

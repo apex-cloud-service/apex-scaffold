@@ -73,8 +73,8 @@ public class CasProtocolAdapter implements SsoProtocolAdapter {
                 .bodyToMono(String.class)
                 .timeout(Duration.ofSeconds(10))
                 .flatMap(xmlResponse -> parseCasResponse(xmlResponse))
-                .doOnError(e ->
-                        log.error("CAS ticket 验证失败: ticket={}, service={}, error={}", ticket, service, e.getMessage()));
+                .doOnError(
+                        e -> log.error("CAS ticket 验证失败: type={}", e.getClass().getSimpleName()));
     }
 
     @Override
@@ -135,7 +135,7 @@ public class CasProtocolAdapter implements SsoProtocolAdapter {
                 .onErrorResume(e -> {
                     Map<String, Object> result = new HashMap<>(RESULT_MAP_CAPACITY);
                     result.put("success", false);
-                    result.put("message", "CAS 连接失败: " + e.getMessage());
+                    result.put("message", "CAS 连接失败");
                     return Mono.just(result);
                 });
     }
@@ -160,8 +160,7 @@ public class CasProtocolAdapter implements SsoProtocolAdapter {
                 }
                 userInfo.put("attributes", attributes);
             } else if (xmlResponse.contains(CAS_AUTH_FAILURE_TAG)) {
-                String errorMsg = extractXmlTag(xmlResponse, "cas:authenticationFailure");
-                throw new RuntimeException("CAS 认证失败: " + errorMsg);
+                throw new RuntimeException("CAS 认证失败");
             } else {
                 throw new RuntimeException("无法解析 CAS 响应");
             }

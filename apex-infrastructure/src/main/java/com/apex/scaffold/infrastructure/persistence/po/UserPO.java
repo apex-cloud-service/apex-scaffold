@@ -109,6 +109,7 @@ public class UserPO extends BasePO {
      * @since 2.2.0
      */
     @TableField("password")
+    @lombok.ToString.Exclude
     private String password;
 
     /**
@@ -125,6 +126,7 @@ public class UserPO extends BasePO {
      * <p>微信授权访问令牌，用于调用微信API。
      */
     @TableField("access_token")
+    @lombok.ToString.Exclude
     private String accessToken;
 
     /**
@@ -133,6 +135,7 @@ public class UserPO extends BasePO {
      * <p>微信授权刷新令牌，用于刷新AccessToken。
      */
     @TableField("refresh_token")
+    @lombok.ToString.Exclude
     private String refreshToken;
 
     /**

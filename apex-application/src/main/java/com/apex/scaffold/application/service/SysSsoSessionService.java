@@ -163,6 +163,13 @@ public class SysSsoSessionService {
                                     return ssoProtocolAdapterFactory
                                             .getAdapter(protocolType)
                                             .logout(config, sessionToken)
+                                            .onErrorMap(e -> {
+                                                log.error(
+                                                        "SSO 协议登出失败: sessionId={}, type={}",
+                                                        sessionId,
+                                                        e.getClass().getSimpleName());
+                                                return new BusinessException(ResultCode.ERROR, "撤销会话失败");
+                                            })
                                             .flatMap(result -> {
                                                 session.setStatus(SsoSessionStatus.LOGOUT);
                                                 session.setLogoutTime(LocalDateTime.now());
@@ -171,9 +178,11 @@ public class SysSsoSessionService {
                                                         .thenReturn(true);
                                             });
                                 } catch (Exception e) {
-                                    log.error("撤销 SSO 会话失败: sessionId={}", sessionId, e);
-                                    return Mono.error(
-                                            new BusinessException(ResultCode.ERROR, "撤销会话失败: " + e.getMessage()));
+                                    log.error(
+                                            "撤销 SSO 会话失败: sessionId={}, type={}",
+                                            sessionId,
+                                            e.getClass().getSimpleName());
+                                    return Mono.error(new BusinessException(ResultCode.ERROR, "撤销会话失败"));
                                 }
                             })
                             .switchIfEmpty(Mono.defer(() -> {
@@ -206,7 +215,10 @@ public class SysSsoSessionService {
                 .filter(session -> session.getStatus() != SsoSessionStatus.LOGOUT
                         && session.getStatus() != SsoSessionStatus.EXPIRED)
                 .flatMap(session -> revokeSession(session.getId()).onErrorResume(e -> {
-                    log.error("撤销会话失败,继续处理其他会话: sessionId={}", session.getId(), e);
+                    log.error(
+                            "撤销会话失败,继续处理其他会话: sessionId={}, type={}",
+                            session.getId(),
+                            e.getClass().getSimpleName());
                     return Mono.just(false);
                 }))
                 .filter(success -> success)
@@ -339,7 +351,7 @@ public class SysSsoSessionService {
             }
             return objectMapper.readValue(configJson, new TypeReference<Map<String, Object>>() {});
         } catch (Exception e) {
-            log.error("解析 JSON 配置失败: config={}", configJson, e);
+            log.error("解析 SSO JSON 配置失败: type={}", e.getClass().getSimpleName());
             throw new BusinessException(ResultCode.PARAM_ERROR, "配置格式错误,请检查 JSON 格式");
         }
     }

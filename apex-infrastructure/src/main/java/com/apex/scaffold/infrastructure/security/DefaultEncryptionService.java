@@ -7,10 +7,11 @@ import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.util.Base64;
 import javax.crypto.Cipher;
-import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.GCMParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -35,18 +36,22 @@ public class DefaultEncryptionService implements EncryptionService {
     private final SecretKey secretKey;
     private final SecureRandom secureRandom;
 
-    public DefaultEncryptionService() {
-        try {
-            // 生产环境应从安全配置或密钥管理服务获取密钥
-            KeyGenerator keyGenerator = KeyGenerator.getInstance(ALGORITHM);
-            keyGenerator.init(KEY_SIZE);
-            this.secretKey = keyGenerator.generateKey();
-            this.secureRandom = new SecureRandom();
-
-            log.warn("使用默认生成的密钥，生产环境请配置外部密钥管理服务");
-        } catch (Exception e) {
-            throw new RuntimeException("初始化加密服务失败", e);
+    /** 从 Base64 配置解析 AES-256 密钥，缺失或非法时抛出 {@link IllegalArgumentException}。 */
+    public DefaultEncryptionService(@Value("${apex.security.data-encryption-key:}") String keyBase64) {
+        if (keyBase64 == null || keyBase64.isBlank()) {
+            throw new IllegalArgumentException("必须配置数据加密密钥");
         }
+        byte[] keyBytes;
+        try {
+            keyBytes = Base64.getDecoder().decode(keyBase64);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("数据加密密钥必须为有效Base64");
+        }
+        if (keyBytes.length != KEY_SIZE / Byte.SIZE) {
+            throw new IllegalArgumentException("数据加密密钥必须是32字节（256位）");
+        }
+        this.secretKey = new SecretKeySpec(keyBytes, ALGORITHM);
+        this.secureRandom = new SecureRandom();
     }
 
     @Override
@@ -57,7 +62,7 @@ public class DefaultEncryptionService implements EncryptionService {
                 byte[] iv = new byte[GCM_IV_LENGTH];
                 secureRandom.nextBytes(iv);
 
-                // 初始化加密器
+                // 初始化加密器（GCM 参数绑定本次生成的 IV）
                 Cipher cipher = Cipher.getInstance(TRANSFORMATION);
                 GCMParameterSpec parameterSpec = new GCMParameterSpec(GCM_TAG_LENGTH, iv);
                 cipher.init(Cipher.ENCRYPT_MODE, secretKey, parameterSpec);
@@ -92,7 +97,7 @@ public class DefaultEncryptionService implements EncryptionService {
                 byte[] encryptedData = new byte[byteBuffer.remaining()];
                 byteBuffer.get(encryptedData);
 
-                // 初始化解密器
+                // 初始化解密器（GCM 参数绑定密文中携带的 IV）
                 Cipher cipher = Cipher.getInstance(TRANSFORMATION);
                 GCMParameterSpec parameterSpec = new GCMParameterSpec(GCM_TAG_LENGTH, iv);
                 cipher.init(Cipher.DECRYPT_MODE, secretKey, parameterSpec);

@@ -1,6 +1,7 @@
 package com.apex.scaffold.interfaces.filter;
 
 import com.apex.scaffold.common.result.ResultCode;
+import com.apex.scaffold.common.util.LogSafetyUtil;
 import com.apex.scaffold.interfaces.monitor.SecurityMetricsRecorder;
 import com.apex.scaffold.interfaces.util.MessageUtils;
 import com.apex.scaffold.interfaces.util.ResponseUtil;
@@ -175,7 +176,7 @@ public class InputValidationFilter implements WebFilter {
         if (validationProperties.isPathTraversalEnabled()) {
             String rawPath = uri.getRawPath();
             if (rawPath != null && containsPathTraversal(rawPath)) {
-                log.warn("检测到路径遍历攻击, URI: {}", uri);
+                log.warn("检测到路径遍历攻击, URI: {}", LogSafetyUtil.uri(uri.getRawPath(), 256));
                 return buildI18nError(exchange, "web.input_path_traversal_detected");
             }
         }
@@ -186,7 +187,7 @@ public class InputValidationFilter implements WebFilter {
                 if (values != null) {
                     for (String value : values) {
                         if (value != null && containsXss(value)) {
-                            log.warn("检测到查询参数 XSS 攻击，URI: {}", uri);
+                            log.warn("检测到查询参数 XSS 攻击，URI: {}", LogSafetyUtil.uri(uri.getRawPath(), 256));
                             securityMetricsRecorder.recordXssIntercepted();
                             return buildI18nError(exchange, "web.input_xss_detected");
                         }
@@ -201,7 +202,7 @@ public class InputValidationFilter implements WebFilter {
                 if (values != null) {
                     for (String value : values) {
                         if (value != null && hasSqlInjection(value)) {
-                            log.warn("检测到查询参数 SQL 注入攻击，URI: {}", uri);
+                            log.warn("检测到查询参数 SQL 注入攻击，URI: {}", LogSafetyUtil.uri(uri.getRawPath(), 256));
                             return buildI18nError(exchange, "web.input_sql_injection_detected");
                         }
                     }
@@ -212,14 +213,17 @@ public class InputValidationFilter implements WebFilter {
         // 参数长度检测
         String rawQuery = uri.getRawQuery();
         if (rawQuery != null && rawQuery.length() > validationProperties.getMaxParamLength()) {
-            log.warn("请求参数超长, URI: {}, 长度: {}", uri, rawQuery.length());
+            log.warn("请求参数超长, URI: {}, 长度: {}", LogSafetyUtil.uri(uri.getRawPath(), 256), rawQuery.length());
             return buildI18nError(exchange, "web.input_param_too_long");
         }
 
         // Content-Type 验证
         MediaType contentType = request.getHeaders().getContentType();
         if (contentType != null && !isContentTypeAllowed(contentType)) {
-            log.warn("Content-Type 不在白名单中, Content-Type: {}, URI: {}", contentType, uri);
+            log.warn(
+                    "Content-Type 不在白名单中, Content-Type: {}, URI: {}",
+                    LogSafetyUtil.text(contentType.toString(), 128),
+                    LogSafetyUtil.uri(uri.getRawPath(), 256));
             return buildI18nError(exchange, "web.input_content_type_blocked");
         }
 
@@ -280,14 +284,16 @@ public class InputValidationFilter implements WebFilter {
                         if (validationProperties.isXssEnabled() && containsXss(body)) {
                             log.warn(
                                     "检测到请求体 XSS 攻击, URI: {}",
-                                    exchange.getRequest().getURI());
+                                    LogSafetyUtil.uri(
+                                            exchange.getRequest().getURI().getRawPath(), 256));
                             securityMetricsRecorder.recordXssIntercepted();
                             return buildI18nError(exchange, "web.input_xss_detected");
                         }
                         if (validationProperties.isSqlInjectionPrecheck() && hasSqlInjection(body)) {
                             log.warn(
                                     "检测到请求体 SQL 注入攻击, URI: {}",
-                                    exchange.getRequest().getURI());
+                                    LogSafetyUtil.uri(
+                                            exchange.getRequest().getURI().getRawPath(), 256));
                             return buildI18nError(exchange, "web.input_sql_injection_detected");
                         }
                     }

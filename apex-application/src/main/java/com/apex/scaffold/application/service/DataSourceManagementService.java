@@ -370,13 +370,19 @@ public class DataSourceManagementService {
                         poolCache.put(entity.getId(), pool);
                         log.info("数据源连接池建立成功: id={}, pool={}", entity.getId(), config.getPoolName());
                     } catch (Exception e) {
-                        log.warn("数据源连接池建立失败（配置已保存，状态 OFFLINE）: id={}, reason={}", entity.getId(), e.getMessage());
+                        log.warn(
+                                "数据源连接池建立失败（配置已保存，状态 OFFLINE）: id={}, errorType={}",
+                                entity.getId(),
+                                e.getClass().getSimpleName());
                     }
                     return (Void) null;
                 })
                 .subscribeOn(BlockingIoSchedulers.jdbc())
                 .onErrorResume(e -> {
-                    log.warn("数据源连接池建立流程异常: id={}, reason={}", entity.getId(), e.getMessage());
+                    log.warn(
+                            "数据源连接池建立流程异常: id={}, errorType={}",
+                            entity.getId(),
+                            e.getClass().getSimpleName());
                     return Mono.empty();
                 }));
     }
@@ -398,7 +404,7 @@ public class DataSourceManagementService {
                 })
                 .subscribeOn(BlockingIoSchedulers.jdbc())
                 .onErrorResume(e -> {
-                    log.warn("数据源连接池关闭异常: id={}, reason={}", id, e.getMessage());
+                    log.warn("数据源连接池关闭异常: id={}, errorType={}", id, e.getClass().getSimpleName());
                     return Mono.empty();
                 });
     }

@@ -18,6 +18,19 @@ import org.junit.jupiter.api.Test;
 @DisplayName("PasswordUtil 单元测试")
 class PasswordUtilTest {
 
+    @Test
+    void shouldAcceptOnlyBcryptOrAbsentPasswordAtPersistenceBoundary() {
+        String hash = PasswordUtil.encryptPassword("boundary-secret");
+        assertThat(PasswordUtil.isBcryptHash(hash)).isTrue();
+        assertThatCode(() -> PasswordUtil.requirePasswordHash(hash)).doesNotThrowAnyException();
+        assertThatCode(() -> PasswordUtil.requirePasswordHash(null)).doesNotThrowAnyException();
+        assertThatCode(() -> PasswordUtil.requirePasswordHash("")).doesNotThrowAnyException();
+        for (String invalid : java.util.List.of("plaintext", " ", hash.substring(1), hash.replace("$10$", "$03$"))) {
+            assertThat(PasswordUtil.isBcryptHash(invalid)).isFalse();
+            assertThatIllegalArgumentException().isThrownBy(() -> PasswordUtil.requirePasswordHash(invalid));
+        }
+    }
+
     @Nested
     @DisplayName("encryptPassword 加密密码测试")
     class EncryptPasswordTests {

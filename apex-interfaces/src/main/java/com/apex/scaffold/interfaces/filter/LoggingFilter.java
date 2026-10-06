@@ -2,14 +2,12 @@ package com.apex.scaffold.interfaces.filter;
 
 import java.net.InetSocketAddress;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.server.reactive.ServerHttpRequest;
-import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
@@ -76,93 +74,72 @@ public class LoggingFilter implements WebFilter {
             return chain.filter(exchange);
         }
 
-        long startTime = System.currentTimeMillis();
-        String queryString = request.getURI().getRawQuery();
-        String traceId = (String) exchange.getAttributes().getOrDefault("traceId", "-");
-        String requestId = (String) exchange.getAttributes().getOrDefault("requestId", "-");
-        String userId = (String) exchange.getAttributes().getOrDefault("userId", "-");
-        String clientIp = Optional.ofNullable(request.getRemoteAddress())
-                .map(InetSocketAddress::getHostString)
-                .orElse("-");
+        return Mono.defer(() -> {
+            long startTime = System.nanoTime();
+            return Mono.defer(() -> chain.filter(exchange))
+                    .doOnSuccess(v -> logRequest(exchange, method, path, startTime, null))
+                    .doOnError(error -> logRequest(exchange, method, path, startTime, error));
+        });
+    }
 
-        // 将链路与请求标识写入 MDC，使所有 Appender 格式统一携带 traceId/requestId
-        MDC.put("traceId", traceId);
-        MDC.put("requestId", requestId);
+    private void logRequest(ServerWebExchange exchange, String method, String path, long startTime, Throwable error) {
+        int status = error != null
+                ? 500
+                : exchange.getResponse().getStatusCode() == null
+                        ? 200
+                        : exchange.getResponse().getStatusCode().value();
+        long duration = java.util.concurrent.TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime);
+        boolean warning = status >= HTTP_STATUS_CLIENT_ERROR_START || duration > SLOW_REQUEST_THRESHOLD_MS;
+        if (error != null ? !log.isErrorEnabled() : warning ? !log.isWarnEnabled() : !log.isInfoEnabled()) {
+            return;
+        }
+        java.util.Map<String, String> previous = MDC.getCopyOfContextMap();
+        try {
+            MDC.put("traceId", safeAttribute(exchange, "traceId"));
+            MDC.put("requestId", safeAttribute(exchange, "requestId"));
+            MDC.put("userId", safeAttribute(exchange, "userId"));
+            MDC.put("method", method);
+            MDC.put("uri", com.apex.scaffold.common.util.LogSafetyUtil.text(path, 256));
+            MDC.put("status", String.valueOf(status));
+            MDC.put("duration", String.valueOf(duration));
+            MDC.put(
+                    "clientIp",
+                    com.apex.scaffold.common.util.LogSafetyUtil.text(
+                            Optional.ofNullable(exchange.getRequest().getRemoteAddress())
+                                    .map(InetSocketAddress::getHostString)
+                                    .orElse("-"),
+                            64));
+            HttpHeaders headers = exchange.getRequest().getHeaders();
+            String detail = buildDetail(
+                    method,
+                    com.apex.scaffold.common.util.LogSafetyUtil.text(path, 256),
+                    status,
+                    duration,
+                    null,
+                    toHeaderValue(headers, HttpHeaders.USER_AGENT, "-"),
+                    toHeaderValue(headers, HttpHeaders.CONTENT_TYPE, "-"),
+                    com.apex.scaffold.common.util.LogSafetyUtil.uri(headers.getFirst(HttpHeaders.REFERER), 120),
+                    headers.getContentLength(),
+                    exchange.getResponse().getHeaders().getContentLength());
+            if (error != null) {
+                log.error("请求异常 | {} error={}", detail, error.getClass().getSimpleName());
+            } else if (warning) {
+                log.warn("请求完成 | {}", detail);
+            } else {
+                log.info("请求完成 | {}", detail);
+            }
+        } finally {
+            if (previous == null) {
+                MDC.clear();
+            } else {
+                MDC.setContextMap(previous);
+            }
+        }
+    }
 
-        HttpHeaders headers = request.getHeaders();
-        String userAgent = toHeaderValue(headers, HttpHeaders.USER_AGENT, "-");
-        String contentType = toHeaderValue(headers, HttpHeaders.CONTENT_TYPE, "-");
-        String referer = toHeaderValue(headers, HttpHeaders.REFERER, "-");
-        long requestSize = headers.getContentLength();
-
-        AtomicBoolean errorLogged = new AtomicBoolean(false);
-
-        return chain.filter(exchange)
-                .doOnSuccess(v -> {
-                    long durationMs = System.currentTimeMillis() - startTime;
-                    ServerHttpResponse response = exchange.getResponse();
-                    int statusCode = response.getStatusCode() != null
-                            ? response.getStatusCode().value()
-                            : 200;
-                    long responseSize = response.getHeaders().getContentLength();
-
-                    MDC.put("method", method);
-                    MDC.put("uri", path);
-                    MDC.put("clientIp", clientIp);
-                    MDC.put("status", String.valueOf(statusCode));
-                    MDC.put("duration", String.valueOf(durationMs));
-                    MDC.put("userId", userId);
-
-                    String detail = buildDetail(
-                            method,
-                            path,
-                            statusCode,
-                            durationMs,
-                            queryString,
-                            userAgent,
-                            contentType,
-                            referer,
-                            requestSize,
-                            responseSize);
-
-                    if (statusCode >= HTTP_STATUS_CLIENT_ERROR_START) {
-                        log.warn("请求完成(错误) | {}", detail);
-                        errorLogged.set(true);
-                    } else if (durationMs > SLOW_REQUEST_THRESHOLD_MS) {
-                        log.warn("请求完成(慢请求) | {}", detail);
-                    } else {
-                        log.info("请求完成 | {}", detail);
-                    }
-                    clearMdc();
-                })
-                .doOnError(e -> {
-                    long durationMs = System.currentTimeMillis() - startTime;
-
-                    MDC.put("method", method);
-                    MDC.put("uri", path);
-                    MDC.put("clientIp", clientIp);
-                    MDC.put("status", "500");
-                    MDC.put("duration", String.valueOf(durationMs));
-                    MDC.put("userId", userId);
-
-                    if (!errorLogged.get()) {
-                        log.error(
-                                "请求异常 | method={} path={} duration={}ms "
-                                        + "error={}: {} query={} UA={} CT={} referer={} reqSize={}B",
-                                method,
-                                path,
-                                durationMs,
-                                e.getClass().getSimpleName(),
-                                e.getMessage(),
-                                queryString != null ? queryString : "",
-                                userAgent,
-                                contentType,
-                                referer,
-                                requestSize,
-                                e);
-                    }
-                    clearMdc();
-                });
+    private String safeAttribute(ServerWebExchange exchange, String name) {
+        Object value = exchange.getAttribute(name);
+        return com.apex.scaffold.common.util.LogSafetyUtil.text(value instanceof String text ? text : "-", 64);
     }
 
     /**
@@ -247,13 +224,7 @@ public class LoggingFilter implements WebFilter {
      * @return 截断后的字符串，null 值返回 "-"
      */
     private static String truncate(String value, int maxLen) {
-        if (value == null) {
-            return "-";
-        }
-        if (value.length() <= maxLen) {
-            return value;
-        }
-        return value.substring(0, maxLen) + "...";
+        return com.apex.scaffold.common.util.LogSafetyUtil.text(value, maxLen);
     }
 
     /**

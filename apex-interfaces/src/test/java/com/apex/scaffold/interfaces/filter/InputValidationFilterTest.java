@@ -31,6 +31,29 @@ import reactor.test.StepVerifier;
 @MockitoSettings(strictness = Strictness.LENIENT)
 @DisplayName("InputValidationFilter 输入验证过滤器测试")
 class InputValidationFilterTest {
+    @Test
+    void shouldKeepFailureLogsSafeAndSingle() {
+        var logger = (ch.qos.logback.classic.Logger) org.slf4j.LoggerFactory.getLogger(InputValidationFilter.class);
+        var originalLevel = logger.getLevel();
+        var appender = new ch.qos.logback.core.read.ListAppender<ch.qos.logback.classic.spi.ILoggingEvent>();
+        appender.start();
+        logger.setLevel(ch.qos.logback.classic.Level.DEBUG);
+        logger.addAppender(appender);
+        try {
+            when(validationProperties.isEnabled()).thenReturn(true);
+            when(validationProperties.isPathTraversalEnabled()).thenReturn(true);
+            var exchange = MockServerWebExchange.from(MockServerHttpRequest.get("/api/../blocked?token=log-secret")
+                    .build());
+            var filter = new InputValidationFilter(validationProperties, messageUtils, securityMetricsRecorder);
+            StepVerifier.create(filter.filter(exchange, chain)).verifyComplete();
+            assertThat(appender.list).hasSize(1);
+            assertThat(appender.list.get(0).getFormattedMessage()).doesNotContain("log-secret", "token=");
+        } finally {
+            logger.detachAppender(appender);
+            logger.setLevel(originalLevel);
+            appender.stop();
+        }
+    }
 
     @Mock
     private InputValidationProperties validationProperties;

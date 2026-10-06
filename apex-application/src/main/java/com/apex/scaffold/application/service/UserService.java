@@ -129,7 +129,10 @@ public class UserService {
                 .findByOpenId(openId)
                 .doOnSuccess(user ->
                         log.info("根据OpenID查询用户成功，openId: {}, userId: {}", openId, user != null ? user.getId() : null))
-                .doOnError(e -> log.error("根据OpenID查询用户失败，openId: {}, error: {}", openId, e.getMessage(), e));
+                .doOnError(e -> log.error(
+                        "根据OpenID查询用户失败，openId: {}, type: {}",
+                        openId,
+                        e.getClass().getSimpleName()));
     }
 
     /**
@@ -189,7 +192,8 @@ public class UserService {
         return userRepository
                 .findById(userId)
                 .doOnSuccess(user -> log.info("根据ID查询用户成功，userId: {}", userId))
-                .doOnError(e -> log.error("根据ID查询用户失败，userId: {}, error: {}", userId, e.getMessage(), e));
+                .doOnError(e -> log.error(
+                        "根据ID查询用户失败，userId: {}, type: {}", userId, e.getClass().getSimpleName()));
     }
 
     /**
@@ -213,10 +217,11 @@ public class UserService {
                         .save(user)
                         .doOnSuccess(u -> {
                             log.info("用户创建成功，userId: {}, openId: {}", u.getId(), u.getOpenId());
-                            log.debug("用户详细信息: {}", u);
                         })
-                        .doOnError(
-                                e -> log.error("用户创建失败，openId: {}, error: {}", user.getOpenId(), e.getMessage(), e)));
+                        .doOnError(e -> log.error(
+                                "用户创建失败，openId: {}, type: {}",
+                                user.getOpenId(),
+                                e.getClass().getSimpleName())));
     }
 
     /**
@@ -267,7 +272,8 @@ public class UserService {
                             .thenReturn(updated);
                 })
                 .doOnSuccess(u -> log.info("用户更新成功，userId: {}", u.getId()))
-                .doOnError(e -> log.error("用户更新失败，userId: {}, error: {}", userId, e.getMessage(), e));
+                .doOnError(e -> log.error(
+                        "用户更新失败，userId: {}, type: {}", userId, e.getClass().getSimpleName()));
     }
 
     /**
@@ -345,8 +351,11 @@ public class UserService {
                 })
                 .defaultIfEmpty(false)
                 .doOnSuccess(result -> log.info("更新用户登录信息，userId: {}, ip: {}, result: {}", userId, loginIp, result))
-                .doOnError(
-                        e -> log.error("更新用户登录信息失败，userId: {}, ip: {}, error: {}", userId, loginIp, e.getMessage(), e));
+                .doOnError(e -> log.error(
+                        "更新用户登录信息失败，userId: {}, ip: {}, type: {}",
+                        userId,
+                        loginIp,
+                        e.getClass().getSimpleName()));
     }
 
     /**
@@ -386,7 +395,10 @@ public class UserService {
                 })
                 .defaultIfEmpty(false)
                 .doOnSuccess(result -> log.info("更新用户Token信息，userId: {}, result: {}", userId, result))
-                .doOnError(e -> log.error("更新用户Token信息失败，userId: {}, error: {}", userId, e.getMessage(), e));
+                .doOnError(e -> log.error(
+                        "更新用户Token信息失败，userId: {}, type: {}",
+                        userId,
+                        e.getClass().getSimpleName()));
     }
 
     /**

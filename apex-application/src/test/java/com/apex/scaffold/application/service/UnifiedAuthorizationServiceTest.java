@@ -89,7 +89,10 @@ class UnifiedAuthorizationServiceTest {
             UnifiedAuthorizationGateway gateway = mock(UnifiedAuthorizationGateway.class);
             when(gateway.query("main", 7L))
                     .thenReturn(Mono.just(new UnifiedAuthorizationGateway.Authorization(
-                            "main", 7L, List.of(), List.of(new UnifiedAuthorizationGateway.Role("ADMIN", item.getKey())))));
+                            "main",
+                            7L,
+                            List.of(),
+                            List.of(new UnifiedAuthorizationGateway.Role("ADMIN", item.getKey())))));
             var service = new UnifiedAuthorizationService(gateway, new MockEnvironment());
             StepVerifier.create(service.roles(7L).contextWrite(TenantContext.withTenant("main")))
                     .assertNext(roles -> assertThat(roles.get(0).getDataScope()).isEqualTo(item.getValue()))

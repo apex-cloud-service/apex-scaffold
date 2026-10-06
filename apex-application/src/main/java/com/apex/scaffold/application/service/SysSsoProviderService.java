@@ -253,12 +253,25 @@ public class SysSsoProviderService {
                         String protocolType = entity.getProviderType().name();
                         return ssoProtocolAdapterFactory
                                 .getAdapter(protocolType)
-                                .testConnection(config);
+                                .testConnection(config)
+                                .onErrorResume(e -> {
+                                    log.error(
+                                            "SSO 提供商连接测试失败: id={}, type={}",
+                                            id,
+                                            e.getClass().getSimpleName());
+                                    Map<String, Object> errorResult = new HashMap<>(16);
+                                    errorResult.put("success", false);
+                                    errorResult.put("message", "SSO 连接测试失败");
+                                    return Mono.just(errorResult);
+                                });
                     } catch (Exception e) {
-                        log.error("解析 SSO 提供商配置失败: id={}", id, e);
+                        log.error(
+                                "SSO 提供商连接测试失败: id={}, type={}",
+                                id,
+                                e.getClass().getSimpleName());
                         Map<String, Object> errorResult = new HashMap<>(16);
                         errorResult.put("success", false);
-                        errorResult.put("message", "配置解析失败: " + e.getMessage());
+                        errorResult.put("message", "SSO 连接测试失败");
                         return Mono.just(errorResult);
                     }
                 });
@@ -292,10 +305,20 @@ public class SysSsoProviderService {
                         String protocolType = entity.getProviderType().name();
                         return ssoProtocolAdapterFactory
                                 .getAdapter(protocolType)
-                                .getMetadata(config);
+                                .getMetadata(config)
+                                .onErrorMap(e -> {
+                                    log.error(
+                                            "获取 SSO 提供商元数据失败: id={}, type={}",
+                                            id,
+                                            e.getClass().getSimpleName());
+                                    return new BusinessException(ResultCode.ERROR, "获取 SSO 提供商元数据失败");
+                                });
                     } catch (Exception e) {
-                        log.error("解析 SSO 提供商配置失败: id={}", id, e);
-                        return Mono.error(new BusinessException(ResultCode.ERROR, "配置解析失败: " + e.getMessage()));
+                        log.error(
+                                "获取 SSO 提供商元数据失败: id={}, type={}",
+                                id,
+                                e.getClass().getSimpleName());
+                        return Mono.error(new BusinessException(ResultCode.ERROR, "获取 SSO 提供商元数据失败"));
                     }
                 });
     }
@@ -319,8 +342,11 @@ public class SysSsoProviderService {
             config.put("enabled", providerDTO.getEnabled());
             return config;
         } catch (Exception e) {
-            log.error("构建 SSO 提供商配置失败: providerId={}", providerDTO.getId(), e);
-            throw new BusinessException(ResultCode.ERROR, "构建 SSO 配置失败: " + e.getMessage());
+            log.error(
+                    "构建 SSO 提供商配置失败: providerId={}, type={}",
+                    providerDTO.getId(),
+                    e.getClass().getSimpleName());
+            throw new BusinessException(ResultCode.ERROR, "构建 SSO 配置失败");
         }
     }
 
@@ -338,7 +364,7 @@ public class SysSsoProviderService {
             }
             return objectMapper.readValue(configJson, new TypeReference<Map<String, Object>>() {});
         } catch (Exception e) {
-            log.error("解析 JSON 配置失败: config={}", configJson, e);
+            log.error("解析 SSO JSON 配置失败: type={}", e.getClass().getSimpleName());
             throw new BusinessException(ResultCode.PARAM_ERROR, "配置格式错误,请检查 JSON 格式");
         }
     }

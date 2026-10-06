@@ -246,8 +246,7 @@ public class SamlProtocolAdapter implements SsoProtocolAdapter {
             }
 
             byte[] decodedResponse = Base64.getDecoder().decode(samlResponse);
-            String responseXml = new String(decodedResponse, StandardCharsets.UTF_8);
-            log.debug("收到 SAMLResponse: {}", responseXml);
+            log.debug("收到 SAMLResponse: length={}", decodedResponse.length);
 
             DocumentBuilderFactory factory = createSecureDocumentBuilderFactory();
             DocumentBuilder builder = factory.newDocumentBuilder();
@@ -342,7 +341,7 @@ public class SamlProtocolAdapter implements SsoProtocolAdapter {
      */
     @Override
     public Mono<Map<String, Object>> logout(Map<String, Object> config, String sessionToken) {
-        log.info("执行 SAML 登出, sessionToken: {}", sessionToken);
+        log.info("执行 SAML 登出");
 
         return Mono.fromCallable(() -> {
             Map<String, Object> result = new HashMap<>(16);
@@ -477,7 +476,7 @@ public class SamlProtocolAdapter implements SsoProtocolAdapter {
                     }
                 } catch (Exception e) {
                     success = false;
-                    message.append("证书无效: ").append(e.getMessage()).append("; ");
+                    message.append("证书无效; ");
                     details.put("certificate", "证书格式错误或已过期");
                 }
             } else {
@@ -531,8 +530,8 @@ public class SamlProtocolAdapter implements SsoProtocolAdapter {
 
             return documentToString(doc);
         } catch (Exception e) {
-            log.error("构建 AuthnRequest 失败", e);
-            throw new RuntimeException("构建 AuthnRequest 失败: " + e.getMessage(), e);
+            log.error("构建 AuthnRequest 失败: type={}", e.getClass().getSimpleName());
+            throw new RuntimeException("构建 AuthnRequest 失败");
         }
     }
 
@@ -571,8 +570,8 @@ public class SamlProtocolAdapter implements SsoProtocolAdapter {
 
             return documentToString(doc);
         } catch (Exception e) {
-            log.error("构建 LogoutRequest 失败", e);
-            throw new RuntimeException("构建 LogoutRequest 失败: " + e.getMessage(), e);
+            log.error("构建 LogoutRequest 失败: type={}", e.getClass().getSimpleName());
+            throw new RuntimeException("构建 LogoutRequest 失败");
         }
     }
 
@@ -630,8 +629,8 @@ public class SamlProtocolAdapter implements SsoProtocolAdapter {
 
             return documentToString(doc);
         } catch (Exception e) {
-            log.error("构建 SP 元数据失败", e);
-            throw new RuntimeException("构建 SP 元数据失败: " + e.getMessage(), e);
+            log.error("构建 SP 元数据失败: type={}", e.getClass().getSimpleName());
+            throw new RuntimeException("构建 SP 元数据失败");
         }
     }
 

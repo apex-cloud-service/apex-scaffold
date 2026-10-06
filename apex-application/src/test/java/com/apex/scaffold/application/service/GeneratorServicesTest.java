@@ -23,12 +23,20 @@ import reactor.test.StepVerifier;
 
 @ExtendWith(MockitoExtension.class)
 class GeneratorServicesTest {
-    @Mock GenConfigRepository configRepository;
-    @Mock GenDatasourceRepository datasourceRepository;
-    @Mock GenHistoryRepository historyRepository;
-    @InjectMocks GenConfigService configService;
+    @Mock
+    GenConfigRepository configRepository;
 
-    @org.mockito.Spy ObjectMapper objectMapper = new ObjectMapper();
+    @Mock
+    GenDatasourceRepository datasourceRepository;
+
+    @Mock
+    GenHistoryRepository historyRepository;
+
+    @InjectMocks
+    GenConfigService configService;
+
+    @org.mockito.Spy
+    ObjectMapper objectMapper = new ObjectMapper();
 
     @Test
     void configQueryReadsPersistedModel() {
@@ -54,8 +62,7 @@ class GeneratorServicesTest {
         lenient().when(configRepository.findById(2L)).thenReturn(Mono.just(config));
         lenient().when(historyRepository.findByConfigId(2L)).thenReturn(Mono.just(java.util.List.of(history)));
 
-        StepVerifier.create(configService.listHistory(2L, 1, 20)
-                        .contextWrite(TenantContext.withTenant("tenant-a")))
+        StepVerifier.create(configService.listHistory(2L, 1, 20).contextWrite(TenantContext.withTenant("tenant-a")))
                 .assertNext(page -> {
                     assertThat(page.getTotal()).isEqualTo(1L);
                     assertThat(page.getRecords()).singleElement().satisfies(item -> {
@@ -68,8 +75,7 @@ class GeneratorServicesTest {
 
     @Test
     void historyQueryRejectsInvalidPage() {
-        assertThatThrownBy(() -> configService.listHistory(2L, 0, 20))
-                .isInstanceOf(BusinessException.class);
+        assertThatThrownBy(() -> configService.listHistory(2L, 0, 20)).isInstanceOf(BusinessException.class);
     }
 
     @Test

@@ -6,6 +6,7 @@ import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.interfaces.monitor.SecurityMetricsRecorder;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.concurrent.atomic.AtomicLong;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -76,6 +77,16 @@ import reactor.core.publisher.Mono;
         matchIfMissing = true)
 public class AntiReplayAspect {
 
+    private final AtomicLong rejected = new AtomicLong();
+
+    private void recordRejection(String reason) {
+        securityMetricsRecorder.recordAntiReplayRejected();
+        long count = rejected.incrementAndGet();
+        if (count > 0 && (count & (count - 1)) == 0) {
+            log.warn("防重放拒绝: reason={}, total={}", reason, count);
+        }
+    }
+
     /** Redis 防重放键前缀 */
     private static final String NONCE_KEY_PREFIX = "replay:";
 
@@ -137,8 +148,7 @@ public class AntiReplayAspect {
         String timestampStr = headers.getFirst(HEADER_TIMESTAMP);
 
         if (timestampStr == null) {
-            log.warn("防重放校验失败，缺少 X-Timestamp 请求头");
-            securityMetricsRecorder.recordAntiReplayRejected();
+            recordRejection("missing-timestamp");
             throw new BusinessException(ResultCode.ANTI_REPLAY_FAILED);
         }
 
@@ -146,20 +156,14 @@ public class AntiReplayAspect {
         long now = Instant.now().getEpochSecond();
 
         if (Math.abs(now - timestamp) > antiReplay.maxTimeDiff()) {
-            log.warn(
-                    "防重放校验失败，时间戳偏差过大，timestamp: {}, now: {}, maxTimeDiff: {}s",
-                    timestamp,
-                    now,
-                    antiReplay.maxTimeDiff());
-            securityMetricsRecorder.recordAntiReplayRejected();
+            recordRejection("expired-timestamp");
             throw new BusinessException(ResultCode.ANTI_REPLAY_FAILED);
         }
 
         if (antiReplay.requireNonce()) {
             String nonce = headers.getFirst(HEADER_NONCE);
             if (nonce == null || nonce.isBlank()) {
-                log.warn("防重放校验失败，缺少 X-Nonce 请求头");
-                securityMetricsRecorder.recordAntiReplayRejected();
+                recordRejection("missing-nonce");
                 throw new BusinessException(ResultCode.ANTI_REPLAY_FAILED);
             }
 
@@ -169,11 +173,10 @@ public class AntiReplayAspect {
                     .setIfAbsent(nonceKey, NONCE_VALUE, Duration.ofSeconds(nonceTtlSeconds))
                     .flatMap(acquired -> {
                         if (Boolean.FALSE.equals(acquired)) {
-                            log.warn("防重放拒绝，nonce: {}, nonceKey: {}", nonce, nonceKey);
-                            securityMetricsRecorder.recordAntiReplayRejected();
+                            recordRejection("reused-nonce");
                             return Mono.error(new BusinessException(ResultCode.ANTI_REPLAY_FAILED));
                         }
-                        log.debug("防重放通过，nonce: {}", nonce);
+                        log.debug("防重放通过");
                         try {
                             Object result = joinPoint.proceed();
                             if (result instanceof Mono<?> mono) {

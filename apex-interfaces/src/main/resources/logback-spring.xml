@@ -45,7 +45,7 @@
     scanPeriod     扫描间隔，默认60秒，此处设为30秒以加快响应
     注意：频繁扫描会增加 CPU 开销，生产环境可适当调大
 -->
-<configuration scan="true" scanPeriod="30 seconds">
+<configuration>
 
   <!--
     ================================================================================================================
@@ -149,7 +149,7 @@
     包含完整上下文信息：时间、级别、线程、traceId、requestId、userId、Logger、文件位置
   -->
   <springProfile name="dev">
-    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+    <appender name="CONSOLE_OUTPUT" class="ch.qos.logback.core.ConsoleAppender">
       <!-- 输出到标准输出，便于 Docker/K8s 收集 -->
       <target>System.out</target>
       <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
@@ -162,24 +162,40 @@
           %clr([%X{requestId:-N/A}]){blue}
           %clr([%X{userId:-N/A}]){green}
           %clr(%logger{45}){white}
-          %clr([%file:%line]){faint}
+
           - %msg%n%wEx
         </pattern>
       </encoder>
     </appender>
+  <appender name="CONSOLE" class="ch.qos.logback.classic.AsyncAppender">
+    <queueSize>1024</queueSize>
+    <discardingThreshold>200</discardingThreshold>
+    <neverBlock>true</neverBlock>
+    <includeCallerData>false</includeCallerData>
+    <maxFlushTime>2000</maxFlushTime>
+    <appender-ref ref="CONSOLE_OUTPUT"/>
+  </appender>
 
     <!--
       SQL_CONSOLE (dev 环境)
       SQL 日志专用控制台输出
       只输出时间、SQL类型、线程、traceId和消息内容，格式更简洁
     -->
-    <appender name="SQL_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+    <appender name="SQL_CONSOLE_OUTPUT" class="ch.qos.logback.core.ConsoleAppender">
       <target>System.out</target>
       <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
         <charset>${ENCODING}</charset>
         <pattern>%clr(%d{HH:mm:ss.SSS}){faint} [%clr(SQL){yellow}] %clr([%thread]){cyan} %clr([%X{traceId:-N/A}]){magenta} %clr(%msg){green}%n</pattern>
       </encoder>
     </appender>
+  <appender name="SQL_CONSOLE" class="ch.qos.logback.classic.AsyncAppender">
+    <queueSize>1024</queueSize>
+    <discardingThreshold>200</discardingThreshold>
+    <neverBlock>true</neverBlock>
+    <includeCallerData>false</includeCallerData>
+    <maxFlushTime>2000</maxFlushTime>
+    <appender-ref ref="SQL_CONSOLE_OUTPUT"/>
+  </appender>
   </springProfile>
 
   <!--
@@ -351,12 +367,20 @@
     生产环境建议日志输出到 stdout/stderr，由容器运行时收集
   -->
   <springProfile name="!dev">
-    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+    <appender name="CONSOLE_OUTPUT" class="ch.qos.logback.core.ConsoleAppender">
       <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
         <charset>${ENCODING}</charset>
-        <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] [%X{traceId:-N/A}] [%X{requestId:-N/A}] [%X{userId:-N/A}] %logger{60} [%file:%line] - %msg%n</pattern>
+        <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] [%X{traceId:-N/A}] [%X{requestId:-N/A}] [%X{userId:-N/A}] %logger{60} - %msg%n</pattern>
       </encoder>
     </appender>
+  <appender name="CONSOLE" class="ch.qos.logback.classic.AsyncAppender">
+    <queueSize>1024</queueSize>
+    <discardingThreshold>200</discardingThreshold>
+    <neverBlock>true</neverBlock>
+    <includeCallerData>false</includeCallerData>
+    <maxFlushTime>2000</maxFlushTime>
+    <appender-ref ref="CONSOLE_OUTPUT"/>
+  </appender>
   </springProfile>
 
   <!--
@@ -371,7 +395,7 @@
     使用 SizeAndTimeBasedRollingPolicy：按日期+大小双维度滚动
     文件命名：apex-scaffold.2025-01-01.0.log.gz
   -->
-  <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+  <appender name="FILE_OUTPUT" class="ch.qos.logback.core.rolling.RollingFileAppender">
     <file>${LOG_HOME}/${LOG_NAME}.log</file>
     <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
       <fileNamePattern>${LOG_HOME}/${LOG_NAME}.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
@@ -381,8 +405,16 @@
     </rollingPolicy>
     <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
       <charset>${ENCODING}</charset>
-      <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [%X{traceId:-N/A}] [%X{requestId:-N/A}] [%X{userId:-N/A}] %-5level %logger{100} [%file:%line] - %msg%n</pattern>
+      <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [%X{traceId:-N/A}] [%X{requestId:-N/A}] [%X{userId:-N/A}] %-5level %logger{100} - %msg%n</pattern>
     </encoder>
+  </appender>
+  <appender name="FILE" class="ch.qos.logback.classic.AsyncAppender">
+    <queueSize>1024</queueSize>
+    <discardingThreshold>200</discardingThreshold>
+    <neverBlock>true</neverBlock>
+    <includeCallerData>false</includeCallerData>
+    <maxFlushTime>2000</maxFlushTime>
+    <appender-ref ref="FILE_OUTPUT"/>
   </appender>
 
   <!--
@@ -391,7 +423,7 @@
     使用 ThresholdFilter 过滤，确保只有严重错误才写入
     包含完整异常堆栈（%wEx）
   -->
-  <appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+  <appender name="ERROR_FILE_OUTPUT" class="ch.qos.logback.core.rolling.RollingFileAppender">
     <file>${LOG_HOME}/${LOG_NAME}-error.log</file>
     <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
       <level>ERROR</level>
@@ -404,24 +436,32 @@
     </rollingPolicy>
     <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
       <charset>${ENCODING}</charset>
-      <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [%X{traceId:-N/A}] [%X{requestId:-N/A}] [%X{userId:-N/A}] %-5level %logger{100} [%file:%line] - %msg%n%wEx</pattern>
+      <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [%X{traceId:-N/A}] [%X{requestId:-N/A}] [%X{userId:-N/A}] %-5level %logger{100} - %msg%n%wEx</pattern>
     </encoder>
+  </appender>
+  <appender name="ERROR_FILE" class="ch.qos.logback.classic.AsyncAppender">
+    <queueSize>1024</queueSize>
+    <discardingThreshold>200</discardingThreshold>
+    <neverBlock>true</neverBlock>
+    <includeCallerData>false</includeCallerData>
+    <maxFlushTime>2000</maxFlushTime>
+    <appender-ref ref="ERROR_FILE_OUTPUT"/>
   </appender>
 
   <!--
     ================================================================================================================
     JSON_FILE - 结构化 JSON 日志输出（供 Grafana Alloy 采集）
     ================================================================================================================
-    
+
     【设计目标】
       替代 Logstash TCP Appender，改为输出结构化 JSON 格式到本地文件，由 Grafana Alloy 采集后推送到 Loki。
-      
+
     【架构变更理由】
       1. 解耦日志传输：应用不再直接连接 Logstash，避免网络故障阻塞日志写入
       2. 轻量化采集：Alloy 比 Logstash 资源占用降低 80%，支持日志/指标/trace 统一采集
       3. 容器友好：Alloy 可通过 Volume Mount 直接读取日志文件，无需 Sidecar
       4. 容错能力：文件写入失败不影响应用主流程，Alloy 支持断点续传
-    
+
     【JSON 字段映射】
       - @timestamp    日志时间戳（ISO 8601 格式）
       - level         日志级别（INFO/WARN/ERROR）
@@ -433,12 +473,12 @@
       - userId        用户ID（MDC）
       - stack_trace   异常堆栈（仅 ERROR 级别）
       - service       服务名（固定值，供 Loki 标签索引）
-    
+
     【滚动策略】
       - 单文件最大：100MB（与主日志一致）
       - 保留天数：7天（Loki 查询窗口为 7 天，超出数据已清理，日志文件同步清理）
       - 总大小上限：2GB（防止磁盘写满）
-    
+
     【Alloy 采集配置】
       见 config/monitoring/alloy-config.alloy：
       ```hcl
@@ -451,10 +491,10 @@
         forward_to = [loki.process.apex_logs.receiver]
       }
       ```
-    
+
     @since 1.3.0
   -->
-  <appender name="JSON_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+  <appender name="JSON_FILE_OUTPUT" class="ch.qos.logback.core.rolling.RollingFileAppender">
     <file>${LOG_HOME}/${LOG_NAME}-json.log</file>
     <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
       <fileNamePattern>${LOG_HOME}/${LOG_NAME}-json.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
@@ -479,6 +519,14 @@
       <customFields>{"service":"${LOG_NAME}"}</customFields>
     </encoder>
   </appender>
+  <appender name="JSON_FILE" class="ch.qos.logback.classic.AsyncAppender">
+    <queueSize>1024</queueSize>
+    <discardingThreshold>200</discardingThreshold>
+    <neverBlock>true</neverBlock>
+    <includeCallerData>false</includeCallerData>
+    <maxFlushTime>2000</maxFlushTime>
+    <appender-ref ref="JSON_FILE_OUTPUT"/>
+  </appender>
 
   <!--
     REQUEST_FILE - HTTP 请求日志
@@ -488,7 +536,7 @@
     - clientIp：客户端IP
     注意：此 Appender 只负责输出原始日志，业务过滤由 Logger 控制
   -->
-  <appender name="REQUEST_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+  <appender name="REQUEST_FILE_OUTPUT" class="ch.qos.logback.core.rolling.RollingFileAppender">
     <file>${LOG_HOME}/${LOG_NAME}-request.log</file>
     <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
       <fileNamePattern>${LOG_HOME}/${LOG_NAME}-request.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
@@ -501,6 +549,14 @@
       <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%X{traceId:-N/A}] [%X{requestId:-N/A}] [%X{userId:-N/A}] [%X{method:-N/A}] [%X{uri:-N/A}] [%X{status:-N/A}] [%X{duration:-N/A}ms] [%X{clientIp:-N/A}] - %msg%n</pattern>
     </encoder>
   </appender>
+  <appender name="REQUEST_FILE" class="ch.qos.logback.classic.AsyncAppender">
+    <queueSize>1024</queueSize>
+    <discardingThreshold>200</discardingThreshold>
+    <neverBlock>true</neverBlock>
+    <includeCallerData>false</includeCallerData>
+    <maxFlushTime>2000</maxFlushTime>
+    <appender-ref ref="REQUEST_FILE_OUTPUT"/>
+  </appender>
 
   <!--
     SQL_FILE - SQL 查询日志（仅 dev 环境）
@@ -508,7 +564,7 @@
     生产环境不启用，避免日志量过大和敏感信息泄露
   -->
   <springProfile name="dev">
-    <appender name="SQL_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <appender name="SQL_FILE_OUTPUT" class="ch.qos.logback.core.rolling.RollingFileAppender">
       <file>${LOG_HOME}/${LOG_NAME}-sql.log</file>
       <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
         <fileNamePattern>${LOG_HOME}/${LOG_NAME}-sql.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
@@ -521,6 +577,14 @@
         <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [%X{traceId:-N/A}] [%X{sqlType:-N/A}] [%X{sqlDuration:-N/A}ms] - %msg%n</pattern>
       </encoder>
     </appender>
+  <appender name="SQL_FILE" class="ch.qos.logback.classic.AsyncAppender">
+    <queueSize>1024</queueSize>
+    <discardingThreshold>200</discardingThreshold>
+    <neverBlock>true</neverBlock>
+    <includeCallerData>false</includeCallerData>
+    <maxFlushTime>2000</maxFlushTime>
+    <appender-ref ref="SQL_FILE_OUTPUT"/>
+  </appender>
   </springProfile>
 
   <!--
@@ -551,7 +615,7 @@
   -->
 
   <!-- Nacos 客户端日志 -->
-  <appender name="NACOS_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+  <appender name="NACOS_FILE_OUTPUT" class="ch.qos.logback.core.rolling.RollingFileAppender">
     <file>${LOG_HOME}/nacos/nacos.log</file>
     <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
       <fileNamePattern>${LOG_HOME}/nacos/nacos.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
@@ -564,9 +628,17 @@
       <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [%X{traceId:-N/A}] %-5level %logger{80} - %msg%n%wEx</pattern>
     </encoder>
   </appender>
+  <appender name="NACOS_FILE" class="ch.qos.logback.classic.AsyncAppender">
+    <queueSize>1024</queueSize>
+    <discardingThreshold>200</discardingThreshold>
+    <neverBlock>true</neverBlock>
+    <includeCallerData>false</includeCallerData>
+    <maxFlushTime>2000</maxFlushTime>
+    <appender-ref ref="NACOS_FILE_OUTPUT"/>
+  </appender>
 
   <!-- RocketMQ Spring 启动器日志（客户端内部日志由 rmq.logback.xml 输出到 rocketmq.log） -->
-  <appender name="ROCKETMQ_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+  <appender name="ROCKETMQ_FILE_OUTPUT" class="ch.qos.logback.core.rolling.RollingFileAppender">
     <file>${LOG_HOME}/rocketmq/rocketmq-spring.log</file>
     <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
       <fileNamePattern>${LOG_HOME}/rocketmq/rocketmq-spring.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
@@ -579,9 +651,17 @@
       <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [%X{traceId:-N/A}] %-5level %logger{80} - %msg%n%wEx</pattern>
     </encoder>
   </appender>
+  <appender name="ROCKETMQ_FILE" class="ch.qos.logback.classic.AsyncAppender">
+    <queueSize>1024</queueSize>
+    <discardingThreshold>200</discardingThreshold>
+    <neverBlock>true</neverBlock>
+    <includeCallerData>false</includeCallerData>
+    <maxFlushTime>2000</maxFlushTime>
+    <appender-ref ref="ROCKETMQ_FILE_OUTPUT"/>
+  </appender>
 
   <!-- Zipkin/Brave 链路追踪日志 -->
-  <appender name="ZIPKIN_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+  <appender name="ZIPKIN_FILE_OUTPUT" class="ch.qos.logback.core.rolling.RollingFileAppender">
     <file>${LOG_HOME}/zipkin/zipkin.log</file>
     <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
       <fileNamePattern>${LOG_HOME}/zipkin/zipkin.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
@@ -594,9 +674,17 @@
       <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [%X{traceId:-N/A}] [%X{requestId:-N/A}] [%X{userId:-N/A}] %-5level %logger{80} - %msg%n%wEx</pattern>
     </encoder>
   </appender>
+  <appender name="ZIPKIN_FILE" class="ch.qos.logback.classic.AsyncAppender">
+    <queueSize>1024</queueSize>
+    <discardingThreshold>200</discardingThreshold>
+    <neverBlock>true</neverBlock>
+    <includeCallerData>false</includeCallerData>
+    <maxFlushTime>2000</maxFlushTime>
+    <appender-ref ref="ZIPKIN_FILE_OUTPUT"/>
+  </appender>
 
   <!-- Sentinel 熔断限流日志 -->
-  <appender name="SENTINEL_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+  <appender name="SENTINEL_FILE_OUTPUT" class="ch.qos.logback.core.rolling.RollingFileAppender">
     <file>${LOG_HOME}/sentinel/sentinel.log</file>
     <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
       <fileNamePattern>${LOG_HOME}/sentinel/sentinel.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
@@ -608,6 +696,14 @@
       <charset>${ENCODING}</charset>
       <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [%X{traceId:-N/A}] %-5level %logger{80} - %msg%n%wEx</pattern>
     </encoder>
+  </appender>
+  <appender name="SENTINEL_FILE" class="ch.qos.logback.classic.AsyncAppender">
+    <queueSize>1024</queueSize>
+    <discardingThreshold>200</discardingThreshold>
+    <neverBlock>true</neverBlock>
+    <includeCallerData>false</includeCallerData>
+    <maxFlushTime>2000</maxFlushTime>
+    <appender-ref ref="SENTINEL_FILE_OUTPUT"/>
   </appender>
 
   <!--
@@ -642,6 +738,7 @@
         <includeMdc>true</includeMdc>
         <timeZone>Asia/Shanghai</timeZone>
       </encoder>
+    <appendTimeout>0</appendTimeout>
     </appender>
   </springProfile>
 
@@ -827,6 +924,7 @@
       <appender-ref ref="FILE"/>
       <appender-ref ref="ERROR_FILE"/>
       <appender-ref ref="LOGSTASH"/>
+      <appender-ref ref="JSON_FILE"/>
     </logger>
 
     <!-- Spring Framework 日志：WARN 级别，只关注异常 -->
@@ -834,6 +932,7 @@
       <appender-ref ref="CONSOLE"/>
       <appender-ref ref="FILE"/>
       <appender-ref ref="LOGSTASH"/>
+      <appender-ref ref="JSON_FILE"/>
     </logger>
 
     <!-- Reactor Netty：WARN 级别 -->
@@ -841,6 +940,7 @@
       <appender-ref ref="CONSOLE"/>
       <appender-ref ref="FILE"/>
       <appender-ref ref="LOGSTASH"/>
+      <appender-ref ref="JSON_FILE"/>
     </logger>
   </springProfile>
 
@@ -938,6 +1038,7 @@
       <appender-ref ref="CONSOLE"/>
       <appender-ref ref="FILE"/>
       <appender-ref ref="LOGSTASH"/>
+      <appender-ref ref="JSON_FILE"/>
     </logger>
 
     <!-- Spring Web：INFO 级别 -->
@@ -945,6 +1046,7 @@
       <appender-ref ref="CONSOLE"/>
       <appender-ref ref="FILE"/>
       <appender-ref ref="LOGSTASH"/>
+      <appender-ref ref="JSON_FILE"/>
     </logger>
 
     <!-- Reactor Netty：INFO 级别 -->
@@ -952,6 +1054,7 @@
       <appender-ref ref="CONSOLE"/>
       <appender-ref ref="FILE"/>
       <appender-ref ref="LOGSTASH"/>
+      <appender-ref ref="JSON_FILE"/>
     </logger>
 
     <!--
@@ -1020,4 +1123,16 @@
     </logger>
   </springProfile>
 
+  <springProfile name="performance">
+    <logger name="com.apex.scaffold.interfaces.filter.LoggingFilter" level="OFF" additivity="false"/>
+    <logger name="zipkin2" level="OFF" additivity="false"/>
+    <logger name="brave" level="OFF" additivity="false"/>
+    <logger name="com.apex.scaffold.interfaces.config.TraceLoggingSpanHandler" level="OFF" additivity="false"/>
+    <logger name="org.mybatis" level="OFF" additivity="false"/>
+    <logger name="com.baomidou.mybatisplus" level="OFF" additivity="false"/>
+    <logger name="com.alibaba.nacos" level="OFF" additivity="false"/>
+    <logger name="org.apache.rocketmq" level="OFF" additivity="false"/>
+    <logger name="org.redisson" level="OFF" additivity="false"/>
+    <logger name="reactor.netty" level="OFF" additivity="false"/>
+  </springProfile>
 </configuration>

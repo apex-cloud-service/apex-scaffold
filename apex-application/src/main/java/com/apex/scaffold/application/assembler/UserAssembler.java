@@ -127,6 +127,10 @@ public interface UserAssembler {
     @Mapping(target = "createTime", ignore = true)
     @Mapping(target = "updateTime", ignore = true)
     @Mapping(target = "deleted", ignore = true)
+    @Mapping(target = "password", ignore = true)
+    @Mapping(target = "accessToken", ignore = true)
+    @Mapping(target = "refreshToken", ignore = true)
+    @Mapping(target = "tokenExpireTime", ignore = true)
     @org.mapstruct.BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     UserEntity mergeUpdate(@MappingTarget UserEntity target, UserEntity source);
 }

@@ -2,13 +2,13 @@ package com.apex.scaffold.infrastructure.persistence.repository;
 
 import com.apex.scaffold.common.context.DataScopeJdbcBridge;
 import com.apex.scaffold.common.dto.PageResponse;
+import com.apex.scaffold.common.persistence.util.ConditionUtil;
 import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
 import com.apex.scaffold.domain.model.entity.UserEntity;
 import com.apex.scaffold.domain.repository.UserRepository;
 import com.apex.scaffold.infrastructure.persistence.converter.UserPoConverter;
 import com.apex.scaffold.infrastructure.persistence.mapper.UserMapper;
 import com.apex.scaffold.infrastructure.persistence.po.UserPO;
-import com.apex.scaffold.common.persistence.util.ConditionUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -192,6 +192,7 @@ public class UserRepositoryImpl implements UserRepository {
     @Override
     public Mono<UserEntity> save(UserEntity user) {
         return Mono.fromCallable(() -> {
+                    com.apex.scaffold.common.util.PasswordUtil.requirePasswordHash(user.getPassword());
                     UserPO po = userPoConverter.toPo(user);
                     if (po.getId() == null) {
                         userMapper.insert(po);
@@ -290,17 +291,21 @@ public class UserRepositoryImpl implements UserRepository {
      * @return 保存后的用户实体列表Mono
      */
     public Mono<List<UserEntity>> saveAll(List<UserEntity> users) {
-        return Mono.fromCallable(() -> transactionTemplate.execute(status -> {
-                    List<UserPO> pos = userPoConverter.toPoList(users);
-                    pos.forEach(po -> {
-                        if (po.getId() == null) {
-                            userMapper.insert(po);
-                        } else {
-                            userMapper.updateById(po);
-                        }
+        return Mono.fromCallable(() -> {
+                    users.forEach(
+                            user -> com.apex.scaffold.common.util.PasswordUtil.requirePasswordHash(user.getPassword()));
+                    return transactionTemplate.execute(status -> {
+                        List<UserPO> pos = userPoConverter.toPoList(users);
+                        pos.forEach(po -> {
+                            if (po.getId() == null) {
+                                userMapper.insert(po);
+                            } else {
+                                userMapper.updateById(po);
+                            }
+                        });
+                        return pos;
                     });
-                    return pos;
-                }))
+                })
                 .subscribeOn(BlockingIoSchedulers.jdbc())
                 .map(userPoConverter::toEntityList);
     }

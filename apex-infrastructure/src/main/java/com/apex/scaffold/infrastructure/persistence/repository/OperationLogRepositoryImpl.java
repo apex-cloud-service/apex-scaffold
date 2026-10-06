@@ -38,14 +38,21 @@ public class OperationLogRepositoryImpl implements OperationLogRepository {
      */
     @Override
     public Mono<Integer> insert(OperationLogEntity log) {
+        String tenantId =
+                com.apex.scaffold.common.context.TenantContext.currentTenantId().orElse(null);
         return Mono.fromCallable(() -> {
-                    OperationLogPO po = operationLogPoConverter.toPo(log);
-                    int rows = operationLogMapper.insert(po);
-                    log.setId(po.getId());
-                    log.setCreateTime(po.getCreateTime());
-                    log.setUpdateTime(po.getUpdateTime());
-                    log.setDeleted(po.getDeleted());
-                    return rows;
+                    String previous = com.apex.scaffold.common.context.TenantContext.setTenantId(tenantId);
+                    try {
+                        OperationLogPO po = operationLogPoConverter.toPo(log);
+                        int rows = operationLogMapper.insert(po);
+                        log.setId(po.getId());
+                        log.setCreateTime(po.getCreateTime());
+                        log.setUpdateTime(po.getUpdateTime());
+                        log.setDeleted(po.getDeleted());
+                        return rows;
+                    } finally {
+                        com.apex.scaffold.common.context.TenantContext.restoreTenantId(previous);
+                    }
                 })
                 .subscribeOn(BlockingIoSchedulers.jdbc());
     }

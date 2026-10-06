@@ -2,6 +2,7 @@ package com.apex.scaffold.interfaces.monitor;
 
 import com.apex.scaffold.common.exception.AlertEvent;
 import com.apex.scaffold.common.exception.BusinessException;
+import com.apex.scaffold.common.util.LogSafetyUtil;
 import com.apex.scaffold.common.util.TraceIdUtil;
 import com.apex.scaffold.interfaces.service.AlertService;
 import io.micrometer.core.instrument.Counter;
@@ -117,7 +118,7 @@ public class ExceptionMonitor {
      */
     public void monitorException(Exception ex) {
         String exceptionType = ex.getClass().getName();
-        String traceId = TraceIdUtil.getTraceId();
+        String traceId = LogSafetyUtil.text(TraceIdUtil.getTraceId(), 64);
 
         if (exceptionCounter.size() >= maxExceptionTypes && !exceptionCounter.containsKey(exceptionType)) {
             log.warn("超过最大异常类型监控数量({})，丢弃新类型异常监控: {}", maxExceptionTypes, exceptionType);
@@ -145,7 +146,7 @@ public class ExceptionMonitor {
             totalAlertCount.incrementAndGet();
             AlertEvent alertEvent = AlertEvent.builder()
                     .exceptionType(exceptionType)
-                    .message(ex.getMessage())
+                    .message(ex.getClass().getSimpleName())
                     .traceId(traceId)
                     .count(currentCount)
                     .serviceName(serviceName)
@@ -163,9 +164,8 @@ public class ExceptionMonitor {
                                 log.error(
                                         "发送告警失败, exceptionType: {}, error: {}, traceId: {}",
                                         exceptionType,
-                                        error.getMessage(),
-                                        traceId,
-                                        error);
+                                        error.getClass().getSimpleName(),
+                                        traceId);
                             });
         }
     }

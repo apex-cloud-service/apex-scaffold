@@ -55,4 +55,58 @@ class OperationLogServiceTest {
 
         verify(operationLogRepository).insert(log);
     }
+
+    @Test
+    void saturationRejectsWithoutBlockingOrSchedulingMoreWork() {
+        reactor.core.publisher.Sinks.Empty<Void> completion = reactor.core.publisher.Sinks.empty();
+        when(operationLogRepository.insert(any()))
+                .thenReturn(completion.asMono().thenReturn(1));
+        for (int i = 0; i < 1025; i++) {
+            operationLogService.saveAsync(new OperationLogEntity(), "tenant-a");
+        }
+        org.assertj.core.api.Assertions.assertThat(operationLogService.getDroppedCount())
+                .isEqualTo(1);
+        try {
+            verify(operationLogRepository, org.mockito.Mockito.timeout(3000).times(1024))
+                    .insert(any());
+        } finally {
+            completion.tryEmitEmpty();
+        }
+        operationLogService.saveAsync(new OperationLogEntity(), "tenant-b");
+        verify(operationLogRepository, org.mockito.Mockito.timeout(3000).times(1025))
+                .insert(any());
+        org.assertj.core.api.Assertions.assertThat(operationLogService.getDroppedCount())
+                .isEqualTo(1);
+    }
+
+    @Test
+    void hangingWritesTimeOut() {
+        when(operationLogRepository.insert(any())).thenReturn(Mono.never());
+        reactor.test.StepVerifier.withVirtualTime(
+                        () -> operationLogService.saveInternal(new OperationLogEntity(), "tenant-a"))
+                .expectSubscription()
+                .thenAwait(Duration.ofSeconds(4))
+                .expectError(java.util.concurrent.TimeoutException.class)
+                .verify(Duration.ofSeconds(2));
+    }
+
+    @Test
+    void shutdownCancelsPendingWritesAndRejectsNewWork() throws Exception {
+        java.util.concurrent.CountDownLatch subscribed = new java.util.concurrent.CountDownLatch(1);
+        java.util.concurrent.CountDownLatch cancelled = new java.util.concurrent.CountDownLatch(1);
+        when(operationLogRepository.insert(any()))
+                .thenReturn(Mono.<Integer>never()
+                        .doOnSubscribe(subscription -> subscribed.countDown())
+                        .doOnCancel(cancelled::countDown));
+        operationLogService.saveAsync(new OperationLogEntity(), "tenant-a");
+        org.assertj.core.api.Assertions.assertThat(subscribed.await(2, java.util.concurrent.TimeUnit.SECONDS))
+                .isTrue();
+        operationLogService.destroy();
+        org.assertj.core.api.Assertions.assertThat(cancelled.await(1, java.util.concurrent.TimeUnit.SECONDS))
+                .isTrue();
+        operationLogService.saveAsync(new OperationLogEntity(), "tenant-b");
+        org.assertj.core.api.Assertions.assertThat(operationLogService.getDroppedCount())
+                .isEqualTo(1);
+        verify(operationLogRepository).insert(any());
+    }
 }

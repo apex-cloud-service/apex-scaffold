@@ -205,10 +205,9 @@ public class AccountDeletionService {
         Mono<Void> deleteTokens = safeVoid(tokenService.deleteToken(openId));
         // 临时注册/绑定票据不应在注销后继续推进旧身份流程；票据清理失败不回滚已完成的账号失效。
         Mono<Void> revokeTickets = safeVoid(authTicketService.revokeIdentity(phone, openId));
-        Mono<Void> evictById = safeVoid(
-                cacheConsistencyPort.evictWithDelayedDoubleDelete("user:id", String.valueOf(user.getId())));
-        Mono<Void> evictByOpenId =
-                safeVoid(cacheConsistencyPort.evictWithDelayedDoubleDelete("user:openId", openId));
+        Mono<Void> evictById =
+                safeVoid(cacheConsistencyPort.evictWithDelayedDoubleDelete("user:id", String.valueOf(user.getId())));
+        Mono<Void> evictByOpenId = safeVoid(cacheConsistencyPort.evictWithDelayedDoubleDelete("user:openId", openId));
         return revokeSubject
                 .then(deleteTokens)
                 .then(revokeTickets)

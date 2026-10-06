@@ -4,7 +4,7 @@ import com.apex.scaffold.application.service.OperationLogService;
 import com.apex.scaffold.application.service.UserService;
 import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.context.TenantContext;
-import com.apex.scaffold.common.util.JsonUtil;
+import com.apex.scaffold.common.util.LogSafetyUtil;
 import com.apex.scaffold.common.util.RequestUtil;
 import com.apex.scaffold.common.util.TraceIdUtil;
 import com.apex.scaffold.domain.model.entity.OperationLogEntity;
@@ -149,22 +149,18 @@ public class OperationLogAspect {
         // 保证 Repository 通过 TenantLineInnerInterceptor 能读到正确租户。
         String tenantIdAtEntry = TenantContext.currentTenantId().orElse(null);
 
+        if (isMonoReturnType(joinPoint)) {
+            return handleMonoReturn(joinPoint, operationLog, null, startTime, traceId, tenantIdAtEntry);
+        }
         OperationLogEntity logEntity = buildLogEntity(joinPoint, operationLog, traceId);
 
         try {
-            setRequestInfo(logEntity, joinPoint);
+            setRequestInfo(logEntity, joinPoint, operationLog);
         } catch (Exception e) {
-            log.warn("初始化操作日志请求信息失败: {}", e.getMessage());
+            log.warn("初始化操作日志请求信息失败: {}", e.getClass().getSimpleName());
         }
 
-        // 判断返回类型是否为 Mono，采用不同的处理策略
-        boolean isMonoReturn = isMonoReturnType(joinPoint);
-
-        if (isMonoReturn) {
-            return handleMonoReturn(joinPoint, logEntity, startTime, traceId, tenantIdAtEntry);
-        } else {
-            return handleSyncReturn(joinPoint, logEntity, startTime, traceId, tenantIdAtEntry);
-        }
+        return handleSyncReturn(joinPoint, operationLog, logEntity, startTime, traceId, tenantIdAtEntry);
     }
 
     /**
@@ -185,30 +181,62 @@ public class OperationLogAspect {
     @SuppressWarnings("unchecked")
     private Object handleMonoReturn(
             ProceedingJoinPoint joinPoint,
+            OperationLog operationLog,
             OperationLogEntity logEntity,
             long startTime,
             String traceId,
             String tenantIdAtEntry)
             throws Throwable {
-        return ((Mono<Object>) joinPoint.proceed())
-                .flatMap(result -> {
-                    logEntity.setStatus(0);
-                    if (logResult && result != null) {
-                        setResponseInfo(logEntity, result);
-                    }
-                    completeLog(logEntity, startTime);
-                    return enrichUserInfo(logEntity)
-                            .doFinally(s -> enqueueLog(logEntity, tenantIdAtEntry))
-                            .thenReturn(result);
-                })
-                .onErrorResume(error -> {
-                    logEntity.setStatus(1);
-                    logEntity.setErrorMsg(truncateString(error.getMessage(), 2000));
-                    completeLog(logEntity, startTime);
-                    return enrichUserInfo(logEntity)
-                            .doFinally(s -> enqueueLog(logEntity, tenantIdAtEntry))
-                            .then(Mono.error(error));
-                });
+        Mono<Object> source = (Mono<Object>) joinPoint.proceed();
+        return Mono.deferContextual(context -> {
+            OperationLogEntity entry;
+            try {
+                entry = buildLogEntity(joinPoint, operationLog, traceId);
+                setRequestInfo(entry, joinPoint, operationLog);
+            } catch (RuntimeException ignored) {
+                return source;
+            }
+            long subscriptionStart = System.currentTimeMillis();
+            String tenant = context.getOrDefault(TenantContext.REACTOR_CONTEXT_KEY, tenantIdAtEntry);
+            return ReactiveSecurityContextHolder.getContext()
+                    .doOnNext(security -> {
+                        Authentication authentication = security.getAuthentication();
+                        if (authentication != null && authentication.isAuthenticated()) {
+                            entry.setUserName(LogSafetyUtil.text(authentication.getName(), 128));
+                            if (authentication.getPrincipal()
+                                    instanceof com.apex.scaffold.interfaces.security.AuthenticatedUser user) {
+                                entry.setUserId(user.userId());
+                            }
+                        }
+                    })
+                    .onErrorResume(error -> Mono.empty())
+                    .then(source.doOnSuccess(result ->
+                                    recordCompletion(entry, operationLog, result, null, subscriptionStart, tenant))
+                            .doOnError(error ->
+                                    recordCompletion(entry, operationLog, null, error, subscriptionStart, tenant)));
+        });
+    }
+
+    private void recordCompletion(
+            OperationLogEntity entry,
+            OperationLog annotation,
+            Object result,
+            Throwable error,
+            long start,
+            String tenant) {
+        try {
+            entry.setStatus(error == null ? 0 : 1);
+            if (error != null) {
+                entry.setErrorMsg(error.getClass().getSimpleName());
+            } else if (logResult && annotation.saveResponse() && result != null) {
+                entry.setResponseResult(
+                        LogSafetyUtil.json(result, maxResultLength, annotation.excludeResponseFields()));
+            }
+            completeLog(entry, start);
+            enqueueLog(entry, tenant);
+        } catch (RuntimeException ignored) {
+            return;
+        }
     }
 
     /**
@@ -225,6 +253,7 @@ public class OperationLogAspect {
      */
     private Object handleSyncReturn(
             ProceedingJoinPoint joinPoint,
+            OperationLog operationLog,
             OperationLogEntity logEntity,
             long startTime,
             String traceId,
@@ -233,13 +262,18 @@ public class OperationLogAspect {
         try {
             Object result = joinPoint.proceed();
             logEntity.setStatus(0);
-            if (logResult && result != null) {
-                setResponseInfo(logEntity, result);
+            if (logResult && operationLog.saveResponse() && result != null) {
+                try {
+                    logEntity.setResponseResult(
+                            LogSafetyUtil.json(result, maxResultLength, operationLog.excludeResponseFields()));
+                } catch (RuntimeException ignored) {
+                    logEntity.setResponseResult(null);
+                }
             }
             return result;
         } catch (Exception e) {
             logEntity.setStatus(1);
-            logEntity.setErrorMsg(truncateString(e.getMessage(), 2000));
+            logEntity.setErrorMsg(e.getClass().getSimpleName());
             throw e;
         } finally {
             enrichUserInfoSync(logEntity);
@@ -265,10 +299,13 @@ public class OperationLogAspect {
         try {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             if (auth != null && auth.isAuthenticated()) {
-                logEntity.setUserName(auth.getName());
+                logEntity.setUserName(LogSafetyUtil.text(auth.getName(), 128));
+                if (auth.getPrincipal() instanceof com.apex.scaffold.interfaces.security.AuthenticatedUser user) {
+                    logEntity.setUserId(user.userId());
+                }
             }
         } catch (Exception e) {
-            log.debug("同步路径补充操作日志用户信息失败: {}", e.getMessage());
+            log.debug("同步路径补充操作日志用户信息失败: {}", e.getClass().getSimpleName());
         }
     }
 
@@ -301,7 +338,7 @@ public class OperationLogAspect {
         entity.setDescription(operationLog.description());
         entity.setRequestMethod("INTERNAL");
         entity.setRequestUri(truncateString(joinPoint.getSignature().toShortString(), 500));
-        entity.setTraceId(traceId);
+        entity.setTraceId(LogSafetyUtil.text(traceId, 64));
         return entity;
     }
 
@@ -315,7 +352,8 @@ public class OperationLogAspect {
      * @param logEntity 日志实体
      * @param joinPoint 连接点
      */
-    private void setRequestInfo(OperationLogEntity logEntity, ProceedingJoinPoint joinPoint) {
+    private void setRequestInfo(
+            OperationLogEntity logEntity, ProceedingJoinPoint joinPoint, OperationLog operationLog) {
         try {
             Object[] args = joinPoint.getArgs();
             if (args == null || args.length == 0) {
@@ -324,10 +362,10 @@ public class OperationLogAspect {
 
             ServerHttpRequest request = AspectRequestUtil.resolveServerHttpRequest(args);
             if (request != null) {
-                logEntity.setRequestUri(truncateString(String.valueOf(request.getURI()), 500));
+                logEntity.setRequestUri(LogSafetyUtil.uri(String.valueOf(request.getURI()), 500));
                 logEntity.setRequestMethod(truncateString(request.getMethod().name(), 10));
-                logEntity.setIp(RequestUtil.getClientIp(request));
-                String userAgent = request.getHeaders().getFirst("User-Agent");
+                logEntity.setIp(LogSafetyUtil.text(RequestUtil.getClientIp(request), 64));
+                String userAgent = LogSafetyUtil.text(request.getHeaders().getFirst("User-Agent"), 512);
                 // 基于 IP 设置操作地点
                 if (logEntity.getIp() != null && !logEntity.getIp().isBlank()) {
                     logEntity.setLocation(resolveLocation(logEntity.getIp()));
@@ -338,18 +376,19 @@ public class OperationLogAspect {
                 }
             }
 
-            if (logParams && args.length > 0) {
-                String params = truncateString(
-                        JsonUtil.toJson(Arrays.stream(args)
+            if (logParams && operationLog.saveRequest() && args.length > 0) {
+                logEntity.setRequestParams(LogSafetyUtil.json(
+                        Arrays.stream(args)
+                                .limit(32)
                                 .filter(a -> !(a instanceof ServerWebExchange)
                                         && !(a instanceof ServerHttpRequest)
                                         && !(a instanceof ServerRequest))
-                                .toList()),
-                        maxParamLength);
-                logEntity.setRequestParams(params);
+                                .toList(),
+                        maxParamLength,
+                        operationLog.excludeRequestFields()));
             }
         } catch (Exception e) {
-            log.warn("设置请求信息失败: {}", e.getMessage());
+            log.warn("设置请求信息失败: {}", e.getClass().getSimpleName());
         }
     }
 
@@ -507,11 +546,11 @@ public class OperationLogAspect {
     private void setResponseInfo(OperationLogEntity logEntity, Object result) {
         try {
             if (result != null) {
-                String resultStr = JsonUtil.toJson(result);
+                String resultStr = LogSafetyUtil.json(result, maxResultLength);
                 logEntity.setResponseResult(truncateString(resultStr, maxResultLength));
             }
         } catch (Exception e) {
-            log.warn("设置响应信息失败: {}", e.getMessage(), e);
+            log.warn("设置响应信息失败: {}", e.getClass().getSimpleName(), e);
         }
     }
 
@@ -553,7 +592,9 @@ public class OperationLogAspect {
                 })
                 .then()
                 .onErrorResume(e -> {
-                    log.debug("Failed to enrich operation log user info: {}", e.getMessage());
+                    log.debug(
+                            "Failed to enrich operation log user info: {}",
+                            e.getClass().getSimpleName());
                     return Mono.empty();
                 });
     }
@@ -565,7 +606,11 @@ public class OperationLogAspect {
      * @param tenantIdAtEntry 切面入口捕获的租户 ID（可能为 null）；在写入线程显式安装
      */
     private void enqueueLog(OperationLogEntity logEntity, String tenantIdAtEntry) {
-        operationLogService.saveAsync(logEntity, tenantIdAtEntry);
+        try {
+            operationLogService.saveAsync(logEntity, tenantIdAtEntry);
+        } catch (RuntimeException ignored) {
+            return;
+        }
     }
 
     /**
@@ -579,9 +624,6 @@ public class OperationLogAspect {
         if (str == null) {
             return null;
         }
-        if (str.length() <= maxLen) {
-            return str;
-        }
-        return str.substring(0, maxLen);
+        return LogSafetyUtil.text(str, maxLen);
     }
 }

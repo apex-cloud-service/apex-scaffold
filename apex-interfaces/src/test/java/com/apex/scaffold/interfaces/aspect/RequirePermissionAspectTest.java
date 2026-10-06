@@ -184,6 +184,35 @@ class RequirePermissionAspectTest {
         verify(point, never()).proceed();
     }
 
+    @Test
+    void propagatesTargetFailuresWithoutDuplicatingSensitiveLogs() throws Throwable {
+        when(permissionService.getPermissionsByUserId(7L)).thenReturn(Mono.just(List.of(permission("read"))));
+        ch.qos.logback.classic.Logger logger =
+                (ch.qos.logback.classic.Logger) org.slf4j.LoggerFactory.getLogger(RequirePermissionAspect.class);
+        ch.qos.logback.core.read.ListAppender<ch.qos.logback.classic.spi.ILoggingEvent> appender =
+                new ch.qos.logback.core.read.ListAppender<>();
+        appender.start();
+        logger.addAppender(appender);
+        try {
+            for (Class<?> returnType : List.of(Mono.class, Flux.class)) {
+                ProceedingJoinPoint point = joinPoint(returnType, null);
+                IllegalStateException failure = new IllegalStateException("password=secret-value");
+                when(point.proceed()).thenThrow(failure);
+                org.reactivestreams.Publisher<?> result =
+                        (org.reactivestreams.Publisher<?>) aspect.around(point, annotation("single"));
+                StepVerifier.create(Flux.from(result)
+                                .contextWrite(ReactiveSecurityContextHolder.withAuthentication(
+                                        authenticated("trusted", "ROLE_USER"))))
+                        .expectErrorSatisfies(error -> assertThat(error).isSameAs(failure))
+                        .verify();
+            }
+            assertThat(appender.list).isEmpty();
+        } finally {
+            logger.detachAppender(appender);
+            appender.stop();
+        }
+    }
+
     private void rejectAuthentication(Authentication authentication) throws Throwable {
         ProceedingJoinPoint point = joinPoint(Mono.class, Mono.just("value"));
         deny(mono(point, "single", authentication), ResultCode.UNAUTHORIZED);

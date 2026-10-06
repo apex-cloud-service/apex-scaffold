@@ -134,6 +134,7 @@ public class DatabaseConfigRequest {
             description = "数据库密码（仅用于一次性连接测试与配置生成，不会被持久化）",
             example = "******",
             requiredMode = Schema.RequiredMode.REQUIRED)
+    @lombok.ToString.Exclude
     private String password;
 
     /**
@@ -148,6 +149,7 @@ public class DatabaseConfigRequest {
      * </ul>
      */
     @Schema(description = "附加 JDBC 连接参数（键值对形式，可为空）", example = "useSSL=false&serverTimezone=Asia/Shanghai")
+    @lombok.ToString.Exclude
     private String connectionParams;
 
     /**

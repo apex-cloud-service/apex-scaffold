@@ -8,6 +8,7 @@ import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
@@ -96,6 +97,17 @@ public class IpRateLimitWebFilter implements WebFilter {
     /** 安全指标记录器 */
     private final SecurityMetricsRecorder securityMetricsRecorder;
 
+    private final AtomicLong rateLimitRejected = new AtomicLong();
+    private final AtomicLong blockedRejected = new AtomicLong();
+    private final AtomicLong blockTriggered = new AtomicLong();
+
+    private void logSampled(AtomicLong counter, String reason) {
+        long count = counter.incrementAndGet();
+        if (count > 0 && (count & (count - 1)) == 0) {
+            log.warn("IP 限流事件: reason={}, total={}", reason, count);
+        }
+    }
+
     /**
      * Lua 脚本：滑动窗口限流原子操作（清理过期条目 + 添加当前请求 + 统计窗口计数 + 设置过期）。
      *
@@ -179,7 +191,7 @@ public class IpRateLimitWebFilter implements WebFilter {
 
         return checkBlocked(reputationKey, now).flatMap(blockedUntil -> {
             if (blockedUntil != null && now < blockedUntil) {
-                log.warn("IP 已被封禁: {}, 解封时间: {}", clientIp, blockedUntil);
+                logSampled(blockedRejected, "already-blocked");
                 return ResponseUtil.error(
                         exchange,
                         HttpStatus.TOO_MANY_REQUESTS,
@@ -227,7 +239,7 @@ public class IpRateLimitWebFilter implements WebFilter {
                         String.valueOf(windowSize * 3)))
                 .flatMap(count -> {
                     if (count > limit) {
-                        log.warn("IP 速率超限: {}, Path: {}, Count: {}, Limit: {}", clientIp, path, count, limit);
+                        logSampled(rateLimitRejected, "rate-exceeded");
                         securityMetricsRecorder.recordRateLimitRejected();
                         return registerViolationAndRespond(exchange, reputationKey, violationKey, clientIp);
                     }
@@ -287,11 +299,7 @@ public class IpRateLimitWebFilter implements WebFilter {
                         return Mono.empty();
                     }
                     long blockedUntil = System.currentTimeMillis() + (rateLimitProperties.getBlockDuration() * 1000L);
-                    log.warn(
-                            "IP 持续速率超限触发短时封禁: {}, violations: {}, blockedUntil: {}",
-                            clientIp,
-                            violations,
-                            blockedUntil);
+                    logSampled(blockTriggered, "block-triggered");
                     securityMetricsRecorder.recordIpBlocked();
                     return redisTemplate
                             .opsForHash()

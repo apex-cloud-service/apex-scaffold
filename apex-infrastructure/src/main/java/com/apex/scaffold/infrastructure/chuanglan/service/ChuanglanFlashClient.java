@@ -87,8 +87,7 @@ public final class ChuanglanFlashClient {
                 encryptType == null || encryptType.isBlank() ? config.getEncryptType() : encryptType;
         if (!Objects.equals(effectiveEncryptType, decryptStrategy.getEncryptType())) {
             return Mono.error(new ChuanglanApiException(
-                    "UNSUPPORTED_ENCRYPT_TYPE",
-                    "未配置手机号解密策略: encryptType=" + effectiveEncryptType));
+                    "UNSUPPORTED_ENCRYPT_TYPE", "未配置手机号解密策略: encryptType=" + effectiveEncryptType));
         }
         // 使用 MultiValueMap 而非 LinkedHashMap：Spring WebFlux 的 FormHttpMessageWriter
         // 只能序列化 MultiValueMap，bodyValue(LinkedHashMap) + form-urlencoded 会抛 UnsupportedMediaTypeException

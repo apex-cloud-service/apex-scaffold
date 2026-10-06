@@ -108,7 +108,8 @@ class AccountDeletionServiceTest {
         when(tokenBlacklistService.revokeSubject(eq(OPEN_ID), anyLong())).thenReturn(Mono.empty());
         when(tokenService.deleteToken(OPEN_ID)).thenReturn(Mono.just(2L));
         when(authTicketService.revokeIdentity(PHONE, OPEN_ID)).thenReturn(Mono.empty());
-        when(cacheConsistencyPort.evictWithDelayedDoubleDelete(anyString(), anyString())).thenReturn(Mono.just(true));
+        when(cacheConsistencyPort.evictWithDelayedDoubleDelete(anyString(), anyString()))
+                .thenReturn(Mono.just(true));
     }
 
     /**

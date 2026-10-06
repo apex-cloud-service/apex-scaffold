@@ -1,8 +1,5 @@
 package com.apex.scaffold.interfaces.handler;
 
-import com.apex.scaffold.workflow.application.query.WorkflowQueryService;
-import com.apex.scaffold.workflow.application.query.WorkflowStatisticsService;
-import com.apex.scaffold.workflow.application.service.WorkflowService;
 import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.annotation.TenantAware;
 import com.apex.scaffold.common.dto.PageResponse;
@@ -10,6 +7,9 @@ import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.interfaces.dto.workflow.*;
 import com.apex.scaffold.interfaces.security.AuthenticatedUser;
 import com.apex.scaffold.interfaces.util.MessageUtils;
+import com.apex.scaffold.workflow.application.query.WorkflowQueryService;
+import com.apex.scaffold.workflow.application.query.WorkflowStatisticsService;
+import com.apex.scaffold.workflow.application.service.WorkflowService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -74,6 +74,15 @@ public class WorkflowHandler extends BaseHandler {
     private final WorkflowQueryService workflowQueryService;
     private final WorkflowStatisticsService workflowStatisticsService;
 
+    /**
+     * 创建工作流管理处理器。
+     *
+     * @param workflowService 工作流服务
+     * @param workflowQueryService 工作流查询服务
+     * @param workflowStatisticsService 工作流统计服务
+     * @param messageUtils 国际化消息工具
+     * @param validator Jakarta Bean Validation 校验器
+     */
     public WorkflowHandler(
             WorkflowService workflowService,
             WorkflowQueryService workflowQueryService,

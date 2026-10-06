@@ -21,6 +21,13 @@ class ConfigEncryptionServiceTest {
     }
 
     @Test
+    void shouldRejectBlankKey() {
+        assertThrows(IllegalArgumentException.class, () -> new ConfigEncryptionService(" ".repeat(32)));
+        assertThrows(IllegalArgumentException.class, () -> new ConfigEncryptionService(null));
+        assertThrows(IllegalArgumentException.class, () -> new ConfigEncryptionService(""));
+    }
+
+    @Test
     @DisplayName("测试配置值加密和解密")
     void testEncryptAndDecrypt() {
         // Given

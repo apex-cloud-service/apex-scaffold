@@ -117,6 +117,33 @@ class UserRepositoryTest {
     }
 
     @Test
+    void shouldRejectPlaintextBeforeSingleAndBatchPersistence() {
+        UserEntity user = new UserEntity();
+        user.setPassword("plaintext-secret");
+        StepVerifier.create(repository.save(user))
+                .expectError(IllegalArgumentException.class)
+                .verify();
+        StepVerifier.create(repository.saveAll(java.util.List.of(user)))
+                .expectError(IllegalArgumentException.class)
+                .verify();
+    }
+
+    @Test
+    void shouldPreserveHashAndExcludeCredentialsFromObjectLogs() {
+        UserEntity user = repository.findById(1L).block();
+        String hash = com.apex.scaffold.common.util.PasswordUtil.encryptPassword("P@ssword123");
+        user.setPassword(hash);
+        user.setAccessToken("private-access-token");
+        user.setRefreshToken("private-refresh-token");
+        UserEntity saved = repository.save(user).block();
+        assertThat(saved.getPassword()).isEqualTo(hash);
+        assertThat(repository.findById(1L).block().getPassword()).isEqualTo(hash);
+        assertThat(user.toString()).doesNotContain(hash, "private-access-token", "private-refresh-token");
+        assertThat(Mappers.getMapper(UserPoConverter.class).toPo(user).toString())
+                .doesNotContain(hash, "private-access-token", "private-refresh-token");
+    }
+
+    @Test
     void paginatesWithMetadataStableIdOrderAndSoftDeleteFiltering() {
         PageResponse<UserEntity> first =
                 repository.findPage(1, 2, "create_time", false).block();

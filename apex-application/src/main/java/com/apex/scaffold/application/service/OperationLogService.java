@@ -30,7 +30,7 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class OperationLogService {
+public class OperationLogService implements org.springframework.beans.factory.DisposableBean {
 
     /**
      * 操作日志仓储。
@@ -38,6 +38,25 @@ public class OperationLogService {
      * <p>用于异步持久化用户操作记录，如登录、资料修改、权限变更等。</p>
      */
     private final OperationLogRepository operationLogRepository;
+
+    private final java.util.concurrent.Semaphore pending = new java.util.concurrent.Semaphore(1024);
+    private final java.util.concurrent.atomic.AtomicLong dropped = new java.util.concurrent.atomic.AtomicLong();
+    private final java.util.concurrent.atomic.AtomicLong failed = new java.util.concurrent.atomic.AtomicLong();
+
+    private final reactor.core.Disposable.Composite subscriptions = reactor.core.Disposables.composite();
+
+    @Override
+    public void destroy() {
+        subscriptions.dispose();
+    }
+
+    public long getDroppedCount() {
+        return dropped.get();
+    }
+
+    public long getFailedCount() {
+        return failed.get();
+    }
 
     /**
      * 异步保存操作日志（不传入租户：使用 TenantContext 当前值）。
@@ -62,14 +81,33 @@ public class OperationLogService {
      */
     public void saveAsync(OperationLogEntity operationLog, String tenantId) {
         if (operationLog == null) {
-            log.warn("OperationLogService.saveAsync 接收到空实体，已忽略");
             return;
         }
-        saveInternal(operationLog, tenantId)
-                .doOnSuccess(v -> log.debug("保存操作日志成功"))
-                .doOnError(e -> log.error("保存操作日志失败: {}", e.getMessage(), e))
-                .onErrorResume(e -> Mono.empty())
-                .subscribe();
+        if (subscriptions.isDisposed() || !pending.tryAcquire()) {
+            dropped.incrementAndGet();
+            return;
+        }
+        reactor.core.Disposable.Swap subscription = reactor.core.Disposables.swap();
+        if (!subscriptions.add(subscription)) {
+            pending.release();
+            dropped.incrementAndGet();
+            return;
+        }
+        try {
+            subscription.update(saveInternal(operationLog, tenantId)
+                    .doOnError(error -> failed.incrementAndGet())
+                    .onErrorResume(error -> Mono.empty())
+                    .doFinally(signal -> {
+                        subscriptions.remove(subscription);
+                        pending.release();
+                    })
+                    .subscribe());
+        } catch (RuntimeException error) {
+            subscriptions.remove(subscription);
+            subscription.dispose();
+            pending.release();
+            failed.incrementAndGet();
+        }
     }
 
     /**
@@ -80,21 +118,11 @@ public class OperationLogService {
      * @return 组合后的 Mono（未订阅）
      */
     Mono<Void> saveInternal(OperationLogEntity operationLog, String tenantId) {
-        // previous 可能为 null；usingWhen 会跳过 resourceClosure 当 resource 为 null。
-        // 因此使用 1 元素数组保存 previous，resource 对象本身非空，保证三个回调都执行。
-        String[] holder = new String[1];
-        return Mono.usingWhen(
-                        Mono.fromCallable(() -> {
-                            holder[0] = TenantContext.setTenantId(tenantId);
-                            return holder;
-                        }),
-                        ignored -> operationLogRepository
-                                .insert(operationLog)
-                                .then()
-                                .subscribeOn(BlockingIoSchedulers.jdbc()),
-                        ignored -> Mono.fromRunnable(() -> TenantContext.restoreTenantId(holder[0])),
-                        (ignored, err) -> Mono.fromRunnable(() -> TenantContext.restoreTenantId(holder[0])),
-                        ignored -> Mono.fromRunnable(() -> TenantContext.restoreTenantId(holder[0])))
-                .subscribeOn(BlockingIoSchedulers.jdbc());
+        return Mono.defer(() -> operationLogRepository.insert(operationLog).then())
+                .subscribeOn(BlockingIoSchedulers.event())
+                .timeout(java.time.Duration.ofSeconds(3))
+                .contextWrite(context -> tenantId == null
+                        ? context.delete(TenantContext.REACTOR_CONTEXT_KEY)
+                        : context.put(TenantContext.REACTOR_CONTEXT_KEY, tenantId));
     }
 }

@@ -1,12 +1,12 @@
 package com.apex.scaffold.infrastructure.persistence.repository;
 
+import com.apex.scaffold.common.persistence.util.ConditionUtil;
 import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
 import com.apex.scaffold.domain.model.entity.SysSsoAuditLogEntity;
 import com.apex.scaffold.domain.repository.SysSsoAuditLogRepository;
 import com.apex.scaffold.infrastructure.persistence.converter.SysSsoAuditLogPoConverter;
 import com.apex.scaffold.infrastructure.persistence.mapper.SysSsoAuditLogMapper;
 import com.apex.scaffold.infrastructure.persistence.po.SysSsoAuditLogPO;
-import com.apex.scaffold.common.persistence.util.ConditionUtil;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;

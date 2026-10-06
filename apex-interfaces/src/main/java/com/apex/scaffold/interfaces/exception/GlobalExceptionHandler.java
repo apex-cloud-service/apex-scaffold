@@ -5,6 +5,7 @@ import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.common.util.HttpStatusUtil;
 import com.apex.scaffold.common.util.JsonUtil;
+import com.apex.scaffold.common.util.LogSafetyUtil;
 import com.apex.scaffold.common.util.TraceIdUtil;
 import com.apex.scaffold.domain.gateway.RemoteApiException;
 import com.apex.scaffold.interfaces.monitor.ExceptionMonitor;
@@ -98,7 +99,7 @@ public class GlobalExceptionHandler {
         exceptionMonitor.monitorException(ex);
 
         String traceId = resolveTraceId(exchange);
-        log.warn("业务异常: {}, traceId: {}", ex.getMessage(), traceId);
+        logFailure(exchange, ex, traceId);
 
         return Mono.deferContextual(ctx -> {
             Locale locale = ctx.getOrDefault(Locale.class, Locale.SIMPLIFIED_CHINESE);
@@ -138,7 +139,7 @@ public class GlobalExceptionHandler {
         exceptionMonitor.monitorException(ex);
 
         String traceId = resolveTraceId(exchange);
-        log.warn("微信API异常: {}, traceId: {}", ex.getMessage(), traceId);
+        logFailure(exchange, ex, traceId);
 
         Result<Void> result = Result.error(ResultCode.WX_API_ERROR.getCode(), ex.getMessage(), traceId);
         return Mono.just(ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(result));
@@ -152,13 +153,7 @@ public class GlobalExceptionHandler {
             RemoteApiException ex, ServerWebExchange exchange) {
         exceptionMonitor.monitorException(ex);
         String traceId = resolveTraceId(exchange);
-        log.warn(
-                "远程API异常: service={}, path={}, status={}, circuitBreakerOpen={}, traceId={}",
-                ex.getServiceName(),
-                ex.getRequestPath(),
-                ex.getHttpStatus(),
-                ex.isCircuitBreakerOpen(),
-                traceId);
+        logFailure(exchange, ex, traceId);
 
         return Mono.deferContextual(ctx -> {
             Locale locale = ctx.getOrDefault(Locale.class, Locale.SIMPLIFIED_CHINESE);
@@ -213,7 +208,7 @@ public class GlobalExceptionHandler {
                 .map(ConstraintViolation::getMessage)
                 .collect(Collectors.joining(", "));
 
-        log.warn("参数校验失败: {}, traceId: {}", message, traceId);
+        logFailure(exchange, ex, traceId);
 
         Result<Void> result = Result.error(ResultCode.PARAM_ERROR.getCode(), message, traceId);
         return Mono.just(ResponseEntity.badRequest().body(result));
@@ -232,7 +227,7 @@ public class GlobalExceptionHandler {
         exceptionMonitor.monitorException(ex);
 
         String traceId = resolveTraceId(exchange);
-        log.warn("非法参数: {}, traceId: {}", ex.getMessage(), traceId, ex);
+        logFailure(exchange, ex, traceId);
 
         return Mono.deferContextual(ctx -> {
             Locale locale = ctx.getOrDefault(Locale.class, Locale.SIMPLIFIED_CHINESE);
@@ -262,8 +257,7 @@ public class GlobalExceptionHandler {
         exceptionMonitor.monitorException(ex);
 
         String traceId = resolveTraceId(exchange);
-        String contentType = exchange.getRequest().getHeaders().getFirst("Content-Type");
-        log.warn("请求体解码失败: {}, contentType: {}, traceId: {}", ex.getMessage(), contentType, traceId);
+        logFailure(exchange, ex, traceId);
 
         return Mono.deferContextual(ctx -> {
             Locale locale = ctx.getOrDefault(Locale.class, Locale.SIMPLIFIED_CHINESE);
@@ -286,7 +280,7 @@ public class GlobalExceptionHandler {
         exceptionMonitor.monitorException(ex);
 
         String traceId = resolveTraceId(exchange);
-        log.warn("非法状态: {}, traceId: {}", ex.getMessage(), traceId);
+        logFailure(exchange, ex, traceId);
 
         return Mono.deferContextual(ctx -> {
             String msg = ex.getMessage() != null && !ex.getMessage().isBlank() ? ex.getMessage() : "状态异常";
@@ -323,7 +317,7 @@ public class GlobalExceptionHandler {
         exceptionMonitor.monitorException(ex);
 
         String traceId = resolveTraceId(exchange);
-        log.error("数据完整性违反: {}, traceId: {}", ex.getMessage(), traceId, ex);
+        logFailure(exchange, ex, traceId);
 
         return Mono.deferContextual(ctx -> {
             Locale locale = ctx.getOrDefault(Locale.class, Locale.SIMPLIFIED_CHINESE);
@@ -350,7 +344,7 @@ public class GlobalExceptionHandler {
         exceptionMonitor.monitorException(ex);
 
         String traceId = resolveTraceId(exchange);
-        log.error("空指针异常: {}, traceId: {}", sanitizeMessage(ex.getMessage()), traceId, ex);
+        logFailure(exchange, ex, traceId);
 
         return Mono.deferContextual(ctx -> {
             Locale locale = ctx.getOrDefault(Locale.class, Locale.SIMPLIFIED_CHINESE);
@@ -377,7 +371,7 @@ public class GlobalExceptionHandler {
         exceptionMonitor.monitorException(ex);
 
         String traceId = resolveTraceId(exchange);
-        log.error("系统异常: {}, traceId: {}", sanitizeMessage(ex.getMessage()), traceId, ex);
+        logFailure(exchange, ex, traceId);
 
         return Mono.deferContextual(ctx -> {
             Locale locale = ctx.getOrDefault(Locale.class, Locale.SIMPLIFIED_CHINESE);
@@ -417,10 +411,7 @@ public class GlobalExceptionHandler {
 
         String traceId = resolveTraceId(exchange);
 
-        String message =
-                ex.getFieldErrors().stream().map(FieldError::getDefaultMessage).collect(Collectors.joining(", "));
-
-        log.warn("WebFlux请求体绑定失败: {}, traceId: {}", message, traceId);
+        logFailure(exchange, ex, traceId);
 
         return Mono.deferContextual(ctx -> {
             Locale locale = ctx.getOrDefault(Locale.class, Locale.SIMPLIFIED_CHINESE);
@@ -464,7 +455,7 @@ public class GlobalExceptionHandler {
             status = HttpStatus.INTERNAL_SERVER_ERROR;
         }
 
-        log.warn("响应状态异常: [{}] {}, traceId: {}", status.value(), reason, traceId);
+        logFailure(exchange, ex, traceId);
 
         Result<Void> result = Result.error(status.value(), reason, traceId);
         return Mono.just(ResponseEntity.status(status).body(result));
@@ -496,7 +487,7 @@ public class GlobalExceptionHandler {
         exceptionMonitor.monitorException(ex);
 
         String traceId = resolveTraceId(exchange);
-        log.warn("请求体超出缓冲区大小限制: {}, traceId: {}", ex.getMessage(), traceId);
+        logFailure(exchange, ex, traceId);
 
         return Mono.deferContextual(ctx -> {
             Locale locale = ctx.getOrDefault(Locale.class, Locale.SIMPLIFIED_CHINESE);
@@ -520,9 +511,9 @@ public class GlobalExceptionHandler {
     private String resolveTraceId(ServerWebExchange exchange) {
         String exchangeTraceId = exchange.getAttribute(TraceIdUtil.TRACE_ID_KEY);
         if (exchangeTraceId != null && !exchangeTraceId.isBlank()) {
-            return exchangeTraceId;
+            return LogSafetyUtil.text(exchangeTraceId, 64);
         }
-        return TraceIdUtil.getTraceId();
+        return LogSafetyUtil.text(TraceIdUtil.getTraceId(), 64);
     }
 
     /**
@@ -549,7 +540,7 @@ public class GlobalExceptionHandler {
                 return Mono.error(ex);
             }
             String traceId = resolveTraceId(exchange);
-            log.error("WebFlux未捕获异常: {}, traceId: {}", ex.getMessage(), traceId, ex);
+            logFailure(exchange, ex, traceId);
 
             return Mono.deferContextual(ctx -> {
                 Locale locale = ctx.getOrDefault(Locale.class, Locale.SIMPLIFIED_CHINESE);
@@ -614,38 +605,30 @@ public class GlobalExceptionHandler {
         };
     }
 
-    /**
-     * 对异常消息进行脱敏处理,防止敏感信息泄露到日志中。
-     *
-     * <p>支持的脱敏类型:
-     * <ul>
-     *   <li>手机号: 138****8000</li>
-     *   <li>身份证号: 110***********1234</li>
-     *   <li>邮箱: t***@example.com</li>
-     *   <li>银行卡号: 6222 **** **** 1234</li>
-     * </ul>
-     *
-     * @param message 原始异常消息
-     * @return 脱敏后的消息
-     */
-    private String sanitizeMessage(String message) {
-        if (message == null || message.isEmpty()) {
-            return message;
+    @SuppressWarnings("unchecked")
+    private void logFailure(ServerWebExchange exchange, Throwable failure, String traceId) {
+        String key = GlobalExceptionHandler.class.getName() + ".logged";
+        java.util.Set<Throwable> logged = (java.util.Set<Throwable>) exchange.getAttributes()
+                .computeIfAbsent(
+                        key,
+                        ignored -> java.util.Collections.synchronizedSet(
+                                java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>())));
+        if (!logged.add(failure)) {
+            return;
         }
-
-        // 手机号脱敏 (11位数字,以1开头)
-        String sanitized = message.replaceAll("(?<!\\d)(1[3-9]\\d{1})(\\d{4})(\\d{4})(?!\\d)", "$1****$3");
-
-        // 身份证号脱敏 (15或18位,保留前3后4)
-        sanitized = sanitized.replaceAll("(?<!\\d)(\\d{3})(\\d{8,11})(\\d{4})(?!\\d)", "$1*********$3");
-
-        // 邮箱脱敏
-        sanitized = sanitized.replaceAll(
-                "([a-zA-Z0-9._%+-]{1})[a-zA-Z0-9._%+-]*(@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,})", "$1***$2");
-
-        // 银行卡号脱敏 (16-19位数字,保留前4后4)
-        sanitized = sanitized.replaceAll("(?<!\\d)(\\d{4})(\\d{8,11})(\\d{4})(?!\\d)", "$1 **** **** $3");
-
-        return sanitized;
+        String type = failure.getClass().getSimpleName();
+        if (failure instanceof BusinessException
+                || failure instanceof IllegalArgumentException
+                || failure instanceof IllegalStateException
+                || failure instanceof ConstraintViolationException
+                || failure instanceof WebExchangeBindException
+                || failure instanceof DecodingException
+                || failure instanceof DataBufferLimitException
+                || failure instanceof ResponseStatusException
+                || failure instanceof RemoteApiException) {
+            log.warn("请求处理失败: type={}, traceId={}", type, traceId);
+        } else {
+            log.error("请求处理失败: type={}, traceId={}", type, traceId);
+        }
     }
 }

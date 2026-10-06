@@ -62,7 +62,8 @@ class UnifiedAuthorizationServiceIntegrationTest {
     void setUp() throws Exception {
         authorizationServer = startHttpsAuthorizationServer();
         int redisPort = freePort();
-        redisServer = RedisServer.newRedisServer().bind("127.0.0.1").port(redisPort).build();
+        redisServer =
+                RedisServer.newRedisServer().bind("127.0.0.1").port(redisPort).build();
         redisServer.start();
         Config config = new Config();
         config.setThreads(2).setNettyThreads(2);
@@ -115,9 +116,8 @@ class UnifiedAuthorizationServiceIntegrationTest {
         authorizationServer.disposeNow();
         authorizationServer = null;
         StepVerifier.create(service.roles(7L).contextWrite(TenantContext.withTenant("main")))
-                .assertNext(roles -> assertThat(roles)
-                        .extracting(role -> role.getCode())
-                        .containsExactly("ADMIN"))
+                .assertNext(roles ->
+                        assertThat(roles).extracting(role -> role.getCode()).containsExactly("ADMIN"))
                 .verifyComplete();
     }
 
@@ -139,7 +139,8 @@ class UnifiedAuthorizationServiceIntegrationTest {
         StepVerifier.create(service.permissions(7L).contextWrite(TenantContext.withTenant("main")))
                 .expectErrorMatches(error -> error instanceof WebClientResponseException.Unauthorized)
                 .verify();
-        assertThat(redisson.getBucket(REDIS_KEY, StringCodec.INSTANCE).isExists()).isFalse();
+        assertThat(redisson.getBucket(REDIS_KEY, StringCodec.INSTANCE).isExists())
+                .isFalse();
     }
 
     private UnifiedAuthorizationService service(AuthCenterPermissionClient client, long cacheSeconds) {
@@ -152,7 +153,8 @@ class UnifiedAuthorizationServiceIntegrationTest {
     }
 
     private AuthCenterPermissionClient client(String token) {
-        return new AuthCenterPermissionClient(properties(endpoint(), token),
+        return new AuthCenterPermissionClient(
+                properties(endpoint(), token),
                 org.springframework.web.reactive.function.client.WebClient.builder()
                         .clientConnector(new ReactorClientHttpConnector(clientHttpClient()))
                         .build());
@@ -177,7 +179,8 @@ class UnifiedAuthorizationServiceIntegrationTest {
                 keyStore.load(input, PASSWORD.toCharArray());
             }
             X509Certificate certificate = (X509Certificate) keyStore.getCertificate("localhost");
-            SslContext sslContext = SslContextBuilder.forClient().trustManager(certificate).build();
+            SslContext sslContext =
+                    SslContextBuilder.forClient().trustManager(certificate).build();
             return HttpClient.create().secure(ssl -> ssl.sslContext(sslContext));
         } catch (Exception error) {
             throw new IllegalStateException("Unable to create test HTTPS client", error);
@@ -187,11 +190,28 @@ class UnifiedAuthorizationServiceIntegrationTest {
     private DisposableServer startHttpsAuthorizationServer() throws Exception {
         Path store = temporary.resolve("test.p12");
         Process certificate = new ProcessBuilder(
-                        Path.of(System.getProperty("java.home"), "bin", "keytool").toString(),
-                        "-genkeypair", "-alias", "localhost", "-keyalg", "RSA", "-keystore", store.toString(),
-                        "-storetype", "PKCS12", "-storepass", PASSWORD, "-keypass", PASSWORD,
-                        "-dname", "CN=localhost", "-ext", "SAN=dns:localhost,ip:127.0.0.1",
-                        "-validity", "1", "-noprompt")
+                        Path.of(System.getProperty("java.home"), "bin", "keytool")
+                                .toString(),
+                        "-genkeypair",
+                        "-alias",
+                        "localhost",
+                        "-keyalg",
+                        "RSA",
+                        "-keystore",
+                        store.toString(),
+                        "-storetype",
+                        "PKCS12",
+                        "-storepass",
+                        PASSWORD,
+                        "-keypass",
+                        PASSWORD,
+                        "-dname",
+                        "CN=localhost",
+                        "-ext",
+                        "SAN=dns:localhost,ip:127.0.0.1",
+                        "-validity",
+                        "1",
+                        "-noprompt")
                 .redirectErrorStream(true)
                 .start();
         assertThat(certificate.waitFor()).isZero();
@@ -214,12 +234,12 @@ class UnifiedAuthorizationServiceIntegrationTest {
                     if (!"/auth/v1/authorization/users/99".equals(request.uri())) {
                         return response.status(404).send();
                     }
-                    if (!"Bearer test-access-token".equals(request.requestHeaders().get("Authorization"))) {
+                    if (!"Bearer test-access-token"
+                            .equals(request.requestHeaders().get("Authorization"))) {
                         return response.status(401).send();
                     }
                     authorizationRequests.incrementAndGet();
-                    return response.header("Content-Type", "application/json")
-                            .sendString(Mono.just(body));
+                    return response.header("Content-Type", "application/json").sendString(Mono.just(body));
                 })
                 .bindNow(Duration.ofSeconds(10));
     }

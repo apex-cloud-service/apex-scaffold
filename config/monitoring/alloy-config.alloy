@@ -50,7 +50,6 @@ loki.source.file "apex_logs" {
 
   // 文件监听配置
   tail_from_end = false  // 从文件开头读取（首次启动时）
-  sync_period   = "10s"  // 文件扫描间隔（检测新日志）
 }
 
 // ============================================================
@@ -66,15 +65,15 @@ loki.process "apex_logs" {
   stage.json {
     // 提取 JSON 字段到内部变量
     expressions = {
-      level       = "level",         // 日志级别：INFO/WARN/ERROR
-      logger      = "logger_name",   // Logger 名称（Java 类名）
-      message     = "message",       // 日志消息
-      timestamp   = "@timestamp",    // 时间戳（ISO 8601）
-      thread      = "thread_name",   // 线程名
-      traceId     = "traceId",       // 分布式链路追踪ID（MDC）
-      requestId   = "requestId",     // HTTP 请求ID（MDC）
-      userId      = "userId",        // 用户ID（MDC）
-      stack_trace = "stack_trace",   // 异常堆栈（仅 ERROR 级别）
+      level       = "level",
+      logger      = "logger_name",
+      message     = "message",
+      timestamp   = "\"@timestamp\"",
+      thread      = "thread_name",
+      traceId     = "traceId",
+      requestId   = "requestId",
+      userId      = "userId",
+      stack_trace = "stack_trace",
     }
   }
 
@@ -82,7 +81,7 @@ loki.process "apex_logs" {
   // 注意：标签数量越多，索引体积越大，查询越慢，应精简标签
   stage.labels {
     values = {
-      level = "",  // 从 Stage 1 提取的 level 字段作为标签
+      level = "",
     }
   }
 
@@ -92,11 +91,6 @@ loki.process "apex_logs" {
     format = "RFC3339"  // ISO 8601 格式：2024-01-01T12:00:00.123Z
   }
 
-  // Stage 4: 输出格式化（将 JSON 字段组合为最终日志行）
-  // Loki 存储原始日志行，此处保留完整 JSON 供查询时解析
-  stage.output {
-    source = ""  // 空字符串表示保留原始日志行
-  }
 }
 
 // ============================================================
@@ -111,10 +105,10 @@ loki.write "loki_endpoint" {
     url = "http://loki:3100/loki/api/v1/push"
 
     // 批量推送配置（提高吞吐量，降低网络开销）
-    batch_size  = 1048576   // 批量大小：1MB
+    batch_size  = "1MiB"    // 批量大小：1MB
     batch_wait  = "10s"     // 批量等待时间：10 秒
-    max_backoff = "5m"      // 最大重试退避时间
-    min_backoff = "500ms"   // 最小重试退避时间
+    max_backoff_period = "5m"    // 最大重试退避时间
+    min_backoff_period = "500ms"  // 最小重试退避时间
 
     // 租户ID（单租户模式留空，多租户模式填写）
     // tenant_id = ""

@@ -8,6 +8,7 @@ import com.alibaba.csp.sentinel.slots.block.flow.param.ParamFlowException;
 import com.alibaba.csp.sentinel.slots.system.SystemBlockException;
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.common.result.ResultCode;
+import com.apex.scaffold.common.util.LogSafetyUtil;
 import com.apex.scaffold.common.util.TraceIdUtil;
 import com.apex.scaffold.interfaces.monitor.SecurityMetricsRecorder;
 import com.apex.scaffold.interfaces.util.MessageUtils;
@@ -93,10 +94,10 @@ public class SentinelExceptionHandler {
      */
     @ExceptionHandler(FlowException.class)
     public Mono<ResponseEntity<Result<Void>>> handleFlowException(FlowException ex, ServerWebExchange exchange) {
-        String traceId = TraceIdUtil.getTraceId();
+        String traceId = resolveTraceId(exchange);
         securityMetricsRecorder.recordRateLimitRejected();
         String resource = ex.getRule() != null ? ex.getRule().getResource() : "unknown";
-        log.warn("接口限流, resource: {}, traceId: {}", resource, traceId);
+        log.warn("接口限流, resource: {}, traceId: {}", LogSafetyUtil.uri(resource, 256), traceId);
         return buildI18nError(ResultCode.RATE_LIMIT, traceId, HttpStatus.TOO_MANY_REQUESTS);
     }
 
@@ -113,10 +114,10 @@ public class SentinelExceptionHandler {
     @ExceptionHandler(ParamFlowException.class)
     public Mono<ResponseEntity<Result<Void>>> handleParamFlowException(
             ParamFlowException ex, ServerWebExchange exchange) {
-        String traceId = TraceIdUtil.getTraceId();
+        String traceId = resolveTraceId(exchange);
         securityMetricsRecorder.recordRateLimitRejected();
         String resource = ex.getRule() != null ? ex.getRule().getResource() : "unknown";
-        log.warn("热点参数限流, resource: {}, traceId: {}", resource, traceId);
+        log.warn("热点参数限流, resource: {}, traceId: {}", LogSafetyUtil.uri(resource, 256), traceId);
         return buildI18nError(ResultCode.RATE_LIMIT, traceId, HttpStatus.TOO_MANY_REQUESTS);
     }
 
@@ -139,11 +140,11 @@ public class SentinelExceptionHandler {
     @ExceptionHandler(DegradeException.class)
     public Mono<ResponseEntity<Result<Object>>> handleDegradeException(
             DegradeException ex, ServerWebExchange exchange) {
-        String traceId = TraceIdUtil.getTraceId();
+        String traceId = resolveTraceId(exchange);
         String resource = ex.getRule() != null ? ex.getRule().getResource() : "unknown";
         securityMetricsRecorder.recordCircuitBreakerOpened();
         String method = exchange.getRequest().getMethod().name();
-        log.warn("接口熔断, resource: {}, method: {}, traceId: {}", resource, method, traceId);
+        log.warn("接口熔断, resource: {}, method: {}, traceId: {}", LogSafetyUtil.uri(resource, 256), method, traceId);
 
         if (READ_METHODS.contains(method)) {
             return degradeFallbackService
@@ -173,8 +174,8 @@ public class SentinelExceptionHandler {
     @ExceptionHandler(SystemBlockException.class)
     public Mono<ResponseEntity<Result<Void>>> handleSystemBlockException(
             SystemBlockException ex, ServerWebExchange exchange) {
-        String traceId = TraceIdUtil.getTraceId();
-        log.warn("系统保护触发, rule: {}, traceId: {}", ex.getRule(), traceId);
+        String traceId = resolveTraceId(exchange);
+        log.warn("系统保护触发, traceId: {}", traceId);
         return buildI18nError(ResultCode.DEGRADE, traceId, HttpStatus.SERVICE_UNAVAILABLE);
     }
 
@@ -191,7 +192,7 @@ public class SentinelExceptionHandler {
     @ExceptionHandler(AuthorityException.class)
     public Mono<ResponseEntity<Result<Void>>> handleAuthorityException(
             AuthorityException ex, ServerWebExchange exchange) {
-        String traceId = TraceIdUtil.getTraceId();
+        String traceId = resolveTraceId(exchange);
         log.warn("授权规则限制, traceId: {}", traceId);
         return buildI18nError(ResultCode.FORBIDDEN, traceId, HttpStatus.FORBIDDEN);
     }
@@ -208,7 +209,7 @@ public class SentinelExceptionHandler {
      */
     @ExceptionHandler(BlockException.class)
     public Mono<ResponseEntity<Result<Void>>> handleBlockException(BlockException ex, ServerWebExchange exchange) {
-        String traceId = TraceIdUtil.getTraceId();
+        String traceId = resolveTraceId(exchange);
         log.warn("Sentinel阻塞异常, type: {}, traceId: {}", ex.getClass().getSimpleName(), traceId);
         return buildI18nError(ResultCode.CIRCUIT_BREAKER, traceId, HttpStatus.SERVICE_UNAVAILABLE);
     }
@@ -232,5 +233,10 @@ public class SentinelExceptionHandler {
             Result<Void> result = Result.error(resultCode.getCode(), msg, traceId);
             return Mono.just(ResponseEntity.status(httpStatus).body(result));
         });
+    }
+
+    private String resolveTraceId(ServerWebExchange exchange) {
+        String traceId = exchange.getAttribute(TraceIdUtil.TRACE_ID_KEY);
+        return LogSafetyUtil.text(traceId == null || traceId.isBlank() ? TraceIdUtil.getTraceId() : traceId, 64);
     }
 }

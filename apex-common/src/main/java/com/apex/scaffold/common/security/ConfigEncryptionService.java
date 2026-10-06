@@ -73,12 +73,16 @@ public class ConfigEncryptionService {
     private final SecretKey secretKey;
     private final SecureRandom secureRandom;
 
+    /**
+     * 构造配置加密服务。
+     *
+     * @param encryptionKey 配置加密密钥，必须恰好 32 字节
+     * @throws IllegalArgumentException 密钥缺失或长度不是 32 字节时抛出
+     */
     public ConfigEncryptionService(@Value("${security.config.encryption.key:}") String encryptionKey) {
 
-        if (encryptionKey == null || encryptionKey.isEmpty()) {
-            log.warn("⚠️ 配置加密密钥未设置，使用默认密钥（仅适用于开发环境）");
-            // 32字节默认密钥
-            encryptionKey = "CHANGE_ME_IN_PRODUCTION_ENV_32B";
+        if (encryptionKey == null || encryptionKey.isBlank()) {
+            throw new IllegalArgumentException("必须配置配置加密密钥");
         }
 
         byte[] keyBytes = encryptionKey.getBytes(StandardCharsets.UTF_8);
@@ -91,6 +95,7 @@ public class ConfigEncryptionService {
     }
 
     @PostConstruct
+    /** 初始化完成回调，打印就绪日志。 */
     public void init() {
         log.info("配置加密服务已初始化");
     }

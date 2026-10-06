@@ -34,6 +34,22 @@ public class PasswordUtil {
     private static final String SPECIAL = "!@#$%^&*()_+";
     private static final String ALL_CHARS = UPPERCASE + LOWERCASE + DIGITS + SPECIAL;
 
+    public static boolean isBcryptHash(String value) {
+        return value != null && value.matches("\\$2[aby]\\$(0[4-9]|[12][0-9]|3[01])\\$[./A-Za-z0-9]{53}");
+    }
+
+    /**
+     * 校验密码字段必须是 BCrypt 哈希。
+     *
+     * @param value 待校验的密码字段；null 或空串跳过校验
+     * @throws IllegalArgumentException 非 BCrypt 哈希格式时抛出
+     */
+    public static void requirePasswordHash(String value) {
+        if (value != null && !value.isEmpty() && !isBcryptHash(value)) {
+            throw new IllegalArgumentException("密码持久化仅接受BCrypt哈希");
+        }
+    }
+
     /**
      * 加密密码
      *

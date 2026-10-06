@@ -89,6 +89,78 @@ class IpRateLimitWebFilterTest {
     }
 
     @Test
+    void samplesRateLimitAndBlockLogsWithoutRequestFields() {
+        when(rateLimitProperties.isEnabled()).thenReturn(true);
+        when(rateLimitProperties.getDefaultWindow()).thenReturn(60);
+        when(rateLimitProperties.getDefaultLimit()).thenReturn(1);
+        when(rateLimitProperties.getBlockThreshold()).thenReturn(1);
+        when(rateLimitProperties.getBlockDuration()).thenReturn(60);
+        when(clientIpResolver.resolve(
+                        nullable(InetSocketAddress.class), nullable(java.util.List.class), nullable(String.class)))
+                .thenReturn("10.0.0.1");
+        when(redisTemplate.opsForHash()).thenReturn(hashOps);
+        when(hashOps.get(anyString(), any())).thenReturn(Mono.empty());
+        when(hashOps.put(anyString(), any(), any())).thenReturn(Mono.just(true));
+        when(redisTemplate.expire(anyString(), any())).thenReturn(Mono.just(true));
+        when(redisTemplate.execute(any(), anyList(), anyString(), anyString(), anyString(), anyString()))
+                .thenReturn(Flux.just(2L));
+        when(redisTemplate.execute(any(), anyList(), anyString())).thenReturn(Flux.just(1L));
+        ch.qos.logback.classic.Logger logger =
+                (ch.qos.logback.classic.Logger) org.slf4j.LoggerFactory.getLogger(IpRateLimitWebFilter.class);
+        ch.qos.logback.core.read.ListAppender<ch.qos.logback.classic.spi.ILoggingEvent> appender =
+                new ch.qos.logback.core.read.ListAppender<>();
+        appender.start();
+        logger.addAppender(appender);
+        try {
+            for (int i = 0; i < 16; i++) {
+                MockServerWebExchange exchange = MockServerWebExchange.from(
+                        MockServerHttpRequest.get("/api/secret-value").build());
+                StepVerifier.create(filter.filter(exchange, chain)).verifyComplete();
+                assertThat(exchange.getResponse().getStatusCode()).isEqualTo(HttpStatus.TOO_MANY_REQUESTS);
+            }
+            assertThat(appender.list).hasSize(10).allSatisfy(event -> assertThat(event.getFormattedMessage())
+                    .doesNotContain("secret-value", "10.0.0.1"));
+            verify(securityMetricsRecorder, times(16)).recordRateLimitRejected();
+            verify(securityMetricsRecorder, times(16)).recordIpBlocked();
+            verify(chain, never()).filter(any());
+        } finally {
+            logger.detachAppender(appender);
+            appender.stop();
+        }
+    }
+
+    @Test
+    void samplesAlreadyBlockedLogs() {
+        when(rateLimitProperties.isEnabled()).thenReturn(true);
+        when(rateLimitProperties.getBlockDuration()).thenReturn(60);
+        when(clientIpResolver.resolve(
+                        nullable(InetSocketAddress.class), nullable(java.util.List.class), nullable(String.class)))
+                .thenReturn("10.0.0.1");
+        when(redisTemplate.opsForHash()).thenReturn(hashOps);
+        when(hashOps.get(anyString(), any())).thenReturn(Mono.just(String.valueOf(System.currentTimeMillis() + 30000)));
+        ch.qos.logback.classic.Logger logger =
+                (ch.qos.logback.classic.Logger) org.slf4j.LoggerFactory.getLogger(IpRateLimitWebFilter.class);
+        ch.qos.logback.core.read.ListAppender<ch.qos.logback.classic.spi.ILoggingEvent> appender =
+                new ch.qos.logback.core.read.ListAppender<>();
+        appender.start();
+        logger.addAppender(appender);
+        try {
+            for (int i = 0; i < 16; i++) {
+                MockServerWebExchange exchange = MockServerWebExchange.from(
+                        MockServerHttpRequest.get("/api/test").build());
+                StepVerifier.create(filter.filter(exchange, chain)).verifyComplete();
+                assertThat(exchange.getResponse().getStatusCode()).isEqualTo(HttpStatus.TOO_MANY_REQUESTS);
+            }
+            assertThat(appender.list).hasSize(5).allSatisfy(event -> assertThat(event.getFormattedMessage())
+                    .doesNotContain("10.0.0.1"));
+            verify(chain, never()).filter(any());
+        } finally {
+            logger.detachAppender(appender);
+            appender.stop();
+        }
+    }
+
+    @Test
     @DisplayName("正常请求在限制内应该放行")
     void shouldAllowWithinLimit() {
         MockServerHttpRequest request = MockServerHttpRequest.get("/api/test")

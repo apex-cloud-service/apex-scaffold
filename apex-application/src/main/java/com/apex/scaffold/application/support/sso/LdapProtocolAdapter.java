@@ -57,7 +57,10 @@ public class LdapProtocolAdapter implements SsoProtocolAdapter {
 
         return Mono.fromCallable(() -> performLdapBind(config, username, password))
                 .subscribeOn(BlockingIoSchedulers.remote())
-                .doOnError(e -> log.error("LDAP 认证失败: username={}, error={}", username, e.getMessage()));
+                .doOnError(e -> log.error(
+                        "LDAP 认证失败: username={}, type={}",
+                        username,
+                        e.getClass().getSimpleName()));
     }
 
     @Override
@@ -107,7 +110,7 @@ public class LdapProtocolAdapter implements SsoProtocolAdapter {
                     } catch (Exception e) {
                         Map<String, Object> result = new HashMap<>(RESULT_MAP_CAPACITY);
                         result.put("success", false);
-                        result.put("message", "LDAP 连接失败: " + e.getMessage());
+                        result.put("message", "LDAP 连接失败");
                         return result;
                     } finally {
                         closeDirContext(ctx);
@@ -188,7 +191,7 @@ public class LdapProtocolAdapter implements SsoProtocolAdapter {
             try {
                 ctx.close();
             } catch (Exception e) {
-                log.warn("关闭 LDAP 连接失败: {}", e.getMessage());
+                log.warn("关闭 LDAP 连接失败: type={}", e.getClass().getSimpleName());
             }
         }
     }

@@ -70,6 +70,32 @@ class IdempotentApiAspectTest {
     private static final String PATH = "/api/v1/auth/register";
 
     @Test
+    void samplesMissingKeyRejectionsWithoutLoggingPath() throws Throwable {
+        ServerRequest request = createMockServerRequest(null);
+        when(joinPoint.getArgs()).thenReturn(new Object[] {request});
+        when(annotation.header()).thenReturn("Idempotency-Key");
+        when(annotation.required()).thenReturn(true);
+        ch.qos.logback.classic.Logger logger =
+                (ch.qos.logback.classic.Logger) org.slf4j.LoggerFactory.getLogger(IdempotentApiAspect.class);
+        ch.qos.logback.core.read.ListAppender<ch.qos.logback.classic.spi.ILoggingEvent> appender =
+                new ch.qos.logback.core.read.ListAppender<>();
+        appender.start();
+        logger.addAppender(appender);
+        try {
+            for (int i = 0; i < 16; i++) {
+                assertThatThrownBy(() -> aspect.around(joinPoint, annotation)).isInstanceOf(BusinessException.class);
+            }
+            assertThat(appender.list).hasSize(5);
+            assertThat(appender.list)
+                    .allSatisfy(event -> assertThat(event.getFormattedMessage()).doesNotContain(PATH));
+            verify(securityMetricsRecorder, org.mockito.Mockito.times(16)).recordRepeatSubmitRejected();
+        } finally {
+            logger.detachAppender(appender);
+            appender.stop();
+        }
+    }
+
+    @Test
     @DisplayName("函数式端点首次请求（携带幂等键头 + SETNX 成功）时应正常执行方法")
     void shouldAllowFirstRequest() throws Throwable {
         ServerRequest request = createMockServerRequest(IDEMPOTENCY_KEY);
@@ -199,6 +225,33 @@ class IdempotentApiAspectTest {
 
         assertThatThrownBy(() -> result.block()).isInstanceOf(RuntimeException.class);
         verify(valueOperations, never()).delete(anyString());
+    }
+
+    @Test
+    void excludesRedisExceptionTextFromFallbackLogs() throws Throwable {
+        ServerRequest request = createMockServerRequest(IDEMPOTENCY_KEY);
+        when(joinPoint.getArgs()).thenReturn(new Object[] {request});
+        when(annotation.header()).thenReturn("Idempotency-Key");
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.setIfAbsent(anyString(), anyString(), any(Duration.class)))
+                .thenReturn(Mono.error(new RedisConnectionFailureException("password=secret-value")));
+        when(joinPoint.proceed()).thenReturn(Mono.just(TEST_RESULT));
+        ch.qos.logback.classic.Logger logger =
+                (ch.qos.logback.classic.Logger) org.slf4j.LoggerFactory.getLogger(IdempotentApiAspect.class);
+        ch.qos.logback.core.read.ListAppender<ch.qos.logback.classic.spi.ILoggingEvent> appender =
+                new ch.qos.logback.core.read.ListAppender<>();
+        appender.start();
+        logger.addAppender(appender);
+        try {
+            assertThat(((Mono<?>) aspect.around(joinPoint, annotation)).block()).isEqualTo(TEST_RESULT);
+            assertThat(appender.list).isNotEmpty().allSatisfy(event -> {
+                assertThat(event.getFormattedMessage()).doesNotContain("secret-value");
+                assertThat(event.getThrowableProxy()).isNull();
+            });
+        } finally {
+            logger.detachAppender(appender);
+            appender.stop();
+        }
     }
 
     @Test

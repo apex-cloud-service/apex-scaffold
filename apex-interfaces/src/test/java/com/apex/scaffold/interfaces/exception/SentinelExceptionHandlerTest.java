@@ -49,6 +49,30 @@ import reactor.test.StepVerifier;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("SentinelExceptionHandler Sentinel异常处理器测试")
 class SentinelExceptionHandlerTest {
+    @Test
+    void shouldKeepFailureLogsSafeAndSingle() {
+        var logger = (ch.qos.logback.classic.Logger) org.slf4j.LoggerFactory.getLogger(SentinelExceptionHandler.class);
+        var originalLevel = logger.getLevel();
+        var appender = new ch.qos.logback.core.read.ListAppender<ch.qos.logback.classic.spi.ILoggingEvent>();
+        appender.start();
+        logger.setLevel(ch.qos.logback.classic.Level.DEBUG);
+        logger.addAppender(appender);
+        try {
+            var rule = new FlowRule("/api/test?token=log-secret\r\nforged");
+            var failure = new FlowException("blocked");
+            setRuleOnException(failure, rule);
+            var exchange = org.springframework.mock.web.server.MockServerWebExchange.from(
+                    org.springframework.mock.http.server.reactive.MockServerHttpRequest.get("/api/test")
+                            .build());
+            handler.handleFlowException(failure, exchange).block();
+            assertThat(appender.list).hasSize(1);
+            assertThat(appender.list.get(0).getFormattedMessage()).doesNotContain("log-secret", "forged");
+        } finally {
+            logger.detachAppender(appender);
+            logger.setLevel(originalLevel);
+            appender.stop();
+        }
+    }
 
     @Mock
     private MessageUtils messageUtils;

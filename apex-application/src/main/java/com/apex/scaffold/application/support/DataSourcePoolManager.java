@@ -5,7 +5,6 @@ import com.apex.scaffold.common.result.ResultCode;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -77,7 +76,7 @@ public class DataSourcePoolManager {
                 config.setAutoCommit(true);
                 config.setConnectionTestQuery("SELECT 1");
 
-                log.info("创建代码生成数据源连接池: datasourceId={}, jdbcUrl={}", datasourceId, jdbcUrl);
+                log.info("创建代码生成数据源连接池: datasourceId={}", datasourceId);
                 return new HikariDataSource(config);
             });
 
@@ -111,11 +110,8 @@ public class DataSourcePoolManager {
                 })
                 .timeout(Duration.ofSeconds(timeoutSeconds + 1))
                 .onErrorMap(e -> {
-                    log.error("数据库连接测试失败: jdbcUrl={}", jdbcUrl, e);
-                    if (e instanceof SQLException) {
-                        return new BusinessException(ResultCode.DB_ERROR, "数据库连接失败: " + e.getMessage());
-                    }
-                    return new BusinessException(ResultCode.DB_ERROR, "数据库连接超时");
+                    log.error("数据库连接测试失败: errorType={}", e.getClass().getSimpleName());
+                    return new BusinessException(ResultCode.DB_ERROR);
                 });
     }
 

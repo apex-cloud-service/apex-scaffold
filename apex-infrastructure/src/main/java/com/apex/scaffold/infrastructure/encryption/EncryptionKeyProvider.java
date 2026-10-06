@@ -1,8 +1,6 @@
 package com.apex.scaffold.infrastructure.encryption;
 
-import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
-import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import lombok.extern.slf4j.Slf4j;
@@ -29,17 +27,23 @@ public class EncryptionKeyProvider {
 
     private final SecretKey encryptionKey;
 
-    public EncryptionKeyProvider(@Value("${security.encryption.key:}") String base64Key) {
-        if (base64Key != null && !base64Key.isEmpty()) {
-            // 从配置加载密钥（生产环境应从KMS获取）
-            byte[] keyBytes = Base64.getDecoder().decode(base64Key);
-            this.encryptionKey = new SecretKeySpec(keyBytes, ALGORITHM);
-            log.info("使用配置的加密密钥");
-        } else {
-            // 开发环境：生成临时密钥
-            log.warn("未配置加密密钥，生成临时密钥（仅用于开发环境）");
-            this.encryptionKey = generateKey();
+    /** 从 Base64 配置解析 AES-256 密钥，缺失或非法时抛出 {@link IllegalArgumentException}。 */
+    public EncryptionKeyProvider(
+            @Value("${security.encryption.key:${security.token.encryption.key:}}") String base64Key) {
+        if (base64Key == null || base64Key.isBlank()) {
+            throw new IllegalArgumentException("必须配置Token加密密钥");
         }
+        byte[] keyBytes;
+        try {
+            keyBytes = Base64.getDecoder().decode(base64Key);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Token加密密钥必须为有效Base64");
+        }
+        if (keyBytes.length != KEY_SIZE / Byte.SIZE) {
+            throw new IllegalArgumentException("Token加密密钥必须为32字节");
+        }
+        this.encryptionKey = new SecretKeySpec(keyBytes, ALGORITHM);
+        log.info("使用配置的加密密钥");
     }
 
     /**
@@ -47,20 +51,6 @@ public class EncryptionKeyProvider {
      */
     public SecretKey getEncryptionKey() {
         return encryptionKey;
-    }
-
-    /**
-     * 生成新的AES-256密钥
-     * 仅用于开发环境
-     */
-    private SecretKey generateKey() {
-        try {
-            KeyGenerator keyGen = KeyGenerator.getInstance(ALGORITHM);
-            keyGen.init(KEY_SIZE);
-            return keyGen.generateKey();
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("无法生成加密密钥", e);
-        }
     }
 
     /**

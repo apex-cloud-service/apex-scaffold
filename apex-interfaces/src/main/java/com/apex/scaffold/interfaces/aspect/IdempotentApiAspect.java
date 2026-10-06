@@ -9,6 +9,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.util.HexFormat;
+import java.util.concurrent.atomic.AtomicLong;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -70,6 +71,16 @@ import reactor.core.publisher.Mono;
 @Order(Ordered.HIGHEST_PRECEDENCE + 10)
 public class IdempotentApiAspect {
 
+    private final AtomicLong rejected = new AtomicLong();
+
+    private void recordRejection(String reason) {
+        securityMetricsRecorder.recordRepeatSubmitRejected();
+        long count = rejected.incrementAndGet();
+        if (count > 0 && (count & (count - 1)) == 0) {
+            log.warn("HTTP 幂等拒绝: reason={}, total={}", reason, count);
+        }
+    }
+
     /** Redis 幂等键前缀。 */
     private static final String IDEMPOTENT_KEY_PREFIX = "apex:idem:";
 
@@ -118,8 +129,7 @@ public class IdempotentApiAspect {
         String headerValue = context.header(idempotentApi.header());
         if (headerValue == null || headerValue.isBlank()) {
             if (idempotentApi.required()) {
-                log.warn("HTTP 幂等校验失败，缺少 {} 请求头, path: {}", idempotentApi.header(), context.path());
-                securityMetricsRecorder.recordRepeatSubmitRejected();
+                recordRejection("missing-key");
                 throw new BusinessException(ResultCode.IDEMPOTENCY_KEY_MISSING);
             }
             // 渐进接入：缺头放行，带上头即获得幂等保护
@@ -134,8 +144,7 @@ public class IdempotentApiAspect {
                 .setIfAbsent(cacheKey, PLACEHOLDER_VALUE, Duration.ofSeconds(expireSeconds))
                 .flatMap(acquired -> {
                     if (Boolean.FALSE.equals(acquired)) {
-                        log.warn("HTTP 幂等拒绝重复提交, key: {}, path: {}", cacheKey, context.path());
-                        securityMetricsRecorder.recordRepeatSubmitRejected();
+                        recordRejection("duplicate-key");
                         return Mono.error(new BusinessException(ResultCode.REPEAT_SUBMIT));
                     }
                     try {
@@ -166,7 +175,7 @@ public class IdempotentApiAspect {
      * @return 目标方法执行结果
      */
     private Mono<Object> fallbackToProceed(ProceedingJoinPoint joinPoint, Throwable error) {
-        log.error("Redis 不可用，HTTP 幂等校验降级放行: {}", error.getMessage(), error);
+        log.error("Redis 不可用，HTTP 幂等校验降级放行: type={}", error.getClass().getSimpleName());
         try {
             Object result = joinPoint.proceed();
             if (result instanceof Mono<?> mono) {

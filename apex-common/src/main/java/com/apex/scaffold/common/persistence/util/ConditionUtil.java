@@ -51,8 +51,7 @@ public final class ConditionUtil {
      * @param <R> 实体类型
      * @return 原查询包装器
      */
-    public static <T, R> LambdaQueryWrapper<R> ifPresent(
-            LambdaQueryWrapper<R> wrapper, T value, Consumer<T> consumer) {
+    public static <T, R> LambdaQueryWrapper<R> ifPresent(LambdaQueryWrapper<R> wrapper, T value, Consumer<T> consumer) {
         if (value != null) {
             consumer.accept(value);
         }

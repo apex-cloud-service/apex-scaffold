@@ -1,12 +1,12 @@
 package com.apex.scaffold.infrastructure.persistence.repository;
 
+import com.apex.scaffold.common.persistence.util.ConditionUtil;
 import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
 import com.apex.scaffold.domain.model.entity.DictTypeEntity;
 import com.apex.scaffold.domain.repository.DictTypeRepository;
 import com.apex.scaffold.infrastructure.persistence.converter.DictTypePoConverter;
 import com.apex.scaffold.infrastructure.persistence.mapper.DictTypeMapper;
 import com.apex.scaffold.infrastructure.persistence.po.DictTypePO;
-import com.apex.scaffold.common.persistence.util.ConditionUtil;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;

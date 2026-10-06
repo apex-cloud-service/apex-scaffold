@@ -1,12 +1,12 @@
 package com.apex.scaffold.infrastructure.persistence.repository;
 
+import com.apex.scaffold.common.persistence.util.ConditionUtil;
 import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
 import com.apex.scaffold.domain.model.entity.RolePermissionEntity;
 import com.apex.scaffold.domain.repository.RolePermissionRepository;
 import com.apex.scaffold.infrastructure.persistence.converter.RolePermissionPoConverter;
 import com.apex.scaffold.infrastructure.persistence.mapper.RolePermissionMapper;
 import com.apex.scaffold.infrastructure.persistence.po.RolePermissionPO;
-import com.apex.scaffold.common.persistence.util.ConditionUtil;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;

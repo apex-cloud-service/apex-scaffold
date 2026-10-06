@@ -82,7 +82,7 @@ public class OidcProtocolAdapter implements SsoProtocolAdapter {
             result.put("redirectUrl", authUrl.toString());
             result.put("state", state);
 
-            log.debug("OIDC认证发起成功: state={}, clientId={}", state, clientId);
+            log.debug("OIDC认证发起成功: clientId={}", clientId);
             return result;
         }));
     }
@@ -103,7 +103,7 @@ public class OidcProtocolAdapter implements SsoProtocolAdapter {
         // 验证state参数（CSRF防护）
         return validateState(state).flatMap(isValid -> {
             if (!isValid) {
-                log.error("OIDC State验证失败，可能的CSRF攻击: state={}", state);
+                log.error("OIDC State验证失败，可能的CSRF攻击");
                 return Mono.error(new SecurityException("OIDC State验证失败，可能的CSRF攻击"));
             }
 
@@ -150,7 +150,8 @@ public class OidcProtocolAdapter implements SsoProtocolAdapter {
                             return Mono.error(new RuntimeException("OIDC 响应缺少 id_token 和 userinfo 端点"));
                         })
                         .doOnSuccess(userInfo -> log.info("OIDC认证成功: userId={}", userInfo.get("userId")))
-                        .doOnError(e -> log.error("OIDC 认证失败: code={}, error=", code, e.getMessage()));
+                        .doOnError(e ->
+                                log.error("OIDC 认证失败: type={}", e.getClass().getSimpleName()));
             }));
         });
     }
@@ -207,15 +208,15 @@ public class OidcProtocolAdapter implements SsoProtocolAdapter {
                         Map<String, Object> discovery = objectMapper.readValue(discoveryJson, Map.class);
                         return Mono.just(discovery);
                     } catch (Exception e) {
-                        return Mono.error(new RuntimeException("解析 OIDC Discovery 失败: " + e.getMessage()));
+                        return Mono.error(new RuntimeException("解析 OIDC Discovery 失败"));
                     }
                 })
                 .onErrorResume(e -> {
-                    log.warn("获取 OIDC Discovery 失败: {}", e.getMessage());
+                    log.warn("获取 OIDC Discovery 失败: type={}", e.getClass().getSimpleName());
                     return Mono.fromCallable(() -> {
                         Map<String, Object> metadata = new HashMap<>(16);
                         metadata.put("protocol", "OIDC");
-                        metadata.put("error", e.getMessage());
+                        metadata.put("error", "获取 OIDC Discovery 失败");
                         return metadata;
                     });
                 });
@@ -258,7 +259,7 @@ public class OidcProtocolAdapter implements SsoProtocolAdapter {
                 .onErrorResume(e -> {
                     Map<String, Object> result = new HashMap<>(16);
                     result.put("success", false);
-                    result.put("message", "OIDC 连接失败: " + e.getMessage());
+                    result.put("message", "OIDC 连接失败");
                     return Mono.just(result);
                 });
     }
@@ -270,7 +271,7 @@ public class OidcProtocolAdapter implements SsoProtocolAdapter {
                 Map<String, Object> tokenData = objectMapper.readValue(tokenJson, Map.class);
                 return tokenData;
             } catch (Exception e) {
-                throw new RuntimeException("解析 OIDC Token 响应失败: " + e.getMessage());
+                throw new RuntimeException("解析 OIDC Token 响应失败");
             }
         });
     }
@@ -302,7 +303,7 @@ public class OidcProtocolAdapter implements SsoProtocolAdapter {
 
                 return userInfo;
             } catch (Exception e) {
-                throw new RuntimeException("解析 ID Token 失败: " + e.getMessage());
+                throw new RuntimeException("解析 ID Token 失败");
             }
         });
     }
@@ -337,7 +338,7 @@ public class OidcProtocolAdapter implements SsoProtocolAdapter {
 
                         return Mono.just(userInfo);
                     } catch (Exception e) {
-                        return Mono.error(new RuntimeException("解析 UserInfo 响应失败: " + e.getMessage()));
+                        return Mono.error(new RuntimeException("解析 UserInfo 响应失败"));
                     }
                 });
     }
@@ -373,7 +374,7 @@ public class OidcProtocolAdapter implements SsoProtocolAdapter {
                 .opsForValue()
                 .set(key, callbackUrl, STATE_TTL)
                 .then()
-                .doOnSuccess(v -> log.debug("OIDC State已存储: state={}", state));
+                .doOnSuccess(v -> log.debug("OIDC State已存储"));
     }
 
     /**
@@ -395,6 +396,6 @@ public class OidcProtocolAdapter implements SsoProtocolAdapter {
      */
     private Mono<Void> deleteState(String state) {
         String key = STATE_CACHE_PREFIX + state;
-        return redisTemplate.delete(key).then().doOnSuccess(v -> log.debug("OIDC State已删除: state={}", state));
+        return redisTemplate.delete(key).then().doOnSuccess(v -> log.debug("OIDC State已删除"));
     }
 }

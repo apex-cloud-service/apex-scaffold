@@ -5,6 +5,7 @@ import com.apex.scaffold.application.dto.admin.CurrentDatabaseInfoDTO;
 import com.apex.scaffold.application.dto.admin.DatabaseConfigRequest;
 import com.apex.scaffold.application.dto.admin.DatabaseTestResultDTO;
 import com.apex.scaffold.application.dto.admin.DeploymentConfigResultDTO;
+import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
 import io.r2dbc.spi.Connection;
 import io.r2dbc.spi.ConnectionFactory;
 import java.sql.DatabaseMetaData;
@@ -15,7 +16,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 /**
  * 数据库配置应用服务。
@@ -38,6 +38,8 @@ import reactor.core.scheduler.Schedulers;
 @Service
 @RequiredArgsConstructor
 public class DatabaseConfigService {
+
+    private static final String CONNECTION_PARAMETER_SEPARATOR = "&";
 
     private static final String ERROR_TIMEOUT = "timeout";
 
@@ -97,7 +99,9 @@ public class DatabaseConfigService {
                                     .doFinally(signalType -> {
                                         Mono.from(connection.close())
                                                 .onErrorResume(e -> {
-                                                    log.warn("关闭测试连接时出错: {}", e.getMessage());
+                                                    log.warn(
+                                                            "关闭测试连接时出错: {}",
+                                                            e.getClass().getSimpleName());
                                                     return Mono.empty();
                                                 })
                                                 .subscribe();
@@ -112,7 +116,7 @@ public class DatabaseConfigService {
                                     .build();
                         })
                         .onErrorResume(e -> {
-                            log.warn("R2DBC连接测试失败: {}", e.getMessage());
+                            log.warn("R2DBC连接测试失败: {}", e.getClass().getSimpleName());
                             String errorMessage = extractErrorMessage(e);
                             return Mono.just(DatabaseTestResultDTO.builder()
                                     .success(false)
@@ -121,10 +125,10 @@ public class DatabaseConfigService {
                         });
 
             } catch (Exception e) {
-                log.warn("创建R2DBC连接工厂失败: {}", e.getMessage());
+                log.warn("创建R2DBC连接工厂失败: {}", e.getClass().getSimpleName());
                 return Mono.just(DatabaseTestResultDTO.builder()
                         .success(false)
-                        .message("配置错误: " + e.getMessage())
+                        .message("配置错误，请检查数据库连接参数")
                         .build());
             }
         });
@@ -198,7 +202,7 @@ public class DatabaseConfigService {
         } else if (message.contains(ERROR_TIMEOUT)) {
             return "连接超时";
         } else {
-            return message;
+            return "数据库连接失败，请检查连接配置";
         }
     }
 
@@ -222,7 +226,7 @@ public class DatabaseConfigService {
                             .dockerCompose(dockerCompose)
                             .build();
                 })
-                .subscribeOn(Schedulers.boundedElastic());
+                .subscribeOn(BlockingIoSchedulers.jdbc());
     }
 
     /**
@@ -248,7 +252,7 @@ public class DatabaseConfigService {
                                 .build();
 
                     } catch (SQLException e) {
-                        log.error("获取当前数据库信息失败", e);
+                        log.error("获取当前数据库信息失败: type={}", e.getClass().getSimpleName());
                         return CurrentDatabaseInfoDTO.builder()
                                 .type("Unknown")
                                 .version("Unknown")
@@ -256,7 +260,7 @@ public class DatabaseConfigService {
                                 .build();
                     }
                 })
-                .subscribeOn(Schedulers.boundedElastic());
+                .subscribeOn(BlockingIoSchedulers.jdbc());
     }
 
     /**
@@ -279,6 +283,14 @@ public class DatabaseConfigService {
 
         if (request.getConnectionParams() != null
                 && !request.getConnectionParams().isEmpty()) {
+            java.util.Set<String> allowed =
+                    java.util.Set.of("useSSL", "serverTimezone", "useUnicode", "characterEncoding", "ssl", "sslmode");
+            for (String parameter : request.getConnectionParams().split(CONNECTION_PARAMETER_SEPARATOR)) {
+                String[] pair = parameter.split("=", 2);
+                if (pair.length != 2 || !allowed.contains(pair[0]) || !pair[1].matches("[A-Za-z0-9_./+-]+")) {
+                    throw new IllegalArgumentException("不支持的数据库连接参数");
+                }
+            }
             baseUrl += "?" + request.getConnectionParams();
         }
 
@@ -336,7 +348,7 @@ public class DatabaseConfigService {
                 DB_PASSWORD=%s
                 DB_DRIVER=%s
                 """,
-                jdbcUrl, request.getUsername(), request.getPassword(), driver);
+                jdbcUrl, request.getUsername(), "", driver);
     }
 
     /**
@@ -380,13 +392,13 @@ public class DatabaseConfigService {
                 request.getPort(),
                 request.getPort(),
                 envPrefix,
-                request.getPassword(),
+                "${DB_PASSWORD:?DB_PASSWORD is required}",
                 envPrefix,
                 request.getDatabase(),
                 envPrefix,
                 request.getUsername(),
                 envPrefix,
-                request.getPassword(),
+                "${DB_PASSWORD:?DB_PASSWORD is required}",
                 DB_TYPE_MYSQL.equalsIgnoreCase(request.getDbType()) ? "mysql" : "postgresql");
     }
 }

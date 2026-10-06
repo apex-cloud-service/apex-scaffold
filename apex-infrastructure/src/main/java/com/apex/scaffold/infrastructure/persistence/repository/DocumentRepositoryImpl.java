@@ -1,13 +1,13 @@
 package com.apex.scaffold.infrastructure.persistence.repository;
 
 import com.apex.scaffold.common.context.TenantContext;
+import com.apex.scaffold.common.persistence.util.ConditionUtil;
 import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
 import com.apex.scaffold.domain.model.entity.DocumentEntity;
 import com.apex.scaffold.domain.repository.DocumentRepository;
 import com.apex.scaffold.infrastructure.persistence.converter.DocumentPoConverter;
 import com.apex.scaffold.infrastructure.persistence.mapper.DocumentMapper;
 import com.apex.scaffold.infrastructure.persistence.po.DocumentPO;
-import com.apex.scaffold.common.persistence.util.ConditionUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;

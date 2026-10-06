@@ -62,6 +62,58 @@ import reactor.test.StepVerifier;
 @MockitoSettings(strictness = Strictness.LENIENT)
 @DisplayName("GlobalExceptionHandler 全局异常处理器测试")
 class GlobalExceptionHandlerTest {
+    @Test
+    void shouldKeepFailureLogsSafeAndSingle() {
+        var logger = (ch.qos.logback.classic.Logger) org.slf4j.LoggerFactory.getLogger(GlobalExceptionHandler.class);
+        var originalLevel = logger.getLevel();
+        var appender = new ch.qos.logback.core.read.ListAppender<ch.qos.logback.classic.spi.ILoggingEvent>();
+        appender.start();
+        logger.setLevel(ch.qos.logback.classic.Level.DEBUG);
+        logger.addAppender(appender);
+        try {
+            var request = MockServerWebExchange.from(
+                    MockServerHttpRequest.get("/api/test").build());
+            var failure = new IllegalArgumentException("token=log-secret\r\nforged");
+            handler.handleIllegalArgumentException(failure, request).block();
+            handler.webExceptionHandler().handle(request, failure).block();
+            assertThat(appender.list).hasSize(1);
+            assertThat(appender.list.get(0).getFormattedMessage()).doesNotContain("log-secret", "forged");
+            assertThat(appender.list.get(0).getThrowableProxy()).isNull();
+        } finally {
+            logger.detachAppender(appender);
+            logger.setLevel(originalLevel);
+            appender.stop();
+        }
+    }
+
+    @Test
+    void shouldKeepMonitorAlertAndDeliveryFailureSafe() {
+        var alertService = mock(com.apex.scaffold.interfaces.service.AlertService.class);
+        var monitor =
+                new ExceptionMonitor(alertService, new io.micrometer.core.instrument.simple.SimpleMeterRegistry());
+        org.springframework.test.util.ReflectionTestUtils.setField(monitor, "maxExceptionTypes", 100);
+        org.springframework.test.util.ReflectionTestUtils.setField(monitor, "exceptionThreshold", 1);
+        when(alertService.sendAlert(any())).thenReturn(Mono.error(new IllegalStateException("token=delivery-secret")));
+        var logger = (Logger) LoggerFactory.getLogger(ExceptionMonitor.class);
+        var level = logger.getLevel();
+        var appender = new ch.qos.logback.core.read.ListAppender<ch.qos.logback.classic.spi.ILoggingEvent>();
+        appender.start();
+        logger.setLevel(Level.DEBUG);
+        logger.addAppender(appender);
+        try {
+            monitor.monitorException(new NullPointerException("token=source-secret"));
+            var captor = org.mockito.ArgumentCaptor.forClass(com.apex.scaffold.common.exception.AlertEvent.class);
+            verify(alertService).sendAlert(captor.capture());
+            assertThat(captor.getValue().getMessage()).isEqualTo("NullPointerException");
+            assertThat(appender.list).hasSize(1);
+            assertThat(appender.list.get(0).getFormattedMessage()).doesNotContain("delivery-secret", "source-secret");
+            assertThat(appender.list.get(0).getThrowableProxy()).isNull();
+        } finally {
+            logger.detachAppender(appender);
+            logger.setLevel(level);
+            appender.stop();
+        }
+    }
 
     @Mock
     private ExceptionMonitor exceptionMonitor;

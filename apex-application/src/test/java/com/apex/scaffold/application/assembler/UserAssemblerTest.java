@@ -29,6 +29,24 @@ class UserAssemblerTest {
 
     private final UserAssembler assembler = Mappers.getMapper(UserAssembler.class);
 
+    @Test
+    void shouldPreserveCredentialsDuringProfileUpdate() {
+        UserEntity target = new UserEntity();
+        target.setPassword("stored-hash");
+        target.setAccessToken("stored-access");
+        target.setRefreshToken("stored-refresh");
+        UserEntity source = new UserEntity();
+        source.setPassword("plaintext");
+        source.setAccessToken("external-access");
+        source.setRefreshToken("external-refresh");
+        source.setNickName("updated");
+        assembler.mergeUpdate(target, source);
+        assertEquals("stored-hash", target.getPassword());
+        assertEquals("stored-access", target.getAccessToken());
+        assertEquals("stored-refresh", target.getRefreshToken());
+        assertEquals("updated", target.getNickName());
+    }
+
     /**
      * 验证 {@code testToDTO} 场景。
      */

@@ -83,7 +83,6 @@ ingester:
 querier:
   # 查询超时和并发限制
   max_concurrent: 20  # 最大并发查询数
-  query_timeout: 10m  # 单次查询超时时间
   
   # 查询分片配置（并行查询多个 Ingester）
   query_ingesters_within: 3h  # 查询最近 3 小时数据时包含 Ingester（内存数据）
@@ -99,7 +98,6 @@ query_range:
         ttl: 1h           # 缓存 TTL 1 小时
   
   # 查询拆分配置（大查询拆分为小查询，提高并行度）
-  split_queries_by_interval: 15m  # 按 15 分钟间隔拆分查询
 
 # Schema 配置（定义索引和存储结构）
 schema_config:
@@ -129,6 +127,7 @@ compactor:
   working_directory: /loki/compactor  # 工作目录
   compaction_interval: 10m            # 压缩间隔（生产环境建议 1h）
   retention_enabled: true             # 启用自动清理过期数据
+  delete_request_store: filesystem    # 删除请求存储后端（retention 启用时必填）
   retention_delete_delay: 2h          # 删除延迟（防止查询中删除）
   retention_delete_worker_count: 150  # 删除工作线程数
 

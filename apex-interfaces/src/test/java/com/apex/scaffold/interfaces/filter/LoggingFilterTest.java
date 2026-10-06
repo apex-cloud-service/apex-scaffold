@@ -101,4 +101,53 @@ class LoggingFilterTest {
 
         verify(chain).filter(any(ServerWebExchange.class));
     }
+
+    @Test
+    void failureLogRedactsQueryAndBoundsMetadata() {
+        ch.qos.logback.classic.Logger logger =
+                (ch.qos.logback.classic.Logger) org.slf4j.LoggerFactory.getLogger(LoggingFilter.class);
+        ch.qos.logback.core.read.ListAppender<ch.qos.logback.classic.spi.ILoggingEvent> appender =
+                new ch.qos.logback.core.read.ListAppender<>();
+        appender.start();
+        logger.addAppender(appender);
+        try {
+            var request = MockServerHttpRequest.get("/api/login?password=secret-value&access_token=token-value")
+                    .header("User-Agent", "x".repeat(10000))
+                    .header("Referer", "https://example.com/?code=private-code")
+                    .build();
+            when(chain.filter(any())).thenReturn(Mono.error(new IllegalStateException("password=exception-secret")));
+            StepVerifier.create(filter.filter(MockServerWebExchange.from(request), chain))
+                    .expectError(IllegalStateException.class)
+                    .verify();
+            org.assertj.core.api.Assertions.assertThat(appender.list).isNotEmpty();
+            var event = appender.list.get(0);
+            org.assertj.core.api.Assertions.assertThat(event.getFormattedMessage())
+                    .doesNotContain("secret-value", "token-value", "private-code", "exception-secret")
+                    .hasSizeLessThan(2048);
+            org.assertj.core.api.Assertions.assertThat(event.getThrowableProxy())
+                    .isNull();
+        } finally {
+            logger.detachAppender(appender);
+            appender.stop();
+        }
+    }
+
+    @Test
+    void assemblyAndCancellationPreserveMdc() {
+        org.slf4j.MDC.put("traceId", "outer-trace");
+        try {
+            when(chain.filter(any())).thenReturn(Mono.never());
+            var result = filter.filter(
+                    MockServerWebExchange.from(
+                            MockServerHttpRequest.get("/api/user").build()),
+                    chain);
+            org.assertj.core.api.Assertions.assertThat(org.slf4j.MDC.get("traceId"))
+                    .isEqualTo("outer-trace");
+            StepVerifier.create(result).thenCancel().verify();
+            org.assertj.core.api.Assertions.assertThat(org.slf4j.MDC.get("traceId"))
+                    .isEqualTo("outer-trace");
+        } finally {
+            org.slf4j.MDC.clear();
+        }
+    }
 }

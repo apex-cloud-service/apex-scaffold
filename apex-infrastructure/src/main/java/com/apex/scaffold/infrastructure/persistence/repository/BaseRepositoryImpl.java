@@ -1,9 +1,9 @@
 package com.apex.scaffold.infrastructure.persistence.repository;
 
-import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
-import com.apex.scaffold.domain.model.entity.BaseEntity;
 import com.apex.scaffold.common.persistence.po.BasePO;
 import com.apex.scaffold.common.persistence.util.ApexLambdaQueryWrapper;
+import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
+import com.apex.scaffold.domain.model.entity.BaseEntity;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import java.util.List;
@@ -135,12 +135,12 @@ public abstract class BaseRepositoryImpl<E extends BaseEntity, PO extends BasePO
                         PO po = convertToPo(entity);
 
                         if (entity.getId() == null) {
-                            // 新增
+                            // 新增：无 id，执行「实体名.insert」MyBatis 语句
                             session.insert(entityClass.getSimpleName() + ".insert", po);
                             entity.setId(po.getId());
                             log.debug("新增实体成功, type: {}, id: {}", entityClass.getSimpleName(), po.getId());
                         } else {
-                            // 更新
+                            // 更新：有 id，执行「实体名.updateById」MyBatis 语句
                             session.update(entityClass.getSimpleName() + ".updateById", po);
                             log.debug("更新实体成功, type: {}, id: {}", entityClass.getSimpleName(), entity.getId());
                         }

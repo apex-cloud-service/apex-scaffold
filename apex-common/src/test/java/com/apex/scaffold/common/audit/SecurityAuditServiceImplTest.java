@@ -1,8 +1,8 @@
 package com.apex.scaffold.common.audit;
 
+import com.apex.scaffold.common.util.TraceIdUtil;
 import java.util.HashMap;
 import java.util.Map;
-import com.apex.scaffold.common.util.TraceIdUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -46,9 +46,9 @@ class SecurityAuditServiceImplTest {
         String traceId = "audit-trace-001";
         TraceIdUtil.setTraceId(traceId);
 
-        StepVerifier.create(securityAuditService.logSecurityEvent(
-                        "TRACE_EVENT", "trace event", 1L, "admin", "tenant1", "test")
-                .contextWrite(TraceIdUtil.withTraceIdContext(traceId)))
+        StepVerifier.create(securityAuditService
+                        .logSecurityEvent("TRACE_EVENT", "trace event", 1L, "admin", "tenant1", "test")
+                        .contextWrite(TraceIdUtil.withTraceIdContext(traceId)))
                 .verifyComplete();
         TraceIdUtil.clear();
     }

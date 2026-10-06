@@ -71,6 +71,11 @@ class OperationLogAspectTest {
      */
     @BeforeEach
     void setUp() {
+        org.springframework.test.util.ReflectionTestUtils.setField(aspect, "operationLogEnabled", true);
+        org.springframework.test.util.ReflectionTestUtils.setField(aspect, "logParams", true);
+        org.springframework.test.util.ReflectionTestUtils.setField(aspect, "logResult", true);
+        org.springframework.test.util.ReflectionTestUtils.setField(aspect, "maxParamLength", 2000);
+        org.springframework.test.util.ReflectionTestUtils.setField(aspect, "maxResultLength", 2000);
         traceIdUtilMockedStatic = mockStatic(TraceIdUtil.class);
         traceIdUtilMockedStatic.when(TraceIdUtil::getTraceId).thenReturn(TEST_TRACE_ID);
     }
@@ -85,6 +90,7 @@ class OperationLogAspectTest {
     void around_whenMethodSucceeds_shouldLogSuccess() throws Throwable {
         MethodSignature signature = mock(MethodSignature.class);
         when(signature.toString()).thenReturn("testMethod");
+        when(signature.getReturnType()).thenReturn((Class) String.class);
         when(signature.getMethod())
                 .thenReturn(
                         OperationLogAspectTest.class.getDeclaredMethod("around_whenMethodSucceeds_shouldLogSuccess"));
@@ -109,6 +115,7 @@ class OperationLogAspectTest {
     void around_whenMethodThrowsException_shouldLogFailureAndRethrow() throws Throwable {
         MethodSignature signature = mock(MethodSignature.class);
         when(signature.toString()).thenReturn("testMethod");
+        when(signature.getReturnType()).thenReturn((Class) String.class);
         when(signature.getMethod())
                 .thenReturn(OperationLogAspectTest.class.getDeclaredMethod(
                         "around_whenMethodThrowsException_shouldLogFailureAndRethrow"));
@@ -140,6 +147,7 @@ class OperationLogAspectTest {
 
         MethodSignature signature = mock(MethodSignature.class);
         when(signature.toString()).thenReturn("testMethod");
+        when(signature.getReturnType()).thenReturn((Class) String.class);
         when(signature.getMethod())
                 .thenReturn(OperationLogAspectTest.class.getDeclaredMethod(
                         "around_withServerWebExchange_shouldSetRequestInfo"));
@@ -164,6 +172,7 @@ class OperationLogAspectTest {
     void around_whenSaveLogFails_shouldNotAffectMainFlow() throws Throwable {
         MethodSignature signature = mock(MethodSignature.class);
         when(signature.toString()).thenReturn("testMethod");
+        when(signature.getReturnType()).thenReturn((Class) String.class);
         when(signature.getMethod())
                 .thenReturn(OperationLogAspectTest.class.getDeclaredMethod(
                         "around_whenSaveLogFails_shouldNotAffectMainFlow"));
@@ -178,10 +187,65 @@ class OperationLogAspectTest {
         when(operationLog.saveResponse()).thenReturn(false);
         when(operationLog.excludeRequestFields()).thenReturn(new String[0]);
 
-        doThrow(new RuntimeException("保存失败")).when(operationLogService).saveAsync(any());
+        doThrow(new RuntimeException("保存失败"))
+                .when(operationLogService)
+                .saveAsync(any(), org.mockito.ArgumentMatchers.nullable(String.class));
 
         Object result = aspect.around(joinPoint, operationLog);
 
         assertThat(result).isEqualTo("success");
+    }
+
+    @Test
+    void emptyMonoRecordsEachSubscription() throws Throwable {
+        MethodSignature signature = mock(MethodSignature.class);
+        when(signature.getReturnType()).thenReturn((Class) reactor.core.publisher.Mono.class);
+        when(joinPoint.getSignature()).thenReturn(signature);
+        when(joinPoint.getArgs()).thenReturn(new Object[] {java.util.Map.of("password", "private-value")});
+        when(joinPoint.proceed()).thenReturn(reactor.core.publisher.Mono.empty());
+        when(operationLog.type()).thenReturn(OperationType.INSERT);
+        when(operationLog.saveRequest()).thenReturn(true);
+        reactor.core.publisher.Mono<?> result = (reactor.core.publisher.Mono<?>) aspect.around(joinPoint, operationLog);
+        reactor.test.StepVerifier.create(result).verifyComplete();
+        reactor.test.StepVerifier.create(result).verifyComplete();
+        org.mockito.ArgumentCaptor<com.apex.scaffold.domain.model.entity.OperationLogEntity> captured =
+                org.mockito.ArgumentCaptor.forClass(com.apex.scaffold.domain.model.entity.OperationLogEntity.class);
+        org.mockito.Mockito.verify(operationLogService, org.mockito.Mockito.times(2))
+                .saveAsync(captured.capture(), org.mockito.ArgumentMatchers.nullable(String.class));
+        assertThat(captured.getAllValues().get(0))
+                .isNotSameAs(captured.getAllValues().get(1));
+        assertThat(captured.getValue().getRequestParams())
+                .doesNotContain("private-value")
+                .contains("***");
+        assertThat(captured.getValue().getStatus()).isZero();
+    }
+
+    @Test
+    void reactiveAuditPreservesIdentityAndSubscriptionTenant() throws Throwable {
+        MethodSignature signature = mock(MethodSignature.class);
+        when(signature.getReturnType()).thenReturn((Class) reactor.core.publisher.Mono.class);
+        when(joinPoint.getSignature()).thenReturn(signature);
+        when(joinPoint.getArgs()).thenReturn(new Object[0]);
+        when(joinPoint.proceed())
+                .thenReturn(reactor.core.publisher.Mono.just("success")
+                        .publishOn(com.apex.scaffold.common.scheduler.BlockingIoSchedulers.event()));
+        when(operationLog.type()).thenReturn(OperationType.UPDATE);
+        var principal = new com.apex.scaffold.interfaces.security.AuthenticatedUser(42L, "open-id", "tenant-a", 1L);
+        var authentication = new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                principal, null, java.util.List.of());
+        reactor.core.publisher.Mono<?> result = (reactor.core.publisher.Mono<?>) aspect.around(joinPoint, operationLog);
+        reactor.test.StepVerifier.create(result.contextWrite(
+                                org.springframework.security.core.context.ReactiveSecurityContextHolder
+                                        .withAuthentication(authentication))
+                        .contextWrite(context -> context.put(
+                                com.apex.scaffold.common.context.TenantContext.REACTOR_CONTEXT_KEY, "tenant-a")))
+                .expectNextCount(1)
+                .verifyComplete();
+        var captured =
+                org.mockito.ArgumentCaptor.forClass(com.apex.scaffold.domain.model.entity.OperationLogEntity.class);
+        org.mockito.Mockito.verify(operationLogService)
+                .saveAsync(captured.capture(), org.mockito.ArgumentMatchers.eq("tenant-a"));
+        assertThat(captured.getValue().getUserId()).isEqualTo(42L);
+        assertThat(captured.getValue().getUserName()).isEqualTo("open-id");
     }
 }
