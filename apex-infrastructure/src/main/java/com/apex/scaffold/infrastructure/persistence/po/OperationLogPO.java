@@ -28,10 +28,6 @@ import lombok.experimental.SuperBuilder;
 public class OperationLogPO extends BasePO {
 
     /**
-     * 构造操作日志持久化对象。
-     */
-
-    /**
      * 操作模块。
      */
     @TableField("module")

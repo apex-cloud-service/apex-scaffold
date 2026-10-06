@@ -27,10 +27,6 @@ import lombok.experimental.SuperBuilder;
 public class DictTypePO extends BasePO {
 
     /**
-     * 构造字典类型持久化对象。
-     */
-
-    /**
      * 字典名称。
      */
     private String dictName;

@@ -28,10 +28,6 @@ import lombok.experimental.SuperBuilder;
 public class LoginLogPO extends BasePO {
 
     /**
-     * 构造登录日志持久化对象。
-     */
-
-    /**
      * 登录账号。
      */
     private String username;

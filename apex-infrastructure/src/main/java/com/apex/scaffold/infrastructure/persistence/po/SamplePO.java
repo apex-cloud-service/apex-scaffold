@@ -28,11 +28,6 @@ import lombok.experimental.SuperBuilder;
 public class SamplePO extends BasePO {
 
     /**
-     * 创建采样记录实体对象。
-     *
-     */
-
-    /**
      * 采样用户 ID。
      */
     @TableField("user_id")

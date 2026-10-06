@@ -27,10 +27,6 @@ import lombok.experimental.SuperBuilder;
 public class MenuPO extends BasePO {
 
     /**
-     * 构造系统菜单持久化对象。
-     */
-
-    /**
      * 父菜单 ID。
      *
      * <p>值为 0 表示顶级菜单。</p>

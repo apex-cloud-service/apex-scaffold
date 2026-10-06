@@ -27,10 +27,6 @@ import lombok.experimental.SuperBuilder;
 @TableName("biz_subscription")
 public class SubscriptionPO extends BasePO {
 
-    /**
-     * 创建订阅持久化对象。
-     */
-
     /** 用户ID。 */
     @TableField("user_id")
     private Long userId;

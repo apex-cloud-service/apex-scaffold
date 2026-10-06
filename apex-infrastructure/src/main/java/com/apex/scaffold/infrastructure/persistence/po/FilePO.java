@@ -27,10 +27,6 @@ import lombok.experimental.SuperBuilder;
 public class FilePO extends BasePO {
 
     /**
-     * 构造文件信息持久化对象。
-     */
-
-    /**
      * 文件名称。
      */
     @TableField("file_name")

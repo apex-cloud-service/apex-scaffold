@@ -28,11 +28,6 @@ import lombok.experimental.SuperBuilder;
 public class BlacklistPO extends BasePO {
 
     /**
-     * 创建拉黑关系实体对象。
-     *
-     */
-
-    /**
      * 拉黑者用户 ID。
      */
     @TableField("user_id")

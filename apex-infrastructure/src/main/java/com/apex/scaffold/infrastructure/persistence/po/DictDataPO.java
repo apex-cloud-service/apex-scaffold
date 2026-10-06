@@ -27,10 +27,6 @@ import lombok.experimental.SuperBuilder;
 public class DictDataPO extends BasePO {
 
     /**
-     * 构造字典数据持久化对象。
-     */
-
-    /**
      * 字典排序。
      */
     private Integer dictSort;

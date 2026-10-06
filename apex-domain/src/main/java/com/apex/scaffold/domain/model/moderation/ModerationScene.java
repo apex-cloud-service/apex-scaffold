@@ -5,13 +5,6 @@ package com.apex.scaffold.domain.model.moderation;
  *
  * <p>具体启用项由云端审核策略决定，每个枚举常量对应一个审核场景。</p>
  *
- * @author weiqiang.ling
- * @version 1.0.0
- * @since 1.0.0
- */
-/**
- * ModerationScene 组件。
- *
  * @author Apex Team
  * @version 1.0.0
  * @since 1.0.0

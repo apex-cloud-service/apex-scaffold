@@ -27,11 +27,6 @@ import lombok.experimental.SuperBuilder;
 @TableName("biz_quiz_question")
 public class QuizQuestionPO extends BasePO {
 
-    /**
-     * 创建答题题目实体对象。
-     *
-     */
-
     /** 题目标识。 */
     @TableField("question_id")
     private String questionId;

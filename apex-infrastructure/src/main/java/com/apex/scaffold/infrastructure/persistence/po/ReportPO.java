@@ -27,10 +27,6 @@ import lombok.experimental.SuperBuilder;
 @TableName("biz_report")
 public class ReportPO extends BasePO {
 
-    /**
-     * 创建报告持久化对象。
-     */
-
     /** 报告类型。 */
     @TableField("report_type")
     private String reportType;

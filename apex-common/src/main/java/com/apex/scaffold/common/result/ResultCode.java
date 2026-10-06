@@ -198,8 +198,6 @@ public enum ResultCode {
     /** 对局已结算/不可重复提交 */
     BATTLE_ALREADY_SUBMITTED(4202, "对局已结算/不可重复提交", "biz.battle_already_submitted"),
 
-    /** 黄金眼反作弊已触发，需先完成黄金眼测试对局 */
-
     /** 内容不可见 */
     CONTENT_NOT_VISIBLE(4301, "内容不可见", "biz.content_not_visible"),
 

@@ -26,10 +26,6 @@ import lombok.experimental.SuperBuilder;
 @TableName("biz_credit_tx")
 public class CreditTxPO extends BasePO {
 
-    /**
-     * 创建算力流水持久化对象。
-     */
-
     /** 用户ID。 */
     @TableField("user_id")
     private Long userId;

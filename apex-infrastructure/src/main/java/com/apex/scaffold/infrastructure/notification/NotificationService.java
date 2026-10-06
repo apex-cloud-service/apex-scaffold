@@ -27,8 +27,6 @@ import reactor.core.publisher.Sinks;
 @Service
 public class NotificationService {
 
-    /** 日志记录器 */
-
     /** 消息广播流（多播，保留最近 100 条供迟到订阅者） */
     private final Sinks.Many<NotificationMessage> sink =
             Sinks.many().multicast().onBackpressureBuffer(100);

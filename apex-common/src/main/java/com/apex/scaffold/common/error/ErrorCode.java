@@ -14,12 +14,6 @@ package com.apex.scaffold.common.error;
  *
  * @author Apex Team
  * @version 1.0.0
- */
-/**
- * ErrorCode 组件。
- *
- * @author Apex Team
- * @version 1.0.0
  * @since 1.0.0
  */
 public enum ErrorCode {

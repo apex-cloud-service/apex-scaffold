@@ -5,13 +5,6 @@ package com.apex.scaffold.domain.gateway;
  *
  * <p>该类型供重试与熔断策略识别：调用失败只影响当前输入，不应计入远程服务故障率。</p>
  *
- * @author weiqiang.ling
- * @version 1.0.0
- * @since 1.0.0
- */
-/**
- * RemoteClientInputException 远程客户端异常/失败契约。
- *
  * @author Apex Team
  * @version 1.0.0
  * @since 1.0.0

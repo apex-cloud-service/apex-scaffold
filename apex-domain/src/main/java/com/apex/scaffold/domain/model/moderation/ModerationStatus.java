@@ -6,13 +6,6 @@ package com.apex.scaffold.domain.model.moderation;
  * <p>状态流转：PENDING_MACHINE → WAITING_REVIEW → IN_REVIEW → APPROVED/REJECTED；
  * 机器审核失败时可直接进入FAILED状态。</p>
  *
- * @author weiqiang.ling
- * @version 1.0.0
- * @since 1.0.0
- */
-/**
- * ModerationStatus 组件。
- *
  * @author Apex Team
  * @version 1.0.0
  * @since 1.0.0

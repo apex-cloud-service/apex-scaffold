@@ -29,8 +29,6 @@ import org.springframework.stereotype.Service;
 @Service
 public class MailService {
 
-    /** 日志记录器 */
-
     /** JavaMail 发送器（由 Spring Boot 自动配置提供） */
     private final JavaMailSender mailSender;
 

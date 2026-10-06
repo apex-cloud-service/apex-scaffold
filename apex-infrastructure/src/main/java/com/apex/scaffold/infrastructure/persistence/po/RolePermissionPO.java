@@ -26,10 +26,6 @@ import lombok.experimental.SuperBuilder;
 public class RolePermissionPO extends BasePO {
 
     /**
-     * 构造角色权限关联持久化对象。
-     */
-
-    /**
      * 角色ID。
      */
     private Long roleId;

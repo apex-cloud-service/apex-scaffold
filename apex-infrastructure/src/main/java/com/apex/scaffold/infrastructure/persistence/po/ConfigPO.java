@@ -27,10 +27,6 @@ import lombok.experimental.SuperBuilder;
 public class ConfigPO extends BasePO {
 
     /**
-     * 构造参数配置持久化对象。
-     */
-
-    /**
      * 参数名称。
      */
     private String configName;

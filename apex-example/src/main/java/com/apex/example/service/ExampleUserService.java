@@ -46,14 +46,13 @@ public class ExampleUserService {
     /**
      * 创建用户
      *
-     * @param request 创建请求
-     * @return 用户响应
-     */
-    /**
      * <p><b>响应式事务说明</b>：示例为单表操作，无需 {@code @Transactional}。
      * 响应式链路（Reactor 线程）下 JDBC {@code @Transactional} 会在方法返回时提前提交、
      * 导致实际 SQL 在事务外执行，这是 WebFlux + JDBC 的经典陷阱；
      * 多表事务应使用事务模板或专用 JDBC 调度器，或迁移 R2DBC。</p>
+     *
+     * @param request 创建请求
+     * @return 用户响应
      */
     public Mono<UserResponse> createUser(CreateUserRequest request) {
         log.info("开始创建用户, username={}", request.getUsername());

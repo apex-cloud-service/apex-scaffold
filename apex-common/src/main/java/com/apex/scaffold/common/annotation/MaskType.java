@@ -5,12 +5,6 @@ package com.apex.scaffold.common.annotation;
  *
  * @author Apex Team
  * @version 1.0.0
- */
-/**
- * MaskType 自定义注解类型。
- *
- * @author Apex Team
- * @version 1.0.0
  * @since 1.0.0
  */
 public enum MaskType {

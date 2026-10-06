@@ -28,11 +28,6 @@ import lombok.experimental.SuperBuilder;
 public class ReportTicketPO extends BasePO {
 
     /**
-     * 创建举报工单实体对象。
-     *
-     */
-
-    /**
      * 举报者用户 ID。
      */
     @TableField("reporter_user_id")

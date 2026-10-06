@@ -5,13 +5,6 @@ package com.apex.scaffold.domain.model.moderation;
  *
  * <p>严重程度依次递增，数值越大表示审核决定越严格。</p>
  *
- * @author weiqiang.ling
- * @version 1.0.0
- * @since 1.0.0
- */
-/**
- * ModerationDecision 组件。
- *
  * @author Apex Team
  * @version 1.0.0
  * @since 1.0.0
