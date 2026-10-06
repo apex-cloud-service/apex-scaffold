@@ -29,12 +29,24 @@ public interface RolePoConverter {
     @org.mapstruct.Mapping(target = "dataScope", source = "dataScope")
     RolePO toPo(RoleEntity entity);
 
-    /** 将数据权限类型转换为对应编码。 */
+    /**
+     * 将数据权限类型转换为对应编码。
+     *
+     * @param type 数据权限类型
+     * @return 对应编码；类型为空时返回 {@code null}
+     */
     default Integer map(DataScopeType type) {
         return type == null ? null : type.getCode();
     }
 
-    /** 将编码转换为数据权限类型，不支持的编码抛出 {@link IllegalArgumentException}。 */
+    /**
+     * 将编码转换为数据权限类型。
+     *
+     * <p>不支持的编码抛出 {@link IllegalArgumentException}。
+     *
+     * @param code 数据权限编码
+     * @return 对应数据权限类型；编码为空时返回 {@code null}
+     */
     default DataScopeType map(Integer code) {
         if (code == null) {
             return null;

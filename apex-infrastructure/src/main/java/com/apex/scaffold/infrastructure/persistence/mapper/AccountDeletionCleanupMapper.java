@@ -20,44 +20,92 @@ import org.apache.ibatis.annotations.Select;
 @Mapper
 public interface AccountDeletionCleanupMapper {
 
-    /** 删除账号权限关联。 */
+    /**
+     * 删除账号权限关联。
+     *
+     * @param userId 目标用户ID
+     * @return 删除的记录行数
+     */
     @Delete("DELETE FROM sys_user_role WHERE user_id=#{userId}")
     int deleteUserRoles(@Param("userId") Long userId);
 
-    /** 删除用户个人资料。 */
+    /**
+     * 删除用户个人资料。
+     *
+     * @param userId 目标用户ID
+     * @return 删除的记录行数
+     */
     @Delete("DELETE FROM biz_user_profile WHERE user_id=#{userId}")
     int deleteUserProfile(@Param("userId") Long userId);
 
-    /** 删除用户合规记录（合规状态投影）。 */
+    /**
+     * 删除用户合规记录（合规状态投影）。
+     *
+     * @param userId 目标用户ID
+     * @return 删除的记录行数
+     */
     @Delete("DELETE FROM biz_user_compliance WHERE user_id=#{userId}")
     int deleteUserCompliance(@Param("userId") Long userId);
 
-    /** 删除用户同意记录（隐私授权投影）。 */
+    /**
+     * 删除用户同意记录（隐私授权投影）。
+     *
+     * @param userId 目标用户ID
+     * @return 删除的记录行数
+     */
     @Delete("DELETE FROM biz_user_consent WHERE user_id=#{userId}")
     int deleteUserConsent(@Param("userId") Long userId);
 
-    /** 删除账号相关的黑名单关系（双向）。 */
+    /**
+     * 删除账号相关的黑名单关系（双向）。
+     *
+     * @param userId 目标用户ID
+     * @return 删除的记录行数
+     */
     @Delete("DELETE FROM biz_blacklist WHERE user_id=#{userId} OR target_user_id=#{userId}")
     int deleteBlacklist(@Param("userId") Long userId);
 
-    /** 删除只属于该用户的算力流水。 */
+    /**
+     * 删除只属于该用户的算力流水。
+     *
+     * @param userId 目标用户ID
+     * @return 删除的记录行数
+     */
     @Delete("DELETE FROM biz_credit_tx WHERE user_id=#{userId}")
     int deleteCreditTransactions(@Param("userId") Long userId);
 
-    /** 删除账号的算力账户余额。 */
+    /**
+     * 删除账号的算力账户余额。
+     *
+     * @param userId 目标用户ID
+     * @return 删除的记录行数
+     */
     @Delete("DELETE FROM biz_credit_account WHERE user_id=#{userId}")
     int deleteCreditAccount(@Param("userId") Long userId);
 
-    /** 删除发给用户的系统消息。 */
+    /**
+     * 删除发给用户的系统消息。
+     *
+     * @param userId 目标用户ID
+     * @return 删除的记录行数
+     */
     @Delete("DELETE FROM biz_system_message WHERE user_id=#{userId}")
     int deleteSystemMessages(@Param("userId") Long userId);
 
-    /** 删除用户产生的采样记录。 */
+    /**
+     * 删除用户产生的采样记录。
+     *
+     * @param userId 目标用户ID
+     * @return 删除的记录行数
+     */
     @Delete("DELETE FROM biz_sample WHERE user_id=#{userId}")
     int deleteSamples(@Param("userId") Long userId);
 
     /**
      * 删除账号自己的文件元数据；被举报工单 evidence JSON 引用的文件保留。
+     *
+     * @param userId 目标用户ID
+     * @return 删除的记录行数
      */
     @Delete("DELETE f FROM sys_file f WHERE f.user_id=#{userId} AND f.deleted=0 AND NOT EXISTS "
             + "(SELECT 1 FROM biz_report_ticket r WHERE r.evidence IS NOT NULL "
@@ -69,6 +117,9 @@ public interface AccountDeletionCleanupMapper {
      * 查询需要异步物理删除的文件对象。
      *
      * <p>举报证据引用的对象不出现在结果中。</p>
+     *
+     * @param userId 目标用户ID
+     * @return 待物理删除的文件PO列表
      */
     @Select("SELECT f.bucket_name, f.file_name FROM sys_file f "
             + "WHERE f.user_id=#{userId} AND f.deleted=0 "

@@ -18,9 +18,19 @@ import org.mapstruct.MappingConstants;
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
 public interface ChartPoConverter {
 
-    /** 将图表 PO 转换为领域实体。 */
+    /**
+     * 将图表 PO 转换为领域实体。
+     *
+     * @param po 图表持久化对象
+     * @return 图表领域实体
+     */
     ChartEntity toEntity(ChartPO po);
 
-    /** 将图表领域实体转换为 PO。 */
+    /**
+     * 将图表领域实体转换为 PO。
+     *
+     * @param entity 图表领域实体
+     * @return 图表持久化对象
+     */
     ChartPO toPo(ChartEntity entity);
 }

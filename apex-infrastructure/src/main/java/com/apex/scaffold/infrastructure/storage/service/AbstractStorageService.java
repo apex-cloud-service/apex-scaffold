@@ -88,6 +88,7 @@ public abstract class AbstractStorageService implements StorageService {
      *
      * <p>如果存储桶不存在则创建，存在则直接返回
      *
+     * @param bucketName 存储桶名称
      * @return 异步操作结果
      */
     protected abstract Mono<Void> ensureBucketExistsInternal(String bucketName);
@@ -95,6 +96,7 @@ public abstract class AbstractStorageService implements StorageService {
     /**
      * 创建存储桶
      *
+     * @param bucketName 存储桶名称
      * @return 异步操作结果
      */
     protected abstract Mono<Void> createBucketInternal(String bucketName);
@@ -289,6 +291,7 @@ public abstract class AbstractStorageService implements StorageService {
     /**
      * 执行文件删除
      *
+     * @param bucketName 存储桶名称
      * @param fileName   文件名
      * @return 删除结果，true 表示删除成功，false 表示删除失败
      */
@@ -297,6 +300,7 @@ public abstract class AbstractStorageService implements StorageService {
     /**
      * 检查文件是否存在
      *
+     * @param bucketName 存储桶名称
      * @param fileName   文件名
      * @return true 表示文件存在，false 表示文件不存在
      */
