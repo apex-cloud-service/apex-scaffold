@@ -1,7 +1,7 @@
 package com.apex.scaffold.workflow.infrastructure.persistence.repository;
 
-import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
 import com.apex.scaffold.common.persistence.util.ConditionUtil;
+import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
 import com.apex.scaffold.workflow.domain.model.Task;
 import com.apex.scaffold.workflow.domain.repository.TaskRepository;
 import com.apex.scaffold.workflow.infrastructure.persistence.converter.TaskPoConverter;

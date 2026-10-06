@@ -1,7 +1,7 @@
 package com.apex.scaffold.workflow.infrastructure.persistence.repository;
 
-import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
 import com.apex.scaffold.common.persistence.util.ConditionUtil;
+import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
 import com.apex.scaffold.workflow.domain.model.ApprovalRecord;
 import com.apex.scaffold.workflow.domain.repository.ApprovalRecordRepository;
 import com.apex.scaffold.workflow.infrastructure.persistence.converter.ApprovalRecordPoConverter;
@@ -81,7 +81,6 @@ public class ApprovalRecordRepositoryImpl implements ApprovalRecordRepository {
     /** {@inheritDoc} */
     @Override
     public Mono<Integer> deleteById(Long id) {
-        return Mono.fromCallable(() -> approvalRecordMapper.deleteById(id))
-                .subscribeOn(BlockingIoSchedulers.jdbc());
+        return Mono.fromCallable(() -> approvalRecordMapper.deleteById(id)).subscribeOn(BlockingIoSchedulers.jdbc());
     }
 }

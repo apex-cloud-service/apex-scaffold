@@ -1,7 +1,7 @@
 package com.apex.scaffold.workflow.infrastructure.persistence.repository;
 
-import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
 import com.apex.scaffold.common.persistence.util.ConditionUtil;
+import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
 import com.apex.scaffold.workflow.domain.model.ProcessInstance;
 import com.apex.scaffold.workflow.domain.repository.ProcessInstanceRepository;
 import com.apex.scaffold.workflow.infrastructure.persistence.converter.ProcessInstancePoConverter;
@@ -80,7 +80,6 @@ public class ProcessInstanceRepositoryImpl implements ProcessInstanceRepository 
     /** {@inheritDoc} */
     @Override
     public Mono<Integer> deleteById(Long id) {
-        return Mono.fromCallable(() -> processInstanceMapper.deleteById(id))
-                .subscribeOn(BlockingIoSchedulers.jdbc());
+        return Mono.fromCallable(() -> processInstanceMapper.deleteById(id)).subscribeOn(BlockingIoSchedulers.jdbc());
     }
 }
