@@ -261,6 +261,15 @@ public class UserEntity extends BaseEntity {
     private String onboardingStatus;
 
     /**
+     * 注册来源
+     *
+     * <p>账户首次注册时使用的客户端渠道（{@link com.apex.scaffold.domain.enums.RegisterChannel}
+     * 编码），用于多端运营统计与账户来源追溯。注册完成后不再随登录终端变化。
+     * 未知来源为 {@code UNKNOWN}，历史存量数据默认该值。</p>
+     */
+    private String registerChannel;
+
+    /**
      * 最后登录时间
      *
      * <p>记录用户最近一次成功登录的时间戳。
@@ -386,6 +395,11 @@ public class UserEntity extends BaseEntity {
     /** Sets onboardingStatus. For persistence/construction use only. */
     public void setOnboardingStatus(String value) {
         this.onboardingStatus = value;
+    }
+
+    /** Sets registerChannel. For persistence/construction use only. */
+    public void setRegisterChannel(String value) {
+        this.registerChannel = value;
     }
 
     /** Sets lastLoginTime. For persistence/construction use only. */

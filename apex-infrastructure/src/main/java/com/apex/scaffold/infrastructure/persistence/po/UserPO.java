@@ -260,6 +260,15 @@ public class UserPO extends BasePO {
     private String onboardingStatus;
 
     /**
+     * 注册来源。
+     *
+     * <p>账户首次注册时使用的客户端渠道（RegisterChannel 编码），
+     * 未知来源为 UNKNOWN；对应 V59 迁移新增列。</p>
+     */
+    @TableField("register_channel")
+    private String registerChannel;
+
+    /**
      * 最后登录时间。
      *
      * <p>用户最后登录的时间。
