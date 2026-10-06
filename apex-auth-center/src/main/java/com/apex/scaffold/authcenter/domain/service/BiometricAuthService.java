@@ -39,151 +39,80 @@ public interface BiometricAuthService {
      * @param signature 签名
      * @return 验证是否成功
      */
+    @SuppressWarnings("PMD.AbstractMethodOrInterfaceMethodMustUseJavadocRule")
     Mono<Boolean> verifyBiometric(
-            String userId,
-            String tenantId,
-            BiometricAuth.BiometricType type,
-            String challenge,
-            String signature);
+            String userId, String tenantId, BiometricAuth.BiometricType type, String challenge, String signature);
 
     /**
      * 启用生物识别认证
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
      *
-     * @param id TODO
-     * @param operator TODO
-     * @return TODO
+     * @param id 认证配置ID
+     * @param operator 操作人
      */
     Mono<Void> enableBiometric(Long id, String operator);
 
     /**
      * 禁用生物识别认证
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
      *
-     * @param id TODO
-     * @param operator TODO
-     * @return TODO
+     * @param id 认证配置ID
+     * @param operator 操作人
      */
     Mono<Void> disableBiometric(Long id, String operator);
 
     /**
      * 删除生物识别认证
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
      *
-     * @param id TODO
-     * @param operator TODO
-     * @return TODO
+     * @param id 认证配置ID
+     * @param operator 操作人
      */
     Mono<Void> deleteBiometric(Long id, String operator);
 
     /**
      * 查询用户的生物识别配置
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
      *
-     * @param userId TODO
-     * @return TODO
+     * @param userId 用户ID
+     * @param tenantId 租户ID
+     * @return 用户的生物识别配置列表
      */
+    @SuppressWarnings("PMD.AbstractMethodOrInterfaceMethodMustUseJavadocRule")
     Flux<BiometricAuth> getUserBiometrics(String userId, String tenantId);
 
     /**
      * 检查用户是否启用了生物识别
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
      *
-     * @param userId TODO
-     * @return TODO
+     * @param userId 用户ID
+     * @param tenantId 租户ID
+     * @return 是否已启用
      */
+    @SuppressWarnings("PMD.AbstractMethodOrInterfaceMethodMustUseJavadocRule")
     Mono<Boolean> isBiometricEnabled(String userId, String tenantId);
 
     /**
      * 解锁生物识别
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
      *
-     * @param id TODO
-     * @param operator TODO
-     * @return TODO
+     * @param id 认证配置ID
+     * @param operator 操作人
      */
     Mono<Void> unlockBiometric(Long id, String operator);
 
     /**
      * 生成WebAuthn注册挑战
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
      *
-     * @param userId TODO
-     * @return TODO
+     * @param userId 用户ID
+     * @param tenantId 租户ID
+     * @return 注册挑战数据
      */
+    @SuppressWarnings("PMD.AbstractMethodOrInterfaceMethodMustUseJavadocRule")
     Mono<RegistrationChallenge> createRegistrationChallenge(String userId, String tenantId);
 
     /**
      * 生成WebAuthn认证挑战
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
      *
-     * @param userId TODO
-     * @return TODO
+     * @param userId 用户ID
+     * @param tenantId 租户ID
+     * @return 认证挑战数据
      */
+    @SuppressWarnings("PMD.AbstractMethodOrInterfaceMethodMustUseJavadocRule")
     Mono<AuthenticationChallenge> createAuthenticationChallenge(String userId, String tenantId);
 
     /**

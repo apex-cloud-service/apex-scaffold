@@ -334,8 +334,7 @@ class MfaManagementHandlerTest {
                     .type(MfaConfig.MfaType.TOTP)
                     .status(MfaConfig.MfaStatus.ACTIVE)
                     .build();
-            when(mfaService.getUserMfaConfigs("user-1", "tenant-1"))
-                    .thenReturn(Flux.just(config));
+            when(mfaService.getUserMfaConfigs("user-1", "tenant-1")).thenReturn(Flux.just(config));
 
             StepVerifier.create(handler.getUserMfaConfigs(request))
                     .assertNext(response ->
@@ -429,8 +428,7 @@ class MfaManagementHandlerTest {
             when(request.attribute("userId")).thenReturn(Optional.of("user-1"));
             when(request.attribute("tenantId")).thenReturn(Optional.of("tenant-1"));
             when(request.queryParam("code")).thenReturn(Optional.of("ABCD1234"));
-            when(mfaService.verifyBackupCode("user-1", "ABCD1234", "tenant-1"))
-                    .thenReturn(Mono.just(true));
+            when(mfaService.verifyBackupCode("user-1", "ABCD1234", "tenant-1")).thenReturn(Mono.just(true));
 
             StepVerifier.create(handler.verifyBackupCode(request))
                     .assertNext(response ->

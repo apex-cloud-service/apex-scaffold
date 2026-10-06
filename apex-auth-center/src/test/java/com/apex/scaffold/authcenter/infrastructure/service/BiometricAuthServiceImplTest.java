@@ -110,14 +110,15 @@ class BiometricAuthServiceImplTest {
                 .failedAttempts(0)
                 .build();
 
-        when(biometricAuthRepository.findByUserIdAndTypeAndTenantId(userId, BiometricAuth.BiometricType.FINGERPRINT, "tenant1"))
+        when(biometricAuthRepository.findByUserIdAndTypeAndTenantId(
+                        userId, BiometricAuth.BiometricType.FINGERPRINT, "tenant1"))
                 .thenReturn(Mono.just(auth));
         when(valueOps.get(anyString())).thenReturn(Mono.just(challenge));
         when(redisTemplate.delete(anyString())).thenReturn(Mono.just(1L));
         when(biometricAuthRepository.save(any(BiometricAuth.class))).thenReturn(Mono.just(auth));
 
-        StepVerifier.create(
-                        service.verifyBiometric(userId, "tenant1", BiometricAuth.BiometricType.FINGERPRINT, challenge, signature))
+        StepVerifier.create(service.verifyBiometric(
+                        userId, "tenant1", BiometricAuth.BiometricType.FINGERPRINT, challenge, signature))
                 .expectNext(false)
                 .verifyComplete();
     }
@@ -134,7 +135,8 @@ class BiometricAuthServiceImplTest {
                 .failedAttempts(10)
                 .build();
 
-        when(biometricAuthRepository.findByUserIdAndTypeAndTenantId(userId, BiometricAuth.BiometricType.FINGERPRINT, "tenant1"))
+        when(biometricAuthRepository.findByUserIdAndTypeAndTenantId(
+                        userId, BiometricAuth.BiometricType.FINGERPRINT, "tenant1"))
                 .thenReturn(Mono.just(auth));
 
         StepVerifier.create(service.verifyBiometric(
@@ -155,7 +157,8 @@ class BiometricAuthServiceImplTest {
                 .failedAttempts(0)
                 .build();
 
-        when(biometricAuthRepository.findByUserIdAndTypeAndTenantId(userId, BiometricAuth.BiometricType.FINGERPRINT, "tenant1"))
+        when(biometricAuthRepository.findByUserIdAndTypeAndTenantId(
+                        userId, BiometricAuth.BiometricType.FINGERPRINT, "tenant1"))
                 .thenReturn(Mono.just(auth));
 
         StepVerifier.create(service.verifyBiometric(
@@ -176,7 +179,8 @@ class BiometricAuthServiceImplTest {
                 .failedAttempts(0)
                 .build();
 
-        when(biometricAuthRepository.findByUserIdAndTypeAndTenantId(userId, BiometricAuth.BiometricType.FINGERPRINT, "tenant1"))
+        when(biometricAuthRepository.findByUserIdAndTypeAndTenantId(
+                        userId, BiometricAuth.BiometricType.FINGERPRINT, "tenant1"))
                 .thenReturn(Mono.just(auth));
         when(valueOps.get(anyString())).thenReturn(Mono.empty());
 
@@ -263,8 +267,7 @@ class BiometricAuthServiceImplTest {
                 .type(BiometricAuth.BiometricType.FACE_ID)
                 .build();
 
-        when(biometricAuthRepository.findByUserIdAndTenantId(userId, "tenant1"))
-                .thenReturn(Flux.just(auth1, auth2));
+        when(biometricAuthRepository.findByUserIdAndTenantId(userId, "tenant1")).thenReturn(Flux.just(auth1, auth2));
 
         StepVerifier.create(service.getUserBiometrics(userId, "tenant1"))
                 .expectNext(auth1)
@@ -283,10 +286,11 @@ class BiometricAuthServiceImplTest {
                 .status(BiometricAuth.AuthStatus.ACTIVE)
                 .build();
 
-        when(biometricAuthRepository.findByUserIdAndTenantId(userId, "tenant1"))
-                .thenReturn(Flux.just(auth));
+        when(biometricAuthRepository.findByUserIdAndTenantId(userId, "tenant1")).thenReturn(Flux.just(auth));
 
-        StepVerifier.create(service.isBiometricEnabled(userId, "tenant1")).expectNext(true).verifyComplete();
+        StepVerifier.create(service.isBiometricEnabled(userId, "tenant1"))
+                .expectNext(true)
+                .verifyComplete();
     }
 
     @Test
@@ -300,8 +304,7 @@ class BiometricAuthServiceImplTest {
                 .status(BiometricAuth.AuthStatus.DISABLED)
                 .build();
 
-        when(biometricAuthRepository.findByUserIdAndTenantId(userId, "tenant1"))
-                .thenReturn(Flux.just(auth));
+        when(biometricAuthRepository.findByUserIdAndTenantId(userId, "tenant1")).thenReturn(Flux.just(auth));
 
         StepVerifier.create(service.isBiometricEnabled(userId, "tenant1"))
                 .expectNext(false)
@@ -363,7 +366,8 @@ class BiometricAuthServiceImplTest {
     void testVerifyBiometric_UserNotFound() {
         String userId = "non-existent-user";
 
-        when(biometricAuthRepository.findByUserIdAndTypeAndTenantId(userId, BiometricAuth.BiometricType.FINGERPRINT, "tenant1"))
+        when(biometricAuthRepository.findByUserIdAndTypeAndTenantId(
+                        userId, BiometricAuth.BiometricType.FINGERPRINT, "tenant1"))
                 .thenReturn(Mono.empty());
 
         StepVerifier.create(service.verifyBiometric(

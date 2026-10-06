@@ -58,19 +58,28 @@ public class ConfigEncryptionService {
 
     private final SecretKey secretKey;
 
+    /**
+     * 构造配置加密服务并加载Base64编码的AES密钥
+     *
+     * @param configKeyBase64 配置加密密钥（Base64编码的32字节密钥）
+     * @throws IllegalArgumentException 密钥未配置、非有效Base64或长度不为32字节时抛出
+     */
     public ConfigEncryptionService(@Value("${apex.security.config-encryption-key:}") String configKeyBase64) {
 
-        if (configKeyBase64 == null || configKeyBase64.isEmpty()) {
-            // 如果没有提供密钥，生成临时密钥（仅用于开发环境）
-            log.warn("未提供配置加密密钥，使用临时生成的密钥。生产环境必须提供apex.security.config-encryption-key");
-            this.secretKey = generateKey();
-            log.info("临时配置加密密钥（Base64）: ", Base64.getEncoder().encodeToString(secretKey.getEncoded()));
-        } else {
-            // 从Base64解码密钥
-            byte[] decodedKey = Base64.getDecoder().decode(configKeyBase64);
-            this.secretKey = new SecretKeySpec(decodedKey, "AES");
-            log.info("配置加密服务已初始化");
+        if (configKeyBase64 == null || configKeyBase64.isBlank()) {
+            throw new IllegalArgumentException("必须配置配置加密密钥");
         }
+        byte[] decodedKey;
+        try {
+            decodedKey = Base64.getDecoder().decode(configKeyBase64);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("配置加密密钥必须为有效Base64");
+        }
+        if (decodedKey.length != AES_KEY_SIZE / Byte.SIZE) {
+            throw new IllegalArgumentException("配置加密密钥必须是32字节（256位）");
+        }
+        this.secretKey = new SecretKeySpec(decodedKey, "AES");
+        log.info("配置加密服务已初始化");
     }
 
     /**

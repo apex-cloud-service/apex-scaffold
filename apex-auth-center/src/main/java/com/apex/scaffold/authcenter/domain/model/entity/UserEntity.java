@@ -80,6 +80,7 @@ public class UserEntity {
      *
      * <p>使用BCrypt或Argon2加密存储，永远不存储明文密码
      */
+    @lombok.ToString.Exclude
     private String passwordHash;
 
     /**

@@ -6,12 +6,12 @@ import com.apex.scaffold.authcenter.application.dto.AuditLogQueryRequest;
 import com.apex.scaffold.authcenter.application.service.AuditLogService;
 import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.annotation.OperationLog.OperationType;
-import com.apex.scaffold.common.context.TenantContext;
-import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import com.apex.scaffold.common.annotation.RequireAdminRole;
 import com.apex.scaffold.common.annotation.RequireResourcePermission;
+import com.apex.scaffold.common.context.TenantContext;
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.common.result.ResultCode;
+import com.apex.scaffold.common.util.LogSafetyUtil;
 import com.apex.scaffold.common.util.TraceIdUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -22,6 +22,7 @@ import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
@@ -136,7 +137,7 @@ public class AuditLogHandler {
             content = @Content(schema = @Schema(implementation = Result.class)))
     public Mono<ServerResponse> getLog(ServerRequest request) {
         Long id = Long.valueOf(request.pathVariable("id"));
-        log.info("Getting audit log: id={}", id);
+        log.debug("Getting audit log: id={}", id);
 
         return auditLogService
                 .getLogById(id)
@@ -203,7 +204,7 @@ public class AuditLogHandler {
         Long userId = Long.valueOf(request.pathVariable("userId"));
         String tenantId =
                 request.queryParam("tenantId").orElseThrow(() -> new IllegalArgumentException("tenantId is required"));
-        log.info("Listing user audit logs: userId={}, tenantId={}", userId, tenantId);
+        log.debug("Listing user audit logs: userId={}, tenantId={}", userId, LogSafetyUtil.text(tenantId, 64));
 
         return auditLogService
                 .listUserLogs(userId, tenantId)
@@ -213,7 +214,11 @@ public class AuditLogHandler {
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(Result.success(dtos)))
                 .onErrorResume(e -> {
-                    log.error("Failed to list user audit logs: userId={}, tenantId={}", userId, tenantId, e);
+                    log.error(
+                            "Failed to list user audit logs: userId={}, tenantId={}",
+                            userId,
+                            LogSafetyUtil.text(tenantId, 64),
+                            e);
                     return buildError(ResultCode.ERROR, TraceIdUtil.getTraceId());
                 });
     }
@@ -283,7 +288,10 @@ public class AuditLogHandler {
         String eventType = request.pathVariable("eventType");
         String tenantId =
                 request.queryParam("tenantId").orElseThrow(() -> new IllegalArgumentException("tenantId is required"));
-        log.info("Listing logs by event type: eventType={}, tenantId={}", eventType, tenantId);
+        log.debug(
+                "Listing logs by event type: eventType={}, tenantId={}",
+                LogSafetyUtil.text(eventType, 64),
+                LogSafetyUtil.text(tenantId, 64));
 
         return auditLogService
                 .listLogsByEventType(eventType, tenantId)
@@ -293,7 +301,11 @@ public class AuditLogHandler {
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(Result.success(dtos)))
                 .onErrorResume(e -> {
-                    log.error("Failed to list logs by event type: eventType={}, tenantId={}", eventType, tenantId, e);
+                    log.error(
+                            "Failed to list logs by event type: eventType={}, tenantId={}",
+                            LogSafetyUtil.text(eventType, 64),
+                            LogSafetyUtil.text(tenantId, 64),
+                            e);
                     return buildError(ResultCode.ERROR, TraceIdUtil.getTraceId());
                 });
     }
@@ -354,7 +366,7 @@ public class AuditLogHandler {
     public Mono<ServerResponse> listLogsByTimeRange(ServerRequest request) {
         return request.bodyToMono(AuditLogQueryRequest.class)
                 .flatMap(req -> {
-                    log.info(
+                    log.debug(
                             "Listing logs by time range: startTime={}, endTime={}, tenantId={}",
                             req.getStartTime(),
                             req.getEndTime(),
@@ -427,7 +439,7 @@ public class AuditLogHandler {
     public Mono<ServerResponse> listFailedLogs(ServerRequest request) {
         String tenantId =
                 request.queryParam("tenantId").orElseThrow(() -> new IllegalArgumentException("tenantId is required"));
-        log.info("Listing failed logs: tenantId={}", tenantId);
+        log.debug("Listing failed logs: tenantId={}", LogSafetyUtil.text(tenantId, 64));
 
         return auditLogService
                 .listFailedLogs(tenantId)
@@ -437,7 +449,7 @@ public class AuditLogHandler {
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(Result.success(dtos)))
                 .onErrorResume(e -> {
-                    log.error("Failed to list failed logs: tenantId={}", tenantId, e);
+                    log.error("Failed to list failed logs: tenantId={}", LogSafetyUtil.text(tenantId, 64), e);
                     return buildError(ResultCode.ERROR, TraceIdUtil.getTraceId());
                 });
     }
@@ -499,7 +511,7 @@ public class AuditLogHandler {
     public Mono<ServerResponse> listHighRiskLogs(ServerRequest request) {
         String tenantId =
                 request.queryParam("tenantId").orElseThrow(() -> new IllegalArgumentException("tenantId is required"));
-        log.info("Listing high risk logs: tenantId={}", tenantId);
+        log.debug("Listing high risk logs: tenantId={}", LogSafetyUtil.text(tenantId, 64));
 
         return auditLogService
                 .listHighRiskLogs(tenantId)
@@ -509,7 +521,7 @@ public class AuditLogHandler {
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(Result.success(dtos)))
                 .onErrorResume(e -> {
-                    log.error("Failed to list high risk logs: tenantId={}", tenantId, e);
+                    log.error("Failed to list high risk logs: tenantId={}", LogSafetyUtil.text(tenantId, 64), e);
                     return buildError(ResultCode.ERROR, TraceIdUtil.getTraceId());
                 });
     }
@@ -579,7 +591,10 @@ public class AuditLogHandler {
         String ipAddress = request.pathVariable("ipAddress");
         String tenantId =
                 request.queryParam("tenantId").orElseThrow(() -> new IllegalArgumentException("tenantId is required"));
-        log.info("Listing logs by IP address: ipAddress={}, tenantId={}", ipAddress, tenantId);
+        log.debug(
+                "Listing logs by IP address: ipAddress={}, tenantId={}",
+                LogSafetyUtil.text(ipAddress, 64),
+                LogSafetyUtil.text(tenantId, 64));
 
         return auditLogService
                 .listLogsByIpAddress(ipAddress, tenantId)
@@ -589,7 +604,11 @@ public class AuditLogHandler {
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(Result.success(dtos)))
                 .onErrorResume(e -> {
-                    log.error("Failed to list logs by IP address: ipAddress={}, tenantId={}", ipAddress, tenantId, e);
+                    log.error(
+                            "Failed to list logs by IP address: ipAddress={}, tenantId={}",
+                            LogSafetyUtil.text(ipAddress, 64),
+                            LogSafetyUtil.text(tenantId, 64),
+                            e);
                     return buildError(ResultCode.ERROR, TraceIdUtil.getTraceId());
                 });
     }
@@ -652,7 +671,7 @@ public class AuditLogHandler {
     public Mono<ServerResponse> countLogs(ServerRequest request) {
         return request.bodyToMono(AuditLogQueryRequest.class)
                 .flatMap(req -> {
-                    log.info(
+                    log.debug(
                             "Counting logs: startTime={}, endTime={}, tenantId={}",
                             req.getStartTime(),
                             req.getEndTime(),
@@ -744,7 +763,11 @@ public class AuditLogHandler {
                 .orElseThrow(() -> new IllegalArgumentException("startTime is required"));
         LocalDateTime startTime = LocalDateTime.parse(startTimeStr);
 
-        log.info("Counting login failures: userId={}, startTime={}, tenantId={}", userId, startTime, tenantId);
+        log.debug(
+                "Counting login failures: userId={}, startTime={}, tenantId={}",
+                userId,
+                startTime,
+                LogSafetyUtil.text(tenantId, 64));
 
         return auditLogService
                 .countLoginFailures(userId, startTime, tenantId)
@@ -752,7 +775,11 @@ public class AuditLogHandler {
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(Result.success(count)))
                 .onErrorResume(e -> {
-                    log.error("Failed to count login failures: userId={}, tenantId={}", userId, tenantId, e);
+                    log.error(
+                            "Failed to count login failures: userId={}, tenantId={}",
+                            userId,
+                            LogSafetyUtil.text(tenantId, 64),
+                            e);
                     return buildError(ResultCode.ERROR, TraceIdUtil.getTraceId());
                 });
     }
@@ -817,7 +844,11 @@ public class AuditLogHandler {
      */
     @OperationLog(module = "审计日志", type = OperationType.DELETE, description = "清理过期日志")
     @RequireAdminRole
-    @RequireResourcePermission(resourceType = "audit-logs", resourceIdExpression = "#request.queryParam('tenantId').orElse('')", permission = "MANAGE", errorMessage = "无权清理该租户审计日志")
+    @RequireResourcePermission(
+            resourceType = "audit-logs",
+            resourceIdExpression = "#request.queryParam('tenantId').orElse('')",
+            permission = "MANAGE",
+            errorMessage = "无权清理该租户审计日志")
     @Operation(operationId = "cleanupExpiredLogs", summary = "清理过期日志", description = "清理指定保留天数之前的审计日志")
     @io.swagger.v3.oas.annotations.Parameter(
             name = "retentionDays",
@@ -846,17 +877,25 @@ public class AuditLogHandler {
         return ReactiveSecurityContextHolder.getContext()
                 .map(securityContext -> securityContext.getAuthentication().getDetails())
                 .ofType(String.class)
-                .switchIfEmpty(Mono.defer(() -> Mono.justOrEmpty(TenantContext.currentTenantId().orElse(null))))
+                .switchIfEmpty(Mono.defer(
+                        () -> Mono.justOrEmpty(TenantContext.currentTenantId().orElse(null))))
                 .switchIfEmpty(Mono.error(new IllegalStateException("tenant context is required")))
                 .flatMap(tenantId -> {
-                    log.info("Cleaning up expired logs: beforeTime={}, tenantId={}", beforeTime, tenantId);
+                    log.info(
+                            "Cleaning up expired logs: beforeTime={}, tenantId={}",
+                            beforeTime,
+                            LogSafetyUtil.text(tenantId, 64));
                     return auditLogService
                             .cleanupExpiredLogs(beforeTime, tenantId)
                             .flatMap(count -> ServerResponse.ok()
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .bodyValue(Result.success(count)))
                             .onErrorResume(e -> {
-                                log.error("Failed to cleanup expired logs: beforeTime={}, tenantId={}", beforeTime, tenantId, e);
+                                log.error(
+                                        "Failed to cleanup expired logs: beforeTime={}, tenantId={}",
+                                        beforeTime,
+                                        LogSafetyUtil.text(tenantId, 64),
+                                        e);
                                 return buildError(ResultCode.ERROR, TraceIdUtil.getTraceId());
                             });
                 });

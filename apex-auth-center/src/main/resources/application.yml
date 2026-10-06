@@ -1,3 +1,8 @@
+apex:
+  security:
+    data-encryption-key: ${APEX_DATA_ENCRYPTION_KEY:}
+    config-encryption-key: ${APEX_CONFIG_ENCRYPTION_KEY:}
+
 auth-center:
   authorization-reader-user-id: ${AUTH_CENTER_AUTHORIZATION_READER_USER_ID:}
 
@@ -45,7 +50,7 @@ security:
   config:
     encryption:
       # 配置加密密钥，必须为32字节（256位）；生产环境必须通过环境变量 CONFIG_ENCRYPTION_KEY 注入独立密钥
-      key: ${CONFIG_ENCRYPTION_KEY:authcenter-config-encryption-key}
+      key: ${CONFIG_ENCRYPTION_KEY:}
 
 logging:
   level:

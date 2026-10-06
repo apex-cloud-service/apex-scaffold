@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 /**
  * TOTP 持久化对象
@@ -41,6 +42,7 @@ public class TotpPO {
     /**
      * TOTP 密钥（加密存储）
      */
+    @ToString.Exclude
     private String secret;
 
     /**
@@ -51,11 +53,13 @@ public class TotpPO {
     /**
      * 备份码列表（加密存储，逗号分隔）
      */
+    @ToString.Exclude
     private String backupCodes;
 
     /**
      * 已使用的备份码列表（逗号分隔）
      */
+    @ToString.Exclude
     private String usedBackupCodes;
 
     /**

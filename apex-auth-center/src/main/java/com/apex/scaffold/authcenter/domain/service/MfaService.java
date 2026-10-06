@@ -131,8 +131,7 @@ public interface MfaService {
      * @param tenantId 租户ID
      * @return 完成信号
      */
-    Mono<Void> unlockMfa(
-            String userId, MfaConfig.MfaType type, String operator, String tenantId);
+    Mono<Void> unlockMfa(String userId, MfaConfig.MfaType type, String operator, String tenantId);
 
     /**
      * TOTP设置信息

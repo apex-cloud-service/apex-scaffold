@@ -204,15 +204,11 @@ public class TotpService {
     public Mono<Boolean> verifyBackupCode(Long userId, String backupCode, String tenantId) {
         return totpRepository
                 .findByUserId(userId, tenantId)
-                .map(totp -> totp.useBackupCode(backupCode))
-                .flatMap(success -> {
-                    if (success) {
-                        return totpRepository
-                                .findByUserId(userId, tenantId)
-                                .flatMap(totpRepository::update)
-                                .thenReturn(true);
+                .flatMap(totp -> {
+                    if (!totp.isEnabled() || !totp.useBackupCode(backupCode)) {
+                        return Mono.just(false);
                     }
-                    return Mono.just(false);
+                    return totpRepository.update(totp).thenReturn(true);
                 })
                 .defaultIfEmpty(false);
     }
@@ -263,6 +259,9 @@ public class TotpService {
         for (int i = -WINDOW; i <= WINDOW; i++) {
             long step = currentStep + i;
             String expectedCode = generateTotpCode(secret, step);
+            if (expectedCode.isEmpty()) {
+                return false;
+            }
             if (code.equals(expectedCode)) {
                 return true;
             }
@@ -295,7 +294,7 @@ public class TotpService {
             int code = truncated % (int) Math.pow(10, CODE_DIGITS);
             return String.format("%0" + CODE_DIGITS + "d", code);
         } catch (Exception e) {
-            log.error("生成 TOTP 验证码失败", e);
+            log.warn("生成 TOTP 验证码失败: error={}", e.getClass().getSimpleName());
             return "";
         }
     }

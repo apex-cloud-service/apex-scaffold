@@ -191,10 +191,8 @@ class ClientSecretRotationServiceTest {
         String clientSecret = "wrong-secret";
         RuntimeException auditFailure = new RuntimeException("audit unavailable");
 
-        when(valueOperations.get("oauth2:client:test-client:secret:current"))
-                .thenReturn(Mono.just("correct-hash"));
-        when(valueOperations.get("oauth2:client:test-client:secret:pending"))
-                .thenReturn(Mono.just("another-hash"));
+        when(valueOperations.get("oauth2:client:test-client:secret:current")).thenReturn(Mono.just("correct-hash"));
+        when(valueOperations.get("oauth2:client:test-client:secret:pending")).thenReturn(Mono.just("another-hash"));
         when(auditService.logSecurityEvent(any(), any(), any(), any(), any(), any(), any()))
                 .thenReturn(Mono.error(auditFailure));
 

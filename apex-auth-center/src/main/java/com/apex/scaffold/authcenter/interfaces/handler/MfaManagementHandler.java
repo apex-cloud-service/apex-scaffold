@@ -895,7 +895,11 @@ public class MfaManagementHandler {
      */
     @OperationLog(module = "MFA管理", type = OperationType.UPDATE, description = "解锁MFA")
     @RequireAdminRole
-    @RequireResourcePermission(resourceType = "mfa", resourceIdExpression = "#request.queryParam('userId').orElse('')", permission = "MANAGE", errorMessage = "无权解锁该用户MFA")
+    @RequireResourcePermission(
+            resourceType = "mfa",
+            resourceIdExpression = "#request.queryParam('userId').orElse('')",
+            permission = "MANAGE",
+            errorMessage = "无权解锁该用户MFA")
     @Operation(operationId = "unlockMfa", summary = "解锁MFA（管理员）", description = "管理员强制解锁用户因验证失败过多而被锁定的MFA")
     @Parameter(name = "userId", description = "要解锁的用户ID", required = true, example = "1001")
     @Parameter(
@@ -930,7 +934,8 @@ public class MfaManagementHandler {
                 .orElseThrow(() -> new IllegalArgumentException("operator is required"));
         String tenantId = tenantId(request);
 
-        return mfaService.unlockMfa(userId, type, operator, tenantId)
+        return mfaService
+                .unlockMfa(userId, type, operator, tenantId)
                 .then(ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(Result.success(null)))

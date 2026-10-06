@@ -10,6 +10,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import com.apex.scaffold.application.service.UnifiedAuthorizationService;
 import com.apex.scaffold.authcenter.application.service.RoleService;
 import com.apex.scaffold.authcenter.application.service.UnifiedAuthorizationQueryService;
 import com.apex.scaffold.authcenter.domain.model.entity.PermissionEntity;
@@ -23,7 +24,6 @@ import com.apex.scaffold.authcenter.domain.service.TokenService;
 import com.apex.scaffold.authcenter.interfaces.handler.UnifiedAuthorizationHandler;
 import com.apex.scaffold.authcenter.interfaces.router.UnifiedAuthorizationRouter;
 import com.apex.scaffold.authcenter.interfaces.util.RequestHandlerUtil;
-import com.apex.scaffold.application.service.UnifiedAuthorizationService;
 import com.apex.scaffold.common.config.JwtProperties;
 import com.apex.scaffold.common.context.TenantContext;
 import com.apex.scaffold.domain.gateway.UnifiedAuthorizationGateway.Authorization;
@@ -223,7 +223,7 @@ class DualServiceAuthorizationIntegrationTest {
                             .withProperty("apex.features.auth-center-permission", "true")
                             .withProperty(
                                     "apex.auth-center-permission.cache-seconds",
-                                    System.getProperty("apex.test.cache-seconds", "30")), 
+                                    System.getProperty("apex.test.cache-seconds", "30")),
                     new AuthorizationCacheAdapter(cache));
             var trustedTenant = TenantContext.withTenant("main");
             StepVerifier.create(service.permissions(7L).contextWrite(trustedTenant))

@@ -10,6 +10,7 @@ import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.annotation.OperationLog.OperationType;
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.common.result.ResultCode;
+import com.apex.scaffold.common.util.LogSafetyUtil;
 import com.apex.scaffold.common.util.TraceIdUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -265,7 +266,7 @@ public class AuthConfigHandler {
         Long id = Long.valueOf(request.pathVariable("id"));
         String tenantId =
                 request.queryParam("tenantId").orElseThrow(() -> new IllegalArgumentException("tenantId is required"));
-        log.info("Updating auth config: id={}, tenantId={}", id, tenantId);
+        log.info("Updating auth config: id={}, tenantId={}", id, LogSafetyUtil.text(tenantId, 64));
 
         return request.bodyToMono(UpdateAuthConfigRequest.class)
                 .flatMap(req -> authConfigService.updateConfig(
@@ -281,7 +282,7 @@ public class AuthConfigHandler {
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(Result.success(dto)))
                 .onErrorResume(e -> {
-                    log.error("Failed to update auth config: id=", id, e);
+                    log.error("Failed to update auth config: id={}", id, e);
                     return buildError(ResultCode.ERROR, TraceIdUtil.getTraceId());
                 });
     }
@@ -354,7 +355,7 @@ public class AuthConfigHandler {
         Long id = Long.valueOf(request.pathVariable("id"));
         String tenantId =
                 request.queryParam("tenantId").orElseThrow(() -> new IllegalArgumentException("tenantId is required"));
-        log.info("Deleting auth config: id={}, tenantId={}", id, tenantId);
+        log.info("Deleting auth config: id={}, tenantId={}", id, LogSafetyUtil.text(tenantId, 64));
 
         return authConfigService
                 .deleteConfig(id, tenantId)
@@ -362,7 +363,11 @@ public class AuthConfigHandler {
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(Result.success(null)))
                 .onErrorResume(e -> {
-                    log.error("Failed to delete auth config: id={}, tenantId={}", id, tenantId, e);
+                    log.error(
+                            "Failed to delete auth config: id={}, tenantId={}",
+                            id,
+                            LogSafetyUtil.text(tenantId, 64),
+                            e);
                     return buildError(ResultCode.ERROR, TraceIdUtil.getTraceId());
                 });
     }
@@ -427,7 +432,7 @@ public class AuthConfigHandler {
         Long id = Long.valueOf(request.pathVariable("id"));
         String tenantId =
                 request.queryParam("tenantId").orElseThrow(() -> new IllegalArgumentException("tenantId is required"));
-        log.info("Getting auth config: id={}, tenantId={}", id, tenantId);
+        log.debug("Getting auth config: id={}, tenantId={}", id, LogSafetyUtil.text(tenantId, 64));
 
         return authConfigService
                 .getConfigById(id, tenantId)
@@ -439,7 +444,7 @@ public class AuthConfigHandler {
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(Result.error(ResultCode.NOT_FOUND)))
                 .onErrorResume(e -> {
-                    log.error("Failed to get auth config: id={}, tenantId={}", id, tenantId, e);
+                    log.error("Failed to get auth config: id={}, tenantId={}", id, LogSafetyUtil.text(tenantId, 64), e);
                     return buildError(ResultCode.ERROR, TraceIdUtil.getTraceId());
                 });
     }
@@ -489,7 +494,7 @@ public class AuthConfigHandler {
     public Mono<ServerResponse> listConfigs(ServerRequest request) {
         String tenantId =
                 request.queryParam("tenantId").orElseThrow(() -> new IllegalArgumentException("tenantId is required"));
-        log.info("Listing auth configs: tenantId={}", tenantId);
+        log.debug("Listing auth configs: tenantId={}", LogSafetyUtil.text(tenantId, 64));
 
         return authConfigService
                 .listAllConfigs(tenantId)
@@ -499,7 +504,7 @@ public class AuthConfigHandler {
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(Result.success(dtos)))
                 .onErrorResume(e -> {
-                    log.error("Failed to list auth configs: tenantId={}", tenantId, e);
+                    log.error("Failed to list auth configs: tenantId={}", LogSafetyUtil.text(tenantId, 64), e);
                     return buildError(ResultCode.ERROR, TraceIdUtil.getTraceId());
                 });
     }
@@ -562,7 +567,10 @@ public class AuthConfigHandler {
         String configType = request.pathVariable("type");
         String tenantId =
                 request.queryParam("tenantId").orElseThrow(() -> new IllegalArgumentException("tenantId is required"));
-        log.info("Getting configs by type: type={}, tenantId={}", configType, tenantId);
+        log.debug(
+                "Getting configs by type: type={}, tenantId={}",
+                LogSafetyUtil.text(configType, 64),
+                LogSafetyUtil.text(tenantId, 64));
 
         return authConfigService
                 .listConfigsByType(configType, tenantId)
@@ -572,7 +580,11 @@ public class AuthConfigHandler {
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(Result.success(dtos)))
                 .onErrorResume(e -> {
-                    log.error("Failed to get configs by type: type={}, tenantId={}", configType, tenantId, e);
+                    log.error(
+                            "Failed to get configs by type: type={}, tenantId={}",
+                            LogSafetyUtil.text(configType, 64),
+                            LogSafetyUtil.text(tenantId, 64),
+                            e);
                     return buildError(ResultCode.ERROR, TraceIdUtil.getTraceId());
                 });
     }
@@ -660,7 +672,11 @@ public class AuthConfigHandler {
                 .orElseThrow(() -> new IllegalArgumentException("configKey is required"));
         String tenantId =
                 request.queryParam("tenantId").orElseThrow(() -> new IllegalArgumentException("tenantId is required"));
-        log.info("Getting effective config: type={}, key={}, tenantId={}", configType, configKey, tenantId);
+        log.debug(
+                "Getting effective config: type={}, key={}, tenantId={}",
+                LogSafetyUtil.text(configType, 64),
+                LogSafetyUtil.text(configKey, 64),
+                LogSafetyUtil.text(tenantId, 64));
 
         return authConfigService
                 .getConfigByTypeAndKey(configType, configKey, tenantId)
@@ -674,9 +690,9 @@ public class AuthConfigHandler {
                 .onErrorResume(e -> {
                     log.error(
                             "Failed to get effective config: configType={}, configKey={}, tenantId={}",
-                            configType,
-                            configKey,
-                            tenantId,
+                            LogSafetyUtil.text(configType, 64),
+                            LogSafetyUtil.text(configKey, 64),
+                            LogSafetyUtil.text(tenantId, 64),
                             e);
                     return buildError(ResultCode.ERROR, TraceIdUtil.getTraceId());
                 });

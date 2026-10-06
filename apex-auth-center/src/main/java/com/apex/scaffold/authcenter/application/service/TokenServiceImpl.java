@@ -80,7 +80,7 @@ public class TokenServiceImpl implements TokenService {
     @Override
     @SuppressWarnings("PMD.MethodTooLongRule")
     public Mono<TokenPair> issueToken(Long userId, String tenantId, String deviceId, String clientIp) {
-        log.debug("开始签发Token: userId={}, tenantId={}, deviceId={}", userId, tenantId, deviceId);
+        log.debug("开始签发Token: userId={}", userId);
 
         return userRepository
                 .findById(userId)
@@ -168,9 +168,7 @@ public class TokenServiceImpl implements TokenService {
                                             .tokenType("Bearer")
                                             .build()));
                 })
-                .doOnSuccess(pair -> log.info("Token签发成功: userId={}, tenantId={}", userId, tenantId))
-                .doOnError(e ->
-                        log.error("Token签发失败: userId={}, tenantId={}, error={}", userId, tenantId, e.getMessage()));
+                .doOnSuccess(pair -> log.debug("Token签发成功: userId={}", userId));
     }
 
     @Override
@@ -234,10 +232,7 @@ public class TokenServiceImpl implements TokenService {
 
                     // 检测Token重放攻击：如果Token已被撤销，说明可能是重放攻击
                     if (tokenEntity.isRevoked()) {
-                        log.warn(
-                                "检测到可疑的Token刷新尝试: 使用已撤销的refresh token, userId={}, jti={}",
-                                tokenEntity.getUserId(),
-                                tokenEntity.getJti());
+                        log.warn("检测到可疑的Token刷新尝试: userId={}", tokenEntity.getUserId());
 
                         // 记录Token重放攻击审计日志
                         return auditService
@@ -257,7 +252,7 @@ public class TokenServiceImpl implements TokenService {
                             .revokeByJti(tokenEntity.getJti(), "system", "token_refresh")
                             .flatMap(revoked -> {
                                 if (!revoked) {
-                                    log.error("Token轮换失败: 无法撤销旧token, jti={}", tokenEntity.getJti());
+                                    log.warn("Token轮换失败: 无法撤销旧token");
                                     return Mono.error(new BusinessException(ResultCode.ERROR, "Token刷新失败"));
                                 }
 
@@ -277,8 +272,7 @@ public class TokenServiceImpl implements TokenService {
                             })
                             .contextWrite(TenantContext.withTenant(tokenEntity.getTenantId()));
                 })
-                .doOnSuccess(pair -> log.info("Token刷新成功，已轮换refresh token"))
-                .doOnError(e -> log.error("Token刷新失败: {}", e.getMessage()));
+                .doOnSuccess(pair -> log.debug("Token刷新成功，已轮换refresh token"));
     }
 
     @Override
@@ -307,8 +301,7 @@ public class TokenServiceImpl implements TokenService {
                                         "manual",
                                         tokenEntity.getClientIp()));
                     })
-                    .doOnSuccess(v -> log.info("Token撤销成功: jti={}", jti))
-                    .doOnError(e -> log.error("Token撤销失败: {}", e.getMessage()));
+                    .doOnSuccess(v -> log.debug("Token撤销成功"));
         } catch (JwtException e) {
             return Mono.error(new BusinessException(ResultCode.UNAUTHORIZED, "Token无效"));
         }
@@ -318,8 +311,7 @@ public class TokenServiceImpl implements TokenService {
     public Mono<Void> revokeAllUserTokens(Long userId, String tenantId) {
         return tokenRepository
                 .revokeByUserId(userId, tenantId)
-                .doOnSuccess(
-                        count -> log.info("已撤销用户所有Token: userId={}, tenantId={}, count={}", userId, tenantId, count))
+                .doOnSuccess(count -> log.debug("已撤销用户所有Token: userId={}, count={}", userId, count))
                 .then();
     }
 

@@ -84,10 +84,7 @@ public class DeviceTrustServiceImpl implements DeviceTrustService {
                                                     null)
                                             .thenReturn(saved))
                                     .doOnNext(saved -> log.info(
-                                            "注册新设备: userId={}, deviceId={}, name={}",
-                                            userId,
-                                            deviceId,
-                                            deviceName));
+                                            "注册新设备: userId={}, deviceId={}, name={}", userId, deviceId, deviceName));
                         }));
     }
 
@@ -249,7 +246,8 @@ public class DeviceTrustServiceImpl implements DeviceTrustService {
      */
     @Override
     public Flux<DeviceTrust> getUserTrustedDevices(String userId, String tenantId) {
-        return deviceTrustRepository.findByUserIdAndTenantId(userId, tenantId)
+        return deviceTrustRepository
+                .findByUserIdAndTenantId(userId, tenantId)
                 .filter(device -> device.isActive() && !device.isExpired());
     }
 
@@ -320,16 +318,15 @@ public class DeviceTrustServiceImpl implements DeviceTrustService {
 
                     device.downgradeTrustLevel();
                     device.setStatus(DeviceTrust.TrustStatus.LOCKED);
-                    return deviceTrustRepository
-                            .save(device)
-                            .flatMap(saved -> auditLogService.log(
-                                            userId,
-                                            saved.getTenantId(),
-                                            "检测到设备异常: " + saved.getDeviceName(),
-                                            "DEVICE_ANOMALY_DETECTED",
-                                            "FAILURE",
-                                            null)
-                                    .thenReturn(true));
+                    return deviceTrustRepository.save(device).flatMap(saved -> auditLogService
+                            .log(
+                                    userId,
+                                    saved.getTenantId(),
+                                    "检测到设备异常: " + saved.getDeviceName(),
+                                    "DEVICE_ANOMALY_DETECTED",
+                                    "FAILURE",
+                                    null)
+                            .thenReturn(true));
                 })
                 .defaultIfEmpty(false);
     }
@@ -391,11 +388,8 @@ public class DeviceTrustServiceImpl implements DeviceTrustService {
                                             "SUCCESS",
                                             null)
                                     .thenReturn(saved))
-                            .doOnNext(saved -> log.info(
-                                    "延长设备信任有效期: deviceId={}, days={}, operator={}",
-                                    deviceId,
-                                    days,
-                                    operator));
+                            .doOnNext(saved ->
+                                    log.info("延长设备信任有效期: deviceId={}, days={}, operator={}", deviceId, days, operator));
                 })
                 .then();
     }

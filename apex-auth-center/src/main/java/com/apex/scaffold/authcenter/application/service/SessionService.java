@@ -79,7 +79,7 @@ public class SessionService {
 
                     return sessionRepository.save(session);
                 }))
-                .doOnSuccess(s -> log.info("会话创建成功: sessionId={}, userId={}", s.getSessionId(), userId));
+                .doOnNext(s -> log.debug("会话创建成功: userId={}", userId));
     }
 
     /**
@@ -193,7 +193,7 @@ public class SessionService {
                     }
                     return Mono.<Void>empty();
                 })
-                .doOnSuccess(v -> log.info("会话终止成功: sessionId={}", sessionId));
+                .doOnSuccess(v -> log.debug("会话终止成功"));
     }
 
     /**
@@ -212,7 +212,7 @@ public class SessionService {
                     }
                     return Mono.<Void>empty();
                 })
-                .doOnSuccess(v -> log.info("用户所有会话终止成功: userId=", userId));
+                .doOnSuccess(v -> log.debug("用户所有会话终止成功: userId={}", userId));
     }
 
     /**
@@ -230,7 +230,7 @@ public class SessionService {
                     return sessionRepository.update(session);
                 })
                 .then()
-                .doOnSuccess(v -> log.info("会话踢出成功: sessionId={}", sessionId));
+                .doOnSuccess(v -> log.debug("会话踢出成功"));
     }
 
     /**

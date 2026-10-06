@@ -57,6 +57,11 @@ public class SecurityMetricsService {
 
     private final ConcurrentHashMap<String, AtomicInteger> failedLoginsByIp;
 
+    /**
+     * 构造安全指标服务并注册监控计数器与计时器。
+     *
+     * @param meterRegistry Micrometer指标注册表
+     */
     public SecurityMetricsService(MeterRegistry meterRegistry) {
         this.meterRegistry = meterRegistry;
         this.activeSessionsByUser = new ConcurrentHashMap<>();
@@ -126,7 +131,7 @@ public class SecurityMetricsService {
                 .computeIfAbsent(userId, k -> meterRegistry.gauge("auth.active.sessions.by.user", new AtomicInteger(0)))
                 .incrementAndGet();
 
-        log.info("认证成功: userId={}, tenantId={}, method={}", userId, tenantId, method);
+        log.debug("认证成功");
     }
 
     /**
@@ -151,7 +156,7 @@ public class SecurityMetricsService {
             failedLoginsByIp.entrySet().removeIf(entry -> entry.getValue().get() == 0);
         }
 
-        log.warn("认证失败: username={}, reason={}, ip={}", username, reason, ipAddress);
+        log.debug("认证失败");
     }
 
     /**
@@ -207,7 +212,7 @@ public class SecurityMetricsService {
                 .register(meterRegistry)
                 .increment();
 
-        log.error("检测到暴力破解攻击: identifier={}, type={}", identifier, type);
+        log.warn("检测到暴力破解攻击");
     }
 
     /**
@@ -226,7 +231,7 @@ public class SecurityMetricsService {
                 .register(meterRegistry)
                 .increment();
 
-        log.warn("权限拒绝: userId={}, resource={}, action={}", userId, resource, action);
+        log.debug("权限拒绝");
     }
 
     /**

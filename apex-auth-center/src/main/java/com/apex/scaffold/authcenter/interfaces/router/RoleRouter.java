@@ -66,7 +66,9 @@ public class RoleRouter {
                 .path("/auth/v1/roles", builder -> builder.POST(
                                 "", accept(MediaType.APPLICATION_JSON), roleHandler::createRole)
                         .GET("", accept(MediaType.APPLICATION_JSON), roleHandler::listRoles)
-                        .POST("/assign-permissions", accept(MediaType.APPLICATION_JSON), request -> request.bodyToMono(AssignPermissionsRequest.class).flatMap(roleHandler::assignPermissions))
+                        .POST("/assign-permissions", accept(MediaType.APPLICATION_JSON), request -> request.bodyToMono(
+                                        AssignPermissionsRequest.class)
+                                .flatMap(roleHandler::assignPermissions))
                         .PUT("/{id}", accept(MediaType.APPLICATION_JSON), roleHandler::updateRole)
                         .DELETE("/{id}", roleHandler::deleteRole)
                         .GET("/{id}", roleHandler::getRoleById)

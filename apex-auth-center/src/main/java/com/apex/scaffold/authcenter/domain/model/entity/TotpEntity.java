@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 /**
  * TOTP（Time-based One-Time Password）实体
@@ -44,6 +45,7 @@ public class TotpEntity {
      *
      * <p>该密钥用于生成 TOTP 验证码，必须安全存储，通常使用 AES-256-GCM 加密。
      */
+    @ToString.Exclude
     private String secret;
 
     /**
@@ -59,11 +61,13 @@ public class TotpEntity {
      * <p>当用户无法访问认证器应用时，可以使用备份码登录。
      * 每个备份码只能使用一次，使用后应标记为已使用。
      */
+    @ToString.Exclude
     private String backupCodes;
 
     /**
      * 已使用的备份码列表（逗号分隔）
      */
+    @ToString.Exclude
     private String usedBackupCodes;
 
     /**

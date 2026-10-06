@@ -1,6 +1,7 @@
 package com.apex.scaffold.authcenter.infrastructure.kms;
 
 import lombok.Data;
+import lombok.ToString;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
@@ -22,6 +23,7 @@ public class VaultKmsProperties {
     /**
      * Vault Token
      */
+    @ToString.Exclude
     private String token;
 
     /**

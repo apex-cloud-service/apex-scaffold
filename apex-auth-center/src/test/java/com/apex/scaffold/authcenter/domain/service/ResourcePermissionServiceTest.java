@@ -4,11 +4,11 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+import com.apex.scaffold.authcenter.application.service.UnifiedAuthorizationQueryService;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import com.apex.scaffold.authcenter.application.service.UnifiedAuthorizationQueryService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -51,8 +51,7 @@ class ResourcePermissionServiceTest {
     @DisplayName("检查权限 - 超级管理员直接通过")
     void testHasPermission_SuperAdmin() {
         ResourcePermissionService.PermissionContext context =
-                new ResourcePermissionService.PermissionContext(
-                        true, Set.of(), "192.168.1.1", "device-1", "tenant-1");
+                new ResourcePermissionService.PermissionContext(true, Set.of(), "192.168.1.1", "device-1", "tenant-1");
 
         StepVerifier.create(service.hasPermission(TEST_USER_ID, TEST_RESOURCE_TYPE, TEST_RESOURCE_ID, "READ", context))
                 .expectNext(true)
@@ -64,36 +63,18 @@ class ResourcePermissionServiceTest {
     @Test
     @DisplayName("具备RBAC管理权限时不要求Redis资源ACL")
     void testHasPermission_RbacManagementPermissionDoesNotRequireResourceAcl() {
-        UnifiedAuthorizationQueryService authorizationQueryService =
-                mock(UnifiedAuthorizationQueryService.class);
+        UnifiedAuthorizationQueryService authorizationQueryService = mock(UnifiedAuthorizationQueryService.class);
 
         when(authorizationQueryService.query("tenant-1", 100L))
-                .thenReturn(Mono.just(
-                        new UnifiedAuthorizationQueryService.Authorization(
-                                "tenant-1",
-                                100L,
-                                List.of("session:terminate"),
-                                List.of())));
+                .thenReturn(Mono.just(new UnifiedAuthorizationQueryService.Authorization(
+                        "tenant-1", 100L, List.of("session:terminate"), List.of())));
 
-        service = new ResourcePermissionService(
-                redisTemplate,
-                authorizationQueryService);
+        service = new ResourcePermissionService(redisTemplate, authorizationQueryService);
 
         ResourcePermissionService.PermissionContext context =
-                new ResourcePermissionService.PermissionContext(
-                        false,
-                        Set.of(),
-                        "192.168.1.1",
-                        "device-1",
-                        "tenant-1");
+                new ResourcePermissionService.PermissionContext(false, Set.of(), "192.168.1.1", "device-1", "tenant-1");
 
-        StepVerifier.create(
-                        service.hasPermission(
-                                "100",
-                                "session",
-                                "session-1",
-                                "MANAGE",
-                                context))
+        StepVerifier.create(service.hasPermission("100", "session", "session-1", "MANAGE", context))
                 .expectNext(true)
                 .verifyComplete();
 
@@ -103,36 +84,18 @@ class ResourcePermissionServiceTest {
     @Test
     @DisplayName("RBAC授予mfa:unlock时不要求Redis资源ACL")
     void testHasPermission_RbacMfaUnlockDoesNotRequireResourceAcl() {
-        UnifiedAuthorizationQueryService authorizationQueryService =
-                mock(UnifiedAuthorizationQueryService.class);
+        UnifiedAuthorizationQueryService authorizationQueryService = mock(UnifiedAuthorizationQueryService.class);
 
         when(authorizationQueryService.query("tenant-1", 200L))
-                .thenReturn(Mono.just(
-                        new UnifiedAuthorizationQueryService.Authorization(
-                                "tenant-1",
-                                200L,
-                                List.of("mfa:unlock"),
-                                List.of())));
+                .thenReturn(Mono.just(new UnifiedAuthorizationQueryService.Authorization(
+                        "tenant-1", 200L, List.of("mfa:unlock"), List.of())));
 
-        service = new ResourcePermissionService(
-                redisTemplate,
-                authorizationQueryService);
+        service = new ResourcePermissionService(redisTemplate, authorizationQueryService);
 
         ResourcePermissionService.PermissionContext context =
-                new ResourcePermissionService.PermissionContext(
-                        false,
-                        Set.of(),
-                        "192.168.1.1",
-                        "device-1",
-                        "tenant-1");
+                new ResourcePermissionService.PermissionContext(false, Set.of(), "192.168.1.1", "device-1", "tenant-1");
 
-        StepVerifier.create(
-                        service.hasPermission(
-                                "200",
-                                "mfa",
-                                "user-123",
-                                "MANAGE",
-                                context))
+        StepVerifier.create(service.hasPermission("200", "mfa", "user-123", "MANAGE", context))
                 .expectNext(true)
                 .verifyComplete();
 
@@ -142,36 +105,18 @@ class ResourcePermissionServiceTest {
     @Test
     @DisplayName("RBAC授予auth:audit:cleanup时不要求Redis资源ACL")
     void testHasPermission_RbacAuditCleanupDoesNotRequireResourceAcl() {
-        UnifiedAuthorizationQueryService authorizationQueryService =
-                mock(UnifiedAuthorizationQueryService.class);
+        UnifiedAuthorizationQueryService authorizationQueryService = mock(UnifiedAuthorizationQueryService.class);
 
         when(authorizationQueryService.query("tenant-1", 300L))
-                .thenReturn(Mono.just(
-                        new UnifiedAuthorizationQueryService.Authorization(
-                                "tenant-1",
-                                300L,
-                                List.of("auth:audit:cleanup"),
-                                List.of())));
+                .thenReturn(Mono.just(new UnifiedAuthorizationQueryService.Authorization(
+                        "tenant-1", 300L, List.of("auth:audit:cleanup"), List.of())));
 
-        service = new ResourcePermissionService(
-                redisTemplate,
-                authorizationQueryService);
+        service = new ResourcePermissionService(redisTemplate, authorizationQueryService);
 
         ResourcePermissionService.PermissionContext context =
-                new ResourcePermissionService.PermissionContext(
-                        false,
-                        Set.of(),
-                        "192.168.1.1",
-                        "device-1",
-                        "tenant-1");
+                new ResourcePermissionService.PermissionContext(false, Set.of(), "192.168.1.1", "device-1", "tenant-1");
 
-        StepVerifier.create(
-                        service.hasPermission(
-                                "300",
-                                "audit-logs",
-                                "tenant-1",
-                                "MANAGE",
-                                context))
+        StepVerifier.create(service.hasPermission("300", "audit-logs", "tenant-1", "MANAGE", context))
                 .expectNext(true)
                 .verifyComplete();
 
@@ -181,36 +126,18 @@ class ResourcePermissionServiceTest {
     @Test
     @DisplayName("RBAC授予role:assign时不要求Redis资源ACL")
     void testHasPermission_RbacRoleAssignDoesNotRequireResourceAcl() {
-        UnifiedAuthorizationQueryService authorizationQueryService =
-                mock(UnifiedAuthorizationQueryService.class);
+        UnifiedAuthorizationQueryService authorizationQueryService = mock(UnifiedAuthorizationQueryService.class);
 
         when(authorizationQueryService.query("tenant-1", 400L))
-                .thenReturn(Mono.just(
-                        new UnifiedAuthorizationQueryService.Authorization(
-                                "tenant-1",
-                                400L,
-                                List.of("role:assign"),
-                                List.of())));
+                .thenReturn(Mono.just(new UnifiedAuthorizationQueryService.Authorization(
+                        "tenant-1", 400L, List.of("role:assign"), List.of())));
 
-        service = new ResourcePermissionService(
-                redisTemplate,
-                authorizationQueryService);
+        service = new ResourcePermissionService(redisTemplate, authorizationQueryService);
 
         ResourcePermissionService.PermissionContext context =
-                new ResourcePermissionService.PermissionContext(
-                        false,
-                        Set.of(),
-                        "192.168.1.1",
-                        "device-1",
-                        "tenant-1");
+                new ResourcePermissionService.PermissionContext(false, Set.of(), "192.168.1.1", "device-1", "tenant-1");
 
-        StepVerifier.create(
-                        service.hasPermission(
-                                "400",
-                                "role",
-                                "role-1",
-                                "MANAGE",
-                                context))
+        StepVerifier.create(service.hasPermission("400", "role", "role-1", "MANAGE", context))
                 .expectNext(true)
                 .verifyComplete();
 

@@ -357,7 +357,11 @@ public class RoleHandler {
      */
     @OperationLog(module = "角色管理", type = OperationType.UPDATE, description = "为角色分配权限")
     @RequireAdminRole
-    @RequireResourcePermission(resourceType = "role", resourceIdExpression = "#request.roleId", permission = "MANAGE", errorMessage = "无权修改该角色权限")
+    @RequireResourcePermission(
+            resourceType = "role",
+            resourceIdExpression = "#request.roleId",
+            permission = "MANAGE",
+            errorMessage = "无权修改该角色权限")
     @Operation(
             operationId = "assignPermissions",
             summary = "为角色分配权限",
@@ -379,7 +383,8 @@ public class RoleHandler {
                             mediaType = "application/json",
                             schema = @Schema(implementation = AssignPermissionsRequest.class)))
     public Mono<ServerResponse> assignPermissions(AssignPermissionsRequest request) {
-        return roleService.assignPermissions(request.getRoleId(), request.getPermissionIds())
+        return roleService
+                .assignPermissions(request.getRoleId(), request.getPermissionIds())
                 .then(buildSuccess(null))
                 .onErrorResume(this::handleError);
     }

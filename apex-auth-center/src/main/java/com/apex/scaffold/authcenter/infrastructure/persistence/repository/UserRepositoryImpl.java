@@ -28,6 +28,7 @@ public class UserRepositoryImpl implements UserRepository {
     @Override
     public Mono<UserEntity> save(UserEntity entity) {
         return JdbcTenantScope.call(entity.getTenantId(), t -> {
+            com.apex.scaffold.common.util.PasswordUtil.requirePasswordHash(entity.getPasswordHash());
             UserPO po = converter.toPo(entity);
             po.setTenantId(t);
             po.setCreatedAt(LocalDateTime.now());
@@ -58,6 +59,7 @@ public class UserRepositoryImpl implements UserRepository {
             if (entity.getId() == null) {
                 throw new BusinessException(ResultCode.PARAM_ERROR);
             }
+            com.apex.scaffold.common.util.PasswordUtil.requirePasswordHash(entity.getPasswordHash());
             UserPO po = converter.toPo(entity);
             po.setTenantId(t);
             po.setCreatedAt(null);

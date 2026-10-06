@@ -34,6 +34,12 @@ public class AwsKmsService implements KeyManagementService {
     private final KmsAsyncClient kmsClient;
     private final String masterKeyId;
 
+    /**
+     * 构造AWS KMS服务
+     *
+     * @param kmsClient AWS KMS异步客户端
+     * @param properties AWS KMS配置属性
+     */
     public AwsKmsService(KmsAsyncClient kmsClient, AwsKmsProperties properties) {
         this.kmsClient = kmsClient;
         this.masterKeyId = properties.getMasterKeyId();
@@ -53,7 +59,8 @@ public class AwsKmsService implements KeyManagementService {
                 .map(response -> Base64.getEncoder()
                         .encodeToString(response.ciphertextBlob().asByteArray()))
                 .doOnSuccess(ciphertext -> log.debug("AWS KMS加密成功，密钥: {}", maskKeyId(keyId)))
-                .doOnError(error -> log.error("AWS KMS加密失败: {}", error.getMessage()));
+                .doOnError(
+                        error -> log.error("AWS KMS加密失败: {}", error.getClass().getSimpleName()));
     }
 
     @Override
@@ -70,7 +77,8 @@ public class AwsKmsService implements KeyManagementService {
                 })
                 .map(response -> response.plaintext().asUtf8String())
                 .doOnSuccess(plaintext -> log.debug("AWS KMS解密成功"))
-                .doOnError(error -> log.error("AWS KMS解密失败: {}", error.getMessage()));
+                .doOnError(
+                        error -> log.error("AWS KMS解密失败: {}", error.getClass().getSimpleName()));
     }
 
     @Override
@@ -89,7 +97,8 @@ public class AwsKmsService implements KeyManagementService {
                                 .encodeToString(response.ciphertextBlob().asByteArray())))
                 .cast(DataKey.class)
                 .doOnSuccess(dataKey -> log.info("AWS KMS数据密钥生成成功"))
-                .doOnError(error -> log.error("AWS KMS数据密钥生成失败: {}", error.getMessage()));
+                .doOnError(error ->
+                        log.error("AWS KMS数据密钥生成失败: {}", error.getClass().getSimpleName()));
     }
 
     @Override
@@ -103,7 +112,8 @@ public class AwsKmsService implements KeyManagementService {
                 })
                 .map(response -> keyId)
                 .doOnSuccess(key -> log.info("AWS KMS密钥轮换已启用: {}", maskKeyId(keyId)))
-                .doOnError(error -> log.error("AWS KMS密钥轮换失败: {}", error.getMessage()));
+                .doOnError(
+                        error -> log.error("AWS KMS密钥轮换失败: {}", error.getClass().getSimpleName()));
     }
 
     @Override
@@ -125,7 +135,8 @@ public class AwsKmsService implements KeyManagementService {
                             metadata.creationDate(),
                             metadata.enabled());
                 })
-                .doOnError(error -> log.error("获取AWS KMS密钥元数据失败: {}", error.getMessage()));
+                .doOnError(error ->
+                        log.error("获取AWS KMS密钥元数据失败: {}", error.getClass().getSimpleName()));
     }
 
     @Override
@@ -139,7 +150,8 @@ public class AwsKmsService implements KeyManagementService {
                 })
                 .map(response -> true)
                 .doOnSuccess(success -> log.warn("AWS KMS密钥已禁用: {}", maskKeyId(keyId)))
-                .doOnError(error -> log.error("禁用AWS KMS密钥失败: {}", error.getMessage()))
+                .doOnError(
+                        error -> log.error("禁用AWS KMS密钥失败: {}", error.getClass().getSimpleName()))
                 .onErrorReturn(false);
     }
 
@@ -154,7 +166,8 @@ public class AwsKmsService implements KeyManagementService {
                 })
                 .map(response -> true)
                 .doOnSuccess(success -> log.info("AWS KMS密钥已启用: {}", maskKeyId(keyId)))
-                .doOnError(error -> log.error("启用AWS KMS密钥失败: {}", error.getMessage()))
+                .doOnError(
+                        error -> log.error("启用AWS KMS密钥失败: {}", error.getClass().getSimpleName()))
                 .onErrorReturn(false);
     }
 
@@ -174,6 +187,12 @@ public class AwsKmsService implements KeyManagementService {
         private String plaintextKey;
         private String encryptedKey;
 
+        /**
+         * 构造数据密钥。
+         *
+         * @param plaintextKey 明文数据密钥
+         * @param encryptedKey 加密后的数据密钥
+         */
         public AwsDataKey(String plaintextKey, String encryptedKey) {
             this.plaintextKey = plaintextKey;
             this.encryptedKey = encryptedKey;
@@ -211,6 +230,16 @@ public class AwsKmsService implements KeyManagementService {
         private Instant creationDate;
         private boolean enabled;
 
+        /**
+         * 构造密钥元数据。
+         *
+         * @param keyId 密钥ID
+         * @param keyArn 密钥ARN
+         * @param algorithm 算法规格
+         * @param keyState 密钥状态
+         * @param creationDate 创建时间
+         * @param enabled 是否启用
+         */
         public AwsKeyMetadata(
                 String keyId, String keyArn, String algorithm, String keyState, Instant creationDate, boolean enabled) {
             this.keyId = keyId;

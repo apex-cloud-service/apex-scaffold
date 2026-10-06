@@ -60,28 +60,28 @@ public class AuthenticationApplicationService {
         String tenantId = request.getTenantId() != null ? request.getTenantId() : "default";
         String deviceId = request.getDeviceId();
 
-        log.debug("开始登录: username={}, tenantId={}", username, tenantId);
+        log.debug("开始登录");
 
         return userRepository
                 .findByUsername(username, tenantId)
                 .switchIfEmpty(Mono.defer(() -> {
-                    log.warn("用户不存在: username={}, tenantId={}", username, tenantId);
+                    log.debug("登录拒绝: 用户不存在");
                     return Mono.error(new BusinessException(ResultCode.UNAUTHORIZED, "用户名或密码错误"));
                 }))
                 .flatMap(user -> {
                     if (user.isLocked()) {
-                        log.warn("账户已锁定: userId={}, username={}", user.getId(), username);
+                        log.debug("登录拒绝: 账户已锁定, userId={}", user.getId());
                         return Mono.error(new BusinessException(ResultCode.FORBIDDEN, "账户已锁定，请稍后重试"));
                     }
 
                     if (!user.isActive()) {
-                        log.warn("账户已禁用: userId={}, username={}", user.getId(), username);
+                        log.debug("登录拒绝: 账户已禁用, userId={}", user.getId());
                         return Mono.error(new BusinessException(ResultCode.FORBIDDEN, "账户已禁用"));
                     }
 
                     boolean passwordMatches = passwordEncoder.matches(password, user.getPasswordHash());
                     if (!passwordMatches) {
-                        log.warn("密码错误: userId={}, username={}", user.getId(), username);
+                        log.debug("登录拒绝: 凭证无效, userId={}", user.getId());
                         user.recordLoginFailure();
                         return userRepository
                                 .update(user)
@@ -94,10 +94,8 @@ public class AuthenticationApplicationService {
                             .then(tokenService.issueToken(user.getId(), tenantId, deviceId, clientIp))
                             .map(tokenPair -> buildLoginResponse(user.getId(), username, tenantId, tokenPair));
                 })
-                .doOnSuccess(response ->
-                        log.info("登录成功: userId={}, username={}, tenantId={}", response.getUserId(), username, tenantId))
-                .doOnError(
-                        e -> log.error("登录失败: username={}, tenantId={}, error={}", username, tenantId, e.getMessage()));
+                .doOnNext(response -> log.debug("登录成功: userId={}", response.getUserId()))
+                .doOnError(e -> log.debug("登录失败: error={}", e.getClass().getSimpleName()));
     }
 
     /**
@@ -110,12 +108,13 @@ public class AuthenticationApplicationService {
      * @return 空结果
      */
     public Mono<Void> logout(Long userId, String tenantId) {
-        log.debug("开始登出: userId={}, tenantId={}", userId, tenantId);
+        log.debug("开始登出: userId={}", userId);
 
         return tokenService
                 .revokeAllUserTokens(userId, tenantId)
-                .doOnSuccess(v -> log.info("登出成功: userId={}, tenantId={}", userId, tenantId))
-                .doOnError(e -> log.error("登出失败: userId={}, tenantId={}, error={}", userId, tenantId, e.getMessage()));
+                .doOnSuccess(v -> log.debug("登出成功: userId={}", userId))
+                .doOnError(e -> log.debug(
+                        "登出失败: userId={}, error={}", userId, e.getClass().getSimpleName()));
     }
 
     /**
@@ -131,8 +130,8 @@ public class AuthenticationApplicationService {
 
         return tokenService
                 .refreshToken(refreshToken)
-                .doOnSuccess(pair -> log.info("Token刷新成功"))
-                .doOnError(e -> log.error("Token刷新失败: error={}", e.getMessage()));
+                .doOnSuccess(pair -> log.debug("Token刷新成功"))
+                .doOnError(e -> log.debug("Token刷新失败: error={}", e.getClass().getSimpleName()));
     }
 
     /**

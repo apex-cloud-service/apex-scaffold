@@ -30,6 +30,28 @@ import reactor.test.StepVerifier;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("TotpService 单元测试")
 class TotpServiceTest {
+    @Test
+    void shouldKeepFailureLogsSafeAndSingle() {
+        var logger = (ch.qos.logback.classic.Logger) org.slf4j.LoggerFactory.getLogger(TotpService.class);
+        var originalLevel = logger.getLevel();
+        var appender = new ch.qos.logback.core.read.ListAppender<ch.qos.logback.classic.spi.ILoggingEvent>();
+        appender.start();
+        logger.setLevel(ch.qos.logback.classic.Level.DEBUG);
+        logger.addAppender(appender);
+        try {
+            mockTotp.setSecret("!");
+            when(totpRepository.findByUserId(100L, "test-tenant")).thenReturn(Mono.just(mockTotp));
+            StepVerifier.create(totpService.verifyCode(100L, "123456", "test-tenant"))
+                    .expectNext(false)
+                    .verifyComplete();
+            assertThat(appender.list).hasSize(1);
+            assertThat(appender.list.get(0).getThrowableProxy()).isNull();
+        } finally {
+            logger.detachAppender(appender);
+            logger.setLevel(originalLevel);
+            appender.stop();
+        }
+    }
 
     @Mock
     private TotpRepository totpRepository;
@@ -312,7 +334,9 @@ class TotpServiceTest {
             // Then
             StepVerifier.create(result).expectNext(true).verifyComplete();
 
-            verify(totpRepository, times(2)).findByUserId(100L, "test-tenant");
+            verify(totpRepository).findByUserId(100L, "test-tenant");
+            verify(totpRepository).update(org.mockito.ArgumentMatchers.argThat(entity -> "12345678"
+                    .equals(entity.getUsedBackupCodes())));
             verify(totpRepository).update(any(TotpEntity.class));
         }
 

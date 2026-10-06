@@ -146,12 +146,13 @@ public class PasswordPolicyService {
      * @return 验证结果
      */
     public Mono<Void> validatePasswordNotReused(
-            String newPassword, String oldPasswordHash, java.util.function.Function<String, String> passwordEncoder) {
+            String newPassword,
+            String oldPasswordHash,
+            org.springframework.security.crypto.password.PasswordEncoder passwordEncoder) {
 
         return Mono.fromRunnable(() -> {
             if (oldPasswordHash != null) {
-                String newPasswordHash = passwordEncoder.apply(newPassword);
-                if (newPasswordHash.equals(oldPasswordHash)) {
+                if (passwordEncoder.matches(newPassword, oldPasswordHash)) {
                     throw new BusinessException(ResultCode.PARAM_INVALID, "新密码不能与旧密码相同");
                 }
             }

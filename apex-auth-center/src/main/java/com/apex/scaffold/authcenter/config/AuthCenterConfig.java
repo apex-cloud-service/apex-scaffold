@@ -45,10 +45,16 @@ import reactor.core.publisher.Mono;
 @EnableConfigurationProperties(JwtProperties.class)
 @Import({EncryptionKeyProvider.class, DefaultAuditLogService.class, DefaultEncryptionService.class})
 public class AuthCenterConfig {
+    /**
+     * 资源权限领域服务Bean
+     *
+     * @param redisTemplate Redis模板
+     * @param authorizationQueryService 统一授权查询服务
+     * @return ResourcePermissionService实例
+     */
     @Bean
     public ResourcePermissionService domainResourcePermissionService(
-            ReactiveStringRedisTemplate redisTemplate,
-            UnifiedAuthorizationQueryService authorizationQueryService) {
+            ReactiveStringRedisTemplate redisTemplate, UnifiedAuthorizationQueryService authorizationQueryService) {
         return new ResourcePermissionService(redisTemplate, authorizationQueryService);
     }
 
@@ -98,6 +104,19 @@ public class AuthCenterConfig {
         return new BCryptPasswordEncoder();
     }
 
+    /**
+     * 认证中心Spring Security过滤链Bean
+     *
+     * <p>禁用CSRF等表单类认证，公开登录与OAuth2端点，其余请求需Bearer Token认证，
+     * 并在认证后写入租户上下文。
+     *
+     * @param http ServerHttpSecurity构建器
+     * @param tokens 令牌服务
+     * @param roles 角色服务
+     * @param jwt JWT配置属性
+     * @param environment 环境变量
+     * @return SecurityWebFilterChain实例
+     */
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(
             ServerHttpSecurity http,

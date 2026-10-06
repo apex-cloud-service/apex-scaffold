@@ -6,11 +6,11 @@ import static org.mockito.Mockito.verifyNoInteractions;
 
 import com.apex.scaffold.authcenter.infrastructure.persistence.po.PermissionPO;
 import com.apex.scaffold.authcenter.infrastructure.persistence.po.RolePO;
-import com.apex.scaffold.infrastructure.persistence.po.UserRolePO;
-import com.apex.scaffold.domain.model.entity.UserRoleEntity;
-import com.apex.scaffold.infrastructure.persistence.converter.UserRolePoConverter;
 import com.apex.scaffold.common.context.TenantContext;
 import com.apex.scaffold.common.exception.BusinessException;
+import com.apex.scaffold.domain.model.entity.UserRoleEntity;
+import com.apex.scaffold.infrastructure.persistence.converter.UserRolePoConverter;
+import com.apex.scaffold.infrastructure.persistence.po.UserRolePO;
 import com.baomidou.mybatisplus.core.MybatisConfiguration;
 import com.baomidou.mybatisplus.core.metadata.TableInfo;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
@@ -101,8 +101,39 @@ class PersistenceContractTest {
     void userRoleTenantIdIsMappedAcrossDomainAndPersistence() throws Exception {
         assertThat(UserRoleEntity.class.getDeclaredField("tenantId")).isNotNull();
         assertThat(UserRolePO.class.getDeclaredField("tenantId")).isNotNull();
-        assertThat(UserRolePoConverter.class.getMethod("toPo", UserRoleEntity.class)).isNotNull();
-        assertThat(UserRolePoConverter.class.getMethod("toEntity", UserRolePO.class)).isNotNull();
+        assertThat(UserRolePoConverter.class.getMethod("toPo", UserRoleEntity.class))
+                .isNotNull();
+        assertThat(UserRolePoConverter.class.getMethod("toEntity", UserRolePO.class))
+                .isNotNull();
+    }
+
+    @Test
+    void userWritesRejectPlaintextBeforeConversionOrDatabaseAccess() {
+        com.apex.scaffold.authcenter.infrastructure.persistence.mapper.UserMapper mapper =
+                mock(com.apex.scaffold.authcenter.infrastructure.persistence.mapper.UserMapper.class);
+        com.apex.scaffold.authcenter.infrastructure.persistence.converter.UserConverter converter =
+                mock(com.apex.scaffold.authcenter.infrastructure.persistence.converter.UserConverter.class);
+        com.apex.scaffold.authcenter.infrastructure.persistence.repository.UserRepositoryImpl repository =
+                new com.apex.scaffold.authcenter.infrastructure.persistence.repository.UserRepositoryImpl(
+                        mapper, converter);
+        com.apex.scaffold.authcenter.domain.model.entity.UserEntity user =
+                new com.apex.scaffold.authcenter.domain.model.entity.UserEntity();
+        TenantContext.setTenantId("tenant-a");
+        user.setTenantId("tenant-a");
+        user.setId(1L);
+        user.setPasswordHash("plaintext-secret");
+        StepVerifier.create(repository.save(user))
+                .expectError(IllegalArgumentException.class)
+                .verify();
+        StepVerifier.create(repository.update(user))
+                .expectError(IllegalArgumentException.class)
+                .verify();
+        verifyNoInteractions(mapper, converter);
+        assertThat(user.toString()).doesNotContain("plaintext-secret");
+        com.apex.scaffold.authcenter.infrastructure.persistence.po.UserPO po =
+                new com.apex.scaffold.authcenter.infrastructure.persistence.po.UserPO();
+        po.setPasswordHash("plaintext-secret");
+        assertThat(po.toString()).doesNotContain("plaintext-secret");
     }
 
     @Test

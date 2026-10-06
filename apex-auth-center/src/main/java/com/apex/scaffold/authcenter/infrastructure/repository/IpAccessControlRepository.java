@@ -18,41 +18,39 @@ public interface IpAccessControlRepository extends ReactiveCrudRepository<IpAcce
 
     /**
      * 根据租户ID和类型查询规则
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
      *
-     * @param tenantId TODO
-     * @param type TODO
-     * @return TODO
+     * @param tenantId 租户ID
+     * @param type 控制类型
+     * @return 访问控制规则列表
      */
     Flux<IpAccessControl> findByTenantIdAndType(String tenantId, IpAccessControl.AccessControlType type);
 
+    /**
+     * 按ID和租户ID查询访问控制规则
+     *
+     * @param id 规则ID
+     * @param tenantId 租户ID
+     * @return 访问控制规则，不存在时为空
+     */
+    @SuppressWarnings("PMD.AbstractMethodOrInterfaceMethodMustUseJavadocRule")
     Mono<IpAccessControl> findByIdAndTenantId(Long id, String tenantId);
 
+    /**
+     * 按ID和租户ID删除访问控制规则
+     *
+     * @param id 规则ID
+     * @param tenantId 租户ID
+     * @return 删除的记录数量
+     */
     @Query("DELETE FROM ip_access_control WHERE id = :id AND tenant_id = :tenantId")
+    @SuppressWarnings("PMD.AbstractMethodOrInterfaceMethodMustUseJavadocRule")
     Mono<Long> deleteByIdAndTenantId(Long id, String tenantId);
 
     /**
      * 根据租户ID查询所有规则
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
      *
-     * @param tenantId TODO
-     * @return TODO
+     * @param tenantId 租户ID
+     * @return 访问控制规则列表
      */
     Flux<IpAccessControl> findByTenantId(String tenantId);
 
@@ -69,26 +67,17 @@ public interface IpAccessControlRepository extends ReactiveCrudRepository<IpAcce
 
     /**
      * 删除过期的规则（方法名无法派生查询，使用显式SQL）
+     *
+     * @param now 当前时间
+     * @return 删除的记录数量
      */
     @Query("DELETE FROM ip_access_control WHERE expires_at < :now")
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
-     *
-     * @param now TODO
-     * @return TODO
-     */
     Mono<Long> deleteExpired(LocalDateTime now);
 
     /**
      * 查询启用的规则
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
+     *
+     * @return 已启用的访问控制规则列表
      */
     Flux<IpAccessControl> findByEnabledTrue();
 }

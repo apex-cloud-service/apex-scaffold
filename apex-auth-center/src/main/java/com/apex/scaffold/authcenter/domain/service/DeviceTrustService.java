@@ -43,145 +43,70 @@ public interface DeviceTrustService {
      * @param deviceId 设备ID
      * @return 信任级别
      */
+    @SuppressWarnings("PMD.AbstractMethodOrInterfaceMethodMustUseJavadocRule")
     Mono<DeviceTrust.TrustLevel> verifyDeviceTrust(String userId, String tenantId, String deviceId);
 
     /**
      * 更新设备使用信息
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
      *
-     * @param userId TODO
-     * @param deviceId TODO
-     * @param ip TODO
-     * @param location TODO
-     * @return TODO
+     * @param userId 用户ID
+     * @param tenantId 租户ID
+     * @param deviceId 设备ID
+     * @param ip 当前IP地址
+     * @param location 当前位置
      */
+    @SuppressWarnings("PMD.AbstractMethodOrInterfaceMethodMustUseJavadocRule")
     Mono<Void> updateDeviceUsage(String userId, String tenantId, String deviceId, String ip, String location);
 
     /**
      * 提升设备信任级别
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
      *
-     * @param deviceId TODO
-     * @param operator TODO
-     * @return TODO
+     * @param deviceId 设备ID
+     * @param operator 操作人
      */
     Mono<Void> upgradeTrustLevel(Long deviceId, String operator);
 
     /**
      * 降低设备信任级别
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
      *
-     * @param deviceId TODO
-     * @param operator TODO
-     * @return TODO
+     * @param deviceId 设备ID
+     * @param operator 操作人
      */
     Mono<Void> downgradeTrustLevel(Long deviceId, String operator);
 
     /**
      * 撤销设备信任
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
      *
-     * @param deviceId TODO
-     * @param operator TODO
-     * @return TODO
+     * @param deviceId 设备ID
+     * @param operator 操作人
      */
     Mono<Void> revokeDeviceTrust(Long deviceId, String operator);
 
     /**
      * 查询用户的可信设备列表
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
      *
-     * @param userId TODO
-     * @return TODO
+     * @param userId 用户ID
+     * @param tenantId 租户ID
+     * @return 可信设备列表
      */
+    @SuppressWarnings("PMD.AbstractMethodOrInterfaceMethodMustUseJavadocRule")
     Flux<DeviceTrust> getUserTrustedDevices(String userId, String tenantId);
 
     /**
      * 检查设备是否可信
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
      *
-     * @param userId TODO
-     * @param deviceId TODO
-     * @return TODO
+     * @param userId 用户ID
+     * @param deviceId 设备ID
+     * @return 是否可信
      */
+    @SuppressWarnings("PMD.AbstractMethodOrInterfaceMethodMustUseJavadocRule")
     Mono<Boolean> isDeviceTrusted(String userId, String tenantId, String deviceId);
 
     /**
      * 计算设备风险评分
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
      *
-     * @param deviceId TODO
-     * @return TODO
+     * @param deviceId 设备ID
+     * @return 风险评分
      */
     Mono<Integer> calculateDeviceRiskScore(Long deviceId);
 
@@ -194,54 +119,30 @@ public interface DeviceTrustService {
      * @param location 当前位置
      * @return 是否异常
      */
+    @SuppressWarnings("PMD.AbstractMethodOrInterfaceMethodMustUseJavadocRule")
     Mono<Boolean> detectDeviceAnomaly(String userId, String tenantId, String deviceId, String ip, String location);
 
     /**
      * 清理过期设备
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
+     *
+     * @return 清理的设备数量
      */
     Mono<Long> cleanupExpiredDevices();
 
     /**
      * 获取设备详情
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
      *
-     * @param deviceId TODO
-     * @return TODO
+     * @param deviceId 设备ID
+     * @return 设备信任记录，不存在时为空
      */
     Mono<DeviceTrust> getDeviceDetails(Long deviceId);
 
     /**
      * 延长设备信任有效期
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
      *
-     * @param deviceId TODO
-     * @param days TODO
-     * @param operator TODO
-     * @return TODO
+     * @param deviceId 设备ID
+     * @param days 延长天数
+     * @param operator 操作人
      */
     Mono<Void> extendDeviceTrust(Long deviceId, int days, String operator);
 }

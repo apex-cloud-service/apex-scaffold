@@ -38,6 +38,34 @@ class AwsKmsServiceTest {
     }
 
     @Test
+    void failuresDoNotExposeRemoteCredentials() {
+        ch.qos.logback.classic.Logger logger =
+                (ch.qos.logback.classic.Logger) org.slf4j.LoggerFactory.getLogger(AwsKmsService.class);
+        ch.qos.logback.core.read.ListAppender<ch.qos.logback.classic.spi.ILoggingEvent> appender =
+                new ch.qos.logback.core.read.ListAppender<>();
+        appender.start();
+        logger.addAppender(appender);
+        when(kmsClient.encrypt(any(EncryptRequest.class)))
+                .thenReturn(CompletableFuture.failedFuture(
+                        KmsException.builder().message("aws-private-secret").build()));
+        try {
+            StepVerifier.create(awsKmsService.encrypt("private-secret", null))
+                    .expectError()
+                    .verify();
+            org.assertj.core.api.Assertions.assertThat(appender.list).isNotEmpty();
+            org.assertj.core.api.Assertions.assertThat(appender.list).allSatisfy(event -> {
+                org.assertj.core.api.Assertions.assertThat(event.getFormattedMessage())
+                        .doesNotContain("private-secret");
+                org.assertj.core.api.Assertions.assertThat(event.getThrowableProxy())
+                        .isNull();
+            });
+        } finally {
+            logger.detachAppender(appender);
+            appender.stop();
+        }
+    }
+
+    @Test
     @DisplayName("加密数据 - 成功")
     void testEncrypt_Success() {
         String plaintext = "sensitive-data";

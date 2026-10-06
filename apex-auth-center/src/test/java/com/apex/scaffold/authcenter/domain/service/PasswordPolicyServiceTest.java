@@ -241,10 +241,18 @@ class PasswordPolicyServiceTest {
     }
 
     @Test
+    void shouldRejectPlaintextHistory() {
+        StepVerifier.create(service.addPasswordToHistory("user-123", "PlaintextP@ssw0rd"))
+                .expectError(IllegalArgumentException.class)
+                .verify();
+        org.mockito.Mockito.verifyNoInteractions(redisTemplate);
+    }
+
+    @Test
     @DisplayName("添加密码到历史")
     void testAddPasswordToHistory() {
         String userId = "user-123";
-        String passwordHash = "new-hash";
+        String passwordHash = com.apex.scaffold.common.util.PasswordUtil.encryptPassword("HistoryP@ssw0rd");
         String key = "password:history:" + userId;
 
         when(redisTemplate.opsForList()).thenReturn(listOperations);

@@ -19,6 +19,17 @@ class PasswordPolicyServiceTest {
     }
 
     @Test
+    void shouldRejectReusedBcryptPasswordWithRandomSalt() {
+        var encoder = new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
+        String password = "SameP@ssw0rd123";
+        String hash = encoder.encode(password);
+        assertThat(encoder.encode(password)).isNotEqualTo(hash);
+        StepVerifier.create(passwordPolicyService.validatePasswordNotReused(password, hash, encoder))
+                .expectError(BusinessException.class)
+                .verify();
+    }
+
+    @Test
     @DisplayName("符合策略的强密码应验证通过")
     void testValidStrongPassword() {
         String validPassword = "StrongP@ssw0rd123";
@@ -170,10 +181,10 @@ class PasswordPolicyServiceTest {
     @DisplayName("验证新密码与旧密码不同 - 不同应通过")
     void testPasswordNotReused() {
         String newPassword = "NewP@ssw0rd123456";
-        String oldPasswordHash = "old_hash_value";
+        var encoder = new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
+        String oldPasswordHash = encoder.encode("OldP@ssw0rd123456");
 
-        StepVerifier.create(passwordPolicyService.validatePasswordNotReused(
-                        newPassword, oldPasswordHash, pwd -> "new_hash_value"))
+        StepVerifier.create(passwordPolicyService.validatePasswordNotReused(newPassword, oldPasswordHash, encoder))
                 .verifyComplete();
     }
 
@@ -181,10 +192,10 @@ class PasswordPolicyServiceTest {
     @DisplayName("验证新密码与旧密码不同 - 相同应失败")
     void testPasswordReusedShouldFail() {
         String newPassword = "SameP@ssw0rd123";
-        String oldPasswordHash = "same_hash";
+        var encoder = new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
+        String oldPasswordHash = encoder.encode(newPassword);
 
-        StepVerifier.create(passwordPolicyService.validatePasswordNotReused(
-                        newPassword, oldPasswordHash, pwd -> "same_hash"))
+        StepVerifier.create(passwordPolicyService.validatePasswordNotReused(newPassword, oldPasswordHash, encoder))
                 .expectError(BusinessException.class)
                 .verify();
     }
@@ -194,7 +205,8 @@ class PasswordPolicyServiceTest {
     void testPasswordNotReusedWithNullOldPassword() {
         String newPassword = "NewP@ssw0rd123456";
 
-        StepVerifier.create(passwordPolicyService.validatePasswordNotReused(newPassword, null, pwd -> "new_hash"))
+        StepVerifier.create(passwordPolicyService.validatePasswordNotReused(
+                        newPassword, null, new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder()))
                 .verifyComplete();
     }
 

@@ -23,6 +23,9 @@ import lombok.NoArgsConstructor;
 public class RefreshTokenRequest {
 
     @NotBlank(message = "刷新令牌不能为空")
-    @Schema(description = "刷新令牌", example = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(
+            description = "刷新令牌",
+            example = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+            requiredMode = Schema.RequiredMode.REQUIRED)
     private String refreshToken;
 }

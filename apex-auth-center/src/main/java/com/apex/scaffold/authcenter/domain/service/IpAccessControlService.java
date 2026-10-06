@@ -22,31 +22,12 @@ public interface IpAccessControlService {
 
     /**
      * 添加IP到白名单
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
      *
-     * @param ipAddress TODO
-     * @param tenantId TODO
-     * @param description TODO
-     * @param operator TODO
-     * @return TODO
+     * @param ipAddress IP地址或CIDR
+     * @param tenantId 租户ID
+     * @param description 描述
+     * @param operator 操作员
+     * @return 创建的白名单记录
      */
     Mono<IpAccessControl> addToWhitelist(String ipAddress, String tenantId, String description, String operator);
 
@@ -65,156 +46,74 @@ public interface IpAccessControlService {
 
     /**
      * 从白名单移除IP
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
      *
-     * @param ipAddress TODO
-     * @param tenantId TODO
-     * @return TODO
+     * @param ipAddress IP地址或CIDR
+     * @param tenantId 租户ID
      */
     Mono<Void> removeFromWhitelist(String ipAddress, String tenantId);
 
     /**
      * 从黑名单移除IP
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
      *
-     * @param ipAddress TODO
-     * @param tenantId TODO
-     * @return TODO
+     * @param ipAddress IP地址或CIDR
+     * @param tenantId 租户ID
      */
     Mono<Void> removeFromBlacklist(String ipAddress, String tenantId);
 
     /**
      * 查询租户的白名单规则
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
      *
-     * @param tenantId TODO
-     * @return TODO
+     * @param tenantId 租户ID
+     * @return 白名单规则列表
      */
     Flux<IpAccessControl> getWhitelist(String tenantId);
 
     /**
      * 查询租户的黑名单规则
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
      *
-     * @param tenantId TODO
-     * @return TODO
+     * @param tenantId 租户ID
+     * @return 黑名单规则列表
      */
     Flux<IpAccessControl> getBlacklist(String tenantId);
 
     /**
      * 清理过期的规则
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
+     *
+     * @return 清理的规则数量
      */
     Mono<Long> cleanupExpiredRules();
 
     /**
      * 启用规则
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
      *
-     * @param ruleId TODO
-     * @param operator TODO
-     * @return TODO
+     * @param ruleId 规则ID
+     * @param tenantId 租户ID
+     * @param operator 操作员
      */
+    @SuppressWarnings("PMD.AbstractMethodOrInterfaceMethodMustUseJavadocRule")
     Mono<Void> enableRule(Long ruleId, String tenantId, String operator);
 
     /**
      * 禁用规则
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
      *
-     * @param ruleId TODO
-     * @param operator TODO
-     * @return TODO
+     * @param ruleId 规则ID
+     * @param tenantId 租户ID
+     * @param operator 操作员
      */
+    @SuppressWarnings("PMD.AbstractMethodOrInterfaceMethodMustUseJavadocRule")
     Mono<Void> disableRule(Long ruleId, String tenantId, String operator);
 
     /**
      * 删除规则
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
      *
-     * @param ruleId TODO
-     * @param operator TODO
-     * @return TODO
+     * @param ruleId 规则ID
+     * @param tenantId 租户ID
+     * @param operator 操作员
      */
+    @SuppressWarnings("PMD.AbstractMethodOrInterfaceMethodMustUseJavadocRule")
     Mono<Void> deleteRule(Long ruleId, String tenantId, String operator);
 
     /**
-     * 批量导入规则
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method/**
      * 批量导入访问控制规则
      *
      * @param rules 规则流

@@ -2,6 +2,7 @@ package com.apex.scaffold.authcenter.infrastructure.filter;
 
 import com.apex.scaffold.authcenter.domain.service.IpAccessControlService;
 import com.apex.scaffold.common.audit.AuditLogService;
+import com.apex.scaffold.common.util.LogSafetyUtil;
 import java.net.InetSocketAddress;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -45,7 +46,10 @@ public class IpAccessControlFilter implements WebFilter {
                 .isAccessAllowed(clientIp, tenantId)
                 .onErrorResume(error -> {
                     // 发生错误时默认拒绝访问
-                    log.error("IP访问控制检查失败: ip={}, error={}", clientIp, error.getMessage(), error);
+                    exchange.getAttributes()
+                            .put(
+                                    IpAccessControlFilter.class.getName() + ".failure",
+                                    error.getClass().getSimpleName());
                     return Mono.just(false);
                 })
                 .flatMap(allowed -> {
@@ -56,17 +60,19 @@ public class IpAccessControlFilter implements WebFilter {
 
                     // 拒绝访问，先完成审计再返回403
                     log.warn(
-                            "IP访问被拒绝: ip={}, tenantId={}, path={}",
-                            clientIp,
-                            tenantId,
-                            exchange.getRequest().getPath());
+                            "IP访问被拒绝: ip={}, tenantId={}, path={}, error={}",
+                            LogSafetyUtil.text(clientIp, 64),
+                            LogSafetyUtil.text(tenantId, 64),
+                            LogSafetyUtil.uri(exchange.getRequest().getURI().getRawPath(), 256),
+                            exchange.getAttributeOrDefault(IpAccessControlFilter.class.getName() + ".failure", "none"));
 
                     return auditLogService
                             .log(
                                     "system",
                                     tenantId,
                                     "IP_ACCESS_DENIED",
-                                    exchange.getRequest().getPath().value(),
+                                    LogSafetyUtil.uri(
+                                            exchange.getRequest().getURI().getRawPath(), 256),
                                     "DENIED",
                                     null)
                             .then(Mono.defer(() -> {

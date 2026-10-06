@@ -30,7 +30,11 @@ public class LoginRequest {
 
     @NotBlank(message = "密码不能为空")
     @Size(min = 6, max = 128, message = "密码长度必须在6-128之间")
-    @Schema(description = "密码", format = "password", accessMode = Schema.AccessMode.WRITE_ONLY, requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(
+            description = "密码",
+            format = "password",
+            accessMode = Schema.AccessMode.WRITE_ONLY,
+            requiredMode = Schema.RequiredMode.REQUIRED)
     private String password;
 
     @Schema(description = "租户匹配声明；省略时使用 default，必须与服务端配置的可信登录租户一致，不能用于切换租户", example = "default")

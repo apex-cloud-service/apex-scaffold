@@ -9,42 +9,41 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.apex.scaffold.authcenter.application.aspect.AdminRoleAspect;
+import com.apex.scaffold.authcenter.application.aspect.ResourcePermissionAspect;
 import com.apex.scaffold.authcenter.application.assembler.AuditLogAssembler;
 import com.apex.scaffold.authcenter.application.assembler.RoleAssembler;
 import com.apex.scaffold.authcenter.application.assembler.SessionAssembler;
 import com.apex.scaffold.authcenter.application.dto.AssignPermissionsRequest;
-import com.apex.scaffold.authcenter.application.aspect.AdminRoleAspect;
-import com.apex.scaffold.authcenter.application.aspect.ResourcePermissionAspect;
 import com.apex.scaffold.authcenter.application.service.AuditLogService;
 import com.apex.scaffold.authcenter.application.service.RoleService;
 import com.apex.scaffold.authcenter.application.service.SessionService;
 import com.apex.scaffold.authcenter.application.service.UnifiedAuthorizationQueryService;
-import com.apex.scaffold.authcenter.domain.service.IpAccessControlService;
 import com.apex.scaffold.authcenter.domain.model.MfaConfig;
+import com.apex.scaffold.authcenter.domain.service.IpAccessControlService;
 import com.apex.scaffold.authcenter.domain.service.MfaService;
+import com.apex.scaffold.authcenter.domain.service.ResourcePermissionService;
+import com.apex.scaffold.authcenter.domain.service.TokenService;
 import com.apex.scaffold.authcenter.interfaces.handler.AuditLogHandler;
 import com.apex.scaffold.authcenter.interfaces.handler.MfaManagementHandler;
 import com.apex.scaffold.authcenter.interfaces.handler.RoleHandler;
 import com.apex.scaffold.authcenter.interfaces.handler.SessionHandler;
-import com.apex.scaffold.authcenter.domain.service.ResourcePermissionService;
-import com.apex.scaffold.authcenter.domain.service.TokenService;
 import com.apex.scaffold.common.annotation.RequireResourcePermission;
 import com.apex.scaffold.common.exception.BusinessException;
 import org.junit.jupiter.api.Test;
 import org.springframework.aop.support.AopUtils;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
-import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
+import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.web.reactive.function.server.ServerRequest;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -53,6 +52,9 @@ class ResourcePermissionWiringTest {
     @Test
     void authCenterRegistersDomainResourcePermissionService() {
         new ApplicationContextRunner()
+                .withPropertyValues(
+                        "apex.security.data-encryption-key=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+                        "security.encryption.key=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=")
                 .withUserConfiguration(AuthCenterConfig.class)
                 .withBean(IpAccessControlService.class, () -> mock(IpAccessControlService.class))
                 .withBean(TokenService.class, () -> mock(TokenService.class))
@@ -69,19 +71,26 @@ class ResourcePermissionWiringTest {
     @Test
     void highRiskHandlersDeclareResourcePermissions() throws Exception {
         assertThat(AnnotationUtils.findAnnotation(
-                        MfaManagementHandler.class.getDeclaredMethod("unlockMfa", org.springframework.web.reactive.function.server.ServerRequest.class),
+                        MfaManagementHandler.class.getDeclaredMethod(
+                                "unlockMfa", org.springframework.web.reactive.function.server.ServerRequest.class),
                         RequireResourcePermission.class))
                 .isNotNull();
         assertThat(AnnotationUtils.findAnnotation(
-                        SessionHandler.class.getDeclaredMethod("terminateSession", org.springframework.web.reactive.function.server.ServerRequest.class),
+                        SessionHandler.class.getDeclaredMethod(
+                                "terminateSession",
+                                org.springframework.web.reactive.function.server.ServerRequest.class),
                         RequireResourcePermission.class))
                 .isNotNull();
         assertThat(AnnotationUtils.findAnnotation(
-                        SessionHandler.class.getDeclaredMethod("terminateUserSessions", org.springframework.web.reactive.function.server.ServerRequest.class),
+                        SessionHandler.class.getDeclaredMethod(
+                                "terminateUserSessions",
+                                org.springframework.web.reactive.function.server.ServerRequest.class),
                         RequireResourcePermission.class))
                 .isNotNull();
         assertThat(AnnotationUtils.findAnnotation(
-                        AuditLogHandler.class.getDeclaredMethod("cleanupExpiredLogs", org.springframework.web.reactive.function.server.ServerRequest.class),
+                        AuditLogHandler.class.getDeclaredMethod(
+                                "cleanupExpiredLogs",
+                                org.springframework.web.reactive.function.server.ServerRequest.class),
                         RequireResourcePermission.class))
                 .isNotNull();
         assertThat(AnnotationUtils.findAnnotation(
@@ -96,9 +105,8 @@ class ResourcePermissionWiringTest {
             context.register(HighRiskHandlerConfiguration.class);
             context.refresh();
 
-            UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(
-                            "user-1", "", java.util.List.of(new SimpleGrantedAuthority("ROLE_ADMIN")));
+            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                    "user-1", "", java.util.List.of(new SimpleGrantedAuthority("ROLE_ADMIN")));
             ResourcePermissionService permissionService = context.getBean(ResourcePermissionService.class);
             when(permissionService.hasPermission(eq("user-1"), anyString(), anyString(), eq("MANAGE"), any()))
                     .thenReturn(Mono.just(false));
@@ -117,36 +125,42 @@ class ResourcePermissionWiringTest {
                     .roleId(42L)
                     .permissionIds(java.util.Set.of(7L))
                     .build();
-            
 
             StepVerifier.create(context.getBean(MfaManagementHandler.class)
                             .unlockMfa(mfaRequest)
                             .contextWrite(ReactiveSecurityContextHolder.withAuthentication(authentication)))
-                    .expectErrorSatisfies(error -> assertThat(((BusinessException) error).getCode()).isEqualTo(403))
+                    .expectErrorSatisfies(error ->
+                            assertThat(((BusinessException) error).getCode()).isEqualTo(403))
                     .verify();
             StepVerifier.create(context.getBean(SessionHandler.class)
                             .terminateSession(sessionRequest)
                             .contextWrite(ReactiveSecurityContextHolder.withAuthentication(authentication)))
-                    .expectErrorSatisfies(error -> assertThat(((BusinessException) error).getCode()).isEqualTo(403))
+                    .expectErrorSatisfies(error ->
+                            assertThat(((BusinessException) error).getCode()).isEqualTo(403))
                     .verify();
             StepVerifier.create(context.getBean(SessionHandler.class)
                             .terminateUserSessions(userSessionsRequest)
                             .contextWrite(ReactiveSecurityContextHolder.withAuthentication(authentication)))
-                    .expectErrorSatisfies(error -> assertThat(((BusinessException) error).getCode()).isEqualTo(403))
+                    .expectErrorSatisfies(error ->
+                            assertThat(((BusinessException) error).getCode()).isEqualTo(403))
                     .verify();
             StepVerifier.create(context.getBean(AuditLogHandler.class)
                             .cleanupExpiredLogs(auditRequest)
                             .contextWrite(ReactiveSecurityContextHolder.withAuthentication(authentication)))
-                    .expectErrorSatisfies(error -> assertThat(((BusinessException) error).getCode()).isEqualTo(403))
+                    .expectErrorSatisfies(error ->
+                            assertThat(((BusinessException) error).getCode()).isEqualTo(403))
                     .verify();
             StepVerifier.create(context.getBean(RoleHandler.class)
                             .assignPermissions(permissionsRequest)
                             .contextWrite(ReactiveSecurityContextHolder.withAuthentication(authentication)))
-                    .expectErrorSatisfies(error -> assertThat(((BusinessException) error).getCode()).isEqualTo(403))
+                    .expectErrorSatisfies(error ->
+                            assertThat(((BusinessException) error).getCode()).isEqualTo(403))
                     .verify();
 
-            verify(context.getBean(MfaService.class), org.mockito.Mockito.never()).unlockMfa(any(), any(), any(), any());
-            verify(context.getBean(SessionService.class), org.mockito.Mockito.never()).terminateSession(any());
+            verify(context.getBean(MfaService.class), org.mockito.Mockito.never())
+                    .unlockMfa(any(), any(), any(), any());
+            verify(context.getBean(SessionService.class), org.mockito.Mockito.never())
+                    .terminateSession(any());
             verify(context.getBean(SessionService.class), org.mockito.Mockito.never())
                     .terminateUserSessions(anyLong(), anyString());
             verify(context.getBean(AuditLogService.class), org.mockito.Mockito.never())
@@ -204,23 +218,30 @@ class ResourcePermissionWiringTest {
                     .build();
 
             StepVerifier.create(context.getBean(MfaManagementHandler.class).unlockMfa(mfaRequest))
-                    .expectErrorSatisfies(error -> assertThat(((BusinessException) error).getCode()).isEqualTo(401))
+                    .expectErrorSatisfies(error ->
+                            assertThat(((BusinessException) error).getCode()).isEqualTo(401))
                     .verify();
             StepVerifier.create(context.getBean(SessionHandler.class).terminateSession(sessionRequest))
-                    .expectErrorSatisfies(error -> assertThat(((BusinessException) error).getCode()).isEqualTo(401))
+                    .expectErrorSatisfies(error ->
+                            assertThat(((BusinessException) error).getCode()).isEqualTo(401))
                     .verify();
             StepVerifier.create(context.getBean(SessionHandler.class).terminateUserSessions(userSessionsRequest))
-                    .expectErrorSatisfies(error -> assertThat(((BusinessException) error).getCode()).isEqualTo(401))
+                    .expectErrorSatisfies(error ->
+                            assertThat(((BusinessException) error).getCode()).isEqualTo(401))
                     .verify();
             StepVerifier.create(context.getBean(AuditLogHandler.class).cleanupExpiredLogs(auditRequest))
-                    .expectErrorSatisfies(error -> assertThat(((BusinessException) error).getCode()).isEqualTo(401))
+                    .expectErrorSatisfies(error ->
+                            assertThat(((BusinessException) error).getCode()).isEqualTo(401))
                     .verify();
             StepVerifier.create(context.getBean(RoleHandler.class).assignPermissions(permissionsRequest))
-                    .expectErrorSatisfies(error -> assertThat(((BusinessException) error).getCode()).isEqualTo(401))
+                    .expectErrorSatisfies(error ->
+                            assertThat(((BusinessException) error).getCode()).isEqualTo(401))
                     .verify();
 
-            verify(context.getBean(MfaService.class), org.mockito.Mockito.never()).unlockMfa(any(), any(), any(), any());
-            verify(context.getBean(SessionService.class), org.mockito.Mockito.never()).terminateSession(any());
+            verify(context.getBean(MfaService.class), org.mockito.Mockito.never())
+                    .unlockMfa(any(), any(), any(), any());
+            verify(context.getBean(SessionService.class), org.mockito.Mockito.never())
+                    .terminateSession(any());
             verify(context.getBean(SessionService.class), org.mockito.Mockito.never())
                     .terminateUserSessions(anyLong(), anyString());
             verify(context.getBean(AuditLogService.class), org.mockito.Mockito.never())
@@ -236,9 +257,8 @@ class ResourcePermissionWiringTest {
             context.register(HighRiskHandlerConfiguration.class);
             context.refresh();
 
-            UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(
-                            "admin-1", "", java.util.List.of(new SimpleGrantedAuthority("ROLE_ADMIN")));
+            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                    "admin-1", "", java.util.List.of(new SimpleGrantedAuthority("ROLE_ADMIN")));
             authentication.setDetails("tenant-1");
             ResourcePermissionService permissionService = context.getBean(ResourcePermissionService.class);
             when(permissionService.hasPermission(eq("admin-1"), anyString(), anyString(), eq("MANAGE"), any()))
@@ -262,7 +282,8 @@ class ResourcePermissionWiringTest {
                     .build();
 
             MfaService mfaService = context.getBean(MfaService.class);
-            when(mfaService.unlockMfa(anyString(), any(MfaConfig.MfaType.class), anyString(), anyString())).thenReturn(Mono.empty());
+            when(mfaService.unlockMfa(anyString(), any(MfaConfig.MfaType.class), anyString(), anyString()))
+                    .thenReturn(Mono.empty());
             SessionService sessionService = context.getBean(SessionService.class);
             when(sessionService.terminateSession(anyString())).thenReturn(Mono.empty());
             when(sessionService.terminateUserSessions(anyLong(), anyString())).thenReturn(Mono.empty());

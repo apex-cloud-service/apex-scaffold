@@ -282,7 +282,8 @@ class IpAccessControlServiceImplTest {
         when(repository.save(any(IpAccessControl.class))).thenReturn(Mono.just(whitelistRule));
 
         // When & Then
-        StepVerifier.create(ipAccessControlService.enableRule(1L, tenantId, operator)).verifyComplete();
+        StepVerifier.create(ipAccessControlService.enableRule(1L, tenantId, operator))
+                .verifyComplete();
 
         ArgumentCaptor<IpAccessControl> captor = ArgumentCaptor.forClass(IpAccessControl.class);
         verify(repository, times(1)).save(captor.capture());
@@ -308,7 +309,8 @@ class IpAccessControlServiceImplTest {
         when(repository.save(any(IpAccessControl.class))).thenReturn(Mono.just(whitelistRule));
 
         // When & Then
-        StepVerifier.create(ipAccessControlService.disableRule(1L, tenantId, operator)).verifyComplete();
+        StepVerifier.create(ipAccessControlService.disableRule(1L, tenantId, operator))
+                .verifyComplete();
 
         ArgumentCaptor<IpAccessControl> captor = ArgumentCaptor.forClass(IpAccessControl.class);
         verify(repository, times(1)).save(captor.capture());
@@ -337,7 +339,8 @@ class IpAccessControlServiceImplTest {
                 .thenReturn(Mono.empty());
 
         // When & Then
-        StepVerifier.create(ipAccessControlService.deleteRule(1L, tenantId, operator)).verifyComplete();
+        StepVerifier.create(ipAccessControlService.deleteRule(1L, tenantId, operator))
+                .verifyComplete();
 
         verify(repository).deleteByIdAndTenantId(1L, tenantId);
     }

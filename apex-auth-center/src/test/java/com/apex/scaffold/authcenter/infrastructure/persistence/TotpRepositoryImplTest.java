@@ -30,7 +30,37 @@ import reactor.core.publisher.Mono;
 class TotpRepositoryImplTest {
     private final TotpMapper mapper = mock(TotpMapper.class);
     private final TotpConverter converter = Mappers.getMapper(TotpConverter.class);
-    private final TotpRepositoryImpl repository = new TotpRepositoryImpl(mapper, converter);
+    private final TotpRepositoryImpl repository = new TotpRepositoryImpl(
+            mapper,
+            converter,
+            new com.apex.scaffold.infrastructure.security.DefaultEncryptionService(
+                    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="));
+
+    @org.junit.jupiter.api.Test
+    void credentialsAreEncryptedAtRestAndRestoredOnRead() {
+        TotpEntity input = TotpEntity.builder()
+                .tenantId("tenant-a")
+                .userId(9L)
+                .secret("TOTP-SECRET")
+                .backupCodes("12345678,87654321")
+                .usedBackupCodes("12345678")
+                .build();
+        java.util.concurrent.atomic.AtomicReference<TotpPO> stored =
+                new java.util.concurrent.atomic.AtomicReference<>();
+        when(mapper.insert(any(TotpPO.class))).thenAnswer(invocation -> {
+            TotpPO po = invocation.getArgument(0);
+            assertThat(po.getSecret()).isNotEqualTo(input.getSecret());
+            assertThat(po.getBackupCodes()).doesNotContain("12345678", "87654321");
+            assertThat(po.getUsedBackupCodes()).doesNotContain("12345678");
+            stored.set(po);
+            return 1;
+        });
+        value(repository.save(input), input);
+        when(mapper.selectByUserIdAndTenantId(9L, "tenant-a")).thenAnswer(invocation -> stored.get());
+        value(repository.findByUserId(9L, "tenant-a"), input);
+        assertThat(input.toString()).doesNotContain("TOTP-SECRET", "12345678", "87654321");
+        assertThat(stored.get().toString()).doesNotContain(stored.get().getSecret());
+    }
 
     @BeforeAll
     static void initializeTableMetadata() {
@@ -111,6 +141,10 @@ class TotpRepositoryImplTest {
         verifyNoInteractions(mapper);
         if (outcome.equals("error")) {
             entity(result, outcome, failure);
+        } else if (outcome.equals("zero")) {
+            reactor.test.StepVerifier.create(result)
+                    .expectError(org.springframework.dao.OptimisticLockingFailureException.class)
+                    .verify();
         } else {
             TotpEntity expected =
                     TotpEntity.builder().id(7L).tenantId(tenantId).userId(9L).build();

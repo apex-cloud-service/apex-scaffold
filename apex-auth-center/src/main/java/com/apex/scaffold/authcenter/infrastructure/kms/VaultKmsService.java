@@ -39,6 +39,11 @@ public class VaultKmsService implements KeyManagementService {
     private final WebClient webClient;
     private final VaultKmsProperties properties;
 
+    /**
+     * 构造Vault KMS服务并初始化WebClient
+     *
+     * @param properties Vault KMS配置属性
+     */
     public VaultKmsService(VaultKmsProperties properties) {
         this.properties = properties;
         this.webClient = WebClient.builder()
@@ -48,7 +53,7 @@ public class VaultKmsService implements KeyManagementService {
                 .defaultHeader("X-Vault-Namespace", properties.getNamespace())
                 .build();
 
-        log.info("HashiCorp Vault KMS服务已初始化，地址: {}", properties.getAddress());
+        log.info("HashiCorp Vault KMS服务已初始化");
     }
 
     @Override
@@ -66,7 +71,7 @@ public class VaultKmsService implements KeyManagementService {
                 .bodyToMono(VaultResponse.class)
                 .map(response -> response.getData().get("ciphertext").toString())
                 .doOnSuccess(ciphertext -> log.debug("Vault加密成功，密钥: {}", keyName))
-                .doOnError(error -> log.error("Vault加密失败: {}", error.getMessage()));
+                .doOnError(error -> log.error("Vault加密失败: {}", error.getClass().getSimpleName()));
     }
 
     @Override
@@ -87,7 +92,7 @@ public class VaultKmsService implements KeyManagementService {
                     return new String(Base64.getDecoder().decode(base64Plaintext));
                 })
                 .doOnSuccess(plaintext -> log.debug("Vault解密成功"))
-                .doOnError(error -> log.error("Vault解密失败: {}", error.getMessage()));
+                .doOnError(error -> log.error("Vault解密失败: {}", error.getClass().getSimpleName()));
     }
 
     @Override
@@ -110,7 +115,8 @@ public class VaultKmsService implements KeyManagementService {
                             data.get("ciphertext").toString());
                 })
                 .doOnSuccess(dataKey -> log.info("Vault数据密钥生成成功"))
-                .doOnError(error -> log.error("Vault数据密钥生成失败: {}", error.getMessage()));
+                .doOnError(
+                        error -> log.error("Vault数据密钥生成失败: {}", error.getClass().getSimpleName()));
     }
 
     @Override
@@ -125,7 +131,8 @@ public class VaultKmsService implements KeyManagementService {
                 .bodyToMono(Void.class)
                 .thenReturn(keyName)
                 .doOnSuccess(key -> log.info("Vault密钥轮换成功: {}", keyName))
-                .doOnError(error -> log.error("Vault密钥轮换失败: {}", error.getMessage()));
+                .doOnError(
+                        error -> log.error("Vault密钥轮换失败: {}", error.getClass().getSimpleName()));
     }
 
     @Override
@@ -148,7 +155,8 @@ public class VaultKmsService implements KeyManagementService {
                             Instant.now(),
                             !(boolean) data.getOrDefault("deletion_allowed", false));
                 })
-                .doOnError(error -> log.error("获取Vault密钥元数据失败: {}", error.getMessage()));
+                .doOnError(error ->
+                        log.error("获取Vault密钥元数据失败: {}", error.getClass().getSimpleName()));
     }
 
     @Override
@@ -166,7 +174,8 @@ public class VaultKmsService implements KeyManagementService {
                 .bodyToMono(Void.class)
                 .map(v -> true)
                 .doOnSuccess(success -> log.warn("Vault密钥已配置为可删除: {}", keyName))
-                .doOnError(error -> log.error("配置Vault密钥失败: {}", error.getMessage()))
+                .doOnError(
+                        error -> log.error("配置Vault密钥失败: {}", error.getClass().getSimpleName()))
                 .onErrorReturn(false);
     }
 
@@ -185,7 +194,8 @@ public class VaultKmsService implements KeyManagementService {
                 .bodyToMono(Void.class)
                 .map(v -> true)
                 .doOnSuccess(success -> log.info("Vault密钥已配置为不可删除: {}", keyName))
-                .doOnError(error -> log.error("配置Vault密钥失败: {}", error.getMessage()))
+                .doOnError(
+                        error -> log.error("配置Vault密钥失败: {}", error.getClass().getSimpleName()))
                 .onErrorReturn(false);
     }
 
@@ -205,6 +215,12 @@ public class VaultKmsService implements KeyManagementService {
         private String plaintextKey;
         private String encryptedKey;
 
+        /**
+         * 构造数据密钥。
+         *
+         * @param plaintextKey 明文数据密钥
+         * @param encryptedKey 加密后的数据密钥
+         */
         public VaultDataKey(String plaintextKey, String encryptedKey) {
             this.plaintextKey = plaintextKey;
             this.encryptedKey = encryptedKey;
@@ -242,6 +258,16 @@ public class VaultKmsService implements KeyManagementService {
         private Instant creationDate;
         private boolean enabled;
 
+        /**
+         * 构造密钥元数据。
+         *
+         * @param keyId 密钥ID
+         * @param keyArn 密钥ARN
+         * @param algorithm 算法规格
+         * @param keyState 密钥状态
+         * @param creationDate 创建时间
+         * @param enabled 是否启用
+         */
         public VaultKeyMetadata(
                 String keyId, String keyArn, String algorithm, String keyState, Instant creationDate, boolean enabled) {
             this.keyId = keyId;

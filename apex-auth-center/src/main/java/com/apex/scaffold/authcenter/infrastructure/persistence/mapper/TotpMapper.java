@@ -1,6 +1,7 @@
 package com.apex.scaffold.authcenter.infrastructure.persistence.mapper;
 
 import com.apex.scaffold.authcenter.infrastructure.persistence.po.TotpPO;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -23,7 +24,10 @@ public interface TotpMapper extends BaseMapper<TotpPO> {
      * @param tenantId 租户 ID
      * @return TOTP 持久化对象
      */
-    TotpPO selectByUserIdAndTenantId(@Param("userId") Long userId, @Param("tenantId") String tenantId);
+    default TotpPO selectByUserIdAndTenantId(@Param("userId") Long userId, @Param("tenantId") String tenantId) {
+        return selectOne(
+                new LambdaQueryWrapper<TotpPO>().eq(TotpPO::getUserId, userId).eq(TotpPO::getTenantId, tenantId));
+    }
 
     /**
      * 根据用户 ID 和租户 ID 删除 TOTP 配置
@@ -32,7 +36,10 @@ public interface TotpMapper extends BaseMapper<TotpPO> {
      * @param tenantId 租户 ID
      * @return 影响行数
      */
-    int deleteByUserIdAndTenantId(@Param("userId") Long userId, @Param("tenantId") String tenantId);
+    default int deleteByUserIdAndTenantId(@Param("userId") Long userId, @Param("tenantId") String tenantId) {
+        return delete(
+                new LambdaQueryWrapper<TotpPO>().eq(TotpPO::getUserId, userId).eq(TotpPO::getTenantId, tenantId));
+    }
 
     /**
      * 检查用户是否已配置 TOTP
@@ -41,5 +48,12 @@ public interface TotpMapper extends BaseMapper<TotpPO> {
      * @param tenantId 租户 ID
      * @return 存在返回 1，否则返回 0
      */
-    int existsByUserIdAndTenantId(@Param("userId") Long userId, @Param("tenantId") String tenantId);
+    default int existsByUserIdAndTenantId(@Param("userId") Long userId, @Param("tenantId") String tenantId) {
+        return selectCount(new LambdaQueryWrapper<TotpPO>()
+                                .eq(TotpPO::getUserId, userId)
+                                .eq(TotpPO::getTenantId, tenantId))
+                        > 0
+                ? 1
+                : 0;
+    }
 }

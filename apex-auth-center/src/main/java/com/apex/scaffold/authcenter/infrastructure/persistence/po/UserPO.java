@@ -34,6 +34,7 @@ public class UserPO {
     private String phone;
 
     /** 密码哈希值（BCrypt）。 */
+    @lombok.ToString.Exclude
     private String passwordHash;
 
     /** 第三方 OpenID（如微信、钉钉）。 */

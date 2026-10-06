@@ -98,7 +98,7 @@ public class RefreshTokenRotationService {
                     .flatMap(oldTokenEntity -> {
                         // 3. 验证Token状态
                         if (oldTokenEntity.isRevoked()) {
-                            log.warn("尝试使用已撤销的Token: jti={}, userId={}", jti, userId);
+                            log.debug("尝试使用已撤销的Token: userId={}", userId);
                             return Mono.error(new BusinessException(ResultCode.UNAUTHORIZED, "Token已撤销"));
                         }
 
@@ -110,7 +110,7 @@ public class RefreshTokenRotationService {
                         if (tokenFamily == null || tokenFamily.isEmpty()) {
                             // 兼容旧Token，创建新Family
                             tokenFamily = UUID.randomUUID().toString();
-                            log.info("为旧Token创建Family: jti={}, newFamily={}", jti, tokenFamily);
+                            log.debug("为旧Token创建Family: userId={}", userId);
                         }
 
                         String finalTokenFamily = tokenFamily;
@@ -118,11 +118,7 @@ public class RefreshTokenRotationService {
                         // 4. 检查Family是否已被撤销（重放攻击检测）
                         return checkFamilyRevoked(finalTokenFamily).flatMap(isRevoked -> {
                             if (isRevoked) {
-                                log.error(
-                                        "检测到Token Family重放攻击: family={}, userId={}, jti={}",
-                                        finalTokenFamily,
-                                        userId,
-                                        jti);
+                                log.debug("检测到Token Family重放攻击: userId={}", userId);
 
                                 return auditService
                                         .logSecurityEvent(
@@ -140,8 +136,7 @@ public class RefreshTokenRotationService {
                             return markTokenAsUsed(jti).flatMap(isFirstUse -> {
                                 if (!isFirstUse) {
                                     // Token被并发使用或重放
-                                    log.error(
-                                            "检测到Token重用: jti={}, family={}, userId={}", jti, finalTokenFamily, userId);
+                                    log.debug("检测到Token重用: userId={}", userId);
 
                                     // 撤销整个Token Family
                                     return revokeTokenFamily(finalTokenFamily, userId, tenantId)
@@ -173,11 +168,11 @@ public class RefreshTokenRotationService {
                             });
                         });
                     })
-                    .doOnSuccess(pair -> log.info("Token轮换成功"))
-                    .doOnError(e -> log.error("Token轮换失败: {}", e.getMessage()));
+                    .doOnSuccess(pair -> log.debug("Token轮换成功"))
+                    .doOnError(e -> log.debug("Token轮换失败: type={}", e.getClass().getSimpleName()));
 
         } catch (Exception e) {
-            log.error("Token解析失败", e);
+            log.warn("Token解析失败: type={}", e.getClass().getSimpleName());
             return Mono.error(new BusinessException(ResultCode.UNAUTHORIZED, "Token无效"));
         }
     }
@@ -209,7 +204,7 @@ public class RefreshTokenRotationService {
      * 当检测到Token重用时调用
      */
     private Mono<Void> revokeTokenFamily(String tokenFamily, Long userId, String tenantId) {
-        log.warn("撤销Token Family: family={}, userId={}", tokenFamily, userId);
+        log.debug("撤销Token Family: userId={}", userId);
 
         // 1. 在Redis中标记Family为已撤销
         String key = FAMILY_REVOKED_KEY_PREFIX + tokenFamily;

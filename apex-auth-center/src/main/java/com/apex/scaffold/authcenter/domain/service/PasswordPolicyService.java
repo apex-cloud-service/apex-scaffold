@@ -225,6 +225,9 @@ public class PasswordPolicyService {
      * @return 完成标识
      */
     public Mono<Void> addPasswordToHistory(String userId, String passwordHash) {
+        if (!com.apex.scaffold.common.util.PasswordUtil.isBcryptHash(passwordHash)) {
+            return Mono.error(new IllegalArgumentException("密码历史仅接受BCrypt哈希"));
+        }
         String key = REDIS_PASSWORD_HISTORY + userId;
 
         return redisTemplate
@@ -324,6 +327,13 @@ public class PasswordPolicyService {
         private final int score;
         private final List<String> errors;
 
+        /**
+         * 构造密码验证结果。
+         *
+         * @param passed 是否通过校验
+         * @param score 强度评分
+         * @param errors 未通过时的错误信息列表
+         */
         public PasswordValidationResult(boolean passed, int score, List<String> errors) {
             this.passed = passed;
             this.score = score;

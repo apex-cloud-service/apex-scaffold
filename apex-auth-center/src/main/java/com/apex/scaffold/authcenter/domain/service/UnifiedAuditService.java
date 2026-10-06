@@ -1,5 +1,6 @@
 package com.apex.scaffold.authcenter.domain.service;
 
+import com.apex.scaffold.common.util.LogSafetyUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Instant;
 import java.util.HashMap;
@@ -54,6 +55,26 @@ public class UnifiedAuditService {
 
     private final ReactiveRedisTemplate<String, String> redisTemplate;
     private final ObjectMapper objectMapper;
+    private final java.util.concurrent.Semaphore alerts = new java.util.concurrent.Semaphore(64);
+    private final java.util.concurrent.Semaphore pending = new java.util.concurrent.Semaphore(256);
+    private final java.util.concurrent.atomic.AtomicLong dropped = new java.util.concurrent.atomic.AtomicLong();
+    private final java.util.concurrent.atomic.AtomicLong failed = new java.util.concurrent.atomic.AtomicLong();
+
+    public long getDroppedCount() {
+        return dropped.get();
+    }
+
+    public long getFailedCount() {
+        return failed.get();
+    }
+
+    private Map<String, Object> copyDetails(Map<String, Object> details) {
+        Map<String, Object> copy = new java.util.LinkedHashMap<>();
+        if (details != null) {
+            details.entrySet().stream().limit(28).forEach(entry -> copy.put(entry.getKey(), entry.getValue()));
+        }
+        return copy;
+    }
 
     /**
      * 记录认证事件
@@ -99,9 +120,7 @@ public class UnifiedAuditService {
             boolean success,
             Map<String, Object> details) {
 
-        if (details == null) {
-            details = new HashMap<>(16);
-        }
+        details = copyDetails(details);
         details.put("resourceId", resourceId);
 
         return logEvent(EventType.AUTHORIZATION, action, userId, tenantId, null, null, success, null, details);
@@ -129,9 +148,7 @@ public class UnifiedAuditService {
             boolean success,
             Map<String, Object> details) {
 
-        if (details == null) {
-            details = new HashMap<>(16);
-        }
+        details = copyDetails(details);
         details.put("clientId", clientId);
 
         return logEvent(EventType.OAUTH2, action, userId, tenantId, clientIp, null, success, null, details);
@@ -162,9 +179,7 @@ public class UnifiedAuditService {
             String errorMessage,
             Map<String, Object> details) {
 
-        if (details == null) {
-            details = new HashMap<>(16);
-        }
+        details = copyDetails(details);
         details.put("protocol", protocol);
         details.put("idpName", idpName);
 
@@ -192,9 +207,7 @@ public class UnifiedAuditService {
             String errorMessage,
             Map<String, Object> details) {
 
-        if (details == null) {
-            details = new HashMap<>(16);
-        }
+        details = copyDetails(details);
         details.put("severity", severity);
 
         return logEvent(EventType.SECURITY, action, userId, tenantId, clientIp, null, false, errorMessage, details)
@@ -234,91 +247,83 @@ public class UnifiedAuditService {
             String errorMessage,
             Map<String, Object> details) {
 
-        return Mono.fromCallable(() -> {
-                    AuditLog auditLog = new AuditLog();
-                    auditLog.setEventId(UUID.randomUUID().toString());
-                    auditLog.setEventType(eventType.name());
-                    auditLog.setAction(action);
-                    auditLog.setUserId(userId);
-                    auditLog.setTenantId(tenantId);
-                    auditLog.setClientIp(clientIp);
-                    auditLog.setUserAgent(userAgent);
-                    auditLog.setSuccess(success);
-                    auditLog.setErrorMessage(errorMessage);
-                    auditLog.setDetails(details);
-                    auditLog.setTimestamp(Instant.now());
-                    auditLog.setTraceId(getTraceId());
-
-                    return auditLog;
-                })
-                .flatMap(auditLog -> {
-                    // 序列化为JSON
-                    return Mono.fromCallable(() -> objectMapper.writeValueAsString(auditLog))
-                            .flatMap(json -> {
-                                // 写入Redis Stream（持久化 + 实时消费）
-                                Map<String, String> streamData = new HashMap<>(16);
-                                streamData.put("data", json);
-
-                                return redisTemplate
-                                        .opsForStream()
-                                        .add(AUDIT_LOG_STREAM, streamData)
-                                        .thenReturn(auditLog);
-                            })
-                            .doOnSuccess(result -> {
-                                // 同时输出到应用日志
-                                if (result.isSuccess()) {
-                                    log.info(
-                                            "[AUDIT] eventType={}, action={}, userId={}, tenantId={}, clientIp={}, traceId={}",
-                                            result.getEventType(),
-                                            result.getAction(),
-                                            result.getUserId(),
-                                            result.getTenantId(),
-                                            result.getClientIp(),
-                                            result.getTraceId());
-                                } else {
-                                    log.warn(
-                                            "[AUDIT] eventType={}, action={}, userId={}, tenantId={}, clientIp={}, error={}, traceId={}",
-                                            result.getEventType(),
-                                            result.getAction(),
-                                            result.getUserId(),
-                                            result.getTenantId(),
-                                            result.getClientIp(),
-                                            result.getErrorMessage(),
-                                            result.getTraceId());
-                                }
-                            });
-                })
-                .onErrorResume(e -> {
-                    // 审计日志记录失败不应影响业务，但必须记录错误
-                    log.error("[AUDIT] 审计日志记录失败: eventType={}, action={}, userId={}", eventType, action, userId, e);
-                    return Mono.empty();
-                });
+        return Mono.deferContextual(context -> {
+            if (!pending.tryAcquire()) {
+                dropped.incrementAndGet();
+                return Mono.empty();
+            }
+            return Mono.fromCallable(() -> {
+                        AuditLog auditLog = new AuditLog();
+                        auditLog.setEventId(UUID.randomUUID().toString());
+                        auditLog.setEventType(eventType.name());
+                        auditLog.setAction(LogSafetyUtil.text(action, 64));
+                        auditLog.setUserId(LogSafetyUtil.text(userId, 64));
+                        auditLog.setTenantId(LogSafetyUtil.text(tenantId, 64));
+                        auditLog.setClientIp(LogSafetyUtil.text(clientIp, 64));
+                        auditLog.setUserAgent(LogSafetyUtil.text(userAgent, 256));
+                        auditLog.setSuccess(success);
+                        auditLog.setErrorMessage(errorMessage == null ? null : "[omitted]");
+                        auditLog.setDetails(objectMapper.readValue(
+                                LogSafetyUtil.json(details, 2048),
+                                new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {}));
+                        auditLog.setTimestamp(Instant.now());
+                        auditLog.setTraceId(LogSafetyUtil.text(context.getOrDefault("traceId", getTraceId()), 64));
+                        return auditLog;
+                    })
+                    .flatMap(auditLog -> Mono.fromCallable(() -> objectMapper.writeValueAsString(auditLog))
+                            .flatMap(json -> redisTemplate
+                                    .opsForStream()
+                                    .add(
+                                            AUDIT_LOG_STREAM,
+                                            Map.of("data", json),
+                                            org.springframework.data.redis.connection.RedisStreamCommands.XAddOptions
+                                                    .maxlen(100000))
+                                    .thenReturn(auditLog)))
+                    .timeout(java.time.Duration.ofSeconds(3))
+                    .onErrorResume(error -> {
+                        failed.incrementAndGet();
+                        return Mono.empty();
+                    })
+                    .doFinally(signal -> pending.release());
+        });
     }
 
     /**
      * 发送安全告警到专用队列
      */
     private Mono<Void> sendSecurityAlert(AuditLog auditLog) {
-        return Mono.fromCallable(() -> objectMapper.writeValueAsString(auditLog))
-                .flatMap(json -> {
-                    Map<String, String> alertData = new HashMap<>(16);
-                    alertData.put("alert", json);
+        return Mono.defer(() -> {
+            if (!alerts.tryAcquire()) {
+                dropped.incrementAndGet();
+                return Mono.empty();
+            }
+            return Mono.fromCallable(() -> objectMapper.writeValueAsString(auditLog))
+                    .flatMap(json -> {
+                        Map<String, String> alertData = new HashMap<>(16);
+                        alertData.put("alert", json);
 
-                    return redisTemplate
-                            .opsForStream()
-                            .add(AUDIT_SECURITY_ALERT, alertData)
-                            .then();
-                })
-                .doOnSuccess(v -> log.error(
-                        "[SECURITY ALERT] 高危安全事件: action={}, userId={}, clientIp={}, error={}",
-                        auditLog.getAction(),
-                        auditLog.getUserId(),
-                        auditLog.getClientIp(),
-                        auditLog.getErrorMessage()))
-                .onErrorResume(e -> {
-                    log.error("[SECURITY ALERT] 安全告警发送失败", e);
-                    return Mono.empty();
-                });
+                        return redisTemplate
+                                .opsForStream()
+                                .add(
+                                        AUDIT_SECURITY_ALERT,
+                                        alertData,
+                                        org.springframework.data.redis.connection.RedisStreamCommands.XAddOptions
+                                                .maxlen(10000))
+                                .then();
+                    })
+                    .timeout(java.time.Duration.ofSeconds(3))
+                    .doOnSuccess(v -> log.debug(
+                            "[SECURITY ALERT] 高危安全事件: action={}, userId={}, clientIp={}, error={}",
+                            auditLog.getAction(),
+                            auditLog.getUserId(),
+                            auditLog.getClientIp(),
+                            auditLog.getErrorMessage()))
+                    .onErrorResume(e -> {
+                        failed.incrementAndGet();
+                        return Mono.empty();
+                    })
+                    .doFinally(signal -> alerts.release());
+        });
     }
 
     /**
@@ -326,8 +331,8 @@ public class UnifiedAuditService {
      * 实际项目中应从MDC或Sleuth中获取
      */
     private String getTraceId() {
-        // TODO: 集成Spring Cloud Sleuth或OpenTelemetry
-        return UUID.randomUUID().toString();
+        String traceId = org.slf4j.MDC.get("traceId");
+        return traceId == null ? UUID.randomUUID().toString() : LogSafetyUtil.text(traceId, 64);
     }
 
     /**

@@ -2,6 +2,7 @@ package com.apex.scaffold.authcenter.interfaces.router;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.apex.scaffold.authcenter.AuthCenterBasicTestConfiguration;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.time.Duration;
 import java.util.HashSet;
@@ -12,7 +13,6 @@ import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import com.apex.scaffold.authcenter.AuthCenterBasicTestConfiguration;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
@@ -24,7 +24,14 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.TestConstructor;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(
+        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+        properties = {
+            "security.encryption.key=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+            "apex.security.data-encryption-key=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+            "apex.security.config-encryption-key=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+            "security.config.encryption.key=01234567890123456789012345678901"
+        })
 @Import(AuthCenterBasicTestConfiguration.class)
 @AutoConfigureWebTestClient
 @ActiveProfiles("basic")

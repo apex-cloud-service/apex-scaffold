@@ -5,12 +5,12 @@ import com.apex.scaffold.authcenter.domain.repository.TotpRepository;
 import com.apex.scaffold.authcenter.infrastructure.persistence.converter.TotpConverter;
 import com.apex.scaffold.authcenter.infrastructure.persistence.mapper.TotpMapper;
 import com.apex.scaffold.authcenter.infrastructure.persistence.po.TotpPO;
+import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 /**
  * TOTP 仓储实现
@@ -27,25 +27,31 @@ public class TotpRepositoryImpl implements TotpRepository {
 
     private final TotpMapper totpMapper;
     private final TotpConverter totpConverter;
+    private final com.apex.scaffold.common.security.EncryptionService encryptionService;
 
     @Override
     public Mono<TotpEntity> save(TotpEntity totp) {
-        return Mono.fromCallable(() -> {
-                    TotpPO po = totpConverter.toPo(totp);
-                    totpMapper.insert(po);
-                    return totpConverter.toEntity(po);
-                })
-                .subscribeOn(Schedulers.boundedElastic());
+        return Mono.defer(() -> encrypt(totpConverter.toPo(totp)))
+                .flatMap(po -> Mono.fromCallable(() -> {
+                            totpMapper.insert(po);
+                            return po;
+                        })
+                        .subscribeOn(BlockingIoSchedulers.jdbc()))
+                .flatMap(this::decrypt);
     }
 
     @Override
     public Mono<TotpEntity> update(TotpEntity totp) {
-        return Mono.fromCallable(() -> {
-                    TotpPO po = totpConverter.toPo(totp);
-                    totpMapper.updateById(po);
-                    return totpConverter.toEntity(po);
-                })
-                .subscribeOn(Schedulers.boundedElastic());
+        return Mono.defer(() -> encrypt(totpConverter.toPo(totp)))
+                .flatMap(po -> Mono.fromCallable(() -> {
+                            if (totpMapper.updateById(po) != 1) {
+                                throw new org.springframework.dao.OptimisticLockingFailureException(
+                                        "TOTP update failed");
+                            }
+                            return po;
+                        })
+                        .subscribeOn(BlockingIoSchedulers.jdbc()))
+                .flatMap(this::decrypt);
     }
 
     @Override
@@ -54,18 +60,20 @@ public class TotpRepositoryImpl implements TotpRepository {
                     LambdaQueryWrapper<TotpPO> wrapper = new LambdaQueryWrapper<>();
                     wrapper.eq(TotpPO::getId, id).eq(TotpPO::getTenantId, tenantId);
                     TotpPO po = totpMapper.selectOne(wrapper);
-                    return po != null ? totpConverter.toEntity(po) : null;
+                    return po;
                 })
-                .subscribeOn(Schedulers.boundedElastic());
+                .subscribeOn(BlockingIoSchedulers.jdbc())
+                .flatMap(this::decrypt);
     }
 
     @Override
     public Mono<TotpEntity> findByUserId(Long userId, String tenantId) {
         return Mono.fromCallable(() -> {
                     TotpPO po = totpMapper.selectByUserIdAndTenantId(userId, tenantId);
-                    return po != null ? totpConverter.toEntity(po) : null;
+                    return po;
                 })
-                .subscribeOn(Schedulers.boundedElastic());
+                .subscribeOn(BlockingIoSchedulers.jdbc())
+                .flatMap(this::decrypt);
     }
 
     @Override
@@ -75,18 +83,42 @@ public class TotpRepositoryImpl implements TotpRepository {
                     wrapper.eq(TotpPO::getId, id).eq(TotpPO::getTenantId, tenantId);
                     return totpMapper.delete(wrapper) > 0;
                 })
-                .subscribeOn(Schedulers.boundedElastic());
+                .subscribeOn(BlockingIoSchedulers.jdbc());
     }
 
     @Override
     public Mono<Boolean> deleteByUserId(Long userId, String tenantId) {
         return Mono.fromCallable(() -> totpMapper.deleteByUserIdAndTenantId(userId, tenantId) > 0)
-                .subscribeOn(Schedulers.boundedElastic());
+                .subscribeOn(BlockingIoSchedulers.jdbc());
     }
 
     @Override
     public Mono<Boolean> existsByUserId(Long userId, String tenantId) {
         return Mono.fromCallable(() -> totpMapper.existsByUserIdAndTenantId(userId, tenantId) > 0)
-                .subscribeOn(Schedulers.boundedElastic());
+                .subscribeOn(BlockingIoSchedulers.jdbc());
+    }
+
+    private Mono<TotpPO> encrypt(TotpPO po) {
+        return transform(po.getSecret(), true)
+                .doOnNext(po::setSecret)
+                .then(transform(po.getBackupCodes(), true).doOnNext(po::setBackupCodes))
+                .then(transform(po.getUsedBackupCodes(), true).doOnNext(po::setUsedBackupCodes))
+                .thenReturn(po);
+    }
+
+    private Mono<TotpEntity> decrypt(TotpPO po) {
+        TotpEntity entity = totpConverter.toEntity(po);
+        return transform(po.getSecret(), false)
+                .doOnNext(entity::setSecret)
+                .then(transform(po.getBackupCodes(), false).doOnNext(entity::setBackupCodes))
+                .then(transform(po.getUsedBackupCodes(), false).doOnNext(entity::setUsedBackupCodes))
+                .thenReturn(entity);
+    }
+
+    private Mono<String> transform(String value, boolean encrypt) {
+        if (value == null) {
+            return Mono.empty();
+        }
+        return encrypt ? encryptionService.encrypt(value) : encryptionService.decrypt(value);
     }
 }

@@ -94,6 +94,33 @@ class RefreshTokenRotationServiceTest {
         return claims;
     }
 
+    @Test
+    void invalidTokenLogsExcludeCredentialAndExceptionText() {
+        ch.qos.logback.classic.Logger logger =
+                (ch.qos.logback.classic.Logger) org.slf4j.LoggerFactory.getLogger(RefreshTokenRotationService.class);
+        ch.qos.logback.core.read.ListAppender<ch.qos.logback.classic.spi.ILoggingEvent> appender =
+                new ch.qos.logback.core.read.ListAppender<>();
+        appender.start();
+        logger.addAppender(appender);
+        try (MockedStatic<JwtUtil> jwtUtil = mockStatic(JwtUtil.class)) {
+            jwtUtil.when(() -> JwtUtil.parseToken("secret-token"))
+                    .thenThrow(new JwtException("secret-token untrusted-message"));
+            StepVerifier.create(service.rotateRefreshToken("secret-token"))
+                    .expectError(BusinessException.class)
+                    .verify();
+            org.assertj.core.api.Assertions.assertThat(appender.list).isNotEmpty();
+            org.assertj.core.api.Assertions.assertThat(appender.list).allSatisfy(event -> {
+                org.assertj.core.api.Assertions.assertThat(event.getFormattedMessage())
+                        .doesNotContain("secret-token", "untrusted-message");
+                org.assertj.core.api.Assertions.assertThat(event.getThrowableProxy())
+                        .isNull();
+            });
+        } finally {
+            logger.detachAppender(appender);
+            appender.stop();
+        }
+    }
+
     @Nested
     @DisplayName("rotateRefreshToken() 方法测试")
     class RotateRefreshTokenTest {

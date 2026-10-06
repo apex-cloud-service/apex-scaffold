@@ -21,15 +21,26 @@ import org.junit.jupiter.api.Test;
 @DisplayName("ConfigEncryptionService 单元测试")
 class ConfigEncryptionServiceTest {
 
+    @Test
+    void shouldRejectMissingAndInvalidKeys() {
+        for (String key : new String[] {null, "", " ", "invalid-secret!"}) {
+            assertThatThrownBy(() -> new ConfigEncryptionService(key)).isInstanceOf(IllegalArgumentException.class);
+        }
+        for (int length : new int[] {0, 16, 24, 31, 33}) {
+            String key = Base64.getEncoder().encodeToString(new byte[length]);
+            assertThatThrownBy(() -> new ConfigEncryptionService(key)).isInstanceOf(IllegalArgumentException.class);
+        }
+    }
+
     @Nested
-    @DisplayName("使用临时生成密钥（未提供配置密钥）")
+    @DisplayName("使用显式生成密钥")
     class WithGeneratedKeyTests {
 
         private ConfigEncryptionService service;
 
         @BeforeEach
         void setUp() {
-            service = new ConfigEncryptionService("");
+            service = new ConfigEncryptionService(ConfigEncryptionService.generateKeyBase64());
         }
 
         @Test
@@ -194,7 +205,7 @@ class ConfigEncryptionServiceTest {
 
         @BeforeEach
         void setUp() {
-            service = new ConfigEncryptionService("");
+            service = new ConfigEncryptionService(ConfigEncryptionService.generateKeyBase64());
         }
 
         @Test

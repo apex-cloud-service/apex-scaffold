@@ -28,6 +28,40 @@ class VaultKmsServiceTest {
     }
 
     @Test
+    void propertiesDoNotExposeToken() {
+        assertThat(properties.toString()).doesNotContain("test-token");
+    }
+
+    @Test
+    void failuresDoNotExposeRemoteCredentials() {
+        ch.qos.logback.classic.Logger logger =
+                (ch.qos.logback.classic.Logger) org.slf4j.LoggerFactory.getLogger(VaultKmsService.class);
+        ch.qos.logback.core.read.ListAppender<ch.qos.logback.classic.spi.ILoggingEvent> appender =
+                new ch.qos.logback.core.read.ListAppender<>();
+        appender.start();
+        logger.addAppender(appender);
+        RuntimeException failure = new IllegalStateException("vault-token-private-secret");
+        org.springframework.web.reactive.function.client.WebClient client =
+                org.springframework.web.reactive.function.client.WebClient.builder()
+                        .exchangeFunction(request -> reactor.core.publisher.Mono.error(failure))
+                        .build();
+        org.springframework.test.util.ReflectionTestUtils.setField(vaultKmsService, "webClient", client);
+        try {
+            reactor.test.StepVerifier.create(vaultKmsService.encrypt("private-secret", null))
+                    .expectError()
+                    .verify();
+            assertThat(appender.list).isNotEmpty();
+            assertThat(appender.list).allSatisfy(event -> {
+                assertThat(event.getFormattedMessage()).doesNotContain("private-secret");
+                assertThat(event.getThrowableProxy()).isNull();
+            });
+        } finally {
+            logger.detachAppender(appender);
+            appender.stop();
+        }
+    }
+
+    @Test
     @DisplayName("VaultKmsService初始化 - 验证属性设置")
     void testVaultKmsServiceInitialization() {
         assertThat(vaultKmsService).isNotNull();

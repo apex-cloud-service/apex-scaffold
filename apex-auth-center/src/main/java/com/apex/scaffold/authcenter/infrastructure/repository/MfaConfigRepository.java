@@ -48,8 +48,7 @@ public interface MfaConfigRepository extends ReactiveCrudRepository<MfaConfig, L
      * @param tenantId 租户 ID
      * @return MFA 配置
      */
-    Mono<MfaConfig> findByUserIdAndTypeAndTenantId(
-            String userId, MfaConfig.MfaType type, String tenantId);
+    Mono<MfaConfig> findByUserIdAndTypeAndTenantId(String userId, MfaConfig.MfaType type, String tenantId);
 
     /**
      * 根据租户 ID 查询所有 MFA 配置。

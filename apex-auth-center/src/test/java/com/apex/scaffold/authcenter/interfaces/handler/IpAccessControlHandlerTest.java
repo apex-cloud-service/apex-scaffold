@@ -314,7 +314,8 @@ class IpAccessControlHandlerTest {
             when(request.pathVariable("ruleId")).thenReturn("1001");
             when(request.attribute("userId")).thenReturn(Optional.of("admin-1"));
             when(request.attribute("tenantId")).thenReturn(Optional.of("tenant-1"));
-            when(ipAccessControlService.enableRule(1001L, "tenant-1", "admin-1")).thenReturn(Mono.empty());
+            when(ipAccessControlService.enableRule(1001L, "tenant-1", "admin-1"))
+                    .thenReturn(Mono.empty());
 
             StepVerifier.create(handler.enableRule(request))
                     .assertNext(response ->
@@ -361,7 +362,8 @@ class IpAccessControlHandlerTest {
             when(request.pathVariable("ruleId")).thenReturn("1001");
             when(request.attribute("userId")).thenReturn(Optional.of("admin-1"));
             when(request.attribute("tenantId")).thenReturn(Optional.of("tenant-1"));
-            when(ipAccessControlService.disableRule(1001L, "tenant-1", "admin-1")).thenReturn(Mono.empty());
+            when(ipAccessControlService.disableRule(1001L, "tenant-1", "admin-1"))
+                    .thenReturn(Mono.empty());
 
             StepVerifier.create(handler.disableRule(request))
                     .assertNext(response ->
@@ -393,7 +395,8 @@ class IpAccessControlHandlerTest {
             when(request.pathVariable("ruleId")).thenReturn("1001");
             when(request.attribute("userId")).thenReturn(Optional.of("admin-1"));
             when(request.attribute("tenantId")).thenReturn(Optional.of("tenant-1"));
-            when(ipAccessControlService.deleteRule(1001L, "tenant-1", "admin-1")).thenReturn(Mono.empty());
+            when(ipAccessControlService.deleteRule(1001L, "tenant-1", "admin-1"))
+                    .thenReturn(Mono.empty());
 
             StepVerifier.create(handler.deleteRule(request))
                     .assertNext(response ->

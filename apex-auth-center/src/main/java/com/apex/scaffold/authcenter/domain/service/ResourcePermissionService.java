@@ -1,7 +1,7 @@
 package com.apex.scaffold.authcenter.domain.service;
 
-import java.util.*;
 import com.apex.scaffold.authcenter.application.service.UnifiedAuthorizationQueryService;
+import java.util.*;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,6 +41,7 @@ public class ResourcePermissionService {
     private static final String ROLE_DEPT_MANAGER = "DEPT_MANAGER";
     private static final String RESOURCE_TYPE_SENSITIVE_DATA = "sensitive-data";
     private static final String PERMISSION_MANAGE = "MANAGE";
+    private static final String RESOURCE_TYPE_AUDIT_LOGS = "audit-logs";
 
     /**
      * Redis键前缀
@@ -82,7 +83,8 @@ public class ResourcePermissionService {
             return Mono.just(false);
         }
         String permissionCode = permissionCode(resourceType, requiredPermission);
-        return authorizationQueryService.query(context.getTenantId(), numericUserId)
+        return authorizationQueryService
+                .query(context.getTenantId(), numericUserId)
                 .map(authorization -> authorization.permissions().contains(permissionCode));
     }
 
@@ -97,16 +99,28 @@ public class ResourcePermissionService {
     }
 
     private boolean isRbacManagedResource(String resourceType, String requiredPermission) {
-        return ("session".equals(resourceType) || "user-sessions".equals(resourceType)) && "MANAGE".equals(requiredPermission)
+        return ("session".equals(resourceType) || "user-sessions".equals(resourceType))
+                        && "MANAGE".equals(requiredPermission)
                 || "audit-logs".equals(resourceType) && "MANAGE".equals(requiredPermission)
                 || "role".equals(resourceType) && "MANAGE".equals(requiredPermission)
                 || "mfa".equals(resourceType) && "MANAGE".equals(requiredPermission);
     }
 
+    /**
+     * 构造仅使用Redis授权数据的服务（无统一授权查询）。
+     *
+     * @param redisTemplate Redis模板
+     */
     public ResourcePermissionService(ReactiveRedisTemplate<String, String> redisTemplate) {
         this(redisTemplate, null);
     }
 
+    /**
+     * 构造资源权限服务
+     *
+     * @param redisTemplate Redis模板
+     * @param authorizationQueryService 统一授权查询服务，可为null
+     */
     public ResourcePermissionService(
             ReactiveRedisTemplate<String, String> redisTemplate,
             UnifiedAuthorizationQueryService authorizationQueryService) {
@@ -138,8 +152,9 @@ public class ResourcePermissionService {
                 resourceId,
                 requiredPermission);
 
-        if ("audit-logs".equals(resourceType)
-                && (context.getTenantId() == null || !context.getTenantId().equals(resourceId))) {
+        boolean auditTenantMismatch =
+                context.getTenantId() == null || !context.getTenantId().equals(resourceId);
+        if (RESOURCE_TYPE_AUDIT_LOGS.equals(resourceType) && auditTenantMismatch) {
             return Mono.just(false);
         }
         Mono<Boolean> rbacPermission = checkRbacPermission(userId, resourceType, requiredPermission, context);
@@ -151,39 +166,40 @@ public class ResourcePermissionService {
                 return Mono.just(true);
             }
             return isResourceOwner(userId, resourceType, resourceId, context.getTenantId())
-                .flatMap(isOwner -> {
-                    if (isOwner) {
-                        log.debug("资源所有者直接通过: userId={}, resourceId={}", userId, resourceId);
-                        return Mono.just(true);
-                    }
+                    .flatMap(isOwner -> {
+                        if (isOwner) {
+                            log.debug("资源所有者直接通过: userId={}, resourceId={}", userId, resourceId);
+                            return Mono.just(true);
+                        }
 
-                    // 3. 检查显式授权
-                    return checkExplicitPermission(userId, resourceType, resourceId, requiredPermission, context.getTenantId())
-                            .flatMap(hasExplicit -> {
-                                if (hasExplicit) {
-                                    return Mono.just(true);
-                                }
+                        // 3. 检查显式授权
+                        return checkExplicitPermission(
+                                        userId, resourceType, resourceId, requiredPermission, context.getTenantId())
+                                .flatMap(hasExplicit -> {
+                                    if (hasExplicit) {
+                                        return Mono.just(true);
+                                    }
 
-                                // 4. 检查组织层级权限
-                                return checkOrganizationPermission(
-                                        userId, resourceType, resourceId, requiredPermission, context);
-                            });
-                })
-                // 5. 检查临时权限
-                .flatMap(hasPermission -> {
-                    if (hasPermission) {
-                        return Mono.just(true);
-                    }
-                    return checkTemporaryPermission(
-                            userId, resourceType, resourceId, requiredPermission, context.getTenantId());
-                })
-                // 6. 检查条件权限（IP/设备限制）
-                .flatMap(hasPermission -> {
-                    if (!hasPermission) {
-                        return Mono.just(false);
-                    }
-                    return validatePermissionContext(userId, resourceType, resourceId, context);
-                });
+                                    // 4. 检查组织层级权限
+                                    return checkOrganizationPermission(
+                                            userId, resourceType, resourceId, requiredPermission, context);
+                                });
+                    })
+                    // 5. 检查临时权限
+                    .flatMap(hasPermission -> {
+                        if (hasPermission) {
+                            return Mono.just(true);
+                        }
+                        return checkTemporaryPermission(
+                                userId, resourceType, resourceId, requiredPermission, context.getTenantId());
+                    })
+                    // 6. 检查条件权限（IP/设备限制）
+                    .flatMap(hasPermission -> {
+                        if (!hasPermission) {
+                            return Mono.just(false);
+                        }
+                        return validatePermissionContext(userId, resourceType, resourceId, context);
+                    });
         });
     }
 
@@ -194,8 +210,7 @@ public class ResourcePermissionService {
         return isResourceOwner(userId, resourceType, resourceId, null);
     }
 
-    private Mono<Boolean> isResourceOwner(
-            String userId, String resourceType, String resourceId, String tenantId) {
+    private Mono<Boolean> isResourceOwner(String userId, String resourceType, String resourceId, String tenantId) {
         String key = resourceKey(REDIS_RESOURCE_OWNER, resourceType, resourceId, tenantId);
 
         return redisTemplate
@@ -212,8 +227,7 @@ public class ResourcePermissionService {
         return setResourceOwner(resourceType, resourceId, ownerId, null);
     }
 
-    public Mono<Void> setResourceOwner(
-            String resourceType, String resourceId, String ownerId, String tenantId) {
+    public Mono<Void> setResourceOwner(String resourceType, String resourceId, String ownerId, String tenantId) {
         String key = resourceKey(REDIS_RESOURCE_OWNER, resourceType, resourceId, tenantId);
         return redisTemplate.opsForValue().set(key, ownerId).then();
     }
@@ -222,11 +236,7 @@ public class ResourcePermissionService {
      * 检查显式授权
      */
     private Mono<Boolean> checkExplicitPermission(
-            String userId,
-            String resourceType,
-            String resourceId,
-            String requiredPermission,
-            String tenantId) {
+            String userId, String resourceType, String resourceId, String requiredPermission, String tenantId) {
         String key = resourceKey(REDIS_RESOURCE_SHARE, resourceType, resourceId, tenantId);
 
         return redisTemplate
@@ -253,12 +263,17 @@ public class ResourcePermissionService {
         return grantPermission(resourceType, resourceId, targetUserId, permissions, null);
     }
 
+    /**
+     * 授予资源权限（指定租户）
+     *
+     * @param resourceType 资源类型
+     * @param resourceId 资源ID
+     * @param targetUserId 目标用户ID
+     * @param permissions 权限集合（READ/WRITE/DELETE/MANAGE）
+     * @param tenantId 租户ID，null表示默认作用域
+     */
     public Mono<Void> grantPermission(
-            String resourceType,
-            String resourceId,
-            String targetUserId,
-            Set<String> permissions,
-            String tenantId) {
+            String resourceType, String resourceId, String targetUserId, Set<String> permissions, String tenantId) {
         String key = resourceKey(REDIS_RESOURCE_SHARE, resourceType, resourceId, tenantId);
         String permissionStr = String.join(",", permissions);
 
@@ -279,8 +294,15 @@ public class ResourcePermissionService {
         return revokePermission(resourceType, resourceId, targetUserId, null);
     }
 
-    public Mono<Void> revokePermission(
-            String resourceType, String resourceId, String targetUserId, String tenantId) {
+    /**
+     * 撤销资源权限（指定租户）
+     *
+     * @param resourceType 资源类型
+     * @param resourceId 资源ID
+     * @param targetUserId 目标用户ID
+     * @param tenantId 租户ID，null表示默认作用域
+     */
+    public Mono<Void> revokePermission(String resourceType, String resourceId, String targetUserId, String tenantId) {
         String key = resourceKey(REDIS_RESOURCE_SHARE, resourceType, resourceId, tenantId);
 
         log.info("撤销资源权限: type={}, resourceId={}, targetUserId={}", resourceType, resourceId, targetUserId);
@@ -324,10 +346,19 @@ public class ResourcePermissionService {
             String targetUserId,
             Set<String> permissions,
             long durationSeconds) {
-        return grantTemporaryPermission(
-                resourceType, resourceId, targetUserId, permissions, durationSeconds, null);
+        return grantTemporaryPermission(resourceType, resourceId, targetUserId, permissions, durationSeconds, null);
     }
 
+    /**
+     * 授予临时权限（带过期时间，指定租户）
+     *
+     * @param resourceType 资源类型
+     * @param resourceId 资源ID
+     * @param targetUserId 目标用户ID
+     * @param permissions 权限集合
+     * @param durationSeconds 有效期（秒）
+     * @param tenantId 租户ID，null表示默认作用域
+     */
     public Mono<Void> grantTemporaryPermission(
             String resourceType,
             String resourceId,
@@ -335,8 +366,7 @@ public class ResourcePermissionService {
             Set<String> permissions,
             long durationSeconds,
             String tenantId) {
-        String key = resourceKey(REDIS_TEMP_PERMISSION, resourceType, resourceId, tenantId)
-                + ":" + targetUserId;
+        String key = resourceKey(REDIS_TEMP_PERMISSION, resourceType, resourceId, tenantId) + ":" + targetUserId;
         String permissionStr = String.join(",", permissions);
 
         log.info(
@@ -357,11 +387,7 @@ public class ResourcePermissionService {
      * 检查临时权限
      */
     private Mono<Boolean> checkTemporaryPermission(
-            String userId,
-            String resourceType,
-            String resourceId,
-            String requiredPermission,
-            String tenantId) {
+            String userId, String resourceType, String resourceId, String requiredPermission, String tenantId) {
         String key = resourceKey(REDIS_TEMP_PERMISSION, resourceType, resourceId, tenantId) + ":" + userId;
 
         return redisTemplate
@@ -387,7 +413,7 @@ public class ResourcePermissionService {
             String resourceId,
             String requiredPermission,
             PermissionContext context) {
-        // TODO: 实现组织层级权限检查
+        // TODO(Apex Team): 实现组织层级权限检查
         // 1. 查询用户的组织角色（部门经理、项目管理员等）
         // 2. 查询资源所属的组织单元
         // 3. 判断用户角色是否有该组织单元的权限
@@ -459,16 +485,29 @@ public class ResourcePermissionService {
         private final String deviceId;
         private final String tenantId;
 
+        /**
+         * 构造权限上下文（无租户标识）。
+         *
+         * @param superAdmin 是否超级管理员
+         * @param organizationRoles 组织角色集合
+         * @param clientIp 客户端IP
+         * @param deviceId 设备ID
+         */
         public PermissionContext(boolean superAdmin, Set<String> organizationRoles, String clientIp, String deviceId) {
             this(superAdmin, organizationRoles, clientIp, deviceId, null);
         }
 
+        /**
+         * 构造权限上下文。
+         *
+         * @param superAdmin 是否超级管理员
+         * @param organizationRoles 组织角色集合
+         * @param clientIp 客户端IP
+         * @param deviceId 设备ID
+         * @param tenantId 租户ID
+         */
         public PermissionContext(
-                boolean superAdmin,
-                Set<String> organizationRoles,
-                String clientIp,
-                String deviceId,
-                String tenantId) {
+                boolean superAdmin, Set<String> organizationRoles, String clientIp, String deviceId, String tenantId) {
             this.superAdmin = superAdmin;
             this.organizationRoles = organizationRoles != null ? organizationRoles : Collections.emptySet();
             this.clientIp = clientIp;
@@ -506,6 +545,14 @@ public class ResourcePermissionService {
         private final String resourceId;
         private final Set<String> permissions;
 
+        /**
+         * 构造资源权限授予记录。
+         *
+         * @param userId 被授权用户ID
+         * @param resourceType 资源类型
+         * @param resourceId 资源ID
+         * @param permissions 授予的权限集合
+         */
         public ResourcePermissionGrant(String userId, String resourceType, String resourceId, Set<String> permissions) {
             this.userId = userId;
             this.resourceType = resourceType;

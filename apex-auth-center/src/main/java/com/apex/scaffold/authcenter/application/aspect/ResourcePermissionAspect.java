@@ -88,7 +88,7 @@ public class ResourcePermissionAspect {
                     // 构建权限上下文
                     PermissionContext context = buildPermissionContext(authentication, joinPoint);
 
-                    // 执行权限检查
+                    // 调用领域权限服务执行检查，未通过则拒绝访问
                     return permissionService
                             .hasPermission(userId, resourceType, resourceId, requiredPermission, context)
                             .flatMap(hasPermission -> {
@@ -174,7 +174,7 @@ public class ResourcePermissionAspect {
                 context.setVariable(parameters[i].getName(), args[i]);
             }
 
-            // 执行表达式
+            // 执行 SpEL 表达式求值（异常时返回 null）
             Object value = expressionParser.parseExpression(expression).getValue(context);
             return value != null ? value.toString() : null;
 
@@ -199,12 +199,7 @@ public class ResourcePermissionAspect {
         String deviceId = extractDeviceId(joinPoint);
 
         String tenantId = authentication.getDetails() instanceof String value ? value : null;
-        return new PermissionContext(
-                isSuperAdmin,
-                Collections.emptySet(),
-                clientIp,
-                deviceId,
-                tenantId);
+        return new PermissionContext(isSuperAdmin, Collections.emptySet(), clientIp, deviceId, tenantId);
     }
 
     /**

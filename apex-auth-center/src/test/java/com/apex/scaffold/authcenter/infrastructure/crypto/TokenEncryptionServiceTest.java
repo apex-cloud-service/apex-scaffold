@@ -17,7 +17,7 @@ import org.junit.jupiter.api.Test;
 class TokenEncryptionServiceTest {
 
     private TokenEncryptionService encryptionService;
-    private static final String TEST_ENCRYPTION_KEY = "01234567890123456789012345678901"; // 32字节测试密钥
+    private static final String TEST_ENCRYPTION_KEY = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
 
     @BeforeEach
     void setUp() {
@@ -156,6 +156,22 @@ class TokenEncryptionServiceTest {
                 IllegalArgumentException.class,
                 () -> new EncryptionKeyProvider("this-key-is-way-too-long-and-exceeds-32-bytes"),
                 "非法Base64密钥应抛出异常");
+    }
+
+    @Test
+    void shouldRejectMissingAndIncorrectlySizedKeys() {
+        for (String key :
+                new String[] {null, "", " ", "AAAAAAAAAAAAAAAAAAAAAA==", "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"}) {
+            assertThrows(IllegalArgumentException.class, () -> new EncryptionKeyProvider(key));
+        }
+    }
+
+    @Test
+    void shouldDecryptAcrossInstancesWithSameConfiguredKey() {
+        String stored = encryptionService.encryptForStorage("restart-token");
+        TokenEncryptionService restarted =
+                new TokenEncryptionServiceImpl(new EncryptionKeyProvider(TEST_ENCRYPTION_KEY));
+        assertEquals("restart-token", restarted.decrypt(stored));
     }
 
     @Test

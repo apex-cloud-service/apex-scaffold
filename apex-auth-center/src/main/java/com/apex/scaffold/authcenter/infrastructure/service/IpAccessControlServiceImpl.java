@@ -4,6 +4,7 @@ import com.apex.scaffold.authcenter.domain.model.IpAccessControl;
 import com.apex.scaffold.authcenter.domain.service.IpAccessControlService;
 import com.apex.scaffold.authcenter.infrastructure.repository.IpAccessControlRepository;
 import com.apex.scaffold.common.audit.AuditLogService;
+import com.apex.scaffold.common.util.LogSafetyUtil;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import lombok.RequiredArgsConstructor;
@@ -67,13 +68,19 @@ public class IpAccessControlServiceImpl implements IpAccessControlService {
 
                     // 1. 黑名单中直接拒绝
                     if (inBlacklist) {
-                        log.warn("IP访问被拒绝(黑名单): ip={}, tenantId={}", ipAddress, tenantId);
+                        log.warn(
+                                "IP访问被拒绝(黑名单): ip={}, tenantId={}",
+                                LogSafetyUtil.text(ipAddress, 64),
+                                LogSafetyUtil.text(tenantId, 64));
                         return false;
                     }
 
                     // 2. 如果配置了白名单，必须在白名单中
                     if (hasWhitelist && !inWhitelist) {
-                        log.warn("IP访问被拒绝(不在白名单): ip={}, tenantId=", ipAddress, tenantId);
+                        log.warn(
+                                "IP访问被拒绝(不在白名单): ip={}, tenantId={}",
+                                LogSafetyUtil.text(ipAddress, 64),
+                                LogSafetyUtil.text(tenantId, 64));
                         return false;
                     }
 
@@ -140,12 +147,12 @@ public class IpAccessControlServiceImpl implements IpAccessControlService {
                 .createdBy(operator)
                 .build();
 
-        return repository.save(rule)
+        return repository
+                .save(rule)
                 .flatMap(saved -> auditLogService
                         .log(operator, tenantId, "添加IP白名单: " + ipAddress, "IP_WHITELIST_ADD", "SUCCESS", null)
                         .thenReturn(saved))
-                .doOnNext(saved -> log.info(
-                        "添加IP白名单: ip={}, tenantId={}, operator={}", ipAddress, tenantId, operator));
+                .doOnNext(saved -> log.info("添加IP白名单: ip={}, tenantId={}, operator={}", ipAddress, tenantId, operator));
     }
 
     /**
@@ -176,16 +183,15 @@ public class IpAccessControlServiceImpl implements IpAccessControlService {
                 .createdBy(operator)
                 .build();
 
-        return repository.save(rule)
+        return repository
+                .save(rule)
                 .flatMap(saved -> auditLogService
                         .log(
                                 operator,
                                 tenantId,
                                 "添加IP黑名单: "
                                         + ipAddress
-                                        + (durationMinutes != null
-                                                ? ", 持续时间: " + durationMinutes + "分钟"
-                                                : ""),
+                                        + (durationMinutes != null ? ", 持续时间: " + durationMinutes + "分钟" : ""),
                                 "IP_BLACKLIST_ADD",
                                 "SUCCESS",
                                 null)
@@ -326,7 +332,7 @@ public class IpAccessControlServiceImpl implements IpAccessControlService {
         return repository
                 .findByIdAndTenantId(ruleId, tenantId)
                 .flatMap(rule -> repository
-                         .deleteByIdAndTenantId(ruleId, tenantId)
+                        .deleteByIdAndTenantId(ruleId, tenantId)
                         .then(auditLogService.log(
                                 operator,
                                 rule.getTenantId(),

@@ -38,7 +38,10 @@ public class CreateAuthConfigRequest {
     private String configKey;
 
     @NotBlank(message = "配置值不能为空")
-    @Schema(description = "配置值（JSON格式）", example = "{\"minLength\":8,\"requireUppercase\":true}", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(
+            description = "配置值（JSON格式）",
+            example = "{\"minLength\":8,\"requireUppercase\":true}",
+            requiredMode = Schema.RequiredMode.REQUIRED)
     private String configValue;
 
     @Schema(description = "配置描述", example = "Default password policy")
