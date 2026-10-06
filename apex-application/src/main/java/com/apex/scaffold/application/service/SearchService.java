@@ -54,7 +54,6 @@ public class SearchService {
                 pageNum,
                 pageSize);
 
-        // 调用搜索仓储
         return searchRepository
                 .search(keyword, resourceTypes, tenantId, null, pageNum, pageSize)
                 .map(pageResponse -> {

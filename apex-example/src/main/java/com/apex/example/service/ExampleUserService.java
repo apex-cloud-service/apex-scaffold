@@ -65,7 +65,6 @@ public class ExampleUserService {
             return Mono.error(new BusinessException(ResultCode.USER_ALREADY_EXISTS));
         }
 
-        // 构建实体
         ExampleUser user = ExampleUser.builder()
                 .username(request.getUsername())
                 .email(request.getEmail())
@@ -77,7 +76,6 @@ public class ExampleUserService {
                 .deleted(0)
                 .build();
 
-        // 保存到数据库
         int rows = userMapper.insert(user);
         if (rows == 0) {
             return Mono.error(new BusinessException(ResultCode.ERROR, "创建用户失败"));
@@ -184,7 +182,6 @@ public class ExampleUserService {
             return Mono.error(new BusinessException(ResultCode.USER_NOT_FOUND));
         }
 
-        // 更新字段
         user.setEmail(request.getEmail());
         user.setAge(request.getAge());
         user.setPhone(request.getPhone());

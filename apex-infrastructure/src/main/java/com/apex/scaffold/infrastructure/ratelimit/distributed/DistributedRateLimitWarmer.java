@@ -64,7 +64,7 @@ public class DistributedRateLimitWarmer {
                     properties.getRules().size(),
                     elapsed);
 
-            // 打印预热详情
+            // 逐条打印启用规则的预热详情（预热令牌数为容量的一半）
             properties.getRules().forEach(rule -> {
                 if (rule.isEnabled()) {
                     log.info(

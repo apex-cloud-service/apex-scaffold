@@ -208,7 +208,7 @@ public class SysJwtConfigService {
 
                     } catch (Exception e) {
                         log.error("JWT 测试失败", e);
-                        // 返回失败响应
+                        // 解析失败不抛出，返回 isValid=false 的降级响应
                         return JwtTestResponse.builder().isValid(false).build();
                     }
                 })

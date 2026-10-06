@@ -61,7 +61,6 @@ public class OfficeMessageService {
     public Mono<Long> sendMessage(OfficePlatform platform, MessageTarget target, MessageContent content) {
         log.info("开始发送消息，平台：{}，目标类型：{}", platform, target.getTargetType());
 
-        // 构建消息实体
         OfficeMessage message = OfficeMessage.builder()
                 .platform(platform)
                 .messageType(content.getType())
@@ -77,7 +76,6 @@ public class OfficeMessageService {
             return Mono.error(new IllegalArgumentException("消息验证失败，请检查必填字段"));
         }
 
-        // 保存消息记录
         return messageRepository.save(message).flatMap(savedMessage -> {
             log.info("消息记录已保存，ID：{}", savedMessage.getId());
 

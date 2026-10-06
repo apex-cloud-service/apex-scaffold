@@ -187,7 +187,7 @@ public class HotSpotRateLimitAspect {
             log.debug("热点参数限流通过, key: {}, windowCount: {}, currentSlotCount: {}", baseKey, windowCount, currentCount);
         }
 
-        // 执行目标方法
+        // 限流检查全部通过，放行目标方法
         return joinPoint.proceed();
     }
 

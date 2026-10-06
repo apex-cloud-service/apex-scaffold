@@ -178,7 +178,6 @@ public class MqLagMonitor {
      * @param lag           积压量
      */
     private void handleCriticalLag(String consumerGroup, long lag) {
-        // 发送告警
         alertManager.alertLag(consumerGroup, lag);
 
         // 自动扩容
@@ -198,7 +197,6 @@ public class MqLagMonitor {
      * @param lag           积压量
      */
     private void handleWarningLag(String consumerGroup, long lag) {
-        // 发送告警
         alertManager.alertLag(consumerGroup, lag);
     }
 

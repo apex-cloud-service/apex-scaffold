@@ -109,7 +109,7 @@ public class ClientSecretRotationService {
             Instant now = Instant.now();
             String secretHash = hashSecret(newSecret);
 
-            // 获取当前密钥
+            // 组装密钥轮换相关的四类 Redis 键名
             String currentKey = REDIS_CLIENT_SECRET_PREFIX + clientId + REDIS_SECRET_CURRENT;
             String pendingKey = REDIS_CLIENT_SECRET_PREFIX + clientId + REDIS_SECRET_PENDING;
             String createdKey = REDIS_CLIENT_SECRET_PREFIX + clientId + REDIS_SECRET_CREATED;
@@ -260,7 +260,7 @@ public class ClientSecretRotationService {
     public void scheduledSecretRotation() {
         log.info("执行定时OAuth2客户端密钥轮换检查");
 
-        // TODO: 从数据库获取所有客户端列表
+        // TODO(Apex Team): 从数据库获取所有客户端列表
         // 这里仅作为示例框架
 
         /*
@@ -324,7 +324,7 @@ public class ClientSecretRotationService {
      * @return 通知结果
      */
     private Mono<Void> notifyClientSecretRotation(String clientId, long daysUntilRotation) {
-        // TODO: 实现实际的通知逻辑
+        // TODO(Apex Team): 实现实际的通知逻辑
         // 1. 发送邮件通知
         // 2. 调用Webhook
         // 3. 在管理后台显示提醒

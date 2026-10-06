@@ -96,7 +96,7 @@ public class BloomFilterMetrics {
                 .tag("component", "cache")
                 .register(meterRegistry);
 
-        // 查询延迟
+        // 查询延迟（P50/P90/P95/P99 分位）
         this.queryTimer = Timer.builder("cache_bloom_filter_query_duration")
                 .description("BloomFilter 查询延迟")
                 .tag("component", "cache")

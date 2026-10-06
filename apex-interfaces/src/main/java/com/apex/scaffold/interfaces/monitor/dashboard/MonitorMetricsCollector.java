@@ -388,7 +388,7 @@ public class MonitorMetricsCollector {
                 metric("loginFailed", "登录失败", counter(M_LOGIN_FAILED), "次"),
                 metric("api5xx", "接口 5xx", apiErrorCount(5), "次"));
 
-        // 更新趋势聚合
+        // 记录本次采样点到趋势序列，供下方组装趋势数据
         metrics.forEach(m -> recordTrend(m.key(), m.name(), m.unit(), m.value()));
 
         List<MonitorBusinessResponse.BusinessTrend> trends = businessTrends.entrySet().stream()

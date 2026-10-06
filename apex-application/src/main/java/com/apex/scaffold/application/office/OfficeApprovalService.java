@@ -127,7 +127,7 @@ public class OfficeApprovalService {
                     ApprovalPort client = getApprovalClient(process.getPlatform());
                     return client.getApprovalDetail(process.getPlatformInstanceId())
                             .map(detail -> {
-                                // 更新审批记录
+                                // 解析平台返回的审批明细并回填审批记录
                                 List<ApprovalRecord> records = parseApprovalRecords(detail);
                                 process.setRecords(records);
                                 return process;
@@ -173,7 +173,7 @@ public class OfficeApprovalService {
                                             .build();
                                     process.addRecord(record);
 
-                                    // 更新审批状态
+                                    // 按动作映射流程状态：仅 APPROVE/REJECT 变更状态
                                     if (action == ApprovalAction.APPROVE) {
                                         process.updateStatus(ApprovalStatus.APPROVED);
                                     } else if (action == ApprovalAction.REJECT) {

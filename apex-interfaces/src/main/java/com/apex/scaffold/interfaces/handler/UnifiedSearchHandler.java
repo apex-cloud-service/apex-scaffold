@@ -128,7 +128,6 @@ public class UnifiedSearchHandler {
 
         log.info("Search request: keyword={}, types={}, page={}, size={}", keyword, resourceTypes, page, size);
 
-        // 执行搜索
         return searchService
                 .search(keyword, resourceTypes, page, size)
                 .flatMap(result -> ServerResponse.ok()

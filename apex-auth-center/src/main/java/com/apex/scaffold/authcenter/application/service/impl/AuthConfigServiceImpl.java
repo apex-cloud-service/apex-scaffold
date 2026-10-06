@@ -46,7 +46,7 @@ public class AuthConfigServiceImpl implements AuthConfigService {
                 config.getConfigKey(),
                 config.getTenantId());
 
-        // 设置创建时间
+        // 初始化审计字段：创建/更新时间与版本号
         config.setCreatedAt(LocalDateTime.now());
         config.setUpdatedAt(LocalDateTime.now());
         config.setVersion(1);
@@ -81,7 +81,7 @@ public class AuthConfigServiceImpl implements AuthConfigService {
                 .findById(id, tenantId)
                 .switchIfEmpty(Mono.error(new IllegalArgumentException("Config not found: " + id)))
                 .flatMap(existing -> {
-                    // 更新字段
+                    // 仅覆盖请求中非空的字段（部分更新语义）
                     if (config.getConfigValue() != null) {
                         existing.setConfigValue(config.getConfigValue());
                     }
@@ -265,7 +265,7 @@ public class AuthConfigServiceImpl implements AuthConfigService {
                 .then(Mono.defer(() -> {
                     // 清除缓存
                     configCache.invalidateAll();
-                    // 返回默认配置
+                    // 返回内置默认配置（重置后的生效值）
                     return getDefaultConfigByType(configType);
                 }))
                 .doOnSuccess(v -> log.info("Config reset to default: type={}", configType));

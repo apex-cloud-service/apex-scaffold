@@ -82,7 +82,7 @@ public class SsoConfigEncryptionService {
                         SecureRandom secureRandom = new SecureRandom();
                         secureRandom.nextBytes(iv);
 
-                        // 初始化加密器
+                        // 初始化加密器（GCM 参数绑定本次生成的 IV）
                         Cipher cipher = Cipher.getInstance(ENCRYPTION_ALGORITHM);
                         GCMParameterSpec gcmSpec = new GCMParameterSpec(GCM_TAG_LENGTH, iv);
                         cipher.init(Cipher.ENCRYPT_MODE, masterKey, gcmSpec);
@@ -126,7 +126,7 @@ public class SsoConfigEncryptionService {
                         byte[] iv = Base64.getDecoder().decode(parts[0]);
                         byte[] cipherText = Base64.getDecoder().decode(parts[1]);
 
-                        // 初始化解密器
+                        // 初始化解密器（GCM 参数绑定密文携带的 IV）
                         Cipher cipher = Cipher.getInstance(ENCRYPTION_ALGORITHM);
                         GCMParameterSpec gcmSpec = new GCMParameterSpec(GCM_TAG_LENGTH, iv);
                         cipher.init(Cipher.DECRYPT_MODE, masterKey, gcmSpec);

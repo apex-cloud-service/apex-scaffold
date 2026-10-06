@@ -56,7 +56,7 @@ public class JwtKeyRotationScheduler {
                             daysUntilExpiry,
                             key.getExpiresAt());
 
-                    // TODO: 集成告警系统，发送邮件/短信/钉钉通知
+                    // TODO(Apex Team): 集成告警系统，发送邮件/短信/钉钉通知
                     // alertService.sendKeyExpiryAlert(key.getKeyVersion(), daysUntilExpiry);
                 })
                 .count()

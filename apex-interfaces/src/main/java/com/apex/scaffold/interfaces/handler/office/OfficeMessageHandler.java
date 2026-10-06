@@ -124,20 +124,17 @@ public class OfficeMessageHandler {
                             req.getTargetType(),
                             req.getMessageType());
 
-                    // 转换平台类型
+                    // 解析平台枚举（非法平台名会抛 IllegalArgumentException）
                     OfficePlatform platform = OfficePlatform.valueOf(req.getPlatform());
 
-                    // 构建消息目标
                     MessageTarget target = MessageTarget.builder()
                             .targetType(req.getTargetType())
                             .userIds(req.getUserIds())
                             .groupIds(req.getGroupIds())
                             .build();
 
-                    // 构建消息内容
                     MessageContent content = buildMessageContent(req);
 
-                    // 发送消息
                     return messageService.sendMessage(platform, target, content).flatMap(messageId -> messageService
                             .getMessageStatus(messageId)
                             .map(message -> SendMessageResponse.builder()
