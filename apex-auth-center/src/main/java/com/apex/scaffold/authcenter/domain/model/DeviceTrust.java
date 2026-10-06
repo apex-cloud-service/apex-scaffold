@@ -288,6 +288,9 @@ public class DeviceTrust {
 
     private static final int DAYS_UNUSED_THRESHOLD = 30;
 
+    /**
+     * 根据信任级别、认证次数与最近使用时间计算风险评分。
+     */
     public void calculateRiskScore() {
         int score = 0;
 

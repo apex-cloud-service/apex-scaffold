@@ -22,6 +22,11 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication(scanBasePackages = {"com.apex.scaffold.authcenter", "com.apex.scaffold.common"})
 public class AuthCenterApplication {
 
+    /**
+     * 认证中心独立启动入口。
+     *
+     * @param args 启动参数
+     */
     public static void main(String[] args) {
         SpringApplication.run(AuthCenterApplication.class, args);
     }

@@ -30,6 +30,12 @@ import org.springframework.web.reactive.function.server.ServerResponse;
  */
 @Configuration
 public class OauthEndpointRouter {
+    /**
+     * 注册OAuth2授权码签发路由。
+     *
+     * @param handler OAuth2授权端点处理器
+     * @return 路由函数
+     */
     @Bean
     @RouterOperation(
             path = "/oauth2/authorize",
@@ -60,6 +66,12 @@ public class OauthEndpointRouter {
                 .build();
     }
 
+    /**
+     * 注册OAuth2令牌撤销路由。
+     *
+     * @param handler OAuth2授权端点处理器
+     * @return 路由函数
+     */
     @Bean
     @RouterOperation(
             path = "/oauth2/revoke",
@@ -88,6 +100,12 @@ public class OauthEndpointRouter {
         return RouterFunctions.route().POST("/oauth2/revoke", handler::revoke).build();
     }
 
+    /**
+     * 注册OAuth2令牌内省路由。
+     *
+     * @param handler OAuth2授权端点处理器
+     * @return 路由函数
+     */
     @Bean
     @RouterOperation(
             path = "/oauth2/introspect",

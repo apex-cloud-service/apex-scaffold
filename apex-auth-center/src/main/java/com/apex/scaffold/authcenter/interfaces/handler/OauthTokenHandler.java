@@ -66,6 +66,12 @@ public class OauthTokenHandler {
     private final OAuth2Service service;
     private final UnifiedAuditService auditService;
 
+    /**
+     * 构造OAuth2令牌端点处理器。
+     *
+     * @param service OAuth2应用服务
+     * @param auditService 统一审计服务
+     */
     public OauthTokenHandler(OAuth2Service service, UnifiedAuditService auditService) {
         this.service = service;
         this.auditService = auditService;

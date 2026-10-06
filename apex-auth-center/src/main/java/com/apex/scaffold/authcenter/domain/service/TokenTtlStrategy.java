@@ -209,6 +209,14 @@ public class TokenTtlStrategy {
         private final boolean isDowngraded;
         private final String reason;
 
+        /**
+         * 构造Token TTL配置。
+         *
+         * @param accessTokenTtl 访问令牌TTL
+         * @param refreshTokenTtl 刷新令牌TTL
+         * @param isDowngraded 是否降级
+         * @param reason 降级原因
+         */
         public TokenTtlConfig(Duration accessTokenTtl, Duration refreshTokenTtl, boolean isDowngraded, String reason) {
             this.accessTokenTtl = accessTokenTtl;
             this.refreshTokenTtl = refreshTokenTtl;

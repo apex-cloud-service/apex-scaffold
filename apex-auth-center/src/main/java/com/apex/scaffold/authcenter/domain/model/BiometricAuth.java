@@ -164,6 +164,9 @@ public class BiometricAuth {
      */
     private static final int MAX_FAILED_ATTEMPTS = 5;
 
+    /**
+     * 增加失败次数，达到上限时锁定认证。
+     */
     public void incrementFailedAttempts() {
         this.failedAttempts = (this.failedAttempts == null ? 0 : this.failedAttempts) + 1;
 

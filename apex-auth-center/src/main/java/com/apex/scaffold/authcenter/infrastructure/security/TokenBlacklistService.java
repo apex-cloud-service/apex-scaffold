@@ -32,6 +32,11 @@ public class TokenBlacklistService {
 
     private static final String USER_TOKENS_PREFIX = "token:user:";
 
+    /**
+     * 构造令牌黑名单服务
+     *
+     * @param redisTemplate Redis模板
+     */
     public TokenBlacklistService(ReactiveStringRedisTemplate redisTemplate) {
         this.redisTemplate = redisTemplate;
     }
@@ -227,6 +232,11 @@ public class TokenBlacklistService {
         private String userId; // 用户ID
         private Long remainingTtl; // 剩余TTL（秒）
 
+        /**
+         * 创建未拉黑状态的黑名单信息。
+         *
+         * @return 未拉黑的BlacklistInfo实例
+         */
         public static BlacklistInfo notBlacklisted() {
             return BlacklistInfo.builder().blacklisted(false).build();
         }

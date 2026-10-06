@@ -8,6 +8,13 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
 
+/**
+ * OAuth2 授权数据持久化仓储。
+ *
+ * @author Apex Team
+ * @version 1.3.1
+ * @since  1.3.0
+ */
 @Repository
 @RequiredArgsConstructor
 @SuppressWarnings({"PMD.ClassNamingShouldBeCamelRule", "PMD.ClassMustHaveAuthorRule"})
@@ -18,6 +25,25 @@ public class OAuth2AuthorizationRepository {
 
     private final JdbcTemplate jdbcTemplate;
 
+    /**
+     * 插入OAuth2授权记录
+     *
+     * @param tenant 租户ID
+     * @param id 授权记录ID
+     * @param clientId 客户端ID
+     * @param principal 资源所有者标识
+     * @param grantType 授权类型
+     * @param scopes 授权范围
+     * @param redirectUri 重定向URI
+     * @param challenge PKCE码挑战
+     * @param challengeMethod PKCE挑战方法
+     * @param codeHash 授权码哈希
+     * @param codeExpires 授权码过期时间
+     * @param accessHash 访问令牌哈希
+     * @param accessExpires 访问令牌过期时间
+     * @param refreshHash 刷新令牌哈希
+     * @param refreshExpires 刷新令牌过期时间
+     */
     public Mono<Void> insert(
             String tenant,
             String id,
@@ -76,6 +102,19 @@ public class OAuth2AuthorizationRepository {
                 .orElse(null));
     }
 
+    /**
+     * 用授权码兑换访问/刷新令牌（授权码一次性使用，兑换后置空）
+     *
+     * @param tenant 租户ID
+     * @param hash 授权码哈希
+     * @param clientId 客户端ID
+     * @param redirect 重定向URI
+     * @param accessHash 访问令牌哈希
+     * @param accessExpires 访问令牌过期时间
+     * @param refreshHash 刷新令牌哈希
+     * @param refreshExpires 刷新令牌过期时间
+     * @return 兑换成功时为true
+     */
     public Mono<Boolean> exchangeCode(
             String tenant,
             String hash,
@@ -104,6 +143,14 @@ public class OAuth2AuthorizationRepository {
                         == 1);
     }
 
+    /**
+     * 按令牌哈希撤销指定客户端的授权记录
+     *
+     * @param tenant 租户ID
+     * @param hash 令牌哈希（访问或刷新令牌）
+     * @param clientId 客户端ID
+     * @return 撤销的记录数量
+     */
     public Mono<Integer> revokeByHash(String tenant, String hash, String clientId) {
         return JdbcTenantScope.call(
                 tenant,
@@ -116,6 +163,19 @@ public class OAuth2AuthorizationRepository {
                         hash));
     }
 
+    /**
+     * 轮换刷新令牌并同步更新访问令牌与授权范围
+     *
+     * @param tenant 租户ID
+     * @param clientId 客户端ID
+     * @param oldHash 旧刷新令牌哈希
+     * @param newHash 新刷新令牌哈希
+     * @param newExpires 新刷新令牌过期时间
+     * @param accessHash 新访问令牌哈希
+     * @param accessExpires 新访问令牌过期时间
+     * @param scope 授权范围
+     * @return 轮换成功时为true
+     */
     public Mono<Boolean> rotateRefresh(
             String tenant,
             String clientId,

@@ -80,18 +80,10 @@ public interface KeyManagementService {
         /**
          * 获取明文密钥（用于加密数据）
          */
-        /**
-         * TODO: Add method description
-         * @return TODO
-         */
         String getPlaintextKey();
 
         /**
          * 获取加密后的密钥（用于存储）
-         */
-        /**
-         * TODO: Add method description
-         * @return TODO
          */
         String getEncryptedKey();
     }
@@ -100,40 +92,16 @@ public interface KeyManagementService {
      * 密钥元数据
      */
     interface KeyMetadata {
-        /**
-         * TODO: Add method description
-         * @return TODO
-         */
         String getKeyId();
 
-        /**
-         * TODO: Add method description
-         * @return TODO
-         */
         String getKeyArn();
 
-        /**
-         * TODO: Add method description
-         * @return TODO
-         */
         String getAlgorithm();
 
-        /**
-         * TODO: Add method description
-         * @return TODO
-         */
         String getKeyState();
 
-        /**
-         * TODO: Add method description
-         * @return TODO
-         */
         java.time.Instant getCreationDate();
 
-        /**
-         * TODO: Add method description
-         * @return TODO
-         */
         boolean isEnabled();
     }
 }

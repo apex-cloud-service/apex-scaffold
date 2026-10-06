@@ -21,6 +21,12 @@ import org.springframework.web.reactive.function.server.ServerResponse;
  */
 @Configuration
 public class UnifiedAuthorizationRouter {
+    /**
+     * 注册统一授权快照查询路由。
+     *
+     * @param handler 统一授权处理器
+     * @return 路由函数
+     */
     @Bean
     @RouterOperation(
             path = "/auth/v1/authorization/users/{userId}",

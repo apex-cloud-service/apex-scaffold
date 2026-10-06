@@ -27,6 +27,12 @@ public class RoleService {
     private final RoleRepository roleRepository;
     private final PermissionRepository permissionRepository;
 
+    /**
+     * 创建角色，角色编码在同租户内不允许重复
+     *
+     * @param role 待创建的角色
+     * @return 创建后的角色
+     */
     public Mono<RoleEntity> createRole(RoleEntity role) {
         return roleRepository
                 .existsByCode(role.getCode(), role.getTenantId())
@@ -65,6 +71,12 @@ public class RoleService {
         return roleRepository.findByUserId(userId, tenantId);
     }
 
+    /**
+     * 更新角色
+     *
+     * @param role 待更新的角色
+     * @return 更新后的角色
+     */
     public Mono<RoleEntity> updateRole(RoleEntity role) {
         return roleRepository
                 .findById(role.getId())
@@ -76,6 +88,11 @@ public class RoleService {
                 .doOnSuccess(r -> log.info("角色更新成功: id={}", r.getId()));
     }
 
+    /**
+     * 删除角色
+     *
+     * @param id 角色ID
+     */
     public Mono<Void> deleteRole(Long id) {
         return roleRepository
                 .deleteById(id)
@@ -88,6 +105,12 @@ public class RoleService {
                 .doOnSuccess(v -> log.info("角色删除成功: id={}", id));
     }
 
+    /**
+     * 为角色分配权限（全量覆盖该角色的权限集合）
+     *
+     * @param roleId 角色ID
+     * @param permissionIds 权限ID集合
+     */
     public Mono<Void> assignPermissionsToRole(Long roleId, Set<Long> permissionIds) {
         return roleRepository
                 .findById(roleId)
@@ -102,6 +125,13 @@ public class RoleService {
                 .doOnSuccess(v -> log.info("角色权限分配成功: roleId={}, permissions={}", roleId, permissionIds.size()));
     }
 
+    /**
+     * 为用户分配角色
+     *
+     * @param userId 用户ID
+     * @param roleIds 角色ID集合
+     * @param tenantId 租户ID
+     */
     public Mono<Void> assignRolesToUser(Long userId, Set<Long> roleIds, String tenantId) {
         return roleRepository
                 .assignRolesToUser(userId, roleIds, tenantId)
@@ -114,6 +144,13 @@ public class RoleService {
                 .doOnSuccess(v -> log.info("用户角色分配成功: userId={}, roles={}", userId, roleIds.size()));
     }
 
+    /**
+     * 移除用户的指定角色
+     *
+     * @param userId 用户ID
+     * @param roleIds 角色ID集合
+     * @param tenantId 租户ID
+     */
     public Mono<Void> removeRolesFromUser(Long userId, Set<Long> roleIds, String tenantId) {
         return roleRepository
                 .removeRolesFromUser(userId, roleIds, tenantId)

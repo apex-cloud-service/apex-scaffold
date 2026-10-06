@@ -29,6 +29,12 @@ import org.springframework.web.reactive.function.server.ServerResponse;
  */
 @Configuration
 public class OauthTokenRouter {
+    /**
+     * 注册OAuth2令牌签发路由。
+     *
+     * @param handler OAuth2令牌端点处理器
+     * @return 路由函数
+     */
     @Bean
     @RouterOperation(
             path = "/oauth2/token",

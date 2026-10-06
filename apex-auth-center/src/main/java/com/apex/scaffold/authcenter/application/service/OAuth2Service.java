@@ -27,6 +27,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
+/**
+ * OAuth2 客户端校验、令牌签发/撤销/内省服务。
+ *
+ * @author Apex Team
+ * @version 1.3.1
+ * @since  1.3.0
+ */
 @Service
 @RequiredArgsConstructor
 @SuppressWarnings({"PMD.ClassNamingShouldBeCamelRule", "PMD.ClassMustHaveAuthorRule"})
@@ -60,6 +67,15 @@ public class OAuth2Service {
     private final PasswordEncoder passwordEncoder;
     private final ObjectMapper objectMapper;
 
+    /**
+     * 校验OAuth2客户端凭证与认证方式
+     *
+     * @param id 客户端ID
+     * @param secret 客户端密钥
+     * @param method 客户端认证方式
+     * @param tenant 租户ID
+     * @return 客户端有效时为true，否则发出{@link OAuthException}
+     */
     public Mono<Boolean> validateClient(String id, String secret, String method, String tenant) {
         if (secret == null) {
             return fail(INVALID_CLIENT);
@@ -135,6 +151,13 @@ public class OAuth2Service {
         });
     }
 
+    /**
+     * 撤销指定令牌
+     *
+     * @param token 待撤销的令牌
+     * @param clientId 客户端ID
+     * @param tenant 租户ID
+     */
     public Mono<Void> revoke(String token, String clientId, String tenant) {
         if (token == null || token.isBlank()) {
             return fail(INVALID_REQUEST);
@@ -419,6 +442,11 @@ public class OAuth2Service {
 
     @SuppressWarnings("PMD.ClassNamingShouldBeCamelRule")
     public static final class OAuthException extends RuntimeException {
+        /**
+         * 构造携带OAuth2错误码的异常。
+         *
+         * @param code OAuth2错误码
+         */
         public OAuthException(String code) {
             super(code);
         }

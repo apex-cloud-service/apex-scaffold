@@ -26,6 +26,12 @@ public class UnifiedAuthorizationHandler {
     private final Environment environment;
     private final RequestHandlerUtil responses;
 
+    /**
+     * 处理授权快照查询请求，仅允许专用 reader 账号访问
+     *
+     * @param request 请求对象
+     * @return 授权快照响应
+     */
     public Mono<ServerResponse> query(ServerRequest request) {
         return ReactiveSecurityContextHolder.getContext()
                 .map(context -> context.getAuthentication())

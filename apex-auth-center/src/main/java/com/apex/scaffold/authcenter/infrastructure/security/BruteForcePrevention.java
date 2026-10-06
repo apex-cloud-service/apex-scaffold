@@ -48,6 +48,11 @@ public class BruteForcePrevention {
     private static final String LOCKOUT_BY_USERNAME_PREFIX = "brute_force:lockout:username:";
     private static final String LOCKOUT_BY_IP_PREFIX = "brute_force:lockout:ip:";
 
+    /**
+     * 构造暴力破解防护服务
+     *
+     * @param redisTemplate Redis模板
+     */
     public BruteForcePrevention(ReactiveStringRedisTemplate redisTemplate) {
         this.redisTemplate = redisTemplate;
     }

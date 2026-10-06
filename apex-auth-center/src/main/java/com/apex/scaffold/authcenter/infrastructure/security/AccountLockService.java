@@ -35,6 +35,11 @@ public class AccountLockService {
      */
     private static final Duration DEFAULT_LOCK_DURATION = Duration.ofMinutes(15);
 
+    /**
+     * 构造账户锁定服务
+     *
+     * @param redisTemplate Redis模板
+     */
     public AccountLockService(ReactiveStringRedisTemplate redisTemplate) {
         this.redisTemplate = redisTemplate;
     }
@@ -234,6 +239,11 @@ public class AccountLockService {
         private Long remainingSeconds; // 剩余锁定时间（秒），-1表示永久
         private boolean permanent; // 是否永久锁定
 
+        /**
+         * 创建未锁定状态的锁定信息。
+         *
+         * @return 未锁定的LockInfo实例
+         */
         public static LockInfo notLocked() {
             return LockInfo.builder().locked(false).build();
         }

@@ -34,6 +34,12 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 @Configuration
 @EnableConfigurationProperties(OAuth2Properties.class)
 public class OauthMetadataRouter {
+    /**
+     * 注册OAuth2服务发现与JWKS公钥集路由。
+     *
+     * @param metadata OAuth2元数据服务
+     * @return 路由函数
+     */
     @Bean
     @RouterOperations({
         @RouterOperation(

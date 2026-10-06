@@ -183,6 +183,11 @@ public class AuthenticationRouter {
                                                                             type = "string")))
                                 }))
     })
+    /**
+     * 注册认证相关路由。
+     *
+     * @return 路由函数
+     */
     @Bean
     public RouterFunction<ServerResponse> authenticationRoutes() {
         return route().POST(

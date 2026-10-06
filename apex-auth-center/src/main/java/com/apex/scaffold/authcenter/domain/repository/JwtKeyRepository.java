@@ -14,117 +14,70 @@ public interface JwtKeyRepository {
 
     /**
      * 保存JWT密钥
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
      *
-     * @param jwtKey TODO
-     * @return TODO
+     * @param jwtKey 密钥实体
+     * @return 保存后的密钥实体
      */
     Mono<JwtKeyEntity> save(JwtKeyEntity jwtKey);
 
     /**
      * 根据ID查询
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
      *
-     * @param id TODO
-     * @return TODO
+     * @param id 密钥ID
+     * @return 匹配的密钥实体，不存在时为空
      */
     Mono<JwtKeyEntity> findById(Long id);
 
     /**
      * 根据版本号查询
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
      *
-     * @param keyVersion TODO
-     * @return TODO
+     * @param keyVersion 密钥版本号
+     * @return 匹配的密钥实体，不存在时为空
      */
     Mono<JwtKeyEntity> findByKeyVersion(String keyVersion);
 
     /**
      * 查询当前活跃的密钥
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
+     *
+     * @return 当前 ACTIVE 状态的密钥，不存在时为空
      */
     Mono<JwtKeyEntity> findActiveKey();
 
     /**
      * 查询所有可用于验证的密钥(ACTIVE和ROTATING状态)
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
+     *
+     * @return 可用于验证的密钥列表
      */
     Flux<JwtKeyEntity> findUsableKeys();
 
     /**
      * 查询即将过期的密钥(30天内)
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
+     *
+     * @return 即将过期的密钥列表
      */
     Flux<JwtKeyEntity> findExpiringSoonKeys();
 
     /**
      * 更新密钥状态
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
      *
-     * @param id TODO
-     * @param status TODO
-     * @return TODO
+     * @param id 密钥ID
+     * @param status 目标状态
+     * @return 是否更新成功
      */
     Mono<Boolean> updateStatus(Long id, String status);
 
     /**
      * 将所有ACTIVE状态的密钥设置为ROTATING
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
+     *
+     * @return 受影响的密钥数量
      */
     Mono<Integer> markAllActiveAsRotating();
 
     /**
      * 删除已吊销且超过保留期的密钥
-     */
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
      *
-     * @param days TODO
-     * @return TODO
+     * @param days 保留期天数
+     * @return 删除的密钥数量
      */
     Mono<Integer> deleteRevokedKeysOlderThan(int days);
 }

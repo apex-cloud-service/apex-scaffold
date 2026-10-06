@@ -64,6 +64,9 @@ public class JwtKeyRotationService {
      */
     private static final int HISTORICAL_KEY_RETENTION_DAYS = 90;
 
+    /**
+     * 构造服务并生成初始签名密钥
+     */
     public JwtKeyRotationService() {
         // 初始化第一个密钥
         this.currentKey = generateNewKey();
@@ -238,6 +241,13 @@ public class JwtKeyRotationService {
         private final SecretKey key;
         private final LocalDateTime createdAt;
 
+        /**
+         * 构造密钥信息。
+         *
+         * @param keyId 密钥ID
+         * @param key 密钥对象
+         * @param createdAt 创建时间
+         */
         public KeyInfo(String keyId, SecretKey key, LocalDateTime createdAt) {
             this.keyId = keyId;
             this.key = key;

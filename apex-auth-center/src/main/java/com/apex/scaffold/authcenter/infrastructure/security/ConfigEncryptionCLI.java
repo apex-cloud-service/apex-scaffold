@@ -29,6 +29,11 @@ public class ConfigEncryptionCLI {
 
     private static final int MIN_ARGS_FOR_OPERATION = 3;
 
+    /**
+     * 命令行工具入口。
+     *
+     * @param args 命令行参数
+     */
     public static void main(String[] args) {
         if (args.length < 1) {
             printUsage();

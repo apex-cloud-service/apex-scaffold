@@ -16,6 +16,13 @@ import java.util.Map;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
+/**
+ * OAuth2 授权服务器元数据（RFC 8414）端点服务。
+ *
+ * @author Apex Team
+ * @version 1.3.1
+ * @since  1.3.0
+ */
 @Service
 @SuppressWarnings({"PMD.ClassNamingShouldBeCamelRule", "PMD.ClassMustHaveAuthorRule"})
 public class OAuth2MetadataService {
@@ -26,6 +33,15 @@ public class OAuth2MetadataService {
     private final RSAPublicKey publicKey;
     private final java.security.PrivateKey privateKey;
 
+    /**
+     * 构造服务并加载或生成RSA签名密钥对
+     *
+     * <p>优先从配置加载Base64编码的密钥对并做签名自检；basic profile下未配置时现场生成。
+     *
+     * @param properties OAuth2配置属性
+     * @param environment Spring环境
+     * @throws IllegalStateException RSA密钥配置无效时抛出
+     */
     public OAuth2MetadataService(OAuth2Properties properties, Environment environment) {
         this.properties = properties;
         try {
@@ -98,10 +114,20 @@ public class OAuth2MetadataService {
                         unsigned(publicKey.getPublicExponent()))));
     }
 
+    /**
+     * 获取令牌签名私钥
+     *
+     * @return RSA签名私钥
+     */
     public java.security.PrivateKey signingKey() {
         return privateKey;
     }
 
+    /**
+     * 获取令牌验证公钥
+     *
+     * @return RSA验证公钥
+     */
     public RSAPublicKey verificationKey() {
         return publicKey;
     }

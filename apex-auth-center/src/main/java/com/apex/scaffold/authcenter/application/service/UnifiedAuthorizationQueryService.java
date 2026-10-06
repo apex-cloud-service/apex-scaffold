@@ -21,6 +21,14 @@ public class UnifiedAuthorizationQueryService {
     private final RoleRepository roles;
     private final PermissionRepository permissions;
 
+    /**
+     * 校验读取者身份有效后，查询目标用户的授权快照
+     *
+     * @param tenant 租户ID
+     * @param readerId 发起查询的用户ID
+     * @param userId 目标用户ID
+     * @return 目标用户的授权快照
+     */
     public Mono<Authorization> queryForReader(String tenant, Long readerId, Long userId) {
         if (tenant == null || tenant.isBlank() || readerId == null || readerId <= 0) {
             return Mono.error(new org.springframework.security.access.AccessDeniedException("Forbidden"));
@@ -34,6 +42,13 @@ public class UnifiedAuthorizationQueryService {
                 .flatMap(reader -> query(tenant, userId));
     }
 
+    /**
+     * 查询用户在同租户下的有效角色与权限快照
+     *
+     * @param tenant 租户ID
+     * @param userId 用户ID
+     * @return 授权快照
+     */
     public Mono<Authorization> query(String tenant, Long userId) {
         if (tenant == null || tenant.isBlank() || userId == null || userId <= 0) {
             return Mono.error(new org.springframework.security.access.AccessDeniedException("Forbidden"));
