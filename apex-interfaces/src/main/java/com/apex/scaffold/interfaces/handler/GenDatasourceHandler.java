@@ -48,6 +48,13 @@ public class GenDatasourceHandler extends BaseHandler {
 
     private final GenDatasourceService genDatasourceService;
 
+    /**
+     * 创建数据源配置管理处理器。
+     *
+     * @param genDatasourceService 生成数据源服务
+     * @param messageUtils 国际化消息工具
+     * @param validator Jakarta Bean Validation 校验器
+     */
     public GenDatasourceHandler(
             GenDatasourceService genDatasourceService, MessageUtils messageUtils, Validator validator) {
         super(messageUtils, validator);

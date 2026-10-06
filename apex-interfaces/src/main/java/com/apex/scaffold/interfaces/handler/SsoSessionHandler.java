@@ -48,6 +48,13 @@ public class SsoSessionHandler extends BaseHandler {
 
     private final SysSsoSessionService sysSsoSessionService;
 
+    /**
+     * 创建 SSO 会话管理处理器。
+     *
+     * @param sysSsoSessionService SSO 会话服务
+     * @param messageUtils 国际化消息工具
+     * @param validator Jakarta Bean Validation 校验器
+     */
     public SsoSessionHandler(
             SysSsoSessionService sysSsoSessionService, MessageUtils messageUtils, Validator validator) {
         super(messageUtils, validator);

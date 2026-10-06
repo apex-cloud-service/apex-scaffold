@@ -57,6 +57,13 @@ public class SsoAuditLogHandler extends BaseHandler {
 
     private final SysSsoAuditLogService sysSsoAuditLogService;
 
+    /**
+     * 创建 SSO 审计日志处理器。
+     *
+     * @param sysSsoAuditLogService SSO 审计日志服务
+     * @param messageUtils 国际化消息工具
+     * @param validator Jakarta Bean Validation 校验器
+     */
     public SsoAuditLogHandler(
             SysSsoAuditLogService sysSsoAuditLogService, MessageUtils messageUtils, Validator validator) {
         super(messageUtils, validator);

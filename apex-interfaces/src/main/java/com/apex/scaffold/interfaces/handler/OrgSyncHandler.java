@@ -65,6 +65,14 @@ public class OrgSyncHandler extends BaseHandler {
     private final UserService userService;
     private final RequestHandlerUtil requestHandlerUtil;
 
+    /**
+     * 创建组织同步处理器。
+     *
+     * @param orgSyncService 组织架构同步服务
+     * @param userService 用户服务
+     * @param requestHandlerUtil 请求参数处理工具
+     * @param messageUtils 国际化消息工具
+     */
     public OrgSyncHandler(
             OrgSyncService orgSyncService,
             UserService userService,

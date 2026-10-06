@@ -44,6 +44,13 @@ public class SecurityContextDataScopeProvider implements ReactiveDataScopeProvid
         this(roleRepository, deptRepository, null);
     }
 
+    /**
+     * 构建数据权限提供者（含统一授权服务，供 Spring 使用的主构造器）。
+     *
+     * @param roleRepository 角色仓储，用于查询用户角色及其数据权限
+     * @param deptRepository 部门仓储，用于校验部门状态与解析部门及其子部门
+     * @param unifiedAuthorizationService 统一授权服务，启用时优先经其查询角色，可为空
+     */
     @org.springframework.beans.factory.annotation.Autowired
     public SecurityContextDataScopeProvider(
             RoleRepository roleRepository,

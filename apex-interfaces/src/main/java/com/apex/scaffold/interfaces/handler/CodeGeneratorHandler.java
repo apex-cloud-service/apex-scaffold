@@ -59,6 +59,13 @@ public class CodeGeneratorHandler extends BaseHandler {
 
     private final CodeGenerationService codeGenerationService;
 
+    /**
+     * 创建代码生成执行处理器。
+     *
+     * @param codeGenerationService 代码生成服务
+     * @param messageUtils 国际化消息工具
+     * @param validator Jakarta Bean Validation 校验器
+     */
     public CodeGeneratorHandler(
             CodeGenerationService codeGenerationService, MessageUtils messageUtils, Validator validator) {
         super(messageUtils, validator);

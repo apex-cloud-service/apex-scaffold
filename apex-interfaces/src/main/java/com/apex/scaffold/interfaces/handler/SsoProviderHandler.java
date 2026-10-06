@@ -52,6 +52,13 @@ public class SsoProviderHandler extends BaseHandler {
 
     private final SysSsoProviderService sysSsoProviderService;
 
+    /**
+     * 创建 SSO 提供商管理处理器。
+     *
+     * @param sysSsoProviderService SSO 提供商服务
+     * @param messageUtils 国际化消息工具
+     * @param validator Jakarta Bean Validation 校验器
+     */
     public SsoProviderHandler(
             SysSsoProviderService sysSsoProviderService, MessageUtils messageUtils, Validator validator) {
         super(messageUtils, validator);

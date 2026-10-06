@@ -66,6 +66,14 @@ public class OfficeIntegrationHandler extends BaseHandler {
     private final UserService userService;
     private final RequestHandlerUtil requestHandlerUtil;
 
+    /**
+     * 创建办公集成处理器。
+     *
+     * @param officeService 办公集成服务
+     * @param userService 用户服务
+     * @param requestHandlerUtil 请求参数处理工具
+     * @param messageUtils 国际化消息工具
+     */
     public OfficeIntegrationHandler(
             OfficeIntegrationService officeService,
             UserService userService,

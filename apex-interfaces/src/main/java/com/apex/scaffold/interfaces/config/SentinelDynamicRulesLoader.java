@@ -137,6 +137,12 @@ public class SentinelDynamicRulesLoader {
     private final ObjectMapper objectMapper;
     private final ResourceLoader resourceLoader;
 
+    /**
+     * 创建 Sentinel 动态规则加载器。
+     *
+     * @param objectMapper JSON 序列化工具
+     * @param resourceLoader Spring 资源加载器
+     */
     public SentinelDynamicRulesLoader(ObjectMapper objectMapper, ResourceLoader resourceLoader) {
         this.objectMapper = objectMapper;
         this.resourceLoader = resourceLoader;

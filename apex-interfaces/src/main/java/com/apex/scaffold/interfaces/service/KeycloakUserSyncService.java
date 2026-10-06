@@ -153,6 +153,12 @@ public class KeycloakUserSyncService {
                 });
     }
 
+    /**
+     * 从 Keycloak 全量同步用户到本地数据库。
+     *
+     * <p>拉取 Keycloak 全部用户并逐个调用 {@code syncUserFromKeycloak}；单个用户同步失败仅记录
+     * 警告日志并继续，不中断整体流程。</p>
+     */
     public Mono<Void> syncAllUsers() {
         return Mono.fromCallable(() -> {
                     log.info("Starting full user sync from Keycloak");
@@ -179,6 +185,16 @@ public class KeycloakUserSyncService {
                 .doOnError(e -> log.error("Full user sync from Keycloak failed", e));
     }
 
+    /**
+     * 在 Keycloak 中创建用户并回写本地数据库。
+     *
+     * <p>先调用 Keycloak Admin API 创建用户（创建失败时发出错误信号），可选地重置初始密码，
+     * 然后将返回的 Keycloak Sub 写入用户实体并保存到本地数据库。</p>
+     *
+     * @param user 待创建的用户实体，需包含用户名等基本信息
+     * @param password 初始密码，为空时跳过密码设置
+     * @return {@link Mono<UserEntity>} 已保存并关联 Keycloak Sub 的用户实体
+     */
     public Mono<UserEntity> createKeycloakUser(UserEntity user, String password) {
         return Mono.fromCallable(() -> {
                     log.info("Creating user in Keycloak: username={}", user.getUsername());

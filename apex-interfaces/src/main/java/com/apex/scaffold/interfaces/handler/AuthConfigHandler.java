@@ -71,6 +71,20 @@ public class AuthConfigHandler extends BaseHandler {
     private final LoginLogService loginLogService;
     private final PermissionService permissionService;
 
+    /**
+     * 创建后台认证授权配置处理器。
+     *
+     * @param jwtConfigService JWT 配置服务
+     * @param sessionConfigService 会话配置服务
+     * @param securityPolicyService 安全策略服务
+     * @param permissionSyncService 权限同步服务
+     * @param oauth2ClientManagementService OAuth2 客户端管理服务
+     * @param onlineUserQueryService 在线用户查询服务
+     * @param loginLogService 登录日志服务
+     * @param permissionService 权限服务
+     * @param messageUtils 国际化消息工具
+     * @param validator Jakarta Bean Validation 校验器
+     */
     public AuthConfigHandler(
             SysJwtConfigService jwtConfigService,
             SysSessionConfigService sessionConfigService,

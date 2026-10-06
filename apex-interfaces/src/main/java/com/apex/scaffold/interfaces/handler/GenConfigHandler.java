@@ -52,6 +52,14 @@ public class GenConfigHandler extends BaseHandler {
     private final GenConfigService genConfigService;
     private final CodeGenerationService codeGenerationService;
 
+    /**
+     * 创建生成配置管理处理器。
+     *
+     * @param genConfigService 生成配置服务
+     * @param codeGenerationService 代码生成服务
+     * @param messageUtils 国际化消息工具
+     * @param validator Jakarta Bean Validation 校验器
+     */
     public GenConfigHandler(
             GenConfigService genConfigService,
             CodeGenerationService codeGenerationService,

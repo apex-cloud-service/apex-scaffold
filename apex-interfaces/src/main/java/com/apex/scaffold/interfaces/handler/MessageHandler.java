@@ -70,6 +70,14 @@ public class MessageHandler extends BaseHandler {
     private final UserService userService;
     private final RequestHandlerUtil requestHandlerUtil;
 
+    /**
+     * 创建消息管理处理器。
+     *
+     * @param messageService 站内消息服务
+     * @param userService 用户服务
+     * @param requestHandlerUtil 请求参数处理工具
+     * @param messageUtils 国际化消息工具
+     */
     public MessageHandler(
             OffMessageService messageService,
             UserService userService,

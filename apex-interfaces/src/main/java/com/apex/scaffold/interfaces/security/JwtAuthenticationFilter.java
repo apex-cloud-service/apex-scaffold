@@ -174,6 +174,16 @@ public class JwtAuthenticationFilter implements WebFilter {
         this(tokenBlacklistService, tokenService, messageUtils, userRepository, roleRepository, null);
     }
 
+    /**
+     * 构造方法注入依赖（含统一授权服务，供 Spring 使用的主构造器）
+     *
+     * @param tokenBlacklistService Token 黑名单服务，用于验证 Token 是否已注销
+     * @param tokenService          Token 服务，用于生成和存储新 AccessToken（滑动刷新）
+     * @param messageUtils          国际化消息工具，用于解析多语言错误消息
+     * @param userRepository        用户仓储，用于根据 OpenID 查询用户信息
+     * @param roleRepository        角色仓储，用于根据用户ID查询用户角色列表
+     * @param unifiedAuthorizationService 统一授权服务，用于权限校验，可为空
+     */
     @org.springframework.beans.factory.annotation.Autowired
     public JwtAuthenticationFilter(
             TokenBlacklistService tokenBlacklistService,

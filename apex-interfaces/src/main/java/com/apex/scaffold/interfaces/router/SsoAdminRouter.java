@@ -36,6 +36,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 @Configuration
 public class SsoAdminRouter {
 
+    /** 注册〈SSO 单点登录〉管理路由，涵盖提供商、会话与审计日志管理端点。 */
     @RouterOperations({
         @RouterOperation(
                 path = "/admin-api/v1/sso/providers",

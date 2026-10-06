@@ -39,6 +39,7 @@ public class OfficeIntegrationRouter {
 
     private static final String BASE_PATH = "/api/v1/office";
 
+    /** 注册〈办公平台集成〉路由，涵盖审批流程与日历事件等业务端点。 */
     @RouterOperations({
         @RouterOperation(
                 path = BASE_PATH + "/approvals",

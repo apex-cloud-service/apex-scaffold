@@ -57,6 +57,13 @@ public class AlertService {
         return sendAlert(alertEvent, null);
     }
 
+    /**
+     * 监听告警事件并异步发送告警。
+     *
+     * <p>作为 Spring 事件监听器接收 {@link AlertEvent}，触发 {@code sendAlert} 订阅发送，不阻塞事件线程。</p>
+     *
+     * @param alertEvent 监听到的告警事件
+     */
     @EventListener
     public void handleAlertEvent(AlertEvent alertEvent) {
         sendAlert(alertEvent).subscribe();

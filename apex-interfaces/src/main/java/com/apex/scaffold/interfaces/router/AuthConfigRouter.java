@@ -32,6 +32,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 @Configuration
 public class AuthConfigRouter {
 
+    /** 注册〈后台认证授权配置〉管理路由，涵盖 JWT、会话、安全策略、权限同步与 OAuth2 客户端端点。 */
     @RouterOperations({
         @RouterOperation(
                 path = "/admin-api/v1/auth/config/jwt",

@@ -172,6 +172,14 @@ public class MessageTemplateHandler extends BaseHandler {
                 });
     }
 
+    /**
+     * 更新指定消息模板。
+     *
+     * <p>解析并校验请求体，按路径参数 {@code templateId} 更新模板内容；模板不存在时返回 404。</p>
+     *
+     * @param request HTTP 请求，路径参数 {@code templateId} 为模板 ID，请求体为模板更新参数
+     * @return 带 traceId 的统一成功响应，data 为更新后的 {@link MessageTemplateDTO}
+     */
     @Parameters({@Parameter(name = "templateId", in = ParameterIn.PATH, required = true, description = "模板ID")})
     @Operation(summary = "更新消息模板", description = "更新指定消息模板")
     @ApiResponses({
@@ -206,6 +214,14 @@ public class MessageTemplateHandler extends BaseHandler {
                 });
     }
 
+    /**
+     * 删除指定消息模板。
+     *
+     * <p>按路径参数 {@code templateId} 删除消息模板，成功后返回空数据。</p>
+     *
+     * @param request HTTP 请求，路径参数 {@code templateId} 为模板 ID
+     * @return 带 traceId 的统一成功响应，无业务数据
+     */
     @Parameters({@Parameter(name = "templateId", in = ParameterIn.PATH, required = true, description = "模板ID")})
     @Operation(summary = "删除消息模板", description = "删除指定消息模板")
     @ApiResponses({

@@ -57,6 +57,7 @@ public class OAuth2RouterConfig {
     private final OAuth2JwksHandler jwksHandler;
     private final OAuth2DiscoveryHandler discoveryHandler;
 
+    /** 注册〈OAuth2 协议端点〉路由，涵盖授权、Token、自省、同意与 JWKS 等端点。 */
     @Bean
     public RouterFunction<ServerResponse> oauth2Routes() {
         return route().GET("/.well-known/oauth-authorization-server", discoveryHandler::discovery)
@@ -71,6 +72,7 @@ public class OAuth2RouterConfig {
                 .build();
     }
 
+    /** 注册〈OAuth2 客户端管理〉管理路由，提供客户端的增删改查与密钥重置端点。 */
     @Bean
     public RouterFunction<ServerResponse> oauth2ClientManagementRoutes() {
         return route().POST("/admin-api/v1/oauth2/clients", oauth2ClientHandler::createClient)

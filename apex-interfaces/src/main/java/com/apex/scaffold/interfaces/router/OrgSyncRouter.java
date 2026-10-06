@@ -31,6 +31,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 @Configuration
 public class OrgSyncRouter {
 
+    /** 注册〈组织架构同步〉管理路由，涵盖部门、员工管理与同步触发端点。 */
     @RouterOperations({
         @RouterOperation(
                 path = "/admin-api/v1/org/departments",

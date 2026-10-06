@@ -60,6 +60,15 @@ public class SsoAuthHandler extends BaseHandler {
     private final SysSsoSessionService sysSsoSessionService;
     private final SsoProtocolAdapterFactory ssoProtocolAdapterFactory;
 
+    /**
+     * 创建 SSO 认证端点处理器。
+     *
+     * @param sysSsoProviderService SSO 提供商服务
+     * @param sysSsoSessionService SSO 会话服务
+     * @param ssoProtocolAdapterFactory SSO 协议适配器工厂
+     * @param messageUtils 国际化消息工具
+     * @param validator Jakarta Bean Validation 校验器
+     */
     public SsoAuthHandler(
             SysSsoProviderService sysSsoProviderService,
             SysSsoSessionService sysSsoSessionService,
