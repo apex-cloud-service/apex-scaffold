@@ -7,6 +7,7 @@ import com.apex.scaffold.application.service.auth.AuthNextAction;
 import com.apex.scaffold.application.service.auth.AuthTicketPayload;
 import com.apex.scaffold.application.service.auth.AuthTicketService;
 import com.apex.scaffold.application.service.auth.AuthTicketType;
+import com.apex.scaffold.application.service.auth.RegisterChannelResolver;
 import com.apex.scaffold.common.dto.TokenStoreEntry;
 import com.apex.scaffold.domain.model.entity.UserEntity;
 import com.apex.scaffold.domain.service.TokenService;
@@ -119,6 +120,9 @@ public abstract class AbstractPhoneLoginStrategy implements LoginStrategy {
                             payload.setType(AuthTicketType.REGISTRATION);
                             payload.setDeviceId(deviceId);
                             payload.setPhone(phone);
+                            // 记录注册来源：注册落库时写入 sys_user.register_channel
+                            payload.setRegisterChannel(
+                                    RegisterChannelResolver.resolve(request).name());
                             return authTicketService.issue(payload).map(ticket -> {
                                 // 签发与 authTicket 有效期一致的临时 accessToken，
                                 // 确保新用户在注册流程中不会因 Token 缺失而被 401 强制登出

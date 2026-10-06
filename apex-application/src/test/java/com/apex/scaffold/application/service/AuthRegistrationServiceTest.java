@@ -57,6 +57,9 @@ class AuthRegistrationServiceTest {
     @Mock
     private LoginResponseHelper loginResponseHelper;
 
+    @Mock
+    private UserSocialService userSocialService;
+
     private AuthRegistrationService service;
 
     /**
@@ -71,7 +74,16 @@ class AuthRegistrationServiceTest {
                 .when(userService.assertWechatRegistrationAllowed(org.mockito.ArgumentMatchers.anyString()))
                 .thenReturn(Mono.empty());
         service = new AuthRegistrationService(
-                userService, ticketService, smsCodeService, tokenService, loginResponseHelper);
+                userService, ticketService, smsCodeService, tokenService, loginResponseHelper, userSocialService);
+        // 默认放行社交身份绑定登记（幂等操作，多数用例不关注绑定细节）
+        org.mockito.Mockito.lenient()
+                .when(userSocialService.upsertBinding(
+                        org.mockito.ArgumentMatchers.any(),
+                        org.mockito.ArgumentMatchers.any(),
+                        org.mockito.ArgumentMatchers.any(),
+                        org.mockito.ArgumentMatchers.any(),
+                        org.mockito.ArgumentMatchers.any()))
+                .thenReturn(Mono.empty());
     }
 
     /**

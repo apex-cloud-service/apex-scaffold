@@ -61,4 +61,16 @@ public class LoginLogPO extends BasePO {
      * 登录时间。
      */
     private LocalDateTime loginTime;
+
+    /**
+     * 客户端类型（PC_ADMIN/PC_WEB/WECHAT_MP/MINI_PROGRAM/APP_ANDROID/APP_IOS/H5/UNKNOWN）。
+     *
+     * <p>对应 V59 迁移新增列，当前登录请求未携带 X-Client-Type 时为空。</p>
+     */
+    private String clientType;
+
+    /**
+     * 客户端平台（android/ios/h5/harmony/wechat）。
+     */
+    private String platform;
 }

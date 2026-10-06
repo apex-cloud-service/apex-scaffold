@@ -11,12 +11,14 @@ import com.apex.scaffold.application.service.login.LoginResponseHelper;
 import com.apex.scaffold.common.dto.TokenStoreEntry;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.result.ResultCode;
+import com.apex.scaffold.domain.enums.SocialChannel;
 import com.apex.scaffold.domain.model.entity.UserEntity;
 import com.apex.scaffold.domain.service.SmsCodeService;
 import com.apex.scaffold.domain.service.TokenService;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.concurrent.ThreadLocalRandom;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -71,6 +73,7 @@ import reactor.core.publisher.Mono;
  * @version 1.0.0
  * @since 1.0.0
  */
+@Slf4j
 @Service
 public class AuthRegistrationService {
 
@@ -90,6 +93,14 @@ public class AuthRegistrationService {
     private final LoginResponseHelper loginResponseHelper;
 
     /**
+     * 社交身份绑定应用服务。
+     *
+     * <p>注册/绑定成功后登记（WECHAT_APP, openId）绑定记录，支撑多端统一账户归一。
+     * 绑定失败仅告警，不阻断注册与登录。</p>
+     */
+    private final UserSocialService userSocialService;
+
+    /**
      * 构造注册服务。
      *
      * @param userService         用户持久化服务
@@ -97,18 +108,21 @@ public class AuthRegistrationService {
      * @param smsCodeService      短信验证码服务（通过 {@code @Qualifier("chuanglanSmsCodeService")} 注入）
      * @param tokenService        JWT Token 服务
      * @param loginResponseHelper 登录响应构建器
+     * @param userSocialService   社交身份绑定应用服务
      */
     public AuthRegistrationService(
             UserService userService,
             AuthTicketService authTicketService,
             @Qualifier("chuanglanSmsCodeService") SmsCodeService smsCodeService,
             TokenService tokenService,
-            LoginResponseHelper loginResponseHelper) {
+            LoginResponseHelper loginResponseHelper,
+            UserSocialService userSocialService) {
         this.userService = userService;
         this.authTicketService = authTicketService;
         this.smsCodeService = smsCodeService;
         this.tokenService = tokenService;
         this.loginResponseHelper = loginResponseHelper;
+        this.userSocialService = userSocialService;
     }
 
     /**
@@ -317,9 +331,36 @@ public class AuthRegistrationService {
         Mono<Void> invalidateOldToken = oldSubject != null && !oldSubject.isBlank() && isPlaceholderOpenId(oldSubject)
                 ? tokenService.deleteToken(oldSubject).then()
                 : Mono.empty();
-        return invalidateOldToken
-                .then(userService.update(user))
-                .flatMap(updated -> buildLoginResponse(updated, request.getDeviceId(), request.getClientIp(), false));
+        return invalidateOldToken.then(userService.update(user)).flatMap(updated -> recordSocialBinding(
+                        updated, payload)
+                .then(buildLoginResponse(updated, request.getDeviceId(), request.getClientIp(), false)));
+    }
+
+    /**
+     * 登记微信开放平台社交身份绑定（多端统一账户归一数据基础）。
+     *
+     * <p>幂等：重复绑定同一（渠道, OpenID）仅同步 UnionID；失败仅告警不阻断
+     * 注册/绑定主流程，绑定记录可在后续登录时补写。</p>
+     *
+     * @param user    绑定目标用户实体
+     * @param payload 票据载荷（含 openId / unionId）
+     * @return 空 Mono
+     */
+    private Mono<Void> recordSocialBinding(UserEntity user, AuthTicketPayload payload) {
+        if (user == null || payload == null) {
+            return Mono.empty();
+        }
+        return userSocialService
+                .upsertBinding(
+                        user.getId(),
+                        user.getTenantId(),
+                        SocialChannel.WECHAT_APP,
+                        payload.getOpenId(),
+                        payload.getUnionId())
+                .onErrorResume(error -> {
+                    log.warn("微信社交身份绑定记录失败(不阻断主流程): userId={}, error={}", user.getId(), error.getMessage());
+                    return Mono.empty();
+                });
     }
 
     /**
@@ -355,6 +396,8 @@ public class AuthRegistrationService {
         registration.setProvince(wechat.getProvince());
         registration.setCity(wechat.getCity());
         registration.setLanguage(wechat.getLanguage());
+        // 传递注册来源：登录推导的 register_channel 随票据透传到注册落库
+        registration.setRegisterChannel(wechat.getRegisterChannel());
         return authTicketService.issue(registration).map(ticket -> {
             LoginResponse response = new LoginResponse();
             response.setNextAction(AuthNextAction.REGISTER_REQUIRED.name());
@@ -399,7 +442,10 @@ public class AuthRegistrationService {
                     applyRegistration(existing, payload, request);
                     return userService.update(existing);
                 })
-                .switchIfEmpty(Mono.defer(() -> userService.create(newRegisteredUser(payload, request))));
+                .switchIfEmpty(Mono.defer(() -> userService
+                        .create(newRegisteredUser(payload, request))
+                        .flatMap(
+                                created -> recordSocialBinding(created, payload).thenReturn(created))));
     }
 
     /**
@@ -428,6 +474,8 @@ public class AuthRegistrationService {
                         : payload.getOpenId());
         user.setStatus(1);
         user.setOnboardingStatus("ONBOARDING_PENDING");
+        // 注册来源打标：票据签发时由登录请求推导，落库后用于账户来源追溯
+        user.setRegisterChannel(payload.getRegisterChannel());
         user.setDeleted(0);
         LocalDateTime now = LocalDateTime.now();
         user.setCreateTime(now);

@@ -3,14 +3,17 @@ package com.apex.scaffold.application.service.login;
 import com.apex.scaffold.application.dto.LoginRequest;
 import com.apex.scaffold.application.dto.LoginResponse;
 import com.apex.scaffold.application.service.UserService;
+import com.apex.scaffold.application.service.UserSocialService;
 import com.apex.scaffold.application.service.auth.AuthNextAction;
 import com.apex.scaffold.application.service.auth.AuthTicketPayload;
 import com.apex.scaffold.application.service.auth.AuthTicketService;
 import com.apex.scaffold.application.service.auth.AuthTicketType;
+import com.apex.scaffold.application.service.auth.RegisterChannelResolver;
 import com.apex.scaffold.common.dto.TokenStoreEntry;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.domain.enums.LoginType;
+import com.apex.scaffold.domain.enums.SocialChannel;
 import com.apex.scaffold.domain.gateway.WeChatGateway;
 import com.apex.scaffold.domain.model.entity.UserEntity;
 import com.apex.scaffold.domain.service.TokenService;
@@ -55,6 +58,14 @@ public class WeChatCodeLoginStrategy implements LoginStrategy {
 
     /** 用户应用服务，提供用户查询和创建功能 */
     private final UserService userService;
+
+    /**
+     * 社交身份绑定应用服务。
+     *
+     * <p>登录成功后登记（WECHAT_APP, openId）绑定记录，支撑多端统一账户归一。
+     * 绑定失败不阻断登录，由调用方容错。</p>
+     */
+    private final UserSocialService userSocialService;
 
     /** Token 服务，提供 JWT 生成和存储功能 */
     private final TokenService tokenService;
@@ -121,14 +132,32 @@ public class WeChatCodeLoginStrategy implements LoginStrategy {
                                         wxRefreshToken,
                                         tokenExpireTime,
                                         request.getDeviceId(),
-                                        wxUserInfo);
+                                        wxUserInfo,
+                                        request);
                             }
                             // 记录登录IP和时间
                             existing.recordLogin(request.getClientIp());
                             // 更新微信基础信息和Token，包括从微信同步性别
                             applyWeChatUserInfo(existing, wxUserInfo, unionId);
                             existing.updateToken(wxAccessToken, wxRefreshToken, tokenExpireTime);
-                            return userService.update(existing).flatMap(user -> buildLoginResponse(user, request));
+                            return userService
+                                    .update(existing)
+                                    // 登记多端社交身份绑定（失败不阻断登录）
+                                    .flatMap(user -> userSocialService
+                                            .upsertBinding(
+                                                    user.getId(),
+                                                    user.getTenantId(),
+                                                    SocialChannel.WECHAT_APP,
+                                                    openId,
+                                                    unionId)
+                                            .onErrorResume(bindError -> {
+                                                log.warn(
+                                                        "微信社交身份绑定记录失败(不阻断登录): userId={}, error={}",
+                                                        user.getId(),
+                                                        bindError.getMessage());
+                                                return Mono.empty();
+                                            })
+                                            .then(buildLoginResponse(user, request)));
                         })
                         .switchIfEmpty(Mono.defer(() -> userService
                                 .assertWechatRegistrationAllowed(openId)
@@ -139,7 +168,8 @@ public class WeChatCodeLoginStrategy implements LoginStrategy {
                                         wxRefreshToken,
                                         tokenExpireTime,
                                         request.getDeviceId(),
-                                        wxUserInfo))));
+                                        wxUserInfo,
+                                        request))));
             });
         });
     }
@@ -244,7 +274,8 @@ public class WeChatCodeLoginStrategy implements LoginStrategy {
      * 签发微信手机号绑定票据并返回待绑定登录响应。
      *
      * <p>将微信身份与用户资料写入注册票据，返回 {@link AuthNextAction#PHONE_BIND_REQUIRED}
-     * 登录响应以引导用户完成手机号绑定。</p>
+     * 登录响应以引导用户完成手机号绑定。票据同时携带由登录请求推导的注册来源，
+     * 供注册落库时写入 {@code sys_user.register_channel}。</p>
      *
      * @param openId          微信 openId
      * @param unionId         微信 unionId
@@ -253,6 +284,7 @@ public class WeChatCodeLoginStrategy implements LoginStrategy {
      * @param tokenExpireTime 微信 Token 过期时间
      * @param deviceId        设备 ID
      * @param wxUserInfo      微信用户资料
+     * @param request         原始登录请求，用于推导注册来源
      * @return 待绑定登录响应（含注册票据）
      */
     private Mono<LoginResponse> issueWechatBindTicket(
@@ -262,7 +294,8 @@ public class WeChatCodeLoginStrategy implements LoginStrategy {
             String refreshToken,
             LocalDateTime tokenExpireTime,
             String deviceId,
-            WeChatGateway.WeChatUserInfo wxUserInfo) {
+            WeChatGateway.WeChatUserInfo wxUserInfo,
+            LoginRequest request) {
         AuthTicketPayload payload = new AuthTicketPayload();
         payload.setType(AuthTicketType.WECHAT_BIND);
         payload.setDeviceId(deviceId);
@@ -271,6 +304,7 @@ public class WeChatCodeLoginStrategy implements LoginStrategy {
         payload.setWechatAccessToken(accessToken);
         payload.setWechatRefreshToken(refreshToken);
         payload.setWechatTokenExpireTime(tokenExpireTime);
+        payload.setRegisterChannel(RegisterChannelResolver.resolve(request).name());
         // 将微信用户资料（昵称、头像、地区等）写入票据，确保注册阶段不会丢失
         if (wxUserInfo != null) {
             payload.setNickName(wxUserInfo.getNickname());

@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 import com.apex.scaffold.application.dto.LoginRequest;
 import com.apex.scaffold.application.dto.LoginResponse;
 import com.apex.scaffold.application.service.UserService;
+import com.apex.scaffold.application.service.UserSocialService;
 import com.apex.scaffold.application.service.auth.AuthTicketService;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.result.ResultCode;
@@ -47,6 +48,9 @@ class WeChatCodeLoginStrategyTest {
     @Mock
     private AuthTicketService authTicketService;
 
+    @Mock
+    private UserSocialService userSocialService;
+
     private WeChatCodeLoginStrategy strategy;
     private LoginRequest request;
 
@@ -59,7 +63,16 @@ class WeChatCodeLoginStrategyTest {
                 .when(userService.assertWechatRegistrationAllowed(org.mockito.ArgumentMatchers.anyString()))
                 .thenReturn(Mono.empty());
         strategy = new WeChatCodeLoginStrategy(
-                weChatGateway, userService, tokenService, loginResponseHelper, authTicketService);
+                weChatGateway, userService, userSocialService, tokenService, loginResponseHelper, authTicketService);
+        // 默认放行社交身份绑定登记（幂等操作，多数用例不关注绑定细节）
+        org.mockito.Mockito.lenient()
+                .when(userSocialService.upsertBinding(
+                        org.mockito.ArgumentMatchers.any(),
+                        org.mockito.ArgumentMatchers.any(),
+                        org.mockito.ArgumentMatchers.any(),
+                        org.mockito.ArgumentMatchers.any(),
+                        org.mockito.ArgumentMatchers.any()))
+                .thenReturn(Mono.empty());
         request = new LoginRequest();
         request.setCode("wx-code");
         request.setDeviceId("device");

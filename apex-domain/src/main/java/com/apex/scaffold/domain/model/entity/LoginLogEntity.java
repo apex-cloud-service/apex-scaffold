@@ -78,6 +78,31 @@ public class LoginLogEntity extends BaseEntity {
      */
     private LocalDateTime loginTime;
 
+    /**
+     * 客户端类型。
+     *
+     * <p>多端客户端标识（PC_ADMIN/PC_WEB/WECHAT_MP/MINI_PROGRAM/APP_ANDROID/APP_IOS/H5），
+     * 请求未携带 X-Client-Type 时为空，用于按终端维度审计登录来源。</p>
+     */
+    private String clientType;
+
+    /**
+     * 客户端平台。
+     *
+     * <p>客户端上报的平台标识（android/ios/h5/harmony/wechat）。</p>
+     */
+    private String platform;
+
+    /** Sets clientType. For persistence/construction use only. */
+    public void setClientType(String value) {
+        this.clientType = value;
+    }
+
+    /** Sets platform. For persistence/construction use only. */
+    public void setPlatform(String value) {
+        this.platform = value;
+    }
+
     /** Sets username. For persistence/construction use only. */
     public void setUsername(String value) {
         this.username = value;

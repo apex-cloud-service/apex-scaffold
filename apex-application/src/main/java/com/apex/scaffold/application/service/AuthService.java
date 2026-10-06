@@ -431,7 +431,7 @@ public class AuthService {
                             .delete(LOGIN_FAIL_USERNAME_PREFIX + username)
                             .then());
         }
-        return cleanup.then(safeRecordLoginLog(username, clientIp, true, "登录成功"));
+        return cleanup.then(safeRecordLoginLog(username, clientIp, request.getPlatform(), true, "登录成功"));
     }
 
     /**
@@ -466,7 +466,7 @@ public class AuthService {
                     ? incrementIp
                     : incrementIp.then(incrementLoginFailCount(LOGIN_FAIL_USERNAME_PREFIX + username, windowSize));
         }
-        return counters.then(safeRecordLoginLog(username, clientIp, false, "登录失败"));
+        return counters.then(safeRecordLoginLog(username, clientIp, request.getPlatform(), false, "登录失败"));
     }
 
     /**
@@ -497,17 +497,20 @@ public class AuthService {
      *
      * @param username 登录账号
      * @param clientIp 客户端 IP
+     * @param platform 客户端平台标识（android/ios/h5/harmony/wechat），可为 {@code null}
      * @param success 是否成功
      * @param message 登录消息
      * @return 空 Mono
      */
-    private Mono<Void> safeRecordLoginLog(String username, String clientIp, boolean success, String message) {
+    private Mono<Void> safeRecordLoginLog(
+            String username, String clientIp, String platform, boolean success, String message) {
         if (loginLogService == null) {
             return Mono.empty();
         }
         com.apex.scaffold.domain.model.entity.LoginLogEntity entity =
                 com.apex.scaffold.domain.model.entity.LoginLogEntity.create(
                         username, clientIp, resolveBrowser(), resolveOs(), success, message);
+        entity.setPlatform(platform);
         return loginLogService.record(entity).onErrorResume(error -> {
             log.warn("登录日志记录失败，username: {}, error: {}", username, error.getMessage());
             return Mono.empty();

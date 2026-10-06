@@ -57,4 +57,7 @@ public class AuthTicketPayload {
     private String city;
     /** 微信语言（从 /sns/userinfo 拉取）。 */
     private String language;
+
+    /** 注册来源（{@link com.apex.scaffold.domain.enums.RegisterChannel} 编码），从登录请求推导。 */
+    private String registerChannel;
 }
