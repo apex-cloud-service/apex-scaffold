@@ -17,7 +17,8 @@ import reactor.core.publisher.Mono;
 /**
  * 通过受保护中心 API 查询显式映射身份的授权。
  *
- * @author Apex Scaffold Team
+ * @author Apex Team
+ * @since 1.3.0
  */
 @Component
 public class AuthCenterPermissionClient implements UnifiedAuthorizationGateway {

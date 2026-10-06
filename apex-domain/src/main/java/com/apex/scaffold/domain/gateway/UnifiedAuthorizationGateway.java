@@ -6,7 +6,8 @@ import reactor.core.publisher.Mono;
 /**
  * 查询可信主应用身份对应的统一授权。
  *
- * @author Apex Scaffold Team
+ * @author Apex Team
+ * @since 1.3.0
  */
 public interface UnifiedAuthorizationGateway {
     /**

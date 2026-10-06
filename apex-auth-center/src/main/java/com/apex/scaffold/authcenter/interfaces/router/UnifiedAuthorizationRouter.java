@@ -17,7 +17,8 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 /**
  * 注册受保护的统一授权快照接口。
  *
- * @author Apex Scaffold Team
+ * @author Apex Team
+ * @since 1.3.0
  */
 @Configuration
 public class UnifiedAuthorizationRouter {

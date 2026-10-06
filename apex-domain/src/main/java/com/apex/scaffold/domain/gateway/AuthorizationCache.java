@@ -6,7 +6,8 @@ import reactor.core.publisher.Mono;
 /**
  * 统一授权快照的短期缓存契约。
  *
- * @author Apex Scaffold Team
+ * @author Apex Team
+ * @since 1.3.0
  */
 public interface AuthorizationCache {
     /**

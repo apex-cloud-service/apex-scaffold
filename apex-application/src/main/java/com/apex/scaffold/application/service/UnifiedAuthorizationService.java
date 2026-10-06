@@ -13,7 +13,8 @@ import reactor.core.publisher.Mono;
 /**
  * 编排统一授权查询及具有独立到期时间的短期缓存。
  *
- * @author Apex Scaffold Team
+ * @author Apex Team
+ * @since 1.3.0
  */
 @Service
 public class UnifiedAuthorizationService {

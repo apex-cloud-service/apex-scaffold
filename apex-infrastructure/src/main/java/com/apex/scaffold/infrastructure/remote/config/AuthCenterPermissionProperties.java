@@ -9,7 +9,8 @@ import org.springframework.stereotype.Component;
 /**
  * 配置中心连接凭据和跨系统可信身份映射。
  *
- * @author Apex Scaffold Team
+ * @author Apex Team
+ * @since 1.3.0
  */
 @Getter
 @Setter

@@ -12,7 +12,8 @@ import reactor.core.publisher.Mono;
 /**
  * 查询同租户有效账号的授权快照。
  *
- * @author Apex Scaffold Team
+ * @author Apex Team
+ * @since 1.3.0
  */
 @Service
 @RequiredArgsConstructor

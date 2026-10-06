@@ -17,7 +17,8 @@ import reactor.core.publisher.Mono;
 /**
  * 仅向有效专用 reader 提供当前 Token 租户的授权快照。
  *
- * @author Apex Scaffold Team
+ * @author Apex Team
+ * @since 1.3.0
  */
 @Component
 @RequiredArgsConstructor

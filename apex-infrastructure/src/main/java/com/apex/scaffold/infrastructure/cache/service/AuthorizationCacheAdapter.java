@@ -9,7 +9,8 @@ import reactor.core.publisher.Mono;
 /**
  * 将授权缓存契约适配到现有多级缓存。
  *
- * @author Apex Scaffold Team
+ * @author Apex Team
+ * @since 1.3.0
  */
 @Component
 @RequiredArgsConstructor
