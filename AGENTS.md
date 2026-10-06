@@ -713,7 +713,7 @@ public class FeatureProperties {
   - Service、Component、Handler 和配置类必须使用构造器注入，配合 Lombok 的 `@RequiredArgsConstructor` 注解实现。
   - 构造器注入的优势：编译时检查依赖完整性、支持 final 字段、便于单元测试、避免循环依赖。
 - **Lombok 使用规范**：Service、Component、配置类、DTO、Request、Response、VO 和实体优先沿用现有 Lombok 模式；使用何种 Lombok 注解以及是否保留手写方法，应根据类的可变性、继承关系和现有代码判断。避免引入 `@SneakyThrows`、`val`、`var` 和 `@Synchronized`，除非已有模式明确需要。
-- **代码注释规范**：JavaDoc 按现有模块和类的模式维护；对公开 API、复杂逻辑和非直观业务规则优先补充必要说明，简单 getter/setter、重写方法或已有清晰契约的代码无需机械补充。需要检查时可使用仓库中存在的 `scripts/dev/check/scan-javadoc-issues.sh`、`scripts/dev/format/batch-add-javadoc.sh`。
+- **代码注释规范**：JavaDoc 按现有模块和类的模式维护；对公开 API、复杂逻辑和非直观业务规则优先补充必要说明，简单 getter/setter、重写方法或已有清晰契约的代码无需机械补充。需要检查时可使用仓库中存在的 `scripts/dev/check/scan-javadoc-issues.sh`、`scripts/dev/format/batch-add-javadoc.sh`；完整的注释规范（语言决策、文件头模板、行内注释规则、坏注释反例与兼容性条款）见 `docs/04-development/comment-convention.md`。
 - **包名约定**：主模块使用 `com.apex.scaffold.*`，example 使用现有 `com.apex.example`。
 - **依赖管理**：引入依赖前先检查根 POM 和目标模块是否已有可复用能力。
 
