@@ -40,10 +40,16 @@ public class CreditEventListener {
 
     private final SystemMessageRepository systemMessageRepository;
 
+    /** 创建监听器，系统消息仓储可选注入，未注入时跳过通知写入。 */
     public CreditEventListener(Optional<SystemMessageRepository> systemMessageRepository) {
         this.systemMessageRepository = systemMessageRepository.orElse(null);
     }
 
+    /**
+     * 监听积分消费事件，剩余余额低于阈值时异步写入低余额系统消息提醒。
+     *
+     * @param event 积分消费领域事件
+     */
     @EventListener(CreditConsumedEvent.class)
     public void handleCreditConsumedEvent(CreditConsumedEvent event) {
         log.info(
@@ -57,6 +63,11 @@ public class CreditEventListener {
                 .subscribe();
     }
 
+    /**
+     * 监听积分赚取事件，跨越里程碑节点时异步写入里程碑祝贺系统消息。
+     *
+     * @param event 积分赚取领域事件
+     */
     @EventListener(CreditEarnedEvent.class)
     public void handleCreditEarnedEvent(CreditEarnedEvent event) {
         log.info(

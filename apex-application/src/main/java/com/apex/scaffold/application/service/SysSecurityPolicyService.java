@@ -43,6 +43,14 @@ public class SysSecurityPolicyService {
                 .switchIfEmpty(Mono.error(new BusinessException(ResultCode.NOT_FOUND, "安全策略不存在，请联系管理员初始化配置")));
     }
 
+    /**
+     * 更新当前租户的安全策略。
+     *
+     * <p>沿用原记录 ID 与租户归属并强制保持启用状态，策略不存在时返回错误信号。</p>
+     *
+     * @param request 安全策略更新请求
+     * @return 更新后的安全策略 DTO
+     */
     public Mono<SecurityPolicyDTO> update(SecurityPolicyRequest request) {
         String tenantId = TenantContext.currentTenantId()
                 .orElseThrow(() -> new BusinessException(ResultCode.FORBIDDEN, "租户上下文未初始化"));

@@ -23,10 +23,19 @@ public class UnifiedAuthorizationService {
     private final com.apex.scaffold.domain.gateway.AuthorizationCache cache;
     private final long cacheSeconds;
 
+    /** 创建服务实例，不启用授权结果缓存。 */
     public UnifiedAuthorizationService(UnifiedAuthorizationGateway gateway, Environment environment) {
         this(gateway, environment, null);
     }
 
+    /**
+     * 创建服务实例并初始化授权短期缓存配置。
+     *
+     * @param gateway 统一授权查询网关
+     * @param environment Spring 环境配置
+     * @param cache 授权结果缓存，为 null 时不启用缓存
+     * @throws IllegalArgumentException 缓存 TTL 配置小于 0 或超过 30 秒
+     */
     @org.springframework.beans.factory.annotation.Autowired
     public UnifiedAuthorizationService(
             UnifiedAuthorizationGateway gateway,
@@ -41,6 +50,11 @@ public class UnifiedAuthorizationService {
         this.enabled = environment.getProperty("apex.features.auth-center-permission", Boolean.class, false);
     }
 
+    /**
+     * 返回认证中心权限功能开关是否启用。
+     *
+     * @return 功能启用时返回 true，未配置时默认关闭
+     */
     public boolean enabled() {
         return enabled;
     }
@@ -103,6 +117,14 @@ public class UnifiedAuthorizationService {
                                 && !role.dataScope().isBlank());
     }
 
+    /**
+     * 查询用户的权限列表。
+     *
+     * <p>经统一授权查询获取权限编码，转换为权限实体列表。</p>
+     *
+     * @param userId 用户 ID
+     * @return 权限实体列表
+     */
     public Mono<List<PermissionEntity>> permissions(Long userId) {
         return query(userId).map(data -> data.permissions().stream()
                 .map(code -> {
@@ -114,6 +136,14 @@ public class UnifiedAuthorizationService {
                 .toList());
     }
 
+    /**
+     * 查询用户的角色列表。
+     *
+     * <p>经统一授权查询获取角色及数据权限范围，转换为角色实体列表。</p>
+     *
+     * @param userId 用户 ID
+     * @return 角色实体列表
+     */
     public Mono<List<RoleEntity>> roles(Long userId) {
         return query(userId).map(data -> data.roles().stream()
                 .map(role -> {

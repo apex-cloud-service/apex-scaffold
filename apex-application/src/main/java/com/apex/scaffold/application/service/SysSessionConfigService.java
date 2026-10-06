@@ -43,6 +43,14 @@ public class SysSessionConfigService {
                 .switchIfEmpty(Mono.error(new BusinessException(ResultCode.NOT_FOUND, "会话配置不存在，请联系管理员初始化配置")));
     }
 
+    /**
+     * 更新当前租户的会话配置。
+     *
+     * <p>沿用原记录 ID 与租户归属并强制保持启用状态，配置不存在时返回错误信号。</p>
+     *
+     * @param request 会话配置更新请求
+     * @return 更新后的会话配置 DTO
+     */
     public Mono<SessionConfigDTO> update(SessionConfigRequest request) {
         String tenantId = TenantContext.currentTenantId()
                 .orElseThrow(() -> new BusinessException(ResultCode.FORBIDDEN, "租户上下文未初始化"));

@@ -30,10 +30,16 @@ public class SubscriptionEventListener {
 
     private final SystemMessageRepository systemMessageRepository;
 
+    /** 创建监听器，系统消息仓储可选注入，未注入时跳过通知写入。 */
     public SubscriptionEventListener(Optional<SystemMessageRepository> systemMessageRepository) {
         this.systemMessageRepository = systemMessageRepository.orElse(null);
     }
 
+    /**
+     * 监听订阅激活事件，异步写入订阅激活系统消息通知。
+     *
+     * @param event 订阅激活领域事件
+     */
     @EventListener(SubscriptionActivatedEvent.class)
     public void handleSubscriptionActivatedEvent(SubscriptionActivatedEvent event) {
         log.info(
@@ -57,6 +63,11 @@ public class SubscriptionEventListener {
                 .subscribe();
     }
 
+    /**
+     * 监听订阅过期事件，异步写入订阅过期系统消息通知。
+     *
+     * @param event 订阅过期领域事件
+     */
     @EventListener(SubscriptionExpiredEvent.class)
     public void handleSubscriptionExpiredEvent(SubscriptionExpiredEvent event) {
         log.info(

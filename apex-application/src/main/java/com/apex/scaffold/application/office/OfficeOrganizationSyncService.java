@@ -309,10 +309,25 @@ public class OfficeOrganizationSyncService {
      * 同步任务结果
      */
     public record SyncTaskResult(Long taskId, int syncedCount, String message, boolean success) {
+        /**
+         * 创建表示同步成功的任务结果。
+         *
+         * @param taskId 同步任务 ID
+         * @param syncedCount 同步记录数
+         * @param message 结果描述信息
+         * @return 同步成功的任务结果
+         */
         public static SyncTaskResult success(Long taskId, int syncedCount, String message) {
             return new SyncTaskResult(taskId, syncedCount, message, true);
         }
 
+        /**
+         * 创建表示同步失败的任务结果。
+         *
+         * @param taskId 同步任务 ID
+         * @param message 失败原因描述
+         * @return 同步失败的任务结果
+         */
         public static SyncTaskResult failure(Long taskId, String message) {
             return new SyncTaskResult(taskId, 0, message, false);
         }

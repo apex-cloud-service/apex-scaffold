@@ -25,6 +25,9 @@ public class ClientSecretRotationScheduler {
 
     private final OAuth2ClientSecretRotationService rotationService;
 
+    /**
+     * 每日 02:00 定时巡检密钥已过期的 OAuth2 客户端，发现后记录 ERROR 告警日志。
+     */
     @Scheduled(cron = "0 0 2 * * ?")
     public void checkExpiredSecrets() {
         log.info("Starting daily check for expired client secrets");
@@ -43,6 +46,9 @@ public class ClientSecretRotationScheduler {
                         error -> log.error("Error checking expired secrets", error));
     }
 
+    /**
+     * 每日 03:00 定时巡检密钥即将到期的 OAuth2 客户端，并逐个触发到期通知。
+     */
     @Scheduled(cron = "0 0 3 * * ?")
     public void checkExpiringSoonSecrets() {
         log.info("Starting daily check for expiring soon client secrets");
