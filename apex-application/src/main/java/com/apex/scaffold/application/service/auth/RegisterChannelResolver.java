@@ -65,6 +65,9 @@ public final class RegisterChannelResolver {
             if (LoginType.WX_MINI.name().equals(normalized)) {
                 return RegisterChannel.MINI_PROGRAM;
             }
+            if (LoginType.WX_OAUTH.name().equals(normalized)) {
+                return RegisterChannel.WECHAT_MP;
+            }
         }
         // 3. platform 推导
         String platform = request.getPlatform();

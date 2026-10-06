@@ -284,9 +284,10 @@ public class AuthRegistrationService {
      */
     private Mono<LoginResponse> bindAgainstPhoneUser(
             AuthTicketPayload payload, WechatBindPhoneRequest request, UserEntity openUser) {
-        // 小程序渠道：手机号账户直接挂载小程序社交绑定（sys_user_social），不覆写
-        // sys_user.open_id（该列保留开放平台 App 主身份），允许多渠道并存
-        if (resolveChannel(payload) == SocialChannel.WECHAT_MINI) {
+        // 社交绑定渠道（小程序/公众号）：手机号账户直接挂载对应渠道社交绑定
+        // （sys_user_social），不覆写 sys_user.open_id（该列保留开放平台 App 主身份），
+        // 允许多渠道并存；仅开放平台 App 渠道保持原有 openId 合并语义
+        if (isChannelBoundIdentity(payload)) {
             String clientType = com.apex.scaffold.common.enums.ClientType.fromCode(payload.getRegisterChannel())
                     .name();
             return userService
@@ -456,11 +457,11 @@ public class AuthRegistrationService {
         if (payload.getOpenId() == null || payload.getOpenId().isBlank()) {
             return userService.create(newRegisteredUser(payload, request));
         }
-        // 小程序渠道：openId 不写 sys_user.open_id（该列保留开放平台 App 主身份），
-        // 统一以 PHONE_ 占位建号并写 WECHAT_MINI 社交绑定行
-        if (resolveChannel(payload) == SocialChannel.WECHAT_MINI) {
+        // 社交绑定渠道（小程序/公众号）：openId 不写 sys_user.open_id（该列保留
+        // 开放平台 App 主身份），统一以 PHONE_ 占位建号并写对应渠道社交绑定行
+        if (isChannelBoundIdentity(payload)) {
             return userService
-                    .create(newMiniProgramUser(payload, request))
+                    .create(newChannelPlaceholderUser(payload, request))
                     .flatMap(created -> recordSocialBinding(created, payload).thenReturn(created));
         }
         return userService
@@ -490,18 +491,32 @@ public class AuthRegistrationService {
     }
 
     /**
-     * 构建小程序渠道的新用户实体。
+     * 判断票据中的微信身份是否为"社交绑定渠道"身份。
+     *
+     * <p>小程序/公众号渠道的 OpenID 只落在 {@code sys_user_social}，
+     * 不参与 {@code sys_user.open_id} 合并语义（该列保留开放平台 App 主身份）；
+     * 仅开放平台 App 渠道返回 {@code false}。
+     *
+     * @param payload 票据载荷
+     * @return true 表示走渠道占位建号/绑定路径
+     */
+    private boolean isChannelBoundIdentity(AuthTicketPayload payload) {
+        return resolveChannel(payload) != SocialChannel.WECHAT_APP;
+    }
+
+    /**
+     * 构建社交绑定渠道（小程序/公众号）的新用户实体。
      *
      * <p>与 {@link #newRegisteredUser(AuthTicketPayload, RegisterRequest)} 的差异仅在于
-     * {@code openId}：小程序 OpenID 不写入 {@code sys_user.open_id}（避免覆写
-     * 开放平台 App 主身份），统一使用 {@code PHONE_ + UUID} 占位，小程序身份
-     * 由 {@code sys_user_social}（渠道=WECHAT_MINI）承载。</p>
+     * {@code openId}：渠道 OpenID 不写入 {@code sys_user.open_id}（避免覆写
+     * 开放平台 App 主身份），统一使用 {@code PHONE_ + UUID} 占位，渠道身份
+     * 由 {@code sys_user_social} 承载。</p>
      *
      * @param payload 注册票据载荷
      * @param request 注册请求
      * @return openId 为 PHONE_ 占位的新用户实体
      */
-    private UserEntity newMiniProgramUser(AuthTicketPayload payload, RegisterRequest request) {
+    private UserEntity newChannelPlaceholderUser(AuthTicketPayload payload, RegisterRequest request) {
         UserEntity user = newRegisteredUser(payload, request);
         user.setOpenId("PHONE_" + java.util.UUID.randomUUID().toString().replace("-", ""));
         return user;

@@ -245,4 +245,17 @@ public class LoginRequest {
                     "客户端类型（可选，请求头 X-Client-Type 优先）：PC_ADMIN/PC_WEB/WECHAT_MP/MINI_PROGRAM/APP_ANDROID/APP_IOS/H5")
     @Size(max = 32, message = "{param.size_invalid}")
     private String clientType;
+
+    /**
+     * OAuth state 防 CSRF 随机串（可选）。
+     *
+     * <p>WX_OAUTH（公众号网页授权）登录时必传：授权跳转前由
+     * {@code GET /api/v1/auth/wechat/mp/authorize} 签发（Redis 登记 5 分钟），
+     * 登录时服务端原子校验并消费（一次性），不匹配或已消费拒绝登录。</p>
+     *
+     * @since 3.3.0
+     */
+    @Schema(description = "OAuth state 防 CSRF 随机串（WX_OAUTH 登录必传，由 authorize 端点签发）")
+    @Size(max = 64, message = "{param.size_invalid}")
+    private String state;
 }

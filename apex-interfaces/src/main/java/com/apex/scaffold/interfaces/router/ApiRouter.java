@@ -2493,6 +2493,7 @@ public class ApiRouter {
             RouterFunctions.Builder auth, AuthHandler authHandler, AuthorizationHandler authorizationHandler) {
         auth.POST("/register", accept(MediaType.APPLICATION_JSON), authHandler::register);
         auth.POST("/wechat/bind-phone", accept(MediaType.APPLICATION_JSON), authHandler::bindWechatPhone);
+        auth.GET("/wechat/mp/authorize", authHandler::mpAuthorize);
         return auth.POST("/login", accept(MediaType.APPLICATION_JSON), authHandler::login)
                 .POST("/refresh", authHandler::refresh)
                 .POST("/logout", authHandler::logout)

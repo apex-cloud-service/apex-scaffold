@@ -67,6 +67,9 @@ class AuthHandlerTest {
     @Mock
     private BusinessMetricsRecorder businessMetricsRecorder;
 
+    @Mock
+    private com.apex.scaffold.domain.gateway.WeChatGateway weChatGateway;
+
     private static final String TEST_OPEN_ID = "test-open-id-123";
 
     private AuthHandler handler;
@@ -82,7 +85,8 @@ class AuthHandlerTest {
                 requestHandlerUtil,
                 messageUtils,
                 securityMetricsRecorder,
-                businessMetricsRecorder);
+                businessMetricsRecorder,
+                weChatGateway);
     }
 
     @Nested

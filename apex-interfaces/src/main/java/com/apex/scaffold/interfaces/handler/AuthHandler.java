@@ -85,12 +85,16 @@ public class AuthHandler extends BaseHandler {
     /** 核心业务指标记录器。 */
     private final BusinessMetricsRecorder businessMetricsRecorder;
 
+    /** 微信网关，提供公众号网页授权跳转与 OAuth state 签发能力。 */
+    private final com.apex.scaffold.domain.gateway.WeChatGateway weChatGateway;
+
     /**
      * 构造方法，通过 super(messageUtils) 传递 MessageUtils 给 BaseHandler
      *
      * @param authService     认证业务服务
      * @param requestHandlerUtil 请求处理工具
      * @param messageUtils    国际化消息工具
+     * @param weChatGateway   微信网关（公众号网页授权）
      */
     public AuthHandler(
             AuthService authService,
@@ -98,13 +102,15 @@ public class AuthHandler extends BaseHandler {
             RequestHandlerUtil requestHandlerUtil,
             MessageUtils messageUtils,
             SecurityMetricsRecorder securityMetricsRecorder,
-            BusinessMetricsRecorder businessMetricsRecorder) {
+            BusinessMetricsRecorder businessMetricsRecorder,
+            com.apex.scaffold.domain.gateway.WeChatGateway weChatGateway) {
         super(messageUtils);
         this.authService = authService;
         this.authRegistrationService = authRegistrationService;
         this.requestHandlerUtil = requestHandlerUtil;
         this.securityMetricsRecorder = securityMetricsRecorder;
         this.businessMetricsRecorder = businessMetricsRecorder;
+        this.weChatGateway = weChatGateway;
     }
 
     /**
@@ -521,5 +527,53 @@ public class AuthHandler extends BaseHandler {
             String outId = formData.getFirst("outId");
             return authService.validateMobile(token, mobile, outId).flatMap(requestHandlerUtil::buildSuccessResponse);
         });
+    }
+
+    /**
+     * 公众号网页授权跳转入口
+     *
+     * <p>生成微信公众号网页授权 URL 并签发一次性 OAuth state（Redis 登记 5 分钟），
+     * 302 重定向到微信授权页。用户授权后微信回跳到 {@code redirectUri} 并携带
+     * {@code code} 与 {@code state}，客户端以 {@code loginType=WX_OAUTH} 提交登录。
+     * 渠道未配置（{@code wechat.mp} 凭据缺失）时返回明确错误码。
+     *
+     * <p>该端点无需登录态即可访问（登录前入口，{@code PUBLIC_PATHS} 已放行）。
+     *
+     * @param request 服务器请求对象，查询参数 {@code redirectUri}（必填，授权后回跳的 H5 地址）、
+     *                {@code scope}（可选，snsapi_base/snsapi_userinfo，缺省 snsapi_base）
+     * @return 302 重定向到微信授权页；参数缺失或渠道未配置时返回错误响应
+     */
+    @Operation(
+            operationId = "mpAuthorize",
+            summary = "公众号网页授权跳转",
+            description = "生成微信公众号网页授权URL并302重定向；签发一次性OAuth state防CSRF。"
+                    + "授权后微信回跳 redirectUri 并携带 code/state，客户端以 loginType=WX_OAUTH 提交登录。")
+    @ApiResponses({
+        @ApiResponse(responseCode = "302", description = "重定向到微信授权页"),
+        @ApiResponse(
+                responseCode = "400",
+                description = "缺少 redirectUri 参数或微信渠道未配置",
+                content = @Content(schema = @Schema(implementation = Result.class)))
+    })
+    @OperationLog(module = "认证管理", type = OperationLog.OperationType.OTHER, description = "公众号网页授权跳转")
+    public Mono<ServerResponse> mpAuthorize(ServerRequest request) {
+        String traceId = TraceIdUtil.getTraceId();
+        String redirectUri = request.queryParam("redirectUri").orElse("").trim();
+        if (redirectUri.isBlank()) {
+            return buildError(ResultCode.PARAM_ERROR, traceId);
+        }
+        String scope = request.queryParam("scope").orElse("").trim();
+        // 签发一次性 OAuth state 后拼装授权 URL 并 302 跳转；渠道未配置时按 i18n 键返回错误
+        return weChatGateway
+                .mpIssueAuthState()
+                .flatMap(state -> Mono.fromSupplier(() -> weChatGateway.mpAuthorizeUrl(redirectUri, scope, state)))
+                .flatMap(authorizeUrl -> ServerResponse.temporaryRedirect(java.net.URI.create(authorizeUrl))
+                        .build())
+                .onErrorResume(com.apex.scaffold.common.exception.BaseException.class, e -> {
+                    // 渠道未配置等业务异常：优先按异常携带的 i18n 键返回（如 wx.channel_not_configured）
+                    return e.getMessageKey() != null
+                            ? buildError(e.getCode(), e.getMessageKey(), traceId)
+                            : buildError(ResultCode.PARAM_ERROR, traceId);
+                });
     }
 }

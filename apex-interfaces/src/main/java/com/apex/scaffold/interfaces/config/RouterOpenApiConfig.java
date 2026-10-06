@@ -282,7 +282,20 @@ public class RouterOpenApiConfig {
                                                                 schema =
                                                                         @Schema(
                                                                                 implementation =
-                                                                                        WxPhoneRequest.class)))))
+                                                                                        WxPhoneRequest.class))))),
+        @RouterOperation(
+                path = "/api/v1/auth/wechat/mp/authorize",
+                method = RequestMethod.GET,
+                beanClass = AuthHandler.class,
+                beanMethod = "mpAuthorize",
+                operation =
+                        @Operation(
+                                operationId = "mpAuthorize",
+                                summary = "公众号网页授权跳转",
+                                description = "生成微信公众号网页授权URL并302重定向；签发一次性OAuth state防CSRF。"
+                                        + "授权后微信回跳 redirectUri 并携带 code/state，客户端以 loginType=WX_OAUTH 提交登录。",
+                                security = {},
+                                responses = @ApiResponse(responseCode = "302", description = "重定向到微信授权页")))
     })
     @Bean
     /**
