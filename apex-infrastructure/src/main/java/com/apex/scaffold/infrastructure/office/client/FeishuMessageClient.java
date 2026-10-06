@@ -28,6 +28,7 @@ import reactor.core.publisher.Mono;
 public class FeishuMessageClient extends AbstractOfficeApiSupport implements MessagePort {
     private final ObjectMapper objectMapper;
 
+    /** 构造飞书消息客户端并初始化 ObjectMapper。 */
     public FeishuMessageClient(
             WebClient.Builder builder, OfficePlatformProperties properties, ObjectMapper objectMapper) {
         super(builder, properties, OfficePlatform.FEISHU, "https://open.feishu.cn");

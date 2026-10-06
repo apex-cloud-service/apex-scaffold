@@ -32,19 +32,9 @@ import org.mapstruct.MappingConstants;
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
 public interface DocumentPoConverter {
 
-    /**
-     * TODO: Add method description
-     *
-     * @param po TODO
-     * @return TODO
-     */
+    /** 将文档 PO 转换为领域实体。 */
     DocumentEntity toEntity(DocumentPO po);
 
-    /**
-     * TODO: Add method description
-     *
-     * @param entity TODO
-     * @return TODO
-     */
+    /** 将文档领域实体转换为 PO。 */
     DocumentPO toPo(DocumentEntity entity);
 }

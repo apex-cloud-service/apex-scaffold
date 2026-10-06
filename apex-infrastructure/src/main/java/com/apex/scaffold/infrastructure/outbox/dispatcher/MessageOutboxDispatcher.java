@@ -78,6 +78,7 @@ public class MessageOutboxDispatcher {
 
     private final String instanceId = UUID.randomUUID().toString();
 
+    /** 定时派发 Outbox 待投递消息（由 {@code @Scheduled} 按 fixedDelay 周期触发）。 */
     @Scheduled(fixedDelayString = "${apex.outbox.dispatcher.fixed-delay-ms:5000}")
     public void dispatch() {
         outboxService.releaseExpiredLocks().block();

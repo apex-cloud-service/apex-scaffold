@@ -84,6 +84,7 @@ public class MqAlertManager {
     private final Counter sendFailAlertCounter;
     private final Counter consumeFailAlertCounter;
 
+    /** 构造 MQ 告警管理器并注册各类告警计数器。 */
     public MqAlertManager(MeterRegistry meterRegistry, ApplicationEventPublisher eventPublisher) {
         this.meterRegistry = meterRegistry;
         this.eventPublisher = eventPublisher;

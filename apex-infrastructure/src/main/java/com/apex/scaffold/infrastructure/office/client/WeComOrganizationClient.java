@@ -35,6 +35,7 @@ public class WeComOrganizationClient implements OfficePlatformOrganizationClient
     private final WebClient webClient;
     private final OfficePlatformProperties.Platform properties;
 
+    /** 构造企业微信组织客户端并加载企业微信平台配置。 */
     public WeComOrganizationClient(WebClient webClient, OfficePlatformProperties platformProperties) {
         this.webClient = webClient;
         this.properties = platformProperties

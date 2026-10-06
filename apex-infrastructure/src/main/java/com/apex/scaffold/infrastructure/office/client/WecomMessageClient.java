@@ -30,6 +30,7 @@ public class WecomMessageClient extends AbstractOfficeApiSupport implements Mess
     private static final String USER_TARGET_TYPE = "USER";
     private final ObjectMapper objectMapper;
 
+    /** 构造企业微信消息客户端并初始化 ObjectMapper。 */
     public WecomMessageClient(
             WebClient.Builder builder, OfficePlatformProperties properties, ObjectMapper objectMapper) {
         super(builder, properties, OfficePlatform.WECOM, "https://qyapi.weixin.qq.com");

@@ -24,6 +24,7 @@ import reactor.core.publisher.Mono;
 public class DingtalkApprovalClient extends AbstractOfficeApiSupport implements ApprovalClient {
     private final ObjectMapper objectMapper;
 
+    /** 构造钉钉审批客户端并初始化 ObjectMapper。 */
     public DingtalkApprovalClient(
             WebClient.Builder builder, OfficePlatformProperties properties, ObjectMapper objectMapper) {
         super(builder, properties, OfficePlatform.DINGTALK, "https://api.dingtalk.com");

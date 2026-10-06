@@ -25,11 +25,13 @@ public class AuthCenterPermissionClient implements UnifiedAuthorizationGateway {
     private final WebClient client;
     private final CircuitBreaker breaker = CircuitBreaker.ofDefaults("auth-center-permission");
 
+    /** 构造授权查询客户端并使用默认受管 WebClient。 */
     @Autowired
     public AuthCenterPermissionClient(AuthCenterPermissionProperties properties) {
         this(properties, ManagedWebClientFactory.create());
     }
 
+    /** 构造授权查询客户端。 */
     public AuthCenterPermissionClient(AuthCenterPermissionProperties properties, WebClient client) {
         this.properties = properties;
         this.client = client;

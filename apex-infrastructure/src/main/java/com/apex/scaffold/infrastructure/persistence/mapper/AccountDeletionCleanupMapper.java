@@ -22,128 +22,38 @@ public interface AccountDeletionCleanupMapper {
 
     /** 删除账号权限关联。 */
     @Delete("DELETE FROM sys_user_role WHERE user_id=#{userId}")
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
-     *
-     * @param userId TODO
-     * @return TODO
-     */
     int deleteUserRoles(@Param("userId") Long userId);
 
     /** 删除用户个人资料。 */
     @Delete("DELETE FROM biz_user_profile WHERE user_id=#{userId}")
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
-     *
-     * @param userId TODO
-     * @return TODO
-     */
     int deleteUserProfile(@Param("userId") Long userId);
 
     /** 删除用户合规记录（合规状态投影）。 */
     @Delete("DELETE FROM biz_user_compliance WHERE user_id=#{userId}")
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
-     *
-     * @param userId TODO
-     * @return TODO
-     */
     int deleteUserCompliance(@Param("userId") Long userId);
 
     /** 删除用户同意记录（隐私授权投影）。 */
     @Delete("DELETE FROM biz_user_consent WHERE user_id=#{userId}")
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
-     *
-     * @param userId TODO
-     * @return TODO
-     */
     int deleteUserConsent(@Param("userId") Long userId);
 
     /** 删除账号相关的黑名单关系（双向）。 */
     @Delete("DELETE FROM biz_blacklist WHERE user_id=#{userId} OR target_user_id=#{userId}")
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
-     *
-     * @param userId TODO
-     * @return TODO
-     */
     int deleteBlacklist(@Param("userId") Long userId);
 
     /** 删除只属于该用户的算力流水。 */
     @Delete("DELETE FROM biz_credit_tx WHERE user_id=#{userId}")
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
-     *
-     * @param userId TODO
-     * @return TODO
-     */
     int deleteCreditTransactions(@Param("userId") Long userId);
 
     /** 删除账号的算力账户余额。 */
     @Delete("DELETE FROM biz_credit_account WHERE user_id=#{userId}")
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
-     *
-     * @param userId TODO
-     * @return TODO
-     */
     int deleteCreditAccount(@Param("userId") Long userId);
 
     /** 删除发给用户的系统消息。 */
     @Delete("DELETE FROM biz_system_message WHERE user_id=#{userId}")
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
-     *
-     * @param userId TODO
-     * @return TODO
-     */
     int deleteSystemMessages(@Param("userId") Long userId);
 
     /** 删除用户产生的采样记录。 */
     @Delete("DELETE FROM biz_sample WHERE user_id=#{userId}")
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
-     *
-     * @param userId TODO
-     * @return TODO
-     */
     int deleteSamples(@Param("userId") Long userId);
 
     /**
@@ -153,16 +63,6 @@ public interface AccountDeletionCleanupMapper {
             + "(SELECT 1 FROM biz_report_ticket r WHERE r.evidence IS NOT NULL "
             + "AND (r.evidence LIKE CONCAT('%',f.file_url,'%') "
             + "OR r.evidence LIKE CONCAT('%',f.file_name,'%')))")
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
-     *
-     * @param userId TODO
-     * @return TODO
-     */
     int deleteFilesExceptReportEvidence(@Param("userId") Long userId);
 
     /**
@@ -175,15 +75,5 @@ public interface AccountDeletionCleanupMapper {
             + "AND NOT EXISTS (SELECT 1 FROM biz_report_ticket r WHERE r.evidence IS NOT NULL "
             + "AND (r.evidence LIKE CONCAT('%',f.file_url,'%') "
             + "OR r.evidence LIKE CONCAT('%',f.file_name,'%')))")
-    /**
-     * TODO: Add method description
-     * @return TODO
-     */
-    /**
-     * TODO: Add method description
-     *
-     * @param userId TODO
-     * @return TODO
-     */
     List<AccountDeletionFilePO> selectNonPhotoFilesExceptReportEvidence(@Param("userId") Long userId);
 }

@@ -60,6 +60,7 @@ public class MqLagMonitor {
     private final DefaultMQAdminExt adminClient;
     private volatile boolean adminStarted;
 
+    /** 构造积压监控器并使用默认 Admin 客户端。 */
     @Autowired
     public MqLagMonitor(MeterRegistry meterRegistry, MqAlertManager alertManager) {
         this(meterRegistry, alertManager, new DefaultMQAdminExt());
@@ -161,6 +162,7 @@ public class MqLagMonitor {
         return Math.max(0L, offset.getBrokerOffset() - offset.getConsumerOffset());
     }
 
+    /** 应用关闭时释放 Admin 客户端（{@code @PreDestroy} 生命周期回调）。 */
     @PreDestroy
     public synchronized void shutdownAdminClient() {
         if (adminStarted) {

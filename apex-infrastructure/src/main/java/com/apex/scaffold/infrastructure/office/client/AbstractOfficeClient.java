@@ -7,6 +7,13 @@ import java.util.Map;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+/**
+ * Office 平台客户端抽象基类，封装 OAuth Token 获取与 API 调用公共逻辑。
+ *
+ * @author Apex Team
+ * @version 1.3.1
+ * @since  1.3.0
+ */
 abstract class AbstractOfficeClient implements OfficeOAuthClient, OfficePlatformClient {
     /** 接口返回成功的错误码。 */
     private static final String SUCCESS_CODE = "0";
@@ -15,6 +22,7 @@ abstract class AbstractOfficeClient implements OfficeOAuthClient, OfficePlatform
     protected final WebClient webClient;
     protected final OfficePlatformProperties.Platform properties;
 
+    /** 构造客户端并初始化超时、WebClient 与平台配置。 */
     protected AbstractOfficeClient(
             WebClient webClient,
             OfficePlatformProperties properties,
@@ -135,6 +143,13 @@ abstract class AbstractOfficeClient implements OfficeOAuthClient, OfficePlatform
         return required(id instanceof String value ? value : null, "identity");
     }
 
+    /**
+     * 请求平台令牌接口并解析 access token。
+     *
+     * @param uri    令牌接口路径
+     * @param params 追加到 URL 的查询参数
+     * @return access token
+     */
     protected Mono<String> postToken(String uri, Map<String, String> params) {
         return webClient
                 .get()
@@ -159,6 +174,13 @@ abstract class AbstractOfficeClient implements OfficeOAuthClient, OfficePlatform
                 .map(this::user);
     }
 
+    /**
+     * 从平台响应中提取 access token。
+     *
+     * @param body 平台响应体
+     * @return access token
+     * @throws IllegalStateException 响应中未包含 access token 时抛出
+     */
     protected String token(Map<?, ?> body) {
         Object value = body.get("access_token");
         if (value == null) {
@@ -170,6 +192,13 @@ abstract class AbstractOfficeClient implements OfficeOAuthClient, OfficePlatform
         return value.toString();
     }
 
+    /**
+     * 从平台响应中提取用户标识，兼容多种字段名。
+     *
+     * @param body 平台响应体
+     * @return 用户标识
+     * @throws IllegalStateException 响应中未包含用户标识时抛出
+     */
     protected String user(Map<?, ?> body) {
         Object value = body.get("userid");
         if (value == null) {
@@ -187,6 +216,14 @@ abstract class AbstractOfficeClient implements OfficeOAuthClient, OfficePlatform
         return value.toString();
     }
 
+    /**
+     * 校验必填字符串，空值时快速失败。
+     *
+     * @param value 待校验的值
+     * @param name  值的名称，用于错误提示
+     * @return 校验通过的原值
+     * @throws IllegalStateException 值为空或空白时抛出
+     */
     protected String required(String value, String name) {
         if (value == null || value.isBlank()) {
             throw new IllegalStateException(name + "未配置");

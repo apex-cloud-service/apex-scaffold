@@ -23,6 +23,7 @@ import reactor.core.publisher.Mono;
  */
 @Component
 public class DingTalkOfficeClient extends AbstractOfficeClient {
+    /** 构造钉钉 OAuth 客户端并指向钉钉 API 域名。 */
     public DingTalkOfficeClient(WebClient.Builder builder, OfficePlatformProperties properties) {
         super(builder.baseUrl("https://api.dingtalk.com").build(), properties, OfficePlatform.DINGTALK);
     }

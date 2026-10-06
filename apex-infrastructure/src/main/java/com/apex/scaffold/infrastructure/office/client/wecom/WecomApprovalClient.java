@@ -22,6 +22,7 @@ import reactor.core.publisher.Mono;
  */
 @Component("wecomApprovalClient")
 public class WecomApprovalClient extends AbstractOfficeApiSupport implements ApprovalClient {
+    /** 构造企业微信审批客户端。 */
     public WecomApprovalClient(
             WebClient.Builder builder, OfficePlatformProperties properties, ObjectMapper objectMapper) {
         super(builder, properties, OfficePlatform.WECOM, "https://qyapi.weixin.qq.com");

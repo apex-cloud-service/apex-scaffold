@@ -24,6 +24,7 @@ import reactor.core.publisher.Mono;
 public class FeishuApprovalClient extends AbstractOfficeApiSupport implements ApprovalClient {
     private final ObjectMapper objectMapper;
 
+    /** 构造飞书审批客户端并初始化 ObjectMapper。 */
     public FeishuApprovalClient(
             WebClient.Builder builder, OfficePlatformProperties properties, ObjectMapper objectMapper) {
         super(builder, properties, OfficePlatform.FEISHU, "https://open.feishu.cn");

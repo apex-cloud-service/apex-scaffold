@@ -56,6 +56,7 @@ public class MqProducerMetrics {
     private final Counter fallbackCounter;
     private final Timer sendDurationTimer;
 
+    /** 构造 MQ 生产者指标并注册发送成功/失败/降级计数器与延迟 Timer。 */
     public MqProducerMetrics(MeterRegistry meterRegistry) {
         this.successCounter = Counter.builder("mq.producer.send.success")
                 .tag("component", "mq")

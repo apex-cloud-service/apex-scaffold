@@ -30,6 +30,7 @@ public class DingTalkMessageClient extends AbstractOfficeApiSupport implements M
     private static final String USER_TARGET_TYPE = "USER";
     private final ObjectMapper objectMapper;
 
+    /** 构造钉钉消息客户端并初始化 ObjectMapper。 */
     public DingTalkMessageClient(
             WebClient.Builder builder, OfficePlatformProperties properties, ObjectMapper objectMapper) {
         super(builder, properties, OfficePlatform.DINGTALK, "https://oapi.dingtalk.com");

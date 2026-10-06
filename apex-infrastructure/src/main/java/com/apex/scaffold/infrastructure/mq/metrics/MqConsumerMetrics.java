@@ -63,6 +63,7 @@ public class MqConsumerMetrics {
     private final Timer consumeDurationTimer;
     private final AtomicLong currentLag = new AtomicLong(0);
 
+    /** 构造 MQ 消费者指标并注册计数器、延迟 Timer 与 Lag Gauge。 */
     public MqConsumerMetrics(MeterRegistry meterRegistry) {
         this.successCounter = Counter.builder("mq.consumer.consume.success")
                 .tag("component", "mq")

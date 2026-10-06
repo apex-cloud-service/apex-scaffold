@@ -22,6 +22,7 @@ public abstract class AbstractOfficeApiSupport {
     protected final WebClient webClient;
     protected final OfficePlatformProperties.Platform properties;
 
+    /** 构造 API 调用支持类并初始化超时、WebClient 与平台配置。 */
     protected AbstractOfficeApiSupport(
             WebClient.Builder builder,
             OfficePlatformProperties platformProperties,
@@ -93,11 +94,26 @@ public abstract class AbstractOfficeApiSupport {
         return request.map(mapper).onErrorMap(this::mapError);
     }
 
+    /**
+     * 读取平台密钥的环境变量值。
+     *
+     * @param name 平台名称，用于错误提示
+     * @return 密钥值
+     * @throws BusinessException 密钥引用或环境变量未配置时抛出，见 {@link ResultCode#BUSINESS_ERROR}
+     */
     protected String secret(String name) {
         String reference = required(properties.getSecretReference(), name + " secret reference");
         return required(System.getenv(reference), name + " secret");
     }
 
+    /**
+     * 校验必填字符串，空值时快速失败。
+     *
+     * @param value 待校验的值
+     * @param name  值的名称，用于错误提示
+     * @return 校验通过的原值
+     * @throws BusinessException 值为空或空白时抛出，见 {@link ResultCode#BUSINESS_ERROR}
+     */
     protected String required(String value, String name) {
         if (value == null || value.isBlank()) {
             throw new BusinessException(ResultCode.BUSINESS_ERROR, name + "未配置");
@@ -105,6 +121,14 @@ public abstract class AbstractOfficeApiSupport {
         return value;
     }
 
+    /**
+     * 将对象转为非空文本，空值时快速失败。
+     *
+     * @param value 待转换的对象
+     * @param name  值的名称，用于错误提示
+     * @return 对象的字符串形式
+     * @throws BusinessException 对象为 null 时抛出，见 {@link ResultCode#BUSINESS_ERROR}
+     */
     protected String text(Object value, String name) {
         return required(value == null ? null : value.toString(), name);
     }

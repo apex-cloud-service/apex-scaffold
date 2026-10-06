@@ -54,6 +54,7 @@ public class DistributedRateLimitMetrics {
     private final Counter redisErrorCounter;
     private final Timer durationTimer;
 
+    /** 构造分布式限流指标并注册通过/拒绝/Redis 故障计数器与延迟 Timer。 */
     public DistributedRateLimitMetrics(MeterRegistry meterRegistry) {
         this.allowedCounter = Counter.builder("ratelimit.distributed.allowed")
                 .tag("component", "ratelimit")

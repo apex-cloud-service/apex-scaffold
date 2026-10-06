@@ -20,6 +20,14 @@ public class AuthCenterPermissionProperties {
     private String accessToken;
     private List<Mapping> mappings = List.of();
 
+    /**
+     * 解析主系统租户与用户对应的认证中心可信身份映射。
+     *
+     * @param tenant 主系统租户 ID
+     * @param user   主系统用户 ID
+     * @return 唯一匹配且有效的身份映射
+     * @throws IllegalStateException 映射缺失、不唯一或无效时抛出
+     */
     public Mapping resolve(String tenant, Long user) {
         if (tenant == null || tenant.isBlank() || user == null || user <= 0 || mappings == null) {
             throw new IllegalStateException("Trusted authorization mapping unavailable");

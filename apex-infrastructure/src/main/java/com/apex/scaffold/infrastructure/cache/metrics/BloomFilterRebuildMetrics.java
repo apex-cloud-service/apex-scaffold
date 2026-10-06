@@ -25,6 +25,7 @@ public class BloomFilterRebuildMetrics {
     private final Counter rebuildSuccessCounter;
     private final Counter rebuildFailureCounter;
 
+    /** 构造 BloomFilter 重建指标并注册成功/失败计数器。 */
     public BloomFilterRebuildMetrics(MeterRegistry meterRegistry) {
         this.rebuildSuccessCounter = Counter.builder("bloom_filter_rebuild_success_total")
                 .description("BloomFilter 重建成功次数")

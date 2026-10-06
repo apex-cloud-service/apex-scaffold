@@ -18,6 +18,12 @@ public record OfficePlatformCapabilities(Set<String> capabilities) {
         capabilities = Set.copyOf(capabilities == null ? Set.of() : capabilities);
     }
 
+    /**
+     * 判断平台是否支持指定能力。
+     *
+     * @param capability 能力标识
+     * @return 支持返回 true，否则返回 false
+     */
     public boolean supports(String capability) {
         return capabilities.contains(capability);
     }
