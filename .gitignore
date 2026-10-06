@@ -99,3 +99,8 @@ rebel-remote.xml
 dist/
 release/
 .scannerwork/
+
+# ===== Python 运行产物与本地备份 =====
+__pycache__/
+*.pyc
+docker-compose.yml.bak.*
