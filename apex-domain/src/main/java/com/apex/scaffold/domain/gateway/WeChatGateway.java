@@ -67,6 +67,32 @@ public interface WeChatGateway {
     Mono<WeChatPhoneResult> getPhoneNumber(String phoneCode);
 
     /**
+     * 微信小程序 code 换取会话（jscode2session）
+     *
+     * <p>使用小程序 {@code wx.login()} 返回的临时登录凭证换取
+     * OpenID、UnionID 与会话密钥。依赖 {@code wechat.miniapp} 配置，
+     * 未配置渠道时抛出 {@code BusinessException(WECHAT_CHANNEL_NOT_CONFIGURED)}。
+     *
+     * @param jsCode 小程序临时登录凭证（wx.login 返回的 code）
+     * @return 小程序会话信息（openid 必有；unionid 满足条件时返回）
+     * @since 3.3.0
+     */
+    Mono<MiniProgramSession> miniProgramCodeToSession(String jsCode);
+
+    /**
+     * 获取小程序用户手机号
+     *
+     * <p>使用小程序手机号授权凭证（getPhoneNumber 返回的 code）换取用户手机号，
+     * 凭证通过小程序 appid 的全局 AccessToken 调用
+     * {@code /wxa/business/getuserphonenumber} 接口置换。
+     *
+     * @param phoneCode 小程序手机号授权凭证
+     * @return 微信手机号结果
+     * @since 3.3.0
+     */
+    Mono<WeChatPhoneResult> miniProgramPhoneNumber(String phoneCode);
+
+    /**
      * 微信登录结果
      *
      * <p>封装微信登录认证返回的会话信息
@@ -80,6 +106,24 @@ public interface WeChatGateway {
         private String accessToken;
         private String refreshToken;
         private Long expiresIn;
+    }
+
+    /**
+     * 微信小程序会话信息
+     *
+     * <p>封装 {@code /sns/jscode2session} 接口返回的会话信息。
+     *
+     * @author Apex Team
+     * @since 3.3.0
+     */
+    @Data
+    class MiniProgramSession {
+        /** 用户在当前小程序下的 OpenID */
+        private String openid;
+        /** 用户在微信开放平台主体下的 UnionID（需绑定开放平台账号，可能为空） */
+        private String unionid;
+        /** 会话密钥（用于解密敏感数据，本服务暂不落库） */
+        private String sessionKey;
     }
 
     /**

@@ -5,8 +5,11 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
+import com.apex.scaffold.common.exception.BusinessException;
+import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.infrastructure.circuitbreaker.CircuitBreakerService;
 import com.apex.scaffold.infrastructure.wechat.service.WeChatAppService;
+import com.apex.scaffold.infrastructure.wechat.service.WeChatMiniProgramService;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -35,6 +38,9 @@ class WeChatGatewayImplTest {
     private WeChatAppService weChatAppService;
 
     @Mock
+    private WeChatMiniProgramService weChatMiniProgramService;
+
+    @Mock
     private CircuitBreakerService circuitBreakerService;
 
     @InjectMocks
@@ -45,7 +51,12 @@ class WeChatGatewayImplTest {
      */
     @BeforeEach
     void setUp() {
-        when(circuitBreakerService.withCircuitBreaker(anyString(), any(), any()))
+        lenient()
+                .when(circuitBreakerService.withCircuitBreaker(anyString(), any(), any()))
+                .thenAnswer(invocation -> invocation.getArgument(1));
+        // 小程序 code 换会话使用两参断路器（自定义降级透传业务异常）
+        lenient()
+                .when(circuitBreakerService.withCircuitBreaker(anyString(), any()))
                 .thenAnswer(invocation -> invocation.getArgument(1));
     }
 
@@ -176,6 +187,58 @@ class WeChatGatewayImplTest {
                 .assertNext(result -> {
                     assertThat(result.getPhoneNumber()).isNull();
                     assertThat(result.getPurePhoneNumber()).isNull();
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("miniProgramCodeToSession - 成功委派并转换会话信息")
+    void miniProgramCodeToSession_Success() {
+        when(weChatMiniProgramService.codeToSession("js_code"))
+                .thenReturn(Mono.just(Map.of(
+                        "openid", "mini_openid",
+                        "unionid", "union_001",
+                        "session_key", "session_key_value")));
+
+        weChatGatewayImpl
+                .miniProgramCodeToSession("js_code")
+                .as(StepVerifier::create)
+                .assertNext(session -> {
+                    assertThat(session.getOpenid()).isEqualTo("mini_openid");
+                    assertThat(session.getUnionid()).isEqualTo("union_001");
+                    assertThat(session.getSessionKey()).isEqualTo("session_key_value");
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("miniProgramCodeToSession - 渠道未配置业务异常直接透传")
+    void miniProgramCodeToSession_BusinessException_Passthrough() {
+        when(weChatMiniProgramService.codeToSession("js_code"))
+                .thenReturn(Mono.error(new BusinessException(ResultCode.WECHAT_CHANNEL_NOT_CONFIGURED)));
+
+        weChatGatewayImpl
+                .miniProgramCodeToSession("js_code")
+                .as(StepVerifier::create)
+                .expectErrorSatisfies(e -> assertThat(e)
+                        .isInstanceOf(BusinessException.class)
+                        .hasFieldOrPropertyWithValue("code", ResultCode.WECHAT_CHANNEL_NOT_CONFIGURED.getCode()))
+                .verify();
+    }
+
+    @Test
+    @DisplayName("miniProgramPhoneNumber - 成功委派并解析 phone_info")
+    void miniProgramPhoneNumber_Success() {
+        when(weChatMiniProgramService.getPhoneNumber("phone_code"))
+                .thenReturn(
+                        Mono.just(Map.of("phone_info", Map.of("purePhoneNumber", "13800138000", "countryCode", "86"))));
+
+        weChatGatewayImpl
+                .miniProgramPhoneNumber("phone_code")
+                .as(StepVerifier::create)
+                .assertNext(result -> {
+                    assertThat(result.getPurePhoneNumber()).isEqualTo("13800138000");
+                    assertThat(result.getCountryCode()).isEqualTo("86");
                 })
                 .verifyComplete();
     }

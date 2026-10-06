@@ -3,6 +3,7 @@ package com.apex.scaffold.infrastructure.wechat.gateway;
 import com.apex.scaffold.domain.gateway.WeChatGateway;
 import com.apex.scaffold.infrastructure.circuitbreaker.CircuitBreakerService;
 import com.apex.scaffold.infrastructure.wechat.service.WeChatAppService;
+import com.apex.scaffold.infrastructure.wechat.service.WeChatMiniProgramService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -11,7 +12,8 @@ import reactor.core.publisher.Mono;
 /**
  * 微信网关实现类
  *
- * <p>实现WeChatGateway接口，通过WeChatAppService与微信开放平台进行交互。
+ * <p>实现WeChatGateway接口，通过WeChatAppService（开放平台移动应用）与
+ * WeChatMiniProgramService（小程序）与微信服务端进行交互。
  * 所有外部API调用均通过断路器保护，防止级联故障。
  *
  * <h2>设计原则</h2>
@@ -23,7 +25,7 @@ import reactor.core.publisher.Mono;
  * </ul>
  *
  * @author Apex Team
- * @version 2.0.0
+ * @version 2.1.0
  * @since 1.0.0
  */
 @Slf4j
@@ -37,6 +39,13 @@ public class WeChatGatewayImpl implements WeChatGateway {
      * <p>用于与微信开放平台进行交互，提供登录、获取用户信息等能力
      */
     private final WeChatAppService weChatAppService;
+
+    /**
+     * 微信小程序服务
+     *
+     * <p>用于与微信小程序服务端 API 交互（jscode2session / 手机号置换）。
+     */
+    private final WeChatMiniProgramService weChatMiniProgramService;
 
     /**
      * 断路器服务
@@ -121,6 +130,64 @@ public class WeChatGatewayImpl implements WeChatGateway {
         // 使用断路器保护外部API调用
         return circuitBreakerService.withCircuitBreaker(
                 "wechat-api", apiCall, Mono.just(createPhoneResultFallbackResult()));
+    }
+
+    /**
+     * 微信小程序 code 换取会话（jscode2session）。
+     *
+     * <p>调用通过断路器保护；渠道未配置（{@code WECHAT_CHANNEL_NOT_CONFIGURED}）属于
+     * 部署配置缺失，必须明确透传业务错误码而非静默降级，因此使用自定义降级逻辑区分：
+     * 业务异常直接抛出，网络/服务类异常降级为空会话（由策略层判定登录失败）。
+     *
+     * @param jsCode 小程序临时登录凭证
+     * @return 小程序会话信息
+     */
+    @Override
+    public Mono<MiniProgramSession> miniProgramCodeToSession(String jsCode) {
+        Mono<MiniProgramSession> apiCall =
+                weChatMiniProgramService.codeToSession(jsCode).map(this::toMiniProgramSession);
+        return circuitBreakerService.withCircuitBreaker("wechat-api", apiCall).onErrorResume(e -> {
+            if (e instanceof com.apex.scaffold.common.exception.BusinessException) {
+                return Mono.error(e);
+            }
+            log.error("小程序 jscode2session 失败, code: {}", jsCode, e);
+            return Mono.just(new MiniProgramSession());
+        });
+    }
+
+    /**
+     * 获取小程序用户手机号。
+     *
+     * <p>调用通过断路器保护，当微信服务不可用时返回降级结果（手机号为空）。
+     *
+     * @param phoneCode 小程序手机号授权凭证
+     * @return 微信手机号结果
+     */
+    @Override
+    public Mono<WeChatPhoneResult> miniProgramPhoneNumber(String phoneCode) {
+        Mono<WeChatPhoneResult> apiCall = weChatMiniProgramService
+                .getPhoneNumber(phoneCode)
+                .map(this::toPhoneResult)
+                .onErrorResume(e -> {
+                    log.error("获取小程序手机号失败", e);
+                    return Mono.just(createPhoneResultFallbackResult());
+                });
+        return circuitBreakerService.withCircuitBreaker(
+                "wechat-api", apiCall, Mono.just(createPhoneResultFallbackResult()));
+    }
+
+    /**
+     * 将Map转换为小程序会话信息
+     *
+     * @param map 微信 jscode2session 接口返回的Map
+     * @return 小程序会话信息
+     */
+    private MiniProgramSession toMiniProgramSession(java.util.Map<String, Object> map) {
+        MiniProgramSession session = new MiniProgramSession();
+        session.setOpenid((String) map.get("openid"));
+        session.setUnionid((String) map.get("unionid"));
+        session.setSessionKey((String) map.get("session_key"));
+        return session;
     }
 
     /**

@@ -82,5 +82,19 @@ public enum LoginType {
      *
      * @since 2.2.0
      */
-    PASSWORD
+    PASSWORD,
+
+    /**
+     * 微信小程序登录
+     *
+     * <p>服务端以 {@code wx.login()} 的临时凭证（code）调用微信
+     * {@code /sns/jscode2session} 接口换取 OpenID / UnionID / session_key，
+     * 按社交身份绑定表（{@code sys_user_social}，渠道=WECHAT_MINI）归一账户；
+     * 可选携带手机号授权凭证（phoneCode）换取手机号完成手机号归一。
+     * 由 {@code WeChatMiniProgramLoginStrategy} 实现，依赖
+     * {@code wechat.miniapp} 配置（V59+ 多端改造引入）。
+     *
+     * @since 3.3.0
+     */
+    WX_MINI
 }

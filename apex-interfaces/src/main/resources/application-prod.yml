@@ -631,6 +631,14 @@ wechat:
     app-id: ${WECHAT_APP_ID:}
     app-secret: ${WECHAT_APP_SECRET:}
 
+  miniapp:
+    # 微信小程序 AppID 和 AppSecret（多端统一账户改造：WX_MINI 登录渠道）。
+    # 渠道隔离：与 wechat.app（开放平台移动应用）相互独立；两者凭据缺省时
+    # 对应登录方式返回 wx.channel_not_configured 明确错误码，互不影响。
+    # ⚠️ 安全要求：Secret 严禁写入代码仓库，必须通过环境变量或密钥管理服务注入。
+    app-id: ${WECHAT_MINIAPP_APP_ID:}
+    app-secret: ${WECHAT_MINIAPP_APP_SECRET:}
+
   # 微信开放平台移动应用 OAuth2 登录接口。
   # 注意：此接口用于移动应用 OAuth2 授权码换取 access_token，
   # 非小程序 jscode2session 接口。

@@ -135,6 +135,9 @@ public enum ResultCode {
     /** 管理员处置后，该身份被禁止再次注册。 */
     REGISTRATION_RESTRICTED(1022, "该身份不允许再次注册", "auth.registration_restricted"),
 
+    /** 微信渠道未配置（wechat.miniapp 等渠道凭据缺失） */
+    WECHAT_CHANNEL_NOT_CONFIGURED(1023, "微信登录渠道未配置", "wx.channel_not_configured"),
+
     // ========== 流量治理错误 ==========
 
     /** 请求过于频繁 */
