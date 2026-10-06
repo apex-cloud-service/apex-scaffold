@@ -93,6 +93,47 @@ public interface WeChatGateway {
     Mono<WeChatPhoneResult> miniProgramPhoneNumber(String phoneCode);
 
     /**
+     * 公众号网页授权 code 换取会话
+     *
+     * <p>使用公众号 H5 网页授权回跳携带的 code 调用 {@code /sns/oauth2/access_token}
+     * 换取 OpenID / UnionID。依赖 {@code wechat.mp} 配置，渠道未配置时抛出
+     * {@code BusinessException(WECHAT_CHANNEL_NOT_CONFIGURED)}。
+     *
+     * @param code 网页授权回调携带的 code（一次性有效）
+     * @return 公众号网页授权会话信息
+     * @since 3.3.0
+     */
+    Mono<MpAuthSession> mpAuthCodeToSession(String code);
+
+    /**
+     * 生成公众号网页授权跳转 URL
+     *
+     * @param redirectUri 授权后回跳的 H5 页面地址
+     * @param scope       授权作用域（{@code snsapi_base}/{@code snsapi_userinfo}），空时按 snsapi_base
+     * @param state       防 CSRF 随机串
+     * @return 完整授权跳转 URL
+     * @since 3.3.0
+     */
+    String mpAuthorizeUrl(String redirectUri, String scope, String state);
+
+    /**
+     * 签发公众号 OAuth state 一次性防 CSRF 凭证
+     *
+     * @return state 随机串（Redis 登记，5 分钟有效）
+     * @since 3.3.0
+     */
+    Mono<String> mpIssueAuthState();
+
+    /**
+     * 原子校验并消费公众号 OAuth state
+     *
+     * @param state 授权回跳携带的 state
+     * @return true 表示校验通过（state 一次性消费）
+     * @since 3.3.0
+     */
+    Mono<Boolean> mpValidateAuthState(String state);
+
+    /**
      * 微信登录结果
      *
      * <p>封装微信登录认证返回的会话信息
@@ -124,6 +165,30 @@ public interface WeChatGateway {
         private String unionid;
         /** 会话密钥（用于解密敏感数据，本服务暂不落库） */
         private String sessionKey;
+    }
+
+    /**
+     * 微信公众号网页授权会话信息
+     *
+     * <p>封装 {@code /sns/oauth2/access_token}（OAuth 2.0） 接口返回的授权会话信息。
+     *
+     * @author Apex Team
+     * @since 3.3.0
+     */
+    @Data
+    class MpAuthSession {
+        /** 用户在当前公众号下的 OpenID */
+        private String openid;
+        /** 用户在微信开放平台主体下的 UnionID（需绑定开放平台账号，可能为空） */
+        private String unionid;
+        /** 网页授权接口调用凭证（仅 scope=snsapi_userinfo 时可用于拉取用户信息） */
+        private String accessToken;
+        /** 网页授权刷新令牌 */
+        private String refreshToken;
+        /** 网页授权凭证有效期（秒） */
+        private Long expiresIn;
+        /** 用户授权的作用域（snsapi_base / snsapi_userinfo） */
+        private String scope;
     }
 
     /**

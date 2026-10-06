@@ -41,6 +41,9 @@ class WeChatGatewayImplTest {
     private WeChatMiniProgramService weChatMiniProgramService;
 
     @Mock
+    private com.apex.scaffold.infrastructure.wechat.service.WeChatMpService weChatMpService;
+
+    @Mock
     private CircuitBreakerService circuitBreakerService;
 
     @InjectMocks
@@ -240,6 +243,67 @@ class WeChatGatewayImplTest {
                     assertThat(result.getPurePhoneNumber()).isEqualTo("13800138000");
                     assertThat(result.getCountryCode()).isEqualTo("86");
                 })
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("mpAuthCodeToSession - 成功委派并转换会话信息")
+    void mpAuthCodeToSession_Success() {
+        when(weChatMpService.getAccessTokenByCode("mp_code"))
+                .thenReturn(Mono.just(Map.of(
+                        "openid", "mp_openid",
+                        "unionid", "union_001",
+                        "access_token", "mp_access_token",
+                        "expires_in", 7200)));
+
+        weChatGatewayImpl
+                .mpAuthCodeToSession("mp_code")
+                .as(StepVerifier::create)
+                .assertNext(session -> {
+                    assertThat(session.getOpenid()).isEqualTo("mp_openid");
+                    assertThat(session.getUnionid()).isEqualTo("union_001");
+                    assertThat(session.getAccessToken()).isEqualTo("mp_access_token");
+                    assertThat(session.getExpiresIn()).isEqualTo(7200L);
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("mpAuthCodeToSession - 渠道未配置业务异常直接透传")
+    void mpAuthCodeToSession_BusinessException_Passthrough() {
+        when(weChatMpService.getAccessTokenByCode("mp_code"))
+                .thenReturn(Mono.error(new BusinessException(ResultCode.WECHAT_CHANNEL_NOT_CONFIGURED)));
+
+        weChatGatewayImpl
+                .mpAuthCodeToSession("mp_code")
+                .as(StepVerifier::create)
+                .expectErrorSatisfies(e -> assertThat(e)
+                        .isInstanceOf(BusinessException.class)
+                        .hasFieldOrPropertyWithValue("code", ResultCode.WECHAT_CHANNEL_NOT_CONFIGURED.getCode()))
+                .verify();
+    }
+
+    @Test
+    @DisplayName("mpAuthorizeUrl - 委托 MpService 拼装授权 URL")
+    void mpAuthorizeUrl_Delegates() {
+        when(weChatMpService.buildAuthorizeUrl("https://h5.example.com/login", "snsapi_base", "state-1"))
+                .thenReturn("https://open.weixin.qq.com/connect/oauth2/authorize?appid=x");
+
+        String url = weChatGatewayImpl.mpAuthorizeUrl("https://h5.example.com/login", "snsapi_base", "state-1");
+        assertThat(url).contains("connect/oauth2/authorize");
+    }
+
+    @Test
+    @DisplayName("mpIssueAuthState / mpValidateAuthState - 委托 MpService")
+    void mpStateOperations_Delegate() {
+        when(weChatMpService.issueAuthState()).thenReturn(Mono.just("state-1"));
+        when(weChatMpService.validateAuthState("state-1")).thenReturn(Mono.just(true));
+
+        StepVerifier.create(weChatGatewayImpl.mpIssueAuthState())
+                .expectNext("state-1")
+                .verifyComplete();
+        StepVerifier.create(weChatGatewayImpl.mpValidateAuthState("state-1"))
+                .expectNext(true)
                 .verifyComplete();
     }
 }

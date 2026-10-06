@@ -96,5 +96,19 @@ public enum LoginType {
      *
      * @since 3.3.0
      */
-    WX_MINI
+    WX_MINI,
+
+    /**
+     * 微信公众号网页授权登录
+     *
+     * <p>公众号 H5 内通过网页授权（snsapi_base / snsapi_userinfo）获取授权 code，
+     * 服务端以 {@code wechat.mp} 渠道凭据调用 {@code /sns/oauth2/access_token}
+     * 换取 OpenID / UnionID，按社交身份绑定表（渠道=WECHAT_MP）归一账户；
+     * 未绑定手机号的用户签发 {@code WECHAT_BIND} 票据引导短信验证绑定。
+     * 由 {@code WeChatMpOAuthLoginStrategy} 实现，依赖
+     * {@code wechat.mp} 配置（V59+ 多端改造引入）。
+     *
+     * @since 3.3.0
+     */
+    WX_OAUTH
 }

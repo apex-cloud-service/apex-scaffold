@@ -4,6 +4,7 @@ import com.apex.scaffold.domain.gateway.WeChatGateway;
 import com.apex.scaffold.infrastructure.circuitbreaker.CircuitBreakerService;
 import com.apex.scaffold.infrastructure.wechat.service.WeChatAppService;
 import com.apex.scaffold.infrastructure.wechat.service.WeChatMiniProgramService;
+import com.apex.scaffold.infrastructure.wechat.service.WeChatMpService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -12,9 +13,9 @@ import reactor.core.publisher.Mono;
 /**
  * 微信网关实现类
  *
- * <p>实现WeChatGateway接口，通过WeChatAppService（开放平台移动应用）与
- * WeChatMiniProgramService（小程序）与微信服务端进行交互。
- * 所有外部API调用均通过断路器保护，防止级联故障。
+ * <p>实现WeChatGateway接口，通过WeChatAppService（开放平台移动应用）、
+ * WeChatMiniProgramService（小程序）与 WeChatMpService（公众号）与微信服务端
+ * 进行交互。所有外部API调用均通过断路器保护，防止级联故障。
  *
  * <h2>设计原则</h2>
  * <ul>
@@ -25,7 +26,7 @@ import reactor.core.publisher.Mono;
  * </ul>
  *
  * @author Apex Team
- * @version 2.1.0
+ * @version 2.2.0
  * @since 1.0.0
  */
 @Slf4j
@@ -46,6 +47,13 @@ public class WeChatGatewayImpl implements WeChatGateway {
      * <p>用于与微信小程序服务端 API 交互（jscode2session / 手机号置换）。
      */
     private final WeChatMiniProgramService weChatMiniProgramService;
+
+    /**
+     * 微信公众号服务
+     *
+     * <p>用于与微信公众号网页授权 API 交互（code 换会话 / 授权跳转 / state）。
+     */
+    private final WeChatMpService weChatMpService;
 
     /**
      * 断路器服务
@@ -187,6 +195,82 @@ public class WeChatGatewayImpl implements WeChatGateway {
         session.setOpenid((String) map.get("openid"));
         session.setUnionid((String) map.get("unionid"));
         session.setSessionKey((String) map.get("session_key"));
+        return session;
+    }
+
+    /**
+     * 公众号网页授权 code 换取会话。
+     *
+     * <p>调用通过断路器保护；渠道未配置（{@code WECHAT_CHANNEL_NOT_CONFIGURED}）属于
+     * 部署配置缺失，必须明确透传业务错误码而非静默降级（与小程序渠道一致）；
+     * 网络/服务类异常降级为空会话，由策略层判定登录失败。
+     *
+     * @param code 网页授权回调携带的 code
+     * @return 公众号网页授权会话信息
+     */
+    @Override
+    public Mono<MpAuthSession> mpAuthCodeToSession(String code) {
+        Mono<MpAuthSession> apiCall = weChatMpService.getAccessTokenByCode(code).map(this::toMpAuthSession);
+        return circuitBreakerService.withCircuitBreaker("wechat-api", apiCall).onErrorResume(e -> {
+            if (e instanceof com.apex.scaffold.common.exception.BusinessException) {
+                return Mono.error(e);
+            }
+            log.error("公众号网页授权失败, code: {}", code, e);
+            return Mono.just(new MpAuthSession());
+        });
+    }
+
+    /**
+     * 生成公众号网页授权跳转 URL（委托 {@link WeChatMpService}，纯字符串拼装无 I/O）。
+     *
+     * @param redirectUri 授权后回跳的 H5 页面地址
+     * @param scope       授权作用域，空时按 snsapi_base
+     * @param state       防 CSRF 随机串
+     * @return 完整授权跳转 URL
+     */
+    @Override
+    public String mpAuthorizeUrl(String redirectUri, String scope, String state) {
+        return weChatMpService.buildAuthorizeUrl(redirectUri, scope, state);
+    }
+
+    /**
+     * 签发公众号 OAuth state 一次性防 CSRF 凭证（委托 {@link WeChatMpService}）。
+     *
+     * @return state 随机串（Redis 登记，5 分钟有效）
+     */
+    @Override
+    public Mono<String> mpIssueAuthState() {
+        return weChatMpService.issueAuthState();
+    }
+
+    /**
+     * 原子校验并消费公众号 OAuth state（委托 {@link WeChatMpService}）。
+     *
+     * @param state 授权回跳携带的 state
+     * @return true 表示校验通过（state 一次性消费）
+     */
+    @Override
+    public Mono<Boolean> mpValidateAuthState(String state) {
+        return weChatMpService.validateAuthState(state);
+    }
+
+    /**
+     * 将Map转换为公众号网页授权会话信息
+     *
+     * @param map 微信 /sns/oauth2/access_token 接口返回的Map
+     * @return 公众号网页授权会话信息
+     */
+    private MpAuthSession toMpAuthSession(java.util.Map<String, Object> map) {
+        MpAuthSession session = new MpAuthSession();
+        session.setOpenid((String) map.get("openid"));
+        session.setUnionid((String) map.get("unionid"));
+        session.setAccessToken((String) map.get("access_token"));
+        session.setRefreshToken((String) map.get("refresh_token"));
+        session.setScope((String) map.get("scope"));
+        Object expiresIn = map.get("expires_in");
+        if (expiresIn instanceof Number) {
+            session.setExpiresIn(((Number) expiresIn).longValue());
+        }
         return session;
     }
 
