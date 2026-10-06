@@ -70,6 +70,11 @@ public class MessageIdGenerator {
 
     private final Snowflake snowflake;
 
+    /**
+     * 基于应用名派生 workerId、本机地址派生 datacenterId，初始化雪花算法。
+     *
+     * @param appName 应用名（{@code spring.application.name}）
+     */
     public MessageIdGenerator(@Value("${spring.application.name:apex}") String appName) {
         long workerId = Math.abs(appName.hashCode() % 32);
         long datacenterId = getDatacenterId();
@@ -77,6 +82,11 @@ public class MessageIdGenerator {
         log.info("MessageIdGenerator初始化: workerId={}, datacenterId={}", workerId, datacenterId);
     }
 
+    /**
+     * 生成全局唯一消息 ID。
+     *
+     * @return 雪花算法 ID 的十进制字符串
+     */
     public String nextId() {
         return String.valueOf(snowflake.nextId());
     }

@@ -9,10 +9,12 @@ package com.apex.scaffold.common.exception;
  */
 public class ForbiddenException extends BaseException {
 
+    /** 构造 403 异常。 */
     public ForbiddenException(String message) {
         super(message);
     }
 
+    /** 构造带根因的 403 异常。 */
     public ForbiddenException(String message, Throwable cause) {
         super(message, cause);
     }
