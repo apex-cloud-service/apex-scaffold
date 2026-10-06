@@ -1,5 +1,11 @@
 #!/bin/bash
 
+###############################################################################
+# init-realm.sh - 初始化 Keycloak realm 与客户端配置
+# 用法：./scripts/keycloak/init-realm.sh  可选环境变量 KEYCLOAK_URL/REALM_NAME/CLIENT_ID/ADMIN_USER/ADMIN_PASSWORD；无位置参数
+# 作者：Apex Team    创建：2026-10-01
+###############################################################################
+
 set -e
 
 KEYCLOAK_URL="${KEYCLOAK_URL:-http://localhost:8180}"

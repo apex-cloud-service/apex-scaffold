@@ -1,5 +1,11 @@
 #!/bin/bash
 
+###############################################################################
+# owasp-check.sh - 运行 OWASP Dependency Check 依赖漏洞扫描
+# 用法：./scripts/owasp-check.sh  无参数；需本机安装 dependency-check，报告输出到 ./reports/dependency-check/
+# 作者：Apex Team    创建：2026-10-01
+###############################################################################
+
 set -e
 
 echo "运行 OWASP Dependency Check..."

@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
+
+###############################################################################
+# weekly-link-check.sh - 周度文档链接检查并生成 Markdown 报告
+# 用法：./scripts/ops/maintenance/weekly-link-check.sh  无参数；报告写 docs/reports/link-check-YYYYMMDD.md
+# 作者：Apex Team    创建：2026-10-01
+###############################################################################
 set -euo pipefail
 
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

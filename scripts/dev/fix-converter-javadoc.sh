@@ -1,5 +1,11 @@
 #!/bin/bash
 
+###############################################################################
+# fix-converter-javadoc.sh - 批量修复 Converter 接口 JavaDoc 和 @author 注解
+# 用法：./scripts/dev/fix-converter-javadoc.sh  无参数；仅处理脚本内清单列出的 Converter 文件
+# 作者：Apex Team    创建：2026-10-01
+###############################################################################
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/../lib/common.sh"
 

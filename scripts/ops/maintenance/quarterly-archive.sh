@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
+
+###############################################################################
+# quarterly-archive.sh - 季度归档：将 docs/reports 过时报告移入 docs/_archive/reports
+# 用法：./scripts/ops/maintenance/quarterly-archive.sh  无参数；归档 90 天前的报告文件
+# 作者：Apex Team    创建：2026-10-01
+###############################################################################
 set -euo pipefail
 
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

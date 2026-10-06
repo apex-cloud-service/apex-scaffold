@@ -21,6 +21,11 @@ import java.util.Scanner;
  * java ConfigEncryptionTool generate-key
  * java ConfigEncryptionTool encrypt "MyPassword123" "01234567890123456789012345678901"
  * java ConfigEncryptionTool decrypt "ENC(base64...)" "01234567890123456789012345678901"
+ *
+ * @author Apex Team
+ * @version 1.3.1
+ * @since  1.3.0
+ * @created 2026-10-04
  */
 public class ConfigEncryptionTool {
 
@@ -32,6 +37,11 @@ public class ConfigEncryptionTool {
     private static final String ENC_PREFIX = "ENC(";
     private static final String ENC_SUFFIX = ")";
 
+    /**
+     * 命令行入口：按 args[0] 分发到 generate-key / encrypt / decrypt / interactive 子命令。
+     *
+     * @param args 子命令与参数；无参数时打印用法
+     */
     public static void main(String[] args) {
         if (args.length == 0) {
             printUsage();

@@ -1,5 +1,11 @@
 #!/bin/bash
 
+###############################################################################
+# start-monitoring.sh - 启动监控栈（Prometheus/Grafana/AlertManager）
+# 用法：./scripts/ops/monitoring/start-monitoring.sh  无参数；在 config/monitoring 目录执行 docker-compose up -d
+# 作者：Apex Team    创建：2026-10-01
+###############################################################################
+
 set -e
 
 cd "$(dirname "$0")/../config/monitoring"

@@ -1,4 +1,10 @@
 #!/bin/bash
+
+###############################################################################
+# check-doc-links.sh - 扫描 docs/ 目录 Markdown 内部链接的有效性
+# 用法：./scripts/ci/check-doc-links.sh  无参数；依赖 python3 与 scripts/lib/common.sh
+# 作者：Apex Team    创建：2026-09-13
+###############################################################################
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

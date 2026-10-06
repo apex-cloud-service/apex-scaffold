@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
+
+###############################################################################
+# jvm-diagnostics-test.sh - jvm-diagnostics.sh 的自动化测试
+# 用法：./scripts/test/jvm-diagnostics-test.sh  无参数；使用临时目录与假 jcmd 验证各子命令行为
+# 作者：Apex Team    创建：2026-08-30
+###############################################################################
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")/../.." && pwd)"

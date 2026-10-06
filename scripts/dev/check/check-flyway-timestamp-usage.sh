@@ -1,5 +1,11 @@
 #!/bin/bash
 
+###############################################################################
+# check-flyway-timestamp-usage.sh - 检查 Flyway 迁移脚本中禁用的 TIMESTAMP 类型用法
+# 用法：./scripts/dev/check/check-flyway-timestamp-usage.sh  无参数；发现问题输出清单并以非零码退出
+# 作者：Apex Team    创建：2026-10-01
+###############################################################################
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/../../lib/common.sh"
 

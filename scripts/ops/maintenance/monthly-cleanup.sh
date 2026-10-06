@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
+
+###############################################################################
+# monthly-cleanup.sh - 月度清理：备份文件与临时产物检查清理，日志写 logs/maintenance-YYYYMM.log
+# 用法：./scripts/ops/maintenance/monthly-cleanup.sh  无参数；删除前交互确认
+# 作者：Apex Team    创建：2026-10-01
+###############################################################################
 set -euo pipefail
 
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

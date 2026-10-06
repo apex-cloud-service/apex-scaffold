@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
+
+###############################################################################
+# jvm-diagnostics.sh - JVM 在线诊断信息采集（jcmd 封装）
+# 用法：./scripts/diagnostics/jvm-diagnostics.sh  {flags|heap-info|thread-dump|jfr|all} PID [OUTPUT_DIR]；无效 action 退出码 2，--help 查看用法
+# 作者：Apex Team    创建：2026-08-30
+###############################################################################
 set -euo pipefail
 
 usage() {
