@@ -11,17 +11,20 @@ import com.apex.scaffold.infrastructure.security.service.TokenServiceImpl;
 import io.jsonwebtoken.Claims;
 import java.time.Duration;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.redisson.api.RBucket;
 import org.redisson.api.RLock;
+import org.redisson.api.RSet;
 import org.redisson.api.RedissonClient;
 import org.redisson.misc.CompletableFutureWrapper;
 import reactor.core.publisher.Mono;
@@ -56,6 +59,9 @@ class TokenServiceImplTest {
     @Mock
     private RBucket bucket;
 
+    @Mock
+    private RSet<String> sessionsSet;
+
     @InjectMocks
     private TokenServiceImpl tokenService;
 
@@ -69,6 +75,8 @@ class TokenServiceImplTest {
         mockClaims = mock(Claims.class);
         // RedisKeyPrefix 在测试中返回原始 key，不做版本前缀包装（lenient，并非所有测试都使用）
         lenient().when(redisKeyPrefix.wrap(anyString())).thenAnswer(invocation -> invocation.getArgument(0));
+        // 会话索引 Set 的通用桩（lenient，仅多会话用例触达；doReturn 规避 getSet 泛型推断）
+        lenient().doReturn(sessionsSet).when(redissonClient).getSet(anyString(), any());
     }
 
     @Test
@@ -480,5 +488,152 @@ class TokenServiceImplTest {
                 .as(StepVerifier::create)
                 .expectNext(0L)
                 .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("生成AccessToken（多会话）- claims 携带 sid 与 clientType")
+    void generateAccessToken_SessionScoped_PutsSidAndClientTypeClaims() {
+        try (MockedStatic<JwtUtil> jwtUtil = mockStatic(JwtUtil.class)) {
+            @SuppressWarnings("unchecked")
+            ArgumentCaptor<Map<String, Object>> claimsCaptor = ArgumentCaptor.forClass(Map.class);
+            jwtUtil.when(() -> JwtUtil.generateToken(anyString(), claimsCaptor.capture(), anyLong()))
+                    .thenReturn(TEST_ACCESS_TOKEN);
+
+            tokenService.generateAccessToken(TEST_SUBJECT, "device-1", "sess-1", "MINI_PROGRAM");
+
+            Map<String, Object> claims = claimsCaptor.getValue();
+            assertThat(claims).containsEntry("type", "access");
+            assertThat(claims).containsEntry("sid", "sess-1");
+            assertThat(claims).containsEntry("clientType", "MINI_PROGRAM");
+            assertThat(claims).containsEntry("deviceId", "device-1");
+        }
+    }
+
+    @Test
+    @DisplayName("存储会话Token - 写入会话槽并登记会话索引")
+    void storeSessionToken_WritesSessionSlotsAndRegistersIndex() {
+        when(redissonClient.getBucket(anyString(), any())).thenReturn(bucket);
+        when(bucket.setAsync(anyString(), any(Duration.class))).thenReturn(new CompletableFutureWrapper<>((Void) null));
+        when(sessionsSet.addAsync("sess-1")).thenReturn(new CompletableFutureWrapper<>(true));
+        when(sessionsSet.expireAsync(any(Duration.class))).thenReturn(new CompletableFutureWrapper<>(true));
+
+        tokenService
+                .storeSessionToken(TEST_SUBJECT, "sess-1", TEST_ACCESS_TOKEN, TEST_REFRESH_TOKEN, null, null)
+                .as(StepVerifier::create)
+                .verifyComplete();
+
+        ArgumentCaptor<String> keyCaptor = ArgumentCaptor.forClass(String.class);
+        verify(redissonClient, times(2)).getBucket(keyCaptor.capture(), any());
+        assertThat(keyCaptor.getAllValues()).hasSize(2).allSatisfy(key -> assertThat(key)
+                .contains(":sess-1"));
+        verify(sessionsSet).addAsync("sess-1");
+    }
+
+    @Test
+    @DisplayName("删除单会话 - 清除会话槽并从索引摘除")
+    void deleteSessionToken_RemovesSlotsAndIndexEntry() {
+        when(redissonClient.getBucket(anyString(), any())).thenReturn(bucket);
+        when(bucket.deleteAsync()).thenReturn(new CompletableFutureWrapper<>(true));
+        when(sessionsSet.removeAsync("sess-1")).thenReturn(new CompletableFutureWrapper<>(true));
+
+        tokenService
+                .deleteSessionToken(TEST_SUBJECT, "sess-1")
+                .as(StepVerifier::create)
+                .expectNext(2L)
+                .verifyComplete();
+
+        ArgumentCaptor<String> keyCaptor = ArgumentCaptor.forClass(String.class);
+        verify(redissonClient, times(2)).getBucket(keyCaptor.capture(), any());
+        assertThat(keyCaptor.getAllValues()).allSatisfy(key -> assertThat(key).contains(":sess-1"));
+        verify(sessionsSet).removeAsync("sess-1");
+    }
+
+    @Test
+    @DisplayName("全端登出 - 遍历会话索引清除全部槽位与索引")
+    void deleteAllSessions_DeletesAllSessionSlots() {
+        when(redissonClient.getBucket(anyString(), any())).thenReturn(bucket);
+        when(bucket.deleteAsync()).thenReturn(new CompletableFutureWrapper<>(true));
+        when(sessionsSet.readAllAsync()).thenReturn(new CompletableFutureWrapper<>(Set.of("s1", "s2")));
+        when(sessionsSet.removeAsync(anyString())).thenReturn(new CompletableFutureWrapper<>(true));
+        when(sessionsSet.deleteAsync()).thenReturn(new CompletableFutureWrapper<>(true));
+
+        tokenService
+                .deleteAllSessions(TEST_SUBJECT)
+                .as(StepVerifier::create)
+                .expectNext(6L) // 2 会话 × 2 槽 + legacy 槽 2
+                .verifyComplete();
+
+        verify(bucket, times(6)).deleteAsync();
+        verify(sessionsSet, times(2)).removeAsync(anyString());
+        verify(sessionsSet).deleteAsync();
+    }
+
+    @Test
+    @DisplayName("查询会话 - 返回会话索引登记的 sid")
+    void findSessions_ReturnsIndexedSids() {
+        when(sessionsSet.readAllAsync()).thenReturn(new CompletableFutureWrapper<>(Set.of("s1", "s2")));
+
+        tokenService
+                .findSessions(TEST_SUBJECT)
+                .collectList()
+                .as(StepVerifier::create)
+                .assertNext(sids -> assertThat(sids).containsExactlyInAnyOrder("s1", "s2"))
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("校验RefreshToken（多会话）- 按 claims.sid 定位会话槽")
+    void validateRefreshToken_SessionScoped_ChecksSessionSlot() {
+        try (MockedStatic<JwtUtil> jwtUtil = mockStatic(JwtUtil.class)) {
+            when(mockClaims.get("type")).thenReturn("refresh");
+            when(mockClaims.get("sub")).thenReturn(TEST_SUBJECT);
+            when(mockClaims.get("sid")).thenReturn("sess-1");
+            jwtUtil.when(() -> JwtUtil.parseToken(TEST_REFRESH_TOKEN)).thenReturn(mockClaims);
+            jwtUtil.when(() -> JwtUtil.isTokenExpired(TEST_REFRESH_TOKEN)).thenReturn(false);
+            when(tokenBlacklistService.isBlacklisted(TEST_REFRESH_TOKEN)).thenReturn(Mono.just(false));
+            when(redissonClient.getBucket(anyString(), any())).thenReturn(bucket);
+            when(bucket.getAsync()).thenReturn(new CompletableFutureWrapper<>(TEST_REFRESH_TOKEN));
+
+            tokenService
+                    .validateRefreshToken(TEST_SUBJECT, TEST_REFRESH_TOKEN)
+                    .as(StepVerifier::create)
+                    .expectNext(true)
+                    .verifyComplete();
+
+            ArgumentCaptor<String> keyCaptor = ArgumentCaptor.forClass(String.class);
+            verify(redissonClient).getBucket(keyCaptor.capture(), any());
+            assertThat(keyCaptor.getValue()).contains(":sess-1");
+        }
+    }
+
+    @Test
+    @DisplayName("轮换RefreshToken（多会话）- 锁与会话槽按 sid 隔离")
+    void rotateRefreshToken_SessionScoped_UsesSessionKeys() throws Exception {
+        try (MockedStatic<JwtUtil> jwtUtil = mockStatic(JwtUtil.class)) {
+            when(mockClaims.get("type")).thenReturn("refresh");
+            when(mockClaims.get("sub")).thenReturn(TEST_SUBJECT);
+            when(mockClaims.get("sid")).thenReturn("sess-1");
+            jwtUtil.when(() -> JwtUtil.parseToken(TEST_REFRESH_TOKEN)).thenReturn(mockClaims);
+            jwtUtil.when(() -> JwtUtil.isTokenExpired(TEST_REFRESH_TOKEN)).thenReturn(false);
+
+            RLock lock = mock(RLock.class);
+            when(redissonClient.getLock(anyString())).thenReturn(lock);
+            when(lock.tryLock(anyLong(), anyLong(), any(TimeUnit.class))).thenReturn(true);
+            when(tokenBlacklistService.isBlacklisted(TEST_REFRESH_TOKEN)).thenReturn(Mono.just(false));
+            when(tokenBlacklistService.add(eq(TEST_REFRESH_TOKEN), anyLong())).thenReturn(Mono.empty());
+            when(redissonClient.getBucket(anyString(), any())).thenReturn(bucket);
+            when(bucket.get()).thenReturn(TEST_REFRESH_TOKEN);
+
+            tokenService
+                    .rotateRefreshToken(
+                            TEST_SUBJECT, TEST_REFRESH_TOKEN, TEST_ACCESS_TOKEN, "new_refresh_token", null, null)
+                    .as(StepVerifier::create)
+                    .expectNext(true)
+                    .verifyComplete();
+
+            ArgumentCaptor<String> lockCaptor = ArgumentCaptor.forClass(String.class);
+            verify(redissonClient).getLock(lockCaptor.capture());
+            assertThat(lockCaptor.getValue()).contains(":sess-1");
+        }
     }
 }

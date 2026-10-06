@@ -30,7 +30,8 @@ public interface TokenService {
      * 生成AccessToken（短期访问令牌）。
      *
      * <p>使用JWT标准生成短期有效的访问令牌，将用户标识和设备ID
-     * 编码到Payload中，实现设备绑定。AccessToken有效期通常为2小时。</p>
+     * 编码到Payload中，实现设备绑定。AccessToken有效期通常为2小时。
+     * 未指定会话ID时按旧版单会话模型签发（claims 不含 sid，存储走 legacy 槽）。</p>
      *
      * @param subject  用户唯一标识（通常为userId或openId）
      * @param deviceId 设备标识，绑定Token与设备，防止Token跨设备使用
@@ -39,16 +40,47 @@ public interface TokenService {
     String generateAccessToken(String subject, String deviceId);
 
     /**
+     * 生成AccessToken（多会话模型，携带会话ID与客户端类型）。
+     *
+     * <p>在 claims 中注入 {@code sid}（会话ID）与 {@code clientType}（客户端类型），
+     * 同一用户每次登录产生独立会话槽（{@code token:access:{subject}:{sid}}），
+     * 多端同时在线互不覆盖。</p>
+     *
+     * @param subject    用户唯一标识（通常为userId或openId）
+     * @param deviceId   设备标识，绑定Token与设备（可选）
+     * @param sid        会话ID（UUID），由调用方生成并保持 access/refresh 一致；为空时退化为旧版单会话模型
+     * @param clientType 客户端类型编码（{@code ClientType}），可为空
+     * @return AccessToken字符串
+     * @since 3.3.0
+     */
+    String generateAccessToken(String subject, String deviceId, String sid, String clientType);
+
+    /**
      * 生成RefreshToken（长期刷新令牌）。
      *
      * <p>生成长期有效的刷新令牌，用于在AccessToken过期后
-     * 无感获取新的AccessToken。RefreshToken有效期通常为7天。</p>
+     * 无感获取新的AccessToken。RefreshToken有效期通常为7天。
+     * 未指定会话ID时按旧版单会话模型签发。</p>
      *
      * @param subject  用户唯一标识（通常为userId或openId）
      * @param deviceId 设备标识，绑定Token与设备
      * @return RefreshToken字符串
      */
     String generateRefreshToken(String subject, String deviceId);
+
+    /**
+     * 生成RefreshToken（多会话模型，携带会话ID与客户端类型）。
+     *
+     * <p>{@code sid} 必须与同会话 AccessToken 一致，刷新轮换按会话槽隔离。</p>
+     *
+     * @param subject    用户唯一标识（通常为userId或openId）
+     * @param deviceId   设备标识，绑定Token与设备（可选）
+     * @param sid        会话ID（UUID），为空时退化为旧版单会话模型
+     * @param clientType 客户端类型编码（{@code ClientType}），可为空
+     * @return RefreshToken字符串
+     * @since 3.3.0
+     */
+    String generateRefreshToken(String subject, String deviceId, String sid, String clientType);
 
     /**
      * 解析Token并提取Claims。
@@ -117,6 +149,30 @@ public interface TokenService {
             TokenStoreEntry refreshEntry);
 
     /**
+     * 存储Token对到服务端缓存（多会话模型，携带会话上下文）。
+     *
+     * <p>按 {@code (subject, sid)} 写入独立会话槽并登记到会话索引，
+     * 同一用户多次登录互不覆盖；{@code sid} 为空时退化为旧版单会话槽
+     * （{@code token:access:{subject}}），保持与存量客户端兼容。</p>
+     *
+     * @param subject       用户唯一标识
+     * @param sid           会话ID（UUID）；为空时走 legacy 单会话槽
+     * @param accessToken   AccessToken 字符串
+     * @param refreshToken  RefreshToken 字符串
+     * @param accessEntry   AccessToken 对应的用户信息条目，可为 null（退化为纯字符串存储）
+     * @param refreshEntry  RefreshToken 对应的用户信息条目，可为 null
+     * @return 存储完成信号
+     * @since 3.3.0
+     */
+    Mono<Void> storeSessionToken(
+            String subject,
+            String sid,
+            String accessToken,
+            String refreshToken,
+            TokenStoreEntry accessEntry,
+            TokenStoreEntry refreshEntry);
+
+    /**
      * 验证RefreshToken的有效性。
      *
      * <p>校验刷新令牌是否与用户匹配且未过期。
@@ -140,6 +196,31 @@ public interface TokenService {
     Mono<Long> deleteToken(String subject);
 
     /**
+     * 删除指定会话的Token（多会话模型，单会话登出）。
+     *
+     * <p>仅清除 {@code (subject, sid)} 会话槽与会话索引登记，
+     * 其他端会话不受影响；{@code sid} 为空时等价于 {@link #deleteToken(String)}。</p>
+     *
+     * @param subject 用户唯一标识
+     * @param sid     会话ID（UUID）
+     * @return 删除的Token数量
+     * @since 3.3.0
+     */
+    Mono<Long> deleteSessionToken(String subject, String sid);
+
+    /**
+     * 删除用户全部会话（多会话模型，全端登出）。
+     *
+     * <p>遍历会话索引清除所有会话槽；用户无会话索引时退化为
+     * {@link #deleteToken(String)} 清理 legacy 槽。</p>
+     *
+     * @param subject 用户唯一标识
+     * @return 删除的Token数量
+     * @since 3.3.0
+     */
+    Mono<Long> deleteAllSessions(String subject);
+
+    /**
      * 单独存储AccessToken（用于新用户注册前临时Token场景）。
      *
      * <p>仅存储AccessToken到Redis，不设置RefreshToken。
@@ -154,6 +235,22 @@ public interface TokenService {
     Mono<Void> storeAccessToken(String subject, String accessToken, int ttlSeconds);
 
     /**
+     * 单独存储AccessToken到指定会话槽（多会话滑动续期场景）。
+     *
+     * <p>鉴权过滤器滑动续期时使用：按 {@code (subject, sid)} 覆盖写入
+     * 新 AccessToken，不影响其他会话；{@code sid} 为空时回退到
+     * {@link #storeAccessToken(String, String, int)}（legacy 槽）。</p>
+     *
+     * @param subject     用户唯一标识
+     * @param sid         会话ID（UUID）
+     * @param accessToken 新 AccessToken 字符串
+     * @param ttlSeconds  Redis键过期时间（秒）
+     * @return 存储完成信号
+     * @since 3.3.0
+     */
+    Mono<Void> storeSessionAccessToken(String subject, String sid, String accessToken, int ttlSeconds);
+
+    /**
      * 获取用户已存储的RefreshToken字符串。
      *
      * <p>从 Redis 中读取 {@code token:refresh:{subject}} 键对应的值，
@@ -164,6 +261,31 @@ public interface TokenService {
      * @return RefreshToken 字符串；若不存在则返回空 Mono
      */
     Mono<String> findRefreshToken(String subject);
+
+    /**
+     * 获取指定会话已存储的RefreshToken字符串（多会话模型）。
+     *
+     * <p>{@code sid} 为空时回退到 {@link #findRefreshToken(String)}（legacy 槽）。</p>
+     *
+     * @param subject 用户唯一标识
+     * @param sid     会话ID（UUID）
+     * @return RefreshToken 字符串；若不存在则返回空 Mono
+     * @since 3.3.0
+     */
+    Mono<String> findSessionRefreshToken(String subject, String sid);
+
+    /**
+     * 查询用户当前全部有效会话。
+     *
+     * <p>返回会话索引中登记的全部 {@code sid}。legacy 单会话槽不登记索引，
+     * 存量令牌的清理由 {@link #deleteAllSessions(String)} 与
+     * {@link #findRefreshToken(String)} 覆盖。用于在线会话管理与全端登出。</p>
+     *
+     * @param subject 用户唯一标识
+     * @return 会话ID集合
+     * @since 3.3.0
+     */
+    reactor.core.publisher.Flux<String> findSessions(String subject);
 
     /**
      * 原子轮换刷新令牌（分布式锁保护）。
