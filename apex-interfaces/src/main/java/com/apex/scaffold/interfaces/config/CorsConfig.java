@@ -44,6 +44,10 @@ import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
  *   <li>Origin — 请求来源标识</li>
  *   <li>X-Timestamp — 防重放时间戳</li>
  *   <li>X-Nonce — 防重放随机数</li>
+ *   <li>X-Client-Type — 多端终端标识（多会话审计维度）</li>
+ *   <li>X-Tenant-Id — 租户标识</li>
+ *   <li>Idempotency-Key — 幂等键</li>
+ *   <li>X-Device-Id — 设备指纹</li>
  * </ul>
  *
  * <h2>Exposed Headers</h2>
@@ -111,7 +115,18 @@ public class CorsConfig {
         }
 
         config.setAllowedHeaders(Arrays.asList(
-                "Content-Type", "Authorization", "X-Requested-With", "Accept", "Origin", "X-Timestamp", "X-Nonce"));
+                "Content-Type",
+                "Authorization",
+                "X-Requested-With",
+                "Accept",
+                "Origin",
+                "X-Timestamp",
+                "X-Nonce",
+                // 多端接入请求头：终端标识、租户、幂等键与设备指纹（多会话/审计维度）
+                "X-Client-Type",
+                "X-Tenant-Id",
+                "Idempotency-Key",
+                "X-Device-Id"));
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setMaxAge(3600L);
 

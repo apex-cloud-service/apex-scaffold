@@ -212,14 +212,17 @@ public class AuthRegistrationService {
      * @return 注册或登录响应
      */
     private Mono<LoginResponse> registerWithPayload(AuthTicketPayload payload, RegisterRequest request) {
+        // 注册签发的令牌按注册来源渠道标记客户端类型（多会话审计维度）
+        String clientType = com.apex.scaffold.common.enums.ClientType.fromCode(payload.getRegisterChannel())
+                .name();
         return userService
                 .getByPhone(payload.getPhone())
                 .flatMap(existing -> isSameRegistrationIdentity(existing, payload)
-                        ? buildLoginResponse(existing, request.getDeviceId(), request.getClientIp(), true)
+                        ? buildLoginResponse(existing, request.getDeviceId(), request.getClientIp(), true, clientType)
                         : Mono.<LoginResponse>error(new BusinessException(ResultCode.USER_ALREADY_EXISTS)))
                 .switchIfEmpty(Mono.defer(() -> completeOrCreateUser(payload, request)
-                        .flatMap(
-                                user -> buildLoginResponse(user, request.getDeviceId(), request.getClientIp(), true))));
+                        .flatMap(user -> buildLoginResponse(
+                                user, request.getDeviceId(), request.getClientIp(), true, clientType))));
     }
 
     /**
@@ -331,9 +334,12 @@ public class AuthRegistrationService {
         Mono<Void> invalidateOldToken = oldSubject != null && !oldSubject.isBlank() && isPlaceholderOpenId(oldSubject)
                 ? tokenService.deleteToken(oldSubject).then()
                 : Mono.empty();
+        // 绑定登录沿用登录阶段上报的客户端类型（票据载荷携带注册来源渠道）
+        String clientType = com.apex.scaffold.common.enums.ClientType.fromCode(payload.getRegisterChannel())
+                .name();
         return invalidateOldToken.then(userService.update(user)).flatMap(updated -> recordSocialBinding(
                         updated, payload)
-                .then(buildLoginResponse(updated, request.getDeviceId(), request.getClientIp(), false)));
+                .then(buildLoginResponse(updated, request.getDeviceId(), request.getClientIp(), false, clientType)));
     }
 
     /**
@@ -545,37 +551,42 @@ public class AuthRegistrationService {
      * 生成 JWT Token 并构建标准登录响应。
      *
      * <p>通过 openId 和 deviceId 生成双 Token（accessToken + refreshToken），
-     * 将 Token 与用户信息以 JSON 格式写入 Redis（由
-     * {@link TokenService#storeToken(String, String, String, com.apex.scaffold.common.dto.TokenStoreEntry, com.apex.scaffold.common.dto.TokenStoreEntry)}
-     * 保证幂等），最后通过 {@link LoginResponseHelper#build(UserEntity, String, String, boolean, String, String)}
+     * 多会话模型下每次注册完成生成新会话ID（{@code sid}），令牌按会话槽独立存储；
+     * 最后通过 {@link LoginResponseHelper#build(UserEntity, String, String, boolean, String, String)}
      * 组装含用户信息的登录响应。</p>
      *
-     * @param user     用户实体
-     * @param deviceId 设备标识（用于 Token 绑定设备）
-     * @param clientIp 客户端 IP
-     * @param newUser  是否为新用户（影响 {@code isNewUser} 标记）
+     * @param user       用户实体
+     * @param deviceId   设备标识（用于 Token 绑定设备）
+     * @param clientIp   客户端 IP
+     * @param newUser    是否为新用户（影响 {@code isNewUser} 标记）
+     * @param clientType 客户端类型编码（{@code ClientType}），由注册来源渠道推导
      * @return 含 accessToken / refreshToken 和用户信息的登录响应
      */
-    private Mono<LoginResponse> buildLoginResponse(UserEntity user, String deviceId, String clientIp, boolean newUser) {
+    private Mono<LoginResponse> buildLoginResponse(
+            UserEntity user, String deviceId, String clientIp, boolean newUser, String clientType) {
         String subject = user.getOpenId();
-        String accessToken = tokenService.generateAccessToken(subject, deviceId);
-        String refreshToken = tokenService.generateRefreshToken(subject, deviceId);
-        TokenStoreEntry tokenEntry = buildTokenEntry(user);
+        String sid = java.util.UUID.randomUUID().toString();
+        String accessToken = tokenService.generateAccessToken(subject, deviceId, sid, clientType);
+        String refreshToken = tokenService.generateRefreshToken(subject, deviceId, sid, clientType);
+        TokenStoreEntry tokenEntry = buildTokenEntry(user, sid, clientType, deviceId);
         // 记录首次登录信息（lastLoginTime / lastLoginIp），与 AbstractPhoneLoginStrategy 保持一致
         return userService
                 .updateLoginInfo(user.getId(), clientIp)
-                .then(tokenService.storeToken(subject, accessToken, refreshToken, tokenEntry, tokenEntry))
+                .then(tokenService.storeSessionToken(subject, sid, accessToken, refreshToken, tokenEntry, tokenEntry))
                 .then(Mono.fromSupplier(() -> loginResponseHelper.build(
                         user, accessToken, refreshToken, newUser, user.getPhone(), clientIp)));
     }
 
     /**
-     * 从用户实体构建 Token 存储条目。
+     * 从用户实体构建 Token 存储条目（多会话模型，携带会话与终端上下文）。
      *
-     * @param user 用户实体
-     * @return 包含用户基础信息的 TokenStoreEntry
+     * @param user       用户实体
+     * @param sid        会话ID
+     * @param clientType 客户端类型编码
+     * @param deviceId   设备标识
+     * @return 包含用户基础信息与会话上下文的 TokenStoreEntry
      */
-    private TokenStoreEntry buildTokenEntry(UserEntity user) {
+    private TokenStoreEntry buildTokenEntry(UserEntity user, String sid, String clientType, String deviceId) {
         return TokenStoreEntry.builder()
                 .userId(user.getId())
                 .openId(user.getOpenId())
@@ -584,6 +595,9 @@ public class AuthRegistrationService {
                 .gender(user.getGender())
                 .phone(user.getPhone())
                 .unionId(user.getUnionId())
+                .sid(sid)
+                .clientType(clientType)
+                .deviceId(deviceId)
                 .build();
     }
 

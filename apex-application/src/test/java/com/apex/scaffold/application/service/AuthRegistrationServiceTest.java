@@ -315,9 +315,9 @@ class AuthRegistrationServiceTest {
         when(userService.getByPhone(PHONE)).thenReturn(Mono.empty(), Mono.just(created));
         when(userService.create(any())).thenReturn(Mono.just(created));
         when(userService.updateLoginInfo(eq(2L), anyString())).thenReturn(Mono.just(true));
-        when(tokenService.generateAccessToken("PHONE_created", "device")).thenReturn("access");
-        when(tokenService.generateRefreshToken("PHONE_created", "device")).thenReturn("refresh");
-        when(tokenService.storeToken(eq("PHONE_created"), eq("access"), eq("refresh"), any(), any()))
+        when(tokenService.generateAccessToken(any(), any(), any(), any())).thenReturn("access");
+        when(tokenService.generateRefreshToken(any(), any(), any(), any())).thenReturn("refresh");
+        when(tokenService.storeSessionToken(eq("PHONE_created"), any(), eq("access"), eq("refresh"), any(), any()))
                 .thenReturn(Mono.error(new IllegalStateException("token store unavailable")), Mono.empty());
         LoginResponse expected = new LoginResponse();
         expected.setNextAction("AUTHENTICATED");
@@ -408,9 +408,9 @@ class AuthRegistrationServiceTest {
      */
     private LoginResponse prepareLogin(UserEntity user, boolean newUser) {
         when(userService.updateLoginInfo(eq(user.getId()), anyString())).thenReturn(Mono.just(true));
-        when(tokenService.generateAccessToken("wx-openid", "device")).thenReturn("access");
-        when(tokenService.generateRefreshToken("wx-openid", "device")).thenReturn("refresh");
-        when(tokenService.storeToken(eq("wx-openid"), eq("access"), eq("refresh"), any(), any()))
+        when(tokenService.generateAccessToken(any(), any(), any(), any())).thenReturn("access");
+        when(tokenService.generateRefreshToken(any(), any(), any(), any())).thenReturn("refresh");
+        when(tokenService.storeSessionToken(eq("wx-openid"), any(), eq("access"), eq("refresh"), any(), any()))
                 .thenReturn(Mono.empty());
         LoginResponse expected = new LoginResponse();
         expected.setNextAction("AUTHENTICATED");
@@ -424,9 +424,11 @@ class AuthRegistrationServiceTest {
      */
     private void prepareGeneratedTokenLogin() {
         when(userService.updateLoginInfo(any(), anyString())).thenReturn(Mono.just(true));
-        when(tokenService.generateAccessToken(anyString(), eq("device"))).thenReturn("access");
-        when(tokenService.generateRefreshToken(anyString(), eq("device"))).thenReturn("refresh");
-        when(tokenService.storeToken(anyString(), eq("access"), eq("refresh"), any(), any()))
+        when(tokenService.generateAccessToken(anyString(), eq("device"), any(), any()))
+                .thenReturn("access");
+        when(tokenService.generateRefreshToken(anyString(), eq("device"), any(), any()))
+                .thenReturn("refresh");
+        when(tokenService.storeSessionToken(anyString(), any(), eq("access"), eq("refresh"), any(), any()))
                 .thenReturn(Mono.empty());
         when(loginResponseHelper.build(any(), eq("access"), eq("refresh"), eq(true), eq(PHONE), eq("127.0.0.1")))
                 .thenAnswer(invocation -> {

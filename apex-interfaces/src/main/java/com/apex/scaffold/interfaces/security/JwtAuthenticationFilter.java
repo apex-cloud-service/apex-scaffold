@@ -348,7 +348,10 @@ public class JwtAuthenticationFilter implements WebFilter {
      * 尝试为即将过期的 AccessToken 执行滑动续期。
      *
      * <p>当 Token 进入续期窗口时，生成新的 AccessToken 并写入 Redis，
-     * 同时通过 {@value #NEW_ACCESS_TOKEN_HEADER} 响应头下发给客户端。</p>
+     * 同时通过 {@value #NEW_ACCESS_TOKEN_HEADER} 响应头下发给客户端。
+     * 多会话模型：续期沿用令牌 claims 中的 {@code sid} 与 {@code clientType}，
+     * 新令牌写入同会话槽，不影响其他端会话；无 {@code sid} 的存量令牌
+     * 走 legacy 单会话槽，行为与改造前一致。</p>
      *
      * @param exchange 当前请求交换上下文
      * @param openId   用户 OpenID
@@ -360,11 +363,16 @@ public class JwtAuthenticationFilter implements WebFilter {
             return Mono.empty();
         }
         String deviceId = claims.get("deviceId", String.class);
-        String newToken = tokenService.generateAccessToken(openId, deviceId);
+        String sid = claims.get("sid", String.class);
+        String clientType = claims.get("clientType", String.class);
+        String newToken = tokenService.generateAccessToken(openId, deviceId, sid, clientType);
         exchange.getResponse().getHeaders().set(NEW_ACCESS_TOKEN_HEADER, newToken);
         int ttlSeconds = (int) (accessTokenExpireMs / 1000);
-        log.debug("AccessToken 滑动刷新: openId={}, 剩余有效期进入续期窗口", openId);
-        return tokenService.storeAccessToken(openId, newToken, ttlSeconds);
+        log.debug(
+                "AccessToken 滑动刷新: openId={}, sessionId={}, 剩余有效期进入续期窗口",
+                openId,
+                sid == null || sid.isBlank() ? "legacy" : sid);
+        return tokenService.storeSessionAccessToken(openId, sid, newToken, ttlSeconds);
     }
 
     /**

@@ -175,6 +175,8 @@ public abstract class AbstractPhoneLoginStrategy implements LoginStrategy {
      *
      * <p>生成 JWT Token 对（accessToken + refreshToken），存储 Token 及用户信息，
      * 并通过 {@link LoginResponseHelper} 构建统一格式的登录响应。
+     * 多会话模型：每次登录生成新会话ID（{@code sid}），令牌按会话槽独立存储，
+     * 多端同时在线互不覆盖；客户端类型取请求头/请求体上报值（缺省 UNKNOWN）。
      *
      * @param user      用户实体
      * @param phone     用户手机号
@@ -186,23 +188,29 @@ public abstract class AbstractPhoneLoginStrategy implements LoginStrategy {
     protected Mono<LoginResponse> buildLoginResponse(
             UserEntity user, String phone, boolean isNewUser, String deviceId, LoginRequest request) {
         String subject = user.getOpenId() != null ? user.getOpenId() : phone;
-        String accessToken = tokenService.generateAccessToken(subject, deviceId);
-        String refreshToken = tokenService.generateRefreshToken(subject, deviceId);
-        TokenStoreEntry tokenEntry = buildTokenEntry(user);
+        String sid = java.util.UUID.randomUUID().toString();
+        String clientType = com.apex.scaffold.common.enums.ClientType.fromCode(request.getClientType())
+                .name();
+        String accessToken = tokenService.generateAccessToken(subject, deviceId, sid, clientType);
+        String refreshToken = tokenService.generateRefreshToken(subject, deviceId, sid, clientType);
+        TokenStoreEntry tokenEntry = buildTokenEntry(user, sid, clientType, request);
         return userService
                 .updateLoginInfo(user.getId(), request.getClientIp())
-                .then(tokenService.storeToken(subject, accessToken, refreshToken, tokenEntry, tokenEntry))
+                .then(tokenService.storeSessionToken(subject, sid, accessToken, refreshToken, tokenEntry, tokenEntry))
                 .thenReturn(loginResponseHelper.build(
                         user, accessToken, refreshToken, isNewUser, phone, request.getClientIp()));
     }
 
     /**
-     * 从用户实体构建 Token 存储条目。
+     * 从用户实体构建 Token 存储条目（多会话模型，携带会话与终端上下文）。
      *
-     * @param user 用户实体
-     * @return 包含用户基础信息的 TokenStoreEntry
+     * @param user       用户实体
+     * @param sid        会话ID
+     * @param clientType 客户端类型编码
+     * @param request    登录请求（提取 platform / loginType）
+     * @return 包含用户基础信息与会话上下文的 TokenStoreEntry
      */
-    private TokenStoreEntry buildTokenEntry(UserEntity user) {
+    private TokenStoreEntry buildTokenEntry(UserEntity user, String sid, String clientType, LoginRequest request) {
         return TokenStoreEntry.builder()
                 .userId(user.getId())
                 .openId(user.getOpenId())
@@ -211,6 +219,11 @@ public abstract class AbstractPhoneLoginStrategy implements LoginStrategy {
                 .gender(user.getGender())
                 .phone(user.getPhone())
                 .unionId(user.getUnionId())
+                .sid(sid)
+                .clientType(clientType)
+                .platform(request.getPlatform())
+                .loginType(getLoginType().name())
+                .deviceId(request.getDeviceId())
                 .build();
     }
 }

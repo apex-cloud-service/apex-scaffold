@@ -2,7 +2,9 @@ package com.apex.scaffold.application.service.login;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -84,9 +86,10 @@ class PasswordLoginStrategyTest {
         void shouldLoginSuccessfully() {
             UserEntity user = user(1L, "admin", "secret123");
             when(userService.getByUsername("admin")).thenReturn(Mono.just(user));
-            when(tokenService.generateAccessToken("open-1", "device-1")).thenReturn("access-token");
-            when(tokenService.generateRefreshToken("open-1", "device-1")).thenReturn("refresh-token");
-            when(tokenService.storeToken(anyString(), anyString(), anyString())).thenReturn(Mono.empty());
+            when(tokenService.generateAccessToken(any(), any(), any(), any())).thenReturn("access-token");
+            when(tokenService.generateRefreshToken(any(), any(), any(), any())).thenReturn("refresh-token");
+            when(tokenService.storeSessionToken(anyString(), anyString(), anyString(), anyString(), any(), any()))
+                    .thenReturn(Mono.empty());
             LoginResponse expected = new LoginResponse();
             expected.setAccessToken("access-token");
             when(loginResponseHelper.build(user, "access-token", "refresh-token", false))
@@ -97,7 +100,9 @@ class PasswordLoginStrategyTest {
 
             assertThat(response).isNotNull();
             assertThat(response.getAccessToken()).isEqualTo("access-token");
-            verify(tokenService).storeToken("open-1", "access-token", "refresh-token");
+            verify(tokenService)
+                    .storeSessionToken(
+                            eq("open-1"), anyString(), eq("access-token"), eq("refresh-token"), any(), any());
         }
     }
 

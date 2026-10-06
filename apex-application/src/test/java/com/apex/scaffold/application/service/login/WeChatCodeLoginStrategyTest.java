@@ -90,9 +90,9 @@ class WeChatCodeLoginStrategyTest {
         UserEntity user = user("openid", "13812345678");
         when(userService.getByOpenId("openid")).thenReturn(Mono.just(user));
         when(userService.update(user)).thenReturn(Mono.just(user));
-        when(tokenService.generateAccessToken("openid", "device")).thenReturn("access");
-        when(tokenService.generateRefreshToken("openid", "device")).thenReturn("refresh");
-        when(tokenService.storeToken(eq("openid"), eq("access"), eq("refresh"), any(), any()))
+        when(tokenService.generateAccessToken(any(), any(), any(), any())).thenReturn("access");
+        when(tokenService.generateRefreshToken(any(), any(), any(), any())).thenReturn("refresh");
+        when(tokenService.storeSessionToken(eq("openid"), any(), eq("access"), eq("refresh"), any(), any()))
                 .thenReturn(Mono.empty());
         LoginResponse expected = new LoginResponse();
         expected.setNextAction("AUTHENTICATED");
@@ -175,9 +175,9 @@ class WeChatCodeLoginStrategyTest {
         UserEntity user = user("openid", "13812345678");
         when(userService.getByOpenId("openid")).thenReturn(Mono.just(user));
         when(userService.update(user)).thenReturn(Mono.just(user));
-        when(tokenService.generateAccessToken("openid", "device")).thenReturn("access");
-        when(tokenService.generateRefreshToken("openid", "device")).thenReturn("refresh");
-        when(tokenService.storeToken(eq("openid"), eq("access"), eq("refresh"), any(), any()))
+        when(tokenService.generateAccessToken(any(), any(), any(), any())).thenReturn("access");
+        when(tokenService.generateRefreshToken(any(), any(), any(), any())).thenReturn("refresh");
+        when(tokenService.storeSessionToken(eq("openid"), any(), eq("access"), eq("refresh"), any(), any()))
                 .thenReturn(Mono.empty());
         LoginResponse expected = new LoginResponse();
         expected.setNextAction("AUTHENTICATED");

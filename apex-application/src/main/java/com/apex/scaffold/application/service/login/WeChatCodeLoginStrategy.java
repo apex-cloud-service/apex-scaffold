@@ -330,7 +330,8 @@ public class WeChatCodeLoginStrategy implements LoginStrategy {
     /**
      * 为已登录用户生成并存储 Token，构建完整登录响应。
      *
-     * <p>生成访问令牌与刷新令牌并写入 Token 存储，再组装登录响应。</p>
+     * <p>多会话模型：每次登录生成新会话ID（{@code sid}），令牌按会话槽独立存储，
+     * 多端同时在线互不覆盖；客户端类型取请求头/请求体上报值（缺省 UNKNOWN）。</p>
      *
      * @param user    已登录的用户实体
      * @param request 微信验证码登录请求
@@ -338,22 +339,28 @@ public class WeChatCodeLoginStrategy implements LoginStrategy {
      */
     private Mono<LoginResponse> buildLoginResponse(UserEntity user, LoginRequest request) {
         String deviceId = request.getDeviceId();
-        String accessToken = tokenService.generateAccessToken(user.getOpenId(), deviceId);
-        String refreshToken = tokenService.generateRefreshToken(user.getOpenId(), deviceId);
-        TokenStoreEntry tokenEntry = buildTokenEntry(user);
+        String sid = java.util.UUID.randomUUID().toString();
+        String clientType = com.apex.scaffold.common.enums.ClientType.fromCode(request.getClientType())
+                .name();
+        String accessToken = tokenService.generateAccessToken(user.getOpenId(), deviceId, sid, clientType);
+        String refreshToken = tokenService.generateRefreshToken(user.getOpenId(), deviceId, sid, clientType);
+        TokenStoreEntry tokenEntry = buildTokenEntry(user, sid, clientType, request);
         return tokenService
-                .storeToken(user.getOpenId(), accessToken, refreshToken, tokenEntry, tokenEntry)
+                .storeSessionToken(user.getOpenId(), sid, accessToken, refreshToken, tokenEntry, tokenEntry)
                 .thenReturn(loginResponseHelper.build(
                         user, accessToken, refreshToken, false, user.getPhone(), request.getClientIp()));
     }
 
     /**
-     * 从用户实体构建 Token 存储条目。
+     * 从用户实体构建 Token 存储条目（多会话模型，携带会话与终端上下文）。
      *
-     * @param user 用户实体
-     * @return 包含用户基础信息的 TokenStoreEntry
+     * @param user       用户实体
+     * @param sid        会话ID
+     * @param clientType 客户端类型编码
+     * @param request    登录请求（提取 platform / deviceId）
+     * @return 包含用户基础信息与会话上下文的 TokenStoreEntry
      */
-    private TokenStoreEntry buildTokenEntry(UserEntity user) {
+    private TokenStoreEntry buildTokenEntry(UserEntity user, String sid, String clientType, LoginRequest request) {
         return TokenStoreEntry.builder()
                 .userId(user.getId())
                 .openId(user.getOpenId())
@@ -362,6 +369,11 @@ public class WeChatCodeLoginStrategy implements LoginStrategy {
                 .gender(user.getGender())
                 .phone(user.getPhone())
                 .unionId(user.getUnionId())
+                .sid(sid)
+                .clientType(clientType)
+                .platform(request.getPlatform())
+                .loginType(getLoginType().name())
+                .deviceId(request.getDeviceId())
                 .build();
     }
 

@@ -14,6 +14,7 @@ import com.apex.scaffold.application.service.AuthRegistrationService;
 import com.apex.scaffold.application.service.AuthService;
 import com.apex.scaffold.common.annotation.IdempotentApi;
 import com.apex.scaffold.common.annotation.OperationLog;
+import com.apex.scaffold.common.enums.ClientType;
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.common.util.TraceIdUtil;
@@ -154,6 +155,12 @@ public class AuthHandler extends BaseHandler {
                     // 提取客户端IP用于安全审计和暴力破解防护
                     String clientIp = requestHandlerUtil.extractClientIp(request);
                     loginRequest.setClientIp(clientIp);
+                    // 多端终端标识：请求头 X-Client-Type 优先，请求体 clientType 字段兜底；
+                    // 两者均缺省时按 UNKNOWN 处理（存量客户端行为不变）
+                    String headerClientType = request.headers().firstHeader(ClientType.HEADER);
+                    if (headerClientType != null && !headerClientType.isBlank()) {
+                        loginRequest.setClientType(headerClientType);
+                    }
                     return authService.login(loginRequest, clientIp);
                 })
                 .flatMap(requestHandlerUtil::buildSuccessResponse)
@@ -242,7 +249,10 @@ public class AuthHandler extends BaseHandler {
      * @param request 服务器请求对象，包含 {@code Authorization} 请求头（Bearer Token）
      * @return 包含退出结果的响应对象，成功时返回成功信息
      */
-    @Operation(operationId = "authLogout", summary = "退出登录", description = "使当前Token失效，清除用户登录态")
+    @Operation(
+            operationId = "authLogout",
+            summary = "退出登录",
+            description = "使当前Token失效，清除当前会话登录态（多端其他会话不受影响）；" + "可选查询参数 scope=all 全端登出（清除该用户全部会话）")
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",
@@ -261,10 +271,13 @@ public class AuthHandler extends BaseHandler {
         if (token == null || token.isBlank()) {
             return buildError(ResultCode.UNAUTHORIZED.getCode(), "auth.token_missing", traceId);
         }
+        // 会话范围：默认仅当前会话；scope=all 时全端登出（多会话模型）
+        boolean allSessions =
+                "all".equalsIgnoreCase(request.queryParam("scope").orElse("").trim());
         return request.principal()
                 .switchIfEmpty(Mono.error(new IllegalStateException("未登录")))
                 .map(Principal::getName)
-                .flatMap(openId -> authService.logout(token, openId))
+                .flatMap(openId -> authService.logout(token, openId, allSessions))
                 .then(requestHandlerUtil.buildSuccessResponse(null))
                 .onErrorResume(
                         IllegalStateException.class,

@@ -431,7 +431,8 @@ public class AuthService {
                             .delete(LOGIN_FAIL_USERNAME_PREFIX + username)
                             .then());
         }
-        return cleanup.then(safeRecordLoginLog(username, clientIp, request.getPlatform(), true, "登录成功"));
+        return cleanup.then(
+                safeRecordLoginLog(username, clientIp, request.getClientType(), request.getPlatform(), true, "登录成功"));
     }
 
     /**
@@ -466,7 +467,8 @@ public class AuthService {
                     ? incrementIp
                     : incrementIp.then(incrementLoginFailCount(LOGIN_FAIL_USERNAME_PREFIX + username, windowSize));
         }
-        return counters.then(safeRecordLoginLog(username, clientIp, request.getPlatform(), false, "登录失败"));
+        return counters.then(
+                safeRecordLoginLog(username, clientIp, request.getClientType(), request.getPlatform(), false, "登录失败"));
     }
 
     /**
@@ -497,19 +499,21 @@ public class AuthService {
      *
      * @param username 登录账号
      * @param clientIp 客户端 IP
+     * @param clientType 客户端类型（{@code ClientType} 编码，多端终端标识），可为 {@code null}
      * @param platform 客户端平台标识（android/ios/h5/harmony/wechat），可为 {@code null}
      * @param success 是否成功
      * @param message 登录消息
      * @return 空 Mono
      */
     private Mono<Void> safeRecordLoginLog(
-            String username, String clientIp, String platform, boolean success, String message) {
+            String username, String clientIp, String clientType, String platform, boolean success, String message) {
         if (loginLogService == null) {
             return Mono.empty();
         }
         com.apex.scaffold.domain.model.entity.LoginLogEntity entity =
                 com.apex.scaffold.domain.model.entity.LoginLogEntity.create(
                         username, clientIp, resolveBrowser(), resolveOs(), success, message);
+        entity.setClientType(clientType);
         entity.setPlatform(platform);
         return loginLogService.record(entity).onErrorResume(error -> {
             log.warn("登录日志记录失败，username: {}, error: {}", username, error.getMessage());
@@ -637,17 +641,23 @@ public class AuthService {
                                 .getByOpenId(openId)
                                 .switchIfEmpty(Mono.error(new BusinessException(ResultCode.UNAUTHORIZED)))
                                 .flatMap(user -> {
+                                    // 多会话模型：刷新沿用旧令牌 claims 中的 sid 与 clientType，
+                                    // 保证轮换后令牌仍归属同一会话槽；旧令牌无 sid 时走 legacy 单会话。
+                                    String sid = (String) claims.get("sid");
+                                    String clientType = (String) claims.get("clientType");
                                     // 先生成新令牌对（无需锁），再通过 rotateRefreshToken 在分布式锁内
                                     // 原子完成旧令牌比对与新令牌写入。
-                                    String newAccessToken = tokenService.generateAccessToken(openId, deviceId);
-                                    String newRefreshToken = tokenService.generateRefreshToken(openId, deviceId);
+                                    String newAccessToken =
+                                            tokenService.generateAccessToken(openId, deviceId, sid, clientType);
+                                    String newRefreshToken =
+                                            tokenService.generateRefreshToken(openId, deviceId, sid, clientType);
                                     return rotateAndRespond(
                                             openId,
                                             refreshToken,
                                             newAccessToken,
                                             newRefreshToken,
-                                            buildTokenEntry(user),
-                                            buildTokenEntry(user),
+                                            buildTokenEntry(user, sid, clientType),
+                                            buildTokenEntry(user, sid, clientType),
                                             user);
                                 });
                     });
@@ -717,12 +727,25 @@ public class AuthService {
     }
 
     /**
-     * 从用户实体构建 Token 存储条目。
+     * 从用户实体构建 Token 存储条目（旧版，无会话上下文）。
      *
      * @param user 用户实体
      * @return 包含用户基础信息的 TokenStoreEntry
      */
     private TokenStoreEntry buildTokenEntry(com.apex.scaffold.domain.model.entity.UserEntity user) {
+        return buildTokenEntry(user, null, null);
+    }
+
+    /**
+     * 从用户实体构建 Token 存储条目（多会话模型，携带会话与终端上下文）。
+     *
+     * @param user       用户实体
+     * @param sid        会话ID（来自旧令牌 claims，轮换后保持同一会话），可为空
+     * @param clientType 客户端类型编码（来自旧令牌 claims），可为空
+     * @return 包含用户基础信息与会话上下文的 TokenStoreEntry
+     */
+    private TokenStoreEntry buildTokenEntry(
+            com.apex.scaffold.domain.model.entity.UserEntity user, String sid, String clientType) {
         return TokenStoreEntry.builder()
                 .userId(user.getId())
                 .openId(user.getOpenId())
@@ -731,6 +754,8 @@ public class AuthService {
                 .gender(user.getGender())
                 .phone(user.getPhone())
                 .unionId(user.getUnionId())
+                .sid(sid)
+                .clientType(clientType)
                 .build();
     }
 
@@ -757,21 +782,37 @@ public class AuthService {
     }
 
     /**
-     * 退出登录
+     * 退出登录（仅当前会话）。
      *
-     * <p>
-     * 使当前用户的所有 Token 失效，包括：
-     * <ul>
-     *   <li>将 Token 加入黑名单</li>
-     *   <li>删除存储的 Token</li>
-     * </ul>
+     * <p>多会话模型下的默认行为：仅使当前令牌所属会话失效，其他端会话不受影响；
+     * 存量令牌（无 sid）保持旧版单会话语义。</p>
      *
      * @param token 当前访问令牌
      * @param openId 当前用户 OpenID
      * @return 空响应，表示退出成功
      */
     public Mono<Void> logout(String token, String openId) {
-        log.info("用户退出登录, openId: {}", openId);
+        return logout(token, openId, false);
+    }
+
+    /**
+     * 退出登录（支持会话范围）。
+     *
+     * <p>三层纵深防御（黑名单当前令牌 → 拉黑存储的 RefreshToken → 删除存储键）：
+     * <ul>
+     *   <li>{@code allSessions=false}（默认）：仅当前会话——多会话令牌按 claims.sid
+     *       定位会话槽，其他端不受影响；存量令牌走 legacy 单会话槽，行为与改造前一致</li>
+     *   <li>{@code allSessions=true}（全端登出）：遍历会话索引拉黑全部 RefreshToken
+     *       并清空所有会话槽（含 legacy 槽），配合 subject 吊销标记覆盖存量令牌</li>
+     * </ul>
+     *
+     * @param token 当前访问令牌
+     * @param openId 当前用户 OpenID
+     * @param allSessions 是否全端登出（{@code ?scope=all}）
+     * @return 空响应，表示退出成功
+     */
+    public Mono<Void> logout(String token, String openId, boolean allSessions) {
+        log.info("用户退出登录, openId: {}, allSessions: {}", openId, allSessions);
         return Mono.fromCallable(() -> tokenService.parseToken(token))
                 .subscribeOn(Schedulers.fromExecutor(ioTaskExecutor))
                 .flatMap(claims -> {
@@ -779,14 +820,38 @@ public class AuthService {
                     if (tokenOpenId == null || !tokenOpenId.equals(openId)) {
                         return Mono.error(new BusinessException(ResultCode.TOKEN_USER_MISMATCH));
                     }
-                    /*
-                     * 登出流程的三层纵深防御：
-                     * 1. AccessToken 加入黑名单（jti 校验拦截）
-                     * 2. RefreshToken 加入黑名单（防止登出后通过 RefreshToken 续期）
-                     * 3. 从 Redis 中删除两个 Token 的存储键
-                     */
-                    return tokenBlacklistService
-                            .add(token, TOKEN_BLACKLIST_TTL_MS)
+                    String sid = (String) claims.get("sid");
+                    // 1. 当前 AccessToken 加入黑名单（jti 校验拦截），所有 scope 均执行
+                    Mono<Void> blacklistCurrentToken = tokenBlacklistService.add(token, TOKEN_BLACKLIST_TTL_MS);
+                    if (allSessions) {
+                        // 2. 全端登出：拉黑 legacy 槽与各会话槽的 RefreshToken
+                        Mono<Void> blacklistStoredRefreshTokens = tokenService
+                                .findRefreshToken(tokenOpenId)
+                                .mergeWith(tokenService
+                                        .findSessions(tokenOpenId)
+                                        .flatMap(sessionId ->
+                                                tokenService.findSessionRefreshToken(tokenOpenId, sessionId)))
+                                .flatMap(storedRefreshToken ->
+                                        tokenBlacklistService.add(storedRefreshToken, TOKEN_BLACKLIST_TTL_MS))
+                                .then();
+                        // 3. 清空全部会话槽与索引（含 legacy 槽）
+                        return blacklistCurrentToken
+                                .then(blacklistStoredRefreshTokens)
+                                .then(Mono.defer(() -> tokenService.deleteAllSessions(tokenOpenId)))
+                                .then();
+                    }
+                    if (sid != null && !sid.isBlank()) {
+                        // 2. 会话级登出：仅拉黑当前会话的 RefreshToken
+                        // 3. 仅清除当前会话槽，其他端会话不受影响
+                        return blacklistCurrentToken
+                                .then(Mono.defer(() -> tokenService.findSessionRefreshToken(tokenOpenId, sid)))
+                                .flatMap(storedRefreshToken ->
+                                        tokenBlacklistService.add(storedRefreshToken, TOKEN_BLACKLIST_TTL_MS))
+                                .then(Mono.defer(() -> tokenService.deleteSessionToken(tokenOpenId, sid)))
+                                .then();
+                    }
+                    // legacy 单会话（存量令牌无 sid）：保持旧版行为
+                    return blacklistCurrentToken
                             .then(tokenService.findRefreshToken(tokenOpenId))
                             .flatMap(storedRefreshToken ->
                                     tokenBlacklistService.add(storedRefreshToken, TOKEN_BLACKLIST_TTL_MS))

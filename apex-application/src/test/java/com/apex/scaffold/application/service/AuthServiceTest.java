@@ -315,8 +315,10 @@ class AuthServiceTest {
         when(tokenService.parseToken("valid_refresh_token")).thenReturn(claims);
         // v3.1.0: Token 轮换在分布式锁内原子完成（rotateRefreshToken），
         // 旧令牌单次消费、写入新令牌对成功后拉黑旧令牌。
-        when(tokenService.generateAccessToken("test_openid", null)).thenReturn("new_access_token");
-        when(tokenService.generateRefreshToken("test_openid", null)).thenReturn("new_refresh_token");
+        when(tokenService.generateAccessToken(eq("test_openid"), any(), any(), any()))
+                .thenReturn("new_access_token");
+        when(tokenService.generateRefreshToken(eq("test_openid"), any(), any(), any()))
+                .thenReturn("new_refresh_token");
         when(tokenService.rotateRefreshToken(
                         eq("test_openid"),
                         eq("valid_refresh_token"),
@@ -482,6 +484,56 @@ class AuthServiceTest {
                 .verifyErrorSatisfies(ex -> {
                     assertThat(ex).isInstanceOf(BusinessException.class);
                 });
+    }
+
+    @Test
+    @DisplayName("logout - 多会话令牌仅登出当前会话")
+    void logout_SessionScoped_OnlyKillsCurrentSession() {
+        io.jsonwebtoken.Claims claims = mock(io.jsonwebtoken.Claims.class);
+        when(claims.get("sub")).thenReturn("test_openid");
+        when(claims.get("sid")).thenReturn("sess-1");
+        when(tokenService.parseToken("bearer_token")).thenReturn(claims);
+        when(tokenBlacklistService.add("bearer_token", 7200000)).thenReturn(Mono.empty());
+        when(tokenService.findSessionRefreshToken("test_openid", "sess-1"))
+                .thenReturn(Mono.just("session_refresh_token"));
+        when(tokenBlacklistService.add("session_refresh_token", 7200000)).thenReturn(Mono.empty());
+        when(tokenService.deleteSessionToken("test_openid", "sess-1")).thenReturn(Mono.just(2L));
+
+        authService
+                .logout("bearer_token", "test_openid")
+                .as(StepVerifier::create)
+                .verifyComplete();
+
+        verify(tokenService).deleteSessionToken("test_openid", "sess-1");
+        verify(tokenService, never()).deleteToken("test_openid");
+        verify(tokenService, never()).deleteAllSessions("test_openid");
+    }
+
+    @Test
+    @DisplayName("logout - scope=all 全端登出清空全部会话")
+    void logout_AllSessions_ClearsAllSessions() {
+        io.jsonwebtoken.Claims claims = mock(io.jsonwebtoken.Claims.class);
+        when(claims.get("sub")).thenReturn("test_openid");
+        when(claims.get("sid")).thenReturn("sess-1");
+        when(tokenService.parseToken("bearer_token")).thenReturn(claims);
+        when(tokenService.findRefreshToken("test_openid")).thenReturn(Mono.just("legacy_refresh_token"));
+        when(tokenService.findSessions("test_openid")).thenReturn(reactor.core.publisher.Flux.just("sess-1"));
+        when(tokenService.findSessionRefreshToken("test_openid", "sess-1"))
+                .thenReturn(Mono.just("session_refresh_token"));
+        when(tokenBlacklistService.add(
+                        org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.eq(7200000L)))
+                .thenReturn(Mono.empty());
+        when(tokenService.deleteAllSessions("test_openid")).thenReturn(Mono.just(4L));
+
+        authService
+                .logout("bearer_token", "test_openid", true)
+                .as(StepVerifier::create)
+                .verifyComplete();
+
+        verify(tokenService).deleteAllSessions("test_openid");
+        verify(tokenBlacklistService).add("bearer_token", 7200000);
+        verify(tokenBlacklistService).add("legacy_refresh_token", 7200000);
+        verify(tokenBlacklistService).add("session_refresh_token", 7200000);
     }
 
     @Test

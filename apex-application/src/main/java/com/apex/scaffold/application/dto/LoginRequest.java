@@ -228,4 +228,21 @@ public class LoginRequest {
     @Schema(description = "图形验证码（可选，启用验证码时必填）")
     @Size(min = 4, max = 6, message = "{param.size_invalid}")
     private String captchaCode;
+
+    /**
+     * 客户端类型（可选，请求头 X-Client-Type 的兜底）。
+     *
+     * <p>多端统一接入的终端标识（{@code ClientType} 编码）：
+     * PC_ADMIN/PC_WEB/WECHAT_MP/MINI_PROGRAM/APP_ANDROID/APP_IOS/H5/UNKNOWN。
+     * 请求头 {@code X-Client-Type} 优先，本字段仅在客户端无法设置请求头时兜底；
+     * 两者均缺省时按 UNKNOWN 处理，与存量客户端行为完全兼容。
+     * 写入 JWT claims 与登录日志，用于按终端维度审计与追踪。</p>
+     *
+     * @since 3.3.0
+     */
+    @Schema(
+            description =
+                    "客户端类型（可选，请求头 X-Client-Type 优先）：PC_ADMIN/PC_WEB/WECHAT_MP/MINI_PROGRAM/APP_ANDROID/APP_IOS/H5")
+    @Size(max = 32, message = "{param.size_invalid}")
+    private String clientType;
 }

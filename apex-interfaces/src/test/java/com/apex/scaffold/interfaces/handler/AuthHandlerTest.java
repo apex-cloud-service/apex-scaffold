@@ -275,7 +275,8 @@ class AuthHandlerTest {
         void shouldLogoutSuccessfully() {
             when(requestHandlerUtil.extractToken(any(ServerRequest.class)))
                     .thenReturn(java.util.Optional.of("test-token"));
-            when(authService.logout(eq("test-token"), eq(TEST_OPEN_ID))).thenReturn(Mono.empty());
+            when(authService.logout(eq("test-token"), eq(TEST_OPEN_ID), eq(false)))
+                    .thenReturn(Mono.empty());
             when(requestHandlerUtil.buildSuccessResponse(any()))
                     .thenReturn(org.springframework.web.reactive.function.server.ServerResponse.ok()
                             .bodyValue(Map.of("success", true)));
@@ -288,7 +289,7 @@ class AuthHandlerTest {
                     })
                     .verifyComplete();
 
-            verify(authService).logout(eq("test-token"), eq(TEST_OPEN_ID));
+            verify(authService).logout(eq("test-token"), eq(TEST_OPEN_ID), eq(false));
         }
     }
 

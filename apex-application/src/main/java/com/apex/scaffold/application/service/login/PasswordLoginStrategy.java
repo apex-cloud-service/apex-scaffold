@@ -100,7 +100,7 @@ public class PasswordLoginStrategy implements LoginStrategy {
                 .getByUsername(username.trim())
                 .switchIfEmpty(Mono.error(new BusinessException(ResultCode.USER_NOT_FOUND)))
                 .flatMap(user -> authenticatePassword(user, password))
-                .flatMap(user -> issueTokens(user, deviceId));
+                .flatMap(user -> issueTokens(user, deviceId, request));
     }
 
     /**
@@ -126,16 +126,23 @@ public class PasswordLoginStrategy implements LoginStrategy {
     /**
      * 签发并存储 JWT Token 对，装配登录响应。
      *
+     * <p>多会话模型：每次登录生成新会话ID（{@code sid}），令牌按会话槽独立存储，
+     * 多端同时在线互不覆盖；客户端类型取请求头/请求体上报值（缺省 UNKNOWN）。</p>
+     *
      * @param user     认证通过的用户实体
      * @param deviceId 客户端设备标识
+     * @param request  登录请求（提取 clientType / platform）
      * @return 完整登录响应
      */
-    private Mono<LoginResponse> issueTokens(UserEntity user, String deviceId) {
+    private Mono<LoginResponse> issueTokens(UserEntity user, String deviceId, LoginRequest request) {
         String subject = user.getOpenId() != null ? user.getOpenId() : String.valueOf(user.getId());
-        String accessToken = tokenService.generateAccessToken(subject, deviceId);
-        String refreshToken = tokenService.generateRefreshToken(subject, deviceId);
+        String sid = java.util.UUID.randomUUID().toString();
+        String clientType = com.apex.scaffold.common.enums.ClientType.fromCode(request.getClientType())
+                .name();
+        String accessToken = tokenService.generateAccessToken(subject, deviceId, sid, clientType);
+        String refreshToken = tokenService.generateRefreshToken(subject, deviceId, sid, clientType);
         return tokenService
-                .storeToken(subject, accessToken, refreshToken)
+                .storeSessionToken(subject, sid, accessToken, refreshToken, null, null)
                 .thenReturn(loginResponseHelper.build(user, accessToken, refreshToken, false));
     }
 }

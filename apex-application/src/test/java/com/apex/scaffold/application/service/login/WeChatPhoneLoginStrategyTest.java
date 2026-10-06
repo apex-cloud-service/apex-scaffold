@@ -139,9 +139,10 @@ class WeChatPhoneLoginStrategyTest {
 
         when(weChatGateway.getPhoneNumber("test_phone_code")).thenReturn(Mono.just(phoneResult));
         when(userService.getByPhone("13800138000")).thenReturn(Mono.just(existingUser));
-        when(tokenService.generateAccessToken("test_openid", null)).thenReturn("access_token");
-        when(tokenService.generateRefreshToken("test_openid", null)).thenReturn("refresh_token");
-        when(tokenService.storeToken(eq("test_openid"), eq("access_token"), eq("refresh_token"), any(), any()))
+        when(tokenService.generateAccessToken(any(), any(), any(), any())).thenReturn("access_token");
+        when(tokenService.generateRefreshToken(any(), any(), any(), any())).thenReturn("refresh_token");
+        when(tokenService.storeSessionToken(
+                        eq("test_openid"), any(), eq("access_token"), eq("refresh_token"), any(), any()))
                 .thenReturn(Mono.empty());
         when(userService.updateLoginInfo(1L, null)).thenReturn(Mono.just(true));
         when(loginResponseHelper.build(existingUser, "access_token", "refresh_token", false, "13800138000", null))
@@ -155,7 +156,8 @@ class WeChatPhoneLoginStrategyTest {
 
         verify(weChatGateway).getPhoneNumber("test_phone_code");
         verify(userService).getByPhone("13800138000");
-        verify(tokenService).storeToken(eq("test_openid"), eq("access_token"), eq("refresh_token"), any(), any());
+        verify(tokenService)
+                .storeSessionToken(eq("test_openid"), any(), eq("access_token"), eq("refresh_token"), any(), any());
     }
 
     @Test
