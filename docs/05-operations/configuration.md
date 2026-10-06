@@ -20,6 +20,42 @@ mvnd spring-boot:run -Dspring-boot.run.profiles=prod
 
 ## 🔐 安全认证配置
 
+### 凭据加密密钥
+
+数据源密码和认证中心 TOTP 密钥、备份码及已消费备份码使用 `apex.security.data-encryption-key`，由 `APEX_DATA_ENCRYPTION_KEY` 注入，值为 Base64 编码的 32 字节随机密钥，可用 `openssl rand -base64 32` 生成。必须跨实例和重启保持一致；缺失、非法 Base64 或长度错误会拒绝初始化。原先由临时随机密钥加密的数据需要使用原密钥解密后重新加密，无法通过新密钥恢复。
+
+TOTP 仓储只读取加密格式，不会在解密失败时回退为明文。升级前需备份 `auth_totp`，使用部署的稳定数据密钥将历史明文 `secret`、`backup_codes`、`used_backup_codes` 转换为当前 AES-GCM 格式，或安排用户重新绑定 MFA；可用 `scripts/utils/local_deployment.py prepare` 离线生成候选快照、备份和审查报告；工具不连接数据库，不自动执行迁移。更换密钥前也必须先完成旧密钥到新密钥的数据迁移。
+
+公共配置加密使用 `security.config.encryption.key`（`CONFIG_ENCRYPTION_KEY`），要求 UTF-8 编码后恰好 32 字节且不为全空白。认证中心独立配置加密使用 `apex.security.config-encryption-key`（`APEX_CONFIG_ENCRYPTION_KEY`），要求 Base64 解码后恰好 32 字节。两者格式不同，不能直接共用同一个字符串；均不再提供默认或临时密钥。
+
+Token 存储加密使用 `security.encryption.key`（环境变量 `SECURITY_ENCRYPTION_KEY`）；认证中心也支持 `security.token.encryption.key`（`TOKEN_ENCRYPTION_KEY`），前者优先。密钥必须为 Base64 编码的 32 字节，跨实例和重启保持一致；缺失或长度错误会拒绝启动，不再生成临时密钥。旧临时密钥加密的 Token 需要保留原密钥迁移，否则必须重新登录。
+
+Compose 强制注入 `APEX_DATA_ENCRYPTION_KEY`、`SECURITY_ENCRYPTION_KEY`、`CONFIG_ENCRYPTION_KEY`、`APEX_CONFIG_ENCRYPTION_KEY` 和 `JWT_SECRET`，缺失或为空时拒绝渲染。一次性 `security-key-check` 服务使用 Python 3.13 镜像校验格式，成功后才允许启动应用；四类加密密钥必须独立生成并安全保存，不应每次启动重新生成。三个 Base64 密钥可分别用 `openssl rand -base64 32` 生成；公共配置密钥可用 `openssl rand -hex 16` 生成（结果是 32 字节 ASCII）。`.env.example` 仅保留空值。环境变量仍可被具有 Docker 管理权限的用户查看。
+
+安全检查命令（捕获渲染结果，不把展开后的密钥打印到终端）：
+
+```bash
+python3 scripts/utils/local_deployment.py compose --env-file .env
+```
+
+离线 TOTP 迁移准备与回滚：
+
+```bash
+python3 -m venv /tmp/apex-totp-tools
+/tmp/apex-totp-tools/bin/pip install -r scripts/utils/local-deployment-requirements.txt
+/tmp/apex-totp-tools/bin/python scripts/utils/local_deployment.py prepare --input /secure/auth_totp.json --output /secure/totp-review
+/tmp/apex-totp-tools/bin/python scripts/utils/local_deployment.py rollback --bundle /secure/totp-review --output /secure/auth_totp-restored.json
+```
+
+运行前通过安全环境注入 `APEX_DATA_ENCRYPTION_KEY`；如需轮换，另注入 `TOTP_OLD_DATA_ENCRYPTION_KEY`，不将值写进命令行。输入为完整 `auth_totp` 行的 JSON 数组，必须包含 `id`、`tenant_id`、`version`、`secret`、`backup_codes`、`used_backup_codes`，包括逻辑删除行。工具只转换后三个敏感字段，保留其他字段。历史明文只接受当前生成器的 32 字符大写 Base32 secret 及逗号分隔的 8 位数字备份码；允许空备份码和 NULL 备份码。当前密文为裸 `Base64(12 字节 IV + AES-256-GCM 密文 + 16 字节标签)`，不是 `ENC(...)`；必须认证解密成功且明文格式正确才能跳过。旧密钥密文在提供原密钥时重加密，未知格式、损坏密文、身份重复或错误密钥会阻止生成迁移包。
+
+输出目录权限为 0700、文件为 0600，包含原始字节备份 `backup.json`、候选 `candidate.json` 与不含字段值的 `review.json`。备份可能含明文，仍须放在受控加密磁盘，不能入库。重复处理候选数据不产生二次加密；拒绝覆盖已有输出。离线回滚同时核对备份和候选 SHA-256 后恢复原始快照，摘要用于检测意外改动，不代替可信签名。输出或磁盘写入失败可能留下不完整目录，应检查后选择新的输出目录。
+
+实际数据库应用须另行审查、停写、完整备份并在隔离副本演练；按 `tenant_id`、`id`、`version` 及旧字段值做事务内比较更新，只替换三个字段，任何冲突整批回滚。恢复写入前验证 MFA。数据库回滚同样需要停写并检查迁移后是否发生业务修改；本工具的 rollback 只恢复离线快照，不能声称已回滚数据库。丢失原随机密钥的数据不能恢复，需重新绑定 MFA；本工具不会连接或修改现有数据库。
+
+
+部署配置生成仅输出密码环境变量占位符；环境变量模板中的 `DB_PASSWORD` 留空，由部署者在安全配置中填写。
+
 ### JWT配置
 
 ```yaml
@@ -760,6 +796,24 @@ spring:
   datasource:
     password: ${DB_PASSWORD}  # 必须从环境变量读取
 ```
+
+### 日志与审计容量边界
+
+主应用配置位于 `apex-interfaces/src/main/resources/logback-spring.xml`，认证中心配置位于 `apex-auth-center/src/main/resources/logback-spring.xml`。控制台与文件输出使用有界 `AsyncAppender`：每个队列最多 1024 条，剩余容量低于 200 时可丢弃低级别事件，`neverBlock=true` 避免日志输出阻塞请求线程。队列满时 WARN/ERROR 也可能丢失；关闭时最多等待 2000ms 刷新，因此运行日志不能作为可靠审计存储。
+
+主应用 `LoggingFilter` 每个请求只记录完成或异常事件，不输出查询参数、请求体及异常消息；路径最多 256 字符，标识和 IP 最多 64 字符，User-Agent 最多 80 字符，Referer 删除查询与片段后最多 120 字符。`performance` profile 关闭此请求日志。认证配置及审计查询日志使用 DEBUG，查询标识在输出前限长并移除控制字符。
+
+操作审计最多准入 1024 个待完成任务，通过 event 专用调度器写入，并设置 3 秒响应式超时。饱和时立即丢弃，不排队等待；失败和丢弃分别累计在 `OperationLogService.getFailedCount()` 与 `getDroppedCount()`。超时取消订阅并释放名额；服务关闭时取消在途订阅并停止接收新任务，关闭后拒绝的任务计入丢弃数量。底层同步 JDBC 的执行时间仍需通过驱动、数据库与连接池超时控制。
+
+认证中心统一审计按每次订阅读取 Reactor Context 中的 traceId，最多保留 64 字符；没有上下文标识时使用 MDC 或生成标识。统一审计最多准入 256 个任务，高危告警最多准入 64 个任务，均设置 3 秒超时并在完成、取消或失败时释放名额。Redis 审计 Stream 使用 `MAXLEN 100000`，告警 Stream 使用 `MAXLEN 10000`；超出保留窗口的旧事件会被裁剪。失败与丢弃由 `UnifiedAuditService` 对应计数方法提供，当前没有新增监控端点。
+
+审计参数与结果使用安全摘要：全局最多 8192 字符，递归最多 6 层，每个容器最多 32 项；认证审计详情最多 2048 字符。敏感字段及自定义排除字段脱敏，无字段名的字符串省略，循环引用省略，非有限浮点数替换为 null；预算内无法生成合法 JSON 时返回 null。此策略会损失详情，需结合审计保留与可靠性要求评估部署容量。
+
+防重放运行日志不输出 nonce 或请求时间戳原值；拒绝事件按当前切面实例的累计次数，在第 1、2、4、8… 次输出 WARN，日志包含固定原因和累计次数。采样只使用一个原子计数器，不按外部字段维护键集合；每次拒绝仍记录安全指标。该策略不是按时间窗口限速，长期运行时日志会逐渐稀疏，应以安全指标观察持续拒绝。幂等缺键及重复拒绝使用独立原子计数器按相同累计次数采样，逐次安全指标不变，日志不输出路径或请求键；Redis 降级错误仅记录异常类型，不输出异常消息与堆栈，现有 fail-open 行为保持不变。Refresh Token 轮换成功和重放分支运行日志使用 DEBUG，不输出 jti 或 Family 标识；解析失败仅记录异常类型，安全审计仍保留原有事件记录。
+
+IP 限流过滤器的速率超限、已封禁请求及封禁触发分别使用固定原子计数器，按第 1、2、4、8… 次输出 WARN；日志只记录固定原因和累计次数，不输出请求路径或客户端 IP。429 响应与既有速率拒绝、封禁触发指标保留。权限切面不重复记录目标方法抛出的异常，Mono/Flux 保留原异常向上层传播；统一异常处理器的日志策略仍需独立审查。
+
+认证中心文件输出当前使用文本格式，主应用按 profile 配置输出格式；采集规则应与对应应用配置匹配，不能统一假定全部日志为 JSON。
 
 ## 📈 性能压测脚本
 

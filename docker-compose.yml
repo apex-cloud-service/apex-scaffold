@@ -4,8 +4,8 @@
 # 服务: apex-scaffold(应用) + mysql + redis；可选 rocketmq（--profile rocketmq）
 #
 # 用法:
-#   # 1) 本地/测试一键栈（默认读取 .env，缺省值即开箱即用）
-#   cp .env.example .env        # 可选，按需修改
+#   # 1) 本地/测试一键栈（默认读取 .env，需先配置全部安全密钥）
+#   cp .env.example .env        # 密钥格式见 docs/05-operations/configuration.md
 #   docker compose up -d --build
 #   docker compose ps           # 等待 mysql/redis healthy、app 就绪
 #
@@ -30,7 +30,26 @@
 #   详细文档:   docs/DEPLOYMENT.md
 # ============================================================
 
+x-security-environment: &security-environment
+  APEX_DATA_ENCRYPTION_KEY: ${APEX_DATA_ENCRYPTION_KEY:?APEX_DATA_ENCRYPTION_KEY is required}
+  SECURITY_ENCRYPTION_KEY: ${SECURITY_ENCRYPTION_KEY:?SECURITY_ENCRYPTION_KEY is required}
+  CONFIG_ENCRYPTION_KEY: ${CONFIG_ENCRYPTION_KEY:?CONFIG_ENCRYPTION_KEY is required}
+  APEX_CONFIG_ENCRYPTION_KEY: ${APEX_CONFIG_ENCRYPTION_KEY:?APEX_CONFIG_ENCRYPTION_KEY is required}
+  JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+
 services:
+  security-key-check:
+    image: python:3.13-alpine
+    environment: *security-environment
+    command: ["python3", "-B", "/tools/local_deployment.py", "validate"]
+    volumes:
+      - ./scripts/utils/local_deployment.py:/tools/local_deployment.py:ro
+    network_mode: none
+    read_only: true
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    user: "65534:65534"
+    restart: "no"
   # ---------------- 应用服务 ----------------
   apex-scaffold:
     build:
@@ -44,6 +63,7 @@ services:
       - "${APP_PORT:-8080}:8080"
       - "${MANAGEMENT_PORT:-8081}:8081"
     environment:
+      <<: *security-environment
       # 激活 profile：<环境>,<档位>，例如 prod,enterprise / dev,standard
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod,enterprise}
       # ---------- JVM 调优参数（默认与 Dockerfile ENV JAVA_OPTS 一致；.env 设置 JAVA_OPTS 可整体覆盖） ----------
@@ -65,7 +85,6 @@ services:
       # 与下方 redis 服务的 --requirepass 保持一致；生产务必修改
       REDIS_PASSWORD: ${REDIS_PASSWORD:-apex-redis-password}
       # ---------- JWT（⚠️ 生产必须通过 .env 注入强随机密钥，且 ≥32 字节，否则 prod 启动校验失败） ----------
-      JWT_SECRET: ${JWT_SECRET:-change-me-in-production-32chars-minimum}
       # ---------- Nacos（本地编排无 Nacos，默认关闭；接入时改 true 并注入地址） ----------
       NACOS_CONFIG_ENABLED: ${NACOS_CONFIG_ENABLED:-false}
       NACOS_DISCOVERY_ENABLED: ${NACOS_DISCOVERY_ENABLED:-false}
@@ -92,6 +111,16 @@ services:
       OUTBOX_RETENTION_DELIVERED_HOURS: ${OUTBOX_RETENTION_DELIVERED_HOURS:-168}
       OUTBOX_RETENTION_DEAD_DAYS: ${OUTBOX_RETENTION_DEAD_DAYS:-30}
       OUTBOX_RETENTION_BATCH_SIZE: ${OUTBOX_RETENTION_BATCH_SIZE:-5000}
+      # ---------- Keycloak（IAM/OIDC，对齐 OrbStack 旧实例） ----------
+      KEYCLOAK_ENABLED: ${KEYCLOAK_ENABLED:-false}
+      KEYCLOAK_SERVER_URL: ${KEYCLOAK_SERVER_URL:-http://localhost:8180}
+      KEYCLOAK_REALM: ${KEYCLOAK_REALM:-apex}
+      KEYCLOAK_CLIENT_ID: ${KEYCLOAK_CLIENT_ID:-apex-client}
+      KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET:-}
+      KEYCLOAK_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USERNAME:-admin}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin123}
+      KEYCLOAK_FRONTEND_CALLBACK_URL: ${KEYCLOAK_FRONTEND_CALLBACK_URL:-http://localhost:5173/auth/callback}
+      KEYCLOAK_USER_SYNC_ENABLED: ${KEYCLOAK_USER_SYNC_ENABLED:-true}
       # ---------- License（商业授权，可选；留空使用随包基础版） ----------
       APEX_LICENSE_FILE: ${APEX_LICENSE_FILE:-}
       # ---------- 文件上传（prod 强制校验：开启上传必须同时开启百度云图片审核） ----------
@@ -117,6 +146,8 @@ services:
       # ---------- 时区 ----------
       TZ: ${TZ:-Asia/Shanghai}
     depends_on:
+      security-key-check:
+        condition: service_completed_successfully
       mysql:
         condition: service_healthy
       redis:
@@ -197,7 +228,7 @@ services:
     volumes:
       - meilisearch-data:/meili_data
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:7700/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "-O", "/dev/null", "http://127.0.0.1:7700/health"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -268,24 +299,21 @@ services:
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin123}
       # 数据库配置（使用现有 MySQL 实例）
       KC_DB: mysql
-      KC_DB_URL: jdbc:mysql://mysql:3306/${KEYCLOAK_DB_NAME:-keycloak}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
+      KC_DB_URL: jdbc:mysql://mysql:3306/${KEYCLOAK_DB_NAME:-keycloak}?useUnicode=true&characterEncoding=UTF-8&connectionCollation=utf8mb4_unicode_ci&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
       KC_DB_USERNAME: ${KEYCLOAK_DB_USERNAME:-root}
       KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:-apex-root}
-      # 主机名与端口
-      KC_HOSTNAME: ${KEYCLOAK_HOSTNAME:-localhost}
+      # 主机名与端口（对齐 OrbStack 旧实例：hostname-strict=false + start-dev，容器内按请求 Host 解析 issuer）
+      KC_HOSTNAME_STRICT: "false"
+      KC_RUN_IN_CONTAINER: "true"
       KC_HTTP_PORT: 8080
       KC_HTTPS_PORT: 8443
-      # 生产环境需设置 KC_PROXY=edge 并在前置网关终止 TLS
-      KC_PROXY: edge
       # 日志
       KC_LOG_LEVEL: ${KEYCLOAK_LOG_LEVEL:-INFO}
       KC_HEALTH_ENABLED: "true"
       # 时区
       TZ: ${TZ:-Asia/Shanghai}
     command:
-      - start
-      - --optimized
-      - --hostname-strict=false
+      - start-dev
       - --http-enabled=true
     ports:
       - "${KEYCLOAK_PORT:-8180}:8080"
@@ -295,7 +323,7 @@ services:
       mysql:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/8080 && echo -e 'GET /health/ready HTTP/1.0\\r\\nHost: localhost\\r\\n\\r\\n' >&3 && cat <&3 | grep -q '200 OK'"]
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000 && echo -e 'GET /health/ready HTTP/1.0\\r\\nHost: localhost\\r\\n\\r\\n' >&3 && cat <&3 | grep -q '200 OK'"]
       interval: 30s
       timeout: 10s
       retries: 10
