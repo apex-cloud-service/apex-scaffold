@@ -35,6 +35,11 @@ public class ResourcePermissionService {
     private static final String PERMISSION_CACHE_PREFIX = "resource:permission:";
     private static final Duration CACHE_TTL = Duration.ofMinutes(10);
 
+    /**
+     * 构造资源权限服务。
+     *
+     * @param redisTemplate Redis 响应式模板，用于存储资源-用户授权关系
+     */
     public ResourcePermissionService(ReactiveStringRedisTemplate redisTemplate) {
         this.redisTemplate = redisTemplate;
         this.expressionParser = new SpelExpressionParser();
