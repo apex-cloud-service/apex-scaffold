@@ -170,6 +170,17 @@
     </dependencies>
     <build>
         <plugins>
+            <!-- PMD 排除 MapStruct 等注解处理器生成的源码（与 apex-infrastructure 模块配置一致：
+                 生成的 *AssemblerImpl 仅含 getter/setter 复制，注释/命名规则不适用于生成物） -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-pmd-plugin</artifactId>
+                <configuration>
+                    <excludeRoots>
+                        <excludeRoot>target/generated-sources/annotations</excludeRoot>
+                    </excludeRoots>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
