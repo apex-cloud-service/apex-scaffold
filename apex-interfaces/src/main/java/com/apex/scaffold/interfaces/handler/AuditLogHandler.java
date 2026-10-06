@@ -53,7 +53,7 @@ public class AuditLogHandler extends BaseHandler {
     /**
      * 创建审计日志处理器。
      *
-     * @param auditLogService 审计日志服务
+     * @param auditLogQueryService 审计日志查询服务
      * @param messageUtils 国际化消息工具
      * @param validator Jakarta Bean Validation 校验器
      */

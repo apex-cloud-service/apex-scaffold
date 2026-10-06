@@ -69,11 +69,11 @@ public class LicenseGenerator {
     public static LicenseGenerator generateNewKeys(String privateKeyFile, String publicKeyFile) throws Exception {
         KeyPair keyPair = RsaUtil.generateKeyPair();
 
-        // 保存私钥
+        // 保存私钥：导出为 Base64 后写入私钥文件
         String privateKeyBase64 = RsaUtil.privateKeyToBase64(keyPair.getPrivate());
         Files.write(Paths.get(privateKeyFile), privateKeyBase64.getBytes(StandardCharsets.UTF_8));
 
-        // 保存公钥
+        // 保存公钥：导出为 Base64 后写入公钥文件
         String publicKeyBase64 = RsaUtil.publicKeyToBase64(keyPair.getPublic());
         Files.write(Paths.get(publicKeyFile), publicKeyBase64.getBytes(StandardCharsets.UTF_8));
 
