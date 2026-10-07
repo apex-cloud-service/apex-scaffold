@@ -150,9 +150,11 @@ Reactor `Retry` 编程式完成，参数含义与声明式配置存在差异。�
 | ------------------------ | ---- | ----------------------------------------------------------------- |
 | `enabled`                | true | **总开关（本轮真实接线）**；关闭时跳过防护并 WARN 告警一次                                |
 | `ip-max-attempts`        | 20   | 单 IP 窗口内失败上限，超限返回 `LOGIN_LOCKED`(1008)                            |
-| `username-max-attempts`  | 5    | 单用户名失败上限（更严格，防定向爆破）                                               |
+| `username-max-attempts`  | 5    | 单账号失败上限（更严格，防定向爆破）；多端改造后 PASSWORD 登录同样按 username 维度计数防护 |
 | `captcha-after-failures` | 3    | **验证码升级阈值（本轮新增）**：连续失败 ≥3 次后登录必须携带验证码，否则 `CAPTCHA_REQUIRED`(4742) |
 | `window-size`            | 900  | 失败计数窗口（秒）                                                         |
+
+**账号维度取值**（`resolveUsername`，多端统一账户改造后）：`phone`（短信验证码类登录，防单手机号验证码穷举）→ `username`（PASSWORD 登录，防绕过 IP 维度的单账号撞库，并补齐登录日志账号字段）→ `code`（微信授权码类，一次性凭证仅兼容保留）。短信发送另有手机号指纹维度的独立限流（`SmsVerificationCoordinator`，`security:sms:send:*`）。
 
 **业务侧防护**：`AntiReplay`（防重放）、`@IdempotentApi`（防重复提交）、Sentinel IP 限流
 （登录接口）、短信发送限流（防轰炸）、图形验证码服务（`CaptchaService`）、安全响应头

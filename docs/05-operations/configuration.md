@@ -84,6 +84,50 @@ jwt:
 - 使用强随机字符串生成器: `openssl rand -base64 48`
 - 定期轮换密钥
 
+### 多端统一账户与微信渠道（多端对接改造新增）
+
+主应用一套后端同时服务 App / 微信小程序 / 微信公众号 H5 / PC 端，账户统一收敛到 `sys_user`，账户来源可区分（`register_channel` + `sys_user_social.channel` + 登录日志 `client_type`）。
+
+**登录方式矩阵**（统一入口 `POST /api/v1/auth/login`，按 `loginType` 分发）：
+
+| loginType | 端 | 说明 |
+| --- | --- | --- |
+| `WX_CODE` / `WX_PHONE` / `WX_SMS` / `CL_PHONE` / `CL_SMS` | App | 既有链路不变 |
+| `PASSWORD` | PC Web / PC 官网 | 账号密码登录 |
+| `WX_MINI` | 微信小程序 | `wx.login()` 的 code（必填）+ `phoneCode`（可选） |
+| `WX_OAUTH` | 微信公众号 H5 | 网页授权 code（必填）+ `state`（必传，由 authorize 端点签发） |
+
+**微信渠道配置**（三渠道互相独立，凭据缺失时对应登录方式返回 `wx.channel_not_configured`(1023)，不影响其他渠道）：
+
+```yaml
+wechat:
+  app:                      # 微信开放平台移动应用（App 端微信登录）
+    app-id: ${WECHAT_APP_ID:}
+    app-secret: ${WECHAT_APP_SECRET:}
+  miniapp:                  # 微信小程序（WX_MINI 登录渠道）
+    app-id: ${WECHAT_MINIAPP_APP_ID:}
+    app-secret: ${WECHAT_MINIAPP_APP_SECRET:}
+  mp:                       # 微信公众号（WX_OAUTH 网页授权登录渠道）
+    app-id: ${WECHAT_MP_APP_ID:}
+    app-secret: ${WECHAT_MP_APP_SECRET:}
+```
+
+**多端请求头**（CORS 已放行）：
+
+- `X-Client-Type`：终端标识（`PC_ADMIN`/`PC_WEB`/`WECHAT_MP`/`MINI_PROGRAM`/`APP_ANDROID`/`APP_IOS`/`H5`），写入 JWT claims 与登录日志 `sys_login_log.client_type`；请求体 `clientType` 字段兜底，缺省 `UNKNOWN` 完全兼容存量客户端
+- `X-Tenant-Id`：租户标识
+- `Idempotency-Key`：注册幂等键
+- `X-Device-Id`：设备指纹
+
+**多会话令牌**：每次登录生成独立会话（JWT claims `sid`），Redis 键 `token:(access|refresh):{subject}:{sid}` + 会话索引 `token:sessions:{subject}`；多端同时在线互不顶号。登出默认仅当前会话，`POST /api/v1/auth/logout?scope=all` 全端登出。存量无 `sid` 令牌走 legacy 单会话槽，行为不变，自然过期淘汰。无感续期沿用 `X-New-Access-Token` 响应头。
+
+**PC 管理端（认证中心登录）**：PC 管理后台走认证中心 `POST /auth/v1/login`（密码 + MFA/TOTP + 设备信任），签发令牌 claims 携带 `accountId`（主应用 `sys_user.id`）、`username`、`clientType=PC_ADMIN`；主应用 `JwtAuthenticationFilter` 识别该 claims 结构后按 `accountId` 装配统一账户并复用主应用 RBAC。要求：
+
+- 两应用使用相同 `JWT_SECRET` 环境变量
+- 认证中心库执行 V55 迁移（`auth_user.account_id`）
+- 存量账户映射按 `scripts/data/backfill_auth_user_account_id.sql` 人工回填（两库独立，username 精确匹配，幂等）；未映射账户登录后访问主应用业务接口将返回 401
+- `wechat.mp` 网页授权需在公众平台配置网页授权域名；小程序需配置服务器域名白名单
+
 ### 认证中心统一授权
 
 主应用使用 `apex.features.auth-center-permission` 切换权限、JWT 角色和数据范围的数据源，默认 `false`。开启后，缺失可信映射、中心故障、超时或身份不一致均拒绝授权，不回退本地角色或权限。

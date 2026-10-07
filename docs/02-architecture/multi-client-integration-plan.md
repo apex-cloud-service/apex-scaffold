@@ -1,6 +1,6 @@
 # 多端对接调整方案（PC / 小程序 / 公众号 / App · 统一账户体系）
 
-> 状态：批次 1 实施中（2026-10-06 评审通过）
+> 状态：批次 1–6 已全部实施完成（2026-10-06 评审通过；四端联调验收见 docs/05-operations/multi-client-acceptance-checklist.md）
 > 范围：本仓库后端改造 + 四端前端对接契约（管理后台为独立前端仓库）
 
 ## 一、结论
@@ -90,9 +90,14 @@ PC 管理端（独立前端仓库）
 
 ### 4.5 PC 管理端信任链（认证中心）
 
-- 认证中心登录响应与 JWT claims 增加 `account_id`、`clientType=PC_ADMIN`、`sid`（认证中心 SessionPO 已天然支持多会话）。
-- 主应用 `JwtAuthenticationFilter` 增加第二验签分支：issuer/kid 匹配认证中心 → RS256 验签（JWKS：配置注入公钥为主、HTTP 拉取 `/oauth2/jwks` 缓存为辅）→ `account_id` 装配 `AuthenticatedUser`。
-- 权限、数据权限、审计、租户上下文全部沿用主应用现有链路。
+> **实施偏差（2026-10-07 确认）**：勘察发现认证中心 `/auth/v1/login` 链路实际与主应用共用同一 `JWT_SECRET`（HS256），其 RS256/JWKS 属于独立的 OAuth2 端点体系，与 PC 管理端登录无关。因此本节从「双密钥体系 + JWKS 验签」调整为「**claims 结构区分**」方案，安全语义等价：
+>
+> - 认证中心令牌 claims：`tokenType=ACCESS` + `accountId`（主应用 `sys_user.id`）+ `username` + `tenantId` + `jti`；主应用令牌：`type=access` + `sid`。两类令牌以 claims 结构天然互斥，不会误识别。
+> - 主应用 `JwtAuthenticationFilter` 入口按 claims 结构路由：命中认证中心结构时按 `accountId` 加载统一账户，复用既有 RBAC 链路（统一授权服务 / 角色缓存 / 角色仓储），不滑动续期、不查主应用注销黑名单（认证中心令牌以库内 jti 撤销状态为准）。
+> - 部署要求两侧使用相同 `JWT_SECRET`；存量 `auth_user ↔ sys_user` 映射跨库人工回填（`scripts/data/backfill_auth_user_account_id.sql`）。
+
+- 认证中心登录响应与 JWT claims 增加 `accountId`、`username`、`clientType`（`PC_ADMIN`）；会话身份由既有 jti/tokenFamily 承担（令牌全量落库、按 jti 撤销，无需另加 sid）。
+- 权限、数据权限、审计、租户上下文全部沿用主应用现有链路（`materializeUserContext` 与 C 端共用）。
 - 认证中心保持既有能力：暴力破解防护、IP 访问控制、TOTP/MFA、设备信任、密钥轮换。
 
 ### 4.6 横切配套
@@ -106,14 +111,16 @@ PC 管理端（独立前端仓库）
 
 ## 五、分批实施计划（每批验证 + 提交后停下等确认）
 
-| 批次 | 内容 | 验证 |
-|------|------|------|
-| 1 | 账户来源与多端身份基础：V59/V55 迁移（双库）、`sys_user_social` 域模型/仓储、登录链路写绑定行 + register_channel、登录日志字段 | `mvnd -pl 受影响模块 -am test` + 迁移完整性校验 |
-| 2 | 客户端标识与多会话令牌：ClientType、sid、TokenServiceImpl 多槽、登出 scope、CORS 头、ResultCode/i18n | 受影响模块 test + spotless + pmd |
-| 3 | 微信多应用配置 + 小程序登录：wechat.miniapp、MiniProgramService、WX_MINI 策略、归一四步 | 单测（mock 微信 API）+ 集成 + ArchUnit |
-| 4 | 公众号网页授权登录：wechat.mp、authorize 端点、WX_OAUTH 策略、JS-SDK 签名（可选） | 同批次 3 |
-| 5 | PC 管理端接入认证中心：auth_user.account_id、claims 扩展、主应用 JWKS 验签、存量账户映射迁移 | 双侧 test + 联调说明 |
-| 6 | 配套、文档与验收：限流参数规则、docs 更新、四端联调清单、全量 `mvnd clean test` | 双库迁移实测 + 全量测试 |
+| 批次 | 内容 | 验证 | 状态 |
+|------|------|------|------|
+| 1 | 账户来源与多端身份基础：V59/V55 迁移（双库）、`sys_user_social` 域模型/仓储、登录链路写绑定行 + register_channel、登录日志字段 | 受影响模块 test + 迁移完整性校验 | ✅ 完成 |
+| 2 | 客户端标识与多会话令牌：ClientType、sid、TokenServiceImpl 多槽、登出 scope、CORS 头 | 受影响模块 test + spotless + pmd | ✅ 完成 |
+| 3 | 微信多应用配置 + 小程序登录：wechat.miniapp、WeChatMiniProgramService、WX_MINI 策略、归一四步 | 单测（mock 微信 API）+ 全量回归 | ✅ 完成 |
+| 4 | 公众号网页授权登录：wechat.mp、authorize 端点、WX_OAUTH 策略、OAuth state 防 CSRF（JS-SDK 签名按需后续） | 单测 + RouterOpenApi 覆盖测试 | ✅ 完成 |
+| 5 | PC 管理端接入认证中心：auth_user.account_id、统一账户 claims、主应用令牌分支（claims 区分，见 4.5 偏差说明）、存量映射回填脚本 | 双侧 test + spotless + pmd | ✅ 完成 |
+| 6 | 配套、文档与验收：PASSWORD 登录 username 维度防爆破、docs 更新、四端联调清单 | 全量测试 + 迁移完整性校验 | ✅ 完成 |
+
+**实施过程中顺带修复的存量质量债**：apex-infrastructure 51 处、apex-auth-center 18 处接口 Javadoc 缺失（PMD 存量违规清零）；apex-application 排除 MapStruct 生成代码的 PMD 检查（与 infrastructure 模块对齐）。
 
 每批按 Conventional Commits 分主题提交，不触碰无关 WIP。
 

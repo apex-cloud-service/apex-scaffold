@@ -19,7 +19,7 @@
 | `/api/mfa/**`、`/api/ip-access-control/**` | 认证中心 | MFA 管理和 IP 访问控制 | 需要 Bearer ACCESS 访问令牌 |
 | `/api/v1/mfa/**`、`/auth/v1/**` | 认证中心 | MFA、登录、令牌、角色、权限和会话 | 仅 `/auth/v1/login`、`/auth/v1/refresh` 公开，其余需要 Bearer ACCESS 访问令牌 |
 
-主应用认证约定以 `SecurityConfig` 和 `SystemConstants.PUBLIC_PATHS` 为准。本文业务路由中的公开端点为：`GET /`、`GET /api/v1/health`；`POST /api/v1/auth/login`、`register`、`wechat/bind-phone`、`refresh`、`sms/code`、`cl/sms/code`、`cl/validate-mobile`（后六项均拼接 `/api/v1/auth/` 前缀）；`GET /api/v1/auth/captcha`、`POST /api/v1/auth/captcha/verify`；`GET /api/v1/office/login`、`GET /api/v1/office/callback`；`POST /oauth2/token`、`POST /oauth2/revoke`、`POST /oauth2/introspect`；以及 Keycloak 的三个登录/回调端点。`/api/v1/info`、`/api/v1/office/status`、`/api/v1/auth/wx/phone`、`/api/v1/auth/logout` 均需要认证。白名单还包含框架或静态资源路径，不能据此推断存在业务 Router。
+主应用认证约定以 `SecurityConfig` 和 `SystemConstants.PUBLIC_PATHS` 为准。本文业务路由中的公开端点为：`GET /`、`GET /api/v1/health`；`POST /api/v1/auth/login`、`register`、`wechat/bind-phone`、`refresh`、`sms/code`、`cl/sms/code`、`cl/validate-mobile`（后六项均拼接 `/api/v1/auth/` 前缀）；`GET /api/v1/auth/wechat/mp/authorize`（公众号网页授权跳转入口）；`GET /api/v1/auth/captcha`、`POST /api/v1/auth/captcha/verify`；`GET /api/v1/office/login`、`GET /api/v1/office/callback`；`POST /oauth2/token`、`POST /oauth2/revoke`、`POST /oauth2/introspect`；以及 Keycloak 的三个登录/回调端点。`/api/v1/info`、`/api/v1/office/status`、`/api/v1/auth/wx/phone`、`/api/v1/auth/logout` 均需要认证。白名单还包含框架或静态资源路径，不能据此推断存在业务 Router。
 
 管理端在 `rbacEnabled=true` 时按配置角色授权，关闭时 Web 安全层仅要求认证。`securityProperties.adminPaths` 命中的其他管理路径在启用 RBAC 时要求配置的 `adminRole` 或 `SUPER_ADMIN`；`/api/v1/auth/roles/my` 和 `/api/v1/auth/permissions/my` 优先按普通已认证用户放行。Handler 的权限注解仍需独立核对。
 
@@ -300,6 +300,7 @@
 | POST | `/api/v1/auth/cl/sms/code` | `ApiRouter` | `AuthHandler.sendClSmsCode` | 发送创蓝短信验证码 |
 | POST | `/api/v1/auth/cl/validate-mobile` | `ApiRouter` | `AuthHandler.validateMobile` | 校验本机手机号 |
 | POST | `/api/v1/auth/wx/phone` | `ApiRouter` | `AuthHandler.bindPhone` | 绑定微信手机号 |
+| GET | `/api/v1/auth/wechat/mp/authorize` | `ApiRouter` | `AuthHandler.mpAuthorize` | 公众号网页授权跳转（签发一次性 OAuth state 并 302 跳转微信授权页；公开端点，`wechat.mp` 凭据缺失时返回 `wx.channel_not_configured`） |
 | GET | `/api/v1/auth/roles/my` | `ApiRouter` | `AuthorizationHandler.getMyRoles` | 查询本人角色 |
 | GET | `/api/v1/auth/permissions/my` | `ApiRouter` | `AuthorizationHandler.getMyPermissions` | 查询本人权限 |
 | GET | `/api/v1/auth/roles` | `ApiRouter` | `AuthorizationHandler.getAllRoles` | 查询全部角色 |
