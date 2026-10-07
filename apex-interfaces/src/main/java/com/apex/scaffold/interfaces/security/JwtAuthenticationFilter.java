@@ -94,6 +94,15 @@ public class JwtAuthenticationFilter implements WebFilter {
 
     private static final String ACCESS_TOKEN_TYPE = "access";
 
+    /**
+     * 认证中心访问令牌的 type 声明值（{@code tokenType=ACCESS}）。
+     *
+     * <p>认证中心 {@code /auth/v1/login} 签发的令牌使用 {@code tokenType} 声明
+     * （主应用令牌使用 {@code type}），并携带 {@code accountId} 统一账户声明；
+     * 两者以 claims 结构天然区分，签名验证共用 {@code JWT_SECRET}。
+     */
+    private static final String ACCESS_TOKEN_TYPE_CENTER = "ACCESS";
+
     /** Token 前缀标识 */
     private static final String TOKEN_PREFIX = "Bearer ";
 
@@ -255,6 +264,13 @@ public class JwtAuthenticationFilter implements WebFilter {
         try {
             Claims claims = JwtUtil.parseToken(token);
             String tokenType = claims.get("type", String.class);
+            // 认证中心令牌分支：claims 携带 tokenType=ACCESS 与 accountId 统一账户声明
+            // （主应用令牌使用 type=access，两者以 claims 结构天然区分，签名共用 JWT_SECRET）
+            String centerTokenType = claims.get("tokenType", String.class);
+            Long accountId = claims.get("accountId", Long.class);
+            if (tokenType == null && ACCESS_TOKEN_TYPE_CENTER.equals(centerTokenType) && accountId != null) {
+                return authenticateCenterToken(exchange, chain, claims, accountId);
+            }
             if (!ACCESS_TOKEN_TYPE.equals(tokenType)) {
                 log.warn("拒绝非AccessToken访问业务接口, tokenType: {}", tokenType);
                 return handleError(exchange, ResultCode.UNAUTHORIZED);
@@ -395,40 +411,132 @@ public class JwtAuthenticationFilter implements WebFilter {
                     }
                     return true;
                 })
-                .flatMap(user -> {
-                    // 将用户身份与部门写入 exchange attributes，供数据权限装配端使用
-                    // （DataScopeAspect / 自定义 DataScopeProvider），键名与 MdcDataScopeProvider 对齐。
-                    // 注意 attributes 为 ConcurrentHashMap（禁止 null 值），deptId 为空时跳过。
-                    exchange.getAttributes().put("apex.userId", user.getId());
-                    exchange.getAttributes()
-                            .put(
-                                    "apex.authenticatedUser",
-                                    new AuthenticatedUser(
-                                            user.getId(), user.getOpenId(), user.getTenantId(), user.getDeptId()));
-                    if (user.getTenantId() != null && !user.getTenantId().isBlank()) {
-                        exchange.getAttributes().put("tenantId", user.getTenantId());
-                    }
-                    if (user.getDeptId() != null) {
-                        exchange.getAttributes().put("apex.deptId", user.getDeptId());
-                    }
-                    if (unifiedAuthorizationService != null && unifiedAuthorizationService.enabled()) {
-                        if (user.getTenantId() == null || user.getTenantId().isBlank()) {
-                            return Mono.error(new IllegalStateException("Trusted tenant required"));
-                        }
-                        return unifiedAuthorizationService
-                                .roles(user.getId())
-                                .map(this::buildAuthoritiesFromRoles)
-                                .map(authorities -> Tuples.of(user, authorities))
-                                .contextWrite(
-                                        com.apex.scaffold.common.context.TenantContext.withTenant(user.getTenantId()));
-                    }
-                    List<SimpleGrantedAuthority> cached =
-                            forceFreshRoles ? null : userRolesCache.getIfPresent(user.getId());
-                    if (cached != null) {
-                        return Mono.just(Tuples.of(user, cached));
-                    }
-                    return fetchAndCacheUserRoles(user.getId()).map(authorities -> Tuples.of(user, authorities));
-                });
+                .flatMap(user -> materializeUserContext(exchange, user, forceFreshRoles));
+    }
+
+    /**
+     * 认证中心令牌认证分支（PC 管理端统一账户）。
+     *
+     * <p>claims 携带 {@code tokenType=ACCESS} 与 {@code accountId}（主应用
+     * {@code sys_user.id}）：按 accountId 加载统一账户，校验启用状态与租户
+     * 一致性后，复用主应用既有 RBAC 链路（统一授权服务 / 角色仓储）装配权限，
+     * 与 C 端令牌共用同一身份模型与数据权限机制。
+     *
+     * <p>与 C 端令牌的差异：不做滑动续期（认证中心令牌由
+     * {@code /auth/v1/refresh} 自行续期，主应用令牌存储不适用）；不做
+     * {@code isSubjectRevoked} 注销身份校验（认证中心令牌以认证中心库的
+     * jti 撤销状态为准；入口处的令牌串黑名单查询对认证中心令牌恒为未命中，
+     * 无副作用）。
+     *
+     * @param exchange  当前请求交换上下文
+     * @param chain     过滤链
+     * @param claims    已解析的认证中心令牌 claims
+     * @param accountId 统一账户ID（claims.accountId）
+     * @return 认证成功返回过滤链继续处理，失败返回错误响应
+     */
+    private Mono<Void> authenticateCenterToken(
+            ServerWebExchange exchange, WebFilterChain chain, Claims claims, Long accountId) {
+        String tokenTenant = claims.get("tenantId", String.class);
+        String username = claims.get("username", String.class);
+        return loadCenterAccountAuthorities(exchange, accountId, tokenTenant, username)
+                .map(java.util.Optional::of)
+                .defaultIfEmpty(java.util.Optional.empty())
+                .onErrorMap(e -> new AuthenticationInfrastructureException(e))
+                .flatMap(value -> value.map(
+                                tuple -> setAuthenticationContext(exchange, chain, tuple.getT1(), tuple.getT2()))
+                        .orElseGet(() -> handleError(exchange, ResultCode.UNAUTHORIZED)))
+                .onErrorResume(
+                        AuthenticationInfrastructureException.class,
+                        error -> ResponseUtil.error(
+                                exchange,
+                                org.springframework.http.HttpStatus.SERVICE_UNAVAILABLE,
+                                ResultCode.SYSTEM_BUSY.getCode(),
+                                ResultCode.SYSTEM_BUSY.getMsg()));
+    }
+
+    /**
+     * 加载认证中心令牌对应的统一账户并装配权限。
+     *
+     * <p>校验启用状态与租户一致性，任一校验不通过时返回空 Publisher，
+     * 由调用方统一转换为 401（避免向下游泄露具体拒绝原因）。
+     *
+     * @param exchange   当前请求交换上下文
+     * @param accountId  统一账户ID（claims.accountId）
+     * @param tokenTenant 令牌 claims 中的租户ID
+     * @param username   令牌 claims 中的用户名（仅用于日志）
+     * @return 用户与权限列表；校验不通过或账户不存在时为空
+     */
+    private Mono<Tuple2<com.apex.scaffold.domain.model.entity.UserEntity, List<SimpleGrantedAuthority>>>
+            loadCenterAccountAuthorities(
+                    ServerWebExchange exchange, Long accountId, String tokenTenant, String username) {
+        return userRepository.findById(accountId).flatMap(user -> {
+            if (!user.isEnabled()) {
+                log.warn("拒绝已禁用用户访问（认证中心令牌）, accountId: {}, username: {}", accountId, username);
+                return Mono.empty();
+            }
+            if (tokenTenant != null
+                    && !tokenTenant.isBlank()
+                    && user.getTenantId() != null
+                    && !user.getTenantId().isBlank()
+                    && !tokenTenant.equals(user.getTenantId())) {
+                log.warn(
+                        "认证中心令牌租户不匹配, accountId: {}, tokenTenant: {}, userTenant: {}",
+                        accountId,
+                        tokenTenant,
+                        user.getTenantId());
+                return Mono.empty();
+            }
+            // 供下游 LoggingFilter 写入 MDC（与 C 端 userId 属性对齐）
+            exchange.getAttributes().put("userId", String.valueOf(accountId));
+            return materializeUserContext(exchange, user, false);
+        });
+    }
+
+    /**
+     * 装配已加载用户的身份属性与权限列表（C 端与认证中心令牌共用）。
+     *
+     * <p>将用户身份与部门写入 exchange attributes（数据权限装配端使用），
+     * 并按统一授权服务开关 / 本地缓存 / 角色仓储的顺序装配权限。
+     *
+     * @param exchange        当前请求交换上下文
+     * @param user            已加载的主应用用户实体（统一账户）
+     * @param forceFreshRoles 是否跳过本地缓存强制刷新角色
+     * @return 用户与权限列表的 Mono 包装
+     */
+    private Mono<Tuple2<com.apex.scaffold.domain.model.entity.UserEntity, List<SimpleGrantedAuthority>>>
+            materializeUserContext(
+                    ServerWebExchange exchange,
+                    com.apex.scaffold.domain.model.entity.UserEntity user,
+                    boolean forceFreshRoles) {
+        // 将用户身份与部门写入 exchange attributes，供数据权限装配端使用
+        // （DataScopeAspect / 自定义 DataScopeProvider），键名与 MdcDataScopeProvider 对齐。
+        // 注意 attributes 为 ConcurrentHashMap（禁止 null 值），deptId 为空时跳过。
+        exchange.getAttributes().put("apex.userId", user.getId());
+        exchange.getAttributes()
+                .put(
+                        "apex.authenticatedUser",
+                        new AuthenticatedUser(user.getId(), user.getOpenId(), user.getTenantId(), user.getDeptId()));
+        if (user.getTenantId() != null && !user.getTenantId().isBlank()) {
+            exchange.getAttributes().put("tenantId", user.getTenantId());
+        }
+        if (user.getDeptId() != null) {
+            exchange.getAttributes().put("apex.deptId", user.getDeptId());
+        }
+        if (unifiedAuthorizationService != null && unifiedAuthorizationService.enabled()) {
+            if (user.getTenantId() == null || user.getTenantId().isBlank()) {
+                return Mono.error(new IllegalStateException("Trusted tenant required"));
+            }
+            return unifiedAuthorizationService
+                    .roles(user.getId())
+                    .map(this::buildAuthoritiesFromRoles)
+                    .map(authorities -> Tuples.of(user, authorities))
+                    .contextWrite(com.apex.scaffold.common.context.TenantContext.withTenant(user.getTenantId()));
+        }
+        List<SimpleGrantedAuthority> cached = forceFreshRoles ? null : userRolesCache.getIfPresent(user.getId());
+        if (cached != null) {
+            return Mono.just(Tuples.of(user, cached));
+        }
+        return fetchAndCacheUserRoles(user.getId()).map(authorities -> Tuples.of(user, authorities));
     }
 
     /**

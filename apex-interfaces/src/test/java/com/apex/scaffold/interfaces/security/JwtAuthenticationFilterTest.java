@@ -22,6 +22,7 @@ import java.util.Locale;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -581,6 +582,151 @@ class JwtAuthenticationFilterTest {
         StepVerifier.create(filter.addTokenToBlacklist(VALID_TOKEN, expireTime)).verifyComplete();
 
         verify(tokenBlacklistService).add(VALID_TOKEN, expireTime);
+    }
+
+    @Nested
+    @DisplayName("认证中心令牌分支（PC 管理端统一账户）")
+    class CenterTokenTests {
+
+        /** 构造认证中心访问令牌 claims（tokenType=ACCESS + accountId）。 */
+        private Claims centerClaims(Long accountId, String tenantId) {
+            Claims claims = org.mockito.Mockito.mock(Claims.class);
+            when(claims.get("tokenType", String.class)).thenReturn("ACCESS");
+            when(claims.get("accountId", Long.class)).thenReturn(accountId);
+            when(claims.get("tenantId", String.class)).thenReturn(tenantId);
+            when(claims.get("username", String.class)).thenReturn("admin");
+            return claims;
+        }
+
+        /** 构造启用状态的统一账户实体。 */
+        private com.apex.scaffold.domain.model.entity.UserEntity account(Long id, String tenantId) {
+            com.apex.scaffold.domain.model.entity.UserEntity user =
+                    com.apex.scaffold.domain.model.entity.UserEntity.create(TEST_OPEN_ID, "union-1");
+            user.setId(id);
+            user.setTenantId(tenantId);
+            return user;
+        }
+
+        @Test
+        @DisplayName("accountId 命中统一账户并复用主应用 RBAC 装配权限")
+        void filter_withCenterToken_shouldAuthenticateViaAccountId() {
+            Claims centerClaims = centerClaims(500L, "default");
+            com.apex.scaffold.domain.model.entity.UserEntity account = account(500L, "default");
+            RoleEntity adminRole = RoleEntity.create("管理员", "ADMIN", "系统管理员");
+
+            when(tokenBlacklistService.isBlacklisted(VALID_TOKEN)).thenReturn(Mono.just(false));
+            jwtUtilMockedStatic.when(() -> JwtUtil.parseToken(VALID_TOKEN)).thenReturn(centerClaims);
+            when(userRepository.findById(500L)).thenReturn(Mono.just(account));
+            when(roleRepository.findByUserId(500L)).thenReturn(Mono.just(java.util.List.of(adminRole)));
+            when(chain.filter(any(ServerWebExchange.class)))
+                    .thenAnswer(invocation ->
+                            org.springframework.security.core.context.ReactiveSecurityContextHolder.getContext()
+                                    .switchIfEmpty(Mono.error(new AssertionError("Missing authentication")))
+                                    .doOnNext(context -> assertThat(
+                                                    context.getAuthentication().getAuthorities())
+                                            .extracting(
+                                                    org.springframework.security.core.GrantedAuthority::getAuthority)
+                                            .containsExactly("ROLE_ADMIN"))
+                                    .then(Mono.deferContextual(ctx -> {
+                                        assertThat(ctx.<String>get(
+                                                        com.apex.scaffold.common.context.TenantContext
+                                                                .REACTOR_CONTEXT_KEY))
+                                                .isEqualTo("default");
+                                        return Mono.empty();
+                                    })));
+
+            ServerWebExchange exchange = MockServerWebExchange.from(MockServerHttpRequest.get("/api/v1/user/profile")
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + VALID_TOKEN)
+                    .build());
+
+            StepVerifier.create(filter.filter(exchange, chain)).verifyComplete();
+
+            // MDC 用户标识与 C 端 userId 属性对齐（字符串形式）
+            assertThat(exchange.getAttributes().get("userId")).isEqualTo("500");
+            assertThat(exchange.getAttributes().get("tenantId")).isEqualTo("default");
+            verify(userRepository).findById(500L);
+            verify(roleRepository).findByUserId(500L);
+        }
+
+        @Test
+        @DisplayName("账户被禁用时返回401且不进入过滤链")
+        void filter_withCenterTokenDisabledAccount_shouldReturnUnauthorized() {
+            Claims centerClaims = centerClaims(500L, "default");
+            com.apex.scaffold.domain.model.entity.UserEntity account = account(500L, "default");
+            account.setStatus(0);
+
+            when(tokenBlacklistService.isBlacklisted(VALID_TOKEN)).thenReturn(Mono.just(false));
+            jwtUtilMockedStatic.when(() -> JwtUtil.parseToken(VALID_TOKEN)).thenReturn(centerClaims);
+            when(userRepository.findById(500L)).thenReturn(Mono.just(account));
+
+            ServerWebExchange exchange = MockServerWebExchange.from(MockServerHttpRequest.get("/api/v1/user/profile")
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + VALID_TOKEN)
+                    .build());
+
+            StepVerifier.create(filter.filter(exchange, chain)).verifyComplete();
+
+            assertThat(exchange.getResponse().getStatusCode()).isEqualTo(HttpStatusCode.valueOf(401));
+            verifyNoInteractions(chain);
+        }
+
+        @Test
+        @DisplayName("令牌租户与统一账户租户不一致时返回401")
+        void filter_withCenterTokenTenantMismatch_shouldReturnUnauthorized() {
+            Claims centerClaims = centerClaims(500L, "foreign-tenant");
+            com.apex.scaffold.domain.model.entity.UserEntity account = account(500L, "default");
+
+            when(tokenBlacklistService.isBlacklisted(VALID_TOKEN)).thenReturn(Mono.just(false));
+            jwtUtilMockedStatic.when(() -> JwtUtil.parseToken(VALID_TOKEN)).thenReturn(centerClaims);
+            when(userRepository.findById(500L)).thenReturn(Mono.just(account));
+
+            ServerWebExchange exchange = MockServerWebExchange.from(MockServerHttpRequest.get("/api/v1/user/profile")
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + VALID_TOKEN)
+                    .build());
+
+            StepVerifier.create(filter.filter(exchange, chain)).verifyComplete();
+
+            assertThat(exchange.getResponse().getStatusCode()).isEqualTo(HttpStatusCode.valueOf(401));
+            verifyNoInteractions(chain);
+        }
+
+        @Test
+        @DisplayName("accountId 对应的统一账户不存在时返回401")
+        void filter_withCenterTokenMissingAccount_shouldReturnUnauthorized() {
+            Claims centerClaims = centerClaims(999L, "default");
+
+            when(tokenBlacklistService.isBlacklisted(VALID_TOKEN)).thenReturn(Mono.just(false));
+            jwtUtilMockedStatic.when(() -> JwtUtil.parseToken(VALID_TOKEN)).thenReturn(centerClaims);
+            when(userRepository.findById(999L)).thenReturn(Mono.empty());
+
+            ServerWebExchange exchange = MockServerWebExchange.from(MockServerHttpRequest.get("/api/v1/user/profile")
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + VALID_TOKEN)
+                    .build());
+
+            StepVerifier.create(filter.filter(exchange, chain)).verifyComplete();
+
+            assertThat(exchange.getResponse().getStatusCode()).isEqualTo(HttpStatusCode.valueOf(401));
+            verifyNoInteractions(chain);
+        }
+
+        @Test
+        @DisplayName("无 accountId 的 ACCESS 声明不进入认证中心分支（结构区分兜底）")
+        void filter_withCenterTokenWithoutAccountId_shouldFallBackToUnauthorized() {
+            Claims claimsWithoutAccount = org.mockito.Mockito.mock(Claims.class);
+            when(claimsWithoutAccount.get("tokenType", String.class)).thenReturn("ACCESS");
+            // accountId 未携带（如存量 auth_user 未建立映射时签发的旧令牌）
+
+            when(tokenBlacklistService.isBlacklisted(VALID_TOKEN)).thenReturn(Mono.just(false));
+            jwtUtilMockedStatic.when(() -> JwtUtil.parseToken(VALID_TOKEN)).thenReturn(claimsWithoutAccount);
+
+            ServerWebExchange exchange = MockServerWebExchange.from(MockServerHttpRequest.get("/api/v1/user/profile")
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + VALID_TOKEN)
+                    .build());
+
+            StepVerifier.create(filter.filter(exchange, chain)).verifyComplete();
+
+            assertThat(exchange.getResponse().getStatusCode()).isEqualTo(HttpStatusCode.valueOf(401));
+            verifyNoInteractions(userRepository, chain);
+        }
     }
 
     private Claims mockClaims() {
