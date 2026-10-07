@@ -540,17 +540,27 @@ public class AuthService {
     }
 
     /**
-     * 从登录请求中解析用户名标识
+     * 解析登录尝试的账号维度标识（暴力破解防护与登录日志共用）。
      *
-     * <p>优先使用手机号作为用户名标识，适用于短信验证码登录场景。
-     * 若手机号为空，则尝试使用微信授权码作为标识。
+     * <p>多端登录方式的取值优先级：
+     * <ol>
+     *   <li>{@code phone} — 短信验证码类登录（WX_SMS/CL_SMS）：按手机号维度防护，
+     *       防止攻击者对单手机号暴力穷举验证码</li>
+     *   <li>{@code username} — 账号密码登录（PASSWORD）：按账号维度防护，
+     *       防止绕过 IP 维度对单一账号的撞库尝试；同时补齐登录日志的账号字段</li>
+     *   <li>{@code code} — 微信授权码类登录（WX_CODE/WX_MINI/WX_OAUTH）：
+     *       授权码一次性有效，按码计数无累积意义，仅为兼容保留</li>
+     * </ol>
      *
      * @param request 登录请求
-     * @return 用户名标识，可能为 null
+     * @return 账号维度标识；无法识别时返回 {@code null}（仅保留 IP 维度防护）
      */
     private String resolveUsername(LoginRequest request) {
         if (request.getPhone() != null && !request.getPhone().isBlank()) {
             return request.getPhone();
+        }
+        if (request.getUsername() != null && !request.getUsername().isBlank()) {
+            return request.getUsername();
         }
         if (request.getCode() != null && !request.getCode().isBlank()) {
             return request.getCode();

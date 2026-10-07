@@ -223,6 +223,32 @@ class AuthServiceTest {
     }
 
     @Test
+    @DisplayName("login - PASSWORD 登录按 username 维度防护：失败次数达阈值返回 LOGIN_LOCKED")
+    void login_PasswordUsernameBruteForceLocked() {
+        String clientIp = "127.0.0.1";
+        @SuppressWarnings("unchecked")
+        ReactiveValueOperations<String, String> valueOperations = mock(ReactiveValueOperations.class);
+        when(loginProtectionProperties.getEnabled()).thenReturn(true);
+        // 验证码升级阈值设为 0：跳过升级逻辑，聚焦 username 维度防爆破断言
+        when(loginProtectionProperties.getCaptchaAfterFailures()).thenReturn(0);
+        when(loginProtectionProperties.getUsernameMaxAttempts()).thenReturn(5);
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.get("login:fail:ip:" + clientIp)).thenReturn(Mono.empty());
+        when(valueOperations.get("login:fail:username:admin")).thenReturn(Mono.just("5"));
+
+        LoginRequest passwordRequest = new LoginRequest();
+        passwordRequest.setLoginType("PASSWORD");
+        passwordRequest.setUsername("admin");
+        passwordRequest.setPassword("secret123");
+
+        authService.login(passwordRequest, clientIp).as(StepVerifier::create).verifyErrorSatisfies(error -> {
+            assertThat(error).isInstanceOf(BusinessException.class);
+            assertThat(((BusinessException) error).getCode()).isEqualTo(ResultCode.LOGIN_LOCKED.getCode());
+        });
+        verify(loginStrategyProvider, never()).getStrategy(anyString());
+    }
+
+    @Test
     @DisplayName("login - IP失败次数达到阈值且未携带验证码时应返回CAPTCHA_REQUIRED")
     void login_CaptchaEscalationRequiresCaptcha() {
         String clientIp = "127.0.0.1";
