@@ -63,6 +63,7 @@ public interface DeviceTrustService {
      *
      * @param deviceId 设备ID
      * @param operator 操作人
+     * @return 操作完成信号
      */
     Mono<Void> upgradeTrustLevel(Long deviceId, String operator);
 
@@ -71,6 +72,7 @@ public interface DeviceTrustService {
      *
      * @param deviceId 设备ID
      * @param operator 操作人
+     * @return 操作完成信号
      */
     Mono<Void> downgradeTrustLevel(Long deviceId, String operator);
 
@@ -79,6 +81,7 @@ public interface DeviceTrustService {
      *
      * @param deviceId 设备ID
      * @param operator 操作人
+     * @return 操作完成信号
      */
     Mono<Void> revokeDeviceTrust(Long deviceId, String operator);
 
@@ -143,6 +146,7 @@ public interface DeviceTrustService {
      * @param deviceId 设备ID
      * @param days 延长天数
      * @param operator 操作人
+     * @return 操作完成信号
      */
     Mono<Void> extendDeviceTrust(Long deviceId, int days, String operator);
 }
