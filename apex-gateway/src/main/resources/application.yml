@@ -1,0 +1,139 @@
+# ============================================================
+# Apex Scaffold - API 网关主配置
+# ============================================================
+# ┌───────────────────────────────────────────────────────────┐
+# │ 注释符号规范（全仓配置文件统一约定）                         │
+# ├───────────────────────────────────────────────────────────┤
+# │ ✅ 已启用能力          ❌ 已禁用能力                       │
+# │ ⚠️ 安全提示/注意点     💡 设计说明/优化理由                │
+# │ 🔒 敏感配置（环境变量注入，禁止硬编码）                     │
+# └───────────────────────────────────────────────────────────┘
+#
+# 【Phase 1 透明代理说明】
+#   本期网关只做"透明代理"：全部 /api/v1/** 与 /admin-api/v1/** 流量转发到
+#   现有单体 apex-scaffold（端口 8080），用于验证网关零损耗与契约不变。
+#   后续 Phase 按域把路由指向已迁移的微服务（见 docs/microservice-migration-plan.md §15）。
+#
+# @author Apex Team
+# ============================================================
+
+server:
+  port: ${GATEWAY_PORT:8000}
+  shutdown: graceful
+  netty:
+    connection-timeout: 5s
+    idle-timeout: 30s
+
+spring:
+  application:
+    name: apex-gateway
+  main:
+    web-application-type: reactive
+
+  # ==================== Redis（限流令牌桶依赖） ====================
+  data:
+    redis:
+      host: ${REDIS_HOST:127.0.0.1}
+      port: ${REDIS_PORT:6379}
+      # 🔒 生产环境必须通过环境变量注入
+      password: ${REDIS_PASSWORD:}
+      database: ${REDIS_DATABASE:0}
+      timeout: 3s
+      lettuce:
+        pool:
+          max-active: 16
+          max-idle: 8
+          min-idle: 2
+          max-wait: 2s
+
+  # ==================== 熔断降级（Resilience4j） ====================
+  cloud:
+    circuitbreaker:
+      resilience4j:
+        enabled: true
+
+    gateway:
+      # 关闭默认的 X-Forwarded-* 重写，交给入口负载均衡处理
+      x-forwarded:
+        enabled: true
+        for-enabled: true
+        host-enabled: true
+        port-enabled: true
+        proto-enabled: true
+
+      httpclient:
+        connect-timeout: 3000
+        response-timeout: 30s
+        pool:
+          type: elastic
+          max-idle-time: 30s
+
+      # ==================== 路由规则 ====================
+      # 💡 未显式切流的路径统一兜底到单体，保证 Phase 1 行为不变
+      routes:
+        # ---- 认证域（Phase 2 切换为 apex-auth-service） ----
+        - id: auth-domain
+          uri: ${ROUTE_AUTH_URI:http://127.0.0.1:8080}
+          predicates:
+            - Path=/api/v1/auth/**,/oauth2/**,/.well-known/**,/admin-api/v1/auth/**,/admin-api/v1/sso/**
+
+        # ---- 工作流域（Phase 3 切换为 apex-workflow-service） ----
+        - id: workflow-domain
+          uri: ${ROUTE_WORKFLOW_URI:http://127.0.0.1:8080}
+          predicates:
+            - Path=/api/v1/workflows/**,/api/workflow/**,/admin-api/v1/workflows/**
+
+        # ---- 办公域（Phase 5 切换为 apex-office-service） ----
+        - id: office-domain
+          uri: ${ROUTE_OFFICE_URI:http://127.0.0.1:8080}
+          predicates:
+            - Path=/api/v1/office/**,/api/v1/messages/**,/admin-api/v1/office/**,/admin-api/v1/org/**
+
+        # ---- 文件域（Phase 4 切换为 apex-file-service） ----
+        - id: file-domain
+          uri: ${ROUTE_FILE_URI:http://127.0.0.1:8080}
+          predicates:
+            - Path=/api/v1/file/**,/api/v1/files/**,/api/v1/documents/**,/admin-api/v1/documents/**
+
+        # ---- 兜底：系统管理与其余全部接口（Phase 6 收敛为 apex-system-service） ----
+        - id: system-domain
+          uri: ${ROUTE_SYSTEM_URI:http://127.0.0.1:8080}
+          predicates:
+            - Path=/api/v1/**,/admin-api/v1/**,/health,/actuator/**
+
+      default-filters:
+        # 避免 CORS 头重复（网关与下游同时返回时）
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_FIRST
+
+# ==================== 健康检查与指标 ====================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,gateway
+  endpoint:
+    health:
+      show-details: when-authorized
+      probes:
+        enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+  tracing:
+    sampling:
+      probability: ${TRACING_SAMPLING_PROBABILITY:0.1}
+
+# ==================== 链路追踪（Brave -> Zipkin） ====================
+management.zipkin:
+  tracing:
+    endpoint: ${ZIPKIN_ENDPOINT:http://127.0.0.1:9411/api/v2/spans}
+
+# ==================== 日志 ====================
+logging:
+  level:
+    root: INFO
+    com.apex.scaffold.gateway: INFO
+    org.springframework.cloud.gateway: INFO
+  pattern:
+    # 控制台输出包含 traceId，便于本地排查
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{traceId:-}] %logger{36} - %msg%n"

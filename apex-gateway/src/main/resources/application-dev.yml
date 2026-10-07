@@ -1,0 +1,30 @@
+# ============================================================
+# Apex Scaffold - API 网关 开发环境配置
+# ============================================================
+# 说明：本地开发默认关闭 Nacos（网关以静态 URI 转发到本机单体 8080），
+#       避免未启动 Nacos 时应用无法启动。
+#
+# @author Apex Team
+# ============================================================
+
+spring:
+  cloud:
+    nacos:
+      config:
+        # ❌ 本地开发默认关闭 Nacos 配置中心
+        enabled: ${NACOS_CONFIG_ENABLED:false}
+      discovery:
+        # ❌ 本地开发默认关闭服务注册
+        enabled: ${NACOS_DISCOVERY_ENABLED:false}
+        register-enabled: ${NACOS_REGISTER_ENABLED:false}
+
+# 本地路由全部指向本机单体应用
+# 说明：application.yml 中的 ${ROUTE_*_URI} 已默认 http://127.0.0.1:8080，
+#       此处无需重复声明，保持单一事实来源。
+
+# 本地限流放宽，避免自测被限流打断
+logging:
+  level:
+    com.apex.scaffold.gateway: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    reactor.netty.http.client: INFO
