@@ -279,6 +279,96 @@ class TokenServiceImplTest {
     }
 
     @Nested
+    @DisplayName("issueToken() 统一账户模型测试")
+    class IssueTokenUnifiedAccountTest {
+
+        @Test
+        @DisplayName("统一账户映射 - claims 携带 accountId/username/clientType")
+        void testIssueTokenWithAccountMapping() {
+            // Given：用户已与主应用统一账户建立映射（accountId=500）
+            UserEntity mappedUser = UserEntity.builder()
+                    .id(100L)
+                    .username("testuser")
+                    .tenantId("test-tenant")
+                    .passwordHash("hashed-password")
+                    .email("test@example.com")
+                    .phone("13800138000")
+                    .status(1)
+                    .failedLoginAttempts(0)
+                    .accountId(500L)
+                    .build();
+            when(userRepository.findById(100L)).thenReturn(Mono.just(mappedUser));
+            when(tokenRepository.save(any(TokenEntity.class)))
+                    .thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
+            when(encryptionService.encrypt(anyString()))
+                    .thenReturn(new TokenEncryptionService.EncryptedToken("encrypted-data", "test-iv"));
+            when(encryptionService.hashToken(anyString())).thenReturn("token-hash");
+            when(auditService.logTokenIssued(anyLong(), anyString(), anyString(), anyString(), anyString()))
+                    .thenReturn(Mono.empty());
+
+            try (MockedStatic<JwtUtil> jwtUtil = mockStatic(JwtUtil.class)) {
+                @SuppressWarnings("unchecked")
+                ArgumentCaptor<Map<String, Object>> claimsCaptor = ArgumentCaptor.forClass(Map.class);
+                jwtUtil.when(() -> JwtUtil.generateToken(anyString(), claimsCaptor.capture(), anyLong()))
+                        .thenReturn("mocked-jwt-token");
+
+                // When：携带客户端类型 PC_ADMIN 签发（PC 管理端统一账户链路）
+                Mono<TokenPair> result =
+                        tokenService.issueToken(100L, "test-tenant", "device-001", "192.168.1.100", "PC_ADMIN");
+
+                // Then
+                StepVerifier.create(result)
+                        .assertNext(pair -> assertThat(pair.getAccessToken()).isEqualTo("mocked-jwt-token"))
+                        .verifyComplete();
+
+                // 首次调用为 ACCESS 令牌 claims
+                Map<String, Object> accessClaims = claimsCaptor.getAllValues().get(0);
+                assertThat(accessClaims).containsEntry("tokenType", "ACCESS");
+                assertThat(accessClaims).containsEntry("accountId", 500L);
+                assertThat(accessClaims).containsEntry("username", "testuser");
+                assertThat(accessClaims).containsEntry("clientType", "PC_ADMIN");
+                assertThat(accessClaims).containsEntry("tenantId", "test-tenant");
+                // 刷新令牌 claims 同样携带统一账户字段
+                Map<String, Object> refreshClaims = claimsCaptor.getAllValues().get(1);
+                assertThat(refreshClaims).containsEntry("accountId", 500L);
+            }
+        }
+
+        @Test
+        @DisplayName("向后兼容 - 未映射用户与未上报 clientType 时 claims 不含对应键")
+        void testIssueTokenLegacyClaimsCompatible() {
+            // Given：mockUser 未设置 accountId，4 参签名（无 clientType）
+            when(userRepository.findById(100L)).thenReturn(Mono.just(mockUser));
+            when(tokenRepository.save(any(TokenEntity.class)))
+                    .thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
+            when(encryptionService.encrypt(anyString()))
+                    .thenReturn(new TokenEncryptionService.EncryptedToken("encrypted-data", "test-iv"));
+            when(encryptionService.hashToken(anyString())).thenReturn("token-hash");
+            when(auditService.logTokenIssued(anyLong(), anyString(), anyString(), anyString(), anyString()))
+                    .thenReturn(Mono.empty());
+
+            try (MockedStatic<JwtUtil> jwtUtil = mockStatic(JwtUtil.class)) {
+                @SuppressWarnings("unchecked")
+                ArgumentCaptor<Map<String, Object>> claimsCaptor = ArgumentCaptor.forClass(Map.class);
+                jwtUtil.when(() -> JwtUtil.generateToken(anyString(), claimsCaptor.capture(), anyLong()))
+                        .thenReturn("mocked-jwt-token");
+
+                Mono<TokenPair> result = tokenService.issueToken(100L, "test-tenant", "device-001", "192.168.1.100");
+
+                StepVerifier.create(result)
+                        .assertNext(pair -> assertThat(pair.getAccessToken()).isEqualTo("mocked-jwt-token"))
+                        .verifyComplete();
+
+                Map<String, Object> accessClaims = claimsCaptor.getAllValues().get(0);
+                assertThat(accessClaims).doesNotContainKey("accountId");
+                assertThat(accessClaims).doesNotContainKey("clientType");
+                // username 由用户档案携带（主应用侧回退匹配依据）
+                assertThat(accessClaims).containsEntry("username", "testuser");
+            }
+        }
+    }
+
+    @Nested
     @DisplayName("validateToken() 方法测试")
     class ValidateTokenTest {
 

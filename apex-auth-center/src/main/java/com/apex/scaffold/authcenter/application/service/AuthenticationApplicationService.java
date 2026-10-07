@@ -59,6 +59,7 @@ public class AuthenticationApplicationService {
         String password = request.getPassword();
         String tenantId = request.getTenantId() != null ? request.getTenantId() : "default";
         String deviceId = request.getDeviceId();
+        String clientType = request.getClientType();
 
         log.debug("开始登录");
 
@@ -91,8 +92,11 @@ public class AuthenticationApplicationService {
                     user.recordLoginSuccess(clientIp);
                     return userRepository
                             .update(user)
-                            .then(tokenService.issueToken(user.getId(), tenantId, deviceId, clientIp))
-                            .map(tokenPair -> buildLoginResponse(user.getId(), username, tenantId, tokenPair));
+                            // 统一账户模型：携带 clientType 时走扩展签名（claims 注入 accountId/username/clientType）
+                            .then(Mono.defer(() -> clientType == null || clientType.isBlank()
+                                    ? tokenService.issueToken(user.getId(), tenantId, deviceId, clientIp)
+                                    : tokenService.issueToken(user.getId(), tenantId, deviceId, clientIp, clientType)))
+                            .map(tokenPair -> buildLoginResponse(user, tenantId, tokenPair));
                 })
                 .doOnNext(response -> log.debug("登录成功: userId={}", response.getUserId()))
                 .doOnError(e -> log.debug("登录失败: error={}", e.getClass().getSimpleName()));
@@ -135,19 +139,20 @@ public class AuthenticationApplicationService {
     }
 
     /**
-     * 构建登录响应
+     * 构建登录响应（统一账户模型）。
      *
-     * @param userId    用户ID
-     * @param username  用户名
+     * @param user      登录用户实体（携带统一账户映射）
      * @param tenantId  租户ID
      * @param tokenPair Token对
      * @return 登录响应
      */
-    private LoginResponse buildLoginResponse(Long userId, String username, String tenantId, TokenPair tokenPair) {
+    private LoginResponse buildLoginResponse(
+            com.apex.scaffold.authcenter.domain.model.entity.UserEntity user, String tenantId, TokenPair tokenPair) {
         return LoginResponse.builder()
-                .userId(userId)
-                .username(username)
+                .userId(user.getId())
+                .username(user.getUsername())
                 .tenantId(tenantId)
+                .accountId(user.getAccountId())
                 .accessToken(tokenPair.getAccessToken())
                 .refreshToken(tokenPair.getRefreshToken())
                 .tokenType(tokenPair.getTokenType())

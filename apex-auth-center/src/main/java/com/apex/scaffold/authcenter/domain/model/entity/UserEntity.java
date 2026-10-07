@@ -91,6 +91,17 @@ public class UserEntity {
     private String openId;
 
     /**
+     * 统一账户ID（主应用 sys_user.id）
+     *
+     * <p>PC 管理端统一账户体系关联：登录签发的 JWT 携带本字段（claims.accountId），
+     * 主应用据此装配 {@code sys_user} 身份与 RBAC 权限；认证中心不复制权限数据。
+     * 可为空（尚未与主应用账户建立映射）。
+     *
+     * @since 3.3.0
+     */
+    private Long accountId;
+
+    /**
      * 账户状态
      *
      * <p>枚举值：

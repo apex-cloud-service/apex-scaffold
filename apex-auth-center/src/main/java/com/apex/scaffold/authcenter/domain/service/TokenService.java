@@ -36,6 +36,7 @@ public interface TokenService {
      * <p>为用户签发访问令牌和刷新令牌。
      * 访问令牌用于API访问，默认有效期2小时。
      * 刷新令牌用于获取新的访问令牌，默认有效期7天。
+     * 未指定客户端类型时按旧签名处理（claims 不含 clientType）。
      *
      * @param userId 用户ID
      * @param tenantId 租户ID
@@ -44,6 +45,27 @@ public interface TokenService {
      * @return Token对的Mono
      */
     Mono<TokenPair> issueToken(Long userId, String tenantId, String deviceId, String clientIp);
+
+    /**
+     * 签发Token对（多端统一账户模型，携带客户端类型）
+     *
+     * <p>在 claims 中额外注入 {@code clientType}（客户端类型编码）；
+     * {@code accountId}（统一账户ID）与 {@code username} 由用户档案自动携带，
+     * 供主应用装配统一身份。会话身份由 {@code jti}/{@code tokenFamily} 承担
+     * （令牌全量落库、按 jti 撤销），不再单独注入 sid。
+     *
+     * @param userId     用户ID
+     * @param tenantId   租户ID
+     * @param deviceId   设备ID
+     * @param clientIp   客户端IP
+     * @param clientType 客户端类型编码（{@code ClientType}），可为空
+     * @return Token对的Mono
+     * @since 3.3.0
+     */
+    default Mono<TokenPair> issueToken(
+            Long userId, String tenantId, String deviceId, String clientIp, String clientType) {
+        return issueToken(userId, tenantId, deviceId, clientIp);
+    }
 
     /**
      * 验证Token有效性

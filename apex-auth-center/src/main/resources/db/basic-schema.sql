@@ -164,6 +164,7 @@ CREATE TABLE IF NOT EXISTS auth_user (
     phone VARCHAR(4096),
     password_hash VARCHAR(4096),
     open_id VARCHAR(4096),
+    account_id BIGINT,
     status INT,
     last_login_at TIMESTAMP,
     last_login_ip VARCHAR(4096),

@@ -30,6 +30,17 @@ public class LoginResponse {
     @Schema(description = "租户ID", example = "default")
     private String tenantId;
 
+    /**
+     * 统一账户ID（主应用 sys_user.id）。
+     *
+     * <p>PC 管理端统一账户体系关联：主应用据此装配统一身份与 RBAC 权限；
+     * 尚未与主应用账户建立映射时为空。
+     *
+     * @since 3.3.0
+     */
+    @Schema(description = "统一账户ID（主应用 sys_user.id，未映射时为空）")
+    private Long accountId;
+
     @Schema(description = "访问令牌", example = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
     private String accessToken;
 

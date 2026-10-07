@@ -42,4 +42,15 @@ public class LoginRequest {
 
     @Schema(description = "设备ID", example = "web-chrome-uuid")
     private String deviceId;
+
+    /**
+     * 客户端类型（可选，多端统一账户改造新增）。
+     *
+     * <p>PC 管理端固定上报 {@code PC_ADMIN}；签发令牌时写入 JWT claims
+     * {@code clientType}，供主应用按终端维度审计。缺省时不写入 claims。
+     *
+     * @since 3.3.0
+     */
+    @Schema(description = "客户端类型（可选）：PC 管理端固定 PC_ADMIN")
+    private String clientType;
 }

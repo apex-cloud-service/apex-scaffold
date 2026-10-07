@@ -40,6 +40,9 @@ public class UserPO {
     /** 第三方 OpenID（如微信、钉钉）。 */
     private String openId;
 
+    /** 统一账户ID（主应用 sys_user.id，PC 管理端统一账户关联，可为空）。 */
+    private Long accountId;
+
     /** 账号状态（0=禁用 1=启用 2=锁定）。 */
     private Integer status;
 

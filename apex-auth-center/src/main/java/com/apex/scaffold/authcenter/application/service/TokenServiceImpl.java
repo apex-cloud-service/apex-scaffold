@@ -80,7 +80,14 @@ public class TokenServiceImpl implements TokenService {
     @Override
     @SuppressWarnings("PMD.MethodTooLongRule")
     public Mono<TokenPair> issueToken(Long userId, String tenantId, String deviceId, String clientIp) {
-        log.debug("开始签发Token: userId={}", userId);
+        return issueToken(userId, tenantId, deviceId, clientIp, null);
+    }
+
+    @Override
+    @SuppressWarnings("PMD.MethodTooLongRule")
+    public Mono<TokenPair> issueToken(
+            Long userId, String tenantId, String deviceId, String clientIp, String clientType) {
+        log.debug("开始签发Token: userId={}, clientType={}", userId, clientType);
 
         return userRepository
                 .findById(userId)
@@ -99,19 +106,10 @@ public class TokenServiceImpl implements TokenService {
                     String accessJti = UUID.randomUUID().toString();
                     String refreshJti = UUID.randomUUID().toString();
 
-                    Map<String, Object> accessClaims = new HashMap<>(CLAIMS_INITIAL_CAPACITY);
-                    accessClaims.put("jti", accessJti);
-                    accessClaims.put("userId", userId);
-                    accessClaims.put("tenantId", tenantId);
-                    accessClaims.put("tokenType", "ACCESS");
-                    accessClaims.put("deviceId", deviceId);
-
-                    Map<String, Object> refreshClaims = new HashMap<>(CLAIMS_INITIAL_CAPACITY);
-                    refreshClaims.put("jti", refreshJti);
-                    refreshClaims.put("userId", userId);
-                    refreshClaims.put("tenantId", tenantId);
-                    refreshClaims.put("tokenType", REFRESH_TOKEN_TYPE);
-                    refreshClaims.put("deviceId", deviceId);
+                    Map<String, Object> accessClaims =
+                            buildClaims(accessJti, userId, tenantId, "ACCESS", deviceId, user, clientType);
+                    Map<String, Object> refreshClaims =
+                            buildClaims(refreshJti, userId, tenantId, REFRESH_TOKEN_TYPE, deviceId, user, clientType);
 
                     String accessToken =
                             JwtUtil.generateToken(String.valueOf(userId), accessClaims, ACCESS_TOKEN_EXPIRE_MS);
@@ -169,6 +167,49 @@ public class TokenServiceImpl implements TokenService {
                                             .build()));
                 })
                 .doOnSuccess(pair -> log.debug("Token签发成功: userId={}", userId));
+    }
+
+    /**
+     * 构建 Token claims（统一账户模型）。
+     *
+     * <p>除既有 jti/userId/tenantId/tokenType/deviceId 外，追加统一账户字段：
+     * {@code accountId}（主应用 sys_user.id，未映射时不写入）、{@code username}、
+     * {@code clientType}（客户端类型编码，调用方未上报时不写入），供主应用
+     * 装配统一身份与按终端审计。
+     *
+     * @param jti        Token 唯一ID
+     * @param userId     认证中心用户ID
+     * @param tenantId   租户ID
+     * @param tokenType  令牌类型（ACCESS/REFRESH）
+     * @param deviceId   设备ID
+     * @param user       用户实体（携带统一账户映射）
+     * @param clientType 客户端类型编码，可为空
+     * @return claims Map
+     */
+    private Map<String, Object> buildClaims(
+            String jti,
+            Long userId,
+            String tenantId,
+            String tokenType,
+            String deviceId,
+            com.apex.scaffold.authcenter.domain.model.entity.UserEntity user,
+            String clientType) {
+        Map<String, Object> claims = new HashMap<>(CLAIMS_INITIAL_CAPACITY);
+        claims.put("jti", jti);
+        claims.put("userId", userId);
+        claims.put("tenantId", tenantId);
+        claims.put("tokenType", tokenType);
+        claims.put("deviceId", deviceId);
+        if (user.getAccountId() != null) {
+            claims.put("accountId", user.getAccountId());
+        }
+        if (user.getUsername() != null && !user.getUsername().isBlank()) {
+            claims.put("username", user.getUsername());
+        }
+        if (clientType != null && !clientType.isBlank()) {
+            claims.put("clientType", clientType);
+        }
+        return claims;
     }
 
     @Override
