@@ -178,6 +178,9 @@ public enum ResultCode {
     /** JSON 处理错误 */
     JSON_ERROR(3006, "JSON 处理错误", "infra.json_error"),
 
+    /** 依赖的下游服务不可用（Feign 降级/熔断出口） */
+    SERVICE_UNAVAILABLE(3007, "服务暂时不可用，请稍后重试", "infra.service_unavailable"),
+
     // ========== 业务错误 ==========
 
     /** 用户不存在 */
