@@ -18,9 +18,19 @@ spring:
         enabled: ${NACOS_DISCOVERY_ENABLED:false}
         register-enabled: ${NACOS_REGISTER_ENABLED:false}
 
-# 本地路由全部指向本机单体应用
-# 说明：application.yml 中的 ${ROUTE_*_URI} 已默认 http://127.0.0.1:8080，
-#       此处无需重复声明，保持单一事实来源。
+# 本地路由说明
+# 💡 application.yml 中认证域（/auth/v1/**）与工作流域（/api/v1/workflows/**）
+#   已默认切换为 lb://apex-*-service，需启用 Nacos 服务发现（或通过 ROUTE_AUTH_URI /
+#   ROUTE_WORKFLOW_URI 环境变量临时指回本机单体 http://127.0.0.1:8080）；
+#   办公域/文件域/系统域仍默认 http://127.0.0.1:8080，此处无需重复声明。
+
+# ==================== CORS 跨域（开发环境） ====================
+# （差异）公共层 allow-all-origins 默认为 false，且不声明 allowed-origins 时会触发
+#   CorsGlobalConfig 启动校验失败。开发联调需显式放行前端本机端口，
+#   否则浏览器端所有跨域请求会被 CorsWebFilter 拦截。
+cors:
+  # 明确允许的来源域名（逗号分隔，与主应用 apex-interfaces dev 配置保持一致）
+  allowed-origins: http://localhost:3000,http://localhost:5173,http://localhost:5174,http://localhost:5175
 
 # 本地限流放宽，避免自测被限流打断
 logging:

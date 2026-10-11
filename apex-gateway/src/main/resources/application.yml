@@ -18,7 +18,9 @@
 # ============================================================
 
 server:
-  port: ${GATEWAY_PORT:8000}
+  # 统一端口：遵循迁移方案 §5.1 的部署单元规划（apex-gateway:8080）
+  # 保留 GATEWAY_PORT 环境变量覆盖能力，便于本地/多实例调试
+  port: ${GATEWAY_PORT:8080}
   shutdown: graceful
   netty:
     connection-timeout: 5s
@@ -71,39 +73,105 @@ spring:
       # ==================== 路由规则 ====================
       # 💡 未显式切流的路径统一兜底到单体，保证 Phase 1 行为不变
       routes:
-        # ---- 认证域（Phase 2 切换为 apex-auth-service） ----
-        - id: auth-domain
-          uri: ${ROUTE_AUTH_URI:http://127.0.0.1:8080}
+        # ---- 认证域（Phase 2 已切换为 apex-auth-service，路径契约见方案 §5.2） ----
+        # 💡 Phase 2.4：auth-service 实际承载 /auth/v1/** 契约；
+        # MFA/认证配置/审计日志等 /api/v1/** 接口过渡期仍由单体兜底（绞杀者模式）。
+        # 可用 ROUTE_AUTH_URI 环境变量临时指回单体地址以一键回滚。
+        - id: auth-service
+          uri: ${ROUTE_AUTH_URI:lb://apex-auth-service}
           predicates:
-            - Path=/api/v1/auth/**,/oauth2/**,/.well-known/**,/admin-api/v1/auth/**,/admin-api/v1/sso/**
+            - Path=/auth/v1/**,/oauth2/**,/.well-known/**,/admin-api/v1/auth/**,/admin-api/v1/sso/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: authService
+                fallbackUri: forward:/__gateway/fallback
 
-        # ---- 工作流域（Phase 3 切换为 apex-workflow-service） ----
+        # ---- 工作流域（Phase 3 已切换为 apex-workflow-service） ----
+        # 💡 可用 ROUTE_WORKFLOW_URI 环境变量临时指回单体地址以一键回滚。
         - id: workflow-domain
-          uri: ${ROUTE_WORKFLOW_URI:http://127.0.0.1:8080}
+          uri: ${ROUTE_WORKFLOW_URI:lb://apex-workflow-service}
           predicates:
             - Path=/api/v1/workflows/**,/api/workflow/**,/admin-api/v1/workflows/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: workflowService
+                fallbackUri: forward:/__gateway/fallback
 
-        # ---- 办公域（Phase 5 切换为 apex-office-service） ----
+        # ---- 办公域（Phase 5 已切换为 apex-office-service） ----
+        # 💡 可用 ROUTE_OFFICE_URI 环境变量临时指回单体地址以一键回滚。
         - id: office-domain
-          uri: ${ROUTE_OFFICE_URI:http://127.0.0.1:8080}
+          uri: ${ROUTE_OFFICE_URI:lb://apex-office-service}
           predicates:
-            - Path=/api/v1/office/**,/api/v1/messages/**,/admin-api/v1/office/**,/admin-api/v1/org/**
+            - Path=/api/v1/office/**,/api/v1/messages/**,/admin-api/v1/office/**,/admin-api/v1/org/**,/admin-api/v1/message-templates
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: officeService
+                fallbackUri: forward:/__gateway/fallback
 
         # ---- 文件域（Phase 4 切换为 apex-file-service） ----
         - id: file-domain
-          uri: ${ROUTE_FILE_URI:http://127.0.0.1:8080}
+          uri: ${ROUTE_FILE_URI:lb://apex-file-service}
           predicates:
             - Path=/api/v1/file/**,/api/v1/files/**,/api/v1/documents/**,/admin-api/v1/documents/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: fileService
+                fallbackUri: forward:/__gateway/fallback
 
         # ---- 兜底：系统管理与其余全部接口（Phase 6 收敛为 apex-system-service） ----
+        # 💡 可用 ROUTE_SYSTEM_URI 环境变量临时指回单体地址（http://127.0.0.1:8080）
+        #    以实现一键回滚。
         - id: system-domain
-          uri: ${ROUTE_SYSTEM_URI:http://127.0.0.1:8080}
+          uri: ${ROUTE_SYSTEM_URI:lb://apex-system-service}
           predicates:
             - Path=/api/v1/**,/admin-api/v1/**,/health,/actuator/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: systemService
+                fallbackUri: forward:/__gateway/fallback
 
       default-filters:
         # 避免 CORS 头重复（网关与下游同时返回时）
         - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_FIRST
+
+# ==================== 熔断阈值（Resilience4j 实例） ====================
+# 各路由 CircuitBreaker 过滤器使用的命名实例（authService/workflowService/...）
+# 统一继承 default 配置，可按需为单实例覆盖。
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        # 基于计数的滑动窗口（网关请求量分布不均，计数窗口更直观）
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 50
+        # 最少采样请求数，避免小流量误熔断
+        minimum-number-of-calls: 20
+        # 失败率阈值（%）
+        failure-rate-threshold: 50
+        # 慢调用比例阈值（%）与慢调用判定时长
+        slow-call-rate-threshold: 60
+        slow-call-duration-threshold: 2s
+        # 熔断 OPEN 保持时长，到期后自动进入 HALF_OPEN
+        wait-duration-in-open-state: 30s
+        permitted-number-of-calls-in-half-open-state: 10
+        automatic-transition-from-open-to-half-open-enabled: true
+        register-health-indicator: true
+    instances:
+      authService:
+        base-config: default
+      workflowService:
+        base-config: default
+      officeService:
+        base-config: default
+      fileService:
+        base-config: default
+      systemService:
+        base-config: default
 
 # ==================== 健康检查与指标 ====================
 management:
@@ -137,3 +205,47 @@ logging:
   pattern:
     # 控制台输出包含 traceId，便于本地排查
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{traceId:-}] %logger{36} - %msg%n"
+
+# ==================== CORS 跨域（网关统一收敛） ====================
+# 说明：跨域策略从主应用迁移到网关唯一一处，下游服务不再各自放行（迁移方案 §5.3）。
+cors:
+  # 是否允许所有来源（仅开发联调开启，生产必须 false）
+  allow-all-origins: ${CORS_ALLOW_ALL_ORIGINS:false}
+  # 明确允许的来源域名（逗号分隔；allow-all-origins=false 时必填）
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:}
+
+# ==================== 网关自定义能力 ====================
+apex:
+  gateway:
+    # JWKS 验签（风险 #1 缓解：非对称 RSA + 过渡期 HMAC 双 kid 并行验证）
+    # 公钥可安全下发；hmac-secret 为对称密钥，生产必须经环境变量/KMS 注入
+    jwks:
+      # 🔒 过渡期 HMAC 对称密钥（兼容旧 Token 验签）
+      hmac-secret: ${JWT_SECRET:}
+      # 按 kid 组织的密钥清单（可 Nacos 热更新，密钥轮换时无需重启网关）。
+      # 必须为 YAML 列表（或 JSON 数组），不可用标量字符串占位符，否则无法绑定到
+      # List<JwksProfile>（会抛 ConverterNotFoundException）。
+      # 默认空列表；生产由 Nacos 的 apex-gateway.yaml 覆盖为：
+      #   ks:
+      #     - kid: hmac-legacy
+      #       alg: hmac
+      #     - kid: rsa-2026-01
+      #       alg: rsa256
+      #       public-key-base64: "MIIBIjANBgkqh..."
+      ks: []
+    # 全局限流（Redis 固定窗口计数，迁移方案 §1.2.2）
+    rate-limit:
+      # 单窗口允许的最大请求数
+      capacity: ${RATE_LIMIT_CAPACITY:1000}
+      # 窗口长度（毫秒）
+      window-ms: ${RATE_LIMIT_WINDOW_MS:60000}
+
+# ==================== 灰度发布 ====================
+# 三级判定：Header 强制 > 租户白名单 > 用户尾号百分比（迁移方案 §15）
+gray:
+  # 灰度总开关
+  enabled: ${GRAY_ENABLED:false}
+  # 用户尾号灰度百分比（0–100），同一用户分桶稳定
+  percentage: ${GRAY_PERCENTAGE:0}
+  # 强制灰度的租户 ID 白名单（逗号分隔）
+  tenant-whitelist: ${GRAY_TENANT_WHITELIST:}

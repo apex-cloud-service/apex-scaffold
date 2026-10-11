@@ -1,0 +1,155 @@
+# ============================================================
+# Apex Scaffold - Nacos 服务私有配置：apex-gateway.yaml
+# ============================================================
+# 【作用】
+#   Nacos 配置中心「服务私有配置」，仅由 apex-gateway 引用
+#   （Data ID: apex-gateway.yaml，Group: DEFAULT_GROUP）。
+#   承载网关可热更新的配置：路由规则、灰度策略、JWKS 密钥清单、
+#   限流参数、CORS 白名单。发布后无需重启即可生效。
+#
+# 【与本地文件的关系】
+#   application.yml 中的同名项作为「启动兜底默认值」；本文件仅覆盖需要
+#   动态调整的部分（路由切流、密钥轮换、灰度放量）。未列出的项沿用本地值。
+#
+# 【发布方式】
+#   见 config/nacos/README.md「四、发布方式」。
+#
+# 【安全提示】
+#   🔒 仅下发公钥（public-key-base64）与 kid；HMAC 对称密钥（hmac-secret）
+#      一律经环境变量 JWT_SECRET 注入，禁止写入本文件。
+#
+# @author Apex Team
+# ============================================================
+
+spring:
+  cloud:
+    gateway:
+      # ==================== 路由规则（按 Phase 逐步切流） ====================
+      # 💡 未迁移的域继续指向单体 http://127.0.0.1:8080（Phase 1 透明代理）；
+      #    迁移完成后改为 lb://apex-xxx-service（见迁移方案 §15）。
+      routes:
+        # ---- 认证域（Phase 2 切为 apex-auth-service） ----
+        - id: auth-domain
+          uri: ${ROUTE_AUTH_URI:http://127.0.0.1:8080}
+          predicates:
+            - Path=/api/v1/auth/**,/oauth2/**,/.well-known/**,/admin-api/v1/auth/**,/admin-api/v1/sso/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: authService
+                fallbackUri: forward:/__gateway/fallback
+
+        # ---- 工作流域（Phase 3 切为 apex-workflow-service） ----
+        - id: workflow-domain
+          uri: ${ROUTE_WORKFLOW_URI:http://127.0.0.1:8080}
+          predicates:
+            - Path=/api/v1/workflows/**,/api/workflow/**,/admin-api/v1/workflows/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: workflowService
+                fallbackUri: forward:/__gateway/fallback
+
+        # ---- 办公域（Phase 5 已切为 apex-office-service） ----
+        # 💡 可用 ROUTE_OFFICE_URI 环境变量临时指回单体地址以一键回滚。
+        - id: office-domain
+          uri: ${ROUTE_OFFICE_URI:lb://apex-office-service}
+          predicates:
+            - Path=/api/v1/office/**,/api/v1/messages/**,/admin-api/v1/office/**,/admin-api/v1/org/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: officeService
+                fallbackUri: forward:/__gateway/fallback
+
+        # ---- 文件域（Phase 4 切为 apex-file-service） ----
+        - id: file-domain
+          uri: ${ROUTE_FILE_URI:lb://apex-file-service}
+          predicates:
+            - Path=/api/v1/file/**,/api/v1/files/**,/api/v1/documents/**,/admin-api/v1/documents/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: fileService
+                fallbackUri: forward:/__gateway/fallback
+
+        # ---- 系统域兜底（Phase 6 收敛为 apex-system-service） ----
+        - id: system-domain
+          uri: ${ROUTE_SYSTEM_URI:http://127.0.0.1:8080}
+          predicates:
+            - Path=/api/v1/**,/admin-api/v1/**,/health,/actuator/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: systemService
+                fallbackUri: forward:/__gateway/fallback
+
+# ==================== 熔断阈值（Resilience4j 实例） ====================
+# ⚠️ 与 application.yml 保持一致：Nacos 的 routes 列表为整表覆盖（列表不逐元素合并），
+#    因此必须在此同步下发 CircuitBreaker 过滤器与 resilience4j 实例，
+#    否则一旦本文件生效，路由级熔断将被静默丢弃。
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 50
+        minimum-number-of-calls: 20
+        failure-rate-threshold: 50
+        slow-call-rate-threshold: 60
+        slow-call-duration-threshold: 2s
+        wait-duration-in-open-state: 30s
+        permitted-number-of-calls-in-half-open-state: 10
+        automatic-transition-from-open-to-half-open-enabled: true
+        register-health-indicator: true
+    instances:
+      authService:
+        base-config: default
+      workflowService:
+        base-config: default
+      officeService:
+        base-config: default
+      fileService:
+        base-config: default
+      systemService:
+        base-config: default
+
+# ==================== 网关自定义能力 ====================
+apex:
+  gateway:
+    # ==================== JWKS 验签密钥清单 ====================
+    jwks:
+      # 按 kid 组织的密钥清单（可 Nacos 热更新，密钥轮换时无需重启网关）。
+      # 必须为 YAML 列表，不可用标量字符串占位符。
+      # 🔒 hmac-secret 不在此下发，仅经 JWT_SECRET 环境变量注入。
+      ks:
+        - kid: hmac-legacy
+          alg: hmac
+        # 示例：新增 RSA 公钥（轮换时启用，双 kid 并存过渡）
+        # - kid: rsa-2026-01
+        #   alg: rsa256
+        #   public-key-base64: "MIIBIjANBgkqh..."
+
+    # ==================== 全局限流（Redis 固定窗口计数） ====================
+    rate-limit:
+      # 单窗口允许的最大请求数
+      capacity: ${RATE_LIMIT_CAPACITY:1000}
+      # 窗口长度（毫秒）
+      window-ms: ${RATE_LIMIT_WINDOW_MS:60000}
+
+# ==================== CORS 跨域（网关统一收敛） ====================
+cors:
+  # 是否允许所有来源（仅开发联调开启，生产必须 false）
+  allow-all-origins: ${CORS_ALLOW_ALL_ORIGINS:false}
+  # 明确允许的来源域名（逗号分隔；allow-all-origins=false 时必填）
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:}
+
+# ==================== 灰度发布 ====================
+# 三级判定：Header 强制 > 租户白名单 > 用户尾号百分比（迁移方案 §15）
+gray:
+  # 灰度总开关
+  enabled: ${GRAY_ENABLED:false}
+  # 用户尾号灰度百分比（0–100），同一用户分桶稳定
+  percentage: ${GRAY_PERCENTAGE:0}
+  # 强制灰度的租户 ID 白名单（逗号分隔）
+  tenant-whitelist: ${GRAY_TENANT_WHITELIST:}

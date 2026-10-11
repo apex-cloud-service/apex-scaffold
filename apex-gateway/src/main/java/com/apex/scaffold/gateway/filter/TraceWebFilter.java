@@ -1,7 +1,6 @@
 package com.apex.scaffold.gateway.filter;
 
 import com.apex.scaffold.common.util.TraceIdUtil;
-import java.util.UUID;
 import org.slf4j.MDC;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
@@ -15,23 +14,36 @@ import reactor.core.publisher.Mono;
 /**
  * 链路追踪 ID 注入过滤器（全局，最先执行）.
  *
- * <p>TraceId 的唯一来源：客户端未携带时由网关注入，已携带时透传（便于跨系统联调）。
- * 注入后写入请求头与 MDC，供下游服务、Feign 拦截器、MQ 事件信封复用，
- * 使"HTTP 请求链路 + 异步消息链路"在 Zipkin / 日志平台可串联。
+ * <p>对应迁移方案 §5.3 过滤器链第 1 位（order = -1）。
+ *
+ * <p>职责：
+ * <ol>
+ *   <li>客户端未携带 {@code X-Trace-Id} 时由网关注入（复用 {@link TraceIdUtil} 生成规则）</li>
+ *   <li>已携带时原样透传，便于跨系统联调与链路串联</li>
+ *   <li>写入请求头、响应头、MDC 与 Reactor Context，供下游服务 / Feign 拦截器 /
+ *       MQ 事件信封复用，使「HTTP 链路 + 异步消息链路」在 Zipkin / 日志平台可串联</li>
+ * </ol>
+ *
+ * <p><b>响应式说明</b>：TraceId 通过 {@code contextWrite} 写入 Reactor Context，
+ * 保证跨线程操作符内可安全读取（见 {@link TraceIdUtil#getTraceId(reactor.util.context.ContextView)}）。
  *
  * @author Apex Team
  * @since 1.3.1
  */
 @Component
-public class TraceIdGatewayFilter implements GlobalFilter, Ordered {
+public class TraceWebFilter implements GlobalFilter, Ordered {
 
     /** 追踪 ID 请求头名称 */
     public static final String HEADER_TRACE_ID = "X-Trace-Id";
 
+    /** 过滤器顺序：最先执行，保证后续所有过滤器与下游均可见 TraceId */
+    public static final int ORDER = -1;
+
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
+        // 优先透传客户端 TraceId（兼容跨系统联调场景），否则生成新的
         String incoming = exchange.getRequest().getHeaders().getFirst(HEADER_TRACE_ID);
-        String traceId = StringUtils.hasText(incoming) ? incoming : generateTraceId();
+        String traceId = StringUtils.hasText(incoming) ? incoming : TraceIdUtil.generateTraceId();
 
         ServerHttpRequest mutated =
                 exchange.getRequest().mutate().header(HEADER_TRACE_ID, traceId).build();
@@ -43,6 +55,7 @@ public class TraceIdGatewayFilter implements GlobalFilter, Ordered {
                 .contextWrite(context -> context.put(TraceIdUtil.TRACE_ID_KEY, traceId))
                 .doOnEach(signal -> {
                     if (signal.isOnComplete() || signal.isOnError()) {
+                        // 请求结束清理 MDC，避免线程复用时 TraceId 串味
                         MDC.remove(TraceIdUtil.TRACE_ID_KEY);
                     } else {
                         MDC.put(TraceIdUtil.TRACE_ID_KEY, traceId);
@@ -50,17 +63,8 @@ public class TraceIdGatewayFilter implements GlobalFilter, Ordered {
                 });
     }
 
-    /**
-     * 生成无连字符的 32 位 TraceId.
-     *
-     * @return TraceId 字符串
-     */
-    private String generateTraceId() {
-        return UUID.randomUUID().toString().replace("-", "");
-    }
-
     @Override
     public int getOrder() {
-        return Ordered.HIGHEST_PRECEDENCE;
+        return ORDER;
     }
 }

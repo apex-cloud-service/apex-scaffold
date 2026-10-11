@@ -28,7 +28,7 @@ public class RateLimitConfig {
 
     private static final Logger log = LoggerFactory.getLogger(RateLimitConfig.class);
 
-    /** 用户身份头（由 {@code JwtAuthGatewayFilter} 注入） */
+    /** 用户身份头（由 {@link com.apex.scaffold.gateway.filter.UserContextRelayFilter} 注入） */
     private static final String HEADER_USER_ID = "X-User-Id";
 
     /**
