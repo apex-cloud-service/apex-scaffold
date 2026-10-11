@@ -54,6 +54,22 @@ spring:
       resilience4j:
         enabled: true
 
+    # ==================== 负载均衡（灰度标签实例级路由） ====================
+    # 迁移方案 §15 / Task 3：在 discovery + caching 供应商之上叠加灰度标签过滤装饰器。
+    # 💡 全局默认供应商由 lb/GrayTagLoadBalancerConfiguration 通过
+    #    @LoadBalancerClients(defaultConfiguration=...) 对全部 lb:// 客户端生效；
+    #    实例元数据约定（下游注册侧声明）：
+    #      spring.cloud.nacos.discovery.metadata.gray-tag: stable | gray
+    #    网关消费 X-Gray-Tag 请求头，按 metadata[gray-tag] 过滤实例，无匹配时回退稳定/全量。
+    loadbalancer:
+      cache:
+        # 实例清单缓存总开关（关闭时每次直查发现客户端，Nacos 压力升高）
+        enabled: ${LB_CACHE_ENABLED:true}
+        # 实例清单缓存存活时长
+        ttl: ${LB_CACHE_TTL:5s}
+        # 单个客户端缓存的实例条目上限
+        capacity: ${LB_CACHE_CAPACITY:1000}
+
     gateway:
       # 关闭默认的 X-Forwarded-* 重写，交给入口负载均衡处理
       x-forwarded:
