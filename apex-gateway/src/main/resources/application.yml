@@ -233,12 +233,28 @@ apex:
       #       alg: rsa256
       #       public-key-base64: "MIIBIjANBgkqh..."
       ks: []
-    # 全局限流（Redis 固定窗口计数，迁移方案 §1.2.2）
+    # 全局限流（Redis 分布式令牌桶，迁移方案 §1.2.2 / Task 2）
     rate-limit:
-      # 单窗口允许的最大请求数
-      capacity: ${RATE_LIMIT_CAPACITY:1000}
-      # 窗口长度（毫秒）
+      # 限流总开关（false 时纯透传）
+      enabled: ${RATE_LIMIT_ENABLED:true}
+      # 限流算法：token-bucket（令牌桶，默认） | fixed-window（固定窗口计数）
+      algorithm: ${RATE_LIMIT_ALGORITHM:token-bucket}
+      # 默认桶容量（未命中 rules 时生效）
+      default-capacity: ${RATE_LIMIT_CAPACITY:1000}
+      # 默认令牌补充速率（令牌/秒）
+      default-refill-rate: ${RATE_LIMIT_REFILL_RATE:100}
+      # Redis Key 统一前缀（拼接为 {key-prefix}{scope}:{identity}:{path}）
+      key-prefix: "apex:gateway:rl:"
+      # 固定窗口长度（毫秒，仅 algorithm=fixed-window 使用）
       window-ms: ${RATE_LIMIT_WINDOW_MS:60000}
+      # 按资源（Ant 路径通配）覆盖的限流规则，命中后覆盖默认容量与速率（可 Nacos 热更新）
+      rules:
+        - resource: "/api/v1/workflows/**"
+          capacity: 2000
+          refill-rate: 200
+        - resource: "/api/v1/auth/**"
+          capacity: 5000
+          refill-rate: 500
 
 # ==================== 灰度发布 ====================
 # 三级判定：Header 强制 > 租户白名单 > 用户尾号百分比（迁移方案 §15）

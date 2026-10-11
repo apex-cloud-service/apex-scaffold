@@ -1,20 +1,18 @@
 package com.apex.scaffold.gateway.filter;
 
-import com.apex.scaffold.common.result.ResultCode;
+import com.apex.scaffold.gateway.ratelimit.GatewayRateLimitProperties;
+import com.apex.scaffold.gateway.ratelimit.TokenBucketRateLimitFilter;
 import com.apex.scaffold.gateway.support.GatewayWebUtil;
-import java.time.Duration;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.cloud.gateway.filter.ratelimit.KeyResolver;
 import org.springframework.core.Ordered;
-import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
@@ -23,23 +21,27 @@ import reactor.core.publisher.Mono;
  *
  * <p>对应迁移方案 §5.3 过滤器链第 5 位（order = 30）。
  *
- * <p>在网关统一执行全局限流：优先按<b>用户维度</b>（已认证请求，{@code X-User-Id} 存在），
- * 匿名请求按<b>IP 维度</b>回退；两种维度再叠加<b>路径维度</b>，
- * 从而同时满足「IP 级 + 路径级」限流要求（方案 §1.2.2）。
+ * <p>本过滤器只负责「<b>维度 + 路径</b>」Key 的拼接与阈值解析，实际限流判定委托给
+ * {@link TokenBucketRateLimitFilter}（Redis 分布式令牌桶，Task 2）。职责分离后，
+ * 限流算法演进（令牌桶 / 固定窗口）无需改动本过滤器。
  *
- * <p><b>限流算法</b>：Redis 固定窗口计数器（每窗口自增，首次写入设置 TTL）。
- * 阈值由 {@code apex.gateway.rate-limit.*} 配置（yml 或 Nacos 动态下发）：
- * <ul>
- *   <li>{@code capacity} — 单窗口允许的最大请求数</li>
- *   <li>{@code window-ms} — 窗口长度（毫秒）</li>
- * </ul>
+ * <p><b>维度优先级</b>：租户（{@code X-Tenant-Id}）→ 用户（{@code X-User-Id}）→ IP。
+ * 取首个可解析的维度身份，叠加请求路径形成
+ * {@code {key-prefix}{scope}:{identity}:{path}}，从而同时满足
+ * 「租户/用户/IP 级 + 路径级」限流要求（方案 §1.2.2）。
  *
- * <p><b>失败出口</b>：触发限流返回 HTTP 429 + {@link ResultCode#RATE_LIMIT} JSON，
- * 与下游单体错误码逐字段一致（方案 §17 验收）。
+ * <p><b>阈值解析</b>：优先匹配 {@code apex.gateway.rate-limit.rules[].resource}
+ * （Ant 风格路径通配），命中则用其 {@code capacity}/{@code refill-rate}，
+ * 否则回退 {@code default-capacity}/{@code default-refill-rate}。
+ *
+ * <p><b>失败出口</b>：令牌不足返回 HTTP 429 + {@link com.apex.scaffold.common.result.ResultCode#RATE_LIMIT}
+ * 及 {@code X-RateLimit-Remaining}/{@code Retry-After} 头；Redis 异常由内核降级放行
+ * （宁可宽松也不阻断业务），且<b>不影响下游异常向上传播</b>，保证路由级熔断（Task 1）可感知下游故障。
  *
  * @author Apex Team
  * @since 1.3.1
  * @see com.apex.scaffold.gateway.config.RateLimitConfig
+ * @see TokenBucketRateLimitFilter
  */
 @Component
 public class RequestRateLimitFilter implements GlobalFilter, Ordered {
@@ -49,104 +51,122 @@ public class RequestRateLimitFilter implements GlobalFilter, Ordered {
     /** 过滤器顺序：上下文注入（20）之后、灰度（40）之前 */
     public static final int ORDER = 30;
 
-    /** IP 维度限流 Key 解析器（匿名回退） */
-    private final KeyResolver ipKeyResolver;
+    /** Ant 风格路径匹配器（用于 {@code rules[].resource} 匹配） */
+    private static final AntPathMatcher PATH_MATCHER = new AntPathMatcher();
 
-    /** 用户维度限流 Key 解析器（已认证优先） */
+    /** 租户维度限流 Key 解析器（优先级最高） */
+    private final KeyResolver tenantKeyResolver;
+
+    /** 用户维度限流 Key 解析器（优先级次之） */
     private final KeyResolver userKeyResolver;
 
-    /** 限流计数用的响应式 Redis 模板 */
-    private final ReactiveStringRedisTemplate redisTemplate;
+    /** IP 维度限流 Key 解析器（默认兜底） */
+    private final KeyResolver ipKeyResolver;
 
-    /** 单窗口允许的最大请求数 */
-    private final int capacity;
+    /** 限流判定内核（Redis 令牌桶 / 固定窗口） */
+    private final TokenBucketRateLimitFilter rateLimitCore;
 
-    /** 窗口长度（毫秒） */
-    private final long windowMillis;
+    /** 限流配置属性（开关 / 算法 / 阈值 / 规则） */
+    private final GatewayRateLimitProperties properties;
 
     /**
      * 构造限流过滤器.
      *
-     * @param ipKeyResolver   IP 维度 KeyResolver（{@code RateLimitConfig} 主维度）
-     * @param userKeyResolver 用户维度 KeyResolver
-     * @param redisTemplate   Redis 响应式模板（窗口计数）
-     * @param capacity        单窗口最大请求数
-     * @param windowMillis    窗口毫秒数
+     * @param tenantKeyResolver 租户维度 KeyResolver
+     * @param userKeyResolver   用户维度 KeyResolver
+     * @param ipKeyResolver     IP 维度 KeyResolver（{@code RateLimitConfig} 主维度）
+     * @param rateLimitCore     限流判定内核
+     * @param properties        限流配置属性
      */
     public RequestRateLimitFilter(
-            @Qualifier("ipKeyResolver") KeyResolver ipKeyResolver,
+            @Qualifier("tenantKeyResolver") KeyResolver tenantKeyResolver,
             @Qualifier("userKeyResolver") KeyResolver userKeyResolver,
-            ReactiveStringRedisTemplate redisTemplate,
-            @Value("${apex.gateway.rate-limit.capacity:1000}") int capacity,
-            @Value("${apex.gateway.rate-limit.window-ms:60000}") long windowMillis) {
-        this.ipKeyResolver = ipKeyResolver;
+            @Qualifier("ipKeyResolver") KeyResolver ipKeyResolver,
+            TokenBucketRateLimitFilter rateLimitCore,
+            GatewayRateLimitProperties properties) {
+        this.tenantKeyResolver = tenantKeyResolver;
         this.userKeyResolver = userKeyResolver;
-        this.redisTemplate = redisTemplate;
-        this.capacity = capacity;
-        this.windowMillis = windowMillis;
+        this.ipKeyResolver = ipKeyResolver;
+        this.rateLimitCore = rateLimitCore;
+        this.properties = properties;
     }
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-        String userId = exchange.getRequest().getHeaders().getFirst("X-User-Id");
+        if (!properties.isEnabled()) {
+            return chain.filter(exchange);
+        }
+
         String path = exchange.getRequest().getURI().getPath();
 
-        Mono<String> keyMono =
-                StringUtils.hasText(userId) ? userKeyResolver.resolve(exchange) : ipKeyResolver.resolve(exchange);
-
-        // 仅对「限流判定」阶段做降级放行；下游链路的异常必须原样向上传播，
-        // 否则会吞掉 ConnectException，导致路由级熔断/全局异常处理永远无法感知下游故障。
-        return keyMono
-                // 叠加路径维度：同一身份在同一路径上独立计数
-                .map(baseKey -> baseKey + ":path:" + path)
-                .flatMap(this::decide)
-                .onErrorResume(err -> {
-                    // Redis 异常时降级放行（宁可宽松也不阻断业务），记录告警
-                    log.warn("限流判定异常, 降级放行: path={}, reason={}", path, err.getMessage());
-                    return Mono.just(Boolean.TRUE);
-                })
-                .flatMap(allowed -> {
-                    if (!allowed) {
-                        log.warn("触发限流: path={}, limit={}", path, capacity);
-                        return GatewayWebUtil.writeError(exchange, HttpStatus.TOO_MANY_REQUESTS, ResultCode.RATE_LIMIT);
-                    }
-                    return chain.filter(exchange);
+        return resolveIdentity(exchange)
+                .map(identity -> buildKey(identity, path))
+                .flatMap(key -> {
+                    Threshold threshold = resolveThreshold(path);
+                    return rateLimitCore.apply(exchange, chain, key, threshold.capacity(), threshold.refillRate());
                 });
     }
 
     /**
-     * 判定当前请求是否允许放行（固定窗口计数）.
+     * 按优先级解析限流维度身份：租户 → 用户 → IP.
      *
-     * <p>固定窗口：以「当前时间 / 窗口长度」作为窗口编号拼接 Key，
-     * 自增计数；首次写入设置 TTL 自动过期，避免 Key 无限堆积。
-     *
-     * <p>本方法<b>只做限流判定</b>，不调用 {@code chain.filter}，以便上游 {@code onErrorResume}
-     * 仅兜住 Redis 等基础设施异常，而不会误吞下游业务异常。
-     *
-     * @param key 限流 Key（含维度前缀 + 路径）
-     * @return {@code true} 放行；{@code false} 触发限流
+     * @param exchange 当前交换对象
+     * @return 首个可解析的维度身份（{@code scope:identity}）；IP 维度始终可用，故必定非空
      */
-    private Mono<Boolean> decide(String key) {
-        long windowStart = (System.currentTimeMillis() / windowMillis) * windowMillis;
-        String windowKey = key + ":window:" + windowStart;
+    private Mono<String> resolveIdentity(ServerWebExchange exchange) {
+        return tenantKeyResolver
+                .resolve(exchange)
+                .switchIfEmpty(Mono.defer(() -> userKeyResolver.resolve(exchange)))
+                .switchIfEmpty(Mono.defer(() -> ipKeyResolver.resolve(exchange)))
+                .switchIfEmpty(Mono.fromSupplier(() -> "ip:" + GatewayWebUtil.clientIp(exchange)));
+    }
 
-        return redisTemplate
-                .opsForValue()
-                .increment(windowKey)
-                .flatMap(count -> {
-                    if (count != null && count == 1L) {
-                        // 窗口首次命中：设置过期时间，保证自动清理
-                        return redisTemplate
-                                .expire(windowKey, Duration.ofMillis(windowMillis))
-                                .thenReturn(count);
-                    }
-                    return Mono.just(count == null ? 0L : count);
-                })
-                .map(count -> count <= capacity);
+    /**
+     * 拼接限流 Key：{@code {key-prefix}{scope}:{identity}:{path}}.
+     *
+     * @param identity 维度身份（{@code scope:identity}）
+     * @param path     请求路径
+     * @return 完整限流 Key
+     */
+    private String buildKey(String identity, String path) {
+        return properties.getKeyPrefix() + identity + ":" + path;
+    }
+
+    /**
+     * 解析路径对应的限流阈值（容量 + 补充速率）.
+     *
+     * <p>按 {@code rules} 声明顺序匹配首个命中的 Ant 规则，未命中回退默认值。
+     *
+     * @param path 请求路径
+     * @return 解析后的阈值
+     */
+    private Threshold resolveThreshold(String path) {
+        List<GatewayRateLimitProperties.Rule> rules = properties.getRules();
+        if (rules != null) {
+            for (GatewayRateLimitProperties.Rule rule : rules) {
+                String resource = rule.getResource();
+                if (resource != null && PATH_MATCHER.match(resource, path)) {
+                    long capacity = rule.getCapacity() != null ? rule.getCapacity() : properties.getDefaultCapacity();
+                    double refillRate =
+                            rule.getRefillRate() != null ? rule.getRefillRate() : properties.getDefaultRefillRate();
+                    log.debug("限流规则命中: path={}, resource={}, capacity={}", path, resource, capacity);
+                    return new Threshold(capacity, refillRate);
+                }
+            }
+        }
+        return new Threshold(properties.getDefaultCapacity(), properties.getDefaultRefillRate());
     }
 
     @Override
     public int getOrder() {
         return ORDER;
     }
+
+    /**
+     * 限流阈值二元组（桶容量 + 令牌补充速率）.
+     *
+     * @param capacity   桶容量
+     * @param refillRate 令牌补充速率（令牌/秒）
+     */
+    private record Threshold(long capacity, double refillRate) {}
 }
