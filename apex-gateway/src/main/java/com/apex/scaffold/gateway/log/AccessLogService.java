@@ -2,6 +2,8 @@ package com.apex.scaffold.gateway.log;
 
 import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
 import com.apex.scaffold.common.util.JsonUtil;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -60,6 +62,9 @@ public class AccessLogService {
     /** 脱敏占位符 */
     private static final String MASK_VALUE = "***";
 
+    /** 访问日志落库失败计数指标名 */
+    public static final String METRIC_PERSIST_FAILED = "apex.gateway.accesslog.persist.failed";
+
     /** 采样率下界（闭区间）：小于等于该值表示不采样 */
     private static final double SAMPLE_RATE_MIN = 0.0d;
 
@@ -72,18 +77,24 @@ public class AccessLogService {
     /** 访问日志落库配置 */
     private final AccessLogProperties properties;
 
+    /** 落库失败计数指标注册表 */
+    private final MeterRegistry meterRegistry;
+
     /** 落库失败累计次数（用于观测，不作为错误向上传播） */
     private final AtomicLong persistFailureCount = new AtomicLong();
 
     /**
      * 构造访问日志落库服务.
      *
-     * @param repository 访问日志仓储
-     * @param properties 访问日志落库配置
+     * @param repository    访问日志仓储
+     * @param properties    访问日志落库配置
+     * @param meterRegistry 指标注册表（用于落库失败计数）
      */
-    public AccessLogService(AccessLogRepository repository, AccessLogProperties properties) {
+    public AccessLogService(
+            AccessLogRepository repository, AccessLogProperties properties, MeterRegistry meterRegistry) {
         this.repository = repository;
         this.properties = properties;
+        this.meterRegistry = meterRegistry;
     }
 
     /**
@@ -102,6 +113,10 @@ public class AccessLogService {
         }
         return repository.save(record).subscribeOn(BlockingIoSchedulers.jdbc()).onErrorResume(ex -> {
             long failures = persistFailureCount.incrementAndGet();
+            Counter.builder(METRIC_PERSIST_FAILED)
+                    .description("网关访问日志落库失败次数")
+                    .register(meterRegistry)
+                    .increment();
             log.warn("访问日志落库失败(已忽略): traceId={}, failures={}, reason={}", record.traceId(), failures, ex.getMessage());
             return Mono.empty();
         });

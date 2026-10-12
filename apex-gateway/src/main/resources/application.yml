@@ -216,6 +216,9 @@ management:
   metrics:
     tags:
       application: ${spring.application.name}
+    # 网关熔断/限流/灰度/访问日志落库失败计数（apex.gateway.*）由
+    # ResilienceConfig、TokenBucketRateLimitFilter、GrayRouteFilter、AccessLogService 注册，
+    # 经 /actuator/prometheus 暴露，供 Prometheus 抓取与告警。
   tracing:
     sampling:
       probability: ${TRACING_SAMPLING_PROBABILITY:0.1}

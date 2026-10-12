@@ -62,6 +62,16 @@
 
 因此当前项目具备“资源级限流/熔断/降级”的基础。后续重点不是重新引入框架,而是统一降级返回语义、补齐依赖故障策略、定义自动触发与恢复边界,并区分进程内降级和实例级上下线。
 
+> **口径一致性说明（2026-10-12，网关韧性落地）**：上游 `apex-gateway` 已新增独立的网关层韧性能力
+> （非替换本节的 Sentinel 资源级限流，二者并行）：
+> - **熔断**：路由级 Resilience4j `CircuitBreaker`，按路由覆盖阈值，OPEN 返回 `503` + 统一 `Result`
+>   （`com.apex.scaffold.gateway.fallback`）。
+> - **限流**：网关层全局限流，实现已由“固定窗口计数”统一为 **令牌桶（token-bucket）**，
+>   `apex.gateway.rate-limit.algorithm` 默认 `token-bucket`（可切换 `fixed-window`），超限 `429`，
+>   Redis 异常时降级放行并记录 WARN 与指标。
+> - **负载均衡**：`apex.gateway` 按 `X-Gray-Tag` 匹配 `metadata[gray-tag]` 实例（`com.apex.scaffold.gateway.lb`）。
+> 上述实现细节、装配类与指标（`apex.gateway.*`）以源码与 `.trae/documents/gateway-resilience-enhancement-plan.md` 为准。
+
 ### 2.4 已有健康检查与注册能力
 
 `application.yml` 已配置 Actuator liveness/readiness probes,readiness 包含数据库和 Redis 检查;同时存在 Nacos discovery 开关、注册开关和实例权重配置。

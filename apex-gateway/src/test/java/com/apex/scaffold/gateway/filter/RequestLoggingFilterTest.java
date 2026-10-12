@@ -6,6 +6,7 @@ import com.apex.scaffold.gateway.log.AccessLogProperties;
 import com.apex.scaffold.gateway.log.AccessLogRecord;
 import com.apex.scaffold.gateway.log.AccessLogRepository;
 import com.apex.scaffold.gateway.log.AccessLogService;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -50,7 +51,8 @@ class RequestLoggingFilterTest {
             saveCount.incrementAndGet();
             return Mono.empty();
         };
-        return new RequestLoggingFilter(new AccessLogService(repository, properties), properties);
+        return new RequestLoggingFilter(
+                new AccessLogService(repository, properties, new SimpleMeterRegistry()), properties);
     }
 
     /**
@@ -144,8 +146,8 @@ class RequestLoggingFilterTest {
                 captured.add(record);
                 return Mono.empty();
             };
-            RequestLoggingFilter enabledFilter =
-                    new RequestLoggingFilter(new AccessLogService(repository, properties), properties);
+            RequestLoggingFilter enabledFilter = new RequestLoggingFilter(
+                    new AccessLogService(repository, properties, new SimpleMeterRegistry()), properties);
             MockServerWebExchange exchange = MockServerWebExchange.from(MockServerHttpRequest.get("/api/v1/orders")
                     .header(HttpHeaders.USER_AGENT, "junit")
                     .header(HttpHeaders.AUTHORIZATION, "Bearer secret-token")

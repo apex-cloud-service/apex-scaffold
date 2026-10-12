@@ -7,6 +7,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.time.LocalDateTime;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -36,6 +37,8 @@ class AccessLogServiceTest {
 
     private final AccessLogRepository repository = mock(AccessLogRepository.class);
 
+    private final SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
+
     /**
      * 构造被测服务（指定开关与采样率）。
      *
@@ -47,7 +50,7 @@ class AccessLogServiceTest {
         AccessLogProperties properties = new AccessLogProperties();
         properties.setEnabled(enabled);
         properties.setSampleRate(sampleRate);
-        return new AccessLogService(repository, properties);
+        return new AccessLogService(repository, properties, meterRegistry);
     }
 
     /**
@@ -121,6 +124,11 @@ class AccessLogServiceTest {
 
             verify(repository).save(any());
             assertThat(service.persistFailureCount()).isEqualTo(1L);
+            assertThat(meterRegistry
+                            .get(AccessLogService.METRIC_PERSIST_FAILED)
+                            .counter()
+                            .count())
+                    .isEqualTo(1.0d);
         }
 
         @Test
@@ -133,6 +141,10 @@ class AccessLogServiceTest {
 
             verify(repository).save(any());
             assertThat(service.persistFailureCount()).isZero();
+            assertThat(meterRegistry
+                            .find(AccessLogService.METRIC_PERSIST_FAILED)
+                            .counter())
+                    .isNull();
         }
     }
 

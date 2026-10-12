@@ -3,6 +3,7 @@ package com.apex.scaffold.gateway.config;
 import com.apex.scaffold.gateway.log.AccessLogProperties;
 import com.apex.scaffold.gateway.log.AccessLogRepository;
 import com.apex.scaffold.gateway.log.AccessLogService;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -40,7 +41,8 @@ public class AccessLogConfig {
      * @return 访问日志落库服务
      */
     @Bean
-    public AccessLogService accessLogService(AccessLogRepository repository, AccessLogProperties properties) {
-        return new AccessLogService(repository, properties);
+    public AccessLogService accessLogService(
+            AccessLogRepository repository, AccessLogProperties properties, MeterRegistry meterRegistry) {
+        return new AccessLogService(repository, properties, meterRegistry);
     }
 }

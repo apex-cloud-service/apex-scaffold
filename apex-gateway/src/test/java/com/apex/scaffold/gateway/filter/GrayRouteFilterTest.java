@@ -2,6 +2,7 @@ package com.apex.scaffold.gateway.filter;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -23,6 +24,22 @@ import reactor.core.publisher.Mono;
  */
 @DisplayName("GrayRouteFilter 灰度路由过滤器测试")
 class GrayRouteFilterTest {
+
+    private final SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
+
+    private GrayRouteFilter currentFilter;
+
+    /**
+     * 构造被测过滤器（注入独立指标注册表）.
+     *
+     * @param enabled         灰度总开关
+     * @param percentage      用户尾号灰度百分比
+     * @param tenantWhitelist 租户白名单
+     * @return 灰度路由过滤器
+     */
+    private GrayRouteFilter newFilter(boolean enabled, int percentage, List<String> tenantWhitelist) {
+        return new GrayRouteFilter(enabled, percentage, tenantWhitelist, meterRegistry);
+    }
 
     /**
      * 构造直通链路，捕获被改写的交换对象。
@@ -49,7 +66,19 @@ class GrayRouteFilterTest {
                 .block();
     }
 
-    private GrayRouteFilter currentFilter;
+    /**
+     * 读取指定来源的灰度命中计数.
+     *
+     * @param source 命中来源 tag
+     * @return 命中次数；无该来源指标时为 0
+     */
+    private double grayHitCount(String source) {
+        var counter = meterRegistry
+                .find(GrayRouteFilter.METRIC_GRAY_HIT)
+                .tag("source", source)
+                .counter();
+        return counter == null ? 0.0d : counter.count();
+    }
 
     @Nested
     @DisplayName("过滤器顺序")
@@ -58,7 +87,7 @@ class GrayRouteFilterTest {
         @Test
         @DisplayName("getOrder 应返回 40")
         void shouldReturnExpectedOrder() {
-            assertThat(new GrayRouteFilter(false, 0, List.of()).getOrder())
+            assertThat(newFilter(false, 0, List.of()).getOrder())
                     .isEqualTo(GrayRouteFilter.ORDER)
                     .isEqualTo(40);
         }
@@ -71,12 +100,13 @@ class GrayRouteFilterTest {
         @Test
         @DisplayName("灰度关闭时应标记 stable")
         void shouldMarkStableWhenDisabled() {
-            currentFilter = new GrayRouteFilter(false, 100, List.of());
+            currentFilter = newFilter(false, 100, List.of());
             MockServerWebExchange exchange = MockServerWebExchange.from(MockServerHttpRequest.get("/api/v1/orders")
                     .header(GrayRouteFilter.HEADER_GRAY_TAG, "gray")
                     .build());
 
             assertThat(grayTagOf(exchange)).isEqualTo(GrayRouteFilter.STABLE_VALUE);
+            assertThat(grayHitCount("header")).isZero();
         }
     }
 
@@ -87,12 +117,13 @@ class GrayRouteFilterTest {
         @Test
         @DisplayName("携带 X-Gray-Tag: gray 应强制命中灰度")
         void shouldForceGrayByHeader() {
-            currentFilter = new GrayRouteFilter(true, 0, List.of());
+            currentFilter = newFilter(true, 0, List.of());
             MockServerWebExchange exchange = MockServerWebExchange.from(MockServerHttpRequest.get("/api/v1/orders")
                     .header(GrayRouteFilter.HEADER_GRAY_TAG, "gray")
                     .build());
 
             assertThat(grayTagOf(exchange)).isEqualTo(GrayRouteFilter.GRAY_VALUE);
+            assertThat(grayHitCount("header")).isEqualTo(1.0d);
         }
     }
 
@@ -103,23 +134,25 @@ class GrayRouteFilterTest {
         @Test
         @DisplayName("租户命中白名单应灰度")
         void shouldGrayWhenTenantWhitelisted() {
-            currentFilter = new GrayRouteFilter(true, 0, List.of("tenant-9"));
+            currentFilter = newFilter(true, 0, List.of("tenant-9"));
             MockServerWebExchange exchange = MockServerWebExchange.from(MockServerHttpRequest.get("/api/v1/orders")
                     .header("X-Tenant-Id", "tenant-9")
                     .build());
 
             assertThat(grayTagOf(exchange)).isEqualTo(GrayRouteFilter.GRAY_VALUE);
+            assertThat(grayHitCount("tenant")).isEqualTo(1.0d);
         }
 
         @Test
         @DisplayName("租户未命中白名单应稳定")
         void shouldStableWhenTenantNotWhitelisted() {
-            currentFilter = new GrayRouteFilter(true, 0, List.of("tenant-9"));
+            currentFilter = newFilter(true, 0, List.of("tenant-9"));
             MockServerWebExchange exchange = MockServerWebExchange.from(MockServerHttpRequest.get("/api/v1/orders")
                     .header("X-Tenant-Id", "tenant-1")
                     .build());
 
             assertThat(grayTagOf(exchange)).isEqualTo(GrayRouteFilter.STABLE_VALUE);
+            assertThat(grayHitCount("tenant")).isZero();
         }
     }
 
@@ -130,29 +163,31 @@ class GrayRouteFilterTest {
         @Test
         @DisplayName("百分比 100 时任意用户均灰度")
         void shouldGrayAllWhenPercentageFull() {
-            currentFilter = new GrayRouteFilter(true, 100, List.of());
+            currentFilter = newFilter(true, 100, List.of());
             MockServerWebExchange exchange = MockServerWebExchange.from(MockServerHttpRequest.get("/api/v1/orders")
                     .header("X-User-Id", "user-1001")
                     .build());
 
             assertThat(grayTagOf(exchange)).isEqualTo(GrayRouteFilter.GRAY_VALUE);
+            assertThat(grayHitCount("percentage")).isEqualTo(1.0d);
         }
 
         @Test
         @DisplayName("百分比 0 时任意用户均稳定")
         void shouldStableAllWhenPercentageZero() {
-            currentFilter = new GrayRouteFilter(true, 0, List.of());
+            currentFilter = newFilter(true, 0, List.of());
             MockServerWebExchange exchange = MockServerWebExchange.from(MockServerHttpRequest.get("/api/v1/orders")
                     .header("X-User-Id", "user-1001")
                     .build());
 
             assertThat(grayTagOf(exchange)).isEqualTo(GrayRouteFilter.STABLE_VALUE);
+            assertThat(grayHitCount("percentage")).isZero();
         }
 
         @Test
         @DisplayName("同一用户的灰度状态应稳定（多次调用一致）")
         void shouldBeStableForSameUser() {
-            currentFilter = new GrayRouteFilter(true, 50, List.of());
+            currentFilter = newFilter(true, 50, List.of());
             String first = grayTagOf(MockServerWebExchange.from(MockServerHttpRequest.get("/api/v1/orders")
                     .header("X-User-Id", "stable-user")
                     .build()));

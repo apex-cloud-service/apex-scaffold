@@ -17,6 +17,7 @@ import com.tngtech.archunit.lang.ArchRule;
  *   <li>网关不得引入阻塞式 Servlet 栈（javax.servlet / jakarta.servlet）</li>
  *   <li>过滤器层（filter）不得反向依赖配置层（config）与启动类</li>
  *   <li>安全验签层（security）不得依赖过滤器层（filter）</li>
+ *   <li>熔断降级（fallback）、负载均衡（lb）、访问日志（log）不得依赖业务分层</li>
  *   <li>过滤器命名需以 Filter 结尾，便于链路顺序维护</li>
  * </ul>
  *
@@ -86,4 +87,58 @@ class GatewayArchTest {
             .should()
             .dependOnClassesThat()
             .resideInAnyPackage("com.apex.scaffold.gateway.filter..");
+
+    /**
+     * 熔断降级层不得依赖业务分层。
+     *
+     * <p>{@code fallback} 包仅承载熔断打开时的兜底响应装配（Resilience4j fallback），
+     * 属纯横切能力，不得反向依赖主应用 interfaces / application / domain / infrastructure。
+     */
+    @ArchTest
+    static final ArchRule fallback_does_not_depend_on_business_layers = noClasses()
+            .that()
+            .resideInAPackage("com.apex.scaffold.gateway.fallback..")
+            .should()
+            .dependOnClassesThat()
+            .resideInAnyPackage(
+                    "com.apex.scaffold..interfaces..",
+                    "com.apex.scaffold..application..",
+                    "com.apex.scaffold..domain..",
+                    "com.apex.scaffold..infrastructure..");
+
+    /**
+     * 负载均衡层不得依赖业务分层。
+     *
+     * <p>{@code lb} 包负责按灰度标签筛选服务实例（ServiceInstanceListSupplier），
+     * 仅依赖服务发现模型，不得反向依赖主应用业务分层。
+     */
+    @ArchTest
+    static final ArchRule load_balancer_does_not_depend_on_business_layers = noClasses()
+            .that()
+            .resideInAPackage("com.apex.scaffold.gateway.lb..")
+            .should()
+            .dependOnClassesThat()
+            .resideInAnyPackage(
+                    "com.apex.scaffold..interfaces..",
+                    "com.apex.scaffold..application..",
+                    "com.apex.scaffold..domain..",
+                    "com.apex.scaffold..infrastructure..");
+
+    /**
+     * 访问日志层不得依赖业务分层。
+     *
+     * <p>{@code log} 包仅承载结构化访问日志的组装与异步落库编排（R2DBC），
+     * 不得反向依赖主应用业务分层。
+     */
+    @ArchTest
+    static final ArchRule access_log_does_not_depend_on_business_layers = noClasses()
+            .that()
+            .resideInAPackage("com.apex.scaffold.gateway.log..")
+            .should()
+            .dependOnClassesThat()
+            .resideInAnyPackage(
+                    "com.apex.scaffold..interfaces..",
+                    "com.apex.scaffold..application..",
+                    "com.apex.scaffold..domain..",
+                    "com.apex.scaffold..infrastructure..");
 }
