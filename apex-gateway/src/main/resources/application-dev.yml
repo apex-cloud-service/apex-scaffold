@@ -8,6 +8,11 @@
 # ============================================================
 
 spring:
+  # 本地访问日志落库（Task 4）：指向本机 MySQL 的独立库 apex_gateway
+  r2dbc:
+    url: ${GATEWAY_DB_URL:r2dbc:mysql://127.0.0.1:3306/apex_gateway?serverTimezone=Asia/Shanghai}
+    username: ${GATEWAY_DB_USERNAME:root}
+    password: ${GATEWAY_DB_PASSWORD:root}
   cloud:
     nacos:
       config:

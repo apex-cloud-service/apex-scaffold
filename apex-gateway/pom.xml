@@ -71,6 +71,18 @@
             <artifactId>commons-pool2</artifactId>
         </dependency>
 
+        <!-- 访问日志持久化: Spring Data R2DBC 响应式数据库访问 (Task 4) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-r2dbc</artifactId>
+        </dependency>
+        <!-- R2DBC MySQL 驱动 (生产/运行期) -->
+        <dependency>
+            <groupId>io.asyncer</groupId>
+            <artifactId>r2dbc-mysql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
         <!-- 健康检查与指标 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
