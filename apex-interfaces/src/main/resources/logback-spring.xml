@@ -11,9 +11,9 @@
   【核心特性】
     1. 日志级别外部化：所有关键日志级别通过环境变量/配置中心注入，避免硬编码
     2. 多 Appender 分离：控制台、主日志、错误日志、请求日志、SQL日志、组件日志分文件存储
-    3. 组件日志隔离：Nacos、RocketMQ、Zipkin、Sentinel 等中间件日志独立存储
+    3. 组件日志隔离：Nacos、RocketMQ、Sentinel 等中间件日志独立存储
     4. 集中式日志聚合：生产环境通过 Logstash TCP 输出到 ELK/OpenSearch
-    5. 链路追踪集成：全链路 traceId/requestId/userId 通过 MDC 贯穿所有日志
+    5. 链路追踪集成：跨进程链路经 SkyWalking Agent 埋点（MDC 键 tid），业务 traceId/requestId/userId 通过 MDC 贯穿所有日志
     6. 滚动策略：基于时间 + 大小的双重滚动，自动压缩归档
 
   【日志变量体系】
@@ -129,7 +129,6 @@
     【文件类 - 组件日志】
       - NACOS_FILE     Nacos 客户端日志
       - ROCKETMQ_FILE  RocketMQ Spring 启动器日志（客户端内部日志由 rmq.logback.xml 输出）
-      - ZIPKIN_FILE    Zipkin/Brave 链路追踪日志
       - SENTINEL_FILE  Sentinel 熔断限流日志
       - SQL_FILE       SQL 查询日志（仅 dev 环境）
 
@@ -217,9 +216,6 @@
     │ org.mybatis         │ DEBUG    │ MyBatis SQL 日志：含参数绑定 INSERT/UPDATE/SELECT  │
     │ com.baomidou.mybatis│ DEBUG    │ MyBatis-Plus 增强 SQL：分页、Lambda 条件构造      │
     │ LoggingFilter       │ INFO     │ HTTP 请求摘要 → REQUEST_FILE + FILE，便于定位异常  │
-    │ zipkin2             │ DEBUG    │ Zipkin 上报层日志：Span 序列化、HTTP 发送、错误重试│
-    │ brave               │ DEBUG    │ Brave 框架日志：Span 创建/传播/采样决策/完成/清理  │
-    │ TraceLoggingSpan... │ INFO     │ 自定义 Span 摘要 → ZIPKIN_FILE（路径/耗时/状态）   │
     │ nacos/rocketmq      │ WARN     │ 中间件客户端日志：仅记录连接异常和配置错误          │
     └─────────────────────┴──────────┴───────────────────────────────────────────────────┘
 
@@ -227,7 +223,6 @@
     - apex-scaffold.log:          com.apex + Spring + SQL + 组件
     - apex-scaffold-error.log:    所有 ERROR 级别
     - apex-scaffold-request.log:  LoggingFilter 请求摘要
-    - zipkin/zipkin.log:         Brave/Zipkin 链路追踪
     - nacos/nacos.log:           Nacos 客户端日志
     - rocketmq/rocketmq*.log:    RocketMQ 客户端日志
 
@@ -267,19 +262,6 @@
       <appender-ref ref="FILE"/>
     </logger>
 
-    <!-- 链路追踪：DEBUG 级别记录 span 创建/传播/上报全过程 -->
-    <logger name="zipkin2" level="DEBUG" additivity="false">
-      <appender-ref ref="CONSOLE"/>
-      <appender-ref ref="ZIPKIN_FILE"/>
-    </logger>
-    <logger name="brave" level="DEBUG" additivity="false">
-      <appender-ref ref="CONSOLE"/>
-      <appender-ref ref="ZIPKIN_FILE"/>
-    </logger>
-    <logger name="com.apex.scaffold.interfaces.config.TraceLoggingSpanHandler" level="INFO" additivity="false">
-      <appender-ref ref="ZIPKIN_FILE"/>
-    </logger>
-
     <!-- 组件日志：WARN 级别抑制噪音 -->
     <logger name="com.alibaba.nacos" level="WARN" additivity="false">
       <appender-ref ref="CONSOLE"/>
@@ -311,9 +293,6 @@
     │ com.apex             │ ERROR  │ 仅记录业务异常（NPE、SQL 错误、外部调用失败等）     │
     │ org.springframework  │ ERROR  │ 仅记录致命错误（Context 加载失败等）                 │
     │ LoggingFilter        │ OFF    │ 关闭请求日志：高频请求日志会拖累 TPS 30%-50%         │
-    │ zipkin2              │ OFF    │ 关闭 Zipkin 上报层日志                              │
-    │ brave                │ OFF    │ 关闭 Brave 框架日志                                 │
-    │ TraceLoggingSpan...  │ OFF    │ 关闭 Span 摘要日志                                  │
     │ *.persistence        │ OFF    │ 关闭 SQL 日志：DB 查询数量巨大，日志可翻倍 I/O        │
     │ org.mybatis          │ OFF    │ 关闭 MyBatis 框架日志                               │
     │ com.baomidou.mybatis │ OFF    │ 关闭 MyBatis-Plus 框架日志                          │
@@ -343,11 +322,6 @@
 
     <!-- 请求日志：关闭（高频请求日志会严重拖累压测 TPS） -->
     <logger name="com.apex.scaffold.interfaces.filter.LoggingFilter" level="OFF" additivity="false"/>
-
-    <!-- 链路追踪：关闭（压测时 <trace.sampling-rate>0.0</trace.sampling-rate> 已关闭采样） -->
-    <logger name="zipkin2" level="OFF" additivity="false"/>
-    <logger name="brave" level="OFF" additivity="false"/>
-    <logger name="com.apex.scaffold.interfaces.config.TraceLoggingSpanHandler" level="OFF" additivity="false"/>
 
     <!-- SQL 日志：关闭 -->
     <logger name="com.apex.scaffold.infrastructure.persistence" level="OFF" additivity="false"/>
@@ -505,7 +479,7 @@
     <encoder class="net.logstash.logback.encoder.LogstashEncoder">
       <!-- 禁用 Logback Context 信息（hostname 等），减少冗余字段 -->
       <includeContext>false</includeContext>
-      <!-- 启用 MDC（Mapped Diagnostic Context）：traceId、requestId、userId -->
+      <!-- 启用 MDC（Mapped Diagnostic Context）：traceId（业务头 X-Trace-Id）与 tid（SkyWalking Agent 注入）一并输出，供 ELK 关联查询 -->
       <includeMdc>true</includeMdc>
       <!-- 启用结构化参数（通过 StructuredArguments.keyValue() 传入的参数） -->
       <includeStructuredArguments>true</includeStructuredArguments>
@@ -596,14 +570,17 @@
       中间件组件日志独立存放，避免与应用日志混杂。每个组件使用独立子目录：
       - logs/nacos/      Nacos 服务发现与配置
       - logs/rocketmq/   RocketMQ 消息队列
-      - logs/zipkin/     Zipkin/Brave 链路追踪
       - logs/sentinel/   Sentinel 熔断限流
 
     【日志来源说明】
       - Nacos          com.alibaba.nacos 包
       - RocketMQ       org.apache.rocketmq.spring 包（RocketMQ Spring Starter，走 SLF4J）
-      - Zipkin/Brave   zipkin2、brave 包
       - Sentinel       sentinelRecordLogger、sentinelCommandCenterLogger（桥接自 sentinel-logging-slf4j）
+
+    【链路追踪说明】
+      - 跨进程链路由 SkyWalking Java Agent 负责（-javaagent 接入），无编译期依赖，
+        因此不再需要独立的 ZIPKIN_FILE 组件日志目录；traceId 经 MDC 键 tid 注入，
+        由 JSON_FILE_OUTPUT 统一输出（includeMdc=true），供 Filebeat/ELK 关联查询。
 
     【注意】
       - RocketMQ 客户端内部日志（连接、发送、消费、偏移量等）由客户端自带的 shaded logback
@@ -660,29 +637,6 @@
     <appender-ref ref="ROCKETMQ_FILE_OUTPUT"/>
   </appender>
 
-  <!-- Zipkin/Brave 链路追踪日志 -->
-  <appender name="ZIPKIN_FILE_OUTPUT" class="ch.qos.logback.core.rolling.RollingFileAppender">
-    <file>${LOG_HOME}/zipkin/zipkin.log</file>
-    <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-      <fileNamePattern>${LOG_HOME}/zipkin/zipkin.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
-      <maxFileSize>${MAX_FILE_SIZE}</maxFileSize>
-      <maxHistory>${MAX_HISTORY}</maxHistory>
-      <totalSizeCap>${TOTAL_SIZE_CAP}</totalSizeCap>
-    </rollingPolicy>
-    <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
-      <charset>${ENCODING}</charset>
-      <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [%X{traceId:-N/A}] [%X{requestId:-N/A}] [%X{userId:-N/A}] %-5level %logger{80} - %msg%n%wEx</pattern>
-    </encoder>
-  </appender>
-  <appender name="ZIPKIN_FILE" class="ch.qos.logback.classic.AsyncAppender">
-    <queueSize>1024</queueSize>
-    <discardingThreshold>200</discardingThreshold>
-    <neverBlock>true</neverBlock>
-    <includeCallerData>false</includeCallerData>
-    <maxFlushTime>2000</maxFlushTime>
-    <appender-ref ref="ZIPKIN_FILE_OUTPUT"/>
-  </appender>
-
   <!-- Sentinel 熔断限流日志 -->
   <appender name="SENTINEL_FILE_OUTPUT" class="ch.qos.logback.core.rolling.RollingFileAppender">
     <file>${LOG_HOME}/sentinel/sentinel.log</file>
@@ -719,7 +673,7 @@
       - connectionTimeout 连接超时 5秒
       - reconnectionDelay 重连延迟 10秒
       - ringBufferSize    环形缓冲区大小，防止阻塞业务线程
-      - includeMdc        包含 MDC 上下文（traceId 等）
+      - includeMdc        包含 MDC 上下文（traceId、tid 等）
       - timeZone          时区设置为 Asia/Shanghai
   -->
   <springProfile name="prod">
@@ -825,37 +779,6 @@
     <logger name="org.apache.rocketmq" level="INFO" additivity="false">
       <appender-ref ref="CONSOLE"/>
       <appender-ref ref="ROCKETMQ_FILE"/>
-    </logger>
-
-    <!-- Zipkin/Brave 链路追踪日志：dev 使用 DEBUG 记录各层详情 -->
-    <logger name="zipkin2" level="DEBUG" additivity="false">
-      <appender-ref ref="CONSOLE"/>
-      <appender-ref ref="ZIPKIN_FILE"/>
-    </logger>
-    <logger name="brave" level="DEBUG" additivity="false">
-      <appender-ref ref="CONSOLE"/>
-      <appender-ref ref="ZIPKIN_FILE"/>
-    </logger>
-    <!-- Brave Span 处理器日志（TraceLoggingSpanHandler 输出完整 Span 数据；ERROR 级同时进入 error.log） -->
-    <logger name="com.apex.scaffold.interfaces.config.TraceLoggingSpanHandler" level="INFO" additivity="false">
-      <appender-ref ref="CONSOLE"/>
-      <appender-ref ref="ZIPKIN_FILE"/>
-      <appender-ref ref="ERROR_FILE"/>
-    </logger>
-    <!-- Brave Handler 层：Span 序列化与上报内部流程 -->
-    <logger name="brave.handler" level="DEBUG" additivity="false">
-      <appender-ref ref="CONSOLE"/>
-      <appender-ref ref="ZIPKIN_FILE"/>
-    </logger>
-    <!-- Brave Tracer 层：Span 创建、采样决策 -->
-    <logger name="brave.Tracer" level="DEBUG" additivity="false">
-      <appender-ref ref="CONSOLE"/>
-      <appender-ref ref="ZIPKIN_FILE"/>
-    </logger>
-    <!-- Brave Propagation 层：Trace 上下文传播 -->
-    <logger name="brave.propagation" level="DEBUG" additivity="false">
-      <appender-ref ref="CONSOLE"/>
-      <appender-ref ref="ZIPKIN_FILE"/>
     </logger>
 
     <!-- Sentinel 熔断限流日志 -->
@@ -998,20 +921,6 @@
       <appender-ref ref="CONSOLE"/>
       <appender-ref ref="ROCKETMQ_FILE"/>
     </logger>
-    <logger name="zipkin2" level="INFO" additivity="false">
-      <appender-ref ref="CONSOLE"/>
-      <appender-ref ref="ZIPKIN_FILE"/>
-    </logger>
-    <logger name="brave" level="INFO" additivity="false">
-      <appender-ref ref="CONSOLE"/>
-      <appender-ref ref="ZIPKIN_FILE"/>
-    </logger>
-    <!-- Brave Span 处理器日志（TraceLoggingSpanHandler 输出完整 Span 数据；ERROR 级同时进入 error.log） -->
-    <logger name="com.apex.scaffold.interfaces.config.TraceLoggingSpanHandler" level="INFO" additivity="false">
-      <appender-ref ref="CONSOLE"/>
-      <appender-ref ref="ZIPKIN_FILE"/>
-      <appender-ref ref="ERROR_FILE"/>
-    </logger>
     <logger name="sentinelRecordLogger" level="INFO" additivity="false">
       <appender-ref ref="CONSOLE"/>
       <appender-ref ref="SENTINEL_FILE"/>
@@ -1061,7 +970,6 @@
       生产环境组件日志策略：
       - Nacos、RocketMQ：仅写文件，不走 Console 和 Logstash（避免日志量过大）
       - Sentinel：仅写文件
-      - Zipkin/Brave：降级到 WARN，仅写文件
     -->
     <logger name="com.alibaba.nacos" level="INFO" additivity="false">
       <appender-ref ref="NACOS_FILE"/>
@@ -1078,17 +986,6 @@
     </logger>
     <logger name="sentinelCommandCenterLogger" level="INFO" additivity="false">
       <appender-ref ref="SENTINEL_FILE"/>
-    </logger>
-    <logger name="zipkin2" level="WARN" additivity="false">
-      <appender-ref ref="ZIPKIN_FILE"/>
-    </logger>
-    <logger name="brave" level="WARN" additivity="false">
-      <appender-ref ref="ZIPKIN_FILE"/>
-    </logger>
-    <!-- Brave Span 处理器日志（TraceLoggingSpanHandler 输出完整 Span 数据；ERROR 级同时进入 error.log） -->
-    <logger name="com.apex.scaffold.interfaces.config.TraceLoggingSpanHandler" level="INFO" additivity="false">
-      <appender-ref ref="ZIPKIN_FILE"/>
-      <appender-ref ref="ERROR_FILE"/>
     </logger>
   </springProfile>
 
@@ -1125,9 +1022,6 @@
 
   <springProfile name="performance">
     <logger name="com.apex.scaffold.interfaces.filter.LoggingFilter" level="OFF" additivity="false"/>
-    <logger name="zipkin2" level="OFF" additivity="false"/>
-    <logger name="brave" level="OFF" additivity="false"/>
-    <logger name="com.apex.scaffold.interfaces.config.TraceLoggingSpanHandler" level="OFF" additivity="false"/>
     <logger name="org.mybatis" level="OFF" additivity="false"/>
     <logger name="com.baomidou.mybatisplus" level="OFF" additivity="false"/>
     <logger name="com.alibaba.nacos" level="OFF" additivity="false"/>

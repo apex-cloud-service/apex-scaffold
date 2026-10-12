@@ -60,6 +60,15 @@ public class TraceFilter implements WebFilter {
     private static final String TRACE_ID_ATTR = "traceId";
 
     /**
+     * SkyWalking 标准 MDC 键。
+     *
+     * <p>SkyWalking Agent 通过该键向 SLF4J MDC 注入链路标识，JSON 日志统一以
+     * {@code %X{tid}} 输出；本过滤器在 Agent 缺省场景下补齐该键，保证日志与
+     * SkyWalking 链路、响应头 {@code X-Trace-Id} 使用同一 traceId。
+     */
+    private static final String TID_MDC_KEY = "tid";
+
+    /**
      * 处理链路追踪：提取/生成 TraceId 并传播。
      *
      * <ol>
@@ -88,6 +97,9 @@ public class TraceFilter implements WebFilter {
         TraceIdUtil.setTraceId(traceId);
         exchange.getAttributes().put(TRACE_ID_ATTR, traceId);
 
+        // 写入 SkyWalking 标准 MDC 键，使日志可据 %X{tid} 与链路关联
+        MDC.put(TID_MDC_KEY, traceId);
+
         // 将TraceId添加到响应头
         String finalTraceId = traceId;
         exchange.getResponse().getHeaders().add(TRACE_ID_HEADER, finalTraceId);
@@ -100,6 +112,7 @@ public class TraceFilter implements WebFilter {
                     // 请求结束时清除TraceId
                     TraceIdUtil.clear();
                     MDC.remove(TraceIdUtil.TRACE_ID_KEY);
+                    MDC.remove(TID_MDC_KEY);
                     log.debug("TraceId已清除: {}", finalTraceId);
                 });
     }

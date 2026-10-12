@@ -21,7 +21,7 @@ import reactor.core.publisher.Mono;
  *   <li>客户端未携带 {@code X-Trace-Id} 时由网关注入（复用 {@link TraceIdUtil} 生成规则）</li>
  *   <li>已携带时原样透传，便于跨系统联调与链路串联</li>
  *   <li>写入请求头、响应头、MDC 与 Reactor Context，供下游服务 / Feign 拦截器 /
- *       MQ 事件信封复用，使「HTTP 链路 + 异步消息链路」在 Zipkin / 日志平台可串联</li>
+ *       MQ 事件信封复用，使「HTTP 链路 + 异步消息链路」在 SkyWalking / 日志平台可串联</li>
  * </ol>
  *
  * <p><b>响应式说明</b>：TraceId 通过 {@code contextWrite} 写入 Reactor Context，

@@ -12,7 +12,7 @@
 #   docker compose -f docker-compose.infra.yml down -v        # 停止并清数据（⚠️ 数据丢失）
 #
 # 访问入口:
-#   MySQL    localhost:3306   (root / apex-root，库 apex_data、apex_test)
+#   MySQL    localhost:3306   (root / apex-root，库 apex_system、apex_test)
 #   Redis    localhost:6379   (无密码，AOF 持久化)
 #   Nacos    http://localhost:18848/nacos  (nacos / nacos；本机 8848 已被占用故映射 18848)
 #   RocketMQ localhost:9876 (Namesrv) / 10911 (Broker)
@@ -26,8 +26,8 @@
 #   - 监控组件配置来自 config/monitoring/（prometheus.yml / grafana / alert-rules.yml）。
 #   - JVM 调优：Nacos/RocketMQ/Sentinel/Zipkin 均已内置生产级 JVM 参数
 #     （G1 回收器/GC 停顿目标/元空间/OOM 堆转储+退出/滚动 GC 日志），与 Apex 应用同思路，
-#     详见各服务注释与 docs/DEPLOYMENT.md §4.5；注意组件镜像多为 JDK8，GC 日志用 -Xloggc 语法。
-#   - 详细说明见 docs/DEPLOYMENT.md 第 6.5 节「本地基础设施一键部署」。
+#     详见各服务注释与 docs/05-operations/deployment.md §4.5；注意组件镜像多为 JDK8，GC 日志用 -Xloggc 语法。
+#   - 详细说明见 docs/05-operations/deployment.md 第 6.5 节「本地基础设施一键部署」。
 # ============================================================
 
 services:
@@ -37,7 +37,7 @@ services:
     container_name: apex-infra-mysql
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-apex-root}
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-apex_data}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-apex_system}
       TZ: Asia/Shanghai
     command:
       - --character-set-server=utf8mb4
@@ -211,6 +211,47 @@ services:
     networks:
       - apex-infra
 
+  # ---------------- SkyWalking（链路追踪：替代 Zipkin，与 Zipkin 并存灰度） ----------------
+  # 各微服务经 skywalking-agent（-javaagent）上报到 OAP gRPC 11800；
+  # UI 通过 OAP HTTP 12800 查询，展示服务拓扑与链路追踪。
+  # 存储默认 H2（挂卷持久化）；生产可切 ES（SW_STORAGE=elasticsearch，与 ELK 复用）。
+  # 灰度说明：Zipkin 服务暂时保留（上方 zipkin 块共存），切换完成后移除。
+  skywalking-oap:
+    image: apache/skywalking-oap-server:9.7.0
+    container_name: apex-infra-skywalking-oap
+    environment:
+      TZ: Asia/Shanghai
+      SW_STORAGE: ${SW_STORAGE:-h2}
+    volumes:
+      - ./config/monitoring/skywalking/application.yml:/skywalking/config/application.yml:ro
+      - ./config/monitoring/skywalking/alarm-settings.yml:/skywalking/config/alarm-settings.yml:ro
+      - skywalking-data:/skywalking/data
+    ports:
+      - "11800:11800"
+      - "12800:12800"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:12800/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+    networks:
+      - apex-infra
+
+  skywalking-ui:
+    image: apache/skywalking-ui:9.7.0
+    container_name: apex-infra-skywalking-ui
+    environment:
+      TZ: Asia/Shanghai
+      SW_OAP_ADDRESS: http://skywalking-oap:12800
+    ports:
+      - "${SKYWALKING_UI_PORT:-8080}:8080"
+    restart: unless-stopped
+    networks:
+      - apex-infra
+    depends_on:
+      - skywalking-oap
+
   # ---------------- Prometheus（指标采集） ----------------
   prometheus:
     image: prom/prometheus:v2.53.0
@@ -277,6 +318,7 @@ volumes:
   redis-data:
   nacos-data:
   nacos-logs:
+  skywalking-data:
   prometheus-data:
   grafana-data:
 

@@ -1,0 +1,46 @@
+# ============================================================
+# Apex Scaffold - SkyWalking 告警规则
+# ============================================================
+# 用途: 挂载到 skywalking-oap 容器 /skywalking/config/alarm-settings.yml
+# 说明: 仅保留少量高价值规则（服务响应时间、错误率、实例下线），
+#       避免默认规则过于嘈杂；如需扩展可参照官方 alarm-settings.yml 补充。
+# ============================================================
+
+rules:
+  # ---- 服务响应时间过长（P99 > 3s，持续 3 个周期） ----
+  service_resp_time_rule:
+    metrics-name: service_resp_time
+    op: ">"
+    threshold: 3000
+    period: 10
+    count: 3
+    silence-period: 10
+    message: "服务 {name} 的 P99 响应时间超过 3000ms（当前 {value}ms）"
+
+  # ---- 服务成功率低于 90% ----
+  service_sla_rule:
+    metrics-name: service_sla
+    op: "<"
+    threshold: 9000
+    period: 10
+    count: 2
+    silence-period: 10
+    message: "服务 {name} 成功率低于 90%（当前 {value}%）"
+
+  # ---- 服务实例下线 ----
+  service_instance_down:
+    metrics-name: service_instance_healthy
+    op: "<"
+    threshold: 1
+    period: 10
+    count: 1
+    silence-period: 5
+    message: "服务实例 {name} 已下线"
+
+# ---------------- 告警推送（可选，默认关闭） ----------------
+# 可配置 webhook / gRPC 对接自身告警中台；本地开发默认不推送。
+webhooks:
+#  - http://127.0.0.1:9090/alarm
+
+gRPCHooks:
+#  - http://127.0.0.1:9876

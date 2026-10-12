@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 # ============================================================
-# Apex Scaffold - java -jar 部署守护脚本
+# Apex Scaffold - 微服务 java -jar 部署守护脚本
 # ============================================================
+# 微服务模式下每个进程对应一个微服务模块（apex-gateway / apex-auth-service /
+# apex-system-service / apex-workflow-service / apex-office-service / apex-file-service），
+# 由 APEX_SERVICE_MODULE 指定；旧单体 apex-interfaces 可执行 jar 已随单体退役移除。
 # 支持普通 java -jar 方式在各环境（dev/it/prod）后台运行、停止、
 # 重启、查看状态与日志，无需 Docker / systemd。
 #
@@ -18,10 +21,12 @@
 # 实际激活 profile 为 "<环境>,<档位>"，例如 prod,enterprise。
 #
 # 可覆盖变量（export 或 .env 文件注入）:
-#   APEX_JAR       可执行 jar 路径（默认自动查找 apex-interfaces/target/*-executable.jar）
+#   APEX_SERVICE_MODULE  微服务模块名（默认 apex-gateway）；脚本据此定位
+#                        <模块>/target/<模块>-*.jar 作为启动产物
+#   APEX_JAR       可执行 jar 路径（默认按 APEX_SERVICE_MODULE 自动查找）
 #   JAVA_OPTS      JVM 参数。默认已含完整调优集：堆内存(-Xms512m/-Xmx1024m)、G1 回收器、
 #                  GC 停顿目标、元空间上下限、OOM 堆转储+退出、滚动 GC 日志(-Xlog:gc*)等；
-#                  详见 docs/DEPLOYMENT.md §4.5；GC 日志与堆转储落盘 ${LOG_DIR}
+#                  详见 docs/05-operations/deployment.md §4.5；GC 日志与堆转储落盘 ${LOG_DIR}
 #   APEX_LOG_DIR   日志根目录（默认 <项目根>/logs；logback 业务日志 + GC 日志 + 堆转储共用）
 #   APP_PID_FILE   PID 文件（默认 <项目根>/logs/app.pid）
 #   APP_OUT_LOG    标准输出日志（默认 <项目根>/logs/app.out.log）
@@ -52,6 +57,9 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 cd "${PROJECT_ROOT}" || exit 1
 
+# 微服务模块名（默认网关；可通过 APEX_SERVICE_MODULE 覆盖为其它微服务，如 apex-system-service）
+SERVICE_MODULE="${APEX_SERVICE_MODULE:-apex-gateway}"
+
 # ---------- 参数解析 ----------
 ACTION="${1:-status}"
 ENV_PROFILE="${2:-dev}"
@@ -71,7 +79,7 @@ SPRING_PROFILES_ACTIVE="${ENV_PROFILE},${TIER}"
 # ---------- 可覆盖变量默认值 ----------
 # 日志根目录：logback 业务日志（APEX_LOG_DIR）+ GC 日志 + OOM 堆转储 共用同一目录
 LOG_DIR="${APEX_LOG_DIR:-${PROJECT_ROOT}/logs}"
-# 生产级 JVM 调优默认值（可用 JAVA_OPTS 整体覆盖，详见 docs/DEPLOYMENT.md §4.5）：
+# 生产级 JVM 调优默认值（可用 JAVA_OPTS 整体覆盖，详见 docs/05-operations/deployment.md §4.5）：
 #   -Xms/-Xmx            堆内存 初始(最小)512m / 最大 1024m
 #   -XX:+UseG1GC          G1 垃圾回收器；-XX:MaxGCPauseMillis=200 目标最大停顿
 #   -XX:MetaspaceSize/-XX:MaxMetaspaceSize  元空间初始 256m / 上限 512m
@@ -80,8 +88,20 @@ LOG_DIR="${APEX_LOG_DIR:-${PROJECT_ROOT}/logs}"
 #   -Xlog:gc*:file=...    滚动 GC 日志（5 份 × 20m）
 #   -Dfile.encoding=UTF-8 -Djava.security.egd=file:/dev/./urandom
 JAVA_OPTS="${JAVA_OPTS:--Xms512m -Xmx1024m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:MetaspaceSize=256m -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=${LOG_DIR}/heapdump.hprof -XX:+ExitOnOutOfMemoryError -Xlog:gc*:file=${LOG_DIR}/gc.log:time,uptime,level,tags:filecount=5,filesize=20m -Dfile.encoding=UTF-8 -Djava.security.egd=file:/dev/./urandom}"
-APP_PID_FILE="${APP_PID_FILE:-${PROJECT_ROOT}/logs/app.pid}"
-APP_OUT_LOG="${APP_OUT_LOG:-${PROJECT_ROOT}/logs/app.out.log}"
+
+# ---------- SkyWalking Agent（可选接入，替代原 Zipkin/Brave） ----------
+# SW_AGENT_ENABLED=true 且探针 jar 存在时，自动拼接 -javaagent；否则跳过（无探针仍可启动）。
+# agent 自动注入 MDC 键 tid，供 logback %X{tid} 输出与链路关联。
+SW_AGENT_ENABLED="${SW_AGENT_ENABLED:-false}"
+SW_AGENT_JAR="${SW_AGENT_JAR:-${PROJECT_ROOT}/skywalking-agent/skywalking-agent.jar}"
+SW_AGENT_NAME="${SW_AGENT_NAME:-${SERVICE_MODULE}}"
+SW_AGENT_COLLECTOR_BACKEND_SERVICES="${SW_AGENT_COLLECTOR_BACKEND_SERVICES:-localhost:11800}"
+export SW_AGENT_ENABLED SW_AGENT_JAR SW_AGENT_NAME SW_AGENT_COLLECTOR_BACKEND_SERVICES
+if [ "${SW_AGENT_ENABLED}" = "true" ] && [ -f "${SW_AGENT_JAR}" ]; then
+  JAVA_OPTS="-javaagent:${SW_AGENT_JAR} ${JAVA_OPTS}"
+fi
+APP_PID_FILE="${APP_PID_FILE:-${PROJECT_ROOT}/logs/${SERVICE_MODULE}.pid}"
+APP_OUT_LOG="${APP_OUT_LOG:-${PROJECT_ROOT}/logs/${SERVICE_MODULE}.out.log}"
 SERVER_PORT="${SERVER_PORT:-8080}"
 MANAGEMENT_PORT="${MANAGEMENT_PORT:-8081}"
 SHUTDOWN_TIMEOUT_SECONDS="${APEX_SHUTDOWN_TIMEOUT_SECONDS:-90}"
@@ -107,11 +127,11 @@ fi
 if [ -n "${APEX_JAR:-}" ]; then
   JAR="${APEX_JAR}"
 else
-  JAR="$(ls "${PROJECT_ROOT}"/apex-interfaces/target/apex-interfaces-*-executable.jar 2>/dev/null | head -n 1)"
+  JAR="$(ls "${PROJECT_ROOT}"/"${SERVICE_MODULE}"/target/"${SERVICE_MODULE}"-*.jar 2>/dev/null | grep -v -- '-sources.jar' | head -n 1)"
 fi
 if [ -z "${JAR:-}" ] || [ ! -f "${JAR}" ]; then
-  echo "❌ 未找到可执行 JAR。请先构建: ./scripts/build/build.sh -Penterprise"
-  echo "   或通过 APEX_JAR 环境变量指定 jar 路径。"
+  echo "❌ 未找到可执行 JAR（模块 ${SERVICE_MODULE}）。请先构建: ./scripts/build/build.sh -Penterprise"
+  echo "   或通过 APEX_JAR / APEX_SERVICE_MODULE 环境变量指定。"
   exit 1
 fi
 
@@ -149,7 +169,7 @@ cmd_start() {
   fi
   mkdir -p "${LOG_DIR}"
 
-  echo "🚀 启动 Apex Scaffold"
+  echo "🚀 启动 Apex Scaffold 微服务: ${SERVICE_MODULE}"
   echo "   JAR        : ${JAR}"
   echo "   Profiles   : ${SPRING_PROFILES_ACTIVE}"
   echo "   PID 文件   : ${APP_PID_FILE}"
