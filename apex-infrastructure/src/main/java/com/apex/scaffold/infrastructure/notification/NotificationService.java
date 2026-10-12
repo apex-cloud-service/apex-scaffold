@@ -65,6 +65,19 @@ public class NotificationService {
      * @param message 消息体（含接收人）
      */
     public void publish(NotificationMessage message) {
+        publishLocal(message);
+    }
+
+    /**
+     * 仅向本实例的 SSE 订阅者广播消息（本地扇出，不触发 MQ 回环）。
+     *
+     * <p>供多实例广播消费者（{@code NotificationBroadcastListener}）调用：
+     * 每个实例收到 RocketMQ 广播消息后，仅需将消息推送给本实例持有的 SSE
+     * 长连接订阅者，<b>不得</b>再次发布到 MQ，否则将造成无限回环。</p>
+     *
+     * @param message 消息体（含接收人）
+     */
+    public void publishLocal(NotificationMessage message) {
         meterRegistry.counter("apex.sse.events.count").increment();
         Sinks.EmitResult result = sink.tryEmitNext(message);
         if (result.isFailure()) {

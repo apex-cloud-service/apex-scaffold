@@ -36,6 +36,12 @@ public class MqConstant {
     /** 照片人工审核请求主题。 */
     public static final String TOPIC_PHOTO_MODERATION = "apex-photo-moderation";
 
+    /** 站内通知（SSE 广播）主题。 */
+    public static final String TOPIC_NOTIFICATION = "apex-notification-topic";
+
+    /** 站内通知（SSE 广播）消费组。 */
+    public static final String CONSUMER_GROUP_NOTIFICATION = "apex-notification-consumer-group";
+
     /** 照片人工审核结果主题。 */
     public static final String TOPIC_PHOTO_MODERATION_RESULT = "apex-photo-moderation-result";
 
