@@ -99,6 +99,31 @@ public class DomainEventOutboxStore {
     }
 
     /**
+     * 判断指定事件 ID 是否已在 Outbox 登记。
+     *
+     * <p>不区分状态：只要存在记录（PENDING/PROCESSING/DELIVERED/DEAD）即返回 {@code true}。
+     * 事务消息回查时据此判断本地事务是否已成功提交，避免误回滚已落库的事件。</p>
+     *
+     * @param eventId 事件唯一标识
+     * @return 存在返回 {@code true}；不存在或参数为空返回 {@code false}
+     */
+    public boolean existsByEventId(String eventId) {
+        if (eventId == null || eventId.isBlank()) {
+            return false;
+        }
+        String sql = "SELECT 1 FROM sys_domain_event_outbox WHERE event_id = ? LIMIT 1";
+        try (Connection connection = dataSource.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, eventId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                return resultSet.next();
+            }
+        } catch (SQLException exception) {
+            throw new IllegalStateException("查询 Outbox 事件存在性失败", exception);
+        }
+    }
+
+    /**
      * 按状态统计 Outbox 记录数量。
      *
      * <p>用于监控积压情况：PENDING 待投递、PROCESSING 处理中、DEAD 超过重试上限。

@@ -661,6 +661,10 @@ sequenceDiagram
 
 ## 8. 数据一致性与分布式事务
 
+> **结论（消除歧义）**：本项目的"分布式事务"统一采用 **Outbox 最终一致** 方案（本地事务内写业务表 + Outbox 表，再由调度投递 RocketMQ，消费端幂等 + DLQ 兜底）。
+> **不启用 Seata**：Seata 仅为可选项，当前未引入、未配置、未依赖。仅当出现无法用"最终一致 + Saga 补偿"覆盖的真实强一致需求时，才重新评估 Seata TCC/Saga 模式。
+> 已落地的 Outbox 支撑组件：`TransactionalOutboxExecutor`（业务写 + Outbox 写同事务）、`DefaultMqLocalTransactionHandler`（RocketMQ 事务消息回查，按 `event_id` 是否存在决定 COMMIT/ROLLBACK）、`MqConsumerMetrics`（含死信指标 `mq.consumer.dlq.messages`）。
+
 ### 8.1 Outbox 事件链路（复用现有实现）
 
 ```mermaid

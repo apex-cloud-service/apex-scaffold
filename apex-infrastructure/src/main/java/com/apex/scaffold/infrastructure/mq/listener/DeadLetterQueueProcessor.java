@@ -1,6 +1,7 @@
 package com.apex.scaffold.infrastructure.mq.listener;
 
 import com.apex.scaffold.infrastructure.mq.constant.MqConstant;
+import com.apex.scaffold.infrastructure.mq.metrics.MqConsumerMetrics;
 import jakarta.annotation.PostConstruct;
 import java.time.Instant;
 import java.util.List;
@@ -19,6 +20,7 @@ import org.apache.rocketmq.client.consumer.listener.MessageListenerConcurrently;
 import org.apache.rocketmq.client.exception.MQClientException;
 import org.apache.rocketmq.common.message.MessageExt;
 import org.apache.rocketmq.spring.autoconfigure.RocketMQAutoConfiguration;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -90,6 +92,10 @@ public class DeadLetterQueueProcessor {
 
     /** RocketMQ 死信消费者实例 */
     private DefaultMQPushConsumer dlqConsumer;
+
+    /** 消费者监控指标（用于死信告警与统计） */
+    @Autowired(required = false)
+    private MqConsumerMetrics consumerMetrics;
 
     /**
      * 注册死信处理器。
@@ -285,6 +291,9 @@ public class DeadLetterQueueProcessor {
         int reconsumeTimes = messageExt.getReconsumeTimes();
         log.warn(
                 "[DLQ] 收到死信消息, msgId: {}, originalTopic: {}, reconsumeTimes: {}", msgId, originalTopic, reconsumeTimes);
+        if (consumerMetrics != null) {
+            consumerMetrics.recordDlq();
+        }
 
         DlqHandler handler = handlerRegistry.get(originalTopic);
         if (handler == null) {

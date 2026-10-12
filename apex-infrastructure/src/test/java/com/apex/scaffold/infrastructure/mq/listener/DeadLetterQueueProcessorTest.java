@@ -6,6 +6,7 @@ import static org.mockito.Mockito.mockConstruction;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.apex.scaffold.infrastructure.mq.metrics.MqConsumerMetrics;
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
 import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
 import org.apache.rocketmq.common.message.MessageExt;
@@ -167,6 +168,37 @@ class DeadLetterQueueProcessorTest {
         String dlqTopic = ReflectionTestUtils.invokeMethod(processor, "buildDlqTopic", topic);
 
         assertThat(dlqTopic).isEqualTo("%DLQ%photo-consumer-group");
+    }
+
+    /**
+     * 测试处理死信消息时应累加死信指标。
+     */
+    @Test
+    @DisplayName("处理死信消息时应累加死信指标")
+    void shouldRecordDlqMetricWhenDeadLetterProcessed() {
+        MqConsumerMetrics metrics = mock(MqConsumerMetrics.class);
+        ReflectionTestUtils.setField(processor, "consumerMetrics", metrics);
+        processor.registerHandler("apex-photo-moderation", msg -> true);
+
+        MessageExt message = createMessageExt("apex-photo-moderation", "msg-metric-001");
+        processor.processDeadLetter(message);
+
+        verify(metrics).recordDlq();
+    }
+
+    /**
+     * 测试未注册处理器时也应累加死信指标。
+     */
+    @Test
+    @DisplayName("未注册处理器时也应累加死信指标")
+    void shouldRecordDlqMetricWhenNoHandlerRegistered() {
+        MqConsumerMetrics metrics = mock(MqConsumerMetrics.class);
+        ReflectionTestUtils.setField(processor, "consumerMetrics", metrics);
+
+        MessageExt message = createMessageExt("unknown-topic", "msg-metric-002");
+        processor.processDeadLetter(message);
+
+        verify(metrics).recordDlq();
     }
 
     /**
