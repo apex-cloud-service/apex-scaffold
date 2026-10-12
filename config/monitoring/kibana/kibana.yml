@@ -1,0 +1,26 @@
+# ============================================================
+# Apex Scaffold - Kibana 配置（ELK 日志可视化与检索）
+# ============================================================
+# 用途: 挂载到 kibana 容器 /usr/share/kibana/config/kibana.yml
+#
+# 定位: 连接 Elasticsearch，提供 Discover 检索、仪表盘与告警。
+#       内置 Data View「apex-logs-*」支持按 traceId 串联单请求全链路日志、
+#       按 tenantId 隔离租户、按 routeId/status 查询网关访问日志。
+# ============================================================
+
+server.name: apex-kibana
+server.host: 0.0.0.0
+server.port: 5601
+
+# 连接同网络内的 ES（docker-compose 服务名 elasticsearch）
+elasticsearch.hosts: ["http://elasticsearch:9200"]
+
+# 本地开发关闭安全；生产应与 ES 安全配置保持一致并配置账号
+elasticsearch.username: "kibana_system"
+elasticsearch.password: "kibana"
+
+# 中文界面
+i18n.locale: "zh-CN"
+
+# 关闭遥测
+telemetry.enabled: false

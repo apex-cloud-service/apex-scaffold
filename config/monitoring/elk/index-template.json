@@ -1,0 +1,56 @@
+{
+  "index_patterns": ["apex-logs-*"],
+  "template": {
+    "settings": {
+      "number_of_shards": 1,
+      "number_of_replicas": 0,
+      "index.lifecycle.name": "apex-logs-ilm"
+    },
+    "mappings": {
+      "dynamic_templates": [
+        {
+          "strings_as_keyword": {
+            "match_mapping_type": "string",
+            "mapping": {
+              "type": "keyword",
+              "ignore_above": 1024
+            }
+          }
+        }
+      ],
+      "properties": {
+        "@timestamp": { "type": "date" },
+        "@version": { "type": "keyword" },
+        "message": { "type": "text" },
+        "level": { "type": "keyword" },
+        "logger_name": { "type": "keyword" },
+        "thread_name": { "type": "keyword" },
+        "service": { "type": "keyword" },
+        "serviceName": { "type": "keyword" },
+        "traceId": { "type": "keyword" },
+        "tid": { "type": "keyword" },
+        "tenantId": { "type": "keyword" },
+        "routeId": { "type": "keyword" },
+        "requestId": { "type": "keyword" },
+        "userId": { "type": "keyword" },
+        "host": {
+          "properties": {
+            "name": { "type": "keyword" }
+          }
+        },
+        "error": {
+          "properties": {
+            "message": { "type": "text", "index": false }
+          }
+        }
+      }
+    }
+  },
+  "composed_of": [],
+  "priority": 200,
+  "version": 1,
+  "_meta": {
+    "description": "Apex Scaffold 应用结构化日志索引模板（供 Filebeat 采集的 *-json.log 使用）",
+    "managed_by": "apex-scaffold"
+  }
+}

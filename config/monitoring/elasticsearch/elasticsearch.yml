@@ -1,0 +1,32 @@
+# ============================================================
+# Apex Scaffold - Elasticsearch 配置（ELK 日志存储与检索）
+# ============================================================
+# 用途: 挂载到 elasticsearch 容器 /usr/share/elasticsearch/config/elasticsearch.yml
+#
+# 定位: 承接 Filebeat 采集的应用结构化 JSON 日志，提供 traceId/tenantId/routeId/status
+#       等维度的复杂检索、聚合分析与长期留存。与 Loki/Grafana 并存（Loki 偏实时流式，
+#       ES 偏结构化检索与长期留存）。
+#
+# 安全: 本地/演示环境关闭 xpack 安全（单节点零配置启动）；生产应开启安全认证与 TLS，
+#       并通过 ELASTIC_PASSWORD / 环境变量注入凭据（见 docker-compose.infra.yml 注释）。
+# ============================================================
+
+cluster.name: apex-scaffold-logs
+node.name: node-1
+network.host: 0.0.0.0
+
+# 单节点模式：避免生产环境的引导选举检查
+discovery.type: single-node
+
+# 本地开发关闭安全插件；生产请置为 true 并配置 TLS + 内置用户凭据
+xpack.security.enabled: false
+xpack.security.enrollment.enabled: false
+xpack.security.http.ssl.enabled: false
+xpack.security.transport.ssl.enabled: false
+
+# 关闭机器学习与监控采集，降低本地资源占用
+xpack.ml.enabled: false
+
+# 数据路径（compose 挂卷 es-data 持久化）
+path.data: /usr/share/elasticsearch/data
+path.logs: /usr/share/elasticsearch/logs

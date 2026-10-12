@@ -489,8 +489,8 @@
       <includeTags>true</includeTags>
       <!-- 禁用调用者信息（class、method、line），避免性能开销 -->
       <includeCallerData>false</includeCallerData>
-      <!-- 自定义字段：固定添加 service 标签，供 Loki 标签索引使用 -->
-      <customFields>{"service":"${LOG_NAME}"}</customFields>
+      <!-- 自定义字段：service 供 Loki 标签索引；serviceName 供 ELK 按服务检索/聚合（keyword） -->
+      <customFields>{"service":"${LOG_NAME}","serviceName":"${LOG_NAME}"}</customFields>
     </encoder>
   </appender>
   <appender name="JSON_FILE" class="ch.qos.logback.classic.AsyncAppender">

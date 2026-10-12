@@ -1,0 +1,54 @@
+# ============================================================
+# Apex Scaffold - Filebeat 配置（采集应用 JSON 日志 → Elasticsearch）
+# ============================================================
+# 用途: 挂载到 filebeat 容器 /usr/share/filebeat/filebeat.yml
+#
+# 管道: 应用 logback JSON_FILE_OUTPUT 写入 /var/log/apex-scaffold/*-json.log
+#       → Filebeat filestream + ndjson 解析 → Elasticsearch（索引 apex-logs-yyyy.MM.dd）
+#       → Kibana 检索。
+#
+# 索引模板与 ILM: 由 config/monitoring/elk/index-template.json 与 ilm-policy.json
+#   统一定义（traceId/tenantId/serviceName/routeId 为 keyword），Filebeat 不自动建模板/ILM，
+#   避免与托管模板冲突。首次启动需将模板与 ILM 策略 PUT 到 ES（见 docs ELK 运维说明）。
+# ============================================================
+
+filebeat.inputs:
+  - type: filestream
+    id: apex-json-logs
+    enabled: true
+    paths:
+      - /var/log/apex-scaffold/*-json.log
+    # 每行已是完整 JSON（LogstashEncoder 输出），直接解析到根字段
+    parsers:
+      - ndjson:
+          target: ""
+          add_error_key: true
+          overwrite_keys: true
+    # 忽略滚动归档的压缩文件，避免重复采集
+    prospector.scanner.exclude_files: ['\.gz$']
+
+# ======================= 输出到 Elasticsearch =======================
+output.elasticsearch:
+  hosts: ["elasticsearch:9200"]
+  # 按天滚动的索引名（与 index-template.json 的 index_patterns apex-logs-* 匹配）
+  index: "apex-logs-%{+yyyy.MM.dd}"
+  # 本地 ES 关闭安全；生产请补充 username/password 与 protocol=https
+  # username: "elastic"
+  # password: "${ELASTIC_PASSWORD}"
+  # protocol: "https"
+  # ssl.verification_mode: "none"
+
+# 禁用 Filebeat 自带模板与 ILM，统一使用托管模板（config/monitoring/elk/*）
+setup.template.enabled: false
+setup.ilm.enabled: false
+
+# 加载外部 Kibana 仪表盘（可选）
+setup.kibana:
+  host: "kibana:5601"
+
+# 日志级别
+logging.level: info
+logging.to_files: false
+
+# 关闭内置监控采集
+monitoring.enabled: false

@@ -252,6 +252,73 @@ services:
     depends_on:
       - skywalking-oap
 
+  # ---------------- ELK（结构化日志检索，与 Loki/Grafana 并存） ----------------
+  # 管道：应用 logback JSON_FILE → /var/log/apex-scaffold/*-json.log
+  #       → Filebeat 采集 → Elasticsearch → Kibana 检索。
+  # 注意：ES 8.x 要求宿主机 vm.max_map_count>=262144（一次性设置：
+  #       sudo sysctl -w vm.max_map_count=262144）。生产应开启 xpack 安全。
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.4
+    container_name: apex-infra-elasticsearch
+    environment:
+      TZ: Asia/Shanghai
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+      discovery.type: single-node
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - ./config/monitoring/elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
+      - es-data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:9200/_cluster/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+    networks:
+      - apex-infra
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.13.4
+    container_name: apex-infra-kibana
+    environment:
+      TZ: Asia/Shanghai
+    volumes:
+      - ./config/monitoring/kibana/kibana.yml:/usr/share/kibana/config/kibana.yml:ro
+    ports:
+      - "5601:5601"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:5601/api/status || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+    networks:
+      - apex-infra
+    depends_on:
+      - elasticsearch
+
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:8.13.4
+    container_name: apex-infra-filebeat
+    user: root
+    environment:
+      TZ: Asia/Shanghai
+    volumes:
+      - ./config/monitoring/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      # 与各微服务共享的日志卷（应用侧挂载到 LOG_HOME，见各服务 compose）
+      - apex-logs:/var/log/apex-scaffold:ro
+    command: ["-e", "-strict.perms=false"]
+    restart: unless-stopped
+    networks:
+      - apex-infra
+    depends_on:
+      - elasticsearch
+
   # ---------------- Prometheus（指标采集） ----------------
   prometheus:
     image: prom/prometheus:v2.53.0
@@ -319,6 +386,8 @@ volumes:
   nacos-data:
   nacos-logs:
   skywalking-data:
+  es-data:
+  apex-logs:
   prometheus-data:
   grafana-data:
 
