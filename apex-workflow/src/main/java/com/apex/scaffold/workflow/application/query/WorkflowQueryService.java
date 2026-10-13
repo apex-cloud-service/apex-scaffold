@@ -205,6 +205,23 @@ public class WorkflowQueryService {
     }
 
     /**
+     * 按任务 ID 查询任务详情。
+     *
+     * <p>用于在工作流事件发布等场景补充任务信息（所属流程实例、节点编码等）。
+     * 主键不存在时返回空 {@link Mono}。
+     *
+     * @param taskId 任务 ID
+     * @return 任务 DTO；任务不存在时返回 {@link Mono#empty()}
+     */
+    public Mono<WorkflowTaskDTO> getTaskById(Long taskId) {
+        return Mono.fromCallable(() -> {
+                    TaskPO po = taskMapper.selectById(taskId);
+                    return po == null ? null : convertToTaskDTO(po);
+                })
+                .subscribeOn(BlockingIoSchedulers.jdbc());
+    }
+
+    /**
      * 获取流程定义详情（用于设计器加载）。
      *
      * <p>根据流程编码查询唯一的流程定义，并解析其 DAG JSON 结构。

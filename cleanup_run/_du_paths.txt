@@ -1,0 +1,151 @@
+/Users/eric/Library/Application Support/com.bohemiancoding.sketch3
+/Users/eric/Library/Application Support/Plug-Ins
+/Users/eric/Library/Application Support/.mibprofile
+/Users/eric/Library/Application Support/com.nektony.Funter-SIII
+/Users/eric/Library/Application Support/accountsd
+/Users/eric/Library/Application Support/DiskImages
+/Users/eric/Library/Application Support/libraryLocationV4URL.data
+/Users/eric/Library/Application Support/ControlCenter
+/Users/eric/Library/Application Support/.CCH_NGLW_Lock
+/Users/eric/Library/Application Support/CoreParsec
+/Users/eric/Library/Application Support/xPlan
+/Users/eric/Library/Application Support/PremiumSoft CyberTech
+/Users/eric/Library/Application Support/videosubscriptionsd
+/Users/eric/Library/Application Support/Animoji
+/Users/eric/Library/Application Support/heartbeats
+/Users/eric/Library/Application Support/vfkit
+/Users/eric/Library/Application Support/Bartender 7
+/Users/eric/Library/Application Support/微信web开发者工具
+/Users/eric/Library/Application Support/com.fiplab.memoryclean3
+/Users/eric/Library/Application Support/.CCH_UPI_Lock
+/Users/eric/Library/Application Support/dmd
+/Users/eric/Library/Application Support/appplaceholdersyncd
+/Users/eric/Library/Application Support/libraryRecentDocumentItemsV401.data
+/Users/eric/Library/Application Support/bitz_net
+/Users/eric/Library/Application Support/.E8E175C5-AF63-4C44-B65A-151031E3324C
+/Users/eric/Library/Application Support/clawhub
+/Users/eric/Library/Application Support/Quick Look
+/Users/eric/Library/Application Support/kotlin
+/Users/eric/Library/Application Support/shark-mac-client
+/Users/eric/Library/Application Support/HBuilder X
+/Users/eric/Library/Application Support/CrashReporter
+/Users/eric/Library/Application Support/iLifeMediaBrowser
+/Users/eric/Library/Application Support/deepseek-harness-desktop
+/Users/eric/Library/Application Support/微信开发者工具
+/Users/eric/Library/Application Support/privatecloudcomputed
+/Users/eric/Library/Application Support/EcosiaBrowser
+/Users/eric/Library/Application Support/CloudDocs
+/Users/eric/Library/Application Support/.GMTemporary
+/Users/eric/Library/Application Support/FEFileExplorer
+/Users/eric/Library/Application Support/.ACCC_Lock
+/Users/eric/Library/Application Support/libraryRecentDocumentItemsV401.sdata
+/Users/eric/Library/Application Support/MWebLibrary
+/Users/eric/Library/Application Support/.f1d4f3959d97e06ec2090.40683081
+/Users/eric/Library/Application Support/Knowledge
+/Users/eric/Library/Application Support/icdd
+/Users/eric/Library/Application Support/zhiximind-desktop
+/Users/eric/Library/Application Support/Users
+/Users/eric/Library/Application Support/gk
+/Users/eric/Library/Application Support/FileProvider
+/Users/eric/Library/Application Support/revenuecat
+/Users/eric/Library/Application Support/designer
+/Users/eric/Library/Application Support/realdoc
+/Users/eric/Library/Application Support/Yu Writer
+/Users/eric/Library/Application Support/DifferentialPrivacy
+/Users/eric/Library/Application Support/dsh-desktop
+/Users/eric/Library/Application Support/Recory-Mac
+/Users/eric/Library/Application Support/.gbda
+/Users/eric/Library/Application Support/AskPermission
+/Users/eric/Library/Application Support/.com.felttip.1999
+/Users/eric/Library/Application Support/io.sentry
+/Users/eric/Library/Application Support/transparencyd
+/Users/eric/Library/Application Support/themes
+/Users/eric/Library/Application Support/Updater_new
+/Users/eric/Library/Application Support/syncdefaultsd
+/Users/eric/Library/Application Support/CS Odessa
+/Users/eric/Library/Application Support/SymbolSourceSymbols
+/Users/eric/Library/Application Support/Memory Meter 3
+/Users/eric/Library/Application Support/Policy
+/Users/eric/Library/Application Support/Eltima Software
+/Users/eric/Library/Application Support/.ADCS_Lock
+/Users/eric/Library/Containers/com.wdc.WDDesktop
+/Users/eric/Library/Containers/com.zy.clash.osx
+/Users/eric/Library/Containers/com.brohawn.ActivityMonitor
+/Users/eric/Library/Containers/net.televator.Vimari
+/Users/eric/Library/Containers/FN2V63AD2J.com.tencent.ScreenCapture3
+/Users/eric/Library/Containers/com.brohawn.ActivityMonitor.Widget
+/Users/eric/Library/Containers/com.baiqian.HappyRead.HappyReadExtension
+/Users/eric/Library/Containers/com.brohawn.ActivityMonitor.NetworkToday
+/Users/eric/Library/Containers/io.coressh.askpass
+/Users/eric/Library/Caches/runtime-info-darwin-x64-768cc29e967a2e65
+/Users/eric/Library/Caches/RevenueCatFonts
+/Users/eric/Library/Caches/familycircled
+/Users/eric/Library/Caches/SentryCrash
+/Users/eric/Library/Caches/runtime-info
+/Users/eric/Library/Caches/dws
+/Users/eric/Library/Caches/PassKit
+/Users/eric/Library/Caches/CloudKit
+/Users/eric/Library/Caches/runtime-info-darwin-x64-5fc9bc492a3d29a1
+/Users/eric/Library/Caches/Animoji
+/Users/eric/Library/Caches/GameKit
+/Users/eric/Library/Caches/baidunetdisk-updater
+/Users/eric/Library/Caches/runtime-info-darwin-x64-70fa3db9baa14a08
+/Users/eric/Library/Caches/coze-updater
+/Users/eric/Library/Caches/RevenueCat
+/Users/eric/Library/Caches/FamilyCircle
+/Users/eric/Library/Caches/askpermissiond
+/Users/eric/Library/Caches/JNA
+/Users/eric/Library/Caches/io.sentry
+/Users/eric/Library/Caches/com.plausiblelabs.crashreporter.data
+/Users/eric/Library/HTTPStorages/runtime-info-darwin-x64-768cc29e967a2e65
+/Users/eric/Library/HTTPStorages/com.nektony.App-Cleaner-SII
+/Users/eric/Library/HTTPStorages/familycircled
+/Users/eric/Library/HTTPStorages/com.nektony.App-Cleaner-SIII
+/Users/eric/Library/HTTPStorages/runtime-info-darwin-x64-fe40accb24f0bd30
+/Users/eric/Library/HTTPStorages/com.oracle.java.8u391.java
+/Users/eric/Library/HTTPStorages/com.nektony.Funter-SIII
+/Users/eric/Library/HTTPStorages/runtime-info
+/Users/eric/Library/HTTPStorages/com.rogueamoeba.soundsource
+/Users/eric/Library/HTTPStorages/com.oracle.java.Java-Updater.binarycookies
+/Users/eric/Library/HTTPStorages/com.intuitibits.wifiexplorerpro3.binarycookies
+/Users/eric/Library/HTTPStorages/runtime-info-darwin-x64-5fc9bc492a3d29a1
+/Users/eric/Library/HTTPStorages/com.kite.Kite
+/Users/eric/Library/HTTPStorages/com.mindjet.mindmanager.13
+/Users/eric/Library/HTTPStorages/com.macwk.com.macOS.Updater
+/Users/eric/Library/HTTPStorages/com.oracle.java.8u401.java
+/Users/eric/Library/HTTPStorages/com.nektony.MacCleaner-PRO-SIII
+/Users/eric/Library/HTTPStorages/com.fiplab.memoryclean3
+/Users/eric/Library/HTTPStorages/com.macwk.com.macOS.Updater.binarycookies
+/Users/eric/Library/HTTPStorages/com.apphousekitchen.aldente-pro.binarycookies
+/Users/eric/Library/HTTPStorages/com.macclean.app
+/Users/eric/Library/HTTPStorages/org.eclipse.platform.ide
+/Users/eric/Library/HTTPStorages/com.apphousekitchen.aldente-pro
+/Users/eric/Library/HTTPStorages/runtime-info-darwin-x64-70fa3db9baa14a08
+/Users/eric/Library/HTTPStorages/com.sublimemerge
+/Users/eric/Library/HTTPStorages/com.grammarly.GRLlamaOnboarding.binarycookies
+/Users/eric/Library/HTTPStorages/com.oracle.java.8u361.java
+/Users/eric/Library/HTTPStorages/com.colliderli.iina
+/Users/eric/Library/HTTPStorages/com.intuitibits.wifiexplorerpro3
+/Users/eric/Library/HTTPStorages/com.wondershare.UpdateHelper
+/Users/eric/Library/HTTPStorages/com.kite.KiteHelper
+/Users/eric/Library/HTTPStorages/com.macclean.app.binarycookies
+/Users/eric/Library/HTTPStorages/askpermissiond
+/Users/eric/Library/HTTPStorages/com.torusknot.SourceTreeNotMAS
+/Users/eric/Library/HTTPStorages/com.mac.utility.media.player.pro.binarycookies
+/Users/eric/Library/HTTPStorages/com.ggt.vm
+/Users/eric/Library/HTTPStorages/com.oracle.java.Java-Updater
+/Users/eric/Library/HTTPStorages/com.mac.utility.media.player.pro
+/Users/eric/Library/HTTPStorages/com.nektony.Memory-Cleaner-SIII
+/Users/eric/Library/HTTPStorages/com.panic.Coda2
+/Users/eric/Library/HTTPStorages/com.oracle.java.8u281.java
+/Users/eric/Library/HTTPStorages/com.oray.remote.binarycookies
+/Users/eric/Library/HTTPStorages/com.nektony.Duplicate-File-Finder-SIII
+/Users/eric/Library/HTTPStorages/com.fiplab.memoryclean3.binarycookies
+/Users/eric/Library/HTTPStorages/com.mindjet.mindmanager.13.binarycookies
+/Users/eric/Library/HTTPStorages/real_networking
+/Users/eric/Library/HTTPStorages/com.colliderli.iina.binarycookies
+/Users/eric/Library/Logs/CoreSimulator
+/Users/eric/Library/Logs/DiscRecording.log
+/Users/eric/Library/Logs/fsck_hfs.log
+/Users/eric/Library/Logs/ClashX Pro
+/Users/eric/Library/Logs/Baseband

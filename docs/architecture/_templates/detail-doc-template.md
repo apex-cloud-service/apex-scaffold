@@ -163,7 +163,7 @@ export COMPONENT_A_TIMEOUT=10s
 export COMPONENT_A_POOL_SIZE=100
 ```
 
-### Docker Compose
+### Podman Compose
 
 ```yaml
 version: '3.8'
@@ -324,7 +324,7 @@ example:
 - [监控配置](../../_archive/operations/monitoring-dashboard-configuration.md)
 
 ### 开发规范
-- [后端开发规范](../../04-development/backend-development-standards.md)
+- [后端开发规范](../../04-development/development-standards.md)
 - 前端开发规范：已迁移至独立前端仓库 `apex-admin-web` 的 `frontend-docs/frontend-development-standards.md`
 
 ### 外部资源

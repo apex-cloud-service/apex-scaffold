@@ -1,0 +1,39 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:apex_auth}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=true&requireSSL=true
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+  
+  r2dbc:
+    # R2DBC MySQL 响应式数据源(生产环境,与 JDBC 数据源指向同一生产库)
+    url: r2dbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:apex_auth}?serverTimezone=Asia/Shanghai&sslMode=REQUIRED
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    pool:
+      initial-size: 10
+      max-size: 30
+      max-idle-time: 30m
+      max-acquire-time: 3s
+      max-create-connection-time: 5s
+  
+  flyway:
+    enabled: true
+    baseline-on-migrate: false
+    locations: classpath:db/migration/mysql
+    out-of-order: false
+    validate-on-migrate: true
+
+logging:
+  level:
+    root: WARN
+    com.apex.scaffold.auth: INFO
+    org.springframework.web: WARN
+    org.springframework.security: WARN
+    org.springframework.r2dbc: INFO

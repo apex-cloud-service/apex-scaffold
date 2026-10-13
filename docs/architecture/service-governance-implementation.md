@@ -2,11 +2,11 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 在不进行微服务拆分的前提下，补齐单体应用的优雅关机、运行期降级与上下线协同，并让同一套代码根据配置或启动环境选择 `standalone`、Docker Compose、Kubernetes 治理实现，为 `java -jar` 到 Kubernetes 的迁移提供兼容路径。
+**Goal:** 在不进行微服务拆分的前提下，补齐单体应用的优雅关机、运行期降级与上下线协同，并让同一套代码根据配置或启动环境选择 `standalone`、Podman Compose、Kubernetes 治理实现，为 `java -jar` 到 Kubernetes 的迁移提供兼容路径。
 
 **Architecture:** 在 `apex-interfaces` 建立平台无关的治理 SPI、配置属性、启动期部署模式解析、生命周期状态机、统一 deadline 和关停协调器；通过策略模式隔离 standalone、Compose、Kubernetes，通过适配器连接 Spring Availability、Nacos 和平台探针。MQ、线程池等资源以 drain participant 接入协调器，HPA/Deployment 仍由 Kubernetes 控制面负责，业务代码不直接调用平台 API。
 
-**Tech Stack:** Java 17、Spring Boot 3.5.15、Spring WebFlux、Spring Availability、Spring Cloud Alibaba Nacos/Sentinel、RocketMQ Spring、Micrometer、JUnit 5、Mockito、AssertJ、Docker Compose、Kubernetes YAML、Bash。
+**Tech Stack:** Java 17、Spring Boot 3.5.15、Spring WebFlux、Spring Availability、Spring Cloud Alibaba Nacos/Sentinel、RocketMQ Spring、Micrometer、JUnit 5、Mockito、AssertJ、Podman Compose、Kubernetes YAML、Bash。
 
 ---
 
@@ -18,7 +18,7 @@
 - [SentinelNacosDataSourceConfig.java](../../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/config/SentinelNacosDataSourceConfig.java) 已接入动态规则；本次仅在必要处补充生命周期和失败策略配置，不把 Nacos 故障误判为应用存活失败。
 - [MqConsumerService.java](../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/mq/service/MqConsumerService.java)、[UserMessageListener.java](../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/mq/listener/UserMessageListener.java)、[DeadLetterQueueProcessor.java](../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/mq/listener/DeadLetterQueueProcessor.java) 需要提供停止 intake、in-flight 计数和 deadline drain 能力。
 - [ThreadPoolConfig.java](../../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/config/ThreadPoolConfig.java) 与 [AsyncConfig.java](../../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/config/AsyncConfig.java) 各自管理关闭等待，需接入统一资源排空协议，避免等待时间叠加。
-- [k8s/deployment.yaml](../../k8s/deployment.yaml) 已存在 probes 与 HPA；[docker-compose.yml](../../docker-compose.yml) 已有基础服务，但应用缺少 readiness healthcheck 和 stop grace 配置。
+- [k8s/deployment.yaml](../../k8s/deployment.yaml) 已存在 probes 与 HPA；[podman-compose.yml](../../podman-compose.yml) 已有基础服务，但应用缺少 readiness healthcheck 和 stop grace 配置。
 - [scripts/deploy/app.sh](../../scripts/deploy/app.sh)、[scripts/deploy/start.sh](../../scripts/deploy/start.sh)、[scripts/deploy/stop.sh](../../scripts/deploy/stop.sh) 需要统一检查管理端口 readiness 和退出码。
 - 未找到 `AGENTS.md` 和 `docs/guide/代码开发规范.md`，实现遵循已加载 Java/Spring 规范与仓库现有 Javadoc、配置注释、测试命名风格。
 
@@ -29,7 +29,7 @@
 3. 模式只在启动期解析一次，运行期不热切换；部署方式迁移采用新实例启动、readiness 就绪、旧实例优雅下线。
 4. 显式配置与环境探测冲突时以显式配置为准并告警；自动探测出现多个平台证据时，生产默认启动失败。
 5. `standalone` 和 `compose` 不在应用内创建/销毁进程或容器；Kubernetes 扩缩容仅由 HPA/Deployment 完成。
-6. 业务层只依赖 `DeploymentGovernanceStrategy`、`DrainParticipant` 和状态查询，不直接依赖 Nacos、Docker 或 Kubernetes API。
+6. 业务层只依赖 `DeploymentGovernanceStrategy`、`DrainParticipant` 和状态查询，不直接依赖 Nacos、Podman 或 Kubernetes API。
 7. 优雅关机总流程为：进入 `DRAINING` → readiness 立即拒绝流量 → 平台摘流/注销 → 停止 HTTP/MQ/后台 intake → 等待 participant → 关闭资源 → deadline 到期强制停止并记录诊断。
 8. 所有新增生产类、具名方法和构造器添加中文 Javadoc；类型 Javadoc 包含 `@author`、`@version`、`@since`。配置文件、Shell、Kubernetes、Compose 和测试代码添加与仓库一致的中文说明注释。不得记录密钥、Token 或完整环境变量。
 
@@ -68,7 +68,7 @@
 
 ### 修改部署、脚本和文档
 
-- `docker-compose.yml`：应用 readiness healthcheck、`stop_grace_period`、依赖条件和中文注释。
+- `podman-compose.yml`：应用 readiness healthcheck、`stop_grace_period`、依赖条件和中文注释。
 - `k8s/deployment.yaml`、`k8s/canary-deployment.yaml`：管理地址、startupProbe、readinessProbe、preStop、termination grace、稳定/金丝雀 selector。
 - `k8s/pod-disruption-budget.yaml`：新增稳定版本 PDB。
 - `scripts/deploy/app.sh`、`start.sh`、`stop.sh`：统一 readiness、超时、强杀和退出码。
@@ -138,7 +138,7 @@
 
 - [ ] 定义统一接口：`mode()`、`prepareForTraffic()`、`withdrawFromTraffic(WithdrawalReason reason)`、`restoreTraffic()`、`capabilities()`；声明方法必须可重复调用。
 - [ ] registry 接收所有策略和解析结果，只选择一个活动策略；零个或多个匹配策略启动失败，输出能力矩阵。
-- [ ] standalone 策略只负责本地 readiness 和可选 Nacos 联动；Compose 策略依赖 healthcheck/Nacos/外部代理，不调用 Docker API；Kubernetes 策略通过 Spring readiness 与 Service/EndpointSlice 协作，不调用 Kubernetes API。
+- [ ] standalone 策略只负责本地 readiness 和可选 Nacos 联动；Compose 策略依赖 healthcheck/Nacos/外部代理，不调用容器管理 API；Kubernetes 策略通过 Spring readiness 与 Service/EndpointSlice 协作，不调用 Kubernetes API。
 - [ ] 生产环境采用构造器注入和条件装配；不使用字段注入。所有新类型和方法添加中文 Javadoc。
 - [ ] 上下文测试验证四种 mode 选择、唯一策略、Nacos/MQ 能力开关，以及不支持能力返回 false 而非静默成功。
 
@@ -179,7 +179,7 @@
 
 **Files:**
 - Modify: `application.yml` 及所有相关 profile YAML
-- Modify: `docker-compose.yml`
+- Modify: `podman-compose.yml`
 - Modify: `scripts/deploy/app.sh`
 - Modify: `scripts/deploy/start.sh`
 - Modify: `scripts/deploy/stop.sh`
@@ -231,7 +231,7 @@
 - [ ] 单元测试覆盖 mode resolver、状态机、readiness、registry、deadline、线程池和 MQ participant。
 - [ ] Spring context test 覆盖 basic/standard/enterprise 组合、Bean 条件和唯一策略装配。
 - [ ] `WebTestClient` 随机端口测试访问 `/actuator/health/liveness` 和 `/actuator/health/readiness`，并验证 shutdown 后 readiness 变为拒绝流量。
-- [ ] 如可复用现有测试基础设施，增加进程级 SIGTERM 测试；否则保留为可选 profile，不能让普通单元测试依赖 Docker、Nacos 或 RocketMQ。
+- [ ] 如可复用现有测试基础设施，增加进程级 SIGTERM 测试；否则保留为可选 profile，不能让普通单元测试依赖 Podman、Nacos 或 RocketMQ。
 - [ ] 增加 Compose 配置校验和 K8s manifest 校验，不把 PMD、Spotless、Javadoc 失败用 `|| true` 吞掉。
 - [ ] 按项目规范执行：
   ```bash

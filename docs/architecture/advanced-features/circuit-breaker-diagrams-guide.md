@@ -199,7 +199,7 @@ resilience4j_circuitbreaker_slow_call_rate{name="paymentService"}
 - [Sentinel熔断限流完整技术指南](circuit-breaker-rate-limit-guide.md)
 - [自动重试策略](auto-retry-strategy.md)
 - [服务治理方案](../service-governance-solution.md)
-- [后端开发规范](../../04-development/backend-development-standards.md)
+- [后端开发规范](../../04-development/development-standards.md)
 
 ---
 

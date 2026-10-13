@@ -42,11 +42,11 @@
 | 文件 | 原版本 | 修复后版本 | 状态 |
 |------|--------|-----------|------|
 | pom.xml（根） | v1.2.0 | v1.3.1 | ✅ 现行基准版本 |
-| Dockerfile | v1.1.3 | v1.3.1 | ✅ 已修复并随版本升级 |
+| Containerfile | v1.1.3 | v1.3.1 | ✅ 已修复并随版本升级 |
 | package.json（前端） | v1.1.4 | v1.3.1 | ✅ 已修复并随版本升级 |
 
 **修复方法**：
-- 后端：直接修改 Dockerfile BUILD_VERSION 参数
+- 后端：直接修改 Containerfile BUILD_VERSION 参数
 - 前端：使用 sed 命令更新 package.json
 
 ---
@@ -142,7 +142,7 @@
 5. `docs/reports/code_review_and_standardization_report_2026-09-17.md`
 
 ### 修改文件（2 个）
-1. `Dockerfile`：BUILD_VERSION v1.1.3 → v1.2.0（后续随版本收口升级至 v1.3.1）
+1. `Containerfile`（原 Dockerfile）：BUILD_VERSION v1.1.3 → v1.2.0（后续随版本收口升级至 v1.3.1）
 2. `apex-admin-web/package.json`：version v1.1.4 → v1.2.0（后续随版本收口升级至 v1.3.1）
 
 ### 删除文件（3 个）
@@ -159,7 +159,7 @@
 1. **V40 Flyway 迁移测试**：
    ```bash
    # 启动 MySQL
-   docker-compose -f docker-compose.infra.yml up -d mysql
+   podman-compose -f podman-compose.infra.yml up -d mysql
    
    # 启动应用（自动执行 Flyway）
    mvnd spring-boot:run -pl apex-interfaces -P basic
@@ -177,8 +177,8 @@
 
 3. **三种部署方式测试**：
    - java -jar：`mvnd clean package && java -jar apex-interfaces/target/*.jar`
-   - Docker：`docker build -t apex-scaffold:1.3.1 . && docker run -p 8080:8080 apex-scaffold:1.3.1`
-   - Docker Compose：`docker-compose up -d`
+   - Podman：`podman build -f Containerfile -t apex-scaffold:1.3.1 . && podman run -p 8080:8080 apex-scaffold:1.3.1`
+   - Podman Compose：`podman-compose -f podman-compose.yml up -d`
 
 ---
 
@@ -253,7 +253,7 @@ ALTER TABLE wf_workflow_definition CHANGE COLUMN enabled status VARCHAR(20);
 - 架构设计：DDD 分层清晰，响应式编程规范
 - 安全防护：OAuth2、JWT、RBAC、审计日志完善
 - 文档体系：开发规范、部署指南、API 文档齐全
-- 部署支持：java -jar、Docker、Docker Compose 三种方式
+- 部署支持：java -jar、Podman、Podman Compose 三种方式
 
 **项目已达到商业化交付标准！** 🚀
 

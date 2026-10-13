@@ -1,0 +1,36 @@
+spring:
+  autoconfigure:
+    # basic profile 使用单机 H2 数据源与内存队列，排除 Redisson、dynamic-datasource、
+    # 远程 API 客户端自动装配（认证中心不依赖这些组件）
+    exclude:
+      org.redisson.spring.starter.RedissonAutoConfigurationV2,
+      com.baomidou.dynamic.datasource.spring.boot.autoconfigure.DynamicDataSourceAutoConfiguration,
+      com.apex.scaffold.infrastructure.remote.config.RemoteApiClientConfig
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:auth-center;MODE=MySQL;DB_CLOSE_DELAY=-1
+    username: sa
+    password:
+  r2dbc:
+    # 与上方 JDBC 数据源共享同一命名 H2 内存库（basic profile 下供 R2DBC 仓储使用）
+    url: r2dbc:h2:mem:///auth-center;MODE=MySQL;DB_CLOSE_DELAY=-1
+    username: sa
+    password:
+  flyway:
+    enabled: false
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:db/basic-schema.sql
+apex:
+  events:
+    outbox:
+      # basic/H2 环境关闭事务 Outbox：Outbox 存储 SQL 使用 MySQL 方言（ON DUPLICATE KEY UPDATE ... IF()），
+      # H2 MySQL 模式不支持 IF() 函数，启用会导致登出事件写入失败。
+      # 关闭后由 AuthCenterEventConfig 装配轻量级 LocalDomainEventPublisher（仅日志，不落库）。
+      enabled: false
+logging:
+  level:
+    org.springframework.web: INFO
+    org.springframework.security: INFO
+    com.apex.scaffold.auth: INFO

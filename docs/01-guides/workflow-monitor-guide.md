@@ -1,5 +1,9 @@
 # 工作流监控与统计功能使用指南
 
+> 微服务化说明：本节功能由独立服务 **`apex-workflow-service`** 提供（默认端口 `8083`，数据库 `apex_workflow`），
+> 通过网关（默认端口 `8080`）以 `/admin-api/v1/workflows/**` 路由对外暴露；
+> 独立构建命令：`mvnd -pl apex-workflow-service -am package`。
+
 ## 📋 概述
 
 工作流监控与统计功能为 Apex Scaffold v1.4.0 新增的 Enterprise 特性,提供完整的流程实例监控、待办任务管理和统计分析能力。
@@ -573,6 +577,6 @@ CREATE INDEX idx_task_instance ON wf_task(process_instance_id);
 
 ---
 
-**文档版本**: v1.0  
-**最后更新**: 2026-09-02  
-**适用版本**: Apex Scaffold v1.2.0+
+**文档版本**: v1.1
+**最后更新**: 2026-10-09
+**适用版本**: Apex Scaffold v1.4.0+（微服务化：`apex-workflow-service`）

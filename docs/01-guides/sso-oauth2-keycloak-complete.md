@@ -606,8 +606,8 @@ setInterval(() => {
 - 1.3 为什么选择Keycloak
 - 1.4 与Apex Scaffold的集成架构
 
-**2. Docker部署配置 (1200字)**
-- 2.1 使用Docker Compose部署
+**2. 容器部署配置 (1200字)**
+- 2.1 使用Podman Compose部署
   ```yaml
   services:
     keycloak:

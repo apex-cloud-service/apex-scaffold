@@ -175,7 +175,7 @@
   <text x="1290" y="400" class="code">✅ 离线验证</text>
   <text x="1310" y="417" class="step-desc">无需联网激活</text>
   <text x="1290" y="437" class="code">✅ 防虚拟机检测</text>
-  <text x="1310" y="454" class="step-desc">检测Docker/VM环境</text>
+  <text x="1310" y="454" class="step-desc">检测容器/VM环境</text>
   
   <rect x="1270" y="490" width="460" height="150" rx="6" fill="#fff" stroke="#fbbf24" stroke-width="1.5"/>
   <text x="1290" y="513" class="step-title">功能控制</text>

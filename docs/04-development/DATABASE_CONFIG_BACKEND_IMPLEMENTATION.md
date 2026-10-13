@@ -33,7 +33,7 @@
 部署配置生成结果 DTO：
 - `yaml`: YAML 格式配置
 - `env`: 环境变量格式配置
-- `dockerCompose`: Docker Compose 配置
+- `dockerCompose`: Podman Compose 配置（保留兼容 API 字段名）
 
 #### CurrentDatabaseInfoDTO.java
 当前数据库信息 DTO：
@@ -58,7 +58,7 @@
    - 生成三种格式的部署配置
    - YAML 配置：Spring Boot 数据源配置，密码使用环境变量
    - 环境变量配置：包含完整连接信息
-   - Docker Compose 配置：数据库容器定义
+   - Podman Compose 配置：数据库容器定义
    - 在 `boundedElastic()` 线程池执行
 
 3. **getCurrentDatabaseInfo()**

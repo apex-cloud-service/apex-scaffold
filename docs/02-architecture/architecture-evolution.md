@@ -70,14 +70,14 @@ Apex Scaffold 当前为**模块化单体**（Modular Monolith）：
 代码侧已完备，以下为**运维/部署配套**建议（已随包落地于 `config/monitoring/`）：
 
 1. **监控大盘**：`config/monitoring/grafana/apex-dashboard.json` —— Grafana 官方仪表盘
-   （覆盖 JVM/HTTP/连接池/Sentinel 指标，指标口径 `apex_api_*`），docker-compose 一键导入；
+   （覆盖 JVM/HTTP/连接池/Sentinel 指标，指标口径 `apex_api_*`），podman-compose 一键导入；
 2. **告警规则**：`config/monitoring/prometheus/alert-rules.yml` —— 10 条预置规则
    （服务宕机、接口 5xx 率、P95 延迟、JVM 堆、连接池水位、Redis/Sentinel）；
 3. **日志采集**：对接 ELK / Loki（结构化日志 + TraceId 字段即可关联查询）；
 4. **采样率调优**：默认 0.1（10%），高 QPS 可再下调，低流量可上调至 1.0；
 5. **管理端口安全**：`management.server.port=8081` 独立端口，建议仅内网/服务网格暴露，生产关闭 prometheus 之外的多余端点。
 
-> 一键拉起监控栈：`docker compose -f config/monitoring/docker-compose.yml up -d`
+> 一键拉起监控栈：`podman-compose -f config/monitoring/podman-compose.yml up -d`
 > （Prometheus + Grafana + Zipkin，自动置备数据源与大盘，详见 `config/monitoring/README.md`）
 
 ## 四、结论

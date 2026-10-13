@@ -125,7 +125,7 @@ public class MeilisearchConfig {
         /**
          * Meilisearch 服务地址
          *
-         * <p>示例：{@code http://localhost:7700}（本地开发）、{@code http://meilisearch:7700}（Docker Compose）、
+         * <p>示例：{@code http://localhost:7700}（本地开发）、{@code http://meilisearch:7700}（Podman Compose）、
          * {@code http://meilisearch.default.svc.cluster.local:7700}（Kubernetes）
          *
          * <p>默认值：{@code http://localhost:7700}

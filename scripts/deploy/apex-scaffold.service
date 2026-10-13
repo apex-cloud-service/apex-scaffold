@@ -1,24 +1,35 @@
 # ============================================================
-# Apex Scaffold - systemd 服务单元模板（java -jar 部署）
+# Apex Scaffold - systemd 服务单元模板（微服务 java -jar 部署）
 # ============================================================
-# 部署位置: /etc/systemd/system/apex-scaffold.service
+# 微服务模式下每个进程对应一个微服务模块（apex-gateway / apex-auth-service /
+# apex-system-service / apex-workflow-service / apex-office-service / apex-file-service），
+# 由 APEX_SERVICE_MODULE 指定且每个微服务各装一份本模板（不同实例名）。旧单体可执行
+# jar（apex-interfaces-*-executable.jar）已随单体退役移除。
+#
+# 生产推荐使用 Podman Compose（podman-compose.yml，网关 + 5 微服务 + 中间件），
+# 本模板仅用于无容器的裸机 java -jar 部署场景。
+#
+# 部署位置: /etc/systemd/system/apex-<service>.service（如 apex-gateway.service）
 # 配套环境变量文件: /etc/apex-scaffold/apex.env（每行 KEY=VALUE）
 #
-# 使用步骤:
+# 使用步骤（以 apex-gateway 为例，其它微服务将 <module> 替换为对应模块名）:
 #   1. 构建并拷贝可执行 jar（logs 目录存放 GC 日志 gc.log 与 OOM 堆转储 heapdump.hprof）:
 #        ./scripts/build/build.sh -Penterprise
 #        mkdir -p /opt/apex-scaffold/logs
-#        cp apex-interfaces/target/apex-interfaces-*-executable.jar /opt/apex-scaffold/app.jar
-#   2. 创建环境变量文件（见 docs/DEPLOYMENT.md 环境变量参考表）:
+#        cp <module>/target/<module>-*.jar /opt/apex-scaffold/app.jar
+#   2. 创建环境变量文件（见 docs/05-operations/deployment.md 环境变量参考表）:
 #        sudo mkdir -p /etc/apex-scaffold
 #        sudo tee /etc/apex-scaffold/apex.env > /dev/null <<'EOF'
 #        SPRING_PROFILES_ACTIVE=prod,enterprise
-#        DB_MASTER_URL=jdbc:mysql://127.0.0.1:3306/apex_data?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
-#        DB_MASTER_USERNAME=apex
-#        DB_MASTER_PASSWORD=********
-#        DB_SLAVE_URL=jdbc:mysql://127.0.0.1:3306/apex_data?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
-#        DB_SLAVE_USERNAME=apex
-#        DB_SLAVE_PASSWORD=********   # 从库凭据（prod 已启用 slave，必须注入）
+#        # 各微服务使用独立库（网关为响应式服务、不直连数据库，可省略以下数据源项）：
+#        #   apex-auth-service -> apex_auth   apex-system-service -> apex_system
+#        #   apex-workflow-service -> apex_workflow   apex-office-service -> apex_office
+#        #   apex-file-service -> apex_file
+#        DB_HOST=127.0.0.1
+#        DB_PORT=3306
+#        DB_NAME=apex_system
+#        DB_USERNAME=apex
+#        DB_PASSWORD=********
 #        REDIS_HOST=127.0.0.1
 #        REDIS_PORT=6379
 #        REDIS_PASSWORD=********   # prod 强制要求（spring.data.redis.password）
@@ -47,21 +58,21 @@
 #        OUTBOX_RETENTION_BATCH_SIZE=5000
 #        APEX_LOG_DIR=/var/log/apex-scaffold
 #        EOF
-#   3. 安装并启用:
-#        sudo cp scripts/deploy/apex-scaffold.service /etc/systemd/system/
+#   3. 安装并启用（每个微服务一份，实例名按模块命名）:
+#        sudo cp scripts/deploy/apex-scaffold.service /etc/systemd/system/apex-gateway.service
 #        sudo chown -R apex:apex /opt/apex-scaffold /var/log/apex-scaffold
 #        sudo systemctl daemon-reload
-#        sudo systemctl enable --now apex-scaffold
+#        sudo systemctl enable --now apex-gateway
 #   4. 常用操作:
-#        systemctl status apex-scaffold
-#        journalctl -u apex-scaffold -f
-#        sudo systemctl restart apex-scaffold
+#        systemctl status apex-gateway
+#        journalctl -u apex-gateway -f
+#        sudo systemctl restart apex-gateway
 # ============================================================
 
 [Unit]
-Description=Apex Scaffold Application
+Description=Apex Scaffold Microservice (java -jar)
 Documentation=https://github.com/your-org/apex-scaffold
-After=network-online.target mysqld.service redis.service docker.service
+After=network-online.target mysqld.service redis.service
 Wants=network-online.target
 
 [Service]

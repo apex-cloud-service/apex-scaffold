@@ -18,7 +18,7 @@
 
   <rect width="1400" height="900" fill="#fff"/>
   <text x="700" y="40" class="title">Apex Scaffold 部署拓扑（本地一键 / 生产 K8s）</text>
-  <text x="700" y="64" class="subtitle">docker-compose.infra.yml · Nacos · RocketMQ · Sentinel · Prometheus/Grafana/Zipkin · v1.3.1</text>
+  <text x="700" y="64" class="subtitle">podman-compose.infra.yml · Nacos · RocketMQ · Sentinel · Prometheus/Grafana/Zipkin · v1.3.1</text>
 
   <!-- Access Layer -->
   <rect x="40" y="90" width="1320" height="76" rx="10" fill="#4f46e5" opacity="0.08" stroke="#4f46e5" stroke-width="2"/>
@@ -164,7 +164,7 @@
   <text x="1183" y="680" class="box-desc">健康/指标端点</text>
   <text x="1183" y="695" class="code">apex_* 指标前缀</text>
 
-  <text x="700" y="752" class="note" text-anchor="middle">部署形态：本地开发 docker compose -f docker-compose.infra.yml up -d（127.0.0.1 直连） · 生产 Kubernetes（HPA/ConfigMap/Secret/滚动发布）</text>
+  <text x="700" y="752" class="note" text-anchor="middle">部署形态：本地开发 podman-compose -f podman-compose.infra.yml up -d（127.0.0.1 直连） · 生产 Kubernetes（HPA/ConfigMap/Secret/滚动发布）</text>
   <text x="700" y="774" class="note" text-anchor="middle">运维入口：Nacos 18848 / Sentinel 8858 / Zipkin 9411 / Prometheus 9090 / Grafana 3200 / MinIO 9000</text>
   <text x="700" y="796" class="note" text-anchor="middle">配置来源：config/monitoring（prometheus.yml / alert-rules.yml / grafana provisioning）</text>
 
@@ -172,5 +172,5 @@
   <text x="60" y="846" class="box-title">环境隔离</text>
   <text x="60" y="864" class="box-desc">dev（本地 compose，127.0.0.1）· test（apex_test 库）· prod（K8s Namespace 隔离，Secret 注入凭据，Nacos prod 命名空间）</text>
 
-  <text x="700" y="893" class="note" text-anchor="middle" font-size="10">端口映射以本机实际占用为准（Nacos 8848→18848，Grafana 3000→3200）；JVM 调优参数见 docker-compose.infra.yml 注释</text>
+  <text x="700" y="893" class="note" text-anchor="middle" font-size="10">端口映射以本机实际占用为准（Nacos 8848→18848，Grafana 3000→3200）；JVM 调优参数见 podman-compose.infra.yml 注释</text>
 </svg>

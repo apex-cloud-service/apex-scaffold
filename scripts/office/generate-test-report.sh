@@ -44,7 +44,7 @@ get_test_stats() {
     
     # 运行办公模块测试并捕获结果
     if source ./scripts/build/init-build-env.sh && \
-       mvnd -pl apex-interfaces -am test -Dtest='*Office*' -Dsurefire.failIfNoSpecifiedTests=false > "$REPORT_DIR/test-output.log" 2>&1; then
+       mvnd -pl apex-system -am test -Dtest='*Office*' -Dsurefire.failIfNoSpecifiedTests=false > "$REPORT_DIR/test-output.log" 2>&1; then
         echo "PASSED"
     else
         echo "FAILED"

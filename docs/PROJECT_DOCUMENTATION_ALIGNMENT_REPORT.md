@@ -98,7 +98,7 @@ docs/
 scripts/
 ├── dev/              ✅ 开发工具 (codegen, format, check)
 ├── test/             ✅ 测试脚本 (集成测试、JVM诊断)
-├── deploy/           ✅ 部署脚本 (docker, service)
+├── deploy/           ✅ 部署脚本 (podman, service)
 ├── ops/              ✅ 运维脚本 (backup, monitoring, diagnostics)
 ├── ci/               ✅ CI/CD (文档检查、SpringDoc覆盖率)
 ├── utils/            ✅ 通用工具 (SVG验证、环境变量提取)

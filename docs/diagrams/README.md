@@ -15,7 +15,7 @@
 | 核心架构图        | 3张  | 01-03      | DDD分层、部署拓扑、技术选型 |
 | 业务流程图        | 4张  | 04-07      | 登录认证、权限校验、工作流、文件上传 |
 | 基础设施图        | 5张  | 08-12      | 数据库、缓存、限流、数据权限、安全 |
-| 部署与微服务治理图    | 6张  | 13-18      | Docker/K8s、CI/CD、Nacos、Zipkin、Gateway |
+| 部署与微服务治理图    | 6张  | 13-18      | Podman/K8s、CI/CD、Nacos、Zipkin、Gateway |
 | 前端技术栈与响应式编程图 | 5张  | 19-23      | Vue 3、Axios、WebFlux、i18n、OpenAPI |
 | 监控可观测性图      | 2张  | 24-25      | Prometheus/Grafana、Loki日志 |
 | 高级架构与技术栈图    | 5张  | 26-29      | 容灾、消息队列、全文搜索、技术栈总览 |
@@ -85,7 +85,7 @@
 
 | 编号 | 文件名                                      | 标题                   | 说明                            |
 | -- | ---------------------------------------- | -------------------- | ----------------------------- |
-| 13 | `13_docker_compose_local_dev.svg`        | Docker Compose本地开发环境 | 一键启动完整技术栈,健康检查+数据持久化          |
+| 13 | `13_docker_compose_local_dev.svg`        | Podman Compose本地开发环境 | 一键启动完整技术栈,健康检查+数据持久化          |
 | 14 | `14_kubernetes_production_deployment.svg` | Kubernetes生产部署架构     | HPA自动伸缩,ConfigMap/Secret,滚动发布 |
 | 15 | `15_cicd_pipeline.svg`                   | CI/CD流水线架构           | GitHub Actions,安全扫描+多环境部署     |
 | 16 | `16_nacos_service_discovery.svg`         | Nacos服务注册与发现         | 服务注册+配置中心,3节点Raft集群          |
@@ -269,7 +269,7 @@ chrome --headless --print-to-pdf=output.pdf input.svg
 | ------------ | -------------- |
 | Vue 3        | 19, 20, 22     |
 | Spring Boot  | 01, 03, 21     |
-| Docker       | 13, 14         |
+| Podman       | 13, 14         |
 | Kubernetes   | 14, 26         |
 | 监控           | 17, 24, 25     |
 | 安全           | 04, 05, 11, 12 |

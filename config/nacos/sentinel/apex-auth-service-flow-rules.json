@@ -1,0 +1,13 @@
+[
+  {"resource":"/api/v1/auth/login","limitApp":"default","grade":1,"count":50,"strategy":0,"controlBehavior":0,"clusterMode":false},
+  {"resource":"/api/v1/auth/refresh","limitApp":"default","grade":1,"count":200,"strategy":0,"controlBehavior":0,"clusterMode":false},
+  {"resource":"/api/v1/auth/logout","limitApp":"default","grade":1,"count":100,"strategy":0,"controlBehavior":0,"clusterMode":false},
+  {"resource":"/api/v1/auth/sms/code","limitApp":"default","grade":1,"count":20,"strategy":0,"controlBehavior":0,"clusterMode":false},
+  {"resource":"/api/v1/auth/cl/sms/code","limitApp":"default","grade":1,"count":20,"strategy":0,"controlBehavior":0,"clusterMode":false},
+  {"resource":"/api/v1/auth/mfa/challenge","limitApp":"default","grade":1,"count":50,"strategy":0,"controlBehavior":0,"clusterMode":false},
+  {"resource":"/api/v1/auth/mfa/verify","limitApp":"default","grade":1,"count":50,"strategy":0,"controlBehavior":0,"clusterMode":false},
+  {"resource":"/oauth2/token","limitApp":"default","grade":1,"count":100,"strategy":0,"controlBehavior":0,"clusterMode":false},
+  {"resource":"/api/v1/sso/**","limitApp":"default","grade":1,"count":80,"strategy":0,"controlBehavior":0,"clusterMode":false},
+  {"resource":"/internal/v1/users/**","limitApp":"default","grade":1,"count":500,"strategy":0,"controlBehavior":0,"clusterMode":false},
+  {"resource":"/internal/v1/tokens/validate","limitApp":"default","grade":1,"count":1000,"strategy":0,"controlBehavior":0,"clusterMode":false}
+]

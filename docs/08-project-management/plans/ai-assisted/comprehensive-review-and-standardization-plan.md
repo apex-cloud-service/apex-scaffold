@@ -33,8 +33,8 @@
 
 #### 部署方式
 1. **java -jar**：直接运行可执行 jar
-2. **Docker**：多阶段构建镜像（基于 eclipse-temurin:17-jre-alpine）
-3. **Docker Compose**：应用 + MySQL + Redis + Meilisearch + Loki + Alloy
+2. **Podman**：多阶段构建镜像（基于 eclipse-temurin:17-jre-alpine）
+3. **Podman Compose**：应用 + MySQL + Redis + Meilisearch + Loki + Alloy
 
 #### 文档体系
 - **文档总量**：9 个一级目录 + 70+ SVG 架构图
@@ -58,12 +58,12 @@
 - **根 POM 版本**：✅ v1.2.0（已确认）
 - **README.md 标识**：✅ v1.2.0（已一致）
 - **前端 package.json**：❌ v1.1.4（落后 1 个小版本）
-- **后端 Dockerfile**：❌ BUILD_VERSION=1.1.3（落后 2 个小版本）
-- **前端 Dockerfile**：未指定版本号（仅 Node 18）
+- **后端 Containerfile**（原 Dockerfile）：历史检查记录为 BUILD_VERSION=1.1.3（落后 2 个小版本）
+- **前端容器构建文件**：历史检查记录为未指定版本号（仅 Node 18，独立前端项目）
 
 #### 问题 3：数据库初始化脚本统一性
 - **当前状态**：
-  - Docker Compose：通过 Flyway 自动迁移
+  - Podman Compose：通过 Flyway 自动迁移
   - java -jar：通过 Flyway 自动迁移
   - 需确认：三种部署方式是否共用同一套脚本
 
@@ -162,8 +162,8 @@
 
 #### 1.5 确认三种部署方式统一性
 - **验证点**：
-  - `docker-compose.yml` 中的 MySQL 初始化是否依赖 Flyway（✅ 已确认：通过应用启动时 Flyway 自动迁移）
-  - `docker-compose.infra.yml` 中的 MySQL 是否有独立初始化脚本（✅ 已确认：无独立脚本，仅创建空库）
+  - `podman-compose.yml` 中的 MySQL 初始化是否依赖 Flyway（✅ 已确认：通过应用启动时 Flyway 自动迁移）
+  - `podman-compose.infra.yml` 中的 MySQL 是否有独立初始化脚本（✅ 已确认：无独立脚本，仅创建空库）
   - java -jar 启动时 Flyway 配置是否正确读取 `db/migration/`（✅ 已确认：通过 `spring.flyway.locations`）
 
 #### 1.7 检查 Flyway 配置一致性
@@ -201,7 +201,7 @@
 
 ### 任务 2：版本号统一（P0）
 
-**目标**：统一前后端版本号，确保根 POM、README、Docker 构建参数一致。
+**目标**：统一前后端版本号，确保根 POM、README、Podman 构建参数一致。
 
 #### 2.1 确定统一版本号
 - **决策依据**：根 POM 版本为准
@@ -211,7 +211,7 @@
 - **后端**：
   - `/Users/work/apex-scaffold/pom.xml`（根 POM）
   - `/Users/work/apex-scaffold/README.md`
-  - `/Users/work/apex-scaffold/Dockerfile`（BUILD_VERSION）
+  - `/Users/work/apex-scaffold/Containerfile`（BUILD_VERSION）
   - `/Users/work/apex-scaffold/CHANGELOG.md`（如有）
 - **前端**：
   - `/Users/work/apex-admin-web/package.json`
@@ -219,7 +219,7 @@
 
 #### 2.3 验证版本号传播
 - **检查点**：
-  - Docker 镜像标签
+  - Podman 镜像标签
   - Actuator `/actuator/info` 端点返回的版本信息
   - Grafana Dashboard 版本标识
 
@@ -233,7 +233,7 @@
 - **对比项**：
   - `application.yml` 中的环境变量占位符 `${VAR:default}`
   - `.env.example` 中的变量名称、默认值、注释
-  - `docker-compose.yml` 中的环境变量传递
+  - `podman-compose.yml` 中的环境变量传递
 
 #### 3.2 检查配置文档准确性
 - **检查文档**：
@@ -298,7 +298,7 @@
 #### 5.1 核心架构图验证
 - **验证清单**：
   1. **01_logical_architecture.svg**：四层架构是否与实际模块划分一致
-  2. **02_physical_architecture.svg**：部署架构是否与 Docker Compose 配置一致
+  2. **02_physical_architecture.svg**：部署架构是否与 Podman Compose 配置一致
   3. **03_technical_architecture.svg**：技术选型是否与 `pom.xml` 依赖对应
   4. **09_multi_level_cache_architecture.svg**：缓存实现是否与代码一致（Caffeine L1 + Redis L2）
   5. **10_rate_limit_circuit_breaker.svg**：限流熔断实现是否与 Sentinel/Resilience4j 配置一致
@@ -425,7 +425,7 @@
 
 **已完成**：
 - ✅ 项目结构全面扫描（后端 8 模块 + 前端完整目录）
-- ✅ 核心配置文件读取（application.yml、.env.example、docker-compose.yml）
+- ✅ 核心配置文件读取（application.yml、.env.example、podman-compose.yml）
 - ✅ Flyway 脚本版本对比（MySQL 39 版本、PostgreSQL 38 版本）
 - ✅ 文档目录结构分析（9 个一级目录 + 70+ SVG 图表 + 25 个 Mermaid 源码）
 - ✅ 根 POM 版本号确认（v1.2.0）
@@ -433,11 +433,11 @@
 - ✅ PostgreSQL V37 脚本内容识别（MySQL V37 已读取）
 - ✅ 前端 API 模块扫描（15 个 API 文件）
 - ✅ 时序图源码目录确认（25 个 Mermaid 文件）
-- ✅ 版本号不一致点定位（前端 v1.1.4、后端 Dockerfile v1.1.3）
+- ✅ 历史版本号不一致点定位（前端 v1.1.4、后端容器构建文件 v1.1.3）
 
 **关键发现**：
 1. **PostgreSQL V37 缺失**：需创建脚本添加 email 和 keycloak_sub 字段
-2. **版本号不统一**：需将前端和 Dockerfile 统一到 v1.2.0
+2. **版本号不统一**：需将前端和 Containerfile 统一到 v1.2.0
 3. **前端 office API 多版本**：office.ts、office-new.ts、office-updated.ts 需确认关系
 4. **SVG broken 文件**：3 个 .svg.broken 文件需确认是否删除
 5. **路由实现规范**：✅ 已完全符合 WebFlux 函数式规范（无注解式 Controller）
@@ -541,12 +541,12 @@
 #### Step 7.1：构建验证
 - [ ] 后端构建：`mvnd clean package -DskipTests`
 - [ ] 前端构建：`cd apex-admin-web && pnpm build`
-- [ ] Docker 镜像构建：`docker build -t apex-scaffold:test .`
+- [ ] Podman 镜像构建：`podman build -f Containerfile -t apex-scaffold:test .`
 
 #### Step 7.2：启动验证
 - [ ] java -jar 启动测试
-- [ ] Docker Compose 启动测试（基础栈）
-- [ ] Docker Compose 启动测试（完整栈）
+- [ ] Podman Compose 启动测试（基础栈）
+- [ ] Podman Compose 启动测试（完整栈）
 
 #### Step 7.3：Flyway 迁移验证
 - [ ] MySQL Flyway 迁移测试（从空库到 V39）
@@ -625,7 +625,7 @@
 - [ ] **验证数据库表结构与 PO 类一致性（核心任务）**
 - [ ] **验证菜单、权限种子数据与代码一致性（核心任务）**
 - [ ] 创建 PostgreSQL V37 脚本
-- [ ] 统一版本号（POM、README、Dockerfile、package.json）
+- [ ] 统一版本号（POM、README、Containerfile、package.json）
 - [ ] 修复配置文件不一致
 
 ### 阶段 3：文档与代码对齐
@@ -652,7 +652,7 @@
 ### 阶段 7：验证与测试
 - [ ] 后端构建测试
 - [ ] 前端构建测试
-- [ ] Docker 镜像构建测试
+- [ ] Podman 镜像构建测试
 - [ ] Flyway 迁移测试（MySQL + PostgreSQL）
 - [ ] 三种部署方式启动测试
 - [ ] 功能冒烟测试
@@ -664,7 +664,7 @@
 本计划全面覆盖了 Apex Scaffold 项目的代码、配置、文档、脚本和图表的评审与规范化工作。通过分阶段执行，将确保：
 
 1. **数据库一致性**：MySQL 和 PostgreSQL 脚本版本完全对齐
-2. **部署统一性**：java -jar、Docker、Docker Compose 三种方式共用同一套脚本
+2. **部署统一性**：java -jar、Podman、Podman Compose 三种方式共用同一套脚本
 3. **文档准确性**：API 文档、架构图、配置文档与代码实现 100% 一致
 4. **目录规范性**：文档、脚本目录结构清晰，命名规范统一
 5. **可维护性**：脚本可执行、文档化完整、图表与文档关联清晰

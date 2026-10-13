@@ -1,0 +1,8 @@
+[
+  {"resource":"/api/v1/workflows/**","limitApp":"default","grade":1,"count":100,"strategy":0,"controlBehavior":0,"clusterMode":false},
+  {"resource":"/api/workflow/definitions/**","limitApp":"default","grade":1,"count":100,"strategy":0,"controlBehavior":0,"clusterMode":false},
+  {"resource":"/api/workflow/instances/**","limitApp":"default","grade":1,"count":200,"strategy":0,"controlBehavior":0,"clusterMode":false},
+  {"resource":"/api/workflow/tasks/**","limitApp":"default","grade":1,"count":200,"strategy":0,"controlBehavior":0,"clusterMode":false},
+  {"resource":"/admin-api/v1/workflows/**","limitApp":"default","grade":1,"count":100,"strategy":0,"controlBehavior":0,"clusterMode":false},
+  {"resource":"/internal/v1/instances/{id}/status","limitApp":"default","grade":1,"count":1000,"strategy":0,"controlBehavior":0,"clusterMode":false}
+]

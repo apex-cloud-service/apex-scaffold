@@ -1,0 +1,58 @@
+# ============================================================
+# Apex Scaffold - 办公服务 application.yml（Phase 5 骨架占位）
+# ============================================================
+# 【独立库】 办公服务使用独立数据库 apex_office（设计文档 §4.3），
+#   表结构：off_department / off_employee / off_binding / off_message /
+#          off_message_recipient / off_message_template / off_sync_history /
+#          off_calendar / off_approval_process。
+# @author Apex Team
+# ============================================================
+
+server:
+  port: 8084
+
+spring:
+  application:
+    name: apex-office-service
+
+  codec:
+    max-in-memory-size: 256MB
+
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/apex_office?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false
+    username: root
+    password: ${DB_PASSWORD:root}
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration/mysql
+    out-of-order: true
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+  global-config:
+    db-config:
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+logging:
+  level:
+    root: INFO
+    com.apex.scaffold.office: DEBUG
+    com.apex.scaffold.officeservice: DEBUG
+    org.springframework.web: DEBUG
+
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json

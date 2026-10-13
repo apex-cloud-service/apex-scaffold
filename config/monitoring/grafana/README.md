@@ -11,11 +11,11 @@
 
 ## 快速开始
 
-### 方式一：docker-compose 一键启动（推荐）
+### 方式一：Podman Compose 一键启动（推荐）
 
 ```bash
 cd config/monitoring
-docker compose up -d
+podman-compose -f podman-compose.yml up -d
 ```
 
 容器启动时通过 [auto-provisioning](./provisioning/) 自动完成：
@@ -119,11 +119,11 @@ docker compose up -d
 > - Redis：`redisson_healthy`（1 = 全部节点 PING 通，0 = 不可达）由应用侧
 >   `RedissonMetricsBinder` 上报（带 500ms 超时探针）。
 > - 健康探针：`probe_success` 由 Blackbox Exporter 探测 `/actuator/health` 提供，
->   docker-compose 栈已内置（`blackbox-exporter` 服务）。
+>   Podman Compose 栈已内置（`blackbox-exporter` 服务）。
 
 启用告警的两种方式：
 
-- **本地演示**：`docker compose up -d` 后，Prometheus 自动加载 `alert-rules.yml`，可在
+- **本地演示**：在仓库根目录执行 `podman-compose -f config/monitoring/podman-compose.yml up -d` 后，Prometheus 自动加载 `alert-rules.yml`，可在
   Prometheus **Alerts** 页查看规则状态（Alertmanager 需另行配置接收端）。
 - **生产**：将 `alert-rules.yml` 挂载到生产 Prometheus，并配置 Alertmanager 对接
   钉钉/企业微信/邮件等通知渠道。
@@ -149,7 +149,7 @@ docker compose up -d
 
 ## 注意事项
 
-1. **数据保留**：docker-compose 预设 Prometheus 保留 15 天，按需调整
+1. **数据保留**：Podman Compose 预设 Prometheus 保留 15 天，按需调整
    `--storage.tsdb.retention.time`
 2. **面板规模**：大盘 46 面板按 7 个分组折叠展示，性能开销可控；如需精简可折叠分组行
 3. **权限管理**：生产环境务必修改 Grafana 默认口令并配置 SSO / 权限

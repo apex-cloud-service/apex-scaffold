@@ -116,6 +116,11 @@ public class LicenseRevalidationScheduler implements AutoCloseable {
      * @param properties License配置,传递给加载器
      */
     private void safeRefresh(LicenseValidator validator, LicenseProperties properties) {
+        // enabled=false 为强制降级（不可绕过授权）：禁止重检把随包有效 License 重新加载而解除降级
+        if (!properties.isEnabled()) {
+            log.warn("apex.license.enabled=false —— 跳过运行期重检，保持强制降级模式");
+            return;
+        }
         try {
             validator.refresh(() -> LicenseLoader.load(properties));
         } catch (Exception e) {

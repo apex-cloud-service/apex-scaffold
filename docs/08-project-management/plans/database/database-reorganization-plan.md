@@ -332,8 +332,8 @@ scripts/
 **A. 根目录**:
 ```
 .env.example
-docker-compose.yml
-docker-compose.infra.yml
+podman-compose.yml
+podman-compose.infra.yml
 ```
 **处理方案**: 保持不变（根目录是标准位置）
 
@@ -973,7 +973,7 @@ mvnd test -P basic
 
 - [AGENTS.md](../../../../AGENTS.md) - 项目开发规范
 - [docs/DOCS_REORGANIZATION_REPORT.md](../../../DOCS_REORGANIZATION_REPORT.md) - 上次文档重组报告
-- [docs/04-development/backend-development-standards.md](../../../04-development/backend-development-standards.md) - 后端开发规范
+- [docs/04-development/development-standards.md](../../../04-development/development-standards.md) - 后端开发规范
 - [Flyway Documentation](https://flywaydb.org/documentation/) - Flyway 官方文档
 
 ---

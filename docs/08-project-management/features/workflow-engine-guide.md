@@ -494,7 +494,7 @@ grep "WorkflowTimeoutHandler" logs/apex-scaffold.log
 ### 项目文档
 - [工作流实现方案](../../_archive/reports/workflow-implementation.md)
 - [工作流进度报告](../../_archive/reports/workflow-progress.md)
-- [后端开发规范](../../04-development/backend-development-standards.md)
+- [后端开发规范](../../04-development/development-standards.md)
 
 ### 相关代码
 - 服务类：`WorkflowService.java`, `WorkflowQueryService.java`, `WorkflowStatisticsService.java`

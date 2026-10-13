@@ -173,7 +173,7 @@ DB_PASSWORD=password
 DB_DRIVER=org.postgresql.Driver
 ```
 
-**生成的 Docker Compose 配置**:
+**生成的 Podman Compose 配置**:
 ```yaml
 version: '3.8'
 services:
@@ -224,7 +224,7 @@ networks:
 - ✅ 支持 MySQL 和 PostgreSQL
 - ✅ 正确生成 YAML 格式（Spring Boot 配置）
 - ✅ 正确生成环境变量格式
-- ✅ 正确生成 Docker Compose 格式
+- ✅ 正确生成 Podman Compose 格式
 - ✅ 密码使用环境变量注入（安全）
 - ✅ HikariCP 连接池参数完整
 
@@ -353,7 +353,7 @@ echo -e "\n=== 测试完成 ==="
 1. ✅ 用户认证和登录
 2. ✅ JWT Token 生成和使用
 3. ✅ 获取当前数据库信息
-4. ✅ 生成部署配置（YAML/env/Docker Compose）
+4. ✅ 生成部署配置（YAML/env/Podman Compose）
 5. ✅ 权限控制
 6. ✅ 统一响应格式
 7. ✅ TraceId 链路追踪

@@ -110,7 +110,7 @@ docs/
 │   ├── README.md
 │   ├── deployment/                  # 部署
 │   │   ├── deployment-guide.md
-│   │   ├── docker-compose.md
+│   │   ├── podman-compose.md
 │   │   └── kubernetes-deploy.md
 │   ├── configuration/               # 配置
 │   │   ├── configuration-guide.md
@@ -189,7 +189,7 @@ scripts/
 │   └── generate-test-report.sh
 │
 ├── deploy/                          # 部署相关
-│   ├── docker/                      # Docker部署
+│   ├── podman/                      # Podman部署
 │   │   ├── pull-infra-images.sh
 │   │   └── deploy-monitoring.sh
 │   ├── k8s/                         # Kubernetes部署

@@ -6,6 +6,9 @@ from pathlib import Path
 import subprocess
 import tempfile
 import unittest
+from unittest.mock import patch
+
+import yaml
 
 TOOL = Path(__file__).resolve().parents[1] / "utils" / "local_deployment.py"
 
@@ -30,6 +33,24 @@ class LocalDeploymentTest(unittest.TestCase):
             "backup_codes": "12345678,87654321", "used_backup_codes": "",
             "deleted": 0,
         }
+
+    def test_compose_uses_podman_yaml_and_checks_each_service(self):
+        config = {"services": {"apex-auth-service": {"environment": self.env},
+                               "mysql": {"environment": {"MYSQL_DATABASE": "apex_system"}}}}
+        with patch.object(self.tool.subprocess, "run") as run:
+            run.return_value = subprocess.CompletedProcess([], 0, yaml.safe_dump(config), "")
+            self.tool.compose_check(Path("config space.env"))
+            command = run.call_args.args[0]
+            self.assertEqual(command[0], "podman-compose")
+            self.assertEqual(command[-1], "config")
+            self.assertIn("podman-compose.yml", command[2])
+            self.assertNotIn("--project-directory", command)
+            self.assertNotIn("--format", command)
+            self.assertTrue(Path(run.call_args.kwargs["cwd"]).is_absolute())
+            config["services"]["apex-auth-service"]["environment"]["JWT_SECRET"] = "short"
+            run.return_value.stdout = yaml.safe_dump(config)
+            with self.assertRaises(ValueError):
+                self.tool.compose_check(None)
 
     def test_keys_validate_actual_formats_without_values(self):
         self.tool.validate_keys(self.env)

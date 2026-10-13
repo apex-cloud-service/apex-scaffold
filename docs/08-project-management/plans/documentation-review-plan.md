@@ -85,7 +85,7 @@
 **总计**: 约 **239 个环境变量配置点**
 
 #### 现有环境变量文件
-- `.env.example` - Docker Compose 环境变量模板（100 行）
+- `.env.example` - Podman Compose 环境变量模板（100 行）
 - 包含：构建配置、端口映射、数据库、Redis、JWT、Nacos、RocketMQ、License、Keycloak 等
 
 ### 3.3 SQL 脚本现状
@@ -199,7 +199,7 @@
 #### 问题 4: .env.example 覆盖不完整
 **位置**: `.env.example`  
 **问题描述**:
-- 仅包含 Docker Compose 部署相关变量
+- 仅包含 Podman Compose 部署相关变量
 - 缺少应用层配置变量（如 Sentinel、Meilisearch、Loki、Grafana 等）
 - 缺少各 Profile 特有配置变量
 

@@ -129,7 +129,7 @@ public class LokiConfig {
         /**
          * Loki 服务地址
          *
-         * <p>示例：{@code http://localhost:3100}（本地开发）、{@code http://loki:3100}（Docker Compose）、
+         * <p>示例：{@code http://localhost:3100}（本地开发）、{@code http://loki:3100}（Podman Compose）、
          * {@code http://loki.default.svc.cluster.local:3100}（Kubernetes）
          *
          * <p>默认值：{@code http://localhost:3100}

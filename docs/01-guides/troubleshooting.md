@@ -32,11 +32,11 @@ server:
 **解决方案**:
 
 ```bash
-# 检查MySQL是否运行（本地基础设施由 docker-compose.infra.yml 管理）
-docker compose -f docker-compose.infra.yml ps mysql
+# 检查MySQL是否运行（本地基础设施由 podman-compose.infra.yml 管理）
+podman-compose -f podman-compose.infra.yml ps mysql
 
 # 如果未运行,启动MySQL
-docker compose -f docker-compose.infra.yml up -d mysql
+podman-compose -f podman-compose.infra.yml up -d mysql
 
 # 等待MySQL完全启动(约30秒)
 sleep 30
@@ -54,7 +54,7 @@ spring:
         master:
           url: jdbc:mysql://127.0.0.1:3306/apex_data?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
           username: root
-          password: apex-root  # 与 docker-compose.infra.yml 的 MYSQL_ROOT_PASSWORD 一致
+          password: apex-root  # 与 podman-compose.infra.yml 的 MYSQL_ROOT_PASSWORD 一致
 ```
 
 ### Q3: Redis连接失败（Lettuce/Redisson 无法建立连接）
@@ -62,11 +62,11 @@ spring:
 **解决方案**:
 
 ```bash
-# 检查Redis状态（本地基础设施由 docker-compose.infra.yml 管理）
-docker compose -f docker-compose.infra.yml ps redis
+# 检查Redis状态（本地基础设施由 podman-compose.infra.yml 管理）
+podman-compose -f podman-compose.infra.yml ps redis
 
 # 测试Redis连接（infra 栈容器名为 apex-infra-redis）
-docker exec -it apex-infra-redis redis-cli ping
+podman exec -it apex-infra-redis redis-cli ping
 # 应返回: PONG
 ```
 
@@ -253,10 +253,10 @@ public Mono<UserEntity> findById(Long id) {
 3. 清除缓存测试:
 ```bash
 # Redis中查看缓存Key
-docker exec -it apex-infra-redis redis-cli keys "user:*"
+podman exec -it apex-infra-redis redis-cli keys "user:*"
 
 # 删除特定缓存
-docker exec -it apex-infra-redis redis-cli del "user::1"
+podman exec -it apex-infra-redis redis-cli del "user::1"
 ```
 
 ### Q11: 缓存穿透导致数据库压力大
@@ -302,11 +302,11 @@ public Mono<UserEntity> findById(Long id) {
 **解决方案**:
 
 ```bash
-# 检查NameServer是否运行（本地基础设施由 docker-compose.infra.yml 管理）
-docker compose -f docker-compose.infra.yml ps rocketmq-namesrv
+# 检查NameServer是否运行（本地基础设施由 podman-compose.infra.yml 管理）
+podman-compose -f podman-compose.infra.yml ps rocketmq-namesrv
 
 # 创建Topic
-docker exec -it <rocketmq-broker-container> sh
+podman exec -it <rocketmq-broker-container> sh
 mqadmin updateTopic -n localhost:9876 -t your-topic -c DefaultCluster
 ```
 
@@ -395,49 +395,34 @@ curl http://localhost:9090/api/v1/targets | jq '.data.activeTargets[] | select(.
 
 3. 重启Grafana:
 ```bash
-docker compose -f docker-compose.infra.yml restart grafana
+podman-compose -f podman-compose.infra.yml restart grafana
 ```
 
-## 🐳 Docker问题
+## 🐳 Podman问题
 
-### Q16: Docker容器启动后立即退出
+### Q16: Podman容器启动后立即退出
 
 **解决方案**:
 
 ```bash
 # 查看容器日志
-docker compose -f docker-compose.infra.yml logs apex-scaffold
+podman-compose -f podman-compose.yml logs apex-gateway
 
 # 常见原因:
-# 1. 端口冲突: 修改 docker-compose.yml / docker-compose.infra.yml 中的 ports 映射
-# 2. 内存不足: 增加Docker资源限制
+# 1. 端口冲突: 修改 podman-compose.yml / podman-compose.infra.yml 中的 ports 映射
+# 2. 内存不足: 增加Podman资源限制
 # 3. 配置文件错误: 检查application.yml
 ```
 
-### Q17: Docker构建慢
+### Q17: Podman构建慢
 
 **解决方案**:
 
-使用多阶段构建和优化Dockerfile:
-```dockerfile
-# 使用国内Maven镜像
-FROM maven:3.9-eclipse-temurin-17 AS builder
-WORKDIR /app
-COPY pom.xml .
-RUN mvn dependency:go-offline -B  # 预下载依赖
-COPY src ./src
-RUN mvn clean package -DskipTests
-
-FROM eclipse-temurin:17-jre-alpine
-WORKDIR /app
-COPY --from=builder /app/target/*.jar app.jar
-EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
-```
+使用项目根目录的 [Containerfile](../../Containerfile)：其中已配置多阶段构建、mvnd 构建环境和模块依赖缓存。通过 `SERVICE_MODULE` 和 `BUILD_PROFILE` 选择服务与构建档位。
 
 构建时使用缓存:
 ```bash
-docker build --no-cache -t apex-scaffold:latest .
+podman build -f Containerfile -t apex-scaffold:latest .
 ```
 
 ## 🔍 调试技巧
@@ -487,7 +472,7 @@ jmc recording.jfr
 **提交Issue时请提供**:
 - 完整的错误日志
 - 复现步骤
-- 环境信息(JDK版本、OS、Docker版本)
+- 环境信息(JDK版本、OS、Podman版本)
 - 相关配置文件内容
 
 ---

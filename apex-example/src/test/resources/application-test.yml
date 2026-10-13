@@ -5,6 +5,12 @@ spring:
   application:
     name: apex-example-test
 
+  # 允许 Bean 定义覆盖：测试替身（ExampleTestMockConfiguration 的 @Primary 桩）
+  # 需覆盖主应用（apex-interfaces/apex-infrastructure）泄漏的同名真实 Bean
+  # （如 redissonClient），与 apex-common/apex-interfaces 测试配置约定一致
+  main:
+    allow-bean-definition-overriding: true
+
   # 邮件（演示占位）：满足 MailService 对 JavaMailSender 的装配依赖
   mail:
     host: smtp.example.com
@@ -22,10 +28,16 @@ spring:
     exclude:
       - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
       - org.springframework.boot.autoconfigure.data.redis.RedisReactiveAutoConfiguration
+      # 关闭 R2DBC 自动配置：spring-boot-starter-data-r2dbc 经 apex-application 传递引入，
+      # 示例应用未配置 R2DBC 连接（无 url），否则 R2dbcAutoConfiguration 会因
+      # 「Failed to determine a suitable R2DBC Connection URL」导致上下文启动失败；
+      # 响应式事务由 ExampleTestMockConfiguration 的 @Primary TransactionalOperator 替身满足
+      - org.springframework.boot.autoconfigure.r2dbc.R2dbcAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.r2dbc.R2dbcDataAutoConfiguration
 
   # 数据源（dynamic-datasource 配置，与主应用保持一致）
   # MySQL 测试库（与主应用 dev/it 约定一致，env 可覆盖）；
-  # 启动前提：本地 MySQL 可达（docker compose -f docker-compose.infra.yml up -d）。
+  # 启动前提：本地 MySQL 可达（podman-compose -f podman-compose.infra.yml up -d）。
   datasource:
     dynamic:
       primary: master
@@ -54,10 +66,29 @@ apex:
   sentinel:
     system-rules:
       enabled: false
+  # 数据加密密钥：DefaultEncryptionService (@Service) 构造时要求
+  # apex.security.data-encryption-key 为 Base64 编码的 32 字节（256 位）密钥，
+  # 缺失或非法会抛异常导致上下文启动失败。此处提供与 auth-center 测试一致的占位密钥
+  # （32 字节零值），仅保证容器装配通过，不涉及真实数据加密。
+  security:
+    data-encryption-key: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
 
 # 跨域配置（测试环境放开所有来源，与主应用 application-it.yml 一致）
 cors:
   allow-all-origins: true
+
+# 配置加密密钥：ConfigEncryptionService (@Service) 会在容器启动时要求
+# security.config.encryption.key 恰好为 32 字节（UTF-8），否则抛异常导致上下文启动失败。
+# 集成测试真正加载 Spring 容器（区别于主应用仅跑纯 JDBC 测试），故需提供显式测试密钥。
+security:
+  config:
+    encryption:
+      key: 01234567890123456789012345678901
+  # Token 加密密钥：EncryptionKeyProvider (@Component) 构造时要求
+  # security.encryption.key 为 Base64 编码的 32 字节（256 位）密钥，缺失或非法会抛异常。
+  # 提供与 auth-center 测试一致的占位密钥（32 字节零值），仅保证装配通过。
+  encryption:
+    key: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
 
 # MyBatis-Plus配置
 mybatis-plus:

@@ -10,7 +10,7 @@
 
 **5 分钟快速启动** - 从环境准备到项目启动的完整指南
 
-- 环境要求检查（JDK、Maven、Docker）
+- 环境要求检查（JDK、Maven、Podman）
 - 三种档位启动方式（Basic、Standard、Enterprise）
 - 验证安装和测试示例接口
 - 常见问题排查

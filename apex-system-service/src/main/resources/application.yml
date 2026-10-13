@@ -1,0 +1,676 @@
+# ============================================================
+# Apex Scaffold - 系统服务 application.yml（Phase 6 系统收敛）
+# ============================================================
+# 【作用】
+#   系统服务（apex-system-service）运行期主配置：端口、数据源、Flyway、
+#   MyBatis-Plus 与系统域所需基础设施。
+#   服务名 = Nacos 注册名 = 网关路由 lb:// 的目标名（迁移方案 Phase 6）。
+#
+# 【装配方式】
+#   Phase 6 采用绞杀者模式将原单体的 Web 层（apex-interfaces 的
+#   router/handler/filter/security/config）、应用层（apex-application，
+#   按 user/rbac/config/log/job/… 子包重组）、领域层（apex-domain）、
+#   基础设施（apex-infrastructure）与通用层（apex-common）收敛进本服务，
+#   并以独立库 apex_system（旧库 apex_data 更名而来）承载系统数据。
+#
+# 【配置来源】
+#   本文件与单体 apex-interfaces/application.yml 保持同构但以系统服务
+#   身份覆盖差异项（服务名 / 端口 / 库名）；越界能力（auth/office/file/
+#   workflow）已拆分为独立服务，不在此重复承载。
+#
+# ┌───────────────────────────────────────────────────────────┐
+# │ 注释符号规范（全仓配置文件统一约定）                         │
+# ├───────────────────────────────────────────────────────────┤
+# │ ✅ 已启用能力          ❌ 已禁用能力                       │
+# │ ⚠️ 安全提示/注意点     💡 设计说明/优化理由                │
+# │ 🔒 敏感配置（环境变量注入，禁止硬编码）                     │
+# │ （差异）标注与单体收敛前配置的差异及理由                    │
+# └───────────────────────────────────────────────────────────┘
+# @author Apex Team
+# ============================================================
+
+# ============================================================
+# 服务治理：模式只在启动期解析一次，运行期不热切换
+# ============================================================
+apex:
+  features:
+    auth-center-permission: ${APEX_AUTH_CENTER_PERMISSION_ENABLED:false}
+  auth-center-permission:
+    base-url: ${APEX_AUTH_CENTER_BASE_URL:}
+    access-token: ${APEX_AUTH_CENTER_ACCESS_TOKEN:}
+    cache-seconds: ${APEX_AUTH_CENTER_CACHE_SECONDS:0}
+    mappings: []
+  governance:
+    # 是否启用统一 readiness、资源排空和优雅关停协调
+    enabled: ${APEX_GOVERNANCE_ENABLED:true}
+    deployment-mode: ${APEX_GOVERNANCE_DEPLOYMENT_MODE:auto}
+    auto-detection:
+      enabled: ${APEX_GOVERNANCE_AUTO_DETECTION_ENABLED:true}
+      fail-on-ambiguous-environment: ${APEX_GOVERNANCE_FAIL_ON_AMBIGUOUS:true}
+    registration:
+      provider: ${APEX_GOVERNANCE_REGISTRATION_PROVIDER:auto}
+      fail-mode: ${APEX_GOVERNANCE_REGISTRATION_FAIL_MODE:auto}
+    mq:
+      drain-timeout: ${APEX_GOVERNANCE_MQ_DRAIN_TIMEOUT:30s}
+    shutdown:
+      total-timeout: ${APEX_GOVERNANCE_SHUTDOWN_TIMEOUT:90s}
+      readiness-withdraw-timeout: ${APEX_GOVERNANCE_READINESS_WITHDRAW_TIMEOUT:5s}
+      force-shutdown-after-timeout: ${APEX_GOVERNANCE_FORCE_SHUTDOWN:true}
+  blocking-io:
+    jdbc:
+      threads: 32
+    cache:
+      threads: 4
+    storage:
+      threads: 8
+
+server:
+  # 系统服务端口（迁移方案 Phase 6 / §13 微服务拓扑）
+  # （差异）单体为 8080，本服务独立端口 8082，经网关统一暴露
+  port: 8082
+  # ✅ 优雅停机：收到停机信号后停止接收新请求，等待在途请求完成
+  shutdown: graceful
+  # ✅ HTTP/2 支持（Netty 原生支持，需 TLS 或 h2c）
+  http2:
+    enabled: true
+  # ---------- Netty 服务器性能参数（NettyConfig 读取） ----------
+  netty:
+    connection-timeout: 5000
+    connect-timeout-millis: 5000
+    compression:
+      enabled: true
+      level: 6
+      min-response-size: 1024
+    read-timeout-seconds: 30
+    write-timeout-seconds: 60
+    idle-timeout-seconds: 20
+  # ---------- 默认 WebClient 超时（毫秒） ----------
+  webclient:
+    connect-timeout-millis: ${WEBCLIENT_CONNECT_TIMEOUT:5000}
+    read-timeout-millis: ${WEBCLIENT_READ_TIMEOUT:10000}
+    write-timeout-millis: ${WEBCLIENT_WRITE_TIMEOUT:10000}
+
+spring:
+  application:
+    # 服务名 = Nacos 注册名 = 网关路由 lb:// 的目标名
+    # 与 bootstrap.yml 保持一致，统一为 apex-system-service。
+    name: apex-system-service
+  # ---------- Spring Security OAuth2 Client（Keycloak OIDC） ----------
+  # ✅ OAuth2 Client 响应式支持：WebFlux 自动装配 ReactiveOAuth2AuthorizedClientService
+  # 💡 仅在 keycloak.enabled=true 时生效（KeycloakConfig 条件装配）
+  security:
+    oauth2:
+      client:
+        registration:
+          keycloak:
+            provider: keycloak
+            client-id: ${KEYCLOAK_CLIENT_ID:apex-client}
+            client-secret: ${KEYCLOAK_CLIENT_SECRET:}
+            authorization-grant-type: authorization_code
+            scope:
+              - openid
+              - profile
+              - email
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+        provider:
+          keycloak:
+            authorization-uri: ${KEYCLOAK_SERVER_URL:http://localhost:8180}/realms/${KEYCLOAK_REALM:apex}/protocol/openid-connect/auth
+            token-uri: ${KEYCLOAK_SERVER_URL:http://localhost:8180}/realms/${KEYCLOAK_REALM:apex}/protocol/openid-connect/token
+            jwk-set-uri: ${KEYCLOAK_SERVER_URL:http://localhost:8180}/realms/${KEYCLOAK_REALM:apex}/protocol/openid-connect/certs
+            user-info-uri: ${KEYCLOAK_SERVER_URL:http://localhost:8180}/realms/${KEYCLOAK_REALM:apex}/protocol/openid-connect/userinfo
+            user-name-attribute: preferred_username
+  profiles:
+    # 默认激活环境（dev/basic/standard/enterprise/prod）
+    active: dev
+  main:
+    # ✅ 响应式应用（WebFlux）：禁用 Servlet 容器
+    web-application-type: reactive
+  messages:
+    # 国际化消息源
+    basename: i18n/messages
+  cache:
+    # ✅ 本地缓存：Caffeine（进程内缓存）
+    type: caffeine
+  # ---------- 文件上传 / 请求体大小 ----------
+  codec:
+    max-in-memory-size: ${MAX_IN_MEMORY_SIZE:10MB}
+  # ---------- Redis（基础设施） ----------
+  # ✅ Redis 基础设施：JWT 黑名单 / 图形验证码 / 防重放 nonce / 登录保护
+  #    等通用能力均存储于 Redis（RedissonAutoConfigurationV2 按本段构建）
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: ${REDIS_TIMEOUT:3000ms}
+      lettuce:
+        pool:
+          max-active: ${REDIS_POOL_MAX_ACTIVE:16}
+          max-idle: ${REDIS_POOL_MAX_IDLE:8}
+          min-idle: ${REDIS_POOL_MIN_IDLE:2}
+  # ---------- 数据源（独立库 apex_system，由旧库 apex_data 更名而来） ----------
+  # （差异）单体统一库 apex_data；Phase 6 系统收敛后使用独立库 apex_system。
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:apex_system}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
+    username: ${DB_USERNAME:root}
+    # 🔒 生产必须通过 DB_PASSWORD 注入，默认值仅用于本地开发
+    password: ${DB_PASSWORD:root}
+    hikari:
+      maximum-pool-size: ${DB_MAX_POOL_SIZE:20}
+      minimum-idle: ${DB_MIN_IDLE:5}
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      pool-name: ApexSystemHikariPool
+  # ---------- 数据库版本迁移（Flyway） ----------
+  # 迁移脚本随 apex-interfaces 一并打包（classpath:db/migration/mysql，
+  # 即 sys_user / RBAC / 菜单 / 字典 / 配置 / 任务 / 租户 / OAuth2 等系统域表）。
+  flyway:
+    enabled: ${FLYWAY_ENABLED:true}
+    baseline-on-migrate: true
+    locations: classpath:db/migration/mysql
+    out-of-order: true
+  # ---------- 注册中心与配置中心（Nacos） ----------
+  # 💡 启动早期加载由 bootstrap.yml 负责，此处为应用装配期配置。
+  cloud:
+    nacos:
+      # ===== 配置中心 =====
+      config:
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+        namespace: ${NACOS_NAMESPACE:public}
+        group: DEFAULT_GROUP
+        file-extension: yml
+        refresh-enabled: true
+        enabled: ${NACOS_CONFIG_ENABLED:true}
+      # ===== 服务注册与发现 =====
+      discovery:
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+        namespace: ${NACOS_NAMESPACE:public}
+        group: DEFAULT_GROUP
+        enabled: ${NACOS_DISCOVERY_ENABLED:true}
+        register-enabled: ${NACOS_REGISTER_ENABLED:true}
+        service: ${spring.application.name}
+        weight: 1
+    # ---------- Sentinel 限流熔断（控制台通信） ----------
+    sentinel:
+      transport:
+        dashboard: ${SENTINEL_DASHBOARD_URL:}
+        port: ${SENTINEL_TRANSPORT_PORT:8719}
+        client-ip: ${SENTINEL_CLIENT_IP:}
+      eager: ${SENTINEL_EAGER:true}
+
+jwt:
+  # 🔒 JWT 签名密钥：生产必须通过 JWT_SECRET 注入 ≥32 字节随机密钥
+  secret: ${JWT_SECRET:change-me-in-production}
+  # Access Token 有效期（毫秒）：2 小时
+  access-token-expire: 7200000
+  # Refresh Token 有效期（毫秒）：7 天
+  refresh-token-expire: 604800000
+  # Access Token 自动续期阈值（毫秒）
+  access-token-renew-threshold: ${JWT_ACCESS_RENEW_THRESHOLD:1800000}
+
+# ============================================================
+# Keycloak 集成（企业级 IAM）
+# ============================================================
+# ✅ Keycloak OAuth2/OIDC 认证：支持 OIDC 登录、社交登录、SAML、MFA 等高级认证方式
+# 💡 使用 @ConditionalOnProperty("keycloak.enabled") 控制集成开关，默认关闭
+keycloak:
+  enabled: ${KEYCLOAK_ENABLED:false}
+  server-url: ${KEYCLOAK_SERVER_URL:http://localhost:8180}
+  realm: ${KEYCLOAK_REALM:apex}
+  admin-username: ${KEYCLOAK_ADMIN_USERNAME:admin}
+  admin-password: ${KEYCLOAK_ADMIN_PASSWORD:admin123}
+  admin-client-id: ${KEYCLOAK_ADMIN_CLIENT_ID:admin-cli}
+  client-id: ${KEYCLOAK_CLIENT_ID:apex-client}
+  client-secret: ${KEYCLOAK_CLIENT_SECRET:}
+  user-sync-enabled: ${KEYCLOAK_USER_SYNC_ENABLED:true}
+  frontend-callback-url: ${KEYCLOAK_FRONTEND_CALLBACK_URL:http://localhost:3000/auth/callback}
+
+logging:
+  level:
+    root: INFO
+    com.apex.scaffold: INFO
+    com.apex.scaffold.application: INFO
+    com.apex.scaffold.domain: INFO
+    com.apex.scaffold.infrastructure: INFO
+    com.apex.scaffold.interfaces: INFO
+    com.apex.scaffold.systemservice: INFO
+    com.apex.scaffold.infrastructure.persistence.mapper: WARN
+    org.springframework.web: WARN
+    org.springframework.web.reactive: WARN
+    org.springframework.security: WARN
+    org.springframework.http.codec: WARN
+    reactor.netty: WARN
+    reactor.netty.http.server: WARN
+    reactor.netty.http.client: WARN
+    org.redisson: WARN
+    com.alibaba.nacos: WARN
+    org.apache.rocketmq: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+# ============================================================
+# 系统监控（Actuator + Micrometer + Prometheus）
+# ============================================================
+management:
+  server:
+    # 管理端口与业务端口物理隔离（单体 8081；本服务独立端口 8082）
+    port: 8083
+    address: ${MANAGEMENT_SERVER_ADDRESS:127.0.0.1}
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,circuitbreakers
+  endpoint:
+    health:
+      show-details: when-authorized
+      probes:
+        enabled: true
+      group:
+        liveness:
+          include: livenessState
+        readiness:
+          include: readinessState,db,redis
+    circuitbreakers:
+      enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+    enable:
+      reactor.netty: true
+    distribution:
+      percentiles-histogram:
+        http:
+          server:
+            requests: true
+      percentiles:
+        http:
+          server:
+            requests: 0.5, 0.9, 0.95, 0.99
+  # ---------- 链路追踪（Micrometer Tracing + Zipkin） ----------
+  tracing:
+    enabled: ${TRACING_ENABLED:true}
+    sampling:
+      probability: ${TRACE_SAMPLING_RATE:0.1}
+  zipkin:
+    tracing:
+      endpoint: ${ZIPKIN_BASE_URL:http://localhost:9411}/api/v2/spans
+
+# ============================================================
+# 熔断 / 限流 / 重试 / 超时（Resilience4j）
+# ============================================================
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        failure-rate-threshold: 50
+        slow-call-rate-threshold: 50
+        slow-call-duration-threshold: 3000
+        sliding-window-size: 100
+        minimum-number-of-calls: 10
+        wait-duration-in-open-state: 60000
+        permitted-number-of-calls-in-half-open-state: 5
+        automatic-transition-from-open-to-half-open-enabled: true
+        record-exceptions:
+          - java.io.IOException
+          - java.util.concurrent.TimeoutException
+          - org.springframework.web.reactive.function.client.WebClientResponseException
+          - com.apex.scaffold.domain.gateway.RemoteApiException
+        ignore-exceptions:
+          - com.apex.scaffold.domain.gateway.RemoteClientInputException
+      strict:
+        failure-rate-threshold: 30
+        slow-call-rate-threshold: 30
+        sliding-window-size: 50
+        minimum-number-of-calls: 5
+        wait-duration-in-open-state: 30000
+    instances:
+      default:
+        base-config: default
+  timelimiter:
+    configs:
+      default:
+        timeout-duration: 10000
+        cancel-running-future: true
+    instances:
+      default:
+        base-config: default
+  ratelimiter:
+    configs:
+      default:
+        limit-for-period: 50
+        limit-refresh-period: 10s
+        timeout-duration: 5s
+    instances:
+      default:
+        base-config: default
+  retry:
+    configs:
+      default:
+        max-attempts: 3
+        wait-duration: 500ms
+        retry-exceptions:
+          - java.io.IOException
+          - java.util.concurrent.TimeoutException
+          - org.springframework.web.reactive.function.client.WebClientResponseException
+    instances:
+      default:
+        base-config: default
+
+# ============================================================
+# 消息中间件（RocketMQ）
+# ============================================================
+rocketmq:
+  name-server: ${ROCKETMQ_NAMESERVER:${ROCKETMQ_NAMESRV_ADDR:127.0.0.1:9876}}
+  producer:
+    group: ${ROCKETMQ_PRODUCER_GROUP:apex-producer-group}
+    send-message-timeout: ${ROCKETMQ_SEND_TIMEOUT:30000}
+    compress-message-body-threshold: 1024
+    retry-times-when-send-failed: 2
+    retry-times-when-send-async-failed: 2
+    max-message-size: 4194304
+  consumer:
+    enabled: ${ROCKETMQ_CONSUMER_ENABLED:true}
+
+# ============================================================
+# 消息消费幂等（MqConsumerService 读取）
+# ============================================================
+mq:
+  consumer:
+    idempotent-ttl-minutes: ${MQ_IDEMPOTENT_TTL_MINUTES:30}
+
+# ============================================================
+# MyBatis 持久化
+# ============================================================
+mybatis:
+  mapper-locations: classpath*:mapper/**/*.xml
+
+# ============================================================
+# 接口文档（SpringDoc OpenAPI + Knife4j）
+# ============================================================
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+
+knife4j:
+  enable: true
+  production: false
+
+# ============================================================
+# CORS 跨域
+# ============================================================
+cors:
+  allow-all-origins: false
+  allowed-origins: http://localhost:3000
+
+# ============================================================
+# 远程调用（WebClient + 外部 API）
+# ============================================================
+remote:
+  api:
+    default-connect-timeout: ${REMOTE_API_CONNECT_TIMEOUT:5000}
+    default-read-timeout: ${REMOTE_API_READ_TIMEOUT:10000}
+    default-retry-count: ${REMOTE_API_RETRY_COUNT:2}
+    default-retry-delay: ${REMOTE_API_RETRY_DELAY:1000}
+    max-in-memory-size: 10485760
+    compress-response: true
+    pool-max-connections: ${REMOTE_API_POOL_MAX_CONNECTIONS:100}
+    pool-pending-acquire-max-count: 500
+    pool-max-idle-time-seconds: 30
+    pool-max-life-time-minutes: 5
+    io-timeout-seconds: 10
+    connect-timeout-millis: 5000
+    services: {}
+
+# ============================================================
+# 内容安全审核（百度 AI 内容审核，企业版能力）
+# ============================================================
+text:
+  moderation:
+    baidu:
+      api-key: ${BAIDU_TEXT_MODERATION_API_KEY:}
+      secret-key: ${BAIDU_TEXT_MODERATION_SECRET_KEY:}
+      token-endpoint: https://aip.baidubce.com/oauth/2.0/token
+      endpoint: https://aip.baidubce.com/rest/2.0/solution/v1/text_censor/v2/user_defined
+      timeout-seconds: 10
+      retry-max-attempts: 3
+      retry-base-delay-ms: 250
+image:
+  moderation:
+    baidu:
+      api-key: ${BAIDU_IMAGE_MODERATION_API_KEY:}
+      secret-key: ${BAIDU_IMAGE_MODERATION_SECRET_KEY:}
+      token-endpoint: https://aip.baidubce.com/oauth/2.0/token
+      endpoint: https://aip.baidubce.com/rest/2.0/solution/v1/img_censor/v2/user_defined
+      strategy-id: 1
+      timeout-seconds: 10
+      max-base64-bytes: 9500000
+      max-dimension: 4096
+      jpeg-quality: 0.88
+
+# ============================================================
+# API 调用日志（外部 HTTP 调用采集，ApiCallLogProperties 读取）
+# ============================================================
+api-call-log:
+  enabled: true
+  max-body-length: 4096
+  log-request-body: true
+  log-response-body: true
+
+# ============================================================
+# 异常告警
+# ============================================================
+alert:
+  exception:
+    threshold: 10
+    window: 5
+    max-types: 100
+  dingding:
+    webhook: ${DINGDING_WEBHOOK:}
+    secret: ${DINGDING_SECRET:}
+
+# ============================================================
+# 操作日志 / 审计（@OperationLog 注解切面）
+# ============================================================
+operation-log:
+  enabled: ${OPERATION_LOG_ENABLED:true}
+  log-params: true
+  log-result: true
+  max-param-length: 2000
+  max-result-length: 2000
+
+# ============================================================
+# 业务自定义配置（apex.*）
+# ============================================================
+  license:
+    enabled: ${APEX_LICENSE_ENABLED:true}
+    file-path: ${APEX_LICENSE_FILE:classpath:license/license-basic.json}
+    public-key-file: ${APEX_LICENSE_PUBLIC_KEY_FILE:classpath:license/public.key}
+  api:
+    response-timeout: ${APEX_RESPONSE_TIMEOUT:30s}
+  sql:
+    slow:
+      enabled: ${APEX_SQL_SLOW_ENABLED:true}
+      threshold-ms: ${APEX_SQL_SLOW_THRESHOLD_MS:1000}
+  database:
+    type: ${APEX_DATABASE_TYPE:mysql}
+  sentinel:
+    nacos:
+      enabled: ${SENTINEL_NACOS_ENABLED:false}
+      server-addr: ${apex.sentinel.nacos.server-addr:${NACOS_SERVER_ADDR:127.0.0.1:18848}}
+      namespace: ${NACOS_NAMESPACE:}
+      group-id: ${SENTINEL_NACOS_GROUP:SENTINEL_GROUP}
+      flow-data-id: ${SENTINEL_NACOS_FLOW_DATA_ID:apex-sentinel-flow-rules}
+      degrade-data-id: ${SENTINEL_NACOS_DEGRADE_DATA_ID:apex-sentinel-degrade-rules}
+  circuit-breaker:
+    default-config:
+      failure-rate-threshold: 50
+      wait-duration-in-open-state: 60s
+      sliding-window-size: 100
+      minimum-number-of-calls: 10
+      permitted-calls-in-half-open: 5
+    strict:
+      failure-rate-threshold: 30
+      wait-duration-in-open-state: 30s
+      sliding-window-size: 50
+      minimum-number-of-calls: 5
+      permitted-calls-in-half-open: 5
+    lenient:
+      failure-rate-threshold: 80
+      wait-duration-in-open-state: 120s
+      sliding-window-size: 200
+      minimum-number-of-calls: 20
+      permitted-calls-in-half-open: 15
+  ratelimit:
+    local-fallback:
+      enabled: true
+  captcha:
+    enabled: ${APEX_CAPTCHA_ENABLED:true}
+    length: ${APEX_CAPTCHA_LENGTH:4}
+    ttl: ${APEX_CAPTCHA_TTL_SECONDS:120s}
+  gateway:
+    enabled: true
+    request-id-header: X-Request-Id
+    slow-request-threshold: 3000
+    metrics:
+      enabled: true
+      request-counter-enabled: true
+      response-timer-enabled: true
+      error-counter-enabled: true
+  cache:
+    local:
+      max-size: 10000
+      expire-after-write: 300
+      initial-capacity: 500
+    remote:
+      default-ttl: 3600
+      batch-size: 100
+    double-delete:
+      enabled: ${APEX_CACHE_DOUBLE_DELETE_ENABLED:true}
+      delay-millis: ${APEX_CACHE_DOUBLE_DELETE_DELAY_MILLIS:500}
+      retry-times: ${APEX_CACHE_DOUBLE_DELETE_RETRY_TIMES:3}
+  redis:
+    key-prefix: ${APEX_REDIS_KEY_PREFIX:}
+    lock-watchdog-timeout: ${APEX_REDIS_LOCK_WATCHDOG_TIMEOUT:30000}
+    command-timeout: ${APEX_REDIS_COMMAND_TIMEOUT:3000}
+    retry-attempts: ${APEX_REDIS_RETRY_ATTEMPTS:3}
+    retry-interval: ${APEX_REDIS_RETRY_INTERVAL:1500}
+    cleanup-on-startup: ${APEX_REDIS_CLEANUP_ON_STARTUP:true}
+  events:
+    outbox:
+      batch-size: ${OUTBOX_BATCH_SIZE:50}
+      max-attempts: ${OUTBOX_MAX_ATTEMPTS:8}
+      lock-timeout-seconds: ${OUTBOX_LOCK_TIMEOUT_SECONDS:120}
+      parallelism: ${OUTBOX_PARALLELISM:4}
+      retention-enabled: ${OUTBOX_RETENTION_ENABLED:true}
+      retention-delivered-hours: ${OUTBOX_RETENTION_DELIVERED_HOURS:168}
+      retention-dead-days: ${OUTBOX_RETENTION_DEAD_DAYS:30}
+      retention-batch-size: ${OUTBOX_RETENTION_BATCH_SIZE:5000}
+  degrade:
+    snapshot:
+      enabled: true
+      redis-throttle-seconds: 5
+      local-max-entries: 256
+      resources: []
+  security:
+    data-encryption-key: ${APEX_DATA_ENCRYPTION_KEY:}
+    guard:
+      enabled: true
+      ua-check-enabled: true
+    scan-guard:
+      enabled: true
+      block-status: 403
+      block-connect-method: true
+      path-patterns:
+        - /HNAP1
+        - /CFIDE
+        - /.git
+        - /.env
+        - /dana-cached
+        - /success.txt
+        - /confluence
+        - /devicedesc.xml
+        - /SDK
+        - /cgi-bin
+        - /boaform
+        - /GponForm
+        - /autodiscover
+        - /remote
+        - /owa
+        - /ecp
+        - /phpmyadmin
+        - /_ignition
+        - /WEB-INF
+        - /server-status
+        - /server-info
+        - /.aws
+        - /actuator/env
+        - /manager
+        - /host-manager
+    user-rate-limit:
+      enabled: ${APEX_USER_RATE_LIMIT_ENABLED:true}
+    ip-rate-limit:
+      enabled: true
+      default-limit: 120
+      default-window: 60
+      violation-window: 60
+      block-threshold: 30
+      block-duration: 300
+    login-protection:
+      enabled: true
+      ip-max-attempts: 20
+      username-max-attempts: 5
+      captcha-after-failures: 3
+      window-size: 600
+    sms-send-limit:
+      max-attempts: 3
+      window-seconds: 300
+    input-validation:
+      enabled: true
+    security-headers:
+      enabled: true
+    anti-replay:
+      enabled: true
+      nonce-ttl-seconds: ${APEX_ANTI_REPLAY_NONCE_TTL:360}
+  mq:
+    consumer:
+      enabled: ${APEX_MQ_CONSUMER_ENABLED:true}
+    dlq:
+      enabled: ${APEX_MQ_DLQ_ENABLED:true}
+    domain-event-enabled: ${APEX_MQ_DOMAIN_EVENT_ENABLED:true}
+    domain-event-topic: ${APEX_MQ_DOMAIN_EVENT_TOPIC:apex-domain-event}
+
+# ============================================================
+# 全文搜索（Meilisearch）
+# ============================================================
+meilisearch:
+  enabled: ${MEILISEARCH_ENABLED:false}
+  url: ${MEILISEARCH_URL:http://localhost:7700}
+  api-key: ${MEILISEARCH_API_KEY:}
+  index-prefix: ${MEILISEARCH_INDEX_PREFIX:apex_}
+  batch-size: 100
+
+# ============================================================
+# 运行日志查询（Grafana Loki）
+# ============================================================
+loki:
+  enabled: ${LOKI_ENABLED:false}
+  url: ${LOKI_URL:http://localhost:3100}
+  max-lines: 1000
+  max-query-range-seconds: 3600
+
+# ============================================================
+# Grafana（日志查询跳转）
+# ============================================================
+grafana:
+  enabled: ${GRAFANA_ENABLED:false}
+  url: ${GRAFANA_URL:http://localhost:3200}
+  explore-path: /explore
+
+security:
+  config:
+    encryption:
+      key: ${CONFIG_ENCRYPTION_KEY:}

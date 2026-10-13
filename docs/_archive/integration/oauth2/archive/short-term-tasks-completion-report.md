@@ -392,7 +392,7 @@ open apex-application/target/site/jacoco/index.html
 
 - **实施指南**: [oauth2_test_tasks_implementation_guide.md](test-tasks-implementation-guide.md)
 - **修复报告**: [oauth2_unit_test_fix_report.md](unit-test-fix-report.md)
-- **mvnd标准**: [mvnd_build_standard.md](../../../../04-development/mvnd-build-standard.md)
+- **mvnd标准**: [development-standards.md](../../../../04-development/development-standards.md)
 
 ---
 

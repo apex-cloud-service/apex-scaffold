@@ -19,7 +19,7 @@
 | R2DBC 迁移 | ✅ 完成 | HikariCP → R2DBC 成功 |
 | MySQL 连接测试 | ✅ 通过 | 返回版本 MYSQL 8.0.46 |
 | PostgreSQL 支持 | ✅ 通过 | 驱动正常，配置生成正确 |
-| 配置生成功能 | ✅ 通过 | YAML/env/Docker Compose |
+| 配置生成功能 | ✅ 通过 | YAML/env/Podman Compose |
 | 当前数据库信息 | ✅ 通过 | 正确返回数据库版本 |
 | 错误处理 | ✅ 通过 | 友好的错误信息 |
 
@@ -49,7 +49,7 @@
 ### 2. 配置生成导出 ✅
 - [x] YAML 格式 Spring Boot 配置
 - [x] 环境变量格式配置
-- [x] Docker Compose 配置
+- [x] Podman Compose 配置
 - [x] 一键复制到剪贴板
 - [x] 密码使用环境变量（安全）
 

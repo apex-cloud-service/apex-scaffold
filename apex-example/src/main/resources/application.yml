@@ -20,7 +20,7 @@ spring:
         master:
           url: ${DB_MASTER_URL:jdbc:mysql://localhost:3306/apex_example?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true}
           username: ${DB_MASTER_USERNAME:root}
-          # 与本地基础设施（docker-compose.infra.yml）默认一致；可用 DB_MASTER_PASSWORD 覆盖
+          # 与本地基础设施（podman-compose.infra.yml）默认一致；可用 DB_MASTER_PASSWORD 覆盖
           password: ${DB_MASTER_PASSWORD:apex-root}
           driver-class-name: com.mysql.cj.jdbc.Driver
         # 从库（数据源动态切换演示：@DataSource("slave") 切到本数据源）
@@ -30,7 +30,7 @@ spring:
         slave:
           url: ${DB_SLAVE_URL:jdbc:mysql://localhost:3306/apex_example?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true}
           username: ${DB_SLAVE_USERNAME:root}
-          # 默认值与 master 一致（apex-root，与本地基础设施 docker-compose.infra.yml 默认一致）
+          # 默认值与 master 一致（apex-root，与本地基础设施 podman-compose.infra.yml 默认一致）
           password: ${DB_SLAVE_PASSWORD:apex-root}
           driver-class-name: com.mysql.cj.jdbc.Driver
 

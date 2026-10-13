@@ -12,7 +12,7 @@
 |---|--------|------|---------|
 | 1 | 源码包（8 模块 + generator） | DDD 五层 + 代码生成器 | ✅ |
 | 2 | 配套前端工程 apex-admin-web | Vue3 管理后台（前后端分离） | ✅ |
-| 3 | 部署资产 | Dockerfile / docker-compose.yml / docker-compose.infra.yml / k8s/（含金丝雀）/ scripts/ | ✅ |
+| 3 | 部署资产 | Containerfile / podman-compose.yml / podman-compose.infra.yml / k8s/（含金丝雀）/ scripts/ | ✅ |
 | 4 | 文档集 docs/ | QUICK_START/ARCHITECTURE/CONFIGURATION/DEPLOYMENT/CODEGEN/EXAMPLE_GUIDE 等 27 篇 | ✅ |
 | 5 | 监控资产 config/monitoring/ | Prometheus 抓取 + 10 条告警规则 + Grafana 大盘 | ✅ |
 | 6 | 授权工具 | scripts/license/（私钥 + 发放脚本）+ LICENSE_MANAGEMENT.md | ✅（企业版） |

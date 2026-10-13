@@ -16,10 +16,10 @@ class CheckScriptMigrationTest < Minitest::Test
       FileUtils.cp(File.join(ROOT, path), target)
     end
     write('pom.xml', '<id>basic</id><id>standard</id><id>enterprise</id>')
-    %w[application domain infrastructure common interfaces].each do |name|
+    %w[application domain infrastructure common system].each do |name|
       FileUtils.mkdir_p(File.join(@root, "apex-#{name}/src/main/java"))
     end
-    FileUtils.mkdir_p(File.join(@root, 'apex-interfaces/src/main/resources/db/migration/mysql'))
+    FileUtils.mkdir_p(File.join(@root, 'apex-system/src/main/resources/db/migration/mysql'))
   end
 
   def teardown
@@ -41,6 +41,30 @@ class CheckScriptMigrationTest < Minitest::Test
 
   def report(name)
     File.readlines(File.join(@root, name), chomp: true)
+  end
+
+  def test_podman_deployment_paths_and_arguments
+    scripts = %w[scripts/deploy/start.sh scripts/deploy/stop.sh scripts/deploy/service/start.sh scripts/deploy/service/stop.sh]
+    write('bin/podman-compose', "#!/bin/bash\nprintf '%s\\n' \"$PWD\" \"$@\" > \"$COMPOSE_CAPTURE\"\n")
+    FileUtils.chmod(0o755, File.join(@root, 'bin/podman-compose'))
+    scripts.each do |script|
+      target = File.join(@root, script)
+      FileUtils.mkdir_p(File.dirname(target))
+      FileUtils.cp(File.join(ROOT, script), target)
+      capture = File.join(@tmp, 'compose args')
+      env = {'PATH' => "#{@root}/bin:#{ENV.fetch('PATH')}", 'COMPOSE_CAPTURE' => capture, 'APEX_COMPOSE_STOP_TIMEOUT' => '123'}
+      args = script.end_with?('start.sh') ? ['--profile', 'test profile'] : ['--remove-orphans']
+      out, err, status = Open3.capture3(env, '/bin/bash', target, *args, chdir: @tmp)
+      assert status.success?, out + err
+      lines = File.readlines(capture, chomp: true)
+      assert_equal @root, lines[0]
+      assert_equal ['-f', File.join(@root, 'podman-compose.yml')], lines[1..2]
+      if script.end_with?('start.sh')
+        assert_equal ['--profile', 'test profile', 'up', '-d', '--build'], lines[3..]
+      else
+        assert_equal ['down', '--timeout', '123', '--remove-orphans'], lines[3..]
+      end
+    end
   end
 
   def test_empty_scans_and_unrelated_reports

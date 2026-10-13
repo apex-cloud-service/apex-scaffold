@@ -62,6 +62,9 @@ public class TokenBucketRateLimitFilter {
     /** 降级放行计数指标名 */
     private static final String METRIC_FAILOPEN = "apex.gateway.ratelimit.failopen";
 
+    /** 固定窗口算法标识（{@code algorithm=fixed-window} 兼容路径） */
+    private static final String ALGORITHM_FIXED_WINDOW = "fixed-window";
+
     /**
      * Lua 脚本：原子性令牌桶算法（与 infra {@code DistributedTokenBucketRateLimiter} 同语义）.
      *
@@ -168,7 +171,7 @@ public class TokenBucketRateLimitFilter {
      * @return {@code true} 放行；{@code false} 触发限流
      */
     public Mono<Boolean> tryAcquire(String key, long capacity, double refillRate) {
-        if ("fixed-window".equalsIgnoreCase(properties.getAlgorithm())) {
+        if (ALGORITHM_FIXED_WINDOW.equalsIgnoreCase(properties.getAlgorithm())) {
             return tryAcquireFixedWindow(key, capacity);
         }
         return tryAcquireTokenBucket(key, capacity, refillRate);

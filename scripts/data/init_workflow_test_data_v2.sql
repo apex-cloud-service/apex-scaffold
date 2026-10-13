@@ -1,7 +1,7 @@
 -- 工作流测试数据初始化脚本（修复版）
 -- 用途：为工作流监控页面提供测试数据
 
-USE apex_data;
+USE apex_system;
 
 -- 清理旧数据
 DELETE FROM wf_approval_record WHERE deleted = 0;

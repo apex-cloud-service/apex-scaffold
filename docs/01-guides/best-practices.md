@@ -400,7 +400,7 @@ listener 只有在业务副作用完成后才能返回成功。处理失败应�
 
 ## 📦 部署最佳实践
 
-### 1. Docker镜像优化
+### 1. 容器镜像优化
 
 ```dockerfile
 # 多阶段构建减小镜像体积
@@ -420,7 +420,7 @@ ENTRYPOINT ["java", "-jar", "app.jar"]
 ### 2. 健康检查
 
 ```yaml
-# 与项目 Dockerfile 一致：探测管理端口 8081 的就绪探针（含 DB + Redis）
+# 与项目 Containerfile 一致：探测管理端口 8081 的就绪探针（含 DB + Redis）
 healthcheck:
   test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8081/actuator/health/readiness", "|", "grep", "-q", "UP"]
   interval: 30s

@@ -1,7 +1,7 @@
 # 配置文件深度分析 - 环境变量配置清单
 
 **创建日期**: 2026-09-09  
-**分析范围**: 所有配置文件（application*.yml, bootstrap.yml）  
+**分析范围**: 所有配置文件（application*.yml, bootstrap.yml）+ Nacos 配置中心 dataId（见 §2.16）
 **项目版本**: 1.3.1
 
 ---
@@ -200,20 +200,21 @@
 
 | 环境变量 | 默认值 | 说明 | Profile | 必填 |
 |---------|--------|------|---------|------|
-| `STORAGE_DEFAULT_TYPE` | `local` | 默认存储实现：local/minio/volcengine | 全部 | ❌ |
-| `STORAGE_BUCKET_NAME` | `apex` | 默认 Bucket 名称 | 全部 | ❌ |
-| `STORAGE_PRESIGNED_EXPIRE` | `300` | 预签名 URL 有效期（秒） | 全部 | ❌ |
-| `STORAGE_LOCAL_BASE_PATH` | `./data/storage` | 本地存储根目录 | 全部 | ❌ |
-| `STORAGE_LOCAL_PUBLIC_BASE_URL` | - | 文件对外访问基础 URL | 全部 | ❌ |
-| `MINIO_ENDPOINT` | - | MinIO 端点 | 全部 | ❌ |
-| `MINIO_ACCESS_KEY` | - | MinIO AccessKey | 全部 | ❌ |
-| `MINIO_SECRET_KEY` | - | MinIO SecretKey | 全部 | ❌ |
-| `MINIO_SECURE` | - | 是否使用 HTTPS | 全部 | ❌ |
-| `VOLC_ENGINE_ENABLED` | `false` | 启用火山引擎 TOS | 全部 | ❌ |
-| `VOLC_ENGINE_ENDPOINT` | - | TOS 端点 | 全部 | ❌ |
-| `VOLC_ENGINE_REGION` | - | TOS 区域 | 全部 | ❌ |
-| `VOLC_ENGINE_ACCESS_KEY` | - | TOS AccessKey | 全部 | ❌ |
-| `VOLC_ENGINE_SECRET_KEY` | - | TOS SecretKey | 全部 | ❌ |
+| `STORAGE_DEFAULT_TYPE` | `local` | 默认存储实现：local/minio/volcengine | 文件服务 | ❌ |
+| `STORAGE_BUCKET_NAME` | `apex` | 默认 Bucket 名称 | 文件服务 | ❌ |
+| `STORAGE_PRESIGNED_URL_EXPIRE_SECONDS` | `300` | 预签名 URL 有效期（秒） | 文件服务 | ❌ |
+| `STORAGE_LOCAL_ENABLED` | `true` | 启用本地存储后端 | 文件服务 | ❌ |
+| `STORAGE_LOCAL_BASE_PATH` | `./data/storage` | 本地存储根目录 | 文件服务 | ❌ |
+| `STORAGE_LOCAL_PUBLIC_BASE_URL` | - | 文件对外访问基础 URL | 文件服务 | ❌ |
+| `MINIO_ENDPOINT` | - | MinIO 端点 | 文件服务 | ❌ |
+| `MINIO_ACCESS_KEY` | - | MinIO AccessKey | 文件服务 | ❌ |
+| `MINIO_SECRET_KEY` | - | MinIO SecretKey | 文件服务 | ❌ |
+| `MINIO_SECURE` | - | 是否使用 HTTPS | 文件服务 | ❌ |
+| `STORAGE_VOLCENGINE_ENABLED` | `false` | 启用火山引擎 TOS | 文件服务 | ❌ |
+| `STORAGE_VOLCENGINE_ENDPOINT` | - | TOS 端点 | 文件服务 | ❌ |
+| `STORAGE_VOLCENGINE_REGION` | - | TOS 区域 | 文件服务 | ❌ |
+| `STORAGE_VOLCENGINE_ACCESS_KEY` | - | TOS AccessKey | 文件服务 | ❌ |
+| `STORAGE_VOLCENGINE_SECRET_KEY` | - | TOS SecretKey | 文件服务 | ❌ |
 
 **在 .env.example 中**: ❌ 全部缺失
 
@@ -316,8 +317,7 @@
 | `NACOS_CONFIG_ENABLED` | `true` | 启用 Nacos 配置中心 | 全部 | ❌ |
 | `NACOS_DISCOVERY_ENABLED` | `true` | 启用 Nacos 服务发现 | 全部 | ❌ |
 | `NACOS_REGISTER_ENABLED` | `true` | 注册到 Nacos | 全部 | ❌ |
-| `FILE_UPLOAD_ENABLED` | `false` | 启用文件上传 | 全部 | ❌ |
-| `FILE_UPLOAD_MAX_SIZE` | `10485760` | 单文件最大字节数（10MB） | 全部 | ❌ |
+| `FILE_MAX_SIZE_BYTES` | `10485760` | 单文件最大字节数（10MB，apex-file-service 文件域） | 文件服务 | ❌ |
 | `OPERATION_LOG_ENABLED` | `true` | 启用操作日志 | 全部 | ❌ |
 | `APEX_RESPONSE_TIMEOUT` | `30s` | 全局响应超时 | 全部 | ❌ |
 | `APEX_SQL_SLOW_ENABLED` | `true` | 启用慢 SQL 指标采集 | 全部 | ❌ |
@@ -336,6 +336,31 @@
 | `VAR` | - | 通用变量占位符 | 全部 | ❌ |
 
 **在 .env.example 中**: ✅ NACOS_* 部分已覆盖，其他缺失
+
+### 2.16 Nacos 配置中心 Data ID 清单（微服务化）
+
+> 来源：迁移方案 §12.1 + 执行计划 Phase 1.4；模板见 [`config/nacos/`](../../config/nacos/README.md)。
+> 约定：`{service}` = `spring.application.name`（服务名一律 `apex-xxx-service`）；
+> 组 `DEFAULT_GROUP`（Sentinel 规则为 `SENTINEL_GROUP`）；密钥一律环境变量 / KMS，禁明文。
+
+| Data ID | 类型 | 引用服务 | 说明 |
+|---------|------|----------|------|
+| `apex-common.yaml` | 共享配置 | 全部微服务 | Result/i18n 开关、日志级别基线、JWKs 地址、公共请求头约定 |
+| `apex-datasource-{env}.yaml` | 共享配置 | 有库服务（dev/prod） | 各服务数据源连接（口令走 `DB_PASSWORD_{SERVICE}` 环境变量） |
+| `apex-gateway.yaml` | 服务私有 | `apex-gateway` | 路由规则、灰度、JWKS 密钥清单、限流参数、CORS 白名单 |
+| `apex-auth-service.yaml` | 服务私有 | `apex-auth-service` | Phase 2 引入（登录/JWT/MFA 等动态项） |
+| `apex-system-service.yaml` | 服务私有 | `apex-system-service` | Phase 6 引入 |
+| `apex-workflow-service.yaml` | 服务私有 | `apex-workflow-service` | Phase 3 引入 |
+| `apex-office-service.yaml` | 服务私有 | `apex-office-service` | Phase 5 引入 |
+| `apex-file-service.yaml` | 服务私有 | `apex-file-service` | Phase 4 引入 |
+| `{service}-flow-rules` | Sentinel 规则 | 各微服务 | 限流规则（FlowRule JSON 数组），整体替换语义 |
+| `{service}-degrade-rules` | Sentinel 规则 | 各微服务 | 熔断规则（DegradeRule JSON 数组），整体替换语义 |
+
+**bootstrap.yml 命名说明**：`spring.application.name` 是 Nacos 注册名与配置
+dataId 的权威来源，也是网关路由 `lb://{service}` 的解析目标。当前
+`apex-auth-center` 的 `bootstrap.yml` 已先行采用目标名 `apex-auth-service`，
+而 `application.yml` 仍为历史名 `apex-auth-center`，两者不一致属 Phase 2.2
+「应用名与库治理」待收敛项。
 
 ---
 
@@ -454,10 +479,11 @@ LOKI_URL=http://localhost:3100
 GRAFANA_ENABLED=false
 GRAFANA_URL=http://localhost:3200
 
-# ---------- 存储 ----------
+# ---------- 存储（apex-file-service 文件域） ----------
 STORAGE_DEFAULT_TYPE=local
 STORAGE_BUCKET_NAME=apex
-STORAGE_PRESIGNED_EXPIRE=300
+STORAGE_PRESIGNED_URL_EXPIRE_SECONDS=300
+STORAGE_LOCAL_ENABLED=true
 STORAGE_LOCAL_BASE_PATH=./data/storage
 STORAGE_LOCAL_PUBLIC_BASE_URL=
 
@@ -468,13 +494,13 @@ MINIO_SECRET_KEY=
 MINIO_SECURE=false
 
 # 火山引擎 TOS
-VOLC_ENGINE_ENABLED=false
-VOLC_ENGINE_ENDPOINT=
-VOLC_ENGINE_REGION=
-VOLC_ENGINE_ACCESS_KEY=
-VOLC_ENGINE_SECRET_KEY=
+STORAGE_VOLCENGINE_ENABLED=false
+STORAGE_VOLCENGINE_ENDPOINT=
+STORAGE_VOLCENGINE_REGION=
+STORAGE_VOLCENGINE_ACCESS_KEY=
+STORAGE_VOLCENGINE_SECRET_KEY=
 
-# ---------- 内容审核 ----------
+# ---------- 内容审核（独立内容安全能力） ----------
 BAIDU_TEXT_MODERATION_API_KEY=
 BAIDU_TEXT_MODERATION_SECRET_KEY=
 BAIDU_IMAGE_MODERATION_API_KEY=
@@ -504,8 +530,7 @@ TRACE_SAMPLING_RATE=0.1
 ZIPKIN_BASE_URL=http://localhost:9411
 
 # ---------- 其他系统配置 ----------
-FILE_UPLOAD_ENABLED=false
-FILE_UPLOAD_MAX_SIZE=10485760
+FILE_MAX_SIZE_BYTES=10485760
 OPERATION_LOG_ENABLED=true
 APEX_RESPONSE_TIMEOUT=30s
 APEX_SQL_SLOW_ENABLED=true
@@ -519,7 +544,7 @@ APEX_SQL_SLOW_THRESHOLD_MS=1000
 ### 6.1 环境变量优先级
 
 1. **操作系统环境变量**（最高优先级）
-2. **`.env` 文件**（Docker Compose）
+2. **`.env` 文件**（Podman Compose）
 3. **`application-{profile}.yml`**
 4. **`application.yml`**（默认值，最低优先级）
 
@@ -534,7 +559,7 @@ REDIS_PASSWORD=
 
 #### 生产环境
 ```bash
-# 通过 Kubernetes Secret / Docker Secret 注入
+# 通过 Kubernetes Secret / Podman Secret 注入
 JWT_SECRET=${K8S_SECRET_JWT}
 REDIS_PASSWORD=${K8S_SECRET_REDIS_PASSWORD}
 ```
@@ -546,7 +571,6 @@ REDIS_PASSWORD=${K8S_SECRET_REDIS_PASSWORD}
 - ✅ `JWT_SECRET` 长度 ≥ 32 字节（prod 环境）
 - ✅ `REDIS_PASSWORD` 非空（prod 环境）
 - ✅ `DB_MASTER_URL` 格式正确
-- ✅ `FILE_UPLOAD_ENABLED=true` 时 `BAIDU_*_MODERATION_*` 已配置（prod 环境）
 
 ---
 

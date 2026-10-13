@@ -12,7 +12,7 @@
 #   - 验证失败: 删除金丝雀 Ingress 注解即可回滚（流量 100% 回稳定版）
 #
 # 方式二: Argo Rollouts（渐进式交付，需安装 argo-rollouts）
-#   使用 Rollout 对象 + analysis 自动化灰度，见 docs/DEPLOYMENT.md §14。
+#   使用 Rollout 对象 + analysis 自动化灰度，见 ../docs/05-operations/deployment.md §14。
 #
 # 前提:
 #   - Nginx Ingress Controller ≥ v0.22（支持 canary 注解）
@@ -61,7 +61,7 @@ spec:
             - secretRef:
                 name: apex-secrets
           env:
-            # JVM 生产级调优参数（与 Dockerfile 默认一致；GC 日志/堆转储写入容器 /app/logs）
+            # JVM 生产级调优参数（与 Containerfile 默认一致；GC 日志/堆转储写入容器 /app/logs）
             - name: JAVA_OPTS
               value: "-Xms512m -Xmx768m -Xss512k -XX:MaxDirectMemorySize=128m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:MetaspaceSize=256m -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/app/logs/heapdump.hprof -XX:+ExitOnOutOfMemoryError -Xlog:gc*:file=/app/logs/gc.log:time,uptime,level,tags:filecount=5,filesize=20m -Dfile.encoding=UTF-8 -Djava.security.egd=file:/dev/./urandom"
             # 显式选择 Kubernetes 治理模式，启动后不随运行环境热切换

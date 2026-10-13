@@ -21,8 +21,8 @@
   <text x="70" y="390" class="text">产物: apex-scaffold-1.0.0.jar</text>
 
   <rect x="500" y="90" width="430" height="320" rx="8" fill="#f0fdf4" stroke="#059669" stroke-width="2"/>
-  <text x="520" y="120" class="box-title">镜像构建 (Docker)</text>
-  <text x="520" y="145" class="text">多阶段构建 Dockerfile:</text>
+  <text x="520" y="120" class="box-title">镜像构建 (Podman)</text>
+  <text x="520" y="145" class="text">多阶段构建 Containerfile:</text>
   <text x="520" y="170" class="code">FROM eclipse-temurin:17-jre-alpine AS base</text>
   <text x="520" y="188" class="code">COPY *.jar /app.jar</text>
   <text x="520" y="206" class="code">EXPOSE 8080 8081</text>
@@ -30,10 +30,10 @@
   <text x="520" y="252" class="text">镜像优化:</text>
   <text x="520" y="270" class="code">• Alpine Linux (体积150MB)</text>
   <text x="520" y="288" class="code">• 分层缓存 (依赖层复用)</text>
-  <text x="520" y="306" class="code">• .dockerignore (排除.git等)</text>
+  <text x="520" y="306" class="code">• .containerignore (排除.git等)</text>
   <text x="520" y="334" class="text">推送到Registry:</text>
-  <text x="520" y="352" class="code">docker push ghcr.io/apex/scaffold:1.0.0</text>
-  <text x="520" y="370" class="code">docker push ghcr.io/apex/scaffold:latest</text>
+  <text x="520" y="352" class="code">podman push ghcr.io/apex/scaffold:1.0.0</text>
+  <text x="520" y="370" class="code">podman push ghcr.io/apex/scaffold:latest</text>
 
   <rect x="950" y="90" width="400" height="320" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
   <text x="970" y="120" class="box-title">部署阶段 (Deploy)</text>
@@ -61,7 +61,7 @@
   <text x="80" y="624" class="code">• GitHub Packages (容器镜像仓库)</text>
   <text x="80" y="642" class="code">• 语义化版本: v1.2.3 (major.minor.patch)</text>
   <text x="70" y="672" class="text">流水线加速:</text>
-  <text x="80" y="692" class="code">• GitHub Actions缓存 (Maven .m2, Docker layer)</text>
+  <text x="80" y="692" class="code">• GitHub Actions缓存 (Maven .m2, 容器镜像层)</text>
   <text x="80" y="710" class="code">• 并行任务: 前端构建 || 后端构建</text>
   <text x="80" y="728" class="code">• 矩阵构建: JDK 17/21 × MySQL 8.0/8.4</text>
 

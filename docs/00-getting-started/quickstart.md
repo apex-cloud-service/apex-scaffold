@@ -34,15 +34,32 @@ java -version
 # 检查构建工具版本（推荐 mvnd，Maven Daemon；mvn 亦可）
 mvnd --version
 
-# 检查Docker(可选)
-docker --version
-docker compose --version
+# 检查 Podman 与独立 Compose CLI（可选）
+podman --version
+podman-compose --version
 ```
 
 如果未安装,请参考:
 - [JDK 17下载](https://www.oracle.com/java/technologies/downloads/#java17)（推荐 sdkman：`sdk install java 17.0.12-oracle`）
 - [mvnd安装指南](https://github.com/apache/maven-mvnd)（推荐 sdkman：`sdk install mvnd`；传统 Maven 亦可）
-- [Docker安装指南](https://docs.docker.com/get-docker/)
+- [Podman 安装指南](https://podman.io/docs/installation)
+
+macOS 使用虚拟机运行容器，安装独立 `podman-compose` 后准备 machine：
+
+```bash
+brew install podman podman-compose
+podman machine init  # 仅首次创建；已有 machine 时跳过
+podman machine start
+```
+
+项目命令使用独立 `podman-compose`，并显式指定 Compose 文件。Testcontainers 通过 Docker 兼容 API 连接 Podman，因此仍使用 `DOCKER_HOST`：
+
+```bash
+export DOCKER_HOST="unix://$(podman machine inspect --format '{{.ConnectionInfo.PodmanSocket.Path}}')"
+export TESTCONTAINERS_RYUK_DISABLED=true
+```
+
+上述设置仅用于测试进程；禁用 Ryuk 后需自行清理测试遗留容器。
 
 ---
 
@@ -84,10 +101,10 @@ curl http://localhost:8080/actuator/health
 
 ```bash
 # 1. 启动基础设施
-docker-compose -f docker-compose.infra.yml up -d
+podman-compose -f podman-compose.infra.yml up -d
 
 # 等待 MySQL 和 Redis 启动完成（约 30 秒）
-docker-compose -f docker-compose.infra.yml ps
+podman-compose -f podman-compose.infra.yml ps
 
 # 2. 配置环境变量
 cp .env.example .env
@@ -118,7 +135,7 @@ JWT_SECRET=your-secret-key-at-least-32-bytes
 
 ```bash
 # 1. 启动完整基础设施
-docker-compose -f docker-compose.infra.yml up -d
+podman-compose -f podman-compose.infra.yml up -d
 
 # 2. 配置环境变量（包含 RocketMQ、Nacos）
 cp .env.example .env
@@ -141,17 +158,22 @@ ZIPKIN_BASE_URL=http://localhost:9411
 
 ---
 
-### 选项:使用Docker(最简单)
+### 选项：使用 Podman
 
 ```bash
-# 一键启动所有依赖(MySQL + Redis + 应用)
-docker compose up -d --build
+# 先配置 .env 中的安全密钥，并创建应用依赖的观测网络
+cp .env.example .env
+# 编辑 .env，填写全部安全密钥（参见配置管理文档）
+podman-compose -p apex-infra -f podman-compose.infra.yml up -d skywalking-oap skywalking-ui elasticsearch kibana filebeat
+
+# 启动 MySQL、Redis 和应用
+podman-compose -f podman-compose.yml up -d --build
 
 # 等待30秒让服务完全启动
 sleep 30
 
 # 验证服务状态
-docker compose ps
+podman-compose -f podman-compose.yml ps
 ```
 
 预期输出（容器名由 compose 自动生成，形如 apex-scaffold-mysql-1）:
@@ -164,7 +186,7 @@ apex-scaffold-redis-1    Up (healthy)        0.0.0.0:6379->6379/tcp
 
 > 💡 如需同时部署项目用到的**全部中间件**（Nacos / RocketMQ / Sentinel /
 > Zipkin / Prometheus / Grafana 等），一条命令：
-> `docker compose -f docker-compose.infra.yml up -d`（详见 [DEPLOYMENT.md](../05-operations/deployment.md) §6.5）
+> `podman-compose -f podman-compose.infra.yml up -d`（详见 [DEPLOYMENT.md](../05-operations/deployment.md) §6.5）
 
 ---
 
@@ -271,7 +293,7 @@ apex-example/
 **解决方案**:
 ```bash
 # 1. 检查 MySQL 是否启动
-docker-compose -f docker-compose.infra.yml ps
+podman-compose -f podman-compose.infra.yml ps
 
 # 2. 检查环境变量
 echo $DB_MASTER_URL
@@ -290,7 +312,7 @@ mysql -h localhost -P 3306 -u root -p
 **解决方案**:
 ```bash
 # 1. 检查 Redis 是否启动
-docker-compose -f docker-compose.infra.yml ps
+podman-compose -f podman-compose.infra.yml ps
 
 # 2. 测试 Redis 连通性
 redis-cli -h localhost -p 6379 -a your_password ping
@@ -308,7 +330,7 @@ redis-cli -h localhost -p 6379 -a your_password ping
 export SERVER_PORT=8081
 ./scripts/deploy/app.sh start dev basic
 
-# 方法 2: 修改 docker-compose.yml 端口映射
+# 方法 2: 修改 podman-compose.yml 端口映射
 ports:
   - "8081:8080"  # 将宿主机的8081映射到容器的8080
 
@@ -323,10 +345,10 @@ kill -9 <PID>
 
 ```bash
 # 删除数据卷(⚠️ 会丢失所有数据!)
-docker compose down -v
+podman-compose -f podman-compose.yml down -v
 
 # 重新启动
-docker compose up -d
+podman-compose -f podman-compose.yml up -d
 ```
 
 更多问题请参考 [troubleshooting.md](../01-guides/troubleshooting.md)

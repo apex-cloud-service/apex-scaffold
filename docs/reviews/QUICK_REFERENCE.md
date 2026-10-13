@@ -259,7 +259,7 @@ src/main/resources/
 git checkout -b feature/security-fixes
 
 # 2. 确保Redis运行
-docker-compose up -d redis
+podman-compose -f podman-compose.infra.yml up -d redis
 
 # 3. 运行现有测试
 ./mvnw clean test

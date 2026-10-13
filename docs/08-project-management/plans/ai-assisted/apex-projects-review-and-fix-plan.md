@@ -15,7 +15,7 @@
 - 开发环境：`application-dev.yml`（默认激活 profile）
 - 生产环境：`application-prod.yml`
 - 基础版：`application-basic.yml`
-- 监控配置：`config/monitoring/docker-compose.yml`
+- 监控配置：`config/monitoring/podman-compose.yml`
 
 **已发现的配置**：
 ✅ Flyway 在 dev 环境**已禁用**（`spring.flyway.enabled: false`）
@@ -116,7 +116,7 @@ spring:
 
 **发现位置**：
 - 后端配置：`application-dev.yml` 中 `grafana.url: http://localhost:3200`
-- 监控栈配置：`config/monitoring/docker-compose.yml` 中 Grafana 端口映射 `"3200:3000"`
+- 监控栈配置：`config/monitoring/podman-compose.yml` 中 Grafana 端口映射 `"3200:3000"`
 - 启动脚本：`scripts/deploy/start.sh` 中输出 `http://localhost:3000`
 
 **问题描述**：
@@ -245,7 +245,7 @@ grep -r "component" apex-interfaces/src/main/resources/db/migration/mysql/V*.sql
    - ✅ 所有页面路由正常访问（无 404）
 
 #### ✅ Grafana 监控平台验证
-1. 启动监控栈：`docker compose -f /Users/work/apex-scaffold/config/monitoring/docker-compose.yml up -d`
+1. 启动监控栈：`podman-compose -f /Users/work/apex-scaffold/config/monitoring/podman-compose.yml up -d`
 2. 访问 `http://localhost:3200`（admin/admin）
 3. 验证：
    - ✅ Grafana 正常访问

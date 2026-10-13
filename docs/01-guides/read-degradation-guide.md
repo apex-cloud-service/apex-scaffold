@@ -283,7 +283,7 @@ apex_cache_read_degradation_total{cache_key="user:456"} 2
 
 ```bash
 # 1. 模拟 DB 故障（暂停 MySQL 容器）
-docker pause apex-mysql
+podman pause apex-infra-mysql
 
 # 2. 观察降级指标
 curl http://localhost:8080/actuator/prometheus | grep apex_cache_read_degradation_total
@@ -292,7 +292,7 @@ curl http://localhost:8080/actuator/prometheus | grep apex_cache_read_degradatio
 curl http://localhost:8080/api/v1/products/123
 
 # 4. 恢复 DB
-docker unpause apex-mysql
+podman unpause apex-infra-mysql
 ```
 
 ## 7. 故障排查

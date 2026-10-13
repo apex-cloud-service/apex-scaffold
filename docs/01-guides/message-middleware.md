@@ -66,7 +66,8 @@ mq:
 本地使用 Compose 启动 RocketMQ：
 
 ```bash
-docker compose --profile rocketmq up -d
+ROCKETMQ_NAMESERVER=rocketmq-namesrv:9876 APEX_MQ_CONSUMER_ENABLED=true \
+podman-compose -f podman-compose.yml --profile rocketmq up -d
 ```
 
 生产环境至少注入 `ROCKETMQ_NAMESERVER`、`ROCKETMQ_PRODUCER_GROUP`，启用 ACL 时同时注入 `ROCKETMQ_ACCESS_KEY` 和 `ROCKETMQ_SECRET_KEY`。消息消费开关为 `APEX_MQ_CONSUMER_ENABLED`。

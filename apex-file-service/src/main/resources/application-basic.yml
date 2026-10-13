@@ -1,0 +1,44 @@
+# ============================================================
+# Apex Scaffold - 文件服务 basic Profile 配置
+# ============================================================
+# 【作用】
+#   基础版（basic）单机运行配置：使用 H2 内存库替代 MySQL，
+#   关闭 Flyway 改用 db/basic-schema.sql 初始化；存储使用本地文件系统兜底。
+# @author Apex Team
+# ============================================================
+
+spring:
+  autoconfigure:
+    # basic profile 排除文件服务不依赖的自动装配组件
+    exclude:
+      org.redisson.spring.starter.RedissonAutoConfigurationV2,
+      com.baomidou.dynamic.datasource.spring.boot.autoconfigure.DynamicDataSourceAutoConfiguration,
+      com.apex.scaffold.infrastructure.remote.config.RemoteApiClientConfig
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:file-service;MODE=MySQL;DB_CLOSE_DELAY=-1
+    username: sa
+    password:
+  flyway:
+    enabled: false
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:db/basic-schema.sql
+  codec:
+    # basic 环境内存受限，收窄请求体缓冲
+    max-in-memory-size: 16MB
+
+# basic 环境使用本地文件系统存储（MinIO/TOS 默认关闭）
+storage:
+  local:
+    enabled: true
+  volcengine:
+    enabled: false
+
+logging:
+  level:
+    org.springframework.web: INFO
+    org.springframework.security: INFO
+    com.apex.scaffold.file: INFO
+    com.apex.scaffold.fileservice: INFO

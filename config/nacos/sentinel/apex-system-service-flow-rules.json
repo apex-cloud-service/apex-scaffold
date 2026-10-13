@@ -1,0 +1,17 @@
+[
+  {"resource":"/api/v1/user/info","limitApp":"default","grade":1,"count":300,"strategy":0,"controlBehavior":0,"clusterMode":false},
+  {"resource":"/api/v1/user/{userId}","limitApp":"default","grade":1,"count":200,"strategy":0,"controlBehavior":0,"clusterMode":false},
+  {"resource":"/api/v1/user/list","limitApp":"default","grade":1,"count":50,"strategy":0,"controlBehavior":0,"clusterMode":false},
+  {"resource":"/admin-api/v1/users/**","limitApp":"default","grade":1,"count":100,"strategy":0,"controlBehavior":0,"clusterMode":false},
+  {"resource":"/admin-api/v1/roles/**","limitApp":"default","grade":1,"count":100,"strategy":0,"controlBehavior":0,"clusterMode":false},
+  {"resource":"/admin-api/v1/menus/**","limitApp":"default","grade":1,"count":100,"strategy":0,"controlBehavior":0,"clusterMode":false},
+  {"resource":"/admin-api/v1/depts/**","limitApp":"default","grade":1,"count":100,"strategy":0,"controlBehavior":0,"clusterMode":false},
+  {"resource":"/admin-api/v1/dicts/**","limitApp":"default","grade":1,"count":200,"strategy":0,"controlBehavior":0,"clusterMode":false},
+  {"resource":"/admin-api/v1/configs/**","limitApp":"default","grade":1,"count":100,"strategy":0,"controlBehavior":0,"clusterMode":false},
+  {"resource":"/admin-api/v1/jobs/**","limitApp":"default","grade":1,"count":50,"strategy":0,"controlBehavior":0,"clusterMode":false},
+  {"resource":"/admin-api/v1/logs/**","limitApp":"default","grade":1,"count":100,"strategy":0,"controlBehavior":0,"clusterMode":false},
+  {"resource":"/api/v1/search/**","limitApp":"default","grade":1,"count":100,"strategy":0,"controlBehavior":0,"clusterMode":false},
+  {"resource":"/internal/v1/users/{accountId}/snapshot","limitApp":"default","grade":1,"count":1000,"strategy":0,"controlBehavior":0,"clusterMode":false},
+  {"resource":"/internal/v1/depts/tree","limitApp":"default","grade":1,"count":200,"strategy":0,"controlBehavior":0,"clusterMode":false},
+  {"resource":"/internal/v1/dict/{type}","limitApp":"default","grade":1,"count":500,"strategy":0,"controlBehavior":0,"clusterMode":false}
+]

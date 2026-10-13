@@ -1,18 +1,10 @@
 package com.apex.scaffold.common.context;
 
 import java.util.ArrayDeque;
-import java.util.Collection;
 import java.util.Deque;
-import java.util.Iterator;
-import java.util.NoSuchElementException;
 import java.util.Optional;
-import org.reactivestreams.Subscription;
-import reactor.core.CoreSubscriber;
-import reactor.core.Fuseable;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
-import reactor.core.publisher.Operators;
 import reactor.core.scheduler.Schedulers;
 import reactor.util.context.Context;
 
@@ -28,18 +20,23 @@ import reactor.util.context.Context;
  * （供日志/埋点/读取当前数据源），实际路由由切面同步委派到 Baomidou 的
  * {@code DynamicDataSourceContextHolder}（驱动 {@code DynamicRoutingDataSource} 选库）。</p>
  *
- * <h2>H3 响应式/跨线程上下文桥接</h2>
+ * <h2>响应式/跨线程上下文桥接</h2>
  * <ul>
  *   <li>在 {@link #initializeGlobalHooks()} 中挂载全局
  *       {@link Schedulers#onScheduleHook}：任务提交到 Scheduler 时捕获当前线程的
  *       数据源栈快照，在执行线程内重建后运行，finally 清理，解决
  *       BlockingIoSchedulers.jdbc() 等跨线程切换时数据源丢失。</li>
- *   <li>挂载全局 {@link Hooks#onEachOperator}：lift {@code CoreSubscriber}，
- *       从 Reactor Context（{@link #REACTOR_CONTEXT_KEY}）读取栈快照并安装，
- *       保证每个 onNext/onError/onComplete、request/cancel 执行前已恢复上下文，
- *       并区分普通 Subscription 与 {@link Fuseable.QueueSubscription}，避免融合作业模式
- *       丢失上下文。</li>
+ *   <li>显式的 {@link #withDataSource(Mono)} / {@link #withDataSource(Flux)} 桥接：
+ *       在订阅阶段从 Reactor Context（{@link #REACTOR_CONTEXT_KEY}）读取栈快照并安装，
+ *       执行完毕后自动恢复。</li>
  * </ul>
+ *
+ * <p><b>为何不再注册全局 {@code Hooks.onEachOperator}：</b>全局按操作符 lift
+ * {@code CoreSubscriber} 会把 WebFlux 路由与 Sentinel 内部的
+ * {@code FluxConcatMap$ConcatMapInner}、{@code MonoNext} 等订阅者一并包装。这些内部
+ * 订阅者的 {@code currentContext()}/{@code cancel()} 会经由其 {@code parent} 反向引用回环，
+ * 与包装后的 {@code actual} 链形成环状图，导致 {@code currentContext()} 与 {@code cancel()}
+ * 无限互递归并抛出 {@link StackOverflowError}。</p>
  *
  * @author Apex Team
  * @version 1.1.0
@@ -54,13 +51,12 @@ public final class DataSourceContext {
     private static final ThreadLocal<Deque<String>> STACK = new ThreadLocal<>();
 
     private static final String SCHEDULER_HOOK_KEY = DataSourceContext.class.getName();
-    private static final String OPERATOR_HOOK_KEY = DataSourceContext.class.getName() + ".operator";
 
     static {
         initializeGlobalHooks();
     }
 
-    /** 幂等初始化全局 Reactor 与 Scheduler Hook（加载类时自动调用）。 */
+    /** 幂等初始化全局 Scheduler Hook（加载类时自动调用）。 */
     public static synchronized void initializeGlobalHooks() {
         Schedulers.resetOnScheduleHook(SCHEDULER_HOOK_KEY);
         Schedulers.onScheduleHook(SCHEDULER_HOOK_KEY, runnable -> {
@@ -75,16 +71,11 @@ public final class DataSourceContext {
                 }
             };
         });
-        Hooks.resetOnEachOperator(OPERATOR_HOOK_KEY);
-        Hooks.onEachOperator(
-                OPERATOR_HOOK_KEY,
-                Operators.lift((scannable, subscriber) -> new DataSourceContextSubscriber<>(subscriber)));
     }
 
-    /** 重置全局 Hook（测试/容器销毁清理用）。 */
+    /** 重置全局 Scheduler Hook（测试/容器销毁清理用）。 */
     public static void resetGlobalHooks() {
         Schedulers.resetOnScheduleHook(SCHEDULER_HOOK_KEY);
-        Hooks.resetOnEachOperator(OPERATOR_HOOK_KEY);
     }
 
     /** 私有构造，禁止实例化 */
@@ -239,190 +230,5 @@ public final class DataSourceContext {
             return;
         }
         STACK.set(new ArrayDeque<>(snapshot));
-    }
-
-    private static final class DataSourceContextSubscriber<T> implements CoreSubscriber<T> {
-
-        private final CoreSubscriber<? super T> actual;
-
-        private DataSourceContextSubscriber(CoreSubscriber<? super T> actual) {
-            this.actual = actual;
-        }
-
-        @Override
-        public void onSubscribe(Subscription s) {
-            if (s instanceof Fuseable.QueueSubscription<?> queueSubscription) {
-                actual.onSubscribe(new DataSourceContextQueueSubscription<>(queueSubscription, this));
-            } else {
-                actual.onSubscribe(new DataSourceContextSubscription(s, this));
-            }
-        }
-
-        @Override
-        public void onNext(T t) {
-            withContext(() -> actual.onNext(t));
-        }
-
-        @Override
-        public void onError(Throwable t) {
-            withContext(() -> actual.onError(t));
-        }
-
-        @Override
-        public void onComplete() {
-            withContext(actual::onComplete);
-        }
-
-        @Override
-        public Context currentContext() {
-            return actual.currentContext();
-        }
-
-        private void withContext(Runnable runnable) {
-            Deque<String> snapshot = actual.currentContext().getOrDefault(REACTOR_CONTEXT_KEY, null);
-            // 只有当调用方显式写入了 Reactor Context（快照非空）时才做"安装/恢复"。
-            // 当 snapshot == null 时，我们不参与线程上下文管理：onComplete/doFinally 中
-            // 业务代码可能自行 pop() 切换栈，如果此时强行恢复 previous 会把业务 restore
-            // 的效果覆盖（测试 assertThat(current().isEmpty()) 失败）。
-            if (snapshot == null || snapshot.isEmpty()) {
-                runnable.run();
-                return;
-            }
-            Deque<String> previous = snapshotStack();
-            installStack(snapshot);
-            try {
-                runnable.run();
-            } finally {
-                installStack(previous);
-            }
-        }
-    }
-
-    private static final class DataSourceContextSubscription implements Subscription {
-
-        private final Subscription delegate;
-        private final DataSourceContextSubscriber<?> subscriber;
-
-        private DataSourceContextSubscription(Subscription delegate, DataSourceContextSubscriber<?> subscriber) {
-            this.delegate = delegate;
-            this.subscriber = subscriber;
-        }
-
-        @Override
-        public void request(long n) {
-            subscriber.withContext(() -> delegate.request(n));
-        }
-
-        @Override
-        public void cancel() {
-            subscriber.withContext(delegate::cancel);
-        }
-    }
-
-    private static final class DataSourceContextQueueSubscription<T> implements Fuseable.QueueSubscription<T> {
-
-        private final Fuseable.QueueSubscription<T> delegate;
-        private final DataSourceContextSubscriber<?> subscriber;
-
-        private DataSourceContextQueueSubscription(
-                Fuseable.QueueSubscription<T> delegate, DataSourceContextSubscriber<?> subscriber) {
-            this.delegate = delegate;
-            this.subscriber = subscriber;
-        }
-
-        @Override
-        public void request(long n) {
-            subscriber.withContext(() -> delegate.request(n));
-        }
-
-        @Override
-        public void cancel() {
-            subscriber.withContext(delegate::cancel);
-        }
-
-        @Override
-        public int requestFusion(int requestedMode) {
-            return delegate.requestFusion(requestedMode);
-        }
-
-        @Override
-        public T poll() {
-            return delegate.poll();
-        }
-
-        @Override
-        public int size() {
-            return delegate.size();
-        }
-
-        @Override
-        public boolean isEmpty() {
-            return delegate.isEmpty();
-        }
-
-        @Override
-        public void clear() {
-            delegate.clear();
-        }
-
-        @Override
-        public Iterator<T> iterator() {
-            return new Iterator<>() {
-                private final Iterator<T> it = delegate.iterator();
-
-                @Override
-                public boolean hasNext() {
-                    return it.hasNext();
-                }
-
-                @Override
-                public T next() {
-                    if (!hasNext()) {
-                        throw new NoSuchElementException();
-                    }
-                    return it.next();
-                }
-            };
-        }
-
-        @Override
-        public Object[] toArray() {
-            return delegate.toArray();
-        }
-
-        @Override
-        public <U> U[] toArray(U[] a) {
-            return delegate.toArray(a);
-        }
-
-        @Override
-        public boolean contains(Object o) {
-            return delegate.contains(o);
-        }
-
-        @Override
-        public boolean containsAll(Collection<?> c) {
-            return delegate.containsAll(c);
-        }
-
-        @Override
-        public boolean add(T t) {
-            return delegate.add(t);
-        }
-
-        @Override
-        public boolean remove(Object o) {
-            return delegate.remove(o);
-        }
-
-        @Override
-        public boolean removeAll(Collection<?> c) {
-            return delegate.removeAll(c);
-        }
-
-        @Override
-        public boolean retainAll(Collection<?> c) {
-            return delegate.retainAll(c);
-        }
     }
 }

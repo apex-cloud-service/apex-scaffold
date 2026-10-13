@@ -3,7 +3,7 @@
 # ============================================================
 # 用途: 挂载到 filebeat 容器 /usr/share/filebeat/filebeat.yml
 #
-# 管道: 应用 logback JSON_FILE_OUTPUT 写入 /var/log/apex-scaffold/*-json.log
+# 管道: 应用 /app/logs → 宿主 logs/<service> → /var/log/apex-scaffold/**/*-json.log
 #       → Filebeat filestream + ndjson 解析 → Elasticsearch（索引 apex-logs-yyyy.MM.dd）
 #       → Kibana 检索。
 #
@@ -17,7 +17,8 @@ filebeat.inputs:
     id: apex-json-logs
     enabled: true
     paths:
-      - /var/log/apex-scaffold/*-json.log
+      - /var/log/apex-scaffold/**/*-json.log
+    prospector.scanner.recursive_glob: true
     # 每行已是完整 JSON（LogstashEncoder 输出），直接解析到根字段
     parsers:
       - ndjson:
@@ -26,6 +27,20 @@ filebeat.inputs:
           overwrite_keys: true
     # 忽略滚动归档的压缩文件，避免重复采集
     prospector.scanner.exclude_files: ['\.gz$']
+
+# SkyWalking Toolkit 输出 TID；统一为查询契约 tid，并优先保留探针字段。
+processors:
+  - drop_fields:
+      when.has_fields: ["TID"]
+      fields: ["tid"]
+      ignore_missing: true
+  - rename:
+      when.has_fields: ["TID"]
+      fields:
+        - from: "TID"
+          to: "tid"
+      ignore_missing: true
+      fail_on_error: true
 
 # ======================= 输出到 Elasticsearch =======================
 output.elasticsearch:

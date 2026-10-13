@@ -7,16 +7,16 @@
 //   替代 Logstash，配置简单，资源占用低，支持日志/指标/trace 统一采集。
 // 
 // 【核心特性】
-//   1. 文件采集：监听 /var/log/apex-scaffold/apex-scaffold-json.log
+//   1. 文件采集：递归发现 /var/log/apex-scaffold/**/*-json.log
 //   2. JSON 解析：自动解析 JSON 字段（level、message、traceId 等）
-//   3. 标签提取：提取 service、level、traceId 作为 Loki 标签
+//   3. 标签提取：提取 service、level 作为 Loki 标签
 //   4. 批量推送：批量聚合后推送到 Loki，减少网络往返
 // 
 // 【标签策略】
-//   - service：服务名（apex-scaffold），用于多服务环境区分
+//   - service：JSON 中的服务名，用于多服务环境区分
 //   - level：日志级别（info/warn/error），用于按级别过滤
 //   - env：环境标识（dev/prod），用于多环境隔离
-//   - traceId：链路追踪ID（仅当存在时添加），用于链路关联查询
+//   - traceId：保留在日志内容中供查询，不作为高基数标签
 // 
 // 【性能优化】
 //   - 批量大小：1MB 或 1024 条/批，减少网络请求
@@ -32,18 +32,21 @@
 // 第一部分：日志采集源（Loki Source File）
 // ============================================================
 
-// 采集 Apex Scaffold JSON 日志文件
-loki.source.file "apex_logs" {
-  // 监听的日志文件路径（支持通配符）
-  // Docker Compose 挂载：./logs:/var/log/apex-scaffold:ro
-  targets = [
+// 递归发现 Apex Scaffold 各服务的 JSON 日志文件
+// Podman Compose 挂载：./logs:/var/log/apex-scaffold:ro
+local.file_match "apex_logs" {
+  path_targets = [
     {
-      __path__ = "/var/log/apex-scaffold/apex-scaffold-json.log",
-      service  = "apex-scaffold",
-      env      = "dev",
+      __path__ = "/var/log/apex-scaffold/**/*-json.log",
+      env      = env("APEX_LOG_ENV"),
       job      = "apex-scaffold-logs",
     },
   ]
+}
+
+// 采集发现的实际日志文件
+loki.source.file "apex_logs" {
+  targets = local.file_match.apex_logs.targets
 
   // 转发到日志处理 Pipeline
   forward_to = [loki.process.apex_logs.receiver]
@@ -65,6 +68,7 @@ loki.process "apex_logs" {
   stage.json {
     // 提取 JSON 字段到内部变量
     expressions = {
+      service     = "service",
       level       = "level",
       logger      = "logger_name",
       message     = "message",
@@ -81,7 +85,8 @@ loki.process "apex_logs" {
   // 注意：标签数量越多，索引体积越大，查询越慢，应精简标签
   stage.labels {
     values = {
-      level = "",
+      service = "",
+      level   = "",
     }
   }
 
@@ -100,7 +105,7 @@ loki.process "apex_logs" {
 // 推送日志到 Loki
 loki.write "loki_endpoint" {
   // Loki HTTP Push API 端点
-  // Docker Compose 网络内：http://loki:3100/loki/api/v1/push
+  // Podman Compose 网络内：http://loki:3100/loki/api/v1/push
   endpoint {
     url = "http://loki:3100/loki/api/v1/push"
 

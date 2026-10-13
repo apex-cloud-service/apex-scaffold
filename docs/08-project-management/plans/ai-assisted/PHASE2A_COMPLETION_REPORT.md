@@ -613,8 +613,7 @@ mvnd clean test -P basic
 
 **文档**:
 - [PHASE2_FIX_EXAMPLES.md](../../../_archive/PHASE2_FIX_EXAMPLES.md)
-- [JAVADOC_GUIDE.md](../../../04-development/javadoc-guide.md)
-- [LOMBOK_GUIDE.md](../../../04-development/lombok-guide.md)
+- [统一开发规范](../../../04-development/development-standards.md)
 
 ---
 

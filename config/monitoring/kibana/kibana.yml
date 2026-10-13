@@ -12,7 +12,7 @@ server.name: apex-kibana
 server.host: 0.0.0.0
 server.port: 5601
 
-# 连接同网络内的 ES（docker-compose 服务名 elasticsearch）
+# 连接同网络内的 ES（Podman Compose 服务名 elasticsearch）
 elasticsearch.hosts: ["http://elasticsearch:9200"]
 
 # 本地开发关闭安全；生产应与 ES 安全配置保持一致并配置账号

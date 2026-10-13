@@ -12,7 +12,7 @@
 
 ## 核心价值主张
 
-五层网络拓扑架构为 Apex Scaffold 提供清晰的部署边界和灵活的扩展路径，通过 Docker Compose 默认栈和 Kubernetes 扩展拓扑的双轨策略，支持从快速原型验证到生产级高可用的平滑演进。
+五层网络拓扑架构为 Apex Scaffold 提供清晰的部署边界和灵活的扩展路径，通过 Podman Compose 默认栈和 Kubernetes 扩展拓扑的双轨策略，支持从快速原型验证到生产级高可用的平滑演进。
 
 ---
 
@@ -21,7 +21,7 @@
 ### 1. 🚀 上线速度提升
 
 **价值点**：
-- Docker Compose 一键启动完整环境，新项目从零到演示环境 < 30 分钟
+- Podman Compose 一键启动完整环境，新项目从零到演示环境 < 30 分钟
 - 标准化基础设施配置，减少环境搭建和故障排查时间
 - 端口分离和健康检查配置开箱即用，无需额外开发
 
@@ -36,9 +36,9 @@
 time (
   git clone <repo> && \
   cd apex-scaffold && \
-  docker-compose -f docker-compose.infra.yml up -d && \
+  podman-compose -f podman-compose.infra.yml up -d && \
   sleep 30 && \
-  docker-compose up -d && \
+  podman-compose -f podman-compose.yml up -d && \
   curl -f http://localhost:8080/actuator/health
 )
 # 目标: < 5 分钟 (不含镜像下载时间)
@@ -265,8 +265,8 @@ ROI = (¥92,400 - ¥38,400) / ¥38,400
 **Compose 环境验收**：
 ```bash
 # 1. 一键启动验证
-docker-compose -f docker-compose.infra.yml up -d
-docker-compose up -d
+podman-compose -f podman-compose.infra.yml up -d
+podman-compose -f podman-compose.yml up -d
 
 # 2. 健康检查验证
 curl http://localhost:8080/actuator/health
@@ -373,7 +373,7 @@ testssl.sh <domain>
 
 **客户背景**: 初创公司，5 人技术团队，需快速验证产品
 
-**方案**: Docker Compose 单机部署
+**方案**: Podman Compose 单机部署
 
 **效果**:
 - 2 周完成开发和部署

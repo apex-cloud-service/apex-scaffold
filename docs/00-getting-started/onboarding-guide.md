@@ -47,9 +47,9 @@
    - 📌 **为什么要看**: 理解生产环境的5层网络拓扑
    - 🔍 **重点关注**:
      - 端口分配:8080(业务端口)、8081(管理端口)
-     - Docker Compose默认栈 vs Kubernetes生产扩展
+     - Podman Compose默认栈 vs Kubernetes生产扩展
      - Profile配置:basic/standard/enterprise
-   - 💡 **实践建议**: 执行 `docker compose up -d` 启动本地开发环境
+   - 💡 **实践建议**: 执行 `podman-compose -f podman-compose.yml up -d` 启动本地开发环境
 
 #### 自测题
 
@@ -177,11 +177,11 @@
 ### 任务1: 本地环境搭建 (15分钟)
 
 ```bash
-# 1. 启动Docker Compose
-docker compose up -d
+# 1. 启动 Podman Compose
+podman-compose -f podman-compose.yml up -d
 
-# 2. 等待服务启动(约1分钟)
-docker compose ps
+# 2. 查看服务启动状态
+podman-compose -f podman-compose.yml ps
 
 # 3. 访问服务
 open http://localhost:8080/doc.html      # Swagger文档
@@ -219,7 +219,7 @@ curl -X POST http://localhost:8080/api/v1/auth/login \
 完成基础培训后,根据你的角色深入学习:
 
 ### 后端开发
-- [后端开发规范](../04-development/backend-development-standards.md)
+- [后端开发规范](../04-development/development-standards.md)
 - [WebFlux响应式编程最佳实践](../architecture/reactive-programming-guide.md)
 - [MyBatis-Plus使用指南](../01-guides/best-practices.md)
 

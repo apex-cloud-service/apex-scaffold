@@ -124,7 +124,7 @@ WebFlux 纯函数式端点（Handler 参数是 `ServerRequest`），导致标注
 **说明（诚实标注）**：`application.yml` / `application-prod.yml` 中的 `resilience4j.retry.instances`
 为声明式配置，当前**无代码消费**（无 `@Retryable` / `RetryRegistry` 注入）；实际重试全部由
 Reactor `Retry` 编程式完成，参数含义与声明式配置存在差异。建议：要么删除冗余 YAML，
-要么按文档化的 `docs/DEPLOYMENT.md` 理解二者互补关系，避免运维误改后「没生效」。
+要么按文档化的 `docs/05-operations/deployment.md` 理解二者互补关系，避免运维误改后「没生效」。
 
 ***
 

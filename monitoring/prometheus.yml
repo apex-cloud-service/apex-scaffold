@@ -27,7 +27,7 @@ scrape_configs:
   - job_name: 'apex-auth-center'
     metrics_path: '/actuator/prometheus'
     static_configs:
-      - targets: ['host.docker.internal:8080']
+      - targets: ['host.containers.internal:8080']
         labels:
           service: 'auth-center'
           component: 'authentication'
@@ -35,7 +35,7 @@ scrape_configs:
   - job_name: 'apex-application'
     metrics_path: '/actuator/prometheus'
     static_configs:
-      - targets: ['host.docker.internal:8081']
+      - targets: ['host.containers.internal:8081']
         labels:
           service: 'application'
           component: 'business'

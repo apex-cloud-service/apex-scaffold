@@ -86,7 +86,7 @@ echo "=== 2/5 全局替换标识 ==="
 # 替换顺序: 先长 token（包名），再短 token（项目名/库名/端口）
 find "${TARGET}" -type f \( -name '*.java' -o -name '*.yml' -o -name '*.yaml' -o -name '*.xml' \
     -o -name '*.sql' -o -name '*.properties' -o -name '*.md' -o -name '*.sh' -o -name '*.service' \
-    -o -name '*.json' -o -name '*.ftl' -o -name '*.env*' -o -name 'Dockerfile' -o -name '.sdkmanrc' \
+    -o -name '*.json' -o -name '*.ftl' -o -name '*.env*' -o -name 'Containerfile*' -o -name '.sdkmanrc' \
     -o -name '*.html' -o -name '*.js' \) -print0 | while IFS= read -r -d '' f; do
     # 包名替换（com.apex.scaffold → newPackage；com.apex.example → newPackage.example）
     sed -i '' "s|com\.apex\.scaffold|${PACKAGE}|g" "$f"
@@ -145,13 +145,13 @@ echo "=== 5/5 验证 ==="
 LEFTOVER=$(grep -rl "com\.apex\.scaffold\|com\.apex\.example\|apex-scaffold\|apex_data\|apex_test\|apex_example" \
     "${TARGET}" --include='*.java' --include='*.yml' --include='*.yaml' --include='*.xml' \
     --include='*.sql' --include='*.properties' --include='*.md' --include='*.sh' --include='*.json' \
-    --include='Dockerfile' --include='*.env*' 2>/dev/null | wc -l | tr -d ' ')
+    --include='Containerfile*' --include='*.env*' 2>/dev/null | wc -l | tr -d ' ')
 if [[ "$LEFTOVER" != "0" ]]; then
     echo "⚠️  检测到 ${LEFTOVER} 处旧标识残留（不影响运行，可手工清理）:"
     grep -rl "com\.apex\.scaffold\|com\.apex\.example\|apex-scaffold\|apex_data\|apex_test\|apex_example" \
         "${TARGET}" --include='*.java' --include='*.yml' --include='*.yaml' --include='*.xml' \
         --include='*.sql' --include='*.properties' --include='*.md' --include='*.sh' --include='*.json' \
-        --include='Dockerfile' --include='*.env*' 2>/dev/null | head -5
+        --include='Containerfile*' --include='*.env*' 2>/dev/null | head -5
 else
     echo "✅ 旧标识零残留"
 fi
@@ -166,11 +166,11 @@ cat << 'EOF'
    git init && git add -A && git commit -m "chore: init from apex-scaffold"
 
 2. 准备本地基础设施（MySQL/Redis 等）
-   docker compose -f docker-compose.infra.yml up -d
+   podman-compose -f podman-compose.infra.yml up -d
 
 3. 构建并启动（dev 环境）
    source ~/.sdkman/bin/sdkman-init.sh
-   mvnd spring-boot:run -pl apex-interfaces
+   mvnd spring-boot:run -pl apex-system-service
 
 4. 验证清单
    □ http://localhost:<port>/doc.html        API 文档可访问

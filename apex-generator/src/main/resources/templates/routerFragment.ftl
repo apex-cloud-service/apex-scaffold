@@ -1,7 +1,8 @@
 ================================================================
 ${tableComment}路由注册片段
 ================================================================
-将以下代码追加到 ApiRouter.java，并在文件头部 import 对应的
+将以下代码追加到对应的子域路由器（com.apex.scaffold.interfaces.router
+包下的 ConfigRouter/LogRouter 等，按业务域选择），并在文件头部 import 对应的
 Handler 类：${ifacePackage}.handler.${module}.${entityName}Handler
 
     /**

@@ -1,0 +1,1013 @@
+# ============================================================
+# Apex Scaffold 公共配置（application.yml）
+# ============================================================
+# 本文件为所有环境（dev/basic/standard/enterprise/prod）的公共默认配置，
+# 各环境通过 application-{profile}.yml 覆盖差异项；所有敏感/环境相关值
+# 均以环境变量 ${VAR:default} 形式提供，生产必须注入真实值。
+#
+# ┌───────────────────────────────────────────────────────────┐
+# │ 注释符号规范（全仓配置文件统一约定）                         │
+# ├───────────────────────────────────────────────────────────┤
+# │ ✅ 已启用能力          ❌ 已禁用能力                       │
+# │ ⚠️ 安全提示/注意点     💡 设计说明/优化理由                │
+# │ 🔒 敏感配置（环境变量注入，禁止硬编码）                     │
+# │ （差异）标注与公共 application.yml 的差异及理由              │
+# │ 区块分隔: # ==== 一级区块 ====  # ---- 二级小节 ----         │
+# └───────────────────────────────────────────────────────────┘
+# ============================================================
+
+# ============================================================
+# 服务治理：模式只在启动期解析一次，运行期不热切换
+# ============================================================
+apex:
+  features:
+    auth-center-permission: ${APEX_AUTH_CENTER_PERMISSION_ENABLED:false}
+  auth-center-permission:
+    base-url: ${APEX_AUTH_CENTER_BASE_URL:}
+    access-token: ${APEX_AUTH_CENTER_ACCESS_TOKEN:}
+    cache-seconds: ${APEX_AUTH_CENTER_CACHE_SECONDS:0}
+    mappings: []
+  office:
+    enabled: ${APEX_OFFICE_ENABLED:false}
+    login-tenant-id: ${APEX_OFFICE_LOGIN_TENANT_ID:}
+    timeout: ${APEX_OFFICE_TIMEOUT:5s}
+    max-retries: ${APEX_OFFICE_MAX_RETRIES:2}
+    platforms:
+      FEISHU:
+        enabled: ${FEISHU_ENABLED:false}
+        app-id: ${FEISHU_APP_ID:}
+        secret-reference: ${FEISHU_SECRET_REFERENCE:FEISHU_SECRET}
+        redirect-uri: ${FEISHU_REDIRECT_URI:}
+        signing-secret-reference: ${FEISHU_SIGNING_SECRET_REFERENCE:FEISHU_SIGNING_SECRET}
+      DINGTALK:
+        enabled: ${DINGTALK_ENABLED:false}
+        app-id: ${DINGTALK_APP_ID:}
+        secret-reference: ${DINGTALK_SECRET_REFERENCE:DINGTALK_SECRET}
+        agent-id: ${DINGTALK_AGENT_ID:}
+        redirect-uri: ${DINGTALK_REDIRECT_URI:}
+        signing-secret-reference: ${DINGTALK_SIGNING_SECRET_REFERENCE:DINGTALK_SIGNING_SECRET}
+      WECOM:
+        enabled: ${WECOM_ENABLED:false}
+        app-id: ${WECOM_CORP_ID:}
+        secret-reference: ${WECOM_SECRET_REFERENCE:WECOM_SECRET}
+        agent-id: ${WECOM_AGENT_ID:}
+        redirect-uri: ${WECOM_REDIRECT_URI:}
+        signing-secret-reference: ${WECOM_SIGNING_SECRET_REFERENCE:WECOM_SIGNING_SECRET}
+  governance:
+    # 是否启用统一 readiness、资源排空和优雅关停协调
+    enabled: ${APEX_GOVERNANCE_ENABLED:true}
+    # auto 会按显式环境变量、Kubernetes 标记、Compose 标记顺序识别
+    deployment-mode: ${APEX_GOVERNANCE_DEPLOYMENT_MODE:auto}
+    auto-detection:
+      # 是否启用部署环境自动识别
+      enabled: ${APEX_GOVERNANCE_AUTO_DETECTION_ENABLED:true}
+      # 检测到多个平台证据时是否阻止启动
+      fail-on-ambiguous-environment: ${APEX_GOVERNANCE_FAIL_ON_AMBIGUOUS:true}
+    registration:
+      # 注册方式：auto、none、nacos、platform
+      provider: ${APEX_GOVERNANCE_REGISTRATION_PROVIDER:auto}
+      # 注册中心故障处理：auto、open、closed
+      fail-mode: ${APEX_GOVERNANCE_REGISTRATION_FAIL_MODE:auto}
+    mq:
+      # MQ 在途消息排空预算
+      drain-timeout: ${APEX_GOVERNANCE_MQ_DRAIN_TIMEOUT:30s}
+    shutdown:
+      # 所有资源共享的总关停预算
+      total-timeout: ${APEX_GOVERNANCE_SHUTDOWN_TIMEOUT:90s}
+      # readiness 摘流后的传播等待预算
+      readiness-withdraw-timeout: ${APEX_GOVERNANCE_READINESS_WITHDRAW_TIMEOUT:5s}
+      # 总预算耗尽后是否强制停止剩余资源
+      force-shutdown-after-timeout: ${APEX_GOVERNANCE_FORCE_SHUTDOWN:true}
+  blocking-io:
+    jdbc:
+      threads: 32
+    cache:
+      threads: 4
+    storage:
+      threads: 8
+
+server:
+  # HTTP 服务端口
+  port: 8080
+  # ✅ 优雅停机：收到停机信号后停止接收新请求，等待在途请求完成
+  shutdown: graceful
+  # ✅ HTTP/2 支持（Netty 原生支持，需 TLS 或 h2c）
+  http2:
+    enabled: true
+  # ---------- Netty 服务器性能参数（NettyConfig 读取） ----------
+  netty:
+    # Spring Boot 原生连接建立超时（毫秒）（ServerProperties.Netty）
+    connection-timeout: 5000
+    # 自定义 NettyConfig 读取的连接建立超时（毫秒）（与原生键保持一致）
+    connect-timeout-millis: 5000
+    # 💡 事件循环线程数：默认 = CPU 核数 * 2；高并发可显式覆盖（NETTY_EVENT_LOOP_THREADS）
+    # WebFlux 下通过系统属性 reactor.netty.ioWorkerCount 控制（见性能优化说明）
+    # ---------- HTTP 响应压缩（GZip） ----------
+    compression:
+      # ✅ 启用响应压缩：显著降低 JSON 响应体积（WebFlux 静态资源默认压缩）
+      enabled: true
+      # 压缩级别（0-9）：6 为 CPU/体积均衡点（NettyConfig 默认值）
+      level: 6
+      # 最小压缩响应体（字节）：低于此值不压缩，避免小响应压缩开销大于收益
+      min-response-size: 1024
+    # ---------- 连接超时控制 ----------
+    # 读取超时（秒）：超过 30s 无数据读取则关闭连接（防慢客户端占用连接）
+    read-timeout-seconds: 30
+    # 写入超时（秒）：超过 60s 未写完则关闭连接
+    write-timeout-seconds: 60
+    # 空闲超时（秒）：连接空闲 20s 无任何读写则关闭（keep-alive 连接回收）
+    idle-timeout-seconds: 20
+  # ---------- 默认 WebClient 超时（毫秒） ----------
+  webclient:
+    # 连接建立超时
+    connect-timeout-millis: ${WEBCLIENT_CONNECT_TIMEOUT:5000}
+    # 读取响应超时
+    read-timeout-millis: ${WEBCLIENT_READ_TIMEOUT:10000}
+    # 写入请求超时
+    write-timeout-millis: ${WEBCLIENT_WRITE_TIMEOUT:10000}
+
+spring:
+  application:
+    # 应用名称：服务注册名 + 配置中心配置标识（⚠️ 须与 bootstrap.yml 一致）
+    name: apex-scaffold
+  # ---------- Spring Security OAuth2 Client（Keycloak OIDC）----------
+  # ✅ OAuth2 Client 响应式支持：WebFlux 自动装配 ReactiveOAuth2AuthorizedClientService
+  # 💡 仅在 keycloak.enabled=true 时生效（KeycloakConfig 条件装配）
+  security:
+    oauth2:
+      client:
+        registration:
+          # Keycloak OIDC Provider（Spring Security 5+ 标准配置）
+          keycloak:
+            # OAuth2 Client ID（与 keycloak.client-id 保持一致）
+            client-id: ${KEYCLOAK_CLIENT_ID:apex-client}
+            # 🔒 OAuth2 Client Secret（Confidential Client）
+            client-secret: ${KEYCLOAK_CLIENT_SECRET:}
+            # 授权类型：authorization_code（标准 OAuth2 授权码流程）
+            authorization-grant-type: authorization_code
+            # 回调地址：Keycloak 授权后回调到本服务（Spring Security 默认 /login/oauth2/code/{registrationId}）
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            # 请求的 OAuth2 Scope（OIDC 必需 openid，profile/email 获取用户信息）
+            scope:
+              - openid
+              - profile
+              - email
+            # Client 名称（用于 UI 显示）
+            client-name: Keycloak
+        provider:
+          # Keycloak Provider 配置（OIDC Discovery）
+          keycloak:
+            # 🔒 OIDC Issuer URI：Keycloak 自动发现端点（/.well-known/openid-configuration）
+            issuer-uri: ${KEYCLOAK_SERVER_URL:http://localhost:8180}/realms/${KEYCLOAK_REALM:apex}
+            # 用户信息端点（OIDC UserInfo Endpoint）
+            user-name-attribute: preferred_username
+  # ---------- 邮件发送（C7） ----------
+  mail:
+    # SMTP 服务器（环境变量注入；空配置时发送会报错，业务方可捕获降级）
+    host: ${MAIL_HOST:}
+    port: ${MAIL_PORT:465}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    default-encoding: UTF-8
+    # 465(SSL) 或 587(STARTTLS)
+    properties:
+      mail.smtp.ssl.enable: true
+  profiles:
+    # 默认激活环境（dev/basic/standard/enterprise/prod）
+    active: dev
+  main:
+    # ✅ 响应式应用（WebFlux）：禁用 Servlet 容器
+    web-application-type: reactive
+  messages:
+    # 国际化消息源
+    basename: i18n/messages
+  cache:
+    # ✅ 本地缓存：Caffeine（进程内缓存）
+    type: caffeine
+  # ---------- 文件上传 / 请求体大小 ----------
+  codec:
+    # 请求体/响应体内存缓冲上限（WebFlux 编解码器）
+    max-in-memory-size: ${MAX_IN_MEMORY_SIZE:10MB}
+  # ---------- 数据库连接池（HikariCP 默认；prod 使用 Druid dynamic-datasource 覆盖） ----------
+  datasource:
+    hikari:
+      # 连接池最大连接数：响应式应用 JDBC 阻塞操作经 boundedElastic 调度，按需调整
+      maximum-pool-size: ${DB_MAX_POOL_SIZE:20}
+      # 最小空闲连接数
+      minimum-idle: ${DB_MIN_IDLE:5}
+      # 获取连接超时（毫秒）
+      connection-timeout: 30000
+      # 空闲连接回收时间（毫秒）
+      idle-timeout: 600000
+      # 连接最大存活时间（毫秒），应小于数据库 wait_timeout
+      max-lifetime: 1800000
+      pool-name: ApexHikariPool
+  # ---------- 注册中心与配置中心（Nacos） ----------
+  # ⚠️ dev 环境在 application-dev.yml 中关闭；生产使用独立命名空间（NACOS_NAMESPACE）。
+  # 💡 启动早期加载由 bootstrap.yml 负责，此处为应用装配期配置。
+  cloud:
+    nacos:
+      # ===== 配置中心 =====
+      config:
+        # 🔒 Nacos 地址（生产通过 NACOS_SERVER_ADDR 注入）
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+        # 命名空间（环境隔离）
+        namespace: ${NACOS_NAMESPACE:public}
+        # 配置分组
+        group: DEFAULT_GROUP
+        # 配置文件后缀
+        file-extension: yml
+        # ✅ 配置自动刷新（@RefreshScope / @Value 生效）
+        refresh-enabled: true
+        # ✅ 启用配置中心
+        enabled: ${NACOS_CONFIG_ENABLED:true}
+      # ===== 服务注册与发现 =====
+      discovery:
+        # 🔒 Nacos 地址（与配置中心一致）
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+        namespace: ${NACOS_NAMESPACE:public}
+        group: DEFAULT_GROUP
+        # ✅ 启用服务发现
+        enabled: ${NACOS_DISCOVERY_ENABLED:true}
+        # ✅ 注册本实例到 Nacos
+        register-enabled: ${NACOS_REGISTER_ENABLED:true}
+        # 注册服务名（默认取应用名）
+        service: ${spring.application.name}
+        # 实例权重（越大被选中概率越高）
+        weight: 1
+    # ---------- Sentinel 限流熔断（控制台通信） ----------
+    sentinel:
+      transport:
+        # 🔒 Sentinel Dashboard 地址（空值 = 不连接控制台，仅本地规则生效）
+        dashboard: ${SENTINEL_DASHBOARD_URL:}
+        # 客户端与 Dashboard 通信端口（同宿主机多实例须唯一）
+        port: ${SENTINEL_TRANSPORT_PORT:8719}
+        # 客户端上报 IP（多网卡环境建议显式指定）
+        client-ip: ${SENTINEL_CLIENT_IP:}
+      # 💡 启动即初始化 Sentinel 客户端，避免首请求懒加载延迟
+      eager: ${SENTINEL_EAGER:true}
+
+jwt:
+  # 🔒 JWT 签名密钥：生产必须通过 JWT_SECRET 注入 ≥32 字节随机密钥
+  secret: ${JWT_SECRET:change-me-in-production}
+  # Access Token 有效期（毫秒）：2 小时
+  access-token-expire: 7200000
+  # Refresh Token 有效期（毫秒）：7 天
+  refresh-token-expire: 604800000
+  # Access Token 自动续期阈值（毫秒）：剩余有效期低于该值且携带有效 Refresh Token 时
+  # 自动签发新 Token（JwtAuthenticationFilter 读取，实现无感续期，默认 30 分钟）
+  access-token-renew-threshold: ${JWT_ACCESS_RENEW_THRESHOLD:1800000}
+
+# ============================================================
+# Keycloak 集成（企业级 IAM）
+# ============================================================
+# ✅ Keycloak OAuth2/OIDC 认证：支持 OIDC 登录、社交登录、SAML、MFA 等高级认证方式
+# 💡 使用 @ConditionalOnProperty("keycloak.enabled") 控制集成开关，默认关闭
+keycloak:
+  # ✅ Keycloak 集成总开关：false = 仅使用现有 JWT 认证
+  enabled: ${KEYCLOAK_ENABLED:false}
+  # 🔒 Keycloak 服务器地址（生产通过 KEYCLOAK_SERVER_URL 注入）
+  server-url: ${KEYCLOAK_SERVER_URL:http://localhost:8180}
+  # Realm 名称（Keycloak 租户隔离单位）
+  realm: ${KEYCLOAK_REALM:apex}
+  # 🔒 Admin 用户名（仅服务端 Admin API 使用）
+  admin-username: ${KEYCLOAK_ADMIN_USERNAME:admin}
+  # 🔒 Admin 密码（仅服务端 Admin API 使用）
+  admin-password: ${KEYCLOAK_ADMIN_PASSWORD:admin123}
+  # Admin Client ID（服务端调用 Admin REST API 使用）
+  admin-client-id: ${KEYCLOAK_ADMIN_CLIENT_ID:admin-cli}
+  # OAuth2 Client ID（前端 OIDC 登录使用）
+  client-id: ${KEYCLOAK_CLIENT_ID:apex-client}
+  # 🔒 OAuth2 Client Secret（Confidential Client 模式，公钥模式可留空）
+  client-secret: ${KEYCLOAK_CLIENT_SECRET:}
+  # 用户同步开关：是否将 Keycloak 用户同步到本地数据库
+  user-sync-enabled: ${KEYCLOAK_USER_SYNC_ENABLED:true}
+  # OIDC 登录成功后前端回调地址（前端路由）
+  frontend-callback-url: ${KEYCLOAK_FRONTEND_CALLBACK_URL:http://localhost:3000/auth/callback}
+
+logging:
+  level:
+    # 💡 日志级别分层：业务层 INFO，框架层 WARN；dev 在 logback-spring.xml 覆盖为 DEBUG
+    root: INFO
+    com.apex.scaffold: INFO
+    com.apex.scaffold.application: INFO
+    com.apex.scaffold.domain: INFO
+    com.apex.scaffold.infrastructure: INFO
+    com.apex.scaffold.interfaces: INFO
+    # MyBatis Mapper SQL：由 P6Spy（dev）或 Druid stat（prod）统一输出，避免重复
+    com.apex.scaffold.infrastructure.persistence.mapper: WARN
+    # 框架层默认 WARN，避免调试日志洪水；dev profile 在 logback-spring.xml 覆盖为 DEBUG
+    org.springframework.web: WARN
+    org.springframework.web.reactive: WARN
+    org.springframework.security: WARN
+    org.springframework.http.codec: WARN
+    # Netty 网络层：默认 WARN，仅记录异常（💡 性能优化，避免每请求 50-200 条 DEBUG）
+    reactor.netty: WARN
+    reactor.netty.http.server: WARN
+    reactor.netty.http.client: WARN
+    org.redisson: WARN
+    com.alibaba.nacos: WARN
+    org.apache.rocketmq: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+# ============================================================
+# 系统监控（Actuator + Micrometer + Prometheus）
+# ============================================================
+# ✅ 统一监控体系：Actuator 端点 + Micrometer 指标 + Prometheus 拉取
+management:
+  server:
+    # 管理端口与业务端口物理隔离（默认 8081）
+    # ⚠️ 仅监听回环地址，外部不可达；容器/K8s 通过 MANAGEMENT_SERVER_ADDRESS 调整
+    port: 8081
+    address: ${MANAGEMENT_SERVER_ADDRESS:127.0.0.1}
+  endpoints:
+    web:
+      exposure:
+        # ⚠️ 仅暴露运维必需端点，禁止 env/configprops/mappings 等敏感端点
+        include: health,info,metrics,prometheus,circuitbreakers
+  endpoint:
+    health:
+      # 健康详情仅向已认证请求展示，匿名请求只返回 UP/DOWN
+      show-details: when-authorized
+      # ✅ K8s 风格存活/就绪探针
+      probes:
+        enabled: true
+      group:
+        # 存活探针：仅检查进程存活（失败 → K8s 重启 Pod）
+        liveness:
+          include: livenessState
+        # 就绪探针：检查 DB + Redis 可用（失败 → K8s 摘除流量）
+        readiness:
+          include: readinessState,db,redis
+    circuitbreakers:
+      # ✅ 熔断器状态端点（供监控采集）
+      enabled: true
+  metrics:
+    tags:
+      # 所有指标附加 application 标签，便于 Prometheus 按应用聚合
+      application: ${spring.application.name}
+    enable:
+      # ✅ 启用 Reactor Netty 指标（WebFlux 网关监控）
+      # 提供 EventLoop 线程、连接池、ByteBuf 内存等详细指标
+      reactor.netty: true
+    distribution:
+      percentiles-histogram:
+        http:
+          server:
+            # ✅ HTTP 请求延迟直方图（Prometheus Histogram 分位数计算）
+            requests: true
+      percentiles:
+        http:
+          server:
+            # 请求延迟百分位：P50/P90/P95/P99
+            requests: 0.5, 0.9, 0.95, 0.99
+  # ---------- 链路追踪（Micrometer Tracing + Zipkin） ----------
+  tracing:
+    # ✅ 启用链路追踪（企业版档位语义明确；basic/standard 可在档位配置关闭）
+    enabled: ${TRACING_ENABLED:true}
+    sampling:
+      # 采样率：默认 10%（💡 高 QPS 下全量采样会造成 Zipkin 网络/存储压力）
+      probability: ${TRACE_SAMPLING_RATE:0.1}
+  zipkin:
+    tracing:
+      # 🔒 Zipkin 上报端点（生产通过 ZIPKIN_BASE_URL 注入）
+      endpoint: ${ZIPKIN_BASE_URL:http://localhost:9411}/api/v2/spans
+
+# ============================================================
+# 熔断 / 限流 / 重试 / 超时（Resilience4j）
+# ============================================================
+# ✅ 弹性能力四件套：熔断（circuitbreaker）+ 限流（ratelimiter）
+#   + 重试（retry）+ 超时（timelimiter），保护外部调用不拖垮本服务
+resilience4j:
+  circuitbreaker:
+    configs:
+      # 默认熔断配置：适用一般外部服务
+      default:
+        # 失败率阈值（%）：50% 请求失败 → 熔断
+        failure-rate-threshold: 50
+        # 慢调用率阈值（%）
+        slow-call-rate-threshold: 50
+        # 慢调用判定阈值（毫秒）：>3s 计为慢调用
+        slow-call-duration-threshold: 3000
+        # 滑动窗口大小：统计最近 100 次调用
+        sliding-window-size: 100
+        # 最小调用次数：不足 10 次不触发（防小样本误判）
+        minimum-number-of-calls: 10
+        # 熔断打开后等待（毫秒）：60s 后进入半开探测
+        wait-duration-in-open-state: 60000
+        # 半开状态试探调用数：5 次全成功 → 关闭熔断
+        permitted-number-of-calls-in-half-open-state: 5
+        # 自动 Open → Half-Open 过渡
+        automatic-transition-from-open-to-half-open-enabled: true
+        # 视为失败的异常（IO/超时/5xx/远程 API）
+        record-exceptions:
+          - java.io.IOException
+          - java.util.concurrent.TimeoutException
+          - org.springframework.web.reactive.function.client.WebClientResponseException
+          - com.apex.scaffold.domain.gateway.RemoteApiException
+        # 忽略的异常（客户端输入错误 4xx 不触发熔断）
+        ignore-exceptions:
+          - com.apex.scaffold.domain.gateway.RemoteClientInputException
+      # 严格熔断配置：支付/短信/微信等关键服务专用（prod 覆盖到实例）
+      strict:
+        # 更快熔断：失败率降至 30%
+        failure-rate-threshold: 30
+        slow-call-rate-threshold: 30
+        # 更敏感：窗口缩小至 50 次
+        sliding-window-size: 50
+        minimum-number-of-calls: 5
+        # 更快恢复：30s 即半开
+        wait-duration-in-open-state: 30000
+    instances:
+      # 默认实例继承 default；prod 可覆盖为 strict
+      default:
+        base-config: default
+  timelimiter:
+    configs:
+      default:
+        # 异步调用超时（毫秒）：10s 未完成则取消
+        timeout-duration: 10000
+        # 超时后取消运行中的 Future，释放线程
+        cancel-running-future: true
+    instances:
+      default:
+        base-config: default
+  ratelimiter:
+    configs:
+      default:
+        # 默认限流：每 10 秒允许 50 次调用（突发容忍 10）
+        limit-for-period: 50
+        limit-refresh-period: 10s
+        # 等待令牌超时：5s 内未获得令牌则拒绝
+        timeout-duration: 5s
+    instances:
+      default:
+        base-config: default
+  retry:
+    configs:
+      default:
+        # 重试次数：共执行 3 次（1 次 + 2 次重试）
+        max-attempts: 3
+        # 重试间隔
+        wait-duration: 500ms
+        # 仅对可重试异常重试（IO/超时/5xx）
+        retry-exceptions:
+          - java.io.IOException
+          - java.util.concurrent.TimeoutException
+          - org.springframework.web.reactive.function.client.WebClientResponseException
+    instances:
+      default:
+        base-config: default
+
+# ============================================================
+# 消息中间件（RocketMQ）
+# ============================================================
+# ✅ 生产者/消费者连接参数；business 消费者开关由 apex.mq.consumer.enabled 控制
+#   （basic/standard 档位关闭，enterprise/prod 开启）
+rocketmq:
+  # 🔒 Name Server 地址（生产通过 ROCKETMQ_NAMESERVER / ROCKETMQ_NAMESRV_ADDR 注入）
+  name-server: ${ROCKETMQ_NAMESERVER:${ROCKETMQ_NAMESRV_ADDR:127.0.0.1:9876}}
+  producer:
+    # 生产者组名
+    group: ${ROCKETMQ_PRODUCER_GROUP:apex-producer-group}
+    # 同步发送超时（毫秒）
+    send-message-timeout: ${ROCKETMQ_SEND_TIMEOUT:30000}
+    # 消息压缩阈值（字节）：超过 1KB 压缩
+    compress-message-body-threshold: 1024
+    # 同步发送失败重试次数（不含首次）
+    retry-times-when-send-failed: 2
+    # 异步发送失败重试次数
+    retry-times-when-send-async-failed: 2
+    # 单条消息最大字节数（默认 4MB）
+    max-message-size: 4194304
+  consumer:
+    # ⚠️ rocketmq.consumer.enabled 仅控制 RocketMQ Starter 消费者装配；
+    #    业务监听器由 apex.mq.consumer.enabled 控制（见 apex.mq 段）
+    enabled: ${ROCKETMQ_CONSUMER_ENABLED:true}
+
+# ============================================================
+# 消息消费幂等（MqConsumerService 读取）
+# ============================================================
+# ✅ 消费端幂等控制：已处理消息 ID 在 Redis 中保留该时长（分钟），
+#    重复投递（At-least-once 语义）在窗口内直接跳过，防止业务重复执行
+mq:
+  consumer:
+    # 幂等记录 TTL（分钟）：默认 30 分钟；须大于业务最长处理链路时长
+    idempotent-ttl-minutes: ${MQ_IDEMPOTENT_TTL_MINUTES:30}
+
+# ============================================================
+# MyBatis 持久化
+# ============================================================
+mybatis:
+  # Mapper XML 扫描路径：覆盖多模块 classpath（** 匹配跨目录）
+  mapper-locations: classpath*:mapper/**/*.xml
+
+# ============================================================
+# 接口文档（SpringDoc OpenAPI + Knife4j）
+# ============================================================
+# ✅ 在线接口文档：Swagger UI + Knife4j 增强 UI（prod 关闭，见 application-prod.yml）
+springdoc:
+  swagger-ui:
+    # Swagger UI 入口
+    path: /swagger-ui.html
+  api-docs:
+    # OpenAPI JSON 端点
+    path: /v3/api-docs
+
+# Knife4j 增强接口文档（doc.html）。
+# ✅ 纯前端 webjar（knife4j-openapi3-ui），不引入 MVC 依赖，与 WebFlux 函数式端点兼容。
+# ⚠️ production=true 时 Knife4j 会拦截文档请求并提示"文档维护中"；开发环境保持 false。
+knife4j:
+  enable: true
+  production: false
+
+# ============================================================
+# CORS 跨域
+# ============================================================
+cors:
+  # ⚠️ 安全：默认禁止所有来源；生产收紧前须完成客户端来源盘点
+  allow-all-origins: false
+  # 允许的来源白名单（⚠️ 必须用逗号分隔字符串：CorsConfig 以 @Value("${cors.allowed-origins}") 注入 List，
+  #   YAML List（- item）形式无法被占位符解析，会导致 dev（allow-all-origins=false）启动校验失败）
+  allowed-origins: http://localhost:3000
+
+# ============================================================
+# 远程调用（WebClient + 外部 API）
+# ============================================================
+# ✅ 统一外部 HTTP 调用：默认超时/重试 + 连接池 + 多服务配置
+remote:
+  api:
+    # ---------- 默认超时与重试 ----------
+    # 连接超时（毫秒）
+    default-connect-timeout: ${REMOTE_API_CONNECT_TIMEOUT:5000}
+    # 读取超时（毫秒）
+    default-read-timeout: ${REMOTE_API_READ_TIMEOUT:10000}
+    # 默认重试次数（不含首次）
+    default-retry-count: ${REMOTE_API_RETRY_COUNT:2}
+    # 重试间隔（毫秒）
+    default-retry-delay: ${REMOTE_API_RETRY_DELAY:1000}
+    # 远程响应聚合缓冲上限（字节），默认 10MB
+    max-in-memory-size: 10485760
+    # ✅ 远程响应 GZip 解压（WebClient 自动协商 Accept-Encoding）
+    # 💡 外部服务返回 gzip 响应时自动解压，节省带宽；服务端不压缩时无副作用
+    compress-response: true
+    # ---------- 外部 HTTP 连接池 ----------
+    # 连接池最大连接数
+    pool-max-connections: ${REMOTE_API_POOL_MAX_CONNECTIONS:100}
+    # 等待获取连接的最大排队数
+    pool-pending-acquire-max-count: 500
+    # 连接最大空闲时间（秒）
+    pool-max-idle-time-seconds: 30
+    # 连接最大生命周期（分钟）
+    pool-max-life-time-minutes: 5
+    # IO 读写超时（秒）
+    io-timeout-seconds: 10
+    # 连接建立超时（毫秒）
+    connect-timeout-millis: 5000
+    # ---------- 多目标服务配置（按需扩展） ----------
+    # 示例:
+    # services:
+    #   user-service:
+    #     base-url: http://localhost:8081
+    #     connect-timeout: 3000
+    #     read-timeout: 8000
+    services: {}
+
+# ============================================================
+# 内容安全审核（百度 AI 内容审核，企业版能力）
+# ============================================================
+# ⚠️ 文本/图片审核适配器读取以下凭据；未配置时审核通道自动禁用（放行直传）
+# 🔒 所有密钥均通过环境变量注入，禁止硬编码；启用后需在 prod 校验器完成参数校验
+text:
+  moderation:
+    baidu:
+      # 🔒 百度 AI 内容审核 API Key（空值 = 不启用文本审核）
+      api-key: ${BAIDU_TEXT_MODERATION_API_KEY:}
+      # 🔒 Secret Key（空值 = 不启用文本审核）
+      secret-key: ${BAIDU_TEXT_MODERATION_SECRET_KEY:}
+      # Token 获取端点（OAuth 2.0）
+      token-endpoint: https://aip.baidubce.com/oauth/2.0/token
+      # 文本审核接口地址
+      endpoint: https://aip.baidubce.com/rest/2.0/solution/v1/text_censor/v2/user_defined
+      # 审核接口调用超时（秒）
+      timeout-seconds: 10
+      # 失败重试次数（不含首次）
+      retry-max-attempts: 3
+      # 重试基础间隔（毫秒，指数退避）
+      retry-base-delay-ms: 250
+image:
+  moderation:
+    baidu:
+      # 🔒 百度 AI 图片审核 API Key（空值 = 不启用图片审核）
+      api-key: ${BAIDU_IMAGE_MODERATION_API_KEY:}
+      # 🔒 Secret Key（空值 = 不启用图片审核）
+      secret-key: ${BAIDU_IMAGE_MODERATION_SECRET_KEY:}
+      # Token 获取端点（OAuth 2.0）
+      token-endpoint: https://aip.baidubce.com/oauth/2.0/token
+      # 图片审核接口地址
+      endpoint: https://aip.baidubce.com/rest/2.0/solution/v1/img_censor/v2/user_defined
+      # 审核策略 ID（百度控制台配置；0 = 默认策略）
+      strategy-id: 1
+      # 审核接口调用超时（秒）
+      timeout-seconds: 10
+      # 图片 Base64 编码后最大字节数（默认 9.5MB，超出拒绝审核）
+      max-base64-bytes: 9500000
+      # 图片最大边长（像素）：超过按比例缩放后再审核
+      max-dimension: 4096
+      # 图片压缩质量（0.0-1.0）：降低审核传输体积
+      jpeg-quality: 0.88
+
+# ============================================================
+# API 调用日志（外部 HTTP 调用采集，ApiCallLogProperties 读取）
+# ============================================================
+# ✅ 记录对外部服务调用的请求/响应摘要（含耗时与状态码），便于联调与审计
+api-call-log:
+  # ✅ 调用日志采集总开关
+  enabled: true
+  # 请求/响应体最大记录长度（字符）：超出截断，防止大报文撑爆日志
+  max-body-length: 4096
+  # ✅ 记录请求体（⚠️ 含敏感字段的调用建议关闭）
+  log-request-body: true
+  # ✅ 记录响应体（⚠️ 含敏感字段的调用建议关闭）
+  log-response-body: true
+
+# ============================================================
+# 异常告警
+# ============================================================
+# ✅ 异常聚合告警：统计窗口内达到阈值触发通知（钉钉）
+alert:
+  exception:
+    # 触发阈值：窗口内异常次数
+    threshold: 10
+    # 统计窗口（分钟）
+    window: 5
+    # 去重类型上限
+    max-types: 100
+  dingding:
+    # 🔒 钉钉机器人 Webhook（环境变量注入；空值 = 告警静默）
+    webhook: ${DINGDING_WEBHOOK:}
+    # 🔒 钉钉加签密钥（HMAC-SHA256；空值降级为无签名模式）
+    secret: ${DINGDING_SECRET:}
+
+# ============================================================
+# 操作日志 / 审计（@OperationLog 注解切面）
+# ============================================================
+# ✅ 操作审计：拦截标注 @OperationLog 的方法，异步批量落库（OperationLogAspect 读取）
+# 💡 支持生产-消费批量写入（阻塞队列合并），降低高频操作场景的 DB 写入压力
+operation-log:
+  # ✅ 操作日志总开关（关闭后切面直接放行，不记录任何操作）
+  enabled: ${OPERATION_LOG_ENABLED:true}
+  # ✅ 记录请求参数（JSON 序列化后入库）
+  log-params: true
+  # ✅ 记录响应结果（供审计追踪返回内容；⚠️ 含敏感字段的响应建议关闭或脱敏）
+  log-result: true
+  # 请求参数最大截断长度（字符）：防止大报文撑爆日志表
+  max-param-length: 2000
+  # 响应结果最大截断长度（字符）
+  max-result-length: 2000
+
+# ============================================================
+# 业务自定义配置（apex.*）
+# ============================================================
+  license:
+    # ✅ License 校验总开关（默认开启）。
+    # 开启后：随包内置基础版 License，商业功能（@FeatureGate 标注）需授权版本才能使用；
+    # 未检测到有效 License 时进入降级模式：基础功能放行，商业功能拒绝并输出 WARN 日志。
+    enabled: ${APEX_LICENSE_ENABLED:true}
+    # 🔒 License 文件路径：支持 classpath: 前缀与文件系统路径（生产可通过环境变量指向授权文件）
+    file-path: ${APEX_LICENSE_FILE:classpath:license/license-basic.json}
+    # 🔒 公钥（Base64）：生产可覆盖为官方发布公钥；缺省使用随包默认公钥
+    public-key-file: ${APEX_LICENSE_PUBLIC_KEY_FILE:classpath:license/public.key}
+  # ---------- 全局响应超时（三高-高可用兜底） ----------
+  api:
+    # ✅ 单个请求（含过滤器链与业务处理）的最大处理时长（GlobalResponseTimeoutWebFilter）。
+    # 超时请求返回 504 + REQUEST_TIMEOUT(2006) 统一错误响应，防止慢请求长期占用连接引发雪崩；
+    # 💡 SSE 长连接（Accept: text/event-stream）自动豁免；设为 0s 可关闭
+    response-timeout: ${APEX_RESPONSE_TIMEOUT:30s}
+  # ---------- 慢 SQL 指标（Grafana「数据库（慢SQL）」分组） ----------
+  # ✅ SlowSqlMetricsInterceptor（MyBatis 插件）统计 SQL 执行耗时，上报
+  #    apex.sql.execution / apex.sql.slow.count / apex.sql.slow.max.ms 指标；
+  #    超阈值时输出 WARN 慢 SQL 日志（含 SQL 文本与耗时）
+  sql:
+    slow:
+      # ✅ 是否启用慢 SQL 指标采集（默认开启）
+      enabled: ${APEX_SQL_SLOW_ENABLED:true}
+      # 慢 SQL 判定阈值（毫秒），超过即计入慢 SQL 计数并告警日志
+      threshold-ms: ${APEX_SQL_SLOW_THRESHOLD_MS:1000}
+  # ---------- 数据库类型（多数据库适配边界） ----------
+  # ✅ 通过 apex.database.type 统一驱动 MyBatis-Plus 分页方言、Flyway 迁移目录
+  #    与 Druid 连接池 db-type，首期支持 mysql / postgresql；
+  # 💡 切换数据库时只需修改此处（或环境变量 APEX_DATABASE_TYPE），无需改动多处配置；
+  # ⚠️ 切换数据库类型前需确保对应 db/migration/{type}/ 迁移脚本已就位
+  database:
+    type: ${APEX_DATABASE_TYPE:mysql}
+  # ---------- Sentinel 规则 Nacos 动态下发（生产热更新） ----------
+  # ✅ 启用后限流/熔断规则改为从 Nacos 拉取（约 30s 热生效），静态规则作为启动兜底；
+  # ⚠️ 启用时 Nacos 的 DataId 需维护完整规则集（JSON 模板见 config/sentinel/ 与 docs/CONFIGURATION.md）；
+  #    Nacos 不可用不影响启动（仅记录 WARN，静态规则继续生效）
+  sentinel:
+    nacos:
+      # ✅ 是否启用 Nacos 动态规则下发（生产接入 Nacos 后置 true）
+      enabled: ${SENTINEL_NACOS_ENABLED:false}
+      # 🔒 Nacos 服务地址（默认取 NACOS_SERVER_ADDR，本地 infra 栈为 127.0.0.1:18848）
+      server-addr: ${apex.sentinel.nacos.server-addr:${NACOS_SERVER_ADDR:127.0.0.1:18848}}
+      # Nacos 命名空间 ID（默认公共空间）
+      namespace: ${NACOS_NAMESPACE:}
+      # 配置分组
+      group-id: ${SENTINEL_NACOS_GROUP:SENTINEL_GROUP}
+      # 限流规则 DataId
+      flow-data-id: ${SENTINEL_NACOS_FLOW_DATA_ID:apex-sentinel-flow-rules}
+      # 熔断规则 DataId
+      degrade-data-id: ${SENTINEL_NACOS_DEGRADE_DATA_ID:apex-sentinel-degrade-rules}
+  # ---------- 熔断器（CircuitBreakerPort 编程式熔断） ----------
+  # ✅ CircuitBreakerService 按模式读取以下参数创建 Resilience4j CircuitBreaker，
+  #    业务代码通过 domain 端口 CircuitBreakerPort.withCircuitBreaker(name, mono) 接入；
+  #    （差异）此处为编程式熔断参数，与 resilience4j.* 声明式配置互补
+  circuit-breaker:
+    # 默认模式：均衡保护，适用一般外部服务
+    default-config:
+      # 失败率阈值（%）：50% 请求失败 → 熔断
+      failure-rate-threshold: 50
+      # 熔断打开后等待时长（Duration）：60s 后进入半开探测
+      wait-duration-in-open-state: 60s
+      # 滑动窗口大小：统计最近 100 次调用
+      sliding-window-size: 100
+      # 最小调用次数：不足 10 次不触发（防小样本误判）
+      minimum-number-of-calls: 10
+      # 半开状态允许通过的最大调用次数
+      permitted-calls-in-half-open: 5
+    # 严格模式：低阈值快熔断，适用支付/短信等不可降级关键服务
+    strict:
+      failure-rate-threshold: 30
+      wait-duration-in-open-state: 30s
+      sliding-window-size: 50
+      minimum-number-of-calls: 5
+      permitted-calls-in-half-open: 5
+    # 宽松模式：高阈值长等待，适用非关键/可容忍延迟服务
+    lenient:
+      failure-rate-threshold: 80
+      wait-duration-in-open-state: 120s
+      sliding-window-size: 200
+      minimum-number-of-calls: 20
+      permitted-calls-in-half-open: 15
+  # ---------- 本地限流降级（LocalRateLimiter） ----------
+  ratelimit:
+    local-fallback:
+      # ✅ Redis 不可用时自动降级为进程内本地限流（UserRateLimitAspect 读取）。
+      # 💡 保证 Redis 故障期间 @UserRateLimit 仍生效（单实例语义），恢复后自动切回 Redis
+      enabled: true
+  captcha:
+    # ✅ 图形验证码总开关（默认开启）。
+    # 开启后提供 GET /api/v1/auth/captcha 获取验证码；登录请求携带 captchaId 时强制校验。
+    enabled: ${APEX_CAPTCHA_ENABLED:true}
+    # 验证码字符长度（4-6）
+    length: ${APEX_CAPTCHA_LENGTH:4}
+    # 验证码有效期（秒）
+    ttl: ${APEX_CAPTCHA_TTL_SECONDS:120s}
+  # ---------- API 网关过滤器 ----------
+  gateway:
+    # ✅ 网关全局过滤器总开关（关闭后仅保留 Spring Security 核心过滤器链）
+    enabled: true
+    # 请求唯一标识 HTTP 头（前端/网关注入，用于全链路日志关联）
+    request-id-header: X-Request-Id
+    # 慢请求判定阈值（毫秒）：超过则记录 WARN 并增加慢请求计数
+    slow-request-threshold: 3000
+    metrics:
+      # ✅ 网关指标采集总开关
+      enabled: true
+      # 请求计数（按 method+path）
+      request-counter-enabled: true
+      # 响应计时（Timer）
+      response-timer-enabled: true
+      # 错误计数（按 method+path+statusCode）
+      error-counter-enabled: true
+  # ---------- 缓存（Caffeine 本地 + Redis 远程） ----------
+  cache:
+    local:
+      # 一级本地缓存（Caffeine）：进程内低延迟
+      max-size: 10000
+      # 写入后过期（秒）：5 分钟
+      expire-after-write: 300
+      # 哈希表初始容量（减少扩容停顿）
+      initial-capacity: 500
+    remote:
+      # 二级远程缓存（Redis）：跨实例共享
+      default-ttl: 3600
+      # 批量操作每批条目数（mget/mset/Pipeline）
+      batch-size: 100
+    # ---------- 延迟双删（防止并发读写缓存脏数据） ----------
+    # ✅ 更新 DB 后先立即删除缓存，延迟再删一次；第二次删除异步执行，不阻塞业务响应
+    double-delete:
+      # ✅ 是否启用（默认 true）
+      enabled: ${APEX_CACHE_DOUBLE_DELETE_ENABLED:true}
+      # 第二次删除的延迟时间（毫秒，默认 500）
+      delay-millis: ${APEX_CACHE_DOUBLE_DELETE_DELAY_MILLIS:500}
+      # 每次删除失败的最大重试次数（默认 3）
+      retry-times: ${APEX_CACHE_DOUBLE_DELETE_RETRY_TIMES:3}
+  # ---------- Redis 键前缀与 Redisson 配置 ----------
+  redis:
+    # Redis 键统一前缀：多应用共用同一 Redis 实例时用前缀隔离（如 apex-prod:）
+    # 空值 = 无前缀（默认）；配置后所有业务键（限流/验证码/缓存）自动追加
+    key-prefix: ${APEX_REDIS_KEY_PREFIX:}
+    # ---------- Redisson 看门狗（Watchdog）配置 ----------
+    # ✅ 分布式锁看门狗超时时间（毫秒）：默认 30 秒
+    # 看门狗会每隔该值的 1/3（即 10 秒）自动续期锁，防止长时间业务执行导致锁提前释放。
+    # 仅当 leaseTime = -1 时启用看门狗自动续期机制。
+    lock-watchdog-timeout: ${APEX_REDIS_LOCK_WATCHDOG_TIMEOUT:30000}
+    # Redis 命令超时时间（毫秒）：默认 3 秒
+    # 超过该时间未响应则抛出 RedisTimeoutException
+    command-timeout: ${APEX_REDIS_COMMAND_TIMEOUT:3000}
+    # 命令失败重试次数：默认 3 次
+    # 仅对网络瞬时故障（如连接超时、读取超时）有效
+    retry-attempts: ${APEX_REDIS_RETRY_ATTEMPTS:3}
+    # 重试间隔（毫秒）：默认 1500ms
+    # Redisson 使用指数退避策略，实际等待时间为 retryInterval * (2^retryCount - 1)
+    retry-interval: ${APEX_REDIS_RETRY_INTERVAL:1500}
+    # ---------- 启动时数据清理（开发环境） ----------
+    # ✅ 启动时清理旧格式数据（生产环境建议关闭）
+    cleanup-on-startup: ${APEX_REDIS_CLEANUP_ON_STARTUP:true}
+  # ---------- 领域事件 Outbox（DomainEventOutboxDispatcher 读取） ----------
+  # ✅ 发件箱模式：领域事件先落库（outbox 表）再可靠投递，保证事件不丢失
+  #    （进程崩溃后由定时 Dispatcher 补偿重发，投递成功后清理）
+  events:
+    outbox:
+      # 每次轮询批量取出的事件数
+      batch-size: ${OUTBOX_BATCH_SIZE:50}
+      # 单事件最大投递尝试次数：超过后标记死信（留待人工处理）
+      max-attempts: ${OUTBOX_MAX_ATTEMPTS:8}
+      # 分布式锁持有时长（秒）：防多实例并发轮询同一批事件
+      lock-timeout-seconds: ${OUTBOX_LOCK_TIMEOUT_SECONDS:120}
+      # 并行投递线程数
+      parallelism: ${OUTBOX_PARALLELISM:4}
+      # ✅ 保留策略总开关：定期清理已投递/死信事件，防止表无限膨胀
+      retention-enabled: ${OUTBOX_RETENTION_ENABLED:true}
+      # 已投递事件保留时长（小时）：默认 7 天
+      retention-delivered-hours: ${OUTBOX_RETENTION_DELIVERED_HOURS:168}
+      # 死信事件保留时长（天）：默认 30 天
+      retention-dead-days: ${OUTBOX_RETENTION_DEAD_DAYS:30}
+      # 每次清理批次大小（条）
+      retention-batch-size: ${OUTBOX_RETENTION_BATCH_SIZE:5000}
+  # ---------- 降级快照（DegradeSnapshotProperties 读取） ----------
+  degrade:
+    snapshot:
+      # ✅ 降级快照总开关：接口降级时将最近一次成功响应快照存入本地/Redis，
+      #    降级期间优先返回快照（提升可用性）。默认白名单为空 = 不接入任何接口
+      enabled: true
+      # Redis 写入节流窗口（秒）：同一资源在此窗口内最多写一次 Redis（写放大控制）
+      redis-throttle-seconds: 5
+      # 本地缓存最大条目数（超出按最旧淘汰）
+      local-max-entries: 256
+      # 快照资源白名单：显式声明才接入（如 /api/v1/users/me）；须经评审避免跨用户错配
+      resources: []
+  # ---------- 安全配置 ----------
+  security:
+    data-encryption-key: ${APEX_DATA_ENCRYPTION_KEY:}
+    guard:
+      # ✅ 安全守卫总开关（UA 检查等基础防护）
+      enabled: true
+      # ✅ User-Agent 检查（💡 部分合法客户端可能不发 UA，prod 可关闭）
+      ua-check-enabled: true
+    scan-guard:
+      # ✅ 扫描流量拦截：识别公网扫描器高频探测路径（/.git、/phpmyadmin、/actuator/env 等）
+      #    并直接阻断，降低信息泄露与被攻击面（ScanTrafficGuardProperties 读取）
+      enabled: true
+      # 拦截响应状态码：403 明确拒绝（默认）；可改 404 让扫描器误判路径不存在
+      block-status: 403
+      # ✅ 拦截 CONNECT 隧道探测（防代理隧道滥用）
+      block-connect-method: true
+      # 探测路径模式列表（默认覆盖公网扫描器高频路径，均与业务 /api /actuator 无交集）
+      path-patterns:
+        - /HNAP1
+        - /CFIDE
+        - /.git
+        - /.env
+        - /dana-cached
+        - /success.txt
+        - /confluence
+        - /devicedesc.xml
+        - /SDK
+        - /cgi-bin
+        - /boaform
+        - /GponForm
+        - /autodiscover
+        - /remote
+        - /owa
+        - /ecp
+        - /phpmyadmin
+        - /_ignition
+        - /WEB-INF
+        - /server-status
+        - /server-info
+        - /.aws
+        - /actuator/env
+        - /manager
+        - /host-manager
+    user-rate-limit:
+      enabled: ${APEX_USER_RATE_LIMIT_ENABLED:true}
+    ip-rate-limit:
+      # ✅ IP 限流总开关（防单 IP 恶意请求）
+      enabled: true
+      # 默认窗口内最大请求数
+      default-limit: 120
+      # 默认滑动窗口（秒）
+      default-window: 60
+      # 违规统计窗口（秒）
+      violation-window: 60
+      # 封禁阈值：窗口内违规次数达到则封禁
+      block-threshold: 30
+      # 封禁时长（秒）
+      block-duration: 300
+    login-protection:
+      # ✅ 登录保护（防暴力破解；⚠️ prod 暂关闭，启用前需验证 Redis 跨实例一致性）
+      enabled: true
+      # 单 IP 最大登录尝试次数（窗口内）
+      ip-max-attempts: 20
+      # 单用户名最大尝试次数（更严格）
+      username-max-attempts: 5
+      # 连续失败多少次后强制要求图形验证码（验证码升级阈值，0 表示不启用）
+      captcha-after-failures: 3
+      # 统计窗口（秒）
+      window-size: 600
+    # ---------- 短信发送限流（防短信轰炸） ----------
+    sms-send-limit:
+      # 单手机号窗口内最大发送次数（SmsSendLimitProperties 读取）
+      max-attempts: 3
+      # 限流窗口（秒）：5 分钟内最多 3 条
+      window-seconds: 300
+    input-validation:
+      # ✅ 输入校验过滤器（SQL 注入/XSS 等攻击特征检测）
+      enabled: true
+    security-headers:
+      # ✅ 安全响应头（CSP/X-Content-Type-Options 等）
+      enabled: true
+    anti-replay:
+      # ✅ 防重放攻击（时间戳 + 随机数校验）
+      enabled: true
+      # 随机数（nonce）有效期（秒）：同一 nonce 在有效期内只允许使用一次
+      # （AntiReplayAspect 读取，默认 360s = 6 分钟，须大于客户端时钟偏差容忍度）
+      nonce-ttl-seconds: ${APEX_ANTI_REPLAY_NONCE_TTL:360}
+  # ---------- 消息消费者开关（业务监听器装配） ----------
+  # ⚠️ 与 rocketmq.consumer.enabled 区分：此键控制业务监听器
+  #    （UserMessageListener / DeadLetterQueueProcessor）的 @ConditionalOnProperty 装配
+  mq:
+    consumer:
+      # ✅ 启用消息消费者（basic/standard 档位关闭）
+      enabled: ${APEX_MQ_CONSUMER_ENABLED:true}
+    dlq:
+      # ✅ 启用死信队列处理
+      enabled: ${APEX_MQ_DLQ_ENABLED:true}
+    # ---------- 领域事件 MQ 投递（EnhancedDomainEventPublisherImpl 读取） ----------
+    # ✅ 领域事件经 RocketMQ 广播（配合 Outbox 实现可靠投递）；关闭后仅本地发布
+    domain-event-enabled: ${APEX_MQ_DOMAIN_EVENT_ENABLED:true}
+    # 领域事件 Topic 名称
+    domain-event-topic: ${APEX_MQ_DOMAIN_EVENT_TOPIC:apex-domain-event}
+
+# ============================================================
+# 全文搜索（Meilisearch）
+# ============================================================
+# ✅ 系统管理数据（用户/角色/菜单/部门/字典/配置）统一全文索引
+# 💡 Meilisearch 轻量搜索引擎，CJK 支持好、官方 Java SDK、比 ES 轻量 10 倍
+meilisearch:
+  # ✅ Meilisearch 总开关（⚠️ dev 环境在 application-dev.yml 启用）
+  enabled: ${MEILISEARCH_ENABLED:false}
+  # 🔒 Meilisearch 服务地址（生产通过环境变量注入）
+  url: ${MEILISEARCH_URL:http://localhost:7700}
+  # 🔒 Master API Key（生产必须注入随机密钥）
+  api-key: ${MEILISEARCH_API_KEY:}
+  # 索引名称前缀（多应用共用时隔离）
+  index-prefix: ${MEILISEARCH_INDEX_PREFIX:apex_}
+  # 批量索引批次大小
+  batch-size: 100
+
+# ============================================================
+# 运行日志查询（Grafana Loki）
+# ============================================================
+# ✅ 应用 stdout/文件日志通过 Alloy 采集到 Loki，提供轻量日志查询（替代 ELK）
+loki:
+  # ✅ Loki 日志查询总开关（⚠️ dev 环境在 application-dev.yml 启用）
+  enabled: ${LOKI_ENABLED:false}
+  # 🔒 Loki 服务地址（生产通过环境变量注入）
+  url: ${LOKI_URL:http://localhost:3100}
+  # 单次查询最大返回行数
+  max-lines: 1000
+  # 单次查询最大时间窗口（秒）：1 小时，防止慢查询
+  max-query-range-seconds: 3600
+
+# ============================================================
+# Grafana（日志查询跳转）
+# ============================================================
+# ✅ 提供 Grafana Explore 跳转链接，供高级日志查询
+grafana:
+  # ✅ Grafana 集成开关
+  enabled: ${GRAFANA_ENABLED:false}
+  # 🔒 Grafana 服务地址（生产通过环境变量注入）
+  url: ${GRAFANA_URL:http://localhost:3200}
+  # Grafana Explore 路径
+  explore-path: /explore
+
+
+security:
+  config:
+    encryption:
+      key: ${CONFIG_ENCRYPTION_KEY:}

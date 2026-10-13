@@ -52,7 +52,8 @@ check_environment() {
     check_command "npm" || all_ok=false
     check_command "mvnd" || all_ok=false
     check_command "java" || all_ok=false
-    check_command "docker" || all_ok=false
+    check_command "podman" || all_ok=false
+    check_command "podman-compose" || all_ok=false
     
     if [ "$all_ok" = true ]; then
         log_success "环境检查通过"
@@ -61,7 +62,7 @@ check_environment() {
         log_info "npm 版本: $(npm --version)"
         log_info "Java 版本: $(java -version 2>&1 | head -n 1)"
         log_info "Maven Daemon 版本: $(mvnd --version | head -n 1)"
-        log_info "Docker 版本: $(docker --version)"
+        log_info "Podman 版本: $(podman --version)"
         return 0
     else
         log_error "环境检查失败，请安装缺失的工具"
@@ -329,7 +330,7 @@ setup_api_docs() {
     cd "$PROJECT_ROOT"
     
     log_info "检查 SpringDoc 配置..."
-    if grep -r "springdoc" apex-interfaces/src/main/resources/application*.yml > /dev/null 2>&1; then
+    if grep -r "springdoc" apex-system/src/main/resources/application*.yml > /dev/null 2>&1; then
         log_success "SpringDoc 已配置"
     else
         log_warn "未找到 SpringDoc 配置"
@@ -408,7 +409,7 @@ set -e
 cd "$(dirname "$0")/../config/monitoring"
 
 echo "启动监控服务..."
-docker-compose up -d
+podman-compose -f podman-compose.yml up -d
 
 echo "等待服务启动..."
 sleep 10

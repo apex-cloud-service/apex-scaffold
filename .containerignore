@@ -1,0 +1,24 @@
+# Apex Scaffold - Podman 构建上下文忽略清单
+# 不排除 pom.xml / src / .mvn（构建必需）。
+.git
+.gitignore
+.idea
+.vscode
+*.iml
+.DS_Store
+**/target
+**/classes
+logs
+data
+*.log
+.env
+.env.*
+!.env.example
+config/license/private.key
+config/license/*.lic
+backups
+lr
+.workbuddy
+node_modules
+k8s
+.containerignore

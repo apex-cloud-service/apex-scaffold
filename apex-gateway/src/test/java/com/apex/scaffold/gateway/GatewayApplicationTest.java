@@ -12,9 +12,9 @@ import com.apex.scaffold.gateway.filter.UserContextRelayFilter;
 import com.apex.scaffold.gateway.security.GatewayJwtVerifierService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestConstructor;
 
 /**
  * 网关上下文加载测试.
@@ -28,32 +28,38 @@ import org.springframework.test.context.ActiveProfiles;
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("dev")
+@TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 @DisplayName("GatewayApplication 上下文加载测试")
 class GatewayApplicationTest {
 
-    @Autowired
-    private TraceWebFilter traceWebFilter;
+    private final TraceWebFilter traceWebFilter;
+    private final JwtSignatureFilter jwtSignatureFilter;
+    private final UserContextRelayFilter userContextRelayFilter;
+    private final RequestRateLimitFilter requestRateLimitFilter;
+    private final GrayRouteFilter grayRouteFilter;
+    private final RequestLoggingFilter requestLoggingFilter;
+    private final GatewayJwtVerifierService gatewayJwtVerifierService;
+    private final GatewayExceptionHandler gatewayExceptionHandler;
 
-    @Autowired
-    private JwtSignatureFilter jwtSignatureFilter;
-
-    @Autowired
-    private UserContextRelayFilter userContextRelayFilter;
-
-    @Autowired
-    private RequestRateLimitFilter requestRateLimitFilter;
-
-    @Autowired
-    private GrayRouteFilter grayRouteFilter;
-
-    @Autowired
-    private RequestLoggingFilter requestLoggingFilter;
-
-    @Autowired
-    private GatewayJwtVerifierService gatewayJwtVerifierService;
-
-    @Autowired
-    private GatewayExceptionHandler gatewayExceptionHandler;
+    /** 构造测试实例并注入网关过滤器与验签组件。 */
+    GatewayApplicationTest(
+            TraceWebFilter traceWebFilter,
+            JwtSignatureFilter jwtSignatureFilter,
+            UserContextRelayFilter userContextRelayFilter,
+            RequestRateLimitFilter requestRateLimitFilter,
+            GrayRouteFilter grayRouteFilter,
+            RequestLoggingFilter requestLoggingFilter,
+            GatewayJwtVerifierService gatewayJwtVerifierService,
+            GatewayExceptionHandler gatewayExceptionHandler) {
+        this.traceWebFilter = traceWebFilter;
+        this.jwtSignatureFilter = jwtSignatureFilter;
+        this.userContextRelayFilter = userContextRelayFilter;
+        this.requestRateLimitFilter = requestRateLimitFilter;
+        this.grayRouteFilter = grayRouteFilter;
+        this.requestLoggingFilter = requestLoggingFilter;
+        this.gatewayJwtVerifierService = gatewayJwtVerifierService;
+        this.gatewayExceptionHandler = gatewayExceptionHandler;
+    }
 
     @Test
     @DisplayName("上下文应成功加载并装配全部过滤器与验签服务")

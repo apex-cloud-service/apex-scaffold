@@ -76,7 +76,7 @@
 
 ### 2.5 可观测性与部署
 - 指标 apex_api_*（MetricsWebFilter）、Prometheus + 10 条告警规则 + Grafana 14 面板大盘、Zipkin 链路、TraceId 贯穿日志、钉钉异常告警
-- 部署三方式（java -jar app.sh/systemd、Dockerfile 多阶段、Compose）+ infra 9 组件一键栈 + k8s deployment.yaml + 健康检查双端点
+- 部署三方式（java -jar app.sh/systemd、Containerfile 多阶段、Compose）+ infra 9 组件一键栈 + k8s deployment.yaml + 健康检查双端点
 - 环境变量全覆盖、prod 强制校验（JWT≥32 字节、Druid keepAlive、文件上传联动等）
 
 ### 2.6 商业化机制

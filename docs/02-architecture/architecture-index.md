@@ -9,6 +9,8 @@
 
 本文档提供Apex Scaffold项目所有架构图表和技术文档的快速索引。
 
+2026-10-12 system 第二批物理迁移：当前业务四层归入 `apex-system`，由 `apex-system-service` 启动；原 interfaces/application 模块退休，共享 domain/infrastructure 仅保留通用契约和设施。当前边界见 [架构设计说明](architecture-overview.md) 与根 AGENTS；历史 SVG 和原单体图不代表当前 Maven 模块拓扑。
+
 ***
 
 ## ✅ SVG 图表质量状态
@@ -33,7 +35,7 @@
 | ------------ | ---------- | ---------------------------------------------- |
 | **01-07 号**  | 2026-09-10 | 核心架构图+业务流程图,基于实际代码统计(32 Handler/34 Service) |
 | **08-12 号**  | 2026-09-10 | 基础设施图,展示40+表ER关系、多级缓存、限流熔断、数据权限、安全防护         |
-| **13-18 号**  | 2026-09-10 | 部署与微服务图,Docker Compose/K8s/CI/CD/Nacos/Zipkin  |
+| **13-18 号**  | 2026-09-10 | 部署与微服务图,Podman Compose/K8s/CI/CD/Nacos/Zipkin  |
 | **19-23 号**  | 2026-09-10 | 前端技术栈图,Vue 3/Axios/WebFlux/i18n/OpenAPI        |
 | **24-29 号**  | 2026-09-10 | 监控+高级架构,66个Grafana面板、Loki日志、容灾、MQ、Meilisearch |
 | **全部29张图表** | 2026-09-10 | 统一深色企业级配色,所有版本号与pom.xml一致,移除CSS变量           |
@@ -103,9 +105,9 @@
 
 | 序号 | 名称                      | 文件                                                                                                           | 说明                                                                     |
 | -- | ----------------------- | ------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------- |
-| 13 | **Docker Compose本地开发环境** | [13\_docker\_compose\_local\_dev.svg](../diagrams/13_docker_compose_local_dev.svg)                             | 展示一键启动完整技术栈的docker-compose配置，包含核心服务和企业版服务，支持健康检查和数据持久化                |
+| 13 | **Podman Compose本地开发环境** | [13\_docker\_compose\_local\_dev.svg](../diagrams/13_docker_compose_local_dev.svg)                             | 展示一键启动完整技术栈的podman-compose配置，包含核心服务和企业版服务，支持健康检查和数据持久化                |
 | 14 | **Kubernetes生产部署架构**    | [14\_kubernetes\_production\_deployment.svg](../diagrams/14_kubernetes_production_deployment.svg)               | 展示Deployment、HPA自动伸缩、Service/Ingress、ConfigMap/Secret等K8s核心资源及生产最佳实践 |
-| 15 | **CI/CD流水线架构**          | [15\_cicd\_pipeline.svg](../diagrams/15_cicd_pipeline.svg)                                                      | 展示GitHub Actions构建、测试、安全扫描、Docker镜像构建、多环境部署完整流水线                    |
+| 15 | **CI/CD流水线架构**          | [15\_cicd\_pipeline.svg](../diagrams/15_cicd_pipeline.svg)                                                      | 展示GitHub Actions构建、测试、安全扫描、Podman镜像构建、多环境部署完整流水线                    |
 | 16 | **Nacos服务注册与发现**        | [16\_nacos\_service\_discovery.svg](../diagrams/16_nacos_service_discovery.svg)                                 | 展示服务注册、配置中心、健康检查、元数据管理及Nacos 3节点集群部署                                 |
 | 17 | **Zipkin分布式链路追踪**       | [17\_zipkin\_distributed\_tracing.svg](../diagrams/17_zipkin_distributed_tracing.svg)                           | 展示Micrometer Tracing、10%采样率、TraceId/SpanId结构及典型调用链路示例                |
 | 18 | **Spring Cloud Gateway** | [18\_spring\_cloud\_gateway.svg](../diagrams/18_spring_cloud_gateway.svg)                                       | 展示动态路由、全局过滤器链、限流熔断、跨域CORS、安全响应头等API网关核心功能                          |
@@ -248,7 +250,7 @@
 | **01 逻辑架构快速参考**   | [architecture/01-logical-architecture-quick-ref.md](../architecture/01-logical-architecture-quick-ref.md)               | 模块定位、依赖规则、技术能力与开发检查清单                                       |
 | **01 逻辑架构架构决策**   | [architecture/01-logical-architecture-decision.md](../architecture/01-logical-architecture-decision.md)                 | DDD 四层架构、依赖倒置和模块化单体决策 (ADR-001)                             |
 | **01 逻辑架构商业价值**   | [architecture/01-logical-architecture-business-value.md](../architecture/01-logical-architecture-business-value.md)     | 可验证的工程价值、度量方式和收益边界                                          |
-| **02 部署架构详细说明** ⭐ | [architecture/02-physical-architecture-detail.md](../architecture/02-physical-architecture-detail.md)                   | 五层拓扑、Docker Compose 默认栈、K8s 扩展拓扑 (新增)                       |
+| **02 部署架构详细说明** ⭐ | [architecture/02-physical-architecture-detail.md](../architecture/02-physical-architecture-detail.md)                   | 五层拓扑、Podman Compose 默认栈、K8s 扩展拓扑 (新增)                       |
 | **02 部署架构快速参考** ⭐ | [architecture/02-physical-architecture-quick-ref.md](../architecture/02-physical-architecture-quick-ref.md)             | 端口速查、命令速查、环境变量、故障排查 (新增)                                    |
 | **02 部署架构架构决策** ⭐ | [architecture/02-physical-architecture-decision.md](../architecture/02-physical-architecture-decision.md)               | 五层拓扑、Compose vs K8s、端口分离、能力分级 (ADR-002\~008) (新增)           |
 | **02 部署架构商业价值** ⭐ | [architecture/02-physical-architecture-business-value.md](../architecture/02-physical-architecture-business-value.md)   | 上线速度、成本控制、安全合规、故障定位、扩展灵活性 (新增)                              |
@@ -258,7 +260,7 @@
 | **03 技术架构商业价值** ⭐ | [architecture/03-technical-architecture-business-value.md](../architecture/03-technical-architecture-business-value.md) | 开发效率、性能并发、资源成本、可观测性、稳定性、扩展性 (新增)                            |
 | **业务流程文档**        | [architecture/business-flows.md](../architecture/business-flows.md)                                                     | 登录认证、权限校验、工作流、文件上传流程详解                                      |
 | **数据库设计文档**       | [architecture/database-design.md](../architecture/database-design.md)                                                   | 表结构设计、索引优化、主从复制配置                                           |
-| **部署架构文档**        | [architecture/deployment-architecture.md](../architecture/deployment-architecture.md)                                   | Kubernetes/Docker部署方案、HPA扩缩容、高可用保障                          |
+| **部署架构文档**        | [architecture/deployment-architecture.md](../architecture/deployment-architecture.md)                                   | Kubernetes/Podman部署方案、HPA扩缩容、高可用保障                          |
 | **网络架构文档**        | [architecture/network-architecture.md](../architecture/network-architecture.md)                                         | 网络分区、防火墙规则、DDoS防护、SSL/TLS配置                                 |
 | **后端技术栈文档**       | [architecture/backend-technology-stack.md](../architecture/backend-technology-stack.md)                                 | Spring Boot/WebFlux/MyBatis-Plus等后端技术栈详解、技术选型理由、性能优化策略      |
 | **前端技术栈文档**       | [architecture/frontend-technology-stack.md](../architecture/frontend-technology-stack.md)                               | Vue 3/Vite 6/TypeScript/Pinia/Element Plus前端技术栈详解、开发规范、最佳实践 |
@@ -298,7 +300,7 @@
 
 | 文档名称        | 文件路径                                                                                       | 说明                   |
 | ----------- | ------------------------------------------------------------------------------------------ | -------------------- |
-| **后端开发规范**  | [standards/backend-development-standards.md](../04-development/backend-development-standards.md)   | Java/Spring Boot开发规范 |
+| **后端开发规范**  | [development-standards.md](../04-development/development-standards.md)   | Java/Spring Boot开发规范 |
 | **前端开发规范**  | 独立前端仓库 `apex-admin-web` 的 `frontend-docs/frontend-development-standards.md` | Vue/TypeScript开发规范   |
 | **API路由映射** | [api/route-mapping.md](../_archive/api/route-mapping.md)                                               | 前后端API路由对照表          |
 
@@ -356,7 +358,7 @@
 
 **推荐阅读顺序**:
 
-1. [后端开发规范](../04-development/backend-development-standards.md) - 编码规范
+1. [后端开发规范](../04-development/development-standards.md) - 编码规范
 2. 前端开发规范（位于独立前端仓库 `apex-admin-web` 的 `frontend-docs/`） - 前端规范
 3. [业务流程文档](../architecture/business-flows.md) - 业务流程
 4. [数据库设计文档](../architecture/database-design.md) - 数据库设计
@@ -446,7 +448,7 @@
 | **Spring Boot**  | 后端技术栈架构图、后端技术栈文档                                       |
 | **WebFlux**      | 后端技术栈架构图、后端技术栈文档、前后端交互架构图                              |
 | **Kubernetes**   | 基础设施组件架构图、部署架构文档                                       |
-| **Docker**       | 基础设施组件架构图、部署架构文档                                       |
+| **Podman**       | 基础设施组件架构图、部署架构文档                                       |
 | **Prometheus**   | 监控体系架构图、基础设施组件文档                                       |
 | **Grafana**      | 监控体系架构图、基础设施组件文档                                       |
 

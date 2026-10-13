@@ -147,7 +147,7 @@ generate_markdown_report() {
     
     # 统计各模块
     declare -A module_stats
-    for module in apex-common apex-license-spring-boot-starter apex-license-tools apex-domain apex-infrastructure apex-application apex-workflow apex-interfaces apex-auth-center apex-example apex-generator; do
+    for module in apex-common apex-license-spring-boot-starter apex-license-tools apex-domain apex-infrastructure apex-application apex-workflow apex-system apex-auth-service apex-example apex-generator; do
         module_stats[$module]=$(count_module_tests "$module")
     done
     
@@ -198,7 +198,7 @@ generate_markdown_report() {
 EOF
 
     # 添加各模块统计
-    for module in apex-common apex-license-spring-boot-starter apex-license-tools apex-domain apex-infrastructure apex-application apex-workflow apex-interfaces apex-auth-center apex-example apex-generator; do
+    for module in apex-common apex-license-spring-boot-starter apex-license-tools apex-domain apex-infrastructure apex-application apex-workflow apex-system apex-auth-service apex-example apex-generator; do
         IFS=',' read -r m_total m_passed m_failed m_errors m_skipped <<< "${module_stats[$module]}"
         if [ "$m_total" -gt 0 ]; then
             pass_rate=$(awk "BEGIN {printf \"%.1f\", ($m_passed/$m_total)*100}")
@@ -221,7 +221,7 @@ EOF
     echo "| 模块 | 行覆盖率 | 分支覆盖率 | 报告路径 |" >> "$report_file"
     echo "|------|----------|------------|----------|" >> "$report_file"
     
-    for module in apex-common apex-license-spring-boot-starter apex-license-tools apex-domain apex-infrastructure apex-application apex-workflow apex-interfaces apex-auth-center apex-example apex-generator; do
+    for module in apex-common apex-license-spring-boot-starter apex-license-tools apex-domain apex-infrastructure apex-application apex-workflow apex-system apex-auth-service apex-example apex-generator; do
         IFS=',' read -r line_cov branch_cov <<< "$(extract_jacoco_coverage "$module")"
         if [ "$line_cov" != "N/A" ]; then
             echo "| $module | $line_cov | $branch_cov | \`$module/target/site/jacoco/index.html\` |" >> "$report_file"
@@ -255,7 +255,7 @@ EOF
 ### 5.3 测试范围
 
 - ✅ **已覆盖**: apex-common, apex-domain, apex-application, apex-license-spring-boot-starter 等核心模块的单元测试
-- ⚠️ **部分覆盖**: apex-interfaces (排除了部分集成测试)
+- ⚠️ **部分覆盖**: apex-system (排除了部分集成测试)
 - ⚠️ **未执行**: 集成测试 (Failsafe)
 
 ---
@@ -362,7 +362,7 @@ generate_json_summary() {
 EOF
 
     # 添加各模块统计
-    local modules=(apex-common apex-license-spring-boot-starter apex-license-tools apex-domain apex-infrastructure apex-application apex-workflow apex-interfaces apex-auth-center apex-example apex-generator)
+    local modules=(apex-common apex-license-spring-boot-starter apex-license-tools apex-domain apex-infrastructure apex-application apex-workflow apex-system apex-auth-service apex-example apex-generator)
     local first=true
     
     for module in "${modules[@]}"; do

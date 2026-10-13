@@ -38,11 +38,11 @@ Apex Scaffold 将 Keycloak 作为**身份提供商(IdP)**,通过 OIDC 协议集�
 
 ---
 
-## 2. Docker 部署配置
+## 2. Podman 部署配置
 
-### 2.1 开发环境部署 (Docker Compose)
+### 2.1 开发环境部署 (Podman Compose)
 
-在 `docker-compose.yml` 中添加 Keycloak 服务:
+在 `podman-compose.yml` 中添加 Keycloak 服务:
 
 ```yaml
 services:

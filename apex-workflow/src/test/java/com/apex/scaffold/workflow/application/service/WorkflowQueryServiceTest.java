@@ -273,6 +273,41 @@ class WorkflowQueryServiceTest {
     }
 
     @Test
+    @DisplayName("getTaskById - 成功按ID查询任务")
+    void testGetTaskById_Success() {
+        // Given: 模拟按主键查询任务
+        when(taskMapper.selectById(1L)).thenReturn(testTask);
+
+        // When: 调用单任务查询（事件发布方回查任务信息）
+        Mono<WorkflowTaskDTO> result = queryService.getTaskById(1L);
+
+        // Then: 验证转换后的 DTO
+        StepVerifier.create(result)
+                .assertNext(dto -> {
+                    assertThat(dto.getId()).isEqualTo(1L);
+                    assertThat(dto.getInstanceId()).isEqualTo(1L);
+                    assertThat(dto.getNodeId()).isEqualTo("node_2");
+                    assertThat(dto.getTaskName()).isEqualTo("部门主管审批");
+                    assertThat(dto.getStatus()).isEqualTo("PENDING");
+                    assertThat(dto.getAssigneeId()).isEqualTo(20L);
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("getTaskById - 任务不存在返回空")
+    void testGetTaskById_NotFound() {
+        // Given: 模拟查询不到任务
+        when(taskMapper.selectById(999L)).thenReturn(null);
+
+        // When: 调用单任务查询
+        Mono<WorkflowTaskDTO> result = queryService.getTaskById(999L);
+
+        // Then: 应返回空
+        StepVerifier.create(result).verifyComplete();
+    }
+
+    @Test
     @DisplayName("getDefinitionDetail - 成功查询流程定义详情")
     void testGetDefinitionDetail_Success() {
         // Given: 模拟查询流程定义

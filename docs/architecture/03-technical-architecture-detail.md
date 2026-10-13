@@ -332,9 +332,9 @@ meilisearch:
 | 组件 | 版本 | 用途 | 配置位置 |
 |------|------|------|----------|
 | **JDK** | 17 LTS | Java 运行时 | JVM 参数按环境选择 |
-| **Docker** | - | 容器化 | 多阶段构建 + 镜像优化 |
+| **Podman** | - | 容器化 | Containerfile 多阶段构建 + 镜像优化 |
 | **Kubernetes** | >= 1.24 | 容器编排 | HPA + Ingress + ConfigMap |
-| **Docker Compose** | - | 本地开发 | 一键启动完整栈 |
+| **podman-compose** | - | 本地开发 | 一键启动完整栈 |
 | **Maven** | 3.9 | 构建工具 | 多模块构建 + Spotless |
 | **JUnit** | 5 | 单元测试 | MockMvc + StepVerifier |
 | **Logback** | - | 日志框架 | 结构化日志 + traceId |
@@ -354,7 +354,7 @@ JAVA_OPTS="
 "
 ```
 
-**Docker 多阶段构建**：
+**Containerfile 多阶段构建**（历史单体示例；实际构建使用仓库根目录 `Containerfile`）：
 ```dockerfile
 # 阶段 1: Maven 构建
 FROM maven:3.9-eclipse-temurin-17 AS builder

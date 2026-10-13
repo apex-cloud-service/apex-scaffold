@@ -50,7 +50,7 @@ java -jar apex-common/target/benchmarks.jar "DataMaskBenchmark" \
 **运行前提**:
 ```bash
 # 启动本地Redis服务器
-docker run -d -p 6379:6379 redis:7-alpine
+podman run -d -p 6379:6379 docker.io/library/redis:7-alpine
 
 # 或安装原生Redis
 brew install redis

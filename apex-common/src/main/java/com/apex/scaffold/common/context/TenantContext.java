@@ -1,16 +1,8 @@
 package com.apex.scaffold.common.context;
 
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.NoSuchElementException;
 import java.util.Optional;
-import org.reactivestreams.Subscription;
-import reactor.core.CoreSubscriber;
-import reactor.core.Fuseable;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
-import reactor.core.publisher.Operators;
 import reactor.core.scheduler.Schedulers;
 import reactor.util.context.Context;
 
@@ -41,17 +33,25 @@ public final class TenantContext {
     private static final ThreadLocal<String> TENANT_ID = new ThreadLocal<>();
 
     private static final String SCHEDULER_HOOK_KEY = TenantContext.class.getName();
-    private static final String OPERATOR_HOOK_KEY = TenantContext.class.getName() + ".operator";
 
     static {
         initializeGlobalHooks();
     }
 
     /**
-     * 幂等初始化全局 Reactor 与 Scheduler Hook。
+     * 幂等初始化全局 Scheduler Hook。
      *
      * <p>容器首次加载类时会自动调用；测试若执行过 {@link #resetGlobalHooks()}，可再次调用本方法
      * 恢复默认传播机制，避免同 JVM 测试顺序造成上下文传播能力缺失。</p>
+     *
+     * <p><b>为何不再注册全局 {@code Hooks.onEachOperator}：</b>全局按操作符 lift
+     * {@code CoreSubscriber} 会把 WebFlux 路由与 Sentinel 内部的
+     * {@code FluxConcatMap$ConcatMapInner}、{@code MonoNext} 等订阅者一并包装。这些内部
+     * 订阅者的 {@code currentContext()}/{@code cancel()} 会经由其 {@code parent} 反向引用回环，
+     * 与包装后的 {@code actual} 链形成环状图，导致 {@code currentContext()} 与 {@code cancel()}
+     * 无限互递归并抛出 {@link StackOverflowError}。跨线程上下文改由两条不侵入框架内部的机制保证：
+     * 本类的 {@link Schedulers#onScheduleHook}（线程边界）与显式的
+     * {@link #withTenant(Mono)} / {@link #withTenant(Flux)} 桥接（Reactor Context 边界）。</p>
      */
     public static synchronized void initializeGlobalHooks() {
         Schedulers.resetOnScheduleHook(SCHEDULER_HOOK_KEY);
@@ -66,203 +66,15 @@ public final class TenantContext {
                 }
             };
         });
-        Hooks.resetOnEachOperator(OPERATOR_HOOK_KEY);
-        Hooks.onEachOperator(
-                OPERATOR_HOOK_KEY,
-                Operators.lift((scannable, subscriber) -> new TenantContextSubscriber<>(subscriber)));
-    }
-
-    private static final class TenantContextSubscriber<T> implements CoreSubscriber<T> {
-
-        private final CoreSubscriber<? super T> actual;
-
-        private TenantContextSubscriber(CoreSubscriber<? super T> actual) {
-            this.actual = actual;
-        }
-
-        @Override
-        public void onSubscribe(Subscription s) {
-            if (s instanceof Fuseable.QueueSubscription<?> queueSubscription) {
-                actual.onSubscribe(new TenantContextQueueSubscription<>(queueSubscription, this));
-            } else {
-                actual.onSubscribe(new TenantContextSubscription(s, this));
-            }
-        }
-
-        @Override
-        public void onNext(T t) {
-            withTenant(() -> actual.onNext(t));
-        }
-
-        @Override
-        public void onError(Throwable t) {
-            withTenant(() -> actual.onError(t));
-        }
-
-        @Override
-        public void onComplete() {
-            withTenant(actual::onComplete);
-        }
-
-        @Override
-        public Context currentContext() {
-            return actual.currentContext();
-        }
-
-        private void withTenant(Runnable runnable) {
-            String tenantId = actual.currentContext().getOrDefault(REACTOR_CONTEXT_KEY, null);
-            // 只有当调用方显式写入了 Reactor Context 时才做"安装/恢复"；
-            // tenantId == null 时不参与线程上下文管理，避免 onComplete/doFinally
-            // 后业务代码的清理被 finally 中的 restore 覆盖。
-            if (tenantId == null) {
-                runnable.run();
-                return;
-            }
-            String previous = install(tenantId);
-            try {
-                runnable.run();
-            } finally {
-                restore(previous);
-            }
-        }
-    }
-
-    private static final class TenantContextSubscription implements Subscription {
-
-        private final Subscription delegate;
-        private final TenantContextSubscriber<?> subscriber;
-
-        private TenantContextSubscription(Subscription delegate, TenantContextSubscriber<?> subscriber) {
-            this.delegate = delegate;
-            this.subscriber = subscriber;
-        }
-
-        @Override
-        public void request(long n) {
-            subscriber.withTenant(() -> delegate.request(n));
-        }
-
-        @Override
-        public void cancel() {
-            subscriber.withTenant(delegate::cancel);
-        }
-    }
-
-    private static final class TenantContextQueueSubscription<T> implements Fuseable.QueueSubscription<T> {
-
-        private final Fuseable.QueueSubscription<T> delegate;
-        private final TenantContextSubscriber<?> subscriber;
-
-        private TenantContextQueueSubscription(
-                Fuseable.QueueSubscription<T> delegate, TenantContextSubscriber<?> subscriber) {
-            this.delegate = delegate;
-            this.subscriber = subscriber;
-        }
-
-        @Override
-        public void request(long n) {
-            subscriber.withTenant(() -> delegate.request(n));
-        }
-
-        @Override
-        public void cancel() {
-            subscriber.withTenant(delegate::cancel);
-        }
-
-        @Override
-        public int requestFusion(int requestedMode) {
-            return delegate.requestFusion(requestedMode);
-        }
-
-        @Override
-        public T poll() {
-            return delegate.poll();
-        }
-
-        @Override
-        public int size() {
-            return delegate.size();
-        }
-
-        @Override
-        public boolean isEmpty() {
-            return delegate.isEmpty();
-        }
-
-        @Override
-        public void clear() {
-            delegate.clear();
-        }
-
-        @Override
-        public Iterator<T> iterator() {
-            return new Iterator<>() {
-                private final Iterator<T> delegateIterator = delegate.iterator();
-
-                @Override
-                public boolean hasNext() {
-                    return delegateIterator.hasNext();
-                }
-
-                @Override
-                public T next() {
-                    if (!hasNext()) {
-                        throw new NoSuchElementException();
-                    }
-                    return delegateIterator.next();
-                }
-            };
-        }
-
-        @Override
-        public Object[] toArray() {
-            return delegate.toArray();
-        }
-
-        @Override
-        public <U> U[] toArray(U[] a) {
-            return delegate.toArray(a);
-        }
-
-        @Override
-        public boolean contains(Object o) {
-            return delegate.contains(o);
-        }
-
-        @Override
-        public boolean containsAll(Collection<?> c) {
-            return delegate.containsAll(c);
-        }
-
-        @Override
-        public boolean add(T t) {
-            return delegate.add(t);
-        }
-
-        @Override
-        public boolean remove(Object o) {
-            return delegate.remove(o);
-        }
-
-        @Override
-        public boolean removeAll(Collection<?> c) {
-            return delegate.removeAll(c);
-        }
-
-        @Override
-        public boolean retainAll(Collection<?> c) {
-            return delegate.retainAll(c);
-        }
     }
 
     /**
-     * 重置全局注册的 Reactor 与 Scheduler Hook。
+     * 重置全局注册的 Scheduler Hook。
      *
      * <p>仅限测试或容器销毁清理调用，避免同 JVM 内重复注册造成上下文传播顺序漂移。</p>
      */
     public static void resetGlobalHooks() {
         Schedulers.resetOnScheduleHook(SCHEDULER_HOOK_KEY);
-        Hooks.resetOnEachOperator(OPERATOR_HOOK_KEY);
     }
 
     /** 私有构造，禁止实例化 */

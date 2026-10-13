@@ -37,7 +37,7 @@ class DeadLetterQueueProcessorTest {
      */
     @BeforeEach
     void setUp() {
-        processor = new DeadLetterQueueProcessor();
+        processor = new DeadLetterQueueProcessor(null);
         ReflectionTestUtils.setField(processor, "nameServer", "localhost:9876");
     }
 
@@ -109,7 +109,7 @@ class DeadLetterQueueProcessorTest {
     @Test
     @DisplayName("NameServer未配置时不启动消费者")
     void shouldNotStartWhenNameServerBlank() {
-        DeadLetterQueueProcessor noNameServerProcessor = new DeadLetterQueueProcessor();
+        DeadLetterQueueProcessor noNameServerProcessor = new DeadLetterQueueProcessor(null);
         ReflectionTestUtils.setField(noNameServerProcessor, "nameServer", "");
         noNameServerProcessor.start();
         // 不应抛出异常
@@ -149,7 +149,7 @@ class DeadLetterQueueProcessorTest {
     @Test
     @DisplayName("NameServer未配置时注册处理器不启动消费者")
     void shouldNotStartWhenHandlerRegisteredWithNameServerBlank() {
-        DeadLetterQueueProcessor noNameServerProcessor = new DeadLetterQueueProcessor();
+        DeadLetterQueueProcessor noNameServerProcessor = new DeadLetterQueueProcessor(null);
         ReflectionTestUtils.setField(noNameServerProcessor, "nameServer", "");
 
         noNameServerProcessor.start();
@@ -177,7 +177,7 @@ class DeadLetterQueueProcessorTest {
     @DisplayName("处理死信消息时应累加死信指标")
     void shouldRecordDlqMetricWhenDeadLetterProcessed() {
         MqConsumerMetrics metrics = mock(MqConsumerMetrics.class);
-        ReflectionTestUtils.setField(processor, "consumerMetrics", metrics);
+        processor = new DeadLetterQueueProcessor(metrics);
         processor.registerHandler("apex-photo-moderation", msg -> true);
 
         MessageExt message = createMessageExt("apex-photo-moderation", "msg-metric-001");
@@ -193,7 +193,7 @@ class DeadLetterQueueProcessorTest {
     @DisplayName("未注册处理器时也应累加死信指标")
     void shouldRecordDlqMetricWhenNoHandlerRegistered() {
         MqConsumerMetrics metrics = mock(MqConsumerMetrics.class);
-        ReflectionTestUtils.setField(processor, "consumerMetrics", metrics);
+        processor = new DeadLetterQueueProcessor(metrics);
 
         MessageExt message = createMessageExt("unknown-topic", "msg-metric-002");
         processor.processDeadLetter(message);

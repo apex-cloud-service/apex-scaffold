@@ -1,8 +1,6 @@
 package com.apex.scaffold.infrastructure.remote.logging;
 
 import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
-import com.apex.scaffold.domain.model.entity.ApiCallLogEntity;
-import com.apex.scaffold.domain.repository.ApiCallLogRepository;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -14,38 +12,21 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Mono;
 
 /**
- * API 调用日志异步写入服务。
- *
- * <p>负责对外部 HTTP 调用日志进行脱敏处理和异步持久化。核心职责：
- * <ul>
- *   <li>请求/响应头中的敏感字段脱敏（Authorization、Api-Key、Secret 等）</li>
- *   <li>超长请求/响应体截断（受 {@link ApiCallLogProperties#getMaxBodyLength()} 控制）</li>
- *   <li>异步写入数据库（通过 {@link ApiCallLogRepository#save(ApiCallLogEntity)}）</li>
- * </ul>
- *
- * <p>该服务采用"发后即忘"（fire-and-forget）模式：调用方通过 {@link #log(ApiCallLogEntity)}
- * 提交日志实体后立即返回，数据库写入在 boundedElastic 调度器上异步执行。
- * 写入失败不会阻塞或中断主业务流程。</p>
+ * API 调用观测脱敏、指标记录及异步写入服务。
  *
  * @author Apex Team
- * @version 1.0.0
+ * @version 1.3.1
  * @since 1.0.0
- * @see ApiCallLogProperties
- * @see ApiCallLogRepository
  */
 @Service
 public class ApiCallLogService {
     private static final Logger log = LoggerFactory.getLogger(ApiCallLogService.class);
-
-    /**
-     * 常见的请求/响应头敏感字段名称（小写）。
-     * 这些字段的值在写入日志前会被替换为 {@code "***"}。
-     */
     private static final Set<String> SENSITIVE_HEADER_NAMES = Set.of(
             "authorization",
             "api-key",
@@ -60,58 +41,35 @@ public class ApiCallLogService {
             "sign",
             "signature",
             "x-qa-hmac-signature");
-
-    /**
-     * URL 查询参数中需要脱敏的敏感参数名。
-     * 这些参数的值在写入日志前会被替换为 {@code "***"}。
-     */
     private static final Set<String> SENSITIVE_QUERY_PARAMS =
             new LinkedHashSet<>(Arrays.asList("secret", "access_token", "appid"));
-
-    /** 敏感字段值脱敏后的占位符。 */
     private static final String MASKED_VALUE = "***";
-
-    /** 脱敏键值对匹配模式：敏感字段名后跟冒号空格值。 */
     private static final Pattern SENSITIVE_KEY_PATTERN = buildSensitivePattern();
-
-    /** 配置属性。 */
     private final ApiCallLogProperties properties;
-
-    /** API 调用日志仓储。 */
-    private final ApiCallLogRepository repository;
-
-    /** 指标注册表。 */
+    private final ApiCallLogSink repository;
     private final MeterRegistry meterRegistry;
 
     /**
-     * 构造日志服务。
+     * 装配可选的服务专属写入适配；无适配时仍执行脱敏和指标统计。
      *
      * @param properties 配置属性
-     * @param repository 日志仓储
-     * @param meterRegistry Micrometer 指标注册表
+     * @param repository 服务专属调用观测写入适配
+     * @param meterRegistry 指标注册表
      */
     public ApiCallLogService(
-            ApiCallLogProperties properties, ApiCallLogRepository repository, MeterRegistry meterRegistry) {
+            ApiCallLogProperties properties, ObjectProvider<ApiCallLogSink> repository, MeterRegistry meterRegistry) {
         this.properties = properties;
-        this.repository = repository;
+        this.repository = repository.getIfAvailable(() -> observation -> Mono.empty());
         this.meterRegistry = meterRegistry;
     }
 
     /**
-     * 异步记录 API 调用日志。
+     * 脱敏调用数据并异步提交写入。
      *
-     * <p>在写入数据库前，对日志实体执行以下预处理：
-     * <ol>
-     *   <li>请求头 / 响应头中的敏感字段脱敏（{@link #sanitizeHeaders(String)}）</li>
-     *   <li>请求体截断（{@link #truncate(String)}）</li>
-     *   <li>响应体截断（受 {@link ApiCallLogProperties#isLogResponseBody()} 控制）</li>
-     * </ol>
-     * 预处理后的实体通过 {@link ApiCallLogRepository#save(ApiCallLogEntity)} 异步写入。</p>
-     *
-     * @param entity 待记录的 API 调用日志实体（将在方法内被修改和写入）
-     * @return 提交写入操作后的空 Mono（不等待写入完成）
+     * @param entity 待记录的调用观测数据
+     * @return 写入完成信号
      */
-    public Mono<Void> log(ApiCallLogEntity entity) {
+    public Mono<Void> log(ApiCallObservation entity) {
         if (!properties.isEnabled() || entity == null) {
             return Mono.empty();
         }
@@ -125,24 +83,15 @@ public class ApiCallLogService {
             entity.setResponseBody(truncate(entity.getResponseBody()));
         }
         recordApiCallMetrics(entity);
-        // C3 修复：将落库提交到专用阻塞池，避免在 WebClient NIO / doFinally 线程里阻塞，
-        // 同时返回的 Mono 延迟到订阅者线程执行 subscribeOn，测试侧 Mockito 可同步 verify。
         return repository.save(entity).subscribeOn(BlockingIoSchedulers.jdbc());
     }
 
     /**
-     * 记录第三方调用 Micrometer 指标（耗时与结果分布）。
+     * 记录调用耗时与结果指标。
      *
-     * <p>指标不依赖日志写入结果，即使落库失败也能反映真实调用情况：</p>
-     * <ul>
-     *   <li>{@code apex.api.call}：调用耗时 Timer，按目标服务 {@code service} 标签区分</li>
-     *   <li>{@code apex.api.call.result}：调用结果 Counter，按 {@code service} 与 {@code result}
-     *       （success/client_error/server_error/exception）标签区分</li>
-     * </ul>
-     *
-     * @param entity 已预处理的 API 调用日志实体
+     * @param entity 调用观测数据
      */
-    private void recordApiCallMetrics(ApiCallLogEntity entity) {
+    private void recordApiCallMetrics(ApiCallObservation entity) {
         String service = entity.getServiceName() != null ? entity.getServiceName() : "unknown";
         if (entity.getExecutionTime() != null) {
             meterRegistry
@@ -155,9 +104,9 @@ public class ApiCallLogService {
     }
 
     /**
-     * 将调用状态码映射为结果标签。
+     * 将调用状态映射为结果标签。
      *
-     * @param status 调用状态（0=2xx 成功，1=4xx 客户端错误，2=5xx 服务端错误，3=异常）
+     * @param status 调用状态
      * @return 结果标签
      */
     private String resolveResult(Integer status) {
@@ -174,24 +123,10 @@ public class ApiCallLogService {
     }
 
     /**
-     * 对请求头 / 响应头的 JSON 字符串进行敏感字段脱敏。
+     * 脱敏请求和响应头中的敏感字段。
      *
-     * <h3>脱敏规则</h3>
-     * <p>使用正则匹配 {@code "敏感字段名": "原始值"} 模式，将原始值替换为 {@code "***"}。
-     * 字段名匹配不区分大小写。</p>
-     *
-     * <h3>脱敏的敏感字段</h3>
-     * <ul>
-     *   <li>{@code Authorization}</li>
-     *   <li>{@code Api-Key} / {@code ApiKey}</li>
-     *   <li>{@code Secret}</li>
-     *   <li>{@code Token}</li>
-     *   <li>{@code Signature}</li>
-     *   <li>{@code Credential}</li>
-     * </ul>
-     *
-     * @param headers 原始请求/响应头（JSON 格式），可为 null
-     * @return 脱敏后的头信息，null 输入返回 null
+     * @param headers 原始头信息
+     * @return 脱敏后的头信息
      */
     private String sanitizeHeaders(String headers) {
         if (headers == null || headers.isBlank()) {
@@ -201,13 +136,10 @@ public class ApiCallLogService {
     }
 
     /**
-     * 对 URL 中的敏感查询参数（如 secret、access_token、appid）进行脱敏。
+     * 脱敏 URL 查询参数。
      *
-     * <p>微信 API 调用时，{@code secret} 和 {@code access_token} 常以查询参数形式
-     * 出现在 URL 中。若不对 URL 脱敏，这些敏感值会被原样写入数据库日志。</p>
-     *
-     * @param url 原始完整 URL，可为 null
-     * @return 脱敏后的 URL；null 输入返回 null，非 URI 格式输入返回原值
+     * @param url 原始 URL
+     * @return 脱敏后的 URL
      */
     String sanitizeUrl(String url) {
         if (url == null || url.isBlank()) {
@@ -250,10 +182,10 @@ public class ApiCallLogService {
     }
 
     /**
-     * 判断查询参数名是否为敏感字段。
+     * 判断查询参数是否需要脱敏。
      *
      * @param paramName 参数名
-     * @return true 表示需脱敏
+     * @return 是否需要脱敏
      */
     private boolean isSensitiveQueryParam(String paramName) {
         if (paramName == null) {
@@ -263,10 +195,10 @@ public class ApiCallLogService {
     }
 
     /**
-     * 按配置的最大长度截断字符串。
+     * 按配置截断字符串。
      *
-     * @param value 原始字符串，可为 null
-     * @return 截断后的字符串，null 输入返回 null
+     * @param value 原始内容
+     * @return 截断后的内容
      */
     private String truncate(String value) {
         if (value == null) {
@@ -277,16 +209,9 @@ public class ApiCallLogService {
     }
 
     /**
-     * 构建敏感字段脱敏正则模式。
+     * 构建敏感头字段匹配模式。
      *
-     * <h3>正则模式</h3>
-     * <pre>"(field1|field2|..."):".*?"</pre>
-     *
-     * <p>注意：不适用 {@link Pattern#quote(String)}（其产生的 {@code \Q...\E}
-     * 在 JDK 17+ 的 {@code CASE_INSENSITIVE} 模式下行为不一致），
-     * 改为仅转义真正的正则元字符。</p>
-     *
-     * @return 编译后的 Pattern
+     * @return 匹配模式
      */
     private static Pattern buildSensitivePattern() {
         String fieldNames = SENSITIVE_HEADER_NAMES.stream()

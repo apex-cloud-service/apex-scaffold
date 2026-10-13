@@ -75,7 +75,7 @@ PKCE (Proof Key for Code Exchange) 相关文档位于 [`oauth2/pkce/`](oauth2/pk
 
 - [系统架构文档](../../architecture/system-architecture.md) - 整体架构设计
 - [安全防护体系](../../architecture/advanced-features/security-protection-system.md) - 安全机制详解
-- [后端开发规范](../../04-development/backend-development-standards.md) - 开发规范
+- [后端开发规范](../../04-development/development-standards.md) - 开发规范
 - [部署指南](../operations/deployment.md) - 部署说明
 
 ---

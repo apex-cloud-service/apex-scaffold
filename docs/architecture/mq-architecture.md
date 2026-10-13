@@ -729,7 +729,7 @@ mapedFileSizeCommitLog=1073741824
 **RocketMQ Console**:
 ```bash
 # 启动Console
-docker run -d \
+podman run -d \
   --name rocketmq-console \
   -e "JAVA_OPTS=-Drocketmq.namesrv.addr=192.168.1.10:9876" \
   -p 8080:8080 \

@@ -1,10 +1,45 @@
-# 工作流模块化测试报告
+# 工作流模块测试报告
 
-> 报告范围：工作流模块拆分及方案 1 共享持久化基础设施迁移
+> 报告范围：工作流模块拆分、独立服务化（`apex-workflow-service`）及 Phase 3.6 测试/构建
 > 目标版本：apex-scaffold 1.3.1
-> 生成日期：2026-10-05
+> 首次生成：2026-10-05 ｜ 本报告更新：2026-10-09（新增 Phase 3.6 微服务测试与独立构建）
 
-## 1. 变更范围
+## 0. 总览（Phase 3.6）
+
+> 微服务改造执行计划 Phase 3（`docs/microservice-migration-plan.md` §3.6）：
+> 工作流服务独立构建通过，并完成全接口回归、审批流转集成测试、Flyway 迁移测试。
+
+### 0.1 独立构建
+
+```bash
+mvnd -pl apex-workflow-service -am package
+```
+
+结果：**BUILD SUCCESS**，产出可执行 jar `apex-workflow-service-1.3.1.jar`（经 `spring-boot-maven-plugin` repackage，原 jar 改为 `.original`）。
+
+### 0.2 测试套件汇总
+
+工作流服务模块共 **6 个测试类 / 42 个用例，全部通过（0 失败 / 0 错误 / 0 跳过）**：
+
+| 测试类 | 用例数 | 类型 | 覆盖要点 |
+|--------|-------|------|---------|
+| `WorkflowRouterRegressionTest` | 4 | 路由回归 | 全接口路由表回归：路径、方法、认证要求、参数校验与旧应用保持一致 |
+| `WorkflowHandlerIntegrationTest` | 24 | 流程集成 | 审批流转端到端：启动 → 串行/并行/网关节点 → 完成/拒绝/转办/委派/回退 → 事件发布 |
+| `WorkflowFlywayMigrationTest` | 6 | 迁移结构校验 | 独立 Flyway V1 链版本连续、双方言表/列一致、与 H2 basic 建表对齐、PO 字段→列对齐、Mapper 原生 SQL 依赖列齐全 |
+| `WorkflowEventConfigTest` | 3 | 事件装配 | `WorkflowEventConfig` 事件发布器装配与条件生效 |
+| `LocalWorkflowEventPublisherTest` | 2 | 事件发布 | 本地事件发布器语义（basic/H2 profile） |
+| `MqWorkflowEventPublisherTest` | 3 | 事件发布 | RocketMQ 事件发布器（topic `apex-workflow-events`）语义 |
+
+> 说明：共享持久化基础设施、事件装配与领域逻辑测试分布在 `apex-common` / `apex-workflow` / `apex-api-contract` 等模块，详见 §5。
+
+### 0.3 质量门禁
+
+- JaCoCo：继承 `apex-services-bom` 根门禁（LINE ≥ 0.60 / BRANCH ≥ 0.50），`apex-workflow-service` 已开启 JaCoCo 插件（POM 已配置，见续 §5）。
+- 架构：`apex-workflow-service` 不依赖 `apex-infrastructure`（仅依赖 `apex-common` / `apex-workflow` / `apex-domain` / `apex-api-contract`），符合「服务间无编译依赖」约定。乐观锁切面（`OptimisticLockerInnerInterceptor`）位于 `apex-infrastructure`，故工作流服务未启用；`wf_process_instance` / `wf_task` / `wf_approval_record` 因此不设 `version` 列，`wf_workflow_definition.version` 为流程版本号（对齐旧单体 V21 语义）。
+
+---
+
+## 1. 变更范围（历史：模块拆分）
 
 本次完成以下模块边界调整：
 
@@ -82,3 +117,44 @@ mvnd test
 - 保持 `apex-infrastructure` 全部业务 PO、Repository 和乐观锁切面编译及测试。
 - 保持 `apex-workflow` 在无 `apex-infrastructure` 直接依赖的情况下完成编译和测试。
 - 保持 `apex-interfaces` 与 `apex-example` 的工作流集成测试以及全工程 JaCoCo 检查。
+
+---
+
+## 5. Phase 3.6 补充：独立服务测试与构建明细
+
+### 5.1 Flyway 迁移测试（`WorkflowFlywayMigrationTest`）
+
+采用仓库既定「免容器静态结构校验」范式（镜像 `apex-interfaces` `FlywayMigrationVersionTest`），不依赖在线 MySQL/PostgreSQL，直接解析迁移脚本进行结构断言：
+
+| 用例 | 校验点 |
+|------|--------|
+| `shouldHaveUniqueContiguousVersions` | mysql/postgresql 两套 V1 链版本号一致且从 1 起连续、无重复 |
+| `shouldDeclareIdenticalTablesAndColumnsAcrossDialects` | 双方言声明完全相同的 4 张表，且每张表列集合一致 |
+| `shouldAlignBasicSchemaTableSetWithFlyway` | H2 `basic-schema.sql` 表集合与 Flyway 迁移表集合对齐 |
+| `shouldDefineRequiredColumnsAndIndexes` | 每张表必备业务列 + 审计列在三份脚本中齐全；必备索引/唯一键名存在 |
+| `shouldKeepPoFieldsLeadingMigrationColumns` | 「代码为事实来源」：4 个 PO 类的持久化字段（子类字段 + `id/create_time/update_time/deleted` 审计列）须存在于三份脚本对应表 |
+| `shouldProvideMapperNativeSqlDependentColumns` | `wf_task` 具备 `TaskMapper` 原生 SQL 依赖列（`status/timeout_at/timeout_handled/transferred_from/deleted`） |
+
+> 变量/常量定义：`EXPECTED_TABLES = Set.of("wf_workflow_definition","wf_process_instance","wf_task","wf_approval_record")`；`AUDIT_COLUMNS = Set.of("id","create_time","update_time","deleted")`。
+> 关键 AssertJ 约定：对 `Set` 比较使用 `containsExactlyInAnyOrderElementsOf`（`containsExactlyElementsOf` 为顺序敏感，`Set.of` 迭代顺序不确定会误报）。
+
+### 5.2 审批流转集成测试（`WorkflowHandlerIntegrationTest`）
+
+覆盖完整审批生命周期：流程定义加载 → 启动实例 → 串行审批通过/拒绝、并行网关聚合、排他网关条件分支 → 任务完成/转办（`transfer`）/委派（`delegate`）/回退（`rollback`）→ 实例状态（RUNNING/SUSPENDED/COMPLETED/REJECTED/TERMINATED）与审批记录落库 → 事件发布（`WorkflowInstanceStarted`/`TaskAssigned`/`TaskCompleted`，topic `apex-workflow-events`）。
+
+### 5.3 路由回归（`WorkflowRouterRegressionTest`）
+
+断言 `WorkflowRouter` 暴露的接口路径、HTTP 方法、鉴权开关（`AuthenticatedUser` 注入）、请求 DTO 校验规则与旧应用 `apex-interfaces` 路由表保持一致，保证切流后外部契约不变。
+
+### 5.4 测试执行命令
+
+```bash
+# 工作流服务全量测试
+mvnd -pl apex-workflow-service -am test
+# 独立构建（含 repackage 可执行 jar）
+mvnd -pl apex-workflow-service -am package
+# 迁移完整性（逐服务 Flyway 链，含工作流服务）
+bash scripts/test/check-migration-integrity.sh
+# 覆盖率报告
+#   位置：apex-workflow-service/target/site/jacoco/index.html
+```

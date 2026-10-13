@@ -42,9 +42,18 @@ echo "==> [1/4] 查找缺少类级 JavaDoc 的 public 类..."
 while IFS= read -r file; do
     [[ -n "$file" && "$file" != */test/* ]] || continue
     file=${file#./}
-    # 使用 awk 检测：跳过注解行和空行后，public class 前的非空行必须以 */ 结尾
+    # 使用 awk 检测：跳过注解行（含多行注解续行）和空行后，public class 前的非空行必须以 */ 结尾
     if awk '
-        /^[[:space:]]*@/ { next }
+        in_ann {
+            pd += gsub(/\(/, "(", $0) - gsub(/\)/, ")", $0)
+            if (pd <= 0) in_ann = 0
+            next
+        }
+        /^[[:space:]]*@[A-Za-z_]/ {
+            pd = gsub(/\(/, "(", $0) - gsub(/\)/, ")", $0)
+            if (pd > 0) in_ann = 1
+            next
+        }
         /^[[:space:]]*$/ { next }
         /^public (class|interface|enum|@interface)/ {
             if (last !~ /\*\/[[:space:]]*$/) { found = 1; exit }

@@ -1,0 +1,10 @@
+[
+  {"resource":"/api/v1/auth/login","grade":1,"count":0.5,"timeWindow":10,"minRequestAmount":5},
+  {"resource":"/api/v1/auth/refresh","grade":1,"count":0.3,"timeWindow":10,"minRequestAmount":5},
+  {"resource":"/api/v1/auth/mfa/verify","grade":1,"count":0.5,"timeWindow":10,"minRequestAmount":5},
+  {"resource":"/oauth2/token","grade":1,"count":0.5,"timeWindow":15,"minRequestAmount":5},
+  {"resource":"/api/v1/sso/**","grade":1,"count":0.5,"timeWindow":15,"minRequestAmount":5},
+  {"resource":"/api/v1/auth/login","grade":0,"count":3000,"timeWindow":15,"minRequestAmount":5,"statIntervalMs":30000,"slowRatioThreshold":0.5},
+  {"resource":"/api/v1/auth/refresh","grade":0,"count":2000,"timeWindow":10,"minRequestAmount":5,"statIntervalMs":30000,"slowRatioThreshold":0.5},
+  {"resource":"/api/v1/auth/mfa/verify","grade":0,"count":3000,"timeWindow":15,"minRequestAmount":5,"statIntervalMs":30000,"slowRatioThreshold":0.5}
+]

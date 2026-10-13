@@ -1,0 +1,9 @@
+[
+  {"resource":"/api/v1/user/list","grade":1,"count":0.5,"timeWindow":10,"minRequestAmount":5},
+  {"resource":"/admin-api/v1/users/**","grade":1,"count":0.5,"timeWindow":10,"minRequestAmount":5},
+  {"resource":"/admin-api/v1/jobs/**","grade":1,"count":0.5,"timeWindow":15,"minRequestAmount":5},
+  {"resource":"/internal/v1/depts/tree","grade":1,"count":0.5,"timeWindow":10,"minRequestAmount":5},
+  {"resource":"/api/v1/search/**","grade":0,"count":3000,"timeWindow":15,"minRequestAmount":5,"statIntervalMs":30000,"slowRatioThreshold":0.5},
+  {"resource":"/admin-api/v1/users/**","grade":0,"count":2000,"timeWindow":15,"minRequestAmount":5,"statIntervalMs":30000,"slowRatioThreshold":0.5},
+  {"resource":"/internal/v1/dict/{type}","grade":0,"count":5000,"timeWindow":10,"minRequestAmount":5,"statIntervalMs":30000,"slowRatioThreshold":0.5}
+]

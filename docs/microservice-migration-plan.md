@@ -1,10 +1,22 @@
 # Apex Scaffold 微服务架构改造方案
 
-> **版本**：v1.0 | **日期**：2026-10-07 | **状态**：待确认（方案文档，尚未执行任何代码变更）
+> **版本**：v1.0 | **日期**：2026-10-07（2026-10-09 同步实施状态） | **状态**：实施中（已按执行计划推进：Phase 1 共享层/BOM、网关、内部契约、Nacos 配置分层及 Phase 1 验收均已完成并产出测试报告与离线契约基线；Phase 2.1 JWT 对称→非对称（JWKS）、Phase 2.2 auth 库治理、Phase 2.3 Nacos 注册 + 内部 API、Phase 2.4 网关 /auth 切流 + 灰度、Phase 2.5 主应用双通道兼容、Phase 2.6 登出传播（TokenRevokedEvent + Outbox + V56）均已完成，`mvn -pl apex-auth-center -am verify` 全门禁绿）
 >
 > 本方案基于对当前仓库全部 11 个 Maven 模块的实际代码调研形成，所有图表与结论均以真实文件路径为证据。
+>
+> > **实施状态说明（2026-10-08 更新）**：早期"尚未执行任何代码变更"表述已过期。`.trae/documents/microservice-migration-execution-plan.md` 为当前执行跟踪文档；Phase 1.2 `apex-gateway` 模块已完成过滤器链 + JWKS 验签 + 统一错误出口，`mvnd -pl apex-gateway -am verify` 全门禁绿（64/64 测试，JaCoCo LINE 85.9% / BRANCH 64.4%，spotless/pmd/ArchUnit 全过），测试报告见 `docs/06-testing/gateway-module-test-report.md` 及 `docs/06-testing/TEST_REPORT.md` 网关段。
+>
+> > > **Phase 2 状态（2026-10-09 更新）**：Phase 2.1 JWT 对称→非对称（JWKS）已完成 —— 新增 `JwtKeyMaterialService`（RS256 外观：`sign`/`parse`/`availablePublicKeys` JWKS 投影），`TokenServiceImpl` 签发/解析改走响应式 `JwtKeyMaterialService`；`JwtKeyRotationService` 三实现合并为 `domain` 的 Redis-RSA 单一版本。Phase 2.2 库治理已完成（Flyway 重复 V49→V51、`bootstrap.yml` 服务名收敛为 `apex-auth-service`）。Phase 2.3 Nacos 注册 + 内部 API 已完成（`InternalAuthService` / `InternalAuthRouter`，服务间契约 `/internal/v1/**` 免鉴权白名单）。Phase 2.4 网关 `/auth` 切流 + 灰度已完成。Phase 2.5 主应用双通道兼容已完成。Phase 2.6 登出传播已完成 —— 新增 `TokenRevokedEvent`（`apex-domain`），`AuthenticationApplicationService.logout()` 经 `DomainEventPublisher` 发布；auth-center 显式装配 Outbox 三件套（`AuthCenterEventConfig`：`DomainEventOutboxStore` / `DomainEventOutboxPublisher` / `DomainEventOutboxDispatcher`）与 H2 降级发布器 `LocalDomainEventPublisher`，补齐 `sys_domain_event_outbox` 表（`V56__create_domain_event_outbox.sql`，mysql/postgresql）。定向验证 `mvn -pl apex-auth-center -am verify` → BUILD SUCCESS（spotless/pmd/JaCoCo/ArchUnit 全过）。
 
 ---
+
+## 2026-10-12 system 物理迁移实施状态
+
+第二批已将原 application 全部源码、资源与测试及 system 专属 domain/infrastructure 依赖闭包迁入 `apex-system`，保留原 Java 包名；interfaces/application 坐标退出 reactor 与 BOM，system-service/example 改用 system，auth-service parity 测试采用 test-scope system。共享 domain 保留 BaseEntity、Token/SMS/Event/缓存/远程调用契约；共享 infrastructure 保留通用设施，无 system 反向生产依赖。ApiCallLogEntity 留在 system，受管 HTTP 客户端通过共享观测 DTO 和 sink 接口解耦。
+
+本批迁入文件按旧路径与 system 对应路径交叉统计为 683 个：application 281、domain 180、infrastructure 222（main 560、test 123，含资源）；共享层及兄弟服务 801 个生产 Java 文件未发现直接导入 system 类型。
+
+此前全 reactor `compile -DskipTests` 于 18:19:24 通过（含 example），BaseEntityTest 漏迁已补齐。本次已加载 JDK 17.0.12-oracle/mvnd 2.0.0-rc-3 后执行完整 `clean verify -pl '!apex-example'`，20:52:48 因 LoggingFilterTest 缺少 httpHandler 测试辅助方法在 testCompile 失败；已补齐 WebFlux 过滤器/异常处理装配。重跑原完整门禁于 21:09:11 BUILD SUCCESS（12:34，当前 reactor Surefire/Failsafe XML 汇总 4853 tests、Failures 0、Errors 0、Skipped 3；含合并后的 Spotless、PMD、ArchUnit、JaCoCo 门禁），没有降低阈值或跳过检查。随后加载同一构建环境执行 `mvnd -T4 -B test-compile -pl apex-example -am`，21:10:28 BUILD SUCCESS（38.539s）。下文现状分析保留为方案制定时的历史基线。
 
 ## 目录
 
@@ -628,6 +640,7 @@ flowchart LR
 3. **滑动续期**：现有 `X-New-Access-Token` 响应头机制保留，但改由 auth-service 的 `/auth/v1/refresh` 统一提供；网关透传该头。
 4. **会话与在线用户**：会话数据归 auth-service（已有 `SessionService`）；system-service 的 `/admin-api/v1/online-users` 改为 Feign/事件副本查询。
 5. **登出传播**：auth-service 撤销 Token → 写 Redis 黑名单（既有）+ 发 `TokenRevokedEvent` → 各服务清本地权限缓存。
+   - ✅ 已实现（Phase 2.6，2026-10-09）：`TokenRevokedEvent`（`apex-domain`，`EVENT_TYPE=TOKEN_REVOKED`，字段 `userId`/`tenantId`/`reason`）由 `AuthenticationApplicationService.logout()` 在写入 Redis 黑名单后发布；auth-center 经 `AuthCenterEventConfig` 显式装配事务 Outbox（生产 `DomainEventPublisherImpl(@Primary)` + `DomainEventOutboxDispatcher`，basic/H2 降级 `LocalDomainEventPublisher`），事件落 `sys_domain_event_outbox`（Flyway `V56`，mysql/postgresql 双套）后由投递器可靠投递，消费方据事件清本地权限缓存。
 
 ### 7.3 多端登录链路时序图（小程序，改造后）
 
@@ -792,9 +805,15 @@ erDiagram
 |---|---|---|
 | apex_auth（已存在） | sso/oauth2/jwt 配置类表（V25-V26, V27, V48-V55 相关）、auth 核心表 | 已建（V44–V55） |
 | apex_workflow | 工作流引擎表（V20-V21 相关）、审批表 | WorkflowRouter 迁移 |
-| apex_office | off_*（V29-V36 办公平台系列表） | office 子域 |
+| apex_office | `office_*` 表（V29/V31/V32/V34/V35，已在 `apex-office-service` 的 `V1__init_office_schema.sql` 重建）；`off_*` 组织/消息域表（V57 / PG V42，**已于 2026-10-11 迁入** `apex-office-service` 的 `V2__create_off_msg_org.sql`） | office 子域 |
 | apex_file | file/document 元数据表 | file 子域 |
 | apex_system | 其余全部（user/tenant/dept/menu/dict/config/log/job/monitor…） | 剩余核心 |
+
+> **归属澄清（与代码事实对齐）**：
+> - `V29–V36` 中创建 `office_*` 表的是 V29/V31/V32/V34/V35；**V30/V33/V36 仅写入共享 `sys_menu`/`sys_role_menu`/`sys_permission` 种子**，属系统域，不随办公域迁出。
+> - `V41` 主体是 `gen_*`/`sys_*`（系统域），其中“办公平台增强”部分**未新建表**（复用 `office_*`），故不可整份迁出。
+> - `off_*`（`off_department`/`off_employee`/`off_sync_history`/`off_message`/`off_message_recipient`/`off_message_template`）由 `mysql/V57`（等价 `postgresql/V42`）创建，**已于 2026-10-11 迁出至 `apex-office-service`**：新库经 `V2__create_off_msg_org.sql` 重建同构表，`Off*` 代码（`apex-office` 50 类 + `apex-office-service` 5 接口类）整体迁入、单体侧 55 类删除，网关切流已补齐 `/admin-api/v1/message-templates`，进入观察期。
+> - 逐文件归属明细见 `apex-interfaces/src/main/resources/db/migration/OFFICE_MIGRATION_OWNERSHIP.md`。
 
 ### 9.3 迁移执行方案（每个服务抽取时重复此流程）
 
@@ -816,6 +835,7 @@ flowchart TD
 - 新服务 Flyway 版本链从 `V1` 重新开始（与旧库版本链解耦），MySQL/PostgreSQL 双脚本同步维护，脚本幂等（沿用 AGENTS.md 规范）。
 - 跨库逻辑关联只允许存 ID（如 `sys_user.account_id`、`wf_task.assignee_account_id`），列表页需要"用户名"时由事件同步**冗余展示列**（username/nickname），不做跨库查询。
 - 多租户策略不变：各库仍是**行级隔离**（TenantLineInnerInterceptor），不升级为库级隔离；每服务各自建 `tenant_id` 列与拦截器配置。
+- **已应用迁移文件不可改写**：prod `validate-on-migrate=true`、`repair=false`，Flyway `checksum` 含整份文件（含注释），任何源码修改都会导致校验失败、单体无法启动。归属调整一律通过**新增迁移**或外部索引（`OFFICE_MIGRATION_OWNERSHIP.md`）/本文档登记完成，绝不回改历史 `.sql`。
 
 ---
 
@@ -916,7 +936,7 @@ graph TB
     subgraph LB["负载均衡 / Ingress"]
         INGRESS["Nginx Ingress<br/>TLS 终止"]
     end
-    subgraph K8S["Kubernetes 集群 (或单机 docker-compose 起步)"]
+    subgraph K8S["Kubernetes 集群 (或单机 podman-compose 起步)"]
         subgraph NS["namespace: apex"]
             GWP["apex-gateway<br/>Deployment x2 (无状态,<br/>HPA 按 QPS)"]
             AP["apex-auth-service x2<br/>(P0, 双副本+PDB)"]
@@ -952,7 +972,7 @@ graph TB
 
 - **资源与容量**：每服务 JVM 起步 1G（WebFlux 无容器线程池，内存压力低于 MVC），网关/auth 各 2 副本起步；HPA 按 CPU 60% + QPS。
 - **发布**：滚动发布（maxUnavailable=0）+ readiness 探针接 Nacos 摘除；`DrainParticipant` 治理接口沿用做优雅下线。
-- **起步替代**：dev/standard 环境可用 docker-compose（gateway + 5 服务 + mysql + redis + rocketmq + nacos + minio），降低初期运维面。
+- **起步替代**：dev/standard 环境可用 podman-compose（gateway + 5 服务 + mysql + redis + rocketmq + nacos + minio），降低初期运维面。
 
 ---
 
@@ -1044,7 +1064,7 @@ flowchart TD
 | 5 | auth-service 成全局单点 | 高 | 登录/鉴权整体不可用 | ≥2 副本 + PDB；网关验签不依赖 auth 在线；服务侧权限走本地缓存 stale 降级；熔断仅影响实时权限查询 |
 | 6 | 办公平台回调地址变更协调 | 低 | 集成中断 | 网关保留旧回调路径别名转发；平台侧双配置过渡 |
 | 7 | 多服务 Flyway 版本链并行演进混乱 | 低 | 环境错配 | 每服务独立 V1 链 + 启动校验 baseline；`check-migration-integrity.sh` 扩展为逐服务执行 |
-| 8 | 团队运维复杂度陡增 | 中 | 交付速度下降 | docker-compose 起步、Grafana 开箱模板、runbook 与值班手册（Phase 7） |
+| 8 | 团队运维复杂度陡增 | 中 | 交付速度下降 | podman-compose 起步、Grafana 开箱模板、runbook 与值班手册（Phase 7） |
 | 9 | 网关成性能瓶颈/单点 | 中 | 入口抖动 | ≥2 副本 + Ingress LB；网关无状态；压测目标含网关层 P95 增幅 ≤ 15ms |
 
 ---
@@ -1098,6 +1118,9 @@ flowchart TD
 | 数据库拆分先例 | `apex-auth-center/src/main/resources/db/migration/mysql/`（V44–V55 独立链 vs 主链 V1–V59） |
 | 工作流垂直切片 | `apex-workflow/pom.xml`（仅依赖 domain+common）、`apex-workflow/.../domain/` |
 | 统一账户铺垫 | 提交 `1634ee2 feat(auth-center): unified account claims...`、V59 迁移（多端统一账户） |
+| JWT/JWKS 非对称（Phase 2.1） | `apex-auth-center/.../domain/service/JwtKeyMaterialService.java`（RS256 `sign`/`parse`/JWKS 投影）、`.../application/service/TokenServiceImpl.java`（改走响应式 `sign`/`parse`）、`.../domain/service/JwtKeyRotationService.java`（Redis-RSA 单一实现）；测试报告 `docs/06-testing/auth-center-jwt-jwks-test-report.md` |
+| auth 库治理（Phase 2.2） | `apex-auth-center/src/main/resources/bootstrap.yml`（服务名 `apex-auth-service`）、`db/migration/{mysql,postgresql}/V51__add_high_risk_authorization_permissions.sql`（修复重复 V49） |
+| 登出传播/Outbox（Phase 2.6） | `apex-domain/.../event/TokenRevokedEvent.java`、`apex-auth-center/.../application/service/AuthenticationApplicationService.java`（logout 发布）、`apex-auth-center/.../config/AuthCenterEventConfig.java`、`.../infrastructure/event/LocalDomainEventPublisher.java`、`resources/db/migration/{mysql,postgresql}/V56__create_domain_event_outbox.sql`、`application-basic.yml`（`apex.events.outbox.enabled=false`） |
 
 ---
 

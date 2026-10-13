@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  - Apex Scaffold - 文件模块 POM 配置文件
+  - 微服务化改造 Phase 4：将文件/文档/图表能力从单体中抽取为独立模块，
+  - 供 apex-file-service 复用；本模块聚合领域模型、仓储契约、应用服务与
+  - 存储 SPI（MinIO / 火山 TOS / 本地）基础设施适配。
+  - 约束：本模块 <parent> 指向根 POM（库模块），业务代码禁止自行声明第三方版本号。
+  - @author Apex Team
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <groupId>com.apex.scaffold</groupId>
+        <artifactId>apex-scaffold</artifactId>
+        <version>1.3.1</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>apex-file</artifactId>
+    <packaging>jar</packaging>
+    <name>apex-file</name>
+    <description>Apex Scaffold - File Module (文件/文档/图表 领域+应用+基础设施/存储 SPI)</description>
+
+    <dependencies>
+        <!-- 依赖领域层：文件/文档/图表领域模型与仓储契约（迁移自 apex-domain） -->
+        <dependency>
+            <groupId>com.apex.scaffold</groupId>
+            <artifactId>apex-domain</artifactId>
+        </dependency>
+
+        <!-- 依赖公共模块：统一响应、异常、注解、工具类等 -->
+        <dependency>
+            <groupId>com.apex.scaffold</groupId>
+            <artifactId>apex-common</artifactId>
+        </dependency>
+
+        <!-- Spring WebFlux：响应式应用服务与存储适配 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webflux</artifactId>
+        </dependency>
+
+        <!-- Spring JDBC：阻塞式持久化访问的调度桥接 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-jdbc</artifactId>
+        </dependency>
+
+        <!-- 参数校验：请求 DTO 的声明式校验 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+
+        <!-- MyBatis-Plus：文件/文档/图表持久化（PO / Mapper / 分页插件） -->
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-extension</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-annotation</artifactId>
+        </dependency>
+
+        <!-- 对象存储 SDK：MinIO / 火山引擎 TOS（存储 SPI 适配） -->
+        <dependency>
+            <groupId>io.minio</groupId>
+            <artifactId>minio</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.volcengine</groupId>
+            <artifactId>ve-tos-java-sdk</artifactId>
+        </dependency>
+
+        <!-- springdoc：为功能路由生成 OpenAPI 文档 -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webflux-api</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- Lombok：编译期生成样板代码 -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Lombok 编译期注解处理器 -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok-mapstruct-binding</artifactId>
+            <version>0.2.0</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- MapStruct：对象转换 -->
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct</artifactId>
+        </dependency>
+
+        <!-- 测试依赖 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.projectreactor</groupId>
+            <artifactId>reactor-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-params</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+    <build>
+        <plugins>
+            <!-- PMD 排除 MapStruct 等注解处理器生成的源码 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-pmd-plugin</artifactId>
+                <configuration>
+                    <excludeRoots>
+                        <excludeRoot>${project.build.directory}/generated-sources/annotations</excludeRoot>
+                    </excludeRoots>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <!-- 纯 DTO / 请求对象：仅携带数据，无业务决策分支 -->
+                        <exclude>com/apex/scaffold/file/application/dto/**/*</exclude>
+                        <!-- 纯领域模型：仅携带数据，无业务决策分支 -->
+                        <exclude>com/apex/scaffold/file/domain/model/**/*</exclude>
+                        <!-- 持久化对象与转换器：无业务决策分支 -->
+                        <exclude>com/apex/scaffold/file/infrastructure/persistence/po/**/*</exclude>
+                        <exclude>com/apex/scaffold/file/infrastructure/persistence/converter/**/*</exclude>
+                        <exclude>com/apex/scaffold/file/infrastructure/persistence/repository/**/*</exclude>
+                    </excludes>
+                    <rules>
+                        <rule>
+                            <element>BUNDLE</element>
+                            <includes>
+                                <!-- 应用服务：核心编排逻辑 -->
+                                <include>com.apex.scaffold.file.application.service.*</include>
+                                <include>com.apex.scaffold.file.application.query.*</include>
+                                <include>com.apex.scaffold.file.application.util.*</include>
+                            </includes>
+                            <limits>
+                                <limit>
+                                    <counter>LINE</counter>
+                                    <value>COVEREDRATIO</value>
+                                    <minimum>0.75</minimum>
+                                </limit>
+                                <limit>
+                                    <counter>BRANCH</counter>
+                                    <value>COVEREDRATIO</value>
+                                    <minimum>0.55</minimum>
+                                </limit>
+                            </limits>
+                        </rule>
+                        <rule>
+                            <element>BUNDLE</element>
+                            <includes>
+                                <!-- 存储 SPI 基础设施适配：MinIO / TOS / Local -->
+                                <include>com.apex.scaffold.file.infrastructure.storage.service.*</include>
+                            </includes>
+                            <limits>
+                                <limit>
+                                    <counter>LINE</counter>
+                                    <value>COVEREDRATIO</value>
+                                    <minimum>0.60</minimum>
+                                </limit>
+                                <limit>
+                                    <counter>BRANCH</counter>
+                                    <value>COVEREDRATIO</value>
+                                    <minimum>0.45</minimum>
+                                </limit>
+                            </limits>
+                        </rule>
+                    </rules>
+                </configuration>
+                <executions>
+                    <execution><goals><goal>prepare-agent</goal></goals></execution>
+                    <execution><id>file-report</id><phase>test</phase><goals><goal>report</goal></goals></execution>
+                    <execution><id>file-coverage-check</id><phase>test</phase><goals><goal>check</goal></goals></execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

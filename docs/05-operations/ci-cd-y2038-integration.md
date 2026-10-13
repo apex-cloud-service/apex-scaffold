@@ -111,7 +111,7 @@ release:
 ```
 database-check ──┐
 code-quality ────┤
-unit-test ───────┼──> build-image ──> Docker 镜像发布
+unit-test ───────┼──> build-image ──> Podman 镜像发布
 integration-test ┘                   或
                                      release ──> GitHub Release
 ```
@@ -164,7 +164,7 @@ mvnd -pl apex-infrastructure test -Dtest=TimeFieldArchTest
 
 5. **构建镜像** (build-image, 仅 main 分支)
    - 构建 JAR 包
-   - 构建 Docker 镜像
+   - 构建 Podman 镜像
    - 推送到 Docker Hub
 
 ### Pull Request 时

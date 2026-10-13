@@ -478,7 +478,7 @@ public Mono<Void> completeTask(Long taskId, Long userId, String comment) {
 
 ### 项目文档
 - [WebFlux Handler 总结](../_archive/webflux-handler-summary.md)
-- [后端开发规范](../04-development/backend-development-standards.md)
+- [后端开发规范](../04-development/development-standards.md)
 
 ---
 

@@ -2,6 +2,7 @@ package com.apex.scaffold.common.util.ratelimit.algorithm;
 
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.LongSupplier;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -84,6 +85,9 @@ public class SlidingWindow {
     /** 窗口起始时间戳 */
     private final long windowStartTime;
 
+    /** 时间源（毫秒），默认使用 {@link System#currentTimeMillis()}，可注入以便确定性测试 */
+    private final LongSupplier timeSource;
+
     /**
      * 构造滑动窗口（使用默认子桶数量 10）。
      *
@@ -102,6 +106,18 @@ public class SlidingWindow {
      * @param maxPermits  窗口内最大许可数
      */
     public SlidingWindow(long windowMs, int bucketCount, int maxPermits) {
+        this(windowMs, bucketCount, maxPermits, System::currentTimeMillis);
+    }
+
+    /**
+     * 构造滑动窗口（可注入时间源，便于测试）。
+     *
+     * @param windowMs    窗口大小（毫秒）
+     * @param bucketCount 子桶数量
+     * @param maxPermits  窗口内最大许可数
+     * @param timeSource  毫秒时间源
+     */
+    SlidingWindow(long windowMs, int bucketCount, int maxPermits, LongSupplier timeSource) {
         if (windowMs <= 0) {
             throw new IllegalArgumentException("窗口大小必须大于0, 实际值: " + windowMs);
         }
@@ -118,9 +134,10 @@ public class SlidingWindow {
         this.buckets = new long[bucketCount];
         this.bucketStartTimes = new long[bucketCount];
         this.currentCount = new AtomicLong(0);
-        this.windowStartTime = System.currentTimeMillis();
+        this.timeSource = timeSource;
+        this.windowStartTime = timeSource.getAsLong();
 
-        long now = System.currentTimeMillis();
+        long now = this.windowStartTime;
         for (int i = 0; i < bucketCount; i++) {
             bucketStartTimes[i] = now;
         }
@@ -157,7 +174,7 @@ public class SlidingWindow {
         lock.lock();
         try {
             // Step 1: 清理过期子桶并重算窗口内总计数
-            long now = System.currentTimeMillis();
+            long now = timeSource.getAsLong();
             long total = slideAndClean(now);
 
             // Step 2: 检查是否超限
@@ -230,7 +247,7 @@ public class SlidingWindow {
     public long getCurrentCount() {
         lock.lock();
         try {
-            return slideAndClean(System.currentTimeMillis());
+            return slideAndClean(timeSource.getAsLong());
         } finally {
             lock.unlock();
         }

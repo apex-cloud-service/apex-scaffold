@@ -20,10 +20,10 @@ import org.apache.rocketmq.client.consumer.listener.MessageListenerConcurrently;
 import org.apache.rocketmq.client.exception.MQClientException;
 import org.apache.rocketmq.common.message.MessageExt;
 import org.apache.rocketmq.spring.autoconfigure.RocketMQAutoConfiguration;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 
 /**
@@ -94,8 +94,12 @@ public class DeadLetterQueueProcessor {
     private DefaultMQPushConsumer dlqConsumer;
 
     /** 消费者监控指标（用于死信告警与统计） */
-    @Autowired(required = false)
-    private MqConsumerMetrics consumerMetrics;
+    private final MqConsumerMetrics consumerMetrics;
+
+    /** 构造死信处理器，监控指标未启用时允许省略。 */
+    public DeadLetterQueueProcessor(@Nullable MqConsumerMetrics consumerMetrics) {
+        this.consumerMetrics = consumerMetrics;
+    }
 
     /**
      * 注册死信处理器。

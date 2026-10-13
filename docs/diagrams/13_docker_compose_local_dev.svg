@@ -4,8 +4,8 @@
     <style>.title{font:700 32px sans-serif;fill:#0f172a;text-anchor:middle}.subtitle{font:500 14px sans-serif;fill:#64748b;text-anchor:middle}.box-title{font:600 14px sans-serif;fill:#0f172a}.text{font:400 11px sans-serif;fill:#475569}.code{font:400 10px monospace;fill:#2563eb}</style>
   </defs>
   <rect width="1400" height="900" fill="#fff"/>
-  <text x="700" y="40" class="title">13. Docker Compose 本地开发环境</text>
-  <text x="700" y="65" class="subtitle">一键启动完整技术栈 · docker-compose.yml · 开发/测试环境 v3.0</text>
+  <text x="700" y="40" class="title">13. Podman Compose 本地开发环境</text>
+  <text x="700" y="65" class="subtitle">一键启动完整技术栈 · podman-compose.yml · 开发/测试环境 v3.0</text>
 
   <rect x="50" y="90" width="650" height="380" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="2"/>
   <text x="70" y="120" class="box-title">核心服务 (默认Profile)</text>
@@ -22,7 +22,7 @@
   <text x="80" y="363" class="code">port: 3000, admin/admin</text>
   <text x="70" y="390" class="text">• zipkin: 链路追踪(采样10%)</text>
   <text x="80" y="408" class="code">port: 9411</text>
-  <text x="70" y="435" class="text">启动命令: docker compose up -d --build</text>
+  <text x="70" y="435" class="text">启动命令: podman-compose -f podman-compose.yml up -d --build</text>
 
   <rect x="720" y="90" width="630" height="380" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
   <text x="740" y="120" class="box-title">企业版服务 (--profile enterprise)</text>
@@ -55,7 +55,7 @@
   <text x="80" y="742" class="code">grafana: ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards</text>
   <text x="70" y="776" class="text">网络配置: apex-network (bridge模式), 所有服务互联互通</text>
   <text x="70" y="800" class="text">环境变量注入: .env文件 (DB密码/JWT密钥/存储配置)</text>
-  <text x="70" y="824" class="text">开发调试: -f docker-compose.yml -f docker-compose.dev.yml (覆盖配置/热重载)</text>
+  <text x="70" y="824" class="text">开发调试: -f podman-compose.yml（配置通过 .env 注入）</text>
 
-  <text x="700" y="885" class="code" text-anchor="middle">© 2026 Apex Team · Docker Compose本地开发环境 v3.0</text>
+  <text x="700" y="885" class="code" text-anchor="middle">© 2026 Apex Team · Podman Compose本地开发环境 v3.0</text>
 </svg>

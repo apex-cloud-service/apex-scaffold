@@ -36,23 +36,6 @@
         </dependency>
 
         <dependency>
-            <groupId>io.micrometer</groupId>
-            <artifactId>micrometer-tracing-bridge-brave</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.zipkin.zipkin2</groupId>
-            <artifactId>zipkin</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.zipkin.reporter2</groupId>
-            <artifactId>zipkin-reporter-brave</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.zipkin.reporter2</groupId>
-            <artifactId>zipkin-sender-okhttp3</artifactId>
-        </dependency>
-
-        <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
             <scope>test</scope>
@@ -97,7 +80,6 @@
                 <configuration>
                     <excludes>
                         <exclude>**/OAuth2*.java</exclude>
-                        <exclude>**/OfficeOAuthClient.java</exclude>
                     </excludes>
                 </configuration>
             </plugin>

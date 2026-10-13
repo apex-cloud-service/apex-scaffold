@@ -3,7 +3,7 @@
 > 文档版本: v1.0
 > 创建时间: 2026-09-04
 > 适用版本: apex-scaffold v2.5.0+
-> 部署方式: Kubernetes / Docker / Docker Compose
+> 部署方式: Kubernetes / Podman / podman-compose
 
 > **配套架构图**:
 > - [部署架构拓扑图](../diagrams/45_deployment_flow.svg)
@@ -19,12 +19,11 @@ Apex Scaffold 采用**云原生架构**设计，支持多种部署方式，从�
 
 | 部署方式 | 适用场景 | 优势 | 劣势 |
 |---------|---------|------|------|
-| **Docker Compose** | 本地开发/单机测试 | 简单快速，一键启动 | 不支持集群，无法水平扩展 |
-| **Docker Swarm** | 小规模生产 | 轻量级，易上手 | 功能相对简单，社区不活跃 |
+| **Podman Compose** | 本地开发/单机测试 | 简单快速，一键启动 | 单机编排，扩容需外部控制器 |
 | **Kubernetes** | 生产环境 (推荐) | 强大的编排能力，生态丰富 | 学习曲线陡峭，运维复杂 |
 | **裸机部署** | 传统环境 | 性能最优 | 运维成本高，难以扩展 |
 
-**推荐方案**: 本地开发使用 **Docker Compose**，生产环境使用 **Kubernetes**
+**推荐方案**: 本地开发使用 **Podman Compose**，生产环境使用 **Kubernetes**
 
 ---
 
@@ -324,9 +323,11 @@ kubectl create secret generic apex-secret \
 
 ---
 
-## 四、Docker Compose 部署 (本地开发)
+## 四、Podman Compose 部署 (本地开发)
 
-### 4.1 docker-compose.yml
+### 4.1 podman-compose.yml
+
+以下为历史单体拓扑示例，不应覆盖仓库配置；实际部署以仓库根目录的 `podman-compose.yml` 和 `podman-compose.infra.yml` 为准。
 
 ```yaml
 version: '3.8'
@@ -337,7 +338,7 @@ services:
     image: apex-scaffold:latest
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Containerfile
     container_name: apex-app
     ports:
       - "8080:8080"
@@ -375,7 +376,7 @@ services:
       - TZ=Asia/Shanghai
     volumes:
       - mysql-data:/var/lib/mysql
-      - ./docker/mysql/init:/docker-entrypoint-initdb.d
+      # 初始化 SQL 由部署方另行提供；仓库默认栈不挂载该历史初始化目录
     networks:
       - apex-network
     restart: unless-stopped
@@ -438,13 +439,12 @@ services:
     ports:
       - "10911:10911"
       - "10912:10912"
-    command: sh mqbroker -n rocketmq-namesrv:9876 -c /opt/rocketmq/conf/broker.conf
+    command: sh mqbroker -n rocketmq-namesrv:9876
     environment:
       - JAVA_OPT=-server -Xms1g -Xmx1g
     depends_on:
       - rocketmq-namesrv
-    volumes:
-      - ./docker/rocketmq/broker.conf:/opt/rocketmq/conf/broker.conf
+    # 集群自定义配置需另行提供；默认栈见 podman-compose.infra.yml
     networks:
       - apex-network
     restart: unless-stopped
@@ -460,7 +460,7 @@ services:
       - '--storage.tsdb.path=/prometheus'
       - '--storage.tsdb.retention.time=15d'
     volumes:
-      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./config/monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus-data:/prometheus
     networks:
       - apex-network
@@ -477,7 +477,7 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=admin
     volumes:
       - grafana-data:/var/lib/grafana
-      - ./docker/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./config/monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
     networks:
       - apex-network
     restart: unless-stopped
@@ -496,17 +496,17 @@ volumes:
 ### 4.2 启动命令
 
 ```bash
-# 启动所有服务
-docker-compose up -d
+# 在仓库根目录启动应用栈
+podman-compose -f podman-compose.yml up -d --build
 
 # 查看日志
-docker-compose logs -f apex-app
+podman-compose -f podman-compose.yml logs -f
 
 # 停止服务
-docker-compose down
+podman-compose -f podman-compose.yml down
 
-# 清理数据
-docker-compose down -v
+# 清理数据（会删除卷）
+podman-compose -f podman-compose.yml down -v
 ```
 
 ---
@@ -515,7 +515,7 @@ docker-compose down -v
 
 ### 5.1 镜像构建
 
-**Dockerfile**:
+**Containerfile**（以下为历史单体镜像示例；实际构建使用仓库根目录的多阶段 `Containerfile`）:
 ```dockerfile
 FROM eclipse-temurin:17-jre-alpine
 
@@ -550,12 +550,12 @@ EXPOSE 8080 8081
 # Maven 打包
 mvn clean package -DskipTests
 
-# Docker 构建
-docker build -t apex-scaffold:v2.5.0 .
+# Podman 构建（仓库根目录）
+podman build -f Containerfile -t apex-scaffold:v2.5.0 .
 
 # 推送到Harbor
-docker tag apex-scaffold:v2.5.0 harbor.example.com/apex/apex-scaffold:v2.5.0
-docker push harbor.example.com/apex/apex-scaffold:v2.5.0
+podman tag apex-scaffold:v2.5.0 harbor.example.com/apex/apex-scaffold:v2.5.0
+podman push harbor.example.com/apex/apex-scaffold:v2.5.0
 ```
 
 ### 5.2 Kubernetes 部署流程
@@ -776,7 +776,7 @@ kubectl logs -f <pod-name> -n apex-prod --tail=100
 ### 10.2 外部参考
 
 - [Kubernetes官方文档](https://kubernetes.io/docs/)
-- [Docker官方文档](https://docs.docker.com/)
+- [Podman官方文档](https://docs.podman.io/)
 - [Spring Boot部署指南](https://docs.spring.io/spring-boot/docs/current/reference/html/deployment.html)
 
 ---

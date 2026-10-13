@@ -60,16 +60,8 @@
 
 3. **启动依赖服务**
    ```bash
-   # MySQL（用于数据持久化）
-   docker run -d --name mysql \
-     -e MYSQL_ROOT_PASSWORD=root \
-     -p 3306:3306 \
-     mysql:8.0
-   
-   # Redis（用于 state 存储）
-   docker run -d --name redis \
-     -p 6379:6379 \
-     redis:7-alpine
+   # 使用项目基础设施栈启动 MySQL 和 Redis
+   podman-compose -f podman-compose.infra.yml up -d mysql redis
    ```
 
 ### 2.2 配置环境变量
@@ -121,14 +113,13 @@ source config/office-platforms.env
 mvnd -pl apex-interfaces -am spring-boot:run -P dev
 ```
 
-或使用 Docker：
+或使用 Podman：
 ```bash
-# 构建镜像
-mvnd clean package -DskipTests
-docker build -t apex-scaffold:latest .
+# 构建 basic 档位聚合应用镜像（Containerfile 内执行构建）
+podman build -f Containerfile --build-arg SERVICE_MODULE=apex-example --build-arg BUILD_PROFILE=basic -t apex-scaffold:latest .
 
 # 启动容器
-docker run -d \
+podman run -d \
   --name apex-scaffold \
   --env-file config/office-platforms.env \
   -p 8080:8080 \

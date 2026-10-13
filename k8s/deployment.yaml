@@ -4,10 +4,10 @@
 # 使用方式:
 #   kubectl apply -f k8s/
 # 说明:
-#   - 配置注入方式与应用 Docker/Compose 一致：全部通过环境变量（Secret + env），
+#   - 配置注入方式与应用 Podman/Compose 一致：全部通过环境变量（Secret + env），
 #     不覆盖 classpath 内 application*.yml（应用本身已含完整配置）。
-#   - 镜像: 本地 docker build -t apex-scaffold:latest .（详见 docs/DEPLOYMENT.md §5）
-#   - 探针: startup/liveness/readiness 指向管理端口 8081 的 Actuator 端点（与 Dockerfile 一致）
+#   - 镜像: 本地 podman build -t apex-scaffold:latest .（使用根目录 Containerfile，可显式指定 -f Containerfile；详见 ../docs/05-operations/deployment.md §5）
+#   - 探针: startup/liveness/readiness 指向管理端口 8081 的 Actuator 端点（与 Containerfile 一致）
 #   - 数据库/Redis 为集群外服务时，将 Secret 与 env 中的地址改为实际 Service/DNS。
 # ============================================================
 
@@ -105,7 +105,7 @@ spec:
             - secretRef:
                 name: apex-secrets
           env:
-            # JVM 生产级调优参数（与 Dockerfile 默认一致；GC 日志/堆转储写入容器 /app/logs）
+            # JVM 生产级调优参数（与 Containerfile 默认一致；GC 日志/堆转储写入容器 /app/logs）
             - name: JAVA_OPTS
               value: "-Xms512m -Xmx768m -Xss512k -XX:MaxDirectMemorySize=128m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:MetaspaceSize=256m -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/app/logs/heapdump.hprof -XX:+ExitOnOutOfMemoryError -Xlog:gc*:file=/app/logs/gc.log:time,uptime,level,tags:filecount=5,filesize=20m -Dfile.encoding=UTF-8 -Djava.security.egd=file:/dev/./urandom"
           startupProbe:

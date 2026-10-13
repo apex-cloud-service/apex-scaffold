@@ -2,6 +2,7 @@ package com.apex.scaffold.common.util.ratelimit.algorithm;
 
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.LongSupplier;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -72,6 +73,9 @@ public class TokenBucket {
     /** 上次令牌补充的时间戳（纳秒） */
     private final AtomicLong lastRefillTimeNanos;
 
+    /** 时间源（纳秒），默认使用 {@link System#nanoTime()}，可注入以便确定性测试 */
+    private final LongSupplier timeSource;
+
     /**
      * 构造令牌桶。
      *
@@ -79,6 +83,17 @@ public class TokenBucket {
      * @param refillRate 令牌补充速率（令牌/秒），决定平均速率
      */
     public TokenBucket(long capacity, double refillRate) {
+        this(capacity, refillRate, System::nanoTime);
+    }
+
+    /**
+     * 构造令牌桶（可注入时间源，便于测试）。
+     *
+     * @param capacity   桶容量（最大令牌数）
+     * @param refillRate 令牌补充速率（令牌/秒）
+     * @param timeSource 纳秒时间源
+     */
+    TokenBucket(long capacity, double refillRate, LongSupplier timeSource) {
         if (capacity <= 0) {
             throw new IllegalArgumentException("桶容量必须大于0, 实际值: " + capacity);
         }
@@ -88,7 +103,8 @@ public class TokenBucket {
         this.capacity = capacity;
         this.refillRate = refillRate;
         this.availableTokens = new AtomicLong(capacity);
-        this.lastRefillTimeNanos = new AtomicLong(System.nanoTime());
+        this.timeSource = timeSource;
+        this.lastRefillTimeNanos = new AtomicLong(timeSource.getAsLong());
         log.debug("令牌桶初始化, capacity: {}, refillRate: {}/s", capacity, refillRate);
     }
 
@@ -147,7 +163,7 @@ public class TokenBucket {
      * 补充后不超过桶容量上限。
      */
     private void refillTokens() {
-        long now = System.nanoTime();
+        long now = timeSource.getAsLong();
         long last = lastRefillTimeNanos.get();
         long elapsedNanos = now - last;
 

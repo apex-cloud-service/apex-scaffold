@@ -24,6 +24,7 @@
 5. [工作流管理](#5-工作流管理)
 6. [监控与日志](#6-监控与日志)
 7. [健康检查](#7-健康检查)
+8. [内部服务化接口（/internal/v1/**）](#8-内部服务化接口internalv1)
 
 ---
 
@@ -351,6 +352,75 @@
 
 ---
 
+## 8. 内部服务化接口（/internal/v1/**）
+
+微服务化迁移后，服务间同步调用统一走内部 API 契约（apex-api-contract）。该类接口**仅注册在业务服务端口**，网关路由层强制拒绝（403，见 `docs/02-architecture/architecture-overview.md` 契约模块说明与 `docs/06-testing/gateway-module-test-report.md` 内部接口拦截用例），只允许集群内直连调用。
+
+### 8.1 契约客户端总览
+
+| 契约客户端 | Feign name | 目标服务 | 说明 |
+|------------|-----------|----------|------|
+| `AuthFeignClient` | `FeignClientConstants.AUTH_SERVICE_NAME` | apex-auth-service | 认证/授权相关内部接口 |
+| `SystemFeignClient` | `FeignClientConstants.SYSTEM_SERVICE_NAME` | apex-system-service | 用户/部门/字典相关内部接口 |
+| `WorkflowFeignClient` | `FeignClientConstants.WORKFLOW_SERVICE_NAME` | apex-workflow-service | 工作流实例/任务相关内部接口 |
+
+所有内部接口统一返回 `Result<T>`；请求头由 `FeignTenantTraceConfiguration` 注入 `X-Tenant-Id`（来自 `TenantContext.currentTenantId()`）与 `X-Trace-Id`（来自 `TraceIdUtil.getTraceId()`），保证租户隔离与全链路追踪透传。同步 Feign 调用需通过 `FeignReactiveBridge` 包装为 `Mono`，在 `BlockingIoSchedulers.remote()` 调度器上执行，避免阻塞 WebFlux 事件循环。
+
+### 8.2 认证服务内部接口（AuthFeignClient）
+
+**目标服务**：apex-auth-service
+
+| HTTP 方法 | 路径 | 方法 | 说明 |
+|-----------|------|------|------|
+| GET | `/internal/v1/users/{accountId}/permissions` | `getUserPermissions` | 获取指定用户在指定租户（`tenantId` 查询参数）下的权限码集合 |
+| POST | `/internal/v1/tokens/validate` | `validateToken` | 校验存量 Token 并返回用户语义快照（过渡期能力，auth 不可用时机优先 403 拒绝） |
+
+### 8.3 系统服务内部接口（SystemFeignClient）
+
+**目标服务**：apex-system-service
+
+| HTTP 方法 | 路径 | 方法 | 说明 |
+|-----------|------|------|------|
+| GET | `/internal/v1/users/{accountId}/snapshot` | `getUserSnapshot` | 获取用户快照（基础信息 + 租户/状态） |
+| GET | `/internal/v1/users/{accountId}` | `getUserProfile` | 获取用户档案详情 |
+| GET | `/internal/v1/depts/tree` | `getDeptTree` | 获取当前租户部门树 |
+| GET | `/internal/v1/dict/{type}` | `getDictItems` | 获取指定字典类型的字典项列表 |
+
+### 8.4 工作流服务内部接口（WorkflowFeignClient）
+
+**目标服务**：apex-workflow-service
+
+| HTTP 方法 | 路径 | 方法 | 说明 |
+|-----------|------|------|------|
+| GET | `/internal/v1/instances/{id}/status` | `getInstanceStatus` | 获取流程实例状态 |
+
+### 8.5 降级策略（§6.3 降级矩阵）
+
+内部接口调用失败时的降级行为遵循「拒绝优先 + 本地陈旧缓存并联级」原则：
+
+| 场景 | 降级行为 |
+|------|----------|
+| auth 权限/令牌校验失败 | 拒绝优先：返回 403，禁止放行 |
+| auth 服务不可用（SERVICE_UNAVAILABLE） | 返回 503 + Resilience4j 重试 1 次 |
+| system 用户快照/档案失败 | 返回 503（`ResultCode.SERVICE_UNAVAILABLE`） |
+| system 字典失败 | 本地陈旧缓存（stale-while-revalidate）兜底 |
+| workflow 实例状态失败 | 返回 503（`ResultCode.SERVICE_UNAVAILABLE`） |
+
+统一降级工厂：`SystemFeignClientFallbackFactory` 等方法级 Fallback 工厂，统一返回 `Result.error(ResultCode.SERVICE_UNAVAILABLE)` 并输出 WARN 日志。
+
+### 8.6 契约模块结构（apex-api-contract）
+
+```
+apex-api-contract/src/main/java/com/apex/scaffold/contract/
+├── client/            # Feign 契约接口（Auth/System/Workflow）
+├── dto/internal/      # 内部接口共享 DTO（UserSnapshotDTO/DeptTreeDTO/DictItemDTO/TokenValidationDTO 等）
+├── config/            # FeignTenantTraceConfiguration、FeignClientConstants
+├── support/           # FeignReactiveBridge（同步转响应式桥接）
+└── (fallback 工厂)     # Auth/System/Workflow 各自 FallbackFactory
+```
+
+---
+
 ## 附录
 
 ### A. 权限码分类
@@ -415,8 +485,8 @@ Handler 负责：
 
 ---
 
-**文档生成时间**：2026-09-10  
-**项目版本**：1.2.0  
+**文档生成时间**：2026-10-08
+**项目版本**：1.3.1
 **维护团队**：Apex Team
 > 配套图表：[54 API 契约流转](../diagrams/54_api_contract_flow.svg)
 

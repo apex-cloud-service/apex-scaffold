@@ -23,13 +23,12 @@
 - 📘 [**WebFlux 响应式编程指南**](../architecture/reactive-programming-guide.md) ⭐ 新增
 - 📘 [**策略模式实现指南**](../architecture/strategy-pattern-guide.md) ⭐ 新增
 - [WebFlux Handler 实现总结](../_archive/webflux-handler-summary.md)
-- [后端开发规范](../04-development/backend-development-standards.md)
+- [后端开发规范](../04-development/development-standards.md)
 - [代码生成器使用](../04-development/codegen.md)
 
 ### 最佳实践
 - [开发最佳实践](../01-guides/best-practices.md)
-- [Lombok 使用指南](../04-development/lombok-guide.md)
-- [Javadoc 编写指南](../04-development/javadoc-guide.md)
+- [统一开发规范](../04-development/development-standards.md)（含 Lombok 与 Javadoc 使用指南）
 
 ### 功能模块
 - [工作流引擎指南](../08-project-management/features/workflow-engine-guide.md)
@@ -125,7 +124,7 @@ mvnd --version   # 应显示 2.0.0-rc-3
 
 ```bash
 # 1. 启动基础服务 (MySQL + Redis)
-docker-compose -f deployment/local/docker-compose.yml up -d
+podman-compose -f podman-compose.infra.yml up -d mysql redis
 
 # 2. 运行应用 (basic profile)
 mvnd spring-boot:run -pl apex-interfaces -P basic
@@ -653,7 +652,7 @@ public class UserService {
 }
 ```
 
-📖 **详细指南**: [Lombok 使用指南](../04-development/lombok-guide.md)
+📖 **详细指南**: [Lombok 使用指南](../04-development/development-standards.md#32-lombok)
 
 ### 7.3 Javadoc 规范
 
@@ -693,7 +692,7 @@ public class UserService {
 }
 ```
 
-📖 **详细指南**: [Javadoc 编写指南](../04-development/javadoc-guide.md)
+📖 **详细指南**: [Javadoc 编写指南](../04-development/development-standards.md#4-注释与-javadoc-规范)
 
 ---
 
@@ -793,7 +792,7 @@ mvnd spring-boot:run -pl apex-interfaces
 ### 10.2 进阶学习 (2-4 周)
 
 1. ✅ 阅读 [策略模式实现指南](../architecture/strategy-pattern-guide.md)
-2. ✅ 阅读 [后端开发规范](../04-development/backend-development-standards.md)
+2. ✅ 阅读 [后端开发规范](../04-development/development-standards.md)
 3. ✅ 学习工作流引擎使用
 4. ✅ 掌握 Sentinel 限流熔断
 5. ✅ 掌握多租户数据隔离

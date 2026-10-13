@@ -27,7 +27,7 @@ import org.openjdk.jmh.runner.options.OptionsBuilder;
  * <h2>运行前提</h2>
  * <ul>
  *   <li>本地已启动Redis服务器(默认端口6379)</li>
- *   <li>或使用Docker启动: {@code docker run -d -p 6379:6379 redis:7-alpine}</li>
+ *   <li>或使用Podman启动: {@code podman run -d -p 6379:6379 docker.io/library/redis:7-alpine}</li>
  * </ul>
  *
  * <h2>运行方式</h2>

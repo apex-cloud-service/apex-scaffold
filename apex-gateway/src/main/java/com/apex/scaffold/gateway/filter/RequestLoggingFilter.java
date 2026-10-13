@@ -6,9 +6,13 @@ import com.apex.scaffold.gateway.log.AccessLogRecord;
 import com.apex.scaffold.gateway.log.AccessLogService;
 import com.apex.scaffold.gateway.support.GatewayWebUtil;
 import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Set;
+import net.logstash.logback.marker.Markers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.cloud.gateway.route.Route;
@@ -87,24 +91,43 @@ public class RequestLoggingFilter implements GlobalFilter, Ordered {
         String traceId = request.getHeaders().getFirst(TraceWebFilter.HEADER_TRACE_ID);
         String headers = describeHeaders(request);
 
-        return chain.filter(exchange).doFinally(signal -> {
+        return Mono.deferContextual(context -> chain.filter(exchange).doFinally(signal -> {
             long costMillis = (System.nanoTime() - startNanos) / 1_000_000;
             Integer status = exchange.getResponse().getStatusCode() == null
                     ? null
                     : exchange.getResponse().getStatusCode().value();
-            String resolvedTraceId = StringUtils.hasText(traceId) ? traceId : TraceIdUtil.getTraceId();
-            // 结构化访问日志：字段固定，便于日志平台解析与聚合
-            log.info(
-                    "access method={} uri={} status={} costMs={} clientIp={} traceId={} headers={}",
-                    method,
-                    path,
-                    status,
-                    costMillis,
-                    clientIp,
-                    resolvedTraceId,
-                    headers);
-            persistAccessLog(exchange, method, path, clientIp, resolvedTraceId, status, costMillis);
-        });
+            String resolvedTraceId =
+                    StringUtils.hasText(traceId) ? traceId : context.getOrDefault(TraceIdUtil.TRACE_ID_KEY, null);
+            Route route = exchange.getAttribute(ServerWebExchangeUtils.GATEWAY_ROUTE_ATTR);
+            String tenantId = exchange.getRequest().getHeaders().getFirst(UserContextRelayFilter.HEADER_TENANT_ID);
+            Map<String, Object> fields = new LinkedHashMap<>();
+            fields.put("routeId", route == null ? null : route.getId());
+            fields.put("status", status);
+            fields.put("requestUri", path);
+            fields.put("method", method);
+            fields.put("duration", costMillis);
+            fields.put("clientIp", clientIp);
+            fields.put("headers", headers);
+            Map<String, String> previous = MDC.getCopyOfContextMap();
+            try {
+                MDC.remove(TraceIdUtil.TRACE_ID_KEY);
+                MDC.remove("tenantId");
+                if (StringUtils.hasText(resolvedTraceId)) {
+                    MDC.put(TraceIdUtil.TRACE_ID_KEY, resolvedTraceId);
+                }
+                if (StringUtils.hasText(tenantId)) {
+                    MDC.put("tenantId", tenantId);
+                }
+                log.info(Markers.appendEntries(fields), "access");
+                persistAccessLog(exchange, method, path, clientIp, resolvedTraceId, status, costMillis);
+            } finally {
+                if (previous == null) {
+                    MDC.clear();
+                } else {
+                    MDC.setContextMap(previous);
+                }
+            }
+        }));
     }
 
     /**

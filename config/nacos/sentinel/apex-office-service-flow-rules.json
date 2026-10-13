@@ -1,0 +1,9 @@
+[
+  {"resource":"/api/v1/office/**","limitApp":"default","grade":1,"count":100,"strategy":0,"controlBehavior":0,"clusterMode":false},
+  {"resource":"/api/v1/messages/**","limitApp":"default","grade":1,"count":200,"strategy":0,"controlBehavior":0,"clusterMode":false},
+  {"resource":"/admin-api/v1/office/**","limitApp":"default","grade":1,"count":100,"strategy":0,"controlBehavior":0,"clusterMode":false},
+  {"resource":"/admin-api/v1/org/**","limitApp":"default","grade":1,"count":50,"strategy":0,"controlBehavior":0,"clusterMode":false},
+  {"resource":"/api/v1/office/wecom/callback","limitApp":"default","grade":1,"count":200,"strategy":0,"controlBehavior":0,"clusterMode":false},
+  {"resource":"/api/v1/office/dingtalk/callback","limitApp":"default","grade":1,"count":200,"strategy":0,"controlBehavior":0,"clusterMode":false},
+  {"resource":"/api/v1/office/feishu/callback","limitApp":"default","grade":1,"count":200,"strategy":0,"controlBehavior":0,"clusterMode":false}
+]

@@ -1,6 +1,16 @@
 # 架构设计说明
 
-## 📐 DDD五层架构
+> 依据持续演进：本仓库正按 `docs/microservice-migration-plan.md` 从「多模块 DDD 单体」改造为「API 网关 + 5 个业务微服务 + 共享 SDK/契约」。截至微服务改造 Phase 1，已新增 `apex-gateway`、`apex-api-contract`、`apex-services-bom` 三个模块（详见下文「微服务共享层」与 `architecture-evolution.md`）。
+
+## 当前物理边界（2026-10-12）
+
+system 的接口、应用、业务领域与专属持久化已迁入 `apex-system`，Java 包名保持不变；启动由 `apex-system-service` 装配。原 `apex-interfaces`、`apex-application` 已退休。共享 domain 保留 BaseEntity、Token/SMS/Event/缓存/远程调用契约；共享 infrastructure 保留通用配置、缓存、MQ、Outbox、审计、加密、邮件及 HTTP 客户端，不反向依赖 system。HTTP 观测数据通过 ApiCallObservation/ApiCallLogSink 桥接，数据库业务实体留在 system。auth-service 的 system 依赖仅用于 test-scope parity 测试，example 编译使用 system 库。
+
+本批 application/domain/infrastructure 共 683 个文件迁入 system（281/180/222；main 560、test 123，含资源）；共享层及兄弟服务 801 个生产 Java 文件无 system 类型的直接导入。构建与测试结果以验收清单的本批验证记录为准。
+
+下文五层模块图为迁移前背景；当前分层存在于 system 库内的原 Java 包中。实际构建模块以根 POM 为准。
+
+## 📐 DDD五层架构（迁移前背景）
 
 Apex Scaffold 采用**领域驱动设计(DDD)**的五层架构模式,确保代码结构清晰、职责分明、易于维护和扩展。
 
@@ -26,10 +36,32 @@ Apex Scaffold 采用**领域驱动设计(DDD)**的五层架构模式,确保代�
 └──────────────┬──────────────────────────┘
                │ 依赖
 ┌──────────────▼──────────────────────────┐
-│        apex-common (公共模块)            │
-│  工具类 | 异常 | 统一响应 | 常量          │
+│        apex-common (共享 SDK)            │
+│  工具类 | 异常 | 统一响应 | 上下文 | 常量  │
 └─────────────────────────────────────────┘
 ```
+
+> 注：`apex-common` 在微服务改造后作为 **共享 SDK** 独立复用，其内容受 `apex-common/README.md` 的「SDK 内容准入规则」约束（结果/异常/上下文/注解/纯工具可进，Redis/MQ/Storage 实现与业务实体禁入）。版本由 `apex-services-bom` 统一管理。
+
+## 微服务共享层（Phase 1 新增）
+
+| 模块 | 定位 | 依赖 |
+|---|---|---|
+| `apex-services-bom` | 微服务统一版本清单（parent 唯一来源）：锁定 `apex-common`/`apex-api-contract`/`apex-license-starter` 及 MyBatis-Plus/Redisson/RocketMQ/Sentinel/Resilience4j 等 | 继承根 `pom.xml`，供网关/契约/各业务服务 parent 引用 |
+| `apex-api-contract` | 跨服务内部 API 契约（`/internal/v1/**`）+ Feign 基础设施（`FeignTenantTraceConfiguration`、粉丝回调）+ 阻塞 IO 桥接约定（`BlockingIoSchedulers.remote()`） | `apex-common` + OpenFeign |
+| `apex-gateway` | Spring Cloud Gateway（WebFlux）：路由 / JWT(JWKS) 验签 / 用户上下文注入 / 全局限流 / TraceId / CORS / 灰度路由 / 访问日志 | `apex-common` + gateway-webflux + nacos + Resilience4j + redis-reactive |
+
+```
+客户端 → apex-gateway ──(lb://apex-auth-service)──→ 认证/各业务微服务
+              │ 依赖 + 统一契约
+              ▼
+   apex-api-contract（Feign 契约）+ apex-common（SDK）
+              ▲
+              │ parent 统一版本
+        apex-services-bom（唯一版本源）
+```
+
+三个模块均已在根 `pom.xml` `<modules>` 注册，是微服务改造 Phase 1 的基座，后续 5 个业务服务（auth/system/workflow/office/file）均以此为模板。
 
 ### 分层职责
 

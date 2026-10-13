@@ -178,7 +178,7 @@ PENDING → RUNNING → COMPLETED / REJECTED
 **关键配置**:
 - `STORAGE_DEFAULT_TYPE`: 存储类型（local/minio/volcengine）
 - `STORAGE_BUCKET_NAME`: Bucket 名称
-- `FILE_UPLOAD_MAX_SIZE`: 最大文件大小（10MB）
+- `FILE_MAX_SIZE_BYTES`: 单文件大小上限（10MB，apex-file-service 文件域）
 - `BAIDU_IMAGE_MODERATION_API_KEY`: 百度图片审核 API Key
 - `BAIDU_TEXT_MODERATION_API_KEY`: 百度文本审核 API Key
 

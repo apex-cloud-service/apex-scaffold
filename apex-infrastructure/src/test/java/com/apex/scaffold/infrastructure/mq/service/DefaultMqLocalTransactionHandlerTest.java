@@ -44,8 +44,7 @@ class DefaultMqLocalTransactionHandlerTest {
                 .setHeader("apex-message-id", messageId)
                 .build();
 
-        assertThat(newHandler().check(message))
-                .isEqualTo(RocketMQLocalTransactionState.COMMIT);
+        assertThat(newHandler().check(message)).isEqualTo(RocketMQLocalTransactionState.COMMIT);
         verify(outboxStore).existsByEventId(messageId);
     }
 
@@ -58,8 +57,7 @@ class DefaultMqLocalTransactionHandlerTest {
                 .setHeader("apex-message-id", messageId)
                 .build();
 
-        assertThat(newHandler().check(message))
-                .isEqualTo(RocketMQLocalTransactionState.ROLLBACK);
+        assertThat(newHandler().check(message)).isEqualTo(RocketMQLocalTransactionState.ROLLBACK);
         verify(outboxStore).existsByEventId(messageId);
     }
 
@@ -72,8 +70,7 @@ class DefaultMqLocalTransactionHandlerTest {
                 .setHeader("apex-message-id", messageId)
                 .build();
 
-        assertThat(newHandler().execute(message, "argument"))
-                .isEqualTo(RocketMQLocalTransactionState.COMMIT);
+        assertThat(newHandler().execute(message, "argument")).isEqualTo(RocketMQLocalTransactionState.COMMIT);
     }
 
     @Test
@@ -81,8 +78,7 @@ class DefaultMqLocalTransactionHandlerTest {
     void shouldReturnUnknownWhenMessageIdUnresolvable() {
         Message<?> message = MessageBuilder.withPayload("payload").build();
 
-        assertThat(newHandler().check(message))
-                .isEqualTo(RocketMQLocalTransactionState.UNKNOWN);
+        assertThat(newHandler().check(message)).isEqualTo(RocketMQLocalTransactionState.UNKNOWN);
     }
 
     @Test
@@ -92,8 +88,7 @@ class DefaultMqLocalTransactionHandlerTest {
                 .setHeader("apex-message-id", "  ")
                 .build();
 
-        assertThat(newHandler().check(message))
-                .isEqualTo(RocketMQLocalTransactionState.UNKNOWN);
+        assertThat(newHandler().check(message)).isEqualTo(RocketMQLocalTransactionState.UNKNOWN);
     }
 
     @Test
@@ -105,8 +100,7 @@ class DefaultMqLocalTransactionHandlerTest {
                 .setHeader("KEYS", messageId)
                 .build();
 
-        assertThat(newHandler().check(message))
-                .isEqualTo(RocketMQLocalTransactionState.ROLLBACK);
+        assertThat(newHandler().check(message)).isEqualTo(RocketMQLocalTransactionState.ROLLBACK);
         verify(outboxStore).existsByEventId(messageId);
     }
 }

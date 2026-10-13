@@ -109,7 +109,7 @@ spec:
 
 **部署配置**:
 ```yaml
-# Docker Compose
+# Podman Compose
 services:
   sentinel-dashboard:
     image: bladex/sentinel-dashboard:1.8.9
@@ -378,7 +378,7 @@ MinIO-4: /data1 /data2 /data3 /data4
 
 **部署配置**:
 ```bash
-docker run -d \
+podman run -d \
   --name minio \
   -p 9000:9000 -p 9001:9001 \
   -e "MINIO_ROOT_USER=admin" \
@@ -438,7 +438,7 @@ Broker Cluster
 
 **部署配置**:
 ```yaml
-# docker-compose.yml
+# Podman Compose 集群拓扑示例（与仓库默认栈不同）
 services:
   namesrv1:
     image: apache/rocketmq:5.1.0
@@ -938,16 +938,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Build Docker Image
+      - name: Build OCI Image with Podman
         run: |
-          docker build -t apex-scaffold:${{ github.sha }} .
-          docker tag apex-scaffold:${{ github.sha }} \
+          podman build -f Containerfile -t apex-scaffold:${{ github.sha }} .
+          podman tag apex-scaffold:${{ github.sha }} \
             harbor.example.com/apex/apex-scaffold:latest
       - name: Push to Harbor
+        env:
+          HARBOR_PASSWORD: ${{ secrets.HARBOR_PASSWORD }}
+          HARBOR_USER: ${{ secrets.HARBOR_USER }}
         run: |
-          echo ${{ secrets.HARBOR_PASSWORD }} | \
-            docker login harbor.example.com -u ${{ secrets.HARBOR_USER }} --password-stdin
-          docker push harbor.example.com/apex/apex-scaffold:latest
+          printf '%s' "$HARBOR_PASSWORD" | \
+            podman login harbor.example.com -u "$HARBOR_USER" --password-stdin
+          podman push harbor.example.com/apex/apex-scaffold:latest
 
   deploy:
     needs: build

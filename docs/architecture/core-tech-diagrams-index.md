@@ -292,7 +292,7 @@ Mermaid时序图/架构图统一放在`docs/diagrams/sequence/`目录,编号规�
 
 ### 开发规范
 
-- [backend-development-standards.md](../04-development/backend-development-standards.md) - 后端开发规范
+- [development-standards.md](../04-development/development-standards.md) - 后端开发规范
 - [BEST_PRACTICES.md](../01-guides/best-practices.md) - 最佳实践指南
 
 ---

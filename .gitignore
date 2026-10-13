@@ -103,4 +103,4 @@ release/
 # ===== Python 运行产物与本地备份 =====
 __pycache__/
 *.pyc
-docker-compose.yml.bak.*
+podman-compose.yml.bak.*

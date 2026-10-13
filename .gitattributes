@@ -30,8 +30,8 @@
 # ===== 无扩展名文本配置文件 =====
 .sdkmanrc text eol=lf
 .env.example text eol=lf
-Dockerfile text eol=lf
-.dockerignore text eol=lf
+Containerfile* text eol=lf
+.containerignore text eol=lf
 
 # ===== 二进制文件标记 =====
 *.png binary

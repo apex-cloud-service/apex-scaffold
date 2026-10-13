@@ -1,0 +1,22 @@
+FROM docker.io/library/eclipse-temurin:17-jre-alpine
+RUN apk add --no-cache tzdata wget
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+WORKDIR /app
+# 目标微服务模块（默认网关）；构建前需先执行 mvnd clean package -DskipTests -Penterprise
+ARG SERVICE_MODULE=apex-gateway
+ARG SERVICE_PORT=8080
+ARG MANAGEMENT_PORT=8080
+ARG HEALTHCHECK_PORT=8080
+ENV HEALTHCHECK_PORT="${HEALTHCHECK_PORT}"
+COPY ${SERVICE_MODULE}/target/${SERVICE_MODULE}-*.jar /app/app.jar
+RUN mkdir -p /app/logs /app/data/storage && chown -R appuser:appgroup /app/logs /app/data/storage
+ENV JAVA_OPTS="-Xms512m -Xmx1024m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:MetaspaceSize=256m -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/app/logs/heapdump.hprof -XX:+ExitOnOutOfMemoryError -Dfile.encoding=UTF-8 -Djava.security.egd=file:/dev/./urandom"
+ENV SPRING_PROFILES_ACTIVE="prod,enterprise"
+ENV TZ="Asia/Shanghai"
+ENV LOG_PATH="/app/logs"
+ENV APEX_SERVICE_MODULE="${SERVICE_MODULE}"
+EXPOSE ${SERVICE_PORT} ${MANAGEMENT_PORT}
+HEALTHCHECK --interval=30s --timeout=5s --start-period=90s --retries=3 \
+  CMD wget -qO- http://127.0.0.1:${HEALTHCHECK_PORT}/actuator/health/readiness > /dev/null || exit 1
+USER appuser
+ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -jar /app/app.jar"]

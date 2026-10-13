@@ -48,16 +48,16 @@ echo "=== 潜在冲突端口检查 ==="
 echo ""
 
 # 检查 Loki 和 Grafana 端口
-echo "✓ Loki: 3100 (docker-compose.yml)"
-echo "✓ Grafana: 3100 映射容器内 3000 (docker-compose.infra.yml)"
+echo "✓ Loki: 3100 (podman-compose.yml)"
+echo "✓ Grafana: 3100 映射容器内 3000 (podman-compose.infra.yml)"
 echo "  注意: Loki 和 Grafana 使用相同的 3100 端口，但在不同的 profile 中"
-echo "  - Loki: docker-compose.yml (主服务栈)"
-echo "  - Grafana: docker-compose.infra.yml (基础设施栈)"
+echo "  - Loki: podman-compose.yml (主服务栈)"
+echo "  - Grafana: podman-compose.infra.yml (基础设施栈)"
 echo "  ⚠️  WARNING: 不能同时启动两个 profile，会端口冲突！"
 echo ""
 
-# 检查 config/monitoring/docker-compose.yml 中的 Grafana
-echo "✓ config/monitoring/docker-compose.yml: Grafana 3000"
+# 检查 config/monitoring/podman-compose.yml 中的 Grafana
+echo "✓ config/monitoring/podman-compose.yml: Grafana 3000"
 echo "  注意: 独立监控栈配置，未更新为 3100"
 echo "  ⚠️  WARNING: 需要更新为 3100 以保持一致性！"
 echo ""
@@ -71,7 +71,7 @@ echo ""
 
 echo "=== 需要修复的冲突 ==="
 echo ""
-echo "1. config/monitoring/docker-compose.yml"
+echo "1. config/monitoring/podman-compose.yml"
 echo "   当前: Grafana 3000:3000"
 echo "   建议: Grafana 3100:3000"
 echo "   原因: 与主配置保持一致"

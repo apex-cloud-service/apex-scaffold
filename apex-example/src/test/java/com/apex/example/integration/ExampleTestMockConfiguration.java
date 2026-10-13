@@ -1,25 +1,25 @@
 package com.apex.example.integration;
 
-import com.apex.scaffold.application.service.FileService;
 import com.apex.scaffold.domain.repository.JobRepository;
 import com.apex.scaffold.domain.service.AccountDeletionPort;
 import com.apex.scaffold.domain.service.BusinessMetricsPort;
-import com.apex.scaffold.domain.service.StorageService;
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
+import com.apex.scaffold.infrastructure.config.LokiConfig;
+import com.apex.scaffold.infrastructure.config.MeilisearchConfig;
+import com.meilisearch.sdk.Client;
 import java.time.Duration;
 import org.mockito.Answers;
 import org.mockito.Mockito;
 import org.redisson.api.RedissonClient;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.data.redis.core.ReactiveValueOperations;
 import org.springframework.data.redis.core.ScanOptions;
+import org.springframework.transaction.reactive.TransactionalOperator;
+import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -30,7 +30,7 @@ import reactor.core.publisher.Mono;
  *
  * @author Apex Team
  */
-@Configuration
+@TestConfiguration
 @Profile("test")
 public class ExampleTestMockConfiguration {
     @Bean
@@ -114,57 +114,92 @@ public class ExampleTestMockConfiguration {
         return Mockito.mock(BusinessMetricsPort.class);
     }
 
+    /**
+     * 提供 Loki 配置属性替身。
+     *
+     * <p>{@code LokiConfig} 使用 {@code @ConditionalOnProperty(loki.enabled=true)}，
+     * 测试环境不创建 {@link LokiConfig.LokiProperties} Bean；而无条件 {@code @Component}
+     * {@code LokiAdapter} 依赖该 Bean，故需测试桩保证依赖链完整（默认不连接 Loki 服务）。</p>
+     *
+     * @return Loki 配置属性替身
+     */
     @Bean
     @Primary
-    FileService fileService() {
-        FileService service = Mockito.mock(FileService.class);
-        Mockito.when(service.getUrl(Mockito.anyString(), Mockito.anyString()))
-                .thenReturn(Mono.just("http://localhost/mock-file-url"));
-        Mockito.when(service.exists(Mockito.anyString(), Mockito.anyString())).thenReturn(Mono.just(false));
-        Mockito.when(service.delete(Mockito.anyString(), Mockito.anyString())).thenReturn(Mono.just(true));
-        return service;
+    LokiConfig.LokiProperties lokiProperties() {
+        LokiConfig.LokiProperties properties = new LokiConfig.LokiProperties();
+        properties.setUrl("http://localhost:3100");
+        properties.setEnabled(false);
+        properties.setMaxLines(1000);
+        properties.setMaxQueryRangeSeconds(3600);
+        return properties;
     }
 
+    /**
+     * 提供 @Primary WebClient 替身。
+     *
+     * <p>主应用存在多个具名 WebClient Bean（officeWebClient/chuanglanWebClient/
+     * weChatApiWebClient/weWorkWebClient）且均未标注 {@code @Primary}，
+     * 而办公平台组织客户端（Feishu/WeCom/DingTalk OrganizationClient）按类型注入
+     * {@link WebClient}，导致 {@code NoUniqueBeanDefinitionException}。
+     * 此处置一个 {@code @Primary} 替身作为唯一候选，满足注入且不会真实发出 HTTP 请求。</p>
+     *
+     * @return WebClient 替身
+     */
     @Bean
     @Primary
-    StorageService storageService() {
-        return new StorageService() {
-            /** {@inheritDoc} */
-            @Override
-            public Mono<String> upload(
-                    String bucketName, String objectName, InputStream inputStream, String contentType) {
-                return Mono.error(new UnsupportedOperationException());
-            }
+    WebClient webClient() {
+        return Mockito.mock(WebClient.class, Answers.RETURNS_DEEP_STUBS);
+    }
 
-            /** {@inheritDoc} */
-            @Override
-            public Mono<InputStream> download(String bucketName, String objectName) {
-                return Mono.just(new ByteArrayInputStream("fake-face".getBytes(StandardCharsets.UTF_8)));
-            }
+    /**
+     * 提供响应式事务操作器替身。
+     *
+     * <p>{@code TransactionalOperator} 仅当存在 {@code ReactiveTransactionManager}
+     * （依赖 R2DBC 数据源配置）时由 Spring Boot 自动装配，而示例应用未配置 R2DBC，
+     * 故测试环境不创建该 Bean；无条件 {@code @Service} {@code OfficeOrganizationSyncService}
+     * 按类型注入它，需以 Mockito 替身满足依赖注入，不真实开启响应式事务。</p>
+     *
+     * @return TransactionalOperator 替身
+     */
+    @Bean
+    @Primary
+    TransactionalOperator transactionalOperator() {
+        return Mockito.mock(TransactionalOperator.class, Answers.RETURNS_DEEP_STUBS);
+    }
 
-            /** {@inheritDoc} */
-            @Override
-            public Mono<Boolean> delete(String bucketName, String objectName) {
-                return Mono.just(true);
-            }
+    /**
+     * 提供 Meilisearch 配置属性替身。
+     *
+     * <p>{@code MeilisearchConfig} 使用 {@code @ConditionalOnProperty(meilisearch.enabled=true)}，
+     * 测试环境不创建 {@link MeilisearchConfig.MeilisearchProperties} Bean；而无条件
+     * {@code @Component} {@code MeilisearchAdapter} 依赖该 Bean，故需测试桩保证依赖链完整。</p>
+     *
+     * @return Meilisearch 配置属性替身
+     */
+    @Bean
+    @Primary
+    MeilisearchConfig.MeilisearchProperties meilisearchProperties() {
+        MeilisearchConfig.MeilisearchProperties properties = new MeilisearchConfig.MeilisearchProperties();
+        properties.setUrl("http://localhost:7700");
+        properties.setApiKey("test-api-key");
+        properties.setEnabled(false);
+        properties.setIndexPrefix("test_");
+        properties.setBatchSize(100);
+        return properties;
+    }
 
-            /** {@inheritDoc} */
-            @Override
-            public Mono<String> getPresignedUrl(String bucketName, String objectName, Integer expiry) {
-                return Mono.just("http://localhost/mock-presigned-url");
-            }
-
-            /** {@inheritDoc} */
-            @Override
-            public Mono<Boolean> exists(String bucketName, String objectName) {
-                return Mono.just(true);
-            }
-
-            /** {@inheritDoc} */
-            @Override
-            public String getPhotoUrlPrefix() {
-                return "/uploads/apex";
-            }
-        };
+    /**
+     * 提供 Meilisearch 客户端替身。
+     *
+     * <p>测试环境不创建真实 {@link Client} Bean（{@code meilisearch.enabled=false}），
+     * 以 Mockito 替身满足 {@code MeilisearchAdapter} 的构造依赖，所有索引/查询返回空结果，
+     * 不会实际连接 Meilisearch 服务。</p>
+     *
+     * @return Meilisearch 客户端替身
+     */
+    @Bean
+    @Primary
+    Client meilisearchClient() {
+        return Mockito.mock(Client.class, Answers.RETURNS_DEEP_STUBS);
     }
 }

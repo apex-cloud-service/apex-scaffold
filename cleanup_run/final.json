@@ -1,0 +1,971 @@
+{
+  "delete": [
+    {
+      "path": "Library/HTTPStorages/com.macwk.com.macOS.Updater",
+      "name": "com.macwk.com.macOS.Updater",
+      "size": 4235264,
+      "mtime": 1635408591.1634784,
+      "label": "HTTPStorages"
+    },
+    {
+      "path": "Library/Application Support/Yu Writer",
+      "name": "Yu Writer",
+      "size": 1093632,
+      "mtime": 1547683089.416213,
+      "label": "AppSupport"
+    },
+    {
+      "path": "Library/Application Support/com.bohemiancoding.sketch3",
+      "name": "com.bohemiancoding.sketch3",
+      "size": 835584,
+      "mtime": 1595242821.5531251,
+      "label": "AppSupport"
+    },
+    {
+      "path": "Library/HTTPStorages/com.torusknot.SourceTreeNotMAS",
+      "name": "com.torusknot.SourceTreeNotMAS",
+      "size": 368640,
+      "mtime": 1635558198.5660248,
+      "label": "HTTPStorages"
+    },
+    {
+      "path": "Library/Application Support/zhiximind-desktop",
+      "name": "zhiximind-desktop",
+      "size": 360448,
+      "mtime": 1654427685.3474646,
+      "label": "AppSupport"
+    },
+    {
+      "path": "Library/HTTPStorages/com.kite.Kite",
+      "name": "com.kite.Kite",
+      "size": 303104,
+      "mtime": 1635236303.8811579,
+      "label": "HTTPStorages"
+    },
+    {
+      "path": "Library/HTTPStorages/com.kite.KiteHelper",
+      "name": "com.kite.KiteHelper",
+      "size": 303104,
+      "mtime": 1635236174.0041952,
+      "label": "HTTPStorages"
+    },
+    {
+      "path": "Library/HTTPStorages/com.mindjet.mindmanager.13",
+      "name": "com.mindjet.mindmanager.13",
+      "size": 237568,
+      "mtime": 1657603931.0117483,
+      "label": "HTTPStorages"
+    },
+    {
+      "path": "Library/HTTPStorages/com.sublimemerge",
+      "name": "com.sublimemerge",
+      "size": 172032,
+      "mtime": 1635747606.1038704,
+      "label": "HTTPStorages"
+    },
+    {
+      "path": "Library/HTTPStorages/com.colliderli.iina",
+      "name": "com.colliderli.iina",
+      "size": 172032,
+      "mtime": 1636941112.0005233,
+      "label": "HTTPStorages"
+    },
+    {
+      "path": "Library/HTTPStorages/com.panic.Coda2",
+      "name": "com.panic.Coda2",
+      "size": 172032,
+      "mtime": 1639397652.6648757,
+      "label": "HTTPStorages"
+    },
+    {
+      "path": "Library/HTTPStorages/com.apphousekitchen.aldente-pro",
+      "name": "com.apphousekitchen.aldente-pro",
+      "size": 86016,
+      "mtime": 1777701522.2876902,
+      "label": "HTTPStorages"
+    },
+    {
+      "path": "Library/HTTPStorages/real_networking",
+      "name": "real_networking",
+      "size": 86016,
+      "mtime": 1781157057.5340104,
+      "label": "HTTPStorages"
+    },
+    {
+      "path": "Library/HTTPStorages/com.rogueamoeba.soundsource",
+      "name": "com.rogueamoeba.soundsource",
+      "size": 81920,
+      "mtime": 1657783998.3899877,
+      "label": "HTTPStorages"
+    },
+    {
+      "path": "Library/HTTPStorages/org.eclipse.platform.ide",
+      "name": "org.eclipse.platform.ide",
+      "size": 81920,
+      "mtime": 1762767220.1815257,
+      "label": "HTTPStorages"
+    },
+    {
+      "path": "Library/HTTPStorages/com.mac.utility.media.player.pro",
+      "name": "com.mac.utility.media.player.pro",
+      "size": 73728,
+      "mtime": 1638933829.8845441,
+      "label": "HTTPStorages"
+    },
+    {
+      "path": "Library/HTTPStorages/com.oracle.java.Java-Updater",
+      "name": "com.oracle.java.Java-Updater",
+      "size": 69632,
+      "mtime": 1654750885.5131793,
+      "label": "HTTPStorages"
+    },
+    {
+      "path": "Library/HTTPStorages/com.oracle.java.8u391.java",
+      "name": "com.oracle.java.8u391.java",
+      "size": 65536,
+      "mtime": 1698661122.938733,
+      "label": "HTTPStorages"
+    },
+    {
+      "path": "Library/HTTPStorages/com.oracle.java.8u401.java",
+      "name": "com.oracle.java.8u401.java",
+      "size": 65536,
+      "mtime": 1711931811.8769403,
+      "label": "HTTPStorages"
+    },
+    {
+      "path": "Library/HTTPStorages/com.intuitibits.wifiexplorerpro3",
+      "name": "com.intuitibits.wifiexplorerpro3",
+      "size": 65536,
+      "mtime": 1660718800.5884976,
+      "label": "HTTPStorages"
+    },
+    {
+      "path": "Library/HTTPStorages/com.oracle.java.8u361.java",
+      "name": "com.oracle.java.8u361.java",
+      "size": 61440,
+      "mtime": 1693129502.0871575,
+      "label": "HTTPStorages"
+    },
+    {
+      "path": "Library/HTTPStorages/com.oracle.java.8u281.java",
+      "name": "com.oracle.java.8u281.java",
+      "size": 61440,
+      "mtime": 1648797449.639741,
+      "label": "HTTPStorages"
+    },
+    {
+      "path": "Library/Application Support/Recory-Mac",
+      "name": "Recory-Mac",
+      "size": 53248,
+      "mtime": 1612707408.9497817,
+      "label": "AppSupport"
+    },
+    {
+      "path": "Library/Containers/net.televator.Vimari",
+      "name": "net.televator.Vimari",
+      "size": 49152,
+      "mtime": 1678066992.7181232,
+      "label": "Containers"
+    },
+    {
+      "path": "Library/Application Support/gk",
+      "name": "gk",
+      "size": 12288,
+      "mtime": 1777348220.623208,
+      "label": "AppSupport"
+    },
+    {
+      "path": ".oh-my-zsh.backup.20260624_172102",
+      "name": ".oh-my-zsh.backup.20260624_172102",
+      "size": 29208576,
+      "mtime": 1782292865.2146618,
+      "label": "home_junk"
+    },
+    {
+      "path": "dbeaver-agent",
+      "name": "dbeaver-agent",
+      "size": 1155072,
+      "mtime": 1566604498.0,
+      "label": "home_junk"
+    }
+  ],
+  "keep": [
+    {
+      "path": "Library/Application Support/微信web开发者工具",
+      "name": "微信web开发者工具",
+      "size": 239566848,
+      "mtime": 1580309242.5853636,
+      "label": "AppSupport",
+      "reason": "已安装应用相关"
+    },
+    {
+      "path": "Library/Application Support/EcosiaBrowser",
+      "name": "EcosiaBrowser",
+      "size": 178958336,
+      "mtime": 1789799116.1601815,
+      "label": "AppSupport",
+      "reason": "已安装应用相关"
+    },
+    {
+      "path": "Library/Application Support/PremiumSoft CyberTech",
+      "name": "PremiumSoft CyberTech",
+      "size": 86147072,
+      "mtime": 1615435559.0722594,
+      "label": "AppSupport",
+      "reason": "已安装应用相关"
+    },
+    {
+      "path": "Library/Application Support/Knowledge",
+      "name": "Knowledge",
+      "size": 27013120,
+      "mtime": 1543925026.5161753,
+      "label": "AppSupport",
+      "reason": "已安装应用相关"
+    },
+    {
+      "path": "Library/Caches/CloudKit",
+      "name": "CloudKit",
+      "size": 16723968,
+      "mtime": 1789621685.1312833,
+      "label": "Caches",
+      "reason": "系统/框架"
+    },
+    {
+      "path": "Library/Application Support/FileProvider",
+      "name": "FileProvider",
+      "size": 7081984,
+      "mtime": 1615953053.3080552,
+      "label": "AppSupport",
+      "reason": "系统/框架"
+    },
+    {
+      "path": "Library/Application Support/realdoc",
+      "name": "realdoc",
+      "size": 4751360,
+      "mtime": 1781157117.2033658,
+      "label": "AppSupport",
+      "reason": "已安装应用相关"
+    },
+    {
+      "path": "Library/Application Support/videosubscriptionsd",
+      "name": "videosubscriptionsd",
+      "size": 4599808,
+      "mtime": 1687913192.9993641,
+      "label": "AppSupport",
+      "reason": "系统/框架"
+    },
+    {
+      "path": "Library/Application Support/Quick Look",
+      "name": "Quick Look",
+      "size": 4231168,
+      "mtime": 1605240148.163184,
+      "label": "AppSupport",
+      "reason": "系统/框架"
+    },
+    {
+      "path": "Library/HTTPStorages/familycircled",
+      "name": "familycircled",
+      "size": 3186688,
+      "mtime": 1635230394.7192566,
+      "label": "HTTPStorages",
+      "reason": "系统/框架"
+    },
+    {
+      "path": "Library/HTTPStorages/askpermissiond",
+      "name": "askpermissiond",
+      "size": 3186688,
+      "mtime": 1635231022.880204,
+      "label": "HTTPStorages",
+      "reason": "系统/框架"
+    },
+    {
+      "path": "Library/Application Support/DifferentialPrivacy",
+      "name": "DifferentialPrivacy",
+      "size": 2375680,
+      "mtime": 1732509657.8354003,
+      "label": "AppSupport",
+      "reason": "系统/框架"
+    },
+    {
+      "path": "Library/Application Support/CS Odessa",
+      "name": "CS Odessa",
+      "size": 2211840,
+      "mtime": 1628591932.6917553,
+      "label": "AppSupport",
+      "reason": "已安装应用相关"
+    },
+    {
+      "path": "Library/Application Support/Animoji",
+      "name": "Animoji",
+      "size": 2060288,
+      "mtime": 1787032937.8754804,
+      "label": "AppSupport",
+      "reason": "系统/框架"
+    },
+    {
+      "path": "Library/Application Support/com.fiplab.memoryclean3",
+      "name": "com.fiplab.memoryclean3",
+      "size": 1794048,
+      "mtime": 1718190574.4530869,
+      "label": "AppSupport",
+      "reason": "已安装应用相关"
+    },
+    {
+      "path": "Library/Application Support/dsh-desktop",
+      "name": "dsh-desktop",
+      "size": 1675264,
+      "mtime": 1787018436.8282754,
+      "label": "AppSupport",
+      "reason": "已安装应用相关"
+    },
+    {
+      "path": "Library/Containers/com.brohawn.ActivityMonitor.Widget",
+      "name": "com.brohawn.ActivityMonitor.Widget",
+      "size": 921600,
+      "mtime": 1788227512.7245748,
+      "label": "Containers",
+      "reason": "已安装应用相关"
+    },
+    {
+      "path": "Library/Containers/FN2V63AD2J.com.tencent.ScreenCapture3",
+      "name": "FN2V63AD2J.com.tencent.ScreenCapture3",
+      "size": 684032,
+      "mtime": 1715934082.091301,
+      "label": "Containers",
+      "reason": "已安装应用相关"
+    },
+    {
+      "path": "Library/HTTPStorages/runtime-info-darwin-x64-fe40accb24f0bd30",
+      "name": "runtime-info-darwin-x64-fe40accb24f0bd30",
+      "size": 499712,
+      "mtime": 1778287487.58558,
+      "label": "HTTPStorages",
+      "reason": "系统/框架"
+    },
+    {
+      "path": "Library/Application Support/Users",
+      "name": "Users",
+      "size": 434176,
+      "mtime": 1648877325.1988294,
+      "label": "AppSupport",
+      "reason": "系统/框架"
+    },
+    {
+      "path": "Library/HTTPStorages/com.fiplab.memoryclean3",
+      "name": "com.fiplab.memoryclean3",
+      "size": 237568,
+      "mtime": 1718190565.875018,
+      "label": "HTTPStorages",
+      "reason": "已安装应用相关"
+    },
+    {
+      "path": "Library/HTTPStorages/com.macclean.app",
+      "name": "com.macclean.app",
+      "size": 237568,
+      "mtime": 1781517124.167842,
+      "label": "HTTPStorages",
+      "reason": "已安装应用相关"
+    },
+    {
+      "path": "Library/Application Support/com.nektony.Funter-SIII",
+      "name": "com.nektony.Funter-SIII",
+      "size": 180224,
+      "mtime": 1717745628.1892467,
+      "label": "AppSupport",
+      "reason": "已安装应用相关"
+    },
+    {
+      "path": "Library/Application Support/deepseek-harness-desktop",
+      "name": "deepseek-harness-desktop",
+      "size": 172032,
+      "mtime": 1787018809.7908015,
+      "label": "AppSupport",
+      "reason": "已安装应用相关"
+    },
+    {
+      "path": "Library/HTTPStorages/com.nektony.MacCleaner-PRO-SIII",
+      "name": "com.nektony.MacCleaner-PRO-SIII",
+      "size": 172032,
+      "mtime": 1716795820.7868717,
+      "label": "HTTPStorages",
+      "reason": "已安装应用相关"
+    },
+    {
+      "path": "Library/Containers/com.baiqian.HappyRead.HappyReadExtension",
+      "name": "com.baiqian.HappyRead.HappyReadExtension",
+      "size": 131072,
+      "mtime": 1788231635.5940626,
+      "label": "Containers",
+      "reason": "已安装应用相关"
+    },
+    {
+      "path": "Library/HTTPStorages/runtime-info-darwin-x64-768cc29e967a2e65",
+      "name": "runtime-info-darwin-x64-768cc29e967a2e65",
+      "size": 98304,
+      "mtime": 1787736609.4923472,
+      "label": "HTTPStorages",
+      "reason": "系统/框架"
+    },
+    {
+      "path": "Library/HTTPStorages/com.nektony.App-Cleaner-SIII",
+      "name": "com.nektony.App-Cleaner-SIII",
+      "size": 98304,
+      "mtime": 1716803021.8229275,
+      "label": "HTTPStorages",
+      "reason": "已安装应用相关"
+    },
+    {
+      "path": "Library/HTTPStorages/runtime-info-darwin-x64-70fa3db9baa14a08",
+      "name": "runtime-info-darwin-x64-70fa3db9baa14a08",
+      "size": 98304,
+      "mtime": 1789970809.1524353,
+      "label": "HTTPStorages",
+      "reason": "系统/框架"
+    },
+    {
+      "path": "Library/Application Support/bitz_net",
+      "name": "bitz_net",
+      "size": 77824,
+      "mtime": 1782818616.1118217,
+      "label": "AppSupport",
+      "reason": "已安装应用相关"
+    },
+    {
+      "path": "Library/HTTPStorages/com.ggt.vm",
+      "name": "com.ggt.vm",
+      "size": 77824,
+      "mtime": 1660290271.5431664,
+      "label": "HTTPStorages",
+      "reason": "已安装应用相关"
+    },
+    {
+      "path": "Library/HTTPStorages/com.nektony.Funter-SIII",
+      "name": "com.nektony.Funter-SIII",
+      "size": 73728,
+      "mtime": 1717745523.4882526,
+      "label": "HTTPStorages",
+      "reason": "已安装应用相关"
+    },
+    {
+      "path": "Library/HTTPStorages/com.nektony.Memory-Cleaner-SIII",
+      "name": "com.nektony.Memory-Cleaner-SIII",
+      "size": 65536,
+      "mtime": 1717747016.2016954,
+      "label": "HTTPStorages",
+      "reason": "已安装应用相关"
+    },
+    {
+      "path": "Library/HTTPStorages/com.nektony.Duplicate-File-Finder-SIII",
+      "name": "com.nektony.Duplicate-File-Finder-SIII",
+      "size": 65536,
+      "mtime": 1717745637.576906,
+      "label": "HTTPStorages",
+      "reason": "已安装应用相关"
+    },
+    {
+      "path": "Library/HTTPStorages/com.wondershare.UpdateHelper",
+      "name": "com.wondershare.UpdateHelper",
+      "size": 61440,
+      "mtime": 1698493674.6478808,
+      "label": "HTTPStorages",
+      "reason": "已安装应用相关"
+    },
+    {
+      "path": "Library/HTTPStorages/com.nektony.App-Cleaner-SII",
+      "name": "com.nektony.App-Cleaner-SII",
+      "size": 57344,
+      "mtime": 1636609398.7413256,
+      "label": "HTTPStorages",
+      "reason": "已安装应用相关"
+    },
+    {
+      "path": "Library/Containers/io.coressh.askpass",
+      "name": "io.coressh.askpass",
+      "size": 49152,
+      "mtime": 1663030498.9233851,
+      "label": "Containers",
+      "reason": "已安装应用相关"
+    },
+    {
+      "path": "Library/Application Support/FEFileExplorer",
+      "name": "FEFileExplorer",
+      "size": 45056,
+      "mtime": 1641620227.3556309,
+      "label": "AppSupport",
+      "reason": "已安装应用相关"
+    },
+    {
+      "path": "Library/Application Support/MWebLibrary",
+      "name": "MWebLibrary",
+      "size": 40960,
+      "mtime": 1628036021.768299,
+      "label": "AppSupport",
+      "reason": "已安装应用相关"
+    },
+    {
+      "path": "Library/Application Support/Updater_new",
+      "name": "Updater_new",
+      "size": 36864,
+      "mtime": 1699285238.1068468,
+      "label": "AppSupport",
+      "reason": "系统/框架"
+    },
+    {
+      "path": "Library/Containers/com.brohawn.ActivityMonitor",
+      "name": "com.brohawn.ActivityMonitor",
+      "size": 36864,
+      "mtime": 1718761842.8039362,
+      "label": "Containers",
+      "reason": "已安装应用相关"
+    },
+    {
+      "path": "Library/Containers/com.brohawn.ActivityMonitor.NetworkToday",
+      "name": "com.brohawn.ActivityMonitor.NetworkToday",
+      "size": 28672,
+      "mtime": 1663030444.49499,
+      "label": "Containers",
+      "reason": "已安装应用相关"
+    },
+    {
+      "path": "Library/Application Support/shark-mac-client",
+      "name": "shark-mac-client",
+      "size": 24576,
+      "mtime": 1579265928.5482116,
+      "label": "AppSupport",
+      "reason": "已安装应用相关"
+    },
+    {
+      "path": "Library/Containers/com.wdc.WDDesktop",
+      "name": "com.wdc.WDDesktop",
+      "size": 24576,
+      "mtime": 1614396658.6710887,
+      "label": "Containers",
+      "reason": "已安装应用相关"
+    },
+    {
+      "path": "Library/Application Support/.GMTemporary",
+      "name": ".GMTemporary",
+      "size": 12288,
+      "mtime": 1712543469.2128606,
+      "label": "AppSupport",
+      "reason": "系统/框架"
+    },
+    {
+      "path": "Library/Application Support/.gbda",
+      "name": ".gbda",
+      "size": 12288,
+      "mtime": 1657784742.5369897,
+      "label": "AppSupport",
+      "reason": "系统/框架"
+    },
+    {
+      "path": "Library/Application Support/Memory Meter 3",
+      "name": "Memory Meter 3",
+      "size": 8192,
+      "mtime": 1788412762.3258252,
+      "label": "AppSupport",
+      "reason": "系统/框架"
+    },
+    {
+      "path": "Library/Application Support/.mibprofile",
+      "name": ".mibprofile",
+      "size": 4096,
+      "mtime": 1628577018.3219547,
+      "label": "AppSupport",
+      "reason": "系统/框架"
+    },
+    {
+      "path": "Library/Application Support/DiskImages",
+      "name": "DiskImages",
+      "size": 4096,
+      "mtime": 1543929188.0456133,
+      "label": "AppSupport",
+      "reason": "系统/框架"
+    },
+    {
+      "path": "Library/Application Support/libraryLocationV4URL.data",
+      "name": "libraryLocationV4URL.data",
+      "size": 4096,
+      "mtime": 1628036020.0596383,
+      "label": "AppSupport",
+      "reason": "系统/框架"
+    },
+    {
+      "path": "Library/Application Support/heartbeats",
+      "name": "heartbeats",
+      "size": 4096,
+      "mtime": 1591452914.0007448,
+      "label": "AppSupport",
+      "reason": "系统/框架"
+    },
+    {
+      "path": "Library/Application Support/libraryRecentDocumentItemsV401.data",
+      "name": "libraryRecentDocumentItemsV401.data",
+      "size": 4096,
+      "mtime": 1715906174.6891963,
+      "label": "AppSupport",
+      "reason": "系统/框架"
+    },
+    {
+      "path": "Library/Application Support/libraryRecentDocumentItemsV401.sdata",
+      "name": "libraryRecentDocumentItemsV401.sdata",
+      "size": 4096,
+      "mtime": 1779326753.827142,
+      "label": "AppSupport",
+      "reason": "系统/框架"
+    },
+    {
+      "path": "Library/Application Support/.f1d4f3959d97e06ec2090.40683081",
+      "name": ".f1d4f3959d97e06ec2090.40683081",
+      "size": 4096,
+      "mtime": 1658126882.596885,
+      "label": "AppSupport",
+      "reason": "系统/框架"
+    },
+    {
+      "path": "Library/Application Support/.com.felttip.1999",
+      "name": ".com.felttip.1999",
+      "size": 4096,
+      "mtime": 1556582779.738075,
+      "label": "AppSupport",
+      "reason": "系统/框架"
+    },
+    {
+      "path": "Library/HTTPStorages/com.oracle.java.Java-Updater.binarycookies",
+      "name": "com.oracle.java.Java-Updater.binarycookies",
+      "size": 4096,
+      "mtime": 1778659642.9940867,
+      "label": "HTTPStorages",
+      "reason": "系统/框架"
+    },
+    {
+      "path": "Library/HTTPStorages/com.intuitibits.wifiexplorerpro3.binarycookies",
+      "name": "com.intuitibits.wifiexplorerpro3.binarycookies",
+      "size": 4096,
+      "mtime": 1674960335.2741258,
+      "label": "HTTPStorages",
+      "reason": "系统/框架"
+    },
+    {
+      "path": "Library/HTTPStorages/com.macwk.com.macOS.Updater.binarycookies",
+      "name": "com.macwk.com.macOS.Updater.binarycookies",
+      "size": 4096,
+      "mtime": 1660532886.9228945,
+      "label": "HTTPStorages",
+      "reason": "系统/框架"
+    },
+    {
+      "path": "Library/HTTPStorages/com.apphousekitchen.aldente-pro.binarycookies",
+      "name": "com.apphousekitchen.aldente-pro.binarycookies",
+      "size": 4096,
+      "mtime": 1777701526.4164157,
+      "label": "HTTPStorages",
+      "reason": "系统/框架"
+    },
+    {
+      "path": "Library/HTTPStorages/com.grammarly.GRLlamaOnboarding.binarycookies",
+      "name": "com.grammarly.GRLlamaOnboarding.binarycookies",
+      "size": 4096,
+      "mtime": 1732504854.0434704,
+      "label": "HTTPStorages",
+      "reason": "已安装应用相关"
+    },
+    {
+      "path": "Library/HTTPStorages/com.macclean.app.binarycookies",
+      "name": "com.macclean.app.binarycookies",
+      "size": 4096,
+      "mtime": 1781517385.8940082,
+      "label": "HTTPStorages",
+      "reason": "已安装应用相关"
+    },
+    {
+      "path": "Library/HTTPStorages/com.mac.utility.media.player.pro.binarycookies",
+      "name": "com.mac.utility.media.player.pro.binarycookies",
+      "size": 4096,
+      "mtime": 1640396478.8484547,
+      "label": "HTTPStorages",
+      "reason": "系统/框架"
+    },
+    {
+      "path": "Library/HTTPStorages/com.oray.remote.binarycookies",
+      "name": "com.oray.remote.binarycookies",
+      "size": 4096,
+      "mtime": 1718343753.8882334,
+      "label": "HTTPStorages",
+      "reason": "已安装应用相关"
+    },
+    {
+      "path": "Library/HTTPStorages/com.fiplab.memoryclean3.binarycookies",
+      "name": "com.fiplab.memoryclean3.binarycookies",
+      "size": 4096,
+      "mtime": 1788412763.107778,
+      "label": "HTTPStorages",
+      "reason": "已安装应用相关"
+    },
+    {
+      "path": "Library/HTTPStorages/com.mindjet.mindmanager.13.binarycookies",
+      "name": "com.mindjet.mindmanager.13.binarycookies",
+      "size": 4096,
+      "mtime": 1657605316.6389837,
+      "label": "HTTPStorages",
+      "reason": "系统/框架"
+    },
+    {
+      "path": "Library/HTTPStorages/com.colliderli.iina.binarycookies",
+      "name": "com.colliderli.iina.binarycookies",
+      "size": 4096,
+      "mtime": 1614923538.8064704,
+      "label": "HTTPStorages",
+      "reason": "系统/框架"
+    },
+    {
+      "path": "Library/Application Support/Plug-Ins",
+      "name": "Plug-Ins",
+      "size": 0,
+      "mtime": 1717770748.9168098,
+      "label": "AppSupport",
+      "reason": "系统/框架"
+    },
+    {
+      "path": "Library/Application Support/accountsd",
+      "name": "accountsd",
+      "size": 0,
+      "mtime": 1543968954.4635866,
+      "label": "AppSupport",
+      "reason": "系统/框架"
+    },
+    {
+      "path": "Library/Application Support/ControlCenter",
+      "name": "ControlCenter",
+      "size": 0,
+      "mtime": 1732502445.8251588,
+      "label": "AppSupport",
+      "reason": "系统/框架"
+    },
+    {
+      "path": "Library/Application Support/.CCH_NGLW_Lock",
+      "name": ".CCH_NGLW_Lock",
+      "size": 0,
+      "mtime": 1625365556.748131,
+      "label": "AppSupport",
+      "reason": "系统/框架"
+    },
+    {
+      "path": "Library/Application Support/CoreParsec",
+      "name": "CoreParsec",
+      "size": 0,
+      "mtime": 1545100297.6222591,
+      "label": "AppSupport",
+      "reason": "系统/框架"
+    },
+    {
+      "path": "Library/Application Support/xPlan",
+      "name": "xPlan",
+      "size": 0,
+      "mtime": 1717654052.0994136,
+      "label": "AppSupport",
+      "reason": "系统/框架"
+    },
+    {
+      "path": "Library/Application Support/vfkit",
+      "name": "vfkit",
+      "size": 0,
+      "mtime": 1732504486.042997,
+      "label": "AppSupport",
+      "reason": "系统/框架"
+    },
+    {
+      "path": "Library/Application Support/.CCH_UPI_Lock",
+      "name": ".CCH_UPI_Lock",
+      "size": 0,
+      "mtime": 1625365559.3885632,
+      "label": "AppSupport",
+      "reason": "系统/框架"
+    },
+    {
+      "path": "Library/Application Support/dmd",
+      "name": "dmd",
+      "size": 0,
+      "mtime": 1543925110.0163662,
+      "label": "AppSupport",
+      "reason": "系统/框架"
+    },
+    {
+      "path": "Library/Application Support/appplaceholdersyncd",
+      "name": "appplaceholdersyncd",
+      "size": 0,
+      "mtime": 1754209426.8127277,
+      "label": "AppSupport",
+      "reason": "系统/框架"
+    },
+    {
+      "path": "Library/Application Support/kotlin",
+      "name": "kotlin",
+      "size": 0,
+      "mtime": 1544696634.3097184,
+      "label": "AppSupport",
+      "reason": "系统/框架"
+    },
+    {
+      "path": "Library/Application Support/iLifeMediaBrowser",
+      "name": "iLifeMediaBrowser",
+      "size": 0,
+      "mtime": 1631083986.8203497,
+      "label": "AppSupport",
+      "reason": "系统/框架"
+    },
+    {
+      "path": "Library/Application Support/privatecloudcomputed",
+      "name": "privatecloudcomputed",
+      "size": 0,
+      "mtime": 1732520549.0943277,
+      "label": "AppSupport",
+      "reason": "系统/框架"
+    },
+    {
+      "path": "Library/Application Support/.ACCC_Lock",
+      "name": ".ACCC_Lock",
+      "size": 0,
+      "mtime": 1544702059.550224,
+      "label": "AppSupport",
+      "reason": "系统/框架"
+    },
+    {
+      "path": "Library/Application Support/revenuecat",
+      "name": "revenuecat",
+      "size": 0,
+      "mtime": 1778664511.9240732,
+      "label": "AppSupport",
+      "reason": "系统/框架"
+    },
+    {
+      "path": "Library/Application Support/designer",
+      "name": "designer",
+      "size": 0,
+      "mtime": 1688524108.9272766,
+      "label": "AppSupport",
+      "reason": "系统/框架"
+    },
+    {
+      "path": "Library/Application Support/AskPermission",
+      "name": "AskPermission",
+      "size": 0,
+      "mtime": 1778755630.9638224,
+      "label": "AppSupport",
+      "reason": "系统/框架"
+    },
+    {
+      "path": "Library/Application Support/io.sentry",
+      "name": "io.sentry",
+      "size": 0,
+      "mtime": 1719373355.5722017,
+      "label": "AppSupport",
+      "reason": "系统/框架"
+    },
+    {
+      "path": "Library/Application Support/transparencyd",
+      "name": "transparencyd",
+      "size": 0,
+      "mtime": 1570623841.6607487,
+      "label": "AppSupport",
+      "reason": "系统/框架"
+    },
+    {
+      "path": "Library/Application Support/themes",
+      "name": "themes",
+      "size": 0,
+      "mtime": 1628035969.2722182,
+      "label": "AppSupport",
+      "reason": "系统/框架"
+    },
+    {
+      "path": "Library/Application Support/syncdefaultsd",
+      "name": "syncdefaultsd",
+      "size": 0,
+      "mtime": 1570548129.7246091,
+      "label": "AppSupport",
+      "reason": "系统/框架"
+    },
+    {
+      "path": "Library/Application Support/SymbolSourceSymbols",
+      "name": "SymbolSourceSymbols",
+      "size": 0,
+      "mtime": 1736667243.7860556,
+      "label": "AppSupport",
+      "reason": "系统/框架"
+    },
+    {
+      "path": "Library/Application Support/Policy",
+      "name": "Policy",
+      "size": 0,
+      "mtime": 1567927269.9344275,
+      "label": "AppSupport",
+      "reason": "系统/框架"
+    },
+    {
+      "path": "Library/Application Support/Eltima Software",
+      "name": "Eltima Software",
+      "size": 0,
+      "mtime": 1657606579.3778515,
+      "label": "AppSupport",
+      "reason": "系统/框架"
+    },
+    {
+      "path": "Library/Application Support/.ADCS_Lock",
+      "name": ".ADCS_Lock",
+      "size": 0,
+      "mtime": 1544702061.6262403,
+      "label": "AppSupport",
+      "reason": "系统/框架"
+    },
+    {
+      "path": "nacos",
+      "name": "nacos",
+      "size": 69632,
+      "mtime": 1717417522.5024216,
+      "label": "home_junk",
+      "reason": "保守保留"
+    },
+    {
+      "path": "gradle",
+      "name": "gradle",
+      "size": 61440,
+      "mtime": 1544165586.7684848,
+      "label": "home_junk",
+      "reason": "保守保留"
+    },
+    {
+      "path": "Sunlogin",
+      "name": "Sunlogin",
+      "size": 16384,
+      "mtime": 1754229790.6392045,
+      "label": "home_junk",
+      "reason": "保守保留"
+    },
+    {
+      "path": "fsdownload",
+      "name": "fsdownload",
+      "size": 8192,
+      "mtime": 1598338026.3006618,
+      "label": "home_junk",
+      "reason": "保守保留"
+    },
+    {
+      "path": "Oray",
+      "name": "Oray",
+      "size": 4096,
+      "mtime": 1705034444.8460329,
+      "label": "home_junk",
+      "reason": "保守保留"
+    },
+    {
+      "path": "Sunlogin Files",
+      "name": "Sunlogin Files",
+      "size": 0,
+      "mtime": 1662014485.139196,
+      "label": "home_junk",
+      "reason": "保守保留"
+    }
+  ]
+}

@@ -6,14 +6,14 @@
 #   1. 对 MySQL 执行 mysqldump 全量备份（--single-transaction --routines）
 #   2. 支持两种执行场景:
 #      a) 宿主机直连 MySQL（java -jar 部署）
-#      b) Docker 容器（docker compose 部署, 通过 MYSQL_CONTAINER 指定容器名）
+#      b) Podman 容器（podman-compose 部署, 通过 MYSQL_CONTAINER 指定容器名）
 #   3. 保留 N 份最新备份（轮转清理, 默认 7 份）
 #   4. 可选上传对象存储（MinIO/S3 兼容, 通过 mc/aws 客户端）
 #
 # 用法:
 #   ./db-backup.sh                      # 使用环境变量或默认值
 #   ./db-backup.sh --container apex-infra-mysql
-#   ./db-backup.sh --db apex_data --keep 14 --upload
+#   ./db-backup.sh --db apex_system --keep 14 --upload
 #
 # 环境变量（均可用 -- 参数覆盖）:
 #   DB_MASTER_HOST / DB_MASTER_PORT / DB_MASTER_USERNAME / DB_MASTER_PASSWORD
@@ -29,7 +29,7 @@ DB_HOST="${DB_MASTER_HOST:-127.0.0.1}"
 DB_PORT="${DB_MASTER_PORT:-3306}"
 DB_USER="${DB_MASTER_USERNAME:-root}"
 DB_PASS="${DB_MASTER_PASSWORD:-}"
-DB_NAME="${MYSQL_DATABASE:-apex_data}"
+DB_NAME="${MYSQL_DATABASE:-apex_system}"
 MYSQL_CONTAINER="${MYSQL_CONTAINER:-}"
 BACKUP_DIR="${BACKUP_DIR:-$(dirname "$0")/../../backups}"
 BACKUP_KEEP="${BACKUP_KEEP:-7}"
@@ -87,8 +87,8 @@ DUMP_OPTS=(--single-transaction --routines --triggers --set-gtid-purged=OFF
            --default-character-set=utf8mb4)
 
 if [[ -n "$MYSQL_CONTAINER" ]]; then
-    # 容器场景: 通过 docker exec 在容器内执行 dump, 避免宿主机网络不通
-    docker exec "$MYSQL_CONTAINER" sh -c \
+    # 容器场景: 通过 podman exec 在容器内执行 dump, 避免宿主机网络不通
+    podman exec "$MYSQL_CONTAINER" sh -c \
         "mysqldump $(printf '%q ' "${DUMP_OPTS[@]}") $DB_NAME" | gzip > "$COMPRESSED"
 else
     # 宿主机直连场景

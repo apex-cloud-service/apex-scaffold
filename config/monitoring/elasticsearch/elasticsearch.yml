@@ -8,7 +8,7 @@
 #       ES 偏结构化检索与长期留存）。
 #
 # 安全: 本地/演示环境关闭 xpack 安全（单节点零配置启动）；生产应开启安全认证与 TLS，
-#       并通过 ELASTIC_PASSWORD / 环境变量注入凭据（见 docker-compose.infra.yml 注释）。
+#       并通过 ELASTIC_PASSWORD / 环境变量注入凭据（见 podman-compose.infra.yml 注释）。
 # ============================================================
 
 cluster.name: apex-scaffold-logs

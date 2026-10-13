@@ -1,0 +1,234 @@
+package com.apex.scaffold.authservice.config;
+
+import com.apex.scaffold.auth.application.service.RoleService;
+import com.apex.scaffold.auth.application.service.UnifiedAuthorizationQueryService;
+import com.apex.scaffold.auth.domain.service.IpAccessControlService;
+import com.apex.scaffold.auth.domain.service.ResourcePermissionService;
+import com.apex.scaffold.auth.domain.service.TokenService;
+import com.apex.scaffold.auth.infrastructure.filter.IpAccessControlFilter;
+import com.apex.scaffold.common.audit.AuditLogService;
+import com.apex.scaffold.common.config.JwtProperties;
+import com.apex.scaffold.common.context.TenantContext;
+import com.apex.scaffold.common.util.JwtUtil;
+import com.apex.scaffold.infrastructure.audit.DefaultAuditLogService;
+import com.apex.scaffold.infrastructure.encryption.EncryptionKeyProvider;
+import com.apex.scaffold.infrastructure.security.DefaultEncryptionService;
+import java.util.List;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+import org.springframework.core.env.Environment;
+import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
+import org.springframework.security.config.web.server.ServerHttpSecurity;
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.security.web.server.authentication.AuthenticationWebFilter;
+import org.springframework.security.web.server.context.NoOpServerSecurityContextRepository;
+import reactor.core.publisher.Mono;
+
+/**
+ * 认证中心配置类
+ *
+ * <p>提供认证中心所需的基础Bean配置
+ *
+ * @author Apex Team
+ * @since 2026-09-20
+ */
+@Configuration
+@EnableConfigurationProperties(JwtProperties.class)
+@Import({EncryptionKeyProvider.class, DefaultAuditLogService.class, DefaultEncryptionService.class})
+public class AuthCenterConfig {
+    /**
+     * 资源权限领域服务Bean
+     *
+     * @param redisTemplate Redis模板
+     * @param authorizationQueryService 统一授权查询服务
+     * @return ResourcePermissionService实例
+     */
+    @Bean
+    public ResourcePermissionService domainResourcePermissionService(
+            ReactiveStringRedisTemplate redisTemplate, UnifiedAuthorizationQueryService authorizationQueryService) {
+        return new ResourcePermissionService(redisTemplate, authorizationQueryService);
+    }
+
+    static List<org.springframework.security.core.authority.SimpleGrantedAuthority> toAuthorities(
+            List<com.apex.scaffold.auth.domain.model.entity.RoleEntity> roles) {
+        return roles.stream()
+                .map(role -> role.getCode())
+                .filter(code -> code != null && !code.isBlank())
+                .map(code -> code.startsWith("ROLE_") ? code : "ROLE_" + code)
+                .distinct()
+                .map(org.springframework.security.core.authority.SimpleGrantedAuthority::new)
+                .toList();
+    }
+
+    private static final String OAUTH2_INTROSPECT_PATH = "/oauth2/introspect";
+    private static final String OAUTH2_REVOKE_PATH = "/oauth2/revoke";
+    private static final String OAUTH2_TOKEN_PATH = "/oauth2/token";
+
+    private static final String BEARER_PREFIX = "Bearer ";
+    private static final String LOGIN_PATH = "/auth/v1/login";
+
+    /** 内部契约路由前缀（迁移方案 Phase 2.3）：不经网关，仅集群内服务直连调用 */
+    private static final String INTERNAL_API_PREFIX = "/internal/v1/**";
+
+    /** 内部契约路径前缀（不含通配符，用于运行时路径判定，迁移方案 Phase 2.3） */
+    private static final String INTERNAL_API_PATH_PREFIX = "/internal/v1/";
+
+    /** 租户透传请求头：由 FeignTenantTraceConfiguration 注入 */
+    private static final String TENANT_HEADER = "X-Tenant-Id";
+
+    /**
+     * IP访问控制过滤器Bean
+     *
+     * <p>通过配置类注册（而非组件扫描），保证过滤器仅随应用主上下文装配；
+     * 依赖的 {@link IpAccessControlService} 与 {@link AuditLogService} 由容器注入。
+     *
+     * @param ipAccessControlService IP访问控制服务
+     * @param auditLogService 审计日志服务
+     * @return IpAccessControlFilter实例
+     */
+    @Bean
+    public IpAccessControlFilter ipAccessControlFilter(
+            IpAccessControlService ipAccessControlService, AuditLogService auditLogService) {
+        return new IpAccessControlFilter(ipAccessControlService, auditLogService);
+    }
+
+    /**
+     * 密码编码器Bean
+     *
+     * <p>使用BCrypt算法加密密码
+     *
+     * @return PasswordEncoder实例
+     */
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    /**
+     * 认证中心Spring Security过滤链Bean
+     *
+     * <p>禁用CSRF等表单类认证，公开登录与OAuth2端点，其余请求需Bearer Token认证，
+     * 并在认证后写入租户上下文。
+     *
+     * @param http ServerHttpSecurity构建器
+     * @param tokens 令牌服务
+     * @param roles 角色服务
+     * @param jwt JWT配置属性
+     * @param environment 环境变量
+     * @return SecurityWebFilterChain实例
+     */
+    @Bean
+    public SecurityWebFilterChain securityWebFilterChain(
+            ServerHttpSecurity http,
+            TokenService tokens,
+            RoleService roles,
+            JwtProperties jwt,
+            Environment environment) {
+        JwtUtil.applyConfig(jwt);
+        AuthenticationWebFilter bearer = bearerAuthenticationFilter(tokens, roles);
+        return http.csrf(ServerHttpSecurity.CsrfSpec::disable)
+                .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
+                .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
+                .logout(ServerHttpSecurity.LogoutSpec::disable)
+                .securityContextRepository(NoOpServerSecurityContextRepository.getInstance())
+                .exceptionHandling(errors -> errors.authenticationEntryPoint((exchange, exception) -> {
+                    exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+                    return exchange.getResponse().setComplete();
+                }))
+                .authorizeExchange(exchanges -> exchanges
+                        .pathMatchers(
+                                LOGIN_PATH,
+                                "/auth/v1/refresh",
+                                "/.well-known/openid-configuration",
+                                "/.well-known/jwks.json",
+                                OAUTH2_TOKEN_PATH,
+                                OAUTH2_REVOKE_PATH,
+                                OAUTH2_INTROSPECT_PATH,
+                                INTERNAL_API_PREFIX)
+                        .permitAll()
+                        .anyExchange()
+                        .authenticated())
+                .addFilterAt(bearer, SecurityWebFiltersOrder.AUTHENTICATION)
+                .addFilterAfter(
+                        (exchange, chain) -> {
+                            String path = exchange.getRequest().getPath().value();
+                            if (path.startsWith(INTERNAL_API_PATH_PREFIX)) {
+                                String tenant =
+                                        exchange.getRequest().getHeaders().getFirst(TENANT_HEADER);
+                                if (tenant == null || tenant.isBlank()) {
+                                    tenant = environment.getProperty("auth-center.login-tenant", "default");
+                                }
+                                return TenantContext.withTenant(chain.filter(exchange))
+                                        .contextWrite(TenantContext.withTenant(tenant));
+                            }
+                            if (List.of(LOGIN_PATH, OAUTH2_TOKEN_PATH, OAUTH2_REVOKE_PATH, OAUTH2_INTROSPECT_PATH)
+                                    .contains(path)) {
+                                String tenant = environment.getProperty("auth-center.login-tenant", "default");
+                                return TenantContext.withTenant(chain.filter(exchange))
+                                        .contextWrite(TenantContext.withTenant(tenant));
+                            }
+                            return ReactiveSecurityContextHolder.getContext()
+                                    .map(context -> context.getAuthentication().getDetails())
+                                    .ofType(String.class)
+                                    .flatMap(tenant -> TenantContext.withTenant(chain.filter(exchange))
+                                            .contextWrite(TenantContext.withTenant(tenant))
+                                            .thenReturn(true))
+                                    .switchIfEmpty(Mono.defer(
+                                            () -> chain.filter(exchange).thenReturn(true)))
+                                    .then();
+                        },
+                        SecurityWebFiltersOrder.AUTHENTICATION)
+                .build();
+    }
+
+    private AuthenticationWebFilter bearerAuthenticationFilter(TokenService tokens, RoleService roles) {
+        AuthenticationWebFilter bearer = new AuthenticationWebFilter(
+                (org.springframework.security.authentication.ReactiveAuthenticationManager) authentication ->
+                        tokens.validateToken(authentication.getCredentials().toString())
+                                .filter(token -> "ACCESS".equals(token.getTokenType())
+                                        && token.getUserId() != null
+                                        && token.getUserId() > 0
+                                        && token.getTenantId() != null
+                                        && !token.getTenantId().isBlank())
+                                .switchIfEmpty(Mono.error(new BadCredentialsException("Unauthorized")))
+                                .flatMap(token -> Mono.defer(() -> roles.getUserRoles(
+                                                token.getUserId(), token.getTenantId())
+                                        .filter(role ->
+                                                token.getTenantId().equals(role.getTenantId()) && role.isValid())
+                                        .collectList()
+                                        .map(assignedRoles -> {
+                                            UsernamePasswordAuthenticationToken principal =
+                                                    new UsernamePasswordAuthenticationToken(
+                                                            token.getUserId().toString(),
+                                                            "",
+                                                            toAuthorities(assignedRoles));
+                                            principal.setDetails(token.getTenantId());
+                                            return (org.springframework.security.core.Authentication) principal;
+                                        })
+                                        .transformDeferred(mono -> TenantContext.withTenant(mono))
+                                        .contextWrite(TenantContext.withTenant(token.getTenantId()))))
+                                .onErrorMap(error -> new BadCredentialsException("Unauthorized")));
+        bearer.setSecurityContextRepository(NoOpServerSecurityContextRepository.getInstance());
+        bearer.setServerAuthenticationConverter(exchange -> {
+            String header = exchange.getRequest().getHeaders().getFirst("Authorization");
+            if (header == null || !header.regionMatches(true, 0, BEARER_PREFIX, 0, BEARER_PREFIX.length())) {
+                return Mono.empty();
+            }
+            return Mono.just(new UsernamePasswordAuthenticationToken("", header.substring(BEARER_PREFIX.length())));
+        });
+        bearer.setAuthenticationFailureHandler((filterExchange, exception) -> {
+            filterExchange.getExchange().getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+            return filterExchange.getExchange().getResponse().setComplete();
+        });
+        return bearer;
+    }
+}

@@ -24,7 +24,7 @@
 #     ├── LICENSE / LICENSE-COMMERCIAL.md
 #     ├── docs/             (文档)
 #     ├── config/           (配置模板 + 公钥)
-#     ├── docker-compose.yml / Dockerfile / k8s/
+#     ├── podman-compose.yml / Containerfile / k8s/
 #     └── scripts/
 # 💡 shebang 用 zsh：macOS 自带 bash 3.2 不支持 sdkman 的 ${var^^} 语法，zsh 正常。
 # ============================================================
@@ -38,28 +38,35 @@ PROFILE="${1:-standard}"
 VERSION="${2:-1.2.0}"
 DIST_DIR="dist/apex-scaffold-${VERSION}-${PROFILE}"
 
-# 统一构建环境：sdkman 默认 JDK（17.0.12-oracle）+ mvnd 2.0.0-rc-3
-# （差异）项目统一使用 mvnd 而非 mvn；JDK 由 sdkman 管理，不硬编码 JAVA_HOME。
-if [[ -f "$HOME/.sdkman/bin/sdkman-init.sh" ]]; then
-  # shellcheck disable=SC1091
-  source "$HOME/.sdkman/bin/sdkman-init.sh"
-fi
-if ! command -v mvnd &> /dev/null; then
-  echo "❌ 未找到 mvnd，请先安装: sdk install mvnd"
-  exit 1
-fi
+case "${PROFILE}" in
+  basic|standard|enterprise) ;;
+  *) echo "不支持的发布 profile: ${PROFILE}" >&2; exit 1 ;;
+esac
+
+source "${ROOT_DIR}/scripts/build/init-build-env.sh"
+
+SERVICES=(apex-system-service apex-auth-service apex-workflow-service apex-office-service apex-file-service apex-gateway)
+SERVICE_MODULES="${(j:,:)SERVICES}"
 
 echo "==> [1/3] 构建 ${PROFILE} 版本 (v${VERSION})"
-MAVEN_OPTS="-Xmx1024m" mvnd -o -q clean package -P"${PROFILE}" -DskipTests \
-  || MAVEN_OPTS="-Xmx1024m" mvnd -q clean package -P"${PROFILE}" -DskipTests
+MAVEN_OPTS="-Xmx1024m" mvnd -o -q clean package -P"${PROFILE}" -pl "${SERVICE_MODULES}" -am -DskipTests \
+  || MAVEN_OPTS="-Xmx1024m" mvnd -q clean package -P"${PROFILE}" -pl "${SERVICE_MODULES}" -am -DskipTests
+
+# 六个服务在 basic/standard/enterprise 中均属于根 reactor，产物不使用 classifier。
+SERVICE_JARS=()
+for svc in "${SERVICES[@]}"; do
+  jars=("${svc}"/target/"${svc}"-*.jar(N))
+  if (( ${#jars[@]} != 1 )); then
+    echo "${svc} 应有且仅有一个发布 JAR，实际找到 ${#jars[@]} 个" >&2
+    exit 1
+  fi
+  SERVICE_JARS+=("${jars[1]}")
+done
 
 echo "==> [2/3] 组装发布目录 ${DIST_DIR}"
 rm -rf "${DIST_DIR}"
 mkdir -p "${DIST_DIR}/docs" "${DIST_DIR}/config/license" "${DIST_DIR}/scripts"
-
-# 可执行 jar
-cp apex-interfaces/target/apex-interfaces-*.jar "${DIST_DIR}/" 2>/dev/null || \
-  cp apex-interfaces/target/*.jar "${DIST_DIR}/apex-interfaces-${VERSION}.jar"
+cp "${SERVICE_JARS[@]}" "${DIST_DIR}/"
 
 # 许可证
 cp LICENSE LICENSE-COMMERCIAL.md "${DIST_DIR}/"
@@ -78,7 +85,7 @@ rm -f "${DIST_DIR}/config/license/private.key" 2>/dev/null || true
 # 部署文件
 # 注意：scripts/license（发放工具）与 apex-license-tools 模块不进入发行包 ——
 # License 发放能力为卖方专属，随包交付会令买家可自签 License。
-cp docker-compose.yml Dockerfile "${DIST_DIR}/" 2>/dev/null || true
+cp podman-compose.yml podman-compose.infra.yml Containerfile "${DIST_DIR}/" 2>/dev/null || true
 cp -r k8s "${DIST_DIR}/" 2>/dev/null || true
 cp -r scripts/build scripts/deploy "${DIST_DIR}/scripts/" 2>/dev/null || true
 chmod +x "${DIST_DIR}"/scripts/*/*.sh 2>/dev/null || true
@@ -90,4 +97,4 @@ cd ..
 
 echo ""
 echo "✅ 发布包已生成: dist/apex-scaffold-${VERSION}-${PROFILE}.zip"
-echo "   构建标识: $(cat apex-interfaces/target/classes/apex-build.properties | grep build.profile.id)"
+echo "   构建标识: $(cat apex-system/target/classes/apex-build.properties | grep build.profile.id)"

@@ -168,10 +168,10 @@
 
 1. **启动基础设施服务** (30分钟)
    
-   使用 Docker Compose:
+   使用 Podman Compose:
    ```bash
    cd /Users/work/apex-scaffold
-   docker-compose -f docker/docker-compose-basic.yml up -d mysql redis
+   podman-compose -f podman-compose.infra.yml up -d mysql redis
    ```
    
    或使用项目脚本:
@@ -305,7 +305,7 @@
 
 | 问题 | 解决方案 |
 |------|----------|
-| Redis 连接拒绝 | 检查 Redis 是否启动: `docker ps \| grep redis` |
+| Redis 连接拒绝 | 检查 Redis 是否启动: `podman ps --filter name=apex-infra-redis` |
 | MySQL 连接失败 | 检查端口和密码: `mysql -h localhost -P 3306 -u root -p` |
 | Flyway 迁移失败 | 清空数据库重试: `DROP DATABASE apex_scaffold; CREATE DATABASE apex_scaffold;` |
 | 端口 8080 被占用 | 修改 `application-basic.yml` 中的 `server.port` |

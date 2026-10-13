@@ -1,0 +1,239 @@
+# ============================================================
+# Apex Scaffold 开发环境（Dev）配置
+# ============================================================
+# 适用场景 : 本地开发 / 联调调试
+# 启用方式 : 默认 profile（spring.profiles.active=dev，见 application.yml）
+# 核心特性 : MySQL + P6Spy SQL 日志 / 本地 Redis / 禁用 Nacos / 本地文件存储
+#
+# ┌───────────────────────────────────────────────────────────┐
+# │ 注释符号规范（全仓配置文件统一约定）                         │
+# ├───────────────────────────────────────────────────────────┤
+# │ ✅ 已启用能力          ❌ 已禁用能力                       │
+# │ ⚠️ 安全提示/注意点     💡 设计说明/优化理由                │
+# │ 🔒 敏感配置（环境变量注入，禁止硬编码）                     │
+# │ （差异）标注与公共 application.yml 的差异及理由              │
+# └───────────────────────────────────────────────────────────┘
+# ============================================================
+
+# ============================================================
+# CORS 跨域（开发环境）
+# ============================================================
+# （差异）公共层仅放行 http://localhost:3000；开发联调时前端 Vite
+#   运行在 5173，经代理转发请求仍携带 Origin: http://localhost:5173，
+#   需显式加入白名单，否则浏览器端所有接口请求被 CORS 过滤器拦截返回 403。
+cors:
+  allowed-origins: http://localhost:3000,http://localhost:5173,http://localhost:5174,http://localhost:5175
+
+spring:
+  # ---------- 自动配置 ----------
+  # 💡 不排除 RedissonAutoConfigurationV2：HotSpotRateLimitAspect（IP 热点限流）直接依赖
+  #    RedissonClient，AntiReplayAspect / MetricsConfig / IpRateLimitWebFilter 依赖其
+  #    ReactiveRedisConnectionFactory（ReactiveStringRedisTemplate）。
+  #    RedissonAutoConfigurationV2 按 spring.data.redis.* 构建（localhost:6379 无密码），
+  #    若排除 Redisson，dev 完整启动将因缺少 RedissonClient / ReactiveStringRedisTemplate 失败。
+
+  # ---------- Redis（本地） ----------
+  data:
+    redis:
+      # ✅ 本地 Redis：默认 localhost:6379（可由 podman-compose.infra.yml 一键部署）
+      host: localhost
+      port: 6379
+      # 连接超时（毫秒）
+      timeout: 3000ms
+
+  # ---------- 数据源（MySQL，与 prod 同构：dynamic-datasource + Druid） ----------
+  # ✅ dev 使用本机/容器 MySQL（默认 127.0.0.1:3306/apex_system），与 prod 结构一致，
+  #    可通过 DB_MASTER_URL / DB_MASTER_USERNAME / DB_MASTER_PASSWORD 环境变量覆盖。
+  # ✅ dev 保留 P6Spy SQL 日志代理（p6spy: true；spy.properties 位于
+  #    apex-infrastructure/src/main/resources/），输出带参数值的格式化 SQL 日志
+  #    （logback-spring.xml dev 段 p6spy logger → SQL_CONSOLE/SQL_FILE）。
+  # ⚠️ prod / it 关闭 P6Spy（p6spy: false），避免代理层开销。
+  # ⚠️ 启动前提：本地 MySQL 可达（podman-compose -f podman-compose.infra.yml up -d 一键部署，
+  #    root/apex-root、库 apex_system），且 Flyway 迁移可执行（见下方 flyway 段）。
+  datasource:
+    dynamic:
+      # 主数据源名称，与生产配置保持一致
+      primary: master
+      # 关闭严格模式：允许未显式声明的数据源
+      strict: false
+      # 启用 P6Spy SQL 日志代理（仅 dev）
+      p6spy: true
+      datasource:
+        master:
+          # 主库 JDBC URL；默认指向本机 MySQL（apex_system 库）
+          url: ${DB_MASTER_URL:jdbc:mysql://127.0.0.1:3306/apex_system?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false}
+          # 数据库凭据；默认本机 root/apex-root，可经环境变量覆盖
+          username: ${DB_MASTER_USERNAME:root}
+          password: ${DB_MASTER_PASSWORD:apex-root}
+          # MySQL 驱动与连接池（与 prod 一致：Alibaba Druid）
+          driver-class-name: com.mysql.cj.jdbc.Driver
+          type: com.alibaba.druid.pool.DruidDataSource
+          druid:
+            db-type: mysql
+            initial-size: 5
+            min-idle: 5
+            max-active: ${DB_MAX_ACTIVE:20}
+            max-wait: 3000
+            validation-query: SELECT 1 FROM DUAL
+            test-while-idle: true
+            pool-prepared-statements: true
+            max-pool-prepared-statement-per-connection-size: 20
+            filters: stat
+        # 从库（数据源动态切换：@DataSource("slave") 切到本数据源）
+        # ✅ 配置与 master 完全一致（仅环境变量前缀 DB_SLAVE_*），本地演示默认指向同一
+        #    MySQL 实例（apex_system 库），无需额外部署；真实只读从库通过
+        #    DB_SLAVE_URL / DB_SLAVE_USERNAME / DB_SLAVE_PASSWORD 注入；
+        #    初始化脚本见 scripts/datasource/init-slave.sql。
+        slave:
+          # 从库 JDBC URL；默认指向本机 MySQL（apex_system 库），可经 DB_SLAVE_URL 覆盖
+          url: ${DB_SLAVE_URL:jdbc:mysql://127.0.0.1:3306/apex_system?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false}
+          # 数据库凭据；默认本机 root/apex-root，可经环境变量覆盖
+          username: ${DB_SLAVE_USERNAME:root}
+          password: ${DB_SLAVE_PASSWORD:apex-root}
+          # MySQL 驱动与连接池（与 master 一致：Alibaba Druid）
+          driver-class-name: com.mysql.cj.jdbc.Driver
+          type: com.alibaba.druid.pool.DruidDataSource
+          druid:
+            db-type: mysql
+            initial-size: 5
+            min-idle: 5
+            max-active: ${DB_MAX_ACTIVE:20}
+            max-wait: 3000
+            validation-query: SELECT 1 FROM DUAL
+            test-while-idle: true
+            pool-prepared-statements: true
+            max-pool-prepared-statement-per-connection-size: 20
+            filters: stat
+
+  # ---------- Flyway 数据库迁移（与 prod 一致） ----------
+  flyway:
+    # dev 启动时自动执行 classpath:db/migration/{apex.database.type} 迁移
+    enabled: false
+    locations: classpath:db/migration/${apex.database.type:mysql}
+    # 严格校验已执行迁移的 checksum，防止脚本被篡改
+    validate-on-migrate: true
+    # 禁止自动创建基线版本
+    baseline-on-migrate: false
+    # 禁止自动修复元数据表
+    repair: false
+
+  # ---------- 注册中心与配置中心 ----------
+  # ❌ Nacos：dev 环境禁用配置中心与服务发现，避免依赖外部 Nacos 实例。
+  # （差异）公共层 spring.cloud.nacos 默认 enabled；dev 显式关闭。
+  cloud:
+    nacos:
+      discovery:
+        enabled: false
+      config:
+        enabled: false
+
+# ============================================================
+# JWT 签名密钥（开发环境）
+# ============================================================
+# 🔒 生产必须通过 JWT_SECRET 注入 ≥32 字节（256 bits）随机密钥；
+#    dev 默认值长度满足 JJWT 0.12+ 的 HMAC-SHA256 密钥强度要求（≥256 bits）。
+jwt:
+  secret: ${JWT_SECRET:apex-dev-jwt-secret-key-change-me-0123456789}
+
+# ============================================================
+# Keycloak 集成（开发环境）
+# ============================================================
+# ✅ dev 环境默认启用 Keycloak，连接到 podman-compose.yml 中的 Keycloak 服务
+keycloak:
+  # ✅ 开发环境启用 Keycloak 集成
+  enabled: ${KEYCLOAK_ENABLED:true}
+  # Keycloak 服务器地址（默认 Podman Compose 配置的端口 8180）
+  server-url: ${KEYCLOAK_SERVER_URL:http://localhost:8180}
+  realm: ${KEYCLOAK_REALM:apex}
+  admin-username: ${KEYCLOAK_ADMIN_USERNAME:admin}
+  admin-password: ${KEYCLOAK_ADMIN_PASSWORD:admin123}
+  admin-client-id: admin-cli
+  client-id: apex-client
+  # dev 环境使用 Public Client（不需要 client-secret）
+  client-secret: ${KEYCLOAK_CLIENT_SECRET:}
+  user-sync-enabled: true
+  frontend-callback-url: http://localhost:3000/auth/callback
+
+# ============================================================
+# 消息中间件（RocketMQ）
+# ============================================================
+# ⚠️ dev 环境不启动本地 RocketMQ Broker；仅配置连接信息供调试。
+rocketmq:
+  # Name Server 地址：本地 Broker 未启动时生产者发送会失败，属预期行为。
+  name-server: localhost:9876
+  producer:
+    group: ${ROCKETMQ_PRODUCER_GROUP:apex-dev-producer}
+    send-message-timeout: ${ROCKETMQ_SEND_TIMEOUT:30000}
+
+# ============================================================
+# 日志级别
+# ============================================================
+logging:
+  level:
+    root: INFO
+    # ✅ 业务代码 DEBUG：本地开发查看详细日志
+    com.apex.scaffold: DEBUG
+    org.redisson: WARN
+
+# ============================================================
+# 业务自定义配置
+# ============================================================
+apex:
+  redis:
+    # ❌ 关闭启动时 Redis 清理（开发环境保留本地缓存数据）
+    cleanup-on-startup: false
+  # ---------- Sentinel 系统保护 ----------
+  # ❌ 开发环境关闭系统保护规则（CPU/QPS 过载拦截）：
+  #   本地机器负载波动（容器/其他进程占用 CPU）会触发 SystemBlockException(503)，
+  #   误伤正常接口调试；生产环境保持默认开启（application.yml 默认 enabled=true）。
+  sentinel:
+    system-rules:
+      enabled: false
+  # ---------- 消息消费者开关 ----------
+  # ❌ 关闭消息消费者：本地无 RocketMQ Broker，避免监听器启动报错。
+  mq:
+    consumer:
+      enabled: false
+    dlq:
+      enabled: false
+    # ❌ 关闭领域事件 MQ 广播：无 Broker 时跳过分布式发布，仅保留本地事件（进程内）
+    # 💡 EnhancedDomainEventPublisherImpl 读取，关闭后发布走 Spring 事件本地分发
+    domain-event-enabled: false
+    # 领域事件 Topic（保留默认值；开启广播时生效）
+    domain-event-topic: apex-domain-event
+  # ---------- 登录保护开关 ----------
+  # ❌ 开发环境临时关闭登录保护：便于快速调试，避免验证码/暴力检查干扰
+  security:
+    login-protection:
+      enabled: false
+
+# ============================================================
+# 数据可视化(可选调试工具)
+# ============================================================
+# ✅ dev 使用本地 MySQL;如需查看数据,可使用 Navicat / mysql 客户端直连
+#    jdbc:mysql://127.0.0.1:3306/apex_system（root/apex-root，可环境变量覆盖）。
+
+# ============================================================
+# 全文搜索（Meilisearch）
+# ============================================================
+# ✅ dev 环境启用 Meilisearch，本地默认 http://localhost:7700
+meilisearch:
+  enabled: true
+  url: http://localhost:7700
+  api-key: masterKey  # 开发环境测试密钥
+
+# ============================================================
+# 运行日志查询（Grafana Loki）
+# ============================================================
+# ✅ dev 环境启用 Loki，本地默认 http://localhost:3100
+loki:
+  enabled: true
+  url: http://localhost:3100
+
+# ============================================================
+# Grafana（日志查询跳转）
+# ============================================================
+# ✅ dev 环境启用 Grafana，本地默认 http://localhost:3200
+grafana:
+  enabled: true
+  url: http://localhost:3200

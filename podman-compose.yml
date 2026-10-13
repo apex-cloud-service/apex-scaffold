@@ -1,0 +1,674 @@
+# ============================================================
+# Apex Scaffold - Podman Compose 一键编排
+# ============================================================
+# 服务: apex-gateway + 5 微服务 + nacos + mysql + redis；可选 rocketmq（--profile rocketmq）
+#
+# 用法:
+#   # 1) 本地/测试一键栈（默认读取 .env，需先配置全部安全密钥）
+#   cp .env.example .env        # 密钥格式见 docs/05-operations/configuration.md
+#   podman-compose -f podman-compose.yml up -d --build
+#   podman-compose -f podman-compose.yml ps           # 等待 mysql/redis/nacos healthy、各微服务就绪
+#
+#   # 2) 生产部署（务必先编辑 .env：数据库密码 / JWT_SECRET / 地址）
+#   podman-compose -f podman-compose.yml --env-file .env.prod up -d --build
+#
+#   # 3) 需要 RocketMQ（企业版消息能力）
+#   ROCKETMQ_NAMESERVER=rocketmq-namesrv:9876 APEX_MQ_CONSUMER_ENABLED=true \
+#   podman-compose -f podman-compose.yml --profile rocketmq up -d --build
+#
+#   # 4) 应用启动前先启动观测服务，创建共享 apex-observability 网络
+#   podman-compose -p apex-infra -f podman-compose.infra.yml up -d skywalking-oap skywalking-ui elasticsearch kibana filebeat
+#
+#   # 5) 管理后台前端（可选，需先构建镜像: cd ../apex-admin-web && podman build -t apex-admin-web:latest .）
+#   podman-compose -f podman-compose.yml up -d apex-admin-web
+#
+# 访问（旧单体 apex-scaffold 已退役，由 apex-gateway 承接 8080 统一入口，见 §15.1/§15.3）:
+#   业务 API    http://localhost:8080 （网关，API 文档 /doc.html）
+#   认证服务    http://localhost:8081     系统服务    http://localhost:8082（管理 8083）
+#   工作流服务  http://localhost:8093     办公服务    http://localhost:8084
+#   文件服务    http://localhost:8085
+#   Nacos 控制台  http://localhost:8848/nacos
+#   管理后台    http://localhost          （前端容器 Nginx，反代 /api、/admin-api 到网关 8080）
+#   详细文档:   docs/05-operations/deployment.md
+# ============================================================
+
+x-security-environment: &security-environment
+  APEX_DATA_ENCRYPTION_KEY: ${APEX_DATA_ENCRYPTION_KEY:?APEX_DATA_ENCRYPTION_KEY is required}
+  SECURITY_ENCRYPTION_KEY: ${SECURITY_ENCRYPTION_KEY:?SECURITY_ENCRYPTION_KEY is required}
+  CONFIG_ENCRYPTION_KEY: ${CONFIG_ENCRYPTION_KEY:?CONFIG_ENCRYPTION_KEY is required}
+  APEX_CONFIG_ENCRYPTION_KEY: ${APEX_CONFIG_ENCRYPTION_KEY:?APEX_CONFIG_ENCRYPTION_KEY is required}
+  JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+
+# 共享环境变量锚点：所有微服务复用安全密钥、Redis、Nacos、JWT、RocketMQ、Outbox、
+# Keycloak、License、治理与可观测等公共配置；各服务仅在自身块内追加 DB / 端口等差异项。
+x-app-common-environment: &app-common-environment
+  <<: *security-environment
+  # 激活 profile：<环境>,<档位>，例如 prod,enterprise / dev,standard
+  SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod,enterprise}
+  # ---------- 日志与链路追踪 ----------
+  LOG_PATH: /app/logs
+  SW_AGENT_ENABLED: ${SW_AGENT_ENABLED:-true}
+  SW_AGENT_COLLECTOR_BACKEND_SERVICES: ${SW_AGENT_COLLECTOR_BACKEND_SERVICES:-skywalking-oap:11800}
+  # ---------- JVM 调优参数（默认与 Containerfile ENV JAVA_OPTS 一致；.env 设置 JAVA_OPTS 可整体覆盖） ----------
+  # 堆内存 -Xms512m/-Xmx1024m、G1 回收器、GC 停顿目标、元空间上下限、OOM 堆转储+退出、滚动 GC 日志
+  # （GC 日志/堆转储写入容器 /app/logs，需持久化时挂载 volume 或经 logstash/sidecar 采集）
+  JAVA_OPTS: ${JAVA_OPTS:--Xms512m -Xmx1024m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:MetaspaceSize=256m -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/app/logs/heapdump.hprof -XX:+ExitOnOutOfMemoryError -Xlog:gc*:file=/app/logs/gc.log:time,uptime,level,tags:filecount=5,filesize=20m -Dfile.encoding=UTF-8 -Djava.security.egd=file:/dev/./urandom}
+  # ---------- 数据库主机（各服务在自身块内提供 DB_NAME / SPRING_DATASOURCE_URL） ----------
+  DB_HOST: mysql
+  DB_PORT: "3306"
+  DB_USERNAME: ${DB_USERNAME:-root}
+  DB_PASSWORD: ${DB_PASSWORD:-apex-root}
+  # ---------- Redis（网关限流 / 各服务缓存与分布式锁共用） ----------
+  REDIS_HOST: redis
+  REDIS_PORT: "6379"
+  # prod 配置强制要求（spring.data.redis.password=${REDIS_PASSWORD}），
+  # 与下方 redis 服务的 --requirepass 保持一致；生产务必修改
+  REDIS_PASSWORD: ${REDIS_PASSWORD:-apex-redis-password}
+  # ---------- Nacos（服务发现 + 配置中心；微服务拓扑默认启用） ----------
+  NACOS_CONFIG_ENABLED: ${NACOS_CONFIG_ENABLED:-true}
+  NACOS_DISCOVERY_ENABLED: ${NACOS_DISCOVERY_ENABLED:-true}
+  NACOS_REGISTER_ENABLED: ${NACOS_REGISTER_ENABLED:-true}
+  NACOS_SERVER_ADDR: ${NACOS_SERVER_ADDR:-nacos:8848}
+  NACOS_NAMESPACE: ${NACOS_NAMESPACE:-public}
+  # ---------- RocketMQ（公共配置提供本地默认地址；业务能力默认关闭） ----------
+  # 启用消息能力：设置 ROCKETMQ_NAMESERVER=rocketmq-namesrv:9876、APEX_MQ_CONSUMER_ENABLED=true，并搭配 --profile rocketmq 启动
+  ROCKETMQ_NAMESERVER: ${ROCKETMQ_NAMESERVER:-}
+  ROCKETMQ_NAMESRV_ADDR: ${ROCKETMQ_NAMESRV_ADDR:-}
+  ROCKETMQ_PRODUCER_GROUP: ${ROCKETMQ_PRODUCER_GROUP:-apex-producer-group}
+  ROCKETMQ_ACCESS_KEY: ${ROCKETMQ_ACCESS_KEY:-}
+  ROCKETMQ_SECRET_KEY: ${ROCKETMQ_SECRET_KEY:-}
+  APEX_MQ_CONSUMER_ENABLED: ${APEX_MQ_CONSUMER_ENABLED:-false}
+  APEX_MQ_DLQ_ENABLED: ${APEX_MQ_DLQ_ENABLED:-false}
+  APEX_MQ_DOMAIN_EVENT_ENABLED: ${APEX_MQ_DOMAIN_EVENT_ENABLED:-false}
+  APEX_MQ_DOMAIN_EVENT_TOPIC: ${APEX_MQ_DOMAIN_EVENT_TOPIC:-apex-domain-event}
+  MQ_IDEMPOTENT_TTL_MINUTES: ${MQ_IDEMPOTENT_TTL_MINUTES:-30}
+  OUTBOX_BATCH_SIZE: ${OUTBOX_BATCH_SIZE:-50}
+  OUTBOX_MAX_ATTEMPTS: ${OUTBOX_MAX_ATTEMPTS:-8}
+  OUTBOX_LOCK_TIMEOUT_SECONDS: ${OUTBOX_LOCK_TIMEOUT_SECONDS:-120}
+  OUTBOX_PARALLELISM: ${OUTBOX_PARALLELISM:-4}
+  OUTBOX_RETENTION_ENABLED: ${OUTBOX_RETENTION_ENABLED:-true}
+  OUTBOX_RETENTION_DELIVERED_HOURS: ${OUTBOX_RETENTION_DELIVERED_HOURS:-168}
+  OUTBOX_RETENTION_DEAD_DAYS: ${OUTBOX_RETENTION_DEAD_DAYS:-30}
+  OUTBOX_RETENTION_BATCH_SIZE: ${OUTBOX_RETENTION_BATCH_SIZE:-5000}
+  # ---------- Keycloak（IAM/OIDC，对齐 OrbStack 旧实例） ----------
+  KEYCLOAK_ENABLED: ${KEYCLOAK_ENABLED:-false}
+  KEYCLOAK_SERVER_URL: ${KEYCLOAK_SERVER_URL:-http://keycloak:8080}
+  KEYCLOAK_REALM: ${KEYCLOAK_REALM:-apex}
+  KEYCLOAK_CLIENT_ID: ${KEYCLOAK_CLIENT_ID:-apex-client}
+  KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET:-}
+  KEYCLOAK_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USERNAME:-admin}
+  KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin123}
+  KEYCLOAK_FRONTEND_CALLBACK_URL: ${KEYCLOAK_FRONTEND_CALLBACK_URL:-http://localhost:5173/auth/callback}
+  KEYCLOAK_USER_SYNC_ENABLED: ${KEYCLOAK_USER_SYNC_ENABLED:-true}
+  # ---------- License（商业授权，可选；留空使用随包基础版） ----------
+  APEX_LICENSE_FILE: ${APEX_LICENSE_FILE:-}
+  # ---------- Meilisearch（全文搜索，供 system-service 使用） ----------
+  MEILISEARCH_ENABLED: ${MEILISEARCH_ENABLED:-true}
+  MEILISEARCH_URL: ${MEILISEARCH_URL:-http://meilisearch:7700}
+  MEILISEARCH_API_KEY: ${MEILI_MASTER_KEY:-masterKey}
+  # ---------- Loki（运行日志查询） ----------
+  LOKI_ENABLED: ${LOKI_ENABLED:-true}
+  LOKI_URL: ${LOKI_URL:-http://loki:3100}
+  # ---------- Grafana（日志查询跳转） ----------
+  GRAFANA_ENABLED: ${GRAFANA_ENABLED:-false}
+  GRAFANA_URL: ${GRAFANA_URL:-http://localhost:3200}
+  # ---------- 服务治理：Compose 模式与统一关停预算 ----------
+  APEX_GOVERNANCE_DEPLOYMENT_MODE: ${APEX_GOVERNANCE_DEPLOYMENT_MODE:-compose}
+  APEX_GOVERNANCE_SHUTDOWN_TIMEOUT: ${APEX_GOVERNANCE_SHUTDOWN_TIMEOUT:-90s}
+  APEX_GOVERNANCE_READINESS_WITHDRAW_TIMEOUT: ${APEX_GOVERNANCE_READINESS_WITHDRAW_TIMEOUT:-5s}
+  APEX_GOVERNANCE_MQ_DRAIN_TIMEOUT: ${APEX_GOVERNANCE_MQ_DRAIN_TIMEOUT:-30s}
+  APEX_GOVERNANCE_FORCE_SHUTDOWN: ${APEX_GOVERNANCE_FORCE_SHUTDOWN:-true}
+  # ---------- 时区 ----------
+  TZ: ${TZ:-Asia/Shanghai}
+
+services:
+  security-key-check:
+    image: docker.io/library/python:3.13-alpine
+    environment: *security-environment
+    command: ["python3", "-B", "/tools/local_deployment.py", "validate"]
+    volumes:
+      - ./scripts/utils/local_deployment.py:/tools/local_deployment.py:ro
+    network_mode: none
+    read_only: true
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    user: "65534:65534"
+    restart: "no"
+  # ---------------- 应用微服务（§13.1：gateway + 5 服务；一个镜像 = 一个服务） ----------------
+  #
+  # 旧单体 apex-scaffold 已退役（见 docs/microservice-migration-plan.md §15.1/§15.3）。
+  # Containerfile 以 --build-arg SERVICE_MODULE 参数化，每个微服务构建独立镜像；
+  # 网关（apex-gateway）承接原单体 8080 入口职责，其余服务经网关 lb:// 路由。
+  # 服务间路由依赖 Nacos 服务发现，故本地编排默认启用 Nacos（见 NACOS_* 变量）。
+  #
+
+  # 网关：统一入口（原单体 8080 职责），无独立数据库，依赖 Redis 限流。
+  apex-gateway:
+    build:
+      context: .
+      dockerfile: Containerfile
+      args:
+        BUILD_PROFILE: ${BUILD_PROFILE:-enterprise}
+        SERVICE_MODULE: apex-gateway
+        SERVICE_PORT: "8080"
+        MANAGEMENT_PORT: "8080"
+        HEALTHCHECK_PORT: "8080"
+    image: apex-gateway:${TAG:-latest}
+    volumes:
+      - ./logs/apex-gateway:/app/logs
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    environment:
+      <<: *app-common-environment
+      GATEWAY_PORT: "8080"
+    depends_on:
+      security-key-check:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      nacos:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:8080/actuator/health/readiness"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 60s
+    stop_grace_period: ${APEX_STOP_GRACE_PERIOD:-105s}
+    restart: unless-stopped
+    networks:
+      - apex-network
+      - observability
+
+  # 认证服务：Token/会话/OAuth2（独立库 apex_auth）。
+  apex-auth-service:
+    build:
+      context: .
+      dockerfile: Containerfile
+      args:
+        BUILD_PROFILE: ${BUILD_PROFILE:-enterprise}
+        SERVICE_MODULE: apex-auth-service
+        SERVICE_PORT: "8081"
+        MANAGEMENT_PORT: "8081"
+        HEALTHCHECK_PORT: "8081"
+    image: apex-auth-service:${TAG:-latest}
+    volumes:
+      - ./logs/apex-auth-service:/app/logs
+    ports:
+      - "${AUTH_PORT:-8081}:8081"
+    environment:
+      <<: *app-common-environment
+      DB_NAME: apex_auth
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/apex_auth?createDatabaseIfNotExist=true&useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-root}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-apex-root}
+    depends_on:
+      security-key-check:
+        condition: service_completed_successfully
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nacos:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:8081/actuator/health/readiness"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 90s
+    stop_grace_period: ${APEX_STOP_GRACE_PERIOD:-105s}
+    restart: unless-stopped
+    networks:
+      - apex-network
+      - observability
+
+  # 系统服务：user/rbac/config/log/job/tenant 等系统域收敛（独立库 apex_system；管理端口 8083）。
+  apex-system-service:
+    build:
+      context: .
+      dockerfile: Containerfile
+      args:
+        BUILD_PROFILE: ${BUILD_PROFILE:-enterprise}
+        SERVICE_MODULE: apex-system-service
+        SERVICE_PORT: "8082"
+        MANAGEMENT_PORT: "8083"
+        HEALTHCHECK_PORT: "8083"
+    image: apex-system-service:${TAG:-latest}
+    volumes:
+      - ./logs/apex-system-service:/app/logs
+    ports:
+      - "${SYSTEM_PORT:-8082}:8082"
+      - "${SYSTEM_MANAGEMENT_PORT:-8083}:8083"
+    environment:
+      <<: *app-common-environment
+      MANAGEMENT_SERVER_ADDRESS: "0.0.0.0"
+      DB_NAME: apex_system
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/apex_system?createDatabaseIfNotExist=true&useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-root}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-apex-root}
+    depends_on:
+      security-key-check:
+        condition: service_completed_successfully
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nacos:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:8083/actuator/health/readiness"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 90s
+    stop_grace_period: ${APEX_STOP_GRACE_PERIOD:-105s}
+    restart: unless-stopped
+    networks:
+      - apex-network
+      - observability
+
+  # 工作流服务：工作流引擎/审批（独立库 apex_workflow）。
+  apex-workflow-service:
+    build:
+      context: .
+      dockerfile: Containerfile
+      args:
+        BUILD_PROFILE: ${BUILD_PROFILE:-enterprise}
+        SERVICE_MODULE: apex-workflow-service
+        SERVICE_PORT: "8083"
+        MANAGEMENT_PORT: "8083"
+        HEALTHCHECK_PORT: "8083"
+    image: apex-workflow-service:${TAG:-latest}
+    volumes:
+      - ./logs/apex-workflow-service:/app/logs
+    ports:
+      - "${WORKFLOW_PORT:-8093}:8083"
+    environment:
+      <<: *app-common-environment
+      DB_NAME: apex_workflow
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/apex_workflow?createDatabaseIfNotExist=true&useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-root}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-apex-root}
+    depends_on:
+      security-key-check:
+        condition: service_completed_successfully
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nacos:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:8083/actuator/health/readiness"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 90s
+    stop_grace_period: ${APEX_STOP_GRACE_PERIOD:-105s}
+    restart: unless-stopped
+    networks:
+      - apex-network
+      - observability
+
+  # 办公服务：组织/审批/日历/消息/三平台同步（独立库 apex_office）。
+  apex-office-service:
+    build:
+      context: .
+      dockerfile: Containerfile
+      args:
+        BUILD_PROFILE: ${BUILD_PROFILE:-enterprise}
+        SERVICE_MODULE: apex-office-service
+        SERVICE_PORT: "8084"
+        MANAGEMENT_PORT: "8084"
+        HEALTHCHECK_PORT: "8084"
+    image: apex-office-service:${TAG:-latest}
+    volumes:
+      - ./logs/apex-office-service:/app/logs
+    ports:
+      - "${OFFICE_PORT:-8084}:8084"
+    environment:
+      <<: *app-common-environment
+      DB_NAME: apex_office
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/apex_office?createDatabaseIfNotExist=true&useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-root}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-apex-root}
+    depends_on:
+      security-key-check:
+        condition: service_completed_successfully
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nacos:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:8084/actuator/health/readiness"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 90s
+    stop_grace_period: ${APEX_STOP_GRACE_PERIOD:-105s}
+    restart: unless-stopped
+    networks:
+      - apex-network
+      - observability
+
+  # 文件服务：文件/文档/存储 SPI/分片与预览（独立库 apex_file）。
+  apex-file-service:
+    build:
+      context: .
+      dockerfile: Containerfile
+      args:
+        BUILD_PROFILE: ${BUILD_PROFILE:-enterprise}
+        SERVICE_MODULE: apex-file-service
+        SERVICE_PORT: "8085"
+        MANAGEMENT_PORT: "8085"
+        HEALTHCHECK_PORT: "8085"
+    image: apex-file-service:${TAG:-latest}
+    volumes:
+      - ./logs/apex-file-service:/app/logs
+    ports:
+      - "${FILE_PORT:-8085}:8085"
+    environment:
+      <<: *app-common-environment
+      DB_NAME: apex_file
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/apex_file?createDatabaseIfNotExist=true&useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-root}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-apex-root}
+    depends_on:
+      security-key-check:
+        condition: service_completed_successfully
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nacos:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:8085/actuator/health/readiness"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 90s
+    stop_grace_period: ${APEX_STOP_GRACE_PERIOD:-105s}
+    restart: unless-stopped
+    networks:
+      - apex-network
+      - observability
+
+  # ---------------- Nacos（服务发现 + 配置中心） ----------------
+  # 微服务拓扑下网关 lb:// 路由依赖服务发现；提供 nacos/nacos（单机模式，仅用于本地起步）。
+  nacos:
+    image: docker.io/nacos/nacos-server:v2.4.3
+    environment:
+      MODE: standalone
+      NACOS_AUTH_ENABLE: "false"
+      PREFER_HOST_MODE: hostname
+      JVM_XMS: 256m
+      JVM_XMX: 512m
+      TZ: ${TZ:-Asia/Shanghai}
+    ports:
+      - "${NACOS_PORT:-8848}:8848"
+      - "${NACOS_GRPC_PORT:-9848}:9848"
+    volumes:
+      - nacos-data:/home/nacos/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8848/nacos/v1/console/health/readiness"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - apex-network
+
+  # ---------------- MySQL ----------------
+  mysql:
+    image: docker.io/library/mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-apex-root}
+      # 引导库（旧单体 apex_data 已随单体退役收敛为 apex_system，见 §Phase 6）；
+      # 各微服务另经 createDatabaseIfNotExist 自建独立库（apex_auth/apex_system/apex_workflow/...）
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-apex_system}
+      TZ: ${TZ:-Asia/Shanghai}
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    ports:
+      # 暴露给宿主机便于运维；生产可通过 MYSQL_PORT 改映射或注释掉
+      - "${MYSQL_PORT:-3306}:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p${MYSQL_ROOT_PASSWORD:-apex-root}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - apex-network
+
+  # ---------------- Redis ----------------
+  redis:
+    image: docker.io/library/redis:7-alpine
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-apex-redis-password}
+    command: ["sh", "-c", "redis-server --appendonly yes --requirepass \"$${REDIS_PASSWORD}\""]
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis-data:/data
+    # Redis 开启 requirepass 后，健康检查必须携带密码，否则应用依赖检查会长期失败
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$${REDIS_PASSWORD}\" ping | grep -q PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - apex-network
+
+  # ---------------- Meilisearch（全文搜索引擎） ----------------
+  # 轻量级搜索引擎，用于系统管理数据（用户/角色/菜单/部门/字典/配置）全文索引
+  # CJK 支持好，内存占用比 Elasticsearch 低 80%
+  meilisearch:
+    image: docker.io/getmeili/meilisearch:v1.10
+    environment:
+      # Master Key：开发环境默认值，生产必须通过 MEILI_MASTER_KEY 注入随机密钥（≥16字符）
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:-masterKey}
+      # 运行环境：development（允许无 Master Key）/ production（强制 Master Key）
+      MEILI_ENV: ${MEILI_ENV:-development}
+      # 数据持久化路径
+      MEILI_DB_PATH: /meili_data
+      # 时区
+      TZ: ${TZ:-Asia/Shanghai}
+    ports:
+      - "${MEILISEARCH_PORT:-7700}:7700"
+    volumes:
+      - meilisearch-data:/meili_data
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "-O", "/dev/null", "http://127.0.0.1:7700/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - apex-network
+
+  # ---------------- Loki（日志聚合与查询） ----------------
+  # Grafana Loki 轻量级日志系统，比 ELK 资源消耗降低 80%
+  # 标签索引 + 全文扫描架构，专为云原生应用设计
+  loki:
+    image: docker.io/grafana/loki:3.0.0
+    command: -config.file=/etc/loki/local-config.yaml
+    environment:
+      TZ: ${TZ:-Asia/Shanghai}
+    ports:
+      - "${LOKI_PORT:-3100}:3100"
+    volumes:
+      - ./config/monitoring/loki-config.yaml:/etc/loki/local-config.yaml:ro
+      - loki-data:/loki
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3100/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    restart: unless-stopped
+    networks:
+      - apex-network
+
+  # ---------------- Alloy（日志采集器） ----------------
+  # Grafana Alloy：新一代可观测性数据采集器，统一采集日志/指标/trace
+  # 替代 Logstash，配置简单，资源占用低
+  alloy:
+    image: docker.io/grafana/alloy:v1.0.0
+    command:
+      - run
+      - --server.http.listen-addr=0.0.0.0:12345
+      - --storage.path=/var/lib/alloy/data
+      - /etc/alloy/config.alloy
+    environment:
+      TZ: ${TZ:-Asia/Shanghai}
+      APEX_LOG_ENV: ${APEX_LOG_ENV:-prod}
+    ports:
+      - "${ALLOY_PORT:-12345}:12345"
+    volumes:
+      - ./config/monitoring/alloy-config.alloy:/etc/alloy/config.alloy:ro
+      # 挂载应用日志目录（只读），Alloy 读取 JSON 日志文件
+      - ./logs:/var/log/apex-scaffold:ro
+      - alloy-data:/var/lib/alloy
+    depends_on:
+      loki:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - apex-network
+
+  # ---------------- Keycloak（IAM 身份认证与访问管理） ----------------
+  # 企业级开源 IAM，提供 OIDC/OAuth2/SAML 单点登录、社交登录、MFA、用户联邦等能力
+  # 默认关闭，通过 --profile keycloak 启用：podman-compose -f podman-compose.yml --profile keycloak up -d keycloak
+  # 管理控制台: http://localhost:${KEYCLOAK_PORT:-8180}  (admin/admin123)
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0.7
+    profiles: ["keycloak"]
+    environment:
+      # 管理员账号（生产必须修改）
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN_USERNAME:-admin}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin123}
+      # 数据库配置（使用现有 MySQL 实例）
+      KC_DB: mysql
+      KC_DB_URL: jdbc:mysql://mysql:3306/${KEYCLOAK_DB_NAME:-keycloak}?useUnicode=true&characterEncoding=UTF-8&connectionCollation=utf8mb4_unicode_ci&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
+      KC_DB_USERNAME: ${KEYCLOAK_DB_USERNAME:-root}
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:-apex-root}
+      # 主机名与端口（对齐 OrbStack 旧实例：hostname-strict=false + start-dev，容器内按请求 Host 解析 issuer）
+      KC_HOSTNAME_STRICT: "false"
+      KC_RUN_IN_CONTAINER: "true"
+      KC_HTTP_PORT: 8080
+      KC_HTTPS_PORT: 8443
+      # 日志
+      KC_LOG_LEVEL: ${KEYCLOAK_LOG_LEVEL:-INFO}
+      KC_HEALTH_ENABLED: "true"
+      # 时区
+      TZ: ${TZ:-Asia/Shanghai}
+    command:
+      - start-dev
+      - --http-enabled=true
+    ports:
+      - "${KEYCLOAK_PORT:-8180}:8080"
+    volumes:
+      - keycloak-data:/opt/keycloak/data
+    depends_on:
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000 && echo -e 'GET /health/ready HTTP/1.0\\r\\nHost: localhost\\r\\n\\r\\n' >&3 && cat <&3 | grep -q '200 OK'"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+    restart: unless-stopped
+    networks:
+      - apex-network
+
+  # ---------------- RocketMQ（可选：podman-compose -f podman-compose.yml --profile rocketmq up -d） ----------------
+  rocketmq-namesrv:
+    image: docker.io/apache/rocketmq:5.3.1
+    profiles: ["rocketmq"]
+    # mkdir 确保 GC 日志目录存在（镜像默认无 /home/rocketmq/logs）
+    command:
+      - /bin/sh
+      - -c
+      - mkdir -p /home/rocketmq/logs && exec sh mqnamesrv
+    environment:
+      HEAP_OPTS: "-Xms256m -Xmx512m -Xmn128m"
+      # JVM 调优（JDK8 语法；JAVA_OPT_EXT 追加在末尾，覆盖默认 /dev/shm GC 日志）：
+      #   ⚠️ runserver.sh 强制 CMS 回收器（JDK8），故不传 G1（G1+CMS 共存会启动崩溃）；
+      #   元空间 256m/512m；OOM 堆转储 + 退出自愈；滚动 GC 日志 5×20m
+      JAVA_OPT_EXT: "-XX:MetaspaceSize=256m -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/home/rocketmq/logs/rmq_namesrv_heapdump.hprof -XX:+ExitOnOutOfMemoryError -Xloggc:/home/rocketmq/logs/rmq_namesrv_gc.log -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=5 -XX:GCLogFileSize=20m -Dfile.encoding=UTF-8"
+    ports:
+      - "9876:9876"
+    restart: unless-stopped
+    networks:
+      - apex-network
+
+  # ---------------- Apex Admin Web（前端管理后台，可选） ----------------
+  apex-admin-web:
+    # 镜像需预先构建（前端为独立仓库，compose 无法引用仓库外 build context）：
+    #   cd ../apex-admin-web && podman build -t apex-admin-web:${TAG:-latest} .
+    image: apex-admin-web:${TAG:-latest}
+    container_name: apex-admin-web
+    environment:
+      # 反代后端：同 compose 网络内按服务名访问 apex-gateway:8080（网关承接原单体 8080 入口）
+      API_PROXY_PASS: ${API_PROXY_PASS:-http://apex-gateway:8080}
+      TZ: ${TZ:-Asia/Shanghai}
+    ports:
+      - "${WEB_PORT:-80}:80"
+    # 等待网关 readiness 通过后再启动反向代理，避免将流量导向未就绪实例
+    depends_on:
+      apex-gateway:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - apex-network
+
+  rocketmq-broker:
+    image: docker.io/apache/rocketmq:5.3.1
+    profiles: ["rocketmq"]
+    command:
+      - /bin/sh
+      - -c
+      - mkdir -p /home/rocketmq/logs && exec sh mqbroker -n rocketmq-namesrv:9876
+    environment:
+      NAMESRV_ADDR: rocketmq-namesrv:9876
+      HEAP_OPTS: "-Xms512m -Xmx1g -Xmn256m"
+      # JVM 调优（JDK8 语法；runbroker.sh 已含 G1）：
+      #   200ms 停顿；元空间 256m/512m；OOM 堆转储 + 退出自愈；滚动 GC 日志 5×20m
+      JAVA_OPT_EXT: "-XX:MaxGCPauseMillis=200 -XX:MetaspaceSize=256m -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/home/rocketmq/logs/rmq_broker_heapdump.hprof -XX:+ExitOnOutOfMemoryError -Xloggc:/home/rocketmq/logs/rmq_broker_gc.log -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=5 -XX:GCLogFileSize=20m -Dfile.encoding=UTF-8"
+    depends_on:
+      - rocketmq-namesrv
+    ports:
+      - "10909:10909"
+      - "10911:10911"
+    restart: unless-stopped
+    networks:
+      - apex-network
+
+volumes:
+  mysql-data:
+  redis-data:
+  meilisearch-data:
+  loki-data:
+  alloy-data:
+  keycloak-data:
+  nacos-data:
+
+networks:
+  apex-network:
+    driver: bridge
+  observability:
+    name: apex-observability
+    external: true

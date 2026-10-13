@@ -33,7 +33,7 @@ Apex Scaffold v1.0.0 是一个面向中小型企业的**企业级后端开发脚
 
 ### 开发体验
 - 📝 **API文档** - SpringDoc OpenAPI + Knife4j可视化
-- 🐳 **容器化部署** - Docker + Kubernetes一键部署
+- 🐳 **容器化部署** - Podman + Kubernetes一键部署
 - 🧪 **测试框架** - JUnit 5 + Mockito + AssertJ完整覆盖
 
 ## 📦 安装方式
@@ -48,10 +48,10 @@ Apex Scaffold v1.0.0 是一个面向中小型企业的**企业级后端开发脚
 </dependency>
 ```
 
-### Docker镜像
+### 容器镜像
 
 ```bash
-docker pull apexscaffold/apex-scaffold:1.0.0
+podman pull docker.io/apexscaffold/apex-scaffold:1.0.0
 ```
 
 ### Kubernetes部署

@@ -131,7 +131,7 @@
    - 说明字段的约束、默认值、取值范围
 
 **参考模板**：
-- docs/04-development/javadoc-guide.md
+- docs/04-development/development-standards.md
 - 已完成的示例：AuthHandler.java、UserHandler.java、MenuHandler.java
 
 #### Step 1.3：修复 apex-application 层（2-3 小时）
@@ -693,7 +693,7 @@ mvnd pmd:check
 ### 10.1 项目规范
 
 - [AGENTS.md](../../../../AGENTS.md) - 项目开发规范
-- [JavaDoc 编写指南](../../../04-development/javadoc-guide.md)
+- [JavaDoc 编写指南](../../../04-development/development-standards.md)
 - [SpringDoc 注解模板](../../../03-api/springdoc-annotation-templates.md)
 
 ### 10.2 示例文件

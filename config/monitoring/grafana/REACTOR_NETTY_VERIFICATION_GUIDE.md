@@ -9,24 +9,20 @@
 
 在验证 Reactor Netty 指标前，请确保以下服务正常运行：
 
-### 1. Docker Daemon 状态
+### 1. Podman 运行状态
 
 ```bash
-docker ps
+podman ps
 ```
 
-**预期结果**：能够看到容器列表，而不是 "Cannot connect to the Docker daemon" 错误
+**预期结果**：能够看到容器列表，且 Podman 连接正常。
 
-**如果失败**：
+**如果失败（macOS）**：
 ```bash
-# macOS（如使用 OrbStack）
-open -a OrbStack
-
-# 或使用 Docker Desktop
-open -a Docker
-
-# 等待 10 秒后重试
-sleep 10 && docker ps
+# 查看已有虚拟机；尚未创建时先执行 podman machine init
+podman machine list
+podman machine start
+podman ps
 ```
 
 ---
@@ -34,7 +30,7 @@ sleep 10 && docker ps
 ### 2. Redis 容器状态
 
 ```bash
-docker compose -f /Users/work/apex-scaffold/docker-compose.infra.yml ps redis
+podman-compose -f /Users/work/apex-scaffold/podman-compose.infra.yml ps redis
 ```
 
 **预期结果**：
@@ -46,7 +42,7 @@ apex-infra-redis     Up X minutes (healthy)
 **如果失败（容器未运行）**：
 ```bash
 cd /Users/work/apex-scaffold
-docker compose -f docker-compose.infra.yml up -d redis
+podman-compose -f podman-compose.infra.yml up -d redis
 ```
 
 ---
@@ -325,7 +321,7 @@ chmod +x verify_reactor_metrics.sh
 
 **解决**：
 ```bash
-docker compose -f /Users/work/apex-scaffold/docker-compose.infra.yml up -d redis
+podman-compose -f /Users/work/apex-scaffold/podman-compose.infra.yml up -d redis
 ```
 
 ---

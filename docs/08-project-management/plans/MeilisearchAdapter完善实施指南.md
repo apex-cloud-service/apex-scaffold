@@ -7,7 +7,7 @@
 **已完成**：
 - ✅ 框架搭建完成（Domain/Infrastructure/Application/Interfaces层）
 - ✅ 编译通过（Infrastructure层BUILD SUCCESS）
-- ✅ 配置完整（Meilisearch、Docker Compose）
+- ✅ 配置完整（Meilisearch、Podman Compose）
 - ✅ 事件驱动索引和定时任务
 
 **当前限制**：
@@ -471,7 +471,7 @@ public Mono<Boolean> removeIndex(String resourceType, String resourceId) {
 ### 1. 启动Meilisearch
 
 ```bash
-docker compose up -d meilisearch
+podman-compose -f podman-compose.yml up -d meilisearch
 ```
 
 ### 2. 编译应用

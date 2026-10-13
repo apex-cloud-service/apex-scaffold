@@ -427,7 +427,7 @@ curl -X POST http://localhost:8080/api/v1/auth/login \
 **架构文档**:
 - 📊 [ARCHITECTURE_INDEX.md](../../../02-architecture/architecture-index.md) - 架构文档索引
 - 📈 [diagrams/README.md](../../../diagrams/README.md) - SVG图表使用指南
-- 📝 [standards/backend-development-standards.md](../../../04-development/backend-development-standards.md) - 后端开发规范
+- 📝 [development-standards.md](../../../04-development/development-standards.md) - 后端开发规范
 
 **获取帮助**:
 - 💬 企业微信 **Apex 开发群**

@@ -71,8 +71,8 @@ class TransactionalOutboxExecutorTest {
                     + "locked_by VARCHAR(64), locked_at DATETIME(6), last_error VARCHAR(1000), "
                     + "created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6), delivered_at DATETIME(6))");
             statement.execute("DROP TABLE IF EXISTS sys_biz_records");
-            statement.execute("CREATE TABLE sys_biz_records ("
-                    + "id BIGINT NOT NULL PRIMARY KEY, biz_key VARCHAR(64) NOT NULL)");
+            statement.execute(
+                    "CREATE TABLE sys_biz_records (" + "id BIGINT NOT NULL PRIMARY KEY, biz_key VARCHAR(64) NOT NULL)");
         }
     }
 
@@ -162,8 +162,8 @@ class TransactionalOutboxExecutorTest {
     /** 业务写入须走事务绑定连接，才能与 Outbox 写入共享事务边界。 */
     private void writeBizInBoundTransaction(long id, String key) {
         Connection connection = DataSourceUtils.getConnection(dataSource);
-        try (PreparedStatement statement = connection.prepareStatement(
-                "INSERT INTO sys_biz_records (id, biz_key) VALUES (?, ?)")) {
+        try (PreparedStatement statement =
+                connection.prepareStatement("INSERT INTO sys_biz_records (id, biz_key) VALUES (?, ?)")) {
             statement.setLong(1, id);
             statement.setString(2, key);
             statement.executeUpdate();
@@ -180,7 +180,8 @@ class TransactionalOutboxExecutorTest {
 
     private boolean isOutboxRecordPresent(String eventId) {
         return isPresent(
-                "SELECT 1 FROM sys_domain_event_outbox WHERE event_id = ?", statement -> statement.setString(1, eventId));
+                "SELECT 1 FROM sys_domain_event_outbox WHERE event_id = ?",
+                statement -> statement.setString(1, eventId));
     }
 
     private boolean isPresent(String sql, StatementBinder binder) {

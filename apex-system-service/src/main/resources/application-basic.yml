@@ -1,0 +1,60 @@
+# ============================================================
+# Apex Scaffold - 系统服务 basic Profile 配置（Phase 6 系统收敛）
+# ============================================================
+# 【作用】
+#   基础版（basic）单机配置：仅保留基础功能档位，关闭 RQ 消费者等。
+#   本服务以绞杀者模式组装 apex-interfaces Web 层，行为与单体系统域
+#   一致，故沿用 apex-interfaces/application-basic.yml 的档位口径：
+#   · basic 档 **不切换 H2**，仍使用 application.yml 的 apex_system 数据源；
+#   · Redis 基础设施仍被依赖（JWT 黑名单 / 图形验证码 / 防重放 / 登录保护），
+#     故不排除 Redis/Redisson 自动配置（与单体 basic 口径一致）。
+#
+# ┌───────────────────────────────────────────────────────────┐
+# │ 注释符号规范（全仓配置文件统一约定）                         │
+# ├───────────────────────────────────────────────────────────┤
+# │ ✅ 已启用能力          ❌ 已禁用能力                       │
+# │ 💡 设计说明/优化理由   （差异）标注与公共配置的差异及理由       │
+# └───────────────────────────────────────────────────────────┘
+# @author Apex Team
+# ============================================================
+
+# ============================================================
+# 1. 档位功能矩阵（features.*）
+# ============================================================
+apex:
+  features:
+    # ✅ JWT 认证：所有档位必备
+    jwt-auth: true
+    # ❌ RBAC 权限：基础版不提供
+    rbac: false
+    # ❌ 多级缓存：基础版仅 Caffeine 单机缓存（见公共层 apex.cache.local）
+    cache: false
+    # ❌ 消息队列：基础版不引入 RocketMQ
+    message-queue: false
+    # ❌ 监控告警：基础版仅保留 Actuator 基础端点（见下方 management）
+    monitoring: false
+    # ❌ 链路追踪：基础版不启用
+    tracing: false
+
+  # ---------- 消息消费者开关 ----------
+  # ❌ RocketMQ：基础版不启用消息队列
+  mq:
+    consumer:
+      enabled: false
+    dlq:
+      enabled: false
+    # ❌ 关闭领域事件 MQ 广播（基础版无 RocketMQ，事件仅本地分发）
+    domain-event-enabled: false
+    domain-event-topic: apex-domain-event
+
+# ============================================================
+# 2. 系统监控
+# ============================================================
+# ✅ Actuator 基础端点：基础版仅暴露健康检查与应用信息。
+management:
+  endpoints:
+    web:
+      exposure:
+        # （差异）公共层默认 health,info,metrics,prometheus,circuitbreakers；
+        #          基础版收紧为 health,info，不暴露指标端点。
+        include: health,info

@@ -1,7 +1,7 @@
 -- 工作流测试数据初始化脚本
 -- 用途：为工作流监控页面提供测试数据
 
-USE apex_data;
+USE apex_system;
 
 -- 1. 插入工作流定义（请假审批流程）
 INSERT INTO wf_workflow_definition (

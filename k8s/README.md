@@ -1,6 +1,6 @@
 # Apex Scaffold Kubernetes 部署资产说明
 
-本目录提供完整的 K8s 部署与发布能力资产，与 [docs/DEPLOYMENT.md](../docs/05-operations/deployment.md) §5/§12 配套。
+本目录提供完整的 K8s 部署与发布能力资产，与 [docs/05-operations/deployment.md](../docs/05-operations/deployment.md) §5/§12 配套。
 
 ## 文件清单
 

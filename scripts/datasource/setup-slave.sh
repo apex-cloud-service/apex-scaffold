@@ -2,7 +2,7 @@
 # ============================================================
 # Apex Scaffold 数据源动态切换 - 从库一键初始化脚本
 #
-# 功能: 创建本地演示用从库 apex_data_slave + 主/从路由探针表
+# 功能: 创建本地演示用从库 apex_system_slave + 主/从路由探针表
 #       （routing_probe，标记值 MASTER/SLAVE），用于验证
 #       @DataSource("slave") 自定义注解的数据源动态切换。
 #
@@ -15,7 +15,7 @@
 #   DB_HOST       MySQL 地址（默认 127.0.0.1）
 #   DB_PORT       MySQL 端口（默认 3306）
 #   DB_USER       MySQL 账号（默认 root）
-#   DB_PASSWORD   MySQL 密码（默认 apex-root，与 docker-compose.infra.yml 一致）
+#   DB_PASSWORD   MySQL 密码（默认 apex-root，与 podman-compose.infra.yml 一致）
 #
 # 依赖: mysql 客户端（brew install mysql-client 或 mysql）
 # ============================================================
@@ -43,7 +43,7 @@ mysql -h"${DB_HOST}" -P"${DB_PORT}" -u"${DB_USER}" -p"${DB_PASSWORD}" \
 
 echo ""
 echo "✅ 初始化完成："
-echo "   - 从库 apex_data_slave（演示用，与主库同实例）"
+echo "   - 从库 apex_system_slave（演示用，与主库同实例）"
 echo "   - 主库 routing_probe.source = MASTER"
 echo "   - 从库 routing_probe.source = SLAVE"
 echo ""

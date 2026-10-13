@@ -353,7 +353,7 @@
   <rect x="50" y="1480" width="1700" height="80" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2"/>
   <text x="80" y="1510" class="category-label">构建工具与版本管理</text>
   <text x="80" y="1535" class="tech-desc">• Maven 3.9+ / mvnd 2.0.0-rc-3 (推荐)  • Java 17.0.12-oracle (SDKMAN管理)</text>
-  <text x="80" y="1553" class="tech-desc">• npm 9+ / pnpm 8+  • Node.js 20.x LTS  • Docker 26.x + Docker Compose 2.x</text>
+  <text x="80" y="1553" class="tech-desc">• npm 9+ / pnpm 8+  • Node.js 20.x LTS  • Podman + podman-compose</text>
 
   <text x="900" y="1590" class="tech-desc" text-anchor="middle">© 2026 Apex Team · 技术架构全景 v3.0 · 基于 pom.xml 和 package.json 实际版本生成</text>
 </svg>

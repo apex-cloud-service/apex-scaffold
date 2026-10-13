@@ -343,15 +343,15 @@ public interface UserRepository {
 
 | 组件             | 用途                     | 端口                  | 部署方式               |
 | -------------- | ---------------------- | ------------------- | ------------------ |
-| **应用服务**       | apex-scaffold业务应用      | 8080(业务) / 8081(管理) | Docker / K8s       |
+| **应用服务**       | apex-scaffold业务应用      | 8080(业务) / 8081(管理) | Podman / K8s       |
 | **MySQL**      | 关系型数据库,主从复制            | 3306                | 独立部署 / RDS         |
 | **Redis**      | 缓存与会话,Cluster/Sentinel | 6379                | 独立部署 / ElastiCache |
-| **Nacos**      | 配置中心与服务发现              | 8848                | Docker / K8s       |
-| **Sentinel**   | 流控熔断Dashboard          | 8858                | Docker             |
-| **RocketMQ**   | 消息队列                   | 9876(NameServer)    | Docker / K8s       |
-| **Prometheus** | 指标采集                   | 9090                | Docker             |
-| **Grafana**    | 监控大盘                   | 3000                | Docker             |
-| **Zipkin**     | 链路追踪                   | 9411                | Docker             |
+| **Nacos**      | 配置中心与服务发现              | 8848                | Podman / K8s       |
+| **Sentinel**   | 流控熔断Dashboard          | 8858                | Podman             |
+| **RocketMQ**   | 消息队列                   | 9876(NameServer)    | Podman / K8s       |
+| **Prometheus** | 指标采集                   | 9090                | Podman             |
+| **Grafana**    | 监控大盘                   | 3000                | Podman             |
+| **Zipkin**     | 链路追踪                   | 9411                | Podman             |
 
 ### 3.3 网络拓扑
 
@@ -474,8 +474,8 @@ public interface UserRepository {
 | 技术                 | 版本    | 说明        |
 | ------------------ | ----- | --------- |
 | **Maven**          | 3.9.x | 构建工具,依赖管理 |
-| **Docker**         | 24.x  | 容器化       |
-| **Docker Compose** | 2.x   | 本地编排      |
+| **Podman**         | -     | 容器化       |
+| **podman-compose** | -     | 本地编排      |
 | **Kubernetes**     | 1.28+ | 生产编排(可选)  |
 | **GitHub Actions** | -     | CI/CD流水线  |
 

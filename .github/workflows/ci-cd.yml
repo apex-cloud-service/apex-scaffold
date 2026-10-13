@@ -123,34 +123,32 @@ jobs:
     name: Integration Tests
     runs-on: ubuntu-latest
     
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD: root123
-          MYSQL_DATABASE: apex_example
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd="mysqladmin ping"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=3
-      
-      redis:
-        image: redis:7-alpine
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
+      - name: Set up Podman integration services and API socket
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y podman
+          systemctl --user start podman.socket
+          echo "DOCKER_HOST=unix://$XDG_RUNTIME_DIR/podman/podman.sock" >> "$GITHUB_ENV"
+          echo "TESTCONTAINERS_RYUK_DISABLED=true" >> "$GITHUB_ENV"
+          podman run -d --name apex-ci-mysql -p 127.0.0.1:3306:3306 \
+            -e MYSQL_ROOT_PASSWORD=root123 -e MYSQL_DATABASE=apex_example \
+            docker.io/library/mysql:8.0
+          podman run -d --name apex-ci-redis -p 127.0.0.1:6379:6379 docker.io/library/redis:7-alpine
+          ready=false
+          for attempt in {1..60}; do
+            if podman exec apex-ci-mysql mysqladmin ping -h127.0.0.1 -uroot -proot123 --silent \
+              && podman exec apex-ci-redis redis-cli ping; then
+              ready=true
+              break
+            fi
+            sleep 2
+          done
+          test "$ready" = true
+
       - name: Set up JDK ${{ env.JAVA_VERSION }}
         uses: actions/setup-java@v4
         with:
@@ -168,7 +166,7 @@ jobs:
       
       - name: Initialize database
         run: |
-          mysql -h 127.0.0.1 -P 3306 -u root -proot123 apex_example < apex-example/src/main/resources/db/init.sql
+          podman exec -i apex-ci-mysql mysql -u root -proot123 apex_example < apex-example/src/main/resources/db/init.sql
       
       - name: Set up Maven Daemon
         run: |
@@ -186,6 +184,10 @@ jobs:
           SPRING_DATA_REDIS_HOST: localhost
           SPRING_DATA_REDIS_PORT: 6379
       
+      - name: Clean up Podman integration services
+        if: always()
+        run: podman rm -f apex-ci-mysql apex-ci-redis || true
+
       - name: Upload integration test results
         if: always()
         uses: actions/upload-artifact@v4
@@ -195,54 +197,51 @@ jobs:
 
   # ============================================
   # 构建镜像(仅main分支)
+  # 微服务拓扑：为网关 + 5 个业务服务分别构建独立镜像（一个镜像只打包一个服务）
   # ============================================
   build-image:
-    name: Build Docker Image
+    name: Build Podman Image (${{ matrix.service }})
     runs-on: ubuntu-latest
     needs: [code-quality, unit-test, integration-test]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          - apex-gateway
+          - apex-auth-service
+          - apex-system-service
+          - apex-workflow-service
+          - apex-office-service
+          - apex-file-service
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
       
-      - name: Set up JDK ${{ env.JAVA_VERSION }}
-        uses: actions/setup-java@v4
-        with:
-          java-version: ${{ env.JAVA_VERSION }}
-          distribution: 'temurin'
-          cache: maven
-      
-      - name: Set up Maven Daemon
+      - name: Set up Podman
         run: |
-          curl -s "https://get.sdkman.io" | bash
-          source "$HOME/.sdkman/bin/sdkman-init.sh"
-          sdk install mvnd "${MVND_VERSION}"
-          echo "$HOME/.sdkman/candidates/mvnd/current/bin" >> "$GITHUB_PATH"
+          sudo apt-get update
+          sudo apt-get install -y podman
+          podman info
 
-      - name: Build JAR
-        run: mvnd clean package -DskipTests -P enterprise
-      
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./Dockerfile
-          push: true
-          tags: |
-            apexscaffold/apex-scaffold:latest
-            apexscaffold/apex-scaffold:${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+      - name: Login to Docker Hub with Podman
+        env:
+          REGISTRY_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          REGISTRY_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: printf '%s' "$REGISTRY_TOKEN" | podman login docker.io --username "$REGISTRY_USERNAME" --password-stdin
+
+      - name: Build and push Podman image
+        env:
+          SERVICE_MODULE: ${{ matrix.service }}
+        run: |
+          podman build -f Containerfile \
+            --build-arg SERVICE_MODULE="$SERVICE_MODULE" \
+            --build-arg BUILD_PROFILE=enterprise \
+            -t "docker.io/apexscaffold/$SERVICE_MODULE:latest" \
+            -t "docker.io/apexscaffold/$SERVICE_MODULE:$GITHUB_SHA" .
+          podman push "docker.io/apexscaffold/$SERVICE_MODULE:latest"
+          podman push "docker.io/apexscaffold/$SERVICE_MODULE:$GITHUB_SHA"
 
   # ============================================
   # 发布版本(打tag时触发)
@@ -281,7 +280,12 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            apex-interfaces/target/*.jar
+            apex-gateway/target/*.jar
+            apex-auth-service/target/*.jar
+            apex-system-service/target/*.jar
+            apex-workflow-service/target/*.jar
+            apex-office-service/target/*.jar
+            apex-file-service/target/*.jar
             apex-example/target/*.jar
             docs/03-api/openapi/openapi-latest.json
             docs/03-api/openapi/openapi-latest.yaml

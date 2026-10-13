@@ -2,7 +2,17 @@
 
 本文件定义本仓库的编码、验证和提交约定。修改前先检查实际代码和配置，遵循现有模式；不要为了满足规则进行无关重构。
 
-## 项目结构
+## 当前 system 物理边界（2026-10-12）
+
+`apex-system` 已承接原 interfaces/application 的源码、资源和测试，以及 system 专属 domain/infrastructure 实体、仓储、Mapper/PO、适配器与测试，保持原 Java 包名。`apex-interfaces`、`apex-application` 已退出 reactor 和依赖版本声明；`apex-system-service` 装配 system 库，example 依赖 system，auth-service 仅在 test scope 引用 system 进行 parity 验证。
+
+共享 `apex-domain` 只保留 BaseEntity、Token/SMS/Cache/Event/远程调用等通用契约与 TokenRevokedEvent；共享 `apex-infrastructure` 保留缓存、消息、事件 Outbox、审计、加密、邮件、通用持久化配置与受管 HTTP 客户端。共享模块不得依赖 system；system 业务实体不得下沉 common 或 api-contract。HTTP 日志使用共享 ApiCallObservation/ApiCallLogSink，system 持久化实现负责映射 ApiCallLogEntity。
+
+本批按旧路径删除与 system 对应路径存在交叉统计，迁入 application 281、domain 180、infrastructure 222 个文件，共 683 个（main 560、test 123，含资源，不含前批 interfaces）。共享层和兄弟服务 801 个生产 Java 文件未发现直接导入 system 类型；实际门禁结果见验收清单的本批记录。
+
+当前物理依赖为 `system-service → system → infrastructure → domain → common`；其他服务通过各自业务库复用共享设施。system 库内部继续遵守 domain/application/infrastructure/interfaces 的 Java 包分层。下文原单体结构和图示保留为迁移背景，以本节及根 POM 为当前物理边界。
+
+## 项目结构（原单体分层背景）
 
 Apex Scaffold 是 Java 17、Spring Boot 3.5.15、Spring WebFlux 的多模块项目。
 
@@ -22,9 +32,23 @@ Apex Scaffold 是 Java 17、Spring Boot 3.5.15、Spring WebFlux 的多模块项�
 - `apex-application`：应用层，用例编排、应用服务、事务边界、DTO/Assembler 转换、事件监听和定时任务调度。依赖 `apex-domain`、`apex-common` 和 `apex-infrastructure`。
 - `apex-workflow`：工作流独立模块，遵循与主应用一致的 DDD 分层，内部包含 `application`（服务/查询/调度/DTO）、`domain`（领域模型/仓储契约）和 `infrastructure`（专属持久化）三层。依赖 `apex-domain` 和 `apex-common`，不依赖 `apex-infrastructure`；对外由 `apex-interfaces` 通过 `apex-workflow` 依赖引用其应用服务。
 - `apex-interfaces`：接口层，WebFlux 函数式 Router + Handler、安全过滤器链、AOP 切面（权限、审计、幂等、防重放、数据权限等）、配置类、OpenAPI 文档、i18n 资源、Flyway 迁移脚本和主启动入口 `Application.java`。依赖 `apex-application`、`apex-workflow`、`apex-infrastructure`、`apex-domain` 和 `apex-license-spring-boot-starter`。
-- `apex-auth-center`：独立认证中心模块，采用与主应用相同的 DDD 分层（application/domain/infrastructure/interfaces），负责认证、授权、MFA/TOTP、JWT 密钥轮换、会话管理、审计日志、KMS 集成、IP 访问控制、设备信任、生物识别、暴力破解防护等。有独立启动类 `AuthCenterApplication.java` 和独立 Flyway 迁移（V44–V52）。依赖 `apex-common` 和 `apex-infrastructure`。
+- `apex-auth`：认证领域/应用库模块（Phase 6 库模块），承载认证、授权、MFA/TOTP、JWT 密钥轮换、会话管理、审计日志、KMS 集成、IP 访问控制、设备信任、生物识别、暴力破解防护等能力的 application/domain/infrastructure 三层，并保留共享配置 `OAuth2Properties`。依赖 `apex-common`、`apex-infrastructure`、`apex-domain` 和 `apex-api-contract`，不含 `interfaces`、启动类与 Flyway 资源。
 - `apex-example`：示例模块，演示完整 DDD + WebFlux 链路的集成用法，依赖 `apex-interfaces` 及其下层所有模块。
 - `apex-generator`：独立的 DDD 代码生成器，不依赖其他业务模块，根据数据库表结构生成 entity/mapper/po 等模板代码。
+
+微服务化改造模块（详见 [docs/microservice-migration-plan.md](docs/microservice-migration-plan.md)）：
+
+- `apex-services-bom`：微服务依赖版本 BOM，统一锁定各服务模块与第三方依赖版本（Phase 1.1）。
+- `apex-api-contract`：跨服务内部 API 契约模块，提供 Feign 接口与共享 DTO（纯契约，无业务实体），被各服务与网关按需依赖（Phase 1.3）。
+- `apex-gateway`：API 网关，统一入口/路由/JWT（JWKS）验签/限流/灰度切流/链路追踪/`/internal` 403 拦截，独立启动（端口 8080，Phase 1.2）。
+- `apex-workflow-service`：工作流服务，独立启动类 + Router/Handler，使用独立 `apex_workflow` 库与独立 Flyway 链 V1（Phase 3，端口 8083）。
+- `apex-file`：文件模块库，承载文件/文档/图表的领域+应用+基础设施与存储 SPI（Phase 4 库模块）。
+- `apex-file-service`：文件服务，独立启动类 + Router/Handler，使用独立 `apex_file` 库与独立 Flyway 链 V1，含分片上传与预览（Phase 4，端口 8085）。
+- `apex-auth`：认证模块库，承载认证/授权/MFA/JWT/会话/审计的领域+应用+基础设施三层与共享配置（Phase 6 库模块）。
+- `apex-auth-service`：认证服务，独立启动类 + Router/Handler，使用独立 `apex_auth` 库与独立 Flyway 链 V44（Phase 6，端口 8081）。
+- `apex-system-service`：系统服务，Strangler 装配 `apex-interfaces`/`apex-application`/`apex-domain`/`apex-infrastructure`/`apex-common`，独立启动类 + 扫描根包 `com.apex.scaffold.systemservice`，使用独立 `apex_system` 库（原 `apex_data`，Phase 6，端口 8082）；网关路由 `lb://apex-system-service`（`ROUTE_SYSTEM_URI` 可一键回滚）。
+- `apex-office`：办公模块库，承载办公平台（企微/钉钉/飞书）领域+应用+基础设施与集成适配（Phase 5 库模块）。
+- `apex-office-service`：办公服务，独立启动类 + Router/Handler，使用独立 `apex_office` 库与独立 Flyway 链（Phase 5，端口 8084）。
 
 依赖方向保持为：
 
@@ -37,9 +61,9 @@ interfaces ──▶ application ──▶ domain ◀── infrastructure
                     │                             │
               license-tools                       │
                                                   │
-auth-center ──────────────────────────────────────┘
-     │
-     └──▶ common ◀── 所有模块按需依赖
+auth-service ────────────────────────────────────┘
+    │
+    └──▶ common ◀── 所有模块按需依赖
 
 workflow ──▶ common（不依赖 infrastructure，共享持久化设施 BasePO/ConditionUtil/ApexLambdaQueryWrapper 位于 common）
 ```
@@ -50,8 +74,15 @@ workflow ──▶ common（不依赖 infrastructure，共享持久化设施 Bas
 - `application` 可依赖 `domain`、`common` 和 `infrastructure`，但不得反向依赖 `interfaces`。
 - `workflow` 为独立分层模块，可依赖 `domain` 和 `common`，不得依赖 `infrastructure`（共享持久化设施已下沉至 `common`），也不得被 `domain`/`infrastructure` 反向依赖。
 - `interfaces` 是主应用的最上层，依赖 `application`、`workflow`、`infrastructure`、`domain` 和 `license-spring-boot-starter`。
-- `apex-auth-center` 是独立的认证子系统，依赖 `common` 和 `infrastructure`，不依赖主应用的 `application`/`interfaces` 层。
+- `apex-auth` 是独立的认证库模块，依赖 `common`、`infrastructure`、`domain` 和 `api-contract`，不依赖主应用的 `application`/`interfaces` 层；`apex-auth-service` 为可启动服务，依赖 `apex-auth` 库并拥有独立的 `interfaces`、配置、启动类与 Flyway 资源。
 - `apex-example` 和 `apex-generator` 分别用于示例演示和代码生成，不参与生产依赖链。
+
+微服务化相关约束：
+
+- `apex-services-bom` 仅做依赖版本锁定（`import` 到各服务模块），不承载业务代码。
+- `apex-api-contract` 仅含 Feign 接口与共享 DTO，不得引入业务实体或持久化依赖；服务间调用必须经该契约桥接。
+- `apex-gateway` / `apex-workflow-service` / `apex-file-service` 为独立可启动服务，各自拥有独立 `bootstrap.yml`、独立启动类与独立 Flyway 迁移链；不得跨服务直接访问对方数据库。
+- 已服务化的服务不再被 `apex-interfaces` 反向依赖；单体中对应代码域须清理干净（无残留）。
 
 修改跨层代码时运行已有架构测试（ArchUnit），确保依赖方向不被破坏。
 
@@ -61,14 +92,14 @@ workflow ──▶ common（不依赖 infrastructure，共享持久化设施 Bas
 
 ### 项目模块与运行边界图
 
-下图按“启动边界、运行时调用链、构建辅助模块”展示项目结构。主应用和认证中心分别由独立启动类装配；主应用通过组件扫描排除 `com.apex.scaffold.authcenter..*`，因此认证中心内部的 `UserMapper`、`UserConverter` 不属于主应用用户查询链。
+下图按“启动边界、运行时调用链、构建辅助模块”展示项目结构。主应用和认证服务分别由独立启动类装配；主应用通过组件扫描排除 `com.apex.scaffold.auth..*` 与 `com.apex.scaffold.authservice..*`，因此认证服务内部的 `UserMapper`、`UserConverter` 不属于主应用用户查询链。
 
 ```mermaid
 graph LR
     subgraph MainApp[主应用 apex-interfaces 启动边界]
         direction TB
-        entry["Application<br/>Spring Boot + WebFlux<br/>排除 authcenter 包扫描"]
-        web["接口层<br/>WebFilter / SecurityConfig<br/>ApiRouter / Handler"]
+        entry["Application<br/>Spring Boot + WebFlux<br/>排除 auth/authservice 包扫描"]
+        web["接口层<br/>WebFilter / SecurityConfig<br/>子域 Router / Handler"]
         app["apex-application<br/>UserService<br/>用例编排 / 缓存 / 事务"]
         workflow["apex-workflow ★<br/>WorkflowService / QueryService<br/>领域模型 / 专属持久化"]
         domain["apex-domain<br/>Entity / Domain Service<br/>Repository Port / Domain Event"]
@@ -91,15 +122,15 @@ graph LR
         infra --> common
     end
 
-    subgraph AuthApp[独立认证中心 apex-auth-center]
-        authEntry["AuthCenterApplication<br/>独立 Spring Boot 入口"]
-        authWeb["authcenter interfaces<br/>认证 / 授权 / MFA / 会话"]
-        authApp["authcenter application / domain"]
-        authInfra["authcenter infrastructure<br/>独立 UserMapper / UserConverter"]
-        authDb[("认证中心数据库/表")]
-        authEntry --> authWeb --> authApp --> authInfra --> authDb
+    subgraph AuthApp[认证服务 apex-auth-service]
+        authEntry["AuthServiceApplication<br/>独立 Spring Boot 入口"]
+        authWeb["authservice interfaces<br/>认证 / 授权 / MFA / 会话"]
+        authLib["apex-auth 库<br/>application / domain / infrastructure"]
+        authInfra["apex-auth infrastructure<br/>独立 UserMapper / UserConverter"]
+        authDb[("认证服务数据库/表")]
+        authEntry --> authWeb --> authLib --> authInfra --> authDb
         authWeb --> common
-        authApp --> common
+        authLib --> common
         authInfra --> common
     end
 
@@ -119,7 +150,7 @@ graph LR
 
 **图中边界与依赖说明**：
 
-- `Application` 是主应用入口，负责装配 WebFlux、异步任务、配置属性和服务发现；`AuthCenterApplication` 是认证中心的独立入口，二者不是同一个 Spring ApplicationContext。
+- `Application` 是主应用入口，负责装配 WebFlux、异步任务、配置属性和服务发现；`AuthServiceApplication` 是认证服务的独立入口，二者不是同一个 Spring ApplicationContext。
 - 主应用依赖方向为 `interfaces -> application -> domain`，基础设施实现 `domain` 定义的 Repository Port；当前 `application -> infrastructure` 是项目实际存在的直接依赖，不能在文档中简化为纯粹的六边形依赖。
 - `apex-workflow` 是独立的 DDD 分层模块，依赖 `domain` 和 `common`，**不依赖 `infrastructure`**；共享持久化设施 `BasePO`、`ConditionUtil`、`ApexLambdaQueryWrapper` 已从 `infrastructure` 下沉至 `common`，从而消除了工作流模块与基础设施模块间的循环依赖。接口层通过 `apex-workflow` 依赖引用其应用服务，对外 HTTP 路由保持不变。
 - `apex-common` 提供 `Result`、异常、注解、上下文、工具和 `BlockingIoSchedulers`，不承载具体业务用例。
@@ -133,13 +164,14 @@ graph LR
 - **apex-infrastructure**：实现 Repository Port，使用 MyBatis-Plus Mapper/PO 访问数据库，并承载 Redis/Caffeine、RocketMQ、MinIO/TOS、Keycloak、KMS 等适配器。同步调用通过语义化 Scheduler 隔离。
 - **apex-application**：以 `UserService` 等应用服务编排用例，处理缓存、事务、领域对象组合和 Assembler 转换；它把接口层请求转换为领域调用，再把结果交回接口层。
 - **apex-workflow**：独立工作流模块，内部自带 application（服务/查询/调度/DTO）、domain（领域模型/仓储契约）、infrastructure（专属持久化）三层，承载工作流引擎、办公审批集成与监控统计；依赖 `apex-domain` 和 `apex-common`，不依赖 `apex-infrastructure`，由接口层引用其应用服务。
-- **apex-interfaces**：由 `Application` 启动，包含 WebFilter、Spring Security、`ApiRouter`、Handler、AOP、OpenAPI、异常处理、配置和主应用 Flyway 资源。
-- **apex-auth-center**：独立认证子系统，内部拥有自己的 application/domain/infrastructure/interfaces 分层、认证中心数据库边界和 Flyway 资源，负责认证、授权、MFA/TOTP、JWT、会话、审计和风控能力。
+- **apex-interfaces**：由 `Application` 启动，包含 WebFilter、Spring Security、按子域拆分的 Router（`PublicApiRouter` 等 18 个 `@Configuration` 路由类，由原 `ApiRouter` 拆分而来）、Handler、AOP、OpenAPI、异常处理、配置和主应用 Flyway 资源。
+- **apex-auth**：认证库模块，承载认证、授权、MFA/TOTP、JWT、会话、审计和风控能力的 application/domain/infrastructure 三层与共享配置，不包含 `interfaces`、启动类与 Flyway 资源。
+- **apex-auth-service**：认证服务，独立启动类 + Router/Handler，拥有自己的 `interfaces`、配置与独立 `apex_auth` Flyway 资源。
 
 **运行时装配与数据边界**：
 
-- 主应用从 `Application` 启动，组件扫描覆盖 `com.apex.scaffold`，但通过正则排除 `com.apex.scaffold.authcenter..*`；因此主应用启动时不会把认证中心的 Handler、Service、Mapper 或配置注册到同一个容器中。
-- `AuthCenterApplication` 负责认证中心自己的组件装配、配置和迁移资源。认证中心可以与主应用共享 `apex-common` 的基础类型，但运行时数据库、请求入口和用户转换链保持独立。
+- 主应用从 `Application` 启动，组件扫描覆盖 `com.apex.scaffold`，但通过正则排除 `com.apex.scaffold.auth..*` 与 `com.apex.scaffold.authservice..*`；因此主应用启动时不会把认证服务的 Handler、Service、Mapper 或配置注册到同一个容器中。
+- `AuthServiceApplication` 负责认证服务自己的组件装配、配置和迁移资源。认证服务可以与主应用共享 `apex-common` 的基础类型，但运行时数据库、请求入口和用户转换链保持独立。
 - 图中的箭头表示模块依赖或运行时调用方向，不表示所有模块都在同一个进程中执行。`apex-example`、`apex-generator` 和 `apex-license-tools` 是构建或辅助用途，不应被理解为生产请求的运行时下游。
 - 从数据模型看，`UserPO` 是基础设施持久化模型，`UserEntity` 是应用与领域之间传递的业务模型，`UserDTO` 是接口响应模型。三者分层转换可以避免数据库字段、领域规则和 API 契约相互泄漏。
 - 从部署边界看，主应用和认证中心可以独立启动、独立配置和独立演进；需要跨系统调用时，应通过明确的认证协议或远程适配器完成，不能直接引用对方的内部 Mapper 或 Converter。
@@ -159,8 +191,8 @@ flowchart TD
     F -->|未认证| F401["authenticationEntryPoint<br/>HTTP 401"]
     F -->|无权限| F403["accessDeniedHandler<br/>HTTP 403"]
     F -->|通过| G
-    G --> H["ApiRouter.apiRoutes<br/>/api/v1 -> buildApiRoutes"]
-    H --> I["buildUserRoutes<br/>GET /user/{userId}<br/>UserHandler.getUserById"]
+    G --> H["PublicApiRouter.apiRoutes<br/>/api/v1 -> buildApiRoutes"]
+    H --> I["PublicApiRouter.buildUserRoutes<br/>GET /user/{userId}<br/>UserHandler.getUserById"]
     I --> J["Handler 参数处理<br/>safeParseLong / RequestHandlerUtil"]
     J --> K["横切能力按注解和业务语义生效<br/>OperationLog / RequirePermission / DataScope<br/>IdempotentApi / AntiReplay"]
     K --> L["Application Service<br/>UserService.getById"]
@@ -195,7 +227,7 @@ flowchart TD
 
 1. **请求上下文建立**：`TraceFilter` 位于最前端，提取或生成 `X-Trace-Id`，写入交换对象属性、响应头和 Reactor Context，并在结束时清理 MDC。`LocaleWebFilter` 负责语言上下文，日志、指标、限流和安全头过滤器负责横切能力。
 2. **安全决策**：`SecurityConfig.securityWebFilterChain` 先处理 `SystemConstants.PUBLIC_PATHS` 的 `permitAll` 规则，再按认证用户路径、管理路径和 `anyExchange().authenticated()` 处理其余请求。JWT 和 OAuth2 过滤器位于 Spring Security 的认证位置；401 由认证入口处理，403 由拒绝访问处理器处理。
-3. **函数式路由**：主应用通过 `ApiRouter.apiRoutes` 建立 `/api/v1` 路径，再由 `buildApiRoutes` 分发到 `/auth`、`/user`、`/file` 等子路由。用户查询实际由 `buildUserRoutes` 注册到 `UserHandler.getUserById`，不存在独立的 `UserRouter`。
+3. **函数式路由**：主应用将原单体 `ApiRouter` 按子域拆分为 18 个 `@Configuration` 路由类（如 `PublicApiRouter`、`UserAdminRouter`、`LogRouter` 等）。`/api/v1` 通用路径由 `PublicApiRouter.apiRoutes` 建立，再由 `buildApiRoutes` 分发到 `/auth`、`/user` 等子路由；用户查询 `GET /api/v1/user/{userId}` 仍由 `buildUserRoutes` 注册到 `UserHandler.getUserById`。后台管理路径则独立注册在 `UserAdminRouter` 等子域 Router 中，不再由单一 `ApiRouter` 汇聚。
 4. **Handler 与横切能力**：Handler 负责读取路径或请求体、构造响应式链并调用 Application Service。`@OperationLog`、`@RequirePermission`、`@DataScope`、`@IdempotentApi` 和 `@AntiReplay` 是否生效，取决于具体 Handler 方法的实际注解和业务风险；不能把所有注解都强加到每个接口。
 5. **应用服务与缓存**：`UserService.getById` 使用 `@Cacheable(value = "user:id")`，缓存命中时可以直接返回用户实体；未命中时才调用领域 Repository。缓存具体由配置的缓存实现承载，文档不应把每次查询固定描述为直接访问数据库。
 6. **领域 Port 与基础设施实现**：Application 依赖领域层的 `UserRepository` 接口，运行时由 `UserRepositoryImpl` 实现。该实现调用 `UserMapper.selectById`，并通过 `UserPoConverter` 将 `UserPO` 转换为 `UserEntity`。
@@ -211,7 +243,7 @@ sequenceDiagram
     participant Client as 客户端
     participant Filter as 应用级 WebFilter
     participant Security as SecurityWebFilterChain
-    participant Router as ApiRouter
+    participant Router as PublicApiRouter
     participant Handler as UserHandler
     participant Aspect as OperationLog/AOP
     participant Service as UserService
@@ -284,7 +316,7 @@ sequenceDiagram
 
 1. TraceId 在最前端过滤器生成或接收，并通过 Reactor Context 传播；它不是由 Handler 临时生成的请求标识。
 2. 安全链只对 `PUBLIC_PATHS` 精确匹配路径执行 `permitAll`；其他路径最终受认证规则约束。用户查询接口是否需要 Token，以 `SecurityConfig` 的路径规则为准，不以 Handler Javadoc 为准。
-3. 用户查询路由实际注册在 `ApiRouter.buildUserRoutes`：`GET /api/v1/user/{userId}` 映射到 `UserHandler.getUserById`。
+3. 用户查询路由实际注册在 `PublicApiRouter.buildUserRoutes`：`GET /api/v1/user/{userId}` 映射到 `UserHandler.getUserById`。
 4. Handler 先调用 `safeParseLong`；非法路径参数直接返回 `PARAM_ERROR`，不会访问 Service 或数据库。
 5. `UserService.getById` 先经过 `user:id` 缓存抽象；只有缓存未命中才调用 `UserRepository`。
 6. `UserRepository` 是领域 Port，`UserRepositoryImpl` 是基础设施实现；主应用使用 `UserPoConverter`，不要与认证中心的 `UserConverter` 混淆。
@@ -297,7 +329,7 @@ sequenceDiagram
 
 - `Filter` 代表一组应用级 WebFilter，而不是单个统一过滤器。它们负责请求上下文、链路追踪、语言、日志、限流、输入防护和响应头等横切能力；其中具体执行顺序由 `@Order` 和过滤器注册方式决定。
 - `SecurityWebFilterChain` 负责“请求能否进入业务路由”的安全判断，不负责查询用户业务数据。`PUBLIC_PATHS` 命中时跳过认证要求，但不代表跳过所有应用级过滤器；非公开路径则继续经过 JWT/OAuth2 认证和授权判断。
-- `ApiRouter` 只负责把 HTTP 方法和路径映射到 Handler。它不执行 `UserService` 查询，也不负责把 `UserPO` 转换成 `UserDTO`；这些职责分别属于 Handler/Application Service 和 Converter/Assembler。
+- `Router`（如 `PublicApiRouter` 等子域路由类）只负责把 HTTP 方法和路径映射到 Handler。它不执行 `UserService` 查询，也不负责把 `UserPO` 转换成 `UserDTO`；这些职责分别属于 Handler/Application Service 和 Converter/Assembler。
 - `UserHandler` 是接口适配层。它负责从 `ServerRequest` 读取路径参数、判断参数是否可解析、组合 `Mono` 链并选择成功或业务错误响应。`safeParseLong` 返回空值时，链路在 Handler 内结束，不会继续访问缓存或数据库。
 - `OperationLog/AOP` 只表示实际存在的横切切面执行点。切面是否参与当前请求，要以目标方法是否声明相应注解以及切面匹配条件为准；时序图中的 `@OperationLog` 对应当前 `getUserById` 方法的实际审计记录。
 - `UserService` 负责用例编排和缓存抽象，`UserRepository` 负责领域层定义的查询契约，`UserRepositoryImpl` 负责把契约落到 MyBatis-Plus 和数据库。这样可以把业务调用者与具体持久化技术隔离开。
@@ -440,7 +472,7 @@ public class XxxRouter {
 
 5. **数据库迁移**（Flyway）：
    - 主应用迁移脚本位于 `apex-interfaces/src/main/resources/db/migration/{mysql,postgresql}/`
-   - 认证中心迁移脚本位于 `apex-auth-center/src/main/resources/db/migration/{mysql,postgresql}/`（另有 `auth/` 子目录存放认证中心 schema 种子）
+   - 认证服务迁移脚本位于 `apex-auth-service/src/main/resources/db/migration/{mysql,postgresql}/`（独立链 V44–V56）
    - 根据变更所属模块选择对应目录，按数据库类型追加脚本
    - 禁止修改已执行的迁移脚本（版本号不可回退或重复）
 
@@ -713,7 +745,7 @@ public class FeatureProperties {
   - Service、Component、Handler 和配置类必须使用构造器注入，配合 Lombok 的 `@RequiredArgsConstructor` 注解实现。
   - 构造器注入的优势：编译时检查依赖完整性、支持 final 字段、便于单元测试、避免循环依赖。
 - **Lombok 使用规范**：Service、Component、配置类、DTO、Request、Response、VO 和实体优先沿用现有 Lombok 模式；使用何种 Lombok 注解以及是否保留手写方法，应根据类的可变性、继承关系和现有代码判断。避免引入 `@SneakyThrows`、`val`、`var` 和 `@Synchronized`，除非已有模式明确需要。
-- **代码注释规范**：JavaDoc 按现有模块和类的模式维护；对公开 API、复杂逻辑和非直观业务规则优先补充必要说明，简单 getter/setter、重写方法或已有清晰契约的代码无需机械补充。需要检查时可使用仓库中存在的 `scripts/dev/check/scan-javadoc-issues.sh`、`scripts/dev/format/batch-add-javadoc.sh`；完整的注释规范（语言决策、文件头模板、行内注释规则、坏注释反例与兼容性条款）见 `docs/04-development/comment-convention.md`。
+- **代码注释规范**：JavaDoc 按现有模块和类的模式维护；对公开 API、复杂逻辑和非直观业务规则优先补充必要说明，简单 getter/setter、重写方法或已有清晰契约的代码无需机械补充。需要检查时可使用仓库中存在的 `scripts/dev/check/scan-javadoc-issues.sh`、`scripts/dev/format/batch-add-javadoc.sh`；完整的注释规范（语言决策、文件头模板、行内注释规则、坏注释反例与兼容性条款）见 `docs/04-development/development-standards.md`。
 - **包名约定**：主模块使用 `com.apex.scaffold.*`，example 使用现有 `com.apex.example`。
 - **依赖管理**：引入依赖前先检查根 POM 和目标模块是否已有可复用能力。
 
@@ -1134,7 +1166,7 @@ mvnd clean test -P basic
 # 运行指定模块的测试
 mvnd -pl apex-common,apex-infrastructure -am test
 
-# 运行集成测试（需要 Docker 环境）
+# 运行集成测试（需要 Podman 环境及 Testcontainers 的 Docker API 兼容连接）
 mvnd verify -P integration-test
 
 # 运行架构测试

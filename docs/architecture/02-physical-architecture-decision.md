@@ -25,7 +25,7 @@
 采用五层网络拓扑架构:
 1. 客户端层 (Internet)
 2. 网络安全层 (DMZ)
-3. 应用服务层 (K8s Pods / Docker)
+3. 应用服务层 (K8s Pods / Podman)
 4. 数据存储层 (高可用集群)
 5. 运维监控层 (可观测性)
 
@@ -55,7 +55,7 @@
 
 ---
 
-## ADR-003: Docker Compose 作为默认本地栈
+## ADR-003: Docker Compose 作为默认本地栈（历史决策，现已迁移 Podman）
 
 **状态**: ✅ 已采纳  
 **决策日期**: 2024-Q4  
@@ -67,14 +67,14 @@
 
 ### 决策
 
-采用 Docker Compose 作为默认本地开发和测试栈:
-- `docker-compose.infra.yml`: 基础设施 (MySQL/Redis/RocketMQ/Nacos/Meilisearch/监控栈)
-- `docker-compose.yml`: 应用服务
+该决策当时采用 Docker Compose 作为默认本地开发和测试栈；当前仓库已迁移至 Podman Compose，对应文件为:
+- `podman-compose.infra.yml`: 基础设施 (MySQL/Redis/RocketMQ/Nacos/Meilisearch/监控栈)
+- `podman-compose.yml`: 应用服务
 
 ### 理由
 
 **优势**:
-- **一键启动**: `docker-compose up -d` 启动完整环境
+- **一键启动**: `podman-compose -f podman-compose.infra.yml up -d` 启动基础设施，`podman-compose -f podman-compose.yml up -d` 启动应用
 - **环境一致**: 所有开发者使用相同镜像版本
 - **资源友好**: 单机运行,无需 K8s 集群
 - **快速迭代**: 修改配置后快速重启验证
@@ -99,8 +99,9 @@
 
 当需要测试生产级能力时,改用 K8s 测试环境:
 ```bash
-# 本地开发
-docker-compose up -d
+# 本地开发（当前 Podman 部署方式）
+podman-compose -f podman-compose.infra.yml up -d
+podman-compose -f podman-compose.yml up -d
 
 # 集成测试
 kubectl apply -f k8s/test/
@@ -125,7 +126,7 @@ kubectl apply -f k8s/prod/
 
 推荐使用 Kubernetes 作为生产部署平台,但不强制:
 - **推荐场景**: 需要高可用、自动伸缩、多环境管理
-- **可选场景**: 小规模部署可继续使用 Docker Compose + Nginx
+- **可选场景**: 小规模部署可使用 Podman Compose + Nginx
 
 ### 理由
 
@@ -295,7 +296,7 @@ spec:
 ### 决策
 
 监控系统 (Prometheus/Grafana/Loki/Zipkin) 作为独立的"运维监控层"部署:
-- Compose: 独立的 `docker-compose.infra.yml` 服务组
+- Compose: 独立的 `podman-compose.infra.yml` 服务组
 - K8s: 独立的 Namespace `monitoring`
 
 ### 理由

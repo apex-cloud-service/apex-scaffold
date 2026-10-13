@@ -150,7 +150,7 @@ docs/reports/archive/
 
 | 文档名称 | 路径 | 说明 |
 |---------|------|------|
-| mvnd 构建标准 | [standards/mvnd-build-standard.md](../04-development/mvnd-build-standard.md) | mvnd 构建标准文档 |
+| mvnd 构建标准 | [development-standards.md](../04-development/development-standards.md) | mvnd 构建标准文档 |
 
 ### 项目报告
 
@@ -341,7 +341,7 @@ docs/reports/archive/
 ### 新人入职
 
 1. 阅读 [ARCHITECTURE_INDEX.md](../02-architecture/architecture-index.md) 了解架构全貌
-2. 根据岗位查看对应开发规范 ([后端](../04-development/backend-development-standards.md) / [前端](../04-development/frontend-development-standards.md))
+2. 根据岗位查看对应开发规范 ([后端](../04-development/development-standards.md) / [前端](../04-development/frontend-development-standards.md))
 3. 查阅 [00-getting-started/quickstart.md](../00-getting-started/quickstart.md) 快速启动项目
 
 ### 功能开发

@@ -121,11 +121,11 @@ cd scripts/dev/codegen
 
 ## 🚀 deploy/ - 部署相关
 
-应用部署、服务管理和 Docker 相关脚本。
+应用部署、服务管理和 Podman 相关脚本。
 
-### docker/ - Docker 部署
+### podman/ - Podman 部署
 
-**用途**: Docker 镜像管理和容器编排。
+**用途**: Podman 镜像管理和容器编排。
 
 | 脚本 | 功能 | 使用场景 |
 |-----|------|---------|
@@ -135,10 +135,10 @@ cd scripts/dev/codegen
 **示例**:
 ```bash
 # 拉取所有基础设施镜像
-./scripts/deploy/docker/pull-infra-images.sh
+./scripts/deploy/podman/pull-infra-images.sh
 
 # 部署监控服务
-./scripts/deploy/docker/deploy-monitoring.sh
+./scripts/deploy/podman/deploy-monitoring.sh
 ```
 
 ---
@@ -548,10 +548,10 @@ git commit -m "feat(order): add order management module"
 
 ```bash
 # 1. 拉取基础设施镜像
-./scripts/deploy/docker/pull-infra-images.sh
+./scripts/deploy/podman/pull-infra-images.sh
 
 # 2. 部署监控服务
-./scripts/deploy/docker/deploy-monitoring.sh
+./scripts/deploy/podman/deploy-monitoring.sh
 
 # 3. 启动应用
 ./scripts/deploy/service/start.sh
@@ -741,7 +741,7 @@ sdk env  # 或手动设置 export JAVA_HOME=...
 - ✨ 重组目录结构，按功能分类
 - ✨ 新增 `dev/format/` 和 `dev/check/` 分类
 - ✨ 新增 `ops/monitoring/` 和 `ops/backup/` 分类
-- ✨ 新增 `deploy/docker/` 和 `deploy/service/` 分类
+- ✨ 新增容器部署和 `deploy/service/` 分类（当前容器入口为 `deploy/podman/`）
 - ✨ 新增 `utils/` 通用工具分类
 - 🗑️ 删除 6 个临时脚本（PMD、JavaDoc 清理等）
 - 📝 更新所有脚本路径引用

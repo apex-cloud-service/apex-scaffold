@@ -77,7 +77,7 @@ echo ""
 # 检查 3: Handler 类的 Javadoc 完整性
 echo "[3/5] 检查 Handler 类 Javadoc 完整性..."
 
-HANDLER_FILES=$(find apex-interfaces/src/main/java -name "*Handler.java" | grep -v "Base" | grep -v "Abstract")
+HANDLER_FILES=$(find apex-system/src/main/java -name "*Handler.java" | grep -v "Base" | grep -v "Abstract")
 MISSING_JAVADOC=0
 
 for file in ${HANDLER_FILES}; do
@@ -113,7 +113,7 @@ echo ""
 # 检查 5: Flyway 迁移脚本命名规范
 echo "[5/5] 检查 Flyway 迁移脚本命名规范..."
 
-MIGRATION_FILES=$(find apex-interfaces/src/main/resources/db/migration -name "V*.sql" 2>/dev/null || true)
+MIGRATION_FILES=$(find apex-system/src/main/resources/db/migration -name "V*.sql" 2>/dev/null || true)
 
 if [ -z "${MIGRATION_FILES}" ]; then
   echo -e "${YELLOW}  ⚠ 未找到 Flyway 迁移脚本${NC}"

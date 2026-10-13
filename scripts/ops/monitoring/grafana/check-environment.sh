@@ -117,7 +117,7 @@ if check_service "Grafana" "$GRAFANA_URL" "/api/health"; then
     fi
 else
     echo -e "  ${YELLOW}提示: 请检查 Grafana 是否正在运行${NC}"
-    echo -e "  启动命令: ${BLUE}systemctl start grafana-server${NC} 或 ${BLUE}docker-compose up -d grafana${NC}"
+    echo -e "  启动命令: ${BLUE}systemctl start grafana-server${NC} 或 ${BLUE}podman-compose -f config/monitoring/podman-compose.yml up -d grafana${NC}"
 fi
 
 echo ""
@@ -133,7 +133,7 @@ if check_service "Prometheus" "$PROMETHEUS_URL" "/api/v1/status/config"; then
     fi
 else
     echo -e "  ${YELLOW}提示: 请检查 Prometheus 是否正在运行${NC}"
-    echo -e "  启动命令: ${BLUE}systemctl start prometheus${NC} 或 ${BLUE}docker-compose up -d prometheus${NC}"
+    echo -e "  启动命令: ${BLUE}systemctl start prometheus${NC} 或 ${BLUE}podman-compose -f config/monitoring/podman-compose.yml up -d prometheus${NC}"
 fi
 
 echo ""
@@ -143,7 +143,7 @@ if check_service "应用 (Apex Scaffold)" "$APP_URL" "/actuator/health"; then
     APP_OK=1
 else
     echo -e "  ${YELLOW}提示: 请检查应用是否正在运行${NC}"
-    echo -e "  启动命令: ${BLUE}mvnd -pl apex-interfaces spring-boot:run${NC}"
+    echo -e "  启动命令: ${BLUE}mvnd -pl apex-system-service spring-boot:run${NC}"
 fi
 
 echo ""

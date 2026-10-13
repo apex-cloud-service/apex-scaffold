@@ -118,14 +118,14 @@ check_database_scripts() {
     print_header "检查3: 数据库迁移脚本"
     
     # 检查V9脚本注释
-    if grep -q "通用用户属性" apex-interfaces/src/main/resources/db/migration/mysql/V9__add_birthday_onboarding_to_sys_user.sql; then
+    if grep -q "通用用户属性" apex-system/src/main/resources/db/migration/mysql/V9__add_birthday_onboarding_to_sys_user.sql; then
         print_success "V9迁移脚本注释已优化"
     else
         print_error "V9迁移脚本注释未优化"
     fi
     
     # 统计迁移脚本数量
-    MIGRATION_COUNT=$(find apex-interfaces/src/main/resources/db/migration/mysql -name "V*.sql" | wc -l)
+    MIGRATION_COUNT=$(find apex-system/src/main/resources/db/migration/mysql -name "V*.sql" | wc -l)
     print_info "Flyway迁移脚本总数: $MIGRATION_COUNT"
 }
 
@@ -136,7 +136,7 @@ check_module_structure() {
     print_header "检查4: 模块结构"
     
     # 检查核心模块
-    MODULES=("apex-common" "apex-domain" "apex-application" "apex-workflow" "apex-infrastructure" "apex-interfaces" "apex-example" "apex-generator")
+    MODULES=("apex-common" "apex-domain" "apex-application" "apex-workflow" "apex-infrastructure" "apex-system" "apex-example" "apex-generator")
     
     for module in "${MODULES[@]}"; do
         if [ -d "$module" ]; then
@@ -157,7 +157,7 @@ check_core_files() {
     FILES=(
         "README.md"
         "pom.xml"
-        "docker-compose.yml"
+        "podman-compose.yml"
         "LICENSE"
     )
     

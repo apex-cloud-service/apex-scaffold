@@ -16,7 +16,7 @@
 |------|------|----------|----------|
 | 🌐 **客户端层** | 用户接入 | Web/Mobile/API/CDN/DNS | Internet |
 | 🛡️ **网络安全层** | 流量防护 | WAF/Nginx/ALB/Sentinel/SSO | DMZ |
-| ⚙️ **应用服务层** | 业务处理 | Spring Boot WebFlux | K8s Pods / Docker |
+| ⚙️ **应用服务层** | 业务处理 | Spring Boot WebFlux | K8s Pods / Podman |
 | 💾 **数据存储层** | 持久化 | MySQL/Redis/MinIO/RocketMQ/Meilisearch | 高可用集群 |
 | 🔍 **运维监控层** | 可观测性 | Prometheus/Grafana/Loki/Zipkin | 监控栈 |
 
@@ -42,13 +42,13 @@
 
 ## 部署模式对比
 
-| 能力 | Docker Compose | Kubernetes | 状态 |
+| 能力 | Podman Compose | Kubernetes | 状态 |
 |------|----------------|------------|------|
 | 基础运行 | ✅ 单实例 | ✅ Deployment | 已验证 |
 | 多实例扩展 | 手动 scale | ✅ HPA | 建议 |
 | 滚动发布 | ❌ | ✅ RollingUpdate | 建议 |
 | 配置管理 | .env | ✅ ConfigMap/Secret | 建议 |
-| 服务发现 | Docker DNS | ✅ Service/Ingress | 建议 |
+| 服务发现 | Podman 网络 DNS | ✅ Service/Ingress | 建议 |
 | 资源限制 | 弱隔离 | ✅ cgroups 强限制 | 建议 |
 
 ---
@@ -84,22 +84,22 @@
 
 ## 快速启动命令
 
-### 本地开发 (Docker Compose)
+### 本地开发 (Podman Compose)
 ```bash
 # 1. 启动基础设施
-docker-compose -f docker-compose.infra.yml up -d
+podman-compose -f podman-compose.infra.yml up -d
 
 # 2. 等待 MySQL/Redis 就绪 (约 30s)
-docker-compose logs -f mysql redis
+podman-compose -f podman-compose.infra.yml logs -f mysql redis
 
 # 3. 启动应用
-docker-compose up -d
+podman-compose -f podman-compose.yml up -d
 
 # 4. 健康检查
 curl http://localhost:8080/actuator/health
 
 # 5. 查看日志
-docker-compose logs -f apex-app
+podman-compose -f podman-compose.yml logs -f apex-gateway
 
 # 6. 访问监控
 open http://localhost:3000  # Grafana (admin/admin)
@@ -109,12 +109,11 @@ open http://localhost:9090  # Prometheus
 ### 生产部署 (Kubernetes)
 ```bash
 # 1. 构建镜像
-mvn clean package -DskipTests
-docker build -t apex-scaffold:1.2.0 .
+podman build -f Containerfile -t apex-scaffold:1.2.0 .
 
 # 2. 推送镜像
-docker tag apex-scaffold:1.2.0 registry.example.com/apex-scaffold:1.2.0
-docker push registry.example.com/apex-scaffold:1.2.0
+podman tag apex-scaffold:1.2.0 registry.example.com/apex-scaffold:1.2.0
+podman push registry.example.com/apex-scaffold:1.2.0
 
 # 3. 部署应用
 kubectl apply -f k8s/deployment.yaml
@@ -244,38 +243,38 @@ ZIPKIN_BASE_URL=http://zipkin:9411
 ### 应用启动失败
 ```bash
 # 1. 查看日志
-docker-compose logs apex-app
+podman-compose -f podman-compose.yml logs -f apex-gateway
 
 # 2. 检查数据库连接
-docker-compose exec apex-app curl http://localhost:8081/actuator/health
+podman-compose -f podman-compose.yml exec apex-gateway wget -qO- http://localhost:8081/actuator/health
 
 # 3. 进入容器调试
-docker-compose exec apex-app bash
+podman-compose -f podman-compose.yml exec apex-gateway sh
 ```
 
 ### 数据库连接失败
 ```bash
 # 1. 检查 MySQL 状态
-docker-compose ps mysql
-docker-compose logs mysql
+podman-compose -f podman-compose.infra.yml ps mysql
+podman-compose -f podman-compose.infra.yml logs mysql
 
 # 2. 测试连接
-docker-compose exec mysql mysql -uroot -p${MYSQL_ROOT_PASSWORD} -e "SELECT 1"
+podman-compose -f podman-compose.infra.yml exec mysql mysql -uroot -p${MYSQL_ROOT_PASSWORD} -e "SELECT 1"
 
-# 3. 检查网络
-docker network inspect apex-scaffold_default
+# 3. 检查容器网络
+podman inspect apex-infra-mysql --format '{{json .NetworkSettings.Networks}}'
 ```
 
 ### Redis 连接失败
 ```bash
 # 1. 检查 Redis 状态
-docker-compose exec redis redis-cli PING
+podman-compose -f podman-compose.infra.yml exec redis redis-cli PING
 
 # 2. 查看连接数
-docker-compose exec redis redis-cli CLIENT LIST
+podman-compose -f podman-compose.infra.yml exec redis redis-cli CLIENT LIST
 
 # 3. 查看内存使用
-docker-compose exec redis redis-cli INFO memory
+podman-compose -f podman-compose.infra.yml exec redis redis-cli INFO memory
 ```
 
 ### Prometheus 无数据
@@ -287,7 +286,7 @@ open http://localhost:9090/targets
 curl http://localhost:8081/actuator/prometheus
 
 # 3. 检查 Prometheus 配置
-docker-compose exec prometheus cat /etc/prometheus/prometheus.yml
+podman-compose -f podman-compose.infra.yml exec prometheus cat /etc/prometheus/prometheus.yml
 ```
 
 ---

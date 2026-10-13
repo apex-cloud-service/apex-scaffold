@@ -48,7 +48,7 @@
 
 **基础设施**：Redisson+Caffeine 二级缓存（响应式、Single-Flight 击穿合并、穿透空标记、写穿透）、RocketMQ（sync/async/delay + 死信监听 + 消费幂等）、Outbox 模式领域事件（表+轮询投递+指标）、动态数据源（master/slave 配置就绪）、数据权限 SQL 改写拦截器（5 种 scope）、乐观锁（@Version + 0 行更新转异常 + 重试切面）、远程调用（WebClient + R4j 熔断/重试/连接池/调用日志/混沌注入）、分布式锁切面、幂等（注解 + Service 两层）。
 
-**工具与交付**：代码生成器（DDD 五层 + Vue3 前端 4 模板 + 迁移 + 测试骨架）、一键初始化脚本、Dockerfile 三档构建、Compose 应用栈 + 9 组件基础设施栈、k8s 部署 + 金丝雀、DB 备份/恢复脚本、压测脚本、Prometheus/告警/Grafana 大盘一键栈、CI 三 workflow（ci-cd/release/security-scan）、266 个测试文件、i18n 四语言、采购材料包（docs/sales/ 四份）。
+**工具与交付**：代码生成器（DDD 五层 + Vue3 前端 4 模板 + 迁移 + 测试骨架）、一键初始化脚本、Containerfile 三档构建、Compose 应用栈 + 9 组件基础设施栈、k8s 部署 + 金丝雀、DB 备份/恢复脚本、压测脚本、Prometheus/告警/Grafana 大盘一键栈、CI 三 workflow（ci-cd/release/security-scan）、266 个测试文件、i18n 四语言、采购材料包（docs/sales/ 四份）。
 
 ---
 

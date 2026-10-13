@@ -6,7 +6,7 @@
 >
 > 当前架构: 单体应用 + DDD 分层, Spring Boot WebFlux
 >
-> 目标部署演进: `java -jar` → Docker Compose → Kubernetes
+> 目标部署演进: `java -jar` → Podman Compose → Kubernetes
 
 ## 1. 目标与结论
 
@@ -16,11 +16,11 @@
 
 1. 应用实例可以在停止、发布、重启时完成优雅关机,尽量避免新请求、异步任务和消息消费被强制中断。
 2. 应用可以根据健康状态、依赖状态、错误率和响应时间实施自动降级,并通过注册中心或流量入口完成实例上下线。
-3. 应用可以根据运行指标进行扩缩容,且方案能够从普通 `java -jar` 部署平滑演进到 Docker Compose 和 Kubernetes。
+3. 应用可以根据运行指标进行扩缩容,且方案能够从普通 `java -jar` 部署平滑演进到 Podman Compose 和 Kubernetes。
 
 ### 1.2 总体结论
 
-| 能力 | 单体阶段是否可实现 | `java -jar` | Docker Compose | Kubernetes | 结论 |
+| 能力 | 单体阶段是否可实现 | `java -jar` | Podman Compose | Kubernetes | 结论 |
 |---|---|---|---|---|---|
 | 优雅关机 | 可以 | 可以 | 可以 | 可以 | 当前项目已有基础实现,需要补齐关停顺序、真实排空确认和发布联动 |
 | 自动降级 | 可以 | 可以 | 可以 | 可以 | 属于进程内治理,不要求先拆微服务;当前已有 Sentinel、Resilience4j 基础 |
@@ -107,7 +107,7 @@
 - 应用进程: 处理流量接纳、请求排空、业务降级、执行器关闭和状态发布。
 - Actuator/指标: 暴露 liveness、readiness、业务指标和资源指标。
 - Nacos 或流量入口: 维护实例可接流量状态和权重。
-- Docker Compose: 提供容器生命周期和健康检查,不负责完整的生产级自动扩容。
+- Podman Compose: 提供容器生命周期和健康检查,不负责完整的生产级自动扩容。
 - Kubernetes: 负责副本数、滚动发布、探针、Service 路由和 HPA。
 - Prometheus/Grafana/Loki: 提供指标、日志和告警,不直接替代扩容控制器。
 
@@ -139,7 +139,7 @@ STARTING -> READY -> DEGRADED
 
 ### 3.3 设计模式与可替换架构
 
-为保证部署方式从 `java -jar` 平滑迁移到 Docker Compose 和 Kubernetes,应用治理能力采用“稳定抽象 + 平台适配器”的结构,业务代码不得直接调用 Nacos、Docker API 或 Kubernetes API。
+为保证部署方式从 `java -jar` 平滑迁移到 Podman Compose 和 Kubernetes,应用治理能力采用“稳定抽象 + 平台适配器”的结构,业务代码不得直接调用 Nacos、容器管理 API 或 Kubernetes API。
 
 采用的设计模式如下:
 
@@ -185,14 +185,14 @@ apex:
 
 - `auto`:启动时自动识别,推荐作为默认值。
 - `standalone`:普通 `java -jar`、systemd 或无容器编排环境。
-- `compose`:Docker Compose 环境。
+- `compose`:Podman Compose 环境。
 - `kubernetes`:Kubernetes Pod 环境。
 
 选择优先级必须固定:
 
 1. 显式配置 `APEX_GOVERNANCE_DEPLOYMENT_MODE` 或配置文件值最高优先级。
 2. `auto` 模式下检测 Kubernetes 官方服务账号文件和 `KUBERNETES_SERVICE_HOST`/`KUBERNETES_SERVICE_PORT`。
-3. 检测项目约定的 `APEX_DEPLOYMENT_PLATFORM=compose` 标记;不能只依赖 `/.dockerenv`,因为 Kubernetes 容器也可能存在该文件。
+3. 检测项目约定的 `APEX_DEPLOYMENT_PLATFORM=compose` 标记;不能只依赖 `/.dockerenv`（保留 Docker API 兼容环境的原始标识）,因为 Kubernetes 容器也可能存在该文件，Podman 也不保证生成它。
 4. 均未匹配时选择 `standalone`。
 
 自动识别只在 Spring 容器启动期间执行一次,选定后整个进程生命周期保持不变。禁止因环境变量或探针短暂变化在运行中切换策略;部署平台切换应通过新实例启动和旧实例优雅下线完成。
@@ -297,7 +297,7 @@ apex:
 - 发布脚本必须先从负载均衡器摘除实例,再发送 SIGTERM。
 - 若无负载均衡器,无法保证请求迁移,只能做到进程内部尽量优雅。
 
-Docker Compose:
+Podman Compose:
 
 - 使用 `stop_grace_period` 覆盖总关停预算。
 - 配置容器 healthcheck 指向 readiness,不要只探测端口。
@@ -409,17 +409,17 @@ Nacos 的 `enabled`、`register-enabled` 和 `weight` 应作为明确的部署�
 
 如果只有一台机器,此阶段只能做进程重启或资源调节,不能获得真正的横向高可用。多机扩容还需要统一配置、日志、锁、会话和任务调度策略。
 
-### 6.3 Docker Compose 阶段
+### 6.3 Podman Compose 阶段
 
 Compose 适合验证容器化和固定副本,不适合作为完整的生产级自动扩容控制平面:
 
-- `docker compose up --scale` 可以手动调整副本数。
-- 需要外部脚本读取 Prometheus 指标并调用 Docker API/Compose 命令,才能实现自动调整。
+- `podman-compose -f podman-compose.yml up -d --scale <服务名>=<副本数>` 可以手动调整允许扩容的服务;需先移除固定 `container_name` 和宿主机端口冲突。
+- 需要外部脚本读取 Prometheus 指标并调用 Podman API/Compose 命令,才能实现自动调整。
 - 需要独立的反向代理或 Nacos 服务发现将流量分发到副本。
 - 需要限制扩缩容频率、设置最小/最大副本数、冷却时间和失败回滚。
-- 单机 Docker Compose 无法解决主机容量不足和节点故障。
+- 单机 Podman Compose 无法解决主机容量不足和节点故障。
 
-该阶段建议只实现“可扩容运行”和“半自动扩容”,把控制逻辑保留在部署运维层,不要将 Docker API 权限放进业务容器。
+该阶段建议只实现“可扩容运行”和“半自动扩容”,把控制逻辑保留在部署运维层,不要将 Podman API 权限放进业务容器。
 
 ### 6.4 Kubernetes 阶段
 
@@ -469,14 +469,14 @@ Kubernetes 是最终推荐方案:
 
 阶段验收:停止期间无新流量进入,存量请求在预算内完成;非核心依赖故障不拖垮核心接口;应用可被监控发现并人工安全上下线。
 
-### 阶段 B: Docker Compose 多副本
+### 阶段 B: Podman Compose 多副本
 
 目标是验证容器化和多实例行为:
 
 - 增加容器 healthcheck、stop grace period 和资源限制。
 - 通过反向代理或 Nacos 完成副本发现和路由。
 - 手动执行 `--scale` 验证启动、就绪、摘流和缩容。
-- 用外部脚本实现受控半自动扩缩容,不在业务容器内操作 Docker。
+- 用外部脚本实现受控半自动扩缩容,不在业务容器内操作 Podman。
 - 验证 Redis、数据库、消息和本地文件相关的多副本风险。
 
 阶段验收:至少两个副本可以同时提供流量,任一副本停止不导致核心请求整体不可用;扩缩容后连接池和消息处理仍在容量边界内。
@@ -503,7 +503,7 @@ Kubernetes 是最终推荐方案:
 - `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/governance/platform/DeploymentGovernanceStrategy.java`:声明平台无关的流量准备、摘除、恢复和能力查询契约。
 - `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/governance/platform/DeploymentGovernanceStrategyRegistry.java`:注册策略并保证每个进程唯一选择。
 - `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/governance/platform/standalone/StandaloneGovernanceStrategy.java`:处理普通 JAR 环境的 readiness 与可选 Nacos 联动。
-- `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/governance/platform/compose/ComposeGovernanceStrategy.java`:处理 Compose 健康检查、Nacos/代理能力声明,不直接操作 Docker API。
+- `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/governance/platform/compose/ComposeGovernanceStrategy.java`:处理 Compose 健康检查、Nacos/代理能力声明,不直接操作容器管理 API。
 - `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/governance/platform/kubernetes/KubernetesGovernanceStrategy.java`:通过 Spring Availability/readiness 与 Kubernetes Service 协作,不在应用内操作 Deployment/HPA。
 - `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/governance/lifecycle/GracefulShutdownCoordinator.java`:以模板方法固定摘流、传播等待、停止新工作、排空和退出顺序。
 - `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/governance/lifecycle/ServiceLifecycleStateMachine.java`:维护合法生命周期迁移和幂等操作。
@@ -511,7 +511,7 @@ Kubernetes 是最终推荐方案:
 - `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/config/SentinelConfig.java`:规则边界、动态配置和统一降级指标。
 - `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/config/SentinelNacosDataSourceConfig.java`:动态规则加载、版本和失败策略,以实际文件存在情况为准。
 - `k8s/deployment.yaml`:探针、滚动更新、termination grace period、PDB/HPA 配套配置。
-- `docker-compose.yml`:healthcheck、stop grace period、资源限制和多副本验证所需配置。
+- `podman-compose.yml`:healthcheck、stop grace period、资源限制和多副本验证所需配置。
 - 现有执行器、RocketMQ 监听器、WebFilter 和异常处理类:仅在排空计数和降级语义确有归属时修改。
 - 对应模块现有测试目录:补充生命周期、降级触发、探针状态和配置绑定测试。
 
@@ -538,7 +538,7 @@ Kubernetes 是最终推荐方案:
 - RocketMQ 停止拉取新消息,在途消息完成、重试或进入可追踪失败路径。
 - `@Async` 和自定义线程池任务不被静默丢弃。
 - 超过排空预算时进程仍能退出,日志包含各类未完成数量。
-- Docker stop 和 Kubernetes Pod 删除行为与直接 SIGTERM 一致。
+- `podman stop` 和 Kubernetes Pod 删除行为与直接 SIGTERM 一致。
 
 ### 10.3 降级与上下线
 
@@ -592,7 +592,7 @@ Kubernetes 是最终推荐方案:
 | 注册中心故障 | 实例状态不可知、流量错误 | 明确 fail-open/fail-closed 并告警 |
 | 自动识别误判部署平台 | 装配错误策略、上下线失效 | 显式配置优先、强平台证据、冲突启动失败 |
 | 运行期动态切换策略 | 关停与注册状态不一致 | 模式只在启动期解析,迁移通过滚动替换实例 |
-| 应用持有 Docker/Kubernetes 管理权限 | 业务容器权限过高 | 扩缩容始终由外部控制平面负责 |
+| 应用持有 Podman/Kubernetes 管理权限 | 业务容器权限过高 | 扩缩容始终由外部控制平面负责 |
 
 ## 13. 需要本方案确认的事项
 

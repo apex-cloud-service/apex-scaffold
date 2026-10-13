@@ -4,7 +4,7 @@
 # ============================================================
 # 用途: 扫描Java文件,识别缺少JavaDoc的类和方法
 # 使用: ./check_javadoc.sh [module_path]
-# 示例: ./check_javadoc.sh apex-interfaces/src/main/java
+# 示例: ./check_javadoc.sh apex-system/src/main/java
 # ============================================================
 
 set -e
@@ -16,7 +16,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 # 默认扫描路径
-SCAN_PATH="${1:-apex-interfaces/src/main/java}"
+SCAN_PATH="${1:-apex-system/src/main/java}"
 
 echo "=========================================="
 echo "JavaDoc 质量检查工具"
@@ -297,7 +297,7 @@ cat >> "$OUTPUT_FILE" << EOF
 
 **P0 - 核心接口层** (Handler):
 \`\`\`bash
-find apex-interfaces/src/main/java -name "*Handler.java"
+find apex-system/src/main/java -name "*Handler.java"
 \`\`\`
 
 **P1 - 应用服务层** (Service):

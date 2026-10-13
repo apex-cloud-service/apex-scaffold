@@ -38,7 +38,7 @@
   <text x="970" y="199" class="code">Fluent Bit: 3.2.4</text>
   <text x="970" y="227" class="code">SpringDoc OpenAPI: 2.8.1</text>
   <text x="970" y="255" class="text">DevOps:</text>
-  <text x="970" y="275" class="code">Docker: 27.x</text>
+  <text x="970" y="275" class="code">Podman + podman-compose</text>
   <text x="970" y="293" class="code">Kubernetes: 1.32+</text>
   <text x="970" y="311" class="code">GitHub Actions</text>
   <text x="970" y="339" class="text">✅ 所有版本基于pom.xml实际配置</text>

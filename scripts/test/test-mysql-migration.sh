@@ -3,7 +3,7 @@
 # MySQL Flyway 迁移隔离测试脚本
 #
 # 功能：
-#   - 使用临时 Docker 容器验证 Flyway 迁移脚本
+#   - 使用临时 Podman 容器验证 Flyway 迁移脚本
 #   - 自动清理测试容器和数据，不影响现有业务数据库
 #   - 完全隔离的测试环境
 #
@@ -28,6 +28,8 @@ if [ "${APEX_MIGRATION_SDK_READY:-0}" != "1" ]; then
     exec zsh -c 'source "$HOME/.sdkman/bin/sdkman-init.sh" && sdk env && export APEX_MIGRATION_SDK_READY=1 && exec /bin/bash "$1"' -- "$SCRIPT_DIR/test-mysql-migration.sh"
 fi
 require_command "mvnd" "Maven Daemon" || exit 1
+require_command "podman" "Podman（macOS 需先 podman machine start）" || exit 1
+podman info >/dev/null
 
 # 临时容器配置
 CONTAINER_NAME="apex-test-mysql-$(date +%s)"
@@ -46,9 +48,9 @@ log_info "测试数据库: ${TEST_DB_NAME}"
 cleanup() {
     local exit_code=$?
     log_info "清理测试资源..."
-    docker stop "$CONTAINER_NAME" 2>/dev/null || true
-    docker rm "$CONTAINER_NAME" 2>/dev/null || true
-    docker network rm "$NETWORK_NAME" 2>/dev/null || true
+    podman stop "$CONTAINER_NAME" 2>/dev/null || true
+    podman rm "$CONTAINER_NAME" 2>/dev/null || true
+    podman network rm "$NETWORK_NAME" 2>/dev/null || true
     log_success "清理完成"
     exit "$exit_code"
 }
@@ -56,22 +58,22 @@ trap cleanup EXIT
 
 # 创建网络和容器
 print_section "创建测试环境"
-docker network create "$NETWORK_NAME" >/dev/null
-docker run -d \
+podman network create "$NETWORK_NAME" >/dev/null
+podman run -d \
     --name "$CONTAINER_NAME" \
     --network "$NETWORK_NAME" \
     -p "127.0.0.1:${DB_PORT}:3306" \
     -e MYSQL_ROOT_PASSWORD="$DB_PASSWORD" \
     -e MYSQL_DATABASE="$TEST_DB_NAME" \
     --tmpfs /var/lib/mysql:rw,noexec,nosuid,size=512m \
-    mysql:8.0 \
+    docker.io/library/mysql:8.0 \
     --character-set-server=utf8mb4 \
     --collation-server=utf8mb4_unicode_ci \
     >/dev/null
 
 log_info "等待 MySQL 就绪..."
 for i in {1..30}; do
-    if docker exec "$CONTAINER_NAME" mysqladmin ping -h127.0.0.1 -P3306 --protocol=TCP -uroot -p"$DB_PASSWORD" --silent 2>/dev/null; then
+    if podman exec "$CONTAINER_NAME" mysqladmin ping -h127.0.0.1 -P3306 --protocol=TCP -uroot -p"$DB_PASSWORD" --silent 2>/dev/null; then
         log_success "MySQL 已就绪"
         break
     fi
@@ -87,7 +89,7 @@ cat > "$FLYWAY_CONF" << EOF
 flyway.url=jdbc:mysql://127.0.0.1:${DB_PORT}/${TEST_DB_NAME}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
 flyway.user=root
 flyway.password=${DB_PASSWORD}
-flyway.locations=filesystem:${PROJECT_ROOT}/apex-auth-center/src/main/resources/db/migration/mysql
+flyway.locations=filesystem:${PROJECT_ROOT}/apex-auth-service/src/main/resources/db/migration/mysql
 flyway.baselineOnMigrate=false
 flyway.cleanDisabled=true
 flyway.validateMigrationNaming=true
@@ -101,7 +103,7 @@ require_command "mvnd" "Maven Daemon" || exit 1
 
 # 临时禁用 set -e 来捕获 mvnd 错误
 set +e
-mvnd -B -f apex-auth-center/pom.xml \
+mvnd -B -f apex-auth-service/pom.xml \
     -Dflyway.configFiles="$FLYWAY_CONF" \
     flyway:migrate
 MVND_EXIT_CODE=$?
@@ -114,9 +116,9 @@ fi
 
 # 验证结果
 print_section "验证迁移结果"
-TABLES=$(docker exec "$CONTAINER_NAME" mysql -uroot -p"$DB_PASSWORD" "$TEST_DB_NAME" \
+TABLES=$(podman exec "$CONTAINER_NAME" mysql -uroot -p"$DB_PASSWORD" "$TEST_DB_NAME" \
     -sN -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='${TEST_DB_NAME}'")
-MIGRATIONS=$(docker exec "$CONTAINER_NAME" mysql -uroot -p"$DB_PASSWORD" "$TEST_DB_NAME" \
+MIGRATIONS=$(podman exec "$CONTAINER_NAME" mysql -uroot -p"$DB_PASSWORD" "$TEST_DB_NAME" \
     -sN -e "SELECT COUNT(*) FROM flyway_schema_history WHERE success=1")
 
 log_info "创建表数量: $TABLES"

@@ -379,7 +379,7 @@
 1. 重启Grafana服务:
    ```bash
    cd config/monitoring
-   docker-compose restart grafana
+   podman-compose -f podman-compose.yml restart grafana
    ```
 
 2. 访问Grafana: `http://localhost:3000`
@@ -635,6 +635,24 @@ export async function getUserDetail(userId: number): Promise<User> {
 - [ ] 告警规则配置完成并可触发
 - [ ] Zipkin链路追踪集成完成
 - [ ] 编写监控平台使用指南
+
+#### 2026-10-13 部署、日志采集与 SkyWalking 复核记录
+
+本轮只复核部署脚本、容器编排和监控配置；上方原有验收 checkbox 保留原状态，其中 Zipkin 条目属于历史方案，当前部署使用 SkyWalking。以下检查不能替代整栈生产验收。
+
+- [x] 修复 `scripts/deploy/service/app.sh` 默认业务/管理端口：gateway 8080/8080、auth 8081/8081、system 8082/8083、workflow 8083/8083、office 8084/8084、file 8085/8085。此前脚本将所有模块业务端口强制设为 8080，并把网关管理端口设为 8081，导致 readiness 探测错端口。
+- [x] 受控执行脚本 `status` 并捕获变量赋值：修复前网关管理端口断言失败；修复后六服务默认值、业务端口覆盖、独立管理端口覆盖、自定义 readiness URL 共九组检查通过。PID 文件使用 `/dev/null`，未启动或停止用户进程。`bash -n` 检查 app.sh 和 start-local.sh 通过。
+- [x] 读取 Apache 官方 `skywalking-java/v9.7.0/apm-sniffer/config/agent.config`，确认 `logging.dir=${SW_LOGGING_DIR:}`；现有环境变量设置符合该版本配置，无需追加同义 JVM 参数。这是配置依据，尚不是 Agent 日志实际落盘验证。
+- [x] 在现有 OAP 9.7.0 容器实跑 Compose 使用的 GraphQL `{version}` 查询，返回 `{"data":{"version":"9.7.0-066457b"}}`，健康检查匹配通过；仅证明查询服务可用。
+- [x] Filebeat 8.13.4 镜像执行 `test config -strict.perms=false` 返回 `Config OK`。配置递归采集 `/var/log/apex-scaffold/**/*-json.log`，将 Toolkit 的 `TID` 重命名为 `tid`，保留业务 `traceId`。
+- [x] 现有 Alloy v1.0.0 容器执行 `alloy fmt /etc/alloy/config.alloy` 成功，未写回配置；仅证明语法可解析，尚未验证 Loki 入库。
+- [x] 只读检查现有 `apex-review-gateway-fixed-20261013` quick 网关容器，用户为 `uid=100(appuser)`；8080 的 GET readiness 返回 `{"status":"UP"}`，`wget --spider` HEAD 探测退出 0。容器现有健康状态仍为 unhealthy，inspect 确认旧镜像健康检查探测 8081，历史输出 connection refused；当前仓库网关 Compose 探测 8080，未重建或重启用户容器。
+- [ ] 完整 Containerfile 构建、Agent SHA512 校验、可选 Gateway 4.x/WebFlux 6.x 插件装载、Agent 非 root 可读与日志落盘验收。本轮一次性容器下载官方 9.7.0 压缩包 90 秒超时，仅收到 6,487,941/45,958,841 字节；现存 `localhost/apex-scaffold:latest` quick 镜像不含 Agent，不能证明完整镜像通过。
+- [ ] 六服务 `prod,enterprise` 完整镜像启动及网关到下游 WebFlux 的同一 trace 验收。上述 quick 网关 readiness 成功不覆盖这些检查。
+- [ ] Filebeat 到 Elasticsearch、Alloy 到 Loki 的实际日志采集、字段、索引/模板/ILM 与检索验收；配置解析通过不等于入库成功。
+- [ ] 各服务宿主机日志 bind mount 的部署账号权限验收。镜像目录 chown 会被挂载遮蔽，需要在目标部署主机确认 `logs/<service>` 可写。
+
+本轮未修改根 POM 或 Java，未运行 Java 构建/完整门禁，未提交、未停止用户服务、未删除用户卷，也未恢复已删除文件。
 
 ### 5.3 任务3验收标准
 

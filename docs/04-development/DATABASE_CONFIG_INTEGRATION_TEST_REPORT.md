@@ -4,7 +4,7 @@
 2026-09-07 14:00 - 14:50
 
 ## 测试环境
-- **后端**：Spring Boot 3.5.15 + WebFlux + MySQL (Docker)
+- **后端**：Spring Boot 3.5.15 + WebFlux + MySQL（容器）
 - **前端**：Vue 3 + TypeScript + Vite
 - **数据库**：MySQL 8.0 (apex-infra-mysql 容器)
 - **数据库名**：apex_data
@@ -144,7 +144,7 @@ lsof -ti:8080 | xargs kill -9
 1. **修复用户认证**：
    ```bash
    # 检查数据库中的 admin 用户
-   docker exec -i apex-infra-mysql mysql -u root -papex-root apex_data \
+   podman exec -i apex-infra-mysql mysql -u root -papex-root apex_data \
      -e "SELECT id, username FROM sys_user WHERE username='admin';"
    
    # 如果不存在，需要运行用户初始化脚本
@@ -213,7 +213,7 @@ cd /Users/work/apex-scaffold
 mvnd flyway:repair -pl apex-interfaces -Dflyway.url=jdbc:mysql://localhost:3306/apex_data -Dflyway.user=root -Dflyway.password=apex-root
 
 # 方式 2：手动更新 checksum
-docker exec -i apex-infra-mysql mysql -u root -papex-root apex_data << 'EOF'
+podman exec -i apex-infra-mysql mysql -u root -papex-root apex_data << 'EOF'
 UPDATE flyway_schema_history SET checksum = NULL 
 WHERE version IN ('1', '2', '3', '4', '5', '6', '7');
 EOF

@@ -315,7 +315,7 @@ public Mono<ServerResponse> method(ServerRequest request) {
 - [SpringDoc官方文档](https://springdoc.org/)
 - [OpenAPI 3.0规范](https://swagger.io/specification/)
 - [项目SpringDoc注解模板](./springdoc-annotation-templates.md)
-- [后端开发规范](../04-development/backend-development-standards.md)
+- [后端开发规范](../04-development/development-standards.md)
 
 ---
 

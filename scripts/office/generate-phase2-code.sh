@@ -9,7 +9,7 @@ PROJECT_ROOT="/Users/work/apex-scaffold"
 DOMAIN_PATH="$PROJECT_ROOT/apex-domain/src/main/java/com/apex/scaffold/domain/office"
 APPLICATION_PATH="$PROJECT_ROOT/apex-application/src/main/java/com/apex/scaffold/application/office"
 INFRASTRUCTURE_PATH="$PROJECT_ROOT/apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/office"
-INTERFACES_PATH="$PROJECT_ROOT/apex-interfaces/src/main/java/com/apex/scaffold/interfaces"
+INTERFACES_PATH="$PROJECT_ROOT/apex-system/src/main/java/com/apex/scaffold/interfaces"
 
 echo "=========================================="
 echo "办公平台集成 - 阶段二代码生成工具"
@@ -141,7 +141,7 @@ generate_document_module() {
 generate_migration_scripts() {
     print_step "生成数据库迁移脚本..."
     
-    MIGRATION_PATH="$PROJECT_ROOT/apex-interfaces/src/main/resources/db/migration"
+    MIGRATION_PATH="$PROJECT_ROOT/apex-system/src/main/resources/db/migration"
     
     # 查找最新的版本号
     LATEST_VERSION=$(ls -1 "$MIGRATION_PATH/mysql" | grep -oP 'V\K[0-9]+' | sort -n | tail -1)

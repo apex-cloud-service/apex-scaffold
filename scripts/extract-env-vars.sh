@@ -3,8 +3,8 @@
 
 set -euo pipefail
 
-CONFIG_DIR="apex-interfaces/src/main/resources"
-TEST_CONFIG_DIR="apex-interfaces/src/test/resources"
+CONFIG_DIR="apex-system/src/main/resources"
+TEST_CONFIG_DIR="apex-system/src/test/resources"
 OUTPUT_FILE="env-vars-extracted.txt"
 
 echo "正在扫描配置文件中的环境变量..."

@@ -20,7 +20,8 @@ if [[ -f "$HOME/.sdkman/bin/sdkman-init.sh" ]]; then
   sdk env
   echo "✅ 已加载 sdkman 项目环境"
 else
-  echo "⚠️ 未找到 sdkman（$HOME/.sdkman），请安装: https://sdkman.io"
+  echo "未找到 sdkman（$HOME/.sdkman），请安装: https://sdkman.io" >&2
+  exit 1
 fi
 
 # 检查 Java 版本
@@ -29,9 +30,9 @@ if ! command -v java &> /dev/null; then
     exit 1
 fi
 
-JAVA_VERSION=$(java -version 2>&1 | awk -F '"' '/version/ {print $2}' | cut -d'.' -f1)
-if [ "$JAVA_VERSION" -lt 17 ]; then
-    echo "❌ Java 版本过低，需要 JDK 17+，当前版本: $JAVA_VERSION"
+JAVA_VERSION=$(java -version 2>&1 | awk -F '"' '/version/ {print $2}')
+if [[ "${JAVA_HOME:-}" != "$HOME/.sdkman/candidates/java/17.0.12-oracle" || "$JAVA_VERSION" != "17.0.12" ]]; then
+    echo "需要 SDKMAN JDK 17.0.12-oracle，当前版本: $JAVA_VERSION" >&2
     exit 1
 fi
 

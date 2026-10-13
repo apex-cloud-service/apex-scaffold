@@ -316,7 +316,7 @@ RBAC 六件套（sys_user/role/permission/user_role/role_permission）、sys_ope
 **现状**：17 篇文档，缺部署与运营类文档。
 
 **建议方案**：
-1. 部署指南：Docker Compose 全量部署 / K8s 部署 / 裸机部署（含 Nginx/HTTPS）
+1. 部署指南：Podman Compose 全量部署 / K8s 部署 / 裸机部署（含 Nginx/HTTPS）
 2. FAQ（常见问题 30+）
 3. 版本升级指南（v1.0→v1.1 升级步骤）
 4. 管理后台使用指南（登录→建角色→配权限→建用户→看日志全流程截图）

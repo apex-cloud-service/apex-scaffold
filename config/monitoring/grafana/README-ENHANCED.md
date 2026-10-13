@@ -132,8 +132,8 @@
 Grafana 已配置自动从 `/var/lib/grafana/dashboards` 目录加载面板，只需重启 Grafana：
 
 ```bash
-# Docker Compose 环境
-docker compose restart grafana
+# 在仓库根目录操作 Podman Compose 监控栈
+podman-compose -f config/monitoring/podman-compose.yml restart grafana
 
 # 等待 10 秒后访问
 open http://localhost:3000/d/apex-enhanced

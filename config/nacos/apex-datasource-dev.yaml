@@ -1,0 +1,55 @@
+# ============================================================
+# Apex Scaffold - Nacos 共享配置：apex-datasource-dev.yaml
+# ============================================================
+# 【作用】
+#   Nacos「共享配置」，供各微服务在 dev 环境引用自身数据库
+#   （Data ID: apex-datasource-dev.yaml，Group: DEFAULT_GROUP）。
+#   各服务通过 bootstrap.yml 的 spring.cloud.nacos.config.external-configs
+#   按需挂载，仅引用自己库对应 section。
+#
+# 【安全提示】
+#   🔒 连接口令一律经 ${DB_PASSWORD_xxx} 环境变量 / KMS 注入，禁止明文。
+#   🔒 除数据库口令外，敏感连接（Redis 口令等）同样走 env，不在此下发。
+#
+# @author Apex Team
+# ============================================================
+
+# —— 认证服务（库 apex_auth，最小权限账号）——
+apex-auth-service:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${DB_HOST_DEV:127.0.0.1}:${DB_PORT_DEV:3306}/apex_auth?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false
+    username: ${DB_USERNAME_AUTH:apex_auth}
+    password: ${DB_PASSWORD_AUTH:}
+
+# —— 系统服务（库 apex_system，最小权限账号）——
+apex-system-service:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${DB_HOST_DEV:127.0.0.1}:${DB_PORT_DEV:3306}/apex_system?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false
+    username: ${DB_USERNAME_SYSTEM:apex_system}
+    password: ${DB_PASSWORD_SYSTEM:}
+
+# —— 工作流服务（库 apex_workflow，最小权限账号）——
+apex-workflow-service:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${DB_HOST_DEV:127.0.0.1}:${DB_PORT_DEV:3306}/apex_workflow?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false
+    username: ${DB_USERNAME_WORKFLOW:apex_workflow}
+    password: ${DB_PASSWORD_WORKFLOW:}
+
+# —— 办公服务（库 apex_office，最小权限账号）——
+apex-office-service:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${DB_HOST_DEV:127.0.0.1}:${DB_PORT_DEV:3306}/apex_office?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false
+    username: ${DB_USERNAME_OFFICE:apex_office}
+    password: ${DB_PASSWORD_OFFICE:}
+
+# —— 文件服务（库 apex_file，最小权限账号）——
+apex-file-service:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${DB_HOST_DEV:127.0.0.1}:${DB_PORT_DEV:3306}/apex_file?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false
+    username: ${DB_USERNAME_FILE:apex_file}
+    password: ${DB_PASSWORD_FILE:}

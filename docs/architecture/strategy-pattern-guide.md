@@ -245,7 +245,7 @@ public class AuthHandler {
      │Strategy    │  │Strategy│ │Strategy   │
      └────────────┘  └────────┘ └───────────┘
          ↓               ↓           ↓
-      java -jar     Docker Compose  K8s Pod
+      java -jar     Podman Compose  K8s Pod
 ```
 
 #### 核心接口

@@ -1,0 +1,85 @@
+# ============================================================
+# Apex Scaffold - 文件服务 application.yml
+# ============================================================
+# 【作用】
+#   文件服务（apex-file-service）运行期主配置：端口、数据源、Flyway、MyBatis-Plus。
+#   服务名 = Nacos 注册名 = 网关路由 lb:// 的目标名（迁移方案 Phase 4）。
+#
+# 【独立库】
+#   文件服务使用独立数据库 apex_file（迁移方案 §4.2），
+#   表结构：file_record / file_document / file_chart / file_chunk。
+#
+# @author Apex Team
+# ============================================================
+
+server:
+  # 文件服务端口（迁移方案 §4.1：端口 8085）
+  port: 8085
+
+spring:
+  application:
+    # 服务名 = Nacos 注册名 = 网关路由 lb:// 的目标名
+    # 与 bootstrap.yml 保持一致，统一为 apex-file-service。
+    name: apex-file-service
+
+  # 大文件上传：放开 Netty 请求体缓冲上限，支撑网关透传流式上传（迁移方案 §4.3）
+  codec:
+    max-in-memory-size: 256MB
+
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/apex_file?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false
+    username: root
+    password: ${DB_PASSWORD:root}
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration/mysql
+    out-of-order: true
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+  global-config:
+    db-config:
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+# ==================== 文件能力配置 ====================
+file:
+  upload:
+    # 单文件最大字节数（默认 10MB，分片上传接口不受此限制）
+    max-size-bytes: ${FILE_MAX_SIZE_BYTES:10485760}
+
+storage:
+  # 默认存储桶
+  bucket-name: ${STORAGE_BUCKET_NAME:apex}
+  # 预签名 URL 有效期（秒）
+  presigned-url-expire-seconds: ${STORAGE_PRESIGNED_URL_EXPIRE_SECONDS:300}
+  local:
+    # 本地存储开关（默认开启，作为兜底存储）
+    enabled: ${STORAGE_LOCAL_ENABLED:true}
+    base-path: ${STORAGE_LOCAL_BASE_PATH:/root/data/apex/uploads}
+  volcengine:
+    # 火山引擎 TOS 开关（默认关闭，按需开启）
+    enabled: ${STORAGE_VOLCENGINE_ENABLED:false}
+
+logging:
+  level:
+    root: INFO
+    com.apex.scaffold.file: DEBUG
+    com.apex.scaffold.fileservice: DEBUG
+    org.springframework.web: DEBUG
+
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json

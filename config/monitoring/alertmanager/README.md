@@ -5,8 +5,8 @@
 推送到通知渠道（钉钉 / 企业微信 / 邮件 / Slack 等）。
 
 > 告警规则在 `../prometheus/alert-rules.yml` 中定义；规则产生告警后由
-> Alertmanager 负责**路由、分组、抑制与通知**。本地 docker-compose 演示栈
-> （`../docker-compose.yml`）默认未启用 Alertmanager，如需演示告警通知，
+> Alertmanager 负责**路由、分组、抑制与通知**。本地 Podman Compose 演示栈
+> （`../podman-compose.yml`）默认未启用 Alertmanager，如需演示告警通知，
 > 可将 `prom/prometheus` 命令追加 `--web.external-url` 并在此目录添加
 > `alertmanager.yml` 后将 `alertmanager:9093` 加入 compose 网络。
 

@@ -98,7 +98,7 @@ data:
           startup-delay-seconds: 60
 ```
 
-## Docker Compose 示例
+## Podman Compose 示例
 
 ```yaml
 version: '3.8'

@@ -160,14 +160,21 @@ def rollback(bundle, output):
 
 def compose_check(env_file):
     root = Path(__file__).resolve().parents[2]
-    command = ["docker", "compose", "--project-directory", str(root), "-f", str(root / "docker-compose.yml")]
+    import yaml
+
+    command = ["podman-compose", "-f", str(root / "podman-compose.yml")]
     if env_file:
-        command += ["--env-file", str(env_file)]
-    result = subprocess.run(command + ["config", "--format", "json"], capture_output=True, text=True)
+        command += ["--env-file", str(env_file.resolve())]
+    result = subprocess.run(command + ["config"], cwd=root, capture_output=True, text=True)
     if result.returncode:
-        raise ValueError("Compose 配置验证失败；请检查必需环境变量与 Compose 版本（输出已隐藏）")
-    config = json.loads(result.stdout)
-    validate_keys(config["services"]["apex-scaffold"]["environment"])
+        raise ValueError("Compose 配置验证失败；请检查必需环境变量与 podman-compose 版本（输出已隐藏）")
+    config = yaml.safe_load(result.stdout)
+    environments = [service.get("environment", {}) for service in config["services"].values()]
+    secured = [environment for environment in environments if "APEX_DATA_ENCRYPTION_KEY" in environment]
+    if not secured:
+        raise ValueError("Compose 配置缺少应用安全环境变量")
+    for environment in secured:
+        validate_keys(environment)
 
 
 def main():

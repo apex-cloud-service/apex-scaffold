@@ -30,7 +30,7 @@ TOTP 仓储只读取加密格式，不会在解密失败时回退为明文。升
 
 Token 存储加密使用 `security.encryption.key`（环境变量 `SECURITY_ENCRYPTION_KEY`）；认证中心也支持 `security.token.encryption.key`（`TOKEN_ENCRYPTION_KEY`），前者优先。密钥必须为 Base64 编码的 32 字节，跨实例和重启保持一致；缺失或长度错误会拒绝启动，不再生成临时密钥。旧临时密钥加密的 Token 需要保留原密钥迁移，否则必须重新登录。
 
-Compose 强制注入 `APEX_DATA_ENCRYPTION_KEY`、`SECURITY_ENCRYPTION_KEY`、`CONFIG_ENCRYPTION_KEY`、`APEX_CONFIG_ENCRYPTION_KEY` 和 `JWT_SECRET`，缺失或为空时拒绝渲染。一次性 `security-key-check` 服务使用 Python 3.13 镜像校验格式，成功后才允许启动应用；四类加密密钥必须独立生成并安全保存，不应每次启动重新生成。三个 Base64 密钥可分别用 `openssl rand -base64 32` 生成；公共配置密钥可用 `openssl rand -hex 16` 生成（结果是 32 字节 ASCII）。`.env.example` 仅保留空值。环境变量仍可被具有 Docker 管理权限的用户查看。
+Compose 强制注入 `APEX_DATA_ENCRYPTION_KEY`、`SECURITY_ENCRYPTION_KEY`、`CONFIG_ENCRYPTION_KEY`、`APEX_CONFIG_ENCRYPTION_KEY` 和 `JWT_SECRET`，缺失或为空时拒绝渲染。一次性 `security-key-check` 服务使用 Python 3.13 镜像校验格式，成功后才允许启动应用；四类加密密钥必须独立生成并安全保存，不应每次启动重新生成。三个 Base64 密钥可分别用 `openssl rand -base64 32` 生成；公共配置密钥可用 `openssl rand -hex 16` 生成（结果是 32 字节 ASCII）。`.env.example` 仅保留空值。环境变量仍可被具有 Podman 管理权限的用户查看。
 
 安全检查命令（捕获渲染结果，不把展开后的密钥打印到终端）：
 
@@ -629,6 +629,78 @@ storage:
     # CDN域名(可选)
     cdn-domain: https://cdn.example.com
 ```
+
+## 🧭 Nacos 配置中心（微服务化）
+
+微服务化后，配置分为**本地文件**与 **Nacos 远端**两层：`bootstrap.yml` 在应用
+启动早期建立与 Nacos 的连接，再拉取远端配置与本地 `application.yml` 合并（迁移方案
+§12.1）。本节的模板文件位于 [`config/nacos/`](../../config/nacos/README.md)。
+
+### 加载顺序与优先级
+
+```text
+bootstrap.yml
+  -> Nacos 远端配置（apex-common.yaml -> apex-datasource-{env}.yaml -> apex-{service}.yaml -> Sentinel 规则）
+  -> application.yml
+  -> application-{profile}.yml
+```
+
+优先级：**环境变量 > Nacos 远端配置 > 本地文件默认值**。无 Nacos 部署时通过
+`NACOS_CONFIG_ENABLED=false` 关闭配置中心，应用回退到本地 `application.yml`，行为与单体一致。
+
+### bootstrap.yml 关键项
+
+```yaml
+spring:
+  application:
+    # 服务名 = Nacos 注册名 = 网关路由 lb:// 的目标名（apex-xxx-service）
+    name: apex-gateway
+  cloud:
+    nacos:
+      config:
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+        namespace: ${NACOS_NAMESPACE:public}
+        group: DEFAULT_GROUP
+        file-extension: yml
+        refresh-enabled: true
+        enabled: ${NACOS_CONFIG_ENABLED:true}
+      discovery:
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+        namespace: ${NACOS_NAMESPACE:dev}
+        group: DEFAULT_GROUP
+        enabled: ${NACOS_DISCOVERY_ENABLED:true}
+        register-enabled: ${NACOS_REGISTER_ENABLED:true}
+```
+
+> ⚠️ 网关（`apex-gateway`）作为流量入口，`NACOS_CONFIG_ENABLED`/`NACOS_DISCOVERY_ENABLED`/
+> `NACOS_REGISTER_ENABLED` 默认 **true**；业务服务默认 **false**，避免本地未部署 Nacos 时启动失败。
+
+### Nacos Data ID 清单
+
+> 约定：`{service}` = `spring.application.name`，服务名一律 `apex-xxx-service` 形式；
+> 配置分组 `DEFAULT_GROUP`（Sentinel 规则为 `SENTINEL_GROUP`）；`{env}` = dev/prod。
+
+| Data ID | 类型 | 引用服务 | 模板文件 |
+|---------|------|----------|----------|
+| `apex-common.yaml` | 共享 | 全部微服务 | [`config/nacos/apex-common.yaml`](../../config/nacos/apex-common.yaml) |
+| `apex-datasource-dev.yaml` | 共享 | 有库服务（dev） | [`config/nacos/apex-datasource-dev.yaml`](../../config/nacos/apex-datasource-dev.yaml) |
+| `apex-datasource-prod.yaml` | 共享 | 有库服务（prod） | [`config/nacos/apex-datasource-prod.yaml`](../../config/nacos/apex-datasource-prod.yaml) |
+| `apex-gateway.yaml` | 服务私有 | `apex-gateway` | [`config/nacos/apex-gateway.yaml`](../../config/nacos/apex-gateway.yaml) |
+| `apex-auth-service.yaml` | 服务私有 | `apex-auth-service` | Phase 2 引入 |
+| `apex-system-service.yaml` | 服务私有 | `apex-system-service` | Phase 6 引入 |
+| `apex-workflow-service.yaml` | 服务私有 | `apex-workflow-service` | Phase 3 引入 |
+| `apex-office-service.yaml` | 服务私有 | `apex-office-service` | Phase 5 引入 |
+| `apex-file-service.yaml` | 服务私有 | `apex-file-service` | Phase 4 引入 |
+| `{service}-flow-rules` | Sentinel | 各微服务 | [`config/nacos/sentinel/`](../../config/nacos/sentinel/README.md) |
+| `{service}-degrade-rules` | Sentinel | 各微服务 | [`config/nacos/sentinel/`](../../config/nacos/sentinel/README.md) |
+
+> 💡 Sentinel 规则推送为**整体替换**语义，发布时必须提交完整规则集；
+> 相关配置项见[Sentinel配置](#sentinel配置)的 `apex.sentinel.nacos`。
+
+### 敏感配置约定
+
+Nacos 远端配置**禁止**出现明文密钥。JWT 私钥、数据库口令、Redis 口令等一律经
+环境变量 / KMS 注入；相关变量名见[环境变量清单](configuration-inventory.md)。
 
 ## 📊 监控告警配置
 

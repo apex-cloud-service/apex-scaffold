@@ -221,13 +221,13 @@ curl -X POST \
 
 ---
 
-### 方法 4：Docker Compose Provisioning
+### 方法 4：Podman Compose Provisioning
 
 适合容器化部署，支持自动导入。
 
 #### 步骤 1：创建 Provisioning 配置
 
-创建文件 `docker/grafana/provisioning/dashboards/apex-cache.yaml`：
+在现有 `config/monitoring/grafana/provisioning/dashboards/` 目录下配置 `apex-cache.yaml`：
 
 ```yaml
 apiVersion: 1
@@ -244,7 +244,7 @@ providers:
       path: /etc/grafana/provisioning/dashboards/apex-cache
 ```
 
-#### 步骤 2：更新 docker-compose.yml
+#### 步骤 2：更新 config/monitoring/podman-compose.yml（挂载路径相对此文件）
 
 ```yaml
 version: '3.8'
@@ -256,9 +256,9 @@ services:
       - "3000:3000"
     volumes:
       # Dashboard 配置文件
-      - ./docs/cache/grafana-cache-dashboard-optimized.json:/etc/grafana/provisioning/dashboards/apex-cache/dashboard.json:ro
+      - ../../docs/cache/grafana-cache-dashboard-optimized.json:/etc/grafana/provisioning/dashboards/apex-cache/dashboard.json:ro
       # Provisioning 配置
-      - ./docker/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
       # 数据持久化
       - grafana-data:/var/lib/grafana
     environment:
@@ -272,7 +272,7 @@ services:
     ports:
       - "9090:9090"
     volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus-data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
@@ -283,10 +283,10 @@ volumes:
   prometheus-data:
 ```
 
-#### 步骤 3：启动服务
+#### 步骤 3：启动服务（项目根目录）
 
 ```bash
-docker-compose up -d
+podman-compose -f config/monitoring/podman-compose.yml up -d
 ```
 
 Dashboard 会在 Grafana 启动时自动导入。
@@ -554,7 +554,7 @@ label_values(up{job="apex-scaffold"}, instance)
 ## 💡 推荐配置
 
 **生产环境：**
-- 使用方法 1（自动化脚本）或方法 4（Docker Provisioning）
+- 使用方法 1（自动化脚本）或方法 4（Podman Compose Provisioning）
 - 配置告警通知到钉钉或企业微信
 - 设置刷新间隔为 30s 或 1m
 - 启用环境变量过滤器

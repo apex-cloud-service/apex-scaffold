@@ -22,7 +22,7 @@ Apex Scaffold v1.2.0 已通过商业化就绪度评审（92/100），具备以�
 | 发布脚本 | ✅ 已就绪 | scripts/release/release.sh 三档打包 |
 | License发放 | ✅ 已就绪 | scripts/license/generate-license.sh |
 | 销售材料 | ✅ 已就绪 | docs/sales/ 4份文档 |
-| 部署工具 | ✅ 已就绪 | Docker Compose + K8s + 备份恢复 |
+| 部署工具 | ✅ 已就绪 | Podman Compose + K8s + 备份恢复 |
 | 代码生成器 | ✅ 已就绪 | DDD五层 + Vue3前端模板 |
 
 ### 执行目标
@@ -87,7 +87,7 @@ dist/
 - `LICENSE` / `LICENSE-COMMERCIAL.md` — 许可证文件
 - `docs/` — 技术文档
 - `config/` — 配置模板 + 公钥
-- `docker-compose.yml` / `Dockerfile` — 容器化
+- `podman-compose.yml` / `Containerfile` — 容器化
 - `k8s/` — K8s部署清单（仅Enterprise）
 - `scripts/` — 运维脚本
 
@@ -386,8 +386,8 @@ gh release create v1.2.0 \
 
 | 文档 | 目标读者 | 核心内容 |
 |------|----------|----------|
-| 快速开始指南 | 开发者 | 5分钟Docker启动 |
-| 部署指南 | 运维工程师 | Docker/K8s部署 |
+| 快速开始指南 | 开发者 | 5分钟Podman启动 |
+| 部署指南 | 运维工程师 | Podman/K8s部署 |
 | License管理指南 | 运维工程师 | License安装/更新/续期 |
 | 配置说明 | 开发者 | 各配置项说明 |
 | API文档 | 开发者 | 接口列表+示例 |
@@ -442,7 +442,7 @@ gh release create v1.2.0 \
 - [ ] 环境要求（JDK/MySQL/Redis版本）
 - [ ] 启动失败常见原因
 - [ ] License安装指南
-- [ ] Docker部署FAQ
+- [ ] Podman部署FAQ
 - [ ] 数据库初始化FAQ
 - [ ] 功能开关配置FAQ
 
@@ -543,7 +543,7 @@ gh release create v1.2.0 \
 - 产品定位（WebFlux响应式 + DDD企业级脚手架）
 - 核心优势（66个监控面板 + 三高能力 + License保护）
 - 三档定价
-- 快速体验方式（Docker一键启动）
+- 快速体验方式（Podman一键启动）
 - 购买方式
 
 #### 18.2 上线监控
@@ -721,8 +721,8 @@ gh release create v1.2.0 \
 | 备份恢复 | scripts/backup/ | MySQL备份恢复 |
 | 代码生成器 | scripts/codegen/ | DDD五层+Vue3模板 |
 | 项目初始化 | scripts/init/new-project.sh | 一键改名 |
-| Docker部署 | docker-compose.yml | 应用栈 |
-| 基础设施 | docker-compose.infra.yml | MySQL/Redis/MQ等 |
+| Podman部署 | podman-compose.yml | 应用栈 |
+| 基础设施 | podman-compose.infra.yml | MySQL/Redis/MQ等 |
 | K8s部署 | k8s/ | 部署+金丝雀 |
 | 版本说明 | docs/07-commercial/COMMERCIAL_VERSIONS.md | 三档功能矩阵 |
 | 商业协议 | LICENSE-COMMERCIAL.md | 授权条款 |

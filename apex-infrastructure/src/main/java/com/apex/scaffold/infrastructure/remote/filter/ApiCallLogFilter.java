@@ -1,11 +1,11 @@
 package com.apex.scaffold.infrastructure.remote.filter;
 
 import com.apex.scaffold.common.context.TenantContext;
+import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
 import com.apex.scaffold.common.util.TraceIdUtil;
-import com.apex.scaffold.domain.model.entity.ApiCallLogEntity;
 import com.apex.scaffold.infrastructure.remote.logging.ApiCallLogService;
+import com.apex.scaffold.infrastructure.remote.logging.ApiCallObservation;
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
@@ -57,7 +57,7 @@ import reactor.core.publisher.Mono;
  * @version 1.0.0
  * @since 1.0.0
  * @see ApiCallLogService
- * @see ApiCallLogEntity
+ * @see ApiCallObservation
  */
 public final class ApiCallLogFilter {
     private static final Logger log = LoggerFactory.getLogger(ApiCallLogFilter.class);
@@ -131,7 +131,7 @@ public final class ApiCallLogFilter {
      * <ol>
      *   <li>检查请求中是否存在 {@link #ATTRIBUTE_SERVICE_NAME} 属性</li>
      *   <li>不存在 → 直接放行，不记录日志</li>
-     *   <li>存在 → 构建 {@link ApiCallLogEntity} 请求元数据，
+     *   <li>存在 → 构建 {@link ApiCallObservation} 请求元数据，
      *       使用 {@code doOnSuccess} / {@code doOnError} / {@code doFinally} 回调记录响应</li>
      * </ol>
      *
@@ -146,7 +146,7 @@ public final class ApiCallLogFilter {
             if (serviceName == null) {
                 return next.exchange(request);
             }
-            ApiCallLogEntity entity = buildRequestMeta(request, serviceName);
+            ApiCallObservation entity = buildRequestMeta(request, serviceName);
             entity.setRequestBody(request.attribute(ATTRIBUTE_REQUEST_BODY)
                     .filter(String.class::isInstance)
                     .map(String.class::cast)
@@ -205,22 +205,19 @@ public final class ApiCallLogFilter {
      * @param entity   API 调用日志实体
      * @param tenantId 入口侧捕获的租户 ID（允许为 null）
      */
-    private void writeLog(ApiCallLogEntity entity, String tenantId) {
-        String previous = TenantContext.setTenantId(tenantId);
-        try {
-            // 注意：不使用 usingWhen 包装 install/log——因为租户 previous 可能为 null，
-            // usingWhen 会把 null 资源视为"空"直接 onComplete，跳过 resourceClosure 导致
-            // logService.log 根本不被调用（Mockito.verify 失败）。
-            logService
-                    .log(entity)
-                    .doOnError(e -> log.warn("API调用日志写入失败: {}", e.getMessage()))
-                    .onErrorResume(e -> Mono.empty())
-                    .block(Duration.ofSeconds(2));
-        } catch (Exception ex) {
-            log.warn("API调用日志写入超时或异常: {}", ex.getMessage());
-        } finally {
-            TenantContext.restoreTenantId(previous);
-        }
+    private void writeLog(ApiCallObservation entity, String tenantId) {
+        Mono.fromRunnable(() -> {
+                    String previous = TenantContext.setTenantId(tenantId);
+                    try {
+                        logService
+                                .log(entity)
+                                .subscribe(null, error -> log.warn("API调用日志写入失败: {}", error.getMessage()));
+                    } finally {
+                        TenantContext.restoreTenantId(previous);
+                    }
+                })
+                .subscribeOn(BlockingIoSchedulers.jdbc())
+                .subscribe(null, error -> log.warn("API调用日志提交失败: {}", error.getMessage()));
     }
 
     /**
@@ -244,7 +241,7 @@ public final class ApiCallLogFilter {
      * @param response 远程响应
      * @param startMillis 请求开始时间
      */
-    private void recordResponseMeta(ApiCallLogEntity entity, ClientResponse response, long startMillis) {
+    private void recordResponseMeta(ApiCallObservation entity, ClientResponse response, long startMillis) {
         entity.setExecutionTime(System.currentTimeMillis() - startMillis);
         entity.setResponseStatus(String.valueOf(response.statusCode().value()));
         entity.setResponseHeaders(headersToJson(response));
@@ -261,8 +258,8 @@ public final class ApiCallLogFilter {
      * @param serviceName 目标服务名称
      * @return 已填充基础字段的日志实体
      */
-    private ApiCallLogEntity buildRequestMeta(ClientRequest request, String serviceName) {
-        ApiCallLogEntity entity = new ApiCallLogEntity();
+    private ApiCallObservation buildRequestMeta(ClientRequest request, String serviceName) {
+        ApiCallObservation entity = new ApiCallObservation();
         entity.setServiceName(serviceName);
         entity.setMethod(request.method().name());
         entity.setPath(request.url().getPath());

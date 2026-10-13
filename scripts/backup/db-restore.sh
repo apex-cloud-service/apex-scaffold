@@ -6,11 +6,11 @@
 #   1. 从本地备份目录（或指定文件）恢复 MySQL 数据库
 #   2. 支持 .sql / .sql.gz 两种格式（自动识别解压）
 #   3. 恢复前强制校验目标库是否存在（防止误建库）; 默认先备份当前数据再覆盖
-#   4. 支持宿主机直连 / Docker 容器两种场景（与 db-backup.sh 保持一致）
+#   4. 支持宿主机直连 / Podman 容器两种场景（与 db-backup.sh 保持一致）
 #
 # 用法:
 #   ./db-restore.sh                          # 交互选择最近的备份文件
-#   ./db-restore.sh --file backups/apex_data_20260828_120000.sql.gz
+#   ./db-restore.sh --file backups/apex_system_20260828_120000.sql.gz
 #   ./db-restore.sh --file xxx.sql --no-backup   # 跳过恢复前备份
 #
 # 环境变量（均可用 -- 参数覆盖）:
@@ -26,7 +26,7 @@ DB_HOST="${DB_MASTER_HOST:-127.0.0.1}"
 DB_PORT="${DB_MASTER_PORT:-3306}"
 DB_USER="${DB_MASTER_USERNAME:-root}"
 DB_PASS="${DB_MASTER_PASSWORD:-}"
-DB_NAME="${MYSQL_DATABASE:-apex_data}"
+DB_NAME="${MYSQL_DATABASE:-apex_system}"
 MYSQL_CONTAINER="${MYSQL_CONTAINER:-}"
 BACKUP_DIR="${BACKUP_DIR:-$(dirname "$0")/../../backups}"
 RESTORE_FILE=""
@@ -91,7 +91,7 @@ fi
 # ---------- 目标库存在性校验 ----------
 CHECK_SQL="SELECT SCHEMA_NAME FROM information_schema.SCHEMATA WHERE SCHEMA_NAME='$DB_NAME';"
 if [[ -n "$MYSQL_CONTAINER" ]]; then
-    EXISTS=$(docker exec "$MYSQL_CONTAINER" mysql -uroot -p"$DB_PASS" -N -e "$CHECK_SQL" 2>/dev/null || true)
+    EXISTS=$(podman exec "$MYSQL_CONTAINER" mysql -uroot -p"$DB_PASS" -N -e "$CHECK_SQL" 2>/dev/null || true)
 else
     EXISTS=$(mysql --host="$DB_HOST" --port="$DB_PORT" --user="$DB_USER" --password="$DB_PASS" -N -e "$CHECK_SQL" 2>/dev/null || true)
 fi
@@ -108,7 +108,7 @@ case "$RESTORE_FILE" in
 esac
 
 if [[ -n "$MYSQL_CONTAINER" ]]; then
-    "${DECOMPRESS[@]}" "$RESTORE_FILE" | docker exec -i "$MYSQL_CONTAINER" \
+    "${DECOMPRESS[@]}" "$RESTORE_FILE" | podman exec -i "$MYSQL_CONTAINER" \
         mysql -uroot -p"$DB_PASS" --default-character-set=utf8mb4 "$DB_NAME"
 else
     "${DECOMPRESS[@]}" "$RESTORE_FILE" | mysql --host="$DB_HOST" --port="$DB_PORT" \

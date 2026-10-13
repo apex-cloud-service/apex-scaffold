@@ -193,11 +193,214 @@ mvnd clean test jacoco:report
 
 ---
 
+## 🚪 微服务改造 — apex-gateway 网关段（2026-10-08）
+
+> 归属：微服务改造执行计划 Phase 1.2（`docs/microservice-migration-plan.md` §5.3 过滤器链 / §17 验收）。
+> 详细报告见 [gateway-module-test-report.md](./gateway-module-test-report.md)。
+
+### 测试与门禁结果
+
+| 项目 | 结果 |
+|------|------|
+| `mvnd -pl apex-gateway -am verify` | ✅ BUILD SUCCESS |
+| 单元 + 架构测试 | ✅ 64/64 通过（0 失败 / 0 错误 / 0 跳过） |
+| Spotless 格式检查 | ✅ 通过 |
+| PMD 静态检查 | ✅ 通过（0 违规） |
+| ArchUnit 架构测试 | ✅ 4/4 通过 |
+| JaCoCo 行覆盖率 | ✅ 85.9%（311/362，门禁 ≥60%） |
+| JaCoCo 分支覆盖率 | ✅ 64.4%（112/174，门禁 ≥50%） |
+
+### 覆盖内容（迁移方案 §5.3 过滤器链）
+
+| 组件 | 顺序 | 用例数 | 状态 |
+|------|------|-------|------|
+| CorsGlobalConfig | -100 | 启动校验 | ✅ |
+| TraceWebFilter | -1 | 6 | ✅ |
+| JwtSignatureFilter | 0 | 9 | ✅ |
+| UserContextRelayFilter | 20 | 6 | ✅ |
+| RequestRateLimitFilter | 30 | 7 | ✅ |
+| GrayRouteFilter | 40 | 8 | ✅ |
+| RequestLoggingFilter | 50 | 4 | ✅ |
+| GatewayJwtVerifierService（JWKS HMAC/RSA 验签） | — | 9 | ✅ |
+| GatewayWebUtil（统一错误出口 + 客户端 IP） | — | 9 | ✅ |
+| GatewayApplicationTest（上下文加载/链路顺序） | — | 2 | ✅ |
+| GatewayArchTest（架构分层合规） | — | 4 | ✅ |
+
+### 本轮修复（阻塞项闭环）
+
+1. `application.yml`：`jwks.ks` 由标量占位符 `ks: ${JWKS_KEYS:[]}` 改为 YAML 列表 `ks: []`，修复上下文加载 `ConverterNotFoundException`。
+2. `application-dev.yml`：新增 `cors.allowed-origins`（放行前端本机端口），修复 `CorsGlobalConfig` 启动校验失败。
+3. `JwtSignatureFilter` / `GatewayJwtVerifierService`：修复 4 处 PMD 违规（常量优先比较 + 复用 `SystemConstants.TOKEN_PREFIX` + 新增 `HMAC_ALG_PREFIX`）。
+
+---
+
+## 📦 微服务改造 — apex-api-contract 契约模块段（2026-10-08）
+
+> 归属：微服务改造执行计划 Phase 1.3（`docs/microservice-migration-plan.md` §6.2 六个内部契约 / §17 验收）。
+> 详细报告见 [contract-module-test-report.md](./contract-module-test-report.md)。
+
+### 测试与门禁结果
+
+| 项目 | 结果 |
+|------|------|
+| `mvnd -pl apex-api-contract -am verify` | ✅ BUILD SUCCESS |
+| 单元测试 | ✅ 20/20 通过（0 失败 / 0 错误 / 0 跳过） |
+| Spotless 格式检查 | ✅ 通过 |
+| PMD 静态检查 | ✅ 通过（0 违规） |
+| JaCoCo 行覆盖率 | ✅ 89.6%（门禁 ≥60%） |
+| JaCoCo 分支覆盖率 | ✅ 100.0%（门禁 ≥50%） |
+
+### 覆盖内容
+
+| 测试类 | 用例数 | 状态 | 覆盖要点 |
+|--------|-------|------|---------|
+| FeignContractSignatureTest | 6 | ✅ | Auth/System/Workflow 契约（`/internal/v1/` 路径前缀、HTTP 注解、`Result<T>` 形状、DTO 序列化） |
+| FeignClientFallbackFactoryTest | 5 | ✅ | 统一降级（`Result.error(SERVICE_UNAVAILABLE)`，语义码 3007，`getData()==null`） |
+| FeignTenantTraceConfigurationTest | — | ✅ | `X-Tenant-Id` / `X-Trace-Id` 透传与不覆盖策略 |
+| FeignReactiveBridgeTest | — | ✅ | 同步转响应式桥接（`subscribeOn(BlockingIoSchedulers.remote())`） |
+
+---
+
+## 🧱 微服务改造 — Phase 1 验收段（2026-10-08）
+
+> 归属：微服务改造执行计划 Phase 1（§5 透明代理 / §10 质量门禁 / §11 验收）。
+
+### Phase 1 交付物（BOM 锁定 + 网关 + 契约 + Nacos 配置）
+
+| 项 | 交付物 | 状态 |
+|----|--------|------|
+| Phase 1.1 | `apex-services-bom` 统一版本锁定 + parent 指向 + SDK 准入规则 | ✅ |
+| Phase 1.2 | `apex-gateway`（端口/过滤器链/JWKS/限流/灰度/`/internal` 403/透明代理路由） | ✅ |
+| Phase 1.3 | `apex-api-contract`（6 内部契约 / Feign 租户透传 / 桥接范式 / 测试） | ✅ |
+| Phase 1.4 | `config/nacos/` 配置分层（共享/网关/数据源/Sentinel 规则）+ Data ID 清单 | ✅ |
+
+### 门禁结果（Phase 1 相关模块）
+
+```bash
+mvnd -pl apex-gateway,apex-api-contract -am verify -DskipITs
+mvnd test
+```
+
+| 项目 | 结果 |
+|------|------|
+| `apex-services-bom` / `apex-api-contract` / `apex-gateway` verify | ✅ BUILD SUCCESS |
+| 全工程 `mvnd test`（15 模块） | ✅ BUILD SUCCESS（0 失败 / 0 错误） |
+| Spotless / PMD / ArchUnit / JaCoCo | ✅ 全绿 |
+
+### 透明代理回归（契约基线）
+
+- 网关透明代理模式：各路由默认指向单体 `http://127.0.0.1:8080`（`ROUTE_*_URI` 可覆写），迁移期零行为变更。
+- **离线契约基线**：`OpenApiExportTest`（纯 JUnit 5，无需 Spring 上下文 / 数据库）已导出基线快照：
+  - 命令：`mvnd -pl apex-interfaces -am -Dtest=OpenApiExportTest -Dsurefire.failIfNoSpecifiedTests=false test`
+  - 产物：`apex-interfaces/target/openapi-export/openapi.json`（79 paths）、`openapi.yaml`
+- **环境约束**：本机无 MySQL/Redis/Nacos（端口 3306/6379/8848 未开放），在线透明代理回归（`scripts/utils/export-api-docs.sh` 对运行中应用抓取 `/v3/api-docs` 后与基线 diff）需在具备完整环境时执行，diff 应为空。
+
+---
+
+## 🔐 微服务改造 — apex-auth-center JWT/JWKS 段（Phase 2.1/2.2，2026-10-08）
+
+> 归属：微服务改造执行计划 Phase 2.1/2.2（§7.2 JWT+JWKS 非对称 / §16 风险 #1 双 kid 过渡 / §17 验收）。完整报告见 `docs/06-testing/auth-center-jwt-jwks-test-report.md`。
+
+### 测试与门禁结果
+
+```bash
+mvnd -pl apex-auth-center -am test-compile -DskipTests
+mvnd -pl apex-auth-center -am test \
+  -Dtest='JwtKeyMaterialServiceTest,JwtKeyRotationServiceTest,RefreshTokenRotationServiceTest,TokenServiceImplTest' \
+  -Dsurefire.failIfNoSpecifiedTests=false
+```
+
+| 项目 | 结果 |
+|------|------|
+| 模块编译（test-compile） | ✅ BUILD SUCCESS |
+| 定向单元测试（4 个测试类） | ✅ 61/61 通过（0 失败 / 0 错误 / 0 跳过） |
+
+### 覆盖内容（迁移方案 §7.2 非对称改造）
+
+| 测试类 | 用例数 | 状态 |
+|--------|-------|------|
+| `domain.service.JwtKeyMaterialServiceTest` | 8 | ✅ |
+| `domain.service.JwtKeyRotationServiceTest` | 16 | ✅ |
+| `application.service.RefreshTokenRotationServiceTest` | 11 | ✅ |
+| `application.service.TokenServiceImplTest` | 26 | ✅ |
+
+### 本轮改造与修复
+
+1. **HS256 → RS256**：新增 `JwtKeyMaterialService`（非对称外观层），`TokenServiceImpl` 签发/解析改走响应式 `jwtKeyMaterialService.sign(...)`/`parse(...)`；`JwtKeyRotationService` 三实现合并为 `domain` 的 Redis-RSA 单一实现。
+2. **修复主代码编译错误**：`ObjectMapper.readTree(byte[])` 抛 `IOException`，catch 子句由 `JsonProcessingException` 改为 `IOException`。
+3. **修复测试编译错误**：`RefreshTokenRotationServiceTest` 移除 `MockedStatic<JwtUtil>` 后遗留 9 处悬空 `try { }` 与 1 处多余 `}`，逐方法清理。
+4. **库治理**：修复 Flyway 重复 V49，补 V51（mysql + postgresql）；auth-center `bootstrap.yml` 服务名收敛为 `apex-auth-service`。
+
+---
+
+## 🔐 微服务改造 — Phase 2.7 全链路集成测试段（2026-10-10）
+
+> 归属：微服务改造执行计划 Phase 2.7（登录/刷新/登出/MFA/OAuth2 全链路集成测试与文档）。
+
+### 测试与门禁结果
+
+```bash
+mvnd -pl apex-auth-center -am verify
+```
+
+| 结果 | 说明 |
+|------|------|
+| BUILD SUCCESS | 2026-10-09 全量执行，tests 1543 通过，0 失败；Spotless / PMD / Enforcer / JaCoCo 门禁全绿 |
+
+### 覆盖内容（全链路）
+
+| 链路 | 覆盖测试类 |
+|------|-----------|
+| 登录 / 刷新 / 登出 | `AuthenticationHandlerIntegrationTest`、`AuthenticationApplicationServiceTest` |
+| MFA（TOTP） | `MfaHandlerIntegrationTest`、`MfaManagementHandlerTest`、`TotpServiceTest` |
+| 会话 | `SessionHandlerIntegrationTest`、`SessionServiceTest` |
+| OAuth2 / SSO | `OAuth2BootTest`、`SsoConfigEncryptionServiceTest` |
+| 权限 / 角色 / 统一授权 | `PermissionHandlerIntegrationTest`、`RoleHandlerIntegrationTest`、`UnifiedAuthorizationHandlerTest` |
+| 审计 | `AuditLogHandlerIntegrationTest` |
+| JWKS 验签 / 轮换 | `JwtKeyMaterialServiceTest`、`JwtKeyRotationServiceTest` |
+| 双通道兼容 | `TokenServiceImplTest`、`RefreshTokenRotationServiceTest` |
+| 内部 API | `InternalAuthServiceTest`、`InternalAuthHandlerTest` |
+| 运行时 OpenAPI 契约 | `AuthCenterOpenApiIntegrationTest`（`/v3/api-docs`，覆盖 ~80 端点） |
+| 登出传播（Outbox） | `TokenRevokedEventTest`、`AuthenticationApplicationServiceTest` |
+
+### 说明
+
+- 上述为**无需在线环境**即可回归的自动化集成测试；`apex-auth-center/TESTING.md` 中「测试结果记录（人工验收，需在线环境）」为另需在线 MySQL/Redis/Nacos + HTTPS 入口的人工验收记录，尚未执行。
+- 生产灰度 100% 切流验证为运维动作，需在线环境（同 Phase 1 口径）。
+
+---
+
+## 🔧 微服务改造 — Phase 3 工作流服务段（2026-10-10）
+
+> 归属：微服务改造执行计划 Phase 3（工作流服务化）。
+
+- 模块：`apex-workflow-service`（端口 8083；`WorkflowServiceApplication` `@EnableDiscoveryClient` + `@EnableScheduling`；`interfaces/` 层 `WorkflowRouter`/`WorkflowHandler` 自 `apex-interfaces` 迁入）。
+- 库：独立 Flyway 链 V1（`apex_workflow`：`wf_definition`/`wf_instance`/`wf_task`/`wf_approval`，MySQL + PostgreSQL 双套）。
+- 事件：审批事件 topic `apex-workflow-events`（`WorkflowInstanceStarted`/`TaskAssigned`/`TaskCompleted`）。
+- 网关：`/api/v1/workflows/**` 路由；单体已无 workflow 代码残留。
+- 测试：`WorkflowRouterRegressionTest`、`WorkflowHandlerIntegrationTest`、`WorkflowFlywayMigrationTest`、`MqWorkflowEventPublisherTest`、`LocalWorkflowEventPublisherTest`。
+- 校验：`check-migration-integrity.sh` 已纳入 workflow 独立 V1 链。
+
+---
+
+## 📁 微服务改造 — Phase 4 文件服务段（2026-10-10）
+
+> 归属：微服务改造执行计划 Phase 4（文件服务剥离 + 存储 SPI）。
+
+- 模块：`apex-file-service`（端口 8085）+ 库模块 `apex-file`（File/Document/Chart + `infrastructure/storage/` + 存储 SPI）。
+- 库：独立 Flyway 链 V1（`apex_file`：`file_record`/`file_document`/`file_chunk`，MySQL + PostgreSQL 双套）。
+- 存储 SPI：由 `DefaultStorageConfiguration` 按 profile 装配（Local/MinIO/VolcEngine）。
+- 单体残留清理：已删除 `apex-interfaces` `BaiduModerationProductionConfigValidator`、`apex-common` `StorageProvider`/`FileUrlUtil`、`apex-domain` `StorageType` 枚举及测试；移除 minio/ve-tos 死依赖；环境变量收敛为 `apex-file-service` 规范名（`FILE_MAX_SIZE_BYTES`/`STORAGE_PRESIGNED_URL_EXPIRE_SECONDS`/`STORAGE_LOCAL_ENABLED`/`STORAGE_VOLCENGINE_*`）。
+- 测试：`apex-file` 单测 63 项、`apex-file-service` 单测 23 项 + `FileHandlerIntegrationTest` 47 项（`-Premote-it` failsafe）。
+- 门禁：`mvnd -pl apex-file,apex-file-service -am test` → BUILD SUCCESS。
+
+---
+
 ## 📞 联系方式
 
 如有测试相关问题，请联系开发团队。
 
 ---
 
-**报告生成时间**: 2026-10-05  
+**报告生成时间**: 2026-10-05（2026-10-08 追加网关段、契约模块段、Phase 1 验收段；2026-10-10 追加 Phase 2.7 全链路集成测试段、Phase 3 工作流服务段、Phase 4 文件服务段）
 **报告维护者**: 开发团队

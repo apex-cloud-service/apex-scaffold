@@ -142,7 +142,7 @@
 - `config/monitoring/grafana/apex-dashboard.json`
 - `config/monitoring/prometheus/prometheus.yml`
 - `config/monitoring/prometheus/alert-rules.yml`
-- `config/monitoring/docker-compose.yml`
+- `config/monitoring/podman-compose.yml`
 
 ---
 

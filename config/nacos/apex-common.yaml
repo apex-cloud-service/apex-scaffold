@@ -1,0 +1,66 @@
+# ============================================================
+# Apex Scaffold - Nacos 共享配置：apex-common.yaml
+# ============================================================
+# 【作用】
+#   Nacos 配置中心「共享配置」，由全部微服务共同引用（Data ID: apex-common.yaml，
+#   Group: DEFAULT_GROUP）。集中承载跨服务一致的约定项：Result/i18n 开关、
+#   日志级别基线、JWKs 地址、网关公共头约定等。
+#
+# 【发布方式】
+#   见 config/nacos/README.md「四、发布方式」；发布后约 30s 热生效。
+#
+# 【优先级】
+#   环境变量 > Nacos 远端配置（本文件） > 本地 application.yml 默认值
+#
+# 【安全提示】
+#   🔒 本文件禁止写入任何明文密钥/口令。敏感值一律用 ${ENV_VAR:default}
+#      占位，由环境变量 / KMS 在运行时注入。
+#
+# @author Apex Team
+# ============================================================
+
+apex:
+  # ==================== 统一响应约定 ====================
+  # Result/i18n 行为开关：所有服务保持一致，避免响应结构漂移
+  result:
+    # 是否在响应体中始终携带 traceId（便于跨服务链路对齐）
+    always-include-trace-id: true
+    # 是否启用 i18n 消息本地化（关闭则统一返回中文默认文案）
+    i18n-enabled: true
+
+  # ==================== JWKS 验签公共约定 ====================
+  # 网关与各下游服务共享的 JWKS 元信息（公钥地址可安全下发，无私钥）
+  jwks:
+    # JWKS 公钥端点（由 apex-auth-service 暴露）
+    endpoint: ${JWKS_ENDPOINT:/.well-known/jwks.json}
+    # 外部 JWKS 拉取地址（网关按此地址轮询公钥；空=走服务内端点）
+    remote-url: ${JWKS_REMOTE_URL:}
+    # 公钥缓存刷新间隔（秒）；密钥轮换后最迟在此时间内生效
+    refresh-interval-seconds: 300
+
+  # ==================== 服务间公共请求头约定 ====================
+  # 与 apex-api-contract / 网关过滤器保持一致，禁止各服务自行改名
+  headers:
+    # 租户头（由网关注入，下游只读）
+    tenant-id: X-Tenant-Id
+    # 用户头（由网关注入，下游只读）
+    user-id: X-User-Id
+    # 链路头（由网关注入，跨服务透传）
+    trace-id: X-Trace-Id
+    # 内部调用标记头（仅内部网络使用，网关会剥离外部伪造）
+    internal-prefix: X-Internal-
+
+# ==================== 日志级别基线 ====================
+# 各服务可在此基础上按需覆盖，避免每服务重复配置
+logging:
+  level:
+    root: ${LOG_LEVEL_ROOT:INFO}
+    com.apex.scaffold: ${LOG_LEVEL_APEX:INFO}
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{traceId:-}] %logger{36} - %msg%n"
+
+# ==================== 链路追踪基线 ====================
+management:
+  tracing:
+    sampling:
+      probability: ${TRACING_SAMPLING_PROBABILITY:0.1}

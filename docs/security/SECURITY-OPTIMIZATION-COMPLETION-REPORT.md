@@ -524,7 +524,7 @@ apex:
    ```bash
    # 构建生产镜像
    ./mvnw clean package -Pprod
-   docker build -t apex-auth-center:v2.0.0 .
+   podman build -t apex-auth-center:v2.0.0 .
    
    # 滚动更新
    kubectl set image deployment/apex-auth-center \

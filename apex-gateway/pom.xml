@@ -23,6 +23,14 @@
     <description>Apex Scaffold - API 网关 (路由/鉴权/限流/追踪)</description>
 
     <dependencies>
+        <dependency>
+            <groupId>net.logstash.logback</groupId>
+            <artifactId>logstash-logback-encoder</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.skywalking</groupId>
+            <artifactId>apm-toolkit-logback-1.x</artifactId>
+        </dependency>
         <!-- 共享基础: Result / ResultCode / JwtUtil / TraceIdUtil / BlockingIoSchedulers -->
         <dependency>
             <groupId>com.apex.scaffold</groupId>
@@ -93,19 +101,7 @@
             <artifactId>micrometer-registry-prometheus</artifactId>
         </dependency>
 
-        <!-- 链路追踪 (Brave -> Zipkin, 与主应用一致) -->
-        <dependency>
-            <groupId>io.micrometer</groupId>
-            <artifactId>micrometer-tracing-bridge-brave</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.zipkin.reporter2</groupId>
-            <artifactId>zipkin-reporter-brave</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.zipkin.reporter2</groupId>
-            <artifactId>zipkin-sender-okhttp3</artifactId>
-        </dependency>
+        <!-- 链路追踪由 SkyWalking Agent 提供（-javaagent 方式接入，无需编译期依赖） -->
 
         <dependency>
             <groupId>org.projectlombok</groupId>

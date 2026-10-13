@@ -1,53 +1,41 @@
 # ================================================================
 # Apex Scaffold - Prometheus 抓取配置
 # ================================================================
-# 用途: 采集 Apex Scaffold 应用指标（/actuator/prometheus，独立管理端口 8081）
-#      以及 Sentinel 限流熔断指标（sentinel_prometheus_exporter，端口 8720）。
-# 背景: 应用通过 spring-boot-starter-actuator + micrometer-registry-prometheus
-#      暴露 Micrometer 指标，Sentinel 通过 sentinel-prometheus-exporter 暴露治理指标。
-# 影响: 配合 grafana/apex-dashboard.json 大盘与 alert-rules.yml 告警规则使用。
+# 采集应用 /actuator/prometheus 与 Sentinel 治理指标。
+# Podman 通过 host.containers.internal 访问宿主机；容器栈内改用服务名。
 # ================================================================
 
 global:
-  scrape_interval: 15s      # 默认抓取周期
-  evaluation_interval: 15s  # 告警规则评估周期
+  scrape_interval: 15s
+  evaluation_interval: 15s
   external_labels:
     cluster: apex-scaffold
 
-# 告警规则文件（服务宕机 / 高错误率 / 高延迟 / JVM / 连接池）
 rule_files:
   - alert-rules.yml
 
 scrape_configs:
-  # ---- Apex Scaffold 应用实例 ----
-  # 本地开发（java -jar 跑在宿主机 8081）：经 host.docker.internal 访问；
-  # 容器/Compose 栈内：改为 <service>:8081（如 apex-scaffold:8081）；K8s 内为 <service>:8081
   - job_name: apex-scaffold
     metrics_path: /actuator/prometheus
     scrape_interval: 15s
     static_configs:
       - targets:
-          - "host.docker.internal:8081"
+          - "host.containers.internal:8081"
         labels:
           application: apex-scaffold
           module: interfaces
 
-  # ---- Sentinel 限流熔断指标（可选，未启用 exporter 时忽略） ----
   - job_name: apex-sentinel
     metrics_path: /metrics
     scrape_interval: 15s
     static_configs:
       - targets:
-          - "host.docker.internal:8720"
+          - "host.containers.internal:8720"
         labels:
           application: apex-scaffold
           component: sentinel
 
-  # ---- 健康探针（Blackbox Exporter 探测 /actuator/health） ----
-  # 供 alert-rules.yml 的 ApexHealthCheckDown（probe_success）使用。
-  # 本地 docker-compose 栈：blackbox 容器经 host.docker.internal 访问宿主机上的应用；
-  # K8s/生产：targets 改为 <service>:8081，并将 relabel 的 __address__ 改为实际
-  # blackbox-exporter 地址（集群内通常为 <blackbox-service>:9115）。
+  # Blackbox Exporter 探测宿主机应用健康端点。
   - job_name: apex-scaffold-health
     metrics_path: /probe
     params:
@@ -55,7 +43,7 @@ scrape_configs:
     scrape_interval: 15s
     static_configs:
       - targets:
-          - "http://host.docker.internal:8081/actuator/health"
+          - "http://host.containers.internal:8081/actuator/health"
         labels:
           application: apex-scaffold
     relabel_configs:
@@ -66,7 +54,6 @@ scrape_configs:
       - target_label: __address__
         replacement: blackbox-exporter:9115
 
-  # ---- Grafana 自身指标（可选，用于监控监控本身） ----
   - job_name: grafana
     metrics_path: /metrics
     scrape_interval: 30s
@@ -74,8 +61,6 @@ scrape_configs:
       - targets:
           - "grafana:3200"
 
-  # ---- Zipkin 自指标（span/message 收集与丢弃计数，支撑大盘「Zipkin 链路追踪」分组） ----
-  # 经 zipkin:9411/prometheus 暴露 Prometheus 格式自指标（zipkin_collector_* 等）。
   - job_name: zipkin
     metrics_path: /prometheus
     scrape_interval: 15s

@@ -60,7 +60,7 @@
 | 🌐 **接入层** | Nginx + Sentinel + JWT | 负载均衡、限流熔断、认证 |
 | ☕ **后端核心** | Spring Boot + WebFlux + DDD | 业务逻辑、响应式编排 |
 | 💾 **数据层** | MySQL + Redis + MinIO + Meilisearch | 持久化、缓存、对象存储、全文搜索 |
-| 🐳 **基础设施** | JDK 17 + Docker + K8s | 运行时、容器编排 |
+| 🐳 **基础设施** | JDK 17 + Podman + K8s | 运行时、容器编排 |
 | 🔍 **可观测性** | Prometheus + Grafana + Loki + Alloy | 指标、日志、链路追踪 |
 
 ---
@@ -105,20 +105,20 @@ java -jar target/*.jar
 mvn spotless:apply
 ```
 
-### Docker 部署
+### Podman 部署
 
 ```bash
 # 启动基础设施
-docker-compose -f docker-compose.infra.yml up -d
+podman-compose -f podman-compose.infra.yml up -d
 
 # 启动应用
-docker-compose up -d
+podman-compose -f podman-compose.yml up -d
 
 # 查看日志
-docker-compose logs -f apex-app
+podman-compose -f podman-compose.yml logs -f apex-gateway
 
 # 停止
-docker-compose down
+podman-compose -f podman-compose.yml down
 ```
 
 ### Kubernetes 部署
@@ -339,20 +339,20 @@ GET /swagger-ui.html
 
 ```bash
 # 1. 查看日志
-docker-compose logs apex-app
+podman-compose -f podman-compose.yml logs apex-gateway
 
 # 2. 检查健康状态
 curl http://localhost:8081/actuator/health
 
 # 3. 检查依赖服务
-docker-compose ps
+podman-compose -f podman-compose.infra.yml ps
 ```
 
 ### 数据库连接失败
 
 ```bash
 # 1. 测试连接
-docker-compose exec mysql mysql -uroot -p -e "SELECT 1"
+podman-compose -f podman-compose.infra.yml exec mysql mysql -uroot -p -e "SELECT 1"
 
 # 2. 检查配置
 echo $DB_MASTER_URL
@@ -365,13 +365,13 @@ curl http://localhost:8081/actuator/metrics/hikaricp.connections.active
 
 ```bash
 # 1. 测试连接
-docker-compose exec redis redis-cli PING
+podman-compose -f podman-compose.infra.yml exec redis redis-cli PING
 
 # 2. 查看连接数
-docker-compose exec redis redis-cli CLIENT LIST
+podman-compose -f podman-compose.infra.yml exec redis redis-cli CLIENT LIST
 
 # 3. 检查内存
-docker-compose exec redis redis-cli INFO memory
+podman-compose -f podman-compose.infra.yml exec redis redis-cli INFO memory
 ```
 
 ### 前端构建失败
@@ -539,7 +539,7 @@ hikaricp_connections_timeout_total
 
 ### 基础设施
 
-- [ ] Docker 镜像使用非 root 用户
+- [ ] OCI 镜像使用非 root 用户
 - [ ] K8s Security Context 配置正确
 - [ ] 密钥使用 Secret 存储 (不写在配置文件)
 - [ ] 定期更新依赖版本

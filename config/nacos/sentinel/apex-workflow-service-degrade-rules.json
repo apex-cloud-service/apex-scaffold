@@ -1,0 +1,7 @@
+[
+  {"resource":"/api/workflow/instances/**","grade":1,"count":0.5,"timeWindow":10,"minRequestAmount":5},
+  {"resource":"/api/workflow/tasks/**","grade":1,"count":0.5,"timeWindow":10,"minRequestAmount":5},
+  {"resource":"/admin-api/v1/workflows/**","grade":1,"count":0.5,"timeWindow":15,"minRequestAmount":5},
+  {"resource":"/api/workflow/instances/**","grade":0,"count":3000,"timeWindow":15,"minRequestAmount":5,"statIntervalMs":30000,"slowRatioThreshold":0.5},
+  {"resource":"/api/workflow/tasks/**","grade":0,"count":3000,"timeWindow":15,"minRequestAmount":5,"statIntervalMs":30000,"slowRatioThreshold":0.5}
+]

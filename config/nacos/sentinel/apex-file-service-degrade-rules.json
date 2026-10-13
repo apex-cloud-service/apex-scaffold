@@ -1,0 +1,7 @@
+[
+  {"resource":"/api/v1/file/upload","grade":1,"count":0.5,"timeWindow":15,"minRequestAmount":5},
+  {"resource":"/api/v1/file/url","grade":1,"count":0.3,"timeWindow":10,"minRequestAmount":5},
+  {"resource":"/api/v1/documents/**","grade":1,"count":0.5,"timeWindow":15,"minRequestAmount":5},
+  {"resource":"/api/v1/file/upload","grade":0,"count":5000,"timeWindow":20,"minRequestAmount":5,"statIntervalMs":30000,"slowRatioThreshold":0.5},
+  {"resource":"/api/v1/documents/**","grade":0,"count":3000,"timeWindow":15,"minRequestAmount":5,"statIntervalMs":30000,"slowRatioThreshold":0.5}
+]

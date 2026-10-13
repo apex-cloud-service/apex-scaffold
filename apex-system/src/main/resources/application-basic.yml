@@ -1,0 +1,73 @@
+# ============================================================
+# Apex Scaffold 基础版 (Basic) 配置模板
+# ============================================================
+# 适用场景 : 个人项目 / 小型应用（MIT 开源）
+# 启用方式 : java -jar apex-system-service.jar --spring.profiles.active=basic
+# 功能范围 : JWT 认证 / 统一响应 / 参数校验 / WebFlux / MyBatis-Plus
+#
+# ┌───────────────────────────────────────────────────────────┐
+# │ 注释符号规范（全仓配置文件统一约定）                         │
+# ├───────────────────────────────────────────────────────────┤
+# │ ✅ 已启用能力          ❌ 已禁用能力                       │
+# │ ⚠️ 安全提示/注意点     💡 设计说明/优化理由                │
+# │ 🔒 敏感配置（环境变量注入，禁止硬编码）                     │
+# │ （差异）标注与公共 application.yml 的差异及理由              │
+# └───────────────────────────────────────────────────────────┘
+# 说明: 本文件只覆盖 basic 档差异项，公共默认值见 application.yml。
+# ============================================================
+
+# ============================================================
+# 1. 档位功能矩阵（features.*）
+# ============================================================
+# 基础版仅含核心能力，商业版差异详见 standard/enterprise。
+apex:
+  features:
+    # ✅ JWT 认证：所有档位必备
+    jwt-auth: true
+    # ❌ RBAC 权限：基础版不提供
+    rbac: false
+    # ❌ 多级缓存：基础版仅 Caffeine 单机缓存（见公共层 apex.cache.local）
+    cache: false
+    # ❌ 消息队列：基础版不引入 RocketMQ
+    message-queue: false
+    # ❌ 监控告警：基础版仅保留 Actuator 基础端点（见下方 management）
+    monitoring: false
+    # ❌ 链路追踪：基础版不启用
+    tracing: false
+
+  # ---------- 消息消费者开关 ----------
+  # ❌ RocketMQ：基础版不启用消息队列。
+  # ⚠️ rocketmq.producer.enabled 不是有效开关；业务消费者由
+  #    apex.mq.consumer.enabled 控制，RocketMQ Starter 在基础版通过
+  #    不配置 name-server 保持惰性，不建立连接。
+  mq:
+    consumer:
+      # ❌ 关闭消息消费者（防止无 Broker 环境下监听器启动报错）
+      enabled: false
+    dlq:
+      # ❌ 关闭死信队列处理
+      enabled: false
+    # ❌ 关闭领域事件 MQ 广播（基础版无 RocketMQ，事件仅本地分发）
+    domain-event-enabled: false
+    domain-event-topic: apex-domain-event
+
+# ============================================================
+# 2. 数据访问
+# ============================================================
+# 💡 Redis 基础设施：基础版仍依赖 Redis（JWT 黑名单 / 图形验证码 / 防重放 nonce /
+#    登录保护等通用能力均存储于 Redis），故**不排除** Redis/Redisson 自动配置；
+#    features.cache=false 仅表示不提供「多级业务缓存」能力（Caffeine 单机），
+#    与 Redis 基础设施无关。部署时需提供 Redis（如 podman-compose.infra.yml）。
+spring:
+
+# ============================================================
+# 3. 系统监控
+# ============================================================
+# ✅ Actuator 基础端点：基础版仅暴露健康检查与应用信息。
+management:
+  endpoints:
+    web:
+      exposure:
+        # （差异）公共层默认 health,info,metrics,prometheus,circuitbreakers；
+        #          基础版收紧为 health,info，不暴露指标端点。
+        include: health,info

@@ -6,7 +6,7 @@
 # apex-system-service / apex-workflow-service / apex-office-service / apex-file-service），
 # 由 APEX_SERVICE_MODULE 指定；旧单体 apex-interfaces 可执行 jar 已随单体退役移除。
 # 支持普通 java -jar 方式在各环境（dev/it/prod）后台运行、停止、
-# 重启、查看状态与日志，无需 Docker / systemd。
+# 重启、查看状态与日志，无需 Podman / systemd。
 #
 # 用法:
 #   ./app.sh start  [环境] [档位]     # 例: ./app.sh start prod enterprise
@@ -27,10 +27,11 @@
 #   JAVA_OPTS      JVM 参数。默认已含完整调优集：堆内存(-Xms512m/-Xmx1024m)、G1 回收器、
 #                  GC 停顿目标、元空间上下限、OOM 堆转储+退出、滚动 GC 日志(-Xlog:gc*)等；
 #                  详见 docs/05-operations/deployment.md §4.5；GC 日志与堆转储落盘 ${LOG_DIR}
-#   APEX_LOG_DIR   日志根目录（默认 <项目根>/logs；logback 业务日志 + GC 日志 + 堆转储共用）
+#   APEX_LOG_DIR   日志目录（默认 LOG_PATH 或 <项目根>/logs/<模块>；业务日志 + GC 日志 + 堆转储共用）
 #   APP_PID_FILE   PID 文件（默认 <项目根>/logs/app.pid）
 #   APP_OUT_LOG    标准输出日志（默认 <项目根>/logs/app.out.log）
-#   SERVER_PORT    业务端口（仅用于健康检查，默认 8080）
+#   SERVER_PORT    业务端口（默认按模块配置，网关 8080）
+#   MANAGEMENT_PORT 管理端口（默认复用业务端口；system-service 默认 8083）
 #   APEX_ENV_FILE  环境变量文件（可选，每行 KEY=VALUE，启动前 source）
 #
 # 业务环境变量（必须注入）:
@@ -54,8 +55,16 @@
 set -Eeuo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
 cd "${PROJECT_ROOT}" || exit 1
+
+# 在计算服务、日志和 JVM 默认值之前加载环境文件。
+if [ -n "${APEX_ENV_FILE:-}" ] && [ -f "${APEX_ENV_FILE}" ]; then
+  # shellcheck disable=SC1090
+  set -a
+  source "${APEX_ENV_FILE}"
+  set +a
+fi
 
 # 微服务模块名（默认网关；可通过 APEX_SERVICE_MODULE 覆盖为其它微服务，如 apex-system-service）
 SERVICE_MODULE="${APEX_SERVICE_MODULE:-apex-gateway}"
@@ -78,7 +87,9 @@ SPRING_PROFILES_ACTIVE="${ENV_PROFILE},${TIER}"
 
 # ---------- 可覆盖变量默认值 ----------
 # 日志根目录：logback 业务日志（APEX_LOG_DIR）+ GC 日志 + OOM 堆转储 共用同一目录
-LOG_DIR="${APEX_LOG_DIR:-${PROJECT_ROOT}/logs}"
+LOG_DIR="${APEX_LOG_DIR:-${LOG_PATH:-${PROJECT_ROOT}/logs/${SERVICE_MODULE}}}"
+export LOG_PATH="${LOG_DIR}"
+export SW_LOGGING_DIR="${SW_LOGGING_DIR:-${LOG_DIR}/skywalking}"
 # 生产级 JVM 调优默认值（可用 JAVA_OPTS 整体覆盖，详见 docs/05-operations/deployment.md §4.5）：
 #   -Xms/-Xmx            堆内存 初始(最小)512m / 最大 1024m
 #   -XX:+UseG1GC          G1 垃圾回收器；-XX:MaxGCPauseMillis=200 目标最大停顿
@@ -90,46 +101,53 @@ LOG_DIR="${APEX_LOG_DIR:-${PROJECT_ROOT}/logs}"
 JAVA_OPTS="${JAVA_OPTS:--Xms512m -Xmx1024m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:MetaspaceSize=256m -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=${LOG_DIR}/heapdump.hprof -XX:+ExitOnOutOfMemoryError -Xlog:gc*:file=${LOG_DIR}/gc.log:time,uptime,level,tags:filecount=5,filesize=20m -Dfile.encoding=UTF-8 -Djava.security.egd=file:/dev/./urandom}"
 
 # ---------- SkyWalking Agent（可选接入，替代原 Zipkin/Brave） ----------
-# SW_AGENT_ENABLED=true 且探针 jar 存在时，自动拼接 -javaagent；否则跳过（无探针仍可启动）。
-# agent 自动注入 MDC 键 tid，供 logback %X{tid} 输出与链路关联。
+# SW_AGENT_ENABLED=true 时必须提供可读且非空的探针 jar；未启用时跳过。
+# JSON 日志由 SkyWalking Toolkit Provider 输出 TID，Filebeat 将其转为 tid；业务 traceId 独立保留。
 SW_AGENT_ENABLED="${SW_AGENT_ENABLED:-false}"
 SW_AGENT_JAR="${SW_AGENT_JAR:-${PROJECT_ROOT}/skywalking-agent/skywalking-agent.jar}"
 SW_AGENT_NAME="${SW_AGENT_NAME:-${SERVICE_MODULE}}"
 SW_AGENT_COLLECTOR_BACKEND_SERVICES="${SW_AGENT_COLLECTOR_BACKEND_SERVICES:-localhost:11800}"
 export SW_AGENT_ENABLED SW_AGENT_JAR SW_AGENT_NAME SW_AGENT_COLLECTOR_BACKEND_SERVICES
-if [ "${SW_AGENT_ENABLED}" = "true" ] && [ -f "${SW_AGENT_JAR}" ]; then
+if [[ "${ACTION}" =~ ^(start|restart|console)$ ]] && [ "${SW_AGENT_ENABLED}" = "true" ]; then
+  if [ ! -f "${SW_AGENT_JAR}" ] || [ ! -r "${SW_AGENT_JAR}" ] || [ ! -s "${SW_AGENT_JAR}" ]; then
+    echo "SkyWalking Agent 已启用，但探针 JAR 不存在、不可读或为空: ${SW_AGENT_JAR}" >&2
+    exit 1
+  fi
   JAVA_OPTS="-javaagent:${SW_AGENT_JAR} ${JAVA_OPTS}"
 fi
 APP_PID_FILE="${APP_PID_FILE:-${PROJECT_ROOT}/logs/${SERVICE_MODULE}.pid}"
 APP_OUT_LOG="${APP_OUT_LOG:-${PROJECT_ROOT}/logs/${SERVICE_MODULE}.out.log}"
-SERVER_PORT="${SERVER_PORT:-8080}"
-MANAGEMENT_PORT="${MANAGEMENT_PORT:-8081}"
+case "${SERVICE_MODULE}" in
+  apex-auth-service) DEFAULT_SERVER_PORT=8081 ;;
+  apex-system-service) DEFAULT_SERVER_PORT=8082 ;;
+  apex-workflow-service) DEFAULT_SERVER_PORT=8083 ;;
+  apex-office-service) DEFAULT_SERVER_PORT=8084 ;;
+  apex-file-service) DEFAULT_SERVER_PORT=8085 ;;
+  *) DEFAULT_SERVER_PORT=8080 ;;
+esac
+SERVER_PORT="${SERVER_PORT:-${DEFAULT_SERVER_PORT}}"
+if [ "${SERVICE_MODULE}" = "apex-system-service" ]; then
+  MANAGEMENT_PORT="${MANAGEMENT_PORT:-8083}"
+else
+  MANAGEMENT_PORT="${MANAGEMENT_PORT:-${SERVER_PORT}}"
+fi
 SHUTDOWN_TIMEOUT_SECONDS="${APEX_SHUTDOWN_TIMEOUT_SECONDS:-90}"
 APEX_GOVERNANCE_DEPLOYMENT_MODE="${APEX_GOVERNANCE_DEPLOYMENT_MODE:-standalone}"
 READINESS_URL="${APEX_READINESS_URL:-http://127.0.0.1:${MANAGEMENT_PORT}/actuator/health/readiness}"
-
-# 若提供环境变量文件则先加载（每行 KEY=VALUE）
-if [ -n "${APEX_ENV_FILE:-}" ] && [ -f "${APEX_ENV_FILE}" ]; then
-  # shellcheck disable=SC1090
-  set -a
-  source "${APEX_ENV_FILE}"
-  set +a
-
-  # 环境文件优先于脚本默认值，重新计算端口、治理模式和等待预算
-  SERVER_PORT="${SERVER_PORT:-8080}"
-  MANAGEMENT_PORT="${MANAGEMENT_PORT:-8081}"
-  SHUTDOWN_TIMEOUT_SECONDS="${APEX_SHUTDOWN_TIMEOUT_SECONDS:-90}"
-  APEX_GOVERNANCE_DEPLOYMENT_MODE="${APEX_GOVERNANCE_DEPLOYMENT_MODE:-standalone}"
-  READINESS_URL="${APEX_READINESS_URL:-http://127.0.0.1:${MANAGEMENT_PORT}/actuator/health/readiness}"
-fi
 
 # ---------- 定位可执行 jar ----------
 if [ -n "${APEX_JAR:-}" ]; then
   JAR="${APEX_JAR}"
 else
-  JAR="$(ls "${PROJECT_ROOT}"/"${SERVICE_MODULE}"/target/"${SERVICE_MODULE}"-*.jar 2>/dev/null | grep -v -- '-sources.jar' | head -n 1)"
+  JAR=""
+  for candidate in "${PROJECT_ROOT}/${SERVICE_MODULE}/target/${SERVICE_MODULE}"-*.jar; do
+    [ -f "${candidate}" ] || continue
+    case "${candidate}" in *-sources.jar|*-javadoc.jar) continue ;; esac
+    JAR="${candidate}"
+    break
+  done
 fi
-if [ -z "${JAR:-}" ] || [ ! -f "${JAR}" ]; then
+if [[ "${ACTION}" =~ ^(start|restart|console)$ ]] && { [ -z "${JAR:-}" ] || [ ! -f "${JAR}" ]; }; then
   echo "❌ 未找到可执行 JAR（模块 ${SERVICE_MODULE}）。请先构建: ./scripts/build/build.sh -Penterprise"
   echo "   或通过 APEX_JAR / APEX_SERVICE_MODULE 环境变量指定。"
   exit 1
@@ -167,7 +185,7 @@ cmd_start() {
     echo "ℹ️  服务已在运行 (PID $(get_pid))，如需重启请执行: $0 restart ${ENV_PROFILE} ${TIER}"
     return 0
   fi
-  mkdir -p "${LOG_DIR}"
+  mkdir -p "${LOG_DIR}" "$(dirname "${APP_PID_FILE}")" "$(dirname "${APP_OUT_LOG}")"
 
   echo "🚀 启动 Apex Scaffold 微服务: ${SERVICE_MODULE}"
   echo "   JAR        : ${JAR}"
@@ -270,7 +288,9 @@ cmd_console() {
   echo "🚀 前台运行 (Profiles: ${SPRING_PROFILES_ACTIVE})，Ctrl+C 停止"
   echo "   JAR: ${JAR}"
   echo "   GC 日志: ${LOG_DIR}/gc.log"
-  SPRING_PROFILES_ACTIVE="${SPRING_PROFILES_ACTIVE}" exec java ${JAVA_OPTS} -jar "${JAR}" --server.port="${SERVER_PORT}"
+  SPRING_PROFILES_ACTIVE="${SPRING_PROFILES_ACTIVE}" \
+  APEX_GOVERNANCE_DEPLOYMENT_MODE="${APEX_GOVERNANCE_DEPLOYMENT_MODE}" \
+  exec java ${JAVA_OPTS} -jar "${JAR}" --server.port="${SERVER_PORT}" --management.server.port="${MANAGEMENT_PORT}"
 }
 
 case "${ACTION}" in

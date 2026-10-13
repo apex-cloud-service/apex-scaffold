@@ -9,8 +9,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.apex.scaffold.domain.model.entity.ApiCallLogEntity;
-import com.apex.scaffold.domain.repository.ApiCallLogRepository;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -19,6 +17,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.support.StaticListableBeanFactory;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -30,11 +29,11 @@ import reactor.test.StepVerifier;
  *   <li>敏感请求头脱敏（Authorization、ApiKey、Secret 等）</li>
  *   <li>请求体 / 响应体截断（按 {@link ApiCallLogProperties#getMaxBodyLength()} 限制）</li>
  *   <li>日志记录启用 / 禁用开关</li>
- *   <li>异步写入委托至 {@link ApiCallLogRepository}</li>
+ *   <li>异步写入委托至 {@link ApiCallLogSink}</li>
  * </ul>
  *
  * <h2>测试隔离</h2>
- * <p>使用 Mockito 模拟 {@link ApiCallLogRepository}，确保不触发真实数据库操作。</p>
+ * <p>使用 Mockito 模拟 {@link ApiCallLogSink}，确保不触发真实数据库操作。</p>
  *
  * @author Apex Team
  * @version 1.0.0
@@ -48,7 +47,7 @@ class ApiCallLogServiceTest {
 
     /** Mock 的日志仓储。 */
     @Mock
-    private ApiCallLogRepository repository;
+    private ApiCallLogSink repository;
 
     /** 使用默认配置的日志属性。 */
     private ApiCallLogProperties properties;
@@ -58,6 +57,8 @@ class ApiCallLogServiceTest {
 
     /** 被测服务实例。 */
     private ApiCallLogService service;
+
+    private final StaticListableBeanFactory beanFactory = new StaticListableBeanFactory();
 
     /**
      * 每个测试前初始化配置和被测服务。
@@ -69,7 +70,8 @@ class ApiCallLogServiceTest {
         properties.setMaxBodyLength(100);
         properties.setLogRequestBody(true);
         properties.setLogResponseBody(true);
-        service = new ApiCallLogService(properties, repository, meterRegistry);
+        beanFactory.addBean("apiCallLogSink", repository);
+        service = new ApiCallLogService(properties, beanFactory.getBeanProvider(ApiCallLogSink.class), meterRegistry);
     }
 
     // ==================== 脱敏测试 ====================
@@ -88,7 +90,7 @@ class ApiCallLogServiceTest {
         @Test
         @DisplayName("应脱敏 Authorization / ApiKey / Secret / Token 字段")
         void shouldMaskSensitiveHeaders() {
-            ApiCallLogEntity entity = buildBaseEntity();
+            ApiCallObservation entity = buildBaseEntity();
             entity.setRequestHeaders("{\"authorization\":\"Bearer sk-12345\",\"content-type\":\"application/json\","
                     + "\"apikey\":\"secret-key-789\",\"x-request-id\":\"req-001\"}");
             entity.setResponseHeaders("{\"content-type\":\"application/json\",\"secret\":\"my-secret-value\"}");
@@ -116,7 +118,7 @@ class ApiCallLogServiceTest {
         @Test
         @DisplayName("null 请求头应返回 null")
         void shouldHandleNullHeaders() {
-            ApiCallLogEntity entity = buildBaseEntity();
+            ApiCallObservation entity = buildBaseEntity();
             entity.setRequestHeaders(null);
             entity.setResponseHeaders(null);
 
@@ -145,7 +147,7 @@ class ApiCallLogServiceTest {
         @Test
         @DisplayName("超长请求体应被截断")
         void shouldTruncateLongRequestBody() {
-            ApiCallLogEntity entity = buildBaseEntity();
+            ApiCallObservation entity = buildBaseEntity();
             // 构造150字符的请求体，超过 maxBodyLength=100
             entity.setRequestBody("A".repeat(150));
             entity.setResponseBody("B".repeat(50)); // 50字符，未超过限制
@@ -171,9 +173,10 @@ class ApiCallLogServiceTest {
         @DisplayName("关闭响应体日志时应清空 responseBody")
         void shouldClearResponseBodyWhenDisabled() {
             properties.setLogResponseBody(false);
-            service = new ApiCallLogService(properties, repository, meterRegistry);
+            service =
+                    new ApiCallLogService(properties, beanFactory.getBeanProvider(ApiCallLogSink.class), meterRegistry);
 
-            ApiCallLogEntity entity = buildBaseEntity();
+            ApiCallObservation entity = buildBaseEntity();
             entity.setResponseBody("some response body");
 
             when(repository.save(any())).thenReturn(Mono.empty());
@@ -201,9 +204,10 @@ class ApiCallLogServiceTest {
         @DisplayName("disabled=true 时不调用 repository.save()")
         void shouldSkipLogWhenDisabled() {
             properties.setEnabled(false);
-            service = new ApiCallLogService(properties, repository, meterRegistry);
+            service =
+                    new ApiCallLogService(properties, beanFactory.getBeanProvider(ApiCallLogSink.class), meterRegistry);
 
-            ApiCallLogEntity entity = buildBaseEntity();
+            ApiCallObservation entity = buildBaseEntity();
 
             StepVerifier.create(service.log(entity)).verifyComplete();
 
@@ -239,7 +243,7 @@ class ApiCallLogServiceTest {
         @DisplayName("status=0 时记录耗时 Timer 与 success 计数")
         void shouldRecordSuccessMetrics() {
             when(repository.save(any())).thenReturn(Mono.empty());
-            ApiCallLogEntity entity = buildBaseEntity();
+            ApiCallObservation entity = buildBaseEntity();
 
             StepVerifier.create(service.log(entity)).verifyComplete();
 
@@ -266,7 +270,7 @@ class ApiCallLogServiceTest {
         @DisplayName("status=2 时按 server_error 计数")
         void shouldRecordServerErrorResult() {
             when(repository.save(any())).thenReturn(Mono.empty());
-            ApiCallLogEntity entity = buildBaseEntity();
+            ApiCallObservation entity = buildBaseEntity();
             entity.setStatus(2);
 
             StepVerifier.create(service.log(entity)).verifyComplete();
@@ -290,7 +294,7 @@ class ApiCallLogServiceTest {
         @DisplayName("status=null 时按 unknown 计数")
         void shouldRecordUnknownResultWhenStatusNull() {
             when(repository.save(any())).thenReturn(Mono.empty());
-            ApiCallLogEntity entity = buildBaseEntity();
+            ApiCallObservation entity = buildBaseEntity();
             entity.setStatus(null);
             entity.setExecutionTime(null);
 
@@ -315,8 +319,8 @@ class ApiCallLogServiceTest {
      *
      * @return 预填充的日志实体
      */
-    private ApiCallLogEntity buildBaseEntity() {
-        ApiCallLogEntity entity = new ApiCallLogEntity();
+    private ApiCallObservation buildBaseEntity() {
+        ApiCallObservation entity = new ApiCallObservation();
         entity.setServiceName("wechat");
         entity.setMethod("POST");
         entity.setPath("/sns/oauth2/access_token");

@@ -57,18 +57,16 @@ API 接口文档、规范和版本管理。
 代码生成、开发规范和工具使用。
 
 - [代码生成](./04-development/codegen.md) - DDD 代码生成器
-- [JavaDoc 指南](./04-development/javadoc-guide.md) - 文档注释规范
-- [Lombok 指南](./04-development/lombok-guide.md) - Lombok 使用
+- [统一开发规范](./04-development/development-standards.md) - 后端开发规范、注释与 JavaDoc、Lombok、构建规范
 - [JMH 基准测试](./04-development/jmh-benchmark-guide.md) - 性能测试
 - [SVG 维护](./04-development/svg-maintenance-guide.md) - 图表维护
-- [后端开发规范](./04-development/backend-development-standards.md) - 后端规范
 - 前端开发文档：已迁移至独立前端仓库 `apex-admin-web` 的 `frontend-docs/` 目录
 
 ### [05. 运维部署](./05-operations/)
 
 生产部署、配置管理和监控告警。
 
-- [部署指南](./05-operations/deployment.md) - Docker/K8s 部署
+- [部署指南](./05-operations/deployment.md) - Podman/K8s 部署
 - [配置管理](./05-operations/configuration.md) - 配置项说明
 - [安全防护](./05-operations/security-protections.md) - 安全体系
 - [高级特性](./05-operations/advanced-features.md) - 高级功能
@@ -107,7 +105,7 @@ API 接口文档、规范和版本管理。
 - **系统架构**: 逻辑架构、物理架构、技术架构
 - **业务流程**: 登录认证、权限校验、工作流审批、文件上传
 - **技术架构**: 缓存架构、限流熔断、自动重试、安全防护
-- **部署架构**: Docker Compose、Kubernetes、CI/CD 流水线
+- **部署架构**: Podman Compose、Kubernetes、CI/CD 流水线
 - **监控体系**: Prometheus、Grafana、Zipkin、日志聚合
 
 详见 [diagrams/README.md](./diagrams/README.md)

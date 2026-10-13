@@ -58,7 +58,7 @@ Apex Scaffold 是一个基于 Spring Boot 3.5 + WebFlux 响应式 + DDD 五层�
 
 1. **通用性**：所有核心模块不携带特定业务场景
 2. **清晰性**：代码、文档、配置采用统一的通用术语
-3. **可交付性**：开箱即用（docker-compose 一键启动）、文档完整、示例齐全
+3. **可交付性**：开箱即用（podman-compose 一键启动）、文档完整、示例齐全
 4. **可分级售卖**：基础版（开源）/ 标准版 / 企业版 三档在依赖与功能上真实差异化
 5. **可盈利保护**：License 机制真实生效，商业版本无法被 fork 绕过
 6. **可持续演进**：git 版本管理、CI/CD、版本规范、变更记录齐全
@@ -67,7 +67,7 @@ Apex Scaffold 是一个基于 Spring Boot 3.5 + WebFlux 响应式 + DDD 五层�
 
 | 项 | 说明 |
 |---|---|
-| 在范围内 | 全部 Maven 模块、docs/、scripts/、config/、docker/k8s 交付物、CI/CD 配置 |
+| 在范围内 | 全部 Maven 模块、docs/、scripts/、config/、Podman/K8s 交付物、CI/CD 配置 |
 | 前提约束 | Java 17、Spring Boot 3.5、WebFlux 响应式、MyBatis-Plus、MySQL、Redis 为不可变技术底座 |
 | 不在范围内 | 不改动核心架构风格（DDD 五层为卖点，保留）；不新增云厂商绑定 |
 | 法律前提 | ✅ 已确认：自有代码，可分发 |
@@ -133,7 +133,7 @@ Apex Scaffold 是一个基于 Spring Boot 3.5 + WebFlux 响应式 + DDD 五层�
 
 **Apex Scaffold v2.0** 定位：面向中小企业的 **Java 17 / Spring Boot 3 / WebFlux 响应式** 通用后端开发脚手架。
 
-- **交付物**：可下载源码包 / GitHub 仓库 / Maven 依赖（starter）+ Docker 一键环境 + 通用管理后台 + 代码生成器（二期）
+- **交付物**：可下载源码包 / GitHub 仓库 / Maven 依赖（starter）+ Podman 一键环境 + 通用管理后台 + 代码生成器（二期）
 - **三档版本**：基础版（MIT 开源）→ 标准版（商业授权）→ 企业版（商业授权 + 高级功能）
 
 ### 4.2 目标仓库结构
@@ -151,8 +151,8 @@ apex-scaffold/
 ├── docs/                   # [重构] 商业化文档体系（零内部报告、零 业务引用）
 ├── scripts/                # [重构] 构建/部署/备份脚本（零 copy 脚本）
 ├── config/                 # 配置模板（监控/特性开关）
-├── docker-compose.yml      # 一键环境
-├── Dockerfile
+├── podman-compose.yml      # 一键环境
+├── Containerfile
 ├── k8s/                    # 部署清单
 ├── .github/workflows/      # CI/CD + 安全扫描
 ├── .gitignore              # [新增]
@@ -368,7 +368,7 @@ apex-interfaces/src/main/resources/db/migration/
   3. `apex-example` 提供独立 `db/init.sql`（example_user 演示表）；
   4. 更新 `application.yml` Flyway 配置（`locations`、`baseline-on-migrate`）；
   5. 用全新空库验证 `spring-boot:run` 启动自动迁移成功。
-- **验收**: 全新 MySQL 实例 `docker-compose up` 后应用启动成功；`flyway_schema_history` 记录为重建后的干净版本序列；无任何业务表（interest/battle/photo/原偏好模型 等）创建；迁移脚本 grep 业务关键词零命中。
+- **验收**: 全新 MySQL 实例 `podman-compose -f podman-compose.infra.yml up` 后应用启动成功；`flyway_schema_history` 记录为重建后的干净版本序列；无任何业务表（interest/battle/photo/原偏好模型 等）创建；迁移脚本 grep 业务关键词零命中。
 
 #### B6. 文档 业务痕迹清理
 
@@ -405,7 +405,7 @@ apex-interfaces/src/main/resources/db/migration/
 
 - **复杂度**: M　**优先级**: P1
 - **动作**:
-  1. `docker-compose up -d` 启动 MySQL/Redis；
+  1. `podman-compose -f podman-compose.infra.yml up -d` 启动 MySQL/Redis；
   2. 启动应用，验证：健康检查、注册/登录/刷新 Token、RBAC 角色权限、文件上传（Local）、操作日志落库、API 调用日志、缓存读写；
   3. 验证 SpringDoc/Knife4j 文档页可用且仅含通用接口；
   4. 验证 Redis 中缓存 key 前缀为 `apex:`（非 `apex:`）；
@@ -522,7 +522,7 @@ apex-interfaces/src/main/resources/db/migration/
 - **动作**:
   1. 确定发布渠道：源码包（GitHub Release）+ Maven 构件（Central 或私有仓库）；
   2. 若发布 Central：配置 `maven-gpg-plugin`、`nexus-staging-maven-plugin`、`pom.xml` SCM/developers/license 元数据；
-  3. 产出 `apex-scaffold-*-release.zip`（含源码、docs、docker、k8s、示例）；
+  3. 产出 `apex-scaffold-*-release.zip`（含源码、docs、scripts/deploy/podman、k8s、示例）；
   4. 配置 `.github/workflows/release.yml`：打 tag 自动构建发布。
 - **验收**: 发布流水线可产出一份可分发安装包；安装包内无 target/、无业务代码、无 业务残留。
 
@@ -549,14 +549,14 @@ apex-interfaces/src/main/resources/db/migration/
 - **复杂度**: L　**优先级**: P1
 - **动作**:
   1. 梳理现有 docs：保留并更新（QUICK_START/ARCHITECTURE/CONFIGURATION/BEST_PRACTICES/API_VERSION_MANAGEMENT/AUDIT_LOG_USAGE/LICENSE_MANAGEMENT/SPI_PLUGIN_GUIDE/JMH_BENCHMARK_GUIDE/TROUBLESHOOTING/COMMERCIAL_VERSIONS）；删除内部报告（见 A2）；重写 README；
-  2. 补齐：代码生成器使用指南（二期）、管理后台使用指南、多租户指南（二期）、备份恢复指南、部署指南（Docker/K8s/裸机）；
+  2. 补齐：代码生成器使用指南（二期）、管理后台使用指南、多租户指南（二期）、备份恢复指南、部署指南（Podman/K8s/裸机）；
   3. 新增 FAQ 与版本升级指南。
 - **验收**: docs 目录结构清晰、无内部信息、**grep 业务关键词零命中**；README 新手 30 分钟可跑通。
 
 #### E2. 交付物校验
 
 - **复杂度**: M　**优先级**: P1
-- **动作**: 按 QUICK_START 从零执行一遍（全新环境 clone → 构建 → 启动 → 示例 CRUD）；校验 Dockerfile/docker-compose/k8s/CI 流水线。
+- **动作**: 按 QUICK_START 从零执行一遍（全新环境 clone → 构建 → 启动 → 示例 CRUD）；校验 Containerfile/podman-compose/k8s/CI 流水线。
 - **验收**: 全新环境按文档 30 分钟内可启动并完成一个 CRUD 接口。
 
 #### E3. 营销物料
@@ -601,7 +601,7 @@ apex-interfaces/src/main/resources/db/migration/
 |---|---|---|
 | **业务痕迹清除不彻底**（遗漏注释/测试数据/i18n/SQL 变量等） | 🔴 高 | 每阶段结束全库 grep 验证；最终验收门禁为零命中；附录 10 提供全量清单逐项核对 |
 | 去业务化误删通用代码（如 RBAC/审计被牵连） | 高 | 先冻结保留清单（4.3/4.4），按"保留清单校验 + 编译失败兜底"推进；每模块删除后立即 `mvn test` |
-| 删库后启动失败/迁移错乱 | 高 | 阶段 B5 用全新空库验证；Docker 环境独立验证后再动 CI |
+| 删库后启动失败/迁移错乱 | 高 | 阶段 B5 用全新空库验证；Podman 环境独立验证后再动 CI |
 | 测试回归反复（拷贝测试与本地不兼容） | 中 | 阶段 A6/A7 先清零存量问题，阶段 B 每步增量回归 |
 | License 机制被绕过影响收入 | 高 | D2 默认启用 + 集成测试覆盖篡改/过期场景 |
 | 三档 Profile 实质化后 basic 包不可用 | 中 | D1 三档分别构建验证 + 冒烟 |
@@ -617,7 +617,7 @@ apex-interfaces/src/main/resources/db/migration/
 1. `git log` 有清晰版本历史；仓库无 `target/`、无 copy 脚本、无 `.env`/密钥；
 2. **全库 grep `业务`/`业务`/`业务` 零命中**（排除 .git 目录；扫描覆盖 .java/.yml/.yaml/.xml/.properties/.sql/.js/.html/.css/.json/.csv/.py/.sh/.md 全部文本文件类型）；
 3. `mvn clean verify` 全模块全绿（单元 + 集成 + PMD + Spotless + JaCoCo）；
-4. 全新空库 `docker-compose up` 一键启动成功，Flyway 迁移为干净基线；
+4. 全新空库 `podman-compose -f podman-compose.infra.yml up` 一键启动成功，Flyway 迁移为干净基线；
 5. 管理后台可用（登录→建角色→赋权限→建用户全流程通过）；
 6. 三档 Profile 构建产物可区分；License 未配置时商业功能不可用；
 7. LICENSE 双轨文件与 README 表述自洽；安全扫描无 Critical/High；

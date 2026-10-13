@@ -112,7 +112,7 @@ java -cp "<apex-license-tools.jar>:<依赖>" com.apex.scaffold.license.tools.Lic
 
 ### 2.2 容器/K8s 部署的机器指纹覆盖
 
-Docker 容器内 MAC 地址每次重建可能变化，K8s Pod 中硬件信息不可用。此时通过配置手动指定指纹：
+Podman 容器内 MAC 地址每次重建可能变化，K8s Pod 中硬件信息不可用。此时通过配置手动指定指纹：
 
 ```yaml
 apex:
@@ -335,7 +335,7 @@ generator.saveToFile(renewedLicense, "renewed-license.json");
 | 篡改 License 后访问商业功能被拒 | 签名验证失败 | 重新从服务商获取 License |
 | 启动日志 "机器指纹不匹配" | License 绑定的指纹与当前机器不一致 | 联系服务商在目标机器上重新采集指纹并签发新 License；或检查是否误用其他机器的 License |
 | 启动日志 WARN "License 未包含机器指纹" | 旧版 License 无 `machineFingerprint` 字段 | 建议升级为带指纹绑定的 License；当前仍可正常使用，无安全降级 |
-| 容器重建后 License 失效 | Docker 容器 MAC 地址变化导致指纹改变 | 使用 `apex.license.machine-fingerprint-override` 指定稳定指纹值 |
+| 容器重建后 License 失效 | Podman 容器 MAC 地址变化导致指纹改变 | 使用 `apex.license.machine-fingerprint-override` 指定稳定指纹值 |
 
 ## 注意事项
 
@@ -345,7 +345,7 @@ generator.saveToFile(renewedLicense, "renewed-license.json");
 4. **测试环境**：测试时可将 `apex.license.enabled` 设为 `false` 跳过验证（商业功能将不可用）；也可设 `apex.license.machine-fingerprint-skip=true` 单独跳过机器指纹验证。
 5. **降级 ≠ 绕过**：即使关闭 License 校验或移除 License 文件，`@FeatureGate` 标注的商业功能仍会拒绝访问。
 6. **机器指纹向后兼容**：不带 `machineFingerprint` 字段的旧版 License 可正常加载验证，仅输出 WARN 提示建议升级。
-7. **容器指纹策略**：Docker/K8s 环境下推荐使用 `machine-fingerprint-override` 配置稳定标识，而非依赖容器内自动采集。
+7. **容器指纹策略**：Podman/K8s 环境下推荐使用 `machine-fingerprint-override` 配置稳定标识，而非依赖容器内自动采集。
 
 ## 工具链
 

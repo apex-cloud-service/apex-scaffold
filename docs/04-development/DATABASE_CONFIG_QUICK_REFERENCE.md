@@ -124,7 +124,7 @@ DB_PASSWORD=password123
 DB_DRIVER=com.mysql.cj.jdbc.Driver
 ```
 
-### Docker Compose 格式
+### Podman Compose 格式
 ```yaml
 version: '3.8'
 services:

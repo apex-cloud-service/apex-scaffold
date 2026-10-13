@@ -9,7 +9,7 @@
 ## ⚠️ 当前状态
 
 **检查结果**:
-- ❌ Docker服务未运行 (无法连接到Docker daemon)
+- 原历史检查发现 Docker daemon 未运行；当前使用 Podman，请重新检查 `podman machine list` 和 `podman ps`。
 - ❌ 本地MySQL进程未运行
 - ❌ Homebrew MySQL服务未安装/未启动
 
@@ -17,34 +17,19 @@
 
 ---
 
-## 🚀 方案A: 启动Docker MySQL (推荐)
+## 方案A: 启动 Podman MySQL (推荐)
 
-### Step 1: 启动Docker服务
+### Step 1: 启动 Podman
 
 **macOS**:
-1. 如果使用Docker Desktop:
-   ```bash
-   # 打开 Docker Desktop 应用
-   open /Applications/Docker.app
-   
-   # 等待Docker启动(约30秒)
-   sleep 30
-   ```
+```bash
+# 查看已有虚拟机；尚未创建时先执行 podman machine init
+podman machine list
+podman machine start
 
-2. 如果使用OrbStack:
-   ```bash
-   # 打开 OrbStack
-   open /Applications/OrbStack.app
-   
-   # 等待启动
-   sleep 20
-   ```
-
-3. 验证Docker运行:
-   ```bash
-   docker ps
-   # 应该能看到容器列表(可能为空)
-   ```
+# 验证连接，应看到容器列表（可能为空）
+podman ps
+```
 
 ### Step 2: 启动MySQL容器
 
@@ -52,10 +37,10 @@
 cd /Users/work/apex-scaffold
 
 # 启动MySQL容器
-docker-compose -f docker-compose.infra.yml up -d mysql
+podman-compose -f podman-compose.infra.yml up -d mysql
 
 # 查看启动日志
-docker-compose -f docker-compose.infra.yml logs -f mysql
+podman-compose -f podman-compose.infra.yml logs -f mysql
 # 看到 "ready for connections" 表示MySQL已就绪
 # 按Ctrl+C退出日志查看
 
@@ -67,7 +52,7 @@ sleep 15
 
 ```bash
 # 测试连接
-docker-compose -f docker-compose.infra.yml exec mysql \
+podman-compose -f podman-compose.infra.yml exec mysql \
   mysql -u root -papex-root -e "SELECT VERSION();"
 
 # 应该显示MySQL版本号,如: 8.0.x
@@ -77,7 +62,7 @@ docker-compose -f docker-compose.infra.yml exec mysql \
 
 ```bash
 # 方式1: 通过Docker容器执行
-docker-compose -f docker-compose.infra.yml exec -T mysql \
+podman-compose -f podman-compose.infra.yml exec -T mysql \
   mysql -u root -papex-root apex_data < frontend_button_permission_config.sql
 
 # 方式2: 通过本地MySQL客户端连接Docker容器
@@ -88,7 +73,7 @@ mysql -h 127.0.0.1 -P 3306 -u root -papex-root apex_data < frontend_button_permi
 
 ```bash
 # 查询新增的权限记录
-docker-compose -f docker-compose.infra.yml exec mysql \
+podman-compose -f podman-compose.infra.yml exec mysql \
   mysql -u root -papex-root apex_data -e "
 SELECT COUNT(*) AS '新增权限数' 
 FROM sys_menu 
@@ -244,15 +229,15 @@ ORDER BY m1.sort, m2.sort;
 
 ## 🔍 故障排查
 
-### 问题1: Docker daemon未运行
+### 问题1: Podman 虚拟机或连接不可用
 
-**错误**: `Cannot connect to the Docker daemon`
+**检查**: `podman machine list`、`podman system connection list`。
 
 **解决**:
-1. 检查Docker Desktop/OrbStack是否已安装
-2. 打开Docker Desktop/OrbStack应用
-3. 等待Docker完全启动(菜单栏图标稳定)
-4. 重试docker命令
+1. 确认已安装 Podman。
+2. macOS 尚无虚拟机时执行 `podman machine init`。
+3. 执行 `podman machine start`。
+4. 使用 `podman ps` 确认连接正常后重试。
 
 ### 问题2: MySQL连接被拒绝
 

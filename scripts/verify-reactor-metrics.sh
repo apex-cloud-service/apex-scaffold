@@ -20,7 +20,7 @@ if curl -s -f http://localhost:8081/actuator/health > /dev/null 2>&1; then
     echo -e "${GREEN}✓ 应用运行正常${NC}"
 else
     echo -e "${RED}✗ 应用未运行或不健康${NC}"
-    echo "   请先启动应用：mvnd spring-boot:run -pl apex-interfaces"
+    echo "   请先启动应用：mvnd spring-boot:run -pl apex-system-service"
     exit 1
 fi
 

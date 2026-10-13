@@ -177,8 +177,8 @@ Apex Scaffold 是一款基于 **Spring Boot 3** + **Spring WebFlux** + **DDD领�
 | 技术             | 说明        |
 | -------------- | --------- |
 | Maven Daemon   | 2.0.0-rc-3（mvnd） |
-| Docker         | 容器化       |
-| Docker Compose | 本地编排      |
+| Podman         | 容器化       |
+| Podman Compose | 本地编排      |
 | Kubernetes     | 生产编排(可选)  |
 | GitHub Actions | CI/CD流水线  |
 
@@ -286,14 +286,16 @@ mvnd clean package -DskipTests
 java -jar apex-interfaces/target/apex-interfaces-1.3.1.jar
 ```
 
-**方式 4: 使用 Docker Compose**
+**方式 4: 使用 Podman Compose**
 
 ```bash
-# 启动基础设施（MySQL + Redis + 监控栈）
-docker-compose -f docker-compose.infra.yml up -d
+# 复制模板并配置全部安全密钥
+cp .env.example .env
+# 先启动观测组件，创建应用依赖的网络
+podman-compose -p apex-infra -f podman-compose.infra.yml up -d skywalking-oap skywalking-ui elasticsearch kibana filebeat
 
-# 启动应用
-docker-compose up -d
+# 构建并启动应用及 MySQL、Redis 等中间件
+podman-compose -f podman-compose.yml up -d --build
 ```
 
 访问: <http://localhost:8080>
@@ -362,15 +364,15 @@ apex-scaffold/
 │   │   └── utils/                       # 工具函数
 │   └── package.json
 ├── docs/                                # 文档目录
-├── docker/                              # Docker配置
+├── config/                              # 配置模板（监控 / Podman Compose）
 ├── scripts/                             # 脚本工具
 ├── .trae/documents/                     # 技术文档
 │   ├── 系统架构设计文档.md
 │   ├── 数据库设计文档.md
 │   └── 业务流程文档.md
 ├── pom.xml
-├── Dockerfile
-├── docker-compose.yml
+├── Containerfile
+├── podman-compose.yml
 └── README.md
 ```
 
@@ -492,7 +494,7 @@ spring:
 
 - [部署运维文档](./docs/05-operations/deployment.md)
 
-  - 单机 / Docker Compose / Kubernetes 三种部署方式
+  - 单机 / Podman Compose / Kubernetes 三种部署方式
 
   - 性能调优、灾备、升级手册
 
@@ -565,22 +567,24 @@ spring:
 
 ## 🐳 部署指南
 
-### Docker Compose 部署 (推荐)
+### Podman Compose 部署 (推荐)
+
+准备环境变量和观测网络见上方「方式 4」；macOS 安装与 machine 初始化见 [快速开始](docs/00-getting-started/quickstart.md)。
 
 ```bash
-# 启动所有服务
-docker-compose up -d
+# 启动所有默认服务
+podman-compose -f podman-compose.yml up -d --build
 
-# 查看日志
-docker-compose logs -f apex-scaffold
+# 查看网关日志
+podman-compose -f podman-compose.yml logs -f apex-gateway
 
 # 停止服务
-docker-compose down
+podman-compose -f podman-compose.yml down
 ```
 
 服务列表:
 
-- apex-scaffold: 应用服务 (8080)
+- apex-gateway: 网关 (8080)，以及五个业务微服务
 
 - mysql: 数据库 (3306)
 

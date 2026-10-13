@@ -11,8 +11,9 @@ import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
 import org.apache.rocketmq.remoting.protocol.admin.ConsumeStats;
 import org.apache.rocketmq.remoting.protocol.admin.OffsetWrapper;
 import org.apache.rocketmq.tools.admin.DefaultMQAdminExt;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.lang.Nullable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -60,16 +61,14 @@ public class MqLagMonitor {
     private final DefaultMQAdminExt adminClient;
     private volatile boolean adminStarted;
 
-    /** 构造积压监控器并使用默认 Admin 客户端。 */
-    @Autowired
-    public MqLagMonitor(MeterRegistry meterRegistry, MqAlertManager alertManager) {
-        this(meterRegistry, alertManager, new DefaultMQAdminExt());
-    }
-
-    MqLagMonitor(MeterRegistry meterRegistry, MqAlertManager alertManager, DefaultMQAdminExt adminClient) {
+    /** 构造积压监控器，未提供专属 Admin 客户端时使用默认客户端。 */
+    public MqLagMonitor(
+            MeterRegistry meterRegistry,
+            MqAlertManager alertManager,
+            @Qualifier("mqLagAdminClient") @Nullable DefaultMQAdminExt adminClient) {
         this.meterRegistry = meterRegistry;
         this.alertManager = alertManager;
-        this.adminClient = adminClient;
+        this.adminClient = adminClient != null ? adminClient : new DefaultMQAdminExt();
     }
 
     @Value("${apex.mq.monitor.lag.warning-threshold:10000}")
@@ -81,7 +80,7 @@ public class MqLagMonitor {
     @Value("${apex.mq.monitor.auto-scale.enabled:true}")
     private boolean autoScaleEnabled;
 
-    @Value("${rocketmq.name-server}")
+    @Value("${rocketmq.name-server:}")
     private String nameServer;
 
     /**

@@ -12,13 +12,13 @@
 
 本文档详细说明 Apex Scaffold 的网络物理部署架构，涵盖从客户端到基础设施的完整拓扑。架构设计基于以下原则：
 
-- **Docker Compose 默认栈**：本地开发和测试环境使用 `docker-compose.yml` 和 `docker-compose.infra.yml` 一键启动
+- **Podman Compose 默认栈**：本地开发和测试环境使用 `podman-compose.yml` 和 `podman-compose.infra.yml` 一键启动
 
 - **Kubernetes 扩展拓扑**：生产环境可选择 K8s 部署，支持 HPA、滚动发布、ConfigMap 等云原生能力
 
 - **能力分级标注**：明确区分"默认启用"、"可选启用"、"建议拓扑"，避免将未验证能力描述为既定事实
 
-- **配置优先**：所有组件状态以 `docker-compose.yml`、`application.yml` 和 `pom.xml` 为准
+- **配置优先**：所有组件状态以 `podman-compose.yml`、`application.yml` 和 `pom.xml` 为准
 
 ***
 
@@ -80,7 +80,7 @@ upstream apex-backend {
 
 ***
 
-### 3. ⚙️ 应用服务层 (K8s Pods / Docker)
+### 3. ⚙️ 应用服务层 (K8s Pods / Podman)
 
 **职责**：业务逻辑处理、响应式编排
 
@@ -93,13 +93,13 @@ upstream apex-backend {
 
 **部署模式对比**：
 
-| 能力    | Docker Compose             | Kubernetes           | 状态  |
+| 能力    | Podman Compose             | Kubernetes           | 状态  |
 | ----- | -------------------------- | -------------------- | --- |
 | 基础运行  | ✅ 默认单实例                    | ✅ Deployment         | 已验证 |
 | 多实例扩展 | 手动 `scale`                 | ✅ HPA                | 建议  |
 | 滚动发布  | ❌                          | ✅ RollingUpdate      | 建议  |
 | 配置管理  | `.env` / `application.yml` | ✅ ConfigMap / Secret | 建议  |
-| 服务发现  | Docker 内部 DNS              | ✅ Service / Ingress  | 建议  |
+| 服务发现  | Podman 网络 DNS              | ✅ Service / Ingress  | 建议  |
 
 **端口分离**：
 
@@ -144,7 +144,7 @@ resources:
 | RocketMQ      | `apache/rocketmq:5.3.1` | 可选   | 主从 Broker / Dledger   |
 | Meilisearch   | `getmeili/meilisearch`  | ✅ 启用 | 多副本部署                 |
 
-**MySQL 配置** (`docker-compose.infra.yml`):
+**MySQL 配置** (`podman-compose.infra.yml`):
 
 ```yaml
 mysql:
@@ -234,7 +234,7 @@ scrape_configs:
 
 **CI/CD 集成建议**：
 
-- Jenkins：构建 Docker 镜像 → 推送镜像仓库 → 触发 K8s 滚动更新
+- Jenkins：使用 Podman 构建 OCI 镜像 → 推送镜像仓库 → 触发 K8s 滚动更新
 
 - ArgoCD：GitOps 声明式部署，监听 Git 仓库变更自动同步
 
@@ -274,13 +274,13 @@ Apex Application → Zipkin (链路上报)
 
 ***
 
-## Docker Compose 默认栈启动流程
+## Podman Compose 默认栈启动流程
 
 ### 1. 启动基础设施
 
 ```bash
 cd /Users/work/apex-scaffold
-docker-compose -f docker-compose.infra.yml up -d
+podman-compose -f podman-compose.infra.yml up -d
 ```
 
 **启动组件**：
@@ -308,7 +308,7 @@ docker-compose -f docker-compose.infra.yml up -d
 ### 2. 启动应用
 
 ```bash
-docker-compose up -d
+podman-compose -f podman-compose.yml up -d --build
 ```
 
 **环境变量**：
@@ -413,7 +413,7 @@ spec:
 
 ## 能力状态说明
 
-### ✅ 已验证能力 (Docker Compose 默认)
+### ✅ 默认栈能力 (Podman Compose，运行结果需按环境验证)
 
 - MySQL 8.0 单实例
 
@@ -515,12 +515,12 @@ spec:
 
 ## 架构约束与限制
 
-### Docker Compose 限制
+### Podman Compose 限制
 
 1. **单机部署**：无法跨节点，不支持真正的高可用
-2. **资源隔离弱**：容器间共享宿主机资源，无 cgroups 强限制
-3. **无自动伸缩**：需手动 `docker-compose scale`
-4. **网络性能**：Docker 网络有性能损耗，生产建议 Host 网络或 K8s CNI
+2. **资源隔离**：容器共享宿主机资源，需配置 cgroups 资源限制
+3. **无自动伸缩**：手动使用 `podman-compose -f podman-compose.yml up -d --scale <服务名>=<副本数>`，并先处理固定容器名和宿主机端口冲突
+4. **网络性能**：容器网络有性能损耗，生产需按环境评估网络方案
 
 ### Kubernetes 扩展要求
 
@@ -541,7 +541,7 @@ spec:
 
 ### Q1: 如何启用 RocketMQ 消息消费？
 
-**A**: 修改 `docker-compose.yml`:
+**A**: 修改 `podman-compose.yml`:
 
 ```yaml
 environment:

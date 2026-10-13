@@ -443,8 +443,8 @@ X-New-Refresh-Token: eyJhbGciOiJIUzI1NiJ9...
 ```bash
 cd /Users/work/apex-scaffold
 
-# 确保 Docker 和 Redis 正在运行
-docker compose -f docker-compose.infra.yml up -d redis
+# 确保 Podman 和 Redis 正在运行
+podman-compose -f podman-compose.infra.yml up -d redis
 
 # 启动应用
 mvnd spring-boot:run -pl apex-interfaces

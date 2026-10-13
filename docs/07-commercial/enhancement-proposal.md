@@ -52,7 +52,7 @@ JWT + Spring Security + RBAC；暴力破解封禁、IP 限流封禁升级、防�
 - 全局响应超时（504 + REQUEST_TIMEOUT，SSE 豁免）
 
 ### 1.5 可观测性与部署
-apex_api_* 指标 + Prometheus + 10 条告警 + Grafana 14 面板、Zipkin 链路、TraceId 贯穿、钉钉异常告警；部署三方式（jar/systemd、Docker、Compose）+ infra 9 组件 + k8s（deployment/hpa/canary）。
+apex_api_* 指标 + Prometheus + 10 条告警 + Grafana 14 面板、Zipkin 链路、TraceId 贯穿、钉钉异常告警；部署三方式（jar/systemd、Podman、Podman Compose）+ infra 9 组件 + k8s（deployment/hpa/canary）。
 
 ### 1.6 商业化机制
 - 三档 Profile（basic/standard/enterprise）+ apex-build.properties 产物标识

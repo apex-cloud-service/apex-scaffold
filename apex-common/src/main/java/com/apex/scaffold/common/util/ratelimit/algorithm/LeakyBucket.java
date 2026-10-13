@@ -2,6 +2,7 @@ package com.apex.scaffold.common.util.ratelimit.algorithm;
 
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.LongSupplier;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -66,6 +67,9 @@ public class LeakyBucket {
     /** 上次漏水的时间戳（纳秒） */
     private final AtomicLong lastLeakTimeNanos;
 
+    /** 时间源（纳秒），默认使用 {@link System#nanoTime()}，可注入以便确定性测试 */
+    private final LongSupplier timeSource;
+
     /**
      * 构造漏桶。
      *
@@ -73,6 +77,17 @@ public class LeakyBucket {
      * @param leakRate 漏水速率（请求/秒），即恒定处理速率
      */
     public LeakyBucket(long capacity, double leakRate) {
+        this(capacity, leakRate, System::nanoTime);
+    }
+
+    /**
+     * 构造漏桶（可注入时间源，便于测试）。
+     *
+     * @param capacity   桶容量（最大缓冲请求数）
+     * @param leakRate   漏水速率（请求/秒）
+     * @param timeSource 纳秒时间源
+     */
+    LeakyBucket(long capacity, double leakRate, LongSupplier timeSource) {
         if (capacity <= 0) {
             throw new IllegalArgumentException("桶容量必须大于0, 实际值: " + capacity);
         }
@@ -82,7 +97,8 @@ public class LeakyBucket {
         this.capacity = capacity;
         this.leakRate = leakRate;
         this.waterLevel = new AtomicLong(0);
-        this.lastLeakTimeNanos = new AtomicLong(System.nanoTime());
+        this.timeSource = timeSource;
+        this.lastLeakTimeNanos = new AtomicLong(timeSource.getAsLong());
         log.debug("漏桶初始化, capacity: {}, leakRate: {}/s", capacity, leakRate);
     }
 
@@ -141,7 +157,7 @@ public class LeakyBucket {
      * 水位不低于 0。
      */
     private void leakWater() {
-        long now = System.nanoTime();
+        long now = timeSource.getAsLong();
         long last = lastLeakTimeNanos.get();
         long elapsedNanos = now - last;
 
