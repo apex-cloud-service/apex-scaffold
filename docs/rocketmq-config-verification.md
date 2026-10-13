@@ -9,7 +9,7 @@
 
 ### 1. application.yml（开发环境）
 
-**配置位置**: [application.yml:725-768](../apex-interfaces/src/main/resources/application.yml#L725-L768)
+**配置位置**: [application.yml:725-768](../apex-system/src/main/resources/application.yml)
 
 **配置内容**:
 ```yaml
@@ -57,7 +57,7 @@ apex:
 
 ### 2. application-prod.yml（生产环境）
 
-**配置位置**: [application-prod.yml:382-413](../apex-interfaces/src/main/resources/application-prod.yml#L382-L413)
+**配置位置**: [application-prod.yml:382-413](../apex-system/src/main/resources/application-prod.yml)
 
 **配置内容**:
 ```yaml

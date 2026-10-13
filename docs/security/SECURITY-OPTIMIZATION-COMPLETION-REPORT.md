@@ -81,7 +81,7 @@
 - 密钥版本管理，支持密钥轮换
 - 集成Spring Security加密工具
 
-**代码位置**: [TokenEncryptionService.java](../../apex-auth-center/src/main/java/com/apex/scaffold/authcenter/domain/service/TokenEncryptionService.java)
+**代码位置**: [TokenEncryptionService.java](../../apex-auth/src/main/java/com/apex/scaffold/auth/domain/service/TokenEncryptionService.java)
 
 #### ✅ Refresh Token轮换机制
 **文件**: `TokenServiceImpl.java` (已更新)

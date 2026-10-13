@@ -40,42 +40,42 @@
 #### 1. **UserRepositoryTest** (2个失败 → 通过)
 - **问题**: 测试表缺少 `email` 和 `keycloak_sub` 字段
 - **修复**: 在 CREATE TABLE 语句中添加缺失字段
-- **文件**: [UserRepositoryTest.java](../../../apex-infrastructure/src/test/java/com/apex/scaffold/infrastructure/persistence/repository/UserRepositoryTest.java)
+- **文件**: [UserRepositoryTest.java](../../../apex-system/src/test/java/com/apex/scaffold/infrastructure/persistence/repository/UserRepositoryTest.java)
 
 #### 2. **SocialLoginHandlerTest** (4个失败 → 通过)
 - **问题**: 测试期望 HTTP 302，实际返回 307
 - **修复**: 修改测试断言为 307 (Temporary Redirect)
 - **原因**: Spring WebFlux `temporaryRedirect()` 使用 307 是正确行为
-- **文件**: [SocialLoginHandlerTest.java](../../../apex-interfaces/src/test/java/com/apex/scaffold/interfaces/handler/SocialLoginHandlerTest.java)
+- **文件**: [SocialLoginHandlerTest.java](../../../apex-system/src/test/java/com/apex/scaffold/interfaces/handler/SocialLoginHandlerTest.java)
 
 #### 3. **DataScopeAspect + DataScopeAspectTest** (1个失败 → 通过)
 - **问题**: 多构造函数时 Spring 无法确定使用哪个
 - **修复**: 将单参数构造函数改为 `private`，保留双参数为唯一 `public`
 - **文件**: 
-  - [DataScopeAspect.java](../../../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/aspect/DataScopeAspect.java) ✅ **生产代码**
-  - [DataScopeAspectTest.java](../../../apex-interfaces/src/test/java/com/apex/scaffold/interfaces/aspect/DataScopeAspectTest.java)
+  - [DataScopeAspect.java](../../../apex-system/src/main/java/com/apex/scaffold/interfaces/aspect/DataScopeAspect.java) ✅ **生产代码**
+  - [DataScopeAspectTest.java](../../../apex-system/src/test/java/com/apex/scaffold/interfaces/aspect/DataScopeAspectTest.java)
 
 #### 4. **DataScopeServiceTest** (1个错误 → 通过)
 - **问题**: 测试表缺少字段 + Spring 无法创建 bean
 - **修复**: 添加字段 + 手动指定 bean 创建逻辑
-- **文件**: [DataScopeServiceTest.java](../../../apex-interfaces/src/test/java/com/apex/scaffold/interfaces/aspect/DataScopeServiceTest.java)
+- **文件**: [DataScopeServiceTest.java](../../../apex-system/src/test/java/com/apex/scaffold/interfaces/aspect/DataScopeServiceTest.java)
 
 #### 5. **FlywayMigrationVersionTest** (1个失败 → 通过)
 - **问题**: 硬编码期望版本 1-22，实际有 1-26
 - **修复**: 改为动态读取并比较 MySQL/PostgreSQL 迁移版本
-- **文件**: [FlywayMigrationVersionTest.java](../../../apex-interfaces/src/test/java/com/apex/scaffold/interfaces/test/FlywayMigrationVersionTest.java)
+- **文件**: [FlywayMigrationVersionTest.java](../../../apex-system/src/test/java/com/apex/scaffold/interfaces/test/FlywayMigrationVersionTest.java)
 
 #### 6. **KeycloakConfigTest** (3个错误 → 跳过)
 - **问题**: 需要真实的 Keycloak 服务器环境
 - **修复**: 添加 `@Disabled` 注解，标记为集成测试
-- **文件**: [KeycloakConfigTest.java](../../../apex-interfaces/src/test/java/com/apex/scaffold/interfaces/config/KeycloakConfigTest.java)
+- **文件**: [KeycloakConfigTest.java](../../../apex-system/src/test/java/com/apex/scaffold/interfaces/config/KeycloakConfigTest.java)
 
 #### 7. **LayeringArchTest** (1个失败，160处违规 → 通过)
 - **问题**: 应用层的查询服务直接依赖基础设施层 PO 和 Mapper
 - **根因**: WorkflowQueryService、WorkflowStatisticsService、UnifiedBusinessLogService 遵循 CQRS 模式
 - **修复**: 调整 ArchUnit 规则，为查询服务（QueryService、StatisticsService、LogService）创建例外
 - **原理**: CQRS 模式下，查询服务允许直接访问数据层以优化性能
-- **文件**: [LayeringArchTest.java](../../../apex-interfaces/src/test/java/com/apex/scaffold/arch/LayeringArchTest.java) ✅ **测试代码**
+- **文件**: [LayeringArchTest.java](../../../apex-system/src/test/java/com/apex/scaffold/arch/LayeringArchTest.java) ✅ **测试代码**
 
 ---
 
@@ -83,7 +83,7 @@
 
 ### 修改的生产代码（2处）
 
-#### 1. [DataScopeAspect.java](../../../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/aspect/DataScopeAspect.java)
+#### 1. [DataScopeAspect.java](../../../apex-system/src/main/java/com/apex/scaffold/interfaces/aspect/DataScopeAspect.java)
 
 **修改内容**:
 ```java
@@ -100,7 +100,7 @@ public DataScopeAspect(DataScopeProvider dataScopeProvider,
 
 **符合规范**: ✅ 遵循 Spring 最佳实践，无需 `@Autowired` 注解
 
-#### 2. [LayeringArchTest.java](../../../apex-interfaces/src/test/java/com/apex/scaffold/arch/LayeringArchTest.java)
+#### 2. [LayeringArchTest.java](../../../apex-system/src/test/java/com/apex/scaffold/arch/LayeringArchTest.java)
 
 **修改内容**:
 ```java
@@ -242,20 +242,20 @@ assertThat(migrationVersions("postgresql"))
 
 | 文件 | 类型 | 修改内容 |
 |------|------|---------|
-| [DataScopeAspect.java](../../../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/aspect/DataScopeAspect.java) | 构造函数 | 单参数构造函数改为 private |
+| [DataScopeAspect.java](../../../apex-system/src/main/java/com/apex/scaffold/interfaces/aspect/DataScopeAspect.java) | 构造函数 | 单参数构造函数改为 private |
 
 ### 测试代码（8个文件）
 
 | 文件 | 类型 | 修改内容 |
 |------|------|---------|
-| [UserRepositoryTest.java](../../../apex-infrastructure/src/test/java/com/apex/scaffold/infrastructure/persistence/repository/UserRepositoryTest.java) | 表结构 | 添加 email 和 keycloak_sub 字段 |
-| [SocialLoginHandlerTest.java](../../../apex-interfaces/src/test/java/com/apex/scaffold/interfaces/handler/SocialLoginHandlerTest.java) | 断言 | HTTP 302 → 307 |
-| [DataScopeAspectTest.java](../../../apex-interfaces/src/test/java/com/apex/scaffold/interfaces/aspect/DataScopeAspectTest.java) | 构造调用 | 适配新构造函数设计 |
-| [DataScopeServiceTest.java](../../../apex-interfaces/src/test/java/com/apex/scaffold/interfaces/aspect/DataScopeServiceTest.java) | 表结构+Bean | 添加字段+手动创建bean |
-| [FlywayMigrationVersionTest.java](../../../apex-interfaces/src/test/java/com/apex/scaffold/interfaces/test/FlywayMigrationVersionTest.java) | 断言 | 动态版本检查 |
-| [PostgresqlMigrationVersionTest.java](../../../apex-interfaces/src/test/java/com/apex/scaffold/interfaces/test/PostgresqlMigrationVersionTest.java) | 断言 | 动态版本检查 |
-| [KeycloakConfigTest.java](../../../apex-interfaces/src/test/java/com/apex/scaffold/interfaces/config/KeycloakConfigTest.java) | 注解 | 添加 @Disabled |
-| [LayeringArchTest.java](../../../apex-interfaces/src/test/java/com/apex/scaffold/arch/LayeringArchTest.java) | 架构规则 | CQRS 查询服务例外 |
+| [UserRepositoryTest.java](../../../apex-system/src/test/java/com/apex/scaffold/infrastructure/persistence/repository/UserRepositoryTest.java) | 表结构 | 添加 email 和 keycloak_sub 字段 |
+| [SocialLoginHandlerTest.java](../../../apex-system/src/test/java/com/apex/scaffold/interfaces/handler/SocialLoginHandlerTest.java) | 断言 | HTTP 302 → 307 |
+| [DataScopeAspectTest.java](../../../apex-system/src/test/java/com/apex/scaffold/interfaces/aspect/DataScopeAspectTest.java) | 构造调用 | 适配新构造函数设计 |
+| [DataScopeServiceTest.java](../../../apex-system/src/test/java/com/apex/scaffold/interfaces/aspect/DataScopeServiceTest.java) | 表结构+Bean | 添加字段+手动创建bean |
+| [FlywayMigrationVersionTest.java](../../../apex-system/src/test/java/com/apex/scaffold/interfaces/test/FlywayMigrationVersionTest.java) | 断言 | 动态版本检查 |
+| [PostgresqlMigrationVersionTest.java](../../../apex-system/src/test/java/com/apex/scaffold/interfaces/test/PostgresqlMigrationVersionTest.java) | 断言 | 动态版本检查 |
+| [KeycloakConfigTest.java](../../../apex-system/src/test/java/com/apex/scaffold/interfaces/config/KeycloakConfigTest.java) | 注解 | 添加 @Disabled |
+| [LayeringArchTest.java](../../../apex-system/src/test/java/com/apex/scaffold/arch/LayeringArchTest.java) | 架构规则 | CQRS 查询服务例外 |
 
 ---
 

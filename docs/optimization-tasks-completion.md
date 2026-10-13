@@ -18,9 +18,9 @@
 
 | 任务 | 状态 | 完成度 | 新增文件/修改 |
 |-----|------|--------|--------------|
-| 1. Sentinel 规则文件监听 | ✅ 完成 | 100% | [SentinelRuleFileWatcher.java](../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/config/SentinelRuleFileWatcher.java) |
+| 1. Sentinel 规则文件监听 | ✅ 完成 | 100% | [SentinelRuleFileWatcher.java](../apex-system/src/main/java/com/apex/scaffold/interfaces/config/SentinelRuleFileWatcher.java) |
 | 2. 布隆过滤器定时重建 | ✅ 完成 | 100% | [BloomFilterRebuildTask.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/task/BloomFilterRebuildTask.java) |
-| 3. 自适应采样器 | ✅ 完成 | 100% | [AdaptiveSampler.java](../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/config/AdaptiveSampler.java) |
+| 3. 自适应采样器 | ✅ 完成 | 100% | AdaptiveSampler.java（历史文件已移除） |
 
 ### 中期任务（1-2月）- 66.7% 完成
 
@@ -39,7 +39,7 @@
 ### 2.1 ✅ Sentinel 规则文件监听（新增）
 
 #### 核心组件
-**文件**: [SentinelRuleFileWatcher.java](../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/config/SentinelRuleFileWatcher.java)
+**文件**: [SentinelRuleFileWatcher.java](../apex-system/src/main/java/com/apex/scaffold/interfaces/config/SentinelRuleFileWatcher.java)
 
 #### 功能特性
 - ✅ 使用 Java NIO `WatchService` 监听文件变化
@@ -77,7 +77,7 @@ apex:
 ### 2.2 ✅ 自适应采样器（新增）
 
 #### 核心组件
-**文件**: [AdaptiveSampler.java](../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/config/AdaptiveSampler.java)
+**文件**: AdaptiveSampler.java（历史文件已移除）
 
 #### 采样策略
 
@@ -122,7 +122,7 @@ trace:
 - ✅ 减少 Zipkin 存储压力
 
 #### 集成方式
-修改 [TraceConfig.java](../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/config/TraceConfig.java)：
+修改 TraceConfig.java（历史文件已移除）：
 ```java
 // 根据配置选择采样器
 Sampler sampler;
@@ -196,11 +196,11 @@ apex:
 
 **企业微信**：
 - [WeWorkService.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/wechat/service/WeWorkService.java)
-- [WecomMessageClient.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/office/client/WecomMessageClient.java)
+- [WecomMessageClient.java](../apex-office/src/main/java/com/apex/scaffold/office/infrastructure/client/WecomMessageClient.java)
 
 **钉钉**：
-- [DingTalkMessageClient.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/office/client/DingTalkMessageClient.java)
-- [DingTalkOrganizationClient.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/office/client/DingTalkOrganizationClient.java)
+- [DingTalkMessageClient.java](../apex-office/src/main/java/com/apex/scaffold/office/infrastructure/client/DingTalkMessageClient.java)
+- [DingTalkOrganizationClient.java](../apex-office/src/main/java/com/apex/scaffold/office/infrastructure/client/DingTalkOrganizationClient.java)
 
 #### 需要配置
 配置 Alertmanager 路由：
@@ -320,7 +320,7 @@ apex:
 ## 三、配置文件更新
 
 ### 3.1 开发环境配置
-**文件**: [application.yml](../apex-interfaces/src/main/resources/application.yml)
+**文件**: [application.yml](../apex-system/src/main/resources/application.yml)
 
 **更新内容**：
 ```yaml
@@ -342,7 +342,7 @@ trace:
 ```
 
 ### 3.2 生产环境配置
-**文件**: [application-prod.yml](../apex-interfaces/src/main/resources/application-prod.yml)
+**文件**: [application-prod.yml](../apex-system/src/main/resources/application-prod.yml)
 
 **更新内容**：
 ```yaml

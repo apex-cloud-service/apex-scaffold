@@ -30,7 +30,7 @@
 - ✅ 分析交互状态完整性
 - ✅ 评估代码质量
 
-**产出**: [前端页面审计报告.md](../../../../04-development/frontend/page-audit-report.md) (277行)
+**产出**: 前端页面审计报告.md（无现存目标） (277行)
 
 #### 1.2 监控配置验证
 - ✅ Management端点配置验证
@@ -57,7 +57,7 @@
 - ✅ 执行脚本文档(488行)
 
 **产出**: 
-- [前端按钮权限控制补充指南.md](../../../../04-development/frontend/button-permission-guide.md)
+- 前端按钮权限控制补充指南.md（无现存目标）
 - [前端按钮权限控制补充执行脚本.md](../task-implementations/frontend-button-permission-script.md)
 - frontend_button_permission_config.sql（目标不存在，无已核实替代文件；原路径：`file:///Users/work/apex-scaffold/frontend_button_permission_config.sql`）
 
@@ -80,7 +80,7 @@
 
 **产出**:
 - [scripts/check_javadoc.sh](../../../../../scripts/check_javadoc.sh)
-- [start_mysql_and_run_sql.sh](../../../../../start_mysql_and_run_sql.sh)
+- [start-mysql-and-run-sql.sh](../../../../../scripts/data/start-mysql-and-run-sql.sh)
 - deploy_monitoring_configs.sh（目标不存在，无已核实替代文件；原路径：`file:///Users/work/apex-scaffold/deploy_monitoring_configs.sh`）
 
 ---
@@ -95,7 +95,7 @@
 **产出**:
 - frontend-components/EmptyState.vue（目标不存在，无已核实替代文件；原路径：`file:///Users/work/apex-scaffold/frontend-components/EmptyState.vue`）
 - frontend-components/validate.ts（目标不存在，无已核实替代文件；原路径：`file:///Users/work/apex-scaffold/frontend-components/validate.ts`）
-- [前端组件使用指南.md](../../../../04-development/frontend/component-guide.md)
+- 前端组件使用指南.md（无现存目标）
 
 #### 3.2 监控配置实施
 - ✅ 17条告警规则配置完成
@@ -231,7 +231,7 @@ cd /Users/work/apex-scaffold
 
 **参考文档**:
 - [前端按钮权限控制补充执行脚本.md](../task-implementations/frontend-button-permission-script.md)
-- [前端组件使用指南.md](../../../../04-development/frontend/component-guide.md)
+- 前端组件使用指南.md（无现存目标）
 
 ---
 
@@ -514,7 +514,7 @@ cd /Users/work/apex-scaffold
 **关键文档**:
 - [任务执行最终完成报告.md](task-final-completion.md) - 执行指南
 - [后续任务完整实施方案.md](../task-implementations/follow-up-tasks-plan.md) - PromQL查询
-- [前端组件使用指南.md](../../../../04-development/frontend/component-guide.md) - 组件使用
+- 前端组件使用指南.md（无现存目标） - 组件使用
 
 **一键命令**:
 ```bash

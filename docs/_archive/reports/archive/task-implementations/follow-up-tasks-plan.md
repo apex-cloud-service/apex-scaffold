@@ -926,7 +926,7 @@ docker-compose restart grafana
 ## 📚 相关文档
 
 - [Grafana监控平台现状与配置总结.md](../../../operations/grafana-status-summary.md)
-- [前端开发规范.md](../../../../04-development/frontend-development-standards.md)
+- 前端开发规范.md（无现存目标）
 - [任务执行完成报告.md](../project-deliveries/task-completion-report.md)
 
 ---

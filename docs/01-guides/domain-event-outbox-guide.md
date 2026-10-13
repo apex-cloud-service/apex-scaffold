@@ -21,7 +21,7 @@ Apex Scaffold 采用 **Transactional Outbox 模式** 实现领域事件的可靠
 
 ### 2.1 本地消息表
 
-Outbox 表 [sys_domain_event_outbox](../../apex-interfaces/src/main/resources/db/migration/mysql/V1__init_schema.sql#L294-L321) 存储待投递的领域事件:
+Outbox 表 [sys_domain_event_outbox](../../apex-system/src/main/resources/db/migration/mysql/V1__init_schema.sql) 存储待投递的领域事件:
 
 ```sql
 CREATE TABLE IF NOT EXISTS `sys_domain_event_outbox` (

@@ -30,7 +30,7 @@
 
 #### 补充的 Router 类(3个)
 
-**1. [OfficeIntegrationRouter.java](../../../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/router/OfficeIntegrationRouter.java)**
+**1. OfficeIntegrationRouter.java（历史文件已移除）**
 - ✅ 添加完整的类级别 JavaDoc(包含路由列表)
 - ✅ 添加方法级别 JavaDoc
 - ✅ 为 13 个接口补充完整的 @Operation 注解
@@ -39,7 +39,7 @@
 - ✅ 所有接口包含: operationId、summary、description、tags、parameters、requestBody、responses
 - ✅ 所有描述使用中文,包含示例值
 
-**2. [OrgSyncRouter.java](../../../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/router/OrgSyncRouter.java)**
+**2. [OrgSyncRouter.java](../../../apex-office-service/src/main/java/com/apex/scaffold/officeservice/interfaces/off/router/OrgSyncRouter.java)**
 - ✅ 添加完整的类级别 JavaDoc
 - ✅ 添加方法级别 JavaDoc
 - ✅ 为 8 个接口补充完整的 @Operation 注解
@@ -49,7 +49,7 @@
 - ✅ 使用 SpringdocRouteBuilder 函数式 API
 - ✅ 所有参数包含类型、描述、示例值
 
-**3. [MessageRouter.java](../../../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/router/MessageRouter.java)**
+**3. [MessageRouter.java](../../../apex-office-service/src/main/java/com/apex/scaffold/officeservice/interfaces/off/router/MessageRouter.java)**
 - ✅ 添加完整的类级别 JavaDoc(包含两个 Bean 方法的说明)
 - ✅ 添加两个方法的方法级别 JavaDoc
 - ✅ 为 12 个接口补充完整的 @Operation 注解
@@ -60,13 +60,13 @@
 #### 补充的 DTO 类(7个)
 
 **workflow 包 DTO**:
-1. [StartProcessInstanceRequest.java](../../../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/dto/workflow/StartProcessInstanceRequest.java)
-2. [CompleteTaskRequest.java](../../../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/dto/workflow/CompleteTaskRequest.java)
-3. [RollbackTaskRequest.java](../../../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/dto/workflow/RollbackTaskRequest.java)
-4. [TransferTaskRequest.java](../../../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/dto/workflow/TransferTaskRequest.java)
-5. [DelegateTaskRequest.java](../../../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/dto/workflow/DelegateTaskRequest.java)
-6. [SuspendInstanceRequest.java](../../../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/dto/workflow/SuspendInstanceRequest.java)
-7. [ResumeInstanceRequest.java](../../../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/dto/workflow/ResumeInstanceRequest.java)
+1. [StartProcessInstanceRequest.java](../../../apex-workflow-service/src/main/java/com/apex/scaffold/workflowservice/interfaces/dto/workflow/StartProcessInstanceRequest.java)
+2. [CompleteTaskRequest.java](../../../apex-workflow-service/src/main/java/com/apex/scaffold/workflowservice/interfaces/dto/workflow/CompleteTaskRequest.java)
+3. [RollbackTaskRequest.java](../../../apex-workflow-service/src/main/java/com/apex/scaffold/workflowservice/interfaces/dto/workflow/RollbackTaskRequest.java)
+4. [TransferTaskRequest.java](../../../apex-workflow-service/src/main/java/com/apex/scaffold/workflowservice/interfaces/dto/workflow/TransferTaskRequest.java)
+5. [DelegateTaskRequest.java](../../../apex-workflow-service/src/main/java/com/apex/scaffold/workflowservice/interfaces/dto/workflow/DelegateTaskRequest.java)
+6. [SuspendInstanceRequest.java](../../../apex-workflow-service/src/main/java/com/apex/scaffold/workflowservice/interfaces/dto/workflow/SuspendInstanceRequest.java)
+7. [ResumeInstanceRequest.java](../../../apex-workflow-service/src/main/java/com/apex/scaffold/workflowservice/interfaces/dto/workflow/ResumeInstanceRequest.java)
 
 **每个 DTO 都添加了**:
 - ✅ 类级别 @Schema 注解(description)
@@ -120,13 +120,13 @@
 **检查结果**: ✅ 所有 53 个 Handler 类已有完整 JavaDoc
 
 **本次补充**: 2 个类的类级别 JavaDoc
-1. [SsoSessionHandler.java](../../../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/handler/SsoSessionHandler.java)
+1. [SsoSessionHandler.java](../../../apex-system/src/main/java/com/apex/scaffold/interfaces/handler/SsoSessionHandler.java)
    - ✅ 添加完整的类级别 JavaDoc
    - ✅ 添加核心功能说明
    - ✅ 添加接口清单(4个接口)
    - ✅ 方法 JavaDoc 已完整
 
-2. [SsoAuditLogHandler.java](../../../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/handler/SsoAuditLogHandler.java)
+2. [SsoAuditLogHandler.java](../../../apex-system/src/main/java/com/apex/scaffold/interfaces/handler/SsoAuditLogHandler.java)
    - ✅ 添加完整的类级别 JavaDoc
    - ✅ 添加审计范围说明
    - ✅ 添加接口清单(2个接口)
@@ -528,16 +528,16 @@ mvnd clean compile -DskipTests
 ### 改进的后端文件
 
 **Router 类**:
-- [OfficeIntegrationRouter.java](../../../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/router/OfficeIntegrationRouter.java)
-- [OrgSyncRouter.java](../../../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/router/OrgSyncRouter.java)
-- [MessageRouter.java](../../../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/router/MessageRouter.java)
+- OfficeIntegrationRouter.java（历史文件已移除）
+- [OrgSyncRouter.java](../../../apex-office-service/src/main/java/com/apex/scaffold/officeservice/interfaces/off/router/OrgSyncRouter.java)
+- [MessageRouter.java](../../../apex-office-service/src/main/java/com/apex/scaffold/officeservice/interfaces/off/router/MessageRouter.java)
 
 **DTO 类**:
 - workflow 包下 7 个 Request 类(详见 §1.2)
 
 **Handler 类**:
-- [SsoSessionHandler.java](../../../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/handler/SsoSessionHandler.java)
-- [SsoAuditLogHandler.java](../../../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/handler/SsoAuditLogHandler.java)
+- [SsoSessionHandler.java](../../../apex-system/src/main/java/com/apex/scaffold/interfaces/handler/SsoSessionHandler.java)
+- [SsoAuditLogHandler.java](../../../apex-system/src/main/java/com/apex/scaffold/interfaces/handler/SsoAuditLogHandler.java)
 
 ### 生成的脚本文件
 

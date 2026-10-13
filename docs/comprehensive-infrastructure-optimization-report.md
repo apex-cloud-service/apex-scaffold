@@ -52,7 +52,7 @@
    - 效果: 100万元素仅需1.2MB内存，O(k)时间复杂度
 
 2. **Sentinel 规则外部化**
-   - 文件: [SentinelDynamicRulesLoader.java](../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/config/SentinelDynamicRulesLoader.java)
+   - 文件: [SentinelDynamicRulesLoader.java](../apex-system/src/main/java/com/apex/scaffold/interfaces/config/SentinelDynamicRulesLoader.java)
    - 效果: 规则修改无需重启，支持热更新
 
 3. **链路追踪采样率提升**
@@ -128,7 +128,7 @@
 #### 优化项
 
 1. **监控指标增强**
-   - 文件: [GatewayMetrics.java](../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/metrics/GatewayMetrics.java)
+   - 文件: [GatewayMetrics.java](../apex-system/src/main/java/com/apex/scaffold/interfaces/metrics/GatewayMetrics.java)
    - 新增指标: 6 个
    - 覆盖维度: 连接、队列、限流、熔断
 
@@ -208,9 +208,9 @@
 
 | 配置文件 | 优化内容 |
 |---------|---------|
-| [application.yml](../apex-interfaces/src/main/resources/application.yml) | 基础配置、日志级别、追踪采样率 |
-| [application-prod.yml](../apex-interfaces/src/main/resources/application-prod.yml) | 生产环境配置、RocketMQ、Netty 性能调优 |
-| [logback-spring.xml](../apex-interfaces/src/main/resources/logback-spring.xml) | 日志配置、Appender、Logger 规则 |
+| [application.yml](../apex-system/src/main/resources/application.yml) | 基础配置、日志级别、追踪采样率 |
+| [application-prod.yml](../apex-system/src/main/resources/application-prod.yml) | 生产环境配置、RocketMQ、Netty 性能调优 |
+| [logback-spring.xml](../apex-system/src/main/resources/logback-spring.xml) | 日志配置、Appender、Logger 规则 |
 | [alert-rules.yml](../config/monitoring/prometheus/alert-rules.yml) | Prometheus 告警规则（22 个） |
 | [rocketmq-prod.yml](../config/rocketmq-prod.yml) | RocketMQ 生产环境增强配置 |
 | [sentinel-rules.json](../config/sentinel/sentinel-rules.json) | Sentinel 流控规则外部化 |

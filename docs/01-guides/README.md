@@ -74,9 +74,9 @@
 ## 🚀 快速链接
 
 - [返回文档中心](../README.md)
-- [快速开始](../00-getting-started/)
-- [架构设计](../02-architecture/)
-- [开发文档](../04-development/)
+- [快速开始](../00-getting-started/README.md)
+- [架构设计](../02-architecture/README.md)
+- [开发文档](../04-development/README.md)
 
 ---
 

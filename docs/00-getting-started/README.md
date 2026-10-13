@@ -87,9 +87,9 @@
 ## 🚀 快速链接
 
 - [返回文档中心](../README.md)
-- [使用指南](../01-guides/)
-- [架构设计](../02-architecture/)
-- [开发文档](../04-development/)
+- [使用指南](../01-guides/README.md)
+- [架构设计](../02-architecture/README.md)
+- [开发文档](../04-development/README.md)
 
 ---
 

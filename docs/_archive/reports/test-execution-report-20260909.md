@@ -40,14 +40,14 @@
   when(request.pathVariable("keycloakSub")).thenReturn(keycloakSub);
   ```
 - **影响测试**: `shouldReturnUserInfoWhenSyncSucceeds`, `shouldReturn500WhenUserSyncFails`
-- **修复文件**: [KeycloakAdminHandlerTest.java](../../../apex-interfaces/src/test/java/com/apex/scaffold/interfaces/handler/KeycloakAdminHandlerTest.java)
+- **修复文件**: [KeycloakAdminHandlerTest.java](../../../apex-system/src/test/java/com/apex/scaffold/interfaces/handler/KeycloakAdminHandlerTest.java)
 
 #### SocialLoginHandlerTest
 - **问题**: 社交登录测试混用 `ServerRequest.create()` 和 `when(request.pathVariable())`，导致路径变量不可用
 - **根因**: 生产代码通过 `request.pathVariable("provider")` 获取社交平台标识
 - **修复**: 统一改为 Mockito mock 提供路径变量
 - **影响测试**: `shouldRedirectToGoogleEndpoint`, `shouldRedirectToWeChatEndpoint`, `shouldReturn400ForUnsupportedProvider`
-- **修复文件**: [SocialLoginHandlerTest.java](../../../apex-interfaces/src/test/java/com/apex/scaffold/interfaces/handler/SocialLoginHandlerTest.java)
+- **修复文件**: [SocialLoginHandlerTest.java](../../../apex-system/src/test/java/com/apex/scaffold/interfaces/handler/SocialLoginHandlerTest.java)
 
 ### 2. 迁移版本契约测试过期
 
@@ -60,7 +60,7 @@
           .containsExactlyElementsOf(migrationVersions("mysql"));
   ```
 - **优势**: 无需在每次新增迁移脚本时手动更新测试，自动验证 MySQL/PostgreSQL 版本一致性契约
-- **修复文件**: [PostgresqlMigrationVersionTest.java](../../../apex-interfaces/src/test/java/com/apex/scaffold/interfaces/test/PostgresqlMigrationVersionTest.java)
+- **修复文件**: [PostgresqlMigrationVersionTest.java](../../../apex-system/src/test/java/com/apex/scaffold/interfaces/test/PostgresqlMigrationVersionTest.java)
 
 ### 3. 过期 API 测试删除
 
@@ -68,7 +68,7 @@
 - **问题**: 测试引用不存在的方法 `createUserInKeycloak(String, String)` 和已迁移的旧包 `javax.ws.rs.core.Response`
 - **根因**: 生产代码已迁移到 Jakarta REST API，旧测试未同步删除
 - **修复**: 删除整个过期测试嵌套类，保留真实存在的 `syncUserFromKeycloak` 和 `syncAllUsers` API 测试
-- **修复文件**: [KeycloakUserSyncServiceTest.java](../../../apex-interfaces/src/test/java/com/apex/scaffold/interfaces/service/KeycloakUserSyncServiceTest.java)
+- **修复文件**: [KeycloakUserSyncServiceTest.java](../../../apex-system/src/test/java/com/apex/scaffold/interfaces/service/KeycloakUserSyncServiceTest.java)
 
 ---
 

@@ -386,8 +386,8 @@ SELECT COUNT(*) AS '新增权限数' FROM sys_menu WHERE menu_type = 2 AND perms
 5. [Grafana监控平台现状与配置总结.md](../../../operations/grafana-status-summary.md)
 
 ### 审计报告
-6. [前端页面审计报告.md](../../../../04-development/frontend/page-audit-report.md)
-7. [前端按钮权限控制补充指南.md](../../../../04-development/frontend/button-permission-guide.md)
+6. 前端页面审计报告.md（无现存目标）
+7. 前端按钮权限控制补充指南.md（无现存目标）
 
 ### 代码文件
 - frontend_button_permission_config.sql（目标不存在，无已核实替代文件；原路径：`file:///Users/work/apex-scaffold/frontend_button_permission_config.sql`） - SQL脚本

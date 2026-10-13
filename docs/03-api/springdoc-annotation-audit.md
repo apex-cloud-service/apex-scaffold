@@ -59,7 +59,7 @@ OAuth2 端点和 Token 接口的元数据位于 `OAuth2EndpointRouter`、`OAuth2
 | 成功响应 | 200，`UnifiedAuthorizationResponse.UnifiedAuthorizationResult` Schema，即 `Result` 封装的快照 |
 | 错误响应 | 400 参数非法、401 未认证、403 禁止查询 |
 
-授权读取账号由 `AUTH_CENTER_AUTHORIZATION_READER_USER_ID` 指定，不要求管理员角色。中心从认证上下文取得租户，检查读取账号和目标账号同租户、启用、未锁定且未软删除。完整响应和主应用映射要求见[认证中心 README](../../apex-auth-center/README.md)与[配置说明](../05-operations/configuration.md#认证中心统一授权)。
+授权读取账号由 `AUTH_CENTER_AUTHORIZATION_READER_USER_ID` 指定，不要求管理员角色。中心从认证上下文取得租户，检查读取账号和目标账号同租户、启用、未锁定且未软删除。完整响应和主应用映射要求见[统一授权业务流程](../architecture/business-flows.md#三权限校验与统一授权流程)与[配置说明](../05-operations/configuration.md#认证中心统一授权)。
 
 认证中心登录和刷新直接返回 DTO，登出成功为 HTTP 200 空响应体；不能把其他接口的 `Result` 契约套用于这些入口。
 
@@ -72,5 +72,5 @@ OAuth2 端点和 Token 接口的元数据位于 `OAuth2EndpointRouter`、`OAuth2
 ## 参考
 
 - [SpringDoc 注解模板](springdoc-annotation-templates.md)
-- [认证中心验证指南](../../apex-auth-center/TESTING.md)
+- [统一授权 Handler 测试源码](../../apex-auth-service/src/test/java/com/apex/scaffold/authservice/interfaces/handler/UnifiedAuthorizationHandlerTest.java)
 - [OpenAPI 规范](https://swagger.io/specification/)

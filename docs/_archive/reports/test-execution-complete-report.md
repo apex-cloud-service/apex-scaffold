@@ -39,14 +39,14 @@
 - **问题**: 测试表缺少 `email` 和 `keycloak_sub` 字段
 - **修复**: 在 CREATE TABLE 语句中添加缺失字段
 - **影响**: 基础设施层数据访问测试
-- **修改文件**: [UserRepositoryTest.java](../../../apex-infrastructure/src/test/java/com/apex/scaffold/infrastructure/persistence/repository/UserRepositoryTest.java)
+- **修改文件**: [UserRepositoryTest.java](../../../apex-system/src/test/java/com/apex/scaffold/infrastructure/persistence/repository/UserRepositoryTest.java)
 
 #### 2. **SocialLoginHandlerTest** (4个失败 → 全部通过)
 - **问题**: 测试期望 HTTP 302，实际返回 307
 - **修复**: 修改测试断言，期望 307 (Temporary Redirect)
 - **原因**: Spring WebFlux `temporaryRedirect()` 使用 HTTP 307 是正确行为
 - **影响**: 社交登录接口测试
-- **修改文件**: [SocialLoginHandlerTest.java](../../../apex-interfaces/src/test/java/com/apex/scaffold/interfaces/handler/SocialLoginHandlerTest.java)
+- **修改文件**: [SocialLoginHandlerTest.java](../../../apex-system/src/test/java/com/apex/scaffold/interfaces/handler/SocialLoginHandlerTest.java)
 
 #### 3. **DataScopeAspect** + **DataScopeAspectTest** (1个失败 → 通过)
 - **问题**: 多构造函数时 Spring 无法确定使用哪个
@@ -56,8 +56,8 @@
   - Spring 自动选择唯一 public 构造函数进行依赖注入
 - **影响**: 数据权限 AOP 切面
 - **修改文件**: 
-  - [DataScopeAspect.java](../../../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/aspect/DataScopeAspect.java) ✅ **生产代码**
-  - [DataScopeAspectTest.java](../../../apex-interfaces/src/test/java/com/apex/scaffold/interfaces/aspect/DataScopeAspectTest.java)
+  - [DataScopeAspect.java](../../../apex-system/src/main/java/com/apex/scaffold/interfaces/aspect/DataScopeAspect.java) ✅ **生产代码**
+  - [DataScopeAspectTest.java](../../../apex-system/src/test/java/com/apex/scaffold/interfaces/aspect/DataScopeAspectTest.java)
 
 #### 4. **DataScopeServiceTest** (1个错误 → 通过)
 - **问题**: 
@@ -67,20 +67,20 @@
   - 在 CREATE TABLE 语句中添加缺失字段
   - 手动指定 bean 创建逻辑，提供双参数构造函数的参数
 - **影响**: 数据权限服务集成测试
-- **修改文件**: [DataScopeServiceTest.java](../../../apex-interfaces/src/test/java/com/apex/scaffold/interfaces/aspect/DataScopeServiceTest.java)
+- **修改文件**: [DataScopeServiceTest.java](../../../apex-system/src/test/java/com/apex/scaffold/interfaces/aspect/DataScopeServiceTest.java)
 
 #### 5. **FlywayMigrationVersionTest** (1个失败 → 通过)
 - **问题**: 硬编码期望版本 1-22，实际有 1-26
 - **修复**: 改为动态读取并比较 MySQL/PostgreSQL 迁移版本
 - **影响**: 数据库迁移契约测试
-- **修改文件**: [FlywayMigrationVersionTest.java](../../../apex-interfaces/src/test/java/com/apex/scaffold/interfaces/test/FlywayMigrationVersionTest.java)
+- **修改文件**: [FlywayMigrationVersionTest.java](../../../apex-system/src/test/java/com/apex/scaffold/interfaces/test/FlywayMigrationVersionTest.java)
 
 #### 6. **KeycloakConfigTest** (3个错误 → 跳过)
 - **问题**: 需要真实的 Keycloak 服务器环境
 - **修复**: 添加 `@Disabled` 注解，标记为集成测试
 - **原因**: 这是集成测试，应该在有 Keycloak 环境的 CI/CD 中运行
 - **影响**: Keycloak 配置测试
-- **修改文件**: [KeycloakConfigTest.java](../../../apex-interfaces/src/test/java/com/apex/scaffold/interfaces/config/KeycloakConfigTest.java)
+- **修改文件**: [KeycloakConfigTest.java](../../../apex-system/src/test/java/com/apex/scaffold/interfaces/config/KeycloakConfigTest.java)
 
 ---
 
@@ -92,7 +92,7 @@
 
 #### ✅ **DataScopeAspect** - 需要修改（已完成）
 
-**文件**: [DataScopeAspect.java](../../../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/aspect/DataScopeAspect.java)
+**文件**: [DataScopeAspect.java](../../../apex-system/src/main/java/com/apex/scaffold/interfaces/aspect/DataScopeAspect.java)
 
 **问题**: 
 - 有 3 个 public 构造函数，Spring 无法确定使用哪个
@@ -130,7 +130,7 @@ public DataScopeAspect(DataScopeProvider dataScopeProvider, ReactiveDataScopePro
 
 ### LayeringArchTest - 架构违规检查 (1个失败)
 
-**测试**: [LayeringArchTest.java](../../../apex-interfaces/src/test/java/com/apex/scaffold/arch/LayeringArchTest.java)
+**测试**: [LayeringArchTest.java](../../../apex-system/src/test/java/com/apex/scaffold/arch/LayeringArchTest.java)
 
 **失败测试**: `application_does_not_depend_on_interfaces_or_infrastructure`
 
@@ -300,19 +300,19 @@ assertThat(mysqlVersions)
 
 | 文件 | 修改类型 | 说明 |
 |------|---------|------|
-| [DataScopeAspect.java](../../../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/aspect/DataScopeAspect.java) | 构造函数可见性调整 | 单参数构造函数改为 private，确保 Spring 使用双参数构造函数 |
+| [DataScopeAspect.java](../../../apex-system/src/main/java/com/apex/scaffold/interfaces/aspect/DataScopeAspect.java) | 构造函数可见性调整 | 单参数构造函数改为 private，确保 Spring 使用双参数构造函数 |
 
 ### 测试代码修改 (7个文件)
 
 | 文件 | 修改类型 | 说明 |
 |------|---------|------|
-| [UserRepositoryTest.java](../../../apex-infrastructure/src/test/java/com/apex/scaffold/infrastructure/persistence/repository/UserRepositoryTest.java) | 表结构修复 | 添加 email 和 keycloak_sub 字段 |
-| [SocialLoginHandlerTest.java](../../../apex-interfaces/src/test/java/com/apex/scaffold/interfaces/handler/SocialLoginHandlerTest.java) | 状态码断言 | 302 → 307 |
-| [DataScopeAspectTest.java](../../../apex-interfaces/src/test/java/com/apex/scaffold/interfaces/aspect/DataScopeAspectTest.java) | 构造函数调用 | 适配新的构造函数设计 |
-| [DataScopeServiceTest.java](../../../apex-interfaces/src/test/java/com/apex/scaffold/interfaces/aspect/DataScopeServiceTest.java) | 表结构 + Bean创建 | 添加字段 + 手动指定 bean 创建逻辑 |
-| [FlywayMigrationVersionTest.java](../../../apex-interfaces/src/test/java/com/apex/scaffold/interfaces/test/FlywayMigrationVersionTest.java) | 动态版本检查 | 改为动态读取迁移版本 |
-| [KeycloakConfigTest.java](../../../apex-interfaces/src/test/java/com/apex/scaffold/interfaces/config/KeycloakConfigTest.java) | 测试禁用 | 添加 @Disabled 注解 |
-| [PostgresqlMigrationVersionTest.java](../../../apex-interfaces/src/test/java/com/apex/scaffold/interfaces/test/PostgresqlMigrationVersionTest.java) | 动态版本检查 | 改为动态读取迁移版本（早期修复） |
+| [UserRepositoryTest.java](../../../apex-system/src/test/java/com/apex/scaffold/infrastructure/persistence/repository/UserRepositoryTest.java) | 表结构修复 | 添加 email 和 keycloak_sub 字段 |
+| [SocialLoginHandlerTest.java](../../../apex-system/src/test/java/com/apex/scaffold/interfaces/handler/SocialLoginHandlerTest.java) | 状态码断言 | 302 → 307 |
+| [DataScopeAspectTest.java](../../../apex-system/src/test/java/com/apex/scaffold/interfaces/aspect/DataScopeAspectTest.java) | 构造函数调用 | 适配新的构造函数设计 |
+| [DataScopeServiceTest.java](../../../apex-system/src/test/java/com/apex/scaffold/interfaces/aspect/DataScopeServiceTest.java) | 表结构 + Bean创建 | 添加字段 + 手动指定 bean 创建逻辑 |
+| [FlywayMigrationVersionTest.java](../../../apex-system/src/test/java/com/apex/scaffold/interfaces/test/FlywayMigrationVersionTest.java) | 动态版本检查 | 改为动态读取迁移版本 |
+| [KeycloakConfigTest.java](../../../apex-system/src/test/java/com/apex/scaffold/interfaces/config/KeycloakConfigTest.java) | 测试禁用 | 添加 @Disabled 注解 |
+| [PostgresqlMigrationVersionTest.java](../../../apex-system/src/test/java/com/apex/scaffold/interfaces/test/PostgresqlMigrationVersionTest.java) | 动态版本检查 | 改为动态读取迁移版本（早期修复） |
 
 ---
 

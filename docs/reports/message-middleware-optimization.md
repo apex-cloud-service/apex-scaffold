@@ -107,7 +107,7 @@ apex-interfaces → apex-application → apex-domain ← apex-infrastructure
 ```
 
 **✅ 架构测试验证**
-- [LayeringArchTest.java](../../apex-interfaces/src/test/java/com/apex/scaffold/arch/LayeringArchTest.java) 使用 ArchUnit 自动校验
+- [LayeringArchTest.java](../../apex-system/src/test/java/com/apex/scaffold/arch/LayeringArchTest.java) 使用 ArchUnit 自动校验
 
 **⚠️ 发现的违规问题**
 
@@ -115,7 +115,7 @@ apex-interfaces → apex-application → apex-domain ← apex-infrastructure
    - [RemoteClientFailure.java](../../apex-domain/src/main/java/com/apex/scaffold/domain/gateway/RemoteClientFailure.java) 从 infrastructure 包导入(虽然是接口契约,但包名违规)
 
 2. **application 层依赖 infrastructure**
-   - [application/pom.xml](../../apex-application/pom.xml#L32-L33) 直接依赖 apex-infrastructure
+   - [application/pom.xml](../../apex-system/pom.xml) 直接依赖 apex-infrastructure
    - 事务边界和 DTO 转换应在 application 层,但仓储实现不应被直接依赖
 
 3. **消息监听器位置**

@@ -289,7 +289,7 @@ cd /Users/work/apex-scaffold
    - 告警规则完整配置
    - Zipkin集成方案
 
-5. [前端组件使用指南.md](../../../../04-development/frontend/component-guide.md) ⭐ **组件使用**
+5. 前端组件使用指南.md（无现存目标） ⭐ **组件使用**
    - EmptyState完整示例
    - validate使用方法
    - 修改前后对比
@@ -309,7 +309,7 @@ cd /Users/work/apex-scaffold
 ### 工具脚本
 
 11. deploy_monitoring_configs.sh（目标不存在，无已核实替代文件；原路径：`file:///Users/work/apex-scaffold/deploy_monitoring_configs.sh`） - 监控部署
-12. [start_mysql_and_run_sql.sh](../../../../../start_mysql_and_run_sql.sh) - MySQL启动
+12. [start-mysql-and-run-sql.sh](../../../../../scripts/data/start-mysql-and-run-sql.sh) - MySQL启动
 13. [check_javadoc.sh](../../../../../scripts/check_javadoc.sh) - JavaDoc检查
 
 ---

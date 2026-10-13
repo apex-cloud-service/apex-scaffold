@@ -522,7 +522,7 @@ const beforeUpload = (file: File) => {
 
 ### 8.1 内部文档
 - [实现一致性修正报告](../_archive/trae-reports/2026-09/implementation-consistency-fix-report.md)
-- [四张时序图](../diagrams/sequence/)
+- [四张时序图](../diagrams/sequence/README.md)
 - [环境变量管理指南](../_archive/operations/environment-variables.md)
 
 ### 8.2 OpenAPI 文档

@@ -276,7 +276,7 @@ cd /Users/work/apex-scaffold
    - npm run build验证
 
 **参考文档**:
-- [前端组件使用指南.md](../../../../04-development/frontend/component-guide.md)
+- 前端组件使用指南.md（无现存目标）
 - [前端按钮权限控制补充执行脚本.md](../task-implementations/frontend-button-permission-script.md)
 
 ---
@@ -405,7 +405,7 @@ cd /Users/work/apex-scaffold
 ### 实施指南
 
 5. [后续任务完整实施方案.md](../task-implementations/follow-up-tasks-plan.md) - Grafana PromQL
-6. [前端组件使用指南.md](../../../../04-development/frontend/component-guide.md) - 组件使用
+6. 前端组件使用指南.md（无现存目标） - 组件使用
 7. [前端按钮权限控制补充执行脚本.md](../task-implementations/frontend-button-permission-script.md) - 权限控制
 8. [MySQL启动与SQL执行指南.md](../../../operations/mysql-startup-guide.md) - 数据库
 
@@ -419,7 +419,7 @@ cd /Users/work/apex-scaffold
 ### 工具脚本
 
 13. deploy_monitoring_configs.sh（目标不存在，无已核实替代文件；原路径：`file:///Users/work/apex-scaffold/deploy_monitoring_configs.sh`） - 监控部署
-14. [start_mysql_and_run_sql.sh](../../../../../start_mysql_and_run_sql.sh) - MySQL启动
+14. [start-mysql-and-run-sql.sh](../../../../../scripts/data/start-mysql-and-run-sql.sh) - MySQL启动
 15. [check_javadoc.sh](../../../../../scripts/check_javadoc.sh) - JavaDoc检查
 
 ---

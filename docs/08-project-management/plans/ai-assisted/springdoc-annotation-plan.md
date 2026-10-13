@@ -699,13 +699,13 @@ mvnd pmd:check
 ### 10.2 示例文件
 
 **Handler 示例**：
-- [AuthHandler.java](../../../../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/handler/AuthHandler.java)
-- [UserHandler.java](../../../../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/handler/UserHandler.java)
-- [MenuHandler.java](../../../../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/handler/MenuHandler.java)
+- [AuthHandler.java](../../../../apex-system/src/main/java/com/apex/scaffold/interfaces/handler/AuthHandler.java)
+- [UserHandler.java](../../../../apex-system/src/main/java/com/apex/scaffold/interfaces/handler/UserHandler.java)
+- [MenuHandler.java](../../../../apex-system/src/main/java/com/apex/scaffold/interfaces/handler/MenuHandler.java)
 
 **Service 示例**：
-- [UserService.java](../../../../apex-application/src/main/java/com/apex/scaffold/application/service/UserService.java)
-- [MenuService.java](../../../../apex-application/src/main/java/com/apex/scaffold/application/service/MenuService.java)
+- [UserService.java](../../../../apex-system/src/main/java/com/apex/scaffold/application/service/UserService.java)
+- [MenuService.java](../../../../apex-system/src/main/java/com/apex/scaffold/application/service/MenuService.java)
 
 ### 10.3 工具脚本
 

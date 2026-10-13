@@ -37,7 +37,7 @@
 
 #### 1. Application 层 ✅
 
-**TokenServiceImpl** ([查看代码](../../../apex-auth-center/src/main/java/com/apex/scaffold/authcenter/application/service/TokenServiceImpl.java))
+**TokenServiceImpl** ([查看代码](../../../apex-auth/src/main/java/com/apex/scaffold/auth/application/service/TokenServiceImpl.java))
 - ✅ `issueToken`: JWT 签发（访问令牌 2h + 刷新令牌 7d）
 - ✅ `validateToken`: 签名验证、过期检测、撤销检查
 - ✅ `refreshToken`: 刷新令牌换新访问令牌
@@ -45,7 +45,7 @@
 - ✅ `revokeAllUserTokens`: 批量撤销
 - ✅ `extractUserId`: 从 Token 提取用户 ID
 
-**AuthenticationApplicationService** ([查看代码](../../../apex-auth-center/src/main/java/com/apex/scaffold/authcenter/application/service/AuthenticationApplicationService.java))
+**AuthenticationApplicationService** ([查看代码](../../../apex-auth/src/main/java/com/apex/scaffold/auth/application/service/AuthenticationApplicationService.java))
 - ✅ `login`: 用户名密码登录、BCrypt 验证、失败记录
 - ✅ `logout`: 撤销所有 Token
 - ✅ `refreshToken`: Token 刷新流程
@@ -57,27 +57,27 @@
 
 #### 2. Interfaces 层 ✅
 
-**AuthenticationHandler** ([查看代码](../../../apex-auth-center/src/main/java/com/apex/scaffold/authcenter/interfaces/handler/AuthenticationHandler.java))
+**AuthenticationHandler** ([查看代码](../../../apex-auth-service/src/main/java/com/apex/scaffold/authservice/interfaces/handler/AuthenticationHandler.java))
 - ✅ `login`: POST /auth/v1/login
 - ✅ `logout`: POST /auth/v1/logout/{userId}
 - ✅ `refreshToken`: POST /auth/v1/refresh
 
-**AuthenticationRouter** ([查看代码](../../../apex-auth-center/src/main/java/com/apex/scaffold/authcenter/interfaces/router/AuthenticationRouter.java))
+**AuthenticationRouter** ([查看代码](../../../apex-auth-service/src/main/java/com/apex/scaffold/authservice/interfaces/router/AuthenticationRouter.java))
 - ✅ 函数式路由配置
 - ✅ Content-Type 验证
 - ✅ RESTful 设计
 
 #### 3. 配置与启动 ✅
 
-**启动类**: [AuthCenterApplication.java](../../../apex-auth-center/src/main/java/com/apex/scaffold/authcenter/AuthCenterApplication.java)  
-**配置**: [application.yml](../../../apex-auth-center/src/main/resources/application.yml)  
-**安全配置**: [AuthCenterConfig.java](../../../apex-auth-center/src/main/java/com/apex/scaffold/authcenter/config/AuthCenterConfig.java)
+**启动类**: [AuthCenterApplication.java](../../../apex-auth-service/src/main/java/com/apex/scaffold/authservice/AuthServiceApplication.java)\
+**配置**: [application.yml](../../../apex-auth-service/src/main/resources/application.yml)\
+**安全配置**: [AuthCenterConfig.java](../../../apex-auth-service/src/main/java/com/apex/scaffold/authservice/config/AuthCenterConfig.java)
 
 #### 4. 测试数据 ✅
 
 **Flyway 种子脚本**:
-- [V46__insert_test_users.sql (MySQL)](../../../apex-auth-center/src/main/resources/db/migration/mysql/V46__insert_test_users.sql)
-- [V46__insert_test_users.sql (PostgreSQL)](../../../apex-auth-center/src/main/resources/db/migration/postgresql/V46__insert_test_users.sql)
+- [V46__insert_test_users.sql (MySQL)](../../../apex-auth-service/src/main/resources/db/migration/mysql/V46__insert_test_users.sql)
+- [V46__insert_test_users.sql (PostgreSQL)](../../../apex-auth-service/src/main/resources/db/migration/postgresql/V46__insert_test_users.sql)
 
 **测试账户**:
 | 用户名 | 密码 | 租户 | 角色 |
@@ -88,7 +88,7 @@
 
 #### 5. 测试文档 ✅
 
-**完整验证指南**: [TESTING.md](../../../apex-auth-center/TESTING.md)
+**完整验证指南**: TESTING.md（无现存目标）
 
 包含:
 - ✅ 环境准备步骤
@@ -239,7 +239,7 @@ curl -X POST http://localhost:8081/auth/v1/login \
 
 ### 3. 查看文档
 - **接口文档**: http://localhost:8081/swagger-ui.html
-- **测试指南**: [TESTING.md](../../../apex-auth-center/TESTING.md)
+- **测试指南**: TESTING.md（无现存目标）
 - **设计方案**: [unified-auth-center-design.md](unified-auth-center-design.md)
 
 ---

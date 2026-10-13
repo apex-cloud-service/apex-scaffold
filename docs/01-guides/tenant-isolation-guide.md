@@ -346,7 +346,7 @@ apex:
 
 ### 7.1 HTTP 请求租户装配
 
-[TenantAspect](../../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/aspect/TenantAspect.java) 从请求头提取租户 ID:
+[TenantAspect](../../apex-system/src/main/java/com/apex/scaffold/interfaces/aspect/TenantAspect.java) 从请求头提取租户 ID:
 
 ```java
 @Aspect

@@ -15,8 +15,8 @@
 
 | 文件 | 位置 | 状态 |
 |------|------|------|
-| MySQL 迁移脚本 | [`apex-interfaces/src/main/resources/db/migration/mysql/V41__add_generator_auth_sso_office_tables.sql`](../../apex-interfaces/src/main/resources/db/migration/mysql/V41__add_generator_auth_sso_office_tables.sql) | ✅ 完成 |
-| PostgreSQL 迁移脚本 | [`apex-interfaces/src/main/resources/db/migration/postgresql/V41__add_generator_auth_sso_office_tables.sql`](../../apex-interfaces/src/main/resources/db/migration/postgresql/V41__add_generator_auth_sso_office_tables.sql) | ✅ 完成 |
+| MySQL 迁移脚本 | [`apex-interfaces/src/main/resources/db/migration/mysql/V41__add_generator_auth_sso_office_tables.sql`](../../apex-system/src/main/resources/db/migration/mysql/V41__add_generator_auth_sso_office_tables.sql) | ✅ 完成 |
+| PostgreSQL 迁移脚本 | [`apex-interfaces/src/main/resources/db/migration/postgresql/V41__add_generator_auth_sso_office_tables.sql`](../../apex-system/src/main/resources/db/migration/postgresql/V41__add_generator_auth_sso_office_tables.sql) | ✅ 完成 |
 
 #### 数据库表 (11张)
 
@@ -47,10 +47,10 @@
 #### 文件清单 (49个文件)
 
 **Domain 层** (7个文件):
-- ✅ [`GenDatasourceEntity.java`](../../apex-domain/src/main/java/com/apex/scaffold/domain/model/entity/GenDatasourceEntity.java) - 数据源实体
-- ✅ [`GenConfigEntity.java`](../../apex-domain/src/main/java/com/apex/scaffold/domain/model/entity/GenConfigEntity.java) - 配置实体
-- ✅ [`GenTemplateEntity.java`](../../apex-domain/src/main/java/com/apex/scaffold/domain/model/entity/GenTemplateEntity.java) - 模板实体
-- ✅ [`GenDatasourceRepository.java`](../../apex-domain/src/main/java/com/apex/scaffold/domain/repository/GenDatasourceRepository.java) - 数据源仓储接口
+- ✅ [`GenDatasourceEntity.java`](../../apex-system/src/main/java/com/apex/scaffold/domain/model/entity/GenDatasourceEntity.java) - 数据源实体
+- ✅ [`GenConfigEntity.java`](../../apex-system/src/main/java/com/apex/scaffold/domain/model/entity/GenConfigEntity.java) - 配置实体
+- ✅ [`GenTemplateEntity.java`](../../apex-system/src/main/java/com/apex/scaffold/domain/model/entity/GenTemplateEntity.java) - 模板实体
+- ✅ [`GenDatasourceRepository.java`](../../apex-system/src/main/java/com/apex/scaffold/domain/repository/GenDatasourceRepository.java) - 数据源仓储接口
 - ✅ `GenConfigRepository.java` - 配置仓储接口
 - ✅ `GenTemplateRepository.java` - 模板仓储接口
 - ✅ `GenHistoryRepository.java` - 历史仓储接口
@@ -146,9 +146,9 @@
 #### 文件清单 (38个文件)
 
 **Domain 层** (6个文件):
-- ✅ [`SysSsoProviderEntity.java`](../../apex-domain/src/main/java/com/apex/scaffold/domain/model/entity/SysSsoProviderEntity.java) - SSO 提供商实体
-- ✅ [`SysSsoSessionEntity.java`](../../apex-domain/src/main/java/com/apex/scaffold/domain/model/entity/SysSsoSessionEntity.java) - SSO 会话实体
-- ✅ [`SysSsoAuditLogEntity.java`](../../apex-domain/src/main/java/com/apex/scaffold/domain/model/entity/SysSsoAuditLogEntity.java) - SSO 审计日志实体
+- ✅ [`SysSsoProviderEntity.java`](../../apex-system/src/main/java/com/apex/scaffold/domain/model/entity/SysSsoProviderEntity.java) - SSO 提供商实体
+- ✅ [`SysSsoSessionEntity.java`](../../apex-system/src/main/java/com/apex/scaffold/domain/model/entity/SysSsoSessionEntity.java) - SSO 会话实体
+- ✅ [`SysSsoAuditLogEntity.java`](../../apex-system/src/main/java/com/apex/scaffold/domain/model/entity/SysSsoAuditLogEntity.java) - SSO 审计日志实体
 - ✅ 对应 Repository 接口 (3个)
 
 **Infrastructure 层** (12个文件):
@@ -157,10 +157,10 @@
 **Application 层** (18个文件):
 - ✅ Service: SysSsoProviderService, SysSsoSessionService, SysSsoAuditLogService
 - ✅ **协议适配器** (4个):
-  - ✅ [`SamlProtocolAdapter.java`](../../apex-application/src/main/java/com/apex/scaffold/application/support/sso/SamlProtocolAdapter.java) - SAML 2.0 实现
-  - ✅ [`CasProtocolAdapter.java`](../../apex-application/src/main/java/com/apex/scaffold/application/support/sso/CasProtocolAdapter.java) - CAS 2.0/3.0 实现
-  - ✅ [`LdapProtocolAdapter.java`](../../apex-application/src/main/java/com/apex/scaffold/application/support/sso/LdapProtocolAdapter.java) - LDAP 实现
-  - ✅ [`OidcProtocolAdapter.java`](../../apex-application/src/main/java/com/apex/scaffold/application/support/sso/OidcProtocolAdapter.java) - OIDC/OAuth 2.0 实现
+  - ✅ [`SamlProtocolAdapter.java`](../../apex-system/src/main/java/com/apex/scaffold/application/support/sso/SamlProtocolAdapter.java) - SAML 2.0 实现
+  - ✅ [`CasProtocolAdapter.java`](../../apex-system/src/main/java/com/apex/scaffold/application/support/sso/CasProtocolAdapter.java) - CAS 2.0/3.0 实现
+  - ✅ [`LdapProtocolAdapter.java`](../../apex-system/src/main/java/com/apex/scaffold/application/support/sso/LdapProtocolAdapter.java) - LDAP 实现
+  - ✅ [`OidcProtocolAdapter.java`](../../apex-system/src/main/java/com/apex/scaffold/application/support/sso/OidcProtocolAdapter.java) - OIDC/OAuth 2.0 实现
 - ✅ DTO: 9 个 Request/Response/DTO 类
 
 **Interfaces 层** (8个文件):

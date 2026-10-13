@@ -41,8 +41,8 @@
 #### Flyway V41 迁移脚本
 
 **文件位置**:
-- MySQL: [`apex-interfaces/src/main/resources/db/migration/mysql/V41__add_generator_auth_sso_office_tables.sql`](../../apex-interfaces/src/main/resources/db/migration/mysql/V41__add_generator_auth_sso_office_tables.sql)
-- PostgreSQL: [`apex-interfaces/src/main/resources/db/migration/postgresql/V41__add_generator_auth_sso_office_tables.sql`](../../apex-interfaces/src/main/resources/db/migration/postgresql/V41__add_generator_auth_sso_office_tables.sql)
+- MySQL: [`apex-interfaces/src/main/resources/db/migration/mysql/V41__add_generator_auth_sso_office_tables.sql`](../../apex-system/src/main/resources/db/migration/mysql/V41__add_generator_auth_sso_office_tables.sql)
+- PostgreSQL: [`apex-interfaces/src/main/resources/db/migration/postgresql/V41__add_generator_auth_sso_office_tables.sql`](../../apex-system/src/main/resources/db/migration/postgresql/V41__add_generator_auth_sso_office_tables.sql)
 
 **包含表结构** (11张表):
 
@@ -74,12 +74,12 @@
 #### Domain 层 (4个文件)
 
 **实体类**:
-- [`GenDatasourceEntity`](../../apex-domain/src/main/java/com/apex/scaffold/domain/model/entity/GenDatasourceEntity.java): 数据源实体
-- [`GenConfigEntity`](../../apex-domain/src/main/java/com/apex/scaffold/domain/model/entity/GenConfigEntity.java): 生成配置实体
-- [`GenTemplateEntity`](../../apex-domain/src/main/java/com/apex/scaffold/domain/model/entity/GenTemplateEntity.java): 模板实体
+- [`GenDatasourceEntity`](../../apex-system/src/main/java/com/apex/scaffold/domain/model/entity/GenDatasourceEntity.java): 数据源实体
+- [`GenConfigEntity`](../../apex-system/src/main/java/com/apex/scaffold/domain/model/entity/GenConfigEntity.java): 生成配置实体
+- [`GenTemplateEntity`](../../apex-system/src/main/java/com/apex/scaffold/domain/model/entity/GenTemplateEntity.java): 模板实体
 
 **Repository 接口**:
-- [`GenDatasourceRepository`](../../apex-domain/src/main/java/com/apex/scaffold/domain/repository/GenDatasourceRepository.java): 数据源仓储接口
+- [`GenDatasourceRepository`](../../apex-system/src/main/java/com/apex/scaffold/domain/repository/GenDatasourceRepository.java): 数据源仓储接口
 
 #### Infrastructure 层 (15个文件)
 
@@ -191,18 +191,18 @@ PO + Mapper + Converter + Repository 实现
 #### Domain 层 (6个文件)
 
 **实体类**:
-- [`SysSsoProviderEntity`](../../apex-domain/src/main/java/com/apex/scaffold/domain/model/entity/SysSsoProviderEntity.java): SSO 提供商实体
-- [`SysSsoSessionEntity`](../../apex-domain/src/main/java/com/apex/scaffold/domain/model/entity/SysSsoSessionEntity.java): SSO 会话实体
-- [`SysSsoAuditLogEntity`](../../apex-domain/src/main/java/com/apex/scaffold/domain/model/entity/SysSsoAuditLogEntity.java): SSO 审计日志实体
+- [`SysSsoProviderEntity`](../../apex-system/src/main/java/com/apex/scaffold/domain/model/entity/SysSsoProviderEntity.java): SSO 提供商实体
+- [`SysSsoSessionEntity`](../../apex-system/src/main/java/com/apex/scaffold/domain/model/entity/SysSsoSessionEntity.java): SSO 会话实体
+- [`SysSsoAuditLogEntity`](../../apex-system/src/main/java/com/apex/scaffold/domain/model/entity/SysSsoAuditLogEntity.java): SSO 审计日志实体
 
 **枚举类型**:
 - `SsoProtocol`: SAML / CAS / LDAP / OIDC
 - `SsoSessionStatus`: ACTIVE / EXPIRED / LOGOUT / REVOKED
 
 **Repository 接口**:
-- [`SysSsoProviderRepository`](../../apex-domain/src/main/java/com/apex/scaffold/domain/repository/SysSsoProviderRepository.java)
-- [`SysSsoSessionRepository`](../../apex-domain/src/main/java/com/apex/scaffold/domain/repository/SysSsoSessionRepository.java)
-- [`SysSsoAuditLogRepository`](../../apex-domain/src/main/java/com/apex/scaffold/domain/repository/SysSsoAuditLogRepository.java)
+- [`SysSsoProviderRepository`](../../apex-system/src/main/java/com/apex/scaffold/domain/repository/SysSsoProviderRepository.java)
+- [`SysSsoSessionRepository`](../../apex-system/src/main/java/com/apex/scaffold/domain/repository/SysSsoSessionRepository.java)
+- [`SysSsoAuditLogRepository`](../../apex-system/src/main/java/com/apex/scaffold/domain/repository/SysSsoAuditLogRepository.java)
 
 #### Infrastructure 层 (12个文件)
 
@@ -216,10 +216,10 @@ PO + Mapper + Converter + Repository 实现
 - `SysSsoAuditLogService`: SSO 审计日志服务
 
 **SSO 协议适配器** (核心):
-- [`SamlProtocolAdapter`](../../apex-application/src/main/java/com/apex/scaffold/application/support/sso/SamlProtocolAdapter.java): SAML 2.0 协议实现
-- [`CasProtocolAdapter`](../../apex-application/src/main/java/com/apex/scaffold/application/support/sso/CasProtocolAdapter.java): CAS 2.0/3.0 协议实现
-- [`LdapProtocolAdapter`](../../apex-application/src/main/java/com/apex/scaffold/application/support/sso/LdapProtocolAdapter.java): LDAP 认证实现
-- [`OidcProtocolAdapter`](../../apex-application/src/main/java/com/apex/scaffold/application/support/sso/OidcProtocolAdapter.java): OIDC/OAuth 2.0 实现
+- [`SamlProtocolAdapter`](../../apex-system/src/main/java/com/apex/scaffold/application/support/sso/SamlProtocolAdapter.java): SAML 2.0 协议实现
+- [`CasProtocolAdapter`](../../apex-system/src/main/java/com/apex/scaffold/application/support/sso/CasProtocolAdapter.java): CAS 2.0/3.0 协议实现
+- [`LdapProtocolAdapter`](../../apex-system/src/main/java/com/apex/scaffold/application/support/sso/LdapProtocolAdapter.java): LDAP 认证实现
+- [`OidcProtocolAdapter`](../../apex-system/src/main/java/com/apex/scaffold/application/support/sso/OidcProtocolAdapter.java): OIDC/OAuth 2.0 实现
 
 **协议实现特性**:
 

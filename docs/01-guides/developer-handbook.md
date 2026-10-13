@@ -812,8 +812,8 @@ mvnd spring-boot:run -pl apex-interfaces
 ### 11.1 文档资源
 
 - 📖 [在线文档](https://docs.apex-scaffold.com)
-- 📁 [项目文档目录](../)
-- 📊 [架构图集](../02-architecture/)
+- 📁 [项目文档目录](../README.md)
+- 📊 [架构图集](../02-architecture/README.md)
 
 ### 11.2 社区支持
 

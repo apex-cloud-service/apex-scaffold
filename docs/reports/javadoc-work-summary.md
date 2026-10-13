@@ -1061,7 +1061,7 @@ mvnd clean compile -DskipTests
 // 已删除重复注释，保留第 19-45 行的完整 JavaDoc
 ```
 
-**文件位置**: [UserService.java](../../apex-application/src/main/java/com/apex/scaffold/application/service/UserService.java)
+**文件位置**: [UserService.java](../../apex-system/src/main/java/com/apex/scaffold/application/service/UserService.java)
 
 ### 2. 新增模块 Handler JavaDoc 补充
 
@@ -1075,7 +1075,7 @@ mvnd clean compile -DskipTests
 - 使用场景: 基于数据库表快速生成业务代码
 - 注意事项: 需要 system:generator:generate 权限
 
-**文件位置**: [CodeGeneratorHandler.java](../../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/handler/CodeGeneratorHandler.java)
+**文件位置**: [CodeGeneratorHandler.java](../../apex-system/src/main/java/com/apex/scaffold/interfaces/handler/CodeGeneratorHandler.java)
 
 #### OfficeIntegrationHandler
 
@@ -1087,7 +1087,7 @@ mvnd clean compile -DskipTests
 - 集成平台: 飞书、钉钉、企业微信
 - 接口清单: 4 个主要接口
 
-**文件位置**: [OfficeIntegrationHandler.java](../../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/handler/OfficeIntegrationHandler.java)
+**文件位置**: OfficeIntegrationHandler.java（历史文件已移除）
 
 #### MessageHandler
 
@@ -1099,7 +1099,7 @@ mvnd clean compile -DskipTests
 - 消息类型: 用户消息、系统通知、审批消息、任务消息
 - 接口清单: 4 个主要接口
 
-**文件位置**: [MessageHandler.java](../../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/handler/MessageHandler.java)
+**文件位置**: [MessageHandler.java](../../apex-office-service/src/main/java/com/apex/scaffold/officeservice/interfaces/off/handler/MessageHandler.java)
 
 #### OrgSyncHandler
 
@@ -1111,7 +1111,7 @@ mvnd clean compile -DskipTests
 - 同步策略: 全量同步、增量同步、双向同步
 - 接口清单: 5 个主要接口
 
-**文件位置**: [OrgSyncHandler.java](../../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/handler/OrgSyncHandler.java)
+**文件位置**: [OrgSyncHandler.java](../../apex-office-service/src/main/java/com/apex/scaffold/officeservice/interfaces/off/handler/OrgSyncHandler.java)
 
 ### 3. 补充 @author 标签
 
@@ -1792,7 +1792,7 @@ mvnd clean compile -DskipTests
 
 ### 1. OffEmployeePO - 办公员工持久化对象
 
-**文件路径**: [OffEmployeePO.java](../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/persistence/po/OffEmployeePO.java)
+**文件路径**: [OffEmployeePO.java](../../apex-office/src/main/java/com/apex/scaffold/office/off/infrastructure/persistence/po/OffEmployeePO.java)
 
 **JavaDoc 内容**:
 - **核心字段**: 员工编号、姓名、邮箱、手机号、部门ID、职位、工号、外部平台ID、同步来源、账号状态、租户ID
@@ -1803,7 +1803,7 @@ mvnd clean compile -DskipTests
 
 ### 2. OffDepartmentPO - 办公部门持久化对象
 
-**文件路径**: [OffDepartmentPO.java](../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/persistence/po/OffDepartmentPO.java)
+**文件路径**: [OffDepartmentPO.java](../../apex-office/src/main/java/com/apex/scaffold/office/off/infrastructure/persistence/po/OffDepartmentPO.java)
 
 **JavaDoc 内容**:
 - **核心字段**: 部门编码、部门名称、父部门ID、部门层级路径、排序号、负责人ID、外部平台ID、同步来源、部门状态、租户ID
@@ -1814,7 +1814,7 @@ mvnd clean compile -DskipTests
 
 ### 3. SysSsoProviderPO - SSO 提供商持久化对象
 
-**文件路径**: [SysSsoProviderPO.java](../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/persistence/po/SysSsoProviderPO.java)
+**文件路径**: [SysSsoProviderPO.java](../../apex-system/src/main/java/com/apex/scaffold/infrastructure/persistence/po/SysSsoProviderPO.java)
 
 **JavaDoc 内容**:
 - **核心字段**: 提供商编码、提供商名称、认证协议、OIDC 发现端点、客户端 ID、客户端密钥、授权端点、令牌端点等
@@ -1825,7 +1825,7 @@ mvnd clean compile -DskipTests
 
 ### 4. SysSsoSessionPO - SSO 会话持久化对象
 
-**文件路径**: [SysSsoSessionPO.java](../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/persistence/po/SysSsoSessionPO.java)
+**文件路径**: [SysSsoSessionPO.java](../../apex-system/src/main/java/com/apex/scaffold/infrastructure/persistence/po/SysSsoSessionPO.java)
 
 **JavaDoc 内容**:
 - **核心字段**: 会话令牌、SSO 提供商 ID、用户 ID、外部用户 ID、访问令牌、刷新令牌、令牌过期时间、会话状态、租户 ID
@@ -1836,7 +1836,7 @@ mvnd clean compile -DskipTests
 
 ### 5. SysSsoAuditLogPO - SSO 审计日志持久化对象
 
-**文件路径**: [SysSsoAuditLogPO.java](../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/persistence/po/SysSsoAuditLogPO.java)
+**文件路径**: [SysSsoAuditLogPO.java](../../apex-system/src/main/java/com/apex/scaffold/infrastructure/persistence/po/SysSsoAuditLogPO.java)
 
 **JavaDoc 内容**:
 - **核心字段**: SSO 提供商 ID、用户 ID、外部用户 ID、操作类型、操作状态、客户端 IP、User-Agent、错误信息、请求数据、租户 ID
@@ -1847,7 +1847,7 @@ mvnd clean compile -DskipTests
 
 ### 6. OffSyncHistoryPO - 办公数据同步历史持久化对象
 
-**文件路径**: [OffSyncHistoryPO.java](../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/persistence/po/OffSyncHistoryPO.java)
+**文件路径**: [OffSyncHistoryPO.java](../../apex-office/src/main/java/com/apex/scaffold/office/off/infrastructure/persistence/po/OffSyncHistoryPO.java)
 
 **JavaDoc 内容**:
 - **核心字段**: 同步类型、同步来源、同步状态、开始时间、结束时间、同步耗时、部门数量、员工数量、错误信息、租户 ID
@@ -1859,7 +1859,7 @@ mvnd clean compile -DskipTests
 
 ### 7. OffMessagePO - 办公消息持久化对象
 
-**文件路径**: [OffMessagePO.java](../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/persistence/po/OffMessagePO.java)
+**文件路径**: [OffMessagePO.java](../../apex-office/src/main/java/com/apex/scaffold/office/off/infrastructure/persistence/po/OffMessagePO.java)
 
 **JavaDoc 内容**:
 - **核心字段**: 消息编码、模板 ID、主题、内容、消息类型、优先级、发送人 ID、发送时间、过期时间、消息状态、租户 ID

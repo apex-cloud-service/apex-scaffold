@@ -159,7 +159,7 @@ apex:
 
 #### 优化 1: 网关监控指标增强
 
-**文件**: [GatewayMetrics.java](../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/metrics/GatewayMetrics.java)
+**文件**: [GatewayMetrics.java](../apex-system/src/main/java/com/apex/scaffold/interfaces/metrics/GatewayMetrics.java)
 
 **新增指标**（6 个）:
 ```java
@@ -245,7 +245,7 @@ Counter.builder("apex.gateway.circuitbreaker.triggered")
 
 #### 优化 3: 网关性能配置
 
-**文件**: [application-prod.yml](../apex-interfaces/src/main/resources/application-prod.yml)
+**文件**: [application-prod.yml](../apex-system/src/main/resources/application-prod.yml)
 
 **优化配置**:
 ```yaml

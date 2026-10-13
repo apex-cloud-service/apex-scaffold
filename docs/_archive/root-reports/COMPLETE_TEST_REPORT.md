@@ -466,10 +466,10 @@ npm run test:e2e:ui
 
 ## 📚 相关文档
 
-1. [test-report-2026-09-16.md](file:///Users/work/apex-scaffold/test-report-2026-09-16.md) - 后端测试详细报告
-2. [FRONTEND_TYPE_FIXES.md](file:///Users/work/apex-scaffold/FRONTEND_TYPE_FIXES.md) - 前端类型修复指南
-3. [FINAL_COMPLETE_REPORT.md](file:///Users/work/apex-scaffold/FINAL_COMPLETE_REPORT.md) - 测试与修复完成报告
-4. [OPTIMIZATION_IMPLEMENTATION_REPORT.md](file:///Users/work/apex-scaffold/OPTIMIZATION_IMPLEMENTATION_REPORT.md) - 优化实施报告
+1. [test-report-2026-09-16.md](test-report-2026-09-16.md) - 后端测试详细报告
+2. [FRONTEND_TYPE_FIXES.md](FRONTEND_TYPE_FIXES.md) - 前端类型修复指南
+3. [FINAL_COMPLETE_REPORT.md](FINAL_COMPLETE_REPORT.md) - 测试与修复完成报告
+4. [OPTIMIZATION_IMPLEMENTATION_REPORT.md](OPTIMIZATION_IMPLEMENTATION_REPORT.md) - 优化实施报告
 5. [COMPLETE_TEST_REPORT.md](./COMPLETE_TEST_REPORT.md) - 本完整测试报告
 
 ---

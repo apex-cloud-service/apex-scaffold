@@ -34,7 +34,7 @@
 
 #### 已实现部分
 ✅ **规则外部化**：
-- 文件：[SentinelDynamicRulesLoader.java](../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/config/SentinelDynamicRulesLoader.java)
+- 文件：[SentinelDynamicRulesLoader.java](../apex-system/src/main/java/com/apex/scaffold/interfaces/config/SentinelDynamicRulesLoader.java)
 - 规则文件：[sentinel-rules.json](../config/sentinel/sentinel-rules.json)
 - 功能：启动时从 JSON 文件加载规则
 
@@ -98,7 +98,7 @@ public boolean manualRebuild() {
 ### 2.3 ❌ 自适应采样器（未实现 0%）
 
 #### 当前实现
-❌ **固定采样率**：[TraceConfig.java:58](../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/config/TraceConfig.java#L58)
+❌ **固定采样率**：TraceConfig.java:58（历史文件已移除）
 ```java
 @Value("${trace.sampling-rate:1.0}")
 private float samplingRate;
@@ -248,15 +248,15 @@ apex:
 #### 已实现
 ✅ **企业微信集成**：
 - 服务：[WeWorkService.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/wechat/service/WeWorkService.java)
-- 客户端：[WecomMessageClient.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/office/client/WecomMessageClient.java)
+- 客户端：[WecomMessageClient.java](../apex-office/src/main/java/com/apex/scaffold/office/infrastructure/client/WecomMessageClient.java)
 - 配置：[WeWorkProperties.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/wechat/config/WeWorkProperties.java)
 
 ✅ **钉钉集成**：
-- 客户端：[DingTalkMessageClient.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/office/client/DingTalkMessageClient.java)
-- 组织架构：[DingTalkOrganizationClient.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/office/client/DingTalkOrganizationClient.java)
+- 客户端：[DingTalkMessageClient.java](../apex-office/src/main/java/com/apex/scaffold/office/infrastructure/client/DingTalkMessageClient.java)
+- 组织架构：[DingTalkOrganizationClient.java](../apex-office/src/main/java/com/apex/scaffold/office/infrastructure/client/DingTalkOrganizationClient.java)
 
 ✅ **消息服务抽象**：
-- 接口：[OfficePlatformMessageClient.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/office/spi/OfficePlatformMessageClient.java)
+- 接口：[OfficePlatformMessageClient.java](../apex-office/src/main/java/com/apex/scaffold/office/infrastructure/spi/OfficePlatformMessageClient.java)
 - 实现：支持文本、Markdown、卡片等多种消息类型
 
 #### 需要配置

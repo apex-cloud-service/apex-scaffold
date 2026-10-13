@@ -13,7 +13,7 @@
 - [二、现状分析](#二现状分析)
 - [三、总体架构设计](#三总体架构设计)
 - [四、缓存穿透解决方案](#四缓存穿透解决方案)
-- [五、缓存击穿解决方案](#缓存击穿解决方案)
+- [五、缓存击穿解决方案](#五缓存击穿解决方案)
 - [六、缓存雪崩解决方案](#六缓存雪崩解决方案)
 - [七、监控告警体系](#七监控告警体系)
 - [八、实施步骤](#八实施步骤)
@@ -1074,7 +1074,7 @@ public class CacheMetricsCollector {
 |---|---|---|
 | 1.1 | [MultiLevelCacheService.java](../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/service/MultiLevelCacheService.java) | `set()` 与 `setEmptyMarker()` 应用 TTL jitter；新增 `jitter()` 工具方法 |
 | 1.2 | [CacheProperties.java](../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/config/CacheProperties.java) | 新增 `jitter`、`empty`、`lock` 配置组 |
-| 1.3 | [application.yml](../../apex-interfaces/src/main/resources/application.yml) | 补充 `apex.cache.jitter.factor`、`apex.cache.empty.ttl`、`apex.cache.empty.jitter-factor` 默认值 |
+| 1.3 | [application.yml](../../apex-system/src/main/resources/application.yml) | 补充 `apex.cache.jitter.factor`、`apex.cache.empty.ttl`、`apex.cache.empty.jitter-factor` 默认值 |
 | 1.4 | [MultiLevelCacheService.java](../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/service/MultiLevelCacheService.java) | L2 操作增加 `onErrorResume` 处理 Redis 异常，切到 L1-only 模式 |
 
 ### Phase 2：缓存穿透防护
@@ -1085,7 +1085,7 @@ public class CacheMetricsCollector {
 | 2.2 | `apex-infrastructure/.../cache/bloom/BloomFilterInitializer.java` | 新建启动期预热器 |
 | 2.3 | `apex-infrastructure/.../cache/bloom/BloomFilterDataProvider.java` | 新建数据提供者接口 |
 | 2.4 | [MultiLevelCacheService.java](../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/service/MultiLevelCacheService.java) | `getWithLoader()` 前置接入布隆过滤器 |
-| 2.5 | [application.yml](../../apex-interfaces/src/main/resources/application.yml) | 新增 `apex.cache.bloom.*` 配置（容量、误判率、各域开关） |
+| 2.5 | [application.yml](../../apex-system/src/main/resources/application.yml) | 新增 `apex.cache.bloom.*` 配置（容量、误判率、各域开关） |
 
 ### Phase 3：缓存击穿增强
 
@@ -1104,7 +1104,7 @@ public class CacheMetricsCollector {
 | 4.2 | `apex-infrastructure/.../cache/prewarmer/CachePrewarmRunner.java` | 新建启动后预热触发器 |
 | 4.3 | `apex-infrastructure/.../cache/prewarmer/CachePrewarmDataProvider.java` | 新建数据提供者接口 |
 | 4.4 | [MultiLevelCacheService.java](../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/service/MultiLevelCacheService.java) | Redis 故障降级到 L1-only 模式（已在 Phase 1.4 完成） |
-| 4.5 | [application.yml](../../apex-interfaces/src/main/resources/application.yml) | 新增 `apex.cache.prewarm.*` 配置 |
+| 4.5 | [application.yml](../../apex-system/src/main/resources/application.yml) | 新增 `apex.cache.prewarm.*` 配置 |
 
 ### Phase 5：监控告警
 
@@ -1112,7 +1112,7 @@ public class CacheMetricsCollector {
 |---|---|---|
 | 5.1 | `apex-infrastructure/.../cache/metrics/CacheMetricsCollector.java` | 新建缓存指标采集器 |
 | 5.2 | [MultiLevelCacheService.java](../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/service/MultiLevelCacheService.java) | 在各关键节点埋点（命中/未命中/回源/降级） |
-| 5.3 | [application.yml](../../apex-interfaces/src/main/resources/application.yml) | 告警阈值配置（接入现有 Sentinel/钉钉告警） |
+| 5.3 | [application.yml](../../apex-system/src/main/resources/application.yml) | 告警阈值配置（接入现有 Sentinel/钉钉告警） |
 
 ### Phase 6：测试验证
 

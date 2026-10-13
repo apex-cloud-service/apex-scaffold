@@ -16,9 +16,9 @@
 
 | 类别              | 现状                                                                                                             | 代表文件                                                                                                                                                                                                                                                                                                                                                 |
 | --------------- | -------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| DTO / PO / 请求响应 | 大量使用 `@Data`(约 117 个)                                                                                          | [PageRequest](../../../apex-application/src/main/java/com/apex/scaffold/application/dto/PageRequest.java)(`@Data` + 手写逻辑 getter 共存)、各 `*PO`                                                                                                                                                                                  |
-| 领域实体/值对象        | `@Getter`+`@EqualsAndHashCode`/`@ToString`,保留静态工厂与逻辑 getter                                                    | [TenantEntity](../../../apex-domain/src/main/java/com/apex/scaffold/domain/model/entity/TenantEntity.java)、[PhoneNumber](../../../apex-domain/src/main/java/com/apex/scaffold/domain/model/valueobject/PhoneNumber.java)                                                                             |
-| `@Data` 与手写方法共存 | `@Data` 下保留手写逻辑/compat 方法(Lombok 遇同名方法自动跳过)                                                                    | [BasePO.getLockVersion()](../../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/persistence/po/BasePO.java#L96-L98)、[ReportTicketPO.getEvidenceJson()](../../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/persistence/po/ReportTicketPO.java#L76-L87) |
+| DTO / PO / 请求响应 | 大量使用 `@Data`(约 117 个)                                                                                          | [PageRequest](../../../apex-system/src/main/java/com/apex/scaffold/application/dto/PageRequest.java)(`@Data` + 手写逻辑 getter 共存)、各 `*PO`                                                                                                                                                                                  |
+| 领域实体/值对象        | `@Getter`+`@EqualsAndHashCode`/`@ToString`,保留静态工厂与逻辑 getter                                                    | [TenantEntity](../../../apex-system/src/main/java/com/apex/scaffold/domain/model/entity/TenantEntity.java)、[PhoneNumber](../../../apex-system/src/main/java/com/apex/scaffold/domain/model/valueobject/PhoneNumber.java)                                                                             |
+| `@Data` 与手写方法共存 | `@Data` 下保留手写逻辑/compat 方法(Lombok 遇同名方法自动跳过)                                                                    | [BasePO.getLockVersion()](../../../apex-common/src/main/java/com/apex/scaffold/common/persistence/po/BasePO.java)、[ReportTicketPO.getEvidenceJson()](../../../apex-system/src/main/java/com/apex/scaffold/infrastructure/persistence/po/ReportTicketPO.java) |
 | 结果/异常           | `@Getter`+`@Setter`+`@ToString`+`@EqualsAndHashCode`+`@NoArgsConstructor`+`@AllArgsConstructor`,链式 setter 手写保留 | [Result](../../../apex-common/src/main/java/com/apex/scaffold/common/result/Result.java)、[BaseException](../../../apex-common/src/main/java/com/apex/scaffold/common/exception/BaseException.java)                                                                                                   |
 | 生成器模板           | `.ftl` 已用 `@Data`                                                                                              | dtoRequest.ftl / dtoResponse.ftl / po.ftl 等                                                                                                                                                                                                                                                                                                          |
 
@@ -40,13 +40,13 @@
 
 **已抽查确认的代表类**(实际清单以实施时逐文件复核为准):
 
-- apex-domain: [AuditLogRecord](../../../apex-domain/src/main/java/com/apex/scaffold/domain/model/record/AuditLogRecord.java)(14 字段纯样板)等 record/model 层纯 POJO。
+- apex-domain: [AuditLogRecord](../../../apex-system/src/main/java/com/apex/scaffold/domain/model/record/AuditLogRecord.java)(14 字段纯样板)等 record/model 层纯 POJO。
 
-- apex-application: [DeptDTO](../../../apex-application/src/main/java/com/apex/scaffold/application/dto/admin/DeptDTO.java)、UserExportDTO、AuditLogDTO、OnlineUserDTO、AccountDeletionRequest 等 DTO。
+- apex-application: [DeptDTO](../../../apex-system/src/main/java/com/apex/scaffold/application/dto/admin/DeptDTO.java)、UserExportDTO、AuditLogDTO、OnlineUserDTO、AccountDeletionRequest 等 DTO。
 
-- apex-infrastructure: [DeptPO](../../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/persistence/po/DeptPO.java)、SlowSqlProperties、MailConfigurationProperties 等。
+- apex-infrastructure: [DeptPO](../../../apex-system/src/main/java/com/apex/scaffold/infrastructure/persistence/po/DeptPO.java)、SlowSqlProperties、MailConfigurationProperties 等。
 
-- apex-interfaces: [FileUploadRequestDoc](../../../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/dto/FileUploadRequestDoc.java)、[GenericFileUploadRequestDoc](../../../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/dto/GenericFileUploadRequestDoc.java)。
+- apex-interfaces: [FileUploadRequestDoc](../../../apex-file-service/src/main/java/com/apex/scaffold/fileservice/interfaces/dto/FileUploadRequestDoc.java)、[GenericFileUploadRequestDoc](../../../apex-file-service/src/main/java/com/apex/scaffold/fileservice/interfaces/dto/GenericFileUploadRequestDoc.java)。
 
 - apex-license-spring-boot-starter / apex-example: 满足判定标准的类。
 
@@ -56,15 +56,15 @@
 
 - 已有 Lombok 注解的类(即使带手写 setter,如 TenantEntity 的"仅供持久层使用"setter)。
 
-- 含逻辑 getter/setter 的类:[PhoneNumber.getMasked()/getFormatted()/getWithCountryCode()](../../../apex-domain/src/main/java/com/apex/scaffold/domain/model/valueobject/PhoneNumber.java#L146-L172)、PageRequest.getOffset() 等。
+- 含逻辑 getter/setter 的类:[PhoneNumber.getMasked()/getFormatted()/getWithCountryCode()](../../../apex-system/src/main/java/com/apex/scaffold/domain/model/valueobject/PhoneNumber.java)、PageRequest.getOffset() 等。
 
 - 链式 setter:[Result.setTraceId()](../../../apex-common/src/main/java/com/apex/scaffold/common/result/Result.java)(源码注释明确因与 Lombok void setter 冲突而手写)。
 
-- 复杂构造器/静态工厂:[BaseException](../../../apex-common/src/main/java/com/apex/scaffold/common/exception/BaseException.java)、[CronExpression](../../../apex-application/src/main/java/com/apex/scaffold/application/job/CronExpression.java)(不可变、仅一个 getter)、LocalCacheService(构造器注入+业务逻辑)。
+- 复杂构造器/静态工厂:[BaseException](../../../apex-common/src/main/java/com/apex/scaffold/common/exception/BaseException.java)、[CronExpression](../../../apex-system/src/main/java/com/apex/scaffold/application/job/CronExpression.java)(不可变、仅一个 getter)、LocalCacheService(构造器注入+业务逻辑)。
 
 - 枚举类:ResultCode、LicenseVersion、ActivityStatus、EducationLevel、TenantEntity.TenantStatus、BaseEntity.LogicalDeletion 等(枚举内嵌类 getter 保持手写)。
 
-- 已有 compat 别名方法的类:[ReportTicketPO.getEvidenceJson()/setEvidenceJson()](../../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/persistence/po/ReportTicketPO.java#L76-L87)。
+- 已有 compat 别名方法的类:[ReportTicketPO.getEvidenceJson()/setEvidenceJson()](../../../apex-system/src/main/java/com/apex/scaffold/infrastructure/persistence/po/ReportTicketPO.java)。
 
 - 所有 `serialVersionUID` / `@Serial` 字段:保留手写,不删除(改动会破坏序列化兼容)。
 
@@ -78,9 +78,9 @@
 
 - 手写 no-args 构造器保留(项目 DTO/PO 普遍显式声明 `Xxx() {}`,`@Data` 会生成无参构造器,但显式声明可保留 Javadoc 与习惯,不删除);如类无显式构造器则不加。
 
-- 若类继承基类(PO extends BasePO 等),追加 `@EqualsAndHashCode(callSuper = true)`、`@ToString(callSuper = true)`,与 [ReportTicketPO](../../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/persistence/po/ReportTicketPO.java) 既有写法一致。
+- 若类继承基类(PO extends BasePO 等),追加 `@EqualsAndHashCode(callSuper = true)`、`@ToString(callSuper = true)`,与 [ReportTicketPO](../../../apex-system/src/main/java/com/apex/scaffold/infrastructure/persistence/po/ReportTicketPO.java) 既有写法一致。
 
-- 逻辑方法/兼容方法在 `@Data` 下保留(Lombok 遇同名方法跳过生成),参考 [BasePO](../../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/persistence/po/BasePO.java)。
+- 逻辑方法/兼容方法在 `@Data` 下保留(Lombok 遇同名方法跳过生成),参考 [BasePO](../../../apex-common/src/main/java/com/apex/scaffold/common/persistence/po/BasePO.java)。
 
 - 字段上的 `@Schema`、`@TableField`、`@TableId`、`@TableName`、`@Version`、`@TableLogic`、jakarta validation 注解等全部原样保留在字段上。
 

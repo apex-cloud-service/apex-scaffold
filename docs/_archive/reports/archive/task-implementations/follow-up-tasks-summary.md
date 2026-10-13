@@ -138,7 +138,7 @@
 
 #### MySQL启动与SQL执行脚本
 
-**文件**: [start_mysql_and_run_sql.sh](../../../../../start_mysql_and_run_sql.sh)
+**文件**: [start-mysql-and-run-sql.sh](../../../../../scripts/data/start-mysql-and-run-sql.sh)
 
 **功能**:
 - 自动检查Docker状态
@@ -340,7 +340,7 @@ cd /Users/work/apex-scaffold
 
 **脚本工具**:
 - [check_javadoc.sh](../../../../../scripts/check_javadoc.sh) - JavaDoc检查
-- [start_mysql_and_run_sql.sh](../../../../../start_mysql_and_run_sql.sh) - MySQL一键启动
+- [start-mysql-and-run-sql.sh](../../../../../scripts/data/start-mysql-and-run-sql.sh) - MySQL一键启动
 
 **SQL脚本**:
 - frontend_button_permission_config.sql（目标不存在，无已核实替代文件；原路径：`file:///Users/work/apex-scaffold/frontend_button_permission_config.sql`） - 权限配置

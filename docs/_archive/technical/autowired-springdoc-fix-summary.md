@@ -15,12 +15,12 @@ Spring 4.3+ 对于单构造器的类会自动进行依赖注入，无需显式�
 
 #### ✅ 已修复文件（2 个）
 
-1. **[DataScopeAspect.java](../../../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/aspect/DataScopeAspect.java)**
+1. **[DataScopeAspect.java](../../../apex-system/src/main/java/com/apex/scaffold/interfaces/aspect/DataScopeAspect.java)**
    - **位置**：第 85 行
    - **修复**：移除构造器上的 `@Autowired` 注解
    - **说明**：该类只有一个构造器，Spring 会自动注入依赖
 
-2. **[UserHandler.java](../../../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/handler/UserHandler.java)**
+2. **[UserHandler.java](../../../apex-system/src/main/java/com/apex/scaffold/interfaces/handler/UserHandler.java)**
    - **位置**：第 80 行
    - **修复**：移除构造器上的 `@Autowired` 注解
    - **说明**：虽然该类有两个构造器，但第二个构造器是为了兼容性保留的，Spring 会优先选择参数最多的构造器
@@ -75,7 +75,7 @@ mvnd clean compile -DskipTests
 
 #### ✅ 本次补充注解的文件（1 个）
 
-**[AbstractStorageProxyHandler.java](../../../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/handler/AbstractStorageProxyHandler.java)**
+**AbstractStorageProxyHandler.java（历史文件已移除）**
 
 **方法**：`proxy(ServerRequest request)`
 

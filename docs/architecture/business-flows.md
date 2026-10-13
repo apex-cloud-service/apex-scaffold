@@ -43,7 +43,7 @@
 
 `POST /auth/v1/refresh` 请求体为 `{ "refreshToken": "..." }`。实际 `TokenServiceImpl.refreshToken` 校验令牌类型，撤销旧 Refresh Token，再签发新 Token 对；客户端必须保存新的两种令牌。应用服务中旧的“不轮换”注释不代表实际行为。
 
-`POST /auth/v1/logout/{userId}` 携带 Bearer ACCESS Token。路径 ID 必须与认证用户一致，租户取自认证上下文；撤销该用户在该租户的全部 Token，成功返回 HTTP 200 空响应体。实际测试步骤和开发种子前提见[认证中心验证指南](../../apex-auth-center/TESTING.md)。
+`POST /auth/v1/logout/{userId}` 携带 Bearer ACCESS Token。路径 ID 必须与认证用户一致，租户取自认证上下文；撤销该用户在该租户的全部 Token，成功返回 HTTP 200 空响应体。登录、登出和刷新接口的验证用例见[认证接口集成测试源码](../../apex-auth-service/src/test/java/com/apex/scaffold/authservice/interfaces/handler/AuthenticationHandlerIntegrationTest.java)；测试使用模拟应用服务，不代表真实数据库种子或部署联调。
 
 ## 三、权限校验与统一授权流程
 

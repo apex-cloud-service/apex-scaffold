@@ -275,9 +275,9 @@ npm run dev
 ## 📞 技术支持
 
 如遇到问题,请参考以下文档:
-1. [前端按钮权限控制补充指南.md](../../../../04-development/frontend/button-permission-guide.md) - 详细实施指南
+1. 前端按钮权限控制补充指南.md（无现存目标） - 详细实施指南
 2. [前端按钮权限控制补充执行脚本.md](frontend-button-permission-script.md) - 执行步骤
-3. [前端页面审计报告.md](../../../../04-development/frontend/page-audit-report.md) - 现状分析
+3. 前端页面审计报告.md（无现存目标） - 现状分析
 
 或联系:
 - 前端负责人

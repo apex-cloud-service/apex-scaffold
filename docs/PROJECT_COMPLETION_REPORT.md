@@ -132,7 +132,7 @@ docs/
 - ✅ 128位认证标签，防止密文篡改
 - ✅ 密钥通过环境变量注入，不硬编码
 
-**关键代码**: [TokenEncryptionService.java](../apex-auth-center/src/main/java/com/apex/scaffold/authcenter/domain/service/TokenEncryptionService.java)
+**关键代码**: [TokenEncryptionService.java](../apex-auth/src/main/java/com/apex/scaffold/auth/domain/service/TokenEncryptionService.java)
 
 **使用示例**:
 ```java
@@ -158,7 +158,7 @@ String plainToken = encryptionService.decrypt(encryptedToken);
 - ✅ 检测重放攻击：使用已撤销Token触发安全警报
 - ✅ 记录完整审计日志
 
-**关键代码**: [TokenServiceImpl.java:206-229](../apex-auth-center/src/main/java/com/apex/scaffold/authcenter/application/service/TokenServiceImpl.java#L206-L229)
+**关键代码**: [TokenServiceImpl.java:206-229](../apex-auth/src/main/java/com/apex/scaffold/auth/application/service/TokenServiceImpl.java)
 
 **安全流程**:
 ```
@@ -189,8 +189,8 @@ String plainToken = encryptionService.decrypt(encryptedToken);
 - ✅ 分布式同步：密钥存储在Redis
 
 **关键代码**: 
-- [JwtKeyRotationService.java](../apex-auth-center/src/main/java/com/apex/scaffold/authcenter/application/service/JwtKeyRotationService.java)
-- [JwtKeyRotationScheduler.java](../apex-auth-center/src/main/java/com/apex/scaffold/authcenter/application/scheduler/JwtKeyRotationScheduler.java)
+- [JwtKeyRotationService.java](../apex-auth/src/main/java/com/apex/scaffold/auth/domain/service/JwtKeyRotationService.java)
+- [JwtKeyRotationScheduler.java](../apex-auth/src/main/java/com/apex/scaffold/auth/domain/service/JwtKeyRotationService.java)
 
 **配置示例**:
 ```yaml
@@ -260,7 +260,7 @@ jwt:
 - ✅ 支持基于用户名和IP的双重防护
 - ✅ 自动解锁机制
 
-**关键代码**: [BruteForcePrevention.java](../apex-auth-center/src/main/java/com/apex/scaffold/authcenter/infrastructure/security/BruteForcePrevention.java)
+**关键代码**: [BruteForcePrevention.java](../apex-auth/src/main/java/com/apex/scaffold/auth/infrastructure/security/BruteForcePrevention.java)
 
 ---
 
@@ -273,7 +273,7 @@ jwt:
 - ✅ 不能使用常见弱密码
 - ✅ 不能包含连续字符
 
-**关键代码**: [PasswordPolicyService.java](../apex-auth-center/src/main/java/com/apex/scaffold/authcenter/infrastructure/security/PasswordPolicyService.java)
+**关键代码**: [PasswordPolicyService.java](../apex-auth/src/main/java/com/apex/scaffold/auth/infrastructure/security/PasswordPolicyService.java)
 
 ---
 
@@ -285,7 +285,7 @@ jwt:
 - ✅ 记录锁定原因和时间
 - ✅ 支持延长锁定时间
 
-**关键代码**: [AccountLockService.java](../apex-auth-center/src/main/java/com/apex/scaffold/authcenter/infrastructure/security/AccountLockService.java)
+**关键代码**: [AccountLockService.java](../apex-auth/src/main/java/com/apex/scaffold/auth/infrastructure/security/AccountLockService.java)
 
 ---
 
@@ -297,7 +297,7 @@ jwt:
 - ✅ 支持按用户批量撤销Token
 - ✅ 自动清理过期Token
 
-**关键代码**: [TokenBlacklistService.java](../apex-auth-center/src/main/java/com/apex/scaffold/authcenter/infrastructure/security/TokenBlacklistService.java)
+**关键代码**: [TokenBlacklistService.java](../apex-auth/src/main/java/com/apex/scaffold/auth/infrastructure/security/TokenBlacklistService.java)
 
 ---
 

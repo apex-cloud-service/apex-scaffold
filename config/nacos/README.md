@@ -57,8 +57,8 @@ Data ID 内容基线，便于评审、版本管理与一键发布。
 
 | Data ID | 服务 | 模板文件 | 引用配置 |
 |---------|------|----------|----------|
-| `{service}-flow-rules` | 各微服务 | [sentinel/](./sentinel/) | `apex.sentinel.nacos.flow-data-id` |
-| `{service}-degrade-rules` | 各微服务 | [sentinel/](./sentinel/) | `apex.sentinel.nacos.degrade-data-id` |
+| `{service}-flow-rules` | 各微服务 | [sentinel/](./sentinel/README.md) | `apex.sentinel.nacos.flow-data-id` |
+| `{service}-degrade-rules` | 各微服务 | [sentinel/](./sentinel/README.md) | `apex.sentinel.nacos.degrade-data-id` |
 
 > ⚠️ Sentinel 规则推送为**整体替换**语义：发布时必须提交**完整规则集**，
 > 不能只发增量。现有单体规则见 [`config/sentinel/`](../sentinel/README.md)。

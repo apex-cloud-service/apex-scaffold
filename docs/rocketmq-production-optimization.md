@@ -46,7 +46,7 @@
 | [MqProducerService.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/mq/service/MqProducerService.java) | 增加超时控制、故障降级处理 |
 | [MqConsumerService.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/mq/service/MqConsumerService.java) | 增加配置集成、监控指标 |
 | [alert-rules.yml](../config/monitoring/prometheus/alert-rules.yml) | 新增 8 个 RocketMQ 告警规则 |
-| [application-prod.yml](../apex-interfaces/src/main/resources/application-prod.yml) | 完善生产环境 RocketMQ 配置 |
+| [application-prod.yml](../apex-system/src/main/resources/application-prod.yml) | 完善生产环境 RocketMQ 配置 |
 
 ---
 

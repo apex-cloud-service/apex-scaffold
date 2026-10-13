@@ -576,7 +576,7 @@ public interface UserRepository {
 
 **迁移资源**：认证中心当前激活 `classpath:db/migration/mysql`；未激活的 `db/migration/auth/*/V51` 重复脚本已从当前工作区移除，不表示数据库迁移已执行。
 
-**验证依据**：[配置说明](../05-operations/configuration.md#认证中心统一授权)、[登录与授权时序](business-flows.md)、[验证矩阵](../../apex-auth-center/TESTING.md)。本 ADR 的状态不代表测试通过或已部署。
+**验证依据**：[配置说明](../05-operations/configuration.md#认证中心统一授权)、[登录与授权时序](business-flows.md)、[统一授权 Handler 测试源码](../../apex-auth-service/src/test/java/com/apex/scaffold/authservice/interfaces/handler/UnifiedAuthorizationHandlerTest.java)。本 ADR 的状态不代表测试通过或已部署。
 
 ### 历史决策摘要：采用 Spring WebFlux（正式编号 ADR-009）
 

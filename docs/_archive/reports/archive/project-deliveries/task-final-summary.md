@@ -308,8 +308,8 @@ npm run dev
 ### 核心文档
 
 1. [实施计划](../../../../08-project-management/plans/monitoring-enhancement-plan.md) - 总体规划
-2. [前端审计报告](../../../../04-development/frontend/page-audit-report.md) - 现状分析
-3. [权限控制指南](../../../../04-development/frontend/button-permission-guide.md) - 理论方法
+2. 前端审计报告（无现存目标） - 现状分析
+3. 权限控制指南（无现存目标） - 理论方法
 4. [权限控制执行脚本](../task-implementations/frontend-button-permission-script.md) - 具体步骤
 5. [SQL执行指南](../../../operations/sql-execution-guide.md) - SQL执行
 6. [监控配置总结](../../../operations/grafana-status-summary.md) - 监控方案

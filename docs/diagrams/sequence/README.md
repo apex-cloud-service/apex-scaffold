@@ -90,7 +90,7 @@ done
 
 该源文件保留历史登录设计，图内固定 TTL 和自动续期描述不作为当前认证中心契约。主应用登录为 `POST /api/v1/auth/login`；认证中心登录为 `POST /auth/v1/login`，刷新为 `POST /auth/v1/refresh`。认证中心刷新撤销旧 Refresh Token 并返回新 Token 对，客户端必须保存新的 Token 对。
 
-认证中心登出为 `POST /auth/v1/logout/{userId}`，要求 Bearer ACCESS Token，路径用户必须是当前认证用户，租户来自可信认证上下文，成功返回 HTTP 200 空响应体。详细示例见 [认证中心 README](../../../apex-auth-center/README.md)。
+认证中心登出为 `POST /auth/v1/logout/{userId}`，要求 Bearer ACCESS Token，路径用户必须是当前认证用户，租户来自可信认证上下文，成功返回 HTTP 200 空响应体。路由与响应契约见 [认证接口路由源码](../../../apex-auth-service/src/main/java/com/apex/scaffold/authservice/interfaces/router/AuthenticationRouter.java)。
 
 ---
 

@@ -747,9 +747,9 @@ open http://localhost:8080/doc.html
 ## 📚 相关文档
 
 1. [COMPLETE_TEST_REPORT.md](./COMPLETE_TEST_REPORT.md) - 完整功能测试报告
-2. [OPTIMIZATION_IMPLEMENTATION_REPORT.md](file:///Users/work/apex-scaffold/OPTIMIZATION_IMPLEMENTATION_REPORT.md) - 优化实施报告
+2. [OPTIMIZATION_IMPLEMENTATION_REPORT.md](OPTIMIZATION_IMPLEMENTATION_REPORT.md) - 优化实施报告
 3. [AGENTS.md](../../../AGENTS.md) - 开发规范文档
-4. [integration-test.sh](../../../integration-test.sh) - 对接测试脚本
+4. [integration-test.sh](../../../scripts/test/integration-test.sh) - 对接测试脚本
 5. [INTEGRATION_TEST_REPORT.md](./INTEGRATION_TEST_REPORT.md) - 本对接测试报告
 
 ---

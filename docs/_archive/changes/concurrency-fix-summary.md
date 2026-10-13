@@ -24,7 +24,7 @@
 
 - **5xx / 瞬态异常保留幂等键至 TTL 过期**，由分布式锁的原子性保证并发重试只被处理一次。
 
-**文件**: [IdempotentApiAspect.java](../../../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/aspect/IdempotentApiAspect.java)、[IdempotentApiAspectTest.java](../../../apex-interfaces/src/test/java/com/apex/scaffold/interfaces/aspect/IdempotentApiAspectTest.java)
+**文件**: [IdempotentApiAspect.java](../../../apex-system/src/main/java/com/apex/scaffold/interfaces/aspect/IdempotentApiAspect.java)、[IdempotentApiAspectTest.java](../../../apex-system/src/test/java/com/apex/scaffold/interfaces/aspect/IdempotentApiAspectTest.java)
 
 ### C2 EventListener 去阻塞与租户上下文治理（3 个监听器 + 事件模型）
 
@@ -36,7 +36,7 @@
 
 **修复**:
 
-- 3 个监听器（[UserRegisteredEventListener.java](../../../apex-application/src/main/java/com/apex/scaffold/application/listener/UserRegisteredEventListener.java)、[SubscriptionEventListener.java](../../../apex-application/src/main/java/com/apex/scaffold/application/listener/SubscriptionEventListener.java)、[CreditEventListener.java](../../../apex-application/src/main/java/com/apex/scaffold/application/listener/CreditEventListener.java)）全部去除 `.block()`，改为纯 Mono 链；
+- 3 个监听器（[UserRegisteredEventListener.java](../../../apex-system/src/main/java/com/apex/scaffold/application/listener/UserRegisteredEventListener.java)、[SubscriptionEventListener.java](../../../apex-system/src/main/java/com/apex/scaffold/application/listener/SubscriptionEventListener.java)、[CreditEventListener.java](../../../apex-system/src/main/java/com/apex/scaffold/application/listener/CreditEventListener.java)）全部去除 `.block()`，改为纯 Mono 链；
 
 - [BaseDomainEvent.java](../../../apex-common/src/main/java/com/apex/scaffold/common/event/BaseDomainEvent.java) 新增 `tenantId` 字段并随事件 DTO 传递；
 
@@ -50,11 +50,11 @@
 
 **修复**:
 
-- [OperationLogAspect.java](../../../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/aspect/OperationLogAspect.java) 与 [ApiCallLogFilter.java](../../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/remote/filter/ApiCallLogFilter.java) 在**入口捕获** **`tenantId`** **并显式传入**日志服务；
+- [OperationLogAspect.java](../../../apex-system/src/main/java/com/apex/scaffold/interfaces/aspect/OperationLogAspect.java) 与 [ApiCallLogFilter.java](../../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/remote/filter/ApiCallLogFilter.java) 在**入口捕获** **`tenantId`** **并显式传入**日志服务；
 
 - 统一在专用阻塞 Scheduler（`BlockingIoSchedulers.jdbc()`）上受控提交；
 
-- [OperationLogService.java](../../../apex-application/src/main/java/com/apex/scaffold/application/service/OperationLogService.java) 新增 `saveAsync(entity, tenantId)` 重载。
+- [OperationLogService.java](../../../apex-system/src/main/java/com/apex/scaffold/application/service/OperationLogService.java) 新增 `saveAsync(entity, tenantId)` 重载。
 
 ***
 
@@ -98,7 +98,7 @@
 
 **文件**: [DataScopeContext.java](../../../apex-common/src/main/java/com/apex/scaffold/common/context/DataScopeContext.java)、[DataSourceContext.java](../../../apex-common/src/main/java/com/apex/scaffold/common/context/DataSourceContext.java)、[TenantContext.java](../../../apex-common/src/main/java/com/apex/scaffold/common/context/TenantContext.java)
 
-### H4 AntiReplayAspect 响应式返回值处理（[AntiReplayAspect.java](../../../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/aspect/AntiReplayAspect.java)）
+### H4 AntiReplayAspect 响应式返回值处理（[AntiReplayAspect.java](../../../apex-system/src/main/java/com/apex/scaffold/interfaces/aspect/AntiReplayAspect.java)）
 
 **问题**: 切面用 `fromCallable` 包装方法返回值，当返回值为 `Publisher` 时被二次包装，破坏响应式语义。
 
@@ -122,7 +122,7 @@
 
 ### 3.3 异步测试时序断言
 
-[OperationLogServiceTest.java](../../../apex-application/src/test/java/com/apex/scaffold/application/service/OperationLogServiceTest.java) 改为通过 `saveInternal` 返回的 Mono 手动 `block()` 后再 verify，消除"subscribe 后立即断言"的竞态。
+[OperationLogServiceTest.java](../../../apex-system/src/test/java/com/apex/scaffold/application/service/OperationLogServiceTest.java) 改为通过 `saveInternal` 返回的 Mono 手动 `block()` 后再 verify，消除"subscribe 后立即断言"的竞态。
 
 ***
 

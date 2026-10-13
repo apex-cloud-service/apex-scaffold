@@ -113,15 +113,15 @@ npm install -D sass-embedded  # 成功安装
 
 ### 详细文档
 
-1. **[test-report-2026-09-16.md](file:///Users/work/apex-scaffold/test-report-2026-09-16.md)**
+1. **[test-report-2026-09-16.md](test-report-2026-09-16.md)**
    - 后端测试详细报告
    - 包含所有模块的测试结果
 
-2. **[FRONTEND_TYPE_FIXES.md](file:///Users/work/apex-scaffold/FRONTEND_TYPE_FIXES.md)**
+2. **[FRONTEND_TYPE_FIXES.md](FRONTEND_TYPE_FIXES.md)**
    - 前端修复指南
    - 包含所有26个错误的详细说明和修复步骤
 
-3. **[FINAL_REPORT.md](file:///Users/work/apex-scaffold/FINAL_REPORT.md)**
+3. **[FINAL_REPORT.md](FINAL_REPORT.md)**
    - 本完成报告
 
 ### 修复脚本

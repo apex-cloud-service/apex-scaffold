@@ -181,7 +181,7 @@
 
 2. **配置数据库连接** (15分钟)
    
-   检查 [`apex-interfaces/src/main/resources/application-basic.yml`](../../apex-interfaces/src/main/resources/application-basic.yml):
+   检查 [`apex-interfaces/src/main/resources/application-basic.yml`](../../apex-system/src/main/resources/application-basic.yml):
    ```yaml
    spring:
      r2dbc:

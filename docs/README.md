@@ -6,7 +6,7 @@
 
 ## 📖 文档导航
 
-### [00. 快速开始](./00-getting-started/)
+### [00. 快速开始](./00-getting-started/README.md)
 
 快速入门指南和示例代码，帮助您在 5 分钟内启动项目。
 
@@ -15,7 +15,7 @@
 - [示例总结](./00-getting-started/examples-summary.md) - 示例模块汇总
 - [入门架构指南](./00-getting-started/onboarding-guide.md) - 架构快速上手
 
-### [01. 使用指南](./01-guides/)
+### [01. 使用指南](./01-guides/README.md)
 
 功能使用指南、最佳实践和问题排查。
 
@@ -27,7 +27,7 @@
 - [SSO 集成](./01-guides/sso-implementation-guide.md) - 单点登录
 - [文档搜索](./01-guides/doc-search-guide.md) - 全文搜索
 
-### [02. 架构设计](./02-architecture/)
+### [02. 架构设计](./02-architecture/README.md)
 
 系统架构、技术选型和设计决策。
 
@@ -39,20 +39,20 @@
 - [数据库设计](./architecture/database-design.md) - 数据模型设计
 - [多级缓存](./05-operations/advanced-features.md) - 缓存架构
 
-### [03. API 文档](./03-api/)
+### [03. API 文档](./03-api/README.md)
 
 API 接口文档、规范和版本管理。
 
 - [路由映射](./03-api/api-routes.md) - 前后端路由对应
 - [API 版本管理](./03-api/api-version-management.md) - 版本控制策略
 - [SpringDoc 注解](./03-api/springdoc-annotation-templates.md) - API 文档注解
-- [数据管理 API](./03-api/) - 数据管理接口
+- [数据管理 API](./03-api/README.md) - 数据管理接口
 
 **在线文档**: 启动项目后访问
 - Swagger UI: http://localhost:8080/swagger-ui.html
 - Knife4j UI: http://localhost:8080/doc.html
 
-### [04. 开发文档](./04-development/)
+### [04. 开发文档](./04-development/README.md)
 
 代码生成、开发规范和工具使用。
 
@@ -62,7 +62,7 @@ API 接口文档、规范和版本管理。
 - [SVG 维护](./04-development/svg-maintenance-guide.md) - 图表维护
 - 前端开发文档：已迁移至独立前端仓库 `apex-admin-web` 的 `frontend-docs/` 目录
 
-### [05. 运维部署](./05-operations/)
+### [05. 运维部署](./05-operations/README.md)
 
 生产部署、配置管理和监控告警。
 
@@ -71,7 +71,7 @@ API 接口文档、规范和版本管理。
 - [安全防护](./05-operations/security-protections.md) - 安全体系
 - [高级特性](./05-operations/advanced-features.md) - 高级功能
 
-### [06. 测试文档](./06-testing/)
+### [06. 测试文档](./06-testing/README.md)
 
 测试策略、测试报告和质量保证。
 
@@ -79,7 +79,7 @@ API 接口文档、规范和版本管理。
 - [API 测试报告](./06-testing/api-test-report.md) - 接口测试
 - [API 测试计划](./06-testing/api-test-plan.md) - 测试计划
 
-### [07. 商业化文档](./07-commercial/)
+### [07. 商业化文档](./07-commercial/README.md)
 
 商业版本、授权管理和销售资料。
 
@@ -87,7 +87,7 @@ API 接口文档、规范和版本管理。
 - [商业版本](./07-commercial/COMMERCIAL_VERSIONS.md) - 版本对比
 - [销售资料](./07-commercial/sales/) - 销售支持文档
 
-### [08. 项目管理](./08-project-management/)
+### [08. 项目管理](./08-project-management/README.md)
 
 项目管理、实施计划和需求管理。
 
@@ -100,7 +100,7 @@ API 接口文档、规范和版本管理。
 
 ## 🎨 架构图表
 
-完整的架构图表位于 [diagrams](./diagrams/) 目录，包含 70+ 张专业 SVG 图表：
+完整的架构图表位于 [diagrams](./diagrams/README.md) 目录，包含 70+ 张专业 SVG 图表：
 
 - **系统架构**: 逻辑架构、物理架构、技术架构
 - **业务流程**: 登录认证、权限校验、工作流审批、文件上传
@@ -125,7 +125,7 @@ API 接口文档、规范和版本管理。
 
 1. [开发手册](./01-guides/developer-handbook.md) - 完整开发指南
 2. [代码生成器](./04-development/codegen.md) - 快速生成代码
-3. [API 文档](./03-api/) - 接口文档
+3. [API 文档](./03-api/README.md) - 接口文档
 4. [测试指南](./06-testing/integration-test-guide.md) - 测试实践
 
 ### 运维人员
@@ -191,6 +191,6 @@ API 接口文档、规范和版本管理。
 
 **📖 开始您的 Apex Scaffold 之旅！**
 
-[快速开始](./00-getting-started/quickstart.md) • [架构设计](./02-architecture/) • [API 文档](./03-api/) • [运维部署](./05-operations/)
+[快速开始](./00-getting-started/quickstart.md) • [架构设计](./02-architecture/README.md) • [API 文档](./03-api/README.md) • [运维部署](./05-operations/README.md)
 
 </div>

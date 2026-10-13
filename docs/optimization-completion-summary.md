@@ -45,17 +45,17 @@
 - ✅ 分域容量配置：[BloomFilterNamespaceProperties.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/config/BloomFilterNamespaceProperties.java)
   - 支持命名空间独立配置
   - 支持自适应扩容开关
-- ✅ 开发环境配置：[application.yml](../apex-interfaces/src/main/resources/application.yml)
+- ✅ 开发环境配置：[application.yml](../apex-system/src/main/resources/application.yml)
   - 完整的 BloomFilter 配置段
   - 分域容量示例配置
-- ✅ 生产环境配置：[application-prod.yml](../apex-interfaces/src/main/resources/application-prod.yml)
+- ✅ 生产环境配置：[application-prod.yml](../apex-system/src/main/resources/application-prod.yml)
   - 4 个命名空间容量配置（user/order/media/product）
   - 定时重建和监控指标启用
 
 #### 5. 测试覆盖
 - ✅ BloomFilter 服务测试：[BloomFilterServiceTest.java](../apex-infrastructure/src/test/java/com/apex/scaffold/infrastructure/cache/filter/BloomFilterServiceTest.java) - 8 个用例
 - ✅ 定时重建测试：[BloomFilterRebuildTaskTest.java](../apex-infrastructure/src/test/java/com/apex/scaffold/infrastructure/cache/task/BloomFilterRebuildTaskTest.java) - 4 个用例
-- ✅ Sentinel 规则加载测试：[SentinelDynamicRulesLoaderTest.java](../apex-interfaces/src/test/java/com/apex/scaffold/interfaces/config/SentinelDynamicRulesLoaderTest.java) - 4 个用例
+- ✅ Sentinel 规则加载测试：[SentinelDynamicRulesLoaderTest.java](../apex-system/src/test/java/com/apex/scaffold/interfaces/config/SentinelDynamicRulesLoaderTest.java) - 4 个用例
 - ✅ 集成测试框架：[MultiLevelCacheServiceBloomFilterIntegrationTest.java](../apex-infrastructure/src/test/java/com/apex/scaffold/infrastructure/cache/service/MultiLevelCacheServiceBloomFilterIntegrationTest.java)
 
 #### 6. 文档完善

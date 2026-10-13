@@ -19,23 +19,23 @@
 
 | 组件 | 文件路径 | 行数 | 功能 |
 |-----|---------|------|------|
-| Sentinel 规则文件监听器 | [SentinelRuleFileWatcher.java](../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/config/SentinelRuleFileWatcher.java) | ~200 | 实时监听规则文件，自动热更新 |
-| 自适应采样器 | [AdaptiveSampler.java](../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/config/AdaptiveSampler.java) | ~200 | 根据 QPS 动态调整链路追踪采样率 |
+| Sentinel 规则文件监听器 | [SentinelRuleFileWatcher.java](../apex-system/src/main/java/com/apex/scaffold/interfaces/config/SentinelRuleFileWatcher.java) | ~200 | 实时监听规则文件，自动热更新 |
+| 自适应采样器 | AdaptiveSampler.java（历史文件已移除） | ~200 | 根据 QPS 动态调整链路追踪采样率 |
 
 ### ✅ 修改组件（3 个）
 
 | 组件 | 修改内容 | 说明 |
 |-----|---------|------|
-| [TraceConfig.java](../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/config/TraceConfig.java) | 集成自适应采样器 | 新增 9 个配置参数，修改 tracing() 方法 |
-| [SentinelDynamicRulesLoader.java](../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/config/SentinelDynamicRulesLoader.java) | 新增 getRulesFile() | 供文件监听器使用 |
-| [application.yml](../apex-interfaces/src/main/resources/application.yml) | 新增配置项 | watch-enabled 开关 |
+| TraceConfig.java（历史文件已移除） | 集成自适应采样器 | 新增 9 个配置参数，修改 tracing() 方法 |
+| [SentinelDynamicRulesLoader.java](../apex-system/src/main/java/com/apex/scaffold/interfaces/config/SentinelDynamicRulesLoader.java) | 新增 getRulesFile() | 供文件监听器使用 |
+| [application.yml](../apex-system/src/main/resources/application.yml) | 新增配置项 | watch-enabled 开关 |
 
 ### ✅ 配置文件更新（2 个）
 
 | 文件 | 更新内容 | 环境 |
 |-----|---------|------|
-| [application.yml](../apex-interfaces/src/main/resources/application.yml) | Sentinel watch-enabled: false | 开发环境 |
-| [application-prod.yml](../apex-interfaces/src/main/resources/application-prod.yml) | watch-enabled: true, adaptive-sampling: true | 生产环境 |
+| [application.yml](../apex-system/src/main/resources/application.yml) | Sentinel watch-enabled: false | 开发环境 |
+| [application-prod.yml](../apex-system/src/main/resources/application-prod.yml) | watch-enabled: true, adaptive-sampling: true | 生产环境 |
 
 ### ✅ 技术文档（3 份）
 

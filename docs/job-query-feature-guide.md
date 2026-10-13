@@ -70,39 +70,39 @@
 ### 后端文件
 
 #### 1. DTO层
-- **[apex-application/src/main/java/com/apex/scaffold/application/dto/admin/JobQueryRequest.java](../apex-application/src/main/java/com/apex/scaffold/application/dto/admin/JobQueryRequest.java)**
+- **[apex-application/src/main/java/com/apex/scaffold/application/dto/admin/JobQueryRequest.java](../apex-system/src/main/java/com/apex/scaffold/application/dto/admin/JobQueryRequest.java)**
   - 定时任务分页查询请求DTO
   - 包含分页参数和筛选条件
   - 使用Builder模式构建
 
 #### 2. Domain层
-- **[apex-domain/src/main/java/com/apex/scaffold/domain/repository/JobRepository.java](../apex-domain/src/main/java/com/apex/scaffold/domain/repository/JobRepository.java#L85-L101)**
+- **[apex-domain/src/main/java/com/apex/scaffold/domain/repository/JobRepository.java](../apex-system/src/main/java/com/apex/scaffold/domain/repository/JobRepository.java)**
   - 新增 `findByPage()` 方法：分页查询定时任务
   - 新增 `countByCondition()` 方法：统计符合条件的任务数量
 
 #### 3. Infrastructure层
-- **[apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/repository/JobRepositoryImpl.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/persistence/repository/JobRepositoryImpl.java)**
+- **[apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/repository/JobRepositoryImpl.java](../apex-system/src/main/java/com/apex/scaffold/infrastructure/persistence/repository/JobRepositoryImpl.java)**
   - 实现动态SQL查询逻辑
   - 使用MyBatis-Plus LambdaQueryWrapper构建动态查询条件
   - 使用BlockingScheduler隔离阻塞I/O操作
 
 #### 4. Application层
-- **[apex-application/src/main/java/com/apex/scaffold/application/service/JobService.java](../apex-application/src/main/java/com/apex/scaffold/application/service/JobService.java#L97-L120)**
+- **[apex-application/src/main/java/com/apex/scaffold/application/service/JobService.java](../apex-system/src/main/java/com/apex/scaffold/application/service/JobService.java)**
   - 新增 `pageJobs()` 方法
   - 使用 `Mono.zip()` 并行执行count和findByPage查询
   - 构建 PageResponse 响应对象
 
 #### 5. Interfaces层
-- **[apex-interfaces/src/main/java/com/apex/scaffold/interfaces/handler/JobHandler.java](../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/handler/JobHandler.java#L141-L188)**
+- **[apex-interfaces/src/main/java/com/apex/scaffold/interfaces/handler/JobHandler.java](../apex-system/src/main/java/com/apex/scaffold/interfaces/handler/JobHandler.java)**
   - 新增 `page()` 处理器方法
   - 完整的参数校验（边界检查、类型转换）
   - SpringDoc @Operation 和 @Parameter 注解
 
-- **[apex-interfaces/src/main/java/com/apex/scaffold/interfaces/router/ApiRouter.java](../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/router/ApiRouter.java)**
+- **[apex-interfaces/src/main/java/com/apex/scaffold/interfaces/router/ApiRouter.java](../apex-system/src/main/java/com/apex/scaffold/interfaces/router/JobRouter.java)**
   - 注册 `GET /api/jobs/page` 路由
 
 #### 6. 测试文件
-- **[apex-application/src/test/java/com/apex/scaffold/application/service/JobServiceTest.java](../apex-application/src/test/java/com/apex/scaffold/application/service/JobServiceTest.java#L204-L317)**
+- **[apex-application/src/test/java/com/apex/scaffold/application/service/JobServiceTest.java](../apex-system/src/test/java/com/apex/scaffold/application/service/JobServiceTest.java)**
   - 5个新增测试用例：
     - `pageJobs_WithoutFiltersSuccess()` - 无条件分页查询
     - `pageJobs_WithJobNameFilterSuccess()` - 按任务名称筛选
@@ -130,13 +130,13 @@
 ### 数据库迁移脚本
 
 #### 1. MySQL版本
-- **[apex-interfaces/src/main/resources/db/migration/mysql/V28__add_job_query_menu_and_permissions.sql](../apex-interfaces/src/main/resources/db/migration/mysql/V28__add_job_query_menu_and_permissions.sql)**
+- **[apex-interfaces/src/main/resources/db/migration/mysql/V28__add_job_query_menu_and_permissions.sql](../apex-system/src/main/resources/db/migration/mysql/V28__add_job_query_menu_and_permissions.sql)**
   - 插入菜单记录（id=1013）
   - 插入权限记录（id=2042，code=system:job:page）
   - 为超级管理员角色自动授权
 
 #### 2. PostgreSQL版本
-- **[apex-interfaces/src/main/resources/db/migration/postgresql/V28__add_job_query_menu_and_permissions.sql](../apex-interfaces/src/main/resources/db/migration/postgresql/V28__add_job_query_menu_and_permissions.sql)**
+- **[apex-interfaces/src/main/resources/db/migration/postgresql/V28__add_job_query_menu_and_permissions.sql](../apex-system/src/main/resources/db/migration/postgresql/V28__add_job_query_menu_and_permissions.sql)**
   - 与MySQL版本功能一致
   - 使用 `ON CONFLICT` 语法实现幂等性
 

@@ -299,8 +299,8 @@
 - [统一认证中心设计](../_archive/trae-documents/unified-auth-center-design.md)
 
 ### 数据库文档
-- [OAuth2表结构](../../apex-interfaces/src/main/resources/db/migration/mysql/V25__oauth2_authorization_server_schema.sql)
-- [SSO表结构](../../apex-interfaces/src/main/resources/db/migration/mysql/V41__add_generator_auth_sso_office_tables.sql)
+- [OAuth2表结构](../../apex-system/src/main/resources/db/migration/mysql/V25__oauth2_authorization_server_schema.sql)
+- [SSO表结构](../../apex-system/src/main/resources/db/migration/mysql/V41__add_generator_auth_sso_office_tables.sql)
 
 ### 代码文件
 - **认证中心**: `apex-auth-center/`

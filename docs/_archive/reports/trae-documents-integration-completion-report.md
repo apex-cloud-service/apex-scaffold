@@ -210,7 +210,7 @@ cd /Users/work/apex-scaffold/.trae/documents/
 ### 快速访问(按场景)
 
 - **OAuth2/PKCE 集成**: [docs/integration/oauth2/integration-guide.md](../integration/oauth2/integration-guide.md)
-- **前端组件开发**: [docs/frontend/component-guide.md](../../04-development/frontend/component-guide.md)
+- **前端组件开发**: docs/frontend/component-guide.md（无现存目标）
 - **监控运维配置**: [docs/operations/grafana-status-summary.md](../operations/grafana-status-summary.md)
 - **商业化规划**: [docs/commercial/sales-execution-plan.md](../../07-commercial/sales-execution-plan.md)
 

@@ -13,10 +13,10 @@
 
 | 服务 | 文件路径 | 功能说明 |
 |------|---------|---------|
-| **RoleService** | [RoleService.java](../../../apex-auth-center/src/main/java/com/apex/scaffold/authcenter/application/service/RoleService.java) | 角色 CRUD、权限分配、用户角色管理 |
-| **PermissionService** | [PermissionService.java](../../../apex-auth-center/src/main/java/com/apex/scaffold/authcenter/application/service/PermissionService.java) | 权限 CRUD、权限查询、批量操作 |
-| **SessionService** | [SessionService.java](../../../apex-auth-center/src/main/java/com/apex/scaffold/authcenter/application/service/SessionService.java) | 会话创建、在线管理、并发控制 |
-| **AuthorizationService** | [AuthorizationService.java](../../../apex-auth-center/src/main/java/com/apex/scaffold/authcenter/application/service/AuthorizationService.java) | RBAC 权限验证、资源访问控制 |
+| **RoleService** | [RoleService.java](../../../apex-auth/src/main/java/com/apex/scaffold/auth/application/service/RoleService.java) | 角色 CRUD、权限分配、用户角色管理 |
+| **PermissionService** | [PermissionService.java](../../../apex-auth/src/main/java/com/apex/scaffold/auth/application/service/PermissionService.java) | 权限 CRUD、权限查询、批量操作 |
+| **SessionService** | [SessionService.java](../../../apex-auth/src/main/java/com/apex/scaffold/auth/application/service/SessionService.java) | 会话创建、在线管理、并发控制 |
+| **AuthorizationService** | [AuthorizationService.java](../../../apex-auth/src/main/java/com/apex/scaffold/auth/application/service/AuthorizationService.java) | RBAC 权限验证、资源访问控制 |
 
 **核心功能**:
 - ✅ 角色与权限管理完整生命周期

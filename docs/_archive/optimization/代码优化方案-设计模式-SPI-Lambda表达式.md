@@ -760,18 +760,18 @@ mvnd pmd:check
 ### 7.1 关键代码索引
 
 **设计模式应用**:
-- 策略模式: [LoginStrategyProvider.java](../../../apex-application/src/main/java/com/apex/scaffold/application/service/login/LoginStrategyProvider.java)
-- SPI 机制: [StorageProvider.java](../../../apex-common/src/main/java/com/apex/scaffold/common/spi/StorageProvider.java)
+- 策略模式: [LoginStrategyProvider.java](../../../apex-system/src/main/java/com/apex/scaffold/application/service/login/LoginStrategyProvider.java)
+- SPI 机制: StorageProvider.java（历史文件已移除）
 - 适配器模式: [CacheServiceImpl.java](../../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/service/CacheServiceImpl.java)
 
 **Lambda 表达式应用**:
 - 配置验证: [ApexBlockingIoProperties.java](../../../apex-common/src/main/java/com/apex/scaffold/common/config/ApexBlockingIoProperties.java)
-- 响应式链式: [SubscriptionRepositoryImpl.java](../../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/persistence/repository/SubscriptionRepositoryImpl.java)
+- 响应式链式: [SubscriptionRepositoryImpl.java](../../../apex-system/src/main/java/com/apex/scaffold/infrastructure/persistence/repository/SubscriptionRepositoryImpl.java)
 
 **待优化代码**:
 - 限流器清理: [LocalRateLimiter.java#L246-L260](../../../apex-common/src/main/java/com/apex/scaffold/common/util/ratelimit/LocalRateLimiter.java#L246-L260)
-- 部门树构建: [DeptService.java#L137-L151](../../../apex-application/src/main/java/com/apex/scaffold/application/service/DeptService.java#L137-L151)
-- Lua 脚本: [IpRateLimitWebFilter.java#L108-L113](../../../apex-interfaces/src/main/java/com/apex/scaffold/interfaces/filter/IpRateLimitWebFilter.java#L108-L113)
+- 部门树构建: [DeptService.java#L137-L151](../../../apex-system/src/main/java/com/apex/scaffold/application/service/DeptService.java)
+- Lua 脚本: [IpRateLimitWebFilter.java#L108-L113](../../../apex-system/src/main/java/com/apex/scaffold/interfaces/filter/IpRateLimitWebFilter.java)
 
 ### 7.2 参考文档
 

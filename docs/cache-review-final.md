@@ -18,7 +18,7 @@
 | ✅ 定时重建任务 | 每天凌晨 3 点自动重建 BloomFilter | [BloomFilterRebuildTask.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/task/BloomFilterRebuildTask.java) |
 | ✅ 监控指标采集 | Prometheus 指标完整采集 | [BloomFilterMetrics.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/metrics/BloomFilterMetrics.java) |
 | ✅ 分域容量配置 | 支持按业务域独立配置容量 | [BloomFilterNamespaceProperties.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/config/BloomFilterNamespaceProperties.java) |
-| ✅ 配置文件完善 | 开发/生产环境配置完整 | [application.yml](../apex-interfaces/src/main/resources/application.yml#L856-L880), [application-prod.yml](../apex-interfaces/src/main/resources/application-prod.yml#L312-L331) |
+| ✅ 配置文件完善 | 开发/生产环境配置完整 | [application.yml](../apex-system/src/main/resources/application.yml), [application-prod.yml](../apex-system/src/main/resources/application-prod.yml) |
 | ✅ 单元测试补充 | 定时任务测试用例 | [BloomFilterRebuildTaskTest.java](../apex-infrastructure/src/test/java/com/apex/scaffold/infrastructure/cache/task/BloomFilterRebuildTaskTest.java) |
 
 ---
@@ -174,7 +174,7 @@ namespaces:
 
 ### 2.1 开发环境配置
 
-**文件**: [application.yml:856-880](../apex-interfaces/src/main/resources/application.yml#L856-L880)
+**文件**: [application.yml:856-880](../apex-system/src/main/resources/application.yml)
 
 新增完整的 BloomFilter 配置：
 ```yaml
@@ -200,7 +200,7 @@ apex:
 
 ### 2.2 生产环境配置
 
-**文件**: [application-prod.yml:312-331](../apex-interfaces/src/main/resources/application-prod.yml#L312-L331)
+**文件**: [application-prod.yml:312-331](../apex-system/src/main/resources/application-prod.yml)
 
 生产环境根据实际数据量调整：
 ```yaml

@@ -157,7 +157,7 @@ apex:
 
 授权读取请求为 `GET {base-url}/auth/v1/authorization/users/{centerUserId}`，使用配置的 Bearer ACCESS Token。成功响应是 `Result`，`data` 包含中心租户/用户身份、权限编码和角色数据范围；客户端校验成功码与映射身份后转换为主应用身份。客户端超时为 3 秒，使用名为 `auth-center-permission` 的 Resilience4j 默认熔断器；当前没有为该熔断器提供独立配置项。
 
-中心默认监听 8081，HTTPS 入口须由实际部署提供；示例本地 HTTP 地址不能直接用于主应用远程授权配置。参见[认证中心说明](../../apex-auth-center/README.md)、[验证矩阵](../../apex-auth-center/TESTING.md)和[业务时序](../architecture/business-flows.md)。
+中心默认监听 8081，HTTPS 入口须由实际部署提供；示例本地 HTTP 地址不能直接用于主应用远程授权配置。参见[认证接口路由契约](../../apex-auth-service/src/main/java/com/apex/scaffold/authservice/interfaces/router/AuthenticationRouter.java)、[认证接口集成测试源码](../../apex-auth-service/src/test/java/com/apex/scaffold/authservice/interfaces/handler/AuthenticationHandlerIntegrationTest.java)和[业务时序](../architecture/business-flows.md)。
 
 ### RBAC权限配置
 

@@ -111,7 +111,7 @@ ratelimit_distributed_redis_errors_total{component="ratelimit"}
 
 ### 3.1 开发环境配置
 
-**文件**: [application.yml](../apex-interfaces/src/main/resources/application.yml)
+**文件**: [application.yml](../apex-system/src/main/resources/application.yml)
 
 ```yaml
 apex:
@@ -132,7 +132,7 @@ apex:
 
 ### 3.2 生产环境配置
 
-**文件**: [application-prod.yml](../apex-interfaces/src/main/resources/application-prod.yml)
+**文件**: [application-prod.yml](../apex-system/src/main/resources/application-prod.yml)
 
 ```yaml
 apex:

@@ -728,9 +728,9 @@ sdk env  # 或手动设置 export JAVA_HOME=...
 ## 📚 相关文档
 
 - [AGENTS.md](../AGENTS.md) - 编码规范和验证约定
-- [docs/04-development/](../docs/04-development/) - 开发规范文档
-- [docs/05-operations/](../docs/05-operations/) - 运维部署文档
-- [docs/06-testing/](../docs/06-testing/) - 测试文档
+- [docs/04-development/](../docs/04-development/README.md) - 开发规范文档
+- [docs/05-operations/](../docs/05-operations/README.md) - 运维部署文档
+- [docs/06-testing/](../docs/06-testing/README.md) - 测试文档
 
 ---
 

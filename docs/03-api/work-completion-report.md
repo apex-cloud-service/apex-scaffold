@@ -44,7 +44,7 @@
 - ✅ 生成历史记录
 
 **关键文件**:
-- Domain: [`GenDatasourceEntity`](../../apex-domain/src/main/java/com/apex/scaffold/domain/model/entity/GenDatasourceEntity.java), [`GenConfigEntity`](../../apex-domain/src/main/java/com/apex/scaffold/domain/model/entity/GenConfigEntity.java)
+- Domain: [`GenDatasourceEntity`](../../apex-system/src/main/java/com/apex/scaffold/domain/model/entity/GenDatasourceEntity.java), [`GenConfigEntity`](../../apex-system/src/main/java/com/apex/scaffold/domain/model/entity/GenConfigEntity.java)
 - Application: `CodeGenerationService`, `GenDatasourceService`
 - Interfaces: ``CodeGeneratorRouter``
 
@@ -105,15 +105,15 @@
 - ✅ Logout 端点
 
 **关键文件**:
-- Domain: [`SysSsoProviderEntity`](../../apex-domain/src/main/java/com/apex/scaffold/domain/model/entity/SysSsoProviderEntity.java), [`SysSsoSessionEntity`](../../apex-domain/src/main/java/com/apex/scaffold/domain/model/entity/SysSsoSessionEntity.java)
-- Application: [`SamlProtocolAdapter`](../../apex-application/src/main/java/com/apex/scaffold/application/support/sso/SamlProtocolAdapter.java), [`OidcProtocolAdapter`](../../apex-application/src/main/java/com/apex/scaffold/application/support/sso/OidcProtocolAdapter.java)
+- Domain: [`SysSsoProviderEntity`](../../apex-system/src/main/java/com/apex/scaffold/domain/model/entity/SysSsoProviderEntity.java), [`SysSsoSessionEntity`](../../apex-system/src/main/java/com/apex/scaffold/domain/model/entity/SysSsoSessionEntity.java)
+- Application: [`SamlProtocolAdapter`](../../apex-system/src/main/java/com/apex/scaffold/application/support/sso/SamlProtocolAdapter.java), [`OidcProtocolAdapter`](../../apex-system/src/main/java/com/apex/scaffold/application/support/sso/OidcProtocolAdapter.java)
 - Interfaces: `SsoAdminRouter`, `SsoAuthRouter`
 
 ### 4. 数据库设计 (100%)
 
 **Flyway 迁移脚本**:
-- ✅ MySQL: [`V41__add_generator_auth_sso_office_tables.sql`](../../apex-interfaces/src/main/resources/db/migration/mysql/V41__add_generator_auth_sso_office_tables.sql)
-- ✅ PostgreSQL: [`V41__add_generator_auth_sso_office_tables.sql`](../../apex-interfaces/src/main/resources/db/migration/postgresql/V41__add_generator_auth_sso_office_tables.sql)
+- ✅ MySQL: [`V41__add_generator_auth_sso_office_tables.sql`](../../apex-system/src/main/resources/db/migration/mysql/V41__add_generator_auth_sso_office_tables.sql)
+- ✅ PostgreSQL: [`V41__add_generator_auth_sso_office_tables.sql`](../../apex-system/src/main/resources/db/migration/postgresql/V41__add_generator_auth_sso_office_tables.sql)
 
 **数据库表** (11张):
 - 代码生成器: `gen_datasource`, `gen_config`, `gen_template`, `gen_history`

@@ -330,7 +330,7 @@ private Long expireAt;       // 会触发 ArchUnit 测试失败
 
 ## 相关文档
 
-- **开发规范**: [AGENTS.md#时间字段使用规范](../../AGENTS.md#L99-L109)
+- **开发规范**: [AGENTS.md#持久化、迁移与租户隔离](../../AGENTS.md#持久化迁移与租户隔离)
 - **Y2038 分析报告**: [Y2038-timestamp-analysis-report.md](../_archive/trae-documents/Y2038-timestamp-analysis-report.md)
 - **检查脚本**: [check-flyway-timestamp-usage.sh](../../scripts/dev/check/check-flyway-timestamp-usage.sh)
 - **架构测试**: [TimeFieldArchTest.java](../../apex-infrastructure/src/test/java/com/apex/scaffold/arch/TimeFieldArchTest.java)

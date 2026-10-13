@@ -124,8 +124,8 @@ http://localhost:8080/v3/api-docs
 ## 🚀 快速链接
 
 - [返回文档中心](../README.md)
-- [开发文档](../04-development/)
-- [测试文档](../06-testing/)
+- [开发文档](../04-development/README.md)
+- [测试文档](../06-testing/README.md)
 
 ---
 

@@ -861,9 +861,9 @@ plain-code-verifier-value
 
 | 文件类型 | 路径 |
 |---------|------|
-| **测试类** | [OAuth2AuthorizationServiceImplTest.java](../../../../../apex-application/src/test/java/com/apex/scaffold/application/service/OAuth2AuthorizationServiceImplTest.java) |
-| **实现类** | [OAuth2AuthorizationServiceImpl.java](../../../../../apex-application/src/main/java/com/apex/scaffold/application/service/OAuth2AuthorizationServiceImpl.java) |
-| **实体类** | [OAuth2AuthorizationCodeEntity.java](../../../../../apex-domain/src/main/java/com/apex/scaffold/domain/model/entity/OAuth2AuthorizationCodeEntity.java) |
+| **测试类** | [OAuth2AuthorizationServiceImplTest.java](../../../../../apex-system/src/test/java/com/apex/scaffold/application/service/OAuth2AuthorizationServiceImplTest.java) |
+| **实现类** | [OAuth2AuthorizationServiceImpl.java](../../../../../apex-system/src/main/java/com/apex/scaffold/application/service/OAuth2AuthorizationServiceImpl.java) |
+| **实体类** | [OAuth2AuthorizationCodeEntity.java](../../../../../apex-system/src/main/java/com/apex/scaffold/domain/model/entity/OAuth2AuthorizationCodeEntity.java) |
 
 ### 10.2 测试工具版本
 

@@ -117,10 +117,10 @@ docs/reports/archive/
 
 | 文档名称 | 路径 | 说明 |
 |---------|------|------|
-| 前端组件使用指南 | [frontend/component-guide.md](../04-development/frontend/component-guide.md) | 前端组件开发指南 |
-| 按钮权限控制指南 | [frontend/button-permission-guide.md](../04-development/frontend/button-permission-guide.md) | 前端按钮权限控制补充指南 |
-| 前端页面审计报告 | [frontend/page-audit-report.md](../04-development/frontend/page-audit-report.md) | 前端页面审计结果 |
-| 数据库配置适配方案 | [frontend/database-config-adapter.md](../04-development/frontend/database-config-adapter.md) | 前端配置数据库多适配方案 |
+| 前端组件使用指南 | frontend/component-guide.md（无现存目标） | 前端组件开发指南 |
+| 按钮权限控制指南 | frontend/button-permission-guide.md（无现存目标） | 前端按钮权限控制补充指南 |
+| 前端页面审计报告 | frontend/page-audit-report.md（无现存目标） | 前端页面审计结果 |
+| 数据库配置适配方案 | frontend/database-config-adapter.md（无现存目标） | 前端配置数据库多适配方案 |
 
 ### 运维监控
 
@@ -180,10 +180,10 @@ docs/reports/archive/
 **适用场景**: 开发前端组件、实现按钮级权限控制、页面审计
 
 **推荐阅读顺序**:
-1. [前端组件使用指南](../04-development/frontend/component-guide.md) - 组件开发规范
-2. [按钮权限控制指南](../04-development/frontend/button-permission-guide.md) - 权限控制实现
-3. [前端页面审计报告](../04-development/frontend/page-audit-report.md) - 审计结果参考
-4. [前端开发规范](../04-development/frontend-development-standards.md) - 编码规范
+1. 前端组件使用指南（无现存目标） - 组件开发规范
+2. 按钮权限控制指南（无现存目标） - 权限控制实现
+3. 前端页面审计报告（无现存目标） - 审计结果参考
+4. 前端开发规范（无现存目标） - 编码规范
 
 ### 场景 3: 监控体系搭建与运维
 
@@ -341,7 +341,7 @@ docs/reports/archive/
 ### 新人入职
 
 1. 阅读 [ARCHITECTURE_INDEX.md](../02-architecture/architecture-index.md) 了解架构全貌
-2. 根据岗位查看对应开发规范 ([后端](../04-development/development-standards.md) / [前端](../04-development/frontend-development-standards.md))
+2. 根据岗位查看对应开发规范 ([后端](../04-development/development-standards.md) / 前端开发规范（无现存目标）)
 3. 查阅 [00-getting-started/quickstart.md](../00-getting-started/quickstart.md) 快速启动项目
 
 ### 功能开发
