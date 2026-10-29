@@ -136,6 +136,21 @@ public class GeneratorWizardService {
     private final String outputRoot;
     private final AtomicLong taskSequence = new AtomicLong();
 
+    /**
+     * 构造代码生成向导服务。
+     *
+     * @param configRepository 生成配置仓储
+     * @param datasourceRepository 数据源配置仓储
+     * @param templateRepository 模板仓储
+     * @param historyRepository 生成历史仓储
+     * @param artifactRepository 生成产物仓储
+     * @param dataSourcePoolManager 动态数据源连接池管理器
+     * @param metadataReader 数据库元数据读取器
+     * @param templateEngine 变量替换模板引擎
+     * @param encryptionService 配置加解密服务
+     * @param objectMapper JSON 序列化器
+     * @param outputRoot 产物输出根目录，按租户/任务隔离
+     */
     public GeneratorWizardService(
             GenConfigRepository configRepository,
             GenDatasourceRepository datasourceRepository,

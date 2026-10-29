@@ -88,6 +88,13 @@ public class WorkflowDefinitionHandler {
 
     private final RequestHandlerUtil requestHandlerUtil;
 
+    /**
+     * 构造流程定义接口处理器。
+     *
+     * @param workflowService 工作流写服务
+     * @param workflowQueryService 工作流查询服务
+     * @param requestHandlerUtil 请求解析与统一响应工具
+     */
     public WorkflowDefinitionHandler(
             WorkflowService workflowService,
             WorkflowQueryService workflowQueryService,

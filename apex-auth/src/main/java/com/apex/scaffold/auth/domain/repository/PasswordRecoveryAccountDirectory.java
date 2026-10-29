@@ -14,8 +14,20 @@ import reactor.core.publisher.Mono;
  */
 public interface PasswordRecoveryAccountDirectory {
 
+    /**
+     * 按邮箱摘要跨租户解析目标账号，多命中时不返回账号明细。
+     *
+     * @param email 规范化邮箱
+     * @return 唯一命中 / 无命中 / 多命中三种解析结果之一
+     */
     Mono<Resolution> resolveByEmail(String email);
 
+    /**
+     * 按手机号摘要跨租户解析目标账号，多命中时不返回账号明细。
+     *
+     * @param phone 规范化手机号
+     * @return 唯一命中 / 无命中 / 多命中三种解析结果之一
+     */
     Mono<Resolution> resolveByPhone(String phone);
 
     /** 以显式 userId + tenantId 条件更新密码哈希，返回是否更新成功。 */

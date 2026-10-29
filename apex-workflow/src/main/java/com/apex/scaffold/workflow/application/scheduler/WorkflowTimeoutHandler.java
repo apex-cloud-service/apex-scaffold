@@ -41,6 +41,16 @@ public class WorkflowTimeoutHandler {
     private final Duration leaseTtl;
     private final AtomicBoolean running = new AtomicBoolean();
 
+    /**
+     * 构造工作流超时扫描入口。
+     *
+     * @param taskScan 超时任务扫描端口
+     * @param workflowService 工作流服务
+     * @param scanLease 跨实例扫描租约
+     * @param executorEnabled 是否启用 XXL 执行器；与 {@code workflowEnabled} 同时为真时才跳过本地 {@code @Scheduled}
+     * @param workflowEnabled 是否为工作流任务开启执行器托管
+     * @param leaseSeconds 租约有效期（秒）
+     */
     public WorkflowTimeoutHandler(
             TimeoutTaskScan taskScan,
             WorkflowService workflowService,

@@ -16,8 +16,20 @@ import reactor.core.publisher.Mono;
  */
 public interface PasswordRecoveryRepository {
 
+    /**
+     * 保存恢复单，返回持久化后的实体。
+     *
+     * @param entity 待保存的恢复单
+     * @return 持久化后的恢复单
+     */
     Mono<PasswordRecoveryEntity> save(PasswordRecoveryEntity entity);
 
+    /**
+     * 按恢复单主键查询，不附加租户作用域。
+     *
+     * @param id 恢复单主键
+     * @return 恢复单，不存在时为空
+     */
     Mono<PasswordRecoveryEntity> findById(String id);
 
     /**

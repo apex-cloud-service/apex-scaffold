@@ -24,6 +24,14 @@ public class JdbcWorkflowTaskTransaction implements WorkflowTaskTransaction {
     private final WorkflowDefinitionRepositoryImpl definitions;
     private final TransactionTemplate transactions;
 
+    /**
+     * 构造任务事务执行器，绑定同一数据源的同步事务模板。
+     *
+     * @param dataSource 工作流库数据源
+     * @param tasks 任务仓储
+     * @param instances 流程实例仓储
+     * @param definitions 流程定义仓储
+     */
     public JdbcWorkflowTaskTransaction(
             DataSource dataSource,
             TaskRepositoryImpl tasks,

@@ -70,6 +70,11 @@ public class DataSourcePoolManager {
 
     private final Semaphore connectionGate;
 
+    /**
+     * 构造动态数据源连接池管理器。
+     *
+     * @param maxConcurrency 并发创建/测试连接池的信号量上限，小于 1 时按 1 处理
+     */
     public DataSourcePoolManager(
             @Value("${apex.generator.datasource.max-concurrency:" + DEFAULT_CONCURRENCY + "}") int maxConcurrency) {
         this.connectionGate = new Semaphore(Math.max(1, maxConcurrency));
