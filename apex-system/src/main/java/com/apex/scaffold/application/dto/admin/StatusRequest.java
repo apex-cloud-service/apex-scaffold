@@ -1,6 +1,9 @@
 package com.apex.scaffold.application.dto.admin;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 /**
  * 状态更新请求体（公共 DTO）。
@@ -21,33 +24,13 @@ import io.swagger.v3.oas.annotations.media.Schema;
  * @version 1.2.0
  * @since 1.0.0
  */
+@Getter
+@Setter
+@NoArgsConstructor
 @Schema(description = "状态更新请求体（启用/停用）")
 public class StatusRequest {
 
     /** 是否启用：true-启用，false-停用 */
     @Schema(description = "是否启用：true-启用，false-停用", example = "true")
     private boolean enabled;
-
-    /**
-     * 构造状态更新请求体（无参，供 JSON 反序列化使用）。
-     */
-    public StatusRequest() {}
-
-    /**
-     * 获取是否启用。
-     *
-     * @return true-启用，false-停用
-     */
-    public boolean isEnabled() {
-        return enabled;
-    }
-
-    /**
-     * 设置是否启用。
-     *
-     * @param enabled true-启用，false-停用
-     */
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
-    }
 }

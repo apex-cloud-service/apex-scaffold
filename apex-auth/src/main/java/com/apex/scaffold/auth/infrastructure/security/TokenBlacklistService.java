@@ -257,6 +257,8 @@ public class TokenBlacklistService {
     /**
      * 撤销原因枚举
      */
+    @lombok.Getter
+    @lombok.RequiredArgsConstructor
     public enum RevokeReason {
         /** 用户主动登出 */
         USER_LOGOUT("用户主动登出"),
@@ -274,13 +276,5 @@ public class TokenBlacklistService {
         EXPIRED("Token过期");
 
         private final String description;
-
-        RevokeReason(String description) {
-            this.description = description;
-        }
-
-        public String getDescription() {
-            return description;
-        }
     }
 }

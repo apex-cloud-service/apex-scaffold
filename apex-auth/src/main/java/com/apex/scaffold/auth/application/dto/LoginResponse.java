@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
  * <p>登录成功后返回的用户信息和Token
  *
  * @author Apex Team
- * @since 2026-09-20
+ * @since 1.3.1
  */
 @Data
 @Builder

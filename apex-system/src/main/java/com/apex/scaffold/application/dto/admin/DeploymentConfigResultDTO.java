@@ -51,6 +51,6 @@ public class DeploymentConfigResultDTO {
     /**
      * Docker Compose 配置（可选）。
      */
-    @Schema(description = "Docker Compose 配置内容（可为空）", example = "services:\n  database:\n    image: mysql:8.0")
+    @Schema(description = "Docker Compose 配置内容（可为空）", example = "services:\n  database:\n    image: mysql:9.0")
     private String dockerCompose;
 }

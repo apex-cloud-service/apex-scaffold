@@ -356,6 +356,12 @@ public class ProfileService {
      * @param user 用户实体
      * @param profile 用户画像实体
      * @param compliance 用户合规配置实体
+     * @param activeSubscription 当前生效订阅，null 表示非会员
+     * @param publishedPhotoCount 已发布照片数（认证进度统计口径）
+     * @param receivedLikeCount 收到的点赞总数
+     * @param creditBalance 算力余额
+     * @param aestheticResonanceCount 美学共鸣计数
+     * @param exposureCreditBalance 曝光算力余额
      * @return 用户资料视图对象
      */
     private MeVO buildMeVO(

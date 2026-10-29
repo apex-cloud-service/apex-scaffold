@@ -35,7 +35,12 @@ public class DingTalkOrganizationClient implements OfficePlatformOrganizationCli
     private final WebClient webClient;
     private final OfficePlatformProperties.Platform properties;
 
-    /** 构造钉钉组织客户端并加载钉钉平台配置。 */
+    /**
+     * 构造钉钉组织客户端并加载钉钉平台配置。
+     *
+     * @param webClient 用于调用钉钉通讯录 API 的 HTTP 客户端
+     * @param platformProperties 包含钉钉应用凭证的平台配置
+     */
     public DingTalkOrganizationClient(WebClient webClient, OfficePlatformProperties platformProperties) {
         this.webClient = webClient;
         this.properties = platformProperties

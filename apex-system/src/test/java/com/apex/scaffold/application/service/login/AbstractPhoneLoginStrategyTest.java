@@ -57,8 +57,6 @@ class AbstractPhoneLoginStrategyTest {
         private volatile String generatedSubject;
         private volatile String generatedDeviceId;
 
-        /**
-         */
         TestPhoneLoginStrategy(
                 UserService userService,
                 TokenService tokenService,

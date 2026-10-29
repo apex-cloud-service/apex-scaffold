@@ -26,6 +26,7 @@ class FlywayMigrationVersionTest {
         List<BigDecimal> mysqlVersions = migrationVersions("mysql");
         List<BigDecimal> postgresqlVersions = migrationVersions("postgresql");
 
+        assertThat(mysqlVersions).isNotEmpty().contains(versionNumber("62"));
         assertThat(mysqlVersions)
                 .as("MySQL and PostgreSQL migration versions must be identical")
                 .containsExactlyElementsOf(postgresqlVersions);

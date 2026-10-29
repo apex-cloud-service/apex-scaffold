@@ -124,7 +124,11 @@ class UnifiedAuthorizationServiceIntegrationTest {
     @Test
     void productionClientRejectsNonHttpsEndpointBeforeNetworkAccess() {
         AuthCenterPermissionProperties properties = properties("http://127.0.0.1:1");
-        AuthCenterPermissionClient client = new AuthCenterPermissionClient(properties, null);
+        AuthCenterPermissionClient client = new AuthCenterPermissionClient(
+                properties,
+                org.springframework.web.reactive.function.client.WebClient.builder()
+                        .build(),
+                null);
 
         StepVerifier.create(client.query("main", 7L))
                 .expectErrorMatches(error -> error instanceof IllegalStateException
@@ -157,7 +161,8 @@ class UnifiedAuthorizationServiceIntegrationTest {
                 properties(endpoint(), token),
                 org.springframework.web.reactive.function.client.WebClient.builder()
                         .clientConnector(new ReactorClientHttpConnector(clientHttpClient()))
-                        .build());
+                        .build(),
+                null);
     }
 
     private AuthCenterPermissionProperties properties(String baseUrl) {

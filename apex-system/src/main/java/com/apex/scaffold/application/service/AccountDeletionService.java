@@ -52,6 +52,15 @@ public class AccountDeletionService {
 
     /**
      * 创建账号注销服务。
+     *
+     * @param userService 用户应用服务
+     * @param subscriptionRepository 订阅仓储
+     * @param smsVerificationCoordinator 短信验证码协调器
+     * @param accountDeletionPort 账号注销端口
+     * @param tokenBlacklistService 令牌黑名单服务
+     * @param tokenService 令牌服务
+     * @param cacheConsistencyPort 缓存一致性端口
+     * @param authTicketService 认证票据服务
      */
     public AccountDeletionService(
             UserService userService,

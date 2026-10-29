@@ -78,6 +78,15 @@ public final class AuthCenterApiResponses {
     @Schema(name = "MfaStatusResult", description = "统一响应，data 类型为 MfaStatus")
     public static class MfaStatusResult extends Result<MfaStatus> {}
 
+    @Schema(name = "PasswordRecoveryInitiateResult", description = "统一响应，data 类型为 PasswordRecoveryInitiateResponse")
+    public static class PasswordRecoveryInitiateResult extends Result<PasswordRecoveryInitiateResponse> {}
+
+    @Schema(name = "PasswordRecoveryVerifyResult", description = "统一响应，data 类型为 PasswordRecoveryVerifyResponse")
+    public static class PasswordRecoveryVerifyResult extends Result<PasswordRecoveryVerifyResponse> {}
+
+    @Schema(name = "PasswordRecoveryConfirmResult", description = "统一响应，data 类型为 PasswordRecoveryConfirmResponse")
+    public static class PasswordRecoveryConfirmResult extends Result<PasswordRecoveryConfirmResponse> {}
+
     @Data
     @Schema(name = "OnlineStatistics", description = "OnlineStatistics 响应数据")
     public static class OnlineStatistics {

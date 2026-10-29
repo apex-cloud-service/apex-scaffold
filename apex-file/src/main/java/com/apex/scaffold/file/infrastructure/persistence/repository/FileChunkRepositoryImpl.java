@@ -43,10 +43,9 @@ public class FileChunkRepositoryImpl implements FileChunkRepository {
     public Mono<FileChunkEntity> save(FileChunkEntity chunk) {
         return Mono.fromCallable(() -> {
                     FileChunkPO po = fileChunkPoConverter.toPo(chunk);
-                    if (po.getId() == null) {
-                        fileChunkMapper.insert(po);
-                    } else {
-                        fileChunkMapper.updateById(po);
+                    int affected = po.getId() == null ? fileChunkMapper.insert(po) : fileChunkMapper.updateById(po);
+                    if (affected != 1) {
+                        throw new IllegalStateException("分片记录保存失败或并发版本冲突");
                     }
                     return fileChunkPoConverter.toEntity(po);
                 })

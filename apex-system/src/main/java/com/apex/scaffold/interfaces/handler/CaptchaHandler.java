@@ -2,6 +2,7 @@ package com.apex.scaffold.interfaces.handler;
 
 import com.apex.scaffold.application.security.CaptchaService;
 import com.apex.scaffold.application.security.CaptchaVO;
+import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.interfaces.util.MessageUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -75,6 +76,12 @@ public class CaptchaHandler extends BaseHandler {
                 content = @Content(mediaType = "application/json", schema = @Schema(implementation = CaptchaVO.class))),
         @ApiResponse(responseCode = "500", description = "服务器内部错误")
     })
+    @OperationLog(
+            module = "Captcha",
+            type = OperationLog.OperationType.OTHER,
+            description = "generate",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> generate(ServerRequest request) {
         return captchaService.generate().flatMap(this::buildSuccess);
     }
@@ -103,6 +110,12 @@ public class CaptchaHandler extends BaseHandler {
                 content = @Content(mediaType = "application/json")),
         @ApiResponse(responseCode = "400", description = "参数错误，captchaId或code为空")
     })
+    @OperationLog(
+            module = "Captcha",
+            type = OperationLog.OperationType.OTHER,
+            description = "verify",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> verify(ServerRequest request) {
         return request.bodyToMono(CaptchaVerifyRequest.class)
                 .defaultIfEmpty(new CaptchaVerifyRequest())

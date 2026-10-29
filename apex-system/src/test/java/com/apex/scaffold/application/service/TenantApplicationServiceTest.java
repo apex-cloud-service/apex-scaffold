@@ -3,17 +3,21 @@ package com.apex.scaffold.application.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.apex.scaffold.application.assembler.TenantAssembler;
 import com.apex.scaffold.application.dto.admin.TenantCreateRequest;
 import com.apex.scaffold.application.dto.admin.TenantDTO;
+import com.apex.scaffold.application.dto.admin.TenantPageQuery;
+import com.apex.scaffold.common.dto.PageResponse;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.domain.model.entity.TenantEntity;
 import com.apex.scaffold.domain.model.valueobject.TenantQuota;
 import com.apex.scaffold.domain.repository.TenantRepository;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -21,17 +25,18 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DuplicateKeyException;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 /**
  * 租户应用服务单元测试。
  *
- * <p>覆盖租户生命周期管理（创建、停用、启用、冻结、解冻、注销、归档）与配额校验，
- * 重点验证编码唯一性、状态迁移合法性映射与配额超限错误码。</p>
+ * <p>覆盖平台租户目录分页、开通、详情、生命周期动作与配额管理，重点验证
+ * 编码唯一性、状态迁移合法性映射、乐观锁版本冲突与配额超限错误码。</p>
  *
  * @author Apex Team
- * @version 1.0.0
+ * @version 1.1.0
  * @since 1.3.0
  */
 @ExtendWith(MockitoExtension.class)
@@ -94,7 +99,7 @@ class TenantApplicationServiceTest {
     }
 
     @Test
-    @DisplayName("createTenant - 编码已存在时抛出异常")
+    @DisplayName("createTenant - 预查询发现编码已存在时抛出异常")
     void createTenant_DuplicateCode() {
         TenantCreateRequest request = new TenantCreateRequest();
         request.setTenantCode(TENANT_CODE);
@@ -107,6 +112,40 @@ class TenantApplicationServiceTest {
                 .as(StepVerifier::create)
                 .expectErrorMatches(err -> err instanceof BusinessException
                         && ((BusinessException) err).getCode().equals(ResultCode.TENANT_CODE_EXISTS.getCode()))
+                .verify();
+
+        verify(tenantRepository, never()).insert(any(TenantEntity.class));
+    }
+
+    @Test
+    @DisplayName("createTenant - 并发唯一键冲突映射为编码已存在")
+    void createTenant_DuplicateKeyOnInsert() {
+        TenantCreateRequest request = new TenantCreateRequest();
+        request.setTenantCode(TENANT_CODE);
+        request.setTenantName("Acme Corp");
+
+        when(tenantRepository.existsByCode(TENANT_CODE, null)).thenReturn(Mono.just(false));
+        when(tenantRepository.insert(any(TenantEntity.class)))
+                .thenReturn(Mono.error(new DuplicateKeyException("uk_sys_tenant_tenant_code")));
+
+        tenantApplicationService
+                .createTenant(request)
+                .as(StepVerifier::create)
+                .expectErrorMatches(err -> err instanceof BusinessException
+                        && ((BusinessException) err).getCode().equals(ResultCode.TENANT_CODE_EXISTS.getCode()))
+                .verify();
+    }
+
+    @Test
+    @DisplayName("getById - 租户不存在时抛出 TENANT_NOT_FOUND")
+    void getById_NotFound() {
+        when(tenantRepository.findById(99L)).thenReturn(Mono.empty());
+
+        tenantApplicationService
+                .getById(99L)
+                .as(StepVerifier::create)
+                .expectErrorMatches(err -> err instanceof BusinessException
+                        && ((BusinessException) err).getCode().equals(ResultCode.TENANT_NOT_FOUND.getCode()))
                 .verify();
     }
 
@@ -124,60 +163,115 @@ class TenantApplicationServiceTest {
     }
 
     @Test
-    @DisplayName("disable - 正常租户停用成功")
-    void disable_Success() {
+    @DisplayName("pageTenants - 返回带筛选条件的分页结果")
+    void pageTenants_Success() {
+        TenantPageQuery query = TenantPageQuery.builder()
+                .pageNum(1)
+                .pageSize(10)
+                .tenantCode("T0")
+                .status("ACTIVE")
+                .build();
+
+        when(tenantRepository.search("T0", null, "ACTIVE", 1, 10))
+                .thenReturn(Mono.just(PageResponse.of(List.of(activeTenant), 1L, 1, 10)));
+        when(tenantAssembler.toDTO(activeTenant)).thenReturn(mockTenantDTO);
+
+        tenantApplicationService
+                .pageTenants(query)
+                .as(StepVerifier::create)
+                .assertNext(page -> {
+                    assertThat(page.getTotal()).isEqualTo(1L);
+                    assertThat(page.getPageNum()).isEqualTo(1);
+                    assertThat(page.getPageSize()).isEqualTo(10);
+                    assertThat(page.getList()).hasSize(1);
+                    assertThat(page.getList().get(0).getTenantCode()).isEqualTo(TENANT_CODE);
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("changeStatus - 正常租户停用成功")
+    void changeStatus_DisableSuccess() {
         TenantDTO disabledDTO = new TenantDTO();
         disabledDTO.setId(1L);
         disabledDTO.setTenantCode(TENANT_CODE);
         disabledDTO.setStatus("DISABLED");
 
-        when(tenantRepository.findByCode(TENANT_CODE)).thenReturn(Mono.just(activeTenant));
+        when(tenantRepository.findById(1L)).thenReturn(Mono.just(activeTenant));
         when(tenantRepository.updateById(any(TenantEntity.class))).thenReturn(Mono.just(1));
         when(tenantAssembler.toDTO(any(TenantEntity.class))).thenReturn(disabledDTO);
 
         tenantApplicationService
-                .disable(TENANT_CODE)
+                .changeStatus(1L, "disable", null)
                 .as(StepVerifier::create)
                 .assertNext(dto -> assertThat(dto.getStatus()).isEqualTo("DISABLED"))
                 .verifyComplete();
+
+        verify(tenantRepository).updateById(eq(activeTenant));
     }
 
     @Test
-    @DisplayName("disable - 已停用租户再次停用返回 TENANT_ILLEGAL_TRANSITION")
-    void disable_IllegalTransition() {
+    @DisplayName("changeStatus - 已停用租户再次停用返回 TENANT_ILLEGAL_TRANSITION")
+    void changeStatus_IllegalTransition() {
         activeTenant.disable();
-        when(tenantRepository.findByCode(TENANT_CODE)).thenReturn(Mono.just(activeTenant));
+        when(tenantRepository.findById(1L)).thenReturn(Mono.just(activeTenant));
 
         tenantApplicationService
-                .disable(TENANT_CODE)
+                .changeStatus(1L, "disable", null)
                 .as(StepVerifier::create)
                 .expectErrorMatches(err -> err instanceof BusinessException
                         && ((BusinessException) err).getCode().equals(ResultCode.TENANT_ILLEGAL_TRANSITION.getCode()))
                 .verify();
+
+        verify(tenantRepository, never()).updateById(any(TenantEntity.class));
     }
 
     @Test
-    @DisplayName("archive - 终态归档后任何迁移被拒绝")
-    void archive_TerminalState() {
+    @DisplayName("changeStatus - 不支持的动作返回 PARAM_ERROR")
+    void changeStatus_UnsupportedAction() {
+        tenantApplicationService
+                .changeStatus(1L, "explode", null)
+                .as(StepVerifier::create)
+                .expectErrorMatches(err -> err instanceof BusinessException
+                        && ((BusinessException) err).getCode().equals(ResultCode.PARAM_ERROR.getCode()))
+                .verify();
+    }
+
+    @Test
+    @DisplayName("changeStatus - 影响行数为 0 返回 TENANT_VERSION_CONFLICT")
+    void changeStatus_VersionConflict() {
+        when(tenantRepository.findById(1L)).thenReturn(Mono.just(activeTenant));
+        when(tenantRepository.updateById(any(TenantEntity.class))).thenReturn(Mono.just(0));
+
+        tenantApplicationService
+                .changeStatus(1L, "disable", 7)
+                .as(StepVerifier::create)
+                .expectErrorMatches(err -> err instanceof BusinessException
+                        && ((BusinessException) err).getCode().equals(ResultCode.TENANT_VERSION_CONFLICT.getCode()))
+                .verify();
+    }
+
+    @Test
+    @DisplayName("changeStatus - 终态归档后任何迁移被拒绝")
+    void changeStatus_ArchiveTerminalState() {
         TenantDTO archivedDTO = new TenantDTO();
         archivedDTO.setId(1L);
         archivedDTO.setTenantCode(TENANT_CODE);
         archivedDTO.setStatus("ARCHIVED");
 
         activeTenant.deactivate();
-        when(tenantRepository.findByCode(TENANT_CODE)).thenReturn(Mono.just(activeTenant));
+        when(tenantRepository.findById(1L)).thenReturn(Mono.just(activeTenant));
         when(tenantRepository.updateById(any(TenantEntity.class))).thenReturn(Mono.just(1));
         when(tenantAssembler.toDTO(any(TenantEntity.class))).thenReturn(archivedDTO);
 
         tenantApplicationService
-                .archive(TENANT_CODE)
+                .changeStatus(1L, "archive", null)
                 .as(StepVerifier::create)
                 .assertNext(dto -> assertThat(dto.getStatus()).isEqualTo("ARCHIVED"))
                 .verifyComplete();
 
-        when(tenantRepository.findByCode(TENANT_CODE)).thenReturn(Mono.just(activeTenant));
         tenantApplicationService
-                .enable(TENANT_CODE)
+                .changeStatus(1L, "enable", null)
                 .as(StepVerifier::create)
                 .expectErrorMatches(err -> err instanceof BusinessException
                         && ((BusinessException) err).getCode().equals(ResultCode.TENANT_ILLEGAL_TRANSITION.getCode()))
@@ -256,12 +350,12 @@ class TenantApplicationServiceTest {
         updatedDTO.setMaxUsers(200);
         updatedDTO.setMaxStorageMb(20480);
 
-        when(tenantRepository.findByCode(TENANT_CODE)).thenReturn(Mono.just(activeTenant));
+        when(tenantRepository.findById(1L)).thenReturn(Mono.just(activeTenant));
         when(tenantRepository.updateById(any(TenantEntity.class))).thenReturn(Mono.just(1));
         when(tenantAssembler.toDTO(any(TenantEntity.class))).thenReturn(updatedDTO);
 
         tenantApplicationService
-                .updateQuota(TENANT_CODE, 200, 20480)
+                .updateQuota(1L, 200, 20480, null)
                 .as(StepVerifier::create)
                 .assertNext(dto -> {
                     assertThat(dto.getMaxUsers()).isEqualTo(200);
@@ -270,5 +364,19 @@ class TenantApplicationServiceTest {
                 .verifyComplete();
 
         verify(tenantRepository).updateById(eq(activeTenant));
+    }
+
+    @Test
+    @DisplayName("updateQuota - 影响行数为 0 返回 TENANT_VERSION_CONFLICT")
+    void updateQuota_VersionConflict() {
+        when(tenantRepository.findById(1L)).thenReturn(Mono.just(activeTenant));
+        when(tenantRepository.updateById(any(TenantEntity.class))).thenReturn(Mono.just(0));
+
+        tenantApplicationService
+                .updateQuota(1L, 200, 20480, 3)
+                .as(StepVerifier::create)
+                .expectErrorMatches(err -> err instanceof BusinessException
+                        && ((BusinessException) err).getCode().equals(ResultCode.TENANT_VERSION_CONFLICT.getCode()))
+                .verify();
     }
 }

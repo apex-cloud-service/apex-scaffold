@@ -331,8 +331,8 @@ BEGIN
         update_time = CURRENT_TIMESTAMP;
 
     IF v_admin_role_id IS NOT NULL THEN
-        INSERT INTO sys_role_permission (role_id, permission_id)
-        SELECT v_admin_role_id, p.id
+        INSERT INTO sys_role_permission (id, role_id, permission_id)
+        SELECT 410000 + p.id, v_admin_role_id, p.id
         FROM sys_permission p
         WHERE p.code IN (
             'system:generator:view', 'system:generator:datasource:list', 'system:generator:datasource:add',

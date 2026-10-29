@@ -78,6 +78,11 @@ public class OAuth2MetadataService {
         }
     }
 
+    /**
+     * 构造 RFC 8414 授权服务器元数据，端点地址以配置的 issuer 为前缀。
+     *
+     * @return 端点地址及支持的授权类型、PKCE 和客户端认证方式
+     */
     public Map<String, Object> discovery() {
         String issuer = properties.getIssuer();
         Map<String, Object> metadata = new LinkedHashMap<>();
@@ -96,6 +101,11 @@ public class OAuth2MetadataService {
         return metadata;
     }
 
+    /**
+     * 导出当前签名密钥的 JWK Set，仅包含 RSA 公钥，不暴露私钥。
+     *
+     * @return 含单个 RS256 签名公钥的 keys 集合，模数和指数采用无填充 Base64URL 编码
+     */
     public Map<String, Object> jwks() {
         return Map.of(
                 "keys",

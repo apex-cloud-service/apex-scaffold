@@ -9,6 +9,7 @@ import com.apex.scaffold.application.assembler.AdminUserAssembler;
 import com.apex.scaffold.application.factory.UserDefaultsFactory;
 import com.apex.scaffold.application.service.AdminUserManagementService;
 import com.apex.scaffold.application.service.ProfileService;
+import com.apex.scaffold.application.service.TenantGuard;
 import com.apex.scaffold.common.context.DataScopeContext;
 import com.apex.scaffold.common.context.DataScopeProvider;
 import com.apex.scaffold.common.context.ReactiveDataScopeProvider;
@@ -164,7 +165,8 @@ class DataScopeServiceTest {
                         mock(UserDefaultsFactory.class),
                         mock(CacheConsistencyPort.class),
                         mock(AccountDeletionPort.class),
-                        mock(AdminUserAssembler.class)));
+                        mock(AdminUserAssembler.class),
+                        mock(TenantGuard.class)));
         context.refresh();
         service = context.getBean(AdminUserManagementService.class);
     }

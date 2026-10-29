@@ -28,6 +28,8 @@ import lombok.ToString;
  * @see BaseEntity
  */
 @Getter
+@lombok.Setter
+@lombok.NoArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class RoleEntity extends BaseEntity {
@@ -86,38 +88,6 @@ public class RoleEntity extends BaseEntity {
     private Integer status;
 
     private DataScopeType dataScope;
-
-    /** Sets dataScope. For persistence/construction use only. */
-    public void setDataScope(DataScopeType value) {
-        this.dataScope = value;
-    }
-
-    /** Sets name. For persistence/construction use only. */
-    public void setName(String value) {
-        this.name = value;
-    }
-
-    /** Sets code. For persistence/construction use only. */
-    public void setCode(String value) {
-        this.code = value;
-    }
-
-    /** Sets description. For persistence/construction use only. */
-    public void setDescription(String value) {
-        this.description = value;
-    }
-
-    /** Sets status. For persistence/construction use only. */
-    public void setStatus(Integer value) {
-        this.status = value;
-    }
-
-    /**
-     * 默认构造函数
-     */
-    public RoleEntity() {
-        super();
-    }
 
     /**
      * 静态工厂方法：创建角色
@@ -200,6 +170,8 @@ public class RoleEntity extends BaseEntity {
     /**
      * 角色状态枚举
      */
+    @Getter
+    @lombok.RequiredArgsConstructor
     private enum RoleStatus {
         /** 禁用 */
         DISABLED(0),
@@ -207,23 +179,5 @@ public class RoleEntity extends BaseEntity {
         ENABLED(1);
 
         private final Integer code;
-
-        /**
-         * 创建 {@code RoleStatus} 实例。
-         *
-         * @param code 枚举编码
-         */
-        RoleStatus(Integer code) {
-            this.code = code;
-        }
-
-        /**
-         * 获取枚举编码。
-         *
-         * @return 枚举编码
-         */
-        public Integer getCode() {
-            return code;
-        }
     }
 }

@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
  * 帮助管理员了解系统中权限定义的变化情况。
  *
  * @author Apex Scaffold Generator
- * @since 2026-09-19
+ * @since 1.3.1
  */
 @Data
 @Builder

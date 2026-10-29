@@ -101,7 +101,7 @@ public class OfficeCalendarService {
                             .organizerName(organizerName)
                             .startTime(startTime)
                             .endTime(endTime)
-                            .isAllDay(isAllDay)
+                            .isAllDay(Boolean.TRUE.equals(isAllDay))
                             .location(location)
                             .participantIds(convertToJson(participantIds))
                             .participantNames(convertToJson(participantNames))
@@ -165,6 +165,18 @@ public class OfficeCalendarService {
             LocalDateTime endTime,
             String[] participantIds,
             String location) {
+        return updateEvent(eventId, title, description, startTime, endTime, participantIds, location, null);
+    }
+
+    public Mono<Boolean> updateEvent(
+            Long eventId,
+            String title,
+            String description,
+            LocalDateTime startTime,
+            LocalDateTime endTime,
+            String[] participantIds,
+            String location,
+            Boolean isAllDay) {
         log.info("更新日历事件 - eventId: {}, title: {}", eventId, title);
 
         return calendarEventRepository
@@ -191,6 +203,9 @@ public class OfficeCalendarService {
                                     event.updateTime(startTime, endTime);
                                     event.setParticipantIds(convertToJson(participantIds));
                                     event.setLocation(location);
+                                    if (isAllDay != null) {
+                                        event.setIsAllDay(isAllDay);
+                                    }
 
                                     return calendarEventRepository.update(event).thenReturn(true);
                                 }
@@ -339,9 +354,12 @@ public class OfficeCalendarService {
             String meetingRoomId, LocalDateTime startTime, LocalDateTime endTime) {
         log.info("检查会议室可用性 - meetingRoomId: {}, startTime: {}, endTime: {}", meetingRoomId, startTime, endTime);
 
-        return calendarEventRepository
-                .findByMeetingRoom(meetingRoomId, startTime, endTime)
-                .map(events -> events.isEmpty())
+        return TenantContext.currentTenantId()
+                .map(Long::parseLong)
+                .map(tenantId -> calendarEventRepository
+                        .findByMeetingRoom(tenantId, meetingRoomId, startTime, endTime)
+                        .map(events -> events.isEmpty()))
+                .orElseGet(() -> Mono.error(new IllegalStateException("租户ID未设置")))
                 .doOnSuccess(available ->
                         log.info("会议室可用性检查完成 - meetingRoomId: {}, available: {}", meetingRoomId, available))
                 .doOnError(error -> log.error("会议室可用性检查失败 - meetingRoomId: {}", meetingRoomId, error));

@@ -60,7 +60,6 @@ public class OAuth2ClientManagementHandler {
      * @return 包含新建客户端信息的 {@code Result} 响应（Mono，参数非法或创建失败时发出错误信号）
      */
     @RequirePermission("system:oauth2:client:create")
-    @OperationLog(module = "OAuth2客户端管理", type = OperationLog.OperationType.INSERT, description = "创建OAuth2客户端")
     @Operation(
             operationId = "createOAuth2Client",
             summary = "创建OAuth2客户端",
@@ -75,6 +74,12 @@ public class OAuth2ClientManagementHandler {
                 description = "请求参数错误",
                 content = @Content(schema = @Schema(implementation = Result.class)))
     })
+    @OperationLog(
+            module = "OAuth2ClientManagement",
+            type = OperationLog.OperationType.INSERT,
+            description = "createClient",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> createClient(ServerRequest request) {
         return request.bodyToMono(OAuth2ClientRequest.class)
                 .flatMap(clientManagementService::createClient)
@@ -93,7 +98,6 @@ public class OAuth2ClientManagementHandler {
      * @return 包含更新后客户端信息的 {@code Result} 响应（Mono，客户端不存在或参数非法时发出错误信号）
      */
     @RequirePermission("system:oauth2:client:update")
-    @OperationLog(module = "OAuth2客户端管理", type = OperationLog.OperationType.UPDATE, description = "更新OAuth2客户端")
     @Operation(operationId = "updateOAuth2Client", summary = "更新OAuth2客户端", description = "更新指定客户端的配置信息")
     @ApiResponses({
         @ApiResponse(
@@ -105,6 +109,12 @@ public class OAuth2ClientManagementHandler {
                 description = "客户端不存在",
                 content = @Content(schema = @Schema(implementation = Result.class)))
     })
+    @OperationLog(
+            module = "OAuth2ClientManagement",
+            type = OperationLog.OperationType.UPDATE,
+            description = "updateClient",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> updateClient(ServerRequest request) {
         String clientId = request.pathVariable("clientId");
         return request.bodyToMono(OAuth2ClientRequest.class)
@@ -123,7 +133,6 @@ public class OAuth2ClientManagementHandler {
      * @return 包含"删除成功"提示的 {@code Result} 响应（Mono，客户端不存在时发出错误信号）
      */
     @RequirePermission("system:oauth2:client:delete")
-    @OperationLog(module = "OAuth2客户端管理", type = OperationLog.OperationType.DELETE, description = "删除OAuth2客户端")
     @Operation(operationId = "deleteOAuth2Client", summary = "删除OAuth2客户端", description = "删除指定的OAuth2客户端及其相关的令牌")
     @ApiResponses({
         @ApiResponse(
@@ -135,6 +144,12 @@ public class OAuth2ClientManagementHandler {
                 description = "客户端不存在",
                 content = @Content(schema = @Schema(implementation = Result.class)))
     })
+    @OperationLog(
+            module = "OAuth2ClientManagement",
+            type = OperationLog.OperationType.DELETE,
+            description = "deleteClient",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> deleteClient(ServerRequest request) {
         String clientId = request.pathVariable("clientId");
         return clientManagementService
@@ -164,6 +179,12 @@ public class OAuth2ClientManagementHandler {
                 description = "客户端不存在",
                 content = @Content(schema = @Schema(implementation = Result.class)))
     })
+    @OperationLog(
+            module = "OAuth2ClientManagement",
+            type = OperationLog.OperationType.SELECT,
+            description = "getClient",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> getClient(ServerRequest request) {
         String clientId = request.pathVariable("clientId");
         return clientManagementService.getClient(clientId).flatMap(response -> ServerResponse.ok()
@@ -188,6 +209,12 @@ public class OAuth2ClientManagementHandler {
                 description = "查询成功,返回客户端列表和分页信息",
                 content = @Content(schema = @Schema(implementation = Result.class)))
     })
+    @OperationLog(
+            module = "OAuth2ClientManagement",
+            type = OperationLog.OperationType.SELECT,
+            description = "listClients",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> listClients(ServerRequest request) {
         int page = request.queryParam("page").map(Integer::parseInt).orElse(1);
         int size = request.queryParam("size").map(Integer::parseInt).orElse(10);
@@ -219,7 +246,6 @@ public class OAuth2ClientManagementHandler {
      * @return 包含 clientId 与新 clientSecret 的 {@code Result} 响应（Mono，客户端不存在时发出错误信号）
      */
     @RequirePermission("system:oauth2:client:secret:reset")
-    @OperationLog(module = "OAuth2客户端管理", type = OperationLog.OperationType.UPDATE, description = "重置OAuth2客户端密钥")
     @Operation(operationId = "resetOAuth2ClientSecret", summary = "重置客户端密钥", description = "重新生成指定客户端的clientSecret")
     @ApiResponses({
         @ApiResponse(
@@ -231,6 +257,12 @@ public class OAuth2ClientManagementHandler {
                 description = "客户端不存在",
                 content = @Content(schema = @Schema(implementation = Result.class)))
     })
+    @OperationLog(
+            module = "OAuth2ClientManagement",
+            type = OperationLog.OperationType.OTHER,
+            description = "resetClientSecret",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> resetClientSecret(ServerRequest request) {
         String clientId = request.pathVariable("clientId");
         return clientManagementService.resetClientSecret(clientId).flatMap(newSecret -> {

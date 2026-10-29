@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
  * <p>用于验证 TOTP 验证码或备份码。
  *
  * @author Apex Scaffold Team
- * @since 2026-09-21
+ * @since 1.3.1
  */
 @Data
 @Builder

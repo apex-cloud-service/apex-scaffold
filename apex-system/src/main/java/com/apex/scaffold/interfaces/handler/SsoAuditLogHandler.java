@@ -1,6 +1,7 @@
 package com.apex.scaffold.interfaces.handler;
 
 import com.apex.scaffold.application.service.SysSsoAuditLogService;
+import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.annotation.RequirePermission;
 import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.common.util.TraceIdUtil;
@@ -128,6 +129,12 @@ public class SsoAuditLogHandler extends BaseHandler {
         @ApiResponse(responseCode = "401", description = "未授权,需要登录"),
         @ApiResponse(responseCode = "403", description = "权限不足,需要 system:sso:auditlog:list 权限")
     })
+    @OperationLog(
+            module = "SsoAuditLog",
+            type = OperationLog.OperationType.SELECT,
+            description = "list",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> list(ServerRequest request) {
         int page = safeParseInt(request.queryParam("page").orElse("1"), 1);
         int size = safeParseInt(request.queryParam("size").orElse("20"), 20);
@@ -174,6 +181,12 @@ public class SsoAuditLogHandler extends BaseHandler {
         @ApiResponse(responseCode = "401", description = "未授权,需要登录"),
         @ApiResponse(responseCode = "403", description = "权限不足,需要 system:sso:auditlog:stat 权限")
     })
+    @OperationLog(
+            module = "SsoAuditLog",
+            type = OperationLog.OperationType.SELECT,
+            description = "getStatistics",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> getStatistics(ServerRequest request) {
         Long providerId = request.queryParam("providerId").map(Long::parseLong).orElse(null);
         int days = safeParseInt(request.queryParam("days").orElse("30"), 30);

@@ -4,6 +4,8 @@ import com.apex.scaffold.domain.model.entity.BaseEntity;
 import java.io.Serial;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.ToString;
 
 /**
@@ -27,6 +29,8 @@ import lombok.ToString;
  * @see BaseEntity
  */
 @Getter
+@Setter
+@NoArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class FileChunkEntity extends BaseEntity {
@@ -34,8 +38,11 @@ public class FileChunkEntity extends BaseEntity {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    /** 创建分片实体对象。 */
-    public FileChunkEntity() {}
+    /** 分片所属可信租户。 */
+    private String tenantId;
+
+    /** 分片实际存储提供商类型。 */
+    private String storageType;
 
     /** 所属文件 ID（关联 file_record.id）。 */
     private Long fileId;
@@ -99,86 +106,5 @@ public class FileChunkEntity extends BaseEntity {
         entity.storageStatus = "STORED";
         entity.userId = userId;
         return entity;
-    }
-
-    /**
-     * 设置所属文件 ID（仅供持久层和构造器使用）。
-     *
-     * @param value 所属文件 ID
-     */
-    public void setFileId(Long value) {
-        this.fileId = value;
-    }
-
-    /**
-     * 设置分片序号（仅供持久层和构造器使用）。
-     *
-     * @param value 分片序号
-     */
-    public void setChunkIndex(Integer value) {
-        this.chunkIndex = value;
-    }
-
-    /**
-     * 设置分片大小（仅供持久层和构造器使用）。
-     *
-     * @param value 分片大小（字节）
-     */
-    public void setChunkSize(Long value) {
-        this.chunkSize = value;
-    }
-
-    /**
-     * 设置分片总数（仅供持久层和构造器使用）。
-     *
-     * @param value 分片总数
-     */
-    public void setTotalChunks(Integer value) {
-        this.totalChunks = value;
-    }
-
-    /**
-     * 设置分片 MD5（仅供持久层和构造器使用）。
-     *
-     * @param value 分片 MD5
-     */
-    public void setMd5(String value) {
-        this.md5 = value;
-    }
-
-    /**
-     * 设置分片对象键（仅供持久层和构造器使用）。
-     *
-     * @param value 分片对象键
-     */
-    public void setObjectName(String value) {
-        this.objectName = value;
-    }
-
-    /**
-     * 设置分片存储桶名称（仅供持久层和构造器使用）。
-     *
-     * @param value 分片存储桶名称
-     */
-    public void setBucketName(String value) {
-        this.bucketName = value;
-    }
-
-    /**
-     * 设置存储状态（仅供持久层和构造器使用）。
-     *
-     * @param value 存储状态
-     */
-    public void setStorageStatus(String value) {
-        this.storageStatus = value;
-    }
-
-    /**
-     * 设置上传用户 ID（仅供持久层和构造器使用）。
-     *
-     * @param value 上传用户 ID
-     */
-    public void setUserId(Long value) {
-        this.userId = value;
     }
 }

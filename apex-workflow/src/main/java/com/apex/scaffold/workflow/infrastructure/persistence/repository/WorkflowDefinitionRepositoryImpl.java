@@ -1,90 +1,136 @@
 package com.apex.scaffold.workflow.infrastructure.persistence.repository;
 
 import com.apex.scaffold.common.persistence.util.ConditionUtil;
-import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
 import com.apex.scaffold.workflow.domain.model.WorkflowDefinition;
+import com.apex.scaffold.workflow.domain.model.WorkflowDefinitionStatus;
 import com.apex.scaffold.workflow.domain.repository.WorkflowDefinitionRepository;
 import com.apex.scaffold.workflow.infrastructure.persistence.converter.WorkflowDefinitionPoConverter;
 import com.apex.scaffold.workflow.infrastructure.persistence.mapper.WorkflowDefinitionMapper;
 import com.apex.scaffold.workflow.infrastructure.persistence.po.WorkflowDefinitionPO;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
 
 /**
- * 工作流定义仓储实现。
- *
- * <p>基于 MyBatis-Plus 实现工作流定义仓储接口 {@link WorkflowDefinitionRepository}，
- * 负责工作流定义领域对象与数据库表 {@code wf_workflow_definition} 之间的映射与转换。</p>
- *
- * <h2>阻塞操作隔离</h2>
- * <p>所有数据库操作通过 {@link BlockingIoSchedulers#jdbc()} 调度器执行，
- * 避免阻塞响应式流的事件循环线程。</p>
- *
+ * 使用显式租户 SQL 条件的定义仓储。
  * @author Apex Team
- * @version 1.0.0
+ * @version 1.3.1
  * @since 1.0.0
  */
 @Repository
 @RequiredArgsConstructor
 public class WorkflowDefinitionRepositoryImpl implements WorkflowDefinitionRepository {
-
-    /** 工作流定义 MyBatis Mapper。 */
     private final WorkflowDefinitionMapper workflowDefinitionMapper;
-
-    /** 工作流定义 PO 转换器。 */
     private final WorkflowDefinitionPoConverter workflowDefinitionPoConverter;
 
     /** {@inheritDoc} */
     @Override
     public Mono<WorkflowDefinition> findById(Long id) {
-        return Mono.fromCallable(() -> workflowDefinitionMapper.selectById(id))
-                .subscribeOn(BlockingIoSchedulers.jdbc())
-                .flatMap(po -> po == null ? Mono.empty() : Mono.just(workflowDefinitionPoConverter.toEntity(po)));
+        return WorkflowTenantAccess.execute(tenant -> findByIdSync(tenant, id));
+    }
+
+    /** 同步查询，供事务回调复用。 */
+    public WorkflowDefinition findByIdSync(String tenant, Long id) {
+        return workflowDefinitionPoConverter.toEntity(
+                workflowDefinitionMapper.selectOne(ConditionUtil.lambda(WorkflowDefinitionPO.class)
+                        .eq(WorkflowDefinitionPO::getId, id)
+                        .eq(WorkflowDefinitionPO::getTenantId, tenant)));
     }
 
     /** {@inheritDoc} */
     @Override
-    public Mono<WorkflowDefinition> findByCode(String workflowCode) {
-        return Mono.fromCallable(
-                        () -> workflowDefinitionMapper.selectOne(ConditionUtil.lambda(WorkflowDefinitionPO.class)
-                                .eq(WorkflowDefinitionPO::getWorkflowCode, workflowCode)
-                                .eq(WorkflowDefinitionPO::getEnabled, 1)
-                                .orderByDesc(WorkflowDefinitionPO::getVersion)
-                                .last("LIMIT 1")))
-                .subscribeOn(BlockingIoSchedulers.jdbc())
-                .flatMap(po -> po == null ? Mono.empty() : Mono.just(workflowDefinitionPoConverter.toEntity(po)));
+    public Mono<WorkflowDefinition> findByCode(String code) {
+        return WorkflowTenantAccess.execute(tenant -> workflowDefinitionPoConverter.toEntity(
+                workflowDefinitionMapper.selectOne(ConditionUtil.lambda(WorkflowDefinitionPO.class)
+                        .eq(WorkflowDefinitionPO::getTenantId, tenant)
+                        .eq(WorkflowDefinitionPO::getWorkflowCode, code)
+                        .eq(WorkflowDefinitionPO::getEnabled, 1)
+                        .eq(WorkflowDefinitionPO::getStatus, WorkflowDefinitionStatus.PUBLISHED.name())
+                        .orderByDesc(WorkflowDefinitionPO::getVersion)
+                        .last("LIMIT 1"))));
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Mono<List<WorkflowDefinition>> findVersionsByCode(String code) {
+        return WorkflowTenantAccess.execute(tenant -> workflowDefinitionPoConverter.toEntityList(
+                workflowDefinitionMapper.selectList(ConditionUtil.lambda(WorkflowDefinitionPO.class)
+                        .eq(WorkflowDefinitionPO::getTenantId, tenant)
+                        .eq(WorkflowDefinitionPO::getWorkflowCode, code)
+                        .orderByDesc(WorkflowDefinitionPO::getVersion))));
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Mono<List<WorkflowDefinition>> findPage(
+            String workflowCode, WorkflowDefinitionStatus status, int offset, int limit) {
+        return WorkflowTenantAccess.execute(tenant -> workflowDefinitionPoConverter.toEntityList(
+                workflowDefinitionMapper.selectList(pageCondition(tenant, workflowCode, status)
+                        .orderByDesc(WorkflowDefinitionPO::getUpdateTime)
+                        .last("LIMIT " + limit + " OFFSET " + offset))));
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Mono<Long> count(String workflowCode, WorkflowDefinitionStatus status) {
+        return WorkflowTenantAccess.execute(
+                tenant -> workflowDefinitionMapper.selectCount(pageCondition(tenant, workflowCode, status)));
+    }
+
+    private LambdaQueryWrapper<WorkflowDefinitionPO> pageCondition(
+            String tenant, String workflowCode, WorkflowDefinitionStatus status) {
+        return ConditionUtil.lambda(WorkflowDefinitionPO.class)
+                .eq(WorkflowDefinitionPO::getTenantId, tenant)
+                .eq(
+                        workflowCode != null && !workflowCode.isBlank(),
+                        WorkflowDefinitionPO::getWorkflowCode,
+                        workflowCode)
+                .eq(status != null, WorkflowDefinitionPO::getStatus, status == null ? null : status.name());
     }
 
     /** {@inheritDoc} */
     @Override
     public Mono<List<WorkflowDefinition>> findAll() {
-        return Mono.fromCallable(
-                        () -> workflowDefinitionMapper.selectList(ConditionUtil.lambda(WorkflowDefinitionPO.class)
-                                .orderByDesc(WorkflowDefinitionPO::getCreateTime)))
-                .subscribeOn(BlockingIoSchedulers.jdbc())
-                .map(workflowDefinitionPoConverter::toEntityList);
+        return WorkflowTenantAccess.execute(tenant -> workflowDefinitionPoConverter.toEntityList(
+                workflowDefinitionMapper.selectList(ConditionUtil.lambda(WorkflowDefinitionPO.class)
+                        .eq(WorkflowDefinitionPO::getTenantId, tenant)
+                        .orderByDesc(WorkflowDefinitionPO::getCreateTime))));
     }
 
     /** {@inheritDoc} */
     @Override
     public Mono<Integer> insert(WorkflowDefinition entity) {
-        return Mono.fromCallable(() -> workflowDefinitionMapper.insert(workflowDefinitionPoConverter.toPo(entity)))
-                .subscribeOn(BlockingIoSchedulers.jdbc());
+        return WorkflowTenantAccess.execute(tenant -> {
+            WorkflowDefinitionPO po = workflowDefinitionPoConverter.toPo(entity);
+            po.setTenantId(tenant);
+            int inserted = workflowDefinitionMapper.insert(po);
+            entity.setId(po.getId());
+            return inserted;
+        });
     }
 
     /** {@inheritDoc} */
     @Override
     public Mono<Integer> updateById(WorkflowDefinition entity) {
-        return Mono.fromCallable(() -> workflowDefinitionMapper.updateById(workflowDefinitionPoConverter.toPo(entity)))
-                .subscribeOn(BlockingIoSchedulers.jdbc());
+        return WorkflowTenantAccess.execute(tenant -> {
+            WorkflowDefinitionPO po = workflowDefinitionPoConverter.toPo(entity);
+            po.setTenantId(null);
+            return workflowDefinitionMapper.update(
+                    po,
+                    ConditionUtil.lambda(WorkflowDefinitionPO.class)
+                            .eq(WorkflowDefinitionPO::getId, entity.getId())
+                            .eq(WorkflowDefinitionPO::getTenantId, tenant));
+        });
     }
 
     /** {@inheritDoc} */
     @Override
     public Mono<Integer> deleteById(Long id) {
-        return Mono.fromCallable(() -> workflowDefinitionMapper.deleteById(id))
-                .subscribeOn(BlockingIoSchedulers.jdbc());
+        return WorkflowTenantAccess.execute(
+                tenant -> workflowDefinitionMapper.delete(ConditionUtil.lambda(WorkflowDefinitionPO.class)
+                        .eq(WorkflowDefinitionPO::getId, id)
+                        .eq(WorkflowDefinitionPO::getTenantId, tenant)));
     }
 }

@@ -44,7 +44,7 @@ import reactor.core.publisher.Mono;
  * </ul>
  *
  * @author Apex Scaffold Generator
- * @since 2026-09-19
+ * @since 1.3.1
  */
 @Component
 @Tag(name = "后台-SSO 提供商管理", description = "SSO 单点登录提供商配置管理")
@@ -104,6 +104,12 @@ public class SsoProviderHandler extends BaseHandler {
         @ApiResponse(responseCode = "401", description = "未授权,需要登录"),
         @ApiResponse(responseCode = "403", description = "权限不足,需要 system:sso:provider:list 权限")
     })
+    @OperationLog(
+            module = "SsoProvider",
+            type = OperationLog.OperationType.SELECT,
+            description = "list",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> list(ServerRequest request) {
         int page = safeParseInt(request.queryParam("page").orElse("1"), 1);
         int size = safeParseInt(request.queryParam("size").orElse("20"), 20);
@@ -133,7 +139,12 @@ public class SsoProviderHandler extends BaseHandler {
         @ApiResponse(responseCode = "401", description = "未授权,需要登录"),
         @ApiResponse(responseCode = "403", description = "权限不足,需要 system:sso:provider:add 权限")
     })
-    @OperationLog(module = "SSO 提供商管理", type = OperationLog.OperationType.INSERT, description = "创建 SSO 提供商")
+    @OperationLog(
+            module = "SSO 提供商管理",
+            type = OperationLog.OperationType.INSERT,
+            description = "创建 SSO 提供商",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> create(ServerRequest request) {
         return parseBody(request, SsoProviderRequest.class)
                 .flatMap(sysSsoProviderService::create)
@@ -168,7 +179,12 @@ public class SsoProviderHandler extends BaseHandler {
         @ApiResponse(responseCode = "403", description = "权限不足,需要 system:sso:provider:edit 权限"),
         @ApiResponse(responseCode = "404", description = "SSO 提供商不存在")
     })
-    @OperationLog(module = "SSO 提供商管理", type = OperationLog.OperationType.UPDATE, description = "更新 SSO 提供商")
+    @OperationLog(
+            module = "SSO 提供商管理",
+            type = OperationLog.OperationType.UPDATE,
+            description = "更新 SSO 提供商",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> update(ServerRequest request) {
         Long id = requirePositiveId(request);
         return parseBody(request, SsoProviderRequest.class)
@@ -203,7 +219,12 @@ public class SsoProviderHandler extends BaseHandler {
         @ApiResponse(responseCode = "403", description = "权限不足,需要 system:sso:provider:remove 权限"),
         @ApiResponse(responseCode = "404", description = "SSO 提供商不存在")
     })
-    @OperationLog(module = "SSO 提供商管理", type = OperationLog.OperationType.DELETE, description = "删除 SSO 提供商")
+    @OperationLog(
+            module = "SSO 提供商管理",
+            type = OperationLog.OperationType.DELETE,
+            description = "删除 SSO 提供商",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> delete(ServerRequest request) {
         return sysSsoProviderService
                 .delete(requirePositiveId(request))
@@ -234,6 +255,12 @@ public class SsoProviderHandler extends BaseHandler {
         @ApiResponse(responseCode = "403", description = "权限不足,需要 system:sso:provider:query 权限"),
         @ApiResponse(responseCode = "404", description = "SSO 提供商不存在")
     })
+    @OperationLog(
+            module = "SsoProvider",
+            type = OperationLog.OperationType.SELECT,
+            description = "get",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> get(ServerRequest request) {
         return sysSsoProviderService.getById(requirePositiveId(request)).flatMap(this::buildSuccess);
     }
@@ -265,6 +292,12 @@ public class SsoProviderHandler extends BaseHandler {
         @ApiResponse(responseCode = "403", description = "权限不足,需要 system:sso:provider:test 权限"),
         @ApiResponse(responseCode = "404", description = "SSO 提供商不存在")
     })
+    @OperationLog(
+            module = "SsoProvider",
+            type = OperationLog.OperationType.OTHER,
+            description = "testConnection",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> testConnection(ServerRequest request) {
         return sysSsoProviderService.testConnection(requirePositiveId(request)).flatMap(this::buildSuccess);
     }
@@ -296,6 +329,12 @@ public class SsoProviderHandler extends BaseHandler {
         @ApiResponse(responseCode = "403", description = "权限不足,需要 system:sso:provider:metadata 权限"),
         @ApiResponse(responseCode = "404", description = "SSO 提供商不存在")
     })
+    @OperationLog(
+            module = "SsoProvider",
+            type = OperationLog.OperationType.SELECT,
+            description = "getMetadata",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> getMetadata(ServerRequest request) {
         return sysSsoProviderService.getMetadata(requirePositiveId(request)).flatMap(this::buildSuccess);
     }

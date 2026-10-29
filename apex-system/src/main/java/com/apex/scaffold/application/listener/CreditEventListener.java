@@ -40,7 +40,11 @@ public class CreditEventListener {
 
     private final SystemMessageRepository systemMessageRepository;
 
-    /** 创建监听器，系统消息仓储可选注入，未注入时跳过通知写入。 */
+    /**
+     * 创建监听器，系统消息仓储可选注入，未注入时跳过通知写入。
+     *
+     * @param systemMessageRepository 系统消息仓储，可选
+     */
     public CreditEventListener(Optional<SystemMessageRepository> systemMessageRepository) {
         this.systemMessageRepository = systemMessageRepository.orElse(null);
     }

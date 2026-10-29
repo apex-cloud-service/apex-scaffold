@@ -69,9 +69,9 @@ public interface OffDepartmentRepository {
     Flux<OffDepartmentEntity> findByParentId(Long parentId);
 
     /**
-     * 查询所有根部门（顶层部门，parentId为null或0）
+     * 查询所有根部门（当前实现仅返回parentId为null的部门，不包含parentId为0的部门）
      *
-     * @return 根部门列表的Flux流
+     * @return parentId为null的根部门列表的Flux流
      */
     Flux<OffDepartmentEntity> findRootDepartments();
 
@@ -83,6 +83,14 @@ public interface OffDepartmentRepository {
      * @return 部门实体列表的Flux流
      */
     Flux<OffDepartmentEntity> findByExternalId(String syncSource, String externalId);
+
+    /**
+     * 按同步来源查询全部部门，用于组织同步后统一重算层级。
+     *
+     * @param syncSource 同步来源（如 FEISHU、DINGTALK、WECHAT）
+     * @return 该来源下全部部门实体的Flux流
+     */
+    Flux<OffDepartmentEntity> findBySyncSource(String syncSource);
 
     /**
      * 插入新部门记录

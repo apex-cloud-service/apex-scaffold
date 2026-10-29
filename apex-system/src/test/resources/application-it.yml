@@ -34,7 +34,7 @@ spring:
   #   2. 表结构与生产零差异，规避内存数据库兼容性造成的假阳性/漏检
   #   3. 每次启动经 Flyway migrate + data-it.sql 幂等重置，保证测试确定性
   # 前提：本地 MySQL 可达（如 podman run -p 3306:3306 -e MYSQL_ROOT_PASSWORD=apex-root
-  #       -e MYSQL_DATABASE=apex_test docker.io/library/mysql:8.0），连接信息可经环境变量覆盖。
+  #       -e MYSQL_DATABASE=apex_test docker.io/library/mysql:9.0），连接信息可经环境变量覆盖。
   # --------------------------------------------------------------------------
   datasource:
     dynamic:

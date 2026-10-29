@@ -173,7 +173,7 @@ VALUES
     (3300, '查询办公消息', 'office:message:query', '查询办公消息', 1, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0),
     (3301, '发送办公消息', 'office:message:create', '创建办公消息', 1, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0),
     (3302, '删除办公消息', 'office:message:delete', '删除办公消息', 1, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0)
-ON CONFLICT (id) DO UPDATE SET
+ON CONFLICT (code) DO UPDATE SET
     name = EXCLUDED.name,
     description = EXCLUDED.description,
     status = 1,

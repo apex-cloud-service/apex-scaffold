@@ -46,7 +46,7 @@ import org.springframework.beans.factory.annotation.Value;
  * </ul>
  *
  * @author Apex Security Team
- * @since 2026-09-25
+ * @since 1.3.1
  */
 @Slf4j
 public class ConfigEncryptionService {

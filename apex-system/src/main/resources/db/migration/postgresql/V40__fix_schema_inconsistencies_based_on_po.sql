@@ -71,7 +71,7 @@ COMMENT ON COLUMN wf_process_instance.form_data IS '表单数据JSON';
 
 -- Add title column (missing in V31)
 ALTER TABLE office_message
-    ADD COLUMN title VARCHAR(500);
+    ADD COLUMN IF NOT EXISTS title VARCHAR(500);
 
 COMMENT ON COLUMN office_message.title IS '消息标题';
 

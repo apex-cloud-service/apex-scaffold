@@ -86,6 +86,12 @@ public class DeptHandler extends BaseHandler {
                                 schema = @Schema(implementation = java.util.List.class))),
         @ApiResponse(responseCode = "403", description = "权限不足，需要system:dept:list权限")
     })
+    @OperationLog(
+            module = "Dept",
+            type = OperationLog.OperationType.SELECT,
+            description = "listTree",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> listTree(ServerRequest request) {
         return deptService.listTree().flatMap(this::buildSuccess);
     }
@@ -115,6 +121,12 @@ public class DeptHandler extends BaseHandler {
         @ApiResponse(responseCode = "404", description = "部门不存在"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要system:dept:query权限")
     })
+    @OperationLog(
+            module = "Dept",
+            type = OperationLog.OperationType.SELECT,
+            description = "detail",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> detail(ServerRequest request) {
         return deptService.get(requirePositiveId(request)).flatMap(this::buildSuccess);
     }
@@ -141,7 +153,12 @@ public class DeptHandler extends BaseHandler {
         @ApiResponse(responseCode = "400", description = "参数校验失败或部门名称已存在"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要system:dept:add权限")
     })
-    @OperationLog(module = "部门管理", type = OperationLog.OperationType.INSERT, description = "新增部门")
+    @OperationLog(
+            module = "部门管理",
+            type = OperationLog.OperationType.INSERT,
+            description = "新增部门",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> create(ServerRequest request) {
         return parseBody(request, DeptDTO.class)
                 .map(this::toEntity)
@@ -178,7 +195,12 @@ public class DeptHandler extends BaseHandler {
         @ApiResponse(responseCode = "404", description = "部门不存在"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要system:dept:edit权限")
     })
-    @OperationLog(module = "部门管理", type = OperationLog.OperationType.UPDATE, description = "更新部门")
+    @OperationLog(
+            module = "部门管理",
+            type = OperationLog.OperationType.UPDATE,
+            description = "更新部门",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> update(ServerRequest request) {
         long id = requirePositiveId(request);
         return parseBody(request, DeptDTO.class)
@@ -209,7 +231,12 @@ public class DeptHandler extends BaseHandler {
         @ApiResponse(responseCode = "403", description = "权限不足，需要system:dept:remove权限"),
         @ApiResponse(responseCode = "409", description = "部门存在子部门或关联数据，无法删除")
     })
-    @OperationLog(module = "部门管理", type = OperationLog.OperationType.DELETE, description = "删除部门")
+    @OperationLog(
+            module = "部门管理",
+            type = OperationLog.OperationType.DELETE,
+            description = "删除部门",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> delete(ServerRequest request) {
         return deptService
                 .delete(requirePositiveId(request))

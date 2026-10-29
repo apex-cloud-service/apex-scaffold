@@ -80,20 +80,19 @@ CREATE TABLE IF NOT EXISTS wf_rollback_history (
     INDEX idx_rollback_history_time (rollback_time)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='流程回退历史表';
 
--- 为 wf_definition 表添加版本管理字段（支持未来版本管理功能）
-ALTER TABLE wf_definition
-    ADD COLUMN version INT DEFAULT 1 COMMENT '版本号',
+-- 为 wf_workflow_definition 表添加版本管理字段（version 已由 V20 创建）
+ALTER TABLE wf_workflow_definition
     ADD COLUMN is_latest TINYINT(1) DEFAULT 1 COMMENT '是否最新版本: 0-否 1-是',
     ADD COLUMN previous_version_id BIGINT COMMENT '前一版本ID';
 
--- 为 wf_definition 表添加版本索引
-CREATE INDEX idx_definition_code_version ON wf_definition(workflow_code, version);
-CREATE INDEX idx_definition_is_latest ON wf_definition(is_latest);
+-- 为 wf_workflow_definition 表添加版本索引
+CREATE INDEX idx_definition_code_version ON wf_workflow_definition(workflow_code, version);
+CREATE INDEX idx_definition_is_latest ON wf_workflow_definition(is_latest);
 
 -- 插入配置说明数据（可选，用于记录迁移信息）
-INSERT INTO sys_config (config_key, config_value, config_type, config_desc, create_time, update_time)
-VALUES ('workflow.version', 'v1.4.0', 'system', '工作流引擎版本：支持回退、转办、挂起、超时处理', NOW(), NOW())
-ON DUPLICATE KEY UPDATE config_value = 'v1.4.0', config_desc = '工作流引擎版本：支持回退、转办、挂起、超时处理', update_time = NOW();
+INSERT INTO sys_config (id, config_name, config_key, config_value, config_type, remark, create_time, update_time)
+VALUES (21001, '工作流引擎版本', 'workflow.version', 'v1.4.0', 1, '工作流引擎版本：支持回退、转办、挂起、超时处理', NOW(), NOW())
+ON DUPLICATE KEY UPDATE config_value = 'v1.4.0', remark = '工作流引擎版本：支持回退、转办、挂起、超时处理', update_time = NOW();
 
 -- ============================================================
 -- 迁移说明

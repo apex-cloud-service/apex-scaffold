@@ -2,91 +2,94 @@ package com.apex.scaffold.interfaces.config;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import lombok.RequiredArgsConstructor;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.keycloak.admin.client.Keycloak;
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.TestPropertySource;
+import org.springframework.boot.autoconfigure.AutoConfigurations;
+import org.springframework.boot.autoconfigure.context.ConfigurationPropertiesAutoConfiguration;
+import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 
 /**
- * {@link KeycloakConfig} 的集成测试类
+ * Keycloak 配置离线测试。
  *
- * <p>测试 Keycloak 配置类的属性绑定和 Bean 初始化。
- *
- * <p><b>注意</b>：此测试需要真实的 Keycloak 服务器环境，因此默认禁用。
- * 要运行此测试，需要：
- * <ol>
- *   <li>启动 Keycloak 服务器（默认 http://localhost:8180）</li>
- *   <li>创建 test-realm 并配置 admin-cli 客户端</li>
- *   <li>移除 @Disabled 注解</li>
- * </ol>
+ * <p>加载真实属性绑定基础设施并创建真实 Admin Client，不请求令牌或调用远端 API，
+ * 因此仅验证配置和客户端装配，不代表 Keycloak 认证通过。
  *
  * @author Apex Team
- * @version 1.0.0
+ * @version 1.3.1
  * @since 2.4.0
  */
-@Disabled("需要真实的 Keycloak 服务器环境，作为集成测试在 CI/CD 中运行")
-@DisplayName("KeycloakConfig 集成测试")
-@SpringBootTest(classes = KeycloakConfig.class)
-@ActiveProfiles("test")
-@TestPropertySource(
-        properties = {
-            "keycloak.enabled=true",
-            "keycloak.server-url=http://localhost:8180",
-            "keycloak.realm=test-realm",
-            "keycloak.admin-username=admin",
-            "keycloak.admin-password=admin123",
-            "keycloak.admin-client-id=admin-cli",
-            "keycloak.client-id=test-client",
-            "keycloak.client-secret=test-secret",
-            "keycloak.user-sync-enabled=true",
-            "keycloak.frontend-callback-url=http://localhost:3000/auth/callback"
-        })
-@RequiredArgsConstructor
+@DisplayName("Keycloak 配置离线测试")
 class KeycloakConfigTest {
 
-    private final ObjectProvider<KeycloakConfig> keycloakConfigProvider;
+    private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
+            .withConfiguration(AutoConfigurations.of(ConfigurationPropertiesAutoConfiguration.class))
+            .withUserConfiguration(KeycloakConfig.class)
+            .withPropertyValues(
+                    "keycloak.enabled=true",
+                    "keycloak.server-url=http://127.0.0.1:1",
+                    "keycloak.realm=test-realm",
+                    "keycloak.admin-username=test-admin",
+                    "keycloak.admin-password=offline-test-password",
+                    "keycloak.admin-client-id=admin-cli",
+                    "keycloak.client-id=test-client",
+                    "keycloak.client-secret=offline-test-secret",
+                    "keycloak.user-sync-enabled=false",
+                    "keycloak.frontend-callback-url=http://localhost:3000/auth/callback");
 
-    private final ObjectProvider<Keycloak> keycloakAdminClientProvider;
-
-    /**
-     * 验证 KeycloakConfig Bean 被正确创建
-     */
+    /** 验证启用集成时创建唯一配置 Bean。 */
     @Test
-    @DisplayName("KeycloakConfig Bean 应被正确创建")
+    @DisplayName("启用集成时创建配置 Bean")
     void keycloakConfigShouldBeCreated() {
-        assertThat(keycloakConfigProvider.getIfAvailable()).isNotNull();
+        contextRunner.run(context -> assertThat(context).hasNotFailed().hasSingleBean(KeycloakConfig.class));
     }
 
-    /**
-     * 验证配置属性被正确绑定
-     */
+    /** 验证真实属性绑定覆盖全部配置字段及非默认同步开关。 */
     @Test
     @DisplayName("配置属性应被正确绑定")
     void configPropertiesShouldBeBindCorrectly() {
-        KeycloakConfig keycloakConfig = keycloakConfigProvider.getIfAvailable();
-        assertThat(keycloakConfig).isNotNull();
-        assertThat(keycloakConfig.getServerUrl()).isEqualTo("http://localhost:8180");
-        assertThat(keycloakConfig.getRealm()).isEqualTo("test-realm");
-        assertThat(keycloakConfig.getAdminUsername()).isEqualTo("admin");
-        assertThat(keycloakConfig.getAdminPassword()).isEqualTo("admin123");
-        assertThat(keycloakConfig.getAdminClientId()).isEqualTo("admin-cli");
-        assertThat(keycloakConfig.getClientId()).isEqualTo("test-client");
-        assertThat(keycloakConfig.getClientSecret()).isEqualTo("test-secret");
-        assertThat(keycloakConfig.isUserSyncEnabled()).isTrue();
-        assertThat(keycloakConfig.getFrontendCallbackUrl()).isEqualTo("http://localhost:3000/auth/callback");
+        contextRunner.run(context -> {
+            assertThat(context).hasNotFailed();
+            KeycloakConfig config = context.getBean(KeycloakConfig.class);
+            assertThat(config.getServerUrl()).isEqualTo("http://127.0.0.1:1");
+            assertThat(config.getRealm()).isEqualTo("test-realm");
+            assertThat(config.getAdminUsername()).isEqualTo("test-admin");
+            assertThat(config.getAdminPassword()).isEqualTo("offline-test-password");
+            assertThat(config.getAdminClientId()).isEqualTo("admin-cli");
+            assertThat(config.getClientId()).isEqualTo("test-client");
+            assertThat(config.getClientSecret()).isEqualTo("offline-test-secret");
+            assertThat(config.isUserSyncEnabled()).isFalse();
+            assertThat(config.getFrontendCallbackUrl()).isEqualTo("http://localhost:3000/auth/callback");
+        });
     }
 
-    /**
-     * 验证 Keycloak Admin Client Bean 被正确创建
-     */
+    /** 验证真实客户端离线创建，并由上下文关闭其资源。 */
     @Test
-    @DisplayName("Keycloak Admin Client Bean 应被正确创建")
+    @DisplayName("离线创建真实 Keycloak Admin Client")
     void keycloakAdminClientShouldBeCreated() {
-        assertThat(keycloakAdminClientProvider.getIfAvailable()).isNotNull();
+        contextRunner.run(context -> {
+            assertThat(context).hasNotFailed().hasSingleBean(Keycloak.class);
+            assertThat(context.getBean(Keycloak.class).isClosed()).isFalse();
+        });
+    }
+
+    /** 验证显式关闭集成时既不绑定必填属性，也不创建客户端。 */
+    @Test
+    void disabledIntegrationDoesNotCreateBeans() {
+        new ApplicationContextRunner()
+                .withConfiguration(AutoConfigurations.of(ConfigurationPropertiesAutoConfiguration.class))
+                .withUserConfiguration(KeycloakConfig.class)
+                .withPropertyValues("keycloak.enabled=false")
+                .run(context -> assertThat(context)
+                        .hasNotFailed()
+                        .doesNotHaveBean(KeycloakConfig.class)
+                        .doesNotHaveBean(Keycloak.class));
+    }
+
+    /** 验证启用集成但必填属性为空时绑定失败。 */
+    @Test
+    void missingRequiredPropertyFailsBinding() {
+        contextRunner.withPropertyValues("keycloak.realm=").run(context -> assertThat(context)
+                .hasFailed());
     }
 }

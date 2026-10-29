@@ -18,7 +18,7 @@ import reactor.core.publisher.Mono;
  * <p>基于 MyBatis-Plus 实现 TotpRepository 接口，使用响应式编程包装阻塞数据库操作。
  *
  * @author Apex Scaffold Team
- * @since 2026-09-21
+ * @since 1.3.1
  */
 @Slf4j
 @Repository

@@ -3,8 +3,7 @@ package com.apex.scaffold.auth.domain.service;
 import com.apex.scaffold.auth.application.service.UnifiedAuthorizationQueryService;
 import java.util.*;
 import java.util.stream.Collectors;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -34,9 +33,8 @@ import reactor.core.publisher.Mono;
  * @author Apex Security Team
  * @since 1.0.0
  */
+@Slf4j
 public class ResourcePermissionService {
-
-    private static final Logger log = LoggerFactory.getLogger(ResourcePermissionService.class);
 
     private static final String ROLE_DEPT_MANAGER = "DEPT_MANAGER";
     private static final String RESOURCE_TYPE_SENSITIVE_DATA = "sensitive-data";
@@ -449,20 +447,15 @@ public class ResourcePermissionService {
             return true;
         }
 
-        switch (requiredPermission) {
-            case "READ":
-                return userPermissions.contains("READ")
-                        || userPermissions.contains("WRITE")
-                        || userPermissions.contains("DELETE");
-            case "WRITE":
-                return userPermissions.contains("WRITE") || userPermissions.contains("DELETE");
-            case "DELETE":
-                return userPermissions.contains("DELETE");
-            case "MANAGE":
-                return userPermissions.contains("MANAGE");
-            default:
-                return false;
-        }
+        return switch (requiredPermission) {
+            case "READ" -> userPermissions.contains("READ")
+                    || userPermissions.contains("WRITE")
+                    || userPermissions.contains("DELETE");
+            case "WRITE" -> userPermissions.contains("WRITE") || userPermissions.contains("DELETE");
+            case "DELETE" -> userPermissions.contains("DELETE");
+            case "MANAGE" -> userPermissions.contains("MANAGE");
+            default -> false;
+        };
     }
 
     /**
@@ -478,6 +471,7 @@ public class ResourcePermissionService {
     /**
      * 权限上下文
      */
+    @lombok.Getter
     public static class PermissionContext {
         private final boolean superAdmin;
         private final Set<String> organizationRoles;
@@ -514,66 +508,17 @@ public class ResourcePermissionService {
             this.deviceId = deviceId;
             this.tenantId = tenantId;
         }
-
-        public boolean isSuperAdmin() {
-            return superAdmin;
-        }
-
-        public Set<String> getOrganizationRoles() {
-            return organizationRoles;
-        }
-
-        public String getClientIp() {
-            return clientIp;
-        }
-
-        public String getDeviceId() {
-            return deviceId;
-        }
-
-        public String getTenantId() {
-            return tenantId;
-        }
     }
 
     /**
      * 资源权限授予记录
      */
+    @lombok.Getter
+    @lombok.RequiredArgsConstructor
     public static class ResourcePermissionGrant {
         private final String userId;
         private final String resourceType;
         private final String resourceId;
         private final Set<String> permissions;
-
-        /**
-         * 构造资源权限授予记录。
-         *
-         * @param userId 被授权用户ID
-         * @param resourceType 资源类型
-         * @param resourceId 资源ID
-         * @param permissions 授予的权限集合
-         */
-        public ResourcePermissionGrant(String userId, String resourceType, String resourceId, Set<String> permissions) {
-            this.userId = userId;
-            this.resourceType = resourceType;
-            this.resourceId = resourceId;
-            this.permissions = permissions;
-        }
-
-        public String getUserId() {
-            return userId;
-        }
-
-        public String getResourceType() {
-            return resourceType;
-        }
-
-        public String getResourceId() {
-            return resourceId;
-        }
-
-        public Set<String> getPermissions() {
-            return permissions;
-        }
     }
 }

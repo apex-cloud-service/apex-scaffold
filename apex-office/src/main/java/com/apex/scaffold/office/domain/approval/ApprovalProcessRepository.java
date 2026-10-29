@@ -39,9 +39,11 @@ public interface ApprovalProcessRepository {
     Mono<ApprovalProcess> findByProcessInstanceId(String processInstanceId);
 
     /**
-     * 根据平台和平台实例ID查询审批流程
+     * 根据平台实例ID查询审批流程
      *
-     * @param platform 办公平台类型
+     * <p>当前仓储实现忽略 platform，仅按当前租户和平台实例ID查询，调用方不能依赖此方法提供平台隔离。
+     *
+     * @param platform 办公平台类型（当前实现不参与筛选）
      * @param platformInstanceId 平台中的审批实例ID
      * @return 审批流程，如果不存在则返回空Mono
      */

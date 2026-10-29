@@ -93,23 +93,23 @@ public class SearchIndexReconciliationJob {
      *
      * <p>通过管理后台或 API 调用，用于测试或紧急修复。
      *
+     * <p>返回完整完成信号供受控任务调用器等待，单类型或末尾失败均传播至任务日志。
+     *
      * @param resourceType 资源类型，null表示同步所有类型
+     * @return 所选资源全部同步完成的信号
      */
-    public void manualSync(String resourceType) {
-        log.warn("Manual incremental sync triggered: type={}", resourceType);
-
-        long sinceTimestamp = System.currentTimeMillis() - TWENTY_FOUR_HOURS;
-
-        if (resourceType != null) {
-            // 同步指定类型
-            indexSyncPort
-                    .syncIncremental(resourceType, sinceTimestamp)
-                    .doOnSuccess(count -> log.info("Manual sync completed: type={}, count={}", resourceType, count))
-                    .doOnError(e -> log.error("Manual sync failed: type={}", resourceType, e))
-                    .subscribe();
-        } else {
-            // 同步所有类型
-            syncIncremental();
-        }
+    @ManagedJob
+    public reactor.core.publisher.Mono<Void> manualSync(String resourceType) {
+        return reactor.core.publisher.Mono.defer(() -> {
+            long sinceTimestamp = System.currentTimeMillis() - TWENTY_FOUR_HOURS;
+            if (resourceType != null) {
+                return indexSyncPort
+                        .syncIncremental(resourceType, sinceTimestamp)
+                        .then();
+            }
+            return reactor.core.publisher.Flux.fromArray(RESOURCE_TYPES)
+                    .flatMapDelayError(type -> indexSyncPort.syncIncremental(type, sinceTimestamp), 1, 1)
+                    .then();
+        });
     }
 }

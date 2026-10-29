@@ -76,7 +76,6 @@ public class GenConfigHandler extends BaseHandler {
      * @param request HTTP 请求，支持分页参数 page、size 和查询条件
      * @return 带 traceId 的统一成功响应，data 为生成配置分页列表
      */
-    @OperationLog(module = "代码生成器-配置", type = OperationLog.OperationType.SELECT, description = "查询生成配置列表")
     @RequirePermission("system:generator:config:list")
     @Operation(
             operationId = "adminListGenConfigs",
@@ -101,12 +100,19 @@ public class GenConfigHandler extends BaseHandler {
         @ApiResponse(responseCode = "200", description = "查询成功"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要 system:generator:config:list 权限")
     })
+    @OperationLog(
+            module = "GenConfig",
+            type = OperationLog.OperationType.SELECT,
+            description = "list",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> list(ServerRequest request) {
         int page = safeParseInt(request.queryParam("page").orElse("1"), 1);
         int size = safeParseInt(request.queryParam("size").orElse("20"), 20);
         Long datasourceId = safeParseLong(request.queryParam("datasourceId").orElse(null));
+        String configName = request.queryParam("configName").orElse(null);
 
-        return genConfigService.list(datasourceId, page, size).flatMap(this::buildSuccess);
+        return genConfigService.list(configName, datasourceId, page, size).flatMap(this::buildSuccess);
     }
 
     /**
@@ -126,7 +132,12 @@ public class GenConfigHandler extends BaseHandler {
         @ApiResponse(responseCode = "400", description = "参数校验失败"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要 system:generator:config:add 权限")
     })
-    @OperationLog(module = "代码生成器-配置", type = OperationLog.OperationType.INSERT, description = "新增生成配置")
+    @OperationLog(
+            module = "代码生成器-配置",
+            type = OperationLog.OperationType.INSERT,
+            description = "新增生成配置",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> create(ServerRequest request) {
         return parseBody(request, GenConfigRequest.class)
                 .flatMap(genConfigService::create)
@@ -157,7 +168,12 @@ public class GenConfigHandler extends BaseHandler {
         @ApiResponse(responseCode = "403", description = "权限不足，需要 system:generator:config:edit 权限"),
         @ApiResponse(responseCode = "404", description = "生成配置不存在")
     })
-    @OperationLog(module = "代码生成器-配置", type = OperationLog.OperationType.UPDATE, description = "更新生成配置")
+    @OperationLog(
+            module = "代码生成器-配置",
+            type = OperationLog.OperationType.UPDATE,
+            description = "更新生成配置",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> update(ServerRequest request) {
         Long id = requirePositiveId(request);
         return parseBody(request, GenConfigRequest.class)
@@ -185,7 +201,12 @@ public class GenConfigHandler extends BaseHandler {
         @ApiResponse(responseCode = "403", description = "权限不足，需要 system:generator:config:remove 权限"),
         @ApiResponse(responseCode = "404", description = "生成配置不存在")
     })
-    @OperationLog(module = "代码生成器-配置", type = OperationLog.OperationType.DELETE, description = "删除生成配置")
+    @OperationLog(
+            module = "代码生成器-配置",
+            type = OperationLog.OperationType.DELETE,
+            description = "删除生成配置",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> delete(ServerRequest request) {
         return genConfigService
                 .delete(requirePositiveId(request))
@@ -198,7 +219,6 @@ public class GenConfigHandler extends BaseHandler {
      * @param request HTTP 请求，路径参数 {@code id} 为数据源ID
      * @return 带 traceId 的统一成功响应，data 为表结构列表（表名、注释等）
      */
-    @OperationLog(module = "代码生成器-表结构", type = OperationLog.OperationType.SELECT, description = "查询数据库表结构")
     @RequirePermission("system:generator:table:list")
     @Operation(operationId = "adminListGenTables", summary = "查询数据库表结构", description = "查询指定数据源下的所有表结构信息，包括表名、表注释等元数据")
     @Parameter(
@@ -213,6 +233,12 @@ public class GenConfigHandler extends BaseHandler {
         @ApiResponse(responseCode = "403", description = "权限不足，需要 system:generator:table:list 权限"),
         @ApiResponse(responseCode = "404", description = "数据源不存在")
     })
+    @OperationLog(
+            module = "GenConfig",
+            type = OperationLog.OperationType.SELECT,
+            description = "getTables",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> getTables(ServerRequest request) {
         Long datasourceId = requirePositiveId(request);
         return codeGenerationService.getTables(datasourceId).collectList().flatMap(this::buildSuccess);
@@ -224,7 +250,6 @@ public class GenConfigHandler extends BaseHandler {
      * @param request HTTP 请求，路径参数 {@code id} 为数据源ID，{@code tableName} 为表名
      * @return 带 traceId 的统一成功响应，data 为字段列表（字段名、类型、长度、注释等）
      */
-    @OperationLog(module = "代码生成器-表结构", type = OperationLog.OperationType.SELECT, description = "查询表字段信息")
     @RequirePermission("system:generator:table:list")
     @Operation(
             operationId = "adminListGenColumns",
@@ -248,6 +273,12 @@ public class GenConfigHandler extends BaseHandler {
         @ApiResponse(responseCode = "403", description = "权限不足，需要 system:generator:table:list 权限"),
         @ApiResponse(responseCode = "404", description = "数据源或表不存在")
     })
+    @OperationLog(
+            module = "GenConfig",
+            type = OperationLog.OperationType.SELECT,
+            description = "getColumns",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> getColumns(ServerRequest request) {
         Long datasourceId = requirePositiveId(request);
         String tableName = request.pathVariable("tableName");
@@ -264,7 +295,6 @@ public class GenConfigHandler extends BaseHandler {
      * @param request HTTP 请求，路径参数 {@code id} 为生成配置ID，支持分页参数
      * @return 带 traceId 的统一成功响应，data 为生成历史分页列表
      */
-    @OperationLog(module = "代码生成器-历史", type = OperationLog.OperationType.SELECT, description = "查询生成历史")
     @RequirePermission("system:generator:history:list")
     @Operation(
             operationId = "adminListGenHistory",
@@ -292,6 +322,12 @@ public class GenConfigHandler extends BaseHandler {
         @ApiResponse(responseCode = "403", description = "权限不足，需要 system:generator:history:list 权限"),
         @ApiResponse(responseCode = "404", description = "生成配置不存在")
     })
+    @OperationLog(
+            module = "GenConfig",
+            type = OperationLog.OperationType.SELECT,
+            description = "listHistory",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> listHistory(ServerRequest request) {
         Long configId = requirePositiveId(request);
         int page = safeParseInt(request.queryParam("page").orElse("1"), 1);

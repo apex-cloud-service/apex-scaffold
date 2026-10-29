@@ -311,20 +311,28 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     /**
-     * 根据ID列表批量查询
+     * 按主键批量查询未删除用户。
      *
-     * <p>
-     * 根据用户主键ID列表批量查询用户信息。
-     * 使用 MyBatis-Plus 的 {@code selectBatchIds} 方法执行批量查询。
-     * </p>
+     * <p>供组织目录内部接口回填已绑定系统用户的部门归属。</p>
      *
-     * @param ids 用户ID列表
-     * @return 用户实体流 {@code Flux<UserEntity>}
+     * @param ids 用户主键集合，为空时返回空流
+     * @return 命中的用户实体流
      */
+    @Override
     public Flux<UserEntity> findByIds(List<Long> ids) {
-        return Mono.fromCallable(() -> userMapper.selectByIds(ids))
+        if (ids == null || ids.isEmpty()) {
+            return Flux.empty();
+        }
+        List<Long> idList = ids.stream().filter(id -> id != null).distinct().toList();
+        if (idList.isEmpty()) {
+            return Flux.empty();
+        }
+        return Mono.fromCallable(
+                        () -> userPoConverter.toEntityList(userMapper.selectList(new LambdaQueryWrapper<UserPO>()
+                                .eq(UserPO::getDeleted, 0)
+                                .in(UserPO::getId, idList))))
                 .subscribeOn(BlockingIoSchedulers.jdbc())
-                .flatMapMany(list -> Flux.fromIterable(userPoConverter.toEntityList(list)));
+                .flatMapMany(Flux::fromIterable);
     }
 
     /**
@@ -369,6 +377,8 @@ public class UserRepositoryImpl implements UserRepository {
      *
      * @param pageNum  当前页码
      * @param pageSize 每页记录数
+     * @param orderBy 排序字段
+     * @param isAsc   是否升序排列
      * @return 分页响应结果，包含用户实体列表和分页信息
      */
     @Override
@@ -452,6 +462,86 @@ public class UserRepositoryImpl implements UserRepository {
                             userPoConverter.toEntityList(result.getRecords()), result.getTotal(), pageNum, pageSize);
                 })))
                 .subscribeOn(BlockingIoSchedulers.jdbc());
+    }
+
+    /**
+     * 按手机号、邮箱或登录名批量解析用户。
+     *
+     * <p>三个条件以 {@code OR + IN} 组合成一次查询，任一匹配即命中；空集合条件跳过，
+     * 全部为空时不发起查询。租户过滤由租户拦截器按当前租户上下文注入。</p>
+     *
+     * @param phones    手机号集合，可为空
+     * @param emails    邮箱集合，可为空
+     * @param usernames 登录名集合，可为空
+     * @return 命中的用户实体流
+     */
+    @Override
+    public Flux<UserEntity> findByPhonesOrEmailsOrUsernames(
+            List<String> phones, List<String> emails, List<String> usernames) {
+        List<String> phoneList = normalize(phones);
+        List<String> emailList = normalize(emails);
+        List<String> usernameList = normalize(usernames);
+        if (phoneList.isEmpty() && emailList.isEmpty() && usernameList.isEmpty()) {
+            return Flux.empty();
+        }
+        return Mono.fromCallable(() -> {
+                    LambdaQueryWrapper<UserPO> wrapper = new LambdaQueryWrapper<UserPO>().eq(UserPO::getDeleted, 0);
+                    wrapper.and(nested -> {
+                        boolean joined = false;
+                        if (!phoneList.isEmpty()) {
+                            nested.in(UserPO::getPhone, phoneList);
+                            joined = true;
+                        }
+                        if (!emailList.isEmpty()) {
+                            if (joined) {
+                                nested.or();
+                            }
+                            nested.in(UserPO::getEmail, emailList);
+                            joined = true;
+                        }
+                        if (!usernameList.isEmpty()) {
+                            if (joined) {
+                                nested.or();
+                            }
+                            nested.in(UserPO::getUsername, usernameList);
+                        }
+                    });
+                    return userPoConverter.toEntityList(userMapper.selectList(wrapper));
+                })
+                .subscribeOn(BlockingIoSchedulers.jdbc())
+                .flatMapMany(Flux::fromIterable);
+    }
+
+    /**
+     * 统计当前租户下的有效用户数。
+     *
+     * <p>只统计未删除用户；{@code sys_user} 不在租户拦截白名单中，
+     * {@code tenant_id} 条件由租户拦截器按当前租户上下文自动注入。</p>
+     *
+     * @return 当前租户未删除用户总数
+     */
+    @Override
+    public Mono<Long> countByCurrentTenant() {
+        return Mono.fromCallable(
+                        () -> userMapper.selectCount(new LambdaQueryWrapper<UserPO>().eq(UserPO::getDeleted, 0)))
+                .subscribeOn(BlockingIoSchedulers.jdbc());
+    }
+
+    /**
+     * 去空白、去重并丢弃空值。
+     *
+     * @param values 原始值集合
+     * @return 可安全用于 {@code IN} 的取值列表
+     */
+    private static List<String> normalize(List<String> values) {
+        if (values == null) {
+            return List.of();
+        }
+        return values.stream()
+                .filter(value -> value != null && !value.isBlank())
+                .map(String::strip)
+                .distinct()
+                .toList();
     }
 
     /**

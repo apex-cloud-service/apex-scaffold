@@ -28,6 +28,8 @@ public interface DocumentInfoConverter {
      * @return 文档信息持久化对象
      */
     @Mapping(target = "documentType", source = "documentType", qualifiedByName = "documentTypeToString")
+    @Mapping(target = "isFolder", source = "isFolder", defaultValue = "false")
+    @Mapping(target = "isArchived", source = "isArchived", defaultValue = "false")
     DocumentInfoPO toPO(DocumentInfo documentInfo);
 
     /**
@@ -37,6 +39,8 @@ public interface DocumentInfoConverter {
      * @return 文档信息领域实体
      */
     @Mapping(target = "documentType", source = "documentType", qualifiedByName = "stringToDocumentType")
+    @Mapping(target = "isFolder", source = "isFolder", defaultValue = "false")
+    @Mapping(target = "isArchived", source = "isArchived", defaultValue = "false")
     DocumentInfo toEntity(DocumentInfoPO po);
 
     /**

@@ -4,36 +4,23 @@
 -- 描述: 为认证授权系统添加安全增强字段
 -- =====================================================
 
--- 1. 为 token 表添加安全相关字段
-ALTER TABLE token
-    ADD COLUMN IF NOT EXISTS is_revoked BOOLEAN DEFAULT FALSE COMMENT '是否已撤销',
-    ADD COLUMN IF NOT EXISTS revoke_reason VARCHAR(255) COMMENT '撤销原因',
-    ADD COLUMN IF NOT EXISTS revoked_at DATETIME COMMENT '撤销时间',
-    ADD COLUMN IF NOT EXISTS last_used_at DATETIME COMMENT '最后使用时间',
-    ADD COLUMN IF NOT EXISTS last_used_ip VARCHAR(64) COMMENT '最后使用IP',
-    ADD COLUMN IF NOT EXISTS device_fingerprint VARCHAR(255) COMMENT '设备指纹',
-    ADD COLUMN IF NOT EXISTS is_encrypted BOOLEAN DEFAULT TRUE COMMENT 'Token是否加密存储';
-
--- 2. 为 token 表添加索引
-CREATE INDEX IF NOT EXISTS idx_token_is_revoked ON token(is_revoked);
-CREATE INDEX IF NOT EXISTS idx_token_last_used_at ON token(last_used_at);
-CREATE INDEX IF NOT EXISTS idx_token_device_fingerprint ON token(device_fingerprint);
+-- 1. 令牌存储使用 oauth2_authorization，安全字段在第 11 节统一添加。
 
 -- 3. 为 user 表添加安全相关字段（如果不存在）
-ALTER TABLE user
-    ADD COLUMN IF NOT EXISTS is_locked BOOLEAN DEFAULT FALSE COMMENT '账户是否被锁定',
-    ADD COLUMN IF NOT EXISTS lock_reason VARCHAR(255) COMMENT '锁定原因',
-    ADD COLUMN IF NOT EXISTS locked_at DATETIME COMMENT '锁定时间',
-    ADD COLUMN IF NOT EXISTS locked_until DATETIME COMMENT '锁定截止时间（null表示永久锁定）',
-    ADD COLUMN IF NOT EXISTS failed_login_attempts INT DEFAULT 0 COMMENT '连续登录失败次数',
-    ADD COLUMN IF NOT EXISTS last_failed_login_at DATETIME COMMENT '最后失败登录时间',
-    ADD COLUMN IF NOT EXISTS password_changed_at DATETIME COMMENT '密码最后修改时间',
-    ADD COLUMN IF NOT EXISTS password_expires_at DATETIME COMMENT '密码过期时间',
-    ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN DEFAULT FALSE COMMENT '是否必须修改密码';
+ALTER TABLE sys_user
+    ADD COLUMN is_locked BOOLEAN DEFAULT FALSE COMMENT '账户是否被锁定',
+    ADD COLUMN lock_reason VARCHAR(255) COMMENT '锁定原因',
+    ADD COLUMN locked_at DATETIME COMMENT '锁定时间',
+    ADD COLUMN locked_until DATETIME COMMENT '锁定截止时间（null表示永久锁定）',
+    ADD COLUMN failed_login_attempts INT DEFAULT 0 COMMENT '连续登录失败次数',
+    ADD COLUMN last_failed_login_at DATETIME COMMENT '最后失败登录时间',
+    ADD COLUMN password_changed_at DATETIME COMMENT '密码最后修改时间',
+    ADD COLUMN password_expires_at DATETIME COMMENT '密码过期时间',
+    ADD COLUMN must_change_password BOOLEAN DEFAULT FALSE COMMENT '是否必须修改密码';
 
--- 4. 为 user 表添加索引
-CREATE INDEX IF NOT EXISTS idx_user_is_locked ON user(is_locked);
-CREATE INDEX IF NOT EXISTS idx_user_password_expires_at ON user(password_expires_at);
+-- 4. 为 sys_user 表添加索引
+CREATE INDEX idx_user_is_locked ON sys_user(is_locked);
+CREATE INDEX idx_user_password_expires_at ON sys_user(password_expires_at);
 
 -- 5. 创建密码历史表（用于防止密码重用）
 CREATE TABLE IF NOT EXISTS password_history (
@@ -155,14 +142,16 @@ CREATE TABLE IF NOT EXISTS trusted_device (
 
 -- 11. 为 oauth2_authorization 表添加安全字段
 ALTER TABLE oauth2_authorization
-    ADD COLUMN IF NOT EXISTS device_id VARCHAR(255) COMMENT '设备ID',
-    ADD COLUMN IF NOT EXISTS device_fingerprint VARCHAR(255) COMMENT '设备指纹',
-    ADD COLUMN IF NOT EXISTS client_ip VARCHAR(64) COMMENT '客户端IP',
-    ADD COLUMN IF NOT EXISTS is_revoked BOOLEAN DEFAULT FALSE COMMENT '是否已撤销',
-    ADD COLUMN IF NOT EXISTS revoked_at DATETIME COMMENT '撤销时间';
+    ADD COLUMN device_id VARCHAR(255) COMMENT '设备ID',
+    ADD COLUMN device_fingerprint VARCHAR(255) COMMENT '设备指纹',
+    ADD COLUMN client_ip VARCHAR(64) COMMENT '客户端IP',
+    ADD COLUMN is_revoked BOOLEAN DEFAULT FALSE COMMENT '是否已撤销',
+    ADD COLUMN last_used_at DATETIME COMMENT '最后使用时间',
+    ADD COLUMN last_used_ip VARCHAR(64) COMMENT '最后使用IP',
+    ADD COLUMN is_encrypted BOOLEAN DEFAULT TRUE COMMENT 'Token是否加密存储';
 
-CREATE INDEX IF NOT EXISTS idx_oauth2_auth_device_id ON oauth2_authorization(device_id);
-CREATE INDEX IF NOT EXISTS idx_oauth2_auth_is_revoked ON oauth2_authorization(is_revoked);
+CREATE INDEX idx_oauth2_auth_device_id ON oauth2_authorization(device_id);
+CREATE INDEX idx_oauth2_auth_is_revoked ON oauth2_authorization(is_revoked);
 
 -- 12. 创建配置加密密钥表
 CREATE TABLE IF NOT EXISTS encryption_key (
@@ -195,8 +184,8 @@ CREATE TABLE IF NOT EXISTS encryption_key (
 -- TRUNCATE TABLE oauth2_authorization;
 
 -- 14. 更新现有用户的密码修改时间（如果字段为空）
-UPDATE user 
-SET password_changed_at = created_at 
+UPDATE sys_user
+SET password_changed_at = create_time
 WHERE password_changed_at IS NULL;
 
 -- 15. 设置密码过期策略（可选，90天过期）
@@ -239,7 +228,7 @@ ORDER BY TABLE_NAME;
 
 -- 统计表数据
 SELECT 
-    'token' as table_name, COUNT(*) as row_count FROM token
+    'oauth2_authorization' as table_name, COUNT(*) as row_count FROM oauth2_authorization
 UNION ALL
 SELECT 'password_history', COUNT(*) FROM password_history
 UNION ALL

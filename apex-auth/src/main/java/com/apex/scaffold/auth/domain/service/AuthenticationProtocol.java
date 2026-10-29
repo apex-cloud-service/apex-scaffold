@@ -25,7 +25,7 @@ import reactor.core.publisher.Mono;
  *
  * @author Apex Team
  * @version 1.0.0
- * @since 2026-09-20
+ * @since 1.3.1
  * @see JwtAuthenticationProtocol
  * @see OAuth2AuthenticationProtocol
  */

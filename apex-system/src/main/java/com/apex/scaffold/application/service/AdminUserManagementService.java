@@ -61,6 +61,7 @@ public class AdminUserManagementService {
     private final CacheConsistencyPort cacheConsistencyPort;
     private final AccountDeletionPort accountDeletionPort;
     private final AdminUserAssembler adminUserAssembler;
+    private final TenantGuard tenantGuard;
 
     /**
      * 创建超级管理员用户管理服务。
@@ -77,6 +78,7 @@ public class AdminUserManagementService {
      * @param cacheConsistencyPort 缓存一致性端口
      * @param accountDeletionPort 账号注销端口
      * @param adminUserAssembler 管理后台用户对象转换器
+     * @param tenantGuard 租户写链路守卫
      */
     public AdminUserManagementService(
             UserRepository userRepository,
@@ -90,7 +92,8 @@ public class AdminUserManagementService {
             UserDefaultsFactory userDefaultsFactory,
             CacheConsistencyPort cacheConsistencyPort,
             AccountDeletionPort accountDeletionPort,
-            AdminUserAssembler adminUserAssembler) {
+            AdminUserAssembler adminUserAssembler,
+            TenantGuard tenantGuard) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.userRoleRepository = userRoleRepository;
@@ -103,6 +106,7 @@ public class AdminUserManagementService {
         this.cacheConsistencyPort = cacheConsistencyPort;
         this.accountDeletionPort = accountDeletionPort;
         this.adminUserAssembler = adminUserAssembler;
+        this.tenantGuard = tenantGuard;
     }
 
     /**
@@ -186,7 +190,8 @@ public class AdminUserManagementService {
     public Mono<AdminUserDetailResponse> create(String operatorOpenId, AdminUserCreateRequest request) {
         String phone = request.phone().trim();
         return assertSuperAdmin(operatorOpenId)
-                .then(userRepository.findByPhone(phone))
+                .then(tenantGuard.assertUserQuota(1))
+                .then(Mono.defer(() -> userRepository.findByPhone(phone)))
                 .flatMap(existing ->
                         Mono.<UserEntity>error(new BusinessException(ResultCode.USER_ALREADY_EXISTS, "手机号已存在")))
                 .switchIfEmpty(Mono.defer(() -> {

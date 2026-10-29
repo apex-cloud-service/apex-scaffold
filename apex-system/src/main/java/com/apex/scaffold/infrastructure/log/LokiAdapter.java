@@ -1,5 +1,6 @@
 package com.apex.scaffold.infrastructure.log;
 
+import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
 import com.apex.scaffold.domain.log.RuntimeLogEntry;
 import com.apex.scaffold.domain.log.RuntimeLogRepository;
 import com.apex.scaffold.infrastructure.config.LokiConfig.LokiProperties;
@@ -14,7 +15,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 /**
  * Loki日志查询适配器
@@ -31,6 +31,14 @@ public class LokiAdapter implements RuntimeLogRepository {
     private final LokiProperties properties;
     private final ObjectMapper objectMapper;
 
+    /**
+     * 查询 Loki 运行日志。
+     *
+     * <p>现有 WebClient 同步桥接包含阻塞等待，订阅时在 {@link BlockingIoSchedulers#remote()}
+     * 执行请求及解析；请求失败沿用空列表降级。
+     *
+     * @return 匹配的日志条目
+     */
     @Override
     public Mono<List<RuntimeLogEntry>> queryLogs(
             LocalDateTime startTime, LocalDateTime endTime, String level, String logger, String message, int limit) {
@@ -59,11 +67,19 @@ public class LokiAdapter implements RuntimeLogRepository {
 
                     return parseLogResponse(response);
                 })
-                .subscribeOn(Schedulers.boundedElastic())
+                .subscribeOn(BlockingIoSchedulers.remote())
                 .doOnError(e -> log.error("Query logs failed", e))
                 .onErrorReturn(new ArrayList<>());
     }
 
+    /**
+     * 统计 Loki 运行日志数量。
+     *
+     * <p>订阅时在 {@link BlockingIoSchedulers#remote()} 执行同步远程等待及响应解析，
+     * 避免阻塞请求线程；请求失败沿用返回零的降级语义。
+     *
+     * @return 日志数量
+     */
     @Override
     public Mono<Long> countLogs(LocalDateTime startTime, LocalDateTime endTime, String level) {
 
@@ -89,7 +105,7 @@ public class LokiAdapter implements RuntimeLogRepository {
 
                     return parseCountResponse(response);
                 })
-                .subscribeOn(Schedulers.boundedElastic())
+                .subscribeOn(BlockingIoSchedulers.remote())
                 .doOnError(e -> log.error("Count logs failed", e))
                 .onErrorReturn(0L);
     }

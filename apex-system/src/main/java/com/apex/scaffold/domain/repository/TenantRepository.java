@@ -1,5 +1,6 @@
 package com.apex.scaffold.domain.repository;
 
+import com.apex.scaffold.common.dto.PageResponse;
 import com.apex.scaffold.domain.model.entity.TenantEntity;
 import java.util.List;
 import reactor.core.publisher.Mono;
@@ -44,6 +45,22 @@ public interface TenantRepository {
      * @return 租户实体列表
      */
     Mono<List<TenantEntity>> findAll();
+
+    /**
+     * 分页查询租户目录。
+     *
+     * <p>平台管理员的租户列表入口，支持按编码与名称模糊匹配、状态精确匹配，
+     * 结果按租户编码升序排列。</p>
+     *
+     * @param tenantCode 租户编码（模糊匹配），可为 {@code null}
+     * @param tenantName 租户名称（模糊匹配），可为 {@code null}
+     * @param status 租户状态（精确匹配），可为 {@code null}
+     * @param pageNum 页码，从 1 开始
+     * @param pageSize 每页条数
+     * @return 租户分页结果
+     */
+    Mono<PageResponse<TenantEntity>> search(
+            String tenantCode, String tenantName, String status, int pageNum, int pageSize);
 
     /**
      * 检查租户编码是否已存在。

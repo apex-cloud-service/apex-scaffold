@@ -87,6 +87,41 @@ class RouterOpenApiCoverageTest {
         assertThat(documentedOperations()).hasSameSizeAs(documentedRoutes);
     }
 
+    @Test
+    void shouldBindOAuthAndKeycloakDocumentationToRealRoutes() throws Exception {
+        for (Class<?> config : List.of(OAuth2RouterConfig.class, KeycloakRouterConfig.class)) {
+            var constructor = config.getConstructors()[0];
+            Object router = constructor.newInstance(Arrays.stream(constructor.getParameterTypes())
+                    .map(Mockito::mock)
+                    .toArray());
+            for (Method factory : config.getDeclaredMethods()) {
+                RouterOperations documentation = factory.getAnnotation(RouterOperations.class);
+                if (documentation == null) {
+                    continue;
+                }
+                RouteCollector collector = new RouteCollector();
+                ((RouterFunction<?>) factory.invoke(router)).accept(collector);
+                List<Endpoint> documented = new ArrayList<>();
+                for (RouterOperation route : documentation.value()) {
+                    Method handler = route.beanClass().getMethod(route.beanMethod(), ServerRequest.class);
+                    var audit = handler.getAnnotation(com.apex.scaffold.common.annotation.OperationLog.class);
+                    assertThat(audit).as("敏感协议接口审计: " + route.path()).isNotNull();
+                    assertThat(audit.saveRequest()).as(route.path()).isFalse();
+                    assertThat(audit.saveResponse()).as(route.path()).isFalse();
+                    assertThat(handler.getAnnotation(Operation.class))
+                            .as(route.path())
+                            .isNotNull();
+                    assertThat(handler.getAnnotation(Operation.class).operationId())
+                            .isNotBlank();
+                    for (RequestMethod method : route.method()) {
+                        documented.add(new Endpoint(method.name(), route.path()));
+                    }
+                }
+                assertThat(documented).as(factory.getName()).containsExactlyInAnyOrderElementsOf(collector.endpoints);
+            }
+        }
+    }
+
     /**
      * 验证每个文档操作都有唯一标识、摘要以及可解析的 Handler 方法和标签。
      *
@@ -106,6 +141,9 @@ class RouterOpenApiCoverageTest {
                     .isTrue();
 
             Method handlerMethod = route.beanClass().getMethod(route.beanMethod(), ServerRequest.class);
+            assertThat(handlerMethod.getAnnotation(com.apex.scaffold.common.annotation.OperationLog.class))
+                    .as("HTTP 审计覆盖: " + route.beanClass().getSimpleName() + "." + route.beanMethod())
+                    .isNotNull();
             assertThat(handlerMethod.getAnnotation(Operation.class))
                     .as(route.beanMethod())
                     .isNotNull();
@@ -144,6 +182,21 @@ class RouterOpenApiCoverageTest {
         Set<String> operationIds = documentedOperations().stream()
                 .map(route -> route.operation().operationId())
                 .collect(java.util.stream.Collectors.toSet());
+        for (Class<?> config : List.of(OAuth2RouterConfig.class, KeycloakRouterConfig.class)) {
+            for (Method factory : config.getDeclaredMethods()) {
+                RouterOperations documentation = factory.getAnnotation(RouterOperations.class);
+                if (documentation == null) {
+                    continue;
+                }
+                for (RouterOperation route : documentation.value()) {
+                    Method handler = route.beanClass().getMethod(route.beanMethod(), ServerRequest.class);
+                    Operation operation = handler.getAnnotation(Operation.class);
+                    assertThat(operation).as(route.path()).isNotNull();
+                    assertThat(operation.operationId()).as(route.path()).isNotBlank();
+                    operationIds.add(operation.operationId());
+                }
+            }
+        }
 
         for (Field field : OpenApiDocumentationCustomizer.class.getDeclaredFields()) {
             if (!Map.class.isAssignableFrom(field.getType())) {
@@ -234,12 +287,24 @@ class RouterOpenApiCoverageTest {
     }
 
     /**
-     * 验证 Customizer 引用的所有请求/响应 DTO 类都具有类级 @Schema 注解。
+     * 验证 Customizer 引用的请求/响应类型除 Java 标准标量外都具有类级 @Schema 注解。
      *
      * @throws Exception 当反射读取字段失败时
      */
     @Test
     void shouldExposeSchemaAnnotationsOnReferencedDtos() throws Exception {
+        Set<Class<?>> scalarTypes = Set.of(
+                String.class,
+                Boolean.class,
+                Byte.class,
+                Short.class,
+                Integer.class,
+                Long.class,
+                Float.class,
+                Double.class,
+                Character.class,
+                java.math.BigInteger.class,
+                java.math.BigDecimal.class);
         for (String fieldName : List.of("JSON_REQUEST_TYPES", "RESPONSE_TYPES")) {
             Field field = OpenApiDocumentationCustomizer.class.getDeclaredField(fieldName);
             field.setAccessible(true);
@@ -247,6 +312,9 @@ class RouterOpenApiCoverageTest {
             for (Object value : mapping.values()) {
                 assertThat(value).as(fieldName).isInstanceOf(Class.class);
                 Class<?> dtoClass = (Class<?>) value;
+                if (scalarTypes.contains(dtoClass)) {
+                    continue;
+                }
                 assertThat(dtoClass.getAnnotation(io.swagger.v3.oas.annotations.media.Schema.class))
                         .as(fieldName + " -> " + dtoClass.getName())
                         .isNotNull();

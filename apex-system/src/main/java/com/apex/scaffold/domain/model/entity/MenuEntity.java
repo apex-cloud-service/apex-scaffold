@@ -25,6 +25,7 @@ import lombok.ToString;
  * @see BaseEntity
  */
 @Getter
+@lombok.Setter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class MenuEntity extends BaseEntity {
@@ -113,56 +114,6 @@ public class MenuEntity extends BaseEntity {
      * <p>取值说明：0-停用，1-正常。停用的菜单在导航中隐藏且权限校验失败。</p>
      */
     private Integer status;
-
-    /** Sets parentId. For persistence/construction use only. */
-    public void setParentId(Long value) {
-        this.parentId = value;
-    }
-
-    /** Sets menuName. For persistence/construction use only. */
-    public void setMenuName(String value) {
-        this.menuName = value;
-    }
-
-    /** Sets menuType. For persistence/construction use only. */
-    public void setMenuType(Integer value) {
-        this.menuType = value;
-    }
-
-    /** Sets path. For persistence/construction use only. */
-    public void setPath(String value) {
-        this.path = value;
-    }
-
-    /** Sets component. For persistence/construction use only. */
-    public void setComponent(String value) {
-        this.component = value;
-    }
-
-    /** Sets perms. For persistence/construction use only. */
-    public void setPerms(String value) {
-        this.perms = value;
-    }
-
-    /** Sets icon. For persistence/construction use only. */
-    public void setIcon(String value) {
-        this.icon = value;
-    }
-
-    /** Sets sort. For persistence/construction use only. */
-    public void setSort(Integer value) {
-        this.sort = value;
-    }
-
-    /** Sets visible. For persistence/construction use only. */
-    public void setVisible(Integer value) {
-        this.visible = value;
-    }
-
-    /** Sets status. For persistence/construction use only. */
-    public void setStatus(Integer value) {
-        this.status = value;
-    }
 
     /**
      * 默认构造函数。
@@ -287,6 +238,7 @@ public class MenuEntity extends BaseEntity {
     /**
      * 菜单类型枚举。
      */
+    @Getter
     public enum MenuType {
         /** 目录：导航分组，不含具体路由页面 */
         DIRECTORY(0),
@@ -305,20 +257,12 @@ public class MenuEntity extends BaseEntity {
         MenuType(Integer code) {
             this.code = code;
         }
-
-        /**
-         * 获取枚举编码。
-         *
-         * @return 枚举编码
-         */
-        public Integer getCode() {
-            return code;
-        }
     }
 
     /**
      * 菜单状态枚举。
      */
+    @Getter
     public enum MenuState {
         /** 停用 */
         DISABLED(0),
@@ -335,20 +279,12 @@ public class MenuEntity extends BaseEntity {
         MenuState(Integer code) {
             this.code = code;
         }
-
-        /**
-         * 获取枚举编码。
-         *
-         * @return 枚举编码
-         */
-        public Integer getCode() {
-            return code;
-        }
     }
 
     /**
      * 菜单可见性枚举。
      */
+    @Getter
     public enum MenuVisible {
         /** 隐藏 */
         HIDDEN(0),
@@ -364,15 +300,6 @@ public class MenuEntity extends BaseEntity {
          */
         MenuVisible(Integer code) {
             this.code = code;
-        }
-
-        /**
-         * 获取枚举编码。
-         *
-         * @return 枚举编码
-         */
-        public Integer getCode() {
-            return code;
         }
     }
 }

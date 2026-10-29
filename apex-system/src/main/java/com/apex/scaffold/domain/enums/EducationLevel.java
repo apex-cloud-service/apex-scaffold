@@ -2,6 +2,8 @@ package com.apex.scaffold.domain.enums;
 
 import java.util.Arrays;
 import java.util.Locale;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 /**
  * 用户教育程度。
@@ -15,6 +17,8 @@ import java.util.Locale;
  * @version 1.0.0
  * @since 1.0.0
  */
+@Getter
+@RequiredArgsConstructor
 public enum EducationLevel {
 
     /** 高中及以下。 */
@@ -38,30 +42,12 @@ public enum EducationLevel {
     private final String description;
 
     /**
-     * 以中文展示描述构造教育程度枚举。
-     *
-     * @param description 中文展示描述
-     */
-    EducationLevel(String description) {
-        this.description = description;
-    }
-
-    /**
      * 获取稳定的持久化/API编码。
      *
      * @return 枚举名称编码
      */
     public String getCode() {
         return name();
-    }
-
-    /**
-     * 获取中文展示描述。
-     *
-     * @return 展示描述
-     */
-    public String getDescription() {
-        return description;
     }
 
     /**

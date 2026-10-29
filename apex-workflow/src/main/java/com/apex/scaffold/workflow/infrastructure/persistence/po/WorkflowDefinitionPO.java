@@ -2,6 +2,7 @@ package com.apex.scaffold.workflow.infrastructure.persistence.po;
 
 import com.apex.scaffold.common.persistence.po.BasePO;
 import com.baomidou.mybatisplus.annotation.TableName;
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -28,7 +29,7 @@ import lombok.experimental.SuperBuilder;
 public class WorkflowDefinitionPO extends BasePO {
 
     /** 租户 ID，用于多租户数据隔离。 */
-    private Long tenantId;
+    private String tenantId;
 
     /** 流程编码，业务上唯一标识一类流程。 */
     private String workflowCode;
@@ -51,6 +52,15 @@ public class WorkflowDefinitionPO extends BasePO {
 
     /** 启用标志，1 表示启用、0 表示停用。 */
     private Integer enabled;
+
+    /** 生命周期状态：DRAFT / PUBLISHED / DISABLED。 */
+    private String status;
+
+    /** 发布时刻，仅在发布后写入。 */
+    private LocalDateTime publishedAt;
+
+    /** 发布人用户 ID，仅在发布后写入。 */
+    private Long publishedBy;
 
     /** 备注信息。 */
     private String remark;

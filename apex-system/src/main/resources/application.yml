@@ -79,8 +79,12 @@ apex:
       # 总预算耗尽后是否强制停止剩余资源
       force-shutdown-after-timeout: ${APEX_GOVERNANCE_FORCE_SHUTDOWN:true}
   blocking-io:
+    # 阻塞 I/O 专用池；各池可独立开启虚拟线程（JDK 21），默认关闭以保持既有行为
     jdbc:
       threads: 32
+      # 开启虚拟线程后 threads 语义变为"默认最大并发"，建议用 max-concurrency 与数据库连接池上限对齐
+      # virtual-threads: false
+      # max-concurrency: 32
     cache:
       threads: 4
     storage:

@@ -100,7 +100,12 @@ public class UnifiedSearchHandler {
         @ApiResponse(responseCode = "500", description = "搜索失败，服务器内部错误")
     })
     @RequirePermission("system:search:query")
-    @OperationLog(module = "全文搜索", type = OperationLog.OperationType.SELECT, description = "执行全文搜索")
+    @OperationLog(
+            module = "全文搜索",
+            type = OperationLog.OperationType.SELECT,
+            description = "执行全文搜索",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> search(ServerRequest request) {
         // 解析查询参数
         String keyword = request.queryParam("keyword").orElse("");
@@ -169,7 +174,12 @@ public class UnifiedSearchHandler {
         @ApiResponse(responseCode = "500", description = "索引重建失败，服务器内部错误")
     })
     @RequirePermission("system:search:rebuild")
-    @OperationLog(module = "全文搜索", type = OperationLog.OperationType.UPDATE, description = "重建搜索索引")
+    @OperationLog(
+            module = "全文搜索",
+            type = OperationLog.OperationType.UPDATE,
+            description = "重建搜索索引",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> rebuildIndex(ServerRequest request) {
         String resourceType = request.queryParam("type").orElse(null);
 

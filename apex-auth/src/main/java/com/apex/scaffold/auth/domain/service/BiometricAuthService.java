@@ -35,6 +35,7 @@ public interface BiometricAuthService {
      *
      * @param userId 用户ID
      * @param type 生物识别类型
+     * @param tenantId 租户ID
      * @param challenge 挑战数据
      * @param signature 签名
      * @return 验证是否成功

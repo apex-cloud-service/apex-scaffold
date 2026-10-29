@@ -34,7 +34,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
  * </ul>
  *
  * @author Apex Scaffold Generator
- * @since 2026-09-19
+ * @since 1.3.1
  */
 @Configuration
 public class SsoAuthRouter {

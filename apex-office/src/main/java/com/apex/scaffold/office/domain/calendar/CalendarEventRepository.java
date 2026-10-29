@@ -66,14 +66,18 @@ public interface CalendarEventRepository {
     Mono<List<CalendarEvent>> findByParticipant(String participantId);
 
     /**
-     * 查询指定会议室的日历事件
+     * 查询指定会议室在指定时间范围内的有效占用事件。
      *
+     * <p>实现必须按租户过滤，并排除已取消（{@code CANCELLED}）的事件。
+     *
+     * @param tenantId 租户ID
      * @param meetingRoomId 会议室ID
      * @param startTime 开始时间
      * @param endTime 结束时间
      * @return 日历事件列表
      */
-    Mono<List<CalendarEvent>> findByMeetingRoom(String meetingRoomId, LocalDateTime startTime, LocalDateTime endTime);
+    Mono<List<CalendarEvent>> findByMeetingRoom(
+            Long tenantId, String meetingRoomId, LocalDateTime startTime, LocalDateTime endTime);
 
     /**
      * 更新日历事件

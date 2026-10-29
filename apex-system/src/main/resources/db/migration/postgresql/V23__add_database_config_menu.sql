@@ -38,8 +38,8 @@ ON CONFLICT (id) DO UPDATE SET
 
 -- 3. 为超级管理员角色授予数据库配置权限
 -- 注意：仅授予新增的 4 个权限，避免重复插入
-INSERT INTO sys_role_permission (role_id, permission_id)
-SELECT 1, id
+INSERT INTO sys_role_permission (id, role_id, permission_id)
+SELECT 230000 + id, 1, id
 FROM sys_permission
 WHERE code IN ('system:database:view', 'system:database:test', 'system:database:generate', 'system:database:info')
   AND status = 1

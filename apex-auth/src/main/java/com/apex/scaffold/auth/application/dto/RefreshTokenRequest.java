@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
  * <p>使用刷新令牌换取新的访问令牌
  *
  * @author Apex Team
- * @since 2026-09-20
+ * @since 1.3.1
  */
 @Data
 @Builder

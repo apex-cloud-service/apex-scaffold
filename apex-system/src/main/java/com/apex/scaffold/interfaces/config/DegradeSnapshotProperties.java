@@ -35,6 +35,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @version 1.0.0
  * @since 1.0.0
  */
+@lombok.Getter
+@lombok.Setter
 @ConfigurationProperties(prefix = "apex.degrade.snapshot")
 public class DegradeSnapshotProperties {
 
@@ -62,33 +64,6 @@ public class DegradeSnapshotProperties {
     private List<String> resources = new ArrayList<>();
 
     /**
-     * 快照保存总开关是否开启。
-     *
-     * @return {@code true} 表示启用快照保存
-     */
-    public boolean isEnabled() {
-        return enabled;
-    }
-
-    /**
-     * 设置快照保存总开关。
-     *
-     * @param enabled 是否启用
-     */
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
-    }
-
-    /**
-     * 获取 Redis 写入节流窗口（秒）。
-     *
-     * @return 节流窗口秒数，恒大于等于 0
-     */
-    public long getRedisThrottleSeconds() {
-        return redisThrottleSeconds;
-    }
-
-    /**
      * 设置 Redis 写入节流窗口（秒）。
      *
      * @param redisThrottleSeconds 节流窗口秒数
@@ -98,30 +73,12 @@ public class DegradeSnapshotProperties {
     }
 
     /**
-     * 获取本地缓存最大条目数。
-     *
-     * @return 最大条目数，恒大于等于 1
-     */
-    public int getLocalMaxEntries() {
-        return localMaxEntries;
-    }
-
-    /**
      * 设置本地缓存最大条目数。
      *
      * @param localMaxEntries 最大条目数
      */
     public void setLocalMaxEntries(int localMaxEntries) {
         this.localMaxEntries = Math.max(1, localMaxEntries);
-    }
-
-    /**
-     * 获取快照白名单资源列表。
-     *
-     * @return 归一化资源名列表；空列表表示不接入任何接口
-     */
-    public List<String> getResources() {
-        return resources;
     }
 
     /**

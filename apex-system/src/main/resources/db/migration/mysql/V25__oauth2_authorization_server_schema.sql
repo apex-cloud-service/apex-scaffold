@@ -224,25 +224,29 @@ INSERT INTO oauth2_scope_permission (scope, permission_code, description) VALUES
 -- ============================================================================
 
 -- 7.1 创建OAuth2客户端管理菜单
-INSERT INTO sys_menu (id, parent_id, menu_name, menu_type, path, component, perms, icon, sort_order, visible, status, created_by, created_at, updated_at)
-VALUES 
-(300, 1, 'OAuth2客户端', 1, '/system/oauth2-clients', '/system/oauth2-clients/index', 'system:oauth2client:list', 'key', 8, 1, 1, 'system', NOW(), NOW());
+INSERT INTO sys_menu (id, parent_id, menu_name, menu_type, path, component, perms, icon, sort, visible, status, create_time, update_time)
+VALUES
+(300, 1000, 'OAuth2客户端', 1, '/system/oauth2-clients', '/system/oauth2-clients/index', 'system:oauth2client:list', 'key', 8, 1, 1, NOW(), NOW());
 
 -- 7.2 创建OAuth2客户端管理按钮权限
-INSERT INTO sys_menu (id, parent_id, menu_name, menu_type, perms, sort_order, visible, status, created_by, created_at, updated_at)
-VALUES 
-(3001, 300, 'OAuth2客户端查询', 2, 'system:oauth2client:query', 1, 0, 1, 'system', NOW(), NOW()),
-(3002, 300, 'OAuth2客户端新增', 2, 'system:oauth2client:add', 2, 0, 1, 'system', NOW(), NOW()),
-(3003, 300, 'OAuth2客户端修改', 2, 'system:oauth2client:edit', 3, 0, 1, 'system', NOW(), NOW()),
-(3004, 300, 'OAuth2客户端删除', 2, 'system:oauth2client:remove', 4, 0, 1, 'system', NOW(), NOW()),
-(3005, 300, 'OAuth2客户端重置密钥', 2, 'system:oauth2client:reset', 5, 0, 1, 'system', NOW(), NOW());
+INSERT INTO sys_menu (id, parent_id, menu_name, menu_type, perms, sort, visible, status, create_time, update_time)
+VALUES
+(3001, 300, 'OAuth2客户端查询', 2, 'system:oauth2client:query', 1, 0, 1, NOW(), NOW()),
+(3002, 300, 'OAuth2客户端新增', 2, 'system:oauth2client:add', 2, 0, 1, NOW(), NOW()),
+(3003, 300, 'OAuth2客户端修改', 2, 'system:oauth2client:edit', 3, 0, 1, NOW(), NOW()),
+(3004, 300, 'OAuth2客户端删除', 2, 'system:oauth2client:remove', 4, 0, 1, NOW(), NOW()),
+(3005, 300, 'OAuth2客户端重置密钥', 2, 'system:oauth2client:reset', 5, 0, 1, NOW(), NOW());
 
 -- 7.3 为超级管理员角色授予OAuth2客户端管理权限
-INSERT INTO sys_role_menu (role_id, menu_id)
-SELECT r.id, m.id 
+INSERT INTO sys_permission (id, name, code, type, status)
+SELECT 250000 + id, menu_name, perms, 1, 1 FROM sys_menu
+WHERE id IN (300, 3001, 3002, 3003, 3004, 3005);
+
+INSERT INTO sys_role_permission (id, role_id, permission_id)
+SELECT 2500000 + m.id, r.id, 250000 + m.id
 FROM sys_role r
 CROSS JOIN sys_menu m
-WHERE r.role_key = 'SUPER_ADMIN' 
+WHERE r.code = 'SUPER_ADMIN'
   AND m.id IN (300, 3001, 3002, 3003, 3004, 3005);
 
 -- ============================================================================

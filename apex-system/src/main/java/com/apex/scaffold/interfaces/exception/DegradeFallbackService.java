@@ -306,6 +306,7 @@ public class DegradeFallbackService {
      *
      * <p>用于容量淘汰（按最旧时间戳淘汰）与惰性过期（读取时校验 TTL）。</p>
      */
+    @lombok.Getter(lombok.AccessLevel.PRIVATE)
     private static final class LocalCacheEntry {
 
         /** 快照数据。 */
@@ -323,24 +324,6 @@ public class DegradeFallbackService {
         private LocalCacheEntry(Object data, long savedAtMillis) {
             this.data = data;
             this.savedAtMillis = savedAtMillis;
-        }
-
-        /**
-         * 获取快照数据。
-         *
-         * @return 快照数据
-         */
-        private Object getData() {
-            return data;
-        }
-
-        /**
-         * 获取写入时间戳。
-         *
-         * @return 写入时间戳（毫秒）
-         */
-        private long getSavedAtMillis() {
-            return savedAtMillis;
         }
     }
 }

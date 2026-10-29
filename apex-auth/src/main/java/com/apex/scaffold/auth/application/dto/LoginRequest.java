@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
  * <p>用户名密码登录的请求参数
  *
  * @author Apex Team
- * @since 2026-09-20
+ * @since 1.3.1
  */
 @Data
 @Builder

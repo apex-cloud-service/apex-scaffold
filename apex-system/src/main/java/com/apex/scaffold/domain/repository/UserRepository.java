@@ -2,6 +2,7 @@ package com.apex.scaffold.domain.repository;
 
 import com.apex.scaffold.common.dto.PageResponse;
 import com.apex.scaffold.domain.model.entity.UserEntity;
+import java.util.List;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -159,4 +160,31 @@ public interface UserRepository {
      */
     Mono<PageResponse<UserEntity>> searchForAdministration(
             String keyword, Integer status, Integer pageNum, Integer pageSize);
+
+    /**
+     * 按手机号、邮箱或登录名批量解析用户。
+     *
+     * <p>供组织目录内部接口使用：外部身份提供商（如企业通讯录）只持有手机号、
+     * 邮箱或登录名，需要映射到本租户真实的 {@code sys_user.id}。三个条件以
+     * {@code IN} 组合成一次查询，任一匹配即命中；空集合条件会被忽略。</p>
+     *
+     * <p>租户过滤由持久化层租户拦截器按当前租户上下文注入，调用方必须先装配租户。</p>
+     *
+     * @param phones    手机号集合，可为空
+     * @param emails    邮箱集合，可为空
+     * @param usernames 登录名集合，可为空
+     * @return 命中的用户实体流，三者均为空时返回空流
+     */
+    Flux<UserEntity> findByPhonesOrEmailsOrUsernames(List<String> phones, List<String> emails, List<String> usernames);
+
+    /**
+     * 统计当前租户下的有效用户数。
+     *
+     * <p>供租户用户配额断言使用：只统计未删除用户，租户范围由持久化层租户拦截器
+     * 按当前租户上下文注入，调用方必须先装配租户。</p>
+     *
+     * @return 当前租户未删除用户总数
+     * @since 2.4.1
+     */
+    Mono<Long> countByCurrentTenant();
 }

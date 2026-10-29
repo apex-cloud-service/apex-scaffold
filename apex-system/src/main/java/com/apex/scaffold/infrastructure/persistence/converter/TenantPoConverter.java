@@ -43,6 +43,7 @@ public interface TenantPoConverter {
             target = "quota",
             expression = "java(com.apex.scaffold.domain.model.valueobject.TenantQuota.of("
                     + "po.getMaxUsers(), po.getMaxStorageMb()))")
+    @Mapping(target = "lockVersion", source = "version")
     TenantEntity toEntity(TenantPO po);
 
     /**

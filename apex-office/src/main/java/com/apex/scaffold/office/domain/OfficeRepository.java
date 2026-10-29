@@ -184,13 +184,25 @@ public interface OfficeRepository {
     Mono<OfficeSyncTask> saveSyncTask(OfficeSyncTask task);
 
     /**
-     * 查询租户的最新同步任务
+     * 查询租户指定平台与同步类型的最新同步任务
+     *
+     * <p>任务按租户/平台/同步类型（DEPARTMENT/MEMBER）三维隔离，部门与成员游标互不覆盖。
      *
      * @param tenantId 租户标识，不能为空
      * @param platform 平台类型，不能为空
+     * @param syncType 同步类型（DEPARTMENT/MEMBER），不能为空
      * @return 同步任务，不存在时返回空 Mono
      */
-    Mono<OfficeSyncTask> findLatestSyncTask(String tenantId, OfficePlatform platform);
+    Mono<OfficeSyncTask> findLatestSyncTask(String tenantId, OfficePlatform platform, String syncType);
+
+    /**
+     * 按主键查询租户的同步任务
+     *
+     * @param tenantId 租户标识，不能为空
+     * @param taskId 任务主键，不能为空
+     * @return 同步任务，不存在或不属于该租户时返回空 Mono
+     */
+    Mono<OfficeSyncTask> findSyncTaskById(String tenantId, Long taskId);
 
     /**
      * 查询租户的所有同步任务列表

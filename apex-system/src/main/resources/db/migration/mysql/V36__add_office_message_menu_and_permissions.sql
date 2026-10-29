@@ -1,46 +1,16 @@
--- 添加办公平台消息发送菜单和权限
--- 版本：V33
--- 功能：为消息发送模块添加菜单和权限配置
+-- 复用 V33 消息菜单及查询权限，补充通用发送和重发权限。
+UPDATE sys_menu SET perms = 'office:message:list' WHERE id = 2002;
 
--- 1. 添加消息发送菜单
-INSERT INTO sys_menu (menu_name, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, update_by, update_time, remark)
-VALUES 
-    ('消息发送', (SELECT id FROM (SELECT id FROM sys_menu WHERE menu_name = '办公平台' LIMIT 1) AS tmp), 2, 'message', 'office/message/index', 1, 0, 'C', '0', '0', 'office:message:list', 'message', 'admin', NOW(), 'admin', NOW(), '办公平台消息发送菜单');
+INSERT INTO sys_menu (id, parent_id, menu_name, sort, path, component, menu_type, visible, status, perms, icon) VALUES
+(36001, 2002, '发送消息', 7, '', '', 2, 0, 1, 'office:message:send', '#'),
+(36002, 2002, '重新发送', 8, '', '', 2, 0, 1, 'office:message:resend', '#');
 
--- 2. 获取刚插入的菜单ID
-SET @message_menu_id = LAST_INSERT_ID();
+INSERT INTO sys_permission (id, name, code, type, status)
+SELECT 360000 + id, menu_name, perms, 1, 1 FROM sys_menu WHERE id IN (2002, 36001, 36002);
 
--- 3. 添加消息发送相关按钮权限
-INSERT INTO sys_menu (menu_name, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, update_by, update_time, remark)
-VALUES 
-    ('发送消息', @message_menu_id, 1, '', '', 1, 0, 'F', '0', '0', 'office:message:send', '#', 'admin', NOW(), 'admin', NOW(), '发送消息按钮'),
-    ('查询消息状态', @message_menu_id, 2, '', '', 1, 0, 'F', '0', '0', 'office:message:query', '#', 'admin', NOW(), 'admin', NOW(), '查询消息状态按钮'),
-    ('重新发送', @message_menu_id, 3, '', '', 1, 0, 'F', '0', '0', 'office:message:resend', '#', 'admin', NOW(), 'admin', NOW(), '重新发送消息按钮');
-
--- 4. 为管理员角色分配消息发送权限
--- 获取管理员角色ID
-SET @admin_role_id = (SELECT role_id FROM sys_role WHERE role_key = 'admin' LIMIT 1);
-
--- 分配菜单权限
-INSERT INTO sys_role_menu (role_id, menu_id)
-SELECT @admin_role_id, id FROM sys_menu WHERE perms IN (
-    'office:message:list',
-    'office:message:send',
-    'office:message:query',
-    'office:message:resend'
-) AND NOT EXISTS (
-    SELECT 1 FROM sys_role_menu WHERE role_id = @admin_role_id AND menu_id = sys_menu.id
-);
-
--- 5. 为超级管理员角色分配消息发送权限（如果存在）
-SET @super_admin_role_id = (SELECT role_id FROM sys_role WHERE role_key = 'super_admin' LIMIT 1);
-
-INSERT INTO sys_role_menu (role_id, menu_id)
-SELECT @super_admin_role_id, id FROM sys_menu WHERE perms IN (
-    'office:message:list',
-    'office:message:send',
-    'office:message:query',
-    'office:message:resend'
-) AND @super_admin_role_id IS NOT NULL AND NOT EXISTS (
-    SELECT 1 FROM sys_role_menu WHERE role_id = @super_admin_role_id AND menu_id = sys_menu.id
-);
+INSERT INTO sys_role_permission (id, role_id, permission_id)
+SELECT 3600000 + r.id * 100000 + p.id, r.id, p.id
+FROM sys_role r CROSS JOIN sys_permission p
+WHERE r.code IN ('ADMIN', 'SUPER_ADMIN')
+  AND p.code IN ('office:message:list', 'office:message:send', 'office:message:query', 'office:message:resend')
+  AND NOT EXISTS (SELECT 1 FROM sys_role_permission rp WHERE rp.role_id = r.id AND rp.permission_id = p.id);

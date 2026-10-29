@@ -1,6 +1,9 @@
 package com.apex.scaffold.interfaces.handler;
 
+import com.apex.scaffold.common.annotation.OperationLog;
+import com.apex.scaffold.common.context.TenantContext;
 import com.apex.scaffold.infrastructure.notification.NotificationService;
+import com.apex.scaffold.interfaces.security.AuthenticatedUser;
 import com.apex.scaffold.interfaces.util.MessageUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -11,6 +14,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Validator;
 import java.time.Duration;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
@@ -74,12 +78,28 @@ public class NotificationSseHandler extends BaseHandler {
                 content = @Content(mediaType = "text/event-stream", schema = @Schema(implementation = String.class))),
         @ApiResponse(responseCode = "401", description = "未授权，用户未登录或认证信息无效")
     })
+    @OperationLog(
+            module = "NotificationSse",
+            type = OperationLog.OperationType.OTHER,
+            description = "stream",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> stream(ServerRequest request) {
         return request.principal()
                 .flatMap(principal -> {
-                    String recipient = principal.getName();
+                    if (!(principal instanceof Authentication authentication)
+                            || !authentication.isAuthenticated()
+                            || !(authentication.getPrincipal() instanceof AuthenticatedUser user)
+                            || user.userId() == null
+                            || user.tenantId() == null
+                            || user.tenantId().isBlank()) {
+                        return Mono.error(new com.apex.scaffold.common.exception.BusinessException(
+                                com.apex.scaffold.common.result.ResultCode.UNAUTHORIZED));
+                    }
+                    String recipient = String.valueOf(user.userId());
                     Flux<org.springframework.http.codec.ServerSentEvent<String>> events = notificationService.stream(
                                     recipient)
+                            .contextWrite(TenantContext.withTenant(user.tenantId()))
                             .map(msg -> org.springframework.http.codec.ServerSentEvent.builder(msg.content())
                                     .event("notification")
                                     .build())

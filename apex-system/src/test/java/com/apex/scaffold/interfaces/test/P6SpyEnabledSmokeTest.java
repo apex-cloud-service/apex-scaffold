@@ -59,9 +59,6 @@ class P6SpyEnabledSmokeTest {
                 .isInstanceOf(DynamicRoutingDataSource.class);
     }
 
-    /**
-     *
-     */
     @Test
     void shouldExecuteSqlThroughP6SpyProxy() throws Exception {
         try (Connection conn = dataSource.getConnection();

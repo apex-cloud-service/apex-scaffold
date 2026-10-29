@@ -1,6 +1,8 @@
 package com.apex.scaffold.interfaces.handler;
 
+import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.annotation.RequirePermission;
+import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
 import com.apex.scaffold.interfaces.monitor.dashboard.MonitorMetricsCollector;
 import com.apex.scaffold.interfaces.util.MessageUtils;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
@@ -72,6 +74,12 @@ public class MonitorDashboardHandler extends BaseHandler {
         @ApiResponse(responseCode = "401", description = "未授权，需要登录"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要system:monitor:view权限")
     })
+    @OperationLog(
+            module = "MonitorDashboard",
+            type = OperationLog.OperationType.SELECT,
+            description = "overview",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> overview(ServerRequest request) {
         return Mono.fromSupplier(collector::overview).flatMap(this::buildSuccess);
     }
@@ -92,8 +100,16 @@ public class MonitorDashboardHandler extends BaseHandler {
         @ApiResponse(responseCode = "401", description = "未授权，需要登录"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要system:monitor:view权限")
     })
+    @OperationLog(
+            module = "MonitorDashboard",
+            type = OperationLog.OperationType.SELECT,
+            description = "system",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> system(ServerRequest request) {
-        return Mono.fromSupplier(collector::system).flatMap(this::buildSuccess);
+        return Mono.fromSupplier(collector::system)
+                .subscribeOn(BlockingIoSchedulers.general())
+                .flatMap(this::buildSuccess);
     }
 
     /**
@@ -115,6 +131,12 @@ public class MonitorDashboardHandler extends BaseHandler {
         @ApiResponse(responseCode = "401", description = "未授权，需要登录"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要system:monitor:view权限")
     })
+    @OperationLog(
+            module = "MonitorDashboard",
+            type = OperationLog.OperationType.SELECT,
+            description = "middleware",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> middleware(ServerRequest request) {
         return Mono.fromSupplier(collector::middleware).flatMap(this::buildSuccess);
     }
@@ -138,6 +160,12 @@ public class MonitorDashboardHandler extends BaseHandler {
         @ApiResponse(responseCode = "401", description = "未授权，需要登录"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要system:monitor:view权限")
     })
+    @OperationLog(
+            module = "MonitorDashboard",
+            type = OperationLog.OperationType.SELECT,
+            description = "governance",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> governance(ServerRequest request) {
         return Mono.fromSupplier(collector::governance).flatMap(this::buildSuccess);
     }
@@ -158,6 +186,12 @@ public class MonitorDashboardHandler extends BaseHandler {
         @ApiResponse(responseCode = "401", description = "未授权，需要登录"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要system:monitor:view权限")
     })
+    @OperationLog(
+            module = "MonitorDashboard",
+            type = OperationLog.OperationType.SELECT,
+            description = "business",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> business(ServerRequest request) {
         return Mono.fromSupplier(collector::business).flatMap(this::buildSuccess);
     }

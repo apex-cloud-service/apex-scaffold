@@ -67,7 +67,6 @@ public class KeycloakAdminHandler {
      * @param request 服务器请求对象
      * @return 包含全量同步结果的响应对象
      */
-    @OperationLog(module = "用户同步管理", type = OperationLog.OperationType.UPDATE, description = "全量同步Keycloak用户")
     @Operation(
             operationId = "syncAllKeycloakUsers",
             summary = "全量同步Keycloak用户",
@@ -82,6 +81,12 @@ public class KeycloakAdminHandler {
                 description = "用户同步失败",
                 content = @Content(schema = @Schema(implementation = Result.class)))
     })
+    @OperationLog(
+            module = "KeycloakAdmin",
+            type = OperationLog.OperationType.UPDATE,
+            description = "syncAllUsers",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> syncAllUsers(ServerRequest request) {
         log.info("Admin triggered full user sync from Keycloak");
 
@@ -103,7 +108,6 @@ public class KeycloakAdminHandler {
      * @param request 服务器请求对象，包含 Keycloak Sub 路径参数
      * @return 包含单个用户同步结果的响应对象
      */
-    @OperationLog(module = "用户同步管理", type = OperationLog.OperationType.UPDATE, description = "同步单个Keycloak用户")
     @Operation(
             operationId = "syncKeycloakUser",
             summary = "同步单个Keycloak用户",
@@ -119,6 +123,12 @@ public class KeycloakAdminHandler {
                 content = @Content(schema = @Schema(implementation = Result.class)))
     })
     @Parameter(name = "keycloakSub", description = "Keycloak用户唯一标识(Subject)", required = true, in = ParameterIn.PATH)
+    @OperationLog(
+            module = "KeycloakAdmin",
+            type = OperationLog.OperationType.UPDATE,
+            description = "syncUser",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> syncUser(ServerRequest request) {
         String keycloakSub = request.pathVariable("keycloakSub");
         log.info("Admin triggered user sync from Keycloak: keycloakSub={}", keycloakSub);
@@ -155,6 +165,12 @@ public class KeycloakAdminHandler {
                 description = "返回Keycloak集成状态",
                 content = @Content(schema = @Schema(implementation = Result.class)))
     })
+    @OperationLog(
+            module = "KeycloakAdmin",
+            type = OperationLog.OperationType.SELECT,
+            description = "getKeycloakStatus",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> getKeycloakStatus(ServerRequest request) {
         log.info("Checking Keycloak integration status");
 

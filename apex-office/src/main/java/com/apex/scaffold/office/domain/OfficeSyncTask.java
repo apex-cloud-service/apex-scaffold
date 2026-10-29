@@ -31,6 +31,9 @@ public class OfficeSyncTask {
     /** 平台类型 */
     OfficePlatform platform;
 
+    /** 同步类型（DEPARTMENT/MEMBER），与租户、平台联合隔离任务与游标 */
+    String syncType;
+
     /** 同步游标（用于增量同步和分页） */
     String cursor;
 

@@ -1,6 +1,7 @@
 package com.apex.scaffold.infrastructure.search;
 
 import com.apex.scaffold.common.dto.PageResponse;
+import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
 import com.apex.scaffold.domain.search.IndexSyncPort;
 import com.apex.scaffold.domain.search.SearchRepository;
 import com.apex.scaffold.domain.search.SearchResultEntity;
@@ -19,7 +20,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 /**
  * Meilisearch 搜索适配器
@@ -58,6 +58,13 @@ public class MeilisearchAdapter implements SearchRepository, IndexSyncPort {
 
     private static final String INDEX_NAME = "system_resources";
 
+    /**
+     * 执行全局搜索。
+     *
+     * <p>同步 SDK 请求在订阅时隔离到 {@link BlockingIoSchedulers#remote()}，失败返回空分页。
+     *
+     * @return 搜索分页结果
+     */
     @Override
     public Mono<PageResponse<SearchResultEntity>> search(
             String keyword, Set<String> resourceTypes, Long tenantId, Long userId, int pageNum, int pageSize) {
@@ -89,72 +96,93 @@ public class MeilisearchAdapter implements SearchRepository, IndexSyncPort {
 
                     com.meilisearch.sdk.model.Searchable searchResult = index.search(request);
 
-                    List<SearchResultEntity> entities = new ArrayList<>();
-                    for (Object hit : searchResult.getHits()) {
-                        @SuppressWarnings("unchecked")
-                        Map<String, Object> doc = (Map<String, Object>) hit;
-                        entities.add(mapToEntity(doc));
-                    }
+                    @SuppressWarnings("unchecked")
+                    List<SearchResultEntity> entities = searchResult.getHits().stream()
+                            .map(hit -> (Map<String, Object>) hit)
+                            .map(this::mapToEntity)
+                            .collect(Collectors.toList());
 
                     long total = searchResult.getHits() != null
                             ? searchResult.getHits().size()
                             : 0;
                     return PageResponse.of(entities, total, pageNum, pageSize);
                 })
-                .subscribeOn(Schedulers.boundedElastic())
+                .subscribeOn(BlockingIoSchedulers.remote())
                 .doOnError(e -> log.error("Search failed: keyword={}", keyword, e))
                 .onErrorReturn(PageResponse.of(Collections.emptyList(), 0L, pageNum, pageSize));
     }
 
+    /**
+     * 同步单个资源文档。
+     *
+     * <p>订阅后先在 {@link BlockingIoSchedulers#jdbc()} 查询文档，再在
+     * {@link BlockingIoSchedulers#remote()} 序列化并调用同步 SDK；资源不存在或失败返回 false。
+     *
+     * @return 是否成功提交索引
+     */
     @Override
     public Mono<Boolean> indexResource(String resourceType, String resourceId) {
-        return Mono.fromCallable(() -> {
-                    Map<String, Object> document = fetchResourceDocument(resourceType, resourceId);
-                    if (document == null) {
-                        log.warn("Resource not found: type={}, id={}", resourceType, resourceId);
-                        return false;
-                    }
-
-                    String json = objectMapper.writeValueAsString(Collections.singletonList(document));
-                    Index index = meilisearchClient.index(properties.getIndexPrefix() + INDEX_NAME);
-                    index.addDocuments(json);
-
-                    log.debug("Indexed resource: type={}, id={}", resourceType, resourceId);
-                    return true;
-                })
-                .subscribeOn(Schedulers.boundedElastic())
+        return Mono.fromCallable(() -> fetchResourceDocument(resourceType, resourceId))
+                .subscribeOn(BlockingIoSchedulers.jdbc())
+                .flatMap(document -> Mono.fromCallable(() -> {
+                            String json = objectMapper.writeValueAsString(Collections.singletonList(document));
+                            Index index = meilisearchClient.index(properties.getIndexPrefix() + INDEX_NAME);
+                            index.addDocuments(json);
+                            log.debug("Indexed resource: type={}, id={}", resourceType, resourceId);
+                            return true;
+                        })
+                        .subscribeOn(BlockingIoSchedulers.remote()))
+                .switchIfEmpty(Mono.fromSupplier(() -> {
+                    log.warn("Resource not found: type={}, id={}", resourceType, resourceId);
+                    return false;
+                }))
                 .doOnError(e -> log.error("Index failed: type={}, id={}", resourceType, resourceId, e))
                 .onErrorReturn(false);
     }
 
+    /**
+     * 批量同步资源文档。
+     *
+     * <p>在 {@link BlockingIoSchedulers#jdbc()} 读取并过滤文档，在
+     * {@link BlockingIoSchedulers#remote()} 提交同步 SDK 请求；空批次及失败返回零。
+     *
+     * @return 成功提交的文档数量
+     */
     @Override
     public Mono<Integer> indexResourceBatch(String resourceType, List<String> resourceIds) {
         if (resourceIds == null || resourceIds.isEmpty()) {
             return Mono.just(0);
         }
 
-        return Mono.fromCallable(() -> {
-                    List<Map<String, Object>> documents = resourceIds.stream()
-                            .map(id -> fetchResourceDocument(resourceType, id))
-                            .filter(Objects::nonNull)
-                            .collect(Collectors.toList());
-
+        return Mono.fromCallable(() -> resourceIds.stream()
+                        .map(id -> fetchResourceDocument(resourceType, id))
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toList()))
+                .subscribeOn(BlockingIoSchedulers.jdbc())
+                .flatMap(documents -> {
                     if (documents.isEmpty()) {
-                        return 0;
+                        return Mono.just(0);
                     }
-
-                    String json = objectMapper.writeValueAsString(documents);
-                    Index index = meilisearchClient.index(properties.getIndexPrefix() + INDEX_NAME);
-                    index.addDocuments(json);
-
-                    log.info("Batch indexed: type={}, count={}", resourceType, documents.size());
-                    return documents.size();
+                    return Mono.fromCallable(() -> {
+                                String json = objectMapper.writeValueAsString(documents);
+                                Index index = meilisearchClient.index(properties.getIndexPrefix() + INDEX_NAME);
+                                index.addDocuments(json);
+                                log.info("Batch indexed: type={}, count={}", resourceType, documents.size());
+                                return documents.size();
+                            })
+                            .subscribeOn(BlockingIoSchedulers.remote());
                 })
-                .subscribeOn(Schedulers.boundedElastic())
                 .doOnError(e -> log.error("Batch index failed: type={}", resourceType, e))
                 .onErrorReturn(0);
     }
 
+    /**
+     * 删除资源索引。
+     *
+     * <p>订阅时在 {@link BlockingIoSchedulers#remote()} 执行同步 SDK 删除请求，失败返回 false。
+     *
+     * @return 是否成功提交删除请求
+     */
     @Override
     public Mono<Boolean> removeIndex(String resourceType, String resourceId) {
         return Mono.fromCallable(() -> {
@@ -165,11 +193,20 @@ public class MeilisearchAdapter implements SearchRepository, IndexSyncPort {
                     log.debug("Removed index: type={}, id={}", resourceType, resourceId);
                     return true;
                 })
-                .subscribeOn(Schedulers.boundedElastic())
+                .subscribeOn(BlockingIoSchedulers.remote())
                 .doOnError(e -> log.error("Remove index failed: type={}, id={}", resourceType, resourceId, e))
                 .onErrorReturn(false);
     }
 
+    /**
+     * 按资源类型重建索引。
+     *
+     * <p>在 {@link BlockingIoSchedulers#general()} 顺序编排并等待批次，ID 查询单独使用
+     * {@link BlockingIoSchedulers#jdbc()}，批次内部再分离 JDBC 与远程请求，避免同池嵌套等待。
+     * 单个资源类型失败后继续其余类型。
+     *
+     * @return 成功提交的文档总数
+     */
     @Override
     public Mono<Long> rebuildIndex(String resourceType) {
         return Mono.fromCallable(() -> {
@@ -182,7 +219,9 @@ public class MeilisearchAdapter implements SearchRepository, IndexSyncPort {
                     long totalCount = 0;
                     for (String type : types) {
                         try {
-                            List<String> ids = fetchAllResourceIds(type);
+                            List<String> ids = Mono.fromCallable(() -> fetchAllResourceIds(type))
+                                    .subscribeOn(BlockingIoSchedulers.jdbc())
+                                    .block();
                             log.info("Rebuilding index for type={}, total={}", type, ids.size());
 
                             for (int i = 0; i < ids.size(); i += properties.getBatchSize()) {
@@ -202,15 +241,27 @@ public class MeilisearchAdapter implements SearchRepository, IndexSyncPort {
                     log.info("Index rebuild completed: type={}, total={}", resourceType, totalCount);
                     return totalCount;
                 })
-                .subscribeOn(Schedulers.boundedElastic());
+                .subscribeOn(BlockingIoSchedulers.general());
     }
 
+    /**
+     * 按更新时间增量同步索引。
+     *
+     * <p>在 {@link BlockingIoSchedulers#general()} 顺序编排并等待批次，在
+     * {@link BlockingIoSchedulers#jdbc()} 查询变更 ID，批次内部隔离数据库读取与同步 SDK 请求。
+     * 无变更返回零，ID 查询错误继续向调用方传播。
+     *
+     * @return 成功提交的文档总数
+     */
     @Override
     public Mono<Long> syncIncremental(String resourceType, Long sinceTimestamp) {
         return Mono.fromCallable(() -> {
                     log.info("Starting incremental sync: type={}, since={}", resourceType, sinceTimestamp);
 
-                    List<String> ids = fetchIncrementalResourceIds(resourceType, sinceTimestamp);
+                    List<String> ids = Mono.fromCallable(
+                                    () -> fetchIncrementalResourceIds(resourceType, sinceTimestamp))
+                            .subscribeOn(BlockingIoSchedulers.jdbc())
+                            .block();
 
                     if (ids.isEmpty()) {
                         log.info("No incremental changes: type={}", resourceType);
@@ -228,7 +279,7 @@ public class MeilisearchAdapter implements SearchRepository, IndexSyncPort {
                     log.info("Incremental sync completed: type={}, count={}", resourceType, totalCount);
                     return totalCount;
                 })
-                .subscribeOn(Schedulers.boundedElastic());
+                .subscribeOn(BlockingIoSchedulers.general());
     }
 
     private Map<String, Object> fetchResourceDocument(String resourceType, String resourceId) {

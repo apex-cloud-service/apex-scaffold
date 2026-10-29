@@ -22,7 +22,13 @@ import reactor.core.publisher.Mono;
  */
 @Component("wecomApprovalClient")
 public class WecomApprovalClient extends AbstractOfficeApiSupport implements ApprovalClient {
-    /** 构造企业微信审批客户端。 */
+    /**
+     * 构造企业微信审批客户端并配置平台 API 地址。
+     *
+     * @param builder 用于创建企业微信 HTTP 客户端的构建器
+     * @param properties 平台凭证及请求超时配置
+     * @param objectMapper 注入的 JSON 转换器，当前实现未使用
+     */
     public WecomApprovalClient(
             WebClient.Builder builder, OfficePlatformProperties properties, ObjectMapper objectMapper) {
         super(builder, properties, OfficePlatform.WECOM, "https://qyapi.weixin.qq.com");

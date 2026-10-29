@@ -2,6 +2,9 @@ package com.apex.scaffold.domain.model.entity;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.ToString;
 
 /**
@@ -25,6 +28,8 @@ import lombok.ToString;
  * @see BaseEntity
  */
 @Getter
+@Setter
+@NoArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class DictDataEntity extends BaseEntity {
@@ -80,48 +85,6 @@ public class DictDataEntity extends BaseEntity {
      * 备注。
      */
     private String remark;
-
-    /** Sets dictSort. For persistence/construction use only. */
-    public void setDictSort(Integer value) {
-        this.dictSort = value;
-    }
-
-    /** Sets dictLabel. For persistence/construction use only. */
-    public void setDictLabel(String value) {
-        this.dictLabel = value;
-    }
-
-    /** Sets dictValue. For persistence/construction use only. */
-    public void setDictValue(String value) {
-        this.dictValue = value;
-    }
-
-    /** Sets dictType. For persistence/construction use only. */
-    public void setDictType(String value) {
-        this.dictType = value;
-    }
-
-    /** Sets isDefault. For persistence/construction use only. */
-    public void setIsDefault(Integer value) {
-        this.isDefault = value;
-    }
-
-    /** Sets status. For persistence/construction use only. */
-    public void setStatus(Integer value) {
-        this.status = value;
-    }
-
-    /** Sets remark. For persistence/construction use only. */
-    public void setRemark(String value) {
-        this.remark = value;
-    }
-
-    /**
-     * 默认构造函数。
-     */
-    public DictDataEntity() {
-        super();
-    }
 
     /**
      * 静态工厂方法：创建字典数据。
@@ -204,6 +167,8 @@ public class DictDataEntity extends BaseEntity {
     /**
      * 字典数据状态枚举。
      */
+    @Getter
+    @RequiredArgsConstructor
     public enum DictState {
         /** 停用 */
         DISABLED(0),
@@ -211,29 +176,13 @@ public class DictDataEntity extends BaseEntity {
         ENABLED(1);
 
         private final Integer code;
-
-        /**
-         * 创建 {@code DictState} 实例。
-         *
-         * @param code 枚举编码
-         */
-        DictState(Integer code) {
-            this.code = code;
-        }
-
-        /**
-         * 获取枚举编码。
-         *
-         * @return 枚举编码
-         */
-        public Integer getCode() {
-            return code;
-        }
     }
 
     /**
      * 默认标记枚举。
      */
+    @Getter
+    @RequiredArgsConstructor
     public enum DictDefault {
         /** 非默认 */
         NOT_DEFAULT(0),
@@ -241,23 +190,5 @@ public class DictDataEntity extends BaseEntity {
         DEFAULT(1);
 
         private final Integer code;
-
-        /**
-         * 创建 {@code DictDefault} 实例。
-         *
-         * @param code 枚举编码
-         */
-        DictDefault(Integer code) {
-            this.code = code;
-        }
-
-        /**
-         * 获取枚举编码。
-         *
-         * @return 枚举编码
-         */
-        public Integer getCode() {
-            return code;
-        }
     }
 }

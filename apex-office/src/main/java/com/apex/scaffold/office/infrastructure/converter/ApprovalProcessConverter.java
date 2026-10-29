@@ -34,11 +34,14 @@ import org.mapstruct.ReportingPolicy;
 public abstract class ApprovalProcessConverter {
 
     /**
-     * MapStruct 生成的实现类无法声明带参构造器，故采用 JSR-250 {@code @Resource} 字段注入，
-     * 以避免使用 Spring {@code @Autowired}。
+     * JSON 序列化器。
+     *
+     * <p>MapStruct 生成的实现类只能声明无参构造器，无法转发放置在抽象基类上的带参构造器，
+     * 故沿用本模块 {@code OfficeMessageConverter} 的做法：JSR-250 {@code @Resource} 字段注入，
+     * 避免使用 Spring {@code @Autowired}，同时保留默认实例以便脱离容器（如单元测试）时可用。
      */
     @Resource
-    private ObjectMapper objectMapper;
+    private ObjectMapper objectMapper = new ObjectMapper();
 
     /**
      * 领域实体转PO

@@ -36,11 +36,11 @@ ON DUPLICATE KEY UPDATE
     status = 1,
     update_time = NOW();
 
--- 3. 为超级管理员角色授予数据库配置权限
--- 注意：仅授予新增的 4 个权限，避免重复插入
-INSERT IGNORE INTO sys_role_permission (role_id, permission_id)
-SELECT 1, id
-FROM sys_permission
-WHERE code IN ('system:database:view', 'system:database:test', 'system:database:generate', 'system:database:info')
-  AND status = 1
-  AND deleted = 0;
+-- 3. 为管理员角色授予数据库配置权限，关联主键必须显式提供。
+INSERT INTO sys_role_permission (id, role_id, permission_id)
+SELECT 230000 + p.id, 1, p.id
+FROM sys_permission p
+WHERE p.code IN ('system:database:view', 'system:database:test', 'system:database:generate', 'system:database:info')
+  AND p.status = 1
+  AND p.deleted = 0
+  AND NOT EXISTS (SELECT 1 FROM sys_role_permission rp WHERE rp.role_id = 1 AND rp.permission_id = p.id);

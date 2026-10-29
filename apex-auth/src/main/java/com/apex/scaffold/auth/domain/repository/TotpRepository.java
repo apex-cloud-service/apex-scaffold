@@ -9,7 +9,7 @@ import reactor.core.publisher.Mono;
  * <p>定义 TOTP 多因素认证的数据访问操作。
  *
  * @author Apex Scaffold Team
- * @since 2026-09-21
+ * @since 1.3.1
  */
 public interface TotpRepository {
 

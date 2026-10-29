@@ -87,6 +87,12 @@ public class GenDatasourceHandler extends BaseHandler {
         @ApiResponse(responseCode = "200", description = "查询成功"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要 system:generator:datasource:list 权限")
     })
+    @OperationLog(
+            module = "GenDatasource",
+            type = OperationLog.OperationType.SELECT,
+            description = "list",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> list(ServerRequest request) {
         int page = safeParseInt(request.queryParam("page").orElse("1"), 1);
         int size = safeParseInt(request.queryParam("size").orElse("20"), 20);
@@ -112,7 +118,12 @@ public class GenDatasourceHandler extends BaseHandler {
         @ApiResponse(responseCode = "400", description = "参数校验失败"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要 system:generator:datasource:add 权限")
     })
-    @OperationLog(module = "代码生成器-数据源", type = OperationLog.OperationType.INSERT, description = "新增数据源")
+    @OperationLog(
+            module = "代码生成器-数据源",
+            type = OperationLog.OperationType.INSERT,
+            description = "新增数据源",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> create(ServerRequest request) {
         return parseBody(request, GenDatasourceRequest.class)
                 .flatMap(genDatasourceService::create)
@@ -143,7 +154,12 @@ public class GenDatasourceHandler extends BaseHandler {
         @ApiResponse(responseCode = "403", description = "权限不足，需要 system:generator:datasource:edit 权限"),
         @ApiResponse(responseCode = "404", description = "数据源不存在")
     })
-    @OperationLog(module = "代码生成器-数据源", type = OperationLog.OperationType.UPDATE, description = "更新数据源")
+    @OperationLog(
+            module = "代码生成器-数据源",
+            type = OperationLog.OperationType.UPDATE,
+            description = "更新数据源",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> update(ServerRequest request) {
         Long id = requirePositiveId(request);
         return parseBody(request, GenDatasourceRequest.class)
@@ -175,7 +191,12 @@ public class GenDatasourceHandler extends BaseHandler {
         @ApiResponse(responseCode = "404", description = "数据源不存在"),
         @ApiResponse(responseCode = "409", description = "数据源被生成配置引用，无法删除")
     })
-    @OperationLog(module = "代码生成器-数据源", type = OperationLog.OperationType.DELETE, description = "删除数据源")
+    @OperationLog(
+            module = "代码生成器-数据源",
+            type = OperationLog.OperationType.DELETE,
+            description = "删除数据源",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> delete(ServerRequest request) {
         return genDatasourceService
                 .delete(requirePositiveId(request))
@@ -205,6 +226,12 @@ public class GenDatasourceHandler extends BaseHandler {
         @ApiResponse(responseCode = "403", description = "权限不足，需要 system:generator:datasource:test 权限"),
         @ApiResponse(responseCode = "404", description = "数据源不存在")
     })
+    @OperationLog(
+            module = "GenDatasource",
+            type = OperationLog.OperationType.OTHER,
+            description = "testConnection",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> testConnection(ServerRequest request) {
         return genDatasourceService.testConnection(requirePositiveId(request)).flatMap(this::buildSuccess);
     }

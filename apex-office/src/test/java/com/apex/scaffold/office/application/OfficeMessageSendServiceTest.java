@@ -34,7 +34,30 @@ class OfficeMessageSendServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new OfficeMessageService(repository, feishuMessageClient, dingTalkMessageClient, wecomMessageClient);
+        when(feishuMessageClient.getPlatformType()).thenReturn("feishu");
+        when(dingTalkMessageClient.getPlatformType()).thenReturn("dingtalk");
+        when(wecomMessageClient.getPlatformType()).thenReturn("wecom");
+        service = new OfficeMessageService(
+                repository, java.util.List.of(feishuMessageClient, dingTalkMessageClient, wecomMessageClient));
+        clearInvocations(feishuMessageClient, dingTalkMessageClient, wecomMessageClient);
+    }
+
+    @Test
+    void rejectsDuplicatePlatformStrategies() {
+        when(feishuMessageClient.getPlatformType()).thenReturn("feishu");
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> new OfficeMessageService(
+                        repository, java.util.List.of(feishuMessageClient, feishuMessageClient)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("重复");
+    }
+
+    @Test
+    void rejectsUnknownPlatformStrategy() {
+        when(feishuMessageClient.getPlatformType()).thenReturn("unknown");
+        org.assertj.core.api.Assertions.assertThatThrownBy(
+                        () -> new OfficeMessageService(repository, java.util.List.of(feishuMessageClient)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("不支持的平台");
     }
 
     @Test

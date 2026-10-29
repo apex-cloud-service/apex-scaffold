@@ -52,6 +52,9 @@ class JobServiceTest {
     @Mock
     private JobAssembler jobAssembler;
 
+    @Mock
+    private com.apex.scaffold.application.job.JobInvoker jobInvoker;
+
     @InjectMocks
     private JobService jobService;
 

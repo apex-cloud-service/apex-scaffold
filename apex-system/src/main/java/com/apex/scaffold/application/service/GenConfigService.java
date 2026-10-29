@@ -40,6 +40,7 @@ public class GenConfigService {
     private final GenDatasourceRepository datasourceRepository;
     private final GenHistoryRepository historyRepository;
     private final ObjectMapper objectMapper;
+    private final TenantGuard tenantGuard;
 
     /**
      * 创建代码生成配置。
@@ -50,15 +51,16 @@ public class GenConfigService {
      * @return 创建后的生成配置 DTO
      */
     public Mono<GenConfigDTO> create(GenConfigRequest request) {
-        return tenantId().flatMap(tenant -> validateOutputPath(request.getOutputPath())
-                .then(Mono.defer(() -> datasourceRepository.findById(request.getDatasourceId())))
-                .publishOn(BlockingIoSchedulers.jdbc())
-                .switchIfEmpty(Mono.error(new BusinessException(ResultCode.NOT_FOUND, "数据源不存在")))
-                .flatMap(datasource -> requireTenant(datasource.getTenantId(), tenant))
-                .then(Mono.defer(() -> {
-                    GenConfigEntity entity = toEntity(request, tenant);
-                    return configRepository.insert(entity).thenReturn(toDTO(entity));
-                })));
+        return tenantGuard.assertActive().then(Mono.defer(() -> tenantId()
+                .flatMap(tenant -> validateOutputPath(request.getOutputPath())
+                        .then(Mono.defer(() -> datasourceRepository.findById(request.getDatasourceId())))
+                        .publishOn(BlockingIoSchedulers.jdbc())
+                        .switchIfEmpty(Mono.error(new BusinessException(ResultCode.NOT_FOUND, "数据源不存在")))
+                        .flatMap(datasource -> requireTenant(datasource.getTenantId(), tenant))
+                        .then(Mono.defer(() -> {
+                            GenConfigEntity entity = toEntity(request, tenant);
+                            return configRepository.insert(entity).thenReturn(toDTO(entity));
+                        })))));
     }
 
     /**
@@ -119,20 +121,26 @@ public class GenConfigService {
     /**
      * 分页查询当前租户的代码生成配置。
      *
+     * <p>过滤与分页在数据库侧完成，返回真实总数，前端按 {@link PageResponse} 渲染分页器。
+     *
+     * @param configName 配置名称模糊匹配条件，可为空
      * @param datasourceId 数据源 ID，为空时查询全部
      * @param pageNum 页码（从 1 开始）
      * @param pageSize 每页大小
      * @return 生成配置分页结果
      */
-    public Mono<PageResponse<GenConfigDTO>> list(Long datasourceId, int pageNum, int pageSize) {
-        return tenantId().flatMap(tenant -> (datasourceId == null
-                        ? configRepository.findAll()
-                        : configRepository.findByDatasourceId(datasourceId))
-                .map(items -> items.stream()
-                        .filter(item -> tenant.equals(item.getTenantId()))
-                        .map(this::toDTO)
-                        .toList())
-                .map(items -> page(items, pageNum, pageSize)));
+    public Mono<PageResponse<GenConfigDTO>> list(String configName, Long datasourceId, int pageNum, int pageSize) {
+        validatePage(pageNum, pageSize);
+        return tenantId().flatMap(tenant -> configRepository
+                .search(configName, datasourceId, pageNum, pageSize)
+                .map(page -> PageResponse.of(
+                        page.getRecords().stream()
+                                .filter(item -> tenant.equals(item.getTenantId()))
+                                .map(this::toDTO)
+                                .toList(),
+                        page.getTotal(),
+                        pageNum,
+                        pageSize)));
     }
 
     /**
@@ -146,12 +154,15 @@ public class GenConfigService {
     public Mono<PageResponse<GenHistoryDTO>> listHistory(Long configId, int pageNum, int pageSize) {
         validatePage(pageNum, pageSize);
         return findById(configId).flatMap(config -> historyRepository
-                .findByConfigId(configId)
-                .map(items -> items.stream()
-                        .filter(item -> config.getTenantId().equals(item.getTenantId()))
-                        .map(this::toHistoryDTO)
-                        .toList())
-                .map(items -> pageHistory(items, pageNum, pageSize)));
+                .searchByConfigId(configId, pageNum, pageSize)
+                .map(page -> PageResponse.of(
+                        page.getRecords().stream()
+                                .filter(item -> config.getTenantId().equals(item.getTenantId()))
+                                .map(this::toHistoryDTO)
+                                .toList(),
+                        page.getTotal(),
+                        pageNum,
+                        pageSize)));
     }
 
     private Mono<String> tenantId() {
@@ -208,19 +219,6 @@ public class GenConfigService {
         dto.setCreateTime(entity.getCreateTime());
         dto.setUpdateTime(entity.getUpdateTime());
         return dto;
-    }
-
-    private PageResponse<GenConfigDTO> page(List<GenConfigDTO> items, int pageNum, int pageSize) {
-        validatePage(pageNum, pageSize);
-        int from = Math.min((pageNum - 1) * pageSize, items.size());
-        int to = Math.min(from + pageSize, items.size());
-        return PageResponse.of(items.subList(from, to), (long) items.size(), pageNum, pageSize);
-    }
-
-    private PageResponse<GenHistoryDTO> pageHistory(List<GenHistoryDTO> items, int pageNum, int pageSize) {
-        int from = Math.min((pageNum - 1) * pageSize, items.size());
-        int to = Math.min(from + pageSize, items.size());
-        return PageResponse.of(items.subList(from, to), (long) items.size(), pageNum, pageSize);
     }
 
     private void validatePage(int pageNum, int pageSize) {

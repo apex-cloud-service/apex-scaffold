@@ -41,6 +41,7 @@ import lombok.ToString;
  * @see BaseEntity
  */
 @Getter
+@lombok.Setter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class ReportEntity extends BaseEntity {
@@ -118,69 +119,6 @@ public class ReportEntity extends BaseEntity {
      * </p>
      */
     private LocalDateTime createdAt;
-
-    /**
-     * 设置报告类型（仅供持久层和构造器使用）。
-     *
-     * @param value 报告类型
-     */
-    public void setReportType(String value) {
-        this.reportType = value;
-    }
-
-    /**
-     * 设置归属用户ID（仅供持久层和构造器使用）。
-     *
-     * @param value 用户ID
-     */
-    public void setOwnerUserId(Long value) {
-        this.ownerUserId = value;
-    }
-
-    /**
-     * 设置关联照片ID（仅供持久层和构造器使用）。
-     *
-     * @param value 照片ID
-     */
-    public void setPhotoId(Long value) {
-        this.photoId = value;
-    }
-
-    /**
-     * 设置报告状态（仅供持久层和构造器使用）。
-     *
-     * @param value 状态
-     */
-    public void setStatus(String value) {
-        this.status = value;
-    }
-
-    /**
-     * 设置处理进度（仅供持久层和构造器使用）。
-     *
-     * @param value 进度百分比
-     */
-    public void setProgress(Integer value) {
-        this.progress = value;
-    }
-
-    /**
-     * 设置报告数据JSON（仅供持久层和构造器使用）。
-     *
-     * @param value 数据JSON
-     */
-    public void setDataJson(String value) {
-        this.dataJson = value;
-    }
-
-    /**
-     * 设置生成时间（仅供持久层和构造器使用）。
-     *
-     * @param value 生成时间
-     */
-    public void setCreatedAt(LocalDateTime value) {
-        this.createdAt = value;
-    }
 
     /**
      * 默认构造函数
@@ -282,6 +220,7 @@ public class ReportEntity extends BaseEntity {
     /**
      * 报告类型枚举
      */
+    @Getter
     public enum ReportType {
         /** 照片风险评估 */
         PHOTO_RISK("PHOTO_RISK");
@@ -295,14 +234,6 @@ public class ReportEntity extends BaseEntity {
          */
         ReportType(String code) {
             this.code = code;
-        }
-
-        /**
-         * 获取枚举编码。
-         * @return 枚举编码
-         */
-        public String getCode() {
-            return code;
         }
 
         /**
@@ -327,6 +258,7 @@ public class ReportEntity extends BaseEntity {
     /**
      * 报告状态枚举
      */
+    @Getter
     public enum ReportStatus {
         /** 待处理 */
         PENDING("PENDING"),
@@ -346,14 +278,6 @@ public class ReportEntity extends BaseEntity {
          */
         ReportStatus(String code) {
             this.code = code;
-        }
-
-        /**
-         * 获取枚举编码。
-         * @return 枚举编码
-         */
-        public String getCode() {
-            return code;
         }
 
         /**

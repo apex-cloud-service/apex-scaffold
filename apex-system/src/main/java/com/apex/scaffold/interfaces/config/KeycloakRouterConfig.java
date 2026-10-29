@@ -4,9 +4,12 @@ import com.apex.scaffold.interfaces.handler.KeycloakAdminHandler;
 import com.apex.scaffold.interfaces.handler.SocialLoginHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springdoc.core.annotations.RouterOperation;
+import org.springdoc.core.annotations.RouterOperations;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.RouterFunctions;
 import org.springframework.web.reactive.function.server.ServerResponse;
@@ -82,6 +85,38 @@ public class KeycloakRouterConfig {
      * @return Keycloak 路由函数
      */
     @Bean
+    @RouterOperations({
+        @RouterOperation(
+                path = "/api/v1/auth/oidc/login",
+                method = RequestMethod.GET,
+                beanClass = SocialLoginHandler.class,
+                beanMethod = "initiateOidcLogin"),
+        @RouterOperation(
+                path = "/api/v1/auth/social/{provider}/login",
+                method = RequestMethod.GET,
+                beanClass = SocialLoginHandler.class,
+                beanMethod = "initiateSocialLogin"),
+        @RouterOperation(
+                path = "/api/v1/auth/oidc/callback",
+                method = RequestMethod.GET,
+                beanClass = SocialLoginHandler.class,
+                beanMethod = "handleOidcCallback"),
+        @RouterOperation(
+                path = "/admin-api/v1/keycloak/sync/all",
+                method = RequestMethod.POST,
+                beanClass = KeycloakAdminHandler.class,
+                beanMethod = "syncAllUsers"),
+        @RouterOperation(
+                path = "/admin-api/v1/keycloak/sync/user/{keycloakSub}",
+                method = RequestMethod.POST,
+                beanClass = KeycloakAdminHandler.class,
+                beanMethod = "syncUser"),
+        @RouterOperation(
+                path = "/admin-api/v1/keycloak/status",
+                method = RequestMethod.GET,
+                beanClass = KeycloakAdminHandler.class,
+                beanMethod = "getKeycloakStatus")
+    })
     public RouterFunction<ServerResponse> keycloakRoutes() {
         log.info("Registering Keycloak routes");
 

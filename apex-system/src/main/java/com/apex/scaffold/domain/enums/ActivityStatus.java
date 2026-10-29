@@ -2,6 +2,8 @@ package com.apex.scaffold.domain.enums;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 /**
  * 活跃度标签枚举。
@@ -15,6 +17,8 @@ import java.time.temporal.ChronoUnit;
  * @version 1.0.0
  * @since 1.0.0
  */
+@Getter
+@RequiredArgsConstructor
 public enum ActivityStatus {
 
     /**
@@ -35,23 +39,6 @@ public enum ActivityStatus {
      * <p>距最近一次登录 ≤ 该值判定为 {@link #ACTIVE}，否则判定为 {@link #INACTIVE}。</p>
      */
     public static final int ACTIVE_THRESHOLD_DAYS = 3;
-
-    /**
-     * 创建 {@code ActivityStatus} 实例。
-     * @param coefficient 该活跃状态对应的曝光系数
-     */
-    ActivityStatus(double coefficient) {
-        this.coefficient = coefficient;
-    }
-
-    /**
-     * 获取当前活跃度对应的曝光系数.
-     *
-     * @return 曝光系数
-     */
-    public double getCoefficient() {
-        return coefficient;
-    }
 
     /**
      * 根据最近一次登录时间获取对应的活跃度标签.

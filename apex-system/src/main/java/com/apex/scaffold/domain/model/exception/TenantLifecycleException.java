@@ -20,6 +20,7 @@ import com.apex.scaffold.domain.model.entity.TenantEntity.TenantStatus;
  * @version 1.0.0
  * @since 1.3.0
  */
+@lombok.Getter
 public class TenantLifecycleException extends RuntimeException {
 
     private static final long serialVersionUID = 1L;
@@ -40,23 +41,5 @@ public class TenantLifecycleException extends RuntimeException {
         super("租户当前状态[" + currentStatus + "]不允许执行操作[" + operation + "]");
         this.currentStatus = currentStatus;
         this.operation = operation;
-    }
-
-    /**
-     * 获取当前租户状态。
-     *
-     * @return 当前状态
-     */
-    public TenantStatus getCurrentStatus() {
-        return currentStatus;
-    }
-
-    /**
-     * 获取被拒绝的操作名称。
-     *
-     * @return 操作名称
-     */
-    public String getOperation() {
-        return operation;
     }
 }

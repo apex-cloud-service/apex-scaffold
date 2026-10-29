@@ -33,6 +33,11 @@ public class PermissionService {
     private final PermissionRepository permissionRepository;
 
     /**
+     * 租户写链路守卫。
+     */
+    private final TenantGuard tenantGuard;
+
+    /**
      * 根据用户 ID 获取权限列表
      *
      * <p>通过用户 ID 查询用户拥有的所有角色，再通过角色查询对应的权限，实现基于角色的权限访问控制
@@ -134,10 +139,12 @@ public class PermissionService {
      * @throws org.springframework.dao.DuplicateKeyException 当权限编码重复时由持久化层抛出
      */
     public Mono<PermissionEntity> createPermission(PermissionEntity permission) {
-        return permissionRepository.insert(permission).map(rows -> {
-            log.info("创建权限成功，code: {}, name: {}", permission.getCode(), permission.getName());
-            return permission;
-        });
+        return tenantGuard
+                .assertActive()
+                .then(Mono.defer(() -> permissionRepository.insert(permission).map(rows -> {
+                    log.info("创建权限成功，code: {}, name: {}", permission.getCode(), permission.getName());
+                    return permission;
+                })));
     }
 
     /**

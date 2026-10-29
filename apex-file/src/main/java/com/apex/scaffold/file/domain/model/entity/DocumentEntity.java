@@ -45,6 +45,8 @@ import lombok.ToString;
  * @see BaseEntity
  */
 @Getter
+@lombok.Setter
+@lombok.NoArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class DocumentEntity extends BaseEntity {
@@ -64,127 +66,6 @@ public class DocumentEntity extends BaseEntity {
     private Integer viewCount;
     private Integer downloadCount;
     private String tenantId;
-
-    /**
-     * 设置文档标题。仅供持久层回填使用。
-     *
-     * @param value 文档标题
-     */
-    public void setTitle(String value) {
-        this.title = value;
-    }
-
-    /**
-     * 设置文档类型。仅供持久层回填使用。
-     *
-     * @param value 文档类型（contract/report/proposal/manual/other）
-     */
-    public void setDocType(String value) {
-        this.docType = value;
-    }
-
-    /**
-     * 设置文档分类。仅供持久层回填使用。
-     *
-     * @param value 文档分类（tech/business/finance/hr）
-     */
-    public void setCategory(String value) {
-        this.category = value;
-    }
-
-    /**
-     * 设置文档正文内容。仅供持久层回填使用。
-     *
-     * @param value 文档的正文内容
-     */
-    public void setContent(String value) {
-        this.content = value;
-    }
-
-    /**
-     * 设置文档文件访问地址。仅供持久层回填使用。
-     *
-     * @param value 关联文件的对象存储 URL
-     */
-    public void setFileUrl(String value) {
-        this.fileUrl = value;
-    }
-
-    /**
-     * 设置文件大小。仅供持久层回填使用。
-     *
-     * @param value 关联文件的大小（字节）
-     */
-    public void setFileSize(Long value) {
-        this.fileSize = value;
-    }
-
-    /**
-     * 设置文档作者 ID。仅供持久层回填使用。
-     *
-     * @param value 文档创建者的用户 ID
-     */
-    public void setAuthorId(Long value) {
-        this.authorId = value;
-    }
-
-    /**
-     * 设置文档作者姓名。仅供持久层回填使用。
-     *
-     * @param value 文档创建者的姓名
-     */
-    public void setAuthorName(String value) {
-        this.authorName = value;
-    }
-
-    /**
-     * 设置文档状态。仅供持久层回填使用。
-     *
-     * @param value 文档状态码（0-草稿 1-正常 2-已归档）
-     */
-    public void setStatus(Integer value) {
-        this.status = value;
-    }
-
-    /**
-     * 设置文档标签列表。仅供持久层回填使用。
-     *
-     * @param value 文档的标签集合
-     */
-    public void setTags(List<String> value) {
-        this.tags = value;
-    }
-
-    /**
-     * 设置浏览计数。仅供持久层回填使用。
-     *
-     * @param value 文档累计浏览次数
-     */
-    public void setViewCount(Integer value) {
-        this.viewCount = value;
-    }
-
-    /**
-     * 设置下载计数。仅供持久层回填使用。
-     *
-     * @param value 文档累计下载次数
-     */
-    public void setDownloadCount(Integer value) {
-        this.downloadCount = value;
-    }
-
-    /**
-     * 设置租户 ID。仅供持久层回填使用。
-     *
-     * @param value 文档所属租户的唯一标识
-     */
-    public void setTenantId(String value) {
-        this.tenantId = value;
-    }
-
-    public DocumentEntity() {
-        super();
-    }
 
     /**
      * 创建草稿状态的文档实体。
@@ -312,6 +193,8 @@ public class DocumentEntity extends BaseEntity {
         return status != null && status.equals(DocumentStatus.ARCHIVED.getCode());
     }
 
+    @Getter
+    @lombok.RequiredArgsConstructor
     public enum DocumentStatus {
         /** 草稿 */
         DRAFT(0),
@@ -321,21 +204,10 @@ public class DocumentEntity extends BaseEntity {
         ARCHIVED(2);
 
         private final Integer code;
-
-        DocumentStatus(Integer code) {
-            this.code = code;
-        }
-
-        /**
-         * 获取文档状态的数据库存储码。
-         *
-         * @return 状态码（0-草稿 1-正常 2-已归档）
-         */
-        public Integer getCode() {
-            return code;
-        }
     }
 
+    @Getter
+    @lombok.RequiredArgsConstructor
     public enum DocType {
         /** 合同 */
         CONTRACT("contract"),
@@ -349,21 +221,10 @@ public class DocumentEntity extends BaseEntity {
         OTHER("other");
 
         private final String code;
-
-        DocType(String code) {
-            this.code = code;
-        }
-
-        /**
-         * 获取文档类型的字符串编码。
-         *
-         * @return 类型编码（contract/report/proposal/manual/other）
-         */
-        public String getCode() {
-            return code;
-        }
     }
 
+    @Getter
+    @lombok.RequiredArgsConstructor
     public enum Category {
         /** 技术 */
         TECH("tech"),
@@ -375,18 +236,5 @@ public class DocumentEntity extends BaseEntity {
         HR("hr");
 
         private final String code;
-
-        Category(String code) {
-            this.code = code;
-        }
-
-        /**
-         * 获取文档分类的字符串编码。
-         *
-         * @return 分类编码（tech/business/finance/hr）
-         */
-        public String getCode() {
-            return code;
-        }
     }
 }

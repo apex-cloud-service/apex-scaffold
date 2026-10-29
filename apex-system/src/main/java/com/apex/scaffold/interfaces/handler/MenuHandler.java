@@ -76,6 +76,12 @@ public class MenuHandler extends BaseHandler {
         @ApiResponse(responseCode = "200", description = "查询成功", content = @Content(mediaType = "application/json")),
         @ApiResponse(responseCode = "403", description = "权限不足，需要system:menu:list权限")
     })
+    @OperationLog(
+            module = "Menu",
+            type = OperationLog.OperationType.SELECT,
+            description = "tree",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> tree(ServerRequest request) {
         return menuService.getMenuTree().flatMap(this::buildSuccess);
     }
@@ -101,6 +107,12 @@ public class MenuHandler extends BaseHandler {
         @ApiResponse(responseCode = "403", description = "权限不足，需要system:menu:query权限"),
         @ApiResponse(responseCode = "404", description = "菜单不存在")
     })
+    @OperationLog(
+            module = "Menu",
+            type = OperationLog.OperationType.SELECT,
+            description = "detail",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> detail(ServerRequest request) {
         return menuService.getMenu(requirePositiveId(request)).flatMap(this::buildSuccess);
     }
@@ -125,7 +137,12 @@ public class MenuHandler extends BaseHandler {
         @ApiResponse(responseCode = "400", description = "参数校验失败"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要system:menu:add权限")
     })
-    @OperationLog(module = "菜单管理", type = OperationLog.OperationType.INSERT, description = "创建菜单")
+    @OperationLog(
+            module = "菜单管理",
+            type = OperationLog.OperationType.INSERT,
+            description = "创建菜单",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> create(ServerRequest request) {
         return parseBody(request, MenuRequest.class)
                 .flatMap(menuService::createMenu)
@@ -157,7 +174,12 @@ public class MenuHandler extends BaseHandler {
         @ApiResponse(responseCode = "403", description = "权限不足，需要system:menu:edit权限"),
         @ApiResponse(responseCode = "404", description = "菜单不存在")
     })
-    @OperationLog(module = "菜单管理", type = OperationLog.OperationType.UPDATE, description = "更新菜单")
+    @OperationLog(
+            module = "菜单管理",
+            type = OperationLog.OperationType.UPDATE,
+            description = "更新菜单",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> update(ServerRequest request) {
         Long menuId = requirePositiveId(request);
         return parseBody(request, MenuRequest.class)
@@ -188,7 +210,12 @@ public class MenuHandler extends BaseHandler {
         @ApiResponse(responseCode = "403", description = "权限不足，需要system:menu:remove权限"),
         @ApiResponse(responseCode = "404", description = "菜单不存在")
     })
-    @OperationLog(module = "菜单管理", type = OperationLog.OperationType.DELETE, description = "删除菜单")
+    @OperationLog(
+            module = "菜单管理",
+            type = OperationLog.OperationType.DELETE,
+            description = "删除菜单",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> delete(ServerRequest request) {
         return menuService
                 .deleteMenu(requirePositiveId(request))
@@ -222,7 +249,12 @@ public class MenuHandler extends BaseHandler {
         @ApiResponse(responseCode = "403", description = "权限不足，需要system:menu:edit权限"),
         @ApiResponse(responseCode = "404", description = "菜单不存在")
     })
-    @OperationLog(module = "菜单管理", type = OperationLog.OperationType.UPDATE, description = "更新菜单状态")
+    @OperationLog(
+            module = "菜单管理",
+            type = OperationLog.OperationType.UPDATE,
+            description = "更新菜单状态",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> updateStatus(ServerRequest request) {
         Long menuId = requirePositiveId(request);
         return parseBody(request, StatusRequest.class)

@@ -4,6 +4,7 @@ import com.apex.scaffold.workflow.domain.model.ProcessInstance;
 import com.apex.scaffold.workflow.infrastructure.persistence.po.ProcessInstancePO;
 import java.util.List;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 
 /**
@@ -25,6 +26,8 @@ public interface ProcessInstancePoConverter {
      * @param entity 流程实例领域对象
      * @return 流程实例持久化对象
      */
+    @Mapping(source = "contextJson", target = "formData")
+    @Mapping(source = "currentNodeKey", target = "currentNodeCode")
     ProcessInstancePO toPo(ProcessInstance entity);
 
     /**
@@ -33,6 +36,8 @@ public interface ProcessInstancePoConverter {
      * @param po 流程实例持久化对象
      * @return 流程实例领域对象
      */
+    @Mapping(source = "formData", target = "contextJson")
+    @Mapping(source = "currentNodeCode", target = "currentNodeKey")
     ProcessInstance toEntity(ProcessInstancePO po);
 
     /**

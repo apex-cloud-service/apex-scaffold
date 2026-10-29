@@ -1,5 +1,6 @@
 package com.apex.scaffold.infrastructure.persistence.repository;
 
+import com.apex.scaffold.common.dto.PageResponse;
 import com.apex.scaffold.common.persistence.util.ConditionUtil;
 import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
 import com.apex.scaffold.domain.model.generator.GenConfigEntity;
@@ -7,6 +8,7 @@ import com.apex.scaffold.domain.repository.GenConfigRepository;
 import com.apex.scaffold.infrastructure.persistence.converter.GenConfigPoConverter;
 import com.apex.scaffold.infrastructure.persistence.mapper.GenConfigMapper;
 import com.apex.scaffold.infrastructure.persistence.po.GenConfigPO;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -96,6 +98,33 @@ public class GenConfigRepositoryImpl implements GenConfigRepository {
                         ConditionUtil.lambda(GenConfigPO.class).orderByDesc(GenConfigPO::getCreateTime)))
                 .subscribeOn(BlockingIoSchedulers.jdbc())
                 .map(configPoConverter::toEntityList);
+    }
+
+    /**
+     * 分页查询生成配置。
+     *
+     * <p>过滤与分页下推到数据库，按创建时间倒序排列；租户范围由持久化拦截器追加。
+     *
+     * @param configName 配置名称模糊匹配条件，可为 {@code null}
+     * @param datasourceId 数据源 ID 精确匹配条件，可为 {@code null}
+     * @param pageNum 页码，从 1 开始
+     * @param pageSize 每页大小
+     * @return 分页结果
+     */
+    @Override
+    public Mono<PageResponse<GenConfigEntity>> search(String configName, Long datasourceId, int pageNum, int pageSize) {
+        return Mono.fromCallable(() -> {
+                    Page<GenConfigPO> page = new Page<>(pageNum, pageSize);
+                    configMapper.selectPage(
+                            page,
+                            ConditionUtil.lambda(GenConfigPO.class)
+                                    .likeIfPresent(GenConfigPO::getConfigName, configName)
+                                    .eqIfPresent(GenConfigPO::getDatasourceId, datasourceId)
+                                    .orderByDesc(GenConfigPO::getCreateTime));
+                    return PageResponse.of(
+                            configPoConverter.toEntityList(page.getRecords()), page.getTotal(), pageNum, pageSize);
+                })
+                .subscribeOn(BlockingIoSchedulers.jdbc());
     }
 
     /**

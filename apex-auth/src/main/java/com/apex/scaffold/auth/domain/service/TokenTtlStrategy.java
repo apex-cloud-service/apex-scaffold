@@ -203,42 +203,13 @@ public class TokenTtlStrategy {
     /**
      * Token TTL配置
      */
+    @lombok.Getter
+    @lombok.RequiredArgsConstructor
     public static class TokenTtlConfig {
         private final Duration accessTokenTtl;
         private final Duration refreshTokenTtl;
         private final boolean isDowngraded;
         private final String reason;
-
-        /**
-         * 构造Token TTL配置。
-         *
-         * @param accessTokenTtl 访问令牌TTL
-         * @param refreshTokenTtl 刷新令牌TTL
-         * @param isDowngraded 是否降级
-         * @param reason 降级原因
-         */
-        public TokenTtlConfig(Duration accessTokenTtl, Duration refreshTokenTtl, boolean isDowngraded, String reason) {
-            this.accessTokenTtl = accessTokenTtl;
-            this.refreshTokenTtl = refreshTokenTtl;
-            this.isDowngraded = isDowngraded;
-            this.reason = reason;
-        }
-
-        public Duration getAccessTokenTtl() {
-            return accessTokenTtl;
-        }
-
-        public Duration getRefreshTokenTtl() {
-            return refreshTokenTtl;
-        }
-
-        public boolean isDowngraded() {
-            return isDowngraded;
-        }
-
-        public String getReason() {
-            return reason;
-        }
 
         public long getAccessTokenTtlSeconds() {
             return accessTokenTtl.getSeconds();

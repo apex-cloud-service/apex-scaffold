@@ -317,6 +317,7 @@ public class PasswordPolicyService {
     /**
      * 密码强度枚举
      */
+    @lombok.Getter
     public enum PasswordStrength {
         /** 弱密码 */
         WEAK("弱"),
@@ -331,10 +332,6 @@ public class PasswordPolicyService {
 
         PasswordStrength(String description) {
             this.description = description;
-        }
-
-        public String getDescription() {
-            return description;
         }
     }
 }

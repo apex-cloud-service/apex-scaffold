@@ -7,7 +7,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 
 /**
  * 火山引擎对象存储 TOS 配置属性类。
@@ -58,7 +57,6 @@ public class VolcEngineConfig {
      * @version 1.0.0
      */
     @Slf4j
-    @Configuration
     @ConditionalOnProperty(name = "storage.volcengine.enabled", havingValue = "true")
     public static class VolcEngineTosConfig {
 

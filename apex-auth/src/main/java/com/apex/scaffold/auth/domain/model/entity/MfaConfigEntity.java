@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
  * 支持多种 MFA 类型：TOTP、SMS、EMAIL、WEBAUTHN 等。
  *
  * @author Apex Scaffold Team
- * @since 2026-09-21
+ * @since 1.3.1
  */
 @Data
 @Builder

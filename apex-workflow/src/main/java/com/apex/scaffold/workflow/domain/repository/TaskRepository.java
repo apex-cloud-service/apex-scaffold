@@ -44,27 +44,30 @@ public interface TaskRepository {
     Mono<List<Task>> findByAssignee(Long assigneeId);
 
     /**
-     * 查询全部待处理任务（流式）。
+     * 查询当前可信 Reactor 租户内配置了超时时间的待处理任务；后台跨租户扫描使用独立的 TimeoutTaskScan。
      *
-     * <p>返回状态为 {@code PENDING} 的任务，以 {@link Flux} 流式输出，便于大数据量
-     * 场景下逐条消费。</p>
+     * <p>仅查询状态为 {@code PENDING} 且 {@code timeoutAt} 非空的任务，按超时时间升序
+     * 以 {@link Flux} 输出；不在查询中筛选是否已经超时。</p>
      *
-     * @return 待处理任务流 {@link Flux}
+     * @return 配置了超时时间的待处理任务流 {@link Flux}
      */
     Flux<Task> findPendingTasks();
 
     /**
      * 新增一条任务。
      *
+     * <p>当前实现不会将持久化对象的主键回填到传入的领域对象。</p>
+     *
      * @param task 待新增的任务
-     * @return 返回携带自增主键的回填结果 {@link Mono}
+     * @return 返回带影响行数的 {@link Mono}
      */
     Mono<Integer> insert(Task task);
 
     /**
-     * 按主键更新任务。
+     * 在可信租户内，按主键、PENDING 状态与读取版本条件更新任务并递增版本。
+     * 缺失版本或条件不匹配时返回零，调用方必须拒绝继续办理。
      *
-     * @param task 待更新的任务，主键不能为空
+     * @param task 待更新的任务，主键与读取版本不能为空
      * @return 返回带影响行数的 {@link Mono}
      */
     Mono<Integer> updateById(Task task);

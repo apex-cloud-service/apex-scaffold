@@ -12,7 +12,7 @@ import org.apache.ibatis.annotations.Param;
  * <p>TOTP 数据访问接口
  *
  * @author Apex Scaffold Team
- * @since 2026-09-21
+ * @since 1.3.1
  */
 @Mapper
 public interface TotpMapper extends BaseMapper<TotpPO> {

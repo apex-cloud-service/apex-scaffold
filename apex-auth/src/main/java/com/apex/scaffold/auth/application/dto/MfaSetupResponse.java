@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
  * <p>返回 TOTP 密钥、OTP Auth URL 和备份码，用于前端显示二维码和备份码。
  *
  * @author Apex Scaffold Team
- * @since 2026-09-21
+ * @since 1.3.1
  */
 @Data
 @Builder

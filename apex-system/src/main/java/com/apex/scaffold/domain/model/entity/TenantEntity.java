@@ -37,6 +37,7 @@ import lombok.ToString;
  * @see TenantQuota
  */
 @Getter
+@lombok.Setter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class TenantEntity extends BaseEntity {
@@ -66,46 +67,6 @@ public class TenantEntity extends BaseEntity {
 
     /** 备注 */
     private String remark;
-
-    /** 仅供持久层/构造使用 */
-    public void setTenantCode(String value) {
-        this.tenantCode = value;
-    }
-
-    /** 仅供持久层/构造使用 */
-    public void setTenantName(String value) {
-        this.tenantName = value;
-    }
-
-    /** 仅供持久层/构造使用 */
-    public void setAdminUserId(String value) {
-        this.adminUserId = value;
-    }
-
-    /** 仅供持久层/构造使用 */
-    public void setPackageCode(String value) {
-        this.packageCode = value;
-    }
-
-    /** 仅供持久层/构造使用 */
-    public void setExpireTime(LocalDateTime value) {
-        this.expireTime = value;
-    }
-
-    /** 仅供持久层/构造使用 */
-    public void setStatus(TenantStatus value) {
-        this.status = value;
-    }
-
-    /** 仅供持久层/构造使用 */
-    public void setQuota(TenantQuota value) {
-        this.quota = value;
-    }
-
-    /** 仅供持久层/构造使用 */
-    public void setRemark(String value) {
-        this.remark = value;
-    }
 
     /**
      * 默认构造函数。

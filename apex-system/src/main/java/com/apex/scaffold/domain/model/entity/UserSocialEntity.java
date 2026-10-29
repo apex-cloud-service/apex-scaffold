@@ -28,6 +28,7 @@ import lombok.ToString;
  * @see com.apex.scaffold.domain.enums.SocialChannel
  */
 @Getter
+@lombok.Setter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class UserSocialEntity extends BaseEntity {
@@ -73,41 +74,6 @@ public class UserSocialEntity extends BaseEntity {
      * 绑定时间。
      */
     private LocalDateTime boundAt;
-
-    /** Sets userId. For persistence/construction use only. */
-    public void setUserId(Long value) {
-        this.userId = value;
-    }
-
-    /** Sets tenantId. For persistence/construction use only. */
-    public void setTenantId(String value) {
-        this.tenantId = value;
-    }
-
-    /** Sets channel. For persistence/construction use only. */
-    public void setChannel(SocialChannel value) {
-        this.channel = value;
-    }
-
-    /** Sets openId. For persistence/construction use only. */
-    public void setOpenId(String value) {
-        this.openId = value;
-    }
-
-    /** Sets unionId. For persistence/construction use only. */
-    public void setUnionId(String value) {
-        this.unionId = value;
-    }
-
-    /** Sets status. For persistence/construction use only. */
-    public void setStatus(Integer value) {
-        this.status = value;
-    }
-
-    /** Sets boundAt. For persistence/construction use only. */
-    public void setBoundAt(LocalDateTime value) {
-        this.boundAt = value;
-    }
 
     /**
      * 静态工厂方法：创建绑定记录。
@@ -160,6 +126,8 @@ public class UserSocialEntity extends BaseEntity {
     /**
      * 绑定状态枚举。
      */
+    @Getter
+    @lombok.RequiredArgsConstructor
     public enum BindingStatus {
         /** 解绑 */
         UNBOUND(0),
@@ -167,23 +135,5 @@ public class UserSocialEntity extends BaseEntity {
         BOUND(1);
 
         private final Integer code;
-
-        /**
-         * 创建 {@code BindingStatus} 实例。
-         *
-         * @param code 枚举编码
-         */
-        BindingStatus(Integer code) {
-            this.code = code;
-        }
-
-        /**
-         * 获取枚举编码。
-         *
-         * @return 枚举编码
-         */
-        public Integer getCode() {
-            return code;
-        }
     }
 }

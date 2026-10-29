@@ -24,6 +24,8 @@ import lombok.ToString;
  * @see BaseEntity
  */
 @Getter
+@lombok.Setter
+@lombok.NoArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class ConfigEntity extends BaseEntity {
@@ -72,43 +74,6 @@ public class ConfigEntity extends BaseEntity {
      * 备注。
      */
     private String remark;
-
-    /** Sets configName. For persistence/construction use only. */
-    public void setConfigName(String value) {
-        this.configName = value;
-    }
-
-    /** Sets configKey. For persistence/construction use only. */
-    public void setConfigKey(String value) {
-        this.configKey = value;
-    }
-
-    /** Sets configValue. For persistence/construction use only. */
-    public void setConfigValue(String value) {
-        this.configValue = value;
-    }
-
-    /** Sets configType. For persistence/construction use only. */
-    public void setConfigType(Integer value) {
-        this.configType = value;
-    }
-
-    /** Sets status. For persistence/construction use only. */
-    public void setStatus(Integer value) {
-        this.status = value;
-    }
-
-    /** Sets remark. For persistence/construction use only. */
-    public void setRemark(String value) {
-        this.remark = value;
-    }
-
-    /**
-     * 默认构造函数。
-     */
-    public ConfigEntity() {
-        super();
-    }
 
     /**
      * 静态工厂方法：创建参数配置。
@@ -180,6 +145,8 @@ public class ConfigEntity extends BaseEntity {
     /**
      * 参数类型枚举。
      */
+    @Getter
+    @lombok.RequiredArgsConstructor
     public enum ConfigType {
         /** 内置：系统预设，禁止删除 */
         BUILTIN(0),
@@ -187,29 +154,13 @@ public class ConfigEntity extends BaseEntity {
         USER(1);
 
         private final Integer code;
-
-        /**
-         * 创建 {@code ConfigType} 实例。
-         *
-         * @param code 枚举编码
-         */
-        ConfigType(Integer code) {
-            this.code = code;
-        }
-
-        /**
-         * 获取枚举编码。
-         *
-         * @return 枚举编码
-         */
-        public Integer getCode() {
-            return code;
-        }
     }
 
     /**
      * 参数状态枚举。
      */
+    @Getter
+    @lombok.RequiredArgsConstructor
     public enum ConfigState {
         /** 停用 */
         DISABLED(0),
@@ -217,23 +168,5 @@ public class ConfigEntity extends BaseEntity {
         ENABLED(1);
 
         private final Integer code;
-
-        /**
-         * 创建 {@code ConfigState} 实例。
-         *
-         * @param code 枚举编码
-         */
-        ConfigState(Integer code) {
-            this.code = code;
-        }
-
-        /**
-         * 获取枚举编码。
-         *
-         * @return 枚举编码
-         */
-        public Integer getCode() {
-            return code;
-        }
     }
 }

@@ -13,6 +13,7 @@ import lombok.ToString;
  * @since 1.2.0
  */
 @Getter
+@lombok.NoArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class OffMessageEntity extends BaseEntity {
@@ -31,10 +32,6 @@ public class OffMessageEntity extends BaseEntity {
     private LocalDateTime expireTime;
     private String status;
     private String tenantId;
-
-    public OffMessageEntity() {
-        super();
-    }
 
     /**
      * 设置消息编码，赋值后刷新更新时间。

@@ -8,7 +8,7 @@ import reactor.core.publisher.Mono;
  * JWT密钥仓储接口
  *
  * @author Apex Team
- * @since 2026-09-25
+ * @since 1.3.1
  */
 public interface JwtKeyRepository {
 

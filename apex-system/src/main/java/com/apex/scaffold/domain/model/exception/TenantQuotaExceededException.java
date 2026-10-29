@@ -10,6 +10,7 @@ package com.apex.scaffold.domain.model.exception;
  * @version 1.0.0
  * @since 1.3.0
  */
+@lombok.Getter
 public class TenantQuotaExceededException extends RuntimeException {
 
     private static final long serialVersionUID = 1L;
@@ -40,41 +41,5 @@ public class TenantQuotaExceededException extends RuntimeException {
         this.current = current;
         this.increment = increment;
         this.max = max;
-    }
-
-    /**
-     * 获取配额维度。
-     *
-     * @return 配额维度
-     */
-    public String getDimension() {
-        return dimension;
-    }
-
-    /**
-     * 获取当前使用量。
-     *
-     * @return 当前使用量
-     */
-    public long getCurrent() {
-        return current;
-    }
-
-    /**
-     * 获取申请增量。
-     *
-     * @return 申请增量
-     */
-    public long getIncrement() {
-        return increment;
-    }
-
-    /**
-     * 获取配额上限。
-     *
-     * @return 配额上限
-     */
-    public long getMax() {
-        return max;
     }
 }

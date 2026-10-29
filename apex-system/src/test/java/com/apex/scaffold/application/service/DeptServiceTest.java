@@ -19,7 +19,7 @@ class DeptServiceTest {
 
     private final DeptRepository deptRepository = mock(DeptRepository.class);
     private final DeptAssembler deptAssembler = mock(DeptAssembler.class);
-    private final DeptService service = new DeptService(deptRepository, deptAssembler);
+    private final DeptService service = new DeptService(deptRepository, deptAssembler, mock(TenantGuard.class));
 
     @Test
     void returnsLockVersionForDepartmentDetail() {

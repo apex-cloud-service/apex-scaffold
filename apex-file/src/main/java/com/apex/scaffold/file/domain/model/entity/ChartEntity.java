@@ -27,6 +27,8 @@ import lombok.ToString;
  * @see BaseEntity
  */
 @Getter
+@lombok.Setter
+@lombok.NoArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class ChartEntity extends BaseEntity {
@@ -118,68 +120,6 @@ public class ChartEntity extends BaseEntity {
      * <p>多租户隔离字段，用于租户数据隔离。</p>
      */
     private String tenantId;
-
-    /** Sets chartName. For persistence/construction use only. */
-    public void setChartName(String value) {
-        this.chartName = value;
-    }
-
-    /** Sets chartType. For persistence/construction use only. */
-    public void setChartType(String value) {
-        this.chartType = value;
-    }
-
-    /** Sets category. For persistence/construction use only. */
-    public void setCategory(String value) {
-        this.category = value;
-    }
-
-    /** Sets description. For persistence/construction use only. */
-    public void setDescription(String value) {
-        this.description = value;
-    }
-
-    /** Sets dataSource. For persistence/construction use only. */
-    public void setDataSource(String value) {
-        this.dataSource = value;
-    }
-
-    /** Sets config. For persistence/construction use only. */
-    public void setConfig(Map<String, Object> value) {
-        this.config = value;
-    }
-
-    /** Sets status. For persistence/construction use only. */
-    public void setStatus(Integer value) {
-        this.status = value;
-    }
-
-    /** Sets creatorId. For persistence/construction use only. */
-    public void setCreatorId(Long value) {
-        this.creatorId = value;
-    }
-
-    /** Sets creatorName. For persistence/construction use only. */
-    public void setCreatorName(String value) {
-        this.creatorName = value;
-    }
-
-    /** Sets viewCount. For persistence/construction use only. */
-    public void setViewCount(Integer value) {
-        this.viewCount = value;
-    }
-
-    /** Sets tenantId. For persistence/construction use only. */
-    public void setTenantId(String value) {
-        this.tenantId = value;
-    }
-
-    /**
-     * 默认构造函数。
-     */
-    public ChartEntity() {
-        super();
-    }
 
     /**
      * 静态工厂方法：创建图表。
@@ -293,6 +233,8 @@ public class ChartEntity extends BaseEntity {
     /**
      * 图表状态枚举。
      */
+    @Getter
+    @lombok.RequiredArgsConstructor
     public enum ChartStatus {
         /** 草稿 */
         DRAFT(0),
@@ -300,29 +242,13 @@ public class ChartEntity extends BaseEntity {
         NORMAL(1);
 
         private final Integer code;
-
-        /**
-         * 创建 {@code ChartStatus} 实例。
-         *
-         * @param code 枚举编码
-         */
-        ChartStatus(Integer code) {
-            this.code = code;
-        }
-
-        /**
-         * 获取枚举编码。
-         *
-         * @return 枚举编码
-         */
-        public Integer getCode() {
-            return code;
-        }
     }
 
     /**
      * 图表类型枚举。
      */
+    @Getter
+    @lombok.RequiredArgsConstructor
     public enum ChartType {
         /** 折线图 */
         LINE("line"),
@@ -336,29 +262,13 @@ public class ChartEntity extends BaseEntity {
         RADAR("radar");
 
         private final String code;
-
-        /**
-         * 创建 {@code ChartType} 实例。
-         *
-         * @param code 枚举编码
-         */
-        ChartType(String code) {
-            this.code = code;
-        }
-
-        /**
-         * 获取枚举编码。
-         *
-         * @return 枚举编码
-         */
-        public String getCode() {
-            return code;
-        }
     }
 
     /**
      * 图表分类枚举。
      */
+    @Getter
+    @lombok.RequiredArgsConstructor
     public enum Category {
         /** 业务 */
         BUSINESS("business"),
@@ -370,23 +280,5 @@ public class ChartEntity extends BaseEntity {
         FINANCE("finance");
 
         private final String code;
-
-        /**
-         * 创建 {@code Category} 实例。
-         *
-         * @param code 枚举编码
-         */
-        Category(String code) {
-            this.code = code;
-        }
-
-        /**
-         * 获取枚举编码。
-         *
-         * @return 枚举编码
-         */
-        public String getCode() {
-            return code;
-        }
     }
 }

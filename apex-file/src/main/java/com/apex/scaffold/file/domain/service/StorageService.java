@@ -8,15 +8,14 @@ import reactor.core.publisher.Mono;
  *
  * <p>定义对象存储（OSS/S3/MinIO等）的上传、下载、删除、
  * 预签名URL生成及文件存在性检查等核心操作规范。由基础设施层的
- * {@code AbstractStorageService} 子类提供具体实现，
+ * 兼容门面委托独立对象存储 SPI 提供具体实现，
  * 支持多种云存储厂商的适配接入。</p>
  *
  * <h2>支持的存储类型</h2>
  * <ul>
  *   <li>本地存储 - 默认实现，适用于单机部署</li>
  *   <li>MinIO - 开源对象存储，可显式启用</li>
- *   <li>阿里云OSS - 通过 {@code AliOssStorageService} 适配</li>
- *   <li>火山引擎TOS - 通过 {@code VolcEngineStorageService} 适配</li>
+ *   <li>阿里云OSS、火山引擎TOS、七牛 - 显式启用对应 SDK 策略</li>
  * </ul>
  *
  * <h2>使用方式</h2>
@@ -36,8 +35,8 @@ public interface StorageService {
      * <p>将输入流中的文件数据上传到指定存储桶，支持设置Content-Type头。
      * 上传成功后返回对象的完整名称（含路径）。</p>
      *
-     * <p>覆盖上传：若目标路径已存在同名文件，将被新文件覆盖。
-     * 如需防止覆盖，调用方应在调用前使用 {@link #exists} 检查。</p>
+     * <p>本地与 MinIO 保留历史 UUID 命名规则，调用方必须持久化返回的键；
+     * 其他云策略保留传入键，同名对象按后端覆盖语义处理。上传流不由策略关闭。</p>
      *
      * @param bucketName  存储桶名称
      * @param objectName  对象名称（含路径，如 "photos/2024/abc123.jpg"）
@@ -67,7 +66,7 @@ public interface StorageService {
      *
      * @param bucketName 存储桶名称
      * @param objectName 对象名称（含路径）
-     * @return true表示删除成功；false表示文件不存在或删除失败
+     * @return true表示删除请求成功；false仅表示对象缺失；其他失败传播错误信号
      */
     Mono<Boolean> delete(String bucketName, String objectName);
 
@@ -82,7 +81,7 @@ public interface StorageService {
      * @param bucketName 存储桶名称
      * @param objectName 对象名称（含路径）
      * @param expiry     过期时间（秒），建议值：300（5分钟）~ 86400（1天）
-     * @return 预签名URL字符串；生成失败返回空信号
+     * @return GET 预签名URL；失败传播错误。null 使用 300 秒，范围 1 至 604800 秒；本地策略明确不支持 HTTP 签名
      */
     Mono<String> getPresignedUrl(String bucketName, String objectName, Integer expiry);
 

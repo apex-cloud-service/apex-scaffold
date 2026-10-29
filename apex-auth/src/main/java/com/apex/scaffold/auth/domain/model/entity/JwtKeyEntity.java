@@ -29,7 +29,7 @@ import org.springframework.data.relational.core.mapping.Table;
  * </ul>
  *
  * @author Apex Team
- * @since 2026-09-25
+ * @since 1.3.1
  */
 @Data
 @EqualsAndHashCode(callSuper = false)

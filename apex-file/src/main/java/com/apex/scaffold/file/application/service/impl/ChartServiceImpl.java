@@ -246,25 +246,20 @@ public class ChartServiceImpl implements ChartService {
         List<ChartDataResponse.ChartSeries> series = new ArrayList<>(16);
 
         switch (chartType) {
-            case "line":
-            case "bar":
+            case "line", "bar" -> {
                 series.add(createSeries("Series 1", chartType, 7));
                 series.add(createSeries("Series 2", chartType, 7));
-                break;
-            case "pie":
+            }
+            case "pie" -> {
                 xAxis = Arrays.asList("A", "B", "C", "D", "E");
                 series.add(createSeries("Data", "pie", 5));
-                break;
-            case "scatter":
-                series.add(createSeries("Series 1", "scatter", 7));
-                break;
-            case "radar":
+            }
+            case "scatter" -> series.add(createSeries("Series 1", "scatter", 7));
+            case "radar" -> {
                 xAxis = Arrays.asList("Metric 1", "Metric 2", "Metric 3", "Metric 4", "Metric 5");
                 series.add(createSeries("Series 1", "radar", 5));
-                break;
-
-            default:
-                break;
+            }
+            default -> {}
         }
 
         return ChartDataResponse.builder()

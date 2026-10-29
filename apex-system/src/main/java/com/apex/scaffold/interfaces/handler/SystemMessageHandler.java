@@ -1,6 +1,7 @@
 package com.apex.scaffold.interfaces.handler;
 
 import com.apex.scaffold.application.service.UserService;
+import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.domain.repository.SystemMessageRepository;
 import com.apex.scaffold.interfaces.util.MessageUtils;
 import io.swagger.v3.oas.annotations.Operation;
@@ -80,6 +81,12 @@ public class SystemMessageHandler extends BaseHandler {
         @ApiResponse(responseCode = "200", description = "分页查询成功"),
         @ApiResponse(responseCode = "401", description = "未授权，用户未登录或认证信息无效")
     })
+    @OperationLog(
+            module = "SystemMessage",
+            type = OperationLog.OperationType.SELECT,
+            description = "inbox",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> inbox(ServerRequest request) {
         int page = safeParseInt(request.queryParam("page").orElse(null), DEFAULT_PAGE);
         int size = safeParseInt(request.queryParam("size").orElse(null), DEFAULT_SIZE);
@@ -101,6 +108,12 @@ public class SystemMessageHandler extends BaseHandler {
         @ApiResponse(responseCode = "200", description = "统计成功"),
         @ApiResponse(responseCode = "401", description = "未授权，用户未登录或认证信息无效")
     })
+    @OperationLog(
+            module = "SystemMessage",
+            type = OperationLog.OperationType.SELECT,
+            description = "unreadCount",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> unreadCount(ServerRequest request) {
         return currentUserId(request, userService)
                 .flatMap(systemMessageRepository::countUnread)
@@ -121,6 +134,12 @@ public class SystemMessageHandler extends BaseHandler {
         @ApiResponse(responseCode = "400", description = "消息 ID 格式错误"),
         @ApiResponse(responseCode = "401", description = "未授权，用户未登录或认证信息无效")
     })
+    @OperationLog(
+            module = "SystemMessage",
+            type = OperationLog.OperationType.UPDATE,
+            description = "markRead",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> markRead(ServerRequest request) {
         return Mono.defer(() -> {
             long messageId = requirePositiveId(request);
@@ -144,6 +163,12 @@ public class SystemMessageHandler extends BaseHandler {
         @ApiResponse(responseCode = "200", description = "标记成功"),
         @ApiResponse(responseCode = "401", description = "未授权，用户未登录或认证信息无效")
     })
+    @OperationLog(
+            module = "SystemMessage",
+            type = OperationLog.OperationType.UPDATE,
+            description = "markAllRead",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> markAllRead(ServerRequest request) {
         return currentUserId(request, userService)
                 .flatMap(systemMessageRepository::markAllRead)

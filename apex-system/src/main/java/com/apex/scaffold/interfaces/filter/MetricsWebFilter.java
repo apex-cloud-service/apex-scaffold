@@ -48,6 +48,7 @@ import reactor.core.publisher.SignalType;
  * @see MeterRegistry
  */
 @Slf4j
+@lombok.RequiredArgsConstructor
 @Component
 @Order(Ordered.LOWEST_PRECEDENCE - 10)
 public class MetricsWebFilter implements WebFilter {
@@ -72,15 +73,6 @@ public class MetricsWebFilter implements WebFilter {
 
     /** Micrometer 指标注册表。 */
     private final MeterRegistry meterRegistry;
-
-    /**
-     * 构造 API 响应时间监控过滤器
-     *
-     * @param meterRegistry Micrometer 指标注册器
-     */
-    public MetricsWebFilter(MeterRegistry meterRegistry) {
-        this.meterRegistry = meterRegistry;
-    }
 
     /**
      * 过滤请求并记录响应时间指标

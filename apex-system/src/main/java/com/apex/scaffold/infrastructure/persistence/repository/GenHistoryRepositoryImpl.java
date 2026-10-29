@@ -1,5 +1,6 @@
 package com.apex.scaffold.infrastructure.persistence.repository;
 
+import com.apex.scaffold.common.dto.PageResponse;
 import com.apex.scaffold.common.persistence.util.ConditionUtil;
 import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
 import com.apex.scaffold.domain.model.generator.GenHistoryEntity;
@@ -7,6 +8,7 @@ import com.apex.scaffold.domain.repository.GenHistoryRepository;
 import com.apex.scaffold.infrastructure.persistence.converter.GenHistoryPoConverter;
 import com.apex.scaffold.infrastructure.persistence.mapper.GenHistoryMapper;
 import com.apex.scaffold.infrastructure.persistence.po.GenHistoryPO;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -100,17 +102,47 @@ public class GenHistoryRepositoryImpl implements GenHistoryRepository {
     }
 
     /**
-     * 新增生成历史记录。
+     * 分页查询指定配置的生成历史。
      *
-     * <p>代码生成任务开始时创建记录，初始状态可能为待处理。
-     * 任务完成后通过 {@link #updateById} 更新状态和结果。
+     * <p>过滤与分页下推到数据库，按创建时间倒序排列；租户范围由持久化拦截器追加。
      *
-     * @param entity 历史实体
-     * @return 影响行数
+     * @param configId 生成配置 ID
+     * @param pageNum 页码，从 1 开始
+     * @param pageSize 每页大小
+     * @return 分页结果
      */
     @Override
-    public Mono<Integer> insert(GenHistoryEntity entity) {
-        return Mono.fromCallable(() -> historyMapper.insert(historyPoConverter.toPo(entity)))
+    public Mono<PageResponse<GenHistoryEntity>> searchByConfigId(Long configId, int pageNum, int pageSize) {
+        return Mono.fromCallable(() -> {
+                    Page<GenHistoryPO> page = new Page<>(pageNum, pageSize);
+                    historyMapper.selectPage(
+                            page,
+                            ConditionUtil.lambda(GenHistoryPO.class)
+                                    .eq(GenHistoryPO::getConfigId, configId)
+                                    .orderByDesc(GenHistoryPO::getCreateTime));
+                    return PageResponse.of(
+                            historyPoConverter.toEntityList(page.getRecords()), page.getTotal(), pageNum, pageSize);
+                })
+                .subscribeOn(BlockingIoSchedulers.jdbc());
+    }
+
+    /**
+     * 新增生成历史记录。
+     *
+     * <p>插入前由 MyBatis-Plus 分配雪花主键，写回持久化对象后同步回实体，
+     * 便于调用方在后续产物落库时引用 {@code historyId}。
+     *
+     * @param entity 历史实体
+     * @return 已回写主键的历史实体
+     */
+    @Override
+    public Mono<GenHistoryEntity> insert(GenHistoryEntity entity) {
+        return Mono.fromCallable(() -> {
+                    GenHistoryPO po = historyPoConverter.toPo(entity);
+                    historyMapper.insert(po);
+                    entity.setId(po.getId());
+                    return entity;
+                })
                 .subscribeOn(BlockingIoSchedulers.jdbc());
     }
 

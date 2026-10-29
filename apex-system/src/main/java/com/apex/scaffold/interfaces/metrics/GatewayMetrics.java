@@ -53,7 +53,11 @@ public class GatewayMetrics {
     private final Counter rateLimitRejectedCounter;
     private final Counter circuitBreakerTriggeredCounter;
 
-    /** 创建网关监控指标组件，向注册表注册网关相关 Gauge 与 Counter。 */
+    /**
+     * 创建网关监控指标组件，向注册表注册网关相关 Gauge 与 Counter。
+     *
+     * @param meterRegistry 接收网关指标的监控注册表
+     */
     public GatewayMetrics(MeterRegistry meterRegistry) {
         // 活跃连接数（Gauge）
         Gauge.builder("apex.gateway.connections.active", activeConnections, AtomicLong::get)

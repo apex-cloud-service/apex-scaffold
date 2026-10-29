@@ -2,8 +2,11 @@ package com.apex.scaffold.workflow.application.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import com.apex.scaffold.common.context.TenantContext;
 import com.apex.scaffold.workflow.application.dto.WorkflowStatisticsDTO;
 import com.apex.scaffold.workflow.application.dto.WorkflowTrendDTO;
 import com.apex.scaffold.workflow.application.query.WorkflowStatisticsService;
@@ -24,6 +27,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
+import reactor.util.context.Context;
 
 /**
  * {@link WorkflowStatisticsService} 单元测试
@@ -37,6 +41,12 @@ import reactor.test.StepVerifier;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("WorkflowStatisticsService 单元测试")
 class WorkflowStatisticsServiceTest {
+
+    /** 测试租户。 */
+    private static final String TENANT = "tenant-a";
+
+    /** 可信租户上下文。 */
+    private static final Context TENANT_CONTEXT = Context.of(TenantContext.REACTOR_CONTEXT_KEY, TENANT);
 
     @Mock
     private ProcessInstanceMapper processInstanceMapper;
@@ -56,20 +66,20 @@ class WorkflowStatisticsServiceTest {
     @DisplayName("getStatistics - 成功返回统计概览数据")
     void testGetStatistics_Success() {
         // Given: 模拟今日发起数
-        when(processInstanceMapper.countTodayStarted(any(LocalDateTime.class), any(LocalDateTime.class)))
+        when(processInstanceMapper.countTodayStarted(eq(TENANT), any(LocalDateTime.class), any(LocalDateTime.class)))
                 .thenReturn(15);
 
         // 模拟运行中总数
-        when(processInstanceMapper.countByStatus("RUNNING")).thenReturn(8);
-        when(processInstanceMapper.countSuspended()).thenReturn(2);
+        when(processInstanceMapper.countByStatus(TENANT, "RUNNING")).thenReturn(8);
+        when(processInstanceMapper.countSuspended(TENANT)).thenReturn(2);
 
         // 模拟待办任务总数
-        when(taskMapper.countPendingTasks()).thenReturn(23);
-        when(taskMapper.countTimeoutTasks(any(LocalDateTime.class))).thenReturn(4);
-        when(taskMapper.countTransferredTasks()).thenReturn(6);
+        when(taskMapper.countPendingTasks(TENANT)).thenReturn(23);
+        when(taskMapper.countTimeoutTasks(eq(TENANT), any(LocalDateTime.class))).thenReturn(4);
+        when(taskMapper.countTransferredTasks(TENANT)).thenReturn(6);
 
         // 模拟平均完成时长（秒）
-        when(processInstanceMapper.avgCompletionSeconds()).thenReturn(7200L);
+        when(processInstanceMapper.avgCompletionSeconds(TENANT)).thenReturn(7200L);
 
         // 模拟状态分布
         List<Map<String, Object>> statusDist = new ArrayList<>();
@@ -88,10 +98,10 @@ class WorkflowStatisticsServiceTest {
         rejected.put("count", 3);
         statusDist.add(rejected);
 
-        when(processInstanceMapper.statusDistribution()).thenReturn(statusDist);
+        when(processInstanceMapper.statusDistribution(TENANT)).thenReturn(statusDist);
 
         // When: 调用统计服务
-        Mono<WorkflowStatisticsDTO> result = statisticsService.getStatistics();
+        Mono<WorkflowStatisticsDTO> result = statisticsService.getStatistics().contextWrite(TENANT_CONTEXT);
 
         // Then: 验证结果
         StepVerifier.create(result)
@@ -112,21 +122,31 @@ class WorkflowStatisticsServiceTest {
     }
 
     @Test
+    @DisplayName("getStatistics - 无租户上下文时失败且不查询数据库")
+    void testGetStatistics_MissingTenantFails() {
+        StepVerifier.create(statisticsService.getStatistics())
+                .expectErrorSatisfies(error -> assertThat(error).hasMessageContaining("缺少有效租户上下文"))
+                .verify();
+
+        verifyNoInteractions(taskMapper, processInstanceMapper);
+    }
+
+    @Test
     @DisplayName("getStatistics - 无数据时返回默认值")
     void testGetStatistics_NoData() {
         // Given: 所有查询返回 0 或空
-        when(processInstanceMapper.countTodayStarted(any(LocalDateTime.class), any(LocalDateTime.class)))
+        when(processInstanceMapper.countTodayStarted(eq(TENANT), any(LocalDateTime.class), any(LocalDateTime.class)))
                 .thenReturn(0);
-        when(processInstanceMapper.countByStatus("RUNNING")).thenReturn(0);
-        when(processInstanceMapper.countSuspended()).thenReturn(0);
-        when(taskMapper.countPendingTasks()).thenReturn(0);
-        when(taskMapper.countTimeoutTasks(any(LocalDateTime.class))).thenReturn(0);
-        when(taskMapper.countTransferredTasks()).thenReturn(0);
-        when(processInstanceMapper.avgCompletionSeconds()).thenReturn(0L);
-        when(processInstanceMapper.statusDistribution()).thenReturn(new ArrayList<>());
+        when(processInstanceMapper.countByStatus(TENANT, "RUNNING")).thenReturn(0);
+        when(processInstanceMapper.countSuspended(TENANT)).thenReturn(0);
+        when(taskMapper.countPendingTasks(TENANT)).thenReturn(0);
+        when(taskMapper.countTimeoutTasks(eq(TENANT), any(LocalDateTime.class))).thenReturn(0);
+        when(taskMapper.countTransferredTasks(TENANT)).thenReturn(0);
+        when(processInstanceMapper.avgCompletionSeconds(TENANT)).thenReturn(0L);
+        when(processInstanceMapper.statusDistribution(TENANT)).thenReturn(new ArrayList<>());
 
         // When: 调用统计服务
-        Mono<WorkflowStatisticsDTO> result = statisticsService.getStatistics();
+        Mono<WorkflowStatisticsDTO> result = statisticsService.getStatistics().contextWrite(TENANT_CONTEXT);
 
         // Then: 验证结果
         StepVerifier.create(result)
@@ -162,13 +182,15 @@ class WorkflowStatisticsServiceTest {
             completedList.add(completedMap);
         }
 
-        when(processInstanceMapper.countStartedByDateRange(any(LocalDateTime.class), any(LocalDateTime.class)))
+        when(processInstanceMapper.countStartedByDateRange(
+                        eq(TENANT), any(LocalDateTime.class), any(LocalDateTime.class)))
                 .thenReturn(startedList);
-        when(processInstanceMapper.countCompletedByDateRange(any(LocalDateTime.class), any(LocalDateTime.class)))
+        when(processInstanceMapper.countCompletedByDateRange(
+                        eq(TENANT), any(LocalDateTime.class), any(LocalDateTime.class)))
                 .thenReturn(completedList);
 
         // When: 调用趋势分析
-        Mono<WorkflowTrendDTO> result = statisticsService.getTrend(7);
+        Mono<WorkflowTrendDTO> result = statisticsService.getTrend(7).contextWrite(TENANT_CONTEXT);
 
         // Then: 验证结果
         StepVerifier.create(result)
@@ -209,13 +231,15 @@ class WorkflowStatisticsServiceTest {
             completedList.add(completedMap);
         }
 
-        when(processInstanceMapper.countStartedByDateRange(any(LocalDateTime.class), any(LocalDateTime.class)))
+        when(processInstanceMapper.countStartedByDateRange(
+                        eq(TENANT), any(LocalDateTime.class), any(LocalDateTime.class)))
                 .thenReturn(startedList);
-        when(processInstanceMapper.countCompletedByDateRange(any(LocalDateTime.class), any(LocalDateTime.class)))
+        when(processInstanceMapper.countCompletedByDateRange(
+                        eq(TENANT), any(LocalDateTime.class), any(LocalDateTime.class)))
                 .thenReturn(completedList);
 
         // When: 调用30天趋势
-        Mono<WorkflowTrendDTO> result = statisticsService.getTrend(30);
+        Mono<WorkflowTrendDTO> result = statisticsService.getTrend(30).contextWrite(TENANT_CONTEXT);
 
         // Then: 验证结果
         StepVerifier.create(result)
@@ -268,13 +292,15 @@ class WorkflowStatisticsServiceTest {
         completed3.put("count", 10);
         completedList.add(completed3);
 
-        when(processInstanceMapper.countStartedByDateRange(any(LocalDateTime.class), any(LocalDateTime.class)))
+        when(processInstanceMapper.countStartedByDateRange(
+                        eq(TENANT), any(LocalDateTime.class), any(LocalDateTime.class)))
                 .thenReturn(startedList);
-        when(processInstanceMapper.countCompletedByDateRange(any(LocalDateTime.class), any(LocalDateTime.class)))
+        when(processInstanceMapper.countCompletedByDateRange(
+                        eq(TENANT), any(LocalDateTime.class), any(LocalDateTime.class)))
                 .thenReturn(completedList);
 
         // When: 调用趋势分析
-        Mono<WorkflowTrendDTO> result = statisticsService.getTrend(7);
+        Mono<WorkflowTrendDTO> result = statisticsService.getTrend(7).contextWrite(TENANT_CONTEXT);
 
         // Then: 验证结果，无数据的日期应该为0
         StepVerifier.create(result)

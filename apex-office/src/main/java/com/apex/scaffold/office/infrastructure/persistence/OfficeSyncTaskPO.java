@@ -23,6 +23,7 @@ public class OfficeSyncTaskPO {
 
     private String tenantId;
     private OfficePlatform platform;
+    private String syncType;
     private String cursorValue;
     private String state;
     private String failureMessage;

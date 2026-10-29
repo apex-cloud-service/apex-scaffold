@@ -112,7 +112,12 @@ public class AuditLogHandler extends BaseHandler {
         @ApiResponse(responseCode = "401", description = "未授权，需要登录"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要 system:audit-log:list 权限")
     })
-    @OperationLog(module = "审计日志", type = OperationLog.OperationType.SELECT, description = "分页查询审计日志")
+    @OperationLog(
+            module = "审计日志",
+            type = OperationLog.OperationType.SELECT,
+            description = "分页查询审计日志",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> list(ServerRequest request) {
         int page = safeParseInt(request.queryParam("page").orElse(null), 1);
         int size = safeParseInt(request.queryParam("size").orElse(null), 20);

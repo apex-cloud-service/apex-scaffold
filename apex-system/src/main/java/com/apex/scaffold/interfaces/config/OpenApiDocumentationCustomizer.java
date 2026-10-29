@@ -40,6 +40,7 @@ import com.apex.scaffold.application.dto.admin.MenuDTO;
 import com.apex.scaffold.application.dto.admin.MenuRequest;
 import com.apex.scaffold.application.dto.admin.OnlineUserDTO;
 import com.apex.scaffold.application.dto.admin.StatusRequest;
+import com.apex.scaffold.application.dto.search.SearchResultDTO;
 import com.apex.scaffold.interfaces.dto.monitor.MonitorBusinessResponse;
 import com.apex.scaffold.interfaces.dto.monitor.MonitorGovernanceResponse;
 import com.apex.scaffold.interfaces.dto.monitor.MonitorMiddlewareResponse;
@@ -52,6 +53,7 @@ import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.examples.Example;
 import io.swagger.v3.oas.models.media.ArraySchema;
+import io.swagger.v3.oas.models.media.BooleanSchema;
 import io.swagger.v3.oas.models.media.ComposedSchema;
 import io.swagger.v3.oas.models.media.Content;
 import io.swagger.v3.oas.models.media.IntegerSchema;
@@ -71,6 +73,7 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.springframework.core.ParameterizedTypeReference;
 
 /**
  * 函数式接口 OpenAPI 文档增强器。
@@ -148,6 +151,9 @@ final class OpenApiDocumentationCustomizer {
             Map.entry("authRegister", LoginResponse.class),
             Map.entry("bindWechatPhone", LoginResponse.class),
             Map.entry("authRefresh", LoginResponse.class),
+            Map.entry("oauth2Revoke", String.class),
+            Map.entry("oauth2Consent", String.class),
+            Map.entry("oauth2RevokeConsent", String.class),
             Map.entry("validateMobile", MobileValidateResponse.class),
             Map.entry("getMyRoles", RoleDTO.class),
             Map.entry("getAllRoles", RoleDTO.class),
@@ -232,6 +238,21 @@ final class OpenApiDocumentationCustomizer {
     private static final String OP_ID_DELETE_CURRENT_USER = "deleteCurrentUser";
     private static final String OP_ID_SEND_ACCOUNT_DELETION_CODE = "sendAccountDeletionCode";
 
+    /** 发起社交登录的操作标识。 */
+    private static final String OP_ID_INITIATE_SOCIAL_LOGIN = "initiateSocialLogin";
+
+    /** 统一搜索的操作标识。 */
+    private static final String OP_ID_UNIFIED_SEARCH = "unifiedSearch";
+
+    /** 重建搜索索引的操作标识。 */
+    private static final String OP_ID_REBUILD_SEARCH_INDEX = "rebuildSearchIndex";
+
+    /** 处理单点登录回调的操作标识。 */
+    private static final String OP_ID_HANDLE_SSO_CALLBACK = "handleSsoCallback";
+
+    /** 同步 Keycloak 用户的操作标识。 */
+    private static final String OP_ID_SYNC_KEYCLOAK_USER = "syncKeycloakUser";
+
     /** 匿名访问路径判断器，用于确定哪些接口无需 Bearer Token 鉴权。 */
     private final Predicate<String> publicPath;
 
@@ -276,7 +297,11 @@ final class OpenApiDocumentationCustomizer {
 
         openApi.getPaths().forEach((path, pathItem) -> pathItem.readOperations().forEach(operation -> {
             OpenApiOperationContext context = new OpenApiOperationContext(
-                    path, operation.getOperationId(), operation, components, publicPath.test(path));
+                    path,
+                    "/oauth2/authorize".equals(path) ? "oauth2Authorize" : operation.getOperationId(),
+                    operation,
+                    components,
+                    publicPath.test(path));
             contributors.forEach(contributor -> contributor.contribute(context));
         }));
     }
@@ -302,7 +327,7 @@ final class OpenApiDocumentationCustomizer {
         ObjectSchema schema = new ObjectSchema();
         schema.setDescription(error ? "统一错误响应" : "统一成功响应");
         schema.addProperty(
-                "code", new IntegerSchema().format("int32").description("业务状态码").example(error ? 400 : 200));
+                "code", new IntegerSchema().format("int32").description("业务状态码").example(error ? 400 : 0));
         schema.addProperty("msg", new StringSchema().description("面向调用方的结果说明").example(error ? "请求参数不正确" : "操作成功"));
         schema.addProperty(
                 "data", new ObjectSchema().description(dataDescription).nullable(true));
@@ -370,7 +395,17 @@ final class OpenApiDocumentationCustomizer {
      * @param operation OpenAPI 操作
      */
     private void addQueryParameters(String operationId, io.swagger.v3.oas.models.Operation operation) {
-        for (QueryParameter definition : QUERY_PARAMETERS.getOrDefault(operationId, List.of())) {
+        List<QueryParameter> definitions = "oauth2Authorize".equals(operationId)
+                ? List.of(
+                        stringQuery("response_type", "授权响应类型，仅支持 code", true, null, List.of("code")),
+                        stringQuery("client_id", "客户端标识", true, null, List.of()),
+                        stringQuery("redirect_uri", "客户端回调地址", true, null, List.of()),
+                        stringQuery("scope", "请求作用域", false, null, List.of()),
+                        stringQuery("state", "客户端状态值，重定向时原样返回", false, null, List.of()),
+                        stringQuery("code_challenge", "PKCE 挑战值", false, null, List.of()),
+                        stringQuery("code_challenge_method", "PKCE 挑战方法", false, null, List.of()))
+                : QUERY_PARAMETERS.getOrDefault(operationId, List.of());
+        for (QueryParameter definition : definitions) {
             Parameter parameter = findParameter(operation, definition.name(), "query");
             if (parameter == null) {
                 operation.addParametersItem(definition.toOpenApiParameter());
@@ -407,6 +442,12 @@ final class OpenApiDocumentationCustomizer {
      */
     private void addRequestBody(
             String operationId, io.swagger.v3.oas.models.Operation operation, Components components) {
+        Schema<?> oauthForm = oauthFormSchema(operationId);
+        if (oauthForm != null) {
+            operation.setRequestBody(requestBody(
+                    "OAuth2 表单参数；令牌模式专属字段仅在对应 grant_type 下必填", "application/x-www-form-urlencoded", oauthForm));
+            return;
+        }
         if (hasValidRequestBodySchema(operation.getRequestBody())) {
             ensureRequestBodyDescription(operation.getRequestBody());
             return;
@@ -433,6 +474,240 @@ final class OpenApiDocumentationCustomizer {
                                     "outId", new StringSchema().description("调用方业务流水号")),
                             Set.of("token", "mobile"))));
         }
+    }
+
+    /**
+     * 按 Handler 实际读取字段构造 OAuth2 表单。
+     *
+     * @param operationId 操作唯一标识
+     * @return OAuth2 表单模型；非表单操作或标识为空时返回 {@code null}
+     */
+    private Schema<?> oauthFormSchema(String operationId) {
+        if (operationId == null) {
+            return null;
+        }
+        return switch (operationId) {
+            case "oauth2Token" -> {
+                StringSchema grantType = new StringSchema();
+                grantType.setEnum(List.of("authorization_code", "client_credentials", "password", "refresh_token"));
+                Map<String, Schema<?>> properties = new LinkedHashMap<>();
+                properties.put("grant_type", grantType);
+                properties.put("client_id", new StringSchema().description("客户端标识"));
+                properties.put("client_secret", new StringSchema().description("客户端密钥"));
+                properties.put("code", new StringSchema().description("authorization_code 模式的授权码"));
+                properties.put("redirect_uri", new StringSchema().description("authorization_code 模式的回调地址"));
+                properties.put("code_verifier", new StringSchema().description("PKCE 校验值"));
+                properties.put("username", new StringSchema().description("password 模式用户名"));
+                properties.put("password", new StringSchema().description("password 模式密码"));
+                properties.put("refresh_token", new StringSchema().description("refresh_token 模式刷新令牌"));
+                properties.put("scope", new StringSchema().description("client_credentials/password 模式作用域"));
+                yield objectSchema(properties, Set.of("grant_type"));
+            }
+            case "oauth2Revoke" -> objectSchema(
+                    Map.of("token", new StringSchema(), "client_id", new StringSchema()), Set.of("token", "client_id"));
+            case "oauth2Introspect" -> objectSchema(Map.of("token", new StringSchema()), Set.of("token"));
+            case "oauth2Consent" -> {
+                StringSchema approved = new StringSchema();
+                approved.setEnum(List.of("true", "false"));
+                yield objectSchema(
+                        Map.of("client_id", new StringSchema(), "scope", new StringSchema(), "approved", approved),
+                        Set.of("client_id", "approved"));
+            }
+            case "oauth2RevokeConsent" -> objectSchema(Map.of("client_id", new StringSchema()), Set.of("client_id"));
+            default -> null;
+        };
+    }
+
+    /**
+     * 仅对原生 OAuth2 响应应用协议模型，保留撤销及同意端点的 Result 契约。
+     *
+     * @param operationId 操作唯一标识
+     * @param operation OpenAPI 操作
+     * @return 已应用原生协议响应模型时返回 {@code true}，否则返回 {@code false}
+     */
+    private boolean addOauthResponses(String operationId, io.swagger.v3.oas.models.Operation operation) {
+        if (operationId == null) {
+            return false;
+        }
+        ApiResponses responses = operation.getResponses();
+        switch (operationId) {
+            case "initiateOidcLogin", OP_ID_INITIATE_SOCIAL_LOGIN -> {
+                responses.remove("200");
+                responses.remove("302");
+                responses.addApiResponse(
+                        "307",
+                        new ApiResponse()
+                                .description("重定向到 OAuth2 提供商登录页面")
+                                .addHeaderObject(
+                                        "Location",
+                                        new io.swagger.v3.oas.models.headers.Header().schema(new StringSchema())));
+                if (OP_ID_INITIATE_SOCIAL_LOGIN.equals(operationId)) {
+                    addErrorResponse(responses, "400", "不支持的社交登录提供商");
+                }
+                return true;
+            }
+            case "oauth2Authorize" -> {
+                responses.remove("200");
+                responses.remove("302");
+                responses.addApiResponse(
+                        "307",
+                        new ApiResponse()
+                                .description("重定向到客户端，携带 code/state 或 error/error_description/state")
+                                .addHeaderObject(
+                                        "Location",
+                                        new io.swagger.v3.oas.models.headers.Header().schema(new StringSchema())));
+                addErrorResponse(responses, "400", "缺少 client_id 或 redirect_uri 时返回 Result 错误");
+                return true;
+            }
+            case "oauth2Token" -> {
+                addOauthTokenResponses(responses);
+                return true;
+            }
+            case "oauth2Introspect" -> {
+                addOauthIntrospectionResponses(responses);
+                return true;
+            }
+            case "oauth2Jwks" -> {
+                addOauthJwksResponse(responses);
+                return true;
+            }
+            case "oauth2Discovery" -> {
+                addOauthDiscoveryResponse(responses);
+                return true;
+            }
+            default -> {
+                return false;
+            }
+        }
+    }
+
+    /**
+     * 补充令牌颁发成功及参数、授权或客户端认证失败的原生响应。
+     *
+     * @param responses 操作响应集合
+     */
+    private void addOauthTokenResponses(ApiResponses responses) {
+        responses.remove("401");
+        responses.addApiResponse(
+                "200",
+                jsonResponse(
+                        "令牌颁发成功",
+                        objectSchema(
+                                Map.of(
+                                        "access_token",
+                                        new StringSchema(),
+                                        "token_type",
+                                        new StringSchema(),
+                                        "expires_in",
+                                        new IntegerSchema().format("int64"),
+                                        "refresh_token",
+                                        new StringSchema().nullable(true),
+                                        "scope",
+                                        new StringSchema().nullable(true)),
+                                Set.of("access_token", "token_type", "expires_in", "refresh_token", "scope"))));
+        responses.addApiResponse(
+                "400",
+                jsonResponse(
+                        "参数、授权或客户端认证失败均返回 HTTP 400",
+                        objectSchema(
+                                Map.of("error", new StringSchema(), "error_description", new StringSchema()),
+                                Set.of("error", "error_description"))));
+    }
+
+    /**
+     * 补充令牌内省元数据及缺少令牌时的错误响应。
+     *
+     * @param responses 操作响应集合
+     */
+    private void addOauthIntrospectionResponses(ApiResponses responses) {
+        responses.addApiResponse(
+                "200",
+                jsonResponse(
+                        "令牌元数据；无效令牌仅返回 active=false",
+                        objectSchema(
+                                Map.of(
+                                        "active",
+                                        new BooleanSchema(),
+                                        "client_id",
+                                        new StringSchema(),
+                                        "user_id",
+                                        new StringSchema().nullable(true),
+                                        "scope",
+                                        new StringSchema().nullable(true),
+                                        "exp",
+                                        new IntegerSchema().format("int64")),
+                                Set.of("active"))));
+        addErrorResponse(responses, "400", "缺少 token，返回 Result 错误");
+    }
+
+    /**
+     * 补充签名密钥元数据的原生响应。
+     *
+     * @param responses 操作响应集合
+     */
+    private void addOauthJwksResponse(ApiResponses responses) {
+        responses.addApiResponse(
+                "200",
+                jsonResponse(
+                        "签名密钥元数据",
+                        objectSchema(
+                                Map.of(
+                                        "keys",
+                                        new ArraySchema()
+                                                .items(objectSchema(
+                                                        Map.of(
+                                                                "kty",
+                                                                new StringSchema(),
+                                                                "kid",
+                                                                new StringSchema(),
+                                                                "alg",
+                                                                new StringSchema(),
+                                                                "use",
+                                                                new StringSchema()),
+                                                        Set.of("kty", "kid", "alg", "use")))),
+                                Set.of("keys"))));
+    }
+
+    /**
+     * 补充授权服务器发现文档的端点和能力元数据响应。
+     *
+     * @param responses 操作响应集合
+     */
+    private void addOauthDiscoveryResponse(ApiResponses responses) {
+        ObjectSchema metadata = new ObjectSchema();
+        for (String field : List.of(
+                "issuer",
+                "authorization_endpoint",
+                "token_endpoint",
+                "jwks_uri",
+                "revocation_endpoint",
+                "introspection_endpoint")) {
+            metadata.addProperty(field, new StringSchema());
+        }
+        for (String field : List.of(
+                "token_endpoint_auth_methods_supported",
+                "response_types_supported",
+                "grant_types_supported",
+                "revocation_endpoint_auth_methods_supported",
+                "introspection_endpoint_auth_methods_supported",
+                "code_challenge_methods_supported",
+                "scopes_supported")) {
+            metadata.addProperty(field, new ArraySchema().items(new StringSchema()));
+        }
+        responses.addApiResponse("200", jsonResponse("OAuth2 授权服务器元数据", metadata));
+    }
+
+    /**
+     * 构造原生 JSON 响应，不添加业务包装。
+     *
+     * @param description 响应说明
+     * @param schema 响应模型
+     * @return 原生 JSON 响应声明
+     */
+    private ApiResponse jsonResponse(String description, Schema<?> schema) {
+        return new ApiResponse()
+                .description(description)
+                .content(new Content().addMediaType("application/json", new MediaType().schema(schema)));
     }
 
     /**
@@ -549,6 +824,7 @@ final class OpenApiDocumentationCustomizer {
      * @param operationId 操作唯一标识
      * @param operation OpenAPI 操作
      * @param anonymous 是否允许匿名访问
+     * @param components OpenAPI 组件仓库，用于引用已注册 Schema
      */
     private void addResponses(
             String operationId,
@@ -557,6 +833,9 @@ final class OpenApiDocumentationCustomizer {
             Components components) {
         ApiResponses responses = operation.getResponses() == null ? new ApiResponses() : operation.getResponses();
         operation.setResponses(responses);
+        if (addOauthResponses(operationId, operation)) {
+            return;
+        }
         String successCode = operationId != null && ASYNC_ACCEPTED_OPERATION_IDS.contains(operationId) ? "202" : "200";
         ApiResponse success = responses.computeIfAbsent(successCode, ignored -> new ApiResponse().description("请求成功"));
         if (OP_ID_STREAM_NOTIFICATIONS.equals(operationId)) {
@@ -718,6 +997,34 @@ final class OpenApiDocumentationCustomizer {
                 dataType = new ArraySchema().items(dataType);
             }
             json.setSchema(successEnvelope(dataType));
+        } else if (OP_ID_UNIFIED_SEARCH.equals(operationId)) {
+            ResolvedSchema resolved = ModelConverters.getInstance()
+                    .resolveAsResolvedSchema(new AnnotatedType(
+                                    new ParameterizedTypeReference<
+                                            com.apex.scaffold.common.dto.PageResponse<SearchResultDTO>>() {}.getType())
+                            .resolveAsRef(true));
+            resolved.referencedSchemas.forEach(components::addSchemas);
+            json.setSchema(successEnvelope(resolved.schema));
+        } else if (OP_ID_REBUILD_SEARCH_INDEX.equals(operationId)) {
+            json.setSchema(successEnvelope(new IntegerSchema().format("int64")));
+        } else if (OP_ID_HANDLE_SSO_CALLBACK.equals(operationId)) {
+            json.setSchema(successEnvelope(objectSchema(
+                    Map.of(
+                            "sessionId", new IntegerSchema().format("int64"),
+                            "token", new StringSchema().description("SSO 会话标识，格式 SSO-TOKEN-{sessionId}，并非 JWT"),
+                            "userInfo",
+                                    new ObjectSchema()
+                                            .additionalProperties(true)
+                                            .description("协议适配器返回的用户信息"),
+                            "expiryTime", resolveSchema(java.time.LocalDateTime.class, components)),
+                    Set.of("sessionId", "token", "userInfo", "expiryTime"))));
+        } else if (OP_ID_SYNC_KEYCLOAK_USER.equals(operationId)) {
+            json.setSchema(successEnvelope(objectSchema(
+                    Map.of(
+                            "userId", new IntegerSchema().format("int64"),
+                            "username", new StringSchema(),
+                            "email", new StringSchema()),
+                    Set.of("userId", "username", "email"))));
         } else if (OP_ID_DELETE_CURRENT_USER.equals(operationId)) {
             json.setSchema(successEnvelope(accountDeletionAcceptedSchema()));
         } else if (dataSchema == null) {
@@ -937,11 +1244,6 @@ final class OpenApiDocumentationCustomizer {
      */
     private static Map<String, List<QueryParameter>> queryParameters() {
         Map<String, List<QueryParameter>> parameters = new LinkedHashMap<>();
-        parameters.put(
-                "authRefresh",
-                List.of(
-                        stringQuery("refreshToken", "刷新令牌", true, null, List.of()),
-                        stringQuery("deviceId", "设备标识，用于校验令牌绑定设备", false, null, List.of())));
         parameters.put(
                 "adminListUsers",
                 List.of(

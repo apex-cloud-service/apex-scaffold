@@ -1,367 +1,386 @@
 package com.apex.scaffold.file.application.service;
 
-import com.apex.scaffold.common.context.TenantContext;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.result.ResultCode;
-import com.apex.scaffold.file.application.dto.chunk.ChunkInitRequest;
-import com.apex.scaffold.file.application.dto.chunk.ChunkInitResult;
-import com.apex.scaffold.file.application.dto.chunk.ChunkMergeRequest;
-import com.apex.scaffold.file.application.dto.chunk.ChunkMergeResult;
-import com.apex.scaffold.file.application.dto.chunk.ChunkUploadRequest;
-import com.apex.scaffold.file.application.dto.chunk.ChunkUploadResult;
+import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
+import com.apex.scaffold.file.application.dto.chunk.*;
 import com.apex.scaffold.file.domain.model.entity.FileChunkEntity;
 import com.apex.scaffold.file.domain.model.entity.FileEntity;
 import com.apex.scaffold.file.domain.repository.FileChunkRepository;
 import com.apex.scaffold.file.domain.repository.FileRepository;
 import com.apex.scaffold.file.domain.service.StorageService;
+import com.apex.scaffold.file.domain.service.StorageServiceProvider;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.io.SequenceInputStream;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Objects;
+import java.util.UUID;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
- * 分片上传应用服务。
- *
- * <p>为超大文件提供分片上传、断点续传与合片能力。流程分三阶段：
- * <ol>
- *   <li><b>init</b>：登记文件元数据，创建 {@code UPLOADING} 状态的 file_record 主记录并返回 fileId；</li>
- *   <li><b>uploadChunk</b>：逐片上传，分片对象以 {@code chunks/{fileId}/{chunkIndex}} 命名并记录真实对象键，同片重复上传幂等处理；</li>
- *   <li><b>merge</b>：按序号拼接全部分片为完整文件，更新主记录为 {@code STORED} 并清理分片。</li>
- * </ol>
- *
- * <p>通用分片不经过 {@link FileService}（其仅放行图片类型），直接依赖 {@link StorageService}
- * 以支持任意文件类型（{@code application/octet-stream} 已由存储门面放行）。</p>
+ * 分片上传应用服务，依据持久化归属授权并按实际提供商读写，失败补偿不构成云存储与数据库原子事务。
  *
  * @author Apex Team
- * @version 1.0.0
- * @since 1.0.0
- * @see StorageService
- * @see FileChunkRepository
+ * @since 1.3.1
  */
 @Service
+@Slf4j
 public class ChunkUploadService {
-
-    private static final String CHUNK_CONTENT_TYPE = "application/octet-stream";
-
-    private final StorageService storageService;
-    private final FileRepository fileRepository;
-    private final FileChunkRepository fileChunkRepository;
-    private final String defaultBucketName;
-    private final int presignedUrlExpireSeconds;
+    private static final String UPLOADING = "UPLOADING";
+    private static final String STORED = "STORED";
+    private final StorageServiceProvider provider;
+    private final FileRepository files;
+    private final FileChunkRepository chunks;
+    private final String bucket;
+    private final String defaultType;
+    private final int expiry;
 
     /**
-     * 创建分片上传应用服务。
-     *
-     * @param storageService           由 {@code storage.default-type} 选出的默认存储门面
-     * @param fileRepository           文件记录仓储
-     * @param fileChunkRepository      分片记录仓储
-     * @param defaultBucketName        服务端固定存储桶名称
-     * @param presignedUrlExpireSeconds 预签名 URL 有效期，单位秒
+     * 创建分片服务。
+     * @param provider 实际类型路由器
+     * @param files 文件记录仓储
+     * @param chunks 分片仓储
+     * @param bucket 服务端默认桶
+     * @param expiry 签名有效秒数
+     * @param defaultType 初始化时的提供商类型
      */
     public ChunkUploadService(
-            StorageService storageService,
-            FileRepository fileRepository,
-            FileChunkRepository fileChunkRepository,
-            @Value("${storage.bucket-name:apex}") String defaultBucketName,
-            @Value("${storage.presigned-url-expire-seconds:300}") int presignedUrlExpireSeconds) {
-        this.storageService = storageService;
-        this.fileRepository = fileRepository;
-        this.fileChunkRepository = fileChunkRepository;
-        this.defaultBucketName = defaultBucketName;
-        this.presignedUrlExpireSeconds = presignedUrlExpireSeconds;
+            StorageServiceProvider provider,
+            FileRepository files,
+            FileChunkRepository chunks,
+            @Value("${storage.bucket-name:apex}") String bucket,
+            @Value("${storage.presigned-url-expire-seconds:300}") int expiry,
+            @Value("${storage.default-type:local}") String defaultType) {
+        this.provider = provider;
+        this.files = files;
+        this.chunks = chunks;
+        this.bucket = bucket;
+        this.expiry = expiry;
+        this.defaultType = defaultType;
     }
 
-    /**
-     * 初始化分片上传。
-     *
-     * <p>校验入参后创建 {@code UPLOADING} 状态的 file_record 主记录，返回文件主键与建议分片大小，
-     * 供客户端开始逐片上传；分片大小缺省时按 {@code fileSize / totalChunks} 向上取整。</p>
-     *
-     * @param request 初始化请求
-     * @return 初始化结果；分片大小为空的字段为 {@code null}
-     */
+    /** @param request 初始化参数 @return 带可信归属的上传会话 */
     public Mono<ChunkInitResult> init(ChunkInitRequest request) {
-        if (request.getChunkSize() == null) {
-            request.setChunkSize(resolveChunkSize(request.getFileSize(), request.getTotalChunks()));
-        }
-        LocalDateTime now = LocalDateTime.now();
-        FileEntity file = new FileEntity();
-        file.setOriginalName(request.getFileName());
-        file.setFileSize(request.getFileSize());
-        file.setContentType(request.getContentType());
-        file.setMd5(request.getMd5());
-        file.setBucketName(defaultBucketName);
-        file.setBusinessType("CHUNK");
-        file.setStorageStatus("UPLOADING");
-        file.setUserId(currentUserId());
-        file.setCreateTime(now);
-        file.setUpdateTime(now);
-        return fileRepository
-                .save(file)
-                .map(saved -> new ChunkInitResult(
-                        saved.getId(), defaultBucketName, request.getChunkSize(), request.getTotalChunks(), List.of()));
+        return FileAccessContext.current().flatMap(identity -> {
+            if (request.getFileSize() == null
+                    || request.getFileSize() <= 0
+                    || request.getTotalChunks() == null
+                    || request.getTotalChunks() <= 0) {
+                return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "文件大小与分片数必须为正数"));
+            }
+            FileEntity file = new FileEntity();
+            file.setTenantId(identity.tenantId());
+            file.setUserId(identity.userId());
+            file.setStorageType(defaultType);
+            file.setOriginalName(request.getFileName());
+            file.setFileSize(request.getFileSize());
+            file.setContentType(request.getContentType());
+            file.setMd5(request.getMd5());
+            file.setBucketName(bucket);
+            file.setBusinessType("CHUNK");
+            file.setStorageStatus("UPLOADING");
+            file.setCreateTime(LocalDateTime.now());
+            file.setUpdateTime(LocalDateTime.now());
+            provider.getStorageService(defaultType);
+            long size = request.getChunkSize() == null
+                    ? (request.getFileSize() + request.getTotalChunks() - 1) / request.getTotalChunks()
+                    : request.getChunkSize();
+            file.setTotalChunks(request.getTotalChunks());
+            file.setChunkSize(size);
+            return files.save(file)
+                    .map(saved ->
+                            new ChunkInitResult(saved.getId(), bucket, size, request.getTotalChunks(), List.of()));
+        });
     }
 
-    /**
-     * 上传单个分片。
-     *
-     * <p>分片二进制经请求体直接传入。若指定分片已存在（幂等）则直接返回既有对象键，
-     * 否则写入对象存储并入库分片元数据。</p>
-     *
-     * @param request    分片元数据
-     * @param content    分片二进制内容
-     * @return 上传结果；{@code uploaded=false} 表示命中已存在分片
-     */
+    /** @param request 分片参数 @param content 分片内容 @return 授权后的上传结果 */
     public Mono<ChunkUploadResult> uploadChunk(ChunkUploadRequest request, byte[] content) {
-        if (content == null || content.length == 0) {
-            return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "分片内容不能为空"));
+        if (content == null
+                || content.length == 0
+                || request.getChunkIndex() == null
+                || request.getTotalChunks() == null
+                || request.getTotalChunks() <= 0
+                || request.getChunkIndex() < 0
+                || request.getChunkIndex() >= request.getTotalChunks()) {
+            return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "分片参数或内容不合法"));
         }
-        return fileRepository
-                .findById(request.getFileId())
-                .switchIfEmpty(Mono.error(new BusinessException(ResultCode.NOT_FOUND, "文件记录不存在")))
-                .flatMap(file -> fileChunkRepository
-                        .findByFileIdAndIndex(request.getFileId(), request.getChunkIndex())
-                        .flatMap(existing -> Mono.just(new ChunkUploadResult(
-                                request.getFileId(),
+        return authorized(request.getFileId()).flatMap(file -> {
+            if (!UPLOADING.equals(file.getStorageStatus())) {
+                return Mono.error(new BusinessException(ResultCode.BUSINESS_ERROR, "上传会话已结束"));
+            }
+            if (!Objects.equals(file.getTotalChunks(), request.getTotalChunks())) {
+                return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "分片总数与初始化约定不一致"));
+            }
+            return chunks.findByFileIdAndIndex(file.getId(), request.getChunkIndex())
+                    .map(existing -> {
+                        validateChunk(file, existing);
+                        if (!Objects.equals(existing.getTotalChunks(), request.getTotalChunks())) {
+                            throw new BusinessException(ResultCode.PARAM_ERROR, "分片总数不一致");
+                        }
+                        return new ChunkUploadResult(
+                                file.getId(),
                                 request.getChunkIndex(),
                                 false,
                                 existing.getObjectName(),
-                                existing.getChunkSize())))
-                        .switchIfEmpty(doUploadChunk(request, content)));
+                                existing.getChunkSize());
+                    })
+                    .switchIfEmpty(Mono.defer(() -> storeChunk(file, request, content)));
+        });
     }
 
-    /**
-     * 合并分片为完整文件。
-     *
-     * <p>校验分片完整性后按序号下载全部分片并拼接，上传为最终文件，随后更新
-     * file_record 为 {@code STORED}、生成访问 URL 并清理已用分片。</p>
-     *
-     * @param request 合并请求
-     * @return 合并结果（对象定位信息与临时访问 URL）
-     */
+    /** @param file 主记录 @param request 分片参数 @param content 内容 @return 落库成功的实际对象定位 */
+    private Mono<ChunkUploadResult> storeChunk(FileEntity file, ChunkUploadRequest request, byte[] content) {
+        StorageService storage = provider.getStorageService(file.getStorageType());
+        String key = "chunks/" + file.getId() + "/" + UUID.randomUUID();
+        return storage.upload(file.getBucketName(), key, new ByteArrayInputStream(content), "application/octet-stream")
+                .flatMap(actual -> {
+                    FileChunkEntity chunk = FileChunkEntity.stored(
+                            file.getId(),
+                            request.getChunkIndex(),
+                            (long) content.length,
+                            request.getTotalChunks(),
+                            request.getMd5(),
+                            actual,
+                            file.getBucketName(),
+                            file.getUserId());
+                    chunk.setTenantId(file.getTenantId());
+                    chunk.setStorageType(file.getStorageType());
+                    return Mono.defer(() -> chunks.save(chunk))
+                            .switchIfEmpty(Mono.error(new IllegalStateException("分片记录未保存")))
+                            .onErrorResume(error -> FileService.compensate(storage, files, file, actual, error))
+                            .map(saved -> new ChunkUploadResult(
+                                    file.getId(),
+                                    saved.getChunkIndex(),
+                                    true,
+                                    saved.getObjectName(),
+                                    saved.getChunkSize()));
+                });
+    }
+
+    /** @param request 合并参数 @return 完整文件定位，缺失任何对象时失败 */
     public Mono<ChunkMergeResult> merge(ChunkMergeRequest request) {
-        return fileRepository
-                .findById(request.getFileId())
-                .switchIfEmpty(Mono.error(new BusinessException(ResultCode.NOT_FOUND, "文件记录不存在")))
-                .flatMap(file -> fileChunkRepository
-                        .findByFileIdOrderByIndex(request.getFileId())
-                        .collectList()
-                        .flatMap(chunks -> doMerge(file, chunks, request)));
+        return authorized(request.getFileId()).flatMap(file -> chunks.findByFileIdOrderByIndex(file.getId())
+                .collectList()
+                .flatMap(parts -> merge(file, parts, request)));
     }
 
-    /**
-     * 查询分片上传进度（断点续传）。
-     *
-     * <p>返回已成功上传的分片序号列表与分片大小信息，客户端据此跳过已完成分片。</p>
-     *
-     * @param fileId 文件记录主键
-     * @return 上传进度；文件不存在时 Mono 以 BusinessException 错误终止
-     */
+    /** @param fileId 文件记录编号 @return 仅向文件所有者返回上传进度 */
     public Mono<ChunkInitResult> status(Long fileId) {
-        return fileRepository
-                .findById(fileId)
+        return authorized(fileId).flatMap(file -> chunks.findByFileIdOrderByIndex(fileId)
+                .collectList()
+                .map(parts -> {
+                    parts.forEach(part -> validateChunk(file, part));
+                    return new ChunkInitResult(
+                            fileId,
+                            file.getBucketName(),
+                            file.getChunkSize(),
+                            file.getTotalChunks(),
+                            parts.stream().map(FileChunkEntity::getChunkIndex).toList());
+                }));
+    }
+
+    /** @param id 文件编号 @return 已完成租户、用户和历史归属验证的记录 */
+    private Mono<FileEntity> authorized(Long id) {
+        return FileAccessContext.current().flatMap(identity -> files.findById(id)
                 .switchIfEmpty(Mono.error(new BusinessException(ResultCode.NOT_FOUND, "文件记录不存在")))
-                .flatMap(file -> fileChunkRepository
-                        .findByFileIdOrderByIndex(fileId)
-                        .collectList()
-                        .map(chunks -> new ChunkInitResult(
-                                fileId,
-                                defaultBucketName,
-                                chunks.isEmpty() ? null : chunks.get(0).getChunkSize(),
-                                chunks.isEmpty() ? null : chunks.get(0).getTotalChunks(),
-                                chunks.stream()
-                                        .map(FileChunkEntity::getChunkIndex)
-                                        .collect(Collectors.toList()))));
+                .map(file -> {
+                    identity.authorize(file);
+                    return file;
+                }));
     }
 
-    /**
-     * 执行分片写入：上传对象存储并入库分片元数据。
-     *
-     * @param request 分片元数据
-     * @param content 分片二进制内容
-     * @return 新上传的分片结果
-     */
-    private Mono<ChunkUploadResult> doUploadChunk(ChunkUploadRequest request, byte[] content) {
-        String objectName = "chunks/" + request.getFileId() + "/" + request.getChunkIndex();
-        return storageService
-                .upload(defaultBucketName, objectName, new ByteArrayInputStream(content), CHUNK_CONTENT_TYPE)
-                .flatMap(storedObjectName -> fileChunkRepository
-                        .save(FileChunkEntity.stored(
-                                request.getFileId(),
-                                request.getChunkIndex(),
-                                (long) content.length,
-                                request.getTotalChunks(),
-                                request.getMd5(),
-                                storedObjectName,
-                                defaultBucketName,
-                                currentUserId()))
-                        .map(saved -> new ChunkUploadResult(
-                                request.getFileId(),
-                                request.getChunkIndex(),
-                                true,
-                                saved.getObjectName(),
-                                saved.getChunkSize())));
+    /** @param file 主记录 @param part 分片记录 @throws BusinessException 归属或实际存储定位不一致 */
+    private void validateChunk(FileEntity file, FileChunkEntity part) {
+        if (!Objects.equals(file.getId(), part.getFileId())
+                || !Objects.equals(file.getTenantId(), part.getTenantId())
+                || !Objects.equals(file.getUserId(), part.getUserId())
+                || !Objects.equals(file.getStorageType(), part.getStorageType())
+                || !Objects.equals(file.getBucketName(), part.getBucketName())
+                || part.getObjectName() == null
+                || !STORED.equals(part.getStorageStatus())) {
+            throw new BusinessException(ResultCode.FORBIDDEN, "分片归属或定位不完整");
+        }
     }
 
-    /**
-     * 执行分片合并主流程。
-     *
-     * @param file    文件主记录
-     * @param chunks  已按序号排序的全部分片
-     * @param request 合并请求
-     * @return 合并结果
-     */
-    private Mono<ChunkMergeResult> doMerge(FileEntity file, List<FileChunkEntity> chunks, ChunkMergeRequest request) {
-        if (chunks.isEmpty()) {
-            return Mono.error(new BusinessException(ResultCode.BUSINESS_ERROR, "尚未上传任何分片"));
+    /** @param file 主记录 @param parts 有序分片 @param request 合并参数 @return 保存、签名与清理后的结果 */
+    private Mono<ChunkMergeResult> merge(FileEntity file, List<FileChunkEntity> parts, ChunkMergeRequest request) {
+        if (!UPLOADING.equals(file.getStorageStatus())
+                || parts.isEmpty()
+                || file.getTotalChunks() == null
+                || parts.size() != file.getTotalChunks()) {
+            return Mono.error(new BusinessException(ResultCode.BUSINESS_ERROR, "分片不完整或会话已结束"));
         }
-        Integer totalChunks = chunks.get(0).getTotalChunks();
-        if (totalChunks == null || chunks.size() != totalChunks) {
-            throw new BusinessException(ResultCode.BUSINESS_ERROR, "分片不完整，已上传 " + chunks.size() + "/" + totalChunks);
+        for (int index = 0; index < parts.size(); index++) {
+            FileChunkEntity part = parts.get(index);
+            validateChunk(file, part);
+            if (!Objects.equals(part.getChunkIndex(), index) || !Objects.equals(part.getTotalChunks(), parts.size())) {
+                return Mono.error(new BusinessException(ResultCode.BUSINESS_ERROR, "分片序号不连续或总数不一致"));
+            }
         }
-        String finalName = resolveFinalName(file, request.getFileName());
-        String finalContentType = resolveContentType(file, request.getContentType());
-        long fileSize = chunks.stream()
-                .mapToLong(c -> c.getChunkSize() == null ? 0L : c.getChunkSize())
-                .sum();
-        return downloadAll(chunks)
-                .flatMap(streams ->
-                        storageService.upload(defaultBucketName, finalName, mergeStreams(streams), finalContentType))
-                .flatMap(storedObjectName -> updateStoredFile(
-                                file, storedObjectName, fileSize, finalContentType, request.getMd5())
-                        .flatMap(saved -> storageService
-                                .getPresignedUrl(defaultBucketName, storedObjectName, presignedUrlExpireSeconds)
+        if (!Objects.equals(
+                file.getFileSize(),
+                parts.stream().mapToLong(FileChunkEntity::getChunkSize).sum())) {
+            return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "分片大小与初始化约定不一致"));
+        }
+        String name = file.getOriginalName();
+        if (name == null || name.isBlank()) {
+            return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "缺少最终文件名"));
+        }
+        String type = file.getContentType();
+        if (type == null || type.isBlank()) {
+            type = "application/octet-stream";
+        }
+        StorageService storage = provider.getStorageService(file.getStorageType());
+        String key = UUID.randomUUID() + "-"
+                + name.replace('\\', '/').substring(name.replace('\\', '/').lastIndexOf('/') + 1);
+        String contentType = type;
+        return files.claimMerge(file).flatMap(claimed -> {
+            if (!claimed) {
+                return Mono.error(new BusinessException(ResultCode.BUSINESS_ERROR, "会话正在合并或已结束"));
+            }
+            // 崩溃或上传结果不确定时保留 MERGING；运维须核对最终对象后再恢复会话。
+            log.info(
+                    "合并会话已抢占，异常中断需核对对象后恢复: fileId={}, type={}, bucket={}, object={}",
+                    file.getId(),
+                    file.getStorageType(),
+                    file.getBucketName(),
+                    key);
+            file.setStorageStatus("MERGING");
+            return uploadMergedObject(file, parts, storage, key, contentType).flatMap(actual -> {
+                file.setFileName(actual);
+                file.setFilePath(actual);
+                file.setContentType(contentType);
+                file.setStorageStatus("STORED");
+                file.setUpdateTime(LocalDateTime.now());
+                return Mono.defer(() -> files.save(file))
+                        .switchIfEmpty(Mono.error(new IllegalStateException("合并记录未保存")))
+                        .onErrorResume(error -> FileService.<FileEntity>compensate(storage, files, file, actual, error)
+                                .onErrorResume(original -> recoverFailedObject(file, storage, actual, original)))
+                        .flatMap(saved -> cleanup(parts)
+                                .then(Mono.defer(() -> FileService.accessUrl(saved, storage, expiry)))
                                 .map(url -> new ChunkMergeResult(
-                                        file.getId(),
-                                        defaultBucketName,
-                                        storedObjectName,
+                                        saved.getId(),
+                                        saved.getBucketName(),
+                                        actual,
                                         url,
-                                        fileSize,
-                                        request.getMd5()))))
-                .flatMap(result -> cleanupChunks(chunks).thenReturn(result));
+                                        saved.getFileSize(),
+                                        saved.getMd5())));
+            });
+        });
     }
 
-    /**
-     * 按序下载全部分片。
-     *
-     * @param chunks 分片列表（升序）
-     * @return 分片输入流列表（调用方负责关闭）
-     */
-    private Mono<List<InputStream>> downloadAll(List<FileChunkEntity> chunks) {
-        return Flux.fromIterable(chunks)
-                .concatMap(chunk -> storageService.download(chunk.getBucketName(), chunk.getObjectName()))
-                .collectList();
+    /** @param file 合并会话 @param parts 有序分片 @param storage 实际提供商 @param key 最终对象键 @param contentType 内容类型 @return 实际存储对象键 */
+    private Mono<String> uploadMergedObject(
+            FileEntity file, List<FileChunkEntity> parts, StorageService storage, String key, String contentType) {
+        return Mono.using(
+                ArrayList<InputStream>::new,
+                streams -> Flux.fromIterable(parts)
+                        .concatMap(part -> storage.download(part.getBucketName(), part.getObjectName())
+                                .switchIfEmpty(Mono.error(new BusinessException(ResultCode.NOT_FOUND, "分片对象缺失")))
+                                .doOnNext(streams::add))
+                        .onErrorResume(error -> releaseFailedMerge(file, error))
+                        .then(Mono.defer(() -> storage.upload(
+                                        file.getBucketName(),
+                                        key,
+                                        new SequenceInputStream(Collections.enumeration(streams)),
+                                        contentType))
+                                .switchIfEmpty(Mono.error(new IllegalStateException("合并对象未返回定位")))
+                                .onErrorResume(error -> recoverFailedObject(file, storage, key, error)))
+                        .subscribeOn(BlockingIoSchedulers.storage()),
+                ChunkUploadService::closeStreams);
     }
 
-    /**
-     * 拼接多个分片流为单一输入流。
-     *
-     * @param streams 按片序排列的输入流
-     * @return 合并后的输入流
-     */
-    @SuppressWarnings("deprecation")
-    private InputStream mergeStreams(List<InputStream> streams) {
-        return new java.io.SequenceInputStream(Collections.enumeration(streams));
+    /** @param file 合并会话 @param storage 实际提供商 @param key 最终对象键 @param error 原始失败 @param <T> 结果类型 @return 确认无最终对象才释放会话 */
+    private <T> Mono<T> recoverFailedObject(FileEntity file, StorageService storage, String key, Throwable error) {
+        return Mono.defer(() -> storage.exists(file.getBucketName(), key))
+                .defaultIfEmpty(true)
+                .onErrorResume(checkError -> {
+                    if (checkError != error) {
+                        error.addSuppressed(checkError);
+                    }
+                    return Mono.just(true);
+                })
+                .flatMap(exists -> {
+                    if (!exists) {
+                        return releaseFailedMerge(file, error);
+                    }
+                    log.error(
+                            "合并结果未确认，保留 MERGING，须核对对象后人工恢复: fileId={}, type={}, bucket={}, object={}",
+                            file.getId(),
+                            file.getStorageType(),
+                            file.getBucketName(),
+                            key,
+                            error);
+                    return Mono.error(error);
+                });
     }
 
-    /**
-     * 将 file_record 主记录更新为已存储状态。
-     *
-     * @param file             主记录实体
-     * @param storedObjectName 最终对象键
-     * @param fileSize         文件大小
-     * @param contentType      内容类型
-     * @param md5              文件 MD5，可为空
-     * @return 更新后的主记录
-     */
-    private Mono<FileEntity> updateStoredFile(
-            FileEntity file, String storedObjectName, long fileSize, String contentType, String md5) {
-        file.setFileName(storedObjectName);
-        file.setFileSize(fileSize);
-        file.setContentType(contentType);
-        if (md5 != null && !md5.isBlank()) {
-            file.setMd5(md5);
+    /** @param file 无最终对象的会话 @param error 原始失败 @param <T> 结果类型 @return 释放合并权后仍传播原始失败 */
+    private <T> Mono<T> releaseFailedMerge(FileEntity file, Throwable error) {
+        return Mono.defer(() -> files.releaseMerge(file))
+                .defaultIfEmpty(false)
+                .onErrorResume(releaseError -> {
+                    if (releaseError != error) {
+                        error.addSuppressed(releaseError);
+                    }
+                    return Mono.just(false);
+                })
+                .flatMap(released -> {
+                    if (released) {
+                        file.setStorageStatus(UPLOADING);
+                    } else {
+                        log.error("释放合并会话失败，须核对持久化状态后人工恢复: fileId={}", file.getId(), error);
+                    }
+                    return Mono.error(error);
+                });
+    }
+
+    /** @param streams 已打开的分片流，失败与取消时也必须关闭 */
+    private static void closeStreams(List<InputStream> streams) {
+        for (InputStream stream : streams) {
+            try {
+                stream.close();
+            } catch (java.io.IOException error) {
+                log.warn("关闭分片流失败", error);
+            }
         }
-        file.setStorageStatus("STORED");
-        file.setUpdateTime(LocalDateTime.now());
-        return fileRepository.save(file);
     }
 
-    /**
-     * 清理已用分片：删除对象存储中的分片对象并逻辑删除分片元数据。
-     *
-     * @param chunks 全部分片
-     * @return 完成信号
-     */
-    private Mono<Void> cleanupChunks(List<FileChunkEntity> chunks) {
-        Long fileId = chunks.get(0).getFileId();
-        return Flux.fromIterable(chunks)
-                .flatMap(chunk -> storageService
-                        .delete(chunk.getBucketName(), chunk.getObjectName())
+    /** @param fileId 已完成会话编号 @return 所有者授权后的分片清理重试，失败仍保留元数据 */
+    public Mono<Void> retryCleanup(Long fileId) {
+        return authorized(fileId).flatMap(file -> {
+            if (!STORED.equals(file.getStorageStatus())) {
+                return Mono.error(new BusinessException(ResultCode.BUSINESS_ERROR, "仅已完成会话可清理分片"));
+            }
+            return chunks.findByFileIdOrderByIndex(fileId).collectList().flatMap(parts -> {
+                parts.forEach(part -> validateChunk(file, part));
+                return cleanup(parts);
+            });
+        });
+    }
+
+    /** @param parts 已合并分片 @return 全部对象确认删除才移除元数据，删除失败保留记录供重试 */
+    private Mono<Void> cleanup(List<FileChunkEntity> parts) {
+        if (parts.isEmpty()) {
+            return Mono.empty();
+        }
+        return Flux.fromIterable(parts)
+                .concatMap(part -> FileService.deleteConfirmed(
+                                provider.getStorageService(part.getStorageType()),
+                                part.getBucketName(),
+                                part.getObjectName())
                         .onErrorReturn(false))
-                .then(fileChunkRepository.deleteByFileId(fileId));
-    }
-
-    /**
-     * 解析最终文件名：请求显式指定则使用，否则沿用初始化登记的文件名。
-     *
-     * @param file      文件主记录
-     * @param requested 请求携带的文件名，可为空
-     * @return 最终文件名
-     */
-    private String resolveFinalName(FileEntity file, String requested) {
-        if (requested != null && !requested.isBlank()) {
-            return requested;
-        }
-        if (file.getOriginalName() != null && !file.getOriginalName().isBlank()) {
-            return file.getOriginalName();
-        }
-        throw new BusinessException(ResultCode.PARAM_ERROR, "缺少最终文件名");
-    }
-
-    /**
-     * 解析最终内容类型：请求显式指定则使用，否则沿用初始化登记值，最后回退为通用二进制类型。
-     *
-     * @param file      文件主记录
-     * @param requested 请求携带的内容类型，可为空
-     * @return 最终内容类型
-     */
-    private String resolveContentType(FileEntity file, String requested) {
-        if (requested != null && !requested.isBlank()) {
-            return requested;
-        }
-        if (file.getContentType() != null && !file.getContentType().isBlank()) {
-            return file.getContentType();
-        }
-        return CHUNK_CONTENT_TYPE;
-    }
-
-    /**
-     * 当分片大小未显式指定时，按文件大小与分片数向上取整计算。
-     *
-     * @param fileSize    文件总大小
-     * @param totalChunks 分片总数
-     * @return 建议分片大小
-     */
-    private long resolveChunkSize(Long fileSize, Integer totalChunks) {
-        if (fileSize == null || fileSize <= 0 || totalChunks == null || totalChunks <= 0) {
-            return 5 * 1024 * 1024L;
-        }
-        return (fileSize + totalChunks - 1) / totalChunks;
-    }
-
-    /**
-     * 解析当前用户 ID；文件服务上下文中租户未装配时返回 {@code null}。
-     *
-     * @return 当前用户 ID
-     */
-    private Long currentUserId() {
-        return TenantContext.currentTenantId().map(Long::valueOf).orElse(null);
+                .collectList()
+                .flatMap(results -> results.stream().allMatch(Boolean.TRUE::equals)
+                        ? chunks.deleteByFileId(parts.get(0).getFileId())
+                        : Mono.empty());
     }
 }

@@ -89,8 +89,8 @@ CREATE INDEX IF NOT EXISTS idx_definition_code_version ON wf_workflow_definition
 CREATE INDEX IF NOT EXISTS idx_definition_is_latest ON wf_workflow_definition(is_latest);
 
 -- 插入配置说明数据（可选，用于记录迁移信息）
-INSERT INTO sys_config (config_name, config_key, config_value, config_type, remark, create_time, update_time, version, deleted)
-VALUES ('工作流引擎版本', 'workflow.version', 'v1.4.0', 1, '工作流引擎版本：支持回退、转办、挂起、超时处理', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0, 0)
+INSERT INTO sys_config (id, config_name, config_key, config_value, config_type, remark, create_time, update_time, version, deleted)
+VALUES (21001, '工作流引擎版本', 'workflow.version', 'v1.4.0', 1, '工作流引擎版本：支持回退、转办、挂起、超时处理', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0, 0)
 ON CONFLICT (config_key) DO UPDATE SET config_value = EXCLUDED.config_value, remark = EXCLUDED.remark, update_time = EXCLUDED.update_time;
 
 -- ============================================================

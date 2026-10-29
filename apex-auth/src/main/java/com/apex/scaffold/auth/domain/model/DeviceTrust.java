@@ -149,6 +149,8 @@ public class DeviceTrust {
     /**
      * 信任级别枚举
      */
+    @lombok.Getter
+    @lombok.RequiredArgsConstructor
     public enum TrustLevel {
         /**
          * 未信任 - 需要完整MFA
@@ -176,19 +178,6 @@ public class DeviceTrust {
         FULL(4);
 
         private final int level;
-
-        TrustLevel(int level) {
-            this.level = level;
-        }
-
-        /**
-         * 获取信任级别数值
-         *
-         * @return 信任级别数值（0-未信任，1-低，2-中，3-高，4-完全信任）
-         */
-        public int getLevel() {
-            return level;
-        }
     }
 
     /**

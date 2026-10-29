@@ -1,5 +1,6 @@
 package com.apex.scaffold.workflow.application.query;
 
+import com.apex.scaffold.common.context.TenantContext;
 import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
 import com.apex.scaffold.workflow.application.dto.WorkflowStatisticsDTO;
 import com.apex.scaffold.workflow.application.dto.WorkflowTrendDTO;
@@ -55,35 +56,35 @@ public class WorkflowStatisticsService {
      * @return 统计概览 DTO
      */
     public Mono<WorkflowStatisticsDTO> getStatistics() {
-        return Mono.fromCallable(() -> {
+        return requireTenant().flatMap(tenant -> Mono.fromCallable(() -> {
                     WorkflowStatisticsDTO stats = new WorkflowStatisticsDTO();
 
                     // 今日发起流程数
                     LocalDateTime todayStart = LocalDateTime.of(LocalDate.now(), LocalTime.MIN);
                     LocalDateTime todayEnd = LocalDateTime.of(LocalDate.now(), LocalTime.MAX);
-                    Integer todayStarted = processInstanceMapper.countTodayStarted(todayStart, todayEnd);
+                    Integer todayStarted = processInstanceMapper.countTodayStarted(tenant, todayStart, todayEnd);
                     stats.setTodayStarted(todayStarted != null ? todayStarted : 0);
 
-                    Integer runningTotal = processInstanceMapper.countByStatus("RUNNING");
+                    Integer runningTotal = processInstanceMapper.countByStatus(tenant, "RUNNING");
                     stats.setRunningTotal(runningTotal != null ? runningTotal : 0);
 
-                    Integer suspendedCount = processInstanceMapper.countSuspended();
+                    Integer suspendedCount = processInstanceMapper.countSuspended(tenant);
                     stats.setSuspendedCount(suspendedCount != null ? suspendedCount : 0);
 
-                    Integer pendingTaskTotal = taskMapper.countPendingTasks();
+                    Integer pendingTaskTotal = taskMapper.countPendingTasks(tenant);
                     stats.setPendingTaskTotal(pendingTaskTotal != null ? pendingTaskTotal : 0);
 
-                    Integer timeoutCount = taskMapper.countTimeoutTasks(LocalDateTime.now());
+                    Integer timeoutCount = taskMapper.countTimeoutTasks(tenant, LocalDateTime.now());
                     stats.setTimeoutCount(timeoutCount != null ? timeoutCount : 0);
 
-                    Integer transferredCount = taskMapper.countTransferredTasks();
+                    Integer transferredCount = taskMapper.countTransferredTasks(tenant);
                     stats.setTransferredCount(transferredCount != null ? transferredCount : 0);
 
-                    Long avgSeconds = processInstanceMapper.avgCompletionSeconds();
+                    Long avgSeconds = processInstanceMapper.avgCompletionSeconds(tenant);
                     stats.setAvgCompletionSeconds(avgSeconds != null ? avgSeconds : 0L);
 
                     // 转换状态分布 List<Map> 为 Map<String, Integer>
-                    List<Map<String, Object>> statusList = processInstanceMapper.statusDistribution();
+                    List<Map<String, Object>> statusList = processInstanceMapper.statusDistribution(tenant);
                     Map<String, Integer> statusMap = new HashMap<>(16);
                     if (statusList != null) {
                         for (Map<String, Object> row : statusList) {
@@ -98,7 +99,7 @@ public class WorkflowStatisticsService {
 
                     return stats;
                 })
-                .subscribeOn(BlockingIoSchedulers.jdbc());
+                .subscribeOn(BlockingIoSchedulers.jdbc()));
     }
 
     /**
@@ -111,7 +112,7 @@ public class WorkflowStatisticsService {
      * @return 趋势 DTO
      */
     public Mono<WorkflowTrendDTO> getTrend(int days) {
-        return Mono.fromCallable(() -> {
+        return requireTenant().flatMap(tenant -> Mono.fromCallable(() -> {
                     WorkflowTrendDTO trend = new WorkflowTrendDTO();
                     List<String> dates = new ArrayList<>(16);
                     List<Integer> startedCounts = new ArrayList<>(16);
@@ -127,9 +128,9 @@ public class WorkflowStatisticsService {
 
                         // 转换 List<Map> 为 Map<LocalDate, Integer>
                         List<Map<String, Object>> startedList =
-                                processInstanceMapper.countStartedByDateRange(dayStart, dayEnd);
+                                processInstanceMapper.countStartedByDateRange(tenant, dayStart, dayEnd);
                         List<Map<String, Object>> completedList =
-                                processInstanceMapper.countCompletedByDateRange(dayStart, dayEnd);
+                                processInstanceMapper.countCompletedByDateRange(tenant, dayStart, dayEnd);
 
                         Map<LocalDate, Integer> startedByDate = convertToDateMap(startedList);
                         Map<LocalDate, Integer> completedByDate = convertToDateMap(completedList);
@@ -143,7 +144,22 @@ public class WorkflowStatisticsService {
                     trend.setCompletedCounts(completedCounts);
                     return trend;
                 })
-                .subscribeOn(BlockingIoSchedulers.jdbc());
+                .subscribeOn(BlockingIoSchedulers.jdbc()));
+    }
+
+    /**
+     * 订阅时解析可信租户，缺失即失败，避免退化为跨租户统计。
+     *
+     * @return 租户标识
+     */
+    private Mono<String> requireTenant() {
+        return Mono.deferContextual(context -> {
+            String tenant = context.getOrDefault(TenantContext.REACTOR_CONTEXT_KEY, null);
+            if (tenant == null || tenant.isBlank()) {
+                return Mono.error(new IllegalStateException("工作流统计缺少有效租户上下文"));
+            }
+            return Mono.just(tenant);
+        });
     }
 
     /**

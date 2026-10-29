@@ -11,7 +11,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import reactor.core.Disposable;
@@ -29,7 +28,7 @@ import reactor.core.scheduler.Schedulers;
  * <h2>并发模型</h2>
  * <ul>
  *   <li>调度计时运行在 {@code apex-job} 并行调度器上，不阻塞业务线程</li>
- *   <li>任务执行（含反射调用与日志落库）调度到同一并行池的独立线程</li>
+ *   <li>反射调用在专用 general 阻塞池执行，日志由持久化边界隔离</li>
  *   <li>禁止并发的任务通过每任务 {@link AtomicBoolean} 互斥，上一轮未完成时跳过本轮</li>
  * </ul>
  *
@@ -44,7 +43,6 @@ import reactor.core.scheduler.Schedulers;
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class JobScheduler {
 
     /**
@@ -82,6 +80,31 @@ public class JobScheduler {
      */
     private final Scheduler scheduler = Schedulers.newParallel(SCHEDULER_NAME, SCHEDULER_THREADS);
 
+    /** XXL 接管后只保留手工执行入口，不注册本地动态 cron。 */
+    private final boolean externalScheduling;
+    /** 正数任务 ID 才表示接管，未配置或零值继续本地调度。 */
+    private final Long externalJobId;
+
+    /**
+     * 创建调度器并指定唯一外部接管任务。
+     *
+     * @param jobInvoker 受控调用器
+     * @param jobLogService 执行日志服务
+     * @param externalScheduling XXL 执行器开关
+     * @param externalJobId 接管任务 ID，未配置时为零
+     */
+    public JobScheduler(
+            JobInvoker jobInvoker,
+            JobLogService jobLogService,
+            @org.springframework.beans.factory.annotation.Value("${apex.job.executor.enabled:false}")
+                    boolean externalScheduling,
+            @org.springframework.beans.factory.annotation.Value("${apex.job.system.job-id:0}") Long externalJobId) {
+        this.jobInvoker = jobInvoker;
+        this.jobLogService = jobLogService;
+        this.externalScheduling = externalScheduling;
+        this.externalJobId = externalJobId;
+    }
+
     /**
      * 注册任务调度。
      *
@@ -94,11 +117,25 @@ public class JobScheduler {
     public Mono<Void> register(JobEntity job) {
         return Mono.fromRunnable(() -> {
             cancelSchedule(job.getId());
-            if (job.isEnabled()) {
+            if (job.isEnabled() && !isHandledByExternalCenter(job)) {
                 schedules.put(job.getId(), scheduleLoop(job));
                 log.info("定时任务已注册调度，name: {}, cron: {}", job.getJobName(), job.getCronExpression());
             }
         });
+    }
+
+    /**
+     * 判断任务是否已由外部 XXL 中心接管。
+     *
+     * <p>启用外部调度且本服务配置了与任务 ID 一致的中心任务号时，本地不再注册调度，
+     * 避免与中心执行的同一任务重复触发。</p>
+     *
+     * @param job 任务实体
+     * @return 由外部中心接管返回 {@code true}
+     */
+    private boolean isHandledByExternalCenter(JobEntity job) {
+        boolean hasExternalJobId = externalJobId != null && externalJobId > 0;
+        return externalScheduling && hasExternalJobId && externalJobId.equals(job.getId());
     }
 
     /**
@@ -170,7 +207,6 @@ public class JobScheduler {
      * 触发时间时终止。</p>
      *
      * @param job 任务实体
-     * @param self 当前调度链句柄引用
      * @return 单轮调度链
      */
     private Mono<Void> loop(JobEntity job) {
@@ -219,54 +255,61 @@ public class JobScheduler {
      * @return 执行完成的信号
      */
     private Mono<Void> execute(JobEntity job) {
-        AtomicBoolean flag = running.computeIfAbsent(job.getId(), key -> new AtomicBoolean(false));
-        if (!job.isConcurrentAllowed() && !flag.compareAndSet(false, true)) {
-            log.warn("任务禁止并发执行且上一轮未完成，跳过本轮，name: {}", job.getJobName());
-            return Mono.empty();
-        }
         return Mono.defer(() -> {
-                    if (job.getTenantId() == null || job.getTenantId().isBlank()) {
-                        return Mono.error(new IllegalStateException("租户任务缺少租户ID"));
-                    }
-                    return Mono.fromCallable(() -> {
-                                String previousTenant =
-                                        TenantContext.currentTenantId().orElse(null);
-                                TenantContext.setTenantId(job.getTenantId());
-                                try {
-                                    JobLogEntity logEntity = JobLogEntity.start(job);
+            AtomicBoolean flag = running.computeIfAbsent(job.getId(), key -> new AtomicBoolean(false));
+            if (!job.isConcurrentAllowed() && !flag.compareAndSet(false, true)) {
+                return Mono.empty();
+            }
+            return Mono.defer(() -> {
+                        if (job.getTenantId() == null || job.getTenantId().isBlank()) {
+                            return Mono.error(new IllegalStateException("租户任务缺少租户ID"));
+                        }
+                        return Mono.fromCallable(() -> {
+                                    String previousTenant =
+                                            TenantContext.currentTenantId().orElse(null);
+                                    TenantContext.setTenantId(job.getTenantId());
                                     try {
-                                        jobInvoker.invoke(job);
-                                        logEntity.complete("任务执行成功", true, null);
-                                    } catch (Exception e) {
-                                        log.error("任务执行失败，name: {}", job.getJobName(), e);
-                                        logEntity.complete("任务执行失败: " + e.getMessage(), false, truncate(e));
+                                        JobLogEntity logEntity = JobLogEntity.start(job);
+                                        try {
+                                            jobInvoker.invoke(job);
+                                            logEntity.complete("任务执行成功", true, null);
+                                        } catch (Exception e) {
+                                            log.error("任务执行失败，name: {}", job.getJobName(), e);
+                                            logEntity.complete("任务执行失败: " + e.getMessage(), false, truncate(e));
+                                        }
+                                        return logEntity;
+                                    } finally {
+                                        if (previousTenant == null) {
+                                            TenantContext.clear();
+                                        } else {
+                                            TenantContext.setTenantId(previousTenant);
+                                        }
                                     }
-                                    return logEntity;
-                                } finally {
-                                    if (previousTenant == null) {
-                                        TenantContext.clear();
-                                    } else {
-                                        TenantContext.setTenantId(previousTenant);
+                                })
+                                .subscribeOn(com.apex.scaffold.common.scheduler.BlockingIoSchedulers.general())
+                                .flatMap(logEntity -> {
+                                    String previousTenant =
+                                            TenantContext.currentTenantId().orElse(null);
+                                    TenantContext.setTenantId(job.getTenantId());
+                                    try {
+                                        return jobLogService
+                                                .record(logEntity)
+                                                .then(
+                                                        logEntity.isSuccess()
+                                                                ? Mono.<Void>empty()
+                                                                : Mono.<Void>error(
+                                                                        new IllegalStateException("任务执行失败")));
+                                    } finally {
+                                        if (previousTenant == null) {
+                                            TenantContext.clear();
+                                        } else {
+                                            TenantContext.setTenantId(previousTenant);
+                                        }
                                     }
-                                }
-                            })
-                            .subscribeOn(scheduler)
-                            .flatMap(logEntity -> {
-                                String previousTenant =
-                                        TenantContext.currentTenantId().orElse(null);
-                                TenantContext.setTenantId(job.getTenantId());
-                                try {
-                                    return jobLogService.record(logEntity);
-                                } finally {
-                                    if (previousTenant == null) {
-                                        TenantContext.clear();
-                                    } else {
-                                        TenantContext.setTenantId(previousTenant);
-                                    }
-                                }
-                            });
-                })
-                .doFinally(signal -> flag.set(false));
+                                });
+                    })
+                    .doFinally(signal -> flag.set(false));
+        });
     }
 
     /**

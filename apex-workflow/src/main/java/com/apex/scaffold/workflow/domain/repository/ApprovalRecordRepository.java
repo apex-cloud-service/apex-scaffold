@@ -45,8 +45,10 @@ public interface ApprovalRecordRepository {
     /**
      * 新增一条审批记录。
      *
+     * <p>当前实现不会将持久化对象的主键回填到传入的领域对象。</p>
+     *
      * @param record 待新增的审批记录
-     * @return 返回携带自增主键的回填结果 {@link Mono}
+     * @return 返回带影响行数的 {@link Mono}
      */
     Mono<Integer> insert(ApprovalRecord record);
 

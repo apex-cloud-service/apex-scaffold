@@ -255,6 +255,7 @@ public class IpRateLimitWebFilter implements WebFilter {
      *
      * @param reputationKey 信誉 Redis Key
      * @return 封禁截止时间戳 Mono，若未封禁返回 Mono.empty()
+     * @param now 当前时间戳（毫秒），用于封禁上限计算
      */
     private Mono<Long> checkBlocked(String reputationKey, long now) {
         return redisTemplate

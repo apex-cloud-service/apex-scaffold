@@ -54,4 +54,7 @@ public class TenantDTO {
 
     @Schema(description = "创建时间")
     private LocalDateTime createTime;
+
+    @Schema(description = "乐观锁版本号，用于状态与配额更新的并发控制")
+    private Integer version;
 }

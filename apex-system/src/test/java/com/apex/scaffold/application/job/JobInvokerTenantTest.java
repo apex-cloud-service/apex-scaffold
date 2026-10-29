@@ -60,10 +60,12 @@ class JobInvokerTenantTest {
         private String seenTenant;
         private String reactiveTenant;
 
+        @ManagedJob
         public void run() {
             seenTenant = TenantContext.currentTenantId().orElse(null);
         }
 
+        @ManagedJob
         public Mono<Void> reactiveRun() {
             return Mono.deferContextual(context -> {
                 reactiveTenant = context.get(TenantContext.REACTOR_CONTEXT_KEY);

@@ -21,7 +21,7 @@ import lombok.NoArgsConstructor;
  * </ul>
  *
  * @author Apex Scaffold Generator
- * @since 2026-09-19
+ * @since 1.3.1
  */
 @Data
 @Builder

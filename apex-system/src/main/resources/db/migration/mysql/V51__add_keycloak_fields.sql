@@ -6,13 +6,9 @@
 -- Date: 2026-09-08
 -- ============================================================
 
--- Add keycloak_sub field to sys_user table
+-- V37 已创建字段及唯一索引，此处扩展字段长度。
 ALTER TABLE sys_user
-ADD COLUMN keycloak_sub VARCHAR(255) NULL COMMENT 'Keycloak用户唯一标识(sub claim)' AFTER email;
-
--- Add unique index for keycloak_sub
-ALTER TABLE sys_user
-ADD UNIQUE INDEX uk_keycloak_sub (keycloak_sub);
+MODIFY COLUMN keycloak_sub VARCHAR(255) NULL COMMENT 'Keycloak用户唯一标识(sub claim)';
 
 -- Add email field if not exists (for Keycloak OIDC user info)
 -- Check if email column exists, if not add it

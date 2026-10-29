@@ -12,7 +12,6 @@ import com.apex.scaffold.interfaces.governance.platform.compose.ComposeGovernanc
 import com.apex.scaffold.interfaces.governance.platform.kubernetes.KubernetesGovernanceStrategy;
 import com.apex.scaffold.interfaces.governance.platform.standalone.StandaloneGovernanceStrategy;
 import java.util.List;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Bean;
@@ -108,31 +107,28 @@ public class GovernanceLifecycleConfiguration {
     }
 
     /**
-     * 创建 MQ 资源排空参与者。
+     * 在应用就绪后按最终可用的 MQ 组件注册资源参与者。
      *
-     * @param consumerService 普通消息消费服务
-     * @param deadLetterQueueProcessor 死信队列处理器
-     * @return MQ 资源排空参与者
-     */
-    @Bean
-    @ConditionalOnBean({MqConsumerService.class, DeadLetterQueueProcessor.class})
-    public MqDrainParticipant mqDrainParticipant(
-            MqConsumerService consumerService, DeadLetterQueueProcessor deadLetterQueueProcessor) {
-        return new MqDrainParticipant(consumerService, deadLetterQueueProcessor);
-    }
-
-    /**
-     * 在应用就绪后注册 MQ 资源参与者。
+     * <p>组件扫描阶段可见的定义可能随后被条件装配排除，因此在容器刷新完成后查询实际依赖，
+     * 避免未配置 RocketMQ 时由治理配置引入强制依赖。重复就绪事件复用已有参与者。
      *
      * @param event 应用就绪事件
      */
     @EventListener
     public void registerMqParticipant(ApplicationReadyEvent event) {
-        ResourceDrainRegistry drainRegistry = event.getApplicationContext().getBean(ResourceDrainRegistry.class);
-        event.getApplicationContext()
-                .getBeansOfType(MqDrainParticipant.class)
-                .values()
-                .forEach(drainRegistry::register);
+        var context = event.getApplicationContext();
+        ResourceDrainRegistry drainRegistry = context.getBean(ResourceDrainRegistry.class);
+        context.getBeansOfType(MqDrainParticipant.class).values().forEach(drainRegistry::register);
+        if (drainRegistry.participants().stream().anyMatch(MqDrainParticipant.class::isInstance)) {
+            return;
+        }
+        MqConsumerService consumer =
+                context.getBeanProvider(MqConsumerService.class).getIfAvailable();
+        DeadLetterQueueProcessor deadLetter =
+                context.getBeanProvider(DeadLetterQueueProcessor.class).getIfAvailable();
+        if (consumer != null && deadLetter != null) {
+            drainRegistry.register(new MqDrainParticipant(consumer, deadLetter));
+        }
     }
 
     /**

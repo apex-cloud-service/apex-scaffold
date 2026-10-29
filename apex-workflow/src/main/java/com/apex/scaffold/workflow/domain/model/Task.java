@@ -35,8 +35,14 @@ import lombok.Data;
 @Data
 public class Task {
 
+    /** 持久化租户归属；仓储写入仍以可信上下文为准。 */
+    private String tenantId;
+
     /** 任务主键 ID，由持久化层分配，新建时为 {@code null}。 */
     private Long id;
+
+    /** 读取时的持久化版本，用于待办任务条件更新。 */
+    private Integer version;
 
     /** 所属流程实例 ID，指向 {@link ProcessInstance}。 */
     private Long processInstanceId;

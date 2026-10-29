@@ -103,6 +103,9 @@ public class DataSourceManagementService {
     /** 加密服务（密码加密存储 / 建池时解密）。 */
     private final EncryptionService encryptionService;
 
+    /** 租户写链路守卫。 */
+    private final TenantGuard tenantGuard;
+
     /**
      * 分页查询当前租户的数据源列表。
      *
@@ -149,7 +152,9 @@ public class DataSourceManagementService {
                     request.getType(),
                     request.getDriver());
 
-            return assertNameAvailable(request.getName(), tenantId, null)
+            return tenantGuard
+                    .assertActive()
+                    .then(Mono.defer(() -> assertNameAvailable(request.getName(), tenantId, null)))
                     // encrypt 延迟到订阅期执行，避免链构建期的急切副作用
                     .then(Mono.defer(() -> encryptionService.encrypt(request.getPassword())))
                     .flatMap(encryptedPassword -> {

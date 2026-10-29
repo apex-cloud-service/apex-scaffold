@@ -2,6 +2,9 @@ package com.apex.scaffold.domain.model.entity;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.ToString;
 
 /**
@@ -25,6 +28,8 @@ import lombok.ToString;
  * @see BaseEntity
  */
 @Getter
+@Setter
+@NoArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class BlacklistEntity extends BaseEntity {
@@ -66,28 +71,6 @@ public class BlacklistEntity extends BaseEntity {
      * @see #isEnabled()
      */
     private Integer enabled;
-
-    /**
-     * 默认构造函数
-     */
-    public BlacklistEntity() {
-        super();
-    }
-
-    /** Sets userId. For persistence/construction use only. */
-    public void setUserId(Long value) {
-        this.userId = value;
-    }
-
-    /** Sets targetUserId. For persistence/construction use only. */
-    public void setTargetUserId(Long value) {
-        this.targetUserId = value;
-    }
-
-    /** Sets enabled. For persistence/construction use only. */
-    public void setEnabled(Integer value) {
-        this.enabled = value;
-    }
 
     /**
      * 静态工厂方法：创建拉黑记录
@@ -151,6 +134,8 @@ public class BlacklistEntity extends BaseEntity {
     /**
      * 黑名单状态枚举
      */
+    @Getter
+    @RequiredArgsConstructor
     private enum BlacklistStatus {
         /** 无效（已解除） */
         DISABLED(0),
@@ -158,22 +143,5 @@ public class BlacklistEntity extends BaseEntity {
         ENABLED(1);
 
         private final Integer code;
-
-        /**
-         * 创建 {@code BlacklistStatus} 实例。
-         *
-         * @param code 枚举编码
-         */
-        BlacklistStatus(Integer code) {
-            this.code = code;
-        }
-
-        /**
-         * 获取枚举编码。
-         * @return 枚举编码
-         */
-        public Integer getCode() {
-            return code;
-        }
     }
 }

@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import com.apex.scaffold.application.assembler.AdminUserAssembler;
+import com.apex.scaffold.application.dto.admin.AdminUserCreateRequest;
 import com.apex.scaffold.common.dto.PageResponse;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.result.ResultCode;
@@ -40,6 +41,9 @@ class AdminUserManagementServiceTest {
     @Mock
     private AdminUserAssembler adminUserAssembler;
 
+    @Mock
+    private TenantGuard tenantGuard;
+
     private AdminUserManagementService service;
 
     /**
@@ -48,7 +52,7 @@ class AdminUserManagementServiceTest {
     @BeforeEach
     void setUp() {
         service = new AdminUserManagementService(
-                users, roles, null, null, null, null, null, null, null, null, null, adminUserAssembler);
+                users, roles, null, null, null, null, null, null, null, null, null, adminUserAssembler, tenantGuard);
     }
 
     /**
@@ -114,6 +118,39 @@ class AdminUserManagementServiceTest {
                     assertThat(result.get(0).code()).isEqualTo("REVIEW_MANAGER");
                 })
                 .verifyComplete();
+    }
+
+    /**
+     * 配额超限时拒绝创建，且不再查询手机号、不写入用户。
+     */
+    @Test
+    void create_RejectsWhenUserQuotaExceeded() {
+        authorizeSuperAdmin();
+        when(tenantGuard.assertUserQuota(1))
+                .thenReturn(Mono.error(new BusinessException(ResultCode.TENANT_QUOTA_EXCEEDED, "用户数超出配额")));
+        AdminUserCreateRequest request = new AdminUserCreateRequest(
+                "13800001234",
+                "张三",
+                1,
+                java.time.LocalDate.of(1998, 6, 15),
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null);
+
+        StepVerifier.create(service.create("admin-open-id", request))
+                .expectErrorSatisfies(error -> assertThat(((BusinessException) error).getCode())
+                        .isEqualTo(ResultCode.TENANT_QUOTA_EXCEEDED.getCode()))
+                .verify();
+
+        org.mockito.Mockito.verify(users, org.mockito.Mockito.never()).findByPhone(any());
+        org.mockito.Mockito.verify(users, org.mockito.Mockito.never()).save(any());
     }
 
     /** 构造具备超级管理员角色的操作者。 */

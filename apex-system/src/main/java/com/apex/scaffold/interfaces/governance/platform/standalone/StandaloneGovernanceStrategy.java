@@ -13,17 +13,9 @@ import com.apex.scaffold.interfaces.governance.platform.WithdrawalReason;
  * @version 1.0.0
  * @since 1.0.0
  */
+@lombok.RequiredArgsConstructor
 public class StandaloneGovernanceStrategy implements DeploymentGovernanceStrategy {
     private final ReadinessStateController readiness;
-
-    /**
-     * 创建 standalone 策略。
-     *
-     * @param readiness readiness 控制器
-     */
-    public StandaloneGovernanceStrategy(ReadinessStateController readiness) {
-        this.readiness = readiness;
-    }
 
     /** @return standalone 模式 */
     @Override

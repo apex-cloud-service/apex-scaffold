@@ -30,7 +30,7 @@ import lombok.NoArgsConstructor;
  *
  * @author Apex Team
  * @version 1.0.0
- * @since 2026-09-20
+ * @since 1.3.1
  */
 @Data
 @Builder
@@ -164,9 +164,10 @@ public class UserEntity {
     /**
      * 检查账户是否正常
      *
-     * <p>验证账户状态是否为正常（status=1）
+     * <p>账户状态为正常（{@code status=1}），或状态为锁定（{@code status=2}）且
+     * {@code lockedUntil} 非空、锁定时间已到期时返回 {@code true}。此方法不修改账户状态。
      *
-     * @return true-账户正常，false-账户异常
+     * @return 满足上述任一条件时返回 {@code true}，否则返回 {@code false}
      */
     public boolean isActive() {
         return status != null && (status == 1 || (status == LOCKED_STATUS && lockedUntil != null && !isLocked()));

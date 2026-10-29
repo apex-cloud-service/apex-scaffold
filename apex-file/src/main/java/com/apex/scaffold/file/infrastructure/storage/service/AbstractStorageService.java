@@ -161,6 +161,7 @@ public abstract class AbstractStorageService implements StorageService {
      *
      * <p>调用子类的 {@link #doDelete} 执行实际删除操作，在弹性调度器上执行。
      *
+     * @param bucketName  存储桶名称
      * @param objectName 对象（文件）名称
      * @return 删除成功返回 true，失败返回 false
      */
@@ -175,6 +176,7 @@ public abstract class AbstractStorageService implements StorageService {
      * <p>调用子类的 {@link #doDelete} 执行实际删除，操作在弹性调度器上执行。
      * 删除失败时返回 false 而非抛出异常。</p>
      *
+     * @param bucketName  存储桶名称
      * @param fileName   文件名
      * @return 删除成功返回 true，失败返回 false
      */
@@ -189,6 +191,7 @@ public abstract class AbstractStorageService implements StorageService {
      *
      * <p>检查指定存储桶中文件是否存在。</p>
      *
+     * @param bucketName 存储桶名称
      * @param objectName 对象名称
      * @return 文件存在返回 true，否则返回 false
      */
@@ -202,6 +205,7 @@ public abstract class AbstractStorageService implements StorageService {
      *
      * <p>调用子类的 {@link #doExists} 检查指定存储桶中的文件是否存在。</p>
      *
+     * @param bucketName 存储桶名称
      * @param fileName   文件名
      * @return 文件存在返回 true，否则返回 false
      */
@@ -312,6 +316,7 @@ public abstract class AbstractStorageService implements StorageService {
      *
      * <p>构建文件的访问路径，格式为 /storage/{bucketName}/{fileName}。</p>
      *
+     * @param bucketName 存储桶名称
      * @param fileName   文件名
      * @param expiry     过期时间（秒）
      * @return 文件访问路径

@@ -114,6 +114,12 @@ public class AuthorizationHandler extends BaseHandler {
         @ApiResponse(responseCode = "401", description = "未授权，需要登录"),
         @ApiResponse(responseCode = "500", description = "服务器内部错误")
     })
+    @OperationLog(
+            module = "Authorization",
+            type = OperationLog.OperationType.SELECT,
+            description = "getMyRoles",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> getMyRoles(ServerRequest request) {
         String traceId = TraceIdUtil.getTraceId();
         return currentOpenId(request)
@@ -149,6 +155,12 @@ public class AuthorizationHandler extends BaseHandler {
         @ApiResponse(responseCode = "401", description = "未授权，需要登录"),
         @ApiResponse(responseCode = "500", description = "服务器内部错误")
     })
+    @OperationLog(
+            module = "Authorization",
+            type = OperationLog.OperationType.SELECT,
+            description = "getMyPermissions",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> getMyPermissions(ServerRequest request) {
         String traceId = TraceIdUtil.getTraceId();
         return currentOpenId(request)
@@ -181,6 +193,12 @@ public class AuthorizationHandler extends BaseHandler {
         @ApiResponse(responseCode = "403", description = "权限不足"),
         @ApiResponse(responseCode = "500", description = "服务器内部错误")
     })
+    @OperationLog(
+            module = "Authorization",
+            type = OperationLog.OperationType.SELECT,
+            description = "getAllRoles",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> getAllRoles(ServerRequest request) {
         String traceId = TraceIdUtil.getTraceId();
         return roleService
@@ -210,6 +228,12 @@ public class AuthorizationHandler extends BaseHandler {
         @ApiResponse(responseCode = "403", description = "权限不足"),
         @ApiResponse(responseCode = "500", description = "服务器内部错误")
     })
+    @OperationLog(
+            module = "Authorization",
+            type = OperationLog.OperationType.SELECT,
+            description = "getAllPermissions",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> getAllPermissions(ServerRequest request) {
         String traceId = TraceIdUtil.getTraceId();
         return permissionService
@@ -244,7 +268,12 @@ public class AuthorizationHandler extends BaseHandler {
         @ApiResponse(responseCode = "403", description = "权限不足，需要角色管理权限"),
         @ApiResponse(responseCode = "500", description = "服务器内部错误")
     })
-    @OperationLog(module = "权限管理", type = OperationLog.OperationType.INSERT, description = "创建角色")
+    @OperationLog(
+            module = "权限管理",
+            type = OperationLog.OperationType.INSERT,
+            description = "创建角色",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> createRole(ServerRequest request) {
         String traceId = TraceIdUtil.getTraceId();
         return request.bodyToMono(RoleRequest.class)
@@ -282,7 +311,12 @@ public class AuthorizationHandler extends BaseHandler {
         @ApiResponse(responseCode = "404", description = "角色不存在"),
         @ApiResponse(responseCode = "500", description = "服务器内部错误")
     })
-    @OperationLog(module = "权限管理", type = OperationLog.OperationType.UPDATE, description = "更新角色")
+    @OperationLog(
+            module = "权限管理",
+            type = OperationLog.OperationType.UPDATE,
+            description = "更新角色",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> updateRole(ServerRequest request) {
         String traceId = TraceIdUtil.getTraceId();
         return request.bodyToMono(RoleRequest.class)
@@ -322,7 +356,12 @@ public class AuthorizationHandler extends BaseHandler {
         @ApiResponse(responseCode = "409", description = "角色存在关联数据，无法删除"),
         @ApiResponse(responseCode = "500", description = "服务器内部错误")
     })
-    @OperationLog(module = "权限管理", type = OperationLog.OperationType.DELETE, description = "删除角色")
+    @OperationLog(
+            module = "权限管理",
+            type = OperationLog.OperationType.DELETE,
+            description = "删除角色",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> deleteRole(ServerRequest request) {
         String traceId = TraceIdUtil.getTraceId();
         Long id = safeParseLong(request.pathVariable("id"));
@@ -370,7 +409,12 @@ public class AuthorizationHandler extends BaseHandler {
         @ApiResponse(responseCode = "403", description = "权限不足，需要权限管理权限"),
         @ApiResponse(responseCode = "500", description = "服务器内部错误")
     })
-    @OperationLog(module = "权限管理", type = OperationLog.OperationType.INSERT, description = "创建权限")
+    @OperationLog(
+            module = "权限管理",
+            type = OperationLog.OperationType.INSERT,
+            description = "创建权限",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> createPermission(ServerRequest request) {
         String traceId = TraceIdUtil.getTraceId();
         return request.bodyToMono(PermissionRequest.class)
@@ -411,7 +455,12 @@ public class AuthorizationHandler extends BaseHandler {
         @ApiResponse(responseCode = "404", description = "权限不存在"),
         @ApiResponse(responseCode = "500", description = "服务器内部错误")
     })
-    @OperationLog(module = "权限管理", type = OperationLog.OperationType.UPDATE, description = "更新权限")
+    @OperationLog(
+            module = "权限管理",
+            type = OperationLog.OperationType.UPDATE,
+            description = "更新权限",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> updatePermission(ServerRequest request) {
         String traceId = TraceIdUtil.getTraceId();
         return request.bodyToMono(PermissionRequest.class)
@@ -451,7 +500,12 @@ public class AuthorizationHandler extends BaseHandler {
         @ApiResponse(responseCode = "409", description = "权限存在关联数据，无法删除"),
         @ApiResponse(responseCode = "500", description = "服务器内部错误")
     })
-    @OperationLog(module = "权限管理", type = OperationLog.OperationType.DELETE, description = "删除权限")
+    @OperationLog(
+            module = "权限管理",
+            type = OperationLog.OperationType.DELETE,
+            description = "删除权限",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> deletePermission(ServerRequest request) {
         String traceId = TraceIdUtil.getTraceId();
         Long id = safeParseLong(request.pathVariable("id"));
@@ -508,7 +562,12 @@ public class AuthorizationHandler extends BaseHandler {
         @ApiResponse(responseCode = "404", description = "用户或角色不存在"),
         @ApiResponse(responseCode = "500", description = "服务器内部错误")
     })
-    @OperationLog(module = "权限管理", type = OperationLog.OperationType.UPDATE, description = "为用户分配角色")
+    @OperationLog(
+            module = "权限管理",
+            type = OperationLog.OperationType.UPDATE,
+            description = "为用户分配角色",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> assignRoleToUser(ServerRequest request) {
         String traceId = TraceIdUtil.getTraceId();
         Long userId = safeParseLong(request.pathVariable("userId"));
@@ -570,7 +629,12 @@ public class AuthorizationHandler extends BaseHandler {
         @ApiResponse(responseCode = "404", description = "用户或角色不存在"),
         @ApiResponse(responseCode = "500", description = "服务器内部错误")
     })
-    @OperationLog(module = "权限管理", type = OperationLog.OperationType.UPDATE, description = "移除用户角色")
+    @OperationLog(
+            module = "权限管理",
+            type = OperationLog.OperationType.UPDATE,
+            description = "移除用户角色",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> removeRoleFromUser(ServerRequest request) {
         String traceId = TraceIdUtil.getTraceId();
         Long userId = safeParseLong(request.pathVariable("userId"));

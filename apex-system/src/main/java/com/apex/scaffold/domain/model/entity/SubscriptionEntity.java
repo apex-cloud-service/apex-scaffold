@@ -26,6 +26,8 @@ import lombok.ToString;
  * @see BaseEntity
  */
 @Getter
+@lombok.Setter
+@lombok.NoArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class SubscriptionEntity extends BaseEntity {
@@ -63,38 +65,6 @@ public class SubscriptionEntity extends BaseEntity {
      * @see SubscriptionStatus
      */
     private String status;
-
-    /** Sets userId. For persistence/construction use only. */
-    public void setUserId(Long value) {
-        this.userId = value;
-    }
-
-    /** Sets level. For persistence/construction use only. */
-    public void setLevel(String value) {
-        this.level = value;
-    }
-
-    /** Sets startAt. For persistence/construction use only. */
-    public void setStartAt(LocalDateTime value) {
-        this.startAt = value;
-    }
-
-    /** Sets endAt. For persistence/construction use only. */
-    public void setEndAt(LocalDateTime value) {
-        this.endAt = value;
-    }
-
-    /** Sets status. For persistence/construction use only. */
-    public void setStatus(String value) {
-        this.status = value;
-    }
-
-    /**
-     * 默认构造函数
-     */
-    public SubscriptionEntity() {
-        super();
-    }
 
     /**
      * 静态工厂方法：创建VIP订阅
@@ -208,6 +178,8 @@ public class SubscriptionEntity extends BaseEntity {
     /**
      * 订阅等级枚举
      */
+    @Getter
+    @lombok.RequiredArgsConstructor
     public enum SubscriptionLevel {
         /** VIP会员 */
         VIP("VIP"),
@@ -215,23 +187,6 @@ public class SubscriptionEntity extends BaseEntity {
         SVIP("SVIP");
 
         private final String code;
-
-        /**
-         * 创建 {@code SubscriptionLevel} 实例。
-         *
-         * @param code 枚举编码
-         */
-        SubscriptionLevel(String code) {
-            this.code = code;
-        }
-
-        /**
-         * 获取枚举编码。
-         * @return 枚举编码
-         */
-        public String getCode() {
-            return code;
-        }
 
         /**
          * 根据枚举编码解析订阅等级。
@@ -255,6 +210,8 @@ public class SubscriptionEntity extends BaseEntity {
     /**
      * 订阅状态枚举
      */
+    @Getter
+    @lombok.RequiredArgsConstructor
     public enum SubscriptionStatus {
         /** 生效中 */
         ACTIVE("ACTIVE"),
@@ -264,23 +221,6 @@ public class SubscriptionEntity extends BaseEntity {
         CANCELED("CANCELED");
 
         private final String code;
-
-        /**
-         * 创建 {@code SubscriptionStatus} 实例。
-         *
-         * @param code 枚举编码
-         */
-        SubscriptionStatus(String code) {
-            this.code = code;
-        }
-
-        /**
-         * 获取枚举编码。
-         * @return 枚举编码
-         */
-        public String getCode() {
-            return code;
-        }
 
         /**
          * 根据枚举编码解析订阅状态。

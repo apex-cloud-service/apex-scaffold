@@ -24,12 +24,38 @@ class JobSchedulerTenantTest {
 
     private final JobInvoker jobInvoker = mock(JobInvoker.class);
     private final JobLogService jobLogService = mock(JobLogService.class);
-    private final JobScheduler scheduler = new JobScheduler(jobInvoker, jobLogService);
+    private final JobScheduler scheduler = new JobScheduler(jobInvoker, jobLogService, false, 0L);
 
     @AfterEach
     void tearDown() {
         scheduler.shutdown();
         TenantContext.clear();
+    }
+
+    @Test
+    void shouldUseSingleUnannotatedConstructorAndBindSchedulingProperties() {
+        assertThat(JobScheduler.class.getDeclaredConstructors()).hasSize(1);
+        assertThat(JobScheduler.class.getDeclaredConstructors()[0].getDeclaredAnnotations())
+                .isEmpty();
+        var runner = new org.springframework.boot.test.context.runner.ApplicationContextRunner()
+                .withUserConfiguration(JobScheduler.class)
+                .withBean(JobInvoker.class, () -> jobInvoker)
+                .withBean(JobLogService.class, () -> jobLogService);
+        runner.run(context -> {
+            assertThat(context).hasSingleBean(JobScheduler.class);
+            assertThat(ReflectionTestUtils.getField(context.getBean(JobScheduler.class), "externalScheduling"))
+                    .isEqualTo(false);
+            assertThat(ReflectionTestUtils.getField(context.getBean(JobScheduler.class), "externalJobId"))
+                    .isEqualTo(0L);
+        });
+        runner.withPropertyValues("apex.job.executor.enabled=true", "apex.job.system.job-id=42")
+                .run(context -> {
+                    assertThat(context).hasSingleBean(JobScheduler.class);
+                    assertThat(ReflectionTestUtils.getField(context.getBean(JobScheduler.class), "externalScheduling"))
+                            .isEqualTo(true);
+                    assertThat(ReflectionTestUtils.getField(context.getBean(JobScheduler.class), "externalJobId"))
+                            .isEqualTo(42L);
+                });
     }
 
     @Test
@@ -72,7 +98,9 @@ class JobSchedulerTenantTest {
         });
         TenantContext.setTenantId("caller-tenant");
 
-        scheduler.trigger(job).block();
+        org.assertj.core.api.Assertions.assertThatThrownBy(
+                        () -> scheduler.trigger(job).block())
+                .hasMessageContaining("任务执行失败");
 
         assertThat(invokedTenant).hasValue("tenant-a");
         assertThat(logged).isNotNull();
@@ -170,6 +198,51 @@ class JobSchedulerTenantTest {
         scheduler.trigger(second).block();
 
         assertThat(secondTenant).hasValue("tenant-b");
+    }
+
+    @Test
+    void takeoverOnlySuppressesConfiguredPositiveJobId() {
+        for (boolean enabled : new boolean[] {false, true}) {
+            for (Long configured : new Long[] {null, 0L, -1L, 1L, 2L}) {
+                JobScheduler candidate = new JobScheduler(jobInvoker, jobLogService, enabled, configured);
+                try {
+                    candidate.register(job("tenant")).block();
+                    java.util.Map<?, ?> schedules =
+                            (java.util.Map<?, ?>) ReflectionTestUtils.getField(candidate, "schedules");
+                    assertThat(schedules.containsKey(1L))
+                            .isEqualTo(!(enabled && Long.valueOf(1L).equals(configured)));
+                } finally {
+                    candidate.shutdown();
+                }
+            }
+        }
+    }
+
+    @Test
+    void latePublisherFailureIsRecordedBeforeTriggerFails() {
+        try (org.springframework.context.support.StaticApplicationContext context =
+                new org.springframework.context.support.StaticApplicationContext()) {
+            JobInvokerCompletionTest.Target target = new JobInvokerCompletionTest.Target();
+            context.getBeanFactory().registerSingleton("target", target);
+            JobScheduler candidate = new JobScheduler(new JobInvoker(context), jobLogService, false, 0L);
+            AtomicReference<JobLogEntity> recorded = new AtomicReference<>();
+            reactor.core.publisher.Sinks.Empty<Void> persisted = reactor.core.publisher.Sinks.empty();
+            when(jobLogService.record(any())).thenAnswer(invocation -> {
+                recorded.set(invocation.getArgument(0));
+                return persisted.asMono();
+            });
+            try {
+                reactor.test.StepVerifier.create(candidate.trigger(job("tenant")))
+                        .thenAwait(java.time.Duration.ofMillis(100))
+                        .then(() -> persisted.tryEmitEmpty())
+                        .expectErrorMessage("任务执行失败")
+                        .verify(java.time.Duration.ofSeconds(5));
+                assertThat(target.count).hasValue(3);
+                assertThat(recorded.get().isSuccess()).isFalse();
+            } finally {
+                candidate.shutdown();
+            }
+        }
     }
 
     private JobEntity job(String tenantId) {

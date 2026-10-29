@@ -95,7 +95,12 @@ public class ExcelExportHandler extends BaseHandler {
         @ApiResponse(responseCode = "401", description = "未授权，需要登录"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要system:user:list权限")
     })
-    @OperationLog(module = "数据导出", type = OperationLog.OperationType.SELECT, description = "导出用户列表")
+    @OperationLog(
+            module = "数据导出",
+            type = OperationLog.OperationType.SELECT,
+            description = "导出用户列表",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> exportUsers(ServerRequest request) {
         return userService.findPage(1, 100, "create_time", false).flatMap(page -> {
             List<UserExportDTO> rows =

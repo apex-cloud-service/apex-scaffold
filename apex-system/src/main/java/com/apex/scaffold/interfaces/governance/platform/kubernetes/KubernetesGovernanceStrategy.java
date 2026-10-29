@@ -15,17 +15,9 @@ import com.apex.scaffold.interfaces.governance.platform.WithdrawalReason;
  * @version 1.0.0
  * @since 1.0.0
  */
+@lombok.RequiredArgsConstructor
 public class KubernetesGovernanceStrategy implements DeploymentGovernanceStrategy {
     private final ReadinessStateController readiness;
-
-    /**
-     * 创建 Kubernetes 策略。
-     *
-     * @param readiness readiness 控制器
-     */
-    public KubernetesGovernanceStrategy(ReadinessStateController readiness) {
-        this.readiness = readiness;
-    }
 
     /** @return Kubernetes 模式 */
     @Override

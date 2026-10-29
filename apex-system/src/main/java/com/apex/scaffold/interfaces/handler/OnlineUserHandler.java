@@ -98,7 +98,12 @@ public class OnlineUserHandler extends BaseHandler {
         @ApiResponse(responseCode = "401", description = "未授权，需要登录"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要system:online-user:list权限")
     })
-    @OperationLog(module = "在线用户", type = OperationLog.OperationType.SELECT, description = "分页查询在线用户")
+    @OperationLog(
+            module = "在线用户",
+            type = OperationLog.OperationType.SELECT,
+            description = "分页查询在线用户",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> list(ServerRequest request) {
         int page = safeParseInt(request.queryParam("page").orElse(null), 1);
         int size = safeParseInt(request.queryParam("size").orElse(null), 20);

@@ -1,6 +1,7 @@
 package com.apex.scaffold.workflow.application.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import lombok.AllArgsConstructor;
@@ -48,6 +49,18 @@ public class WorkflowDefinitionDTO {
     @Schema(description = "是否启用：true-启用，false-停用", example = "true")
     private Boolean enabled;
 
+    /** 生命周期状态 */
+    @Schema(description = "生命周期状态：DRAFT(草稿)/PUBLISHED(已发布)/DISABLED(已停用)", example = "PUBLISHED")
+    private String status;
+
+    /** 发布时间，未发布时为空 */
+    @Schema(description = "发布时间，未发布时为空")
+    private LocalDateTime publishedAt;
+
+    /** 发布人用户 ID，未发布时为空 */
+    @Schema(description = "发布人用户ID，未发布时为空", example = "1")
+    private Long publishedBy;
+
     /** 节点列表 */
     @Schema(description = "流程节点列表")
     private List<WorkflowNodeDTO> nodes;
@@ -67,32 +80,36 @@ public class WorkflowDefinitionDTO {
         @Schema(description = "节点ID，在流程定义内唯一", example = "node_1")
         private String nodeId;
 
-        /** 节点类型：START/APPROVAL/CONDITION/END */
-        @Schema(description = "节点类型：START(开始)/APPROVAL(审批)/CONDITION(条件)/END(结束)", example = "APPROVAL")
+        /** 节点类型，首期执行器只支持 START/APPROVAL/END */
+        @Schema(description = "节点类型：START(开始)/APPROVAL(审批)/END(结束)，首期不支持条件分支节点", example = "APPROVAL")
         private String nodeType;
 
         /** 节点名称 */
         @Schema(description = "节点名称", example = "部门经理审批")
         private String nodeName;
 
-        /** 审批人类型：SPECIFIED_USER/ROLE/SUPERIOR/INITIATOR */
-        @Schema(description = "审批人类型：SPECIFIED_USER(指定用户)/ROLE(角色)/SUPERIOR(上级)/INITIATOR(发起人)", example = "ROLE")
+        /** 审批人类型，首期只支持指定用户与发起人 */
+        @Schema(
+                description = "审批人类型：SPECIFIED_USER(指定用户)/INITIATOR(发起人)，首期不支持 ROLE 与 SUPERIOR",
+                example = "SPECIFIED_USER")
         private String approverType;
 
-        /** 审批人值（用户ID、角色ID等） */
-        @Schema(description = "审批人值，即审批人类型对应的用户ID或角色ID", example = "200")
+        /** 审批人值：指定用户时为单个正整数用户 ID */
+        @Schema(
+                description = "审批人值：approverType=SPECIFIED_USER 时为单个正整数用户ID；approverType=INITIATOR 时忽略",
+                example = "200")
         private String approverValue;
 
-        /** 审批策略：OR/AND */
-        @Schema(description = "审批策略：OR(任一审批人通过即通过)/AND(会签，所有审批人通过才通过)", example = "OR")
+        /** 审批策略，首期只支持单办理人 */
+        @Schema(description = "审批策略：SINGLE(单办理人)。首期执行器不支持 OR/AND 多人审批，留空等同于 SINGLE", example = "SINGLE")
         private String approvalStrategy;
 
         /** 超时小时数 */
-        @Schema(description = "审批超时小时数", example = "24")
+        @Schema(description = "审批超时小时数，正整数；设置 timeoutAction 时必须同时设置", example = "24")
         private Integer timeoutHours;
 
-        /** 超时动作 */
-        @Schema(description = "超时动作：AUTO_APPROVE(自动通过)/AUTO_REJECT(自动驳回)/REMIND(提醒)", example = "REMIND")
+        /** 超时动作，与执行器支持的超时策略一致 */
+        @Schema(description = "超时动作：AUTO_COMPLETE(自动通过)/ESCALATE(升级办理人)，需配合 timeoutHours 使用", example = "AUTO_COMPLETE")
         private String timeoutAction;
 
         /** 位置信息（前端用） */

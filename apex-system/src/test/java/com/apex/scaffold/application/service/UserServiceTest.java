@@ -49,6 +49,9 @@ class UserServiceTest {
     @Mock
     private CacheConsistencyPort cacheConsistencyService;
 
+    @Mock
+    private TenantGuard tenantGuard;
+
     @InjectMocks
     private UserService userService;
 
@@ -68,6 +71,8 @@ class UserServiceTest {
         lenient()
                 .when(cacheConsistencyService.evictWithDelayedDoubleDelete(anyString(), anyString()))
                 .thenReturn(Mono.just(true));
+        lenient().when(tenantGuard.assertUserQuota(1)).thenReturn(Mono.empty());
+        lenient().when(tenantGuard.assertActive()).thenReturn(Mono.empty());
     }
 
     @Test
@@ -140,6 +145,48 @@ class UserServiceTest {
                 .as(StepVerifier::create)
                 .expectNextMatches(u -> u.getId().equals(1L))
                 .verifyComplete();
+    }
+
+    /**
+     * 租户用户配额超限时拒绝创建，且不写入仓储。
+     */
+    @Test
+    @DisplayName("create - 用户配额超限时拒绝且不调用仓储")
+    void create_RejectsWhenUserQuotaExceeded() {
+        when(tenantGuard.assertUserQuota(1))
+                .thenReturn(Mono.error(new BusinessException(
+                        com.apex.scaffold.common.result.ResultCode.TENANT_QUOTA_EXCEEDED, "用户数超出配额")));
+
+        userService
+                .create(new UserEntity())
+                .as(StepVerifier::create)
+                .expectErrorSatisfies(
+                        error -> org.assertj.core.api.Assertions.assertThat(((BusinessException) error).getCode())
+                                .isEqualTo(com.apex.scaffold.common.result.ResultCode.TENANT_QUOTA_EXCEEDED.getCode()))
+                .verify();
+
+        verifyNoInteractions(userRepository);
+    }
+
+    /**
+     * 租户不可写时拒绝签发注册票据的前置校验，且不查询用户仓储。
+     */
+    @Test
+    @DisplayName("assertPhoneRegistrationAllowed - 租户不可写时拒绝")
+    void assertPhoneRegistrationAllowed_RejectsWhenTenantNotWritable() {
+        when(tenantGuard.assertActive())
+                .thenReturn(Mono.error(new BusinessException(
+                        com.apex.scaffold.common.result.ResultCode.TENANT_ILLEGAL_TRANSITION, "租户状态不允许创建业务数据")));
+
+        userService
+                .assertPhoneRegistrationAllowed("13800001234")
+                .as(StepVerifier::create)
+                .expectErrorSatisfies(error -> org.assertj.core.api.Assertions.assertThat(
+                                ((BusinessException) error).getCode())
+                        .isEqualTo(com.apex.scaffold.common.result.ResultCode.TENANT_ILLEGAL_TRANSITION.getCode()))
+                .verify();
+
+        verifyNoInteractions(userRepository);
     }
 
     /**

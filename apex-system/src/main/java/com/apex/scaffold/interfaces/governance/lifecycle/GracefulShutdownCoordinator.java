@@ -8,8 +8,8 @@ import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 统一优雅关停协调器。
@@ -18,36 +18,15 @@ import org.slf4j.LoggerFactory;
  * @version 1.0.0
  * @since 1.0.0
  */
+@Slf4j
+@RequiredArgsConstructor
 public class GracefulShutdownCoordinator {
-    private static final Logger LOGGER = LoggerFactory.getLogger(GracefulShutdownCoordinator.class);
     private final GovernanceProperties properties;
     private final DeploymentGovernanceStrategy strategy;
     private final ServiceLifecycleStateMachine stateMachine;
     private final ReadinessStateController readiness;
     private final ResourceDrainRegistry registry;
     private final AtomicBoolean stopping = new AtomicBoolean(false);
-
-    /**
-     * 创建关停协调器。
-     *
-     * @param properties 治理配置
-     * @param strategy 部署治理策略
-     * @param stateMachine 生命周期状态机
-     * @param readiness readiness 控制器
-     * @param registry 资源排空注册表
-     */
-    public GracefulShutdownCoordinator(
-            GovernanceProperties properties,
-            DeploymentGovernanceStrategy strategy,
-            ServiceLifecycleStateMachine stateMachine,
-            ReadinessStateController readiness,
-            ResourceDrainRegistry registry) {
-        this.properties = properties;
-        this.strategy = strategy;
-        this.stateMachine = stateMachine;
-        this.readiness = readiness;
-        this.registry = registry;
-    }
 
     /**
      * 初始化并进入可接收流量状态。
@@ -90,7 +69,7 @@ public class GracefulShutdownCoordinator {
             registry.forceStop();
         }
         stateMachine.transitionTo(drained ? ServiceLifecycleState.STOPPED : ServiceLifecycleState.FAILED);
-        LOGGER.info("服务关停完成, mode={}, drained={}, participantCount={}", strategy.mode(), drained, results.size());
+        log.info("服务关停完成, mode={}, drained={}, participantCount={}", strategy.mode(), drained, results.size());
         return new ShutdownResult(drained, results);
     }
 

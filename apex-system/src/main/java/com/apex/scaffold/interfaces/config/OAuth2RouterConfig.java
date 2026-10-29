@@ -8,8 +8,11 @@ import com.apex.scaffold.interfaces.handler.OAuth2ClientManagementHandler;
 import com.apex.scaffold.interfaces.handler.OAuth2DiscoveryHandler;
 import com.apex.scaffold.interfaces.handler.OAuth2JwksHandler;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.RouterOperation;
+import org.springdoc.core.annotations.RouterOperations;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
@@ -59,6 +62,48 @@ public class OAuth2RouterConfig {
 
     /** 注册〈OAuth2 协议端点〉路由，涵盖授权、Token、自省、同意与 JWKS 等端点。 */
     @Bean
+    @RouterOperations({
+        @RouterOperation(
+                path = "/.well-known/oauth-authorization-server",
+                method = RequestMethod.GET,
+                beanClass = OAuth2DiscoveryHandler.class,
+                beanMethod = "discovery"),
+        @RouterOperation(
+                path = "/oauth2/authorize",
+                method = {RequestMethod.GET, RequestMethod.POST},
+                beanClass = OAuth2AuthorizationHandler.class,
+                beanMethod = "authorize"),
+        @RouterOperation(
+                path = "/oauth2/token",
+                method = RequestMethod.POST,
+                beanClass = OAuth2AuthorizationHandler.class,
+                beanMethod = "token"),
+        @RouterOperation(
+                path = "/oauth2/revoke",
+                method = RequestMethod.POST,
+                beanClass = OAuth2AuthorizationHandler.class,
+                beanMethod = "revoke"),
+        @RouterOperation(
+                path = "/oauth2/introspect",
+                method = RequestMethod.POST,
+                beanClass = OAuth2AuthorizationHandler.class,
+                beanMethod = "introspect"),
+        @RouterOperation(
+                path = "/oauth2/consent",
+                method = RequestMethod.POST,
+                beanClass = OAuth2AuthorizationHandler.class,
+                beanMethod = "consent"),
+        @RouterOperation(
+                path = "/oauth2/consent/revoke",
+                method = RequestMethod.POST,
+                beanClass = OAuth2AuthorizationHandler.class,
+                beanMethod = "revokeConsent"),
+        @RouterOperation(
+                path = "/oauth2/jwks",
+                method = RequestMethod.GET,
+                beanClass = OAuth2JwksHandler.class,
+                beanMethod = "jwks")
+    })
     public RouterFunction<ServerResponse> oauth2Routes() {
         return route().GET("/.well-known/oauth-authorization-server", discoveryHandler::discovery)
                 .GET("/oauth2/authorize", oauth2Handler::authorize)
@@ -74,6 +119,38 @@ public class OAuth2RouterConfig {
 
     /** 注册〈OAuth2 客户端管理〉管理路由，提供客户端的增删改查与密钥重置端点。 */
     @Bean
+    @RouterOperations({
+        @RouterOperation(
+                path = "/admin-api/v1/oauth2/clients",
+                method = RequestMethod.POST,
+                beanClass = OAuth2ClientManagementHandler.class,
+                beanMethod = "createClient"),
+        @RouterOperation(
+                path = "/admin-api/v1/oauth2/clients/{clientId}",
+                method = RequestMethod.PUT,
+                beanClass = OAuth2ClientManagementHandler.class,
+                beanMethod = "updateClient"),
+        @RouterOperation(
+                path = "/admin-api/v1/oauth2/clients/{clientId}",
+                method = RequestMethod.DELETE,
+                beanClass = OAuth2ClientManagementHandler.class,
+                beanMethod = "deleteClient"),
+        @RouterOperation(
+                path = "/admin-api/v1/oauth2/clients/{clientId}",
+                method = RequestMethod.GET,
+                beanClass = OAuth2ClientManagementHandler.class,
+                beanMethod = "getClient"),
+        @RouterOperation(
+                path = "/admin-api/v1/oauth2/clients",
+                method = RequestMethod.GET,
+                beanClass = OAuth2ClientManagementHandler.class,
+                beanMethod = "listClients"),
+        @RouterOperation(
+                path = "/admin-api/v1/oauth2/clients/{clientId}/reset-secret",
+                method = RequestMethod.POST,
+                beanClass = OAuth2ClientManagementHandler.class,
+                beanMethod = "resetClientSecret")
+    })
     public RouterFunction<ServerResponse> oauth2ClientManagementRoutes() {
         return route().POST("/admin-api/v1/oauth2/clients", oauth2ClientHandler::createClient)
                 .PUT("/admin-api/v1/oauth2/clients/{clientId}", oauth2ClientHandler::updateClient)

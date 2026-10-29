@@ -2,6 +2,7 @@ package com.apex.scaffold.interfaces.handler;
 
 import com.apex.scaffold.application.dto.admin.LoginLogDTO;
 import com.apex.scaffold.application.service.LoginLogService;
+import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.annotation.RequirePermission;
 import com.apex.scaffold.interfaces.util.MessageUtils;
 import io.swagger.v3.oas.annotations.Operation;
@@ -110,6 +111,12 @@ public class LoginLogHandler extends BaseHandler {
         @ApiResponse(responseCode = "401", description = "未授权，需要登录"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要 system:login-log:list 权限")
     })
+    @OperationLog(
+            module = "LoginLog",
+            type = OperationLog.OperationType.SELECT,
+            description = "list",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> list(ServerRequest request) {
         int page = safeParseInt(request.queryParam("page").orElse(null), 1);
         int size = safeParseInt(request.queryParam("size").orElse(null), 20);

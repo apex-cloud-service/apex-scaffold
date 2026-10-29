@@ -2,27 +2,20 @@
 -- 版本：v1.4.0
 -- 说明：移除外键可以提高写入性能，避免级联删除风险，应用层通过逻辑保证数据完整性
 
--- 1. 移除部门相关外键约束
+-- 1. 移除 V19 创建的部门外键约束
 ALTER TABLE `sys_role_dept`
-    DROP FOREIGN KEY IF EXISTS `fk_sys_role_dept_tenant_dept`;
+    DROP FOREIGN KEY `fk_sys_role_dept_tenant_dept`;
 
--- 2. 移除工作流引擎外键约束
-
--- 2.1 移除流程实例 → 工作流定义外键
+-- 2. 移除 V20 创建的工作流引擎外键约束
 ALTER TABLE `wf_process_instance`
-    DROP FOREIGN KEY IF EXISTS `fk_process_workflow_def`;
+    DROP FOREIGN KEY `fk_process_workflow_def`;
 
--- 2.2 移除任务 → 流程实例外键
 ALTER TABLE `wf_task`
-    DROP FOREIGN KEY IF EXISTS `fk_task_process_instance`;
+    DROP FOREIGN KEY `fk_task_process_instance`;
 
--- 2.3 移除审批记录 → 流程实例外键
 ALTER TABLE `wf_approval_record`
-    DROP FOREIGN KEY IF EXISTS `fk_approval_process_instance`;
-
--- 2.4 移除审批记录 → 任务外键
-ALTER TABLE `wf_approval_record`
-    DROP FOREIGN KEY IF EXISTS `fk_approval_task`;
+    DROP FOREIGN KEY `fk_approval_process_instance`,
+    DROP FOREIGN KEY `fk_approval_task`;
 
 -- 功能保证说明：
 -- 1. sys_role_dept 的租户+部门完整性由应用层代码保证，MyBatis-Plus租户拦截器自动过滤

@@ -298,14 +298,26 @@ public class OfficeRepositoryImpl implements OfficeRepository {
     }
 
     @Override
-    public Mono<OfficeSyncTask> findLatestSyncTask(String tenantId, OfficePlatform platform) {
+    public Mono<OfficeSyncTask> findLatestSyncTask(String tenantId, OfficePlatform platform, String syncType) {
         return scoped(
                 tenantId,
                 () -> converter.toSyncTask(syncTasks.selectOne(new QueryWrapper<OfficeSyncTaskPO>()
                         .eq("tenant_id", tenantId)
                         .eq("platform", platform.name())
+                        .eq("sync_type", syncType)
                         .eq("deleted", 0)
                         .orderByDesc("id")
+                        .last("LIMIT 1"))));
+    }
+
+    @Override
+    public Mono<OfficeSyncTask> findSyncTaskById(String tenantId, Long taskId) {
+        return scoped(
+                tenantId,
+                () -> converter.toSyncTask(syncTasks.selectOne(new QueryWrapper<OfficeSyncTaskPO>()
+                        .eq("id", taskId)
+                        .eq("tenant_id", tenantId)
+                        .eq("deleted", 0)
                         .last("LIMIT 1"))));
     }
 

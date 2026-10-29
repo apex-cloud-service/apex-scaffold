@@ -96,6 +96,12 @@ public class DictHandler extends BaseHandler {
                         @Content(mediaType = "application/json", schema = @Schema(implementation = DictTypeDTO.class))),
         @ApiResponse(responseCode = "403", description = "权限不足，需要 system:dict:list 权限")
     })
+    @OperationLog(
+            module = "Dict",
+            type = OperationLog.OperationType.SELECT,
+            description = "listTypes",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> listTypes(ServerRequest request) {
         return dictService.listTypes().flatMap(this::buildSuccess);
     }
@@ -128,6 +134,12 @@ public class DictHandler extends BaseHandler {
         @ApiResponse(responseCode = "403", description = "权限不足，需要 system:dict:query 权限"),
         @ApiResponse(responseCode = "404", description = "字典类型不存在")
     })
+    @OperationLog(
+            module = "Dict",
+            type = OperationLog.OperationType.SELECT,
+            description = "getType",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> getType(ServerRequest request) {
         return dictService.getType(requirePositiveId(request)).flatMap(this::buildSuccess);
     }
@@ -155,7 +167,12 @@ public class DictHandler extends BaseHandler {
         @ApiResponse(responseCode = "400", description = "参数校验失败或字典类型编码已存在"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要 system:dict:add 权限")
     })
-    @OperationLog(module = "字典管理", type = OperationLog.OperationType.INSERT, description = "创建字典类型")
+    @OperationLog(
+            module = "字典管理",
+            type = OperationLog.OperationType.INSERT,
+            description = "创建字典类型",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> createType(ServerRequest request) {
         return parseBody(request, DictTypeRequest.class)
                 .flatMap(dictService::createType)
@@ -192,7 +209,12 @@ public class DictHandler extends BaseHandler {
         @ApiResponse(responseCode = "403", description = "权限不足，需要 system:dict:edit 权限"),
         @ApiResponse(responseCode = "404", description = "字典类型不存在")
     })
-    @OperationLog(module = "字典管理", type = OperationLog.OperationType.UPDATE, description = "更新字典类型")
+    @OperationLog(
+            module = "字典管理",
+            type = OperationLog.OperationType.UPDATE,
+            description = "更新字典类型",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> updateType(ServerRequest request) {
         Long id = requirePositiveId(request);
         return parseBody(request, DictTypeRequest.class)
@@ -222,7 +244,12 @@ public class DictHandler extends BaseHandler {
         @ApiResponse(responseCode = "404", description = "字典类型不存在"),
         @ApiResponse(responseCode = "409", description = "字典类型下存在数据项，无法删除")
     })
-    @OperationLog(module = "字典管理", type = OperationLog.OperationType.DELETE, description = "删除字典类型")
+    @OperationLog(
+            module = "字典管理",
+            type = OperationLog.OperationType.DELETE,
+            description = "删除字典类型",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> deleteType(ServerRequest request) {
         return dictService
                 .deleteType(requirePositiveId(request))
@@ -261,7 +288,12 @@ public class DictHandler extends BaseHandler {
         @ApiResponse(responseCode = "403", description = "权限不足，需要 system:dict:edit 权限"),
         @ApiResponse(responseCode = "404", description = "字典类型不存在")
     })
-    @OperationLog(module = "字典管理", type = OperationLog.OperationType.UPDATE, description = "更新字典类型状态")
+    @OperationLog(
+            module = "字典管理",
+            type = OperationLog.OperationType.UPDATE,
+            description = "更新字典类型状态",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> updateTypeStatus(ServerRequest request) {
         Long id = requirePositiveId(request);
         return parseBody(request, StatusRequest.class)
@@ -295,6 +327,12 @@ public class DictHandler extends BaseHandler {
         @ApiResponse(responseCode = "400", description = "参数错误，dictType不能为空"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要 system:dict:list 权限")
     })
+    @OperationLog(
+            module = "Dict",
+            type = OperationLog.OperationType.SELECT,
+            description = "listData",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> listData(ServerRequest request) {
         String dictType = request.queryParam("dictType").orElse(null);
         if (dictType == null || dictType.isBlank()) {
@@ -328,6 +366,12 @@ public class DictHandler extends BaseHandler {
         @ApiResponse(responseCode = "403", description = "权限不足，需要 system:dict:query 权限"),
         @ApiResponse(responseCode = "404", description = "字典数据不存在")
     })
+    @OperationLog(
+            module = "Dict",
+            type = OperationLog.OperationType.SELECT,
+            description = "getData",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> getData(ServerRequest request) {
         return dictService.getData(requirePositiveId(request)).flatMap(this::buildSuccess);
     }
@@ -355,7 +399,12 @@ public class DictHandler extends BaseHandler {
         @ApiResponse(responseCode = "400", description = "参数校验失败或字典键值已存在"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要 system:dict:add 权限")
     })
-    @OperationLog(module = "字典管理", type = OperationLog.OperationType.INSERT, description = "创建字典数据")
+    @OperationLog(
+            module = "字典管理",
+            type = OperationLog.OperationType.INSERT,
+            description = "创建字典数据",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> createData(ServerRequest request) {
         return parseBody(request, DictDataRequest.class)
                 .flatMap(dictService::createData)
@@ -392,7 +441,12 @@ public class DictHandler extends BaseHandler {
         @ApiResponse(responseCode = "403", description = "权限不足，需要 system:dict:edit 权限"),
         @ApiResponse(responseCode = "404", description = "字典数据不存在")
     })
-    @OperationLog(module = "字典管理", type = OperationLog.OperationType.UPDATE, description = "更新字典数据")
+    @OperationLog(
+            module = "字典管理",
+            type = OperationLog.OperationType.UPDATE,
+            description = "更新字典数据",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> updateData(ServerRequest request) {
         Long id = requirePositiveId(request);
         return parseBody(request, DictDataRequest.class)
@@ -421,7 +475,12 @@ public class DictHandler extends BaseHandler {
         @ApiResponse(responseCode = "403", description = "权限不足，需要 system:dict:remove 权限"),
         @ApiResponse(responseCode = "404", description = "字典数据不存在")
     })
-    @OperationLog(module = "字典管理", type = OperationLog.OperationType.DELETE, description = "删除字典数据")
+    @OperationLog(
+            module = "字典管理",
+            type = OperationLog.OperationType.DELETE,
+            description = "删除字典数据",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> deleteData(ServerRequest request) {
         return dictService
                 .deleteData(requirePositiveId(request))
@@ -460,7 +519,12 @@ public class DictHandler extends BaseHandler {
         @ApiResponse(responseCode = "403", description = "权限不足，需要 system:dict:edit 权限"),
         @ApiResponse(responseCode = "404", description = "字典数据不存在")
     })
-    @OperationLog(module = "字典管理", type = OperationLog.OperationType.UPDATE, description = "更新字典数据状态")
+    @OperationLog(
+            module = "字典管理",
+            type = OperationLog.OperationType.UPDATE,
+            description = "更新字典数据状态",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> updateDataStatus(ServerRequest request) {
         Long id = requirePositiveId(request);
         return parseBody(request, StatusRequest.class)

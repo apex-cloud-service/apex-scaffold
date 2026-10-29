@@ -279,6 +279,7 @@ public class IpAccessControlServiceImpl implements IpAccessControlService {
      * 启用指定的IP访问控制规则
      *
      * @param ruleId 规则ID
+     * @param tenantId 租户ID
      * @param operator 执行操作的运维人员标识
      * @return 完成信号
      */
@@ -301,6 +302,7 @@ public class IpAccessControlServiceImpl implements IpAccessControlService {
      * 禁用指定的IP访问控制规则
      *
      * @param ruleId 规则ID
+     * @param tenantId 租户ID
      * @param operator 执行操作的运维人员标识
      * @return 完成信号
      */
@@ -323,6 +325,7 @@ public class IpAccessControlServiceImpl implements IpAccessControlService {
      * 删除指定的IP访问控制规则并记录审计日志
      *
      * @param ruleId 规则ID
+     * @param tenantId 租户ID
      * @param operator 执行操作的运维人员标识
      * @return 完成信号
      */

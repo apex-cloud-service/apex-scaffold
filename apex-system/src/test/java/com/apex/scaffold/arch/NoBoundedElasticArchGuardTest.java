@@ -48,7 +48,16 @@ import org.junit.jupiter.api.Test;
 class NoBoundedElasticArchGuardTest {
 
     /** 需要扫描的业务模块名称，按 DDD 分层与物理目录保持一致。 */
-    private static final String[] MODULES = {"apex-common", "apex-domain", "apex-infrastructure", "apex-system"};
+    private static final String[] MODULES = {
+        "apex-common",
+        "apex-domain",
+        "apex-infrastructure-persistence",
+        "apex-infrastructure-cache",
+        "apex-infrastructure-messaging",
+        "apex-infrastructure-remote",
+        "apex-infrastructure-integration",
+        "apex-system"
+    };
 
     /** 每个模块下源码所在的相对路径。 */
     private static final String SRC_MAIN_JAVA = "src/main/java";
@@ -67,12 +76,12 @@ class NoBoundedElasticArchGuardTest {
     private static final Pattern BOUNDED_ELASTIC_CALL = Pattern.compile("Schedulers\\s*\\.\\s*boundedElastic\\s*\\(");
 
     /**
-     * 检查五大模块 src/main/java 下不再存在真实的 boundedElastic() 调用。
+     * 检查共享能力及 system 模块 src/main/java 下不再存在真实的 boundedElastic() 调用。
      *
      * <p>遍历流程：
      * <ol>
-     *   <li>以 {@code System.getProperty("user.dir")} 为仓库根目录。</li>
-     *   <li>对五个模块拼接 {@code <module>/src/main/java} 并验证路径存在。</li>
+     *   <li>从 {@code System.getProperty("user.dir")} 向上定位仓库根目录。</li>
+     *   <li>对所有受约束模块拼接 {@code <module>/src/main/java} 并验证路径存在。</li>
      *   <li>对每个存在的源码目录使用 {@code Files.walkFileTree} 递归扫描所有
      *       {@code .java} 源文件。</li>
      *   <li>对每个源文件先按「块注释 → 字符串字面量 → 行注释」顺序剥离安全文本，
@@ -88,6 +97,10 @@ class NoBoundedElasticArchGuardTest {
     void noDirectBoundedElasticCallsInProductionSources() throws IOException {
         Path repoRoot =
                 Paths.get(System.getProperty("user.dir")).toAbsolutePath().normalize();
+        while (repoRoot != null && !Files.isDirectory(repoRoot.resolve("apex-common"))) {
+            repoRoot = repoRoot.getParent();
+        }
+        assertTrue(repoRoot != null, "必须定位到仓库根目录，防止源码守护静默跳过");
         List<Violation> violations = new ArrayList<>();
 
         for (String module : MODULES) {

@@ -38,20 +38,12 @@ import reactor.core.publisher.Mono;
  * @since 1.0.0
  */
 @Component
+@lombok.RequiredArgsConstructor
 public class MethodNotAllowedRouter implements RouterFunction<ServerResponse>, Ordered {
 
     private static final String API_PATH_PREFIX = "/api/";
 
     private final List<RouterFunction<ServerResponse>> delegates;
-
-    /**
-     * 用已注册的路由委托列表构造 405 兜底路由器。
-     *
-     * @param delegates 已注册的路由函数委托列表
-     */
-    public MethodNotAllowedRouter(List<RouterFunction<ServerResponse>> delegates) {
-        this.delegates = delegates;
-    }
 
     /**
      * {@inheritDoc}

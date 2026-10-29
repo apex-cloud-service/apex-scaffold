@@ -26,11 +26,6 @@ public class TextMessageContent implements MessageContent {
     }
 
     @Override
-    public String getText() {
-        return text;
-    }
-
-    @Override
     public boolean isValid() {
         return text != null && !text.trim().isEmpty();
     }

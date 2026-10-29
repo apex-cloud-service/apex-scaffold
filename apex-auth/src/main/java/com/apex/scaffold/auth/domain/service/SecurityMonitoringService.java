@@ -446,6 +446,8 @@ public class SecurityMonitoringService {
     /**
      * 安全指标数据结构
      */
+    @lombok.Getter
+    @lombok.RequiredArgsConstructor
     public static class SecurityMetrics {
         private final long loginSuccess;
         private final long loginFail;
@@ -454,34 +456,6 @@ public class SecurityMonitoringService {
         private final long userLocked;
         private final long tokenReplay;
         private final Instant timestamp;
-
-        /**
-         * 构造安全指标。
-         *
-         * @param loginSuccess 登录成功次数
-         * @param loginFail 登录失败次数
-         * @param tokenValidateSuccess 令牌验证成功次数
-         * @param tokenValidateFail 令牌验证失败次数
-         * @param userLocked 锁定用户数
-         * @param tokenReplay 令牌重放次数
-         * @param timestamp 指标采集时间
-         */
-        public SecurityMetrics(
-                long loginSuccess,
-                long loginFail,
-                long tokenValidateSuccess,
-                long tokenValidateFail,
-                long userLocked,
-                long tokenReplay,
-                Instant timestamp) {
-            this.loginSuccess = loginSuccess;
-            this.loginFail = loginFail;
-            this.tokenValidateSuccess = tokenValidateSuccess;
-            this.tokenValidateFail = tokenValidateFail;
-            this.userLocked = userLocked;
-            this.tokenReplay = tokenReplay;
-            this.timestamp = timestamp;
-        }
 
         /**
          * 计算登录失败率
@@ -521,106 +495,15 @@ public class SecurityMonitoringService {
             map.put("timestamp", timestamp.toString());
             return map;
         }
-
-        // Getters
-        /**
-         * 获取登录成功次数
-         *
-         * @return 窗口期内登录成功次数
-         */
-        public long getLoginSuccess() {
-            return loginSuccess;
-        }
-
-        /**
-         * 获取登录失败次数
-         *
-         * @return 窗口期内登录失败次数
-         */
-        public long getLoginFail() {
-            return loginFail;
-        }
-
-        /**
-         * 获取 Token 验证成功次数
-         *
-         * @return 窗口期内 Token 验证成功次数
-         */
-        public long getTokenValidateSuccess() {
-            return tokenValidateSuccess;
-        }
-
-        /**
-         * 获取 Token 验证失败次数
-         *
-         * @return 窗口期内 Token 验证失败次数
-         */
-        public long getTokenValidateFail() {
-            return tokenValidateFail;
-        }
-
-        /**
-         * 获取用户锁定次数
-         *
-         * @return 窗口期内用户锁定次数
-         */
-        public long getUserLocked() {
-            return userLocked;
-        }
-
-        /**
-         * 获取 Token 重放攻击次数
-         *
-         * @return 窗口期内 Token 重放攻击次数
-         */
-        public long getTokenReplay() {
-            return tokenReplay;
-        }
-
-        /**
-         * 获取指标采集时间
-         *
-         * @return 指标采集时间戳
-         */
-        public Instant getTimestamp() {
-            return timestamp;
-        }
     }
 
     /**
      * IP活动指标
      */
+    @lombok.Getter
+    @lombok.RequiredArgsConstructor
     public static class IpActivityMetric {
         private final String ip;
         private final long count;
-
-        /**
-         * 构造IP活动指标。
-         *
-         * @param ip IP地址
-         * @param count 窗口期内该IP的活动次数
-         */
-        public IpActivityMetric(String ip, long count) {
-            this.ip = ip;
-            this.count = count;
-        }
-
-        /**
-         * 获取 IP 地址
-         *
-         * @return IP 地址
-         */
-        public String getIp() {
-            return ip;
-        }
-
-        /**
-         * 获取活动次数
-         *
-         * @return 窗口期内该 IP 的活动次数
-         */
-        public long getCount() {
-            return count;
-        }
     }
 }

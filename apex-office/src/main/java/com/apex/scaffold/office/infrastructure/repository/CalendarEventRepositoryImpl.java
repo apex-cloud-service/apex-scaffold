@@ -106,14 +106,18 @@ public class CalendarEventRepositoryImpl implements CalendarEventRepository {
 
     @Override
     public Mono<List<CalendarEvent>> findByMeetingRoom(
-            String meetingRoomId, LocalDateTime startTime, LocalDateTime endTime) {
+            Long tenantId, String meetingRoomId, LocalDateTime startTime, LocalDateTime endTime) {
         return Mono.fromCallable(() -> {
-                    List<CalendarEventPO> poList = mapper.selectByMeetingRoom(meetingRoomId, startTime, endTime);
+                    List<CalendarEventPO> poList =
+                            mapper.selectByMeetingRoom(tenantId, meetingRoomId, startTime, endTime);
                     return poList.stream().map(converter::toEntity).collect(Collectors.toList());
                 })
                 .subscribeOn(blockingIoSchedulers.jdbc())
-                .doOnSuccess(
-                        list -> log.debug("根据会议室查询日历事件 - meetingRoomId: {}, count: {}", meetingRoomId, list.size()))
+                .doOnSuccess(list -> log.debug(
+                        "根据会议室查询日历事件 - tenantId: {}, meetingRoomId: {}, count: {}",
+                        tenantId,
+                        meetingRoomId,
+                        list.size()))
                 .doOnError(error -> log.error("根据会议室查询日历事件失败 - meetingRoomId: {}", meetingRoomId, error));
     }
 

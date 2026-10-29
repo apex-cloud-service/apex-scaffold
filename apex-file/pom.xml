@@ -35,6 +35,20 @@
             <artifactId>apex-common</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>com.apex.scaffold</groupId>
+            <artifactId>apex-storage-spring-boot-starter</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.aliyun.oss</groupId>
+            <artifactId>aliyun-sdk-oss</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.qiniu</groupId>
+            <artifactId>qiniu-java-sdk</artifactId>
+        </dependency>
+
         <!-- Spring WebFlux：响应式应用服务与存储适配 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

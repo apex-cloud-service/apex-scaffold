@@ -107,8 +107,8 @@ WHERE NOT EXISTS (SELECT 1 FROM sys_permission WHERE code = 'system:oauth2:clien
 -- ============================================================
 -- 4. 为超级管理员角色（ADMIN，role_id=1）授权全部新增权限码
 -- ============================================================
-INSERT INTO sys_role_permission (role_id, permission_id)
-SELECT 1, p.id
+INSERT INTO sys_role_permission (id, role_id, permission_id)
+SELECT 500000 + p.id, 1, p.id
 FROM sys_permission p
 WHERE p.code IN (
     'system:auth:config:jwt:query',

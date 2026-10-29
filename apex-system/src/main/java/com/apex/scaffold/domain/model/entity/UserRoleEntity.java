@@ -3,6 +3,8 @@ package com.apex.scaffold.domain.model.entity;
 import java.io.Serial;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.ToString;
 
 /**
@@ -15,15 +17,14 @@ import lombok.ToString;
  * @since 1.0.0
  */
 @Getter
+@Setter
+@NoArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class UserRoleEntity extends BaseEntity {
 
     @Serial
     private static final long serialVersionUID = 1L;
-
-    /** 创建用户角色关联实体对象。 */
-    public UserRoleEntity() {}
 
     /** 租户 ID。 */
     private String tenantId;
@@ -33,19 +34,4 @@ public class UserRoleEntity extends BaseEntity {
 
     /** 角色 ID。 */
     private Long roleId;
-
-    /** Sets tenantId. For persistence/construction use only. */
-    public void setTenantId(String value) {
-        this.tenantId = value;
-    }
-
-    /** Sets userId. For persistence/construction use only. */
-    public void setUserId(Long value) {
-        this.userId = value;
-    }
-
-    /** Sets roleId. For persistence/construction use only. */
-    public void setRoleId(Long value) {
-        this.roleId = value;
-    }
 }

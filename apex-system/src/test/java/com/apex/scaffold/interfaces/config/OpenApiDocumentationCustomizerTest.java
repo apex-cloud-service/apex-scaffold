@@ -58,6 +58,8 @@ class OpenApiDocumentationCustomizerTest {
                 .get("application/json")
                 .getSchema();
         assertThat(response.getProperties()).containsKeys("code", "msg", "data", "traceId");
+        assertThat(((Schema<?>) response.getProperties().get("code")).getExample())
+                .isEqualTo(0);
         assertThat(((Schema<?>) response.getProperties().get("data")).get$ref()).endsWith("/LoginResponse");
         assertThat(login.getResponses()).containsKeys("200", "400", "429", "500");
         assertThat(login.getResponses()).doesNotContainKeys("401", "403");
@@ -110,6 +112,9 @@ class OpenApiDocumentationCustomizerTest {
                         .getSchema()
                         .get$ref())
                 .endsWith("/ApiSuccessResponse");
+        Schema<?> success = openApi.getComponents().getSchemas().get("ApiSuccessResponse");
+        assertThat(((Schema<?>) success.getProperties().get("code")).getExample())
+                .isEqualTo(0);
         assertThat(operation
                         .getResponses()
                         .get("400")
@@ -187,6 +192,223 @@ class OpenApiDocumentationCustomizerTest {
                 .get("application/x-www-form-urlencoded")
                 .getSchema();
         assertThat(form.getRequired()).containsExactlyInAnyOrder("token", "mobile");
+    }
+
+    @Test
+    void shouldKeepRefreshTokenInJsonBodyOnly() {
+        var refresh = operation("authRefresh");
+        OpenAPI api = openApi("/api/v1/auth/refresh", new PathItem().post(refresh));
+
+        new SpringDocConfig().openApiCustomizer().customise(api);
+
+        assertThat(refresh.getParameters() == null || refresh.getParameters().isEmpty())
+                .isTrue();
+        assertThat(refresh.getRequestBody()
+                        .getContent()
+                        .get("application/json")
+                        .getSchema()
+                        .get$ref())
+                .endsWith("/RefreshTokenRequest");
+    }
+
+    @Test
+    void shouldDocumentOAuthRedirectWithoutSuccessEnvelope() {
+        var authorize = operation("oauth2Authorize");
+        authorize.getResponses().addApiResponse("302", new ApiResponse()).addApiResponse("200", new ApiResponse());
+        var postAuthorize = operation("oauth2Authorize_1");
+        OpenAPI api = openApi("/oauth2/authorize", new PathItem().get(authorize).post(postAuthorize));
+
+        new SpringDocConfig().openApiCustomizer().customise(api);
+
+        assertThat(authorize.getResponses()).containsKeys("307", "400").doesNotContainKeys("200", "302");
+        assertThat(postAuthorize.getResponses()).containsKeys("307", "400").doesNotContainKey("200");
+        assertThat(authorize.getResponses().get("307").getContent()).isNull();
+        assertThat(authorize.getResponses().get("307").getHeaders()).containsKey("Location");
+        assertThat(authorize.getParameters())
+                .extracting(Parameter::getName)
+                .containsExactlyInAnyOrder(
+                        "response_type",
+                        "client_id",
+                        "redirect_uri",
+                        "scope",
+                        "state",
+                        "code_challenge",
+                        "code_challenge_method");
+    }
+
+    @Test
+    void shouldDocumentSocialLoginRedirectsWithoutSuccessEnvelope() throws NoSuchMethodException {
+        for (String operationId : Set.of("initiateOidcLogin", "initiateSocialLogin")) {
+            var redirect = operation(operationId);
+            redirect.getResponses().addApiResponse("302", new ApiResponse()).addApiResponse("200", new ApiResponse());
+            String path = "initiateOidcLogin".equals(operationId)
+                    ? "/api/v1/auth/oidc/login"
+                    : "/api/v1/auth/social/{provider}/login";
+            OpenAPI api = openApi(path, new PathItem().get(redirect));
+
+            new SpringDocConfig().openApiCustomizer().customise(api);
+
+            assertThat(redirect.getResponses()).containsKey("307").doesNotContainKeys("200", "302");
+            assertThat(redirect.getResponses().get("307").getContent()).isNull();
+            assertThat(redirect.getResponses()
+                            .get("307")
+                            .getHeaders()
+                            .get("Location")
+                            .getSchema()
+                            .getType())
+                    .isEqualTo("string");
+            if ("initiateSocialLogin".equals(operationId)) {
+                assertThat(responseSchema(redirect, "400").get$ref()).endsWith("/ApiErrorResponse");
+            }
+            var annotations = com.apex.scaffold.interfaces.handler.SocialLoginHandler.class
+                    .getMethod(operationId, org.springframework.web.reactive.function.server.ServerRequest.class)
+                    .getAnnotation(io.swagger.v3.oas.annotations.responses.ApiResponses.class);
+            assertThat(annotations.value())
+                    .extracting(io.swagger.v3.oas.annotations.responses.ApiResponse::responseCode)
+                    .contains("307")
+                    .doesNotContain("200", "302");
+            assertThat(annotations.value())
+                    .filteredOn(response -> "307".equals(response.responseCode()))
+                    .allSatisfy(response -> {
+                        assertThat(response.content()).isEmpty();
+                        assertThat(response.headers()).singleElement().satisfies(header -> {
+                            assertThat(header.name()).isEqualTo("Location");
+                            assertThat(header.schema().type()).isEqualTo("string");
+                        });
+                    });
+        }
+    }
+
+    @Test
+    void shouldPreserveNativeOAuthResponsesAndResultEndpoints() {
+        var token = operation("oauth2Token");
+        var introspect = operation("oauth2Introspect");
+        var revoke = operation("oauth2Revoke");
+        var consent = operation("oauth2Consent");
+        var revokeConsent = operation("oauth2RevokeConsent");
+        for (var resultEndpoint : java.util.List.of(revoke, consent, revokeConsent)) {
+            resultEndpoint
+                    .getResponses()
+                    .addApiResponse(
+                            "200",
+                            new ApiResponse()
+                                    .content(new Content()
+                                            .addMediaType(
+                                                    "application/json",
+                                                    new MediaType()
+                                                            .schema(new Schema<>()
+                                                                    .$ref("#/components/schemas/Result")))));
+        }
+        OpenAPI api = new SpringDocConfig().apexOpenApi();
+        api.setPaths(new Paths()
+                .addPathItem("/oauth2/token", new PathItem().post(token))
+                .addPathItem("/oauth2/introspect", new PathItem().post(introspect))
+                .addPathItem("/oauth2/revoke", new PathItem().post(revoke))
+                .addPathItem("/oauth2/consent", new PathItem().post(consent))
+                .addPathItem("/oauth2/consent/revoke", new PathItem().post(revokeConsent)));
+
+        new SpringDocConfig().openApiCustomizer().customise(api);
+
+        assertThat(responseSchema(token, "200").getProperties())
+                .containsOnlyKeys("access_token", "token_type", "expires_in", "refresh_token", "scope");
+        assertThat(responseSchema(token, "400").getProperties()).containsOnlyKeys("error", "error_description");
+        assertThat(token.getResponses()).doesNotContainKey("401");
+        Schema<?> form = token.getRequestBody()
+                .getContent()
+                .get("application/x-www-form-urlencoded")
+                .getSchema();
+        assertThat(form.getProperties())
+                .containsKeys(
+                        "grant_type",
+                        "client_id",
+                        "client_secret",
+                        "code",
+                        "redirect_uri",
+                        "code_verifier",
+                        "username",
+                        "password",
+                        "refresh_token",
+                        "scope");
+        assertThat(form.getRequired()).containsExactly("grant_type");
+        assertThat(responseSchema(introspect, "200").getProperties())
+                .containsOnlyKeys("active", "client_id", "user_id", "scope", "exp");
+        Schema<?> introspection = responseSchema(introspect, "200");
+        assertThat(introspection.getRequired()).containsExactly("active");
+        assertThat(((Schema<?>) introspection.getProperties().get("user_id")).getNullable())
+                .isTrue();
+        assertThat(((Schema<?>) introspection.getProperties().get("scope")).getNullable())
+                .isTrue();
+        assertThat(responseSchema(introspect, "400").get$ref()).endsWith("/ApiErrorResponse");
+        for (var resultEndpoint : java.util.List.of(revoke, consent, revokeConsent)) {
+            Schema<?> result = responseSchema(resultEndpoint, "200");
+            assertThat(result.getProperties()).containsOnlyKeys("code", "msg", "data", "traceId");
+            assertThat(((Schema<?>) result.getProperties().get("data")).getType())
+                    .isEqualTo("string");
+            assertThat(((Schema<?>) result.getProperties().get("code")).getExample())
+                    .isEqualTo(0);
+        }
+    }
+
+    @Test
+    void shouldKeepDiscoveryAndJwksAsNativeJson() {
+        var discovery = operation("oauth2Discovery");
+        var jwks = operation("oauth2Jwks");
+        OpenAPI api = new SpringDocConfig().apexOpenApi();
+        api.setPaths(new Paths()
+                .addPathItem("/.well-known/oauth-authorization-server", new PathItem().get(discovery))
+                .addPathItem("/oauth2/jwks", new PathItem().get(jwks)));
+
+        new SpringDocConfig().openApiCustomizer().customise(api);
+
+        assertThat(responseSchema(discovery, "200").getProperties())
+                .containsKeys("issuer", "authorization_endpoint", "token_endpoint", "scopes_supported")
+                .doesNotContainKeys("code", "data");
+        assertThat(responseSchema(jwks, "200").getProperties()).containsOnlyKeys("keys");
+        Schema<?> keys = (Schema<?>) responseSchema(jwks, "200").getProperties().get("keys");
+        assertThat(keys.getItems().getProperties()).containsOnlyKeys("kty", "kid", "alg", "use");
+    }
+
+    @Test
+    void shouldDocumentConcreteSearchSsoAndKeycloakData() {
+        var search = operation("unifiedSearch");
+        var rebuild = operation("rebuildSearchIndex");
+        var sso = operation("handleSsoCallback");
+        var keycloak = operation("syncKeycloakUser");
+        OpenAPI api = new SpringDocConfig().apexOpenApi();
+        api.setPaths(new Paths()
+                .addPathItem("/api/v1/search", new PathItem().get(search))
+                .addPathItem("/admin-api/v1/search/rebuild", new PathItem().post(rebuild))
+                .addPathItem("/api/v1/auth/sso/callback", new PathItem().get(sso))
+                .addPathItem("/admin-api/v1/keycloak/sync/user/{keycloakSub}", new PathItem().post(keycloak)));
+
+        new SpringDocConfig().openApiCustomizer().customise(api);
+
+        Schema<?> pageReference =
+                (Schema<?>) responseSchema(search, "200").getProperties().get("data");
+        Schema<?> page = api.getComponents()
+                .getSchemas()
+                .get(pageReference.get$ref().substring("#/components/schemas/".length()));
+        assertThat(page.getProperties()).containsKeys("list", "total", "pageNum", "pageSize", "pages", "hasNext");
+        Schema<?> list = (Schema<?>) page.getProperties().get("list");
+        assertThat(list.getItems().get$ref()).endsWith("/SearchResultDTO");
+        assertThat(((Schema<?>) responseSchema(rebuild, "200").getProperties().get("data")).getFormat())
+                .isEqualTo("int64");
+        Schema<?> ssoData =
+                (Schema<?>) responseSchema(sso, "200").getProperties().get("data");
+        assertThat(ssoData.getProperties()).containsOnlyKeys("sessionId", "token", "userInfo", "expiryTime");
+        assertThat(((Schema<?>) ssoData.getProperties().get("token")).getDescription())
+                .contains("非 JWT");
+        assertThat(((Schema<?>) responseSchema(keycloak, "200").getProperties().get("data")).getProperties())
+                .containsOnlyKeys("userId", "username", "email");
+    }
+
+    private Schema<?> responseSchema(io.swagger.v3.oas.models.Operation operation, String status) {
+        return operation
+                .getResponses()
+                .get(status)
+                .getContent()
+                .get("application/json")
+                .getSchema();
     }
 
     /**

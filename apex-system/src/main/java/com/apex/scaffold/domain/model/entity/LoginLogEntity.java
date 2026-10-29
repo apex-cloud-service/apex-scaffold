@@ -24,6 +24,8 @@ import lombok.ToString;
  * @see BaseEntity
  */
 @Getter
+@lombok.Setter
+@lombok.NoArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class LoginLogEntity extends BaseEntity {
@@ -93,58 +95,6 @@ public class LoginLogEntity extends BaseEntity {
      */
     private String platform;
 
-    /** Sets clientType. For persistence/construction use only. */
-    public void setClientType(String value) {
-        this.clientType = value;
-    }
-
-    /** Sets platform. For persistence/construction use only. */
-    public void setPlatform(String value) {
-        this.platform = value;
-    }
-
-    /** Sets username. For persistence/construction use only. */
-    public void setUsername(String value) {
-        this.username = value;
-    }
-
-    /** Sets ip. For persistence/construction use only. */
-    public void setIp(String value) {
-        this.ip = value;
-    }
-
-    /** Sets browser. For persistence/construction use only. */
-    public void setBrowser(String value) {
-        this.browser = value;
-    }
-
-    /** Sets os. For persistence/construction use only. */
-    public void setOs(String value) {
-        this.os = value;
-    }
-
-    /** Sets status. For persistence/construction use only. */
-    public void setStatus(Integer value) {
-        this.status = value;
-    }
-
-    /** Sets message. For persistence/construction use only. */
-    public void setMessage(String value) {
-        this.message = value;
-    }
-
-    /** Sets loginTime. For persistence/construction use only. */
-    public void setLoginTime(LocalDateTime value) {
-        this.loginTime = value;
-    }
-
-    /**
-     * 默认构造函数。
-     */
-    public LoginLogEntity() {
-        super();
-    }
-
     /**
      * 静态工厂方法：创建登录日志。
      *
@@ -182,6 +132,8 @@ public class LoginLogEntity extends BaseEntity {
     /**
      * 登录状态枚举。
      */
+    @Getter
+    @lombok.RequiredArgsConstructor
     public enum LoginStatus {
         /** 成功 */
         SUCCESS(0),
@@ -189,23 +141,5 @@ public class LoginLogEntity extends BaseEntity {
         FAILED(1);
 
         private final Integer code;
-
-        /**
-         * 创建 {@code LoginStatus} 实例。
-         *
-         * @param code 枚举编码
-         */
-        LoginStatus(Integer code) {
-            this.code = code;
-        }
-
-        /**
-         * 获取枚举编码。
-         *
-         * @return 枚举编码
-         */
-        public Integer getCode() {
-            return code;
-        }
     }
 }

@@ -45,8 +45,10 @@ public interface ProcessInstanceRepository {
     /**
      * 新增一条流程实例。
      *
-     * @param instance 待新增的流程实例
-     * @return 返回携带自增主键的回填结果 {@link Mono}
+     * <p>当前实现在执行插入后，将持久化对象的主键另行回填到传入的领域对象。</p>
+     *
+     * @param instance 待新增的流程实例，执行插入后回填其 ID
+     * @return 返回带影响行数的 {@link Mono}，不返回主键
      */
     Mono<Integer> insert(ProcessInstance instance);
 

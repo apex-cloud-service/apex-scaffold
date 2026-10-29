@@ -135,4 +135,18 @@ public class OffMessageRecipientRepositoryImpl implements OffMessageRecipientRep
                                 .eq(OffMessageRecipientPO::getReadStatus, false)))
                 .subscribeOn(BlockingIoSchedulers.jdbc());
     }
+
+    @Override
+    public Flux<OffMessageRecipientEntity> findInboxAfterId(Long recipientId, Long afterId, int limit) {
+        return Mono.fromCallable(() -> {
+                    LambdaQueryWrapper<OffMessageRecipientPO> wrapper = new LambdaQueryWrapper<>();
+                    wrapper.eq(OffMessageRecipientPO::getRecipientId, recipientId)
+                            .gt(OffMessageRecipientPO::getId, afterId)
+                            .orderByAsc(OffMessageRecipientPO::getId)
+                            .last("LIMIT " + limit);
+                    return mapper.selectList(wrapper);
+                })
+                .subscribeOn(BlockingIoSchedulers.jdbc())
+                .flatMapMany(list -> Flux.fromIterable(list).map(converter::toEntity));
+    }
 }

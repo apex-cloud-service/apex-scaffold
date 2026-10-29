@@ -14,7 +14,7 @@ import lombok.ToString;
  * <p>对应数据库表 auth_totp
  *
  * @author Apex Team
- * @since 2026-09-21
+ * @since 1.3.1
  */
 @Data
 @Builder

@@ -22,20 +22,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
  *@param cpuUsage 进程 CPU 使用率（0~1）
  *@param systemCpuUsage 系统 CPU 使用率（0~1）
  *@param threadCount 当前存活线程数
- *@param activeSessions 活跃会话数（NaN 表示采集不可用）
- *@param totalRequests 累计 API 请求数
- *@param error4xx 累计 4xx 错误数
- *@param error5xx 累计 5xx 错误数
- *@param avgResponseTime 平均响应时间（秒）
- *@param p95ResponseTime 响应时间 P95 分位（秒）
- *@param p99ResponseTime 响应时间 P99 分位（秒）
- *@param gatewayRequests 累计网关请求数
- *@param rateLimitRejected 限流拒绝次数
- *@param circuitBreakerOpened 熔断打开次数
- *@param loginFailed 登录失败次数
- *@param loginSuccess 登录成功次数
- *@param registerCount 注册成功次数
- *@param uploadCount 文件上传成功次数
  *
  * @author Apex Team
  * @version 1.0.0

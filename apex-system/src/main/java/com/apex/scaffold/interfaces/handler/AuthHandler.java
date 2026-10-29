@@ -92,8 +92,11 @@ public class AuthHandler extends BaseHandler {
      * 构造方法，通过 super(messageUtils) 传递 MessageUtils 给 BaseHandler
      *
      * @param authService     认证业务服务
+     * @param authRegistrationService 注册及注册前微信绑定服务
      * @param requestHandlerUtil 请求处理工具
      * @param messageUtils    国际化消息工具
+     * @param securityMetricsRecorder 安全指标记录器
+     * @param businessMetricsRecorder 核心业务指标记录器
      * @param weChatGateway   微信网关（公众号网页授权）
      */
     public AuthHandler(
@@ -151,7 +154,12 @@ public class AuthHandler extends BaseHandler {
                 description = "微信授权失败",
                 content = @Content(schema = @Schema(implementation = Result.class)))
     })
-    @OperationLog(module = "认证管理", type = OperationLog.OperationType.LOGIN, description = "用户登录")
+    @OperationLog(
+            module = "认证管理",
+            type = OperationLog.OperationType.LOGIN,
+            description = "用户登录",
+            saveRequest = false,
+            saveResponse = false)
     @SentinelResource(value = "authLogin", blockHandler = "handleLoginBlock")
     public Mono<ServerResponse> login(ServerRequest request) {
         log.info("用户登录请求");
@@ -235,7 +243,8 @@ public class AuthHandler extends BaseHandler {
             module = "认证管理",
             type = OperationLog.OperationType.LOGIN,
             description = "刷新Token",
-            saveResponse = false)
+            saveResponse = false,
+            saveRequest = false)
     public Mono<ServerResponse> refresh(ServerRequest request) {
         log.info("刷新Token请求");
         return requestHandlerUtil
@@ -269,7 +278,12 @@ public class AuthHandler extends BaseHandler {
                 description = "未登录或Token已失效",
                 content = @Content(schema = @Schema(implementation = Result.class)))
     })
-    @OperationLog(module = "认证管理", type = OperationLog.OperationType.LOGOUT, description = "退出登录")
+    @OperationLog(
+            module = "认证管理",
+            type = OperationLog.OperationType.LOGOUT,
+            description = "退出登录",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> logout(ServerRequest request) {
         String traceId = TraceIdUtil.getTraceId();
         log.info("退出登录请求, traceId: {}", traceId);
@@ -315,7 +329,12 @@ public class AuthHandler extends BaseHandler {
                 description = "未登录",
                 content = @Content(schema = @Schema(implementation = Result.class)))
     })
-    @OperationLog(module = "认证管理", type = OperationLog.OperationType.UPDATE, description = "绑定微信手机号")
+    @OperationLog(
+            module = "认证管理",
+            type = OperationLog.OperationType.UPDATE,
+            description = "绑定微信手机号",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> bindPhone(ServerRequest request) {
         String traceId = TraceIdUtil.getTraceId();
         log.info("绑定微信手机号请求, traceId: {}", traceId);
@@ -354,7 +373,12 @@ public class AuthHandler extends BaseHandler {
                 description = "参数错误或票据无效",
                 content = @Content(schema = @Schema(implementation = Result.class)))
     })
-    @OperationLog(module = "认证管理", type = OperationLog.OperationType.INSERT, description = "用户注册")
+    @OperationLog(
+            module = "认证管理",
+            type = OperationLog.OperationType.INSERT,
+            description = "用户注册",
+            saveRequest = false,
+            saveResponse = false)
     @IdempotentApi(required = false, header = "Idempotency-Key")
     public Mono<ServerResponse> register(ServerRequest request) {
         return requestHandlerUtil
@@ -396,7 +420,12 @@ public class AuthHandler extends BaseHandler {
                 description = "参数错误或微信票据无效",
                 content = @Content(schema = @Schema(implementation = Result.class)))
     })
-    @OperationLog(module = "认证管理", type = OperationLog.OperationType.UPDATE, description = "注册前微信绑定手机号")
+    @OperationLog(
+            module = "认证管理",
+            type = OperationLog.OperationType.UPDATE,
+            description = "注册前微信绑定手机号",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> bindWechatPhone(ServerRequest request) {
         return requestHandlerUtil
                 .handleRequestBody(request, WechatBindPhoneRequest.class)
@@ -428,7 +457,12 @@ public class AuthHandler extends BaseHandler {
                 description = "参数错误",
                 content = @Content(schema = @Schema(implementation = Result.class)))
     })
-    @OperationLog(module = "认证管理", type = OperationLog.OperationType.OTHER, description = "发送短信验证码")
+    @OperationLog(
+            module = "认证管理",
+            type = OperationLog.OperationType.OTHER,
+            description = "发送短信验证码",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> sendSmsCode(ServerRequest request) {
         log.info("发送短信验证码请求");
         return requestHandlerUtil
@@ -458,7 +492,12 @@ public class AuthHandler extends BaseHandler {
                 description = "参数错误",
                 content = @Content(schema = @Schema(implementation = Result.class)))
     })
-    @OperationLog(module = "认证管理", type = OperationLog.OperationType.OTHER, description = "发送创蓝短信验证码")
+    @OperationLog(
+            module = "认证管理",
+            type = OperationLog.OperationType.OTHER,
+            description = "发送创蓝短信验证码",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> sendClSmsCode(ServerRequest request) {
         log.info("发送创蓝短信验证码请求");
         return requestHandlerUtil
@@ -518,7 +557,12 @@ public class AuthHandler extends BaseHandler {
                 description = "参数错误",
                 content = @Content(schema = @Schema(implementation = Result.class)))
     })
-    @OperationLog(module = "认证管理", type = OperationLog.OperationType.OTHER, description = "本机号校验")
+    @OperationLog(
+            module = "认证管理",
+            type = OperationLog.OperationType.OTHER,
+            description = "本机号校验",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> validateMobile(ServerRequest request) {
         log.info("本机号校验请求");
         return request.formData().flatMap(formData -> {
@@ -555,7 +599,12 @@ public class AuthHandler extends BaseHandler {
                 description = "缺少 redirectUri 参数或微信渠道未配置",
                 content = @Content(schema = @Schema(implementation = Result.class)))
     })
-    @OperationLog(module = "认证管理", type = OperationLog.OperationType.OTHER, description = "公众号网页授权跳转")
+    @OperationLog(
+            module = "认证管理",
+            type = OperationLog.OperationType.OTHER,
+            description = "公众号网页授权跳转",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> mpAuthorize(ServerRequest request) {
         String traceId = TraceIdUtil.getTraceId();
         String redirectUri = request.queryParam("redirectUri").orElse("").trim();

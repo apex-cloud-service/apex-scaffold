@@ -12,6 +12,8 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 import java.util.Optional;
 import java.util.Set;
+import lombok.Getter;
+import lombok.Setter;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -67,31 +69,11 @@ class RequestHandlerUtilTest {
         traceIdUtilMockedStatic.close();
     }
 
+    @Getter
+    @Setter
     static class TestRequest {
         private String name;
         private Integer age;
-
-        public String getName() {
-            return name;
-        }
-
-        /**
-         * 设置{@code name}。
-         */
-        public void setName(String name) {
-            this.name = name;
-        }
-
-        public Integer getAge() {
-            return age;
-        }
-
-        /**
-         * 设置{@code age}。
-         */
-        public void setAge(Integer age) {
-            this.age = age;
-        }
     }
 
     /**

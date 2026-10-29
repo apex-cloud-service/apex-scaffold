@@ -18,12 +18,11 @@ class DataSourcePoolManagerTest {
         appender.start();
         logger.addAppender(appender);
         try {
-            StepVerifier.create(new DataSourcePoolManager()
-                            .testConnection(
-                                    "jdbc:unknown:database?password=private-secret", "user", "private-secret", 1))
+            StepVerifier.create(new DataSourcePoolManager(2)
+                            .testConnection("jdbc:mysql://127.0.0.1:1/demo", "user", "private-secret", 1))
                     .expectErrorSatisfies(error -> {
                         assertThat(error).isInstanceOf(BusinessException.class);
-                        assertThat(error.getMessage()).doesNotContain("private-secret", "jdbc:");
+                        assertThat(error.getMessage()).doesNotContain("private-secret", "jdbc:", "user");
                         assertThat(error.getCause()).isNull();
                     })
                     .verify();
@@ -36,5 +35,16 @@ class DataSourcePoolManagerTest {
             logger.detachAppender(appender);
             appender.stop();
         }
+    }
+
+    @Test
+    void unsupportedProtocolIsRejectedBeforeConnecting() {
+        StepVerifier.create(new DataSourcePoolManager(2)
+                        .testConnection("jdbc:unknown:database?password=private-secret", "user", "private-secret", 1))
+                .expectErrorSatisfies(error -> {
+                    assertThat(error).isInstanceOf(BusinessException.class);
+                    assertThat(error.getMessage()).doesNotContain("private-secret", "jdbc:");
+                })
+                .verify();
     }
 }

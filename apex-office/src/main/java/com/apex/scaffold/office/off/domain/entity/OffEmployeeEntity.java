@@ -15,6 +15,7 @@ import lombok.ToString;
  * @since 1.2.0
  */
 @Getter
+@lombok.NoArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class OffEmployeeEntity extends BaseEntity {
@@ -37,10 +38,6 @@ public class OffEmployeeEntity extends BaseEntity {
     private String syncSource;
     private String externalId;
     private String tenantId;
-
-    public OffEmployeeEntity() {
-        super();
-    }
 
     /**
      * 设置工号，赋值后刷新更新时间。

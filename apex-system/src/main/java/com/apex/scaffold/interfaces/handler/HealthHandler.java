@@ -1,5 +1,6 @@
 package com.apex.scaffold.interfaces.handler;
 
+import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.interfaces.util.MessageUtils;
 import io.swagger.v3.oas.annotations.Operation;
@@ -94,6 +95,12 @@ public class HealthHandler extends BaseHandler {
                 description = "服务不可用",
                 content = @Content(schema = @Schema(implementation = Result.class)))
     })
+    @OperationLog(
+            module = "Health",
+            type = OperationLog.OperationType.SELECT,
+            description = "health",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> health(ServerRequest request) {
         Map<String, Object> healthInfo = new HashMap<>(4);
         healthInfo.put("status", "UP");
@@ -119,6 +126,12 @@ public class HealthHandler extends BaseHandler {
                 description = "服务存活",
                 content = @Content(mediaType = "application/json", schema = @Schema(implementation = Result.class)))
     })
+    @OperationLog(
+            module = "Health",
+            type = OperationLog.OperationType.SELECT,
+            description = "root",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> root(ServerRequest request) {
         Map<String, Object> probeInfo = new HashMap<>(3);
         probeInfo.put("status", "UP");
@@ -154,6 +167,12 @@ public class HealthHandler extends BaseHandler {
                 description = "获取成功",
                 content = @Content(mediaType = "application/json", schema = @Schema(implementation = Result.class)))
     })
+    @OperationLog(
+            module = "Health",
+            type = OperationLog.OperationType.SELECT,
+            description = "info",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> info(ServerRequest request) {
         return Mono.deferContextual(ctx -> {
             Locale locale = ctx.getOrDefault(Locale.class, Locale.SIMPLIFIED_CHINESE);

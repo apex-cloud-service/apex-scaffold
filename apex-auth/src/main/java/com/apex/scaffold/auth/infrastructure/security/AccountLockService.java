@@ -252,6 +252,7 @@ public class AccountLockService {
     /**
      * 锁定原因枚举
      */
+    @lombok.Getter
     public enum LockReason {
         /** 暴力破解攻击 */
         BRUTE_FORCE("暴力破解攻击"),
@@ -270,10 +271,6 @@ public class AccountLockService {
 
         LockReason(String description) {
             this.description = description;
-        }
-
-        public String getDescription() {
-            return description;
         }
     }
 }

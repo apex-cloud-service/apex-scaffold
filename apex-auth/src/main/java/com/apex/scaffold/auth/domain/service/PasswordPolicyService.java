@@ -322,35 +322,12 @@ public class PasswordPolicyService {
     /**
      * 密码验证结果
      */
+    @lombok.Getter
+    @lombok.RequiredArgsConstructor
     public static class PasswordValidationResult {
         private final boolean passed;
         private final int score;
         private final List<String> errors;
-
-        /**
-         * 构造密码验证结果。
-         *
-         * @param passed 是否通过校验
-         * @param score 强度评分
-         * @param errors 未通过时的错误信息列表
-         */
-        public PasswordValidationResult(boolean passed, int score, List<String> errors) {
-            this.passed = passed;
-            this.score = score;
-            this.errors = errors;
-        }
-
-        public boolean isPassed() {
-            return passed;
-        }
-
-        public int getScore() {
-            return score;
-        }
-
-        public List<String> getErrors() {
-            return errors;
-        }
 
         public String getStrengthLevel() {
             if (score >= SCORE_THRESHOLD_VERY_STRONG) {

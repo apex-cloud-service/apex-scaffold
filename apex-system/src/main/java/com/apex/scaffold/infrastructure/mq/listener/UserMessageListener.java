@@ -4,11 +4,11 @@ import com.apex.scaffold.common.context.TenantContext;
 import com.apex.scaffold.domain.model.entity.OperationLogEntity;
 import com.apex.scaffold.domain.model.entity.SystemMessageEntity;
 import com.apex.scaffold.domain.repository.OperationLogRepository;
-import com.apex.scaffold.domain.repository.SystemMessageRepository;
 import com.apex.scaffold.domain.repository.UserRepository;
 import com.apex.scaffold.domain.service.CacheService;
 import com.apex.scaffold.infrastructure.mq.constant.MqConstant;
 import com.apex.scaffold.infrastructure.mq.service.MqConsumerService;
+import com.apex.scaffold.infrastructure.persistence.repository.UserRegistrationTransaction;
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -18,6 +18,7 @@ import org.apache.rocketmq.spring.annotation.ConsumeMode;
 import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.apache.rocketmq.spring.core.RocketMQListener;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -63,8 +64,8 @@ import org.springframework.stereotype.Component;
 @ConditionalOnBean(RocketMQTemplate.class)
 @ConditionalOnProperty(name = "apex.mq.consumer.enabled", havingValue = "true", matchIfMissing = true)
 @RocketMQMessageListener(
-        consumerGroup = MqConstant.CONSUMER_GROUP_USER,
-        topic = MqConstant.TOPIC_USER,
+        consumerGroup = "${apex.mq.consumer-groups.user:" + MqConstant.CONSUMER_GROUP_USER + "}",
+        topic = "${apex.mq.topics.user:" + MqConstant.TOPIC_USER + "}",
         selectorExpression = MqConstant.TAG_USER_REGISTER
                 + " || "
                 + MqConstant.TAG_USER_LOGIN
@@ -82,14 +83,20 @@ public class UserMessageListener implements RocketMQListener<Map<String, Object>
     /** 用户仓储，用于查询和更新用户信息 */
     private final UserRepository userRepository;
 
-    /** 系统消息仓储，用于发送系统通知 */
-    private final SystemMessageRepository systemMessageRepository;
+    /** 注册消息的双表同步事务 */
+    private final UserRegistrationTransaction userRegistrationTransaction;
 
     /** 操作日志仓储，用于记录安全审计日志 */
     private final OperationLogRepository operationLogRepository;
 
     /** 缓存服务，用于清理用户缓存 */
     private final CacheService cacheService;
+
+    /** 本监听器实际消费的用户 Topic（注解占位符解析值） */
+    private final String userTopic;
+
+    /** 本监听器实际使用的消费组（注解占位符解析值），同时作为幂等身份 */
+    private final String userConsumerGroup;
 
     /** 消息标签到类型化处理函数的不可变注册表。 */
     private final Map<String, Consumer<UserMessagePayload>> handlers;
@@ -102,21 +109,32 @@ public class UserMessageListener implements RocketMQListener<Map<String, Object>
      *
      * @param mqConsumerService 幂等消费服务
      * @param userRepository 用户仓储
-     * @param systemMessageRepository 系统消息仓储
+     * @param userRegistrationTransaction 注册双表事务
      * @param operationLogRepository 操作日志仓储
      * @param cacheService 缓存服务
+     * @param dlqConsumerGroupRegistrar 死信消费组声明回调
+     * @param userTopic 实际用户消息 Topic，缺省回退 {@link MqConstant#TOPIC_USER}
+     * @param userConsumerGroup 实际用户消费组，缺省回退 {@link MqConstant#CONSUMER_GROUP_USER}
      */
     public UserMessageListener(
             MqConsumerService mqConsumerService,
             UserRepository userRepository,
-            SystemMessageRepository systemMessageRepository,
+            UserRegistrationTransaction userRegistrationTransaction,
             OperationLogRepository operationLogRepository,
-            CacheService cacheService) {
+            CacheService cacheService,
+            Consumer<ConsumerGroupRegistration> dlqConsumerGroupRegistrar,
+            @Value("${apex.mq.topics.user:" + MqConstant.TOPIC_USER + "}") String userTopic,
+            @Value("${apex.mq.consumer-groups.user:" + MqConstant.CONSUMER_GROUP_USER + "}") String userConsumerGroup) {
         this.mqConsumerService = mqConsumerService;
         this.userRepository = userRepository;
-        this.systemMessageRepository = systemMessageRepository;
+        this.userRegistrationTransaction = userRegistrationTransaction;
         this.operationLogRepository = operationLogRepository;
         this.cacheService = cacheService;
+        this.userTopic = userTopic;
+        this.userConsumerGroup = userConsumerGroup;
+        // 把本监听器实际使用的消费组声明给死信处理器：RocketMQ 自然死信 Topic 按消费组生成，
+        // 需借助该映射在 Broker 未写入重试前 Topic 时唯一反查原始业务 Topic。
+        dlqConsumerGroupRegistrar.accept(new ConsumerGroupRegistration(userTopic, userConsumerGroup));
         Map<String, Consumer<UserMessagePayload>> registry = new LinkedHashMap<>();
         register(registry, MqConstant.TAG_USER_REGISTER, this::handleUserRegister);
         register(registry, MqConstant.TAG_USER_LOGIN, this::handleUserLogin);
@@ -162,7 +180,7 @@ public class UserMessageListener implements RocketMQListener<Map<String, Object>
         String previousTenantId = TenantContext.currentTenantId().orElse(null);
         TenantContext.setTenantId(payload.tenantId());
         try {
-            boolean processed = mqConsumerService.processMessage(messageId, message, ignored -> {
+            boolean processed = mqConsumerService.processMessage(userConsumerGroup, messageId, message, ignored -> {
                 if (tag == null) {
                     throw new IllegalArgumentException("消息缺少tag字段");
                 }
@@ -205,8 +223,6 @@ public class UserMessageListener implements RocketMQListener<Map<String, Object>
             welcomeMsg.setContent("欢迎加入 Apex！您的账号已注册成功，开始探索你的审美偏好之旅吧。");
             welcomeMsg.setCreateTime(LocalDateTime.now());
             welcomeMsg.setUpdateTime(LocalDateTime.now());
-            systemMessageRepository.save(welcomeMsg).block();
-
             // 2. 记录注册操作日志
             OperationLogEntity logEntity = new OperationLogEntity();
             logEntity.setUserId(userId);
@@ -215,7 +231,7 @@ public class UserMessageListener implements RocketMQListener<Map<String, Object>
             logEntity.setDescription("用户注册: " + nickName);
             logEntity.setIp(payload.clientIp());
             logEntity.setOperationTime(LocalDateTime.now());
-            operationLogRepository.insert(logEntity).block();
+            userRegistrationTransaction.execute(welcomeMsg, logEntity).block();
         }
 
         log.info("用户注册后置处理完成, userId: {}, nickName: {}", userId, nickName);

@@ -31,7 +31,7 @@ import reactor.core.publisher.Mono;
  * <p>遵循 RFC 6238 标准，支持 30 秒时间窗口和 ±1 窗口容差。
  *
  * @author Apex Scaffold Team
- * @since 2026-09-21
+ * @since 1.3.1
  */
 @Slf4j
 @Service
@@ -73,6 +73,8 @@ public class TotpService {
      * @param userId   用户 ID
      * @param tenantId 租户 ID
      * @return 包含密钥和 OTP Auth URL 的结果
+     * @param issuer      OTP Auth URL 中的发行方标识
+     * @param accountName OTP Auth URL 中的账户名
      */
     public Mono<TotpSetupResult> generateSecret(Long userId, String tenantId, String issuer, String accountName) {
         // 生成随机密钥

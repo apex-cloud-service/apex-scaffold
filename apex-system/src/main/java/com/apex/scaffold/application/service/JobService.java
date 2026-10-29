@@ -60,6 +60,12 @@ public class JobService {
      */
     private final JobAssembler jobAssembler;
 
+    /** 保存与执行共用的受控任务目标解析器。 */
+    private final com.apex.scaffold.application.job.JobInvoker jobInvoker;
+
+    /** 租户写链路守卫。 */
+    private final TenantGuard tenantGuard;
+
     /**
      * 查询全部任务。
      *
@@ -127,8 +133,11 @@ public class JobService {
      * @throws BusinessException 当 Cron 表达式非法时抛出
      */
     public Mono<JobEntity> createJob(JobRequest request) {
-        return Mono.defer(() -> {
+        return tenantGuard
+                .assertActive()
+                .then(Mono.defer(() -> {
                     validateCron(request.getCronExpression());
+                    jobInvoker.validateTarget(request.getInvokeTarget());
                     String tenantId =
                             TenantContext.currentTenantId().orElseThrow(() -> new IllegalStateException("租户上下文不存在"));
                     JobEntity entity = JobEntity.create(
@@ -142,7 +151,7 @@ public class JobService {
                         entity.setConcurrent(request.getConcurrent());
                     }
                     return jobRepository.insert(entity).map(rows -> entity);
-                })
+                }))
                 .flatMap(entity -> jobScheduler.register(entity).thenReturn(entity))
                 .doOnSuccess(job -> log.info("创建定时任务成功，name: {}", job.getJobName()));
     }
@@ -161,6 +170,7 @@ public class JobService {
         return getJob(id)
                 .flatMap(existing -> {
                     validateCron(request.getCronExpression());
+                    jobInvoker.validateTarget(request.getInvokeTarget());
                     existing.updateInfo(
                             request.getJobName(),
                             request.getJobGroup(),

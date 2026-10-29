@@ -1,5 +1,8 @@
 package com.apex.scaffold.office.domain.approval;
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
 /**
  * 审批状态枚举
  *
@@ -8,6 +11,8 @@ package com.apex.scaffold.office.domain.approval;
  * @author Apex Team
  * @since 1.3.0
  */
+@Getter
+@RequiredArgsConstructor
 public enum ApprovalStatus {
 
     /**
@@ -41,17 +46,4 @@ public enum ApprovalStatus {
     TRANSFERRED("已转审");
 
     private final String description;
-
-    ApprovalStatus(String description) {
-        this.description = description;
-    }
-
-    /**
-     * 获取状态描述
-     *
-     * @return 状态描述
-     */
-    public String getDescription() {
-        return description;
-    }
 }

@@ -619,6 +619,12 @@ public class JwtAuthenticationFilter implements WebFilter {
                 return true;
             }
         }
+        // 组织目录内部接口由集群内服务直连，不携带 JWT；租户由 X-Tenant-Id 声明并在 Handler 内绑定
+        for (String internalPath : SystemConstants.INTERNAL_ORG_PATHS) {
+            if (PATH_MATCHER.match(internalPath, path)) {
+                return true;
+            }
+        }
         return false;
     }
 

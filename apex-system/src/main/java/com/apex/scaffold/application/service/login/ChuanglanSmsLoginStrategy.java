@@ -58,6 +58,7 @@ public class ChuanglanSmsLoginStrategy extends AbstractPhoneLoginStrategy {
      * @param userService             用户应用服务
      * @param tokenService            Token 服务
      * @param loginResponseHelper     登录响应构建器
+     * @param authTicketService 认证票据服务，登录成功后签发会话票据
      */
     public ChuanglanSmsLoginStrategy(
             @Qualifier("chuanglanSmsCodeService") SmsCodeService chuanglanSmsCodeService,

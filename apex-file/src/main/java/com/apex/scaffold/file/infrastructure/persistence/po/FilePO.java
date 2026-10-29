@@ -26,6 +26,22 @@ import lombok.experimental.SuperBuilder;
 @TableName("file_record")
 public class FilePO extends BasePO {
 
+    /** 可信租户标识。 */
+    @TableField("tenant_id")
+    private String tenantId;
+
+    /** 对象实际存储提供商类型。 */
+    @TableField("storage_type")
+    private String storageType;
+
+    /** 初始化约定的总片数。 */
+    @TableField("total_chunks")
+    private Integer totalChunks;
+
+    /** 初始化约定的分片大小。 */
+    @TableField("chunk_size")
+    private Long chunkSize;
+
     /**
      * 文件名称。
      */

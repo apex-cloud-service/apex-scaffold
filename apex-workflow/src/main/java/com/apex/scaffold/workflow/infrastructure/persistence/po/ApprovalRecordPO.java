@@ -24,11 +24,11 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 @SuperBuilder
 @EqualsAndHashCode(callSuper = true)
-@TableName("wf_approval_record")
+@TableName(value = "wf_approval_record", excludeProperty = "version")
 public class ApprovalRecordPO extends BasePO {
 
     /** 租户 ID，用于多租户数据隔离。 */
-    private Long tenantId;
+    private String tenantId;
 
     /** 所属流程实例 ID。 */
     private Long processInstanceId;

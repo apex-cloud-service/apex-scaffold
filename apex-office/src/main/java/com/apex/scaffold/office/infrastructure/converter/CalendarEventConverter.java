@@ -28,6 +28,8 @@ public interface CalendarEventConverter {
      * @return 日历事件持久化对象
      */
     @Mapping(target = "eventType", source = "eventType", qualifiedByName = "eventTypeToString")
+    @Mapping(target = "isAllDay", source = "isAllDay", defaultValue = "false")
+    @Mapping(target = "isRecurring", source = "isRecurring", defaultValue = "false")
     CalendarEventPO toPO(CalendarEvent event);
 
     /**
@@ -37,6 +39,8 @@ public interface CalendarEventConverter {
      * @return 日历事件领域实体
      */
     @Mapping(target = "eventType", source = "eventType", qualifiedByName = "stringToEventType")
+    @Mapping(target = "isAllDay", source = "isAllDay", defaultValue = "false")
+    @Mapping(target = "isRecurring", source = "isRecurring", defaultValue = "false")
     CalendarEvent toEntity(CalendarEventPO po);
 
     /**

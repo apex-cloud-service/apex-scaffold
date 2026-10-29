@@ -70,7 +70,6 @@ public class UnifiedBusinessLogHandler {
      * @return 日志分页数据
      */
     @RequirePermission("system:log:business:query")
-    @OperationLog(module = "业务日志", type = OperationLog.OperationType.SELECT, description = "查询业务日志")
     @Operation(
             operationId = "queryUnifiedBusinessLogs",
             summary = "统一查询业务日志",
@@ -131,6 +130,12 @@ public class UnifiedBusinessLogHandler {
         @ApiResponse(responseCode = "403", description = "权限不足，需要 system:log:business:query 权限")
     })
     @SuppressWarnings("PMD.MethodTooLongRule")
+    @OperationLog(
+            module = "UnifiedBusinessLog",
+            type = OperationLog.OperationType.SELECT,
+            description = "queryLogs",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> queryLogs(ServerRequest request) {
         try {
             String logType = request.queryParam("logType").orElse(null);
@@ -223,6 +228,12 @@ public class UnifiedBusinessLogHandler {
         @ApiResponse(responseCode = "400", description = "参数错误，例如时间格式不正确"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要 system:log:business:query 权限")
     })
+    @OperationLog(
+            module = "UnifiedBusinessLog",
+            type = OperationLog.OperationType.SELECT,
+            description = "countLogs",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> countLogs(ServerRequest request) {
         try {
             String logType = request.queryParam("logType").orElse(null);

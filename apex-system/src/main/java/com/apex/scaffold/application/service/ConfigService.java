@@ -47,6 +47,11 @@ public class ConfigService {
     private final ConfigAssembler configAssembler;
 
     /**
+     * 租户写链路守卫。
+     */
+    private final TenantGuard tenantGuard;
+
+    /**
      * 查询全部参数配置。
      *
      * @return 参数配置 DTO 列表
@@ -90,18 +95,20 @@ public class ConfigService {
      * @throws BusinessException 当键名已存在时抛出 {@code CONFIG_KEY_EXISTS}
      */
     public Mono<ConfigEntity> createConfig(ConfigRequest request) {
-        return configRepository.existsByKey(request.getConfigKey(), null).flatMap(exists -> {
-            if (exists) {
-                return Mono.error(new BusinessException(ResultCode.CONFIG_KEY_EXISTS));
-            }
-            ConfigEntity entity =
-                    ConfigEntity.create(request.getConfigName(), request.getConfigKey(), request.getConfigValue());
-            entity.setRemark(request.getRemark());
-            return configRepository.insert(entity).map(rows -> {
-                log.info("创建参数配置成功，key: {}", entity.getConfigKey());
-                return entity;
-            });
-        });
+        return tenantGuard.assertActive().then(Mono.defer(() -> configRepository
+                .existsByKey(request.getConfigKey(), null)
+                .flatMap(exists -> {
+                    if (exists) {
+                        return Mono.error(new BusinessException(ResultCode.CONFIG_KEY_EXISTS));
+                    }
+                    ConfigEntity entity = ConfigEntity.create(
+                            request.getConfigName(), request.getConfigKey(), request.getConfigValue());
+                    entity.setRemark(request.getRemark());
+                    return configRepository.insert(entity).map(rows -> {
+                        log.info("创建参数配置成功，key: {}", entity.getConfigKey());
+                        return entity;
+                    });
+                })));
     }
 
     /**

@@ -27,6 +27,7 @@ import lombok.ToString;
  * @see BaseEntity
  */
 @Getter
+@lombok.Setter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class JobEntity extends BaseEntity {
@@ -97,51 +98,6 @@ public class JobEntity extends BaseEntity {
      * 备注。
      */
     private String remark;
-
-    /** Sets tenantId. For persistence/construction use only. */
-    public void setTenantId(String value) {
-        this.tenantId = value;
-    }
-
-    /** Sets jobName. For persistence/construction use only. */
-    public void setJobName(String value) {
-        this.jobName = value;
-    }
-
-    /** Sets jobGroup. For persistence/construction use only. */
-    public void setJobGroup(String value) {
-        this.jobGroup = value;
-    }
-
-    /** Sets invokeTarget. For persistence/construction use only. */
-    public void setInvokeTarget(String value) {
-        this.invokeTarget = value;
-    }
-
-    /** Sets cronExpression. For persistence/construction use only. */
-    public void setCronExpression(String value) {
-        this.cronExpression = value;
-    }
-
-    /** Sets misfirePolicy. For persistence/construction use only. */
-    public void setMisfirePolicy(Integer value) {
-        this.misfirePolicy = value;
-    }
-
-    /** Sets concurrent. For persistence/construction use only. */
-    public void setConcurrent(Integer value) {
-        this.concurrent = value;
-    }
-
-    /** Sets status. For persistence/construction use only. */
-    public void setStatus(Integer value) {
-        this.status = value;
-    }
-
-    /** Sets remark. For persistence/construction use only. */
-    public void setRemark(String value) {
-        this.remark = value;
-    }
 
     /**
      * 默认构造函数。
@@ -246,6 +202,7 @@ public class JobEntity extends BaseEntity {
     /**
      * 任务状态枚举。
      */
+    @Getter
     public enum JobState {
         /** 停用 */
         DISABLED(0),
@@ -262,20 +219,12 @@ public class JobEntity extends BaseEntity {
         JobState(Integer code) {
             this.code = code;
         }
-
-        /**
-         * 获取枚举编码。
-         *
-         * @return 枚举编码
-         */
-        public Integer getCode() {
-            return code;
-        }
     }
 
     /**
      * 错失执行策略枚举。
      */
+    @Getter
     public enum MisfirePolicy {
         /** 默认：错过即跳过 */
         DEFAULT(0),
@@ -294,20 +243,12 @@ public class JobEntity extends BaseEntity {
         MisfirePolicy(Integer code) {
             this.code = code;
         }
-
-        /**
-         * 获取枚举编码。
-         *
-         * @return 枚举编码
-         */
-        public Integer getCode() {
-            return code;
-        }
     }
 
     /**
      * 并发模式枚举。
      */
+    @Getter
     public enum ConcurrentMode {
         /** 禁止并发 */
         FORBIDDEN(0),
@@ -323,15 +264,6 @@ public class JobEntity extends BaseEntity {
          */
         ConcurrentMode(Integer code) {
             this.code = code;
-        }
-
-        /**
-         * 获取枚举编码。
-         *
-         * @return 枚举编码
-         */
-        public Integer getCode() {
-            return code;
         }
     }
 }

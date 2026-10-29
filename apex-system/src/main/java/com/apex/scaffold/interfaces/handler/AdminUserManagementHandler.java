@@ -104,7 +104,12 @@ public class AdminUserManagementHandler extends BaseHandler {
         @ApiResponse(responseCode = "400", description = "参数校验失败或请求体为空"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要 staff:manage 权限")
     })
-    @OperationLog(module = "用户管理", type = OperationLog.OperationType.INSERT, description = "后台创建用户")
+    @OperationLog(
+            module = "用户管理",
+            type = OperationLog.OperationType.INSERT,
+            description = "后台创建用户",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> create(ServerRequest request) {
         return parseBody(request, AdminUserCreateRequest.class)
                 .flatMap(body -> currentOpenId(request).flatMap(openId -> service.create(openId, body)))
@@ -154,6 +159,12 @@ public class AdminUserManagementHandler extends BaseHandler {
         @ApiResponse(responseCode = "400", description = "参数错误"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要 staff:manage 权限")
     })
+    @OperationLog(
+            module = "AdminUserManagement",
+            type = OperationLog.OperationType.SELECT,
+            description = "list",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> list(ServerRequest request) {
         int page = safeParseInt(request.queryParam("page").orElse(null), 1);
         int size = safeParseInt(request.queryParam("size").orElse(null), 30);
@@ -188,7 +199,12 @@ public class AdminUserManagementHandler extends BaseHandler {
         @ApiResponse(responseCode = "404", description = "用户不存在"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要 staff:manage 权限")
     })
-    @OperationLog(module = "用户管理", type = OperationLog.OperationType.SELECT, description = "查看用户详情")
+    @OperationLog(
+            module = "用户管理",
+            type = OperationLog.OperationType.SELECT,
+            description = "查看用户详情",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> detail(ServerRequest request) {
         return currentOpenId(request)
                 .flatMap(openId -> service.detail(openId, userId(request)))
@@ -228,7 +244,12 @@ public class AdminUserManagementHandler extends BaseHandler {
         @ApiResponse(responseCode = "404", description = "用户不存在"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要 staff:manage 权限")
     })
-    @OperationLog(module = "用户管理", type = OperationLog.OperationType.UPDATE, description = "编辑用户资料")
+    @OperationLog(
+            module = "用户管理",
+            type = OperationLog.OperationType.UPDATE,
+            description = "编辑用户资料",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> update(ServerRequest request) {
         Long targetId = userId(request);
         return parseBody(request, AdminUserUpdateRequest.class)
@@ -248,6 +269,12 @@ public class AdminUserManagementHandler extends BaseHandler {
         @ApiResponse(responseCode = "200", description = "查询成功"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要 staff:manage 权限")
     })
+    @OperationLog(
+            module = "AdminUserManagement",
+            type = OperationLog.OperationType.OTHER,
+            description = "roles",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> roles(ServerRequest request) {
         return currentOpenId(request).flatMap(service::manageableRoles).flatMap(this::buildSuccess);
     }
@@ -286,7 +313,12 @@ public class AdminUserManagementHandler extends BaseHandler {
         @ApiResponse(responseCode = "404", description = "用户不存在"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要 staff:manage 权限")
     })
-    @OperationLog(module = "用户管理", type = OperationLog.OperationType.UPDATE, description = "配置用户后台角色")
+    @OperationLog(
+            module = "用户管理",
+            type = OperationLog.OperationType.UPDATE,
+            description = "配置用户后台角色",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> replaceRoles(ServerRequest request) {
         Long userId = userId(request);
         return parseBody(request, AdminUserRolesRequest.class)
@@ -316,7 +348,12 @@ public class AdminUserManagementHandler extends BaseHandler {
         @ApiResponse(responseCode = "404", description = "用户不存在"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要 staff:session:revoke 权限")
     })
-    @OperationLog(module = "用户管理", type = OperationLog.OperationType.UPDATE, description = "强制用户下线")
+    @OperationLog(
+            module = "用户管理",
+            type = OperationLog.OperationType.UPDATE,
+            description = "强制用户下线",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> revokeSessions(ServerRequest request) {
         return currentOpenId(request)
                 .flatMap(openId -> service.revokeSessions(openId, userId(request)))
@@ -353,7 +390,12 @@ public class AdminUserManagementHandler extends BaseHandler {
         @ApiResponse(responseCode = "404", description = "用户不存在"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要 staff:manage 权限")
     })
-    @OperationLog(module = "用户管理", type = OperationLog.OperationType.UPDATE, description = "更新用户状态")
+    @OperationLog(
+            module = "用户管理",
+            type = OperationLog.OperationType.UPDATE,
+            description = "更新用户状态",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> updateStatus(ServerRequest request) {
         Long targetId = userId(request);
         return parseBody(request, AdminUserStatusRequest.class)

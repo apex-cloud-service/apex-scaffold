@@ -2,6 +2,7 @@ package com.apex.scaffold.auth.infrastructure.kms;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import lombok.Getter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -201,6 +202,7 @@ class VaultKmsServiceTest {
         assertThat(metadata.isEnabled()).isTrue();
     }
 
+    @Getter
     static class TestDataKey implements KeyManagementService.DataKey {
         private final String plaintextKey;
         private final String encryptedKey;
@@ -209,18 +211,9 @@ class VaultKmsServiceTest {
             this.plaintextKey = plaintextKey;
             this.encryptedKey = encryptedKey;
         }
-
-        @Override
-        public String getPlaintextKey() {
-            return plaintextKey;
-        }
-
-        @Override
-        public String getEncryptedKey() {
-            return encryptedKey;
-        }
     }
 
+    @Getter
     static class TestKeyMetadata implements KeyManagementService.KeyMetadata {
         private final String keyId;
         private final String keyArn;
@@ -242,36 +235,6 @@ class VaultKmsServiceTest {
             this.keyState = keyState;
             this.creationDate = creationDate;
             this.enabled = enabled;
-        }
-
-        @Override
-        public String getKeyId() {
-            return keyId;
-        }
-
-        @Override
-        public String getKeyArn() {
-            return keyArn;
-        }
-
-        @Override
-        public String getAlgorithm() {
-            return algorithm;
-        }
-
-        @Override
-        public String getKeyState() {
-            return keyState;
-        }
-
-        @Override
-        public java.time.Instant getCreationDate() {
-            return creationDate;
-        }
-
-        @Override
-        public boolean isEnabled() {
-            return enabled;
         }
     }
 }

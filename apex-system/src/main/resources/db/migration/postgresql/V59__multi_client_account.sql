@@ -39,8 +39,8 @@ CREATE INDEX IF NOT EXISTS idx_user_social_user_id ON sys_user_social (user_id);
 CREATE INDEX IF NOT EXISTS idx_user_social_union_id ON sys_user_social (union_id);
 
 -- 3. 存量微信 OpenID 迁移为 WECHAT_APP 绑定行（PHONE_ 前缀为手机号注册占位符，跳过）
-INSERT INTO sys_user_social (tenant_id, user_id, channel, open_id, union_id, status, bound_at)
-SELECT u.tenant_id, u.id, 'WECHAT_APP', u.open_id, u.union_id, 1,
+INSERT INTO sys_user_social (id, tenant_id, user_id, channel, open_id, union_id, status, bound_at)
+SELECT u.id, u.tenant_id, u.id, 'WECHAT_APP', u.open_id, u.union_id, 1,
        COALESCE(u.create_time, CURRENT_TIMESTAMP)
 FROM sys_user u
 WHERE u.open_id IS NOT NULL

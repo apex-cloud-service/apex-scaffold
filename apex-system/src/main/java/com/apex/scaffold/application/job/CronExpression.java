@@ -80,6 +80,7 @@ public final class CronExpression {
     private static final int MAX_SCAN_ITERATIONS = 3660;
 
     /** 原始表达式。 */
+    @lombok.Getter
     private final String expression;
 
     /** 秒字段取值集合（0-59）。 */
@@ -333,15 +334,6 @@ public final class CronExpression {
     private Integer nextInSet(BitSet set, int from) {
         int next = set.nextSetBit(from + 1);
         return next < 0 ? null : next;
-    }
-
-    /**
-     * 获取原始表达式文本。
-     *
-     * @return 原始表达式
-     */
-    public String getExpression() {
-        return expression;
     }
 
     @Override

@@ -18,5 +18,11 @@ public enum StorageType {
     VOLCENGINE,
 
     /** 本地存储（用于测试） */
-    LOCAL
+    LOCAL,
+
+    /** 阿里云 OSS 对象存储 */
+    ALIYUN_OSS,
+
+    /** 七牛对象存储 */
+    QINIU
 }

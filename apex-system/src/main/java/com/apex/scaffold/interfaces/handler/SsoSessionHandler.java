@@ -106,6 +106,12 @@ public class SsoSessionHandler extends BaseHandler {
         @ApiResponse(responseCode = "401", description = "未授权,需要登录"),
         @ApiResponse(responseCode = "403", description = "权限不足,需要 system:sso:session:list 权限")
     })
+    @OperationLog(
+            module = "SsoSession",
+            type = OperationLog.OperationType.SELECT,
+            description = "list",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> list(ServerRequest request) {
         int page = safeParseInt(request.queryParam("page").orElse("1"), 1);
         int size = safeParseInt(request.queryParam("size").orElse("20"), 20);
@@ -144,7 +150,12 @@ public class SsoSessionHandler extends BaseHandler {
         @ApiResponse(responseCode = "403", description = "权限不足,需要 system:sso:session:revoke 权限"),
         @ApiResponse(responseCode = "404", description = "SSO 会话不存在")
     })
-    @OperationLog(module = "SSO 会话管理", type = OperationLog.OperationType.UPDATE, description = "撤销 SSO 会话")
+    @OperationLog(
+            module = "SSO 会话管理",
+            type = OperationLog.OperationType.UPDATE,
+            description = "撤销 SSO 会话",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> revoke(ServerRequest request) {
         Long id = requirePositiveId(request);
         return sysSsoSessionService
@@ -180,7 +191,12 @@ public class SsoSessionHandler extends BaseHandler {
         @ApiResponse(responseCode = "403", description = "权限不足,需要 system:sso:session:revoke 权限"),
         @ApiResponse(responseCode = "404", description = "用户不存在")
     })
-    @OperationLog(module = "SSO 会话管理", type = OperationLog.OperationType.UPDATE, description = "撤销用户所有 SSO 会话")
+    @OperationLog(
+            module = "SSO 会话管理",
+            type = OperationLog.OperationType.UPDATE,
+            description = "撤销用户所有 SSO 会话",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> revokeUserSessions(ServerRequest request) {
         Long userId = requirePositiveId(request);
         return sysSsoSessionService
@@ -206,6 +222,12 @@ public class SsoSessionHandler extends BaseHandler {
         @ApiResponse(responseCode = "401", description = "未授权,需要登录"),
         @ApiResponse(responseCode = "403", description = "权限不足,需要 system:sso:session:stat 权限")
     })
+    @OperationLog(
+            module = "SsoSession",
+            type = OperationLog.OperationType.SELECT,
+            description = "getStatistics",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> getStatistics(ServerRequest request) {
         return sysSsoSessionService.getStatistics().flatMap(this::buildSuccess);
     }

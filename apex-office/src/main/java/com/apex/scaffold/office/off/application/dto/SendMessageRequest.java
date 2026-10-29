@@ -26,20 +26,30 @@ import lombok.NoArgsConstructor;
 @Schema(description = "发送消息请求")
 public class SendMessageRequest {
 
+    @jakarta.validation.constraints.NotBlank
+    @jakarta.validation.constraints.Size(max = 200)
     @Schema(description = "消息主题", required = true)
     private String subject;
 
+    @jakarta.validation.constraints.NotBlank
+    @jakarta.validation.constraints.Size(max = 16000)
     @Schema(description = "消息内容", required = true)
     private String content;
 
+    @jakarta.validation.constraints.Size(max = 32)
+    @jakarta.validation.constraints.Pattern(regexp = "[A-Z][A-Z_]*")
     @Schema(description = "消息类型(SYSTEM/NOTICE/TASK/ALERT)", example = "NOTICE")
     private String messageType;
 
+    @jakarta.validation.constraints.Pattern(regexp = "LOW|NORMAL|HIGH|URGENT")
     @Schema(description = "优先级(LOW/NORMAL/HIGH/URGENT)", example = "NORMAL")
     private String priority;
 
-    @Schema(description = "接收人ID列表", required = true)
-    private java.util.List<Long> recipientIds;
+    @jakarta.validation.constraints.NotEmpty
+    @jakarta.validation.constraints.Size(max = 100)
+    @Schema(description = "接收系统用户ID列表，须绑定本租户未删除且ACTIVE的办公员工（不是员工主键）", required = true)
+    private java.util.List<@jakarta.validation.constraints.NotNull @jakarta.validation.constraints.Positive Long>
+            recipientIds;
 
     @Schema(description = "过期时间")
     private LocalDateTime expireTime;

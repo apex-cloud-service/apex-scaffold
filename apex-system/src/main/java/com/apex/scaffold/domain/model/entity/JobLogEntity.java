@@ -25,6 +25,8 @@ import lombok.ToString;
  * @see BaseEntity
  */
 @Getter
+@lombok.Setter
+@lombok.NoArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class JobLogEntity extends BaseEntity {
@@ -41,6 +43,7 @@ public class JobLogEntity extends BaseEntity {
      */
     private Long jobId;
 
+    @lombok.Setter(lombok.AccessLevel.NONE)
     private String tenantId;
 
     /**
@@ -94,63 +97,6 @@ public class JobLogEntity extends BaseEntity {
      */
     private Long duration;
 
-    /** Sets jobId. For persistence/construction use only. */
-    public void setJobId(Long value) {
-        this.jobId = value;
-    }
-
-    /** Sets jobName. For persistence/construction use only. */
-    public void setJobName(String value) {
-        this.jobName = value;
-    }
-
-    /** Sets jobGroup. For persistence/construction use only. */
-    public void setJobGroup(String value) {
-        this.jobGroup = value;
-    }
-
-    /** Sets invokeTarget. For persistence/construction use only. */
-    public void setInvokeTarget(String value) {
-        this.invokeTarget = value;
-    }
-
-    /** Sets jobMessage. For persistence/construction use only. */
-    public void setJobMessage(String value) {
-        this.jobMessage = value;
-    }
-
-    /** Sets status. For persistence/construction use only. */
-    public void setStatus(Integer value) {
-        this.status = value;
-    }
-
-    /** Sets exceptionInfo. For persistence/construction use only. */
-    public void setExceptionInfo(String value) {
-        this.exceptionInfo = value;
-    }
-
-    /** Sets startTime. For persistence/construction use only. */
-    public void setStartTime(LocalDateTime value) {
-        this.startTime = value;
-    }
-
-    /** Sets endTime. For persistence/construction use only. */
-    public void setEndTime(LocalDateTime value) {
-        this.endTime = value;
-    }
-
-    /** Sets duration. For persistence/construction use only. */
-    public void setDuration(Long value) {
-        this.duration = value;
-    }
-
-    /**
-     * 默认构造函数。
-     */
-    public JobLogEntity() {
-        super();
-    }
-
     /**
      * 静态工厂方法：创建执行日志骨架。
      *
@@ -201,6 +147,8 @@ public class JobLogEntity extends BaseEntity {
     /**
      * 执行状态枚举。
      */
+    @Getter
+    @lombok.RequiredArgsConstructor
     public enum RunStatus {
         /** 执行中 */
         RUNNING(2),
@@ -210,23 +158,5 @@ public class JobLogEntity extends BaseEntity {
         FAILED(1);
 
         private final Integer code;
-
-        /**
-         * 创建 {@code RunStatus} 实例。
-         *
-         * @param code 枚举编码
-         */
-        RunStatus(Integer code) {
-            this.code = code;
-        }
-
-        /**
-         * 获取枚举编码。
-         *
-         * @return 枚举编码
-         */
-        public Integer getCode() {
-            return code;
-        }
     }
 }

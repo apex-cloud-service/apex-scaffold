@@ -4,6 +4,7 @@ import com.apex.scaffold.application.dto.admin.TenantDTO;
 import com.apex.scaffold.domain.model.entity.TenantEntity;
 import java.util.List;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 
 /**
@@ -24,6 +25,7 @@ public interface TenantAssembler {
      * @param entity 租户实体
      * @return 租户 DTO
      */
+    @Mapping(target = "version", source = "lockVersion")
     TenantDTO toDTO(TenantEntity entity);
 
     /**

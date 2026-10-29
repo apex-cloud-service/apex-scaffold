@@ -3,7 +3,6 @@ package com.apex.scaffold.file.infrastructure.storage.config;
 import io.minio.MinioClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.context.annotation.Bean;
 
@@ -19,7 +18,6 @@ import org.springframework.context.annotation.Bean;
  * @since 1.0.0
  */
 @Slf4j
-@AutoConfiguration
 public class MinioConfig {
 
     /** 构造 MinIO 配置类 */

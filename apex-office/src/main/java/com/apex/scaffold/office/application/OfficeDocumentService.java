@@ -424,7 +424,7 @@ public class OfficeDocumentService {
                 .ownerName(ownerName)
                 .parentFolderId(parentFolderId)
                 .permission("PRIVATE")
-                .isFolder(false)
+                .isFolder(documentType == DocumentType.FOLDER)
                 .isArchived(false)
                 .build();
     }
@@ -454,15 +454,11 @@ public class OfficeDocumentService {
      * @return 平台类型字符串
      */
     private String convertDocumentType(DocumentType documentType) {
-        switch (documentType) {
-            case DOC:
-                return "doc";
-            case SHEET:
-                return "sheet";
-            case SLIDE:
-                return "slide";
-            default:
-                return "doc";
-        }
+        return switch (documentType) {
+            case DOC -> "doc";
+            case SHEET -> "sheet";
+            case SLIDE -> "slide";
+            default -> "doc";
+        };
     }
 }

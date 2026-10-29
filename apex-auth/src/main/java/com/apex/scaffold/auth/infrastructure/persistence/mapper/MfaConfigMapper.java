@@ -12,7 +12,7 @@ import org.apache.ibatis.annotations.Param;
  * <p>MFA 配置数据访问接口
  *
  * @author Apex Scaffold Team
- * @since 2026-09-21
+ * @since 1.3.1
  */
 @Mapper
 public interface MfaConfigMapper extends BaseMapper<MfaConfigPO> {

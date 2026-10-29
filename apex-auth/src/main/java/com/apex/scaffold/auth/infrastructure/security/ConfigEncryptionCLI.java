@@ -21,7 +21,7 @@ import lombok.extern.slf4j.Slf4j;
  * }</pre>
  *
  * @author Apex Security Team
- * @since 2026-09-25
+ * @since 1.3.1
  */
 @Slf4j
 @SuppressWarnings("PMD.ClassNamingShouldBeCamelRule")
@@ -42,36 +42,33 @@ public class ConfigEncryptionCLI {
 
         String command = args[0];
         switch (command) {
-            case "generate":
-                generateKey();
-                break;
+            case "generate" -> generateKey();
 
-            case "encrypt":
+            case "encrypt" -> {
                 if (args.length < MIN_ARGS_FOR_OPERATION) {
                     System.err.println("错误: 缺少参数");
                     System.err.println("用法: encrypt <密钥Base64> <明文>");
                     System.exit(1);
                 }
                 encrypt(args[1], args[2]);
-                break;
+            }
 
-            case "decrypt":
+            case "decrypt" -> {
                 if (args.length < MIN_ARGS_FOR_OPERATION) {
                     System.err.println("错误: 缺少参数");
                     System.err.println("用法: decrypt <密钥Base64> <密文>");
                     System.exit(1);
                 }
                 decrypt(args[1], args[2]);
-                break;
+            }
 
-            case "interactive":
-                interactiveMode();
-                break;
+            case "interactive" -> interactiveMode();
 
-            default:
+            default -> {
                 System.err.println("错误: 未知命令 '" + command + "'");
                 printUsage();
                 System.exit(1);
+            }
         }
     }
 
@@ -166,11 +163,9 @@ public class ConfigEncryptionCLI {
         String choice = scanner.nextLine().trim();
 
         switch (choice) {
-            case "1":
-                generateKey();
-                break;
+            case "1" -> generateKey();
 
-            case "2":
+            case "2" -> {
                 System.out.print("\n请输入密钥（Base64）: ");
                 String encryptKey = scanner.nextLine().trim();
 
@@ -178,9 +173,9 @@ public class ConfigEncryptionCLI {
                 String plaintext = scanner.nextLine().trim();
 
                 encrypt(encryptKey, plaintext);
-                break;
+            }
 
-            case "3":
+            case "3" -> {
                 System.out.print("\n请输入密钥（Base64）: ");
                 String decryptKey = scanner.nextLine().trim();
 
@@ -188,11 +183,12 @@ public class ConfigEncryptionCLI {
                 String ciphertext = scanner.nextLine().trim();
 
                 decrypt(decryptKey, ciphertext);
-                break;
+            }
 
-            default:
+            default -> {
                 System.err.println("无效的选项");
                 System.exit(1);
+            }
         }
 
         scanner.close();

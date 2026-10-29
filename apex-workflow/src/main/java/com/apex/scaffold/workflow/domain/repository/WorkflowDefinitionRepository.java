@@ -1,6 +1,7 @@
 package com.apex.scaffold.workflow.domain.repository;
 
 import com.apex.scaffold.workflow.domain.model.WorkflowDefinition;
+import com.apex.scaffold.workflow.domain.model.WorkflowDefinitionStatus;
 import java.util.List;
 import reactor.core.publisher.Mono;
 
@@ -30,12 +31,43 @@ public interface WorkflowDefinitionRepository {
     Mono<WorkflowDefinition> findById(Long id);
 
     /**
-     * 按流程编码查询工作流定义。
+     * 按流程编码查询已发布且启用的工作流定义。
+     *
+     * <p>同一编码存在多个已发布版本时，返回版本号最大的一条。</p>
      *
      * @param code 流程编码
      * @return 返回包含工作流定义的 {@link Mono}；不存在时为空
      */
     Mono<WorkflowDefinition> findByCode(String code);
+
+    /**
+     * 查询指定编码的全部版本，按版本号降序排列。
+     *
+     * @param code 流程编码
+     * @return 返回版本列表的 {@link Mono}；无数据时为空列表
+     */
+    Mono<List<WorkflowDefinition>> findVersionsByCode(String code);
+
+    /**
+     * 分页查询工作流定义。
+     *
+     * @param workflowCode 流程编码过滤条件，为空表示不过滤
+     * @param status       生命周期状态过滤条件，为空表示不过滤
+     * @param offset       起始偏移量
+     * @param limit        本页最大条数
+     * @return 返回本页定义列表的 {@link Mono}
+     */
+    Mono<List<WorkflowDefinition>> findPage(
+            String workflowCode, WorkflowDefinitionStatus status, int offset, int limit);
+
+    /**
+     * 统计满足过滤条件的定义数量。
+     *
+     * @param workflowCode 流程编码过滤条件，为空表示不过滤
+     * @param status       生命周期状态过滤条件，为空表示不过滤
+     * @return 返回记录数的 {@link Mono}
+     */
+    Mono<Long> count(String workflowCode, WorkflowDefinitionStatus status);
 
     /**
      * 查询全部工作流定义。
@@ -47,8 +79,10 @@ public interface WorkflowDefinitionRepository {
     /**
      * 新增一条工作流定义。
      *
+     * <p>插入成功后会把生成的主键回填到传入的领域对象。</p>
+     *
      * @param definition 待新增的工作流定义
-     * @return 返回携带影响行数的 {@link Mono}，且回填自增主键
+     * @return 返回带影响行数的 {@link Mono}
      */
     Mono<Integer> insert(WorkflowDefinition definition);
 

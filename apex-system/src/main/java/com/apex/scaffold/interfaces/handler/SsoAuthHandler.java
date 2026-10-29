@@ -39,7 +39,7 @@ import reactor.core.publisher.Mono;
  *   <li>用户在 SSO 提供商完成身份验证</li>
  *   <li>SSO 提供商重定向回 /auth/sso/callback,携带认证响应</li>
  *   <li>系统验证认证响应,提取用户信息,建立本地会话</li>
- *   <li>返回 JWT 令牌或重定向到前端首页</li>
+ *   <li>返回 SSO 会话标识、用户信息和会话过期时间</li>
  * </ol>
  *
  * <h2>接口清单</h2>
@@ -50,7 +50,7 @@ import reactor.core.publisher.Mono;
  * </ul>
  *
  * @author Apex Scaffold Generator
- * @since 2026-09-19
+ * @since 1.3.1
  */
 @Component
 @Tag(name = "SSO 认证端点", description = "SSO 单点登录认证端点")
@@ -110,6 +110,12 @@ public class SsoAuthHandler extends BaseHandler {
         @ApiResponse(responseCode = "400", description = "参数错误,提供商 ID 必填且为正整数"),
         @ApiResponse(responseCode = "404", description = "SSO 提供商不存在或已禁用")
     })
+    @OperationLog(
+            module = "SsoAuth",
+            type = OperationLog.OperationType.INSERT,
+            description = "initiate",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> initiate(ServerRequest request) {
         Long providerId = request.queryParam("providerId").map(Long::parseLong).orElse(null);
         if (providerId == null || providerId <= 0) {
@@ -141,14 +147,13 @@ public class SsoAuthHandler extends BaseHandler {
      *   <li>验证认证响应,提取用户信息</li>
      *   <li>查找或创建本地用户</li>
      *   <li>创建 SSO 会话记录</li>
-     *   <li>签发 JWT 令牌</li>
+     *   <li>生成 SSO-TOKEN-{sessionId} 格式的会话标识</li>
      *   <li>返回认证结果</li>
      * </ol>
      *
      * @param request HTTP 请求,包含 SSO 提供商返回的认证响应参数
-     * @return 带 traceId 的统一成功响应,data 为 {"token": "JWT 令牌", "userInfo": {...}}
+     * @return 带 traceId 的统一成功响应，data 包含 sessionId、token（SSO 会话标识，非 JWT）、userInfo 和 expiryTime
      */
-    @OperationLog(module = "统一认证管理", type = OperationLog.OperationType.LOGIN, description = "SSO回调处理")
     @Operation(operationId = "handleSsoCallback", summary = "SSO 回调处理", description = "接收 SSO 提供商的认证响应,验证用户身份并建立本地会话")
     @Parameter(
             name = "providerId",
@@ -157,11 +162,17 @@ public class SsoAuthHandler extends BaseHandler {
             in = ParameterIn.QUERY,
             schema = @io.swagger.v3.oas.annotations.media.Schema(type = "integer", format = "int64"))
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "认证成功,返回 JWT 令牌和用户信息"),
+        @ApiResponse(responseCode = "200", description = "认证成功，返回sessionId、SSO会话标识token（非JWT）、userInfo和expiryTime"),
         @ApiResponse(responseCode = "400", description = "认证响应参数错误或验证失败"),
         @ApiResponse(responseCode = "401", description = "认证失败,用户身份无效"),
         @ApiResponse(responseCode = "404", description = "SSO 提供商不存在或已禁用")
     })
+    @OperationLog(
+            module = "统一认证管理",
+            type = OperationLog.OperationType.LOGIN,
+            description = "SSO回调处理",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> callback(ServerRequest request) {
         Long providerId = request.queryParam("providerId").map(Long::parseLong).orElse(null);
         if (providerId == null || providerId <= 0) {
@@ -201,7 +212,6 @@ public class SsoAuthHandler extends BaseHandler {
      * @param request HTTP 请求,需携带有效的认证令牌
      * @return 带 traceId 的统一成功响应,data 为 {"success": true, "logoutUrl": "SSO 提供商登出 URL(可选)"}
      */
-    @OperationLog(module = "统一认证管理", type = OperationLog.OperationType.LOGOUT, description = "SSO登出")
     @Operation(
             operationId = "ssoLogout",
             summary = "SSO 登出",
@@ -211,6 +221,12 @@ public class SsoAuthHandler extends BaseHandler {
         @ApiResponse(responseCode = "401", description = "未授权,需要先登录"),
         @ApiResponse(responseCode = "404", description = "SSO 会话不存在")
     })
+    @OperationLog(
+            module = "SsoAuth",
+            type = OperationLog.OperationType.LOGOUT,
+            description = "logout",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> logout(ServerRequest request) {
         return sysSsoSessionService.handleLogout(request).flatMap(this::buildSuccess);
     }

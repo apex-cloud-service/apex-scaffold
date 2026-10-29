@@ -128,17 +128,17 @@ CREATE TABLE IF NOT EXISTS token_security_event (
 -- 9. 创建视图用于监控Token健康状态
 CREATE OR REPLACE VIEW v_token_health AS
 SELECT 
-    DATE(issued_at) as issue_date,
+    DATE(access_token_issued_at) as issue_date,
     COUNT(*) as total_tokens,
     SUM(CASE WHEN access_token_encrypted IS NOT NULL THEN 1 ELSE 0 END) as encrypted_tokens,
-    SUM(CASE WHEN status = 'ACTIVE' THEN 1 ELSE 0 END) as active_tokens,
-    SUM(CASE WHEN status = 'REVOKED' THEN 1 ELSE 0 END) as revoked_tokens,
-    SUM(CASE WHEN status = 'ROTATED' THEN 1 ELSE 0 END) as rotated_tokens,
+    SUM(CASE WHEN revoked_at IS NULL AND access_token_expires_at > NOW() THEN 1 ELSE 0 END) as active_tokens,
+    SUM(CASE WHEN revoked_at IS NOT NULL THEN 1 ELSE 0 END) as revoked_tokens,
+    SUM(CASE WHEN rotation_count > 0 THEN 1 ELSE 0 END) as rotated_tokens,
     AVG(rotation_count) as avg_rotation_count,
     COUNT(DISTINCT token_family) as active_families
 FROM oauth2_authorization
-WHERE issued_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
-GROUP BY DATE(issued_at)
+WHERE access_token_issued_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+GROUP BY DATE(access_token_issued_at)
 ORDER BY issue_date DESC;
 
 -- 10. 添加配置表用于密钥版本管理

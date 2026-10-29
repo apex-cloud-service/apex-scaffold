@@ -2,8 +2,7 @@ package com.apex.scaffold.auth.infrastructure.event;
 
 import com.apex.scaffold.common.event.AbstractDomainEvent;
 import com.apex.scaffold.domain.service.DomainEventPublisher;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
 /**
@@ -24,12 +23,11 @@ import reactor.core.publisher.Mono;
  * 由基础设施层的 {@code DomainEventPublisherImpl} + Outbox 提供可靠投递。</p>
  *
  * @author Apex Team
- * @since 2026-10-09
+ * @since 1.3.1
  * @see DomainEventPublisher
  */
+@Slf4j
 public class LocalDomainEventPublisher implements DomainEventPublisher {
-
-    private static final Logger log = LoggerFactory.getLogger(LocalDomainEventPublisher.class);
 
     /**
      * 本地发布领域事件。

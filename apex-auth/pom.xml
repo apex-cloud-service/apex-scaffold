@@ -38,7 +38,7 @@
         <!-- 依赖基础设施层：MailService / EncryptionKeyProvider 等 SPI -->
         <dependency>
             <groupId>com.apex.scaffold</groupId>
-            <artifactId>apex-infrastructure</artifactId>
+            <artifactId>apex-infrastructure-integration</artifactId>
         </dependency>
 
         <!-- 内部 API 契约（/internal/v1 认证校验契约 TokenValidation DTO / AuthFeignClient 等跨服务约定） -->
@@ -89,6 +89,13 @@
         <dependency>
             <groupId>io.asyncer</groupId>
             <artifactId>r2dbc-mysql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- R2DBC PostgreSQL：版本由 Spring Boot BOM 管理 -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>r2dbc-postgresql</artifactId>
             <scope>runtime</scope>
         </dependency>
 

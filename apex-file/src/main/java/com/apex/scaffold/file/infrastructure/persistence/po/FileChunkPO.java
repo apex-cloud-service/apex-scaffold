@@ -26,6 +26,14 @@ import lombok.experimental.SuperBuilder;
 @TableName("file_chunk")
 public class FileChunkPO extends BasePO {
 
+    /** 可信租户标识。 */
+    @TableField("tenant_id")
+    private String tenantId;
+
+    /** 对象实际存储提供商类型。 */
+    @TableField("storage_type")
+    private String storageType;
+
     /**
      * 所属文件 ID（关联 file_record.id）。
      */

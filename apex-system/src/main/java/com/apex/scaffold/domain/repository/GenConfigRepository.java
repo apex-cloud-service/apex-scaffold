@@ -1,5 +1,6 @@
 package com.apex.scaffold.domain.repository;
 
+import com.apex.scaffold.common.dto.PageResponse;
 import com.apex.scaffold.domain.model.generator.GenConfigEntity;
 import java.util.List;
 import reactor.core.publisher.Mono;
@@ -58,6 +59,20 @@ public interface GenConfigRepository {
      * @return 配置实体列表
      */
     Mono<List<GenConfigEntity>> findAll();
+
+    /**
+     * 分页查询生成配置
+     *
+     * <p>在数据库侧完成过滤与分页，按创建时间倒序排列。
+     * 结果集已由持久化拦截器限定为当前租户。
+     *
+     * @param configName 配置名称模糊匹配条件，可为 {@code null}
+     * @param datasourceId 数据源 ID 精确匹配条件，可为 {@code null}
+     * @param pageNum 页码，从 1 开始
+     * @param pageSize 每页大小
+     * @return 分页结果
+     */
+    Mono<PageResponse<GenConfigEntity>> search(String configName, Long datasourceId, int pageNum, int pageSize);
 
     /**
      * 新增生成配置

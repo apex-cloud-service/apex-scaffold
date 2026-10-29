@@ -9,12 +9,11 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.Collections;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
@@ -43,9 +42,8 @@ import reactor.core.publisher.Mono;
 @Aspect
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class ResourcePermissionAspect {
-
-    private static final Logger log = LoggerFactory.getLogger(ResourcePermissionAspect.class);
 
     private final ResourcePermissionService permissionService;
     private final ExpressionParser expressionParser = new SpelExpressionParser();

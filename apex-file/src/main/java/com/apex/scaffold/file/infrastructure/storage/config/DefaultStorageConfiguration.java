@@ -1,67 +1,40 @@
 package com.apex.scaffold.file.infrastructure.storage.config;
 
+import com.apex.scaffold.file.domain.enums.StorageType;
 import com.apex.scaffold.file.domain.service.StorageService;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.autoconfigure.AutoConfiguration;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import com.apex.scaffold.file.domain.service.StorageServiceProvider;
+import com.apex.scaffold.file.infrastructure.storage.service.ObjectStorageServiceAdapter;
+import com.apex.scaffold.storage.StorageRegistry;
+import java.util.EnumMap;
+import java.util.Locale;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.Configuration;
 
 /**
- * 默认对象存储服务配置。
- *
- * <p>根据 {@code storage.default-type} 从已经启用的底层存储实现中选择唯一的默认服务，
- * 并以 {@code @Primary} 门面暴露给应用层。业务服务只依赖 {@link StorageService} 抽象，
- * 不再通过 Bean 数量或字段名称推断实际存储后端。</p>
+ * 将独立存储注册表适配为文件领域门面，统一默认选择并避免旧策略扫描重复装配。
  *
  * @author Apex Team
- * @version 1.0.0
- * @since 1.0.0
+ * @since 1.3.1
  */
-@AutoConfiguration
+@Configuration(proxyBeanMethods = false)
 public class DefaultStorageConfiguration {
-
-    /**
-     * 将 MinIO 选为显式配置的对象存储。
-     *
-     * @param minioStorageService MinIO 存储实现
-     * @return 默认对象存储服务
-     */
-    @Bean(name = "defaultStorageService")
-    @Primary
-    @ConditionalOnProperty(name = "storage.default-type", havingValue = "minio")
-    public StorageService minioDefaultStorageService(
-            @Qualifier("minioStorageService") StorageService minioStorageService) {
-        return minioStorageService;
+    /** @param registry 独立注册表 @return 文件策略选择器 */
+    @Bean
+    public StorageServiceProvider storageServiceProvider(StorageRegistry registry) {
+        EnumMap<StorageType, StorageService> services = new EnumMap<>(StorageType.class);
+        for (StorageType type : StorageType.values()) {
+            String id = type.name().toLowerCase(Locale.ROOT).replace('_', '-');
+            if (registry.types().contains(id)) {
+                services.put(type, new ObjectStorageServiceAdapter(registry.require(id)));
+            }
+        }
+        StorageType defaultType = StorageType.valueOf(
+                registry.defaultStorage().type().toUpperCase(Locale.ROOT).replace('-', '_'));
+        return new StorageServiceProvider(services, defaultType);
     }
-
-    /**
-     * 将火山引擎 TOS 选为默认对象存储。
-     *
-     * @param volcEngineStorageService 火山引擎 TOS 存储实现
-     * @return 默认对象存储服务
-     */
+    /** @param provider 文件策略选择器 @return 默认文件门面 */
     @Bean(name = "defaultStorageService")
-    @Primary
-    @ConditionalOnProperty(name = "storage.default-type", havingValue = "volcengine")
-    public StorageService volcEngineDefaultStorageService(
-            @Qualifier("volcEngineStorageService") StorageService volcEngineStorageService) {
-        return volcEngineStorageService;
-    }
-
-    /**
-     * 将本地文件系统选为默认对象存储。
-     *
-     * <p>未配置 {@code storage.default-type} 时默认选择 Local，确保文件上传不依赖外部对象存储服务。</p>
-     *
-     * @param localStorageService 本地存储实现
-     * @return 默认对象存储服务
-     */
-    @Bean(name = "defaultStorageService")
-    @Primary
-    @ConditionalOnProperty(name = "storage.default-type", havingValue = "local", matchIfMissing = true)
-    public StorageService localDefaultStorageService(
-            @Qualifier("localStorageService") StorageService localStorageService) {
-        return localStorageService;
+    public StorageService defaultStorageService(StorageServiceProvider provider) {
+        return provider.getDefaultStorageService();
     }
 }

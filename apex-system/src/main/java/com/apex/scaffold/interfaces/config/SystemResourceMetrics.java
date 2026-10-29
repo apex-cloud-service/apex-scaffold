@@ -8,8 +8,7 @@ import java.net.NetworkInterface;
 import java.nio.file.FileStore;
 import java.nio.file.FileSystems;
 import java.util.Enumeration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 系统资源指标绑定器（磁盘 + 网络）。
@@ -29,9 +28,8 @@ import org.slf4j.LoggerFactory;
  * @version 1.0.0
  * @since 1.0.0
  */
+@Slf4j
 public class SystemResourceMetrics implements MeterBinder {
-
-    private static final Logger log = LoggerFactory.getLogger(SystemResourceMetrics.class);
 
     /** 磁盘总容量指标名。 */
     private static final String METRIC_DISK_TOTAL = "apex.disk.total";

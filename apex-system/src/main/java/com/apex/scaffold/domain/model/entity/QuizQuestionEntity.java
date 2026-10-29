@@ -42,6 +42,7 @@ public class QuizQuestionEntity extends BaseEntity {
      * 题目的业务主键，用于关联答题记录。
      * </p>
      */
+    @lombok.Setter
     private String questionId;
 
     /**
@@ -51,6 +52,7 @@ public class QuizQuestionEntity extends BaseEntity {
      * 题目的显示文本内容。
      * </p>
      */
+    @lombok.Setter
     private String questionText;
 
     /**
@@ -60,6 +62,7 @@ public class QuizQuestionEntity extends BaseEntity {
      * 题目选项的JSON字符串，包含选项文本和对应ELO分值。
      * </p>
      */
+    @lombok.Setter
     private String optionsJson;
 
     /**
@@ -69,6 +72,7 @@ public class QuizQuestionEntity extends BaseEntity {
      * 此题目所属的吸引力维度，答题后将更新对应维度的ELO评分。
      * </p>
      */
+    @lombok.Setter
     private String dimension;
 
     /**
@@ -87,6 +91,7 @@ public class QuizQuestionEntity extends BaseEntity {
      * 0-未启用，1-已启用。停用的题目不会被随机抽取。
      * </p>
      */
+    @lombok.Setter
     private Integer enabled;
 
     /**
@@ -126,51 +131,6 @@ public class QuizQuestionEntity extends BaseEntity {
         this.setCreateTime(now);
         this.setUpdateTime(now);
         this.setDeleted(LogicalDeletion.NOT_DELETED.getCode());
-    }
-
-    /**
-     * 设置题目唯一标识（仅供持久层和构造器使用）。
-     *
-     * @param value 题目ID
-     */
-    public void setQuestionId(String value) {
-        this.questionId = value;
-    }
-
-    /**
-     * 设置题目文本（仅供持久层和构造器使用）。
-     *
-     * @param value 题目文本
-     */
-    public void setQuestionText(String value) {
-        this.questionText = value;
-    }
-
-    /**
-     * 设置选项JSON（仅供持久层和构造器使用）。
-     *
-     * @param value 选项JSON
-     */
-    public void setOptionsJson(String value) {
-        this.optionsJson = value;
-    }
-
-    /**
-     * 设置关联维度（仅供持久层和构造器使用）。
-     *
-     * @param value 吸引力维度
-     */
-    public void setDimension(String value) {
-        this.dimension = value;
-    }
-
-    /**
-     * 设置是否启用（仅供持久层和构造器使用）。
-     *
-     * @param value 是否启用
-     */
-    public void setEnabled(Integer value) {
-        this.enabled = value;
     }
 
     /**

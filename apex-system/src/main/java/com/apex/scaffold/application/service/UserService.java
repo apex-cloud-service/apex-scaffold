@@ -77,30 +77,40 @@ public class UserService {
      */
     private final CacheConsistencyPort cacheConsistencyService;
 
+    /**
+     * 租户写链路守卫
+     *
+     * <p>
+     * 在创建用户前校验租户状态与用户数配额。
+     * </p>
+     */
+    private final TenantGuard tenantGuard;
+
     private static final Set<String> ALLOWED_ORDER_FIELDS = Set.of("create_time", "nick_name", "status", "id");
 
     /**
      * 校验手机号允许注册。
      *
-     * <p>默认放行；如需注册限制（黑名单/风控），可在此注入自定义策略端口。</p>
+     * <p>注册票据签发前调用，除注册限制（黑名单/风控）外，先断言当前租户
+     * 状态允许创建业务数据，避免为不可写租户签发注册票据后在建档时才发现被拒。</p>
      *
      * @param phone 手机号，为空时跳过校验
      * @return 校验通过信号
      */
     public Mono<Void> assertPhoneRegistrationAllowed(String phone) {
-        return Mono.empty();
+        return tenantGuard.assertActive();
     }
 
     /**
      * 校验微信身份允许注册。
      *
-     * <p>默认放行；如需注册限制（黑名单/风控），可在此注入自定义策略端口。</p>
+     * <p>注册票据签发前调用，先断言当前租户状态允许创建业务数据。</p>
      *
      * @param openId 微信 openId，为空或临时手机号身份时跳过校验
      * @return 校验通过信号
      */
     public Mono<Void> assertWechatRegistrationAllowed(String openId) {
-        return Mono.empty();
+        return tenantGuard.assertActive();
     }
 
     /**
@@ -211,9 +221,11 @@ public class UserService {
     public Mono<UserEntity> create(UserEntity user) {
         log.debug("创建用户，openId: {}", user.getOpenId());
 
-        return assertPhoneRegistrationAllowed(user.getPhone())
-                .then(assertWechatRegistrationAllowed(user.getOpenId()))
-                .then(userRepository
+        return tenantGuard
+                .assertUserQuota(1)
+                .then(Mono.defer(() -> assertPhoneRegistrationAllowed(user.getPhone())))
+                .then(Mono.defer(() -> assertWechatRegistrationAllowed(user.getOpenId())))
+                .then(Mono.defer(() -> userRepository
                         .save(user)
                         .doOnSuccess(u -> {
                             log.info("用户创建成功，userId: {}, openId: {}", u.getId(), u.getOpenId());
@@ -221,7 +233,7 @@ public class UserService {
                         .doOnError(e -> log.error(
                                 "用户创建失败，openId: {}, type: {}",
                                 user.getOpenId(),
-                                e.getClass().getSimpleName())));
+                                e.getClass().getSimpleName()))));
     }
 
     /**
@@ -406,6 +418,8 @@ public class UserService {
      *
      * @param pageNum  页码（从1开始）
      * @param pageSize 每页数量
+     * @param orderBy 排序字段
+     * @param isAsc   是否升序排列
      * @return 分页响应结果，包含用户列表和分页信息
      */
     public Mono<PageResponse<UserEntity>> findPage(Integer pageNum, Integer pageSize, String orderBy, Boolean isAsc) {

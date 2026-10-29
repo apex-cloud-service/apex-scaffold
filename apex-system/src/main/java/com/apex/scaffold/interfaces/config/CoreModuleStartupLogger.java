@@ -1,8 +1,8 @@
 package com.apex.scaffold.interfaces.config;
 
 import java.util.List;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.core.env.Environment;
@@ -80,21 +80,12 @@ import org.springframework.stereotype.Component;
  * @see Environment
  */
 @Component
+@Slf4j
+@RequiredArgsConstructor
 public class CoreModuleStartupLogger implements ApplicationListener<ApplicationReadyEvent> {
-
-    private static final Logger log = LoggerFactory.getLogger(CoreModuleStartupLogger.class);
 
     /** Spring 环境抽象，提供所有配置属性访问能力。 */
     private final Environment env;
-
-    /**
-     * 构造器注入。
-     *
-     * @param env Spring {@link Environment}，由容器自动注入
-     */
-    public CoreModuleStartupLogger(Environment env) {
-        this.env = env;
-    }
 
     /**
      * Spring 容器就绪后触发，依次输出七个核心模块的加载状态。

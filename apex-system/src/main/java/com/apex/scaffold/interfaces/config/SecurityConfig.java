@@ -1,6 +1,7 @@
 package com.apex.scaffold.interfaces.config;
 
 import com.apex.scaffold.common.constant.SystemConstants;
+import com.apex.scaffold.common.context.TenantContext;
 import com.apex.scaffold.interfaces.security.JwtAuthenticationFilter;
 import com.apex.scaffold.interfaces.security.OAuth2ResourceServerFilter;
 import com.apex.scaffold.interfaces.security.OidcAuthenticationSuccessHandler;
@@ -17,6 +18,8 @@ import org.springframework.security.config.annotation.web.reactive.EnableWebFlux
 import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.util.AntPathMatcher;
+import org.springframework.web.server.WebFilter;
 import reactor.core.publisher.Mono;
 
 /**
@@ -88,6 +91,12 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
+    /** 内部调用声明目标租户的请求头，与共享租户透传约定一致。 */
+    private static final String INTERNAL_TENANT_HEADER = "X-Tenant-Id";
+
+    /** 内部组织接口路径匹配器。 */
+    private static final AntPathMatcher PATH_MATCHER = new AntPathMatcher();
+
     /** 是否启用 RBAC 细粒度角色授权（basic 版本关闭，仅保留 JWT 认证）。 */
     @Value("${apex.features.rbac:true}")
     private boolean rbacEnabled;
@@ -137,6 +146,8 @@ public class SecurityConfig {
                     exchanges
                             .pathMatchers(SystemConstants.PUBLIC_PATHS.toArray(new String[0]))
                             .permitAll()
+                            .pathMatchers(SystemConstants.INTERNAL_ORG_PATHS.toArray(new String[0]))
+                            .permitAll()
                             .pathMatchers(SystemConstants.AUTHENTICATED_USER_PATHS.toArray(new String[0]))
                             .authenticated();
                     if (rbacEnabled) {
@@ -160,6 +171,7 @@ public class SecurityConfig {
                 })
                 .addFilterAt(jwtAuthenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION)
                 .addFilterAfter(oauth2ResourceServerFilter, SecurityWebFiltersOrder.AUTHENTICATION)
+                .addFilterAfter(internalOrganizationTenantFilter(), SecurityWebFiltersOrder.AUTHORIZATION)
                 .exceptionHandling(exceptionHandling -> exceptionHandling
                         .authenticationEntryPoint((exchange, ex) -> Mono.deferContextual(ctx -> {
                             Locale locale = ctx.getOrDefault(Locale.class, Locale.SIMPLIFIED_CHINESE);
@@ -178,5 +190,36 @@ public class SecurityConfig {
         }
 
         return httpSecurity.build();
+    }
+
+    /**
+     * 组织目录内部接口的租户桥接过滤器。
+     *
+     * <p>内部组织接口由集群内其他服务（如 office 组织同步）直连调用，不携带 JWT，
+     * 因此无法使用从认证主体解析租户的 {@code @TenantAware} 切面。调用方必须通过
+     * {@code X-Tenant-Id} 声明目标租户，本过滤器在匹配 {@link SystemConstants#INTERNAL_ORG_PATHS}
+     * 时把该租户写入 Reactor Context，Handler 侧再用 {@link TenantContext#withTenant(reactor.core.publisher.Mono)}
+     * 安装到执行线程，保证 MyBatis 租户拦截器能按租户过滤。</p>
+     *
+     * <p>路径不匹配或请求头缺失时直接透传，交由安全链与 Handler 决定拒绝方式，
+     * 避免在过滤器层吞掉错误。</p>
+     *
+     * @return 内部组织接口租户桥接过滤器
+     */
+    private WebFilter internalOrganizationTenantFilter() {
+        return (exchange, chain) -> {
+            String path = exchange.getRequest().getPath().value();
+            boolean internalOrgPath =
+                    SystemConstants.INTERNAL_ORG_PATHS.stream().anyMatch(pattern -> PATH_MATCHER.match(pattern, path));
+            if (!internalOrgPath) {
+                return chain.filter(exchange);
+            }
+            String tenantId = exchange.getRequest().getHeaders().getFirst(INTERNAL_TENANT_HEADER);
+            if (tenantId == null || tenantId.isBlank()) {
+                return chain.filter(exchange);
+            }
+            return TenantContext.withTenant(chain.filter(exchange))
+                    .contextWrite(TenantContext.withTenant(tenantId.strip()));
+        };
     }
 }

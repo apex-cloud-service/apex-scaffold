@@ -15,6 +15,7 @@ import lombok.ToString;
  * @since 1.2.0
  */
 @Getter
+@lombok.NoArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class OffSyncHistoryEntity extends BaseEntity {
@@ -31,10 +32,6 @@ public class OffSyncHistoryEntity extends BaseEntity {
     private Integer employeeCount;
     private String errorMessage;
     private String tenantId;
-
-    public OffSyncHistoryEntity() {
-        super();
-    }
 
     /**
      * 设置同步类型，并刷新实体更新时间。

@@ -2,6 +2,7 @@ package com.apex.scaffold.application.service;
 
 import com.apex.scaffold.application.dto.log.UnifiedBusinessLogDTO;
 import com.apex.scaffold.common.dto.PageResponse;
+import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
 import com.apex.scaffold.infrastructure.persistence.mapper.*;
 import com.apex.scaffold.infrastructure.persistence.po.*;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -13,7 +14,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 /**
  * 业务日志统一查询服务
@@ -39,6 +39,9 @@ public class UnifiedBusinessLogService {
 
     /**
      * 统一查询业务日志
+     *
+     * <p>订阅时在 {@link BlockingIoSchedulers#jdbc()} 执行同步 Mapper 查询和结果聚合，
+     * 避免占用请求线程；查询失败沿用空分页降级。
      *
      * @param logType   日志类型（login/operation/api，null表示全部）
      * @param startTime 开始时间
@@ -87,7 +90,7 @@ public class UnifiedBusinessLogService {
 
                     return PageResponse.of(pagedLogs, (long) allLogs.size(), pageNum, pageSize);
                 })
-                .subscribeOn(Schedulers.boundedElastic())
+                .subscribeOn(BlockingIoSchedulers.jdbc())
                 .doOnError(e -> log.error("Query unified business logs failed", e))
                 .onErrorReturn(PageResponse.of(new ArrayList<>(DEFAULT_CAPACITY), 0L, pageNum, pageSize));
     }
@@ -188,6 +191,9 @@ public class UnifiedBusinessLogService {
     /**
      * 统计业务日志数量
      *
+     * <p>订阅时将同步 Mapper 统计隔离至 {@link BlockingIoSchedulers#jdbc()}，
+     * 保持按日志类型累加及异常返回零的既有语义。
+     *
      * @param logType   日志类型
      * @param startTime 开始时间
      * @param endTime   结束时间
@@ -218,7 +224,7 @@ public class UnifiedBusinessLogService {
 
                     return total;
                 })
-                .subscribeOn(Schedulers.boundedElastic())
+                .subscribeOn(BlockingIoSchedulers.jdbc())
                 .doOnError(e -> log.error("Count unified business logs failed", e))
                 .onErrorReturn(0L);
     }

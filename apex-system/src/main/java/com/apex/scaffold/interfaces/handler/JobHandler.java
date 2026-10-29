@@ -89,6 +89,12 @@ public class JobHandler extends BaseHandler {
         @ApiResponse(responseCode = "403", description = "权限不足，需要system:job:list权限")
     })
     @RequirePermission("system:job:list")
+    @OperationLog(
+            module = "Job",
+            type = OperationLog.OperationType.SELECT,
+            description = "list",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> list(ServerRequest request) {
         return jobService.listJobs().flatMap(this::buildSuccess);
     }
@@ -151,6 +157,12 @@ public class JobHandler extends BaseHandler {
     })
     @RequirePermission("system:job:list")
     @SuppressWarnings("PMD.MethodTooLongRule")
+    @OperationLog(
+            module = "Job",
+            type = OperationLog.OperationType.SELECT,
+            description = "page",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> page(ServerRequest request) {
         return Mono.defer(() -> {
                     String pageNumStr = request.queryParam("pageNum").orElse(null);
@@ -221,6 +233,12 @@ public class JobHandler extends BaseHandler {
         @ApiResponse(responseCode = "403", description = "权限不足，需要system:job:query权限")
     })
     @RequirePermission("system:job:query")
+    @OperationLog(
+            module = "Job",
+            type = OperationLog.OperationType.SELECT,
+            description = "detail",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> detail(ServerRequest request) {
         return jobService.getJob(requirePositiveId(request)).flatMap(this::buildSuccess);
     }
@@ -252,7 +270,12 @@ public class JobHandler extends BaseHandler {
         @ApiResponse(responseCode = "403", description = "权限不足，需要system:job:add权限")
     })
     @RequirePermission("system:job:add")
-    @OperationLog(module = "定时任务", type = OperationLog.OperationType.INSERT, description = "创建定时任务")
+    @OperationLog(
+            module = "定时任务",
+            type = OperationLog.OperationType.INSERT,
+            description = "创建定时任务",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> create(ServerRequest request) {
         return parseBody(request, JobRequest.class)
                 .flatMap(jobService::createJob)
@@ -290,7 +313,12 @@ public class JobHandler extends BaseHandler {
         @ApiResponse(responseCode = "403", description = "权限不足，需要system:job:edit权限")
     })
     @RequirePermission("system:job:edit")
-    @OperationLog(module = "定时任务", type = OperationLog.OperationType.UPDATE, description = "更新定时任务")
+    @OperationLog(
+            module = "定时任务",
+            type = OperationLog.OperationType.UPDATE,
+            description = "更新定时任务",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> update(ServerRequest request) {
         Long id = requirePositiveId(request);
         return parseBody(request, JobRequest.class)
@@ -321,7 +349,12 @@ public class JobHandler extends BaseHandler {
         @ApiResponse(responseCode = "403", description = "权限不足，需要system:job:remove权限")
     })
     @RequirePermission("system:job:remove")
-    @OperationLog(module = "定时任务", type = OperationLog.OperationType.DELETE, description = "删除定时任务")
+    @OperationLog(
+            module = "定时任务",
+            type = OperationLog.OperationType.DELETE,
+            description = "删除定时任务",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> delete(ServerRequest request) {
         return jobService
                 .deleteJob(requirePositiveId(request))
@@ -361,7 +394,12 @@ public class JobHandler extends BaseHandler {
         @ApiResponse(responseCode = "403", description = "权限不足，需要system:job:edit权限")
     })
     @RequirePermission("system:job:edit")
-    @OperationLog(module = "定时任务", type = OperationLog.OperationType.UPDATE, description = "更新任务状态")
+    @OperationLog(
+            module = "定时任务",
+            type = OperationLog.OperationType.UPDATE,
+            description = "更新任务状态",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> updateStatus(ServerRequest request) {
         Long id = requirePositiveId(request);
         return parseBody(request, StatusRequest.class)
@@ -395,7 +433,12 @@ public class JobHandler extends BaseHandler {
         @ApiResponse(responseCode = "403", description = "权限不足，需要system:job:run权限")
     })
     @RequirePermission("system:job:run")
-    @OperationLog(module = "定时任务", type = OperationLog.OperationType.UPDATE, description = "手动触发任务")
+    @OperationLog(
+            module = "定时任务",
+            type = OperationLog.OperationType.UPDATE,
+            description = "手动触发任务",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> runOnce(ServerRequest request) {
         return jobService.runOnce(requirePositiveId(request)).then(buildSuccess(java.util.Map.of("triggered", true)));
     }
@@ -437,6 +480,12 @@ public class JobHandler extends BaseHandler {
         @ApiResponse(responseCode = "403", description = "权限不足，需要system:job:query权限")
     })
     @RequirePermission("system:job:query")
+    @OperationLog(
+            module = "Job",
+            type = OperationLog.OperationType.OTHER,
+            description = "logs",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> logs(ServerRequest request) {
         int limit = safeParseInt(request.queryParam("limit").orElse(null), 20);
         return jobService.listLogs(requirePositiveId(request), limit).flatMap(this::buildSuccess);

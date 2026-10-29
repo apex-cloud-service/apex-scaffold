@@ -23,7 +23,12 @@ import reactor.core.publisher.Mono;
  */
 @Component
 public class WeComOfficeClient extends AbstractOfficeClient {
-    /** 构造企业微信 OAuth 客户端并指向企业微信 API 域名。 */
+    /**
+     * 构造企业微信 OAuth 客户端并指向企业微信 API 域名。
+     *
+     * @param builder 用于创建企业微信 HTTP 客户端的构建器
+     * @param properties 平台凭证、回跳地址及请求超时配置
+     */
     public WeComOfficeClient(WebClient.Builder builder, OfficePlatformProperties properties) {
         super(builder.baseUrl("https://qyapi.weixin.qq.com").build(), properties, OfficePlatform.WECOM);
     }

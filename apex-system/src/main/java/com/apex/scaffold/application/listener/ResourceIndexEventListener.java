@@ -47,8 +47,7 @@ public class ResourceIndexEventListener {
 
         try {
             switch (event.getAction()) {
-                case CREATE:
-                case UPDATE:
+                case CREATE, UPDATE -> {
                     // 创建或更新索引
                     indexSyncPort
                             .indexResource(event.getResourceType(), event.getResourceId())
@@ -74,8 +73,8 @@ public class ResourceIndexEventListener {
                                     event.getAction(),
                                     e))
                             .subscribe();
-                    break;
-                case DELETE:
+                }
+                case DELETE -> {
                     // 删除索引
                     indexSyncPort
                             .removeIndex(event.getResourceType(), event.getResourceId())
@@ -98,9 +97,8 @@ public class ResourceIndexEventListener {
                                     event.getResourceId(),
                                     e))
                             .subscribe();
-                    break;
-                default:
-                    log.warn("Unknown action: {}", event.getAction());
+                }
+                default -> log.warn("Unknown action: {}", event.getAction());
             }
         } catch (Exception e) {
             // 捕获所有异常，确保不影响业务流程

@@ -68,19 +68,25 @@ public interface CalendarEventMapper extends BaseMapper<CalendarEventPO> {
     List<CalendarEventPO> selectByParticipant(@Param("participantId") String participantId);
 
     /**
-     * 查询指定会议室在指定时间范围内的日历事件
+     * 查询指定会议室在指定时间范围内的有效占用事件
      *
+     * <p>租户条件与状态条件必须显式拼入：租户隔离不能依赖调用方自行过滤，
+     * 已取消（{@code CANCELLED}）的事件不再占用会议室，否则取消后无法重新预订。
+     *
+     * @param tenantId 租户ID
      * @param meetingRoomId 会议室ID
      * @param startTime 开始时间
      * @param endTime 结束时间
      * @return 日历事件列表
      */
-    @Select("SELECT * FROM office_calendar_event WHERE meeting_room_id = #{meetingRoomId} AND deleted = 0 AND "
+    @Select("SELECT * FROM office_calendar_event WHERE tenant_id = #{tenantId} "
+            + "AND meeting_room_id = #{meetingRoomId} AND deleted = 0 AND status <> 'CANCELLED' AND "
             + "((start_time >= #{startTime} AND start_time < #{endTime}) OR "
             + "(end_time > #{startTime} AND end_time <= #{endTime}) OR "
             + "(start_time <= #{startTime} AND end_time >= #{endTime})) "
             + "ORDER BY start_time ASC")
     List<CalendarEventPO> selectByMeetingRoom(
+            @Param("tenantId") Long tenantId,
             @Param("meetingRoomId") String meetingRoomId,
             @Param("startTime") LocalDateTime startTime,
             @Param("endTime") LocalDateTime endTime);

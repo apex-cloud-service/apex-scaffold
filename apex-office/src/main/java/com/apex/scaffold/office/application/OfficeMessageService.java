@@ -4,7 +4,10 @@ import com.apex.scaffold.office.domain.OfficePlatform;
 import com.apex.scaffold.office.domain.message.*;
 import com.apex.scaffold.office.domain.port.MessagePort;
 import java.time.LocalDateTime;
-import lombok.RequiredArgsConstructor;
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -31,16 +34,46 @@ import reactor.core.publisher.Mono;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class OfficeMessageService {
 
     private static final String STATUS_FAILED = "FAILED";
     private static final int MAX_RETRY_COUNT = 3;
 
     private final OfficeMessageRepository messageRepository;
-    private final MessagePort feishuMessageClient;
-    private final MessagePort dingTalkMessageClient;
-    private final MessagePort wecomMessageClient;
+    private final Map<OfficePlatform, MessagePort> strategies;
+
+    /**
+     * 按端口声明的平台注册策略；未知平台和重复注册在装配阶段失败。
+     *
+     * @param messageRepository 站内信仓储
+     * @param ports 站内信端口列表，按平台注册策略
+     */
+    public OfficeMessageService(OfficeMessageRepository messageRepository, List<MessagePort> ports) {
+        this.messageRepository = messageRepository;
+        Map<OfficePlatform, MessagePort> registry = new EnumMap<>(OfficePlatform.class);
+        for (MessagePort port : ports) {
+            String type = port.getPlatformType();
+            OfficePlatform platform;
+            try {
+                platform = OfficePlatform.valueOf(type.toUpperCase(Locale.ROOT));
+            } catch (IllegalArgumentException | NullPointerException error) {
+                throw new IllegalArgumentException("不支持的平台：" + type, error);
+            }
+            if (registry.putIfAbsent(platform, port) != null) {
+                throw new IllegalArgumentException("重复的平台策略：" + platform);
+            }
+        }
+        this.strategies = Map.copyOf(registry);
+    }
+
+    /** 发送与撤回共享同一个平台选择入口。 */
+    private MessagePort strategy(OfficePlatform platform) {
+        MessagePort port = strategies.get(platform);
+        if (port == null) {
+            throw new IllegalArgumentException("不支持的平台：" + platform);
+        }
+        return port;
+    }
 
     /**
      * 发送消息
@@ -105,12 +138,7 @@ public class OfficeMessageService {
      * @return 平台消息ID
      */
     private Mono<String> sendToPlatform(OfficePlatform platform, MessageTarget target, MessageContent content) {
-        return switch (platform) {
-            case FEISHU -> feishuMessageClient.sendMessage(target, content);
-            case DINGTALK -> dingTalkMessageClient.sendMessage(target, content);
-            case WECOM -> wecomMessageClient.sendMessage(target, content);
-            default -> Mono.error(new IllegalArgumentException("不支持的平台：" + platform));
-        };
+        return Mono.defer(() -> strategy(platform).sendMessage(target, content));
     }
 
     /**
@@ -189,11 +217,6 @@ public class OfficeMessageService {
      * @return 撤回是否成功
      */
     private Mono<Boolean> recallOnPlatform(OfficePlatform platform, String platformMessageId) {
-        return switch (platform) {
-            case FEISHU -> feishuMessageClient.recallMessage(platformMessageId);
-            case DINGTALK -> dingTalkMessageClient.recallMessage(platformMessageId);
-            case WECOM -> wecomMessageClient.recallMessage(platformMessageId);
-            default -> Mono.error(new IllegalArgumentException("不支持的平台：" + platform));
-        };
+        return Mono.defer(() -> strategy(platform).recallMessage(platformMessageId));
     }
 }

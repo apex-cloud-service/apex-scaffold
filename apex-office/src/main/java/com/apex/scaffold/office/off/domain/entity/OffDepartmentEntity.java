@@ -14,6 +14,7 @@ import lombok.ToString;
  * @since 1.2.0
  */
 @Getter
+@lombok.NoArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class OffDepartmentEntity extends BaseEntity {
@@ -34,10 +35,6 @@ public class OffDepartmentEntity extends BaseEntity {
     private String syncSource;
     private String externalId;
     private String tenantId;
-
-    public OffDepartmentEntity() {
-        super();
-    }
 
     /**
      * 设置部门编码，并刷新实体更新时间。

@@ -3,6 +3,8 @@ package com.apex.scaffold.domain.model.entity;
 import java.io.Serial;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.ToString;
 
 /**
@@ -15,6 +17,8 @@ import lombok.ToString;
  * @since 1.0.0
  */
 @Getter
+@Setter
+@NoArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class RolePermissionEntity extends BaseEntity {
@@ -22,22 +26,9 @@ public class RolePermissionEntity extends BaseEntity {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    /** 创建角色权限关联实体对象。 */
-    public RolePermissionEntity() {}
-
     /** 角色 ID。 */
     private Long roleId;
 
     /** 权限 ID。 */
     private Long permissionId;
-
-    /** Sets roleId. For persistence/construction use only. */
-    public void setRoleId(Long value) {
-        this.roleId = value;
-    }
-
-    /** Sets permissionId. For persistence/construction use only. */
-    public void setPermissionId(Long value) {
-        this.permissionId = value;
-    }
 }

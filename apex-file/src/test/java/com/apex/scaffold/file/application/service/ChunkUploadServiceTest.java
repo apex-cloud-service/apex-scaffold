@@ -1,30 +1,22 @@
 package com.apex.scaffold.file.application.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
-import com.apex.scaffold.common.context.TenantContext;
 import com.apex.scaffold.common.exception.BusinessException;
-import com.apex.scaffold.common.result.ResultCode;
-import com.apex.scaffold.file.application.dto.chunk.ChunkInitRequest;
-import com.apex.scaffold.file.application.dto.chunk.ChunkMergeRequest;
-import com.apex.scaffold.file.application.dto.chunk.ChunkUploadRequest;
+import com.apex.scaffold.file.application.dto.chunk.*;
+import com.apex.scaffold.file.domain.enums.StorageType;
 import com.apex.scaffold.file.domain.model.entity.FileChunkEntity;
 import com.apex.scaffold.file.domain.model.entity.FileEntity;
 import com.apex.scaffold.file.domain.repository.FileChunkRepository;
 import com.apex.scaffold.file.domain.repository.FileRepository;
 import com.apex.scaffold.file.domain.service.StorageService;
+import com.apex.scaffold.file.domain.service.StorageServiceProvider;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.util.concurrent.atomic.AtomicReference;
-import org.junit.jupiter.api.AfterEach;
+import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -33,359 +25,379 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+/** 验证分片会话归属、对象缺失、失败补偿及元数据保留。 */
 @ExtendWith(MockitoExtension.class)
-@DisplayName("ChunkUploadService 分片上传单元测试")
 class ChunkUploadServiceTest {
+    @Mock
+    private StorageService storage;
 
     @Mock
-    private StorageService storageService;
+    private FileRepository files;
 
     @Mock
-    private FileRepository fileRepository;
+    private FileChunkRepository chunks;
 
-    @Mock
-    private FileChunkRepository fileChunkRepository;
+    private ChunkUploadService service;
 
-    private ChunkUploadService chunkUploadService;
-
+    /** 创建使用明确提供商的被测服务。 */
     @BeforeEach
     void setUp() {
-        chunkUploadService = new ChunkUploadService(storageService, fileRepository, fileChunkRepository, "apex", 300);
+        service = new ChunkUploadService(
+                new StorageServiceProvider(Map.of(StorageType.LOCAL, storage), StorageType.LOCAL),
+                files,
+                chunks,
+                "apex",
+                300,
+                "local");
     }
 
-    @AfterEach
-    void tearDown() {
-        TenantContext.clear();
+    /** 注入与租户编号不同的可信用户身份。 */
+    private <T> Mono<T> authenticated(Mono<T> operation) {
+        return operation.contextWrite(c -> c.put(FileAccessContext.KEY, new FileAccessContext("42", 7L)));
     }
 
-    private FileEntity fileWithId(Long id) {
-        FileEntity file = new FileEntity();
-        file.setId(id);
-        return file;
+    /** 创建尚未完成的归属完整主记录。 */
+    private FileEntity file() {
+        FileEntity f = new FileEntity();
+        f.setId(1L);
+        f.setTenantId("42");
+        f.setUserId(7L);
+        f.setStorageType("local");
+        f.setBucketName("apex");
+        f.setStorageStatus("UPLOADING");
+        f.setOriginalName("movie.mp4");
+        f.setFileSize(6L);
+        f.setTotalChunks(2);
+        f.setChunkSize(3L);
+        return f;
     }
 
-    private FileChunkEntity chunk(Long fileId, int index, int totalChunks, long size) {
-        FileChunkEntity c = new FileChunkEntity();
-        c.setFileId(fileId);
-        c.setChunkIndex(index);
-        c.setTotalChunks(totalChunks);
-        c.setChunkSize(size);
-        c.setBucketName("apex");
-        c.setObjectName("chunks/" + fileId + "/" + index);
-        return c;
+    /** 创建归属完整的已存储分片。 */
+    private FileChunkEntity part(int index, int total) {
+        FileChunkEntity p = FileChunkEntity.stored(1L, index, 3L, total, null, "chunks/1/" + index, "apex", 7L);
+        p.setTenantId("42");
+        p.setStorageType("local");
+        return p;
     }
 
+    /** 验证初始化使用用户编号而非租户编号。 */
     @Test
-    @DisplayName("init：分片大小缺省时应自动计算并落库用户 ID")
-    void init_autoChunkSize() {
-        TenantContext.setTenantId("42");
-        AtomicReference<FileEntity> saved = new AtomicReference<>();
-        when(fileRepository.save(any(FileEntity.class))).thenAnswer(inv -> {
+    void initPersistsTrustedUser() {
+        when(files.save(any())).thenAnswer(inv -> {
             FileEntity f = inv.getArgument(0);
-            f.setId(100L);
-            saved.set(f);
-            return Mono.just(f);
-        });
-
-        ChunkInitRequest request = ChunkInitRequest.builder()
-                .fileName("movie.mp4")
-                .fileSize(10_000_000L)
-                .totalChunks(4)
-                .build();
-
-        StepVerifier.create(chunkUploadService.init(request))
-                .assertNext(result -> {
-                    assertThat(result.fileId()).isEqualTo(100L);
-                    assertThat(result.bucketName()).isEqualTo("apex");
-                    assertThat(result.totalChunks()).isEqualTo(4);
-                    assertThat(result.chunkSize()).isEqualTo(2_500_000L);
-                    assertThat(result.uploadedChunks()).isEmpty();
-                })
-                .verifyComplete();
-
-        assertThat(saved.get().getBusinessType()).isEqualTo("CHUNK");
-        assertThat(saved.get().getStorageStatus()).isEqualTo("UPLOADING");
-        assertThat(saved.get().getUserId()).isEqualTo(42L);
-    }
-
-    @Test
-    @DisplayName("init：显式分片大小应原样使用")
-    void init_explicitChunkSize() {
-        TenantContext.clear();
-        when(fileRepository.save(any(FileEntity.class))).thenAnswer(inv -> {
-            FileEntity f = inv.getArgument(0);
+            assertThat(f.getUserId()).isEqualTo(7L);
+            assertThat(f.getTenantId()).isEqualTo("42");
+            assertThat(f.getStorageType()).isEqualTo("local");
             f.setId(1L);
             return Mono.just(f);
         });
-
-        ChunkInitRequest request = ChunkInitRequest.builder()
-                .fileName("a.bin")
-                .fileSize(100L)
-                .totalChunks(2)
-                .chunkSize(64L)
-                .build();
-
-        StepVerifier.create(chunkUploadService.init(request))
-                .assertNext(result -> assertThat(result.chunkSize()).isEqualTo(64L))
-                .verifyComplete();
-    }
-
-    @Test
-    @DisplayName("uploadChunk：空内容应抛出参数错误")
-    void uploadChunk_emptyContent() {
-        ChunkUploadRequest request = ChunkUploadRequest.builder()
-                .fileId(1L)
-                .chunkIndex(0)
-                .totalChunks(2)
-                .build();
-        StepVerifier.create(chunkUploadService.uploadChunk(request, new byte[0]))
-                .expectErrorSatisfies(ex -> {
-                    assertThat(ex).isInstanceOf(BusinessException.class);
-                    assertThat(((BusinessException) ex).getCode()).isEqualTo(ResultCode.PARAM_ERROR.getCode());
-                })
-                .verify();
-    }
-
-    @Test
-    @DisplayName("uploadChunk：文件记录不存在应返回未找到")
-    void uploadChunk_fileNotFound() {
-        when(fileRepository.findById(1L)).thenReturn(Mono.empty());
-        ChunkUploadRequest request = ChunkUploadRequest.builder()
-                .fileId(1L)
-                .chunkIndex(0)
-                .totalChunks(2)
-                .build();
-        StepVerifier.create(chunkUploadService.uploadChunk(request, new byte[] {1, 2, 3}))
-                .expectErrorSatisfies(ex -> {
-                    assertThat(ex).isInstanceOf(BusinessException.class);
-                    assertThat(((BusinessException) ex).getCode()).isEqualTo(ResultCode.NOT_FOUND.getCode());
-                })
-                .verify();
-    }
-
-    @Test
-    @DisplayName("uploadChunk：分片已存在应幂等返回既有对象键")
-    void uploadChunk_idempotent() {
-        when(fileRepository.findById(1L)).thenReturn(Mono.just(fileWithId(1L)));
-        FileChunkEntity existing = chunk(1L, 0, 2, 3L);
-        when(fileChunkRepository.findByFileIdAndIndex(1L, 0)).thenReturn(Mono.just(existing));
-        when(storageService.upload(
-                        eq("apex"), eq("chunks/1/0"), any(InputStream.class), eq("application/octet-stream")))
-                .thenReturn(Mono.just("chunks/1/0"));
-
-        ChunkUploadRequest request = ChunkUploadRequest.builder()
-                .fileId(1L)
-                .chunkIndex(0)
-                .totalChunks(2)
-                .build();
-        StepVerifier.create(chunkUploadService.uploadChunk(request, new byte[] {9, 9, 9}))
-                .assertNext(result -> {
-                    assertThat(result.uploaded()).isFalse();
-                    assertThat(result.objectName()).isEqualTo("chunks/1/0");
-                })
-                .verifyComplete();
-        verify(fileChunkRepository, never()).save(any(FileChunkEntity.class));
-    }
-
-    @Test
-    @DisplayName("uploadChunk：新分片应上传存储并入库")
-    void uploadChunk_newChunk() {
-        when(fileRepository.findById(1L)).thenReturn(Mono.just(fileWithId(1L)));
-        when(fileChunkRepository.findByFileIdAndIndex(1L, 1)).thenReturn(Mono.empty());
-        when(storageService.upload(
-                        eq("apex"), eq("chunks/1/1"), any(InputStream.class), eq("application/octet-stream")))
-                .thenReturn(Mono.just("chunks/1/1"));
-        when(fileChunkRepository.save(any(FileChunkEntity.class))).thenAnswer(inv -> Mono.just(inv.getArgument(0)));
-
-        ChunkUploadRequest request = ChunkUploadRequest.builder()
-                .fileId(1L)
-                .chunkIndex(1)
-                .totalChunks(2)
-                .build();
-        StepVerifier.create(chunkUploadService.uploadChunk(request, new byte[] {1, 2, 3, 4}))
-                .assertNext(result -> {
-                    assertThat(result.uploaded()).isTrue();
-                    assertThat(result.objectName()).isEqualTo("chunks/1/1");
-                    assertThat(result.chunkSize()).isEqualTo(4L);
+        StepVerifier.create(authenticated(service.init(ChunkInitRequest.builder()
+                        .fileName("movie.mp4")
+                        .fileSize(6L)
+                        .totalChunks(2)
+                        .build())))
+                .assertNext(r -> {
+                    assertThat(r.chunkSize()).isEqualTo(3L);
+                    assertThat(r.totalChunks()).isEqualTo(2);
                 })
                 .verifyComplete();
     }
 
+    /** 无分片时也必须从持久化会话恢复初始化约定。 */
     @Test
-    @DisplayName("merge：文件记录不存在应返回未找到")
-    void merge_fileNotFound() {
-        when(fileRepository.findById(1L)).thenReturn(Mono.empty());
-        ChunkMergeRequest request = ChunkMergeRequest.builder().fileId(1L).build();
-        StepVerifier.create(chunkUploadService.merge(request))
-                .expectErrorSatisfies(ex -> {
-                    assertThat(ex).isInstanceOf(BusinessException.class);
-                    assertThat(((BusinessException) ex).getCode()).isEqualTo(ResultCode.NOT_FOUND.getCode());
-                })
-                .verify();
-    }
-
-    @Test
-    @DisplayName("merge：无任何分片应返回业务错误")
-    void merge_noChunks() {
-        when(fileRepository.findById(1L)).thenReturn(Mono.just(fileWithId(1L)));
-        when(fileChunkRepository.findByFileIdOrderByIndex(1L)).thenReturn(Flux.empty());
-        ChunkMergeRequest request = ChunkMergeRequest.builder().fileId(1L).build();
-        StepVerifier.create(chunkUploadService.merge(request))
-                .expectErrorSatisfies(ex -> {
-                    assertThat(ex).isInstanceOf(BusinessException.class);
-                    assertThat(((BusinessException) ex).getCode()).isEqualTo(ResultCode.BUSINESS_ERROR.getCode());
-                })
-                .verify();
-    }
-
-    @Test
-    @DisplayName("merge：分片不完整应返回业务错误")
-    void merge_incomplete() {
-        when(fileRepository.findById(1L)).thenReturn(Mono.just(fileWithId(1L)));
-        when(fileChunkRepository.findByFileIdOrderByIndex(1L))
-                .thenReturn(Flux.just(chunk(1L, 0, 3, 5L), chunk(1L, 1, 3, 5L)));
-        ChunkMergeRequest request = ChunkMergeRequest.builder().fileId(1L).build();
-        StepVerifier.create(chunkUploadService.merge(request))
-                .expectErrorSatisfies(ex -> {
-                    assertThat(ex).isInstanceOf(BusinessException.class);
-                    assertThat(((BusinessException) ex).getCode()).isEqualTo(ResultCode.BUSINESS_ERROR.getCode());
-                })
-                .verify();
-    }
-
-    @Test
-    @DisplayName("merge：全部分片就绪应拼接落库并清理分片")
-    void merge_happyPath() {
-        FileEntity file = fileWithId(1L);
-        file.setOriginalName("final.mp4");
-        when(fileRepository.findById(1L)).thenReturn(Mono.just(file));
-        when(fileChunkRepository.findByFileIdOrderByIndex(1L))
-                .thenReturn(Flux.just(chunk(1L, 0, 2, 3L), chunk(1L, 1, 2, 3L)));
-        when(storageService.download("apex", "chunks/1/0"))
-                .thenReturn(Mono.just(new ByteArrayInputStream(new byte[] {1, 2, 3})));
-        when(storageService.download("apex", "chunks/1/1"))
-                .thenReturn(Mono.just(new ByteArrayInputStream(new byte[] {4, 5, 6})));
-        when(storageService.upload(eq("apex"), eq("final.mp4"), any(InputStream.class), eq("application/octet-stream")))
-                .thenReturn(Mono.just("final.mp4"));
-        when(fileRepository.save(any(FileEntity.class))).thenAnswer(inv -> Mono.just(inv.getArgument(0)));
-        when(storageService.getPresignedUrl("apex", "final.mp4", 300)).thenReturn(Mono.just("http://x/final.mp4"));
-        when(storageService.delete(anyString(), anyString())).thenReturn(Mono.just(true));
-        when(fileChunkRepository.deleteByFileId(1L)).thenReturn(Mono.empty());
-
-        ChunkMergeRequest request = ChunkMergeRequest.builder().fileId(1L).build();
-        StepVerifier.create(chunkUploadService.merge(request))
-                .assertNext(result -> {
-                    assertThat(result.fileId()).isEqualTo(1L);
-                    assertThat(result.fileName()).isEqualTo("final.mp4");
-                    assertThat(result.url()).isEqualTo("http://x/final.mp4");
-                    assertThat(result.fileSize()).isEqualTo(6L);
-                })
-                .verifyComplete();
-        verify(fileChunkRepository).deleteByFileId(1L);
-    }
-
-    @Test
-    @DisplayName("status：无分片时返回空的分片进度")
-    void status_empty() {
-        when(fileRepository.findById(1L)).thenReturn(Mono.just(fileWithId(1L)));
-        when(fileChunkRepository.findByFileIdOrderByIndex(1L)).thenReturn(Flux.empty());
-        StepVerifier.create(chunkUploadService.status(1L))
-                .assertNext(result -> {
-                    assertThat(result.fileId()).isEqualTo(1L);
-                    assertThat(result.chunkSize()).isNull();
-                    assertThat(result.uploadedChunks()).isEmpty();
-                })
-                .verifyComplete();
-    }
-
-    @Test
-    @DisplayName("status：应返回已上传分片序号列表")
-    void status_withChunks() {
-        when(fileRepository.findById(1L)).thenReturn(Mono.just(fileWithId(1L)));
-        when(fileChunkRepository.findByFileIdOrderByIndex(1L))
-                .thenReturn(Flux.just(chunk(1L, 0, 2, 5L), chunk(1L, 1, 2, 5L)));
-        StepVerifier.create(chunkUploadService.status(1L))
-                .assertNext(result -> {
-                    assertThat(result.chunkSize()).isEqualTo(5L);
-                    assertThat(result.totalChunks()).isEqualTo(2);
-                    assertThat(result.uploadedChunks()).containsExactly(0, 1);
-                })
-                .verifyComplete();
-    }
-
-    @Test
-    @DisplayName("status：文件不存在应返回未找到")
-    void status_notFound() {
-        when(fileRepository.findById(1L)).thenReturn(Mono.empty());
-        StepVerifier.create(chunkUploadService.status(1L))
-                .expectErrorSatisfies(ex -> {
-                    assertThat(ex).isInstanceOf(BusinessException.class);
-                    assertThat(((BusinessException) ex).getCode()).isEqualTo(ResultCode.NOT_FOUND.getCode());
-                })
-                .verify();
-    }
-
-    @Test
-    @DisplayName("merge：请求指定文件名与内容类型应优先于登记值")
-    void merge_requestOverridesName() {
-        FileEntity file = fileWithId(1L);
-        file.setOriginalName("original.bin");
-        file.setContentType("application/octet-stream");
-        when(fileRepository.findById(1L)).thenReturn(Mono.just(file));
-        when(fileChunkRepository.findByFileIdOrderByIndex(1L)).thenReturn(Flux.just(chunk(1L, 0, 1, 2L)));
-        when(storageService.download("apex", "chunks/1/0"))
-                .thenReturn(Mono.just(new ByteArrayInputStream(new byte[] {7, 7})));
-        when(storageService.upload(eq("apex"), eq("renamed.zip"), any(InputStream.class), eq("application/zip")))
-                .thenReturn(Mono.just("renamed.zip"));
-        when(fileRepository.save(any(FileEntity.class))).thenAnswer(inv -> Mono.just(inv.getArgument(0)));
-        when(storageService.getPresignedUrl("apex", "renamed.zip", 300)).thenReturn(Mono.just("http://x/renamed.zip"));
-        when(storageService.delete(anyString(), anyString())).thenReturn(Mono.just(true));
-        when(fileChunkRepository.deleteByFileId(1L)).thenReturn(Mono.empty());
-
-        ChunkMergeRequest request = ChunkMergeRequest.builder()
-                .fileId(1L)
-                .fileName("renamed.zip")
-                .contentType("application/zip")
-                .md5("abc")
-                .build();
-        StepVerifier.create(chunkUploadService.merge(request))
-                .assertNext(result -> {
-                    assertThat(result.fileName()).isEqualTo("renamed.zip");
-                    assertThat(result.md5()).isEqualTo("abc");
-                })
-                .verifyComplete();
-    }
-
-    @Test
-    @DisplayName("merge：缺少最终文件名应返回参数错误")
-    void merge_missingFinalName() {
-        FileEntity file = fileWithId(1L);
-        when(fileRepository.findById(1L)).thenReturn(Mono.just(file));
-        when(fileChunkRepository.findByFileIdOrderByIndex(1L)).thenReturn(Flux.just(chunk(1L, 0, 1, 2L)));
-        ChunkMergeRequest request = ChunkMergeRequest.builder().fileId(1L).build();
-        StepVerifier.create(chunkUploadService.merge(request))
-                .expectErrorSatisfies(ex -> {
-                    assertThat(ex).isInstanceOf(BusinessException.class);
-                    assertThat(((BusinessException) ex).getCode()).isEqualTo(ResultCode.PARAM_ERROR.getCode());
-                })
-                .verify();
-    }
-
-    @Test
-    @DisplayName("init：文件大小与分片数异常时应回退默认分片大小")
-    void init_invalidSizesFallback() {
-        when(fileRepository.save(any(FileEntity.class))).thenAnswer(inv -> {
-            FileEntity f = inv.getArgument(0);
-            f.setId(9L);
-            return Mono.just(f);
+    void statusRestoresInitializationBeforeAnyChunk() {
+        when(files.save(any())).thenAnswer(inv -> {
+            FileEntity saved = inv.getArgument(0);
+            saved.setId(1L);
+            when(files.findById(1L)).thenReturn(Mono.just(saved));
+            return Mono.just(saved);
         });
+        when(chunks.findByFileIdOrderByIndex(1L)).thenReturn(Flux.empty());
+        StepVerifier.create(authenticated(service.init(ChunkInitRequest.builder()
+                                .fileName("movie.mp4")
+                                .fileSize(6L)
+                                .totalChunks(2)
+                                .chunkSize(3L)
+                                .contentType("video/mp4")
+                                .md5("expected-md5")
+                                .build())
+                        .flatMap(result -> service.status(result.fileId()))))
+                .assertNext(result -> {
+                    assertThat(result.totalChunks()).isEqualTo(2);
+                    assertThat(result.chunkSize()).isEqualTo(3L);
+                })
+                .verifyComplete();
+    }
+
+    /** 验证无身份及非法初始化参数均不产生记录。 */
+    @Test
+    void rejectsInvalidInitialization() {
         ChunkInitRequest request = ChunkInitRequest.builder()
                 .fileName("x.bin")
                 .fileSize(0L)
                 .totalChunks(0)
                 .build();
-        StepVerifier.create(chunkUploadService.init(request))
-                .assertNext(result -> assertThat(result.chunkSize()).isEqualTo(5 * 1024 * 1024L))
+        StepVerifier.create(service.init(request))
+                .expectError(BusinessException.class)
+                .verify();
+        StepVerifier.create(authenticated(service.init(request)))
+                .expectError(BusinessException.class)
+                .verify();
+        verifyNoInteractions(files, storage);
+    }
+
+    /** 验证历史无归属和其他用户会话拒绝访问。 */
+    @Test
+    void rejectsForeignAndUnknownOwnership() {
+        FileEntity f = file();
+        f.setUserId(8L);
+        when(files.findById(1L)).thenReturn(Mono.just(f));
+        StepVerifier.create(authenticated(service.status(1L)))
+                .expectError(BusinessException.class)
+                .verify();
+        f.setUserId(7L);
+        f.setTenantId(null);
+        StepVerifier.create(authenticated(service.status(1L)))
+                .expectError(BusinessException.class)
+                .verify();
+        verifyNoInteractions(chunks, storage);
+    }
+
+    /** 验证缺失主记录返回错误。 */
+    @Test
+    void rejectsMissingFile() {
+        when(files.findById(1L)).thenReturn(Mono.empty());
+        StepVerifier.create(authenticated(service.status(1L)))
+                .expectError(BusinessException.class)
+                .verify();
+    }
+
+    /** 验证已上传分片幂等返回，不再次写对象。 */
+    @Test
+    void idempotentChunk() {
+        when(files.findById(1L)).thenReturn(Mono.just(file()));
+        when(chunks.findByFileIdAndIndex(1L, 0)).thenReturn(Mono.just(part(0, 2)));
+        StepVerifier.create(authenticated(service.uploadChunk(
+                        ChunkUploadRequest.builder()
+                                .fileId(1L)
+                                .chunkIndex(0)
+                                .totalChunks(2)
+                                .build(),
+                        new byte[] {1})))
+                .assertNext(r -> assertThat(r.uploaded()).isFalse())
                 .verifyComplete();
+        verifyNoInteractions(storage);
+    }
+
+    /** 验证新分片持久化实际返回键和完整归属。 */
+    @Test
+    void storesActualChunkKey() {
+        when(files.findById(1L)).thenReturn(Mono.just(file()));
+        when(chunks.findByFileIdAndIndex(1L, 0)).thenReturn(Mono.empty());
+        when(storage.upload(eq("apex"), anyString(), any(InputStream.class), anyString()))
+                .thenReturn(Mono.just("actual-part"));
+        when(chunks.save(any())).thenAnswer(inv -> {
+            FileChunkEntity p = inv.getArgument(0);
+            assertThat(p.getUserId()).isEqualTo(7L);
+            assertThat(p.getTenantId()).isEqualTo("42");
+            assertThat(p.getObjectName()).isEqualTo("actual-part");
+            return Mono.just(p);
+        });
+        StepVerifier.create(authenticated(service.uploadChunk(
+                        ChunkUploadRequest.builder()
+                                .fileId(1L)
+                                .chunkIndex(0)
+                                .totalChunks(2)
+                                .build(),
+                        new byte[] {1, 2, 3})))
+                .assertNext(r -> assertThat(r.objectName()).isEqualTo("actual-part"))
+                .verifyComplete();
+    }
+
+    /** 首片也不得自行改变初始化约定的总片数。 */
+    @Test
+    void rejectsChangedTotalOnFirstChunk() {
+        when(files.save(any())).thenAnswer(inv -> {
+            FileEntity saved = inv.getArgument(0);
+            saved.setId(1L);
+            when(files.findById(1L)).thenReturn(Mono.just(saved));
+            return Mono.just(saved);
+        });
+        lenient().when(chunks.findByFileIdAndIndex(1L, 0)).thenReturn(Mono.empty());
+        lenient()
+                .when(storage.upload(anyString(), anyString(), any(), anyString()))
+                .thenReturn(Mono.just("bad"));
+        lenient().when(chunks.save(any())).thenAnswer(inv -> Mono.just(inv.getArgument(0)));
+        StepVerifier.create(authenticated(service.init(ChunkInitRequest.builder()
+                                .fileName("movie.mp4")
+                                .fileSize(6L)
+                                .totalChunks(2)
+                                .build())
+                        .flatMap(result -> service.uploadChunk(
+                                ChunkUploadRequest.builder()
+                                        .fileId(result.fileId())
+                                        .chunkIndex(0)
+                                        .totalChunks(1)
+                                        .build(),
+                                new byte[] {1}))))
+                .expectError(BusinessException.class)
+                .verify();
+        verifyNoInteractions(storage);
+    }
+
+    /** 验证空分片在访问对象存储前被拒绝。 */
+    @Test
+    void rejectsEmptyChunk() {
+        StepVerifier.create(authenticated(service.uploadChunk(
+                        ChunkUploadRequest.builder()
+                                .fileId(1L)
+                                .chunkIndex(0)
+                                .totalChunks(2)
+                                .build(),
+                        new byte[0])))
+                .expectError(BusinessException.class)
+                .verify();
+        verifyNoInteractions(storage, files);
+    }
+
+    /** 验证无分片及分片不完整时不能合并。 */
+    @Test
+    void rejectsIncompleteParts() {
+        when(files.findById(1L)).thenReturn(Mono.just(file()));
+        when(chunks.findByFileIdOrderByIndex(1L)).thenReturn(Flux.empty(), Flux.just(part(0, 2)));
+        for (int i = 0; i < 2; i++) {
+            StepVerifier.create(authenticated(
+                            service.merge(ChunkMergeRequest.builder().fileId(1L).build())))
+                    .expectError(BusinessException.class)
+                    .verify();
+        }
+        verifyNoInteractions(storage);
+    }
+
+    /** 验证数据库记录存在但真实分片缺失时不上传合并对象。 */
+    @Test
+    void missingObjectFailsMerge() {
+        when(files.claimMerge(any())).thenReturn(Mono.just(true));
+        when(files.findById(1L)).thenReturn(Mono.just(file()));
+        when(chunks.findByFileIdOrderByIndex(1L)).thenReturn(Flux.just(part(0, 2), part(1, 2)));
+        when(storage.download("apex", "chunks/1/0"))
+                .thenReturn(Mono.just(new ByteArrayInputStream(new byte[] {1, 2, 3})));
+        when(storage.download("apex", "chunks/1/1")).thenReturn(Mono.empty());
+        when(files.releaseMerge(any())).thenReturn(Mono.just(true));
+        StepVerifier.create(authenticated(
+                        service.merge(ChunkMergeRequest.builder().fileId(1L).build())))
+                .expectError(BusinessException.class)
+                .verify();
+        verify(storage, never()).upload(anyString(), anyString(), any(), anyString());
+        verify(files).releaseMerge(any());
+        verify(chunks, never()).deleteByFileId(anyLong());
+    }
+
+    /** 数据库抢占失败的竞争调用不得下载或创建最终对象。 */
+    @Test
+    void losingMergeDoesNotCreateObject() {
+        when(files.findById(1L)).thenReturn(Mono.just(file()));
+        when(chunks.findByFileIdOrderByIndex(1L)).thenReturn(Flux.just(part(0, 2), part(1, 2)));
+        when(files.claimMerge(any())).thenReturn(Mono.just(false));
+        StepVerifier.create(authenticated(
+                        service.merge(ChunkMergeRequest.builder().fileId(1L).build())))
+                .expectError(BusinessException.class)
+                .verify();
+        verifyNoInteractions(storage);
+    }
+
+    /** 部分清理失败后，可在可信身份下重试，包括已删除的对象。 */
+    @Test
+    void retriesPartialCleanup() {
+        FileEntity saved = file();
+        saved.setStorageStatus("STORED");
+        when(files.findById(1L)).thenReturn(Mono.just(saved));
+        when(chunks.findByFileIdOrderByIndex(1L)).thenReturn(Flux.just(part(0, 2), part(1, 2)));
+        when(storage.delete("apex", "chunks/1/0")).thenReturn(Mono.just(true), Mono.just(false));
+        when(storage.exists("apex", "chunks/1/0")).thenReturn(Mono.just(false));
+        when(storage.delete("apex", "chunks/1/1"))
+                .thenReturn(Mono.error(new IllegalStateException("unavailable")), Mono.just(true));
+        when(chunks.deleteByFileId(1L)).thenReturn(Mono.empty());
+        StepVerifier.create(authenticated(service.retryCleanup(1L))).verifyComplete();
+        verify(chunks, never()).deleteByFileId(anyLong());
+        StepVerifier.create(authenticated(service.retryCleanup(1L))).verifyComplete();
+        verify(chunks).deleteByFileId(1L);
+    }
+
+    /** 本地合并完成清理后返回编码后的授权下载地址，云后端仍使用配置的签名有效期。 */
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.EnumSource(
+            value = StorageType.class,
+            names = {"LOCAL", "MINIO"})
+    void mergeUsesRecordedBackendAccessUrl(StorageType backend) {
+        service = new ChunkUploadService(
+                new StorageServiceProvider(Map.of(backend, storage), backend), files, chunks, "apex", 123, "local");
+        FileEntity file = file();
+        file.setStorageType(backend.name());
+        FileChunkEntity first = part(0, 2);
+        FileChunkEntity second = part(1, 2);
+        first.setStorageType(backend.name());
+        second.setStorageType(backend.name());
+        when(files.findById(1L)).thenReturn(Mono.just(file));
+        when(files.claimMerge(any())).thenReturn(Mono.just(true));
+        when(chunks.findByFileIdOrderByIndex(1L)).thenReturn(Flux.just(first, second));
+        when(storage.download(anyString(), anyString()))
+                .thenAnswer(inv -> Mono.just(new ByteArrayInputStream(new byte[] {1, 2, 3})));
+        when(storage.upload(eq("apex"), anyString(), any(InputStream.class), anyString()))
+                .thenAnswer(inv -> {
+                    InputStream merged = inv.getArgument(2);
+                    assertThat(merged.readAllBytes()).containsExactly(1, 2, 3, 1, 2, 3);
+                    return Mono.just("dir/final movie.mp4");
+                });
+        when(files.save(any())).thenAnswer(inv -> Mono.just(inv.getArgument(0)));
+        when(storage.delete(anyString(), anyString())).thenReturn(Mono.just(true));
+        when(chunks.deleteByFileId(1L)).thenReturn(Mono.empty());
+        if (backend == StorageType.MINIO) {
+            when(storage.getPresignedUrl("apex", "dir/final movie.mp4", 123)).thenReturn(Mono.just("signed-url"));
+        }
+        StepVerifier.create(authenticated(
+                        service.merge(ChunkMergeRequest.builder().fileId(1L).build())))
+                .assertNext(result -> {
+                    assertThat(result.fileName()).isEqualTo("dir/final movie.mp4");
+                    assertThat(result.url())
+                            .isEqualTo(
+                                    backend == StorageType.LOCAL
+                                            ? "/api/v1/file/content?bucketName=apex&fileName=dir/final%20movie.mp4"
+                                            : "signed-url");
+                    assertThat(file.getStorageStatus()).isEqualTo("STORED");
+                })
+                .verifyComplete();
+        verify(chunks).deleteByFileId(1L);
+        if (backend == StorageType.LOCAL) {
+            verify(storage, never()).getPresignedUrl(anyString(), anyString(), anyInt());
+        } else {
+            verify(storage).getPresignedUrl("apex", "dir/final movie.mp4", 123);
+        }
+    }
+
+    /** 验证合并成功而对象清理失败时保留分片元数据。 */
+    @Test
+    void failedCleanupRetainsMetadata() {
+        when(files.claimMerge(any())).thenReturn(Mono.just(true));
+        when(storage.exists(anyString(), anyString())).thenReturn(Mono.just(true));
+        when(files.findById(1L)).thenReturn(Mono.just(file()));
+        when(chunks.findByFileIdOrderByIndex(1L)).thenReturn(Flux.just(part(0, 2), part(1, 2)));
+        when(storage.download(anyString(), anyString()))
+                .thenAnswer(inv -> Mono.just(new ByteArrayInputStream(new byte[] {1, 2, 3})));
+        when(storage.upload(eq("apex"), anyString(), any(InputStream.class), anyString()))
+                .thenReturn(Mono.just("actual-final"));
+        when(files.save(any())).thenAnswer(inv -> Mono.just(inv.getArgument(0)));
+        lenient()
+                .when(storage.getPresignedUrl("apex", "actual-final", 300))
+                .thenReturn(Mono.error(new UnsupportedOperationException("local has no signing")));
+        when(storage.delete(anyString(), anyString())).thenReturn(Mono.just(false));
+        StepVerifier.create(authenticated(
+                        service.merge(ChunkMergeRequest.builder().fileId(1L).build())))
+                .assertNext(r -> {
+                    assertThat(r.fileName()).isEqualTo("actual-final");
+                    assertThat(r.url()).isEqualTo("/api/v1/file/content?bucketName=apex&fileName=actual-final");
+                })
+                .verifyComplete();
+        verify(chunks, never()).deleteByFileId(anyLong());
     }
 }

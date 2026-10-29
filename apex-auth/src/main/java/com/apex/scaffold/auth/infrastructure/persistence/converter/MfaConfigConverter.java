@@ -11,7 +11,7 @@ import org.mapstruct.ReportingPolicy;
  * <p>负责 MfaConfigEntity 与 MfaConfigPO 之间的双向转换，使用 MapStruct 自动生成实现代码。
  *
  * @author Apex Scaffold Team
- * @since 2026-09-21
+ * @since 1.3.1
  */
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE, uses = NumericFlagConverter.class)
 public interface MfaConfigConverter {

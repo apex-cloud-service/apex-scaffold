@@ -24,6 +24,20 @@ public interface FileRepository {
     Mono<FileEntity> save(FileEntity file);
 
     /**
+     * 原子抢占尚未合并的会话，数据库条件更新确保只有一个调用方可写最终对象。
+     * @param file 已验证归属的会话
+     * @return 是否取得合并权
+     */
+    Mono<Boolean> claimMerge(FileEntity file);
+
+    /**
+     * 最终对象尚未写入或已确认清理后，条件释放 MERGING 会话供所有者重试。
+     * @param file 已验证归属的会话
+     * @return 是否将 MERGING 重置为 UPLOADING
+     */
+    Mono<Boolean> releaseMerge(FileEntity file);
+
+    /**
      * 根据ID查询文件信息
      *
      * @param id 文件ID

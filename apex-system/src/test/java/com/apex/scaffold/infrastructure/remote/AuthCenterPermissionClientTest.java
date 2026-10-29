@@ -9,6 +9,42 @@ import reactor.test.StepVerifier;
 
 class AuthCenterPermissionClientTest {
     @Test
+    void shouldUseSingleUnannotatedConstructor() {
+        assertThat(AuthCenterPermissionClient.class.getDeclaredConstructors()).hasSize(1);
+        assertThat(AuthCenterPermissionClient.class.getDeclaredConstructors()[0].getDeclaredAnnotations())
+                .isEmpty();
+    }
+
+    @Test
+    void shouldPreferQualifiedClientAndOtherwiseUseManagedFactory() {
+        var factory =
+                org.mockito.Mockito.mock(com.apex.scaffold.infrastructure.remote.config.ManagedWebClientFactory.class);
+        WebClient managed = WebClient.builder().build();
+        WebClient dedicated = WebClient.builder().build();
+        org.mockito.Mockito.when(factory.create()).thenReturn(managed);
+        var runner = new org.springframework.boot.test.context.runner.ApplicationContextRunner()
+                .withUserConfiguration(AuthCenterPermissionClient.class)
+                .withBean(AuthCenterPermissionProperties.class, this::configured)
+                .withBean(com.apex.scaffold.infrastructure.remote.config.ManagedWebClientFactory.class, () -> factory);
+        runner.withBean("authCenterPermissionWebClient", WebClient.class, () -> dedicated)
+                .run(context -> {
+                    assertThat(context).hasSingleBean(AuthCenterPermissionClient.class);
+                    assertThat(org.springframework.test.util.ReflectionTestUtils.getField(
+                                    context.getBean(AuthCenterPermissionClient.class), "client"))
+                            .isSameAs(dedicated);
+                    org.mockito.Mockito.verify(factory, org.mockito.Mockito.never())
+                            .create();
+                });
+        runner.withBean("unrelatedWebClient", WebClient.class, () -> dedicated).run(context -> {
+            assertThat(context).hasSingleBean(AuthCenterPermissionClient.class);
+            assertThat(org.springframework.test.util.ReflectionTestUtils.getField(
+                            context.getBean(AuthCenterPermissionClient.class), "client"))
+                    .isSameAs(managed);
+            org.mockito.Mockito.verify(factory).create();
+        });
+    }
+
+    @Test
     void missingMappingMustDenyWithoutCallingHttp() {
         var properties = new AuthCenterPermissionProperties();
         var client = new AuthCenterPermissionClient(
@@ -17,7 +53,8 @@ class AuthCenterPermissionClientTest {
                         .exchangeFunction(request -> {
                             throw new AssertionError("HTTP must not be called");
                         })
-                        .build());
+                        .build(),
+                null);
         StepVerifier.create(client.query("main-tenant", 7L))
                 .expectError(IllegalStateException.class)
                 .verify();
@@ -49,7 +86,7 @@ class AuthCenterPermissionClientTest {
                                     .build());
                 })
                 .build();
-        StepVerifier.create(new AuthCenterPermissionClient(properties, http).query("main", 7L))
+        StepVerifier.create(new AuthCenterPermissionClient(properties, http, null).query("main", 7L))
                 .assertNext(data -> {
                     assertThat(data.tenantId()).isEqualTo("main");
                     assertThat(data.userId()).isEqualTo(7L);
@@ -69,7 +106,7 @@ class AuthCenterPermissionClientTest {
                                         "{\"code\":0,\"data\":{\"tenantId\":\"foreign\",\"userId\":99,\"permissions\":[],\"roles\":[]}}")
                                 .build()))
                 .build();
-        StepVerifier.create(new AuthCenterPermissionClient(configured(), http).query("main", 7L))
+        StepVerifier.create(new AuthCenterPermissionClient(configured(), http, null).query("main", 7L))
                 .expectError(IllegalStateException.class)
                 .verify();
     }
@@ -80,7 +117,7 @@ class AuthCenterPermissionClientTest {
                 .exchangeFunction(
                         request -> reactor.core.publisher.Mono.error(new IllegalStateException("Unavailable")))
                 .build();
-        StepVerifier.create(new AuthCenterPermissionClient(configured(), http).query("main", 7L))
+        StepVerifier.create(new AuthCenterPermissionClient(configured(), http, null).query("main", 7L))
                 .expectError()
                 .verify();
     }
@@ -112,7 +149,7 @@ class AuthCenterPermissionClientTest {
                                             + request.url().getPath()))
                                     .build()))
                     .build();
-            StepVerifier.create(new AuthCenterPermissionClient(configured(), http).query("main", 7L))
+            StepVerifier.create(new AuthCenterPermissionClient(configured(), http, null).query("main", 7L))
                     .assertNext(data -> {
                         assertThat(data.tenantId()).isEqualTo("main");
                         assertThat(data.userId()).isEqualTo(7L);
@@ -131,7 +168,7 @@ class AuthCenterPermissionClientTest {
         WebClient http = WebClient.builder()
                 .exchangeFunction(request -> reactor.core.publisher.Mono.never())
                 .build();
-        StepVerifier.withVirtualTime(() -> new AuthCenterPermissionClient(configured(), http).query("main", 7L))
+        StepVerifier.withVirtualTime(() -> new AuthCenterPermissionClient(configured(), http, null).query("main", 7L))
                 .thenAwait(java.time.Duration.ofSeconds(4))
                 .expectError(java.util.concurrent.TimeoutException.class)
                 .verify();
@@ -146,7 +183,7 @@ class AuthCenterPermissionClientTest {
                     return reactor.core.publisher.Mono.error(new IllegalStateException("Unavailable"));
                 })
                 .build();
-        var client = new AuthCenterPermissionClient(configured(), http);
+        var client = new AuthCenterPermissionClient(configured(), http, null);
         for (int attempt = 0; attempt < 100; attempt++) {
             StepVerifier.create(client.query("main", 7L)).expectError().verify();
         }
@@ -171,7 +208,7 @@ class AuthCenterPermissionClientTest {
                                             + "}}")
                                     .build()))
                     .build();
-            StepVerifier.create(new AuthCenterPermissionClient(configured(), http).query("main", 7L))
+            StepVerifier.create(new AuthCenterPermissionClient(configured(), http, null).query("main", 7L))
                     .expectError(IllegalStateException.class)
                     .verify();
         }
@@ -192,7 +229,7 @@ class AuthCenterPermissionClientTest {
                                     .body(body)
                                     .build()))
                     .build();
-            StepVerifier.create(new AuthCenterPermissionClient(configured(), http).query("main", 7L))
+            StepVerifier.create(new AuthCenterPermissionClient(configured(), http, null).query("main", 7L))
                     .expectError()
                     .verify();
         }

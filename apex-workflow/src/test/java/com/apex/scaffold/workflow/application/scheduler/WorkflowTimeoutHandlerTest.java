@@ -1,251 +1,364 @@
 package com.apex.scaffold.workflow.application.scheduler;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import com.apex.scaffold.workflow.application.service.WorkflowService;
 import com.apex.scaffold.workflow.domain.model.Task;
-import com.apex.scaffold.workflow.domain.repository.TaskRepository;
+import com.apex.scaffold.workflow.domain.repository.ScanLease;
+import com.apex.scaffold.workflow.domain.repository.TimeoutTaskScan;
+import java.lang.reflect.Modifier;
+import java.time.Duration;
 import java.time.LocalDateTime;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.ArgumentCaptor;
+import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.Sinks;
+import reactor.test.StepVerifier;
 
-@ExtendWith(MockitoExtension.class)
-@DisplayName("工作流超时处理器单元测试")
 class WorkflowTimeoutHandlerTest {
+    private final TimeoutTaskScan repository = mock(TimeoutTaskScan.class);
+    private final WorkflowService service = mock(WorkflowService.class);
+    private final WorkflowTimeoutHandler handler =
+            new WorkflowTimeoutHandler(repository, service, null, false, false, 300);
 
-    @Mock
-    private TaskRepository taskRepository;
-
-    @Mock
-    private WorkflowService workflowService;
-
-    @InjectMocks
-    private WorkflowTimeoutHandler timeoutHandler;
-
-    private Task escalateTask;
-    private Task autoCompleteTask;
-    private Task notifyTask;
-
-    @BeforeEach
-    void setUp() {
-        escalateTask = new Task();
-        escalateTask.setId(1000L);
-        escalateTask.setProcessInstanceId(100L);
-        escalateTask.setNodeCode("manager_approval");
-        escalateTask.setAssigneeId(10002L);
-        escalateTask.setStatus("PENDING");
-        escalateTask.setTimeoutAt(LocalDateTime.now().minusHours(1));
-        escalateTask.setTimeoutStrategy("ESCALATE");
-
-        autoCompleteTask = new Task();
-        autoCompleteTask.setId(1001L);
-        autoCompleteTask.setProcessInstanceId(101L);
-        autoCompleteTask.setNodeCode("dept_approval");
-        autoCompleteTask.setAssigneeId(10003L);
-        autoCompleteTask.setStatus("PENDING");
-        autoCompleteTask.setTimeoutAt(LocalDateTime.now().minusHours(2));
-        autoCompleteTask.setTimeoutStrategy("AUTO_COMPLETE");
-
-        notifyTask = new Task();
-        notifyTask.setId(1002L);
-        notifyTask.setProcessInstanceId(102L);
-        notifyTask.setNodeCode("finance_approval");
-        notifyTask.setAssigneeId(10004L);
-        notifyTask.setStatus("PENDING");
-        notifyTask.setTimeoutAt(LocalDateTime.now().minusMinutes(30));
-        notifyTask.setTimeoutStrategy("NOTIFY");
+    @Test
+    void hasSingleConstructorForImplicitInjection() {
+        var constructors = WorkflowTimeoutHandler.class.getDeclaredConstructors();
+        assertThat(constructors).hasSize(1);
+        assertThat(Modifier.isPublic(constructors[0].getModifiers())).isTrue();
+        assertThat(constructors[0].getParameterTypes())
+                .containsExactly(
+                        TimeoutTaskScan.class,
+                        WorkflowService.class,
+                        ScanLease.class,
+                        boolean.class,
+                        boolean.class,
+                        long.class);
+        assertThat(constructors[0].getDeclaredAnnotations()).isEmpty();
     }
 
     @Test
-    @DisplayName("处理超时任务 - ESCALATE 策略")
-    void testHandleTimeoutTasks_EscalateStrategy() {
-        when(taskRepository.findPendingTasks()).thenReturn(Flux.just(escalateTask));
-        when(workflowService.transferTask(anyLong(), anyLong(), anyLong(), anyString()))
-                .thenReturn(Mono.empty());
+    void springContextInjectsDependenciesAndDefaultLeaseTtl() {
+        ScanLease lease = mock(ScanLease.class);
+        when(repository.findPendingTasks()).thenReturn(Flux.empty());
+        when(lease.acquire(eq("workflow-timeout-scan"), anyString(), eq(Duration.ofSeconds(300))))
+                .thenReturn(Mono.just(true));
+        when(lease.release(eq("workflow-timeout-scan"), anyString())).thenReturn(Mono.empty());
 
-        timeoutHandler.handleTimeoutTasks();
-
-        try {
-            Thread.sleep(500);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-
-        verify(taskRepository, times(1)).findPendingTasks();
-        verify(workflowService, times(1)).transferTask(eq(1000L), eq(1L), eq(10002L), eq("任务超时自动升级"));
+        new ApplicationContextRunner()
+                .withBean(TimeoutTaskScan.class, () -> repository)
+                .withBean(WorkflowService.class, () -> service)
+                .withBean(ScanLease.class, () -> lease)
+                .withUserConfiguration(WorkflowTimeoutHandler.class)
+                .run(context -> {
+                    assertThat(context).hasNotFailed().hasSingleBean(WorkflowTimeoutHandler.class);
+                    StepVerifier.create(context.getBean(WorkflowTimeoutHandler.class)
+                                    .scanTimeoutTasks())
+                            .verifyComplete();
+                    verify(repository).findPendingTasks();
+                    verify(lease).acquire(eq("workflow-timeout-scan"), anyString(), eq(Duration.ofSeconds(300)));
+                    verify(lease).release(eq("workflow-timeout-scan"), anyString());
+                });
     }
 
     @Test
-    @DisplayName("处理超时任务 - AUTO_COMPLETE 策略")
-    void testHandleTimeoutTasks_AutoCompleteStrategy() {
-        when(taskRepository.findPendingTasks()).thenReturn(Flux.just(autoCompleteTask));
-        when(workflowService.completeTask(anyLong(), anyLong(), anyString())).thenReturn(Mono.empty());
+    void springContextBindsExternalSchedulingAndConfiguredLeaseTtl() {
+        ScanLease lease = mock(ScanLease.class);
+        when(repository.findPendingTasks()).thenReturn(Flux.empty());
+        when(lease.acquire(eq("workflow-timeout-scan"), anyString(), eq(Duration.ofSeconds(45))))
+                .thenReturn(Mono.just(true));
+        when(lease.release(eq("workflow-timeout-scan"), anyString())).thenReturn(Mono.empty());
 
-        timeoutHandler.handleTimeoutTasks();
-
-        try {
-            Thread.sleep(500);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-
-        verify(taskRepository, times(1)).findPendingTasks();
-        verify(workflowService, times(1)).completeTask(eq(1001L), eq(10003L), eq("系统自动审批（超时）"));
+        new ApplicationContextRunner()
+                .withBean(TimeoutTaskScan.class, () -> repository)
+                .withBean(WorkflowService.class, () -> service)
+                .withBean(ScanLease.class, () -> lease)
+                .withUserConfiguration(WorkflowTimeoutHandler.class)
+                .withPropertyValues(
+                        "apex.job.executor.enabled=true",
+                        "apex.job.workflow.enabled=true",
+                        "apex.workflow.timeout-scan.lease-seconds=45")
+                .run(context -> {
+                    assertThat(context).hasNotFailed().hasSingleBean(WorkflowTimeoutHandler.class);
+                    WorkflowTimeoutHandler managed = context.getBean(WorkflowTimeoutHandler.class);
+                    managed.handleTimeoutTasks();
+                    verifyNoInteractions(repository, lease);
+                    StepVerifier.create(managed.scanTimeoutTasks()).verifyComplete();
+                    verify(lease).acquire(eq("workflow-timeout-scan"), anyString(), eq(Duration.ofSeconds(45)));
+                    verify(lease).release(eq("workflow-timeout-scan"), anyString());
+                });
     }
 
     @Test
-    @DisplayName("处理超时任务 - NOTIFY 策略")
-    void testHandleTimeoutTasks_NotifyStrategy() {
-        when(taskRepository.findPendingTasks()).thenReturn(Flux.just(notifyTask));
+    void waitsForAllTasksAndReportsFailureAfterOtherTasks() {
+        Task first = task(1L, "ESCALATE");
+        Task second = task(2L, "AUTO_COMPLETE");
+        Sinks.Empty<Void> completion = Sinks.empty();
+        CountDownLatch started = new CountDownLatch(1);
+        when(repository.findPendingTasks()).thenReturn(Flux.just(first, second));
+        when(service.handleTimeoutTask(
+                        argThat(task -> task != null && task.getId().equals(1L))))
+                .thenReturn(Mono.error(new IllegalStateException("单项失败")));
+        when(service.handleTimeoutTask(
+                        argThat(task -> task != null && task.getId().equals(2L))))
+                .thenReturn(completion.asMono().doOnSubscribe(ignored -> started.countDown()));
 
-        timeoutHandler.handleTimeoutTasks();
-
-        try {
-            Thread.sleep(500);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-
-        verify(taskRepository, times(1)).findPendingTasks();
-        verify(workflowService, never()).transferTask(anyLong(), anyLong(), anyLong(), anyString());
-        verify(workflowService, never()).completeTask(anyLong(), anyLong(), anyString());
+        StepVerifier.create(handler.scanTimeoutTasks())
+                .then(() -> await(started))
+                .expectNoEvent(Duration.ofMillis(50))
+                .then(() -> completion.tryEmitEmpty())
+                .expectErrorMessage("单项失败")
+                .verify(Duration.ofSeconds(5));
+        verify(service).handleTimeoutTask(second);
     }
 
     @Test
-    @DisplayName("处理超时任务 - 混合策略")
-    void testHandleTimeoutTasks_MixedStrategies() {
-        when(taskRepository.findPendingTasks()).thenReturn(Flux.just(escalateTask, autoCompleteTask, notifyTask));
-        when(workflowService.transferTask(anyLong(), anyLong(), anyLong(), anyString()))
-                .thenReturn(Mono.empty());
-        when(workflowService.completeTask(anyLong(), anyLong(), anyString())).thenReturn(Mono.empty());
-
-        timeoutHandler.handleTimeoutTasks();
-
-        try {
-            Thread.sleep(500);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-
-        verify(taskRepository, times(1)).findPendingTasks();
-        verify(workflowService, times(1)).transferTask(eq(1000L), eq(1L), eq(10002L), eq("任务超时自动升级"));
-        verify(workflowService, times(1)).completeTask(eq(1001L), eq(10003L), eq("系统自动审批（超时）"));
+    void rejectsConcurrentScanAndReleasesAfterCancellation() {
+        CountDownLatch started = new CountDownLatch(1);
+        CountDownLatch cancelled = new CountDownLatch(1);
+        when(repository.findPendingTasks())
+                .thenReturn(Flux.<Task>never()
+                        .doOnSubscribe(ignored -> started.countDown())
+                        .doOnCancel(cancelled::countDown));
+        Disposable first = handler.scanTimeoutTasks().subscribe();
+        await(started);
+        StepVerifier.create(handler.scanTimeoutTasks())
+                .expectErrorMessage("超时扫描正在执行")
+                .verify();
+        first.dispose();
+        await(cancelled);
+        when(repository.findPendingTasks()).thenReturn(Flux.empty());
+        StepVerifier.create(handler.scanTimeoutTasks()).verifyComplete();
     }
 
     @Test
-    @DisplayName("处理超时任务 - 无超时任务")
-    void testHandleTimeoutTasks_NoTimeoutTasks() {
-        when(taskRepository.findPendingTasks()).thenReturn(Flux.empty());
-
-        timeoutHandler.handleTimeoutTasks();
-
-        try {
-            Thread.sleep(500);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+    void localScanOnlyDisabledWhenBothSwitchesEnabled() {
+        for (boolean executor : new boolean[] {false, true}) {
+            for (boolean workflow : new boolean[] {false, true}) {
+                TimeoutTaskScan local = mock(TimeoutTaskScan.class);
+                CountDownLatch scanned = new CountDownLatch(1);
+                if (!(executor && workflow)) {
+                    when(local.findPendingTasks())
+                            .thenReturn(Flux.<Task>empty().doOnSubscribe(ignored -> scanned.countDown()));
+                }
+                new WorkflowTimeoutHandler(local, service, null, executor, workflow, 300).handleTimeoutTasks();
+                if (executor && workflow) {
+                    verifyNoInteractions(local);
+                } else {
+                    await(scanned);
+                    verify(local).findPendingTasks();
+                }
+            }
         }
-
-        verify(taskRepository, times(1)).findPendingTasks();
-        verify(workflowService, never()).transferTask(anyLong(), anyLong(), anyLong(), anyString());
-        verify(workflowService, never()).completeTask(anyLong(), anyLong(), anyString());
     }
 
     @Test
-    @DisplayName("处理超时任务 - 未超时的任务")
-    void testHandleTimeoutTasks_NotYetTimeout() {
-        Task futureTask = new Task();
-        futureTask.setId(1003L);
-        futureTask.setTimeoutAt(LocalDateTime.now().plusHours(1));
-        futureTask.setTimeoutStrategy("ESCALATE");
-
-        when(taskRepository.findPendingTasks()).thenReturn(Flux.just(futureTask));
-
-        timeoutHandler.handleTimeoutTasks();
-
-        try {
-            Thread.sleep(500);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-
-        verify(taskRepository, times(1)).findPendingTasks();
-        verify(workflowService, never()).transferTask(anyLong(), anyLong(), anyLong(), anyString());
+    void filtersFutureAndMissingDeadlineAndPreservesNotifyBehavior() {
+        Task future = task(1L, "ESCALATE");
+        future.setTimeoutAt(LocalDateTime.now().plusHours(1));
+        Task missing = task(2L, "AUTO_COMPLETE");
+        missing.setTimeoutAt(null);
+        when(repository.findPendingTasks()).thenReturn(Flux.just(future, missing, task(3L, "NOTIFY")));
+        StepVerifier.create(handler.scanTimeoutTasks()).verifyComplete();
+        verifyNoInteractions(service);
     }
 
     @Test
-    @DisplayName("处理超时任务 - 单个任务处理失败")
-    void testHandleTimeoutTasks_SingleTaskFailure() {
-        when(taskRepository.findPendingTasks()).thenReturn(Flux.just(escalateTask, autoCompleteTask));
-        when(workflowService.transferTask(anyLong(), anyLong(), anyLong(), anyString()))
-                .thenReturn(Mono.error(new RuntimeException("转办失败")));
-        when(workflowService.completeTask(anyLong(), anyLong(), anyString())).thenReturn(Mono.empty());
-
-        timeoutHandler.handleTimeoutTasks();
-
-        try {
-            Thread.sleep(500);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-
-        verify(taskRepository, times(1)).findPendingTasks();
-        verify(workflowService, times(1)).transferTask(eq(1000L), eq(1L), eq(10002L), eq("任务超时自动升级"));
-        verify(workflowService, times(1)).completeTask(eq(1001L), eq(10003L), eq("系统自动审批（超时）"));
+    void defaultStrategyEscalatesAndUnknownStrategyFails() {
+        when(repository.findPendingTasks()).thenReturn(Flux.just(task(1L, null), task(2L, "UNKNOWN")));
+        when(service.handleTimeoutTask(any(Task.class))).thenReturn(Mono.empty());
+        StepVerifier.create(handler.scanTimeoutTasks())
+                .expectError(IllegalArgumentException.class)
+                .verify();
+        verify(service)
+                .handleTimeoutTask(argThat(task -> task != null && task.getId().equals(1L)));
     }
 
     @Test
-    @DisplayName("处理超时任务 - 未知策略")
-    void testHandleTimeoutTasks_UnknownStrategy() {
-        Task unknownTask = new Task();
-        unknownTask.setId(1003L);
-        unknownTask.setTimeoutAt(LocalDateTime.now().minusHours(1));
-        unknownTask.setTimeoutStrategy("UNKNOWN_STRATEGY");
-
-        when(taskRepository.findPendingTasks()).thenReturn(Flux.just(unknownTask));
-
-        timeoutHandler.handleTimeoutTasks();
-
-        try {
-            Thread.sleep(500);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-
-        verify(taskRepository, times(1)).findPendingTasks();
-        verify(workflowService, never()).transferTask(anyLong(), anyLong(), anyLong(), anyString());
-        verify(workflowService, never()).completeTask(anyLong(), anyLong(), anyString());
+    void executesEachTaskInItsPersistedTenantContext() {
+        Task first = task(1L, "AUTO_COMPLETE");
+        first.setTenantId("tenant-A");
+        Task second = task(2L, "AUTO_COMPLETE");
+        second.setTenantId("tenant-B");
+        when(repository.findPendingTasks()).thenReturn(Flux.just(first, second));
+        when(service.handleTimeoutTask(any(Task.class)))
+                .thenAnswer(invocation -> Mono.deferContextual(context -> {
+                    assertThat(context.<String>get(com.apex.scaffold.common.context.TenantContext.REACTOR_CONTEXT_KEY))
+                            .isEqualTo(invocation.<Task>getArgument(0).getId() == 1L ? "tenant-A" : "tenant-B");
+                    return Mono.empty();
+                }));
+        StepVerifier.create(handler.scanTimeoutTasks()).verifyComplete();
     }
 
     @Test
-    @DisplayName("处理超时任务 - null 策略默认为 ESCALATE")
-    void testHandleTimeoutTasks_NullStrategyDefaultsToEscalate() {
-        Task nullStrategyTask = new Task();
-        nullStrategyTask.setId(1004L);
-        nullStrategyTask.setAssigneeId(10005L);
-        nullStrategyTask.setTimeoutAt(LocalDateTime.now().minusHours(1));
-        nullStrategyTask.setTimeoutStrategy(null);
+    void rejectsTaskWithoutPersistedTenantBeforeMutation() {
+        Task invalid = task(1L, "AUTO_COMPLETE");
+        invalid.setTenantId(" ");
+        when(repository.findPendingTasks()).thenReturn(Flux.just(invalid));
+        StepVerifier.create(handler.scanTimeoutTasks())
+                .expectError(IllegalStateException.class)
+                .verify();
+        verifyNoInteractions(service);
+    }
 
-        when(taskRepository.findPendingTasks()).thenReturn(Flux.just(nullStrategyTask));
-        when(workflowService.transferTask(anyLong(), anyLong(), anyLong(), anyString()))
-                .thenReturn(Mono.empty());
-
-        timeoutHandler.handleTimeoutTasks();
-
-        try {
-            Thread.sleep(500);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+    @ParameterizedTest
+    @ValueSource(strings = {"success", "error", "cancel"})
+    void leaseCleanupFinishesBeforeReentry(String outcome) {
+        ScanLease lease = mock(ScanLease.class);
+        Sinks.Empty<Void> scanFinished = Sinks.empty();
+        Sinks.Empty<Void> releaseFinished = Sinks.empty();
+        CountDownLatch started = new CountDownLatch(1);
+        CountDownLatch releasing = new CountDownLatch(1);
+        CountDownLatch terminated = new CountDownLatch(1);
+        AtomicReference<Throwable> failure = new AtomicReference<>();
+        when(lease.acquire(anyString(), anyString(), any())).thenReturn(Mono.just(true));
+        when(lease.release(anyString(), anyString()))
+                .thenReturn(releaseFinished.asMono().doOnSubscribe(ignored -> releasing.countDown()));
+        when(repository.findPendingTasks())
+                .thenReturn(scanFinished
+                        .asMono()
+                        .thenMany(Flux.<Task>empty())
+                        .doOnSubscribe(ignored -> started.countDown()));
+        WorkflowTimeoutHandler leased = new WorkflowTimeoutHandler(repository, service, lease, false, false, 300);
+        Disposable subscription = leased.scanTimeoutTasks()
+                .subscribe(
+                        ignored -> {},
+                        error -> {
+                            failure.set(error);
+                            terminated.countDown();
+                        },
+                        terminated::countDown);
+        await(started);
+        switch (outcome) {
+            case "success" -> scanFinished.tryEmitEmpty();
+            case "error" -> scanFinished.tryEmitError(new IllegalStateException("扫描失败"));
+            case "cancel" -> subscription.dispose();
+            default -> throw new AssertionError(outcome);
         }
+        await(releasing);
+        StepVerifier.create(leased.scanTimeoutTasks())
+                .expectErrorMessage("超时扫描正在执行")
+                .verify(Duration.ofSeconds(5));
+        verify(lease, times(1)).acquire(anyString(), anyString(), any());
+        assertThat(terminated.getCount()).isEqualTo(1);
+        assertThat(releaseFinished.tryEmitEmpty()).isEqualTo(Sinks.EmitResult.OK);
+        if (!"cancel".equals(outcome)) {
+            await(terminated);
+            if ("error".equals(outcome)) {
+                assertThat(failure.get()).hasMessage("扫描失败");
+            } else {
+                assertThat(failure.get()).isNull();
+            }
+        }
+        when(repository.findPendingTasks()).thenReturn(Flux.empty());
+        StepVerifier.create(leased.scanTimeoutTasks()).verifyComplete();
+        ArgumentCaptor<String> owners = ArgumentCaptor.forClass(String.class);
+        verify(lease, times(2)).acquire(anyString(), owners.capture(), any());
+        assertThat(owners.getAllValues().get(0))
+                .isNotEqualTo(owners.getAllValues().get(1));
+        verify(lease).release("workflow-timeout-scan", owners.getAllValues().get(0));
+        verify(lease).release("workflow-timeout-scan", owners.getAllValues().get(1));
+    }
 
-        verify(taskRepository, times(1)).findPendingTasks();
-        verify(workflowService, times(1)).transferTask(eq(1004L), eq(1L), eq(10005L), eq("任务超时自动升级"));
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void cancellationWaitsForLateAcquisitionBeforeCleanup(boolean acquired) {
+        ScanLease lease = mock(ScanLease.class);
+        Sinks.One<Boolean> acquisition = Sinks.one();
+        AtomicBoolean acquisitionCancelled = new AtomicBoolean();
+        when(lease.acquire(anyString(), anyString(), any()))
+                .thenReturn(acquisition.asMono().doOnCancel(() -> acquisitionCancelled.set(true)));
+        when(lease.release(anyString(), anyString())).thenReturn(Mono.empty());
+        WorkflowTimeoutHandler leased = new WorkflowTimeoutHandler(repository, service, lease, false, false, 300);
+
+        Disposable subscription = leased.scanTimeoutTasks().subscribe();
+        subscription.dispose();
+        assertThat(acquisitionCancelled).isFalse();
+        StepVerifier.create(leased.scanTimeoutTasks())
+                .expectErrorMessage("超时扫描正在执行")
+                .verify(Duration.ofSeconds(5));
+        assertThat(acquisition.tryEmitValue(acquired)).isEqualTo(Sinks.EmitResult.OK);
+        verify(lease, times(acquired ? 1 : 0)).release(anyString(), anyString());
+        verifyNoInteractions(repository);
+
+        when(lease.acquire(anyString(), anyString(), any())).thenReturn(Mono.just(false));
+        StepVerifier.create(leased.scanTimeoutTasks()).verifyComplete();
+    }
+
+    @Test
+    void cancelledAcquisitionFailureUnlocksWithoutStartingScan() {
+        ScanLease lease = mock(ScanLease.class);
+        Sinks.One<Boolean> acquisition = Sinks.one();
+        when(lease.acquire(anyString(), anyString(), any())).thenReturn(acquisition.asMono());
+        WorkflowTimeoutHandler leased = new WorkflowTimeoutHandler(repository, service, lease, false, false, 300);
+        Disposable subscription = leased.scanTimeoutTasks().subscribe();
+        subscription.dispose();
+        assertThat(acquisition.tryEmitError(new IllegalStateException("抢占失败"))).isEqualTo(Sinks.EmitResult.OK);
+        when(lease.acquire(anyString(), anyString(), any())).thenReturn(Mono.just(false));
+        StepVerifier.create(leased.scanTimeoutTasks()).verifyComplete();
+        verify(lease, never()).release(anyString(), anyString());
+        verifyNoInteractions(repository);
+    }
+
+    @Test
+    void acquisitionFailureAllowsNextScanWithoutReleasingUnownedLease() {
+        ScanLease lease = mock(ScanLease.class);
+        when(lease.acquire(anyString(), anyString(), any()))
+                .thenReturn(Mono.error(new IllegalStateException("抢占失败")), Mono.just(false));
+        WorkflowTimeoutHandler leased = new WorkflowTimeoutHandler(repository, service, lease, false, false, 300);
+        StepVerifier.create(leased.scanTimeoutTasks())
+                .expectErrorMessage("抢占失败")
+                .verify();
+        StepVerifier.create(leased.scanTimeoutTasks()).verifyComplete();
+        verify(lease, never()).release(anyString(), anyString());
+        verifyNoInteractions(repository);
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void releaseFailurePreservesScanOutcomeAndAllowsReentry(boolean scanFails) {
+        ScanLease lease = mock(ScanLease.class);
+        when(lease.acquire(anyString(), anyString(), any())).thenReturn(Mono.just(true));
+        when(lease.release(anyString(), anyString())).thenReturn(Mono.error(new IllegalStateException("释放失败")));
+        when(repository.findPendingTasks())
+                .thenReturn(scanFails ? Flux.error(new IllegalStateException("扫描失败")) : Flux.empty());
+        WorkflowTimeoutHandler leased = new WorkflowTimeoutHandler(repository, service, lease, false, false, 300);
+        StepVerifier verifier = scanFails
+                ? StepVerifier.create(leased.scanTimeoutTasks()).expectErrorMessage("扫描失败")
+                : StepVerifier.create(leased.scanTimeoutTasks()).expectComplete();
+        verifier.verify(Duration.ofSeconds(5));
+        when(lease.acquire(anyString(), anyString(), any())).thenReturn(Mono.just(false));
+        StepVerifier.create(leased.scanTimeoutTasks()).verifyComplete();
+        verify(lease, times(1)).release(anyString(), anyString());
+    }
+
+    private Task task(Long id, String strategy) {
+        Task task = new Task();
+        task.setId(id);
+        task.setTenantId("tenant-default");
+        task.setAssigneeId(10L);
+        task.setTimeoutAt(LocalDateTime.now().minusHours(1));
+        task.setTimeoutStrategy(strategy);
+        return task;
+    }
+
+    private void await(CountDownLatch latch) {
+        try {
+            assertThat(latch.await(5, TimeUnit.SECONDS)).isTrue();
+        } catch (InterruptedException error) {
+            Thread.currentThread().interrupt();
+            throw new AssertionError(error);
+        }
     }
 }

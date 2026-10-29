@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
  * <p>用于初始化 TOTP MFA 设置，生成密钥和二维码。
  *
  * @author Apex Scaffold Team
- * @since 2026-09-21
+ * @since 1.3.1
  */
 @Data
 @Builder

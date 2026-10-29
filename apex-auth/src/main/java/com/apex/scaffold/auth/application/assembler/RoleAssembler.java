@@ -23,7 +23,7 @@ import org.mapstruct.ReportingPolicy;
  *
  * @author Apex Team
  * @version 1.0.0
- * @since 2024-01-01
+ * @since 1.3.1
  */
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface RoleAssembler {

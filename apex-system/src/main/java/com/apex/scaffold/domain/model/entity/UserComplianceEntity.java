@@ -25,6 +25,8 @@ import lombok.ToString;
  * @see BaseEntity
  */
 @Getter
+@lombok.Setter
+@lombok.NoArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class UserComplianceEntity extends BaseEntity {
@@ -94,38 +96,6 @@ public class UserComplianceEntity extends BaseEntity {
      * </p>
      */
     private LocalDateTime shadowBanAt;
-
-    /** Sets userId. For persistence/construction use only. */
-    public void setUserId(Long value) {
-        this.userId = value;
-    }
-
-    /** Sets teenMode. For persistence/construction use only. */
-    public void setTeenMode(Integer value) {
-        this.teenMode = value;
-    }
-
-    /** Sets teenModeSetAt. For persistence/construction use only. */
-    public void setTeenModeSetAt(LocalDateTime value) {
-        this.teenModeSetAt = value;
-    }
-
-    /** Sets shadowBanStage. For persistence/construction use only. */
-    public void setShadowBanStage(String value) {
-        this.shadowBanStage = value;
-    }
-
-    /** Sets shadowBanAt. For persistence/construction use only. */
-    public void setShadowBanAt(LocalDateTime value) {
-        this.shadowBanAt = value;
-    }
-
-    /**
-     * 默认构造函数
-     */
-    public UserComplianceEntity() {
-        super();
-    }
 
     /**
      * 静态工厂方法：创建新的合规配置
@@ -222,6 +192,8 @@ public class UserComplianceEntity extends BaseEntity {
     /**
      * 青少年模式状态枚举
      */
+    @Getter
+    @lombok.RequiredArgsConstructor
     public enum TeenModeStatus {
         /** 未开启 */
         DISABLED(0),
@@ -229,23 +201,6 @@ public class UserComplianceEntity extends BaseEntity {
         ENABLED(1);
 
         private final Integer code;
-
-        /**
-         * 创建 {@code TeenModeStatus} 实例。
-         *
-         * @param code 枚举编码
-         */
-        TeenModeStatus(Integer code) {
-            this.code = code;
-        }
-
-        /**
-         * 获取枚举编码。
-         * @return 枚举编码
-         */
-        public Integer getCode() {
-            return code;
-        }
 
         /**
          * 根据枚举编码解析青少年模式状态。
@@ -280,6 +235,8 @@ public class UserComplianceEntity extends BaseEntity {
      *
      * @author Apex Team
      */
+    @Getter
+    @lombok.RequiredArgsConstructor
     public enum ShadowBanStage {
         /** 未被封禁（默认状态） */
         NONE("NONE"),
@@ -291,24 +248,6 @@ public class UserComplianceEntity extends BaseEntity {
         STAGE_3("STAGE_3");
 
         private final String code;
-
-        /**
-         * 创建 {@code ShadowBanStage} 实例。
-         *
-         * @param code 枚举编码
-         */
-        ShadowBanStage(String code) {
-            this.code = code;
-        }
-
-        /**
-         * 获取阶段编码
-         *
-         * @return 阶段编码字符串
-         */
-        public String getCode() {
-            return code;
-        }
 
         /**
          * 根据编码获取对应的影子封禁阶段
@@ -334,18 +273,13 @@ public class UserComplianceEntity extends BaseEntity {
          * @return 下一级阶段，若已是最高级则返回当前阶段
          */
         public ShadowBanStage next() {
-            switch (this) {
-                case NONE:
-                    return STAGE_1;
-                case STAGE_1:
-                    return STAGE_2;
-                case STAGE_2:
-                    return STAGE_3;
-                case STAGE_3:
-                    return STAGE_3;
-                default:
-                    return STAGE_1;
-            }
+            return switch (this) {
+                case NONE -> STAGE_1;
+                case STAGE_1 -> STAGE_2;
+                case STAGE_2 -> STAGE_3;
+                case STAGE_3 -> STAGE_3;
+                default -> STAGE_1;
+            };
         }
     }
 }

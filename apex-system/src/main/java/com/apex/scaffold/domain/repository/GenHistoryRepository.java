@@ -1,5 +1,6 @@
 package com.apex.scaffold.domain.repository;
 
+import com.apex.scaffold.common.dto.PageResponse;
 import com.apex.scaffold.domain.model.generator.GenHistoryEntity;
 import java.util.List;
 import reactor.core.publisher.Mono;
@@ -63,15 +64,28 @@ public interface GenHistoryRepository {
     Mono<List<GenHistoryEntity>> findAll();
 
     /**
+     * 分页查询指定配置的生成历史
+     *
+     * <p>在数据库侧完成过滤与分页，按创建时间倒序排列。
+     * 结果集已由持久化拦截器限定为当前租户。
+     *
+     * @param configId 生成配置ID
+     * @param pageNum 页码，从 1 开始
+     * @param pageSize 每页大小
+     * @return 分页结果
+     */
+    Mono<PageResponse<GenHistoryEntity>> searchByConfigId(Long configId, int pageNum, int pageSize);
+
+    /**
      * 新增生成历史记录
      *
      * <p>代码生成任务开始时创建记录，初始状态可能为待处理。
      * 任务完成后通过 {@link #updateById} 更新状态和结果。
      *
      * @param entity 历史实体
-     * @return 影响行数
+     * @return 已回写主键的历史实体
      */
-    Mono<Integer> insert(GenHistoryEntity entity);
+    Mono<GenHistoryEntity> insert(GenHistoryEntity entity);
 
     /**
      * 更新生成历史记录

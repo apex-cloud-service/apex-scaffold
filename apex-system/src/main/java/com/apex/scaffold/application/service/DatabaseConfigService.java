@@ -358,7 +358,7 @@ public class DatabaseConfigService {
      * @return Docker Compose 格式配置
      */
     private String generateDockerComposeConfig(DatabaseConfigRequest request) {
-        String image = DB_TYPE_MYSQL.equalsIgnoreCase(request.getDbType()) ? "mysql:8.0" : "postgres:15";
+        String image = DB_TYPE_MYSQL.equalsIgnoreCase(request.getDbType()) ? "mysql:9.0" : "postgres:15";
 
         String envPrefix = DB_TYPE_MYSQL.equalsIgnoreCase(request.getDbType()) ? "MYSQL" : "POSTGRES";
 

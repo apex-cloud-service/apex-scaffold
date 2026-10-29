@@ -1,5 +1,6 @@
 package com.apex.scaffold.interfaces.handler;
 
+import com.apex.scaffold.common.annotation.OperationLog;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -119,6 +120,12 @@ public class OAuth2DiscoveryHandler {
                 }
                 """)))
     })
+    @OperationLog(
+            module = "OAuth2Discovery",
+            type = OperationLog.OperationType.SELECT,
+            description = "discovery",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> discovery(ServerRequest request) {
         String issuer = String.format("http://localhost:%d", serverPort);
 

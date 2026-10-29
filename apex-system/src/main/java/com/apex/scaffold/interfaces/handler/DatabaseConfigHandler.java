@@ -110,6 +110,12 @@ public class DatabaseConfigHandler extends BaseHandler {
         @ApiResponse(responseCode = "401", description = "未授权，需要登录"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要system:database:test权限")
     })
+    @OperationLog(
+            module = "DatabaseConfig",
+            type = OperationLog.OperationType.OTHER,
+            description = "testConnection",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> testConnection(ServerRequest request) {
         log.info("收到数据库连接测试请求");
         return parseBody(request, DatabaseConfigRequest.class)
@@ -143,6 +149,12 @@ public class DatabaseConfigHandler extends BaseHandler {
         @ApiResponse(responseCode = "400", description = "请求参数校验失败"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要system:database:generate权限")
     })
+    @OperationLog(
+            module = "DatabaseConfig",
+            type = OperationLog.OperationType.OTHER,
+            description = "generateConfig",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> generateConfig(ServerRequest request) {
         return parseBody(request, DatabaseConfigRequest.class)
                 .flatMap(databaseConfigService::generateDeploymentConfig)
@@ -163,6 +175,12 @@ public class DatabaseConfigHandler extends BaseHandler {
         @ApiResponse(responseCode = "200", description = "查询成功", content = @Content(mediaType = "application/json")),
         @ApiResponse(responseCode = "403", description = "权限不足，需要system:database:info权限")
     })
+    @OperationLog(
+            module = "DatabaseConfig",
+            type = OperationLog.OperationType.SELECT,
+            description = "getCurrentInfo",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> getCurrentInfo(ServerRequest request) {
         return databaseConfigService.getCurrentDatabaseInfo().flatMap(this::buildSuccess);
     }
@@ -189,6 +207,12 @@ public class DatabaseConfigHandler extends BaseHandler {
         @ApiResponse(responseCode = "401", description = "未授权，需要登录"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要 system:database:datasource:list 权限")
     })
+    @OperationLog(
+            module = "DatabaseConfig",
+            type = OperationLog.OperationType.SELECT,
+            description = "listDataSources",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> listDataSources(ServerRequest request) {
         int pageNum = safeParseInt(request.queryParam("pageNum").orElse("1"), 1);
         int pageSize = safeParseInt(request.queryParam("pageSize").orElse("10"), 10);
@@ -224,7 +248,12 @@ public class DatabaseConfigHandler extends BaseHandler {
         @ApiResponse(responseCode = "401", description = "未授权，需要登录"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要 system:database:datasource:create 权限")
     })
-    @OperationLog(module = "数据库配置", type = OperationLog.OperationType.INSERT, description = "创建数据源")
+    @OperationLog(
+            module = "数据库配置",
+            type = OperationLog.OperationType.INSERT,
+            description = "创建数据源",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> createDataSource(ServerRequest request) {
         log.info("收到创建数据源请求");
         return parseBody(request, DataSourceRequest.class)
@@ -261,7 +290,12 @@ public class DatabaseConfigHandler extends BaseHandler {
         @ApiResponse(responseCode = "403", description = "权限不足，需要 system:database:datasource:update 权限"),
         @ApiResponse(responseCode = "404", description = "数据源不存在")
     })
-    @OperationLog(module = "数据库配置", type = OperationLog.OperationType.UPDATE, description = "更新数据源")
+    @OperationLog(
+            module = "数据库配置",
+            type = OperationLog.OperationType.UPDATE,
+            description = "更新数据源",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> updateDataSource(ServerRequest request) {
         Long id = requirePositiveId(request);
         log.info("收到更新数据源请求: id={}", id);
@@ -287,7 +321,12 @@ public class DatabaseConfigHandler extends BaseHandler {
         @ApiResponse(responseCode = "403", description = "权限不足，需要 system:database:datasource:delete 权限"),
         @ApiResponse(responseCode = "404", description = "数据源不存在")
     })
-    @OperationLog(module = "数据库配置", type = OperationLog.OperationType.DELETE, description = "删除数据源")
+    @OperationLog(
+            module = "数据库配置",
+            type = OperationLog.OperationType.DELETE,
+            description = "删除数据源",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> deleteDataSource(ServerRequest request) {
         Long id = requirePositiveId(request);
         log.info("收到删除数据源请求: id={}", id);
@@ -320,6 +359,12 @@ public class DatabaseConfigHandler extends BaseHandler {
         @ApiResponse(responseCode = "403", description = "权限不足，需要 system:database:datasource:metrics 权限"),
         @ApiResponse(responseCode = "404", description = "数据源不存在")
     })
+    @OperationLog(
+            module = "DatabaseConfig",
+            type = OperationLog.OperationType.SELECT,
+            description = "getDataSourceMetrics",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> getDataSourceMetrics(ServerRequest request) {
         Long id = requirePositiveId(request);
         log.info("收到数据源监控指标查询请求: id={}", id);

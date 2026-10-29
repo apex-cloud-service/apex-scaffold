@@ -22,8 +22,6 @@ class BaseHandlerTest {
     /** 测试用具体 Handler 子类 */
     static class TestHandler extends BaseHandler {
 
-        /**
-         */
         TestHandler() {
             super(null);
         }

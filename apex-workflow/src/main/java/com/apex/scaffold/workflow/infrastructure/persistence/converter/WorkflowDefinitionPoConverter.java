@@ -4,6 +4,7 @@ import com.apex.scaffold.workflow.domain.model.WorkflowDefinition;
 import com.apex.scaffold.workflow.infrastructure.persistence.po.WorkflowDefinitionPO;
 import java.util.List;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 
 /**
@@ -25,6 +26,7 @@ public interface WorkflowDefinitionPoConverter {
      * @param entity 工作流定义领域对象
      * @return 工作流定义持久化对象
      */
+    @Mapping(source = "dagJson", target = "nodeDefinition")
     WorkflowDefinitionPO toPo(WorkflowDefinition entity);
 
     /**
@@ -33,6 +35,7 @@ public interface WorkflowDefinitionPoConverter {
      * @param po 工作流定义持久化对象
      * @return 工作流定义领域对象
      */
+    @Mapping(source = "nodeDefinition", target = "dagJson")
     WorkflowDefinition toEntity(WorkflowDefinitionPO po);
 
     /**

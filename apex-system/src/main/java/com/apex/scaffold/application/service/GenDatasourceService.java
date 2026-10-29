@@ -37,6 +37,7 @@ public class GenDatasourceService {
     private final GenDatasourceRepository datasourceRepository;
     private final GenConfigRepository configRepository;
     private final ConfigEncryptionService encryptionService;
+    private final TenantGuard tenantGuard;
 
     /**
      * 创建代码生成数据源。
@@ -47,7 +48,7 @@ public class GenDatasourceService {
      * @return 创建后的数据源 DTO
      */
     public Mono<GenDatasourceDTO> create(GenDatasourceRequest request) {
-        return tenantId()
+        return tenantGuard.assertActive().then(Mono.defer(() -> tenantId()
                 .flatMap(tenant -> testConnection(request.getJdbcUrl(), request.getUsername(), request.getPassword())
                         .filter(Boolean.TRUE::equals)
                         .switchIfEmpty(Mono.error(new BusinessException(ResultCode.DB_ERROR, "数据库连接测试失败，请检查连接配置")))
@@ -55,7 +56,7 @@ public class GenDatasourceService {
                         .flatMap(existing -> existing.isPresent()
                                 ? Mono.error(new BusinessException(ResultCode.BUSINESS_ERROR, "数据源名称已存在"))
                                 : Mono.just(toEntity(request, tenant)))
-                        .flatMap(entity -> datasourceRepository.insert(entity).thenReturn(toDTO(entity))));
+                        .flatMap(entity -> datasourceRepository.insert(entity).thenReturn(toDTO(entity))))));
     }
 
     /**

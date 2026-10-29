@@ -24,6 +24,8 @@ import lombok.ToString;
  * @see BaseEntity
  */
 @Getter
+@lombok.Setter
+@lombok.NoArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class DictTypeEntity extends BaseEntity {
@@ -61,33 +63,6 @@ public class DictTypeEntity extends BaseEntity {
      * <p>字典类型的补充说明。</p>
      */
     private String remark;
-
-    /** Sets dictName. For persistence/construction use only. */
-    public void setDictName(String value) {
-        this.dictName = value;
-    }
-
-    /** Sets dictType. For persistence/construction use only. */
-    public void setDictType(String value) {
-        this.dictType = value;
-    }
-
-    /** Sets status. For persistence/construction use only. */
-    public void setStatus(Integer value) {
-        this.status = value;
-    }
-
-    /** Sets remark. For persistence/construction use only. */
-    public void setRemark(String value) {
-        this.remark = value;
-    }
-
-    /**
-     * 默认构造函数。
-     */
-    public DictTypeEntity() {
-        super();
-    }
 
     /**
      * 静态工厂方法：创建字典类型。
@@ -147,6 +122,8 @@ public class DictTypeEntity extends BaseEntity {
     /**
      * 字典状态枚举。
      */
+    @Getter
+    @lombok.RequiredArgsConstructor
     public enum DictState {
         /** 停用 */
         DISABLED(0),
@@ -154,23 +131,5 @@ public class DictTypeEntity extends BaseEntity {
         ENABLED(1);
 
         private final Integer code;
-
-        /**
-         * 创建 {@code DictState} 实例。
-         *
-         * @param code 枚举编码
-         */
-        DictState(Integer code) {
-            this.code = code;
-        }
-
-        /**
-         * 获取枚举编码。
-         *
-         * @return 枚举编码
-         */
-        public Integer getCode() {
-            return code;
-        }
     }
 }

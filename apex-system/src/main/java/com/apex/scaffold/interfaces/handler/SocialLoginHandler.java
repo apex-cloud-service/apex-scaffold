@@ -1,9 +1,11 @@
 package com.apex.scaffold.interfaces.handler;
 
+import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.result.Result;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.headers.Header;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -55,13 +57,24 @@ public class SocialLoginHandler {
      * <p>重定向到 Keycloak 登录页面，触发 OIDC 授权码流程。</p>
      *
      * @param request 服务器请求对象
-     * @return 302 重定向到 Keycloak 登录页面的响应对象
+     * @return 307 重定向到 Keycloak 登录页面的响应对象
      */
     @Operation(
             operationId = "initiateOidcLogin",
             summary = "发起Keycloak OIDC登录",
             description = "重定向到Keycloak登录页面,触发OIDC授权码流程")
-    @ApiResponses({@ApiResponse(responseCode = "302", description = "重定向到Keycloak登录页面")})
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "307",
+                description = "重定向到Keycloak登录页面",
+                headers = @Header(name = "Location", schema = @Schema(type = "string")))
+    })
+    @OperationLog(
+            module = "SocialLogin",
+            type = OperationLog.OperationType.INSERT,
+            description = "initiateOidcLogin",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> initiateOidcLogin(ServerRequest request) {
         log.info("Initiating OIDC login");
 
@@ -76,20 +89,29 @@ public class SocialLoginHandler {
      * <p>根据 provider 参数重定向到对应的 OAuth2 提供商（github/google/wechat）。</p>
      *
      * @param request 服务器请求对象，包含路径参数 provider
-     * @return 302 重定向到第三方 OAuth2 提供商登录页面的响应对象
+     * @return 307 重定向到第三方 OAuth2 提供商登录页面的响应对象
      */
     @Operation(
             operationId = "initiateSocialLogin",
             summary = "发起第三方社交登录",
             description = "根据provider参数重定向到对应的OAuth2提供商(github/google/wechat)")
     @ApiResponses({
-        @ApiResponse(responseCode = "302", description = "重定向到第三方OAuth2提供商登录页面"),
+        @ApiResponse(
+                responseCode = "307",
+                description = "重定向到第三方OAuth2提供商登录页面",
+                headers = @Header(name = "Location", schema = @Schema(type = "string"))),
         @ApiResponse(
                 responseCode = "400",
                 description = "不支持的社交登录提供商",
                 content = @Content(schema = @Schema(implementation = Result.class)))
     })
     @Parameter(name = "provider", description = "社交登录提供商:github、google或wechat", required = true, in = ParameterIn.PATH)
+    @OperationLog(
+            module = "SocialLogin",
+            type = OperationLog.OperationType.INSERT,
+            description = "initiateSocialLogin",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> initiateSocialLogin(ServerRequest request) {
         String provider = request.pathVariable("provider");
         log.info("Initiating social login: provider={}", provider);
@@ -132,6 +154,12 @@ public class SocialLoginHandler {
                 description = "缺少必需的回调参数",
                 content = @Content(schema = @Schema(implementation = Result.class)))
     })
+    @OperationLog(
+            module = "SocialLogin",
+            type = OperationLog.OperationType.OTHER,
+            description = "handleOidcCallback",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> handleOidcCallback(ServerRequest request) {
         log.info("Handling OIDC callback");
 

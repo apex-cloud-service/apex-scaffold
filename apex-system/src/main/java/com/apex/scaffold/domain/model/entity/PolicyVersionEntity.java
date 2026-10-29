@@ -4,6 +4,8 @@ import java.io.Serial;
 import java.time.LocalDateTime;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.ToString;
 
 /**
@@ -16,15 +18,14 @@ import lombok.ToString;
  * @since 1.0.0
  */
 @Getter
+@Setter
+@NoArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class PolicyVersionEntity extends BaseEntity {
 
     @Serial
     private static final long serialVersionUID = 1L;
-
-    /** 创建协议版本实体对象。 */
-    public PolicyVersionEntity() {}
 
     /** 协议/政策类型（USER_AGREEMENT/PRIVACY_POLICY）。 */
     private String policyType;
@@ -37,40 +38,4 @@ public class PolicyVersionEntity extends BaseEntity {
 
     /** 内容 URL。 */
     private String contentUrl;
-
-    /**
-     * Sets policyType. For persistence/construction use only.
-     *
-     * @param value 协议/政策类型（USER_AGREEMENT/PRIVACY_POLICY）
-     */
-    public void setPolicyType(String value) {
-        this.policyType = value;
-    }
-
-    /**
-     * Sets version. For persistence/construction use only.
-     *
-     * @param value 协议版本号
-     */
-    public void setVersion(String value) {
-        this.version = value;
-    }
-
-    /**
-     * Sets effectiveAt. For persistence/construction use only.
-     *
-     * @param value 协议生效日期
-     */
-    public void setEffectiveAt(LocalDateTime value) {
-        this.effectiveAt = value;
-    }
-
-    /**
-     * Sets contentUrl. For persistence/construction use only.
-     *
-     * @param value 协议内容的访问 URL
-     */
-    public void setContentUrl(String value) {
-        this.contentUrl = value;
-    }
 }

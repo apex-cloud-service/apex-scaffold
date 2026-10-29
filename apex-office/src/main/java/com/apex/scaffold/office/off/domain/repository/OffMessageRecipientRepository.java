@@ -128,10 +128,20 @@ public interface OffMessageRecipientRepository {
     Mono<Integer> markAsRead(Long messageId, Long recipientId);
 
     /**
-     * 标记接收人的所有消息为已读
+     * 标记所有未读消息为已读
      *
      * @param recipientId 接收人ID
-     * @return 受影响的行数
+     * @return 更新的记录数
      */
     Mono<Integer> markAllAsRead(Long recipientId);
+
+    /**
+     * 增量查询收件箱（游标分页）
+     *
+     * @param recipientId 接收人ID
+     * @param afterId 游标：查询 id > afterId 的记录，首次传 0
+     * @param limit 返回记录数上限
+     * @return 按 id 升序的接收记录列表
+     */
+    Flux<OffMessageRecipientEntity> findInboxAfterId(Long recipientId, Long afterId, int limit);
 }

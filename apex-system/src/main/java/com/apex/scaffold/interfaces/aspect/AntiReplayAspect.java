@@ -113,6 +113,7 @@ public class AntiReplayAspect {
      * 构造防重放切面
      *
      * @param redisTemplate 响应式 Redis 字符串模板
+     * @param securityMetricsRecorder 安全指标记录器
      */
     public AntiReplayAspect(
             ReactiveStringRedisTemplate redisTemplate, SecurityMetricsRecorder securityMetricsRecorder) {

@@ -30,7 +30,7 @@ class UnifiedAuthorizationServiceTest {
         when(gateway.query("main", 7L)).thenReturn(Mono.error(new IllegalStateException("Unavailable")));
         var unified = new UnifiedAuthorizationService(
                 gateway, new MockEnvironment().withProperty("apex.features.auth-center-permission", "true"), null);
-        StepVerifier.create(new PermissionService(unified, local)
+        StepVerifier.create(new PermissionService(unified, local, mock(TenantGuard.class))
                         .getPermissionsByUserId(7L)
                         .contextWrite(TenantContext.withTenant("main")))
                 .expectError(IllegalStateException.class)

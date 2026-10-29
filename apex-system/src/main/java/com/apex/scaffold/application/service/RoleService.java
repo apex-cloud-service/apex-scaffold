@@ -54,6 +54,9 @@ public class RoleService {
     /** 角色聚合删除事务网关，确保多表清理位于真实 JDBC 事务内。 */
     private final RoleDeletionGateway roleDeletionGateway;
 
+    /** 租户写链路守卫。 */
+    private final TenantGuard tenantGuard;
+
     /**
      * 根据用户 ID 获取角色列表
      *
@@ -120,10 +123,12 @@ public class RoleService {
      * @throws org.springframework.dao.DuplicateKeyException 当角色编码重复时由持久化层抛出
      */
     public Mono<RoleEntity> createRole(RoleEntity role) {
-        return roleRepository.insert(role).map(rows -> {
-            log.info("创建角色成功，code: {}, name: {}", role.getCode(), role.getName());
-            return role;
-        });
+        return tenantGuard
+                .assertActive()
+                .then(Mono.defer(() -> roleRepository.insert(role).map(rows -> {
+                    log.info("创建角色成功，code: {}, name: {}", role.getCode(), role.getName());
+                    return role;
+                })));
     }
 
     /**

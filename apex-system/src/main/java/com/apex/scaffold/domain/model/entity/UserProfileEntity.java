@@ -29,6 +29,7 @@ import lombok.ToString;
  * @see BaseEntity
  */
 @Getter
+@lombok.Setter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class UserProfileEntity extends BaseEntity {
@@ -170,61 +171,6 @@ public class UserProfileEntity extends BaseEntity {
      */
     private LocalDateTime socialUserAt;
 
-    /** Sets userId. For persistence/construction use only. */
-    public void setUserId(Long value) {
-        this.userId = value;
-    }
-
-    /** Sets datingGoal. For persistence/construction use only. */
-    public void setDatingGoal(String value) {
-        this.datingGoal = value;
-    }
-
-    /** Sets mbti. For persistence/construction use only. */
-    public void setMbti(String value) {
-        this.mbti = value;
-    }
-
-    /** Sets heightCm. For persistence/construction use only. */
-    public void setHeightCm(Integer value) {
-        this.heightCm = value;
-    }
-
-    /** Sets school. For persistence/construction use only. */
-    public void setSchool(String value) {
-        this.school = value;
-    }
-
-    /** Sets educationLevel. For persistence/construction use only. */
-    public void setEducationLevel(EducationLevel value) {
-        this.educationLevel = value;
-    }
-
-    /** Sets job. For persistence/construction use only. */
-    public void setJob(String value) {
-        this.job = value;
-    }
-
-    /** Sets bio. For persistence/construction use only. */
-    public void setBio(String value) {
-        this.bio = value;
-    }
-
-    /** Sets interests. For persistence/construction use only. */
-    public void setInterests(String value) {
-        this.interests = value;
-    }
-
-    /** Sets socialUser. For persistence/construction use only. */
-    public void setSocialUser(Integer value) {
-        this.socialUser = value;
-    }
-
-    /** Sets socialUserAt. For persistence/construction use only. */
-    public void setSocialUserAt(LocalDateTime value) {
-        this.socialUserAt = value;
-    }
-
     /**
      * 默认构造函数
      */
@@ -345,6 +291,7 @@ public class UserProfileEntity extends BaseEntity {
      *
      * <p>定义用户的社交身份类型，用于控制功能权限。</p>
      */
+    @Getter
     public enum SocialUserType {
         /** 普通用户 */
         NORMAL(0),
@@ -360,15 +307,6 @@ public class UserProfileEntity extends BaseEntity {
          */
         SocialUserType(Integer code) {
             this.code = code;
-        }
-
-        /**
-         * 获取枚举编码。
-         *
-         * @return 枚举编码
-         */
-        public Integer getCode() {
-            return code;
         }
 
         /**

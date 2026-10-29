@@ -24,6 +24,7 @@ import lombok.ToString;
  * @see BaseEntity
  */
 @Getter
+@lombok.Setter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class ReportTicketEntity extends BaseEntity {
@@ -54,69 +55,6 @@ public class ReportTicketEntity extends BaseEntity {
 
     /** 处理结果。 */
     private String result;
-
-    /**
-     * Sets reporterUserId. For persistence/construction use only.
-     *
-     * @param value 举报者用户 ID
-     */
-    public void setReporterUserId(Long value) {
-        this.reporterUserId = value;
-    }
-
-    /**
-     * Sets targetType. For persistence/construction use only.
-     *
-     * @param value 目标类型（USER/PHOTO/MESSAGE）
-     */
-    public void setTargetType(String value) {
-        this.targetType = value;
-    }
-
-    /**
-     * Sets targetId. For persistence/construction use only.
-     *
-     * @param value 目标 ID
-     */
-    public void setTargetId(Long value) {
-        this.targetId = value;
-    }
-
-    /**
-     * Sets reason. For persistence/construction use only.
-     *
-     * @param value 举报原因
-     */
-    public void setReason(String value) {
-        this.reason = value;
-    }
-
-    /**
-     * Sets evidence. For persistence/construction use only.
-     *
-     * @param value 证据 JSON
-     */
-    public void setEvidence(String value) {
-        this.evidence = value;
-    }
-
-    /**
-     * Sets status. For persistence/construction use only.
-     *
-     * @param value 工单状态（PENDING/PROCESSING/RESOLVED/REJECTED）
-     */
-    public void setStatus(String value) {
-        this.status = value;
-    }
-
-    /**
-     * Sets result. For persistence/construction use only.
-     *
-     * @param value 处理结果
-     */
-    public void setResult(String value) {
-        this.result = value;
-    }
 
     /**
      * 兼容旧字段命名：evidenceJson。

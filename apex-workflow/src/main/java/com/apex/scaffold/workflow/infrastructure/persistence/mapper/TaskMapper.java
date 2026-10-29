@@ -21,28 +21,31 @@ import org.apache.ibatis.annotations.Select;
 public interface TaskMapper extends BaseMapper<TaskPO> {
 
     /**
-     * 统计处于待处理（PENDING）状态的任务数量。
+     * 统计指定租户处于待处理（PENDING）状态的任务数量。
      *
+     * @param tenant 租户标识，来自可信认证上下文
      * @return 待处理任务数量
      */
-    @Select("SELECT COUNT(*) FROM wf_task WHERE status = 'PENDING' AND deleted = 0")
-    Integer countPendingTasks();
+    @Select("SELECT COUNT(*) FROM wf_task WHERE tenant_id = #{tenant} AND status = 'PENDING' AND deleted = 0")
+    Integer countPendingTasks(@Param("tenant") String tenant);
 
     /**
-     * 统计截至指定时刻已超时且尚未处理的任务数量。
+     * 统计指定租户截至指定时刻已超时且尚未处理的任务数量。
      *
+     * @param tenant 租户标识，来自可信认证上下文
      * @param now 当前时刻
      * @return 超时未处理任务数量
      */
-    @Select(
-            "SELECT COUNT(*) FROM wf_task WHERE status = 'PENDING' AND timeout_at IS NOT NULL AND timeout_at <= #{now} AND timeout_handled = 0 AND deleted = 0")
-    Integer countTimeoutTasks(@Param("now") LocalDateTime now);
+    @Select("SELECT COUNT(*) FROM wf_task WHERE tenant_id = #{tenant} AND status = 'PENDING'"
+            + " AND timeout_at IS NOT NULL AND timeout_at <= #{now} AND timeout_handled = 0 AND deleted = 0")
+    Integer countTimeoutTasks(@Param("tenant") String tenant, @Param("now") LocalDateTime now);
 
     /**
-     * 统计发生转办的任务数量。
+     * 统计指定租户发生转办的任务数量。
      *
+     * @param tenant 租户标识，来自可信认证上下文
      * @return 转办任务数量
      */
-    @Select("SELECT COUNT(*) FROM wf_task WHERE transferred_from IS NOT NULL AND deleted = 0")
-    Integer countTransferredTasks();
+    @Select("SELECT COUNT(*) FROM wf_task WHERE tenant_id = #{tenant} AND transferred_from IS NOT NULL AND deleted = 0")
+    Integer countTransferredTasks(@Param("tenant") String tenant);
 }

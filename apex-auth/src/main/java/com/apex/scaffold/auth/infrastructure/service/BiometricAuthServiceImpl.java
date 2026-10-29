@@ -214,6 +214,7 @@ public class BiometricAuthServiceImpl implements BiometricAuthService {
      *
      * @param userId 用户ID
      * @return 该用户的生物识别配置流
+     * @param tenantId 租户ID
      */
     @Override
     @Cacheable(value = "biometric-auth", key = "#tenantId + ':' + #userId")
@@ -226,6 +227,7 @@ public class BiometricAuthServiceImpl implements BiometricAuthService {
      *
      * @param userId 用户ID
      * @return 存在激活状态的配置时为true，否则为false
+     * @param tenantId 租户ID
      */
     @Override
     public Mono<Boolean> isBiometricEnabled(String userId, String tenantId) {
@@ -270,6 +272,7 @@ public class BiometricAuthServiceImpl implements BiometricAuthService {
      *
      * @param userId 用户ID
      * @return 包含挑战串、用户ID和有效期的注册挑战对象
+     * @param tenantId 租户ID
      */
     @Override
     public Mono<RegistrationChallenge> createRegistrationChallenge(String userId, String tenantId) {
@@ -287,6 +290,7 @@ public class BiometricAuthServiceImpl implements BiometricAuthService {
      *
      * @param userId 用户ID
      * @return 包含挑战串和有效期的认证挑战对象
+     * @param tenantId 租户ID
      */
     @Override
     public Mono<AuthenticationChallenge> createAuthenticationChallenge(String userId, String tenantId) {

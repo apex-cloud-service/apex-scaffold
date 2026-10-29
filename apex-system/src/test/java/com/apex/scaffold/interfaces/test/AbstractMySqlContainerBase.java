@@ -4,7 +4,6 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import javax.sql.DataSource;
 import org.flywaydb.core.Flyway;
-import org.flywaydb.core.api.FlywayException;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.utility.DockerImageName;
 
@@ -23,7 +22,7 @@ import org.testcontainers.utility.DockerImageName;
 abstract class AbstractMySqlContainerBase {
 
     /** 与本地 Maven 仓库已缓存的镜像保持一致，避免构建期额外拉取镜像。 */
-    private static final String MYSQL_IMAGE = "mysql:8.0";
+    private static final String MYSQL_IMAGE = "mysql:9.0";
 
     private static final String DATABASE_NAME = "apex_test";
     private static final String USERNAME = "root";
@@ -47,43 +46,17 @@ abstract class AbstractMySqlContainerBase {
     /**
      * 对容器执行 Flyway 迁移。
      *
-     * <p>历史遗留缺陷：{@code V21__enhance_workflow_tables.sql} 引用不存在的 {@code wf_definition} 表
-     * （V20 实际创建的表名为 {@code wf_workflow_definition}），迁移链会在 V21 处中断。
-     * 这与改造前「本地预置 MySQL」集成测试的既定行为完全一致（V21 失败可忽略，V1-V20 迁移成功即可），
-     * 故此处仅容忍该已知缺陷，其余迁移失败仍会抛出，避免掩盖真实回归。
+     * <p>迁移链必须完整执行成功;任何版本失败都直接抛出,不再容忍已知缺陷,
+     * 避免掩盖后续迁移脚本的回归。
      *
      * @param container 已启动的 MySQL 容器
      */
     private static void migrate(MySQLContainer<?> container) {
-        try {
-            Flyway.configure()
-                    .dataSource(container.getJdbcUrl(), container.getUsername(), container.getPassword())
-                    .locations("classpath:db/migration/mysql")
-                    .load()
-                    .migrate();
-        } catch (FlywayException ex) {
-            if (!isKnownV21Defect(ex)) {
-                throw ex;
-            }
-        }
-    }
-
-    /**
-     * 判断异常是否为已知的 V21 {@code wf_definition} 迁移缺陷。
-     *
-     * @param ex Flyway 异常
-     * @return {@code true} 表示确为该已知缺陷
-     */
-    private static boolean isKnownV21Defect(Throwable ex) {
-        for (Throwable current = ex; current != null; current = current.getCause()) {
-            String message = current.getMessage();
-            if (message != null
-                    && message.contains("V21__enhance_workflow_tables")
-                    && message.contains("wf_definition")) {
-                return true;
-            }
-        }
-        return false;
+        Flyway.configure()
+                .dataSource(container.getJdbcUrl(), container.getUsername(), container.getPassword())
+                .locations("classpath:db/migration/mysql")
+                .load()
+                .migrate();
     }
 
     private static DataSource createDataSource(MySQLContainer<?> container) {

@@ -53,6 +53,11 @@ public class MenuService {
     private final MenuAssembler menuAssembler;
 
     /**
+     * 租户写链路守卫。
+     */
+    private final TenantGuard tenantGuard;
+
+    /**
      * 查询完整菜单树。
      *
      * <p>加载全部未删除菜单，按父子关系组装为多棵根树的列表。
@@ -85,7 +90,9 @@ public class MenuService {
      * @throws BusinessException 校验失败时抛出对应业务异常
      */
     public Mono<MenuEntity> createMenu(MenuRequest request) {
-        return validateParent(request.getParentId())
+        return tenantGuard
+                .assertActive()
+                .then(validateParent(request.getParentId()))
                 .then(validateButtonPerms(request))
                 .then(Mono.defer(() -> {
                     MenuEntity entity = MenuEntity.create(

@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
  * 包含审计字段以追踪配置的创建和更新历史。
  *
  * @author Apex Scaffold Generator
- * @since 2026-09-19
+ * @since 1.3.1
  */
 @Data
 @Builder

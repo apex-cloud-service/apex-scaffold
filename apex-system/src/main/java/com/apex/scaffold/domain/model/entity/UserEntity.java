@@ -31,6 +31,7 @@ import lombok.ToString;
  */
 @AggregateRoot(name = "User")
 @Getter
+@lombok.Setter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class UserEntity extends BaseEntity {
@@ -297,136 +298,6 @@ public class UserEntity extends BaseEntity {
      */
     private LocalDateTime lastHeartbeatTime;
 
-    /** Sets openId. For persistence/construction use only. */
-    public void setOpenId(String value) {
-        this.openId = value;
-    }
-
-    /** Sets username. For persistence/construction use only. */
-    public void setUsername(String value) {
-        this.username = value;
-    }
-
-    /** Sets password. For persistence/construction use only. */
-    public void setPassword(String value) {
-        this.password = value;
-    }
-
-    /** Sets unionId. For persistence/construction use only. */
-    public void setUnionId(String value) {
-        this.unionId = value;
-    }
-
-    /** Sets accessToken. For persistence/construction use only. */
-    public void setAccessToken(String value) {
-        this.accessToken = value;
-    }
-
-    /** Sets refreshToken. For persistence/construction use only. */
-    public void setRefreshToken(String value) {
-        this.refreshToken = value;
-    }
-
-    /** Sets tokenExpireTime. For persistence/construction use only. */
-    public void setTokenExpireTime(LocalDateTime value) {
-        this.tokenExpireTime = value;
-    }
-
-    /** Sets nickName. For persistence/construction use only. */
-    public void setNickName(String value) {
-        this.nickName = value;
-    }
-
-    /** Sets avatarUrl. For persistence/construction use only. */
-    public void setAvatarUrl(String value) {
-        this.avatarUrl = value;
-    }
-
-    /** Sets gender. For persistence/construction use only. */
-    public void setGender(Integer value) {
-        this.gender = value;
-    }
-
-    /** Sets birthday. For persistence/construction use only. */
-    public void setBirthday(LocalDate value) {
-        this.birthday = value;
-    }
-
-    /** Sets country. For persistence/construction use only. */
-    public void setCountry(String value) {
-        this.country = value;
-    }
-
-    /** Sets province. For persistence/construction use only. */
-    public void setProvince(String value) {
-        this.province = value;
-    }
-
-    /** Sets city. For persistence/construction use only. */
-    public void setCity(String value) {
-        this.city = value;
-    }
-
-    /** Sets language. For persistence/construction use only. */
-    public void setLanguage(String value) {
-        this.language = value;
-    }
-
-    /** Sets phone. For persistence/construction use only. */
-    public void setPhone(String value) {
-        this.phone = value;
-    }
-
-    /** Sets email. For persistence/construction use only. */
-    public void setEmail(String value) {
-        this.email = value;
-    }
-
-    /** Sets keycloakSub. For persistence/construction use only. */
-    public void setKeycloakSub(String value) {
-        this.keycloakSub = value;
-    }
-
-    /** Sets status. For persistence/construction use only. */
-    public void setStatus(Integer value) {
-        this.status = value;
-    }
-
-    /** Sets onboardingStatus. For persistence/construction use only. */
-    public void setOnboardingStatus(String value) {
-        this.onboardingStatus = value;
-    }
-
-    /** Sets registerChannel. For persistence/construction use only. */
-    public void setRegisterChannel(String value) {
-        this.registerChannel = value;
-    }
-
-    /** Sets lastLoginTime. For persistence/construction use only. */
-    public void setLastLoginTime(LocalDateTime value) {
-        this.lastLoginTime = value;
-    }
-
-    /** Sets lastLoginIp. For persistence/construction use only. */
-    public void setLastLoginIp(String value) {
-        this.lastLoginIp = value;
-    }
-
-    /** Sets lastHeartbeatTime. For persistence/construction use only. */
-    public void setLastHeartbeatTime(LocalDateTime value) {
-        this.lastHeartbeatTime = value;
-    }
-
-    /** Sets deptId. For persistence/construction use only. */
-    public void setDeptId(Long value) {
-        this.deptId = value;
-    }
-
-    /** Sets tenantId. For persistence/construction use only. */
-    public void setTenantId(String value) {
-        this.tenantId = value;
-    }
-
     /**
      * 公共构造函数
      *
@@ -572,6 +443,7 @@ public class UserEntity extends BaseEntity {
      *     本枚举仅为保持实体内部兼容性而保留
      */
     @Deprecated
+    @Getter
     private enum UserStatus {
         /** 禁用状态 */
         DISABLED(0),
@@ -587,14 +459,6 @@ public class UserEntity extends BaseEntity {
          */
         UserStatus(Integer code) {
             this.code = code;
-        }
-
-        /**
-         * 获取枚举编码。
-         * @return 枚举编码
-         */
-        public Integer getCode() {
-            return code;
         }
     }
 }

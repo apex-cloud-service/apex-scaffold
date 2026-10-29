@@ -50,6 +50,11 @@ public class DictService {
      */
     private final DictDataRepository dictDataRepository;
 
+    /**
+     * 租户写链路守卫。
+     */
+    private final TenantGuard tenantGuard;
+
     // ==================== 字典类型 ====================
 
     /**
@@ -86,17 +91,19 @@ public class DictService {
      * @throws BusinessException 当编码已存在时抛出 {@code DICT_TYPE_EXISTS}
      */
     public Mono<DictTypeEntity> createType(DictTypeRequest request) {
-        return dictTypeRepository.existsByType(request.getDictType(), null).flatMap(exists -> {
-            if (exists) {
-                return Mono.error(new BusinessException(ResultCode.DICT_TYPE_EXISTS));
-            }
-            DictTypeEntity entity =
-                    DictTypeEntity.create(request.getDictName(), request.getDictType(), request.getRemark());
-            return dictTypeRepository.insert(entity).map(rows -> {
-                log.info("创建字典类型成功，type: {}", entity.getDictType());
-                return entity;
-            });
-        });
+        return tenantGuard.assertActive().then(Mono.defer(() -> dictTypeRepository
+                .existsByType(request.getDictType(), null)
+                .flatMap(exists -> {
+                    if (exists) {
+                        return Mono.error(new BusinessException(ResultCode.DICT_TYPE_EXISTS));
+                    }
+                    DictTypeEntity entity =
+                            DictTypeEntity.create(request.getDictName(), request.getDictType(), request.getRemark());
+                    return dictTypeRepository.insert(entity).map(rows -> {
+                        log.info("创建字典类型成功，type: {}", entity.getDictType());
+                        return entity;
+                    });
+                })));
     }
 
     /**
@@ -199,7 +206,9 @@ public class DictService {
      * @throws BusinessException 当字典类型不存在时抛出
      */
     public Mono<DictDataEntity> createData(DictDataRequest request) {
-        return assertTypeExists(request.getDictType())
+        return tenantGuard
+                .assertActive()
+                .then(assertTypeExists(request.getDictType()))
                 .then(Mono.defer(() -> {
                     DictDataEntity entity = DictDataEntity.create(
                             request.getDictSort(),

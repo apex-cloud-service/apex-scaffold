@@ -3,8 +3,6 @@ package com.apex.scaffold.interfaces.config;
 import com.apex.scaffold.interfaces.governance.lifecycle.GracefulShutdownCoordinator;
 import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.SmartLifecycle;
@@ -36,8 +34,6 @@ import org.springframework.stereotype.Component;
 @ConditionalOnProperty(prefix = "apex.governance", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class GracefulShutdownManager implements SmartLifecycle {
 
-    private static final Logger logger = LoggerFactory.getLogger(GracefulShutdownManager.class);
-
     /** 生命周期活跃标记 */
     private final AtomicBoolean running = new AtomicBoolean(false);
 
@@ -51,6 +47,7 @@ public class GracefulShutdownManager implements SmartLifecycle {
      * 构造优雅关闭管理器。
      *
      * @param asyncExecutor Spring {@code @Async} 线程池执行器
+     * @param coordinator 统一关停协调器
      */
     public GracefulShutdownManager(
             @Qualifier("asyncExecutor") java.util.concurrent.Executor asyncExecutor,
@@ -66,7 +63,7 @@ public class GracefulShutdownManager implements SmartLifecycle {
     public void start() {
         if (running.compareAndSet(false, true)) {
             coordinator.start();
-            logger.info("优雅关闭管理器已启动");
+            log.info("优雅关闭管理器已启动");
         }
     }
 
@@ -78,10 +75,10 @@ public class GracefulShutdownManager implements SmartLifecycle {
     @Override
     public void stop() {
         if (running.compareAndSet(true, false)) {
-            logger.info("===== 优雅关闭流程开始 =====");
+            log.info("===== 优雅关闭流程开始 =====");
             coordinator.shutdown().toCompletableFuture().join();
             logAsyncExecutorStatus();
-            logger.info("===== 优雅关闭流程完成 =====");
+            log.info("===== 优雅关闭流程完成 =====");
         }
     }
 
@@ -119,12 +116,12 @@ public class GracefulShutdownManager implements SmartLifecycle {
         if (asyncExecutor instanceof org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor tpte) {
             int active = tpte.getActiveCount();
             int queueSize = tpte.getThreadPoolExecutor().getQueue().size();
-            logger.info("[Shutdown-2] @Async 线程池状态: 活跃任务={}, 队列待处理={}", active, queueSize);
+            log.info("[Shutdown-2] @Async 线程池状态: 活跃任务={}, 队列待处理={}", active, queueSize);
             if (active > 0 || queueSize > 0) {
-                logger.info("[Shutdown-2] @Async 线程池有未完成任务, Spring 将在 Bean 销毁时等待最多 60s");
+                log.info("[Shutdown-2] @Async 线程池有未完成任务, Spring 将在 Bean 销毁时等待最多 60s");
             }
         } else {
-            logger.info("[Shutdown-2] @Async 线程池排空由 Spring Bean 生命周期处理");
+            log.info("[Shutdown-2] @Async 线程池排空由 Spring Bean 生命周期处理");
         }
     }
 }

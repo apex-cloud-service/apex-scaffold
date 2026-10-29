@@ -26,6 +26,7 @@ import lombok.ToString;
  * @see BaseEntity
  */
 @Getter
+@lombok.Setter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class PermissionEntity extends BaseEntity {
@@ -89,31 +90,6 @@ public class PermissionEntity extends BaseEntity {
      * </p>
      */
     private Integer status;
-
-    /** Sets name. For persistence/construction use only. */
-    public void setName(String value) {
-        this.name = value;
-    }
-
-    /** Sets code. For persistence/construction use only. */
-    public void setCode(String value) {
-        this.code = value;
-    }
-
-    /** Sets description. For persistence/construction use only. */
-    public void setDescription(String value) {
-        this.description = value;
-    }
-
-    /** Sets type. For persistence/construction use only. */
-    public void setType(Integer value) {
-        this.type = value;
-    }
-
-    /** Sets status. For persistence/construction use only. */
-    public void setStatus(Integer value) {
-        this.status = value;
-    }
 
     /**
      * 默认构造函数
@@ -194,6 +170,7 @@ public class PermissionEntity extends BaseEntity {
     /**
      * 权限类型枚举
      */
+    @Getter
     public enum PermissionType {
         /** 菜单权限 */
         MENU(1),
@@ -211,15 +188,6 @@ public class PermissionEntity extends BaseEntity {
          */
         PermissionType(Integer code) {
             this.code = code;
-        }
-
-        /**
-         * 获取枚举编码。
-         *
-         * @return 枚举编码
-         */
-        public Integer getCode() {
-            return code;
         }
 
         /**
@@ -244,6 +212,7 @@ public class PermissionEntity extends BaseEntity {
     /**
      * 权限状态枚举
      */
+    @Getter
     private enum PermissionStatus {
         /** 禁用 */
         DISABLED(0),
@@ -259,15 +228,6 @@ public class PermissionEntity extends BaseEntity {
          */
         PermissionStatus(Integer code) {
             this.code = code;
-        }
-
-        /**
-         * 获取枚举编码。
-         *
-         * @return 枚举编码
-         */
-        public Integer getCode() {
-            return code;
         }
     }
 }

@@ -48,7 +48,7 @@ CREATE INDEX idx_doc_document_tenant_author ON doc_document (tenant_id, author_i
 CREATE INDEX idx_doc_document_status ON doc_document (status);
 CREATE INDEX idx_doc_document_create_time ON doc_document (create_time);
 CREATE INDEX idx_doc_document_update_time ON doc_document (update_time);
-CREATE INDEX idx_doc_document_title_content_fulltext ON doc_document USING gin(to_tsvector('chinese', title || ' ' || COALESCE(content, '')));
+CREATE INDEX idx_doc_document_title_content_fulltext ON doc_document USING gin(to_tsvector('simple', title || ' ' || COALESCE(content, '')));
 
 -- 图表表
 CREATE TABLE doc_chart (

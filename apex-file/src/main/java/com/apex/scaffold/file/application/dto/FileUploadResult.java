@@ -13,13 +13,15 @@ import java.util.Map;
  *
  * @param bucketName      服务端配置的存储桶名称
  * @param fileName        存储后生成的唯一对象名称
- * @param url             临时访问 URL
- * @param expiresIn       URL 有效期，单位秒
+ * @param url             云预签名 URL 或需认证授权的 Local 内容地址
+ * @param expiresIn       云签名有效期，单位秒；Local 为 0，表示不适用签名 TTL
  * @param aesthetic       FG-CLIP2 六维美学分析结果（分析失败时为 null）
  * @param fileId          文件记录主键（六维分析失败时为 null）
  * @param photoId         照片记录主键（六维分析失败时为 null）
  * @param processingTaskId 异步接入任务 ID（六维分析失败时为 null）
  * @param processingStatus 异步接入状态：PENDING/READY（六维分析失败时为 null）
+ * @param moderationTaskId 人工审核任务 ID（无需人工审核时为 null）
+ * @param moderationStatus 审核状态：WAITING_REVIEW/APPROVED/REJECTED
  * @author Apex Team
  * @version 1.0.0
  * @since 1.0.0
@@ -28,8 +30,8 @@ import java.util.Map;
 public record FileUploadResult(
         @Schema(description = "服务端配置的存储桶名称", example = "apex") String bucketName,
         @Schema(description = "存储后生成的唯一对象名称", example = "0f12ab34cd56ef78.jpg") String fileName,
-        @Schema(description = "临时访问 URL") String url,
-        @Schema(description = "URL 有效期，单位秒", example = "300") int expiresIn,
+        @Schema(description = "云存储返回临时预签名 URL；Local 返回需携带认证凭证的 /api/v1/file/content 地址") String url,
+        @Schema(description = "云签名有效期，单位秒；Local 为 0，表示不适用签名 TTL，每次访问仍须认证授权", example = "300") int expiresIn,
         @Schema(description = "FG-CLIP2 六维美学分析结果（分析失败时为 null）") Map<String, Object> aesthetic,
         @Schema(description = "文件记录主键（非投票上传时为 null）") Long fileId,
         @Schema(description = "照片记录主键（非投票上传时为 null）") Long photoId,

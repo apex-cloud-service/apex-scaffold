@@ -27,12 +27,20 @@ public class AuthCenterPermissionClient implements UnifiedAuthorizationGateway {
     private final WebClient client;
     private final CircuitBreaker breaker = CircuitBreaker.ofDefaults("auth-center-permission");
 
-    /** 构造授权查询客户端，未提供专属客户端时使用默认受管 WebClient。 */
+    /**
+     * 容器装配优先使用专属客户端，否则使用本容器受管连接池。
+     *
+     * @param properties 认证中心权限客户端配置
+     * @param client 专属 WebClient，未装配专属客户端时为 null
+     * @param factory 受管 WebClient 工厂，兜底创建连接池客户端
+     */
     public AuthCenterPermissionClient(
             AuthCenterPermissionProperties properties,
-            @Qualifier("authCenterPermissionWebClient") @Nullable WebClient client) {
+            @Qualifier("authCenterPermissionWebClient") @Nullable WebClient client,
+            ManagedWebClientFactory factory) {
         this.properties = properties;
-        this.client = client != null ? client : ManagedWebClientFactory.create();
+        this.client =
+                java.util.Objects.requireNonNull(client != null ? client : factory.create(), "授权查询需要显式客户端或容器受管工厂");
     }
 
     @Override

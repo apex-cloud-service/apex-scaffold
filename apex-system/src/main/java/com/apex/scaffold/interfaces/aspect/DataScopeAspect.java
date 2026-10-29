@@ -41,6 +41,7 @@ import reactor.core.publisher.Mono;
  * @see DataScopeProvider
  */
 @Aspect
+@lombok.RequiredArgsConstructor
 @Component
 public class DataScopeAspect {
 
@@ -48,21 +49,6 @@ public class DataScopeAspect {
     private final DataScopeProvider dataScopeProvider;
 
     private final ReactiveDataScopeProvider reactiveDataScopeProvider;
-
-    /**
-     * 构造数据权限切面（同步 + 响应式数据权限装配器）。
-     *
-     * <p>同时注入两类装配器：同步方法经 {@link DataScopeProvider} 解析，
-     * 响应式方法（{@code Mono}/{@code Flux}）经 {@link ReactiveDataScopeProvider} 解析。
-     * Spring 自动识别唯一构造器并完成依赖注入。</p>
-     *
-     * @param dataScopeProvider            同步数据权限装配器
-     * @param reactiveDataScopeProvider    响应式数据权限装配器
-     */
-    public DataScopeAspect(DataScopeProvider dataScopeProvider, ReactiveDataScopeProvider reactiveDataScopeProvider) {
-        this.dataScopeProvider = dataScopeProvider;
-        this.reactiveDataScopeProvider = reactiveDataScopeProvider;
-    }
 
     /**
      * 环绕通知：装配/释放数据权限上下文。

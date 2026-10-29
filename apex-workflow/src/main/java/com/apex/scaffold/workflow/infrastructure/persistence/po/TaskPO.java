@@ -36,7 +36,7 @@ import lombok.experimental.SuperBuilder;
 public class TaskPO extends BasePO {
 
     /** 租户 ID，用于多租户数据隔离。 */
-    private Long tenantId;
+    private String tenantId;
 
     /** 所属流程实例 ID。 */
     private Long processInstanceId;

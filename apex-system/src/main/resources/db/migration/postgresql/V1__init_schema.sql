@@ -424,7 +424,7 @@ CREATE TABLE IF NOT EXISTS biz_user_compliance (
   deleted          INTEGER   NOT NULL DEFAULT 0,
   PRIMARY KEY (id),
   -- 用户ID唯一索引，每个用户仅一条合规记录，用于快速获取用户安全设置
-  CONSTRAINT uk_user_id UNIQUE (user_id)
+  CONSTRAINT uk_user_compliance_user_id UNIQUE (user_id)
 );
 
 -- biz_policy_version
@@ -490,7 +490,7 @@ CREATE TABLE IF NOT EXISTS sys_role (
   deleted     INTEGER       NOT NULL DEFAULT 0,
   PRIMARY KEY (id),
   -- 角色编码唯一索引，保证code全局唯一，用于权限校验时按编码查找角色
-  CONSTRAINT uk_code UNIQUE (code)
+  CONSTRAINT uk_role_code UNIQUE (code)
 );
 
 -- biz_user_profile
@@ -512,7 +512,7 @@ CREATE TABLE IF NOT EXISTS biz_user_profile (
   deleted       INTEGER       NOT NULL DEFAULT 0,
   PRIMARY KEY (id),
   -- 用户ID唯一索引，保证每个用户只有一条资料记录，用于按用户快速查找/更新资料
-  CONSTRAINT uk_user_id UNIQUE (user_id)
+  CONSTRAINT uk_user_profile_user_id UNIQUE (user_id)
 );
 
 -- biz_admin_review_reason

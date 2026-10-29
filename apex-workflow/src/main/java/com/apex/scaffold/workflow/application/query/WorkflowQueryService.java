@@ -1,11 +1,15 @@
 package com.apex.scaffold.workflow.application.query;
 
+import com.apex.scaffold.common.context.TenantContext;
 import com.apex.scaffold.common.dto.PageResponse;
+import com.apex.scaffold.common.exception.BusinessException;
+import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
 import com.apex.scaffold.workflow.application.dto.WorkflowDefinitionDTO;
 import com.apex.scaffold.workflow.application.dto.WorkflowInstanceDTO;
 import com.apex.scaffold.workflow.application.dto.WorkflowInstanceDetailDTO;
 import com.apex.scaffold.workflow.application.dto.WorkflowTaskDTO;
+import com.apex.scaffold.workflow.domain.model.WorkflowDefinitionStatus;
 import com.apex.scaffold.workflow.infrastructure.persistence.mapper.ProcessInstanceMapper;
 import com.apex.scaffold.workflow.infrastructure.persistence.mapper.TaskMapper;
 import com.apex.scaffold.workflow.infrastructure.persistence.mapper.WorkflowDefinitionMapper;
@@ -21,6 +25,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -95,7 +100,7 @@ public class WorkflowQueryService {
      */
     public Mono<PageResponse<WorkflowInstanceDTO>> listInstances(
             int pageNum, int pageSize, String status, Long initiatorId) {
-        return Mono.fromCallable(() -> {
+        return queryForTenant(tenantId -> {
                     log.info(
                             "开始查询工作流实例列表: pageNum={}, pageSize={}, status={}, initiatorId={}",
                             pageNum,
@@ -105,6 +110,7 @@ public class WorkflowQueryService {
 
                     Page<ProcessInstancePO> page = new Page<>(pageNum, pageSize);
                     LambdaQueryWrapper<ProcessInstancePO> wrapper = new LambdaQueryWrapper<>();
+                    wrapper.eq(ProcessInstancePO::getTenantId, tenantId);
 
                     if (status != null && !status.isEmpty()) {
                         wrapper.eq(ProcessInstancePO::getStatus, status);
@@ -120,8 +126,10 @@ public class WorkflowQueryService {
                     // 转换为 DTO，需要查询工作流定义获取 processCode
                     List<WorkflowInstanceDTO> dtoList = poPage.getRecords().stream()
                             .map(po -> {
-                                WorkflowDefinitionPO definition =
-                                        workflowDefinitionMapper.selectById(po.getWorkflowDefinitionId());
+                                WorkflowDefinitionPO definition = workflowDefinitionMapper.selectOne(
+                                        new LambdaQueryWrapper<WorkflowDefinitionPO>()
+                                                .eq(WorkflowDefinitionPO::getId, po.getWorkflowDefinitionId())
+                                                .eq(WorkflowDefinitionPO::getTenantId, tenantId));
                                 return convertToInstanceDTO(po, definition);
                             })
                             .collect(Collectors.toList());
@@ -129,8 +137,7 @@ public class WorkflowQueryService {
                     log.info("转换完成，返回 {} 条 DTO", dtoList.size());
                     return PageResponse.of(dtoList, poPage.getTotal(), pageNum, pageSize);
                 })
-                .doOnError(error -> log.error("查询工作流实例列表失败", error))
-                .subscribeOn(BlockingIoSchedulers.jdbc());
+                .doOnError(error -> log.error("查询工作流实例列表失败", error));
     }
 
     /**
@@ -143,36 +150,41 @@ public class WorkflowQueryService {
      * @return 流程详情 DTO
      */
     public Mono<WorkflowInstanceDetailDTO> getInstanceDetail(Long instanceId) {
-        return Mono.fromCallable(() -> {
-                    WorkflowInstanceDetailDTO detail = new WorkflowInstanceDetailDTO();
+        return queryForTenant(tenantId -> {
+            WorkflowInstanceDetailDTO detail = new WorkflowInstanceDetailDTO();
 
-                    // 查询流程实例
-                    ProcessInstancePO processInstance = processInstanceMapper.selectById(instanceId);
-                    if (processInstance == null) {
-                        return null;
-                    }
+            // 查询流程实例
+            ProcessInstancePO processInstance =
+                    processInstanceMapper.selectOne(new LambdaQueryWrapper<ProcessInstancePO>()
+                            .eq(ProcessInstancePO::getId, instanceId)
+                            .eq(ProcessInstancePO::getTenantId, tenantId));
+            if (processInstance == null) {
+                return null;
+            }
 
-                    // 查询流程定义
-                    WorkflowDefinitionPO workflowDefinition =
-                            workflowDefinitionMapper.selectById(processInstance.getWorkflowDefinitionId());
-                    detail.setInstance(convertToInstanceDTO(processInstance, workflowDefinition));
-                    detail.setCurrentNodeId(processInstance.getCurrentNodeCode());
+            // 查询流程定义
+            WorkflowDefinitionPO workflowDefinition =
+                    workflowDefinitionMapper.selectOne(new LambdaQueryWrapper<WorkflowDefinitionPO>()
+                            .eq(WorkflowDefinitionPO::getId, processInstance.getWorkflowDefinitionId())
+                            .eq(WorkflowDefinitionPO::getTenantId, tenantId));
+            detail.setInstance(convertToInstanceDTO(processInstance, workflowDefinition));
+            detail.setCurrentNodeId(processInstance.getCurrentNodeCode());
 
-                    if (workflowDefinition != null) {
-                        detail.setDefinition(convertToDefinitionDTO(workflowDefinition));
-                    }
+            if (workflowDefinition != null) {
+                detail.setDefinition(convertToDefinitionDTO(workflowDefinition));
+            }
 
-                    // 查询任务列表
-                    List<TaskPO> taskList = taskMapper.selectList(new LambdaQueryWrapper<TaskPO>()
-                            .eq(TaskPO::getProcessInstanceId, instanceId)
-                            .orderByDesc(TaskPO::getCreateTime));
-                    List<WorkflowTaskDTO> tasks =
-                            taskList.stream().map(this::convertToTaskDTO).collect(Collectors.toList());
-                    detail.setTasks(tasks);
+            // 查询任务列表
+            List<TaskPO> taskList = taskMapper.selectList(new LambdaQueryWrapper<TaskPO>()
+                    .eq(TaskPO::getProcessInstanceId, instanceId)
+                    .eq(TaskPO::getTenantId, tenantId)
+                    .orderByDesc(TaskPO::getCreateTime));
+            List<WorkflowTaskDTO> tasks =
+                    taskList.stream().map(this::convertToTaskDTO).collect(Collectors.toList());
+            detail.setTasks(tasks);
 
-                    return detail;
-                })
-                .subscribeOn(BlockingIoSchedulers.jdbc());
+            return detail;
+        });
     }
 
     /**
@@ -186,22 +198,20 @@ public class WorkflowQueryService {
      * @return 分页结果
      */
     public Mono<PageResponse<WorkflowTaskDTO>> listMyTasks(Long assigneeId, int pageNum, int pageSize) {
-        return Mono.fromCallable(() -> {
-                    Page<TaskPO> page = new Page<>(pageNum, pageSize);
-                    LambdaQueryWrapper<TaskPO> wrapper = new LambdaQueryWrapper<>();
-                    wrapper.eq(TaskPO::getAssigneeId, assigneeId)
-                            .eq(TaskPO::getStatus, "PENDING")
-                            .orderByDesc(TaskPO::getCreateTime);
+        return queryForTenant(tenantId -> {
+            Page<TaskPO> page = new Page<>(pageNum, pageSize);
+            LambdaQueryWrapper<TaskPO> wrapper = new LambdaQueryWrapper<>();
+            wrapper.eq(TaskPO::getAssigneeId, assigneeId)
+                    .eq(TaskPO::getStatus, "PENDING")
+                    .eq(TaskPO::getTenantId, tenantId)
+                    .orderByDesc(TaskPO::getCreateTime);
+            IPage<TaskPO> poPage = taskMapper.selectPage(page, wrapper);
 
-                    IPage<TaskPO> poPage = taskMapper.selectPage(page, wrapper);
+            List<WorkflowTaskDTO> dtoList =
+                    poPage.getRecords().stream().map(this::convertToTaskDTO).collect(Collectors.toList());
 
-                    List<WorkflowTaskDTO> dtoList = poPage.getRecords().stream()
-                            .map(this::convertToTaskDTO)
-                            .collect(Collectors.toList());
-
-                    return PageResponse.of(dtoList, poPage.getTotal(), pageNum, pageSize);
-                })
-                .subscribeOn(BlockingIoSchedulers.jdbc());
+            return PageResponse.of(dtoList, poPage.getTotal(), pageNum, pageSize);
+        });
     }
 
     /**
@@ -214,11 +224,11 @@ public class WorkflowQueryService {
      * @return 任务 DTO；任务不存在时返回 {@link Mono#empty()}
      */
     public Mono<WorkflowTaskDTO> getTaskById(Long taskId) {
-        return Mono.fromCallable(() -> {
-                    TaskPO po = taskMapper.selectById(taskId);
-                    return po == null ? null : convertToTaskDTO(po);
-                })
-                .subscribeOn(BlockingIoSchedulers.jdbc());
+        return queryForTenant(tenantId -> {
+            TaskPO po = taskMapper.selectOne(
+                    new LambdaQueryWrapper<TaskPO>().eq(TaskPO::getId, taskId).eq(TaskPO::getTenantId, tenantId));
+            return po == null ? null : convertToTaskDTO(po);
+        });
     }
 
     /**
@@ -230,16 +240,18 @@ public class WorkflowQueryService {
      * @return 流程定义 DTO
      */
     public Mono<WorkflowDefinitionDTO> getDefinitionDetail(String workflowCode) {
-        return Mono.fromCallable(() -> {
-                    WorkflowDefinitionPO workflowDefinition =
-                            workflowDefinitionMapper.selectOne(new LambdaQueryWrapper<WorkflowDefinitionPO>()
-                                    .eq(WorkflowDefinitionPO::getWorkflowCode, workflowCode));
-                    if (workflowDefinition == null) {
-                        return null;
-                    }
-                    return convertToDefinitionDTO(workflowDefinition);
-                })
-                .subscribeOn(BlockingIoSchedulers.jdbc());
+        return queryForTenant(tenantId -> {
+            WorkflowDefinitionPO workflowDefinition =
+                    workflowDefinitionMapper.selectOne(new LambdaQueryWrapper<WorkflowDefinitionPO>()
+                            .eq(WorkflowDefinitionPO::getWorkflowCode, workflowCode)
+                            .eq(WorkflowDefinitionPO::getTenantId, tenantId)
+                            .orderByDesc(WorkflowDefinitionPO::getVersion)
+                            .last("LIMIT 1"));
+            if (workflowDefinition == null) {
+                return null;
+            }
+            return convertToDefinitionDTO(workflowDefinition);
+        });
     }
 
     /**
@@ -251,14 +263,101 @@ public class WorkflowQueryService {
      * @return 流程定义 DTO
      */
     public Mono<WorkflowDefinitionDTO> getDefinitionDetail(Long definitionId) {
-        return Mono.fromCallable(() -> {
-                    WorkflowDefinitionPO workflowDefinition = workflowDefinitionMapper.selectById(definitionId);
-                    if (workflowDefinition == null) {
-                        return null;
-                    }
-                    return convertToDefinitionDTO(workflowDefinition);
-                })
-                .subscribeOn(BlockingIoSchedulers.jdbc());
+        return queryForTenant(tenantId -> {
+            WorkflowDefinitionPO workflowDefinition =
+                    workflowDefinitionMapper.selectOne(new LambdaQueryWrapper<WorkflowDefinitionPO>()
+                            .eq(WorkflowDefinitionPO::getId, definitionId)
+                            .eq(WorkflowDefinitionPO::getTenantId, tenantId));
+            if (workflowDefinition == null) {
+                return null;
+            }
+            return convertToDefinitionDTO(workflowDefinition);
+        });
+    }
+
+    /**
+     * 分页查询流程定义（用于定义管理列表）。
+     *
+     * <p>按流程编码与生命周期状态过滤，最近更新的记录排在前面。
+     * 列表项同样解析 DAG JSON，便于设计器直接渲染缩略图。</p>
+     *
+     * @param workflowCode 流程编码过滤条件，为空表示不过滤
+     * @param status       生命周期状态过滤条件，为空表示不过滤
+     * @param pageNum      页码
+     * @param pageSize     每页大小
+     * @return 分页结果
+     */
+    public Mono<PageResponse<WorkflowDefinitionDTO>> listDefinitions(
+            String workflowCode, String status, int pageNum, int pageSize) {
+        WorkflowDefinitionStatus parsedStatus = parseStatus(status);
+        return queryForTenant(tenantId -> {
+            Page<WorkflowDefinitionPO> page = new Page<>(pageNum, pageSize);
+            LambdaQueryWrapper<WorkflowDefinitionPO> wrapper = new LambdaQueryWrapper<>();
+            wrapper.eq(WorkflowDefinitionPO::getTenantId, tenantId)
+                    .eq(
+                            workflowCode != null && !workflowCode.isBlank(),
+                            WorkflowDefinitionPO::getWorkflowCode,
+                            workflowCode)
+                    .eq(
+                            parsedStatus != null,
+                            WorkflowDefinitionPO::getStatus,
+                            parsedStatus == null ? null : parsedStatus.name())
+                    .orderByDesc(WorkflowDefinitionPO::getUpdateTime);
+
+            IPage<WorkflowDefinitionPO> poPage = workflowDefinitionMapper.selectPage(page, wrapper);
+            List<WorkflowDefinitionDTO> dtoList = poPage.getRecords().stream()
+                    .map(this::convertToDefinitionDTO)
+                    .collect(Collectors.toList());
+            return PageResponse.of(dtoList, poPage.getTotal(), pageNum, pageSize);
+        });
+    }
+
+    /**
+     * 查询指定定义所属流程编码的全部版本。
+     *
+     * <p>定义不存在或不属于当前租户时返回空列表，由接口层按 404 处理，
+     * 避免跨租户探测定义是否存在。</p>
+     *
+     * @param definitionId 流程定义 ID
+     * @return 版本列表，按版本号降序
+     */
+    public Mono<List<WorkflowDefinitionDTO>> listDefinitionVersions(Long definitionId) {
+        return queryForTenant(tenantId -> {
+            WorkflowDefinitionPO definition =
+                    workflowDefinitionMapper.selectOne(new LambdaQueryWrapper<WorkflowDefinitionPO>()
+                            .eq(WorkflowDefinitionPO::getId, definitionId)
+                            .eq(WorkflowDefinitionPO::getTenantId, tenantId));
+            if (definition == null) {
+                return List.<WorkflowDefinitionDTO>of();
+            }
+            List<WorkflowDefinitionPO> versions =
+                    workflowDefinitionMapper.selectList(new LambdaQueryWrapper<WorkflowDefinitionPO>()
+                            .eq(WorkflowDefinitionPO::getWorkflowCode, definition.getWorkflowCode())
+                            .eq(WorkflowDefinitionPO::getTenantId, tenantId)
+                            .orderByDesc(WorkflowDefinitionPO::getVersion));
+            return versions.stream().map(this::convertToDefinitionDTO).collect(Collectors.toList());
+        });
+    }
+
+    private WorkflowDefinitionStatus parseStatus(String status) {
+        if (status == null || status.isBlank()) {
+            return null;
+        }
+        try {
+            return WorkflowDefinitionStatus.from(status);
+        } catch (IllegalArgumentException ex) {
+            throw new BusinessException(ResultCode.PARAM_ERROR, "不支持的生命周期状态：" + status);
+        }
+    }
+
+    private <T> Mono<T> queryForTenant(Function<String, T> query) {
+        return Mono.deferContextual(context -> {
+            String tenantId = context.getOrDefault(TenantContext.REACTOR_CONTEXT_KEY, null);
+            if (tenantId == null || tenantId.isBlank()) {
+                return Mono.error(new IllegalStateException("当前请求未包含有效租户"));
+            }
+            return Mono.fromCallable(() -> query.apply(tenantId)).subscribeOn(BlockingIoSchedulers.jdbc());
+        });
     }
 
     /**
@@ -333,7 +432,10 @@ public class WorkflowQueryService {
         dto.setName(po.getWorkflowName());
         dto.setDescription(po.getDescription());
         dto.setVersion(po.getVersion());
-        dto.setEnabled(po.getEnabled() == 1);
+        dto.setEnabled(Integer.valueOf(1).equals(po.getEnabled()));
+        dto.setStatus(WorkflowDefinitionStatus.from(po.getStatus()).name());
+        dto.setPublishedAt(po.getPublishedAt());
+        dto.setPublishedBy(po.getPublishedBy());
 
         // 解析 DAG JSON，增加 null 防护
         try {

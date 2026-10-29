@@ -6,6 +6,7 @@ import static org.mockito.Mockito.lenient;
 
 import com.apex.scaffold.application.dto.admin.GenConfigRequest;
 import com.apex.scaffold.common.context.TenantContext;
+import com.apex.scaffold.common.dto.PageResponse;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.domain.model.generator.GenConfigEntity;
 import com.apex.scaffold.domain.model.generator.GenHistoryEntity;
@@ -60,7 +61,9 @@ class GeneratorServicesTest {
         history.setTenantId("tenant-a");
         history.setStatus("SUCCESS");
         lenient().when(configRepository.findById(2L)).thenReturn(Mono.just(config));
-        lenient().when(historyRepository.findByConfigId(2L)).thenReturn(Mono.just(java.util.List.of(history)));
+        lenient()
+                .when(historyRepository.searchByConfigId(2L, 1, 20))
+                .thenReturn(Mono.just(PageResponse.of(java.util.List.of(history), 1L, 1, 20)));
 
         StepVerifier.create(configService.listHistory(2L, 1, 20).contextWrite(TenantContext.withTenant("tenant-a")))
                 .assertNext(page -> {

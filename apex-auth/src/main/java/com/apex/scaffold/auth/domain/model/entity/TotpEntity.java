@@ -15,7 +15,7 @@ import lombok.ToString;
  * TOTP 是一种基于时间的一次性密码算法，常用于 Google Authenticator 等认证器应用。
  *
  * @author Apex Scaffold Team
- * @since 2026-09-21
+ * @since 1.3.1
  */
 @Data
 @Builder
@@ -101,10 +101,13 @@ public class TotpEntity {
     private Boolean deleted;
 
     /**
-     * 验证 TOTP 密钥
+     * 对输入的验证码进行基础长度检查。
      *
-     * @param code 用户输入的 6 位验证码
-     * @return 验证是否成功
+     * <p>当前仅检查输入非 {@code null} 且长度为 6，不检查是否为数字，
+     * 也不使用密钥和时间窗口验证 TOTP 验证码的有效性。
+     *
+     * @param code 用户输入的验证码
+     * @return 输入非 {@code null} 且长度为 6 时返回 {@code true}，否则返回 {@code false}
      */
     public boolean verify(String code) {
         if (code == null || code.length() != CODE_DIGITS) {
@@ -125,7 +128,11 @@ public class TotpEntity {
     }
 
     /**
-     * 启用 TOTP
+     * 启用 TOTP。
+     *
+     * <p>要求 {@code verified} 为 {@code true}；启用后更新修改时间。
+     *
+     * @throws IllegalStateException 当 {@code verified} 不为 {@code true} 时
      */
     public void enable() {
         if (!Boolean.TRUE.equals(this.verified)) {

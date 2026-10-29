@@ -3,6 +3,8 @@ package com.apex.scaffold.domain.model.entity;
 import java.io.Serial;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.ToString;
 
 /**
@@ -24,15 +26,14 @@ import lombok.ToString;
  * @see BaseEntity
  */
 @Getter
+@Setter
+@NoArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class CreditTxEntity extends BaseEntity {
 
     @Serial
     private static final long serialVersionUID = 1L;
-
-    /** 创建积分流水实体对象。 */
-    public CreditTxEntity() {}
 
     /** 用户 ID。 */
     private Long userId;
@@ -51,58 +52,4 @@ public class CreditTxEntity extends BaseEntity {
 
     /** 关联 ID。 */
     private Long refId;
-
-    /**
-     * 设置用户ID（仅供持久层和构造器使用）。
-     *
-     * @param value 用户ID
-     */
-    public void setUserId(Long value) {
-        this.userId = value;
-    }
-
-    /**
-     * 设置积分方向（仅供持久层和构造器使用）。
-     *
-     * @param value 积分方向（IN/OUT）
-     */
-    public void setDirection(String value) {
-        this.direction = value;
-    }
-
-    /**
-     * 设置变动数量（仅供持久层和构造器使用）。
-     *
-     * @param value 变动数量
-     */
-    public void setAmount(Long value) {
-        this.amount = value;
-    }
-
-    /**
-     * 设置变动原因（仅供持久层和构造器使用）。
-     *
-     * @param value 变动原因
-     */
-    public void setReason(String value) {
-        this.reason = value;
-    }
-
-    /**
-     * 设置关联类型（仅供持久层和构造器使用）。
-     *
-     * @param value 关联类型
-     */
-    public void setRefType(String value) {
-        this.refType = value;
-    }
-
-    /**
-     * 设置关联ID（仅供持久层和构造器使用）。
-     *
-     * @param value 关联ID
-     */
-    public void setRefId(Long value) {
-        this.refId = value;
-    }
 }

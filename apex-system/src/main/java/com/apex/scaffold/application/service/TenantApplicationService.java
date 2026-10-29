@@ -3,6 +3,8 @@ package com.apex.scaffold.application.service;
 import com.apex.scaffold.application.assembler.TenantAssembler;
 import com.apex.scaffold.application.dto.admin.TenantCreateRequest;
 import com.apex.scaffold.application.dto.admin.TenantDTO;
+import com.apex.scaffold.application.dto.admin.TenantPageQuery;
+import com.apex.scaffold.common.dto.PageResponse;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.domain.model.entity.TenantEntity;
@@ -11,9 +13,11 @@ import com.apex.scaffold.domain.model.exception.TenantQuotaExceededException;
 import com.apex.scaffold.domain.model.valueobject.TenantQuota;
 import com.apex.scaffold.domain.repository.TenantRepository;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -25,20 +29,30 @@ import reactor.core.publisher.Mono;
  *
  * <h2>核心业务规则</h2>
  * <ul>
- *   <li>租户编码全局唯一，创建时校验（{@code TENANT_CODE_EXISTS}）</li>
+ *   <li>租户编码全局唯一，重名由数据库唯一约束兜底并映射为 {@code TENANT_CODE_EXISTS}</li>
  *   <li>非法状态迁移被拒绝并返回 {@code TENANT_ILLEGAL_TRANSITION}</li>
+ *   <li>状态与配额更新支持乐观锁版本校验，影响行数为 0 时返回 {@code TENANT_VERSION_CONFLICT}</li>
  *   <li>配额超限返回 {@code TENANT_QUOTA_EXCEEDED}</li>
  *   <li>停用、冻结、注销、归档状态的租户不得创建新业务数据</li>
  * </ul>
  *
  * @author Apex Team
- * @version 1.0.0
+ * @version 1.1.0
  * @since 1.3.0
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class TenantApplicationService {
+
+    /** 受支持的租户状态动作与领域迁移方法映射。 */
+    private static final Map<String, Consumer<TenantEntity>> TRANSITIONS = Map.of(
+            "disable", TenantEntity::disable,
+            "enable", TenantEntity::enable,
+            "freeze", TenantEntity::freeze,
+            "unfreeze", TenantEntity::unfreeze,
+            "deactivate", TenantEntity::deactivate,
+            "archive", TenantEntity::archive);
 
     private final TenantRepository tenantRepository;
 
@@ -56,6 +70,38 @@ public class TenantApplicationService {
     }
 
     /**
+     * 分页查询租户目录。
+     *
+     * @param query 分页与筛选条件
+     * @return 租户分页结果
+     */
+    public Mono<PageResponse<TenantDTO>> pageTenants(TenantPageQuery query) {
+        return tenantRepository
+                .search(
+                        query.getTenantCode(),
+                        query.getTenantName(),
+                        query.getStatus(),
+                        query.getPageNum(),
+                        query.getPageSize())
+                .map(page -> PageResponse.of(
+                        page.getList().stream().map(tenantAssembler::toDTO).toList(),
+                        page.getTotal(),
+                        page.getPageNum(),
+                        page.getPageSize()));
+    }
+
+    /**
+     * 根据租户 ID 查询租户详情。
+     *
+     * @param tenantId 租户 ID
+     * @return 租户 DTO
+     * @throws BusinessException 当租户不存在时抛出 {@code TENANT_NOT_FOUND}
+     */
+    public Mono<TenantDTO> getById(Long tenantId) {
+        return requireById(tenantId).map(tenantAssembler::toDTO);
+    }
+
+    /**
      * 根据租户编码查询租户详情。
      *
      * @param tenantCode 租户编码
@@ -69,7 +115,8 @@ public class TenantApplicationService {
     /**
      * 创建租户。
      *
-     * <p>校验编码唯一性后持久化，新建租户默认为正常状态。</p>
+     * <p>先做编码存在性预校验以返回友好提示；并发场景下由数据库唯一约束兜底，
+     * 唯一键冲突统一映射为 {@code TENANT_CODE_EXISTS}。新建租户默认为正常状态。</p>
      *
      * @param request 租户创建请求
      * @return 已创建的租户 DTO
@@ -85,96 +132,52 @@ public class TenantApplicationService {
                     request.getTenantCode(), request.getTenantName(), request.getAdminUserId(), quota);
             entity.setPackageCode(request.getPackageCode());
             entity.setRemark(request.getRemark());
-            return tenantRepository.insert(entity).map(rows -> {
-                log.info("创建租户成功，code: {}", entity.getTenantCode());
-                return tenantAssembler.toDTO(entity);
-            });
+            return tenantRepository
+                    .insert(entity)
+                    .onErrorMap(DuplicateKeyException.class, ex -> new BusinessException(ResultCode.TENANT_CODE_EXISTS))
+                    .map(rows -> {
+                        log.info("创建租户成功，code: {}", entity.getTenantCode());
+                        return tenantAssembler.toDTO(entity);
+                    });
         });
     }
 
     /**
-     * 停用租户。
+     * 执行租户状态动作。
      *
-     * @param tenantCode 租户编码
+     * @param tenantId 租户 ID
+     * @param action 动作：disable/enable/freeze/unfreeze/deactivate/archive
+     * @param expectedVersion 期望的租户版本号（乐观锁），可为 {@code null}
      * @return 更新后的租户 DTO
-     * @throws BusinessException 当租户不存在或状态不允许停用时抛出
+     * @throws BusinessException 当动作不支持、租户不存在、状态不允许或版本冲突时抛出
      */
-    public Mono<TenantDTO> disable(String tenantCode) {
-        return requireByCode(tenantCode).flatMap(entity -> applyTransition(entity, TenantEntity::disable, "disable"));
-    }
-
-    /**
-     * 启用租户。
-     *
-     * @param tenantCode 租户编码
-     * @return 更新后的租户 DTO
-     * @throws BusinessException 当租户不存在或状态不允许启用时抛出
-     */
-    public Mono<TenantDTO> enable(String tenantCode) {
-        return requireByCode(tenantCode).flatMap(entity -> applyTransition(entity, TenantEntity::enable, "enable"));
-    }
-
-    /**
-     * 冻结租户。
-     *
-     * @param tenantCode 租户编码
-     * @return 更新后的租户 DTO
-     * @throws BusinessException 当租户不存在或状态不允许冻结时抛出
-     */
-    public Mono<TenantDTO> freeze(String tenantCode) {
-        return requireByCode(tenantCode).flatMap(entity -> applyTransition(entity, TenantEntity::freeze, "freeze"));
-    }
-
-    /**
-     * 解冻租户。
-     *
-     * @param tenantCode 租户编码
-     * @return 更新后的租户 DTO
-     * @throws BusinessException 当租户不存在或状态不允许解冻时抛出
-     */
-    public Mono<TenantDTO> unfreeze(String tenantCode) {
-        return requireByCode(tenantCode).flatMap(entity -> applyTransition(entity, TenantEntity::unfreeze, "unfreeze"));
-    }
-
-    /**
-     * 注销租户。
-     *
-     * @param tenantCode 租户编码
-     * @return 更新后的租户 DTO
-     * @throws BusinessException 当租户不存在或状态不允许注销时抛出
-     */
-    public Mono<TenantDTO> deactivate(String tenantCode) {
-        return requireByCode(tenantCode)
-                .flatMap(entity -> applyTransition(entity, TenantEntity::deactivate, "deactivate"));
-    }
-
-    /**
-     * 归档租户（终态）。
-     *
-     * @param tenantCode 租户编码
-     * @return 更新后的租户 DTO
-     * @throws BusinessException 当租户不存在或状态不允许归档时抛出
-     */
-    public Mono<TenantDTO> archive(String tenantCode) {
-        return requireByCode(tenantCode).flatMap(entity -> applyTransition(entity, TenantEntity::archive, "archive"));
+    public Mono<TenantDTO> changeStatus(Long tenantId, String action, Integer expectedVersion) {
+        return Mono.defer(() -> {
+            Consumer<TenantEntity> transition = TRANSITIONS.get(action);
+            if (transition == null) {
+                return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "不支持的租户状态动作: " + action));
+            }
+            return requireById(tenantId)
+                    .flatMap(entity -> applyTransition(entity, transition, action, expectedVersion));
+        });
     }
 
     /**
      * 更新租户配额。
      *
-     * @param tenantCode 租户编码
+     * @param tenantId 租户 ID
      * @param maxUsers 最大用户数（null 表示不限制）
      * @param maxStorageMb 最大存储容量 MB（null 表示不限制）
+     * @param expectedVersion 期望的租户版本号（乐观锁），可为 {@code null}
      * @return 更新后的租户 DTO
-     * @throws BusinessException 当租户不存在时抛出
+     * @throws BusinessException 当租户不存在或版本冲突时抛出
      */
-    public Mono<TenantDTO> updateQuota(String tenantCode, Integer maxUsers, Integer maxStorageMb) {
-        return requireByCode(tenantCode).flatMap(entity -> {
+    public Mono<TenantDTO> updateQuota(Long tenantId, Integer maxUsers, Integer maxStorageMb, Integer expectedVersion) {
+        return requireById(tenantId).flatMap(entity -> {
             entity.setQuota(TenantQuota.of(maxUsers, maxStorageMb));
-            return tenantRepository.updateById(entity).map(rows -> {
-                log.info("更新租户配额，code: {}, maxUsers: {}", tenantCode, maxUsers);
-                return tenantAssembler.toDTO(entity);
-            });
+            return persistWithVersion(entity, expectedVersion)
+                    .map(tenantAssembler::toDTO)
+                    .doOnSuccess(dto -> log.info("更新租户配额，code: {}, maxUsers: {}", entity.getTenantCode(), maxUsers));
         });
     }
 
@@ -220,6 +223,18 @@ public class TenantApplicationService {
     }
 
     /**
+     * 按 ID 加载租户，不存在则抛出 {@code TENANT_NOT_FOUND}。
+     *
+     * @param tenantId 租户 ID
+     * @return 租户实体
+     */
+    private Mono<TenantEntity> requireById(Long tenantId) {
+        return tenantRepository
+                .findById(tenantId)
+                .switchIfEmpty(Mono.error(new BusinessException(ResultCode.TENANT_NOT_FOUND)));
+    }
+
+    /**
      * 按编码加载租户，不存在则抛出 {@code TENANT_NOT_FOUND}。
      *
      * @param tenantCode 租户编码
@@ -237,10 +252,11 @@ public class TenantApplicationService {
      * @param entity 租户实体
      * @param transition 状态迁移操作
      * @param operationName 操作名称（用于日志）
+     * @param expectedVersion 期望的租户版本号（乐观锁），可为 {@code null}
      * @return 更新后的租户 DTO
      */
     private Mono<TenantDTO> applyTransition(
-            TenantEntity entity, Consumer<TenantEntity> transition, String operationName) {
+            TenantEntity entity, Consumer<TenantEntity> transition, String operationName, Integer expectedVersion) {
         return Mono.defer(() -> {
                     try {
                         transition.accept(entity);
@@ -248,9 +264,28 @@ public class TenantApplicationService {
                         return Mono.<TenantEntity>error(
                                 new BusinessException(ResultCode.TENANT_ILLEGAL_TRANSITION, ex.getMessage()));
                     }
-                    return tenantRepository.updateById(entity).map(rows -> entity);
+                    return persistWithVersion(entity, expectedVersion);
                 })
                 .map(tenantAssembler::toDTO)
-                .doOnSuccess(e -> log.info("租户状态迁移成功，code: {}, op: {}", entity.getTenantCode(), operationName));
+                .doOnSuccess(dto -> log.info("租户状态迁移成功，code: {}, op: {}", entity.getTenantCode(), operationName));
+    }
+
+    /**
+     * 按期望版本持久化租户，影响行数为 0 时判定为并发冲突。
+     *
+     * @param entity 租户实体
+     * @param expectedVersion 期望的租户版本号（乐观锁），为 {@code null} 时沿用实体当前版本
+     * @return 持久化后的租户实体
+     */
+    private Mono<TenantEntity> persistWithVersion(TenantEntity entity, Integer expectedVersion) {
+        if (expectedVersion != null) {
+            entity.setLockVersion(expectedVersion);
+        }
+        return tenantRepository.updateById(entity).flatMap(rows -> {
+            if (rows > 0) {
+                return Mono.just(entity);
+            }
+            return Mono.error(new BusinessException(ResultCode.TENANT_VERSION_CONFLICT));
+        });
     }
 }

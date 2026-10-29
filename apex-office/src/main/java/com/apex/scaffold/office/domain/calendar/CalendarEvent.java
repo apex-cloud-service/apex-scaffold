@@ -143,10 +143,12 @@ public class CalendarEvent {
     }
 
     /**
-     * 更新事件时间
+     * 校验并更新事件的开始与结束时间；校验失败时保留原有时间。
      *
-     * @param startTime 新的开始时间
-     * @param endTime 新的结束时间
+     * @param startTime 新的开始时间，不得为 {@code null}
+     * @param endTime 新的结束时间，不得为 {@code null}，且必须严格晚于开始时间
+     * @throws IllegalArgumentException 结束时间早于或等于开始时间时抛出
+     * @throws NullPointerException 任一时间参数为 {@code null} 时抛出
      */
     public void updateTime(LocalDateTime startTime, LocalDateTime endTime) {
         if (endTime.isBefore(startTime) || endTime.isEqual(startTime)) {

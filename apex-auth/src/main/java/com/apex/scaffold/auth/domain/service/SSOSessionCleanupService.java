@@ -3,6 +3,7 @@ package com.apex.scaffold.auth.domain.service;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Set;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
@@ -321,6 +322,8 @@ public class SSOSessionCleanupService {
     /**
      * 清理统计信息
      */
+    @Getter
+    @RequiredArgsConstructor
     public static class CleanupStatistics {
         private final Long samlAssertions;
         private final Long oidcStates;
@@ -329,62 +332,6 @@ public class SSOSessionCleanupService {
         private final Long tokenBlacklist;
         private final Long loginFailures;
         private final Long tempPermissions;
-
-        /**
-         * 构造清理统计信息。
-         *
-         * @param samlAssertions 清理的SAML断言数量
-         * @param oidcStates 清理的OIDC状态数量
-         * @param oidcNonces 清理的OIDC Nonce数量
-         * @param authCodes 清理的授权码数量
-         * @param tokenBlacklist 清理的令牌黑名单数量
-         * @param loginFailures 清理的登录失败记录数量
-         * @param tempPermissions 清理的临时授权数量
-         */
-        public CleanupStatistics(
-                Long samlAssertions,
-                Long oidcStates,
-                Long oidcNonces,
-                Long authCodes,
-                Long tokenBlacklist,
-                Long loginFailures,
-                Long tempPermissions) {
-            this.samlAssertions = samlAssertions;
-            this.oidcStates = oidcStates;
-            this.oidcNonces = oidcNonces;
-            this.authCodes = authCodes;
-            this.tokenBlacklist = tokenBlacklist;
-            this.loginFailures = loginFailures;
-            this.tempPermissions = tempPermissions;
-        }
-
-        public Long getSamlAssertions() {
-            return samlAssertions;
-        }
-
-        public Long getOidcStates() {
-            return oidcStates;
-        }
-
-        public Long getOidcNonces() {
-            return oidcNonces;
-        }
-
-        public Long getAuthCodes() {
-            return authCodes;
-        }
-
-        public Long getTokenBlacklist() {
-            return tokenBlacklist;
-        }
-
-        public Long getLoginFailures() {
-            return loginFailures;
-        }
-
-        public Long getTempPermissions() {
-            return tempPermissions;
-        }
 
         public Long getTotal() {
             return samlAssertions

@@ -38,6 +38,11 @@ public class JobInvoker {
     private static final String ARG_DELIMITER = ",";
     private static final String BOOLEAN_TRUE = "true";
     private static final String BOOLEAN_FALSE = "false";
+    /** 参数列表左括号，用于定位调用目标中的参数起点。 */
+    private static final String OPEN_PAREN = "(";
+    /** 参数列表右括号，用于判定表达式是否闭合。 */
+    private static final String CLOSE_PAREN = ")";
+
     private static final String INTEGER_PATTERN = "-?\\d+";
     private static final String DECIMAL_PATTERN = "-?\\d+\\.\\d+";
 
@@ -79,14 +84,32 @@ public class JobInvoker {
     }
 
     /**
-     * 解析调用目标字符串。
+     * 保存前验证任务方法白名单，不执行业务方法。
      *
      * @param target 调用目标字符串
-     * @return 调用描述（Bean 名称 + 方法名 + 参数列表）
+     * @throws IllegalStateException 目标不存在、参数不匹配或方法未声明白名单
+     */
+    public void validateTarget(String target) {
+        if (!StringUtils.hasText(target)) {
+            throw new IllegalStateException("任务调用目标不能为空");
+        }
+        Invocation invocation = parse(target);
+        Object bean = resolveBean(invocation.beanName());
+        requireManagedMethod(bean, invocation);
+    }
+
+    /**
+     * 解析受控任务表达式，并拒绝不完整的参数括号。
+     *
+     * @param target 调用目标
+     * @return 解析后的调用描述
      */
     private Invocation parse(String target) {
         String expression = target.trim();
-        int parenIndex = expression.indexOf('(');
+        if (expression.contains(OPEN_PAREN) && !expression.endsWith(CLOSE_PAREN)) {
+            throw new IllegalStateException("任务参数括号未闭合");
+        }
+        int parenIndex = expression.indexOf(OPEN_PAREN);
         String callablePart = parenIndex >= 0 ? expression.substring(0, parenIndex) : expression;
         String argsPart = parenIndex >= 0
                 ? expression.substring(parenIndex + 1, expression.length() - 1).trim()
@@ -191,8 +214,7 @@ public class JobInvoker {
      * @throws IllegalStateException 当方法不存在或调用失败时抛出
      */
     private Object invokeMethod(Object bean, Invocation invocation) {
-        Class<?> beanClass = bean.getClass();
-        Method method = findMethod(beanClass, invocation);
+        Method method = requireManagedMethod(bean, invocation);
         try {
             method.setAccessible(true);
             return method.invoke(bean, invocation.args().toArray());
@@ -202,12 +224,27 @@ public class JobInvoker {
     }
 
     /**
-     * 查找匹配的目标方法。
+     * 解析并检查白名单，再选择代理上可调用的方法。
      *
-     * @param beanClass Bean 类型
+     * @param bean Bean 实例
      * @param invocation 调用描述
      * @return 匹配的方法
      * @throws IllegalStateException 当找不到匹配方法时抛出
+     */
+    private Method requireManagedMethod(Object bean, Invocation invocation) {
+        Method method = findMethod(org.springframework.aop.support.AopUtils.getTargetClass(bean), invocation);
+        if (!method.isAnnotationPresent(ManagedJob.class)) {
+            throw new IllegalStateException("任务方法未授权");
+        }
+        return org.springframework.aop.support.AopUtils.selectInvocableMethod(method, bean.getClass());
+    }
+
+    /**
+     * 根据名称和参数类型解析唯一可调用方法。
+     *
+     * @param beanClass 业务 Bean 类型
+     * @param invocation 调用描述
+     * @return 匹配方法
      */
     private Method findMethod(Class<?> beanClass, Invocation invocation) {
         List<Object> args = invocation.args();
@@ -218,7 +255,10 @@ public class JobInvoker {
         } catch (NoSuchMethodException e) {
             for (Method candidate : beanClass.getMethods()) {
                 if (candidate.getName().equals(invocation.methodName())
-                        && candidate.getParameterCount() == args.size()) {
+                        && candidate.getParameterCount() == args.size()
+                        && java.util.stream.IntStream.range(0, args.size())
+                                .allMatch(index -> org.springframework.util.ClassUtils.isAssignableValue(
+                                        candidate.getParameterTypes()[index], args.get(index)))) {
                     return candidate;
                 }
             }
@@ -231,10 +271,12 @@ public class JobInvoker {
      * 方法返回响应式类型时订阅并阻塞等待完成。
      *
      * @param result 方法返回值
+     * @param tenantId 租户 ID，响应式链路等待期间透传租户上下文
      */
     private void awaitIfPublisher(Object result, String tenantId) {
         if (result instanceof org.reactivestreams.Publisher<?> publisher) {
-            TenantContext.withTenant(reactor.core.publisher.Mono.from(publisher)
+            TenantContext.withTenant(reactor.core.publisher.Flux.from(publisher)
+                            .then()
                             .contextWrite(TenantContext.withTenant(tenantId)))
                     .block(java.time.Duration.ofMinutes(5));
         }

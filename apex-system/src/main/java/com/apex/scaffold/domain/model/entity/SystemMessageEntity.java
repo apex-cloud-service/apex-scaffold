@@ -4,6 +4,7 @@ import java.io.Serial;
 import java.time.LocalDateTime;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 
 /**
@@ -16,6 +17,7 @@ import lombok.ToString;
  * @since 1.0.0
  */
 @Getter
+@Setter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class SystemMessageEntity extends BaseEntity {
@@ -40,58 +42,4 @@ public class SystemMessageEntity extends BaseEntity {
 
     /** 已读时间 */
     private LocalDateTime readAt;
-
-    /**
-     * Sets userId. For persistence/construction use only.
-     *
-     * @param value 接收消息的用户 ID
-     */
-    public void setUserId(Long value) {
-        this.userId = value;
-    }
-
-    /**
-     * Sets msgType. For persistence/construction use only.
-     *
-     * @param value 消息类型
-     */
-    public void setMsgType(String value) {
-        this.msgType = value;
-    }
-
-    /**
-     * Sets content. For persistence/construction use only.
-     *
-     * @param value 消息内容
-     */
-    public void setContent(String value) {
-        this.content = value;
-    }
-
-    /**
-     * Sets refType. For persistence/construction use only.
-     *
-     * @param value 关联业务对象的类型
-     */
-    public void setRefType(String value) {
-        this.refType = value;
-    }
-
-    /**
-     * Sets refId. For persistence/construction use only.
-     *
-     * @param value 关联业务对象的 ID
-     */
-    public void setRefId(Long value) {
-        this.refId = value;
-    }
-
-    /**
-     * Sets readAt. For persistence/construction use only.
-     *
-     * @param value 消息已读时间，未读时为 null
-     */
-    public void setReadAt(LocalDateTime value) {
-        this.readAt = value;
-    }
 }

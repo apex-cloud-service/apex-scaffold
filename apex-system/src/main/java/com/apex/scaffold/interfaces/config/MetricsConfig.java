@@ -17,8 +17,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
@@ -80,9 +79,8 @@ import reactor.core.publisher.Mono;
  * @see BlockingIoSchedulers
  */
 @Configuration
+@Slf4j
 public class MetricsConfig {
-
-    private static final Logger log = LoggerFactory.getLogger(MetricsConfig.class);
 
     /** Redis IP 黑名单键前缀，与 {@code GlobalGuardWebFilter} 保持一致 */
     private static final String IP_BLACKLIST_KEY_PATTERN = "blacklist:ip:*";
@@ -533,19 +531,26 @@ public class MetricsConfig {
     }
 
     /**
-     * 从快照 Map 中按池名读取 long 字段（累计完成任务数）；无快照时返回 NaN。
+     * 从快照 Map 中按池名读取 long 字段（累计完成任务数）；无快照或该线程模型无法读取时返回 NaN。
+     *
+     * <p>平台线程模式的 Reactor 调度器不暴露累计完成数，快照以 {@code -1} 标记未知，
+     * 此处渲染为 NaN，避免把“未知”当成 0 参与对比。</p>
      *
      * @param map  最近一次快照（非空，可能是空 Map）
      * @param pool 池名称
      * @param ext  long 字段提取函数
-     * @return 字段值的 double 表现；池中不存在返回 {@link Double#NaN}
+     * @return 字段值的 double 表现；缺失或未知返回 {@link Double#NaN}
      */
     private static double snapshotLongField(
             Map<String, SchedulerPoolSnapshot> map,
             String pool,
             java.util.function.ToLongFunction<SchedulerPoolSnapshot> ext) {
         SchedulerPoolSnapshot s = map.get(pool);
-        return s == null ? Double.NaN : (double) ext.applyAsLong(s);
+        if (s == null) {
+            return Double.NaN;
+        }
+        long value = ext.applyAsLong(s);
+        return value < 0 ? Double.NaN : (double) value;
     }
 
     /**

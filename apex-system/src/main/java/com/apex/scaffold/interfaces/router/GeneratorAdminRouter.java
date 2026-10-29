@@ -45,7 +45,11 @@ import org.springframework.web.reactive.function.server.ServerResponse;
  *   </ul>
  *   <li><b>代码生成执行</b> - {@link CodeGeneratorHandler}</li>
  *   <ul>
+ *     <li>GET /admin-api/v1/generator/templates - 查询模板目录</li>
+ *     <li>POST /admin-api/v1/generator/preflight - 结构化预检</li>
+ *     <li>POST /admin-api/v1/generator/preview - 纯渲染预览</li>
  *     <li>POST /admin-api/v1/generator/configs/{id}/generate - 执行代码生成</li>
+ *     <li>GET /admin-api/v1/generator/artifacts/{id}/download - 按产物 ID 下载</li>
  *   </ul>
  * </ul>
  *
@@ -116,7 +120,23 @@ public class GeneratorAdminRouter {
         @RouterOperation(
                 path = "/admin-api/v1/generator/configs/{id}/generate",
                 beanClass = CodeGeneratorHandler.class,
-                beanMethod = "generate")
+                beanMethod = "generate"),
+        @RouterOperation(
+                path = "/admin-api/v1/generator/templates",
+                beanClass = CodeGeneratorHandler.class,
+                beanMethod = "templates"),
+        @RouterOperation(
+                path = "/admin-api/v1/generator/preflight",
+                beanClass = CodeGeneratorHandler.class,
+                beanMethod = "preflight"),
+        @RouterOperation(
+                path = "/admin-api/v1/generator/preview",
+                beanClass = CodeGeneratorHandler.class,
+                beanMethod = "preview"),
+        @RouterOperation(
+                path = "/admin-api/v1/generator/artifacts/{id}/download",
+                beanClass = CodeGeneratorHandler.class,
+                beanMethod = "download")
     })
     @Bean
     @SuppressWarnings("PMD.MethodTooLongRule")
@@ -305,10 +325,46 @@ public class GeneratorAdminRouter {
                                         .in(ParameterIn.PATH)
                                         .required(true))
                                 .requestBody(requestBodyBuilder()
-                                        .description("代码生成参数（可选）")
+                                        .description("代码生成参数：预览令牌、字段映射覆盖、是否覆盖（可选）")
                                         .content(org.springdoc.core.fn.builders.content.Builder.contentBuilder()
                                                 .mediaType(MediaType.APPLICATION_JSON_VALUE)))
                                 .response(responseBuilder().responseCode("200").description("代码生成成功")))
+                .GET("/admin-api/v1/generator/templates", generatorHandler::templates, ops -> ops.operationId(
+                                "listGenTemplates")
+                        .summary("查询代码生成模板目录")
+                        .tag("代码生成器管理")
+                        .response(responseBuilder().responseCode("200").description("查询成功")))
+                .POST("/admin-api/v1/generator/preflight", generatorHandler::preflight, ops -> ops.operationId(
+                                "genPreflight")
+                        .summary("代码生成结构化预检")
+                        .tag("代码生成器管理")
+                        .requestBody(requestBodyBuilder()
+                                .description("预检参数：生成配置 ID、字段映射覆盖、是否覆盖")
+                                .required(true)
+                                .content(org.springdoc.core.fn.builders.content.Builder.contentBuilder()
+                                        .mediaType(MediaType.APPLICATION_JSON_VALUE)))
+                        .response(responseBuilder().responseCode("200").description("预检完成")))
+                .POST("/admin-api/v1/generator/preview", generatorHandler::preview, ops -> ops.operationId("genPreview")
+                        .summary("代码生成预览")
+                        .tag("代码生成器管理")
+                        .requestBody(requestBodyBuilder()
+                                .description("预览参数：生成配置 ID、字段映射覆盖")
+                                .required(true)
+                                .content(org.springdoc.core.fn.builders.content.Builder.contentBuilder()
+                                        .mediaType(MediaType.APPLICATION_JSON_VALUE)))
+                        .response(responseBuilder().responseCode("200").description("预览成功")))
+                .GET(
+                        "/admin-api/v1/generator/artifacts/{id}/download",
+                        generatorHandler::download,
+                        ops -> ops.operationId("downloadGenArtifact")
+                                .summary("下载生成产物")
+                                .tag("代码生成器管理")
+                                .parameter(parameterBuilder()
+                                        .name("id")
+                                        .description("产物ID")
+                                        .in(ParameterIn.PATH)
+                                        .required(true))
+                                .response(responseBuilder().responseCode("200").description("下载成功")))
                 .build();
     }
 }

@@ -13,6 +13,7 @@ import lombok.ToString;
  * @since 1.2.0
  */
 @Getter
+@lombok.NoArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class OffMessageTemplateEntity extends BaseEntity {
@@ -26,10 +27,6 @@ public class OffMessageTemplateEntity extends BaseEntity {
     private Map<String, Object> variables;
     private Boolean enabled;
     private String tenantId;
-
-    public OffMessageTemplateEntity() {
-        super();
-    }
 
     /**
      * 设置模板编码，并刷新实体更新时间。

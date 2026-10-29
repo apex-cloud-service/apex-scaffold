@@ -23,7 +23,12 @@ import reactor.core.publisher.Mono;
  */
 @Component
 public class FeishuOfficeClient extends AbstractOfficeClient {
-    /** 构造飞书 OAuth 客户端并指向飞书 API 域名。 */
+    /**
+     * 构造飞书 OAuth 客户端并指向飞书 API 域名。
+     *
+     * @param builder 用于创建飞书 HTTP 客户端的构建器
+     * @param properties 平台凭证、回跳地址及请求超时配置
+     */
     public FeishuOfficeClient(WebClient.Builder builder, OfficePlatformProperties properties) {
         super(builder.baseUrl("https://open.feishu.cn").build(), properties, OfficePlatform.FEISHU);
     }

@@ -80,6 +80,7 @@ public class UserHandler extends BaseHandler {
      * @param userAssembler 用户装配器
      * @param requestHandlerUtil 请求处理工具类，用于统一解析请求体和校验参数
      * @param messageUtils 国际化消息工具
+     * @param accountDeletionService 账号注销服务
      */
     public UserHandler(
             UserService userService,
@@ -116,7 +117,12 @@ public class UserHandler extends BaseHandler {
                 description = "未登录",
                 content = @Content(schema = @Schema(implementation = Result.class)))
     })
-    @OperationLog(module = "用户管理", type = OperationLog.OperationType.SELECT, description = "获取当前用户信息")
+    @OperationLog(
+            module = "用户管理",
+            type = OperationLog.OperationType.SELECT,
+            description = "获取当前用户信息",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> getCurrentUserInfo(ServerRequest request) {
         String traceId = TraceIdUtil.getTraceId();
         return currentOpenId(request)
@@ -149,7 +155,12 @@ public class UserHandler extends BaseHandler {
                 description = "用户不存在",
                 content = @Content(schema = @Schema(implementation = Result.class)))
     })
-    @OperationLog(module = "用户管理", type = OperationLog.OperationType.SELECT, description = "根据 ID 获取用户信息")
+    @OperationLog(
+            module = "用户管理",
+            type = OperationLog.OperationType.SELECT,
+            description = "根据 ID 获取用户信息",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> getUserById(ServerRequest request) {
         String traceId = TraceIdUtil.getTraceId();
         Long userId = safeParseLong(request.pathVariable("userId"));
@@ -194,7 +205,12 @@ public class UserHandler extends BaseHandler {
                 description = "分页参数不合法",
                 content = @Content(schema = @Schema(implementation = Result.class)))
     })
-    @OperationLog(module = "用户管理", type = OperationLog.OperationType.SELECT, description = "分页查询用户列表")
+    @OperationLog(
+            module = "用户管理",
+            type = OperationLog.OperationType.SELECT,
+            description = "分页查询用户列表",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> listUsers(ServerRequest request) {
         String traceId = TraceIdUtil.getTraceId();
         return requestHandlerUtil.handleRequestBody(request, PageRequest.class).flatMap(body -> userService
@@ -231,7 +247,12 @@ public class UserHandler extends BaseHandler {
         @ApiResponse(responseCode = "401", description = "未登录"),
         @ApiResponse(responseCode = "429", description = "发送过于频繁")
     })
-    @OperationLog(module = "用户管理", type = OperationLog.OperationType.UPDATE, description = "发送账号注销验证码")
+    @OperationLog(
+            module = "用户管理",
+            type = OperationLog.OperationType.UPDATE,
+            description = "发送账号注销验证码",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> sendAccountDeletionCode(ServerRequest request) {
         if (accountDeletionService == null) {
             return Mono.error(new IllegalStateException("账号注销服务未配置"));
@@ -259,7 +280,12 @@ public class UserHandler extends BaseHandler {
         @ApiResponse(responseCode = "409", description = "会员权益尚未过期或注销已完成"),
         @ApiResponse(responseCode = "429", description = "请求过于频繁")
     })
-    @OperationLog(module = "用户管理", type = OperationLog.OperationType.DELETE, description = "注销当前账号")
+    @OperationLog(
+            module = "用户管理",
+            type = OperationLog.OperationType.DELETE,
+            description = "注销当前账号",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> deleteCurrentUser(ServerRequest request) {
         if (accountDeletionService == null) {
             return Mono.error(new IllegalStateException("账号注销服务未配置"));

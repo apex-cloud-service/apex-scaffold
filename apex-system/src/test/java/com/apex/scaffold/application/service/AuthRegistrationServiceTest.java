@@ -124,6 +124,27 @@ class AuthRegistrationServiceTest {
     }
 
     /**
+     * 租户不可写时拒绝签发注册票据，不签发一次性凭证。
+     */
+    @Test
+    void tenantNotWritableRejectsRegistrationTicketIssuance() {
+        WechatBindPhoneRequest request = bindRequest();
+        when(smsCodeService.validate(PHONE, "123456")).thenReturn(Mono.just(true));
+        prepareTicketExecution("wx-ticket", AuthTicketType.WECHAT_BIND, wechatPayload());
+        when(userService.getByOpenId("wx-openid")).thenReturn(Mono.empty());
+        when(userService.getByPhone(PHONE)).thenReturn(Mono.empty());
+        when(userService.assertWechatRegistrationAllowed("wx-openid")).thenReturn(Mono.empty());
+        when(userService.assertPhoneRegistrationAllowed(PHONE))
+                .thenReturn(Mono.error(new BusinessException(ResultCode.TENANT_ILLEGAL_TRANSITION, "租户状态不允许创建业务数据")));
+
+        StepVerifier.create(service.bindWechatPhone(request))
+                .expectErrorSatisfies(error -> assertCode(error, ResultCode.TENANT_ILLEGAL_TRANSITION))
+                .verify();
+        verify(ticketService, never()).issue(any());
+        verify(userService, never()).create(any());
+    }
+
+    /**
      * 验证 {@code registeredPhoneWithoutWechatIsBoundAndLoggedIn} 场景。
      */
     @Test

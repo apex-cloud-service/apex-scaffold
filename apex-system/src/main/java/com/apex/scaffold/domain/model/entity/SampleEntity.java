@@ -32,6 +32,7 @@ import lombok.ToString;
  * @see BaseEntity
  */
 @Getter
+@lombok.Setter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class SampleEntity extends BaseEntity {
@@ -133,76 +134,6 @@ public class SampleEntity extends BaseEntity {
      */
     private Double faceRatio;
 
-    /** Sets userId. For persistence/construction use only. */
-    public void setUserId(Long value) {
-        this.userId = value;
-    }
-
-    /** Sets photoId. For persistence/construction use only. */
-    public void setPhotoId(Long value) {
-        this.photoId = value;
-    }
-
-    /** Sets bucketName. For persistence/construction use only. */
-    public void setBucketName(String value) {
-        this.bucketName = value;
-    }
-
-    /** Sets fileName. For persistence/construction use only. */
-    public void setFileName(String value) {
-        this.fileName = value;
-    }
-
-    /** Sets mode. For persistence/construction use only. */
-    public void setMode(String value) {
-        this.mode = value;
-    }
-
-    /** Sets faceType. For persistence/construction use only. */
-    public void setFaceType(String value) {
-        this.faceType = value;
-    }
-
-    /** Sets cropX. For persistence/construction use only. */
-    public void setCropX(Integer value) {
-        this.cropX = value;
-    }
-
-    /** Sets cropY. For persistence/construction use only. */
-    public void setCropY(Integer value) {
-        this.cropY = value;
-    }
-
-    /** Sets cropW. For persistence/construction use only. */
-    public void setCropW(Integer value) {
-        this.cropW = value;
-    }
-
-    /** Sets cropH. For persistence/construction use only. */
-    public void setCropH(Integer value) {
-        this.cropH = value;
-    }
-
-    /** Sets pitch. For persistence/construction use only. */
-    public void setPitch(Double value) {
-        this.pitch = value;
-    }
-
-    /** Sets yaw. For persistence/construction use only. */
-    public void setYaw(Double value) {
-        this.yaw = value;
-    }
-
-    /** Sets roll. For persistence/construction use only. */
-    public void setRoll(Double value) {
-        this.roll = value;
-    }
-
-    /** Sets faceRatio. For persistence/construction use only. */
-    public void setFaceRatio(Double value) {
-        this.faceRatio = value;
-    }
-
     /**
      * 默认构造函数
      */
@@ -289,6 +220,7 @@ public class SampleEntity extends BaseEntity {
     /**
      * 采样模式枚举
      */
+    @Getter
     public enum SampleMode {
         /** 二选一 */
         TWO_CHOICE("TWO_CHOICE"),
@@ -304,14 +236,6 @@ public class SampleEntity extends BaseEntity {
          */
         SampleMode(String code) {
             this.code = code;
-        }
-
-        /**
-         * 获取枚举编码。
-         * @return 枚举编码
-         */
-        public String getCode() {
-            return code;
         }
 
         /**
@@ -336,6 +260,7 @@ public class SampleEntity extends BaseEntity {
     /**
      * 人脸类型枚举
      */
+    @Getter
     public enum FaceType {
         /** 特写 */
         CLOSE_UP("CLOSE_UP"),
@@ -351,14 +276,6 @@ public class SampleEntity extends BaseEntity {
          */
         FaceType(String code) {
             this.code = code;
-        }
-
-        /**
-         * 获取枚举编码。
-         * @return 枚举编码
-         */
-        public String getCode() {
-            return code;
         }
 
         /**

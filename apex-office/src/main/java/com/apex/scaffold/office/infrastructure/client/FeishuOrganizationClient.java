@@ -35,7 +35,12 @@ public class FeishuOrganizationClient implements OfficePlatformOrganizationClien
     private final WebClient webClient;
     private final OfficePlatformProperties.Platform properties;
 
-    /** 构造飞书组织客户端并加载飞书平台配置。 */
+    /**
+     * 构造飞书组织客户端并加载飞书平台配置。
+     *
+     * @param webClient 用于调用飞书通讯录 API 的 HTTP 客户端
+     * @param platformProperties 包含飞书应用凭证的平台配置
+     */
     public FeishuOrganizationClient(WebClient webClient, OfficePlatformProperties platformProperties) {
         this.webClient = webClient;
         this.properties = platformProperties

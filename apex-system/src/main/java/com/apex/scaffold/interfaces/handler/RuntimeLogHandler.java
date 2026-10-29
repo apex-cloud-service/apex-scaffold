@@ -70,7 +70,6 @@ public class RuntimeLogHandler {
      * @return 日志列表
      */
     @RequirePermission("system:log:runtime:query")
-    @OperationLog(module = "运行日志", type = OperationLog.OperationType.SELECT, description = "查询运行时日志")
     @Operation(
             operationId = "queryRuntimeLogs",
             summary = "查询运行时日志",
@@ -125,6 +124,12 @@ public class RuntimeLogHandler {
         @ApiResponse(responseCode = "403", description = "权限不足，需要 system:log:runtime:query 权限")
     })
     @SuppressWarnings("PMD.MethodTooLongRule")
+    @OperationLog(
+            module = "RuntimeLog",
+            type = OperationLog.OperationType.SELECT,
+            description = "queryLogs",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> queryLogs(ServerRequest request) {
         try {
             String startTimeStr = request.queryParam("startTime").orElse(null);
@@ -209,6 +214,12 @@ public class RuntimeLogHandler {
         @ApiResponse(responseCode = "400", description = "参数错误，例如时间格式不正确"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要 system:log:runtime:query 权限")
     })
+    @OperationLog(
+            module = "RuntimeLog",
+            type = OperationLog.OperationType.SELECT,
+            description = "countLogs",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> countLogs(ServerRequest request) {
         try {
             String startTimeStr = request.queryParam("startTime").orElse(null);

@@ -22,6 +22,7 @@ import lombok.ToString;
  * <h2>状态定义</h2>
  * <ul>
  *   <li><strong>SUCCESS</strong>：代码生成成功，所有文件已写入</li>
+ *   <li><strong>PARTIAL</strong>：部分文件写入失败，成功产物已发布并可按 ID 下载</li>
  *   <li><strong>FAILED</strong>：代码生成失败，可能是数据库连接失败、模板解析错误、
  *       文件写入失败等，详细错误记录在 {@link #errorMessage} 中</li>
  * </ul>

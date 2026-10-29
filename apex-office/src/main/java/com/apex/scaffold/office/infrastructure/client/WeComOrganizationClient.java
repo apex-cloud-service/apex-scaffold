@@ -35,7 +35,12 @@ public class WeComOrganizationClient implements OfficePlatformOrganizationClient
     private final WebClient webClient;
     private final OfficePlatformProperties.Platform properties;
 
-    /** 构造企业微信组织客户端并加载企业微信平台配置。 */
+    /**
+     * 构造企业微信组织客户端并加载企业微信平台配置。
+     *
+     * @param webClient 用于调用企业微信通讯录 API 的 HTTP 客户端
+     * @param platformProperties 包含企业微信应用凭证的平台配置
+     */
     public WeComOrganizationClient(WebClient webClient, OfficePlatformProperties platformProperties) {
         this.webClient = webClient;
         this.properties = platformProperties
@@ -48,6 +53,16 @@ public class WeComOrganizationClient implements OfficePlatformOrganizationClient
         return OfficePlatform.WECOM;
     }
 
+    /**
+     * 拉取企业微信部门列表。
+     *
+     * <p>当前实现忽略 cursor，返回终页结果，不支持增量同步或游标翻页。
+     *
+     * @param appId 企业标识
+     * @param secret 应用密钥
+     * @param cursor 同步游标（当前实现忽略）
+     * @return 部门列表的终页结果
+     */
     @Override
     public Mono<OfficeOrganizationService.OrganizationSyncResult<OfficeDepartment>> fetchDepartments(
             String appId, String secret, String cursor) {
@@ -65,6 +80,16 @@ public class WeComOrganizationClient implements OfficePlatformOrganizationClient
                         new BusinessException(ResultCode.BUSINESS_ERROR, "企业微信拉取部门失败：" + ((Throwable) e).getMessage()));
     }
 
+    /**
+     * 拉取企业微信根部门（ID为1）的直属成员列表。
+     *
+     * <p>当前实现忽略 cursor，返回终页结果，不支持增量同步或游标翻页。
+     *
+     * @param appId 企业标识
+     * @param secret 应用密钥
+     * @param cursor 同步游标（当前实现忽略）
+     * @return 根部门直属成员列表的终页结果
+     */
     @Override
     public Mono<OfficeOrganizationService.OrganizationSyncResult<OfficeMember>> fetchMembers(
             String appId, String secret, String cursor) {
@@ -73,6 +98,17 @@ public class WeComOrganizationClient implements OfficePlatformOrganizationClient
         return fetchDepartmentMembers(appId, secret, "1", cursor);
     }
 
+    /**
+     * 拉取企业微信指定部门的直属成员列表，不包含子部门成员。
+     *
+     * <p>当前实现忽略 cursor，返回终页结果，不支持增量同步或游标翻页。
+     *
+     * @param appId 企业标识
+     * @param secret 应用密钥
+     * @param externalDeptId 企业微信部门标识
+     * @param cursor 同步游标（当前实现忽略）
+     * @return 指定部门直属成员列表的终页结果
+     */
     @Override
     public Mono<OfficeOrganizationService.OrganizationSyncResult<OfficeMember>> fetchDepartmentMembers(
             String appId, String secret, String externalDeptId, String cursor) {

@@ -1,5 +1,6 @@
 package com.apex.scaffold.infrastructure.persistence.repository;
 
+import com.apex.scaffold.common.dto.PageResponse;
 import com.apex.scaffold.common.persistence.util.ConditionUtil;
 import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
 import com.apex.scaffold.domain.model.entity.TenantEntity;
@@ -7,6 +8,7 @@ import com.apex.scaffold.domain.repository.TenantRepository;
 import com.apex.scaffold.infrastructure.persistence.converter.TenantPoConverter;
 import com.apex.scaffold.infrastructure.persistence.mapper.TenantMapper;
 import com.apex.scaffold.infrastructure.persistence.po.TenantPO;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -56,6 +58,24 @@ public class TenantRepositoryImpl implements TenantRepository {
                         ConditionUtil.lambda(TenantPO.class).orderByAsc(TenantPO::getTenantCode)))
                 .subscribeOn(BlockingIoSchedulers.jdbc())
                 .map(tenantPoConverter::toEntityList);
+    }
+
+    @Override
+    public Mono<PageResponse<TenantEntity>> search(
+            String tenantCode, String tenantName, String status, int pageNum, int pageSize) {
+        return Mono.fromCallable(() -> {
+                    Page<TenantPO> page = new Page<>(pageNum, pageSize);
+                    tenantMapper.selectPage(
+                            page,
+                            ConditionUtil.lambda(TenantPO.class)
+                                    .likeIfPresent(TenantPO::getTenantCode, tenantCode)
+                                    .likeIfPresent(TenantPO::getTenantName, tenantName)
+                                    .eqIfPresent(TenantPO::getStatus, status)
+                                    .orderByAsc(TenantPO::getTenantCode));
+                    List<TenantEntity> entities = tenantPoConverter.toEntityList(page.getRecords());
+                    return PageResponse.of(entities, page.getTotal(), pageNum, pageSize);
+                })
+                .subscribeOn(BlockingIoSchedulers.jdbc());
     }
 
     @Override

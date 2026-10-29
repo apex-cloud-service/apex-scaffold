@@ -70,6 +70,19 @@ public class WorkflowDefinition {
      */
     private Integer enabled;
 
+    /**
+     * 生命周期状态。
+     *
+     * <p>草稿定义可编辑但不可实例化；发布后的定义内容不可变；停用仅阻止新的实例化。</p>
+     */
+    private WorkflowDefinitionStatus status;
+
+    /** 发布时刻，仅在发布后写入。 */
+    private LocalDateTime publishedAt;
+
+    /** 发布人用户 ID，仅在发布后写入。 */
+    private Long publishedBy;
+
     /** 创建时间，记录该流程定义首次创建的时刻。 */
     private LocalDateTime createTime;
 
@@ -88,4 +101,78 @@ public class WorkflowDefinition {
      * <p>取值 0 表示未删除、1 表示已删除。采用逻辑删除以便审计与数据追溯。</p>
      */
     private Integer deleted;
+
+    /**
+     * 判断是否为草稿状态。
+     *
+     * @return 草稿返回 {@code true}
+     */
+    public boolean isDraft() {
+        return status == WorkflowDefinitionStatus.DRAFT;
+    }
+
+    /**
+     * 判断是否为已发布状态。
+     *
+     * @return 已发布返回 {@code true}
+     */
+    public boolean isPublished() {
+        return status == WorkflowDefinitionStatus.PUBLISHED;
+    }
+
+    /**
+     * 判断是否允许编辑。
+     *
+     * <p>只有草稿可以编辑，已发布或已停用的定义内容不可变。</p>
+     *
+     * @return 可编辑返回 {@code true}
+     */
+    public boolean isEditable() {
+        return isDraft();
+    }
+
+    /**
+     * 发布当前定义。
+     *
+     * <p>发布后内容不可变，实例化时固定使用该版本。</p>
+     *
+     * @param operatorId 发布人用户 ID
+     * @param now        发布时刻
+     * @throws IllegalStateException 当定义已处于发布状态时
+     */
+    public void publish(Long operatorId, LocalDateTime now) {
+        if (status == WorkflowDefinitionStatus.PUBLISHED) {
+            throw new IllegalStateException("流程定义已发布");
+        }
+        this.status = WorkflowDefinitionStatus.PUBLISHED;
+        this.enabled = 1;
+        this.publishedAt = now;
+        this.publishedBy = operatorId;
+    }
+
+    /**
+     * 启用当前定义，使其允许被实例化。
+     *
+     * @throws IllegalStateException 当定义仍为草稿时
+     */
+    public void enable() {
+        if (status == WorkflowDefinitionStatus.DRAFT) {
+            throw new IllegalStateException("流程定义尚未发布，不能启用");
+        }
+        this.status = WorkflowDefinitionStatus.PUBLISHED;
+        this.enabled = 1;
+    }
+
+    /**
+     * 停用当前定义，阻止新的实例化。
+     *
+     * @throws IllegalStateException 当定义仍为草稿时
+     */
+    public void disable() {
+        if (status == WorkflowDefinitionStatus.DRAFT) {
+            throw new IllegalStateException("流程定义尚未发布，不能停用");
+        }
+        this.status = WorkflowDefinitionStatus.DISABLED;
+        this.enabled = 0;
+    }
 }

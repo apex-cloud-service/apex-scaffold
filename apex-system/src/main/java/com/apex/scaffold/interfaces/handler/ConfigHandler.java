@@ -90,6 +90,12 @@ public class ConfigHandler extends BaseHandler {
         @ApiResponse(responseCode = "401", description = "未授权，需要登录"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要 system:config:list 权限")
     })
+    @OperationLog(
+            module = "Config",
+            type = OperationLog.OperationType.SELECT,
+            description = "list",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> list(ServerRequest request) {
         return configService.listConfigs().flatMap(this::buildSuccess);
     }
@@ -121,6 +127,12 @@ public class ConfigHandler extends BaseHandler {
         @ApiResponse(responseCode = "403", description = "权限不足，需要 system:config:query 权限"),
         @ApiResponse(responseCode = "404", description = "参数配置不存在")
     })
+    @OperationLog(
+            module = "Config",
+            type = OperationLog.OperationType.SELECT,
+            description = "detail",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> detail(ServerRequest request) {
         return configService.getConfig(requirePositiveId(request)).flatMap(this::buildSuccess);
     }
@@ -149,7 +161,12 @@ public class ConfigHandler extends BaseHandler {
         @ApiResponse(responseCode = "401", description = "未授权，需要登录"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要 system:config:add 权限")
     })
-    @OperationLog(module = "参数配置", type = OperationLog.OperationType.INSERT, description = "创建参数配置")
+    @OperationLog(
+            module = "参数配置",
+            type = OperationLog.OperationType.INSERT,
+            description = "创建参数配置",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> create(ServerRequest request) {
         return parseBody(request, ConfigRequest.class)
                 .flatMap(configService::createConfig)
@@ -187,7 +204,12 @@ public class ConfigHandler extends BaseHandler {
         @ApiResponse(responseCode = "403", description = "权限不足，需要 system:config:edit 权限"),
         @ApiResponse(responseCode = "404", description = "参数配置不存在")
     })
-    @OperationLog(module = "参数配置", type = OperationLog.OperationType.UPDATE, description = "更新参数配置")
+    @OperationLog(
+            module = "参数配置",
+            type = OperationLog.OperationType.UPDATE,
+            description = "更新参数配置",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> update(ServerRequest request) {
         Long id = requirePositiveId(request);
         return parseBody(request, ConfigRequest.class)
@@ -219,7 +241,12 @@ public class ConfigHandler extends BaseHandler {
         @ApiResponse(responseCode = "403", description = "权限不足，需要 system:config:remove 权限"),
         @ApiResponse(responseCode = "404", description = "参数配置不存在")
     })
-    @OperationLog(module = "参数配置", type = OperationLog.OperationType.DELETE, description = "删除参数配置")
+    @OperationLog(
+            module = "参数配置",
+            type = OperationLog.OperationType.DELETE,
+            description = "删除参数配置",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> delete(ServerRequest request) {
         return configService
                 .deleteConfig(requirePositiveId(request))
@@ -257,7 +284,12 @@ public class ConfigHandler extends BaseHandler {
         @ApiResponse(responseCode = "403", description = "权限不足，需要 system:config:edit 权限"),
         @ApiResponse(responseCode = "404", description = "参数配置不存在")
     })
-    @OperationLog(module = "参数配置", type = OperationLog.OperationType.UPDATE, description = "更新参数配置状态")
+    @OperationLog(
+            module = "参数配置",
+            type = OperationLog.OperationType.UPDATE,
+            description = "更新参数配置状态",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> updateStatus(ServerRequest request) {
         Long id = requirePositiveId(request);
         return parseBody(request, StatusRequest.class)

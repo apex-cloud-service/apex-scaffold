@@ -127,6 +127,12 @@ public class AuthConfigHandler extends BaseHandler {
         @ApiResponse(responseCode = "403", description = "权限不足,需要 system:auth:config:jwt:query 权限"),
         @ApiResponse(responseCode = "404", description = "JWT 配置不存在")
     })
+    @OperationLog(
+            module = "AuthConfig",
+            type = OperationLog.OperationType.SELECT,
+            description = "getJwtConfig",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> getJwtConfig(ServerRequest request) {
         return jwtConfigService.getByTenantId().flatMap(this::buildSuccess);
     }
@@ -150,7 +156,12 @@ public class AuthConfigHandler extends BaseHandler {
         @ApiResponse(responseCode = "403", description = "权限不足,需要 system:auth:config:jwt:edit 权限"),
         @ApiResponse(responseCode = "404", description = "JWT 配置不存在")
     })
-    @OperationLog(module = "认证授权配置", type = OperationLog.OperationType.UPDATE, description = "更新 JWT 配置")
+    @OperationLog(
+            module = "认证授权配置",
+            type = OperationLog.OperationType.UPDATE,
+            description = "更新 JWT 配置",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> updateJwtConfig(ServerRequest request) {
         return parseBody(request, JwtConfigRequest.class)
                 .flatMap(jwtConfigService::update)
@@ -173,6 +184,12 @@ public class AuthConfigHandler extends BaseHandler {
         @ApiResponse(responseCode = "403", description = "权限不足,需要 system:auth:config:session:query 权限"),
         @ApiResponse(responseCode = "404", description = "会话配置不存在")
     })
+    @OperationLog(
+            module = "AuthConfig",
+            type = OperationLog.OperationType.SELECT,
+            description = "getSessionConfig",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> getSessionConfig(ServerRequest request) {
         return sessionConfigService.getByTenantId().flatMap(this::buildSuccess);
     }
@@ -196,7 +213,12 @@ public class AuthConfigHandler extends BaseHandler {
         @ApiResponse(responseCode = "403", description = "权限不足,需要 system:auth:config:session:edit 权限"),
         @ApiResponse(responseCode = "404", description = "会话配置不存在")
     })
-    @OperationLog(module = "认证授权配置", type = OperationLog.OperationType.UPDATE, description = "更新会话配置")
+    @OperationLog(
+            module = "认证授权配置",
+            type = OperationLog.OperationType.UPDATE,
+            description = "更新会话配置",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> updateSessionConfig(ServerRequest request) {
         return parseBody(request, SessionConfigRequest.class)
                 .flatMap(sessionConfigService::update)
@@ -223,6 +245,12 @@ public class AuthConfigHandler extends BaseHandler {
         @ApiResponse(responseCode = "403", description = "权限不足,需要 system:auth:config:security:query 权限"),
         @ApiResponse(responseCode = "404", description = "安全策略不存在")
     })
+    @OperationLog(
+            module = "AuthConfig",
+            type = OperationLog.OperationType.SELECT,
+            description = "getSecurityPolicy",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> getSecurityPolicy(ServerRequest request) {
         return securityPolicyService.getByTenantId().flatMap(this::buildSuccess);
     }
@@ -246,7 +274,12 @@ public class AuthConfigHandler extends BaseHandler {
         @ApiResponse(responseCode = "403", description = "权限不足,需要 system:auth:config:security:edit 权限"),
         @ApiResponse(responseCode = "404", description = "安全策略不存在")
     })
-    @OperationLog(module = "认证授权配置", type = OperationLog.OperationType.UPDATE, description = "更新安全策略")
+    @OperationLog(
+            module = "认证授权配置",
+            type = OperationLog.OperationType.UPDATE,
+            description = "更新安全策略",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> updateSecurityPolicy(ServerRequest request) {
         return parseBody(request, SecurityPolicyRequest.class)
                 .flatMap(securityPolicyService::update)
@@ -276,7 +309,12 @@ public class AuthConfigHandler extends BaseHandler {
         @ApiResponse(responseCode = "401", description = "未授权,需要登录"),
         @ApiResponse(responseCode = "403", description = "权限不足,需要 system:auth:config:permission:sync 权限")
     })
-    @OperationLog(module = "认证授权配置", type = OperationLog.OperationType.SELECT, description = "同步权限码")
+    @OperationLog(
+            module = "认证授权配置",
+            type = OperationLog.OperationType.SELECT,
+            description = "同步权限码",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> syncPermissions(ServerRequest request) {
         return permissionSyncService.syncPermissions().flatMap(this::buildSuccess);
     }
@@ -299,6 +337,12 @@ public class AuthConfigHandler extends BaseHandler {
         @ApiResponse(responseCode = "401", description = "未授权,需要登录"),
         @ApiResponse(responseCode = "403", description = "权限不足,需要 system:oauth2:client:list 权限")
     })
+    @OperationLog(
+            module = "AuthConfig",
+            type = OperationLog.OperationType.SELECT,
+            description = "listOauth2Clients",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> listOauth2Clients(ServerRequest request) {
         int page = safeParseInt(request.queryParam("page").orElse("1"), 1);
         int size = safeParseInt(request.queryParam("size").orElse("20"), 20);
@@ -324,6 +368,12 @@ public class AuthConfigHandler extends BaseHandler {
         @ApiResponse(responseCode = "401", description = "未授权,需要登录"),
         @ApiResponse(responseCode = "403", description = "权限不足,需要 system:online-user:list 权限")
     })
+    @OperationLog(
+            module = "AuthConfig",
+            type = OperationLog.OperationType.SELECT,
+            description = "listOnlineSessions",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> listOnlineSessions(ServerRequest request) {
         int page = safeParseInt(request.queryParam("page").orElse("1"), 1);
         int size = safeParseInt(request.queryParam("size").orElse("20"), 20);
@@ -352,7 +402,12 @@ public class AuthConfigHandler extends BaseHandler {
         @ApiResponse(responseCode = "403", description = "权限不足,需要 staff:session:revoke 权限"),
         @ApiResponse(responseCode = "404", description = "用户不存在")
     })
-    @OperationLog(module = "认证授权配置", type = OperationLog.OperationType.UPDATE, description = "踢出会话")
+    @OperationLog(
+            module = "认证授权配置",
+            type = OperationLog.OperationType.UPDATE,
+            description = "踢出会话",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> kickoutSession(ServerRequest request) {
         return buildSuccess(java.util.Map.of("message", "请直接调用 POST /admin-api/v1/users/{userId}/sessions/revoke 接口"));
     }
@@ -372,6 +427,12 @@ public class AuthConfigHandler extends BaseHandler {
         @ApiResponse(responseCode = "401", description = "未授权,需要登录"),
         @ApiResponse(responseCode = "403", description = "权限不足,需要 system:log:login:list 权限")
     })
+    @OperationLog(
+            module = "AuthConfig",
+            type = OperationLog.OperationType.SELECT,
+            description = "listLoginLogs",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> listLoginLogs(ServerRequest request) {
         String username = request.queryParam("username").orElse(null);
         Integer status = request.queryParam("status").map(Integer::parseInt).orElse(null);
@@ -396,6 +457,12 @@ public class AuthConfigHandler extends BaseHandler {
         @ApiResponse(responseCode = "401", description = "未授权,需要登录"),
         @ApiResponse(responseCode = "403", description = "权限不足,需要 system:permission:list 权限")
     })
+    @OperationLog(
+            module = "AuthConfig",
+            type = OperationLog.OperationType.SELECT,
+            description = "listPermissions",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> listPermissions(ServerRequest request) {
         return permissionService.getAllPermissions().flatMap(this::buildSuccess);
     }
@@ -454,7 +521,12 @@ public class AuthConfigHandler extends BaseHandler {
         @ApiResponse(responseCode = "404", description = "JWT 配置不存在"),
         @ApiResponse(responseCode = "500", description = "JWT 配置错误或测试失败")
     })
-    @OperationLog(module = "认证授权配置", type = OperationLog.OperationType.OTHER, description = "JWT 配置测试")
+    @OperationLog(
+            module = "认证授权配置",
+            type = OperationLog.OperationType.OTHER,
+            description = "JWT 配置测试",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> testJwtConfig(ServerRequest request) {
         return parseBody(request, JwtTestRequest.class)
                 .flatMap(jwtConfigService::testJwt)

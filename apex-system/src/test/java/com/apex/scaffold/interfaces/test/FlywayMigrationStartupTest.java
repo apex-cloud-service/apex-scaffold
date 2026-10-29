@@ -6,6 +6,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -15,7 +16,7 @@ import org.junit.jupiter.api.Test;
  * 这种方式避免了Spring Test的ApplicationContext启动复杂性,测试启动速度极快。
  *
  * <p>测试复用 {@link AbstractMySqlContainerBase} 启动的真实 MySQL 容器并复用其 Flyway 迁移结果
- * (库名 apex_test),验证迁移全部应用(flyway_schema_history >= 22 条)、关键表与种子就位,
+ * (库名 apex_test),验证全部迁移成功、关键表与种子就位,
  * 防止「迁移 SQL 坏导致应用无法启动」回归。无需再人工预置本地 MySQL(127.0.0.1:3306)。
  *
  * @author Apex Team
@@ -36,20 +37,42 @@ class FlywayMigrationStartupTest extends AbstractMySqlContainerBase {
     }
 
     /**
-     * 验证Flyway迁移全部应用成功。
+     * 验证Flyway迁移链全部应用成功。
      *
-     * <p>Flyway 迁移链 V1-V26 必须全部应用成功(MySQL 版,各环境共用同一套迁移)。
-     * 新增迁移脚本时同步更新本断言数量。
+     * <p>MySQL 迁移链必须完整执行到最后一条脚本,不允许任何版本失败后继续。
+     * 从迁移资源解析期望数量，避免新增版本后留下过期计数。
      *
      * @throws SQLException SQL异常
      */
     @Test
-    void shouldApplyAllMigrationsThroughV22() throws SQLException {
+    void shouldApplyAllMigrations() throws SQLException {
+        var migrations = Flyway.configure()
+                .dataSource(DATA_SOURCE)
+                .locations("classpath:db/migration/mysql")
+                .load()
+                .info();
+        int expectedCount = migrations.all().length;
+        assertThat(migrations.pending()).isEmpty();
         try (Connection connection = DATA_SOURCE.getConnection();
                 Statement st = connection.createStatement();
-                ResultSet rs = st.executeQuery("SELECT COUNT(*) FROM flyway_schema_history WHERE success = 1")) {
+                ResultSet rs = st.executeQuery(
+                        "SELECT COUNT(*), "
+                                + "SUM(CASE WHEN success = 1 THEN 1 ELSE 0 END), MAX(version + 0) FROM flyway_schema_history")) {
             assertThat(rs.next()).isTrue();
-            assertThat(rs.getInt(1)).as("至少应有V1-V20共20个迁移全部应用成功(V21失败可忽略)").isGreaterThanOrEqualTo(20);
+            assertThat(rs.getInt(1)).as("迁移记录总数").isEqualTo(expectedCount);
+            assertThat(rs.getInt(2)).as("成功的迁移记录数").isEqualTo(expectedCount);
+            assertThat(rs.getInt(3))
+                    .as("最新已应用迁移版本")
+                    .isEqualTo(
+                            Integer.parseInt(migrations.current().getVersion().toString()));
+        }
+        try (Connection connection = DATA_SOURCE.getConnection();
+                Statement st = connection.createStatement();
+                ResultSet rs = st.executeQuery(
+                        "SELECT column_default,is_nullable FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='wf_workflow_definition' AND column_name='enabled'")) {
+            assertThat(rs.next()).isTrue();
+            assertThat(rs.getString(1)).isEqualTo("DRAFT");
+            assertThat(rs.getString(2)).isEqualTo("NO");
         }
     }
 

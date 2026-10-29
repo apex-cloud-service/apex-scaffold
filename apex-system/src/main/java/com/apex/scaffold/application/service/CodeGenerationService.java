@@ -340,6 +340,7 @@ public class CodeGenerationService {
     /**
      * 写入文件
      *
+     * @param rootPath 输出根目录
      * @param filePath 文件路径
      * @param content 文件内容
      * @throws IOException IO异常

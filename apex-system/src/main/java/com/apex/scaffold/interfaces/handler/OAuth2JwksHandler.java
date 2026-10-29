@@ -1,5 +1,6 @@
 package com.apex.scaffold.interfaces.handler;
 
+import com.apex.scaffold.common.annotation.OperationLog;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -83,6 +84,12 @@ public class OAuth2JwksHandler {
                 }
                 """)))
     })
+    @OperationLog(
+            module = "OAuth2Jwks",
+            type = OperationLog.OperationType.SELECT,
+            description = "jwks",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> jwks(ServerRequest request) {
         Map<String, Object> jwksResponse = new HashMap<>(2);
 

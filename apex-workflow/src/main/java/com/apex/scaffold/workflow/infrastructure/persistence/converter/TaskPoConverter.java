@@ -4,6 +4,7 @@ import com.apex.scaffold.workflow.domain.model.Task;
 import com.apex.scaffold.workflow.infrastructure.persistence.po.TaskPO;
 import java.util.List;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 
 /**
@@ -25,6 +26,8 @@ public interface TaskPoConverter {
      * @param entity 任务领域对象
      * @return 任务持久化对象
      */
+    @Mapping(source = "nodeName", target = "taskName")
+    @Mapping(source = "completedTime", target = "completeTime")
     TaskPO toPo(Task entity);
 
     /**
@@ -33,6 +36,8 @@ public interface TaskPoConverter {
      * @param po 任务持久化对象
      * @return 任务领域对象
      */
+    @Mapping(source = "taskName", target = "nodeName")
+    @Mapping(source = "completeTime", target = "completedTime")
     Task toEntity(TaskPO po);
 
     /**

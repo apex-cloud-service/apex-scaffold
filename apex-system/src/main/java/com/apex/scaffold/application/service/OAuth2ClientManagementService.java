@@ -34,6 +34,7 @@ public class OAuth2ClientManagementService {
     private final OAuth2RegisteredClientRepository clientRepository;
     private final PasswordEncoder passwordEncoder;
     private final OAuth2ClientAssembler oAuth2ClientAssembler;
+    private final TenantGuard tenantGuard;
 
     /**
      * 注册 OAuth2 客户端
@@ -45,32 +46,34 @@ public class OAuth2ClientManagementService {
      * @return 创建后的客户端响应；客户端 ID 已存在时 Mono 以 BusinessException（PARAM_ERROR）错误终止
      */
     public Mono<OAuth2ClientResponse> createClient(OAuth2ClientRequest request) {
-        return clientRepository
-                .findByClientId(request.getClientId())
-                .flatMap(existing -> Mono.<OAuth2RegisteredClientEntity>error(
-                        new BusinessException(ResultCode.PARAM_ERROR, "客户端ID已存在")))
-                .switchIfEmpty(Mono.defer(() -> {
-                    OAuth2RegisteredClientEntity entity = new OAuth2RegisteredClientEntity();
-                    entity.setId(UUID.randomUUID().toString());
-                    entity.setClientId(request.getClientId());
+        return tenantGuard
+                .assertActive()
+                .then(Mono.defer(() -> clientRepository
+                        .findByClientId(request.getClientId())
+                        .flatMap(existing -> Mono.<OAuth2RegisteredClientEntity>error(
+                                new BusinessException(ResultCode.PARAM_ERROR, "客户端ID已存在")))
+                        .switchIfEmpty(Mono.defer(() -> {
+                            OAuth2RegisteredClientEntity entity = new OAuth2RegisteredClientEntity();
+                            entity.setId(UUID.randomUUID().toString());
+                            entity.setClientId(request.getClientId());
 
-                    if (request.getClientSecret() != null
-                            && !request.getClientSecret().isEmpty()) {
-                        entity.setClientSecret(passwordEncoder.encode(request.getClientSecret()));
-                    }
+                            if (request.getClientSecret() != null
+                                    && !request.getClientSecret().isEmpty()) {
+                                entity.setClientSecret(passwordEncoder.encode(request.getClientSecret()));
+                            }
 
-                    entity.setClientName(request.getClientName());
-                    entity.setClientIdIssuedAt(Instant.now());
-                    entity.setClientAuthenticationMethods(request.getClientAuthenticationMethods());
-                    entity.setAuthorizationGrantTypes(request.getAuthorizationGrantTypes());
-                    entity.setRedirectUris(request.getRedirectUris());
-                    entity.setPostLogoutRedirectUris(request.getPostLogoutRedirectUris());
-                    entity.setScopes(request.getScopes());
-                    entity.setClientSettings(buildClientSettings(request));
-                    entity.setTokenSettings(buildTokenSettings(request));
+                            entity.setClientName(request.getClientName());
+                            entity.setClientIdIssuedAt(Instant.now());
+                            entity.setClientAuthenticationMethods(request.getClientAuthenticationMethods());
+                            entity.setAuthorizationGrantTypes(request.getAuthorizationGrantTypes());
+                            entity.setRedirectUris(request.getRedirectUris());
+                            entity.setPostLogoutRedirectUris(request.getPostLogoutRedirectUris());
+                            entity.setScopes(request.getScopes());
+                            entity.setClientSettings(buildClientSettings(request));
+                            entity.setTokenSettings(buildTokenSettings(request));
 
-                    return clientRepository.save(entity);
-                }))
+                            return clientRepository.save(entity);
+                        }))))
                 .map(oAuth2ClientAssembler::toResponse);
     }
 

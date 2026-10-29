@@ -25,7 +25,23 @@
         </dependency>
         <dependency>
             <groupId>com.apex.scaffold</groupId>
-            <artifactId>apex-infrastructure</artifactId>
+            <artifactId>apex-infrastructure-persistence</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.apex.scaffold</groupId>
+            <artifactId>apex-infrastructure-cache</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.apex.scaffold</groupId>
+            <artifactId>apex-infrastructure-messaging</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.apex.scaffold</groupId>
+            <artifactId>apex-infrastructure-remote</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.apex.scaffold</groupId>
+            <artifactId>apex-infrastructure-integration</artifactId>
         </dependency>
         <dependency>
             <groupId>com.apex.scaffold</groupId>
@@ -276,10 +292,26 @@
             <artifactId>mysql</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>test</scope>
+        </dependency>
         <!-- MySQL JDBC 驱动：Testcontainers 与 Hikari 连接容器内 MySQL 使用（版本由父 pom 统一管理） -->
         <dependency>
             <groupId>com.mysql</groupId>
             <artifactId>mysql-connector-j</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-database-postgresql</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
             <scope>test</scope>
         </dependency>
 
@@ -628,10 +660,98 @@
           因此在此处 exclusions 对最终产物是有效的。
         -->
         <dependencies>
-          <!-- 上游 apex-infrastructure -->
+          <!-- 所有直接能力路径保留原 basic 高级库排除，避免其他路径重新引入。 -->
           <dependency>
             <groupId>com.apex.scaffold</groupId>
-            <artifactId>apex-infrastructure</artifactId>
+            <artifactId>apex-infrastructure-persistence</artifactId>
+            <exclusions>
+              <exclusion>
+                <groupId>org.apache.rocketmq</groupId>
+                <artifactId>rocketmq-spring-boot-starter</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-circuitbreaker</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-spring-boot3</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-reactor</artifactId>
+              </exclusion>
+            </exclusions>
+          </dependency>
+          <dependency>
+            <groupId>com.apex.scaffold</groupId>
+            <artifactId>apex-infrastructure-cache</artifactId>
+            <exclusions>
+              <exclusion>
+                <groupId>org.apache.rocketmq</groupId>
+                <artifactId>rocketmq-spring-boot-starter</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-circuitbreaker</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-spring-boot3</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-reactor</artifactId>
+              </exclusion>
+            </exclusions>
+          </dependency>
+          <dependency>
+            <groupId>com.apex.scaffold</groupId>
+            <artifactId>apex-infrastructure-messaging</artifactId>
+            <exclusions>
+              <exclusion>
+                <groupId>org.apache.rocketmq</groupId>
+                <artifactId>rocketmq-spring-boot-starter</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-circuitbreaker</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-spring-boot3</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-reactor</artifactId>
+              </exclusion>
+            </exclusions>
+          </dependency>
+          <dependency>
+            <groupId>com.apex.scaffold</groupId>
+            <artifactId>apex-infrastructure-remote</artifactId>
+            <exclusions>
+              <exclusion>
+                <groupId>org.apache.rocketmq</groupId>
+                <artifactId>rocketmq-spring-boot-starter</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-circuitbreaker</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-spring-boot3</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-reactor</artifactId>
+              </exclusion>
+            </exclusions>
+          </dependency>
+          <dependency>
+            <groupId>com.apex.scaffold</groupId>
+            <artifactId>apex-infrastructure-integration</artifactId>
             <exclusions>
               <exclusion>
                 <groupId>org.apache.rocketmq</groupId>

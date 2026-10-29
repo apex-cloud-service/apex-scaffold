@@ -74,6 +74,15 @@ public class OffDepartmentRepositoryImpl implements OffDepartmentRepository {
     }
 
     @Override
+    public Flux<OffDepartmentEntity> findBySyncSource(String syncSource) {
+        return Mono.fromCallable(() -> mapper.selectList(
+                        new LambdaQueryWrapper<OffDepartmentPO>().eq(OffDepartmentPO::getSyncSource, syncSource)))
+                .subscribeOn(BlockingIoSchedulers.jdbc())
+                .flatMapMany(Flux::fromIterable)
+                .map(converter::toDomain);
+    }
+
+    @Override
     public Mono<Integer> insert(OffDepartmentEntity entity) {
         return Mono.fromCallable(() -> {
                     OffDepartmentPO po = converter.toPo(entity);

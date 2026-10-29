@@ -40,9 +40,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -71,9 +70,8 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @ConditionalOnClass({CircuitBreakerRegistry.class, RocketMQTemplate.class})
+@Slf4j
 public class MonitorMetricsCollector {
-
-    private static final Logger log = LoggerFactory.getLogger(MonitorMetricsCollector.class);
 
     /** 业务趋势保留分钟数。 */
     private static final int TREND_WINDOW_MINUTES = 10;

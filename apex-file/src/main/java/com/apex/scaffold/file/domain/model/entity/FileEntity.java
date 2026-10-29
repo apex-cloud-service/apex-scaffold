@@ -4,6 +4,8 @@ import com.apex.scaffold.domain.model.entity.BaseEntity;
 import java.io.Serial;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.ToString;
 
 /**
@@ -25,6 +27,8 @@ import lombok.ToString;
  * @see BaseEntity
  */
 @Getter
+@Setter
+@NoArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class FileEntity extends BaseEntity {
@@ -32,8 +36,17 @@ public class FileEntity extends BaseEntity {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    /** 创建文件实体对象。 */
-    public FileEntity() {}
+    /** 可信租户标识，历史未核实记录保持为空。 */
+    private String tenantId;
+
+    /** 实际存储提供商类型，访问时不得使用当前默认类型替代。 */
+    private String storageType;
+
+    /** 初始化约定的总片数；历史未知会话保持为空并禁止合并。 */
+    private Integer totalChunks;
+
+    /** 初始化约定的分片大小。 */
+    private Long chunkSize;
 
     /** 文件名称。 */
     private String fileName;
@@ -73,121 +86,4 @@ public class FileEntity extends BaseEntity {
 
     /** 文件 SHA-256 哈希值。 */
     private String sha256;
-
-    /**
-     * 设置文件名（仅供持久层和构造器使用）。
-     *
-     * @param value 文件名
-     */
-    public void setFileName(String value) {
-        this.fileName = value;
-    }
-
-    /**
-     * 设置原始文件名（仅供持久层和构造器使用）。
-     *
-     * @param value 原始文件名
-     */
-    public void setOriginalName(String value) {
-        this.originalName = value;
-    }
-
-    /**
-     * 设置文件路径（仅供持久层和构造器使用）。
-     *
-     * @param value 文件路径
-     */
-    public void setFilePath(String value) {
-        this.filePath = value;
-    }
-
-    /**
-     * 设置文件访问URL（仅供持久层和构造器使用）。
-     *
-     * @param value 文件访问URL
-     */
-    public void setFileUrl(String value) {
-        this.fileUrl = value;
-    }
-
-    /**
-     * 设置文件大小（仅供持久层和构造器使用）。
-     *
-     * @param value 文件大小（字节）
-     */
-    public void setFileSize(Long value) {
-        this.fileSize = value;
-    }
-
-    /**
-     * 设置文件类型（仅供持久层和构造器使用）。
-     *
-     * @param value 文件类型
-     */
-    public void setFileType(String value) {
-        this.fileType = value;
-    }
-
-    /**
-     * 设置内容类型（仅供持久层和构造器使用）。
-     *
-     * @param value 内容类型（MIME）
-     */
-    public void setContentType(String value) {
-        this.contentType = value;
-    }
-
-    /**
-     * 设置存储桶名称（仅供持久层和构造器使用）。
-     *
-     * @param value 存储桶名称
-     */
-    public void setBucketName(String value) {
-        this.bucketName = value;
-    }
-
-    /**
-     * 设置文件MD5（仅供持久层和构造器使用）。
-     *
-     * @param value 文件MD5
-     */
-    public void setMd5(String value) {
-        this.md5 = value;
-    }
-
-    /**
-     * 设置上传用户ID（仅供持久层和构造器使用）。
-     *
-     * @param value 上传用户ID
-     */
-    public void setUserId(Long value) {
-        this.userId = value;
-    }
-
-    /**
-     * 设置文件业务类型（仅供持久层和构造器使用）。
-     *
-     * @param value 文件业务类型
-     */
-    public void setBusinessType(String value) {
-        this.businessType = value;
-    }
-
-    /**
-     * 设置存储状态（仅供持久层和构造器使用）。
-     *
-     * @param value 存储状态
-     */
-    public void setStorageStatus(String value) {
-        this.storageStatus = value;
-    }
-
-    /**
-     * 设置文件SHA-256哈希值（仅供持久层和构造器使用）。
-     *
-     * @param value 文件SHA-256哈希值
-     */
-    public void setSha256(String value) {
-        this.sha256 = value;
-    }
 }

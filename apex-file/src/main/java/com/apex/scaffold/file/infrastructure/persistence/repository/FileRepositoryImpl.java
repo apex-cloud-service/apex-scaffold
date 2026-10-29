@@ -27,8 +27,11 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class FileRepositoryImpl implements FileRepository {
 
+    private static final String ORPHANED = "ORPHANED";
+
     private final FileMapper fileMapper;
     private final FilePoConverter filePoConverter;
+    private final javax.sql.DataSource dataSource;
 
     /**
      * 保存文件信息
@@ -41,14 +44,58 @@ public class FileRepositoryImpl implements FileRepository {
     @Override
     public Mono<FileEntity> save(FileEntity file) {
         return Mono.fromCallable(() -> {
-                    FilePO po = filePoConverter.toPo(file);
-                    if (po.getId() == null) {
-                        fileMapper.insert(po);
-                    } else {
-                        fileMapper.updateById(po);
+                    if (ORPHANED.equals(file.getStorageStatus()) && file.getId() == null) {
+                        // 补偿依据必须独立提交，不继承业务失败的事务回滚状态。
+                        var transaction = new org.springframework.transaction.support.TransactionTemplate(
+                                new org.springframework.jdbc.datasource.DataSourceTransactionManager(dataSource));
+                        transaction.setPropagationBehavior(
+                                org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+                        return transaction.execute(status -> persist(file));
                     }
-                    return filePoConverter.toEntity(po);
+                    return persist(file);
                 })
+                .subscribeOn(BlockingIoSchedulers.jdbc());
+    }
+
+    /** @param file 文件或独立清理依据 @return 校验受影响行数后的持久化结果 */
+    private FileEntity persist(FileEntity file) {
+        FilePO po = filePoConverter.toPo(file);
+        int affected = po.getId() == null ? fileMapper.insert(po) : fileMapper.updateById(po);
+        if (affected != 1) {
+            throw new IllegalStateException("文件记录保存失败或并发版本冲突");
+        }
+        return filePoConverter.toEntity(po);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Mono<Boolean> claimMerge(FileEntity file) {
+        return Mono.fromCallable(() -> fileMapper.update(
+                                null,
+                                new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<FilePO>()
+                                        .eq(FilePO::getId, file.getId())
+                                        .eq(FilePO::getTenantId, file.getTenantId())
+                                        .eq(FilePO::getUserId, file.getUserId())
+                                        .eq(FilePO::getStorageStatus, "UPLOADING")
+                                        .set(FilePO::getStorageStatus, "MERGING")
+                                        .set(FilePO::getUpdateTime, java.time.LocalDateTime.now()))
+                        == 1)
+                .subscribeOn(BlockingIoSchedulers.jdbc());
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Mono<Boolean> releaseMerge(FileEntity file) {
+        return Mono.fromCallable(() -> fileMapper.update(
+                                null,
+                                new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<FilePO>()
+                                        .eq(FilePO::getId, file.getId())
+                                        .eq(FilePO::getTenantId, file.getTenantId())
+                                        .eq(FilePO::getUserId, file.getUserId())
+                                        .eq(FilePO::getStorageStatus, "MERGING")
+                                        .set(FilePO::getStorageStatus, "UPLOADING")
+                                        .set(FilePO::getUpdateTime, java.time.LocalDateTime.now()))
+                        == 1)
                 .subscribeOn(BlockingIoSchedulers.jdbc());
     }
 
@@ -96,8 +143,7 @@ public class FileRepositoryImpl implements FileRepository {
     public Mono<FileEntity> findByStorageLocation(String bucketName, String fileName) {
         return Mono.fromCallable(() -> fileMapper.selectOne(ConditionUtil.lambda(FilePO.class)
                         .eq(FilePO::getBucketName, bucketName)
-                        .eq(FilePO::getFileName, fileName)
-                        .last("LIMIT 1")))
+                        .eq(FilePO::getFileName, fileName)))
                 .subscribeOn(BlockingIoSchedulers.jdbc())
                 .flatMap(po -> po == null ? Mono.empty() : Mono.just(filePoConverter.toEntity(po)));
     }

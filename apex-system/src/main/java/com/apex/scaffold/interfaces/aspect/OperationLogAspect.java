@@ -130,12 +130,20 @@ public class OperationLogAspect {
      *   <li>若目标方法返回其他类型（同步），则在 {@code try-catch-finally} 中同步记录日志</li>
      * </ul>
      *
-     * @param joinPoint    连接点
-     * @param operationLog 操作日志注解
+     * @param joinPoint 连接点
      * @return 方法执行结果
      * @throws Throwable 执行异常
      */
-    @Around("@annotation(operationLog)")
+    @Around("@annotation(com.apex.scaffold.common.annotation.OperationLog)")
+    public Object aroundOperation(ProceedingJoinPoint joinPoint) throws Throwable {
+        MethodSignature signature = (MethodSignature) joinPoint.getSignature();
+        java.lang.reflect.Method method = org.springframework.aop.support.AopUtils.getMostSpecificMethod(
+                signature.getMethod(), joinPoint.getTarget().getClass());
+        OperationLog operationLog = org.springframework.core.annotation.AnnotatedElementUtils.findMergedAnnotation(
+                method, OperationLog.class);
+        return around(joinPoint, operationLog);
+    }
+
     public Object around(ProceedingJoinPoint joinPoint, OperationLog operationLog) throws Throwable {
         if (!operationLogEnabled) {
             return joinPoint.proceed();
@@ -173,9 +181,11 @@ public class OperationLogAspect {
      *
      * @param joinPoint  连接点
      * @param logEntity  日志实体（已包含请求信息）
+     * @param operationLog 操作日志注解
      * @param startTime  开始时间
      * @param traceId    跟踪 ID
      * @return 包装了日志记录逻辑的 {@link Mono}
+     * @param tenantIdAtEntry 切面入口捕获的租户 ID（异步落库时透传）
      * @throws Throwable 目标方法执行异常
      */
     @SuppressWarnings("unchecked")
@@ -246,9 +256,11 @@ public class OperationLogAspect {
      *
      * @param joinPoint  连接点
      * @param logEntity  日志实体
+     * @param operationLog 操作日志注解
      * @param startTime  开始时间
      * @param traceId    跟踪 ID
      * @return 目标方法执行结果
+     * @param tenantIdAtEntry 切面入口捕获的租户 ID（异步落库时透传）
      * @throws Throwable 目标方法执行异常
      */
     private Object handleSyncReturn(
@@ -351,6 +363,7 @@ public class OperationLogAspect {
      *
      * @param logEntity 日志实体
      * @param joinPoint 连接点
+     * @param operationLog 操作日志注解
      */
     private void setRequestInfo(
             OperationLogEntity logEntity, ProceedingJoinPoint joinPoint, OperationLog operationLog) {

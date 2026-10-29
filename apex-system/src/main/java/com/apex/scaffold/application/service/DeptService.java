@@ -31,16 +31,20 @@ public class DeptService {
     private final DeptRepository deptRepository;
     /** 部门对象转换器 */
     private final DeptAssembler deptAssembler;
+    /** 租户写链路守卫 */
+    private final TenantGuard tenantGuard;
 
     /**
      * 构造部门管理服务。
      *
      * @param deptRepository 部门仓储
      * @param deptAssembler 部门对象转换器
+     * @param tenantGuard 租户写链路守卫
      */
-    public DeptService(DeptRepository deptRepository, DeptAssembler deptAssembler) {
+    public DeptService(DeptRepository deptRepository, DeptAssembler deptAssembler, TenantGuard tenantGuard) {
         this.deptRepository = deptRepository;
         this.deptAssembler = deptAssembler;
+        this.tenantGuard = tenantGuard;
     }
 
     /**
@@ -76,7 +80,11 @@ public class DeptService {
      */
     public Mono<DeptDTO> create(DeptEntity dept) {
         dept.setId(null);
-        return resolveAncestors(dept).flatMap(d -> deptRepository.save(d)).map(deptAssembler::toDTO);
+        return tenantGuard
+                .assertActive()
+                .then(resolveAncestors(dept)
+                        .flatMap(d -> deptRepository.save(d))
+                        .map(deptAssembler::toDTO));
     }
 
     /**
