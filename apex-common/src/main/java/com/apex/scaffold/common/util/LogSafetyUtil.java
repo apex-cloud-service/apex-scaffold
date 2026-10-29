@@ -3,10 +3,12 @@ package com.apex.scaffold.common.util;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.Arrays;
 import java.util.IdentityHashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * 日志安全脱敏工具。
@@ -19,6 +21,7 @@ import java.util.Set;
  * @since  1.3.0
  */
 @SuppressWarnings("PMD.ClassMustHaveAuthorRule")
+@lombok.NoArgsConstructor(access = lombok.AccessLevel.PRIVATE)
 public final class LogSafetyUtil {
     private static final int MAX_FIELD_NAME = 256;
     private static final int MAX_DEPTH = 6;
@@ -26,8 +29,6 @@ public final class LogSafetyUtil {
     private static final String APPLICATION_PACKAGE = "com.apex.";
     private static final com.fasterxml.jackson.databind.ObjectMapper JSON =
             new com.fasterxml.jackson.databind.ObjectMapper();
-
-    private LogSafetyUtil() {}
 
     /**
      * 截断文本至指定长度，并将控制字符替换为空格。
@@ -81,12 +82,9 @@ public final class LogSafetyUtil {
      */
     public static String json(Object value, int limit, String... excluded) {
         StringBuilder output = new StringBuilder();
-        Set<String> exclusions = new java.util.HashSet<>();
-        if (excluded != null) {
-            for (String name : excluded) {
-                exclusions.add(normalize(name));
-            }
-        }
+        Set<String> exclusions = excluded == null
+                ? Set.of()
+                : Arrays.stream(excluded).map(LogSafetyUtil::normalize).collect(Collectors.toSet());
         try {
             append(
                     value instanceof String ? "[omitted]" : value,

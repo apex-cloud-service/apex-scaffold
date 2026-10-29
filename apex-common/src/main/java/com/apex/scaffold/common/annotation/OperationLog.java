@@ -5,6 +5,8 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 /**
  * 操作日志注解
@@ -76,6 +78,8 @@ public @interface OperationLog {
      * 编码（code）与枚举名（如 INSERT、UPDATE）保持一致，
      * 调用方可使用 {@link #getCode()} 或 {@link #name()} 获取。
      */
+    @Getter
+    @RequiredArgsConstructor
     enum OperationType {
         /** 新增 */
         INSERT("新增"),
@@ -102,24 +106,6 @@ public @interface OperationLog {
 
         /** 操作类型中文名称 */
         private final String name;
-
-        /**
-         * 构造操作类型枚举
-         *
-         * @param name 操作类型中文名称
-         */
-        OperationType(String name) {
-            this.name = name;
-        }
-
-        /**
-         * 获取操作类型中文名称
-         *
-         * @return 操作类型中文名称
-         */
-        public String getName() {
-            return name;
-        }
 
         /**
          * 获取操作类型编码（等同枚举名，如 INSERT、UPDATE）

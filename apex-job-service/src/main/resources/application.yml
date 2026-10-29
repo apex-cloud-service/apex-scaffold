@@ -1,0 +1,21 @@
+server:
+  port: ${APEX_JOB_PORT:8095}
+spring:
+  application:
+    name: apex-job-service
+  codec:
+    max-in-memory-size: 256KB
+management:
+  endpoints:
+    web:
+      exposure:
+        # 仅暴露编排所需的健康端点，不开放指标与配置类端点。
+        include: health
+  endpoint:
+    health:
+      # 探针只需整体状态，不暴露组件明细。
+      show-details: never
+apex:
+  job:
+    # 固定受信上游；用户身份和租户权限由 system 校验。
+    system-url: ${APEX_JOB_SYSTEM_URL:http://127.0.0.1:8082}

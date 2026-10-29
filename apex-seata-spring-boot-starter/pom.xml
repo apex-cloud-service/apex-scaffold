@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent><groupId>com.apex.scaffold</groupId><artifactId>apex-scaffold</artifactId><version>1.3.1</version><relativePath>../pom.xml</relativePath></parent>
+    <artifactId>apex-seata-spring-boot-starter</artifactId>
+    <name>Apex Seata Starter</name>
+    <description>默认关闭的多模式 Seata 边界（AT/TCC/SAGA/XA）与受保护 XID 传播</description>
+    <dependencies>
+        <dependency><groupId>org.projectlombok</groupId><artifactId>lombok</artifactId><scope>provided</scope></dependency>
+        <dependency><groupId>com.apex.scaffold</groupId><artifactId>apex-common</artifactId></dependency>
+        <!-- 使用真实客户端，生命周期由本模块控制，避免上游注解扫描器处理响应式方法。 -->
+        <dependency>
+            <groupId>org.apache.seata</groupId><artifactId>seata-all</artifactId><version>${seata.version}</version>
+            <exclusions>
+                <exclusion><groupId>org.springframework</groupId><artifactId>spring-webmvc</artifactId></exclusion>
+            </exclusions>
+        </dependency>
+        <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-webflux</artifactId></dependency>
+        <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-aop</artifactId></dependency>
+        <dependency><groupId>org.springframework</groupId><artifactId>spring-jdbc</artifactId></dependency>
+        <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-test</artifactId><scope>test</scope></dependency>
+        <dependency><groupId>io.projectreactor</groupId><artifactId>reactor-test</artifactId><scope>test</scope></dependency>
+        <!-- SAGA 模式引擎装配测试使用内存库验证存储配置与定义加载。 -->
+        <dependency><groupId>com.h2database</groupId><artifactId>h2</artifactId><scope>test</scope></dependency>
+        <dependency><groupId>com.mysql</groupId><artifactId>mysql-connector-j</artifactId><scope>test</scope></dependency>
+    </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <configuration>
+                    <!-- 四个真实模式测试各自初始化 Seata 静态 TM/RM，必须按测试类独立 JVM 运行。 -->
+                    <reuseForks>false</reuseForks>
+                    <forkCount>1</forkCount>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

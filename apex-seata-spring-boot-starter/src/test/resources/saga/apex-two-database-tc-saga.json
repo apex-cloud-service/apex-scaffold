@@ -1,0 +1,88 @@
+{
+  "Name": "ApexTcTwoDatabaseSaga",
+  "Comment": "Real TC, two local MySQL transactions and original phase-two rollback evidence",
+  "Version": "1.0.0",
+  "StartState": "DebitDb1",
+  "RecoverStrategy": "Compensate",
+  "IsPersist": true,
+  "States": {
+    "DebitDb1": {
+      "Type": "ServiceTask",
+      "ServiceName": "sagaDb1Action",
+      "ServiceMethod": "debit",
+      "ServiceType": "SpringBean",
+      "IsPersist": true,
+      "IsForUpdate": true,
+      "ParameterTypes": ["java.lang.String", "java.lang.Integer", "java.lang.Boolean"],
+      "Input": ["$.[businessKey]", "$.[amount]", false],
+      "Status": {
+        "#root == true": "SU",
+        "$Exception{java.lang.Throwable}": "FA"
+      },
+      "CompensateState": "RestoreDb1",
+      "Next": "DebitDb2"
+    },
+    "RestoreDb1": {
+      "Type": "ServiceTask",
+      "ServiceName": "sagaDb1Action",
+      "ServiceMethod": "restore",
+      "ServiceType": "SpringBean",
+      "IsPersist": true,
+      "IsForCompensation": true,
+      "ParameterTypes": ["java.lang.String", "java.lang.Integer"],
+      "Input": ["$.[businessKey]", "$.[amount]"],
+      "Status": {
+        "#root == true": "SU",
+        "$Exception{java.lang.Throwable}": "FA"
+      }
+    },
+    "DebitDb2": {
+      "Type": "ServiceTask",
+      "ServiceName": "sagaDb2Action",
+      "ServiceMethod": "debit",
+      "ServiceType": "SpringBean",
+      "IsPersist": true,
+      "IsForUpdate": true,
+      "ParameterTypes": ["java.lang.String", "java.lang.Integer", "java.lang.Boolean"],
+      "Input": ["$.[businessKey]", "$.[amount]", "$.[failSecond]"],
+      "Status": {
+        "#root == true": "SU",
+        "$Exception{java.lang.Throwable}": "FA"
+      },
+      "CompensateState": "RestoreDb2",
+      "Next": "Success",
+      "Catch": [
+        {
+          "Exceptions": ["java.lang.Throwable"],
+          "Next": "Compensate"
+        }
+      ]
+    },
+    "RestoreDb2": {
+      "Type": "ServiceTask",
+      "ServiceName": "sagaDb2Action",
+      "ServiceMethod": "restore",
+      "ServiceType": "SpringBean",
+      "IsPersist": true,
+      "IsForCompensation": true,
+      "ParameterTypes": ["java.lang.String", "java.lang.Integer"],
+      "Input": ["$.[businessKey]", "$.[amount]"],
+      "Status": {
+        "#root == true": "SU",
+        "$Exception{java.lang.Throwable}": "FA"
+      }
+    },
+    "Compensate": {
+      "Type": "CompensationTrigger",
+      "Next": "Failure"
+    },
+    "Success": {
+      "Type": "Succeed"
+    },
+    "Failure": {
+      "Type": "Fail",
+      "ErrorCode": "DB2_LOCAL_TRANSACTION_FAILED",
+      "Message": "Second local transaction failed after debit and audit writes"
+    }
+  }
+}

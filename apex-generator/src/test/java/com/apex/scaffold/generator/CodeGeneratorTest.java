@@ -154,7 +154,10 @@ class CodeGeneratorTest {
         String po = Files.readString(tempDir.resolve("com/apex/scaffold/infrastructure/persistence/po/OrderPO.java"));
         String migration = Files.readString(tempDir.resolve("generated/V8__create_biz_order.sql"));
 
-        assertThat(entity).contains("private String tenantId;").contains("public void setTenantId(String tenantId)");
+        assertThat(entity)
+                .contains("import lombok.Setter;")
+                .contains("@Setter\n    private String tenantId;")
+                .contains("@Setter\n    private String orderName;");
         assertThat(po).contains("@TableField(\"tenant_id\")").contains("private String tenantId;");
         assertThat(migration)
                 .containsPattern("`tenant_id`\\s+VARCHAR\\(64\\)\\s+NOT NULL COMMENT '租户ID'")

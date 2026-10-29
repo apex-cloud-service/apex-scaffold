@@ -1,5 +1,8 @@
 package com.apex.scaffold.common.error;
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
 /**
  * 统一错误码枚举
  *
@@ -16,6 +19,8 @@ package com.apex.scaffold.common.error;
  * @version 1.0.0
  * @since 1.0.0
  */
+@Getter
+@RequiredArgsConstructor
 public enum ErrorCode {
 
     // ============================================
@@ -240,29 +245,6 @@ public enum ErrorCode {
 
     private final int code;
     private final String message;
-
-    ErrorCode(int code, String message) {
-        this.code = code;
-        this.message = message;
-    }
-
-    /**
-     * 获取错误码数值。
-     *
-     * @return 错误码数值
-     */
-    public int getCode() {
-        return code;
-    }
-
-    /**
-     * 获取错误描述消息。
-     *
-     * @return 错误描述消息
-     */
-    public String getMessage() {
-        return message;
-    }
 
     /**
      * 根据code获取ErrorCode

@@ -224,8 +224,6 @@ class ResultCodeTest {
             assertEquals("对局不是当前可操作对局，请重新同步", ResultCode.BATTLE_NOT_CURRENT.getMsg());
         }
 
-        /**
-         */
         @Test
         @DisplayName("CONTENT_NOT_VISIBLE 的 code=4301, msg='内容不可见'")
         void contentNotVisibleShouldBeCorrect() {

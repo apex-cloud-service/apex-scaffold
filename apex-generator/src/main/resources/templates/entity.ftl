@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.math.BigDecimal;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 
 /**
@@ -43,23 +44,16 @@ public class ${entityName}Entity extends BaseEntity {
 
 </#if>
 <#if tenantAware>
+    @Setter
     private String tenantId;
-
-    public void setTenantId(String tenantId) {
-        this.tenantId = tenantId;
-    }
 
 </#if>
 <#list fields as field>
     /**
      * ${field.comment}。
      */
+    @Setter
     private ${field.type} ${field.name};
-
-    /** Sets ${field.name}. For persistence/construction use only. */
-    public void set${field.name?cap_first}(${field.type} value) {
-        this.${field.name} = value;
-    }
 
 </#list>
     /**

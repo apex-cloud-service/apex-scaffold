@@ -28,6 +28,11 @@ class FeignTenantTraceConfigurationTest {
 
     private final RequestInterceptor interceptor = new FeignTenantTraceConfiguration().tenantTraceInterceptor();
 
+    @Test
+    void interceptorUsesSingleMethodLambda() {
+        assertThat(interceptor.getClass().isAnonymousClass()).isFalse();
+    }
+
     @AfterEach
     void cleanThreadLocal() {
         // 清理测试线程上下文，避免租户 / 追踪 ID 泄漏到其它用例

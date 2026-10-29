@@ -7,10 +7,12 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
+import reactor.core.Scannable;
 import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 
@@ -57,6 +59,22 @@ import reactor.core.scheduler.Schedulers;
  *       不与核心业务路径争用专用池，也禁止继续使用 Reactor 全局 {@code boundedElastic}。</td></tr>
  * </table>
  *
+ * <h2>虚拟线程模式（JDK 21）</h2>
+ * <p>每个池可通过 {@code apex.blocking-io.<pool>.virtual-threads=true} 单独切换到虚拟线程执行器
+ * {@link VirtualThreadBoundedExecutor}。切换后该池由 {@link Schedulers#fromExecutorService} 包装，
+ * 并发控制从"线程数上限"改为"信号量闸门 + 有界排队"，适配"等待远大于计算"的 I/O 场景：</p>
+ * <ul>
+ *   <li>{@code threads} 语义变为最大并发任务数，可由 {@code max-concurrency} 覆盖；
+ *       必须与下游稀缺资源对齐（数据库连接池、对象存储连接、下游配额），不能仅按 CPU 核数放大。</li>
+ *   <li>虚拟线程不可池化，禁止再用线程数当并发上限；背压由排队上限与
+ *       {@code RejectedExecutionException} 共同保证。</li>
+ *   <li>默认关闭，保持既有平台线程池行为不变；灰度时按池逐个开启，
+ *       观察 {@code snapshotAll()} 的 {@code activeTasks} 与 {@code rejected} 指标。</li>
+ *   <li>JDK 21 中 {@code synchronized} 块内阻塞会钉住载体线程；本项目阻塞 I/O 已在
+ *       {@link VirtualThreadBoundedExecutor} 内以信号量排队完成，如怀疑钉住可加
+ *       {@code -Djdk.tracePinnedThreads=full} 观测。</li>
+ * </ul>
+ *
  * <h2>严禁项</h2>
  * <p>任何生产代码<strong>不得直接使用 {@code Schedulers.boundedElastic()}</strong>，
  * 必须从上述六个静态方法中语义最贴近的一个选择。该门禁由代码评审与 ArchUnit 分层测试共同保证。</p>
@@ -74,6 +92,19 @@ import reactor.core.scheduler.Schedulers;
  */
 @Component
 public final class BlockingIoSchedulers {
+
+    /**
+     * 已启用虚拟线程模式的池执行器注册表（键为池短名）。
+     *
+     * <p>虚拟线程模式下 Scheduler 由 {@link Schedulers#fromExecutorService} 包装，
+     * 底层是 {@link VirtualThreadBoundedExecutor} 而非 {@code BoundedElasticScheduler}，
+     * 后者反射路径取不到统计。此注册表让 {@link #snapshotAll()} 直接读执行器真实计数，
+     * 避免指标在虚拟线程模式下退化为 0。</p>
+     *
+     * <p>必须声明在下方池常量之前：池常量在静态初始化阶段即调用
+     * {@link #newScheduler} 并访问本表。</p>
+     */
+    private static final Map<String, VirtualThreadBoundedExecutor> VIRTUAL_EXECUTORS = new ConcurrentHashMap<>();
 
     /** JDBC 阻塞任务 Scheduler。 */
     private static final AtomicReference<Scheduler> JDBC =
@@ -293,8 +324,13 @@ public final class BlockingIoSchedulers {
      */
     private static void refreshFromProperties(
             String propertyPrefix, PoolConfig cfg, AtomicReference<Scheduler> holder) {
-        Scheduler newSched = newScheduler(
-                propertyPrefix, cfg.getThreads(), cfg.getQueueCapacity(), cfg.isFair(), cfg.getTaskTtlMs());
+        Scheduler newSched = buildScheduler(
+                propertyPrefix,
+                cfg.getThreads(),
+                cfg.getQueueCapacity(),
+                cfg.isFair(),
+                cfg.isVirtualThreads(),
+                cfg.getMaxConcurrency());
         Scheduler old = holder.getAndSet(newSched);
         if (old != null && old != newSched && !old.isDisposed()) {
             old.disposeGracefully().subscribe();
@@ -311,7 +347,14 @@ public final class BlockingIoSchedulers {
     @PreDestroy
     public void shutdown() {
         // 函数式 forEach 统一释放 6 池，避免 6 行 disposeQuietly 重复调用
-        POOL_TUPLES.forEach(t -> disposeQuietly(t.holder()));
+        POOL_TUPLES.forEach(t -> {
+            disposeQuietly(t.holder());
+            // 虚拟线程执行器需显式停机，否则排队中的虚拟线程会继续等待许可
+            VirtualThreadBoundedExecutor executor = VIRTUAL_EXECUTORS.remove(t.poolKey());
+            if (executor != null) {
+                executor.shutdown();
+            }
+        });
     }
 
     /**
@@ -327,17 +370,19 @@ public final class BlockingIoSchedulers {
     }
 
     /**
-     * 创建支持 JVM system property 覆盖的有界弹性 Scheduler。
+     * 创建支持 JVM system property 覆盖的调度器。
      *
-     * <p>Scheduler 使用 Project Reactor 的 {@link Schedulers#newBoundedElastic}，
-     * 线程空闲 60s 后自动回收，支持背压保护与可选公平模式/任务 TTL。</p>
+     * <p>默认返回 Project Reactor 的 {@link Schedulers#newBoundedElastic}：
+     * 线程空闲 60s 后自动回收，支持背压保护与可选公平模式。
+     * 当 {@code <prefix>.virtual-threads=true} 时改为虚拟线程执行器，
+     * 详见 {@link #buildScheduler(String, int, int, boolean, boolean, int)}。</p>
      *
      * @param propertyPrefix JVM system property 前缀（如 {@code apex.jdbc}）
      * @param defaultThreads 默认线程数
      * @param defaultQueue   默认队列容量
      * @param defaultFair    默认公平模式（false = 抢占高吞吐，true = FIFO 防饥饿）
      * @param defaultTtlMs   默认任务 TTL 毫秒；-1 表示不限制
-     * @return 有界弹性 Scheduler 实例
+     * @return 调度器实例
      */
     private static Scheduler newScheduler(
             String propertyPrefix, int defaultThreads, int defaultQueue, boolean defaultFair, long defaultTtlMs) {
@@ -350,8 +395,53 @@ public final class BlockingIoSchedulers {
          * 任务 TTL 参数（task-ttl-ms）在 Reactor 3.7+ 才引入，当前版本无法配置，
          * 因此仅读取 longProperty 进行参数校验（保持兼容性），不传递到构造器。
          */
-        long ttl = longProperty(propertyPrefix + ".task-ttl-ms", defaultTtlMs);
-        return Schedulers.newBoundedElastic(threads, queue, propertyPrefix, 60, fair);
+        longProperty(propertyPrefix + ".task-ttl-ms", defaultTtlMs);
+        boolean virtualThreads = booleanProperty(propertyPrefix + ".virtual-threads", false);
+        int maxConcurrency = (int) longProperty(propertyPrefix + ".max-concurrency", -1L);
+        return buildScheduler(propertyPrefix, threads, queue, fair, virtualThreads, maxConcurrency);
+    }
+
+    /**
+     * 按给定参数构建调度器，是平台线程与虚拟线程两条实现路径的唯一分叉点。
+     *
+     * @param propertyPrefix  JVM system property / 配置节点前缀（同时作为 Scheduler 名称与虚拟线程名前缀）
+     * @param threads         平台线程模式下为线程数上限；虚拟线程模式下为默认最大并发任务数
+     * @param queue           队列容量 / 排队容量
+     * @param fair            公平模式
+     * @param virtualThreads  是否使用虚拟线程
+     * @param maxConcurrency  虚拟线程模式下的最大并发任务数；{@code <= 0} 表示沿用 {@code threads}
+     * @return 调度器实例
+     */
+    private static Scheduler buildScheduler(
+            String propertyPrefix, int threads, int queue, boolean fair, boolean virtualThreads, int maxConcurrency) {
+        if (!virtualThreads) {
+            // 灰度回退：关闭虚拟线程后回收残留执行器，避免 snapshot() 继续读到旧计数
+            VirtualThreadBoundedExecutor retired = VIRTUAL_EXECUTORS.remove(poolKeyOf(propertyPrefix));
+            if (retired != null) {
+                retired.shutdown();
+            }
+            return Schedulers.newBoundedElastic(threads, queue, propertyPrefix, 60, fair);
+        }
+        int concurrency = maxConcurrency > 0 ? maxConcurrency : threads;
+        VirtualThreadBoundedExecutor executor =
+                new VirtualThreadBoundedExecutor(propertyPrefix, concurrency, queue, fair);
+        // 覆盖注册旧实例时主动停机，避免参数热更新后旧执行器的在途虚拟线程无人回收
+        VirtualThreadBoundedExecutor previous = VIRTUAL_EXECUTORS.put(poolKeyOf(propertyPrefix), executor);
+        if (previous != null && previous != executor) {
+            previous.shutdown();
+        }
+        return Schedulers.fromExecutorService(executor, propertyPrefix);
+    }
+
+    /**
+     * 从配置前缀提取池短名，例如 {@code apex.jdbc} → {@code jdbc}。
+     *
+     * @param propertyPrefix 配置前缀
+     * @return 最后一段名称
+     */
+    private static String poolKeyOf(String propertyPrefix) {
+        int separator = propertyPrefix.lastIndexOf('.');
+        return separator < 0 ? propertyPrefix : propertyPrefix.substring(separator + 1);
     }
 
     /**
@@ -433,7 +523,7 @@ public final class BlockingIoSchedulers {
      * @param queueCapacity 配置中的队列容量
      * @param activeTasks   当前正在执行任务的估算线程数（近似值）
      * @param queuedTasks   当前在队列中等待的任务数（近似值）
-     * @param completedTasks 已完成任务累计数（近似值，可能溢出为负数）
+     * @param completedTasks 已完成任务累计数；{@code -1} 表示该线程模型无法读取（平台线程模式）
      * @author Apex Team
      * @version 2.0.0
      * @since 2.0.0
@@ -490,10 +580,10 @@ public final class BlockingIoSchedulers {
     /**
      * 构造单个池的指标快照。
      *
-     * <p>由于 Reactor {@code Schedulers.newBoundedElastic} 返回的是
-     * {@code BoundedElasticScheduler} 包装，内部并未公开 statistics()，
-     * 本方法返回的 active/queued 是基于 Scheduler 的已知参数的保守估计。
-     * 后续若 Reactor 暴露只读统计 API，可在此升级。</p>
+     * <p>虚拟线程模式直接从注册表读取 {@link VirtualThreadBoundedExecutor} 的真实计数，
+     * 数值精确。平台线程模式下 Reactor {@code Schedulers.newBoundedElastic} 返回的
+     * {@code BoundedElasticScheduler} 未公开统计 API，只能通过反射读取内部 {@code stats}，
+     * 失败时回退到配置值。</p>
      *
      * @param poolName      池名称
      * @param defaultMax    默认最大线程（可能被配置覆盖，此处用配置值更准确）
@@ -503,34 +593,81 @@ public final class BlockingIoSchedulers {
      */
     private static SchedulerPoolSnapshot snapshot(
             String poolName, int defaultMax, int defaultCap, Scheduler scheduler) {
+        VirtualThreadBoundedExecutor virtualExecutor = VIRTUAL_EXECUTORS.get(poolName);
+        if (virtualExecutor != null) {
+            return new SchedulerPoolSnapshot(
+                    poolName,
+                    virtualExecutor.maxConcurrency(),
+                    virtualExecutor.queueCapacity(),
+                    virtualExecutor.activeTasks(),
+                    virtualExecutor.pendingTasks(),
+                    virtualExecutor.completedTasks());
+        }
         int max = defaultMax;
         int cap = defaultCap;
         int active = 0;
         int queued = 0;
-        long completed = 0L;
-        try {
-            if (scheduler != null) {
-                Class<?> clazz = scheduler.getClass();
-                java.lang.reflect.Field statsField = findField(clazz, "stats");
-                if (statsField != null) {
-                    statsField.setAccessible(true);
-                    Object stats = statsField.get(scheduler);
-                    if (stats != null) {
-                        Class<?> sClazz = stats.getClass();
-                        java.lang.reflect.Method activeM = sClazz.getMethod("activeTasks");
-                        java.lang.reflect.Method pendingM = sClazz.getMethod("pendingTasks");
-                        java.lang.reflect.Method maxM = sClazz.getMethod("maxThreadsAllowed");
-                        active = (int) activeM.invoke(stats);
-                        Number pending = (Number) pendingM.invoke(stats);
-                        max = (int) maxM.invoke(stats);
-                        queued = pending != null ? pending.intValue() : 0;
-                    }
-                }
+        /*
+         * Reactor 3.7 的 BoundedElasticScheduler 已移除 3.6 的 stats 字段：
+         * 最大线程数改读公开的 Scannable#CAPACITY，活跃线程数与剩余队列容量
+         * 只有包级方法 estimateBusy / estimateRemainingTaskCapacity 可得，仍需反射。
+         */
+        if (scheduler instanceof Scannable scannable) {
+            Object capacity = scannable.scanUnsafe(Scannable.Attr.CAPACITY);
+            if (capacity instanceof Integer value && value > 0) {
+                max = value;
             }
-        } catch (Throwable ignore) {
-            // 反射失败时静默回退至默认值，不影响主流程
+            Integer busy = invokeIntMethod(scheduler, "estimateBusy");
+            if (busy != null && busy >= 0) {
+                active = busy;
+            }
+            Integer remaining = invokeIntMethod(scheduler, "estimateRemainingTaskCapacity");
+            Integer perThread = readIntField(scheduler, "maxTaskQueuedPerThread");
+            if (remaining != null && remaining >= 0 && perThread != null && perThread > 0) {
+                queued = Math.max(0, max * perThread - remaining);
+            }
         }
-        return new SchedulerPoolSnapshot(poolName, max, cap, active, queued, completed);
+        // 平台线程模式无法读取累计完成数，用 -1 表示未知，避免把“未知”渲染成 0
+        return new SchedulerPoolSnapshot(poolName, max, cap, active, queued, -1L);
+    }
+
+    /**
+     * 反射调用无参 int 方法，失败返回 {@code null}。
+     *
+     * @param target     目标实例
+     * @param methodName 方法名
+     * @return 返回值；不可用时为 {@code null}
+     */
+    private static Integer invokeIntMethod(Object target, String methodName) {
+        try {
+            java.lang.reflect.Method method = target.getClass().getDeclaredMethod(methodName);
+            method.setAccessible(true);
+            Object result = method.invoke(target);
+            return result instanceof Integer value ? value : null;
+        } catch (Throwable ignore) {
+            return null;
+        }
+    }
+
+    /**
+     * 反射读取 int 字段，失败返回 {@code null}。
+     *
+     * @param target    目标实例
+     * @param fieldName 字段名
+     * @return 字段值；不可用时为 {@code null}
+     */
+    private static Integer readIntField(Object target, String fieldName) {
+        try {
+            java.lang.reflect.Field field = findField(target.getClass(), fieldName);
+            if (field == null) {
+                return null;
+            }
+            field.setAccessible(true);
+            Object result = field.get(target);
+            return result instanceof Integer value ? value : null;
+        } catch (Throwable ignore) {
+            return null;
+        }
     }
 
     /**

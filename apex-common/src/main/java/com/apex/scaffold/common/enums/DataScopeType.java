@@ -2,6 +2,8 @@ package com.apex.scaffold.common.enums;
 
 import java.util.Arrays;
 import java.util.Locale;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 /**
  * 数据权限类型（MyBatis-Plus 自定义数据权限）。
@@ -23,6 +25,8 @@ import java.util.Locale;
  * @version 1.0.0
  * @since 2.3.0
  */
+@Getter
+@RequiredArgsConstructor
 public enum DataScopeType {
 
     /** 全部数据权限 */
@@ -45,35 +49,6 @@ public enum DataScopeType {
 
     /** 类型描述 */
     private final String desc;
-
-    /**
-     * 构造数据权限类型。
-     *
-     * @param code 编码
-     * @param desc 描述
-     */
-    DataScopeType(Integer code, String desc) {
-        this.code = code;
-        this.desc = desc;
-    }
-
-    /**
-     * 获取类型编码。
-     *
-     * @return 编码
-     */
-    public Integer getCode() {
-        return code;
-    }
-
-    /**
-     * 获取类型描述。
-     *
-     * @return 描述
-     */
-    public String getDesc() {
-        return desc;
-    }
 
     /**
      * 按编码解析类型。

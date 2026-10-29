@@ -33,11 +33,6 @@ import lombok.Data;
 public class DatabaseDeploymentConfig {
 
     /**
-     * 构造数据库部署配置。
-     */
-    public DatabaseDeploymentConfig() {}
-
-    /**
      * 数据库类型。
      *
      * <p>首期支持：{@code mysql}、{@code postgresql}。

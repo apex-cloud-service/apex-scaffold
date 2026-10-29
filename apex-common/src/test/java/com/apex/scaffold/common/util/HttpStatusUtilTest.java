@@ -42,8 +42,6 @@ class HttpStatusUtilTest {
             assertThat(HttpStatusUtil.fromBusinessCode(4205)).isEqualTo(HttpStatus.CONFLICT);
         }
 
-        /**
-         */
         @Test
         @DisplayName("code 为 401 应返回 401")
         void shouldReturnUnauthorizedWhenCodeIs401() {
@@ -121,8 +119,6 @@ class HttpStatusUtilTest {
             assertThat(HttpStatusUtil.fromBusinessCode(4603)).isEqualTo(HttpStatus.BAD_REQUEST);
         }
 
-        /**
-         */
         @Test
         @DisplayName("code 为 500 应返回 500")
         void shouldReturnInternalServerErrorWhenCodeIs500() {

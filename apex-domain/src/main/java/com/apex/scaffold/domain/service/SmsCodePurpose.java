@@ -10,6 +10,7 @@ package com.apex.scaffold.domain.service;
  * @version 1.0.0
  * @since 1.0.0
  */
+@lombok.RequiredArgsConstructor
 public enum SmsCodePurpose {
     /** 登录、注册和既有登录流程。 */
     LOGIN("login"),
@@ -17,15 +18,6 @@ public enum SmsCodePurpose {
     ACCOUNT_DELETION("account-deletion");
 
     private final String key;
-
-    /**
-     * 构造短信验证码用途枚举值。
-     *
-     * @param key 用于缓存键的稳定字符串值
-     */
-    SmsCodePurpose(String key) {
-        this.key = key;
-    }
 
     /** @return 用于缓存键的稳定值 */
     public String key() {

@@ -5,6 +5,7 @@ import static org.springframework.web.reactive.function.server.ServerResponse.ok
 import com.apex.example.dto.CreateUserRequest;
 import com.apex.example.service.ExampleUserService;
 import com.apex.scaffold.common.annotation.FeatureGate;
+import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.common.result.ResultCode;
@@ -78,6 +79,12 @@ public class ExampleUserHandler extends BaseHandler {
      * @return 响应结果
      */
     @Operation(summary = "创建用户", description = "创建一个新用户")
+    @OperationLog(
+            module = "ExampleUser",
+            type = OperationLog.OperationType.INSERT,
+            description = "createUser",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> createUser(ServerRequest request) {
         return request.bodyToMono(CreateUserRequest.class)
                 .switchIfEmpty(Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "请求体不能为空")))
@@ -93,6 +100,12 @@ public class ExampleUserHandler extends BaseHandler {
      * @return 响应结果
      */
     @Operation(summary = "查询用户", description = "根据ID查询用户详情")
+    @OperationLog(
+            module = "ExampleUser",
+            type = OperationLog.OperationType.SELECT,
+            description = "getUser",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> getUser(ServerRequest request) {
         Long id = Long.parseLong(request.pathVariable("id"));
 
@@ -109,6 +122,12 @@ public class ExampleUserHandler extends BaseHandler {
      * @return 分页响应结果
      */
     @Operation(summary = "分页查询用户列表", description = "支持 pageNum/pageSize 分页参数")
+    @OperationLog(
+            module = "ExampleUser",
+            type = OperationLog.OperationType.SELECT,
+            description = "listUsers",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> listUsers(ServerRequest request) {
         long pageNum = request.queryParam("pageNum").map(Long::parseLong).orElse((long) DEFAULT_PAGE_NUM);
         long pageSize = request.queryParam("pageSize").map(Long::parseLong).orElse((long) DEFAULT_PAGE_SIZE);
@@ -128,6 +147,12 @@ public class ExampleUserHandler extends BaseHandler {
      * @return 响应结果
      */
     @Operation(summary = "更新用户", description = "根据ID更新用户信息")
+    @OperationLog(
+            module = "ExampleUser",
+            type = OperationLog.OperationType.UPDATE,
+            description = "updateUser",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> updateUser(ServerRequest request) {
         Long id = Long.parseLong(request.pathVariable("id"));
 
@@ -145,6 +170,12 @@ public class ExampleUserHandler extends BaseHandler {
      * @return 响应结果
      */
     @Operation(summary = "删除用户", description = "根据ID逻辑删除用户")
+    @OperationLog(
+            module = "ExampleUser",
+            type = OperationLog.OperationType.DELETE,
+            description = "deleteUser",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> deleteUser(ServerRequest request) {
         Long id = Long.parseLong(request.pathVariable("id"));
 
@@ -164,6 +195,12 @@ public class ExampleUserHandler extends BaseHandler {
      */
     @Operation(summary = "高级运营报表(商业版)", description = "@FeatureGate示例: 需标准版/企业版License授权 premium_report 功能")
     @FeatureGate(value = "premium_report", message = "高级运营报表需要标准版或企业版License,请升级后重试")
+    @OperationLog(
+            module = "ExampleUser",
+            type = OperationLog.OperationType.OTHER,
+            description = "premiumReport",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> premiumReport(ServerRequest request) {
         Map<String, Object> report = new LinkedHashMap<>();
         report.put("reportId", "RPT-" + LocalDate.now() + "-001");

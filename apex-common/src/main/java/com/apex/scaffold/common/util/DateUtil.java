@@ -14,8 +14,6 @@ import java.time.temporal.TemporalAdjusters;
 import java.util.Date;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * 日期时间工具类
@@ -29,9 +27,6 @@ import org.slf4j.LoggerFactory;
  */
 @Slf4j
 public class DateUtil {
-
-    /** Logger实例 */
-    private static final Logger log = LoggerFactory.getLogger(DateUtil.class);
 
     /** 私有构造函数，防止实例化 */
     private DateUtil() {

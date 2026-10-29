@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.apex.scaffold</groupId>
+        <artifactId>apex-scaffold</artifactId>
+        <version>1.3.1</version>
+    </parent>
+
+    <artifactId>apex-tools-deployment</artifactId>
+    <name>Apex Deployment Tools</name>
+    <!-- fat jar 的 Main-Class：由父 POM 的 shade ManifestResourceTransformer 引用。 -->
+    <properties>
+        <start-class>com.apex.scaffold.tools.deployment.LocalDeployment</start-class>
+    </properties>
+    <description>
+        离线部署运维工具模块。
+
+        - LocalDeployment：密钥/前置配置校验、TOTP 敏感字段离线迁移包生成与回滚、Compose 配置校验
+        - TokenV42Recover：显式离线 MySQL V42 结构恢复（不写 Flyway 历史）
+        - DocLinksChecker：全仓 Markdown 本地链接与锚点校验（check-doc-links.sh 的 Java 实现）
+        - DocSearchServer：本地文档静态文件服务（start-doc-search.sh 的 Java 实现，仅监听回环地址）
+        - 仅由 scripts/utils/、scripts/ci/check-doc-links.sh 脚本
+          与 podman-compose.yml 的 security-key-check 调用；不参与业务服务运行期装配
+        - 打包为带依赖的 fat jar：target/local-deployment.jar
+    </description>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.yaml</groupId>
+            <artifactId>snakeyaml</artifactId>
+        </dependency>
+
+        <!-- ===== 测试依赖 ===== -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- 测试需定位仓库根目录下的迁移脚本与 Compose 文件。 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <systemPropertyVariables>
+                        <apex.root>${maven.multiModuleProjectDirectory}</apex.root>
+                    </systemPropertyVariables>
+                </configuration>
+            </plugin>
+            <!-- 运维入口直接运行单个 JAR：入口为 LocalDeployment，TokenV42Recover 以 -cp 方式调用。
+                 spring-boot-starter-parent 已为 shade 预置 spring.* AppendingTransformer 与
+                 mainClass=${start-class}；此处只需覆盖 finalName 与 start-class。 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <createDependencyReducedPom>false</createDependencyReducedPom>
+                            <finalName>local-deployment</finalName>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

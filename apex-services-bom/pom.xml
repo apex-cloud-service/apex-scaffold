@@ -2,7 +2,7 @@
 <!--
   - Apex Scaffold - Services BOM
   - 微服务改造依赖版本管理 (Bill of Materials)
-  - 用途：作为所有微服务模块（gateway/contract/5 个业务服务…）的 parent，统一锁定：
+  - 用途：作为网关、契约、五个业务服务及任务/脱敏服务的 parent，统一锁定：
   -   1) 内部模块版本（apex-common / apex-api-contract / apex-license-starter…）
   -   2) 第三方依赖版本（Spring Cloud / Alibaba / MyBatis-Plus / Redis / MQ / Sentinel / Resilience4j…）
   - 约束：
@@ -137,6 +137,17 @@
                 <groupId>com.apex.scaffold</groupId>
                 <artifactId>apex-system</artifactId>
                 <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.springdoc</groupId>
+                <artifactId>springdoc-openapi-starter-webflux-api</artifactId>
+                <version>${springdoc.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springdoc</groupId>
+                <artifactId>springdoc-openapi-starter-webflux-ui</artifactId>
+                <version>${springdoc.version}</version>
             </dependency>
 
             <!-- ========== 持久层 / ORM ========== -->

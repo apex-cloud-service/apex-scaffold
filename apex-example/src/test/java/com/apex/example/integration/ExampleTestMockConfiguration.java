@@ -33,9 +33,13 @@ import reactor.core.publisher.Mono;
 @TestConfiguration
 @Profile("test")
 public class ExampleTestMockConfiguration {
+    /**
+     * 使用独立 Bean 名保留测试替身，避免被生产同名配置覆盖。
+     * @return 隔离外部 Redis 的主候选客户端
+     */
     @Bean
     @Primary
-    RedissonClient redissonClient() {
+    RedissonClient testRedissonClient() {
         return Mockito.mock(RedissonClient.class, Answers.RETURNS_DEEP_STUBS);
     }
 

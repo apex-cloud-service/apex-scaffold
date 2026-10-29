@@ -138,17 +138,4 @@ public class RemoteApiException extends RuntimeException implements RemoteClient
     public boolean isServerError() {
         return httpStatus >= 500 && httpStatus < 600;
     }
-
-    /**
-     * 判断是否由熔断器打开触发。
-     *
-     * <p>当此方法返回 {@code true} 时，表示当前异常并非远程服务实际返回 503，
-     * 而是本地 Resilience4j CircuitBreaker 处于 OPEN 状态直接拒绝请求。
-     * 上层业务可据此执行降级逻辑。
-     *
-     * @return true 表示由熔断器触发
-     */
-    public boolean isCircuitBreakerOpen() {
-        return circuitBreakerOpen;
-    }
 }

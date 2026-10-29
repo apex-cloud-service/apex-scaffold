@@ -3,6 +3,7 @@ package com.apex.scaffold.common.event;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.LocalDateTime;
+import lombok.Getter;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -22,10 +23,9 @@ class BaseDomainEventTest {
     /** 测试用的具体事件实现 */
     static class TestDomainEvent extends BaseDomainEvent {
 
+        @Getter
         private final String sourceId;
 
-        /**
-         */
         TestDomainEvent(String eventType, String traceId, String sourceId) {
             super(eventType, traceId);
             this.sourceId = sourceId;
@@ -35,20 +35,12 @@ class BaseDomainEventTest {
             super(eventType);
             this.sourceId = "test-source";
         }
-
-        /** {@inheritDoc} */
-        @Override
-        public String getSourceId() {
-            return sourceId;
-        }
     }
 
     @Nested
     @DisplayName("事件创建")
     class CreationTests {
 
-        /**
-         */
         @Test
         @DisplayName("创建事件时 eventId 不应为空")
         void eventIdShouldNotBeNull() {

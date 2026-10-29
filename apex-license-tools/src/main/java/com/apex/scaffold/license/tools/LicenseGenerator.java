@@ -16,6 +16,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Map;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -26,8 +27,10 @@ import lombok.extern.slf4j.Slf4j;
  *
  * @author Apex Team
  * @version 1.0.0
+ * @since 1.3.1
  */
 @Slf4j
+@RequiredArgsConstructor
 public class LicenseGenerator {
 
     private static final int GEN_KEYS_MIN_ARGS = 3;
@@ -47,15 +50,6 @@ public class LicenseGenerator {
         mapper.registerModule(new JavaTimeModule());
         mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         return mapper;
-    }
-
-    /**
-     * 构造函数(使用已有密钥对)
-     *
-     * @param keyPair RSA密钥对
-     */
-    public LicenseGenerator(KeyPair keyPair) {
-        this.keyPair = keyPair;
     }
 
     /**

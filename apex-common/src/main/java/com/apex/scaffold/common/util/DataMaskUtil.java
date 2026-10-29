@@ -1,256 +1,222 @@
 package com.apex.scaffold.common.util;
 
+import com.apex.scaffold.common.annotation.MaskType;
+
 /**
- * 数据脱敏工具类
- *
- * <p>提供常见的敏感信息脱敏方法,符合数据安全规范:
- * <ul>
- *   <li>手机号: 138****8000</li>
- *   <li>身份证: 110***********1234</li>
- *   <li>邮箱: t***@example.com</li>
- *   <li>姓名: 张*</li>
- *   <li>银行卡: 6222 **** **** 1234</li>
- * </ul>
+ * 统一本地脱敏规则引擎。保留长度按 Unicode 码点计算，非法格式与短输入采用全遮盖。
  *
  * @author Apex Team
- * @version 1.0.0
+ * @version 1.3.1
  * @since 1.0.0
  */
 public final class DataMaskUtil {
+    /** 自定义规则仅允许两段不超过四位的非负长度。 */
+    private static final java.util.regex.Pattern CUSTOM_RULE_PATTERN =
+            java.util.regex.Pattern.compile("[0-9]{1,4},[0-9]{1,4}");
 
-    private static final int PHONE_LENGTH = 11;
-    private static final int ID_CARD_SHORT_LENGTH = 15;
-    private static final int ID_CARD_LONG_LENGTH = 18;
-    private static final int MIN_EMAIL_LOCAL_LENGTH = 2;
-    private static final int MIN_CARD_LENGTH = 8;
-    private static final int MIN_ADDRESS_KEEP_LENGTH = 10;
-    private static final int SHORT_VALUE_LENGTH = 4;
-    private static final int TWO_CHARACTERS = 2;
-    private static final int FOUR_CHARACTERS = 4;
+    /** 邮箱只接受单一本地部分与常规 ASCII 域名。 */
+    private static final java.util.regex.Pattern EMAIL_PATTERN =
+            java.util.regex.Pattern.compile("[^\\s@]+@[A-Za-z0-9](?:[A-Za-z0-9.-]*[A-Za-z0-9])?\\.[A-Za-z]{2,}");
 
+    /** IPv4 的固定分段数量。 */
+    private static final int IPV4_SEGMENTS = 4;
+
+    /** 禁止实例化工具类。 */
     private DataMaskUtil() {
-        throw new UnsupportedOperationException("Utility class cannot be instantiated");
+        throw new UnsupportedOperationException("工具类不能实例化");
     }
 
     /**
-     * 手机号脱敏
-     * <p>格式: 138****8000 (保留前3位和后4位)
-     *
+     * 执行指定类型规则；自定义规则格式为前缀长度,后缀长度。
+     * @param value 原值
+     * @param type 规则类型
+     * @param customRule 自定义保留区间
+     * @return 脱敏结果
+     */
+    public static String mask(String value, MaskType type, String customRule) {
+        if (type == null) {
+            throw new IllegalArgumentException("脱敏类型不能为空");
+        }
+        return switch (type) {
+            case PHONE -> maskPhone(value);
+            case ID_CARD -> maskIdCard(value);
+            case EMAIL -> maskEmail(value);
+            case NAME -> maskName(value);
+            case BANK_CARD -> maskBankCard(value);
+            case ADDRESS -> maskAddress(value);
+            case IP_ADDRESS -> maskIpAddress(value);
+            case URL -> maskUrl(value);
+            case GENERAL -> maskGeneral(value);
+            case CUSTOM -> {
+                int[] retained = parseCustomRule(customRule);
+                yield maskRange(value, retained[0], retained[1]);
+            }
+        };
+    }
+
+    /**
+     * 校验自定义规则，异常消息不携带原始配置。
+     * @param rule 前缀,后缀
+     * @return 两个保留长度
+     */
+    public static int[] parseCustomRule(String rule) {
+        if (rule == null || !CUSTOM_RULE_PATTERN.matcher(rule).matches()) {
+            throw new IllegalArgumentException("自定义规则必须为非负前缀,后缀长度");
+        }
+        String[] parts = rule.split(",");
+        return new int[] {Integer.parseInt(parts[0]), Integer.parseInt(parts[1])};
+    }
+
+    /**
+     * 保留首尾码点；首尾重叠或无可遮盖区域时全遮盖，避免短值泄漏。
+     * @param value 原值
+     * @param prefix 前缀长度
+     * @param suffix 后缀长度
+     * @return 脱敏结果
+     */
+    public static String maskRange(String value, int prefix, int suffix) {
+        if (prefix < 0 || suffix < 0) {
+            throw new IllegalArgumentException("保留长度不能为负数");
+        }
+        if (value == null || value.isEmpty()) {
+            return value;
+        }
+        int length = value.codePointCount(0, value.length());
+        if ((long) prefix + suffix >= length) {
+            return "*".repeat(length);
+        }
+        int start = value.offsetByCodePoints(0, prefix);
+        int end = value.offsetByCodePoints(0, length - suffix);
+        return value.substring(0, start) + "*".repeat(length - prefix - suffix) + value.substring(end);
+    }
+
+    /**
+     * 手机号脱敏，合法十一位数字保留前三后四。
      * @param phone 手机号
-     * @return 脱敏后的手机号
+     * @return 脱敏结果
      */
     public static String maskPhone(String phone) {
         if (phone == null || phone.isEmpty()) {
             return phone;
         }
-
-        // 去除空格和特殊字符
         String cleaned = phone.replaceAll("[\\s-]", "");
-
-        if (cleaned.length() != PHONE_LENGTH) {
-            return phone;
-        }
-
-        return cleaned.substring(0, 3) + "****" + cleaned.substring(7);
+        return cleaned.matches("1[0-9]{10}") ? maskRange(cleaned, 3, 4) : maskRange(phone, 0, 0);
     }
 
     /**
-     * 身份证号脱敏
-     * <p>格式: 110***********1234 (保留前3位和后4位)
-     *
-     * @param idCard 身份证号
-     * @return 脱敏后的身份证号
+     * 证件号脱敏，支持十五位数字和十八位数字末位 X。
+     * @param idCard 证件号
+     * @return 脱敏结果
      */
     public static String maskIdCard(String idCard) {
         if (idCard == null || idCard.isEmpty()) {
             return idCard;
         }
-
         String cleaned = idCard.trim();
-
-        if (cleaned.length() != ID_CARD_SHORT_LENGTH && cleaned.length() != ID_CARD_LONG_LENGTH) {
-            return idCard;
-        }
-
-        return cleaned.substring(0, 3) + "*".repeat(cleaned.length() - 7) + cleaned.substring(cleaned.length() - 4);
+        return cleaned.matches("(?:[0-9]{15}|[0-9]{17}[0-9Xx])") ? maskRange(cleaned, 3, 4) : maskRange(idCard, 0, 0);
     }
 
     /**
-     * 邮箱脱敏
-     * <p>格式: t***@example.com (保留首字母和域名)
-     *
-     * @param email 邮箱地址
-     * @return 脱敏后的邮箱
+     * 邮箱脱敏，保留合法域名与多字符本地部分的首码点。
+     * @param email 邮箱
+     * @return 脱敏结果
      */
     public static String maskEmail(String email) {
         if (email == null || email.isEmpty()) {
             return email;
         }
-
-        int atIndex = email.indexOf('@');
-        if (atIndex <= 1) {
-            return email;
+        if (!EMAIL_PATTERN.matcher(email).matches()) {
+            return maskRange(email, 0, 0);
         }
-
-        String localPart = email.substring(0, atIndex);
-        String domain = email.substring(atIndex);
-
-        if (localPart.length() <= MIN_EMAIL_LOCAL_LENGTH) {
-            return localPart.charAt(0) + "*" + domain;
-        }
-
-        return localPart.charAt(0)
-                + "*".repeat(localPart.length() - 2)
-                + localPart.charAt(localPart.length() - 1)
-                + domain;
+        int at = email.indexOf('@');
+        return maskRange(email.substring(0, at), 1, 0) + email.substring(at);
     }
 
     /**
-     * 姓名脱敏
-     * <p>格式: 张* (保留姓氏)
-     *
+     * 姓名脱敏，单字符全遮盖。
      * @param name 姓名
-     * @return 脱敏后的姓名
+     * @return 脱敏结果
      */
     public static String maskName(String name) {
-        if (name == null || name.isEmpty()) {
-            return name;
-        }
-
-        String trimmed = name.trim();
-
-        if (trimmed.length() == 1) {
-            return trimmed;
-        }
-
-        if (trimmed.length() == TWO_CHARACTERS) {
-            return trimmed.charAt(0) + "*";
-        }
-
-        // 3字及以上: 张** 或 欧阳**
-        return trimmed.charAt(0) + "*".repeat(trimmed.length() - 1);
+        return maskRange(name == null ? null : name.trim(), 1, 0);
     }
 
     /**
-     * 银行卡号脱敏
-     * <p>格式: 6222 **** **** 1234 (保留前4位和后4位)
-     *
-     * @param cardNo 银行卡号
-     * @return 脱敏后的银行卡号
+     * 银行卡脱敏，九至十九位数字保留前四后四，不进行卡号有效性认证。
+     * @param cardNo 卡号
+     * @return 脱敏结果
      */
     public static String maskBankCard(String cardNo) {
         if (cardNo == null || cardNo.isEmpty()) {
             return cardNo;
         }
-
         String cleaned = cardNo.replaceAll("[\\s-]", "");
-
-        if (cleaned.length() < MIN_CARD_LENGTH) {
-            return cardNo;
-        }
-
-        // 每4位一组显示
-        StringBuilder result = new StringBuilder();
-        result.append(cleaned.substring(0, FOUR_CHARACTERS));
-        result.append(" ");
-
-        int middleLength = cleaned.length() - 8;
-        int groups = middleLength / 4;
-        for (int i = 0; i < groups; i++) {
-            result.append("**** ");
-        }
-
-        if (middleLength % FOUR_CHARACTERS != 0) {
-            result.append("**** ");
-        }
-
-        result.append(cleaned.substring(cleaned.length() - 4));
-
-        return result.toString().trim();
+        return cleaned.matches("[0-9]{9,19}") ? maskRange(cleaned, 4, 4) : maskRange(cardNo, 0, 0);
     }
 
     /**
-     * 地址脱敏
-     * <p>格式: 北京市朝阳区**** (保留到区县级)
-     *
+     * 地址按码点保留前半部分，不推断行政区划。
      * @param address 地址
-     * @return 脱敏后的地址
+     * @return 脱敏结果
      */
     public static String maskAddress(String address) {
-        if (address == null || address.isEmpty()) {
-            return address;
-        }
-
-        // 简单策略: 保留前50%字符
-        int keepLength = address.length() / 2;
-        if (keepLength < MIN_ADDRESS_KEEP_LENGTH) {
-            keepLength = 10;
-        }
-
-        return address.substring(0, keepLength) + "****";
+        return address == null ? null : maskRange(address, address.codePointCount(0, address.length()) / 2, 0);
     }
 
     /**
-     * IP地址脱敏
-     * <p>格式: 192.168.*.* (保留前两段)
-     *
-     * @param ipAddress IP地址
-     * @return 脱敏后的IP
+     * IPv4 保留前两段，非法格式全遮盖。
+     * @param ipAddress 地址
+     * @return 脱敏结果
      */
     public static String maskIpAddress(String ipAddress) {
         if (ipAddress == null || ipAddress.isEmpty()) {
             return ipAddress;
         }
-
-        String[] parts = ipAddress.split("\\.");
-        if (parts.length != FOUR_CHARACTERS) {
-            return ipAddress;
+        String[] parts = ipAddress.split("\\.", -1);
+        if (parts.length != IPV4_SEGMENTS) {
+            return maskRange(ipAddress, 0, 0);
         }
-
+        for (String part : parts) {
+            if (!part.matches("[0-9]{1,3}") || Integer.parseInt(part) > 255) {
+                return maskRange(ipAddress, 0, 0);
+            }
+        }
         return parts[0] + "." + parts[1] + ".*.*";
     }
 
     /**
-     * URL脱敏
-     * <p>格式: https://example.com/path/**** (隐藏查询参数)
-     *
-     * @param url URL地址
-     * @return 脱敏后的URL
+     * URL 遮盖查询与片段，用户信息存在时全遮盖。
+     * @param url 地址
+     * @return 脱敏结果
      */
     public static String maskUrl(String url) {
         if (url == null || url.isEmpty()) {
             return url;
         }
-
-        int questionMarkIndex = url.indexOf('?');
-        if (questionMarkIndex == -1) {
-            return url;
+        try {
+            java.net.URI uri = java.net.URI.create(url);
+            if (uri.getHost() == null || uri.getUserInfo() != null) {
+                return maskRange(url, 0, 0);
+            }
+            int query = url.indexOf('?');
+            int fragment = url.indexOf('#');
+            int end = query < 0 ? fragment : fragment < 0 ? query : Math.min(query, fragment);
+            return end < 0 ? url : url.substring(0, end) + "?****";
+        } catch (IllegalArgumentException ignored) {
+            return maskRange(url, 0, 0);
         }
-
-        return url.substring(0, questionMarkIndex) + "?****";
     }
 
     /**
-     * 通用字符串脱敏
-     * <p>保留前30%和后20%,中间用*替代
-     *
-     * @param value 原始字符串
-     * @return 脱敏后的字符串
+     * 通用脱敏保留前百分之三十、后百分之二十，四码点及以下全遮盖。
+     * @param value 原值
+     * @return 脱敏结果
      */
     public static String maskGeneral(String value) {
-        if (value == null || value.isEmpty()) {
-            return value;
+        if (value == null) {
+            return null;
         }
-
-        int length = value.length();
-        if (length <= SHORT_VALUE_LENGTH) {
-            return "*".repeat(length);
-        }
-
-        int keepStart = Math.max(1, length * 30 / 100);
-        int keepEnd = Math.max(1, length * 20 / 100);
-        int maskLength = length - keepStart - keepEnd;
-
-        return value.substring(0, keepStart) + "*".repeat(maskLength) + value.substring(length - keepEnd);
+        int length = value.codePointCount(0, value.length());
+        return length <= 4 ? maskRange(value, 0, 0) : maskRange(value, length * 30 / 100, length * 20 / 100);
     }
 }

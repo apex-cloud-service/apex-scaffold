@@ -14,6 +14,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.Getter;
+import lombok.Setter;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -33,14 +35,14 @@ import org.junit.jupiter.api.Test;
 class JsonUtilTest {
 
     /** 测试用普通 Bean。 */
+    @Getter
+    @Setter
     static class TestUser {
         /** 用户名。 */
         private String name;
         /** 年龄。 */
         private int age;
 
-        /**
-         */
         public TestUser() {}
 
         /**
@@ -52,103 +54,33 @@ class JsonUtilTest {
             this.name = name;
             this.age = age;
         }
-
-        /**
-         * 获取用户名。
-         *
-         * @return 用户名
-         */
-        public String getName() {
-            return name;
-        }
-
-        /**
-         * 设置用户名。
-         *
-         * @param name 用户名
-         */
-        public void setName(String name) {
-            this.name = name;
-        }
-
-        /**
-         * 获取年龄。
-         *
-         * @return 年龄
-         */
-        public int getAge() {
-            return age;
-        }
-
-        /**
-         * 设置年龄。
-         *
-         * @param age 年龄
-         */
-        public void setAge(int age) {
-            this.age = age;
-        }
     }
 
     /** 仅含 name 字段的 Bean，用于未知字段测试。 */
+    @Getter
+    @Setter
     static class ExtraFieldsBean {
         /** 名称。 */
         private String name;
 
-        /**
-         */
         public ExtraFieldsBean() {}
-
-        /**
-         * 获取名称。
-         *
-         * @return 名称
-         */
-        public String getName() {
-            return name;
-        }
-
-        /**
-         * 设置名称。
-         *
-         * @param name 名称
-         */
-        public void setName(String name) {
-            this.name = name;
-        }
     }
 
     /** 多态基类，用于 {@link JsonUtil#secureFromJson} 测试。 */
+    @Getter
+    @Setter
     abstract static class Animal {
         /** 名称。 */
         private String name;
-
-        /**
-         * 获取名称。
-         *
-         * @return 名称
-         */
-        public String getName() {
-            return name;
-        }
-
-        /**
-         * 设置名称。
-         *
-         * @param name 名称
-         */
-        public void setName(String name) {
-            this.name = name;
-        }
     }
 
     /** 多态子类：狗。 */
+    @Getter
+    @Setter
     static class Dog extends Animal {
         /** 品种。 */
         private String breed;
 
-        /**
-         */
         public Dog() {}
 
         /**
@@ -160,33 +92,15 @@ class JsonUtilTest {
             setName(name);
             this.breed = breed;
         }
-
-        /**
-         * 获取品种。
-         *
-         * @return 品种
-         */
-        public String getBreed() {
-            return breed;
-        }
-
-        /**
-         * 设置品种。
-         *
-         * @param breed 品种
-         */
-        public void setBreed(String breed) {
-            this.breed = breed;
-        }
     }
 
     /** 多态子类：猫。 */
+    @Getter
+    @Setter
     static class Cat extends Animal {
         /** 是否室内饲养。 */
         private boolean indoor;
 
-        /**
-         */
         public Cat() {}
 
         /**
@@ -196,24 +110,6 @@ class JsonUtilTest {
          */
         public Cat(String name, boolean indoor) {
             setName(name);
-            this.indoor = indoor;
-        }
-
-        /**
-         * 获取是否室内饲养。
-         *
-         * @return 是否室内饲养
-         */
-        public boolean isIndoor() {
-            return indoor;
-        }
-
-        /**
-         * 设置是否室内饲养。
-         *
-         * @param indoor 是否室内饲养
-         */
-        public void setIndoor(boolean indoor) {
             this.indoor = indoor;
         }
     }

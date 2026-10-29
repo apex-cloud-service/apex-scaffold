@@ -37,6 +37,7 @@ import lombok.Getter;
  * @since 1.0.0
  */
 @Getter
+@lombok.RequiredArgsConstructor
 public enum ResultCode {
 
     /** 成功 */
@@ -356,6 +357,8 @@ public enum ResultCode {
     TENANT_ILLEGAL_TRANSITION(4753, "租户当前状态不允许该操作", "biz.tenant.illegal_transition"),
     /** 租户配额超限 */
     TENANT_QUOTA_EXCEEDED(4754, "租户配额已超限", "biz.tenant.quota_exceeded"),
+    /** 租户信息并发更新冲突（乐观锁版本不匹配） */
+    TENANT_VERSION_CONFLICT(4755, "租户信息已被更新，请重试", "biz.tenant.version_conflict"),
 
     // ========== 安全防护错误 ==========
 
@@ -389,19 +392,6 @@ public enum ResultCode {
 
     /** 国际化消息键，对应 messages_*.properties 中的 key */
     private final String messageKey;
-
-    /**
-     * 构造方法
-     *
-     * @param code       状态码
-     * @param msg        状态消息（简体中文默认值，用于日志显示）
-     * @param messageKey 国际化消息键，用于通过 MessageSource 获取多语言消息
-     */
-    ResultCode(Integer code, String msg, String messageKey) {
-        this.code = code;
-        this.msg = msg;
-        this.messageKey = messageKey;
-    }
 
     /**
      * 根据状态码查找对应的枚举值

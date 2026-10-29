@@ -34,11 +34,6 @@ import lombok.Data;
 public class TableDefinition {
 
     /**
-     * 构造表结构定义。
-     */
-    public TableDefinition() {}
-
-    /**
      * 业务模块名。
      *
      * <p>用于生成 DTO 子包（{@code application/dto/{module}}）与

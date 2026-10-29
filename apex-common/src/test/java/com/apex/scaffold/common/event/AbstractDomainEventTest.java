@@ -36,8 +36,6 @@ class AbstractDomainEventTest {
     @DisplayName("eventId UUID 测试")
     class EventIdTest {
 
-        /**
-         */
         @Test
         @DisplayName("eventId 不应为 null")
         void eventIdShouldNotBeNull() {

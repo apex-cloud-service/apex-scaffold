@@ -5,8 +5,7 @@ import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.contract.dto.internal.TokenValidationDTO;
 import com.apex.scaffold.contract.dto.internal.TokenValidationRequest;
 import java.util.List;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
 
@@ -24,9 +23,8 @@ import org.springframework.stereotype.Component;
  * @since 1.3.1
  */
 @Component
+@Slf4j
 public class AuthFeignClientFallbackFactory implements FallbackFactory<AuthFeignClient> {
-
-    private static final Logger log = LoggerFactory.getLogger(AuthFeignClientFallbackFactory.class);
 
     @Override
     public AuthFeignClient create(Throwable cause) {

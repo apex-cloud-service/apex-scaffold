@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -64,12 +65,15 @@ public class LocalRateLimiter {
     private static final Map<String, LocalRateLimiter> INSTANCES = new ConcurrentHashMap<>(16);
 
     /** 窗口内许可总数 */
+    @Getter
     private final int permits;
 
     /** 窗口大小（毫秒） */
+    @Getter
     private final long windowMs;
 
     /** 算法类型 */
+    @Getter
     private final RateLimitAlgorithm algorithm;
 
     /** 底层限流策略实例 */
@@ -168,34 +172,6 @@ public class LocalRateLimiter {
      */
     public int getCurrentCount() {
         return (int) strategy.getCurrentCount();
-    }
-
-    /**
-     * 获取窗口内许可上限
-     *
-     * @return 许可上限
-     */
-    public int getPermits() {
-        return permits;
-    }
-
-    /**
-     * 获取窗口大小（毫秒）
-     *
-     * @return 窗口大小
-     */
-    public long getWindowMs() {
-        return windowMs;
-    }
-
-    /**
-     * 获取当前使用的算法类型
-     *
-     * @return 算法类型枚举
-     * @since 1.3.0
-     */
-    public RateLimitAlgorithm getAlgorithm() {
-        return algorithm;
     }
 
     /**

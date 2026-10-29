@@ -25,8 +25,8 @@ import lombok.Getter;
  *
  * <h2>设计说明</h2>
  * <p>
- * 使用{@code @Getter}替代{@code @Getter}，禁止外部直接修改字段。
- * 所有字段修改应通过具体实体的领域行为方法进行，确保业务规则的完整性。
+ * getter/setter 由 Lombok 生成。setter 仅供持久层恢复主键、时间、并发版本和删除标记；
+ * 业务代码应通过领域行为修改状态，不应自行递增并发版本，更新后的版本由持久层重新映射。
  * </p>
  *
  * @author Apex Team
@@ -35,6 +35,7 @@ import lombok.Getter;
  * @see Serializable
  */
 @Getter
+@lombok.Setter
 public abstract class BaseEntity implements Serializable {
 
     /**
@@ -271,77 +272,6 @@ public abstract class BaseEntity implements Serializable {
     }
 
     /**
-     * 设置主键ID
-     *
-     * <p>
-     * 仅供持久层在保存后调用，填充自动生成的主键。
-     * 领域代码中应避免直接调用此方法。
-     * </p>
-     *
-     * @param id 主键ID
-     * @see #id
-     */
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    /**
-     * 设置创建时间
-     *
-     * <p>
-     * 仅供持久层在保存时调用。
-     * </p>
-     *
-     * @param createTime 创建时间
-     * @see #createTime
-     */
-    public void setCreateTime(LocalDateTime createTime) {
-        this.createTime = createTime;
-    }
-
-    /**
-     * 设置更新时间
-     *
-     * <p>
-     * 仅供持久层在保存时调用。
-     * </p>
-     *
-     * @param updateTime 更新时间
-     * @see #updateTime
-     */
-    public void setUpdateTime(LocalDateTime updateTime) {
-        this.updateTime = updateTime;
-    }
-
-    /**
-     * 设置持久化并发版本号。
-     *
-     * <p>仅供持久层在 PO 与领域实体转换时调用，用于恢复数据库中的并发版本。
-     * 业务代码不应自行递增该值；更新成功后的新版本应由 MyBatis-Plus 生成并通过
-     * 持久层重新映射到领域实体。
-     *
-     * @param lockVersion 当前持久化版本号
-     * @see #lockVersion
-     */
-    public void setLockVersion(Integer lockVersion) {
-        this.lockVersion = lockVersion;
-    }
-
-    /**
-     * 设置删除标记
-     *
-     * <p>
-     * 仅供持久层在查询时调用。
-     * </p>
-     *
-     * @param deleted 删除标记
-     * @see #deleted
-     */
-    public void setDeleted(Integer deleted) {
-        this.deleted = deleted;
-    }
-
-    /**
      * 逻辑删除状态枚举
      *
      * <p>
@@ -351,6 +281,8 @@ public abstract class BaseEntity implements Serializable {
      *
      * @author Apex Team
      */
+    @Getter
+    @lombok.RequiredArgsConstructor
     public enum LogicalDeletion {
         /**
          * 未删除（正常状态）
@@ -370,24 +302,6 @@ public abstract class BaseEntity implements Serializable {
          * 数据库存储值
          */
         private final Integer code;
-
-        /**
-         * 构造函数
-         *
-         * @param code 数据库存储的整数值
-         */
-        LogicalDeletion(Integer code) {
-            this.code = code;
-        }
-
-        /**
-         * 获取数据库存储值
-         *
-         * @return 整数值
-         */
-        public Integer getCode() {
-            return code;
-        }
 
         /**
          * 根据整数值获取枚举实例

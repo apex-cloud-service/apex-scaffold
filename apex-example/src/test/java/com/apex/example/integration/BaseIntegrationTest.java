@@ -1,13 +1,19 @@
 package com.apex.example.integration;
 
 import com.apex.example.repository.ExampleUserMapper;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.time.Duration;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.TestConstructor;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import org.testcontainers.containers.MySQLContainer;
 
 /**
  * 集成测试基类
@@ -18,12 +24,40 @@ import org.springframework.test.web.reactive.server.WebTestClient;
  * @author Apex Team
  * @version 1.0.0
  */
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = "spring.profiles.active=test")
 @AutoConfigureWebTestClient
 @ActiveProfiles("test")
 @Import(ExampleTestMockConfiguration.class)
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 public abstract class BaseIntegrationTest {
+
+    // 同一测试 JVM 共享独立容器，由 Testcontainers 在进程退出时回收。
+    private static final MySQLContainer<?> MYSQL = new MySQLContainer<>("mysql:9.0")
+            .withDatabaseName("apex_example_test")
+            .withUsername("example_test")
+            .withPassword("example_test")
+            .withUrlParam("connectTimeout", "5000")
+            .withUrlParam("socketTimeout", "10000")
+            .withStartupTimeout(Duration.ofSeconds(90))
+            .withConnectTimeoutSeconds(5)
+            .withStartupAttempts(1);
+
+    /** 将主从数据源绑定到同一隔离测试库，不读取开发或生产数据库环境变量。 */
+    @DynamicPropertySource
+    static void databaseProperties(DynamicPropertyRegistry registry) throws SQLException {
+        MYSQL.start();
+        // Flyway 读取会话变量需要此单表查询权限，仅授权当前一次性测试容器内的账号。
+        try (var connection = DriverManager.getConnection(MYSQL.getJdbcUrl(), "root", MYSQL.getPassword());
+                var statement = connection.createStatement()) {
+            statement.execute("GRANT SELECT ON performance_schema.user_variables_by_thread TO 'example_test'@'%'");
+        }
+        for (String name : new String[] {"master", "slave"}) {
+            String prefix = "spring.datasource.dynamic.datasource." + name;
+            registry.add(prefix + ".url", MYSQL::getJdbcUrl);
+            registry.add(prefix + ".username", MYSQL::getUsername);
+            registry.add(prefix + ".password", MYSQL::getPassword);
+        }
+    }
 
     protected final WebTestClient webTestClient;
 

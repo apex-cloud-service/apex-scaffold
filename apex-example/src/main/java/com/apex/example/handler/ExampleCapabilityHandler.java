@@ -88,6 +88,12 @@ public class ExampleCapabilityHandler extends BaseHandler {
      * @return 缓存值 + 底层加载次数
      */
     @Operation(summary = "缓存读穿演示", description = "多级缓存 getWithLoader：首次加载回填，后续命中缓存")
+    @OperationLog(
+            module = "ExampleCapability",
+            type = OperationLog.OperationType.SELECT,
+            description = "getCacheValue",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> getCacheValue(ServerRequest request) {
         String key = request.pathVariable("key");
         return capabilityService.getCachedValue(key).flatMap(value -> ok().bodyValue(Result.success(value)));
@@ -100,6 +106,12 @@ public class ExampleCapabilityHandler extends BaseHandler {
      * @return 删除的缓存键数量
      */
     @Operation(summary = "缓存失效演示", description = "主动删除指定缓存键")
+    @OperationLog(
+            module = "ExampleCapability",
+            type = OperationLog.OperationType.OTHER,
+            description = "evictCache",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> evictCache(ServerRequest request) {
         String key = request.pathVariable("key");
         return capabilityService.evictCache(key).flatMap(count -> ok().bodyValue(
@@ -118,6 +130,12 @@ public class ExampleCapabilityHandler extends BaseHandler {
      */
     @Operation(summary = "写接口幂等演示", description = "@IdempotentApi：相同 Idempotency-Key 窗口内重复请求被拒绝")
     @IdempotentApi(header = "Idempotency-Key", expireTime = 60)
+    @OperationLog(
+            module = "ExampleCapability",
+            type = OperationLog.OperationType.OTHER,
+            description = "idempotentDemo",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> idempotentDemo(ServerRequest request) {
         String idempotencyKey = request.headers().firstHeader("Idempotency-Key");
         Map<String, Object> result = Map.of(
@@ -140,7 +158,12 @@ public class ExampleCapabilityHandler extends BaseHandler {
      * @return 审计记录结果
      */
     @Operation(summary = "操作审计演示", description = "@OperationLog：写操作自动落审计日志（sys_operation_log）")
-    @OperationLog(module = "示例模块", type = OperationLog.OperationType.INSERT, description = "能力演示-审计写入")
+    @OperationLog(
+            module = "示例模块",
+            type = OperationLog.OperationType.INSERT,
+            description = "能力演示-审计写入",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> auditDemo(ServerRequest request) {
         return ok().bodyValue(Result.success(Map.of("audited", true, "message", "本次写操作已记录审计日志")));
     }
@@ -156,6 +179,12 @@ public class ExampleCapabilityHandler extends BaseHandler {
      * @return SSE 事件流
      */
     @Operation(summary = "SSE 实时推送演示", description = "服务端事件流：每秒心跳一条，共 10 条")
+    @OperationLog(
+            module = "ExampleCapability",
+            type = OperationLog.OperationType.OTHER,
+            description = "streamDemo",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> streamDemo(ServerRequest request) {
         Flux<ServerSentEvent<String>> events = capabilityService
                 .streamHeartbeat()
@@ -171,6 +200,12 @@ public class ExampleCapabilityHandler extends BaseHandler {
      * @return 脱敏后的字段映射
      */
     @Operation(summary = "数据脱敏演示", description = "手机号/身份证/邮箱/姓名标准脱敏输出")
+    @OperationLog(
+            module = "ExampleCapability",
+            type = OperationLog.OperationType.OTHER,
+            description = "maskDemo",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> maskDemo(ServerRequest request) {
         String phone = request.queryParam("phone").orElse("13800138000");
         String idCard = request.queryParam("idCard").orElse("110101199003071234");
@@ -189,6 +224,12 @@ public class ExampleCapabilityHandler extends BaseHandler {
      * @return xlsx 文件流（attachment 下载）
      */
     @Operation(summary = "Excel 导出演示", description = "EasyExcel 导出用户清单 xlsx 附件")
+    @OperationLog(
+            module = "ExampleCapability",
+            type = OperationLog.OperationType.EXPORT,
+            description = "exportUsers",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> exportUsers(ServerRequest request) {
         // 演示数据：真实场景由业务查询产出
         List<ExampleUserExportDTO> users = List.of(

@@ -57,7 +57,7 @@ import org.springframework.stereotype.Service;
  *
  * @author Apex Security Team
  * @version 1.0.0
- * @since 2026-09-25
+ * @since 1.3.1
  */
 @Slf4j
 @Service

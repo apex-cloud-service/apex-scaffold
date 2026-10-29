@@ -2,6 +2,8 @@ package com.apex.scaffold.common.enums;
 
 import java.util.Arrays;
 import java.util.Locale;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 /**
  * 性别枚举
@@ -12,6 +14,8 @@ import java.util.Locale;
  * @version 1.0.0
  * @since 1.0.0
  */
+@Getter
+@RequiredArgsConstructor
 public enum Gender {
 
     /**
@@ -46,35 +50,6 @@ public enum Gender {
 
     /** 性别描述 */
     private final String desc;
-
-    /**
-     * 构造函数
-     *
-     * @param code 性别编码
-     * @param desc 性别描述
-     */
-    Gender(Integer code, String desc) {
-        this.code = code;
-        this.desc = desc;
-    }
-
-    /**
-     * 获取性别编码
-     *
-     * @return 性别编码
-     */
-    public Integer getCode() {
-        return code;
-    }
-
-    /**
-     * 获取性别描述
-     *
-     * @return 性别描述
-     */
-    public String getDesc() {
-        return desc;
-    }
 
     /**
      * 根据code获取枚举

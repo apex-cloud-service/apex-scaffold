@@ -1,6 +1,8 @@
 package com.apex.scaffold.common.enums;
 
 import java.util.Arrays;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 /**
  * 用户状态枚举
@@ -11,6 +13,8 @@ import java.util.Arrays;
  * @version 1.0.0
  * @since 1.0.0
  */
+@Getter
+@RequiredArgsConstructor
 public enum UserStatus {
 
     /**
@@ -32,35 +36,6 @@ public enum UserStatus {
 
     /** 状态描述 */
     private final String desc;
-
-    /**
-     * 构造函数
-     *
-     * @param code 状态编码
-     * @param desc 状态描述
-     */
-    UserStatus(Integer code, String desc) {
-        this.code = code;
-        this.desc = desc;
-    }
-
-    /**
-     * 获取状态编码
-     *
-     * @return 状态编码
-     */
-    public Integer getCode() {
-        return code;
-    }
-
-    /**
-     * 获取状态描述
-     *
-     * @return 状态描述
-     */
-    public String getDesc() {
-        return desc;
-    }
 
     /**
      * 根据code获取枚举。

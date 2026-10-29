@@ -14,9 +14,8 @@ import java.util.function.Consumer;
  * @version 1.0.0
  * @since 1.0.0
  */
+@lombok.NoArgsConstructor(access = lombok.AccessLevel.PRIVATE)
 public final class ConditionUtil {
-
-    private ConditionUtil() {}
 
     /**
      * 创建增强型 Lambda 查询包装器。

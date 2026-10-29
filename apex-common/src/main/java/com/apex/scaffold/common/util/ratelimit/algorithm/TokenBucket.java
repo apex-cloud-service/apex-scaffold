@@ -59,9 +59,11 @@ import lombok.extern.slf4j.Slf4j;
 public class TokenBucket {
 
     /** 桶容量（最大令牌数） */
+    @lombok.Getter
     private final long capacity;
 
     /** 令牌补充速率（令牌/秒） */
+    @lombok.Getter
     private final double refillRate;
 
     /** 公平锁，保护令牌补充与消耗的原子性 */
@@ -203,23 +205,5 @@ public class TokenBucket {
         } finally {
             lock.unlock();
         }
-    }
-
-    /**
-     * 获取桶容量。
-     *
-     * @return 桶容量
-     */
-    public long getCapacity() {
-        return capacity;
-    }
-
-    /**
-     * 获取令牌补充速率。
-     *
-     * @return 补充速率（令牌/秒）
-     */
-    public double getRefillRate() {
-        return refillRate;
     }
 }

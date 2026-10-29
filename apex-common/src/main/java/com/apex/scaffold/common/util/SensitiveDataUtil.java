@@ -20,18 +20,8 @@ public final class SensitiveDataUtil {
     /** 日志指纹展示的十六进制字符数。 */
     private static final int FINGERPRINT_LENGTH = 12;
 
-    /** 可安全保留前三后四位的最短长度。 */
-    private static final int MIN_MASKABLE_LENGTH = 7;
-
-    /** 手机号脱敏保留的前缀长度。 */
-    private static final int PHONE_PREFIX_LENGTH = 3;
-
-    /** 手机号脱敏保留的后缀长度。 */
-    private static final int PHONE_SUFFIX_LENGTH = 4;
-
     /**
      * 禁止实例化工具类。
-     *
      */
     private SensitiveDataUtil() {
         throw new UnsupportedOperationException("工具类不能实例化");
@@ -47,13 +37,7 @@ public final class SensitiveDataUtil {
         if (phone == null || phone.isBlank()) {
             return "***";
         }
-        String normalized = phone.trim();
-        if (normalized.length() < MIN_MASKABLE_LENGTH) {
-            return "***";
-        }
-        return normalized.substring(0, PHONE_PREFIX_LENGTH)
-                + "****"
-                + normalized.substring(normalized.length() - PHONE_SUFFIX_LENGTH);
+        return DataMaskUtil.maskPhone(phone.trim());
     }
 
     /**

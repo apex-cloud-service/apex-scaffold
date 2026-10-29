@@ -77,6 +77,8 @@ public class BasePO implements Serializable {
     private Integer deleted;
 
     /** 逻辑删除状态。 */
+    @lombok.Getter
+    @lombok.RequiredArgsConstructor
     public enum LogicalDeletion {
         /** 未删除状态，对应数据库值 0。 */
         NOT_DELETED(0),
@@ -84,18 +86,5 @@ public class BasePO implements Serializable {
         DELETED(1);
 
         private final Integer code;
-
-        LogicalDeletion(Integer code) {
-            this.code = code;
-        }
-
-        /**
-         * 获取状态对应的数据库值。
-         *
-         * @return 数据库存储的整数值
-         */
-        public Integer getCode() {
-            return code;
-        }
     }
 }

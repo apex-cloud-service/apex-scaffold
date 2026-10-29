@@ -9,6 +9,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *
  * @author Apex Team
  * @version 2.2.0
+ * @since 1.3.1
  */
 @Data
 @ConfigurationProperties(prefix = "apex.license")

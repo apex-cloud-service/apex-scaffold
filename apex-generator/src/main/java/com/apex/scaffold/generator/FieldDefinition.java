@@ -20,11 +20,6 @@ import lombok.Data;
 public class FieldDefinition {
 
     /**
-     * 构造字段定义。
-     */
-    public FieldDefinition() {}
-
-    /**
      * 字段名（小驼峰）。
      *
      * <p>例如 {@code productName}。</p>
@@ -93,21 +88,14 @@ public class FieldDefinition {
      * @return MySQL 列类型
      */
     public String sqlType() {
-        switch (simpleType()) {
-            case "Long":
-                return "BIGINT";
-            case "Integer":
-                return "INT";
-            case "BigDecimal":
-                return "DECIMAL(18,2)";
-            case "LocalDateTime":
-                return "DATETIME";
-            case "Boolean":
-                return "TINYINT(1)";
-            case "Double":
-                return "DOUBLE";
-            default:
-                return "VARCHAR(255)";
-        }
+        return switch (simpleType()) {
+            case "Long" -> "BIGINT";
+            case "Integer" -> "INT";
+            case "BigDecimal" -> "DECIMAL(18,2)";
+            case "LocalDateTime" -> "DATETIME";
+            case "Boolean" -> "TINYINT(1)";
+            case "Double" -> "DOUBLE";
+            default -> "VARCHAR(255)";
+        };
     }
 }

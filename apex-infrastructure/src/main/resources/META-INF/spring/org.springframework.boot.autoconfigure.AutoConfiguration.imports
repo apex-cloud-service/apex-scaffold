@@ -1,3 +1,0 @@
-com.apex.scaffold.infrastructure.persistence.config.MybatisPlusConfig
-com.apex.scaffold.infrastructure.cache.config.MultiLevelCacheConfig
-com.apex.scaffold.infrastructure.remote.config.RemoteApiClientConfig

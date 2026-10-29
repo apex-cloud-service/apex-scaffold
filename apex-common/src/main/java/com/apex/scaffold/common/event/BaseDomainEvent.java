@@ -173,15 +173,6 @@ public abstract class BaseDomainEvent {
     }
 
     /**
-     * 获取事件携带的租户上下文。
-     *
-     * @return 发布时注入的租户 ID；未注入时返回 {@code null}
-     */
-    public String getTenantId() {
-        return tenantId;
-    }
-
-    /**
      * 返回领域事件的字符串表示。
      *
      * @return 包含事件ID、事件类型和发生时间的事件字符串

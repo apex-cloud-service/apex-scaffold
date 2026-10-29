@@ -23,7 +23,7 @@ import lombok.Getter;
  *
  * @author Apex Team
  * @version 1.0.0
- * @since 2026-10-09
+ * @since 1.3.1
  * @see AbstractDomainEvent
  */
 @Getter

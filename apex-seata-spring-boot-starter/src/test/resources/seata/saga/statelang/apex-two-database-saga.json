@@ -1,0 +1,64 @@
+{
+  "Name": "ApexTwoDatabaseSaga",
+  "Comment": "Real TC and two MySQL SAGA integration test",
+  "Version": "1.0.0",
+  "StartState": "DebitDb1",
+  "RecoverStrategy": "Compensate",
+  "IsPersist": true,
+  "States": {
+    "DebitDb1": {
+      "Type": "ServiceTask",
+      "ServiceName": "sagaDb1Action",
+      "ServiceMethod": "debit",
+      "ServiceType": "SpringBean",
+      "ParameterTypes": ["java.lang.Integer"],
+      "Input": ["$.[amount]"],
+      "CompensateState": "RestoreDb1",
+      "Next": "DebitDb2"
+    },
+    "RestoreDb1": {
+      "Type": "ServiceTask",
+      "ServiceName": "sagaDb1Action",
+      "ServiceMethod": "restore",
+      "ServiceType": "SpringBean",
+      "ParameterTypes": ["java.lang.Integer"],
+      "Input": ["$.[amount]"]
+    },
+    "DebitDb2": {
+      "Type": "ServiceTask",
+      "ServiceName": "sagaDb2Action",
+      "ServiceMethod": "debit",
+      "ServiceType": "SpringBean",
+      "ParameterTypes": ["java.lang.Integer", "java.lang.Boolean"],
+      "Input": ["$.[amount]", "$.[failSecond]"],
+      "CompensateState": "RestoreDb2",
+      "Next": "Success",
+      "Catch": [
+        {
+          "Exceptions": ["java.lang.Throwable"],
+          "Next": "Compensate"
+        }
+      ]
+    },
+    "RestoreDb2": {
+      "Type": "ServiceTask",
+      "ServiceName": "sagaDb2Action",
+      "ServiceMethod": "restore",
+      "ServiceType": "SpringBean",
+      "ParameterTypes": ["java.lang.Integer"],
+      "Input": ["$.[amount]"]
+    },
+    "Compensate": {
+      "Type": "CompensationTrigger",
+      "Next": "Failure"
+    },
+    "Success": {
+      "Type": "Succeed"
+    },
+    "Failure": {
+      "Type": "Fail",
+      "ErrorCode": "SECOND_BRANCH_FAILED",
+      "Message": "Second database branch failed"
+    }
+  }
+}

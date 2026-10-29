@@ -46,12 +46,11 @@ import lombok.extern.slf4j.Slf4j;
  * @since 1.3.0
  */
 @Slf4j
+@lombok.NoArgsConstructor(access = lombok.AccessLevel.PRIVATE)
 public final class RateLimitAlgorithmFactory {
 
     /** 实例缓存：key → 策略实例 */
     private static final Map<String, RateLimitStrategy> CACHE = new ConcurrentHashMap<>();
-
-    private RateLimitAlgorithmFactory() {}
 
     /**
      * 创建或获取限流策略实例。

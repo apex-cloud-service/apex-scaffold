@@ -59,15 +59,18 @@ public class SlidingWindow {
     private static final int MIN_BUCKET_COUNT = 2;
 
     /** 窗口大小（毫秒） */
+    @lombok.Getter
     private final long windowMs;
 
     /** 子桶数量 */
+    @lombok.Getter
     private final int bucketCount;
 
     /** 每个子桶的时间跨度（毫秒） */
     private final long bucketTimeMs;
 
     /** 窗口内最大许可数 */
+    @lombok.Getter
     private final int maxPermits;
 
     /** 子桶计数数组 */
@@ -251,32 +254,5 @@ public class SlidingWindow {
         } finally {
             lock.unlock();
         }
-    }
-
-    /**
-     * 获取窗口大小。
-     *
-     * @return 窗口大小（毫秒）
-     */
-    public long getWindowMs() {
-        return windowMs;
-    }
-
-    /**
-     * 获取最大许可数。
-     *
-     * @return 最大许可数
-     */
-    public int getMaxPermits() {
-        return maxPermits;
-    }
-
-    /**
-     * 获取子桶数量。
-     *
-     * @return 子桶数量
-     */
-    public int getBucketCount() {
-        return bucketCount;
     }
 }

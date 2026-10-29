@@ -24,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  * @author Apex Team
  * @version 2.2.0
+ * @since 1.3.1
  */
 @Slf4j
 public class LicenseValidator {
@@ -35,7 +36,10 @@ public class LicenseValidator {
     private final PublicKey publicKey;
     private final boolean machineFingerprintSkip;
     private final String machineFingerprintOverride;
+
+    @lombok.Getter
     private volatile boolean degraded;
+
     private volatile LicenseInfo licenseInfo;
     private volatile boolean validated = false;
 
@@ -289,13 +293,6 @@ public class LicenseValidator {
      */
     public boolean isValidated() {
         return validated && !degraded;
-    }
-
-    /**
-     * 是否处于降级模式（无有效 License）
-     */
-    public boolean isDegraded() {
-        return degraded;
     }
 
     /**

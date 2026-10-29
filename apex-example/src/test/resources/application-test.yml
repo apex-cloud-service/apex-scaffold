@@ -6,8 +6,8 @@ spring:
     name: apex-example-test
 
   # 允许 Bean 定义覆盖：测试替身（ExampleTestMockConfiguration 的 @Primary 桩）
-  # 需覆盖主应用（apex-interfaces/apex-infrastructure）泄漏的同名真实 Bean
-  # （如 redissonClient），与 apex-common/apex-interfaces 测试配置约定一致
+  # 需覆盖 apex-system 及共享基础设施依赖引入的同名真实 Bean
+  # （如 redissonClient）
   main:
     allow-bean-definition-overriding: true
 
@@ -28,26 +28,36 @@ spring:
     exclude:
       - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
       - org.springframework.boot.autoconfigure.data.redis.RedisReactiveAutoConfiguration
-      # 关闭 R2DBC 自动配置：spring-boot-starter-data-r2dbc 经 apex-application 传递引入，
+      # 关闭 R2DBC 自动配置：spring-boot-starter-data-r2dbc 经 apex-system 传递引入，
       # 示例应用未配置 R2DBC 连接（无 url），否则 R2dbcAutoConfiguration 会因
       # 「Failed to determine a suitable R2DBC Connection URL」导致上下文启动失败；
       # 响应式事务由 ExampleTestMockConfiguration 的 @Primary TransactionalOperator 替身满足
       - org.springframework.boot.autoconfigure.r2dbc.R2dbcAutoConfiguration
       - org.springframework.boot.autoconfigure.data.r2dbc.R2dbcDataAutoConfiguration
 
-  # 数据源（dynamic-datasource 配置，与主应用保持一致）
-  # MySQL 测试库（与主应用 dev/it 约定一致，env 可覆盖）；
-  # 启动前提：本地 MySQL 可达（podman-compose -f podman-compose.infra.yml up -d）。
+  # 主从地址和凭据由 BaseIntegrationTest 的独立 MySQL 容器动态提供。
   datasource:
     dynamic:
       primary: master
-      strict: false
+      strict: true
+      druid:
+        initial-size: 1
+        min-idle: 1
+        max-active: 4
+        max-wait: 10000
+        connect-timeout: 5000
+        socket-timeout: 10000
+        connection-properties:
+          connectTimeout: 5000
+          socketTimeout: 10000
+        connection-error-retry-attempts: 0
+        break-after-acquire-failure: true
+        fail-fast: true
       datasource:
         master:
-          # 测试库 JDBC URL；默认本机 MySQL（apex_example_test 库），可经环境变量覆盖
-          url: ${DB_MASTER_URL:jdbc:mysql://127.0.0.1:3306/apex_example_test?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false}
-          username: ${DB_MASTER_USERNAME:root}
-          password: ${DB_MASTER_PASSWORD:apex-root}
+          driver-class-name: com.mysql.cj.jdbc.Driver
+        # 主从指向同一测试库以保证读写一致性；单库测试不验证主从复制。
+        slave:
           driver-class-name: com.mysql.cj.jdbc.Driver
 
   # Flyway：加载 MySQL 建表脚本（src/test/resources/db/example-migration）

@@ -3,6 +3,7 @@ package com.apex.scaffold.common.util.ratelimit.algorithm;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.LongSupplier;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -53,9 +54,11 @@ import lombok.extern.slf4j.Slf4j;
 public class LeakyBucket {
 
     /** 桶容量（最大缓冲请求数） */
+    @Getter
     private final long capacity;
 
     /** 漏水速率（请求/秒） */
+    @Getter
     private final double leakRate;
 
     /** 公平锁，保护水位计算与更新的原子性 */
@@ -197,23 +200,5 @@ public class LeakyBucket {
         } finally {
             lock.unlock();
         }
-    }
-
-    /**
-     * 获取桶容量。
-     *
-     * @return 桶容量
-     */
-    public long getCapacity() {
-        return capacity;
-    }
-
-    /**
-     * 获取漏水速率。
-     *
-     * @return 漏水速率（请求/秒）
-     */
-    public double getLeakRate() {
-        return leakRate;
     }
 }

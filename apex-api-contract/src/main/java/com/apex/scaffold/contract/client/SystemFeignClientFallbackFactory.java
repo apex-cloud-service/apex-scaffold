@@ -6,8 +6,7 @@ import com.apex.scaffold.contract.dto.internal.DeptTreeDTO;
 import com.apex.scaffold.contract.dto.internal.DictItemDTO;
 import com.apex.scaffold.contract.dto.internal.UserSnapshotDTO;
 import java.util.List;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
 
@@ -25,9 +24,8 @@ import org.springframework.stereotype.Component;
  * @since 1.3.1
  */
 @Component
+@Slf4j
 public class SystemFeignClientFallbackFactory implements FallbackFactory<SystemFeignClient> {
-
-    private static final Logger log = LoggerFactory.getLogger(SystemFeignClientFallbackFactory.class);
 
     @Override
     public SystemFeignClient create(Throwable cause) {

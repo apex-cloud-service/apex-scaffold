@@ -112,6 +112,16 @@ public final class SystemConstants {
             List.of("/api/v1/auth/roles/my", "/api/v1/auth/permissions/my");
 
     /**
+     * 组织目录内部接口路径（集群内直连，不经网关）
+     *
+     * <p>供其他服务（如 office 组织同步）按手机号、邮箱或登录名解析本租户真实用户与部门，
+     * 调用方不携带 JWT。租户必须由 {@code X-Tenant-Id} 请求头显式声明，并在 Handler 内
+     * 通过 {@code TenantContext.withTenant(...)} 绑定到 Reactor Context，
+     * 不依赖 {@code @TenantAware}（该切面要求已认证主体）。
+     */
+    public static final List<String> INTERNAL_ORG_PATHS = List.of("/internal/v1/org/**");
+
+    /**
      * 公开路径定义（无需认证）
      *
      * <p>定义所有不需要 JWT 认证即可访问的接口路径，用于 SecurityConfig
@@ -135,6 +145,9 @@ public final class SystemConstants {
      *   <li>/uploads/apex/** — 二选一和四选二使用的 AF/AM 投票照片静态资源（本地存储）</li>
      *   <li>/tos/** — 火山云 TOS 照片代理路径（通过预签名 URL 302 重定向访问）</li>
      *   <li>/minio/** — MinIO 照片代理路径（通过预签名 URL 302 重定向访问）</li>
+     *   <li>/api/v2/file-shares/exchange、/api/v2/file-shares/download —
+     *       文件分享链接的匿名兑换与下载入口；令牌经 POST 请求体传递，租户与文件归属
+     *       由服务端分享记录确定。创建与撤销分享仍需认证</li>
      * </ul>
      *
      */
@@ -180,5 +193,7 @@ public final class SystemConstants {
             "/api/v1/auth/social/*/login",
             "/api/v1/auth/oidc/callback",
             "/oauth2/authorization/**",
-            "/login/oauth2/code/**");
+            "/login/oauth2/code/**",
+            "/api/v2/file-shares/exchange",
+            "/api/v2/file-shares/download");
 }

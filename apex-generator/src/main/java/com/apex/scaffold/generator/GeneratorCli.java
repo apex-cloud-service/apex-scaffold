@@ -35,6 +35,7 @@ import lombok.extern.slf4j.Slf4j;
  * @see TableDefinition
  */
 @Slf4j
+@lombok.NoArgsConstructor(access = lombok.AccessLevel.PRIVATE)
 public final class GeneratorCli {
 
     /**
@@ -46,11 +47,6 @@ public final class GeneratorCli {
         String frontendDir;
         int migrationVersion = 2;
     }
-
-    /**
-     * 私有构造函数，禁止实例化。
-     */
-    private GeneratorCli() {}
 
     /**
      * 命令行入口。

@@ -3,6 +3,9 @@ package com.apex.scaffold.common.config;
 import jakarta.annotation.PostConstruct;
 import java.util.Map;
 import java.util.stream.Stream;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -49,6 +52,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @version 1.1.0
  * @since 1.0.0
  */
+@Getter
+@Setter
 @ConfigurationProperties(prefix = "apex.blocking-io")
 public class ApexBlockingIoProperties {
 
@@ -76,20 +81,29 @@ public class ApexBlockingIoProperties {
     /**
      * 单个专用池的参数结构。
      *
-     * <p>字段语义与 Reactor {@code Schedulers.newBoundedElastic(int, int, String, boolean, long)}
+     * <p>平台线程模式（{@code virtualThreads=false}）下，字段语义与 Reactor
+     * {@code Schedulers.newBoundedElastic(int, int, String, boolean, long)}
      * 参数一一对应：线程数（parallelism 上限）、队列容量、线程创建公平模式、
      * 任务 TTL（毫秒，-1 表示无限）。</p>
      *
+     * <p>虚拟线程模式（{@code virtualThreads=true}）下，{@code threads} 的语义变为
+     * "默认最大并发任务数"（可被 {@code maxConcurrency} 覆盖），{@code queueCapacity}
+     * 语义不变。虚拟线程不可池化，并发控制改由信号量闸门承担，详见
+     * {@link com.apex.scaffold.common.scheduler.VirtualThreadBoundedExecutor}。</p>
+     *
      * @author Apex Team
-     * @version 1.0.0
+     * @version 1.1.0
      * @since 1.0.0
      */
+    @Getter
+    @Setter
+    @NoArgsConstructor
     public static class PoolConfig {
 
-        /** 最大工作线程数（boundedElastic 的 parallelism 参数）。 */
+        /** 最大工作线程数（平台线程模式）或默认最大并发任务数（虚拟线程模式）。 */
         private int threads;
 
-        /** 队列容量，线程全忙时缓冲任务；满后提交者线程会阻塞（非 Reject）。 */
+        /** 队列容量，线程/闸门全忙时缓冲任务；满后提交者线程会阻塞（非 Reject）。 */
         private int queueCapacity;
 
         /** 是否启用公平模式（按 FIFO 分配线程，吞吐量略低但防饥饿）。 */
@@ -99,17 +113,29 @@ public class ApexBlockingIoProperties {
         private long taskTtlMs;
 
         /**
-         * 默认构造器（Spring Boot 配置绑定使用）。
+         * 是否使用虚拟线程（JDK 21）承接本池任务。
+         *
+         * <p>默认关闭，保持与既有平台线程池行为一致；仅建议在"等待时间远大于计算时间"
+         * 的池（jdbc / storage / remote / general）开启。cache 池任务典型 &lt; 5ms，
+         * 虚拟线程带来的创建与卸载开销相对收益不明显，一般无需开启。</p>
          */
-        public PoolConfig() {}
+        private boolean virtualThreads;
 
         /**
-         * 便捷构造器，用于声明默认值与单元测试构造。
+         * 虚拟线程模式下的最大并发任务数；{@code <= 0} 表示沿用 {@code threads}。
          *
-         * @param threads       最大工作线程数（必须 &gt; 0）
-         * @param queueCapacity 任务队列容量（必须 &gt; 0）
-         * @param fair          是否启用 FIFO 公平模式
-         * @param taskTtlMs     任务 TTL 毫秒，-1 表示无限制
+         * <p>该值是真正的容量闸门，须与下游稀缺资源对齐：JDBC 池应与数据库连接池
+         * 最大连接数匹配，远程调用池应与下游配额匹配，不能仅按 CPU 核数放大。</p>
+         */
+        private int maxConcurrency;
+
+        /**
+         * 以平台线程模式参数构造（保留既有 4 参签名，虚拟线程相关字段取默认值）。
+         *
+         * @param threads       最大工作线程数
+         * @param queueCapacity 队列容量
+         * @param fair          公平模式
+         * @param taskTtlMs     任务 TTL 毫秒
          */
         public PoolConfig(int threads, int queueCapacity, boolean fair, long taskTtlMs) {
             this.threads = threads;
@@ -119,75 +145,12 @@ public class ApexBlockingIoProperties {
         }
 
         /**
-         * 返回最大工作线程数。
+         * 返回虚拟线程模式下实际生效的最大并发任务数。
          *
-         * @return 线程数上限（boundedElastic parallelism 参数）
+         * @return {@code maxConcurrency} 为正时取该值，否则回退到 {@code threads}
          */
-        public int getThreads() {
-            return threads;
-        }
-
-        /**
-         * 设置最大工作线程数。
-         *
-         * @param threads 线程数上限（必须 &gt; 0）
-         */
-        public void setThreads(int threads) {
-            this.threads = threads;
-        }
-
-        /**
-         * 返回任务队列容量。
-         *
-         * @return 队列容量，线程全忙时允许缓冲的任务数量
-         */
-        public int getQueueCapacity() {
-            return queueCapacity;
-        }
-
-        /**
-         * 设置任务队列容量。
-         *
-         * @param queueCapacity 队列容量（必须 &gt; 0）
-         */
-        public void setQueueCapacity(int queueCapacity) {
-            this.queueCapacity = queueCapacity;
-        }
-
-        /**
-         * 返回是否启用公平模式。
-         *
-         * @return true 表示 FIFO 分配（防饥饿），false 表示抢占（高吞吐）
-         */
-        public boolean isFair() {
-            return fair;
-        }
-
-        /**
-         * 设置是否启用公平模式。
-         *
-         * @param fair true 表示 FIFO，false 表示抢占
-         */
-        public void setFair(boolean fair) {
-            this.fair = fair;
-        }
-
-        /**
-         * 返回任务最大存活时间。
-         *
-         * @return TTL 毫秒；-1 表示不强制过期
-         */
-        public long getTaskTtlMs() {
-            return taskTtlMs;
-        }
-
-        /**
-         * 设置任务最大存活时间。
-         *
-         * @param taskTtlMs TTL 毫秒；-1 表示不强制过期
-         */
-        public void setTaskTtlMs(long taskTtlMs) {
-            this.taskTtlMs = taskTtlMs;
+        public int effectiveMaxConcurrency() {
+            return maxConcurrency > 0 ? maxConcurrency : threads;
         }
     }
 
@@ -225,131 +188,16 @@ public class ApexBlockingIoProperties {
                     + ", queueCapacity=" + cfg.getQueueCapacity()
                     + "（均必须 > 0）");
         }
-    }
-
-    /**
-     * 返回 JDBC 专用池配置。
-     *
-     * @return JDBC/MyBatis/事务等阻塞 DB 操作专用池参数
-     */
-    public PoolConfig getJdbc() {
-        return jdbc;
-    }
-
-    /**
-     * 设置 JDBC 专用池配置。
-     *
-     * @param jdbc JDBC 专用池参数
-     */
-    public void setJdbc(PoolConfig jdbc) {
-        this.jdbc = jdbc;
-    }
-
-    /**
-     * 返回缓存/Redis 专用池配置。
-     *
-     * @return Redisson/本地缓存同步阻塞操作专用池参数
-     */
-    public PoolConfig getCache() {
-        return cache;
-    }
-
-    /**
-     * 设置缓存/Redis 专用池配置。
-     *
-     * @param cache 缓存/Redis 专用池参数
-     */
-    public void setCache(PoolConfig cache) {
-        this.cache = cache;
-    }
-
-    /**
-     * 返回对象存储/文件 I/O 专用池配置。
-     *
-     * @return MinIO/TOS/本地文件读写专用池参数
-     */
-    public PoolConfig getStorage() {
-        return storage;
-    }
-
-    /**
-     * 设置对象存储/文件 I/O 专用池配置。
-     *
-     * @param storage 存储/文件专用池参数
-     */
-    public void setStorage(PoolConfig storage) {
-        this.storage = storage;
-    }
-
-    /**
-     * 返回事件/日志/Outbox 专用池配置。
-     *
-     * @return Outbox 写入/API 日志入库/领域事件回调专用池参数
-     */
-    public PoolConfig getEvent() {
-        return event;
-    }
-
-    /**
-     * 设置事件/日志/Outbox 专用池配置。
-     *
-     * @param event 事件/日志专用池参数
-     */
-    public void setEvent(PoolConfig event) {
-        this.event = event;
-    }
-
-    /**
-     * 返回外部 HTTP/SDK 远程调用专用池配置。
-     *
-     * @return 微信/创蓝/火山引擎修图等同步外部 SDK 专用池参数
-     */
-    public PoolConfig getRemote() {
-        return remote;
-    }
-
-    /**
-     * 设置外部 HTTP/SDK 远程调用专用池配置。
-     *
-     * @param remote 远程调用专用池参数
-     */
-    public void setRemote(PoolConfig remote) {
-        this.remote = remote;
-    }
-
-    /**
-     * 返回通用后台处理专用池配置。
-     *
-     * @return 启动预热/后台批量/补偿/运维专用池参数
-     */
-    public PoolConfig getGeneral() {
-        return general;
-    }
-
-    /**
-     * 设置通用后台处理专用池配置。
-     *
-     * @param general 通用专用池参数
-     */
-    public void setGeneral(PoolConfig general) {
-        this.general = general;
-    }
-
-    /**
-     * 返回 Scheduler 运行态快照刷新周期。
-     *
-     * @return 刷新周期毫秒；默认 3000
-     */
-    public long getSnapshotRefreshMs() {
-        return snapshotRefreshMs;
-    }
-
-    /**
-     * 设置 Scheduler 运行态快照刷新周期。
-     *
-     * @param snapshotRefreshMs 刷新周期毫秒
-     */
-    public void setSnapshotRefreshMs(long snapshotRefreshMs) {
-        this.snapshotRefreshMs = snapshotRefreshMs;
+        if (cfg.isVirtualThreads()) {
+            // 负数无意义；0 表示"沿用 threads"，是合法缺省
+            if (cfg.getMaxConcurrency() < 0) {
+                throw new IllegalStateException("apex.blocking-io." + name + " 配置非法：maxConcurrency="
+                        + cfg.getMaxConcurrency() + "（启用虚拟线程时必须 >= 0，0 表示沿用 threads）");
+            }
+            if (cfg.effectiveMaxConcurrency() <= 0) {
+                throw new IllegalStateException(
+                        "apex.blocking-io." + name + " 配置非法：虚拟线程并发上限必须 > 0（maxConcurrency 或 threads）");
+            }
+        }
     }
 }

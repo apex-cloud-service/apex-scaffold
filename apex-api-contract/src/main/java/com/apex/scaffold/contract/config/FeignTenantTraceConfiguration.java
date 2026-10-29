@@ -4,9 +4,7 @@ import com.apex.scaffold.common.constant.SystemConstants;
 import com.apex.scaffold.common.context.TenantContext;
 import com.apex.scaffold.common.util.TraceIdUtil;
 import feign.RequestInterceptor;
-import feign.RequestTemplate;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Feign 请求租户与追踪上下文透传配置.
@@ -29,12 +27,11 @@ import org.slf4j.LoggerFactory;
  * @author Apex Team
  * @since 1.3.1
  */
+@Slf4j
 public class FeignTenantTraceConfiguration {
 
     /** 租户 ID 请求头名称（与网关 {@code UserContextRelayFilter} 注入的头一致） */
     static final String HEADER_TENANT_ID = "X-Tenant-Id";
-
-    private static final Logger log = LoggerFactory.getLogger(FeignTenantTraceConfiguration.class);
 
     /**
      * 租户与追踪透传拦截器.
@@ -45,20 +42,17 @@ public class FeignTenantTraceConfiguration {
      * @return Feign 请求拦截器
      */
     public RequestInterceptor tenantTraceInterceptor() {
-        return new RequestInterceptor() {
-            @Override
-            public void apply(RequestTemplate template) {
-                // 透传当前线程租户 ID（若已装配）；避免覆盖调用方显式设置的头
-                TenantContext.currentTenantId()
-                        .filter(value -> !template.headers().containsKey(HEADER_TENANT_ID))
-                        .ifPresent(value -> template.header(HEADER_TENANT_ID, value));
-                // 透传当前链路追踪 ID（若未装配则生成）；避免覆盖既有追踪 ID 头
-                String traceId = TraceIdUtil.getTraceId();
-                if (!template.headers().containsKey(SystemConstants.TRACE_ID_HEADER)) {
-                    template.header(SystemConstants.TRACE_ID_HEADER, traceId);
-                } else {
-                    log.debug("Feign 请求已携带 X-Trace-Id，跳过透传注入");
-                }
+        return template -> {
+            // 透传当前线程租户 ID（若已装配）；避免覆盖调用方显式设置的头
+            TenantContext.currentTenantId()
+                    .filter(value -> !template.headers().containsKey(HEADER_TENANT_ID))
+                    .ifPresent(value -> template.header(HEADER_TENANT_ID, value));
+            // 透传当前链路追踪 ID（若未装配则生成）；避免覆盖既有追踪 ID 头
+            String traceId = TraceIdUtil.getTraceId();
+            if (!template.headers().containsKey(SystemConstants.TRACE_ID_HEADER)) {
+                template.header(SystemConstants.TRACE_ID_HEADER, traceId);
+            } else {
+                log.debug("Feign 请求已携带 X-Trace-Id，跳过透传注入");
             }
         };
     }
