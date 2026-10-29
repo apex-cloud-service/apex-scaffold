@@ -1,4 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  服务日志配置：控制台 + 滚动文件 + JSON 文件三路输出，按异步 Appender 聚合。
+
+  日志目录优先级：环境变量 LOG_PATH > apex.log.dir（Spring 属性，dev 下指向项目根
+  logs/）> APEX_LOG_DIR > 进程工作目录下的 logs/。文件名取 spring.application.name，
+  滚动策略为按天 + 100MB 分片、保留 7 天、总量上限 2GB；JSON 输出经 AsyncAppender
+  异步写入，避免日志写入阻塞业务线程。
+-->
 <configuration>
   <springProperty scope="context" name="APEX_LOG_HOME" source="apex.log.dir" defaultValue="${APEX_LOG_DIR:-${user.dir}/logs}"/>
   <property name="LOG_HOME" value="${LOG_PATH:-${APEX_LOG_HOME}}"/>

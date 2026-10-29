@@ -1,19 +1,42 @@
+# ============================================================================
+# 限流参数（绑定 apex.ratelimit，见 RateLimitProperties）
+# ----------------------------------------------------------------------------
+# 本文件只声明限流算法的默认参数；实际配额由 @RateLimit 注解按接口覆盖。
+# 所有 key 均为可选，未配置时使用 RateLimitProperties 中的字段默认值。
+# ============================================================================
 apex:
   ratelimit:
+    # 本地降级限流：分布式限流不可用时是否退回进程内限流
     local-fallback:
+      # 是否启用降级；关闭后分布式限流失败将直接拒绝请求
       enabled: true
+      # 降级时采用的算法：SLIDING_WINDOW / TOKEN_BUCKET / LEAKY_BUCKET
       algorithm: SLIDING_WINDOW
+    # 令牌桶：适合允许短时突发的场景
     token-bucket:
+      # 桶容量，即单次突发允许的最大令牌数
       default-capacity: 100
+      # 令牌补充速率（个/秒）
       default-refill-rate: 20.0
+    # 漏桶：适合恒定速率的平滑限流
     leaky-bucket:
+      # 桶容量，即允许排队的最大请求数
       default-capacity: 50
+      # 漏出速率（个/秒）
       default-leak-rate: 10.0
+    # 滑动窗口：按时间窗口统计请求数，窗口边界无突刺
     sliding-window:
+      # 统计窗口长度（毫秒）
       default-window-ms: 1000
+      # 窗口内分桶数量，分桶越细精度越高但内存占用越大
       default-bucket-count: 10
+    # 自适应限流：按系统负载动态收紧配额
     adaptive:
+      # CPU 使用率阈值（0~1），超过后按 degrade-factor 缩减配额
       cpu-threshold: 0.7
+      # 内存使用率阈值（0~1）
       memory-threshold: 0.85
+      # 线程使用率阈值（0~1）
       thread-threshold: 0.8
+      # 触达阈值后的配额缩减比例（0~1），0.2 表示缩减到原配额的 20%
       degrade-factor: 0.2
