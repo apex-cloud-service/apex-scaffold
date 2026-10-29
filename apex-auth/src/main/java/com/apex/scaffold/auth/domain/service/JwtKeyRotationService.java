@@ -227,8 +227,6 @@ public class JwtKeyRotationService {
 
     /**
      * 清理过期的旧密钥（超过宽限期）
-     *
-     * @return 清理结果
      */
     private Mono<Void> cleanupExpiredKeys() {
         Instant expirationTime = Instant.now().minus(ROTATION_PERIOD_DAYS + GRACE_PERIOD_DAYS, ChronoUnit.DAYS);

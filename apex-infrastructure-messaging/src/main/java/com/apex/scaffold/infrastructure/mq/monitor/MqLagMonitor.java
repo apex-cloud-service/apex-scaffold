@@ -22,7 +22,7 @@ import org.springframework.stereotype.Component;
  *
  * <p>自动监控消息队列的积压情况，并提供告警和自动处理机制。
  *
- * <h2>核心功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>实时监控消息积压量（Lag）</li>
  *   <li>监控消息堆积时间</li>
@@ -31,14 +31,14 @@ import org.springframework.stereotype.Component;
  *   <li>Prometheus 指标暴露</li>
  * </ul>
  *
- * <h2>告警策略</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>轻微积压（1000-10000）: INFO 级别日志</li>
  *   <li>中度积压（10000-50000）: WARN 级别告警</li>
  *   <li>严重积压（> 50000）: ERROR 级别告警 + 自动扩容</li>
  * </ul>
  *
- * <h2>自动处理机制</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>动态调整消费线程数（20-128）</li>
  *   <li>启用批量消费模式</li>

@@ -23,7 +23,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
  * <p>提供代码生成器的数据源管理、生成配置管理和代码生成执行相关的路由注册。
  * 所有路由基于函数式端点模式实现，统一使用 {@code /admin-api/v1/generator} 前缀。</p>
  *
- * <h2>路由清单</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li><b>数据源管理</b> - {@link GenDatasourceHandler}</li>
  *   <ul>

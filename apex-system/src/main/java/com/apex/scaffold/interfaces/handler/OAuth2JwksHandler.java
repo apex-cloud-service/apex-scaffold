@@ -25,14 +25,14 @@ import reactor.core.publisher.Mono;
  * 客户端可通过该端点获取 JWT 令牌签名验证所需的公钥元数据，
  * 无需在客户端预置密钥即可完成令牌验签。</p>
  *
- * <h2>主要功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>暴露 JWKS 端点，返回签名密钥集（kty/kid/alg/use）</li>
  *   <li>支持 HS256 对称签名密钥的元数据发布</li>
  *   <li>配合 OAuth2 服务发现端点 {@code jwks_uri} 使用</li>
  * </ul>
  *
- * <h2>接口清单</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>GET /oauth2/jwks - 获取 JWT 公钥集（JWKS）</li>
  * </ul>

@@ -11,7 +11,7 @@ import reactor.core.publisher.Mono;
  * 通过 {@code apex-system-service} 的内部接口 {@code POST /internal/v1/org/users/resolve}
  * 实现，避免 office 业务库直接依赖 system 的实体或持久化实现。</p>
  *
- * <h2>契约说明</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>只读：解析过程不创建、不修改系统用户</li>
  *   <li>未命中即丢弃：返回结果只包含命中的条目，未命中的外部标识不出现在结果中</li>

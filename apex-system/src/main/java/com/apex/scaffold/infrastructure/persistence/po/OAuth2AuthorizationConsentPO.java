@@ -16,7 +16,7 @@ import lombok.experimental.SuperBuilder;
  * <p>对应数据库表 {@code oauth2_authorization_consent}。
  * 存储用户对OAuth2客户端的授权同意记录。
  *
- * <h2>表结构映射</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>id - 主键，UUID</li>
  *   <li>registered_client_id - 客户端ID</li>
@@ -26,7 +26,7 @@ import lombok.experimental.SuperBuilder;
  *   <li>updated_at - 更新时间</li>
  * </ul>
  *
- * <h2>唯一约束</h2>
+ * <h2>设计说明</h2>
  * <p>(registered_client_id, principal_name) 组合唯一
  *
  * @author Apex Team

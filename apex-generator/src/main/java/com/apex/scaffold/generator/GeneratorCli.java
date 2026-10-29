@@ -15,7 +15,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>读取 JSON 表结构定义文件，按指定迁移版本号生成 DDD 五层代码到
  * 输出目录。供 {@code scripts/codegen/generate.sh} 调用。</p>
  *
- * <h2>用法</h2>
+ * <h2>使用示例</h2>
  * <pre>{@code
  * java com.apex.scaffold.generator.GeneratorCli -i definition.json -o ./generated -v 3
  * java com.apex.scaffold.generator.GeneratorCli -i definition.json -o ./generated -f /path/to/apex-admin-web

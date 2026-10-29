@@ -10,7 +10,7 @@ import lombok.Getter;
  * 消息的具体文本存储在 {@code apex-interfaces/src/main/resources/i18n/messages_*.properties} 中，
  * 通过接口层的 {@code MessageUtils} 根据客户端语言偏好动态解析。
  *
- * <h2>状态码分类</h2>
+ * <h2>设计说明</h2>
  * <table border="1">
  *   <caption>错误码编码规则</caption>
  *   <tr><th>范围</th><th>分类</th><th>说明</th></tr>
@@ -24,7 +24,7 @@ import lombok.Getter;
  *   <tr><td>5001</td><td>安全防护</td><td>防重放攻击校验异常</td></tr>
  * </table>
  *
- * <h2>使用说明</h2>
+ * <h2>使用示例</h2>
  * <p>
  * 每个枚举值包含一个 {@code code}（状态码）和一个 {@code messageKey}（消息键）。
  * 消息键对应 properties 文件中的 key，通过 Spring {@link org.springframework.context.MessageSource}

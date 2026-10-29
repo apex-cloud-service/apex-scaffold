@@ -12,11 +12,11 @@ import lombok.NoArgsConstructor;
  *
  * <p>封装用户对OAuth2客户端的授权同意请求参数。
  *
- * <h2>使用场景</h2>
+ * <h2>职责范围</h2>
  * <p>当用户在授权同意页面选择授权或拒绝时，
  * 前端通过此DTO提交用户的决定和授权的scope列表。
  *
- * <h2>示例</h2>
+ * <h2>使用示例</h2>
  * <pre>{@code
  * {
  *   "clientId": "apex-admin-web",

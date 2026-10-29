@@ -15,7 +15,7 @@ import lombok.experimental.SuperBuilder;
  * <p>对应数据库表 {@code off_employee}，存储从第三方办公平台（飞书、钉钉、企业微信）同步的员工信息。
  * 继承 {@link BasePO} 获得通用字段（ID、创建时间、更新时间、逻辑删除等）。
  *
- * <h2>核心字段</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>{@link #employeeCode} - 员工工号，企业内唯一标识</li>
  *   <li>{@link #employeeName} - 员工姓名</li>
@@ -35,7 +35,7 @@ import lombok.experimental.SuperBuilder;
  *   <li>{@link #tenantId} - 租户标识（多租户隔离）</li>
  * </ul>
  *
- * <h2>业务场景</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>组织架构同步：从第三方平台定期同步员工信息</li>
  *   <li>员工查询：按部门、状态、关键字查询员工</li>
@@ -43,14 +43,14 @@ import lombok.experimental.SuperBuilder;
  *   <li>离职处理：同步员工离职状态</li>
  * </ul>
  *
- * <h2>数据来源</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>飞书（Lark）：通过飞书 API 同步员工通讯录</li>
  *   <li>钉钉（DingTalk）：通过钉钉 API 同步员工信息</li>
  *   <li>企业微信（WeChat Work）：通过企业微信 API 同步成员信息</li>
  * </ul>
  *
- * <h2>注意事项</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>员工工号 {@code employeeCode} 在租户内应保持唯一</li>
  *   <li>外部平台 ID {@code externalId} 用于数据同步的幂等性保证</li>

@@ -130,7 +130,6 @@ public class BiometricAuthServiceImpl implements BiometricAuthService {
      *
      * @param id 生物识别记录ID
      * @param operator 执行操作的运维人员标识
-     * @return 完成信号
      */
     @Override
     @CacheEvict(value = "biometric-auth", key = "#id")
@@ -160,7 +159,6 @@ public class BiometricAuthServiceImpl implements BiometricAuthService {
      *
      * @param id 生物识别记录ID
      * @param operator 执行操作的运维人员标识
-     * @return 完成信号
      */
     @Override
     @CacheEvict(value = "biometric-auth", key = "#id")
@@ -190,7 +188,6 @@ public class BiometricAuthServiceImpl implements BiometricAuthService {
      *
      * @param id 生物识别记录ID
      * @param operator 执行操作的运维人员标识
-     * @return 完成信号
      */
     @Override
     @CacheEvict(value = "biometric-auth", key = "#id")
@@ -242,7 +239,6 @@ public class BiometricAuthServiceImpl implements BiometricAuthService {
      *
      * @param id 生物识别记录ID
      * @param operator 执行操作的运维人员标识
-     * @return 完成信号
      */
     @Override
     @CacheEvict(value = "biometric-auth", key = "#id")

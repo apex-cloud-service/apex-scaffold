@@ -68,6 +68,19 @@ public class TokenTtlStrategy {
     private static final String ROLE_FINANCE = "FINANCE";
     private static final String ROLE_HR = "HR";
 
+    /**
+     * 按角色与安全上下文计算 Access Token 有效期。
+     *
+     * <p>优先级由高到低：安全敏感操作（{@code isSecuritySensitive}，强制降级为 15 分钟）、
+     * 超级管理员/系统管理员、租户/组织管理员、财务/HR/审计类敏感角色、只读角色；
+     * 均不匹配时回落到默认值。{@code userId} 与 {@code tenantId} 仅用于日志定位，不参与计算。
+     *
+     * @param userId 用户标识，仅用于日志定位
+     * @param roles 用户角色编码集合
+     * @param tenantId 租户标识，仅用于日志定位
+     * @param isSecuritySensitive 是否为安全敏感操作后的签发，{@code true} 时强制短有效期
+     * @return Access Token 有效期
+     */
     public Mono<Duration> getAccessTokenTtl(
             String userId, Set<String> roles, String tenantId, boolean isSecuritySensitive) {
         log.debug(
@@ -102,6 +115,17 @@ public class TokenTtlStrategy {
         return Mono.just(DEFAULT_ACCESS_TOKEN_TTL);
     }
 
+    /**
+     * 按角色计算 Refresh Token 有效期。
+     *
+     * <p>与 Access Token 不同，本方法不接收安全敏感标记：刷新令牌有效期只由角色决定，
+     * 安全敏感操作通过缩短 Access Token 有效期而非刷新令牌实现降级。
+     *
+     * @param userId 用户标识，仅用于日志定位
+     * @param roles 用户角色编码集合
+     * @param tenantId 租户标识，仅用于日志定位
+     * @return Refresh Token 有效期
+     */
     public Mono<Duration> getRefreshTokenTtl(String userId, Set<String> roles, String tenantId) {
         log.debug("计算Refresh Token TTL: userId={}, roles={}, tenantId={}", userId, roles, tenantId);
 

@@ -18,7 +18,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  * 拆分而来的系统路由、处理器、过滤器、安全装配收敛为独立可启动/发布/扩展的服务
  * {@code apex-system-service}（端口 8082 / 独立 {@code apex_system} 库）。
  *
- * <h2>装配方式（绞杀者模式收敛）</h2>
+ * <h2>设计说明</h2>
  * <p>本服务复用系统四大分层库模块的既有 Bean，仅新增独立启动/装配：
  * <ul>
  *   <li>{@code com.apex.scaffold.interfaces} - 系统 Web 层（Router/Handler/Filter/Security/Config）</li>
@@ -33,7 +33,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  * 以保持装配边界精确（旧单体启动类 {@code com.apex.scaffold.Application} 已随单体退役移除，
  * 相关日志目录配置仅在 main 入口显式调用）。
  *
- * <h2>数据访问组件扫描</h2>
+ * <h2>设计说明</h2>
  * <p>Spring Boot 的 MyBatis-Plus 自动装配仅扫描启动类所在包
  * （{@code com.apex.scaffold.systemservice}），而系统 Mapper 位于基础设施库
  * {@code apex-infrastructure}（{@code com.apex.scaffold.infrastructure.*}），

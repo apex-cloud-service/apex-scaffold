@@ -10,12 +10,12 @@ import org.apache.ibatis.annotations.Mapper;
  * <p>负责 {@code sys_role} 表的持久化操作，管理系统中的角色定义和权限集合。
  * 继承 MyBatis-Plus {@link BaseMapper}，自动获得通用的单表 CRUD 操作。
  *
- * <h2>表映射</h2>
+ * <h2>设计说明</h2>
  * <p>表名：{@code sys_role}<br>
  * 实体：{@link RolePO}<br>
  * 主键：{@code id}（Long 类型）
  *
- * <h2>通用方法</h2>
+ * <h2>职责范围</h2>
  * <p>继承自 {@link BaseMapper} 的常用方法：
  * <ul>
  *   <li>{@code insert(entity)} - 插入一条记录</li>
@@ -51,7 +51,7 @@ import org.apache.ibatis.annotations.Mapper;
  * roleMapper.updateById(role);
  * }</pre>
  *
- * <h2>自定义 SQL</h2>
+ * <h2>设计说明</h2>
  * <p>如需复杂查询，可在 {@code resources/mapper/RoleMapper.xml} 中定义自定义 SQL：
  * <pre>{@code
  * <select id="findRolesWithPermissions" resultType="...">
@@ -63,7 +63,7 @@ import org.apache.ibatis.annotations.Mapper;
  * </select>
  * }</pre>
  *
- * <h2>注意事项</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>所有写操作（insert/update/delete）应在事务中执行</li>
  *   <li>角色编码 {@code code} 字段有唯一索引，插入时注意避免重复</li>

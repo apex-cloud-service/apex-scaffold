@@ -11,7 +11,7 @@ import reactor.core.publisher.Mono;
  * <p>定义办公平台消息模板的持久化操作契约，支持消息模板的增删改查、类型查询、启用状态管理等功能。
  * 消息模板用于标准化消息发送，支持占位符替换和多种消息类型。
  *
- * <h2>核心职责</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>消息模板的基础 CRUD 操作</li>
  *   <li>按模板编码查询（唯一标识）</li>
@@ -21,14 +21,14 @@ import reactor.core.publisher.Mono;
  *   <li>模板启用/禁用状态管理</li>
  * </ul>
  *
- * <h2>查询场景</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>消息发送：根据模板编码获取模板内容</li>
  *   <li>模板管理：分页查询、类型筛选、状态筛选</li>
  *   <li>模板选择器：查询所有可用的消息模板</li>
  * </ul>
  *
- * <h2>技术特性</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>响应式编程：所有方法返回 Mono/Flux</li>
  *   <li>模板编码唯一性：templateCode 作为业务唯一标识</li>
@@ -94,7 +94,6 @@ public interface OffMessageTemplateRepository {
      * 根据ID删除模板（逻辑删除）
      *
      * @param id 模板ID
-     * @return 删除操作的Mono包装
      */
     Mono<Void> deleteById(Long id);
 

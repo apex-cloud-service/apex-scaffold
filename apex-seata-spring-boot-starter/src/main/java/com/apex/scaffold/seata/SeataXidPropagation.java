@@ -22,6 +22,14 @@ public final class SeataXidPropagation {
     public static final String AUTH_HEADER = "X-Apex-Seata-Key";
     private final SeataProperties properties;
 
+    /**
+     * 入站过滤器：校验并提取内部链路传入的 XID，写入 Reactor 上下文。
+     *
+     * <p>仅在路径前缀命中、传播密钥常量时间比对通过、XID 长度与字符集均合法时放行；
+     * 任一条件不满足直接返回 403，避免伪造 XID 注入外部请求。
+     *
+     * @return 处理 XID 传播的 WebFlux 过滤器
+     */
     public WebFilter inbound() {
         return (exchange, chain) -> {
             String xid = exchange.getRequest().getHeaders().getFirst(XID_HEADER);

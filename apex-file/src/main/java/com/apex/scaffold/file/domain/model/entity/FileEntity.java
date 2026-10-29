@@ -14,7 +14,7 @@ import lombok.ToString;
  * <p>记录系统中上传的所有文件元数据，包括文件名、路径、URL、大小、类型和存储状态等。
  * 支持通用文件上传和业务照片上传两种场景，通过businessType区分。</p>
  *
- * <h2>核心业务规则</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>文件上传后经过内容审核，审核结果通过storageStatus标识</li>
  *   <li>支持STORED/ORPHANED/DELETED三种存储状态</li>

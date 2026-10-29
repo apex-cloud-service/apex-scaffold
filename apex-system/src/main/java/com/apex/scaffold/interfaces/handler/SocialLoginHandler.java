@@ -26,14 +26,14 @@ import reactor.core.publisher.Mono;
  * <p>提供 Keycloak OIDC 登录和第三方社交登录（GitHub、Google、微信）的认证接口，
  * 处理 OAuth2 授权流程的发起、回调和令牌交换。仅在 {@code keycloak.enabled=true} 时生效。</p>
  *
- * <h2>接口清单</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>GET /auth/oidc/login - 发起 Keycloak OIDC 登录，重定向到 Keycloak 登录页面</li>
  *   <li>GET /auth/social/{provider} - 发起第三方社交登录，支持 github、google、wechat</li>
  *   <li>GET /auth/oidc/callback - 处理 OIDC 回调，验证并返回 Token 信息</li>
  * </ul>
  *
- * <h2>支持的社交登录提供商</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>github：GitHub OAuth2 登录</li>
  *   <li>google：Google OAuth2 登录</li>

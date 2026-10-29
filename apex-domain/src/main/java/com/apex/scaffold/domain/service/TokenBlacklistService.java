@@ -9,7 +9,7 @@ import reactor.core.publisher.Mono;
  * <p>定义Token黑名单操作的接口规范，由基础设施层实现。
  * 用于管理退出登录或失效的Token，防止已吊销的Token被继续使用。</p>
  *
- * <h2>核心功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li><b>Token加入黑名单</b>：将指定Token加入黑名单，设置过期时间，
  *       过期后自动从黑名单中移除</li>
@@ -17,14 +17,14 @@ import reactor.core.publisher.Mono;
  *       用于接口鉴权时拦截已吊销的Token</li>
  * </ul>
  *
- * <h2>使用场景</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>用户退出登录时，将当前AccessToken加入黑名单</li>
  *   <li>管理员禁用用户时，将该用户的所有Token加入黑名单</li>
  *   <li>Token刷新时，将旧的AccessToken加入黑名单</li>
  * </ul>
  *
- * <h2>实现说明</h2>
+ * <h2>设计说明</h2>
  * <p>黑名单通常基于Redis实现，利用其key过期机制自动清理过期的Token记录。
  * 黑名单的过期时间与Token本身的剩余有效期保持一致，
  * 避免无限期增长的内存占用。</p>
@@ -43,7 +43,6 @@ public interface TokenBlacklistService {
      *
      * @param token      Token 字符串
      * @param expireTime 过期时间（毫秒），0表示使用Token自身剩余有效期
-     * @return 操作完成信号
      */
     Mono<Void> add(String token, long expireTime);
 
@@ -63,7 +62,6 @@ public interface TokenBlacklistService {
      *
      * @param subject JWT subject
      * @param expireTime 吊销标记保留时间（毫秒）
-     * @return 完成信号
      */
     default Mono<Void> revokeSubject(String subject, long expireTime) {
         return Mono.empty();

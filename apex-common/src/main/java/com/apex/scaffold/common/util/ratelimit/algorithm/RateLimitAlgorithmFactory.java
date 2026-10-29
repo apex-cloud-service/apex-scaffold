@@ -11,14 +11,14 @@ import lombok.extern.slf4j.Slf4j;
  * 封装底层 {@link TokenBucket}、{@link LeakyBucket}、{@link SlidingWindow}
  * 的构造差异，对上层提供统一的创建接口。
  *
- * <h2>设计模式</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li><strong>工厂模式</strong>：封装算法实例的创建逻辑</li>
  *   <li><strong>策略模式</strong>：返回 {@link RateLimitStrategy} 接口，上层透明使用</li>
  *   <li><strong>享元模式</strong>：缓存已创建的限流器实例，相同参数复用</li>
  * </ul>
  *
- * <h2>参数映射</h2>
+ * <h2>设计说明</h2>
  * <table border="1">
  *   <tr><th>算法</th><th>capacity</th><th>rate</th><th>windowMs</th></tr>
  *   <tr><td>令牌桶</td><td>桶容量</td><td>补充速率（令牌/秒）</td><td>不使用</td></tr>

@@ -15,7 +15,7 @@ import lombok.experimental.SuperBuilder;
  * <p>映射数据库表 {@code wf_task}，存储工作流待办任务的完整信息。
  * 继承 {@link BasePO} 获得主键、创建/更新时间、乐观锁版本与逻辑删除等通用字段。</p>
  *
- * <h2>字段说明</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>{@code timeoutAt}：超时时间，对应数据库字段 {@code timeout_at}。</li>
  *   <li>{@code timeoutStrategy}：超时策略，对应数据库字段 {@code timeout_strategy}。</li>

@@ -225,6 +225,14 @@ public class ResourcePermissionService {
         return setResourceOwner(resourceType, resourceId, ownerId, null);
     }
 
+    /**
+     * 在指定租户作用域下写入资源所有者。
+     *
+     * @param resourceType 资源类型，参与缓存键构造
+     * @param resourceId 资源标识，参与缓存键构造
+     * @param ownerId 所有者用户标识
+     * @param tenantId 租户标识，{@code null} 表示不带租户隔离维度
+     */
     public Mono<Void> setResourceOwner(String resourceType, String resourceId, String ownerId, String tenantId) {
         String key = resourceKey(REDIS_RESOURCE_OWNER, resourceType, resourceId, tenantId);
         return redisTemplate.opsForValue().set(key, ownerId).then();
@@ -254,7 +262,6 @@ public class ResourcePermissionService {
      * @param resourceId 资源ID
      * @param targetUserId 目标用户ID
      * @param permissions 权限集合（READ/WRITE/DELETE/MANAGE）
-     * @return 完成标识
      */
     public Mono<Void> grantPermission(
             String resourceType, String resourceId, String targetUserId, Set<String> permissions) {
@@ -315,6 +322,14 @@ public class ResourcePermissionService {
         return getResourcePermissions(resourceType, resourceId, null);
     }
 
+    /**
+     * 在指定租户作用域下读取资源的全部显式授权。
+     *
+     * @param resourceType 资源类型，参与缓存键构造
+     * @param resourceId 资源标识，参与缓存键构造
+     * @param tenantId 租户标识，{@code null} 表示不带租户隔离维度
+     * @return 授权条目流；未授权时为空流
+     */
     public Flux<ResourcePermissionGrant> getResourcePermissions(
             String resourceType, String resourceId, String tenantId) {
         String key = resourceKey(REDIS_RESOURCE_SHARE, resourceType, resourceId, tenantId);
@@ -336,7 +351,6 @@ public class ResourcePermissionService {
      * @param targetUserId 目标用户ID
      * @param permissions 权限集合
      * @param durationSeconds 有效期（秒）
-     * @return 完成标识
      */
     public Mono<Void> grantTemporaryPermission(
             String resourceType,

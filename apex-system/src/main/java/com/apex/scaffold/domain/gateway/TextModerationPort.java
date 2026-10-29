@@ -11,7 +11,7 @@ import reactor.core.publisher.Mono;
  *的 HTTP 调用细节隔离在基础设施层。应用层仅依赖此端口，不感知具体的审核
  *API 路径、鉴权方式和响应格式。</p>
  *
- *<h2>设计意图</h2>
+ *<h2>设计说明</h2>
  *<ul>
  *  <li>兴趣同频等 UGC 场景在消息/话题/开场白落库前先审后发</li>
  *  <li>审核结果使用领域类型 {@link TextModerationResult} 传递，不退化为基础类型</li>

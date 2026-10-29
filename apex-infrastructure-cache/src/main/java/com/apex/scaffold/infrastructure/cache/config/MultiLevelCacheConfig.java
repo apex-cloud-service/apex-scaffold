@@ -20,7 +20,7 @@ import org.springframework.context.annotation.Bean;
  * 一级缓存提供微秒级的访问速度，适合存储高频访问的热点数据；
  * 二级缓存提供跨进程共享的分布式缓存能力。
  *
- * <h2>缓存策略</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li><strong>读取策略（Read-Through）</strong>：优先查 L1（Caffeine），未命中则查 L2（Redis），
  *       仍未命中则回源到数据库，并将结果逐级写入 L1 和 L2</li>
@@ -30,14 +30,14 @@ import org.springframework.context.annotation.Bean;
  *       L2 使用较长 TTL（分钟级）</li>
  * </ul>
  *
- * <h2>适用场景</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>用户基础信息缓存（热点数据，高频读取，低频更新）</li>
  *   <li>字典数据、配置数据（几乎不更新，读取频率极高）</li>
  *   <li>会话数据（可接受秒级不一致）</li>
  * </ul>
  *
- * <h2>注解缓存</h2>
+ * <h2>设计说明</h2>
  * <p>{@link EnableCaching} 激活项目中 {@code @Cacheable} 等 Spring 缓存注解。当前
  * Spring 缓存拦截器会缓存 Reactor {@code Mono} 实际产生的值，而不是缓存 Publisher
  * 对象；{@link CaffeineCacheManager} 的异步缓存模式为响应式返回值提供

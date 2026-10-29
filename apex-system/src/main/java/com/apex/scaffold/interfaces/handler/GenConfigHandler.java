@@ -30,7 +30,7 @@ import reactor.core.publisher.Mono;
  * 所有端点要求 {@code system:generator:config:*} 或 {@code system:generator:table:*} 权限。
  * 生成配置用于定义代码生成的目标表、输出路径、模板选择等参数。</p>
  *
- * <h2>接口清单</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>GET /admin-api/v1/generator/configs - 查询生成配置列表</li>
  *   <li>POST /admin-api/v1/generator/configs - 新增生成配置</li>

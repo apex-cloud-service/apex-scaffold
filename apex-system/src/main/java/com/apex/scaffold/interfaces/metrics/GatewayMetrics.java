@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
  *
  * <p>扩展 ApiGatewayFilter 的监控能力，提供更多维度的网关运行状态指标。
  *
- * <h2>新增指标</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>apex.gateway.connections.active - 当前活跃连接数</li>
  *   <li>apex.gateway.queue.length - 请求队列长度</li>
@@ -23,7 +23,7 @@ import org.springframework.stereotype.Component;
  *   <li>apex.gateway.circuitbreaker.triggered - 熔断触发次数</li>
  * </ul>
  *
- * <h2>Prometheus 查询示例</h2>
+ * <h2>使用示例</h2>
  * <pre>
  * # 当前活跃连接数
  * apex_gateway_connections_active

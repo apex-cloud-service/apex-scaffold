@@ -14,7 +14,7 @@ import org.apache.ibatis.annotations.Update;
  *继承 MyBatis-Plus {@link BaseMapper} 获得通用单表 CRUD 操作，
  *并通过自定义 SQL 支持文件存储状态的原子转换。</p>
  *
- *<h2>核心能力</h2>
+ *<h2>职责范围</h2>
  *<ul>
  *  <li>标记文件存储状态为已删除/已批准</li>
  *</ul>

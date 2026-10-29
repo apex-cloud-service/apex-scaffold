@@ -13,7 +13,7 @@ import lombok.ToString;
  * 解决同一用户在不同微信应用下 OpenID 不同而无法共存的模型缺陷：
  * 每个渠道的 OpenID 各占一条绑定记录，全部挂接到统一的 {@code sys_user} 账户。
  *
- * <h2>核心业务规则</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>{@code (channel, openId)} 渠道内唯一：同一渠道的同一微信身份只能绑定一个用户</li>
  *   <li>{@code unionId} 用于跨渠道自动归一：同一微信开放平台主体下各端 UnionID 相同，

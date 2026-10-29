@@ -25,7 +25,7 @@ import org.springframework.stereotype.Component;
  *   <li>不支持的登录类型抛出 {@link BusinessException}（错误码 1006）</li>
  * </ul>
  *
- * <h2>自注册流程</h2>
+ * <h2>设计说明</h2>
  * <ol>
  *   <li>Spring 容器通过 List 注入所有 {@link LoginStrategy} 实现类</li>
  *   <li>{@link #init()} 方法遍历 strategies 列表，调用 {@link LoginStrategy#getLoginType()} 完成注册</li>

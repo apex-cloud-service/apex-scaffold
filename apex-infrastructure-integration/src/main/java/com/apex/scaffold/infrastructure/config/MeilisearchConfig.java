@@ -16,7 +16,7 @@ import org.springframework.validation.annotation.Validated;
  *
  * <p>本配置类负责装配 Meilisearch Java 客户端，用于系统管理数据（用户、角色、菜单、部门、字典、配置）的全文索引与检索。
  *
- * <h3>技术选型理由</h3>
+ * <p><strong>技术选型理由</strong></p>
  * <ul>
  *   <li><b>CJK 支持好</b>：对中文、日文、韩文的分词与搜索支持优秀</li>
  *   <li><b>轻量高效</b>：内存占用比 Elasticsearch 低 80%，适合中小规模数据集</li>
@@ -24,11 +24,11 @@ import org.springframework.validation.annotation.Validated;
  *   <li><b>部署简单</b>：单节点部署即可使用，无需复杂集群配置</li>
  * </ul>
  *
- * <h3>启用条件</h3>
+ * <p><strong>启用条件</strong></p>
  * <p>当配置 {@code meilisearch.enabled=true} 时生效，默认关闭。
  * 开发环境可在 {@code application-dev.yml} 中启用，生产环境通过环境变量 {@code MEILISEARCH_ENABLED} 控制。
  *
- * <h3>配置项说明</h3>
+ * <p><strong>配置项说明</strong></p>
  * <pre>
  * meilisearch:
  *   enabled: true                      # 总开关
@@ -38,7 +38,7 @@ import org.springframework.validation.annotation.Validated;
  *   batch-size: 100                    # 批量索引批次大小
  * </pre>
  *
- * <h3>使用示例</h3>
+ * <p><strong>使用示例</strong></p>
  * <pre>{@code
  * @Service
  * @RequiredArgsConstructor
@@ -83,11 +83,11 @@ public class MeilisearchConfig {
      * <p>使用配置的 URL 和 API Key 初始化 Meilisearch Java SDK 客户端。
      * 客户端为线程安全单例，可注入到任意 Service 或 Repository 中使用。
      *
-     * <h4>连接验证</h4>
+     * <p><strong>连接验证</strong></p>
      * <p>Bean 初始化时仅创建客户端对象，不会立即连接 Meilisearch 服务。
      * 首次调用索引操作时才建立连接，连接失败会抛出 {@link com.meilisearch.sdk.exceptions.MeilisearchException}。
      *
-     * <h4>重试策略</h4>
+     * <p><strong>重试策略</strong></p>
      * <p>SDK 内部对网络错误、超时等临时故障会自动重试。
      * 业务代码应捕获异常并决定是否降级处理（如返回空结果、使用数据库 LIKE 查询等）。
      *
@@ -111,7 +111,7 @@ public class MeilisearchConfig {
      *
      * <p>从 {@code meilisearch.*} 配置项绑定属性，支持环境变量覆盖。
      *
-     * <h3>安全注意事项</h3>
+     * <p><strong>安全注意事项</strong></p>
      * <ul>
      *   <li><b>API Key 保护</b>：生产环境必须通过环境变量 {@code MEILISEARCH_API_KEY} 注入随机密钥，
      *       禁止在配置文件中硬编码</li>

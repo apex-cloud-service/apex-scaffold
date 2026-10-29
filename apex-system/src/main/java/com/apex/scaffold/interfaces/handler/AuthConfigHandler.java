@@ -29,7 +29,7 @@ import reactor.core.publisher.Mono;
  * <p>提供系统认证授权配置的管理 API,包括 JWT 配置、会话配置、安全策略配置的查询和更新,
  * 以及权限同步功能。同时提供别名路由,复用现有的 OAuth2 客户端、在线会话、登录日志和权限列表查询服务。
  *
- * <h2>核心功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>JWT 配置管理:查询和更新 JWT 签发者、密钥、令牌有效期等配置</li>
  *   <li>会话配置管理:查询和更新会话超时、并发控制、记住我等配置</li>
@@ -38,7 +38,7 @@ import reactor.core.publisher.Mono;
  *   <li>别名路由:复用现有服务,提供统一的认证授权配置入口</li>
  * </ul>
  *
- * <h2>接口清单</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>GET /admin-api/v1/auth/config/jwt - 查询 JWT 配置</li>
  *   <li>PUT /admin-api/v1/auth/config/jwt - 更新 JWT 配置</li>
@@ -473,7 +473,7 @@ public class AuthConfigHandler extends BaseHandler {
      * <p>使用当前租户的 JWT 配置生成测试 Token，并解码验证，用于测试配置是否正确。
      * 该功能主要用于管理员在配置 JWT 参数后，快速验证配置是否生效。
      *
-     * <h2>测试流程</h2>
+     * <h2>设计说明</h2>
      * <ol>
      *   <li>管理员提供测试载荷（Payload）和可选的过期时间</li>
      *   <li>系统使用当前租户的 JWT 配置生成测试 Token</li>
@@ -481,14 +481,14 @@ public class AuthConfigHandler extends BaseHandler {
      *   <li>返回 Token 字符串、解码结果和验证状态</li>
      * </ol>
      *
-     * <h2>使用场景</h2>
+     * <h2>职责范围</h2>
      * <ul>
      *   <li>新租户初始化 JWT 配置后的验证</li>
      *   <li>修改 JWT 签名算法或密钥后的测试</li>
      *   <li>排查 JWT 相关问题时的诊断工具</li>
      * </ul>
      *
-     * <h2>安全说明</h2>
+     * <h2>设计说明</h2>
      * <ul>
      *   <li>生成的测试 Token 仅用于配置验证，不应用于生产环境的身份认证</li>
      *   <li>测试 Token 的有效期建议设置较短（如 5-10 分钟），避免安全风险</li>

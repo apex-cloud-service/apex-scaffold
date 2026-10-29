@@ -19,7 +19,7 @@ import org.springframework.stereotype.Component;
  *   <li>Spring Boot 的 HTTP graceful shutdown 负责 Web 服务器自身的关闭</li>
  * </ol>
  *
- * <h2>生命周期阶段</h2>
+ * <h2>设计说明</h2>
  * <p>本类返回 {@link Integer#MIN_VALUE} 作为 {@link SmartLifecycle} phase，
  * 用于参与生命周期组件的停止排序；该 phase 不定义 {@code @PreDestroy} 回调之间的严格顺序。
  *

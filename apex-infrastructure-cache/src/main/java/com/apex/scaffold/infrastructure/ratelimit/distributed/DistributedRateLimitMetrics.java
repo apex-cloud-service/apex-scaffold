@@ -23,7 +23,7 @@ import reactor.core.publisher.Mono;
  *   <li>Redis 故障次数</li>
  * </ul>
  *
- * <h2>Prometheus 指标</h2>
+ * <h2>设计说明</h2>
  * <pre>
  * # 限流通过次数
  * ratelimit_distributed_allowed_total{component="ratelimit"}

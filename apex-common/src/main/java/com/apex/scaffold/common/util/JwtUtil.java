@@ -19,25 +19,25 @@ import lombok.extern.slf4j.Slf4j;
  * <p>提供 JWT Token 的生成、解析和验证功能。密钥通过环境变量 {@code JWT_SECRET} 配置，
  * 生产环境必须显式设置密钥，不允许使用默认密钥。
  *
- * <h2>密钥配置优先级</h2>
+ * <h2>设计说明</h2>
  * <ol>
  *   <li>环境变量 {@code JWT_SECRET}</li>
  *   <li>系统属性 {@code jwt.secret}</li>
  *   <li>默认开发密钥（仅非生产环境可用）</li>
  * </ol>
  *
- * <h2>安全要求</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li><b>生产环境强制检查</b>：必须通过环境变量 {@code JWT_SECRET} 配置密钥，否则抛出 {@link IllegalStateException}</li>
  *   <li><b>密钥长度要求</b>：默认至少 32 位字符，可通过 {@link #applyConfig(JwtProperties)} 覆盖</li>
  *   <li><b>Token 默认过期时间</b>：7 天，可通过 {@link #applyConfig(JwtProperties)} 覆盖</li>
  * </ul>
  *
- * <h2>运行时配置</h2>
+ * <h2>设计说明</h2>
  * <p>Spring 容器启动后通过 {@link #applyConfig(JwtProperties)} 注入 YAML 配置覆盖硬编码默认值。
  * 在此之前使用内嵌的兼容默认值（7 天过期、32 位密钥最小长度）。</p>
  *
- * <h2>异常传递说明</h2>
+ * <h2>设计说明</h2>
  * <p>{@link #parseToken} 方法直接传递 JWT 库原始异常（如 {@link ExpiredJwtException}、
  * {@link io.jsonwebtoken.JwtException}），不进行包装，以便调用方按异常类型精确处理。
  *

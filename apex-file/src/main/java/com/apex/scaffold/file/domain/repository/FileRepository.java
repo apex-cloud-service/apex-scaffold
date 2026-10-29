@@ -66,7 +66,6 @@ public interface FileRepository {
      * 删除文件信息
      *
      * @param id 文件ID
-     * @return 成功返回 Mono.empty()
      */
     Mono<Void> deleteById(Long id);
 

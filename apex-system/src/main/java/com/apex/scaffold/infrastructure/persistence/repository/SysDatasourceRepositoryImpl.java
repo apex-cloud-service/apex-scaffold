@@ -20,7 +20,7 @@ import reactor.core.publisher.Mono;
  * {@link SysDatasourcePoConverter} 在领域实体与 {@link SysDatasourcePO} 之间转换，
  * 所有阻塞 JDBC 操作调度到 {@code BlockingIoSchedulers.jdbc()} 专用线程池执行。
  *
- * <h2>核心职责</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>数据源配置的增删改查（逻辑删除 + 乐观锁）</li>
  *   <li>按租户隔离查询数据源列表</li>
@@ -28,7 +28,7 @@ import reactor.core.publisher.Mono;
  *   <li>插入后回填雪花算法生成的主键 ID</li>
  * </ul>
  *
- * <h2>租户隔离保障</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>所有查询显式携带 {@code tenantId} 条件</li>
  *   <li>逻辑删除记录由 MyBatis-Plus 插件自动过滤</li>

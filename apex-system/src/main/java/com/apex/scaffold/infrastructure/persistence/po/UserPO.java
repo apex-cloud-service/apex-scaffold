@@ -23,13 +23,13 @@ import lombok.experimental.SuperBuilder;
  *   <li>状态信息：启用状态、注册引导状态、最后登录时间/IP、心跳时间</li>
  * </ul>
  *
- * <h2>表结构</h2>
+ * <h2>设计说明</h2>
  * <p>表名：{@code sys_user}<br>
  * 主键：{@code id}（继承自 {@link BasePO}）<br>
  * 唯一索引：{@code uk_open_id}（微信OpenID）、{@code uk_username}（登录账号）<br>
  * 普通索引：{@code idx_phone}（手机号）、{@code idx_dept_id}（部门ID）、{@code idx_tenant_id}（租户ID）
  *
- * <h2>使用场景</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>微信 APP 登录：通过 OpenID/UnionID 查询或创建用户</li>
  *   <li>账号密码登录：通过 username 查询用户并验证密码</li>
@@ -37,7 +37,7 @@ import lombok.experimental.SuperBuilder;
  *   <li>数据权限控制：通过 deptId 和 tenantId 实现部门级、租户级数据隔离</li>
  * </ul>
  *
- * <h2>注意事项</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>密码字段必须存储 BCrypt 哈希值，禁止存储明文</li>
  *   <li>OpenID 和 UnionID 来自微信授权，不可手动修改</li>

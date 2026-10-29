@@ -17,14 +17,14 @@ import reactor.core.publisher.Mono;
  * 该服务使用 {@link CircuitBreakerProperties} 创建或获取断路器，不是
  * {@code RemoteApiClient} 的远程调用策略入口。
  *
- * <h2>断路器状态</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li><strong>CLOSED（关闭状态）</strong>：正常状态，所有请求正常通过</li>
  *   <li><strong>OPEN（打开状态）</strong>：断路器打开，所有请求直接失败，不调用外部服务</li>
  *   <li><strong>HALF_OPEN（半开状态）</strong>：尝试恢复，允许部分请求通过以测试服务是否恢复</li>
  * </ul>
  *
- * <h2>设计目标</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li><strong>故障隔离</strong>：防止单个服务故障影响整个系统</li>
  *   <li><strong>快速失败</strong>：断路器打开时立即返回降级结果，避免资源浪费</li>

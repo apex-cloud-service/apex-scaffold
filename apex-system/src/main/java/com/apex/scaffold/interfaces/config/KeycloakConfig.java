@@ -18,7 +18,7 @@ import org.springframework.validation.annotation.Validated;
  * <p>负责加载 Keycloak 相关配置参数并初始化 Keycloak Admin Client。
  * 仅在 {@code keycloak.enabled=true} 时生效，实现集成开关可控。
  *
- * <h2>配置绑定</h2>
+ * <h2>设计说明</h2>
  * <p>通过 {@link ConfigurationProperties} 从配置文件读取 {@code keycloak.*} 前缀的配置项：
  * <ul>
  *   <li>{@code keycloak.server-url} - Keycloak 服务器地址</li>
@@ -31,7 +31,7 @@ import org.springframework.validation.annotation.Validated;
  *   <li>{@code keycloak.frontend-callback-url} - 前端回调地址</li>
  * </ul>
  *
- * <h2>Bean 注册</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>{@link #keycloakAdminClient()} - Keycloak Admin REST API 客户端</li>
  * </ul>
@@ -140,7 +140,7 @@ public class KeycloakConfig {
      * <p>使用 Resource Owner Password Credentials Grant（密码模式）认证，
      * 获取 Admin 权限，可调用 Keycloak Admin REST API 管理用户、角色等资源。
      *
-     * <h3>注意事项</h3>
+     * <p><strong>注意事项</strong></p>
      * <ul>
      *   <li>Admin Client 使用阻塞式 HTTP 调用，需通过
      *       {@link BlockingIoSchedulers#remote()} 隔离到专用线程池</li>

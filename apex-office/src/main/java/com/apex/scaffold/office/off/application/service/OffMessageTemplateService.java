@@ -18,7 +18,7 @@ import reactor.core.publisher.Mono;
  * <p>提供消息模板的创建、查询、更新、删除等管理功能。
  * 支持按模板编码、模板类型查询模板，以及获取所有启用的模板列表。
  *
- * <h2>核心功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>模板查询：按模板编码或模板类型查询模板</li>
  *   <li>模板列表：获取所有启用的模板列表</li>
@@ -26,11 +26,11 @@ import reactor.core.publisher.Mono;
  *   <li>模板更新：更新模板名称、内容、变量和启用状态</li>
  * </ul>
  *
- * <h2>模板变量</h2>
+ * <h2>设计说明</h2>
  * <p>模板内容支持占位符变量，发送消息时动态替换为实际值。
  * 例如：{@code "尊敬的{userName}，您的订单{orderId}已发货"}
  *
- * <h2>技术实现</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>使用 Reactor 响应式编程模型，返回 Mono/Flux</li>
  *   <li>通过 Assembler 实现 DTO 与 Entity 之间的转换</li>
@@ -127,7 +127,6 @@ public class OffMessageTemplateService {
      * 删除消息模板
      *
      * @param id 模板 ID
-     * @return 完成信号
      */
     public Mono<Void> deleteTemplate(Long id) {
         return templateRepository.deleteById(id);

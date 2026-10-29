@@ -66,7 +66,6 @@ public class ApiCallLogService {
      * 脱敏调用数据并异步提交写入。
      *
      * @param entity 待记录的调用观测数据
-     * @return 写入完成信号
      */
     public Mono<Void> log(ApiCallObservation entity) {
         if (!properties.isEnabled() || entity == null) {

@@ -128,7 +128,6 @@ public class OAuth2ClientManagementService {
      * 删除 OAuth2 客户端
      *
      * @param clientId 客户端 ID
-     * @return 完成信号；客户端不存在时 Mono 以 BusinessException（NOT_FOUND）错误终止
      */
     public Mono<Void> deleteClient(String clientId) {
         return clientRepository

@@ -13,7 +13,7 @@ import org.springframework.core.type.AnnotatedTypeMetadata;
  * <p>本类实现Spring Boot的{@link Condition}接口,为{@code @ConditionalOnLicenseFeature}注解提供条件评估逻辑。
  * 在Spring容器Bean装配阶段,根据License授权状态决定是否装配标注了该注解的商业组件。</p>
  *
- * <h3>主要功能</h3>
+ * <p><strong>主要功能</strong></p>
  * <ul>
  *   <li><b>条件评估</b>:在Bean实例化前,从Spring Environment绑定{@code apex.license.*}配置,
  *       通过{@link LicenseFeatureGate}检查指定功能是否已授权</li>
@@ -21,7 +21,7 @@ import org.springframework.core.type.AnnotatedTypeMetadata;
  *   <li><b>双层防护</b>:与运行时的{@link FeatureGateAspect}切面配合,形成"装配期+运行期"的双层授权检查机制</li>
  * </ul>
  *
- * <h3>工作原理</h3>
+ * <p><strong>工作原理</strong></p>
  * <p>条件评估发生在Spring容器启动的Bean定义注册阶段,早于Bean实例化:
  * <ol>
  *   <li>Spring扫描到标注了{@code @ConditionalOnLicenseFeature}的Bean定义</li>
@@ -31,7 +31,7 @@ import org.springframework.core.type.AnnotatedTypeMetadata;
  *   <li>返回{@code true}时Bean正常装配,返回{@code false}时Bean被跳过并记录日志</li>
  * </ol>
  *
- * <h3>与运行期切面的协同</h3>
+ * <p><strong>与运行期切面的协同</strong></p>
  * <p>条件装配与{@link FeatureGateAspect}运行时切面共享同一个{@link LicenseValidator}实例(通过
  * {@link LicenseFeatureGate}静态缓存),保证装配期和运行期的授权判断一致。这种设计确保:
  * <ul>
@@ -39,7 +39,7 @@ import org.springframework.core.type.AnnotatedTypeMetadata;
  *   <li>即使通过反射等手段绕过装配检查,运行时切面仍会拦截标注了{@code @FeatureGate}的方法调用</li>
  * </ul>
  *
- * <h3>使用示例</h3>
+ * <p><strong>使用示例</strong></p>
  * <pre>{@code
  * // 标注在配置类上,整个配置类的所有Bean都受此功能授权控制
  * @Configuration

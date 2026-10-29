@@ -30,7 +30,7 @@ import reactor.core.publisher.Mono;
  * 实现 {@link LoginStrategy} 接口，提供基于微信 OAuth2 授权码的登录功能。 这是系统默认的登录方式，通过微信授权码换取 access_token 和 openId，
  * 再获取用户基本信息来完成用户注册或登录。
  *
- * <h2>登录流程</h2>
+ * <h2>设计说明</h2>
  * <ol>
  * <li>使用微信授权码(code)调用微信 OAuth2 接口获取 access_token 和 openId</li>
  * <li>根据 openId 查询系统用户（存在则更新，不存在则创建）</li>
@@ -94,7 +94,7 @@ public class WeChatCodeLoginStrategy implements LoginStrategy {
      *   <li>生成 JWT Token 对（accessToken + refreshToken）并存储</li>
      * </ol>
      *
-     * <h3>性别字段处理</h3>
+     * <p><strong>性别字段处理</strong></p>
      * <p>登录时从微信用户信息中获取 gender 字段（0-未知/1-男/WECHAT_OPENID_TYPE-女），
      * 若用户已在系统中注册且数据库已存有性别值，则保持数据库原值不变（注册时选定的性别不可被微信覆盖）。
      * 若数据库中性别为空且微信返回了有效性别值，则更新为微信性别。

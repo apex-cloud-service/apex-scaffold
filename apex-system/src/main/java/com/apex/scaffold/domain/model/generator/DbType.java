@@ -8,7 +8,7 @@ import lombok.Getter;
  * <p>定义代码生成器支持的数据库类型。不同数据库在表结构查询、数据类型映射和SQL语法上存在差异，
  * 生成器需要根据数据库类型执行不同的元数据查询策略和类型转换规则。
  *
- * <h2>支持的数据库</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>{@link #MYSQL} - MySQL/MariaDB，使用 INFORMATION_SCHEMA 查询元数据</li>
  *   <li>{@link #POSTGRESQL} - PostgreSQL，使用 pg_catalog 系统表查询</li>
@@ -17,7 +17,7 @@ import lombok.Getter;
  *   <li>{@link #H2} - H2 Database，嵌入式数据库，兼容 MySQL 和 PostgreSQL 模式</li>
  * </ul>
  *
- * <h2>使用场景</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>数据源配置时指定目标数据库类型</li>
  *   <li>元数据查询时选择对应的SQL方言</li>

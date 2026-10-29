@@ -24,7 +24,7 @@ import reactor.core.publisher.Mono;
  * 超时请求以 {@code 504 Gateway Timeout} + 错误码
  * {@link ResultCode#REQUEST_TIMEOUT} 返回统一 JSON 响应。</p>
  *
- * <h2>解决的问题</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li><b>高可用</b>：防止慢请求（锁等待、慢 SQL、下游无响应）长期占用
  *       Netty 连接与线程资源，避免线程耗尽引发雪崩</li>
@@ -33,14 +33,14 @@ import reactor.core.publisher.Mono;
  *   <li><b>快速失败</b>：客户端（或网关）可在更短时间内切换重试与降级路径</li>
  * </ul>
  *
- * <h2>豁免规则</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>请求 {@code Accept} 头包含 {@code text/event-stream} 的 SSE 长连接请求</li>
  *   <li>{@code apex.api.response-timeout} 配置为 0/负值时整体关闭</li>
  *   <li>响应已提交的请求不再回写 JSON（仅记录日志），避免破坏半成品响应</li>
  * </ul>
  *
- * <h2>执行顺序</h2>
+ * <h2>设计说明</h2>
  * <p>{@code @Order(HIGHEST_PRECEDENCE + 2)}：位于 TraceFilter（+0）之后、
  * 其余业务过滤器之前 —— 超时日志可携带 traceId，且计时范围覆盖安全校验、
  * 限流与业务处理的完整链路。</p>
@@ -92,7 +92,6 @@ public class GlobalResponseTimeoutWebFilter implements WebFilter {
      * @param exchange 当前请求
      * @param path     请求路径
      * @param ex       超时异常
-     * @return 错误响应写出 Mono
      */
     private Mono<Void> handleTimeout(ServerWebExchange exchange, String path, TimeoutException ex) {
         meterRegistry.counter(METRIC_RESPONSE_TIMEOUT).increment();

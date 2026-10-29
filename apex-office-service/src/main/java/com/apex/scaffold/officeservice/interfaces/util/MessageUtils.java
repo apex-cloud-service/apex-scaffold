@@ -11,7 +11,7 @@ import reactor.core.publisher.Mono;
  * <p>在 Spring WebFlux 响应式架构中，提供从 Reactor Context 中获取当前请求的
  * {@link Locale} 并从 {@link MessageSource} 中解析对应语言消息的能力。
  *
- * <h2>设计原理</h2>
+ * <h2>设计说明</h2>
  * <p>
  * 传统 Spring MVC 使用 {@code LocaleResolver} 和 {@code LocaleContextHolder}
  * 通过 ThreadLocal 传递 Locale。在 WebFlux 响应式架构中，请求可能在多个线程间切换，
@@ -20,19 +20,19 @@ import reactor.core.publisher.Mono;
  * 本工具类通过 {@link Mono#deferContextual} 从中读取。
  * </p>
  *
- * <h2>使用方式</h2>
+ * <h2>使用示例</h2>
  *
- * <h3>方式一：响应式调用（推荐）</h3>
+ * <p><strong>方式一：响应式调用（推荐）</strong></p>
  * <pre>{@code * return messageUtils.get("biz.user.not_found")
  *     .map(msg -> Result.error(4001, msg, traceId))
  *     .flatMap(result -> ServerResponse.ok().bodyValue(result));
  * }</pre>
  *
- * <h3>方式二：同步调用（用于非响应式上下文）</h3>
+ * <p><strong>方式二：同步调用（用于非响应式上下文）</strong></p>
  * <pre>{@code * String msg = messageUtils.get(Locale.US, "sys.success");
  * }</pre>
  *
- * <h2>支持的语言</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>简体中文（zh_CN）</li>
  *   <li>繁体中文（zh_TW）</li>

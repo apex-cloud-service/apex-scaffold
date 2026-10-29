@@ -495,6 +495,12 @@ public class BaiduTextModerationAdapter implements TextModerationPort {
         return value == null || value.isBlank();
     }
 
+    /**
+     * 百度访问令牌的本地缓存条目。
+     *
+     * @param value 访问令牌原文
+     * @param expiresAt 令牌过期时间，由 {@code usable()} 判定是否仍可用
+     */
     private record CachedToken(String value, Instant expiresAt) {
         /**
          * 判断缓存的 Token 是否仍可用。
@@ -506,5 +512,6 @@ public class BaiduTextModerationAdapter implements TextModerationPort {
         }
     }
 
+    /** 表示百度令牌接口返回失败，用于在校验链中区分网络与协议错误。 */
     private static final class BaiduTokenException extends RuntimeException {}
 }

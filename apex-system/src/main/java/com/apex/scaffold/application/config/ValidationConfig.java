@@ -11,7 +11,7 @@ import org.springframework.validation.beanvalidation.MethodValidationPostProcess
  * <p>配置Bean Validation支持，启用方法级别的参数校验。
  * 集成Hibernate Validator作为默认校验器实现。</p>
  *
- * <h2>校验注解说明</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>{@code @NotBlank} - 字符串非空且长度大于0</li>
  *   <li>{@code @NotNull} - 值不为null</li>
@@ -21,7 +21,7 @@ import org.springframework.validation.beanvalidation.MethodValidationPostProcess
  *   <li>{@code @Email} - 邮箱格式校验</li>
  * </ul>
  *
- * <h2>使用方式</h2>
+ * <h2>使用示例</h2>
  * <pre>{@code * // 在DTO上添加校验注解
  * public class LoginRequest {
  *     @NotBlank(message = "手机号不能为空")

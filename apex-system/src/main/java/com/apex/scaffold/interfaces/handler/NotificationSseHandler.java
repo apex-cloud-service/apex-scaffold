@@ -28,7 +28,7 @@ import reactor.core.publisher.Mono;
  * {@code EventSource} 或 fetch 流式接收本站内通知。消息由业务方经
  * {@link NotificationService#publish(String, String)} 发布。</p>
  *
- * <h2>接口清单</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>GET /api/v1/notifications/stream - 订阅当前用户通知流（SSE）</li>
  * </ul>

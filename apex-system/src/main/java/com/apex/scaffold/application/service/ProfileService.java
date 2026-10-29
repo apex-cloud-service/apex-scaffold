@@ -47,7 +47,7 @@ import reactor.core.publisher.Mono;
  *   <li>提交自定义标签（SubmitCustomTagCommand）</li>
  * </ul>
  *
- * <h2>设计模式</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>CQRS模式：分离读模型和写模型</li>
  *   <li>Assembler模式：实体到VO的转换</li>
@@ -131,7 +131,7 @@ public class ProfileService {
      * 使用响应式编程模型，支持高并发场景。
      * </p>
      *
-     * <h3>数据来源</h3>
+     * <p><strong>数据来源</strong></p>
      * <ul>
      *   <li>UserEntity：用户基础信息</li>
      *   <li>UserProfileEntity：用户画像信息</li>
@@ -185,7 +185,7 @@ public class ProfileService {
      * 使用事务保证数据一致性。
      * </p>
      *
-     * <h3>更新字段</h3>
+     * <p><strong>更新字段</strong></p>
      * <ul>
      *   <li>UserEntity.nickName, avatarUrl, gender, birthday, city</li>
      *   <li>UserProfileEntity.datingGoal, bio, mbti, heightCm, school, job</li>
@@ -216,7 +216,7 @@ public class ProfileService {
      * 内部方法，执行用户资料和画像的更新。
      * </p>
      *
-     * <h3>线程模型</h3>
+     * <p><strong>线程模型</strong></p>
      * <p>资料同步写库通过 {@code BlockingIoSchedulers#jdbc()} 专用线程池承载，
      * 与全局 boundedElastic 隔离，避免慢 SQL 拖垮其他阻塞 I/O。</p>
      *
@@ -308,7 +308,7 @@ public class ProfileService {
      * 用户提交自定义的兴趣标签，标签将进入审核流程。
      * </p>
      *
-     * <h3>业务流程</h3>
+     * <p><strong>业务流程</strong></p>
      * <ul>
      *   <li>验证标签非空</li>
      *   <li>创建审核记录</li>
@@ -484,8 +484,8 @@ public class ProfileService {
     /**
      * 检查用户资料是否完整
      *
-     * @param user 用户实体
      * @param profile 用户画像实体
+     * @param user 用户实体
      * @return true-完整，false-不完整
      */
     private boolean isProfileComplete(UserProfileEntity profile, UserEntity user) {

@@ -9,7 +9,7 @@ import reactor.core.publisher.Mono;
  * 可以通知缓存层清理对应的缓存条目，而不直接依赖 Redis/Caffeine
  * 等具体缓存实现。</p>
  *
- * <h2>使用场景</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>用户信息更新后失效用户缓存</li>
  *   <li>照片状态变更后失效照片缓存</li>

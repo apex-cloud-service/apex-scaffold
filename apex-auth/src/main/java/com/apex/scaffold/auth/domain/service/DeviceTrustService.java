@@ -40,9 +40,9 @@ public interface DeviceTrustService {
      * 验证设备信任
      *
      * @param userId 用户ID
+     * @param tenantId 租户ID
      * @param deviceId 设备ID
      * @return 信任级别
-     * @param tenantId 租户ID
      */
     @SuppressWarnings("PMD.AbstractMethodOrInterfaceMethodMustUseJavadocRule")
     Mono<DeviceTrust.TrustLevel> verifyDeviceTrust(String userId, String tenantId, String deviceId);
@@ -64,7 +64,6 @@ public interface DeviceTrustService {
      *
      * @param deviceId 设备ID
      * @param operator 操作人
-     * @return 操作完成信号
      */
     Mono<Void> upgradeTrustLevel(Long deviceId, String operator);
 
@@ -73,7 +72,6 @@ public interface DeviceTrustService {
      *
      * @param deviceId 设备ID
      * @param operator 操作人
-     * @return 操作完成信号
      */
     Mono<Void> downgradeTrustLevel(Long deviceId, String operator);
 
@@ -82,7 +80,6 @@ public interface DeviceTrustService {
      *
      * @param deviceId 设备ID
      * @param operator 操作人
-     * @return 操作完成信号
      */
     Mono<Void> revokeDeviceTrust(Long deviceId, String operator);
 
@@ -100,9 +97,9 @@ public interface DeviceTrustService {
      * 检查设备是否可信
      *
      * @param userId 用户ID
+     * @param tenantId 租户ID
      * @param deviceId 设备ID
      * @return 是否可信
-     * @param tenantId 租户ID
      */
     @SuppressWarnings("PMD.AbstractMethodOrInterfaceMethodMustUseJavadocRule")
     Mono<Boolean> isDeviceTrusted(String userId, String tenantId, String deviceId);
@@ -119,9 +116,9 @@ public interface DeviceTrustService {
      * 检测设备异常
      *
      * @param userId 用户ID
+     * @param tenantId 租户ID
      * @param deviceId 设备ID
      * @param ip 当前IP
-     * @param tenantId 租户ID
      * @param location 当前位置
      * @return 是否异常
      */
@@ -149,7 +146,6 @@ public interface DeviceTrustService {
      * @param deviceId 设备ID
      * @param days 延长天数
      * @param operator 操作人
-     * @return 操作完成信号
      */
     Mono<Void> extendDeviceTrust(Long deviceId, int days, String operator);
 }

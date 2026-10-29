@@ -14,7 +14,7 @@ import lombok.experimental.SuperBuilder;
  * <p>用于定时任务列表的分页与条件查询，继承 {@link PageRequest} 的分页参数，
  * 支持按任务名称、任务分组、任务状态进行筛选。</p>
  *
- * <h2>查询条件说明</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>{@code jobName} - 任务名称，支持模糊匹配</li>
  *   <li>{@code jobGroup} - 任务分组，精确匹配</li>

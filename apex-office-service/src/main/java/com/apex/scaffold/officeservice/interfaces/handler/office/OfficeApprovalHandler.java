@@ -349,15 +349,19 @@ public class OfficeApprovalHandler {
                 .onErrorResume(requestHandlerUtil::handleError);
     }
 
+    /** ApprovalResult ApprovalProcess 统一响应包装。 */
     @Schema(name = "OfficeApprovalResult")
     public static class ApprovalResult extends Result<ApprovalProcessResponse> {}
 
+    /** ApprovalListResult ApprovalProcess 列表统一响应包装。 */
     @Schema(name = "OfficeApprovalListResult")
     public static class ApprovalListResult extends Result<List<ApprovalProcessResponse>> {}
 
+    /** ApprovalBooleanResult 布尔结果统一响应包装。 */
     @Schema(name = "OfficeApprovalBooleanResult")
     public static class ApprovalBooleanResult extends Result<Boolean> {}
 
+    /** ApprovalErrorResult 无数据统一响应包装。 */
     @Schema(name = "OfficeApprovalErrorResult")
     public static class ApprovalErrorResult extends Result<Void> {}
 }

@@ -13,14 +13,14 @@ import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
  * 使用 {@link ReloadableResourceBundleMessageSource} 支持运行时热加载语言资源文件，
  * 语言资源文件存放在 {@code classpath:i18n/} 目录下。</p>
  *
- * <h2>主要功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>构建 {@link MessageSource} Bean，加载 {@code classpath:i18n/messages} 下的多语言资源文件</li>
  *   <li>设置 UTF-8 编码、关闭系统区域回退、未找到 key 时返回 key 本身、缓存 3600 秒</li>
  *   <li>将 MessageSource 注入 {@link LocalValidatorFactoryBean}，使 DTO 校验注解中的 {@code {key}} 占位符可被解析</li>
  * </ul>
  *
- * <h2>支持的语言</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>简体中文（zh_CN）</li>
  *   <li>繁体中文（zh_TW）</li>
@@ -28,7 +28,7 @@ import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
  *   <li>泰文（th_TH）</li>
  * </ul>
  *
- * <h2>配置说明</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li><b>basename</b>：资源文件基础路径，不包括语言后缀和 .properties 扩展名</li>
  *   <li><b>encoding</b>：资源文件编码，设置为 UTF-8 确保多语言字符正常显示</li>
@@ -37,14 +37,14 @@ import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
  *   <li><b>cacheSeconds</b>：缓存时间（秒），生产环境建议设置合理值避免频繁读取文件</li>
  * </ul>
  *
- * <h2>Validator 集成</h2>
+ * <h2>设计说明</h2>
  * <p>
  * 通过 {@link LocalValidatorFactoryBean#setValidationMessageSource(MessageSource)}
  * 将 MessageSource 注入 Jakarta Bean Validation，使 DTO 校验注解中的 {@code {key}}
  * 占位符能被正确解析为对应语言的校验消息。
  * </p>
  *
- * <h2>添加新语言</h2>
+ * <h2>设计说明</h2>
  * <ol>
  *   <li>创建对应的 {@code messages_{locale}.properties} 文件（如 {@code messages_ja_JP.properties}）</li>
  *   <li>在 {@link com.apex.scaffold.interfaces.filter.LocaleWebFilter} 的 {@code SUPPORTED_LOCALES} 中添加对应的 Locale</li>

@@ -13,14 +13,14 @@ import lombok.ToString;
  * 支持草稿、正常、归档三种状态的生命周期管理。提供文档信息更新、文件附件关联、
  * 发布、归档、浏览计数、下载计数等领域行为。
  *
- * <h2>文档生命周期</h2>
+ * <h2>设计说明</h2>
  * <ol>
  *   <li><b>草稿（DRAFT）</b>：文档创建后的初始状态，可编辑修改</li>
  *   <li><b>正常（NORMAL）</b>：文档发布后的状态，对外可见</li>
  *   <li><b>归档（ARCHIVED）</b>：文档归档后的状态，不再使用</li>
  * </ol>
  *
- * <h2>核心行为</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>{@link #create(String, String, String, String, Long, String, String)} - 创建草稿文档</li>
  *   <li>{@link #updateInfo(String, String, String, String, List)} - 更新文档信息</li>
@@ -31,7 +31,7 @@ import lombok.ToString;
  *   <li>{@link #incrementDownloadCount()} - 增加下载计数</li>
  * </ul>
  *
- * <h2>设计原则</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>使用工厂方法 {@code create} 创建文档，确保创建时的业务规则一致性</li>
  *   <li>所有状态变更通过领域方法实现，避免直接修改状态字段</li>
@@ -193,6 +193,11 @@ public class DocumentEntity extends BaseEntity {
         return status != null && status.equals(DocumentStatus.ARCHIVED.getCode());
     }
 
+    /**
+     * 文档生命周期状态。
+     *
+     * <p>与数据库 {@code status} 列存储的整型编码一一对应。
+     */
     @Getter
     @lombok.RequiredArgsConstructor
     public enum DocumentStatus {
@@ -206,6 +211,11 @@ public class DocumentEntity extends BaseEntity {
         private final Integer code;
     }
 
+    /**
+     * 文档类型分类。
+     *
+     * <p>{@code code} 为对外暴露的稳定字符串标识。
+     */
     @Getter
     @lombok.RequiredArgsConstructor
     public enum DocType {
@@ -223,6 +233,11 @@ public class DocumentEntity extends BaseEntity {
         private final String code;
     }
 
+    /**
+     * 文档所属业务类别。
+     *
+     * <p>{@code code} 为对外暴露的稳定字符串标识。
+     */
     @Getter
     @lombok.RequiredArgsConstructor
     public enum Category {

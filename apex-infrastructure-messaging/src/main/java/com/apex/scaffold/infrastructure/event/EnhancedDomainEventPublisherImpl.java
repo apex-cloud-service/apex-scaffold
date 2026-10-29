@@ -25,7 +25,7 @@ import reactor.util.context.ContextView;
  * <p>基于 Spring ApplicationEventPublisher 和 RocketMQ 实现的领域事件发布器，
  * 支持同步事件发布、异步事件发布和分布式事件发布三种模式。
  *
- * <h2>事件发布模式</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li><strong>同步模式</strong>：通过 Spring ApplicationEventPublisher 同步发布事件，
  *       适用于需要立即处理且对事务一致性有要求的场景</li>
@@ -33,7 +33,7 @@ import reactor.util.context.ContextView;
  *   <li><strong>分布式模式</strong>：通过 RocketMQ 发布事件到消息队列，适用于跨服务通信场景</li>
  * </ul>
  *
- * <h2>设计目标</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li><strong>可靠性保障</strong>：分布式事件支持持久化和重试机制</li>
  *   <li><strong>性能优化</strong>：异步事件不会阻塞主业务流程</li>
@@ -88,7 +88,6 @@ public class EnhancedDomainEventPublisherImpl implements DomainEventPublisher {
      * 同时通过 Spring 事件机制和领域事件总线发布事件。
      *
      * @param event 领域事件对象
-     * @return 空Mono，表示发布完成
      */
     @Override
     public Mono<Void> publish(AbstractDomainEvent event) {
@@ -102,7 +101,6 @@ public class EnhancedDomainEventPublisherImpl implements DomainEventPublisher {
      * 适用于需要事务一致性保证的场景。
      *
      * @param event 领域事件对象
-     * @return 空Mono，表示发布完成
      */
     public Mono<Void> publishSync(AbstractDomainEvent event) {
         log.debug("同步发布领域事件: {}, ID: {}", event.getClass().getSimpleName(), event.getEventId());
@@ -136,7 +134,6 @@ public class EnhancedDomainEventPublisherImpl implements DomainEventPublisher {
      * 适用于对响应时间敏感的场景。
      *
      * @param event 领域事件对象
-     * @return 空Mono，表示发布完成
      */
     public Mono<Void> publishAsync(AbstractDomainEvent event) {
         log.debug("异步发布领域事件: {}, ID: {}", event.getClass().getSimpleName(), event.getEventId());
@@ -180,7 +177,6 @@ public class EnhancedDomainEventPublisherImpl implements DomainEventPublisher {
      * 消息会被持久化，支持重试机制，保证事件的可靠传递。
      *
      * @param event 领域事件对象
-     * @return 空Mono，表示发布完成
      */
     public Mono<Void> publishDistributed(AbstractDomainEvent event) {
         if (!domainEventEnabled) {
@@ -243,7 +239,6 @@ public class EnhancedDomainEventPublisherImpl implements DomainEventPublisher {
      * <p>同时通过同步、异步和分布式三种方式发布事件，确保事件被可靠处理。
      *
      * @param event 领域事件对象
-     * @return 空Mono，表示发布完成
      */
     public Mono<Void> publishToAllChannels(AbstractDomainEvent event) {
         log.debug("发布事件到所有渠道: {}, ID: {}", event.getClass().getSimpleName(), event.getEventId());
@@ -270,7 +265,6 @@ public class EnhancedDomainEventPublisherImpl implements DomainEventPublisher {
      *
      * @param event     领域事件对象
      * @param strategy  发布策略
-     * @return 空Mono，表示发布完成
      */
     public Mono<Void> publishWithStrategy(AbstractDomainEvent event, PublishStrategy strategy) {
         log.debug("使用策略 {} 发布事件: {}, ID: {}", strategy, event.getClass().getSimpleName(), event.getEventId());

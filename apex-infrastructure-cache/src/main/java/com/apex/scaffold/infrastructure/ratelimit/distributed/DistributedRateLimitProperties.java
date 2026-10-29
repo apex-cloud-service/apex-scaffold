@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
  *
  * <p>管理分布式令牌桶限流的全局配置和各资源的限流规则。
  *
- * <h2>配置示例</h2>
+ * <h2>使用示例</h2>
  * <pre>{@code
  * apex:
  *   ratelimit:

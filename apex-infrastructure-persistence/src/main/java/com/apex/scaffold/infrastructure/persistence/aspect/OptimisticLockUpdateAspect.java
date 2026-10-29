@@ -13,13 +13,13 @@ import org.springframework.stereotype.Component;
  * {@code 0}，不会主动抛出异常。在 Mapper 调用边界完成转换，可避免异常在 MyBatis
  * Executor 内部被包装为 {@code MyBatisSystemException}，并使上层重试机制可靠识别冲突。
  *
- * <h2>拦截范围</h2>
+ * <h2>职责范围</h2>
  * <p>切面仅处理 MyBatis-Plus {@code BaseMapper} 及其子接口的标准
  * {@code updateById} 方法。只有更新对象继承 {@link BasePO}、携带非空版本号且更新
  * 行数为 {@code 0} 时，才判定为乐观锁冲突。未携带版本号的更新以及自定义 SQL
  * 不会被此切面误判。
  *
- * <h2>异常语义</h2>
+ * <h2>设计说明</h2>
  * <p>检测到冲突后抛出 {@link OptimisticLockingFailureException}，供同步重试切面、
  * Reactor 重试策略或全局异常处理器统一识别。异常消息只包含实体类型和主键，
  * 不输出实体完整内容，避免敏感字段泄露。

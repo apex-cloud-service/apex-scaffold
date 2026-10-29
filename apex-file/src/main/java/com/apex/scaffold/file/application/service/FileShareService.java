@@ -27,7 +27,7 @@ import reactor.core.publisher.Mono;
 /**
  * 文件限时只读分享应用服务。
  *
- * <h2>业务约束</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>创建与撤销使用 {@link FileAccessContext} 的可信身份，要求文件所有者本人操作，
  *       跨租户或非所有者一律拒绝</li>
@@ -127,7 +127,6 @@ public class FileShareService {
      * 撤销分享，仅同一租户的创建者本人可操作；重复撤销视为成功。
      *
      * @param shareId 分享记录编号
-     * @return 撤销完成信号
      */
     public Mono<Void> revoke(Long shareId) {
         return FileAccessContext.current().flatMap(identity -> fileShareRepository
@@ -243,6 +242,11 @@ public class FileShareService {
         }
     }
 
-    /** 兑换过程中的分享与文件组合。 */
+    /**
+     * 兑换过程中的分享与文件组合。
+     *
+     * @param share 分享记录
+     * @param file 被分享的文件记录
+     */
     private record SharedFile(FileShareEntity share, FileEntity file) {}
 }

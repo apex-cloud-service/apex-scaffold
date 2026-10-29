@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Configuration;
  * <p>用于配置企业微信（WeChat Work / WeCom）相关的参数，
  * 包括企业ID、应用AgentId、应用Secret、Token和EncodingAESKey等。
  *
- * <h3>配置示例</h3>
+ * <p><strong>配置示例</strong></p>
  * <pre>{@code * wework:
  *   corp-id: ww1234567890abcdef
  *   agent-id: 1000001
@@ -19,7 +19,7 @@ import org.springframework.context.annotation.Configuration;
  *   encoding-aes-key: your_encoding_aes_key
  * }</pre>
  *
- * <h3>与微信公众平台的区别</h3>
+ * <p><strong>与微信公众平台的区别</strong></p>
  * <ul>
  *   <li><b>企业微信</b>：面向企业内部沟通和办公，支持自建应用</li>
  *   <li><b>微信公众号/开放平台</b>：面向C端用户，支持消息推送和支付</li>

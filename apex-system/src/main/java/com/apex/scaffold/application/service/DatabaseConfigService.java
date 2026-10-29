@@ -23,7 +23,7 @@ import reactor.core.publisher.Mono;
  * <p>提供数据库连接测试（基于 R2DBC）、部署配置生成和当前数据库信息查询功能。
  * 所有方法返回 {@link Mono}，支持响应式编程。</p>
  *
- * <h2>技术选型</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>连接测试：R2DBC（响应式，非阻塞）</li>
  *   <li>当前数据库信息：JDBC（复用应用主数据源）</li>

@@ -19,7 +19,7 @@ import reactor.core.publisher.Mono;
  * <p>作为请求链中的第一个业务过滤器（{@code @Order(HIGHEST_PRECEDENCE)}），
  * 在请求入口处统一处理分布式链路追踪标识（TraceId）的生成与传播：
  *
- * <h2>核心功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li><b>提取 TraceId</b>：优先从请求头 {@code X-Trace-Id} 获取上游传递的 TraceId，
  *       实现跨服务链路串联</li>
@@ -34,12 +34,12 @@ import reactor.core.publisher.Mono;
  *       防止线程复用时 TraceId 泄露到下一个请求</li>
  * </ul>
  *
- * <h2>Reactor 上下文传播</h2>
+ * <h2>设计说明</h2>
  * <p>由于 WebFlux 的响应式线程模型不再依赖 ThreadLocal，
  * TraceId 通过 Reactor Context 在整个响应式链路中传递。下游 Handler 可通过
  * {@code Mono.deferContextual(ctx -> ctx.get(TraceIdUtil.TRACE_ID_KEY))} 获取。</p>
  *
- * <h2>执行顺序</h2>
+ * <h2>设计说明</h2>
  * <p>本过滤器在过滤器链的最前端执行（{@link org.springframework.core.Ordered#HIGHEST_PRECEDENCE}），
  * 确保 TraceId 在 JWT 认证、日志记录、安全校验等所有后续处理之前就绪。</p>
  *
@@ -72,7 +72,6 @@ public class TraceFilter implements WebFilter {
      *
      * @param exchange 当前 HTTP 请求-响应交换对象
      * @param chain    WebFlux 过滤器链
-     * @return 表示过滤完成的 {@link Mono}{@code <Void>}
      */
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {

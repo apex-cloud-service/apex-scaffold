@@ -21,7 +21,7 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
  * <p>{@code it} profile 下由 {@code ItProfileMockRedisConfiguration} 提供
  * mock 模板，本配置类不参与，避免测试环境依赖真实连接工厂。</p>
  *
- * <h2>主要功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>提供 {@code ReactiveRedisTemplate<String, Object>} Bean，键采用 UTF-8 字符串序列化，值采用 JSON 序列化</li>
  *   <li>支持 Hash 结构的键值同样使用 String + JSON 序列化策略，保证读写对称</li>

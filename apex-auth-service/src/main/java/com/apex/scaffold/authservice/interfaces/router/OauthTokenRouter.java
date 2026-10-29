@@ -91,7 +91,20 @@ public class OauthTokenRouter {
         return RouterFunctions.route().POST("/oauth2/token", handler::token).build();
     }
 
-    /** 令牌请求表单；除 grant_type 外的必填性由授权类型和客户端认证方式决定。 */
+    /**
+     * 令牌请求表单；除 grant_type 外的必填性由授权类型和客户端认证方式决定。
+     *
+     * @param grantType 授权类型：authorization_code / password / client_credentials / refresh_token
+     * @param clientId 表单客户端标识，不得与 Basic 同时提交
+     * @param clientSecret 表单客户端密钥
+     * @param scope 以空格分隔的授权范围
+     * @param username password 授权的用户名
+     * @param password password 授权的密码
+     * @param code authorization_code 授权的授权码
+     * @param redirectUri 与授权请求一致的回调地址
+     * @param codeVerifier PKCE S256 校验值
+     * @param refreshToken refresh_token 授权的刷新令牌
+     */
     @Schema(
             description =
                     "authorization_code 需要 code、redirect_uri、code_verifier；password 需要 username、password；refresh_token 需要 refresh_token；未使用 Basic 时需要 client_id、client_secret")
@@ -117,7 +130,15 @@ public class OauthTokenRouter {
                             accessMode = Schema.AccessMode.WRITE_ONLY)
                     String refreshToken) {}
 
-    /** 原生 OAuth 令牌响应字段。 */
+    /**
+     * 原生 OAuth 令牌响应字段。
+     *
+     * @param accessToken 访问令牌
+     * @param tokenType 令牌类型，固定为 Bearer
+     * @param expiresIn 访问令牌有效秒数
+     * @param refreshToken 刷新令牌；client_credentials 不返回此字段
+     * @param scope 实际授予的授权范围
+     */
     public record TokenResponse(
             @Schema(name = "access_token", description = "访问令牌") String accessToken,
             @Schema(

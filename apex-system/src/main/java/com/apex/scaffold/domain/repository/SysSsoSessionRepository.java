@@ -11,7 +11,7 @@ import reactor.core.publisher.Mono;
  * <p>定义单点登录（SSO）会话的持久化操作契约，管理用户的 SSO 会话生命周期。
  * 支持会话的增删改查、过期会话清理、按用户/租户查询会话等功能。
  *
- * <h2>核心职责</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>SSO 会话的基础 CRUD 操作</li>
  *   <li>按会话索引查询（sessionIndex 是 SAML/OAuth2 会话唯一标识）</li>
@@ -20,7 +20,7 @@ import reactor.core.publisher.Mono;
  *   <li>查询和清理过期会话（定时任务）</li>
  * </ul>
  *
- * <h2>查询场景</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>单点登录：创建新会话并关联 SSO 令牌</li>
  *   <li>单点登出：通过 sessionIndex 撤销特定会话</li>
@@ -29,7 +29,7 @@ import reactor.core.publisher.Mono;
  *   <li>会话清理：定期清理过期会话释放存储</li>
  * </ul>
  *
- * <h2>技术特性</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>响应式编程：所有方法返回 Mono/Flux</li>
  *   <li>会话索引：sessionIndex 作为 SSO 会话的业务唯一标识</li>

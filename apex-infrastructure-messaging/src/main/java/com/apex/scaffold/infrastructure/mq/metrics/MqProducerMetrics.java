@@ -22,7 +22,7 @@ import org.springframework.stereotype.Component;
  *   <li>降级次数</li>
  * </ul>
  *
- * <h2>Prometheus 指标</h2>
+ * <h2>设计说明</h2>
  * <pre>
  * # 消息发送成功次数
  * mq_producer_send_success_total{topic="xxx",tag="xxx"}

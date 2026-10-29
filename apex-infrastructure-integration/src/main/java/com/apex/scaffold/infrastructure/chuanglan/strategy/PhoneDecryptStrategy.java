@@ -7,13 +7,13 @@ package com.apex.scaffold.infrastructure.chuanglan.strategy;
  * （AES 或 RSA）。本接口定义手机号解密的统一契约，通过策略模式解耦具体的解密算法，
  * 便于后续扩展新的加密方式而无须修改调用方代码。
  *
- * <h3>支持的加密方式</h3>
+ * <p><strong>支持的加密方式</strong></p>
  * <ul>
  *   <li><b>AES</b>（encryptType="0"）：AES/CBC/PKCS5Padding，密钥由 md5(appKey) 派生</li>
  *   <li><b>RSA</b>（encryptType="1"）：RSA 私钥解密（待实现）</li>
  * </ul>
  *
- * <h3>使用方式</h3>
+ * <p><strong>使用方式</strong></p>
  * <pre>{@code * // 根据配置的 encryptType 选择策略
  * PhoneDecryptStrategy strategy = "0".equals(config.getEncryptType())
  *     ? new AesPhoneDecryptStrategy()
@@ -21,7 +21,7 @@ package com.apex.scaffold.infrastructure.chuanglan.strategy;
  * String phone = strategy.decrypt(encryptedPhone, appKey);
  * }</pre>
  *
- * <h3>设计模式</h3>
+ * <p><strong>设计模式</strong></p>
  * <ul>
  *   <li><b>策略模式（Strategy Pattern）</b>：定义算法族，分别封装，让它们可以互相替换</li>
  *   <li>与 Spring 的依赖注入结合，运行时根据配置选择具体策略实现</li>

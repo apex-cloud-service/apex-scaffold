@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 /**
  * 启用或禁用目标用户账号的请求。
  *
+ * @param enabled 是否启用账号（true-启用，false-禁用；不能操作当前登录管理员自己的账号）
  * @author Apex Team
  * @version 1.0.0
  * @since 1.0.0

@@ -10,7 +10,7 @@ import reactor.core.publisher.Mono;
  * <p>定义代码生成器模板的持久化操作契约，由基础设施层实现（MyBatis-Plus）。
  * 支持模板的CRUD操作、按类型查询和内置模板管理。
  *
- * <h2>核心职责</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>模板的增删改查</li>
  *   <li>按模板类型查询（entity、mapper、service等）</li>
@@ -18,7 +18,7 @@ import reactor.core.publisher.Mono;
  *   <li>模板内容版本管理</li>
  * </ul>
  *
- * <h2>模板分类</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li><strong>内置模板（isBuiltin=1）</strong>：系统预置，不可删除，可能随版本升级更新</li>
  *   <li><strong>自定义模板（isBuiltin=0）</strong>：用户创建，可自由修改和删除</li>

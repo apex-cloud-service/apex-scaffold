@@ -12,13 +12,13 @@ import reactor.core.publisher.Mono;
  * 该接口遵循 DDD 中的 Gateway 模式，将基础设施层的具体实现与领域层解耦，
  * application 层通过该接口调用创蓝平台能力，不依赖具体实现。
  *
- * <h2>支持的能力</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>一键登录（闪验）：通过客户端SDK获取的token置换用户手机号</li>
  *   <li>短信发送：发送验证码/通知类短信到指定手机号</li>
  * </ul>
  *
- * <h2>使用场景</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>用户使用创蓝一键登录时，App端传递闪验token，服务端通过此接口获取手机号</li>
  *   <li>用户选择短信验证码登录时，服务端通过此接口发送验证码短信</li>
@@ -36,7 +36,7 @@ public interface ChuanglanGateway {
      * <p>App端集成创蓝闪验SDK，用户点击一键登录后SDK返回临时token，
      * 服务端使用该token调用创蓝闪验服务端API，置换用户的真实手机号码。
      *
-     * <h3>业务流程</h3>
+     * <p><strong>业务流程</strong></p>
      * <ol>
      *   <li>App端集成创蓝闪验SDK，初始化后预取号</li>
      *   <li>用户点击"一键登录"，SDK返回临时token</li>
@@ -57,7 +57,7 @@ public interface ChuanglanGateway {
      * <p>调用创蓝闪验服务端API，使用客户端SDK获取的临时token置换用户的真实手机号码。
      * 该接口需要在创蓝闪验控制台配置服务端出口IP白名单以确保安全性。
      *
-     * <h3>接口规范（创蓝闪验服务端文档V3.X）</h3>
+     * <p><strong>接口规范（创蓝闪验服务端文档V3.X）</strong></p>
      * <ul>
      *   <li>协议：HTTPS</li>
      *   <li>请求方式：POST</li>
@@ -66,7 +66,7 @@ public interface ChuanglanGateway {
      *   <li>接口地址：https://wsflash.253.com/open/flashsdk/mobile-query</li>
      * </ul>
      *
-     * <h3>请求参数</h3>
+     * <p><strong>请求参数</strong></p>
      * <table border="1">
      *   <tr><th>参数名</th><th>类型</th><th>必填</th><th>说明</th></tr>
      *   <tr><td>token</td><td>String</td><td>是</td><td>运营商token，SDK返回，一次有效</td></tr>
@@ -106,7 +106,7 @@ public interface ChuanglanGateway {
      * <p>通过创蓝253短信平台v2模板API发送短信到指定手机号。
      * 使用模板ID方式发送，验证码作为模板参数填充到模板中。
      *
-     * <h3>发送流程</h3>
+     * <p><strong>发送流程</strong></p>
      * <ol>
      *   <li>生成验证码并通过模板参数JSON传递给创蓝v2 API</li>
      *   <li>创蓝根据模板ID将验证码填充到模板中发送给用户</li>
@@ -134,7 +134,7 @@ public interface ChuanglanGateway {
      *
      * <p>调用创蓝闪验服务端API，校验当前流量卡的手机号与传入的手机号码是否一致。
      *
-     * <h3>接口规范（创蓝闪验服务端文档V3.X）</h3>
+     * <p><strong>接口规范（创蓝闪验服务端文档V3.X）</strong></p>
      * <ul>
      *   <li>协议：HTTPS</li>
      *   <li>请求方式：POST</li>
@@ -143,7 +143,7 @@ public interface ChuanglanGateway {
      *   <li>接口地址：https://wsflash.253.com/open/flashsdk/mobile-validate</li>
      * </ul>
      *
-     * <h3>请求参数</h3>
+     * <p><strong>请求参数</strong></p>
      * <table border="1">
      *   <tr><th>参数名</th><th>类型</th><th>必填</th><th>说明</th></tr>
      *   <tr><td>token</td><td>String</td><td>是</td><td>运营商token，SDK返回</td></tr>
@@ -151,7 +151,7 @@ public interface ChuanglanGateway {
      *   <tr><td>outId</td><td>String</td><td>否</td><td>客户方流水号</td></tr>
      * </table>
      *
-     * <h3>响应格式</h3>
+     * <p><strong>响应格式</strong></p>
      * <pre>{@code * {
      *   "code": "200000",
      *   "message": "成功",

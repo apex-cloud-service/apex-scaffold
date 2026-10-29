@@ -31,7 +31,7 @@ import org.springframework.stereotype.Component;
  * <p>基于 Redisson 的 {@link RLock} 实现分布式锁功能，用于防止缓存击穿和重复请求。
  * 相比本地 {@code ReentrantLock} 方案，Redisson 分布式锁确保多实例部署下锁状态一致共享。
  *
- * <h2>工作原理</h2>
+ * <h2>设计说明</h2>
  * <ol>
  * <li>拦截标注 {@link CacheLock} 注解的方法</li>
  * <li>根据注解中的 key 表达式（支持 SpEL）动态生成锁键</li>
@@ -41,12 +41,12 @@ import org.springframework.stereotype.Component;
  * <li>方法执行完毕后释放锁</li>
  * </ol>
  *
- * <h2>锁命名规范</h2>
+ * <h2>线程安全性</h2>
  * <pre>
  *   cache:lock:{prefix}:{key}
  * </pre>
  *
- * <h2>降级策略说明</h2>
+ * <h2>设计说明</h2>
  * <ul>
  * <li>{@link FallbackStrategy#THROW_EXCEPTION} - 获取锁失败时抛出异常（默认）</li>
  * <li>{@link FallbackStrategy#RETURN_NULL} - 获取锁失败时返回 null</li>

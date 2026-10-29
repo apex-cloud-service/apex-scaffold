@@ -30,13 +30,13 @@ import reactor.core.publisher.Mono;
  * 支持按时间范围、日志级别、Logger 名称、消息关键词等多维度过滤查询，
  * 默认查询最近 1 小时的日志，单次最多返回 1000 条记录。</p>
  *
- * <h2>接口清单</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>GET /admin-api/v1/runtime-logs - 查询运行时日志（需要 system:log:runtime:query 权限）</li>
  *   <li>GET /admin-api/v1/runtime-logs/count - 统计运行时日志数量（需要 system:log:runtime:query 权限）</li>
  * </ul>
  *
- * <h2>查询参数</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>startTime：开始时间（格式：yyyy-MM-dd HH:mm:ss，默认为 1 小时前）</li>
  *   <li>endTime：结束时间（格式：yyyy-MM-dd HH:mm:ss，默认为当前时间）</li>

@@ -14,7 +14,7 @@ import lombok.experimental.SuperBuilder;
  * <p>对应数据库表 {@code off_department}，存储从第三方办公平台（飞书、钉钉、企业微信）同步的部门组织架构信息。
  * 继承 {@link BasePO} 获得通用字段（ID、创建时间、更新时间、逻辑删除等）。
  *
- * <h2>核心字段</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>{@link #deptCode} - 部门编码，企业内唯一标识</li>
  *   <li>{@link #deptName} - 部门名称</li>
@@ -32,7 +32,7 @@ import lombok.experimental.SuperBuilder;
  *   <li>{@link #tenantId} - 租户标识（多租户隔离）</li>
  * </ul>
  *
- * <h2>树形结构</h2>
+ * <h2>设计说明</h2>
  * <p>部门采用树形结构存储，通过 {@code parentId} 构建父子关系：
  * <ul>
  *   <li>根部门：{@code parentId = 0}</li>
@@ -41,7 +41,7 @@ import lombok.experimental.SuperBuilder;
  *   <li>层级字段：{@code deptLevel} 记录部门在树中的深度</li>
  * </ul>
  *
- * <h2>业务场景</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>组织架构同步：从第三方平台定期同步部门结构</li>
  *   <li>部门树查询：构建和展示完整的组织架构树</li>
@@ -49,14 +49,14 @@ import lombok.experimental.SuperBuilder;
  *   <li>权限控制：基于部门的数据权限过滤</li>
  * </ul>
  *
- * <h2>数据来源</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>飞书（Lark）：通过飞书 API 同步部门架构</li>
  *   <li>钉钉（DingTalk）：通过钉钉 API 同步部门信息</li>
  *   <li>企业微信（WeChat Work）：通过企业微信 API 同步部门结构</li>
  * </ul>
  *
- * <h2>注意事项</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>部门编码 {@code deptCode} 在租户内应保持唯一</li>
  *   <li>外部平台 ID {@code externalId} 用于数据同步的幂等性保证</li>

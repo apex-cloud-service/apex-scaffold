@@ -205,7 +205,6 @@ public class ExampleUserService {
      * 会从 UPDATE 的 SET 子句中排除逻辑删除字段，导致删除不生效。</p>
      *
      * @param id 用户ID
-     * @return 空 Mono（完成后响应）
      */
     public Mono<Void> deleteUser(Long id) {
         log.info("删除用户, id={}", id);

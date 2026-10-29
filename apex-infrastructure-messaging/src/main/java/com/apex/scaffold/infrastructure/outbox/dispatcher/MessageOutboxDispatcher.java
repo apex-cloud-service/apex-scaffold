@@ -21,7 +21,7 @@ import reactor.core.publisher.Mono;
  * <p>定时扫描本地消息表(Outbox),将待投递消息发送到RocketMQ。
  * 采用分布式锁机制,确保多实例部署时消息不被重复投递。
  *
- * <h2>调度机制</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>每5秒执行一次调度任务(可通过配置调整)</li>
  *   <li>每次调度先释放过期锁,再批量获取待投递消息</li>
@@ -30,7 +30,7 @@ import reactor.core.publisher.Mono;
  *   <li>发送成功标记为DELIVERED,失败增加重试计数</li>
  * </ul>
  *
- * <h2>失败重试策略</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>最大重试次数由max_attempts字段控制(默认5次)</li>
  *   <li>重试延迟采用指数退避: 10s、20s、40s、80s、160s</li>
@@ -38,7 +38,7 @@ import reactor.core.publisher.Mono;
  *   <li>死信消息需人工介入或通过死信处理器补偿</li>
  * </ul>
  *
- * <h2>多实例协调</h2>
+ * <h2>设计说明</h2>
  * <p>在多实例部署环境下,通过数据库CAS操作实现分布式锁:
  * <ol>
  *   <li>所有实例同时扫描待投递消息</li>
@@ -47,7 +47,7 @@ import reactor.core.publisher.Mono;
  *   <li>其他实例锁定失败,跳过该消息</li>
  * </ol>
  *
- * <h2>配置说明</h2>
+ * <h2>设计说明</h2>
  * <pre>
  * apex:
  *   outbox:
@@ -101,7 +101,6 @@ public class MessageOutboxDispatcher {
      * 重试语义由失败登记统一承担。响应式流程中的错误会记录日志并转换为空完成。
      *
      * @param entity 待投递消息及其当前重试状态
-     * @return 投递流程的完成信号；正常完成也可能表示跳过或错误已被处理，不保证投递成功
      */
     private Mono<Void> tryDispatch(MessageOutboxEntity entity) {
         return outboxService

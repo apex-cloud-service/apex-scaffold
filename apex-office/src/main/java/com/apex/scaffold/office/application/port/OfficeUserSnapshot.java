@@ -16,7 +16,7 @@ import lombok.Getter;
  * {@link OfficeUserQueryPort} 的实现方（基础设施适配层）负责从系统服务内部
  * API 或共享领域实体映射而来。</p>
  *
- * <h2>与领域实体的一致性约束</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>{@link #isEnabled()}：对应系统用户 {@code status == ENABLED(1)}</li>
  *   <li>{@link #getDeleted()}：逻辑删除标记（0-未删除，1-已删除）</li>

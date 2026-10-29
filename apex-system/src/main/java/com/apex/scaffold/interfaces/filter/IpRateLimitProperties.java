@@ -14,7 +14,7 @@ import org.springframework.validation.annotation.Validated;
  * <p>用于配置 {@link IpRateLimitWebFilter} 的速率限制参数，包括默认限流阈值、
  * 滑动窗口大小、信誉系统阈值、黑名单白名单等。
  *
- * <h2>配置前缀</h2>
+ * <h2>设计说明</h2>
  * <p>在 {@code application.yml} 中使用 {@code apex.security.ip-rate-limit} 前缀进行配置：
  * <pre>{@code * apex:
  *   security:

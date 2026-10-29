@@ -10,7 +10,7 @@ import reactor.core.publisher.Mono;
  * <p>提供领域事件的发布、订阅和处理能力。
  * 事件总线是领域层的核心组件，负责在领域层内部传递事件。</p>
  *
- * <h2>事件处理模式</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>同步处理：事件发布后立即同步执行所有处理器</li>
  *   <li>异步处理：事件发布后放入队列，异步执行处理器</li>
@@ -27,7 +27,6 @@ public interface DomainEventBus {
      * 发布领域事件（异步）。
      *
      * @param event 领域事件
-     * @return Mono&lt;Void&gt;
      */
     Mono<Void> publish(BaseDomainEvent event);
 
@@ -35,7 +34,6 @@ public interface DomainEventBus {
      * 发布多个领域事件（异步）。
      *
      * @param events 领域事件列表
-     * @return Mono&lt;Void&gt;
      */
     Mono<Void> publishAll(List<BaseDomainEvent> events);
 
@@ -43,7 +41,6 @@ public interface DomainEventBus {
      * 发布领域事件（同步）。
      *
      * @param event 领域事件
-     * @return Mono&lt;Void&gt;
      */
     Mono<Void> publishSync(BaseDomainEvent event);
 

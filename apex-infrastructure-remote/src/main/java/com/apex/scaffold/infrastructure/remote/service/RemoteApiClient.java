@@ -43,7 +43,7 @@ import reactor.util.retry.RetryBackoffSpec;
  * 支持 GET、POST（JSON/表单）、PUT、DELETE 等常用HTTP方法，具备连接超时、读取超时、
  * 自动重试、自定义请求头、HTTP 响应压缩等特性。
  *
- * <h2>核心特性</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li><b>多服务支持</b> - 通过 {@link RemoteApiProperties} 配置多个目标服务</li>
  *   <li><b>超时控制</b> - 支持按服务配置连接超时和读取超时时间</li>
@@ -635,7 +635,6 @@ public class RemoteApiClient {
      *
      * @param serviceName 目标服务名称（需在配置中已定义）
      * @param path 请求路径
-     * @return 空响应的Mono
      * @throws IllegalArgumentException 如果服务名未在配置中注册
      */
     public Mono<Void> delete(String serviceName, String path) {
@@ -648,7 +647,6 @@ public class RemoteApiClient {
      * @param serviceName 目标服务名称
      * @param path 请求路径
      * @param headers 自定义请求头
-     * @return 空响应的Mono
      */
     public Mono<Void> delete(String serviceName, String path, Map<String, String> headers) {
         return execute(RemoteRequest.builder(Void.class)

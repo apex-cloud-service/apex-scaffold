@@ -72,7 +72,6 @@ public class IdentityRelayAuthenticationFilter implements WebFilter {
      *
      * @param exchange 当前请求
      * @param chain 后续过滤链
-     * @return 请求完成信号
      */
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {

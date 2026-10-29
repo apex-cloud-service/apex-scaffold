@@ -17,7 +17,7 @@ import org.springframework.beans.factory.annotation.Value;
  *
  * <p>用于加密应用配置中的敏感信息（数据库密码、API密钥等）。
  *
- * <h2>加密算法</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>算法：AES-256-GCM（Galois/Counter Mode）</li>
  *   <li>密钥长度：256位</li>
@@ -25,7 +25,7 @@ import org.springframework.beans.factory.annotation.Value;
  *   <li>认证标签长度：128位</li>
  * </ul>
  *
- * <h2>使用方式</h2>
+ * <h2>使用示例</h2>
  * <pre>{@code
  * # 1. 加密敏感配置
  * String encrypted = configEncryptionService.encrypt("my-secret-password");
@@ -38,7 +38,7 @@ import org.springframework.beans.factory.annotation.Value;
  * # 3. 程序启动时自动解密
  * }</pre>
  *
- * <h2>密钥管理建议</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>生产环境：使用AWS KMS、HashiCorp Vault或Azure Key Vault</li>
  *   <li>开发环境：使用环境变量APEX_CONFIG_KEY</li>

@@ -86,6 +86,19 @@ public class OAuth2Service {
                         : fail(INVALID_CLIENT));
     }
 
+    /**
+     * 令牌端点：按 {@code grant_type} 分派到客户端凭证、密码、授权码或刷新令牌流程。
+     *
+     * <p>先校验客户端身份（{@code secret} 为空直接返回 {@code invalid_client}），
+     * 再校验该客户端允许的授权类型与认证方式，任一不通过即返回 OAuth2 错误响应。
+     *
+     * @param form 令牌请求表单，需包含 {@code grant_type}，按流程读取 {@code scope}、{@code code} 等字段
+     * @param clientId 客户端标识
+     * @param secret 客户端密钥，{@code null} 视为非法客户端
+     * @param method 客户端认证方式（如 {@code client_secret_basic}）
+     * @param tenant 租户标识
+     * @return OAuth2 令牌响应体；校验失败时为对应的错误响应体
+     */
     public Mono<Map<String, Object>> token(
             Map<String, String> form, String clientId, String secret, String method, String tenant) {
         if (secret == null) {
@@ -109,6 +122,19 @@ public class OAuth2Service {
         });
     }
 
+    /**
+     * 授权端点：校验客户端、重定向地址与 PKCE 参数后签发授权码。
+     *
+     * <p>仅支持 {@code response_type=code}，且强制 PKCE（{@code code_challenge_method=S256}，
+     * 挑战值须为 43 位 Base64URL 字符）。{@code principal} 为已认证的用户标识，
+     * 由上层认证流程传入，本方法不再校验其身份有效性。
+     *
+     * @param form 授权请求参数，需含 {@code redirect_uri}、{@code response_type}、{@code code_challenge} 等
+     * @param clientId 客户端标识
+     * @param principal 已认证用户标识
+     * @param tenant 租户标识
+     * @return 授权响应体；参数不合法时为对应的 OAuth2 错误响应体
+     */
     public Mono<Map<String, Object>> authorize(
             Map<String, String> form, String clientId, String principal, String tenant) {
         return client(clientId, null, tenant).flatMap(config -> {
@@ -167,6 +193,17 @@ public class OAuth2Service {
                 .then();
     }
 
+    /**
+     * 令牌内省端点（RFC 7662）：返回令牌的存活状态与元数据。
+     *
+     * <p>先按 access token 哈希查找，未命中再按 refresh token 哈希查找；令牌不属于
+     * {@code clientId}、已撤销或已过期时返回 {@code active=false}，不泄露具体失效原因。
+     *
+     * @param token 待内省的令牌原文，空白时返回 {@code invalid_request}
+     * @param clientId 调用方客户端标识，须与令牌归属一致
+     * @param tenant 租户标识
+     * @return 内省响应体，至少包含 {@code active} 字段
+     */
     public Mono<Map<String, Object>> introspect(String token, String clientId, String tenant) {
         if (token == null || token.isBlank()) {
             return fail(INVALID_REQUEST);
@@ -440,6 +477,9 @@ public class OAuth2Service {
         return Mono.error(new OAuthException(code));
     }
 
+    /**
+     * 携带 OAuth2 协议错误码的异常，错误码直接作为响应体 {@code error} 字段。
+     */
     @SuppressWarnings("PMD.ClassNamingShouldBeCamelRule")
     public static final class OAuthException extends RuntimeException {
         /**

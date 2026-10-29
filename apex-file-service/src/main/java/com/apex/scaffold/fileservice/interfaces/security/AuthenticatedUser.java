@@ -12,6 +12,10 @@ import java.security.Principal;
  * {@code UserContextRelayFilter} 注入的可信请求头（{@code X-User-Id}、{@code X-Tenant-Id}），
  * 由 {@link IdentityRelayAuthenticationFilter} 解析后构建。
  *
+ * @param userId 用户标识
+ * @param openId 第三方登录标识
+ * @param tenantId 租户标识
+ * @param deptId 所属部门标识
  * @author Apex Team
  * @version 1.3.1
  * @since 1.3.1

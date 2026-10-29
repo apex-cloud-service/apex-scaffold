@@ -34,7 +34,7 @@ import org.springframework.stereotype.Component;
  * <p>自动监听 RocketMQ 死信队列中的消息，对消费重试耗尽的消息进行二次处理、
  * 告警通知和持久化记录，避免死信消息只能人工查询处理的问题。
  *
- * <h2>处理流程</h2>
+ * <h2>设计说明</h2>
  * <ol>
  *   <li>消费者拉取到死信消息后，解析原始 Topic 和消息体</li>
  *   <li>根据原始 Topic 路由到对应的 {@link DlqHandler} 处理器</li>
@@ -42,7 +42,7 @@ import org.springframework.stereotype.Component;
  *   <li>补偿成功则 ACK，失败则记录 CRITICAL 告警日志</li>
  * </ol>
  *
- * <h2>启用条件</h2>
+ * <h2>设计说明</h2>
  * <p>需同时满足以下条件：
  * <ul>
  *   <li>RocketMQ 已配置（{@code rocketmq.name-server} 不为空）</li>

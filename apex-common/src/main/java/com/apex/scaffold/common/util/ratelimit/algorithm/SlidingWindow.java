@@ -11,7 +11,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>基于桶分片的滑动窗口算法，将时间窗口划分为多个细粒度的子桶，
  * 通过子桶计数累加实现 O(1) 时间复杂度的窗口计数。
  *
- * <h2>算法原理</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li><strong>子桶分片</strong>：将时间窗口 {@code windowMs} 划分为
  *       {@code bucketCount} 个等宽子桶，每个子桶记录该时间段内的请求计数</li>
@@ -23,7 +23,7 @@ import lombok.extern.slf4j.Slf4j;
  *       不随请求量增长</li>
  * </ul>
  *
- * <h2>与朴素滑动窗口的对比</h2>
+ * <h2>设计说明</h2>
  * <table border="1">
  *   <tr><th>维度</th><th>朴素滑动窗口（旧）</th><th>桶分片滑动窗口（本实现）</th></tr>
  *   <tr><td>时间复杂度</td><td>O(n)，n=10000</td><td>O(1)，n=bucketCount</td></tr>
@@ -32,7 +32,7 @@ import lombok.extern.slf4j.Slf4j;
  *   <tr><td>适用场景</td><td>低 QPS</td><td>高 QPS、生产环境</td></tr>
  * </table>
  *
- * <h2>线程安全</h2>
+ * <h2>线程安全性</h2>
  * <p>使用 {@link ReentrantLock} 保护子桶定位、过期清理和计数的原子性。</p>
  *
  * <h2>使用示例</h2>

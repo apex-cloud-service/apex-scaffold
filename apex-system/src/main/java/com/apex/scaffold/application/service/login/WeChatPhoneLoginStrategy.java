@@ -20,14 +20,14 @@ import reactor.core.publisher.Mono;
  * 采用模板方法模式，只需实现 {@link #authenticate(LoginRequest)} 方法完成手机号认证，
  * 其余的用户查询/创建、JWT Token 生成等公共流程由基类统一处理。
  *
- * <h2>登录流程</h2>
+ * <h2>设计说明</h2>
  * <ol>
  *   <li>使用手机号授权凭证(phoneCode)调用微信接口获取用户手机号</li>
  *   <li>本策略 {@link #authenticate(LoginRequest)} 调用微信API获取手机号</li>
  *   <li>基类 {@link AbstractPhoneLoginStrategy#login(LoginRequest)} 完成后续流程</li>
  * </ol>
  *
- * <h2>微信资料同步</h2>
+ * <h2>设计说明</h2>
  * <p>用户登录后，若该用户已有存储的微信 access_token（通过微信授权码登录获取），
  * 则在 {@link #postAuthentication(UserEntity, LoginRequest)} 钩子中异步拉取微信用户信息
  * 并同步昵称、头像、性别、地区等字段。同步策略与 {@link WeChatCodeLoginStrategy} 一致：
@@ -99,7 +99,7 @@ public class WeChatPhoneLoginStrategy extends AbstractPhoneLoginStrategy {
      * 则利用该 token 调用微信 {@code /sns/userinfo} 接口拉取最新的微信用户资料
      * （昵称、头像、性别、地区等）并同步到数据库。</p>
      *
-     * <h3>同步策略（与 WeChatCodeLoginStrategy 一致）</h3>
+     * <p><strong>同步策略（与 WeChatCodeLoginStrategy 一致）</strong></p>
      * <ul>
      *   <li><b>性别</b>：注册时选定的性别不可被微信覆盖，仅数据库性别为空时写入</li>
      *   <li><b>昵称</b>：微信昵称不为空时更新</li>
@@ -107,13 +107,12 @@ public class WeChatPhoneLoginStrategy extends AbstractPhoneLoginStrategy {
      *   <li><b>地区</b>：微信返回的国家/省份/城市信息不为空时更新</li>
      * </ul>
      *
-     * <h3>容错策略</h3>
+     * <p><strong>容错策略</strong></p>
      * <p>微信接口调用失败（网络超时、token过期等）仅记录警告日志，不阻断登录流程。
      * 用户现有的性别等字段保持不变。</p>
      *
      * @param user    已有用户实体（通过手机号查询得到）
      * @param request 原始登录请求参数
-     * @return 异步操作完成的 Mono，同步失败时亦返回空 Mono（不阻断登录）
      */
     @Override
     protected Mono<Void> postAuthentication(UserEntity user, LoginRequest request) {

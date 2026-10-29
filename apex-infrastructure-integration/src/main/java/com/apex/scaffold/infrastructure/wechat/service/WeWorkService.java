@@ -17,7 +17,7 @@ import reactor.core.publisher.Mono;
  * <p>提供企业微信自建应用相关的核心功能，包括AccessToken管理、
  * 消息推送、成员管理、部门管理等。
  *
- * <h3>企业微信API架构</h3>
+ * <p><strong>企业微信API架构</strong></p>
  * <p>企业微信API分为以下模块：
  * <ul>
  *   <li><b>通讯录管理</b> - 成员管理、部门管理、标签管理</li>
@@ -26,12 +26,12 @@ import reactor.core.publisher.Mono;
  *   <li><b>外部联系人</b> - 客户联系、客户群管理</li>
  * </ul>
  *
- * <h3>AccessToken说明</h3>
+ * <p><strong>AccessToken说明</strong></p>
  * <p>企业微信AccessToken与微信公众平台AccessToken不通用，需要单独获取。
  * 所有企业微信API请求需要在URL中携带access_token参数。
  * AccessToken有效期为7200秒，建议缓存并提前刷新。
  *
- * <h3>官方文档</h3>
+ * <p><strong>官方文档</strong></p>
  * <ul>
  *   <li><a href="https://developer.work.weixin.qq.com/document/path/90664">
  *       企业微信服务端API</a></li>
@@ -83,7 +83,7 @@ public class WeWorkService {
      * 企业微信中，每个自建应用和通讯录管理都有独立的Secret，
      * 需要使用对应Secret获取Token后才能调用该Secret可用的API。
      *
-     * <h3>Token说明</h3>
+     * <p><strong>Token说明</strong></p>
      * <ul>
      *   <li>有效期：7200秒（2小时）</li>
      *   <li>建议缓存并提前5分钟刷新</li>
@@ -118,7 +118,7 @@ public class WeWorkService {
      * <p>通过企业微信自建应用向指定成员、部门或标签发送消息。
      * 支持文本、图片、语音、视频、文件、文本卡片、图文、Markdown等多种消息类型。
      *
-     * <h3>接收人格式</h3>
+     * <p><strong>接收人格式</strong></p>
      * <ul>
      *   <li>{@code "@all"} - 向全员发送</li>
      *   <li>{@code "UserID1|UserID2"} - 向指定成员发送，多个用竖线分隔</li>
@@ -210,7 +210,7 @@ public class WeWorkService {
      * <p>企业微信网页授权登录，通过code换取成员信息。
      * 用于在企业微信内置浏览器中实现免登录。
      *
-     * <h3>返回数据字段</h3>
+     * <p><strong>返回数据字段</strong></p>
      * <ul>
      *   <li>{@code UserId} - 成员UserID</li>
      *   <li>{@code DeviceId} - 设备ID</li>

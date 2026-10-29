@@ -16,7 +16,7 @@ import org.springframework.context.annotation.Configuration;
  * <p>按运行环境选择 {@link WorkflowEventPublisher} 的实现，保证容器内始终恰好存在一个
  * 发布器 Bean，供 {@code WorkflowHandler} 注入使用。</p>
  *
- * <h2>按环境分条件装配</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li><strong>生产/开发（{@code apex.events.outbox.enabled=true}，默认）且存在
  *       {@link RocketMQTemplate} Bean</strong>：注册 {@link MqWorkflowEventPublisher}，

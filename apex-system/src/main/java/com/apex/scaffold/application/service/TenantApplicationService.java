@@ -27,7 +27,7 @@ import reactor.core.publisher.Mono;
  * <p>提供租户生命周期管理（创建、启用、停用、冻结、解冻、注销、归档）与配额校验，
  * 是平台管理员管理租户的基础入口。租户表为平台级元数据，不参与租户行级隔离。</p>
  *
- * <h2>核心业务规则</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>租户编码全局唯一，重名由数据库唯一约束兜底并映射为 {@code TENANT_CODE_EXISTS}</li>
  *   <li>非法状态迁移被拒绝并返回 {@code TENANT_ILLEGAL_TRANSITION}</li>
@@ -189,7 +189,6 @@ public class TenantApplicationService {
      * @param tenantCode 租户编码
      * @param current 当前用户数
      * @param increment 申请增量
-     * @return 完成信号
      * @throws BusinessException 当租户不存在、状态不允许或配额超限时抛出
      */
     public Mono<Void> assertUserQuota(String tenantCode, long current, long increment) {
@@ -210,7 +209,6 @@ public class TenantApplicationService {
      * 校验租户是否可创建业务数据。
      *
      * @param tenantCode 租户编码
-     * @return 完成信号，不可创建时抛出 {@code TENANT_ILLEGAL_TRANSITION}
      * @throws BusinessException 当租户不存在或不可创建业务数据时抛出
      */
     public Mono<Void> assertCanCreateBusinessData(String tenantCode) {

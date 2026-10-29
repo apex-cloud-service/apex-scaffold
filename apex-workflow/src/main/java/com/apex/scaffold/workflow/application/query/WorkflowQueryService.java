@@ -41,7 +41,7 @@ import reactor.core.publisher.Mono;
  * 内部对 MyBatis-Plus 的阻塞式 Mapper 调用统一通过
  * {@link BlockingIoSchedulers#jdbc()} 调度器承载，避免阻塞 Netty 事件循环线程。
  *
- * <h2>核心功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>流程实例分页查询与状态过滤</li>
  *   <li>流程实例详情聚合查询（定义 + 任务 + 当前节点）</li>

@@ -185,12 +185,22 @@ public class OauthEndpointRouter {
                 .build();
     }
 
-    /** OAuth 原生错误体，仅用于 OpenAPI 建模。 */
+    /**
+     * OAuth 原生错误体，仅用于 OpenAPI 建模。
+     *
+     * @param error OAuth 协议错误码
+     */
     @Schema(description = "原生 OAuth 错误响应，不含 Result 字段")
     public record OAuthError(
             @Schema(description = "OAuth 协议错误码", requiredMode = Schema.RequiredMode.REQUIRED) String error) {}
 
-    /** 撤销和内省共用的表单文档模型。 */
+    /**
+     * 撤销和内省共用的表单文档模型。
+     *
+     * @param token 访问令牌或刷新令牌
+     * @param clientId 表单客户端标识；不得与 HTTP Basic 同时提交
+     * @param clientSecret 表单客户端密钥
+     */
     @Schema(description = "token 必填；未使用 HTTP Basic 时 client_id 与 client_secret 必填")
     public record TokenActionForm(
             @Schema(description = "访问令牌或刷新令牌", requiredMode = Schema.RequiredMode.REQUIRED) String token,
@@ -198,7 +208,16 @@ public class OauthEndpointRouter {
             @Schema(name = "client_secret", description = "表单客户端密钥", accessMode = Schema.AccessMode.WRITE_ONLY)
                     String clientSecret) {}
 
-    /** 原生内省结果，除 active 外的字段仅在令牌有效时返回。 */
+    /**
+     * 原生内省结果，除 active 外的字段仅在令牌有效时返回。
+     *
+     * @param active 令牌是否有效
+     * @param clientId 客户端标识
+     * @param sub 令牌主体
+     * @param scope 授权范围
+     * @param tokenType 令牌类型
+     * @param exp 过期时间，UTC Unix 秒
+     */
     @Schema(description = "令牌内省结果")
     public record IntrospectionResponse(
             @Schema(description = "令牌是否有效", requiredMode = Schema.RequiredMode.REQUIRED) Boolean active,

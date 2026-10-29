@@ -26,14 +26,14 @@ import reactor.core.publisher.Mono;
  * <p>提供系统健康检查、根路径探活和系统信息查询接口，
  * 系统描述信息会根据客户端语言偏好自动切换。
  *
- * <h2>核心功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>健康检查：返回服务运行状态、时间戳、应用名称和版本</li>
  *   <li>根路径探活：供负载均衡器和反向代理探测服务存活</li>
  *   <li>系统信息：返回应用描述、版本、Java 版本、操作系统等运行环境信息</li>
  * </ul>
  *
- * <h2>接口列表</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>GET /api/v1/health — 健康检查，返回服务运行状态</li>
  *   <li>GET / — 根路径探活，返回服务存活状态</li>
@@ -73,7 +73,7 @@ public class HealthHandler extends BaseHandler {
      * <p>提供服务健康状态检查，用于负载均衡器、服务发现组件或监控系统检查服务可用性。
      * 返回包含状态、时间戳、应用名称和版本信息。
      *
-     * <h3>响应结构</h3>
+     * <p><strong>响应结构</strong></p>
      * <ul>
      *   <li>status: 服务状态，"UP"表示正常运行</li>
      *   <li>timestamp: 当前时间戳</li>
@@ -147,7 +147,7 @@ public class HealthHandler extends BaseHandler {
      * 主要用于运维人员了解当前运行环境信息。
      * 系统描述（description）会根据客户端 Accept-Language 请求头进行国际化。
      *
-     * <h3>响应结构</h3>
+     * <p><strong>响应结构</strong></p>
      * <ul>
      *   <li>application: 应用名称</li>
      *   <li>description: 应用描述（国际化）</li>

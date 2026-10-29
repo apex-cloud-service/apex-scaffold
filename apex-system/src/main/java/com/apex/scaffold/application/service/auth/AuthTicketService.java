@@ -100,7 +100,6 @@ public class AuthTicketService {
      *
      * @param phone 手机号，可为空
      * @param openId 微信 openId，可为空
-     * @return 完成信号
      */
     public Mono<Void> revokeIdentity(String phone, String openId) {
         String marker = String.valueOf(System.currentTimeMillis());

@@ -10,7 +10,7 @@ import org.springframework.http.HttpStatus;
  * 在全局异常处理和认证过滤器中统一使用，避免多份重复代码。
  * 直接使用 Spring 框架的 {@link HttpStatus} 枚举值，消除重复常量定义。
  *
- * <h2>映射规则</h2>
+ * <h2>设计说明</h2>
  * <table>
  *   <tr><th>错误码范围</th><th>HTTP 状态码</th><th>说明</th></tr>
  *   <tr><td>0</td><td>200 OK</td><td>成功</td></tr>
@@ -81,7 +81,7 @@ public class HttpStatusUtil {
      * 等细分错误码被误映射为 {@link HttpStatus#INTERNAL_SERVER_ERROR}(500) 的问题。
      * 采用千位段约定：401xx 段 → 401 Unauthorized，404xx 段 → 404 Not Found。</p>
      *
-     * <h3>判断顺序</h3>
+     * <p><strong>判断顺序</strong></p>
      * <ol>
      *   <li>null → 500</li>
      *   <li>0 → 200</li>

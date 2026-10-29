@@ -14,7 +14,7 @@ import lombok.experimental.SuperBuilder;
  * <p>对应数据库表 {@code gen_history},记录每次代码生成操作的执行结果,
  * 包括生成的文件清单、输出路径、执行状态、错误信息和操作人等审计信息。
  *
- * <h3>主要字段</h3>
+ * <p><strong>主要字段</strong></p>
  * <ul>
  *   <li>{@link #configId} - 关联的生成配置ID</li>
  *   <li>{@link #generatedFiles} - 生成的文件清单(JSON 数组)</li>
@@ -25,7 +25,7 @@ import lombok.experimental.SuperBuilder;
  *   <li>{@link #tenantId} - 租户标识</li>
  * </ul>
  *
- * <h3>审计作用</h3>
+ * <p><strong>审计作用</strong></p>
  * <ul>
  *   <li>追溯代码生成历史,支持回溯和对比</li>
  *   <li>统计生成成功率和失败原因</li>
@@ -33,7 +33,7 @@ import lombok.experimental.SuperBuilder;
  *   <li>提供操作审计和责任追踪</li>
  * </ul>
  *
- * <h3>JSON 字段格式</h3>
+ * <p><strong>JSON 字段格式</strong></p>
  * <p>{@code generatedFiles} 示例:
  * <pre>{@code
  * [

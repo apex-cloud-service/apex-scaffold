@@ -24,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
  * 应用服务与 DTO、接口层函数式 Handler，以及路由注册片段、数据库迁移
  * 片段与单元测试骨架。生成的代码遵循项目既有 Javadoc / Lombok / DDD 规范。</p>
  *
- * <h2>输出文件</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>{@code domain/model/entity/{Entity}Entity.java}</li>
  *   <li>{@code domain/repository/{Entity}Repository.java}</li>

@@ -12,7 +12,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * {@code @ConfigurationPropertiesScan} 自动发现。控制降级快照的保存开关、Redis
  * 写入节流窗口、本地缓存容量上限以及接入快照保存的资源白名单。</p>
  *
- * <h2>设计要点</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li><b>总开关默认开启</b>：{@code enabled} 默认 {@code true}，关闭时快照保存整体跳过；</li>
  *   <li><b>白名单默认空列表</b>：{@link #getResources()} 默认为空，表示默认不接入任何接口，
@@ -21,7 +21,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *       本地缓存不受节流限制（始终更新，保证最新数据）。</li>
  * </ul>
  *
- * <h2>配置示例（application.yml）</h2>
+ * <h2>使用示例</h2>
  * <pre>{@code * apex:
  *   degrade:
  *     snapshot:

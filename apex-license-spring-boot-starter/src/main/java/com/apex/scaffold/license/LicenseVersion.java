@@ -9,14 +9,14 @@ import lombok.RequiredArgsConstructor;
  * <p>本枚举定义了系统支持的所有License版本类型,每个版本对应不同的功能集和价格策略。
  * 版本之间呈递进关系,高级版本包含低级版本的所有功能。</p>
  *
- * <h3>版本体系</h3>
+ * <p><strong>版本体系</strong></p>
  * <ul>
  *   <li><b>基础版(BASIC)</b>:免费版本,提供核心功能,不包含任何商业高级特性</li>
  *   <li><b>标准版(STANDARD)</b>:付费版本,包含审计日志、API版本管理等P1优先级功能</li>
  *   <li><b>企业版(ENTERPRISE)</b>:旗舰版本,包含所有功能,支持定制化开发和专属技术支持</li>
  * </ul>
  *
- * <h3>功能映射</h3>
+ * <p><strong>功能映射</strong></p>
  * <p>不同版本包含的功能特性:
  * <table border="1">
  *   <tr>
@@ -69,7 +69,7 @@ import lombok.RequiredArgsConstructor;
  *   </tr>
  * </table>
  *
- * <h3>价格策略</h3>
+ * <p><strong>价格策略</strong></p>
  * <p>价格以分为单位存储,便于精确计算和货币转换:
  * <ul>
  *   <li>基础版:免费(0分/年)</li>
@@ -77,7 +77,7 @@ import lombok.RequiredArgsConstructor;
  *   <li>企业版:29,800分/年(298元/年)</li>
  * </ul>
  *
- * <h3>使用示例</h3>
+ * <p><strong>使用示例</strong></p>
  * <pre>{@code
  * // 从License信息中获取版本
  * LicenseInfo info = validator.getLicenseInfo();

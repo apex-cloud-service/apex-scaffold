@@ -10,12 +10,12 @@ import org.apache.ibatis.annotations.Mapper;
  * <p>负责 {@code sys_sso_audit_log} 表的持久化操作，记录所有 SSO 相关的操作日志和安全事件。
  * 继承 MyBatis-Plus {@link BaseMapper} 获得通用单表 CRUD 操作。
  *
- * <h2>表映射</h2>
+ * <h2>设计说明</h2>
  * <p>表名：{@code sys_sso_audit_log}<br>
  * 实体：{@link SysSsoAuditLogPO}<br>
  * 主键：{@code id}（Long 类型，雪花算法）
  *
- * <h2>审计日志字段</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>{@code user_id}：操作用户 ID</li>
  *   <li>{@code username}：用户名</li>
@@ -28,7 +28,7 @@ import org.apache.ibatis.annotations.Mapper;
  *   <li>{@code session_id}：关联的会话 ID</li>
  * </ul>
  *
- * <h2>审计事件类型</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>LOGIN：用户通过 SSO 登录</li>
  *   <li>LOGOUT：用户单点登出</li>
@@ -38,7 +38,7 @@ import org.apache.ibatis.annotations.Mapper;
  *   <li>SESSION_EXPIRE：会话过期</li>
  * </ul>
  *
- * <h2>安全审计用途</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>安全合规：满足等保、ISO 27001 等安全合规要求</li>
  *   <li>异常检测：识别可疑的登录行为和攻击模式</li>
@@ -46,7 +46,7 @@ import org.apache.ibatis.annotations.Mapper;
  *   <li>操作溯源：提供完整的用户操作审计链</li>
  * </ul>
  *
- * <h2>通用方法</h2>
+ * <h2>职责范围</h2>
  * <p>继承自 {@link BaseMapper} 的常用方法：
  * <ul>
  *   <li>{@code insert(entity)} - 插入审计日志</li>

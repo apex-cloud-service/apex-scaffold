@@ -85,7 +85,6 @@ public class AccountDeletionService {
      * 向当前账号已经绑定的手机号发送注销验证码。
      *
      * @param openId 当前认证身份
-     * @return 发送完成信号
      */
     public Mono<Void> sendDeletionCode(String openId) {
         return findCurrentUser(openId)
@@ -148,7 +147,6 @@ public class AccountDeletionService {
      * @param user 当前用户实体
      * @param phone 用户绑定的手机号
      * @param code 注销短信验证码
-     * @return 校验通过信号
      */
     private Mono<Void> verifyMembershipAndCode(UserEntity user, String phone, String code) {
         return Mono.defer(() -> {
@@ -202,7 +200,6 @@ public class AccountDeletionService {
      * @param user 当前用户实体
      * @param phone 用户绑定的手机号
      * @param openId 当前认证身份
-     * @return 清理完成信号
      */
     private Mono<Void> invalidateRuntimeState(UserEntity user, String phone, String openId) {
         // 身份级吊销标记是“注销后旧 token 不能污染新账号”的核心门闩，失败时必须让请求失败，
@@ -228,7 +225,6 @@ public class AccountDeletionService {
      * 吞掉清理类操作的所有失败并记录日志，保证后续清理继续执行。
      *
      * @param operation 可空的异步操作
-     * @return 空完成信号
      */
     private Mono<Void> safeVoid(Mono<?> operation) {
         return Mono.justOrEmpty(operation).then().onErrorResume(error -> {

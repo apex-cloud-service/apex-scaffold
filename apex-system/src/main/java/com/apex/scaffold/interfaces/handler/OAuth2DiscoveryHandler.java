@@ -24,14 +24,14 @@ import reactor.core.publisher.Mono;
  *
  * <p>实现 OAuth2 授权服务器元数据发现端点,符合 RFC 8414 规范。
  *
- * <h2>主要功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>暴露 OAuth2 授权服务器元数据端点 {@code /.well-known/oauth-authorization-server}</li>
  *   <li>提供服务器支持的端点、授权类型、作用域等配置信息</li>
  *   <li>支持客户端自动发现和配置</li>
  * </ul>
  *
- * <h2>返回的元数据包括</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>{@code issuer} - 授权服务器标识符</li>
  *   <li>{@code authorization_endpoint} - 授权端点</li>
@@ -58,7 +58,7 @@ import reactor.core.publisher.Mono;
  * }
  * }</pre>
  *
- * <h2>标准规范</h2>
+ * <h2>设计说明</h2>
  * <p>符合以下标准:
  * <ul>
  *   <li>RFC 8414 - OAuth 2.0 Authorization Server Metadata</li>

@@ -20,7 +20,7 @@ import org.springframework.stereotype.Component;
  * <p>监听 Sentinel 规则文件变化，自动重新加载规则，实现真正的热更新。
  * 使用 Java NIO WatchService 监听文件系统变化事件。
  *
- * <h2>工作原理</h2>
+ * <h2>设计说明</h2>
  * <ol>
  *   <li>启动时注册文件监听器，监听规则文件所在目录</li>
  *   <li>文件发生修改时，触发 ENTRY_MODIFY 事件</li>
@@ -28,13 +28,13 @@ import org.springframework.stereotype.Component;
  *   <li>新规则立即生效，无需重启应用</li>
  * </ol>
  *
- * <h2>支持的事件</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>ENTRY_MODIFY - 文件内容修改</li>
  *   <li>ENTRY_CREATE - 新文件创建（可选）</li>
  * </ul>
  *
- * <h2>配置说明</h2>
+ * <h2>设计说明</h2>
  * <pre>
  * apex:
  *   sentinel:
@@ -44,14 +44,14 @@ import org.springframework.stereotype.Component;
  *       rules-file: file:/path/to/sentinel-rules.json
  * </pre>
  *
- * <h2>使用场景</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>生产环境动态调整流控规则，无需重启</li>
  *   <li>紧急情况下快速修改降级策略</li>
  *   <li>A/B 测试不同的限流配置</li>
  * </ul>
  *
- * <h2>注意事项</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>规则文件必须是有效的 JSON 格式，否则加载失败</li>
  *   <li>加载失败不会影响当前运行的规则</li>

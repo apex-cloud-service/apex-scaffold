@@ -39,7 +39,6 @@ public class JobLogService {
      * 记录一条执行日志。
      *
      * @param entity 执行日志实体
-     * @return 记录完成的信号
      */
     public Mono<Void> record(JobLogEntity entity) {
         return jobLogRepository

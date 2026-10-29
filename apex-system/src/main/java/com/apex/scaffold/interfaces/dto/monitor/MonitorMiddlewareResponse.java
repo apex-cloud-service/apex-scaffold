@@ -27,7 +27,19 @@ public record MonitorMiddlewareResponse(
         @Schema(description = "消息中间件指标") MqStats mq,
         @Schema(description = "链路追踪指标") TracingStats tracing) {
 
-    /** MySQL 连接池与 SQL 统计。 */
+    /**
+     * MySQL 连接池与 SQL 统计。
+     *
+     * @param available 数据源是否可用
+     * @param driver 数据源类型/驱动
+     * @param activeConnections 活动连接数
+     * @param maxConnections 最大连接数
+     * @param idleConnections 空闲连接数
+     * @param activeConnectionRatio 连接使用率 0~1
+     * @param totalRequests 累计 SQL 请求数
+     * @param totalErrors 累计 SQL 错误数
+     * @param slowSqlCount 慢 SQL 数（阈值外）
+     */
     @Schema(description = "MySQL 指标")
     public record MysqlStats(
             @Schema(description = "数据源是否可用") boolean available,
@@ -40,7 +52,18 @@ public record MonitorMiddlewareResponse(
             @Schema(description = "累计 SQL 错误数") double totalErrors,
             @Schema(description = "慢 SQL 数（阈值外）") double slowSqlCount) {}
 
-    /** Redis 健康与派生指标。 */
+    /**
+     * Redis 健康与派生指标。
+     *
+     * @param available Redis 是否可用
+     * @param healthy 节点健康（PING 探针）
+     * @param nodes 节点数
+     * @param up 派生指标采集是否成功
+     * @param activeSessions 活跃会话数
+     * @param ipBlacklistSize IP 黑名单大小
+     * @param tokenBlacklistSize Token 黑名单大小
+     * @param lastSuccessTimestamp 最近成功采集时间戳（Unix 秒）
+     */
     @Schema(description = "Redis 指标")
     public record RedisStats(
             @Schema(description = "Redis 是否可用") boolean available,
@@ -52,7 +75,16 @@ public record MonitorMiddlewareResponse(
             @Schema(description = "Token 黑名单大小") double tokenBlacklistSize,
             @Schema(description = "最近成功采集时间戳（Unix 秒）") double lastSuccessTimestamp) {}
 
-    /** 消息中间件（RocketMQ）指标。 */
+    /**
+     * 消息中间件（RocketMQ）指标。
+     *
+     * @param available 是否已接入消息中间件
+     * @param type 中间件类型
+     * @param nameServer NameServer 地址
+     * @param producerGroup 生产组
+     * @param producerStatus 生产者状态（RUNNING/未启动）
+     * @param topics Topic 数
+     */
     @Schema(description = "消息中间件指标")
     public record MqStats(
             @Schema(description = "是否已接入消息中间件") boolean available,
@@ -62,7 +94,16 @@ public record MonitorMiddlewareResponse(
             @Schema(description = "生产者状态（RUNNING/未启动）") String producerStatus,
             @Schema(description = "Topic 数") int topics) {}
 
-    /** 链路追踪（SkyWalking）指标。 */
+    /**
+     * 链路追踪（SkyWalking）指标。
+     *
+     * @param available 是否已启用链路追踪
+     * @param type 追踪类型（SkyWalking）
+     * @param endpoint OAP 后端地址
+     * @param samplingRate 采样率 0~1
+     * @param spansPending 待上报 Segment 数
+     * @param spansDropped 丢弃 Segment 数
+     */
     @Schema(description = "链路追踪指标")
     public record TracingStats(
             @Schema(description = "是否已启用链路追踪") boolean available,

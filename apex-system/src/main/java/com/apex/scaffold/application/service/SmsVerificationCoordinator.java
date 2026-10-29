@@ -70,7 +70,6 @@ public class SmsVerificationCoordinator {
      * 检查手机号限流后发送验证码。
      *
      * @param phone 目标手机号
-     * @return 发送完成信号
      */
     public Mono<Void> send(String phone) {
         return send(phone, SmsCodePurpose.LOGIN);
@@ -81,7 +80,6 @@ public class SmsVerificationCoordinator {
      *
      * @param phone 目标手机号
      * @param purpose 验证码用途
-     * @return 发送完成信号
      */
     public Mono<Void> send(String phone, SmsCodePurpose purpose) {
         SmsCodePurpose normalizedPurpose = purpose == null ? SmsCodePurpose.LOGIN : purpose;

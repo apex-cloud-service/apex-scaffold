@@ -12,7 +12,7 @@ import lombok.ToString;
  * 通过 {@code cronExpression} 定义执行周期，由调度器在应用内
  * 动态注册执行。</p>
  *
- * <h2>核心业务规则</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>调用目标格式为 {@code beanName.methodName} 或 {@code beanName.methodName("arg", 1)}</li>
  *   <li>Cron 表达式采用 6/7 段标准格式（秒-周[年]），非法表达式拒绝保存</li>

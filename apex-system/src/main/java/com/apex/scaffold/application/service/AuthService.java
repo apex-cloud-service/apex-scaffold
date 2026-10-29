@@ -37,7 +37,7 @@ import reactor.core.scheduler.Schedulers;
  * 处理微信 APP 登录、Token 生成与刷新、退出登录等核心功能。
  * 作为应用层服务，协调领域层基础设施完成认证流程。
  *
- * <h2>核心功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>微信 APP 登录：支持验证码登录、一键登录和短信验证码登录，使用策略模式委派具体策略</li>
  *   <li>发送短信验证码：用于短信验证码登录场景，支持普通短信和创蓝短信平台</li>
@@ -47,13 +47,13 @@ import reactor.core.scheduler.Schedulers;
  *   <li>登录暴力破解防护：基于 Redis 的 IP 维度和用户维度的失败次数限制</li>
  * </ul>
  *
- * <h2>设计模式</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>策略模式：登录方式通过 {@link com.apex.scaffold.application.service.login.LoginStrategy} 接口实现，
  *   由 {@link LoginStrategyProvider} 根据请求中的登录类型动态选择合适的策略</li>
  * </ul>
  *
- * <h2>安全特性</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>集成 Sentinel 限流保护登录和刷新接口</li>
  *   <li>Token 黑名单机制支持主动失效</li>
@@ -229,7 +229,6 @@ public class AuthService {
      * 5 分钟窗口判定在线状态。新用户（openId 为空）跳过。</p>
      *
      * @param response 登录响应
-     * @return 心跳更新完成信号
      * @since 2.2.0
      */
     private Mono<Void> refreshHeartbeat(LoginResponse response) {
@@ -265,7 +264,6 @@ public class AuthService {
      *
      * @param request 登录请求
      * @param clientIp 客户端 IP，用于查询失败计数
-     * @return 校验通过的信号
      * @throws BusinessException 当验证码校验失败或升级强制未携带验证码时抛出
      */
     private Mono<Void> verifyCaptchaIfPresent(LoginRequest request, String clientIp) {
@@ -291,7 +289,6 @@ public class AuthService {
      * 校验请求携带的图形验证码。
      *
      * @param request 登录请求
-     * @return 校验通过的信号
      * @throws BusinessException 验证码无效时抛出 {@code CAPTCHA_INVALID}
      */
     private Mono<Void> verifyCaptcha(LoginRequest request) {
@@ -306,7 +303,6 @@ public class AuthService {
      * <p>APP 客户端未开启验证码时不传该字段，直接放行。</p>
      *
      * @param request 登录请求
-     * @return 校验通过的信号
      * @throws BusinessException 当验证码校验失败时抛出
      */
     private Mono<Void> verifyIfPresent(LoginRequest request) {
@@ -355,7 +351,6 @@ public class AuthService {
      *
      * @param request 登录请求
      * @param clientIp 客户端 IP
-     * @return 校验通过的空 Mono
      * @throws BusinessException 超过失败次数限制时抛出
      */
     private Mono<Void> checkBruteForce(LoginRequest request, String clientIp) {
@@ -413,7 +408,6 @@ public class AuthService {
      *
      * @param request 登录请求
      * @param clientIp 客户端 IP
-     * @return 空 Mono
      */
     private Mono<Void> recordLoginSuccess(LoginRequest request, String clientIp) {
         String username = resolveUsername(request);
@@ -442,7 +436,6 @@ public class AuthService {
      *
      * @param request 登录请求
      * @param clientIp 客户端 IP
-     * @return 空 Mono
      */
     private Mono<Void> recordLoginFailure(LoginRequest request, String clientIp) {
         String username = resolveUsername(request);
@@ -476,7 +469,6 @@ public class AuthService {
      *
      * @param key 计数器 Redis 键
      * @param windowSize 计数窗口
-     * @return 空 Mono
      */
     private Mono<Void> incrementLoginFailCount(String key, Duration windowSize) {
         return redisTemplate
@@ -503,7 +495,6 @@ public class AuthService {
      * @param platform 客户端平台标识（android/ios/h5/harmony/wechat），可为 {@code null}
      * @param success 是否成功
      * @param message 登录消息
-     * @return 空 Mono
      */
     private Mono<Void> safeRecordLoginLog(
             String username, String clientIp, String clientType, String platform, boolean success, String message) {
@@ -577,7 +568,7 @@ public class AuthService {
      * 刷新成功后查询用户信息，将包含性别在内的用户基础信息一并返回，
      * 同时将用户信息随新 Token 写入 Redis，避免鉴权时重复查库。
      *
-     * <h3>Token 过期异常细化处理</h3>
+     * <p><strong>Token 过期异常细化处理</strong></p>
      * <p>对 RefreshToken 过期的异常进行细化处理：</p>
      * <ul>
      *   <li>{@link ExpiredJwtException}（Token 已过期）→ 返回
@@ -590,7 +581,7 @@ public class AuthService {
      * 生命周期链路中，前端始终能区分"需要重新登录"和"请求异常"两种场景，
      * 避免用户长时间不操作后看到模糊的"未授权"提示而无法正确跳转至登录页面。</p>
      *
-     * <h3>异常处理链路</h3>
+     * <p><strong>异常处理链路</strong></p>
      * <table>
      *   <tr><th>异常类型</th><th>含义</th><th>ResultCode</th><th>前端行为</th></tr>
      *   <tr><td>{@link ExpiredJwtException}</td><td>RefreshToken 已过期</td>
@@ -799,7 +790,6 @@ public class AuthService {
      *
      * @param token 当前访问令牌
      * @param openId 当前用户 OpenID
-     * @return 空响应，表示退出成功
      */
     public Mono<Void> logout(String token, String openId) {
         return logout(token, openId, false);
@@ -819,7 +809,6 @@ public class AuthService {
      * @param token 当前访问令牌
      * @param openId 当前用户 OpenID
      * @param allSessions 是否全端登出（{@code ?scope=all}）
-     * @return 空响应，表示退出成功
      */
     public Mono<Void> logout(String token, String openId, boolean allSessions) {
         log.info("用户退出登录, openId: {}, allSessions: {}", openId, allSessions);
@@ -935,7 +924,6 @@ public class AuthService {
      * 验证码有效期为 5 分钟，同一手机号再次发送会覆盖之前的验证码。
      *
      * @param request 发送短信请求，包含目标手机号
-     * @return 空响应，表示发送成功
      */
     @SentinelResource(value = "authSendSms", blockHandler = "handleSendSmsBlock", fallback = "sendSmsFallback")
     public Mono<Void> sendSmsCode(SendSmsRequest request) {
@@ -951,7 +939,6 @@ public class AuthService {
      * 验证码有效期为 5 分钟，同一手机号再次发送会覆盖之前的验证码。
      *
      * @param request 发送短信请求，包含目标手机号
-     * @return 空响应，表示发送成功
      */
     @SentinelResource(value = "authSendClSms", blockHandler = "handleSendSmsBlock", fallback = "sendSmsFallback")
     public Mono<Void> sendClSmsCode(SendSmsRequest request) {
@@ -966,14 +953,14 @@ public class AuthService {
      * 调用创蓝闪验本机号校验API，校验当前流量卡的手机号与传入的手机号码是否一致。
      * 该接口适用于需要验证用户当前使用的手机号是否为其SIM卡绑定手机号的场景。
      *
-     * <h3>业务场景</h3>
+     * <p><strong>业务场景</strong></p>
      * <ul>
      *   <li>用户身份验证：确认用户正在使用的手机号与注册手机号一致</li>
      *   <li>安全校验：在敏感操作前验证用户身份</li>
      *   <li>一键登录降级：当一键登录不可用时，验证用户输入的手机号是否为本机号</li>
      * </ul>
      *
-     * <h3>接口规范（创蓝闪验服务端文档V3.X）</h3>
+     * <p><strong>接口规范（创蓝闪验服务端文档V3.X）</strong></p>
      * <ul>
      *   <li><b>接口地址</b>：https://wsflash.253.com/open/flashsdk/mobile-validate</li>
      *   <li><b>协议</b>：HTTPS</li>
@@ -981,7 +968,7 @@ public class AuthService {
      *   <li><b>请求内容类型</b>：application/x-www-form-urlencoded</li>
      * </ul>
      *
-     * <h3>响应字段说明</h3>
+     * <p><strong>响应字段说明</strong></p>
      * <table border="1">
      *   <tr><th>字段名</th><th>类型</th><th>说明</th></tr>
      *   <tr><td>isVerify</td><td>String</td><td>校验结果："1"表示是本机号码，"0"表示非本机号码</td></tr>
@@ -1028,7 +1015,6 @@ public class AuthService {
      *
      * @param request 发送短信请求
      * @param ex      Sentinel 限流异常
-     * @return 不会正常返回，始终抛出异常
      * @throws BusinessException 限流业务异常
      */
     public Mono<Void> handleSendSmsBlock(SendSmsRequest request, BlockException ex) {
@@ -1044,7 +1030,6 @@ public class AuthService {
      *
      * @param request 发送短信请求
      * @param ex      原始异常，如果是 {@link BusinessException} 则直接传递
-     * @return 不会正常返回，始终抛出异常
      * @throws BusinessException 降级业务异常
      */
     public Mono<Void> sendSmsFallback(SendSmsRequest request, Throwable ex) {

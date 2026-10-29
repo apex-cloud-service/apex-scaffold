@@ -21,7 +21,7 @@ import reactor.core.publisher.Mono;
  * 访问他人消息。消息的写入与实时推送由
  * {@link com.apex.scaffold.infrastructure.notification.NotificationService} 负责。</p>
  *
- * <h2>接口清单</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>GET  /api/v1/messages/inbox - 分页查询当前用户站内信</li>
  *   <li>GET  /api/v1/messages/unread-count - 查询当前用户未读消息数</li>

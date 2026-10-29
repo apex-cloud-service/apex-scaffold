@@ -13,7 +13,7 @@ import java.lang.annotation.Target;
  * 当并发调用数达到 {@link #maxConcurrent} 上限时，新的请求将在 {@link #timeout} 时间内
  * 等待获取许可；超时后返回 {@link #message} 指定的错误提示，避免系统因过载而崩溃。
  *
- * <h2>使用场景</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>资源密集型方法的并发保护（如大数据量导出）</li>
  *   <li>第三方服务调用配额受限时的并发控制</li>

@@ -33,14 +33,14 @@ import reactor.core.publisher.Mono;
  * 覆盖用户创建、检索、详情、资料编辑、会话撤销、状态启停与后台角色配置；
  * 除会话撤销外均要求 {@code staff:manage} 权限。
  *
- * <h2>核心功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>用户管理：创建、分页检索、查看详情、编辑资料、启用/停用用户</li>
  *   <li>角色配置：查询可配置的后台角色、替换用户的全部后台角色</li>
  *   <li>会话管理：强制撤销目标用户的全部会话</li>
  * </ul>
  *
- * <h2>接口列表</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>GET /admin-api/v1/staff-roles — 查询可配置的后台角色</li>
  *   <li>GET /admin-api/v1/users — 分页检索用户</li>

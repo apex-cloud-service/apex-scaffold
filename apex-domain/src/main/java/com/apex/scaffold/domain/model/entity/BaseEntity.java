@@ -14,7 +14,7 @@ import lombok.Getter;
  * 采用{@link Serializable}接口支持分布式传输和持久化。
  * </p>
  *
- * <h2>包含的通用字段</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>{@link #id} - 主键ID，全局唯一标识</li>
  *   <li>{@link #createTime} - 创建时间，记录实体首次创建时间戳</li>
@@ -57,7 +57,7 @@ public abstract class BaseEntity implements Serializable {
      * 新创建的实体在未保存前此字段为null。
      * </p>
      *
-     * <h3>设计说明</h3>
+     * <p><strong>设计说明</strong></p>
      * <p>
      * 使用Long类型以支持更大的ID范围，支持分库分表场景。
      * 数据库层面应配置为自增主键或使用分布式ID生成器（如Snowflake）。
@@ -73,7 +73,7 @@ public abstract class BaseEntity implements Serializable {
      * 此字段在实体创建时自动设置，之后不应修改。
      * </p>
      *
-     * <h3>使用场景</h3>
+     * <p><strong>使用场景</strong></p>
      * <ul>
      *   <li>数据审计和追溯</li>
      *   <li>时间范围查询</li>
@@ -90,7 +90,7 @@ public abstract class BaseEntity implements Serializable {
      * 每次实体状态发生变化时应自动更新。
      * </p>
      *
-     * <h3>使用场景</h3>
+     * <p><strong>使用场景</strong></p>
      * <ul>
      *   <li>并发冲突检测（乐观锁）</li>
      *   <li>缓存失效策略</li>
@@ -106,7 +106,7 @@ public abstract class BaseEntity implements Serializable {
      * 业务字段混淆。基础设施层会把它映射到数据库的 {@code version} 列，并由
      * MyBatis-Plus 的乐观锁插件在更新时校验和递增。
      *
-     * <h3>生命周期</h3>
+     * <p><strong>生命周期</strong></p>
      * <ul>
      *   <li>新实体尚未持久化时允许为 {@code null}，插入时由持久层初始化为 {@code 0}</li>
      *   <li>查询实体时由持久层恢复数据库中的当前版本</li>
@@ -130,7 +130,7 @@ public abstract class BaseEntity implements Serializable {
      * </ul>
      * </p>
      *
-     * <h3>设计说明</h3>
+     * <p><strong>设计说明</strong></p>
      * <p>
      * 所有查询方法应默认过滤已删除的记录。
      * 恢复已删除数据时，只需将此字段重置为0。
@@ -163,7 +163,7 @@ public abstract class BaseEntity implements Serializable {
      * 通常在工厂方法或构造函数末尾调用。
      * </p>
      *
-     * <h3>使用示例</h3>
+     * <p><strong>使用示例</strong></p>
      * <pre>{@code * public class UserEntity extends BaseEntity {
      *     public UserEntity() {
      *         super();
@@ -189,7 +189,7 @@ public abstract class BaseEntity implements Serializable {
      * 子类应在业务方法中主动调用此方法。
      * </p>
      *
-     * <h3>调用时机</h3>
+     * <p><strong>调用时机</strong></p>
      * <ul>
      *   <li>字段值变更后</li>
      *   <li>关联关系变更后</li>
@@ -225,7 +225,7 @@ public abstract class BaseEntity implements Serializable {
      * 物理数据保留，仅改变查询条件。
      * </p>
      *
-     * <h3>业务规则</h3>
+     * <p><strong>业务规则</strong></p>
      * <ul>
      *   <li>软删除应同时处理关联数据</li>
      *   <li>敏感数据可配合数据加密</li>

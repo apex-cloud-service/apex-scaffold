@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
  * 提取自原先 {@code ChuanglanApiService.decryptAes()} 方法，遵循策略模式实现
  * {@link PhoneDecryptStrategy} 接口。
  *
- * <h3>解密算法</h3>
+ * <p><strong>解密算法</strong></p>
  * <ol>
  *   <li>计算 {@code md5(appKey)} 得到 32 位十六进制字符串</li>
  *   <li>取前 16 位作为 AES 密钥</li>
@@ -27,7 +27,7 @@ import org.springframework.stereotype.Component;
  *   <li>返回 UTF-8 解码后的明文手机号</li>
  * </ol>
  *
- * <h3>设计模式</h3>
+ * <p><strong>设计模式</strong></p>
  * <ul>
  *   <li><b>策略模式</b>：封装 AES 解密算法，与 RSA 等其他策略可互换</li>
  *   <li>Spring {@code @Component} 注册，支持依赖注入</li>

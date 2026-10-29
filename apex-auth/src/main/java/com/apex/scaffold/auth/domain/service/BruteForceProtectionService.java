@@ -78,7 +78,6 @@ public class BruteForceProtectionService {
      *
      * @param username 用户名
      * @param clientIp 客户端IP
-     * @return 如果允许登录返回空Mono，否则返回错误
      */
     public Mono<Void> checkLoginAllowed(String username, String clientIp) {
         return Mono.zip(isUserLocked(username), isIpLocked(clientIp)).flatMap(tuple -> {
@@ -125,7 +124,6 @@ public class BruteForceProtectionService {
      *
      * @param username 用户名
      * @param clientIp 客户端IP
-     * @return 完成标识
      */
     public Mono<Void> recordLoginFailure(String username, String clientIp) {
         log.info("记录登录失败: username={}, ip={}", username, clientIp);
@@ -145,7 +143,6 @@ public class BruteForceProtectionService {
      *
      * @param username 用户名
      * @param clientIp 客户端IP
-     * @return 完成标识
      */
     public Mono<Void> recordLoginSuccess(String username, String clientIp) {
         log.info("记录登录成功，清除失败计数: username={}, ip={}", username, clientIp);
@@ -162,7 +159,6 @@ public class BruteForceProtectionService {
      *
      * @param username 用户名
      * @param operatorId 操作员ID
-     * @return 完成标识
      */
     public Mono<Void> unlockUser(String username, String operatorId) {
         log.info("管理员解锁用户: username={}, operator={}", username, operatorId);
@@ -180,7 +176,6 @@ public class BruteForceProtectionService {
      *
      * @param clientIp IP地址
      * @param operatorId 操作员ID
-     * @return 完成标识
      */
     public Mono<Void> unlockIp(String clientIp, String operatorId) {
         log.info("管理员解锁IP: ip={}, operator={}", clientIp, operatorId);
@@ -232,7 +227,6 @@ public class BruteForceProtectionService {
      * 增加用户失败计数
      *
      * @param username 用户名
-     * @return 完成标识
      */
     private Mono<Void> incrementUserFailures(String username) {
         String key = REDIS_PREFIX_USER_FAIL + username;
@@ -258,7 +252,6 @@ public class BruteForceProtectionService {
      * 增加IP失败计数
      *
      * @param clientIp IP地址
-     * @return 完成标识
      */
     private Mono<Void> incrementIpFailures(String clientIp) {
         String key = REDIS_PREFIX_IP_FAIL + clientIp;
@@ -282,7 +275,6 @@ public class BruteForceProtectionService {
      * 锁定用户
      *
      * @param username 用户名
-     * @return 完成标识
      */
     private Mono<Void> lockUser(String username) {
         String key = REDIS_PREFIX_USER_LOCKED + username;
@@ -309,7 +301,6 @@ public class BruteForceProtectionService {
      * 锁定IP
      *
      * @param clientIp IP地址
-     * @return 完成标识
      */
     private Mono<Void> lockIp(String clientIp) {
         String key = REDIS_PREFIX_IP_LOCKED + clientIp;
@@ -334,8 +325,6 @@ public class BruteForceProtectionService {
 
     /**
      * 增加全局失败计数
-     *
-     * @return 完成标识
      */
     private Mono<Void> incrementGlobalFailures() {
         return redisTemplate.opsForValue().increment(REDIS_GLOBAL_FAIL_COUNTER).flatMap(count -> {
@@ -372,7 +361,6 @@ public class BruteForceProtectionService {
      *
      * @param username 用户名
      * @param clientIp IP地址
-     * @return 完成标识
      */
     private Mono<Void> checkDistributedAttack(String username, String clientIp) {
         String key = REDIS_DISTRIBUTED_ATTACK + username;

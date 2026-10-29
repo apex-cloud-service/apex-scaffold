@@ -22,7 +22,7 @@ import reactor.core.publisher.Mono;
  * <p>提供文档的创建、更新、删除、查询与计数管理能力。文档支持富文本内容、
  * 文件附件、标签分类与浏览/下载统计。所有操作强制租户隔离。</p>
  *
- * <h2>核心功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>文档 CRUD：创建、更新、删除、按 ID 查询</li>
  *   <li>分页查询：支持关键词、类型、分类、状态过滤</li>
@@ -117,7 +117,6 @@ public class DocumentServiceImpl implements DocumentService {
      * <p>按当前租户隔离删除指定文档。
      *
      * @param id 文档 ID
-     * @return 完成信号
      */
     @Override
     public Mono<Void> delete(Long id) {
@@ -170,7 +169,6 @@ public class DocumentServiceImpl implements DocumentService {
      *
      * @param id 文档 ID
      * @param status 目标状态
-     * @return 完成信号；文档不存在或无租户权限时 Mono 以 BusinessException 错误终止
      */
     @Override
     public Mono<Void> updateStatus(Long id, Integer status) {
@@ -193,7 +191,6 @@ public class DocumentServiceImpl implements DocumentService {
      * <p>将指定文档的浏览计数加一并保存，文档不存在时直接完成。
      *
      * @param id 文档 ID
-     * @return 完成信号
      */
     @Override
     public Mono<Void> incrementViewCount(Long id) {
@@ -212,7 +209,6 @@ public class DocumentServiceImpl implements DocumentService {
      * <p>将指定文档的下载计数加一并保存，文档不存在时直接完成。
      *
      * @param id 文档 ID
-     * @return 完成信号
      */
     @Override
     public Mono<Void> incrementDownloadCount(Long id) {

@@ -36,7 +36,7 @@ import reactor.core.publisher.Mono;
  * 拦截所有标注了 {@link OperationLog} 注解的方法，自动记录操作日志。
  * 支持响应式（{@link Mono}）和非响应式两种方法返回类型的日志记录。
  *
- * <h2>核心功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>自动记录用户操作的模块、类型、描述、参数 IP 等信息</li>
  *   <li>对返回类型为 {@link Mono} 的方法，使用响应式的 {@code doOnSuccess} / {@code doOnError}
@@ -45,7 +45,7 @@ import reactor.core.publisher.Mono;
  *   <li>支持日志批量合并，减少数据库写入次数</li>
  * </ul>
  *
- * <h2>设计模式</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>生产者-消费者模式：使用阻塞队列实现日志的异步批量写入</li>
  *   <li>装饰器模式：对 {@link Mono} 返回值添加 {@code doOnSuccess/doOnError} 回调</li>
@@ -144,6 +144,17 @@ public class OperationLogAspect {
         return around(joinPoint, operationLog);
     }
 
+    /**
+     * 操作日志切面主体：按目标方法返回值类型分派同步或响应式记录逻辑。
+     *
+     * <p>由 {@link #aroundOperation} 解析出注解后调用；{@code operationLogEnabled} 为 {@code false}
+     * 时直接放行，不做任何日志采集。
+     *
+     * @param joinPoint 连接点
+     * @param operationLog 目标方法上的操作日志注解（已合并元注解）
+     * @return 目标方法返回值，可能已被包装以在信号完成/出错时落库
+     * @throws Throwable 目标方法执行异常
+     */
     public Object around(ProceedingJoinPoint joinPoint, OperationLog operationLog) throws Throwable {
         if (!operationLogEnabled) {
             return joinPoint.proceed();
@@ -180,12 +191,12 @@ public class OperationLogAspect {
      * 避免阻塞事件循环线程。
      *
      * @param joinPoint  连接点
-     * @param logEntity  日志实体（已包含请求信息）
      * @param operationLog 操作日志注解
+     * @param logEntity  日志实体（已包含请求信息）
      * @param startTime  开始时间
      * @param traceId    跟踪 ID
-     * @return 包装了日志记录逻辑的 {@link Mono}
      * @param tenantIdAtEntry 切面入口捕获的租户 ID（异步落库时透传）
+     * @return 包装了日志记录逻辑的 {@link Mono}
      * @throws Throwable 目标方法执行异常
      */
     @SuppressWarnings("unchecked")
@@ -255,12 +266,12 @@ public class OperationLogAspect {
      * <p>使用 try-catch-finally 结构同步记录日志。
      *
      * @param joinPoint  连接点
-     * @param logEntity  日志实体
      * @param operationLog 操作日志注解
+     * @param logEntity  日志实体
      * @param startTime  开始时间
      * @param traceId    跟踪 ID
-     * @return 目标方法执行结果
      * @param tenantIdAtEntry 切面入口捕获的租户 ID（异步落库时透传）
+     * @return 目标方法执行结果
      * @throws Throwable 目标方法执行异常
      */
     private Object handleSyncReturn(
@@ -588,7 +599,6 @@ public class OperationLogAspect {
      * 仅在响应式上下文中可用。获取失败或未认证时静默跳过，不影响主流程。
      *
      * @param logEntity 日志实体
-     * @return 完成时发出空信号的 Mono
      */
     private Mono<Void> enrichUserInfo(OperationLogEntity logEntity) {
         if (logEntity.getUserId() != null) {

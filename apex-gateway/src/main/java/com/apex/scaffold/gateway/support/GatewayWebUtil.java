@@ -43,7 +43,6 @@ public final class GatewayWebUtil {
      * @param exchange 当前交换对象
      * @param status   HTTP 状态码（401 / 403 / 429 等）
      * @param code     业务错误码（见 {@link ResultCode}）
-     * @return 完成信号
      */
     public static Mono<Void> writeError(ServerWebExchange exchange, HttpStatus status, ResultCode code) {
         return writeError(exchange, status, Result.error(code));
@@ -56,7 +55,6 @@ public final class GatewayWebUtil {
      * @param status   HTTP 状态码
      * @param code     业务错误码
      * @param traceId  链路追踪 ID
-     * @return 完成信号
      */
     public static Mono<Void> writeError(
             ServerWebExchange exchange, HttpStatus status, ResultCode code, String traceId) {
@@ -69,7 +67,6 @@ public final class GatewayWebUtil {
      * @param exchange 当前交换对象
      * @param status   HTTP 状态码
      * @param result   待序列化的结果对象
-     * @return 完成信号
      */
     public static Mono<Void> writeError(ServerWebExchange exchange, HttpStatus status, Result<?> result) {
         ServerHttpResponse response = exchange.getResponse();

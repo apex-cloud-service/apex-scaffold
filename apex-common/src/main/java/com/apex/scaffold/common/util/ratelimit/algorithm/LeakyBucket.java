@@ -12,7 +12,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>经典的漏桶算法，请求如同水流注入桶中，桶以固定速率漏水（处理请求）。
  * 当注入速率超过漏水速率时，多余的水溢出（拒绝请求），实现严格的平滑流量输出。
  *
- * <h2>算法原理</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li><strong>漏水速率</strong>：桶以 {@code leakRate} 速率（请求/秒）漏水，
  *       即系统以恒定速率处理请求</li>
@@ -24,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
  *       输出速率始终恒定，适合下游处理能力有限的场景</li>
  * </ul>
  *
- * <h2>与令牌桶的区别</h2>
+ * <h2>设计说明</h2>
  * <table border="1">
  *   <tr><th>维度</th><th>令牌桶</th><th>漏桶</th></tr>
  *   <tr><td>突发流量</td><td>允许（受桶容量限制）</td><td>不允许（严格平滑）</td></tr>
@@ -32,7 +32,7 @@ import lombok.extern.slf4j.Slf4j;
  *   <tr><td>适用场景</td><td>API 限流、突发容忍</td><td>MQ 消费、下游保护</td></tr>
  * </table>
  *
- * <h2>线程安全</h2>
+ * <h2>线程安全性</h2>
  * <p>使用 {@link ReentrantLock} 保护水位计算与更新的原子性。</p>
  *
  * <h2>使用示例</h2>

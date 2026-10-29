@@ -82,7 +82,6 @@ public class AccountDeletionTaskScheduler {
      * 将任务标记为成功完成。
      *
      * @param jobId 任务 ID
-     * @return 异步完成信号
      */
     private Mono<Void> markCompleted(Long jobId) {
         return Mono.fromRunnable(() -> taskMapper.markCompleted(jobId, LocalDateTime.now()))
@@ -95,7 +94,6 @@ public class AccountDeletionTaskScheduler {
      *
      * @param jobId 任务 ID
      * @param error 实际异常（消息截断后落库）
-     * @return 异步完成信号
      */
     private Mono<Void> markFailed(Long jobId, Throwable error) {
         String message = error.getMessage() == null ? error.getClass().getSimpleName() : error.getMessage();

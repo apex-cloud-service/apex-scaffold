@@ -20,7 +20,7 @@ import reactor.core.publisher.Mono;
  * 是管理系统运行时参数（系统名称、默认分页、上传限制等）的基础支撑。
  * 参数采用键值对模型，内置参数禁止删除以保护系统功能。</p>
  *
- * <h2>核心业务规则</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>参数键名全局唯一，创建与更新时校验（{@code CONFIG_KEY_EXISTS}）</li>
  *   <li>内置参数（{@code configType=0}）禁止删除，防止系统功能失效</li>

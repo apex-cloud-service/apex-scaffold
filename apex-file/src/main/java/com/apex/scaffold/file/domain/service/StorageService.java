@@ -11,14 +11,14 @@ import reactor.core.publisher.Mono;
  * 兼容门面委托独立对象存储 SPI 提供具体实现，
  * 支持多种云存储厂商的适配接入。</p>
  *
- * <h2>支持的存储类型</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>本地存储 - 默认实现，适用于单机部署</li>
  *   <li>MinIO - 开源对象存储，可显式启用</li>
  *   <li>阿里云OSS、火山引擎TOS、七牛 - 显式启用对应 SDK 策略</li>
  * </ul>
  *
- * <h2>使用方式</h2>
+ * <h2>使用示例</h2>
  * <p>通过 {@link StorageServiceProvider} 工厂类根据配置的存储类型
  * 获取对应的 {@link StorageService} 实现，业务层无需关注具体存储后端。</p>
  *
@@ -105,7 +105,7 @@ public interface StorageService {
      * 前端通过此前缀拼接由 {@code VotePhotoPathResolver} 生成的
      * 对象键（如 {@code AF/a.jpg}）即可得到完整的照片访问地址。</p>
      *
-     * <h2>各实现返回示例</h2>
+     * <h2>使用示例</h2>
      * <table>
      *   <tr><th>存储类型</th><th>返回值</th><th>完整 URL 示例</th></tr>
      *   <tr><td>LOCAL</td><td>{@code /uploads/apex}</td><td>{@code /uploads/apex/AF/a.jpg}</td></tr>

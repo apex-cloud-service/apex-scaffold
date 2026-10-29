@@ -76,6 +76,9 @@ public class StorageAutoConfiguration {
         return value;
     }
 
+    /**
+     * MinIO 后端的条件装配：仅在类路径存在客户端且显式启用时生效。
+     */
     @Configuration(proxyBeanMethods = false)
     @ConditionalOnClass(io.minio.MinioClient.class)
     @ConditionalOnProperty(name = "storage.minio.enabled", havingValue = "true")
@@ -109,6 +112,9 @@ public class StorageAutoConfiguration {
         }
     }
 
+    /**
+     * 火山引擎 TOS 后端的条件装配：仅在类路径存在客户端且显式启用时生效。
+     */
     @Configuration(proxyBeanMethods = false)
     @ConditionalOnClass(com.volcengine.tos.TOSV2.class)
     @ConditionalOnProperty(name = "storage.volcengine.enabled", havingValue = "true")
@@ -141,6 +147,9 @@ public class StorageAutoConfiguration {
         }
     }
 
+    /**
+     * 阿里云 OSS 后端的条件装配：仅在类路径存在客户端且显式启用时生效。
+     */
     @Configuration(proxyBeanMethods = false)
     @ConditionalOnClass(com.aliyun.oss.OSS.class)
     @ConditionalOnProperty(name = "storage.aliyun-oss.enabled", havingValue = "true")
@@ -174,6 +183,9 @@ public class StorageAutoConfiguration {
         }
     }
 
+    /**
+     * 七牛云后端的条件装配：仅在类路径存在上传管理器且显式启用时生效。
+     */
     @Configuration(proxyBeanMethods = false)
     @ConditionalOnClass(com.qiniu.storage.UploadManager.class)
     @ConditionalOnProperty(name = "storage.qiniu.enabled", havingValue = "true")

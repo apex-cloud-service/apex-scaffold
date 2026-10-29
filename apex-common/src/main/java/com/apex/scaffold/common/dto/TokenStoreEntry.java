@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
  * 额外携带登录时解析出的用户基础信息，使得鉴权过滤器和 Token 刷新流程
  * 可以从 Redis 直接获取用户信息，减少数据库查询。
  *
- * <h2>字段说明</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>{@code token} — JWT Token 字符串（access 或 refresh）</li>
  *   <li>{@code userId} — 用户主键 ID</li>
@@ -29,7 +29,7 @@ import lombok.NoArgsConstructor;
  *   <li>{@code deviceId} — 设备标识</li>
  * </ul>
  *
- * <h2>向后兼容</h2>
+ * <h2>设计说明</h2>
  * <p>{@code TokenServiceImpl.validateRefreshToken}
  * 会同时兼容旧格式（纯 JWT 字符串）和新格式（JSON 对象），确保平滑过渡。
  * 新增字段均为可空，旧 JSON 反序列化后对应字段为 {@code null}，不影响读取。

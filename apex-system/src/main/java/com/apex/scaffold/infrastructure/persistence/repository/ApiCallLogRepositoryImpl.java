@@ -35,7 +35,6 @@ public class ApiCallLogRepositoryImpl
      * 将共享调用观测数据转换为 system 日志实体后写入。
      *
      * @param observation 脱敏后的调用观测数据
-     * @return 写入完成信号
      */
     @Override
     public Mono<Void> save(com.apex.scaffold.infrastructure.remote.logging.ApiCallObservation observation) {
@@ -90,7 +89,6 @@ public class ApiCallLogRepositoryImpl
      * </ul>
      *
      * @param entity API 调用日志领域实体（包含请求/响应头体、执行耗时、状态、TraceId 等）
-     * @return 完成后发出信号的 {@link Mono}（无返回值）；写入失败已内部吞掉异常，订阅者不会收到 onError
      */
     @Override
     public Mono<Void> save(ApiCallLogEntity entity) {

@@ -11,7 +11,7 @@ import reactor.core.publisher.Mono;
  * {@code TaskCompletedEvent}），以 RocketMQ 直发方式投递到主题 {@code apex-workflow-events}，
  * 供 system / office 等订阅方消费（迁移方案 §6.4 / 执行计划 Phase 3.4）。
  *
- * <h2>实现与装配</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>{@link MqWorkflowEventPublisher}：生产环境实现，经 {@code RocketMQTemplate}
  *       异步发送（{@code @ConditionalOnProperty} 依据 {@code apex.events.outbox.enabled}）。</li>
@@ -35,7 +35,6 @@ public interface WorkflowEventPublisher {
      * 发布工作流领域事件。
      *
      * @param event 待发布的领域事件（不应为 {@code null}）
-     * @return 空 {@link Mono}，发送成功后完成；发送失败则发出错误信号（通常由调用方降级处理）
      */
     Mono<Void> publish(AbstractDomainEvent event);
 }

@@ -19,11 +19,11 @@ import reactor.util.retry.Retry;
  * <p>管理用户的积分账户，提供积分余额查询、增加（上限2000）、
  * 消费以及各类奖励发放功能（每日登录奖励、投票奖励、收藏奖励、邀请奖励）。</p>
  *
- * <h2>并发控制</h2>
+ * <h2>线程安全性</h2>
  * <p>采用乐观锁机制（version字段）保证并发安全。在高并发场景下，
  * 通过CAS操作确保数据一致性，避免超发奖励问题。</p>
  *
- * <h2>时区处理</h2>
+ * <h2>设计说明</h2>
  * <p>所有日期计算使用Asia/Shanghai时区，确保跨时区用户的日期判断一致性。</p>
  *
  * @author Apex Team
@@ -316,7 +316,7 @@ public class CreditService {
      *
      * <p>二选一：+1；四选二有正面照：+3；四选二无正面照：+2。</p>
      *
-     * <h3>对局类型说明</h3>
+     * <p><strong>对局类型说明</strong></p>
      * <ul>
      *   <li>CHOICE_2 - 二选一对局</li>
      *   <li>CHOICE_2_SELF_ANCHOR - 二选一锚点对局</li>
@@ -357,7 +357,7 @@ public class CreditService {
      *
      * <p>使用乐观锁机制确保并发安全，防止超发奖励。</p>
      *
-     * <h3>业务规则</h3>
+     * <p><strong>业务规则</strong></p>
      * <ul>
      *   <li>每次收藏奖励5积分</li>
      *   <li>每日上限200积分</li>

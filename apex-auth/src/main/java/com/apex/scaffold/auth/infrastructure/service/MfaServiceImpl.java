@@ -213,7 +213,6 @@ public class MfaServiceImpl implements MfaService {
      * @param userId 用户ID
      * @param type 要禁用的MFA类型
      * @param tenantId 租户ID
-     * @return 完成信号
      */
     @Override
     @CacheEvict(value = "mfa-config", key = "#tenantId + ':' + #userId")
@@ -329,7 +328,6 @@ public class MfaServiceImpl implements MfaService {
      * @param userId 用户ID
      * @param type MFA类型
      * @param tenantId 租户ID
-     * @return 完成信号
      */
     @Override
     public Mono<Void> sendMfaCode(String userId, MfaConfig.MfaType type, String tenantId) {
@@ -442,7 +440,6 @@ public class MfaServiceImpl implements MfaService {
      * @param type 要解锁的MFA类型
      * @param operator 执行解锁操作的运维人员标识
      * @param tenantId 租户ID
-     * @return 完成信号
      */
     @Override
     @CacheEvict(value = "mfa-config", key = "#tenantId + ':' + #userId")

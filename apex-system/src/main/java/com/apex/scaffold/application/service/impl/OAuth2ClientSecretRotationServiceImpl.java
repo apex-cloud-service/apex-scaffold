@@ -250,7 +250,6 @@ public class OAuth2ClientSecretRotationServiceImpl implements OAuth2ClientSecret
      *
      * @param clientId 客户端 ID
      * @param scheduledTime 计划执行轮换的时间
-     * @return 完成信号
      */
     @Override
     public Mono<Void> scheduleSecretRotation(String clientId, Instant scheduledTime) {
@@ -265,7 +264,6 @@ public class OAuth2ClientSecretRotationServiceImpl implements OAuth2ClientSecret
      * 当前实现仅记录日志，未对接外部通知渠道。
      *
      * @param clientId 客户端 ID
-     * @return 完成信号
      */
     @Override
     public Mono<Void> notifyClientSecretExpiring(String clientId) {

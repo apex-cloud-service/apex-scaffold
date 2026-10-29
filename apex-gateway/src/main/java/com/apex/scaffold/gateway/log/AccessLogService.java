@@ -90,7 +90,6 @@ public class AccessLogService {
      * 保证返回信号始终为正常完成，不影响调用方。
      *
      * @param record 待落库的访问日志记录（请求头须已脱敏）
-     * @return 完成信号；被开关/采样拦截时立即完成
      */
     public Mono<Void> save(AccessLogRecord record) {
         if (record == null || !properties.isEnabled() || !sampled()) {

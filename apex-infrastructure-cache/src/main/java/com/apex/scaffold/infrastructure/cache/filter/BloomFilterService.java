@@ -17,7 +17,7 @@ import org.springframework.stereotype.Service;
  * <p>提供基于 Guava BloomFilter 的缓存穿透防护，适用于大规模键空间的存在性快速判断。
  * 支持多个命名空间隔离的过滤器实例，每个命名空间独立维护预期容量和误判率。
  *
- * <h2>核心功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>多命名空间支持：不同业务域使用独立的 BloomFilter 实例</li>
  *   <li>动态创建：首次使用自动创建指定容量和误判率的过滤器</li>
@@ -25,14 +25,14 @@ import org.springframework.stereotype.Service;
  *   <li>误判率控制：默认 0.01（1%），可根据业务场景调整</li>
  * </ul>
  *
- * <h2>使用场景</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>防止缓存穿透：在查询缓存前，先用 Bloom Filter 判断 key 是否可能存在</li>
  *   <li>大规模存在性检查：用户ID、订单ID、文件哈希等海量数据的快速过滤</li>
  *   <li>热点数据预热：启动时将数据库中的所有有效 key 加载到过滤器</li>
  * </ul>
  *
- * <h2>工作原理</h2>
+ * <h2>设计说明</h2>
  * <pre>
  * 1. 数据预热阶段：将数据库中所有有效 key 加入 BloomFilter
  * 2. 查询阶段：
@@ -40,18 +40,18 @@ import org.springframework.stereotype.Service;
  *    - BloomFilter.mightContain(key) = true → key 可能存在，继续查询缓存和数据库
  * </pre>
  *
- * <h2>性能特征</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>空间效率：100万元素、1%误判率仅需约 1.2MB 内存</li>
  *   <li>时间复杂度：O(k)，k 为哈希函数个数，通常为常数级</li>
  *   <li>误判情况：可能将不存在的 key 判断为存在（假阳性），但不会将存在的判断为不存在</li>
  * </ul>
  *
- * <h2>配置说明</h2>
+ * <h2>设计说明</h2>
  * <p>通过 {@code apex.cache.bloom-filter.enabled=true} 启用。
  * 各命名空间的容量和误判率在首次使用时通过代码指定。
  *
- * <h2>注意事项</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>BloomFilter 不支持删除操作，需要重建才能移除元素</li>
  *   <li>容量规划时预留 20-30% 增长空间，避免超出预期容量导致误判率上升</li>

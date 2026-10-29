@@ -8,6 +8,15 @@ import io.swagger.v3.oas.annotations.media.Schema;
  *
  * <p>审核原因 ID 以字符串传输，避免雪花 ID 在浏览器端丢失精度。</p>
  *
+ * @param id 原因ID（以字符串传输，避免前端精度丢失）
+ * @param reviewType 审核类型
+ * @param code 原因编码，创建后不可修改
+ * @param label 原因展示文案
+ * @param description 原因补充说明
+ * @param enabled 是否启用（停用后审核时不可再选择）
+ * @param requireComment 选择该原因时是否强制填写备注
+ * @param sortOrder 展示排序值（越小越靠前）
+ * @param version 乐观锁版本号
  * @author Apex Team
  * @version 1.0.0
  * @since 1.0.0

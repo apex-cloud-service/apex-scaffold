@@ -29,26 +29,26 @@ import reactor.core.publisher.Mono;
  * <p>基于 Redis Sorted Set 滑动窗口算法实现 IP 级别的请求速率限制，
  * 并对持续无视 429 响应的客户端进行短时封禁。
  *
- * <h2>滑动窗口算法</h2>
+ * <h2>设计说明</h2>
  * <p>
  * 使用 Redis Sorted Set 存储每个 IP 在某一路径下的请求时间戳，
  * Key 格式为 {@code rate:ip:<ip>:<path>}，Member 为 UUID，Score 为时间戳。
  * 每次请求时清理窗口外旧数据，统计窗口内请求数，超过阈值则触发限流。
  * </p>
  *
- * <h2>违规升级策略</h2>
+ * <h2>设计说明</h2>
  * <p>
  * 只有真实触发速率上限的请求才计为违规。业务 404、空 User-Agent 和其他业务响应
  * 均不参与封禁判断，避免将资源不足、共享出口或客户端差异误判为攻击。
  * </p>
  *
- * <h2>封禁策略</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>单次超限：返回 429，不立即封禁</li>
  *   <li>违规窗口内持续超限达到阈值：封禁 {@code blockDuration} 秒（默认 5 分钟）</li>
  * </ul>
  *
- * <h2>白名单</h2>
+ * <h2>职责范围</h2>
  * <p>支持 CIDR 格式的 IP 白名单，白名单内的 IP 不受速率限制约束。</p>
  *
  * @author Apex Team
@@ -153,7 +153,6 @@ public class IpRateLimitWebFilter implements WebFilter {
      *
      * @param exchange 当前 HTTP 请求-响应交换对象
      * @param chain    WebFlux 过滤器链
-     * @return 表示过滤完成的 Mono
      */
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
@@ -287,7 +286,6 @@ public class IpRateLimitWebFilter implements WebFilter {
      * @param reputationKey 信誉 Redis Key
      * @param violationKey  短期违规计数 Key
      * @param clientIp      客户端 IP
-     * @return 表示限流响应的 Mono
      */
     private Mono<Void> registerViolationAndRespond(
             ServerWebExchange exchange, String reputationKey, String violationKey, String clientIp) {
@@ -380,6 +378,12 @@ public class IpRateLimitWebFilter implements WebFilter {
         }
     }
 
+    /**
+     * 单条路径的限流策略。
+     *
+     * @param rateKey 限流计数器键，按路径模式生成
+     * @param limit 该路径在统计窗口内允许的请求数
+     */
     private record PathLimitPolicy(String rateKey, int limit) {}
 
     /**
@@ -476,7 +480,7 @@ public class IpRateLimitWebFilter implements WebFilter {
      * 在代理场景下，仅依赖 IP 可能导致误判（多个用户共享同一出口 IP），
      * 通过加入 User-Agent 特征可以更精确地识别不同客户端。
      *
-     * <h2>生成规则</h2>
+     * <h2>设计说明</h2>
      * <ul>
      *   <li>若 User-Agent 为空：返回 {@code ip}</li>
      *   <li>若 User-Agent 不为空：返回 {@code ip:uaHash}，其中 uaHash 为 User-Agent 的哈希值</li>

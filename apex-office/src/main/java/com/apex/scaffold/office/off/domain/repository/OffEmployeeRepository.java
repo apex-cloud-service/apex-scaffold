@@ -11,7 +11,7 @@ import reactor.core.publisher.Mono;
  * <p>定义办公平台员工信息的持久化操作契约，支持从外部办公平台（飞书、钉钉、企业微信）
  * 同步的员工数据管理。提供员工的增删改查、部门关联查询、用户映射、批量操作等功能。
  *
- * <h2>核心职责</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>员工的基础 CRUD 操作</li>
  *   <li>按部门查询员工列表</li>
@@ -22,7 +22,7 @@ import reactor.core.publisher.Mono;
  *   <li>员工编码唯一性管理</li>
  * </ul>
  *
- * <h2>查询场景</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>组织架构：查询部门下的所有员工</li>
  *   <li>用户绑定：通过 userId 查找对应的员工信息</li>
@@ -30,7 +30,7 @@ import reactor.core.publisher.Mono;
  *   <li>员工管理：分页查询、状态筛选、部门筛选</li>
  * </ul>
  *
- * <h2>技术特性</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>响应式编程：所有方法返回 Mono/Flux</li>
  *   <li>部门关联：支持按部门查询员工</li>
@@ -115,7 +115,6 @@ public interface OffEmployeeRepository {
      * 根据ID删除员工（逻辑删除）
      *
      * @param id 员工ID
-     * @return 删除操作的Mono包装
      */
     Mono<Void> deleteById(Long id);
 

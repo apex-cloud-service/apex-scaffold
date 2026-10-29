@@ -39,7 +39,7 @@ import org.springframework.web.server.ServerWebExchange;
  * 集中管理限流（Flow Control）、熔断降级（Degrade）和系统保护（System Guard）三类规则。
  * 所有规则在应用启动时通过 {@link PostConstruct} 自动注册到 Sentinel 规则管理器。</p>
  *
- * <h2>规则体系</h2>
+ * <h2>设计说明</h2>
  * <table>
  *   <caption>Sentinel 规则类型与用途</caption>
  *   <tr><th>规则类型</th><th>Sentinel 管理器</th><th>触发场景</th><th>触发后行为</th></tr>
@@ -48,7 +48,7 @@ import org.springframework.web.server.ServerWebExchange;
  *   <tr><td>系统保护规则</td><td>{@link SystemRuleManager}</td><td>CPU/线程/QPS 过载</td><td>返回 503 Service Unavailable</td></tr>
  * </table>
  *
- * <h2>限流策略分组</h2>
+ * <h2>设计说明</h2>
  * <table>
  *   <caption>流控规则分组与 QPS 阈值</caption>
  *   <tr><th>分组</th><th>接口数量</th><th>典型 QPS</th><th>覆盖范围</th></tr>
@@ -62,7 +62,7 @@ import org.springframework.web.server.ServerWebExchange;
  *   <tr><td>V1 探索投票（explore-v1）</td><td>6</td><td>40~100</td><td>获取对局/提交/跳过/共鸣/金睛火眼</td></tr>
  * </table>
  *
- * <h2>熔断参数说明</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>异常比例阈值（count）：窗口内异常数占比超过此值触发熔断，统计窗口使用 Sentinel 默认值</li>
  *   <li>慢调用规则显式使用 30 秒统计窗口，{@code count} 表示 RT 阈值，{@code slowRatioThreshold} 表示慢调用比例</li>
@@ -70,17 +70,17 @@ import org.springframework.web.server.ServerWebExchange;
  *   <li>认证接口（login/refresh）为 10s，文件/媒体/外部为 15~30s</li>
  * </ul>
  *
- * <h2>系统保护规则</h2>
+ * <h2>设计说明</h2>
  * <p>系统保护规则（CPU 使用率、入口 QPS）通过 {@link #initSystemRules()} 在启动时
  * 根据 {@code apex.sentinel.system-rules.*} 配置注册到 {@link SystemRuleManager}。
  * 可通过配置项开关与阈值，实现部署时调整；生产环境建议开启作为最后防线。</p>
  *
- * <h2>Spring 6.2 兼容性</h2>
+ * <h2>设计说明</h2>
  * <p>Sentinel 1.8.8 默认的 {@link BlockRequestHandler} 实现依赖 Spring 6.1.x 内部 API，
  * 在 Spring Boot 3.5（基于 Spring 6.2）中会因方法签名移除而导致运行时错误。
  * 本类通过自定义 {@code blockRequestHandler()} Bean 覆盖默认实现，确保兼容。</p>
  *
- * <h2>异常处理</h2>
+ * <h2>设计说明</h2>
  * <p>限流/熔断触发的 Sentinel 异常由 {@link com.apex.scaffold.interfaces.exception.SentinelExceptionHandler}
  * 统一捕获并转换为国际化 HTTP 错误响应。</p>
  *
@@ -216,12 +216,12 @@ public class SentinelConfig {
      * （如 {@code DefaultServerResponseBuilder.syncBody(Object)}），
      * 导致运行时 {@code NoSuchMethodError}。本 Bean 提供兼容实现替代默认处理器。</p>
      *
-     * <h3>响应格式</h3>
+     * <p><strong>响应格式</strong></p>
      * <p>返回全站统一 {@link Result} 结构（code/msg/data/traceId），与 IP 限流、
      * 全局异常处理器的响应格式保持一致，避免客户端需要兼容多套错误体。
      * 消息通过 {@link MessageUtils} 按请求 {@code Accept-Language} 国际化。</p>
      *
-     * <h3>响应码规则</h3>
+     * <p><strong>响应码规则</strong></p>
      * <ul>
      *   <li>限流异常（{@link FlowException} / {@link ParamFlowException}）→ HTTP 429，
      *       业务码 {@link ResultCode#RATE_LIMIT}（2001）</li>
@@ -632,7 +632,7 @@ public class SentinelConfig {
      * <p>受 {@code apex.sentinel.system-rules.enabled} 控制（默认 {@code true}）。
      * 本地开发环境建议设为 {@code false} 避免误拦；生产环境建议开启作为最后防线。</p>
      *
-     * <h3>启用的规则</h3>
+     * <p><strong>启用的规则</strong></p>
      * <ul>
      *   <li>CPU 使用率阈值（可配置，默认 0.8）</li>
      *   <li>入口 QPS 阈值（可配置，默认 2000）</li>

@@ -31,7 +31,7 @@ import reactor.core.publisher.Mono;
  * 资源类型中进行全文检索，并提供索引重建能力用于索引损坏或数据不一致时的恢复。
  * 搜索结果支持分页，索引重建操作会清空现有索引并重新建立。</p>
  *
- * <h2>接口清单</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>GET /admin-api/v1/search - 全文搜索（支持 keyword/types/page/size 参数）</li>
  *   <li>POST /admin-api/v1/search/rebuild - 重建搜索索引（支持按 type 重建）</li>

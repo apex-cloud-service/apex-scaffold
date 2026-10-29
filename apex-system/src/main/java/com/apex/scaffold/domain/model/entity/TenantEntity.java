@@ -14,7 +14,7 @@ import lombok.ToString;
  * <p>表示 SaaS 或私有化多组织场景下的租户基础模型，承载租户基础信息、
  * 状态生命周期与配额约束。租户是数据隔离的顶层边界，所有业务数据均归属租户。</p>
  *
- * <h2>状态生命周期</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>{@link TenantStatus#ACTIVE} - 正常，可创建业务数据</li>
  *   <li>{@link TenantStatus#DISABLED} - 停用，运营手动暂停，可重新启用</li>
@@ -23,7 +23,7 @@ import lombok.ToString;
  *   <li>{@link TenantStatus#ARCHIVED} - 归档（终态），数据保留但任何迁移被拒绝</li>
  * </ul>
  *
- * <h2>核心业务规则</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>停用、冻结、注销、归档状态的租户不得创建新业务数据</li>
  *   <li>非正常状态的租户不允许任何配额增长</li>

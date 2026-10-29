@@ -10,7 +10,7 @@ import reactor.core.publisher.Mono;
  * <p>定义Token的全生命周期管理接口，包括签发、验证、刷新、撤销等核心功能。
  * 支持JWT和Opaque Token两种格式。
  *
- * <h2>核心功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>Token签发：生成访问令牌和刷新令牌</li>
  *   <li>Token验证：验证签名、过期时间、黑名单</li>
@@ -95,7 +95,6 @@ public interface TokenService {
      * 撤销后的Token无法再使用。
      *
      * @param token Token字符串
-     * @return 撤销结果的Mono
      */
     Mono<Void> revokeToken(String token);
 
@@ -107,7 +106,6 @@ public interface TokenService {
      *
      * @param userId 用户ID
      * @param tenantId 租户ID
-     * @return 撤销结果的Mono
      */
     Mono<Void> revokeAllUserTokens(Long userId, String tenantId);
 

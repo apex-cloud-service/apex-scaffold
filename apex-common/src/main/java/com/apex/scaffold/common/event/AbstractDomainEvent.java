@@ -10,7 +10,7 @@ import lombok.Getter;
  * 实现 {@link java.io.Serializable} 以支持事件序列化（如跨进程传递、事件存储）。
  * 与 {@code DomainEventBus} 兼容，所有事件处理链中的子类需确保可序列化。
  *
- * <h2>与 BaseDomainEvent 的区别</h2>
+ * <h2>设计说明</h2>
  * <p>{@link BaseDomainEvent} 是所有事件的根基类，提供事件ID、时间戳、溯源ID等基本属性。
  * {@code AbstractDomainEvent} 在此基础上添加序列化支持，适用于需要序列化的业务事件。
  * 不需要序列化的事件可直接继承 {@link BaseDomainEvent}。</p>

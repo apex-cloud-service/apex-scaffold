@@ -14,6 +14,20 @@ import java.time.LocalDate;
 /**
  * 超级管理员编辑用户基础资料和画像请求。
  *
+ * @param phone 用户手机号（大陆 11 位手机号，不可与其他用户重复）
+ * @param nickname 用户昵称
+ * @param gender 性别（1-男，2-女）
+ * @param birthday 出生日期（必须早于当前日期）
+ * @param country 国家/地区
+ * @param province 省份
+ * @param city 城市
+ * @param datingGoal 交友目标
+ * @param mbti MBTI 人格类型（INTJ、INTP、ENTJ、ENTP、INFJ、INFP、ENFJ、ENFP、ISTJ、ISFJ、ESTJ、ESFJ、ISTP、ISFP、ESTP、ESFP，
+ * @param heightCm 身高（厘米，100-250）
+ * @param school 学校
+ * @param educationLevel 最高学历（HIGH_SCHOOL-高中及以下，ASSOCIATE-大专，BACHELOR-本科，MASTER-硕士，DOCTOR-博士，OTHER-其他）
+ * @param job 职业
+ * @param bio 个人简介
  * @author Apex Team
  * @version 1.0.0
  * @since 1.0.0

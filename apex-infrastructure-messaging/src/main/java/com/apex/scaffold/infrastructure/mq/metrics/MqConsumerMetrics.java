@@ -22,7 +22,7 @@ import org.springframework.stereotype.Component;
  *   <li>消费积压（Lag）</li>
  * </ul>
  *
- * <h2>Prometheus 指标</h2>
+ * <h2>设计说明</h2>
  * <pre>
  * # 消息消费成功次数
  * mq_consumer_consume_success_total{topic="xxx",group="xxx"}

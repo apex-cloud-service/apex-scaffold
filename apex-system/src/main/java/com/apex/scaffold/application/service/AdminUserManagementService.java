@@ -410,7 +410,6 @@ public class AdminUserManagementService {
      * 校验操作者具备超级管理员角色，否则返回权限错误。
      *
      * @param openId 操作者 openId
-     * @return 校验通过信号
      */
     private Mono<Void> assertSuperAdmin(String openId) {
         return userRepository

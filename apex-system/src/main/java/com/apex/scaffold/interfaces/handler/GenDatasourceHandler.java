@@ -27,7 +27,7 @@ import reactor.core.publisher.Mono;
  * 所有端点要求 {@code system:generator:datasource:*} 权限。数据源配置
  * 用于代码生成器连接目标数据库，支持 MySQL、PostgreSQL、Oracle、SQL Server 等。</p>
  *
- * <h2>接口清单</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>GET /admin-api/v1/generator/datasources - 查询数据源列表（分页）</li>
  *   <li>POST /admin-api/v1/generator/datasources - 新增数据源</li>

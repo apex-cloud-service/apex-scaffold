@@ -10,7 +10,7 @@ import reactor.core.publisher.Mono;
  * 支持JWT标准，提供AccessToken和RefreshToken双Token机制，
  * 保障用户会话安全和设备绑定。</p>
  *
- * <h2>核心功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>生成AccessToken：基于用户标识和设备ID生成短期访问令牌</li>
  *   <li>生成RefreshToken：生成长期刷新令牌，用于无感续期</li>
@@ -119,7 +119,6 @@ public interface TokenService {
      * @param subject      用户唯一标识
      * @param accessToken  AccessToken字符串
      * @param refreshToken RefreshToken字符串
-     * @return 存储完成信号
      */
     Mono<Void> storeToken(String subject, String accessToken, String refreshToken);
 
@@ -138,7 +137,6 @@ public interface TokenService {
      * @param refreshToken  RefreshToken 字符串
      * @param accessEntry   AccessToken 对应的用户信息条目
      * @param refreshEntry  RefreshToken 对应的用户信息条目
-     * @return 存储完成信号
      * @since 2.2.0
      */
     Mono<Void> storeToken(
@@ -161,7 +159,6 @@ public interface TokenService {
      * @param refreshToken  RefreshToken 字符串
      * @param accessEntry   AccessToken 对应的用户信息条目，可为 null（退化为纯字符串存储）
      * @param refreshEntry  RefreshToken 对应的用户信息条目，可为 null
-     * @return 存储完成信号
      * @since 3.3.0
      */
     Mono<Void> storeSessionToken(
@@ -230,7 +227,6 @@ public interface TokenService {
      * @param subject      用户唯一标识（新用户为手机号）
      * @param accessToken  AccessToken字符串
      * @param ttlSeconds   Redis键过期时间（秒）
-     * @return 存储完成信号
      */
     Mono<Void> storeAccessToken(String subject, String accessToken, int ttlSeconds);
 
@@ -245,7 +241,6 @@ public interface TokenService {
      * @param sid         会话ID（UUID）
      * @param accessToken 新 AccessToken 字符串
      * @param ttlSeconds  Redis键过期时间（秒）
-     * @return 存储完成信号
      * @since 3.3.0
      */
     Mono<Void> storeSessionAccessToken(String subject, String sid, String accessToken, int ttlSeconds);

@@ -9,7 +9,7 @@ import lombok.Getter;
  * <p>封装微信OpenID的校验和处理逻辑。
  * OpenID是用户在微信开放平台的唯一标识，同一用户在不同应用下的OpenID不同。</p>
  *
- * <h2>业务规则</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>OpenID不能为空</li>
  *   <li>OpenID应为32位长度的字符串（微信官方规范）</li>

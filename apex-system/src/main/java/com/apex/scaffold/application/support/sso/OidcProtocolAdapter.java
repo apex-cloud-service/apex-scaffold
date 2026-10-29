@@ -366,7 +366,6 @@ public class OidcProtocolAdapter implements SsoProtocolAdapter {
      *
      * @param state 状态码
      * @param callbackUrl 回调URL（用于审计）
-     * @return 存储成功返回Mono.empty()
      */
     private Mono<Void> storeState(String state, String callbackUrl) {
         String key = STATE_CACHE_PREFIX + state;
@@ -392,7 +391,6 @@ public class OidcProtocolAdapter implements SsoProtocolAdapter {
      * 删除已使用的OIDC State（防止重放）
      *
      * @param state 状态码
-     * @return 删除成功返回Mono.empty()
      */
     private Mono<Void> deleteState(String state) {
         String key = STATE_CACHE_PREFIX + state;

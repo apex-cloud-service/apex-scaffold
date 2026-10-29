@@ -7,6 +7,10 @@ import io.swagger.v3.oas.annotations.media.Schema;
  *
  * <p>对应 {@code GET /api/v1/subscription/me} 接口的 data 字段。</p>
  *
+ * @param level 会员等级：NORMAL / PREMIUM / VIP
+ * @param expiresAt 会员到期时间，null 表示无期限
+ * @param computeCredits 算力余额
+ * @param speedMultiplier 算力速度倍率
  * @author Apex Team
  * @version 1.0.0
  * @since 1.0.0

@@ -15,7 +15,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  * <p>微服务化改造 Phase 5：将办公能力（组织 / 审批 / 日历 / 消息 / 三平台同步）
  * 从单体抽取为独立可启动/发布/扩展的服务 {@code apex-office-service}（端口 8084）。
  *
- * <h2>扫描范围</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>{@code com.apex.scaffold.officeservice} - 本服务接口层/配置/安全</li>
  *   <li>{@code com.apex.scaffold.office} - 办公领域/应用模块（apex-office）</li>
@@ -25,7 +25,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  * <p><b>注意</b>：Phase 5 迁移完成前，办公应用层尚依赖单体系统类，需先经
  * apex-api-contract 内部契约桥接后方可实际编译运行。
  *
- * <h2>数据访问组件扫描</h2>
+ * <h2>设计说明</h2>
  * <p>Spring Boot 的 MyBatis-Plus 自动装配仅扫描启动类所在包（{@code com.apex.scaffold.officeservice}）。
  * 而本服务的 Mapper 位于库模块 {@code apex-office}（{@code com.apex.scaffold.office.*}），
  * 且按子域分散于 {@code infrastructure}、{@code off.infrastructure}、{@code meetingroom.infrastructure}

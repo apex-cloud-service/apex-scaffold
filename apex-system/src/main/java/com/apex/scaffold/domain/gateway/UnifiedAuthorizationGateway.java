@@ -19,7 +19,21 @@ public interface UnifiedAuthorizationGateway {
      */
     Mono<Authorization> query(String tenantId, Long userId);
 
+    /**
+     * 统一授权快照。
+     *
+     * @param tenantId 可信主应用租户
+     * @param userId 主应用用户标识
+     * @param permissions 已授予的权限编码
+     * @param roles 已授予的角色
+     */
     record Authorization(String tenantId, Long userId, List<String> permissions, List<Role> roles) {}
 
+    /**
+     * 授权快照中的角色。
+     *
+     * @param code 角色编码
+     * @param dataScope 数据权限范围标识，{@code null} 表示未限定
+     */
     record Role(String code, String dataScope) {}
 }

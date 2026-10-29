@@ -12,7 +12,7 @@ import lombok.Getter;
  * <p>由 workflow-service 在审批人完成（通过/驳回）待办任务后发布，用于通知订阅方
  * "某审批节点已办结"，订阅方据此更新待办状态、推送结果通知或触发下一节点联动。
  *
- * <h2>契约说明（迁移方案 §6.4 / 执行计划 Phase 3.4）</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>发布方：apex-workflow-service</li>
  *   <li>订阅方：system（更新待办/通知）、office（审批结果推送）</li>

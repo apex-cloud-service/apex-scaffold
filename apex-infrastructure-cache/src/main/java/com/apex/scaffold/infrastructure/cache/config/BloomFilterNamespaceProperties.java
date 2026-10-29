@@ -11,14 +11,14 @@ import org.springframework.stereotype.Component;
  *
  * <p>为不同业务域的 BloomFilter 配置独立的容量和误判率参数。
  *
- * <h2>为什么需要分域配置</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>不同业务域的数据量差异巨大（用户 500 万 vs 配置项 1 万）</li>
  *   <li>统一容量会导致小数据量域浪费内存，大数据量域误判率上升</li>
  *   <li>分域配置可以精确控制内存占用和误判率</li>
  * </ul>
  *
- * <h2>配置示例</h2>
+ * <h2>使用示例</h2>
  * <pre>
  * apex:
  *   cache:
@@ -43,7 +43,7 @@ import org.springframework.stereotype.Component;
  *           fpp: 0.01
  * </pre>
  *
- * <h2>容量规划建议</h2>
+ * <h2>设计说明</h2>
  * <table>
  *   <caption>不同数据量级的推荐配置</caption>
  *   <tr><th>数据量</th><th>expected-insertions</th><th>fpp</th><th>内存占用</th></tr>

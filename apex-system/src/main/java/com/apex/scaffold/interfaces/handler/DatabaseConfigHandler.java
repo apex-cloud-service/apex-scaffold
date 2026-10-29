@@ -28,7 +28,7 @@ import reactor.core.publisher.Mono;
  * 动态数据源的完整生命周期管理 API（列表/创建/更新/删除/监控指标），
  * 所有端点要求 {@code system:database:*} 系列权限。
  *
- * <h2>接口清单</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>POST /admin-api/v1/database/test - 测试数据库连接</li>
  *   <li>POST /admin-api/v1/database/generate-config - 生成部署配置</li>
@@ -40,7 +40,7 @@ import reactor.core.publisher.Mono;
  *   <li>GET /admin-api/v1/database/datasources/{id}/metrics - 查询数据源监控指标</li>
  * </ul>
  *
- * <h2>安全边界</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>连接测试的密码仅用于一次性操作，不会被保存到系统中</li>
  *   <li>数据源管理的密码经加密持久化，响应中 URL 与用户名脱敏、密码不返回</li>

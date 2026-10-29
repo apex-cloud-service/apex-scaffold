@@ -10,7 +10,7 @@ import reactor.core.publisher.Mono;
  * <p>定义单点登录（SSO）审计日志的持久化操作契约，记录所有 SSO 相关的操作日志。
  * 支持按提供商、用户、租户查询审计记录，用于安全审计、合规追踪和问题排查。
  *
- * <h2>核心职责</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>记录 SSO 登录、登出、刷新令牌等操作</li>
  *   <li>按提供商查询审计日志（SAML、OAuth2、LDAP 等）</li>
@@ -19,7 +19,7 @@ import reactor.core.publisher.Mono;
  *   <li>支持日志删除（数据清理）</li>
  * </ul>
  *
- * <h2>查询场景</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>安全审计：查询某用户的 SSO 登录历史</li>
  *   <li>故障排查：查询某提供商的失败登录记录</li>
@@ -27,7 +27,7 @@ import reactor.core.publisher.Mono;
  *   <li>异常检测：监控异常的 SSO 操作模式</li>
  * </ul>
  *
- * <h2>技术特性</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>响应式编程：所有方法返回 Mono/Flux</li>
  *   <li>租户隔离：支持多租户环境的日志隔离</li>

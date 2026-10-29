@@ -30,7 +30,7 @@ import reactor.core.publisher.Mono;
  * <p>处理角色相关的HTTP请求，提供完整的RBAC角色管理功能，包括角色的增删改查、
  * 权限分配、权限查询等操作。支持多租户隔离和数据权限范围控制。</p>
  *
- * <h2>主要功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>角色创建 - 创建新的角色并定义其权限范围和数据权限</li>
  *   <li>角色更新 - 修改现有角色的基本信息和权限配置</li>
@@ -41,7 +41,7 @@ import reactor.core.publisher.Mono;
  *   <li>权限查询 - 查询角色当前拥有的所有权限ID</li>
  * </ul>
  *
- * <h2>权限模型说明</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>角色编码 - 全局唯一标识，如 ROLE_ADMIN、ROLE_USER</li>
  *   <li>数据权限范围 - 0=全部数据 1=本部门及子部门 2=本部门 3=仅本人</li>
@@ -49,7 +49,7 @@ import reactor.core.publisher.Mono;
  *   <li>多租户隔离 - 每个租户有独立的角色体系</li>
  * </ul>
  *
- * <h2>安全特性</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>角色编码唯一性校验 - 同一租户下角色编码不能重复</li>
  *   <li>级联删除保护 - 删除角色前检查是否有用户绑定</li>
@@ -77,7 +77,7 @@ public class RoleHandler {
      * <p>创建新的角色并定义其权限范围、数据权限和启用状态。
      * 角色编码在同一租户下必须唯一，建议使用 ROLE_ 前缀命名规范。</p>
      *
-     * <h3>创建流程</h3>
+     * <p><strong>创建流程</strong></p>
      * <ol>
      *   <li>验证角色编码的唯一性（租户级别）</li>
      *   <li>验证必填字段（code、name）</li>
@@ -85,7 +85,7 @@ public class RoleHandler {
      *   <li>记录创建审计日志</li>
      * </ol>
      *
-     * <h3>字段说明</h3>
+     * <p><strong>字段说明</strong></p>
      * <ul>
      *   <li>code - 角色编码，建议格式 ROLE_XXX，如 ROLE_ADMIN</li>
      *   <li>name - 角色名称，用于界面展示</li>
@@ -140,7 +140,7 @@ public class RoleHandler {
      * <p>修改现有角色的基本信息和权限配置。支持部分更新，未提供的字段保持不变。
      * 使用乐观锁（version字段）防止并发修改冲突。</p>
      *
-     * <h3>更新流程</h3>
+     * <p><strong>更新流程</strong></p>
      * <ol>
      *   <li>验证角色是否存在</li>
      *   <li>检查版本号（乐观锁）</li>
@@ -150,7 +150,7 @@ public class RoleHandler {
      *   <li>记录更新审计日志</li>
      * </ol>
      *
-     * <h3>注意事项</h3>
+     * <p><strong>注意事项</strong></p>
      * <ul>
      *   <li>角色ID必须存在且属于当前租户</li>
      *   <li>角色编码修改后仍需保持租户内唯一</li>
@@ -212,7 +212,7 @@ public class RoleHandler {
      * <p>删除指定的角色。删除前会检查是否有用户绑定该角色，
      * 如果存在用户绑定则拒绝删除，需要先解除用户绑定关系。</p>
      *
-     * <h3>删除流程</h3>
+     * <p><strong>删除流程</strong></p>
      * <ol>
      *   <li>验证角色是否存在</li>
      *   <li>检查是否有用户绑定该角色</li>
@@ -222,7 +222,7 @@ public class RoleHandler {
      *   <li>记录删除审计日志</li>
      * </ol>
      *
-     * <h3>安全保护</h3>
+     * <p><strong>安全保护</strong></p>
      * <ul>
      *   <li>系统预置角色（如 ROLE_ADMIN）不允许删除</li>
      *   <li>有用户绑定的角色不允许删除</li>
@@ -269,7 +269,7 @@ public class RoleHandler {
      * <p>查询指定ID的角色详细信息，包含角色基本信息和关联的权限ID集合。
      * 只能查询当前租户下的角色。</p>
      *
-     * <h3>返回信息</h3>
+     * <p><strong>返回信息</strong></p>
      * <ul>
      *   <li>角色ID和基本信息（编码、名称、描述）</li>
      *   <li>数据权限范围配置</li>
@@ -314,7 +314,7 @@ public class RoleHandler {
      * <p>获取当前租户下所有角色的列表。支持查询所有角色或仅查询启用状态的角色。
      * 返回的列表包含角色的基本信息，不包含详细的权限关联信息。</p>
      *
-     * <h3>查询特性</h3>
+     * <p><strong>查询特性</strong></p>
      * <ul>
      *   <li>自动按租户过滤，只返回当前租户的角色</li>
      *   <li>默认按创建时间倒序排列</li>
@@ -322,7 +322,7 @@ public class RoleHandler {
      *   <li>不分页，返回全量数据（适合下拉选择场景）</li>
      * </ul>
      *
-     * <h3>使用场景</h3>
+     * <p><strong>使用场景</strong></p>
      * <ul>
      *   <li>角色管理界面的列表展示</li>
      *   <li>用户分配角色时的下拉选择</li>
@@ -361,7 +361,7 @@ public class RoleHandler {
      * <p>批量为指定角色分配权限。此操作会覆盖角色原有的权限配置，
      * 即删除所有旧权限关联并建立新的权限关联。</p>
      *
-     * <h3>分配流程</h3>
+     * <p><strong>分配流程</strong></p>
      * <ol>
      *   <li>验证角色是否存在且属于当前租户</li>
      *   <li>验证所有权限ID的有效性</li>
@@ -371,7 +371,7 @@ public class RoleHandler {
      *   <li>记录权限变更审计日志</li>
      * </ol>
      *
-     * <h3>注意事项</h3>
+     * <p><strong>注意事项</strong></p>
      * <ul>
      *   <li>这是覆盖操作，不是追加操作</li>
      *   <li>如果传入空数组，表示移除该角色的所有权限</li>
@@ -380,7 +380,7 @@ public class RoleHandler {
      *   <li>系统预置角色的权限分配可能受到限制</li>
      * </ul>
      *
-     * <h3>请求体示例</h3>
+     * <p><strong>请求体示例</strong></p>
      * <pre>{@code
      * {
      *   "roleId": 1,
@@ -436,7 +436,7 @@ public class RoleHandler {
      * <p>查询指定角色当前拥有的所有权限ID集合。
      * 返回的是权限ID列表，不包含权限的详细信息。</p>
      *
-     * <h3>返回数据</h3>
+     * <p><strong>返回数据</strong></p>
      * <ul>
      *   <li>权限ID集合（Set&lt;Long&gt;）</li>
      *   <li>去重且无序</li>
@@ -444,7 +444,7 @@ public class RoleHandler {
      *   <li>如果角色无权限则返回空集合</li>
      * </ul>
      *
-     * <h3>使用场景</h3>
+     * <p><strong>使用场景</strong></p>
      * <ul>
      *   <li>编辑角色时回显已选中的权限</li>
      *   <li>权限配置界面的数据回填</li>

@@ -18,7 +18,7 @@ import org.mapstruct.ReportingPolicy;
  * 提供实体转换、部分更新合并等功能。
  * </p>
  *
- * <h2>核心功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>Entity → DTO 转换</li>
  *   <li>DTO → Entity 转换</li>
@@ -26,7 +26,7 @@ import org.mapstruct.ReportingPolicy;
  *   <li>列表批量转换</li>
  * </ul>
  *
- * <h2>设计模式</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>装配器模式：封装对象转换逻辑</li>
  *   <li>部分更新模式：使用 {@code @MappingTarget} 实现字段合并</li>
@@ -103,7 +103,7 @@ public interface UserAssembler {
      * 仅更新源实体中非 null 的字段，保留目标实体中已有值。
      * </p>
      *
-     * <h3>合并规则</h3>
+     * <p><strong>合并规则</strong></p>
      * <ul>
      *   <li>源字段为 null 时，不更新目标字段（保留原值）</li>
      *   <li>源字段为空字符串时，不更新目标字段（保留原值）</li>
@@ -111,7 +111,7 @@ public interface UserAssembler {
      *   <li>createTime、id 等字段不参与合并</li>
      * </ul>
      *
-     * <h3>业务约束</h3>
+     * <p><strong>业务约束</strong></p>
      * <p>
      * 注意：性别字段的合并需要额外校验（性别不可修改），
      * 该校验逻辑在 {@link com.apex.scaffold.application.service.UserService#mergeFields} 中实现。

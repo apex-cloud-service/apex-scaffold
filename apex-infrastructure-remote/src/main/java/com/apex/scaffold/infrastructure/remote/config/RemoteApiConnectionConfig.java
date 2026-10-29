@@ -21,7 +21,7 @@ import reactor.netty.resources.ConnectionProvider;
  *
  * <p>配置通过 {@link ExternalHttpClientPoolProperties} 读取 YAML 中 {@code remote.api.pool-*} 值。
  *
- * <h2>连接池参数说明</h2>
+ * <h2>设计说明</h2>
  * <table>
  *   <tr><th>参数</th><th>默认值</th><th>说明</th></tr>
  *   <tr><td>maxConnections</td><td>100</td><td>连接池最大连接数，按需调大以支持更高并发</td></tr>
@@ -48,7 +48,7 @@ public class RemoteApiConnectionConfig {
      * <p>连接池名称 {@code remote-api-pool} 用于 Netty 指标监控。
      * 配置从 {@link ExternalHttpClientPoolProperties} 读取，若容器中已存在同名 Bean 则不覆盖。
      *
-     * <h2>优化说明（Netty/线程池/IO 性能优化方案 P1-1/P1-2）</h2>
+     * <h2>设计说明</h2>
      * <ul>
      *   <li>{@code evictInBackground(Duration.ofSeconds(30))} — 独立后台线程每 30s 扫描一次，
      *       主动关闭超过 maxIdleTime/maxLifeTime 的空闲连接，防止过期连接长期占用池配额</li>

@@ -18,14 +18,14 @@ import org.springframework.context.annotation.Configuration;
  * <p>配置 Netty 服务器参数，优化高并发处理能力与网络传输性能，同时防护 Slowloris 慢速攻击。
  * 端口由 {@code server.port} 配置项控制，此处仅配置 TCP 参数不覆盖端口。
  *
- * <h2>性能优化</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>响应压缩：启用 Gzip/Brotli 压缩，减少网络传输数据量</li>
  *   <li>连接队列：SO_BACKLOG 提升至 2048，应对瞬时高并发突发</li>
  *   <li>TCP 参数：启用 SO_KEEPALIVE 和 TCP_NODELAY，减少空闲连接堆积和传输延迟</li>
  * </ul>
  *
- * <h2>安全增强</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>连接超时：CONNECT_TIMEOUT_MILLIS 降至 5000ms，避免慢速连接耗尽连接池</li>
  *   <li>读写超时：默认 ReadTimeoutHandler 为 30s、WriteTimeoutHandler 为 60s，并支持按运行场景覆盖</li>
@@ -114,7 +114,7 @@ public class NettyConfig {
      * <p>应用 TCP 优化参数并启用响应压缩功能。压缩仅对大于 {@code minCompressionResponseSize}
      * 的响应生效，避免对小响应产生额外的 CPU 开销。
      *
-     * <h2>压缩策略说明</h2>
+     * <h2>设计说明</h2>
      * <ul>
      *   <li>Netty 自动协商压缩算法（优先 Brotli > Gzip）</li>
      *   <li>仅对 text/*、application/json 等文本型 MIME 类型进行压缩</li>

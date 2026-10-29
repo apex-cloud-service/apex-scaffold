@@ -11,7 +11,7 @@ import lombok.Getter;
  * <p>由 workflow-service 在流程流转产生新待办任务（回退重建、转办、委派及初始节点分配）后发布，
  * 用于通知订阅方"某审批节点已分配给指定办理人"。
  *
- * <h2>契约说明（迁移方案 §6.4 / 执行计划 Phase 3.4）</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>发布方：apex-workflow-service</li>
  *   <li>订阅方：system（生成待办）、office（审批推送）</li>

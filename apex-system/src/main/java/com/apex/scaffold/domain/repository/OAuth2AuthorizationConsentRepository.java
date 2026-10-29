@@ -9,14 +9,14 @@ import reactor.core.publisher.Mono;
  * <p>提供OAuth2用户授权同意的持久化操作。
  * 用于管理用户对第三方应用的授权记录，支持授权检查、保存和撤销。
  *
- * <h2>核心职责</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>根据客户端ID和用户ID查询授权同意记录</li>
  *   <li>保存或更新用户授权同意</li>
  *   <li>撤销用户对特定客户端的授权</li>
  * </ul>
  *
- * <h2>响应式设计</h2>
+ * <h2>线程安全性</h2>
  * <p>所有方法返回 {@link Mono} 类型，支持WebFlux响应式编程模型。
  *
  * @author Apex Team
@@ -55,7 +55,6 @@ public interface OAuth2AuthorizationConsentRepository {
      *
      * @param clientId 客户端ID
      * @param userId 用户ID (OpenID)
-     * @return 删除操作的完成信号
      */
     Mono<Void> deleteByClientIdAndUserId(String clientId, String userId);
 }

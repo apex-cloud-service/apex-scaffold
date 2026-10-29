@@ -13,7 +13,7 @@ import org.mapstruct.ReportingPolicy;
  * <p>负责 {@link UserEntity}（领域层实体）与 {@link UserPO}（基础设施层持久化对象）
  * 之间的双向转换，使用 MapStruct 自动生成转换代码，确保类型安全和高性能。
  *
- * <h2>转换规则</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>字段映射：同名字段自动映射（如 {@code id}、{@code openId}、{@code nickname} 等）</li>
  *   <li>忽略策略：{@code unmappedTargetPolicy = IGNORE} 忽略目标对象中未匹配的字段</li>
@@ -21,18 +21,18 @@ import org.mapstruct.ReportingPolicy;
  *   <li>空值处理：{@code null} 输入返回 {@code null}，不抛出异常</li>
  * </ul>
  *
- * <h2>使用场景</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>Repository 实现：{@code UserRepositoryImpl} 查询数据库后将 {@code UserPO} 转换为 {@code UserEntity}</li>
  *   <li>数据持久化：将内存中的 {@code UserEntity} 转换为 {@code UserPO} 后保存到数据库</li>
  *   <li>批量操作：{@code toPoList} 和 {@code toEntityList} 支持批量转换，减少循环代码</li>
  * </ul>
  *
- * <h2>MapStruct 编译时代码生成</h2>
+ * <h2>设计说明</h2>
  * <p>编译时 MapStruct 会自动生成 {@code UserPoConverterImpl} 实现类，包含具体的字段复制逻辑。
  * 生成的代码位于 {@code target/generated-sources/annotations/} 目录。
  *
- * <h2>注意事项</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>不支持自定义映射：如需特殊转换逻辑（如日期格式、枚举转换），使用 {@code @Mapping} 注解</li>
  *   <li>性能优化：MapStruct 生成纯 Java 代码，性能接近手写，优于反射方式（如 BeanUtils）</li>

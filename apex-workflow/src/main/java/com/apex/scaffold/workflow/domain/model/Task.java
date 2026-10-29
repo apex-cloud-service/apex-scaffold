@@ -9,7 +9,7 @@ import lombok.Data;
  * <p>任务是流程运行中分配给具体审批人的执行单元，记录任务所属实例、节点信息、
  * 待办人、状态以及超时策略等。</p>
  *
- * <h2>状态说明</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>{@code PENDING}：待处理，任务已生成、等待审批人操作。</li>
  *   <li>{@code COMPLETED}：已完成，审批人完成了任务。</li>
@@ -19,7 +19,7 @@ import lombok.Data;
  *   <li>{@code CANCELLED}：已取消，任务因流程终止等原因被取消。</li>
  * </ul>
  *
- * <h2>超时策略</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>{@code ESCALATE}：升级，任务超时后升级给上级或管理员。</li>
  *   <li>{@code AUTO_COMPLETE}：自动完成，任务超时后自动通过。</li>

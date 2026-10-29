@@ -87,7 +87,6 @@ public class AccountDeletionPortAdapter implements AccountDeletionPort {
      * 清理已注销用户的关联数据并删除主记录。
      *
      * @param task 清理任务快照
-     * @return 清理完成信号
      */
     @Override
     public Mono<Void> cleanup(DeletionTask task) {

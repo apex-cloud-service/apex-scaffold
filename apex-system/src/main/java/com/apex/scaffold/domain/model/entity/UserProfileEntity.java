@@ -15,7 +15,7 @@ import lombok.ToString;
  * 采用 Builder 模式进行复杂对象的构建。
  * </p>
  *
- * <h2>核心业务规则</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>交友目的：用于匹配算法的关键输入</li>
  *   <li>MBTI：16型人格，用于性格匹配</li>
@@ -58,7 +58,7 @@ public class UserProfileEntity extends BaseEntity {
      * 用于算法匹配和展示给其他用户。
      * </p>
      *
-     * <h3>示例值</h3>
+     * <p><strong>示例值</strong></p>
      * <ul>
      *   <li>"认真恋爱"</li>
      *   <li>"寻找灵魂伴侣"</li>
@@ -75,7 +75,7 @@ public class UserProfileEntity extends BaseEntity {
      * 用于性格匹配和展示兼容性分析。
      * </p>
      *
-     * <h3>有效值</h3>
+     * <p><strong>有效值</strong></p>
      * <p>16种组合：INTJ、INTP、ENTJ、ENTP、INFJ、INFP、ENFJ、ENFP、ISTJ、ISFJ、ESTJ、ESFJ、ISTP、ISFP、ESTP、ESFP</p>
      */
     private String mbti;
@@ -88,7 +88,7 @@ public class UserProfileEntity extends BaseEntity {
      * 用于筛选条件和展示。
      * </p>
      *
-     * <h3>取值范围</h3>
+     * <p><strong>取值范围</strong></p>
      * <p>通常为100-250之间的整数</p>
      */
     private Integer heightCm;
@@ -129,7 +129,7 @@ public class UserProfileEntity extends BaseEntity {
      * 用于展示给其他用户。
      * </p>
      *
-     * <h3>长度限制</h3>
+     * <p><strong>长度限制</strong></p>
      * <p>建议控制在200字以内</p>
      */
     private String bio;
@@ -185,7 +185,7 @@ public class UserProfileEntity extends BaseEntity {
      * 为指定用户创建初始画像，设置默认值。
      * </p>
      *
-     * <h3>默认设置</h3>
+     * <p><strong>默认设置</strong></p>
      * <ul>
      *   <li>socialUser = 0（非社交用户）</li>
      *   <li>deleted = 0（未删除）</li>

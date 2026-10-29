@@ -11,7 +11,7 @@ import com.apex.scaffold.domain.enums.RegisterChannel;
  * <p>从登录请求推导账户注册来源（{@link RegisterChannel}），在注册票据签发时
  * 打标、注册落库时写入 {@code sys_user.register_channel}。
  *
- * <h2>解析规则</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>账号密码登录 → {@link RegisterChannel#PC_WEB}</li>
  *   <li>其余登录方式按 {@code LoginRequest.platform} 推导：

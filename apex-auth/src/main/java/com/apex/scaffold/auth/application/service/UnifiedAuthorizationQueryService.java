@@ -78,7 +78,21 @@ public class UnifiedAuthorizationQueryService {
                                         .toList())));
     }
 
+    /**
+     * 统一授权查询结果。
+     *
+     * @param tenantId 租户标识
+     * @param userId 用户标识
+     * @param permissions 权限编码集合
+     * @param roles 角色集合
+     */
     public record Authorization(String tenantId, Long userId, List<String> permissions, List<Role> roles) {}
 
+    /**
+     * 授权结果中的角色。
+     *
+     * @param code 角色编码
+     * @param dataScope 数据权限范围标识，{@code null} 表示未限定
+     */
     public record Role(String code, String dataScope) {}
 }

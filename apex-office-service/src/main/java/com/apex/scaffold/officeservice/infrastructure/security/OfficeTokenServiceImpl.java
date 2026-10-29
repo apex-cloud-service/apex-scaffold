@@ -26,7 +26,7 @@ import reactor.core.publisher.Mono;
  * {@link TokenService} 能力，成为办公服务内的自包含 Bean，满足
  * {@code OfficeApplicationService} 登录签发/登出吊销链路。</p>
  *
- * <h2>与单体实现的一致性</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li><b>JWT 生成/解析</b>：复用共享 {@link JwtUtil}，claims 语义一致
  *       （{@code type}/{@code deviceId}/{@code sid}/{@code clientType}）</li>
@@ -36,7 +36,7 @@ import reactor.core.publisher.Mono;
  *   <li><b>黑名单</b>：复用 {@link TokenBlacklistService} 校验令牌吊销状态</li>
  * </ul>
  *
- * <h2>响应式差异</h2>
+ * <h2>线程安全性</h2>
  * <p>单体实现的刷新令牌轮换使用 Redisson 分布式锁（阻塞式）；本实现改为
  * 基于 {@code SET NX PX} 的响应式自旋锁（{@code setIfAbsent}），在非阻塞链路上
  * 完成"读旧令牌 → 比对 → 写新令牌对 → 拉黑旧令牌"的原子轮换，杜绝刷新令牌并发重用。</p>

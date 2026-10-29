@@ -16,13 +16,13 @@ import org.mapstruct.ReportingPolicy;
  *
  * <p>使用 MapStruct 实现用户资料领域实体与视图对象之间的自动转换
  *
- * <h2>核心功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>用户资料聚合：将UserEntity、UserProfileEntity、UserComplianceEntity聚合成MeVO</li>
  *   <li>字段映射：自动映射用户基础信息、资料信息、合规设置到视图对象</li>
  * </ul>
  *
- * <h2>转换规则</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>teenMode：根据合规实体的teenMode字段判断青少年模式状态</li>
  *   <li>socialUser：根据资料实体的socialUser字段判断社交用户类型</li>

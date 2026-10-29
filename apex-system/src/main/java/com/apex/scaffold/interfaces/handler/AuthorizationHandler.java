@@ -40,7 +40,7 @@ import reactor.core.publisher.Mono;
  * 路径参数中的数字字段通过 {@link #safeParseLong(String)} 安全解析，
  * 解析失败时返回 400 错误响应。</p>
  *
- * <h2>接口清单</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>GET /api/v1/auth/roles/my - 获取当前用户角色</li>
  *   <li>GET /api/v1/auth/permissions/my - 获取当前用户权限</li>

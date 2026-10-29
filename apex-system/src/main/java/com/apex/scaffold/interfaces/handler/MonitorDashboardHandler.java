@@ -25,7 +25,7 @@ import reactor.core.publisher.Mono;
  * <p>提供监控大盘聚合数据接口，数据由 {@link MonitorMetricsCollector}
  * 在进程内聚合 Micrometer / OS / Sentinel / 中间件指标，供管理前端大盘展示。</p>
  *
- * <h2>接口清单</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>GET /admin-api/v1/monitor/overview - 监控概览</li>
  *   <li>GET /admin-api/v1/monitor/system - 系统资源（内存/CPU/磁盘/网络/JVM/线程/GC）</li>

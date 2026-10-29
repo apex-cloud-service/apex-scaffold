@@ -131,6 +131,9 @@ public class MessageSocketRegistry {
 
     /**
      * 一次性短期身份票据。
+     *
+     * @param user 票据绑定的已认证用户
+     * @param expiresAt 票据过期时间
      * @author Apex Team
      * @version 1.3.1
      * @since 1.3.1

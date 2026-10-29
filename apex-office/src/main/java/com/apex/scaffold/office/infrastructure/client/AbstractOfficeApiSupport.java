@@ -34,6 +34,13 @@ public abstract class AbstractOfficeApiSupport {
                 platformProperties.getPlatforms().getOrDefault(platform, new OfficePlatformProperties.Platform());
     }
 
+    /**
+     * 以 GET 查询参数形式调用平台接口。
+     *
+     * @param path 接口路径（相对 {@code baseUrl}）
+     * @param params 查询参数
+     * @return 平台响应体，已通过 {@code checkedBody} 校验业务状态码
+     */
     protected Mono<Map<String, Object>> getAccessToken(String path, Map<String, String> params) {
         return webClient
                 .get()
@@ -48,10 +55,25 @@ public abstract class AbstractOfficeApiSupport {
                 .map(this::checkedBody);
     }
 
+    /**
+     * 以不附加自定义请求头的方式发送 JSON POST 请求。
+     *
+     * @param path 接口路径（相对 {@code baseUrl}）
+     * @param body 请求体，按 JSON 序列化
+     * @return 平台响应体
+     */
     protected Mono<Map<String, Object>> postJson(String path, Map<String, Object> body) {
         return postJson(path, body, Map.of());
     }
 
+    /**
+     * 发送 JSON POST 请求并附加自定义请求头。
+     *
+     * @param path 接口路径（相对 {@code baseUrl}）
+     * @param body 请求体，按 JSON 序列化
+     * @param headers 附加请求头，同名头将被覆盖
+     * @return 平台响应体
+     */
     protected Mono<Map<String, Object>> postJson(String path, Map<String, Object> body, Map<String, String> headers) {
         return webClient
                 .post()
@@ -64,10 +86,24 @@ public abstract class AbstractOfficeApiSupport {
                 .map(this::checkedBody);
     }
 
+    /**
+     * 以 GET 查询参数形式获取 JSON 响应（{@link #getAccessToken} 的语义别名）。
+     *
+     * @param path 接口路径（相对 {@code baseUrl}）
+     * @param params 查询参数
+     * @return 平台响应体
+     */
     protected Mono<Map<String, Object>> getJson(String path, Map<String, String> params) {
         return getAccessToken(path, params);
     }
 
+    /**
+     * 发送带自定义请求头的 GET 请求。请求头常用于承载平台访问令牌。
+     *
+     * @param path 接口路径（相对 {@code baseUrl}）
+     * @param headers 请求头
+     * @return 平台响应体
+     */
     protected Mono<Map<String, Object>> getJsonWithHeaders(String path, Map<String, String> headers) {
         return webClient
                 .get()
@@ -79,6 +115,13 @@ public abstract class AbstractOfficeApiSupport {
                 .map(this::checkedBody);
     }
 
+    /**
+     * 发送带自定义请求头的 DELETE 请求。
+     *
+     * @param path 接口路径（相对 {@code baseUrl}）
+     * @param headers 请求头
+     * @return 平台响应体
+     */
     protected Mono<Map<String, Object>> deleteWithHeaders(String path, Map<String, String> headers) {
         return webClient
                 .delete()
@@ -90,6 +133,14 @@ public abstract class AbstractOfficeApiSupport {
                 .map(this::checkedBody);
     }
 
+    /**
+     * 将平台响应映射为业务对象，并把平台错误统一转换为 {@link BusinessException}。
+     *
+     * @param mapper 响应体到业务对象的映射函数
+     * @param request 平台请求信号
+     * @param <T> 业务对象类型
+     * @return 映射后的业务对象信号；请求失败或映射出错时以业务异常结束
+     */
     protected <T> Mono<T> call(Function<Map<String, Object>, T> mapper, Mono<Map<String, Object>> request) {
         return request.map(mapper).onErrorMap(this::mapError);
     }

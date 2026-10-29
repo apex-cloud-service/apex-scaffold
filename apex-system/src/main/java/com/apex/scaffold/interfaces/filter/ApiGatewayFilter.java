@@ -27,7 +27,7 @@ import reactor.core.publisher.SignalType;
  * HTTP 请求提供统一的网关能力：请求追踪、指标采集、错误统计与日志记录。作为应用内"API 网关层"
  * 的实现，覆盖含被鉴权/限流拦截在内的所有请求，其指标可识别互联网扫描流量等非业务请求。
  *
- * <h2>职责</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>请求追踪：生成或透传 {@code X-Request-Id}，写入 MDC 供日志链路关联</li>
  *   <li>指标采集：通过 Micrometer 输出请求计数、错误计数与响应时间百分位直方图</li>
@@ -35,14 +35,14 @@ import reactor.core.publisher.SignalType;
  *   <li>请求日志：按慢请求、错误响应、正常响应分级输出，控制日志噪音</li>
  * </ul>
  *
- * <h2>监控指标</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>{@code apex_gateway_request_count_total}：网关请求总数（带 method/path/status/statusClass 标签）</li>
  *   <li>{@code apex_gateway_error_count_total}：网关错误响应计数（4xx/5xx，带标签）</li>
  *   <li>{@code apex_gateway_response_time_seconds}：响应时间 Timer（含百分位直方图，支持 P50/P95/P99）</li>
  * </ul>
  *
- * <h2>实现风格</h2>
+ * <h2>设计说明</h2>
  * <p>采用函数式风格实现：请求上下文与统计快照由不可变 {@code record} 承载；路径归一化、状态码
  * 分类、标签构建等为无副作用纯函数；指标登记与日志输出等副作用收敛于独立的消费方法；响应式链路
  * 通过 {@code doFinally}/{@code doOnError} 声明式编排，不依赖可变的中间状态。
@@ -188,7 +188,6 @@ public class ApiGatewayFilter implements WebFilter {
      *
      * @param exchange 当前 HTTP 请求-响应交换对象
      * @param chain    WebFilter 链
-     * @return 响应式处理结果
      */
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {

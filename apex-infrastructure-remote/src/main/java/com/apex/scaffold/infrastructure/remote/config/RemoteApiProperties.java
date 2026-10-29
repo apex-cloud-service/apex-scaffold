@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Configuration;
  * <p>用于配置调用外部项目API的连接参数，支持多目标服务配置。
  * 通过 {@code remote.api} 前缀绑定配置文件中的相关属性。
  *
- * <h2>配置项说明</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>{@code remote.api.default-connect-timeout} - 默认连接超时时间（毫秒）</li>
  *   <li>{@code remote.api.default-read-timeout} - 默认读取超时时间（毫秒）</li>
@@ -21,7 +21,7 @@ import org.springframework.context.annotation.Configuration;
  *   <li>{@code remote.api.services} - 多目标服务配置（Map结构）</li>
  * </ul>
  *
- * <h2>配置示例</h2>
+ * <h2>使用示例</h2>
  * <pre>{@code * remote:
  *   api:
  *     default-connect-timeout: 5000

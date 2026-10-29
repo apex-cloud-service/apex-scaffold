@@ -109,7 +109,6 @@ public class WorkflowOperationLogAspect {
      * @param args 方法实参，仅提取 ServerRequest 的 HTTP 方法
      * @param response 已构建的响应，错误时为 null
      * @param error 原调用异常，正常响应时为 null
-     * @return 本地审计输出完成信号
      */
     private Mono<Void> record(
             AuthenticatedUser user,

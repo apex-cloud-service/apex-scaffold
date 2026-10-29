@@ -10,7 +10,7 @@ import org.apache.ibatis.annotations.Mapper;
  * <p>基于 MyBatis-Plus 实现生成历史记录的持久化操作,管理代码生成操作的审计日志。
  * 继承 {@link BaseMapper} 自动获得常用的增删改查方法。
  *
- * <h3>常用查询场景</h3>
+ * <p><strong>常用查询场景</strong></p>
  * <pre>{@code
  * // 查询某个配置的所有历史记录(分页)
  * LambdaQueryWrapper<GenHistoryPO> wrapper = new LambdaQueryWrapper<>();
@@ -32,13 +32,13 @@ import org.apache.ibatis.annotations.Mapper;
  * Long successCount = mapper.selectCount(wrapper);
  * }</pre>
  *
- * <h3>关联关系</h3>
+ * <p><strong>关联关系</strong></p>
  * <ul>
  *   <li>多对一:GenHistoryPO.configId → GenConfigPO.id</li>
  *   <li>多对一:GenHistoryPO.operatorId → SysUserPO.id</li>
  * </ul>
  *
- * <h3>审计作用</h3>
+ * <p><strong>审计作用</strong></p>
  * <ul>
  *   <li>追溯代码生成历史,支持回溯和对比</li>
  *   <li>统计生成成功率和失败原因</li>
@@ -46,14 +46,14 @@ import org.apache.ibatis.annotations.Mapper;
  *   <li>提供操作审计和责任追踪</li>
  * </ul>
  *
- * <h3>数据保留策略</h3>
+ * <p><strong>数据保留策略</strong></p>
  * <ul>
  *   <li>历史记录通常保留而不物理删除,以维护审计完整性</li>
  *   <li>可定期归档或清理过期历史记录(如 90 天前的记录)</li>
  *   <li>即使配置被删除,历史记录也应保留,但 configId 会成为孤儿引用</li>
  * </ul>
  *
- * <h3>使用约束</h3>
+ * <p><strong>使用约束</strong></p>
  * <ul>
  *   <li>所有 Mapper 方法调用必须在 {@code BlockingIoSchedulers.jdbc()} 调度器上执行</li>
  *   <li>查询时自动过滤逻辑删除记录(MyBatis-Plus 逻辑删除插件)</li>

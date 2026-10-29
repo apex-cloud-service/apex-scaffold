@@ -13,7 +13,7 @@ import lombok.ToString;
  * 角色用于权限管理，可关联多个权限。
  * </p>
  *
- * <h2>核心业务规则</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>角色可被启用或禁用</li>
  *   <li>角色编码唯一，用于系统内部标识</li>
@@ -57,7 +57,7 @@ public class RoleEntity extends BaseEntity {
      * 必须唯一，用于代码中引用角色。
      * </p>
      *
-     * <h3>命名规范</h3>
+     * <p><strong>命名规范</strong></p>
      * <p>建议使用大写下划线格式，如：ADMIN, SUPER_ADMIN, USER</p>
      */
     private String code;

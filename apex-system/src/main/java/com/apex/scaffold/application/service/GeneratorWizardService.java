@@ -64,7 +64,7 @@ import reactor.core.publisher.Mono;
  * <p>在既有「数据源 → 表/字段 → 配置 → 执行 → 历史」链路上补齐向导所需的模板目录、
  * 结构化预检、纯渲染预览、受控执行与按产物 ID 下载五段能力。
  *
- * <h2>安全边界</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>预览只做内存渲染，不写任何服务器文件；预览令牌绑定配置版本、模板内容摘要、
  *       字段映射与目标表集合，任一输入变化后旧令牌失效，必须重新预览</li>
@@ -75,7 +75,7 @@ import reactor.core.publisher.Mono;
  *   <li>所有 JDBC 元数据读取与文件读写均隔离到阻塞调度器</li>
  * </ul>
  *
- * <h2>引擎边界</h2>
+ * <h2>设计说明</h2>
  * <p>在线引擎 {@link CodeTemplateEngine} 只支持 {@code ${variable}} 变量替换，
  * 不支持 FreeMarker 指令；独立模块 {@code apex-generator} 的 FreeMarker 模板不能直接混用，
  * 需先改写语法。模板目录通过 {@code engine=VARIABLE_SUBSTITUTION} 显式声明该能力。
@@ -315,6 +315,12 @@ public class GeneratorWizardService {
 
     /**
      * 向导上下文：配置、数据源、模板与目标表集合。
+     *
+     * @param config 生成器配置（包名、作者、输出目录等）
+     * @param datasource 已解析的数据源连接配置
+     * @param templates 本次使用的模板列表
+     * @param tableNames 待生成的表名列表
+     * @param templateCount 模板数量
      */
     private record WizardContext(
             GenConfigEntity config,
@@ -459,10 +465,21 @@ public class GeneratorWizardService {
     // ------------------------------------------------------------------ 渲染
 
     /**
-     * 渲染结果：表信息、模板与渲染内容。
+     * 单个模板的渲染产物。
+     *
+     * @param table 表渲染上下文
+     * @param template 使用的模板
+     * @param content 渲染后的文件内容
+     * @param relativePath 相对输出根目录的路径
      */
     private record RenderedFile(TableInfo table, GenTemplateEntity template, String content, String relativePath) {}
 
+    /**
+     * 单表渲染上下文：表元数据与列定义。
+     *
+     * @param source 表元数据（表名、注释等）
+     * @param columns 列定义列表，顺序与数据库一致
+     */
     private record TableInfo(TableInfoDTO source, List<ColumnInfoDTO> columns) {}
 
     /**

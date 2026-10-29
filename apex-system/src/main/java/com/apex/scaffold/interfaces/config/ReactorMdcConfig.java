@@ -51,6 +51,11 @@ public class ReactorMdcConfig {
         Hooks.resetOnEachOperator(HOOK_KEY);
     }
 
+    /**
+     * 在订阅/信号回调中桥接 Reactor 上下文与 MDC，使异步链路日志保留 traceId。
+     *
+     * @param <T> 被订阅的数据元素类型
+     */
     private static final class MdcContextSubscriber<T> implements CoreSubscriber<T> {
 
         private final CoreSubscriber<? super T> actual;

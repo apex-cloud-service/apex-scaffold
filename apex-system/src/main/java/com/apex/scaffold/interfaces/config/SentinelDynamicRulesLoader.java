@@ -28,7 +28,7 @@ import org.springframework.stereotype.Component;
  * <p>从外部 JSON 文件加载 Sentinel 流控、降级和系统保护规则，替代硬编码在 Java 代码中的配置方式。
  * 支持本地文件和 classpath 资源，便于运维人员在不重启应用的情况下动态调整规则（配合文件监听）。
  *
- * <h2>核心功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>JSON 配置：规则以 JSON 格式存储，可读性强，易于版本管理</li>
  *   <li>多规则类型：支持流控规则（flowRules）、降级规则（degradeRules）、系统规则（systemRules）</li>
@@ -36,7 +36,7 @@ import org.springframework.stereotype.Component;
  *   <li>灵活路径：支持绝对路径、相对路径和 classpath 资源</li>
  * </ul>
  *
- * <h2>配置文件格式</h2>
+ * <h2>设计说明</h2>
  * <pre>{@code
  * {
  *   "flowRules": [
@@ -72,13 +72,13 @@ import org.springframework.stereotype.Component;
  * }
  * }</pre>
  *
- * <h2>配置说明</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>{@code apex.sentinel.rules-file}：规则文件路径，默认 classpath:config/sentinel/sentinel-rules.json</li>
  *   <li>{@code apex.sentinel.dynamic-rules.enabled}：是否启用动态加载，默认 true</li>
  * </ul>
  *
- * <h2>字段说明</h2>
+ * <h2>设计说明</h2>
  * <table>
  *   <caption>FlowRule 字段</caption>
  *   <tr><th>字段</th><th>说明</th><th>取值</th></tr>

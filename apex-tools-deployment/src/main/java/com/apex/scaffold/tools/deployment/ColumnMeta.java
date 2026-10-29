@@ -7,6 +7,14 @@ import java.util.List;
  *
  * <p>仅保留前置检查需要的属性，避免在比对逻辑中散落 JSON 数组下标。
  *
+ * @param table 所属表名
+ * @param name 列名
+ * @param type 列类型
+ * @param nullable 是否允许为空
+ * @param defaultValue 默认值表达式
+ * @param extra 额外属性（自增等）
+ * @param generationExpression 生成列表达式
+ * @param characterSet 字符集
  * @author Apex Team
  * @since 1.3.1
  */

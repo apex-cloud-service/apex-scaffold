@@ -25,7 +25,7 @@ import reactor.core.scheduler.Schedulers;
  * {@link ApexBlockingIoProperties} 外部化配置，同时保留向后兼容的 JVM system property / 环境变量覆盖机制；
  * 生产环境无需改代码即可通过配置灰度调整参数。</p>
  *
- * <h2>v2.0 升级要点（2026-08-16）</h2>
+ * <h2>设计说明</h2>
  * <ol>
  *   <li>新增 {@code general()} 专用池，专用于启动预热 Runner、后台批量处理、补偿调度、一次性运维任务，
  *       避免此类任务挤占 JDBC/CACHE/STORAGE 等核心业务池。</li>
@@ -36,7 +36,7 @@ import reactor.core.scheduler.Schedulers;
  *       仍保留原有的 JVM {@code -D} 参数作为兼容回退。</li>
  * </ol>
  *
- * <h2>Scheduler 清单与选择规则</h2>
+ * <h2>设计说明</h2>
  * <table>
  *   <tr><th>名称</th><th>静态方法</th><th>默认线程</th><th>默认队列</th><th>用途与选择指南</th></tr>
  *   <tr><td>JDBC</td><td>{@link #jdbc()}</td><td>32</td><td>128</td>
@@ -59,7 +59,7 @@ import reactor.core.scheduler.Schedulers;
  *       不与核心业务路径争用专用池，也禁止继续使用 Reactor 全局 {@code boundedElastic}。</td></tr>
  * </table>
  *
- * <h2>虚拟线程模式（JDK 21）</h2>
+ * <h2>线程安全性</h2>
  * <p>每个池可通过 {@code apex.blocking-io.<pool>.virtual-threads=true} 单独切换到虚拟线程执行器
  * {@link VirtualThreadBoundedExecutor}。切换后该池由 {@link Schedulers#fromExecutorService} 包装，
  * 并发控制从"线程数上限"改为"信号量闸门 + 有界排队"，适配"等待远大于计算"的 I/O 场景：</p>
@@ -75,11 +75,11 @@ import reactor.core.scheduler.Schedulers;
  *       {@code -Djdk.tracePinnedThreads=full} 观测。</li>
  * </ul>
  *
- * <h2>严禁项</h2>
+ * <h2>设计说明</h2>
  * <p>任何生产代码<strong>不得直接使用 {@code Schedulers.boundedElastic()}</strong>，
  * 必须从上述六个静态方法中语义最贴近的一个选择。该门禁由代码评审与 ArchUnit 分层测试共同保证。</p>
  *
- * <h2>JVM 调优（向后兼容）</h2>
+ * <h2>设计说明</h2>
  * <p>未引入 {@link ApexBlockingIoProperties} 时，仍可通过 {@code -D} 参数覆盖默认值：</p>
  * <pre>{@code *   -Dapex.jdbc.threads=36 -Dapex.jdbc.queue-capacity=192
  *   -Dapex.remote.threads=24 -Dapex.storage.fair=true

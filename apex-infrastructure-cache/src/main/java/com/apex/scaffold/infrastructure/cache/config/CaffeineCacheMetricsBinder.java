@@ -21,7 +21,7 @@ import org.springframework.cache.caffeine.CaffeineCacheManager;
  * 只在抓取指标时读取当前累计统计快照，因此不会向缓存执行额外的 get、put、evict 或
  * 数据库/Redis 操作。</p>
  *
- * <h2>指标契约</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>基础名称为 {@code apex.cache.gets}，Prometheus 导出名称为
  *       {@code apex_cache_gets_total}。</li>

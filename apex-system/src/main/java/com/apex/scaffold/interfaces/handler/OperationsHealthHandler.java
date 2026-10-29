@@ -39,7 +39,7 @@ import reactor.core.publisher.Mono;
  * <p>输出可解释的管理员体检报告：每项检查给出状态、采集范围、采样时间、
  * 数据来源、证据与整改建议，并按应用存活、依赖就绪、业务风险、容量分组。</p>
  *
- * <h2>接口清单</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>GET /api/v2/operations/health-report - 管理员体检报告（平台级）</li>
  *   <li>POST /api/v2/operations/health-snapshots - 采集并固化一次体检快照</li>

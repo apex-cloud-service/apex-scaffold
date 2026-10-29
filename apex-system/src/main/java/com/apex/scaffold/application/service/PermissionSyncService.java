@@ -19,7 +19,7 @@ import reactor.core.publisher.Mono;
  * <p>扫描 Spring 容器中所有 Bean 的方法,提取 {@link RequirePermission} 注解标注的权限码,
  * 与数据库中的 {@code sys_permission} 表对比,返回新增和废弃的权限码清单,供管理员审核后批量更新权限表。
  *
- * <h2>核心功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>扫描所有 Spring Bean 的 public 方法,提取 {@code @RequirePermission} 注解</li>
  *   <li>查询数据库中已存在的权限码</li>
@@ -27,14 +27,14 @@ import reactor.core.publisher.Mono;
  *   <li>支持管理员在线查看权限差异,手动决定是否同步</li>
  * </ul>
  *
- * <h2>同步策略</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li><strong>新增权限</strong>:代码中存在但数据库中不存在的权限码</li>
  *   <li><strong>废弃权限</strong>:数据库中存在但代码中不存在的权限码</li>
  *   <li><strong>不处理</strong>:本服务仅返回差异清单,不自动写库,避免误操作</li>
  * </ul>
  *
- * <h2>使用场景</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>新增接口后,手动触发权限同步,将新权限码批量写入数据库</li>
  *   <li>重构接口后,识别废弃的权限码,管理员确认后批量删除或标记</li>

@@ -7,6 +7,7 @@ import java.util.Set;
 /**
  * 用目标集合替换用户角色。
  *
+ * @param roleIds 目标角色 ID 集合（空集合表示清空用户角色）
  * @author Apex Team
  * @version 1.0.0
  * @since 1.0.0

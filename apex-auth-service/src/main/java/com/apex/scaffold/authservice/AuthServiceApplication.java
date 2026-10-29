@@ -13,7 +13,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  *
  * <p>统一认证授权中心的Spring Boot应用程序入口
  *
- * <h2>核心功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>JWT Token签发、验证、刷新和撤销</li>
  *   <li>用户名密码登录认证</li>
@@ -21,7 +21,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  *   <li>多租户隔离支持</li>
  * </ul>
  *
- * <h2>微服务治理（迁移方案 Phase 2）</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>{@link EnableDiscoveryClient}：将本服务注册到 Nacos，服务名
  *       {@code apex-auth-service}，供网关按 {@code lb://apex-auth-service} 路由与发现。</li>
@@ -29,7 +29,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  *       的 {@code @Scheduled} 密钥轮换（每日凌晨 2 点），确保 RSA 密钥定期轮换。</li>
  * </ul>
  *
- * <h2>数据访问组件扫描</h2>
+ * <h2>设计说明</h2>
  * <p>Spring Boot 的 MyBatis-Plus 自动装配仅扫描启动类所在包（{@code com.apex.scaffold.authservice}）。
  * 而本服务的 Mapper 与 R2DBC 仓储位于库模块 {@code apex-auth}（{@code com.apex.scaffold.auth.*}），
  * 因此需显式声明扫描范围：</p>

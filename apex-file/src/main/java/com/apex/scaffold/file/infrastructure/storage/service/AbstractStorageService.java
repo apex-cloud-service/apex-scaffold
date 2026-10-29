@@ -15,21 +15,21 @@ import reactor.core.publisher.Mono;
  * <p>
  * 提供文件存储的统一抽象，实现存储服务的通用逻辑，包括文件校验、存储桶管理等
  *
- * <h2>支持的存储类型</h2>
+ * <h2>职责范围</h2>
  * <ul>
  * <li>本地存储：基于本地文件系统的存储</li>
  * <li>MinIO存储：基于MinIO对象存储服务的存储</li>
  * <li>火山引擎TOS存储：基于火山引擎对象存储TOS的存储</li>
  * </ul>
  *
- * <h2>支持的文件类型</h2>
+ * <h2>职责范围</h2>
  * <ul>
  * <li>图片：JPEG、PNG、GIF、WebP</li>
  * <li>文档：PDF、Word、Excel、PowerPoint</li>
  * <li>文本：纯文本、HTML、CSS、JavaScript、JSON、XML</li>
  * </ul>
  *
- * <h2>核心功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  * <li>文件上传：支持单文件上传并统一校验文件类型</li>
  * <li>文件下载：支持文件下载</li>
@@ -90,7 +90,6 @@ public abstract class AbstractStorageService implements StorageService {
      * <p>如果存储桶不存在则创建，存在则直接返回
      *
      * @param bucketName 存储桶名称
-     * @return 异步操作结果
      */
     protected abstract Mono<Void> ensureBucketExistsInternal(String bucketName);
 
@@ -98,7 +97,6 @@ public abstract class AbstractStorageService implements StorageService {
      * 创建存储桶
      *
      * @param bucketName 存储桶名称
-     * @return 异步操作结果
      */
     protected abstract Mono<Void> createBucketInternal(String bucketName);
 
@@ -239,8 +237,6 @@ public abstract class AbstractStorageService implements StorageService {
      * 创建存储桶。
      *
      * <p>调用子类的 {@link #createBucketInternal(String)} 在弹性调度器上执行存储桶创建。
-     *
-     * @return 空 Mono，表示创建完成
      */
     public Mono<Void> createBucket(String bucketName) {
         return createBucketInternal(bucketName).subscribeOn(BlockingIoSchedulers.storage());

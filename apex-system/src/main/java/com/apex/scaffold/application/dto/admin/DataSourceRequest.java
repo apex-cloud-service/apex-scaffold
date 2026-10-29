@@ -15,14 +15,14 @@ import lombok.NoArgsConstructor;
  * <p>用于创建和更新数据源配置，支持动态添加和管理应用运行时的数据源连接池。
  * 该 DTO 包含完整的数据源连接信息和连接池配置参数。
  *
- * <h2>使用场景</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>创建新的数据源配置（如多租户场景下的租户独立数据库）</li>
  *   <li>更新现有数据源的连接参数或连接池配置</li>
  *   <li>配置主从数据源、读写分离等复杂场景</li>
  * </ul>
  *
- * <h2>字段说明</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li><b>name</b>: 数据源标识名称，建议使用有意义的名称（如 "tenant_001_db"）</li>
  *   <li><b>type</b>: 数据源类型，支持 master（主库）、slave（从库）等</li>
@@ -32,7 +32,7 @@ import lombok.NoArgsConstructor;
  *   <li><b>连接池参数</b>: minIdle、maxPoolSize、connectionTimeout、idleTimeout</li>
  * </ul>
  *
- * <h2>连接池配置建议</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>minIdle: 根据业务负载设置，一般 5-10 个</li>
  *   <li>maxPoolSize: 不宜过大，一般 20-50 个，避免数据库连接数耗尽</li>
@@ -40,7 +40,7 @@ import lombok.NoArgsConstructor;
  *   <li>idleTimeout: 默认 10 分钟，避免长时间空闲连接占用资源</li>
  * </ul>
  *
- * <h2>安全注意事项</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>密码字段会被加密存储，不会明文保存到数据库</li>
  *   <li>创建数据源前建议先使用测试接口验证连接有效性</li>

@@ -7,6 +7,16 @@ import java.time.LocalDateTime;
 /**
  * 后台展示的用户画像明细。
  *
+ * @param datingGoal 交友目标
+ * @param mbti MBTI 人格类型（INTJ、INTP、ENTJ、ENTP、INFJ、INFP、ENFJ、ENFP、ISTJ、ISFJ、ESTJ、ESFJ、ISTP、ISFP、ESTP、ESFP，
+ * @param heightCm 身高（厘米）
+ * @param school 学校
+ * @param educationLevel 最高学历（HIGH_SCHOOL-高中及以下，ASSOCIATE-大专，BACHELOR-本科，MASTER-硕士，DOCTOR-博士，OTHER-其他）
+ * @param job 职业
+ * @param bio 个人简介
+ * @param interests 自定义兴趣标签（JSON 数组字符串）
+ * @param socialUser 是否为付费社交用户
+ * @param socialUserAt 成为社交用户的时间
  * @author Apex Team
  * @version 1.0.0
  * @since 1.0.0

@@ -11,7 +11,7 @@ import java.util.List;
  * <p>定义系统中使用的常量。部分常量引用枚举的规范值以避免重复定义，
  * 确保系统中同一概念的取值来源唯一。
  *
- * <h2>常量来源说明</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li><b>性别常量</b>：引用 {@link Gender} 枚举的 {@code getCode()} 值</li>
  *   <li><b>用户状态常量</b>：引用 {@link UserStatus} 枚举的 {@code getCode()} 值</li>
@@ -129,7 +129,7 @@ public final class SystemConstants {
      * SecurityConfig.securityWebFilterChain() 中通过
      * pathMatchers(...).permitAll() 配置。
      *
-     * <h2>路径说明</h2>
+     * <h2>设计说明</h2>
      * <ul>
      *   <li>登录、Token 刷新、短信验证码和本机号校验 — 建立登录态前必须调用的认证接口</li>
      *   <li>/api/v1/onboarding/policies — 登录前可查阅的协议与隐私政策</li>

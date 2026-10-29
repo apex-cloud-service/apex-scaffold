@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
  *
  * <p>基于雪花算法(Snowflake)生成全局唯一的消息ID,适用于分布式环境下的消息标识生成。
  *
- * <h2>雪花算法简介</h2>
+ * <h2>职责范围</h2>
  * <p>雪花算法由Twitter开源,生成的ID是一个64位的long类型整数:
  * <pre>
  * ┌─────────────┬──────────┬──────────┬──────────────┐
@@ -21,7 +21,7 @@ import org.springframework.stereotype.Component;
  * └─────────────┴──────────┴──────────┴──────────────┘
  * </pre>
  *
- * <h2>ID组成部分</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>时间戳(41位): 精确到毫秒,可使用69年</li>
  *   <li>workerId(5位): 工作机器ID,最多支持32个实例</li>
@@ -29,7 +29,7 @@ import org.springframework.stereotype.Component;
  *   <li>序列号(12位): 毫秒内序列,最多支持4096个ID/ms</li>
  * </ul>
  *
- * <h2>性能特点</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>单机TPS: 每秒可生成409.6万个ID</li>
  *   <li>全局唯一: 不同机器生成的ID不会重复</li>
@@ -37,7 +37,7 @@ import org.springframework.stereotype.Component;
  *   <li>无需中心服务: 本地生成,无网络开销</li>
  * </ul>
  *
- * <h2>机器ID计算</h2>
+ * <h2>设计说明</h2>
  * <p>workerId: 取应用名称hashCode的模32余数<br>
  * datacenterId: 取主机IP地址hashCode的模32余数<br>
  * 如果无法获取主机地址,datacenterId默认为0

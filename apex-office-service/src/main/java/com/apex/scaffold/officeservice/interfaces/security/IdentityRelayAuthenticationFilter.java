@@ -83,7 +83,6 @@ public class IdentityRelayAuthenticationFilter implements WebFilter {
      * 对握手仅消费同源限制下的一次性票据，对 HTTP 独立验证访问 JWT。
      * @param exchange 请求
      * @param chain 后续过滤链
-     * @return 请求完成信号
      */
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {

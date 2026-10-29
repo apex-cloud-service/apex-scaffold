@@ -28,7 +28,7 @@ import reactor.util.retry.Retry;
  *       {@link Retry} 机制在异步流水线上重放整个发布流。</li>
  * </ul>
  *
- * <h2>重试策略</h2>
+ * <h2>设计说明</h2>
  * <ol>
  *   <li><strong>最大尝试次数</strong>：{@link AutoRetry#maxAttempts()}，
  *       含首次执行，最多尝试该次数；</li>
@@ -40,11 +40,11 @@ import reactor.util.retry.Retry;
  *       以其真实根因参与可重试性判断。</li>
  * </ol>
  *
- * <h2>使用前提</h2>
+ * <h2>职责范围</h2>
  * <p>仅应在业务方法本身<strong>幂等</strong>、或重试失败可由上层兜底回滚的场景使用
  * （与 {@link AutoRetry} 注解约定一致），否则重复执行可能造成副作用累积。</p>
  *
- * <h2>可观测性</h2>
+ * <h2>设计说明</h2>
  * <p>每次实际触发的重试都会递增 Micrometer 计数器
  * {@code apex.retry.auto.count}（tag {@code result=retried}），
  * 便于在监控面板上观测重试频次。指标注册表缺失时为安全空操作。</p>

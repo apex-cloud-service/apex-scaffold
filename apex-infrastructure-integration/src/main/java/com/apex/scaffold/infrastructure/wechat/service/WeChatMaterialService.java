@@ -19,13 +19,13 @@ import reactor.core.publisher.Mono;
  * <p>提供微信素材管理相关的功能，包括临时素材上传/下载、永久素材管理、
  * 图文消息素材操作等。素材是微信公众平台用于群发消息、客服消息等功能的基础资源。
  *
- * <h3>素材类型说明</h3>
+ * <p><strong>素材类型说明</strong></p>
  * <ul>
  *   <li><b>临时素材</b>：上传后3天有效，适用于需要快速使用的场景</li>
  *   <li><b>永久素材</b>：上传后长期有效，适用于需要重复使用的场景</li>
  * </ul>
  *
- * <h3>支持的媒体类型</h3>
+ * <p><strong>支持的媒体类型</strong></p>
  * <ul>
  *   <li><b>图片（image）</b>：支持bmp/png/jpeg/jpg/gif，上限10M</li>
  *   <li><b>语音（voice）</b>：支持amr/mp3/wma/wav，上限2M</li>
@@ -33,7 +33,7 @@ import reactor.core.publisher.Mono;
  *   <li><b>缩略图（thumb）</b>：支持jpg，上限64KB</li>
  * </ul>
  *
- * <h3>官方文档</h3>
+ * <p><strong>官方文档</strong></p>
  * <ul>
  *   <li><a href="https://developers.weixin.qq.com/doc/offiaccount/Asset_Management/New_temporary_materials.html">
  *       临时素材管理</a></li>
@@ -78,7 +78,7 @@ public class WeChatMaterialService {
      * <p>上传多媒体文件到微信服务器，获取media_id用于后续的客服消息发送、
      * 群发消息等场景。临时素材的有效期为3天。
      *
-     * <h3>使用流程</h3>
+     * <p><strong>使用流程</strong></p>
      * <ol>
      *   <li>将本地文件读入内存</li>
      *   <li>调用本方法上传文件</li>
@@ -86,7 +86,7 @@ public class WeChatMaterialService {
      *   <li>在3天内使用该media_id发送消息</li>
      * </ol>
      *
-     * <h3>上传限制</h3>
+     * <p><strong>上传限制</strong></p>
      * <ul>
      *   <li>图片（image）：2M以内，支持PNG\JPEG\JPG\GIF</li>
      *   <li>语音（voice）：2M以内，播放长度不超过60s，支持AMR\MP3</li>
@@ -94,7 +94,7 @@ public class WeChatMaterialService {
      *   <li>缩略图（thumb）：64KB以内，支持JPG</li>
      * </ul>
      *
-     * <h3>{@code fileName} 为空时的行为</h3>
+     * <p><strong>{@code fileName} 为空时的行为</strong></p>
      * <p>如果传入的fileName为空字符串或null，方法会使用默认文件名"file"提交上传请求。
      * 通常这不会导致上传失败，但接收端显示的文件名可能不具有实际含义。
      *
@@ -150,7 +150,7 @@ public class WeChatMaterialService {
      *   <li>视频素材：返回JSON格式，包含视频的下载URL</li>
      * </ul>
      *
-     * <h3>使用场景</h3>
+     * <p><strong>使用场景</strong></p>
      * <ul>
      *   <li>下载用户发送给公众号的图片、语音等消息</li>
      *   <li>下载自己上传的临时素材</li>
@@ -183,7 +183,7 @@ public class WeChatMaterialService {
      * <p>上传多媒体文件作为微信的永久素材，永久素材长期有效且不会过期。
      * 永久素材的media_id只可在图文消息等特定场景重复使用。
      *
-     * <h3>上传限制</h3>
+     * <p><strong>上传限制</strong></p>
      * <ul>
      *   <li>图片（image）：2M以内</li>
      *   <li>语音（voice）：2M以内</li>
@@ -192,7 +192,7 @@ public class WeChatMaterialService {
      *   <li>永久素材数量：图片50000，其他1000</li>
      * </ul>
      *
-     * <h3>视频上传</h3>
+     * <p><strong>视频上传</strong></p>
      * <p>视频永久素材上传需要两步：
      * <ol>
      *   <li>调用本方法上传视频文件获取media_id</li>
@@ -314,7 +314,6 @@ public class WeChatMaterialService {
      *
      * @param accessToken 微信全局AccessToken
      * @param mediaId 永久素材的media_id
-     * @return 空Mono表示操作成功，或错误Mono表示操作失败
      */
     public Mono<Void> deletePermanentMaterial(String accessToken, String mediaId) {
         log.info("删除永久素材, mediaId: {}", mediaId);

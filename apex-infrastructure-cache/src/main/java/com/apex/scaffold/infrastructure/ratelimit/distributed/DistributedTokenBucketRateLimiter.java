@@ -15,7 +15,7 @@ import reactor.core.publisher.Mono;
  * <p>基于 Redis 实现的分布式令牌桶算法，支持跨实例的全局流量控制。
  * 使用 Lua 脚本保证原子性操作，适用于微服务多实例部署场景。
  *
- * <h2>核心特性</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>✅ 跨实例共享限流配额</li>
  *   <li>✅ 精确的令牌桶算法实现</li>
@@ -25,7 +25,7 @@ import reactor.core.publisher.Mono;
  *   <li>✅ 支持本地降级（Redis 不可用时）</li>
  * </ul>
  *
- * <h2>算法原理</h2>
+ * <h2>设计说明</h2>
  * <pre>
  * 1. 从 Redis 获取当前令牌数和最后补充时间
  * 2. 计算距离上次补充经过的时间
@@ -34,7 +34,7 @@ import reactor.core.publisher.Mono;
  * 5. 如果令牌充足则扣除，否则拒绝
  * </pre>
  *
- * <h2>配置示例</h2>
+ * <h2>使用示例</h2>
  * <pre>
  * apex:
  *   ratelimit:
@@ -62,14 +62,14 @@ import reactor.core.publisher.Mono;
  * }
  * }</pre>
  *
- * <h2>性能特征</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>延迟：2-5ms（Redis 往返时间）</li>
  *   <li>吞吐：取决于 Redis 性能（通常 10万+ QPS）</li>
  *   <li>存储：每个资源约 50 字节（2 个 Redis key）</li>
  * </ul>
  *
- * <h2>注意事项</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>需要 Redis 2.6+ 支持（Lua 脚本）</li>
  *   <li>时钟同步：多实例部署需要 NTP 同步</li>
@@ -112,7 +112,7 @@ public class DistributedTokenBucketRateLimiter {
      *   <li>返回是否成功（1 成功，0 失败）</li>
      * </ol>
      *
-     * <h3>参数说明</h3>
+     * <p><strong>参数说明</strong></p>
      * <ul>
      *   <li>KEYS[1]: 令牌数 key</li>
      *   <li>KEYS[2]: 最后补充时间 key</li>

@@ -13,14 +13,14 @@ import java.lang.annotation.Target;
  * 防止热点数据导致后端服务过载。通过在方法参数上标注此注解，
  * 系统自动检测该参数的访问频率，当达到热点阈值时启动参数级限流保护。
  *
- * <h2>使用场景</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li><strong>热门商品限流</strong>：秒杀活动中对单个商品 ID 进行限流</li>
  *   <li><strong>热点用户限流</strong>：对高频访问 API 的用户进行速率限制</li>
  *   <li><strong>热点数据查询限流</strong>：对高频查询的数据 Key 进行限流</li>
  * </ul>
  *
- * <h2>工作原理</h2>
+ * <h2>设计说明</h2>
  * <ol>
  *   <li>拦截标注了 {@code @HotSpotRateLimit} 的方法，提取指定参数的值</li>
  *   <li>使用滑动窗口计数器统计该参数值在窗口内的访问频率</li>
@@ -29,7 +29,7 @@ import java.lang.annotation.Target;
  *   <li>窗口滑动后自动恢复，不再热门的数据解除限流</li>
  * </ol>
  *
- * <h2>配置示例</h2>
+ * <h2>使用示例</h2>
  * <pre>{@code * // 对商品ID进行热点限流：当商品访问 QPS > 50 时触发热点保护，
  * // 热点商品自身限流至 10 QPS
  * @HotSpotRateLimit(

@@ -55,7 +55,6 @@ public interface UserRoleRepository {
      *
      * @param userId 用户ID
      * @param roleIds 角色ID集合
-     * @return 替换完成信号
      */
     Mono<Void> replaceRoles(Long userId, Set<Long> roleIds);
 }

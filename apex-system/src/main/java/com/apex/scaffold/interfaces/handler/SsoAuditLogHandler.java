@@ -26,13 +26,13 @@ import reactor.core.publisher.Mono;
  * <p>提供 SSO 单点登录审计日志的查询和统计 API,用于记录和追踪 SSO 相关的所有操作行为。
  * 支持按用户、提供商、操作类型、操作结果、时间范围等维度查询审计日志,满足安全审计和合规要求。
  *
- * <h2>核心功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>日志查询:分页查询 SSO 审计日志,支持多维度筛选和时间范围过滤</li>
  *   <li>日志统计:获取审计日志统计信息,包括操作类型分布、成功/失败比例、按提供商分组等</li>
  * </ul>
  *
- * <h2>审计范围</h2>
+ * <h2>职责范围</h2>
  * <p>记录的操作类型包括:</p>
  * <ul>
  *   <li>LOGIN - 用户通过 SSO 登录</li>
@@ -42,7 +42,7 @@ import reactor.core.publisher.Mono;
  *   <li>CONFIG_UPDATE - SSO 配置更新</li>
  * </ul>
  *
- * <h2>接口清单</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>GET /admin-api/v1/sso/audit-logs - 查询审计日志列表(分页)</li>
  *   <li>GET /admin-api/v1/sso/audit-logs/statistics - 获取审计日志统计信息</li>

@@ -156,5 +156,11 @@ public class UnifiedAuthorizationService {
                 .toList());
     }
 
+    /**
+     * 统一授权的本地缓存条目。
+     *
+     * @param authorization 授权快照
+     * @param expiresAt 缓存过期时间（epoch 毫秒）
+     */
     public record CachedAuthorization(UnifiedAuthorizationGateway.Authorization authorization, long expiresAt) {}
 }

@@ -13,7 +13,7 @@ import lombok.ToString;
  * 用户回答问题后，系统根据ELO算法更新该维度下的评分。
  * </p>
  *
- * <h2>核心业务规则</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>题目通过{@link #questionId}唯一标识</li>
  *   <li>每个题目关联一个吸引力维度，用于更新对应维度的ELO评分</li>

@@ -9,7 +9,7 @@ import reactor.core.publisher.Mono;
  * 由基础设施适配层实现，例如通过系统服务内部 API（{@code /internal/v1}）查询用户快照，
  * 并映射为办公模块内自有的 {@link OfficeUserSnapshot}。
  *
- * <h2>契约说明</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>{@link #getById(Long)}：按用户 ID 查询用户快照，不存在时返回空 Mono</li>
  *   <li>{@link #updateLoginInfo(Long, String)}：记录用户最后登录 IP</li>

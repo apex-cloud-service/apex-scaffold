@@ -20,14 +20,14 @@ import reactor.core.publisher.Mono;
  *
  * <p>编排用户认证流程，包括登录、登出和Token刷新。
  *
- * <h2>核心职责</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>用户名密码登录：验证凭证、记录登录、签发Token</li>
  *   <li>登出：撤销用户所有Token</li>
  *   <li>Token刷新：验证刷新令牌、签发新访问令牌</li>
  * </ul>
  *
- * <h2>安全保障</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>密码使用BCrypt加密存储和验证</li>
  *   <li>登录失败自动记录，5次失败锁定30分钟</li>
@@ -118,7 +118,6 @@ public class AuthenticationApplicationService {
      *
      * @param userId   用户ID
      * @param tenantId 租户ID
-     * @return 空结果
      */
     public Mono<Void> logout(Long userId, String tenantId) {
         log.debug("开始登出: userId={}", userId);

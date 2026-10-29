@@ -11,7 +11,7 @@ import reactor.core.publisher.Mono;
  * <p>定义代码生成器生成历史记录的持久化操作契约，由基础设施层实现（MyBatis-Plus）。
  * 支持历史记录的查询、创建和分页查询。
  *
- * <h2>核心职责</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>记录每次代码生成任务的执行结果</li>
  *   <li>按生成配置ID查询历史记录</li>
@@ -19,7 +19,7 @@ import reactor.core.publisher.Mono;
  *   <li>提供审计追踪和问题排查数据</li>
  * </ul>
  *
- * <h2>查询场景</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>查看某个配置的生成历史</li>
  *   <li>查看某个用户的生成操作记录</li>

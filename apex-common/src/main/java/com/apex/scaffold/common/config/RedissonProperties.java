@@ -9,12 +9,12 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * <p>定义 Redisson 客户端的配置参数，支持通过 {@code apex.redis.*} 配置项覆盖默认值。
  * 该配置类主要控制 Redisson 的看门狗（Watchdog）机制、命令超时和重试策略。
  *
- * <h2>看门狗机制说明</h2>
+ * <h2>设计说明</h2>
  * <p>Redisson 的看门狗（Watchdog）机制用于自动延长分布式锁的有效期，防止业务执行时间过长导致锁提前释放。
  * 当 {@code leaseTime} 设置为 {@code -1} 时，看门狗会每隔 {@link #lockWatchdogTimeout} 的 1/3 时间
  * 自动续期锁，直到业务方法执行完毕或进程崩溃。
  *
- * <h2>配置项说明</h2>
+ * <h2>设计说明</h2>
  * <table border="1">
  *   <tr>
  *     <th>配置项</th>

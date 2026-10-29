@@ -14,7 +14,7 @@ import reactor.core.publisher.Mono;
  *
  * <p>提供操作日志的异步保存功能，使用 Reactor 响应式模型实现非阻塞写入。
  *
- * <h2>C3 并发修复（fire-subscribe / tenant 上下文）</h2>
+ * <h2>线程安全性</h2>
  * <ul>
  *   <li>不再在调用线程里裸 {@code subscribe()}：通过
  *       {@link BlockingIoSchedulers#jdbc()} 受控调度落库，并写入线程
@@ -115,7 +115,6 @@ public class OperationLogService implements org.springframework.beans.factory.Di
      *
      * @param operationLog 操作日志实体
      * @param tenantId     安装的租户 ID
-     * @return 组合后的 Mono（未订阅）
      */
     Mono<Void> saveInternal(OperationLogEntity operationLog, String tenantId) {
         return Mono.defer(() -> operationLogRepository.insert(operationLog).then())

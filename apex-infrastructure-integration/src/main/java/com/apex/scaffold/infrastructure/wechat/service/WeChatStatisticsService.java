@@ -18,7 +18,7 @@ import reactor.core.publisher.Mono;
  * <p>提供微信公众平台和开放平台的各项数据统计分析功能，
  * 包括用户增长分析、用户属性分析、消息发送统计、接口调用统计等。
  *
- * <h3>主要功能模块</h3>
+ * <p><strong>主要功能模块</strong></p>
  * <ul>
  *   <li><b>用户分析</b> - 用户增长、用户属性、用户活跃度</li>
  *   <li><b>消息分析</b> - 消息发送/接收统计、模板消息发送统计</li>
@@ -26,14 +26,14 @@ import reactor.core.publisher.Mono;
  *   <li><b>内容分析</b> - 群发图文阅读量、分享转发量</li>
  * </ul>
  *
- * <h3>统计时间说明</h3>
+ * <p><strong>统计时间说明</strong></p>
  * <ul>
  *   <li>日数据：当天早上8点前可获取前一天的数据</li>
  *   <li>月数据：当月结束后可获取</li>
  *   <li>数据保留期：一般为90天</li>
  * </ul>
  *
- * <h3>官方文档</h3>
+ * <p><strong>官方文档</strong></p>
  * <ul>
  *   <li><a href="https://developers.weixin.qq.com/doc/offiaccount/Analytics/User_Analysis_Data_Interface.html">
  *       用户分析</a></li>
@@ -90,7 +90,7 @@ public class WeChatStatisticsService {
      * <p>获取指定日期范围内的每日用户增长数据，包括新关注人数、取消关注人数、
      * 净增关注人数、累计关注人数等指标。
      *
-     * <h3>返回数据字段</h3>
+     * <p><strong>返回数据字段</strong></p>
      * <ul>
      *   <li>{@code ref_date} - 数据的日期</li>
      *   <li>{@code user_source} - 用户的渠道</li>
@@ -98,7 +98,7 @@ public class WeChatStatisticsService {
      *   <li>{@code cancel_user} - 取消关注的用户数量</li>
      * </ul>
      *
-     * <h3>{@code beginDate} 为空时的行为</h3>
+     * <p><strong>{@code beginDate} 为空时的行为</strong></p>
      * <p>待办：beginDate 为空时，方法应默认设置为前一天日期。
      * 当前版本若传入空值会直接传递给微信API，微信将以错误响应。
      *
@@ -148,7 +148,7 @@ public class WeChatStatisticsService {
      * <p>获取指定日期范围内的每日群发消息统计数据，包括群发消息数量、
      * 发送人数、送达人数、阅读人数等指标。
      *
-     * <h3>返回数据字段</h3>
+     * <p><strong>返回数据字段</strong></p>
      * <ul>
      *   <li>{@code ref_date} - 数据的日期</li>
      *   <li>{@code msg_type} - 消息类型</li>
@@ -202,7 +202,7 @@ public class WeChatStatisticsService {
      * <p>获取指定日期范围内的接口调用次数、失败次数、平均耗时、最大耗时等指标。
      * 可监控各微信API接口的使用情况和性能表现。
      *
-     * <h3>返回数据字段</h3>
+     * <p><strong>返回数据字段</strong></p>
      * <ul>
      *   <li>{@code ref_date} - 数据的日期</li>
      *   <li>{@code callback_count} - 服务器回调的调用次数</li>
@@ -211,7 +211,7 @@ public class WeChatStatisticsService {
      *   <li>{@code max_time_cost} - 最大耗时（毫秒）</li>
      * </ul>
      *
-     * <h3>使用建议</h3>
+     * <p><strong>使用建议</strong></p>
      * <ul>
      *   <li>定期（如每日）获取接口调用数据，及时发现异常</li>
      *   <li>监控失败率和平均耗时，设置告警阈值</li>
@@ -241,7 +241,7 @@ public class WeChatStatisticsService {
      * <p>获取指定日期的接口调用小时级统计数据，精确到小时。
      * 可用于分析高峰时段，优化资源调度和API调用策略。
      *
-     * <h3>使用场景</h3>
+     * <p><strong>使用场景</strong></p>
      * <ul>
      *   <li>分析用户活跃时段，优化推送时间</li>
      *   <li>发现突发流量和异常调用</li>

@@ -76,6 +76,8 @@ public class GracefulShutdownCoordinator {
     /**
      * 关停结果。
      *
+     * @param drained 是否在截止时间内完成排空
+     * @param participants 各参与者的排空结果
      * @author Apex Team
      * @version 1.0.0
      * @since 1.0.0

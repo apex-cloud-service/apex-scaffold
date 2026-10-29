@@ -14,7 +14,7 @@ import java.lang.annotation.Target;
  * 同一幂等键（默认取自 {@code Idempotency-Key} 请求头）在 TTL 窗口内的重复请求
  * 直接返回 {@code REPEAT_SUBMIT}，业务方法不会被执行第二次。
  *
- * <h2>与防重放（{@link AntiReplay}）的区别</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>{@link AntiReplay}：防重放攻击，校验 {@code X-Timestamp} 与 {@code X-Nonce}，
  *       防止攻击者截获并重放已发出的请求</li>
@@ -22,14 +22,14 @@ import java.lang.annotation.Target;
  *       服务端识别为同一业务动作并拒绝重复执行，防止重复扣款/重复下单等副作用</li>
  * </ul>
  *
- * <h2>幂等键合成</h2>
+ * <h2>职责范围</h2>
  * <pre>
  *   apex:idem:{sha256Hex(请求路径 + "|" + 幂等键头值 + "|" + 客户端IP)}
  * </pre>
  * 路径维度天然隔离不同接口；IP 维度防止不同客户端复用同一键值；业务动作本身的唯一性
  * 由客户端为每个动作生成唯一 UUID 保证（与账号注销接口的 {@code Idempotency-Key} 约定一致）。
  *
- * <h2>渐进接入</h2>
+ * <h2>设计说明</h2>
  * <p>{@link #required()} 为 {@code true} 时缺少幂等键头直接拒绝（严格模式，适合新接口）；
  * 为 {@code false} 时缺头请求照常放行（兼容旧客户端渐进接入，带上头即获得幂等保护）。</p>
  *

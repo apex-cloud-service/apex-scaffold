@@ -15,14 +15,14 @@ import lombok.NoArgsConstructor;
  * 客户端列表展示、详情查询和更新表单回显。除密钥轮换接口外，响应中不包含
  * 客户端密钥明文（密钥采用 BCrypt 加密存储，仅在创建与重置时返回一次）。
  *
- * <h2>使用场景</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>管理后台 OAuth2 客户端列表分页展示</li>
  *   <li>客户端详情查询与更新表单数据回显</li>
  *   <li>即将过期客户端（密钥轮换提醒）列表展示</li>
  * </ul>
  *
- * <h2>字段说明</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>{@code authorizationGrantTypes}：客户端支持的授权模式（authorization_code、refresh_token 等）</li>
  *   <li>{@code clientAuthenticationMethods}：客户端认证方式（client_secret_basic、client_secret_post 等）</li>

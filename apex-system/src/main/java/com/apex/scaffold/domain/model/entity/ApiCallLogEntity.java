@@ -13,7 +13,7 @@ import lombok.ToString;
  * <p>记录每一次对外部 HTTP 服务的调用详情，包括请求 URL、请求体、响应状态码、
  * 响应体、执行耗时和异常信息。该实体是只读的，所有字段通过持久层回填。</p>
  *
- * <h2>调用状态枚举</h2>
+ * <h2>设计说明</h2>
  * <table>
  *   <tr><th>值</th><th>含义</th></tr>
  *   <tr><td>{@code 0}</td><td>成功（HTTP 2xx）</td></tr>

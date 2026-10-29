@@ -106,7 +106,6 @@ public class DeviceTrustServiceImpl implements DeviceTrustService {
      * @param deviceId 设备ID
      * @param ip 本次使用的IP地址
      * @param location 本次使用的地理位置
-     * @return 完成信号
      */
     @Override
     @CacheEvict(value = "device-trust", key = "#tenantId + ':' + #userId + ':' + #deviceId")
@@ -133,7 +132,6 @@ public class DeviceTrustServiceImpl implements DeviceTrustService {
      *
      * @param deviceId 设备记录ID
      * @param operator 执行操作的运维人员标识
-     * @return 完成信号
      */
     @Override
     @CacheEvict(value = "device-trust", allEntries = true)
@@ -171,7 +169,6 @@ public class DeviceTrustServiceImpl implements DeviceTrustService {
      *
      * @param deviceId 设备记录ID
      * @param operator 执行操作的运维人员标识
-     * @return 完成信号
      */
     @Override
     @CacheEvict(value = "device-trust", allEntries = true)
@@ -209,7 +206,6 @@ public class DeviceTrustServiceImpl implements DeviceTrustService {
      *
      * @param deviceId 设备记录ID
      * @param operator 执行操作的运维人员标识
-     * @return 完成信号
      */
     @Override
     @CacheEvict(value = "device-trust", allEntries = true)
@@ -365,7 +361,6 @@ public class DeviceTrustServiceImpl implements DeviceTrustService {
      * @param deviceId 设备记录ID
      * @param days 延长的天数
      * @param operator 执行操作的运维人员标识
-     * @return 完成信号
      */
     @Override
     @CacheEvict(value = "device-trust", allEntries = true)

@@ -25,7 +25,7 @@ import reactor.core.publisher.Mono;
  * <p>提供 SSO 单点登录提供商的管理功能,包括提供商的创建、更新、删除、查询、连接测试和元数据获取。
  * 支持 SAML 2.0、CAS、LDAP 和 OIDC 等多种协议类型。
  *
- * <h2>核心功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>创建提供商:校验名称唯一性后持久化,自动关联租户</li>
  *   <li>更新提供商:支持更新配置信息,租户隔离校验</li>
@@ -35,14 +35,14 @@ import reactor.core.publisher.Mono;
  *   <li>获取元数据:获取协议特定的元数据信息(SAML metadata/OIDC discovery 等)</li>
  * </ul>
  *
- * <h2>租户隔离</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>所有操作自动关联当前租户上下文</li>
  *   <li>租户间数据完全隔离,无法跨租户访问</li>
  *   <li>提供商名称在租户内唯一</li>
  * </ul>
  *
- * <h2>协议适配器</h2>
+ * <h2>设计说明</h2>
  * <p>通过 {@link SsoProtocolAdapterFactory} 获取对应协议的适配器,
  * 支持 SAML、CAS、LDAP、OIDC 等协议的统一抽象和管理。
  *

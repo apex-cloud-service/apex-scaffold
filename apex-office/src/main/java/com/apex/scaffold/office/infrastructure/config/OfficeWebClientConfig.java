@@ -18,7 +18,7 @@ import reactor.netty.http.client.HttpClient;
  * <p>配置用于调用飞书、钉钉、企业微信等办公平台API的响应式WebClient,
  * 包含连接超时、读写超时和内存缓冲区大小的优化配置。
  *
- * <h2>配置特性</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li><strong>连接超时</strong>:30秒,适用于办公平台API的建立连接阶段</li>
  *   <li><strong>响应超时</strong>:30秒,适用于办公平台API的整体响应时间</li>
@@ -26,7 +26,7 @@ import reactor.netty.http.client.HttpClient;
  *   <li><strong>内存缓冲区</strong>:16MB,适用于处理办公平台的大文件上传/下载</li>
  * </ul>
  *
- * <h2>超时配置说明</h2>
+ * <h2>设计说明</h2>
  * <table border="1">
  *   <caption>超时类型对比</caption>
  *   <tr>

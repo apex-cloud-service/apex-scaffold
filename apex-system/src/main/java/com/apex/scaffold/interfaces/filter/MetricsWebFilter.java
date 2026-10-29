@@ -22,7 +22,7 @@ import reactor.core.publisher.SignalType;
  * <p>基于 Micrometer Timer 实现接口级响应时间监控，发布真实的 Prometheus 直方图桶，
  * 由 Grafana/PromQL 按查询窗口计算 P50/P95/P99，用于性能监控和告警触发。
  *
- * <h2>监控指标</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li><strong>apex.api.response.time</strong>：接口响应时间（Micrometer 按秒导出），
  *       包含 method（HTTP方法）、path（请求路径）、status（状态码）三个标签</li>
@@ -30,14 +30,14 @@ import reactor.core.publisher.SignalType;
  *       包含 method、path、status 三个标签</li>
  * </ul>
  *
- * <h2>采集策略</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>仅对 {@code /api} 开头的业务接口采集；{@code /actuator}、{@code /health} 及其他非业务路径跳过</li>
  *   <li>对 {@code /api} 开头的业务接口进行全量采集</li>
  *   <li>路径参数会进行归一化处理（如 {@code /api/users/123} → {@code /api/users/{id}}）</li>
  * </ul>
  *
- * <h2>使用方式</h2>
+ * <h2>使用示例</h2>
  * <p>配置 Prometheus 查询时使用 {@code apex_api_response_time_seconds_bucket} 计算分位数；
  * {@code _max} 只表示进程内当前最大值，不作为稳定的 P95/P99 替代。
  *
@@ -82,7 +82,6 @@ public class MetricsWebFilter implements WebFilter {
      *
      * @param exchange 当前 HTTP 请求-响应交换对象
      * @param chain    WebFilter 链
-     * @return 响应式处理结果
      */
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {

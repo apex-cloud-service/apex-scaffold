@@ -21,7 +21,7 @@ import reactor.core.publisher.Mono;
  * {@link GenConfigPoConverter} 在领域实体与 {@link GenConfigPO} 之间转换，
  * 阻塞操作调度到 JDBC 专用线程池执行。
  *
- * <h2>核心职责</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>生成配置的增删改查</li>
  *   <li>按数据源ID查询关联的配置列表</li>
@@ -29,7 +29,7 @@ import reactor.core.publisher.Mono;
  *   <li>JDBC 阻塞操作隔离到专用调度器</li>
  * </ul>
  *
- * <h2>关联关系</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>多对一：多个配置可引用同一个数据源</li>
  *   <li>查询时自动过滤租户和逻辑删除标记</li>

@@ -19,14 +19,14 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
  * 当前 {@code @Async} 仅用于 {@link com.apex.scaffold.interfaces.config.GracefulShutdownManager}
  * 的优雅停机事件监听，属于极低频调用。
  *
- * <h2>主要功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>通过 {@link org.springframework.scheduling.annotation.EnableAsync} 启用 Spring 异步方法支持</li>
  *   <li>提供 {@code asyncExecutor} 线程池 Bean，供 {@code @Async} 注解的异步方法使用</li>
  *   <li>在应用就绪后将该线程池注册到 {@link ResourceDrainRegistry}，参与优雅停机时的资源排空</li>
  * </ul>
  *
- * <h2>优化说明（Netty/线程池/IO 性能优化方案 P2-2）</h2>
+ * <h2>设计说明</h2>
  * <p>本类的 {@code asyncExecutor} 与 {@link ThreadPoolConfig#asyncTaskExecutor()}
  * 参数原完全一致（core=CPU×2, max=CPU×4, queue=200），在 8 核机器上合计 32-64 线程，
  * 存在冗余。优化方案：
@@ -38,7 +38,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
  *       {@code asyncTaskExecutor} 供代码内显式提交使用</li>
  * </ul></p>
  *
- * <h2>设计模式</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li><strong>配置模式</strong>：通过外部化配置和 {@link Bean} 注解管理线程池参数</li>
  *   <li><strong>生产者-消费者模式</strong>：通过线程池 + 阻塞队列实现任务的异步生产和消费</li>
@@ -71,7 +71,7 @@ public class AsyncConfig {
      * 当前 {@code @Async} 仅用于 {@link com.apex.scaffold.interfaces.config.GracefulShutdownManager}
      * 的优雅停机事件监听（极低频），因此配置为最小线程池。
      *
-     * <h2>线程池配置（优化后）</h2>
+     * <h2>线程安全性</h2>
      * <ul>
      *   <li>核心线程数：2（原 CPU×2，冗余缩容后）</li>
      *   <li>最大线程数：4（原 CPU×4，冗余缩容后）</li>

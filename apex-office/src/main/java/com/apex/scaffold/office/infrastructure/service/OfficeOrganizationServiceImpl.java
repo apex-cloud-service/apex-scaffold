@@ -141,5 +141,11 @@ public class OfficeOrganizationServiceImpl implements OfficeOrganizationService 
                 });
     }
 
+    /**
+     * 平台应用凭据。
+     *
+     * @param appId 应用标识
+     * @param secret 应用密钥，调用方不得写入日志
+     */
     private record AppSecret(String appId, String secret) {}
 }

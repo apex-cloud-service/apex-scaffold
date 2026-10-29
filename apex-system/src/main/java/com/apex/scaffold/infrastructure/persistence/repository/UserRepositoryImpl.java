@@ -27,13 +27,13 @@ import reactor.core.publisher.Mono;
  * 采用响应式编程模型，支持非阻塞IO操作。
  * </p>
  *
- * <h2>设计模式</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>转换器模式：Entity-PO转换由MapStruct自动处理</li>
  *   <li>响应式模式：使用Project Reactor实现非阻塞数据访问</li>
  * </ul>
  *
- * <h2>线程调度</h2>
+ * <h2>线程安全性</h2>
  * <p>
  * 所有数据库操作通过专用阻塞 I/O 调度器调度到工作线程池，
  * 避免阻塞事件循环线程。
@@ -80,7 +80,7 @@ public class UserRepositoryImpl implements UserRepository {
      * 使用非阻塞方式执行数据库查询。
      * </p>
      *
-     * <h3>调度说明</h3>
+     * <p><strong>调度说明</strong></p>
      * <p>
      * 查询操作在专用阻塞 I/O 调度器的线程池中执行，
      * 避免阻塞Netty事件循环。
@@ -181,7 +181,7 @@ public class UserRepositoryImpl implements UserRepository {
      * </ul>
      * </p>
      *
-     * <h3>返回说明</h3>
+     * <p><strong>返回说明</strong></p>
      * <p>
      * 返回保存后的实体，包含自动生成的主键ID（插入场景）。
      * </p>
@@ -212,7 +212,6 @@ public class UserRepositoryImpl implements UserRepository {
      * （最近 5 分钟有心跳视为在线）判定使用。</p>
      *
      * @param userId 用户 ID
-     * @return 更新完成信号
      * @since 2.2.0
      */
     @Override
@@ -271,7 +270,6 @@ public class UserRepositoryImpl implements UserRepository {
      * </p>
      *
      * @param id 用户ID
-     * @return 完成信号Mono
      */
     @Override
     public Mono<Void> deleteById(Long id) {
@@ -341,7 +339,7 @@ public class UserRepositoryImpl implements UserRepository {
      * <p>查询所有未被逻辑删除的用户，返回完整用户实体流。
      * 适用于统计分析、批处理等需要全量数据的场景。</p>
      *
-     * <h3>性能提示</h3>
+     * <p><strong>性能提示</strong></p>
      * <p>当用户数量较大时，建议使用 {@link #findPage(Integer, Integer)} 分页查询，
      * 避免一次性加载全量数据造成内存压力。</p>
      *
@@ -369,7 +367,7 @@ public class UserRepositoryImpl implements UserRepository {
      * 仅查询未被逻辑删除（{@code deleted = 0}）的用户。
      * </p>
      *
-     * <h3>分页参数</h3>
+     * <p><strong>分页参数</strong></p>
      * <ul>
      *   <li>{@code pageNum} - 当前页码，从 1 开始</li>
      *   <li>{@code pageSize} - 每页记录数</li>

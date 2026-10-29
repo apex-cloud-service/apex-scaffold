@@ -68,6 +68,7 @@ public class SessionRouter {
                 .build();
     }
 
+    /** SpringDoc 路由操作聚合注解：集中声明该类对外暴露的 OpenAPI 操作元数据。 */
     @java.lang.annotation.Target(java.lang.annotation.ElementType.METHOD)
     @java.lang.annotation.Retention(java.lang.annotation.RetentionPolicy.RUNTIME)
     @RouterOperations({

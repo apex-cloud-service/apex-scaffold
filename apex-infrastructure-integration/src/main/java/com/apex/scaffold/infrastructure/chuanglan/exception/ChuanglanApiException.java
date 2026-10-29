@@ -6,7 +6,7 @@ package com.apex.scaffold.infrastructure.chuanglan.exception;
  * <p>当调用创蓝253云通信平台API时，如果返回错误码或网络异常，抛出此异常。
  * 异常中包含创蓝平台返回的原始错误码和错误信息，便于定位问题。
  *
- * <h2>触发场景</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>短信发送接口返回错误码（如账号密码错误、余额不足等）</li>
  *   <li>闪验token置换手机号接口返回错误码（如token无效、过期等）</li>

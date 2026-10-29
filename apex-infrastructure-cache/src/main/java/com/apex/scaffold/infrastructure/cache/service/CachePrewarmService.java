@@ -19,7 +19,7 @@ import reactor.core.publisher.Mono;
  * <p>应用启动时自动执行缓存预热策略，将热点数据提前加载到缓存中，
  * 避免启动初期大量请求直接访问数据库导致的性能问题和缓存雪崩。
  *
- * <h2>工作原理</h2>
+ * <h2>设计说明</h2>
  * <p>实现 {@link ApplicationRunner} 接口，在 Spring Boot 应用启动完成后自动触发：
  * <ol>
  *   <li>延迟指定时间（默认 30 秒）等待应用完全就绪</li>
@@ -28,11 +28,11 @@ import reactor.core.publisher.Mono;
  *   <li>记录预热结果和统计信息</li>
  * </ol>
  *
- * <h2>启用条件</h2>
+ * <h2>设计说明</h2>
  * <p>通过配置项 {@code apex.cache.prewarm.enabled=true} 启用缓存预热功能。
  * 未启用时，此服务不会被实例化。
  *
- * <h2>配置示例</h2>
+ * <h2>使用示例</h2>
  * <pre>
  * apex:
  *   cache:
@@ -43,7 +43,7 @@ import reactor.core.publisher.Mono;
  *       batch-interval-millis: 100      # 批次间隔 100 毫秒
  * </pre>
  *
- * <h2>预热策略</h2>
+ * <h2>设计说明</h2>
  * <p>预热策略通过实现 {@link CachePrewarmStrategy} 接口并注册为 Spring Bean 来定义。
  * 服务会自动发现并执行所有策略：
  * <pre>{@code
@@ -65,7 +65,7 @@ import reactor.core.publisher.Mono;
  * }
  * }</pre>
  *
- * <h2>执行特性</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li><b>异步非阻塞</b>：使用 Reactor 响应式编程，不阻塞应用启动</li>
  *   <li><b>容错处理</b>：单个策略失败不影响其他策略执行，失败策略返回 0</li>
@@ -73,7 +73,7 @@ import reactor.core.publisher.Mono;
  *   <li><b>手动触发</b>：支持通过 {@link #prewarm(String)} 方法手动触发指定策略</li>
  * </ul>
  *
- * <h2>监控指标</h2>
+ * <h2>设计说明</h2>
  * <p>预热过程会记录以下指标供监控：
  * <ul>
  *   <li>预热策略总数</li>
@@ -82,7 +82,7 @@ import reactor.core.publisher.Mono;
  *   <li>预热总耗时</li>
  * </ul>
  *
- * <h2>注意事项</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>预热策略应该是幂等的，支持重复执行</li>
  *   <li>大批量数据预热应分批加载，避免内存溢出</li>
@@ -148,7 +148,7 @@ public class CachePrewarmService implements ApplicationRunner {
      * 策略调用延迟至订阅并隔离到 {@link BlockingIoSchedulers#general()}，避免计时线程执行同步准备工作。
      * 策略内部的具体阻塞 I/O 仍应按类型选择专用池。
      *
-     * <h3>执行特性</h3>
+     * <p><strong>执行特性</strong></p>
      * <ul>
      *   <li><b>并发执行</b>：多个策略通过 Flux.flatMap 并发执行，提高效率</li>
      *   <li><b>容错处理</b>：单个策略失败不会中断其他策略，失败策略返回 0</li>
@@ -182,7 +182,7 @@ public class CachePrewarmService implements ApplicationRunner {
      *   <li>运维人员通过管理接口手动触发预热</li>
      * </ul>
      *
-     * <h3>查找规则</h3>
+     * <p><strong>查找规则</strong></p>
      * <p>通过 {@link CachePrewarmStrategy#getName()} 返回的名称精确匹配。
      * 如果找不到匹配的策略，返回 0 并记录警告日志。
      * 策略调用在订阅时隔离到 {@link BlockingIoSchedulers#general()}，策略异常继续向调用方传播。

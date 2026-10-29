@@ -14,7 +14,7 @@ import org.mapstruct.ReportingPolicy;
  * 命名不一致（实体 {@code createTime}/{@code updateTime}，DTO {@code createdAt}/
  * {@code updatedAt}），通过 {@code @Mapping} 显式指定。
  *
- * <h2>安全约定</h2>
+ * <h2>设计说明</h2>
  * <p>本转换器只做字段搬运，<strong>不负责脱敏</strong>。URL 与用户名的脱敏、
  * 连接池运行时状态（poolSize/activeConnections/status）由应用服务在转换后补充，
  * 确保密码字段永远不会进入响应 DTO。

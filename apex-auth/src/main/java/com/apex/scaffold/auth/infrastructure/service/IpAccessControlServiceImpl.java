@@ -209,7 +209,6 @@ public class IpAccessControlServiceImpl implements IpAccessControlService {
      *
      * @param ipAddress 要移除的IP地址
      * @param tenantId 租户ID
-     * @return 完成信号
      */
     @Override
     @CacheEvict(value = "ip-access-control", allEntries = true)
@@ -225,7 +224,6 @@ public class IpAccessControlServiceImpl implements IpAccessControlService {
      *
      * @param ipAddress 要解除封禁的IP地址
      * @param tenantId 租户ID
-     * @return 完成信号
      */
     @Override
     @CacheEvict(value = "ip-access-control", allEntries = true)
@@ -281,7 +279,6 @@ public class IpAccessControlServiceImpl implements IpAccessControlService {
      * @param ruleId 规则ID
      * @param tenantId 租户ID
      * @param operator 执行操作的运维人员标识
-     * @return 完成信号
      */
     @Override
     @CacheEvict(value = "ip-access-control", allEntries = true)
@@ -304,7 +301,6 @@ public class IpAccessControlServiceImpl implements IpAccessControlService {
      * @param ruleId 规则ID
      * @param tenantId 租户ID
      * @param operator 执行操作的运维人员标识
-     * @return 完成信号
      */
     @Override
     @CacheEvict(value = "ip-access-control", allEntries = true)
@@ -327,7 +323,6 @@ public class IpAccessControlServiceImpl implements IpAccessControlService {
      * @param ruleId 规则ID
      * @param tenantId 租户ID
      * @param operator 执行操作的运维人员标识
-     * @return 完成信号
      */
     @Override
     @CacheEvict(value = "ip-access-control", allEntries = true)

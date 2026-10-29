@@ -21,7 +21,7 @@ import reactor.core.publisher.Mono;
  * 使用 Token 的 jti（JWT ID）作为 Redis 键，利用 Redis 的 TTL 自动过期能力，
  * 无需额外的定时任务清理过期数据。
  *
- * <h2>实现说明</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>键格式：token:blacklist:{jti}</li>
  *   <li>值固定为 "1"，仅作标记位使用</li>
@@ -54,7 +54,6 @@ public class TokenBlacklistServiceImpl implements TokenBlacklistService {
      *
      * @param token Token 字符串
      * @param expireTime 过期时间（毫秒），此参数保留用于接口兼容，实际以 Token 自身过期时间为准
-     * @return 完成信号
      */
     @Override
     public Mono<Void> add(String token, long expireTime) {

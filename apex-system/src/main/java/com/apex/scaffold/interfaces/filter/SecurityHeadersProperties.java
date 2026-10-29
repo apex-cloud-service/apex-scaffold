@@ -11,7 +11,7 @@ import org.springframework.validation.annotation.Validated;
  * <p>用于配置 {@link SecurityHeaderWebFilter} 的响应头参数，包括 HSTS 的
  * max-age 和 includeSubdomains 选项。
  *
- * <h2>配置前缀</h2>
+ * <h2>设计说明</h2>
  * <p>在 {@code application.yml} 中使用 {@code apex.security.security-headers} 前缀进行配置：
  * <pre>{@code * apex:
  *   security:

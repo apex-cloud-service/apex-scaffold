@@ -32,7 +32,7 @@ import reactor.core.publisher.Mono;
  * <p>处理用户认证相关的HTTP请求，提供完整的身份认证流程管理，包括用户登录验证、
  * 会话管理、令牌刷新和安全登出功能。支持多租户隔离和设备追踪。</p>
  *
- * <h2>主要功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>用户名密码登录 - 验证用户凭证并颁发JWT访问令牌和刷新令牌</li>
  *   <li>安全登出 - 撤销用户在当前租户下的所有有效令牌，防止令牌重放攻击</li>
@@ -41,7 +41,7 @@ import reactor.core.publisher.Mono;
  *   <li>设备追踪 - 记录登录设备信息和客户端IP地址</li>
  * </ul>
  *
- * <h2>安全特性</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>密码哈希验证 - 使用BCrypt算法验证密码</li>
  *   <li>令牌加密存储 - 数据库中的令牌使用AES-256-GCM加密</li>
@@ -71,7 +71,7 @@ public class AuthenticationHandler {
      * 支持多租户隔离，登录时需要指定租户ID或使用默认租户。
      * 系统会记录客户端IP地址和设备ID用于安全审计。</p>
      *
-     * <h3>登录流程</h3>
+     * <p><strong>登录流程</strong></p>
      * <ol>
      *   <li>提取客户端IP地址</li>
      *   <li>验证用户名和密码（BCrypt哈希比对）</li>
@@ -81,7 +81,7 @@ public class AuthenticationHandler {
      *   <li>记录登录日志</li>
      * </ol>
      *
-     * <h3>安全说明</h3>
+     * <p><strong>安全说明</strong></p>
      * <ul>
      *   <li>密码错误超过5次将锁定账户15分钟</li>
      *   <li>令牌使用JWT格式，包含用户ID、租户ID、权限等信息</li>
@@ -152,7 +152,7 @@ public class AuthenticationHandler {
      * 登出后所有访问令牌和刷新令牌立即失效，防止令牌重放攻击。
      * 需要用户已认证并且只能登出自己的账户。</p>
      *
-     * <h3>登出流程</h3>
+     * <p><strong>登出流程</strong></p>
      * <ol>
      *   <li>验证用户身份（从JWT中提取用户信息）</li>
      *   <li>校验路径参数中的userId与当前登录用户是否一致</li>
@@ -161,7 +161,7 @@ public class AuthenticationHandler {
      *   <li>记录登出日志</li>
      * </ol>
      *
-     * <h3>安全说明</h3>
+     * <p><strong>安全说明</strong></p>
      * <ul>
      *   <li>必须携带有效的访问令牌（Bearer Token）</li>
      *   <li>只能登出自己的账户，不能登出其他用户</li>
@@ -223,7 +223,7 @@ public class AuthenticationHandler {
      * 支持刷新令牌轮换机制，每次刷新后旧的刷新令牌自动失效，
      * 新的访问令牌和刷新令牌会一起返回。</p>
      *
-     * <h3>刷新流程</h3>
+     * <p><strong>刷新流程</strong></p>
      * <ol>
      *   <li>验证刷新令牌的有效性（签名、过期时间）</li>
      *   <li>检查刷新令牌是否已被撤销（黑名单检查）</li>
@@ -234,7 +234,7 @@ public class AuthenticationHandler {
      *   <li>记录刷新日志</li>
      * </ol>
      *
-     * <h3>安全说明</h3>
+     * <p><strong>安全说明</strong></p>
      * <ul>
      *   <li>刷新令牌只能使用一次，使用后立即失效</li>
      *   <li>检测到刷新令牌重用会撤销该用户所有令牌（可能的令牌泄露）</li>
@@ -242,7 +242,7 @@ public class AuthenticationHandler {
      *   <li>建议在访问令牌过期前主动刷新，避免接口调用中断</li>
      * </ul>
      *
-     * <h3>最佳实践</h3>
+     * <p><strong>最佳实践</strong></p>
      * <ul>
      *   <li>客户端应在访问令牌过期前5分钟主动刷新</li>
      *   <li>刷新失败后应引导用户重新登录</li>

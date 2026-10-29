@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
  * 在 Spring 容器完全初始化且所有 Bean 就绪后触发。一次性输出七个关键模块的配置状态，
  * 替代运维人员手动检查多个配置文件和日志片段的繁琐流程。</p>
  *
- * <h2>主要功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>监听 {@link ApplicationReadyEvent}，在应用完全就绪后输出核心模块加载状态</li>
  *   <li>汇总输出 Profile 与端口、Nacos、Scheduling、Redis、MySQL、线程池、Sentinel 七项关键配置</li>
@@ -23,7 +23,7 @@ import org.springframework.stereotype.Component;
  *   <li>各模块输出相互独立，某一模块配置缺失不影响其他模块的状态输出</li>
  * </ul>
  *
- * <h2>触发时机</h2>
+ * <h2>设计说明</h2>
  * <p>{@code ApplicationReadyEvent} 在以下阶段之后触发：</p>
  * <ol>
  *   <li>所有 Bean 初始化完成（包括 {@code @PostConstruct}）</li>
@@ -32,7 +32,7 @@ import org.springframework.stereotype.Component;
  * </ol>
  * <p>这意味着日志输出时，所有核心模块确实已完成初始化并能反映真实状态。</p>
  *
- * <h2>输出模块清单</h2>
+ * <h2>职责范围</h2>
  * <table>
  *   <tr><th>序号</th><th>模块</th><th>输出内容</th><th>对应配置前缀</th></tr>
  *   <tr><td>1</td><td>启动信息</td><td>激活的 Profile、服务端口</td><td>spring.profiles.active / server.port</td></tr>
@@ -44,14 +44,14 @@ import org.springframework.stereotype.Component;
  *   <tr><td>7</td><td>Sentinel</td><td>流量控制启用状态</td><td>spring.cloud.sentinel.enabled</td></tr>
  * </table>
  *
- * <h2>安全设计</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>不输出数据库密码、Redis 密码、JWT 密钥等敏感信息</li>
  *   <li>数据源 URL 仅打印域名和端口，不打印具体库名后的参数（但 URL 本身可能含库名）</li>
  *   <li>日志级别使用 {@code INFO}，不影响生产环境日志策略</li>
  * </ul>
  *
- * <h2>日志输出示例</h2>
+ * <h2>使用示例</h2>
  * <pre>{@code * ========== 核心模块加载状态 ==========
  * [启动] Profile: [dev], 端口: 8080
  * [Nacos] 配置中心: 已启用, 服务发现: 已启用, 地址: 127.0.0.1:8848
@@ -63,7 +63,7 @@ import org.springframework.stereotype.Component;
  * ========== 核心模块加载完成 ==========
  * }</pre>
  *
- * <h2>扩展指南</h2>
+ * <h2>设计说明</h2>
  * <p>如需新增模块检查，按以下步骤操作：</p>
  * <ol>
  *   <li>在 {@link #onApplicationEvent(ApplicationReadyEvent)} 中添加

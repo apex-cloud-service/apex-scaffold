@@ -83,7 +83,6 @@ public class WorkflowSecurityAspect {
      *
      * @param user 已通过身份校验的认证主体
      * @param required 方法权限注解，为 null 时无需查询授权中心
-     * @return 无注解或匹配通过时完成；权限不足、声明为空或快照查询失败时发出访问拒绝异常
      */
     private Mono<Void> authorize(AuthenticatedUser user, RequirePermission required) {
         if (required == null) {

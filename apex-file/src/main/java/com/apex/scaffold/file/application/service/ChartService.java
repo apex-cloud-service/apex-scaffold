@@ -13,7 +13,7 @@ import reactor.core.publisher.Mono;
  * <p>提供图表的业务逻辑处理，包括图表创建、更新、删除、查询、状态管理、数据获取和浏览计数。
  * 作为应用层服务接口，定义图表管理的核心业务契约，由实现类协调领域层和基础设施层完成业务逻辑。
  *
- * <h2>核心功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>图表 CRUD：创建、更新、删除、按 ID 查询图表</li>
  *   <li>图表检索：支持按图表名称、类型、分类等条件分页查询</li>
@@ -22,7 +22,7 @@ import reactor.core.publisher.Mono;
  *   <li>统计计数：浏览计数的增量更新</li>
  * </ul>
  *
- * <h2>设计模式</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>应用服务模式：封装业务用例，协调多个领域对象和基础设施服务</li>
  *   <li>响应式编程：所有方法返回 Mono，支持非阻塞的异步处理</li>
@@ -87,11 +87,6 @@ public interface ChartService {
      *
      *
      * @param id 图表ID
-     *
-     *
-     * @return 删除结果
-     *
-     *
      */
     Mono<Void> delete(Long id);
 
@@ -134,11 +129,6 @@ public interface ChartService {
      *
      *
      * @param status 新状态
-     *
-     *
-     * @return 更新结果
-     *
-     *
      */
     Mono<Void> updateStatus(Long id, Integer status);
 
@@ -170,11 +160,6 @@ public interface ChartService {
      *
      *
      * @param id 图表ID
-     *
-     *
-     * @return 更新结果
-     *
-     *
      */
     Mono<Void> incrementViewCount(Long id);
 }

@@ -17,7 +17,7 @@ import reactor.core.publisher.Mono;
  * WeChatMiniProgramService（小程序）与 WeChatMpService（公众号）与微信服务端
  * 进行交互。所有外部API调用均通过断路器保护，防止级联故障。
  *
- * <h2>设计原则</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li><b>领域对象封装</b>：将API原始响应转换为领域层可用的结果对象</li>
  *   <li><b>断路器保护</b>：所有外部API调用均通过断路器保护</li>
@@ -70,7 +70,7 @@ public class WeChatGatewayImpl implements WeChatGateway {
      * <p>使用微信授权code换取access_token和用户信息。
      * 调用通过断路器保护，当微信服务不可用时返回降级结果。
      *
-     * <h3>断路器保护</h3>
+     * <p><strong>断路器保护</strong></p>
      * <p>使用断路器保护微信API调用，当失败率超过阈值时自动熔断，防止级联故障。</p>
      *
      * @param code 微信授权code

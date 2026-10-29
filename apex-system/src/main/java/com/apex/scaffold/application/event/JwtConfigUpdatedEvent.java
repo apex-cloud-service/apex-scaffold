@@ -9,7 +9,7 @@ import org.springframework.context.ApplicationEvent;
  *
  * <p>当租户的 JWT 配置发生更新时发布此事件，用于通知相关组件刷新 JWT 签名和验证配置。
  *
- * <h2>事件触发时机</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>JWT 密钥更新</li>
  *   <li>令牌过期时间调整</li>
@@ -17,7 +17,7 @@ import org.springframework.context.ApplicationEvent;
  *   <li>签发者/接收者配置变更</li>
  * </ul>
  *
- * <h2>事件处理建议</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>清除相关租户的 JWT 验证缓存</li>
  *   <li>通知分布式节点刷新 JWT 配置</li>

@@ -13,7 +13,7 @@ import org.mapstruct.ReportingPolicy;
  * 与持久化对象之间的双向映射，忽略未匹配目标属性（BaseEntity/BasePO 的
  * 审计字段由 MyBatis-Plus 自动填充，不参与转换），供 Repository 实现层使用。
  *
- * <h2>转换场景</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>Repository 查询时：PO → Entity</li>
  *   <li>Repository 写入时：Entity → PO</li>

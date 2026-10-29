@@ -20,26 +20,26 @@ import lombok.experimental.SuperBuilder;
  * 采用树形结构设计，通过 {@code parent_id} 实现父子关联，
  * 通过 {@code ancestors} 存储祖先链，支持高效的数据权限过滤。
  *
- * <h2>表结构</h2>
+ * <h2>设计说明</h2>
  * <p>表名：{@code sys_dept}<br>
  * 主键：{@code id}（雪花算法生成）<br>
  * 索引：{@code idx_parent_id}、{@code idx_tenant_id}
  *
- * <h2>树形结构</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>{@code parent_id}：父部门 ID，0 表示根部门</li>
  *   <li>{@code ancestors}：祖先链，逗号分隔（如 {@code 0,100,101}）</li>
  *   <li>{@code order_num}：同级部门的显示顺序</li>
  * </ul>
  *
- * <h2>使用场景</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>组织架构管理：构建和展示企业组织架构树</li>
  *   <li>数据权限控制：基于部门层级过滤数据（本部门、本部门及以下等）</li>
  *   <li>用户归属：用户通过 {@code dept_id} 关联到部门</li>
  * </ul>
  *
- * <h2>数据权限支持</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>本部门数据：{@code dept_id = ?}</li>
  *   <li>本部门及以下：{@code FIND_IN_SET(?, ancestors)}</li>

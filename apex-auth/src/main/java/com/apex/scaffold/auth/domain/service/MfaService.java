@@ -60,7 +60,6 @@ public interface MfaService {
      * @param userId 用户ID
      * @param type 要禁用的MFA类型
      * @param tenantId 租户ID
-     * @return 完成信号
      */
     Mono<Void> disableMfa(String userId, MfaConfig.MfaType type, String tenantId);
 
@@ -81,7 +80,6 @@ public interface MfaService {
      * @param userId 用户ID
      * @param type MFA类型
      * @param tenantId 租户ID
-     * @return 完成信号
      */
     Mono<Void> sendMfaCode(String userId, MfaConfig.MfaType type, String tenantId);
 
@@ -129,22 +127,30 @@ public interface MfaService {
      * @param type 要解锁的MFA类型
      * @param operator 执行解锁操作的运维人员标识
      * @param tenantId 租户ID
-     * @return 完成信号
      */
     Mono<Void> unlockMfa(String userId, MfaConfig.MfaType type, String operator, String tenantId);
 
     /**
-     * TOTP设置信息
+     * TOTP 设置信息。
+     *
+     * @param secret Base32 编码的 TOTP 密钥
+     * @param qrCodeUrl 二维码内容（otpauth:// 地址）
+     * @param manualEntryKey 手工录入用的密钥
      */
     record TotpSetupInfo(String secret, String qrCodeUrl, String manualEntryKey) {}
 
     /**
-     * MFA激活结果
+     * MFA 激活结果。
+     *
+     * @param success 是否激活成功
+     * @param backupCodes 激活时签发的一次性备用码
      */
     record MfaActivationResult(boolean success, String[] backupCodes) {}
 
     /**
      * 备用验证码结果
+     *
+     * @param codes 重新生成的备用码列表
      */
     record BackupCodesResult(String[] codes) {}
 }

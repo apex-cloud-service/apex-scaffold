@@ -109,7 +109,6 @@ public class UserRoleRepositoryImpl implements UserRoleRepository {
      *
      * @param userId  目标用户 ID
      * @param roleIds 期望保留的角色 ID 集合
-     * @return 完成信号
      */
     @Override
     public Mono<Void> replaceRoles(Long userId, Set<Long> roleIds) {

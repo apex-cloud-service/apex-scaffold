@@ -37,7 +37,6 @@ public class LoginLogService {
      * 记录一条登录日志。
      *
      * @param entity 登录日志实体
-     * @return 记录完成的信号
      */
     public Mono<Void> record(LoginLogEntity entity) {
         return loginLogRepository

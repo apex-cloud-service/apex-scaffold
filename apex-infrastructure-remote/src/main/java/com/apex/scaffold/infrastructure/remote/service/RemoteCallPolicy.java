@@ -19,7 +19,7 @@ import reactor.util.retry.RetryBackoffSpec;
  * <p>对 {@link com.apex.scaffold.infrastructure.remote.service.RemoteApiClient} 的每次远程 HTTP 调用
  * 提供统一的超时解析、Reactor Retry 重试判断和异常包装逻辑，避免上层业务代码重复处理底层网络语义。
  *
- * <h2>职责</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li><b>超时解析</b>：从 {@link ServiceConfig} 读取按服务级别的 connect / read 超时，
  *       未配置时回退到 {@link RemoteApiProperties} 的全局默认值</li>
@@ -29,7 +29,7 @@ import reactor.util.retry.RetryBackoffSpec;
  *       统一包装为 {@link RemoteApiException}，保留 HTTP 状态码和响应体</li>
  * </ul>
  *
- * <h2>重试参数来源</h2>
+ * <h2>设计说明</h2>
  * <p>重试次数和间隔优先取服务级 {@link ServiceConfig}，未配置时回退到
  * {@link RemoteApiProperties} 的全局默认值；最大退避固定为 10s。</p>
  *

@@ -15,14 +15,14 @@ import org.springframework.stereotype.Service;
  * <p>提供运行期故障注入能力，用于主动验证系统在 Redis 断连、数据库延迟和
  * 外部 API 部分失败等异常场景下是否仍能优雅降级。
  *
- * <h2>支持的故障类型</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li><strong>Redis 断连</strong>：模拟 Redis 不可达，验证缓存降级到数据库回源</li>
  *   <li><strong>数据库延迟</strong>：在 SQL 执行前注入可配置的延迟，验证慢查询降级</li>
  *   <li><strong>外部 API 失败</strong>：按比例注入外部调用失败，验证熔断器和重试</li>
  * </ul>
  *
- * <h2>安全机制</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>所有注入默认关闭，需通过配置或 API 显式开启</li>
  *   <li>生产环境（prod profile）禁止开启注入：配置驱动激活和手动触发均被强制拒绝</li>

@@ -27,7 +27,6 @@ public class WorkflowAuditLogServiceImpl {
      * @param resource 不包含路径及查询参数的类名与方法名
      * @param result 响应就绪或调用错误标记，不表示业务成功
      * @param details 仅含操作声明、HTTP 方法和状态码、异常类型的元数据
-     * @return 日志调用完成信号；输出失败时传播异常，无持久化确认语义
      */
     public Mono<Void> log(
             Long userId, String tenantId, String action, String resource, String result, Map<String, Object> details) {

@@ -30,12 +30,12 @@ import reactor.core.publisher.Mono;
  * 演示 {@link ExcelExportService} 的接入方式，业务方可按同模式扩展
  * 其他实体的导出。
  *
- * <h2>核心功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>用户列表导出：拉取用户列表并转换为 xlsx 附件返回，演示 Excel 导出能力的接入方式</li>
  * </ul>
  *
- * <h2>接口列表</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>GET /admin-api/v1/export/users — 导出用户列表（xlsx 附件）</li>
  * </ul>

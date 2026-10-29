@@ -103,7 +103,6 @@ public class OffMessageService {
      * 标记当前用户收到的消息已读。
      * @param messageId 消息标识
      * @param recipientId 可信用户
-     * @return 完成信号
      */
     public Mono<Void> markAsRead(Long messageId, Long recipientId) {
         return TenantContext.withTenant(recipientRepository.markAsRead(messageId, recipientId))
@@ -113,7 +112,6 @@ public class OffMessageService {
     /**
      * 标记当前用户全部消息已读。
      * @param recipientId 可信用户
-     * @return 完成信号
      */
     public Mono<Void> markAllAsRead(Long recipientId) {
         return TenantContext.withTenant(recipientRepository.markAllAsRead(recipientId))

@@ -12,20 +12,20 @@ import org.springframework.stereotype.Component;
  *
  * <p>定时执行增量同步，确保搜索索引与数据库保持一致。
  *
- * <h2>执行时机</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>每天凌晨 2 点自动执行（cron: 0 0 2 * * ?）</li>
  *   <li>同步最近 24 小时内更新的资源</li>
  * </ul>
  *
- * <h2>同步策略</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>遍历所有资源类型（user/role/menu/dept/dict/config）</li>
  *   <li>查询 updated_at > (当前时间 - 24小时) 的资源ID</li>
  *   <li>批量重新索引这些资源</li>
  * </ul>
  *
- * <h2>配置项</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>启用：{@code meilisearch.enabled=true}</li>
  *   <li>禁用：{@code meilisearch.enabled=false} 或不配置</li>
@@ -96,7 +96,6 @@ public class SearchIndexReconciliationJob {
      * <p>返回完整完成信号供受控任务调用器等待，单类型或末尾失败均传播至任务日志。
      *
      * @param resourceType 资源类型，null表示同步所有类型
-     * @return 所选资源全部同步完成的信号
      */
     @ManagedJob
     public reactor.core.publisher.Mono<Void> manualSync(String resourceType) {

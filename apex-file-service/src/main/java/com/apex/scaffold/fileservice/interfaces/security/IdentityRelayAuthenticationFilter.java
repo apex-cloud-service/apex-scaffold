@@ -68,7 +68,6 @@ public class IdentityRelayAuthenticationFilter implements WebFilter {
      * 验证 Bearer JWT，并以订阅上下文传递可信租户与用户。
      * @param exchange 当前请求
      * @param chain 后续过滤链
-     * @return 请求完成信号
      */
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {

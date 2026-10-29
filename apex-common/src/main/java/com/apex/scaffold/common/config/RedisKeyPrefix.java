@@ -10,12 +10,12 @@ import org.springframework.stereotype.Component;
  * 可通过修改 {@code apex.redis.key-prefix} 配置递增版本号，
  * 使新旧格式的 Key 自动隔离，避免跨版本数据读取异常。
  *
- * <h2>使用方式</h2>
+ * <h2>使用示例</h2>
  * <pre>{@code * String key = redisKeyPrefix.wrap("token:access:" + subject);
  * // 当 key-prefix="v2:" 时，生成 "v2:token:access:xxx"
  * }</pre>
  *
- * <h2>配置示例</h2>
+ * <h2>使用示例</h2>
  * <pre>{@code * apex:
  *   redis:
  *     key-prefix: ""   # 默认无前缀，向后兼容

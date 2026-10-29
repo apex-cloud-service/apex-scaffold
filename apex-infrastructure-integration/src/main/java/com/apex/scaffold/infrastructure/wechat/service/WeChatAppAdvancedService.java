@@ -409,20 +409,20 @@ public class WeChatAppAdvancedService {
      * <p>向用户发送订阅消息，用于替代已逐步下线的模板消息。
      * 订阅消息需要用户主动订阅后才能发送，分为一次性订阅和长期订阅。
      *
-     * <h3>订阅消息与模板消息的区别</h3>
+     * <p><strong>订阅消息与模板消息的区别</strong></p>
      * <ul>
      *   <li><b>订阅消息</b>：用户主动订阅，每次订阅可推送一条消息</li>
      *   <li><b>模板消息</b>：已逐步下线，不再支持新接入</li>
      * </ul>
      *
-     * <h3>使用流程</h3>
+     * <p><strong>使用流程</strong></p>
      * <ol>
      *   <li>在微信公众平台申请订阅消息模板</li>
      *   <li>前端调用 {@code wx.requestSubscribeMessage} 引导用户订阅</li>
      *   <li>服务端调用本方法发送订阅消息</li>
      * </ol>
      *
-     * <h3>接口地址</h3>
+     * <p><strong>接口地址</strong></p>
      * <p>{@code POST https://api.weixin.qq.com/cgi-bin/message/subscribe/send?access_token=ACCESS_TOKEN}
      *
      * @param accessToken 微信全局AccessToken
@@ -463,12 +463,11 @@ public class WeChatAppAdvancedService {
     }
 
     /**
-     * 执行shutdown操作
+     * 停止令牌与票据缓存过期调度器：先等待已排定任务结束，超时后强制关闭。
+     *
+     * <p>由 Spring 在容器销毁前调用；被中断时恢复线程中断标记，避免吞掉中断信号。</p>
      */
     @PreDestroy
-    /**
-     * 关闭
-     */
     public void shutdown() {
         scheduler.shutdown();
         try {

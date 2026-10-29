@@ -13,7 +13,7 @@ import java.lang.annotation.Target;
  * 通过滑动窗口或令牌桶算法限制接口在指定时间窗口内的最大访问次数，
  * 防止突发流量冲垮后端服务。
  *
- * <h2>使用场景</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>公开 API 接口的访问频率控制</li>
  *   <li>登录接口暴力破解防护</li>
@@ -21,11 +21,11 @@ import java.lang.annotation.Target;
  *   <li>第三方服务调用的配额管理</li>
  * </ul>
  *
- * <h2>限流维度</h2>
+ * <h2>设计说明</h2>
  * <p>本注解以接口方法为粒度进行限流，所有请求共享同一限流阈值。
  * 若需要按用户维度进行精细化限流，请使用 {@link UserRateLimit} 注解。
  *
- * <h2>配置示例</h2>
+ * <h2>使用示例</h2>
  * <pre>{@code * // 每分钟最多处理 100 次请求
  * @RateLimiter(limit = 100, window = 1)
  * public Mono<Void> batchProcess() { ... }
@@ -36,7 +36,7 @@ import java.lang.annotation.Target;
  * public Mono<Void> queryData(String userId) { ... }
  * }</pre>
  *
- * <h2>与 UserRateLimit 的区别</h2>
+ * <h2>设计说明</h2>
  * <table border="1">
  *   <caption>限流维度对比</caption>
  *   <tr><th>注解</th><th>限流粒度</th><th>适用场景</th></tr>

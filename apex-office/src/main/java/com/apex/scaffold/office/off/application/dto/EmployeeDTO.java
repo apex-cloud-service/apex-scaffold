@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
  * <p>用于接口层返回员工的基本信息和组织关系，支持从飞书、钉钉、企业微信等第三方办公平台同步员工数据。
  * 员工与系统用户账号通过 userId 关联，一个员工对应一个用户账号。
  *
- * <h2>核心字段</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>{@link #id} - 员工ID</li>
  *   <li>{@link #employeeCode} - 员工编号（工号，唯一标识）</li>
@@ -29,7 +29,7 @@ import lombok.NoArgsConstructor;
  *   <li>{@link #externalId} - 外部系统员工ID</li>
  * </ul>
  *
- * <h2>业务场景</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>员工花名册：展示企业所有员工信息</li>
  *   <li>组织架构：按部门展示员工归属</li>
@@ -38,7 +38,7 @@ import lombok.NoArgsConstructor;
  *   <li>第三方同步：从办公平台同步员工档案</li>
  * </ul>
  *
- * <h2>员工与用户关系</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>员工是企业组织架构的一员，包含工号、部门、职位等信息</li>
  *   <li>用户是系统登录账号，包含用户名、密码、权限等信息</li>
@@ -47,7 +47,7 @@ import lombok.NoArgsConstructor;
  *   <li>员工离职时，不删除记录，仅标记为离职状态</li>
  * </ul>
  *
- * <h2>第三方同步</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>syncSource 标识数据来源（FEISHU、DINGTALK、WECHAT_WORK、MANUAL）</li>
  *   <li>externalId 存储第三方平台的员工ID，用于增量同步和身份映射</li>
@@ -55,7 +55,7 @@ import lombok.NoArgsConstructor;
  *   <li>手机号和邮箱用于与用户账号的关联</li>
  * </ul>
  *
- * <h2>数据约束</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>员工编号在租户内必须唯一</li>
  *   <li>手机号和邮箱建议唯一，但允许为空</li>
@@ -63,7 +63,7 @@ import lombok.NoArgsConstructor;
  *   <li>员工姓名、员工编号为必填字段</li>
  * </ul>
  *
- * <h2>注意事项</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>员工编号（工号）是员工的唯一标识，不可修改</li>
  *   <li>员工调整部门时需更新 deptId 和 deptName</li>

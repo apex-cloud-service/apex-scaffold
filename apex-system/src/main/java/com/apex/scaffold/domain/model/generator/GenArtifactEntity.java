@@ -11,13 +11,13 @@ import lombok.ToString;
  * <p>记录向导受控执行时写入独立任务目录的单个文件，是浏览器下载的唯一入口。
  * 产物与生成历史、配置、模板关联，保留租户归属，下载前必须重新校验归属与磁盘路径。
  *
- * <h2>发布状态</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li><strong>PUBLISHED</strong>：文件已成功写入任务目录</li>
  *   <li><strong>FAILED</strong>：写入失败，失败原因记录在 {@link #errorMessage}</li>
  * </ul>
  *
- * <h2>安全约束</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>{@link #relativePath} 只能是任务目录内的相对路径，不得包含绝对路径或 {@code ..}</li>
  *   <li>下载按 {@link #getId()} 定位，不接受客户端提交任意文件路径</li>

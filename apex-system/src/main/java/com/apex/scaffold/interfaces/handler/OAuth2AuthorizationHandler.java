@@ -34,7 +34,7 @@ import reactor.core.publisher.Mono;
  * 密码模式和刷新令牌等授权流程，支持 PKCE 扩展以增强安全性。提供令牌颁发、
  * 令牌撤销、令牌自省、用户授权同意管理等完整的 OAuth2 服务端能力。</p>
  *
- * <h2>接口清单</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>GET /oauth2/authorize - OAuth2 授权端点，处理授权码模式的授权请求</li>
  *   <li>POST /oauth2/token - OAuth2 令牌端点，根据不同 grant_type 换取访问令牌</li>
@@ -44,7 +44,7 @@ import reactor.core.publisher.Mono;
  *   <li>POST /oauth2/consent/revoke - 撤销用户授权同意</li>
  * </ul>
  *
- * <h2>支持的授权模式</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>authorization_code：授权码模式，适用于服务端应用，支持 PKCE</li>
  *   <li>client_credentials：客户端凭证模式，适用于服务间调用</li>

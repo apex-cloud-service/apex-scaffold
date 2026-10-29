@@ -30,7 +30,6 @@ public interface ScanLease {
      *
      * @param name  租约名称
      * @param owner 抢占时使用的本轮持有标识
-     * @return 完成信号
      */
     Mono<Void> release(String name, String owner);
 }

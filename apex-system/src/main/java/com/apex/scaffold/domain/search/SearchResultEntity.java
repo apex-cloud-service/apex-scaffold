@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
  * <p>本类是全文搜索返回的统一结果模型，封装不同资源类型（用户、角色、菜单等）的通用字段。
  * 作为 Domain 层值对象（Value Object），本类是不可变的业务数据载体。
  *
- * <h3>设计理念（DDD 值对象特征）</h3>
+ * <p><strong>设计理念（DDD 值对象特征）</strong></p>
  * <ul>
  *   <li><b>无标识符</b>：值对象无唯一标识符（ID 不用于比较对象相等性），仅基于字段值判等</li>
  *   <li><b>不可变性</b>：使用 Lombok {@code @Data} + {@code @Builder}，通过构建器创建后不可修改</li>
@@ -22,7 +22,7 @@ import lombok.NoArgsConstructor;
  *   <li><b>跨层传递</b>：Domain 层 → Application 层 DTO 转换 → Interfaces 层 VO 响应</li>
  * </ul>
  *
- * <h3>字段说明</h3>
+ * <p><strong>字段说明</strong></p>
  * <table border="1">
  *   <tr>
  *     <th>字段名</th>
@@ -98,10 +98,10 @@ import lombok.NoArgsConstructor;
  *   </tr>
  * </table>
  *
- * <h3>字段映射规则</h3>
+ * <p><strong>字段映射规则</strong></p>
  * <p>不同资源类型的字段映射到统一模型：
  *
- * <h4>用户（user）</h4>
+ * <p><strong>用户（user）</strong></p>
  * <ul>
  *   <li>title: username（用户名）</li>
  *   <li>subtitle: nickname（昵称）</li>
@@ -109,7 +109,7 @@ import lombok.NoArgsConstructor;
  *   <li>extra: {"email": "xxx@example.com", "phone": "138****1234"}</li>
  * </ul>
  *
- * <h4>角色（role）</h4>
+ * <p><strong>角色（role）</strong></p>
  * <ul>
  *   <li>title: role_name（角色名）</li>
  *   <li>subtitle: role_code（角色代码）</li>
@@ -117,7 +117,7 @@ import lombok.NoArgsConstructor;
  *   <li>extra: {"data_scope": "DEPT", "permission_count": 50}</li>
  * </ul>
  *
- * <h4>菜单（menu）</h4>
+ * <p><strong>菜单（menu）</strong></p>
  * <ul>
  *   <li>title: menu_name（菜单名）</li>
  *   <li>subtitle: path（菜单路径）</li>
@@ -125,7 +125,7 @@ import lombok.NoArgsConstructor;
  *   <li>extra: {"menu_type": "M", "icon": "user", "sort": 1}</li>
  * </ul>
  *
- * <h4>部门（dept）</h4>
+ * <p><strong>部门（dept）</strong></p>
  * <ul>
  *   <li>title: dept_name（部门名）</li>
  *   <li>subtitle: dept_code（部门代码）</li>
@@ -133,7 +133,7 @@ import lombok.NoArgsConstructor;
  *   <li>extra: {"parent_name": "研发中心", "sort": 1}</li>
  * </ul>
  *
- * <h4>字典（dict）</h4>
+ * <p><strong>字典（dict）</strong></p>
  * <ul>
  *   <li>title: dict_label（字典标签）</li>
  *   <li>subtitle: dict_value（字典值）</li>
@@ -141,7 +141,7 @@ import lombok.NoArgsConstructor;
  *   <li>extra: {"sort": 1, "css_class": "primary"}</li>
  * </ul>
  *
- * <h4>配置（config）</h4>
+ * <p><strong>配置（config）</strong></p>
  * <ul>
  *   <li>title: config_name（配置名称）</li>
  *   <li>subtitle: config_key（配置键）</li>
@@ -149,7 +149,7 @@ import lombok.NoArgsConstructor;
  *   <li>extra: {"config_type": "Y"}</li>
  * </ul>
  *
- * <h3>使用示例</h3>
+ * <p><strong>使用示例</strong></p>
  * <pre>{@code
  * // 在 Infrastructure 层适配器中构建结果
  * SearchResultEntity userResult = SearchResultEntity.builder()
@@ -167,7 +167,7 @@ import lombok.NoArgsConstructor;
  *     .build();
  * }</pre>
  *
- * <h3>转换到 Application DTO</h3>
+ * <p><strong>转换到 Application DTO</strong></p>
  * <pre>{@code
  * // Application 层服务转换为 DTO
  * SearchResultDTO dto = SearchResultDTO.builder()
@@ -340,7 +340,7 @@ public class SearchResultEntity {
      *
      * <p>存储资源特有的额外字段，不同资源类型包含不同的扩展信息：
      *
-     * <h4>用户（user）</h4>
+     * <p><strong>用户（user）</strong></p>
      * <pre>{@code
      * {
      *   "email": "zhangsan@example.com",  // 邮箱（脱敏）
@@ -350,7 +350,7 @@ public class SearchResultEntity {
      * }
      * }</pre>
      *
-     * <h4>角色（role）</h4>
+     * <p><strong>角色（role）</strong></p>
      * <pre>{@code
      * {
      *   "data_scope": "DEPT",          // 数据权限范围
@@ -359,7 +359,7 @@ public class SearchResultEntity {
      * }
      * }</pre>
      *
-     * <h4>菜单（menu）</h4>
+     * <p><strong>菜单（menu）</strong></p>
      * <pre>{@code
      * {
      *   "menu_type": "M",    // 菜单类型：M目录 C菜单 F按钮
@@ -369,7 +369,7 @@ public class SearchResultEntity {
      * }
      * }</pre>
      *
-     * <h4>部门（dept）</h4>
+     * <p><strong>部门（dept）</strong></p>
      * <pre>{@code
      * {
      *   "parent_name": "研发中心",  // 父部门名
@@ -378,7 +378,7 @@ public class SearchResultEntity {
      * }
      * }</pre>
      *
-     * <h4>字典（dict）</h4>
+     * <p><strong>字典（dict）</strong></p>
      * <pre>{@code
      * {
      *   "sort": 1,               // 排序号
@@ -387,7 +387,7 @@ public class SearchResultEntity {
      * }
      * }</pre>
      *
-     * <h4>配置（config）</h4>
+     * <p><strong>配置（config）</strong></p>
      * <pre>{@code
      * {
      *   "config_type": "Y",  // 配置类型：Y系统内置 N用户自定义

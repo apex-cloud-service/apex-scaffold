@@ -19,7 +19,7 @@ import reactor.core.publisher.Mono;
  * 采用模板方法模式，只需实现 {@link #authenticate(LoginRequest)} 方法完成手机号认证，
  * 其余的用户查询/创建、JWT Token 生成等公共流程由基类统一处理。
  *
- * <h2>一键登录流程</h2>
+ * <h2>设计说明</h2>
  * <ol>
  *   <li>App端集成创蓝闪验SDK，初始化后预取号（获取临时token）</li>
  *   <li>用户点击"一键登录"按钮，SDK拉起运营商授权页</li>
@@ -29,7 +29,7 @@ import reactor.core.publisher.Mono;
  *   <li>基类 {@link AbstractPhoneLoginStrategy#login(LoginRequest)} 完成后续流程</li>
  * </ol>
  *
- * <h2>降级策略</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>当闪验取号失败（如关闭数据网络、双卡切换等），App可引导用户切换至
  *   {@link ChuanglanSmsLoginStrategy 短信验证码登录}方式</li>

@@ -23,7 +23,14 @@ public record MonitorBusinessResponse(
         @Schema(description = "业务指标快照") List<MetricPoint> metrics,
         @Schema(description = "业务指标趋势") List<BusinessTrend> trends) {
 
-    /** 业务指标点。 */
+    /**
+     * 业务指标点。
+     *
+     * @param key 指标键
+     * @param name 指标名称
+     * @param value 指标值
+     * @param unit 单位
+     */
     @Schema(description = "业务指标点")
     public record MetricPoint(
             @Schema(description = "指标键") String key,
@@ -31,14 +38,25 @@ public record MonitorBusinessResponse(
             @Schema(description = "指标值") double value,
             @Schema(description = "单位") String unit) {}
 
-    /** 业务趋势。 */
+    /**
+     * 业务趋势。
+     *
+     * @param name 指标名称
+     * @param key 指标键
+     * @param points 趋势点列表
+     */
     @Schema(description = "业务趋势")
     public record BusinessTrend(
             @Schema(description = "指标名称") String name,
             @Schema(description = "指标键") String key,
             @Schema(description = "趋势点列表") List<TrendPoint> points) {}
 
-    /** 趋势点。 */
+    /**
+     * 趋势点。
+     *
+     * @param time 时间（HH:mm:ss）
+     * @param value 指标值
+     */
     @Schema(description = "趋势点")
     public record TrendPoint(
             @Schema(description = "时间（HH:mm:ss）") String time, @Schema(description = "指标值") double value) {}

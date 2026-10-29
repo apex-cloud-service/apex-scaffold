@@ -9,10 +9,10 @@ import lombok.Data;
  * <p>存储完整的OAuth2授权流程信息，包括授权码、访问令牌、刷新令牌等。
  * 此实体用于审计和追踪OAuth2授权的完整生命周期。
  *
- * <h2>数据存储</h2>
+ * <h2>设计说明</h2>
  * <p>对应数据库表: {@code oauth2_authorization}
  *
- * <h2>使用场景</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>审计OAuth2授权历史</li>
  *   <li>追踪Token签发记录</li>

@@ -14,7 +14,7 @@ import org.springframework.lang.Nullable;
  *   <li>后续按端会话策略（如 PC 唯一、App 多设备并存）的扩展依据</li>
  * </ul>
  *
- * <h2>兼容约定</h2>
+ * <h2>设计说明</h2>
  * <p>存量客户端不携带 {@code X-Client-Type} 时按 {@link #UNKNOWN} 处理，
  * 行为与改造前保持一致；无法识别的取值同样归入 {@link #UNKNOWN}，
  * 不产生错误，保证多端灰度期间平滑过渡。

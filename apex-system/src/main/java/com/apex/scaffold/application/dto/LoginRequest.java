@@ -21,7 +21,7 @@ import lombok.NoArgsConstructor;
  *   <li>PASSWORD：账号密码登录（用户名 + 密码）</li>
  * </ul>
  *
- * <h2>字段验证规则</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>手机号：{@code ^1[3-9]\\d{9}$} 格式（中国大陆手机号）</li>
  *   <li>验证码：6 位数字</li>
@@ -46,7 +46,7 @@ import lombok.NoArgsConstructor;
  *     .build();
  * }</pre>
  *
- * <h2>注意事项</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>密码字段明文传输，服务端使用 BCrypt 比对哈希值</li>
  *   <li>{@code clientIp} 由 Handler 自动填充，无需客户端传递</li>

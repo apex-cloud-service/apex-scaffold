@@ -20,7 +20,7 @@ import org.springframework.context.annotation.Configuration;
  * 提升 Redis 操作的可控性和可观测性。该配置类仅在生产环境（prod）或
  * 显式启用 Redisson 时生效，开发环境默认使用 Spring Data Redis（Lettuce）。
  *
- * <h2>Watchdog 机制说明</h2>
+ * <h2>设计说明</h2>
  * <p>Redisson 的看门狗（Watchdog）机制是一种自动续期机制，用于防止分布式锁在业务执行过程中提前释放。
  * <ul>
  *   <li><strong>Lock Watchdog Timeout</strong>：默认 30 秒，看门狗续期间隔为该值的 1/3（即 10 秒）</li>
@@ -29,7 +29,7 @@ import org.springframework.context.annotation.Configuration;
  *   <li><strong>适用场景</strong>：执行时间不确定的分布式任务，防止锁提前释放导致并发问题</li>
  * </ul>
  *
- * <h2>配置项说明</h2>
+ * <h2>设计说明</h2>
  * <table border="1">
  *   <tr>
  *     <th>配置项</th>
@@ -82,7 +82,7 @@ import org.springframework.context.annotation.Configuration;
  * }
  * }</pre>
  *
- * <h2>注意事项</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>看门狗机制仅适用于 {@code leaseTime = -1} 的场景，显式设置 {@code leaseTime} 则不会启用</li>
  *   <li>看门狗续期操作本身是异步的，不会阻塞业务线程</li>

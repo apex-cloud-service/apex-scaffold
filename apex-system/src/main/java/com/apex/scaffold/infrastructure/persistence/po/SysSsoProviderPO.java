@@ -14,7 +14,7 @@ import lombok.experimental.SuperBuilder;
  * <p>对应数据库表 {@code sys_sso_provider}，存储单点登录提供商的配置信息，支持多种 SSO 协议。
  * 继承 {@link BasePO} 获得通用字段（ID、创建时间、更新时间、逻辑删除等）。
  *
- * <h2>核心字段</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>{@link #providerName} - 提供商名称（如 "企业 AD"、"飞书 SSO"）</li>
  *   <li>{@link #providerType} - 提供商类型（SAML、OAUTH2、LDAP、CAS）</li>
@@ -28,7 +28,7 @@ import lombok.experimental.SuperBuilder;
  *   <li>{@link #tenantId} - 租户标识（多租户隔离）</li>
  * </ul>
  *
- * <h2>支持的协议类型</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>SAML：SAML 2.0 协议，企业级 SSO 标准</li>
  *   <li>OAUTH2：OAuth 2.0 / OpenID Connect 协议</li>
@@ -36,7 +36,7 @@ import lombok.experimental.SuperBuilder;
  *   <li>CAS：中央认证服务协议</li>
  * </ul>
  *
- * <h2>配置字段说明</h2>
+ * <h2>设计说明</h2>
  * <p>{@code config} 字段为 JSON 格式，不同协议类型包含不同的配置项：
  * <ul>
  *   <li>SAML：certificate、privateKey、signatureAlgorithm 等</li>
@@ -45,7 +45,7 @@ import lombok.experimental.SuperBuilder;
  *   <li>CAS：serverUrl、loginUrl、validateUrl、serviceUrl 等</li>
  * </ul>
  *
- * <h2>业务场景</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>SSO 配置：管理员配置单点登录提供商</li>
  *   <li>多协议支持：同时支持多种 SSO 协议</li>
@@ -53,7 +53,7 @@ import lombok.experimental.SuperBuilder;
  *   <li>动态切换：启用/禁用特定的 SSO 提供商</li>
  * </ul>
  *
- * <h2>注意事项</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>配置信息 {@code config} 包含敏感数据（如密钥），需加密存储</li>
  *   <li>证书和私钥应定期更新，避免过期</li>

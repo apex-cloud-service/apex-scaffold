@@ -48,7 +48,7 @@ import reactor.core.publisher.Mono;
  * 基于 Spring WebFlux 函数式编程模型实现，底层集成对象存储服务。
  * 使用 {@link RequestHandlerUtil} 完成统一的参数处理和响应构建。
  *
- * <h2>核心功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>文件上传：支持受控图片格式并执行魔数与违规内容检测</li>
  *   <li>获取文件访问 URL：生成预签名访问地址</li>
@@ -56,7 +56,7 @@ import reactor.core.publisher.Mono;
  *   <li>检查文件存在：验证文件是否已存储</li>
  * </ul>
  *
- * <h2>文件限制</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>文件大小限制由配置项 {@code file.upload.max-size-bytes} 控制，默认 10 MiB</li>
  *   <li>文件上传请求需通过 multipart/form-data 格式提交</li>
@@ -164,7 +164,7 @@ public class FileHandler {
      * 处理 multipart/form-data 文件上传请求，将文件数据读取后上传到服务端固定对象存储桶。
      * 上传完成后返回桶名、唯一对象名和访问 URL；云存储返回签名有效秒数，Local 返回需认证授权的内容地址且 expiresIn 为 0。
      *
-     * <h3>处理流程</h3>
+     * <p><strong>处理流程</strong></p>
      * <ul>
      *   <li>从请求中提取文件 Part，存储桶仅由服务端配置决定</li>
      *   <li>流式读取文件数据，边读边检查大小</li>
@@ -173,7 +173,7 @@ public class FileHandler {
      *   <li>生成并返回文件访问 URL</li>
      * </ul>
      *
-     * <h3>文件大小限制</h3>
+     * <p><strong>文件大小限制</strong></p>
      * <p>文件大小限制由配置项 {@code file.upload.max-size-bytes} 控制，默认 10 MiB。
      * 逐块累计大小，超限后释放已持有的缓冲区；限制内的文件会完整合并到内存字节数组。</p>
      *

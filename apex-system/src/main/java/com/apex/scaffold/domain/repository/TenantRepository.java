@@ -11,7 +11,7 @@ import reactor.core.publisher.Mono;
  * <p>定义租户聚合根的持久化读写操作，由基础设施层提供 MyBatis-Plus 实现。
  * 租户表为平台级元数据，不参与租户行级隔离，由平台管理员统一维护。</p>
  *
- * <h2>核心查询</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>按租户编码查询（编码全局唯一，作为 TenantContext 的租户 ID）</li>
  *   <li>租户编码存在性校验（创建租户时防重）</li>

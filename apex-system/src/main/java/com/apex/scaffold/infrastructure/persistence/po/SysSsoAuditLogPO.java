@@ -14,7 +14,7 @@ import lombok.experimental.SuperBuilder;
  * <p>对应数据库表 {@code sys_sso_audit_log}，记录所有 SSO 相关的操作日志和安全事件。
  * 继承 {@link BasePO} 获得通用字段（ID、创建时间、更新时间、逻辑删除等）。
  *
- * <h2>核心字段</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>{@link #providerId} - SSO 提供商 ID（关联 {@code sys_sso_provider}）</li>
  *   <li>{@link #userId} - 系统用户 ID（关联 {@code sys_user}，可选）</li>
@@ -28,7 +28,7 @@ import lombok.experimental.SuperBuilder;
  *   <li>{@link #tenantId} - 租户标识（多租户隔离）</li>
  * </ul>
  *
- * <h2>操作类型</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>LOGIN：SSO 登录操作</li>
  *   <li>LOGOUT：SSO 登出操作</li>
@@ -40,7 +40,7 @@ import lombok.experimental.SuperBuilder;
  *   <li>OAUTH_TOKEN：OAuth2 令牌请求</li>
  * </ul>
  *
- * <h2>业务场景</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>安全审计：记录所有 SSO 相关操作，支持安全合规</li>
  *   <li>异常检测：识别异常登录行为（如异地登录、频繁失败）</li>
@@ -49,7 +49,7 @@ import lombok.experimental.SuperBuilder;
  *   <li>合规报告：生成安全审计报告</li>
  * </ul>
  *
- * <h2>安全特性</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>记录客户端 IP 地址，用于异地登录检测</li>
  *   <li>记录 User-Agent，识别可疑设备</li>
@@ -57,7 +57,7 @@ import lombok.experimental.SuperBuilder;
  *   <li>敏感数据脱敏：{@code requestData} 中的密码等敏感字段需脱敏</li>
  * </ul>
  *
- * <h2>注意事项</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>审计日志通常保留较长时间（如 1 年），支持合规审计</li>
  *   <li>请求数据 {@code requestData} 需对敏感字段（密码、令牌）进行脱敏</li>

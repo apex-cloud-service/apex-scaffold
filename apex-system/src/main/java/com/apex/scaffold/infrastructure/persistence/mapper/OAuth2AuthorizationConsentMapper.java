@@ -10,7 +10,7 @@ import org.apache.ibatis.annotations.Mapper;
  * <p>提供对 {@code oauth2_authorization_consent} 表的基础CRUD操作。
  * 继承MyBatis-Plus的 {@link BaseMapper}，自动提供常用的数据库操作方法。
  *
- * <h2>自动提供的方法</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>insert - 插入记录</li>
  *   <li>updateById - 根据ID更新</li>

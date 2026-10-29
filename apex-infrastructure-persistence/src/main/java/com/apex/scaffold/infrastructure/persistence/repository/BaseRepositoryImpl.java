@@ -18,7 +18,7 @@ import reactor.core.publisher.Mono;
  * <p>提供通用的CRUD操作，所有具体Repository实现类可继承此类，
  * 减少重复代码，提高开发效率。
  *
- * <h2>设计目标</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li><strong>代码复用</strong>：封装通用CRUD操作，避免重复实现</li>
  *   <li><strong>类型安全</strong>：通过泛型确保类型安全</li>
@@ -26,7 +26,7 @@ import reactor.core.publisher.Mono;
  *   <li><strong>分页支持</strong>：集成PageHelper实现分页查询</li>
  * </ul>
  *
- * <h2>使用方式</h2>
+ * <h2>使用示例</h2>
  * <pre>{@code * @Repository
  * public class UserRepositoryImpl extends BaseRepositoryImpl<UserEntity, UserPO>
  *         implements UserRepository {

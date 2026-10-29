@@ -16,7 +16,7 @@ import reactor.core.publisher.Mono;
  * {@link ReactiveStringRedisTemplate} 提供与单体等价的 Token 吊销能力，作为
  * {@link TokenBlacklistService} 在办公服务内的自包含实现。</p>
  *
- * <h2>键值结构</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>{@code token:blacklist:{token}} → 占位值 {@code 1}，TTL 与 Token 剩余有效期一致</li>
  * </ul>
@@ -53,7 +53,6 @@ public class OfficeTokenBlacklistServiceImpl implements TokenBlacklistService {
      *
      * @param token      Token 字符串
      * @param expireTime 过期时间（毫秒），0 表示使用默认值
-     * @return 操作完成信号
      */
     @Override
     public Mono<Void> add(String token, long expireTime) {

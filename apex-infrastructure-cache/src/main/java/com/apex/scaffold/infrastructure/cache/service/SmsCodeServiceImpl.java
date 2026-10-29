@@ -43,7 +43,6 @@ public class SmsCodeServiceImpl implements SmsCodeService, SmsCodePurposeService
      * 通过真实短信供应商发送并保存验证码。
      *
      * @param phone 目标手机号
-     * @return 发送完成信号
      */
     @Override
     public Mono<Void> sendAndStore(String phone) {

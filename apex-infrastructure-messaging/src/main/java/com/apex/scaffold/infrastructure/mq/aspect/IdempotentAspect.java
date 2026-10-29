@@ -25,7 +25,7 @@ import org.springframework.stereotype.Component;
  * <p>基于 Redis（Redisson）实现消息消费的幂等性控制，防止 RocketMQ 消息重复消费。
  * 相比本地内存方案，Redis 分布式存储确保多实例部署下幂等记录共享一致。
  *
- * <h2>工作原理</h2>
+ * <h2>设计说明</h2>
  * <ol>
  *   <li>拦截标注 {@link Idempotent} 注解的方法</li>
  *   <li>根据注解中的 key 表达式或方法参数生成全局唯一的幂等键</li>
@@ -34,12 +34,12 @@ import org.springframework.stereotype.Component;
  *   <li>如果键不存在，则正常执行业务逻辑，Redis 键会在过期时间后自动清理</li>
  * </ol>
  *
- * <h2>键命名规范</h2>
+ * <h2>设计说明</h2>
  * <pre>
  *   idempotent:mq:{业务键}
  * </pre>
  *
- * <h2>幂等键生成策略</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>如果注解中指定了 key 且匹配参数名，使用该参数值作为幂等键</li>
  *   <li>如果未指定 key，使用"方法签名+参数哈希"作为默认幂等键</li>

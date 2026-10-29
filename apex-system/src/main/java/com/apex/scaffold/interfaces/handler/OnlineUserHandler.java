@@ -27,12 +27,12 @@ import reactor.core.publisher.Mono;
  * 有心跳视为在线）。强制下线由 {@code AdminUserManagementHandler} 的
  * 会话撤销端点承担。
  *
- * <h2>核心功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>在线用户分页查询：查询最近 5 分钟内有心跳的在线用户列表，按最后心跳时间倒序返回</li>
  * </ul>
  *
- * <h2>接口列表</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>GET /admin-api/v1/online-users — 分页查询在线用户</li>
  * </ul>

@@ -14,26 +14,26 @@ import lombok.experimental.SuperBuilder;
  * <p>对应数据库表 {@code sys_permission}，存储系统权限信息。
  * 权限是 RBAC（基于角色的访问控制）权限模型的基本单元，定义了用户可以执行的具体操作。
  *
- * <h2>表结构</h2>
+ * <h2>设计说明</h2>
  * <p>表名：{@code sys_permission}<br>
  * 主键：{@code id}（继承自 {@link BasePO}）<br>
  * 唯一索引：{@code uk_code}（权限编码唯一）
  *
- * <h2>使用场景</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>权限定义：定义系统中的各种操作权限</li>
  *   <li>角色授权：将权限分配给角色</li>
  *   <li>权限验证：在接口或方法上验证用户是否拥有指定权限</li>
  * </ul>
  *
- * <h2>权限编码规范</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>格式：{@code 模块:资源:操作}</li>
  *   <li>示例：{@code user:list:view}、{@code content:article:edit}、{@code system:role:delete}</li>
  *   <li>唯一性：系统内权限编码必须唯一</li>
  * </ul>
  *
- * <h2>权限类型</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>{@code 1}：菜单权限 - 控制菜单是否显示</li>
  *   <li>{@code 2}：按钮权限 - 控制按钮是否可见/可用</li>

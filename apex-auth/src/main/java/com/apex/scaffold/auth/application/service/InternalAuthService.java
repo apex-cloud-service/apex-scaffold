@@ -19,7 +19,7 @@ import reactor.core.publisher.Mono;
  * <p>对应 {@link AuthFeignClient} 契约的两个内部接口实现，仅供集群内服务直连调用
  * （经 {@code /internal/v1/**}，不经过网关，网关层强制 403 拒绝）。
  *
- * <h2>能力</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>权限查询：{@code GET /internal/v1/users/{accountId}/permissions}
  *       —— 消费方（system/workflow/office service）持有主应用 {@code sys_user.id}
@@ -29,7 +29,7 @@ import reactor.core.publisher.Mono;
  *       不含任何凭证或密钥，auth 不可用时机「拒绝优先」由消费方 Fallback 承担。</li>
  * </ul>
  *
- * <h2>租户类型桥接</h2>
+ * <h2>设计说明</h2>
  * <p>契约侧使用 {@code Long tenantId}，而认证中心内部以 {@code String} 租户编码
  * （如 {@code default}）作为租户主键。本服务在边界处做显式桥接：
  * <ul>

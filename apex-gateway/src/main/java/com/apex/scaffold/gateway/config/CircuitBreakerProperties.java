@@ -40,6 +40,7 @@ public class CircuitBreakerProperties {
     /** 按路由实例名的覆盖参数，key 为 CircuitBreaker 过滤器 args.name */
     private Map<String, InstanceOverride> instances = new LinkedHashMap<>();
 
+    /** 覆盖配置为 null 时归一为空表，避免绑定缺失导致后续遍历空指针。 */
     public void setInstances(Map<String, InstanceOverride> instances) {
         this.instances = instances == null ? new LinkedHashMap<>() : instances;
     }

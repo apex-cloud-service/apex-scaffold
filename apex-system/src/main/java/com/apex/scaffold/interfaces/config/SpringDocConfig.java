@@ -23,7 +23,7 @@ import org.springframework.util.AntPathMatcher;
  *
  * <p>提供 Swagger UI 在线接口文档支持。
  *
- * <h2>函数式接口文档增强</h2>
+ * <h2>职责范围</h2>
  * <p>通过 {@link OpenApiDocumentationCustomizer} 补充函数式 Handler 无法由方法签名推断的
  * 请求 DTO、查询参数、响应模型、媒体类型和错误状态，并保持安全白名单与 Bearer JWT 声明一致。
  *

@@ -26,7 +26,7 @@ import reactor.core.publisher.Mono;
  * 内部对 MyBatis-Plus 的阻塞式 Mapper 统计调用统一通过
  * {@link BlockingIoSchedulers#jdbc()} 调度器承载，避免阻塞 Netty 事件循环线程。
  *
- * <h2>核心功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>工作流统计概览：今日发起数、运行中总数、待办任务数、异常计数、平均完成时长等</li>
  *   <li>工作流趋势分析：按日统计最近 N 天的发起数量与完成数量</li>

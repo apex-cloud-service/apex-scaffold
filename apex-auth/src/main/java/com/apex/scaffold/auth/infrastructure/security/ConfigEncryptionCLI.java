@@ -8,7 +8,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>用于生成加密密钥和加密敏感配置值。
  *
- * <h2>使用方法</h2>
+ * <h2>使用示例</h2>
  * <pre>{@code
  * # 1. 生成新的加密密钥
  * java -cp apex-auth-service.jar com.apex.scaffold.auth.infrastructure.security.ConfigEncryptionCLI generateKey

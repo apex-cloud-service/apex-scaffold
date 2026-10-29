@@ -12,7 +12,7 @@ import org.mapstruct.ReportingPolicy;
  * <p>使用 MapStruct（componentModel = "spring"）完成代码生成器生成配置实体与持久化对象
  * 之间的双向映射，忽略未匹配目标属性，供 Repository 实现层使用。</p>
  *
- * <h2>转换场景</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>Repository 查询时：PO → Entity</li>
  *   <li>Repository 写入时：Entity → PO</li>

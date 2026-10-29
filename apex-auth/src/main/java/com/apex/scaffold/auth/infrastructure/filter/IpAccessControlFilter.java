@@ -128,11 +128,8 @@ public class IpAccessControlFilter implements WebFilter {
             return tenantId;
         }
 
-        // 2. 从JWT Token中解析（后续可扩展）
-        // String token = extractToken(exchange);
-        // if (token != null) {
-        //     return parsetenantIdFromToken(token);
-        // }
+        // 2. 预留从 JWT Token 解析租户的扩展点：当前令牌负载不含租户声明，
+        //    待令牌契约增加 tenantId 后启用；届时替换下方默认租户分支。
 
         // 3. 使用默认租户
         return "default";

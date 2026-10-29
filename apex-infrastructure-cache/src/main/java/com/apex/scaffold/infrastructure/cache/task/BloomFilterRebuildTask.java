@@ -19,7 +19,7 @@ import org.springframework.stereotype.Component;
  *   <li>修复运行期间可能出现的数据不一致问题</li>
  * </ul>
  *
- * <h2>执行策略</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li><b>执行时间</b>：每天凌晨 3 点（业务低峰期）</li>
  *   <li><b>执行方式</b>：串行重建各命名空间，避免同时重建造成数据库压力</li>
@@ -27,7 +27,7 @@ import org.springframework.stereotype.Component;
  *   <li><b>日志记录</b>：记录重建开始、完成和失败信息</li>
  * </ul>
  *
- * <h2>工作流程</h2>
+ * <h2>设计说明</h2>
  * <ol>
  *   <li>记录重建开始时间</li>
  *   <li>调用 BloomFilterCacheWarmer 重新加载数据</li>
@@ -35,7 +35,7 @@ import org.springframework.stereotype.Component;
  *   <li>失败时记录错误日志，不影响应用运行</li>
  * </ol>
  *
- * <h2>配置说明</h2>
+ * <h2>设计说明</h2>
  * <p>通过以下配置启用：
  * <pre>
  * apex:
@@ -47,7 +47,7 @@ import org.springframework.stereotype.Component;
  *         cron: "0 0 3 * * ?"  # 每天凌晨 3 点
  * </pre>
  *
- * <h2>监控建议</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>监控重建任务执行时间，异常耗时需告警</li>
  *   <li>监控重建成功率，连续失败需告警</li>

@@ -29,13 +29,13 @@ import reactor.core.publisher.Mono;
  *   <li>OAuth state 一次性防 CSRF 凭证（Redis 签发/原子校验消费）</li>
  * </ul>
  *
- * <h2>渠道隔离</h2>
+ * <h2>设计说明</h2>
  * <p>与 {@link WeChatAppService}（开放平台移动应用，{@code wechat.app}）、
  * {@link WeChatMiniProgramService}（小程序，{@code wechat.miniapp}）互相独立：
  * 使用 {@code wechat.mp} 的 AppID/AppSecret，凭据缺失时抛出
  * {@code BusinessException(WECHAT_CHANNEL_NOT_CONFIGURED)}，不影响其他微信渠道。
  *
- * <h2>错误处理</h2>
+ * <h2>设计说明</h2>
  * <p>统一通过 {@link WeChatApiResponse} 检查微信 {@code errcode}，非 0 抛出
  * {@link WeChatApiException}；AppSecret 严禁写入代码仓库，须经环境变量注入。
  *

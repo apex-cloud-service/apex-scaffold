@@ -18,14 +18,14 @@ import reactor.core.publisher.Mono;
  * 解析客户端 {@code Accept-Language} 请求头，确定当前请求的语言偏好，
  * 并将解析出的 {@link Locale} 写入 Reactor Context 中供下游使用。
  *
- * <h2>为什么使用 WebFilter 而非 LocaleResolver</h2>
+ * <h2>设计说明</h2>
  * <p>
  * Spring MVC 中常用的 {@code LocaleResolver} 依赖 Servlet API，
  * 在 WebFlux 响应式架构中不可用。因此采用自定义 {@link WebFilter}
  * 配合 Reactor Context 实现语言信息的响应式传递。
  * </p>
  *
- * <h2>支持的语言列表</h2>
+ * <h2>职责范围</h2>
  * <table border="1">
  *   <caption>支持的语言列表</caption>
  *   <tr><th>语言</th><th>Locale</th><th>Accept-Language 值示例</th></tr>
@@ -35,7 +35,7 @@ import reactor.core.publisher.Mono;
  *   <tr><td>泰文</td><td>th_TH</td><td>th-TH</td></tr>
  * </table>
  *
- * <h2>语言解析策略</h2>
+ * <h2>设计说明</h2>
  * <ol>
  *   <li>从请求头中获取 {@code Accept-Language} 值</li>
  *   <li>使用 {@link Locale.LanguageRange#parse(String)} 解析语言优先级</li>
@@ -43,7 +43,7 @@ import reactor.core.publisher.Mono;
  *   <li>若客户端未提供或语言不支持，默认使用简体中文（zh_CN）</li>
  * </ol>
  *
- * <h2>过滤器执行顺序</h2>
+ * <h2>设计说明</h2>
  * <p>
  * 设置 {@code @Order(Ordered.HIGHEST_PRECEDENCE + 10)}，
  * 确保在 JWT 认证过滤器和其他业务过滤器之前执行，
@@ -86,7 +86,6 @@ public class LocaleWebFilter implements WebFilter {
      *
      * @param exchange 当前 HTTP 请求-响应交换对象
      * @param chain    WebFlux 过滤器链
-     * @return 表示过滤完成的 Mono
      */
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {

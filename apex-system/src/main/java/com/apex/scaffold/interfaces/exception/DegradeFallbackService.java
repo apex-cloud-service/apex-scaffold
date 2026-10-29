@@ -19,7 +19,7 @@ import reactor.core.publisher.Mono;
  * <p>当 Sentinel 熔断或限流触发时，不再仅返回统一错误码，而是根据资源名称
  * 尝试返回缓存兜底值或"排队中"状态，提升用户体验。
  *
- * <h2>降级策略</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li><strong>读接口</strong>：尝试从 Redis 获取上次成功响应的缓存快照，
  *       命中则返回缓存数据并标记 {@code degraded=true}</li>
@@ -27,12 +27,12 @@ import reactor.core.publisher.Mono;
  *   <li><strong>兜底</strong>：缓存未命中或写接口无快照时，返回标准降级错误</li>
  * </ul>
  *
- * <h2>缓存快照机制</h2>
+ * <h2>设计说明</h2>
  * <p>业务服务可在正常响应成功后调用 {@link #saveSnapshot(String, Object)} 保存快照。
  * 降级时通过 {@link #getSnapshot(String)} 获取最近一次成功响应。
  * 快照 TTL 默认 5 分钟，避免返回过期数据。
  *
- * <h2>防写放大与内存控制</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li><strong>Redis 写入节流</strong>：同一资源在
  *       {@link DegradeSnapshotProperties#getRedisThrottleSeconds()} 窗口内最多写一次 Redis，

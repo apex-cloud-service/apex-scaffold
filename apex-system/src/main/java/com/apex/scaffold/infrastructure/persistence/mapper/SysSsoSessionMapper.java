@@ -10,12 +10,12 @@ import org.apache.ibatis.annotations.Mapper;
  * <p>负责 {@code sys_sso_session} 表的持久化操作，管理单点登录会话的生命周期。
  * 继承 MyBatis-Plus {@link BaseMapper} 获得通用单表 CRUD 操作。
  *
- * <h2>表映射</h2>
+ * <h2>设计说明</h2>
  * <p>表名：{@code sys_sso_session}<br>
  * 实体：{@link SysSsoSessionPO}<br>
  * 主键：{@code id}（Long 类型，雪花算法）
  *
- * <h2>会话字段</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>{@code session_id}：会话唯一标识（UUID）</li>
  *   <li>{@code user_id}：关联用户 ID</li>
@@ -28,7 +28,7 @@ import org.apache.ibatis.annotations.Mapper;
  *   <li>{@code ip_address}：客户端 IP 地址</li>
  * </ul>
  *
- * <h2>会话生命周期</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>创建：用户通过 SSO 认证成功后创建会话</li>
  *   <li>活跃：会话在有效期内可用于身份验证</li>
@@ -37,7 +37,7 @@ import org.apache.ibatis.annotations.Mapper;
  *   <li>撤销：用户主动登出或管理员强制下线</li>
  * </ul>
  *
- * <h2>单点登出</h2>
+ * <h2>设计说明</h2>
  * <p>支持 SAML SLO（Single Logout）和 OAuth2 Token Revocation：
  * <ul>
  *   <li>通过 {@code saml_session_index} 关联 SAML 会话</li>
@@ -45,7 +45,7 @@ import org.apache.ibatis.annotations.Mapper;
  *   <li>支持前端渠道和后端渠道的单点登出</li>
  * </ul>
  *
- * <h2>通用方法</h2>
+ * <h2>职责范围</h2>
  * <p>继承自 {@link BaseMapper} 的常用方法：
  * <ul>
  *   <li>{@code insert(entity)} - 插入会话记录</li>

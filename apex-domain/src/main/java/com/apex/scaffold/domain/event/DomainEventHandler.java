@@ -9,7 +9,7 @@ import reactor.core.publisher.Mono;
  * <p>定义处理特定领域事件的接口。
  * 事件处理器负责处理领域事件，执行相应的业务逻辑。</p>
  *
- * <h2>处理器实现规范</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>每个处理器应该只处理一种类型的事件</li>
  *   <li>处理器应该是无状态的</li>
@@ -45,7 +45,6 @@ public interface DomainEventHandler<T extends BaseDomainEvent> {
      * 处理领域事件。
      *
      * @param event 领域事件
-     * @return Mono&lt;Void&gt;
      */
     Mono<Void> handle(T event);
 

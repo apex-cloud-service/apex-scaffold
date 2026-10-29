@@ -18,7 +18,7 @@ import reactor.core.publisher.Mono;
  * 所有接口均基于微信开放平台移动应用接入规范实现，
  * 通过 {@link WebClient} 以响应式编程方式调用微信 API。
  *
- * <h3>支持的功能</h3>
+ * <p><strong>支持的功能</strong></p>
  * <ul>
  *   <li>微信 APP 授权登录（OAuth 2.0 授权码模式）</li>
  *   <li>刷新 AccessToken</li>
@@ -30,7 +30,7 @@ import reactor.core.publisher.Mono;
  *   <li>获取微信绑定手机号</li>
  * </ul>
  *
- * <h3>错误处理</h3>
+ * <p><strong>错误处理</strong></p>
  * <p>所有方法均统一检查微信 API 返回的 {@code errcode} 字段，
  * 非 0 时抛出 {@link WeChatApiException}。
  *
@@ -81,7 +81,7 @@ public class WeChatAppService {
      * <p>通过授权码（code）获取 access_token 和 openid，
      * 使用微信 OAuth 2.0 授权码模式，调用 {@code /sns/oauth2/access_token} 接口。
      *
-     * <h3>请求参数</h3>
+     * <p><strong>请求参数</strong></p>
      * <ul>
      *   <li>{@code appid} - 应用唯一标识（必填）</li>
      *   <li>{@code secret} - 应用密钥 AppSecret（必填）</li>
@@ -89,7 +89,7 @@ public class WeChatAppService {
      *   <li>{@code grant_type} - 固定值 {@code authorization_code}（必填）</li>
      * </ul>
      *
-     * <h3>成功响应字段</h3>
+     * <p><strong>成功响应字段</strong></p>
      * <ul>
      *   <li>{@code access_token} - 接口调用凭证</li>
      *   <li>{@code expires_in} - access_token 有效期（秒），默认7200</li>
@@ -132,13 +132,13 @@ public class WeChatAppService {
      * 延长授权有效期，避免用户重新登录。
      * 调用微信开放平台 {@code /sns/oauth2/refresh_token} 接口。
      *
-     * <h3>刷新行为</h3>
+     * <p><strong>刷新行为</strong></p>
      * <ul>
      *   <li>若 access_token 已超时，获取新的 access_token</li>
      *   <li>若 access_token 未超时，返回相同 token 但刷新超时时间</li>
      * </ul>
      *
-     * <h3>注意事项</h3>
+     * <p><strong>注意事项</strong></p>
      * <ul>
      *   <li>refresh_token 有效期180天且无法续期</li>
      *   <li>每次刷新返回新的 refresh_token，旧的失效</li>
@@ -176,7 +176,7 @@ public class WeChatAppService {
      * <p>使用 access_token 和 openid 获取微信用户的个人资料，
      * 调用微信开放平台 {@code /sns/userinfo} 接口。
      *
-     * <h3>返回字段说明</h3>
+     * <p><strong>返回字段说明</strong></p>
      * <ul>
      *   <li>{@code openid} - 普通用户的标识</li>
      *   <li>{@code nickname} - 用户昵称</li>
@@ -186,11 +186,11 @@ public class WeChatAppService {
      *   <li>{@code unionid} - 用户统一标识（绑定开放平台后返回）</li>
      * </ul>
      *
-     * <h3>重要提示</h3>
+     * <p><strong>重要提示</strong></p>
      * <p>根据微信开放平台公告（2021年10月20日起生效），
      * 该接口将不再返回用户性别（sex）及地区信息（province、city、country）。
      *
-     * <h3>频率限制</h3>
+     * <p><strong>频率限制</strong></p>
      * <p>调用频率：50000次/分钟</p>
      *
      * @param accessToken 访问令牌，由登录接口返回
@@ -226,7 +226,7 @@ public class WeChatAppService {
      * 调用 {@code /sns/auth} 接口。
      * 常用于判断用户登录态是否已失效。
      *
-     * <h3>接口说明</h3>
+     * <p><strong>接口说明</strong></p>
      * <p>成功时返回 {@code {"errcode": 0, "errmsg": "ok"}}。
      *
      * @param accessToken 访问令牌
@@ -260,13 +260,13 @@ public class WeChatAppService {
      * 该 Token 用于调用发送模板消息、客服消息等需要全局凭证的微信 API。
      * 调用失败时自动重试 1 次。
      *
-     * <h3>响应说明</h3>
+     * <p><strong>响应说明</strong></p>
      * <ul>
      *   <li>{@code access_token} - 全局访问令牌</li>
      *   <li>{@code expires_in} - 有效期（秒），默认为7200秒</li>
      * </ul>
      *
-     * <h3>注意事项</h3>
+     * <p><strong>注意事项</strong></p>
      * <ul>
      *   <li>每天调用次数有限制（2000次/天）</li>
      *   <li>新获取的 token 会使旧 token 失效</li>
@@ -306,7 +306,7 @@ public class WeChatAppService {
      * 调用微信公众平台 {@code /cgi-bin/message/template/send} 接口。
      * 调用失败时自动重试 1 次。
      *
-     * <h3>接口说明</h3>
+     * <p><strong>接口说明</strong></p>
      * <ul>
      *   <li>仅认证服务号可用</li>
      *   <li>每个账号最多25个模板</li>
@@ -347,7 +347,7 @@ public class WeChatAppService {
      * 调用微信公众平台 {@code /cgi-bin/message/custom/send} 接口。
      * 调用失败时自动重试 1 次。
      *
-     * <h3>接口说明</h3>
+     * <p><strong>接口说明</strong></p>
      * <ul>
      *   <li>用户与客服之间在48小时内有过交互才能发送</li>
      *   <li>支持文本、图片、语音、视频、音乐、图文等多种消息类型</li>
@@ -387,7 +387,7 @@ public class WeChatAppService {
      * 再调用微信开放平台的 {@code /wxa/business/getuserphonenumber} 接口，
      * 从返回结果的 {@code phone_info.purePhoneNumber} 字段中提取纯手机号。
      *
-     * <h3>接口说明</h3>
+     * <p><strong>接口说明</strong></p>
      * <ul>
      *   <li>接口地址：{@code POST /wxa/business/getuserphonenumber?access_token=ACCESS_TOKEN}</li>
      *   <li>请求体：{@code {"code": "手机号授权凭证"}}</li>
@@ -411,7 +411,7 @@ public class WeChatAppService {
      *       微信开放平台 - 获取手机号</a></li>
      * </ul>
      *
-     * <h3>调用链路</h3>
+     * <p><strong>调用链路</strong></p>
      * <ol>
      *   <li>客户端通过微信 SDK 获取手机号授权凭证（phoneCode）</li>
      *   <li>应用层的微信手机号登录或手机号绑定流程
@@ -421,7 +421,7 @@ public class WeChatAppService {
      *   <li>解析响应中的 {@code phone_info} 提取手机号返回</li>
      * </ol>
      *
-     * <h3>错误码说明</h3>
+     * <p><strong>错误码说明</strong></p>
      * <ul>
      *   <li>{@code 40001} - AppSecret 错误或 AccessToken 无效</li>
      *   <li>{@code 40013} - 无效的 AppID</li>

@@ -7,6 +7,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
  *
  * <p>对应 {@code POST /api/v1/moderation/reports} 接口的 data 字段。</p>
  *
+ * @param ticketId 举报工单 ID
+ * @param status 工单状态
  * @author Apex Team
  * @version 1.0.0
  * @since 1.0.0

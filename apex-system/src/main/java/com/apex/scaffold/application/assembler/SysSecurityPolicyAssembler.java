@@ -13,13 +13,13 @@ import org.mapstruct.ReportingPolicy;
  * <p>负责安全策略配置领域实体与应用层 DTO 之间的双向转换，使用 MapStruct 自动生成转换代码。
  * 支持请求对象到实体的转换、实体到响应 DTO 的转换。
  *
- * <h2>核心功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>Request → Entity 转换：将请求对象转换为领域实体</li>
  *   <li>Entity → DTO 转换：将领域实体转换为应用层 DTO</li>
  * </ul>
  *
- * <h2>字段映射规则</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>passwordRequireUppercase → passwordRequireUpper：密码大写字母要求（Boolean → Integer 0/1）</li>
  *   <li>passwordRequireLowercase → passwordRequireLower：密码小写字母要求（Boolean → Integer 0/1）</li>

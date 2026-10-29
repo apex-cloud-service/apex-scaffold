@@ -10,12 +10,12 @@ import org.apache.ibatis.annotations.Mapper;
  * <p>负责 {@code off_sync_history} 表的持久化操作，记录从第三方办公平台同步数据的历史记录和状态。
  * 继承 MyBatis-Plus {@link BaseMapper} 获得通用单表 CRUD 操作。
  *
- * <h2>表映射</h2>
+ * <h2>设计说明</h2>
  * <p>表名：{@code off_sync_history}<br>
  * 实体：{@link OffSyncHistoryPO}<br>
  * 主键：{@code id}（Long 类型，雪花算法）
  *
- * <h2>同步历史字段</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>{@code sync_type}：同步类型（EMPLOYEE、DEPARTMENT、CALENDAR、APPROVAL）</li>
  *   <li>{@code platform}：来源平台（FEISHU、DINGTALK、WECOM）</li>
@@ -29,7 +29,7 @@ import org.apache.ibatis.annotations.Mapper;
  *   <li>{@code operator_id}：操作人用户 ID（手动触发时记录）</li>
  * </ul>
  *
- * <h2>同步类型</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>EMPLOYEE：员工信息同步</li>
  *   <li>DEPARTMENT：部门组织架构同步</li>
@@ -38,7 +38,7 @@ import org.apache.ibatis.annotations.Mapper;
  *   <li>MESSAGE：消息通知同步</li>
  * </ul>
  *
- * <h2>同步状态</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>IN_PROGRESS：同步进行中</li>
  *   <li>SUCCESS：同步成功完成</li>
@@ -46,7 +46,7 @@ import org.apache.ibatis.annotations.Mapper;
  *   <li>PARTIAL_SUCCESS：部分成功（有失败记录但整体完成）</li>
  * </ul>
  *
- * <h2>业务场景</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>同步记录：记录每次数据同步的执行情况</li>
  *   <li>失败追溯：查询同步失败的历史记录和原因</li>
@@ -54,7 +54,7 @@ import org.apache.ibatis.annotations.Mapper;
  *   <li>数据对账：通过同步记录进行数据一致性检查</li>
  * </ul>
  *
- * <h2>通用方法</h2>
+ * <h2>职责范围</h2>
  * <p>继承自 {@link BaseMapper} 的常用方法：
  * <ul>
  *   <li>{@code insert(entity)} - 插入同步历史记录</li>

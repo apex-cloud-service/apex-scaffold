@@ -16,7 +16,7 @@ import reactor.core.publisher.Mono;
  * 标注为 {@code @Primary}，当应用中同时存在多个 {@link DomainEventPublisher} 实现时，
  * Spring 将优先注入本实例。
  *
- * <h2>设计要点</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li><strong>先持久化</strong>：发布完成表示 Outbox 记录已经写入数据库</li>
  *   <li><strong>可靠投递</strong>：监听器失败会重试，超过阈值进入 DEAD</li>
@@ -45,7 +45,6 @@ public class DomainEventPublisherImpl implements DomainEventPublisher {
      * Mono 错误信号返回，调用方不得忽略。</p>
      *
      * @param event 领域事件对象，不能为 null
-     * @return 空 Mono，表示发布完成
      */
     @Override
     public Mono<Void> publish(AbstractDomainEvent event) {

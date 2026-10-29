@@ -16,17 +16,17 @@ import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
  * <p>配置 Spring WebFlux 的跨域资源共享（CORS）策略，支持动态配置允许的来源域名。
  * 提供开发环境宽松策略和生产环境严格策略两种模式。
  *
- * <h2>配置项</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>{@code cors.allow-all-origins} — 是否允许所有来源（默认 false，建议生产环境保持关闭）</li>
  *   <li>{@code cors.allowed-origins} — 明确允许的来源域名列表（逗号分隔）</li>
  * </ul>
  *
- * <h2>安全约束</h2>
+ * <h2>设计说明</h2>
  * <p>当 {@code cors.allow-all-origins=false} 但 {@code cors.allowed-origins} 为空时，
  * 直接抛出 {@link IllegalStateException}，防止静默 fallback 到允许所有来源的安全风险。
  *
- * <h2>允许的 HTTP 方法</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>GET — 查询资源</li>
  *   <li>POST — 创建资源</li>
@@ -35,7 +35,7 @@ import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
  *   <li>OPTIONS — 预检请求</li>
  * </ul>
  *
- * <h2>Allowed Headers</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>Content-Type — 请求内容类型</li>
  *   <li>Authorization — Bearer JWT Token 认证</li>
@@ -50,7 +50,7 @@ import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
  *   <li>X-Device-Id — 设备指纹</li>
  * </ul>
  *
- * <h2>Exposed Headers</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>X-Trace-Id — 链路追踪 ID，用于请求链路关联</li>
  *   <li>X-Request-Id — 请求唯一标识，用于日志关联</li>
@@ -86,7 +86,7 @@ public class CorsConfig {
      *   <li>生产环境：{@code allowAllOrigins=false} 时只允许配置的特定域名</li>
      * </ul>
      *
-     * <h3>安全设计说明</h3>
+     * <p><strong>安全设计说明</strong></p>
      * <ul>
      *   <li>setAllowCredentials(true)：允许跨域请求携带凭证（Cookie/Authorization 头）。
      *       与 allowAllOrigins=true 同时使用时，浏览器会因安全策略拒绝请求，因此仅在白名单模式下生效。</li>

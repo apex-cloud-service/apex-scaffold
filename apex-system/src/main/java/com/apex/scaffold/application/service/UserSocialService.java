@@ -16,7 +16,7 @@ import reactor.core.publisher.Mono;
  * 在认证成功后登记渠道身份。绑定为幂等操作：同一渠道 OpenID 重复绑定时
  * 仅同步 UnionID，不产生重复记录；渠道身份已被其他账户绑定时跳过并告警。
  *
- * <h2>失败语义</h2>
+ * <h2>设计说明</h2>
  * <p>本服务向调用方传播仓储异常；登录链路调用方应以
  * {@code onErrorResume} 容忍绑定失败（仅告警不阻断登录），绑定缺失可在
  * 下次登录时补写，历史数据由迁移脚本回填。
@@ -81,7 +81,6 @@ public class UserSocialService {
      * @param channel  社交渠道
      * @param openId   该渠道下的 OpenID
      * @param unionId  微信 UnionID，可为 {@code null}
-     * @return 绑定处理完成（含跳过）后返回空 Mono
      */
     public Mono<Void> upsertBinding(
             Long userId, String tenantId, SocialChannel channel, String openId, String unionId) {

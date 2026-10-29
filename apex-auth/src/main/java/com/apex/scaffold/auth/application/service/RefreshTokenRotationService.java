@@ -26,7 +26,7 @@ import reactor.core.publisher.Mono;
  *
  * <p>实现Token Family机制，防止Refresh Token泄露和重放攻击
  *
- * <h2>核心安全机制</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li><b>Token Family</b>: 每次登录创建新Family，轮换时继承Family ID</li>
  *   <li><b>一次性使用</b>: 每个Refresh Token只能使用一次，使用后立即标记</li>
@@ -34,7 +34,7 @@ import reactor.core.publisher.Mono;
  *   <li><b>异常检测</b>: 监控IP变化、快速刷新等异常模式</li>
  * </ul>
  *
- * <h2>工作流程</h2>
+ * <h2>设计说明</h2>
  * <pre>
  * 1. 验证Refresh Token有效性
  * 2. 检查Token Family是否已被撤销（重放攻击检测）

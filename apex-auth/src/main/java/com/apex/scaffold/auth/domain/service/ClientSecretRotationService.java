@@ -217,7 +217,6 @@ public class ClientSecretRotationService {
      * 清理过期的旧密钥（超过宽限期）
      *
      * @param clientId 客户端ID
-     * @return 清理结果
      */
     public Mono<Void> cleanupExpiredSecrets(String clientId) {
         String createdKey = REDIS_CLIENT_SECRET_PREFIX + clientId + REDIS_SECRET_CREATED;
@@ -280,7 +279,6 @@ public class ClientSecretRotationService {
      * 检查并轮换密钥（如需要）
      *
      * @param clientId 客户端ID
-     * @return 轮换结果
      */
     private Mono<Void> checkAndRotateSecret(String clientId) {
         String rotationKey = REDIS_CLIENT_SECRET_PREFIX + clientId + REDIS_ROTATION_SCHEDULED;
@@ -321,7 +319,6 @@ public class ClientSecretRotationService {
      *
      * @param clientId 客户端ID
      * @param daysUntilRotation 距离轮换的天数
-     * @return 通知结果
      */
     private Mono<Void> notifyClientSecretRotation(String clientId, long daysUntilRotation) {
         // TODO(Apex Team): 实现实际的通知逻辑

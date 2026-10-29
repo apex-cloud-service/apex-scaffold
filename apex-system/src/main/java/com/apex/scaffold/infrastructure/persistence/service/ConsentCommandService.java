@@ -23,19 +23,9 @@ public class ConsentCommandService implements ConsentCommandPort {
     private final UserConsentMapper mapper;
     private final UserConsentPoConverter converter;
 
-    /**
-     * {@inheritDoc}
-     *
-     */
+    /** {@inheritDoc} */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    /**
-     * 保存Both
-     *
-     * @param userAgreement 参数
-     *
-     * @param privacyPolicy 参数
-     */
     public void saveBoth(UserConsentEntity userAgreement, UserConsentEntity privacyPolicy) {
         insert(userAgreement);
         insert(privacyPolicy);

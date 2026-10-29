@@ -14,19 +14,19 @@ import java.lang.annotation.Target;
  * 通过 {@link #prefix} 和 {@link #key} 组合生成唯一的限流键，实现对特定用户
  * 在指定时间窗口内的请求频率控制。
  *
- * <h2>使用场景</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>短信验证码发送频率限制（如：同一手机号每分钟最多发送 1 次）</li>
  *   <li>API 接口的用户级调用频率控制</li>
  *   <li>敏感操作（如修改密码、提现）的频次限制</li>
  * </ul>
  *
- * <h2>限流机制</h2>
+ * <h2>设计说明</h2>
  * <p>采用令牌桶或滑动窗口算法实现，限流键的生成规则为 {@code prefix + ":" + key}。
  * 当用户在 {@link #rateInterval} 秒内的请求速率超过 {@link #rate} 时，请求被拒绝
  * 并返回 {@link #message} 中配置的提示信息。
  *
- * <h2>配置示例</h2>
+ * <h2>使用示例</h2>
  * <pre>{@code * @UserRateLimit(prefix = "sms:send", key = "#phone", rate = 1.0, rateInterval = 60)
  * public Mono<Void> sendSms(String phone) { ... }
  * }</pre>

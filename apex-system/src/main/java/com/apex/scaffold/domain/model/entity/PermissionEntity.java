@@ -12,7 +12,7 @@ import lombok.ToString;
  * 权限是系统中最细粒度的安全控制单位。
  * </p>
  *
- * <h2>核心业务规则</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>权限可被启用或禁用</li>
  *   <li>权限编码唯一，用于系统内部标识</li>
@@ -53,7 +53,7 @@ public class PermissionEntity extends BaseEntity {
      * 必须唯一，用于代码中引用权限。
      * </p>
      *
-     * <h3>命名规范</h3>
+     * <p><strong>命名规范</strong></p>
      * <p>建议使用资源:操作格式，如：user:read, user:write</p>
      */
     private String code;

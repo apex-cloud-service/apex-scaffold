@@ -20,7 +20,7 @@ import reactor.core.publisher.Mono;
  * <p>基于 Redisson 分布式信号量实现跨实例的并发隔离舱，防止单个下游服务故障或慢调用拖垮整个集群。
  * 与本地 Resilience4j Bulkhead 不同，分布式舱壁在多实例环境中共享同一个并发上限。
  *
- * <h2>核心特性</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li><b>分布式信号量</b>：基于 Redis 实现跨实例的许可证（permit）管理</li>
  *   <li><b>快速失败</b>：超限时立即拒绝（不排队），避免请求堆积</li>
@@ -28,14 +28,14 @@ import reactor.core.publisher.Mono;
  *   <li><b>指标监控</b>：记录拒绝次数（apex_bulkhead_rejected_total）</li>
  * </ul>
  *
- * <h2>使用场景</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>限制对第三方 API 的并发调用数（如支付网关、AI 推理服务）</li>
  *   <li>保护慢查询数据库操作（如报表生成、全表扫描）</li>
  *   <li>隔离不同租户的资源消耗（SaaS 多租户场景）</li>
  * </ul>
  *
- * <h2>与熔断器联动</h2>
+ * <h2>设计说明</h2>
  * <p>建议与 {@link CircuitBreakerService} 配合使用：
  * <pre>{@code
  * bulkheadService.execute("third-party-api", () ->

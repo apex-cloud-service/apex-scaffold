@@ -8,6 +8,10 @@ import java.security.Principal;
  * <p>作为 Spring Security 认证主体（{@link Principal}）承载认证成功后的用户标识信息：
  * 用户 ID、OpenID、租户 ID 与部门 ID。其中 compact 构造器重载允许不提供部门 ID。</p>
  *
+ * @param userId 用户标识
+ * @param openId 第三方登录标识
+ * @param tenantId 租户标识
+ * @param deptId 所属部门标识
  * @author Apex Team
  * @version 1.0
  * @since 1.0

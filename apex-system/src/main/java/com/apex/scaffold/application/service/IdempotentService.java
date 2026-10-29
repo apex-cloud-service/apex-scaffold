@@ -22,7 +22,7 @@ import reactor.core.publisher.Mono;
  *   <li>防止接口超时重试导致重复处理</li>
  * </ul>
  *
- * <h2>实现原理</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>使用 Redis {@code SETNX + EXPIRE} 原子操作确保首次请求独占 Key</li>
  *   <li>利用 TTL 自动过期机制替代定时任务清理，无需维护额外线程池</li>

@@ -41,7 +41,7 @@ import reactor.core.publisher.Mono;
  * 基于 Spring WebFlux 的 {@link RestControllerAdvice} 实现，支持响应式异常处理。
  * 集成了国际化支持，异常消息会根据客户端的 Accept-Language 自动切换为对应语言。
  *
- * <h2>处理的异常类型</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li><b>业务异常</b>：{@link BusinessException}，根据错误码映射 HTTP 状态码，
  *       使用 {@link BusinessException#getMessageKey()} 获取关联的消息键</li>
@@ -51,7 +51,7 @@ import reactor.core.publisher.Mono;
  *   <li><b>系统异常</b>：{@link NullPointerException} 及其他未捕获异常</li>
  * </ul>
  *
- * <h2>设计模式</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>集中式异常处理模式：通过 {@link RestControllerAdvice} 统一异常处理入口</li>
  *   <li>策略映射：根据异常类型和错误码映射对应的 HTTP 状态码</li>
@@ -298,7 +298,7 @@ public class GlobalExceptionHandler {
      * 需要记录详细错误日志以便排查。
      * 错误消息通过 {@link MessageUtils} 获取客户端语言的文本。
      *
-     * <h3>常见触发场景</h3>
+     * <p><strong>常见触发场景</strong></p>
      * <ul>
      *   <li>插入或更新时违反非空约束（NOT NULL）</li>
      *   <li>插入或更新时违反唯一约束（UNIQUE）</li>
@@ -392,7 +392,7 @@ public class GlobalExceptionHandler {
      * 本方法收集所有字段级别的校验错误信息，提取 {@link FieldError} 的默认消息并拼接，
      * 返回 400 Bad Request 状态码及国际化的错误提示。
      *
-     * <h3>异常来源</h3>
+     * <p><strong>异常来源</strong></p>
      * <ul>
      *   <li>请求体 JSON 反序列化失败（类型不匹配、格式错误）</li>
      *   <li>{@code @Valid} 或 {@code @Validated} 触发的 JSR-380 校验失败</li>
@@ -431,7 +431,7 @@ public class GlobalExceptionHandler {
      * 并使用 {@link ResponseStatusException#getReason()} 作为错误消息，
      * 将框架级状态异常统一转换为标准 {@link Result} 格式。
      *
-     * <h3>典型使用场景</h3>
+     * <p><strong>典型使用场景</strong></p>
      * <ul>
      *   <li>资源未找到：{@code throw new ResponseStatusException(HttpStatus.NOT_FOUND, "用户不存在")}</li>
      *   <li>权限不足：{@code throw new ResponseStatusException(HttpStatus.FORBIDDEN, "无权访问")}</li>
@@ -470,7 +470,7 @@ public class GlobalExceptionHandler {
      * {@link DataBufferLimitException}。本方法捕获该异常并返回 413 Payload Too Large，
      * 提示客户端缩小请求体或分片传输。
      *
-     * <h3>配置示例</h3>
+     * <p><strong>配置示例</strong></p>
      * <pre>{@code * spring:
      *   codec:
      *     max-in-memory-size: 10MB
@@ -524,7 +524,7 @@ public class GlobalExceptionHandler {
      * 捕获 {@link RestControllerAdvice} 无法覆盖的 WebFlux 底层异常。
      * 根据异常类型判断客户端错误或服务器错误，返回对应语言的 JSON 格式错误响应。
      *
-     * <h3>异常分类</h3>
+     * <p><strong>异常分类</strong></p>
      * <ul>
      *   <li>{@link BusinessException}：根据错误码映射状态码，使用消息键获取国际化消息</li>
      *   <li>{@link IllegalArgumentException} 或 {@code ServerWebInputException}：400 Bad Request</li>

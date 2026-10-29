@@ -20,7 +20,7 @@ import reactor.core.publisher.Mono;
  * 采用模板方法模式，只需实现 {@link #authenticate(LoginRequest)} 方法完成短信验证码校验，
  * 其余的用户查询/创建、JWT Token 生成等公共流程由基类统一处理。
  *
- * <h2>登录流程</h2>
+ * <h2>设计说明</h2>
  * <ol>
  *   <li>App端调用 {@code POST /api/auth/cl/sms/code} 传入手机号</li>
  *   <li>系统通过创蓝253短信平台发送6位验证码到用户手机</li>
@@ -30,7 +30,7 @@ import reactor.core.publisher.Mono;
  *   <li>基类 {@link AbstractPhoneLoginStrategy#login(LoginRequest)} 完成后续流程</li>
  * </ol>
  *
- * <h2>与现有登录方式的关系</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>通过 {@link SmsCodeService} 统一接口 + {@code @Qualifier("chuanglanSmsCodeService")} 注入创蓝实现</li>
  *   <li>短信发送通过创蓝253短信平台，与原有服务商解耦</li>

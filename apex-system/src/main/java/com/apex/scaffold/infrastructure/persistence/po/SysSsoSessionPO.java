@@ -15,7 +15,7 @@ import lombok.experimental.SuperBuilder;
  * <p>对应数据库表 {@code sys_sso_session}，存储单点登录会话信息，管理 SSO 会话的生命周期。
  * 继承 {@link BasePO} 获得通用字段（ID、创建时间、更新时间、逻辑删除等）。
  *
- * <h2>核心字段</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>{@link #providerId} - SSO 提供商 ID（关联 {@code sys_sso_provider}）</li>
  *   <li>{@link #userId} - 系统用户 ID（关联 {@code sys_user}）</li>
@@ -28,14 +28,14 @@ import lombok.experimental.SuperBuilder;
  *   <li>{@link #tenantId} - 租户标识（多租户隔离）</li>
  * </ul>
  *
- * <h2>会话状态</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>ACTIVE：会话活跃，用户已登录</li>
  *   <li>EXPIRED：会话过期，需要重新登录</li>
  *   <li>REVOKED：会话已撤销（用户主动登出或管理员强制下线）</li>
  * </ul>
  *
- * <h2>业务场景</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>会话管理：记录和管理 SSO 登录会话</li>
  *   <li>单点登出：支持 SAML SLO 和 OAuth2 Token Revocation</li>
@@ -44,14 +44,14 @@ import lombok.experimental.SuperBuilder;
  *   <li>会话审计：跟踪和审计 SSO 登录会话</li>
  * </ul>
  *
- * <h2>安全特性</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>断言加密：{@code assertion} 字段应加密存储，防止敏感信息泄露</li>
  *   <li>会话过期：通过 {@code expireTime} 自动过期失效会话</li>
  *   <li>会话撤销：支持主动撤销会话，增强安全性</li>
  * </ul>
  *
- * <h2>注意事项</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>会话索引 {@code sessionIndex} 用于单点登出时定位会话</li>
  *   <li>断言信息 {@code assertion} 包含敏感信息，需加密存储</li>

@@ -35,7 +35,7 @@ import reactor.core.publisher.Mono;
  * 进行精细化限流保护。通过 Redis 滑动窗口计数器实时监测每个参数值的访问频率，
  * 当达到热点阈值时自动应用更严格的限流规则。
  *
- * <h2>实现原理</h2>
+ * <h2>设计说明</h2>
  * <ol>
  * <li><strong>参数监控</strong>：解析 SpEL 表达式获取方法参数值</li>
  * <li><strong>滑动窗口计数</strong>：每个参数值在 Redis 中维护独立的
@@ -46,14 +46,14 @@ import reactor.core.publisher.Mono;
  * <li><strong>自动降温</strong>：Redis 键自动过期，热点标记自动解除</li>
  * </ol>
  *
- * <h2>存储机制</h2>
+ * <h2>设计说明</h2>
  * <ul>
  * <li>使用 {@link RedissonClient} Redis 分布式存储，支持多实例共享热点状态</li>
  * <li>每个热点 Key 维护两个计数器：槽位计数器和窗口总计数器</li>
  * <li>Redis TTL 自动清理过期的热点数据，避免内存泄露</li>
  * </ul>
  *
- * <h2>线程安全设计</h2>
+ * <h2>线程安全性</h2>
  * <ul>
  * <li>使用 Redis 原子操作（INCR）保证计数的原子性</li>
  * <li>Redis 天然支持分布式锁，无需额外锁机制</li>

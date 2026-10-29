@@ -16,7 +16,7 @@ import lombok.ToString;
  * 上传前先 init 生成 file_record 主记录，随后逐片上传并记录 object_name，
  * 全部分片到位后由 merge 按序拼接为完整文件。</p>
  *
- * <h2>核心业务规则</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>同一 file_id 下 chunk_index 从 0 开始且唯一</li>
  *   <li>object_name 为存储 SPI 返回的真实对象键（服务端 UUID 重命名）</li>

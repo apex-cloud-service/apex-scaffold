@@ -50,7 +50,7 @@ import reactor.util.function.Tuples;
  * <p>拦截请求，从请求头中提取JWT Token并进行认证，是Spring Security WebFlux安全体系的核心组件。
  * 同时集成了国际化支持，认证失败时的错误消息会根据客户端语言偏好自动切换。
  *
- * <h2>设计模式</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li><strong>责任链模式</strong>：实现 {@link WebFilter} 接口，在过滤器链中完成JWT认证逻辑</li>
  *   <li><strong>策略模式</strong>：根据请求路径判断是否为公开路径，应用不同的认证策略</li>
@@ -58,7 +58,7 @@ import reactor.util.function.Tuples;
  *       具体步骤由 {@code authenticateToken()}、{@code getUserAuthorities()} 等方法实现</li>
  * </ul>
  *
- * <h2>认证流程</h2>
+ * <h2>设计说明</h2>
  * <ol>
  *   <li>{@link #filter(ServerWebExchange, WebFilterChain)}：入口方法，判断公开路径、提取Token、检查黑名单</li>
  *   <li>{@link #authenticateToken(ServerWebExchange, WebFilterChain, String)}：解析Token，处理异常</li>
@@ -68,14 +68,14 @@ import reactor.util.function.Tuples;
  *   <li>{@link #setAuthenticationContext(ServerWebExchange, WebFilterChain, UserEntity, List)}：创建认证信息并存入SecurityContext</li>
  * </ol>
  *
- * <h2>国际化支持</h2>
+ * <h2>职责范围</h2>
  * <p>
  * 通过 {@link MessageUtils} 从 Reactor Context 中读取由
  * {@link com.apex.scaffold.interfaces.filter.LocaleWebFilter} 写入的 Locale，
  * 将认证错误消息翻译为客户端偏好的语言。
  * </p>
  *
- * <h2>性能优化</h2>
+ * <h2>设计说明</h2>
  * <p>
  * 使用 Caffeine 本地缓存存储用户角色权限，TTL 60秒，避免频繁数据库查询。
  * 缓存键为 userId，值为 {@link List}&lt;{@link SimpleGrantedAuthority}&gt;。
@@ -206,7 +206,6 @@ public class JwtAuthenticationFilter implements WebFilter {
      *
      * @param exchange ServerWebExchange 交换对象
      * @param chain    WebFilterChain 过滤器链
-     * @return 空响应 Mono，表示过滤完成
      */
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
@@ -239,7 +238,6 @@ public class JwtAuthenticationFilter implements WebFilter {
      * @param exchange ServerWebExchange 交换对象
      * @param chain    WebFilterChain 过滤器链
      * @param token    JWT Token 字符串
-     * @return 认证成功返回过滤链继续处理，失败返回错误响应
      */
     private Mono<Void> authenticateToken(ServerWebExchange exchange, WebFilterChain chain, String token) {
         try {
@@ -353,7 +351,6 @@ public class JwtAuthenticationFilter implements WebFilter {
      * @param exchange 当前请求交换上下文
      * @param openId   用户 OpenID
      * @param claims   已解析的 JWT Claims
-     * @return 续期存储操作的 Mono（已完成或空操作）
      */
     private Mono<Void> tryRenewToken(ServerWebExchange exchange, String openId, Claims claims) {
         if (renewalThresholdMs <= 0 || !isNearExpiry(claims)) {
@@ -378,7 +375,9 @@ public class JwtAuthenticationFilter implements WebFilter {
      * <p>优先从 Caffeine 本地缓存获取权限，缓存未命中时从数据库查询并更新缓存。
      * 用户不存在或已禁用时返回空 Publisher，由认证流程拒绝访问。
      *
+     * @param exchange 当前服务器交换对象，用于写入请求级用户上下文
      * @param openId 微信 OpenID
+     * @param forceFreshRoles 是否跳过缓存强制刷新角色（敏感路径为 {@code true}）
      * @return 用户与权限列表的 Mono 包装
      */
     private Mono<Tuple2<com.apex.scaffold.domain.model.entity.UserEntity, List<SimpleGrantedAuthority>>>
@@ -413,7 +412,6 @@ public class JwtAuthenticationFilter implements WebFilter {
      * @param chain     过滤链
      * @param claims    已解析的认证中心令牌 claims
      * @param accountId 统一账户ID（claims.accountId）
-     * @return 认证成功返回过滤链继续处理，失败返回错误响应
      */
     private Mono<Void> authenticateCenterToken(
             ServerWebExchange exchange, WebFilterChain chain, Claims claims, Long accountId) {
@@ -582,7 +580,6 @@ public class JwtAuthenticationFilter implements WebFilter {
      * @param chain       WebFilterChain 过滤器链
      * @param user        数据库查询到的用户实体
      * @param authorities 用户权限列表
-     * @return 携带安全上下文的过滤链处理结果
      */
     private Mono<Void> setAuthenticationContext(
             ServerWebExchange exchange,
@@ -650,7 +647,6 @@ public class JwtAuthenticationFilter implements WebFilter {
      *
      * @param token      Token 字符串
      * @param expireTime Token 过期时间（毫秒），黑名单记录将在此时间后自动清除
-     * @return 处理结果的 Mono
      */
     public Mono<Void> addTokenToBlacklist(String token, long expireTime) {
         return tokenBlacklistService.add(token, expireTime);
@@ -665,7 +661,6 @@ public class JwtAuthenticationFilter implements WebFilter {
      *
      * @param exchange   当前 HTTP 请求-响应交换对象
      * @param resultCode 错误码枚举，包含 code 和 messageKey
-     * @return 表示响应写入完成的 Mono
      */
     private Mono<Void> handleError(ServerWebExchange exchange, ResultCode resultCode) {
         return Mono.deferContextual(ctx -> {

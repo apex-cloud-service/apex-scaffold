@@ -15,7 +15,7 @@ import reactor.core.publisher.Mono;
  * <p>在 HTTP 响应中添加安全相关的响应头，提升应用的安全性。
  * 该过滤器在所有业务过滤器之前执行，确保安全头始终存在。
  *
- * <h2>注入的响应头列表</h2>
+ * <h2>职责范围</h2>
  * <table border="1">
  *   <caption>安全响应头明细表</caption>
  *   <tr><th>响应头</th><th>值</th><th>说明</th></tr>
@@ -30,7 +30,7 @@ import reactor.core.publisher.Mono;
  *   <tr><td>Permissions-Policy</td><td>geolocation=(), camera=(), microphone=()</td><td>限制浏览器 API 权限</td></tr>
  * </table>
  *
- * <h2>HSTS 配置</h2>
+ * <h2>设计说明</h2>
  * <p>
  * Strict-Transport-Security 头的 max-age 和 includeSubDomains 参数
  * 可通过 {@link SecurityHeadersProperties} 配置，默认 max-age 为 1 年。
@@ -114,7 +114,6 @@ public class SecurityHeaderWebFilter implements WebFilter {
      *
      * @param exchange 当前 HTTP 请求-响应交换对象
      * @param chain    WebFlux 过滤器链
-     * @return 表示过滤完成的 Mono
      */
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {

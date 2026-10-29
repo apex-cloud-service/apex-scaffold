@@ -40,6 +40,11 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 @org.springframework.context.annotation.Import(
         com.apex.scaffold.infrastructure.remote.config.ManagedWebClientInitializer.class)
 public class JobServiceApplication {
+    /**
+     * 启动任务代理服务。
+     *
+     * @param args 启动参数，由 Spring Boot 解析
+     */
     public static void main(String[] args) {
         SpringApplication.run(JobServiceApplication.class, args);
     }

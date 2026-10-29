@@ -14,14 +14,14 @@ import org.springframework.web.reactive.function.client.WebClient;
  * <p>本配置类负责装配 Loki 日志查询客户端（基于 WebClient），用于查询应用运行时日志。
  * Loki 是一款轻量级日志聚合系统，专为云原生应用设计，比 ELK 栈资源消耗降低 80% 以上。
  *
- * <h3>技术架构</h3>
+ * <p><strong>技术架构</strong></p>
  * <pre>
  * 应用 stdout/文件日志 → Grafana Alloy 采集 → Loki 存储（标签索引 + 全文扫描）
  *                                              ↓
  *         管理后台 ← 本服务 RuntimeLogHandler ← Loki HTTP API ← LokiAdapter（WebClient）
  * </pre>
  *
- * <h3>技术选型理由</h3>
+ * <p><strong>技术选型理由</strong></p>
  * <ul>
  *   <li><b>轻量高效</b>：仅索引标签（service、level、traceId），全文内容以原始格式压缩存储，
  *       相比 Elasticsearch 全文索引，内存和磁盘占用降低 10 倍</li>
@@ -30,11 +30,11 @@ import org.springframework.web.reactive.function.client.WebClient;
  *   <li><b>Grafana 原生集成</b>：作为 Grafana Labs 产品，与 Grafana 可视化平台深度集成</li>
  * </ul>
  *
- * <h3>启用条件</h3>
+ * <p><strong>启用条件</strong></p>
  * <p>当配置 {@code loki.enabled=true} 时生效，默认关闭。
  * 开发环境可在 {@code application-dev.yml} 中启用，生产环境通过环境变量 {@code LOKI_ENABLED} 控制。
  *
- * <h3>配置项说明</h3>
+ * <p><strong>配置项说明</strong></p>
  * <pre>
  * loki:
  *   enabled: true                      # 总开关
@@ -43,7 +43,7 @@ import org.springframework.web.reactive.function.client.WebClient;
  *   max-query-range-seconds: 3600      # 单次查询最大时间窗口（1小时）
  * </pre>
  *
- * <h3>查询示例（LogQL）</h3>
+ * <p><strong>查询示例（LogQL）</strong></p>
  * <pre>{@code
  * // 查询最近 1 小时的 ERROR 日志，包含关键词 "exception"
  * {service="apex-scaffold", level="error"} |= "exception" | json
@@ -81,7 +81,7 @@ public class LokiConfig {
      * <p>使用 Spring WebFlux 的 {@link WebClient} 调用 Loki Query API。
      * WebClient 是响应式非阻塞客户端，适配本项目 WebFlux 技术栈。
      *
-     * <h4>API 端点</h4>
+     * <p><strong>API 端点</strong></p>
      * <ul>
      *   <li>{@code GET /loki/api/v1/query_range} - 范围查询（时间窗口 + LogQL 过滤）</li>
      *   <li>{@code GET /loki/api/v1/query} - 即时查询（等同于 query_range 的时间点查询）</li>
@@ -89,14 +89,14 @@ public class LokiConfig {
      *   <li>{@code GET /loki/api/v1/label/<name>/values} - 查询标签值</li>
      * </ul>
      *
-     * <h4>超时配置</h4>
+     * <p><strong>超时配置</strong></p>
      * <p>WebClient 默认超时策略继承自全局 {@code server.webclient.*} 配置：
      * <ul>
      *   <li>连接超时：5 秒</li>
      *   <li>读取超时：10 秒</li>
      * </ul>
      *
-     * <h4>错误处理</h4>
+     * <p><strong>错误处理</strong></p>
      * <p>Loki 查询失败（网络超时、服务不可用、LogQL 语法错误）会返回 HTTP 4xx/5xx 响应，
      * 业务代码应捕获 {@link org.springframework.web.reactive.function.client.WebClientResponseException} 并降级处理。
      *
@@ -115,7 +115,7 @@ public class LokiConfig {
      *
      * <p>从 {@code loki.*} 配置项绑定属性，支持环境变量覆盖。
      *
-     * <h3>查询限制说明</h3>
+     * <p><strong>查询限制说明</strong></p>
      * <p>为防止慢查询拖垮 Loki 服务，强制以下限制：
      * <ul>
      *   <li><b>单次查询最大行数</b>：1000 条（超出截断，引导用户使用 Grafana Explore 高级查询）</li>

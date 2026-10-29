@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
  * <p>包含生成的测试 Token 和解码后的详细信息，用于验证 JWT 配置的正确性。
  * 该响应提供了完整的 Token 生命周期信息，方便管理员排查配置问题。
  *
- * <h2>响应内容</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>生成的 JWT Token（完整字符串）</li>
  *   <li>解码后的 Payload（包含所有 Claims）</li>
@@ -23,7 +23,7 @@ import lombok.NoArgsConstructor;
  *   <li>签发者标识</li>
  * </ul>
  *
- * <h2>使用建议</h2>
+ * <h2>使用示例</h2>
  * <p>管理员可以使用此响应：
  * <ul>
  *   <li>复制生成的 Token 到 JWT 解码工具（如 jwt.io）进行验证</li>
@@ -50,7 +50,7 @@ public class JwtTestResponse {
      * <p>完整的 JWT Token 字符串，格式为 {@code header.payload.signature}。
      * 该 Token 可用于测试和验证，但不建议在生产环境中使用。
      *
-     * <h3>Token 结构</h3>
+     * <p><strong>Token 结构</strong></p>
      * <ul>
      *   <li>Header: 包含算法类型（如 HS256）和 Token 类型（JWT）</li>
      *   <li>Payload: 包含所有 Claims（标准 Claims + 自定义 Claims）</li>
@@ -73,7 +73,7 @@ public class JwtTestResponse {
      * <p>包含 Token 中所有的 Claims（标准 Claims + 自定义 Claims）。
      * 这些数据已经过验证，确保 Token 的签名有效且未被篡改。
      *
-     * <h3>标准 Claims</h3>
+     * <p><strong>标准 Claims</strong></p>
      * <ul>
      *   <li>{@code iss}: 签发者（Issuer）</li>
      *   <li>{@code sub}: 主题（Subject）</li>
@@ -84,7 +84,7 @@ public class JwtTestResponse {
      *   <li>{@code jti}: Token ID（JWT ID）</li>
      * </ul>
      *
-     * <h3>自定义 Claims</h3>
+     * <p><strong>自定义 Claims</strong></p>
      * <p>来自请求中指定的 {@code payload} 字段。
      *
      * <p>示例：

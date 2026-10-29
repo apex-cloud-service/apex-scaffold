@@ -9,14 +9,14 @@ import reactor.core.publisher.Mono;
  * <p>定义系统 JWT 配置的持久化操作契约，由基础设施层实现（MyBatis-Plus）。
  * 支持 JWT 配置的 CRUD 操作和租户隔离查询。
  *
- * <h2>核心职责</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>JWT 配置的增删改查</li>
  *   <li>按租户隔离查询 JWT 配置</li>
  *   <li>支持单租户单配置或多配置场景</li>
  * </ul>
  *
- * <h2>租户隔离约束</h2>
+ * <h2>设计说明</h2>
  * <p>所有查询和操作必须强制校验租户 ID，确保：
  * <ul>
  *   <li>每个租户只能访问自己的 JWT 配置</li>
@@ -24,7 +24,7 @@ import reactor.core.publisher.Mono;
  *   <li>跨租户 JWT 配置隔离</li>
  * </ul>
  *
- * <h2>安全约束</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>敏感字段（secretKey、privateKey）在持久化前必须已加密</li>
  *   <li>查询结果中的敏感字段保持加密状态</li>

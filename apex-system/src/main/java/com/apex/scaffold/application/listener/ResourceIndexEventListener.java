@@ -13,13 +13,13 @@ import org.springframework.stereotype.Component;
  *
  * <p>监听业务资源变更事件，自动同步搜索索引。
  *
- * <h2>执行方式</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>异步执行（{@code @Async}），不阻塞业务流程</li>
  *   <li>失败仅记录日志，不影响业务操作</li>
  * </ul>
  *
- * <h2>触发时机</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>CREATE/UPDATE → 调用 {@link IndexSyncPort#indexResource} 创建或更新索引</li>
  *   <li>DELETE → 调用 {@link IndexSyncPort#removeIndex} 删除索引</li>

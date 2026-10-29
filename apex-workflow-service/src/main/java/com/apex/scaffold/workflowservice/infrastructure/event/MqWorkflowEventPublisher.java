@@ -20,7 +20,7 @@ import reactor.core.publisher.Mono;
  * <p>将工作流领域事件序列化为 JSON 后，通过 {@link RocketMQTemplate} 异步直发到主题
  * {@code apex-workflow-events}，实现跨服务的事件广播（迁移方案 §6.4 / 执行计划 Phase 3.4）。
  *
- * <h2>投递语义</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>消息体为事件的 JSON 序列化结果（含 eventId / createdAt / traceId / tenantId 信封字段）；</li>
  *   <li>以事件 ID 作为消息 KEYS，便于订阅方按事件幂等去重与审计检索；</li>
@@ -55,7 +55,6 @@ public class MqWorkflowEventPublisher implements WorkflowEventPublisher {
      * 发布工作流领域事件到 RocketMQ。
      *
      * @param event 工作流领域事件对象
-     * @return 空 {@link Mono}，异步发送成功后完成；发送失败则发出错误信号
      */
     @Override
     public Mono<Void> publish(AbstractDomainEvent event) {

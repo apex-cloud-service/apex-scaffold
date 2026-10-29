@@ -30,7 +30,7 @@ import reactor.core.publisher.Mono;
  * 三类业务日志的查询与统计,支撑「监控中心-业务日志」页面的统一检索与分析。
  * 支持按日志类型、时间范围、用户名、模块名等维度过滤,并提供分页查询与数量统计。</p>
  *
- * <h2>接口清单</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>GET /admin-api/v1/business-logs - 统一查询业务日志
  *       （支持 logType/时间范围/用户名/模块名过滤与分页）</li>
@@ -38,7 +38,7 @@ import reactor.core.publisher.Mono;
  *       （支持 logType/时间范围过滤）</li>
  * </ul>
  *
- * <h2>支持的日志类型</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>{@code login} - 登录日志（{@code sys_login_log}）</li>
  *   <li>{@code operation} - 操作日志（{@code sys_operation_log}）</li>

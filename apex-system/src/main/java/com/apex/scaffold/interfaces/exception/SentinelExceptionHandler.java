@@ -31,7 +31,7 @@ import reactor.core.publisher.Mono;
  * 向客户端返回符合 HTTP 语义标准的响应状态码和国际化友好错误提示。
  * 错误消息会根据客户端 Accept-Language 请求头自动切换为对应语言。
  *
- * <h2>异常处理映射</h2>
+ * <h2>设计说明</h2>
  * <table border="1">
  *   <caption>Sentinel 异常与 HTTP 状态码映射表</caption>
  *   <tr><th>Sentinel 异常类型</th><th>场景</th><th>HTTP 状态码</th><th>降级策略</th></tr>
@@ -43,14 +43,14 @@ import reactor.core.publisher.Mono;
  *   <tr><td>{@link BlockException}</td><td>其他Sentinel阻塞</td><td>503 Service Unavailable</td><td>标准错误码</td></tr>
  * </table>
  *
- * <h2>业务级降级</h2>
+ * <h2>设计说明</h2>
  * <p>对于 {@link DegradeException}（熔断降级），不再仅返回统一错误码：
  * <ul>
  *   <li><strong>读接口</strong>（GET 请求）：通过 {@link DegradeFallbackService} 尝试返回缓存快照</li>
  *   <li><strong>写接口</strong>（POST/PUT/DELETE 请求）：返回"排队中"状态，提示客户端稍后查询</li>
  * </ul>
  *
- * <h2>国际化支持</h2>
+ * <h2>职责范围</h2>
  * <p>
  * 通过 {@link MessageUtils} 从 Reactor Context 中获取由
  * {@link com.apex.scaffold.interfaces.filter.LocaleWebFilter} 写入的 Locale，

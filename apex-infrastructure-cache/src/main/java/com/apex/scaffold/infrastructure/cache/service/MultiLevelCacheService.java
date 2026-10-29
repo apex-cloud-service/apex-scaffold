@@ -36,13 +36,13 @@ import reactor.core.publisher.Mono;
  *       适用于存储需要一致性的共享数据，或 L1 未命中的兜底</li>
  * </ul>
  *
- * <h2>缓存访问流程</h2>
+ * <h2>设计说明</h2>
  * <pre>{@code * get(key) → L1(Caffeine) 命中? → 是 → 返回
  *                                → 否 → L2(Redis) 命中? → 是 → 回填 L1 → 返回
  *                                                       → 否 → 返回空 (调用方回源 DB)
  * }</pre>
  *
- * <h2>缓存失效策略</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li><strong>写入</strong>：Write-Through 模式，同步写入 L2（Redis），同时失效 L1</li>
  *   <li><strong>删除</strong>：同步删除 L2，同时失效 L1</li>
@@ -50,11 +50,11 @@ import reactor.core.publisher.Mono;
  *   <li><strong>淘汰</strong>：L1 基于 W-TinyLFU 算法自动淘汰低频条目</li>
  * </ul>
  *
- * <h2>DB 故障读降级（Enterprise License 特性，v1.3.0）</h2>
+ * <h2>职责范围</h2>
  * <p>当数据库不可用且缓存未命中时，启用读降级策略可从过期缓存中读取旧数据作为兜底，
  * 避免服务完全不可用。通过 {@code apex.cache.read-degradation.enabled=true} 启用。
  *
- * <h2>注意事项</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>L1 缓存是进程级的，不同实例间缓存数据独立，存在短暂的不一致窗口</li>
  *   <li>写操作始终优先更新 L2，确保分布式一致性，再失效 L1</li>
@@ -351,7 +351,6 @@ public class MultiLevelCacheService {
      * 避免短时间内大量请求穿透到数据库。
      *
      * @param key 缓存键
-     * @return 写入完成信号
      */
     private Mono<Void> setEmptyMarker(String key) {
         return Mono.fromCallable(() -> {
@@ -423,8 +422,6 @@ public class MultiLevelCacheService {
      *
      * <p>仅清空当前实例的 Caffeine 本地缓存，不清除 Redis（L2）中的数据。
      * 通常用于缓存刷新或数据变更后的本地缓存重置。
-     *
-     * @return 清空操作完成信号
      */
     public Mono<Void> clearLocal() {
         return localCacheService.clear();

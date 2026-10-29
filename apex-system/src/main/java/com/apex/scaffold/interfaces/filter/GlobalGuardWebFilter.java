@@ -26,7 +26,7 @@ import reactor.core.publisher.Mono;
  *
  * <p>作为安全防护的第一道防线，在请求进入业务处理前执行以下安全检测与防护：
  *
- * <h2>核心功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li><b>IP 黑名单检测</b>：基于 {@link RedissonClient} Redis 分布式存储的 IP 黑名单，
  *       被列入黑名单的 IP 将直接返回 403 拒绝访问，支持多实例部署时的黑名单同步</li>
@@ -36,13 +36,13 @@ import reactor.core.publisher.Mono;
  *
  * <p>安全响应头注入由 {@link SecurityHeaderWebFilter} 统一负责，本过滤器不重复注入。
  *
- * <h2>执行顺序</h2>
+ * <h2>设计说明</h2>
  * <p>
  * 该过滤器优先级最高（{@code @Order(-200)}），在所有安全过滤器之前执行，
  * 确保恶意请求在进入业务逻辑前即被拦截。
  * </p>
  *
- * <h2>IP 黑名单存储机制</h2>
+ * <h2>设计说明</h2>
  * <p>
  * 使用 Redis 作为分布式存储，Key 格式为 {@code blacklist:ip:<ip>}，Value 为封禁时间戳（毫秒）。
  * Redis 的 TTL 机制自动清理过期的黑名单条目，无需手动维护。外部系统可通过
@@ -50,7 +50,7 @@ import reactor.core.publisher.Mono;
  * 动态管理黑名单。
  * </p>
  *
- * <h2>线程模型</h2>
+ * <h2>线程安全性</h2>
  * <p>
  * Redisson 的同步阻塞 API 通过 {@code subscribeOn(BlockingIoSchedulers.cache())}
  * 隔离到缓存专用弹性线程池，避免阻塞 Reactor 的事件循环线程，同时不挤占 JDBC/核心业务池。
@@ -100,7 +100,6 @@ public class GlobalGuardWebFilter implements WebFilter {
      *
      * @param exchange 当前 HTTP 请求-响应交换对象
      * @param chain    WebFlux 过滤器链
-     * @return 表示过滤完成的 Mono
      */
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
@@ -266,5 +265,11 @@ public class GlobalGuardWebFilter implements WebFilter {
         }
     }
 
+    /**
+     * IP 黑名单本地缓存条目。
+     *
+     * @param blacklisted 是否命中黑名单
+     * @param expiresAtMillis 缓存失效时间（epoch 毫秒）
+     */
     private record BlacklistCacheEntry(boolean blacklisted, long expiresAtMillis) {}
 }

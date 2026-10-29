@@ -21,7 +21,7 @@ import reactor.core.publisher.Mono;
  * 适用于存储高频访问的热点数据，配合 {@link MultiLevelCacheService 多级缓存服务}
  * 作为 L1 缓存层使用。
  *
- * <h2>设计要点</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li><strong>进程级缓存</strong>：每个服务实例独立维护，数据不跨实例共享</li>
  *   <li><strong>W-TinyLFU 淘汰算法</strong>：Caffeine 核心算法，统计频率 + 衰减窗口，
@@ -30,7 +30,7 @@ import reactor.core.publisher.Mono;
  *   <li><strong>JSON 序列化</strong>：复杂对象使用 Jackson 序列化存储，确保类型安全</li>
  * </ul>
  *
- * <h2>适用场景</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>用户 Session / Token 缓存</li>
  *   <li>系统配置 / 字典数据（几乎不更新的读密集型数据）</li>
@@ -305,8 +305,6 @@ public class LocalCacheService {
      * 清空本地缓存
      *
      * <p>清除当前缓存管理器中所有缓存条目，通常在缓存刷新或数据变更时调用。
-     *
-     * @return 清空操作完成信号
      */
     public Mono<Void> clear() {
         try {

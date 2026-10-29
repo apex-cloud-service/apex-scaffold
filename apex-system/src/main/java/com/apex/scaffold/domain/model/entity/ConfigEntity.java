@@ -11,7 +11,7 @@ import lombok.ToString;
  * 参数采用键值对（{@code configKey} / {@code configValue}）模型，
  * 支持内置（系统预设，禁止删除）与用户自定义两种类型。</p>
  *
- * <h2>核心业务规则</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>参数键名全局唯一，用于代码中按键读取配置</li>
  *   <li>内置参数（{@code configType=0}）禁止删除，防止系统功能失效</li>

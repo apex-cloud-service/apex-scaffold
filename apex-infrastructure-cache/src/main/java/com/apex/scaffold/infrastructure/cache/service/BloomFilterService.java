@@ -17,14 +17,14 @@ import reactor.core.publisher.Mono;
  * 通过布隆过滤器快速判断某个键是否可能存在于数据源中，拦截一定不存在的键，
  * 避免大量无效请求穿透到数据库。
  *
- * <h2>工作原理</h2>
+ * <h2>设计说明</h2>
  * <p>布隆过滤器是一种空间高效的概率型数据结构，支持快速成员资格查询：
  * <ul>
  *   <li><b>判断存在</b>：如果布隆过滤器返回"可能存在"，则键可能在数据源中（需进一步查询确认）</li>
  *   <li><b>判断不存在</b>：如果布隆过滤器返回"一定不存在"，则键绝对不在数据源中（直接拦截）</li>
  * </ul>
  *
- * <h2>误判率</h2>
+ * <h2>设计说明</h2>
  * <p>布隆过滤器存在<b>假阳性</b>（False Positive）但不存在假阴性：
  * <ul>
  *   <li>可能将不存在的键误判为存在（假阳性），但不会将存在的键误判为不存在</li>
@@ -32,14 +32,14 @@ import reactor.core.publisher.Mono;
  *   <li>默认配置：100万条目容量 + 1% 误判率</li>
  * </ul>
  *
- * <h2>应用场景</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li><b>缓存穿透防护</b>：拦截查询不存在的用户 ID、商品 ID 等，防止恶意攻击</li>
  *   <li><b>黑名单过滤</b>：快速判断 IP、用户 ID 是否在黑名单中</li>
  *   <li><b>去重</b>：判断某个请求、事件是否已经处理过</li>
  * </ul>
  *
- * <h2>配置示例</h2>
+ * <h2>使用示例</h2>
  * <pre>
  * apex:
  *   cache:
@@ -67,7 +67,7 @@ import reactor.core.publisher.Mono;
  *     });
  * }</pre>
  *
- * <h2>注意事项</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>布隆过滤器不支持删除操作，如果需要删除，只能重建整个过滤器</li>
  *   <li>过滤器容量应根据实际数据量合理配置，容量过小会导致误判率上升</li>
@@ -99,7 +99,7 @@ public class BloomFilterService {
      *   <li><b>false</b>：该值<b>一定不存在</b>（可直接拦截，无假阴性）</li>
      * </ul>
      *
-     * <h3>容错处理</h3>
+     * <p><strong>容错处理</strong></p>
      * <p>查询失败时默认返回 {@code true}（假设存在），避免因布隆过滤器故障导致正常请求被误拦截。
      *
      * @param filterName 布隆过滤器名称，不能为 null
@@ -128,15 +128,14 @@ public class BloomFilterService {
      *
      * <p>将值添加到指定名称的布隆过滤器中。如果过滤器不存在，会根据配置自动初始化。
      *
-     * <h3>幂等性</h3>
+     * <p><strong>幂等性</strong></p>
      * <p>重复添加相同的值是安全的，不会产生副作用。
      *
-     * <h3>容错处理</h3>
+     * <p><strong>容错处理</strong></p>
      * <p>添加失败时会记录错误日志但不会抛出异常，避免影响主流程。
      *
      * @param filterName 布隆过滤器名称，不能为 null
      * @param value      待添加的值，不能为 null
-     * @return 完成信号（无返回值）
      */
     public Mono<Void> add(String filterName, String value) {
         if (filterName == null || value == null) {
@@ -162,19 +161,18 @@ public class BloomFilterService {
      * <p>批量添加操作比单个添加更高效，适用于初始化场景或大批量数据预热。
      * 如果过滤器不存在，会根据配置自动初始化。
      *
-     * <h3>使用场景</h3>
+     * <p><strong>使用场景</strong></p>
      * <ul>
      *   <li>应用启动时，将所有有效的业务 ID 批量加载到布隆过滤器</li>
      *   <li>定期同步数据库中的最新数据到布隆过滤器</li>
      * </ul>
      *
-     * <h3>容错处理</h3>
+     * <p><strong>容错处理</strong></p>
      * <p>单个值添加失败不会中断整个批量操作，失败的条目会被跳过。
      * 操作完成后会记录实际成功添加的数量。
      *
      * @param filterName 布隆过滤器名称，不能为 null
      * @param values     待添加的值集合，不能为 null
-     * @return 完成信号（无返回值）
      */
     public Mono<Void> addBatch(String filterName, Iterable<String> values) {
         if (filterName == null || values == null) {
@@ -205,7 +203,7 @@ public class BloomFilterService {
      * <p>返回布隆过滤器中已添加的元素数量估算值。
      * 由于布隆过滤器的概率性质，此数量是近似的，不是精确值。
      *
-     * <h3>注意事项</h3>
+     * <p><strong>注意事项</strong></p>
      * <ul>
      *   <li>计数值是估算的，误差随着元素数量增加而增大</li>
      *   <li>如果过滤器不存在，返回 0</li>
@@ -239,19 +237,18 @@ public class BloomFilterService {
      * <p>从 Redis 中删除指定名称的布隆过滤器及其所有数据。
      * 此操作不可逆，删除后需要重新初始化和添加数据。
      *
-     * <h3>使用场景</h3>
+     * <p><strong>使用场景</strong></p>
      * <ul>
      *   <li>数据源发生重大变更，需要重建布隆过滤器</li>
      *   <li>过滤器配置参数调整（容量或误判率），需要删除后重建</li>
      *   <li>清理不再使用的过滤器，释放 Redis 内存</li>
      * </ul>
      *
-     * <h3>注意事项</h3>
+     * <p><strong>注意事项</strong></p>
      * <p>删除后，所有依赖此过滤器的查询将失去保护，
      * 应确保在删除前已停止相关业务查询，或准备好降级策略。
      *
      * @param filterName 布隆过滤器名称，不能为 null
-     * @return 完成信号（无返回值）
      */
     public Mono<Void> delete(String filterName) {
         if (filterName == null) {

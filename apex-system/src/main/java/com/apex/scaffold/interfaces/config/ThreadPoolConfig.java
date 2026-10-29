@@ -21,14 +21,14 @@ import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
  * 所有线程池均设置 {@link Thread.UncaughtExceptionHandler}，确保未捕获异常
  * 能够被记录日志而非静默丢失。
  *
- * <h2>设计模式</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li><strong>工厂模式</strong>：通过 {@link Bean} 注解创建和管理不同类型的线程池实例</li>
  *   <li><strong>策略模式</strong>：根据任务类型（异步/IO密集/CPU密集）选择不同的线程池策略</li>
  *   <li><strong>资源隔离模式</strong>：不同类型的任务使用独立的线程池，避免相互影响</li>
  * </ul>
  *
- * <h2>优化说明（Netty/线程池/IO 性能优化方案 P2-2）</h2>
+ * <h2>设计说明</h2>
  * <p>{@code asyncTaskExecutor} 与 {@link AsyncConfig#asyncExecutor()} 原参数完全一致
  * （core=CPU×2, max=CPU×4, queue=200），在 8 核机器上合计 32-64 线程，存在冗余。
  * {@code asyncExecutor} 已缩容为最小配置（core=2, max=4, queue=50）。
@@ -100,7 +100,7 @@ public class ThreadPoolConfig {
      *
      * <p>用于处理耗时操作，如发送短信、记录日志等。
      *
-     * <h2>线程池配置</h2>
+     * <h2>线程安全性</h2>
      * <ul>
      *   <li>核心线程数：CPU核心数 * 2</li>
      *   <li>最大线程数：CPU核心数 * 4</li>
@@ -130,7 +130,7 @@ public class ThreadPoolConfig {
      *
      * <p>用于处理 IO 密集型操作，如文件读写、网络请求等。
      *
-     * <h2>线程池配置</h2>
+     * <h2>线程安全性</h2>
      * <ul>
      *   <li>核心线程数：CPU核心数 * 2</li>
      *   <li>最大线程数：CPU核心数 * 8</li>
@@ -161,7 +161,7 @@ public class ThreadPoolConfig {
      *
      * <p>用于处理 CPU 密集型操作，如复杂计算、数据转换等。
      *
-     * <h2>线程池配置</h2>
+     * <h2>线程安全性</h2>
      * <ul>
      *   <li>核心线程数：CPU核心数 - 1（最少为1）</li>
      *   <li>最大线程数：CPU核心数（最少为1）</li>

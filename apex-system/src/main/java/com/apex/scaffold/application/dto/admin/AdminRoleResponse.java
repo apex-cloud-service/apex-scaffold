@@ -7,6 +7,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 /**
  * 后台可配置角色。
  *
+ * @param id 角色ID（以字符串传输，避免前端精度丢失）
+ * @param name 角色名称
+ * @param code 角色编码
  * @author Apex Team
  * @version 1.0.0
  * @since 1.0.0

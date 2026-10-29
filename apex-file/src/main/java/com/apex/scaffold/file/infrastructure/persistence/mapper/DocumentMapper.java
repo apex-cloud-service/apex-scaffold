@@ -11,7 +11,7 @@ import org.apache.ibatis.annotations.Mapper;
  * 继承 BaseMapper 后自动获得增删改查、批量操作、分页查询等基础能力，
  * 无需手写 SQL 即可完成大部分数据库操作。
  *
- * <h2>自动能力</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>单表 CRUD：insert、updateById、deleteById、selectById、selectList 等</li>
  *   <li>条件构造器：支持 LambdaQueryWrapper、LambdaUpdateWrapper 复杂查询</li>
@@ -21,7 +21,7 @@ import org.apache.ibatis.annotations.Mapper;
  *   <li>多租户：集成租户拦截器自动注入 tenantId</li>
  * </ul>
  *
- * <h2>扩展方式</h2>
+ * <h2>设计说明</h2>
  * <p>复杂查询可在接口中定义方法，配合 {@code @Select} 注解或 XML 映射文件实现。
  *
  * @author Apex Team

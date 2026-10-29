@@ -10,7 +10,7 @@ import org.apache.ibatis.annotations.Mapper;
  * <p>基于 MyBatis-Plus 实现代码生成模板的持久化操作,管理 FreeMarker 模板内容。
  * 继承 {@link BaseMapper} 自动获得常用的增删改查方法。
  *
- * <h3>常用查询场景</h3>
+ * <p><strong>常用查询场景</strong></p>
  * <pre>{@code
  * // 查询指定类型的模板
  * LambdaQueryWrapper<GenTemplatePO> wrapper = new LambdaQueryWrapper<>();
@@ -29,7 +29,7 @@ import org.apache.ibatis.annotations.Mapper;
  * wrapper.like(GenTemplatePO::getTemplateName, keyword);
  * }</pre>
  *
- * <h3>模板类型枚举</h3>
+ * <p><strong>模板类型枚举</strong></p>
  * <ul>
  *   <li>entity - 领域实体</li>
  *   <li>po - 持久化对象</li>
@@ -43,14 +43,14 @@ import org.apache.ibatis.annotations.Mapper;
  *   <li>converter/assembler - 转换器</li>
  * </ul>
  *
- * <h3>业务规则</h3>
+ * <p><strong>业务规则</strong></p>
  * <ul>
  *   <li>内置模板({@code isBuiltin=1})应设为只读,禁止普通用户修改和删除</li>
  *   <li>租户查询时应同时返回系统内置模板({@code isBuiltin=1})和当前租户的自定义模板</li>
  *   <li>templateContent 字段为 LONGTEXT 类型,可存储大型复杂模板</li>
  * </ul>
  *
- * <h3>使用约束</h3>
+ * <p><strong>使用约束</strong></p>
  * <ul>
  *   <li>所有 Mapper 方法调用必须在 {@code BlockingIoSchedulers.jdbc()} 调度器上执行</li>
  *   <li>查询时自动过滤逻辑删除记录(MyBatis-Plus 逻辑删除插件)</li>

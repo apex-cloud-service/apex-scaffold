@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Configuration;
  * （OAuth 2.0）所需的凭据参数，与 {@link WeChatAppProperties}（微信开放平台
  * 移动应用）、{@code WeChatMiniAppProperties}（小程序）互相独立、互不影响。
  *
- * <h2>多端渠道约定</h2>
+ * <h2>设计说明</h2>
  * <p>AppID 缺省（未配置或空串）表示该渠道未开通：公众号网页授权登录入口返回
  * {@code WECHAT_CHANNEL_NOT_CONFIGURED} 明确错误码，不影响其他微信渠道。
  *

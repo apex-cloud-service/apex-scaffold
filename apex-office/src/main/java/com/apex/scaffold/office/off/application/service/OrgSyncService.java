@@ -22,7 +22,7 @@ import reactor.core.publisher.Mono;
  * <p>提供部门和员工信息的同步管理功能，支持从飞书、钉钉、企业微信等外部系统同步组织架构数据。
  * 支持部门树形结构管理、员工信息管理、同步历史记录查询等核心业务场景。
  *
- * <h2>核心功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>部门管理：创建、更新、删除部门，查询部门详情和列表</li>
  *   <li>部门树：查询根部门列表，按父级ID查询子部门</li>
@@ -32,7 +32,7 @@ import reactor.core.publisher.Mono;
  *   <li>同步历史：记录和查询每次同步操作的结果和详情</li>
  * </ul>
  *
- * <h2>同步策略</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>全量同步：从外部系统拉取全部组织架构数据，覆盖本地数据</li>
  *   <li>增量同步：仅同步变更的部门和员工信息，提高同步效率</li>
@@ -40,7 +40,7 @@ import reactor.core.publisher.Mono;
  *   <li>冲突处理：按时间戳或优先级规则处理数据冲突</li>
  * </ul>
  *
- * <h2>数据模型</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>部门：支持树形层级结构，包含部门编码、名称、路径、层级、负责人等</li>
  *   <li>员工：包含员工编码、姓名、部门、职位、联系方式、在职状态等</li>
@@ -48,7 +48,7 @@ import reactor.core.publisher.Mono;
  *   <li>外部ID映射：保留外部系统ID，支持双向同步和数据追溯</li>
  * </ul>
  *
- * <h2>技术实现</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>使用 Reactor 响应式编程模型，返回 Mono/Flux</li>
  *   <li>通过 Assembler 实现 DTO 与 Entity 之间的双向转换</li>
@@ -119,7 +119,6 @@ public class OrgSyncService {
      * 删除部门
      *
      * @param id 部门 ID
-     * @return 完成信号
      */
     public Mono<Void> deleteDepartment(Long id) {
         return departmentRepository.deleteById(id);
@@ -218,7 +217,6 @@ public class OrgSyncService {
      * 删除员工
      *
      * @param id 员工 ID
-     * @return 完成信号
      */
     public Mono<Void> deleteEmployee(Long id) {
         return employeeRepository.deleteById(id);

@@ -34,7 +34,7 @@ import reactor.core.publisher.Mono;
  * 合并、进度查询与清理重试。分片二进制内容通过请求体直接传递，元数据经查询参数或 JSON
  * 请求体提交。</p>
  *
- * <h2>接口清单</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>POST /api/v1/file/chunk/init - 初始化分片上传，登记文件元数据并返回 fileId</li>
  *   <li>POST /api/v1/file/chunk/upload - 上传单个分片（二进制请求体 + 元数据查询参数）</li>

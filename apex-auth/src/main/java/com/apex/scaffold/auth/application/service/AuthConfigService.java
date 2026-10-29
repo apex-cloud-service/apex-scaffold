@@ -38,7 +38,6 @@ public interface AuthConfigService {
      *
      * @param id 配置ID
      * @param tenantId 租户ID
-     * @return 删除操作结果
      */
     Mono<Void> deleteConfig(Long id, String tenantId);
 

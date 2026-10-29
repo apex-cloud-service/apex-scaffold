@@ -18,7 +18,7 @@ import org.springframework.stereotype.Service;
  *
  * <p>用于加密和解密应用配置中的敏感信息，如密钥、密码、API密钥等。
  *
- * <h2>使用场景</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>数据库密码加密存储</li>
  *   <li>第三方API密钥加密</li>
@@ -26,7 +26,7 @@ import org.springframework.stereotype.Service;
  *   <li>OAuth2 Client Secret加密</li>
  * </ul>
  *
- * <h2>加密算法</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>算法：AES-256-GCM（认证加密）</li>
  *   <li>密钥长度：256位</li>
@@ -34,7 +34,7 @@ import org.springframework.stereotype.Service;
  *   <li>Tag长度：128位</li>
  * </ul>
  *
- * <h2>配置值格式</h2>
+ * <h2>使用示例</h2>
  * <pre>
  * # 加密配置值格式：ENC(base64EncodedCiphertext)
  * spring:
@@ -47,7 +47,7 @@ import org.springframework.stereotype.Service;
  *     password: ${DB_PASSWORD}
  * </pre>
  *
- * <h2>密钥管理</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>开发环境：使用默认密钥（仅用于测试）</li>
  *   <li>生产环境：通过环境变量 CONFIG_ENCRYPTION_KEY 注入</li>

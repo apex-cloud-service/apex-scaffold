@@ -25,7 +25,7 @@ import reactor.core.publisher.Mono;
  * 是管理后台"角色-菜单-权限"闭环的基础支撑。菜单以父子树形结构
  * 组织，服务层负责结构校验与树组装。</p>
  *
- * <h2>核心业务规则</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>按钮类型（menuType=2）菜单必须携带权限标识 {@code perms}</li>
  *   <li>创建子菜单时父菜单必须存在，且父菜单不能是按钮类型</li>
@@ -201,7 +201,6 @@ public class MenuService {
      * 非顶级菜单要求父节点存在且不是按钮类型。</p>
      *
      * @param parentId 父菜单 ID
-     * @return 校验通过的信号
      * @throws BusinessException 父菜单不存在或为按钮类型时抛出
      */
     private Mono<Void> validateParent(Long parentId) {
@@ -223,7 +222,6 @@ public class MenuService {
      * 校验按钮类型菜单必须配置权限标识。
      *
      * @param request 菜单请求体
-     * @return 校验通过的信号
      * @throws BusinessException 按钮类型缺少权限标识时抛出
      */
     private Mono<Void> validateButtonPerms(MenuRequest request) {

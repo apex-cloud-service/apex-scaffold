@@ -11,7 +11,7 @@ import reactor.core.publisher.Mono;
  * 调用方仍需处理重复投递和发送失败。
  * 支持消息持久化、失败重试、状态管理和分布式锁控制。
  *
- * <h2>核心功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>消息追加: 将待发送消息持久化到本地数据库</li>
  *   <li>消息调度: 批量获取待投递消息</li>
@@ -20,14 +20,14 @@ import reactor.core.publisher.Mono;
  *   <li>锁释放: 自动释放超时的消息锁</li>
  * </ul>
  *
- * <h2>使用场景</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>订单创建成功后发送订单消息</li>
  *   <li>用户注册成功后发送欢迎邮件</li>
  *   <li>支付成功后发送支付通知</li>
  * </ul>
  *
- * <h2>线程与事务边界</h2>
+ * <h2>线程安全性</h2>
  * <p>默认实现将数据库操作延迟到订阅时，并切换到专用 JDBC 调度器；
  * 调用线程的同步 JDBC 事务不会因此自动传播。不要在返回 Mono 的方法上添加
  * JDBC {@code @Transactional} 来假定业务写入与 {@code append} 原子提交。
@@ -73,7 +73,6 @@ public interface MessageOutboxService {
      * 标记消息为已投递
      *
      * @param messageId 消息ID
-     * @return 更新完成信号，不表示必然匹配记录；持久化失败通过错误信号传播
      */
     Mono<Void> markAsDelivered(String messageId);
 
@@ -82,14 +81,11 @@ public interface MessageOutboxService {
      *
      * @param messageId 消息ID
      * @param error 去除敏感信息后的错误摘要
-     * @return 失败登记完成信号；不存在的消息可直接完成，持久化失败通过错误信号传播
      */
     Mono<Void> markAsFailed(String messageId, String error);
 
     /**
      * 释放过期的消息锁，默认实现仅清除锁字段，不恢复待投递状态。
-     *
-     * @return 清锁完成信号；持久化失败通过错误信号传播
      */
     Mono<Void> releaseExpiredLocks();
 }

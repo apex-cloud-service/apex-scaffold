@@ -19,7 +19,7 @@ import reactor.core.publisher.Mono;
  * <p>实现Outbox模式的核心服务,负责消息的持久化、查询、状态管理和锁控制。
  * 所有阻塞IO操作都在专用的JDBC调度器上执行,避免阻塞Reactor主线程。
  *
- * <h2>核心特性</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>阻塞IO隔离: 所有数据库操作都在BlockingIoSchedulers.jdbc()上执行</li>
  *   <li>自动字段填充: 创建时自动填充默认值</li>
@@ -27,7 +27,7 @@ import reactor.core.publisher.Mono;
  *   <li>分布式锁支持: 基于CAS的消息锁定机制</li>
  * </ul>
  *
- * <h2>重试策略</h2>
+ * <h2>设计说明</h2>
  * <p>重试延迟计算公式: delay = retry_delay_seconds * 2^(attempts - 1)
  * <ul>
  *   <li>第1次重试: 10秒后</li>
@@ -138,7 +138,6 @@ public class MessageOutboxServiceImpl implements MessageOutboxService {
      * 在 JDBC 调度器按消息标识设置已投递状态和投递时间，不清空现有锁字段。
      *
      * @param messageId 已完成投递的消息标识
-     * @return 更新调用完成信号；未匹配记录仍正常完成，数据库异常通过错误信号传播
      */
     @Override
     public Mono<Void> markAsDelivered(String messageId) {
@@ -164,7 +163,6 @@ public class MessageOutboxServiceImpl implements MessageOutboxService {
      *
      * @param messageId 投递失败的消息标识
      * @param error 待持久化的错误摘要，调用方须先去除凭据等敏感信息
-     * @return 完成信号；消息不存在时直接完成，数据库或时间计算异常通过错误信号传播
      */
     @Override
     public Mono<Void> markAsFailed(String messageId, String error) {
@@ -208,8 +206,6 @@ public class MessageOutboxServiceImpl implements MessageOutboxService {
      * <p>具体过期判断使用 Mapper 的数据库时钟按行各自的 lock_timeout_seconds 计算；
      * 该更新不把 PROCESSING 状态改回 PENDING，因而清锁本身不会使消息重新进入
      * 待投递查询结果；投递失败的重试与死信登记由 {@link #markAsFailed} 承担。
-     *
-     * @return 清锁调用完成信号，不返回行数；数据库异常通过错误信号传播
      */
     @Override
     public Mono<Void> releaseExpiredLocks() {

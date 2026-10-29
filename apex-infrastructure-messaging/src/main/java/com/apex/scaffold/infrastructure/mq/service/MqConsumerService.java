@@ -31,14 +31,14 @@ import org.springframework.stereotype.Service;
  * <p>提供消息消费的基础服务，包括分布式消息幂等性控制和处理结果封装。
  * 基于 Redisson（Redis）实现分布式幂等，适用于多实例部署环境。
  *
- * <h2>核心功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>消息幂等性控制：基于 Redis 的原子操作防止重复消费相同的消息</li>
  *   <li>消息处理：提供统一的消息处理入口</li>
  *   <li>处理结果封装：封装消息处理的结果信息</li>
  * </ul>
  *
- * <h2>设计模式</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li><strong>幂等消费者模式</strong>：通过 Redis {@code RBucket.setIfAbsent} 原子操作
  *       记录已处理消息ID，确保消息不会被重复处理</li>
@@ -46,7 +46,7 @@ import org.springframework.stereotype.Service;
  *   <li><strong>结果封装模式</strong>：通过 {@link ProcessingResult} 统一封装处理状态和数据</li>
  * </ul>
  *
- * <h2>幂等性说明</h2>
+ * <h2>职责范围</h2>
  * <p>使用 Redis TTL 和带所有权令牌的两阶段状态实现分布式幂等性：
  * <ol>
  *   <li>消息首次到达时，通过 {@code setIfAbsent} 原子操作竞争处理令牌</li>
@@ -56,7 +56,7 @@ import org.springframework.stereotype.Service;
  *   <li>Redis 在 TTL 到期后自动删除状态，防止处理实例异常导致永久占用</li>
  * </ol>
  *
- * <h2>Key 格式</h2>
+ * <h2>设计说明</h2>
  * <pre>
  *   mq:idempotent:{base64url(tenantId)}:{base64url(consumerGroup)}:{base64url(messageId)}
  *   各维度独立使用 UTF-8 Base64 URL 编码（无 padding），避免分隔符碰撞。
@@ -173,7 +173,7 @@ public class MqConsumerService {
      * <p>根据消息ID进行分布式幂等性检查，防止重复消费。
      * 使用 Redis 的原子操作确保在分布式环境下的幂等性。
      *
-     * <h3>幂等性保证</h3>
+     * <p><strong>幂等性保证</strong></p>
      * <ol>
      *   <li>通过 {@code RBucket.setIfAbsent} 原子性写入 Redis key</li>
      *   <li>写入成功：首次处理，正常执行业务逻辑，成功则保留 key，失败则删除 key</li>
@@ -307,9 +307,6 @@ public class MqConsumerService {
      * Redis 的 TTL 机制自动处理 key 过期，无需手动清理。
      */
     @PreDestroy
-    /**
-     * destroy
-     */
     public void destroy() {
         log.info("MqConsumerService 开始关闭");
         shuttingDown.set(true);

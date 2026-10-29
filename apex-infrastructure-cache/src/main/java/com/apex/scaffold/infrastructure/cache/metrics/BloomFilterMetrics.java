@@ -24,7 +24,7 @@ import org.springframework.stereotype.Component;
  *   <li><b>命名空间数量</b>：当前已初始化的命名空间总数</li>
  * </ul>
  *
- * <h2>Prometheus 指标</h2>
+ * <h2>设计说明</h2>
  * <table>
  *   <caption>导出的指标列表</caption>
  *   <tr><th>指标名</th><th>类型</th><th>说明</th></tr>
@@ -35,12 +35,12 @@ import org.springframework.stereotype.Component;
  *   <tr><td>cache_bloom_filter_namespaces</td><td>Gauge</td><td>命名空间数量</td></tr>
  * </table>
  *
- * <h2>误判率计算</h2>
+ * <h2>设计说明</h2>
  * <pre>
  * 误判率 = false_positives_total / (hits_total + pass_total)
  * </pre>
  *
- * <h2>配置说明</h2>
+ * <h2>设计说明</h2>
  * <p>通过以下配置启用：
  * <pre>
  * apex:

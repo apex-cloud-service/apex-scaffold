@@ -13,14 +13,14 @@ import lombok.NoArgsConstructor;
  * <p>用于返回数据源的详细信息，包括配置参数、运行状态和监控指标。
  * 为了安全考虑，敏感信息（如密码、完整的 URL）会进行脱敏处理。
  *
- * <h2>脱敏规则</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li><b>密码</b>: 不返回，完全隐藏</li>
  *   <li><b>URL</b>: 部分脱敏，如 jdbc:mysql://localhost:3306/***</li>
  *   <li><b>用户名</b>: 部分脱敏，如 ro***（保留前两个字符）</li>
  * </ul>
  *
- * <h2>状态说明</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li><b>ONLINE</b>: 数据源正常运行，连接池可用</li>
  *   <li><b>OFFLINE</b>: 数据源离线，连接池不可用</li>
@@ -28,14 +28,14 @@ import lombok.NoArgsConstructor;
  *   <li><b>INITIALIZING</b>: 数据源初始化中</li>
  * </ul>
  *
- * <h2>连接池指标</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li><b>poolSize</b>: 当前连接池配置的最大连接数</li>
  *   <li><b>activeConnections</b>: 当前正在使用的活跃连接数</li>
  *   <li>空闲连接数 = poolSize - activeConnections</li>
  * </ul>
  *
- * <h2>使用场景</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>数据源列表展示</li>
  *   <li>数据源详情查询</li>

@@ -11,7 +11,7 @@ import org.springframework.validation.annotation.Validated;
  * <p>用于配置 {@link InputValidationFilter} 的各项验证开关与参数，包括
  * XSS 防护、路径遍历检测、SQL 注入预检、参数长度限制等。
  *
- * <h2>配置前缀</h2>
+ * <h2>设计说明</h2>
  * <p>在 {@code application.yml} 中使用 {@code apex.security.input-validation} 前缀进行配置：
  * <pre>{@code * apex:
  *   security:

@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
  * <p>根据协议类型创建对应的 SSO 协议适配器实例。支持多种 SSO 协议的动态适配,
  * 使用工厂模式实现协议适配器的统一管理和创建。
  *
- * <h2>支持的协议类型</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>SAML - SAML 2.0 标准协议</li>
  *   <li>CAS - Central Authentication Service 协议</li>
@@ -20,7 +20,7 @@ import org.springframework.stereotype.Component;
  *   <li>OIDC - OpenID Connect 协议</li>
  * </ul>
  *
- * <h2>使用方式</h2>
+ * <h2>使用示例</h2>
  * <pre>
  * SsoProtocolAdapter adapter = factory.getAdapter("SAML");
  * Mono&lt;Map&lt;String, Object&gt;&gt; result = adapter.authenticate(config, params);

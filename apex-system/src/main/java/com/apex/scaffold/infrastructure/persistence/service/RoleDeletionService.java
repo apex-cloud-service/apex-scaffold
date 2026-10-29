@@ -29,18 +29,9 @@ public class RoleDeletionService implements RoleDeletionGateway {
     private final RolePermissionMapper rolePermissionMapper;
     private final RoleMapper roleMapper;
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    /**
-     * 删除Role
-     *
-     * @param roleId 参数
-     *
-     * @return 结果
-     */
     public boolean deleteRole(Long roleId) {
         userRoleMapper.delete(ConditionUtil.lambda(UserRolePO.class).eqIfPresent(UserRolePO::getRoleId, roleId));
         rolePermissionMapper.delete(

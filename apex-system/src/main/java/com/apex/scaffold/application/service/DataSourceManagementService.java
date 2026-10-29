@@ -31,7 +31,7 @@ import reactor.core.publisher.Mono;
  * （通过 {@link SysDatasourceRepository}），连接池运行时状态缓存在进程内，
  * 重启后按需重建。
  *
- * <h2>核心职责</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>数据源 CRUD：创建、更新、删除（逻辑删除）、分页查询</li>
  *   <li>唯一性校验：数据源名称在同一租户内唯一</li>
@@ -40,7 +40,7 @@ import reactor.core.publisher.Mono;
  *   <li>运行时监控：采集 HikariCP 连接池指标，未建池时返回 OFFLINE</li>
  * </ul>
  *
- * <h2>安全与隔离约束</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>租户隔离：所有操作限定 {@code TenantContext.currentTenantId()}，
  *       更新与删除校验记录归属租户，防止跨租户访问</li>
@@ -49,7 +49,7 @@ import reactor.core.publisher.Mono;
  *   <li>脱敏规则：URL 数据库名与用户名在响应中脱敏；密码完全隐藏</li>
  * </ul>
  *
- * <h2>指标说明</h2>
+ * <h2>设计说明</h2>
  * <p>HikariCP 的 {@link HikariPoolMXBean} 仅暴露连接数与等待线程类指标，
  * 平均耗时/创建失败数等扩展指标在接入 Micrometer 采集前为 {@code null}。
  *
@@ -251,7 +251,6 @@ public class DataSourceManagementService {
      * <p>流程：归属校验（租户）→ 逻辑删除 → 关闭并移除运行时连接池。
      *
      * @param id 数据源 ID
-     * @return 完成信号；数据源不存在时抛出 NOT_FOUND
      */
     public Mono<Void> deleteDataSource(Long id) {
         return Mono.defer(() -> {
@@ -311,7 +310,6 @@ public class DataSourceManagementService {
      * @param name 待校验的数据源名称
      * @param tenantId 租户 ID
      * @param selfId 更新场景下允许重名的记录 ID；创建场景传 {@code null}
-     * @return 完成信号；名称冲突时抛出 PARAM_ERROR
      */
     private Mono<Void> assertNameAvailable(String name, String tenantId, Long selfId) {
         return datasourceRepository.findByNameAndTenantId(name, tenantId).flatMap(existing -> {
@@ -348,7 +346,6 @@ public class DataSourceManagementService {
      * 建立失败仅记录告警（保持 OFFLINE 状态），不中断业务流程。
      *
      * @param entity 数据源实体（password 为密文）
-     * @return 完成信号（永不以错误结束）
      */
     private Mono<Void> buildPool(SysDatasource entity) {
         return encryptionService.decrypt(entity.getPassword()).flatMap(plainPassword -> Mono.fromCallable(() -> {
@@ -396,7 +393,6 @@ public class DataSourceManagementService {
      * 关闭并移除指定数据源的连接池。
      *
      * @param id 数据源 ID
-     * @return 完成信号
      */
     private Mono<Void> closePool(Long id) {
         return Mono.fromCallable(() -> {

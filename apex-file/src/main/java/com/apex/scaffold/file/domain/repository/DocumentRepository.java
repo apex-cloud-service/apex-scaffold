@@ -11,7 +11,7 @@ import reactor.core.publisher.Mono;
  * 由基础设施层（infrastructure）提供具体实现。所有方法均为响应式，
  * 基于 Project Reactor 的 Mono/Flux 返回类型。
  *
- * <h2>核心职责</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>文档实体的创建与更新（save）</li>
  *   <li>按 ID 查询文档实体（findById）</li>
@@ -20,7 +20,7 @@ import reactor.core.publisher.Mono;
  *   <li>按租户统计文档数量（count）</li>
  * </ul>
  *
- * <h2>设计原则</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>仓储接口定义在领域层，实现在基础设施层，保持领域层对基础设施的独立性</li>
  *   <li>所有操作支持多租户隔离，通过 tenantId 参数实现租户数据隔离</li>
@@ -63,7 +63,6 @@ public interface DocumentRepository {
      *
      * @param id 文档ID
      * @param tenantId 租户ID
-     * @return 空结果
      */
     Mono<Void> deleteById(Long id, String tenantId);
 

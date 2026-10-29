@@ -37,7 +37,6 @@ public class LocalWorkflowEventPublisher implements WorkflowEventPublisher {
      * <p>仅记录事件摘要，不进行投递，直接返回完成信号。</p>
      *
      * @param event 工作流领域事件对象，不能为 {@code null}
-     * @return 空 {@link Mono}，表示发布完成
      */
     @Override
     public Mono<Void> publish(AbstractDomainEvent event) {

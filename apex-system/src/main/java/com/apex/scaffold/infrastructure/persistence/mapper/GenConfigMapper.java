@@ -10,7 +10,7 @@ import org.apache.ibatis.annotations.Mapper;
  * <p>基于 MyBatis-Plus 实现生成配置的持久化操作,管理代码生成的参数配置。
  * 继承 {@link BaseMapper} 自动获得常用的增删改查方法。
  *
- * <h3>常用查询场景</h3>
+ * <p><strong>常用查询场景</strong></p>
  * <pre>{@code
  * // 查询某个数据源关联的所有配置
  * LambdaQueryWrapper<GenConfigPO> wrapper = new LambdaQueryWrapper<>();
@@ -27,20 +27,20 @@ import org.apache.ibatis.annotations.Mapper;
  * wrapper.eq(GenConfigPO::getModuleName, "user");
  * }</pre>
  *
- * <h3>关联关系</h3>
+ * <p><strong>关联关系</strong></p>
  * <ul>
  *   <li>多对一:GenConfigPO.datasourceId → GenDatasourcePO.id</li>
  *   <li>一对多:GenConfigPO.id ← GenHistoryPO.configId(生成历史记录)</li>
  * </ul>
  *
- * <h3>业务约束</h3>
+ * <p><strong>业务约束</strong></p>
  * <ul>
  *   <li>删除数据源时,应级联处理关联的生成配置(删除或禁用)</li>
  *   <li>outputPath 字段应在应用层校验,禁止包含路径遍历符号 {@code ..}</li>
  *   <li>tableNames 和 templateIds 字段为 JSON 格式,需在应用层解析</li>
  * </ul>
  *
- * <h3>使用约束</h3>
+ * <p><strong>使用约束</strong></p>
  * <ul>
  *   <li>所有 Mapper 方法调用必须在 {@code BlockingIoSchedulers.jdbc()} 调度器上执行</li>
  *   <li>查询时自动过滤逻辑删除记录(MyBatis-Plus 逻辑删除插件)</li>

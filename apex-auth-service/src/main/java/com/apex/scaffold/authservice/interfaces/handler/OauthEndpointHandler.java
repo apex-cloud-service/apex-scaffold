@@ -30,7 +30,7 @@ import reactor.core.publisher.Mono;
  * <p>实现RFC 6749定义的Authorization Endpoint以及令牌撤销（RFC 7009）、
  * 令牌内省（RFC 7662）端点，覆盖OAuth2授权码流程的发码、撤销与状态查询。
  *
- * <h2>主要功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>{@link #authorize}：面向已登录用户签发PKCE授权码，302重定向回
  *       客户端{@code redirect_uri}</li>
@@ -41,7 +41,7 @@ import reactor.core.publisher.Mono;
  *   <li>记录OAuth2授权/撤销/内省审计事件</li>
  * </ul>
  *
- * <h2>安全特性</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>所有响应强制{@code Cache-Control: no-store}，避免授权码/令牌状态
  *       被中间缓存持久化</li>
@@ -84,7 +84,7 @@ public class OauthEndpointHandler {
      *
      * <p>对应{@code GET /oauth2/authorize}端点，要求请求携带已认证的用户主体。
      *
-     * <h3>处理流程</h3>
+     * <p><strong>处理流程</strong></p>
      * <ol>
      *   <li>校验查询参数不含重复值</li>
      *   <li>从{@link ServerRequest#principal()}获取当前登录用户</li>
@@ -94,7 +94,7 @@ public class OauthEndpointHandler {
      *       与可选的{@code state}参数</li>
      * </ol>
      *
-     * <h3>安全说明</h3>
+     * <p><strong>安全说明</strong></p>
      * <ul>
      *   <li>未认证用户返回401 {@code access_denied}，不签发授权码</li>
      *   <li>重定向响应强制{@code Cache-Control: no-store}</li>

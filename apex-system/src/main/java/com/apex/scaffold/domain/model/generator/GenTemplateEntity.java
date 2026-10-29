@@ -11,7 +11,7 @@ import lombok.ToString;
  * <p>定义代码生成的模板内容和模板元数据。模板使用 FreeMarker 语法，
  * 通过变量替换生成目标代码文件（Entity、Mapper、Service、Controller 等）。
  *
- * <h2>核心职责</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>存储模板内容：FreeMarker 模板代码</li>
  *   <li>标识模板类型：entity、mapper、service、controller、xml 等</li>
@@ -19,7 +19,7 @@ import lombok.ToString;
  *   <li>支持内置和自定义模板：内置模板由系统提供，自定义模板由用户创建</li>
  * </ul>
  *
- * <h2>模板类型说明</h2>
+ * <h2>设计说明</h2>
  * <p>常见模板类型及其用途：
  * <ul>
  *   <li><strong>entity</strong>：生成领域实体类（Entity），对应数据库表</li>
@@ -34,7 +34,7 @@ import lombok.ToString;
  *   <li><strong>converter</strong>：生成对象转换器（Converter）</li>
  * </ul>
  *
- * <h2>模板变量</h2>
+ * <h2>设计说明</h2>
  * <p>模板中可使用的常见变量（由代码生成器注入）：
  * <ul>
  *   <li><code>${packageName}</code>：包名</li>
@@ -48,7 +48,7 @@ import lombok.ToString;
  *   <li><code>${datetime}</code>：生成时间</li>
  * </ul>
  *
- * <h2>内置模板与自定义模板</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li><strong>内置模板（isBuiltin=1）</strong>：系统预置的标准模板，不可修改和删除，
  *       升级时可能被覆盖，适用于标准化代码生成</li>
@@ -56,7 +56,7 @@ import lombok.ToString;
  *       用于定制化代码生成场景</li>
  * </ul>
  *
- * <h2>生命周期</h2>
+ * <h2>设计说明</h2>
  * <ol>
  *   <li>创建：管理员或用户创建模板，编写 FreeMarker 内容</li>
  *   <li>使用：在生成配置中引用模板ID，执行代码生成</li>
@@ -64,7 +64,7 @@ import lombok.ToString;
  *   <li>删除：逻辑删除（deleted=1），历史生成记录中仍保留引用</li>
  * </ol>
  *
- * <h2>关联关系</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>多对多：多个生成配置（{@code GenConfigEntity}）可使用同一个模板</li>
  * </ul>

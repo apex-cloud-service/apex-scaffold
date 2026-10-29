@@ -20,13 +20,13 @@ import reactor.core.publisher.Mono;
  * <p>在 REQUEST_FILE appender 中输出每个业务请求的结构化详情，
  * 涵盖请求头、查询参数、响应体大小和异常堆栈，方便联调与排障。</p>
  *
- * <h2>MDC 上下文</h2>
+ * <h2>设计说明</h2>
  * <p>在请求处理开始时将 {@code traceId}（Micrometer Tracing 注入的链路 ID）与
  * {@code requestId}（{@code ApiGatewayFilter} 生成的请求 ID）写入 MDC，使控制台与全部
  * 文件 Appender 的 pattern 统一携带链路标识；响应提交时在 {@code beforeCommit}
  * 中写入 method/uri/status/duration/clientIp/userId，记录后恢复原 MDC，避免上下文残留。</p>
  *
- * <h2>记录内容</h2>
+ * <h2>职责范围</h2>
  * <table>
  *   <tr><th>类别</th><th>字段</th><th>示例</th></tr>
  *   <tr><td rowspan="4">请求头</td><td>User-Agent</td><td>Mozilla/5.0 ...</td></tr>
@@ -62,7 +62,6 @@ public class LoggingFilter implements WebFilter {
      *
      * @param exchange 当前请求-响应交换对象
      * @param chain    过滤器链
-     * @return 过滤链执行结果
      */
     @Override
     @SuppressWarnings("PMD.MethodTooLongRule")

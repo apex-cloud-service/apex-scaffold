@@ -10,7 +10,7 @@ import reactor.core.publisher.Mono;
  * <p>定义统一的认证协议规范，所有认证协议适配器必须实现此接口。
  * 支持JWT、OAuth2、SSO、LDAP等多种认证协议的插件化扩展。
  *
- * <h2>核心功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>用户身份认证</li>
  *   <li>Token验证</li>
@@ -75,7 +75,6 @@ public interface AuthenticationProtocol {
      * <p>撤销Token，清理会话信息
      *
      * @param token Token字符串
-     * @return 登出结果的Mono
      */
     Mono<Void> logout(String token);
 }

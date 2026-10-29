@@ -31,7 +31,6 @@ public class DefaultAuditLogService implements AuditLogService {
      * @param resource 被操作资源标识
      * @param result 操作结果描述
      * @param details 已脱敏的附加详情，可为 {@code null}
-     * @return 日志调用完成时结束的信号，每次订阅均重新记录
      */
     @Override
     public Mono<Void> log(
@@ -63,7 +62,6 @@ public class DefaultAuditLogService implements AuditLogService {
      * @param ip 事件来源地址
      * @param success 认证是否成功
      * @param reason 已脱敏的结果原因
-     * @return 日志调用完成信号，不代表审计数据已持久化
      */
     @Override
     public Mono<Void> logAuthEvent(
@@ -89,7 +87,6 @@ public class DefaultAuditLogService implements AuditLogService {
      * @param resource 被检查的资源描述，传入日志调用但当前模板未为其配置占位符
      * @param permission 权限编码
      * @param granted 权限检查是否通过
-     * @return 当前订阅线程上的日志调用完成信号，不代表持久化完成
      */
     @Override
     public Mono<Void> logPermissionCheck(

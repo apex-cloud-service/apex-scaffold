@@ -29,7 +29,7 @@ import reactor.core.publisher.Mono;
  * <p>基于 {@link AntiReplay} 注解实现请求重放防护，防止同一请求被重复提交。
  * 通过校验请求头中的时间戳（X-Timestamp）和随机数（X-Nonce）来识别重放请求。
  *
- * <h2>工作原理</h2>
+ * <h2>设计说明</h2>
  * <ol>
  *   <li>从目标方法参数中提取请求上下文（函数式 {@link ServerRequest} 或注解式 {@link ServerWebExchange}），
  *       获取请求头</li>
@@ -38,17 +38,17 @@ import reactor.core.publisher.Mono;
  *   <li>任一校验失败则抛出 {@link BusinessException}，拒绝请求执行</li>
  * </ol>
  *
- * <h2>函数式端点适配</h2>
+ * <h2>线程安全性</h2>
  * <p>项目 WebFlux 纯函数式端点（RouterFunction）的 Handler 方法参数形态为 {@link ServerRequest}，
  * 而非 {@link ServerWebExchange}。本切面通过 {@link AspectRequestUtil#resolveHttpHeaders(Object[])}
  * 兼容两种形态，避免函数式端点上标注 {@code @AntiReplay} 被静默跳过。</p>
  *
- * <h2>防重放键命名规范</h2>
+ * <h2>设计说明</h2>
  * <pre>
  *   replay:{nonce}
  * </pre>
  *
- * <h2>响应式混合处理</h2>
+ * <h2>线程安全性</h2>
  * <p>
  * 当需要 Nonce 校验（走 Redis 响应式路径）时，返回类型为 {@link Mono}；
  * 当仅需时间戳校验时，返回 {@link ProceedingJoinPoint#proceed()} 的原始返回值。

@@ -28,7 +28,7 @@ import reactor.core.publisher.Mono;
  * <p>微服务迁移 Phase 2.1 的核心组件：将认证中心 Token 签名算法由对称的
  * HS256（共享密钥）升级为非对称的 RS256（私钥签名、公钥验证），实现：
  *
- * <h2>升级动机</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li><b>职责分离</b>：私钥仅存于认证中心用于签发；其它服务仅持公钥验签，
  *       无需再分发共享密钥，任一验证方泄露都不影响签发安全。</li>
@@ -38,7 +38,7 @@ import reactor.core.publisher.Mono;
  *       密钥轮换对调用方透明。</li>
  * </ul>
  *
- * <h2>与密钥轮换的关系</h2>
+ * <h2>设计说明</h2>
  * <p>本服务不自行管理密钥生命周期，而是复用 {@link JwtKeyRotationService}
  * （Redis-RSA 实现）完成密钥的生成、轮换与宽限期管理，仅负责：
  * <ul>

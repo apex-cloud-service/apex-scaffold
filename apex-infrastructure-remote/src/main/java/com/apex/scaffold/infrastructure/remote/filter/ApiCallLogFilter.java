@@ -27,14 +27,14 @@ import reactor.core.publisher.Mono;
  * 发起调用时自动收集请求元数据（URL、方法、请求头）和响应元数据（状态码、耗时），
  * 通过 {@link ApiCallLogService} 异步写入数据库。</p>
  *
- * <h2>工作原理</h2>
+ * <h2>设计说明</h2>
  * <ol>
  *   <li><b>请求阶段</b> — 在发出请求前记录请求方法、URL、请求头</li>
  *   <li><b>响应成功</b> — 记录 HTTP 状态码、响应头、执行耗时</li>
  *   <li><b>响应失败</b> — 记录异常类型、错误消息、执行耗时</li>
  * </ol>
  *
- * <h2>安全设计</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li><b>按需启用</b> — 仅当调用方通过 {@link #ATTRIBUTE_SERVICE_NAME} 属性传入
  *       serviceName 时才记录，不传则不记录</li>
@@ -44,7 +44,7 @@ import reactor.core.publisher.Mono;
  *   <li><b>不读取响应体</b> — 避免消耗响应流导致业务方获取不到数据</li>
  * </ul>
  *
- * <h2>使用方式</h2>
+ * <h2>使用示例</h2>
  * <pre>{@code * webClient.get()
  *     .uri("https://api.example.com/users")
  *     .attribute(ApiCallLogFilter.ATTRIBUTE_SERVICE_NAME, "wechat")

@@ -43,7 +43,6 @@ public interface OAuth2RegisteredClientRepository {
      * 删除客户端
      *
      * @param id 主键ID
-     * @return 空的Mono，表示删除完成
      */
     Mono<Void> deleteById(String id);
 

@@ -32,7 +32,7 @@ import reactor.core.publisher.Mono;
  * （该列保留开放平台 App 渠道主身份），渠道身份统一登记在
  * {@code sys_user_social}（渠道=WECHAT_MP）。
  *
- * <h2>账户归一（复用四步模型）</h2>
+ * <h2>设计说明</h2>
  * <ol>
  *   <li>按 {@code (WECHAT_MP, openid)} 查社交绑定 → 命中则登录该账户</li>
  *   <li>未命中且有 UnionID → 按 {@code union_id} 查绑定 → 命中则登录并补当前渠道绑定行
@@ -41,12 +41,12 @@ import reactor.core.publisher.Mono;
  *   <li>均未命中：签发 {@code WECHAT_BIND} 票据，引导短信验证绑定手机号后完成注册/登录</li>
  * </ol>
  *
- * <h2>CSRF 防护</h2>
+ * <h2>设计说明</h2>
  * <p>登录请求必须携带 {@code state}（由
  * {@code GET /api/v1/auth/wechat/mp/authorize} 签发，Redis 登记 5 分钟），
  * 服务端原子校验并消费（一次性），不匹配或已消费拒绝登录。</p>
  *
- * <h2>渠道配置</h2>
+ * <h2>设计说明</h2>
  * <p>依赖 {@code wechat.mp} 配置；凭据缺失时网关透传
  * {@code WECHAT_CHANNEL_NOT_CONFIGURED} 明确错误码，不影响其他登录方式。
  *

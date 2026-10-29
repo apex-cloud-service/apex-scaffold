@@ -89,6 +89,19 @@ public class OAuth2AuthorizationRepository {
                 .then();
     }
 
+    /**
+     * 按令牌/授权码哈希查询授权记录（租户内）。
+     *
+     * <p>{@code column} 只允许 {@code access_token_hash}、{@code refresh_token_hash}、
+     * {@code authorization_code_hash} 三者之一：列名直接拼入 SQL，必须在此白名单校验，
+     * 禁止由调用方传入任意列名。
+     *
+     * @param tenant 租户标识
+     * @param column 哈希列名，须在允许集合内
+     * @param hash 令牌或授权码的哈希值
+     * @return 授权记录行；未命中时为空 {@link Mono}
+     * @throws IllegalArgumentException {@code column} 不在允许集合内时发出错误信号
+     */
     public Mono<Map<String, Object>> findByHash(String tenant, String column, String hash) {
         if (!Set.of(ACCESS_TOKEN_HASH, REFRESH_TOKEN_HASH, AUTHORIZATION_CODE_HASH)
                 .contains(column)) {

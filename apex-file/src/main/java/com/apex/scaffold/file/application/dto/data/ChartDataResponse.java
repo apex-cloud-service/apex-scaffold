@@ -47,6 +47,9 @@ public class ChartDataResponse {
     @Schema(description = "数据系列")
     private List<ChartSeries> series;
 
+    /**
+     * 图表数据系列：同名同类型的点集合，供前端渲染折线/柱状等图形。
+     */
     @Data
     @Builder
     @NoArgsConstructor

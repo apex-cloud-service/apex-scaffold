@@ -9,7 +9,7 @@ import reactor.core.publisher.Mono;
  * <p>定义积分账户（CreditAccount）的持久化操作规范，
  * 由基础设施层的 {@code CreditAccountRepositoryImpl} 提供具体实现。
  *
- * <h2>并发控制</h2>
+ * <h2>线程安全性</h2>
  * <p>支持乐观锁机制，通过version字段实现CAS操作，防止并发更新冲突。</p>
  *
  * @author Apex Team

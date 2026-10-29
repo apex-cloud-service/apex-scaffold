@@ -101,6 +101,9 @@ public class AuthCenterPermissionClient implements UnifiedAuthorizationGateway {
         return code != null && !code.isBlank();
     }
 
+    /**
+     * 对授权快照中的集合做防御性拷贝，避免调用方修改上游返回的不可变集合。
+     */
     private static final class ListCopy {
         static java.util.List<String> permissions(Authorization data) {
             return java.util.List.copyOf(data.permissions());

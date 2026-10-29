@@ -195,7 +195,12 @@ public class MaskingHandler {
         return ServerResponse.status(status).bodyValue(Result.error(code));
     }
 
-    /** 批量脱敏数据的文档模型。 */
+    /**
+     * 批量脱敏数据的文档模型。
+     *
+     * @param version 使用的规则版本
+     * @param documents 脱敏后的 JSON 文档，保留原文档结构
+     */
     @Schema(name = "MaskingBatchData")
     public record MaskingBatchData(
             @Schema(description = "使用的规则版本") String version,

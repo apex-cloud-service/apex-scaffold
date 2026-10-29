@@ -6,7 +6,7 @@ package com.apex.scaffold.common.util.ratelimit.algorithm;
  * <p>统一抽象令牌桶、漏桶、滑动窗口三种算法的调用接口，
  * 使上层代码可透明切换限流算法实现。
  *
- * <h2>设计模式</h2>
+ * <h2>设计说明</h2>
  * <p>策略模式：上层依赖此接口而非具体实现，通过
  * {@link RateLimitAlgorithmFactory} 注入不同算法实例。</p>
  *

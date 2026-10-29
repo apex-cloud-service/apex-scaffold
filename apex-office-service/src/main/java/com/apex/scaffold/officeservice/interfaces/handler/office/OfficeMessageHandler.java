@@ -308,15 +308,19 @@ public class OfficeMessageHandler {
                 });
     }
 
+    /** OfficeSendMessageResult SendMessage 统一响应包装。 */
     @Schema(name = "OfficeSendMessageResult")
     public static class OfficeSendMessageResult extends Result<SendMessageResponse> {}
 
+    /** OfficeMessageStatusResult MessageStatus 统一响应包装。 */
     @Schema(name = "OfficeMessageStatusResult")
     public static class OfficeMessageStatusResult extends Result<MessageStatusResponse> {}
 
+    /** OfficeMessageBooleanResult 布尔结果统一响应包装。 */
     @Schema(name = "OfficeMessageBooleanResult")
     public static class OfficeMessageBooleanResult extends Result<Boolean> {}
 
+    /** OfficeMessageErrorResult 无数据统一响应包装。 */
     @Schema(name = "OfficeMessageErrorResult")
     public static class OfficeMessageErrorResult extends Result<Void> {}
 

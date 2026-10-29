@@ -10,7 +10,7 @@ import reactor.core.publisher.Mono;
  * <p>本接口定义系统管理数据（用户、角色、菜单、部门、字典、配置）的全文检索契约，
  * 隔离搜索引擎实现细节，Domain 层与 Application 层仅依赖本接口。
  *
- * <h3>设计理念（Hexagonal Architecture / Ports & Adapters）</h3>
+ * <p><strong>设计理念（Hexagonal Architecture / Ports & Adapters）</strong></p>
  * <ul>
  *   <li><b>接口归属</b>：本接口属于 Domain 层，由 Infrastructure 层的适配器实现</li>
  *   <li><b>依赖方向</b>：Application 层 → Domain 层接口 ← Infrastructure 层适配器</li>
@@ -19,7 +19,7 @@ import reactor.core.publisher.Mono;
  *   <li><b>响应式设计</b>：返回 {@link Mono}，适配项目 WebFlux 响应式技术栈</li>
  * </ul>
  *
- * <h3>核心职责</h3>
+ * <p><strong>核心职责</strong></p>
  * <ol>
  *   <li><b>混合搜索</b>：跨资源类型（user/role/menu 等）统一检索，返回混合分页结果</li>
  *   <li><b>权限过滤</b>：基于租户ID和用户ID过滤搜索结果，确保数据安全</li>
@@ -27,7 +27,7 @@ import reactor.core.publisher.Mono;
  *   <li><b>相关性排序</b>：按匹配度评分排序，最相关结果排在前面</li>
  * </ol>
  *
- * <h3>索引数据源</h3>
+ * <p><strong>索引数据源</strong></p>
  * <table border="1">
  *   <tr>
  *     <th>资源类型</th>
@@ -73,7 +73,7 @@ import reactor.core.publisher.Mono;
  *   </tr>
  * </table>
  *
- * <h3>使用示例</h3>
+ * <p><strong>使用示例</strong></p>
  * <pre>{@code
  * // 在 Application Service 中通过构造器注入本接口
  * @Service
@@ -96,7 +96,7 @@ import reactor.core.publisher.Mono;
  * }
  * }</pre>
  *
- * <h3>实现注意事项</h3>
+ * <p><strong>实现注意事项</strong></p>
  * <ul>
  *   <li><b>异步非阻塞</b>：Infrastructure 层适配器应使用 {@code Mono.fromCallable().subscribeOn(Schedulers.boundedElastic())}
  *       封装阻塞 SDK 调用，避免阻塞 Reactor 线程</li>
@@ -118,7 +118,7 @@ public interface SearchRepository {
      * <p>跨资源类型（用户、角色、菜单、部门、字典、配置）统一检索，返回混合分页结果。
      * 结果按相关性评分排序，匹配关键词的片段以 HTML {@code <em>} 标签高亮。
      *
-     * <h4>查询逻辑</h4>
+     * <p><strong>查询逻辑</strong></p>
      * <ol>
      *   <li>关键词匹配：在 title、subtitle、description 字段中全文检索</li>
      *   <li>资源类型过滤：{@code resourceTypes} 为 null 时搜索所有类型</li>
@@ -128,7 +128,7 @@ public interface SearchRepository {
      *   <li>相关性排序：按匹配度评分降序，评分相同时按更新时间降序</li>
      * </ol>
      *
-     * <h4>高亮规则</h4>
+     * <p><strong>高亮规则</strong></p>
      * <p>匹配关键词在 {@code highlightSnippet} 字段中以 {@code <em>关键词</em>} 形式返回。
      * 前端直接 {@code v-html} 渲染即可高亮显示。示例：
      * <pre>
@@ -136,21 +136,21 @@ public interface SearchRepository {
      * highlightSnippet: "负责<em>系统</em>管理和配置的角色"
      * </pre>
      *
-     * <h4>分页逻辑</h4>
+     * <p><strong>分页逻辑</strong></p>
      * <ul>
      *   <li>{@code pageNum} 从 1 开始，与前端 Element UI Pagination 一致</li>
      *   <li>{@code pageSize} 建议范围：10-50，过大影响前端渲染性能</li>
      *   <li>返回 {@link PageResponse} 包含 {@code total}（总数）、{@code pageNum}、{@code pageSize}、{@code list}（结果列表）</li>
      * </ul>
      *
-     * <h4>性能考量</h4>
+     * <p><strong>性能考量</strong></p>
      * <ul>
      *   <li><b>响应时间目标</b>：P95 < 200ms（单次查询）</li>
      *   <li><b>结果数量限制</b>：单页最多返回 100 条（前端限制，后端兜底）</li>
      *   <li><b>超时处理</b>：搜索引擎查询超时（默认 5 秒）时返回空结果，记录 WARN 日志</li>
      * </ul>
      *
-     * <h4>错误处理</h4>
+     * <p><strong>错误处理</strong></p>
      * <ul>
      *   <li><b>搜索引擎不可用</b>：返回空结果 {@code PageResponse.empty()}，记录 ERROR 日志</li>
      *   <li><b>网络超时</b>：返回空结果，记录 WARN 日志</li>

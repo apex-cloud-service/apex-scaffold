@@ -16,7 +16,7 @@ import reactor.core.publisher.Mono;
  * {@code GET /internal/v1/users/{accountId}}（迁移方案 §6.2）查询；该内部 API 与
  * {@code SystemFeignClient} 桥接在 Phase 6 才落地，且本服务不持有用户表。</p>
  *
- * <h2>降级语义（迁移方案 §6.3）</h2>
+ * <h2>设计说明</h2>
  * <p>按 §6.3 降级策略矩阵，system 用户档案依赖的语义为"快速失败"。
  * 在本降级实现中：</p>
  * <ul>

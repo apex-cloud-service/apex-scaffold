@@ -31,7 +31,7 @@ import reactor.core.publisher.Mono;
  * 回溯 API，所有端点要求 {@code system:job:*} 权限。任务通过动态调度器
  * 在应用内执行，支持 Cron 表达式驱动的周期调度。</p>
  *
- * <h2>接口清单</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>GET /admin-api/v1/jobs - 查询任务列表</li>
  *   <li>GET /admin-api/v1/jobs/{id} - 查询任务详情</li>

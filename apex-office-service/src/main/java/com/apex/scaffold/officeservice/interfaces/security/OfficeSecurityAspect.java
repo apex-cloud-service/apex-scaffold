@@ -116,7 +116,6 @@ public class OfficeSecurityAspect {
      *
      * @param user 已通过身份校验的认证主体
      * @param required 方法权限注解，为 null 时无需查询授权中心
-     * @return 无注解或匹配通过时完成；权限不足、声明为空或快照查询失败时发出访问拒绝异常
      */
     private Mono<Void> authorize(AuthenticatedUser user, RequirePermission required) {
         if (required == null) {
@@ -164,7 +163,6 @@ public class OfficeSecurityAspect {
      * @param args 目标方法实参，仅提取 ServerRequest 的 HTTP 方法
      * @param response 目标响应对象，错误路径为 null
      * @param error 调用链错误，响应生成路径为 null
-     * @return 审计完成信号；审计实现失败时传播错误，不转换为成功
      */
     private Mono<Void> record(
             AuthenticatedUser user,

@@ -26,7 +26,7 @@ import reactor.core.publisher.Mono;
  * 查询、更新、删除与密钥重置，支撑 OAuth2 授权服务器的客户端注册与管理。
  * 客户端密钥（clientSecret）采用 BCrypt 加密存储，密钥明文仅在创建与重置时返回一次。</p>
  *
- * <h2>接口清单</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>POST /oauth2/clients - 创建 OAuth2 客户端</li>
  *   <li>GET /oauth2/clients - 分页查询客户端列表</li>

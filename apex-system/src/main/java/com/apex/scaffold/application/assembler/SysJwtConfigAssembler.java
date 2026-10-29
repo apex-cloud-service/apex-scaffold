@@ -13,13 +13,13 @@ import org.mapstruct.ReportingPolicy;
  * <p>负责 JWT 配置领域实体与应用层 DTO 之间的双向转换，使用 MapStruct 自动生成转换代码。
  * 支持请求对象到实体的转换、实体到响应 DTO 的转换。
  *
- * <h2>核心功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>Request → Entity 转换：将请求对象转换为领域实体</li>
  *   <li>Entity → DTO 转换：将领域实体转换为应用层 DTO，密钥字段自动掩码为 "******"</li>
  * </ul>
  *
- * <h2>特殊处理规则</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li><strong>密钥掩码</strong>：Entity → DTO 时，secretKey/privateKey 字段固定返回 "******"，不暴露真实密钥</li>
  *   <li><strong>字段映射</strong>：secret → secretKey，accessTokenExpiration → accessTokenTtl，refreshTokenExpiration → refreshTokenTtl</li>

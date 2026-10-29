@@ -20,7 +20,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>基于 Jackson 实现统一的 JSON 序列化与反序列化能力，所有方法对入参进行非空校验，
  * 异常通过 {@link BusinessException} 统一包装，便于上层捕获处理。
  *
- * <h3>设计说明</h3>
+ * <p><strong>设计说明</strong></p>
  * <ul>
  *   <li>默认 <b>不启用</b> 全局 default typing，保证序列化产物为标准 JSON（无 {@code ["type", value]} 包装），
  *       避免对前端协议、跨语言交互、缓存可读性造成破坏；</li>
@@ -31,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>序列化空 Bean 不抛异常，便于处理可选字段场景。</li>
  * </ul>
  *
- * <h3>线程安全</h3>
+ * <p><strong>线程安全</strong></p>
  * <p>{@link ObjectMapper} 在初始化后即为线程安全，本工具类以静态方式对外提供，
  * 可在多线程环境中共享使用；不允许在运行期修改其配置。
  *
@@ -165,7 +165,7 @@ public final class JsonUtil {
      * <p>调用方通过 {@code allowedSubtypes} 显式声明允许实例化的子类型，
      * 用于替代已废弃的全局 default typing 机制，避免多态注入攻击（如 CVE-2019-14540）。
      *
-     * <h3>使用示例</h3>
+     * <p><strong>使用示例</strong></p>
      * <pre>{@code
      *   Map<String, Class<? extends Animal>> allowed = new HashMap<>();
      *   allowed.put("dog", Dog.class);

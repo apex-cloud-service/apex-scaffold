@@ -21,7 +21,6 @@ public interface AccessLogRepository {
      * 持久化一条访问日志.
      *
      * @param record 已脱敏的访问日志记录
-     * @return 写入完成信号（不产生元素）
      */
     Mono<Void> save(AccessLogRecord record);
 }

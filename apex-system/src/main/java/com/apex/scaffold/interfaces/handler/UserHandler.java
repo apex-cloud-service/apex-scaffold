@@ -39,7 +39,7 @@ import reactor.core.publisher.Mono;
  * 可用的用户身份，并集成操作日志记录
  * （{@link com.apex.scaffold.common.annotation.OperationLog}）。</p>
  *
- * <h2>核心功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>获取当前登录用户信息</li>
  *   <li>根据用户 ID 查询用户信息</li>
@@ -47,7 +47,7 @@ import reactor.core.publisher.Mono;
  *   <li>发送账号注销验证码并注销当前账号</li>
  * </ul>
  *
- * <h2>接口清单</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>GET /api/v1/user/info - 获取当前用户信息</li>
  *   <li>GET /api/v1/user/{userId} - 根据 ID 获取用户信息</li>
@@ -182,7 +182,7 @@ public class UserHandler extends BaseHandler {
      * 统一进行参数校验，执行分页查询并返回用户列表数据。
      * 需要 {@code user:list} 权限。
      *
-     * <h3>请求参数</h3>
+     * <p><strong>请求参数</strong></p>
      * <ul>
      *   <li>{@code pageNum} - 页码，从 1 开始</li>
      *   <li>{@code pageSize} - 每页记录数</li>

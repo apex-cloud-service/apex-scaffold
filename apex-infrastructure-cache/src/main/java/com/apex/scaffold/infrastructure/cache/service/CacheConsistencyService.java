@@ -25,7 +25,7 @@ import reactor.core.publisher.Mono;
  * <p>统一管理多级缓存（L1 Caffeine + L2 Redis）的同步更新，确保数据一致性。
  * 提供缓存写入、删除、批量操作等功能，自动处理两级缓存的同步。
  *
- * <h2>设计目标</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li><strong>一致性保障</strong>：写入/删除操作同时更新L1和L2缓存，避免脏数据</li>
  *   <li><strong>原子性操作</strong>：确保两级缓存操作的原子性，避免部分更新</li>
@@ -33,14 +33,14 @@ import reactor.core.publisher.Mono;
  *   <li><strong>统一接口</strong>：提供简洁的API，隐藏多级缓存的复杂性</li>
  * </ul>
  *
- * <h2>缓存策略</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li><strong>写入策略</strong>：先写L2（Redis），再失效L1（Caffeine）</li>
  *   <li><strong>删除策略</strong>：同时删除L2和L1</li>
  *   <li><strong>读取策略</strong>：先读L1，未命中则读L2并回填L1</li>
  * </ul>
  *
- * <h2>使用场景</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>用户信息更新后同步失效缓存</li>
  *   <li>积分账户变更后的缓存刷新</li>
@@ -437,7 +437,6 @@ public class CacheConsistencyService implements CacheConsistencyPort {
      *
      * @param cacheName 缓存名称/前缀
      * @param key       缓存键
-     * @return 写入完成信号
      */
     private Mono<Void> setEmptyMarker(String cacheName, String key) {
         String fullKey = buildFullKey(cacheName, key);
@@ -460,7 +459,6 @@ public class CacheConsistencyService implements CacheConsistencyPort {
      * @param key       缓存键
      * @param value     缓存值
      * @param ttl       过期时间
-     * @return 写入完成信号
      */
     private <T> Mono<Void> putL1Cache(String cacheName, String key, T value, Duration ttl) {
         return Mono.defer(() -> {
@@ -478,7 +476,6 @@ public class CacheConsistencyService implements CacheConsistencyPort {
      *
      * @param cacheName 缓存名称
      * @param key       缓存键
-     * @return 失效完成信号
      */
     private Mono<Void> evictL1Cache(String cacheName, String key) {
         return Mono.defer(() -> {
@@ -508,7 +505,7 @@ public class CacheConsistencyService implements CacheConsistencyPort {
      * <p>在原始 TTL 的基础上增加 ±10% 的随机浮动，使不同 key 的过期时间分散在不同时刻，
      * 避免大量缓存同时过期导致的缓存雪崩问题。
      *
-     * <h3>算法</h3>
+     * <p><strong>算法</strong></p>
      * <pre>{@code * jittered = original * (1 + jitterFactor * (random - 0.5) * 2)
      * // 即 original * [0.9, 1.1] 范围内的随机值（jitterFactor=0.1 时）
      * }</pre>

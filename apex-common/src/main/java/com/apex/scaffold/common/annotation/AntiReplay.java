@@ -13,7 +13,7 @@ import java.lang.annotation.Target;
  * 通过校验请求的时间戳和随机数（Nonce），确保每个请求的唯一性和时效性，
  * 防止攻击者截获合法请求后再次发送以欺骗服务端。
  *
- * <h2>防重放原理</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li><b>时间戳校验</b>：检查请求时间戳与服务器当前时间的偏差，
  *       若超过 {@link #maxTimeDiff} 秒则判定为无效请求</li>
@@ -21,7 +21,7 @@ import java.lang.annotation.Target;
  *       已被使用的 Nonce 直接拒绝，确保请求的幂等性</li>
  * </ul>
  *
- * <h2>使用场景</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>支付回调接口（防止重复扣款）</li>
  *   <li>用户关键信息修改接口（防止重复提交）</li>
@@ -29,14 +29,14 @@ import java.lang.annotation.Target;
  *   <li>所有涉及资金、权益变动的关键接口</li>
  * </ul>
  *
- * <h2>请求头要求</h2>
+ * <h2>设计说明</h2>
  * <p>客户端需要在请求头中携带以下信息：
  * <pre>{@code * X-Timestamp: 1717200000        // Unix 时间戳（秒级）
  * X-Nonce: 550e8400-e29b-41d4-a716-446655440000  // UUID 或唯一随机字符串
  * X-Sign: 签名值                 // 可选，请求签名
  * }</pre>
  *
- * <h2>注意事项</h2>
+ * <h2>设计说明</h2>
  * <p>开启随机数校验（{@link #requireNonce}）时，需要在服务端维护 Nonce 的缓存
  * 以判断是否已使用，推荐使用 Redis 并设置与 {@link #maxTimeDiff} 一致的过期时间。
  *

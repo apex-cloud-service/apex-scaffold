@@ -34,7 +34,21 @@ public record MonitorSystemResponse(
         @Schema(description = "网络使用列表") List<NetworkUsage> network,
         @Schema(description = "阻塞 IO 线程池快照") Map<String, BlockingIoPool> blockingIo) {
 
-    /** JVM 内存/GC/类加载指标。 */
+    /**
+     * JVM 内存/GC/类加载指标。
+     *
+     * @param heapUsed 堆内存已用（字节）
+     * @param heapCommitted 堆内存已提交（字节）
+     * @param heapMax 堆内存最大值（字节）
+     * @param heapUsedPercent 堆内存使用率 0~1
+     * @param nonHeapUsed 非堆内存已用（字节）
+     * @param nonHeapCommitted 非堆内存已提交（字节）
+     * @param gcPauseTotalMs GC 暂停累计耗时（毫秒）
+     * @param gcPauseCount GC 暂停次数
+     * @param classLoaded 已加载类数
+     * @param classUnloaded 已卸载类数
+     * @param bufferUsed 缓冲区已用内存（字节）
+     */
     @Schema(description = "JVM 指标")
     public record JvmStats(
             @Schema(description = "堆内存已用（字节）") double heapUsed,
@@ -49,7 +63,14 @@ public record MonitorSystemResponse(
             @Schema(description = "已卸载类数") long classUnloaded,
             @Schema(description = "缓冲区已用内存（字节）") double bufferUsed) {}
 
-    /** CPU 指标。 */
+    /**
+     * CPU 指标。
+     *
+     * @param processUsage 进程 CPU 使用率 0~1
+     * @param systemUsage 系统 CPU 使用率 0~1
+     * @param cores CPU 核数
+     * @param loadAverage 系统负载均值（-1 表示不可用）
+     */
     @Schema(description = "CPU 指标")
     public record CpuStats(
             @Schema(description = "进程 CPU 使用率 0~1") double processUsage,
@@ -57,7 +78,16 @@ public record MonitorSystemResponse(
             @Schema(description = "CPU 核数") double cores,
             @Schema(description = "系统负载均值（-1 表示不可用）") double loadAverage) {}
 
-    /** 进程指标。 */
+    /**
+     * 进程指标。
+     *
+     * @param uptimeSeconds 进程运行时长（秒）
+     * @param startTime 进程启动时间
+     * @param residentMemory 常驻内存（字节，Linux 可用）
+     * @param virtualMemory 虚拟内存（字节，Linux 可用）
+     * @param openFiles 已打开文件描述符数
+     * @param maxFiles 最大文件描述符数
+     */
     @Schema(description = "进程指标")
     public record ProcessStats(
             @Schema(description = "进程运行时长（秒）") long uptimeSeconds,
@@ -67,14 +97,29 @@ public record MonitorSystemResponse(
             @Schema(description = "已打开文件描述符数") double openFiles,
             @Schema(description = "最大文件描述符数") double maxFiles) {}
 
-    /** 线程指标。 */
+    /**
+     * 线程指标。
+     *
+     * @param live 当前存活线程数
+     * @param peak 历史峰值线程数
+     * @param daemon 守护线程数
+     */
     @Schema(description = "线程指标")
     public record ThreadStats(
             @Schema(description = "当前存活线程数") double live,
             @Schema(description = "历史峰值线程数") double peak,
             @Schema(description = "守护线程数") double daemon) {}
 
-    /** 磁盘使用。 */
+    /**
+     * 磁盘使用。
+     *
+     * @param mount 挂载点/盘符
+     * @param type 文件系统类型
+     * @param total 总容量（字节）
+     * @param free 空闲容量（字节）
+     * @param usable 可用容量（字节）
+     * @param usedPercent 使用率 0~1
+     */
     @Schema(description = "磁盘使用")
     public record DiskUsage(
             @Schema(description = "挂载点/盘符") String mount,
@@ -84,7 +129,18 @@ public record MonitorSystemResponse(
             @Schema(description = "可用容量（字节）") long usable,
             @Schema(description = "使用率 0~1") double usedPercent) {}
 
-    /** 网络使用。 */
+    /**
+     * 网络使用。
+     *
+     * @param name 网卡名称
+     * @param up 是否已启用
+     * @param speedMbps 链路速率（Mbps，-1 表示未知）
+     * @param rxBytes 累计接收字节数
+     * @param txBytes 累计发送字节数
+     * @param rxBytesPerSec 接收速率（字节/秒，Linux 可用）
+     * @param txBytesPerSec 发送速率（字节/秒，Linux 可用）
+     * @param available 速率数据是否可用
+     */
     @Schema(description = "网络使用")
     public record NetworkUsage(
             @Schema(description = "网卡名称") String name,
@@ -96,7 +152,17 @@ public record MonitorSystemResponse(
             @Schema(description = "发送速率（字节/秒，Linux 可用）") double txBytesPerSec,
             @Schema(description = "速率数据是否可用") boolean available) {}
 
-    /** 阻塞 IO 线程池快照。 */
+    /**
+     * 阻塞 IO 线程池快照。
+     *
+     * @param maxThreads 最大工作线程数
+     * @param queueCapacity 队列容量
+     * @param activeTasks 执行中任务数
+     * @param queuedTasks 排队任务数
+     * @param completedTasks 累计完成任务数
+     * @param saturation 饱和度 0~1
+     * @param up 采集是否可用
+     */
     @Schema(description = "阻塞 IO 线程池快照")
     public record BlockingIoPool(
             @Schema(description = "最大工作线程数") int maxThreads,

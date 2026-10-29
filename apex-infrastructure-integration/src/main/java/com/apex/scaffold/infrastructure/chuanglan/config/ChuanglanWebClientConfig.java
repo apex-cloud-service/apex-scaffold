@@ -23,7 +23,7 @@ import reactor.util.retry.Retry;
  * 所有创蓝API调用（短信发送、余额查询、闪验）共享此 WebClient 实例，
  * 避免每次调用都创建新的连接实例，提升连接复用率和性能。
  *
- * <h2>连接池配置</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li><strong>最大连接数</strong>：{@value #MAX_CONNECTIONS}，控制同时打开的TCP连接数上限</li>
  *   <li><strong>等待获取连接上限</strong>：{@value #PENDING_ACQUIRE_MAX_COUNT}，
@@ -33,11 +33,11 @@ import reactor.util.retry.Retry;
  *   <li><strong>写超时</strong>：{@value #WRITE_TIMEOUT_SECONDS} 秒</li>
  * </ul>
  *
- * <h2>重试配置</h2>
+ * <h2>设计说明</h2>
  * <p>最多重试 {@value #MAX_RETRY_ATTEMPTS} 次，采用指数退避策略：
  * 首次重试间隔 200ms，之后每次翻倍（200ms → 400ms → 800ms），添加 ±50% 随机抖动。</p>
  *
- * <h2>连接生命周期</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li><strong>空闲超时</strong>：60 秒无流量后关闭连接</li>
  *   <li><strong>最大生命周期</strong>：5 分钟后强制回收连接（防止服务端长连接老化）</li>
@@ -92,7 +92,7 @@ public class ChuanglanWebClientConfig {
      * <p>配置连接池、超时、重试策略和API调用日志记录，
      * 供所有创蓝API调用共享使用。
      *
-     * <h2>优化说明（Netty/线程池/IO 性能优化方案 P1-1/P1-2）</h2>
+     * <h2>设计说明</h2>
      * <ul>
      *   <li>{@code evictInBackground(Duration.ofSeconds(30))} — 独立后台线程每 30s 扫描一次，
      *       主动关闭超过 maxIdleTime/maxLifeTime 的空闲连接，防止过期连接长期占用池配额</li>
@@ -144,7 +144,7 @@ public class ChuanglanWebClientConfig {
      * 首次重试延迟 {@value #INITIAL_RETRY_BACKOFF_MS}ms，
      * 之后每次延迟加倍，并添加 ±50% 随机抖动防止重试风暴。
      *
-     * <h3>重试条件</h3>
+     * <p><strong>重试条件</strong></p>
      * <p>对 {@link java.io.IOException} 和 5xx 服务器错误进行重试，
      * 4xx 客户端错误不重试（因为客户端错误重试无意义）。
      *

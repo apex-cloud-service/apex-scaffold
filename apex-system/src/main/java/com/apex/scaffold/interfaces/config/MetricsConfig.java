@@ -32,7 +32,7 @@ import reactor.core.publisher.Mono;
  * Redis 派生 Gauge 通过定时 SCAN 获取真实快照，并以 {@code up} 与最近成功时间标记采集状态；
  * Prometheus 抓取线程只读取原子快照，不执行阻塞 Redis 查询。</p>
  *
- * <h2>主要功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>注册 JVM 内存、线程、CPU、进程内存、磁盘与网络等系统指标绑定器</li>
  *   <li>注册限流拒绝、IP 封禁、登录失败、XSS 拦截、防重放、幂等重复提交、熔断器打开等安全计数器</li>
@@ -40,7 +40,7 @@ import reactor.core.publisher.Mono;
  *   <li>采集 6 个阻塞 IO 专用线程池（jdbc/cache/storage/event/remote/general）的运行态快照并暴露为 Gauge</li>
  * </ul>
  *
- * <h2>配置属性</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>{@code apex.security.metrics-refresh-interval-ms} — Redis 安全派生指标刷新间隔（毫秒），默认 5000</li>
  *   <li>{@code apex.security.metrics-initial-delay-ms} — Redis 安全派生指标首次刷新延迟（毫秒），默认 1000</li>
@@ -48,7 +48,7 @@ import reactor.core.publisher.Mono;
  *   <li>{@code apex.blocking-io.snapshot-initial-delay-ms} — 阻塞 IO 线程池快照首次刷新延迟（毫秒），默认 1500</li>
  * </ul>
  *
- * <h2>安全监控指标</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>rateLimitRejected - 限流拒绝请求计数</li>
  *   <li>ipBlocked - IP封禁计数</li>
@@ -61,11 +61,11 @@ import reactor.core.publisher.Mono;
  *   <li>活跃会话数 - 通过 Redis SCAN token:access:* 统计</li>
  * </ul>
  *
- * <h2>线程模型</h2>
+ * <h2>线程安全性</h2>
  * <p>Redis SCAN 扫描操作使用 {@link com.apex.scaffold.common.scheduler.BlockingIoSchedulers#cache()}
  * 专用池承载同步 RedisTemplate 阻塞调用，避免占用 Reactor 全局 boundedElastic 导致核心业务被挤占。</p>
  *
- * <h2>阻塞 IO 线程池指标</h2>
+ * <h2>线程安全性</h2>
  * <p>通过 {@code BlockingIoSchedulers#snapshotAll()} 定时采集 6 个专用阻塞池（jdbc/cache/storage/event/remote/general）
  * 的运行态快照，每池注册 7 个 Micrometer Gauge：max_threads、queue_capacity、active_tasks、queued_tasks、
  * completed_tasks、saturation（饱和度 0~1）与 up（采集可用性）。
@@ -327,7 +327,7 @@ public class MetricsConfig {
      * 活跃会话数等 Gauge 指标。Gauge 读取最近一次异步刷新快照，不在 Prometheus 抓取线程中执行
      * Redis 阻塞查询；刷新失败时返回 NaN 并单独暴露查询可用性。
      *
-     * <h2>Redis 键模式</h2>
+     * <h2>设计说明</h2>
      * <ul>
      *   <li>IP 黑名单：{@code blacklist:ip:*} — 由 {@code GlobalGuardWebFilter} 维护</li>
      *   <li>Token 黑名单：{@code token:blacklist:*} — 由 {@code TokenBlacklistServiceImpl} 维护</li>

@@ -87,7 +87,6 @@ public class SessionService {
      *
      * @param userId 用户ID
      * @param tenantId 租户ID
-     * @return 检查结果
      */
     private Mono<Void> checkConcurrentSessions(Long userId, String tenantId) {
         return sessionRepository.findActiveByUserId(userId, tenantId).count().flatMap(count -> {
@@ -164,7 +163,6 @@ public class SessionService {
      * 更新会话活跃时间
      *
      * @param sessionId 会话唯一标识
-     * @return 更新结果
      */
     public Mono<Void> updateSessionActivity(String sessionId) {
         return sessionRepository
@@ -182,7 +180,6 @@ public class SessionService {
      * 终止会话
      *
      * @param sessionId 会话唯一标识
-     * @return 终止结果
      */
     public Mono<Void> terminateSession(String sessionId) {
         return sessionRepository
@@ -201,7 +198,6 @@ public class SessionService {
      *
      * @param userId 用户ID
      * @param tenantId 租户ID
-     * @return 终止结果
      */
     public Mono<Void> terminateUserSessions(Long userId, String tenantId) {
         return sessionRepository
@@ -219,7 +215,6 @@ public class SessionService {
      * 踢出指定会话
      *
      * @param sessionId 会话唯一标识
-     * @return 踢出结果
      */
     public Mono<Void> kickOutSession(String sessionId) {
         return sessionRepository

@@ -86,7 +86,6 @@ public class SecurityMonitoringService {
      *
      * @param userId 登录成功的用户 ID
      * @param clientIp 客户端 IP 地址
-     * @return 记录完成后的空 Mono 信号
      */
     public Mono<Void> recordLoginSuccess(String userId, String clientIp) {
         loginSuccessCounter.incrementAndGet();
@@ -108,7 +107,6 @@ public class SecurityMonitoringService {
      *
      * @param username 登录失败的用户名
      * @param clientIp 客户端 IP 地址
-     * @return 记录并完成登录失败率检查后的空 Mono 信号
      */
     public Mono<Void> recordLoginFailure(String username, String clientIp) {
         loginFailCounter.incrementAndGet();
@@ -130,7 +128,6 @@ public class SecurityMonitoringService {
      * 记录Token验证成功
      *
      * @param tokenId 验证成功的 Token ID
-     * @return 记录完成后的空 Mono 信号
      */
     public Mono<Void> recordTokenValidateSuccess(String tokenId) {
         tokenValidateSuccessCounter.incrementAndGet();
@@ -152,7 +149,6 @@ public class SecurityMonitoringService {
      *
      * @param tokenId 验证失败的 Token ID
      * @param reason 验证失败原因
-     * @return 记录完成后的空 Mono 信号
      */
     public Mono<Void> recordTokenValidateFail(String tokenId, String reason) {
         tokenValidateFailCounter.incrementAndGet();
@@ -195,7 +191,6 @@ public class SecurityMonitoringService {
      *
      * @param userId 被锁定的用户 ID
      * @param reason 锁定原因
-     * @return 记录完成后的空 Mono 信号
      */
     public Mono<Void> recordUserLocked(String userId, String reason) {
         return redisTemplate.opsForValue().increment(REDIS_METRIC_USER_LOCKED).flatMap(count -> {
@@ -233,7 +228,6 @@ public class SecurityMonitoringService {
      *
      * @param tokenId 被重放的 Token ID
      * @param userId Token 关联的用户 ID
-     * @return 记录并完成安全审计事件记录后的空 Mono 信号
      */
     public Mono<Void> recordTokenReplay(String tokenId, String userId) {
         return redisTemplate

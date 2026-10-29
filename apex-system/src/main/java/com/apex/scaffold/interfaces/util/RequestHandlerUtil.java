@@ -22,7 +22,7 @@ import reactor.core.publisher.Mono;
  * <p>提供统一的请求处理、参数验证和响应构建功能。
  * 集成了国际化支持，错误响应消息会根据客户端的 Accept-Language 自动切换。
  *
- * <h2>核心功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>{@link #handleRequestBody(ServerRequest, Class)} — 处理请求体并进行 JSR-380 Bean Validation</li>
  *   <li>{@link #buildSuccessResponse(Object)} — 构建成功的 JSON 响应</li>
@@ -32,7 +32,7 @@ import reactor.core.publisher.Mono;
  *   <li>{@link #extractClientIp(ServerRequest)} — 提取客户端真实IP地址</li>
  * </ul>
  *
- * <h2>国际化说明</h2>
+ * <h2>设计说明</h2>
  * <p>
  * 错误响应方法（{@code buildErrorResponse}、{@code buildUnauthorizedResponse}）
  * 通过 {@link MessageUtils} 从 Reactor Context 中获取 Locale 并解析对应语言的消息。

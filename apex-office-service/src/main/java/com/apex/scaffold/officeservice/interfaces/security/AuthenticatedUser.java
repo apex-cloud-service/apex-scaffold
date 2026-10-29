@@ -11,6 +11,10 @@ import java.security.Principal;
  * <p>本类为办公服务的本地实现，由 {@link IdentityRelayAuthenticationFilter}
  * 从独立验签的 JWT 或一次性握手票据构建，不接受客户端身份头。
  *
+ * @param userId 用户标识
+ * @param openId 第三方登录标识
+ * @param tenantId 租户标识
+ * @param deptId 所属部门标识
  * @author Apex Team
  * @since 1.0.0
  */

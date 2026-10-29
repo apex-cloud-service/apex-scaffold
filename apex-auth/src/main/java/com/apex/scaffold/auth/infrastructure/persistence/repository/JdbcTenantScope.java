@@ -27,6 +27,11 @@ import reactor.core.publisher.Mono;
 final class JdbcTenantScope {
     private JdbcTenantScope() {}
 
+    /**
+     * 在已校验租户作用域的连接上执行的阻塞操作。
+     *
+     * @param <T> 操作结果类型
+     */
     @FunctionalInterface
     interface Operation<T> {
         /**

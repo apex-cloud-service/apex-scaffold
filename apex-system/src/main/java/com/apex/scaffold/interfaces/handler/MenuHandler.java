@@ -28,7 +28,7 @@ import reactor.core.publisher.Mono;
  * 所有端点要求 {@code system:menu:*} 权限，是"角色-菜单-权限"
  * 管理闭环的接口层入口。</p>
  *
- * <h2>接口清单</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>GET /admin-api/v1/menus - 查询菜单树</li>
  *   <li>GET /admin-api/v1/menus/{menuId} - 查询菜单详情</li>

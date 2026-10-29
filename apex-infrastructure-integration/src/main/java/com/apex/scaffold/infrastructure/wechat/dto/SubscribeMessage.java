@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
  * <p>微信订阅消息是微信提供的长期消息推送能力，替代了原有的模板消息（已逐步下线）。
  * 用户需要主动订阅后，服务端才可向用户发送订阅消息。
  *
- * <h3>与模板消息的区别</h3>
+ * <p><strong>与模板消息的区别</strong></p>
  * <ul>
  *   <li><b>模板消息</b>：已逐步下线，不再支持新接入</li>
  *   <li><b>订阅消息</b>：需要用户主动订阅，分为一次性订阅和长期订阅</li>
@@ -22,14 +22,14 @@ import lombok.NoArgsConstructor;
  *   <li><b>长期订阅</b>：用户订阅一次，可长期推送（仅限特定行业）</li>
  * </ul>
  *
- * <h3>使用流程</h3>
+ * <p><strong>使用流程</strong></p>
  * <ol>
  *   <li>在微信公众平台申请订阅消息模板</li>
  *   <li>前端调用wx.requestSubscribeMessage引导用户订阅</li>
  *   <li>服务端通过本DTO封装消息数据并调用发送接口</li>
  * </ol>
  *
- * <h3>字段说明</h3>
+ * <p><strong>字段说明</strong></p>
  * <ul>
  *   <li>{@code toUser} - 接收者OpenID，必填</li>
  *   <li>{@code templateId} - 订阅消息模板ID，必填</li>

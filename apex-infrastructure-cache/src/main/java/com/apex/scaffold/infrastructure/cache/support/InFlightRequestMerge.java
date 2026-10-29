@@ -11,7 +11,7 @@ import reactor.core.publisher.Mono;
  * 其余并发请求共享同一次加载的结果（含成功、空值与错误三种终态），
  * 避免热点 key 过期瞬间的大量并发请求同时穿透到数据库（缓存击穿）。
  *
- * <h2>工作原理</h2>
+ * <h2>设计说明</h2>
  * <ol>
  *   <li>首个到达的请求通过 {@code computeIfAbsent} 注册一个带 {@code cache()} 的
  *       共享 Mono 并真正触发回源</li>
@@ -21,7 +21,7 @@ import reactor.core.publisher.Mono;
  *       后续新请求走正常缓存读取路径（此时缓存已被首请求回填）</li>
  * </ol>
  *
- * <h2>终态语义</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li><b>成功</b>：所有并发订阅者收到同一值</li>
  *   <li><b>空值</b>：DB 无数据时加载器返回空 Mono，并发订阅者均收到空
@@ -30,7 +30,7 @@ import reactor.core.publisher.Mono;
  *       后续请求可重试</li>
  * </ul>
  *
- * <h2>作用范围</h2>
+ * <h2>职责范围</h2>
  * <p>合并范围为本进程内。多实例部署时每个实例最多各自回源一次，
  * 这是与 Guava Cache 一致的标准 Single-Flight 语义；跨实例互斥可由
  * {@code @CacheLock} 分布式锁按业务需要叠加。</p>

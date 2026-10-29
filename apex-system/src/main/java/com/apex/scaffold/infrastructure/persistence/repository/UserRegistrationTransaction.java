@@ -40,7 +40,6 @@ public class UserRegistrationTransaction {
      *
      * @param welcomeMessage 注册欢迎消息
      * @param operationLog 注册审计日志
-     * @return 提交后完成、失败时传播错误的冷 Mono
      */
     public Mono<Void> execute(SystemMessageEntity welcomeMessage, OperationLogEntity operationLog) {
         String tenantId = TenantContext.currentTenantId().orElse(null);

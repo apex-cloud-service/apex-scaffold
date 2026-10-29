@@ -22,7 +22,7 @@ import reactor.core.publisher.Mono;
  * <p>基于 MyBatis-Plus 实现 {@link CreditAccountRepository} 接口定义的信用账户持久化操作。
  * 提供用户信用账户的查询、创建、余额增减等核心功能。</p>
  *
- * <h3>核心功能</h3>
+ * <p><strong>核心功能</strong></p>
  * <ul>
  *   <li>根据用户ID查询信用账户</li>
  *   <li>保存或更新信用账户信息</li>

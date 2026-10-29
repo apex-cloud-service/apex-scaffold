@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
  * <p>领域层Token实体，管理访问令牌和刷新令牌的生命周期。
  * 支持JWT和Opaque Token两种格式。
  *
- * <h2>核心职责</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>Token存储和管理</li>
  *   <li>Token过期检测</li>
@@ -20,7 +20,7 @@ import lombok.NoArgsConstructor;
  *   <li>设备和客户端信息追踪</li>
  * </ul>
  *
- * <h2>业务规则</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>访问令牌默认有效期2小时</li>
  *   <li>刷新令牌默认有效期7天</li>

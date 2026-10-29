@@ -22,14 +22,14 @@ import org.springframework.web.reactive.function.server.ServerResponse;
  * <p>使用 WebFlux 函数式路由注册 OAuth2 授权服务器的端点路由，所有 OAuth2 相关请求通过
  * {@code /oauth2} 前缀访问；客户端管理接口通过 {@code /admin-api/v1/oauth2} 前缀访问。</p>
  *
- * <h2>主要功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>注册 OAuth2 授权服务器标准端点：授权、Token、撤销、自省、JWKS、发现文档、同意页</li>
  *   <li>注册 OAuth2 客户端管理接口:创建、更新、删除、查询、重置密钥</li>
  *   <li>通过函数式路由 {@link RouterFunction} 聚合多个 Handler，保持路由与业务解耦</li>
  * </ul>
  *
- * <h2>端点列表</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>GET/POST /oauth2/authorize - 授权端点（授权码模式）</li>
  *   <li>POST /oauth2/token - Token 端点（所有授权模式）</li>

@@ -51,7 +51,15 @@ public record HealthReportResponse(
     /** 未配置：组件未启用或未接入，不参与总体结论。 */
     public static final String STATUS_NOT_CONFIGURED = "NOT_CONFIGURED";
 
-    /** 状态计数。 */
+    /**
+     * 状态计数。
+     *
+     * @param up 正常项数
+     * @param degraded 降级项数
+     * @param down 失败项数
+     * @param unknown 未知项数
+     * @param notConfigured 未配置项数
+     */
     @Schema(description = "各状态检查项计数")
     public record StatusCounts(
             @Schema(description = "正常项数") int up,
@@ -60,7 +68,14 @@ public record HealthReportResponse(
             @Schema(description = "未知项数") int unknown,
             @Schema(description = "未配置项数") int notConfigured) {}
 
-    /** 分组检查结果。 */
+    /**
+     * 分组检查结果。
+     *
+     * @param category 分组编码 LIVENESS/DEPENDENCY/BUSINESS_RISK/CAPACITY
+     * @param title 分组名称
+     * @param status 分组结论（取组内最差状态）
+     * @param items 分组检查项
+     */
     @Schema(description = "分组检查结果")
     public record HealthGroup(
             @Schema(description = "分组编码 LIVENESS/DEPENDENCY/BUSINESS_RISK/CAPACITY") String category,
@@ -68,7 +83,21 @@ public record HealthReportResponse(
             @Schema(description = "分组结论（取组内最差状态）") String status,
             @Schema(description = "分组检查项") List<HealthCheckItem> items) {}
 
-    /** 单项检查结果。 */
+    /**
+     * 单项检查结果。
+     *
+     * @param id 检查项标识
+     * @param name 检查项名称
+     * @param status 状态 UP/DEGRADED/DOWN/UNKNOWN/NOT_CONFIGURED
+     * @param scope 采集范围（INSTANCE）
+     * @param service 服务名
+     * @param instance 实例标识
+     * @param sampledAt 采样时间（ISO-8601）
+     * @param source 数据来源（指标名/配置项/Bean）
+     * @param evidence 证据（脱敏后的可解释数据）
+     * @param recommendation 整改建议；正常时为空
+     * @param ruleVersion 判定规则版本
+     */
     @Schema(description = "单项检查结果")
     public record HealthCheckItem(
             @Schema(description = "检查项标识") String id,

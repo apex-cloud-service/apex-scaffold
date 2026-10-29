@@ -25,14 +25,14 @@ import reactor.core.scheduler.Schedulers;
  * 每个启用任务维护一条"计算下次触发时间 → 延迟 → 执行 → 记录日志 → 循环"
  * 的响应式调度链，支持动态注册、取消与手动触发。</p>
  *
- * <h2>并发模型</h2>
+ * <h2>线程安全性</h2>
  * <ul>
  *   <li>调度计时运行在 {@code apex-job} 并行调度器上，不阻塞业务线程</li>
  *   <li>反射调用在专用 general 阻塞池执行，日志由持久化边界隔离</li>
  *   <li>禁止并发的任务通过每任务 {@link AtomicBoolean} 互斥，上一轮未完成时跳过本轮</li>
  * </ul>
  *
- * <h2>生命周期</h2>
+ * <h2>设计说明</h2>
  * <p>任务创建/更新/启停时由 {@code JobService} 调用 {@link #register(JobEntity)} 或
  * {@link #unregister(Long)} 同步调度状态；应用关闭时通过
  * {@link #shutdown()} 释放全部调度资源。</p>
@@ -112,7 +112,6 @@ public class JobScheduler {
      * 返回的 Mono 在注册完成后完成，供调用方编排后续逻辑。</p>
      *
      * @param job 任务实体
-     * @return 注册完成的信号
      */
     public Mono<Void> register(JobEntity job) {
         return Mono.fromRunnable(() -> {
@@ -142,7 +141,6 @@ public class JobScheduler {
      * 取消任务调度。
      *
      * @param jobId 任务 ID
-     * @return 取消完成的信号
      */
     public Mono<Void> unregister(Long jobId) {
         return Mono.fromRunnable(() -> {
@@ -165,7 +163,6 @@ public class JobScheduler {
      * <p>不改变调度状态，仅执行一次并记录日志。</p>
      *
      * @param job 任务实体
-     * @return 执行完成的信号
      */
     public Mono<Void> trigger(JobEntity job) {
         return execute(job).then();
@@ -207,7 +204,6 @@ public class JobScheduler {
      * 触发时间时终止。</p>
      *
      * @param job 任务实体
-     * @return 单轮调度链
      */
     private Mono<Void> loop(JobEntity job) {
         return Mono.defer(() -> {
@@ -252,7 +248,6 @@ public class JobScheduler {
      * 执行结果（成功/失败/耗时）统一写入 {@link JobLogEntity} 并落库。</p>
      *
      * @param job 任务实体
-     * @return 执行完成的信号
      */
     private Mono<Void> execute(JobEntity job) {
         return Mono.defer(() -> {

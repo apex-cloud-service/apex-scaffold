@@ -20,7 +20,7 @@ import reactor.core.publisher.Mono;
  * <p>
  * 提供角色查询、校验和管理等功能，支持基于 RBAC 模型的角色管理
  *
- * <h2>线程模型</h2>
+ * <h2>线程安全性</h2>
  * <p>角色级联删除（deleteRole）通过 {@link RoleDeletionGateway} 在同步 JDBC 事务中
  * 清理 {@code role} / {@code user_role} / {@code role_permission} 多表关系，
  * 阻塞 I/O 使用 {@code BlockingIoSchedulers#jdbc()} 专用线程池承载，

@@ -9,7 +9,7 @@ import org.springframework.http.server.reactive.ServerHttpRequest;
  * <p>提供从 HTTP 请求中提取客户端 IP、User-Agent 等网络信息的通用方法。
  * 支持代理场景下的真实 IP 获取。
  *
- * <h2>IP 获取优先级</h2>
+ * <h2>设计说明</h2>
  * <ol>
  *   <li>{@code X-Forwarded-For} 请求头（代理场景）</li>
  *   <li>{@code X-Real-IP} 请求头（Nginx 代理）</li>

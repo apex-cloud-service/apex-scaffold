@@ -98,7 +98,6 @@ public class OAuth2RegisteredClientRepositoryImpl implements OAuth2RegisteredCli
      * 根据主键ID删除OAuth2注册客户端
      *
      * @param id 主键ID
-     * @return 空Mono,表示删除操作完成
      */
     @Override
     public Mono<Void> deleteById(String id) {

@@ -12,7 +12,7 @@ import lombok.ToString;
  * <p>表示数据可视化图表的领域对象，支持多种图表类型（折线图、柱状图、饼图等），
  * 用于业务数据的可视化展示与分析。</p>
  *
- * <h2>核心业务规则</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>图表通过 {@code chartType} 区分类型（line/bar/pie/scatter/radar）</li>
  *   <li>图表配置 {@code config} 存储 ECharts 配置 JSON</li>

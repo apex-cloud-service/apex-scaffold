@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
  * 超过阈值的请求由 {@link GlobalResponseTimeoutWebFilter} 以 504
  * （错误码 {@code REQUEST_TIMEOUT}）熔断，防止慢请求长期占用连接与线程资源。</p>
  *
- * <h2>配置示例</h2>
+ * <h2>使用示例</h2>
  * <pre>{@code * apex:
  *   api:
  *     response-timeout: 30s   # 0s 或负值表示关闭全局超时

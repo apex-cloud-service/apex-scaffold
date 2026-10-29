@@ -12,7 +12,7 @@ import reactor.core.publisher.Mono;
  * 不同的登录方式通过实现该接口来提供差异化的登录逻辑，
  * 由 {@link LoginStrategyProvider} 根据请求中的登录类型动态选择具体实现。
  *
- * <h2>实现规范</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>所有实现类必须标注 {@link org.springframework.stereotype.Component} 注解</li>
  *   <li>实现类需实现 {@link #getLoginType()} 返回对应的登录类型，由 {@link LoginStrategyProvider} 自动注册</li>
@@ -21,7 +21,7 @@ import reactor.core.publisher.Mono;
  *       {@link com.apex.scaffold.domain.event.UserLoggedInEvent} 登录事件当前无消费者，暂不发布</li>
  * </ul>
  *
- * <h2>现有实现</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>{@link WeChatCodeLoginStrategy} - 微信验证码登录</li>
  *   <li>{@link WeChatPhoneLoginStrategy} - 微信一键登录</li>

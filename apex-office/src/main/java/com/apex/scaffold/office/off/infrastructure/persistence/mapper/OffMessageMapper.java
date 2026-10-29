@@ -10,12 +10,12 @@ import org.apache.ibatis.annotations.Mapper;
  * <p>负责 {@code off_message} 表的持久化操作，管理站内消息的存储与查询。
  * 继承 MyBatis-Plus {@link BaseMapper} 获得通用单表 CRUD 操作。
  *
- * <h2>表映射</h2>
+ * <h2>设计说明</h2>
  * <p>表名：{@code off_message}<br>
  * 实体：{@link OffMessagePO}<br>
  * 主键：{@code id}（Long 类型，雪花算法）
  *
- * <h2>消息字段</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>{@code title}：消息标题</li>
  *   <li>{@code content}：消息内容（支持富文本）</li>
@@ -25,7 +25,7 @@ import org.apache.ibatis.annotations.Mapper;
  *   <li>{@code template_id}：消息模板 ID（可选）</li>
  * </ul>
  *
- * <h2>业务场景</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>站内消息发送：用户之间的消息通信</li>
  *   <li>系统通知：系统自动推送的通知消息</li>
@@ -33,7 +33,7 @@ import org.apache.ibatis.annotations.Mapper;
  *   <li>模板消息：基于预定义模板的批量消息</li>
  * </ul>
  *
- * <h2>通用方法</h2>
+ * <h2>职责范围</h2>
  * <p>继承自 {@link BaseMapper} 的常用方法：
  * <ul>
  *   <li>{@code insert(entity)} - 插入消息记录</li>

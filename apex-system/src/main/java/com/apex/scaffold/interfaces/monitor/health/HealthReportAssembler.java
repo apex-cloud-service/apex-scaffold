@@ -28,7 +28,7 @@ import org.springframework.stereotype.Component;
  * 每项都给出状态、范围、采样时间、来源、证据与建议，并按
  * 「应用存活 / 依赖就绪 / 业务风险 / 容量」四组呈现。</p>
  *
- * <h2>判定口径</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>Gauge 缺失（采集器返回 {@code NaN}）判为 {@code UNKNOWN}，不计为健康</li>
  *   <li>组件未接入（如消息中间件）判为 {@code NOT_CONFIGURED}，不参与总体结论</li>

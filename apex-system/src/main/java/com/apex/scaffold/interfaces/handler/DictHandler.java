@@ -33,7 +33,7 @@ import reactor.core.publisher.Mono;
  * 所有端点要求 {@code system:dict:*} 权限。字典采用"类型-数据"
  * 两级模型，是管理系统下拉选项与枚举翻译能力的基础。</p>
  *
- * <h2>接口清单</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>GET /admin-api/v1/dict/types - 查询字典类型列表</li>
  *   <li>GET /admin-api/v1/dict/types/{id} - 查询字典类型详情</li>

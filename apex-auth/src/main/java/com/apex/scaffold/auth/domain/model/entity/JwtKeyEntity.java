@@ -15,12 +15,12 @@ import org.springframework.data.relational.core.mapping.Table;
  * <p>用于存储JWT签名密钥的版本信息和生命周期状态。
  * 支持密钥轮换策略，保证在密钥切换期间的平滑过渡。
  *
- * <h2>密钥状态机</h2>
+ * <h2>设计说明</h2>
  * <pre>
  * PENDING(待启用) → ACTIVE(当前生效) → ROTATING(轮换中) → DEPRECATED(已废弃) → REVOKED(已吊销)
  * </pre>
  *
- * <h2>轮换策略</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>每个时刻只有一个ACTIVE密钥用于签发新Token</li>
  *   <li>ROTATING状态的密钥仅用于验证旧Token（过渡期24小时）</li>

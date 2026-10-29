@@ -19,14 +19,14 @@ import org.springframework.web.reactive.function.server.ServerResponse;
  * <p>提供 SSO 单点登录的认证端点路由,所有路由使用 {@code /auth/sso} 前缀,
  * 作为公开端点(无需权限校验)供前端和 SSO 提供商回调使用。
  *
- * <h2>路由清单</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>GET /auth/sso/initiate - 发起 SSO 认证(公开端点)</li>
  *   <li>POST /auth/sso/callback - SSO 回调处理(公开端点)</li>
  *   <li>POST /auth/sso/logout - SSO 登出(需认证)</li>
  * </ul>
  *
- * <h2>安全说明</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>initiate 和 callback 端点为公开端点,无需 JWT 认证</li>
  *   <li>callback 端点通过协议适配器验证 SSO 提供商的认证响应</li>

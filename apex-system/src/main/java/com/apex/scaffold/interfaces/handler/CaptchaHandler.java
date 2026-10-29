@@ -24,7 +24,7 @@ import reactor.core.publisher.Mono;
  * 验证码生成后由前端展示并回传 {@code captchaId} 与用户输入，
  * 服务端一次性校验。</p>
  *
- * <h2>接口清单</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>GET /api/v1/auth/captcha - 获取验证码（ID + Base64 图片）</li>
  *   <li>POST /api/v1/auth/captcha/verify - 校验验证码</li>

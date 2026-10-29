@@ -30,7 +30,7 @@ import reactor.core.publisher.Mono;
  * {@link ApiGatewayFilter} 的指标统计并被计为 4xx 错误，造成"网关错误率"虚高，
  * 同时产生大量无效日志与下游校验开销。
  *
- * <h2>职责</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>在过滤器链最前端（{@code @Order(HIGHEST_PRECEDENCE + 5)}，早于 {@link ApiGatewayFilter}
  *       与 {@link LoggingFilter}）拦截命中扫描路径的请求，直接返回配置的拒绝状态码</li>
@@ -40,18 +40,18 @@ import reactor.core.publisher.Mono;
  *       （带 method/path 标签）可观测，便于验证拦截效果</li>
  * </ul>
  *
- * <h2>实现风格</h2>
+ * <h2>设计说明</h2>
  * <p>判定与匹配逻辑全部采用函数式风格：{@link #isScanTraffic(ServerHttpRequest)} 通过
  * Stream {@code anyMatch} 组合匹配谓词；{@link #matches(String, String)} 通过
  * Stream {@code map}/{@code collect(Collectors.joining)} 将通配符模式编译为正则表达式，
  * 避免命令式循环与中间状态。所有判定方法均为无副作用纯函数，便于单元测试。</p>
  *
- * <h2>匹配语义</h2>
+ * <h2>设计说明</h2>
  * <p>路径模式见 {@link ScanTrafficGuardProperties}：不含通配符的模式按前缀匹配，
  * 含 {@code *} 的模式按 glob 匹配，均大小写不敏感（扫描器常变换大小写探测）。
  * CONNECT 隧道请求（配置项 {@code apex.security.scan-guard.block-connect-method} 开启时）无条件拦截。</p>
  *
- * <h2>执行顺序</h2>
+ * <h2>设计说明</h2>
  * <p>本过滤器位于 {@link TraceFilter}（{@code HIGHEST_PRECEDENCE}）之后、
  * {@link ApiGatewayFilter}（{@code HIGHEST_PRECEDENCE + 20}）之前，拦截时扫描请求仅产生
  * TraceId 生成的极低开销，不触发任何业务处理。</p>
@@ -100,7 +100,6 @@ public class ScanTrafficGuardWebFilter implements WebFilter {
      *
      * @param exchange 当前 HTTP 请求-响应交换对象
      * @param chain    WebFlux 过滤器链
-     * @return 表示过滤完成的 Mono
      */
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
@@ -176,7 +175,6 @@ public class ScanTrafficGuardWebFilter implements WebFilter {
      *
      * @param exchange 当前 HTTP 请求-响应交换对象
      * @param request  HTTP 请求
-     * @return 直接完成响应
      */
     private Mono<Void> block(ServerWebExchange exchange, ServerHttpRequest request) {
         int statusCode = properties.getBlockStatus();

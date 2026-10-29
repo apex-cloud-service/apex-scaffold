@@ -11,6 +11,12 @@ import jakarta.validation.constraints.Size;
  *
  * <p>支持调整展示文案、启用状态、强制备注与排序；期望版本用于乐观锁并发控制。</p>
  *
+ * @param label 原因展示文案
+ * @param description 原因补充说明（可为空）
+ * @param enabled 是否启用（停用后审核时不可再选择该原因）
+ * @param requireComment 审核选择该原因时是否强制要求填写备注
+ * @param sortOrder 展示排序值（越小越靠前，0-10000）
+ * @param expectedVersion 期望版本号（乐观锁，需与当前版本一致，不一致时更新失败）
  * @author Apex Team
  * @version 1.0.0
  * @since 1.0.0

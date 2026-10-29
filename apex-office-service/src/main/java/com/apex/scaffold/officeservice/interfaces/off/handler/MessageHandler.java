@@ -41,7 +41,7 @@ import reactor.core.publisher.Mono;
  * 改用办公服务接口层的 {@link RequestHandlerUtil} 与安全上下文
  * {@link AuthenticatedUser} 获取当前登录用户。
  *
- * <h2>核心功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>消息发送：支持向指定用户发送站内消息</li>
  *   <li>收件箱管理：查询当前用户收到的消息列表</li>
@@ -503,21 +503,27 @@ public class MessageHandler {
         return requestHandlerUtil.handleError(throwable);
     }
 
+    /** MessageResult Message 统一响应包装。 */
     @Schema(name = "InternalMessageResult")
     public static class MessageResult extends Result<MessageDTO> {}
 
+    /** MessageListResult Message 列表统一响应包装。 */
     @Schema(name = "InternalMessageListResult")
     public static class MessageListResult extends Result<List<MessageDTO>> {}
 
+    /** MessageVoidResult 无数据统一响应包装。 */
     @Schema(name = "InternalMessageVoidResult")
     public static class MessageVoidResult extends Result<Void> {}
 
+    /** MessageCountResult 计数结果统一响应包装。 */
     @Schema(name = "InternalMessageCountResult")
     public static class MessageCountResult extends Result<Long> {}
 
+    /** InboxCursorListResult InboxCursorItem 列表统一响应包装。 */
     @Schema(name = "InternalInboxCursorListResult")
     public static class InboxCursorListResult extends Result<List<InboxCursorItemDTO>> {}
 
+    /** MessageDeliveryListResult MessageDelivery 列表统一响应包装。 */
     @Schema(name = "InternalMessageDeliveryListResult")
     public static class MessageDeliveryListResult extends Result<List<MessageDeliveryDTO>> {}
 }

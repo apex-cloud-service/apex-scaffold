@@ -20,7 +20,7 @@ import reactor.core.publisher.Mono;
  * 采用模板方法模式，只需实现 {@link #authenticate(LoginRequest)} 方法完成短信验证码校验，
  * 其余的用户查询/创建、JWT Token 生成等公共流程由基类统一处理。
  *
- * <h2>登录流程</h2>
+ * <h2>设计说明</h2>
  * <ol>
  *   <li>App 端调用 {@code POST /api/auth/sms/code} 传入手机号，系统发送验证码短信</li>
  *   <li>用户输入收到的 6 位验证码</li>
@@ -29,7 +29,7 @@ import reactor.core.publisher.Mono;
  *   <li>基类 {@link AbstractPhoneLoginStrategy#login(LoginRequest)} 完成后续流程</li>
  * </ol>
  *
- * <h2>注意事项</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>验证码有效期 5 分钟，过期需重新获取</li>
  *   <li>验证码验证成功后会自动从存储中移除（一次性使用）</li>

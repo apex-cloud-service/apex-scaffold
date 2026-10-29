@@ -27,7 +27,7 @@ import reactor.core.publisher.Mono;
  * 用户注册及微信绑定编排服务。
  *
  *
- *<h2>职责</h2>
+ *<h2>职责范围</h2>
  *<p>该服务负责编排以下核心业务流程：</p>
  *<ol>
  *  <li><b>注册</b> — 消耗 {@link AuthTicketType#REGISTRATION} 票据，
@@ -38,7 +38,7 @@ import reactor.core.publisher.Mono;
  *      将微信 openId / unionId / wechatToken 合并到已有手机号用户上，并清理旧的占位 openId</li>
  *</ol>
  *
- *<h2>调用链路</h2>
+ *<h2>设计说明</h2>
  *<pre>
  *  AuthHandler
  *    └── AuthRegistrationService
@@ -50,7 +50,7 @@ import reactor.core.publisher.Mono;
  *                └── TokenService.generateAccessToken() / storeToken()
  *</pre>
  *
- *<h2>安全保障</h2>
+ *<h2>设计说明</h2>
  *<ul>
  *  <li>所有请求依赖一次性票据（{@link AuthTicketService}），防止重放攻击</li>
  *  <li>短信验证码通过 {@link SmsCodeService#validate(String, String)} 校验，
@@ -137,7 +137,7 @@ public class AuthRegistrationService {
      *       由客户端引导用户进入注册页</li>
      * </ul>
      *
-     * <h3>业务流程</h3>
+     * <p><strong>业务流程</strong></p>
      * <ol>
      *   <li>调用 {@link SmsCodeService#validate(String, String)} 校验短信验证码</li>
      *   <li>验证通过后消耗 {@code WECHAT_BIND} 票据，获取微信授权的 openId / unionId / wechatToken</li>
@@ -179,7 +179,7 @@ public class AuthRegistrationService {
      *   <li><b>无微信 openId</b> — 直接创建新用户，openId 使用 {@code PHONE_} 前缀占位</li>
      * </ul>
      *
-     * <h3>前置校验</h3>
+     * <p><strong>前置校验</strong></p>
      * <p>调用 {@link #validateRegistrationProfile(RegisterRequest)} 校验：
      * <ul>
      *   <li>{@code gender} 必须是 1（男）或 2（女）</li>
@@ -262,7 +262,7 @@ public class AuthRegistrationService {
     /**
      * 按手机号查找已有用户并执行合并或签发注册票据。
      *
-     * <h3>决策分支</h3>
+     * <p><strong>决策分支</strong></p>
      * <ul>
      *   <li><b>手机号已注册（phoneUser 存在）</b>：
      *       <ul>
@@ -320,7 +320,7 @@ public class AuthRegistrationService {
     /**
      * 将微信授权信息合并到已有手机号用户上并完成登录。
      *
-     * <h3>操作步骤</h3>
+     * <p><strong>操作步骤</strong></p>
      * <ol>
      *   <li>将微信 openId / unionId / wechatToken 写入用户实体</li>
      *   <li>如果用户之前的 openId 是 {@code PHONE_} 占位符，清理 Redis 中旧的 Token 缓存</li>
@@ -328,7 +328,7 @@ public class AuthRegistrationService {
      *   <li>签发新的 accessToken + refreshToken</li>
      * </ol>
      *
-     * <h3>幂等性保障</h3>
+     * <p><strong>幂等性保障</strong></p>
      * <p>{@code UserAssembler.mergeUpdate} 使用
      * {@code NullValuePropertyMappingStrategy.IGNORE} 策略：
      * 仅当 source 字段为非 {@code null} 时才覆盖 target 字段，避免了重复绑定时丢失已有数据。
@@ -368,7 +368,6 @@ public class AuthRegistrationService {
      *
      * @param user    绑定目标用户实体
      * @param payload 票据载荷（含 openId / unionId / channel）
-     * @return 空 Mono
      */
     private Mono<Void> recordSocialBinding(UserEntity user, AuthTicketPayload payload) {
         if (user == null || payload == null) {
@@ -434,7 +433,7 @@ public class AuthRegistrationService {
     /**
      * 补全已有空壳用户或创建全新用户。
      *
-     * <h3>分支决策</h3>
+     * <p><strong>分支决策</strong></p>
      * <ul>
      *   <li><b>票据中有微信 openId</b>：
      *       <ul>
@@ -525,7 +524,7 @@ public class AuthRegistrationService {
     /**
      * 构建待持久化的全新用户实体。
      *
-     * <h3>初始化字段</h3>
+     * <p><strong>初始化字段</strong></p>
      * <ul>
      *   <li>{@code openId} — 票据中有真实微信 openId 则使用，否则使用 {@code PHONE_ + UUID} 占位</li>
      *   <li>{@code status} — 设为 1（ENABLED）</li>
@@ -561,7 +560,7 @@ public class AuthRegistrationService {
     /**
      * 将注册表单和票据信息写入用户实体。
      *
-     * <h3>填充的字段</h3>
+     * <p><strong>填充的字段</strong></p>
      * <table>
      *   <tr><th>字段</th><th>来源</th><th>说明</th></tr>
      *   <tr><td>{@code phone}</td><td>{@code payload.phone}（票据校验时已验证）</td><td>手机号</td></tr>
@@ -672,7 +671,7 @@ public class AuthRegistrationService {
     /**
      * 校验注册表单中的性别和生日字段。
      *
-     * <h3>校验规则</h3>
+     * <p><strong>校验规则</strong></p>
      * <ul>
      *   <li>{@code gender} — 必须为 1（男）或 2（女），不可为 {@code null}</li>
      *   <li>{@code birthday} — 必须不为 {@code null} 且严格早于当前日期（不允许等于或晚于今天）</li>
@@ -711,7 +710,7 @@ public class AuthRegistrationService {
     /**
      * 判断 openId 是否为占位符（非真实微信 openId）。
      *
-     * <h3>占位符规则</h3>
+     * <p><strong>占位符规则</strong></p>
      * <p>满足以下任一条件即为占位符：</p>
      * <ul>
      *   <li>{@code null}</li>

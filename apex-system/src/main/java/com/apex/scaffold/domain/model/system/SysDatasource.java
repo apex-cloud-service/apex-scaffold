@@ -13,7 +13,7 @@ import lombok.ToString;
  * {@code GenDatasourceEntity}（面向元数据读取）不同，本实体面向运行时
  * 连接池管理，包含完整的连接池参数配置。
  *
- * <h2>核心职责</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>封装数据源连接信息：JDBC URL、驱动类型、认证凭据</li>
  *   <li>封装连接池参数：最小空闲连接、最大连接数、超时时间</li>
@@ -21,7 +21,7 @@ import lombok.ToString;
  *   <li>多租户隔离：每个租户独立管理自己的数据源配置</li>
  * </ul>
  *
- * <h2>安全约束</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li><strong>密码加密存储</strong>：{@link #password} 必须在应用层加密后传入仓储，
  *       禁止明文落库；仅在建立连接池时临时解密</li>
@@ -30,7 +30,7 @@ import lombok.ToString;
  *   <li><strong>脱敏展示</strong>：接口响应中不得返回密码明文</li>
  * </ul>
  *
- * <h2>生命周期</h2>
+ * <h2>设计说明</h2>
  * <ol>
  *   <li>创建：管理员录入连接信息（建议先测试连接有效性）</li>
  *   <li>启用：连接池建立，状态可用</li>

@@ -19,7 +19,7 @@ import reactor.core.publisher.Mono;
  * <p>基于内存的领域事件总线实现，支持同步和异步事件发布。
  * 事件处理器通过订阅机制注册，事件发布后会通知所有订阅的处理器。</p>
  *
- * <h2>特性</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>线程安全的订阅管理</li>
  *   <li>支持同步和异步事件处理</li>
@@ -49,7 +49,6 @@ public class InMemoryDomainEventBus implements DomainEventBus {
      * 发布完成后事件标记为已处理。</p>
      *
      * @param event 领域事件
-     * @return 空 Mono，表示发布完成
      */
     @Override
     public Mono<Void> publish(BaseDomainEvent event) {
@@ -80,7 +79,6 @@ public class InMemoryDomainEventBus implements DomainEventBus {
      * <p>使用 Flux 依次调用 {@link #publish(BaseDomainEvent)} 批量发布事件。</p>
      *
      * @param events 领域事件列表
-     * @return 空 Mono，表示全部发布完成
      */
     @Override
     public Mono<Void> publishAll(List<BaseDomainEvent> events) {
@@ -94,7 +92,6 @@ public class InMemoryDomainEventBus implements DomainEventBus {
      * 适用于需要事务一致性保证的场景。</p>
      *
      * @param event 领域事件
-     * @return 空 Mono，表示发布完成
      */
     @Override
     public Mono<Void> publishSync(BaseDomainEvent event) {
@@ -205,7 +202,6 @@ public class InMemoryDomainEventBus implements DomainEventBus {
      * 异步处理事件。
      *
      * @param event 领域事件
-     * @return Mono&lt;Void&gt;
      */
     @SuppressWarnings("unchecked")
     private Mono<Void> processEventAsync(BaseDomainEvent event) {
@@ -236,7 +232,6 @@ public class InMemoryDomainEventBus implements DomainEventBus {
      * 同步处理事件。
      *
      * @param event 领域事件
-     * @return Mono&lt;Void&gt;
      */
     @SuppressWarnings("unchecked")
     private Mono<Void> processEventSync(BaseDomainEvent event) {

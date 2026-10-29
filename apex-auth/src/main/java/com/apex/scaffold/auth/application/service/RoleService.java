@@ -53,6 +53,13 @@ public class RoleService {
                 .switchIfEmpty(Mono.error(new BusinessException(ResultCode.NOT_FOUND, "角色不存在")));
     }
 
+    /**
+     * 按角色编码查询租户内角色。
+     *
+     * @param code 角色编码
+     * @param tenantId 租户标识
+     * @return 角色实体；不存在时以 {@link ResultCode#NOT_FOUND} 业务异常结束
+     */
     public Mono<RoleEntity> getRoleByCode(String code, String tenantId) {
         return roleRepository
                 .findByCode(code, tenantId)
@@ -67,6 +74,13 @@ public class RoleService {
         return roleRepository.findEnabledByTenantId(tenantId);
     }
 
+    /**
+     * 查询用户在指定租户下的角色。
+     *
+     * @param userId 用户标识
+     * @param tenantId 租户标识
+     * @return 角色实体流；用户未分配角色时为空流
+     */
     public Flux<RoleEntity> getUserRoles(Long userId, String tenantId) {
         return roleRepository.findByUserId(userId, tenantId);
     }
@@ -177,7 +191,6 @@ public class RoleService {
      *
      * @param roleId 角色ID
      * @param permissionIds 权限ID集合
-     * @return 完成信号
      */
     public Mono<Void> assignPermissions(Long roleId, Set<Long> permissionIds) {
         return assignPermissionsToRole(roleId, permissionIds);

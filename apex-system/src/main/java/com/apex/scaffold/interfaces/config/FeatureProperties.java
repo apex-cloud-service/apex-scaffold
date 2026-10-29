@@ -11,14 +11,14 @@ import org.springframework.stereotype.Component;
  * {@code application-{basic|standard|enterprise}.yml} 配置驱动，
  * 实现三档版本在运行时的真实功能差异。</p>
  *
- * <h2>主要功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>通过 {@code @ConfigurationProperties(prefix = "apex.features")} 集中绑定功能开关</li>
  *   <li>为 basic / standard / enterprise 三档版本提供差异化的运行时能力</li>
  *   <li>供各配置类与业务组件按开关条件装配能力（如 RBAC、缓存、消息队列、监控、链路追踪）</li>
  * </ul>
  *
- * <h2>配置属性</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>{@code apex.features.jwt-auth} - JWT 认证（三档均启用，默认 true）</li>
  *   <li>{@code apex.features.rbac} - RBAC 权限（标准版+企业版，默认 false）</li>

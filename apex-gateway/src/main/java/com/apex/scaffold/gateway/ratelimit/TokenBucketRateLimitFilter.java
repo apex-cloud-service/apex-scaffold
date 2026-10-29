@@ -21,20 +21,20 @@ import reactor.core.publisher.Mono;
  * <p>网关限流的<b>唯一判定内核</b>，由 {@link com.apex.scaffold.gateway.filter.RequestRateLimitFilter}
  * 在完成「维度 + 路径」Key 拼接后委托调用，从而把「限流算法」与「维度解析」解耦。
  *
- * <h2>算法</h2>
+ * <h2>设计说明</h2>
  * 默认使用 Redis 令牌桶（Lua 原子脚本），与
  * {@code com.apex.scaffold.infrastructure.ratelimit.distributed.DistributedTokenBucketRateLimiter}
  * <b>保持同一脚本语义</b>（读取 tokens/lastRefill → 按速率补充 → 截断到容量 → 扣减或拒绝 → 写回并设置过期），
  * 保证跨实例共享配额、支持突发流量。可经 {@code algorithm=fixed-window} 切回固定窗口计数器。
  *
- * <h2>失败出口</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li><b>Redis 异常</b>：降级放行（宁可宽松也不阻断业务），累计 {@code apex.gateway.ratelimit.failopen} 指标。</li>
  *   <li><b>令牌不足</b>：返回 HTTP 429 + {@link ResultCode#RATE_LIMIT}，并附带
  *       {@code X-RateLimit-Remaining: 0} 与 {@code Retry-After} 头。</li>
  * </ul>
  *
- * <h2>关键约束</h2>
+ * <h2>设计说明</h2>
  * 仅「限流判定」阶段受降级保护；下游链路的异常必须原样向上传播，
  * 否则会吞掉 {@code ConnectException}，导致路由级熔断（Task 1）永远无法感知下游故障。
  *
@@ -116,7 +116,6 @@ public class TokenBucketRateLimitFilter {
      * @param key         已拼接完成的限流 Key（含前缀 + 维度 + 路径）
      * @param capacity    桶容量
      * @param refillRate  令牌补充速率（令牌/秒，仅令牌桶使用）
-     * @return 完成信号；被限流时写出 429，放行时转发下游
      */
     public Mono<Void> apply(
             ServerWebExchange exchange, GatewayFilterChain chain, String key, long capacity, double refillRate) {

@@ -18,7 +18,7 @@ import reactor.netty.http.client.HttpClient;
  * <p>配置用于 HTTP 调用的 WebClient，基于 Reactor Netty 构建响应式 HTTP 客户端，
  * 支持连接超时、读取超时、写入超时等设置。超时参数通过 {@code server.webclient.*} 配置项管理。</p>
  *
- * <h2>主要功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>构建 {@link WebClient.Builder} Bean，底层使用 Reactor Netty {@link HttpClient}</li>
  *   <li>设置连接超时（CONNECT_TIMEOUT_MILLIS），避免 TCP 握手长时间阻塞</li>
@@ -26,7 +26,7 @@ import reactor.netty.http.client.HttpClient;
  *   <li>通过 {@link ReactorClientHttpConnector} 将 Netty HttpClient 接入 WebClient</li>
  * </ul>
  *
- * <h2>配置属性</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>{@code server.webclient.connect-timeout-millis} — 连接超时（毫秒），默认 5000</li>
  *   <li>{@code server.webclient.read-timeout-millis} — 读取超时（毫秒），默认 10000</li>

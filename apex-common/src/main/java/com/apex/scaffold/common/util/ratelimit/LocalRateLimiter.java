@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
  * 基于 {@link RateLimitStrategy} 策略接口实现进程内限流，支持三种算法：
  * 滑动窗口（默认）、令牌桶、漏桶，确保核心限流能力不因外部依赖故障而完全失效。
  *
- * <h2>设计原理</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li><strong>算法可插拔</strong>：v1.3.0 重构，内部委托给
  *       {@link RateLimitStrategy} 策略接口，支持
@@ -32,7 +32,7 @@ import lombok.extern.slf4j.Slf4j;
  *   <li><strong>自动恢复</strong>：窗口滑动后自动释放容量</li>
  * </ul>
  *
- * <h2>性能对比（v1.2.0 → v1.3.0）</h2>
+ * <h2>设计说明</h2>
  * <table border="1">
  *   <tr><th>指标</th><th>v1.2.0（时间戳数组）</th><th>v1.3.0（桶分片滑动窗口）</th></tr>
  *   <tr><td>tryAcquire 时间复杂度</td><td>O(n), n=10000</td><td>O(1)</td></tr>
@@ -40,7 +40,7 @@ import lombok.extern.slf4j.Slf4j;
  *   <tr><td>1000 实例内存</td><td>~80MB</td><td>~80KB</td></tr>
  * </table>
  *
- * <h2>内存管理</h2>
+ * <h2>设计说明</h2>
  * <p>INSTANCES Map 使用 {@link ConcurrentHashMap} 存储限流器实例。
  * 调用 {@link #clearIdle(long idleThresholdMs)} 可清理超过空闲阈值的实例，
  * 推荐通过定时任务（如每10分钟）调用以防止内存泄漏。</p>
@@ -194,7 +194,7 @@ public class LocalRateLimiter {
      * <p>遍历所有限流器实例，移除最后访问时间超过空闲阈值的实例，
      * 防止 INSTANCES Map 无限增长导致内存泄漏。
      *
-     * <h3>使用建议</h3>
+     * <p><strong>使用建议</strong></p>
      * <p>建议通过定时任务调用，如每 10 分钟清理空闲超过 30 分钟的实例：
      * <pre>{@code
      * scheduler.scheduleAtFixedRate(

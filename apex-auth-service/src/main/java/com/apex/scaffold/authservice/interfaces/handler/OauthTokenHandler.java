@@ -24,7 +24,7 @@ import reactor.core.publisher.Mono;
  * {@code password}、{@code client_credentials}、{@code refresh_token}
  * 四种授权类型的令牌签发。
  *
- * <h2>主要功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>解析并校验表单请求参数（禁止重复参数）</li>
  *   <li>支持HTTP Basic（{@code client_secret_basic}）与表单
@@ -35,7 +35,7 @@ import reactor.core.publisher.Mono;
  *   <li>记录OAuth2令牌签发审计事件</li>
  * </ul>
  *
- * <h2>安全特性</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>响应头强制{@code Cache-Control: no-store}与{@code Pragma: no-cache}，
  *       防止令牌被中间缓存持久化</li>
@@ -83,7 +83,7 @@ public class OauthTokenHandler {
      *
      * <p>对应{@code POST /oauth2/token}端点，是OAuth2授权流程的最终环节。
      *
-     * <h3>处理流程</h3>
+     * <p><strong>处理流程</strong></p>
      * <ol>
      *   <li>解析表单参数，拒绝重复参数（防止请求走私/歧义攻击）</li>
      *   <li>校验{@code grant_type}是否属于受支持的四种授权类型</li>
@@ -94,7 +94,7 @@ public class OauthTokenHandler {
      *   <li>成功时返回包含访问令牌的JSON响应，失败时按RFC 6749返回标准错误体</li>
      * </ol>
      *
-     * <h3>安全说明</h3>
+     * <p><strong>安全说明</strong></p>
      * <ul>
      *   <li>响应头固定{@code Cache-Control: no-store}，避免令牌被缓存</li>
      *   <li>客户端认证失败（{@code invalid_client}）返回401并附带

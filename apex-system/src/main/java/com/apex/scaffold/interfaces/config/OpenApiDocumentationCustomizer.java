@@ -1318,7 +1318,14 @@ final class OpenApiDocumentationCustomizer {
                 name, description, required, new IntegerSchema().format("int64").minimum(java.math.BigDecimal.ONE));
     }
 
-    /** 查询参数定义，用于在 OpenAPI 文档中声明 Query String 参数的名称、类型和约束。 */
+    /**
+     * 查询参数定义，用于在 OpenAPI 文档中声明 Query String 参数的名称、类型和约束。
+     *
+     * @param name 查询参数名
+     * @param description 参数说明
+     * @param required 是否必填
+     * @param schema 参数的类型声明
+     */
     private record QueryParameter(String name, String description, boolean required, Schema<?> schema) {
 
         /**
@@ -1336,7 +1343,13 @@ final class OpenApiDocumentationCustomizer {
         }
     }
 
-    /** 请求头参数定义，用于在 OpenAPI 文档中声明自定义 HTTP Header 参数。 */
+    /**
+     * 请求头参数定义，用于在 OpenAPI 文档中声明自定义 HTTP Header 参数。
+     *
+     * @param name 请求头名称
+     * @param description 参数说明
+     * @param required 是否必填
+     */
     private record HeaderParameter(String name, String description, boolean required) {
 
         /** 转换为 OpenAPI 参数。 */

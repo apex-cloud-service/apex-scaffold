@@ -12,7 +12,7 @@ import org.springframework.validation.annotation.Validated;
  * <p>用于配置 {@link GlobalGuardWebFilter} 的相关参数，包括 IP 黑名单缓存、
  * User-Agent 检查等安全防护功能的开关与阈值。
  *
- * <h2>配置前缀</h2>
+ * <h2>设计说明</h2>
  * <p>在 {@code application.yml} 中使用 {@code apex.security.guard} 前缀进行配置：
  * <pre>{@code * apex:
  *   security:

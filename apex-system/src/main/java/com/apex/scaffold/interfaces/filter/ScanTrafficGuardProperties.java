@@ -12,7 +12,7 @@ import org.springframework.validation.annotation.Validated;
  * <p>用于配置 {@link ScanTrafficGuardWebFilter} 的相关参数，包括拦截开关、返回状态码、
  * CONNECT 隧道拦截开关与扫描路径模式列表。
  *
- * <h2>配置前缀</h2>
+ * <h2>设计说明</h2>
  * <p>在 {@code application.yml} 中使用 {@code apex.security.scan-guard} 前缀进行配置：
  * <pre>{@code * apex:
  *   security:
@@ -25,7 +25,7 @@ import org.springframework.validation.annotation.Validated;
  *         - /.git
  * }</pre>
  *
- * <h2>路径模式匹配语义</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>不含通配符 {@code *} 的模式按路径前缀匹配（大小写不敏感），
  *       如 {@code /.git} 命中 {@code /.git/HEAD}、{@code /.gitignore}</li>

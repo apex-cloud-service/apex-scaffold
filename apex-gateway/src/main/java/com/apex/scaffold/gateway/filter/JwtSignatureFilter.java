@@ -70,7 +70,6 @@ public class JwtSignatureFilter implements GlobalFilter, Ordered {
      * 剥离伪造身份头并验证 HTTP JWT，精确 WebSocket 升级交由办公服务消费票据。
      * @param exchange 请求交换对象
      * @param chain 网关后续过滤链
-     * @return 请求完成信号
      */
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {

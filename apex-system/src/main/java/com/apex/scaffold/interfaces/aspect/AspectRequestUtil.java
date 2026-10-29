@@ -18,7 +18,7 @@ import org.springframework.web.server.ServerWebExchange;
  * 对象。本工具将这一重复的 {@code for + instanceof} 查找逻辑收敛为函数式 API，并统一
  * 请求形态归一化规则，避免四处重复实现导致的语义漂移。</p>
  *
- * <h2>查找优先级</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>{@link #firstArgOfType(Object[], Class)}：按参数数组顺序返回首个匹配实例，
  *       未找到返回 {@code null}</li>

@@ -20,7 +20,7 @@ import reactor.util.context.Context;
  * （供日志/埋点/读取当前数据源），实际路由由切面同步委派到 Baomidou 的
  * {@code DynamicDataSourceContextHolder}（驱动 {@code DynamicRoutingDataSource} 选库）。</p>
  *
- * <h2>响应式/跨线程上下文桥接</h2>
+ * <h2>线程安全性</h2>
  * <ul>
  *   <li>在 {@link #initializeGlobalHooks()} 中挂载全局
  *       {@link Schedulers#onScheduleHook}：任务提交到 Scheduler 时捕获当前线程的

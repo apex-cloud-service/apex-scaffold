@@ -34,8 +34,8 @@ public interface BiometricAuthService {
      * 验证生物识别
      *
      * @param userId 用户ID
-     * @param type 生物识别类型
      * @param tenantId 租户ID
+     * @param type 生物识别类型
      * @param challenge 挑战数据
      * @param signature 签名
      * @return 验证是否成功
@@ -49,7 +49,6 @@ public interface BiometricAuthService {
      *
      * @param id 认证配置ID
      * @param operator 操作人
-     * @return 操作完成信号
      */
     Mono<Void> enableBiometric(Long id, String operator);
 
@@ -58,7 +57,6 @@ public interface BiometricAuthService {
      *
      * @param id 认证配置ID
      * @param operator 操作人
-     * @return 操作完成信号
      */
     Mono<Void> disableBiometric(Long id, String operator);
 
@@ -67,7 +65,6 @@ public interface BiometricAuthService {
      *
      * @param id 认证配置ID
      * @param operator 操作人
-     * @return 操作完成信号
      */
     Mono<Void> deleteBiometric(Long id, String operator);
 
@@ -96,7 +93,6 @@ public interface BiometricAuthService {
      *
      * @param id 认证配置ID
      * @param operator 操作人
-     * @return 操作完成信号
      */
     Mono<Void> unlockBiometric(Long id, String operator);
 
@@ -121,12 +117,19 @@ public interface BiometricAuthService {
     Mono<AuthenticationChallenge> createAuthenticationChallenge(String userId, String tenantId);
 
     /**
-     * WebAuthn注册挑战
+     * WebAuthn 注册挑战。
+     *
+     * @param challenge 一次性注册挑战值
+     * @param userId 挑战绑定的用户标识
+     * @param timeout 挑战有效期（毫秒）
      */
     record RegistrationChallenge(String challenge, String userId, long timeout) {}
 
     /**
      * WebAuthn认证挑战
+     *
+     * @param challenge 一次性认证挑战值
+     * @param timeout 挑战有效期
      */
     record AuthenticationChallenge(String challenge, long timeout) {}
 }

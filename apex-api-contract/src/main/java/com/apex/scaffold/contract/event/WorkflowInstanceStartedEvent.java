@@ -12,7 +12,7 @@ import lombok.Getter;
  * <p>由 workflow-service 在发起流程实例（{@code POST /api/v1/workflows/{workflowCode}/instances}）
  * 成功后发布，用于通知各订阅方"某流程已开始流转"。
  *
- * <h2>契约说明（迁移方案 §6.4 / 执行计划 Phase 3.4）</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>发布方：apex-workflow-service</li>
  *   <li>订阅方：system（生成待办/通知）、office（审批联动推送）</li>

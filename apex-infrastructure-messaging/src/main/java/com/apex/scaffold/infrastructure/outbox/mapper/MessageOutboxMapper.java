@@ -12,14 +12,14 @@ import org.apache.ibatis.annotations.Update;
  * <p>提供对sys_message_outbox表的数据访问操作,包括基础的CRUD和自定义的锁管理操作。
  * 继承MyBatis-Plus的BaseMapper,自动获得常用的单表操作方法。
  *
- * <h2>核心功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>基础CRUD: 继承自BaseMapper,自动生成</li>
  *   <li>释放过期锁: 查询并清理超时的消息锁</li>
  *   <li>锁定消息: 使用CAS操作原子性地锁定消息</li>
  * </ul>
  *
- * <h2>分布式锁机制</h2>
+ * <h2>职责范围</h2>
  * <p>lockMessage方法使用CAS(Compare-And-Swap)操作实现分布式锁:
  * <ol>
  *   <li>只有当locked_by为NULL或空字符串时才能锁定成功</li>

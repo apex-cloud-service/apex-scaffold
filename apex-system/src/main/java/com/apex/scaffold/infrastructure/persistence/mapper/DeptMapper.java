@@ -10,12 +10,12 @@ import org.apache.ibatis.annotations.Mapper;
  * <p>负责 {@code sys_dept} 表的持久化操作，管理组织架构中的部门信息。
  * 继承 MyBatis-Plus {@link BaseMapper}，自动获得通用的单表 CRUD 操作。
  *
- * <h2>表映射</h2>
+ * <h2>设计说明</h2>
  * <p>表名：{@code sys_dept}<br>
  * 实体：{@link DeptPO}<br>
  * 主键：{@code id}（Long 类型，雪花算法）
  *
- * <h2>树形结构</h2>
+ * <h2>设计说明</h2>
  * <p>部门采用树形结构设计：
  * <ul>
  *   <li>{@code parent_id}：父部门 ID，0 表示根部门</li>
@@ -23,7 +23,7 @@ import org.apache.ibatis.annotations.Mapper;
  *   <li>{@code order_num}：同级部门的显示顺序</li>
  * </ul>
  *
- * <h2>通用方法</h2>
+ * <h2>职责范围</h2>
  * <p>继承自 {@link BaseMapper} 的常用方法：
  * <ul>
  *   <li>{@code insert(entity)} - 插入一条部门记录</li>
@@ -69,7 +69,7 @@ import org.apache.ibatis.annotations.Mapper;
  * deptMapper.insert(dept);
  * }</pre>
  *
- * <h2>树形查询最佳实践</h2>
+ * <h2>职责范围</h2>
  * <p>树形结构的组装通常在 Service 层完成：
  * <ol>
  *   <li>查询所有部门：{@code selectList(null)}</li>
@@ -77,7 +77,7 @@ import org.apache.ibatis.annotations.Mapper;
  *   <li>利用 {@code ancestors} 字段高效过滤子树</li>
  * </ol>
  *
- * <h2>数据权限查询</h2>
+ * <h2>职责范围</h2>
  * <pre>{@code
  * // 本部门数据
  * wrapper.eq(DeptPO::getId, currentDeptId);
@@ -89,7 +89,7 @@ import org.apache.ibatis.annotations.Mapper;
  * wrapper.in(DeptPO::getId, allowedDeptIds);
  * }</pre>
  *
- * <h2>注意事项</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>删除部门前需检查是否有子部门和关联用户</li>
  *   <li>更新 {@code parent_id} 时需同步更新 {@code ancestors} 字段</li>

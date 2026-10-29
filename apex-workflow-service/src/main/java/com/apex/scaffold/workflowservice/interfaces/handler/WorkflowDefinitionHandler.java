@@ -39,7 +39,7 @@ import reactor.core.publisher.Mono;
  * <p>提供草稿创建与编辑、结构校验、发布、启停、版本列表与详情查询。
  * 写操作要求编辑/发布/启停权限，并按既有权重记录操作日志；租户范围来自认证上下文。</p>
  *
- * <h2>接口列表</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>GET /api/v2/workflow-definitions — 分页查询流程定义</li>
  *   <li>POST /api/v2/workflow-definitions — 创建草稿</li>

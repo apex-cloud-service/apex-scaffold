@@ -608,10 +608,20 @@ public final class DocLinksChecker {
     }
 
     // ===== 链接抽取（行内 + 引用定义 + 目标解析，偏移基于遮蔽后仍保长度的文本） =====
-
+    /**
+     * 抽取到的链接引用。
+     *
+     * @param offset 在遮蔽文本中的起始偏移
+     * @param value 链接目标原文
+     */
     private record LinkRef(int offset, String value) {}
 
-    /** 行内链接目标解析结果：目标文本与消费结束的绝对偏移。 */
+    /**
+     * 行内链接目标解析结果。
+     *
+     * @param value 目标文本
+     * @param end 消费结束的绝对偏移
+     */
     private record Dest(String value, int end) {}
 
     private static List<LinkRef> links(String text) {
@@ -848,6 +858,14 @@ public final class DocLinksChecker {
         return joined.toAbsolutePath().normalize();
     }
 
+    /**
+     * URL 拆分结果（对齐 Python urlsplit 的四段语义）。
+     *
+     * @param scheme 协议名，无协议时为空串
+     * @param netloc 主机与端口，无主机时为空串
+     * @param path 路径部分
+     * @param fragment 片段标识，不含 {@code #}
+     */
     private record UrlSplit(String scheme, String netloc, String path, String fragment) {}
 
     /** urlsplit 的最小移植：scheme 识别、netloc、path 与 fragment 切分。 */
@@ -939,5 +957,13 @@ public final class DocLinksChecker {
         return -1;
     }
 
+    /**
+     * 待校验的链接条目。
+     *
+     * @param source 链接所在 Markdown 文件路径（相对仓库根）
+     * @param line 链接所在行号（从 1 开始）
+     * @param value 链接原文
+     * @param target 解析后的目标路径
+     */
     private record CheckedLink(Path source, int line, String value, Path target) {}
 }

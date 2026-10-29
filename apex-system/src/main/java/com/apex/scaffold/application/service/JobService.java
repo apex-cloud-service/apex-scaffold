@@ -24,7 +24,7 @@ import reactor.core.publisher.Mono;
  * 联动实现动态调度：创建/更新/启停后自动注册或取消调度链，删除任务时
  * 同时取消调度。应用启动时通过 {@code JobInitializer} 恢复全部启用任务。</p>
  *
- * <h2>核心业务规则</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>Cron 表达式必须合法，保存前由 {@link CronExpression} 解析校验</li>
  *   <li>启用状态的任务在创建/更新后立即注册调度；停用/删除后取消调度</li>
@@ -233,7 +233,6 @@ public class JobService {
      * <p>不改变调度状态，仅触发一次执行并记录日志。</p>
      *
      * @param id 任务 ID
-     * @return 执行完成的信号
      * @throws BusinessException 当任务不存在时抛出
      */
     public Mono<Void> runOnce(Long id) {

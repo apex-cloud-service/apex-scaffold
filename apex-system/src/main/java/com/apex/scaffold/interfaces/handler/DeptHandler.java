@@ -27,13 +27,13 @@ import reactor.core.publisher.Mono;
  * <p>提供部门树查询与 CRUD API（C3 数据权限/部门体系），树形结构由
  * {@link DeptService} 内存组装，所有端点要求 {@code system:dept:*} 权限。
  *
- * <h2>核心功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>部门树查询：查询完整的部门树形结构</li>
  *   <li>部门 CRUD：新增、查询详情、更新、逻辑删除部门</li>
  * </ul>
  *
- * <h2>接口列表</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>GET /admin-api/v1/depts — 查询部门树</li>
  *   <li>GET /admin-api/v1/depts/{id} — 查询部门详情</li>

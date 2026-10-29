@@ -27,7 +27,7 @@ import reactor.core.publisher.Mono;
  * 散点图和雷达图等多种图表类型。图表数据为演示数据（随机生成），生产环境需接入
  * 真实数据源。</p>
  *
- * <h2>租户隔离</h2>
+ * <h2>设计说明</h2>
  * <p>所有图表操作强制租户隔离，更新与删除时校验租户权限。</p>
  *
  * @author Apex Team
@@ -113,7 +113,6 @@ public class ChartServiceImpl implements ChartService {
      * <p>按当前租户隔离删除指定图表。
      *
      * @param id 图表 ID
-     * @return 完成信号
      */
     @Override
     public Mono<Void> delete(Long id) {
@@ -166,7 +165,6 @@ public class ChartServiceImpl implements ChartService {
      *
      * @param id 图表 ID
      * @param status 目标状态
-     * @return 完成信号；图表不存在或无租户权限时 Mono 以 BusinessException 错误终止
      */
     @Override
     public Mono<Void> updateStatus(Long id, Integer status) {
@@ -205,7 +203,6 @@ public class ChartServiceImpl implements ChartService {
      * <p>将指定图表的浏览计数加一并保存，图表不存在时直接完成。
      *
      * @param id 图表 ID
-     * @return 完成信号
      */
     @Override
     public Mono<Void> incrementViewCount(Long id) {

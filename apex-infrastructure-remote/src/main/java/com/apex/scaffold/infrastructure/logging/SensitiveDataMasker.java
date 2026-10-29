@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
  *   <li>键值对：password: 123456 → password: ******</li>
  * </ul>
  *
- * <h2>支持的敏感字段</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>password, pwd, passwd, secret - 密码相关</li>
  *   <li>idCard, idNo, identityCard - 身份证号</li>
@@ -23,7 +23,7 @@ import java.util.regex.Pattern;
  *   <li>apiKey, appKey, appSecret - API密钥</li>
  * </ul>
  *
- * <h2>性能优化</h2>
+ * <h2>设计说明</h2>
  * <p>使用正则表达式预编译和多模式并行匹配，单次脱敏耗时 < 1ms。
  *
  * <h2>使用示例</h2>

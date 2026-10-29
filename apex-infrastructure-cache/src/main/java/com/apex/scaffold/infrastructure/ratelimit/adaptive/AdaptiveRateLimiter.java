@@ -22,7 +22,7 @@ import org.springframework.stereotype.Component;
  * <p>基于系统运行时指标（CPU 使用率、内存使用率、线程数、平均响应时间等）
  * 动态调整限流阈值，实现"系统负载越高，限流越严格"的自我保护机制。
  *
- * <h2>动态调整策略</h2>
+ * <h2>设计说明</h2>
  * <ol>
  *   <li><strong>CPU 使用率</strong>：当 CPU 负载超过阈值时，逐步降低允许的 QPS</li>
  *   <li><strong>内存使用率</strong>：当堆内存使用率过高时，降低准入速率</li>
@@ -30,7 +30,7 @@ import org.springframework.stereotype.Component;
  *   <li><strong>平滑调整</strong>：使用衰减系数防止阈值剧烈抖动</li>
  * </ol>
  *
- * <h2>使用方式</h2>
+ * <h2>使用示例</h2>
  * <pre>{@code * // 获取当前自适应 QPS 上限
  * AdaptiveRateLimiter limiter = adaptiveRateLimiter;
  * int allowedQps = limiter.getAllowedQps("default", 100);
@@ -118,7 +118,7 @@ public class AdaptiveRateLimiter {
      * <p>基于系统负载指标动态计算当前的 QPS 上限。
      * 负载越高，返回值越保守；负载正常时返回 baseQps。
      *
-     * <h2>计算步骤</h2>
+     * <h2>设计说明</h2>
      * <ol>
      *   <li>采样 CPU、内存、线程等系统指标（间隔不低于 {@link #SAMPLING_INTERVAL_MS}）</li>
      *   <li>对每个超限指标计算衰减系数</li>

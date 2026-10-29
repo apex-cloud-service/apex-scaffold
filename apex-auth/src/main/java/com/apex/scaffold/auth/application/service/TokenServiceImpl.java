@@ -28,7 +28,7 @@ import reactor.core.publisher.Mono;
  *
  * <p>基于JWT实现Token的签发、验证、刷新和撤销功能。
  *
- * <h2>核心功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>签发Token对：访问令牌（2小时）+ 刷新令牌（7天）</li>
  *   <li>验证Token：签名验证、过期检测、撤销检查</li>
@@ -36,7 +36,7 @@ import reactor.core.publisher.Mono;
  *   <li>撤销Token：单个撤销或批量撤销用户所有Token</li>
  * </ul>
  *
- * <h2>Token声明结构</h2>
+ * <h2>设计说明</h2>
  * <pre>{@code
  * {
  *   "jti": "唯一Token ID",
@@ -49,7 +49,7 @@ import reactor.core.publisher.Mono;
  * }
  * }</pre>
  *
- * <h2>安全保障</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>所有Token持久化到数据库，支持撤销和追踪</li>
  *   <li>验证时检查数据库撤销状态，已撤销Token拒绝访问</li>

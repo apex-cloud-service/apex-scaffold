@@ -12,7 +12,7 @@ import lombok.ToString;
  * <p>积分算力账户，记录用户算力余额、每日登录奖励领取状态、
  * 以及收藏每日积分上限控制。支持乐观锁机制保证并发安全。</p>
  *
- * <h2>并发控制</h2>
+ * <h2>线程安全性</h2>
  * <p>使用乐观锁机制（version字段）防止并发更新冲突。
  * 在更新前检查版本号，更新时使用CAS操作确保数据一致性。</p>
  *
@@ -36,7 +36,7 @@ public class CreditAccountEntity extends BaseEntity {
      * <p>用于并发控制，每次更新时自动递增。
      * 在高并发场景下，乐观锁可有效防止数据不一致问题。</p>
      *
-     * <h3>使用方式</h3>
+     * <p><strong>使用方式</strong></p>
      * <ul>
      *   <li>查询时获取当前version值</li>
      *   <li>更新时携带version值</li>

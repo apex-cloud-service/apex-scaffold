@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
  * <p>用于接口层返回部门的组织架构信息，支持从飞书、钉钉、企业微信等第三方平台同步部门数据。
  * 部门采用树形结构组织，通过父部门ID和部门路径实现层级关系。
  *
- * <h2>核心字段</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>{@link #id} - 部门ID</li>
  *   <li>{@link #deptCode} - 部门编码（唯一标识）</li>
@@ -25,7 +25,7 @@ import lombok.NoArgsConstructor;
  *   <li>{@link #externalId} - 外部系统部门ID</li>
  * </ul>
  *
- * <h2>业务场景</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>组织架构展示：前端构建部门树形结构</li>
  *   <li>部门管理：查看、编辑部门信息</li>
@@ -34,7 +34,7 @@ import lombok.NoArgsConstructor;
  *   <li>第三方同步：从办公平台同步部门数据</li>
  * </ul>
  *
- * <h2>树形结构</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>使用 parentId 构建父子关系</li>
  *   <li>deptPath 存储完整层级路径，便于查询所有祖先部门</li>
@@ -42,14 +42,14 @@ import lombok.NoArgsConstructor;
  *   <li>sortOrder 控制同级部门的显示顺序</li>
  * </ul>
  *
- * <h2>第三方同步</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>syncSource 标识数据来源（FEISHU、DINGTALK、WECHAT_WORK、MANUAL）</li>
  *   <li>externalId 存储第三方平台的部门ID，用于增量同步和数据映射</li>
  *   <li>同步时保持部门层级关系和负责人信息</li>
  * </ul>
  *
- * <h2>注意事项</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>部门编码在租户内必须唯一</li>
  *   <li>删除部门需先检查是否有子部门和员工</li>

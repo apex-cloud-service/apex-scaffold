@@ -17,14 +17,14 @@ import reactor.core.publisher.Mono;
  * 创蓝253云通信平台的实际通信。遵循 DDD 分层架构的 Gateway 模式，
  * 作为基础设施层的适配器（Adapter），对上层隐藏API调用的技术细节。
  *
- * <h2>设计原则</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li><b>领域对象封装</b>：将API原始响应转换为领域层可用的结果对象</li>
  *   <li><b>异常处理统一</b>：所有API异常被捕获并转换为带有 success=false 的结果对象</li>
  *   <li><b>响应式编程</b>：使用 Project Reactor 的 Mono/Flux 进行非阻塞调用</li>
  * </ul>
  *
- * <h2>委派关系</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li><b>一键登录</b>：{@link #getPhoneNumberByToken(String)}
  *       → {@link ChuanglanApiService#exchangeTokenForPhone(String)}</li>
@@ -91,7 +91,7 @@ public class ChuanglanGatewayImpl implements ChuanglanGateway {
      * <p>调用创蓝一键登录API，使用token换取用户手机号。token为空时直接返回失败结果，
      * 调用异常时根据不同异常类型返回对应的错误信息。
      *
-     * <h3>业务流程</h3>
+     * <p><strong>业务流程</strong></p>
      * <ol>
      *   <li>验证token参数，非空校验</li>
      *   <li>调用 {@link ChuanglanApiService#exchangeTokenForPhone(String)} 执行token置换（带断路器保护）</li>
@@ -99,10 +99,10 @@ public class ChuanglanGatewayImpl implements ChuanglanGateway {
      *   <li>异常处理：区分业务异常、断路器熔断和网络异常</li>
      * </ol>
      *
-     * <h3>断路器保护</h3>
+     * <p><strong>断路器保护</strong></p>
      * <p>使用断路器保护创蓝API调用，当失败率超过阈值时自动熔断，防止级联故障。</p>
      *
-     * <h3>错误码说明</h3>
+     * <p><strong>错误码说明</strong></p>
      * <ul>
      *   <li>"PHONE_NOT_FOUND" - 未获取到手机号</li>
      *   <li>"NETWORK_ERROR" - 网络异常</li>
@@ -153,7 +153,7 @@ public class ChuanglanGatewayImpl implements ChuanglanGateway {
      *
      * <p>调用创蓝一键登录API，使用token换取用户手机号。支持传入客户端IP、加密类型和流水号等可选参数。
      *
-     * <h3>业务流程</h3>
+     * <p><strong>业务流程</strong></p>
      * <ol>
      *   <li>验证token参数，非空校验</li>
      *   <li>调用 {@link ChuanglanApiService#exchangeTokenForPhone(String, String, String, String)} 执行token置换（带断路器保护）</li>
@@ -161,10 +161,10 @@ public class ChuanglanGatewayImpl implements ChuanglanGateway {
      *   <li>异常处理：区分业务异常、断路器熔断和网络异常</li>
      * </ol>
      *
-     * <h3>断路器保护</h3>
+     * <p><strong>断路器保护</strong></p>
      * <p>使用断路器保护创蓝API调用，当失败率超过阈值时自动熔断，防止级联故障。</p>
      *
-     * <h3>请求参数说明</h3>
+     * <p><strong>请求参数说明</strong></p>
      * <ul>
      *   <li><b>token</b> - 运营商token（必填），SDK返回的token，一次有效</li>
      *   <li><b>clientIp</b> - 客户端IP（可选），用于反欺诈核验</li>
@@ -172,7 +172,7 @@ public class ChuanglanGatewayImpl implements ChuanglanGateway {
      *   <li><b>outId</b> - 客户方流水号（可选）</li>
      * </ul>
      *
-     * <h3>错误码说明</h3>
+     * <p><strong>错误码说明</strong></p>
      * <ul>
      *   <li>"PHONE_NOT_FOUND" - 未获取到手机号</li>
      *   <li>"NETWORK_ERROR" - 网络异常</li>
@@ -247,7 +247,7 @@ public class ChuanglanGatewayImpl implements ChuanglanGateway {
      *
      * <p>调用创蓝一键登录API，校验当前流量卡的手机号与传入的手机号码是否一致。
      *
-     * <h3>业务流程</h3>
+     * <p><strong>业务流程</strong></p>
      * <ol>
      *   <li>验证token和mobile参数，非空校验</li>
      *   <li>调用 {@link ChuanglanApiService#validateMobile(String, String, String)} 执行校验</li>
@@ -255,14 +255,14 @@ public class ChuanglanGatewayImpl implements ChuanglanGateway {
      *   <li>异常处理：区分业务异常和网络异常</li>
      * </ol>
      *
-     * <h3>请求参数说明</h3>
+     * <p><strong>请求参数说明</strong></p>
      * <ul>
      *   <li><b>token</b> - 运营商token（必填），SDK返回的token，一次有效</li>
      *   <li><b>mobile</b> - 待校验的手机号码（必填）</li>
      *   <li><b>outId</b> - 客户方流水号（可选）</li>
      * </ul>
      *
-     * <h3>响应字段说明</h3>
+     * <p><strong>响应字段说明</strong></p>
      * <ul>
      *   <li><b>isVerify</b> - 校验结果："1"表示是本机号码，"0"表示非本机号码</li>
      *   <li><b>tradeNo</b> - 交易流水号</li>
@@ -342,7 +342,7 @@ public class ChuanglanGatewayImpl implements ChuanglanGateway {
      * <p>通过创蓝短信平台v2模板API向指定手机号发送短信。参数为空时直接返回失败结果，
      * 调用异常时根据不同异常类型返回对应的错误信息。
      *
-     * <h3>业务流程</h3>
+     * <p><strong>业务流程</strong></p>
      * <ol>
      *   <li>验证手机号和验证码参数</li>
      *   <li>调用 {@link ChuanglanApiService#sendSms(String, String)} 发送短信（带断路器保护）</li>
@@ -350,10 +350,10 @@ public class ChuanglanGatewayImpl implements ChuanglanGateway {
      *   <li>异常处理：区分业务异常、断路器熔断和网络异常</li>
      * </ol>
      *
-     * <h3>断路器保护</h3>
+     * <p><strong>断路器保护</strong></p>
      * <p>使用断路器保护创蓝API调用，当失败率超过阈值时自动熔断，防止级联故障。</p>
      *
-     * <h3>错误码说明</h3>
+     * <p><strong>错误码说明</strong></p>
      * <ul>
      *   <li>"PARAM_ERROR" - 参数错误（手机号或验证码为空）</li>
      *   <li>"RESPONSE_ERROR" - 响应异常（缺少msgId字段）</li>
@@ -416,17 +416,17 @@ public class ChuanglanGatewayImpl implements ChuanglanGateway {
      *
      * <p>调用创蓝API查询当前账户的短信剩余条数或余额。
      *
-     * <h3>业务流程</h3>
+     * <p><strong>业务流程</strong></p>
      * <ol>
      *   <li>调用 {@link ChuanglanApiService#queryBalance()} 查询余额（带断路器保护）</li>
      *   <li>解析响应结果，提取余额数值</li>
      *   <li>异常处理：区分业务异常、断路器熔断和网络异常</li>
      * </ol>
      *
-     * <h3>断路器保护</h3>
+     * <p><strong>断路器保护</strong></p>
      * <p>使用断路器保护创蓝API调用，当失败率超过阈值时自动熔断，防止级联故障。</p>
      *
-     * <h3>错误码说明</h3>
+     * <p><strong>错误码说明</strong></p>
      * <ul>
      *   <li>"BALANCE_NOT_FOUND" - 余额字段不存在</li>
      *   <li>"QUERY_FAILED" - 查询失败</li>
@@ -476,7 +476,7 @@ public class ChuanglanGatewayImpl implements ChuanglanGateway {
      *
      * <p>从创蓝闪验API响应中提取解密后的手机号。
      *
-     * <h3>响应数据结构</h3>
+     * <p><strong>响应数据结构</strong></p>
      * <pre>{@code * {
      *   "code": "200000",
      *   "message": "成功",

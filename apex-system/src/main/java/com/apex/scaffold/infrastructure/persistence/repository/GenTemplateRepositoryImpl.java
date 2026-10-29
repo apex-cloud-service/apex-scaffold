@@ -19,7 +19,7 @@ import reactor.core.publisher.Mono;
  * {@link GenTemplatePoConverter} 在领域实体与 {@link GenTemplatePO} 之间转换，
  * 阻塞操作调度到 JDBC 专用线程池执行。
  *
- * <h2>核心职责</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>模板的增删改查</li>
  *   <li>按模板类型查询（entity、mapper、service等）</li>
@@ -27,7 +27,7 @@ import reactor.core.publisher.Mono;
  *   <li>JDBC 阻塞操作隔离到专用调度器</li>
  * </ul>
  *
- * <h2>模板分类</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li><strong>内置模板（isBuiltin=1）</strong>：系统预置，tenantId 通常为 "system"</li>
  *   <li><strong>自定义模板（isBuiltin=0）</strong>：租户创建，使用实际租户ID</li>

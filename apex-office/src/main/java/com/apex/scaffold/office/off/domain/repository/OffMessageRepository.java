@@ -11,7 +11,7 @@ import reactor.core.publisher.Mono;
  * <p>定义办公平台消息的持久化操作契约，支持消息的增删改查、收发件箱查询、未读统计、状态管理等功能。
  * 用于站内消息、系统通知、业务提醒等场景。
  *
- * <h2>核心职责</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>消息的基础 CRUD 操作</li>
  *   <li>按接收人查询消息（收件箱）</li>
@@ -21,7 +21,7 @@ import reactor.core.publisher.Mono;
  *   <li>分页查询和消息编码查询</li>
  * </ul>
  *
- * <h2>查询场景</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>收件箱：查询用户收到的消息列表</li>
  *   <li>发件箱：查询用户发送的消息列表</li>
@@ -29,7 +29,7 @@ import reactor.core.publisher.Mono;
  *   <li>消息管理：分页查询、状态筛选、类型筛选</li>
  * </ul>
  *
- * <h2>技术特性</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>响应式编程：所有方法返回 Mono/Flux</li>
  *   <li>消息编码：messageCode 作为业务唯一标识</li>
@@ -101,7 +101,6 @@ public interface OffMessageRepository {
      * 根据ID删除消息（逻辑删除）
      *
      * @param id 消息ID
-     * @return 删除操作的Mono包装
      */
     Mono<Void> deleteById(Long id);
 

@@ -49,7 +49,6 @@ public interface IpAccessControlService {
      *
      * @param ipAddress IP地址或CIDR
      * @param tenantId 租户ID
-     * @return 操作完成信号
      */
     Mono<Void> removeFromWhitelist(String ipAddress, String tenantId);
 
@@ -58,7 +57,6 @@ public interface IpAccessControlService {
      *
      * @param ipAddress IP地址或CIDR
      * @param tenantId 租户ID
-     * @return 操作完成信号
      */
     Mono<Void> removeFromBlacklist(String ipAddress, String tenantId);
 

@@ -415,6 +415,10 @@ public class TotpService {
 
     /**
      * TOTP 设置结果
+     *
+     * @param secret Base32 编码的 TOTP 密钥
+     * @param otpAuthUrl 供验证器 App 扫码的 otpauth:// 地址
+     * @param backupCodes 一次性备用恢复码
      */
     public record TotpSetupResult(String secret, String otpAuthUrl, List<String> backupCodes) {
         /**

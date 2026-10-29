@@ -26,7 +26,7 @@ import java.util.Optional;
  * 导致 Grafana 进程内存面板长期无数据。本类在 Linux 上读取 {@code /proc/self/statm} 补齐；
  * 非 Linux 环境（如本机 macOS 开发）不注册指标，与现状一致，不影响本地开发。
  *
- * <h2>实现风格</h2>
+ * <h2>设计说明</h2>
  * <p>采用函数式实现：指标元数据收敛为不可变 record 列表（{@link MemoryFieldSpec}），
  * {@link #bindTo(MeterRegistry)} 通过 {@code List.forEach} + lambda 统一注册两个 Gauge；
  * {@link #readMemoryBytes(int)} 通过 {@link Optional} 链式映射完成"读取 → 取字段 →

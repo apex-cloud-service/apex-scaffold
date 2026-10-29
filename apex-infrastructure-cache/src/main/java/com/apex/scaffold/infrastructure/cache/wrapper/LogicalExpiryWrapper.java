@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
  * <p>为缓存数据提供逻辑过期时间包装,用于实现缓存穿透防护和异步刷新策略。
  * 包装器只保存数据和逻辑期限，不负责缓存删除、刷新线程或并发互斥；这些行为由调用方实现。
  *
- * <h2>使用场景</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li><strong>高并发缓存刷新</strong>:避免缓存失效时大量请求直接打到数据库</li>
  *   <li><strong>缓存降级</strong>:过期数据仍可用于降级返回,避免服务不可用</li>
@@ -19,7 +19,7 @@ import lombok.NoArgsConstructor;
  *   <li><strong>热点数据保护</strong>:调用方可保留旧数据并自行协调刷新</li>
  * </ul>
  *
- * <h2>与物理过期的区别</h2>
+ * <h2>设计说明</h2>
  * <table border="1">
  *   <caption>逻辑过期 vs 物理过期</caption>
  *   <tr>

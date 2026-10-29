@@ -28,7 +28,6 @@ public class AdminReviewAuditService implements AdminReviewAuditPort {
      * 写入失败（返回行数非 1）时抛出 {@code IllegalStateException} 防止静默丢失审计。</p>
      *
      * @param record 审计记录内容
-     * @return 完成信号
      * @throws IllegalStateException 当审计写入影响行数不为 1 时抛出
      */
     @Override

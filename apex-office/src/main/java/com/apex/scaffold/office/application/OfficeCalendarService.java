@@ -168,6 +168,21 @@ public class OfficeCalendarService {
         return updateEvent(eventId, title, description, startTime, endTime, participantIds, location, null);
     }
 
+    /**
+     * 更新日历事件的全部可变字段。
+     *
+     * <p>{@code isAllDay} 为 {@code null} 时保留事件原有的全天标记语义。
+     *
+     * @param eventId 日历事件ID
+     * @param title 事件标题
+     * @param description 事件描述
+     * @param startTime 开始时间
+     * @param endTime 结束时间
+     * @param participantIds 参与人ID数组
+     * @param location 事件地点
+     * @param isAllDay 是否为全天事件，{@code null} 表示保留原值
+     * @return 更新是否成功；事件不存在时返回 {@code false}
+     */
     public Mono<Boolean> updateEvent(
             Long eventId,
             String title,

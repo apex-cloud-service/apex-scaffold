@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
  * <p>用于创建或更新 SSO 单点登录提供商配置，支持 SAML 2.0、CAS、LDAP 和 OIDC 等多种协议。
  * 所有参数均包含 JSR-303 校验注解以确保数据合法性。
  *
- * <h2>支持的协议类型</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>SAML - SAML 2.0 标准协议</li>
  *   <li>CAS - Central Authentication Service 协议</li>

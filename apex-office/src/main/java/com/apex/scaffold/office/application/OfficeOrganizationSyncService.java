@@ -716,7 +716,6 @@ public class OfficeOrganizationSyncService {
      *
      * @param platform           平台类型，对应镜像的同步来源
      * @param externalDepartments 本次同步拉取到的全部外部部门，按外部部门 ID 去重保留首个
-     * @return 完成信号
      */
     private Mono<Void> rebuildDepartmentHierarchy(OfficePlatform platform, List<OfficeDepartment> externalDepartments) {
         Map<String, String> externalParentIds = new HashMap<>();
@@ -909,6 +908,12 @@ public class OfficeOrganizationSyncService {
                 .next();
     }
 
+    /**
+     * 单批组织同步结果。
+     *
+     * @param syncedCount 本批同步成功的成员数量
+     * @param nextCursor 下一页游标，{@code null} 表示已到末页
+     */
     private record SyncBatchResult(int syncedCount, String nextCursor) {}
 
     /**
@@ -931,6 +936,11 @@ public class OfficeOrganizationSyncService {
 
     /**
      * 同步任务结果
+     *
+     * @param taskId 同步任务标识
+     * @param syncedCount 本次同步成功的成员数量
+     * @param message 结果说明
+     * @param success 是否成功
      */
     public record SyncTaskResult(Long taskId, int syncedCount, String message, boolean success) {
         /**

@@ -14,10 +14,10 @@ import lombok.ToString;
  * 采用链式Setter模式进行复杂对象的构建。
  * 提供领域行为方法用于更新Token和记录登录信息。</p>
  *
- * <h2>聚合边界</h2>
+ * <h2>设计说明</h2>
  * <p>User聚合包含以下实体：UserEntity、UserProfileEntity、UserRoleEntity、UserConsentEntity</p>
  *
- * <h2>核心业务规则</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>用户状态：0-禁用，1-正常</li>
  *   <li>通过openId进行微信身份识别</li>
@@ -316,7 +316,7 @@ public class UserEntity extends BaseEntity {
      * <p>用于首次注册时创建用户实体，自动设置默认状态和时间戳。
      * 此方法创建的用户为启用状态（status=1），未删除（deleted=0）。</p>
      *
-     * <h3>使用示例</h3>
+     * <p><strong>使用示例</strong></p>
      * <pre>{@code * UserEntity user = UserEntity.create(openId, unionId);
      * }</pre>
      *
@@ -347,7 +347,7 @@ public class UserEntity extends BaseEntity {
      * <p>当用户完成微信授权登录或刷新Token时调用此方法。
      * 自动更新AccessToken、RefreshToken及其过期时间，同时更新时间戳。</p>
      *
-     * <h3>业务规则</h3>
+     * <p><strong>业务规则</strong></p>
      * <ul>
      *   <li>AccessToken和RefreshToken必须同时更新</li>
      *   <li>过期时间由微信接口返回，通常为7200秒（2小时）</li>
@@ -374,7 +374,7 @@ public class UserEntity extends BaseEntity {
      * <p>每次用户成功登录时调用此方法，记录登录时间和IP地址。
      * 用于安全审计、活跃度统计和异常登录检测。</p>
      *
-     * <h3>业务规则</h3>
+     * <p><strong>业务规则</strong></p>
      * <ul>
      *   <li>覆盖上一次的登录记录</li>
      *   <li>自动更新updateTime</li>

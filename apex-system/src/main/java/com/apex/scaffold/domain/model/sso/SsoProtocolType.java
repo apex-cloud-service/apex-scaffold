@@ -8,7 +8,7 @@ import lombok.Getter;
  * <p>定义 SSO 单点登录系统支持的认证协议类型。不同协议在认证流程、令牌格式和集成方式上存在差异，
  * 系统需要根据协议类型执行不同的认证逻辑和令牌解析策略。
  *
- * <h2>支持的协议</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>{@link #SAML} - Security Assertion Markup Language 2.0，基于 XML 的企业级 SSO 标准</li>
  *   <li>{@link #CAS} - Central Authentication Service，由 Apereo 维护的开源 SSO 协议</li>
@@ -16,7 +16,7 @@ import lombok.Getter;
  *   <li>{@link #OIDC} - OpenID Connect，基于 OAuth 2.0 的现代身份认证层</li>
  * </ul>
  *
- * <h2>协议特点对比</h2>
+ * <h2>职责范围</h2>
  * <table border="1">
  *   <tr>
  *     <th>协议</th>
@@ -50,7 +50,7 @@ import lombok.Getter;
  *   </tr>
  * </table>
  *
- * <h2>使用场景</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>SSO 提供商配置时指定认证协议类型</li>
  *   <li>认证请求处理时选择对应的协议适配器</li>

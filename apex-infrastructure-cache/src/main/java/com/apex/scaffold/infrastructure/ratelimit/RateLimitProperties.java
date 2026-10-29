@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
  * <p>统一管理令牌桶、漏桶、滑动窗口三种限流算法的全局配置参数，
  * 支持通过 {@code application.yml} 的 {@code apex.ratelimit} 前缀进行外部化配置。
  *
- * <h2>配置示例</h2>
+ * <h2>使用示例</h2>
  * <pre>{@code
  * apex:
  *   ratelimit:

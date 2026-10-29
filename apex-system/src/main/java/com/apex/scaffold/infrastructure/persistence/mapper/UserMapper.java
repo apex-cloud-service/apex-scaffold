@@ -13,7 +13,7 @@ import org.apache.ibatis.annotations.Update;
  * <p>负责 {@code sys_user} 表的持久化操作，提供用户记录的 CRUD 和特殊查询能力。
  * 继承 MyBatis-Plus {@link BaseMapper} 获得通用单表 CRUD 操作（insert、update、delete、selectById 等）。
  *
- * <h2>核心功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>通用 CRUD：继承自 {@link BaseMapper}，支持单表增删改查</li>
  *   <li>行级锁查询：{@link #selectByIdForUpdate} 提供 {@code SELECT ... FOR UPDATE} 悲观锁支持</li>
@@ -21,14 +21,14 @@ import org.apache.ibatis.annotations.Update;
  *   <li>账号注销：{@link #deactivateForAccountDeletion} 清空用户敏感数据并停用账号</li>
  * </ul>
  *
- * <h2>使用场景</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>并发更新：使用 {@code selectByIdForUpdate} 锁定记录后更新，防止并发冲突</li>
  *   <li>内容审核：照片举报审核通过后调用 {@code banForPhotoReports} 封禁违规用户</li>
  *   <li>GDPR 合规：用户申请注销时调用 {@code deactivateForAccountDeletion} 清除个人信息</li>
  * </ul>
  *
- * <h2>注意事项</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>行级锁查询必须在事务中使用，否则锁立即释放</li>
  *   <li>封禁和注销操作会更新 {@code version} 字段（乐观锁）</li>

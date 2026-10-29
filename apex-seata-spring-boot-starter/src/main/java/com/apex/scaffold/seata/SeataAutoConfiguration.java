@@ -239,6 +239,9 @@ public class SeataAutoConfiguration {
         }
     }
 
+    /**
+     * 管理 TM/RM 客户端生命周期：容器启动后初始化，关闭时按 Seata 约定销毁。
+     */
     @lombok.RequiredArgsConstructor(access = lombok.AccessLevel.PACKAGE)
     static final class ClientLifecycle implements AutoCloseable {
         private final SeataProperties properties;

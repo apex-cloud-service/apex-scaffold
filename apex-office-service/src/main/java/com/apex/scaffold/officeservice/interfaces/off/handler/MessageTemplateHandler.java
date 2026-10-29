@@ -277,12 +277,15 @@ public class MessageTemplateHandler {
         return requestHandlerUtil.handleError(throwable);
     }
 
+    /** TemplateResult MessageTemplate 统一响应包装。 */
     @Schema(name = "OfficeTemplateResult")
     public static class TemplateResult extends Result<MessageTemplateDTO> {}
 
+    /** TemplateListResult MessageTemplate 列表统一响应包装。 */
     @Schema(name = "OfficeTemplateListResult")
     public static class TemplateListResult extends Result<List<MessageTemplateDTO>> {}
 
+    /** TemplateVoidResult 无数据统一响应包装。 */
     @Schema(name = "OfficeTemplateVoidResult")
     public static class TemplateVoidResult extends Result<Void> {}
 }

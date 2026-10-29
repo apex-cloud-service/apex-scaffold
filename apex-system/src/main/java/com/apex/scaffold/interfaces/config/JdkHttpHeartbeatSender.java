@@ -25,7 +25,7 @@ import java.util.StringJoiner;
  * <p>Sentinel 1.8.9 内置的简单 Socket 客户端在有效的 Dashboard 响应时可能返回 null 响应并引发空指针，
  * 本实现使用 JDK HttpClient 处理标准 HTTP 响应帧，并显式绕过进程级代理设置，确保控制面连接的稳定性。</p>
  *
- * <h2>核心特性</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>使用 JDK HttpClient 替代默认 Socket 实现，获得更好的 HTTP 协议处理能力</li>
  *   <li>绕过系统代理设置，直连 Sentinel Dashboard 控制平面</li>

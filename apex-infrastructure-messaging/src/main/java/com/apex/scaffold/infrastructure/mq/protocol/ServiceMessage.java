@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
  * <p>定义微服务架构下服务间异步通信的标准消息格式。
  * 支持服务发现、路由、追踪和多租户隔离等企业级特性。
  *
- * <h2>核心字段说明</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>messageId: 全局唯一的消息标识,用于幂等性和链路追踪</li>
  *   <li>sourceService: 消息来源服务名称</li>
@@ -24,14 +24,14 @@ import lombok.NoArgsConstructor;
  *   <li>headers: 扩展元数据,用于传递追踪ID、版本号等信息</li>
  * </ul>
  *
- * <h2>使用场景</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>订单服务通知库存服务扣减库存</li>
  *   <li>用户服务通知消息服务发送欢迎邮件</li>
  *   <li>支付服务通知订单服务更新支付状态</li>
  * </ul>
  *
- * <h2>消息路由策略</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>点对点: 指定targetService,消息发送到特定服务</li>
  *   <li>发布订阅: targetService为空,所有订阅该eventType的服务都能收到</li>

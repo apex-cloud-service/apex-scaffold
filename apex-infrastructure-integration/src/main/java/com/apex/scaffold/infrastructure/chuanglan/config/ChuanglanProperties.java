@@ -10,13 +10,13 @@ import org.springframework.context.annotation.Configuration;
  * <p>用于配置创蓝253云通信平台的相关连接参数，包括短信服务API和闪验（一键登录）服务API。
  * 所有敏感信息通过环境变量注入，确保生产环境配置安全。
  *
- * <h2>配置结构</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>{@code chuanglan.sms} - 短信服务相关配置（接口地址、账号、密码、签名、模板ID）</li>
  *   <li>{@code chuanglan.flash} - 闪验（一键登录）服务相关配置（接口地址、appId、appKey）</li>
  * </ul>
  *
- * <h2>配置示例（YAML格式）</h2>
+ * <h2>使用示例</h2>
  * <pre>{@code * chuanglan:
  *   # 短信服务配置（v2模板API）
  *   sms:
@@ -37,7 +37,7 @@ import org.springframework.context.annotation.Configuration;
  *     ssl-enabled: true             # 是否启用HTTPS，默认true
  * }</pre>
  *
- * <h2>环境变量说明</h2>
+ * <h2>设计说明</h2>
  * <table border="1">
  *   <tr><th>环境变量</th><th>对应配置</th><th>说明</th></tr>
  *   <tr><td>CL_SMS_HOST</td><td>chuanglan.sms.host</td><td>短信API主机</td></tr>
@@ -80,7 +80,7 @@ public class ChuanglanProperties {
      * <p>创蓝闪验SDK服务端配置，用于通过token置换用户手机号。
      * 该配置依据创蓝闪验服务端接口文档V3.X。
      *
-     * <h3>多平台说明</h3>
+     * <p><strong>多平台说明</strong></p>
      * <p>根据创蓝文档<a href="https://doc.chuanglan.com/document/NPQOJQE28LK8Z23U">
      * "一个应用对应一个appid，多个应用（不同bundleID）需在创蓝闪验平台创建多个应用以对应多个appid"</a>，
      * 不同平台需独立注册应用并获取各自的 AppID/AppKey。</p>
@@ -107,7 +107,7 @@ public class ChuanglanProperties {
      *
      * <p>创蓝253短信平台的连接参数，用于发送验证码和通知类短信。
      *
-     * <h3>接口信息（v2模板API）</h3>
+     * <p><strong>接口信息（v2模板API）</strong></p>
      * <ul>
      *   <li><b>短信发送</b>：POST /msg/sms/v2/tpl/send</li>
      *   <li><b>余额查询</b>：POST /msg/balance/json</li>
@@ -211,7 +211,7 @@ public class ChuanglanProperties {
      * <p>创蓝闪验SDK服务端配置，用于通过token置换用户手机号。
      * 该配置依据创蓝闪验服务端接口文档V3.X。
      *
-     * <h3>接口信息</h3>
+     * <p><strong>接口信息</strong></p>
      * <ul>
      *   <li><b>手机号置换</b>：POST /open/flashsdk/mobile-query</li>
      *   <li><b>默认地址</b>：wsflash.253.com:443</li>

@@ -20,7 +20,7 @@ import org.springframework.context.annotation.Primary;
  * 因此 {@link DomainEventOutboxStore}、{@link DomainEventPublisherImpl}、
  * {@link DomainEventOutboxDispatcher} 不会随组件扫描自动注册，必须在此显式装配。</p>
  *
- * <h2>按环境分条件装配</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li><strong>生产/开发（{@code apex.events.outbox.enabled=true}，默认）</strong>：注册基于事务
  *       Outbox 的可靠投递三件套——存储、发布器（{@code @Primary}）、后台投递器。</li>

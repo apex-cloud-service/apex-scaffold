@@ -31,14 +31,14 @@ import reactor.core.publisher.Mono;
  * {@link ResultCode#REPEAT_SUBMIT}，业务方法不会被执行第二次，解决客户端网络超时重试
  * 导致的重复扣款/重复下单等副作用。
  *
- * <h2>幂等键合成</h2>
+ * <h2>职责范围</h2>
  * <pre>
  *   apex:idem:{sha256Hex(请求路径 + "|" + 幂等键头值 + "|" + 客户端IP)}
  * </pre>
  * 路径维度隔离不同接口；IP 维度防止不同客户端复用同一键值；业务动作唯一性由客户端
  * 为每个动作生成唯一 UUID 放入请求头保证。
  *
- * <h2>并发与失败语义</h2>
+ * <h2>线程安全性</h2>
  * <ul>
  *   <li><b>并发保护</b>：SETNX 原子性保证同一幂等键并发到达时仅一个请求获得执行权，
  *       其余立即收到 {@code REPEAT_SUBMIT}</li>
@@ -53,7 +53,7 @@ import reactor.core.publisher.Mono;
  *       数据库唯一约束作为最终兜底</li>
  * </ul>
  *
- * <h2>响应式适配</h2>
+ * <h2>线程安全性</h2>
  * <p>兼容函数式端点（{@link ServerRequest}）与注解式端点（{@link ServerWebExchange}）两种
  * 方法参数形态；目标方法返回 {@link Mono} 时在其响应流上串联去重/释放逻辑，返回同步值时
  * 直接放行。与 {@code AntiReplayAspect} 同样采用「方法参数中查找请求对象」的模式，
@@ -228,7 +228,6 @@ public class IdempotentApiAspect {
      * 删除幂等键，允许失败后的重试。
      *
      * @param cacheKey 幂等键
-     * @return 删除完成信号
      */
     private Mono<Void> release(String cacheKey) {
         return redisTemplate.opsForValue().delete(cacheKey).then();
@@ -294,7 +293,13 @@ public class IdempotentApiAspect {
         return new RequestContext(meta.path(), meta.headers(), AspectRequestUtil.resolveClientIp(meta));
     }
 
-    /** 请求上下文：路径、请求头、客户端 IP 的轻量快照。 */
+    /**
+     * 请求上下文：路径、请求头、客户端 IP 的轻量快照。
+     *
+     * @param path 请求路径，参与幂等键构造
+     * @param headers 请求头快照
+     * @param clientIp 客户端 IP，参与幂等键构造
+     */
     private record RequestContext(String path, HttpHeaders headers, String clientIp) {
 
         /** 读取指定请求头首值。 */

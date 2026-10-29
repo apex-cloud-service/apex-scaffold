@@ -16,7 +16,7 @@ import reactor.core.publisher.Mono;
  * <p>创蓝253云通信平台的底层HTTP调用服务，负责与创蓝API接口进行实际的网络通信。
  * 使用 {@link WebClient} 实现非阻塞响应式HTTP调用，与项目的WebFlux响应式架构保持一致。
  *
- * <h2>支持的API</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li><b>短信发送（v2模板API）</b> - POST {@code /msg/sms/v2/tpl/send}，通过模板ID发送验证码短信，使用普通鉴权（password 放入请求体）</li>
  *   <li><b>余额查询</b> - POST {@code /msg/balance/json}，用于查询短信账户余额</li>
@@ -24,14 +24,14 @@ import reactor.core.publisher.Mono;
  *   <li><b>本机号校验</b> - POST {@code /open/flashsdk/mobile-validate}，用于校验当前流量卡手机号与传入手机号是否一致</li>
  * </ul>
  *
- * <h2>错误处理机制</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>HTTP 4xx/5xx 状态码抛出 {@link ChuanglanApiException}</li>
  *   <li>创蓝业务错误码（如余额不足、账号密码错误）也抛出 {@link ChuanglanApiException}</li>
  *   <li>网络超时或连接异常包装为 {@link ChuanglanApiException}</li>
  * </ul>
  *
- * <h2>闪验接口规范（依据创蓝闪验服务端文档V3.X）</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li><b>接口地址</b>：https://wsflash.253.com/open/flashsdk/mobile-query</li>
  *   <li><b>协议</b>：HTTPS</li>
@@ -94,7 +94,7 @@ public class ChuanglanApiService {
      * <p>调用创蓝253短信v2模板API发送短信。使用JSON格式的POST请求，
      * 通过普通鉴权模式（password 放入请求体）进行身份验证。
      *
-     * <h3>API请求格式（v2模板API）</h3>
+     * <p><strong>API请求格式（v2模板API）</strong></p>
      * <pre>{@code * POST https://smssh.253.com/msg/sms/v2/tpl/send
      * Content-Type: application/json
      *
@@ -111,7 +111,7 @@ public class ChuanglanApiService {
      * }
      * }</pre>
      *
-     * <h3>响应格式（v2模板API）</h3>
+     * <p><strong>响应格式（v2模板API）</strong></p>
      * <pre>{@code * {
      *   "code": "000000",
      *   "msgId": "25071516453300902203000007708373",
@@ -122,7 +122,7 @@ public class ChuanglanApiService {
      * }
      * }</pre>
      *
-     * <h3>签名算法（加密鉴权，当前未启用）</h3>
+     * <p><strong>签名算法（加密鉴权，当前未启用）</strong></p>
      * <p>以下为 HmacSHA256 加密鉴权签名算法，当前使用普通鉴权模式，
      * 加密鉴权相关代码已保留注释，需要时恢复。</p>
      * <ol>
@@ -148,7 +148,7 @@ public class ChuanglanApiService {
      *
      * <p>调用创蓝253短信API查询当前账户的短信剩余条数或余额信息。
      *
-     * <h3>API请求格式</h3>
+     * <p><strong>API请求格式</strong></p>
      * <pre>{@code * POST https://smssh1.253.com/msg/balance/json
      * Content-Type: application/json
      *
@@ -158,7 +158,7 @@ public class ChuanglanApiService {
      * }
      * }</pre>
      *
-     * <h3>响应格式</h3>
+     * <p><strong>响应格式</strong></p>
      * <pre>{@code * {
      *   "code": 0,
      *   "balance": "953",
@@ -167,7 +167,7 @@ public class ChuanglanApiService {
      * }
      * }</pre>
      *
-     * <h3>说明</h3>
+     * <p><strong>说明</strong></p>
      * <p>注意：此接口使用旧版v1 API格式，成功响应码为整型0，与短信v2 API的字符串"000000"不同。</p>
      *
      * @return 响应结果Mono，包含balance余额字段
@@ -184,7 +184,7 @@ public class ChuanglanApiService {
      * <p>调用创蓝闪验服务端API，使用客户端SDK获取的临时token置换用户的真实手机号码。
      * 该接口需要在创蓝闪验控制台配置服务端出口IP白名单以确保安全性。
      *
-     * <h3>业务流程</h3>
+     * <p><strong>业务流程</strong></p>
      * <ol>
      *   <li>App端集成创蓝闪验SDK，用户授权后获取临时token</li>
      *   <li>App将token传给服务端登录接口</li>
@@ -193,7 +193,7 @@ public class ChuanglanApiService {
      *   <li>使用AES算法解密手机号密文得到真实手机号</li>
      * </ol>
      *
-     * <h3>接口规范（创蓝闪验服务端文档V3.X）</h3>
+     * <p><strong>接口规范（创蓝闪验服务端文档V3.X）</strong></p>
      * <ul>
      *   <li><b>接口地址</b>：https://wsflash.253.com/open/flashsdk/mobile-query</li>
      *   <li><b>协议</b>：HTTPS</li>
@@ -204,7 +204,7 @@ public class ChuanglanApiService {
      *   <li><b>手机号解密</b>：AES/CBC/PKCS5Padding，密钥为md5(appKey)前16位，IV为后16位</li>
      * </ul>
      *
-     * <h3>请求参数</h3>
+     * <p><strong>请求参数</strong></p>
      * <table border="1">
      *   <tr><th>参数名</th><th>类型</th><th>必填</th><th>说明</th></tr>
      *   <tr><td>appId</td><td>String</td><td>是</td><td>应用的APPID，由控制台创建应用时生成</td></tr>
@@ -215,7 +215,7 @@ public class ChuanglanApiService {
      *   <tr><td>sign</td><td>String</td><td>是</td><td>HmacSHA256签名</td></tr>
      * </table>
      *
-     * <h3>响应格式</h3>
+     * <p><strong>响应格式</strong></p>
      * <pre>{@code * {
      *   "code": "200000",
      *   "message": "成功",
@@ -227,7 +227,7 @@ public class ChuanglanApiService {
      * }
      * }</pre>
      *
-     * <h3>响应字段说明</h3>
+     * <p><strong>响应字段说明</strong></p>
      * <table border="1">
      *   <tr><th>字段名</th><th>类型</th><th>说明</th></tr>
      *   <tr><td>code</td><td>String</td><td>响应代码，200000表示成功</td></tr>
@@ -287,7 +287,7 @@ public class ChuanglanApiService {
      * <p>调用创蓝闪验服务端API，校验当前流量卡的手机号与传入的手机号码是否一致。
      * 该接口需要在创蓝闪验控制台配置服务端出口IP白名单以确保安全性。
      *
-     * <h3>接口规范（创蓝闪验服务端文档V3.X）</h3>
+     * <p><strong>接口规范（创蓝闪验服务端文档V3.X）</strong></p>
      * <ul>
      *   <li><b>接口地址</b>：https://wsflash.253.com/open/flashsdk/mobile-validate</li>
      *   <li><b>协议</b>：HTTPS</li>
@@ -296,7 +296,7 @@ public class ChuanglanApiService {
      *   <li><b>响应内容类型</b>：application/json</li>
      * </ul>
      *
-     * <h3>请求参数</h3>
+     * <p><strong>请求参数</strong></p>
      * <table border="1">
      *   <tr><th>参数名</th><th>类型</th><th>必填</th><th>说明</th></tr>
      *   <tr><td>appId</td><td>String</td><td>是</td><td>应用的APPID，由控制台创建应用时生成</td></tr>
@@ -306,7 +306,7 @@ public class ChuanglanApiService {
      *   <tr><td>sign</td><td>String</td><td>是</td><td>HmacSHA256签名</td></tr>
      * </table>
      *
-     * <h3>响应格式</h3>
+     * <p><strong>响应格式</strong></p>
      * <pre>{@code * {
      *   "code": "200000",
      *   "message": "成功",
@@ -318,7 +318,7 @@ public class ChuanglanApiService {
      * }
      * }</pre>
      *
-     * <h3>响应字段说明</h3>
+     * <p><strong>响应字段说明</strong></p>
      * <table border="1">
      *   <tr><th>字段名</th><th>类型</th><th>说明</th></tr>
      *   <tr><td>code</td><td>String</td><td>响应代码，200000表示成功</td></tr>

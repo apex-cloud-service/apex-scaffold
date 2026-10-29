@@ -22,7 +22,7 @@ import reactor.core.publisher.Mono;
  * 基于 {@link Semaphore} 实现信号量机制（可扩展至 Redisson RSemaphore 分布式信号量），
  * 支持响应式和非响应式两种调用方式。
  *
- * <h2>工作原理</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>通过 {@link ConcurrencyControl} 注解标注需要控制并发的方法</li>
  *   <li>以方法签名为 Key，维护独立的 {@link Semaphore} 实例</li>
@@ -34,7 +34,7 @@ import reactor.core.publisher.Mono;
  *   <li>在 finally 块中释放信号量，确保不会发生资源泄漏</li>
  * </ul>
  *
- * <h2>线程模型</h2>
+ * <h2>线程安全性</h2>
  * <p>响应式路径下信号量 {@code tryAcquire(timeout)} 阻塞调用由 cache() 专用池承载；
  * 若后续升级为 Redisson 分布式 RSemaphore，该调度器选择无需变更。</p>
  *

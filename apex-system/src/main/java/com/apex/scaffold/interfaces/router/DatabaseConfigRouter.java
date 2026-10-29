@@ -38,7 +38,7 @@ public class DatabaseConfigRouter {
      * 校验 {@code system:database:*} 权限；数据源管理端点要求
      * {@code system:database:datasource:*} 细粒度权限。</p>
      *
-     * <h2>数据源管理端点</h2>
+     * <h2>职责范围</h2>
      * <ul>
      *   <li>GET /admin-api/v1/database/datasources - 分页查询数据源列表</li>
      *   <li>POST /admin-api/v1/database/datasources - 创建数据源</li>

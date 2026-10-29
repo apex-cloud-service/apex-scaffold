@@ -20,7 +20,7 @@ import lombok.extern.slf4j.Slf4j;
  * 该维度回退为空字符串，不影响其他维度的采集和最终哈希生成。
  * CPU 与主板维度均通过 {@link OsFamily#detect()} 识别操作系统后按策略分派采集。</p>
  *
- * <h2>采集维度</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li><strong>MAC 地址</strong>：遍历 {@link NetworkInterface}，跳过 loopback/虚拟接口，
  *       收集所有物理网卡 MAC，按字典序拼接</li>
@@ -41,11 +41,11 @@ import lombok.extern.slf4j.Slf4j;
  *   </li>
  * </ul>
  *
- * <h2>哈希规则</h2>
+ * <h2>设计说明</h2>
  * <p>三个维度以 {@code |} 分隔拼接为 {@code mac=xxx|cpu=xxx|board=xxx} 格式，
  * 然后取 SHA-256 的十六进制小写表示（64 字符）。</p>
  *
- * <h2>容器兼容</h2>
+ * <h2>设计说明</h2>
  * <p>容器内 {@code dmidecode} 通常不可用，主板维度回退为空。若容器内 MAC 地址
  * 每次重建都变化（如 Docker 默认 bridge 网络），建议通过
  * {@code apex.license.machine-fingerprint-override} 手动指定指纹。</p>

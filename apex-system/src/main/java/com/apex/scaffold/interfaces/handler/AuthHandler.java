@@ -41,7 +41,7 @@ import reactor.core.publisher.Mono;
  * <p>提供用户登录、注册、Token 刷新、退出登录和短信验证码发送等核心认证功能。
  * 支持多种登录方式（微信登录、创蓝一键登录、短信验证码登录）和微信手机号绑定。
  *
- * <h2>核心功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>登录认证：支持微信授权、创蓝一键登录、短信验证码登录</li>
  *   <li>用户注册：使用一次性票据完成注册流程</li>
@@ -51,7 +51,7 @@ import reactor.core.publisher.Mono;
  *   <li>手机号验证：创蓝手机号合法性验证</li>
  * </ul>
  *
- * <h2>安全特性</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>使用 {@link IdempotentApi} 防止重复注册和登录</li>
  *   <li>使用 {@link OperationLog} 记录关键操作审计日志</li>
@@ -123,7 +123,7 @@ public class AuthHandler extends BaseHandler {
      * 处理微信 APP 登录请求，通过微信开放平台授权码换取登录态，返回 JWT Token 和用户信息。
      * 登录方式由 {@link LoginRequest#getLoginType()} 动态决定，支持验证码登录、一键登录和短信验证码登录。
      *
-     * <h3>登录方式</h3>
+     * <p><strong>登录方式</strong></p>
      * <ul>
      *   <li>{@code WX_CODE} - 微信授权码登录</li>
      *   <li>{@code WX_PHONE} - 微信一键登录（手机号）</li>
@@ -513,14 +513,14 @@ public class AuthHandler extends BaseHandler {
      * 调用创蓝闪验本机号校验API，校验当前流量卡的手机号与传入的手机号码是否一致。
      * 该接口适用于需要验证用户当前使用的手机号是否为其SIM卡绑定手机号的场景。
      *
-     * <h3>业务场景</h3>
+     * <p><strong>业务场景</strong></p>
      * <ul>
      *   <li>用户身份验证：确认用户正在使用的手机号与注册手机号一致</li>
      *   <li>安全校验：在敏感操作前验证用户身份</li>
      *   <li>一键登录降级：当一键登录不可用时，验证用户输入的手机号是否为本机号</li>
      * </ul>
      *
-     * <h3>请求参数</h3>
+     * <p><strong>请求参数</strong></p>
      * <table border="1">
      *   <tr><th>参数名</th><th>类型</th><th>必填</th><th>说明</th></tr>
      *   <tr><td>token</td><td>String</td><td>是</td><td>本机认证SDK返回的临时令牌，一次有效</td></tr>
@@ -528,7 +528,7 @@ public class AuthHandler extends BaseHandler {
      *   <tr><td>outId</td><td>String</td><td>否</td><td>客户方流水号，用于业务追踪</td></tr>
      * </table>
      *
-     * <h3>响应字段</h3>
+     * <p><strong>响应字段</strong></p>
      * <table border="1">
      *   <tr><th>字段名</th><th>类型</th><th>说明</th></tr>
      *   <tr><td>isVerify</td><td>String</td><td>校验结果："1"表示是本机号码，"0"表示非本机号码</td></tr>

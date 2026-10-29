@@ -10,7 +10,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
  * <p>本类负责在应用运行期间定期重新加载并验证License文件,实现License过期即时失效和续期自动生效。
  * 通过守护线程定时执行重检任务,无需重启应用即可响应License文件的变更。</p>
  *
- * <h3>主要功能</h3>
+ * <p><strong>主要功能</strong></p>
  * <ul>
  *   <li><b>过期即时失效</b>:License运行期到期后无需重启应用,商业功能立即拒绝访问</li>
  *   <li><b>续期自动生效</b>:替换或续期License文件后无需重启应用,授权自动恢复</li>
@@ -18,7 +18,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
  *   <li><b>优雅关闭</b>:实现{@link AutoCloseable},应用关闭时自动终止调度线程</li>
  * </ul>
  *
- * <h3>工作原理</h3>
+ * <p><strong>工作原理</strong></p>
  * <p>调度器按{@code apex.license.recheck-interval}配置的间隔(默认1小时)定时执行以下流程:
  * <ol>
  *   <li>通过{@link LicenseValidator#refresh}触发License文件重新加载</li>
@@ -27,7 +27,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
  *   <li>如果验证失败,自动切换到降级模式(基础功能可用,商业功能拒绝)</li>
  * </ol>
  *
- * <h3>与即时降级的配合</h3>
+ * <p><strong>与即时降级的配合</strong></p>
  * <p>每次功能检查({@link LicenseValidator#isFeatureEnabled(String)})同样内置过期即时降级逻辑,
  * 重检间隔仅控制文件重新加载的频率。这种设计确保:
  * <ul>
@@ -35,11 +35,11 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
  *   <li>重检任务失败时,已缓存的验证器仍可继续工作(直到过期)</li>
  * </ul>
  *
- * <h3>线程安全</h3>
+ * <p><strong>线程安全</strong></p>
  * <p>调度器使用单线程{@link ScheduledExecutorService},守护线程命名为{@code apex-license-recheck}。
  * 应用关闭时,通过{@link #close()}方法调用{@code shutdownNow()}立即终止调度线程。</p>
  *
- * <h3>配置说明</h3>
+ * <p><strong>配置说明</strong></p>
  * <p>通过{@code apex.license.recheck-interval}配置重检间隔:
  * <ul>
  *   <li>设置为正数(如{@code 1h}、{@code 30m})时启用定时重检</li>
@@ -47,7 +47,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
  *   <li>建议值:{@code 1h}(每小时重检一次),平衡及时性和系统开销</li>
  * </ul>
  *
- * <h3>使用示例</h3>
+ * <p><strong>使用示例</strong></p>
  * <pre>{@code
  * // application.yml配置
  * apex:

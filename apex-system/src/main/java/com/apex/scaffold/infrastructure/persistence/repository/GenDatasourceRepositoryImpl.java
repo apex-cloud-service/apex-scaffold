@@ -20,7 +20,7 @@ import reactor.core.publisher.Mono;
  * {@link GenDatasourcePoConverter} 在领域实体与 {@link GenDatasourcePO} 之间转换，
  * 阻塞操作调度到 JDBC 专用线程池执行。
  *
- * <h2>核心职责</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>数据源配置的增删改查</li>
  *   <li>按租户隔离查询数据源列表</li>
@@ -28,7 +28,7 @@ import reactor.core.publisher.Mono;
  *   <li>JDBC 阻塞操作隔离到专用调度器</li>
  * </ul>
  *
- * <h2>租户隔离保障</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>所有查询自动过滤 {@code tenantId} 和 {@code deleted} 字段</li>
  *   <li>更新和删除操作依赖 MyBatis-Plus 租户拦截器校验</li>

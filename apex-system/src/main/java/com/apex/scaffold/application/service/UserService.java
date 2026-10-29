@@ -33,7 +33,7 @@ import reactor.core.publisher.Mono;
  *   <li>Token管理</li>
  * </ul>
  *
- * <h2>设计模式</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>缓存模式：使用Spring Cache提升查询性能</li>
  *   <li>事务脚本模式：管理业务流程</li>
@@ -95,7 +95,6 @@ public class UserService {
      * 状态允许创建业务数据，避免为不可写租户签发注册票据后在建档时才发现被拒。</p>
      *
      * @param phone 手机号，为空时跳过校验
-     * @return 校验通过信号
      */
     public Mono<Void> assertPhoneRegistrationAllowed(String phone) {
         return tenantGuard.assertActive();
@@ -107,7 +106,6 @@ public class UserService {
      * <p>注册票据签发前调用，先断言当前租户状态允许创建业务数据。</p>
      *
      * @param openId 微信 openId，为空或临时手机号身份时跳过校验
-     * @return 校验通过信号
      */
     public Mono<Void> assertWechatRegistrationAllowed(String openId) {
         return tenantGuard.assertActive();
@@ -121,7 +119,7 @@ public class UserService {
      * 结果会被缓存以提升性能。
      * </p>
      *
-     * <h3>缓存策略</h3>
+     * <p><strong>缓存策略</strong></p>
      * <ul>
      *   <li>缓存名称：user:openId</li>
      *   <li>缓存键：OpenID值</li>
@@ -185,7 +183,7 @@ public class UserService {
      * 结果会被缓存以提升性能。
      * </p>
      *
-     * <h3>缓存策略</h3>
+     * <p><strong>缓存策略</strong></p>
      * <ul>
      *   <li>缓存名称：user:id</li>
      *   <li>缓存键：用户ID</li>
@@ -244,19 +242,19 @@ public class UserService {
      * 使用事务保证数据一致性，同时使用缓存一致性服务清除相关缓存。
      * </p>
      *
-     * <h3>业务约束</h3>
+     * <p><strong>业务约束</strong></p>
      * <ul>
      *   <li><b>性别不可修改</b>：若数据库中已存在性别值，不允许修改性别字段，抛出 {@link BusinessException}（错误码 PARAM_ERROR）</li>
      *   <li>未传入的字段保持原值不变</li>
      * </ul>
      *
-     * <h3>缓存清除</h3>
+     * <p><strong>缓存清除</strong></p>
      * <ul>
      *   <li>user:id:{userId}</li>
      *   <li>user:openId:{openId}</li>
      * </ul>
      *
-     * <h3>事务管理</h3>
+     * <p><strong>事务管理</strong></p>
      * <p>
      * 仓储将阻塞 JDBC 写入调度到专用线程；本方法不声明同步事务，避免在返回
      * {@code Mono} 后事务提前结束。单条用户更新由数据库语句原子完成。
@@ -300,7 +298,7 @@ public class UserService {
      *   <li>MapStruct 仅合并非空字段，保留原值</li>
      * </ul>
      *
-     * <h3>优化说明</h3>
+     * <p><strong>优化说明</strong></p>
      * <p>
      * 使用 MapStruct 替代原有的逐字段 null-check 合并逻辑，
      * 提升代码可读性和维护性。MapStruct 生成的代码性能优于手动反射。
@@ -332,12 +330,12 @@ public class UserService {
      * 通常在用户登录时调用。
      * </p>
      *
-     * <h3>事务管理</h3>
+     * <p><strong>事务管理</strong></p>
      * <p>
      * 单条用户写入由数据库原子完成；缓存仅在持久化成功后驱逐。
      * </p>
      *
-     * <h3>P0-12修复(SV-9)</h3>
+     * <p><strong>P0-12修复(SV-9)</strong></p>
      * <p>补充 user:openId 缓存驱逐，确保通过 OpenID 查询时不会返回旧的登录信息。
      * 此前仅驱逐了 user:id 缓存，导致 getByOpenId 仍可能命中脏缓存。</p>
      *
@@ -378,7 +376,7 @@ public class UserService {
      * 通常在Token刷新或重新授权时调用。
      * </p>
      *
-     * <h3>事务管理</h3>
+     * <p><strong>事务管理</strong></p>
      * <p>
      * 单条用户写入由数据库原子完成；缓存仅在持久化成功后驱逐。
      * </p>
@@ -442,7 +440,6 @@ public class UserService {
      * 供「在线用户列表」按最近 5 分钟窗口判定在线状态。</p>
      *
      * @param userId 用户 ID
-     * @return 更新完成信号
      * @since 2.2.0
      */
     public Mono<Void> updateLastHeartbeat(Long userId) {

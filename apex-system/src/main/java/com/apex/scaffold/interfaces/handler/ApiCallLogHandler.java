@@ -28,7 +28,7 @@ import reactor.core.publisher.Mono;
  * 日志写入由 {@code ApiCallLogFilter} + {@code ApiCallLogService} 自动完成
  * （写读同源，请求/响应体与敏感头已脱敏），本 Handler 仅负责查询展示。</p>
  *
- * <h2>接口清单</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>GET /admin-api/v1/api-call-logs - 分页查询 API 调用日志
  *       （支持 serviceName / status / traceId / path 过滤）</li>

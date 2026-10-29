@@ -19,7 +19,7 @@ import reactor.core.publisher.Mono;
  * <p>提供微信网页授权（OAuth 2.0）相关的完整功能，包括授权URL生成、
  * Code换取用户信息、授权Token刷新等。
  *
- * <h3>微信网页授权流程</h3>
+ * <p><strong>微信网页授权流程</strong></p>
  * <ol>
  *   <li><b>第一步：引导用户进入授权页面</b>
  *     <p>调用 {@link #buildOauthUrl(String, String, String)} 生成授权URL，
@@ -34,13 +34,13 @@ import reactor.core.publisher.Mono;
  *     <p>当access_token过期时，调用 {@link #refreshAccessToken(String)} 获取新token。</li>
  * </ol>
  *
- * <h3>Scope权限说明</h3>
+ * <p><strong>Scope权限说明</strong></p>
  * <ul>
  *   <li>{@code snsapi_base} - 静默授权，只获取openid，不弹出授权页面</li>
  *   <li>{@code snsapi_userinfo} - 显式授权，获取用户详细信息，会弹出授权页面</li>
  * </ul>
  *
- * <h3>使用示例</h3>
+ * <p><strong>使用示例</strong></p>
  * <pre>{@code * // 1. 生成授权URL
  * String oauthUrl = oAuthService.buildOAuthUrl(
  *     "https://example.com/oauth/callback",
@@ -143,7 +143,7 @@ public class WeChatOAuthService {
      *   state=STATE#wechat_redirect
      * }</pre>
      *
-     * <h3>参数说明</h3>
+     * <p><strong>参数说明</strong></p>
      * <ul>
      *   <li>{@code redirectUri} - 授权后重定向的回调链接地址，需要使用urlencode编码</li>
      *   <li>{@code scope} - 应用授权作用域：
@@ -158,14 +158,14 @@ public class WeChatOAuthService {
      *       携带自定义业务参数，建议使用随机字符串</li>
      * </ul>
      *
-     * <h3>注意事项</h3>
+     * <p><strong>注意事项</strong></p>
      * <ul>
      *   <li>redirect_uri的域名必须在微信公众平台配置的授权回调域名下</li>
      *   <li>scope为snsapi_userinfo时会弹出授权页面</li>
      *   <li>URL最终必须以#wechat_redirect结尾</li>
      * </ul>
      *
-     * <h3>{@code redirectUri} 为空时的行为</h3>
+     * <p><strong>{@code redirectUri} 为空时的行为</strong></p>
      * <p>如果传入的redirectUri为空或null，方法不会抛出异常，
      * 所生成的授权URL将不包含redirect_uri参数，但这样的URL在实际场景中并不完整。
      *
@@ -203,7 +203,7 @@ public class WeChatOAuthService {
      * <p>用户同意授权后，微信会将授权code传递到redirect_uri上，
      * 服务端通过该code换取网页授权access_token和openid等信息。
      *
-     * <h3>返回数据说明</h3>
+     * <p><strong>返回数据说明</strong></p>
      * <p>成功时返回的Map包含以下字段：
      * <ul>
      *   <li>{@code access_token} - 网页授权接口调用凭证</li>
@@ -214,7 +214,7 @@ public class WeChatOAuthService {
      *   <li>{@code unionid} - 用户统一标识（仅绑定开放平台后有）</li>
      * </ul>
      *
-     * <h3>常见错误码</h3>
+     * <p><strong>常见错误码</strong></p>
      * <ul>
      *   <li>{@code 40029} - code无效（code已被使用或过期）</li>
      *   <li>{@code 40163} - code已被使用</li>
@@ -266,7 +266,7 @@ public class WeChatOAuthService {
      * <p>网页授权access_token的过期时间较短（默认为7200秒），
      * 当access_token过期后，可以使用refresh_token获取新的access_token。
      *
-     * <h3>返回数据说明</h3>
+     * <p><strong>返回数据说明</strong></p>
      * <p>成功时返回的Map包含以下字段：
      * <ul>
      *   <li>{@code access_token} - 新的网页授权接口调用凭证</li>
@@ -276,7 +276,7 @@ public class WeChatOAuthService {
      *   <li>{@code scope} - 用户授权的作用域</li>
      * </ul>
      *
-     * <h3>注意事项</h3>
+     * <p><strong>注意事项</strong></p>
      * <ul>
      *   <li>refresh_token有效期较长（默认为30天）</li>
      *   <li>refresh_token过期后需要用户重新授权</li>
@@ -327,7 +327,7 @@ public class WeChatOAuthService {
      * 此接口需scope为{@code snsapi_userinfo}时才能成功调用，
      * 会返回用户的昵称、头像、性别、省份、城市、国家等信息。
      *
-     * <h3>返回数据说明</h3>
+     * <p><strong>返回数据说明</strong></p>
      * <p>成功时返回的Map包含以下字段：
      * <ul>
      *   <li>{@code openid} - 用户唯一标识</li>
@@ -341,7 +341,7 @@ public class WeChatOAuthService {
      *   <li>{@code unionid} - 用户统一标识（绑定开放平台后有）</li>
      * </ul>
      *
-     * <h3>常见错误码</h3>
+     * <p><strong>常见错误码</strong></p>
      * <ul>
      *   <li>{@code 40003} - 不合法的OpenID</li>
      *   <li>{@code 40014} - 不合法的AccessToken</li>
@@ -392,7 +392,7 @@ public class WeChatOAuthService {
      * <p>向微信服务器验证指定的网页授权access_token和openid是否仍然有效。
      * 常用于判断用户的网页授权登录态是否已失效，需要刷新或重新授权。
      *
-     * <h3>适用场景</h3>
+     * <p><strong>适用场景</strong></p>
      * <ul>
      *   <li>在调用获取用户信息接口前先校验token是否有效</li>
      *   <li>定期检查用户的网页授权登录态</li>
@@ -433,7 +433,7 @@ public class WeChatOAuthService {
      * <p>简化版本的网页授权流程，将"Code换Token"和"获取用户信息"两步合并为一步。
      * 适用于只需要用户信息而不需要独立管理access_token的场景。
      *
-     * <h3>处理流程</h3>
+     * <p><strong>处理流程</strong></p>
      * <ol>
      *   <li>调用微信API使用code换取access_token和openid</li>
      *   <li>使用上一步获取的access_token和openid获取用户详细信息</li>

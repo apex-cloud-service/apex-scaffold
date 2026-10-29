@@ -30,7 +30,7 @@ import reactor.core.publisher.Mono;
  * 基于 Spring WebFlux Security 实现全响应式安全防护。
  * 集成了国际化支持，认证失败的错误消息会根据客户端的 Accept-Language 自动切换。
  *
- * <h2>主要功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li><b>JWT 认证</b>：通过 {@link JwtAuthenticationFilter} 实现无状态 Token 认证</li>
  *   <li><b>授权规则</b>：区分公开接口、管理员接口和需认证接口，管理端路径通过
@@ -43,7 +43,7 @@ import reactor.core.publisher.Mono;
  *   <li><b>Keycloak OIDC 登录</b>：当 {@code keycloak.enabled=true} 时启用 OAuth2 登录并绑定成功处理器</li>
  * </ul>
  *
- * <h2>配置属性</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>{@code apex.features.rbac} — 是否启用 RBAC 细粒度角色授权（默认 true，basic 版本关闭）</li>
  *   <li>{@code keycloak.enabled} — 是否启用 Keycloak OIDC 登录（默认 false）</li>
@@ -51,7 +51,7 @@ import reactor.core.publisher.Mono;
  *       由 {@link SecurityProperties} 读取，支持 Nacos 动态刷新</li>
  * </ul>
  *
- * <h2>认证异常响应码策略</h2>
+ * <h2>设计说明</h2>
  * <table>
  *   <tr><th>异常类型</th><th>HTTP 状态码</th><th>业务错误码</th><th>消息键</th><th>处理位置</th></tr>
  *   <tr><td>Token 过期</td><td>401</td><td>40101</td>
@@ -62,14 +62,14 @@ import reactor.core.publisher.Mono;
  *       <td>{@code auth.access_denied}</td><td>{@code accessDeniedHandler}</td></tr>
  * </table>
  *
- * <h2>设计模式</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>过滤器链模式：通过 {@link SecurityWebFilterChain} 编排安全过滤器</li>
  *   <li>策略模式：认证和授权异常处理通过策略接口
  *       Spring Security 的响应式认证入口实现</li>
  * </ul>
  *
- * <h2>公开接口（无需认证）</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>{@code /api/v1/auth/login}、{@code /api/v1/auth/refresh} - 认证接口</li>
  *   <li>{@code /api/v1/auth/sms/code} 等 - 建立登录态所需的短信认证接口</li>
@@ -126,7 +126,7 @@ public class SecurityConfig {
      * <p>
      * 构建 Spring Security 的核心过滤器链，包含以下配置：
      *
-     * <h3>配置项说明</h3>
+     * <p><strong>配置项说明</strong></p>
      * <ul>
      *   <li><b>CSRF</b>：禁用（微信小程序场景不需要 CSRF 防护）</li>
      *   <li><b>授权规则</b>：仅精确列出的登录前接口匿名放行，管理接口要求管理员角色，

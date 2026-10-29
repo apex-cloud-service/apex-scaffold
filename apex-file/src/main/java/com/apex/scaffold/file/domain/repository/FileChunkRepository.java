@@ -52,7 +52,6 @@ public interface FileChunkRepository {
      * 按文件 ID 逻辑删除全部分片
      *
      * @param fileId 文件 ID
-     * @return 完成信号
      */
     Mono<Void> deleteByFileId(Long fileId);
 }

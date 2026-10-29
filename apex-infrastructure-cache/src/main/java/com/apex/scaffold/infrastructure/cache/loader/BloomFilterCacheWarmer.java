@@ -20,7 +20,7 @@ import org.springframework.stereotype.Component;
  * <p>在应用启动时异步加载数据库中的所有有效 key 到 BloomFilter，实现缓存穿透防护的数据预热。
  * 支持多个业务域（用户、订单、商品等）的独立预热。
  *
- * <h2>核心功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>异步预热：避免阻塞应用启动，启动后台线程加载数据</li>
  *   <li>多命名空间：支持同时预热多个业务域的 BloomFilter</li>
@@ -28,21 +28,21 @@ import org.springframework.stereotype.Component;
  *   <li>启动日志：记录预热进度和结果，便于运维监控</li>
  * </ul>
  *
- * <h2>预热策略</h2>
+ * <h2>设计说明</h2>
  * <pre>
  * 1. 用户域（user）：加载所有 user_id
  * 2. 媒体域（media）：加载所有 media_id
  * 3. 其他业务域：根据业务需求扩展
  * </pre>
  *
- * <h2>配置说明</h2>
+ * <h2>设计说明</h2>
  * <p>通过以下配置启用：
  * <ul>
  *   <li>{@code apex.cache.bloom-filter.enabled=true}：启用布隆过滤器</li>
  *   <li>{@code apex.cache.bloom-filter.warm-on-startup=true}：启用启动预热</li>
  * </ul>
  *
- * <h2>性能考虑</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>预热时间：100万条数据约需 2-5 秒</li>
  *   <li>内存占用：100万元素、1%误判率约 1.2MB</li>

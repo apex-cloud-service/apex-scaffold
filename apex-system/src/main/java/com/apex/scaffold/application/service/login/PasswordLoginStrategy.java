@@ -20,7 +20,7 @@ import reactor.core.publisher.Mono;
  * 采用策略模式接入 {@link LoginStrategyProvider}，登录类型 {@link LoginType#PASSWORD}
  * 由 {@code sys_user.username / password} 字段支撑（V3 迁移引入）。</p>
  *
- * <h2>认证流程</h2>
+ * <h2>设计说明</h2>
  * <ol>
  *   <li>按 {@code username} 查询用户（{@code uk_username} 唯一索引）</li>
  *   <li>账号不存在 → {@link ResultCode#USER_NOT_FOUND}</li>
@@ -29,7 +29,7 @@ import reactor.core.publisher.Mono;
  *   <li>通过后签发 JWT Token 对并存储，返回 {@link LoginResponse}（isNewUser=false）</li>
  * </ol>
  *
- * <h2>安全说明</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>密码以 BCrypt 哈希存储于 {@code sys_user.password}，禁止明文</li>
  *   <li>暴力破解防护由 {@code AuthService.checkBruteForce} 统一处理

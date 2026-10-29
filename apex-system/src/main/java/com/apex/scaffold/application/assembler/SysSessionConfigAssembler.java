@@ -13,13 +13,13 @@ import org.mapstruct.ReportingPolicy;
  * <p>负责会话配置领域实体与应用层 DTO 之间的双向转换，使用 MapStruct 自动生成转换代码。
  * 支持请求对象到实体的转换、实体到响应 DTO 的转换。
  *
- * <h2>核心功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>Request → Entity 转换：将请求对象转换为领域实体</li>
  *   <li>Entity → DTO 转换：将领域实体转换为应用层 DTO</li>
  * </ul>
  *
- * <h2>字段映射规则</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>maxConcurrentSessions → maxSessions：最大并发会话数</li>
  *   <li>preventLogin → concurrentControl：并发控制策略（preventLogin=true 对应 concurrentControl=0，false 对应 1）</li>

@@ -20,7 +20,7 @@ import lombok.experimental.SuperBuilder;
  * 使用 MyBatis-Plus 注解映射数据库表结构，支持自动生成主键、JSON 字段映射、
  * 乐观锁、逻辑删除等特性。
  *
- * <h2>字段说明</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>id：主键，自增 ID</li>
  *   <li>title：文档标题</li>
@@ -38,7 +38,7 @@ import lombok.experimental.SuperBuilder;
  *   <li>tenantId：租户 ID（多租户隔离字段）</li>
  * </ul>
  *
- * <h2>继承关系</h2>
+ * <h2>设计说明</h2>
  * <p>继承 {@link BasePO}，自动获得创建时间、更新时间、版本号、逻辑删除等通用字段。
  *
  * @author Apex Team

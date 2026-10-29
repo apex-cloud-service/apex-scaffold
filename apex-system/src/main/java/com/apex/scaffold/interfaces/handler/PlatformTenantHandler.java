@@ -33,7 +33,7 @@ import reactor.core.publisher.Mono;
  * API。所有端点要求平台级 {@code tenant:*} 权限，租户管理员不具备这些权限，
  * 不得通过租户作用域访问平台目录。</p>
  *
- * <h2>接口清单</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>GET /api/v2/platform/tenants - 分页查询租户目录</li>
  *   <li>POST /api/v2/platform/tenants - 开通租户</li>

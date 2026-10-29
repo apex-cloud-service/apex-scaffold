@@ -25,14 +25,14 @@ import reactor.core.publisher.Mono;
  * <p>提供 SSO 单点登录的认证端点,包括发起认证、处理回调和登出功能。
  * 作为 SSO 客户端(SP)与 SSO 提供商(IdP)之间的桥梁,实现标准的 SSO 认证流程。
  *
- * <h2>核心功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>发起认证:生成认证请求并重定向到 SSO 提供商</li>
  *   <li>处理回调:接收 SSO 提供商的认证响应,验证用户身份并建立本地会话</li>
  *   <li>SSO 登出:注销 SSO 会话,并可选择性地重定向到 SSO 提供商的登出端点</li>
  * </ul>
  *
- * <h2>认证流程</h2>
+ * <h2>设计说明</h2>
  * <ol>
  *   <li>用户访问 /auth/sso/initiate 发起认证,指定 SSO 提供商 ID</li>
  *   <li>系统生成认证请求,重定向用户到 SSO 提供商的登录页面</li>
@@ -42,7 +42,7 @@ import reactor.core.publisher.Mono;
  *   <li>返回 SSO 会话标识、用户信息和会话过期时间</li>
  * </ol>
  *
- * <h2>接口清单</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>GET /auth/sso/initiate - 发起 SSO 认证(公开端点)</li>
  *   <li>POST /auth/sso/callback - SSO 回调处理(公开端点)</li>

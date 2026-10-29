@@ -9,7 +9,7 @@ import org.apache.ibatis.annotations.Mapper;
  *
  * <p>继承 {@link BaseMapper} 获得标准增删改查能力；租户过滤由持久化拦截器统一注入。
  *
- * <h3>使用约束</h3>
+ * <p><strong>使用约束</strong></p>
  * <ul>
  *   <li>所有调用必须在 {@code BlockingIoSchedulers.jdbc()} 调度器上执行</li>
  *   <li>逻辑删除由 MyBatis-Plus 自动附加条件</li>

@@ -14,7 +14,7 @@ import lombok.experimental.SuperBuilder;
  * <p>对应数据库表 {@code gen_template},存储代码生成使用的 FreeMarker 模板内容。
  * 模板定义了生成代码的结构和格式,支持内置模板和用户自定义模板。
  *
- * <h3>主要字段</h3>
+ * <p><strong>主要字段</strong></p>
  * <ul>
  *   <li>{@link #templateName} - 模板名称,便于识别和管理</li>
  *   <li>{@link #templateType} - 模板类型(entity/mapper/service/controller/vo/dto等)</li>
@@ -26,7 +26,7 @@ import lombok.experimental.SuperBuilder;
  *   <li>{@link #tenantId} - 租户标识</li>
  * </ul>
  *
- * <h3>模板类型枚举</h3>
+ * <p><strong>模板类型枚举</strong></p>
  * <ul>
  *   <li>{@code entity} - 领域实体类</li>
  *   <li>{@code po} - 持久化对象</li>
@@ -43,7 +43,7 @@ import lombok.experimental.SuperBuilder;
  *   <li>{@code assembler} - 组装器</li>
  * </ul>
  *
- * <h3>模板变量</h3>
+ * <p><strong>模板变量</strong></p>
  * <p>FreeMarker 模板可使用以下变量:
  * <ul>
  *   <li>{@code ${packageName}} - 包名</li>

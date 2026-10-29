@@ -28,6 +28,9 @@ public class OfficePlatformProperties {
     private Map<com.apex.scaffold.office.domain.OfficePlatform, Platform> platforms =
             new EnumMap<>(com.apex.scaffold.office.domain.OfficePlatform.class);
 
+    /**
+     * 单个办公平台的接入参数，未配置的字段沿用全局默认值。
+     */
     @Data
     public static class Platform {
         private boolean enabled;

@@ -38,7 +38,7 @@ import reactor.core.publisher.Mono;
  * 当 Redis 连接异常或 Redisson 不可用时，自动降级到 {@link LocalRateLimiter}
  * 本地限流方案，确保限流能力不因外部依赖故障而完全失效。
  *
- * <h2>降级策略</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li><strong>正常模式</strong>：基于 Redis 的分布式限流，精确控制用户级别速率</li>
  *   <li><strong>降级模式</strong>：基于 {@link LocalRateLimiter} 的本地限流，
@@ -47,7 +47,7 @@ import reactor.core.publisher.Mono;
  *       每分钟尝试恢复 Redis 连接</li>
  * </ul>
  *
- * <h2>线程模型</h2>
+ * <h2>线程安全性</h2>
  * <p>Redisson 的 {@link RRateLimiter#tryAcquire()} 为同步阻塞 API，
  * 本切面通过 {@link Mono#fromCallable(java.util.concurrent.Callable)} 与
  * {@link com.apex.scaffold.common.scheduler.BlockingIoSchedulers#cache()} 缓存专用池

@@ -29,7 +29,7 @@ import org.springframework.stereotype.Component;
  *
  * <p>处理用户相关的消息，包括用户注册、登录、退出和信息更新等事件。
  *
- * <h2>监听的消息类型</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>{@link MqConstant#TAG_USER_REGISTER} - 用户注册消息</li>
  *   <li>{@link MqConstant#TAG_USER_LOGIN} - 用户登录消息</li>
@@ -37,7 +37,7 @@ import org.springframework.stereotype.Component;
  *   <li>{@link MqConstant#TAG_USER_UPDATE} - 用户信息更新消息</li>
  * </ul>
  *
- * <h2>核心功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li><b>消息接收</b>：通过RocketMQ接收用户相关的消息</li>
  *   <li><b>消息路由</b>：根据消息标签分发到不同的处理方法</li>
@@ -46,7 +46,7 @@ import org.springframework.stereotype.Component;
  *   <li><b>用户后置处理</b>：注册欢迎消息、登录奖励、缓存清理等</li>
  * </ul>
  *
- * <h2>消费确认说明</h2>
+ * <h2>设计说明</h2>
  * <p>消息处理涉及的持久化和缓存操作在监听器返回前完成。监听器采用顺序消费模式，
  * 同一消息队列内按 RocketMQ 投递顺序处理；处理异常会向 RocketMQ 抛出并触发重消费，
  * 只有完整处理成功后才确认消息。</p>

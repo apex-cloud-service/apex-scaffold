@@ -53,7 +53,7 @@ import org.springframework.stereotype.Component;
  * <p>在进程内聚合 Micrometer 指标、OS 资源、Sentinel 规则、Resilience4j 熔断器、
  * MySQL/Redis/消息中间件/SkyWalking 状态，为监控大盘提供统一 JSON 数据源。</p>
  *
- * <h2>数据来源</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>JVM/CPU/线程/GC/类加载：Micrometer jvm.* / system.* / process.* 与 MXBean</li>
  *   <li>磁盘：{@link FileStore}；网络：{@link NetworkInterface} + Linux /proc/net/dev</li>
@@ -181,7 +181,16 @@ public class MonitorMetricsCollector {
 
     private volatile long lastNetSampleNanos;
 
-    /** 每分钟业务聚合桶。 */
+    /**
+     * 每分钟业务聚合桶。
+     *
+     * @param key 指标键
+     * @param name 指标显示名
+     * @param unit 计量单位
+     * @param minute 所属分钟窗口的 epoch 分钟
+     * @param value 该窗口内的聚合值
+     * @param time 格式化后的窗口时间标签
+     */
     private record BusinessBucket(String key, String name, String unit, long minute, double value, String time) {}
 
     /**

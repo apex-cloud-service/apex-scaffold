@@ -47,7 +47,14 @@ public final class LocalDeployment {
     /** 失败提示：不输出敏感诊断信息。 */
     private static final String FAILURE_HINT = "操作失败：请检查输入格式、密钥、依赖和输出路径；敏感诊断信息已隐藏";
 
-    /** 参数解析结果：子命令、选项与需要的位置参数集合。 */
+    /**
+     * 参数解析结果：子命令、选项与需要的位置参数集合。
+     *
+     * @param name 命令名称
+     * @param required 是否为必填命令
+     * @param allowed 允许的子命令集合
+     * @param options 选项说明
+     */
     private record Command(String name, Set<String> required, Set<String> allowed, Map<String, String> options) {}
 
     private LocalDeployment() {}

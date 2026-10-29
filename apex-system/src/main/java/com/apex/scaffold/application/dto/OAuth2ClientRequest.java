@@ -13,14 +13,14 @@ import lombok.NoArgsConstructor;
  * <p>用于管理 OAuth2 客户端（第三方应用）的注册、配置和更新。
  * OAuth2 客户端是指接入本系统授权服务的第三方应用，需要预先注册并配置授权参数。
  *
- * <h2>使用场景</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>注册新的 OAuth2 客户端应用</li>
  *   <li>更新已有客户端的配置（如回调地址、授权范围）</li>
  *   <li>配置客户端的安全策略（PKCE、授权同意等）</li>
  * </ul>
  *
- * <h2>OAuth2 授权模式</h2>
+ * <h2>设计说明</h2>
  * <p>支持的授权类型（authorizationGrantTypes）：
  * <ul>
  *   <li>{@code authorization_code}：授权码模式（最常用、最安全）</li>

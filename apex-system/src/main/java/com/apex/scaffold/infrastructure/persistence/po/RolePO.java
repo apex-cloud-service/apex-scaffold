@@ -14,26 +14,26 @@ import lombok.experimental.SuperBuilder;
  * <p>对应数据库表 {@code sys_role}，存储系统角色信息。
  * 角色是 RBAC（基于角色的访问控制）权限模型的核心实体，用于将权限分组并分配给用户。
  *
- * <h2>表结构</h2>
+ * <h2>设计说明</h2>
  * <p>表名：{@code sys_role}<br>
  * 主键：{@code id}（继承自 {@link BasePO}）<br>
  * 唯一索引：{@code uk_code}（角色编码唯一）
  *
- * <h2>使用场景</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>权限管理：定义系统中的各种角色及其权限范围</li>
  *   <li>用户授权：将角色分配给用户，实现权限控制</li>
  *   <li>数据权限：通过 dataScope 控制角色可访问的数据范围</li>
  * </ul>
  *
- * <h2>角色编码规范</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>格式：{@code ROLE_} 前缀 + 大写字母/数字/下划线</li>
  *   <li>示例：{@code ROLE_ADMIN}、{@code ROLE_USER}、{@code ROLE_OPERATOR}</li>
  *   <li>唯一性：系统内角色编码必须唯一</li>
  * </ul>
  *
- * <h2>数据权限类型</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>{@code 1}：全部数据权限</li>
  *   <li>{@code 2}：本部门数据权限</li>

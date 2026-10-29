@@ -152,7 +152,6 @@ public class FileRepositoryImpl implements FileRepository {
      * 根据文件 ID 删除文件信息
      *
      * @param id 文件 ID
-     * @return 成功返回 Mono.empty()
      */
     @Override
     public Mono<Void> deleteById(Long id) {

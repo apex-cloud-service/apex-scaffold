@@ -13,12 +13,12 @@ import java.util.concurrent.TimeUnit;
  * <p>用于方法级别的分布式锁控制，基于 Redisson 实现。
  * 支持多种降级策略，在获取锁失败时可选择抛出异常、返回 null 或执行降级方法。
  *
- * <h2>锁命名规范</h2>
+ * <h2>线程安全性</h2>
  * <pre>
  *   cache:lock:{prefix}:{key}
  * </pre>
  *
- * <h2>锁配置说明</h2>
+ * <h2>线程安全性</h2>
  * <ul>
  *   <li><strong>waitTime</strong>：等待获取锁的最大时间，默认 3000 毫秒。
  *       在指定的时间内会持续尝试获取锁，超时则根据降级策略处理。</li>
@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit;
  *       防止业务执行时间过长导致锁提前释放。</li>
  * </ul>
  *
- * <h2>降级策略</h2>
+ * <h2>设计说明</h2>
  * <ul>
  * <li>{@link FallbackStrategy#THROW_EXCEPTION} - 获取锁失败时抛出异常（默认）</li>
  * <li>{@link FallbackStrategy#RETURN_NULL} - 获取锁失败时返回 null</li>

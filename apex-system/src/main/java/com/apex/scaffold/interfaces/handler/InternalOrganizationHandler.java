@@ -28,7 +28,7 @@ import reactor.core.publisher.Mono;
  *
  * <p>请求头缺失时返回参数错误，而不是回退到默认租户，避免跨租户解析。</p>
  *
- * <h2>接口清单</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>POST /internal/v1/org/users/resolve - 批量解析真实系统用户</li>
  * </ul>

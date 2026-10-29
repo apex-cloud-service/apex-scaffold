@@ -23,7 +23,7 @@ import reactor.core.publisher.Mono;
  * 底层 Redisson 操作为同步阻塞 API，通过 {@code subscribeOn(BlockingIoSchedulers.cache())}
  * 将阻塞操作隔离到弹性线程池，避免阻塞 WebFlux 事件循环线程。
  *
- * <h2>设计模式</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li><strong>服务实现模式</strong>：实现 {@link CacheService} 接口，提供统一的缓存操作抽象</li>
  *   <li><strong>适配器模式</strong>：将 Redisson 客户端操作适配为响应式 {@link Mono} 返回类型</li>

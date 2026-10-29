@@ -30,7 +30,7 @@ import reactor.core.publisher.Mono;
  * 小程序 OpenID 不写入 {@code sys_user.open_id}（该列保留开放平台 App 渠道
  * 主身份），渠道身份统一登记在 {@code sys_user_social}（渠道=WECHAT_MINI）。
  *
- * <h2>账户归一四步</h2>
+ * <h2>设计说明</h2>
  * <ol>
  *   <li>按 {@code (WECHAT_MINI, openid)} 查社交绑定 → 命中则登录该账户</li>
  *   <li>未命中且有 UnionID → 按 {@code union_id} 查绑定 → 命中则登录并补当前渠道绑定行
@@ -41,7 +41,7 @@ import reactor.core.publisher.Mono;
  *       phoneCode 置换出的手机号未注册时签发 {@code REGISTRATION} 票据引导注册</li>
  * </ol>
  *
- * <h2>渠道配置</h2>
+ * <h2>设计说明</h2>
  * <p>依赖 {@code wechat.miniapp} 配置；凭据缺失时网关透传
  * {@code WECHAT_CHANNEL_NOT_CONFIGURED} 明确错误码，不影响其他登录方式。
  *

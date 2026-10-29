@@ -40,7 +40,7 @@ import reactor.core.publisher.Mono;
  * 提供流程发起、待办任务查询、任务审批、流程回退、任务转办、任务委派、
  * 流程挂起/恢复以及实例查询与统计等功能。
  *
- * <h2>核心功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>流程实例管理：发起流程实例、查询实例列表与详情</li>
  *   <li>任务处理：查询待办任务、完成任务审批</li>
@@ -49,7 +49,7 @@ import reactor.core.publisher.Mono;
  *   <li>统计分析：工作流统计数据与趋势查询</li>
  * </ul>
  *
- * <h2>接口列表</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>POST /api/v1/workflows/{workflowCode}/instances — 发起流程实例</li>
  *   <li>GET /api/v1/workflows/tasks/pending — 查询当前用户待办任务</li>
@@ -126,12 +126,25 @@ public class WorkflowHandler {
         }
     }
 
-    /** 统计查询失败时返回的零值数据。 */
+    /**
+     * 统计查询失败时返回的零值数据。
+     *
+     * @param totalInstances 实例总数
+     * @param runningInstances 运行中的实例数
+     * @param completedInstances 已完成实例数
+     * @param pendingTasks 待办任务数
+     */
     @Schema(name = "WorkflowStatisticsFallback")
     public record StatisticsFallback(
             int totalInstances, int runningInstances, int completedInstances, int pendingTasks) {}
 
-    /** 趋势查询失败时返回的空列表数据。 */
+    /**
+     * 趋势查询失败时返回的空列表数据。
+     *
+     * @param dateList 日期标签序列
+     * @param completedList 每日完成数序列
+     * @param rejectedList 每日驳回数序列
+     */
     @Schema(name = "WorkflowTrendFallback")
     public record TrendFallback(
             java.util.List<String> dateList,
@@ -757,7 +770,6 @@ public class WorkflowHandler {
      * 发送动作由 {@link WorkflowEventPublisher} 内部调度到事件专用线程池执行。
      *
      * @param event 待发布的领域事件
-     * @return 发布完成信号，发布失败记录日志后正常完成
      */
     private Mono<Void> publish(AbstractDomainEvent event) {
         return Mono.defer(() -> workflowEventPublisher.publish(event))
@@ -781,7 +793,6 @@ public class WorkflowHandler {
      * @param taskId 任务 ID
      * @param approverId 审批人账户 ID
      * @param comment 审批意见
-     * @return 任务完成事件旁路的完成信号
      */
     private Mono<Void> publishTaskCompleted(Long taskId, Long approverId, String comment) {
         return Mono.defer(() -> workflowQueryService.getTaskById(taskId))
@@ -807,7 +818,6 @@ public class WorkflowHandler {
      * @param taskId 任务 ID
      * @param assigneeId 办理人账户 ID
      * @param assignedBy 分配人账户 ID
-     * @return 任务分配事件旁路的完成信号
      */
     private Mono<Void> publishTaskAssigned(Long taskId, Long assigneeId, Long assignedBy) {
         return Mono.defer(() -> workflowQueryService.getTaskById(taskId))

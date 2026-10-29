@@ -13,7 +13,7 @@ import java.lang.annotation.Target;
  * 如果检测到 {@code version} 字段已被其他事务修改（乐观锁冲突），
  * 自动重试目标方法，直至成功或达到最大重试次数。
  *
- * <h2>使用场景</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li><strong>库存扣减</strong>：秒杀场景下对商品库存的并发扣减</li>
  *   <li><strong>余额更新</strong>：并发转账或充值操作</li>
@@ -21,7 +21,7 @@ import java.lang.annotation.Target;
  *   <li><strong>状态变更</strong>：订单状态等需要并发安全更新的场景</li>
  * </ul>
  *
- * <h2>使用方式</h2>
+ * <h2>使用示例</h2>
  * <pre>{@code * @OptimisticLockRetry(maxRetries = 3, retryDelay = 50)
  * @Transactional
  * public boolean deductStock(Long productId, int quantity) {
@@ -34,7 +34,7 @@ import java.lang.annotation.Target;
  * }
  * }</pre>
  *
- * <h2>注意事项</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>被标注的方法必须具有幂等性或可重复执行，重试不应产生副作用</li>
  *   <li>目标方法需使用 MyBatis-Plus 的 {@code updateById} 操作，

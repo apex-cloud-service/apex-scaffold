@@ -28,12 +28,12 @@ import reactor.core.publisher.Mono;
  * 审计写入由 {@code OperationLogAspect} 切面 + {@code OperationLogService}
  * 在业务方法执行后自动完成（写读同源），本 Handler 仅负责查询展示。
  *
- * <h2>核心功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>审计日志分页查询：支持按操作模块、操作人模糊匹配过滤</li>
  * </ul>
  *
- * <h2>接口列表</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>GET /admin-api/v1/audit-logs — 分页查询审计日志</li>
  * </ul>

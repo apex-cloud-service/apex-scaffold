@@ -17,7 +17,7 @@ import reactor.core.publisher.Mono;
  * <p>提供统一的 WebFlux 环境下 JSON 格式 HTTP 响应写入方法，消除 {@code SecurityConfig}、
  * {@code JwtAuthenticationFilter} 和 {@code GlobalExceptionHandler} 中重复的响应写入代码。
  *
- * <h2>核心功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>{@link #writeJson(ServerWebExchange, HttpStatus, Result)} — 核心方法，写入任意 JSON 响应</li>
  *   <li>{@link #unauthorized(ServerWebExchange, String)} — 返回 401 未授权响应</li>
@@ -25,13 +25,13 @@ import reactor.core.publisher.Mono;
  *   <li>{@link #error(ServerWebExchange, HttpStatus, Integer, String)} — 返回自定义错误响应</li>
  * </ul>
  *
- * <h2>设计模式</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li><b>工具类模式</b>：私有构造方法禁止实例化，全部通过静态方法调用</li>
  *   <li><b>模板方法模式</b>：所有方法内部委托给 {@link #writeJson} 执行实际的响应写入</li>
  * </ul>
  *
- * <h2>响应格式</h2>
+ * <h2>设计说明</h2>
  * <p>所有响应统一为 JSON 格式，包含 code、msg、data、traceId 四个字段：
  * <pre>{@code * {
  *   "code": 401,
@@ -63,7 +63,6 @@ public final class ResponseUtil {
      * @param exchange 当前 WebFlux 服务端交换对象
      * @param status   HTTP 状态码
      * @param result   统一响应结果对象
-     * @return 表示写入完成的 {@link Mono}{@code <Void>}
      */
     public static Mono<Void> writeJson(ServerWebExchange exchange, HttpStatus status, Result<?> result) {
         exchange.getResponse().setStatusCode(status);
@@ -80,7 +79,6 @@ public final class ResponseUtil {
      *
      * @param exchange 当前 WebFlux 服务端交换对象
      * @param message  错误提示信息
-     * @return 表示写入完成的 {@link Mono}{@code <Void>}
      */
     public static Mono<Void> unauthorized(ServerWebExchange exchange, String message) {
         String traceId = TraceIdUtil.getTraceId();
@@ -96,7 +94,6 @@ public final class ResponseUtil {
      *
      * @param exchange 当前 WebFlux 服务端交换对象
      * @param message  错误提示信息
-     * @return 表示写入完成的 {@link Mono}{@code <Void>}
      * @since 2.2.0
      */
     public static Mono<Void> tokenExpired(ServerWebExchange exchange, String message) {
@@ -112,7 +109,6 @@ public final class ResponseUtil {
      *
      * @param exchange 当前 WebFlux 服务端交换对象
      * @param message  错误提示信息
-     * @return 表示写入完成的 {@link Mono}{@code <Void>}
      */
     public static Mono<Void> forbidden(ServerWebExchange exchange, String message) {
         String traceId = TraceIdUtil.getTraceId();
@@ -129,7 +125,6 @@ public final class ResponseUtil {
      * @param status   HTTP 状态码
      * @param code     业务错误码
      * @param message  错误提示信息
-     * @return 表示写入完成的 {@link Mono}{@code <Void>}
      */
     public static Mono<Void> error(ServerWebExchange exchange, HttpStatus status, Integer code, String message) {
         String traceId = TraceIdUtil.getTraceId();

@@ -63,7 +63,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
  * <p>用于让 SpringDoc 正确识别 RouterFunction 注册的接口并生成 Swagger 文档。
  * 除精确声明的登录前公开接口外，业务接口统一声明 Bearer JWT 认证要求。
  *
- * <h2>关于 @RouterOperations 注解的位置</h2>
+ * <h2>设计说明</h2>
  * <p>SpringDoc 要求 {@code @RouterOperations} 注解必须放在 {@code @Bean} 方法上才能被识别。
  * 为避免方法过长（P3C 规范 MethodTooLongRule），将路由按模块分组到多个 @Bean 方法中。
  *

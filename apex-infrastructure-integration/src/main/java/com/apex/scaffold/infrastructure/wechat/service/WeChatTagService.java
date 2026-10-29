@@ -17,11 +17,11 @@ import reactor.core.publisher.Mono;
  * <p>提供微信公众平台用户标签管理相关的功能，包括创建、查询、修改、删除标签，
  * 以及为用户打标签、取消标签、获取标签下用户列表等。
  *
- * <h3>标签功能概述</h3>
+ * <p><strong>标签功能概述</strong></p>
  * <p>微信公众平台支持对用户进行标签化分组管理，方便精准推送消息。
  * 每个公众平台最多可创建100个标签，每个用户可以被打上多个标签。
  *
- * <h3>官方文档</h3>
+ * <p><strong>官方文档</strong></p>
  * <ul>
  *   <li><a href="https://developers.weixin.qq.com/doc/offiaccount/User_Management/User_Tag_Management.html">
  *       用户标签管理</a></li>
@@ -63,7 +63,7 @@ public class WeChatTagService {
      *
      * <p>在公众号上创建一个新的用户标签。每个公众号最多可创建100个标签。
      *
-     * <h3>标签命名规范</h3>
+     * <p><strong>标签命名规范</strong></p>
      * <ul>
      *   <li>标签名长度不超过30个字符</li>
      *   <li>一个公众号最多创建100个标签</li>
@@ -161,7 +161,7 @@ public class WeChatTagService {
      *
      * <p>删除指定标签。删除后，之前被打上此标签的用户将不再拥有该标签。
      *
-     * <h3>注意事项</h3>
+     * <p><strong>注意事项</strong></p>
      * <ul>
      *   <li>删除后标签不可恢复</li>
      *   <li>删除标签不影响用户的其他数据</li>

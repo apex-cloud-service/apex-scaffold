@@ -47,35 +47,18 @@ public interface OAuth2ClientSecretRotationService {
     Mono<Boolean> validateClientSecret(String clientId, String clientSecret);
 
     /**
-     *
-     *
      * 查找密钥已过期的客户端。
      *
-     *
-     *
-     *
-     *
-     * @return 客户端列表
-     *
-     *
+     * @return 密钥已过期的客户端 ID 流
      */
     Flux<String> findClientsWithExpiredSecrets();
 
     /**
-     *
-     *
      * 查找密钥即将过期的客户端。
      *
+     * <p>临期阈值由客户端实体的密钥过期策略决定，不通过本方法参数传入。
      *
-     *
-     *
-     *
-     * @param days 天数
-     *
-     *
-     * @return 客户端列表
-     *
-     *
+     * @return 密钥即将过期的客户端 ID 流
      */
     Flux<String> findClientsWithExpiringSoonSecrets();
 
@@ -84,7 +67,6 @@ public interface OAuth2ClientSecretRotationService {
      *
      * @param clientId 客户端ID
      * @param scheduledTime 调度时间
-     * @return 调度结果
      */
     Mono<Void> scheduleSecretRotation(String clientId, Instant scheduledTime);
 
@@ -98,11 +80,6 @@ public interface OAuth2ClientSecretRotationService {
      *
      *
      * @param clientId 客户端ID
-     *
-     *
-     * @return 通知结果
-     *
-     *
      */
     Mono<Void> notifyClientSecretExpiring(String clientId);
 }

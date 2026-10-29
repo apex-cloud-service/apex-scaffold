@@ -23,7 +23,7 @@ import org.springframework.stereotype.Component;
  * {@link NotificationService#publishLocal(NotificationService.NotificationMessage)}
  * 向本实例持有的 SSE 长连接订阅者推送，<b>绝不</b>再次发布到 MQ，从而避免消息回环。</p>
  *
- * <h2>消息格式</h2>
+ * <h2>设计说明</h2>
  * <pre>
  * {
  *   "messageId": "全局唯一ID（幂等键）",
@@ -33,7 +33,7 @@ import org.springframework.stereotype.Component;
  * }
  * </pre>
  *
- * <h2>消费确认说明</h2>
+ * <h2>设计说明</h2>
  * <p>本地推送完成后再返回，处理失败时抛出异常触发 RocketMQ 重消费。幂等性由
  * {@link MqConsumerService} 基于 Redis 保证。</p>
  *

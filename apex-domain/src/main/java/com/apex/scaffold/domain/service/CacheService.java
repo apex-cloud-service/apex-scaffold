@@ -10,7 +10,7 @@ import reactor.core.publisher.Mono;
  * <p>定义缓存操作的接口规范，由基础设施层实现（如Redis等中间件）。
  * 提供单值缓存、批量缓存、过期时间管理及缓存删除等核心操作。</p>
  *
- * <h2>核心功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li><b>单值读写</b>：基于key-value模式的缓存存取，支持泛型类型安全</li>
  *   <li><b>批量读写</b>：批量获取和设置缓存，减少网络往返次数，提升性能</li>
@@ -18,7 +18,7 @@ import reactor.core.publisher.Mono;
  *   <li><b>缓存删除</b>：支持单个或批量删除缓存条目</li>
  * </ul>
  *
- * <h2>使用场景</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>短信验证码临时存储（5分钟过期）</li>
  *   <li>用户会话Token缓存</li>
@@ -26,7 +26,7 @@ import reactor.core.publisher.Mono;
  *   <li>接口幂等性Key缓存</li>
  * </ul>
  *
- * <h2>类型安全</h2>
+ * <h2>设计说明</h2>
  * <p>所有读写方法均使用泛型参数 {@code T} 和 {@code Class<T>} 保证类型安全。
  * 写入时自动序列化为JSON格式，读取时自动反序列化为目标类型。</p>
  *

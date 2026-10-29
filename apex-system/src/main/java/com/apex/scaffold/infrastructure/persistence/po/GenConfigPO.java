@@ -14,7 +14,7 @@ import lombok.experimental.SuperBuilder;
  * <p>对应数据库表 {@code gen_config},存储代码生成的配置参数,包含目标表清单、
  * 包名结构、模块划分、模板选择和输出路径等信息。
  *
- * <h3>主要字段</h3>
+ * <p><strong>主要字段</strong></p>
  * <ul>
  *   <li>{@link #configName} - 配置名称,便于识别和管理</li>
  *   <li>{@link #datasourceId} - 关联的数据源ID,指定从哪个数据库读取表结构</li>
@@ -29,13 +29,13 @@ import lombok.experimental.SuperBuilder;
  *   <li>{@link #tenantId} - 租户标识</li>
  * </ul>
  *
- * <h3>安全约束</h3>
+ * <p><strong>安全约束</strong></p>
  * <ul>
  *   <li>{@link #outputPath} 必须经过路径穿越校验,禁止包含 {@code ..} 或写入系统敏感目录</li>
  *   <li>支持的白名单路径前缀应配置在应用层 Service 中</li>
  * </ul>
  *
- * <h3>JSON 字段格式</h3>
+ * <p><strong>JSON 字段格式</strong></p>
  * <ul>
  *   <li>{@code tableNames}: ["sys_user", "sys_role"]</li>
  *   <li>{@code templateIds}: [1, 2, 3, 5]</li>

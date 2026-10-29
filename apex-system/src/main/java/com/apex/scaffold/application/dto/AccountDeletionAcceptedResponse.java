@@ -12,13 +12,13 @@ import lombok.NoArgsConstructor;
  * <p>当用户申请注销账号时，系统立即失效账号并返回此响应对象。
  * 受理后清理任务在后台异步执行，客户端应保存 {@code requestId} 用于轮询清理进度。
  *
- * <h2>使用场景</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>用户申请注销账号：调用注销 API 后立即返回</li>
  *   <li>轮询清理进度：客户端使用 {@code requestId} 查询清理任务状态</li>
  * </ul>
  *
- * <h2>字段说明</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>{@code requestId}：本次注销请求的唯一标识，用于轮询清理进度</li>
  *   <li>{@code jobId}：后台异步清理任务的 ID</li>

@@ -15,7 +15,7 @@ import org.springframework.context.annotation.Bean;
  * 客户端的访问密钥、区域和端点等配置信息。通过 {@link VolcEngineTosConfig} 内部配置类
  * 按需创建 {@link TOSV2} 客户端 Bean。</p>
  *
- * <h2>配置示例</h2>
+ * <h2>使用示例</h2>
  * <pre>{@code * storage.volcengine.enabled=true
  * storage.volcengine.access-key=your-access-key
  * storage.volcengine.secret-key=your-secret-key
@@ -67,11 +67,6 @@ public class VolcEngineConfig {
          */
         @Bean
         @ConfigurationProperties(prefix = "storage.volcengine", ignoreInvalidFields = true)
-        /**
-         * volcEngineConfig
-         *
-         * @return 结果
-         */
         public VolcEngineConfig volcEngineConfig() {
             return new VolcEngineConfig();
         }
@@ -83,13 +78,6 @@ public class VolcEngineConfig {
          * @return TOSV2 客户端实例
          */
         @Bean
-        /**
-         * tosClient
-         *
-         * @param config 参数
-         *
-         * @return 结果
-         */
         public TOSV2 tosClient(VolcEngineConfig config) {
             log.info("初始化火山引擎TOS客户端, endpoint: {}, region: {}", config.getEndpoint(), config.getRegion());
             return new TOSV2ClientBuilder()

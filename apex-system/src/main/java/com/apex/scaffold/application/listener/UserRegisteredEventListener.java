@@ -82,7 +82,6 @@ public class UserRegisteredEventListener {
      * </ul>
      *
      * @param event 用户注册事件
-     * @return 组合后的 Mono 管道（无 subscribe）
      */
     private Mono<Void> buildPipeline(UserRegisteredEvent event) {
         // usingWhen 的 resource 不能为 null（否则跳过 closure），

@@ -38,13 +38,18 @@ public interface AccountDeletionPort {
      * 执行账号数据清理。
      *
      * @param task 清理任务
-     * @return 清理完成信号
      */
     Mono<Void> cleanup(DeletionTask task);
 
     /**
      * 注销请求的同步输入。
      *
+     * @param userId 待注销用户标识
+     * @param openId 微信 OpenID，用于定位第三方绑定
+     * @param phone 手机号，用于定位账号
+     * @param requestId 注销请求标识，用于幂等
+     * @param clientIp 发起请求的客户端 IP
+     * @param traceId 链路追踪标识
      * @author Apex Team
      * @version 1.0.0
      * @since 1.0.0
@@ -55,6 +60,9 @@ public interface AccountDeletionPort {
     /**
      * 同步注销完成后返回的任务标识。
      *
+     * @param jobId 异步清理任务标识
+     * @param requestId 注销请求标识，用于幂等
+     * @param status 受理状态
      * @author Apex Team
      * @version 1.0.0
      * @since 1.0.0
@@ -64,6 +72,8 @@ public interface AccountDeletionPort {
     /**
      * 异步清理任务快照。
      *
+     * @param jobId 清理任务标识
+     * @param userId 待清理的用户标识
      * @author Apex Team
      * @version 1.0.0
      * @since 1.0.0

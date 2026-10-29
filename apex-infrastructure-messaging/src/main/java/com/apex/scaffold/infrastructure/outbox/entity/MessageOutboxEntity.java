@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
  * 依赖调用方使用同一个本地事务；实体本身不提供事务或消息发送能力。
  * 后续投递由调度器执行，达到尝试上限后可进入死信状态，不保证最终发送成功。
  *
- * <h2>核心字段说明</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>messageId: 调用方提供的消息标识，实体不负责生成</li>
  *   <li>topic: RocketMQ主题名称</li>
@@ -27,7 +27,7 @@ import lombok.NoArgsConstructor;
  *   <li>lockedBy: 分布式锁标识,防止多实例并发投递</li>
  * </ul>
  *
- * <h2>状态流转</h2>
+ * <h2>设计说明</h2>
  * <pre>
  * PENDING(待投递) → PROCESSING(投递中) → DELIVERED(已投递)
  *                                      ↓

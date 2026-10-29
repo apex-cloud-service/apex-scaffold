@@ -90,7 +90,6 @@ public interface UserRepository {
      * 超过 {@link #ONLINE_WINDOW_MINUTES} 分钟未更新的用户视为离线。</p>
      *
      * @param userId 用户 ID
-     * @return 更新完成信号
      * @since 2.2.0
      */
     Mono<Void> updateLastHeartbeat(Long userId);
@@ -123,7 +122,6 @@ public interface UserRepository {
      * <p>执行逻辑删除操作
      *
      * @param id 用户ID
-     * @return 成功返回Mono.empty()
      */
     Mono<Void> deleteById(Long id);
 

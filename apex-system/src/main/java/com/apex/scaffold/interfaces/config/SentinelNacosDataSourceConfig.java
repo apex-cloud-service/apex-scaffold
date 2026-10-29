@@ -24,7 +24,7 @@ import org.springframework.context.annotation.Configuration;
  * （DegradeRule）的规则源接入 Nacos 配置中心，实现**生产规则热更新**——在 Nacos
  * 控制台修改规则 JSON 后，Sentinel 在约 30 秒内自动加载生效，无需重启应用。</p>
  *
- * <h2>与静态规则的关系</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>应用启动时先由 {@link SentinelConfig} 加载内置静态规则（39 条限流 + 熔断），作为兜底默认值</li>
  *   <li>本配置启用后，Nacos 侧推送的规则会**整体替换**对应规则集合（Sentinel 数据源语义）</li>
@@ -33,7 +33,7 @@ import org.springframework.context.annotation.Configuration;
  *   <li>Nacos 不可用时不影响应用启动：数据源初始化失败仅记录 WARN，静态规则继续生效</li>
  * </ul>
  *
- * <h2>配置项</h2>
+ * <h2>设计说明</h2>
  * <table>
  *   <caption>apex.sentinel.nacos.* 配置</caption>
  *   <tr><th>键</th><th>默认值</th><th>说明</th></tr>
@@ -45,7 +45,7 @@ import org.springframework.context.annotation.Configuration;
  *   <tr><td>degrade-data-id</td><td>apex-sentinel-degrade-rules</td><td>熔断规则 DataId</td></tr>
  * </table>
  *
- * <h2>规则 JSON 格式</h2>
+ * <h2>设计说明</h2>
  * <p>限流规则为 {@code FlowRule} JSON 数组；熔断规则为 {@code DegradeRule} JSON 数组。
  * 模板见 {@code config/sentinel/apex-sentinel-flow-rules.json} 与
  * {@code config/sentinel/apex-sentinel-degrade-rules.json}。</p>

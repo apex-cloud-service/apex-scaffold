@@ -30,7 +30,7 @@ import reactor.core.publisher.Mono;
  * <p>拦截携带OAuth2 Token的请求，验证Token有效性并设置Security Context。
  * 该过滤器仅处理以{@code /oauth2/api/}开头的资源端点,其他端点由JWT过滤器处理。
  *
- * <h2>Token验证流程</h2>
+ * <h2>设计说明</h2>
  * <ol>
  *   <li>从Authorization请求头提取Bearer Token</li>
  *   <li>调用OAuth2AuthorizationService验证Token</li>
@@ -38,7 +38,7 @@ import reactor.core.publisher.Mono;
  *   <li>创建Authentication对象并设置到SecurityContext</li>
  * </ol>
  *
- * <h2>权限格式</h2>
+ * <h2>设计说明</h2>
  * <p>OAuth2 scope会被转换为{@code SCOPE_}前缀的权限,例如:
  * <ul>
  *   <li>scope: "read" → authority: "SCOPE_READ"</li>

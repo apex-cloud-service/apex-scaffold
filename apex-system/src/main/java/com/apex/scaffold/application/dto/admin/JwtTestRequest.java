@@ -14,14 +14,14 @@ import lombok.NoArgsConstructor;
  * <p>用于测试 JWT 配置是否正确，生成测试 Token 并验证配置的有效性。
  * 该功能主要用于管理员在配置 JWT 参数后，快速验证配置是否生效。
  *
- * <h2>使用场景</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>新租户初始化 JWT 配置后的验证</li>
  *   <li>修改 JWT 签名算法或密钥后的测试</li>
  *   <li>排查 JWT 相关问题时的诊断工具</li>
  * </ul>
  *
- * <h2>安全说明</h2>
+ * <h2>设计说明</h2>
  * <p>生成的测试 Token 仅用于验证配置，不应用于生产环境的身份认证。
  * 测试 Token 的有效期应设置较短，避免安全风险。
  *
@@ -63,7 +63,7 @@ public class JwtTestRequest {
      *   <li>标准的 JWT Claims（如 exp、iat、iss）会自动添加，无需手动指定</li>
      * </ul>
      *
-     * <h3>示例</h3>
+     * <p><strong>示例</strong></p>
      * <pre>{@code
      * {
      *   "userId": 1,

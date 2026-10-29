@@ -14,7 +14,7 @@ import lombok.experimental.SuperBuilder;
  * <p>对应数据库表 {@code gen_datasource},存储代码生成器连接的外部数据库配置信息。
  * 每个数据源代表一个可用于代码生成的目标数据库,包含连接信息和认证凭据。
  *
- * <h3>主要字段</h3>
+ * <p><strong>主要字段</strong></p>
  * <ul>
  *   <li>{@link #name} - 数据源名称,租户内唯一</li>
  *   <li>{@link #dbType} - 数据库类型(MYSQL/POSTGRESQL/ORACLE/SQLSERVER/H2)</li>
@@ -26,14 +26,14 @@ import lombok.experimental.SuperBuilder;
  *   <li>{@link #tenantId} - 租户标识,实现多租户隔离</li>
  * </ul>
  *
- * <h3>安全约束</h3>
+ * <p><strong>安全约束</strong></p>
  * <ul>
  *   <li>密码字段必须使用 AES 算法加密,密钥从环境变量读取</li>
  *   <li>禁止在日志或响应中输出明文密码</li>
  *   <li>删除数据源时应级联关闭相关的数据库连接池</li>
  * </ul>
  *
- * <h3>唯一约束</h3>
+ * <p><strong>唯一约束</strong></p>
  * <p>数据库中存在唯一索引 {@code uk_datasource_name_tenant(name, tenant_id, deleted)},
  * 确保同一租户下数据源名称唯一(逻辑删除后不参与唯一性校验)。
  *

@@ -14,7 +14,7 @@ import lombok.experimental.SuperBuilder;
  * <p>对应数据库表 {@code sys_datasource}，存储管理后台"数据库配置"模块注册的
  * 动态数据源连接配置，包括连接信息、认证凭据和连接池参数。
  *
- * <h2>主要字段</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>{@link #name} - 数据源名称，租户内唯一</li>
  *   <li>{@link #type} - 数据源类型（master/slave/backup）</li>
@@ -27,18 +27,18 @@ import lombok.experimental.SuperBuilder;
  *   <li>{@link #tenantId} - 租户标识，实现多租户隔离</li>
  * </ul>
  *
- * <h2>安全约束</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>密码字段必须由应用层使用 EncryptionService 加密后写入，禁止明文落库</li>
  *   <li>禁止在日志或接口响应中输出密码明文</li>
  *   <li>删除数据源时应级联关闭对应的 HikariCP 连接池</li>
  * </ul>
  *
- * <h2>唯一约束</h2>
+ * <h2>设计说明</h2>
  * <p>数据库唯一索引 {@code uk_sys_datasource_name_tenant(name, tenant_id, deleted)}
  * 确保同一租户下数据源名称唯一（逻辑删除后不参与唯一性校验）。
  *
- * <h2>审计字段</h2>
+ * <h2>设计说明</h2>
  * <p>主键（雪花算法）、创建/更新时间、乐观锁版本、逻辑删除标记由 {@link BasePO} 统一提供。
  *
  * @author Apex Team

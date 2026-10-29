@@ -88,7 +88,6 @@ public interface OAuth2AuthorizationService {
      *
      * @param token 令牌值
      * @param clientId 客户端ID
-     * @return 撤销结果
      */
     Mono<Void> revokeToken(String token, String clientId);
 
@@ -125,7 +124,6 @@ public interface OAuth2AuthorizationService {
      *
      * @param clientId 客户端ID
      * @param userId 用户ID(OpenID)
-     * @return 撤销结果
      */
     Mono<Void> revokeConsent(String clientId, String userId);
 }

@@ -10,7 +10,7 @@ import reactor.core.publisher.Mono;
  * <p>定义办公平台消息接收人关系的持久化操作契约，管理消息与接收人的多对多关系。
  * 支持消息接收记录的增删改查、已读/未读状态管理、批量操作等功能。
  *
- * <h2>核心职责</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>消息接收记录的基础 CRUD 操作</li>
  *   <li>按消息ID查询所有接收人</li>
@@ -21,7 +21,7 @@ import reactor.core.publisher.Mono;
  *   <li>统计未读消息数量</li>
  * </ul>
  *
- * <h2>查询场景</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>消息详情：查看某消息的所有接收人及阅读状态</li>
  *   <li>收件箱：查询用户收到的所有消息</li>
@@ -29,7 +29,7 @@ import reactor.core.publisher.Mono;
  *   <li>未读统计：显示用户的未读消息数量</li>
  * </ul>
  *
- * <h2>技术特性</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>响应式编程：所有方法返回 Mono/Flux</li>
  *   <li>关系管理：消息与接收人的多对多关系表</li>
@@ -106,7 +106,6 @@ public interface OffMessageRecipientRepository {
      * 根据ID删除消息接收记录
      *
      * @param id 记录ID
-     * @return 删除操作的Mono包装
      */
     Mono<Void> deleteById(Long id);
 

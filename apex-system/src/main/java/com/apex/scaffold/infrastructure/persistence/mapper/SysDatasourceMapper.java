@@ -10,7 +10,7 @@ import org.apache.ibatis.annotations.Mapper;
  * <p>基于 MyBatis-Plus 实现数据源配置的持久化操作，继承 {@link BaseMapper}
  * 自动获得常用增删改查方法，无需编写 XML 映射文件。
  *
- * <h2>继承的基础方法</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>{@code insert(T entity)} - 插入一条记录（主键由雪花算法自动生成）</li>
  *   <li>{@code deleteById(Serializable id)} - 根据 ID 逻辑删除</li>
@@ -19,7 +19,7 @@ import org.apache.ibatis.annotations.Mapper;
  *   <li>{@code selectList(Wrapper<T> queryWrapper)} - 条件查询列表</li>
  * </ul>
  *
- * <h2>使用约束</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>所有数据库操作都是阻塞 I/O，必须通过
  *       {@code Mono.fromCallable(() -> mapper.xxx()).subscribeOn(BlockingIoSchedulers.jdbc())} 包装</li>

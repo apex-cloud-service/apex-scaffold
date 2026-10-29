@@ -16,7 +16,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * 队列容量、公平模式、任务 TTL 等参数全部从外部配置注入，替代原先散落各处的
  * {@code @Value} 硬编码。所有参数均支持通过环境变量覆盖，便于生产灰度与弹性伸缩。</p>
  *
- * <h2>专用池语义与选择规则</h2>
+ * <h2>线程安全性</h2>
  * <ol>
  *   <li>{@code jdbc} —— 所有 MyBatis-Plus Mapper 调用、Spring JDBC、TransactionTemplate：
  *       典型阻塞 I/O，单次任务 ~1ms~200ms，线程上限 = 连接池 × 0.8。</li>
@@ -32,11 +32,11 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *       不请求核心业务路径，但也不能占用全局共享池。</li>
  * </ol>
  *
- * <h2>禁止项</h2>
+ * <h2>设计说明</h2>
  * <p>任何生产代码<strong>不得直接使用 {@code Schedulers.boundedElastic()}</strong>，
  * 必须从上述 6 类中选择最贴近的语义。ArchUnit 分层测试应同步新增该门禁。</p>
  *
- * <h2>选型决策树（快速查找）</h2>
+ * <h2>设计说明</h2>
  * <pre>{@code * 是否阻塞式调用（不是 WebFlux/WebClient 异步）？
  * ├─ 否：不用 subscribeOn / publishOn，留在 Netty EventLoop
  * └─ 是：下面哪个场景最贴近？

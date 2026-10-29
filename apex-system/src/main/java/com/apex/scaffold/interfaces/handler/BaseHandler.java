@@ -26,7 +26,7 @@ import reactor.core.publisher.Mono;
  * 消除多个 Handler 中重复的 {@code currentOpenId}、数字解析和响应构建方法定义，
  * 统一对请求参数进行安全处理，并提供国际化的错误/成功响应构建能力。
  *
- * <h2>提供的公共方法</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>{@link #currentOpenId(ServerRequest)} — 从请求上下文中获取当前认证用户的 openId</li>
  *   <li>{@link #currentUserId(ServerRequest, com.apex.scaffold.application.service.UserService)} — 从认证上下文中解析当前登录用户的业务 ID</li>
@@ -37,7 +37,7 @@ import reactor.core.publisher.Mono;
  *   <li>{@link #buildError(Integer, String, String, Object...)} — 构建带国际化的自定义错误响应</li>
  * </ul>
  *
- * <h2>模板方法</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>{@link #handleAuthenticated(ServerRequest, Function)} — 认证用户 + 执行业务逻辑 + 包装成功响应</li>
  *   <li>{@link #handleAuthenticatedWithBody(ServerRequest, Class, BiFunction)} — 认证用户 + 解析请求体 + 执行业务逻辑 + 包装成功响应</li>
@@ -45,14 +45,14 @@ import reactor.core.publisher.Mono;
  *   <li>{@link #currentUserId(ServerRequest, com.apex.scaffold.application.service.UserService)} — 从认证上下文中解析当前登录用户的业务 ID</li>
  * </ul>
  *
- * <h2>子类约定</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>所有 Handler 应继承此类，在构造函数中通过 {@code super(messageUtils)} 或 {@code super(messageUtils, validator)} 传递 {@link MessageUtils} 和可选的 {@link Validator}</li>
  *   <li>Handler 方法中统一使用 {@code buildOk()} / {@code buildError()} 构建响应</li>
  *   <li>路径参数解析统一使用 {@code safeParseLong} 避免 NumberFormatException</li>
  * </ul>
  *
- * <h2>国际化实现说明</h2>
+ * <h2>设计说明</h2>
  * <p>
  * {@code messageUtils} 通过构造器注入，所有继承此类的 Handler 必须在构造函数
  * 中通过 {@code super(messageUtils)} 传递实例，遵循 Spring 推荐的构造器注入最佳实践。
@@ -109,7 +109,7 @@ public abstract class BaseHandler {
      * {@link com.apex.scaffold.interfaces.security.JwtAuthenticationFilter}
      * 中完成认证后设置到请求上下文中。
      *
-     * <h3>使用示例</h3>
+     * <p><strong>使用示例</strong></p>
      * <pre>{@code * public Mono<ServerResponse> someMethod(ServerRequest request) {
      *     String traceId = TraceIdUtil.getTraceId();
      *     return currentOpenId(request)
@@ -133,7 +133,7 @@ public abstract class BaseHandler {
      * 当参数为非数字格式时返回 null 而不是抛出 {@link NumberFormatException}，
      * 避免直接使用 {@link Long#parseLong(String)} 在参数不合法时导致 HTTP 500 错误。
      *
-     * <h3>使用示例</h3>
+     * <p><strong>使用示例</strong></p>
      * <pre>{@code * Long chatId = safeParseLong(request.pathVariable("chatId"));
      * if (chatId == null) {
      *     return buildError(ResultCode.PARAM_ERROR.getCode(), "param.chat_id_invalid", traceId);
@@ -161,7 +161,7 @@ public abstract class BaseHandler {
      * 返回指定的默认值而不是抛出异常。支持 pageNum=0 表示第一页的场景，
      * 允许返回 0 及正整数值。
      *
-     * <h3>使用示例</h3>
+     * <p><strong>使用示例</strong></p>
      * <pre>{@code * int pageNum = safeParseInt(request.queryParam("pageNum").orElse(null), 1);
      * int pageSize = safeParseInt(request.queryParam("pageSize").orElse(null), 20);
      * }</pre>
@@ -188,7 +188,7 @@ public abstract class BaseHandler {
      * <p>将已有的 {@link Result} 对象包装为 HTTP 200 JSON 响应。
      * Content-Type 设置为 {@code application/json}。
      *
-     * <h3>使用示例</h3>
+     * <p><strong>使用示例</strong></p>
      * <pre>{@code * return someService.getData(openId)
      *     .map(data -> Result.success(data, traceId))
      *     .flatMap(this::buildOk);
@@ -214,7 +214,7 @@ public abstract class BaseHandler {
      * traceId 并完成 {@link Result#success(Object, String)} 包装，调用方无需手动
      * 组装 {@link Result}。</p>
      *
-     * <h3>使用示例</h3>
+     * <p><strong>使用示例</strong></p>
      * <pre>{@code * public Mono<ServerResponse> list(ServerRequest request) {
      *     return someService.list().flatMap(this::buildSuccess);
      * }
@@ -238,7 +238,7 @@ public abstract class BaseHandler {
      * {@code request.bodyToMono(X).switchIfEmpty(...).flatMap(this::validateAndThrow)}
      * 样板代码。</p>
      *
-     * <h3>使用示例</h3>
+     * <p><strong>使用示例</strong></p>
      * <pre>{@code * public Mono<ServerResponse> create(ServerRequest request) {
      *     return parseBody(request, DictTypeRequest.class)
      *         .flatMap(dictService::createType)
@@ -288,7 +288,7 @@ public abstract class BaseHandler {
      * 使用 {@link MessageUtils} 从 Reactor Context 中读取 Locale 并解析对应语言的消息文本。
      * HTTP 状态码根据业务错误码自动映射。
      *
-     * <h3>状态码映射规则</h3>
+     * <p><strong>状态码映射规则</strong></p>
      * <ul>
      *   <li>401 → 401 Unauthorized</li>
      *   <li>403 → 403 Forbidden</li>
@@ -317,7 +317,7 @@ public abstract class BaseHandler {
      * <p>适用于不在 {@link ResultCode} 枚举中定义的动态错误消息。
      * 消息键对应 messages_*.properties 中的 key。
      *
-     * <h3>使用示例</h3>
+     * <p><strong>使用示例</strong></p>
      * <pre>{@code * if (openId == null) {
      *     return buildError(ResultCode.PARAM_ERROR.getCode(), "param.open_id_not_null", traceId);
      * }
@@ -372,7 +372,7 @@ public abstract class BaseHandler {
      *
      * <p>错误处理不在本方法范围内，调用方应在 {@code serviceCall} 中自行处理业务异常。
      *
-     * <h3>使用示例</h3>
+     * <p><strong>使用示例</strong></p>
      * <pre>{@code * public Mono<ServerResponse> getMyProfile(ServerRequest request) {
      *     return handleAuthenticated(request, userService::getUserProfile);
      * }
@@ -413,7 +413,7 @@ public abstract class BaseHandler {
      * 建议在调用此方法前先调用 {@link #validateAndThrow(Object)} 对请求体进行
      * Jakarta Bean Validation 校验，或由 Spring WebFlux 自动执行参数校验。
      *
-     * <h3>使用示例</h3>
+     * <p><strong>使用示例</strong></p>
      * <pre>{@code * public Mono<ServerResponse> updateProfile(ServerRequest request) {
      *     return request.bodyToMono(UpdateProfileRequest.class)
      *         .flatMap(this::validateAndThrow)
@@ -456,14 +456,14 @@ public abstract class BaseHandler {
      * 构造方法注入 {@link Validator}，否则调用将抛出 {@link IllegalStateException}。
      * 使用仅接受 {@link MessageUtils} 的构造方法初始化的 Handler 不可直接调用此法。
      *
-     * <h3>校验失败行为</h3>
+     * <p><strong>校验失败行为</strong></p>
      * <ul>
      *   <li>所有约束违反信息按自然顺序以英文逗号分隔拼接</li>
      *   <li>抛出 {@code BusinessException(ResultCode.PARAM_ERROR, "字段xxx不能为空, 字段yyy格式不正确")}</li>
      *   <li>由 WebFlux 全局异常处理器将异常转换为 HTTP 400 错误响应</li>
      * </ul>
      *
-     * <h3>使用示例</h3>
+     * <p><strong>使用示例</strong></p>
      * <pre>{@code * public Mono<ServerResponse> submitForm(ServerRequest request) {
      *     return request.bodyToMono(SubmitFormRequest.class)
      *         .flatMap(this::validateAndThrow)
@@ -510,7 +510,7 @@ public abstract class BaseHandler {
      * <p>该方法适用于需要以用户主键 ID 为参数的场景，例如数据库查询、对局创建、
      * 算力扣减等。相比直接使用 openId，业务 ID 更加稳定且查询效率更高。
      *
-     * <h3>使用示例</h3>
+     * <p><strong>使用示例</strong></p>
      * <pre>{@code * public Mono<ServerResponse> startBattle(ServerRequest request) {
      *     return currentUserId(request, userService)
      *         .flatMap(userId -> battleService.startBattle(userId))

@@ -15,7 +15,7 @@ import reactor.util.context.Context;
  * 认证过滤器或业务代码）在查询前填充，{@code DataScopeInnerInterceptor} 在 SQL 执行前
  * 读取并自动拼接过滤条件。</p>
  *
- * <h2>响应式/跨线程上下文桥接</h2>
+ * <h2>线程安全性</h2>
  * <ul>
  *   <li>全局 {@link Schedulers#onScheduleHook}：任务提交时捕获当前
  *       {@link Scope} 快照，执行线程中安装 → finally 恢复，保证

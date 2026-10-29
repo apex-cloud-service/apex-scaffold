@@ -222,15 +222,32 @@ public final class TokenV42Recover {
 
     /** 命令行解析状态。 */
     private enum Mode {
+        /** 参数合法，可执行迁移。 */
         VALID,
+        /** 命中帮助选项，仅打印用法后退出。 */
         HELP,
+        /** 参数非法，需打印用法并以非零码退出。 */
         INVALID
     }
 
-    /** 命令行解析结果。 */
+    /**
+     * 命令行解析结果。
+     *
+     * @param mode 解析状态
+     * @param database 目标数据库名
+     * @param offline 是否为离线模式（仅生成产物，不连库）
+     * @param apply 是否实际执行迁移
+     * @param command 其余命令行参数
+     */
     private record Options(Mode mode, String database, boolean offline, boolean apply, List<String> command) {}
 
-    /** information_schema.tables 中的单表元数据。 */
+    /**
+     * information_schema.tables 中的单表元数据。
+     *
+     * @param type 表类型（information_schema.tables.table_type）
+     * @param engine 存储引擎
+     * @param collation 排序规则
+     */
     private record TableMeta(String type, String engine, String collation) {}
 
     private TokenV42Recover() {}

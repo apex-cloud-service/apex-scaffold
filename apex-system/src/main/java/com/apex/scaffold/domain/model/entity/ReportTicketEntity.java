@@ -11,7 +11,7 @@ import lombok.ToString;
  * <p>记录用户对其他用户、照片或消息的举报信息，包含举报原因、证据和处理状态。
  * 用于内容安全审核和社区管理。</p>
  *
- * <h2>核心业务规则</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>支持举报目标类型：USER/PHOTO/MESSAGE</li>
  *   <li>工单状态：PENDING/PROCESSING/RESOLVED/REJECTED</li>

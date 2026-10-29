@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
  *
  * <p>统一管理 RocketMQ 相关的告警，包括消息积压、死信队列、发送失败等。
  *
- * <h2>告警类型</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>消息积压告警：Lag > 阈值</li>
  *   <li>死信消息告警：DLQ 消息速率过高</li>
@@ -26,7 +26,7 @@ import org.springframework.stereotype.Component;
  *   <li>消息降级告警：触发 Outbox 降级</li>
  * </ul>
  *
- * <h2>告警级别</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>INFO: 轻微异常，无需立即处理</li>
  *   <li>WARNING: 需要关注，可能影响系统</li>
@@ -34,7 +34,7 @@ import org.springframework.stereotype.Component;
  *   <li>CRITICAL: 致命问题，系统可能不可用</li>
  * </ul>
  *
- * <h2>告警通知</h2>
+ * <h2>设计说明</h2>
  * <p>告警信息会：
  * <ul>
  *   <li>记录到日志（根据级别使用不同日志级别）</li>

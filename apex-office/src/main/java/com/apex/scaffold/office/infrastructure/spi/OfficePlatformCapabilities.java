@@ -9,6 +9,7 @@ import java.util.Set;
  * {@code capabilities} 字段对应），构造时对入参做空集合兜底与防御性拷贝，
  * {@code supports} 方法用于判断平台是否支持指定能力。
  *
+ * @param capabilities 平台支持的能力标识集合
  * @author Apex Team
  * @version 1.2.0
  * @since 1.2.0

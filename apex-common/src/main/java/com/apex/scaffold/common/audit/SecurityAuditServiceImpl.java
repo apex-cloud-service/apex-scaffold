@@ -15,7 +15,7 @@ import reactor.core.publisher.Mono;
  * <p>实现 {@link SecurityAuditService} 接口，统一记录所有安全相关事件，
  * 包括认证、授权、Token操作、安全威胁等。
  *
- * <h2>审计事件类型</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>认证事件：登录成功/失败、登出、密码修改</li>
  *   <li>Token事件：签发、刷新、撤销、验证失败</li>
@@ -23,7 +23,7 @@ import reactor.core.publisher.Mono;
  *   <li>安全威胁：暴力破解、Token重放、异常访问</li>
  * </ul>
  *
- * <h2>审计日志字段</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>时间戳：精确到毫秒</li>
  *   <li>事件类型：标准化的事件分类</li>
@@ -33,7 +33,7 @@ import reactor.core.publisher.Mono;
  *   <li>安全上下文：会话ID、请求ID、Token JTI</li>
  * </ul>
  *
- * <h2>实现说明</h2>
+ * <h2>设计说明</h2>
  * <p>当前实现将审计事件统一转换为结构化日志输出（{@code SECURITY_AUDIT} 前缀），
  * 便于日志采集系统（如 ELK/SLS）按字段解析和检索。所有响应式方法均使用 {@link Mono#empty()}
  * 作为终态，不产生阻塞 I/O；密钥相关事件方法（{@code void} 返回）内部通过 {@code subscribe()}
@@ -60,7 +60,6 @@ public class SecurityAuditServiceImpl implements SecurityAuditService {
      * @param clientIp 客户端IP
      * @param userAgent 浏览器User-Agent
      * @param deviceId 设备ID
-     * @return 完成信号
      */
     @Override
     public Mono<Void> logLoginSuccess(
@@ -86,7 +85,6 @@ public class SecurityAuditServiceImpl implements SecurityAuditService {
      * @param clientIp 客户端IP
      * @param userAgent 浏览器User-Agent
      * @param reason 失败原因
-     * @return 完成信号
      */
     @Override
     public Mono<Void> logLoginFailure(
@@ -110,7 +108,6 @@ public class SecurityAuditServiceImpl implements SecurityAuditService {
      * @param username 用户名
      * @param tenantId 租户ID
      * @param clientIp 客户端IP
-     * @return 完成信号
      */
     @Override
     public Mono<Void> logLogout(Long userId, String username, String tenantId, String clientIp) {
@@ -133,7 +130,6 @@ public class SecurityAuditServiceImpl implements SecurityAuditService {
      * @param clientIp 客户端IP
      * @param deviceId 设备ID
      * @param tokenType Token类型（ACCESS/REFRESH）
-     * @return 完成信号
      */
     @Override
     public Mono<Void> logTokenIssued(Long userId, String tenantId, String clientIp, String deviceId, String tokenType) {
@@ -156,7 +152,6 @@ public class SecurityAuditServiceImpl implements SecurityAuditService {
      * @param tenantId 租户ID
      * @param clientIp 客户端IP
      * @param jti 旧Token的JTI
-     * @return 完成信号
      */
     @Override
     public Mono<Void> logTokenRefreshed(Long userId, String tenantId, String clientIp, String jti) {
@@ -180,7 +175,6 @@ public class SecurityAuditServiceImpl implements SecurityAuditService {
      * @param jti 被撤销Token的JTI
      * @param reason 撤销原因
      * @param clientIp 客户端IP
-     * @return 完成信号
      */
     @Override
     public Mono<Void> logTokenRevoked(
@@ -204,7 +198,6 @@ public class SecurityAuditServiceImpl implements SecurityAuditService {
      * @param clientIp 客户端IP
      * @param reason 失败原因
      * @param tokenHint Token提示信息（脱敏后，用于排查）
-     * @return 完成信号
      */
     @Override
     public Mono<Void> logTokenValidationFailure(String clientIp, String reason, String tokenHint) {
@@ -225,7 +218,6 @@ public class SecurityAuditServiceImpl implements SecurityAuditService {
      * @param tenantId 租户ID
      * @param clientIp 客户端IP
      * @param jti 被重放Token的JTI
-     * @return 完成信号
      */
     @Override
     public Mono<Void> logTokenReplayAttack(Long userId, String tenantId, String clientIp, String jti) {
@@ -248,7 +240,6 @@ public class SecurityAuditServiceImpl implements SecurityAuditService {
      * @param username 用户名
      * @param clientIp 客户端IP
      * @param attemptCount 尝试次数
-     * @return 完成信号
      */
     @Override
     public Mono<Void> logBruteForceAttack(String username, String clientIp, int attemptCount) {
@@ -273,7 +264,6 @@ public class SecurityAuditServiceImpl implements SecurityAuditService {
      * @param resource 被访问资源
      * @param action 执行动作
      * @param clientIp 客户端IP
-     * @return 完成信号
      */
     @Override
     public Mono<Void> logPermissionDenied(
@@ -300,7 +290,6 @@ public class SecurityAuditServiceImpl implements SecurityAuditService {
      * @param operation 操作名称
      * @param resource 操作资源
      * @param clientIp 客户端IP
-     * @return 完成信号
      */
     @Override
     public Mono<Void> logSensitiveOperation(
@@ -325,7 +314,6 @@ public class SecurityAuditServiceImpl implements SecurityAuditService {
      * @param username 用户名
      * @param tenantId 租户ID
      * @param clientIp 客户端IP
-     * @return 完成信号
      */
     @Override
     public Mono<Void> logPasswordChanged(Long userId, String username, String tenantId, String clientIp) {
@@ -348,7 +336,6 @@ public class SecurityAuditServiceImpl implements SecurityAuditService {
      * @param username 用户名
      * @param tenantId 租户ID
      * @param reason 锁定原因
-     * @return 完成信号
      */
     @Override
     public Mono<Void> logAccountLocked(Long userId, String username, String tenantId, String reason) {
@@ -371,7 +358,6 @@ public class SecurityAuditServiceImpl implements SecurityAuditService {
      * @param username 用户名
      * @param tenantId 租户ID
      * @param operator 操作人
-     * @return 完成信号
      */
     @Override
     public Mono<Void> logAccountUnlocked(Long userId, String username, String tenantId, String operator) {
@@ -487,7 +473,6 @@ public class SecurityAuditServiceImpl implements SecurityAuditService {
      * @param username 用户名
      * @param tenantId 租户ID
      * @param reason 原因
-     * @return 完成信号
      */
     @Override
     public Mono<Void> logSecurityEvent(
@@ -515,7 +500,6 @@ public class SecurityAuditServiceImpl implements SecurityAuditService {
      * @param success 是否成功
      * @param details 详情Map
      * @param reason 原因
-     * @return 完成信号
      */
     @Override
     public Mono<Void> logSecurityEvent(
@@ -559,7 +543,6 @@ public class SecurityAuditServiceImpl implements SecurityAuditService {
      * @param operatorUserId 操作人ID
      * @param clientIp 客户端IP
      * @param details 详情Map
-     * @return 完成信号
      */
     @Override
     public Mono<Void> logClientSecretRotation(
@@ -597,7 +580,6 @@ public class SecurityAuditServiceImpl implements SecurityAuditService {
      * @param oldJti 旧Token的JTI
      * @param newJti 新Token的JTI
      * @param clientIp 客户端IP
-     * @return 完成信号
      */
     @Override
     public Mono<Void> logTokenRotation(
@@ -626,7 +608,6 @@ public class SecurityAuditServiceImpl implements SecurityAuditService {
      * 后续如需接入独立审计存储（如审计库、消息队列），可在此处扩展而不影响各公开方法签名。
      *
      * @param event 已填充完毕的审计事件对象
-     * @return 始终返回 {@link Mono#empty()}，代表日志写入已完成（同步操作，不会失败）
      */
     private Mono<Void> logAuditEvent(AuditEvent event) {
         return Mono.deferContextual(context -> {
@@ -696,6 +677,9 @@ public class SecurityAuditServiceImpl implements SecurityAuditService {
             return new AuditEventBuilder();
         }
 
+        /**
+         * 审计事件的链式构造器，缺省时使用 {@code LOW} 严重级别。
+         */
         public static class AuditEventBuilder {
             private String eventType;
             private LocalDateTime timestamp;

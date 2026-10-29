@@ -28,7 +28,7 @@ import org.springframework.stereotype.Service;
  * <p>提供RocketMQ消息发送的多种模式，支持同步、异步、单向和延迟消息发送。
  * 所有同步发送方法均包含异常捕获，避免RocketMQ运行时异常直接传播到调用方。
  *
- * <h2>支持的发送模式</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li><b>同步发送</b>：等待消息发送完成后返回结果，带异常处理和超时控制</li>
  *   <li><b>异步发送</b>：通过回调函数通知发送结果，不阻塞调用线程</li>
@@ -37,7 +37,7 @@ import org.springframework.stereotype.Service;
  *   <li><b>带Header发送</b>：发送消息时附带自定义Header信息</li>
  * </ul>
  *
- * <h2>异常处理</h2>
+ * <h2>设计说明</h2>
  * <p>同步发送方法（{@link #sendSync}, {@link #sendDelay}）在RocketMQ客户端抛出
  * 异常时记录错误日志并重新抛出，避免静默丢失消息。上层调用方应做好异常处理。</p>
  *
@@ -160,7 +160,7 @@ public class MqProducerService {
      * <p>以同步方式发送延迟消息，消息将在指定的延迟等级后投递给消费者。
      * 发送过程带异常捕获，RocketMQ客户端异常会记录错误日志并重新抛出。
      *
-     * <h3>延迟等级说明</h3>
+     * <p><strong>延迟等级说明</strong></p>
      * <p>RocketMQ支持的延迟等级：1s/5s/10s/30s/1m/2m/3m/4m/5m/6m/7m/8m/9m/10m/20m/30m/1h/2h</p>
      *
      * @param <T>        消息体类型

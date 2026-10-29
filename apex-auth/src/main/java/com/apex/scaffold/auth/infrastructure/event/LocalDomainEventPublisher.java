@@ -35,7 +35,6 @@ public class LocalDomainEventPublisher implements DomainEventPublisher {
      * <p>仅记录事件摘要，不进行持久化，直接返回完成信号。</p>
      *
      * @param event 领域事件对象，不能为 null
-     * @return 空 Mono，表示发布完成
      */
     @Override
     public Mono<Void> publish(AbstractDomainEvent event) {

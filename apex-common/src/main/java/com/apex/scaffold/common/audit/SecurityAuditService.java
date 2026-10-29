@@ -10,7 +10,7 @@ import reactor.core.publisher.Mono;
  * 下沉到 apex-common，供 apex-auth-center 与 apex-application 共用同一份接口定义，
  * 避免主应用模块反向依赖本应独立部署的 apex-auth-center 内部实现类。
  *
- * <h2>审计事件类型</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>认证事件：登录成功/失败、登出、密码修改</li>
  *   <li>Token事件：签发、刷新、撤销、验证失败</li>
@@ -18,7 +18,7 @@ import reactor.core.publisher.Mono;
  *   <li>安全威胁：暴力破解、Token重放、异常访问</li>
  * </ul>
  *
- * <h2>审计日志字段</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>时间戳：精确到毫秒</li>
  *   <li>事件类型：标准化的事件分类</li>
@@ -28,7 +28,7 @@ import reactor.core.publisher.Mono;
  *   <li>安全上下文：会话ID、请求ID、Token JTI</li>
  * </ul>
  *
- * <h2>模块下沉说明</h2>
+ * <h2>职责范围</h2>
  * <p>本接口原位于 {@code apex-auth-center} 模块内部，2026-09-30 下沉至 {@code apex-common}，
  * 作为跨模块共享的安全审计端口，供 {@code apex-auth-center}（认证中心自身安全事件）与
  * {@code apex-application}（如 OAuth2 客户端密钥轮换等场景）共用同一份接口定义，
@@ -53,7 +53,6 @@ public interface SecurityAuditService {
      * @param clientIp 客户端IP
      * @param userAgent 浏览器User-Agent
      * @param deviceId 设备ID
-     * @return 完成信号
      */
     Mono<Void> logLoginSuccess(
             Long userId, String username, String tenantId, String clientIp, String userAgent, String deviceId);
@@ -66,7 +65,6 @@ public interface SecurityAuditService {
      * @param clientIp 客户端IP
      * @param userAgent 浏览器User-Agent
      * @param reason 失败原因
-     * @return 完成信号
      */
     Mono<Void> logLoginFailure(String username, String tenantId, String clientIp, String userAgent, String reason);
 
@@ -77,7 +75,6 @@ public interface SecurityAuditService {
      * @param username 用户名
      * @param tenantId 租户ID
      * @param clientIp 客户端IP
-     * @return 完成信号
      */
     Mono<Void> logLogout(Long userId, String username, String tenantId, String clientIp);
 
@@ -89,7 +86,6 @@ public interface SecurityAuditService {
      * @param clientIp 客户端IP
      * @param deviceId 设备ID
      * @param tokenType Token类型（ACCESS/REFRESH）
-     * @return 完成信号
      */
     Mono<Void> logTokenIssued(Long userId, String tenantId, String clientIp, String deviceId, String tokenType);
 
@@ -100,7 +96,6 @@ public interface SecurityAuditService {
      * @param tenantId 租户ID
      * @param clientIp 客户端IP
      * @param jti 旧Token的JTI
-     * @return 完成信号
      */
     Mono<Void> logTokenRefreshed(Long userId, String tenantId, String clientIp, String jti);
 
@@ -113,7 +108,6 @@ public interface SecurityAuditService {
      * @param jti 被撤销Token的JTI
      * @param reason 撤销原因
      * @param clientIp 客户端IP
-     * @return 完成信号
      */
     Mono<Void> logTokenRevoked(
             Long userId, String username, String tenantId, String jti, String reason, String clientIp);
@@ -124,7 +118,6 @@ public interface SecurityAuditService {
      * @param clientIp 客户端IP
      * @param reason 失败原因
      * @param tokenHint Token提示信息（脱敏后，用于排查）
-     * @return 完成信号
      */
     Mono<Void> logTokenValidationFailure(String clientIp, String reason, String tokenHint);
 
@@ -135,7 +128,6 @@ public interface SecurityAuditService {
      * @param tenantId 租户ID
      * @param clientIp 客户端IP
      * @param jti 被重放Token的JTI
-     * @return 完成信号
      */
     Mono<Void> logTokenReplayAttack(Long userId, String tenantId, String clientIp, String jti);
 
@@ -145,7 +137,6 @@ public interface SecurityAuditService {
      * @param username 用户名
      * @param clientIp 客户端IP
      * @param attemptCount 尝试次数
-     * @return 完成信号
      */
     Mono<Void> logBruteForceAttack(String username, String clientIp, int attemptCount);
 
@@ -158,7 +149,6 @@ public interface SecurityAuditService {
      * @param resource 被访问资源
      * @param action 执行动作
      * @param clientIp 客户端IP
-     * @return 完成信号
      */
     Mono<Void> logPermissionDenied(
             Long userId, String username, String tenantId, String resource, String action, String clientIp);
@@ -172,7 +162,6 @@ public interface SecurityAuditService {
      * @param operation 操作名称
      * @param resource 操作资源
      * @param clientIp 客户端IP
-     * @return 完成信号
      */
     Mono<Void> logSensitiveOperation(
             Long userId, String username, String tenantId, String operation, String resource, String clientIp);
@@ -184,7 +173,6 @@ public interface SecurityAuditService {
      * @param username 用户名
      * @param tenantId 租户ID
      * @param clientIp 客户端IP
-     * @return 完成信号
      */
     Mono<Void> logPasswordChanged(Long userId, String username, String tenantId, String clientIp);
 
@@ -195,7 +183,6 @@ public interface SecurityAuditService {
      * @param username 用户名
      * @param tenantId 租户ID
      * @param reason 锁定原因
-     * @return 完成信号
      */
     Mono<Void> logAccountLocked(Long userId, String username, String tenantId, String reason);
 
@@ -206,7 +193,6 @@ public interface SecurityAuditService {
      * @param username 用户名
      * @param tenantId 租户ID
      * @param operator 操作人
-     * @return 完成信号
      */
     Mono<Void> logAccountUnlocked(Long userId, String username, String tenantId, String operator);
 
@@ -256,7 +242,6 @@ public interface SecurityAuditService {
      * @param username 用户名
      * @param tenantId 租户ID
      * @param reason 原因
-     * @return 完成信号
      */
     Mono<Void> logSecurityEvent(
             String eventType, String message, Long userId, String username, String tenantId, String reason);
@@ -272,7 +257,6 @@ public interface SecurityAuditService {
      * @param success 是否成功
      * @param details 详情Map
      * @param reason 原因
-     * @return 完成信号
      */
     Mono<Void> logSecurityEvent(
             String eventType,
@@ -291,7 +275,6 @@ public interface SecurityAuditService {
      * @param operatorUserId 操作人ID
      * @param clientIp 客户端IP
      * @param details 详情Map
-     * @return 完成信号
      */
     Mono<Void> logClientSecretRotation(
             String clientId, String operatorUserId, String clientIp, Map<String, Object> details);
@@ -305,7 +288,6 @@ public interface SecurityAuditService {
      * @param oldJti 旧Token的JTI
      * @param newJti 新Token的JTI
      * @param clientIp 客户端IP
-     * @return 完成信号
      */
     Mono<Void> logTokenRotation(
             Long userId, String tenantId, String tokenFamily, String oldJti, String newJti, String clientIp);

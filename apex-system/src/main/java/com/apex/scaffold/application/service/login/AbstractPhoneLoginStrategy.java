@@ -20,7 +20,7 @@ import reactor.core.publisher.Mono;
  * 子类只需实现 {@link #authenticate(LoginRequest)} 方法获取手机号，
  * 其余的用户查询/创建、JWT Token 生成、登录响应构建等公共逻辑由本基类统一处理。
  *
- * <h2>模板方法流程</h2>
+ * <h2>职责范围</h2>
  * <ol>
  *   <li>调用子类的 {@link #authenticate(LoginRequest)} 获取已认证的手机号</li>
  *   <li>根据手机号查询已有用户（通过 {@link UserService#getByPhone(String)}）</li>
@@ -29,13 +29,13 @@ import reactor.core.publisher.Mono;
  *       保存后生成 JWT Token 对，返回登录响应（isNewUser=true）</li>
  * </ol>
  *
- * <h2>钩子方法</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>{@link #postAuthentication(UserEntity, LoginRequest)} - 认证成功后、查询用户前的扩展点，
  *       子类可重写此方法对用户实体进行额外处理（如更新微信用户信息）</li>
  * </ul>
  *
- * <h2>适用子类</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>{@link SmsLoginStrategy} - 短信验证码登录</li>
  *   <li>{@link ChuanglanSmsLoginStrategy} - 创蓝短信验证码登录</li>
@@ -164,7 +164,6 @@ public abstract class AbstractPhoneLoginStrategy implements LoginStrategy {
      *
      * @param user    查询到的已有用户实体
      * @param request 原始登录请求参数
-     * @return 异步操作完成的 Mono，基类默认返回空 Mono
      */
     protected Mono<Void> postAuthentication(UserEntity user, LoginRequest request) {
         return Mono.empty();

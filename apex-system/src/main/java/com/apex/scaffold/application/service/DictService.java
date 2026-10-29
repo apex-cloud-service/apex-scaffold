@@ -23,7 +23,7 @@ import reactor.core.publisher.Mono;
  * 是管理系统下拉选项与枚举值翻译能力的基础支撑。字典采用
  * "类型-数据"两级模型：类型编码全局唯一，数据项按类型归属。</p>
  *
- * <h2>核心业务规则</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>字典类型编码全局唯一，创建与更新时校验（{@code DICT_TYPE_EXISTS}）</li>
  *   <li>字典数据必须归属已存在的字典类型（{@code DICT_TYPE_NOT_FOUND}）</li>
@@ -292,7 +292,6 @@ public class DictService {
      * 校验字典类型编码存在。
      *
      * @param dictType 字典类型编码
-     * @return 校验通过的信号
      * @throws BusinessException 当字典类型不存在时抛出 {@code DICT_TYPE_NOT_FOUND}
      */
     private Mono<Void> assertTypeExists(String dictType) {

@@ -91,7 +91,7 @@ public class DomainEventOutboxDispatcher {
      * <p>使用 {@link CompletableFuture#allOf} 并行投递本批所有事件，
      * 投递完成后通过 {@code whenComplete} 回调记录结果日志。
      *
-     * <h2>优化说明（Netty/线程池/IO 性能优化方案 P0-2）</h2>
+     * <h2>设计说明</h2>
      * <p>原实现使用 {@code CompletableFuture.allOf(deliveries).join()}，
      * 在单线程 {@code @Scheduled} 调度器下会阻塞调度线程直到整批投递完成，
      * 导致投票预取补位、ELO 分桶刷新等其他定时任务被延迟。
@@ -103,7 +103,7 @@ public class DomainEventOutboxDispatcher {
      *   <li>{@code records} 作为局部变量被 lambda 闭包持有引用，不会被 GC 提前回收</li>
      * </ul></p>
      *
-     * <h2>批次互斥</h2>
+     * <h2>设计说明</h2>
      * <p>上一批仍在投递（{@code whenComplete} 未回调）时，本轮跳过领取，保证
      * 同一实例同一时刻最多一批投递在途，避免投递执行器无界堆积，与配置注释
      * "单批仍等待全部完成后再进入下一轮领取"保持一致。</p>

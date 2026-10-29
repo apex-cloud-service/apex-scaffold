@@ -22,12 +22,12 @@ import reactor.core.publisher.Mono;
  *   <li>{@code /wxa/business/getuserphonenumber} — 手机号授权凭证换取手机号</li>
  * </ul>
  *
- * <h2>渠道隔离</h2>
+ * <h2>设计说明</h2>
  * <p>与 {@link WeChatAppService}（微信开放平台移动应用，{@code wechat.app}）互相独立：
  * 使用 {@code wechat.miniapp} 的 AppID/AppSecret，凭据缺失时抛出
  * {@code BusinessException(WECHAT_CHANNEL_NOT_CONFIGURED)}，不影响其他微信渠道。
  *
- * <h2>错误处理</h2>
+ * <h2>设计说明</h2>
  * <p>统一通过 {@link WeChatApiResponse} 检查微信 {@code errcode}，非 0 抛出
  * {@link WeChatApiException}；AppSecret 严禁写入代码仓库，须经环境变量注入。
  *

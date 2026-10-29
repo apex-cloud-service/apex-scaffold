@@ -11,7 +11,7 @@ import reactor.core.publisher.Mono;
  * <p>定义代码生成器数据源配置的持久化操作契约，由基础设施层实现（MyBatis-Plus）。
  * 支持数据源的CRUD操作、连接测试和租户隔离查询。
  *
- * <h2>核心职责</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>数据源配置的增删改查</li>
  *   <li>按租户隔离查询数据源列表</li>
@@ -19,7 +19,7 @@ import reactor.core.publisher.Mono;
  *   <li>支持分页查询</li>
  * </ul>
  *
- * <h2>租户隔离约束</h2>
+ * <h2>设计说明</h2>
  * <p>所有查询和操作必须强制校验租户ID，确保：
  * <ul>
  *   <li>每个租户只能访问自己创建的数据源</li>

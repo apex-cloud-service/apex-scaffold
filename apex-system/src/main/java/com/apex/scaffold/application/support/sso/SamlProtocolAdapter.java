@@ -45,7 +45,7 @@ import reactor.core.publisher.Mono;
  * 支持 SP-initiated 和 IdP-initiated 两种认证流程。SAML 是企业级 SSO 的标准协议,
  * 广泛应用于企业内部系统集成和跨域认证场景。
  *
- * <h2>SAML 认证流程（SP-Initiated）</h2>
+ * <h2>设计说明</h2>
  * <ol>
  *   <li>用户访问受保护资源,SP 检测未认证状态</li>
  *   <li>SP 调用 {@link #initiate} 生成 AuthnRequest 并重定向用户到 IdP</li>
@@ -55,7 +55,7 @@ import reactor.core.publisher.Mono;
  *   <li>SP 提取用户属性并建立本地会话</li>
  * </ol>
  *
- * <h2>SAML 登出流程（SLO）</h2>
+ * <h2>设计说明</h2>
  * <ol>
  *   <li>用户发起登出操作</li>
  *   <li>SP 调用 {@link #logout} 生成 LogoutRequest 并重定向到 IdP</li>
@@ -63,7 +63,7 @@ import reactor.core.publisher.Mono;
  *   <li>SP 销毁本地会话</li>
  * </ol>
  *
- * <h2>配置参数（从 config Map 读取）</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>entityId - SP 实体 ID（唯一标识符）</li>
  *   <li>authEndpoint - IdP 的 SingleSignOnService 端点 URL</li>
@@ -73,7 +73,7 @@ import reactor.core.publisher.Mono;
  *   <li>spCertificate - SP 证书（用于元数据，可选）</li>
  * </ul>
  *
- * <h2>实现说明</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>使用 Java 标准库（javax.xml、java.security）实现,避免引入重量级第三方库</li>
  *   <li>AuthnRequest 使用 HTTP-Redirect 绑定,通过 URL 参数传递</li>
@@ -152,7 +152,7 @@ public class SamlProtocolAdapter implements SsoProtocolAdapter {
      * <p>生成 SAML AuthnRequest XML 并构建重定向 URL。AuthnRequest 包含请求 ID、签发时间、
      * SP 实体 ID 等信息,使用 HTTP-Redirect 绑定通过 URL 参数传递到 IdP。
      *
-     * <h3>实现步骤</h3>
+     * <p><strong>实现步骤</strong></p>
      * <ol>
      *   <li>生成唯一的请求 ID（UUID）</li>
      *   <li>构建 AuthnRequest XML 文档</li>
@@ -988,7 +988,6 @@ public class SamlProtocolAdapter implements SsoProtocolAdapter {
      * 使用Redis SETNX确保原子性
      *
      * @param assertionId SAML Assertion ID
-     * @return 标记成功返回Mono.empty()
      */
     private Mono<Void> markAssertionAsUsed(String assertionId) {
         String key = SAML_ASSERTION_USED_PREFIX + assertionId;

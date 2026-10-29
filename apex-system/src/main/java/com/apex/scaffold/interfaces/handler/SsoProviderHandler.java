@@ -25,14 +25,14 @@ import reactor.core.publisher.Mono;
  * <p>提供 SSO 单点登录提供商的配置管理 API,包括提供商的增删改查、连接测试和元数据获取功能。
  * 支持 SAML、CAS、LDAP、OIDC 等多种单点登录协议的统一管理。
  *
- * <h2>核心功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>提供商配置管理:创建、更新、删除、查询 SSO 提供商配置</li>
  *   <li>连接测试:验证 SSO 提供商配置是否正确,端点是否可访问</li>
  *   <li>元数据获取:获取 SSO 协议相关的元数据信息,用于客户端集成</li>
  * </ul>
  *
- * <h2>接口清单</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>GET /admin-api/v1/sso/providers - 查询提供商列表(分页)</li>
  *   <li>POST /admin-api/v1/sso/providers - 创建提供商</li>

@@ -29,7 +29,7 @@ import reactor.core.publisher.Mono;
  * Token 存储使用 Redis（通过 Redisson 客户端）而非本地内存，确保多实例部署场景下
  * Token 状态一致共享，避免内存泄露问题。
  *
- * <h2>核心设计</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li><b>分布式存储</b>：AccessToken 和 RefreshToken 均存储在 Redis 中，并跟随用户标识</li>
  *   <li><b>自动过期</b>：Redis 键的 TTL 与 JWT Token 的过期时间保持一致，过期后自动清理</li>
@@ -43,7 +43,7 @@ import reactor.core.publisher.Mono;
  *       {@link TokenStoreEntry} JSON 对象存储，替代纯字符串格式</li>
  * </ul>
  *
- * <h2>键值映射</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>{@code token:access:{subject}} → legacy 单会话槽（{@link TokenStoreEntry} JSON）</li>
  *   <li>{@code token:refresh:{subject}} → legacy 单会话槽（{@link TokenStoreEntry} JSON）</li>
@@ -52,7 +52,7 @@ import reactor.core.publisher.Mono;
  *   <li>{@code token:sessions:{subject}} → 会话索引（{@code RSet<String>}，TTL=refreshTokenExpireTime）</li>
  * </ul>
  *
- * <h2>向后兼容</h2>
+ * <h2>设计说明</h2>
  * <p>{@link #validateRefreshToken} 同时兼容旧格式（纯 JWT 字符串）和新格式（JSON 对象），
  * 通过检测值是否以 JSON 对象起始符开头来判断格式；无 {@code sid} 的令牌校验与轮换
  * 自动落回 legacy 槽，存量客户端行为不变。
@@ -304,7 +304,6 @@ public class TokenServiceImpl implements TokenService {
      * @param subject      用户标识（OpenID）
      * @param accessToken  AccessToken 字符串
      * @param refreshToken RefreshToken 字符串
-     * @return 空的 Mono，表示存储完成
      */
     @Override
     public Mono<Void> storeToken(String subject, String accessToken, String refreshToken) {
@@ -323,7 +322,6 @@ public class TokenServiceImpl implements TokenService {
      * @param refreshToken  RefreshToken 字符串
      * @param accessEntry   AccessToken 对应的用户信息条目，可为 null
      * @param refreshEntry  RefreshToken 对应的用户信息条目，可为 null
-     * @return 空的 Mono，表示存储完成
      */
     @Override
     public Mono<Void> storeToken(
@@ -348,7 +346,6 @@ public class TokenServiceImpl implements TokenService {
      * @param refreshToken  RefreshToken 字符串
      * @param accessEntry   AccessToken 对应的用户信息条目，可为 null
      * @param refreshEntry  RefreshToken 对应的用户信息条目，可为 null
-     * @return 空的 Mono，表示存储完成
      */
     @Override
     public Mono<Void> storeSessionToken(
@@ -420,7 +417,6 @@ public class TokenServiceImpl implements TokenService {
      * @param subject      用户标识（新用户为手机号）
      * @param accessToken  AccessToken 字符串
      * @param ttlSeconds   Redis 键过期时间（秒）
-     * @return 空的 Mono，表示存储完成
      */
     @Override
     public Mono<Void> storeAccessToken(String subject, String accessToken, int ttlSeconds) {
@@ -439,7 +435,6 @@ public class TokenServiceImpl implements TokenService {
      * @param sid         会话ID（UUID）
      * @param accessToken 新 AccessToken 字符串
      * @param ttlSeconds  Redis 键过期时间（秒）
-     * @return 空的 Mono，表示存储完成
      */
     @Override
     public Mono<Void> storeSessionAccessToken(String subject, String sid, String accessToken, int ttlSeconds) {
@@ -463,7 +458,7 @@ public class TokenServiceImpl implements TokenService {
      *       定位会话槽，无 sid 的令牌校验 legacy 单会话槽）</li>
      * </ol>
      *
-     * <h2>向后兼容</h2>
+     * <h2>设计说明</h2>
      * <p>Redis 中存储的值可能是旧格式（纯 JWT 字符串）或新格式（{@link TokenStoreEntry} JSON）。
      * 新格式以 JSON 对象起始符开头，通过此特征判断并提取其中的 token 字段进行比较。
      *

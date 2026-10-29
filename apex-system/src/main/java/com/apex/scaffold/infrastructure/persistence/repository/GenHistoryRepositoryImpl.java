@@ -21,7 +21,7 @@ import reactor.core.publisher.Mono;
  * {@link GenHistoryPoConverter} 在领域实体与 {@link GenHistoryPO} 之间转换，
  * 阻塞操作调度到 JDBC 专用线程池执行。
  *
- * <h2>核心职责</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>生成历史记录的增删改查</li>
  *   <li>按配置ID查询关联的历史记录</li>
@@ -29,7 +29,7 @@ import reactor.core.publisher.Mono;
  *   <li>JDBC 阻塞操作隔离到专用调度器</li>
  * </ul>
  *
- * <h2>审计作用</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>记录每次代码生成任务的执行结果</li>
  *   <li>追溯生成历史，支持回溯和对比</li>

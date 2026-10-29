@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
  *
  * <p>扩展 RocketMQ 生产者的可靠性、性能和监控配置，支持生产环境优化。
  *
- * <h2>核心功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>✅ 发送超时控制</li>
  *   <li>✅ 失败重试策略</li>
@@ -18,7 +18,7 @@ import org.springframework.stereotype.Component;
  *   <li>✅ 故障降级</li>
  * </ul>
  *
- * <h2>配置示例</h2>
+ * <h2>使用示例</h2>
  * <pre>{@code
  * apex:
  *   mq:

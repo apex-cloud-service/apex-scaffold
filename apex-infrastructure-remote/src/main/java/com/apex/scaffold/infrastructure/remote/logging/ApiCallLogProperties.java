@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
  * <p>控制对外部 HTTP 服务调用日志的采集行为。通过 Spring Boot
  * {@code api-call-log.*} 前缀的配置项注入。</p>
  *
- * <h2>配置示例</h2>
+ * <h2>使用示例</h2>
  * <pre>{@code * api-call-log:
  *   enabled: true
  *   max-body-length: 4096

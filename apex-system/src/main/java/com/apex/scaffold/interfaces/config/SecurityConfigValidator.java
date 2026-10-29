@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Profile;
  * <p>在生产环境（{@code prod} Profile）下启动时，校验关键安全配置是否已正确设置。
  * 若检测到配置缺失或不符合安全要求，将抛出 {@link IllegalStateException} 阻止应用启动。
  *
- * <h2>校验项目</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>JWT 密钥：必须设置且长度不小于 32 字节</li>
  *   <li>Redis 密码：生产环境必须设置</li>

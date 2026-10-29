@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
  * 阻塞等待期间还占着载体线程；虚拟线程在阻塞 I/O 上会卸载（unmount）载体线程，
  * 因此可以在同等内存下承载高一个数量级的并发等待任务。</p>
  *
- * <h2>为什么不直接使用线程池</h2>
+ * <h2>线程安全性</h2>
  * <p>虚拟线程不可池化：池化会让"每任务一个虚拟线程"的卸载优势退化，且池上限又会
  * 把并发重新绑死到线程数上。本实现改为两层结构：</p>
  * <ol>
@@ -42,7 +42,7 @@ import org.slf4j.LoggerFactory;
  * <p>排队等待发生在虚拟线程内部的 {@link Semaphore#acquire()} 上，此时虚拟线程会卸载载体线程，
  * 因此"排队中的任务数"只消耗堆内存（每线程约 1KB），不会占用平台线程。</p>
  *
- * <h2>定时调度支持</h2>
+ * <h2>职责范围</h2>
  * <p>本执行器同时实现 {@link java.util.concurrent.ScheduledExecutorService}，
  * 因为 Reactor 的 {@code Mono.delay(d, BlockingIoSchedulers.cache())}、
  * {@code retryWhen} 与 {@code Scheduler#schedulePeriodically} 都要求底层执行器支持延迟调度，
@@ -55,7 +55,7 @@ import org.slf4j.LoggerFactory;
  *       闸门打满时该次触发记录告警并跳过。</li>
  * </ul>
  *
- * <h2>与 {@code synchronized} 的关系（pinning）</h2>
+ * <h2>线程安全性</h2>
  * <p>JDK 21 中虚拟线程在 {@code synchronized} 块内阻塞会钉住（pin）载体线程，无法卸载。
  * 本项目阻塞 I/O 边界已由 {@code BlockingIoSchedulers} 统一收口，
  * {@code BlockingIoSchedulers.activeScheduler} 的 {@code synchronized} 块内只做 Scheduler 构造，

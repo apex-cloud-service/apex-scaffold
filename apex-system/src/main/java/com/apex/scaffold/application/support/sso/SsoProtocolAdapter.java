@@ -9,7 +9,7 @@ import reactor.core.publisher.Mono;
  * <p>定义 SSO 单点登录协议的通用接口,支持多种协议(SAML、CAS、LDAP、OIDC)的统一抽象。
  * 各具体协议实现此接口以提供协议特定的认证、登出和元数据获取功能。
  *
- * <h2>支持的协议</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>SAML 2.0 - 企业级 SSO 标准协议</li>
  *   <li>CAS - Central Authentication Service 协议</li>
@@ -17,7 +17,7 @@ import reactor.core.publisher.Mono;
  *   <li>OIDC - OpenID Connect 协议</li>
  * </ul>
  *
- * <h2>核心流程</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>认证流程: initiate() → callback() → authenticate()</li>
  *   <li>登出流程: logout()</li>

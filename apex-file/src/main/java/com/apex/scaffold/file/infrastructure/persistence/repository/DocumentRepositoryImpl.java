@@ -23,7 +23,7 @@ import reactor.core.publisher.Mono;
  * 基于 MyBatis-Plus 访问数据库，所有 JDBC 操作运行在 {@link BlockingIoSchedulers#jdbc()}
  * 专用调度器上，避免阻塞响应式主线程。
  *
- * <h2>核心特性</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>响应式封装：JDBC 阻塞操作通过 {@code Mono.fromCallable} 封装并在专用调度器执行</li>
  *   <li>多租户隔离：自动从 {@link TenantContext} 注入租户 ID，查询时自动过滤</li>
@@ -31,7 +31,7 @@ import reactor.core.publisher.Mono;
  *   <li>实体转换：通过 {@link DocumentPoConverter} 实现领域实体与持久化对象的转换</li>
  * </ul>
  *
- * <h2>设计模式</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>仓储模式：实现领域仓储接口，封装数据访问细节</li>
  *   <li>适配器模式：适配 MyBatis-Plus 提供的数据库访问能力</li>

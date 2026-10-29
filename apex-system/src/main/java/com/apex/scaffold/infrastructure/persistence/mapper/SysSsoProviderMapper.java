@@ -10,12 +10,12 @@ import org.apache.ibatis.annotations.Mapper;
  * <p>负责 {@code sys_sso_provider} 表的持久化操作，管理单点登录提供商配置信息。
  * 继承 MyBatis-Plus {@link BaseMapper} 获得通用单表 CRUD 操作。
  *
- * <h2>表映射</h2>
+ * <h2>设计说明</h2>
  * <p>表名：{@code sys_sso_provider}<br>
  * 实体：{@link SysSsoProviderPO}<br>
  * 主键：{@code id}（Long 类型，雪花算法）
  *
- * <h2>提供商配置字段</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>{@code provider_name}：提供商名称（如 "Keycloak"、"Azure AD"）</li>
  *   <li>{@code provider_type}：提供商类型（SAML、OAuth2、LDAP、CAS）</li>
@@ -27,7 +27,7 @@ import org.apache.ibatis.annotations.Mapper;
  *   <li>{@code enabled}：启用状态</li>
  * </ul>
  *
- * <h2>支持的 SSO 协议</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>SAML 2.0：企业级单点登录标准协议</li>
  *   <li>OAuth 2.0 / OIDC：现代授权与身份认证协议</li>
@@ -35,10 +35,10 @@ import org.apache.ibatis.annotations.Mapper;
  *   <li>CAS：中央认证服务</li>
  * </ul>
  *
- * <h2>租户隔离</h2>
+ * <h2>设计说明</h2>
  * <p>SSO 提供商配置支持租户级隔离，每个租户可配置独立的 SSO 提供商。
  *
- * <h2>通用方法</h2>
+ * <h2>职责范围</h2>
  * <p>继承自 {@link BaseMapper} 的常用方法：
  * <ul>
  *   <li>{@code insert(entity)} - 插入提供商配置</li>

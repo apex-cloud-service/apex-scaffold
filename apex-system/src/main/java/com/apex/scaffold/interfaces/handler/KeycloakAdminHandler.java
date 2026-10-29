@@ -24,14 +24,14 @@ import reactor.core.publisher.Mono;
  *
  * <p>提供 Keycloak 用户同步和集成状态管理接口,用于后台管理员操作。
  *
- * <h2>主要功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>全量同步 Keycloak 用户到本地数据库</li>
  *   <li>同步单个 Keycloak 用户</li>
  *   <li>查询 Keycloak 集成状态</li>
  * </ul>
  *
- * <h2>使用场景</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>初始化数据:首次接入 Keycloak 时全量同步用户</li>
  *   <li>数据修复:当本地用户数据与 Keycloak 不一致时触发同步</li>
@@ -39,10 +39,10 @@ import reactor.core.publisher.Mono;
  *   <li>健康检查:监控 Keycloak 集成状态</li>
  * </ul>
  *
- * <h2>配置要求</h2>
+ * <h2>设计说明</h2>
  * <p>此 Handler 需要配置 {@code keycloak.enabled=true} 才会启用。
  *
- * <h2>权限要求</h2>
+ * <h2>设计说明</h2>
  * <p>所有接口均需要管理员权限,建议在路由层配置权限校验。
  *
  * @author Apex Team

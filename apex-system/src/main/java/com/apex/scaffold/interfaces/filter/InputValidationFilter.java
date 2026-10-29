@@ -37,7 +37,7 @@ import reactor.core.publisher.Mono;
  * 包括路径遍历攻击、SQL 注入和跨站脚本攻击（XSS）。作为全局安全防护的第一道防线，
  * 在请求进入业务处理之前完成输入校验。
  *
- * <h2>检测能力</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li><b>路径遍历检测</b>：通过 {@link URI#getRawPath()} 检测请求路径中的
  *       {@code ../} 路径遍历特征，防止目录穿越攻击</li>
@@ -50,7 +50,7 @@ import reactor.core.publisher.Mono;
  *   <li><b>Content-Type 验证</b>：验证请求的 Content-Type 是否在允许的白名单中</li>
  * </ul>
  *
- * <h2>XSS 正则检测模式</h2>
+ * <h2>设计说明</h2>
  * <table border="1">
  *   <caption>XSS 攻击特征正则模式</caption>
  *   <tr><th>模式</th><th>正则表达式</th><th>说明</th></tr>
@@ -61,7 +61,7 @@ import reactor.core.publisher.Mono;
  *   <tr><td>data: 协议（HTML）</td><td>{@code data:text/html}</td><td>匹配 HTML 数据注入</td></tr>
  * </table>
  *
- * <h2>配置方式</h2>
+ * <h2>使用示例</h2>
  * <p>通过 {@link InputValidationProperties} 配置各项验证的开关与参数，
  * 在 {@code application.yml} 中以 {@code apex.security.input-validation} 为前缀进行配置。
  *
@@ -85,7 +85,6 @@ public class InputValidationFilter implements WebFilter {
      *
      * @param exchange   当前 HTTP 请求-响应交换对象
      * @param messageKey 国际化消息键，对应 messages_*.properties 中的 key
-     * @return 表示响应写入完成的 {@link Mono}{@code <Void>}
      */
     private Mono<Void> buildI18nError(ServerWebExchange exchange, String messageKey) {
         return Mono.deferContextual(ctx -> {

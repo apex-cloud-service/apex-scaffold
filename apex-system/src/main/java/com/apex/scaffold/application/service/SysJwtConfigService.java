@@ -34,14 +34,14 @@ import reactor.core.publisher.Mono;
  * <p>提供租户级别的 JWT 配置管理和测试功能，支持 JWT Token 的生成、验证和配置更新。
  * 所有操作基于当前租户上下文，确保多租户环境下的配置隔离。
  *
- * <h2>核心功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>查询租户 JWT 配置（签名算法、密钥、有效期等）</li>
  *   <li>更新租户 JWT 配置并发布配置变更事件</li>
  *   <li>测试 JWT 配置有效性（生成测试 Token 并验证）</li>
  * </ul>
  *
- * <h2>支持的签名算法</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>HS256: HMAC-SHA256（对称加密，推荐用于单体应用）</li>
  *   <li>HS512: HMAC-SHA512（对称加密，安全性更高）</li>
@@ -113,7 +113,7 @@ public class SysJwtConfigService {
      * <p>使用当前租户的 JWT 配置生成测试 Token 并验证，用于测试配置是否正确。
      * 该方法会执行完整的 Token 生命周期：生成 → 签名 → 解码 → 验证。
      *
-     * <h2>测试流程</h2>
+     * <h2>设计说明</h2>
      * <ol>
      *   <li>获取当前租户的 JWT 配置（算法、密钥、签发者等）</li>
      *   <li>根据请求中的 Payload 和配置生成 JWT Token</li>
@@ -121,7 +121,7 @@ public class SysJwtConfigService {
      *   <li>返回 Token 字符串、解码结果和验证状态</li>
      * </ol>
      *
-     * <h2>安全说明</h2>
+     * <h2>设计说明</h2>
      * <ul>
      *   <li>生成的测试 Token 仅用于配置验证，不应用于生产环境</li>
      *   <li>Token 密钥在传输过程中已加密，不会泄露</li>
@@ -223,14 +223,14 @@ public class SysJwtConfigService {
      * <p>根据 JWT 配置中的算法类型和密钥，创建对应的签名算法实例。
      * 该方法为私有方法，仅供内部使用。
      *
-     * <h2>支持的算法</h2>
+     * <h2>职责范围</h2>
      * <ul>
      *   <li>HS256: HMAC-SHA256（对称加密）</li>
      *   <li>HS512: HMAC-SHA512（对称加密）</li>
      *   <li>RS256: RSA-SHA256（非对称加密）- 待实现</li>
      * </ul>
      *
-     * <h2>密钥要求</h2>
+     * <h2>设计说明</h2>
      * <ul>
      *   <li>HS256/HS512: 密钥长度建议 ≥ 256 位（32 字节）</li>
      *   <li>RS256: 需要提供 RSA 公钥和私钥（PEM 格式）</li>

@@ -23,14 +23,14 @@ import reactor.core.publisher.Mono;
  * <p>提供 SSO 单点登录会话的管理 API,包括会话查询、会话撤销和会话统计功能。
  * 支持按用户、提供商、会话状态等维度查询和管理 SSO 会话。
  *
- * <h2>核心功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>会话查询:分页查询 SSO 会话列表,支持多维度筛选</li>
  *   <li>会话撤销:撤销指定会话或用户的所有会话,使会话失效</li>
  *   <li>会话统计:获取会话统计信息,包括活跃会话数、按提供商分组等</li>
  * </ul>
  *
- * <h2>接口清单</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>GET /admin-api/v1/sso/sessions - 查询会话列表(分页)</li>
  *   <li>POST /admin-api/v1/sso/sessions/{id}/revoke - 撤销指定会话</li>

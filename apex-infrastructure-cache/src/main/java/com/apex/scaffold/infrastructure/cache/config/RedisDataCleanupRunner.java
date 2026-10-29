@@ -18,13 +18,13 @@ import org.springframework.stereotype.Component;
  * Redis 中已存在的旧格式数据无法被新 Codec 正确读取，导致 Token 刷新失败等异常。
  * 本 Runner 在应用启动后自动扫描并清理受影响的 Key，避免手动清 Redis 的操作负担。
  *
- * <h2>清理范围</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>{@code token:access:*} — AccessToken 存储</li>
  *   <li>{@code token:refresh:*} — RefreshToken 存储</li>
  * </ul>
  *
- * <h2>安全机制</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>通过配置项 {@code apex.redis.cleanup-on-startup} 控制开关，生产环境建议关闭</li>
  *   <li>每次启动最多执行一次清理（通过 {@code apex:data:cleanup:v2} 标记 Key 防重）</li>

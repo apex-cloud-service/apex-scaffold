@@ -28,7 +28,6 @@ public class OfficeAuditLogServiceImpl implements AuditLogService {
      * @param resource 不含请求路径参数或正文的资源标识
      * @param result 受控的结果标识，不应将响应生成解释为业务成功
      * @param details 调用方筛选后的白名单元数据，不得包含敏感数据
-     * @return 日志调用完成信号；日志调用抛出的异常通过错误信号传播，不重试或吞错
      */
     @Override
     public Mono<Void> log(
@@ -57,7 +56,6 @@ public class OfficeAuditLogServiceImpl implements AuditLogService {
      * @param ip 契约传入的客户端 IP，本实现不记录
      * @param success 认证是否成功，映射为 GRANTED 或 DENIED
      * @param reason 契约传入的认证原因，本实现不记录
-     * @return 本地审计完成信号；日志调用失败时传播错误，无持久化确认语义
      */
     @Override
     public Mono<Void> logAuthEvent(
@@ -73,7 +71,6 @@ public class OfficeAuditLogServiceImpl implements AuditLogService {
      * @param resource 受控的资源标识
      * @param permission 非 null 的声明权限码
      * @param granted 是否授权通过，映射为 GRANTED 或 DENIED
-     * @return 本地审计完成信号；日志调用失败时传播错误，无持久化确认语义
      * @throws NullPointerException permission 为 null，无法构建不可变元数据映射
      */
     @Override

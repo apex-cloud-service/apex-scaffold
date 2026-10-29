@@ -8,7 +8,7 @@ import com.apex.scaffold.domain.model.entity.TenantEntity.TenantStatus;
  * <p>当对租户执行非法状态迁移（如从终态归档再次迁移、从不兼容状态执行操作）时抛出。
  * 应用层捕获后映射为 {@code BusinessException(ResultCode.TENANT_ILLEGAL_TRANSITION)}。
  *
- * <h2>触发场景</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>对已归档（终态）租户执行任何状态迁移</li>
  *   <li>对停用租户执行冻结（需先启用）</li>

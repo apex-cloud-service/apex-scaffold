@@ -21,7 +21,7 @@ import reactor.core.publisher.Mono;
  * <p>实现 {@link SmsCodeService} 接口，提供基于创蓝253短信平台的验证码发送和验证功能。
  * 验证码使用 Redis 存储，并通过 {@link ChuanglanGateway} 调用创蓝短信API发送。
  *
- * <h2>P0-CL-1修复: 内存缓存迁移至Redis</h2>
+ * <h2>设计说明</h2>
  * <p>将原 {@link java.util.concurrent.ConcurrentHashMap} 内存缓存替换为
  * {@link ReactiveStringRedisTemplate} Redis存储，解决以下问题：</p>
  * <ul>
@@ -30,7 +30,7 @@ import reactor.core.publisher.Mono;
  *   <li>无需维护 ScheduledExecutorService 线程池做过期清理</li>
  * </ul>
  *
- * <h2>验证码策略</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>生成策略：6位随机数字，范围 000000 ~ 999999</li>
  *   <li>有效期：5分钟（300秒），通过 Redis TTL 自动过期</li>
@@ -120,7 +120,6 @@ public class ChuanglanSmsCodeServiceImpl implements SmsCodeService, SmsCodePurpo
      * 发送失败时：复用模式不删除验证码缓存，新生成模式删除验证码缓存。
      *
      * @param phone 目标手机号，中国大陆11位手机号码
-     * @return 发送完成的空Mono，冷却期内返回Mono.error
      */
     @Override
     public Mono<Void> sendAndStore(String phone) {
@@ -181,7 +180,6 @@ public class ChuanglanSmsCodeServiceImpl implements SmsCodeService, SmsCodePurpo
      * @param cacheKey         Redis 验证码 key
      * @param cooldownKey      Redis 冷却期 key
      * @param deleteCodeOnFail 发送失败时是否删除验证码缓存
-     * @return 发送完成的 Mono
      */
     private Mono<Void> doSendSms(
             String phone, String code, String cacheKey, String cooldownKey, boolean deleteCodeOnFail) {

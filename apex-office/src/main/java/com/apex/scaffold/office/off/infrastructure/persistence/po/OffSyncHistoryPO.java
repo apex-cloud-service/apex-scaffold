@@ -15,7 +15,7 @@ import lombok.experimental.SuperBuilder;
  * <p>对应数据库表 {@code off_sync_history}，记录从第三方办公平台同步数据的历史记录和执行状态。
  * 继承 {@link BasePO} 获得通用字段（ID、创建时间、更新时间、逻辑删除等）。
  *
- * <h2>核心字段</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>{@link #syncType} - 同步类型（EMPLOYEE=员工、DEPARTMENT=部门、FULL=全量同步）</li>
  *   <li>{@link #syncSource} - 同步来源平台（FEISHU=飞书、DINGTALK=钉钉、WECOM=企业微信）</li>
@@ -29,7 +29,7 @@ import lombok.experimental.SuperBuilder;
  *   <li>{@link #tenantId} - 租户标识（多租户隔离）</li>
  * </ul>
  *
- * <h2>同步类型</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>EMPLOYEE：仅同步员工信息</li>
  *   <li>DEPARTMENT：仅同步部门组织架构</li>
@@ -37,7 +37,7 @@ import lombok.experimental.SuperBuilder;
  *   <li>INCREMENTAL：增量同步（仅同步变更数据）</li>
  * </ul>
  *
- * <h2>同步状态</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>IN_PROGRESS：同步进行中</li>
  *   <li>SUCCESS：同步成功完成</li>
@@ -45,7 +45,7 @@ import lombok.experimental.SuperBuilder;
  *   <li>PARTIAL_SUCCESS：部分成功（有失败记录但整体完成）</li>
  * </ul>
  *
- * <h2>业务场景</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>同步记录：记录每次数据同步的执行情况</li>
  *   <li>失败追溯：查询同步失败的历史记录和原因</li>
@@ -54,14 +54,14 @@ import lombok.experimental.SuperBuilder;
  *   <li>定时任务：定时任务执行时创建同步历史记录</li>
  * </ul>
  *
- * <h2>统计指标</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>同步成功率 = 成功次数 / 总次数</li>
  *   <li>平均耗时 = 总耗时 / 同步次数</li>
  *   <li>数据量统计 = 部门数量 + 员工数量</li>
  * </ul>
  *
- * <h2>注意事项</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>同步历史记录通常保留而不物理删除，以维护审计完整性</li>
  *   <li>可定期归档或清理过期历史记录（如 90 天前的记录）</li>

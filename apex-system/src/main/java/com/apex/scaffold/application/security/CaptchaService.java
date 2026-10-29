@@ -27,7 +27,7 @@ import reactor.core.publisher.Mono;
  * 置有效期；校验时按 {@code captchaId} 读取答案比对，校验后立即删除
  * （一次性消费），防止重放。</p>
  *
- * <h2>防爆破设计</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>验证码 ID 使用 UUID，无法预测</li>
  *   <li>校验忽略大小写，容忍 OCR 识别误差</li>

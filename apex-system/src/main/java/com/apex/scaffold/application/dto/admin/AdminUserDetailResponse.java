@@ -11,6 +11,26 @@ import java.util.List;
 /**
  * 超级管理员用户详情；明确排除 accessToken、refreshToken 和登录 IP。
  *
+ * @param id 用户ID（以字符串传输，避免前端精度丢失）
+ * @param nickname 用户昵称
+ * @param avatarUrl 头像 URL
+ * @param gender 性别（0-未知，1-男，2-女）
+ * @param birthday 出生日期
+ * @param phone 手机号
+ * @param country 国家/地区
+ * @param province 省份
+ * @param city 城市
+ * @param status 账号状态（0-禁用，1-正常）
+ * @param onboardingStatus 新用户引导状态码（如 ONBOARDING_PENDING 表示引导未完成）
+ * @param language 语言偏好
+ * @param activityStatus 活动状态（按心跳与最近登录时间推导：ONLINE-在线，ACTIVE-活跃，INACTIVE-不活跃）
+ * @param lastLoginTime 最近登录时间
+ * @param lastHeartbeatTime 最近心跳时间
+ * @param createdAt 账号创建时间
+ * @param updatedAt 资料更新时间
+ * @param profile 用户基础信息（含会员与认证状态）
+ * @param profileDetails 用户画像明细
+ * @param roles 后台可配置角色列表
  * @author Apex Team
  * @version 1.0.0
  * @since 1.0.0

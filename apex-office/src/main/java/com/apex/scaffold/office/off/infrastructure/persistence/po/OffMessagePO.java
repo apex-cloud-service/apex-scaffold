@@ -16,7 +16,7 @@ import lombok.experimental.SuperBuilder;
  * <p>对应数据库表 {@code off_message}，存储站内消息的主体信息。
  * 继承 {@link BasePO} 获得通用字段（ID、创建时间、更新时间、逻辑删除等）。
  *
- * <h2>核心字段</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>{@link #messageCode} - 消息编码（唯一标识）</li>
  *   <li>{@link #templateId} - 消息模板 ID（关联 {@code off_message_template}，可选）</li>
@@ -32,7 +32,7 @@ import lombok.experimental.SuperBuilder;
  *   <li>{@link #tenantId} - 租户标识（多租户隔离）</li>
  * </ul>
  *
- * <h2>消息类型</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>SYSTEM_NOTIFY：系统通知（如密码重置、账号变更）</li>
  *   <li>USER_MESSAGE：用户消息（如好友申请、消息提醒）</li>
@@ -40,7 +40,7 @@ import lombok.experimental.SuperBuilder;
  *   <li>TASK_NOTIFY：任务通知（如任务分配、任务到期）</li>
  * </ul>
  *
- * <h2>消息状态</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>DRAFT：草稿状态，未发送</li>
  *   <li>SENDING：发送中，正在分发给接收人</li>
@@ -48,13 +48,13 @@ import lombok.experimental.SuperBuilder;
  *   <li>FAILED：发送失败，需要重试或人工处理</li>
  * </ul>
  *
- * <h2>关联关系</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>一对多：一条消息可以有多个接收人（通过 {@code off_message_recipient} 关联）</li>
  *   <li>多对一：消息可以关联一个模板（{@code templateId}）</li>
  * </ul>
  *
- * <h2>业务场景</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>站内通知：系统向用户发送通知消息</li>
  *   <li>用户消息：用户之间的私信交流</li>
@@ -62,7 +62,7 @@ import lombok.experimental.SuperBuilder;
  *   <li>定时消息：设置发送时间的延迟消息</li>
  * </ul>
  *
- * <h2>注意事项</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>消息编码 {@code messageCode} 应保持全局唯一</li>
  *   <li>过期时间 {@code expireTime} 用于自动清理历史消息</li>

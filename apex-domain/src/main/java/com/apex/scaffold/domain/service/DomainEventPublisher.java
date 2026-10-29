@@ -10,7 +10,7 @@ import reactor.core.publisher.Mono;
  * 领域事件发布遵循DDD（领域驱动设计）的事件驱动架构模式，
  * 用于在领域层与其他边界（如应用服务、基础设施层）之间进行异步通信。</p>
  *
- * <h2>设计原则</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>解耦：领域服务不直接依赖外部系统，通过发布事件实现松耦合</li>
  *   <li>异步：事件发布后立即返回，由监听器异步处理</li>
@@ -38,7 +38,6 @@ public interface DomainEventPublisher {
      * （Mono.empty()），遵循"发送即忘"的异步事件模式。</p>
      *
      * @param event 领域事件对象，不能为null
-     * @return 发布完成信号（Mono.empty()），发布失败时返回错误信号
      * @throws IllegalArgumentException 若event为null
      */
     Mono<Void> publish(AbstractDomainEvent event);

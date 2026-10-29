@@ -15,7 +15,7 @@ import reactor.core.publisher.Mono;
  * <p>设计约束：本端口仅暴露与 Reactor 流式调用相关的核心能力，不暴露
  * Resilience4j 具体类型，保持领域层零第三方框架依赖。</p>
  *
- * <h2>实现约定</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>基础设施层实现类需标注 {@code @Service} 并由 Spring 装配</li>
  *   <li>接口层过滤器/切面应注入本端口而非具体实现</li>

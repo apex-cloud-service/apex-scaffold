@@ -11,14 +11,14 @@ import java.util.stream.IntStream;
  * 供 {@code SentinelConfig}（URL Cleaner 注册）与降级快照保存
  * （{@code DegradeSnapshotRecorder}）共用，避免两套归一化逻辑漂移。</p>
  *
- * <h2>背景</h2>
+ * <h2>设计说明</h2>
  * <p>Sentinel WebFlux 适配器以请求的原始路径作为资源名，而注册的限流/熔断规则
  * 使用 {@code /api/v1/explore/battles/{battleId}/submit} 这类含占位符的模板名。
  * 若不做归一化，运行时资源名（如 {@code /api/v1/explore/battles/123/submit}）
  * 与规则名永不相等，导致对应规则失效；降级快照（以归一化资源名为 key）也将
  * 与熔断降级时读取的资源名不一致，造成快照永不命中。</p>
  *
- * <h2>使用约定</h2>
+ * <h2>使用示例</h2>
  * <ul>
  *   <li>新增含路径变量的限流/熔断规则时，必须同步在
  *       {@link #PATH_VARIABLE_TEMPLATES} 登记对应模板，否则规则不会生效；</li>

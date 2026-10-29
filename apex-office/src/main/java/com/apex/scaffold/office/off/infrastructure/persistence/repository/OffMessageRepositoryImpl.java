@@ -162,7 +162,6 @@ public class OffMessageRepositoryImpl implements OffMessageRepository {
      * 在 JDBC 调度器调用消息主体的主键删除，不同步删除接收人记录。
      *
      * @param id 已通过业务授权的消息主键
-     * @return 删除调用完成信号，未匹配记录仍正常完成；逻辑删除行为遵循实体映射配置
      */
     @Override
     public Mono<Void> deleteById(Long id) {

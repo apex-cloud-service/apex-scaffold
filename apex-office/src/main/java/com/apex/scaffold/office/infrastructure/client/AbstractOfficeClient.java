@@ -163,6 +163,14 @@ abstract class AbstractOfficeClient implements OfficeOAuthClient, OfficePlatform
                 .map(this::token);
     }
 
+    /**
+     * 以查询参数方式携带访问令牌，读取平台用户标识。
+     *
+     * @param uri 平台用户信息接口路径
+     * @param accessToken 平台访问令牌
+     * @param tokenParameter 令牌的查询参数名（各平台命名不同）
+     * @return 平台用户标识（如 openId、userid）
+     */
     protected Mono<String> getUser(String uri, String accessToken, String tokenParameter) {
         return webClient
                 .get()

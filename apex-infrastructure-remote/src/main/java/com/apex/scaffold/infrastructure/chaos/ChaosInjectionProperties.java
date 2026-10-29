@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
  * <p>通过 {@code apex.chaos} 前缀绑定配置，控制各类故障注入的开关、持续时间和参数。
  * 所有注入默认关闭，仅在接受到显式开启指令时激活，确保生产环境安全。
  *
- * <h2>配置示例</h2>
+ * <h2>使用示例</h2>
  * <pre>{@code * apex:
  *   chaos:
  *     enabled: false

@@ -16,7 +16,7 @@ import lombok.experimental.SuperBuilder;
  * <p>映射数据库表 {@code wf_process_instance}，存储工作流流程实例的核心信息。
  * 继承 {@link BasePO} 获得主键、创建/更新时间、乐观锁版本与逻辑删除等通用字段。</p>
  *
- * <h2>字段说明</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>{@code suspended}：挂起标志，对应数据库字段 {@code suspended}（TINYINT 类型）。</li>
  *   <li>{@code formData}：表单数据 JSON，对应数据库字段 {@code form_data}。</li>

@@ -28,7 +28,7 @@ import reactor.core.publisher.Mono;
  * 本路由作为最低优先级的兜底 RouterFunction，在所有其他路由匹配失败后执行，
  * 检查当前请求路径是否注册了其他 HTTP 方法的处理器。若路径存在但方法不匹配则返回 405。</p>
  *
- * <h2>典型场景</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>{@code GET /api/v1/auth/login} → 405（仅注册了 POST）</li>
  *   <li>{@code GET /api/v1/auth/register} → 405（仅注册了 POST）</li>

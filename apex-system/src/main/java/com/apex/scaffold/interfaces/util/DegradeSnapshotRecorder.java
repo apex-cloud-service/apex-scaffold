@@ -15,7 +15,7 @@ import org.springframework.web.reactive.function.server.ServerRequest;
  * 方法过滤、资源归一化与白名单判断，命中后委托
  * {@link DegradeFallbackService#saveSnapshot(String, Object)} 保存。</p>
  *
- * <h2>安全约束（评审硬规则）</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>仅保存 GET/HEAD/OPTIONS 等只读方法的响应，写接口降级走"排队中"，无需快照；</li>
  *   <li>仅保存白名单（{@link DegradeSnapshotProperties#getResources()}）内的归一化资源，

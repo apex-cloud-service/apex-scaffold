@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Bean;
  * <p>本配置类负责装配License授权验证所需的全部核心组件,包括验证器、功能门控切面和运行期重检调度器。
  * 作为Spring Boot自动配置的一部分,无条件注册所有授权检查基础设施,确保商业功能的访问控制始终生效。</p>
  *
- * <h3>主要功能</h3>
+ * <p><strong>主要功能</strong></p>
  * <ul>
  *   <li><b>License验证器注册</b>:创建并缓存{@link LicenseValidator}实例,负责License文件的加载、
  *       签名校验、过期检查和功能授权判断</li>
@@ -22,7 +22,7 @@ import org.springframework.context.annotation.Bean;
  *       实现过期即时失效和续期自动生效</li>
  * </ul>
  *
- * <h3>不可关闭的设计</h3>
+ * <p><strong>不可关闭的设计</strong></p>
  * <p>本配置类使用{@code @AutoConfiguration}无条件装配(v2.2起),所有授权检查组件始终注册:
  * <ul>
  *   <li>{@code apex.license.enabled}缺省为{@code true};显式设为{@code false}仅意味着"更严格"——
@@ -31,17 +31,17 @@ import org.springframework.context.annotation.Bean;
  *       商业基础设施(RBAC/缓存/MQ/追踪等)的装配条件同样不满足,无法静默开启</li>
  * </ul>
  *
- * <h3>容错降级策略</h3>
+ * <p><strong>容错降级策略</strong></p>
  * <p>License文件缺失、签名无效或已过期时,不阻塞应用启动,而是注册一个降级验证器——基础功能放行,
  * 所有商业功能({@code @FeatureGate}标注 / {@code @ConditionalOnLicenseFeature}装配的商业组件)拒绝,
  * 并输出明确的WARN日志。这种设计确保应用在授权问题下仍可正常启动,同时商业功能访问得到有效控制。</p>
  *
- * <h3>装配说明</h3>
+ * <p><strong>装配说明</strong></p>
  * <p>全部Bean均通过{@code @Bean}方法显式注册,不依赖宿主应用的{@code @ComponentScan}路径。
  * 这意味着无论宿主应用主类位于什么包名下,只要引入本模块且未关闭{@code apex.license.enabled},
  * 授权检查机制即自动生效。</p>
  *
- * <h3>使用示例</h3>
+ * <p><strong>使用示例</strong></p>
  * <pre>{@code
  * // application.yml配置
  * apex:
