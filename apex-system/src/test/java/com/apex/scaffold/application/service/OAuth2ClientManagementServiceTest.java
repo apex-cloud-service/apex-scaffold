@@ -37,6 +37,9 @@ class OAuth2ClientManagementServiceTest {
     @Mock
     private OAuth2ClientAssembler oAuth2ClientAssembler;
 
+    @Mock
+    private TenantGuard tenantGuard;
+
     @InjectMocks
     private OAuth2ClientManagementService clientManagementService;
 
@@ -54,6 +57,7 @@ class OAuth2ClientManagementServiceTest {
         lenient()
                 .when(oAuth2ClientAssembler.toResponse(any(OAuth2RegisteredClientEntity.class)))
                 .thenReturn(testResponse);
+        lenient().when(tenantGuard.assertActive()).thenReturn(Mono.empty());
     }
 
     @Test

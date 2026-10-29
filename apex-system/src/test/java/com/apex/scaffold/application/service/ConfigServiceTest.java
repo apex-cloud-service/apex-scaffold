@@ -2,6 +2,7 @@ package com.apex.scaffold.application.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -40,6 +41,9 @@ class ConfigServiceTest {
     @Mock
     private ConfigAssembler configAssembler;
 
+    @Mock
+    private TenantGuard tenantGuard;
+
     @InjectMocks
     private ConfigService configService;
 
@@ -59,6 +63,7 @@ class ConfigServiceTest {
         builtinConfig = ConfigEntity.create("默认分页", "sys.default.page", "20");
         builtinConfig.setId(2L);
         builtinConfig.setConfigType(ConfigEntity.ConfigType.BUILTIN.getCode());
+        lenient().when(tenantGuard.assertActive()).thenReturn(Mono.empty());
     }
 
     /**

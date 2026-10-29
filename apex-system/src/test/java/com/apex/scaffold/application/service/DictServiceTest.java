@@ -2,6 +2,7 @@ package com.apex.scaffold.application.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -42,6 +43,9 @@ class DictServiceTest {
     @Mock
     private DictDataRepository dictDataRepository;
 
+    @Mock
+    private TenantGuard tenantGuard;
+
     @InjectMocks
     private DictService dictService;
 
@@ -60,6 +64,7 @@ class DictServiceTest {
         typeEntity.setId(1L);
         dataEntity = DictDataEntity.create(0, "男", "1", "sys_user_sex");
         dataEntity.setId(10L);
+        lenient().when(tenantGuard.assertActive()).thenReturn(Mono.empty());
     }
 
     /**

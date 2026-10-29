@@ -42,6 +42,9 @@ class MenuServiceTest {
     @Mock
     private MenuAssembler menuAssembler;
 
+    @Mock
+    private TenantGuard tenantGuard;
+
     @InjectMocks
     private MenuService menuService;
 
@@ -88,6 +91,7 @@ class MenuServiceTest {
 
         lenient().when(menuAssembler.toDTO(directory)).thenReturn(directoryDTO);
         lenient().when(menuAssembler.toDTO(childMenu)).thenReturn(childMenuDTO);
+        lenient().when(tenantGuard.assertActive()).thenReturn(Mono.empty());
     }
 
     /**

@@ -54,6 +54,11 @@ public final class ChuanglanSmsClient {
      */
     public Mono<Map<String, Object>> sendSms(String phone, String code) {
         ChuanglanProperties.Sms config = properties.getSms();
+        String missingSetting = firstMissingSetting(config);
+        if (missingSetting != null) {
+            log.error("短信发送配置缺失，拒绝发起请求: setting={}", missingSetting);
+            return Mono.error(new ChuanglanApiException("SMS_NOT_CONFIGURED", "短信通道未配置: " + missingSetting));
+        }
         Map<String, String> body = new LinkedHashMap<>();
         body.put("account", config.getAccount());
         body.put("password", config.getPassword());
@@ -120,5 +125,43 @@ public final class ChuanglanSmsClient {
      */
     private String baseUrl(ChuanglanProperties.Sms config) {
         return (config.isSslEnabled() ? "https" : "http") + "://" + config.getHost();
+    }
+
+    /**
+     * 找出短信发送必需但缺失的配置项。
+     *
+     * <p>账号、密码与模板 ID 缺失时，创蓝接口必然拒绝，发起请求只会产生无效的
+     * 外部调用与错误日志噪声，因此在组装请求前直接失败。</p>
+     *
+     * @param config 短信配置
+     * @return 缺失的配置项名称；全部齐备时返回 {@code null}
+     */
+    private String firstMissingSetting(ChuanglanProperties.Sms config) {
+        if (config == null) {
+            return "sms";
+        }
+        if (isBlank(config.getHost())) {
+            return "host";
+        }
+        if (isBlank(config.getAccount())) {
+            return "account";
+        }
+        if (isBlank(config.getPassword())) {
+            return "password";
+        }
+        if (isBlank(config.getTemplateId())) {
+            return "template-id";
+        }
+        return null;
+    }
+
+    /**
+     * 判断配置值是否为空。
+     *
+     * @param value 配置值
+     * @return 为 {@code null} 或仅含空白字符时返回 {@code true}
+     */
+    private boolean isBlank(String value) {
+        return value == null || value.isBlank();
     }
 }

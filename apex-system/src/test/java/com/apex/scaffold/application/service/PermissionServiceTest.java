@@ -32,6 +32,9 @@ class PermissionServiceTest {
     @Mock
     private PermissionRepository permissionRepository;
 
+    @Mock
+    private TenantGuard tenantGuard;
+
     @InjectMocks
     private PermissionService permissionService;
 
@@ -48,6 +51,7 @@ class PermissionServiceTest {
         permission.setCode("USER_MANAGE");
         permission.setDescription("管理用户信息");
         permission.setType(1);
+        lenient().when(tenantGuard.assertActive()).thenReturn(Mono.empty());
     }
 
     @Test

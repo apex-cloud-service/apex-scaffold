@@ -45,6 +45,9 @@ class RoleServiceTest {
     @Mock
     private RoleDeletionGateway roleDeletionGateway;
 
+    @Mock
+    private TenantGuard tenantGuard;
+
     @InjectMocks
     private RoleService roleService;
 
@@ -60,6 +63,7 @@ class RoleServiceTest {
         role.setName("管理员");
         role.setCode("ADMIN");
         role.setDescription("系统管理员");
+        lenient().when(tenantGuard.assertActive()).thenReturn(Mono.empty());
     }
 
     @Test

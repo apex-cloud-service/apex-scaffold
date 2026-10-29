@@ -297,7 +297,7 @@ public class AuthRegistrationService {
                                     phoneUser, request.getDeviceId(), request.getClientIp(), false, clientType)))
                     .switchIfEmpty(Mono.defer(() -> userService
                             .assertPhoneRegistrationAllowed(request.getPhone())
-                            .then(issueRegistrationTicket(payload, request.getPhone()))));
+                            .then(Mono.defer(() -> issueRegistrationTicket(payload, request.getPhone())))));
         }
         return userService
                 .getByPhone(request.getPhone())
@@ -314,7 +314,7 @@ public class AuthRegistrationService {
                 .switchIfEmpty(Mono.defer(() -> userService
                         .assertPhoneRegistrationAllowed(request.getPhone())
                         .then(userService.assertWechatRegistrationAllowed(payload.getOpenId()))
-                        .then(issueRegistrationTicket(payload, request.getPhone()))));
+                        .then(Mono.defer(() -> issueRegistrationTicket(payload, request.getPhone())))));
     }
 
     /**

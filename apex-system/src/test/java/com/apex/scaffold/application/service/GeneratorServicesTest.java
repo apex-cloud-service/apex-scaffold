@@ -14,6 +14,7 @@ import com.apex.scaffold.domain.repository.GenConfigRepository;
 import com.apex.scaffold.domain.repository.GenDatasourceRepository;
 import com.apex.scaffold.domain.repository.GenHistoryRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -33,11 +34,19 @@ class GeneratorServicesTest {
     @Mock
     GenHistoryRepository historyRepository;
 
+    @Mock
+    TenantGuard tenantGuard;
+
     @InjectMocks
     GenConfigService configService;
 
     @org.mockito.Spy
     ObjectMapper objectMapper = new ObjectMapper();
+
+    @BeforeEach
+    void setUp() {
+        lenient().when(tenantGuard.assertActive()).thenReturn(Mono.empty());
+    }
 
     @Test
     void configQueryReadsPersistedModel() {

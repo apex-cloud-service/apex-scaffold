@@ -651,8 +651,8 @@ apex-api-contract新增AccountRef、TenantMembershipSnapshot、AuthorizationSnap
 | 机会点 | 方案章节 | 模块/关键文件 | 测试场景 | 关联验收 | 当前状态 |
 | --- | --- | --- | --- | --- | --- |
 | O-BASE | 42.5、42.7 | workflow/office/system监控与路由修复 | T14起始前置 | A02/A06 | 已实施，87项定向测试通过（42.7） |
-| O01 自助密码找回 | 42.3、42.20 | auth、auth-service（后端已实施） | T14 | A02 | 邮箱恢复链路已实施：申请/校验/确认三端点、精确匿名白名单、限流与尝试次数、令牌撤销；短信通道与独立前端恢复页未实施 |
-| O02 租户管理界面 | 42.3、42.20 | system（后端已实施，界面在前端项目） | T15 | A07 | 平台租户管理入口已实施：目录/开通/详情/状态动作/配额，tenant:read/create/lifecycle/quota 权限；配额与状态断言未接入全部写链，界面未核查 |
+| O01 自助密码找回 | 42.3、42.20 | auth、auth-service（后端已实施） | T14 | A02 | 邮箱与短信恢复链路均已实施：申请/校验/确认三端点、精确匿名白名单、限流与尝试次数、令牌撤销；短信走创蓝模板发送，未配置凭据时在发起 HTTP 前失败；独立前端恢复页未实施 |
+| O02 租户管理界面 | 42.3、42.20 | system（后端已实施，界面在前端项目） | T15 | A07 | 平台租户管理入口已实施：目录/开通/详情/状态动作/配额，tenant:read/create/lifecycle/quota 权限；用户创建、管理端建号与注册票据签发前已接入租户状态/配额断言，其余写链覆盖见 42.20，界面未核查 |
 | O03 流程定义生命周期 | 42.3、42.8–42.14、42.20 | workflow、workflow-service（部分已实施） | T16 | A05/A06 | 生命周期、图校验、发布、最小执行闭环与权限码已实施，T16 除设计器往返外均有测试证据；可视化设计器未实施 |
 | O04 三通道统一收件箱 | 42.3、42.22 | office、office-service（后端已实施） | T17 | A06 | 收件箱聚合已实施：off_message_delivery 投递记录表（V5 双方言）、增量游标收件箱与投递查询两端点、recordDelivery 白名单与归属校验、事件 SCHEMA_VERSION；第三方平台真实收取与多实例广播未实施 |
 | O05 文件分享链接 | 42.3、42.21 | file、file-service（后端已实施） | T18 | A05 | 限时只读分享已实施：创建/撤销/匿名兑换/代理下载四端点、token 仅存 SHA-256 摘要、过期/撤销/删文件/租户停用拒绝兑换；限流依赖网关 Sentinel 规则，独立前端分享交互未实施 |
@@ -1023,8 +1023,8 @@ V40原失败观察中 consent 表结构和数据前后相同；不能据此宣�
 
 | 编号 | 建议接口集合／契约重点 | 权限与配套资产 | 状态 |
 | --- | --- | --- | --- |
-| O01 | POST /auth/v2/password-recovery/requests、/confirmations；申请统一响应，确认返回恢复/撤销状态 | 精确匿名白名单、限流、防重放、auth i18n、恢复凭证/Outbox模型 | 部分：另有 /verifications 校验端点；短信通道未实施（42.20） |
-| O02 | GET/POST /api/v2/platform/tenants；GET /.../{tenantId}；POST /.../{tenantId}/actions；PUT /.../{tenantId}/quota | 平台tenant:read/create/lifecycle/quota建议权限；本租户/me能力独立；与既有features/grants授权合成 | 部分：接口与权限已兑现；配额/状态断言未接入全部写链（42.20） |
+| O01 | POST /auth/v2/password-recovery/requests、/confirmations；申请统一响应，确认返回恢复/撤销状态 | 精确匿名白名单、限流、防重放、auth i18n、恢复凭证/Outbox模型 | 部分：另有 /verifications 校验端点；短信通道已接入创蓝模板发送，未配置凭据时拒绝发起请求（42.20、42.20.1） |
+| O02 | GET/POST /api/v2/platform/tenants；GET /.../{tenantId}；POST /.../{tenantId}/actions；PUT /.../{tenantId}/quota | 平台tenant:read/create/lifecycle/quota建议权限；本租户/me能力独立；与既有features/grants授权合成 | 部分：接口与权限已兑现；用户创建、管理端建号、注册票据签发前已接入状态/配额断言，Keycloak/OIDC 镜像建档入口未纳入（42.20、42.20.1） |
 | O03 | /api/v2/workflow-definitions下列表/草稿、/{id}/validate、/publish、/versions及/enable、/disable | 读、编辑、发布、启停分权；定义schema/版本/实例引用及workflow双库迁移 | 已兑现（9 端点，42.8–42.14、42.20）；设计器前端属独立项目 |
 | O04 | 复用站内收件箱/详情/已读/未读数，增加投递状态与增量游标；共享事件含schemaVersion及tenant | 只读本人收件，发送及管理员审计独立授权；office消息与投递关联、SSE/WS契约 | 部分：第三方真实收取与多实例广播未实施（42.22） |
 | O05 | POST /api/v2/files/{fileId}/shares；DELETE /api/v2/file-shares/{shareId}；独立分享兑换/下载入口 | 创建/撤销权限；匿名兑换只验证分享授权；file双库模型、签名TTL和撤销说明 | 已兑现（42.21），前端分享交互属独立项目 |
@@ -1209,13 +1209,23 @@ DeadLetterQueueProcessor拒绝缺失或空白tenantId的消息并返回RECONSUME
 
 ### 42.20 O01/O02/O03a 实施与验证（2026-10-28）
 
-O01 在 auth 库新增恢复应用服务与凭证存储，在 auth-service 注册 `/auth/v2/password-recovery/requests`、`/verifications`、`/confirmations` 三个匿名 POST 端点，并在 AuthCenterConfig 精确放行这三条路径。恢复码 6 位、10 分钟过期，确认令牌 10 分钟过期，验证码最多校验 5 次；同一联系方式每小时 5 次、同一 IP 每小时 20 次限流。申请对不存在的账号返回统一响应，不暴露账号是否存在；确认时原子消费凭证、校验密码策略、重设密码并撤销该用户全部会话，撤销失败返回待处理状态而非伪造成功。短信通道当前直接拒绝并提示仅支持邮箱，避免出现无投递实现的静默成功。
+O01 在 auth 库新增恢复应用服务与凭证存储，在 auth-service 注册 `/auth/v2/password-recovery/requests`、`/verifications`、`/confirmations` 三个匿名 POST 端点，并在 AuthCenterConfig 精确放行这三条路径。恢复码 6 位、10 分钟过期，确认令牌 10 分钟过期，验证码最多校验 5 次；同一联系方式每小时 5 次、同一 IP 每小时 20 次限流。申请对不存在的账号返回统一响应，不暴露账号是否存在；确认时原子消费凭证、校验密码策略、重设密码并撤销该用户全部会话，撤销失败返回待处理状态而非伪造成功。短信通道的接入与失败语义见 42.20.1，原「直接拒绝并提示仅支持邮箱」的实现已由该节取代。
 
 O02 在 system 新增 `/api/v2/platform/tenants` 下的目录查询、开通、详情、状态动作与配额更新五个端点，分别要求 `tenant:read`、`tenant:create`、`tenant:lifecycle`、`tenant:quota`；状态动作限定 disable/enable/freeze/unfreeze/deactivate/archive 六种迁移，写操作接受期望版本做乐观锁校验，租户编码重复由预校验加唯一键冲突双重映射为 `TENANT_CODE_EXISTS`。两项新权限码与 O03a 的 `workflow:definition:read/edit/publish/lifecycle` 一并落入 system 迁移 V63、V64（MySQL 与 PostgreSQL 成对，id 2601–2608，按编码防重）。O03a 按 42.5 交付定义生命周期与最小执行闭环，T16 除设计器往返外均有实现与测试证据。
 
 验证按固定构建环境（JDK 21.0.13.0+9-tem、mvnd 2.0.0-rc-3）执行两次定向 verify：`mvnd -T4 -B -pl apex-auth-service,apex-system-service -am verify` 共 17 个 reactor 项目 BUILD SUCCESS，Spotless、PMD/p3c 与 JaCoCo 检查通过；`mvnd -T4 -B -pl apex-workflow-service -am verify` 共 9 个 reactor 项目 BUILD SUCCESS。集成测试实际运行且无失败：SystemDualDatabaseMigrationIntegrationTest、FlywayMigrationStartupTest、UnifiedAuthorizationServiceIntegrationTest、AuthMfaMigrationIntegrationTest、DualServiceAuthorizationIntegrationTest 及各 handler 集成类；workflow 侧六个集成类含 Testcontainers 双库与数据库 HTTP 场景共 95 项。仅 UserMessageBrokerIntegrationTest（需 `APEX_REAL_MQ_IT=true`）跳过 5 项、AuthMySqlTlsContractIntegrationTest（需 `APEX_AUTH_MYSQL_TLS_IT=true`）跳过 1 项，属既有环境门控。期间修正 SystemDualDatabaseMigrationIntegrationTest 将「target 61 之后仅剩 1 个迁移」的硬编码改为按迁移前待执行数量的断言，否则 V63、V64 新增后该用例必然误报。
 
-本轮缺口明确保留：恢复链路只覆盖邮箱通道，短信投递、真实邮件发送、防重放在网关侧的按路径限流均未验证，恢复端点只有应用服务单测与 OpenAPI 契约测试，没有 handler 级集成测试，也没有独立前端恢复页；租户管理的配额与业务数据断言（`assertUserQuota`、`assertCanCreateBusinessData`）尚未接入用户创建等写链路，管理界面在独立前端项目未核查；O03a 可视化设计器与 T16 设计器往返保真未实施，O04–O08 未开始。因此 T14、T15 只能认定为部分场景通过，本轮不是全仓 clean verify，也未执行部署或生产验证。
+本轮缺口明确保留：真实邮件发送、防重放在网关侧的按路径限流均未验证，恢复端点只有应用服务单测与 OpenAPI 契约测试，没有 handler 级集成测试，也没有独立前端恢复页；短信投递与租户门禁的补口见 42.20.1，Keycloak/OIDC 镜像建档入口未纳入租户门禁；租户管理界面在独立前端项目未核查；O03a 可视化设计器与 T16 设计器往返保真未实施，O04–O08 未开始。因此 T14、T15 只能认定为部分场景通过，本轮不是全仓 clean verify，也未执行部署或生产验证。
+
+### 42.20.1 O01 短信通道与 O02 门禁缺口补口（2026-10-29）
+
+O01 在 auth-service 新增 `ChuanglanSmsConfig` 显式装配创蓝短信：由于该服务扫描范围仅为 `com.apex.scaffold.authservice`、`com.apex.scaffold.auth`、`com.apex.scaffold.common`，不含 `com.apex.scaffold.infrastructure`，配置类以 `@EnableConfigurationProperties` 加 `@Import(ChuanglanWebClientConfig.class)` 引入 `chuanglanWebClient`、`chuanglanApiService`，并仅以 `ObjectProvider` 软依赖沿用既有 `ApiCallLogSink`/`MailService`，未配置短信凭据时仍可正常启动。`RecoveryChallengeSenderImpl` 的 SMS 分支直接调用 `ChuanglanApiService.sendSms(phone, code)` 并按创蓝成功码 `000000` 判定成功，不经过 `SmsCodeService`，避免 Redis 验证码存储与冷却语义和恢复凭据 TTL 冲突；非业务异常统一包装为 `SMS_SERVICE_ERROR`「验证码投递失败，请稍后重试」。`ChuanglanSmsClient.sendSms` 在组装请求前校验 `host`/`account`/`password`/`template-id` 四项必需配置，缺失即返回 `ChuanglanApiException("SMS_NOT_CONFIGURED", ...)`，不发起任何外部 HTTP 交换。
+
+O02 补充校验点。`UserService.create` 与 `AdminUserManagementService` 的建号链在进入仓储查询前调用 `tenantGuard.assertUserQuota(1)`；`UserService.assertPhoneRegistrationAllowed`/`assertWechatRegistrationAllowed` 均委托 `tenantGuard.assertActive()`，`AuthRegistrationService.bindAgainstPhoneUser` 的渠道分支与 App 分支据此在签发注册票据前完成租户状态校验。三处门禁与下游操作全部以 `Mono.defer` 惰性组装，门禁拒绝时不会执行 `findByPhone`、`issue(...)`、`create(...)` 等下游调用，测试以 `verify(..., never())` 固定该语义，不做「先执行再返回错误」的形式化拦截。
+
+验证按固定构建环境（JDK 21.0.13.0+9-tem、mvnd 2.0.0-rc-3）执行 `mvnd -T4 -B -pl apex-infrastructure-integration,apex-auth,apex-auth-service,apex-system-service -am verify`，17 个 reactor 项目 BUILD SUCCESS，Spotless、PMD/p3c、JaCoCo 与 Failsafe 检查通过，`git diff --check` 无空白错误。定向测试：`UserServiceTest` 25 项、`AuthRegistrationServiceTest` 16 项、`ChuanglanSmsConfigTest` 8 项、`RecoveryChallengeSenderImplTest` 8 项、`PasswordRecoveryApplicationServiceTest` 13 项、`ChuanglanApiServiceTest` 10 项、`ChuanglanGatewayImplTest` 33 项均 0 失败。期间修正 `ChuanglanSmsClient` 的 Spotless 换行，并为 Config/Dict/Generator/Job/Menu/OAuth2Client/Permission/Role 八个既有测试类补齐 `TenantGuard` 桩，否则新增门禁会在未 stub 时抛 NPE。
+
+本轮缺口明确保留：短信仅在 mock WebClient 下验证请求构造与失败语义，未向真实创蓝环境发送短信，也未验证模板审核状态与签名报备；`KeycloakUserSyncService`、`OidcAuthenticationSuccessHandler` 属外部 IdP 镜像建档入口，不经过上述门禁，仍为已知缺口；恢复链路仍无 handler 级集成测试与独立前端恢复页；本轮验证范围限于受影响模块反应堆，不是全仓 clean verify，未执行部署或生产验证。T14、T15 仍只能认定为部分场景通过。
 
 ### 42.21 O05 实施与验证（2026-10-28）
 

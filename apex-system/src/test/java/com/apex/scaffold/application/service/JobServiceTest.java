@@ -55,6 +55,9 @@ class JobServiceTest {
     @Mock
     private com.apex.scaffold.application.job.JobInvoker jobInvoker;
 
+    @Mock
+    private TenantGuard tenantGuard;
+
     @InjectMocks
     private JobService jobService;
 
@@ -74,6 +77,7 @@ class JobServiceTest {
         jobDTO.setCronExpression("0 0 2 * * ?");
 
         lenient().when(jobAssembler.toDTO(any(JobEntity.class))).thenReturn(jobDTO);
+        lenient().when(tenantGuard.assertActive()).thenReturn(Mono.empty());
     }
 
     /**
