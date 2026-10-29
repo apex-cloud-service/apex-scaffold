@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 env:
-  JAVA_VERSION: '17'
+  JAVA_VERSION: '21'
   MVND_VERSION: '2.0.0-rc-3'
 
 jobs:
@@ -136,7 +136,7 @@ jobs:
           echo "TESTCONTAINERS_RYUK_DISABLED=true" >> "$GITHUB_ENV"
           podman run -d --name apex-ci-mysql -p 127.0.0.1:3306:3306 \
             -e MYSQL_ROOT_PASSWORD=root123 -e MYSQL_DATABASE=apex_example \
-            docker.io/library/mysql:8.0
+            docker.io/library/mysql:9.0
           podman run -d --name apex-ci-redis -p 127.0.0.1:6379:6379 docker.io/library/redis:7-alpine
           ready=false
           for attempt in {1..60}; do

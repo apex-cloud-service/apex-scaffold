@@ -92,15 +92,26 @@ rebel-remote.xml
 .idea/*
 *.log.{err,out}
 
-# ===== Agent / 协作工具工作区 =====
+# ===== Agent / 协作工具工作区（本地状态与计划草稿，不入库）=====
 .trae/
+.workbuddy/
+.zcode/
+.freebuff/
 
 # ===== 发布产物 =====
 dist/
 release/
 .scannerwork/
 
+# ===== 任务中间产物（工作区管理规范 4.1）=====
+_tmp/
+
 # ===== Python 运行产物与本地备份 =====
 __pycache__/
 *.pyc
 podman-compose.yml.bak.*
+
+# ===== 每日报告等本地产物 =====
+daily-report-*.md
+daily-report-*.html
+daily-report-*.docx

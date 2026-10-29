@@ -18,20 +18,49 @@ on:
     - cron: '0 0 * * 1'
   workflow_dispatch:
 
+env:
+  JAVA_VERSION: '21'
+  MVND_VERSION: '2.0.0-rc-3'
+
 jobs:
   check-links:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: 检出代码
         uses: actions/checkout@v4
-      
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Cache Maven packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Set up Maven Daemon
+        run: |
+          curl -s "https://get.sdkman.io" | bash
+          source "$HOME/.sdkman/bin/sdkman-init.sh"
+          sdk install mvnd "${MVND_VERSION}"
+          echo "$HOME/.sdkman/candidates/mvnd/current/bin" >> "$GITHUB_PATH"
+
+      - name: 构建离线运维工具 JAR
+        run: mvnd -B -pl apex-tools-deployment -am verify
+
       - name: 运行内部链接检查脚本
         id: custom-check
         run: bash scripts/ci/check-doc-links.sh
         continue-on-error: true
       
-      - name: 检查 Markdown 链接 (方案1: markdown-link-check)
+      - name: "检查 Markdown 链接 (方案1: markdown-link-check)"
         uses: gaurav-nelson/github-action-markdown-link-check@v1
         with:
           config-file: '.github/markdown-link-check-config.json'
@@ -42,7 +71,7 @@ jobs:
           use-verbose-mode: 'yes'
         continue-on-error: true
       
-      - name: 检查死链 (方案2: lychee)
+      - name: "检查死链 (方案2: lychee)"
         uses: lycheeverse/lychee-action@v1
         with:
           args: |

@@ -205,6 +205,8 @@
 
 - **example 测试断言修正**：USER\_NOT\_FOUND 已按 REST 语义映射为 HTTP 404（原断言 5xx 过期），`shouldFailWhenUserNotFound`/`shouldDeleteUserSuccessfully` 更新为 404 + 4001 校验
 
+<a id="113---2026-08-27"></a>
+
 ## \[1.1.3] - 2026-08-27
 
 ### Added

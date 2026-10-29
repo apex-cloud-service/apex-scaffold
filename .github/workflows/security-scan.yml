@@ -10,7 +10,7 @@ on:
     - cron: '0 2 * * 0'
 
 env:
-  JAVA_VERSION: '17'
+  JAVA_VERSION: '21'
 
 jobs:
   owasp-dependency-check:

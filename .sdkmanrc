@@ -2,10 +2,10 @@
 # SDKMAN 项目级配置（sdk env 自动激活）
 # ============================================================
 # 由 sdkman 安装的默认版本（current 指向）：
-#   java: 17.0.12-oracle（项目 pom 要求 Java 17）
+#   java: 21.0.13.0+9-tem（项目 pom 要求 Java 21）
 #   mvnd: 2.0.0-rc-3（Maven Daemon，构建替代 mvn，速度更快）
 # 用法：cd apex-scaffold && sdk env
 # 构建：mvnd -DskipTests package
 # ============================================================
-java=17.0.12-oracle
+java=21.0.13.0+9-tem
 mvnd=2.0.0-rc-3

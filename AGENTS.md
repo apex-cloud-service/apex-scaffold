@@ -1,16 +1,18 @@
 # AGENTS.md — Apex Scaffold
 
-本文件定义仓库的开发、验证和协作约束。项目使用 Java 17、Spring Boot、Spring WebFlux 和 DDD，当前运行架构为网关加五个业务服务。修改前阅读目标模块的代码、POM、配置和测试，沿用现有模式；只完成任务需要的变更。
+本文件定义仓库的开发、验证和协作约束。项目使用 Java 21、Spring Boot、Spring WebFlux 和 DDD，当前运行架构为网关加五个业务服务，以及任务代理和可选脱敏服务。修改前阅读目标模块的代码、POM、配置和测试，沿用现有模式；只完成任务需要的变更。
 
-项目介绍与运行指引见 [README.md](README.md)。版本与聚合模块以根 [pom.xml](pom.xml) 为准，构建环境以 [.sdkmanrc](.sdkmanrc) 为准。历史文档、注释中的迁移阶段名称不能替代当前实现。本文件与 `.trae/rules/project_rules.md` 冲突时，以本文件为准。
+项目介绍与运行指引见 [README.md](README.md)。版本与聚合模块以根 [pom.xml](pom.xml) 为准，构建环境以 [.sdkmanrc](.sdkmanrc) 为准。历史文档、注释中的迁移阶段名称不能替代当前实现。本文件是仓库协作约束的唯一权威来源；`.trae/rules/project_rules.md` 只是部分编辑器的本地镜像，不入版本库，也不得与本文件冲突。
 
 ## 构建环境
 
-- JDK 必须为 SDKMAN `17.0.12-oracle`，mvnd 必须为 `2.0.0-rc-3`。
+- JDK 必须为 SDKMAN `21.0.13.0+9-tem`，mvnd 必须为 `2.0.0-rc-3`。
 - 所有构建、测试、打包、依赖解析和发布前，在当前 shell 执行 `sdk env`，或加载 [构建初始化脚本](scripts/build/init-build-env.sh)。
-- 不得依赖 `~/.sdkman/candidates/java/current`，该链接可能漂移到不兼容的 JDK。当前工作机如需显式 `JAVA_HOME`，使用 `/Users/eric/.sdkman/candidates/java/17.0.12-oracle`；其他机器使用本机对应的固定版本安装路径。
+- 不得依赖 `~/.sdkman/candidates/java/current`，该链接可能漂移到不兼容的 JDK。如需显式设置 `JAVA_HOME`，使用固定版本安装路径 `$HOME/.sdkman/candidates/java/21.0.13.0+9-tem`，或直接用 `sdk env` 后的 `JAVA_HOME`。
 - 所有构建命令使用 `mvnd`。缺少 mvnd 时直接失败并提示安装，不得回退到系统 `mvn`。
 - 此前使用过其他 JDK 的 daemon 时，先加载正确环境，再执行 `mvnd --stop` 清理，随后重新构建。
+- 本地仓库固定为 `~/.m2/repository`。不得使用 `-Dmaven.repo.local` 指向项目内目录（尤其 `target/`）：`clean` 会连同产物一起删除，且非标准分层的目录（如 `com.apex.scaffold` 写成单级目录）无法被 Maven 解析，只会留下整份 JAR 副本。
+- 构建产物只保留在各模块 `target/`，并由 `.gitignore`、`.containerignore`、`.zcodeignore` 统一忽略。`consumer-*.pom`、`resume.properties`、`failsafe-reports/failsafe-summary.xml` 是构建中断留下的临时残渣，确认后可清除，不入库、不进发布包。
 
 ```bash
 source scripts/build/init-build-env.sh
@@ -23,19 +25,22 @@ mvnd -T4 -B clean verify
 
 ## 模块与物理边界
 
-根 POM 聚合以下 20 个模块：
+根 POM 聚合 31 个模块：共享基础、共享领域、五个按能力拆分的共享设施 JAR（`apex-infrastructure` 仅保留旧坐标兼容）、共享契约、服务父 POM、五个业务库、六个运行模块、服务增强、对象存储、授权、示例与工具，以及离线运维工具 `apex-tools-deployment`。
 
 | 分类 | 模块及职责 |
 | --- | --- |
 | 共享基础 | `apex-common`：响应、异常、上下文、工具、调度器及通用持久化辅助 |
 | 共享领域 | `apex-domain`：基础实体、通用事件与服务端口/Gateway 契约 |
-| 共享设施 | `apex-infrastructure`：缓存、消息、Outbox、审计、加密、邮件、通用持久化配置和受管 HTTP 客户端 |
+| 共享设施 | `apex-infrastructure-persistence`、`apex-infrastructure-cache`、`apex-infrastructure-messaging`、`apex-infrastructure-remote`、`apex-infrastructure-integration`：分别提供持久化、缓存、消息、远程调用和第三方集成能力；`apex-infrastructure` 仅保留旧坐标兼容，不再承载实现源码 |
 | 共享契约 | `apex-api-contract`：跨服务内部 API 与 DTO，无具体业务实体 |
-| 服务父 POM | `apex-services-bom`：网关和五个业务服务的 parent |
+| 服务父 POM | `apex-services-bom`：网关、五个业务服务及任务代理、脱敏服务的 parent |
 | 业务库 | `apex-system`、`apex-auth`、`apex-workflow`、`apex-file`、`apex-office` |
 | 运行模块 | `apex-gateway`、`apex-system-service`、`apex-auth-service`、`apex-workflow-service`、`apex-file-service`、`apex-office-service` |
+| 服务增强 | `apex-job-spring-boot-starter`：默认禁用的 XXL 执行器；`apex-seata-spring-boot-starter`：默认禁用的多模式分布式事务（`apex.seata.mode` 选择 AT/TCC/SAGA/XA，缺省 AT）；`apex-job-service`：固定 system 代理；`apex-masking-service`：无持久化的脱敏接口 |
+| 对象存储 | `apex-storage-spring-boot-starter`：无业务域依赖的五后端存储自动装配 |
 | 授权模块 | `apex-license-spring-boot-starter`、`apex-license-tools` |
 | 示例与工具 | `apex-example`、`apex-generator` |
+| 运维工具 | `apex-tools-deployment`：离线部署密钥/配置校验、TOTP 敏感字段迁移包生成与回滚、MySQL V42 结构恢复、文档链接校验与本地文档静态服务；仅由 `scripts/utils/`、`scripts/ci/check-doc-links.sh` 脚本与 Compose `security-key-check` 以 fat jar 调用，不参与服务运行期装配 |
 
 ### 当前依赖
 
@@ -45,20 +50,37 @@ mvnd -T4 -B clean verify
 | --- | --- |
 | `apex-common` | 无 |
 | `apex-domain` | common |
-| `apex-infrastructure` | domain、common |
+| `apex-infrastructure-persistence` | common、domain |
+| `apex-infrastructure-cache` | common、domain |
+| `apex-infrastructure-messaging` | common、domain、infrastructure-persistence |
+| `apex-infrastructure-remote` | common、domain |
+| `apex-infrastructure-integration` | common、domain、infrastructure-remote；缓存仅 test scope |
+| `apex-infrastructure` | 五个能力 JAR，仅兼容旧坐标 |
 | `apex-api-contract` | common |
-| `apex-system` | common、domain、infrastructure、license-spring-boot-starter |
-| `apex-auth` | common、domain、infrastructure、api-contract |
-| `apex-workflow`、`apex-file`、`apex-office` | common、domain |
-| `apex-system-service` | common、domain、infrastructure、api-contract、system |
-| `apex-auth-service` | common、domain、api-contract、auth |
-| `apex-workflow-service` | common、domain、api-contract、workflow |
-| `apex-file-service` | common、domain、file |
-| `apex-office-service` | common、domain、api-contract、office |
+| `apex-system` | common、domain、五个 infrastructure 能力 JAR、license-spring-boot-starter |
+| `apex-auth` | common、domain、infrastructure-integration、api-contract |
+| `apex-workflow`、`apex-office` | common、domain |
+| `apex-file` | common、domain、storage-spring-boot-starter |
+| `apex-storage-spring-boot-starter` | common |
+| `apex-system-service` | common、domain、api-contract、system、job-spring-boot-starter、seata-spring-boot-starter（能力由 system 装配） |
+| `apex-auth-service` | common、domain、api-contract、auth、infrastructure-cache、infrastructure-messaging、infrastructure-integration、job-spring-boot-starter、seata-spring-boot-starter |
+| `apex-workflow-service` | common、domain、api-contract、workflow、job-spring-boot-starter、seata-spring-boot-starter |
+| `apex-file-service` | common、domain、file、job-spring-boot-starter、seata-spring-boot-starter |
+| `apex-office-service` | common、domain、api-contract、office、job-spring-boot-starter、seata-spring-boot-starter |
+| `apex-job-service` | infrastructure-remote |
+| `apex-masking-service`、两个增强 starter | common |
 | `apex-gateway` | common |
-| `apex-example` | common、domain、infrastructure、system |
+| `apex-example` | common、domain、infrastructure-cache、infrastructure-integration、system（workflow 仅 test scope） |
+| `apex-tools-deployment` | 无内部依赖；仅 Jackson、SnakeYAML 与 JUnit |
 
 表内省略统一的 `apex-` 前缀。auth-service 对 system、example 对 workflow 的依赖仅为 test scope，不得据此引入生产耦合。新增依赖前检查目标 POM，不要机械套用“所有业务库依赖 infrastructure”的链条。
+
+### 服务增强边界
+
+- 五业务 service 均直接依赖 job 与 seata starter；job-service 仅直接内部依赖 infrastructure-remote，masking-service 与两个 starter 仅直接内部依赖 common。
+- job-service 不迁移 system 数据所有权；只代理九个任务接口。XXL 仅接管配置的一个 system 任务及 workflow 超时扫描，中心 cron 人工同步。
+- 脱敏策略为启动配置，无 CRUD 或热刷新；租户来自已验证 JWT。
+- Seata 默认关闭，通过 `apex.seata.mode` 选择 AT（缺省）/TCC/SAGA/XA 四种模式；AT/SAGA/XA 要求同步单 JDBC 数据源，拒绝动态数据源与 Publisher 回调；全局事务内拒绝当前 Outbox 写入。AT 需各业务库 undo_log，SAGA 需存储三表（建表脚本随 starter 发布），XA 依赖数据库 XA 能力；TCC 由扫描器代理 `@LocalTCC` 动作。缺省 AT 与既有接入行为兼容。真实 TC 环境下四模式端到端测试缺少 TC/双库时跳过，不能记为通过。
 
 ### system 归属
 
@@ -98,6 +120,7 @@ apex-system/src/main/java/com/apex/scaffold/
 - Router 的 `@RouterOperation` / `@RouterOperations`、DTO 的 `@Schema` 等 SpringDoc 元数据与实际路径、方法、参数和响应一致。
 - 管理权限与 `@RequirePermission`、数据权限规则、Flyway 权限种子保持一致。写操作沿用 `@OperationLog`；幂等、防重放、限流等按业务语义配置。
 - 路径以实际 Router 与网关配置为准，不能只按 `/api/v1/` 等前缀推断接口归属。
+- office 站内信的 HTTP 消息路由与 WebSocket 握手路由分别使用 `ROUTE_OFFICE_MESSAGE_URI`、`ROUTE_OFFICE_WS_URI`；两者必须指向同一 office 实例。票据和连接注册表是单实例内存状态，不提供跨实例实时广播，断线须通过收件箱与未读数 HTTP 补偿。
 
 ### 响应、异常与国际化
 
@@ -123,6 +146,7 @@ JDBC、MyBatis-Plus、同步 Redis/Redisson、文件 I/O、同步存储 SDK 和�
 
 - 将同步调用延迟到订阅时执行，并在调用边界使用 `subscribeOn`；仅在下游 `publishOn` 不能隔离此前已经执行的阻塞调用。
 - 不直接使用 `Schedulers.boundedElastic()` 绕过专用池。原生异步 WebClient 等无须为了形式统一切到阻塞池。
+- 各池可通过 `apex.blocking-io.<pool>.virtual-threads` 单独启用虚拟线程执行器，默认关闭。启用后 `threads` 语义变为默认并发上限，`max-concurrency` 是真正的并发闸门，必须与数据库连接池、下游配额等稀缺资源对齐，不能按 CPU 核数放大；`jdbc` 池还要确认驱动未用 `synchronized` 包裹阻塞 I/O，否则会钉住载体线程。开关语义与灰度建议见 [配置文档](docs/05-operations/configuration.md)。
 - Handler 请求链不使用 `.block()` 或手动 `.subscribe()`；同步消息消费等桥接边界按既有实现处理。
 - 超时、重试、降级和取消需要匹配业务语义，写操作重试需考虑幂等性。
 
@@ -140,6 +164,8 @@ Mono.fromCallable(() -> repository.findById(id))
 - `TransactionalOperator` 只在真实响应式事务管理器与对应数据访问匹配时提供事务语义。no-op 管理器不提供原子性，不能保护 JDBC 写操作。
 - 与业务写同事务的 Outbox 写入必须保留在同一事务与线程边界，不能拆到 event 池。可参考共享 `TransactionalOutboxExecutor` 和 system 的同步事务实现。
 - 事务中不包含远程调用或无关长耗时操作。多服务一致性采用已有事件/补偿模式，不假定跨库本地事务。
+
+<a id="持久化迁移与租户隔离"></a>
 
 ## 持久化、迁移与租户隔离
 
@@ -218,8 +244,8 @@ git diff --check
 | 检查 | 主要覆盖 |
 | --- | --- |
 | system `LayeringArchTest` | domain/application/infrastructure 分层；部分 QueryService/StatisticsService/LogService 有例外；方法级事务返回类型限制 |
-| infrastructure `TenantIsolationArchTest` | persistence 范围的 `@InterceptorIgnore` 禁用 |
-| infrastructure `TimeFieldArchTest` | 指定命名时间字段的类型 |
+| infrastructure-persistence `TenantIsolationArchTest` | persistence 范围的 `@InterceptorIgnore` 禁用 |
+| infrastructure-persistence `TimeFieldArchTest` | 指定命名时间字段的类型 |
 | gateway `GatewayArchTest` | 网关包边界、业务层与 Servlet 依赖限制 |
 | auth `PersistenceContractTest` | auth domain 与持久化边界及相关契约 |
 | system `NoBoundedElasticArchGuardTest` | 指定共享/system 源码目录的直接 boundedElastic 使用检查 |
@@ -234,7 +260,7 @@ git diff --check
 - 不主动创建 README、报告或其他文档；需要维护现有文档时引用真实路径，不写未经验证的性能、数量、默认账号和完成状态。
 - 当前架构与命令不要引用已退役模块。API、配置和模块边界变化同步更新相关文档；图表以实际实现为准。
 - 管理后台是独立项目，后端不生成或修改不存在的前端目录。菜单组件字段和 API 契约仍需与前端保持一致。
-- `scripts/ci/check-doc-links.sh` 离线扫描全仓 Markdown（含根 README/AGENTS 和模块文档），校验本地路径及 Markdown 标题/HTML 锚点；排除构建产物、工具配置与依赖目录，不验证外部 URL 或非 Markdown 文件内部位置。
+- `scripts/ci/check-doc-links.sh` 离线扫描全仓 Markdown（含根 README/AGENTS 和模块文档），校验本地路径存在、大小写精确匹配、目标未被 `.gitignore` 排除，以及 Markdown 标题/HTML 锚点；排除构建产物、工具配置与依赖目录，不验证外部 URL 或非 Markdown 文件内部位置。文档引用未入库的日志、证据或本地配置时用行内代码写文件名，不要写成链接。
 - 未获用户明确要求，不创建 Git commit 或推送。提交前检查实际 diff 与暂存范围，不混入其他主题。
 - 不提交 `.env`、真实配置、密钥、证书、私钥或构建产物。需要提交时使用 Conventional Commits，按变更目的选择 type/scope。
 - 基础版与标准版/企业版的许可范围分别见 [LICENSE](LICENSE)、[LICENSE-COMMERCIAL.md](LICENSE-COMMERCIAL.md)，不要将整个仓库描述为统一 MIT 或 Apache 授权。

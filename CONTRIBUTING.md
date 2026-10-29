@@ -12,9 +12,13 @@
 - [测试要求](#测试要求)
 - [版本发布](#版本发布)
 
+<a id="行为准则"></a>
+
 ## 行为准则
 
 本项目采用 [Contributor Covenant](https://www.contributor-covenant.org/) 行为准则。参与即表示你同意遵守该准则。请尊重所有贡献者,保持友好和专业的交流氛围。
+
+<a id="如何贡献"></a>
 
 ## 如何贡献
 
@@ -51,10 +55,12 @@
 
 #### 前置条件
 
-- JDK 17+
+- JDK 21+
 - Maven Daemon (mvnd) 2.0.0+
 - Git
 - SDKMAN (推荐)
+
+<a id="环境准备"></a>
 
 #### 环境准备
 
@@ -65,11 +71,11 @@
 cd /Users/work/apex-scaffold && sdk env
 
 # 2. 验证环境
-java -version    # 应显示 17.0.12
+java -version    # 应显示 21.0.13
 mvnd --version   # 应显示 2.0.0-rc-3
 
 # 3. 如环境未安装，执行：
-sdk install java 17.0.12-oracle
+sdk install java 21.0.13.0+9-tem
 sdk install mvnd 2.0.0-rc-3
 ```
 
@@ -106,6 +112,8 @@ git push origin feature/your-feature-name
 # 9. 创建Pull Request
 # 在GitHub上打开你的Fork,点击"Compare & pull request"
 ```
+
+<a id="提交pr流程"></a>
 
 ## 提交PR流程
 
@@ -169,6 +177,8 @@ Closes #123
 - [ ] 无破坏性变更(如有需明确说明)
 ```
 
+<a id="代码规范"></a>
+
 ## 代码规范
 
 ### Java编码规范
@@ -211,6 +221,8 @@ mvnd pmd:check
 # 4. 生成覆盖率报告
 mvnd jacoco:report
 ```
+
+<a id="测试要求"></a>
 
 ## 测试要求
 
@@ -255,6 +267,8 @@ class UserServiceTest {
 
 - API接口必须有集成测试
 - 使用@SpringBootTest + WebTestClient
+
+<a id="版本发布"></a>
 
 ## 版本发布
 

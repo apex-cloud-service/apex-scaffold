@@ -2,9 +2,9 @@
 
 ![Apex Scaffold](https://img.shields.io/badge/Apex_Scaffold-v1.3.1-blue)
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.5.15-brightgreen)
-![Java](https://img.shields.io/badge/Java-17.0.12-orange)
+![Java](https://img.shields.io/badge/Java-21.0.13-orange)
 
-基于 Spring Boot、Spring WebFlux 和 DDD 的 Java 后端脚手架，提供认证、系统管理、工作流、办公集成和文件服务。当前运行架构为 **API 网关 + 五个业务服务**，业务代码以库模块复用，各服务通过独立启动模块装配。
+基于 Spring Boot、Spring WebFlux 和 DDD 的 Java 后端脚手架，提供认证、系统管理、工作流、办公集成和文件服务。当前运行架构为 **API 网关 + 五个业务服务 + 任务代理及可选脱敏服务**，业务代码以库模块复用，各服务通过独立启动模块装配。
 
 [模块结构](#模块结构) · [快速开始](#快速开始) · [配置与部署](#配置与部署) · [验证与开发](#验证与开发) · [文档入口](#文档入口) · [许可证](#许可证)
 
@@ -13,10 +13,11 @@
 - 认证与访问控制：JWT、OAuth2、MFA、会话管理、RBAC、数据权限和租户隔离。
 - 系统管理：用户、角色、菜单、配置、字典、审计及相关管理接口。
 - 工作流：工作流定义与执行，以及独立服务接口。
-- 办公集成：企业微信、钉钉、飞书等平台适配与消息集成。
-- 文件服务：上传、文档管理、预览，以及本地存储、MinIO、TOS 等存储适配。
+- 办公集成：企业微信、钉钉、飞书等平台适配与消息集成；office 还提供基于 HTTP 收件箱和 WebSocket 在线提示的站内信。
+- 文件服务：上传、文档管理、预览，以及 Local、MinIO、火山 TOS、阿里云 OSS、七牛五种存储适配。默认 Local，无故障降级；详见[对象存储接入指南](docs/05-operations/object-storage-integration.md)。
 - 共享设施：统一响应、异常处理、国际化、缓存、事件 Outbox、加密和受管 HTTP 客户端。
 - 服务治理与运维：网关路由、Nacos、限流与熔断、健康检查、指标和日志采集。
+- 服务增强：[XXL-JOB](docs/05-operations/xxl-job-integration.md)、[脱敏](docs/05-operations/data-masking.md)、[Seata 多模式](docs/05-operations/seata-integration.md)。执行器与分布式事务默认关闭；事务模式经 `apex.seata.mode` 选择 AT/TCC/SAGA/XA（缺省 AT）；任务代理 8095、可选脱敏服务 8096。
 
 能力是否启用取决于版本档位、服务配置、许可证及外部组件。仓库不包含管理后台前端源码；Compose 中的前端是独立镜像。
 
@@ -27,7 +28,7 @@
 | 项目 | 当前版本或实现 |
 | --- | --- |
 | 项目版本 | 1.3.1 |
-| JDK | SDKMAN `17.0.12-oracle` |
+| JDK | SDKMAN `21.0.13.0+9-tem` |
 | 构建工具 | Maven Daemon `2.0.0-rc-3` |
 | Spring Boot / Spring Cloud | 3.5.15 / 2025.0.0 |
 | Spring Cloud Alibaba | 2025.0.0.0 |
@@ -40,21 +41,26 @@
 
 WebFlux 不会使 JDBC、同步 Redis 或文件操作自动变为非阻塞。项目通过 `BlockingIoSchedulers` 的专用线程池隔离这些调用。
 
+<a id="模块结构"></a>
+
 ## 模块结构
 
-根 POM 当前聚合 20 个模块。
+根 POM 当前聚合 31 个模块。
 
 | 分类 | 模块 | 职责 |
 | --- | --- | --- |
 | 共享基础 | `apex-common` | 响应、异常、上下文、工具、通用持久化辅助与阻塞调度器 |
 | 共享领域 | `apex-domain` | 基础实体、通用事件、端口与 Gateway 契约 |
-| 共享设施 | `apex-infrastructure` | 缓存、消息、Outbox、审计、加密、通用持久化配置与 HTTP 客户端 |
+| 共享设施 | `apex-infrastructure-persistence`、`apex-infrastructure-cache`、`apex-infrastructure-messaging`、`apex-infrastructure-remote`、`apex-infrastructure-integration` | 按持久化、缓存、消息、远程调用和第三方集成拆分发布；`apex-infrastructure` 保留为旧坐标兼容聚合，不再承载实现源码 |
 | 跨服务契约 | `apex-api-contract` | 内部 API 接口和共享 DTO |
-| 服务父 POM | `apex-services-bom` | 网关及五个业务服务使用的 parent，统一依赖与构建配置 |
+| 服务父 POM | `apex-services-bom` | 网关、五业务服务及任务代理、脱敏服务的 parent，统一依赖与构建配置 |
 | 业务库 | `apex-system`、`apex-auth`、`apex-workflow`、`apex-office`、`apex-file` | 各业务域的领域、应用与专属基础设施实现 |
 | 运行服务 | `apex-gateway`、`apex-system-service`、`apex-auth-service`、`apex-workflow-service`、`apex-office-service`、`apex-file-service` | 网关或业务服务的启动、配置与装配 |
+| 服务增强 | `apex-job-spring-boot-starter`、`apex-seata-spring-boot-starter`、`apex-job-service`、`apex-masking-service` | XXL 执行器、多模式分布式事务（AT/TCC/SAGA/XA）、固定任务代理与脱敏服务 |
+| 对象存储 | `apex-storage-spring-boot-starter` | 仅内部依赖 common，提供五后端策略和自动装配 |
 | 授权 | `apex-license-spring-boot-starter`、`apex-license-tools` | 运行时许可证校验与离线授权工具 |
 | 示例与工具 | `apex-example`、`apex-generator` | 示例应用与代码生成器 |
+| 运维工具 | `apex-tools-deployment` | 离线部署密钥/配置校验、TOTP 敏感字段迁移包生成与回滚、MySQL V42 结构恢复；只由 `scripts/utils/` 下脚本与 `podman-compose.yml` 的 `security-key-check` 调用，不参与服务运行期装配 |
 
 `apex-system` 已接收原接口层、应用层及 system 专属领域和基础设施代码，保留 `com.apex.scaffold.interfaces/application/domain/infrastructure` Java 包名。原 `apex-interfaces`、`apex-application` 和 `apex-auth-center` 不再作为当前运行入口。
 
@@ -64,9 +70,11 @@ WebFlux 不会使 JDBC、同步 Redis 或文件操作自动变为非阻塞。项
         ├─ apex-system-service   → apex-system
         ├─ apex-workflow-service → apex-workflow
         ├─ apex-office-service   → apex-office
-        └─ apex-file-service     → apex-file
+        ├─ apex-file-service     → apex-file → apex-storage-spring-boot-starter → apex-common
+        ├─ apex-job-service      → system 任务管理接口
+        └─ apex-masking-service  → common 脱敏工具（可选）
 
-共享依赖：infrastructure → domain → common
+共享依赖：persistence/cache → domain、common；messaging → persistence、domain、common；remote → domain、common；integration → remote、domain、common；兼容聚合 infrastructure → 五个能力 JAR
 跨服务契约：api-contract → common
 ```
 
@@ -82,11 +90,15 @@ WebFlux 不会使 JDBC、同步 Redis 或文件操作自动变为非阻塞。项
 | `apex-workflow-service` | `WorkflowServiceApplication` | 8083 | `apex_workflow` |
 | `apex-office-service` | `OfficeServiceApplication` | 8084 | `apex_office` |
 | `apex-file-service` | `FileServiceApplication` | 8085 | `apex_file` |
+| `apex-job-service` | `JobServiceApplication` | 8095 | 无独立数据库，固定代理 system |
+| `apex-masking-service` | `MaskingServiceApplication` | 8096 | 无持久化 |
 | `apex-example` | `ExampleApplication` | 8080 | `apex_example` |
 
 system 的默认管理端口为 8083，与 workflow 的业务端口冲突。同一宿主机联调时可将 workflow 的 `server.port` 改为 8093；应用 Compose 已将其宿主机端口映射为 8093。example 与 gateway 也不能同时占用默认 8080。
 
 数据库由各服务分别管理。system 的迁移资源位于 `apex-system/src/main/resources/db/migration/`，由 system-service 从依赖 classpath 加载；其他四个业务服务的迁移资源位于各自 service 模块。迁移包含 MySQL、PostgreSQL 两套目录，实际选择由服务数据源及 Flyway 配置决定。
+
+<a id="快速开始"></a>
 
 ## 快速开始
 
@@ -102,7 +114,7 @@ java -version
 mvnd --version
 ```
 
-也可在已加载 SDKMAN 的 shell 中执行 `sdk env`。JDK 必须为 `17.0.12-oracle`，不能只满足“17+”，也不能依赖会漂移的 `java/current` 链接。没有 mvnd 时应安装指定版本，不要回退到 `mvn`。
+也可在已加载 SDKMAN 的 shell 中执行 `sdk env`。JDK 必须为 `21.0.13.0+9-tem`，不能只满足“21+”，也不能依赖会漂移的 `java/current` 链接。没有 mvnd 时应安装指定版本，不要回退到 `mvn`。
 
 如此前用其他 JDK 启动过 mvnd daemon，加载正确环境后先执行 `mvnd --stop` 再构建。
 
@@ -143,6 +155,8 @@ java -jar apex-system-service/target/apex-system-service-1.3.1.jar \
 
 Java 进程不会自动读取根目录 `.env`。只启动 system-service 是单服务开发环境；完整登录与业务联调还需要 auth-service、网关及相关业务服务。初始化账号与权限以实际迁移种子及环境配置为准。
 
+<a id="配置与部署"></a>
+
 ## 配置与部署
 
 ### 三种 profile 的作用
@@ -176,7 +190,11 @@ export ROUTE_AUTH_URI=http://127.0.0.1:8081
 export ROUTE_SYSTEM_URI=http://127.0.0.1:8082
 export ROUTE_WORKFLOW_URI=http://127.0.0.1:8093
 export ROUTE_OFFICE_URI=http://127.0.0.1:8084
+export ROUTE_OFFICE_MESSAGE_URI=http://127.0.0.1:8084
+export ROUTE_OFFICE_WS_URI=ws://127.0.0.1:8084
 export ROUTE_FILE_URI=http://127.0.0.1:8085
+export ROUTE_JOB_URI=http://127.0.0.1:8095
+export ROUTE_MASKING_URI=http://127.0.0.1:8096
 ```
 
 这些是网关下游地址；workflow 此处使用避开端口冲突的 8093。路由前缀以 [网关配置](apex-gateway/src/main/resources/application.yml) 和各业务 Router 为准，包含 `/auth/v1/`、`/api/v1/`、`/admin-api/v1/`、OAuth2 及 well-known 路径。
@@ -194,6 +212,8 @@ export ROUTE_FILE_URI=http://127.0.0.1:8085
 - 两套栈存在 MySQL、Redis 等宿主端口重叠，不应直接完整同时启动。
 
 部署细节见 [部署指南](docs/05-operations/deployment.md) 和 [微服务加固指南](docs/05-operations/microservice-hardening-guide.md)。
+
+<a id="验证与开发"></a>
 
 ## 验证与开发
 
@@ -214,7 +234,13 @@ mvnd -T4 -B clean verify
 mvnd -T4 -B -pl apex-system-service -am test
 ```
 
+本次基础设施拆分与 office 站内信的固定环境验证入口为 [`scripts/test/verify-infrastructure-websocket.sh`](scripts/test/verify-infrastructure-websocket.sh)，支持 `--infrastructure`、`--websocket` 和 `--full`；脚本只调用 mvnd，不降低现有 verify 门禁。office 站内信的协议、Origin 白名单、HTTP/WS 成对路由和单实例内存状态见[站内信说明](docs/05-operations/in-app-messaging.md)。
+
 `test` 不会执行完整 Failsafe/verify 门禁。开发规范、事务与调度器约束见 [AGENTS.md](AGENTS.md)。业务 JSON 响应使用 `Result<T>`，成功业务码为 `0`，与 HTTP 状态码 200 区分。
+
+改动文档后执行 `bash scripts/ci/check-doc-links.sh`：它校验本地路径存在、大小写精确匹配、目标未被 `.gitignore` 排除，以及标题与 HTML 锚点，适用于 Linux 与 GitHub 渲染。
+
+<a id="文档入口"></a>
 
 ## 文档入口
 
@@ -229,8 +255,13 @@ mvnd -T4 -B -pl apex-system-service -am test
 | [系统架构](docs/architecture/system-architecture.md) | 架构说明 |
 | [业务流程](docs/architecture/business-flows.md) | 业务流程说明 |
 | [微服务验收清单](docs/08-project-management/checklists/microservice-acceptance-checklist.md) | 迁移与验收记录 |
+| [服务增强实施计划](docs/08-project-management/plans/service-enhancement-implementation-plan.md) | 增强范围、依赖边界与验收要求 |
+| [服务增强交付报告](docs/08-project-management/reports/service-enhancement-delivery-report.md) | 文件清单、真实检查结果与运行限制 |
+| [周报归档](docs/08-project-management/weekly-reports/README.md) | 按周记录的实施与验证进展 |
 
 历史文档可能保留迁移阶段名称；当前模块、入口、依赖和配置以根 POM、服务代码及脚本为准。
+
+<a id="许可证"></a>
 
 ## 许可证
 

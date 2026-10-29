@@ -1,8 +1,0 @@
-/Users/eric/fsdownload
-/Users/eric/nacos
-/Users/eric/dbeaver-agent
-/Users/eric/Sunlogin
-/Users/eric/.oh-my-zsh.backup.20260624_172102
-/Users/eric/gradle
-/Users/eric/Oray
-/Users/eric/Sunlogin Files

@@ -43,9 +43,9 @@
   <name>Apex Scaffold</name>
   <description>企业级开发脚手架 - 微信APP版 (WebFlux响应式)</description>
   <properties>
-    <java.version>17</java.version>
-    <maven.compiler.source>17</maven.compiler.source>
-    <maven.compiler.target>17</maven.compiler.target>
+    <java.version>21</java.version>
+    <maven.compiler.source>21</maven.compiler.source>
+    <maven.compiler.target>21</maven.compiler.target>
     <maven.compiler.release>${java.version}</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <spring-boot.version>3.5.15</spring-boot.version>
@@ -65,11 +65,15 @@
     <weixin-java.version>4.8.0</weixin-java.version>
     <minio.version>8.6.0</minio.version>
     <volcengine.tos.version>2.6.1</volcengine.tos.version>
+    <aliyun.oss.version>3.18.1</aliyun.oss.version>
+    <qiniu.version>7.17.0</qiniu.version>
     <hutool.version>5.8.36</hutool.version>
     <mapstruct.version>1.5.5.Final</mapstruct.version>
     <jwt.version>0.12.6</jwt.version>
     <lombok.version>1.18.36</lombok.version>
     <springdoc.version>2.8.1</springdoc.version>
+    <xxl-job.version>3.1.1</xxl-job.version>
+    <seata.version>2.2.0</seata.version>
     <micrometer.version>1.14.1</micrometer.version>
     <flyway.version>10.15.0</flyway.version>
     <mybatis.version>3.0.4</mybatis.version>
@@ -84,6 +88,7 @@
     <awssdk.version>2.20.26</awssdk.version>
     <bucket4j.version>8.7.0</bucket4j.version>
     <caffeine.version>3.1.8</caffeine.version>
+    <guava.version>33.4.8-jre</guava.version>
     <resilience4j.version>2.2.0</resilience4j.version>
     <embedded-redis.version>1.4.3</embedded-redis.version>
     <!-- 覆盖 Spring Boot BOM 默认的 Testcontainers 版本：与本地 Maven 仓库已缓存版本对齐，保证离线可构建。 -->
@@ -114,7 +119,13 @@
     <sonar.projectKey>apex-scaffold</sonar.projectKey>
     <sonar.projectName>Apex Scaffold</sonar.projectName>
     <sonar.coverage.jacoco.xmlReportPaths>target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
-    <maven-pmd-plugin.version>3.19.0</maven-pmd-plugin.version>
+    <maven-pmd-plugin.version>3.21.2</maven-pmd-plugin.version>
+    <!--
+      p3c-pmd 2.1.1 的规则实现基于 PMD 6 API（如 AbstractCommentRule），无法在 PMD 7 下加载，
+      因此 PMD 插件固定在 3.21.2（PMD 6.55.0，PMD 6 线最后一个版本）。PMD 6 最高只识别到
+      targetJdk 20，故 PMD 分析级别单独固定在 20；编译与运行仍是 Java 21。
+    -->
+    <pmd.targetJdk>20</pmd.targetJdk>
     <maven-enforcer-plugin.version>3.4.1</maven-enforcer-plugin.version>
     <spotless.version>2.43.0</spotless.version>
     <p6spy.version>3.9.1</p6spy.version>
@@ -129,10 +140,17 @@
   </properties>
   <modules>
     <module>apex-common</module>
+    <module>apex-storage-spring-boot-starter</module>
     <module>apex-license-spring-boot-starter</module>
     <!-- 卖方内部工具模块：发行源码/发布包必须剥离（详见模块 pom 说明） -->
     <module>apex-license-tools</module>
     <module>apex-domain</module>
+    <module>apex-infrastructure-persistence</module>
+    <module>apex-infrastructure-cache</module>
+    <module>apex-infrastructure-messaging</module>
+    <module>apex-infrastructure-remote</module>
+    <module>apex-infrastructure-integration</module>
+    <!-- 旧坐标兼容聚合，不再包含实现源码。 -->
     <module>apex-infrastructure</module>
     <!-- 工作流模块：聚合工作流引擎、办公审批集成与监控统计能力 -->
     <module>apex-workflow</module>
@@ -162,9 +180,37 @@
     <module>apex-auth</module>
     <!-- 认证服务：启动类/Router+Handler/独立 apex_auth 库（Phase 6） -->
     <module>apex-auth-service</module>
+    <module>apex-job-spring-boot-starter</module>
+    <module>apex-job-service</module>
+    <module>apex-masking-service</module>
+    <module>apex-seata-spring-boot-starter</module>
+    <!-- 运维工具模块：本地部署密钥/配置校验、TOTP 离线迁移与 V42 结构恢复（不参与服务运行期装配） -->
+    <module>apex-tools-deployment</module>
   </modules>
   <dependencyManagement>
     <dependencies>
+      <!-- 本地布隆过滤器直接使用 Guava，避免依赖 MQ/微信的偶然传递依赖。 -->
+      <dependency><groupId>com.google.guava</groupId><artifactId>guava</artifactId><version>${guava.version}</version></dependency>
+      <dependency>
+        <groupId>com.xuxueli</groupId>
+        <artifactId>xxl-job-core</artifactId>
+        <version>${xxl-job.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.seata</groupId>
+        <artifactId>seata-all</artifactId>
+        <version>${seata.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.apex.scaffold</groupId>
+        <artifactId>apex-job-spring-boot-starter</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.apex.scaffold</groupId>
+        <artifactId>apex-seata-spring-boot-starter</artifactId>
+        <version>${project.version}</version>
+      </dependency>
       <dependency>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-webflux</artifactId>
@@ -321,6 +367,16 @@
         <groupId>com.volcengine</groupId>
         <artifactId>ve-tos-java-sdk</artifactId>
         <version>${volcengine.tos.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.aliyun.oss</groupId>
+        <artifactId>aliyun-sdk-oss</artifactId>
+        <version>${aliyun.oss.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.qiniu</groupId>
+        <artifactId>qiniu-java-sdk</artifactId>
+        <version>${qiniu.version}</version>
       </dependency>
       <dependency>
         <groupId>cn.hutool</groupId>
@@ -604,6 +660,11 @@
         <artifactId>apex-infrastructure</artifactId>
         <version>${project.version}</version>
       </dependency>
+      <dependency><groupId>com.apex.scaffold</groupId><artifactId>apex-infrastructure-persistence</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.apex.scaffold</groupId><artifactId>apex-infrastructure-cache</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.apex.scaffold</groupId><artifactId>apex-infrastructure-messaging</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.apex.scaffold</groupId><artifactId>apex-infrastructure-remote</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.apex.scaffold</groupId><artifactId>apex-infrastructure-integration</artifactId><version>${project.version}</version></dependency>
       <dependency>
         <groupId>com.apex.scaffold</groupId>
         <artifactId>apex-workflow</artifactId>
@@ -955,6 +1016,8 @@
         <configuration>
           <skip>${pmd.skip}</skip>
           <linkXRef>false</linkXRef>
+          <!-- PMD 6（p3c-pmd 依赖的版本线）最高支持 targetJdk 20，编译级别见 maven.compiler.release。 -->
+          <targetJdk>${pmd.targetJdk}</targetJdk>
           <rulesets>
             <ruleset>rulesets/java/ali-comment.xml</ruleset>
             <ruleset>rulesets/java/ali-concurrent.xml</ruleset>
@@ -1109,7 +1172,7 @@
             <!-- apex.log.dir: 将测试日志统一输出到项目根目录 logs/ 下，而非各模块 target/ 目录。
                  ${project.basedir} 在 apex-interfaces 模块解析为 .../apex-interfaces，../logs 即项目根 logs/。
                  单元测试使用 logback-test.xml，写入 logs/test/apex-test.log。 -->
-            <argLine>@{argLine} -javaagent:${settings.localRepository}/net/bytebuddy/byte-buddy-agent/${byte-buddy.version}/byte-buddy-agent-${byte-buddy.version}.jar -Djava.awt.headless=true -Dcsp.sentinel.log.dir=${project.build.directory}/sentinel-logs -Dapex.log.dir=${project.basedir}/../logs</argLine>
+            <argLine>@{argLine} -javaagent:${settings.localRepository}/net/bytebuddy/byte-buddy-agent/${byte-buddy.version}/byte-buddy-agent-${byte-buddy.version}.jar -Djava.awt.headless=true -Dcsp.sentinel.log.dir=${project.build.directory}/sentinel-logs -Dapex.log.dir=${project.basedir}/../logs -DsocksNonProxyHosts=localhost|127.*|[::1]</argLine>
             <skipTests>${skip.unit.tests}</skipTests>
             <testFailureIgnore>false</testFailureIgnore>
             <excludes>
@@ -1131,7 +1194,7 @@
           <configuration>
             <!-- apex.log.dir: 将集成测试日志统一输出到项目根目录 logs/ 下。
                  集成测试使用 logback-spring.xml（it profile），写入 logs/apex-scaffold.log 等。 -->
-            <argLine>@{argLine} -javaagent:${settings.localRepository}/net/bytebuddy/byte-buddy-agent/${byte-buddy.version}/byte-buddy-agent-${byte-buddy.version}.jar -Dcsp.sentinel.log.dir=${project.build.directory}/sentinel-logs -Dapex.log.dir=${project.basedir}/../logs</argLine>
+            <argLine>@{argLine} -javaagent:${settings.localRepository}/net/bytebuddy/byte-buddy-agent/${byte-buddy.version}/byte-buddy-agent-${byte-buddy.version}.jar -Dcsp.sentinel.log.dir=${project.build.directory}/sentinel-logs -Dapex.log.dir=${project.basedir}/../logs -DsocksNonProxyHosts=localhost|127.*|[::1]</argLine>
             <includes>
               <include>**/*IntegrationTest.java</include>
               <include>**/*E2ETest.java</include>
@@ -1160,7 +1223,7 @@
             <source>${java.version}</source>
             <show>private</show>
             <links>
-              <link>https://docs.oracle.com/en/java/javase/17/docs/api/</link>
+              <link>https://docs.oracle.com/en/java/javase/21/docs/api/</link>
             </links>
           </configuration>
           <executions>

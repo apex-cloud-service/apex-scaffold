@@ -1,4 +1,4 @@
-FROM docker.io/library/eclipse-temurin:17-jre-alpine
+FROM docker.io/library/eclipse-temurin:21-jre-alpine
 RUN apk add --no-cache tzdata wget
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 WORKDIR /app

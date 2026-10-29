@@ -17,7 +17,7 @@
 # ============================================================
 # 1. Build Stage（编译 + 打包整个反应堆，按 SERVICE_MODULE 取产物）
 # ============================================================
-FROM docker.io/library/maven:3.9-eclipse-temurin-17 AS builder
+FROM docker.io/library/maven:3.9-eclipse-temurin-21 AS builder
 
 # 构建档位：basic / standard / enterprise
 ARG BUILD_PROFILE=enterprise
@@ -32,7 +32,7 @@ RUN apt-get update \
   && apt-get install -y --no-install-recommends curl zip unzip \
   && rm -rf /var/lib/apt/lists/* \
   && curl -s "https://get.sdkman.io" | bash \
-  && bash -c "source \"${SDKMAN_DIR}/bin/sdkman-init.sh\" && sdk install java 17.0.12-oracle && sdk install mvnd 2.0.0-rc-3"
+  && bash -c "source \"${SDKMAN_DIR}/bin/sdkman-init.sh\" && sdk install java 21.0.13.0+9-tem && sdk install mvnd 2.0.0-rc-3"
 
 RUN mkdir -p /usr/share/maven/ref && printf '%s\n' \
   '<?xml version="1.0" encoding="UTF-8"?>' \
@@ -69,6 +69,11 @@ COPY apex-office-service/pom.xml apex-office-service/
 COPY apex-system-service/pom.xml apex-system-service/
 COPY apex-auth/pom.xml apex-auth/
 COPY apex-auth-service/pom.xml apex-auth-service/
+# 新能力模块的 POM 必须在依赖预下载阶段可见。
+COPY apex-job-spring-boot-starter/pom.xml apex-job-spring-boot-starter/
+COPY apex-seata-spring-boot-starter/pom.xml apex-seata-spring-boot-starter/
+COPY apex-job-service/pom.xml apex-job-service/
+COPY apex-masking-service/pom.xml apex-masking-service/
 
 COPY .sdkmanrc .
 COPY scripts/build/init-build-env.sh scripts/build/init-build-env.sh
@@ -96,7 +101,7 @@ RUN zsh -c 'source scripts/build/init-build-env.sh && mvnd -T4 -B -Dmvnd.daemonS
 # ============================================================
 # 2. Runtime Stage（仅含 JRE + 选中微服务的可执行 jar）
 # ============================================================
-FROM docker.io/library/eclipse-temurin:17-jre-alpine
+FROM docker.io/library/eclipse-temurin:21-jre-alpine
 
 # 时区数据（alpine 精简镜像默认不含）
 RUN apk add --no-cache tzdata
